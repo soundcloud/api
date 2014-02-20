@@ -22,7 +22,7 @@ object PublicApiStranglerApp extends FinagleBasedServer {
         .hostConnectionLimit(100)
         .hostConnectionMaxIdleTime(5.seconds)
         .hostConnectionMaxLifeTime(30.seconds)
-        .hosts("api-lb.r.int.s-cloud.net:80")
+        .hosts(config.get("MOTHERSHIP_API_SERVER"))
         .keepAlive(true)
         .failFast(false)
         .tracer(ZipkinTracer(config))
