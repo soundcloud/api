@@ -24,5 +24,4 @@ class DispatchToMothershipHandlerSpec extends UnitSpecification {
       }
     }
   }
-
 }
