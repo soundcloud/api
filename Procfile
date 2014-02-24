@@ -1,2 +1,2 @@
-web: ./bin/run-api
+api: ./bin/run-api
 
