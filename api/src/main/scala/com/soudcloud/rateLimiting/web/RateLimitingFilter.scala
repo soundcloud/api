@@ -13,7 +13,6 @@ class RateLimitingFilter(rateLimit: RateLimit) extends SimpleFilter[Request, Res
   val rateLimitExceededResponse = Response(HttpVersion.HTTP_1_1, HttpResponseStatus.valueOf(429))
 
   override def apply(request: Request, service: Service[Request, Response]): Future[Response] = {
-
     try {
       checkRateLimit(request, service)
     } catch {
@@ -26,9 +25,16 @@ class RateLimitingFilter(rateLimit: RateLimit) extends SimpleFilter[Request, Res
 
     rateLimit.checkIfAllowed(remoteAddress).flatMap {
       case true => service(request)
-      case false => Future.value(rateLimitExceededResponse)
+      case false => logDenied(request, remoteAddress); Future.value(rateLimitExceededResponse)
     }.rescue {
       case NonFatal(e) => logger.error("Error while retrieving rate limiting", e); service(request)
     }
+  }
+
+  private def logDenied(request: Request, consumer: Consumer) = {
+    val requestMethod = request.getMethod
+    val requestUri = request.getUri
+
+    logger.info(s"$requestMethod $requestUri -> ${rateLimitExceededResponse.getStatusCode()} (from [${consumer.identifier}])")
   }
 }
