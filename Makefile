@@ -4,7 +4,8 @@ all:
 	$(SBT) clean test startScript
 
 # bazooka target
-build: all
+build:
+	$(SBT) clean startScript
 
 ci:
 	$(SBT) -no-colors clean test startScript
