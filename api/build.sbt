@@ -12,7 +12,7 @@ organization := "com.soundcloud"
 
 version := "0.1.0-SNAPSHOT"
 
-scalacOptions ++= Seq("-deprecation", "-unchecked", "-language:_")
+scalacOptions ++= Seq("-deprecation", "-unchecked", "-target:jvm-1.6", "-language:_")
 
 resolvers ++= Seq(
   "SoundCloud Internal - Hosted Snapshots" at "http://maven.int.s-cloud.net/content/groups/hosted_snapshots/",

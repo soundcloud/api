@@ -32,7 +32,7 @@ class RateLimitSpec extends UnitSpecification {
   trait Context extends Scope {
     val firstTimeWindow = DefaultTimeWindow(new DateTime(2001, 1, 1, 1, 1, 1))
     val secondTimeWindow = DefaultTimeWindow(new DateTime(2001, 1, 1, 2, 2, 2))
-    val consumer1 = InetAddress.getLoopbackAddress()
+    val consumer1 = InetAddress.getByName("localhost")
     val consumer2 = InetAddress.getByName("10.23.131.255")
     val limit = 3
     val clock = mock[() => TimeWindow]

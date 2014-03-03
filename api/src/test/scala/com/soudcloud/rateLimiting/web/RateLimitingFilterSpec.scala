@@ -11,7 +11,7 @@ import com.twitter.finagle.Service
 class RateLimitingFilterSpec extends UnitSpecification {
 
   trait Context extends Scope {
-    val requestIp = InetAddress.getLoopbackAddress()
+    val requestIp = InetAddress.getByName("10.23.131.255")
     val response = mock[Response]
 
     val request = mock[Request]
