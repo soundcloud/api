@@ -22,10 +22,11 @@ trait RateLimitComponent {
   }
 
   val redis = {
-    val redisHost = config.get("RATE_LIMIT_REDIS_HOST")
+    val redisServer = config.get("RATE_LIMIT_REDIS_SERVER")
+    require(redisServer != null, "$RATE_LIMIT_REDIS_SERVER must be set")
 
     val redisService = ClientBuilder()
-      .hosts(redisHost)
+      .hosts(redisServer)
       .hostConnectionLimit(1)
       .codec(Redis())
       .daemon(true)
