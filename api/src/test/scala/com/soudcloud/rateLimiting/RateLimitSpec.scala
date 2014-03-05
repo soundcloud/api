@@ -4,7 +4,6 @@ import com.soundcloud.scalakit.test.UnitSpecification
 import com.twitter.finagle.redis.{Client => RedisClient}
 import org.joda.time.DateTime
 import org.mockito.Mockito._
-import java.net.InetAddress
 import com.twitter.util.Await
 import org.jboss.netty.buffer.{ChannelBuffers, ChannelBuffer}
 import java.lang.{Long => JvmLong}
@@ -32,8 +31,8 @@ class RateLimitSpec extends UnitSpecification {
   trait Context extends Scope {
     val firstTimeWindow = DefaultTimeWindow(new DateTime(2001, 1, 1, 1, 1, 1))
     val secondTimeWindow = DefaultTimeWindow(new DateTime(2001, 1, 1, 2, 2, 2))
-    val consumer1 = InetAddress.getByName("localhost")
-    val consumer2 = InetAddress.getByName("10.23.131.255")
+    val consumer1 = Ip("127.0.0.1")
+    val consumer2 = Ip("10.23.131.255")
     val limit = 3
     val clock = mock[() => TimeWindow]
     val rateLimit = new RateLimit(resource, redis, limit, clock, new MetricRegistry)

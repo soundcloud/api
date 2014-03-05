@@ -3,11 +3,13 @@ package com.soudcloud.rateLimiting.web
 import com.twitter.finagle.http.{Response, Request}
 import com.twitter.finagle.{Service, SimpleFilter}
 import com.twitter.util.{NonFatal, Future}
-import com.soudcloud.rateLimiting.{Consumer, RateLimit}
+import com.soudcloud.rateLimiting.{Ip, Consumer, RateLimit}
 import org.jboss.netty.handler.codec.http.{HttpResponseStatus, HttpVersion}
 import org.slf4j.LoggerFactory
 
 class RateLimitingFilter(rateLimit: RateLimit) extends SimpleFilter[Request, Response] {
+  val realIpHeader = "X-Real-Ip"
+
   val logger = LoggerFactory.getLogger(this.getClass)
 
   val rateLimitExceededResponse = Response(HttpVersion.HTTP_1_1, HttpResponseStatus.valueOf(429))
@@ -21,7 +23,7 @@ class RateLimitingFilter(rateLimit: RateLimit) extends SimpleFilter[Request, Res
   }
 
   private def checkRateLimit(request: Request, service: Service[Request, Response]): Future[Response] = {
-    val remoteAddress: Consumer = request.remoteAddress
+    val remoteAddress: Consumer = Ip(request.headers().get(realIpHeader))
 
     rateLimit.checkIfAllowed(remoteAddress).flatMap {
       case true => service(request)
