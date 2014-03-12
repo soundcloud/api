@@ -1,42 +1,32 @@
 package com.soudcloud.rateLimiting
 
 import com.soundcloud.scalakit.test.UnitSpecification
-import com.twitter.finagle.redis.{Client => RedisClient}
+import com.twitter.finagle.memcached.{Client => MemcachedClient}
 import org.joda.time.DateTime
 import org.mockito.Mockito._
 import com.twitter.util.Await
-import org.jboss.netty.buffer.{ChannelBuffers, ChannelBuffer}
 import java.lang.{Long => JvmLong}
 import com.soundcloud.jvmkit.ResourceName
 import com.codahale.metrics.MetricRegistry
+import scala.util.Random
 
 class RateLimitSpec extends UnitSpecification {
   sequential
 
-  implicit def string2channelBuffer(s: String): ChannelBuffer = ChannelBuffers.copiedBuffer(s.getBytes("UTF-8"))
-
-  val resource = new ResourceName("some-test")
-
-  val redis = RedisClient("localhost:6379")
-
-  def allKeys = redis.keys("*")
-
-  override def before = {
-    Await.result(allKeys.onSuccess {
-      case s@x :: xs => redis.del(s)
-      case other =>
-    })
-  }
-
   trait Context extends Scope {
+    val port = 11211
+    val hosts = "localhost"
+    val memcached = MemcachedClient(s"$hosts:$port")
+
+    val testRunNumber = s"${System.nanoTime}-${Random.nextLong()}"
+    val resource = new ResourceName(s"some-test-$testRunNumber")
     val firstTimeWindow = DefaultTimeWindow(new DateTime(2001, 1, 1, 1, 1, 1))
     val secondTimeWindow = DefaultTimeWindow(new DateTime(2001, 1, 1, 2, 2, 2))
     val consumer1 = Ip("127.0.0.1")
     val consumer2 = Ip("10.23.131.255")
     val limit = 3
     val clock = mock[() => TimeWindow]
-    val rateLimit = new RateLimit(resource, redis, limit, clock, new MetricRegistry)
-
+    val rateLimit = new RateLimit(resource, memcached, limit, clock, new MetricRegistry)
 
     def clockReturns(t: TimeWindow, o: TimeWindow*) = {
       when(clock.apply()).thenReturn(t, o: _*)
@@ -70,7 +60,6 @@ class RateLimitSpec extends UnitSpecification {
       reachLimitFor(firstTimeWindow, consumer1)
       clockReturns(firstTimeWindow)
       Await.result(rateLimit.checkIfAllowed(consumer2)) must beTrue
-
     }
   }
 
@@ -79,21 +68,6 @@ class RateLimitSpec extends UnitSpecification {
       clockReturns(firstTimeWindow)
       val attemptsBeforeReachingLimit = (0 to limit - 2).map(_ => Await.result(rateLimit.checkIfAllowed(consumer1)))
       attemptsBeforeReachingLimit.toSet must be_==(Set(true))
-    }
-  }
-
-  "expiring windows" >> {
-    "time window expires after time" in new Context {
-      clockReturns(firstTimeWindow)
-      (0 to limit - 1).foreach {
-        _ => Await.result(rateLimit.checkIfAllowed(consumer1))
-      }
-
-      val ttl = Await.result(allKeys.flatMap {
-        a => redis.ttl(a.head)
-      })
-
-      ttl must beSome[JvmLong]
     }
   }
 }

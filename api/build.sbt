@@ -22,9 +22,9 @@ resolvers ++= Seq(
 )
 
 libraryDependencies ++= Seq(
-  "org.specs2"     %% "specs2"        % "2.3.7",
-  "com.twitter"    %% "finagle-redis" % "6.11.1",
-  "com.soundcloud" %% "sc-jvm-kit"    % "0.1.21-SNAPSHOT"
+  "org.specs2"     %% "specs2"            % "2.3.7",
+  "com.twitter"    %% "finagle-memcached" % "6.11.1",
+  "com.soundcloud" %% "sc-jvm-kit"        % "0.1.23"
 )
 
 mainClass in Compile := Some("com.soudcloud.publicApiStrangler.PublicApiStranglerApp")
