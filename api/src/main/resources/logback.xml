@@ -5,8 +5,6 @@
         </encoder>
     </appender>
 
-    <logger name="scala.slick" level="INFO"/>
-
     <logger name="com.soundcloud" level="INFO"/>
 
     <root level="INFO">

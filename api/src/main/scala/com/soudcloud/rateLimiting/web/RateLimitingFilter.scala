@@ -5,12 +5,12 @@ import com.twitter.finagle.{Service, SimpleFilter}
 import com.twitter.util.{NonFatal, Future}
 import com.soudcloud.rateLimiting.{Ip, Consumer, RateLimit}
 import org.jboss.netty.handler.codec.http.{HttpResponseStatus, HttpVersion}
-import org.slf4j.LoggerFactory
+import com.soundcloud.jvmkit.SoundCloudLoggerFactory
 
 class RateLimitingFilter(rateLimit: RateLimit) extends SimpleFilter[Request, Response] {
+  val logger = SoundCloudLoggerFactory.getLogger(this.getClass)
   val realIpHeader = "X-Real-Ip"
 
-  val logger = LoggerFactory.getLogger(this.getClass)
 
   val rateLimitExceededResponse = Response(HttpVersion.HTTP_1_1, HttpResponseStatus.valueOf(429))
 

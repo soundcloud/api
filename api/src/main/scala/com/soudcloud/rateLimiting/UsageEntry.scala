@@ -2,7 +2,6 @@ package com.soudcloud.rateLimiting
 
 import com.soundcloud.jvmkit.ResourceName
 
-
 case class UsageEntry(resource:ResourceName, consumer: Consumer, time: TimeWindow) {
 
   def sanitise(s:String) = s.replaceAll("\\W", "_")

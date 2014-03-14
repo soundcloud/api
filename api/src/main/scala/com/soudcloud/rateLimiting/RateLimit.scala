@@ -2,13 +2,12 @@ package com.soudcloud.rateLimiting
 
 import com.twitter.finagle.memcached.{Client => MemcachedClient}
 import com.twitter.util.{Time, Throw, Return, Future}
-import com.soundcloud.jvmkit.ResourceName
+import com.soundcloud.jvmkit.{SoundCloudLoggerFactory, ResourceName}
 import com.codahale.metrics.MetricRegistry
 import org.jboss.netty.buffer.ChannelBuffers
-import org.slf4j.LoggerFactory
 
 class RateLimit(protectedResource: ResourceName, memcached: MemcachedClient, maximumPerWindow: Long, clock: () => TimeWindow, metrics: MetricRegistry) {
-  val logger = LoggerFactory.getLogger(this.getClass)
+  val logger = SoundCloudLoggerFactory.getLogger(this.getClass)
 
   val zero = ChannelBuffers.copiedBuffer("0".getBytes("UTF-8"))
   val whatToReturnWhenAnErrorHappens = 0L
@@ -48,7 +47,7 @@ class RateLimit(protectedResource: ResourceName, memcached: MemcachedClient, max
 
     def incrementExistingCounter(ignored: Any): Future[Long] = {
       memcached.incr(memcachedKey).map {
-        case Some(value) => value
+        case Some(value) => logger.debug(s"UsageEntry [$memcachedKey] has [$value] hits"); value
         case None => logger.error(s"Could not increment key [$memcachedKey]"); errorMeter.mark(); whatToReturnWhenAnErrorHappens
       }
     }

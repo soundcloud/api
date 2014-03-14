@@ -8,14 +8,8 @@ import org.joda.time.DateTime
 import com.soundcloud.jvmkit.circuitbreakers.CircuitBreaker
 import java.util.Timer
 import com.soundcloud.scalakit.finagle.CircuitBreakerFilter
-import com.twitter.finagle.builder.ClientBuilder
-import com.twitter.finagle.memcached.{Client => MemcachedClient}
+import com.twitter.finagle.memcached.{Client => MemcachedClient, CacheNodeGroup, KetamaClientBuilder}
 import com.twitter.finagle.memcached.protocol.{Response, Command}
-import com.twitter.finagle.memcached.protocol.text.Memcached
-import com.soundcloud.scalakit.stats.MetricsStatsReceiver
-import scala.collection.JavaConversions._
-import com.twitter.finagle.Group
-import java.net.{SocketAddress, InetSocketAddress}
 
 trait RateLimitComponent {
   self: ScAppComponent with StatsComponent =>
@@ -27,29 +21,12 @@ trait RateLimitComponent {
   }
 
   val memcached = {
-    val statsReceiver = new MetricsStatsReceiver(metrics)
-    val memcachedServers = config.getList("RATE_LIMIT_MEMCACHED_SERVERS", "")
-    require(memcachedServers.size() > 0, "$RATE_LIMIT_MEMCACHED_SERVERS must be set to a list of servers")
+    val memcachedServers = config.get("RATE_LIMIT_MEMCACHED_SERVERS", "")
+    require(memcachedServers != null, "$RATE_LIMIT_MEMCACHED_SERVERS must be set to a list of servers")
 
-    val socketAddresses = memcachedServers.map {
-      server =>
-        val pieces = server.split(":")
-        val host = pieces(0)
-        val port = pieces(1).toInt
-        logger.info(s"Configuring memcached server [$host:$port]")
-        new InetSocketAddress(host, port):SocketAddress
-    }
-
-    val memcachedGroup = Group(socketAddresses: _*)
-
-    val memcachedService = ClientBuilder()
-      .group(memcachedGroup)
-      .hostConnectionLimit(1)
-      .codec(new Memcached(statsReceiver))
-      .daemon(true)
+    KetamaClientBuilder()
+      .group(CacheNodeGroup.apply(memcachedServers))
       .build()
-
-    MemcachedClient(circuitBreakerFilter andThen memcachedService)
   }
 
   val rateLimitingFilter: RateLimitingFilter = {
