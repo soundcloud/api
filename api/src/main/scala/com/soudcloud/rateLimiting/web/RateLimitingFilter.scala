@@ -6,8 +6,9 @@ import com.twitter.util.{NonFatal, Future}
 import com.soudcloud.rateLimiting.{Ip, Consumer, RateLimit}
 import org.jboss.netty.handler.codec.http.{HttpResponseStatus, HttpVersion}
 import com.soundcloud.jvmkit.SoundCloudLoggerFactory
+import com.soundcloud.scalakit.finagle.http.HandlerRequest
 
-class RateLimitingFilter(rateLimit: RateLimit) extends SimpleFilter[Request, Response] {
+class RateLimitingFilter(rateLimit: RateLimit) extends SimpleFilter[HandlerRequest, Response] {
   val logger = SoundCloudLoggerFactory.getLogger(this.getClass)
   val realIpHeader = "X-Real-Ip"
 
@@ -16,33 +17,33 @@ class RateLimitingFilter(rateLimit: RateLimit) extends SimpleFilter[Request, Res
 
   val badRequestResponse = Response(HttpVersion.HTTP_1_1, HttpResponseStatus.valueOf(400))
 
-  override def apply(request: Request, service: Service[Request, Response]): Future[Response] = {
+  override def apply(handlerRequest: HandlerRequest, service: Service[HandlerRequest, Response]): Future[Response] = {
     try {
-      checkRateLimit(request, service)
+      checkRateLimit(handlerRequest, service)
     } catch {
-      case NonFatal(e) => logger.error("Error while retrieving rate limiting", e); service(request)
+      case NonFatal(e) => logger.error("Error while retrieving rate limiting", e); service(handlerRequest)
     }
   }
 
-  private def checkRateLimit(request: Request, service: Service[Request, Response]): Future[Response] = {
-    Option(request.headers().get(realIpHeader)) match {
-      case Some(ip) => checkRateLimitFor(Ip(ip), request, service)
+  private def checkRateLimit(handlerRequest: HandlerRequest, service: Service[HandlerRequest, Response]): Future[Response] = {
+    Option(handlerRequest.request.headers().get(realIpHeader)) match {
+      case Some(ip) => checkRateLimitFor(Ip(ip), handlerRequest, service)
       case None => Future.value(badRequestResponse)
     }
   }
 
-  private def checkRateLimitFor(resourceConsumer: Consumer, request: Request, service: Service[Request, Response]) = {
+  private def checkRateLimitFor(resourceConsumer: Consumer, handlerRequest: HandlerRequest, service: Service[HandlerRequest, Response]) = {
     rateLimit.checkIfAllowed(resourceConsumer).flatMap {
-      case true => service(request)
-      case false => logDenied(request, resourceConsumer); Future.value(rateLimitExceededResponse)
+      case true => service(handlerRequest)
+      case false => logDenied(handlerRequest, resourceConsumer); Future.value(rateLimitExceededResponse)
     }.rescue {
-      case NonFatal(e) => logger.error("Error while retrieving rate limiting", e); service(request)
+      case NonFatal(e) => logger.error("Error while retrieving rate limiting", e); service(handlerRequest)
     }
   }
 
-  private def logDenied(request: Request, consumer: Consumer) = {
-    val requestMethod = request.getMethod
-    val requestUri = request.getUri
+  private def logDenied(handlerRequest: HandlerRequest, consumer: Consumer) = {
+    val requestMethod = handlerRequest.getMethod
+    val requestUri = handlerRequest.getUri
 
     logger.info(s"$requestMethod $requestUri -> ${rateLimitExceededResponse.getStatusCode()} (from [${consumer.identifier}])")
   }

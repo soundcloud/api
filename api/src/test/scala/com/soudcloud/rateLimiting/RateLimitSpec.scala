@@ -42,7 +42,7 @@ class RateLimitSpec extends UnitSpecification {
       reachLimitFor(firstTimeWindow, consumer1) must beFalse
     }
 
-    "returns fail for any subsequent request in the currentTime window" in new Context {
+    "returns fail for any subsequent request in the pointInTime window" in new Context {
       reachLimitFor(firstTimeWindow, consumer2)
       val subsequentAttempts = (0 to 100).map(_ => Await.result(rateLimit.checkIfAllowed(consumer2)))
       subsequentAttempts.toSet must be_==(Set(false))

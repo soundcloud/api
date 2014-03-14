@@ -29,7 +29,7 @@ trait RateLimitComponent {
       .build()
   }
 
-  val rateLimitingFilter: RateLimitingFilter = {
+  val enforceDefaultRateLimiting: RateLimitingFilter = {
     val maxPerWindow = config.get("RATELIMIT_MAX_PER_IP", "180").toLong
     val appName = new ResourceName(config.getApplicationName)
     val time = () => DefaultTimeWindow(new DateTime())
