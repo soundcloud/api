@@ -29,11 +29,11 @@ trait RateLimitComponent {
   val memcached = {
     val statsReceiver = new MetricsStatsReceiver(metrics)
     val memcachedServers = config.getList("RATE_LIMIT_MEMCACHED_SERVERS", "")
-    require(memcachedServers.size() == 0, "$RATE_LIMIT_MEMCACHED_SERVERS must be set to a list of servers")
+    require(memcachedServers.size() > 0, "$RATE_LIMIT_MEMCACHED_SERVERS must be set to a list of servers")
 
     val socketAddresses = memcachedServers.map {
       server =>
-        val pieces = server.split(",")
+        val pieces = server.split(":")
         val host = pieces(0)
         val port = pieces(1).toInt
         logger.info(s"Configuring memcached server [$host:$port]")

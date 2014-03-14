@@ -3,9 +3,7 @@ package com.soudcloud.rateLimiting
 import com.soundcloud.scalakit.test.UnitSpecification
 import com.twitter.finagle.memcached.{Client => MemcachedClient}
 import org.joda.time.DateTime
-import org.mockito.Mockito._
 import com.twitter.util.Await
-import java.lang.{Long => JvmLong}
 import com.soundcloud.jvmkit.ResourceName
 import com.codahale.metrics.MetricRegistry
 import scala.util.Random
@@ -29,7 +27,7 @@ class RateLimitSpec extends UnitSpecification {
     val rateLimit = new RateLimit(resource, memcached, limit, clock, new MetricRegistry)
 
     def clockReturns(t: TimeWindow, o: TimeWindow*) = {
-      when(clock.apply()).thenReturn(t, o: _*)
+      clock.apply() returns(t, o: _*)
     }
 
     def reachLimitFor(timeWindow: TimeWindow, consumer: Consumer) = {
