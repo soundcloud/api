@@ -1,71 +1,74 @@
 package com.soudcloud.rateLimiting
 
 import com.soundcloud.scalakit.test.UnitSpecification
-import com.twitter.finagle.memcached.{Client => MemcachedClient}
 import org.joda.time.DateTime
-import com.twitter.util.Await
+import com.twitter.util.{Future, Await}
 import com.soundcloud.jvmkit.ResourceName
 import com.codahale.metrics.MetricRegistry
 import scala.util.Random
 
 class RateLimitSpec extends UnitSpecification {
-  sequential
 
   trait Context extends Scope {
-    val port = 11211
-    val hosts = "localhost"
-    val memcached = MemcachedClient(s"$hosts:$port")
 
     val testRunNumber = s"${System.nanoTime}-${Random.nextLong()}"
     val resource = new ResourceName(s"some-test-$testRunNumber")
     val firstTimeWindow = DefaultTimeWindow(new DateTime(2001, 1, 1, 1, 1, 1))
     val secondTimeWindow = DefaultTimeWindow(new DateTime(2001, 1, 1, 2, 2, 2))
-    val consumer1 = Ip("127.0.0.1")
-    val consumer2 = Ip("10.23.131.255")
+    val consumer1 = Ip("127.0.0.1"): Consumer
+    val consumer2 = Ip("10.23.131.255"): Consumer
     val limit = 3
     val clock = mock[() => TimeWindow]
-    val rateLimit = new RateLimit(resource, memcached, limit, clock, new MetricRegistry)
+    val counter = mock[RateLimitCounter]
+    val rateLimit = new RateLimit(resource, counter, limit, clock, new MetricRegistry)
 
     def clockReturns(t: TimeWindow, o: TimeWindow*) = {
       clock.apply() returns(t, o: _*)
     }
-
-    def reachLimitFor(timeWindow: TimeWindow, consumer: Consumer) = {
-      clockReturns(timeWindow)
-      (0 to limit - 2).foreach(_ => Await.result(rateLimit.checkIfAllowed(consumer)))
-      Await.result(rateLimit.checkIfAllowed(consumer))
-    }
   }
 
-  "when consumer needs to be rate limited" >> {
-    "returns fail once the limit is reached" in new Context {
-      reachLimitFor(firstTimeWindow, consumer1) must beFalse
+  "when consumer attempts to use resource" >> {
+    "returns false once the limit is reached" in new Context {
+      clockReturns(firstTimeWindow)
+      val entry = UsageEntry(resource, consumer1, firstTimeWindow)
+      counter.incr(===(entry)) returns Future.value(limit)
+
+      Await.result(rateLimit.checkIfAllowed(consumer1)) must beFalse
     }
 
-    "returns fail for any subsequent request in the pointInTime window" in new Context {
-      reachLimitFor(firstTimeWindow, consumer2)
-      val subsequentAttempts = (0 to 100).map(_ => Await.result(rateLimit.checkIfAllowed(consumer2)))
-      subsequentAttempts.toSet must be_==(Set(false))
+    "returns true if under limit" in new Context {
+      clockReturns(firstTimeWindow)
+      val entry = UsageEntry(resource, consumer1, firstTimeWindow)
+
+      val fromZeroToLimit = (0L to limit.toLong - 1).toList.map(Future.value(_))
+      counter.incr(===(entry)) returns(fromZeroToLimit.head, fromZeroToLimit.tail: _*)
+
+      fromZeroToLimit.foreach {
+        _ =>
+          Await.result(rateLimit.checkIfAllowed(consumer1)) must beTrue
+      }
     }
 
-    "returns success after the window is over" in new Context {
-      reachLimitFor(firstTimeWindow, consumer1)
-      clockReturns(secondTimeWindow)
+    "returns true if same consumer but different time window" in new Context {
+      clockReturns(firstTimeWindow, secondTimeWindow)
+      val entry1 = UsageEntry(resource, consumer1, firstTimeWindow)
+      val entry2 = UsageEntry(resource, consumer1, secondTimeWindow)
+      counter.incr(===(entry1)) returns Future.value(limit)
+      counter.incr(===(entry2)) returns Future.value(0)
+
+      Await.result(rateLimit.checkIfAllowed(consumer1)) must beFalse
       Await.result(rateLimit.checkIfAllowed(consumer1)) must beTrue
     }
 
-    "wont let consumers interfere with each other" in new Context {
-      reachLimitFor(firstTimeWindow, consumer1)
+    "wont let consumers interfere with one another" in new Context {
       clockReturns(firstTimeWindow)
-      Await.result(rateLimit.checkIfAllowed(consumer2)) must beTrue
-    }
-  }
+      val entry1 = UsageEntry(resource, consumer1, firstTimeWindow)
+      val entry2 = UsageEntry(resource, consumer2, firstTimeWindow)
+      counter.incr(===(entry1)) returns Future.value(limit + 1)
+      counter.incr(===(entry2)) returns Future.value(0)
 
-  "when limit is never reached" >> {
-    "returns success if requests below limit" in new Context {
-      clockReturns(firstTimeWindow)
-      val attemptsBeforeReachingLimit = (0 to limit - 2).map(_ => Await.result(rateLimit.checkIfAllowed(consumer1)))
-      attemptsBeforeReachingLimit.toSet must be_==(Set(true))
+      Await.result(rateLimit.checkIfAllowed(consumer1)) must beFalse
+      Await.result(rateLimit.checkIfAllowed(consumer2)) must beTrue
     }
   }
 }

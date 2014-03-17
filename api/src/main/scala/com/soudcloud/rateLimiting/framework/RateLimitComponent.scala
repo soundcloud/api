@@ -2,7 +2,7 @@ package com.soudcloud.rateLimiting.framework
 
 import com.soudcloud.rateLimiting.web.RateLimitingFilter
 import com.soundcloud.scalakit.framework.{StatsComponent, ScAppComponent}
-import com.soudcloud.rateLimiting.{DefaultTimeWindow, RateLimit}
+import com.soudcloud.rateLimiting.{RateLimitCounter, DefaultTimeWindow, RateLimit}
 import com.soundcloud.jvmkit.ResourceName
 import org.joda.time.DateTime
 import com.soundcloud.jvmkit.circuitbreakers.CircuitBreaker
@@ -33,7 +33,8 @@ trait RateLimitComponent {
     val maxPerWindow = config.get("RATELIMIT_MAX_PER_IP", "180").toLong
     val appName = new ResourceName(config.getApplicationName)
     val time = () => DefaultTimeWindow(new DateTime())
-    val rateLimit = new RateLimit(appName, memcached, maxPerWindow, time, metrics)
+    val counter = new RateLimitCounter(memcached)
+    val rateLimit = new RateLimit(appName, counter, maxPerWindow, time, metrics)
     new RateLimitingFilter(rateLimit)
   }
 }

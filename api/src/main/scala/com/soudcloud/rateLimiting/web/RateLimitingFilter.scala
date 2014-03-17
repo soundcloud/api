@@ -5,7 +5,7 @@ import com.twitter.finagle.{Service, SimpleFilter}
 import com.twitter.util.{NonFatal, Future}
 import com.soudcloud.rateLimiting.{Ip, Consumer, RateLimit}
 import org.jboss.netty.handler.codec.http.{HttpResponseStatus, HttpVersion}
-import com.soundcloud.jvmkit.SoundCloudLoggerFactory
+import com.soundcloud.jvmkit.logging.SoundCloudLoggerFactory
 import com.soundcloud.scalakit.finagle.http.HandlerRequest
 
 class RateLimitingFilter(rateLimit: RateLimit) extends SimpleFilter[HandlerRequest, Response] {
@@ -45,6 +45,6 @@ class RateLimitingFilter(rateLimit: RateLimit) extends SimpleFilter[HandlerReque
     val requestMethod = handlerRequest.getMethod
     val requestUri = handlerRequest.getUri
 
-    logger.info(s"$requestMethod $requestUri -> ${rateLimitExceededResponse.getStatusCode()} (from [${consumer.identifier}])")
+    logger.info(s"Rate limit exceeded: [$requestMethod $requestUri] from [${consumer.identifier}]")
   }
 }

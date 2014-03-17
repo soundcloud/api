@@ -5,7 +5,7 @@
         </encoder>
     </appender>
 
-    <logger name="com.soundcloud" level="INFO"/>
+    <logger name="com.soundcloud" level="DEBUG"/>
 
     <root level="INFO">
         <appender-ref ref="STDOUT"/>

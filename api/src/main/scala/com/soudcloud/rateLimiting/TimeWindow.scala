@@ -2,6 +2,6 @@ package com.soudcloud.rateLimiting
 
 import com.twitter.util.Duration
 
-case class TimeWindow(length: Duration, identifier: Int) {
-  val key = s"${length.inMinutes}m_$identifier"
+case class TimeWindow(unitOfMeasure: Duration, number: Int) {
+  val key = s"${unitOfMeasure.inMinutes}m_$number"
 }

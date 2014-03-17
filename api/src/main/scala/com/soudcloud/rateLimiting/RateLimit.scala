@@ -1,12 +1,12 @@
 package com.soudcloud.rateLimiting
 
-import com.twitter.finagle.memcached.{Client => MemcachedClient}
-import com.twitter.util.{Time, Throw, Return, Future}
-import com.soundcloud.jvmkit.{SoundCloudLoggerFactory, ResourceName}
+import com.twitter.util.{Throw, Return, Future}
+import com.soundcloud.jvmkit.ResourceName
+import com.soundcloud.jvmkit.logging.SoundCloudLoggerFactory
 import com.codahale.metrics.MetricRegistry
 import org.jboss.netty.buffer.ChannelBuffers
 
-class RateLimit(protectedResource: ResourceName, memcached: MemcachedClient, maximumPerWindow: Long, clock: () => TimeWindow, metrics: MetricRegistry) {
+class RateLimit(protectedResource: ResourceName, counter: RateLimitCounter, maximumPerWindow: Long, clock: () => TimeWindow, metrics: MetricRegistry) {
   val logger = SoundCloudLoggerFactory.getLogger(this.getClass)
 
   val zero = ChannelBuffers.copiedBuffer("0".getBytes("UTF-8"))
@@ -17,41 +17,18 @@ class RateLimit(protectedResource: ResourceName, memcached: MemcachedClient, max
   val errorMeter = metrics.meter(s"$metricPrefix.errors")
   val limitedMeter = metrics.meter(s"$metricPrefix.limited")
   val allowedMeter = metrics.meter(s"$metricPrefix.allowed")
-  val newEntryMeter = metrics.meter(s"$metricPrefix.new_entry")
-  val oldEntryMeter = metrics.meter(s"$metricPrefix.old_entry")
 
   def checkIfAllowed(consumer: Consumer): Future[Boolean] = {
     val timeWindow = clock()
     val usage = UsageEntry(protectedResource, consumer, timeWindow)
 
-    val memcachedKey = usage.key
-
-    incrementedKey(memcachedKey, timeWindow).map(_ < maximumPerWindow).respond {
+    counter.incr(usage).map{
+      count => logger.debug(s"Consumer [${usage.key}}] has [$count] hits")
+        count
+    }.map(_ < maximumPerWindow).respond {
       case Return(true) => allowedMeter.mark()
       case Return(false) => limitedMeter.mark()
       case Throw(e) => logger.error("Error on rate limiting", e); errorMeter.mark()
     }
-  }
-
-  private def incrementedKey(memcachedKey: String, timeWindow: TimeWindow) = {
-    def makeSureCounterExists() = {
-      val whenToExpire = Time.now + timeWindow.length
-      memcached.add(memcachedKey, unusedFlag, whenToExpire, zero).onSuccess {
-        wasNewEntry =>
-          if (wasNewEntry)
-            newEntryMeter.mark()
-          else
-            oldEntryMeter.mark()
-      }
-    }
-
-    def incrementExistingCounter(ignored: Any): Future[Long] = {
-      memcached.incr(memcachedKey).map {
-        case Some(value) => logger.debug(s"UsageEntry [$memcachedKey] has [$value] hits"); value
-        case None => logger.error(s"Could not increment key [$memcachedKey]"); errorMeter.mark(); whatToReturnWhenAnErrorHappens
-      }
-    }
-
-    makeSureCounterExists().flatMap(incrementExistingCounter(_))
   }
 }
