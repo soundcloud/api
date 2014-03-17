@@ -31,10 +31,14 @@ trait RateLimitComponent {
 
   val enforceDefaultRateLimiting: RateLimitingFilter = {
     val maxPerWindow = config.get("RATELIMIT_MAX_PER_IP", "180").toLong
+    enforceMaxHitsPerHour(maxPerWindow)
+  }
+
+  def enforceMaxHitsPerHour(maxPerHour: Long): RateLimitingFilter = {
     val appName = new ResourceName(config.getApplicationName)
     val time = () => DefaultTimeWindow(new DateTime())
     val counter = new RateLimitCounter(memcached)
-    val rateLimit = new RateLimit(appName, counter, maxPerWindow, time, metrics)
+    val rateLimit = new RateLimit(appName, counter, maxPerHour, time, metrics)
     new RateLimitingFilter(rateLimit)
   }
 }
