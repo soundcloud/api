@@ -12,6 +12,8 @@ object PublicApiStranglerApp extends FinagleBasedServer with PublicApiClientComp
   override def createRoutes(httpServer: HttpServer): Unit = {
     val dispatchToPublicApiHandler = new DispatchToMothershipHandler(publicApiClient)
 
+    httpServer.register("/oauth2/token", enforceMaxHitsPerHour(3) andThen dispatchToPublicApiHandler)
+
     httpServer.registerFallback(enforceDefaultRateLimiting andThen dispatchToPublicApiHandler)
   }
 
