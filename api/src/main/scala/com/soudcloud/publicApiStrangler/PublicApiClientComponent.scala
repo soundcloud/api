@@ -1,19 +1,19 @@
 package com.soudcloud.publicApiStrangler
 
-import com.soundcloud.scalakit.framework.{StatsComponent, ScAppComponent}
+import com.soundcloud.scalakit.framework.ScAppComponent
 import com.twitter.finagle.Service
-import com.twitter.finagle.http.{Response, Request}
+import org.jboss.netty.handler.codec.http.{HttpRequest, HttpResponse}
 import com.twitter.finagle.builder.ClientBuilder
-import com.soundcloud.scalakit.finagle.http.{MonitoringFilter, TracingHttp}
+import com.soundcloud.scalakit.finagle.http.TracingHttp
 import com.soundcloud.scalakit.finagle.zipkin.ZipkinTracer
 import com.twitter.util.TimeConversions._
 
 trait PublicApiClientComponent {
-  self: ScAppComponent with StatsComponent =>
+  self: ScAppComponent =>
 
-  val publicApiClient: Service[Request, Response] = {
+  val publicApiClient: Service[HttpRequest, HttpResponse] = {
     val svcName = "public-api"
-    val httpClient = ClientBuilder()
+    ClientBuilder()
       .codec(TracingHttp())
       .daemon(true)
       .hostConnectionCoresize(10)
@@ -30,7 +30,5 @@ trait PublicApiClientComponent {
       .requestTimeout(5.seconds)
       .tcpConnectTimeout(5.seconds)
       .build()
-
-    new MonitoringFilter[Request, Response](svcName, metrics) andThen httpClient
   }
 }
