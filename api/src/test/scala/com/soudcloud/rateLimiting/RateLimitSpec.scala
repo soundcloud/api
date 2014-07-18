@@ -4,7 +4,6 @@ import com.soundcloud.scalakit.test.UnitSpecification
 import org.joda.time.DateTime
 import com.twitter.util.{Future, Await}
 import com.soundcloud.jvmkit.ResourceName
-import com.codahale.metrics.MetricRegistry
 import scala.util.Random
 
 class RateLimitSpec extends UnitSpecification {
@@ -20,7 +19,7 @@ class RateLimitSpec extends UnitSpecification {
     val limit = 3
     val clock = mock[() => TimeWindow]
     val counter = mock[RateLimitCounter]
-    val rateLimit = new RateLimit(resource, counter, limit, clock, new MetricRegistry)
+    val rateLimit = new RateLimit(resource, counter, limit, clock)
 
     def clockReturns(t: TimeWindow, o: TimeWindow*) = {
       clock.apply() returns(t, o: _*)
