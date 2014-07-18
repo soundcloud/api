@@ -1,6 +1,6 @@
 package com.soudcloud.rateLimiting
 
-import com.twitter.finagle.memcached.{Client => MemcachedClient}
+import com.twitter.finagle.memcached.{Client => MemcachedClient, MockClient}
 import scala.util.Random
 import com.soundcloud.jvmkit.ResourceName
 import com.twitter.util.{Duration, Await}
@@ -10,9 +10,7 @@ class RateLimitCounterSpec extends UnitSpecification {
   sequential
 
   trait ExternalMemcachedProcess extends Scope {
-    val port = 11211
-    val hosts = "localhost"
-    val memcached = MemcachedClient(s"$hosts:$port")
+    val memcached = new MockClient
     val rateLimitCounter = new RateLimitCounter(memcached)
   }
 
