@@ -10,5 +10,6 @@ import scala.collection.JavaConversions._
 
 class DispatchToMothershipHandler(mothershipClient: Service[HttpRequest, HttpResponse]) extends HttpHandler {
   override def defaultHandling(handlerRequest: HandlerRequest): Future[Response] =
+    handlerRequest.request.host = "api.soundcloud.com"
     mothershipClient(ForwardedRequest(handlerRequest.request)).map(Response.apply)
 }
