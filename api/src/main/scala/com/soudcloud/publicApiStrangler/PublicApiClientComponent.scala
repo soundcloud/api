@@ -21,7 +21,7 @@ trait PublicApiClientComponent {
       .hostConnectionLimit(100)
       .hostConnectionMaxIdleTime(5.seconds)
       .hostConnectionMaxLifeTime(30.seconds)
-      .hosts(config.get("MOTHERSHIP_API_SERVER"))
+      .dest(config.get("MOTHERSHIP_API_SERVER"))
       .keepAlive(true)
       .failFast(false)
       .tracer(ZipkinTracer(config))
