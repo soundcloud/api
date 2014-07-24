@@ -1,4 +1,4 @@
-SBT = cd api && SBT_OPTS="-Xms512M -Xmx2G -Xss1M" ./sbt
+SBT = SBT_OPTS="-Xms512M -Xmx2G -Xss1M" ./sbt
 
 all:
 	$(SBT) clean test startScript
