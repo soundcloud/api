@@ -1,1 +1,4 @@
 .git
+Gemfile
+Gemfile.lock
+*.properties

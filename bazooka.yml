@@ -1,0 +1,7 @@
+api:
+  env: production.properties
+  instances: 10
+  proc: api
+  irc-channel: stream
+  app: public-api-strangler
+  auto-scale-down: false

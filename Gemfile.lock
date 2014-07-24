@@ -1,0 +1,15 @@
+GIT
+  remote: git@github.com:soundcloud/bucha.git
+  revision: 745e399a9d91cd02d3a3537dd1fe11ceb867d2f8
+  specs:
+    bucha (0.0.1)
+
+GEM
+  remote: https://rubygems.org/
+  specs:
+
+PLATFORMS
+  ruby
+
+DEPENDENCIES
+  bucha!
