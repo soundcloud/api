@@ -1,23 +1,17 @@
-package com.soudcloud.publicApiStrangler
 
 import com.soundcloud.scalakit.framework.FinagleBasedServer
 import com.soundcloud.jvmkit.config.BazookaConfig
 import com.soundcloud.scalakit.finagle.http.HttpServer
 import com.soudcloud.rateLimiting.framework.RateLimitComponent
+import com.soundcloud.bff.BffApp
+import com.soundcloud.bff.BazookaConfigComponent
+import com.soundcloud.bff.web.BffController
+import com.soudcloud.publicApiStrangler.PublicApiClientComponent
+import com.soudcloud.publicApiStrangler.DispatchToMothershipHandler
 
-object PublicApiStranglerApp extends FinagleBasedServer with PublicApiClientComponent with RateLimitComponent {
+class App extends BffApp {
 
-  override def config = new BazookaConfig
-
-  override def createRoutes(httpServer: HttpServer): Unit = {
-    val dispatchToPublicApiHandler = new DispatchToMothershipHandler(publicApiClient)
-    val healthCheckHandler = new HealthCheckHandler
-
-    httpServer.register("/-/health", healthCheckHandler)
-
-    httpServer.register("/oauth2/token", enforceMaxHitsPerHour(3) andThen dispatchToPublicApiHandler)
-
-    httpServer.registerFallback(enforceDefaultRateLimiting andThen dispatchToPublicApiHandler)
+  val app = new BffController with PublicApiClientComponent with BazookaConfigComponent {
+    override val fallbackHandler = Some(new DispatchToMothershipHandler(publicApiClient))
   }
-
 }
