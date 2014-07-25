@@ -11,7 +11,7 @@ import com.soudcloud.publicApiStrangler.DispatchToMothershipHandler
 
 class App extends BffApp {
 
-  val app = new BffController with PublicApiClientComponent with BazookaConfigComponent {
+  val app = new BazookaConfigComponent with BffController with PublicApiClientComponent {
     override val fallbackHandler = Some(new DispatchToMothershipHandler(publicApiClient))
   }
 }

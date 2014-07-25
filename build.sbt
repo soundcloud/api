@@ -26,5 +26,4 @@ libraryDependencies ++= Seq(
   "com.soundcloud" %% "bff"  			  % "0.4.14" exclude("org.slf4j", "slf4j-jdk14")
 )
 
-mainClass in Compile := Some("com.soudcloud.publicApiStrangler.PublicApiStranglerApp")
-
+mainClass in Compile := Some("com.soundcloud.bff.Main")
