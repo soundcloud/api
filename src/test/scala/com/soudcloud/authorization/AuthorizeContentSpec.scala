@@ -1,5 +1,6 @@
 package com.soudcloud.authorization
 
+import com.soudcloud.data.{XmlValue, JsonValue}
 import org.mockito.Mockito.verifyZeroInteractions
 
 import com.soundcloud.bff.BazookaConfigComponent
@@ -20,7 +21,7 @@ import com.soundcloud.scalakit.test.VerifiedMocks
 import com.twitter.util.Await
 import com.twitter.util.Future
 
-import play.api.libs.json.JsObject
+import play.api.libs.json.{JsValue, JsObject}
 
 class AuthorizeContentSpec extends UnitSpecification with Fixtures {
 
@@ -45,7 +46,6 @@ class AuthorizeContentSpec extends UnitSpecification with Fixtures {
   }
 
   trait TrackContext extends Context {
-    val content = singleTrack.toString
     val status = 200
     val urn = Urn("soundcloud:tracks:153896632")
     def policies: Policies
@@ -55,16 +55,33 @@ class AuthorizeContentSpec extends UnitSpecification with Fixtures {
         .thenReturn(Future(Seq(AuthorizationRules(urn, policies))))
   }
 
-  "renders the track if authorized" in new TrackContext {
-    lazy val policies = Policies(allowed, allowed)
-    lazy val trackPolicies = new TrackPolicies(policies)
-    lazy val authorizedTrackJson = trackPolicies.apply(session, singleTrack.as[JsObject])
+  "with json" >> {
+    "renders the track if authorized" in new TrackContext {
+      val content = singleTrackJson.toString
+      lazy val policies = Policies(allowed, allowed)
+      lazy val trackPolicies = new TrackPolicies(policies)
+      lazy val authorizedTrackJson = trackPolicies.apply(session, JsonValue(singleTrackJson))
 
-    authorizedResponse.statusCode mustEqual 200
-    authorizedResponse.getContentString mustEqual Json.stringify(authorizedTrackJson.get)
+      authorizedResponse.statusCode mustEqual 200
+      authorizedResponse.getContentString mustEqual Json.stringify(authorizedTrackJson.get.raw.asInstanceOf[JsValue])
+    }
+
+  }
+
+  "with xml" >> {
+    "renders the track if authorized" in new TrackContext {
+      val content = singleTrackXml.toString
+      lazy val policies = Policies(allowed, allowed)
+      lazy val trackPolicies = new TrackPolicies(policies)
+      lazy val authorizedTrackXml = trackPolicies.apply(session, XmlValue(singleTrackXml))
+
+      authorizedResponse.statusCode mustEqual 200
+      authorizedResponse.getContentString mustEqual authorizedTrackXml.get.raw.toString()
+    }
   }
 
   "renders not found if the track isn't authorized" in new TrackContext {
+    val content = singleTrackJson.toString
     lazy val policies = Policies(blocked, blocked)
 
     authorizedResponse.statusCode mustEqual 404

@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<user>
+  <id type="integer">183</id>
+  <kind>user</kind>
+  <permalink>forss</permalink>
+  <username>Forss</username>
+  <uri>https://api.soundcloud.com/users/183</uri>
+  <permalink-url>http://soundcloud.com/forss</permalink-url>
+  <avatar-url>https://i1.sndcdn.com/avatars-000012778523-59quu3-large.jpg?e76cf77</avatar-url>
+  <country>Germany</country>
+  <first-name>Eric</first-name>
+  <last-name>Wahlforss</last-name>
+  <full-name>Eric Wahlforss</full-name>
+  <description>Musician &amp; Founder/CTO SoundCloud</description>
+  <city>Berlin</city>
+  <discogs-name nil="true"></discogs-name>
+  <myspace-name nil="true"></myspace-name>
+  <website>http://forssmusic.com</website>
+  <website-title>Forss Official Site</website-title>
+  <online type="boolean">false</online>
+  <track-count type="integer">26</track-count>
+  <playlist-count type="integer">4</playlist-count>
+  <plan>Pro Plus</plan>
+  <public-favorites-count type="integer">321</public-favorites-count>
+  <followers-count type="integer">122758</followers-count>
+  <followings-count type="integer">1300</followings-count>
+  <subscriptions type="array">
+    <subscription>
+      <product>
+        <id>creator-pro-unlimited</id>
+        <name>Pro Unlimited</name>
+      </product>
+    </subscription>
+  </subscriptions>
+</user>
