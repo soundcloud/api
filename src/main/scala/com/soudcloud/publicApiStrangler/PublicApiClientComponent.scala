@@ -30,7 +30,7 @@ trait PublicApiClientComponent {
       .tracer(ZipkinTracer(cfg))
       .retries(3)
       .name(svcName)
-      .requestTimeout(40.seconds)
+      .requestTimeout(3.seconds)
       .tcpConnectTimeout(5.seconds)
       .build()
   }
