@@ -20,7 +20,6 @@
   <description>My 2003 debut album made on the road with a laptop and fake tickets.</description>
   <genre>Electronic</genre>
   <release>SK006</release>
-  <purchase-title nil="true"></purchase-title>
   <label-name>sonarkollektiv</label-name>
   <title>Soulhack</title>
   <release-year type="integer">2003</release-year>
@@ -57,7 +56,6 @@
       <downloadable type="boolean">true</downloadable>
       <purchase-url>http://sonarkollektiv.com/tracks/DE-P96-03-00040/</purchase-url>
       <label-id type="integer">1771</label-id>
-      <purchase-title nil="true"></purchase-title>
       <genre>Electronic</genre>
       <title>City Ports</title>
       <description>Intro from the Soulhack Album, originally created for a short movie.</description>
@@ -120,16 +118,13 @@
       <downloadable type="boolean">true</downloadable>
       <purchase-url>http://sonarkollektiv.com/tracks/DE-P96-02-01001/</purchase-url>
       <label-id type="integer">1771</label-id>
-      <purchase-title nil="true"></purchase-title>
       <genre>Electronic</genre>
       <title>Soulhack</title>
       <description>From the Soulhack album</description>
       <label-name>sonarkollektiv</label-name>
       <release>SK006</release>
       <track-type>original</track-type>
-      <key-signature></key-signature>
       <isrc>DE-P96-02-01001</isrc>
-      <video-url nil="true"></video-url>
       <bpm type="float">92.0</bpm>
       <release-year type="integer">2003</release-year>
       <release-month type="integer">6</release-month>
@@ -183,16 +178,13 @@
       <downloadable type="boolean">true</downloadable>
       <purchase-url>http://sonarkollektiv.com/tracks/DE-P96-03-00041/</purchase-url>
       <label-id type="integer">1771</label-id>
-      <purchase-title nil="true"></purchase-title>
       <genre>Electronic</genre>
       <title>Funk for Nerds</title>
       <description>From the Soulhack album</description>
       <label-name>sonarkollektiv</label-name>
       <release>SK006</release>
       <track-type>original</track-type>
-      <key-signature></key-signature>
       <isrc>DE-P96-03-00041</isrc>
-      <video-url nil="true"></video-url>
       <bpm type="float">130.0</bpm>
       <release-year type="integer">2003</release-year>
       <release-month type="integer">6</release-month>
@@ -246,7 +238,6 @@
       <downloadable type="boolean">true</downloadable>
       <purchase-url>http://sonarkollektiv.com/tracks/DE-P96-03-00042/</purchase-url>
       <label-id type="integer">1771</label-id>
-      <purchase-title nil="true"></purchase-title>
       <genre>Electronic</genre>
       <title>Flickermood</title>
       <description>From the Soulhack album,&#160;recently featured in this ad &lt;a href="https://www.dswshoes.com/tv_commercial.jsp?m=october2007" rel="nofollow" target="_blank"&gt;https://www.dswshoes.com/tv_commercial.jsp?m=october2007&lt;/a&gt;</description>
@@ -309,16 +300,13 @@
       <downloadable type="boolean">true</downloadable>
       <purchase-url>http://sonarkollektiv.com/tracks/DE-P96-03-00002/</purchase-url>
       <label-id type="integer">1771</label-id>
-      <purchase-title nil="true"></purchase-title>
       <genre>Electronic</genre>
       <title>Using Splashes</title>
       <description>From the Soulhack album</description>
       <label-name>sonarkollektiv</label-name>
       <release>SK006</release>
       <track-type>original</track-type>
-      <key-signature></key-signature>
       <isrc>DE-P96-03-00002</isrc>
-      <video-url nil="true"></video-url>
       <bpm type="float">106.0</bpm>
       <release-year type="integer">2003</release-year>
       <release-month type="integer">6</release-month>
@@ -372,7 +360,6 @@
       <downloadable type="boolean">true</downloadable>
       <purchase-url>http://sonarkollektiv.com/tracks/DE-P96-03-00043/</purchase-url>
       <label-id type="integer">1771</label-id>
-      <purchase-title nil="true"></purchase-title>
       <genre>Electronic</genre>
       <title>Journeyman</title>
       <description>This is a story of a young man, traveling ancient countrysides, looking for new emotions to experience.
@@ -433,9 +420,7 @@
       <label-name>sonarkollektiv</label-name>
       <release>SK006</release>
       <track-type>original</track-type>
-      <key-signature></key-signature>
       <isrc>DE-P96-03-00043</isrc>
-      <video-url nil="true"></video-url>
       <bpm type="float">110.0</bpm>
       <release-year type="integer">2003</release-year>
       <release-month type="integer">6</release-month>
@@ -489,16 +474,13 @@
       <downloadable type="boolean">true</downloadable>
       <purchase-url>http://sonarkollektiv.com/tracks/DE-P96-03-00044/</purchase-url>
       <label-id type="integer">1771</label-id>
-      <purchase-title nil="true"></purchase-title>
       <genre>Electronic</genre>
       <title>Atomised</title>
       <description>From the Soulhack album</description>
       <label-name>sonarkollektiv</label-name>
       <release>SK006</release>
       <track-type>original</track-type>
-      <key-signature></key-signature>
       <isrc>DE-P96-03-00044</isrc>
-      <video-url nil="true"></video-url>
       <bpm type="float">107.0</bpm>
       <release-year type="integer">2003</release-year>
       <release-month type="integer">6</release-month>
@@ -552,16 +534,13 @@
       <downloadable type="boolean">true</downloadable>
       <purchase-url>http://sonarkollektiv.com/tracks/DE-P96-03-00045/</purchase-url>
       <label-id type="integer">1771</label-id>
-      <purchase-title nil="true"></purchase-title>
       <genre>Electronic</genre>
       <title>Characteristics</title>
       <description>From the Soulhack album</description>
       <label-name>sonarkollektiv</label-name>
       <release>SK006</release>
       <track-type>original</track-type>
-      <key-signature></key-signature>
       <isrc>DE-P96-03-00045</isrc>
-      <video-url nil="true"></video-url>
       <bpm type="float">78.0</bpm>
       <release-year type="integer">2003</release-year>
       <release-month type="integer">6</release-month>
@@ -615,17 +594,14 @@
       <downloadable type="boolean">true</downloadable>
       <purchase-url>http://sonarkollektiv.com/tracks/DE-P96-03-00046/</purchase-url>
       <label-id type="integer">1771</label-id>
-      <purchase-title nil="true"></purchase-title>
       <genre>Electronic</genre>
       <title>Lost Through Inversion</title>
       <description>From the Soulhack album</description>
       <label-name>sonarkollektiv</label-name>
       <release>SK006</release>
       <track-type>original</track-type>
-      <key-signature></key-signature>
       <isrc>DE-P96-03-00046</isrc>
       <video-url>http://vimeo.com/3468915</video-url>
-      <bpm nil="true"></bpm>
       <release-year type="integer">2003</release-year>
       <release-month type="integer">6</release-month>
       <release-day type="integer">2</release-day>
@@ -678,16 +654,13 @@
       <downloadable type="boolean">true</downloadable>
       <purchase-url>http://sonarkollektiv.com/tracks/DE-P96-03-00047/</purchase-url>
       <label-id type="integer">1771</label-id>
-      <purchase-title nil="true"></purchase-title>
       <genre>Electronic</genre>
       <title>Tacit Knowledge</title>
       <description>From the Soulhack album</description>
       <label-name>sonarkollektiv</label-name>
       <release>SK006</release>
       <track-type>original</track-type>
-      <key-signature></key-signature>
       <isrc>DE-P96-03-00047</isrc>
-      <video-url nil="true"></video-url>
       <bpm type="float">74.0</bpm>
       <release-year type="integer">2003</release-year>
       <release-month type="integer">6</release-month>
@@ -741,7 +714,6 @@
       <downloadable type="boolean">true</downloadable>
       <purchase-url>http://sonarkollektiv.com/tracks/DE-P96-03-00048/</purchase-url>
       <label-id type="integer">1771</label-id>
-      <purchase-title nil="true"></purchase-title>
       <genre>Electronic</genre>
       <title>Paradigm Shift</title>
       <description>From the Soulhack album. There's a remix project for this track going on at http://forss.to/remix</description>
@@ -750,7 +722,6 @@
       <track-type>original</track-type>
       <key-signature></key-signature>
       <isrc>DE-P96-03-00048</isrc>
-      <video-url nil="true"></video-url>
       <bpm type="float">77.0</bpm>
       <release-year type="integer">2003</release-year>
       <release-month type="integer">6</release-month>

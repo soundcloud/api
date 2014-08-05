@@ -15,22 +15,8 @@
     <streamable type="boolean">true</streamable>
     <embeddable-by>all</embeddable-by>
     <downloadable type="boolean">false</downloadable>
-    <purchase-url nil="true"></purchase-url>
-    <label-id nil="true"></label-id>
-    <purchase-title nil="true"></purchase-title>
     <genre>castro</genre>
     <title>(Your) Hidden Agenda (is so Obvoius)</title>
-    <description></description>
-    <label-name nil="true"></label-name>
-    <release nil="true"></release>
-    <track-type nil="true"></track-type>
-    <key-signature nil="true"></key-signature>
-    <isrc nil="true"></isrc>
-    <video-url nil="true"></video-url>
-    <bpm nil="true"></bpm>
-    <release-year nil="true"></release-year>
-    <release-month nil="true"></release-month>
-    <release-day nil="true"></release-day>
     <original-format>mp3</original-format>
     <license>all-rights-reserved</license>
     <uri>https://api.soundcloud.com/tracks/160943944</uri>
@@ -44,7 +30,6 @@
       <avatar-url>https://i1.sndcdn.com/avatars-000039923266-yns41m-large.jpg?e76cf77</avatar-url>
     </user>
     <permalink-url>http://soundcloud.com/kongtiki/your-hidden-agenda-is-so-obvoius</permalink-url>
-    <artwork-url nil="true"></artwork-url>
     <waveform-url>https://w1.sndcdn.com/xhgYs2l7cZrB_m.png</waveform-url>
     <stream-url>https://api.soundcloud.com/tracks/160943944/stream</stream-url>
     <playback-count type="integer">0</playback-count>
@@ -68,22 +53,9 @@
     <streamable type="boolean">true</streamable>
     <embeddable-by>all</embeddable-by>
     <downloadable type="boolean">false</downloadable>
-    <purchase-url nil="true"></purchase-url>
-    <label-id nil="true"></label-id>
-    <purchase-title nil="true"></purchase-title>
     <genre>ska</genre>
     <title>Couldn't Get High/Nicco (Cover)</title>
     <description>A 2 song combined slightly stoopid cover</description>
-    <label-name nil="true"></label-name>
-    <release nil="true"></release>
-    <track-type nil="true"></track-type>
-    <key-signature nil="true"></key-signature>
-    <isrc nil="true"></isrc>
-    <video-url nil="true"></video-url>
-    <bpm nil="true"></bpm>
-    <release-year nil="true"></release-year>
-    <release-month nil="true"></release-month>
-    <release-day nil="true"></release-day>
     <original-format>mp3</original-format>
     <license>all-rights-reserved</license>
     <uri>https://api.soundcloud.com/tracks/160943940</uri>
@@ -97,7 +69,6 @@
       <avatar-url>https://i1.sndcdn.com/avatars-000032265169-wpvj96-large.jpg?e76cf77</avatar-url>
     </user>
     <permalink-url>http://soundcloud.com/thruthedread541/couldnt-get-highnicco-cover</permalink-url>
-    <artwork-url nil="true"></artwork-url>
     <waveform-url>https://w1.sndcdn.com/g5KJJBL5k4cR_m.png</waveform-url>
     <stream-url>https://api.soundcloud.com/tracks/160943940/stream</stream-url>
     <playback-count type="integer">0</playback-count>
@@ -116,27 +87,13 @@
     <state>finished</state>
     <original-content-size type="integer">7489860</original-content-size>
     <sharing>public</sharing>
-    <tag-list></tag-list>
     <permalink>na-mira-30-07-2014</permalink>
     <streamable type="boolean">true</streamable>
     <embeddable-by>all</embeddable-by>
     <downloadable type="boolean">false</downloadable>
-    <purchase-url nil="true"></purchase-url>
-    <label-id nil="true"></label-id>
-    <purchase-title nil="true"></purchase-title>
     <genre>Pop-Experimental</genre>
     <title>"Na Mira"</title>
     <description>www.quartonoveilda.blogspot.pt</description>
-    <label-name nil="true"></label-name>
-    <release nil="true"></release>
-    <track-type nil="true"></track-type>
-    <key-signature nil="true"></key-signature>
-    <isrc nil="true"></isrc>
-    <video-url nil="true"></video-url>
-    <bpm nil="true"></bpm>
-    <release-year nil="true"></release-year>
-    <release-month nil="true"></release-month>
-    <release-day nil="true"></release-day>
     <original-format>mp3</original-format>
     <license>all-rights-reserved</license>
     <uri>https://api.soundcloud.com/tracks/160943936</uri>
@@ -150,7 +107,6 @@
       <avatar-url>https://i1.sndcdn.com/avatars-000052192669-h3mong-large.jpg?e76cf77</avatar-url>
     </user>
     <permalink-url>http://soundcloud.com/quartonoveilda/na-mira-30-07-2014</permalink-url>
-    <artwork-url nil="true"></artwork-url>
     <waveform-url>https://w1.sndcdn.com/KBvHR3uuFF5f_m.png</waveform-url>
     <stream-url>https://api.soundcloud.com/tracks/160943936/stream</stream-url>
     <playback-count type="integer">0</playback-count>
@@ -169,27 +125,13 @@
     <state>finished</state>
     <original-content-size type="integer">3496612</original-content-size>
     <sharing>public</sharing>
-    <tag-list></tag-list>
     <permalink>la-llorona-remix</permalink>
     <streamable type="boolean">true</streamable>
     <embeddable-by>all</embeddable-by>
     <downloadable type="boolean">false</downloadable>
-    <purchase-url nil="true"></purchase-url>
-    <label-id nil="true"></label-id>
-    <purchase-title nil="true"></purchase-title>
     <genre>Instrumental</genre>
     <title>La Llorona remix</title>
     <description>instrumental</description>
-    <label-name nil="true"></label-name>
-    <release nil="true"></release>
-    <track-type nil="true"></track-type>
-    <key-signature nil="true"></key-signature>
-    <isrc nil="true"></isrc>
-    <video-url nil="true"></video-url>
-    <bpm nil="true"></bpm>
-    <release-year nil="true"></release-year>
-    <release-month nil="true"></release-month>
-    <release-day nil="true"></release-day>
     <original-format>mp3</original-format>
     <license>all-rights-reserved</license>
     <uri>https://api.soundcloud.com/tracks/160943935</uri>
@@ -203,7 +145,6 @@
       <avatar-url>https://i1.sndcdn.com/avatars-000023881548-u0i40a-large.jpg?e76cf77</avatar-url>
     </user>
     <permalink-url>http://soundcloud.com/matzenezz/la-llorona-remix</permalink-url>
-    <artwork-url nil="true"></artwork-url>
     <waveform-url>https://w1.sndcdn.com/p3spIQq1MCm0_m.png</waveform-url>
     <stream-url>https://api.soundcloud.com/tracks/160943935/stream</stream-url>
     <playback-count type="integer">0</playback-count>
@@ -222,27 +163,12 @@
     <state>finished</state>
     <original-content-size type="integer">75693081</original-content-size>
     <sharing>public</sharing>
-    <tag-list></tag-list>
     <permalink>1-2-3-jump</permalink>
     <streamable type="boolean">true</streamable>
     <embeddable-by>all</embeddable-by>
     <downloadable type="boolean">false</downloadable>
-    <purchase-url nil="true"></purchase-url>
-    <label-id nil="true"></label-id>
-    <purchase-title nil="true"></purchase-title>
     <genre>j</genre>
     <title>1 2 3 Jump</title>
-    <description></description>
-    <label-name nil="true"></label-name>
-    <release nil="true"></release>
-    <track-type nil="true"></track-type>
-    <key-signature nil="true"></key-signature>
-    <isrc nil="true"></isrc>
-    <video-url nil="true"></video-url>
-    <bpm nil="true"></bpm>
-    <release-year nil="true"></release-year>
-    <release-month nil="true"></release-month>
-    <release-day nil="true"></release-day>
     <original-format>aiff</original-format>
     <license>all-rights-reserved</license>
     <uri>https://api.soundcloud.com/tracks/160943934</uri>
@@ -275,27 +201,12 @@
     <state>finished</state>
     <original-content-size type="integer">2018875</original-content-size>
     <sharing>public</sharing>
-    <tag-list></tag-list>
     <permalink>mayonez-daleko-od-siebie</permalink>
     <streamable type="boolean">true</streamable>
     <embeddable-by>all</embeddable-by>
     <downloadable type="boolean">false</downloadable>
-    <purchase-url nil="true"></purchase-url>
-    <label-id nil="true"></label-id>
-    <purchase-title nil="true"></purchase-title>
     <genre>Rock</genre>
     <title>Mayonez - Daleko od siebie</title>
-    <description></description>
-    <label-name nil="true"></label-name>
-    <release nil="true"></release>
-    <track-type nil="true"></track-type>
-    <key-signature nil="true"></key-signature>
-    <isrc nil="true"></isrc>
-    <video-url nil="true"></video-url>
-    <bpm nil="true"></bpm>
-    <release-year nil="true"></release-year>
-    <release-month nil="true"></release-month>
-    <release-day nil="true"></release-day>
     <original-format>m4a</original-format>
     <license>all-rights-reserved</license>
     <uri>https://api.soundcloud.com/tracks/160943933</uri>
@@ -309,7 +220,6 @@
       <avatar-url>https://a1.sndcdn.com/images/default_avatar_large.png?e76cf77</avatar-url>
     </user>
     <permalink-url>http://soundcloud.com/jablek/mayonez-daleko-od-siebie</permalink-url>
-    <artwork-url nil="true"></artwork-url>
     <waveform-url>https://w1.sndcdn.com/ZR9CtDBOrdPk_m.png</waveform-url>
     <stream-url>https://api.soundcloud.com/tracks/160943933/stream</stream-url>
     <playback-count type="integer">0</playback-count>
@@ -328,27 +238,13 @@
     <state>finished</state>
     <original-content-size type="integer">6505604</original-content-size>
     <sharing>public</sharing>
-    <tag-list></tag-list>
     <permalink>rose-bleue</permalink>
     <streamable type="boolean">true</streamable>
     <embeddable-by>all</embeddable-by>
     <downloadable type="boolean">false</downloadable>
-    <purchase-url nil="true"></purchase-url>
-    <label-id nil="true"></label-id>
-    <purchase-title nil="true"></purchase-title>
     <genre>snecranagol</genre>
     <title>Rose bleue</title>
     <description>Track 42 (rose Bleue)</description>
-    <label-name nil="true"></label-name>
-    <release nil="true"></release>
-    <track-type nil="true"></track-type>
-    <key-signature nil="true"></key-signature>
-    <isrc nil="true"></isrc>
-    <video-url nil="true"></video-url>
-    <bpm nil="true"></bpm>
-    <release-year nil="true"></release-year>
-    <release-month nil="true"></release-month>
-    <release-day nil="true"></release-day>
     <original-format>mp3</original-format>
     <license>all-rights-reserved</license>
     <uri>https://api.soundcloud.com/tracks/160943931</uri>
@@ -362,7 +258,6 @@
       <avatar-url>https://i1.sndcdn.com/avatars-000093209862-4ym53w-large.jpg?e76cf77</avatar-url>
     </user>
     <permalink-url>http://soundcloud.com/logan-arcens/rose-bleue</permalink-url>
-    <artwork-url nil="true"></artwork-url>
     <waveform-url>https://w1.sndcdn.com/l23fgAyPZUpo_m.png</waveform-url>
     <stream-url>https://api.soundcloud.com/tracks/160943931/stream</stream-url>
     <playback-count type="integer">0</playback-count>
@@ -386,22 +281,8 @@
     <streamable type="boolean">true</streamable>
     <embeddable-by>all</embeddable-by>
     <downloadable type="boolean">false</downloadable>
-    <purchase-url nil="true"></purchase-url>
-    <label-id nil="true"></label-id>
-    <purchase-title nil="true"></purchase-title>
     <genre>Classical Guitar</genre>
     <title>BWV 998 - Prelude</title>
-    <description></description>
-    <label-name nil="true"></label-name>
-    <release nil="true"></release>
-    <track-type nil="true"></track-type>
-    <key-signature nil="true"></key-signature>
-    <isrc nil="true"></isrc>
-    <video-url nil="true"></video-url>
-    <bpm nil="true"></bpm>
-    <release-year nil="true"></release-year>
-    <release-month nil="true"></release-month>
-    <release-day nil="true"></release-day>
     <original-format>mp3</original-format>
     <license>all-rights-reserved</license>
     <uri>https://api.soundcloud.com/tracks/160943930</uri>
@@ -415,7 +296,6 @@
       <avatar-url>https://i1.sndcdn.com/avatars-000096934797-1hdel2-large.jpg?e76cf77</avatar-url>
     </user>
     <permalink-url>http://soundcloud.com/andantelargo/bwv-998-prelude</permalink-url>
-    <artwork-url nil="true"></artwork-url>
     <waveform-url>https://w1.sndcdn.com/26twOaGL7LCw_m.png</waveform-url>
     <stream-url>https://api.soundcloud.com/tracks/160943930/stream</stream-url>
     <playback-count type="integer">0</playback-count>
