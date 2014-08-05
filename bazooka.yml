@@ -5,3 +5,4 @@ api:
   irc-channel: stream
   app: public-api-strangler
   auto-scale-down: false
+  zone: db
