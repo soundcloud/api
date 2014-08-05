@@ -1,6 +1,6 @@
 api:
   env: production.properties
-  instances: 40
+  instances: 60
   proc: api
   irc-channel: stream
   app: public-api-strangler
