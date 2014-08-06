@@ -1,0 +1,3 @@
+specs:
+  script: make ci
+  label: intint
