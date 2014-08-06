@@ -26,11 +26,11 @@ trait PublicApiClientComponent {
       .hostConnectionMaxLifeTime(30.seconds)
       .dest(cfg.get("MOTHERSHIP_API_SERVER"))
       .keepAlive(true)
-      .failFast(false)
+      .failFast(true)
       .tracer(ZipkinTracer(cfg))
       .retries(3)
       .name(svcName)
-      .requestTimeout(3.seconds)
+      .requestTimeout(10.seconds)
       .tcpConnectTimeout(5.seconds)
       .build()
   }
