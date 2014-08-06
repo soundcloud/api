@@ -1,0 +1,307 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<tracks next-href="https://api.soundcloud.com/tracks.xml?consumer_key=apigee&amp;filter=all&amp;limit=50&amp;offset=50&amp;order=original" type="array">
+  <track>
+    <kind>track</kind>
+    <id type="integer">160943944</id>
+    <created-at type="datetime">2014-07-30T12:40:05Z</created-at>
+    <user-id type="integer">15319249</user-id>
+    <duration type="integer">92533</duration>
+    <commentable type="boolean">true</commentable>
+    <state>finished</state>
+    <original-content-size type="integer">3846386</original-content-size>
+    <sharing>public</sharing>
+    <tag-list>israelvis "life but how to live it?" "kong tiki" "boss tuneage" punk trondheim oslo band</tag-list>
+    <permalink>your-hidden-agenda-is-so-obvoius</permalink>
+    <streamable type="boolean">true</streamable>
+    <embeddable-by>all</embeddable-by>
+    <downloadable type="boolean">false</downloadable>
+    <genre>castro</genre>
+    <title>(Your) Hidden Agenda (is so Obvoius)</title>
+    <original-format>mp3</original-format>
+    <license>all-rights-reserved</license>
+    <uri>https://api.soundcloud.com/tracks/160943944</uri>
+    <user>
+      <id type="integer">15319249</id>
+      <kind>user</kind>
+      <permalink>kongtiki</permalink>
+      <username>Kong Tiki</username>
+      <uri>https://api.soundcloud.com/users/15319249</uri>
+      <permalink-url>http://soundcloud.com/kongtiki</permalink-url>
+      <avatar-url>https://i1.sndcdn.com/avatars-000039923266-yns41m-large.jpg?e76cf77</avatar-url>
+    </user>
+    <permalink-url>http://soundcloud.com/kongtiki/your-hidden-agenda-is-so-obvoius</permalink-url>
+    <waveform-url>https://w1.sndcdn.com/xhgYs2l7cZrB_m.png</waveform-url>
+    <stream-url>https://api.soundcloud.com/tracks/160943944/stream</stream-url>
+    <playback-count type="integer">0</playback-count>
+    <download-count type="integer">0</download-count>
+    <favoritings-count type="integer">0</favoritings-count>
+    <comment-count type="integer">0</comment-count>
+    <attachments-uri>https://api.soundcloud.com/tracks/160943944/attachments</attachments-uri>
+  </track>
+  <track>
+    <kind>track</kind>
+    <id type="integer">160943940</id>
+    <created-at type="datetime">2014-07-30T12:40:01Z</created-at>
+    <user-id type="integer">25337937</user-id>
+    <duration type="integer">202101</duration>
+    <commentable type="boolean">true</commentable>
+    <state>finished</state>
+    <original-content-size type="integer">4853468</original-content-size>
+    <sharing>public</sharing>
+    <tag-list>Acoustic</tag-list>
+    <permalink>couldnt-get-highnicco-cover</permalink>
+    <streamable type="boolean">true</streamable>
+    <embeddable-by>all</embeddable-by>
+    <downloadable type="boolean">false</downloadable>
+    <genre>ska</genre>
+    <title>Couldn't Get High/Nicco (Cover)</title>
+    <description>A 2 song combined slightly stoopid cover</description>
+    <original-format>mp3</original-format>
+    <license>all-rights-reserved</license>
+    <uri>https://api.soundcloud.com/tracks/160943940</uri>
+    <user>
+      <id type="integer">25337937</id>
+      <kind>user</kind>
+      <permalink>thruthedread541</permalink>
+      <username>Thru the Dread</username>
+      <uri>https://api.soundcloud.com/users/25337937</uri>
+      <permalink-url>http://soundcloud.com/thruthedread541</permalink-url>
+      <avatar-url>https://i1.sndcdn.com/avatars-000032265169-wpvj96-large.jpg?e76cf77</avatar-url>
+    </user>
+    <permalink-url>http://soundcloud.com/thruthedread541/couldnt-get-highnicco-cover</permalink-url>
+    <waveform-url>https://w1.sndcdn.com/g5KJJBL5k4cR_m.png</waveform-url>
+    <stream-url>https://api.soundcloud.com/tracks/160943940/stream</stream-url>
+    <playback-count type="integer">0</playback-count>
+    <download-count type="integer">0</download-count>
+    <favoritings-count type="integer">0</favoritings-count>
+    <comment-count type="integer">0</comment-count>
+    <attachments-uri>https://api.soundcloud.com/tracks/160943940/attachments</attachments-uri>
+  </track>
+  <track>
+    <kind>track</kind>
+    <id type="integer">160943936</id>
+    <created-at type="datetime">2014-07-30T12:39:59Z</created-at>
+    <user-id type="integer">8086816</user-id>
+    <duration type="integer">187289</duration>
+    <commentable type="boolean">true</commentable>
+    <state>finished</state>
+    <original-content-size type="integer">7489860</original-content-size>
+    <sharing>public</sharing>
+    <permalink>na-mira-30-07-2014</permalink>
+    <streamable type="boolean">true</streamable>
+    <embeddable-by>all</embeddable-by>
+    <downloadable type="boolean">false</downloadable>
+    <genre>Pop-Experimental</genre>
+    <title>"Na Mira"</title>
+    <description>www.quartonoveilda.blogspot.pt</description>
+    <original-format>mp3</original-format>
+    <license>all-rights-reserved</license>
+    <uri>https://api.soundcloud.com/tracks/160943936</uri>
+    <user>
+      <id type="integer">8086816</id>
+      <kind>user</kind>
+      <permalink>quartonoveilda</permalink>
+      <username>Quarto Nove Ilda.</username>
+      <uri>https://api.soundcloud.com/users/8086816</uri>
+      <permalink-url>http://soundcloud.com/quartonoveilda</permalink-url>
+      <avatar-url>https://i1.sndcdn.com/avatars-000052192669-h3mong-large.jpg?e76cf77</avatar-url>
+    </user>
+    <permalink-url>http://soundcloud.com/quartonoveilda/na-mira-30-07-2014</permalink-url>
+    <waveform-url>https://w1.sndcdn.com/KBvHR3uuFF5f_m.png</waveform-url>
+    <stream-url>https://api.soundcloud.com/tracks/160943936/stream</stream-url>
+    <playback-count type="integer">0</playback-count>
+    <download-count type="integer">0</download-count>
+    <favoritings-count type="integer">0</favoritings-count>
+    <comment-count type="integer">0</comment-count>
+    <attachments-uri>https://api.soundcloud.com/tracks/160943936/attachments</attachments-uri>
+  </track>
+  <track>
+    <kind>track</kind>
+    <id type="integer">160943935</id>
+    <created-at type="datetime">2014-07-30T12:39:57Z</created-at>
+    <user-id type="integer">15145503</user-id>
+    <duration type="integer">87439</duration>
+    <commentable type="boolean">true</commentable>
+    <state>finished</state>
+    <original-content-size type="integer">3496612</original-content-size>
+    <sharing>public</sharing>
+    <permalink>la-llorona-remix</permalink>
+    <streamable type="boolean">true</streamable>
+    <embeddable-by>all</embeddable-by>
+    <downloadable type="boolean">false</downloadable>
+    <genre>Instrumental</genre>
+    <title>La Llorona remix</title>
+    <description>instrumental</description>
+    <original-format>mp3</original-format>
+    <license>all-rights-reserved</license>
+    <uri>https://api.soundcloud.com/tracks/160943935</uri>
+    <user>
+      <id type="integer">15145503</id>
+      <kind>user</kind>
+      <permalink>matzenezz</permalink>
+      <username>MatzeNezZ</username>
+      <uri>https://api.soundcloud.com/users/15145503</uri>
+      <permalink-url>http://soundcloud.com/matzenezz</permalink-url>
+      <avatar-url>https://i1.sndcdn.com/avatars-000023881548-u0i40a-large.jpg?e76cf77</avatar-url>
+    </user>
+    <permalink-url>http://soundcloud.com/matzenezz/la-llorona-remix</permalink-url>
+    <waveform-url>https://w1.sndcdn.com/p3spIQq1MCm0_m.png</waveform-url>
+    <stream-url>https://api.soundcloud.com/tracks/160943935/stream</stream-url>
+    <playback-count type="integer">0</playback-count>
+    <download-count type="integer">0</download-count>
+    <favoritings-count type="integer">0</favoritings-count>
+    <comment-count type="integer">0</comment-count>
+    <attachments-uri>https://api.soundcloud.com/tracks/160943935/attachments</attachments-uri>
+  </track>
+  <track>
+    <kind>track</kind>
+    <id type="integer">160943934</id>
+    <created-at type="datetime">2014-07-30T12:39:56Z</created-at>
+    <user-id type="integer">105813976</user-id>
+    <duration type="integer">286145</duration>
+    <commentable type="boolean">true</commentable>
+    <state>finished</state>
+    <original-content-size type="integer">75693081</original-content-size>
+    <sharing>public</sharing>
+    <permalink>1-2-3-jump</permalink>
+    <streamable type="boolean">true</streamable>
+    <embeddable-by>all</embeddable-by>
+    <downloadable type="boolean">false</downloadable>
+    <genre>j</genre>
+    <title>1 2 3 Jump</title>
+    <original-format>aiff</original-format>
+    <license>all-rights-reserved</license>
+    <uri>https://api.soundcloud.com/tracks/160943934</uri>
+    <user>
+      <id type="integer">105813976</id>
+      <kind>user</kind>
+      <permalink>dr-mushroom-1</permalink>
+      <username>Dr.mushroom</username>
+      <uri>https://api.soundcloud.com/users/105813976</uri>
+      <permalink-url>http://soundcloud.com/dr-mushroom-1</permalink-url>
+      <avatar-url>https://i1.sndcdn.com/avatars-000096052986-xpzbzh-large.jpg?e76cf77</avatar-url>
+    </user>
+    <permalink-url>http://soundcloud.com/dr-mushroom-1/1-2-3-jump</permalink-url>
+    <artwork-url>https://i1.sndcdn.com/artworks-000086645557-7h7p4j-large.jpg?e76cf77</artwork-url>
+    <waveform-url>https://w1.sndcdn.com/Ht1TI1nsK9Lm_m.png</waveform-url>
+    <stream-url>https://api.soundcloud.com/tracks/160943934/stream</stream-url>
+    <playback-count type="integer">0</playback-count>
+    <download-count type="integer">0</download-count>
+    <favoritings-count type="integer">0</favoritings-count>
+    <comment-count type="integer">0</comment-count>
+    <attachments-uri>https://api.soundcloud.com/tracks/160943934/attachments</attachments-uri>
+  </track>
+  <track>
+    <kind>track</kind>
+    <id type="integer">160943933</id>
+    <created-at type="datetime">2014-07-30T12:39:55Z</created-at>
+    <user-id type="integer">54282921</user-id>
+    <duration type="integer">241053</duration>
+    <commentable type="boolean">true</commentable>
+    <state>finished</state>
+    <original-content-size type="integer">2018875</original-content-size>
+    <sharing>public</sharing>
+    <permalink>mayonez-daleko-od-siebie</permalink>
+    <streamable type="boolean">true</streamable>
+    <embeddable-by>all</embeddable-by>
+    <downloadable type="boolean">false</downloadable>
+    <genre>Rock</genre>
+    <title>Mayonez - Daleko od siebie</title>
+    <original-format>m4a</original-format>
+    <license>all-rights-reserved</license>
+    <uri>https://api.soundcloud.com/tracks/160943933</uri>
+    <user>
+      <id type="integer">54282921</id>
+      <kind>user</kind>
+      <permalink>jablek</permalink>
+      <username>Jablek</username>
+      <uri>https://api.soundcloud.com/users/54282921</uri>
+      <permalink-url>http://soundcloud.com/jablek</permalink-url>
+      <avatar-url>https://a1.sndcdn.com/images/default_avatar_large.png?e76cf77</avatar-url>
+    </user>
+    <permalink-url>http://soundcloud.com/jablek/mayonez-daleko-od-siebie</permalink-url>
+    <waveform-url>https://w1.sndcdn.com/ZR9CtDBOrdPk_m.png</waveform-url>
+    <stream-url>https://api.soundcloud.com/tracks/160943933/stream</stream-url>
+    <playback-count type="integer">0</playback-count>
+    <download-count type="integer">0</download-count>
+    <favoritings-count type="integer">0</favoritings-count>
+    <comment-count type="integer">0</comment-count>
+    <attachments-uri>https://api.soundcloud.com/tracks/160943933/attachments</attachments-uri>
+  </track>
+  <track>
+    <kind>track</kind>
+    <id type="integer">160943931</id>
+    <created-at type="datetime">2014-07-30T12:39:53Z</created-at>
+    <user-id type="integer">33459051</user-id>
+    <duration type="integer">162679</duration>
+    <commentable type="boolean">true</commentable>
+    <state>finished</state>
+    <original-content-size type="integer">6505604</original-content-size>
+    <sharing>public</sharing>
+    <permalink>rose-bleue</permalink>
+    <streamable type="boolean">true</streamable>
+    <embeddable-by>all</embeddable-by>
+    <downloadable type="boolean">false</downloadable>
+    <genre>snecranagol</genre>
+    <title>Rose bleue</title>
+    <description>Track 42 (rose Bleue)</description>
+    <original-format>mp3</original-format>
+    <license>all-rights-reserved</license>
+    <uri>https://api.soundcloud.com/tracks/160943931</uri>
+    <user>
+      <id type="integer">33459051</id>
+      <kind>user</kind>
+      <permalink>logan-arcens</permalink>
+      <username>Snecranagol</username>
+      <uri>https://api.soundcloud.com/users/33459051</uri>
+      <permalink-url>http://soundcloud.com/logan-arcens</permalink-url>
+      <avatar-url>https://i1.sndcdn.com/avatars-000093209862-4ym53w-large.jpg?e76cf77</avatar-url>
+    </user>
+    <permalink-url>http://soundcloud.com/logan-arcens/rose-bleue</permalink-url>
+    <waveform-url>https://w1.sndcdn.com/l23fgAyPZUpo_m.png</waveform-url>
+    <stream-url>https://api.soundcloud.com/tracks/160943931/stream</stream-url>
+    <playback-count type="integer">0</playback-count>
+    <download-count type="integer">0</download-count>
+    <favoritings-count type="integer">0</favoritings-count>
+    <comment-count type="integer">0</comment-count>
+    <attachments-uri>https://api.soundcloud.com/tracks/160943931/attachments</attachments-uri>
+  </track>
+  <track>
+    <kind>track</kind>
+    <id type="integer">160943930</id>
+    <created-at type="datetime">2014-07-30T12:39:52Z</created-at>
+    <user-id type="integer">106793547</user-id>
+    <duration type="integer">164926</duration>
+    <commentable type="boolean">true</commentable>
+    <state>finished</state>
+    <original-content-size type="integer">2746884</original-content-size>
+    <sharing>public</sharing>
+    <tag-list>Classical Bach</tag-list>
+    <permalink>bwv-998-prelude</permalink>
+    <streamable type="boolean">true</streamable>
+    <embeddable-by>all</embeddable-by>
+    <downloadable type="boolean">false</downloadable>
+    <genre>Classical Guitar</genre>
+    <title>BWV 998 - Prelude</title>
+    <original-format>mp3</original-format>
+    <license>all-rights-reserved</license>
+    <uri>https://api.soundcloud.com/tracks/160943930</uri>
+    <user>
+      <id type="integer">106793547</id>
+      <kind>user</kind>
+      <permalink>andantelargo</permalink>
+      <username>AndanteLargo</username>
+      <uri>https://api.soundcloud.com/users/106793547</uri>
+      <permalink-url>http://soundcloud.com/andantelargo</permalink-url>
+      <avatar-url>https://i1.sndcdn.com/avatars-000096934797-1hdel2-large.jpg?e76cf77</avatar-url>
+    </user>
+    <permalink-url>http://soundcloud.com/andantelargo/bwv-998-prelude</permalink-url>
+    <waveform-url>https://w1.sndcdn.com/26twOaGL7LCw_m.png</waveform-url>
+    <stream-url>https://api.soundcloud.com/tracks/160943930/stream</stream-url>
+    <playback-count type="integer">0</playback-count>
+    <download-count type="integer">0</download-count>
+    <favoritings-count type="integer">0</favoritings-count>
+    <comment-count type="integer">0</comment-count>
+    <attachments-uri>https://api.soundcloud.com/tracks/160943930/attachments</attachments-uri>
+  </track>
+</tracks>
