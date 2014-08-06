@@ -24,5 +24,10 @@ class DispatchToMothershipHandlerSpec extends UnitSpecification {
         Await.result(handler(request)) must be_==(response)
       }
     }
+
+    "returns 500 for failed requests" in new Context {
+      mothershipClient(any[Request]) returns (Future.exception(new IllegalStateException))
+      Await.result(handler(request)).statusCode mustEqual 500
+    }
   }
 }
