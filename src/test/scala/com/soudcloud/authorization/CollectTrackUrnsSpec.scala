@@ -6,7 +6,7 @@ import com.soundcloud.scalakit.Urn
 
 class CollectTrackUrnsSpec extends UnitSpecification with Fixtures {
 
-  "ext‰ract urns from a valid json" >> {
+  "extract urns from a valid json" >> {
     "single track" in {
       CollectTrackUrns(singleTrackJson.toString) match {
         case Some((wrapper, urns)) =>
