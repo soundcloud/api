@@ -1,6 +1,6 @@
 package com.soudcloud.data
 
-import com.soundcloud.bff.authorization.Policies
+import com.soundcloud.jvmkit.policies.ContentPolicies
 import com.soundcloud.scalakit.json.Json
 import play.api.libs.json._
 
@@ -47,8 +47,8 @@ case class JsonValue(override val raw: JsValue) extends ParsedValue {
     }
   }
 
-  override def + (policies: Policies) =
-    new JsonValue(raw.as[JsObject] + policiesField(policies))
+  override def + (policies: ContentPolicies) =
+    new JsonValue(raw.as[JsObject] + policyField(policies))
 
-  private def policiesField(policies: Policies) = "policies" -> Json.toJsValue(policies)
+  private def policyField(policy: ContentPolicies) = "policy" -> Json.toJsValue(policy)
 }

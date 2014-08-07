@@ -1,13 +1,12 @@
 package com.soudcloud.authorization
 
-import com.soudcloud.data.{ParsedValue}
-import com.soundcloud.bff.authorization.AuthorizationRules
-import com.soundcloud.scalakit.Urn
-import com.soundcloud.scalakit.UserSession
+import com.soudcloud.data.ParsedValue
+import com.soundcloud.jvmkit.policies.ContentAuthorization
+import com.soundcloud.scalakit.{Urn, UserSession}
 
 object ApplyTrackPolicies {
 
-  def apply(session: UserSession, data: ParsedValue, rules: Seq[AuthorizationRules]) =
+  def apply(session: UserSession, data: ParsedValue, rules: Seq[ContentAuthorization]) =
     policiesVisitor(session, policiesByUrn(rules)).apply(data)
 
   private def policiesVisitor(session: UserSession, policiesByUrn: Map[Urn, TrackPolicies]) =
@@ -16,6 +15,6 @@ object ApplyTrackPolicies {
         policiesByUrn(urn).apply(session, track)
     }
 
-  private def policiesByUrn(rules: Seq[AuthorizationRules]) =
-    rules.map(rule => rule.urn -> new TrackPolicies(rule.policies)).toMap
+  private def policiesByUrn(authorizations: Seq[ContentAuthorization]) =
+    authorizations.map(authorization => authorization.getUrn -> new TrackPolicies(authorization.getPolicy)).toMap
 }

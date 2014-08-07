@@ -1,15 +1,14 @@
 package com.soudcloud.authorization
 
-import com.soudcloud.data.{ParsedValue}
-import com.soundcloud.bff.authorization.Policies
-import com.soundcloud.bff.authorization.Policies.blocked
+import com.soudcloud.data.ParsedValue
+import com.soundcloud.jvmkit.policies.ContentPolicies
 import com.soundcloud.scalakit.UserSession
 
-class TrackPolicies(policies: Policies) {
+class TrackPolicies(policy: ContentPolicies) {
 
   def apply(session: UserSession, track: ParsedValue): Option[ParsedValue] =
-    if (policies.playback != blocked && policies.metadata != blocked)
-      Some(track + policies)
+    if (policy != ContentPolicies.BLOCK)
+      Some(track + policy)
     else
       None
 }
