@@ -23,7 +23,7 @@ resolvers ++= Seq(
 
 libraryDependencies ++= Seq(
   "com.twitter"    %% "finagle-memcached" % "6.18.0" exclude("org.slf4j", "slf4j-jdk14"),
-  "com.soundcloud" %% "bff"  			  % "0.4.14" exclude("org.slf4j", "slf4j-jdk14")
+  "com.soundcloud" %% "bff"  			        % "0.4.22" exclude("org.slf4j", "slf4j-jdk14")
 )
 
 mainClass in Compile := Some("com.soundcloud.bff.Main")

@@ -2,8 +2,7 @@ package com.soudcloud.authorization
 
 import com.soudcloud.data.ParsedValue
 import com.soundcloud.bff.authorization.ContentAuthorizationService
-import com.soundcloud.bff.finagle.{Request => BffRequest}
-import com.soundcloud.bff.finagle.ResponseBuilder
+import com.soundcloud.bff.finagle.{ResponseBuilder, Request => BffRequest}
 import com.soundcloud.bff.web.UserAuthenticationComponent
 import com.soundcloud.scalakit.Urn
 import com.twitter.util.Future
