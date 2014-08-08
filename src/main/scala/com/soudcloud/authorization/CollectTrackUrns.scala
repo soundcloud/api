@@ -1,48 +1,41 @@
 package com.soudcloud.authorization
 
-import com.soudcloud.data.{Parser, ParsedValue}
-
 import scala.collection.mutable.ListBuffer
 import scala.util.Failure
 import scala.util.Success
 import scala.util.Try
 
 import com.soundcloud.scalakit.Urn
+import com.soundcloud.scalakit.json.Json
+
+import play.api.libs.json.JsObject
+import play.api.libs.json.JsValue
 
 object CollectTrackUrns {
 
-  def apply(content: String): Option[(ParsedValue, List[Urn])] =
-    if(needsParsing(content)) {
-      Try(Parser(content)) match {
-        case Success(parsedContent) => collectUrns(parsedContent)
-        case Failure(_) => None
-      }
-    } else {
-      None
+  def apply(content: String): Option[(JsValue, List[Urn])] =
+    Try(Json.fromJson(content)) match {
+      case Success(json) => collectUrns(json)
+      case Failure(_) => None
     }
 
-  // don't waste precious CPU cycles if there's no tracks to parse
-  private def needsParsing(content: String) =
-    content.indexOf("<kind>track</kind>") > 0 ||
-      content.indexOf("\"kind\":\"track\"") > 0
-
-  private def collectUrns(parsedResponse: ParsedValue) =
-    extractUrns(parsedResponse) match {
+  private def collectUrns(json: JsValue) =
+    extractUrns(json) match {
       case Nil =>
         None
       case urns =>
-        Some(parsedResponse, urns)
+        Some(json, urns)
     }
 
-  private def extractUrns(parsedResponse: ParsedValue) = {
+  private def extractUrns(json: JsValue) = {
     val urns = ListBuffer[Urn]()
-    urnsVisitor(urns).apply(parsedResponse)
+    urnsVisitor(urns).apply(json)
     urns.toList
   }
 
   private def urnsVisitor(urns: ListBuffer[Urn]) =
     new TracksVisitor {
-      def visit(urn: Urn, track: ParsedValue) = {
+      def visit(urn: Urn, track: JsObject) = {
         urns += urn
         Some(track)
       }

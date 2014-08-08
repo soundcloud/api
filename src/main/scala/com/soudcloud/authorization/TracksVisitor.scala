@@ -1,46 +1,57 @@
 package com.soudcloud.authorization
 
-import com.soudcloud.data.ParsedValue
 import com.soundcloud.scalakit.Urn
+
+import play.api.libs.json.JsArray
+import play.api.libs.json.JsArray
+import play.api.libs.json.JsObject
+import play.api.libs.json.JsObject
+import play.api.libs.json.JsObject
+import play.api.libs.json.JsString
+import play.api.libs.json.JsValue
 
 trait TracksVisitor {
 
-  def apply(data: ParsedValue): Option[ParsedValue] =
-    data match {
-      case (a: ParsedValue) if a.isArray =>
-        visitArray(a)
-      case (potentialTrack: ParsedValue) if isTrack(potentialTrack) =>
-        visitTrack(potentialTrack)
-      case (obj: ParsedValue) if obj.isObject =>
-        visitObject(obj)
+  def apply(json: JsValue): Option[JsValue] = {
+    json match {
+      case json: JsArray =>
+        visitArray(json)
+      case json: JsObject if (isTrack(json)) =>
+        visitTrack(json)
+      case json: JsObject =>
+        visitObject(json)
       case other =>
         Some(other)
     }
+  }
 
-  protected def visit(urn: Urn, track: ParsedValue): Option[ParsedValue]
+  protected def visit(urn: Urn, track: JsObject): Option[JsObject]
 
-  private def visitTrack(data: ParsedValue) = {
-    val id = data.value("id").get
+  private def visitArray(json: JsArray) = {
+    val items = json.as[List[JsValue]].map(apply(_)).flatten
+    Some(JsArray(items))
+  }
+
+  private def visitTrack(json: JsObject) = {
+    val id = (json \ "id").as[Int]
     val urn = Urn(s"soundcloud:tracks:$id")
-    visit(urn, data)
+    visit(urn, json)
   }
 
-  private def visitArray(data: ParsedValue): Option[ParsedValue] = {
-    val items = data.children.map(apply).flatten.toList
-    Some(data.withChildren(items))
-  }
-
-  private def visitObject(data: ParsedValue): Option[ParsedValue] =
-    visitFields(data).toList match {
+  private def visitObject(json: JsObject) =
+    visitFields(json).toList match {
       case Nil =>
         None
       case fields =>
-        Some(data.withChildren(fields))
+        Some(JsObject(fields))
     }
 
-  private def visitFields(data: ParsedValue): Seq[ParsedValue] =
-    data.children.map(e => apply(e)).flatten
+  private def visitFields(json: JsObject) =
+    json.fields.toMap.mapValues(apply(_)).collect {
+      case (name, Some(value)) =>
+        name -> value
+    }
 
-  private def isTrack(data: ParsedValue) =
-    data.isObject && data.value("kind") == Some("track")
+  private def isTrack(json: JsObject) =
+    json.fieldSet.contains(("kind", JsString("track")))
 }

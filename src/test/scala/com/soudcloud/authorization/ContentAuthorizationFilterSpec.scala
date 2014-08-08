@@ -23,7 +23,7 @@ class ContentAuthorizationFilterSpec extends UnitSpecification with Fixtures {
     val request = mock[HandlerRequest]
 
     val status = 200
-    val content = playlistJson.toString
+    val content = playlist.toString
 
     val response = {
       val builder = new ResponseBuilder
