@@ -1,13 +1,9 @@
 package com.soudcloud.authorization
 
 import org.mockito.Mockito.verifyZeroInteractions
-
 import com.soundcloud.bff.BazookaConfigComponent
 import com.soundcloud.bff.BffController
-import com.soundcloud.bff.authorization.AuthorizationRules
 import com.soundcloud.bff.authorization.ContentAuthorizationService
-import com.soundcloud.bff.authorization.Policies
-import com.soundcloud.bff.authorization.Policies._
 import com.soundcloud.bff.finagle.{Request => BffRequest}
 import com.soundcloud.bff.finagle.ResponseBuilder
 import com.soundcloud.bff.test.UnitSpecification
@@ -19,8 +15,10 @@ import com.soundcloud.scalakit.json.Json
 import com.soundcloud.scalakit.test.VerifiedMocks
 import com.twitter.util.Await
 import com.twitter.util.Future
-
 import play.api.libs.json.JsObject
+import com.soundcloud.jvmkit.policies.ContentPolicies
+import com.soundcloud.jvmkit.policies.ContentAuthorization
+import com.soundcloud.jvmkit.policies.Reasons
 
 class AuthorizeContentSpec extends UnitSpecification with Fixtures {
 
@@ -48,15 +46,15 @@ class AuthorizeContentSpec extends UnitSpecification with Fixtures {
     val content = singleTrack.toString
     val status = 200
     val urn = Urn("soundcloud:tracks:153896632")
-    def policies: Policies
+    def policies: ContentPolicies
 
     override def before =
       when(contentAuthorization.findRulesApplicableTo(session, Seq(urn)))
-        .thenReturn(Future(Seq(AuthorizationRules(urn, policies))))
+        .thenReturn(Future(Seq(new ContentAuthorization(urn, policies, Reasons.GEO))))
   }
 
   "renders the track if authorized" in new TrackContext {
-    lazy val policies = Policies(allowed, allowed)
+    lazy val policies = ContentPolicies.ALLOW
     lazy val trackPolicies = new TrackPolicies(policies)
     lazy val authorizedTrackJson = trackPolicies.apply(session, singleTrack.as[JsObject])
 
@@ -65,7 +63,7 @@ class AuthorizeContentSpec extends UnitSpecification with Fixtures {
   }
 
   "renders not found if the track isn't authorized" in new TrackContext {
-    lazy val policies = Policies(blocked, blocked)
+    lazy val policies = ContentPolicies.BLOCK
 
     authorizedResponse.statusCode mustEqual 404
     authorizedResponse.getContentString mustEqual ""
