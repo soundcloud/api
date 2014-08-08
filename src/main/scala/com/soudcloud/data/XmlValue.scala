@@ -1,6 +1,6 @@
 package com.soudcloud.data
 
-import com.soundcloud.jvmkit.policies.ContentPolicies
+import com.soundcloud.bff.authorization.Policies
 
 import scala.xml.{Elem, Node}
 
@@ -11,7 +11,7 @@ case class XmlValue(override val raw: Node) extends ParsedValue {
 
   def stringify = raw.toString()
 
-  override def + (policy: ContentPolicies) = this.withChildren(children ++ policiesField(policy))
+  override def + (policies: Policies) = this.withChildren(children ++ policiesField(policies))
 
   override def value(fieldName: String) = Some((raw \ fieldName).text)
 
@@ -24,10 +24,13 @@ case class XmlValue(override val raw: Node) extends ParsedValue {
     new XmlValue(buildElem(fields.asInstanceOf[Seq[XmlValue]]))
   }
 
-  private def policiesField(policy: ContentPolicies): Seq[ParsedValue] =
+  private def policiesField(policies: Policies): Seq[ParsedValue] =
     Seq(
       new XmlValue( // MUAHAHUAHUAHUA
-        <policy>{policy.getPrintName}</policy>
+        <policies>
+          <playback>{policies.playback}</playback>
+          <metadata>{policies.metadata}</metadata>
+        </policies>
       )
     )
 

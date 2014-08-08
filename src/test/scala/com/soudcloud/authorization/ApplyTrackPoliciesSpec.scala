@@ -1,10 +1,13 @@
 package com.soudcloud.authorization
 
-import com.soudcloud.data.{JsonValue, ParsedValue}
+import com.soudcloud.data.{ParsedValue, JsonValue}
+import com.soundcloud.bff.authorization.AuthorizationRules
+import com.soundcloud.bff.authorization.Policies._
 import com.soundcloud.bff.test.UnitSpecification
-import com.soundcloud.jvmkit.policies.{ContentAuthorization, ContentPolicies, Reasons}
-import com.soundcloud.scalakit.{Urn, UserSession}
+import com.soundcloud.scalakit.Urn
+import com.soundcloud.scalakit.UserSession
 import play.api.libs.json.JsObject
+import com.soundcloud.bff.authorization.Policies
 
 class ApplyTrackPoliciesSpec extends UnitSpecification with Fixtures {
 
@@ -14,7 +17,7 @@ class ApplyTrackPoliciesSpec extends UnitSpecification with Fixtures {
       tracksArrayJson.as[List[JsObject]]
         .map(track => (track \ "id").as[Int])
         .map(id => Urn(s"soundcloud:tracks:$id"))
-    def rules: List[ContentAuthorization]
+    def rules: List[AuthorizationRules]
 
     def tracksArray = new JsonValue(tracksArrayJson)
 
@@ -32,7 +35,7 @@ class ApplyTrackPoliciesSpec extends UnitSpecification with Fixtures {
     trait EverythingAuthorized extends Context {
       def rules =
         for (urn <- urns) yield {
-          new ContentAuthorization(urn, ContentPolicies.ALLOW, Reasons.GEO)
+          new AuthorizationRules(urn, Policies(allowed, allowed))
         }
     }
 
@@ -45,9 +48,9 @@ class ApplyTrackPoliciesSpec extends UnitSpecification with Fixtures {
       def rules =
         for (urn <- urns) yield {
           if (authorized.contains(urn))
-            new ContentAuthorization(urn, ContentPolicies.ALLOW, Reasons.GEO)
+            new AuthorizationRules(urn, Policies(allowed, allowed))
           else
-            new ContentAuthorization(urn, ContentPolicies.BLOCK, Reasons.GEO)
+            new AuthorizationRules(urn, Policies(blocked, blocked))
         }
     }
 

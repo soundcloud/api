@@ -1,10 +1,12 @@
 package com.soudcloud.authorization
 
-import com.soudcloud.data.{JsonValue, XmlValue}
+import com.soudcloud.data.{XmlValue, JsonValue}
+import com.soundcloud.bff.authorization.Policies
+import com.soundcloud.bff.authorization.Policies.allowed
+import com.soundcloud.bff.authorization.Policies.blocked
 import com.soundcloud.bff.test.UnitSpecification
-import com.soundcloud.jvmkit.policies.ContentPolicies
-import com.soundcloud.jvmkit.policies.ContentPolicies.{ALLOW, BLOCK}
 import com.soundcloud.scalakit.UserSession
+
 import play.api.libs.json.JsObject
 
 import scala.xml.Node
@@ -13,8 +15,8 @@ class TrackPoliciesSpec extends UnitSpecification with Fixtures {
 
   trait Context extends Scope {
     val session = mock[UserSession]
-    def policy(value: ContentPolicies) =
-      new TrackPolicies(value)
+    def policiesFor(playback: String, metadata: String) =
+      new TrackPolicies(Policies(playback, metadata))
   }
 
   "with some xml" >> {
@@ -23,19 +25,35 @@ class TrackPoliciesSpec extends UnitSpecification with Fixtures {
     }
 
     "adds the policies field if the track is authorized" in new XmlContext {
-      val xml = policy(ALLOW).
+      val xml = policiesFor(playback = allowed, metadata = allowed).
         apply(session, singleTrack).get.
         raw.asInstanceOf[Node]
 
-      (xml \ "policy").text mustEqual "ALLOW"
+      (xml \ "policies" \ "playback").text mustEqual allowed
+      (xml \ "policies" \ "metadata").text mustEqual allowed
       (xml \ "user-id").text mustEqual "22346297"
     }
 
     "returns empty if the track isn't authorized" >> {
 
       "playback unauthorized" in new XmlContext {
-        val xml = policy(BLOCK)
-          .apply(session, singleTrack)
+        val xml =
+          policiesFor(playback = blocked, metadata = allowed)
+            .apply(session, singleTrack)
+        xml must beEmpty
+      }
+
+      "metadata unauthorized" in new XmlContext {
+        val xml =
+          policiesFor(playback = allowed, metadata = blocked)
+            .apply(session, singleTrack)
+        xml must beEmpty
+      }
+
+      "playback and metadata unauthorized" in new XmlContext {
+        val xml =
+          policiesFor(playback = blocked, metadata = blocked)
+            .apply(session, singleTrack)
         xml must beEmpty
       }
     }
@@ -47,19 +65,34 @@ class TrackPoliciesSpec extends UnitSpecification with Fixtures {
     }
 
     "adds the policies field if the track is authorized" in new JsonContext {
-      val json = policy(ALLOW).
+      val json = policiesFor(playback = allowed, metadata = allowed).
         apply(session, singleTrack).get.
         raw.asInstanceOf[JsObject]
 
       (json \ "user_id").toString() mustEqual "22346297"
-      (json \ "policy").as[String] mustEqual "ALLOW"
+      (json \ "policies" \ "playback").as[String] mustEqual allowed
+      (json \ "policies" \ "metadata").as[String] mustEqual allowed
     }
 
     "returns empty if the track isn't authorized" >> {
 
       "playback unauthorized" in new JsonContext {
         val json =
-          policy(BLOCK)
+          policiesFor(playback = blocked, metadata = allowed)
+            .apply(session, singleTrack)
+        json must beEmpty
+      }
+
+      "metadata unauthorized" in new JsonContext {
+        val json =
+          policiesFor(playback = allowed, metadata = blocked)
+            .apply(session, singleTrack)
+        json must beEmpty
+      }
+
+      "playback and metadata unauthorized" in new JsonContext {
+        val json =
+          policiesFor(playback = blocked, metadata = blocked)
             .apply(session, singleTrack)
         json must beEmpty
       }
