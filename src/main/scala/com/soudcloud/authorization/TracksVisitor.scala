@@ -10,44 +10,47 @@ import play.api.libs.json.JsObject
 import play.api.libs.json.JsString
 import play.api.libs.json.JsValue
 
-trait TracksVisitor {
+class TracksVisitor(val json: JsValue) {
 
-  def apply(json: JsValue): Option[JsValue] = {
+  type VisitTrack = (Urn, JsObject) => Option[JsObject]
+
+  def apply(visit: VisitTrack): Option[JsValue] =
+    apply(json, visit)
+
+  private def apply(json: JsValue, visit: VisitTrack): Option[JsValue] = {
     json match {
       case json: JsArray =>
-        visitArray(json)
+        visitArray(json, visit)
       case json: JsObject if (isTrack(json)) =>
-        visitTrack(json)
+        visitTrack(json, visit)
       case json: JsObject =>
-        visitObject(json)
+        visitObject(json, visit)
       case other =>
         Some(other)
     }
   }
 
-  protected def visit(urn: Urn, track: JsObject): Option[JsObject]
-
-  private def visitArray(json: JsArray) = {
-    val items = json.as[List[JsValue]].map(apply(_)).flatten
+  private def visitArray(json: JsArray, visit: VisitTrack) = {
+    val items = json.as[List[JsValue]].map(apply(_, visit)).flatten
     Some(JsArray(items))
   }
 
-  private def visitTrack(json: JsObject) = {
+  private def visitTrack(json: JsObject, visit: VisitTrack) = {
     val id = (json \ "id").as[Int]
     val urn = Urn(s"soundcloud:tracks:$id")
     visit(urn, json)
   }
 
-  private def visitObject(json: JsObject) =
-    visitFields(json).toList match {
+  private def visitObject(json: JsObject, visit: VisitTrack) =
+    visitFields(json, visit).toList match {
       case Nil =>
         None
       case fields =>
         Some(JsObject(fields))
     }
 
-  private def visitFields(json: JsObject) =
-    json.fields.toMap.mapValues(apply(_)).collect {
+  private def visitFields(json: JsObject, visit: VisitTrack) =
+    json.fields.toMap.mapValues(apply(_, visit)).collect {
       case (name, Some(value)) =>
         name -> value
     }

@@ -13,31 +13,27 @@ import play.api.libs.json.JsValue
 
 object CollectTrackUrns {
 
-  def apply(content: String): Option[(JsValue, List[Urn])] =
+  def apply(content: String): Option[(TracksVisitor, List[Urn])] =
     Try(Json.fromJson(content)) match {
-      case Success(json) => collectUrns(json)
+      case Success(json) => collectUrns(new TracksVisitor(json))
       case Failure(_) => None
     }
 
-  private def collectUrns(json: JsValue) =
-    extractUrns(json) match {
+  private def collectUrns(visitor: TracksVisitor) =
+    extractUrns(visitor) match {
       case Nil =>
         None
       case urns =>
-        Some(json, urns)
+        Some(visitor, urns)
     }
 
-  private def extractUrns(json: JsValue) = {
+  private def extractUrns(visitor: TracksVisitor) = {
     val urns = ListBuffer[Urn]()
-    urnsVisitor(urns).apply(json)
-    urns.toList
-  }
-
-  private def urnsVisitor(urns: ListBuffer[Urn]) =
-    new TracksVisitor {
-      def visit(urn: Urn, track: JsObject) = {
+    visitor.apply {
+      case (urn, track) =>
         urns += urn
         Some(track)
-      }
     }
+    urns.toList
+  }
 }

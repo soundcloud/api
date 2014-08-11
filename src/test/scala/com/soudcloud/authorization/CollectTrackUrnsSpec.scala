@@ -9,8 +9,8 @@ class CollectTrackUrnsSpec extends UnitSpecification with Fixtures {
   "extract urns from a valid json" >> {
     "single track" in {
       CollectTrackUrns(singleTrack.toString) match {
-        case Some((json, urns)) =>
-          json mustEqual singleTrack
+        case Some((visitor, urns)) =>
+          visitor.json mustEqual singleTrack
           urns mustEqual List(Urn("soundcloud:tracks:153896632"))
         case other =>
           ko
@@ -19,8 +19,8 @@ class CollectTrackUrnsSpec extends UnitSpecification with Fixtures {
 
     "tracks array" in {
       CollectTrackUrns(tracksArray.toString) match {
-        case Some((json, urns)) =>
-          json mustEqual tracksArray
+        case Some((visitor, urns)) =>
+          visitor.json mustEqual tracksArray
           urns mustEqual
             List(
               Urn("soundcloud:tracks:49438146"),
@@ -33,8 +33,8 @@ class CollectTrackUrnsSpec extends UnitSpecification with Fixtures {
 
     "playlist" in {
       CollectTrackUrns(playlist.toString) match {
-        case Some((json, urns)) =>
-          json mustEqual playlist
+        case Some((visitor, urns)) =>
+          visitor.json mustEqual playlist
           urns mustEqual
             List(
               Urn("soundcloud:tracks:290"),

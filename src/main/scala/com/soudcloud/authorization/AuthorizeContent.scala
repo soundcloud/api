@@ -16,14 +16,14 @@ class AuthorizeContent(
 
   def apply(request: BffRequest, status: Int, content: String): Future[ResponseBuilder] =
     CollectTrackUrns(content) match {
-      case Some((json, urns)) => authorize(request, status, json, urns)
+      case Some((visitor, urns)) => authorize(request, status, visitor, urns)
       case None => Future(render.body(content).status(status))
     }
 
-  private def authorize(request: BffRequest, status: Int, content: JsValue, urns: List[Urn]) =
+  private def authorize(request: BffRequest, status: Int, visitor: TracksVisitor, urns: List[Urn]) =
     userAuthentication.withUserSession(request) { session =>
       contentAuthorization.findRulesApplicableTo(session, urns).map { rules =>
-        ApplyTrackPolicies(session, content, rules)
+        ApplyTrackPolicies(session, visitor, rules)
           .map(Json.stringify)
           .map(render.body(_).status(status))
           .getOrElse(render.notFound)
