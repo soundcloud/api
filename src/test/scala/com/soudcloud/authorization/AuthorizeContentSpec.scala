@@ -4,7 +4,7 @@ import org.mockito.Mockito.verifyZeroInteractions
 import com.soundcloud.bff.BazookaConfigComponent
 import com.soundcloud.bff.BffController
 import com.soundcloud.bff.authorization.ContentAuthorizationService
-import com.soundcloud.bff.finagle.{Request => BffRequest}
+import com.soundcloud.bff.finagle.{ Request => BffRequest }
 import com.soundcloud.bff.finagle.ResponseBuilder
 import com.soundcloud.bff.test.UnitSpecification
 import com.soundcloud.bff.web.UserAuthenticationComponent
@@ -42,7 +42,7 @@ class AuthorizeContentSpec extends UnitSpecification with Fixtures {
     lazy val authorizedResponse = Await.result(authorize.map(_.build))
   }
 
-  trait TrackContext extends Context {
+  trait JsonTrackContext extends Context {
     val content = singleTrack.toString
     val status = 200
     val urn = Urn("soundcloud:tracks:153896632")
@@ -53,16 +53,41 @@ class AuthorizeContentSpec extends UnitSpecification with Fixtures {
         .thenReturn(Future(Seq(new ContentAuthorization(urn, policies, Reasons.GEO))))
   }
 
-  "renders the track if authorized" in new TrackContext {
+  "renders the json track if authorized" in new JsonTrackContext {
     lazy val policies = ContentPolicies.ALLOW
-    lazy val trackPolicies = new TrackPolicies(policies)
-    lazy val authorizedTrackJson = trackPolicies.apply(session, singleTrack.as[JsObject])
+    lazy val authorizedTrackJson = new JsonTrack(singleTrack).withPolicies(policies)
 
     authorizedResponse.statusCode mustEqual 200
-    authorizedResponse.getContentString mustEqual Json.stringify(authorizedTrackJson.get)
+    authorizedResponse.getContentString mustEqual Json.stringify(authorizedTrackJson)
   }
 
-  "renders not found if the track isn't authorized" in new TrackContext {
+  "renders not found if the json track isn't authorized" in new JsonTrackContext {
+    lazy val policies = ContentPolicies.BLOCK
+
+    authorizedResponse.statusCode mustEqual 404
+    authorizedResponse.getContentString mustEqual ""
+  }
+
+  trait XmlTrackContext extends Context {
+    val content = singleTrackXml.toString
+    val status = 200
+    val urn = Urn("soundcloud:tracks:153896632")
+    def policies: ContentPolicies
+
+    override def before =
+      when(contentAuthorization.findRulesApplicableTo(session, Seq(urn)))
+        .thenReturn(Future(Seq(new ContentAuthorization(urn, policies, Reasons.GEO))))
+  }
+
+  "renders the xml track if authorized" in new XmlTrackContext {
+    lazy val policies = ContentPolicies.ALLOW
+    lazy val authorizedTrackXml = new XmlTrack(singleTrackXml).withPolicies(policies)
+
+    authorizedResponse.statusCode mustEqual 200
+    authorizedResponse.getContentString mustEqual authorizedTrackXml.toString
+  }
+
+  "renders not found if the xml track isn't authorized" in new XmlTrackContext {
     lazy val policies = ContentPolicies.BLOCK
 
     authorizedResponse.statusCode mustEqual 404
