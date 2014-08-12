@@ -30,5 +30,11 @@ class ResponseSpec extends UnitSpecification with Fixtures {
       val response = Response(callbackBody).withBody(newBody).build
       response.getContentString mustEqual s"""/**/$name($newBody);"""
     }
+    
+    "supports response with parenthesis" in {
+      val body = "this is a (response) with parenthesis"
+      val callbackBody = s"""/**/jsonp1407857287982($body);"""
+      Response(callbackBody).content mustEqual body
+    }
   }
 }
