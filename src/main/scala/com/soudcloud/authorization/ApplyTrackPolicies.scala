@@ -5,18 +5,23 @@ import com.soundcloud.scalakit.UserSession
 import play.api.libs.json.JsObject
 import play.api.libs.json.JsValue
 import com.soundcloud.jvmkit.policies.ContentAuthorization
+import com.soundcloud.jvmkit.policies.ContentPolicies
 
 object ApplyTrackPolicies {
 
-  def apply(session: UserSession, json: JsValue, rules: Seq[ContentAuthorization]) =
-    policiesVisitor(session, policiesByUrn(rules)).apply(json)
+  def apply(session: UserSession, visitor: TracksVisitor, rules: Seq[ContentAuthorization]) =
+    visit(session, visitor, policiesByUrn(rules))
 
-  private def policiesVisitor(session: UserSession, policiesByUrn: Map[Urn, TrackPolicies]) =
-    new TracksVisitor {
-      def visit(urn: Urn, track: JsObject) =
-        policiesByUrn(urn).apply(session, track)
+  private def visit(session: UserSession, visitor: TracksVisitor, policiesByUrn: Map[Urn, ContentPolicies]) =
+    visitor.apply {
+      case (urn, track) =>
+        val policies = policiesByUrn(urn)
+        if (policies != ContentPolicies.BLOCK)
+          Some(track.withPolicies(policies))
+        else
+          None
     }
 
   private def policiesByUrn(rules: Seq[ContentAuthorization]) =
-    rules.map(rule => rule.getUrn -> new TrackPolicies(rule.getPolicy)).toMap
+    rules.map(rule => rule.getUrn -> rule.getPolicy).toMap
 }

@@ -10,17 +10,15 @@ import play.api.libs.json.JsObject
 import play.api.libs.json.JsObject
 import play.api.libs.json.JsValue
 
-class TracksVisitorSpec extends UnitSpecification with Fixtures {
+class TracksJsonVisitorSpec extends UnitSpecification with Fixtures {
 
   trait Context extends Scope {
-    val visited = ListBuffer[(Urn, JsObject)]()
-    val visitor =
-      new TracksVisitor {
-        override def visit(urn: Urn, track: JsObject) = {
-          visited += urn -> track
-          Some(track)
-        }
-      }
+    val visited = ListBuffer[(Urn, JsValue)]()
+
+    def visit(urn: Urn, track: JsonTrack) = {
+      visited += urn -> track.content
+      Some(track.content)
+    }
     def urnsAndTracks(tracks: List[JsValue]) =
       for (track <- tracks) yield {
         val id = (track \ "id").as[Int]
@@ -32,31 +30,27 @@ class TracksVisitorSpec extends UnitSpecification with Fixtures {
   "visits all track objects" >> {
 
     "single track json" in new Context {
-      visitor.apply(singleTrack) mustEqual Some(singleTrack)
+      new TracksJsonVisitor(singleTrack).apply(visit) mustEqual Some(singleTrack)
       visited.toList mustEqual urnsAndTracks(List(singleTrack))
     }
 
     "playlist json" in new Context {
-      visitor.apply(playlist) mustEqual Some(playlist)
+      new TracksJsonVisitor(playlist).apply(visit) mustEqual Some(playlist)
       val tracks = (playlist \ "tracks").as[List[JsObject]]
       visited.toList mustEqual urnsAndTracks(tracks)
     }
 
     "tracks array json" in new Context {
-      visitor.apply(tracksArray) mustEqual Some(tracksArray)
+      new TracksJsonVisitor(tracksArray).apply(visit) mustEqual Some(tracksArray)
       visited.toList mustEqual urnsAndTracks(tracksArray.as[List[JsObject]])
     }
   }
 
   trait NoTracksContext extends Scope {
-    val visitor =
-      new TracksVisitor {
-        override def visit(urn: Urn, track: JsObject) =
-          throw new IllegalStateException("")
-      }
+    def visit(urn: Urn, track: JsonTrack) = ???
   }
 
   "doesn't invoke the visit method if the json hasn't a track" in new NoTracksContext {
-    visitor.apply(user) mustEqual Some(user)
+    new TracksJsonVisitor(user).apply(visit) mustEqual Some(user)
   }
 }

@@ -4,40 +4,40 @@ import scala.collection.mutable.ListBuffer
 import scala.util.Failure
 import scala.util.Success
 import scala.util.Try
-
 import com.soundcloud.scalakit.Urn
 import com.soundcloud.scalakit.json.Json
-
 import play.api.libs.json.JsObject
 import play.api.libs.json.JsValue
+import scala.xml.XML
 
 object CollectTrackUrns {
 
-  def apply(content: String): Option[(JsValue, List[Urn])] =
-    Try(Json.fromJson(content)) match {
-      case Success(json) => collectUrns(json)
-      case Failure(_) => None
+  def apply(content: String): Option[(TracksVisitor, List[Urn])] =
+    visitorFor(content).map {
+      visitor => (visitor, extractUrns(visitor))
     }
 
-  private def collectUrns(json: JsValue) =
-    extractUrns(json) match {
-      case Nil =>
-        None
-      case urns =>
-        Some(json, urns)
-    }
+  private def visitorFor(content: String) =
+    if (hasJsonTrack(content))
+      Some(new TracksJsonVisitor(Json.fromJson(content)))
+    else if (hasXmlTrack(content))
+      Some(new TracksXmlVisitor(XML.loadString(content)))
+    else
+      None
 
-  private def extractUrns(json: JsValue) = {
+  private def hasXmlTrack(content: String) =
+    content.indexOf("<kind>track</kind>") > 0
+
+  private def hasJsonTrack(content: String) =
+    content.indexOf("\"kind\":\"track\"") > 0
+
+  private def extractUrns(visitor: TracksVisitor): List[Urn] = {
     val urns = ListBuffer[Urn]()
-    urnsVisitor(urns).apply(json)
+    visitor.apply {
+      case (urn, track) =>
+        urns += urn
+        Some(track.content)
+    }
     urns.toList
   }
-
-  private def urnsVisitor(urns: ListBuffer[Urn]) =
-    new TracksVisitor {
-      def visit(urn: Urn, track: JsObject) = {
-        urns += urn
-        Some(track)
-      }
-    }
 }

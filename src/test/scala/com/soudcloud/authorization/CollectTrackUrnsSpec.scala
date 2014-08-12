@@ -6,11 +6,11 @@ import com.soundcloud.scalakit.Urn
 
 class CollectTrackUrnsSpec extends UnitSpecification with Fixtures {
 
-  "extract urns from a valid json" >> {
+  "extract urns from json" >> {
     "single track" in {
       CollectTrackUrns(singleTrack.toString) match {
-        case Some((json, urns)) =>
-          json mustEqual singleTrack
+        case Some((visitor, urns)) =>
+          visitor.wrapped mustEqual singleTrack
           urns mustEqual List(Urn("soundcloud:tracks:153896632"))
         case other =>
           ko
@@ -19,8 +19,8 @@ class CollectTrackUrnsSpec extends UnitSpecification with Fixtures {
 
     "tracks array" in {
       CollectTrackUrns(tracksArray.toString) match {
-        case Some((json, urns)) =>
-          json mustEqual tracksArray
+        case Some((visitor, urns)) =>
+          visitor.wrapped mustEqual tracksArray
           urns mustEqual
             List(
               Urn("soundcloud:tracks:49438146"),
@@ -33,8 +33,8 @@ class CollectTrackUrnsSpec extends UnitSpecification with Fixtures {
 
     "playlist" in {
       CollectTrackUrns(playlist.toString) match {
-        case Some((json, urns)) =>
-          json mustEqual playlist
+        case Some((visitor, urns)) =>
+          visitor.wrapped mustEqual playlist
           urns mustEqual
             List(
               Urn("soundcloud:tracks:290"),
@@ -51,13 +51,75 @@ class CollectTrackUrnsSpec extends UnitSpecification with Fixtures {
           ko
       }
     }
+
+    "invalid json" in {
+      CollectTrackUrns("bad bad json") must beEmpty
+    }
+
+    "json without tracks" in {
+      CollectTrackUrns(user.toString) must beEmpty
+    }
+  }
+  
+  "extract urns from xml" >> {
+    "single track" in {
+      CollectTrackUrns(singleTrackXml.toString) match {
+        case Some((visitor, urns)) =>
+          visitor.wrapped mustEqual singleTrackXml
+          urns mustEqual List(Urn("soundcloud:tracks:153896632"))
+        case other =>
+          ko
+      }
+    }
+
+    "tracks array" in {
+      CollectTrackUrns(tracksArrayXml.toString) match {
+        case Some((visitor, urns)) =>
+          visitor.wrapped mustEqual tracksArrayXml
+          urns mustEqual
+            List(
+              Urn("soundcloud:tracks:160943944"),
+              Urn("soundcloud:tracks:160943940"),
+              Urn("soundcloud:tracks:160943936"),
+              Urn("soundcloud:tracks:160943935"),
+              Urn("soundcloud:tracks:160943934"),
+              Urn("soundcloud:tracks:160943933"),
+              Urn("soundcloud:tracks:160943931"),
+              Urn("soundcloud:tracks:160943930"))
+        case other =>
+          ko
+      }
+    }
+
+    "playlist" in {
+      CollectTrackUrns(playlistXml.toString) match {
+        case Some((visitor, urns)) =>
+          visitor.wrapped mustEqual playlistXml
+          urns mustEqual
+            List(
+              Urn("soundcloud:tracks:290"),
+              Urn("soundcloud:tracks:291"),
+              Urn("soundcloud:tracks:292"),
+              Urn("soundcloud:tracks:293"),
+              Urn("soundcloud:tracks:294"),
+              Urn("soundcloud:tracks:295"),
+              Urn("soundcloud:tracks:296"),
+              Urn("soundcloud:tracks:297"),
+              Urn("soundcloud:tracks:298"),
+              Urn("soundcloud:tracks:299"),
+              Urn("soundcloud:tracks:300"))
+        case other =>
+          ko
+      }
+    }
+
+    "invalid xml" in {
+      CollectTrackUrns("bad bad xlm (tautology)") must beEmpty
+    }
+
+    "xml without tracks" in {
+      CollectTrackUrns(userXml.toString) must beEmpty
+    }
   }
 
-  "return empty for an invalid json" in {
-    CollectTrackUrns("bad bad json") must beEmpty
-  }
-
-  "return empty if the json doesn't have tracks" in {
-    CollectTrackUrns(user.toString) must beEmpty
-  }
 }

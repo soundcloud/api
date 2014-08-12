@@ -21,7 +21,7 @@ class ApplyTrackPoliciesSpec extends UnitSpecification with Fixtures {
 
     lazy val authorizedTrackIds =
       extractIds(
-        ApplyTrackPolicies(session, tracksArray, rules).get
+        ApplyTrackPolicies(session, new TracksJsonVisitor(tracksArray), rules).get
       )
 
     def extractIds(json: JsValue) =
