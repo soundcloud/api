@@ -3,10 +3,10 @@ package com.soudcloud.authorization
 import com.soundcloud.bff.finagle.ResponseBuilder
 import com.soundcloud.scalakit.json.Json
 
-object RenderContent {
+object StringifyContent {
 
   def apply[T <: Track](content: T#Content) =
-    new ResponseBuilder().body(stringify(content))
+    stringify(content)
 
   private def stringify(content: Track#Content) =
     content match {
