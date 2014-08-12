@@ -36,7 +36,7 @@ object CollectTrackUrns {
     visitor.apply {
       case (urn, track) =>
         urns += urn
-        Some(track.wrapped)
+        Some(track.content)
     }
     urns.toList
   }

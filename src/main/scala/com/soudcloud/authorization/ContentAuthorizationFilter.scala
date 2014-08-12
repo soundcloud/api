@@ -1,5 +1,6 @@
 package com.soudcloud.authorization
 
+import com.soundcloud.scalakit.UTF8
 import java.nio.charset.Charset
 
 import scala.collection.JavaConversions.iterableAsScalaIterable
@@ -35,7 +36,7 @@ class ContentAuthorizationFilter(
     }
 
   private def body(response: Response) =
-    response.getContent.toString(Charset.forName("UTF-8"))
+    response.getContent.toString(UTF8)
 
   private def headersMap(response: Response) =
     response.headers.map(e => e.getKey -> e.getValue).toMap

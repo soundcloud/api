@@ -7,40 +7,32 @@ import com.soundcloud.scalakit.json.Json
 import scala.xml.Node
 import scala.xml.Elem
 
-trait Track {
+sealed trait Track {
 
-  type T
+  type Content
 
-  def wrapped: T
-  def withPolicies(policies: ContentPolicies): T
-
-  def stringify: String = ???
+  def content: Content
+  def withPolicies(policies: ContentPolicies): Content
 }
 
-case class JsonTrack(wrapped: JsValue) extends Track {
+case class JsonTrack(content: JsValue) extends Track {
 
-  type T = JsValue
+  type Content = JsValue
 
   def withPolicies(policies: ContentPolicies) =
-    JsObject(wrapped.as[JsObject].fields :+ policyField(policies))
+    JsObject(content.as[JsObject].fields :+ policyField(policies))
 
   private def policyField(policies: ContentPolicies) =
     "policy" -> Json.toJsValue(policies)
 }
 
-case class XmlTrack(wrapped: Node) extends Track {
+case class XmlTrack(content: Node) extends Track {
 
-  type T = Node
+  type Content = Node
 
   def withPolicies(policies: ContentPolicies) = {
-    val policy =
-      <policy>
-        { policies.getPrintName }
-      </policy>
-
-    val children = wrapped.child.toList :+ policy
-    new Elem(wrapped.prefix, wrapped.label, wrapped.attributes, wrapped.scope, true, children: _*)
+    val policy = <policy>{policies.getPrintName}</policy>
+    val children = content.child.toList :+ policy
+    new Elem(content.prefix, content.label, content.attributes, content.scope, true, children: _*)
   }
-
 }
-

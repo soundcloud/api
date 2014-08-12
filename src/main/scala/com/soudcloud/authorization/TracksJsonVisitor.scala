@@ -8,7 +8,7 @@ import play.api.libs.json.JsString
 
 class TracksJsonVisitor(val wrapped: JsValue) extends TracksVisitor {
   
-  type T = JsonTrack
+  type TrackType = JsonTrack
 
   def apply(visit: VisitTrack): Option[JsValue] =
     apply(wrapped, visit)

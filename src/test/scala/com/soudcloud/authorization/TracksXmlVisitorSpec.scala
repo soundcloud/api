@@ -16,8 +16,8 @@ class TracksXmlVisitorSpec extends UnitSpecification with Fixtures {
     val visited = ListBuffer[(Urn, Node)]()
 
     def visit(urn: Urn, track: XmlTrack) = {
-      visited += urn -> track.wrapped
-      Some(track.wrapped)
+      visited += urn -> track.content
+      Some(track.content)
     }
     def urnsAndTracks(tracks: List[Node]) =
       for (track <- tracks) yield {

@@ -16,8 +16,8 @@ class TracksJsonVisitorSpec extends UnitSpecification with Fixtures {
     val visited = ListBuffer[(Urn, JsValue)]()
 
     def visit(urn: Urn, track: JsonTrack) = {
-      visited += urn -> track.wrapped
-      Some(track.wrapped)
+      visited += urn -> track.content
+      Some(track.content)
     }
     def urnsAndTracks(tracks: List[JsValue]) =
       for (track <- tracks) yield {

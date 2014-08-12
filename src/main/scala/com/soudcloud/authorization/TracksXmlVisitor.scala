@@ -11,7 +11,7 @@ import scala.xml.Text
 
 class TracksXmlVisitor(val wrapped: Node) extends TracksVisitor {
 
-  type T = XmlTrack
+  type TrackType = XmlTrack
 
   def apply(visit: VisitTrack): Option[Node] =
     apply(wrapped, visit)

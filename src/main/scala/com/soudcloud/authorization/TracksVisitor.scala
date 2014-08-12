@@ -12,12 +12,12 @@ import play.api.libs.json.JsValue
 
 trait TracksVisitor {
   
-  type T <: Track
+  type TrackType <: Track
   
-  type VisitTrack = (Urn, T) => Option[T#T]
+  type VisitTrack = (Urn, TrackType) => Option[TrackType#Content]
   
-  def apply(visit: VisitTrack): Option[T#T]
+  def apply(visit: VisitTrack): Option[TrackType#Content]
   
-  def wrapped: T#T
+  def wrapped: TrackType#Content
 }
 

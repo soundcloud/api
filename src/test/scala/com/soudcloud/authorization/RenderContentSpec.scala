@@ -14,7 +14,7 @@ class RenderContentSpec extends UnitSpecification with Fixtures {
   "renders xml" >> {
     "body" in {
       val response = RenderContent[XmlTrack](singleTrackXml).build
-      XML.loadString(response.getContentString) mustEqual singleTrackXml
+      response.getContentString must endWith(singleTrackXml.toString)
     }
     
     "declaration" in {
