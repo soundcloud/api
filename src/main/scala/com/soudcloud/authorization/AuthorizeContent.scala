@@ -11,18 +11,23 @@ class AuthorizeContent(
   contentAuthorization: ContentAuthorizationService,
   userAuthentication: UserAuthenticationComponent) {
 
-  def apply(request: BffRequest, status: Int, content: String): Future[ResponseBuilder] =
-    CollectTrackUrns(content) match {
+  def apply(request: BffRequest, status: Int, body: String): Future[ResponseBuilder] =
+    authorize(request, status, body, Response(body))
+
+  private def authorize(request: BffRequest, status: Int, body: String, originalResponse: Response): Future[ResponseBuilder] =
+    CollectTrackUrns(originalResponse.content) match {
       case Some((visitor, urns)) =>
-        authorize(request, status, visitor, urns)
-      case None => Future(render.body(content).status(status))
+        authorize(request, status, visitor, urns, originalResponse)
+      case None =>
+        Future(originalResponse.render.status(status))
     }
 
-  private def authorize(request: BffRequest, status: Int, visitor: TracksVisitor, urns: List[Urn]) =
+  private def authorize(request: BffRequest, status: Int, visitor: TracksVisitor, urns: List[Urn], originalResponse: Response) =
     userAuthentication.withUserSession(request) { session =>
       contentAuthorization.findRulesApplicableTo(session, urns).map { rules =>
         ApplyTrackPolicies(session, visitor, rules)
-          .map(RenderContent(_))
+          .map(StringifyContent(_))
+          .map(originalResponse.withBody(_))
           .map(_.status(status))
           .getOrElse(render.notFound)
       }

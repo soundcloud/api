@@ -1,5 +1,6 @@
 package com.soudcloud.authorization
 
+import com.twitter.finagle.http.{ Response => FinagleResponse }
 import org.mockito.Matchers
 
 import com.soundcloud.bff.finagle.ResponseBuilder
@@ -10,7 +11,6 @@ import com.soundcloud.scalakit.finagle.http.HandlerRequest
 import com.soundcloud.scalakit.test.VerifiedMocks
 import com.twitter.finagle.Service
 import com.twitter.finagle.http.Request
-import com.twitter.finagle.http.Response
 import com.twitter.util.Await
 import com.twitter.util.Future
 
@@ -32,7 +32,7 @@ class ContentAuthorizationFilterSpec extends UnitSpecification with Fixtures {
       builder.build
     }
     val feature = "PUBLIC_API_STRANGLER_CONTENT_AUTHORIZATION"
-    val service = new Service[HandlerRequest, Response] {
+    val service = new Service[HandlerRequest, FinagleResponse] {
       override def apply(request: HandlerRequest) = {
         request mustEqual Context.this.request
         Future(response)
