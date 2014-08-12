@@ -26,7 +26,7 @@ case class CallbackResponse(name: String, content: String) extends Response {
 }
 
 object CallbackResponse {
-  val pattern = """\/\*\*\/(.*)\((.*)\);""".r
+  val pattern = """\/\*\*\/(.*?)\((.*)\);""".r
 }
 
 case class NormalResponse(content: String) extends Response {
