@@ -84,7 +84,7 @@ class AuthorizeContentSpec extends UnitSpecification with Fixtures {
     lazy val authorizedTrackXml = new XmlTrack(singleTrackXml).withPolicies(policies)
 
     authorizedResponse.statusCode mustEqual 200
-    authorizedResponse.getContentString mustEqual authorizedTrackXml.toString
+    authorizedResponse.getContentString must endWith(authorizedTrackXml.toString)
   }
 
   "renders not found if the xml track isn't authorized" in new XmlTrackContext {

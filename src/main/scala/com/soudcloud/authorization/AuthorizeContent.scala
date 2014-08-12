@@ -5,10 +5,7 @@ import com.soundcloud.bff.finagle.{ Request => BffRequest }
 import com.soundcloud.bff.finagle.ResponseBuilder
 import com.soundcloud.bff.web.UserAuthenticationComponent
 import com.soundcloud.scalakit.Urn
-import com.soundcloud.scalakit.json.Json
 import com.twitter.util.Future
-
-import play.api.libs.json.JsValue
 
 class AuthorizeContent(
   contentAuthorization: ContentAuthorizationService,
@@ -25,8 +22,8 @@ class AuthorizeContent(
     userAuthentication.withUserSession(request) { session =>
       contentAuthorization.findRulesApplicableTo(session, urns).map { rules =>
         ApplyTrackPolicies(session, visitor, rules)
-          .map(_.toString)
-          .map(render.body(_).status(status))
+          .map(RenderContent(_))
+          .map(_.status(status))
           .getOrElse(render.notFound)
       }
     }
