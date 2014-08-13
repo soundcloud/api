@@ -19,7 +19,7 @@ class StringifyContentSpec extends UnitSpecification with Fixtures {
     
     "declaration" in {
       val response = StringifyContent[XmlTrack](singleTrackXml)
-      response must startWith("""<?xml version="1.0" encoding="UTF-8"?>""")
+      response must startWith("""<?xml version="1.0" encoding="UTF-8"?> """)
     }
   }
 }
