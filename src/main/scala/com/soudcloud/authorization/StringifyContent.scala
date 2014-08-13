@@ -13,6 +13,6 @@ object StringifyContent {
       case json: JsonTrack#Content =>
         Json.stringify(json)
       case xml: XmlTrack#Content =>
-        """<?xml version="1.0" encoding="UTF-8"?>\n""" + xml.toString
+        """<?xml version="1.0" encoding="UTF-8"?> """ + xml.toString
     }
 }
