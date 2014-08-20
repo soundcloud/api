@@ -6,7 +6,6 @@ import java.nio.charset.Charset
 import scala.collection.JavaConversions.iterableAsScalaIterable
 
 import com.soundcloud.bff.finagle.{Request => BffRequest}
-import com.soundcloud.rollout.RolloutRepository
 import com.soundcloud.scalakit.finagle.http.HandlerRequest
 import com.twitter.finagle.Service
 import com.twitter.finagle.SimpleFilter
@@ -14,21 +13,11 @@ import com.twitter.finagle.http.{ Response => FinagleResponse }
 import com.twitter.util.Future
 
 class ContentAuthorizationFilter(
-  authorizeContent: AuthorizeContent,
-  rolloutRepository: RolloutRepository)
+  authorizeContent: AuthorizeContent)
   extends SimpleFilter[HandlerRequest, FinagleResponse] {
 
-  private val featureFlag = "PUBLIC_API_STRANGLER_CONTENT_AUTHORIZATION"
-
   override def apply(request: HandlerRequest, next: Service[HandlerRequest, FinagleResponse]) =
-    next(request).flatMap { response =>
-      rolloutRepository.activated(request.userSession, featureFlag).flatMap {
-        case true =>
-          authorize(request, response)
-        case false =>
-          Future(response)
-      }
-    }
+    next(request).flatMap(authorize(request, _))
 
   private def authorize(request: HandlerRequest, response: FinagleResponse) =
     authorizeContent(new BffRequest(request.request), response.statusCode, body(response)).map { render =>
