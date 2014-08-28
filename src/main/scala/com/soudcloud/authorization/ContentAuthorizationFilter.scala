@@ -1,23 +1,20 @@
 package com.soudcloud.authorization
 
+import com.soundcloud.bff.finagle.{Request => BffRequest}
 import com.soundcloud.scalakit.UTF8
-import java.nio.charset.Charset
+import com.soundcloud.scalakit.finagle.http.HandlerRequest
+import com.twitter.finagle.{Service, SimpleFilter}
+import com.twitter.finagle.http.{Response => FinagleResponse}
 
 import scala.collection.JavaConversions.iterableAsScalaIterable
 
-import com.soundcloud.bff.finagle.{Request => BffRequest}
-import com.soundcloud.scalakit.finagle.http.HandlerRequest
-import com.twitter.finagle.Service
-import com.twitter.finagle.SimpleFilter
-import com.twitter.finagle.http.{ Response => FinagleResponse }
-import com.twitter.util.Future
-
-class ContentAuthorizationFilter(
-  authorizeContent: AuthorizeContent)
-  extends SimpleFilter[HandlerRequest, FinagleResponse] {
+class ContentAuthorizationFilter(authorizeContent: AuthorizeContent) extends SimpleFilter[HandlerRequest, FinagleResponse] {
 
   override def apply(request: HandlerRequest, next: Service[HandlerRequest, FinagleResponse]) =
-    next(request).flatMap(authorize(request, _))
+    for {
+      response <- next(request)
+      modifiedResponse <- authorize(request, response)
+    } yield modifiedResponse
 
   private def authorize(request: HandlerRequest, response: FinagleResponse) =
     authorizeContent(new BffRequest(request.request), response.statusCode, body(response)).map { render =>

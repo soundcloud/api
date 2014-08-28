@@ -10,7 +10,7 @@ object DefaultTimeWindow {
     val currentTimeInMinutes = currentTime.minuteOfDay.get()
     val lengthInMinutes = length.inMinutes
 
-    val nearestWindow = (currentTimeInMinutes / lengthInMinutes)
+    val nearestWindow = currentTimeInMinutes / lengthInMinutes
     TimeWindow(length, nearestWindow)
   }
 }
