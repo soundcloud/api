@@ -8,7 +8,7 @@ import com.twitter.finagle.http.{Response => FinagleResponse}
 
 import scala.collection.JavaConversions.iterableAsScalaIterable
 
-class ContentAuthorizationFilter(authorizeContent: AuthorizeContent) extends SimpleFilter[HandlerRequest, FinagleResponse] {
+class ContentAuthorizationFilter(authorizeContent: AuthorizeHttpResponse) extends SimpleFilter[HandlerRequest, FinagleResponse] {
 
   override def apply(request: HandlerRequest, next: Service[HandlerRequest, FinagleResponse]) =
     for {

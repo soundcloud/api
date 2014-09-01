@@ -12,7 +12,7 @@ class ContentAuthorizationFilterSpec extends UnitSpecification with Fixtures {
   trait Context extends Scope {
     val someRequest = new HandlerRequest(AlwaysMatchesPathMatcher, FinagleRequest("/something"))
     val service = mock[Service[HandlerRequest, FinagleResponse]]
-    val authorizeContent = mock[AuthorizeContent]
+    val authorizeContent = mock[AuthorizeHttpResponse]
     val originalResponse = FinagleResponse()
     val contentAuthorizationFilter = new ContentAuthorizationFilter(authorizeContent)
   }

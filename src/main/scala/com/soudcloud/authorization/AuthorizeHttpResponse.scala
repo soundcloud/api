@@ -7,7 +7,7 @@ import com.soundcloud.bff.web.UserAuthenticationComponent
 import com.soundcloud.scalakit.Urn
 import com.twitter.util.Future
 
-class AuthorizeContent(
+class AuthorizeHttpResponse(
   contentAuthorization: ContentAuthorizationService,
   userAuthentication: UserAuthenticationComponent) {
 

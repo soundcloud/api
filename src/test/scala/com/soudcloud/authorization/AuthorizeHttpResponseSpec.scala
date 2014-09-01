@@ -20,7 +20,7 @@ import com.soundcloud.jvmkit.policies.ContentPolicies
 import com.soundcloud.jvmkit.policies.ContentAuthorization
 import com.soundcloud.jvmkit.policies.Reasons
 
-class AuthorizeContentSpec extends UnitSpecification with Fixtures {
+class AuthorizeHttpResponseSpec extends UnitSpecification with Fixtures {
 
   trait Context extends VerifiedMocks {
     val session = mock[UserSession]
@@ -36,7 +36,7 @@ class AuthorizeContentSpec extends UnitSpecification with Fixtures {
     def content: String
     def status: Int
 
-    val authorizeContent = new AuthorizeContent(contentAuthorization, userAuthentication)
+    val authorizeContent = new AuthorizeHttpResponse(contentAuthorization, userAuthentication)
 
     lazy val authorize = authorizeContent.apply(request, status, content)
     lazy val authorizedResponse = Await.result(authorize.map(_.build))
