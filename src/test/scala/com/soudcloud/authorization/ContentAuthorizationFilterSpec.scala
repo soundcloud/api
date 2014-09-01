@@ -49,20 +49,5 @@ class ContentAuthorizationFilterSpec extends UnitSpecification with Fixtures {
       authorizedResponse.contentString mustEqual expectedResponse.contentString
       authorizedResponse.headerMap mustEqual expectedResponse.headerMap
     }
-
-    "returns the 'blocked' response, if any unauthorized" in new Context {
-      val expectedResponseBuilder = new ResponseBuilder().status(403)
-      val expectedResponse = expectedResponseBuilder.build
-
-      service.apply(someRequest) returns Future.value(originalResponse)
-      authorizeContent.apply(new BffRequest(someRequest.request), originalResponse.statusCode, originalResponse.contentString) returns
-        Future.value(expectedResponseBuilder)
-
-      val authorizedResponse = Await.result(contentAuthorizationFilter.apply(someRequest, service))
-
-      authorizedResponse.status mustEqual expectedResponse.status
-      authorizedResponse.contentString mustEqual expectedResponse.contentString
-      authorizedResponse.headerMap mustEqual expectedResponse.headerMap
-    }
   }
 }

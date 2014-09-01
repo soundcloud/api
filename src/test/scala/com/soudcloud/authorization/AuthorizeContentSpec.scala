@@ -61,10 +61,10 @@ class AuthorizeContentSpec extends UnitSpecification with Fixtures {
     authorizedResponse.getContentString mustEqual Json.stringify(authorizedTrackJson)
   }
 
-  "renders not found if the json track isn't authorized" in new JsonTrackContext {
+  "renders forbidden if the json track isn't authorized" in new JsonTrackContext {
     lazy val policies = ContentPolicies.BLOCK
 
-    authorizedResponse.statusCode mustEqual 404
+    authorizedResponse.statusCode mustEqual 403
     authorizedResponse.getContentString mustEqual ""
   }
 
@@ -90,7 +90,7 @@ class AuthorizeContentSpec extends UnitSpecification with Fixtures {
   "renders not found if the xml track isn't authorized" in new XmlTrackContext {
     lazy val policies = ContentPolicies.BLOCK
 
-    authorizedResponse.statusCode mustEqual 404
+    authorizedResponse.statusCode mustEqual 403
     authorizedResponse.getContentString mustEqual ""
   }
 

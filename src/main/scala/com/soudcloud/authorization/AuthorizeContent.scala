@@ -29,7 +29,7 @@ class AuthorizeContent(
           .map(StringifyContent(_))
           .map(originalResponse.withBody(_))
           .map(_.status(status))
-          .getOrElse(render.notFound)
+          .getOrElse(render.forbidden)
       }
     }
 
