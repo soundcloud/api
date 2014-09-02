@@ -10,7 +10,7 @@
 .nnmail-cache
 .smex-items
 .svn
-/#.newsrc-dribble#
+¯/#.newsrc-dribble#
 \#*
 abbrev_defs
 auto-save-list
@@ -35,7 +35,7 @@ url/cookies
 logs
 .classpath
 .project
-.idea
+.idea/*
 .idea_modules
 .settings
 .cache

@@ -1,65 +1,53 @@
 package com.soudcloud.authorization
 
-import com.twitter.finagle.http.{ Response => FinagleResponse }
-import org.mockito.Matchers
-
-import com.soundcloud.bff.finagle.ResponseBuilder
+import com.soundcloud.bff.finagle.{ResponseBuilder, Request => BffRequest}
 import com.soundcloud.bff.test.UnitSpecification
-import com.soundcloud.scalakit.UserSession
-import com.soundcloud.scalakit.finagle.http.HandlerRequest
-import com.soundcloud.scalakit.test.VerifiedMocks
+import com.soundcloud.scalakit.finagle.http.{AlwaysMatchesPathMatcher, HandlerRequest}
 import com.twitter.finagle.Service
-import com.twitter.finagle.http.Request
-import com.twitter.util.Await
-import com.twitter.util.Future
+import com.twitter.finagle.http.{Request => FinagleRequest, Response => FinagleResponse}
+import com.twitter.util.{Await, Future}
 
 class ContentAuthorizationFilterSpec extends UnitSpecification with Fixtures {
 
-  trait Context extends VerifiedMocks {
-    val session = mock[UserSession]
-    val authorizeContent = mock[AuthorizeContent]
-    val request = mock[HandlerRequest]
+  trait Context extends Scope {
+    val someRequest = new HandlerRequest(AlwaysMatchesPathMatcher, FinagleRequest("/something"))
+    val service = mock[Service[HandlerRequest, FinagleResponse]]
+    val authorizeContent = mock[AuthorizeHttpResponse]
+    val originalResponse = FinagleResponse()
+    val contentAuthorizationFilter = new ContentAuthorizationFilter(authorizeContent)
+  }
 
-    val status = 200
-    val content = playlist.toString
+  "when the response doesnt contain tracks" >> {
+    "returns the response unchanged" in new Context {
+      val expectedResponseBuilder = new ResponseBuilder().body(originalResponse.contentString).status(originalResponse.statusCode)
 
-    val response = {
-      val builder = new ResponseBuilder
-      builder.header("additional", "header")
-      builder.body(content)
-      builder.build
-    }
-    val feature = "PUBLIC_API_STRANGLER_CONTENT_AUTHORIZATION"
-    val service = new Service[HandlerRequest, FinagleResponse] {
-      override def apply(request: HandlerRequest) = {
-        request mustEqual Context.this.request
-        Future(response)
-      }
-    }
+      service.apply(someRequest) returns Future.value(originalResponse)
+      authorizeContent.apply(new BffRequest(someRequest.request), originalResponse.statusCode, originalResponse.contentString) returns
+        Future.value(expectedResponseBuilder)
 
-    val filter = new ContentAuthorizationFilter(authorizeContent)
+      val authorizedResponse = Await.result(contentAuthorizationFilter.apply(someRequest, service))
 
-    lazy val authorizedResponse = Await.result(filter.apply(request, service))
-
-    def builder = {
-      val builder = new ResponseBuilder
-      builder.body(content)
-    }
-
-    override def before = {
-      when(request.request).thenReturn(Request())
-      when(request.userSession).thenReturn(session)
-      when(authorizeContent.apply(any, Matchers.eq(status), Matchers.eq(content)))
-        .thenReturn(Future(builder))
+      authorizedResponse.status mustEqual originalResponse.status
+      authorizedResponse.contentString mustEqual originalResponse.contentString
+      authorizedResponse.headerMap mustEqual originalResponse.headerMap + ("Content-Length" -> originalResponse.contentString.length.toString)
     }
   }
 
-  "authorizes the content" in new Context {
-    authorizedResponse.statusCode mustEqual status
-    authorizedResponse.getContentString mustEqual content
-  }
+  "when the response contains tracks" >> {
+    "returns original response with authorization info, if authorized" in new Context {
+      val bodyWithAuthorizationInformation = originalResponse.contentString + "some stuff here about policies and stuff"
+      val expectedResponseBuilder = new ResponseBuilder().body(bodyWithAuthorizationInformation).status(originalResponse.statusCode)
+      val expectedResponse = expectedResponseBuilder.build
 
-  "copies the original response response to the authorized response" in new Context {
-    authorizedResponse.headers.get("additional") mustEqual "header"
+      service.apply(someRequest) returns Future.value(originalResponse)
+      authorizeContent.apply(new BffRequest(someRequest.request), originalResponse.statusCode, originalResponse.contentString) returns
+        Future.value(expectedResponseBuilder)
+
+      val authorizedResponse = Await.result(contentAuthorizationFilter.apply(someRequest, service))
+
+      authorizedResponse.status mustEqual expectedResponse.status
+      authorizedResponse.contentString mustEqual expectedResponse.contentString
+      authorizedResponse.headerMap mustEqual expectedResponse.headerMap
+    }
   }
 }
