@@ -26,8 +26,9 @@ class AuthorizeHttpResponse(
     userAuthentication.withUserSession(request) { session =>
       contentAuthorization.findRulesApplicableTo(session, urns).map { rules =>
         ApplyTrackPolicies(session, visitor, rules)
+          .map(FilterTracklessStreamItems(_))
           .map(StringifyContent(_))
-          .map(originalResponse.withBody(_))
+          .map(originalResponse.withBody)
           .map(_.status(status))
           .getOrElse(render.forbidden)
       }
