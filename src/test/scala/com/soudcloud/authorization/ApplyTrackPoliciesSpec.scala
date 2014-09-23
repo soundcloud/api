@@ -67,7 +67,7 @@ class ApplyTrackPoliciesSpec extends UnitSpecification with Fixtures {
       )
 
     override def extractIds(json: JsValue) =
-      json.as[List[JsObject]].map(e => (e \ "track" \ "id").as[Int])
+      (json \ "collection").as[List[JsObject]].map(e => (e \ "track" \ "id").asOpt[Int].getOrElse(-999))
 
   }
 
@@ -86,7 +86,7 @@ class ApplyTrackPoliciesSpec extends UnitSpecification with Fixtures {
     }
 
     "some authorized tracks" in new PartiallyAuthorized {
-      authorizedTrackIds mustEqual authorized.map(_.getIdentifier.toInt)
+      authorizedTrackIds mustEqual Seq(165855069, -999)
     }
   }
 
