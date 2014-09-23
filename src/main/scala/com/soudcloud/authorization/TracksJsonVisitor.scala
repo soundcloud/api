@@ -19,6 +19,8 @@ class TracksJsonVisitor(val wrapped: JsValue) extends TracksVisitor {
         visitArray(json, visit)
       case json: JsObject if (isTrack(json)) =>
         visitTrack(json, visit)
+      case json: JsObject if (isStreamEntryWithTrack(json)) =>
+        visitStreamEntryWithTrack(json, visit)
       case json: JsObject =>
         visitObject(json, visit)
       case other =>
@@ -53,4 +55,27 @@ class TracksJsonVisitor(val wrapped: JsValue) extends TracksVisitor {
 
   private def isTrack(json: JsObject) =
     json.fieldSet.contains(("kind", JsString("track")))
+
+
+  private def isStreamEntryWithTrack(json: JsObject) = {
+    val uuid : Option[String] = (json \ "uuid").asOpt[String]
+    val createdAt : Option[String] = (json \ "created_at").asOpt[String]
+    val track : Option[JsObject] = (json \ "track").asOpt[JsObject]
+    uuid != None && createdAt != None && track != None && isTrack(track.get)
+  }
+
+  private def visitStreamEntryWithTrack(json: JsObject, visit: VisitTrack) = {
+
+    val track : Option[JsObject] = (json \ "track").asOpt[JsObject]
+    val id = (track.get \ "id").as[Int]
+    val urn = Urn(s"soundcloud:tracks:$id")
+    val result : Option[TrackType#Content] = visit(urn, JsonTrack(track.get))
+    if (!result.isEmpty)
+    {
+      json
+    }
+    result
+
+  }
+
 }
