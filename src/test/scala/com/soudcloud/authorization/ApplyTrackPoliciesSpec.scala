@@ -86,7 +86,7 @@ class ApplyTrackPoliciesSpec extends UnitSpecification with Fixtures {
     }
 
     "some authorized tracks" in new PartiallyAuthorized {
-      authorizedTrackIds mustEqual Seq(165855069, -999)
+      authorizedTrackIds mustEqual Seq(165855069)
     }
   }
 

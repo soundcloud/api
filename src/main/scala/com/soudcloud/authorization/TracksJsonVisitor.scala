@@ -39,7 +39,7 @@ class TracksJsonVisitor(val wrapped: JsValue) extends TracksVisitor {
 
   private def visitObject(json: JsObject, visit: VisitTrack) =
     visitFields(json, visit).toList match {
-      case Nil =>
+      case fields if fields.size != json.fields.size =>
         None
       case fields =>
         Some(JsObject(fields))
