@@ -1,7 +1,7 @@
 package com.soudcloud.authorization
 
-import com.soundcloud.bff.test.UnitSpecification
 import com.soudcloud.bff.test.fixtures.GlobalXmlFiles
+import com.soundcloud.bff.test.UnitSpecification
 
 trait Fixtures {
   this: UnitSpecification =>
@@ -12,6 +12,8 @@ trait Fixtures {
   val user = withContentsOf("public_api", "user")
   val stream = withContentsOf("public_api", "stream")
   val streamFiltered = withContentsOf("public_api", "streamFiltered")
+  val generic = withContentsOf("public_api", "generic")
+  val genericFiltered = withContentsOf("public_api", "genericFiltered")
 
   val singleTrackXml = GlobalXmlFiles.load("public_api/single_track").get
   val tracksArrayXml = GlobalXmlFiles.load("public_api/tracks_array").get
