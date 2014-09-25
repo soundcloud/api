@@ -57,26 +57,24 @@ class ApplyTrackPoliciesSpec extends UnitSpecification with Fixtures {
     }
   }
 
-  trait StreamContext extends Context {
-
-    override val urns = List(165855069, 168419205).map(id => Urn(s"soundcloud:tracks:$id"))
-
-    override lazy val authorizedTrackIds =
-      extractIds(
-        ApplyTrackPolicies(session, new TracksJsonVisitor(stream), rules).get
-      )
-
-    override def extractIds(json: JsValue) =
-      (json \ "collection").as[List[JsObject]].map(e => (e \ "track" \ "id").asOpt[Int].getOrElse(-999))
-
-  }
-
-
   "stream tests" >> {
+    trait StreamContext extends Context {
+
+      override val urns = List(165855069, 168419205).map(id => Urn(s"soundcloud:tracks:$id"))
+
+      override lazy val authorizedTrackIds =
+        extractIds(
+          ApplyTrackPolicies(session, new TracksJsonVisitor(stream), rules).get
+        )
+
+      override def extractIds(json: JsValue) =
+        (json \ "collection").as[List[JsObject]].map(e => (e \ "track" \ "id").asOpt[Int].getOrElse(-999))
+
+    }
 
     trait PartiallyAuthorized extends StreamContext {
       val authorized = urns.take(1)
-      def rules =
+      override def rules =
         for (urn <- urns) yield {
           if (authorized.contains(urn))
             new ContentAuthorization(urn, ContentPolicies.ALLOW, Reasons.GEO)

@@ -197,10 +197,6 @@ class AuthorizeHttpResponseSpec extends UnitSpecification with Fixtures {
 
     authorizedResponse.statusCode mustEqual 200
 
-    private val stream: Seq[bff.JsObject] = (Json.fromJson(authorizedResponse.getContentString()) \ "collection").as[Seq[bff.JsObject]]
-    stream.size mustEqual 1
-
-    private val item: bff.JsObject = stream.head
-    (item \ "uuid").as[JsString].value mustEqual "4e3d3c00-3ff9-11e4-8034-72b90052218b"
+    Json.fromJson(authorizedResponse.getContentString()) ==== streamFiltered
   }
 }
