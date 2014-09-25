@@ -1,25 +1,15 @@
 package com.soundcloud.publicApiStrangler.support
 
 import com.soundcloud.bff.ConfigComponent
-import com.soundcloud.jvmkit.config.ConfigConvention
-import com.soundcloud.scalakit.ResourceName
-import com.soundcloud.scalakit.finagle.http.TracingHttp
-import com.twitter.finagle.http.path./
-import com.twitter.logging
-import com.twitter.logging.config
-
 import com.soundcloud.jvmkit.telemetry.Telemetry
 import com.soundcloud.scalakit.ResourceName
-import com.soundcloud.scalakit.framework.ScAppComponent
-import com.twitter.finagle.Service
-import org.jboss.netty.handler.codec.http.{HttpRequest, HttpResponse}
-import com.twitter.finagle.builder.ClientBuilder
 import com.soundcloud.scalakit.finagle.http.{OutgoingHttpRequestMonitoringFilter, TracingHttp}
 import com.soundcloud.scalakit.finagle.zipkin.ZipkinTracer
 import com.twitter.finagle.Service
 import com.twitter.finagle.builder.ClientBuilder
 import com.twitter.util.TimeConversions._
 import org.jboss.netty.handler.codec.http.{HttpRequest, HttpResponse}
+import com.soundcloud.jvmkit.config.ConfigConvention
 
 trait PublicApiClientComponent {
   this: ConfigComponent =>
@@ -35,7 +25,7 @@ trait PublicApiClientComponent {
         .hostConnectionLimit(100)
         .hostConnectionMaxIdleTime(5.seconds)
         .hostConnectionMaxLifeTime(30.seconds)
-        .dest(logging.config.get(ResourceName("MOTHERSHIP_API_SERVER"), ConfigConvention.SRV_RECORD))
+        .dest(config.get(ResourceName("MOTHERSHIP_API_SERVER"), ConfigConvention.SRV_RECORD))
         .keepAlive(true)
         .failFast(true)
         .tracer(ZipkinTracer(config))

@@ -22,6 +22,7 @@ class DispatchToMothershipHandler(mothershipClient: Service[HttpRequest, HttpRes
     request.host = "api.soundcloud.com"
     mothershipClient(ForwardedRequest(request)).map(Response.apply).handle {
       case exception: Exception =>
+        logger.debug("Bad response from mothership", exception)
         val response = Response()
         response.status = HttpResponseStatus.INTERNAL_SERVER_ERROR
         response
