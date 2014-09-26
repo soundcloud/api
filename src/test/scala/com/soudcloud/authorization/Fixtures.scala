@@ -21,5 +21,7 @@ trait Fixtures {
   val userXml = GlobalXmlFiles.load("public_api/user").get
   val streamXml = GlobalXmlFiles.load("public_api/stream").get
   val streamFilteredXml = GlobalXmlFiles.load("public_api/streamFiltered").get
+  val genericXml = GlobalXmlFiles.load("public_api/generic").get
+  val genericFilteredXml = GlobalXmlFiles.load("public_api/genericFiltered").get
 
 }

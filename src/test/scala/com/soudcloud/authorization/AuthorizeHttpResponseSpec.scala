@@ -248,4 +248,28 @@ class AuthorizeHttpResponseSpec extends UnitSpecification with Fixtures {
 
   }
 
+  trait XmlGenericContext extends Context {
+    val content = genericXml.toString
+    val status = 200
+
+    val authorizations = Seq(
+      new ContentAuthorization(Urn("soundcloud:tracks:1"), ContentPolicies.BLOCK, Reasons.GEO),
+      new ContentAuthorization(Urn("soundcloud:tracks:2"), ContentPolicies.ALLOW, Reasons.GEO),
+      new ContentAuthorization(Urn("soundcloud:tracks:3"), ContentPolicies.ALLOW, Reasons.GEO)
+    )
+
+    override def before = {
+      when(contentAuthorization.findRulesApplicableTo(===(session), any[Seq[Urn]]))
+        .thenReturn(Future(authorizations))
+
+    }
+  }
+
+  "removes unauthorized tracks and decorates authorized with policies in various places in a XML payload" in new XmlGenericContext {
+
+    authorizedResponse.statusCode mustEqual 200
+    trim(XML.loadString(authorizedResponse.getContentString())) mustEqual trim(genericFilteredXml)
+
+  }
+
 }
