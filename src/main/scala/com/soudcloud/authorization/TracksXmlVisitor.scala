@@ -5,9 +5,7 @@ import play.api.libs.json.JsObject
 import play.api.libs.json.JsArray
 import com.soundcloud.scalakit.Urn
 import play.api.libs.json.JsString
-import scala.xml.Node
-import scala.xml.Elem
-import scala.xml.Text
+import scala.xml.{NodeSeq, Node, Elem, Text}
 
 class TracksXmlVisitor(val wrapped: Node) extends TracksVisitor {
 
@@ -56,11 +54,8 @@ class TracksXmlVisitor(val wrapped: Node) extends TracksVisitor {
     (node \ "kind").text == "track"
 
   private def isArray(node: Elem) = {
-    val typeAttVal = node.attribute("type").getOrElse(None)
-    if (typeAttVal == None)
-      false
-    else
-      typeAttVal.toString == "array"
+    (node \ "@type").text == "array"
+
   }
 
 
