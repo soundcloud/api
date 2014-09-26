@@ -19,5 +19,7 @@ trait Fixtures {
   val tracksArrayXml = GlobalXmlFiles.load("public_api/tracks_array").get
   val playlistXml = GlobalXmlFiles.load("public_api/playlist").get
   val userXml = GlobalXmlFiles.load("public_api/user").get
+  val streamXml = GlobalXmlFiles.load("public_api/stream").get
+  val streamFilteredXml = GlobalXmlFiles.load("public_api/streamFiltered").get
 
 }

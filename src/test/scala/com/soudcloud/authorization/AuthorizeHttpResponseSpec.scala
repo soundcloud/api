@@ -12,6 +12,9 @@ import com.soundcloud.scalakit.test.VerifiedMocks
 import com.soundcloud.scalakit.{Urn, UserSession}
 import com.twitter.util.{Await, Future}
 import org.mockito.Mockito.verifyZeroInteractions
+import scala.xml.Utility.trim
+import scala.xml.XML
+
 
 class AuthorizeHttpResponseSpec extends UnitSpecification with Fixtures {
 
@@ -199,6 +202,7 @@ class AuthorizeHttpResponseSpec extends UnitSpecification with Fixtures {
     Json.fromJson(authorizedResponse.getContentString()) ==== streamFiltered
   }
 
+
   trait JsonGenericContext extends Context {
     val content = generic.toString
     val status = 200
@@ -219,4 +223,29 @@ class AuthorizeHttpResponseSpec extends UnitSpecification with Fixtures {
 
     Json.fromJson(authorizedResponse.getContentString()) ==== genericFiltered
   }
+
+  trait XmlStreamContext extends Context {
+    val content = streamXml.toString
+    val status = 200
+
+    val authorizations = Seq(
+      new ContentAuthorization(Urn("soundcloud:tracks:169183738"), ContentPolicies.ALLOW, Reasons.GEO),
+      new ContentAuthorization(Urn("soundcloud:tracks:168272289"), ContentPolicies.BLOCK, Reasons.GEO),
+      new ContentAuthorization(Urn("soundcloud:tracks:168546826"), ContentPolicies.ALLOW, Reasons.GEO)
+    )
+
+    override def before = {
+      when(contentAuthorization.findRulesApplicableTo(===(session), any[Seq[Urn]]))
+        .thenReturn(Future(authorizations))
+
+    }
+  }
+
+  "Stream test: Complete activity item should be removed when track is blocked." in new XmlStreamContext {
+
+    authorizedResponse.statusCode mustEqual 200
+    trim(XML.loadString(authorizedResponse.getContentString())) mustEqual trim(streamFilteredXml)
+
+  }
+
 }

@@ -18,17 +18,12 @@ class TracksXmlVisitor(val wrapped: Node) extends TracksVisitor {
 
   private def apply(node: Node, visit: VisitTrack): Option[Node] = {
     node match {
+      case node: Elem if (isArray(node)) =>
+        Some(node.copy(child = visitChild(node, visit)))
       case node: Node if (isTrack(node)) =>
         visitTrack(node, visit)
       case node: Elem =>
-        val att = node.attributes
-        val children = node.child.map {
-          case text: Text =>
-            Some(text)
-          case other =>
-            apply(other, visit)
-        }.flatten
-        Some(new Elem(node.prefix, node.label, node.attributes, node.scope, true, children: _*))
+        visitObject(node, visit)
       case other =>
         Some(other)
     }
@@ -40,6 +35,33 @@ class TracksXmlVisitor(val wrapped: Node) extends TracksVisitor {
     visit(urn, XmlTrack(node))
   }
 
+  private def visitChild(node: Elem, visit: VisitTrack) =
+    node.child.map {
+      case text: Text =>
+        Some(text)
+      case other =>
+        apply(other, visit)
+    }.flatten
+
+  private def visitObject(node: Elem, visit: VisitTrack) =
+    visitChild(node, visit) match {
+      case child if (child.size != node.child.size) =>
+        None
+      case child =>
+        Some(node.copy(child = child))
+    }
+
+
   private def isTrack(node: Node) =
     (node \ "kind").text == "track"
+
+  private def isArray(node: Elem) = {
+    val typeAttVal = node.attribute("type").getOrElse(None)
+    if (typeAttVal == None)
+      false
+    else
+      typeAttVal.toString == "array"
+  }
+
+
 }
