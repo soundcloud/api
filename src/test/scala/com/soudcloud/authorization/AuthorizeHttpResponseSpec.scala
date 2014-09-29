@@ -1,18 +1,20 @@
 package com.soudcloud.authorization
 
 import com.soundcloud.bff
-import com.soundcloud.bff.{BazookaConfigComponent, BffController}
 import com.soundcloud.bff.authorization.ContentAuthorizationService
 import com.soundcloud.bff.finagle.{ResponseBuilder, Request => BffRequest}
 import com.soundcloud.bff.test.UnitSpecification
 import com.soundcloud.bff.web.UserAuthenticationComponent
+import com.soundcloud.bff.{BazookaConfigComponent, BffController}
 import com.soundcloud.jvmkit.policies.{ContentAuthorization, ContentPolicies, Reasons}
-import com.soundcloud.scalakit.{Urn, UserSession}
 import com.soundcloud.scalakit.json.Json
 import com.soundcloud.scalakit.test.VerifiedMocks
+import com.soundcloud.scalakit.{Urn, UserSession}
 import com.twitter.util.{Await, Future}
 import org.mockito.Mockito.verifyZeroInteractions
-import play.api.libs.json.JsString
+import scala.xml.Utility.trim
+import scala.xml.XML
+
 
 class AuthorizeHttpResponseSpec extends UnitSpecification with Fixtures {
 
@@ -197,10 +199,77 @@ class AuthorizeHttpResponseSpec extends UnitSpecification with Fixtures {
 
     authorizedResponse.statusCode mustEqual 200
 
-    private val stream: Seq[bff.JsObject] = (Json.fromJson(authorizedResponse.getContentString()) \ "collection").as[Seq[bff.JsObject]]
-    stream.size mustEqual 1
-
-    private val item: bff.JsObject = stream.head
-    (item \ "uuid").as[JsString].value mustEqual "4e3d3c00-3ff9-11e4-8034-72b90052218b"
+    Json.fromJson(authorizedResponse.getContentString()) ==== streamFiltered
   }
+
+
+  trait JsonGenericContext extends Context {
+    val content = generic.toString
+    val status = 200
+
+    val authorizations = Seq(
+      new ContentAuthorization(Urn("soundcloud:tracks:1"), ContentPolicies.BLOCK, Reasons.GEO),
+      new ContentAuthorization(Urn("soundcloud:tracks:2"), ContentPolicies.ALLOW, Reasons.GEO),
+      new ContentAuthorization(Urn("soundcloud:tracks:3"), ContentPolicies.ALLOW, Reasons.GEO)
+    )
+
+    override def before =
+      when(contentAuthorization.findRulesApplicableTo(===(session), any[Seq[Urn]]))
+        .thenReturn(Future(authorizations))
+  }
+
+  "removes unauthorized tracks and decorates authorized with policies in various places in a JSON payload" in new JsonGenericContext {
+    authorizedResponse.statusCode mustEqual 200
+
+    Json.fromJson(authorizedResponse.getContentString()) ==== genericFiltered
+  }
+
+  trait XmlStreamContext extends Context {
+    val content = streamXml.toString
+    val status = 200
+
+    val authorizations = Seq(
+      new ContentAuthorization(Urn("soundcloud:tracks:169183738"), ContentPolicies.ALLOW, Reasons.GEO),
+      new ContentAuthorization(Urn("soundcloud:tracks:168272289"), ContentPolicies.BLOCK, Reasons.GEO),
+      new ContentAuthorization(Urn("soundcloud:tracks:168546826"), ContentPolicies.ALLOW, Reasons.GEO)
+    )
+
+    override def before = {
+      when(contentAuthorization.findRulesApplicableTo(===(session), any[Seq[Urn]]))
+        .thenReturn(Future(authorizations))
+
+    }
+  }
+
+  "Stream test: Complete activity item should be removed when track is blocked." in new XmlStreamContext {
+
+    authorizedResponse.statusCode mustEqual 200
+    trim(XML.loadString(authorizedResponse.getContentString())) mustEqual trim(streamFilteredXml)
+
+  }
+
+  trait XmlGenericContext extends Context {
+    val content = genericXml.toString
+    val status = 200
+
+    val authorizations = Seq(
+      new ContentAuthorization(Urn("soundcloud:tracks:1"), ContentPolicies.BLOCK, Reasons.GEO),
+      new ContentAuthorization(Urn("soundcloud:tracks:2"), ContentPolicies.ALLOW, Reasons.GEO),
+      new ContentAuthorization(Urn("soundcloud:tracks:3"), ContentPolicies.ALLOW, Reasons.GEO)
+    )
+
+    override def before = {
+      when(contentAuthorization.findRulesApplicableTo(===(session), any[Seq[Urn]]))
+        .thenReturn(Future(authorizations))
+
+    }
+  }
+
+  "removes unauthorized tracks and decorates authorized with policies in various places in a XML payload" in new XmlGenericContext {
+
+    authorizedResponse.statusCode mustEqual 200
+    trim(XML.loadString(authorizedResponse.getContentString())) mustEqual trim(genericFilteredXml)
+
+  }
+
 }

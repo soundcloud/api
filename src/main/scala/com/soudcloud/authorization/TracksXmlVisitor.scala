@@ -5,9 +5,7 @@ import play.api.libs.json.JsObject
 import play.api.libs.json.JsArray
 import com.soundcloud.scalakit.Urn
 import play.api.libs.json.JsString
-import scala.xml.Node
-import scala.xml.Elem
-import scala.xml.Text
+import scala.xml.{NodeSeq, Node, Elem, Text}
 
 class TracksXmlVisitor(val wrapped: Node) extends TracksVisitor {
 
@@ -18,17 +16,12 @@ class TracksXmlVisitor(val wrapped: Node) extends TracksVisitor {
 
   private def apply(node: Node, visit: VisitTrack): Option[Node] = {
     node match {
+      case node: Elem if (isArray(node)) =>
+        Some(node.copy(child = visitChild(node, visit)))
       case node: Node if (isTrack(node)) =>
         visitTrack(node, visit)
       case node: Elem =>
-        val att = node.attributes
-        val children = node.child.map {
-          case text: Text =>
-            Some(text)
-          case other =>
-            apply(other, visit)
-        }.flatten
-        Some(new Elem(node.prefix, node.label, node.attributes, node.scope, true, children: _*))
+        visitObject(node, visit)
       case other =>
         Some(other)
     }
@@ -40,6 +33,30 @@ class TracksXmlVisitor(val wrapped: Node) extends TracksVisitor {
     visit(urn, XmlTrack(node))
   }
 
+  private def visitChild(node: Elem, visit: VisitTrack) =
+    node.child.map {
+      case text: Text =>
+        Some(text)
+      case other =>
+        apply(other, visit)
+    }.flatten
+
+  private def visitObject(node: Elem, visit: VisitTrack) =
+    visitChild(node, visit) match {
+      case child if (child.size != node.child.size) =>
+        None
+      case child =>
+        Some(node.copy(child = child))
+    }
+
+
   private def isTrack(node: Node) =
     (node \ "kind").text == "track"
+
+  private def isArray(node: Elem) = {
+    (node \ "@type").text == "array"
+
+  }
+
+
 }
