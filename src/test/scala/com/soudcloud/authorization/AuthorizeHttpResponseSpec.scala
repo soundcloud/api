@@ -1,24 +1,18 @@
 package com.soudcloud.authorization
 
-import org.mockito.Mockito.verifyZeroInteractions
-import com.soundcloud.bff.BazookaConfigComponent
-import com.soundcloud.bff.BffController
+import com.soundcloud.bff
+import com.soundcloud.bff.{BazookaConfigComponent, BffController}
 import com.soundcloud.bff.authorization.ContentAuthorizationService
-import com.soundcloud.bff.finagle.{ Request => BffRequest }
-import com.soundcloud.bff.finagle.ResponseBuilder
+import com.soundcloud.bff.finagle.{ResponseBuilder, Request => BffRequest}
 import com.soundcloud.bff.test.UnitSpecification
 import com.soundcloud.bff.web.UserAuthenticationComponent
-import com.soundcloud.scalakit.Urn
-import com.soundcloud.scalakit.UserSession
-import com.soundcloud.scalakit.finagle.http.HandlerRequest
+import com.soundcloud.jvmkit.policies.{ContentAuthorization, ContentPolicies, Reasons}
+import com.soundcloud.scalakit.{Urn, UserSession}
 import com.soundcloud.scalakit.json.Json
 import com.soundcloud.scalakit.test.VerifiedMocks
-import com.twitter.util.Await
-import com.twitter.util.Future
-import play.api.libs.json.JsObject
-import com.soundcloud.jvmkit.policies.ContentPolicies
-import com.soundcloud.jvmkit.policies.ContentAuthorization
-import com.soundcloud.jvmkit.policies.Reasons
+import com.twitter.util.{Await, Future}
+import org.mockito.Mockito.verifyZeroInteractions
+import play.api.libs.json.JsString
 
 class AuthorizeHttpResponseSpec extends UnitSpecification with Fixtures {
 
@@ -68,6 +62,36 @@ class AuthorizeHttpResponseSpec extends UnitSpecification with Fixtures {
     authorizedResponse.getContentString mustEqual ""
   }
 
+  trait JsonTrackArrayContext extends Context {
+    val content = tracksArray.toString
+    val status = 200
+    def policies: Seq[ContentPolicies]
+
+    val authorizations = tracksArray.as[Seq[bff.JsValue]]
+        .map(_ \ "id")
+        .map(id => Urn("soundcloud:tracks:" + id))
+        .zip(policies)
+        .map(tuple => new ContentAuthorization(tuple._1, tuple._2, Reasons.GEO))
+
+    override def before =
+      when(contentAuthorization.findRulesApplicableTo(===(session), any[Seq[Urn]]))
+        .thenReturn(Future(authorizations))
+  }
+
+  "renders an empty list if all json tracks aren't authorized" in new JsonTrackArrayContext {
+    override def policies = Seq(ContentPolicies.BLOCK, ContentPolicies.BLOCK, ContentPolicies.BLOCK)
+
+    authorizedResponse.statusCode mustEqual 200
+    authorizedResponse.getContentString mustEqual "[]"
+  }
+
+  "trims a list if some tracks are not authorized" in new JsonTrackArrayContext {
+    override def policies = Seq(ContentPolicies.ALLOW, ContentPolicies.BLOCK, ContentPolicies.ALLOW)
+
+    authorizedResponse.statusCode mustEqual 200
+    Json.fromJson(authorizedResponse.getContentString()).as[Seq[bff.JsValue]].size mustEqual 2
+  }
+
   trait XmlTrackContext extends Context {
     val content = singleTrackXml.toString
     val status = 200
@@ -87,7 +111,7 @@ class AuthorizeHttpResponseSpec extends UnitSpecification with Fixtures {
     authorizedResponse.getContentString must endWith(authorizedTrackXml.toString)
   }
 
-  "renders not found if the xml track isn't authorized" in new XmlTrackContext {
+  "renders forbidden if the xml track isn't authorized" in new XmlTrackContext {
     lazy val policies = ContentPolicies.BLOCK
 
     authorizedResponse.statusCode mustEqual 403
@@ -104,5 +128,79 @@ class AuthorizeHttpResponseSpec extends UnitSpecification with Fixtures {
     authorizedResponse.getContentString mustEqual content
 
     verifyZeroInteractions(contentAuthorization)
+  }
+
+  trait JsonPlaylistContext extends Context {
+    val content = playlist.toString
+    val status = 200
+    def policies: Seq[ContentPolicies]
+
+    val authorizations = (playlist \ "tracks").as[Seq[bff.JsValue]]
+      .map(_ \ "id")
+      .map(id => Urn("soundcloud:tracks:" + id))
+      .zip(policies)
+      .map(tuple => new ContentAuthorization(tuple._1, tuple._2, Reasons.GEO))
+
+    override def before =
+      when(contentAuthorization.findRulesApplicableTo(===(session), any[Seq[Urn]]))
+        .thenReturn(Future(authorizations))
+  }
+
+  "renders playlist metadata without any tracks" in new JsonPlaylistContext {
+    override def policies = Seq.fill(10)(ContentPolicies.BLOCK)
+
+    authorizedResponse.statusCode mustEqual 200
+    (Json.fromJson(authorizedResponse.getContentString) \ "tracks").as[Seq[bff.JsValue]].size mustEqual 0
+  }
+
+  "trims a list if some tracks are not authorized" in new JsonPlaylistContext {
+    override def policies = Seq(
+      ContentPolicies.ALLOW,
+      ContentPolicies.ALLOW,
+      ContentPolicies.ALLOW,
+      ContentPolicies.ALLOW,
+      ContentPolicies.ALLOW,
+
+      ContentPolicies.BLOCK,
+      ContentPolicies.BLOCK,
+      ContentPolicies.BLOCK,
+
+      ContentPolicies.ALLOW,
+      ContentPolicies.ALLOW
+    )
+
+    authorizedResponse.statusCode mustEqual 200
+    (Json.fromJson(authorizedResponse.getContentString) \ "tracks").as[Seq[bff.JsValue]].size mustEqual 7
+  }
+
+  trait JsonStreamContext extends Context {
+    val content = stream.toString
+    val status = 200
+    def policies: Seq[ContentPolicies]
+
+    val authorizations = (stream \ "collection").as[Seq[bff.JsValue]]
+      .map(_ \ "track" \ "id")
+      .map(id => Urn("soundcloud:tracks:" + id))
+      .zip(policies)
+      .map(tuple => new ContentAuthorization(tuple._1, tuple._2, Reasons.GEO))
+
+    override def before =
+      when(contentAuthorization.findRulesApplicableTo(===(session), any[Seq[Urn]]))
+        .thenReturn(Future(authorizations))
+  }
+
+  "removes stream items completely, when track unauthorized" in new JsonStreamContext {
+    override def policies = Seq(
+      ContentPolicies.ALLOW,
+      ContentPolicies.BLOCK
+    )
+
+    authorizedResponse.statusCode mustEqual 200
+
+    private val stream: Seq[bff.JsObject] = (Json.fromJson(authorizedResponse.getContentString()) \ "collection").as[Seq[bff.JsObject]]
+    stream.size mustEqual 1
+
+    private val item: bff.JsObject = stream.head
+    (item \ "uuid").as[JsString].value mustEqual "4e3d3c00-3ff9-11e4-8034-72b90052218b"
   }
 }

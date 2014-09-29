@@ -17,7 +17,7 @@ class TracksJsonVisitor(val wrapped: JsValue) extends TracksVisitor {
     json match {
       case json: JsArray =>
         visitArray(json, visit)
-      case json: JsObject if (isTrack(json)) =>
+      case json: JsObject if isTrack(json) =>
         visitTrack(json, visit)
       case json: JsObject =>
         visitObject(json, visit)
@@ -39,7 +39,7 @@ class TracksJsonVisitor(val wrapped: JsValue) extends TracksVisitor {
 
   private def visitObject(json: JsObject, visit: VisitTrack) =
     visitFields(json, visit).toList match {
-      case Nil =>
+      case fields if fields.size != json.fields.size =>
         None
       case fields =>
         Some(JsObject(fields))
@@ -53,4 +53,5 @@ class TracksJsonVisitor(val wrapped: JsValue) extends TracksVisitor {
 
   private def isTrack(json: JsObject) =
     json.fieldSet.contains(("kind", JsString("track")))
+
 }

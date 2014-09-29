@@ -10,6 +10,7 @@ trait Fixtures {
   val tracksArray = withContentsOf("public_api", "tracks_array")
   val playlist = withContentsOf("public_api", "playlist")
   val user = withContentsOf("public_api", "user")
+  val stream = withContentsOf("public_api", "stream")
 
   val singleTrackXml = GlobalXmlFiles.load("public_api/single_track").get
   val tracksArrayXml = GlobalXmlFiles.load("public_api/tracks_array").get
