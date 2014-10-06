@@ -1,11 +1,7 @@
 package com.soundcloud.authorization
 
-import com.soundcloud.scalakit.Urn
-import com.soundcloud.scalakit.UserSession
-import play.api.libs.json.JsObject
-import play.api.libs.json.JsValue
-import com.soundcloud.jvmkit.policies.ContentAuthorization
-import com.soundcloud.jvmkit.policies.ContentPolicies
+import com.soundcloud.jvmkit.policies.{ContentAuthorization, ContentPolicies}
+import com.soundcloud.scalakit.{Urn, UserSession}
 
 object ApplyTrackPolicies {
 

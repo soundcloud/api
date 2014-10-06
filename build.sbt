@@ -12,7 +12,7 @@ organization := "com.soundcloud"
 
 version := "0.1.0-SNAPSHOT"
 
-scalacOptions ++= Seq("-deprecation", "-unchecked", "-target:jvm-1.6", "-language:_")
+scalacOptions ++= Seq("-deprecation", "-unchecked", "-target:jvm-1.7", "-language:_")
 
 resolvers ++= Seq(
   "SoundCloud Internal - Hosted Snapshots" at "http://maven.int.s-cloud.net/content/groups/hosted_snapshots/",
@@ -22,8 +22,14 @@ resolvers ++= Seq(
 )
 
 libraryDependencies ++= Seq(
-  "com.twitter"    %% "finagle-memcached" % "6.18.0" exclude("org.slf4j", "slf4j-jdk14"),
-  "com.soundcloud" %% "bff"  			  % "0.4.22" exclude("org.slf4j", "slf4j-jdk14")
+  "com.twitter"    %% "finagle-memcached" % "6.20.0" exclude("org.slf4j", "slf4j-jdk14"),
+  "com.soundcloud" %% "bff"  			  % "0.5.20" exclude("org.slf4j", "slf4j-jdk14")
 )
 
 mainClass in Compile := Some("com.soundcloud.bff.Main")
+
+initialize := {
+  val javaVersion = sys.props("java.version")
+  val isJava8 = javaVersion.startsWith("1.8")
+  require(isJava8, "Java 8 is required for this project")
+}
