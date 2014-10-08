@@ -5,13 +5,14 @@ import com.soundcloud.bff.authorization.ContentAuthorizationService
 import com.soundcloud.bff.finagle.{ResponseBuilder, Request => BffRequest}
 import com.soundcloud.bff.test.UnitSpecification
 import com.soundcloud.bff.web.UserAuthenticationComponent
-import com.soundcloud.bff.{BazookaConfigComponent, BffController}
+import com.soundcloud.bff.{BazookaConfigComponent, BffApp}
 import com.soundcloud.jvmkit.policies.{ContentAuthorization, ContentPolicies, Reasons}
 import com.soundcloud.scalakit.json.Json
 import com.soundcloud.scalakit.test.VerifiedMocks
 import com.soundcloud.scalakit.{Urn, UserSession}
 import com.twitter.util.{Await, Future}
 import org.mockito.Mockito.verifyZeroInteractions
+
 import scala.xml.Utility.trim
 import scala.xml.XML
 
@@ -22,8 +23,9 @@ class AuthorizeHttpResponseSpec extends UnitSpecification with Fixtures {
     val session = mock[UserSession]
     val contentAuthorization = mock[ContentAuthorizationService]
     val request = mock[BffRequest]
-    val userAuthentication = new BazookaConfigComponent with BffController with UserAuthenticationComponent {
+    val userAuthentication = new BazookaConfigComponent with BffApp with UserAuthenticationComponent {
       override val applicationName = "test"
+
       override def withUserSession(request: BffRequest)(action: (UserSession) => Future[ResponseBuilder]) = {
         request mustEqual Context.this.request
         action(session)
@@ -91,7 +93,7 @@ class AuthorizeHttpResponseSpec extends UnitSpecification with Fixtures {
     override def policies = Seq(ContentPolicies.ALLOW, ContentPolicies.BLOCK, ContentPolicies.ALLOW)
 
     authorizedResponse.statusCode mustEqual 200
-    Json.fromJson(authorizedResponse.getContentString()).as[Seq[bff.JsValue]].size mustEqual 2
+    Json.fromString(authorizedResponse.getContentString()).as[Seq[bff.JsValue]].size mustEqual 2
   }
 
   trait XmlTrackContext extends Context {
@@ -152,7 +154,7 @@ class AuthorizeHttpResponseSpec extends UnitSpecification with Fixtures {
     override def policies = Seq.fill(10)(ContentPolicies.BLOCK)
 
     authorizedResponse.statusCode mustEqual 200
-    (Json.fromJson(authorizedResponse.getContentString) \ "tracks").as[Seq[bff.JsValue]].size mustEqual 0
+    (Json.fromString(authorizedResponse.getContentString) \ "tracks").as[Seq[bff.JsValue]].size mustEqual 0
   }
 
   "trims a list if some tracks are not authorized" in new JsonPlaylistContext {
@@ -172,7 +174,7 @@ class AuthorizeHttpResponseSpec extends UnitSpecification with Fixtures {
     )
 
     authorizedResponse.statusCode mustEqual 200
-    (Json.fromJson(authorizedResponse.getContentString) \ "tracks").as[Seq[bff.JsValue]].size mustEqual 7
+    (Json.fromString(authorizedResponse.getContentString) \ "tracks").as[Seq[bff.JsValue]].size mustEqual 7
   }
 
   trait JsonStreamContext extends Context {
@@ -199,7 +201,7 @@ class AuthorizeHttpResponseSpec extends UnitSpecification with Fixtures {
 
     authorizedResponse.statusCode mustEqual 200
 
-    Json.fromJson(authorizedResponse.getContentString()) ==== streamFiltered
+    Json.fromString(authorizedResponse.getContentString()) ==== streamFiltered
   }
 
 
@@ -221,7 +223,7 @@ class AuthorizeHttpResponseSpec extends UnitSpecification with Fixtures {
   "removes unauthorized tracks and decorates authorized with policies in various places in a JSON payload" in new JsonGenericContext {
     authorizedResponse.statusCode mustEqual 200
 
-    Json.fromJson(authorizedResponse.getContentString()) ==== genericFiltered
+    Json.fromString(authorizedResponse.getContentString()) ==== genericFiltered
   }
 
   trait XmlStreamContext extends Context {

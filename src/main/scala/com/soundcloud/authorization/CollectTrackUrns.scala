@@ -19,7 +19,7 @@ object CollectTrackUrns {
 
   private def visitorFor(content: String) =
     if (hasJsonTrack(content))
-      Some(new TracksJsonVisitor(Json.fromJson(content)))
+      Some(new TracksJsonVisitor(Json.fromString(content)))
     else if (hasXmlTrack(content))
       Some(new TracksXmlVisitor(XML.loadString(content)))
     else

@@ -25,7 +25,7 @@ trait RateLimitComponent {
     require(memcachedServers != null, "$RATE_LIMIT_MEMCACHED_SERVERS must be set to a list of servers")
 
     KetamaClientBuilder()
-      .group(CacheNodeGroup.apply(memcachedServers))
+      .dest(memcachedServers)
       .build()
   }
 

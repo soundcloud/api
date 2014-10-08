@@ -1,2 +1,3 @@
 #!/bin/bash
+export PATH=vendor/jre-8u20/bin:$PATH
 target/start

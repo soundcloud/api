@@ -10,8 +10,6 @@ scalaVersion := "2.10.3"
 
 organization := "com.soundcloud"
 
-version := "0.1.0-SNAPSHOT"
-
 scalacOptions ++= Seq("-deprecation", "-unchecked", "-target:jvm-1.7", "-language:_")
 
 resolvers ++= Seq(
@@ -26,7 +24,7 @@ libraryDependencies ++= Seq(
   "com.soundcloud" %% "bff"  			  % "0.5.20" exclude("org.slf4j", "slf4j-jdk14")
 )
 
-mainClass in Compile := Some("com.soundcloud.bff.Main")
+mainClass in Compile := Some("com.soundcloud.publicApiStrangler.PublicApiStranglerApp")
 
 initialize := {
   val javaVersion = sys.props("java.version")
