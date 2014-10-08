@@ -1,6 +1,6 @@
 GIT
   remote: git@github.com:soundcloud/bucha.git
-  revision: 0e4da5889c6d5f3fe7751ac1868d271df9ff3360
+  revision: 9e25b903ace7c88a5c6fc14eb4a7dacc486a9a06
   specs:
     bucha (0.0.4)
 
