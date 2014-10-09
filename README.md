@@ -2,6 +2,19 @@
 
 An implementation of the [Strangler Pattern](http://martinfowler.com/bliki/StranglerApplication.html) for the mothership's Public API
 
+
+## Team
+
+Internal Integrations <intint@soundcloud.com>
+
+## How to deploy
+
+This project uses bucha as a deployment tool. In order to deploy the application, run:
+
+```
+bin/bucha api deploy
+```
+
 ## FAQ
 
 ### What should I read before asking questions?
