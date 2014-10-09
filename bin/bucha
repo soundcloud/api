@@ -1,0 +1,43 @@
+#!/bin/bash
+
+read -r -d '' TOKEN_ENC <<'EOF'
+-----BEGIN PGP MESSAGE-----
+Version: Shibboleth
+Date: Wed, 08 Oct 2014 21:25:20 UTC
+
+wcBMA8m04qQy6XvlAQgApo7k983VXw3w2osMG6l2p1PhS71NmXkkKBQT8h4/kRVS
+Vawc3waFBbH9R4kupoGMpR07mMW/2gcnCvOxHm4CkkZ/Rr1gvPxlh4OEOgI381/S
+VANPWxkWNUBjgSDiFsjY3lsrHohHRt7tzINlSwA2kF5xUScky/g2IdywJkRGKbH2
+vDWOCz6vkqSdTNvKmbCO1rEXrLXMHHNwoGjNDWnMEuLkXkIowOG+npjFU8NLNC/K
+/3b+LH/EsZJCS8/WXfwsaACtR/a2Is8ZyaSFBsBSHQehqH2tRt5XP/nusHgMX/Bn
+0hSlTCbzmTuY2yPgJGpljTV00EoyQ1tOIZhfW1VeWdLgAeSF/rXJRN0XuT3lEYFZ
+Yzl84UyF4U1X47ix6MrDxqoP4vCit5Hgw+CQ4Bjh5FTgiuKkMUgY4OTlqTzomwIe
+vKPe6EoLyLnj1nX9Z71gezXVb/lryhBeh5ngAOOff4o3rOvHH+Ca4SD24FjkP5dM
+bPFffqSLYu9CVk1+qeIY2KZs4Xtc4e+04S704YXz6JvR/tkWWoB2MLsx9Yj4Wfn2
+JV6xrTadoehNIWoNRnEtTHDAhOHjZZCOpW7g6157OoF2QOqRyIFvSsdql1tOgu6y
+gMZGjhWvDjSiKv3n515ZUSg7eScYwf7b/D1saoDQg7y+VLv+6wRVjZRzrwxtW7kh
+d85i+mploCefCxwz9NCvFa0GP+mdAMzEmEH9T6Me+rFVJzUMHWhaR45oDNjT25eH
+DKNc6otNmuCgNBY1cN444maFGUiAG67/RUcLrD2B/Gs6t9sDARYOCsBR2ughsmr+
+DUwCFvGWdZLZ6mFdj83Ylv7fpTgEKvAdAgyXHN60HywsWwHO7uSOUhc5rc59Ufzk
+Fa03jJw5HCMrlOGk3DkVZuLJjo7l4UvVAA==
+=W12P
+-----END PGP MESSAGE-----
+EOF
+
+TOKEN=$(curl -fsSL --data "$TOKEN_ENC" http://shibboleth/decrypt)
+
+if [ "$(echo $TOKEN | wc -c | tr -d ' ')" != "41" ]; then
+  echo "error decoding oauth token using shibboleth"
+  echo $TOKEN
+  exit 1
+fi
+
+RUBY_CODE=$(curl -fsSL -H "Authorization: token $TOKEN" -H "Accept: application/vnd.github.v3.raw" -L https://api.github.com/repos/soundcloud/bucha/contents/bin/bucha)
+
+if [[ ! $RUBY_CODE == *bazooka* ]]; then
+  echo "error fetching ruby code from github"
+  echo $RUBY_CODE
+  exit 1
+fi
+
+ruby -e "$RUBY_CODE"  $@
