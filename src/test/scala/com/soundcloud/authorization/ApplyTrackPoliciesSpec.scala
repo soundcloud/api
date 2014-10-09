@@ -6,8 +6,8 @@ import com.soundcloud.scalakit.Urn
 import com.soundcloud.scalakit.UserSession
 import play.api.libs.json.JsObject
 import play.api.libs.json.JsValue
-import com.soundcloud.jvmkit.policies.ContentPolicies
-import com.soundcloud.jvmkit.policies.Reasons
+import com.soundcloud.jvmkit.policies.ContentPolicy
+import com.soundcloud.jvmkit.policies.Reason
 
 class ApplyTrackPoliciesSpec extends UnitSpecification with Fixtures {
 
@@ -33,7 +33,7 @@ class ApplyTrackPoliciesSpec extends UnitSpecification with Fixtures {
     trait EverythingAuthorized extends Context {
       def rules =
         for (urn <- urns) yield {
-          new ContentAuthorization(urn, ContentPolicies.ALLOW, Reasons.GEO)
+          new ContentAuthorization(urn, ContentPolicy.ALLOW, Reason.GEO)
         }
     }
 
@@ -46,9 +46,9 @@ class ApplyTrackPoliciesSpec extends UnitSpecification with Fixtures {
       def rules =
         for (urn <- urns) yield {
           if (authorized.contains(urn))
-            new ContentAuthorization(urn, ContentPolicies.ALLOW, Reasons.GEO)
+            new ContentAuthorization(urn, ContentPolicy.ALLOW, Reason.GEO)
           else
-            new ContentAuthorization(urn, ContentPolicies.BLOCK, Reasons.GEO)
+            new ContentAuthorization(urn, ContentPolicy.BLOCK, Reason.GEO)
         }
     }
 
@@ -77,9 +77,9 @@ class ApplyTrackPoliciesSpec extends UnitSpecification with Fixtures {
       override def rules =
         for (urn <- urns) yield {
           if (authorized.contains(urn))
-            new ContentAuthorization(urn, ContentPolicies.ALLOW, Reasons.GEO)
+            new ContentAuthorization(urn, ContentPolicy.ALLOW, Reason.GEO)
           else
-            new ContentAuthorization(urn, ContentPolicies.BLOCK, Reasons.GEO)
+            new ContentAuthorization(urn, ContentPolicy.BLOCK, Reason.GEO)
         }
     }
 
