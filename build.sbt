@@ -20,7 +20,6 @@ resolvers ++= Seq(
 )
 
 libraryDependencies ++= Seq(
-  "com.twitter"    %% "finagle-memcached" % "6.18.0",
   "com.soundcloud" %% "bff"               % "0.5.21",
   "com.soundcloud" %% "sc-services" % "0.0.18"
 ).map(_.exclude("org.slf4j", "slf4j-jdk14"))
