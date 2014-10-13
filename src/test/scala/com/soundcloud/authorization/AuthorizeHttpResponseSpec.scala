@@ -198,8 +198,8 @@ class AuthorizeHttpResponseSpec extends UnitSpecification with Fixtures {
 
     def policies: Seq[ContentPolicy]
 
-    val authorizations = (stream \ "collection").as[Seq[bff.JsValue]]
-      .map(_ \ "track" \ "id")
+    val authorizations = (stream \ "collection" \\ "track")
+      .map(_ \ "id")
       .map(id => Urn("soundcloud:tracks:" + id))
       .zip(policies)
       .map(tuple => new ContentAuthorization(tuple._1, tuple._2, Reason.GEO))

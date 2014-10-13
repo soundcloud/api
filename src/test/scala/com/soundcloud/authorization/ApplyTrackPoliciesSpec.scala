@@ -68,7 +68,7 @@ class ApplyTrackPoliciesSpec extends UnitSpecification with Fixtures {
         )
 
       override def extractIds(json: JsValue) =
-        (json \ "collection").as[List[JsObject]].map(e => (e \ "track" \ "id").asOpt[Int].getOrElse(-999))
+        (json \ "collection" \\ "track").toList.map(e => (e \ "id").asOpt[Int].getOrElse(-999))
 
     }
 

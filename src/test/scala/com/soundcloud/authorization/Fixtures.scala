@@ -24,4 +24,7 @@ trait Fixtures {
   val genericXml = GlobalXmlFiles.load("public_api/generic").get
   val genericFilteredXml = GlobalXmlFiles.load("public_api/genericFiltered").get
 
+  val timelineStream = withContentsOf("timeline", "stream")
+
+  val okidokiFetch = withContentsOf("okidoki", "fetch")
 }
