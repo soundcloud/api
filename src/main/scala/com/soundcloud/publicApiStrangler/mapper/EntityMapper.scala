@@ -38,7 +38,7 @@ class EntityMapper(okidokiClient: OkidokiClient, lieblingClient: LieblingClient,
   private def likeCounts(likesInfo: JsObject): Map[Urn, Int] = {
     (likesInfo \  "likes_counts").as[Seq[JsObject]].map {
       obj =>
-        Urn((obj \ "target_urn").as[String]) -> (obj \ "likes_counts").as[Int]
+        Urn((obj \ "target_urn").as[String]) -> (obj \ "likes_count").asOpt[Int].getOrElse(0)
     }.toMap.withDefaultValue(0)
   }
 

@@ -7,9 +7,9 @@ import play.api.libs.json.{JsObject, JsValue}
 
 
 class Track(json: JsValue,
-            val likesByUrn: Map[Urn, Int],
+            likesByUrn: Map[Urn, Int],
             entityMapper: EntityMapper)(implicit context: MappingContext)
-  extends JsonMapping(json) with UrnSupport with LikesCountSupport {
+  extends JsonMapping(json) with UrnSupport {
 
   val artwork_url = (json \ "artwork_url").asOpt[String]
   val comment_count = (json \ "comments_count").asOpt[Int]
@@ -22,7 +22,7 @@ class Track(json: JsValue,
   val embeddable_by = (json \ "embeddable_by").asOpt[String]
   val favoritings_count = (json \ "favoritings_count").asOpt[Int]
   val genre = (json \ "genre").asOpt[String]
-  val id = urn.getIdentifier
+  val id = urn.getIdentifier.toInt
   val isrc = (json \ "isrc").asOpt[String]
   val kind = "track"
   val label_id = (json \ "label_id").asOpt[Int]

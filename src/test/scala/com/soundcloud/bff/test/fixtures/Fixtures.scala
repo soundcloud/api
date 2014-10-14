@@ -25,5 +25,7 @@ trait Fixtures {
 
   val timelineStream = withContentsOf("timeline", "stream")
 
+  val lieblingLikesInfo = withContentsOf("liebling", "likes_info")
+
   val okidokiFetch = withContentsOf("okidoki", "fetch")
 }

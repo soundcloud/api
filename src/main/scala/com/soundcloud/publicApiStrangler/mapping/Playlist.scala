@@ -6,13 +6,13 @@ import com.soundcloud.scalakit.Urn
 import play.api.libs.json.{JsObject, JsValue}
 
 class Playlist(json: JsValue,
-               val likesByUrn: Map[Urn, Int],
+               likesByUrn: Map[Urn, Int],
                baseUrl: String,
                entityMapper: EntityMapper)(implicit context: MappingContext)
-  extends JsonMapping(json) with UrnSupport with LikesCountSupport {
+  extends JsonMapping(json) with UrnSupport {
 
   val kind = "playlist"
-  val id = urn.getIdentifier
+  val id = urn.getIdentifier.toInt
   val created_at = (json \ "created_at").asOpt[String]
   val user_id = Urn((json \ "user" \ "urn").as[String]).getIdentifier
   val duration = (json \ "duration").asOpt[Int]

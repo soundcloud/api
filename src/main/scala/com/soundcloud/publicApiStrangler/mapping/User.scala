@@ -8,7 +8,7 @@ import play.api.libs.json.JsValue
 class User(json: JsValue, baseUrl: String)(implicit context: MappingContext) extends JsonMapping(json) with UrnSupport {
 
   val avatar_url = (json \ "avatar_url").asOpt[String]
-  val id = urn.getIdentifier
+  val id = urn.getIdentifier.toInt
   val kind = "user"
   val permalink_url = (json \ "permalink_url").asOpt[String]
   val uri = (json \ "self" \ "url").asOpt[String]
