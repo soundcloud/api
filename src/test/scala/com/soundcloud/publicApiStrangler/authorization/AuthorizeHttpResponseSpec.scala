@@ -7,7 +7,7 @@ import com.soundcloud.bff.finagle.{ResponseBuilder, Request => BffRequest}
 import com.soundcloud.bff.test.UnitSpecification
 import com.soundcloud.bff.web.UserAuthenticationComponent
 import com.soundcloud.bff.{BffApp, BazookaConfigComponent, BffController}
-import com.soundcloud.jvmkit.policies.{ContentAuthorization, ContentPolicies, Reasons}
+import com.soundcloud.jvmkit.policies.{ContentAuthorization, ContentPolicy, Reason}
 import com.soundcloud.scalakit.json.Json
 import com.soundcloud.scalakit.test.VerifiedMocks
 import com.soundcloud.scalakit.{Urn, UserSession}
@@ -43,15 +43,15 @@ class AuthorizeHttpResponseSpec extends UnitSpecification with Fixtures {
     val content = singleTrack.toString
     val status = 200
     val urn = Urn("soundcloud:tracks:153896632")
-    def policies: ContentPolicies
+    def policies: ContentPolicy
 
     override def before =
       when(contentAuthorization.findRulesApplicableTo(session, Seq(urn)))
-        .thenReturn(Future(Seq(new ContentAuthorization(urn, policies, Reasons.GEO))))
+        .thenReturn(Future(Seq(new ContentAuthorization(urn, policies, Reason.GEO))))
   }
 
   "renders the json track if authorized" in new JsonTrackContext {
-    lazy val policies = ContentPolicies.ALLOW
+    lazy val policies = ContentPolicy.ALLOW
     lazy val authorizedTrackJson = new JsonTrack(singleTrack).withPolicies(policies)
 
     authorizedResponse.statusCode mustEqual 200
@@ -59,7 +59,7 @@ class AuthorizeHttpResponseSpec extends UnitSpecification with Fixtures {
   }
 
   "renders forbidden if the json track isn't authorized" in new JsonTrackContext {
-    lazy val policies = ContentPolicies.BLOCK
+    lazy val policies = ContentPolicy.BLOCK
 
     authorizedResponse.statusCode mustEqual 403
     authorizedResponse.getContentString mustEqual ""
@@ -68,13 +68,13 @@ class AuthorizeHttpResponseSpec extends UnitSpecification with Fixtures {
   trait JsonTrackArrayContext extends Context {
     val content = tracksArray.toString
     val status = 200
-    def policies: Seq[ContentPolicies]
+    def policies: Seq[ContentPolicy]
 
     val authorizations = tracksArray.as[Seq[bff.JsValue]]
         .map(_ \ "id")
         .map(id => Urn("soundcloud:tracks:" + id))
         .zip(policies)
-        .map(tuple => new ContentAuthorization(tuple._1, tuple._2, Reasons.GEO))
+        .map(tuple => new ContentAuthorization(tuple._1, tuple._2, Reason.GEO))
 
     override def before =
       when(contentAuthorization.findRulesApplicableTo(===(session), any[Seq[Urn]]))
@@ -82,14 +82,14 @@ class AuthorizeHttpResponseSpec extends UnitSpecification with Fixtures {
   }
 
   "renders an empty list if all json tracks aren't authorized" in new JsonTrackArrayContext {
-    override def policies = Seq(ContentPolicies.BLOCK, ContentPolicies.BLOCK, ContentPolicies.BLOCK)
+    override def policies = Seq(ContentPolicy.BLOCK, ContentPolicy.BLOCK, ContentPolicy.BLOCK)
 
     authorizedResponse.statusCode mustEqual 200
     authorizedResponse.getContentString mustEqual "[]"
   }
 
   "trims a list if some tracks are not authorized" in new JsonTrackArrayContext {
-    override def policies = Seq(ContentPolicies.ALLOW, ContentPolicies.BLOCK, ContentPolicies.ALLOW)
+    override def policies = Seq(ContentPolicy.ALLOW, ContentPolicy.BLOCK, ContentPolicy.ALLOW)
 
     authorizedResponse.statusCode mustEqual 200
     Json.fromString(authorizedResponse.getContentString()).as[Seq[bff.JsValue]].size mustEqual 2
@@ -99,15 +99,15 @@ class AuthorizeHttpResponseSpec extends UnitSpecification with Fixtures {
     val content = singleTrackXml.toString
     val status = 200
     val urn = Urn("soundcloud:tracks:153896632")
-    def policies: ContentPolicies
+    def policies: ContentPolicy
 
     override def before =
       when(contentAuthorization.findRulesApplicableTo(session, Seq(urn)))
-        .thenReturn(Future(Seq(new ContentAuthorization(urn, policies, Reasons.GEO))))
+        .thenReturn(Future(Seq(new ContentAuthorization(urn, policies, Reason.GEO))))
   }
 
   "renders the xml track if authorized" in new XmlTrackContext {
-    lazy val policies = ContentPolicies.ALLOW
+    lazy val policies = ContentPolicy.ALLOW
     lazy val authorizedTrackXml = new XmlTrack(singleTrackXml).withPolicies(policies)
 
     authorizedResponse.statusCode mustEqual 200
@@ -115,7 +115,7 @@ class AuthorizeHttpResponseSpec extends UnitSpecification with Fixtures {
   }
 
   "renders forbidden if the xml track isn't authorized" in new XmlTrackContext {
-    lazy val policies = ContentPolicies.BLOCK
+    lazy val policies = ContentPolicy.BLOCK
 
     authorizedResponse.statusCode mustEqual 403
     authorizedResponse.getContentString mustEqual ""
@@ -136,13 +136,13 @@ class AuthorizeHttpResponseSpec extends UnitSpecification with Fixtures {
   trait JsonPlaylistContext extends Context {
     val content = playlist.toString
     val status = 200
-    def policies: Seq[ContentPolicies]
+    def policies: Seq[ContentPolicy]
 
     val authorizations = (playlist \ "tracks").as[Seq[bff.JsValue]]
       .map(_ \ "id")
       .map(id => Urn("soundcloud:tracks:" + id))
       .zip(policies)
-      .map(tuple => new ContentAuthorization(tuple._1, tuple._2, Reasons.GEO))
+      .map(tuple => new ContentAuthorization(tuple._1, tuple._2, Reason.GEO))
 
     override def before =
       when(contentAuthorization.findRulesApplicableTo(===(session), any[Seq[Urn]]))
@@ -150,7 +150,7 @@ class AuthorizeHttpResponseSpec extends UnitSpecification with Fixtures {
   }
 
   "renders playlist metadata without any tracks" in new JsonPlaylistContext {
-    override def policies = Seq.fill(10)(ContentPolicies.BLOCK)
+    override def policies = Seq.fill(10)(ContentPolicy.BLOCK)
 
     authorizedResponse.statusCode mustEqual 200
     (Json.fromString(authorizedResponse.getContentString) \ "tracks").as[Seq[bff.JsValue]].size mustEqual 0
@@ -158,18 +158,18 @@ class AuthorizeHttpResponseSpec extends UnitSpecification with Fixtures {
 
   "trims a list if some tracks are not authorized" in new JsonPlaylistContext {
     override def policies = Seq(
-      ContentPolicies.ALLOW,
-      ContentPolicies.ALLOW,
-      ContentPolicies.ALLOW,
-      ContentPolicies.ALLOW,
-      ContentPolicies.ALLOW,
+      ContentPolicy.ALLOW,
+      ContentPolicy.ALLOW,
+      ContentPolicy.ALLOW,
+      ContentPolicy.ALLOW,
+      ContentPolicy.ALLOW,
 
-      ContentPolicies.BLOCK,
-      ContentPolicies.BLOCK,
-      ContentPolicies.BLOCK,
+      ContentPolicy.BLOCK,
+      ContentPolicy.BLOCK,
+      ContentPolicy.BLOCK,
 
-      ContentPolicies.ALLOW,
-      ContentPolicies.ALLOW
+      ContentPolicy.ALLOW,
+      ContentPolicy.ALLOW
     )
 
     authorizedResponse.statusCode mustEqual 200
@@ -179,13 +179,13 @@ class AuthorizeHttpResponseSpec extends UnitSpecification with Fixtures {
   trait JsonStreamContext extends Context {
     val content = stream.toString
     val status = 200
-    def policies: Seq[ContentPolicies]
+    def policies: Seq[ContentPolicy]
 
     val authorizations = (stream \ "collection" \\ "track")
       .map(_ \ "id")
       .map(id => Urn("soundcloud:tracks:" + id))
       .zip(policies)
-      .map(tuple => new ContentAuthorization(tuple._1, tuple._2, Reasons.GEO))
+      .map(tuple => new ContentAuthorization(tuple._1, tuple._2, Reason.GEO))
 
     override def before =
       when(contentAuthorization.findRulesApplicableTo(===(session), any[Seq[Urn]]))
@@ -194,8 +194,8 @@ class AuthorizeHttpResponseSpec extends UnitSpecification with Fixtures {
 
   "removes stream items completely, when track unauthorized" in new JsonStreamContext {
     override def policies = Seq(
-      ContentPolicies.ALLOW,
-      ContentPolicies.BLOCK
+      ContentPolicy.ALLOW,
+      ContentPolicy.BLOCK
     )
 
     authorizedResponse.statusCode mustEqual 200
@@ -209,9 +209,9 @@ class AuthorizeHttpResponseSpec extends UnitSpecification with Fixtures {
     val status = 200
 
     val authorizations = Seq(
-      new ContentAuthorization(Urn("soundcloud:tracks:1"), ContentPolicies.BLOCK, Reasons.GEO),
-      new ContentAuthorization(Urn("soundcloud:tracks:2"), ContentPolicies.ALLOW, Reasons.GEO),
-      new ContentAuthorization(Urn("soundcloud:tracks:3"), ContentPolicies.ALLOW, Reasons.GEO)
+      new ContentAuthorization(Urn("soundcloud:tracks:1"), ContentPolicy.BLOCK, Reason.GEO),
+      new ContentAuthorization(Urn("soundcloud:tracks:2"), ContentPolicy.ALLOW, Reason.GEO),
+      new ContentAuthorization(Urn("soundcloud:tracks:3"), ContentPolicy.ALLOW, Reason.GEO)
     )
 
     override def before =
@@ -230,9 +230,9 @@ class AuthorizeHttpResponseSpec extends UnitSpecification with Fixtures {
     val status = 200
 
     val authorizations = Seq(
-      new ContentAuthorization(Urn("soundcloud:tracks:169183738"), ContentPolicies.ALLOW, Reasons.GEO),
-      new ContentAuthorization(Urn("soundcloud:tracks:168272289"), ContentPolicies.BLOCK, Reasons.GEO),
-      new ContentAuthorization(Urn("soundcloud:tracks:168546826"), ContentPolicies.ALLOW, Reasons.GEO)
+      new ContentAuthorization(Urn("soundcloud:tracks:169183738"), ContentPolicy.ALLOW, Reason.GEO),
+      new ContentAuthorization(Urn("soundcloud:tracks:168272289"), ContentPolicy.BLOCK, Reason.GEO),
+      new ContentAuthorization(Urn("soundcloud:tracks:168546826"), ContentPolicy.ALLOW, Reason.GEO)
     )
 
     override def before = {
@@ -254,9 +254,9 @@ class AuthorizeHttpResponseSpec extends UnitSpecification with Fixtures {
     val status = 200
 
     val authorizations = Seq(
-      new ContentAuthorization(Urn("soundcloud:tracks:1"), ContentPolicies.BLOCK, Reasons.GEO),
-      new ContentAuthorization(Urn("soundcloud:tracks:2"), ContentPolicies.ALLOW, Reasons.GEO),
-      new ContentAuthorization(Urn("soundcloud:tracks:3"), ContentPolicies.ALLOW, Reasons.GEO)
+      new ContentAuthorization(Urn("soundcloud:tracks:1"), ContentPolicy.BLOCK, Reason.GEO),
+      new ContentAuthorization(Urn("soundcloud:tracks:2"), ContentPolicy.ALLOW, Reason.GEO),
+      new ContentAuthorization(Urn("soundcloud:tracks:3"), ContentPolicy.ALLOW, Reason.GEO)
     )
 
     override def before = {
