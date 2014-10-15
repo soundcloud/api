@@ -11,12 +11,28 @@ class Timeline(json: JsValue,
                entityMapper: EntityMapper)(implicit context: MappingContext) extends JsonMapping(json) {
 
   val collection = mapChildren((json \ "events").as[Seq[JsObject]])
-//  val futureHref = futurePage((json \ "future_page_cursor").asOpt[String])
+  val futureHref = futurePage(collection)
   val nextHref = nextPage((json \ "meta" \ "next_page_cursor").asOpt[String])
 
 
-//  private def futurePage(cursor: Option[String]) = page.next(cursor).href
-  private def nextPage(cursor: Option[String]) = page.next(cursor).href
+  private def futurePage(events: Seq[TimelineItem]): Option[String] = {
+    events.filter(_.uuid.isDefined) match {
+      case latestEvent :: others =>
+        Some(
+          "https://" +
+          CursorBasedPage(
+          page.param,
+          page.baseUrl,
+          page.path,
+          page.extraParams.updated("uuid[to]", latestEvent.uuid.get),
+          None,
+          page.limit).href
+        )
+      case _ => None
+    }
+  }
+
+  private def nextPage(cursor: Option[String]) = "https://" + page.next(cursor).href
 
 
   private def mapChildren(events: Seq[JsObject]) = {

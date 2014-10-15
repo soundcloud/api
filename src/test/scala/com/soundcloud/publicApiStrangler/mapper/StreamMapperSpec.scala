@@ -4,7 +4,7 @@ import com.soundcloud.bff.test.fixtures.Fixtures
 import com.soundcloud.publicApiStrangler.mapping.TrackTimelineItem
 import com.soundcloud.bff.nextbff.pagination.CursorBasedPage
 import com.soundcloud.bff.test.UnitSpecification
-import com.soundcloud.scalakit.finagle.jsonservice.{IntParam, StringParam}
+import com.soundcloud.scalakit.finagle.jsonservice.{Params, IntParam, StringParam}
 import com.soundcloud.scalakit.test.VerifiedMocks
 import com.soundcloud.scalakit.{Urn, UserSession}
 import com.soundcloud.service.client.TimelineClient
@@ -19,16 +19,10 @@ class StreamMapperSpec extends UnitSpecification with Fixtures {
     val mapper = new StreamMapper(timelineClient, entityMapper)
     val session = mock[UserSession]
     val urn = Urn("soundcloud:users:1")
-    val page = mock[CursorBasedPage[Urn]]
-    val nextPage = mock[CursorBasedPage[Urn]]
+    val page = CursorBasedPage(urn, "foo.com", "/something", Map(), Some("2"), 100)
 
     override def before = {
-      when(nextPage.href).thenReturn("foo.com?cursor=deadbeef")
-
-      when(page.cursor).thenReturn(Some("15"))
-      when(page.limit).thenReturn(100)
-      when(page.next(Some("15"))).thenReturn(nextPage)
-      when(timelineClient.stream(session, Some("15"), 100)).thenReturn(Future(timelineStream.as[JsObject]))
+      when(timelineClient.stream(session, Some("2"), 100)).thenReturn(Future(timelineStream.as[JsObject]))
     }
 
     def result = Await.result(mapper.materialize(session, page)).get
@@ -40,12 +34,11 @@ class StreamMapperSpec extends UnitSpecification with Fixtures {
   }
 
   "builds a nextHref" in new Context {
-    result.nextHref mustEqual "foo.com?cursor=deadbeef"
+    result.nextHref mustEqual "https://foo.com/something?limit=100&cursor=15"
   }
 
   "builds a futureHref" in new Context {
-    pending
-//    result.futureHref mustEqual "foo.com/somewhere/only/we/know?cursor=deadbeef&limit=100&foo=bar"
+    result.futureHref mustEqual Some("https://foo.com/something?uuid%5Bto%5D=deadead&limit=100")
   }
 
 }
