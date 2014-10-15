@@ -19,26 +19,51 @@ class StreamMapperSpec extends UnitSpecification with Fixtures {
     val mapper = new StreamMapper(timelineClient, entityMapper)
     val session = mock[UserSession]
     val urn = Urn("soundcloud:users:1")
-    val page = CursorBasedPage(urn, "foo.com", "/something", Map(), Some("2"), 100)
 
-    override def before = {
-      when(timelineClient.stream(session, Some("2"), 100)).thenReturn(Future(timelineStream.as[JsObject]))
-    }
+    def page: CursorBasedPage[Urn]
 
     def result = Await.result(mapper.materialize(session, page)).get
   }
 
-  "builds a collection" in new Context {
-    result.collection.size mustEqual 5
-    result.collection.head must beAnInstanceOf[TrackTimelineItem]
+  "with a regular cursor" >> {
+    trait Cursor extends Context {
+      val page = CursorBasedPage(urn, "foo.com", "/something", Map(), Some("2"), 100)
+
+      override def before = {
+        when(timelineClient.stream(session, Some("2"), 100)).thenReturn(Future(timelineStream.as[JsObject]))
+      }
+    }
+
+    "builds a collection" in new Cursor {
+      result.collection.size mustEqual 5
+      result.collection.head must beAnInstanceOf[TrackTimelineItem]
+    }
+
+    "builds a nextHref" in new Cursor {
+      result.nextHref mustEqual "https://foo.com/something?limit=100&cursor=15"
+    }
+
+    "builds a futureHref" in new Cursor {
+      result.futureHref mustEqual Some("https://foo.com/something?uuid%5Bto%5D=deadead&limit=100")
+    }
   }
 
-  "builds a nextHref" in new Context {
-    result.nextHref mustEqual "https://foo.com/something?limit=100&cursor=15"
-  }
+  "with a reverse cursor" >> {
+    trait ReverseCursor extends Context {
+      val page = CursorBasedPage(urn, "foo.com", "/something", Map("uuid[to]" -> "deadbeef"), None, 100)
 
-  "builds a futureHref" in new Context {
-    result.futureHref mustEqual Some("https://foo.com/something?uuid%5Bto%5D=deadead&limit=100")
+      override def before = {
+        when(timelineClient.stream(session, Some("deadbeef"), 100, true)).thenReturn(Future(timelineStream.as[JsObject]))
+      }
+    }
+
+    "builds a nextHref" in new ReverseCursor {
+      result.nextHref mustEqual "https://foo.com/something?limit=100&cursor=15"
+    }
+
+    "builds a futureHref" in new ReverseCursor {
+      result.futureHref mustEqual Some("https://foo.com/something?uuid%5Bto%5D=deadead&limit=100")
+    }
   }
 
 }

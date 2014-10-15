@@ -4,6 +4,7 @@ import com.soundcloud.publicApiStrangler.mapper.EntityMapper
 import com.soundcloud.bff.nextbff.mapping.{JsonMapping, MappingContext}
 import com.soundcloud.bff.nextbff.pagination.CursorBasedPage
 import com.soundcloud.scalakit.Urn
+import com.soundcloud.scalakit.finagle.jsonservice.Params
 import play.api.libs.json.{JsObject, JsValue}
 
 class Timeline(json: JsValue,
@@ -17,23 +18,24 @@ class Timeline(json: JsValue,
 
   private def futurePage(events: Seq[TimelineItem]): Option[String] = {
     events.filter(_.uuid.isDefined) match {
-      case latestEvent :: others =>
-        Some(
-          "https://" +
-          CursorBasedPage(
-          page.param,
-          page.baseUrl,
-          page.path,
-          page.extraParams.updated("uuid[to]", latestEvent.uuid.get),
-          None,
-          page.limit).href
-        )
+      case latestEvent :: others => Some(cursorUrl(page.extraParams.updated("uuid[to]", latestEvent.uuid.get), None))
       case _ => None
     }
   }
 
-  private def nextPage(cursor: Option[String]) = "https://" + page.next(cursor).href
+  private def nextPage(cursor: Option[String]) = cursorUrl(page.extraParams.filterKeys(_ != "uuid[to]"), cursor)
 
+
+  private def cursorUrl(extraParams: Params, cursor: Option[String]): String =
+    "https://" +
+      CursorBasedPage(
+        page.param,
+        page.baseUrl,
+        page.path,
+        extraParams,
+        cursor,
+        page.limit
+      ).href
 
   private def mapChildren(events: Seq[JsObject]) = {
     events.map { event =>
