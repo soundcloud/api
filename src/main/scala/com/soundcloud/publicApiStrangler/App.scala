@@ -9,3 +9,4 @@ object App
     with BffApp
     with TimelineController
     with FallbackController
+    with TrackFiltering

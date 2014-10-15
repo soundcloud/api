@@ -11,8 +11,8 @@ import com.twitter.util.{Await, Future}
 class ContentAuthorizationFilterSpec extends UnitSpecification with Fixtures {
 
   trait Context extends Scope {
-    val someRequest = new HandlerRequest(AlwaysMatchesPathMatcher, FinagleRequest("/something"))
-    val service = mock[Service[HandlerRequest, FinagleResponse]]
+    val someRequest = new HandlerRequest(AlwaysMatchesPathMatcher, FinagleRequest("/something")).request
+    val service = mock[Service[FinagleRequest, FinagleResponse]]
     val authorizeContent = mock[AuthorizeHttpResponse]
     val originalResponse = FinagleResponse()
     val contentAuthorizationFilter = new ContentAuthorizationFilter(authorizeContent)
@@ -22,8 +22,8 @@ class ContentAuthorizationFilterSpec extends UnitSpecification with Fixtures {
     "returns the response unchanged" in new Context {
       val expectedResponseBuilder = new ResponseBuilder().body(originalResponse.contentString).status(originalResponse.statusCode)
 
-      service.apply(someRequest) returns Future.value(originalResponse)
-      authorizeContent.apply(new BffRequest(someRequest.request), originalResponse.statusCode, originalResponse.contentString) returns
+      service.apply(new BffRequest(someRequest)) returns Future.value(originalResponse)
+      authorizeContent.apply(new BffRequest(someRequest), originalResponse.statusCode, originalResponse.contentString) returns
         Future.value(expectedResponseBuilder)
 
       val authorizedResponse = Await.result(contentAuthorizationFilter.apply(someRequest, service))
@@ -40,8 +40,8 @@ class ContentAuthorizationFilterSpec extends UnitSpecification with Fixtures {
       val expectedResponseBuilder = new ResponseBuilder().body(bodyWithAuthorizationInformation).status(originalResponse.statusCode)
       val expectedResponse = expectedResponseBuilder.build
 
-      service.apply(someRequest) returns Future.value(originalResponse)
-      authorizeContent.apply(new BffRequest(someRequest.request), originalResponse.statusCode, originalResponse.contentString) returns
+      service.apply(new BffRequest(someRequest)) returns Future.value(originalResponse)
+      authorizeContent.apply(new BffRequest(someRequest), originalResponse.statusCode, originalResponse.contentString) returns
         Future.value(expectedResponseBuilder)
 
       val authorizedResponse = Await.result(contentAuthorizationFilter.apply(someRequest, service))

@@ -12,9 +12,9 @@ class AuthorizeHttpResponse(
   userAuthentication: UserAuthenticationComponent) {
 
   def apply(request: BffRequest, status: Int, body: String): Future[ResponseBuilder] =
-    authorize(request, status, body, Response(body))
+    authorize(request, status, body, BuilderResponse(body))
 
-  private def authorize(request: BffRequest, status: Int, body: String, originalResponse: Response): Future[ResponseBuilder] =
+  private def authorize(request: BffRequest, status: Int, body: String, originalResponse: BuilderResponse): Future[ResponseBuilder] =
     CollectTrackUrns(originalResponse.content) match {
       case Some((visitor, urns)) =>
         authorize(request, status, visitor, urns, originalResponse)
@@ -22,7 +22,7 @@ class AuthorizeHttpResponse(
         Future(originalResponse.render.status(status))
     }
 
-  private def authorize(request: BffRequest, status: Int, visitor: TracksVisitor, urns: List[Urn], originalResponse: Response) =
+  private def authorize(request: BffRequest, status: Int, visitor: TracksVisitor, urns: List[Urn], originalResponse: BuilderResponse) =
     userAuthentication.withUserSession(request) { session =>
       contentAuthorization.findRulesApplicableTo(session, urns).map { rules =>
         ApplyTrackPolicies(session, visitor, rules)
