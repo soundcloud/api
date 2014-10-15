@@ -3,10 +3,17 @@ package com.soundcloud.publicApiStrangler
 import com.soundcloud.publicApiStrangler.support.TrackFiltering
 import com.soundcloud.bff.{BazookaConfigComponent, BffApp}
 import com.soundcloud.publicApiStrangler.controller.{FallbackController, TimelineController}
+import com.soundcloud.service.component.{GeoIpComponent, AuthenticatorComponent}
 
 object App
     extends BazookaConfigComponent
-    with BffApp
     with TimelineController
     with FallbackController
+    with GeoIpComponent
+    with AuthenticatorComponent
     with TrackFiltering
+    with BffApp
+{
+  override val geoProvider = geoIpClient.get _
+  override val authenticator = authenticatorClient.cacheKeyAndSession _
+}

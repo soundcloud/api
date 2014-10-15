@@ -8,6 +8,7 @@ import com.soundcloud.bff.test.UnitSpecification
 import com.soundcloud.bff.web.UserAuthenticationComponent
 import com.soundcloud.bff.{BffApp, BazookaConfigComponent, BffController}
 import com.soundcloud.jvmkit.policies.{ContentAuthorization, ContentPolicy, Reason}
+import com.soundcloud.publicApiStrangler.App._
 import com.soundcloud.scalakit.json.Json
 import com.soundcloud.scalakit.test.VerifiedMocks
 import com.soundcloud.scalakit.{Urn, UserSession}
@@ -24,6 +25,8 @@ class AuthorizeHttpResponseSpec extends UnitSpecification with Fixtures {
     val contentAuthorization = mock[ContentAuthorizationService]
     val request = mock[BffRequest]
     val userAuthentication = new BazookaConfigComponent with BffApp with BffController with UserAuthenticationComponent {
+      override val geoProvider = null
+      override val authenticator = null
       override val applicationName = "test"
       override def withUserSession(request: BffRequest)(action: (UserSession) => Future[ResponseBuilder]) = {
         request mustEqual Context.this.request
