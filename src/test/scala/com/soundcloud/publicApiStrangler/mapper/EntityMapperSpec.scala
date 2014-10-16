@@ -16,12 +16,14 @@ class EntityMapperSpec extends UnitSpecification with Fixtures {
     val okidokiClient = mock[OkidokiClient]
     val lieblingClient = mock[LieblingClient]
     val entityMapper = mock[EntityMapper]
-    val mapper = new EntityMapper(okidokiClient, lieblingClient, "foo.com")
+    val entitySummaryMapper = mock[EntitySummaryMapper]
+    val mapper = new EntityMapper(okidokiClient, lieblingClient, "foo.com", entitySummaryMapper)
     val session = mock[UserSession]
     val urns = List(
       "soundcloud:users:123",
       "soundcloud:tracks:131352352",
-      "soundcloud:playlists:123").map(Urn(_))
+      "soundcloud:playlists:123",
+      "soundcloud:comments:205752728").map(Urn(_))
 
     val userUrns = List(
       "soundcloud:users:4037",
@@ -40,8 +42,7 @@ class EntityMapperSpec extends UnitSpecification with Fixtures {
   }
 
   "builds the proper mappings" in new Context {
-    result.size mustEqual 3
-    result.head must beAnInstanceOf[User]
+    result.size mustEqual 4
   }
 
   "injects the base URL and likes counts" in new Context {

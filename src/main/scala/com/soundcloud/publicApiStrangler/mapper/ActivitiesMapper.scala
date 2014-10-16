@@ -10,7 +10,7 @@ import com.soundcloud.scalakit.finagle.jsonservice.StringParam
 import com.soundcloud.service.client.{MoshimoshiClient, TimelineClient}
 import com.twitter.util.Future
 
-class StreamMapper(timelineClient: TimelineClient,
+class ActivitiesMapper(timelineClient: TimelineClient,
                    entityMapper: EntityMapper,
                    entitySummaryMapper: EntitySummaryMapper)
   extends ClientBasedMapper[CursorBasedPage[Urn], Timeline] {
@@ -21,7 +21,7 @@ class StreamMapper(timelineClient: TimelineClient,
       case _ => (page.cursor, false)
     }
 
-    timelineClient.stream(session, cursor, page.limit, reverse).map { json =>
+    timelineClient.activities(session, cursor, page.limit, reverse).map { json =>
       new Timeline(json, page, entityMapper, entitySummaryMapper)
     }
   }

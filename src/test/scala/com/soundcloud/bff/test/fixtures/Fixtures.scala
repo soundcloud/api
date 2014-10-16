@@ -24,6 +24,7 @@ trait Fixtures {
   val genericFilteredXml = GlobalXmlFiles.load("public_api/genericFiltered").get
 
   val timelineStream = withContentsOf("timeline", "stream")
+  val timelineActivities = withContentsOf("timeline", "activities")
 
   val lieblingLikesInfo = withContentsOf("liebling", "likes_info")
 

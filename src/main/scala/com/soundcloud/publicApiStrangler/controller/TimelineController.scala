@@ -1,10 +1,13 @@
 package com.soundcloud.publicApiStrangler.controller
 
 import com.soundcloud.bff.finagle.{ResponseBuilder, Request => BffRequest}
+import com.soundcloud.bff.nextbff.pagination.CursorBasedPage
 import com.soundcloud.bff.web.BffController
 import com.soundcloud.jvmkit.{LoggedInUserSession, Urn}
-import com.soundcloud.publicApiStrangler.mapper.{EntityMapper, StreamMapper}
+import com.soundcloud.publicApiStrangler.mapper._
+import com.soundcloud.publicApiStrangler.mapping.Timeline
 import com.soundcloud.publicApiStrangler.support._
+import com.soundcloud.scalakit._
 import com.soundcloud.scalakit.finagle.http.{AlwaysMatchesPathMatcher, HandlerRequest}
 import com.soundcloud.service.component.{LieblingComponent, OkidokiComponent, TimelineComponent}
 import com.twitter.finagle.http.Request
@@ -18,26 +21,32 @@ trait TimelineController extends BffController
     with PublicApiClientComponent
     with CursorPagination {
 
-  lazy val entityMapper = new EntityMapper(okidokiClient, lieblingClient, baseUrl)
-  lazy val streamMapper = new StreamMapper(timelineClient, entityMapper)
+  lazy val entitySummaryMapper = new EntitySummaryMapper(okidokiClient, baseUrl)
+  lazy val entityMapper = new EntityMapper(okidokiClient, lieblingClient, baseUrl, entitySummaryMapper)
+  lazy val streamMapper = new StreamMapper(timelineClient, entityMapper, entitySummaryMapper)
+  lazy val activitiesMapper = new ActivitiesMapper(timelineClient, entityMapper, entitySummaryMapper)
 
   val fallback = new DispatchToMothershipHandler(publicApiClient)
 
-  get("/e1/me/stream") {
-    request =>
-      withLoggedInUser(request) {
-        (session: LoggedInUserSession, userUrn: Urn) => {
-          if (rollingOut(session)) {
-            val page = pageFor(request, userUrn)
-            streamMapper.materialize(session, page).map {
-              case Some(info) => render.json(info)
-              case None => render.notFound
-            }
-          } else {
-            fallbackToMothership(request)
+  get("/e1/me/activities")(doMagic(_, activitiesMapper))
+  get("/e1/me/stream")(doMagic(_, streamMapper))
+
+
+  private def doMagic(request: BffRequest, mapper: ClientBasedMapper[CursorBasedPage[Urn], Timeline]) = {
+    withLoggedInUser(request) {
+      (session: LoggedInUserSession, userUrn: Urn) => {
+        if (rollingOut(session)) {
+          val page = pageFor(request, userUrn)
+          mapper.materialize(session, page).map {
+            case Some(info) => render.json(info)
+            case None => render.notFound
           }
+        } else {
+          fallbackToMothership(request)
         }
       }
+    }
+
   }
 
   // TODO !!!! turn this off for full rollout !!!!

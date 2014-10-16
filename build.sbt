@@ -21,7 +21,7 @@ resolvers ++= Seq(
 
 libraryDependencies ++= Seq(
   "com.soundcloud" %% "bff"               % "0.5.24",
-  "com.soundcloud" %% "sc-services"       % "0.0.21"
+  "com.soundcloud" %% "sc-services"       % "0.0.22"
 ).map(_.exclude("org.slf4j", "slf4j-jdk14"))
 
 initialize := {

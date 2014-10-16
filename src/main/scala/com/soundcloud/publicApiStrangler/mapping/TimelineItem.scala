@@ -15,6 +15,11 @@ abstract class TimelineItem(json: JsValue, entityMapper: EntityMapper)(implicit 
 
 
   private def typeFor(timelineType: String) = {
-    timelineType.replace(":", "-")
+    timelineType match {
+      case "user:follow" => "affiliation"
+      case "track:comment" => "comment"
+      case other => timelineType.replace(":", "-")
+    }
+
   }
 }

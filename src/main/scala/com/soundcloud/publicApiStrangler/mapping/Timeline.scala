@@ -1,6 +1,6 @@
 package com.soundcloud.publicApiStrangler.mapping
 
-import com.soundcloud.publicApiStrangler.mapper.EntityMapper
+import com.soundcloud.publicApiStrangler.mapper.{EntitySummaryMapper, EntityMapper}
 import com.soundcloud.bff.nextbff.mapping.{JsonMapping, MappingContext}
 import com.soundcloud.bff.nextbff.pagination.CursorBasedPage
 import com.soundcloud.scalakit.Urn
@@ -9,7 +9,8 @@ import play.api.libs.json.{JsObject, JsValue}
 
 class Timeline(json: JsValue,
                page: CursorBasedPage[Urn],
-               entityMapper: EntityMapper)(implicit context: MappingContext) extends JsonMapping(json) {
+               entityMapper: EntityMapper,
+               entitySummaryMapper: EntitySummaryMapper)(implicit context: MappingContext) extends JsonMapping(json) {
 
   val collection = mapChildren((json \ "events").as[Seq[JsObject]])
   val futureHref = futurePage(collection)
@@ -41,8 +42,10 @@ class Timeline(json: JsValue,
     events.map { event =>
       val urn = Urn((event \ "urn").as[String])
       urn.getCollection match {
-        case "tracks" => new TrackTimelineItem(event, entityMapper)
-        case "playlists" => new PlaylistTimelineItem(event, entityMapper)
+        case "tracks" => new TrackTimelineItem(event, entityMapper, entitySummaryMapper)
+        case "playlists" => new PlaylistTimelineItem(event, entityMapper, entitySummaryMapper)
+        case "comments" => new CommentTimelineItem(event, entityMapper, entitySummaryMapper)
+        case "affiliations" => new ActorTimelineItem(event, entityMapper)
       }
     }
   }

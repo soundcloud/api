@@ -1,6 +1,6 @@
 package com.soundcloud.publicApiStrangler.mapper
 
-import com.soundcloud.publicApiStrangler.mapping.{Playlist, Track, User}
+import com.soundcloud.publicApiStrangler.mapping.{Comment, Playlist, Track, User}
 import com.soundcloud.bff.nextbff.mapper.Mapper
 import com.soundcloud.bff.nextbff.mapping.{JsonMapping, MappingContext}
 import com.soundcloud.jvmkit.UserSession
@@ -9,7 +9,11 @@ import com.soundcloud.service.client.{LieblingClient, OkidokiClient, MoshimoshiC
 import com.twitter.util.Future
 import play.api.libs.json.JsObject
 
-class EntityMapper(okidokiClient: OkidokiClient, lieblingClient: LieblingClient, baseUrl: String) extends Mapper[Urn, JsonMapping] {
+class EntityMapper(okidokiClient: OkidokiClient,
+                   lieblingClient: LieblingClient,
+                   baseUrl: String,
+                   entitySummaryMapper: EntitySummaryMapper)
+  extends Mapper[Urn, JsonMapping] {
 
   override def map(session: UserSession, inputs: Set[Urn])(implicit context: MappingContext): Future[Map[Urn, JsonMapping]] = {
     val likes = lieblingClient.likesCounts(session, inputs.toList)
@@ -30,8 +34,9 @@ class EntityMapper(okidokiClient: OkidokiClient, lieblingClient: LieblingClient,
   private def entityFor(urn: Urn, entityData: JsObject, likesCounts: Map[Urn, Int])(implicit context: MappingContext) = {
     urn.getCollection match {
       case "users" => new User(entityData, baseUrl)
-      case "tracks" => new Track(entityData, likesCounts, this)
-      case "playlists" => new Playlist(entityData, likesCounts, baseUrl, this)
+      case "tracks" => new Track(entityData, likesCounts, baseUrl, entitySummaryMapper)
+      case "playlists" => new Playlist(entityData, likesCounts, baseUrl, entitySummaryMapper)
+      case "comments" => new Comment(entityData, baseUrl, entitySummaryMapper)
     }
   }
 
