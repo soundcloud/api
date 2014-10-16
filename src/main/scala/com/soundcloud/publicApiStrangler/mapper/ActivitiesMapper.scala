@@ -1,6 +1,6 @@
 package com.soundcloud.publicApiStrangler.mapper
 
-import com.soundcloud.publicApiStrangler.mapping.Timeline
+import com.soundcloud.publicApiStrangler.mapping.TimelineWithUuids
 import com.soundcloud.bff.nextbff.mapper.{Mapper, Page}
 import com.soundcloud.bff.nextbff.mapping.MappingContext
 import com.soundcloud.bff.nextbff.pagination.CursorBasedPage
@@ -13,16 +13,16 @@ import com.twitter.util.Future
 class ActivitiesMapper(timelineClient: TimelineClient,
                    entityMapper: EntityMapper,
                    entitySummaryMapper: EntitySummaryMapper)
-  extends ClientBasedMapper[CursorBasedPage[Urn], Timeline] {
+  extends TimelineMapper {
 
-  override def fetch(session: UserSession, page: CursorBasedPage[Urn])(implicit context: MappingContext): Future[Timeline] = {
+  override def fetch(session: UserSession, page: CursorBasedPage[Urn])(implicit context: MappingContext): Future[TimelineWithUuids] = {
     val (cursor, reverse) = page.extraParams.get("uuid[to]") match {
       case Some(StringParam(uuid)) => (Some(uuid), true)
       case _ => (page.cursor, false)
     }
 
     timelineClient.activities(session, cursor, page.limit, reverse).map { json =>
-      new Timeline(json, page, entityMapper, entitySummaryMapper)
+      new TimelineWithUuids(json, page, entityMapper, entitySummaryMapper)
     }
   }
 }

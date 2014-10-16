@@ -25,14 +25,17 @@ trait TimelineController extends BffController
   lazy val entityMapper = new EntityMapper(okidokiClient, lieblingClient, baseUrl, entitySummaryMapper)
   lazy val streamMapper = new StreamMapper(timelineClient, entityMapper, entitySummaryMapper)
   lazy val activitiesMapper = new ActivitiesMapper(timelineClient, entityMapper, entitySummaryMapper)
+  lazy val publicActivitiesMapper = new ActivitiesV1Mapper(timelineClient, entityMapper, entitySummaryMapper)
 
   val fallback = new DispatchToMothershipHandler(publicApiClient)
 
+  get("/me/activities")(doMagic(_, publicActivitiesMapper))
+  get("/me/activities/all")(doMagic(_, publicActivitiesMapper))
   get("/e1/me/activities")(doMagic(_, activitiesMapper))
   get("/e1/me/stream")(doMagic(_, streamMapper))
 
 
-  private def doMagic(request: BffRequest, mapper: ClientBasedMapper[CursorBasedPage[Urn], Timeline]) = {
+  private def doMagic(request: BffRequest, mapper: TimelineMapper) = {
     withLoggedInUser(request) {
       (session: LoggedInUserSession, userUrn: Urn) => {
         if (rollingOut(session)) {

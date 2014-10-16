@@ -1,7 +1,7 @@
 package com.soundcloud.publicApiStrangler.mapper
 
 import com.soundcloud.bff.test.fixtures.Fixtures
-import com.soundcloud.publicApiStrangler.mapping.TrackTimelineItem
+import com.soundcloud.publicApiStrangler.mapping.{TimelineWithUuids, TrackTimelineItem}
 import com.soundcloud.bff.nextbff.pagination.CursorBasedPage
 import com.soundcloud.bff.test.UnitSpecification
 import com.soundcloud.scalakit.finagle.jsonservice.{Params, IntParam, StringParam}
@@ -23,7 +23,7 @@ class ActivitiesMapperSpec extends UnitSpecification with Fixtures {
 
     def page: CursorBasedPage[Urn]
 
-    def result = Await.result(mapper.materialize(session, page)).get
+    def result = Await.result(mapper.materialize(session, page)).get.asInstanceOf[TimelineWithUuids]
   }
 
   "with a regular cursor" >> {
@@ -41,7 +41,7 @@ class ActivitiesMapperSpec extends UnitSpecification with Fixtures {
     }
 
     "builds a nextHref" in new Cursor {
-      result.nextHref mustEqual "https://foo.com/something?limit=100&cursor=4743688807709147136AYpG--SCewY49t7-FBA%3D%3D"
+      result.nextHref mustEqual Some("https://foo.com/something?limit=100&cursor=4743688807709147136AYpG--SCewY49t7-FBA%3D%3D")
     }
 
     "builds a futureHref" in new Cursor {
@@ -59,7 +59,7 @@ class ActivitiesMapperSpec extends UnitSpecification with Fixtures {
     }
 
     "builds a nextHref" in new ReverseCursor {
-      result.nextHref mustEqual "https://foo.com/something?limit=100&cursor=4743688807709147136AYpG--SCewY49t7-FBA%3D%3D"
+      result.nextHref mustEqual Some("https://foo.com/something?limit=100&cursor=4743688807709147136AYpG--SCewY49t7-FBA%3D%3D")
     }
 
     "builds a futureHref" in new ReverseCursor {

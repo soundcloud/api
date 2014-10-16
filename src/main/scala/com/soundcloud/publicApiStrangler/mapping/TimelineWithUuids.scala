@@ -1,0 +1,50 @@
+package com.soundcloud.publicApiStrangler.mapping
+
+import com.soundcloud.publicApiStrangler.mapper.{EntitySummaryMapper, EntityMapper}
+import com.soundcloud.bff.nextbff.mapping.{JsonMapping, MappingContext}
+import com.soundcloud.bff.nextbff.pagination.CursorBasedPage
+import com.soundcloud.scalakit.Urn
+import com.soundcloud.scalakit.finagle.jsonservice.Params
+import play.api.libs.json.{JsObject, JsValue}
+
+class TimelineWithUuids(json: JsValue,
+               page: CursorBasedPage[Urn],
+               entityMapper: EntityMapper,
+               entitySummaryMapper: EntitySummaryMapper)(implicit context: MappingContext)
+  extends Timeline(json) {
+
+  val futureHref = futurePage(events)
+
+
+  override protected def nextPage(cursor: Option[String]) = Some(cursorUrl(page.extraParams.filterKeys(_ != "uuid[to]"), cursor))
+
+  override protected def mapChildren(events: Seq[JsObject]) = {
+    events.map { event =>
+      val urn = Urn((event \ "urn").as[String])
+      urn.getCollection match {
+        case "tracks" => new TrackTimelineItem(event, entityMapper, entitySummaryMapper)
+        case "playlists" => new PlaylistTimelineItem(event, entityMapper, entitySummaryMapper)
+        case "comments" => new CommentTimelineItem(event, entityMapper, entitySummaryMapper)
+        case "affiliations" => new ActorTimelineItem(event, entityMapper)
+      }
+    }
+  }
+
+  private def futurePage(events: Seq[JsObject]): Option[String] = {
+    events.flatMap(e => (e \ "unique_id").asOpt[String]) match {
+      case latestId :: others => Some(cursorUrl(page.extraParams.updated("uuid[to]", latestId), None))
+      case _ => None
+    }
+  }
+
+  private def cursorUrl(extraParams: Params, cursor: Option[String]): String =
+    "https://" +
+      CursorBasedPage(
+        page.param,
+        page.baseUrl,
+        page.path,
+        extraParams,
+        cursor,
+        page.limit
+      ).href
+}
