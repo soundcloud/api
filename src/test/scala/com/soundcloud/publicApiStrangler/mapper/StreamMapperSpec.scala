@@ -26,6 +26,24 @@ class StreamMapperSpec extends UnitSpecification with Fixtures {
     def result = Await.result(mapper.materialize(session, page)).get.asInstanceOf[TimelineWithUuids]
   }
 
+  "without a cursor" >> {
+    trait NoCursor extends Context {
+      val page = CursorBasedPage(urn, "foo.com", "/something", Map(), None, 100)
+
+      override def before = {
+        when(timelineClient.stream(session, None, 100)).thenReturn(Future(timelineStream.as[JsObject]))
+      }
+    }
+
+    "builds a nextHref" in new NoCursor {
+      result.nextHref mustEqual Some("https://foo.com/something?limit=100&cursor=15")
+    }
+
+    "builds a futureHref" in new NoCursor {
+      result.futureHref mustEqual Some("https://foo.com/something?uuid%5Bto%5D=deadead&limit=100")
+    }
+  }
+
   "with a regular cursor" >> {
     trait Cursor extends Context {
       val page = CursorBasedPage(urn, "foo.com", "/something", Map(), Some("2"), 100)
@@ -44,8 +62,8 @@ class StreamMapperSpec extends UnitSpecification with Fixtures {
       result.nextHref mustEqual Some("https://foo.com/something?limit=100&cursor=15")
     }
 
-    "builds a futureHref" in new Cursor {
-      result.futureHref mustEqual Some("https://foo.com/something?uuid%5Bto%5D=deadead&limit=100")
+    "doesn't build a futureHref" in new Cursor {
+      result.futureHref mustEqual None
     }
   }
 

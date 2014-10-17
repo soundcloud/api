@@ -44,8 +44,8 @@ class ActivitiesMapperSpec extends UnitSpecification with Fixtures {
       result.nextHref mustEqual Some("https://foo.com/something?limit=100&cursor=4743688807709147136AYpG--SCewY49t7-FBA%3D%3D")
     }
 
-    "builds a futureHref" in new Cursor {
-      result.futureHref mustEqual Some("https://foo.com/something?uuid%5Bto%5D=43003dfdbfb17cb241a0b02190cd6458786aba7e&limit=100")
+    "doesn't build a futureHref" in new Cursor {
+      result.futureHref mustEqual None
     }
   }
 

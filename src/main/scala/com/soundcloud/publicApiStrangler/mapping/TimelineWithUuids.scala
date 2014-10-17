@@ -31,6 +31,8 @@ class TimelineWithUuids(json: JsValue,
   }
 
   private def futurePage(events: Seq[JsObject]): Option[String] = {
+    if(page.cursor.isDefined) return None
+
     events.flatMap(e => (e \ "cursor").asOpt[String]) match {
       case latestId :: others => Some(cursorUrl(page.extraParams.updated("uuid[to]", latestId), None))
       case _ => None
