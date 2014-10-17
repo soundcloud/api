@@ -30,9 +30,13 @@ trait TimelineController extends BffController
   val fallback = new DispatchToMothershipHandler(publicApiClient)
 
   get("/me/activities")(doMagic(_, publicActivitiesMapper))
+  get("/me/activities.json")(doMagic(_, publicActivitiesMapper))
   get("/me/activities/all")(doMagic(_, publicActivitiesMapper))
+  get("/me/activities/all.json")(doMagic(_, publicActivitiesMapper))
   get("/e1/me/activities")(doMagic(_, activitiesMapper))
+  get("/e1/me/activities.json")(doMagic(_, activitiesMapper))
   get("/e1/me/stream")(doMagic(_, streamMapper))
+  get("/e1/me/stream.json")(doMagic(_, streamMapper))
 
 
   private def doMagic(request: BffRequest, mapper: TimelineMapper) = {
