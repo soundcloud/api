@@ -53,11 +53,11 @@ trait TimelineController extends BffController
         }
       }
     }
-
   }
 
+
   // TODO !!!! turn this off for full rollout !!!!
-  val testUsers = List("8478647", "69099281")
+  val testUsers = List("8478647", "69099281", "1074292", "258229", "172720", "1196384", "107637429", "36587595", "21592204", "67278483", "50881634", "5725061", "1717170", "25882813")
 
   private def rollingOut(session: LoggedInUserSession) = {
     testUsers.contains(session.getUser.getIdentifier)
