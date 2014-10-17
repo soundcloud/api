@@ -6,7 +6,7 @@ import play.api.libs.json.JsValue
 
 abstract class TimelineItem(json: JsValue, entityMapper: EntityMapper)(implicit context: MappingContext) extends JsonMapping(json) {
 
-  val uuid = (json \ "unique_id").asOpt[String]
+  val uuid = (json \ "cursor").asOpt[String]
   val created_at = (json \ "timestamp").as[String]
   val `type` = typeFor((json \ "type").as[String])
 
