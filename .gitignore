@@ -43,3 +43,4 @@ logs
 *.patch
 production.json
 staging.json
+.install.jre
