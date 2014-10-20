@@ -2,7 +2,8 @@ api:
   env: production.properties
   instances: 100
   proc: api
-  irc-channel: stream
+  irc-channel: bff
   app: public-api-strangler
+  scale-method: stepped
   auto-scale-down: false
   zone: db
