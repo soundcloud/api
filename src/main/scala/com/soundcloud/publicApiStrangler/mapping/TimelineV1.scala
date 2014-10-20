@@ -11,7 +11,7 @@ class TimelineV1(json: JsValue,
                page: CursorBasedPage[Urn],
                entityMapper: EntityMapper,
                entitySummaryMapper: EntitySummaryMapper)(implicit context: MappingContext)
-  extends Timeline(json) {
+  extends Timeline(json, page) {
 
   override protected def nextPage(cursor: Option[String]) = Some("https://" + page.next(cursor).href)
 

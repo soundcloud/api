@@ -10,8 +10,8 @@ class TimelineItemV1(json: JsValue,
                      entitySummaryMapper: EntitySummaryMapper)(implicit context: MappingContext)
   extends JsonMapping(json) {
 
-  val created_at = (json \ "timestamp").as[String]
   val `type` = typeFor((json \ "type").as[String])
+  val created_at = (json \ "timestamp").as[String]
   val origin = entityMapper.embed(originUrn)
 
   // deprecated fields, kept for structure only

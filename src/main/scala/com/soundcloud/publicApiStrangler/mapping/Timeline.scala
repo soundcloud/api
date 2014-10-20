@@ -7,9 +7,10 @@ import com.soundcloud.scalakit.Urn
 import com.soundcloud.scalakit.finagle.jsonservice.Params
 import play.api.libs.json.{JsObject, JsValue}
 
-abstract class Timeline(json: JsValue)(implicit context: MappingContext) extends JsonMapping(json) {
+abstract class Timeline(json: JsValue, page: CursorBasedPage[Urn])(implicit context: MappingContext) extends JsonMapping(json) {
 
   val collection: Seq[JsonMapping] = mapChildren(events)
+  val futureHref = futurePage(events)
   val nextHref = nextPage((json \ "meta" \ "next_page_cursor").asOpt[String])
 
   def events = (json \ "events").as[Seq[JsObject]]
@@ -17,4 +18,23 @@ abstract class Timeline(json: JsValue)(implicit context: MappingContext) extends
   protected def nextPage(cursor: Option[String]): Option[String]
   protected def mapChildren(events: Seq[JsObject]): Seq[JsonMapping]
 
+  private def futurePage(events: Seq[JsObject]): Option[String] = {
+    if(page.cursor.isDefined) return None
+
+    events.flatMap(e => (e \ "cursor").asOpt[String]) match {
+      case latestId :: others => Some(cursorUrl(page.extraParams.updated("uuid[to]", latestId), None))
+      case _ => None
+    }
+  }
+
+  protected def cursorUrl(extraParams: Params, cursor: Option[String]): String =
+    "https://" +
+      CursorBasedPage(
+        page.param,
+        page.baseUrl,
+        page.path,
+        extraParams,
+        cursor,
+        page.limit
+      ).href
 }

@@ -11,10 +11,7 @@ class TimelineWithUuids(json: JsValue,
                page: CursorBasedPage[Urn],
                entityMapper: EntityMapper,
                entitySummaryMapper: EntitySummaryMapper)(implicit context: MappingContext)
-  extends Timeline(json) {
-
-  val futureHref = futurePage(events)
-
+  extends Timeline(json, page) {
 
   override protected def nextPage(cursor: Option[String]) = Some(cursorUrl(page.extraParams.filterKeys(_ != "uuid[to]"), cursor))
 
@@ -30,23 +27,4 @@ class TimelineWithUuids(json: JsValue,
     }
   }
 
-  private def futurePage(events: Seq[JsObject]): Option[String] = {
-    if(page.cursor.isDefined) return None
-
-    events.flatMap(e => (e \ "cursor").asOpt[String]) match {
-      case latestId :: others => Some(cursorUrl(page.extraParams.updated("uuid[to]", latestId), None))
-      case _ => None
-    }
-  }
-
-  private def cursorUrl(extraParams: Params, cursor: Option[String]): String =
-    "https://" +
-      CursorBasedPage(
-        page.param,
-        page.baseUrl,
-        page.path,
-        extraParams,
-        cursor,
-        page.limit
-      ).href
 }
