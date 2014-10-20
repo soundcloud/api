@@ -23,7 +23,13 @@ class TrackSummary(json: JsValue,
   val waveform_url = (json \ "waveform_url").asOpt[String]
   val stream_url = (json \ "stream_url").asOpt[String]
   val uri = (json \ "self" \ "url").asOpt[String]
-  val user_id = (json \ "user_id").asOpt[Int]
-  val user_uri = s"https://$baseUrl/users/$user_id"
+  val user_id = userId
+  val user_uri = s"https://$baseUrl/users/$userId"
+
+
+  private def userId = (json \ "user" \ "urn").asOpt[String] match {
+    case None => None
+    case Some(urn) => Urn(urn).getIdentifier.toInt
+  }
 
 }

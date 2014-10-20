@@ -30,7 +30,7 @@ class ActivitiesV1MapperSpec extends UnitSpecification with Fixtures {
       val page = CursorBasedPage(urn, "foo.com", "/something", Map(), Some("2"), 100)
 
       override def before = {
-        when(timelineClient.activities(session, Some("2"), 100)).thenReturn(Future(timelineActivities.as[JsObject]))
+        when(timelineClient.stream(session, Some("2"), 100)).thenReturn(Future(timelineActivities.as[JsObject]))
       }
     }
 

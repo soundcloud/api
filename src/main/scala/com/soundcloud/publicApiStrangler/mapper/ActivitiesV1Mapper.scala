@@ -15,7 +15,8 @@ class ActivitiesV1Mapper(timelineClient: TimelineClient,
   extends TimelineMapper {
 
   override def fetch(session: UserSession, page: CursorBasedPage[Urn])(implicit context: MappingContext): Future[TimelineV1] = {
-    timelineClient.activities(session, page.cursor, page.limit).map { json =>
+    // activities on public api are actually the user' STREAM. Go figure.
+    timelineClient.stream(session, page.cursor, page.limit).map { json =>
       new TimelineV1(json, page, entityMapper, entitySummaryMapper)
     }
   }

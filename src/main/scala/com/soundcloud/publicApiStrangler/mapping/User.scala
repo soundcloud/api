@@ -28,7 +28,7 @@ class User(json: JsValue, baseUrl: String)(implicit context: MappingContext) ext
     (json \ "links").as[Seq[JsObject]].filter(
       data => (data \ "network").as[String] == networkName
     ) match {
-      case networkData :: _ => Some((networkData \ fieldName).as[String])
+      case networkData :: _ => (networkData \ fieldName).asOpt[String]
       case _ => None
     }
   }

@@ -13,7 +13,6 @@ class PlaylistSummary(json: JsValue,
   val kind = "playlist"
   val id = urn.getIdentifier.toInt
   val created_at = (json \ "created_at").asOpt[String]
-  val user_id = Urn((json \ "user" \ "urn").as[String]).getIdentifier
   val duration = (json \ "duration").asOpt[Int]
   val last_modified = (json \ "last_modified").asOpt[String]
   val sharing = (json \ "sharing").asOpt[String]
@@ -34,10 +33,17 @@ class PlaylistSummary(json: JsValue,
   val permalink_url = (json \ "permalink_url").asOpt[String]
   val artwork_url = (json \ "artwork_url").asOpt[String]
   val license = (json \ "license").asOpt[String]
-  val user = entitySummaryMapper.embed(Urn((json \ "user" \ "urn").as[String]))
+  val user_id = if(userUrn.isDefined) userUrn.get.getIdentifier.toInt else None
+  val user = if(userUrn.isDefined) entitySummaryMapper.embed(userUrn.get) else None
   val secret_token = (json \ "secret_token").as[String]
   val reposts_count = (json \ "reposts_count").asOpt[Int]
   val tracks_uri = s"https://$baseUrl/playlists/$id/tracks"
   val secret_uri = s"https://$baseUrl/playlists/$id?secret_token=$secret_token"
+
+
+  private def userUrn: Option[Urn] = (json \ "user" \ "urn").asOpt[String] match {
+    case None => None
+    case Some(urn) => Some(Urn(urn))
+  }
 
 }
