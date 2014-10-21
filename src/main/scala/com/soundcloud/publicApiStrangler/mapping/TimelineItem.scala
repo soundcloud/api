@@ -1,18 +1,13 @@
 package com.soundcloud.publicApiStrangler.mapping
 
-import com.soundcloud.publicApiStrangler.mapper.EntityMapper
-import com.soundcloud.bff.nextbff.mapping.{JsonMapping, MappingContext}
+import com.soundcloud.bff.nextbff.mapping.{MappingContext, JsonMapping}
 import play.api.libs.json.JsValue
 
-abstract class TimelineItem(json: JsValue, entityMapper: EntityMapper)(implicit context: MappingContext) extends JsonMapping(json) {
 
-  val uuid = (json \ "cursor").asOpt[String]
+abstract class TimelineItem(json: JsValue)(implicit context: MappingContext) extends JsonMapping(json) {
+
   val created_at = (json \ "timestamp").as[String]
   val `type` = typeFor((json \ "type").as[String])
-
-  // deprecated fields, kept for structure only
-  val tags = None
-
 
   private def typeFor(timelineType: String) = {
     timelineType match {
@@ -20,6 +15,5 @@ abstract class TimelineItem(json: JsValue, entityMapper: EntityMapper)(implicit 
       case "track:comment" => "comment"
       case other => timelineType.replace(":", "-")
     }
-
   }
 }

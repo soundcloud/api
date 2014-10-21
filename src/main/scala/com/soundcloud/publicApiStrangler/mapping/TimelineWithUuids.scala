@@ -16,14 +16,15 @@ class TimelineWithUuids(json: JsValue,
   override protected def nextPage(cursor: Option[String]) = Some(cursorUrl(page.extraParams.filterKeys(_ != "uuid[to]"), cursor))
 
   override protected def mapChildren(events: Seq[JsObject]) = {
-    events.map { event =>
-      val urn = Urn((event \ "urn").as[String])
-      urn.getCollection match {
-        case "tracks" => new TrackTimelineItem(event, entityMapper, entitySummaryMapper)
-        case "playlists" => new PlaylistTimelineItem(event, entityMapper, entitySummaryMapper)
-        case "comments" => new CommentTimelineItem(event, entityMapper, entitySummaryMapper)
-        case "affiliations" => new ActorTimelineItem(event, entityMapper)
-      }
+    events.map {
+      event =>
+        val urn = Urn((event \ "urn").as[String])
+        urn.getCollection match {
+          case "tracks" => new TrackTimelineItem(event, entityMapper, entitySummaryMapper)
+          case "playlists" => new PlaylistTimelineItem(event, entityMapper, entitySummaryMapper)
+          case "comments" => new CommentTimelineItem(event, entityMapper, entitySummaryMapper)
+          case "affiliations" => new ActorTimelineItem(event, entityMapper)
+        }
     }
   }
 

@@ -5,13 +5,11 @@ import com.soundcloud.publicApiStrangler.mapper.{EntityMapper, EntitySummaryMapp
 import com.soundcloud.scalakit.Urn
 import play.api.libs.json.JsValue
 
-class TimelineItemV1(json: JsValue,
+class TimelineItemWithOrigin(json: JsValue,
                      entityMapper: EntityMapper,
                      entitySummaryMapper: EntitySummaryMapper)(implicit context: MappingContext)
-  extends JsonMapping(json) {
+  extends TimelineItem(json) {
 
-  val `type` = typeFor((json \ "type").as[String])
-  val created_at = (json \ "timestamp").as[String]
   val origin = entityMapper.embed(originUrn)
 
   // deprecated fields, kept for structure only

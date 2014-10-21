@@ -54,8 +54,12 @@ class StreamMapperSpec extends UnitSpecification with Fixtures {
     }
 
     "builds a collection" in new Cursor {
-      result.collection.size mustEqual 5
+      result.collection.size mustEqual 4
       result.collection.head must beAnInstanceOf[TrackTimelineItem]
+    }
+
+    "filters-out invalid content" in new Cursor {
+      result.collection.map(i => (i.json \ "type").as[String]).contains("promoted:stream") mustEqual false
     }
 
     "builds a nextHref" in new Cursor {

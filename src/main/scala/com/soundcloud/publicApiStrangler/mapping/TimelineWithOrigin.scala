@@ -7,7 +7,7 @@ import com.soundcloud.scalakit.Urn
 import com.soundcloud.scalakit.finagle.jsonservice.Params
 import play.api.libs.json.{JsObject, JsValue}
 
-class TimelineV1(json: JsValue,
+class TimelineWithOrigin(json: JsValue,
                page: CursorBasedPage[Urn],
                entityMapper: EntityMapper,
                entitySummaryMapper: EntitySummaryMapper)(implicit context: MappingContext)
@@ -16,8 +16,9 @@ class TimelineV1(json: JsValue,
   override protected def nextPage(cursor: Option[String]) = Some("https://" + page.next(cursor).href)
 
   override protected def mapChildren(events: Seq[JsObject]) = {
-    events.map { event =>
-      new TimelineItemV1(event, entityMapper, entitySummaryMapper)
+    events.map {
+      event =>
+        new TimelineItemWithOrigin(event, entityMapper, entitySummaryMapper)
     }
   }
 

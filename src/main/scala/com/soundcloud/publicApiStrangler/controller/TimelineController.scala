@@ -25,7 +25,7 @@ trait TimelineController extends BffController
   lazy val entityMapper = new EntityMapper(okidokiClient, lieblingClient, baseUrl, entitySummaryMapper)
   lazy val streamMapper = new StreamMapper(timelineClient, entityMapper, entitySummaryMapper)
   lazy val activitiesMapper = new ActivitiesMapper(timelineClient, entityMapper, entitySummaryMapper)
-  lazy val publicActivitiesMapper = new ActivitiesV1Mapper(timelineClient, entityMapper, entitySummaryMapper)
+  lazy val publicActivitiesMapper = new ActivitiesWithOriginMapper(timelineClient, entityMapper, entitySummaryMapper)
 
   val fallback = new DispatchToMothershipHandler(publicApiClient)
 

@@ -8,7 +8,7 @@ import play.api.libs.json.JsValue
 class TrackTimelineItem(json: JsValue,
                         entityMapper: EntityMapper,
                         entitySummaryMapper: EntitySummaryMapper)(implicit context: MappingContext)
-  extends TimelineItem(json, entityMapper) {
+  extends TimelineItemWithUuid(json, entityMapper) {
 
   val track = entityMapper.embed(Urn((json \ "urn").as[String]))
   val user =  entitySummaryMapper.embed(Urn((json \ "actor").as[String]))
