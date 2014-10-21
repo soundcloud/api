@@ -29,7 +29,7 @@ class PlaylistSummary(json: JsValue,
   val release_year = (json \ "release_year").asOpt[String]
   val release_month = (json \ "release_month").asOpt[String]
   val release_day = (json \ "release_day").asOpt[String]
-  val uri = (json \ "self" \ "url").asOpt[String]
+  val uri = s"https://$baseUrl/playlists/$id"
   val permalink_url = (json \ "permalink_url").asOpt[String]
   val artwork_url = (json \ "artwork_url").asOpt[String]
   val license = (json \ "license").asOpt[String]

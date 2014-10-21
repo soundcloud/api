@@ -4,7 +4,8 @@ import com.soundcloud.bff.nextbff.mapping.MappingContext
 import play.api.libs.json.{JsObject, JsValue}
 
 
-class User(json: JsValue, baseUrl: String)(implicit context: MappingContext) extends UserSummary(json, baseUrl) {
+class User(json: JsValue, baseUrl: String)(implicit context: MappingContext)
+  extends UserSummary(json, baseUrl) {
 
   val first_name = (json \ "first_name").asOpt[String]
   val last_name = (json \ "last_name").asOpt[String]
