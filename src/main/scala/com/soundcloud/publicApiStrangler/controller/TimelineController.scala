@@ -56,12 +56,10 @@ trait TimelineController extends BffController
   }
 
 
-  // TODO !!!! turn this off for full rollout !!!!
-  val testUsers = List("8478647", "69099281", "1074292", "258229", "172720", "1196384", "107637429", "36587595", "21592204", "67278483", "50881634", "5725061", "1717170", "25882813")
-
-  private def rollingOut(session: LoggedInUserSession) = {
-    testUsers.contains(session.getUser.getIdentifier)
-  }
+  // rollout percentage
+  private val percent = config.get("NEW_STREAM_ROLLOUT_PERCENTAGE").toFloat
+  private val percentRollout = (1.0 / percent) * 100.0
+  def rollingOut(session: LoggedInUserSession) = (session.getUser.getIdentifier.toInt % percentRollout).toInt == 0
 
   private def fallbackToMothership(request: Request) = {
     fallback.defaultHandling(new HandlerRequest(AlwaysMatchesPathMatcher, request)).map {
