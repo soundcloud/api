@@ -46,7 +46,6 @@ class Track(json: JsValue,
   val attachments_uri = None
   val bpm = None
   val key_signature = None
-  val policy = None
   val user_favorite = None
   val user_playback_count = None
   val video_url = None
