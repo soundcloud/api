@@ -1,11 +1,11 @@
-package com.soundcloud.publicApiStrangler.mapper
+package com.soundcloud.publicApiStrangler.mapper.timeline
 
-import com.soundcloud.publicApiStrangler.mapping.{Comment, Playlist, Track, User}
 import com.soundcloud.bff.nextbff.mapper.Mapper
 import com.soundcloud.bff.nextbff.mapping.{JsonMapping, MappingContext}
 import com.soundcloud.jvmkit.UserSession
+import com.soundcloud.publicApiStrangler.mapping.timeline.{Comment, Playlist, Track, User}
 import com.soundcloud.scalakit._
-import com.soundcloud.service.client.{LieblingClient, OkidokiClient, MoshimoshiClient}
+import com.soundcloud.service.client.{LieblingClient, OkidokiClient}
 import com.twitter.util.Future
 import play.api.libs.json.JsObject
 

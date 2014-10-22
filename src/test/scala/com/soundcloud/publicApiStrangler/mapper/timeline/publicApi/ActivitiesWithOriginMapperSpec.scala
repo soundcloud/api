@@ -1,22 +1,23 @@
-package com.soundcloud.publicApiStrangler.mapper
+package com.soundcloud.publicApiStrangler.mapper.timeline.publicApi
 
 import com.soundcloud.bff.nextbff.pagination.CursorBasedPage
 import com.soundcloud.bff.test.UnitSpecification
 import com.soundcloud.bff.test.fixtures.Fixtures
-import com.soundcloud.publicApiStrangler.mapping.{TimelineItemV1, TimelineWithUuids, TrackTimelineItem}
+import com.soundcloud.publicApiStrangler.mapper.timeline.{EntityMapper, EntitySummaryMapper}
+import com.soundcloud.publicApiStrangler.mapping.timeline.publicApi.TimelineItemWithOrigin
 import com.soundcloud.scalakit.test.VerifiedMocks
 import com.soundcloud.scalakit.{Urn, UserSession}
 import com.soundcloud.service.client.TimelineClient
 import com.twitter.util.{Await, Future}
 import play.api.libs.json.JsObject
 
-class ActivitiesV1MapperSpec extends UnitSpecification with Fixtures {
+class ActivitiesWithOriginMapperSpec extends UnitSpecification with Fixtures {
 
   trait Context extends VerifiedMocks {
     val timelineClient = mock[TimelineClient]
     val entityMapper = mock[EntityMapper]
     val entitySummaryMapper = mock[EntitySummaryMapper]
-    val mapper = new ActivitiesV1Mapper(timelineClient, entityMapper, entitySummaryMapper)
+    val mapper = new ActivitiesWithOriginMapper(timelineClient, entityMapper, entitySummaryMapper)
     val session = mock[UserSession]
     val urn = Urn("soundcloud:users:1")
 
@@ -36,7 +37,7 @@ class ActivitiesV1MapperSpec extends UnitSpecification with Fixtures {
 
     "builds a collection" in new Cursor {
       result.collection.size mustEqual 10
-      result.collection.head must beAnInstanceOf[TimelineItemV1]
+      result.collection.head must beAnInstanceOf[TimelineItemWithOrigin]
     }
 
     "builds a nextHref" in new Cursor {

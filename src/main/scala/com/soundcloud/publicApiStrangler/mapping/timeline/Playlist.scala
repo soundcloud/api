@@ -1,15 +1,15 @@
-package com.soundcloud.publicApiStrangler.mapping
+package com.soundcloud.publicApiStrangler.mapping.timeline
 
-import com.soundcloud.publicApiStrangler.mapper.{EntitySummaryMapper, EntityMapper}
-import com.soundcloud.bff.nextbff.mapping.{JsonMapping, MappingContext}
+import com.soundcloud.bff.nextbff.mapping.MappingContext
+import com.soundcloud.publicApiStrangler.mapper.timeline.EntitySummaryMapper
 import com.soundcloud.scalakit.Urn
-import play.api.libs.json.{JsObject, JsValue}
+import play.api.libs.json.JsValue
 
-class Playlist(json: JsValue,
+class Playlist(jsonValue: JsValue,
                likesByUrn: Map[Urn, Int],
                baseUrl: String,
                entitySummaryMapper: EntitySummaryMapper)(implicit context: MappingContext)
-  extends PlaylistSummary(json, baseUrl, entitySummaryMapper) {
+  extends PlaylistSummary(jsonValue, baseUrl, entitySummaryMapper) {
 
   val likes_count = likesByUrn(urn)
 

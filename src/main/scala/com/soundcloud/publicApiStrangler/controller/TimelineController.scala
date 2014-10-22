@@ -5,7 +5,10 @@ import com.soundcloud.bff.nextbff.pagination.CursorBasedPage
 import com.soundcloud.bff.web.BffController
 import com.soundcloud.jvmkit.{LoggedInUserSession, Urn}
 import com.soundcloud.publicApiStrangler.mapper._
-import com.soundcloud.publicApiStrangler.mapping.Timeline
+import com.soundcloud.publicApiStrangler.mapper.timeline._
+import com.soundcloud.publicApiStrangler.mapper.timeline.e1.{ActivitiesMapper, StreamMapper}
+import com.soundcloud.publicApiStrangler.mapper.timeline.publicApi.ActivitiesWithOriginMapper
+import com.soundcloud.publicApiStrangler.mapping.timeline.Timeline
 import com.soundcloud.publicApiStrangler.support._
 import com.soundcloud.scalakit._
 import com.soundcloud.scalakit.finagle.http.{AlwaysMatchesPathMatcher, HandlerRequest}
@@ -25,7 +28,7 @@ trait TimelineController extends BffController
   lazy val entityMapper = new EntityMapper(okidokiClient, lieblingClient, baseUrl, entitySummaryMapper)
   lazy val streamMapper = new StreamMapper(timelineClient, entityMapper, entitySummaryMapper)
   lazy val activitiesMapper = new ActivitiesMapper(timelineClient, entityMapper, entitySummaryMapper)
-  lazy val publicActivitiesMapper = new ActivitiesV1Mapper(timelineClient, entityMapper, entitySummaryMapper)
+  lazy val publicActivitiesMapper = new ActivitiesWithOriginMapper(timelineClient, entityMapper, entitySummaryMapper)
 
   val fallback = new DispatchToMothershipHandler(publicApiClient)
 

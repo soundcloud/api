@@ -1,23 +1,24 @@
-package com.soundcloud.publicApiStrangler.mapper
+package com.soundcloud.publicApiStrangler.mapper.timeline.publicApi
 
 import com.soundcloud.bff.nextbff.mapping.MappingContext
 import com.soundcloud.bff.nextbff.pagination.CursorBasedPage
 import com.soundcloud.jvmkit.UserSession
-import com.soundcloud.publicApiStrangler.mapping.TimelineV1
+import com.soundcloud.publicApiStrangler.mapper.timeline.{EntityMapper, EntitySummaryMapper, TimelineMapper}
+import com.soundcloud.publicApiStrangler.mapping.timeline.publicApi.TimelineWithOrigin
 import com.soundcloud.scalakit.Urn
 import com.soundcloud.service.client.TimelineClient
 import com.twitter.util.Future
 
 
-class ActivitiesV1Mapper(timelineClient: TimelineClient,
+class ActivitiesWithOriginMapper(timelineClient: TimelineClient,
                    entityMapper: EntityMapper,
                    entitySummaryMapper: EntitySummaryMapper)
   extends TimelineMapper {
 
-  override def fetch(session: UserSession, page: CursorBasedPage[Urn])(implicit context: MappingContext): Future[TimelineV1] = {
+  override def fetch(session: UserSession, page: CursorBasedPage[Urn])(implicit context: MappingContext): Future[TimelineWithOrigin] = {
     // activities on public api are actually the user' STREAM. Go figure.
     timelineClient.stream(session, page.cursor, page.limit).map { json =>
-      new TimelineV1(json, page, entityMapper, entitySummaryMapper)
+      new TimelineWithOrigin(json, page, entityMapper, entitySummaryMapper)
     }
   }
 }

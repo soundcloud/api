@@ -1,10 +1,10 @@
-package com.soundcloud.publicApiStrangler.mapper
+package com.soundcloud.publicApiStrangler.mapper.timeline.e1
 
-import com.soundcloud.bff.test.fixtures.Fixtures
-import com.soundcloud.publicApiStrangler.mapping.{TimelineWithUuids, TrackTimelineItem}
 import com.soundcloud.bff.nextbff.pagination.CursorBasedPage
 import com.soundcloud.bff.test.UnitSpecification
-import com.soundcloud.scalakit.finagle.jsonservice.{Params, IntParam, StringParam}
+import com.soundcloud.bff.test.fixtures.Fixtures
+import com.soundcloud.publicApiStrangler.mapper.timeline.{EntityMapper, EntitySummaryMapper}
+import com.soundcloud.publicApiStrangler.mapping.timeline.e1.{TimelineWithUuids, TrackTimelineItem}
 import com.soundcloud.scalakit.test.VerifiedMocks
 import com.soundcloud.scalakit.{Urn, UserSession}
 import com.soundcloud.service.client.TimelineClient

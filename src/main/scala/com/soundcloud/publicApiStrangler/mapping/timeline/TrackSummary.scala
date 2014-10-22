@@ -1,15 +1,15 @@
-package com.soundcloud.publicApiStrangler.mapping
+package com.soundcloud.publicApiStrangler.mapping.timeline
 
 import com.soundcloud.bff.nextbff.mapping.{JsonMapping, MappingContext}
-import com.soundcloud.publicApiStrangler.mapper.EntitySummaryMapper
+import com.soundcloud.publicApiStrangler.mapper.timeline.EntitySummaryMapper
 import com.soundcloud.scalakit.Urn
 import play.api.libs.json.JsValue
 
 
-class TrackSummary(json: JsValue,
+class TrackSummary(jsonValue: JsValue,
             baseUrl: String,
             entitySummaryMapper: EntitySummaryMapper)(implicit context: MappingContext)
-  extends JsonMapping(json) with UrnSupport {
+  extends JsonMapping(jsonValue) with UrnSupport {
 
   val id = urn.getIdentifier.toInt
   val kind = "track"

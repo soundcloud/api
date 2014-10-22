@@ -1,10 +1,10 @@
-package com.soundcloud.publicApiStrangler.mapper
+package com.soundcloud.publicApiStrangler.mapper.timeline.e1
 
-import com.soundcloud.bff.test.fixtures.Fixtures
-import com.soundcloud.publicApiStrangler.mapping.{TimelineWithUuids, TrackTimelineItem}
 import com.soundcloud.bff.nextbff.pagination.CursorBasedPage
 import com.soundcloud.bff.test.UnitSpecification
-import com.soundcloud.scalakit.finagle.jsonservice.{Params, IntParam, StringParam}
+import com.soundcloud.bff.test.fixtures.Fixtures
+import com.soundcloud.publicApiStrangler.mapper.timeline.{EntityMapper, EntitySummaryMapper}
+import com.soundcloud.publicApiStrangler.mapping.timeline.e1.{TimelineWithUuids, TrackTimelineItem}
 import com.soundcloud.scalakit.test.VerifiedMocks
 import com.soundcloud.scalakit.{Urn, UserSession}
 import com.soundcloud.service.client.TimelineClient
@@ -54,8 +54,12 @@ class StreamMapperSpec extends UnitSpecification with Fixtures {
     }
 
     "builds a collection" in new Cursor {
-      result.collection.size mustEqual 5
+      result.collection.size mustEqual 4
       result.collection.head must beAnInstanceOf[TrackTimelineItem]
+    }
+
+    "filters-out invalid content" in new Cursor {
+      result.collection.map(_.`type`).contains("promoted:stream") mustEqual false
     }
 
     "builds a nextHref" in new Cursor {

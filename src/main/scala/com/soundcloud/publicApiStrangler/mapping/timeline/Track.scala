@@ -1,16 +1,16 @@
-package com.soundcloud.publicApiStrangler.mapping
+package com.soundcloud.publicApiStrangler.mapping.timeline
 
-import com.soundcloud.publicApiStrangler.mapper.{EntitySummaryMapper, EntityMapper}
-import com.soundcloud.bff.nextbff.mapping.{JsonMapping, MappingContext}
+import com.soundcloud.bff.nextbff.mapping.MappingContext
+import com.soundcloud.publicApiStrangler.mapper.timeline.EntitySummaryMapper
 import com.soundcloud.scalakit.Urn
-import play.api.libs.json.{JsObject, JsValue}
+import play.api.libs.json.JsValue
 
 
-class Track(json: JsValue,
+class Track(jsonValue: JsValue,
             likesByUrn: Map[Urn, Int],
             baseUrl: String,
             entitySummaryMapper: EntitySummaryMapper)(implicit context: MappingContext)
-  extends TrackSummary(json, baseUrl, entitySummaryMapper) {
+  extends TrackSummary(jsonValue, baseUrl, entitySummaryMapper) {
 
   val artwork_url = (json \ "artwork_url").asOpt[String]
   val comment_count = (json \ "comments_count").asOpt[Int]

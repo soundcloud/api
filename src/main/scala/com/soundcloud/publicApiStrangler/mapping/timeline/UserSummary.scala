@@ -1,10 +1,11 @@
-package com.soundcloud.publicApiStrangler.mapping
+package com.soundcloud.publicApiStrangler.mapping.timeline
 
 import com.soundcloud.bff.nextbff.mapping.{JsonMapping, MappingContext}
 import play.api.libs.json.JsValue
 
 
-class UserSummary(json: JsValue, baseUrl: String)(implicit context: MappingContext) extends JsonMapping(json) with UrnSupport {
+class UserSummary(jsonValue: JsValue, baseUrl: String)(implicit context: MappingContext)
+  extends JsonMapping(jsonValue) with UrnSupport {
 
   val avatar_url = (json \ "avatar_url").asOpt[String]
   val id = urn.getIdentifier.toInt

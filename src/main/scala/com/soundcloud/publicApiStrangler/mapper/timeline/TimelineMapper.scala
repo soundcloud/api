@@ -1,10 +1,10 @@
-package com.soundcloud.publicApiStrangler.mapper
+package com.soundcloud.publicApiStrangler.mapper.timeline
 
 import com.soundcloud.bff.nextbff.mapper.Mapper
-import com.soundcloud.bff.nextbff.mapping.{Mapping, MappingContext}
+import com.soundcloud.bff.nextbff.mapping.MappingContext
 import com.soundcloud.bff.nextbff.pagination.CursorBasedPage
-import com.soundcloud.jvmkit.{Urn, UserSession}
-import com.soundcloud.publicApiStrangler.mapping.Timeline
+import com.soundcloud.jvmkit.UserSession
+import com.soundcloud.publicApiStrangler.mapping.timeline.Timeline
 import com.soundcloud.scalakit.Urn
 import com.twitter.util.Future
 
