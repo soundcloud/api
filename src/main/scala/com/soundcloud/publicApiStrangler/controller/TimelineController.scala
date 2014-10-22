@@ -5,7 +5,10 @@ import com.soundcloud.bff.nextbff.pagination.CursorBasedPage
 import com.soundcloud.bff.web.BffController
 import com.soundcloud.jvmkit.{LoggedInUserSession, Urn}
 import com.soundcloud.publicApiStrangler.mapper._
-import com.soundcloud.publicApiStrangler.mapping.Timeline
+import com.soundcloud.publicApiStrangler.mapper.timeline._
+import com.soundcloud.publicApiStrangler.mapper.timeline.e1.{ActivitiesMapper, StreamMapper}
+import com.soundcloud.publicApiStrangler.mapper.timeline.publicApi.ActivitiesWithOriginMapper
+import com.soundcloud.publicApiStrangler.mapping.timeline.Timeline
 import com.soundcloud.publicApiStrangler.support._
 import com.soundcloud.scalakit._
 import com.soundcloud.scalakit.finagle.http.{AlwaysMatchesPathMatcher, HandlerRequest}
