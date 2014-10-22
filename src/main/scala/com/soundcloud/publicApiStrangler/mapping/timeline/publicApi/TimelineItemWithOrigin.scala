@@ -6,10 +6,10 @@ import com.soundcloud.publicApiStrangler.mapping.timeline.TimelineItem
 import com.soundcloud.scalakit.Urn
 import play.api.libs.json.JsValue
 
-class TimelineItemWithOrigin(json: JsValue,
+class TimelineItemWithOrigin(jsonValue: JsValue,
                      entityMapper: EntityMapper,
                      entitySummaryMapper: EntitySummaryMapper)(implicit context: MappingContext)
-  extends JsonMapping(json) with TimelineItem {
+  extends JsonMapping(jsonValue) with TimelineItem {
 
   val origin = entityMapper.embed(originUrn)
 

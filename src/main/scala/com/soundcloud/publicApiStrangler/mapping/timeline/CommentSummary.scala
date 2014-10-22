@@ -5,10 +5,10 @@ import com.soundcloud.publicApiStrangler.mapper.timeline.EntitySummaryMapper
 import com.soundcloud.scalakit.Urn
 import play.api.libs.json.JsValue
 
-class CommentSummary(json: JsValue,
+class CommentSummary(jsonValue: JsValue,
                baseUrl: String,
                entitySummaryMapper: EntitySummaryMapper)(implicit context: MappingContext)
-  extends JsonMapping(json) with UrnSupport {
+  extends JsonMapping(jsonValue) with UrnSupport {
 
   val kind = "comment"
   val id = urn.getIdentifier.toInt

@@ -7,11 +7,11 @@ import com.soundcloud.publicApiStrangler.mapping.timeline.Timeline
 import com.soundcloud.scalakit.Urn
 import play.api.libs.json.{JsObject, JsValue}
 
-class TimelineWithOrigin(json: JsValue,
+class TimelineWithOrigin(jsonValue: JsValue,
                page: CursorBasedPage[Urn],
                entityMapper: EntityMapper,
                entitySummaryMapper: EntitySummaryMapper)(implicit context: MappingContext)
-  extends Timeline(json, page) {
+  extends Timeline(jsonValue, page) {
 
   override protected def nextPage(cursor: Option[String]) = Some("https://" + page.next(cursor).href)
 

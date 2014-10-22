@@ -5,8 +5,8 @@ import com.soundcloud.publicApiStrangler.mapper.timeline.EntityMapper
 import com.soundcloud.scalakit.Urn
 import play.api.libs.json.JsValue
 
-class ActorTimelineItem(json: JsValue, entityMapper: EntityMapper)(implicit context: MappingContext)
-  extends JsonMapping(json) with TimelineItemWithUuid {
+class ActorTimelineItem(jsonValue: JsValue, entityMapper: EntityMapper)(implicit context: MappingContext)
+  extends JsonMapping(jsonValue) with TimelineItemWithUuid {
 
   val user = entityMapper.embed(Urn((json \ "actor").as[String]))
 

@@ -5,10 +5,10 @@ import com.soundcloud.publicApiStrangler.mapper.timeline.{EntityMapper, EntitySu
 import com.soundcloud.scalakit.Urn
 import play.api.libs.json.JsValue
 
-class CommentTimelineItem(json: JsValue,
+class CommentTimelineItem(jsonValue: JsValue,
                           entityMapper: EntityMapper,
                           entitySummaryMapper: EntitySummaryMapper)(implicit context: MappingContext)
-  extends JsonMapping(json) with TimelineItemWithUuid {
+  extends JsonMapping(jsonValue) with TimelineItemWithUuid {
 
   val comment = entityMapper.embed(Urn((json \ "urn").as[String]))
 

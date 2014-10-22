@@ -6,8 +6,8 @@ import com.soundcloud.scalakit.Urn
 import com.soundcloud.scalakit.finagle.jsonservice.Params
 import play.api.libs.json.{JsObject, JsValue}
 
-abstract class Timeline(json: JsValue, page: CursorBasedPage[Urn])(implicit context: MappingContext)
-  extends JsonMapping(json) {
+abstract class Timeline(jsonValue: JsValue, page: CursorBasedPage[Urn])(implicit context: MappingContext)
+  extends JsonMapping(jsonValue) {
 
   val collection: Seq[TimelineItem] = mapChildren(events).filter(contentAllowed)
   val futureHref = futurePage(events)

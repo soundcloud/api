@@ -5,10 +5,10 @@ import com.soundcloud.publicApiStrangler.mapper.timeline.EntitySummaryMapper
 import com.soundcloud.scalakit.Urn
 import play.api.libs.json.JsValue
 
-class PlaylistSummary(json: JsValue,
+class PlaylistSummary(jsonValue: JsValue,
                baseUrl: String,
                entitySummaryMapper: EntitySummaryMapper)(implicit context: MappingContext)
-  extends JsonMapping(json) with UrnSupport {
+  extends JsonMapping(jsonValue) with UrnSupport {
 
   val kind = "playlist"
   val id = urn.getIdentifier.toInt

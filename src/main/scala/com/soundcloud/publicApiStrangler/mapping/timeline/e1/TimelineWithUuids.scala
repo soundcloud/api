@@ -7,11 +7,11 @@ import com.soundcloud.publicApiStrangler.mapping.timeline._
 import com.soundcloud.scalakit.Urn
 import play.api.libs.json.{JsObject, JsValue}
 
-class TimelineWithUuids(json: JsValue,
+class TimelineWithUuids(jsonValue: JsValue,
                page: CursorBasedPage[Urn],
                entityMapper: EntityMapper,
                entitySummaryMapper: EntitySummaryMapper)(implicit context: MappingContext)
-  extends Timeline(json, page) {
+  extends Timeline(jsonValue, page) {
 
   override protected def nextPage(cursor: Option[String]) = Some(cursorUrl(page.extraParams.filterKeys(_ != "uuid[to]"), cursor))
 

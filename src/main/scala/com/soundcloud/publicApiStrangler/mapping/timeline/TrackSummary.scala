@@ -6,10 +6,10 @@ import com.soundcloud.scalakit.Urn
 import play.api.libs.json.JsValue
 
 
-class TrackSummary(json: JsValue,
+class TrackSummary(jsonValue: JsValue,
             baseUrl: String,
             entitySummaryMapper: EntitySummaryMapper)(implicit context: MappingContext)
-  extends JsonMapping(json) with UrnSupport {
+  extends JsonMapping(jsonValue) with UrnSupport {
 
   val id = urn.getIdentifier.toInt
   val kind = "track"
