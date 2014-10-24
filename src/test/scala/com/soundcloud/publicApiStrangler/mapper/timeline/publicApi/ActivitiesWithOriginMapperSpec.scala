@@ -28,7 +28,7 @@ class ActivitiesWithOriginMapperSpec extends UnitSpecification with Fixtures {
 
   "with a regular cursor" >> {
     trait Cursor extends Context {
-      val page = CursorBasedPage(urn, "foo.com", "/something", Map(), Some("2"), 100)
+      val page = CursorBasedPage(urn, "http://foo.com", "/something", Map(), Some("2"), 100)
 
       override def before = {
         when(timelineClient.stream(session, Some("2"), 100)).thenReturn(Future(timelineActivities.as[JsObject]))
@@ -41,7 +41,7 @@ class ActivitiesWithOriginMapperSpec extends UnitSpecification with Fixtures {
     }
 
     "builds a nextHref" in new Cursor {
-      result.nextHref mustEqual Some("https://foo.com/something?limit=100&cursor=4743688807709147136AYpG--SCewY49t7-FBA%3D%3D")
+      result.nextHref mustEqual Some("http://foo.com/something?limit=100&cursor=4743688807709147136AYpG--SCewY49t7-FBA%3D%3D")
     }
   }
 

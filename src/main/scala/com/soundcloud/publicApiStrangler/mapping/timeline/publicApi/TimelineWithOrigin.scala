@@ -13,7 +13,7 @@ class TimelineWithOrigin(jsonValue: JsValue,
                entitySummaryMapper: EntitySummaryMapper)(implicit context: MappingContext)
   extends Timeline(jsonValue, page) {
 
-  override protected def nextPage(cursor: Option[String]) = Some("https://" + page.next(cursor).href)
+  override protected def nextPage(cursor: Option[String]) = Some(page.next(cursor).href)
 
   override protected def mapChildren(events: Seq[JsObject]) = {
     events.map {

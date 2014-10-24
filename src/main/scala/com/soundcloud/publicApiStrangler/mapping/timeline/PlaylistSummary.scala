@@ -29,7 +29,7 @@ class PlaylistSummary(jsonValue: JsValue,
   val release_year = (json \ "release_year").asOpt[String]
   val release_month = (json \ "release_month").asOpt[String]
   val release_day = (json \ "release_day").asOpt[String]
-  val uri = s"https://$baseUrl/playlists/$id"
+  val uri = s"$baseUrl/playlists/$id"
   val permalink_url = (json \ "permalink_url").asOpt[String]
   val artwork_url = (json \ "artwork_url").asOpt[String]
   val license = (json \ "license").asOpt[String]
@@ -37,8 +37,8 @@ class PlaylistSummary(jsonValue: JsValue,
   val user = if(userUrn.isDefined) entitySummaryMapper.embed(userUrn.get) else None
   val secret_token = (json \ "secret_token").as[String]
   val reposts_count = (json \ "reposts_count").asOpt[Int]
-  val tracks_uri = s"https://$baseUrl/playlists/$id/tracks"
-  val secret_uri = s"https://$baseUrl/playlists/$id?secret_token=$secret_token"
+  val tracks_uri = s"$baseUrl/playlists/$id/tracks"
+  val secret_uri = s"$baseUrl/playlists/$id?secret_token=$secret_token"
 
 
   private def userUrn: Option[Urn] = (json \ "user" \ "urn").asOpt[String] match {

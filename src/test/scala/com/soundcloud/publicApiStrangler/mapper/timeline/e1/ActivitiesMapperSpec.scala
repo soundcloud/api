@@ -28,7 +28,7 @@ class ActivitiesMapperSpec extends UnitSpecification with Fixtures {
 
   "with a regular cursor" >> {
     trait Cursor extends Context {
-      val page = CursorBasedPage(urn, "foo.com", "/something", Map(), Some("2"), 100)
+      val page = CursorBasedPage(urn, "https://foo.com", "/something", Map(), Some("2"), 100)
 
       override def before = {
         when(timelineClient.activities(session, Some("2"), 100)).thenReturn(Future(timelineActivities.as[JsObject]))
@@ -51,7 +51,7 @@ class ActivitiesMapperSpec extends UnitSpecification with Fixtures {
 
   "with a reverse cursor" >> {
     trait ReverseCursor extends Context {
-      val page = CursorBasedPage(urn, "foo.com", "/something", Map("uuid[to]" -> "deadbeef"), None, 100)
+      val page = CursorBasedPage(urn, "https://foo.com", "/something", Map("uuid[to]" -> "deadbeef"), None, 100)
 
       override def before = {
         when(timelineClient.activities(session, Some("deadbeef"), 100, true)).thenReturn(Future(timelineActivities.as[JsObject]))

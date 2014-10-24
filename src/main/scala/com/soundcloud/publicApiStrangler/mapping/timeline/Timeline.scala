@@ -32,7 +32,6 @@ abstract class Timeline(jsonValue: JsValue, page: CursorBasedPage[Urn])(implicit
   }
 
   protected def cursorUrl(extraParams: Params, cursor: Option[String]): String =
-    "https://" +
       CursorBasedPage(
         page.param,
         page.baseUrl,

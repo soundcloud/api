@@ -19,7 +19,7 @@ class EntityMapperSpec extends UnitSpecification with Fixtures {
     val lieblingClient = mock[LieblingClient]
     val entityMapper = mock[EntityMapper]
     val entitySummaryMapper = mock[EntitySummaryMapper]
-    val mapper = new EntityMapper(okidokiClient, lieblingClient, "foo.com", entitySummaryMapper)
+    val mapper = new EntityMapper(okidokiClient, lieblingClient, "https://foo.com", entitySummaryMapper)
     val session = mock[UserSession]
     val urns = List(
       "soundcloud:users:123",

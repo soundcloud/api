@@ -28,7 +28,7 @@ class StreamMapperSpec extends UnitSpecification with Fixtures {
 
   "without a cursor" >> {
     trait NoCursor extends Context {
-      val page = CursorBasedPage(urn, "foo.com", "/something", Map(), None, 100)
+      val page = CursorBasedPage(urn, "https://foo.com", "/something", Map(), None, 100)
 
       override def before = {
         when(timelineClient.stream(session, None, 100)).thenReturn(Future(timelineStream.as[JsObject]))
@@ -46,7 +46,7 @@ class StreamMapperSpec extends UnitSpecification with Fixtures {
 
   "with a regular cursor" >> {
     trait Cursor extends Context {
-      val page = CursorBasedPage(urn, "foo.com", "/something", Map(), Some("2"), 100)
+      val page = CursorBasedPage(urn, "https://foo.com", "/something", Map(), Some("2"), 100)
 
       override def before = {
         when(timelineClient.stream(session, Some("2"), 100)).thenReturn(Future(timelineStream.as[JsObject]))
@@ -73,7 +73,7 @@ class StreamMapperSpec extends UnitSpecification with Fixtures {
 
   "with a reverse cursor" >> {
     trait ReverseCursor extends Context {
-      val page = CursorBasedPage(urn, "foo.com", "/something", Map("uuid[to]" -> "deadbeef"), None, 100)
+      val page = CursorBasedPage(urn, "https://foo.com", "/something", Map("uuid[to]" -> "deadbeef"), None, 100)
 
       override def before = {
         when(timelineClient.stream(session, Some("deadbeef"), 100, true)).thenReturn(Future(timelineStream.as[JsObject]))

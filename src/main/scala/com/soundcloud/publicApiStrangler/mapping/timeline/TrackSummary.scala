@@ -21,10 +21,10 @@ class TrackSummary(jsonValue: JsValue,
   val duration = (json \ "duration").asOpt[Int]
   val sharing = (json \ "sharing").asOpt[String]
   val waveform_url = (json \ "waveform_url").asOpt[String]
-  val stream_url = s"https://$baseUrl/tracks/$id/stream" // (json \ "stream_url").asOpt[String] // original url not supported by android
-  val uri = s"https://$baseUrl/tracks/$id"
+  val stream_url = s"$baseUrl/tracks/$id/stream" // (json \ "stream_url").asOpt[String] // original url not supported by android
+  val uri = s"$baseUrl/tracks/$id"
   val user_id = userId
-  val user_uri = s"https://$baseUrl/users/$userId"
+  val user_uri = s"$baseUrl/users/$userId"
 
 
   private def userId = (json \ "user" \ "urn").asOpt[String] match {

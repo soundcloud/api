@@ -14,7 +14,7 @@ class CommentSummary(jsonValue: JsValue,
   val id = urn.getIdentifier.toInt
   val created_at = (json \ "created_at").asOpt[String]
   val user_id = userUrn.getIdentifier.toInt
-  val uri = s"https://$baseUrl/comments/$id"
+  val uri = s"$baseUrl/comments/$id"
   val track_id = trackUrn.getIdentifier.toInt
   val timestamp = (json \ "timestamp").asOpt[Int]
   val body = (json \ "body").asOpt[String]
