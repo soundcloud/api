@@ -38,7 +38,7 @@
          "urn":"soundcloud:tracks:131352352",
          "actor":"soundcloud:users:70167771",
          "target":"soundcloud:users:6457573",
-         "cursor": "deadead",
+         "cursor": "4743719115493998592AY_3JtgWAsMVS2M7UEg==",
          "unique_id": "4"
       },
       {
@@ -47,7 +47,7 @@
          "urn":"soundcloud:tracks:162777787",
          "actor":"soundcloud:users:18228",
          "target":null,
-         "cursor": "beefbeef",
+         "cursor": "4743719193470304256AZfcC3O-IGwA",
          "unique_id": "3"
       },
       {
@@ -56,7 +56,7 @@
          "urn":"soundcloud:playlists:162755085",
          "actor":"soundcloud:users:23545583",
          "target":"soundcloud:users:41447243",
-         "cursor": "deadbeef",
+         "cursor": "4743719238089310208AY4W33QK1mtFS3Koe",
          "unique_id": "2"
       },
       {
@@ -65,7 +65,7 @@
          "urn":"soundcloud:playlists:162750218",
          "actor":"soundcloud:users:5539303",
          "target":null,
-         "cursor": "beefdead",
+         "cursor": "4743719239502790656AY4W33QLOmZk73Koe==",
          "unique_id": "1"
       }
    ],
