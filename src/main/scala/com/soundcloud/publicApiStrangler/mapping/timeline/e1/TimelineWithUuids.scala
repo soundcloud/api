@@ -1,6 +1,6 @@
 package com.soundcloud.publicApiStrangler.mapping.timeline.e1
 
-import com.soundcloud.bff.nextbff.mapping.{JsonMapping, MappingContext}
+import com.soundcloud.bff.nextbff.mapping.MappingContext
 import com.soundcloud.bff.nextbff.pagination.CursorBasedPage
 import com.soundcloud.publicApiStrangler.mapper.timeline.{EntityMapper, EntitySummaryMapper}
 import com.soundcloud.publicApiStrangler.mapping.timeline._
@@ -12,8 +12,6 @@ class TimelineWithUuids(jsonValue: JsValue,
                entityMapper: EntityMapper,
                entitySummaryMapper: EntitySummaryMapper)(implicit context: MappingContext)
   extends Timeline(jsonValue, page) {
-
-  override protected def nextPage(cursor: Option[String]) = Some(cursorUrl(page.extraParams.filterKeys(_ != "uuid[to]"), cursor))
 
   override protected def mapChildren(events: Seq[JsObject]) = {
     events.map {
