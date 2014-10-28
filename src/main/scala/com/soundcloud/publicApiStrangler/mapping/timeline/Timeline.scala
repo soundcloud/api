@@ -13,8 +13,11 @@ abstract class Timeline(jsonValue: JsValue, page: CursorBasedPage[Urn])(implicit
   extends JsonMapping(jsonValue) {
 
   val collection: Seq[TimelineItem] = mapChildren(events).filter(contentAllowed)
-  val futureHref = futurePage(events)
-  val nextHref = nextPage((json \ "meta" \ "next_page_cursor").asOpt[String].map(UUIDMapper.fromCursor))
+  val futureHref = futurePage(
+    events,
+    page.cursor.map(UUID.fromString)
+  )
+  val nextHref = nextPage(UUIDMapper.fromCursor((json \ "meta" \ "next_page_cursor").asOpt[String]))
 
   def events = (json \ "events").as[Seq[JsObject]]
 
@@ -32,8 +35,8 @@ abstract class Timeline(jsonValue: JsValue, page: CursorBasedPage[Urn])(implicit
 
   protected def mapChildren(events: Seq[JsObject]): Seq[TimelineItem]
 
-  private def futurePage(events: Seq[JsObject]): Option[String] = {
-    if(page.cursor.isDefined) return None
+  private def futurePage(events: Seq[JsObject], currentUuid: Option[UUID]): Option[String] = {
+    if(currentUuid.isDefined && UUIDMapper.validUuid(currentUuid)) return None
 
     events.flatMap(e => (e \ "cursor").asOpt[String]) match {
       case latestId :: others =>
@@ -41,7 +44,7 @@ abstract class Timeline(jsonValue: JsValue, page: CursorBasedPage[Urn])(implicit
           cursorUrl(
             page.extraParams.updated(
               "uuid[to]",
-              UUIDMapper.fromCursor(latestId).toString
+              UUIDMapper.fromCursor(Some(latestId)).get.toString
             ),
             None
           )

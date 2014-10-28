@@ -20,7 +20,7 @@ class ActivitiesWithOriginMapper(timelineClient: TimelineClient,
     val (uuid, reverse) = clientCursorParam(page)
 
     // activities on public api are actually the user' STREAM. Go figure.
-    timelineClient.stream(session, uuid.map(UUIDMapper.toCursor), page.limit, reverse).map {
+    timelineClient.stream(session, UUIDMapper.toCursor(uuid), page.limit, reverse).map {
       json =>
         new TimelineWithOrigin(json, page, entityMapper, entitySummaryMapper)
     }

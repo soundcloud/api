@@ -17,7 +17,7 @@ class ActivitiesMapper(timelineClient: TimelineClient,
   override def fetch(session: UserSession, page: CursorBasedPage[Urn])(implicit context: MappingContext): Future[TimelineWithUuids] = {
     val (uuid, reverse) = clientCursorParam(page)
 
-    timelineClient.activities(session, uuid.map(UUIDMapper.toCursor), page.limit, reverse).map {
+    timelineClient.activities(session, UUIDMapper.toCursor(uuid), page.limit, reverse).map {
       json =>
         new TimelineWithUuids(json, page, entityMapper, entitySummaryMapper)
     }
