@@ -1,13 +1,16 @@
 package com.soundcloud.publicApiStrangler.controller
 
-import com.soundcloud.bff.finagle.{Request => BffRequest}
+import com.soundcloud.bff.finagle.{Request => BffRequest, ResponseBuilder}
 import com.soundcloud.bff.web.BffController
 import com.soundcloud.jvmkit.{LoggedInUserSession, Urn}
 import com.soundcloud.publicApiStrangler.mapper.timeline._
 import com.soundcloud.publicApiStrangler.mapper.timeline.e1.{ActivitiesMapper, StreamMapper}
 import com.soundcloud.publicApiStrangler.mapper.timeline.publicApi.ActivitiesWithOriginMapper
 import com.soundcloud.publicApiStrangler.support._
+import com.soundcloud.scalakit.finagle.http.{AlwaysMatchesPathMatcher, HandlerRequest}
 import com.soundcloud.service.component.{LieblingComponent, OkidokiComponent, TimelineComponent}
+import com.twitter.finagle.http.Request
+import scala.collection.JavaConversions._
 
 trait TimelineController extends BffController
     with TimelineComponent
@@ -37,11 +40,15 @@ trait TimelineController extends BffController
   private def doMagic(request: BffRequest, mapper: TimelineMapper) = {
     withLoggedInUser(request) {
       (session: LoggedInUserSession, userUrn: Urn) => {
-        val page = pageFor(request, userUrn)
-        mapper.materialize(session, page).map {
-          case Some(info) => render.json(info)
-          case None => render.notFound
-        }.map(_.headers(defaultHeaders))
+        if(rollingOut(session)) {
+          val page = pageFor(request, userUrn)
+          mapper.materialize(session, page).map {
+            case Some(info) => render.json(info)
+            case None => render.notFound
+          }.map(_.headers(defaultHeaders))
+        } else {
+          fallbackToMothership(request)
+        }
       }
     }
   }
@@ -54,5 +61,22 @@ trait TimelineController extends BffController
     "Access-Control-Expose-Headers"-> "Date",
     "Cache-Control" -> "private, max-age=0, must-revalidate"
   )
+
+
+  // TODO !!!! turn this off for full rollout !!!!
+  val testUsers = List("8478647", "69099281", "1074292", "258229", "172720", "1196384", "107637429", "36587595", "21592204", "67278483", "50881634", "5725061", "1717170", "25882813")
+  private def rollingOut(session: LoggedInUserSession) = {
+    testUsers.contains(session.getUser.getIdentifier)
+  }
+
+  private def fallbackToMothership(request: Request) = {
+    fallback.defaultHandling(new HandlerRequest(AlwaysMatchesPathMatcher, request)).map {
+      response =>
+        new ResponseBuilder().
+          body(response.getContentString()).
+          status(response.getStatusCode()).
+          headers(response.headers().entries.map(e => e.getKey -> e.getValue).toMap)
+    }
+  }
 
 }
