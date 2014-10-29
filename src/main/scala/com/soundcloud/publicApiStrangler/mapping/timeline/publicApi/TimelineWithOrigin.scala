@@ -13,6 +13,9 @@ class TimelineWithOrigin(jsonValue: JsValue,
                entitySummaryMapper: EntitySummaryMapper)(implicit context: MappingContext)
   extends Timeline(jsonValue, page) {
 
+  // always include a future href
+  val futureHref: String = futurePage(events)
+
   override protected def mapChildren(events: Seq[JsObject]) = {
     events.map {
       event =>

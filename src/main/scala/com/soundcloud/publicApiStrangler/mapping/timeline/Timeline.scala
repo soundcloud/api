@@ -13,12 +13,8 @@ abstract class Timeline(jsonValue: JsValue, page: CursorBasedPage[Urn])(implicit
   extends JsonMapping(jsonValue) {
 
   val collection: Seq[TimelineItem] = mapChildren(events).filter(contentAllowed)
-  val futureHref = futurePage(
-    events
-  )
   val nextHref = nextPage(
-    UUIDMapper.fromCursor((json \ "meta" \ "next_page_cursor").asOpt[String]),
-    futureUuid(events)
+    UUIDMapper.fromCursor((json \ "meta" \ "next_page_cursor").asOpt[String])
   )
 
   def events = (json \ "events").as[Seq[JsObject]]
@@ -27,37 +23,29 @@ abstract class Timeline(jsonValue: JsValue, page: CursorBasedPage[Urn])(implicit
     item.`type` != "promoted-stream"
   }
 
-  protected def nextPage(uuid: Option[UUID], futureUuid: Option[String]): Option[String] =
+  protected def nextPage(uuid: Option[UUID]): Option[String] = {
     Some(
       cursorUrl(
         page.extraParams.filterKeys(_ != "uuid[to]"),
         uuid
       )
     )
+  }
 
-  protected def mapChildren(events: Seq[JsObject]): Seq[TimelineItem]
-
-  private def futurePage(events: Seq[JsObject]): String = {
-
+  protected def futurePage(events: Seq[JsObject]): String = {
     // TODO don't use a var here :(
     var params = page.extraParams.toMap
     futureUuid(events).map(u => params += ("uuid[to]" -> u))
-    params = params.filterKeys(_ != "uuid[future]")
-
     cursorUrl(params, None)
   }
 
   private def futureUuid(events: Seq[JsObject]): Option[String] = {
-    // when there is an uuid[future], use it.
-    page.extraParams.get("uuid[future]").map(
-      uuid =>
-        Some(uuid.value.mkString(""))
-    ).getOrElse {
-      // use the uuid of the first item
-      val latestId = events.flatMap(e => (e \ "cursor").asOpt[String]).headOption
-      UUIDMapper.fromCursor(latestId).map(_.toString)
-    }
+    // always use the uuid of the first item as future uuid
+    val latestId = events.flatMap(e => (e \ "cursor").asOpt[String]).headOption
+    UUIDMapper.fromCursor(latestId).map(_.toString)
   }
+
+  protected def mapChildren(events: Seq[JsObject]): Seq[TimelineItem]
 
   protected def cursorUrl(extraParams: Params, cursorUuid: Option[UUID]): String =
       CursorBasedPage(

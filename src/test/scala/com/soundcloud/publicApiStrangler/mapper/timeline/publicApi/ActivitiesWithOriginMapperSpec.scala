@@ -4,7 +4,7 @@ import com.soundcloud.bff.nextbff.pagination.CursorBasedPage
 import com.soundcloud.bff.test.UnitSpecification
 import com.soundcloud.bff.test.fixtures.Fixtures
 import com.soundcloud.publicApiStrangler.mapper.timeline.{EntityMapper, EntitySummaryMapper}
-import com.soundcloud.publicApiStrangler.mapping.timeline.publicApi.TimelineItemWithOrigin
+import com.soundcloud.publicApiStrangler.mapping.timeline.publicApi.{TimelineWithOrigin, TimelineItemWithOrigin}
 import com.soundcloud.scalakit.test.VerifiedMocks
 import com.soundcloud.scalakit.{Urn, UserSession}
 import com.soundcloud.service.client.TimelineClient
@@ -25,7 +25,7 @@ class ActivitiesWithOriginMapperSpec extends UnitSpecification with Fixtures {
 
     def page: CursorBasedPage[Urn]
 
-    def result = Await.result(mapper.materialize(session, page)).get
+    def result = Await.result(mapper.materialize(session, page)).get.asInstanceOf[TimelineWithOrigin]
   }
 
   "with a regular cursor" >> {
@@ -45,6 +45,10 @@ class ActivitiesWithOriginMapperSpec extends UnitSpecification with Fixtures {
     "builds a nextHref" in new Cursor {
       result.nextHref mustEqual Some(s"http://foo.com/something?limit=100&cursor=$uuid")
     }
-  }
 
+    "builds a futureHref" in new Cursor {
+      result.futureHref mustEqual "http://foo.com/something?uuid%5Bto%5D=41d4f7d6-6480-4000-8000-000000000000&limit=100"
+    }
+
+  }
 }
