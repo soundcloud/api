@@ -1,21 +1,13 @@
 package com.soundcloud.publicApiStrangler.controller
 
-import com.soundcloud.bff.finagle.{ResponseBuilder, Request => BffRequest}
-import com.soundcloud.bff.nextbff.pagination.CursorBasedPage
+import com.soundcloud.bff.finagle.{Request => BffRequest}
 import com.soundcloud.bff.web.BffController
 import com.soundcloud.jvmkit.{LoggedInUserSession, Urn}
-import com.soundcloud.publicApiStrangler.mapper._
 import com.soundcloud.publicApiStrangler.mapper.timeline._
 import com.soundcloud.publicApiStrangler.mapper.timeline.e1.{ActivitiesMapper, StreamMapper}
 import com.soundcloud.publicApiStrangler.mapper.timeline.publicApi.ActivitiesWithOriginMapper
-import com.soundcloud.publicApiStrangler.mapping.timeline.Timeline
 import com.soundcloud.publicApiStrangler.support._
-import com.soundcloud.scalakit._
-import com.soundcloud.scalakit.finagle.http.{AlwaysMatchesPathMatcher, HandlerRequest}
 import com.soundcloud.service.component.{LieblingComponent, OkidokiComponent, TimelineComponent}
-import com.twitter.finagle.http.Request
-
-import scala.collection.JavaConversions._
 
 trait TimelineController extends BffController
     with TimelineComponent
@@ -45,15 +37,11 @@ trait TimelineController extends BffController
   private def doMagic(request: BffRequest, mapper: TimelineMapper) = {
     withLoggedInUser(request) {
       (session: LoggedInUserSession, userUrn: Urn) => {
-        if (rollingOut(session)) {
-          val page = pageFor(request, userUrn)
-          mapper.materialize(session, page).map {
-            case Some(info) => render.json(info)
-            case None => render.notFound
-          }.map(_.headers(defaultHeaders))
-        } else {
-          fallbackToMothership(request)
-        }
+        val page = pageFor(request, userUrn)
+        mapper.materialize(session, page).map {
+          case Some(info) => render.json(info)
+          case None => render.notFound
+        }.map(_.headers(defaultHeaders))
       }
     }
   }
@@ -66,20 +54,5 @@ trait TimelineController extends BffController
     "Access-Control-Expose-Headers"-> "Date",
     "Cache-Control" -> "private, max-age=0, must-revalidate"
   )
-  
-  // rollout percentage
-  private val percent = config.get("NEW_STREAM_ROLLOUT_PERCENTAGE").toFloat
-  private val percentRollout = (1.0 / percent) * 100.0
-  def rollingOut(session: LoggedInUserSession) = (session.getUser.getIdentifier.toInt % percentRollout).toInt == 0
-
-  private def fallbackToMothership(request: Request) = {
-    fallback.defaultHandling(new HandlerRequest(AlwaysMatchesPathMatcher, request)).map {
-      response =>
-        new ResponseBuilder().
-          body(response.getContentString()).
-          status(response.getStatusCode()).
-          headers(response.headers().entries.map(e => e.getKey -> e.getValue).toMap)
-    }
-  }
 
 }
