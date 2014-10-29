@@ -28,6 +28,31 @@ class ActivitiesMapperSpec extends UnitSpecification with Fixtures {
     def result = Await.result(mapper.materialize(session, page)).get.asInstanceOf[TimelineWithUuids]
   }
 
+  "with an invalid cursor" >> {
+    trait BogusCursor extends Context {
+      val bogusUuid = "fe174380-5b7b-11e4-803d-37087c0f7e84"
+      val page = CursorBasedPage(urn, "https://foo.com", "/something", Map(), Some(bogusUuid), 100)
+
+      override def before = {
+        when(timelineClient.activities(session, None, 100)).thenReturn(Future(timelineActivities.as[JsObject]))
+      }
+    }
+
+    "builds a collection" in new BogusCursor {
+      result.collection.size mustEqual 10
+      result.collection.head must beAnInstanceOf[TrackTimelineItem]
+    }
+
+    "builds a nextHref" in new BogusCursor {
+      result.nextHref mustEqual Some(s"https://foo.com/something?limit=100&cursor=41d4f7d6-6480-4000-8000-000000000000")
+    }
+
+    "builds a futureHref" in new BogusCursor {
+      result.futureHref mustEqual Some(s"https://foo.com/something?uuid%5Bto%5D=$uuid&limit=100")
+    }
+
+  }
+
   "with a regular cursor" >> {
     trait Cursor extends Context {
       val page = CursorBasedPage(urn, "https://foo.com", "/something", Map(), Some(uuid), 100)

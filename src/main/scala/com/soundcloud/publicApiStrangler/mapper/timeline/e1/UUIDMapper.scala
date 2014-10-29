@@ -11,11 +11,25 @@ import com.fasterxml.uuid.impl.UUIDUtil
  */
 object UUIDMapper {
 
-  def toCursor(uuid: UUID): String = s"${uuid.getMostSignificantBits}A00000000000000000000"
+  def toCursor(uuid: Option[UUID]): Option[String] = {
+    if(validUuid(uuid)) {
+      Some(s"${uuid.get.getMostSignificantBits}A00000000000000000000")
+    } else {
+      None // invalid cursors
+    }
+  }
 
-  def fromCursor(cursor: String): UUID = {
-    val gokuTimestamp = cursor.split("A").head
-    UUIDUtil.constructUUID(UUIDType.RANDOM_BASED, gokuTimestamp.toLong, 0)
+  def validUuid(uuid: Option[UUID]): Boolean = {
+    uuid.isDefined && uuid.get.getMostSignificantBits > 0
+  }
+
+  def fromCursor(cursor: Option[String]): Option[UUID] = {
+    if(cursor.isDefined) {
+      val parts = cursor.get.split("A")
+      Some(UUIDUtil.constructUUID(UUIDType.RANDOM_BASED, parts.head.toLong, 0))
+    } else {
+      None
+    }
   }
 
 }
