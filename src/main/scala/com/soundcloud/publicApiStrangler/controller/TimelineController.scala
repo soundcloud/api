@@ -50,7 +50,7 @@ trait TimelineController extends BffController
           mapper.materialize(session, page).map {
             case Some(info) => render.json(info)
             case None => render.notFound
-          }
+          }.map(_.headers(defaultHeaders))
         } else {
           fallbackToMothership(request)
         }
@@ -59,6 +59,14 @@ trait TimelineController extends BffController
   }
 
 
+  private val defaultHeaders = Map(
+    "Access-Control-Allow-Headers" -> "Accept, Authorization, Content-Type, Origin",
+    "Access-Control-Allow-Methods" -> "GET, PUT, POST, DELETE",
+    "Access-Control-Allow-Origin" -> "*",
+    "Access-Control-Expose-Headers"-> "Date",
+    "Cache-Control" -> "private, max-age=0, must-revalidate"
+  )
+  
   // rollout percentage
   private val percent = config.get("NEW_STREAM_ROLLOUT_PERCENTAGE").toFloat
   private val percentRollout = (1.0 / percent) * 100.0
