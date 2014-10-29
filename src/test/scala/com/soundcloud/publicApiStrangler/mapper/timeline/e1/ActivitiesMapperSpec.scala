@@ -48,9 +48,26 @@ class ActivitiesMapperSpec extends UnitSpecification with Fixtures {
     }
 
     "builds a futureHref" in new BogusCursor {
-      result.futureHref mustEqual Some(s"https://foo.com/something?uuid%5Bto%5D=$uuid&limit=100")
+      result.futureHref mustEqual "https://foo.com/something?uuid%5Bto%5D=41d4f7d6-6480-4000-8000-000000000000&limit=100"
+    }
+  }
+
+  "with a uuid[future] present" >> {
+    trait Cursor extends Context {
+      val page = CursorBasedPage(urn, "https://foo.com", "/something", Map("uuid[future]" -> "41d4f7d6-6480-4000-8000-000000000000"), Some(uuid), 100)
+
+      override def before = {
+        when(timelineClient.activities(session, Some(gokuCursor), 100)).thenReturn(Future(timelineActivities.as[JsObject]))
+      }
     }
 
+    "builds a nextHref" in new Cursor {
+      result.nextHref mustEqual Some("https://foo.com/something?uuid%5Bfuture%5D=41d4f7d6-6480-4000-8000-000000000000&limit=100&cursor=41d4f7d6-6480-4000-8000-000000000000")
+    }
+
+    "builds a futureHref" in new Cursor {
+      result.futureHref mustEqual "https://foo.com/something?uuid%5Bto%5D=41d4f7d6-6480-4000-8000-000000000000&limit=100"
+    }
   }
 
   "with a regular cursor" >> {
@@ -71,8 +88,8 @@ class ActivitiesMapperSpec extends UnitSpecification with Fixtures {
       result.nextHref mustEqual Some(s"https://foo.com/something?limit=100&cursor=$uuid")
     }
 
-    "doesn't build a futureHref" in new Cursor {
-      result.futureHref mustEqual None
+    "builds a futureHref" in new Cursor {
+      result.futureHref mustEqual "https://foo.com/something?uuid%5Bto%5D=41d4f7d6-6480-4000-8000-000000000000&limit=100"
     }
   }
 
@@ -90,7 +107,7 @@ class ActivitiesMapperSpec extends UnitSpecification with Fixtures {
     }
 
     "builds a futureHref" in new ReverseCursor {
-      result.futureHref mustEqual Some(s"https://foo.com/something?uuid%5Bto%5D=$uuid&limit=100")
+      result.futureHref mustEqual "https://foo.com/something?uuid%5Bto%5D=41d4f7d6-6480-4000-8000-000000000000&limit=100"
     }
   }
 
