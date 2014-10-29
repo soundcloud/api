@@ -42,7 +42,7 @@ class StreamMapperSpec extends UnitSpecification with Fixtures {
     }
 
     "builds a futureHref" in new NoCursor {
-      result.futureHref mustEqual Some(s"https://foo.com/something?uuid%5Bto%5D=41d51366-f940-4000-8000-000000000000&limit=100")
+      result.futureHref mustEqual s"https://foo.com/something?uuid%5Bto%5D=41d51366-f940-4000-8000-000000000000&limit=100"
     }
   }
 
@@ -69,7 +69,7 @@ class StreamMapperSpec extends UnitSpecification with Fixtures {
     }
 
     "doesn't build a futureHref" in new Cursor {
-      result.futureHref mustEqual None
+      result.futureHref mustEqual "https://foo.com/something?uuid%5Bto%5D=41d51366-f940-4000-8000-000000000000&limit=100"
     }
   }
 
@@ -87,7 +87,7 @@ class StreamMapperSpec extends UnitSpecification with Fixtures {
     }
 
     "builds a futureHref" in new ReverseCursor {
-      result.futureHref mustEqual Some(s"https://foo.com/something?uuid%5Bto%5D=41d51366-f940-4000-8000-000000000000&limit=100")
+      result.futureHref mustEqual s"https://foo.com/something?uuid%5Bto%5D=41d51366-f940-4000-8000-000000000000&limit=100"
     }
   }
 
