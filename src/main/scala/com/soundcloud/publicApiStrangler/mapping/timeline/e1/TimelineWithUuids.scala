@@ -2,6 +2,8 @@ package com.soundcloud.publicApiStrangler.mapping.timeline.e1
 
 import java.util.UUID
 
+import com.fasterxml.jackson.annotation.JsonInclude
+import com.fasterxml.jackson.databind.annotation.JsonSerialize
 import com.soundcloud.bff.nextbff.mapping.MappingContext
 import com.soundcloud.bff.nextbff.pagination.CursorBasedPage
 import com.soundcloud.publicApiStrangler.mapper.timeline.e1.UUIDMapper
@@ -16,6 +18,8 @@ class TimelineWithUuids(jsonValue: JsValue,
                entitySummaryMapper: EntitySummaryMapper)(implicit context: MappingContext)
   extends Timeline(jsonValue, page) {
 
+  // only include future_href if a cursor is not defined or invalid
+  @JsonInclude(JsonInclude.Include.NON_NULL)
   val futureHref: Option[String] = futurePage(
     events,
     page.cursor.map(UUID.fromString)
