@@ -1,8 +1,8 @@
 package com.soundcloud.publicApiStrangler.mapper.timeline.e1
 
+import java.nio.ByteBuffer
 import java.util.UUID
 
-import com.fasterxml.uuid.UUIDType
 import com.fasterxml.uuid.impl.UUIDUtil
 
 /*
@@ -13,7 +13,7 @@ object UUIDMapper {
 
   def toCursor(uuid: Option[UUID]): Option[String] = {
     if(validUuid(uuid)) {
-      Some(s"${uuid.get.getMostSignificantBits}A00000000000000000000")
+      Some(unpack(uuid.get))
     } else {
       None // invalid cursors
     }
@@ -24,12 +24,26 @@ object UUIDMapper {
   }
 
   def fromCursor(cursor: Option[String]): Option[UUID] = {
-    if(cursor.isDefined) {
-      val parts = cursor.get.split("A")
-      Some(UUIDUtil.constructUUID(UUIDType.RANDOM_BASED, parts.head.toLong, 0))
-    } else {
-      None
+    cursor match {
+      case Some(something) => Some(pack(something))
+      case _ => None
     }
   }
 
+  private val GokuCursor = """^(\d+)A(.*)""".r
+
+  private def pack(cursor: String) = {
+    val GokuCursor(timestamp, rest) = cursor
+    val mostSig = timestamp.toLong
+    val leastSig = ByteBuffer.wrap(rest.getBytes("UTF-8")).getLong
+    UUIDUtil.uuid(ByteBuffer.allocate(16).putLong(mostSig).putLong(leastSig).array)
+  }
+
+  private def unpack(uuid: UUID) = {
+    val rest = new String(
+      ByteBuffer.allocate(16).putLong(uuid.getLeastSignificantBits).array(), "UTF-8"
+    ).trim
+
+    s"${uuid.getMostSignificantBits}A${rest}"
+  }
 }

@@ -20,8 +20,8 @@ class StreamMapperSpec extends UnitSpecification with Fixtures {
     val mapper = new StreamMapper(timelineClient, entityMapper, entitySummaryMapper)
     val session = mock[UserSession]
     val urn = Urn("soundcloud:users:1")
-    val gokuCursor = "4743688807709163520A00000000000000000000"
-    val uuid = "41d4f7d6-6480-4000-8000-000000000000"
+    val gokuCursor = "4743688807709147136AYpG--SCe"
+    val uuid = "41d4f7d6-6480-0000-5970-472d2d534365"
 
     def page: CursorBasedPage[Urn]
 
@@ -38,11 +38,11 @@ class StreamMapperSpec extends UnitSpecification with Fixtures {
     }
 
     "builds a nextHref" in new NoCursor {
-      result.nextHref mustEqual Some("https://foo.com/something?limit=100&cursor=00000000-0000-400f-8000-000000000000")
+      result.nextHref mustEqual Some("https://foo.com/something?limit=100&cursor=41d51383-d8c0-0000-5934-573333514c4f")
     }
 
     "builds a futureHref" in new NoCursor {
-      result.futureHref mustEqual Some(s"https://foo.com/something?uuid%5Bto%5D=41d51366-f940-4000-8000-000000000000&limit=100")
+      result.futureHref mustEqual Some(s"https://foo.com/something?uuid%5Bto%5D=41d51366-f940-0000-595f-334a74675741&limit=100")
     }
   }
 
@@ -65,7 +65,7 @@ class StreamMapperSpec extends UnitSpecification with Fixtures {
     }
 
     "builds a nextHref" in new Cursor {
-      result.nextHref mustEqual Some("https://foo.com/something?limit=100&cursor=00000000-0000-400f-8000-000000000000")
+      result.nextHref mustEqual Some("https://foo.com/something?limit=100&cursor=41d51383-d8c0-0000-5934-573333514c4f")
     }
 
     "doesn't build a futureHref" in new Cursor {
@@ -83,11 +83,11 @@ class StreamMapperSpec extends UnitSpecification with Fixtures {
     }
 
     "builds a nextHref" in new ReverseCursor {
-      result.nextHref mustEqual Some("https://foo.com/something?limit=100&cursor=00000000-0000-400f-8000-000000000000")
+      result.nextHref mustEqual Some("https://foo.com/something?limit=100&cursor=41d51383-d8c0-0000-5934-573333514c4f")
     }
 
     "builds a futureHref" in new ReverseCursor {
-      result.futureHref mustEqual Some(s"https://foo.com/something?uuid%5Bto%5D=41d51366-f940-4000-8000-000000000000&limit=100")
+      result.futureHref mustEqual Some(s"https://foo.com/something?uuid%5Bto%5D=41d51366-f940-0000-595f-334a74675741&limit=100")
     }
   }
 

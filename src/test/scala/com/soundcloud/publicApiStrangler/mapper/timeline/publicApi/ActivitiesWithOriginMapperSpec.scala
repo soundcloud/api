@@ -20,8 +20,8 @@ class ActivitiesWithOriginMapperSpec extends UnitSpecification with Fixtures {
     val mapper = new ActivitiesWithOriginMapper(timelineClient, entityMapper, entitySummaryMapper)
     val session = mock[UserSession]
     val urn = Urn("soundcloud:users:1")
-    val gokuCursor = "4743688807709163520A00000000000000000000"
-    val uuid = "41d4f7d6-6480-4000-8000-000000000000"
+    val gokuCursor = "4743688807709147136AYpG--SCe"
+    val uuid = "41d4f7d6-6480-0000-5970-472d2d534365"
 
     def page: CursorBasedPage[Urn]
 
@@ -47,7 +47,7 @@ class ActivitiesWithOriginMapperSpec extends UnitSpecification with Fixtures {
     }
 
     "builds a futureHref" in new Cursor {
-      result.futureHref mustEqual "http://foo.com/something?uuid%5Bto%5D=41d4f7d6-6480-4000-8000-000000000000&limit=100"
+      result.futureHref mustEqual s"http://foo.com/something?uuid%5Bto%5D=$uuid&limit=100"
     }
 
   }
