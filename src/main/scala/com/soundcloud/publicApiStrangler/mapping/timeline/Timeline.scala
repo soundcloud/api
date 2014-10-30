@@ -28,12 +28,10 @@ abstract class Timeline(jsonValue: JsValue, page: CursorBasedPage[Urn])(implicit
   }
 
   protected def nextPage(uuid: Option[UUID]): Option[String] = {
-    Some(
-      cursorUrl(
-        page.extraParams.filterKeys(_ != "uuid[to]"),
-        uuid
-      )
-    )
+    uuid match {
+      case Some(_) => Some(cursorUrl(page.extraParams.filterKeys(_ != "uuid[to]"), uuid))
+      case None => None
+    }
   }
 
   protected def futurePage(events: Seq[JsObject]): String = {
