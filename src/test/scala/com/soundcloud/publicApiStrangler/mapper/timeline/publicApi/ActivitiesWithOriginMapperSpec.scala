@@ -20,8 +20,8 @@ class ActivitiesWithOriginMapperSpec extends UnitSpecification with Fixtures {
     val mapper = new ActivitiesWithOriginMapper(timelineClient, entityMapper, entitySummaryMapper)
     val session = mock[UserSession]
     val urn = Urn("soundcloud:users:1")
-    val gokuCursor = "4743688807709147136AYpG--SCe"
-    val uuid = "41d4f7d6-6480-0000-5970-472d2d534365"
+    val gokuCursor = "4743688807709147136AYpG++SCewY4AAAAAAAAAAA=="
+    val uuid = "41d4f7d6-6480-0000-6291-bef9209ec18e"
 
     def page: CursorBasedPage[Urn]
 

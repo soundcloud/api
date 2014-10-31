@@ -20,8 +20,9 @@ class ActivitiesMapperSpec extends UnitSpecification with Fixtures {
     val mapper = new ActivitiesMapper(timelineClient, entityMapper, entitySummaryMapper)
     val session = mock[UserSession]
     val urn = Urn("soundcloud:users:1")
-    val gokuCursor = "4743688807709147136AYpG--SCe"
-    val uuid = "41d4f7d6-6480-0000-5970-472d2d534365"
+    val gokuCursor = "4743688807709147136AYpG++SCewY4AAAAAAAAAAA=="
+    val uuid = "41d4f7d6-6480-0000-6291-bef9209ec18e"
+    val futureUuid = "41d4f7d6-6480-0000-6291-bef9209ec18e"
 
     def page: CursorBasedPage[Urn]
 
@@ -44,11 +45,11 @@ class ActivitiesMapperSpec extends UnitSpecification with Fixtures {
     }
 
     "builds a nextHref" in new BogusCursor {
-      result.nextHref mustEqual Some(s"https://foo.com/something?limit=100&cursor=41d4f7d6-6480-0000-5970-472d2d534365")
+      result.nextHref mustEqual Some(s"https://foo.com/something?limit=100&cursor=$futureUuid")
     }
 
     "builds a futureHref" in new BogusCursor {
-      result.futureHref mustEqual Some("https://foo.com/something?uuid%5Bto%5D=41d4f7d6-6480-0000-5970-472d2d534365&limit=100")
+      result.futureHref mustEqual Some(s"https://foo.com/something?uuid%5Bto%5D=$futureUuid&limit=100")
     }
   }
 
