@@ -17,7 +17,7 @@ class StreamMapper(timelineClient: TimelineClient,
   override def fetch(session: UserSession, page: CursorBasedPage[Urn])(implicit context: MappingContext): Future[TimelineWithUuids] = {
     val (uuid, reverse) = clientCursorParam(page)
 
-    timelineClient.stream(session, UUIDMapper.toCursor(uuid), page.limit, reverse).map {
+    timelineClient.stream(session, uuid.map(_.toString), page.limit, reverse, Some("uuid")).map {
       json =>
         new TimelineWithUuids(json, page, entityMapper, entitySummaryMapper)
     }

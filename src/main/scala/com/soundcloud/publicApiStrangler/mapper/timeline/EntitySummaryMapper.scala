@@ -12,7 +12,7 @@ import play.api.libs.json.JsObject
 class EntitySummaryMapper(okidokiClient: OkidokiClient, baseUrl: String) extends Mapper[Urn, JsonMapping] {
 
   override def map(session: UserSession, inputs: Set[Urn])(implicit context: MappingContext): Future[Map[Urn, JsonMapping]] = {
-    okidokiClient.fetch(session, inputs.toList).map {
+    okidokiClient.fetch(session, inputs).map {
       entities: List[JsObject] =>
         entities.map {
           entity =>

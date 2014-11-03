@@ -32,7 +32,7 @@ class EntityMapperSpec extends UnitSpecification with Fixtures {
       "soundcloud:tracks:6457573").map(Urn(_))
 
     override def before = {
-      when(okidokiClient.fetch(===(session), any[List[Urn]])).thenReturn(
+      when(okidokiClient.fetch(===(session), any[Set[Urn]])).thenReturn(
         Future(okidokiFetch.as[List[JsObject]])
       )
       when(lieblingClient.likesCounts(===(session), any[List[Urn]])).thenReturn(

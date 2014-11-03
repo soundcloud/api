@@ -3,7 +3,6 @@ package com.soundcloud.publicApiStrangler.mapper.timeline.publicApi
 import com.soundcloud.bff.nextbff.mapping.MappingContext
 import com.soundcloud.bff.nextbff.pagination.CursorBasedPage
 import com.soundcloud.jvmkit.UserSession
-import com.soundcloud.publicApiStrangler.mapper.timeline.e1.UUIDMapper
 import com.soundcloud.publicApiStrangler.mapper.timeline.{EntityMapper, EntitySummaryMapper, TimelineMapper}
 import com.soundcloud.publicApiStrangler.mapping.timeline.publicApi.TimelineWithOrigin
 import com.soundcloud.scalakit.Urn
@@ -20,7 +19,7 @@ class ActivitiesWithOriginMapper(timelineClient: TimelineClient,
     val (uuid, reverse) = clientCursorParam(page)
 
     // activities on public api are actually the user' STREAM. Go figure.
-    timelineClient.stream(session, UUIDMapper.toCursor(uuid), page.limit, reverse).map {
+    timelineClient.stream(session, uuid.map(_.toString), page.limit, reverse, Some("uuid")).map {
       json =>
         new TimelineWithOrigin(json, page, entityMapper, entitySummaryMapper)
     }

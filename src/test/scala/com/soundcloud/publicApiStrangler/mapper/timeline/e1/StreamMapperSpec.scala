@@ -20,10 +20,9 @@ class StreamMapperSpec extends UnitSpecification with Fixtures {
     val mapper = new StreamMapper(timelineClient, entityMapper, entitySummaryMapper)
     val session = mock[UserSession]
     val urn = Urn("soundcloud:users:1")
-    val gokuCursor = "4743688807709147136AYpG++SCewY4AAAAAAAAAAA=="
     val uuid = "41d4f7d6-6480-0000-6291-bef9209ec18e"
-    val nextHrefUuid = "41d51383-d8c0-0000-6385-b7dd02ce9999"
-    val futureUuid = "41d51366-f940-0000-63fd-c9b60580b0c5"
+    val nextUuid = "41d5160c-5ac0-0000-61dc-d68a12e0c3c7"
+    val futureUuid = "41d51624-6140-0000-6191-c98a01a7ddc9"
 
     def page: CursorBasedPage[Urn]
 
@@ -35,12 +34,12 @@ class StreamMapperSpec extends UnitSpecification with Fixtures {
       val page = CursorBasedPage(urn, "https://foo.com", "/something", Map(), None, 100)
 
       override def before = {
-        when(timelineClient.stream(session, None, 100)).thenReturn(Future(timelineStream.as[JsObject]))
+        when(timelineClient.stream(session, None, 100, false, Some("uuid"))).thenReturn(Future(timelineStream.as[JsObject]))
       }
     }
 
     "builds a nextHref" in new NoCursor {
-      result.nextHref mustEqual Some(s"https://foo.com/something?limit=100&cursor=$nextHrefUuid")
+      result.nextHref mustEqual Some(s"https://foo.com/something?limit=100&cursor=$nextUuid")
     }
 
     "builds a futureHref" in new NoCursor {
@@ -53,7 +52,7 @@ class StreamMapperSpec extends UnitSpecification with Fixtures {
       val page = CursorBasedPage(urn, "https://foo.com", "/something", Map(), Some(uuid), 100)
 
       override def before = {
-        when(timelineClient.stream(session, Some(gokuCursor), 100)).thenReturn(Future(timelineStream.as[JsObject]))
+        when(timelineClient.stream(session, Some(uuid), 100, false, Some("uuid"))).thenReturn(Future(timelineStream.as[JsObject]))
       }
     }
 
@@ -67,7 +66,7 @@ class StreamMapperSpec extends UnitSpecification with Fixtures {
     }
 
     "builds a nextHref" in new Cursor {
-      result.nextHref mustEqual Some(s"https://foo.com/something?limit=100&cursor=$nextHrefUuid")
+      result.nextHref mustEqual Some(s"https://foo.com/something?limit=100&cursor=$nextUuid")
     }
 
     "doesn't build a futureHref" in new Cursor {
@@ -80,12 +79,12 @@ class StreamMapperSpec extends UnitSpecification with Fixtures {
       val page = CursorBasedPage(urn, "https://foo.com", "/something", Map("uuid[to]" -> uuid.toString), None, 100)
 
       override def before = {
-        when(timelineClient.stream(session, Some(gokuCursor), 100, true)).thenReturn(Future(timelineStream.as[JsObject]))
+        when(timelineClient.stream(session, Some(uuid), 100, true, Some("uuid"))).thenReturn(Future(timelineStream.as[JsObject]))
       }
     }
 
     "builds a nextHref" in new ReverseCursor {
-      result.nextHref mustEqual Some(s"https://foo.com/something?limit=100&cursor=$nextHrefUuid")
+      result.nextHref mustEqual Some(s"https://foo.com/something?limit=100&cursor=$nextUuid")
     }
 
     "builds a futureHref" in new ReverseCursor {

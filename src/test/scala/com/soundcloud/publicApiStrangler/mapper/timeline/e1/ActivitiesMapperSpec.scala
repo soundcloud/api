@@ -20,37 +20,13 @@ class ActivitiesMapperSpec extends UnitSpecification with Fixtures {
     val mapper = new ActivitiesMapper(timelineClient, entityMapper, entitySummaryMapper)
     val session = mock[UserSession]
     val urn = Urn("soundcloud:users:1")
-    val gokuCursor = "4743688807709147136AYpG++SCewY4AAAAAAAAAAA=="
-    val uuid = "41d4f7d6-6480-0000-6291-bef9209ec18e"
-    val futureUuid = "41d4f7d6-6480-0000-6291-bef9209ec18e"
+    val uuid = "fe174380-5b7b-11e4-803d-37087c0f7e84"
+    val futureUuid = "41d51624-6140-0000-6191-c98a01a7ddc9"
+    val nextUuid = "41d51546-b500-0000-61e0-02e5d7b15300"
 
     def page: CursorBasedPage[Urn]
 
     def result = Await.result(mapper.materialize(session, page)).get.asInstanceOf[TimelineWithUuids]
-  }
-
-  "with an invalid cursor" >> {
-    trait BogusCursor extends Context {
-      val bogusUuid = "fe174380-5b7b-11e4-803d-37087c0f7e84"
-      val page = CursorBasedPage(urn, "https://foo.com", "/something", Map(), Some(bogusUuid), 100)
-
-      override def before = {
-        when(timelineClient.activities(session, None, 100)).thenReturn(Future(timelineActivities.as[JsObject]))
-      }
-    }
-
-    "builds a collection" in new BogusCursor {
-      result.collection.size mustEqual 10
-      result.collection.head must beAnInstanceOf[TrackTimelineItem]
-    }
-
-    "builds a nextHref" in new BogusCursor {
-      result.nextHref mustEqual Some(s"https://foo.com/something?limit=100&cursor=$futureUuid")
-    }
-
-    "builds a futureHref" in new BogusCursor {
-      result.futureHref mustEqual Some(s"https://foo.com/something?uuid%5Bto%5D=$futureUuid&limit=100")
-    }
   }
 
   "with a regular cursor" >> {
@@ -58,7 +34,7 @@ class ActivitiesMapperSpec extends UnitSpecification with Fixtures {
       val page = CursorBasedPage(urn, "https://foo.com", "/something", Map(), Some(uuid), 100)
 
       override def before = {
-        when(timelineClient.activities(session, Some(gokuCursor), 100)).thenReturn(Future(timelineActivities.as[JsObject]))
+        when(timelineClient.activities(session, Some(uuid), 100, false, Some("uuid"))).thenReturn(Future(timelineActivities.as[JsObject]))
       }
     }
 
@@ -68,7 +44,7 @@ class ActivitiesMapperSpec extends UnitSpecification with Fixtures {
     }
 
     "builds a nextHref" in new Cursor {
-      result.nextHref mustEqual Some(s"https://foo.com/something?limit=100&cursor=$uuid")
+      result.nextHref mustEqual Some(s"https://foo.com/something?limit=100&cursor=$nextUuid")
     }
 
     "doesn't build a futureHref" in new Cursor {
@@ -81,16 +57,16 @@ class ActivitiesMapperSpec extends UnitSpecification with Fixtures {
       val page = CursorBasedPage(urn, "https://foo.com", "/something", Map("uuid[to]" -> uuid), None, 100)
 
       override def before = {
-        when(timelineClient.activities(session, Some(gokuCursor), 100, true)).thenReturn(Future(timelineActivities.as[JsObject]))
+        when(timelineClient.activities(session, Some(uuid), 100, true, Some("uuid"))).thenReturn(Future(timelineActivities.as[JsObject]))
       }
     }
 
     "builds a nextHref" in new ReverseCursor {
-      result.nextHref mustEqual Some(s"https://foo.com/something?limit=100&cursor=$uuid")
+      result.nextHref mustEqual Some(s"https://foo.com/something?limit=100&cursor=$nextUuid")
     }
 
     "builds a futureHref" in new ReverseCursor {
-      result.futureHref mustEqual Some(s"https://foo.com/something?uuid%5Bto%5D=$uuid&limit=100")
+      result.futureHref mustEqual Some(s"https://foo.com/something?uuid%5Bto%5D=$futureUuid&limit=100")
     }
   }
 
