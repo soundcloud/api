@@ -11,5 +11,7 @@ class CommentTimelineItem(jsonValue: JsValue,
   extends JsonMapping(jsonValue) with TimelineItemWithUuid {
 
   val comment = entityMapper.embed(Urn((json \ "urn").as[String]))
+  val user =  entitySummaryMapper.embed(Urn((json \ "actor").as[String]))
+
 
 }
