@@ -17,7 +17,7 @@ class EntityMapper(okidokiClient: OkidokiClient,
 
   override def map(session: UserSession, inputs: Set[Urn])(implicit context: MappingContext): Future[Map[Urn, JsonMapping]] = {
     val likes = lieblingClient.likesCounts(session, inputs.toList)
-    val entities = okidokiClient.fetch(session, inputs.toList)
+    val entities = okidokiClient.fetch(session, inputs)
 
     entities.join(likes).map {
       case (entities: List[JsObject], likesInfo: JsObject) =>

@@ -3,10 +3,8 @@ package com.soundcloud.publicApiStrangler.mapping.timeline.e1
 import java.util.UUID
 
 import com.fasterxml.jackson.annotation.JsonInclude
-import com.fasterxml.jackson.databind.annotation.JsonSerialize
 import com.soundcloud.bff.nextbff.mapping.MappingContext
 import com.soundcloud.bff.nextbff.pagination.CursorBasedPage
-import com.soundcloud.publicApiStrangler.mapper.timeline.e1.UUIDMapper
 import com.soundcloud.publicApiStrangler.mapper.timeline.{EntityMapper, EntitySummaryMapper}
 import com.soundcloud.publicApiStrangler.mapping.timeline._
 import com.soundcloud.scalakit.Urn
@@ -27,7 +25,7 @@ class TimelineWithUuids(jsonValue: JsValue,
 
   private def futurePage(events: Seq[JsObject], currentUuid: Option[UUID]): Option[String] = {
     // if already paginating, don't include a future page
-    if(currentUuid.isDefined && UUIDMapper.validUuid(currentUuid)) {
+    if(currentUuid.isDefined) {
       None
     } else {
       Some(futurePage(events))

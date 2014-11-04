@@ -1,13 +1,14 @@
 package com.soundcloud.publicApiStrangler.mapping.timeline.e1
 
+import java.util.UUID
+
 import com.soundcloud.bff.nextbff.mapping.JsonMapping
-import com.soundcloud.publicApiStrangler.mapper.timeline.e1.UUIDMapper
 import com.soundcloud.publicApiStrangler.mapping.timeline.TimelineItem
 
 trait TimelineItemWithUuid extends TimelineItem {
   self: JsonMapping =>
 
-  val uuid = UUIDMapper.fromCursor((json \ "cursor").asOpt[String])
+  val uuid = (json \ "cursor").asOpt[String].map(UUID.fromString)
 
   // deprecated fields, kept for structure only
   val tags = None

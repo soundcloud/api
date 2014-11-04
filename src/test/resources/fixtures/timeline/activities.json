@@ -6,7 +6,7 @@
       "urn": "soundcloud:tracks:128163998",
       "actor": "soundcloud:users:69099281",
       "target": "soundcloud:users:8478647",
-      "cursor": "4743688807709147136AYpG--SCewY49t7-FBA==",
+      "cursor": "41d51624-6140-0000-6191-c98a01a7ddc9",
       "unique_id": "1"
     },
     {
@@ -15,7 +15,7 @@
       "urn": "soundcloud:comments:205752728",
       "actor": "soundcloud:users:69099281",
       "target": "soundcloud:users:8478647",
-      "cursor": "4743719115493998592AY_3JtgWAsMVS2M7UEg==",
+      "cursor": "41d51622-7200-0000-638e-28d5b8b053b7",
       "unique_id": "2"
     },
     {
@@ -24,7 +24,7 @@
       "urn": "soundcloud:playlists:44437439",
       "actor": "soundcloud:users:69099281",
       "target": "soundcloud:users:8478647",
-      "cursor": "4743719308163547136AZ5uw8AWEu_Ea2cyjAQ==",
+      "cursor": "41d51620-2d80-0000-63ea-8323e7ecda37",
       "unique_id": "3"
     },
     {
@@ -33,7 +33,7 @@
       "urn": "soundcloud:playlists:44437439",
       "actor": "soundcloud:users:69099281",
       "target": "soundcloud:users:8478647",
-      "cursor": "4743719322000556032AYYWo2hWI34BTAA==",
+      "cursor": "41d51615-dec0-0000-6398-f610d7c4c853",
       "unique_id": "4"
     },
     {
@@ -42,7 +42,7 @@
       "urn": "soundcloud:affiliations:2902555363",
       "actor": "soundcloud:users:117609137",
       "target": "soundcloud:users:8478647",
-      "cursor": "4743719277599653888AYbiJ5QOdyP9SAA==",
+      "cursor": "41d51610-b480-0000-61d5-9c2cde87c853",
       "unique_id": "5"
     },
     {
@@ -51,7 +51,7 @@
       "urn": "soundcloud:affiliations:2831253281",
       "actor": "soundcloud:users:113761656",
       "target": "soundcloud:users:8478647",
-      "cursor": "4743719115493998592AY_3JtgWAsMVS2M7UEg==",
+      "cursor": "41d51610-9900-0000-6198-f6109a86c853",
       "unique_id": "6"
     },
     {
@@ -60,7 +60,7 @@
       "urn": "soundcloud:playlists:41636896",
       "actor": "soundcloud:users:8478647",
       "target": "soundcloud:users:8478647",
-      "cursor": "4743719193470304256AZfcC3O-IGwA=",
+      "cursor": "41d5160f-c000-0000-61f6-9d3ff4f9c753",
       "unique_id": "7"
     },
     {
@@ -69,7 +69,7 @@
       "urn": "soundcloud:playlists:37770183",
       "actor": "soundcloud:users:8478647",
       "target": "soundcloud:users:8478647",
-      "cursor": "4743719239502790656AY4W33QLOmZk73Koe",
+      "cursor": "41d5160f-1bc0-0000-63ea-e65c80c3c652",
       "unique_id": "8"
     },
     {
@@ -78,7 +78,7 @@
       "urn": "soundcloud:affiliations:2725319448",
       "actor": "soundcloud:users:1269856",
       "target": "soundcloud:users:8478647",
-      "cursor": "4743719277599653888AYbiJ5QOdyP9SAA",
+      "cursor": "41d5160d-05c0-0000-6187-f1ae05f3cec7",
       "unique_id": "9"
     },
     {
@@ -87,11 +87,11 @@
       "urn": "soundcloud:tracks:128163998",
       "actor": "soundcloud:users:69099281",
       "target": "soundcloud:users:8478647",
-      "cursor": "4743712277599653888AYbiJ5QOdyP9SBB",
+      "cursor": "41d5160c-5ac0-0000-61dc-d68a12e0c3c7",
       "unique_id": "10"
     }
   ],
   "meta": {
-    "next_page_cursor": "4743688807709147136AYpG--SCewY49t7-FBA=="
+    "next_page_cursor": "41d51546-b500-0000-61e0-02e5d7b15300"
   }
 }

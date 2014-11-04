@@ -3,12 +3,10 @@ package com.soundcloud.publicApiStrangler.mapping.timeline
 import java.util.UUID
 
 import com.fasterxml.jackson.annotation.JsonInclude
-import com.fasterxml.jackson.databind.annotation.JsonSerialize
 import com.soundcloud.bff.nextbff.mapping.{JsonMapping, MappingContext}
 import com.soundcloud.bff.nextbff.pagination.CursorBasedPage
-import com.soundcloud.publicApiStrangler.mapper.timeline.e1.UUIDMapper
 import com.soundcloud.scalakit.Urn
-import com.soundcloud.scalakit.finagle.jsonservice.{StringParam, Param, Params}
+import com.soundcloud.scalakit.finagle.jsonservice.Params
 import play.api.libs.json.{JsObject, JsValue}
 
 abstract class Timeline(jsonValue: JsValue, page: CursorBasedPage[Urn])(implicit context: MappingContext)
@@ -18,7 +16,7 @@ abstract class Timeline(jsonValue: JsValue, page: CursorBasedPage[Urn])(implicit
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
   val nextHref = nextPage(
-    UUIDMapper.fromCursor((json \ "meta" \ "next_page_cursor").asOpt[String])
+    (json \ "meta" \ "next_page_cursor").asOpt[String].map(UUID.fromString)
   )
 
   def events = (json \ "events").as[Seq[JsObject]]
@@ -37,14 +35,14 @@ abstract class Timeline(jsonValue: JsValue, page: CursorBasedPage[Urn])(implicit
   protected def futurePage(events: Seq[JsObject]): String = {
     // TODO don't use a var here :(
     var params = page.extraParams.toMap
-    futureUuid(events).map(u => params += ("uuid[to]" -> u))
+    futureUuid(events).map(u => params += ("uuid[to]" -> u.toString))
     cursorUrl(params, None)
   }
 
-  private def futureUuid(events: Seq[JsObject]): Option[String] = {
+  private def futureUuid(events: Seq[JsObject]): Option[UUID] = {
     // always use the uuid of the first item as future uuid
     val latestId = events.flatMap(e => (e \ "cursor").asOpt[String]).headOption
-    UUIDMapper.fromCursor(latestId).map(_.toString)
+    latestId.map(UUID.fromString)
   }
 
   protected def mapChildren(events: Seq[JsObject]): Seq[TimelineItem]
