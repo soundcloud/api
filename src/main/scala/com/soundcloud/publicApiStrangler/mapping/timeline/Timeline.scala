@@ -12,7 +12,7 @@ import play.api.libs.json.{JsObject, JsValue}
 abstract class Timeline(jsonValue: JsValue, page: CursorBasedPage[Urn])(implicit context: MappingContext)
   extends JsonMapping(jsonValue) {
 
-  val collection: Seq[TimelineItem] = mapChildren(events).filter(contentAllowed)
+  val collection: Seq[TimelineItem] = mapChildren(events).filterNot(contentDisallowed)
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
   val nextHref = nextPage(
@@ -23,7 +23,7 @@ abstract class Timeline(jsonValue: JsValue, page: CursorBasedPage[Urn])(implicit
 
   private def doNotShow = Set("promoted-stream", "user-mention")
 
-  def contentAllowed(item: TimelineItem) = !doNotShow.contains(item.`type`)
+  def contentDisallowed(item: TimelineItem) = doNotShow.contains(item.`type`)
 
   protected def nextPage(uuid: Option[UUID]): Option[String] = {
     uuid match {
