@@ -2,7 +2,7 @@ package com.soundcloud.publicApiStrangler.mapping.timeline
 
 import java.util.UUID
 
-import com.fasterxml.jackson.annotation.JsonInclude
+import com.fasterxml.jackson.annotation.{JsonIgnore, JsonInclude}
 import com.soundcloud.bff.nextbff.mapping.{JsonMapping, MappingContext}
 import com.soundcloud.bff.nextbff.pagination.CursorBasedPage
 import com.soundcloud.scalakit.Urn
@@ -12,7 +12,7 @@ import play.api.libs.json.{JsObject, JsValue}
 abstract class Timeline(jsonValue: JsValue, page: CursorBasedPage[Urn])(implicit context: MappingContext)
   extends JsonMapping(jsonValue) {
 
-  val collection: Seq[TimelineItem] = mapChildren(events).filter(contentAllowed)
+  val collection: Seq[TimelineItem] = mapChildren(events).filterNot(contentDisallowed)
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
   val nextHref = nextPage(
@@ -21,9 +21,9 @@ abstract class Timeline(jsonValue: JsValue, page: CursorBasedPage[Urn])(implicit
 
   def events = (json \ "events").as[Seq[JsObject]]
 
-  def contentAllowed(item: TimelineItem) = {
-    item.`type` != "promoted-stream"
-  }
+  private def doNotShow = Set("promoted-stream", "user-mention")
+
+  def contentDisallowed(item: TimelineItem) = doNotShow.contains(item.`type`)
 
   protected def nextPage(uuid: Option[UUID]): Option[String] = {
     uuid match {
