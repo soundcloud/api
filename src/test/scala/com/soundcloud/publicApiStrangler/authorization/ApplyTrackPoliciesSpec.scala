@@ -22,7 +22,7 @@ class ApplyTrackPoliciesSpec extends UnitSpecification with Fixtures {
 
     lazy val authorizedTrackIds =
       extractIds(
-        ApplyTrackPolicies(session, new TracksJsonVisitor(tracksArray), rules).get
+        ApplyTrackPolicies(session, new TracksVisitor(tracksArray), rules).get
       )
 
     def extractIds(json: JsValue) =
@@ -65,7 +65,7 @@ class ApplyTrackPoliciesSpec extends UnitSpecification with Fixtures {
 
       override lazy val authorizedTrackIds =
         extractIds(
-          ApplyTrackPolicies(session, new TracksJsonVisitor(stream), rules).get
+          ApplyTrackPolicies(session, new TracksVisitor(stream), rules).get
         )
 
       override def extractIds(json: JsValue) =

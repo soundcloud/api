@@ -1,7 +1,6 @@
 package com.soundcloud.publicApiStrangler.authorization
 
 import play.api.libs.json.JsValue
-import scala.xml.Node
 import com.soundcloud.bff.finagle.ResponseBuilder
 
 trait BuilderResponse {

@@ -1,23 +1,57 @@
 package com.soundcloud.publicApiStrangler.authorization
 
-import com.soundcloud.scalakit.Urn
-
-import play.api.libs.json.JsArray
-import play.api.libs.json.JsArray
-import play.api.libs.json.JsObject
-import play.api.libs.json.JsObject
-import play.api.libs.json.JsObject
-import play.api.libs.json.JsString
 import play.api.libs.json.JsValue
+import play.api.libs.json.JsObject
+import play.api.libs.json.JsArray
+import com.soundcloud.scalakit.Urn
+import play.api.libs.json.JsString
 
-trait TracksVisitor {
+class TracksVisitor(val wrapped: JsValue) {
   
-  type TrackType <: Track
+  type VisitTrack = (Urn, Track) => Option[JsValue]
   
-  type VisitTrack = (Urn, TrackType) => Option[TrackType#Content]
-  
-  def apply(visit: VisitTrack): Option[TrackType#Content]
-  
-  def wrapped: TrackType#Content
+  def apply(visit: VisitTrack): Option[JsValue] =
+    apply(wrapped, visit)
+
+  private def apply(json: JsValue, visit: VisitTrack): Option[JsValue] = {
+    json match {
+      case json: JsArray =>
+        visitArray(json, visit)
+      case json: JsObject if isTrack(json) =>
+        visitTrack(json, visit)
+      case json: JsObject =>
+        visitObject(json, visit)
+      case other =>
+        Some(other)
+    }
+  }
+
+  private def visitArray(json: JsArray, visit: VisitTrack) = {
+    val items = json.as[List[JsValue]].map(apply(_, visit)).flatten
+    Some(JsArray(items))
+  }
+
+  private def visitTrack(json: JsObject, visit: VisitTrack) = {
+    val id = (json \ "id").as[Int]
+    val urn = Urn(s"soundcloud:tracks:$id")
+    visit(urn, new Track(json))
+  }
+
+  private def visitObject(json: JsObject, visit: VisitTrack) =
+    visitFields(json, visit).toList match {
+      case fields if fields.size != json.fields.size =>
+        None
+      case fields =>
+        Some(JsObject(fields))
+    }
+
+  private def visitFields(json: JsObject, visit: VisitTrack) =
+    json.fields.toMap.mapValues(apply(_, visit)).collect {
+      case (name, Some(value)) =>
+        name -> value
+    }
+
+  private def isTrack(json: JsObject) =
+    json.fieldSet.contains(("kind", JsString("track")))
+
 }
-
