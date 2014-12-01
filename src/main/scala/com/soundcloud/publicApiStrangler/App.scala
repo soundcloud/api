@@ -4,6 +4,7 @@ import com.soundcloud.publicApiStrangler.support.TrackFiltering
 import com.soundcloud.bff.{BazookaConfigComponent, BffApp}
 import com.soundcloud.publicApiStrangler.controller.{FallbackController, TimelineController}
 import com.soundcloud.service.component.{GeoIpComponent, AuthenticatorComponent}
+import com.soundcloud.publicApiStrangler.support.RejectXmlRequestFilter
 
 object App
     extends BazookaConfigComponent
@@ -16,4 +17,5 @@ object App
 {
   override val geoProvider = geoIpClient.get _
   override val authenticator = authenticatorClient.cacheKeyAndSession _
+  override val customFilters = List(new RejectXmlRequestFilter)
 }
