@@ -2,21 +2,21 @@ package com.soundcloud.publicApiStrangler.support
 
 import com.twitter.finagle.Service
 import com.twitter.finagle.SimpleFilter
-import com.twitter.finagle.http.MediaType
 import com.twitter.finagle.http.Request
 import com.twitter.finagle.http.Response
 import com.twitter.finagle.http.Status
 import com.twitter.finagle.http.Version
 import com.twitter.util.Future
 
-class RejectXmlRequestFilter extends SimpleFilter[Request, Response] {
+class AcceptOnlyJsonRequestFilter extends SimpleFilter[Request, Response] {
 
   override def apply(request: Request, next: Service[Request, Response]) =
-    if (isXmlRequest(request))
-      Future.value(Response(Version.Http11, Status.NotAcceptable))
-    else
+    if (isJsonRequest(request))
       next(request)
+    else
+      Future.value(Response(Version.Http11, Status.NotAcceptable))
 
-  private def isXmlRequest(request: Request) =
-    request.path.endsWith(".xml") || request.acceptMediaTypes.contains(MediaType.Xml)
+  private def isJsonRequest(request: Request) =
+    (!request.path.contains('.') || request.path.split('.').toList.last == ".json") &&
+      request.acceptMediaTypes.forall(_.matches("(text|application)/(x-)?j(avascript|son)"))
 }
