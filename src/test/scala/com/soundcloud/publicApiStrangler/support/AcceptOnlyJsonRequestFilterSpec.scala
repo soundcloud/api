@@ -31,7 +31,9 @@ class AcceptOnlyJsonRequestFilterSpec extends UnitSpecification {
         "application/x-json",
         "text/javascript",
         "text/x-javascript",
-        "application/x-javascript")
+        "application/x-javascript",
+        "*",
+        "*/*")
     ) yield {
 
       s"using the '$header' header" in new Context {
