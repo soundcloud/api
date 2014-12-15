@@ -6,7 +6,6 @@ import com.soundcloud.bff.finagle.ResponseBuilder
 import com.soundcloud.bff.web.UserAuthenticationComponent
 import com.soundcloud.scalakit.Urn
 import com.twitter.util.Future
-import com.soundcloud.scalakit.json.Json
 
 class AuthorizeHttpResponse(
   contentAuthorization: ContentAuthorizationService,
@@ -27,7 +26,7 @@ class AuthorizeHttpResponse(
     userAuthentication.withUserSession(request) { session =>
       contentAuthorization.findRulesApplicableTo(session, urns).map { rules =>
         ApplyTrackPolicies(session, visitor, rules)
-          .map(Json.stringify)
+          .map(StringifyContent(_))
           .map(originalResponse.withBody)
           .map(_.status(status))
           .getOrElse(render.forbidden)
