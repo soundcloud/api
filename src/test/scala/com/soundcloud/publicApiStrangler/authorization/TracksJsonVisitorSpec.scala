@@ -12,14 +12,14 @@ import play.api.libs.json.JsObject
 import play.api.libs.json.JsObject
 import play.api.libs.json.JsValue
 
-class TracksVisitorSpec extends UnitSpecification with Fixtures {
+class TracksJsonVisitorSpec extends UnitSpecification with Fixtures {
 
   trait Context extends Scope {
     val visited = ListBuffer[(Urn, JsValue)]()
 
-    def visit(urn: Urn, track: Track) = {
-      visited += urn -> track.json
-      Some(track.json)
+    def visit(urn: Urn, track: JsonTrack) = {
+      visited += urn -> track.content
+      Some(track.content)
     }
     def urnsAndTracks(tracks: List[JsValue]) =
       for (track <- tracks) yield {
@@ -32,27 +32,27 @@ class TracksVisitorSpec extends UnitSpecification with Fixtures {
   "visits all track objects" >> {
 
     "single track json" in new Context {
-      new TracksVisitor(singleTrack).apply(visit) mustEqual Some(singleTrack)
+      new TracksJsonVisitor(singleTrack).apply(visit) mustEqual Some(singleTrack)
       visited.toList mustEqual urnsAndTracks(List(singleTrack))
     }
 
     "playlist json" in new Context {
-      new TracksVisitor(playlist).apply(visit) mustEqual Some(playlist)
+      new TracksJsonVisitor(playlist).apply(visit) mustEqual Some(playlist)
       val tracks = (playlist \ "tracks").as[List[JsObject]]
       visited.toList mustEqual urnsAndTracks(tracks)
     }
 
     "tracks array json" in new Context {
-      new TracksVisitor(tracksArray).apply(visit) mustEqual Some(tracksArray)
+      new TracksJsonVisitor(tracksArray).apply(visit) mustEqual Some(tracksArray)
       visited.toList mustEqual urnsAndTracks(tracksArray.as[List[JsObject]])
     }
   }
 
   trait NoTracksContext extends Scope {
-    def visit(urn: Urn, track: Track) = ???
+    def visit(urn: Urn, track: JsonTrack) = ???
   }
 
   "doesn't invoke the visit method if the json hasn't a track" in new NoTracksContext {
-    new TracksVisitor(user).apply(visit) mustEqual Some(user)
+    new TracksJsonVisitor(user).apply(visit) mustEqual Some(user)
   }
 }

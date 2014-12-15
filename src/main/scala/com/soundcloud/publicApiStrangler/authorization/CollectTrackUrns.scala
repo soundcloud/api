@@ -8,6 +8,7 @@ import com.soundcloud.scalakit.Urn
 import com.soundcloud.scalakit.json.Json
 import play.api.libs.json.JsObject
 import play.api.libs.json.JsValue
+import scala.xml.XML
 
 object CollectTrackUrns {
 
@@ -17,12 +18,17 @@ object CollectTrackUrns {
     }
 
   private def visitorFor(content: String) =
-    if (hasTrack(content))
-      Some(new TracksVisitor(Json.fromString(content)))
+    if (hasJsonTrack(content))
+      Some(new TracksJsonVisitor(Json.fromString(content)))
+    else if (hasXmlTrack(content))
+      Some(new TracksXmlVisitor(XML.loadString(content)))
     else
       None
 
-  private def hasTrack(content: String) =
+  private def hasXmlTrack(content: String) =
+    content.indexOf("<kind>track</kind>") > 0
+
+  private def hasJsonTrack(content: String) =
     content.indexOf("\"kind\":\"track\"") > 0
 
   private def extractUrns(visitor: TracksVisitor): List[Urn] = {
@@ -30,7 +36,7 @@ object CollectTrackUrns {
     visitor.apply {
       case (urn, track) =>
         urns += urn
-        Some(track.json)
+        Some(track.content)
     }
     urns.toList
   }

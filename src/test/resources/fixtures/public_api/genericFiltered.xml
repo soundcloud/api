@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<arrayelement type="array">
+    <hasnotrack>
+        <field>fieldValue</field>
+    </hasnotrack>
+    <objectwithnotrack>
+        <notrack>
+            <uuid>dbe4b580-4457-11e4-80a2-78b08bbdefd1</uuid>
+            <created-at type="datetime">2014-09-25T02:01:27Z</created-at>
+        </notrack>
+    </objectwithnotrack>
+    <emptyObject></emptyObject>
+    <trackArray type="array">
+        <track>
+            <kind>track</kind>
+            <id type="integer">2</id>
+            <policy>ALLOW</policy>
+        </track>
+        <track>
+            <kind>track</kind>
+            <id type="integer">3</id>
+            <policy>ALLOW</policy>
+        </track>
+    </trackArray>
+</arrayelement>
+

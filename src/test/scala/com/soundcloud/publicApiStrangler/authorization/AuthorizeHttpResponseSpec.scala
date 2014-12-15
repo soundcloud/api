@@ -14,6 +14,9 @@ import com.soundcloud.scalakit.test.VerifiedMocks
 import com.soundcloud.scalakit.{Urn, UserSession}
 import com.twitter.util.{Await, Future}
 import org.mockito.Mockito.verifyZeroInteractions
+import scala.xml.Utility.trim
+import scala.xml.XML
+
 
 class AuthorizeHttpResponseSpec extends UnitSpecification with Fixtures {
 
@@ -39,7 +42,7 @@ class AuthorizeHttpResponseSpec extends UnitSpecification with Fixtures {
     lazy val authorizedResponse = Await.result(authorize.map(_.build))
   }
 
-  trait TrackContext extends Context {
+  trait JsonTrackContext extends Context {
     val content = singleTrack.toString
     val status = 200
     val urn = Urn("soundcloud:tracks:153896632")
@@ -50,22 +53,22 @@ class AuthorizeHttpResponseSpec extends UnitSpecification with Fixtures {
         .thenReturn(Future(Seq(new ContentAuthorization(urn, policies, Reason.GEO))))
   }
 
-  "renders the json track if authorized" in new TrackContext {
+  "renders the json track if authorized" in new JsonTrackContext {
     lazy val policies = ContentPolicy.ALLOW
-    lazy val authorizedTrack = new Track(singleTrack).withPolicies(policies)
+    lazy val authorizedTrackJson = new JsonTrack(singleTrack).withPolicies(policies)
 
     authorizedResponse.statusCode mustEqual 200
-    authorizedResponse.getContentString mustEqual Json.stringify(authorizedTrack)
+    authorizedResponse.getContentString mustEqual Json.stringify(authorizedTrackJson)
   }
 
-  "renders forbidden if the track isn't authorized" in new TrackContext {
+  "renders forbidden if the json track isn't authorized" in new JsonTrackContext {
     lazy val policies = ContentPolicy.BLOCK
 
     authorizedResponse.statusCode mustEqual 403
     authorizedResponse.getContentString mustEqual ""
   }
 
-  trait TrackArrayContext extends Context {
+  trait JsonTrackArrayContext extends Context {
     val content = tracksArray.toString
     val status = 200
     def policies: Seq[ContentPolicy]
@@ -81,18 +84,44 @@ class AuthorizeHttpResponseSpec extends UnitSpecification with Fixtures {
         .thenReturn(Future(authorizations))
   }
 
-  "renders an empty list if all  tracks aren't authorized" in new TrackArrayContext {
+  "renders an empty list if all json tracks aren't authorized" in new JsonTrackArrayContext {
     override def policies = Seq(ContentPolicy.BLOCK, ContentPolicy.BLOCK, ContentPolicy.BLOCK)
 
     authorizedResponse.statusCode mustEqual 200
     authorizedResponse.getContentString mustEqual "[]"
   }
 
-  "trims a list if some tracks are not authorized" in new TrackArrayContext {
+  "trims a list if some tracks are not authorized" in new JsonTrackArrayContext {
     override def policies = Seq(ContentPolicy.ALLOW, ContentPolicy.BLOCK, ContentPolicy.ALLOW)
 
     authorizedResponse.statusCode mustEqual 200
     Json.fromString(authorizedResponse.getContentString()).as[Seq[bff.JsValue]].size mustEqual 2
+  }
+
+  trait XmlTrackContext extends Context {
+    val content = singleTrackXml.toString
+    val status = 200
+    val urn = Urn("soundcloud:tracks:153896632")
+    def policies: ContentPolicy
+
+    override def before =
+      when(contentAuthorization.findRulesApplicableTo(session, Seq(urn)))
+        .thenReturn(Future(Seq(new ContentAuthorization(urn, policies, Reason.GEO))))
+  }
+
+  "renders the xml track if authorized" in new XmlTrackContext {
+    lazy val policies = ContentPolicy.ALLOW
+    lazy val authorizedTrackXml = new XmlTrack(singleTrackXml).withPolicies(policies)
+
+    authorizedResponse.statusCode mustEqual 200
+    authorizedResponse.getContentString must endWith(authorizedTrackXml.toString)
+  }
+
+  "renders forbidden if the xml track isn't authorized" in new XmlTrackContext {
+    lazy val policies = ContentPolicy.BLOCK
+
+    authorizedResponse.statusCode mustEqual 403
+    authorizedResponse.getContentString mustEqual ""
   }
 
   trait NoTracksContext extends Context {
@@ -107,7 +136,7 @@ class AuthorizeHttpResponseSpec extends UnitSpecification with Fixtures {
     verifyZeroInteractions(contentAuthorization)
   }
 
-  trait PlaylistContext extends Context {
+  trait JsonPlaylistContext extends Context {
     val content = playlist.toString
     val status = 200
     def policies: Seq[ContentPolicy]
@@ -123,14 +152,14 @@ class AuthorizeHttpResponseSpec extends UnitSpecification with Fixtures {
         .thenReturn(Future(authorizations))
   }
 
-  "renders playlist metadata without any tracks" in new PlaylistContext {
+  "renders playlist metadata without any tracks" in new JsonPlaylistContext {
     override def policies = Seq.fill(10)(ContentPolicy.BLOCK)
 
     authorizedResponse.statusCode mustEqual 200
     (Json.fromString(authorizedResponse.getContentString) \ "tracks").as[Seq[bff.JsValue]].size mustEqual 0
   }
 
-  "trims a list if some tracks are not authorized" in new PlaylistContext {
+  "trims a list if some tracks are not authorized" in new JsonPlaylistContext {
     override def policies = Seq(
       ContentPolicy.ALLOW,
       ContentPolicy.ALLOW,
@@ -150,7 +179,7 @@ class AuthorizeHttpResponseSpec extends UnitSpecification with Fixtures {
     (Json.fromString(authorizedResponse.getContentString) \ "tracks").as[Seq[bff.JsValue]].size mustEqual 7
   }
 
-  trait StreamContext extends Context {
+  trait JsonStreamContext extends Context {
     val content = stream.toString
     val status = 200
     def policies: Seq[ContentPolicy]
@@ -166,7 +195,7 @@ class AuthorizeHttpResponseSpec extends UnitSpecification with Fixtures {
         .thenReturn(Future(authorizations))
   }
 
-  "removes stream items completely, when track unauthorized" in new StreamContext {
+  "removes stream items completely, when track unauthorized" in new JsonStreamContext {
     override def policies = Seq(
       ContentPolicy.ALLOW,
       ContentPolicy.BLOCK
@@ -178,7 +207,7 @@ class AuthorizeHttpResponseSpec extends UnitSpecification with Fixtures {
   }
 
 
-  trait GenericContext extends Context {
+  trait JsonGenericContext extends Context {
     val content = generic.toString
     val status = 200
 
@@ -193,9 +222,58 @@ class AuthorizeHttpResponseSpec extends UnitSpecification with Fixtures {
         .thenReturn(Future(authorizations))
   }
 
-  "removes unauthorized tracks and decorates authorized with policies in various places in a  payload" in new GenericContext {
+  "removes unauthorized tracks and decorates authorized with policies in various places in a JSON payload" in new JsonGenericContext {
     authorizedResponse.statusCode mustEqual 200
 
     Json.fromString(authorizedResponse.getContentString()) ==== genericFiltered
   }
+
+  trait XmlStreamContext extends Context {
+    val content = streamXml.toString
+    val status = 200
+
+    val authorizations = Seq(
+      new ContentAuthorization(Urn("soundcloud:tracks:169183738"), ContentPolicy.ALLOW, Reason.GEO),
+      new ContentAuthorization(Urn("soundcloud:tracks:168272289"), ContentPolicy.BLOCK, Reason.GEO),
+      new ContentAuthorization(Urn("soundcloud:tracks:168546826"), ContentPolicy.ALLOW, Reason.GEO)
+    )
+
+    override def before = {
+      when(contentAuthorization.findRulesApplicableTo(===(session), any[Seq[Urn]]))
+        .thenReturn(Future(authorizations))
+
+    }
+  }
+
+  "Stream test: Complete activity item should be removed when track is blocked." in new XmlStreamContext {
+
+    authorizedResponse.statusCode mustEqual 200
+    trim(XML.loadString(authorizedResponse.getContentString())) mustEqual trim(streamFilteredXml)
+
+  }
+
+  trait XmlGenericContext extends Context {
+    val content = genericXml.toString
+    val status = 200
+
+    val authorizations = Seq(
+      new ContentAuthorization(Urn("soundcloud:tracks:1"), ContentPolicy.BLOCK, Reason.GEO),
+      new ContentAuthorization(Urn("soundcloud:tracks:2"), ContentPolicy.ALLOW, Reason.GEO),
+      new ContentAuthorization(Urn("soundcloud:tracks:3"), ContentPolicy.ALLOW, Reason.GEO)
+    )
+
+    override def before = {
+      when(contentAuthorization.findRulesApplicableTo(===(session), any[Seq[Urn]]))
+        .thenReturn(Future(authorizations))
+
+    }
+  }
+
+  "removes unauthorized tracks and decorates authorized with policies in various places in a XML payload" in new XmlGenericContext {
+
+    authorizedResponse.statusCode mustEqual 200
+    trim(XML.loadString(authorizedResponse.getContentString())) mustEqual trim(genericFilteredXml)
+
+  }
+
 }
