@@ -18,5 +18,8 @@ class AcceptOnlyJsonRequestFilter extends SimpleFilter[Request, Response] {
 
   private def isJsonRequest(request: Request) =
     (!request.path.contains('.') || request.path.split('.').toList.last == ".json") &&
-      request.acceptMediaTypes.forall(_.matches("(text|application)/(x-)?j(avascript|son)"))
+      (request.acceptMediaTypes.isEmpty ||
+      	request.acceptMediaTypes.find(_ == "*/*").isDefined ||
+        request.acceptMediaTypes.find(_ == "*").isDefined ||
+        request.acceptMediaTypes.find(_.matches("(text|application)/(x-)?j(avascript|son)")).isDefined)
 }
