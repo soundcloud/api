@@ -27,14 +27,22 @@ trait TimelineController extends BffController
 
   val fallback = new DispatchToMothershipHandler(publicApiClient)
 
-  get("/me/activities")(doMagic(_, publicActivitiesMapper))
-  get("/me/activities.json")(doMagic(_, publicActivitiesMapper))
-  get("/me/activities/all")(doMagic(_, publicActivitiesMapper))
-  get("/me/activities/all.json")(doMagic(_, publicActivitiesMapper))
+  // Android & iPad specific
   get("/e1/me/activities")(doMagic(_, activitiesMapper))
   get("/e1/me/activities.json")(doMagic(_, activitiesMapper))
   get("/e1/me/stream")(doMagic(_, streamMapper))
   get("/e1/me/stream.json")(doMagic(_, streamMapper))
+
+  get("/me/activities")(doMagic(_, publicActivitiesMapper))
+  get("/me/activities.json")(doMagic(_, publicActivitiesMapper))
+
+  // deprecated functionality, aliased to /me/activities
+  get("/me/activities/tracks/:tag")(doMagic(_, publicActivitiesMapper)) // /affiliated, /exclusive
+  get("/me/activities/tracks/:tag.json")(doMagic(_, publicActivitiesMapper)) // /affiliated.xml, /exclusive.json
+  get("/me/activities/all")(doMagic(_, publicActivitiesMapper))
+  get("/me/activities/all.json")(doMagic(_, publicActivitiesMapper))
+  get("/me/activities/all/own")(doMagic(_, publicActivitiesMapper))
+  get("/me/activities/all/own.json")(doMagic(_, publicActivitiesMapper))
 
   private def doMagic(request: BffRequest, mapper: TimelineMapper) = {
     withLoggedInUser(request) {
