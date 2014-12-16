@@ -8,10 +8,10 @@ import com.twitter.finagle.http.Status
 import com.twitter.finagle.http.Version
 import com.twitter.util.Future
 
-class AcceptOnlyJsonRequestFilter extends SimpleFilter[Request, Response] {
+class AcceptOnlyJsonRequestFilter(overrides: Set[String]) extends SimpleFilter[Request, Response] {
 
   override def apply(request: Request, next: Service[Request, Response]) =
-    if (isJsonRequest(request))
+    if (overrides.contains(request.path) || isJsonRequest(request))
       next(request)
     else
       Future.value(Response(Version.Http11, Status.NotAcceptable))

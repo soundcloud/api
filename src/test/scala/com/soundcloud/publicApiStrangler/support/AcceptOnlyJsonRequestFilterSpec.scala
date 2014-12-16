@@ -14,7 +14,8 @@ class AcceptOnlyJsonRequestFilterSpec extends UnitSpecification {
 
   trait Context extends VerifiedMocks {
     val next = mock[Service[Request, Response]]
-    val filter = new AcceptOnlyJsonRequestFilter
+    val overridePath = "/testoverride.xml"
+    val filter = new AcceptOnlyJsonRequestFilter(Set(overridePath))
     val request: Request
     lazy val response =
       Await.result(filter(request, next))
@@ -66,6 +67,15 @@ class AcceptOnlyJsonRequestFilterSpec extends UnitSpecification {
 
       response mustEqual responseFromNextService
     }
+  }
+
+  "allows requests to overriden paths" in new Context {
+    val request = Request(overridePath)
+    val responseFromNextService = mock[Response]
+    when(verified(next).apply(request))
+      .thenReturn(Future.value(responseFromNextService))
+
+    response mustEqual responseFromNextService
   }
 
   "rejects non-json requests with a 406 response" >> {

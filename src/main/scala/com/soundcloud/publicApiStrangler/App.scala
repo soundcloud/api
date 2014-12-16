@@ -17,5 +17,5 @@ object App
 {
   override val geoProvider = geoIpClient.get _
   override val authenticator = authenticatorClient.cacheKeyAndSession _
-  override val customFilters = List(new AcceptOnlyJsonRequestFilter)
+  override val customFilters = List(new AcceptOnlyJsonRequestFilter(Set("/crossdomain.xml")))
 }
