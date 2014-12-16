@@ -48,6 +48,16 @@ class AcceptOnlyJsonRequestFilterSpec extends UnitSpecification {
       }
     }
 
+    "using the json suffix" in new Context {
+      val request = Request("/test.json")
+
+      val responseFromNextService = mock[Response]
+      when(next.apply(request))
+        .thenReturn(Future.value(responseFromNextService))
+
+      response mustEqual responseFromNextService
+    }
+
     "without the header and extension" in new Context {
       val request = Request()
       val responseFromNextService = mock[Response]

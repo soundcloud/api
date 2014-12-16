@@ -17,7 +17,7 @@ class AcceptOnlyJsonRequestFilter extends SimpleFilter[Request, Response] {
       Future.value(Response(Version.Http11, Status.NotAcceptable))
 
   private def isJsonRequest(request: Request) =
-    (!request.path.contains('.') || request.path.split('.').toList.last == ".json") &&
+    (!request.path.contains('.') || request.path.split('.').toList.last == "json") &&
       (request.acceptMediaTypes.isEmpty ||
       	request.acceptMediaTypes.find(_ == "*/*").isDefined ||
         request.acceptMediaTypes.find(_ == "*").isDefined ||
