@@ -11,6 +11,4 @@ trait TrackFiltering extends ContentAuthorizationComponent {
 
   val authorizeContent = new AuthorizeHttpResponse(contentAuthorizationService, this)
   val authorizationFilter = new ContentAuthorizationFilter(authorizeContent)
-
-  override val customFilters: Seq[Filter[Request, Response, Request, Response]] = List(authorizationFilter)
 }
