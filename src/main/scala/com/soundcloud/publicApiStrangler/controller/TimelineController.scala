@@ -37,6 +37,11 @@ trait TimelineController extends BffController
   get("/me/activities.json")(doMagic(_, publicActivitiesMapper))
 
   // deprecated functionality, aliased to /me/activities
+  get("/me/activities/")(doMagic(_, publicActivitiesMapper))
+  get("/me/activities/track")(doMagic(_, publicActivitiesMapper))
+  get("/me/activities/tracks")(doMagic(_, publicActivitiesMapper))
+  get("/me/activities/tracks/")(doMagic(_, publicActivitiesMapper))
+  get("/me/activities/tracks.json")(doMagic(_, publicActivitiesMapper))
   get("/me/activities/tracks/:tag")(doMagic(_, publicActivitiesMapper)) // /affiliated, /exclusive
   get("/me/activities/tracks/:tag.json")(doMagic(_, publicActivitiesMapper)) // /affiliated.xml, /exclusive.json
   get("/me/activities/all")(doMagic(_, publicActivitiesMapper))
