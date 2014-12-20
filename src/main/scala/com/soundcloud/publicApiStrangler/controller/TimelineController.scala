@@ -58,17 +58,10 @@ trait TimelineController extends BffController
           mapper.materialize(session, page).map {
             case Some(info) => render.json(info)
             case None       => render.notFound
-          }.map(_.headers(defaultHeaders))
+          }.map(_.headers(DefaultResponseHeaders.defaultHeaders))
         }
     }
   }
-
-  private val defaultHeaders = Map(
-    "Access-Control-Allow-Headers" -> "Accept, Authorization, Content-Type, Origin",
-    "Access-Control-Allow-Methods" -> "GET, PUT, POST, DELETE",
-    "Access-Control-Allow-Origin" -> "*",
-    "Access-Control-Expose-Headers" -> "Date",
-    "Cache-Control" -> "private, max-age=0, must-revalidate")
 
   private def fallbackToMothership(request: Request) = {
     fallback.defaultHandling(new HandlerRequest(AlwaysMatchesPathMatcher, request)).map {

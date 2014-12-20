@@ -20,8 +20,8 @@ resolvers ++= Seq(
 )
 
 libraryDependencies ++= Seq(
-  "com.soundcloud"     %% "bff"                 % "0.5.24",
-  "com.soundcloud"     %% "sc-services"         % "0.0.25",
+  "com.soundcloud"     %% "bff"                 % "3.1.0",
+  "com.soundcloud"     %% "sc-services"         % "3.2.0",
   "com.fasterxml.uuid" %  "java-uuid-generator" % "3.1.3",
   "commons-codec"      %  "commons-codec"       % "1.9"
 ).map(_.exclude("org.slf4j", "slf4j-jdk14"))

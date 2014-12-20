@@ -1,0 +1,14 @@
+package com.soundcloud.publicApiStrangler.mapper.trackstreams
+
+import com.soundcloud.bff.finagle.ResponseBuilder
+import com.soundcloud.bff.media.MediaUrl
+import com.twitter.util.Future
+
+/**
+ * Maps an eventual set of media urls to a response builder.
+ */
+trait TrackStreamResponseMapper {
+
+  def map(mediaUrls: Future[Set[MediaUrl]]) : Future[ResponseBuilder]
+
+}

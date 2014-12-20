@@ -2,13 +2,14 @@ package com.soundcloud.publicApiStrangler
 
 import com.soundcloud.publicApiStrangler.support.TrackFiltering
 import com.soundcloud.bff.{BazookaConfigComponent, BffApp}
-import com.soundcloud.publicApiStrangler.controller.{GroupController, FallbackController, TimelineController}
+import com.soundcloud.publicApiStrangler.controller.{TrackStreamsController, GroupController, FallbackController, TimelineController}
 import com.soundcloud.service.component.{GeoIpComponent, AuthenticatorComponent}
 import com.soundcloud.publicApiStrangler.support.AcceptOnlyJsonRequestFilter
 
 object App
     extends BazookaConfigComponent
     with TimelineController
+    with TrackStreamsController
     with FallbackController
     with GroupController
     with GeoIpComponent
