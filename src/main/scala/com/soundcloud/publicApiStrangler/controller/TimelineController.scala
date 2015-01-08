@@ -16,9 +16,11 @@ trait TimelineController extends BffController
     with TimelineComponent
     with OkidokiComponent
     with LieblingComponent
-    with PublicApiClientComponent
-    with CursorPagination {
+    with PublicApiClientComponent {
 
+  lazy val baseUrl = config.get("APP_BASE_URL")
+  lazy val pagination = new CursorPagination(baseUrl)
+  
   lazy val entitySummaryMapper = new EntitySummaryMapper(okidokiClient, baseUrl)
   lazy val entityMapper = new EntityMapper(okidokiClient, lieblingClient, baseUrl, entitySummaryMapper)
   lazy val streamMapper = new StreamMapper(timelineClient, entityMapper, entitySummaryMapper)
@@ -52,11 +54,12 @@ trait TimelineController extends BffController
   private def doMagic(request: BffRequest, mapper: TimelineMapper) = {
     withLoggedInUser(request) {
       (session: LoggedInUserSession, userUrn: Urn) =>
-        val page = pageFor(request, userUrn)
-        mapper.materialize(session, page).map {
-          case Some(info) => render.json(info)
-          case None       => render.notFound
-        }.map(_.headers(defaultHeaders))
+        pagination.withPage(request, userUrn) { page =>
+          mapper.materialize(session, page).map {
+            case Some(info) => render.json(info)
+            case None       => render.notFound
+          }.map(_.headers(defaultHeaders))
+        }
     }
   }
 
