@@ -1,19 +1,14 @@
 package com.soundcloud.publicApiStrangler.controller
 
 import com.soundcloud.bff.finagle.{Request => BffRequest, ResponseBuilder}
-import com.soundcloud.bff.nextbff.mapper.FetchMapper
-import com.soundcloud.bff.nextbff.repository.BulkFetchByUrnRepository
 import com.soundcloud.bff.web.BffController
 import com.soundcloud.jvmkit.UserSession
 import com.soundcloud.publicApiStrangler.support._
-import com.soundcloud.scalakit.finagle.http.OkStatus
 import com.soundcloud.scalakit._
+import com.soundcloud.scalakit.finagle.http.OkStatus
 import com.soundcloud.scalakit.finagle.jsonservice._
-import com.twitter.finagle.builder.ClientBuilder
 import com.twitter.util.Future
-import play.api.libs.json.{JsValue, JsArray}
-
-import scala.util.parsing.json.JSON
+import play.api.libs.json.JsValue
 
 trait GroupController extends BffController
 with PublicApiClientComponent {
@@ -29,16 +24,17 @@ with PublicApiClientComponent {
   //HOTFIX:
   get("/users/:id/groups.json")(returnNothing(_))
   get("/groups/:id.json")(returnNothing(_))
-  get("/groups/:id/users.json") (returnNothing(_))
-  get("/groups/:id/users") (returnNothing(_))
+  get("/groups/:id/users.json")(returnNothing(_))
+  get("/groups/:id/users")(returnNothing(_))
 
-  private def returnNothing(request: BffRequest) : Future[ResponseBuilder] = {
+  private def returnNothing(request: BffRequest): Future[ResponseBuilder] = {
     withUserSession(request) {
       (session: UserSession) => {
         gatekeeperClient.get(session, Path("/features") / "disable_groups.json", Params.empty, Params.empty).flatMap {
           case JsonResponse(OkStatus, body, _, _) => {
-            var featureGroups = (body \ "groups").as[Set[JsValue]]
-            val disabled = featureGroups.headOption match {
+            val groups = (body \ "groups").as[Set[JsValue]].headOption
+
+            val disabled = groups match {
               case Some(group) => group.as[String].equals("all")
               case None => false
             }
@@ -46,9 +42,11 @@ with PublicApiClientComponent {
               Future(new ResponseBuilder().nothing.status(200))
             else
               forwardHandler.handle(request)
-           }
+          }
           case _ =>
-            Future(new ResponseBuilder().nothing.status(200))
+            forwardHandler.handle(request)
+        }.rescue {
+          case e: Exception => forwardHandler.handle(request)
         }
       }
     }

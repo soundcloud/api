@@ -7,6 +7,7 @@ import com.twitter.finagle.Service
 import com.twitter.finagle.http.Response
 import com.twitter.util.Future
 import org.jboss.netty.handler.codec.http.{HttpRequest, HttpResponse}
+import collection.JavaConversions._
 
 /**
  * Lets public-api handle requests for track streams.
