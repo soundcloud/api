@@ -29,6 +29,8 @@ with PublicApiClientComponent {
   //HOTFIX:
   get("/users/:id/groups.json")(returnNothing(_))
   get("/groups/:id.json")(returnNothing(_))
+  get("/groups/:id/users.json") (returnNothing(_))
+  get("/groups/:id/users") (returnNothing(_))
 
   private def returnNothing(request: BffRequest) : Future[ResponseBuilder] = {
     withUserSession(request) {
@@ -40,15 +42,13 @@ with PublicApiClientComponent {
               case Some(group) => group.as[String].equals("all")
               case None => false
             }
-            if (disabled) {
-              Future(render.nothing.status(200))
-            }
-            else {
+            if (disabled)
+              Future(new ResponseBuilder().nothing.status(200))
+            else
               forwardHandler.handle(request)
-            }
            }
           case _ =>
-            forwardHandler.handle(request)
+            Future(new ResponseBuilder().nothing.status(200))
         }
       }
     }
