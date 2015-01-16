@@ -22,15 +22,19 @@ with PublicApiClientComponent {
 
   //XXX: Implemented this during an outage that we had to disable groups endpoints. Remove this as soon is safe
   //HOTFIX:
-  get("/users/:id/groups.json")(returnNothing(_))
-  get("/groups/:id.json")(returnNothing(_))
-  get("/groups/:id/users.json")(returnNothing(_))
-  get("/groups/:id/users")(returnNothing(_))
 
-  private def returnNothing(request: BffRequest): Future[ResponseBuilder] = {
+  // Cheap endpoints that were being scraped that may or may not have caused instability
+  get("/users/:id/groups.json")(returnNothing(_, "disable_cheap_groups_endpoints"))
+  get("/groups/:id.json")(returnNothing(_, "disable_cheap_groups_endpoints"))
+  // Expensive endpoints. Most likely to cause stability issues
+  get("/groups/:id/users.json")(returnNothing(_, "disable_expensive_groups_endpoints"))
+  get("/groups/:id/users")(returnNothing(_, "disable_expensive_groups_endpoints"))
+  // /groups/:id/users.*
+
+  private def returnNothing(request: BffRequest, feature:String): Future[ResponseBuilder] = {
     withUserSession(request) {
       (session: UserSession) => {
-        gatekeeperClient.get(session, Path("/features") / "disable_groups.json", Params.empty, Params.empty).flatMap {
+        gatekeeperClient.get(session, Path("/features") / (feature + ".json"), Params.empty, Params.empty).flatMap {
           case JsonResponse(OkStatus, body, _, _) => {
             val groups = (body \ "groups").as[Set[JsValue]].headOption
 
