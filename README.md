@@ -2,7 +2,6 @@
 
 An implementation of the [Strangler Pattern](http://martinfowler.com/bliki/StranglerApplication.html) for the mothership's Public API
 
-
 ## Team
 
 Internal Integrations <intint@soundcloud.com>
@@ -14,6 +13,28 @@ This project uses bucha as a deployment tool. In order to deploy the application
 ```
 bin/bucha api deploy
 ```
+
+## Groups endpoint kill switch
+
+The strangler has support for removing access to expensive endpoints that are harmful to our site-wide stability if abused or scrapped by a malicious user.
+
+### How to use it
+
+There are two features flags:
+
+    1. disable_cheap_groups_endpoints ->  disables both  /users/:id/groups.json  and /groups/:id.json
+    2. disable_expensive_groups_endpoints -> disables both /groups/:id/users.json and /groups/:id/users
+
+Go to rollout and activate the features to the group `all`.
+
+Activating it will make the strangler return HTTP 200 with empty body on requests to the corresponding.
+
+### Links to rollout
+
+http://rollout-web.int.s-cloud.net/activations/disable_cheap_groups_endpoints
+http://rollout-web.int.s-cloud.net/activations/disable_expensive_groups_endpoints
+
+Alternatively you can go to do http://rollout-web.int.s-cloud.net/features and click on the "On" button for the feature.
 
 ## FAQ
 
