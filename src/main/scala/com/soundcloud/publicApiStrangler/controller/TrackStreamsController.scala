@@ -4,7 +4,7 @@ import com.soundcloud.bff.finagle.{Request, ResponseBuilder}
 import com.soundcloud.bff.web.BffController
 import com.soundcloud.jvmkit.UserSession
 import com.soundcloud.publicApiStrangler.mapper.trackstreams.{TrackStreamMappersComponent, TrackStreamResponseMapper}
-import com.soundcloud.publicApiStrangler.support.TrackStreamSnipHandlerComponent
+import com.soundcloud.publicApiStrangler.support.{GateKeeperClientComponent, TrackStreamSnipHandlerComponent}
 import com.twitter.util.Future
 
 
@@ -14,7 +14,8 @@ import com.twitter.util.Future
  */
 trait TrackStreamsController extends BffController
     with TrackStreamSnipHandlerComponent
-    with TrackStreamMappersComponent {
+    with TrackStreamMappersComponent
+    with GateKeeperClientComponent {
 
   get("/tracks/:trackId/streams")(handleStreamRequest(_, trackStreamUrlToJonResponseMapper))
   get("/tracks/:trackId/streams.json")(handleStreamRequest(_, trackStreamUrlToJonResponseMapper))
@@ -26,12 +27,21 @@ trait TrackStreamsController extends BffController
   private def handleStreamRequest(request: Request, mapper: TrackStreamResponseMapper) : Future[ResponseBuilder] = {
     withUserSession(request) {
       (session: UserSession) =>
-        // TODO: Add gatekeeper support to allow switching between public api or public api + media service.
-        trackStreamSnipHandler.handle(request, session, mapper)
-        //mothershipDispatcher.dispatch(request)
+        snipEnabled(session).flatMap(
+            if (_)
+              trackStreamSnipHandler.handle(request, session, mapper)
+            else
+              mothershipDispatcher.dispatch(request)
+        )
     }
   }
 
-
-
+  private def snipEnabled(session:UserSession) : Future[Boolean] =
+    gatekeeperClient.isFeatureAccessible(session, "pub-api-snip-support")
+      .handle
+        {
+          case ex :  Throwable =>
+            logger.error("Exception when accessing gatekeeper", ex)
+            false
+        }
 }

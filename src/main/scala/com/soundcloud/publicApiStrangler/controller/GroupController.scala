@@ -12,7 +12,7 @@ import play.api.libs.json.JsValue
 
 trait GroupController extends BffController
 with PublicApiClientComponent {
-  val gatekeeperClient =
+  val gatekeeperJsonClient =
     JsonClient(ResourceName("gatekeeper"),
       ServiceEntryPoint(config.get("ROLLOUT_BASE_URL", "http://rollout.int.s-cloud.net")),
       config,
@@ -34,7 +34,7 @@ with PublicApiClientComponent {
   private def returnNothing(request: BffRequest, feature:String): Future[ResponseBuilder] = {
     withUserSession(request) {
       (session: UserSession) => {
-        gatekeeperClient.get(session, Path("/features") / (feature + ".json"), Params.empty, Params.empty).flatMap {
+        gatekeeperJsonClient.get(session, Path("/features") / (feature + ".json"), Params.empty, Params.empty).flatMap {
           case JsonResponse(OkStatus, body, _, _) => {
             val groups = (body \ "groups").as[Set[JsValue]].headOption
 
