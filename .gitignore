@@ -44,3 +44,4 @@ logs
 production.json
 staging.json
 .install.jre
+.java-version
