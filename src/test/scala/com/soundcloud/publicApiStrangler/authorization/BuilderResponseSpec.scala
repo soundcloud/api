@@ -1,7 +1,7 @@
 package com.soundcloud.publicApiStrangler.authorization
 
-import com.soundcloud.bff.test.fixtures.Fixtures
 import com.soundcloud.bff.test.UnitSpecification
+import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures
 
 class BuilderResponseSpec extends UnitSpecification with Fixtures {
 

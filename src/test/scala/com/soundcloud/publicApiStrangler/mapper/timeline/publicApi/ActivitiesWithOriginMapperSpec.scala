@@ -2,9 +2,9 @@ package com.soundcloud.publicApiStrangler.mapper.timeline.publicApi
 
 import com.soundcloud.bff.nextbff.pagination.CursorBasedPage
 import com.soundcloud.bff.test.UnitSpecification
-import com.soundcloud.bff.test.fixtures.Fixtures
 import com.soundcloud.publicApiStrangler.mapper.timeline.{EntityMapper, EntitySummaryMapper}
 import com.soundcloud.publicApiStrangler.mapping.timeline.publicApi.{TimelineWithOrigin, TimelineItemWithOrigin}
+import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures
 import com.soundcloud.scalakit.test.VerifiedMocks
 import com.soundcloud.scalakit.{Urn, UserSession}
 import com.soundcloud.service.client.TimelineClient

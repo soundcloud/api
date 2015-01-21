@@ -1,14 +1,12 @@
 package com.soundcloud.publicApiStrangler.authorization
 
-import com.soundcloud.bff.test.fixtures.Fixtures
+import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures
 
 import scala.collection.mutable.ListBuffer
 
 import com.soundcloud.bff.test.UnitSpecification
 import com.soundcloud.scalakit.Urn
 
-import play.api.libs.json.JsObject
-import play.api.libs.json.JsObject
 import play.api.libs.json.JsObject
 import play.api.libs.json.JsValue
 

@@ -1,4 +1,4 @@
-package com.soundcloud.bff.test.fixtures
+package com.soundcloud.publicApiStrangler.test.fixtures
 
 import com.soundcloud.bff.test.UnitSpecification
 

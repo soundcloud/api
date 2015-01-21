@@ -1,8 +1,8 @@
 package com.soundcloud.publicApiStrangler.authorization
 
-import com.soundcloud.bff.test.fixtures.Fixtures
 import com.soundcloud.bff.finagle.{ResponseBuilder, Request => BffRequest}
 import com.soundcloud.bff.test.UnitSpecification
+import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures
 import com.soundcloud.scalakit.finagle.http.{AlwaysMatchesPathMatcher, HandlerRequest}
 import com.twitter.finagle.Service
 import com.twitter.finagle.http.{Request => FinagleRequest, Response => FinagleResponse}

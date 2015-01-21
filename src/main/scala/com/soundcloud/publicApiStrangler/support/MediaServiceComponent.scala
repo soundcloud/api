@@ -1,12 +1,11 @@
 package com.soundcloud.publicApiStrangler.support
 
 import com.soundcloud.bff.{BffComponent, ServiceConfig}
-import com.soundcloud.bff.media.MediaUrlsRepository
 
 
-trait MediaUrlsRepositoryComponent extends MediaServiceComponent with OkidokiServiceComponent {
-  
-  lazy val mediaUrlsRepository = new MediaUrlsRepository(okidokiService, mediaService)
+trait MediaServiceComponent extends BffComponent {
+
+  lazy val mediaService = configService("mediaservice", "MEDIASERVICE_BASE_URL")
 
   private def configService(name: String, envVar: String) = httpService(
     ServiceConfig(
