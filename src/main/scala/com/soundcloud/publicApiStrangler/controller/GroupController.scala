@@ -11,12 +11,8 @@ import com.twitter.util.Future
 import play.api.libs.json.JsValue
 
 trait GroupController extends BffController
-with PublicApiClientComponent {
-  val gatekeeperJsonClient =
-    JsonClient(ResourceName("gatekeeper"),
-      ServiceEntryPoint(config.get("ROLLOUT_BASE_URL", "http://rollout.int.s-cloud.net")),
-      config,
-      telemetry)
+with PublicApiClientComponent
+with GateKeeperClientComponent{
 
   val forwardHandler = new ForwardRequestHandler(publicApiClient)
 

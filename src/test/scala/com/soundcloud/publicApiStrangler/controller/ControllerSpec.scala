@@ -4,7 +4,8 @@ import com.soundcloud.bff.authorization.ContentAuthorizationService
 import com.soundcloud.bff.media.MediaUrlsRepository
 import com.soundcloud.bff.test.{ControllerSpecification, UnitSpecification}
 import com.soundcloud.publicApiStrangler.mapper.trackstreams.{TrackStreamRedirectResponseMapper, TrackStreamJsonResponseMapper}
-import com.soundcloud.publicApiStrangler.support.{GateKeeperClient, TrackStreamSnipHandler, DispatchToMothershipHandler}
+import com.soundcloud.publicApiStrangler.support.{TrackStreamSnipHandler, DispatchToMothershipHandler}
+import com.soundcloud.service.client.GatekeeperClient
 
 import com.twitter.finagle.Service
 import org.jboss.netty.handler.codec.http.{HttpResponse, HttpRequest}
@@ -21,7 +22,7 @@ class ControllerSpec extends ControllerSpecification with UnitSpecification  {
   val publicApiClientMock = mock[Service[HttpRequest, HttpResponse]]
   val mothershipDispatcherMock = mock[DispatchToMothershipHandler]
   val trackStreamSnipHandlerMock = mock[TrackStreamSnipHandler]
-  val gatekeeperClientMock = mock[GateKeeperClient]
+  val gatekeeperClientMock = mock[GatekeeperClient]
 
   lazy val controller = new TestBffApp
     with TrackStreamsController {
