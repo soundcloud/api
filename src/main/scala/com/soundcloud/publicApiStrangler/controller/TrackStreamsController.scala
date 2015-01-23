@@ -17,10 +17,10 @@ trait TrackStreamsController extends BffController
     with TrackStreamMappersComponent
     with GateKeeperClientComponent {
 
-  get("/tracks/:trackId/streams")(handleStreamRequest(_, trackStreamUrlToJonResponseMapper))
-  get("/tracks/:trackId/streams.json")(handleStreamRequest(_, trackStreamUrlToJonResponseMapper))
-  get("/i1/tracks/:trackId/streams")(handleStreamRequest(_, trackStreamUrlToJonResponseMapper))
-  get("/i1/tracks/:trackId/streams.json")(handleStreamRequest(_, trackStreamUrlToJonResponseMapper))
+  get("/tracks/:trackId/streams")(handleStreamRequest(_, trackStreamUrlToJsonResponseMapper))
+  get("/tracks/:trackId/streams.json")(handleStreamRequest(_, trackStreamUrlToJsonResponseMapper))
+  get("/i1/tracks/:trackId/streams")(handleStreamRequest(_, trackStreamUrlToJsonResponseMapper))
+  get("/i1/tracks/:trackId/streams.json")(handleStreamRequest(_, trackStreamUrlToJsonResponseMapper))
   get("/tracks/:trackId/stream")(handleStreamRequest(_, trackStreamUrlToRedirectMapper))
   get("/tracks/:trackId/stream.json")(handleStreamRequest(_, trackStreamUrlToRedirectMapper))
 

@@ -16,7 +16,7 @@ import org.jboss.netty.handler.codec.http.{HttpResponse, HttpRequest}
 class ControllerSpec extends ControllerSpecification with UnitSpecification  {
 
   val mediaUrlsRepositoryMock = mock[MediaUrlsRepository]
-  val trackStreamUrlToJonResponseMapperMock = mock[TrackStreamJsonResponseMapper]
+  val trackStreamUrlToJsonResponseMapperMock = mock[TrackStreamJsonResponseMapper]
   val trackStreamUrlToRedirectMapperMock = mock[TrackStreamRedirectResponseMapper]
   val contentAuthorizationServiceMock = mock[ContentAuthorizationService]
   val publicApiClientMock = mock[Service[HttpRequest, HttpResponse]]
@@ -29,7 +29,7 @@ class ControllerSpec extends ControllerSpecification with UnitSpecification  {
     with GroupController {
 
     override lazy val mediaUrlsRepository = mediaUrlsRepositoryMock
-    override lazy val trackStreamUrlToJonResponseMapper = trackStreamUrlToJonResponseMapperMock
+    override lazy val trackStreamUrlToJsonResponseMapper = trackStreamUrlToJsonResponseMapperMock
     override lazy val trackStreamUrlToRedirectMapper = trackStreamUrlToRedirectMapperMock
     override lazy val contentAuthorizationService = contentAuthorizationServiceMock
     override lazy val publicApiClient = publicApiClientMock

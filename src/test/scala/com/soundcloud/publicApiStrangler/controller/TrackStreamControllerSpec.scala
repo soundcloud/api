@@ -21,7 +21,7 @@ class TrackStreamControllerSpec extends ControllerSpec {
       def forwardWithJsonResponseMapper(path: String) = {
         gatekeeperClientMock.isFeatureAccessible(any[UserSession], org.mockito.Matchers.eq("pub-api-snip-support")) returns Future.value(true)
         val expectedResponseBuilder = new ResponseBuilder().ok
-        trackStreamSnipHandlerMock.handle(any[Request], any[UserSession], org.mockito.Matchers.eq(trackStreamUrlToJonResponseMapperMock)) returns Future.value(expectedResponseBuilder)
+        trackStreamSnipHandlerMock.handle(any[Request], any[UserSession], org.mockito.Matchers.eq(trackStreamUrlToJsonResponseMapperMock)) returns Future.value(expectedResponseBuilder)
         get(path)
 
         response.code ==== 200
