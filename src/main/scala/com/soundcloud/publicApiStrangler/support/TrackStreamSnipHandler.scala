@@ -20,24 +20,15 @@ class TrackStreamSnipHandler(mothershipDispatcher:DispatchToMothershipHandler,
                                      contentAuthService: ContentAuthorizationService,
                                      mediaUrlsRepository: MediaUrlsRepository) {
 
-  def handle(request:Request, userSession:UserSession, mapper:TrackStreamResponseMapper) : Future[ResponseBuilder] = {
-    val pubApiResponseBuilder = mothershipDispatcher.dispatch(request)
+  def handle(request: Request, userSession: UserSession, mapper: TrackStreamResponseMapper): Future[ResponseBuilder] = {
     val trackUrn = new Urn("soundcloud", "tracks", request.routeParams("trackId"))
-    val contentAuthFuture = contentAuthFor(userSession, trackUrn)
-    pubApiResponseBuilder.flatMap(
-          responseBuilder => {
-            if (responseBuilder.build.getStatusCode() >= 400)
-              pubApiResponseBuilder
-            else
-              contentAuthFuture.flatMap(
-                contentAuthForTrack =>
-                  if (contentAuthForTrack.getPolicy.equals(ContentPolicy.SNIP))
-                    replaceStream(userSession, trackUrn, contentAuthForTrack, mapper)
-                  else
-                    pubApiResponseBuilder
-              )
-          }
-    )
+    val original = mothershipDispatcher.dispatch(request)
+    val replaced = for {
+      responseBuilder <- original if responseBuilder.build.getStatusCode < 400
+      contentAuth <- contentAuthFor(userSession, trackUrn) if contentAuth.getPolicy.equals(ContentPolicy.SNIP)
+      replaced <- replaceStream(userSession, trackUrn, contentAuth, mapper)
+    } yield replaced
+    replaced.liftToTry.join(original).map { case (snip, full) => snip.getOrElse(full)}
   }
 
 

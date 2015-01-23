@@ -2,13 +2,12 @@ package com.soundcloud.publicApiStrangler.controller
 
 import com.soundcloud.bff.authorization.ContentAuthorizationService
 import com.soundcloud.bff.media.MediaUrlsRepository
-import com.soundcloud.bff.test.{ControllerSpecification, UnitSpecification}
-import com.soundcloud.publicApiStrangler.mapper.trackstreams.{TrackStreamRedirectResponseMapper, TrackStreamJsonResponseMapper}
-import com.soundcloud.publicApiStrangler.support.{TrackStreamSnipHandler, DispatchToMothershipHandler}
+import com.soundcloud.bff.test.{ControllerSpecification, TestConfigComponent, UnitSpecification}
+import com.soundcloud.publicApiStrangler.mapper.trackstreams.{TrackStreamJsonResponseMapper, TrackStreamRedirectResponseMapper}
+import com.soundcloud.publicApiStrangler.support.{DispatchToMothershipHandler, TrackStreamSnipHandler}
 import com.soundcloud.service.client.GatekeeperClient
-
 import com.twitter.finagle.Service
-import org.jboss.netty.handler.codec.http.{HttpResponse, HttpRequest}
+import org.jboss.netty.handler.codec.http.{HttpRequest, HttpResponse}
 
 /**
  * Support for testing TrackStreamsController
@@ -25,6 +24,7 @@ class ControllerSpec extends ControllerSpecification with UnitSpecification  {
   val gatekeeperClientMock = mock[GatekeeperClient]
 
   lazy val controller = new TestBffApp
+    with ConfigHack
     with TrackStreamsController
     with GroupController {
 
@@ -35,7 +35,7 @@ class ControllerSpec extends ControllerSpecification with UnitSpecification  {
     override lazy val publicApiClient = publicApiClientMock
     override lazy val mothershipDispatcher = mothershipDispatcherMock
     override lazy val trackStreamSnipHandler = trackStreamSnipHandlerMock
-    override lazy val gatekeeperClient = gatekeeperClientMock
+    override val gatekeeperClient = gatekeeperClientMock
 
     def userSession = userSessionForTest
 
@@ -43,4 +43,9 @@ class ControllerSpec extends ControllerSpecification with UnitSpecification  {
 
   def userSession = controller.userSession
 
+}
+
+// hack because we are still using the cake
+trait ConfigHack extends TestConfigComponent {
+  config.set("GATEKEEPER_SRV_RECORD", "dnssrv!http.api.prod.blackhole.dd.srv.int.s-cloud.net")
 }

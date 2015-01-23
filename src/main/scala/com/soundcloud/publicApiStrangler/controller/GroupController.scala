@@ -3,11 +3,12 @@ package com.soundcloud.publicApiStrangler.controller
 import com.soundcloud.bff.finagle.{ResponseBuilder, Request => BffRequest}
 import com.soundcloud.bff.web.BffController
 import com.soundcloud.publicApiStrangler.support._
+import com.soundcloud.service.component.GatekeeperComponent
 import com.twitter.util.Future
 
 trait GroupController extends BffController
 with PublicApiClientComponent
-with GateKeeperClientComponent{
+with GatekeeperComponent{
 
   val forwardHandler = new ForwardRequestHandler(publicApiClient)
 

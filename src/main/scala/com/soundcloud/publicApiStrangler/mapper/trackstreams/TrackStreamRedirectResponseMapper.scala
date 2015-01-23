@@ -14,19 +14,17 @@ class TrackStreamRedirectResponseMapper extends TrackStreamResponseMapper {
 
   def map(mediaUrls: Future[Set[MediaUrl]]) : Future[ResponseBuilder] = {
     val filteredUrls = mediaUrls.map(set => set.filter(url => url.name.equals(urlOfInterest)))
-    filteredUrls.flatMap(set =>
+    filteredUrls.map(set =>
       set.headOption match {
-        case None => Future.value(new ResponseBuilder().notFound)
+        case None => new ResponseBuilder().notFound
         case Some(url) => buildResponse(url)
       }
     )
   }
 
-  private def buildResponse(url:MediaUrl) : Future[ResponseBuilder] = {
+  private def buildResponse(url:MediaUrl) : ResponseBuilder = {
     val content = Json.obj("status" -> "302 - Found", "location" -> url.url.s)
-    val rb = new ResponseBuilder
-    rb.typedJson(content).header("Location", url.url.s).status(302)
-    Future.value(rb)
+    new ResponseBuilder().typedJson(content).header("Location", url.url.s).status(302)
   }
 
 }

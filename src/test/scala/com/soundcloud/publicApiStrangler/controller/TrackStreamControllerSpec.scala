@@ -58,7 +58,7 @@ class TrackStreamControllerSpec extends ControllerSpec {
       }
 
       "forward request to /i1/tracks/:trackId/streams.json to handler that knows how to deal with snip content type and return response unchanged." in new Context {
-        forwardWithJsonResponseMapper("/i1/tracks/5/streams")
+        forwardWithJsonResponseMapper("/i1/tracks/5/streams.json")
       }
 
       "forward request to /tracks/:trackId/stream to handler that knows how to deal with snip content type and return response unchanged." in new Context {

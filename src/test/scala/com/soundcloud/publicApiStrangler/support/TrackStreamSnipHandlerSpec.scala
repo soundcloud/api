@@ -49,6 +49,7 @@ class TrackStreamSnipHandlerSpec extends UnitSpecification {
       val responseBuilder = Await.result(handler.handle(request, userSession, mapper))
       Await.result(clientErrorResponse) ==== responseBuilder
       there was noCallsTo(mediaUrlsRepository)
+      there was noCallsTo(contentAuthService)
     }
 
     "should return pubapi response in case pubapi returns server error" in new Context {
@@ -60,6 +61,7 @@ class TrackStreamSnipHandlerSpec extends UnitSpecification {
       val responseBuilder = Await.result(handler.handle(request, userSession, mapper))
       Await.result(serverErrorResponse) ==== responseBuilder
       there was noCallsTo(mediaUrlsRepository)
+      there was noCallsTo(contentAuthService)
     }
 
 
@@ -72,6 +74,7 @@ class TrackStreamSnipHandlerSpec extends UnitSpecification {
       val responseBuilder = Await.result(handler.handle(request, userSession, mapper))
       Await.result(successResponse) ==== responseBuilder
       there was noCallsTo(mediaUrlsRepository)
+      there was one(contentAuthService).findRulesApplicableTo(userSession, Seq(trackUrn))
     }
 
     "should return MediaUrlsRepository response in case pubapi response is successful and content policy is SNIP" in new Context {
@@ -89,9 +92,8 @@ class TrackStreamSnipHandlerSpec extends UnitSpecification {
       val responseBuilder = Await.result(handler.handle(request, userSession, mapper))
       Await.result(mapperResponse) ==== responseBuilder
 
+      there was one(mediaUrlsRepository).byUrn(userSession, trackUrn, contentAuth)
+      there was one(contentAuthService).findRulesApplicableTo(userSession, Seq(trackUrn))
     }
-
-
   }
-
 }
