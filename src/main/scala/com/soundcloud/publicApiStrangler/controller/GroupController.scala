@@ -1,14 +1,9 @@
 package com.soundcloud.publicApiStrangler.controller
 
-import com.soundcloud.bff.finagle.{Request => BffRequest, ResponseBuilder}
+import com.soundcloud.bff.finagle.{ResponseBuilder, Request => BffRequest}
 import com.soundcloud.bff.web.BffController
-import com.soundcloud.jvmkit.UserSession
 import com.soundcloud.publicApiStrangler.support._
-import com.soundcloud.scalakit._
-import com.soundcloud.scalakit.finagle.http.OkStatus
-import com.soundcloud.scalakit.finagle.jsonservice._
 import com.twitter.util.Future
-import play.api.libs.json.JsValue
 
 trait GroupController extends BffController
 with PublicApiClientComponent
@@ -27,28 +22,14 @@ with GateKeeperClientComponent{
   get("/groups/:id/users")(returnNothing(_, "disable_expensive_groups_endpoints"))
   // /groups/:id/users.*
 
-  private def returnNothing(request: BffRequest, feature:String): Future[ResponseBuilder] = {
-    withUserSession(request) {
-      (session: UserSession) => {
-        gatekeeperJsonClient.get(session, Path("/features") / (feature + ".json"), Params.empty, Params.empty).flatMap {
-          case JsonResponse(OkStatus, body, _, _) => {
-            val groups = (body \ "groups").as[Set[JsValue]].headOption
-
-            val disabled = groups match {
-              case Some(group) => group.as[String].equals("all")
-              case None => false
-            }
-            if (disabled)
-              Future(new ResponseBuilder().nothing.status(200))
-            else
-              forwardHandler.handle(request)
-          }
-          case _ =>
-            forwardHandler.handle(request)
-        }.rescue {
-          case e: Exception => forwardHandler.handle(request)
-        }
+  private[controller] def returnNothing(request: BffRequest, feature: String): Future[ResponseBuilder] = {
+    withUserSession(request) { session =>
+      gatekeeperClient.isFeatureAccessible(session, feature).flatMap { disabled =>
+        if (disabled) Future.value(new ResponseBuilder().nothing.status(200))
+        else forwardHandler.handle(request)
       }
+    }.rescue {
+      case e: Exception => forwardHandler.handle(request)
     }
   }
 }

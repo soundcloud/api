@@ -25,7 +25,8 @@ class ControllerSpec extends ControllerSpecification with UnitSpecification  {
   val gatekeeperClientMock = mock[GatekeeperClient]
 
   lazy val controller = new TestBffApp
-    with TrackStreamsController {
+    with TrackStreamsController
+    with GroupController {
 
     override lazy val mediaUrlsRepository = mediaUrlsRepositoryMock
     override lazy val trackStreamUrlToJonResponseMapper = trackStreamUrlToJonResponseMapperMock
