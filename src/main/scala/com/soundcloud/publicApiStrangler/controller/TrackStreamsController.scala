@@ -38,6 +38,6 @@ trait TrackStreamsController extends BffController
   }
 
   private def snipEnabled(session:UserSession) : Future[Boolean] =
-    gatekeeperClient.isFeatureAccessible(session, "pub-api-snip-support").liftToTry
+    gatekeeperClient.isFeatureAccessible(session, "pub_api_snip_support").liftToTry
       .onFailure(logger.error("Exception when accessing gatekeeper", _)).map(_.getOrElse(false))
 }
