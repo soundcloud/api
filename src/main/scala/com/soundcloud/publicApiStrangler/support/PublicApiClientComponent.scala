@@ -11,7 +11,7 @@ import org.jboss.netty.handler.codec.http.{HttpRequest, HttpResponse}
 trait PublicApiClientComponent {
   this: ConfigComponent =>
 
-  val publicApiClient: Service[HttpRequest, HttpResponse] = {
+  lazy val publicApiClient: Service[HttpRequest, HttpResponse] = {
     val svcName = "public-api"
     ClientBuilder()
       .codec(TracingHttp())
