@@ -1,16 +1,15 @@
 package com.soundcloud.publicApiStrangler.controller
 
-import com.soundcloud.bff.finagle.{ResponseBuilder, Request => BffRequest}
-import com.soundcloud.bff.web.BffController
-import com.soundcloud.publicApiStrangler.support._
-import com.soundcloud.service.component.GatekeeperComponent
+import com.soundcloud.bff.finagle.{Request => BffRequest, ResponseBuilder}
+import com.soundcloud.bff.web.{BffInjectionBasedController, UserAuthentication}
+import com.soundcloud.service.client.GatekeeperClient
 import com.twitter.util.Future
 
-trait GroupController extends BffController
-with PublicApiClientComponent
-with GatekeeperComponent{
-
-  val forwardHandler = new ForwardRequestHandler(publicApiClient)
+class GroupController(
+                       userAuthentication: UserAuthentication,
+                       gatekeeperClient: GatekeeperClient,
+                       forwardHandler: ForwardRequestHandler
+                       ) extends BffInjectionBasedController {
 
   //XXX: Implemented this during an outage that we had to disable groups endpoints. Remove this as soon is safe
   //HOTFIX:
@@ -24,7 +23,7 @@ with GatekeeperComponent{
   // /groups/:id/users.*
 
   private[controller] def returnNothing(request: BffRequest, feature: String): Future[ResponseBuilder] = {
-    withUserSession(request) { session =>
+    userAuthentication.withUserSession(request) { session =>
       gatekeeperClient.isFeatureAccessible(session, feature).flatMap { disabled =>
         if (disabled) Future.value(new ResponseBuilder().nothing.status(200))
         else forwardHandler.handle(request)

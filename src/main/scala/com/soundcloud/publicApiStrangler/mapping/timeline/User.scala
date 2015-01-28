@@ -17,7 +17,7 @@ class User(jsonValue: JsValue, baseUrl: String)(implicit context: MappingContext
   val public_favorites_count = (json \ "public_favorites_count").asOpt[Int]
   val followings_count = (json \ "followings_count").asOpt[Int]
   val plan = (json \ "plan").asOpt[String]
-  val subscriptions = (json \ "subscriptions").asOpt[String] // TODO test
+  val subscriptions = (json \ "subscriptions").asOpt[String]
   val myspace_name = nameInNetwork("myspace")
   val discogs_name = nameInNetwork("discogs")
   val website_title = nameInNetwork("personal")

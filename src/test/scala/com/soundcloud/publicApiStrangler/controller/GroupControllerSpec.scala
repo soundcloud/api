@@ -1,143 +1,155 @@
 package com.soundcloud.publicApiStrangler.controller
 
-import java.nio.charset.Charset
-
+import com.soundcloud.bff.finagle.{Request, ResponseBuilder}
+import com.soundcloud.bff.test.InjectionBasedControllerSpecification
 import com.soundcloud.scalakit.Urn
-import com.twitter.finagle.http.Response
+import com.soundcloud.service.client.GatekeeperClient
 import com.twitter.util.Future
-import org.jboss.netty.buffer.ChannelBuffers.copiedBuffer
-import org.jboss.netty.handler.codec.http.{DefaultHttpHeaders, HttpRequest, HttpResponseStatus}
+import org.jboss.netty.handler.codec.http.HttpResponseStatus
 
-class GroupControllerSpec extends ControllerSpec {
-  "GroupController" should {
-    trait ForwardContext extends Scope {
-      val forwardStatus = HttpResponseStatus.FOUND
-      val forwardContent = "forwardContent"
-      val forwardResponse = mock[Response]
-      forwardResponse.getStatus returns forwardStatus
-      forwardResponse.getContent returns copiedBuffer(forwardContent, Charset.forName("UTF-8"))
-      forwardResponse.headers returns new DefaultHttpHeaders
-      publicApiClientMock.apply(any[HttpRequest]) returns Future(forwardResponse)
-      controller.loggedInAs(Urn("soundcloud:users:123"))
+class GroupControllerSpec extends InjectionBasedControllerSpecification {
 
-      def stillForwards = {
-        response.code ==== forwardStatus.getCode
-        response.body ==== forwardContent
-      }
+  trait ForwardContext extends Scope {
+    val session = loggedInSession(Urn("soundcloud:users:123"))
 
-      def doesNotForward = {
-        response.code ==== 200
-        response.body ==== ""
-        there was noCallsTo(publicApiClientMock)
-      }
+    val gatekeeperClientMock = mock[GatekeeperClient]
+    val forwardHandlerMock = mock[ForwardRequestHandler]
+
+    val controller = new GroupController(fakeUserAuthentication(session), gatekeeperClientMock, forwardHandlerMock)
+
+    val forwardStatus = HttpResponseStatus.FOUND.getCode
+    val forwardContent = "forwardContent"
+
+    def expectForwardedRequest =
+      forwardHandlerMock.handle(any[Request])
+        .returns(Future((new ResponseBuilder()).body(forwardContent).status(forwardStatus)))
+
+    def stillForwards(response: MockResponse) = {
+      response.code ==== 302
+      response.body ==== "forwardContent"
     }
 
-    "when disable_cheap_groups_endpoints via Gatekeeper" >> {
-      trait Context extends ForwardContext {
-        gatekeeperClientMock.isFeatureAccessible(userSession, "disable_cheap_groups_endpoints") returns Future.value(true)
-        gatekeeperClientMock.isFeatureAccessible(userSession, "disable_expensive_groups_endpoints") returns Future.value(false)
-      }
-
-      "does not forward /users/:id/groups.json" in new Context {
-        get("/users/123/groups.json")
-        doesNotForward
-      }
-
-      "does not forward /groups/:id.json" in new Context {
-        get("/groups/123.json")
-        doesNotForward
-      }
-
-      "still forwards /groups/:id/users.json" in new Context {
-        get("/groups/123/users.json")
-        stillForwards
-      }
-
-      "still forwards /groups/:id/users" in new Context {
-        get("/groups/123/users")
-        stillForwards
-      }
+    def doesNotForward(response: MockResponse) = {
+      response.code ==== 200
+      response.body ==== ""
+      there was noCallsTo(forwardHandlerMock)
     }
-    "when disable_expensive_groups_endpoints via Gatekeeper" >> {
-      trait Context extends ForwardContext {
-        gatekeeperClientMock.isFeatureAccessible(userSession, "disable_cheap_groups_endpoints") returns Future.value(false)
-        gatekeeperClientMock.isFeatureAccessible(userSession, "disable_expensive_groups_endpoints") returns Future.value(true)
-      }
+  }
 
-      "still forwards /users/:id/groups.json" in new Context {
-        get("/users/123/groups.json")
-        stillForwards
-      }
-
-      "still forwards /groups/:id.json" in new Context {
-        get("/groups/123.json")
-        stillForwards
-      }
-
-      "does not forward /groups/:id/users.json" in new Context {
-        get("/groups/123/users.json")
-        doesNotForward
-      }
-
-      "does not forward /groups/:id/users" in new Context {
-        get("/groups/123/users")
-        doesNotForward
-      }
+  "when disable_cheap_groups_endpoints via Gatekeeper" >> {
+    trait Context extends ForwardContext {
+      gatekeeperClientMock.isFeatureAccessible(session, "disable_cheap_groups_endpoints") returns Future.value(true)
+      gatekeeperClientMock.isFeatureAccessible(session, "disable_expensive_groups_endpoints") returns Future.value(false)
     }
 
-    "when all endpoints accessible" >> {
-      trait Context extends ForwardContext {
-        gatekeeperClientMock.isFeatureAccessible(userSession, "disable_cheap_groups_endpoints") returns Future.value(false)
-        gatekeeperClientMock.isFeatureAccessible(userSession, "disable_expensive_groups_endpoints") returns Future.value(false)
-      }
-
-      "still forwards /users/:id/groups.json" in new Context {
-        get("/users/123/groups.json")
-        stillForwards
-      }
-
-      "still forwards /groups/:id.json" in new Context {
-        get("/groups/123.json")
-        stillForwards
-      }
-
-      "does not forward /groups/:id/users.json" in new Context {
-        get("/groups/123/users.json")
-        stillForwards
-
-      }
-
-      "does not forward /groups/:id/users" in new Context {
-        get("/groups/123/users")
-        stillForwards
-      }
+    "does not forward /users/:id/groups.json" in new Context {
+      val response = get(controller, "/users/123/groups.json")
+      doesNotForward(response)
     }
 
-    "treats Gatekeeper exception as false" >> {
-      trait Context extends ForwardContext {
-        gatekeeperClientMock.isFeatureAccessible(userSession, "disable_cheap_groups_endpoints") returns Future.exception(new RuntimeException("expected"))
-        gatekeeperClientMock.isFeatureAccessible(userSession, "disable_expensive_groups_endpoints") returns Future.exception(new RuntimeException("expected"))
-      }
+    "does not forward /groups/:id.json" in new Context {
+      val response = get(controller, "/groups/123.json")
+      doesNotForward(response)
+    }
 
-      "still forwards /users/:id/groups.json" in new Context {
-        get("/users/123/groups.json")
-        stillForwards
-      }
+    "still forwards /groups/:id/users.json" in new Context {
+      expectForwardedRequest
 
-      "still forwards /groups/:id.json" in new Context {
-        get("/groups/123.json")
-        stillForwards
-      }
+      val response = get(controller, "/groups/123/users.json")
+      stillForwards(response)
+    }
 
-      "does not forward /groups/:id/users.json" in new Context {
-        get("/groups/123/users.json")
-        stillForwards
-      }
+    "still forwards /groups/:id/users" in new Context {
+      expectForwardedRequest
 
-      "does not forward /groups/:id/users" in new Context {
-        get("/groups/123/users")
-        stillForwards
-      }
+      val response = get(controller, "/groups/123/users")
+      stillForwards(response)
+    }
+  }
+  "when disable_expensive_groups_endpoints via Gatekeeper" >> {
+    trait Context extends ForwardContext {
+      gatekeeperClientMock.isFeatureAccessible(session, "disable_cheap_groups_endpoints") returns Future.value(false)
+      gatekeeperClientMock.isFeatureAccessible(session, "disable_expensive_groups_endpoints") returns Future.value(true)
+    }
+
+    "still forwards /users/:id/groups.json" in new Context {
+      expectForwardedRequest
+
+      val response = get(controller, "/users/123/groups.json")
+      stillForwards(response)
+    }
+
+    "still forwards /groups/:id.json" in new Context {
+      expectForwardedRequest
+
+      val response = get(controller, "/groups/123.json")
+      stillForwards(response)
+    }
+
+    "does not forward /groups/:id/users.json" in new Context {
+      val response = get(controller, "/groups/123/users.json")
+      doesNotForward(response)
+    }
+
+    "does not forward /groups/:id/users" in new Context {
+      val response = get(controller, "/groups/123/users")
+      doesNotForward(response)
+    }
+  }
+
+  "when all endpoints accessible" >> {
+    trait Context extends ForwardContext {
+      gatekeeperClientMock.isFeatureAccessible(session, "disable_cheap_groups_endpoints") returns Future.value(false)
+      gatekeeperClientMock.isFeatureAccessible(session, "disable_expensive_groups_endpoints") returns Future.value(false)
+      expectForwardedRequest
+    }
+
+    "still forwards /users/:id/groups.json" in new Context {
+      val response = get(controller, "/users/123/groups.json")
+      stillForwards(response)
+    }
+
+    "still forwards /groups/:id.json" in new Context {
+      val response = get(controller, "/groups/123.json")
+      stillForwards(response)
+    }
+
+    "does not forward /groups/:id/users.json" in new Context {
+      val response = get(controller, "/groups/123/users.json")
+      stillForwards(response)
+    }
+
+    "does not forward /groups/:id/users" in new Context {
+      val response = get(controller, "/groups/123/users")
+      stillForwards(response)
+    }
+  }
+
+  "treats Gatekeeper exception as false" >> {
+    trait Context extends ForwardContext {
+      gatekeeperClientMock.isFeatureAccessible(session, "disable_cheap_groups_endpoints") returns Future.exception(new RuntimeException("expected"))
+      gatekeeperClientMock.isFeatureAccessible(session, "disable_expensive_groups_endpoints") returns Future.exception(new RuntimeException("expected"))
+      expectForwardedRequest
+    }
+
+    "still forwards /users/:id/groups.json" in new Context {
+      val response = get(controller, "/users/123/groups.json")
+      stillForwards(response)
+    }
+
+    "still forwards /groups/:id.json" in new Context {
+      val response = get(controller, "/groups/123.json")
+      stillForwards(response)
+    }
+
+    "does not forward /groups/:id/users.json" in new Context {
+      val response = get(controller, "/groups/123/users.json")
+      stillForwards(response)
+    }
+
+    "does not forward /groups/:id/users" in new Context {
+      val response = get(controller, "/groups/123/users")
+      stillForwards(response)
     }
   }
 }
