@@ -3,8 +3,10 @@ package com.soundcloud.publicApiStrangler.controller
 import com.soundcloud.bff.finagle.{Request, ResponseBuilder}
 import com.soundcloud.bff.web.BffController
 import com.soundcloud.jvmkit.UserSession
+import com.soundcloud.jvmkit.config.ConfigConvention
 import com.soundcloud.publicApiStrangler.mapper.trackstreams.{TrackStreamMappersComponent, TrackStreamResponseMapper}
 import com.soundcloud.publicApiStrangler.support.TrackStreamSnipHandlerComponent
+import com.soundcloud.scalakit.ResourceName
 import com.soundcloud.service.component.GatekeeperComponent
 import com.twitter.util.Future
 
@@ -38,6 +40,6 @@ trait TrackStreamsController extends BffController
   }
 
   private def snipEnabled(session:UserSession) : Future[Boolean] =
-    gatekeeperClient.isFeatureAccessible(session, "pub_api_snip_support").liftToTry
-      .onFailure(logger.error("Exception when accessing gatekeeper", _)).map(_.getOrElse(false))
+    Future.value(config.getBoolean(ResourceName("PUB_API_SNIP_SUPPORT"), ConfigConvention.ENABLED, false))
+
 }
