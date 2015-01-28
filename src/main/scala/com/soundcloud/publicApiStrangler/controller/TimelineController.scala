@@ -1,33 +1,29 @@
 package com.soundcloud.publicApiStrangler.controller
 
-import com.soundcloud.bff.finagle.{Request => BffRequest, ResponseBuilder}
+import com.soundcloud.bff.finagle.{Request => BffRequest}
 import com.soundcloud.bff.web.BffController
 import com.soundcloud.jvmkit.{LoggedInUserSession, Urn}
 import com.soundcloud.publicApiStrangler.mapper.timeline._
 import com.soundcloud.publicApiStrangler.mapper.timeline.e1.{ActivitiesMapper, StreamMapper}
 import com.soundcloud.publicApiStrangler.mapper.timeline.publicApi.ActivitiesWithOriginMapper
 import com.soundcloud.publicApiStrangler.support._
-import com.soundcloud.scalakit.finagle.http.{AlwaysMatchesPathMatcher, HandlerRequest}
 import com.soundcloud.service.component.{LieblingComponent, OkidokiComponent, TimelineComponent}
-import com.twitter.finagle.http.Request
-import scala.collection.JavaConversions._
 
-trait TimelineController extends BffController
-    with TimelineComponent
-    with OkidokiComponent
-    with LieblingComponent
-    with PublicApiClientComponent {
+trait TimelineController
+  extends BffController
+  with TimelineComponent
+  with OkidokiComponent
+  with LieblingComponent
+  with PublicApiClientComponent {
 
   lazy val baseUrl = config.get("APP_BASE_URL")
   lazy val pagination = new CursorPagination(baseUrl)
-  
+
   lazy val entitySummaryMapper = new EntitySummaryMapper(okidokiClient, baseUrl)
   lazy val entityMapper = new EntityMapper(okidokiClient, lieblingClient, baseUrl, entitySummaryMapper)
   lazy val streamMapper = new StreamMapper(timelineClient, entityMapper, entitySummaryMapper)
   lazy val activitiesMapper = new ActivitiesMapper(timelineClient, entityMapper, entitySummaryMapper)
   lazy val publicActivitiesMapper = new ActivitiesWithOriginMapper(timelineClient, entityMapper, entitySummaryMapper)
-
-  val fallback = new DispatchToMothershipHandler(publicApiClient)
 
   // Android & iPad specific
   get("/e1/me/activities")(doMagic(_, activitiesMapper))
@@ -62,15 +58,4 @@ trait TimelineController extends BffController
         }
     }
   }
-
-  private def fallbackToMothership(request: Request) = {
-    fallback.defaultHandling(new HandlerRequest(AlwaysMatchesPathMatcher, request)).map {
-      response =>
-        new ResponseBuilder().
-          body(response.getContentString()).
-          status(response.getStatusCode()).
-          headers(response.headers().entries.map(e => e.getKey -> e.getValue).toMap)
-    }
-  }
-
 }
