@@ -6,4 +6,5 @@ api:
   app: public-api-strangler
   scale-method: stepped
   auto-scale-down: false
+  step-size: 5
   zone: db
