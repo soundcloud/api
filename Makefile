@@ -28,8 +28,11 @@ all: remove.ivy.lock .install.jre
 build: remove.ivy.lock .install.jre
 	$(SBT) clean startScript
 
-ci: remove.ivy.lock .install.jre
+ci: remove.ivy.lock .install.jre remove.install.jre
 	$(SBT) -no-colors clean test startScript
 
 clean: remove.ivy.lock .install.jre
 	$(SBT) clean
+
+remove.install.jre:
+		rm -f .install.jre
