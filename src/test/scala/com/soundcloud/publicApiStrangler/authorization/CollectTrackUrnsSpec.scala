@@ -1,8 +1,7 @@
 package com.soundcloud.publicApiStrangler.authorization
 
-import com.soundcloud.bff.test.fixtures.Fixtures
 import com.soundcloud.bff.test.UnitSpecification
-import com.soundcloud.scalakit.test.VerifiedMocks
+import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures
 import com.soundcloud.scalakit.Urn
 
 class CollectTrackUrnsSpec extends UnitSpecification with Fixtures {
@@ -61,5 +60,4 @@ class CollectTrackUrnsSpec extends UnitSpecification with Fixtures {
       CollectTrackUrns(user.toString) must beEmpty
     }
   }
-  
 }

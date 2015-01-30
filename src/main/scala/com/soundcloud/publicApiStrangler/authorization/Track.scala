@@ -1,6 +1,6 @@
 package com.soundcloud.publicApiStrangler.authorization
 
-import com.soundcloud.jvmkit.policies.{ContentPolicy}
+import com.soundcloud.jvmkit.policies.ContentPolicy
 import play.api.libs.json.JsValue
 import play.api.libs.json.JsObject
 import com.soundcloud.scalakit.json.Json
