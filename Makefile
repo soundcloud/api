@@ -5,7 +5,7 @@ BIN_DIR=$(PWD)/vendor/bin
 
 PLATFORM := $(shell sh -c 'uname -s 2>/dev/null')
 
-JRE=jre-8u20
+JRE=jre-8u31
 JRE_TARBALL=http://files.int.s-cloud.net/java/jre/$(JRE)-linux-x64.tar.gz
 JRE_DIR=$(VENDOR_DIR)/$(JRE)
 
