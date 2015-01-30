@@ -5,6 +5,6 @@ api:
   irc-channel: bff
   app: public-api-strangler
   scale-method: stepped
-  auto-scale-down: false
+  auto-scale-down: true
   step-size: 5
   zone: db
