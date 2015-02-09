@@ -11,16 +11,12 @@ import play.api.libs.json.Json
  */
 class TrackStreamJsonResponseMapper extends TrackStreamResponseMapper {
 
-
-  val urlNamesOfInterest = Set("http_mp3_128_url", "preview_mp3_128_url")
-
   def map(mediaUrls: Future[Set[MediaUrl]]) : Future[ResponseBuilder] = {
-    val urlsOfInterest = mediaUrls.map(set => set.filter(url => urlNamesOfInterest.contains(url.name)))
-    urlsOfInterest.map(set =>
-      if (set.isEmpty)
+    mediaUrls.map(urls =>
+      if (urls.isEmpty)
         new ResponseBuilder().notFound
       else
-        mapResponse(set)
+        mapResponse(urls)
     )
   }
 
