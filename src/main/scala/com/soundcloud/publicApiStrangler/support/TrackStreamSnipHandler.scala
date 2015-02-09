@@ -22,13 +22,14 @@ class TrackStreamSnipHandler(mothershipDispatcher:DispatchToMothershipHandler,
 
   def handle(request: Request, userSession: UserSession, mapper: TrackStreamResponseMapper): Future[ResponseBuilder] = {
     val trackUrn = new Urn("soundcloud", "tracks", request.routeParams("trackId"))
-    val original = mothershipDispatcher.dispatch(request)
-    val replaced = for {
-      responseBuilder <- original if responseBuilder.build.getStatusCode < 400
-      contentAuth <- contentAuthFor(userSession, trackUrn) if contentAuth.getPolicy.equals(ContentPolicy.SNIP)
-      replaced <- replaceStream(userSession, trackUrn, contentAuth, mapper)
-    } yield replaced
-    replaced.liftToTry.join(original).map { case (snip, full) => snip.getOrElse(full)}
+    val responses = Future.join(mothershipDispatcher.dispatch(request), contentAuthFor(userSession, trackUrn))
+    responses.flatMap{
+      case (mothershipResponse:ResponseBuilder, contentAuth:ContentAuthorization) =>
+        if ((mothershipResponse.build.getStatusCode < 400) && (contentAuth.getPolicy.equals(ContentPolicy.SNIP)))
+          replaceStream(userSession, trackUrn, contentAuth, mapper)
+        else
+          Future.value(mothershipResponse)
+    }
   }
 
 
