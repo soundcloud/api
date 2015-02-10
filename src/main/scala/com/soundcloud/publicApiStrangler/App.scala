@@ -62,14 +62,12 @@ object App
 
     val mediaUrlsRepository = new MediaUrlsRepository(okidokiService, mediaService)
     val trackStreamSnipHandler = new TrackStreamSnipHandler(mothershipDispatcher, contentAuthorizationService, mediaUrlsRepository)
-    val pubApiSnipSupport = config.getBoolean(ResourceName("PUB_API_SNIP_SUPPORT"), ConfigConvention.ENABLED, false)
     new TrackStreamsController(
       userAuthentication,
       trackStreamUrlToJsonResponseMapper,
       trackStreamUrlToRedirectMapper,
       mothershipDispatcher,
-      trackStreamSnipHandler,
-      pubApiSnipSupport)
+      trackStreamSnipHandler)
   }
 
   private val userFollowController = new UserFollowController(userAuthentication, mothershipDispatcher, moshimoshiService)
