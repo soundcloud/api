@@ -17,94 +17,63 @@ class TrackStreamsControllerSpec extends InjectionBasedControllerSpecification {
     val trackStreamUrlToRedirectMapperMock = mock[TrackStreamRedirectResponseMapper]
     val mothershipDispatcherMock = mock[DispatchToMothershipHandler]
     val trackStreamSnipHandlerMock = mock[TrackStreamSnipHandler]
-  }
 
-  "when pub_api_snip_support is enabled" >> {
+    val controller = new TrackStreamsController(
+      fakeUserAuthentication(session),
+      trackStreamUrlToJsonResponseMapperMock,
+      trackStreamUrlToRedirectMapperMock,
+      mothershipDispatcherMock,
+      trackStreamSnipHandlerMock
+    )
 
-    trait SnipSupportEnabledContext extends Context {
-      val controller = new TrackStreamsController(
-        fakeUserAuthentication(session),
-        trackStreamUrlToJsonResponseMapperMock,
-        trackStreamUrlToRedirectMapperMock,
-        mothershipDispatcherMock,
-        trackStreamSnipHandlerMock,
-        true
-      )
-
-      def forwardWithJsonResponseMapper(controller: TrackStreamsController, path: String) = {
-        val expectedResponseBuilder = new ResponseBuilder().ok
-
-        trackStreamSnipHandlerMock.handle(any[Request], any[UserSession], org.mockito.Matchers.eq(trackStreamUrlToJsonResponseMapperMock))
-          .returns(Future.value(expectedResponseBuilder))
-
-        val response = get(controller, path)
-
-        response.code ==== 200
-        there was one(trackStreamSnipHandlerMock).handle(any[Request], any[UserSession], any[TrackStreamJsonResponseMapper])
-        there was noCallsTo(mothershipDispatcherMock)
-      }
-
-      def forwardWithRedirectResponseMapper(controller: TrackStreamsController, path: String) = {
-        val expectedResponseBuilder = new ResponseBuilder().ok
-
-        trackStreamSnipHandlerMock.handle(any[Request], any[UserSession], org.mockito.Matchers.eq(trackStreamUrlToRedirectMapperMock))
-          .returns(Future.value(expectedResponseBuilder))
-
-        val response = get(controller, path)
-
-        response.code ==== 200
-        there was one(trackStreamSnipHandlerMock).handle(any[Request], any[UserSession], any[TrackStreamRedirectResponseMapper])
-        there was noCallsTo(mothershipDispatcherMock)
-      }
-    }
-
-    "forward request to /tracks/:trackId/streams to handler that knows how to deal with snip content type and return response unchanged." in new SnipSupportEnabledContext {
-      forwardWithJsonResponseMapper(controller, "/tracks/5/streams")
-    }
-
-    "forward request to /tracks/:trackId/streams.json to handler that knows how to deal with snip content type and return response unchanged." in new SnipSupportEnabledContext {
-      forwardWithJsonResponseMapper(controller, "/tracks/5/streams.json")
-    }
-
-    "forward request to /i1/tracks/:trackId/streams to handler that knows how to deal with snip content type and return response unchanged." in new SnipSupportEnabledContext {
-      forwardWithJsonResponseMapper(controller, "/i1/tracks/5/streams")
-    }
-
-    "forward request to /i1/tracks/:trackId/streams.json to handler that knows how to deal with snip content type and return response unchanged." in new SnipSupportEnabledContext {
-      forwardWithJsonResponseMapper(controller, "/i1/tracks/5/streams.json")
-    }
-
-    "forward request to /tracks/:trackId/stream to handler that knows how to deal with snip content type and return response unchanged." in new SnipSupportEnabledContext {
-      forwardWithRedirectResponseMapper(controller, "/tracks/5/stream")
-    }
-
-    "forward request to /tracks/:trackId/stream.json to handler that knows how to deal with snip content type and return response unchanged." in new SnipSupportEnabledContext {
-      forwardWithRedirectResponseMapper(controller, "/tracks/5/stream.json")
-    }
-  }
-
-
-  "when pub_api_snip_support is not enabled" >> {
-
-    trait SnipSupportDisabledContext extends Context {
-      val controller = new TrackStreamsController(
-        fakeUserAuthentication(session),
-        trackStreamUrlToJsonResponseMapperMock,
-        trackStreamUrlToRedirectMapperMock,
-        mothershipDispatcherMock,
-        trackStreamSnipHandlerMock,
-        false
-      )
-    }
-
-    "forward request to handler that forwards to pub api and return response unchanged" in new SnipSupportDisabledContext {
+    def forwardWithJsonResponseMapper(controller: TrackStreamsController, path: String) = {
       val expectedResponseBuilder = new ResponseBuilder().ok
-      mothershipDispatcherMock.dispatch(any[Request]) returns Future.value(expectedResponseBuilder)
-      val response = get(controller, "/tracks/5/streams")
+
+      trackStreamSnipHandlerMock.handle(any[Request], any[UserSession], org.mockito.Matchers.eq(trackStreamUrlToJsonResponseMapperMock))
+        .returns(Future.value(expectedResponseBuilder))
+
+      val response = get(controller, path)
 
       response.code ==== 200
-      there was one(mothershipDispatcherMock).dispatch(any[Request])
-      there was noCallsTo(trackStreamSnipHandlerMock)
+      there was one(trackStreamSnipHandlerMock).handle(any[Request], any[UserSession], any[TrackStreamJsonResponseMapper])
+      there was noCallsTo(mothershipDispatcherMock)
     }
+
+    def forwardWithRedirectResponseMapper(controller: TrackStreamsController, path: String) = {
+      val expectedResponseBuilder = new ResponseBuilder().ok
+
+      trackStreamSnipHandlerMock.handle(any[Request], any[UserSession], org.mockito.Matchers.eq(trackStreamUrlToRedirectMapperMock))
+        .returns(Future.value(expectedResponseBuilder))
+
+      val response = get(controller, path)
+
+      response.code ==== 200
+      there was one(trackStreamSnipHandlerMock).handle(any[Request], any[UserSession], any[TrackStreamRedirectResponseMapper])
+      there was noCallsTo(mothershipDispatcherMock)
+    }
+  }
+
+  "forward request to /tracks/:trackId/streams to handler that knows how to deal with snip content type and return response unchanged." in new Context {
+    forwardWithJsonResponseMapper(controller, "/tracks/5/streams")
+  }
+
+  "forward request to /tracks/:trackId/streams.json to handler that knows how to deal with snip content type and return response unchanged." in new Context {
+    forwardWithJsonResponseMapper(controller, "/tracks/5/streams.json")
+  }
+
+  "forward request to /i1/tracks/:trackId/streams to handler that knows how to deal with snip content type and return response unchanged." in new Context {
+    forwardWithJsonResponseMapper(controller, "/i1/tracks/5/streams")
+  }
+
+  "forward request to /i1/tracks/:trackId/streams.json to handler that knows how to deal with snip content type and return response unchanged." in new Context {
+    forwardWithJsonResponseMapper(controller, "/i1/tracks/5/streams.json")
+  }
+
+  "forward request to /tracks/:trackId/stream to handler that knows how to deal with snip content type and return response unchanged." in new Context {
+    forwardWithRedirectResponseMapper(controller, "/tracks/5/stream")
+  }
+
+  "forward request to /tracks/:trackId/stream.json to handler that knows how to deal with snip content type and return response unchanged." in new Context {
+    forwardWithRedirectResponseMapper(controller, "/tracks/5/stream.json")
   }
 }

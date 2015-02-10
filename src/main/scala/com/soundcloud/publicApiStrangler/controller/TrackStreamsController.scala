@@ -17,8 +17,7 @@ class TrackStreamsController(
                               trackStreamUrlToJsonResponseMapper: TrackStreamJsonResponseMapper,
                               trackStreamUrlToRedirectMapper: TrackStreamRedirectResponseMapper,
                               mothershipDispatcher: DispatchToMothershipHandler,
-                              trackStreamSnipHandler: TrackStreamSnipHandler,
-                              pubApiSnipSupport: Boolean
+                              trackStreamSnipHandler: TrackStreamSnipHandler
                               )
   extends BffInjectionBasedController {
 
@@ -32,16 +31,7 @@ class TrackStreamsController(
   private def handleStreamRequest(request: Request, mapper: TrackStreamResponseMapper): Future[ResponseBuilder] = {
     userAuthentication.withUserSession(request) {
       (session: UserSession) =>
-        snipEnabled(session).flatMap(
-          if (_)
-            trackStreamSnipHandler.handle(request, session, mapper)
-          else
-            mothershipDispatcher.dispatch(request)
-        )
+        trackStreamSnipHandler.handle(request, session, mapper)
     }
   }
-
-  private def snipEnabled(session: UserSession): Future[Boolean] =
-    Future.value(pubApiSnipSupport) //TODO: remove future
-
 }
