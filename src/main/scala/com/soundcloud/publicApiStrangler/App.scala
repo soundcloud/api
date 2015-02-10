@@ -28,10 +28,20 @@ object App
 
   private val userAuthentication = createUserAuthentication(authenticatorClient.cacheKeyAndSession, geoIpClient.get)
 
-  private val moshimoshiService = JsonService(ServiceConfig("moshimoshi", config.get("MOSHIMOSHI_BASE_URL"), config))
-  private val okidokiService = JsonService(ServiceConfig("okidoki", config.get("OKIDOKI_BASE_URL"), config))
-  private val mediaService = JsonService(ServiceConfig("mediaservice", config.get("MEDIASERVICE_BASE_URL"), config))
-  private val authsyService = JsonService(ServiceConfig("authsy", config.get("AUTHSY_BASE_URL"), config))
+  private val moshimoshiService = JsonService(
+    ServiceConfig("moshimoshi", config.get(ResourceName("MOSHIMOSHI"), ConfigConvention.BASE_URL), config)
+  )
+  private val okidokiService = JsonService(
+    ServiceConfig("okidoki", config.get(ResourceName("OKIDOKI"), ConfigConvention.SRV_RECORD), config)
+  )
+  private val mediaService = JsonService(
+    ServiceConfig("mediaservice", config.get(ResourceName("MEDIASERVICE"), ConfigConvention.SRV_RECORD), config)
+  )
+
+  private val authsyService = JsonService(
+    ServiceConfig("authsy", config.get(ResourceName("AUTHSY"), ConfigConvention.SRV_RECORD), config)
+  )
+
   private val contentAuthorizationService = new ContentAuthorizationService(authsyService)
 
   private val waveformUrlsRepo = new WaveformUrlsRepository(okidokiService, mediaService)
@@ -41,7 +51,7 @@ object App
   private val mothershipDispatcher = new DispatchToMothershipHandler(publicApiClient)
 
   private val timelineController = {
-    val baseUrl = config.get("APP_BASE_URL")
+    val baseUrl = config.get("APP_BASE_URL", true)
     val entitySummaryMapper = new EntitySummaryMapper(okidokiClient, baseUrl)
     val entityMapper = new EntityMapper(okidokiClient, lieblingClient, baseUrl, entitySummaryMapper)
     val streamMapper = new StreamMapper(timelineClient, entityMapper, entitySummaryMapper)
