@@ -1,15 +1,16 @@
 package com.soundcloud.publicApiStrangler.rateLimiting.framework
 
-import com.soundcloud.publicApiStrangler.rateLimiting.web.RateLimitingFilter
-import com.soundcloud.scalakit.framework.ScAppComponent
-import com.soundcloud.publicApiStrangler.rateLimiting.{RateLimitCounter, DefaultTimeWindow, RateLimit}
-import com.soundcloud.jvmkit.{ResourceName, Clock}
-import org.joda.time.DateTime
 import com.soundcloud.jvmkit.circuitbreakers.CircuitBreaker
-import java.util.Timer
+import com.soundcloud.jvmkit.config.ConfigConvention
+import com.soundcloud.jvmkit.Clock
+import com.soundcloud.publicApiStrangler.rateLimiting.web.RateLimitingFilter
+import com.soundcloud.publicApiStrangler.rateLimiting.{DefaultTimeWindow, RateLimit, RateLimitCounter}
+import com.soundcloud.scalakit.ResourceName
 import com.soundcloud.scalakit.finagle.CircuitBreakerFilter
-import com.twitter.finagle.memcached.{Client => MemcachedClient, CacheNodeGroup, KetamaClientBuilder}
-import com.twitter.finagle.memcached.protocol.{Response, Command}
+import com.soundcloud.scalakit.framework.ScAppComponent
+import com.twitter.finagle.memcached.protocol.{Command, Response}
+import com.twitter.finagle.memcached.{CacheNodeGroup, KetamaClientBuilder}
+import org.joda.time.DateTime
 
 trait RateLimitComponent {
   self: ScAppComponent =>
@@ -21,7 +22,7 @@ trait RateLimitComponent {
   }
 
   val memcached = {
-    val memcachedServers = config.get("RATE_LIMIT_MEMCACHED_SERVERS", "")
+    val memcachedServers = config.get("RATE_LIMIT_MEMCACHED_SERVERS", true)
     require(memcachedServers != null, "$RATE_LIMIT_MEMCACHED_SERVERS must be set to a list of servers")
 
     KetamaClientBuilder()
@@ -30,7 +31,7 @@ trait RateLimitComponent {
   }
 
   val enforceDefaultRateLimiting: RateLimitingFilter = {
-    val maxPerWindow = config.get("RATELIMIT_MAX_PER_IP", "180").toLong
+    val maxPerWindow = config.get(ResourceName("RATELIMIT"), ConfigConvention.MAX_CONNS, "180").toLong
     enforceMaxHitsPerHour(maxPerWindow)
   }
 

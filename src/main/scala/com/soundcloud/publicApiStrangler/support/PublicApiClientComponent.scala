@@ -1,6 +1,8 @@
 package com.soundcloud.publicApiStrangler.support
 
 import com.soundcloud.bff.ConfigComponent
+import com.soundcloud.jvmkit.config.ConfigConvention
+import com.soundcloud.scalakit.ResourceName
 import com.soundcloud.scalakit.finagle.http.TracingHttp
 import com.soundcloud.scalakit.finagle.zipkin.ZipkinTracer
 import com.twitter.finagle.Service
@@ -21,7 +23,7 @@ trait PublicApiClientComponent {
       .hostConnectionLimit(100)
       .hostConnectionMaxIdleTime(5.seconds)
       .hostConnectionMaxLifeTime(30.seconds)
-      .dest(config.get("MOTHERSHIP_API_SERVER"))
+      .dest(config.get(ResourceName("MOTHERSHIP_API_SERVER"), ConfigConvention.SRV_RECORD))
       .keepAlive(true)
       .failFast(true)
       .tracer(ZipkinTracer(config))
