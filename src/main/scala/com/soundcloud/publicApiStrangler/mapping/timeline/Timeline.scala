@@ -33,11 +33,10 @@ abstract class Timeline(jsonValue: JsValue, page: CursorBasedPage[Urn])(implicit
   }
 
   protected def futurePage(events: Seq[JsObject]): String = {
-    // TODO don't use a var here :(
-    var params = page.extraParams.toMap
+    val params = page.extraParams.toMap
+    val updatedParams = futureUuid.map(u => params ++ Params("uuid[to]" -> u.toString)).getOrElse(params)
 
-    futureUuid.map(u => params += ("uuid[to]" -> u.toString))
-    cursorUrl(params, None)
+    cursorUrl(updatedParams, None)
   }
 
   private def futureUuid: Option[UUID] = (json \ "meta" \ "previous_page_cursor").asOpt[String].map(UUID.fromString)
