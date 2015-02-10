@@ -2,11 +2,11 @@ package com.soundcloud.publicApiStrangler.authorization
 
 import com.soundcloud.bff
 import com.soundcloud.bff.authorization.ContentAuthorizationService
-import com.soundcloud.bff.finagle.{ResponseBuilder, Request => BffRequest}
+import com.soundcloud.bff.finagle.{Request => BffRequest}
 import com.soundcloud.bff.media.{TrackWaveformUrl, WaveformUrlsRepository}
+import com.soundcloud.bff.nextbff.test.FakeUserAuthentication
+import com.soundcloud.bff.security.AuthenticatorService
 import com.soundcloud.bff.test.UnitSpecification
-import com.soundcloud.bff.web.UserAuthenticationComponent
-import com.soundcloud.bff.{BffApp, BazookaConfigComponent, BffController}
 import com.soundcloud.jvmkit.policies.{ContentAuthorization, ContentPolicy, Reason}
 import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures
 import com.soundcloud.scalakit.json.Json
@@ -22,16 +22,10 @@ class AuthorizeHttpResponseSpec extends UnitSpecification with Fixtures {
     val contentAuthorization = mock[ContentAuthorizationService]
     val waveformUrlsRepo = mock[WaveformUrlsRepository]
     val request = mock[BffRequest]
-    val userAuthentication = new BazookaConfigComponent with BffApp with BffController with UserAuthenticationComponent {
-      override val geoProvider = null
-      override val authenticator = null
-      override val applicationName = "test"
-      override def withUserSession(request: BffRequest)(action: (UserSession) => Future[ResponseBuilder]) = {
-        request mustEqual Context.this.request
-        action(session)
-      }
-    }
+    val userAuthentication = new FakeUserAuthentication(mock[AuthenticatorService])(session)
+
     def content: String
+
     def status: Int
 
     val authorizeContent = new AuthorizeHttpResponse(contentAuthorization, userAuthentication, waveformUrlsRepo)
@@ -44,6 +38,7 @@ class AuthorizeHttpResponseSpec extends UnitSpecification with Fixtures {
     val content = singleTrack.toString
     val status = 200
     val urn = Urn("soundcloud:tracks:153896632")
+
     def policies: ContentPolicy
 
     override def before = {
@@ -70,13 +65,16 @@ class AuthorizeHttpResponseSpec extends UnitSpecification with Fixtures {
   trait TrackArrayContext extends Context {
     val content = tracksArray.toString
     val status = 200
+
     def policies: Seq[ContentPolicy]
-    def mockWaveFormUrlsRepoExpectations : Unit = { }
+
+    def mockWaveFormUrlsRepoExpectations: Unit = {}
+
     val authorizations = tracksArray.as[Seq[bff.JsValue]]
-        .map(_ \ "id")
-        .map(id => Urn("soundcloud:tracks:" + id))
-        .zip(policies)
-        .map(tuple => new ContentAuthorization(tuple._1, tuple._2, Reason.GEO))
+      .map(_ \ "id")
+      .map(id => Urn("soundcloud:tracks:" + id))
+      .zip(policies)
+      .map(tuple => new ContentAuthorization(tuple._1, tuple._2, Reason.GEO))
 
 
     override def before = {
@@ -105,6 +103,7 @@ class AuthorizeHttpResponseSpec extends UnitSpecification with Fixtures {
   "returns all the tracks when snip" in new TrackArrayContext {
 
     override def policies = Seq(ContentPolicy.SNIP, ContentPolicy.SNIP, ContentPolicy.SNIP)
+
     override def mockWaveFormUrlsRepoExpectations = {
       val trackWaveformUrls = Map(
         Urn("soundcloud", "tracks", "49438146") -> TrackWaveformUrl("RhJ436DPf2Vx", new Url("http://bla"), new Url("http://bla2"), "stream", None),
@@ -120,6 +119,7 @@ class AuthorizeHttpResponseSpec extends UnitSpecification with Fixtures {
 
   "trims a list if a track is blocked others are snip" in new TrackArrayContext {
     override def policies = Seq(ContentPolicy.SNIP, ContentPolicy.BLOCK, ContentPolicy.SNIP)
+
     override def mockWaveFormUrlsRepoExpectations = {
       val trackWaveformUrls = Map(
         Urn("soundcloud", "tracks", "49438146") -> TrackWaveformUrl("RhJ436DPf2Vx", new Url("http://bla"), new Url("http://bla2"), "stream", None),
@@ -148,6 +148,7 @@ class AuthorizeHttpResponseSpec extends UnitSpecification with Fixtures {
   trait PlaylistContext extends Context {
     val content = playlist.toString
     val status = 200
+
     def policies: Seq[ContentPolicy]
 
     val authorizations = (playlist \ "tracks").as[Seq[bff.JsValue]]
@@ -191,6 +192,7 @@ class AuthorizeHttpResponseSpec extends UnitSpecification with Fixtures {
   trait StreamContext extends Context {
     val content = stream.toString
     val status = 200
+
     def policies: Seq[ContentPolicy]
 
     val authorizations = (stream \ "collection" \\ "track")

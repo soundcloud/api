@@ -1,9 +1,10 @@
 package com.soundcloud.publicApiStrangler.controller
 
 import com.soundcloud.bff.finagle.{Request, ResponseBuilder}
-import com.soundcloud.bff.web.BffController
+import com.soundcloud.bff.services.JsonService
+import com.soundcloud.bff.web.{BffInjectionBasedController, UserAuthentication}
 import com.soundcloud.jvmkit.Geo
-import com.soundcloud.publicApiStrangler.support.{DispatchToMothershipHandler, PublicApiClientComponent}
+import com.soundcloud.publicApiStrangler.support.DispatchToMothershipHandler
 import com.soundcloud.scalakit.finagle.http.{AlwaysMatchesPathMatcher, HandlerRequest, OkStatus}
 import com.soundcloud.scalakit.finagle.jsonservice.Params
 import com.soundcloud.scalakit.{Path, UTF8, Urn, UserSession}
@@ -16,7 +17,11 @@ import play.api.libs.json.Json
 import scala.collection.JavaConversions._
 import scala.io.Source
 
-trait UserFollowController extends BffController with PublicApiClientComponent {
+class UserFollowController(
+                            userAuthentication: UserAuthentication,
+                            fallback: DispatchToMothershipHandler,
+                            moshimoshi: JsonService)
+  extends BffInjectionBasedController {
 
   val followRestrictions = {
     val source = Source.fromInputStream(getClass.getResourceAsStream("/user-follow-restrictions.json"), UTF8.name())
@@ -27,8 +32,6 @@ trait UserFollowController extends BffController with PublicApiClientComponent {
     }
   }
 
-  val fallback = new DispatchToMothershipHandler(publicApiClient)
-
   val formatter = DateTimeFormat.forPattern("yyyy/M/d")
 
   get("/me/followings/:id")(fallbackToMothership)
@@ -38,16 +41,17 @@ trait UserFollowController extends BffController with PublicApiClientComponent {
   delete("/me/followings/:id")(fallbackToMothership)
 
   put("/me/followings/:id") { request =>
-    withLoggedInUser(request) { (session, userUrn) =>
-      val restriction = findAgeRestriction(request.routeParams.get("id").get, session.getGeo)
-      if (restriction.isEmpty) {
-        fallbackToMothership(request)
-      } else {
-        findUserAge(session, userUrn).flatMap {
-          case Some(userAge) => if (userAge < restriction.get) denyAgeRestricted(restriction.get) else fallbackToMothership(request)
-          case _ => denyAgeUnknown
+    userAuthentication.withLoggedInUser(request) {
+      (session, userUrn) =>
+        val restriction = findAgeRestriction(request.routeParams.get("id").get, session.getGeo)
+        if (restriction.isEmpty) {
+          fallbackToMothership(request)
+        } else {
+          findUserAge(session, userUrn).flatMap {
+            case Some(userAge) => if (userAge < restriction.get) denyAgeRestricted(restriction.get) else fallbackToMothership(request)
+            case _ => denyAgeUnknown
+          }
         }
-      }
     }
   }
 
