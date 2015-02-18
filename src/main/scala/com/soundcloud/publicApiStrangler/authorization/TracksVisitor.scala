@@ -7,9 +7,9 @@ import com.soundcloud.scalakit.Urn
 import play.api.libs.json.JsString
 
 class TracksVisitor(val wrapped: JsValue) {
-  
+
   type VisitTrack = (Urn, Track) => Option[JsValue]
-  
+
   def apply(visit: VisitTrack): Option[JsValue] =
     apply(wrapped, visit)
 
@@ -52,6 +52,5 @@ class TracksVisitor(val wrapped: JsValue) {
     }
 
   private def isTrack(json: JsObject) =
-    json.fieldSet.contains(("kind", JsString("track")))
-
+    (json \ "kind").asOpt[String].filter(_ == "track").isDefined
 }
