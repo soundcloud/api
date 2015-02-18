@@ -14,6 +14,8 @@ import com.soundcloud.publicApiStrangler.mapper.trackstreams.{TrackStreamJsonRes
 import com.soundcloud.publicApiStrangler.support._
 import com.soundcloud.scalakit.ResourceName
 import com.soundcloud.service.component._
+import com.twitter.finagle.http.Request
+import com.twitter.finagle.http.filter.ExceptionFilter
 
 object App
   extends BffInjectionBasedApp
@@ -46,7 +48,6 @@ object App
 
   private val waveformUrlsRepo = new WaveformUrlsRepository(okidokiService, mediaService)
   private val authorizeContent = new AuthorizeHttpResponse(contentAuthorizationService, userAuthentication, waveformUrlsRepo)
-  private val authorizationFilter = new ContentAuthorizationFilter(authorizeContent)
 
   private val mothershipDispatcher = new DispatchToMothershipHandler(publicApiClient)
 
@@ -84,7 +85,11 @@ object App
 
   override val fallbackHandler = Some(mothershipDispatcher)
 
-  override val customFilters = List(new AcceptOnlyJsonRequestFilter(Set("/crossdomain.xml")), authorizationFilter)
+  override val customFilters = List(
+    new ExceptionFilter[Request],
+    new AcceptOnlyJsonRequestFilter(Set("/crossdomain.xml")),
+    new ContentAuthorizationFilter(authorizeContent)
+  )
 
   override val controllers = List(
     timelineController,
