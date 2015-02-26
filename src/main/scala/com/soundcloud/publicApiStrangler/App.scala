@@ -91,7 +91,7 @@ object App
     new ContentAuthorizationFilter(authorizeContent)
   )
 
-  override val controllers = List(
+  override val controllers = Set(
     timelineController,
     groupController,
     trackStreamsController,
