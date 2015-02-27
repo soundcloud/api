@@ -1,0 +1,20 @@
+{
+  "response": [
+    {
+      "uid": "b5uH7mT3hjkm",
+      "urls": [
+        {
+          "label": "stream",
+          "json": "https://wis.sndcdn.com/b5uH7mT3hjkm_m.json",
+          "png": "https://w1.sndcdn.com/b5uH7mT3hjkm_m.png"
+        },
+        {
+          "label": "preview",
+          "json": "https://wave.sndcdn.com/b5uH7mT3hjkm_m_p90.json",
+          "png": "https://wave.sndcdn.com/b5uH7mT3hjkm_m_p90.png",
+          "duration_ms": 90000
+        }
+      ]
+    }
+  ]
+}

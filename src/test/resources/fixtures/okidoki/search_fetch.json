@@ -1,0 +1,213 @@
+[
+  {
+    "city": "Los Angeles",
+    "country_code": "US",
+    "first_name": "Foo",
+    "last_name": "Fighters",
+    "permalink": "foofighters",
+    "tracks_count": 103,
+    "username": "Foo Fighters",
+    "country": "United States",
+    "full_name": "Foo Fighters",
+    "created_at": "2010/11/08 15:06:42 +0000",
+    "activated_at": "2010/11/08 15:06:42 +0000",
+    "followers_count": 1595672,
+    "followings_count": 2,
+    "public_favorites_count": 1,
+    "self": {
+      "urn": "soundcloud:users:2097360",
+      "url": "http://moshimoshi.int.s-cloud.net/users/soundcloud:users:2097360"
+    },
+    "primary_email": "lmartin@sammusicbiz.com",
+    "groups_count": 0,
+    "links": [
+      {
+        "created_at": "2011/06/25 11:17:42 +0000",
+        "id": 2918861,
+        "network": "personal",
+        "title": "Official Website",
+        "updated_at": "2011/06/25 11:17:42 +0000",
+        "url": "http://foofighters.com",
+        "user_id": 2097360,
+        "username": ""
+      },
+      {
+        "created_at": "2011/06/25 11:17:42 +0000",
+        "id": 2918862,
+        "network": "facebook",
+        "title": null,
+        "updated_at": "2011/06/25 11:17:42 +0000",
+        "url": "http://facebook.com/foofighters",
+        "user_id": 2097360,
+        "username": "foofighters"
+      },
+      {
+        "created_at": "2011/06/25 11:17:42 +0000",
+        "id": 2918863,
+        "network": "twitter",
+        "title": null,
+        "updated_at": "2011/06/25 11:17:42 +0000",
+        "url": "http://twitter.com/foofighters",
+        "user_id": 2097360,
+        "username": "foofighters"
+      },
+      {
+        "created_at": "2011/06/25 11:17:42 +0000",
+        "id": 2918864,
+        "network": "youtube",
+        "title": null,
+        "updated_at": "2011/06/25 11:17:42 +0000",
+        "url": "http://youtube.com/user/foofighters",
+        "user_id": 2097360,
+        "username": "foofighters"
+      }
+    ],
+    "plan": "Pro Unlimited",
+    "quota": {
+      "seconds_used": 22330.862
+    },
+    "avatar_url": "https://i1.sndcdn.com/avatars-000112741027-c2eatm-large.jpg",
+    "original_avatar_url": "https://i1.sndcdn.com/avatars-000112741027-c2eatm-original.jpg",
+    "permalink_url": "http://soundcloud.com/foofighters",
+    "description": "Rock band",
+    "frozen": false,
+    "favoriting_note": "A new favorite:",
+    "publishing_note": "My new sounds:",
+    "subscriptions": [
+      {
+        "recurring": false,
+        "product": {
+          "name": "Pro Unlimited",
+          "urn": "soundcloud:products:creator-pro-unlimited"
+        }
+      }
+    ],
+    "updated_at": "2014/11/10 16:21:38 +0000",
+    "last_modified": "2014/11/10 16:21:38 +0000",
+    "date_of_birth": null,
+    "gender": null,
+    "default_license": null,
+    "default_license_simple": "all-rights-reserved",
+    "stealth": false
+  },
+  {
+    "api_streamable": true,
+    "commentable": true,
+    "created_at": "2011/05/14 22:52:04 +0000",
+    "description": "",
+    "disabled_at": null,
+    "downloadable": true,
+    "duration": 269555,
+    "isrc": "",
+    "label_id": null,
+    "label_name": "",
+    "permalink": "foo-fighters-the-pretender",
+    "public": true,
+    "state": "finished",
+    "streamable": true,
+    "title": "Foo Fighters - The Pretender",
+    "track_type": "",
+    "uid": "b5uH7mT3hjkm",
+    "updated_at": "2015/03/09 15:31:21 +0000",
+    "playback_count": 1009727,
+    "reposts_count": 2670,
+    "license": "all-rights-reserved",
+    "sharing": "public",
+    "tag_list": "",
+    "secret_token": "s-AdyI7",
+    "self": {
+      "urn": "soundcloud:sounds:15273221",
+      "url": "http://moshimoshi.int.s-cloud.net/tracks/soundcloud:sounds:15273221"
+    },
+    "permalink_url": "https://soundcloud.com/foofighters/foo-fighters-the-pretender",
+    "uri": "https://api.soundcloud.com/tracks/15273221",
+    "classification": "music",
+    "artwork_url": null,
+    "original_artwork_url": null,
+    "downloads_count": 0,
+    "download_url": "https://api.soundcloud.com/tracks/15273221/download",
+    "favoritings_count": 15009,
+    "comments_count": 555,
+    "genre": "",
+    "stream_url": "https://media.soundcloud.com/stream/b5uH7mT3hjkm",
+    "waveform_url": "https://wis.sndcdn.com/b5uH7mT3hjkm_m.png",
+    "reveal_comments": true,
+    "reveal_stats": true,
+    "feedable": false,
+    "geo_blocking": false,
+    "embeddable": true,
+    "bucket": "soundcloud-media",
+    "embeddable_by": "all",
+    "original_content_size": 47517500,
+    "original_format": "wav",
+    "release_date": "",
+    "release_year": null,
+    "release_month": null,
+    "release_day": null,
+    "last_modified": "2015/03/09 15:31:21 +0000",
+    "user": {
+      "urn": "soundcloud:users:2097360",
+      "url": "http://moshimoshi.int.s-cloud.net/users/soundcloud:users:2097360"
+    }
+  },
+  {
+    "created_at": "2011/04/01 16:45:47 +0000",
+    "description": "Produced by Butch Vig and mixed by Alan Moulder, Wasting Light was recorded entirely on analog tape in the garage of Grohl s home in California s San Fernando Valley. The no computers/no software back to basics approach has resulted in arguably the strongest and most cohesive effort of the band s 15-year-plus career: From first single Rope to the frenetic opener Bridge Burning to the beautifully bipolar These Days to stunning guest spots from Bob Mould ( Dear Rosemary\") and Krist Novoselic (\"I Should Have Known\"), Wasting Light is a singular triumph: a band that s headlined arenas, stadiums and festivals the world over stripping itself down to the bare essentials and coming up with a world class band s finest hour.",
+    "genre": "Rock",
+    "id": 685235,
+    "label_id": null,
+    "label_name": "RCA",
+    "permalink": "wasting-light",
+    "public": true,
+    "purchase_url": "http://www.smarturl.it/fooswlpreorder",
+    "release": "",
+    "title": "Wasting Light",
+    "self": {
+      "urn": "soundcloud:sets:685235",
+      "url": "http://moshimoshi.int.s-cloud.net/playlists/soundcloud:sets:685235"
+    },
+    "permalink_url": "https://soundcloud.com/foofighters/sets/wasting-light",
+    "track_count": 11,
+    "artwork_url": "https://i1.sndcdn.com/artworks-000006030493-mdxbk1-large.jpg",
+    "original_artwork_url": "https://i1.sndcdn.com/artworks-000006030493-mdxbk1-original.jpg",
+    "duration": 2877794,
+    "likes_count": 4743,
+    "reposts_count": 1259,
+    "sharing": "public",
+    "streamable": true,
+    "license": "all-rights-reserved",
+    "tag_list": "Foo Fighters \"Wasting Light\" \"Dave Grohl\" Butch Vig",
+    "embeddable_by": "all",
+    "purchase_title": "Buy Wasting Light",
+    "secret_token": "s-ySdsT",
+    "release_date": "2011-04-12",
+    "release_year": 2011,
+    "release_month": 4,
+    "release_day": 12,
+    "last_modified": "2012/05/18 19:12:25 +0000",
+    "user": {
+      "urn": "soundcloud:users:2097360",
+      "url": "http://moshimoshi.int.s-cloud.net/users/soundcloud:users:2097360"
+    }
+  },
+  {
+    "created_at": "2011/06/27 04:51:28 +0000",
+    "description": "just grab it and throw it up, just here to bring some foo lovin' to soundcloud.",
+    "name": "Foo Fighters",
+    "permalink": "foo-fighters",
+    "short_description": "all things Foos. covers, live bootlegs, whatever you feel like.",
+    "members_count": 428,
+    "track_count": 268,
+    "moderated": false,
+    "self": {
+      "urn": "soundcloud:groups:30910",
+      "url": "http://moshimoshi.int.s-cloud.net/groups/soundcloud:groups:30910"
+    },
+    "permalink_url": "http://soundcloud.com/groups/foo-fighters",
+    "creator": {
+      "urn": "soundcloud:users:2097360",
+      "url": "http://moshimoshi.int.s-cloud.net/users/soundcloud:users:2097360"
+    },
+    "artwork_url": "http://i1.sndcdn.com/artworks-000008656992-e5ywex-large.jpg"
+  }
+]

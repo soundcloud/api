@@ -43,6 +43,19 @@ http://gatekeeper.int.s-cloud.net/activations/disable_expensive_groups_endpoints
 
 Alternatively you can go to do http://gatekeeper.int.s-cloud.net/features and click on the "On" button for the feature.
 
+## Search leaving mothership
+
+Routing of search requests is controlled via rollout flags.
+
+1. [`search_avoid_mothership_for_tracks`](http://gatekeeper.int.s-cloud.net/activations/search_avoid_mothership_for_tracks)
+   -> uses microservices for /tracks?q= instead of mothership
+1. [`search_avoid_mothership_for_users`](http://gatekeeper.int.s-cloud.net/activations/search_avoid_mothership_for_users)
+   -> uses microservices for /users?q= instead of mothership
+1. [`search_avoid_mothership_for_playlists`](http://gatekeeper.int.s-cloud.net/activations/search_avoid_mothership_for_playlists)
+   -> uses microservices for /playlists?q= instead of mothership
+1. [`search_avoid_mothership_for_groups`](http://gatekeeper.int.s-cloud.net/activations/search_avoid_mothership_for_groups)
+   -> uses microservices for /groups?q= instead of mothership
+
 ## FAQ
 
 ### What should I read before asking questions?

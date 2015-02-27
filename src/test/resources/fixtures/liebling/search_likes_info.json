@@ -1,0 +1,7 @@
+{
+  "likes_counts": [
+    { "target_urn": "soundcloud:tracks:15273221", "likes_count": 2 },
+    { "target_urn": "soundcloud:playlists:685235", "likes_count": 666 }
+  ],
+  "liked_track_urns": [ "soundcloud:tracks:15273221" ]
+}

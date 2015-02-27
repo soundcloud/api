@@ -8,11 +8,15 @@ import com.soundcloud.jvmkit.config.ConfigConvention
 import com.soundcloud.publicApiStrangler.authorization.{AuthorizeHttpResponse, ContentAuthorizationFilter}
 import com.soundcloud.publicApiStrangler.clients.FollowsComponent
 import com.soundcloud.publicApiStrangler.controller._
-import com.soundcloud.publicApiStrangler.features.{RolloutBuilder, RolloutController, Rollout}
+import com.soundcloud.publicApiStrangler.features.{RolloutBuilder, RolloutController}
+import com.soundcloud.publicApiStrangler.mapper.liebling.LikeCountMapper
+import com.soundcloud.publicApiStrangler.mapper.purchaselink.TrackPurchaseLinkMapper
+import com.soundcloud.publicApiStrangler.mapper.search.{PlaylistTracksMapper, SearchEntityMapper, SearchMapper, SearchRepository}
 import com.soundcloud.publicApiStrangler.mapper.timeline.e1.{ActivitiesMapper, StreamMapper}
 import com.soundcloud.publicApiStrangler.mapper.timeline.publicApi.ActivitiesWithOriginMapper
 import com.soundcloud.publicApiStrangler.mapper.timeline.{EntityMapper, EntitySummaryMapper}
 import com.soundcloud.publicApiStrangler.mapper.trackstreams.{TrackStreamJsonResponseMapper, TrackStreamRedirectResponseMapper}
+import com.soundcloud.publicApiStrangler.mapper.waveform.WaveformMapper
 import com.soundcloud.publicApiStrangler.support._
 import com.soundcloud.publicApiStrangler.zookeeper.ZookeeperClientFactory
 import com.soundcloud.scalakit.ResourceName
@@ -41,6 +45,10 @@ object App
   )
   private val authsyService = JsonService(
     ServiceConfig("authsy", config.get(ResourceName("AUTHSY"), ConfigConvention.SRV_RECORD), config)
+  )
+
+  private val searchService = JsonService(
+    ServiceConfig("search", config.get(ResourceName("SEARCH"), ConfigConvention.SRV_RECORD), config)
   )
 
   private val contentAuthorizationService = new ContentAuthorizationService(authsyService)
@@ -96,6 +104,24 @@ object App
     rollout
   )
 
+  private val searchController = {
+    val baseUrl = config.get("APP_BASE_URL", true)
+    val waveformUrlsRepo = new WaveformUrlsRepository(okidokiService, mediaService)
+    val entityMapper = new SearchEntityMapper(
+      okidokiClient,
+      baseUrl,
+      contentAuthorizationService,
+      new WaveformMapper(waveformUrlsRepo),
+      new TrackPurchaseLinkMapper(okidokiClient),
+      new LikeCountMapper(lieblingClient),
+      new PlaylistTracksMapper(okidokiClient, baseUrl),
+      new EntitySummaryMapper(okidokiClient, baseUrl)
+    )
+    val searchRepository = new SearchRepository(searchService)
+    val searchMapper = new SearchMapper(searchRepository, entityMapper, baseUrl)
+    new SearchController(userAuthentication, searchMapper, baseUrl, rollout, mothershipDispatcher)
+  }
+
   override val fallbackHandler = Some(mothershipDispatcher)
 
   override val customFilters = List(
@@ -104,11 +130,14 @@ object App
     new ContentAuthorizationFilter(authorizeContent)
   )
 
+
+
   override val controllers = Set(
     timelineController,
     rolloutController,
     groupController,
     trackStreamsController,
-    userFollowController
+    userFollowController,
+    searchController
   )
 }

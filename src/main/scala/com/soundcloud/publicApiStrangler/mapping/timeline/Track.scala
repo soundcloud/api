@@ -29,7 +29,8 @@ class Track(jsonValue: JsValue,
   val original_format = (json \ "original_format").asOpt[String]
   val playback_count = (json \ "playback_count").asOpt[Int]
   val purchase_title = (json \ "purchase_title").asOpt[String]
-  val purchase_url = (json \ "purchase_url").asOpt[String]
+  // Option[Any] so we can override with an embedded attribute when calling okidoki
+  val purchase_url: Option[Any] = (json \ "purchase_url").asOpt[String]
   val release = (json \ "release").asOpt[String]
   val release_day = (json \ "release_day").asOpt[Int]
   val release_month = (json \ "release_month").asOpt[Int]
@@ -40,14 +41,16 @@ class Track(jsonValue: JsValue,
   val tag_list = (json \ "tag_list").asOpt[String]
   val track_type = (json \ "track_type").asOpt[String]
   val user = entitySummaryMapper.embed(Urn((json \ "user" \ "urn").as[String]))
-  val likes_count = likesByUrn(urn)
+  // Option[Any] so we can override with an embedded attribute when calling Liebling
+  val likes_count: Option[Any] = likesByUrn.get(urn)
 
   // deprecated fields, kept for structure only
-  val attachments_uri = None
+  val attachments_uri: Option[String] = None
   val bpm = None
-  val key_signature = None
-  val user_favorite = None
-  val user_playback_count = None
-  val video_url = None
+  val key_signature: Option[String] = None
+  // Option[Any] so we can override with an embedded attribute when calling Liebling
+  val user_favorite: Option[Any] = None
+  val user_playback_count: Option[Int] = None
+  val video_url: Option[String] = None
 
 }

@@ -12,9 +12,11 @@
       "authsy",
       "gatekeeper",
       "geoip",
+      "liebling",
       "media-service",
       "okidoki",
       "public-api",
+      "search-dispatcher-remix",
       "timeline"
     ]
 }

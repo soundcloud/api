@@ -1,10 +1,9 @@
 package com.soundcloud.publicApiStrangler.mapper
 
-import com.soundcloud.publicApiStrangler.mapper.timeline.{EntitySummaryMapper, EntityMapper}
-import com.soundcloud.publicApiStrangler.mapping._
 import com.soundcloud.bff.test.UnitSpecification
 import com.soundcloud.jvmkit.UserSession
-import com.soundcloud.publicApiStrangler.mapping.timeline.Playlist
+import com.soundcloud.publicApiStrangler.mapper.timeline.{EntityMapper, EntitySummaryMapper}
+import com.soundcloud.publicApiStrangler.mapping.timeline.{Playlist, User}
 import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures
 import com.soundcloud.scalakit.Urn
 import com.soundcloud.scalakit.test.VerifiedMocks
@@ -51,6 +50,10 @@ class EntityMapperSpec extends UnitSpecification with Fixtures {
     val playlist: Playlist = result.filter(t => t.isInstanceOf[Playlist]).head.asInstanceOf[Playlist]
 
     playlist.tracks_uri mustEqual "https://foo.com/playlists/123/tracks"
-    playlist.likes_count mustEqual 666
+    playlist.likes_count mustEqual Some(666)
+    val user: User = result.filter(t => t.isInstanceOf[User]).head.asInstanceOf[User]
+
+    user.website_title mustEqual Some("Adeline Website")
+    user.track_count mustEqual Some(49)
   }
 }

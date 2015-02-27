@@ -1,0 +1,77 @@
+package com.soundcloud.publicApiStrangler.mapper.waveform
+
+import com.soundcloud.bff.media.{TrackWaveformUrl, WaveformUrlsRepository}
+import com.soundcloud.bff.nextbff.mapping.MappingContext
+import com.soundcloud.bff.test.UnitSpecification
+import com.soundcloud.jvmkit.UserSession
+import com.soundcloud.jvmkit.policies.ContentPolicy
+import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures
+import com.soundcloud.scalakit.Url
+import com.soundcloud.scalakit.test.VerifiedMocks
+import com.twitter.util.{Await, Future}
+
+class WaveformMapperSpec extends UnitSpecification with Fixtures  {
+
+  trait Context extends VerifiedMocks {
+    val waveformUrlsRepoMock = mock[WaveformUrlsRepository]
+    val mapper = new WaveformMapper(waveformUrlsRepoMock)
+    val session = mock[UserSession]
+    implicit val context = new MappingContext(mock[UserSession])
+  }
+
+  "empty inputs" >> {
+    "returns empty Map" in new Context {
+      Await.result(mapper.map(session, Set.empty)).isEmpty must beTrue
+    }
+  }
+
+  "only one input" >> {
+
+    trait OneContext extends Context {
+      val uid = "8779as"
+      val policy = ContentPolicy.ALLOW
+      val waveformUrl = TrackWaveformUrl(uid, Url("jsonUrl"), Url("pngUrl"), "preview")
+
+      val waveformRequest = WaveformRequestParams(uid, policy)
+
+      when(verified(waveformUrlsRepoMock).fetchWaveformUrlsToMap(session, Map(uid -> policy)))
+        .thenReturn(Future(Map(uid -> waveformUrl)))
+    }
+
+
+    "returns the mapping of given UID" in new OneContext {
+      val actual = Await.result(mapper.map(session, Set(waveformRequest)))
+      actual must haveSize(1)
+      actual.keys must contain(waveformRequest)
+      actual(waveformRequest).resource ==== waveformUrl
+    }
+  }
+
+  "multiple inputs" >> {
+
+    trait OneContext extends Context {
+      val uid = "8779as"
+      val policy = ContentPolicy.ALLOW
+      val waveformUrl = TrackWaveformUrl(uid, Url("jsonUrl"), Url("pngUrl"), "preview")
+      val waveformRequest = WaveformRequestParams(uid, policy)
+
+      val uid2 = "2222asdasd"
+      val policy2 = ContentPolicy.ALLOW
+      val waveformUrl2 = TrackWaveformUrl(uid2, Url("jsonUrl2"), Url("pngUrl2"), "preview")
+      val waveformRequest2 = WaveformRequestParams(uid2, policy2)
+
+      when(verified(waveformUrlsRepoMock).fetchWaveformUrlsToMap(session, Map(uid -> policy, uid2 -> policy2)))
+        .thenReturn(Future(Map(uid -> waveformUrl, uid2 -> waveformUrl2)))
+    }
+
+
+    "returns the mapping of given UID" in new OneContext {
+      val actual = Await.result(mapper.map(session, Set(waveformRequest, waveformRequest2)))
+      actual must haveSize(2)
+      actual.keys must contain(waveformRequest)
+      actual.keys must contain(waveformRequest2)
+      actual(waveformRequest).resource ==== waveformUrl
+      actual(waveformRequest2).resource ==== waveformUrl2
+    }
+  }
+}
