@@ -7,7 +7,7 @@ import play.api.libs.json.JsValue
 
 class CommentTimelineItem(jsonValue: JsValue,
                           entityMapper: EntityMapper,
-                          entitySummaryMapper: EntitySummaryMapper)(implicit context: MappingContext)
+                          entitySummaryMapper: EntitySummaryMapper)(implicit contextAAA: MappingContext)
   extends JsonMapping(jsonValue) with TimelineItemWithUuid {
 
   val comment = entityMapper.embed(Urn((json \ "urn").as[String]))
