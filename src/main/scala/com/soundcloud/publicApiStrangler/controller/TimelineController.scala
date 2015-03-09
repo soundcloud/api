@@ -17,29 +17,29 @@ class TimelineController(
                           ) extends BffInjectionBasedController {
 
   // Android & iPad specific
-  get("/e1/me/activities")(doMagic(_, activitiesMapper))
-  get("/e1/me/activities.json")(doMagic(_, activitiesMapper))
-  get("/e1/me/stream")(doMagic(_, streamMapper))
-  get("/e1/me/stream.json")(doMagic(_, streamMapper))
+  get("/e1/me/activities")(renderActivities(_, activitiesMapper))
+  get("/e1/me/activities.json")(renderActivities(_, activitiesMapper))
+  get("/e1/me/stream")(renderActivities(_, streamMapper))
+  get("/e1/me/stream.json")(renderActivities(_, streamMapper))
 
-  get("/me/activities")(doMagic(_, publicActivitiesMapper))
-  get("/me/activities.json")(doMagic(_, publicActivitiesMapper))
+  get("/me/activities")(renderActivities(_, publicActivitiesMapper))
+  get("/me/activities.json")(renderActivities(_, publicActivitiesMapper))
 
   // deprecated functionality, aliased to /me/activities
-  get("/me/activities/")(doMagic(_, publicActivitiesMapper))
-  get("/me/activities/track")(doMagic(_, publicActivitiesMapper))
-  get("/me/activities/tracks")(doMagic(_, publicActivitiesMapper))
-  get("/me/activities/tracks/")(doMagic(_, publicActivitiesMapper))
-  get("/me/activities/tracks.json")(doMagic(_, publicActivitiesMapper))
-  get("/me/activities/tracks/:tag")(doMagic(_, publicActivitiesMapper)) // /affiliated, /exclusive
-  get("/me/activities/tracks/:tag.json")(doMagic(_, publicActivitiesMapper)) // /affiliated.xml, /exclusive.json
-  get("/me/activities/all")(doMagic(_, publicActivitiesMapper))
-  get("/me/activities/all.json")(doMagic(_, publicActivitiesMapper))
-  get("/me/activities/all/own")(doMagic(_, publicActivitiesMapper))
-  get("/me/activities/all/own.json")(doMagic(_, publicActivitiesMapper))
+  get("/me/activities/")(renderActivities(_, publicActivitiesMapper))
+  get("/me/activities/track")(renderActivities(_, publicActivitiesMapper))
+  get("/me/activities/tracks")(renderActivities(_, publicActivitiesMapper))
+  get("/me/activities/tracks/")(renderActivities(_, publicActivitiesMapper))
+  get("/me/activities/tracks.json")(renderActivities(_, publicActivitiesMapper))
+  get("/me/activities/tracks/:tag")(renderActivities(_, publicActivitiesMapper)) // /affiliated, /exclusive
+  get("/me/activities/tracks/:tag.json")(renderActivities(_, publicActivitiesMapper)) // /affiliated.xml, /exclusive.json
+  get("/me/activities/all")(renderActivities(_, publicActivitiesMapper))
+  get("/me/activities/all.json")(renderActivities(_, publicActivitiesMapper))
+  get("/me/activities/all/own")(renderActivities(_, publicActivitiesMapper))
+  get("/me/activities/all/own.json")(renderActivities(_, publicActivitiesMapper))
 
 
-  private def doMagic(request: BffRequest, mapper: TimelineMapper) =
+  private def renderActivities(request: BffRequest, mapper: TimelineMapper) =
     userAuthentication.withLoggedInUser(request) {
       (session: LoggedInUserSession, userUrn: Urn) =>
         pagination.withPage(request, userUrn) { page =>
