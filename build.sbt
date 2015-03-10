@@ -21,7 +21,6 @@ resolvers ++= Seq(
 
 libraryDependencies ++= Seq(
   "com.soundcloud"     %% "bff"                 % "7.1.1",
-  "com.soundcloud"     %% "jvmkit"              % "6.1.0",
   "com.soundcloud"     %% "sc-services"         % "8.0.0",
   "com.fasterxml.uuid" %  "java-uuid-generator" % "3.1.3",
   "commons-codec"      %  "commons-codec"       % "1.9"
