@@ -2,9 +2,10 @@ package com.soundcloud.publicApiStrangler.mapping.timeline
 
 import java.util.UUID
 
-import com.fasterxml.jackson.annotation.{JsonIgnore, JsonInclude}
+import com.fasterxml.jackson.annotation.JsonInclude
 import com.soundcloud.bff.nextbff.mapping.{JsonMapping, MappingContext}
 import com.soundcloud.bff.nextbff.pagination.CursorBasedPage
+import com.soundcloud.publicApiStrangler.mapping.timeline.e1.CommentTimelineItem
 import com.soundcloud.scalakit.Urn
 import com.soundcloud.scalakit.finagle.jsonservice.Params
 import play.api.libs.json.{JsObject, JsValue}
@@ -12,7 +13,9 @@ import play.api.libs.json.{JsObject, JsValue}
 abstract class Timeline(jsonValue: JsValue, page: CursorBasedPage[Urn])(implicit context: MappingContext)
   extends JsonMapping(jsonValue) {
 
-  val collection: Seq[TimelineItem] = mapChildren(events).filterNot(contentDisallowed)
+  private val raw_collection: Seq[TimelineItem] = mapChildren(events).filterNot(contentDisallowed)
+
+  lazy val collection = raw_collection.filter(_.isValid)
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
   val nextHref = nextPage(
@@ -44,12 +47,12 @@ abstract class Timeline(jsonValue: JsValue, page: CursorBasedPage[Urn])(implicit
   protected def mapChildren(events: Seq[JsObject]): Seq[TimelineItem]
 
   protected def cursorUrl(extraParams: Params, cursorUuid: Option[UUID]): String =
-      CursorBasedPage(
-        page.param,
-        page.baseUrl,
-        page.path,
-        extraParams,
-        cursorUuid.map(_.toString),
-        page.limit
-      ).href
+    CursorBasedPage(
+      page.param,
+      page.baseUrl,
+      page.path,
+      extraParams,
+      cursorUuid.map(_.toString),
+      page.limit
+    ).href
 }

@@ -7,9 +7,9 @@ import play.api.libs.json.JsValue
 class Comment(jsonValue: JsValue,
                baseUrl: String,
                entitySummaryMapper: EntitySummaryMapper)(implicit context: MappingContext)
-  extends CommentSummary(jsonValue, baseUrl, entitySummaryMapper) with UrnSupport {
+  extends CommentSummary(jsonValue, baseUrl) with UrnSupport {
 
   val track = entitySummaryMapper.embed(trackUrn)
-  val user = entitySummaryMapper.embed(userUrn)
+  val user = userUrn.map(entitySummaryMapper.embed(_))
 
 }

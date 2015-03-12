@@ -28,7 +28,7 @@ class EntitySummaryMapper(okidokiClient: OkidokiClient, baseUrl: String) extends
       case "users" => new UserSummary(entityData, baseUrl)
       case "tracks" => new TrackSummary(entityData, baseUrl, this)
       case "playlists" => new PlaylistSummary(entityData, baseUrl, this)
-      case "comments" => new CommentSummary(entityData, baseUrl, this)
+      case "comments" => new CommentSummary(entityData, baseUrl)
     }
   }
 

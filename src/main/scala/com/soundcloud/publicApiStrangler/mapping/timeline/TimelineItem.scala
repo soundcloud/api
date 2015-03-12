@@ -2,9 +2,7 @@ package com.soundcloud.publicApiStrangler.mapping.timeline
 
 import com.soundcloud.bff.nextbff.mapping.JsonMapping
 
-
-trait TimelineItem {
-  self: JsonMapping =>
+trait TimelineItem extends JsonMapping{
 
   val created_at = (json \ "timestamp").as[String]
   val `type` = typeFor((json \ "type").as[String])
