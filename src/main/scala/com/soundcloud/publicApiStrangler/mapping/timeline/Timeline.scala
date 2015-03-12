@@ -16,11 +16,8 @@ abstract class Timeline(jsonValue: JsValue, page: CursorBasedPage[Urn])(implicit
   private val raw_collection: Seq[TimelineItem] = mapChildren(events).filterNot(contentDisallowed)
 
   lazy val collection = raw_collection.filter {
-    item =>
-      item.`type` match {
-        case "comment" => item.asInstanceOf[CommentTimelineItem].user.isValid
-        case _ => true
-      }
+    case item: CommentTimelineItem => item.user.isValid
+    case _ => true
   }
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
