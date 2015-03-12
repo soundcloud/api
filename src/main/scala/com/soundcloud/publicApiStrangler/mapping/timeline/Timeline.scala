@@ -15,10 +15,7 @@ abstract class Timeline(jsonValue: JsValue, page: CursorBasedPage[Urn])(implicit
 
   private val raw_collection: Seq[TimelineItem] = mapChildren(events).filterNot(contentDisallowed)
 
-  lazy val collection = raw_collection.filter {
-    case item: CommentTimelineItem => item.user.isValid
-    case _ => true
-  }
+  lazy val collection = raw_collection.filter(_.isValid)
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
   val nextHref = nextPage(

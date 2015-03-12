@@ -13,5 +13,5 @@ class CommentTimelineItem(jsonValue: JsValue,
   val comment = entityMapper.embed(Urn((json \ "urn").as[String]))
   val user =  entitySummaryMapper.embed(Urn((json \ "actor").as[String]))
 
-
+  override def isValid = user.isValid
 }
