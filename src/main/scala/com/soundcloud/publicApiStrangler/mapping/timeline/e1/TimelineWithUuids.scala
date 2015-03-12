@@ -13,7 +13,7 @@ import play.api.libs.json.{JsObject, JsValue}
 class TimelineWithUuids(jsonValue: JsValue,
                page: CursorBasedPage[Urn],
                entityMapper: EntityMapper,
-               entitySummaryMapper: EntitySummaryMapper)(implicit context: MappingContext)
+               entitySummaryMapper: EntitySummaryMapper)(implicit context_with_a_different_name: MappingContext)
   extends Timeline(jsonValue, page) {
 
   // only include future_href if a cursor is not defined or invalid
