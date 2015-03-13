@@ -215,8 +215,19 @@
       "urn": "soundcloud:comments:205752728"
     },
     "user": {
-      "urn": "soundcloud:users:6457573",
-      "url": "http:\/\/moshimoshi.int.s-cloud.net\/users\/6457573"
+      "city": null,
+      "country_code": null,
+      "permalink": "patrick-oehm-1",
+      "username": "Superman91",
+      "country": null,
+      "full_name": "Patrick Oehm",
+      "avatar_url": "http://i1.sndcdn.com/avatars-000027972671-4loren-large.jpg",
+      "permalink_url": "http://soundcloud.com/patrick-oehm-1",
+      "last_modified": "2012/12/05 12:05:43 +0000",
+      "self": {
+        "urn": "soundcloud:users:29811451",
+        "url": "http://moshimoshi.int.s-cloud.net/users/soundcloud:users:29811451"
+      }
     }
   }
 ]

@@ -20,6 +20,10 @@ class CommentSummary(jsonValue: JsValue,
   val body = (json \ "body").asOpt[String]
 
   def trackUrn = Urn((json \ "track").as[String])
-  def userUrn = Urn((json \ "user" \ "urn").as[String])
+  def userUrn = {
+    val correctUrn = (json \ "user" \ "self" \ "urn").asOpt[String]
+    val wrongUrn = correctUrn.getOrElse((json \ "user" \ "urn").as[String])
+    Urn(wrongUrn)
+  }
 
 }
