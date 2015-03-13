@@ -23,4 +23,13 @@ class TimelineItemWithOrigin(jsonValue: JsValue,
       case other => other
     }
   }
+
+  private def typeFor(timelineType: String) = {
+    timelineType match {
+      case "user:follow" => "affiliation"
+      case "track:comment" => "comment"
+      case other => timelineType.replace(":", "-")
+    }
+
+  }
 }

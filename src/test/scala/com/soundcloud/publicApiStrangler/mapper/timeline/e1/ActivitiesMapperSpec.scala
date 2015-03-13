@@ -1,7 +1,5 @@
 package com.soundcloud.publicApiStrangler.mapper.timeline.e1
 
-import com.soundcloud.bff.nextbff.mapper.EmbeddedItem
-import com.soundcloud.bff.nextbff.mapping.{MappingContext, JsonMapping}
 import com.soundcloud.bff.nextbff.pagination.CursorBasedPage
 import com.soundcloud.bff.test.UnitSpecification
 import com.soundcloud.publicApiStrangler.mapper.timeline.{EntityMapper, EntitySummaryMapper}
@@ -41,9 +39,7 @@ class ActivitiesMapperSpec extends UnitSpecification with Fixtures {
     }
 
     "builds a collection" in new Cursor {
-      when(entitySummaryMapper.embed(any[Urn])(any[MappingContext])).thenReturn(mock[EmbeddedItem[JsonMapping]])
-
-      result.collection.size mustEqual 9
+      result.collection.size mustEqual 10
       result.collection.head must beAnInstanceOf[TrackTimelineItem]
     }
 
