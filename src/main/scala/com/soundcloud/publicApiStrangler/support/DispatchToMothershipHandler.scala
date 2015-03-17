@@ -9,10 +9,10 @@ import org.jboss.netty.handler.codec.http.{HttpRequest, HttpResponse, HttpRespon
 import scala.collection.JavaConversions._
 
 class DispatchToMothershipHandler(mothershipClient: Service[HttpRequest, HttpResponse]) extends HttpHandler {
+
   override def defaultHandling(handlerRequest: HandlerRequest): Future[Response] = {
     dispatchToMothership(handlerRequest.request)
   }
-
 
   def dispatch(request:Request) : Future[ResponseBuilder] = {
     dispatchToMothership(request).map(toResponseBuilder(_))
