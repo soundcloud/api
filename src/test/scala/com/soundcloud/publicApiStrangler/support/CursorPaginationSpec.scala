@@ -5,8 +5,6 @@ import com.twitter.finagle.http.Request
 import com.soundcloud.jvmkit.Urn
 import com.soundcloud.bff.finagle.ResponseBuilder
 import com.twitter.util.Await
-import com.soundcloud.bff.BffApp
-import com.soundcloud.jvmkit.config.Config
 
 class CursorPaginationSpec extends UnitSpecification {
 
