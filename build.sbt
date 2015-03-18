@@ -6,11 +6,11 @@ net.virtualvoid.sbt.graph.Plugin.graphSettings
 
 name := "public-api-strangler"
 
-scalaVersion := "2.10.3"
+scalaVersion := "2.11.6"
 
 organization := "com.soundcloud"
 
-scalacOptions ++= Seq("-deprecation", "-unchecked", "-target:jvm-1.7", "-language:_")
+scalacOptions ++= Seq("-deprecation", "-unchecked", "-target:jvm-1.7")
 
 resolvers ++= Seq(
   "SoundCloud Internal - Hosted Snapshots" at "http://maven.int.s-cloud.net/content/groups/hosted_snapshots/",
