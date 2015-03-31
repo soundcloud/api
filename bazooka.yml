@@ -2,9 +2,20 @@ api:
   env: production.properties
   instances: 100
   proc: api
-  irc-channel: bff
+  irc-channel: core-services
   app: public-api-strangler
   scale-method: stepped
   auto-scale-down: true
   step-size: 5
   zone: db
+
+api-de:
+  env: production.properties.de
+  instances: 8
+  proc: api
+  irc-channel: core-services
+  app: public-api-strangler
+  scale-method: stepped
+  auto-scale-down: true
+  step-size: 5
+  zone: de
