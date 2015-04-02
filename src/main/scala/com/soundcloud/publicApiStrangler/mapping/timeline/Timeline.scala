@@ -21,7 +21,7 @@ abstract class Timeline(jsonValue: JsValue, page: CursorBasedPage[Urn])(implicit
 
   def events = (json \ "events").as[Seq[JsObject]]
 
-  private def doNotShow = Set("promoted-stream", "user-mention")
+  private def doNotShow = Set("user-mention")
 
   def contentDisallowed(item: TimelineItem) = doNotShow.contains(item.`type`)
 
