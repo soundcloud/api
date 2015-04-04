@@ -1,0 +1,20 @@
+{
+    "name": "public-api-strangler",
+    "description": "An implementation of the Strangler Pattern for the mothership's Public API",
+    "contact_email": "core-services@soundcloud.com",
+    "owner": "core-services",
+    "status": "production",
+    "alert_service": "https://sndcld.pagerduty.com/services/PVZLXKQ",
+    "telemetry_dashboard": "http://promdash/public-api-strangler",
+    "data_sensitivity": ["user_urn", "other_user_data", "pid"],
+    "dependencies": [
+      "authenticator",
+      "authsy",
+      "gatekeeper",
+      "geoip",
+      "media-service",
+      "okidoki",
+      "public-api",
+      "timeline"
+    ]
+}
