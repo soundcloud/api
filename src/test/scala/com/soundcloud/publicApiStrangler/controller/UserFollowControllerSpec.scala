@@ -3,8 +3,9 @@ package com.soundcloud.publicApiStrangler.controller
 import com.soundcloud.bff.services.JsonService
 import com.soundcloud.bff.test.InjectionBasedControllerSpecification
 import com.soundcloud.jvmkit.{Geo => JvmGeo}
-import com.soundcloud.publicApiStrangler.clients.FollowsClient
+import com.soundcloud.publicApiStrangler.clients.{Affiliation, FollowsPage, FollowsClient}
 import com.soundcloud.publicApiStrangler.support.DispatchToMothershipHandler
+import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures
 import com.soundcloud.scalakit.finagle.http.{HandlerRequest, OkStatus}
 import com.soundcloud.scalakit.finagle.jsonservice.{JsonResponse, Params}
 import com.soundcloud.scalakit.{Geo, Path, Urn, UserSession}
@@ -15,7 +16,11 @@ import org.joda.time.{DateTime, DateTimeUtils}
 import org.specs2.mutable.BeforeAfter
 import play.api.libs.json.{JsString, JsNull, JsObject, Json}
 
-class UserFollowControllerSpec extends InjectionBasedControllerSpecification {
+class UserFollowControllerSpec extends InjectionBasedControllerSpecification with Fixtures {
+
+  // changes to DateTimeUtils are not thread-safe
+  sequential
+
   trait Context extends Scope with BeforeAfter {
     val fallbackMock = mock[DispatchToMothershipHandler]
     val okidokiMock = mock[OkidokiClient]
@@ -41,7 +46,17 @@ class UserFollowControllerSpec extends InjectionBasedControllerSpecification {
 
   "GET /me/followings" >> {
     "fetches a user's followings" in new Context {
-      val response = get(controller, "/me/followings", Map("client_id" -> "YOUR_CLIENT_ID"))
+
+      override def before = {
+        super.before
+        val values = Seq(
+          Affiliation("123-123", "2012-02-13T23:30:13.000+0000", Urn("soundcloud:users:12490957"), Urn("soundcloud:users:100"))
+        )
+        followsMock.followings(session, 10) returns Future.value(FollowsPage(values))
+        okidokiMock.fetch(session, values.map(_.user).toSet) returns Future.value(okidokiUsers.as[List[JsObject]])
+      }
+
+      val response = get(controller, "/me/followings", Map("limit" -> "10"))
       response.status ==== Status.Ok
     }
   }

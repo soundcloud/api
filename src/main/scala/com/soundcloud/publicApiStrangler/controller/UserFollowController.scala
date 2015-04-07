@@ -40,6 +40,8 @@ class UserFollowController(userAuthentication: UserAuthentication,
 
   val formatter = DateTimeFormat.forPattern("yyyy/M/d")
 
+  get("/me/followings")(fetchFollowings)
+
   get("/me/followings/:id")(fallbackToMothership)
   head("/me/followings/:id")(fallbackToMothership)
   post("/me/followings/:id")(fallbackToMothership)
@@ -58,6 +60,28 @@ class UserFollowController(userAuthentication: UserAuthentication,
             case _ => denyAgeUnknown
           }
         }
+    }
+  }
+
+  private def fetchFollowings(request: Request): Future[ResponseBuilder] = {
+    userAuthentication.withLoggedInUser(request) { (session, userUrn) =>
+      for {
+        affiliations <- follows.followings(
+          session,
+          request.params.get("limit").map(_.toInt).getOrElse(50)
+        )
+        urns = affiliations.values.map(_.user)
+        users <- okidoki.fetch(session, urns.toSet)
+      } yield {
+        render.json(users)
+      }
+    }
+  }
+
+  private def fetchUsers(session: UserSession, urns: Set[Urn]): Future[List[User]] = {
+    val context = new MappingContext(session)
+    okidoki.fetch(session, urns).map { users =>
+      users.map(user => new User(user, baseUrl)(context))
     }
   }
 

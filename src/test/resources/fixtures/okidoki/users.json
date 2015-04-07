@@ -1,0 +1,111 @@
+[
+  {
+    "city": "London",
+    "country_code": null,
+    "first_name": "Adeline",
+    "permalink": "adeline",
+    "tracks_count": 49,
+    "username": "adeline",
+    "country": null,
+    "full_name": "Adeline",
+    "created_at": "2007\/09\/12 00:06:00 +0000",
+    "activated_at": "2007\/09\/12 08:55:00 +0000",
+    "followers_count": 20976,
+    "followings_count": 118,
+    "public_favorites_count": 5,
+    "self": {
+      "urn": "soundcloud:users:123",
+      "url": "http:\/\/moshimoshi.int.s-cloud.net\/users\/123"
+    },
+    "primary_email": "adeline@kth.se",
+    "groups_count": 0,
+    "links": [
+      {
+        "created_at": "2014\/01\/31 23:52:29 +0000",
+        "id": 31075056,
+        "network": "personal",
+        "title": "Adeline Website",
+        "updated_at": "2014\/01\/31 23:52:29 +0000",
+        "url": "http:\/\/www.adelinemusic.com",
+        "user_id": 123,
+        "username": ""
+      },
+      {
+        "created_at": "2014\/01\/31 23:52:29 +0000",
+        "id": 31075057,
+        "network": "facebook",
+        "title": null,
+        "updated_at": "2014\/01\/31 23:52:29 +0000",
+        "url": "http:\/\/www.facebook.com\/Adelinelive",
+        "user_id": 123,
+        "username": "Adelinelive"
+      },
+      {
+        "created_at": "2014\/01\/31 23:52:29 +0000",
+        "id": 31075058,
+        "network": "twitter",
+        "title": null,
+        "updated_at": "2014\/01\/31 23:52:29 +0000",
+        "url": "http:\/\/twitter.com\/Adelinelive",
+        "user_id": 123,
+        "username": "Adelinelive"
+      },
+      {
+        "created_at": "2014\/01\/31 23:52:29 +0000",
+        "id": 31075059,
+        "network": "youtube",
+        "title": null,
+        "updated_at": "2014\/01\/31 23:52:29 +0000",
+        "url": "http:\/\/www.youtube.com\/watch?v=KQc7UJPMSks",
+        "user_id": 123,
+        "username": "AdelineOfficial"
+      },
+      {
+        "created_at": "2014\/01\/31 23:52:29 +0000",
+        "id": 31075060,
+        "network": "residentadvisor",
+        "title": "Resident Advisor",
+        "updated_at": "2014\/01\/31 23:52:29 +0000",
+        "url": "http:\/\/www.residentadvisor.net\/dj\/adeline",
+        "user_id": 123,
+        "username": "adeline"
+      },
+      {
+        "created_at": "2014\/01\/31 23:52:29 +0000",
+        "id": 31075061,
+        "network": "beatport",
+        "title": "Beatport",
+        "updated_at": "2014\/01\/31 23:52:29 +0000",
+        "url": "http:\/\/www.beatport.com\/artist\/adeline\/249796",
+        "user_id": 123,
+        "username": "adeline"
+      }
+    ],
+    "plan": "Pro Plus",
+    "quota": {
+      "seconds_used": 93790.522
+    },
+    "avatar_url": "https:\/\/i1.sndcdn.com\/avatars-000092704388-h04iht-large.jpg?86347b7",
+    "original_avatar_url": "https:\/\/i1.sndcdn.com\/avatars-000092704388-h04iht-original.png?86347b7",
+    "permalink_url": "http:\/\/soundcloud.com\/adeline",
+    "description": "For Adeline bookings worldwide, please contact tom@mn2s.com, +44 (0) 207 234 9466.\n\nAdeline is a hugely talented and much in demand vocalist with a unique style that has won her fans across the globe. She\u2019s a diminutive figure that punches well above her weight in the DJ booth and studio and always manages to have crowds in the palm of her hand. Brought up in the rolling Swedish countryside, Adeline couldn\u2019t resist the allure of the underground club scene in Stockholm and with countrywoman La Fleur started performing as Housewives. Before long she was presenting on Scandinavia\u2019s biggest radio show as well as working as a curator for SoundCloud.\n\nIn recent years she has spent time in New York, Milan and Berlin and then landed in London before moving to Ibiza where she secured her own residency at Pacha\u2019s Destino venue as well as Tox, playing alongside the likes of AudioFly, DJ Tennis and Blond: Ish. Never far from radio, Adeline also hosts her own show on Pulse and has interviewed the likes of Cassy, Ryan Crosson and tINI as a result. With a strong sense of self and an ability to lay down hypnotizing chords and wobbly bass next to magic melodies, Adeline\u2019s own playful vocals are the icing on the cake. Her first releases were snapped up by established labels like Get Physical\u2019s Kindisch and climbed up the Beatport charts, staying in the Top 20 for three weeks. More greatness followed on Resonance and LA\u2019s Culprit label, as did gigs at Sonar and Eastern Electrics and collaborations with No Regular Play\u2019s Greg Paulus. Now that Adeline has established herself, she continues to confound expectation and is a rightfully respected modern talent.\n\n",
+    "frozen": false,
+    "favoriting_note": "A new favorite:",
+    "publishing_note": "My new sounds:",
+    "subscriptions": [
+      {
+        "recurring": false,
+        "product": {
+          "name": "Pro Plus",
+          "urn": "soundcloud:products:pro-plus"
+        }
+      }
+    ],
+    "updated_at": "2014\/10\/04 10:48:34 +0000",
+    "last_modified": "2014\/10\/04 10:48:34 +0000",
+    "date_of_birth": "1984\/12\/01",
+    "gender": "female",
+    "default_license": null,
+    "stealth": false
+  }
+]
