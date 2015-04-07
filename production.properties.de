@@ -9,6 +9,7 @@ GEOIP_BASE_URL="http://geoip.int.s-cloud.net"
 # enable yourkit by adding to JAVA_OPTS; -agentpath:vendor/yourkit/libyjpagent.so=builtinprobes=none,dir=/tmp
 JAVA_OPTS="-XX:+UseCompressedOops -XX:+UseConcMarkSweepGC -Xmx6G -Xms6G"
 MEDIASERVICE_SRV_RECORD="dnssrv!http.urlgen.prod.media-service.dd.srv.int.s-cloud.net"
+FOLLOWS_SRV_RECORD="dnssrv!http.api.prod.follows.dd.srv.int.s-cloud.net"
 MEMCACHED_HOST="ip-10-33-33-60.m02.ams5.s-cloud.net,ip-10-33-21-49.n07.ams5.s-cloud.net"
 MEMCACHED_PORT="11211"
 MOSHIMOSHI_BASE_URL="http://moshimoshi.int.s-cloud.net"

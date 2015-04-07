@@ -1,26 +1,32 @@
 package com.soundcloud.publicApiStrangler.controller
 
+import com.soundcloud.bff.JsValue
 import com.soundcloud.bff.finagle.{Request, ResponseBuilder}
+import com.soundcloud.bff.nextbff.mapping.MappingContext
 import com.soundcloud.bff.services.JsonService
 import com.soundcloud.bff.web.{BffInjectionBasedController, UserAuthentication}
 import com.soundcloud.jvmkit.Geo
+import com.soundcloud.publicApiStrangler.clients.FollowsClient
+import com.soundcloud.publicApiStrangler.mapping.timeline.User
 import com.soundcloud.publicApiStrangler.support.DispatchToMothershipHandler
 import com.soundcloud.scalakit.finagle.http.{AlwaysMatchesPathMatcher, HandlerRequest, OkStatus}
-import com.soundcloud.scalakit.finagle.jsonservice.Params
+import com.soundcloud.scalakit.finagle.jsonservice.{JsonResponse, Params}
 import com.soundcloud.scalakit.{Path, UTF8, Urn, UserSession}
+import com.soundcloud.service.client.OkidokiClient
 import com.twitter.finagle.http.Status
 import com.twitter.util.Future
 import org.joda.time.format.DateTimeFormat
 import org.joda.time.{LocalDate, Years}
-import play.api.libs.json.Json
+import play.api.libs.json.{JsString, Json}
 
 import scala.collection.JavaConversions._
 import scala.io.Source
 
-class UserFollowController(
-                            userAuthentication: UserAuthentication,
-                            fallback: DispatchToMothershipHandler,
-                            moshimoshi: JsonService)
+class UserFollowController(userAuthentication: UserAuthentication,
+                           fallback: DispatchToMothershipHandler,
+                           okidoki: OkidokiClient,
+                           follows: FollowsClient,
+                           baseUrl: String)
   extends BffInjectionBasedController {
 
   val followRestrictions = {
@@ -61,11 +67,11 @@ class UserFollowController(
   }
 
   private def findUserAge(session: UserSession, userUrn: Urn): Future[Option[Long]] = {
-    moshimoshi.get(session, Path() / "users" / userUrn, Params.empty).map { response =>
-      response.status match {
-        case OkStatus => (response.body \ "date_of_birth").asOpt[String].map(currentAge)
-        case _ => None
+    okidoki.fetch(session, Set(userUrn)).map {
+      case user :: xs => {
+        (user \ "date_of_birth").asOpt[String].map(currentAge)
       }
+      case _ => None
     }
   }
 
