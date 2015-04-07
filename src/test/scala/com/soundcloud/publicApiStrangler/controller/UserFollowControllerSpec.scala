@@ -14,7 +14,7 @@ import com.twitter.finagle.http.{Response, Status}
 import com.twitter.util.Future
 import org.joda.time.{DateTime, DateTimeUtils}
 import org.specs2.mutable.BeforeAfter
-import play.api.libs.json.{JsString, JsNull, JsObject, Json}
+import play.api.libs.json._
 
 class UserFollowControllerSpec extends InjectionBasedControllerSpecification with Fixtures {
 
@@ -44,6 +44,27 @@ class UserFollowControllerSpec extends InjectionBasedControllerSpecification wit
     }
   }
 
+  "GET /me/followings/ids" >> {
+    "fetches a user's followings" in new Context {
+
+      override def before = {
+        super.before
+        val values = Seq(
+          Affiliation("123-123", "2012-02-13T23:30:13.000+0000", Urn("soundcloud:users:12490957"), Urn("soundcloud:users:100"))
+        )
+        val pageInfo = PageInfo(Some("123-1234"), 2)
+        followsMock.followings(session, 10) returns Future.value(FollowsPage(values, pageInfo))
+        okidokiMock.fetch(session, values.map(_.user).toSet) returns Future.value(okidokiUsers.as[List[JsObject]])
+      }
+
+      val response = get(controller, "/me/followings/ids", Map("limit" -> "10"))
+      response.status ==== Status.Ok
+      val json = Json.parse(response.body)
+      (json \ "collection") ==== JsArray(Seq(JsNumber(123)))
+      (json \ "next_href").asOpt[String] ==== Some("http://foo/me/followings?last_id=123-1234&page_size=2")
+    }
+  }
+
   "GET /me/followings" >> {
     "fetches a user's followings" in new Context {
 
@@ -57,11 +78,11 @@ class UserFollowControllerSpec extends InjectionBasedControllerSpecification wit
         okidokiMock.fetch(session, values.map(_.user).toSet) returns Future.value(okidokiUsers.as[List[JsObject]])
       }
 
-      val response = get(controller, "/me/followings", Map("limit" -> "10"))
+      val response = get(controller, "/me/followings", Map("limit" -> "10", "client_id" -> "FOO"))
       response.status ==== Status.Ok
       val json = Json.parse(response.body)
       (json \ "collection").as[Seq[JsObject]].size ==== 1
-      (json \ "next_href").asOpt[String] ==== Some("http://foo/me/followings?last_id=123-1234&page_size=2")
+      (json \ "next_href").asOpt[String] ==== Some("http://foo/me/followings?client_id=FOO&last_id=123-1234&page_size=2")
     }
   }
 
@@ -78,7 +99,7 @@ class UserFollowControllerSpec extends InjectionBasedControllerSpecification wit
         okidokiMock.fetch(session, values.map(_.user).toSet) returns Future.value(okidokiUsers.as[List[JsObject]])
       }
 
-      val response = get(controller, "/me/followers", Map("limit" -> "10"))
+      val response = get(controller, "/me/followers", Map("limit" -> "10", "last_id" -> "foo"))
       response.status ==== Status.Ok
       val json = Json.parse(response.body)
       (json \ "collection").as[Seq[JsObject]].size ==== 1

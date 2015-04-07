@@ -1,7 +1,8 @@
 package com.soundcloud.publicApiStrangler.controller
 
+import com.soundcloud.bff.{ Json => BffJson }
 import com.soundcloud.bff.finagle.{Request, ResponseBuilder}
-import com.soundcloud.bff.nextbff.mapping.MappingContext
+import com.soundcloud.bff.nextbff.mapping.{Mapping, MappingContext}
 import com.soundcloud.bff.web.{BffInjectionBasedController, UserAuthentication}
 import com.soundcloud.jvmkit.Geo
 import com.soundcloud.publicApiStrangler.clients.{FollowsPage, PageInfo, FollowsClient}
@@ -14,7 +15,7 @@ import com.twitter.finagle.http.Status
 import com.twitter.util.Future
 import org.joda.time.format.DateTimeFormat
 import org.joda.time.{LocalDate, Years}
-import play.api.libs.json.Json
+import play.api.libs.json.{JsArray, JsNumber, JsValue, Json}
 
 import scala.collection.JavaConversions._
 import scala.io.Source
@@ -39,6 +40,7 @@ class UserFollowController(userAuthentication: UserAuthentication,
 
   get("/me/followings")(fetchFollowings)
   get("/me/followers")(fetchFollowers)
+  get("/me/followings/ids")(fetchFollowingIds)
 
   get("/me/followings/:id")(fallbackToMothership)
   head("/me/followings/:id")(fallbackToMothership)
@@ -69,27 +71,50 @@ class UserFollowController(userAuthentication: UserAuthentication,
     fetchFromFollows(request, "followings", follows.followings)
   }
 
-  private def fetchFromFollows(request: Request, kind: String, fetchFunction: (UserSession, Int) => Future[FollowsPage]): Future[ResponseBuilder] = {
+  private def fetchFollowingIds(request: Request) = {
+    fetchFromFollows(
+      request,
+      "followings",
+      follows.followings,
+      userIds
+    )
+  }
+
+  private def mapUsersToUsers(users: List[User]): List[Any] = users
+
+  private def userIds(users: List[User]): List[Any] = users.map(u => u.id)
+
+  private def pageSizeParam(request: Request) = {
+    request.params.get("limit")
+      .orElse(request.params.get("page_size"))
+      .map(_.toInt).getOrElse(50)
+  }
+
+  private def fetchFromFollows(request: Request,
+                               kind: String,
+                               fetchFunction: (UserSession, Int) => Future[FollowsPage],
+                               mapUsers: List[User] => List[Any] = mapUsersToUsers): Future[ResponseBuilder] = {
     userAuthentication.withLoggedInUser(request) { (session, userUrn) =>
       for {
         affiliations <- fetchFunction(
           session,
-          request.params.get("limit").map(_.toInt).getOrElse(50)
+          pageSizeParam(request)
         )
         urns = affiliations.values.map(_.user)
-        users <- okidoki.fetch(session, urns.toSet)
+        users <- fetchUsers(session, urns.toSet)
       } yield {
         render.json(Map(
-          "collection" -> users,
-          "next_href" -> nextHref(baseUrl, "/me/" + kind, affiliations.page)
+          "collection" -> mapUsers(users),
+          "next_href" -> nextHref(baseUrl, "/me/" + kind, affiliations.page, request.params)
         ))
       }
     }
   }
 
-  private def nextHref(baseUrl: String, path: String, pageInfo: PageInfo): Option[String] = {
+  private def nextHref(baseUrl: String, path: String, pageInfo: PageInfo, requestParams: Map[String, String]): Option[String] = {
     pageInfo.lastId.map { nextId =>
-      baseUrl + path + "?last_id=" + nextId + "&page_size=" + pageInfo.size
+      val params = requestParams ++ Map("last_id" -> nextId, "page_size" -> pageInfo.size) -- Seq("limit")
+      baseUrl + path + "?" + params.map { case(k, v) => s"$k=$v" }.mkString("&")
     }
   }
 
@@ -107,9 +132,7 @@ class UserFollowController(userAuthentication: UserAuthentication,
 
   private def findUserAge(session: UserSession, userUrn: Urn): Future[Option[Long]] = {
     okidoki.fetch(session, Set(userUrn)).map {
-      case user :: xs => {
-        (user \ "date_of_birth").asOpt[String].map(currentAge)
-      }
+      case user :: xs => (user \ "date_of_birth").asOpt[String].map(currentAge)
       case _ => None
     }
   }
