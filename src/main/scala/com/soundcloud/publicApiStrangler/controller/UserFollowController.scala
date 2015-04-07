@@ -1,23 +1,20 @@
 package com.soundcloud.publicApiStrangler.controller
 
-import com.soundcloud.bff.JsValue
 import com.soundcloud.bff.finagle.{Request, ResponseBuilder}
 import com.soundcloud.bff.nextbff.mapping.MappingContext
-import com.soundcloud.bff.services.JsonService
 import com.soundcloud.bff.web.{BffInjectionBasedController, UserAuthentication}
 import com.soundcloud.jvmkit.Geo
-import com.soundcloud.publicApiStrangler.clients.FollowsClient
+import com.soundcloud.publicApiStrangler.clients.{PageInfo, FollowsClient}
 import com.soundcloud.publicApiStrangler.mapping.timeline.User
 import com.soundcloud.publicApiStrangler.support.DispatchToMothershipHandler
-import com.soundcloud.scalakit.finagle.http.{AlwaysMatchesPathMatcher, HandlerRequest, OkStatus}
-import com.soundcloud.scalakit.finagle.jsonservice.{JsonResponse, Params}
-import com.soundcloud.scalakit.{Path, UTF8, Urn, UserSession}
+import com.soundcloud.scalakit.finagle.http.{AlwaysMatchesPathMatcher, HandlerRequest}
+import com.soundcloud.scalakit.{UTF8, Urn, UserSession}
 import com.soundcloud.service.client.OkidokiClient
 import com.twitter.finagle.http.Status
 import com.twitter.util.Future
 import org.joda.time.format.DateTimeFormat
 import org.joda.time.{LocalDate, Years}
-import play.api.libs.json.{JsString, Json}
+import play.api.libs.json.Json
 
 import scala.collection.JavaConversions._
 import scala.io.Source
@@ -73,8 +70,17 @@ class UserFollowController(userAuthentication: UserAuthentication,
         urns = affiliations.values.map(_.user)
         users <- okidoki.fetch(session, urns.toSet)
       } yield {
-        render.json(users)
+        render.json(Map(
+          "collection" -> users,
+          "next_href" -> nextHref(baseUrl, "/me/followings", affiliations.page)
+        ))
       }
+    }
+  }
+
+  private def nextHref(baseUrl: String, path: String, pageInfo: PageInfo): Option[String] = {
+    pageInfo.lastId.map { nextId =>
+      baseUrl + path + "?last_id=" + nextId + "&page_size=" + pageInfo.size
     }
   }
 

@@ -6,6 +6,7 @@ import com.soundcloud.scalakit.finagle.http.OkStatus
 import com.soundcloud.scalakit.finagle.jsonservice.{JsonResponse, Params}
 import com.soundcloud.scalakit.{Path, Urn}
 import com.twitter.util.Future
+import play.api.libs.json.JsObject
 
 
 class FollowsClient(jsonService: JsonService) {
@@ -16,7 +17,7 @@ class FollowsClient(jsonService: JsonService) {
       Map("page_size" -> pageSize)
     ).map {
       case JsonResponse(OkStatus, data, _, _) =>
-        val values = (data \\ "value").map { value =>
+        val values = (data \ "value").as[Seq[JsObject]].map { value =>
           Affiliation(
             (value \ "id").as[String],
             (value \ "created").as[String],
@@ -24,7 +25,13 @@ class FollowsClient(jsonService: JsonService) {
             Urn((value \ "user").as[String])
           )
         }
-        FollowsPage(values)
+
+        val pageInfo = PageInfo(
+          (data \ "page" \ "last_id").asOpt[String],
+          (data \ "page" \ "size").as[Int]
+        )
+
+        FollowsPage(values, pageInfo)
       case _ =>
         throw new IllegalArgumentException
     }
@@ -33,4 +40,5 @@ class FollowsClient(jsonService: JsonService) {
 }
 
 case class Affiliation(id: String, created: String, target: Urn, user: Urn)
-case class FollowsPage(values: Seq[Affiliation])
+case class PageInfo(lastId: Option[String], size: Int)
+case class FollowsPage(values: Seq[Affiliation], page: PageInfo)

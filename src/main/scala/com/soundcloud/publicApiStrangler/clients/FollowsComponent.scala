@@ -9,7 +9,7 @@ trait FollowsComponent {
   this: ConfigComponent =>
 
   private val followsService = JsonService(
-    ServiceConfig("follows", config.get(ResourceName("FOLLOWS"), ConfigConvention.BASE_URL), config)
+    ServiceConfig("follows", config.get(ResourceName("FOLLOWS"), ConfigConvention.SRV_RECORD), config)
   )
 
   lazy val followsClient = new FollowsClient(followsService)

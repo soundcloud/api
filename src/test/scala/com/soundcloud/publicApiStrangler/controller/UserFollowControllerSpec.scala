@@ -3,7 +3,7 @@ package com.soundcloud.publicApiStrangler.controller
 import com.soundcloud.bff.services.JsonService
 import com.soundcloud.bff.test.InjectionBasedControllerSpecification
 import com.soundcloud.jvmkit.{Geo => JvmGeo}
-import com.soundcloud.publicApiStrangler.clients.{Affiliation, FollowsPage, FollowsClient}
+import com.soundcloud.publicApiStrangler.clients.{PageInfo, Affiliation, FollowsPage, FollowsClient}
 import com.soundcloud.publicApiStrangler.support.DispatchToMothershipHandler
 import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures
 import com.soundcloud.scalakit.finagle.http.{HandlerRequest, OkStatus}
@@ -28,7 +28,7 @@ class UserFollowControllerSpec extends InjectionBasedControllerSpecification wit
     val userUrn = Urn("soundcloud:users:999")
     lazy val geo = Geo("US")
     val session = UserSession(userUrn, Urn("soundcloud:applications:v2"), geo, Set.empty)
-    lazy val controller = new UserFollowController(fakeUserAuthentication(session), fallbackMock, okidokiMock, followsMock, "foo")
+    lazy val controller = new UserFollowController(fakeUserAuthentication(session), fallbackMock, okidokiMock, followsMock, "http://foo")
     lazy val userMock = mock[JsObject]
     lazy val okidokiResponse = Future(List(userMock))
 
@@ -52,12 +52,16 @@ class UserFollowControllerSpec extends InjectionBasedControllerSpecification wit
         val values = Seq(
           Affiliation("123-123", "2012-02-13T23:30:13.000+0000", Urn("soundcloud:users:12490957"), Urn("soundcloud:users:100"))
         )
-        followsMock.followings(session, 10) returns Future.value(FollowsPage(values))
+        val pageInfo = PageInfo(Some("123-1234"), 2)
+        followsMock.followings(session, 10) returns Future.value(FollowsPage(values, pageInfo))
         okidokiMock.fetch(session, values.map(_.user).toSet) returns Future.value(okidokiUsers.as[List[JsObject]])
       }
 
       val response = get(controller, "/me/followings", Map("limit" -> "10"))
       response.status ==== Status.Ok
+      val json = Json.parse(response.body)
+      (json \ "collection").as[Seq[JsObject]].size ==== 1
+      (json \ "next_href").asOpt[String] ==== Some("http://foo/me/followings?last_id=123-1234&page_size=2")
     }
   }
 
