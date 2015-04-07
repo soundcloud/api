@@ -65,6 +65,27 @@ class UserFollowControllerSpec extends InjectionBasedControllerSpecification wit
     }
   }
 
+  "GET /me/followers" >> {
+    "fetches a user's followers" in new Context {
+
+      override def before = {
+        super.before
+        val values = Seq(
+          Affiliation("123-123", "2012-02-13T23:30:13.000+0000", Urn("soundcloud:users:12490957"), Urn("soundcloud:users:100"))
+        )
+        val pageInfo = PageInfo(Some("123-1234"), 2)
+        followsMock.followers(session, 10) returns Future.value(FollowsPage(values, pageInfo))
+        okidokiMock.fetch(session, values.map(_.user).toSet) returns Future.value(okidokiUsers.as[List[JsObject]])
+      }
+
+      val response = get(controller, "/me/followers", Map("limit" -> "10"))
+      response.status ==== Status.Ok
+      val json = Json.parse(response.body)
+      (json \ "collection").as[Seq[JsObject]].size ==== 1
+      (json \ "next_href").asOpt[String] ==== Some("http://foo/me/followers?last_id=123-1234&page_size=2")
+    }
+  }
+
   "PUT /me/followings/:id" >> {
     "should allow user to follow a profile without age restrictions" in new Context {
       fallbackMock.defaultHandling(any[HandlerRequest]) returns Future.value(Response(Status.Ok))

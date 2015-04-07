@@ -11,9 +11,17 @@ import play.api.libs.json.JsObject
 
 class FollowsClient(jsonService: JsonService) {
 
+  def followers(userSession: UserSession, pageSize: Int): Future[FollowsPage] = {
+    fetchPage(userSession, "followers", pageSize)
+  }
+
   def followings(userSession: UserSession, pageSize: Int): Future[FollowsPage] = {
+    fetchPage(userSession, "followings", pageSize)
+  }
+
+  private def fetchPage(userSession: UserSession, kind: String, pageSize: Int): Future[FollowsPage] = {
     jsonService.get(userSession,
-      Path() / "users" / userSession.getUser / "followings",
+      Path() / "users" / userSession.getUser / kind,
       Map("page_size" -> pageSize)
     ).map {
       case JsonResponse(OkStatus, data, _, _) =>
@@ -36,7 +44,6 @@ class FollowsClient(jsonService: JsonService) {
         throw new IllegalArgumentException
     }
   }
-
 }
 
 case class Affiliation(id: String, created: String, target: Urn, user: Urn)

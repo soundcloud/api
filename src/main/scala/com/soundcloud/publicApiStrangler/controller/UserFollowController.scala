@@ -4,7 +4,7 @@ import com.soundcloud.bff.finagle.{Request, ResponseBuilder}
 import com.soundcloud.bff.nextbff.mapping.MappingContext
 import com.soundcloud.bff.web.{BffInjectionBasedController, UserAuthentication}
 import com.soundcloud.jvmkit.Geo
-import com.soundcloud.publicApiStrangler.clients.{PageInfo, FollowsClient}
+import com.soundcloud.publicApiStrangler.clients.{FollowsPage, PageInfo, FollowsClient}
 import com.soundcloud.publicApiStrangler.mapping.timeline.User
 import com.soundcloud.publicApiStrangler.support.DispatchToMothershipHandler
 import com.soundcloud.scalakit.finagle.http.{AlwaysMatchesPathMatcher, HandlerRequest}
@@ -38,6 +38,7 @@ class UserFollowController(userAuthentication: UserAuthentication,
   val formatter = DateTimeFormat.forPattern("yyyy/M/d")
 
   get("/me/followings")(fetchFollowings)
+  get("/me/followers")(fetchFollowers)
 
   get("/me/followings/:id")(fallbackToMothership)
   head("/me/followings/:id")(fallbackToMothership)
@@ -60,10 +61,18 @@ class UserFollowController(userAuthentication: UserAuthentication,
     }
   }
 
-  private def fetchFollowings(request: Request): Future[ResponseBuilder] = {
+  private def fetchFollowers(request: Request): Future[ResponseBuilder] = {
+    fetchFromFollows(request, "followers", follows.followers)
+  }
+
+  private def fetchFollowings(request: Request) = {
+    fetchFromFollows(request, "followings", follows.followings)
+  }
+
+  private def fetchFromFollows(request: Request, kind: String, fetchFunction: (UserSession, Int) => Future[FollowsPage]): Future[ResponseBuilder] = {
     userAuthentication.withLoggedInUser(request) { (session, userUrn) =>
       for {
-        affiliations <- follows.followings(
+        affiliations <- fetchFunction(
           session,
           request.params.get("limit").map(_.toInt).getOrElse(50)
         )
@@ -72,7 +81,7 @@ class UserFollowController(userAuthentication: UserAuthentication,
       } yield {
         render.json(Map(
           "collection" -> users,
-          "next_href" -> nextHref(baseUrl, "/me/followings", affiliations.page)
+          "next_href" -> nextHref(baseUrl, "/me/" + kind, affiliations.page)
         ))
       }
     }
