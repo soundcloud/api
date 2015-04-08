@@ -11,10 +11,10 @@ import play.api.libs.json.JsObject
 
 class FollowsClient(jsonService: JsonService) {
 
-  def followersFollowedBy(userSession: UserSession, user: Urn, otherUser: Urn, pageSize: Int): Future[FollowsPage] = {
+  def mutualFollowers(userSession: UserSession, user: Urn, otherUser: Urn, pageSize: Int): Future[FollowsPage] = {
     fetchPage(
       userSession,
-      Path() / "users" / user.getString / "followers_followers_by" / otherUser.getString,
+      Path() / "users" / user.getString / "mutual_followers" / otherUser.getString,
       pageSize
     )
   }
@@ -23,6 +23,14 @@ class FollowsClient(jsonService: JsonService) {
     fetchPage(
       userSession,
       Path() / "users" / user.getString / "followings_not_followed" / otherUser.getString,
+      pageSize
+    )
+  }
+
+  def mutualFollowings(userSession: UserSession, user: Urn, otherUser: Urn, pageSize: Int): Future[FollowsPage] = {
+    fetchPage(
+      userSession,
+      Path() / "users" / user.getString / "mutual_followings" / otherUser.getString,
       pageSize
     )
   }

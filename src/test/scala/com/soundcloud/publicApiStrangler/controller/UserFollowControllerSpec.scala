@@ -53,7 +53,7 @@ class UserFollowControllerSpec extends InjectionBasedControllerSpecification wit
           Affiliation("123-123", "2012-02-13T23:30:13.000+0000", Urn("soundcloud:users:12490957"), Urn("soundcloud:users:100"))
         )
         val pageInfo = PageInfo(Some("123-1234"), 2)
-        followsMock.followersFollowedBy(session, Urn("soundcloud:users:1"), Urn("soundcloud:users:2"), 10) returns Future.value(FollowsPage(values, pageInfo))
+        followsMock.mutualFollowers(session, Urn("soundcloud:users:1"), Urn("soundcloud:users:2"), 10) returns Future.value(FollowsPage(values, pageInfo))
         okidokiMock.fetch(session, values.map(_.user).toSet) returns Future.value(okidokiUsers.as[List[JsObject]])
       }
 
@@ -86,6 +86,27 @@ class UserFollowControllerSpec extends InjectionBasedControllerSpecification wit
     }
   }
 
+  "GET /users/:id/followings/common_to/:other_id" >> {
+    "fetches followings" in new Context {
+
+      override def before = {
+        super.before
+        val values = Seq(
+          Affiliation("123-123", "2012-02-13T23:30:13.000+0000", Urn("soundcloud:users:12490957"), Urn("soundcloud:users:100"))
+        )
+        val pageInfo = PageInfo(Some("123-1234"), 2)
+        followsMock.mutualFollowings(session, Urn("soundcloud:users:1"), Urn("soundcloud:users:2"), 10) returns Future.value(FollowsPage(values, pageInfo))
+        okidokiMock.fetch(session, values.map(_.user).toSet) returns Future.value(okidokiUsers.as[List[JsObject]])
+      }
+
+      val response = get(controller, "/users/1/followings/common_to/2", Map("limit" -> "10"))
+      response.status ==== Status.Ok
+      val json = Json.parse(response.body)
+      (json \ "collection").as[Seq[JsObject]].size ==== 1
+      (json \ "next_href").asOpt[String] ==== Some("http://foo/users/1/followings/common_to/2?last_id=123-1234&page_size=2")
+    }
+  }
+
   "GET /me/followings/ids" >> {
     "fetches a user's followings" in new Context {
 
@@ -104,6 +125,28 @@ class UserFollowControllerSpec extends InjectionBasedControllerSpecification wit
       val json = Json.parse(response.body)
       (json \ "collection") ==== JsArray(Seq(JsNumber(123)))
       (json \ "next_href").asOpt[String] ==== Some("http://foo/me/followings/ids?last_id=123-1234&page_size=2")
+    }
+  }
+
+
+  "GET /me/followers/ids" >> {
+    "fetches a user's followings" in new Context {
+
+      override def before = {
+        super.before
+        val values = Seq(
+          Affiliation("123-123", "2012-02-13T23:30:13.000+0000", Urn("soundcloud:users:12490957"), Urn("soundcloud:users:100"))
+        )
+        val pageInfo = PageInfo(Some("123-1234"), 2)
+        followsMock.followers(session, 10) returns Future.value(FollowsPage(values, pageInfo))
+        okidokiMock.fetch(session, values.map(_.user).toSet) returns Future.value(okidokiUsers.as[List[JsObject]])
+      }
+
+      val response = get(controller, "/me/followers/ids", Map("limit" -> "10"))
+      response.status ==== Status.Ok
+      val json = Json.parse(response.body)
+      (json \ "collection") ==== JsArray(Seq(JsNumber(123)))
+      (json \ "next_href").asOpt[String] ==== Some("http://foo/me/followers/ids?last_id=123-1234&page_size=2")
     }
   }
 

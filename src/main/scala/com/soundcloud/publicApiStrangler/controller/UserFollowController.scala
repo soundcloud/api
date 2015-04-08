@@ -40,9 +40,11 @@ class UserFollowController(userAuthentication: UserAuthentication,
 
   get("/me/followings")(fetchFollowings)
   get("/me/followers")(fetchFollowers)
+  get("/me/followers/ids")(fetchFollowerIds)
   get("/me/followings/ids")(fetchFollowingIds)
-  get("/users/:id/followers/followed_by/:other_id")(fetchFollowersFollowedBy)
+  get("/users/:id/followers/followed_by/:other_id")(fetchMutualFollowers)
   get("/users/:id/followings/not_followed_by/:other_id")(fetchFollowingsNotFollowedBy)
+  get("/users/:id/followings/common_to/:other_id")(fetchMutualFollowings)
 
   get("/me/followings/:id")(fallbackToMothership)
   head("/me/followings/:id")(fallbackToMothership)
@@ -77,10 +79,22 @@ class UserFollowController(userAuthentication: UserAuthentication,
     )
   }
 
-  private def fetchFollowersFollowedBy(request: Request): Future[ResponseBuilder] = {
+  private def fetchMutualFollowings(request: Request): Future[ResponseBuilder] = {
     fetchFromFollows(
       request,
-      follows.followersFollowedBy(
+      follows.mutualFollowings(
+        _,
+        Urn(s"soundcloud:users:${request.routeParams("id")}"),
+        Urn(s"soundcloud:users:${request.routeParams("other_id")}"),
+        _
+      )
+    )
+  }
+
+  private def fetchMutualFollowers(request: Request): Future[ResponseBuilder] = {
+    fetchFromFollows(
+      request,
+      follows.mutualFollowers(
         _,
         Urn(s"soundcloud:users:${request.routeParams("id")}"),
         Urn(s"soundcloud:users:${request.routeParams("other_id")}"),
@@ -94,6 +108,8 @@ class UserFollowController(userAuthentication: UserAuthentication,
   private def fetchFollowings(request: Request) = fetchFromFollows(request, follows.followings)
 
   private def fetchFollowingIds(request: Request) = fetchFromFollows(request, follows.followings, userIds)
+
+  private def fetchFollowerIds(request: Request) = fetchFromFollows(request, follows.followers, userIds)
 
   private def mapUsersToUsers(users: List[User]): List[Any] = users
 
