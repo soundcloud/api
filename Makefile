@@ -28,11 +28,22 @@ all: remove.ivy.lock .install.jre
 build: remove.ivy.lock .install.jre
 	$(SBT) clean startScript
 
+precheckin: test it-test
+
 ci: remove.ivy.lock remove.install.jre .install.jre
 	$(SBT) -no-colors clean test startScript
+
+it-test: _dev_docker_compose
+	$(SBT) it:test
+
+test:
+	$(SBT) test
 
 clean: remove.ivy.lock .install.jre
 	$(SBT) clean
 
 remove.install.jre:
 		rm -f .install.jre
+
+_dev_docker_compose:
+	docker-compose up -d
