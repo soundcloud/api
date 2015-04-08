@@ -41,6 +41,8 @@ class UserFollowController(userAuthentication: UserAuthentication,
   get("/me/followings")(fetchFollowings)
   get("/me/followers")(fetchFollowers)
   get("/me/followings/ids")(fetchFollowingIds)
+  get("/users/:id/followers/followed_by/:other_id")(fetchFollowersFollowedBy)
+  get("/users/:id/followings/not_followed_by/:other_id")(fetchFollowingsNotFollowedBy)
 
   get("/me/followings/:id")(fallbackToMothership)
   head("/me/followings/:id")(fallbackToMothership)
@@ -63,22 +65,35 @@ class UserFollowController(userAuthentication: UserAuthentication,
     }
   }
 
-  private def fetchFollowers(request: Request): Future[ResponseBuilder] = {
-    fetchFromFollows(request, "followers", follows.followers)
-  }
-
-  private def fetchFollowings(request: Request) = {
-    fetchFromFollows(request, "followings", follows.followings)
-  }
-
-  private def fetchFollowingIds(request: Request) = {
+  private def fetchFollowingsNotFollowedBy(request: Request): Future[ResponseBuilder] = {
     fetchFromFollows(
       request,
-      "followings",
-      follows.followings,
-      userIds
+      follows.followingsNotFollowedBy(
+        _,
+        Urn(s"soundcloud:users:${request.routeParams("id")}"),
+        Urn(s"soundcloud:users:${request.routeParams("other_id")}"),
+        _
+      )
     )
   }
+
+  private def fetchFollowersFollowedBy(request: Request): Future[ResponseBuilder] = {
+    fetchFromFollows(
+      request,
+      follows.followersFollowedBy(
+        _,
+        Urn(s"soundcloud:users:${request.routeParams("id")}"),
+        Urn(s"soundcloud:users:${request.routeParams("other_id")}"),
+        _
+      )
+    )
+  }
+
+  private def fetchFollowers(request: Request): Future[ResponseBuilder] = fetchFromFollows(request, follows.followers)
+
+  private def fetchFollowings(request: Request) = fetchFromFollows(request, follows.followings)
+
+  private def fetchFollowingIds(request: Request) = fetchFromFollows(request, follows.followings, userIds)
 
   private def mapUsersToUsers(users: List[User]): List[Any] = users
 
@@ -91,21 +106,17 @@ class UserFollowController(userAuthentication: UserAuthentication,
   }
 
   private def fetchFromFollows(request: Request,
-                               kind: String,
                                fetchFunction: (UserSession, Int) => Future[FollowsPage],
                                mapUsers: List[User] => List[Any] = mapUsersToUsers): Future[ResponseBuilder] = {
     userAuthentication.withLoggedInUser(request) { (session, userUrn) =>
       for {
-        affiliations <- fetchFunction(
-          session,
-          pageSizeParam(request)
-        )
+        affiliations <- fetchFunction(session, pageSizeParam(request))
         urns = affiliations.values.map(_.user)
         users <- fetchUsers(session, urns.toSet)
       } yield {
         render.json(Map(
           "collection" -> mapUsers(users),
-          "next_href" -> nextHref(baseUrl, "/me/" + kind, affiliations.page, request.params)
+          "next_href" -> nextHref(baseUrl, request.request.path, affiliations.page, request.params)
         ))
       }
     }
