@@ -13,6 +13,7 @@ import com.soundcloud.publicApiStrangler.headers.DefaultResponseHeadersFilter
 import com.soundcloud.publicApiStrangler.mapper.liebling.LikeCountMapper
 import com.soundcloud.publicApiStrangler.mapper.purchaselink.TrackPurchaseLinkMapper
 import com.soundcloud.publicApiStrangler.mapper.search.{PlaylistTracksMapper, SearchEntityMapper, SearchMapper, SearchRepository}
+import com.soundcloud.publicApiStrangler.mapper.similarsounds.SimilarSoundsMapper
 import com.soundcloud.publicApiStrangler.mapper.timeline.e1.{ActivitiesMapper, StreamMapper}
 import com.soundcloud.publicApiStrangler.mapper.timeline.publicApi.ActivitiesWithOriginMapper
 import com.soundcloud.publicApiStrangler.mapper.timeline.{EntityMapper, EntitySummaryMapper}
@@ -35,7 +36,8 @@ object App
   with LieblingComponent
   with PublicApiClientComponent
   with FollowsComponent
-  with GatekeeperComponent {
+  with GatekeeperComponent
+  with SimilarSoundsComponent {
 
   private val userAuthentication = createUserAuthentication
 
@@ -132,6 +134,30 @@ object App
     new SearchController(userAuthentication, searchMapper, baseUrl, rollout, mothershipDispatcher)
   }
 
+  private val similarSoundsController = {
+    val baseUrl = config.get("APP_BASE_URL", true)
+    val waveformUrlsRepo = new WaveformUrlsRepository(okidokiService, mediaService)
+    val searchEntityMapper = new SearchEntityMapper(
+      okidokiClient,
+      baseUrl,
+      contentAuthorizationService,
+      new WaveformMapper(waveformUrlsRepo),
+      new TrackPurchaseLinkMapper(okidokiClient),
+      new LikeCountMapper(lieblingClient),
+      new PlaylistTracksMapper(okidokiClient, baseUrl),
+      new EntitySummaryMapper(okidokiClient, baseUrl)
+    )
+    val similarSoundsMapper = new SimilarSoundsMapper(similarSoundsClient, searchEntityMapper)
+
+    new SimilarSoundsController(
+      userAuthentication,
+      similarSoundsMapper,
+      baseUrl,
+      rollout,
+      mothershipDispatcher
+    )
+  }
+
   override val fallbackHandler = Some(mothershipDispatcher)
 
   override lazy val additionalFilters = List(
@@ -148,6 +174,7 @@ object App
     groupController,
     trackStreamsController,
     userFollowController,
-    searchController
+    searchController,
+    similarSoundsController
   )
 }
