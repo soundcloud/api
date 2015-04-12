@@ -5,7 +5,7 @@ import java.nio.charset.Charset
 import com.soundcloud.scalakit.finagle.http.{AlwaysMatchesPathMatcher, HandlerRequest}
 import com.soundcloud.scalakit.test.UnitSpecification
 import com.twitter.finagle.Service
-import com.twitter.finagle.http.{Status, Version, Request, Response}
+import com.twitter.finagle.http.{Request, Response, Status, Version}
 import com.twitter.util.{Await, Future}
 import org.jboss.netty.buffer.ChannelBuffers
 import org.jboss.netty.handler.codec.http._
@@ -21,7 +21,6 @@ class DispatchToMothershipHandlerSpec extends UnitSpecification {
       httpResponse.headers().add("header1", "valueHeader1").add("header2", "valueHeader2")
       httpResponse.setContent(ChannelBuffers.copiedBuffer("body content", Charset.forName("UTF-8")))
       val response = Response (httpResponse)
-
 
       val request = Request(new DefaultHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.CONNECT, "/"))
       val handlerRequest = new HandlerRequest(AlwaysMatchesPathMatcher, request)
@@ -56,6 +55,5 @@ class DispatchToMothershipHandlerSpec extends UnitSpecification {
         responseFromBuilder.getStatusCode() ==== 500
       }
     }
-
   }
 }

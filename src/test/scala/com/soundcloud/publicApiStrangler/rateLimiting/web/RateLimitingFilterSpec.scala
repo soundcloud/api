@@ -1,14 +1,13 @@
 package com.soundcloud.publicApiStrangler.rateLimiting.web
 
-import com.soundcloud.scalakit.test.UnitSpecification
-import com.soundcloud.publicApiStrangler.rateLimiting.{Consumer, RateLimit}
-import org.mockito.Mockito._
-import com.twitter.util.{Await, Future}
-import com.twitter.finagle.http.{Response, Request}
-import com.twitter.finagle.Service
-import org.jboss.netty.handler.codec.http._
-import com.soundcloud.publicApiStrangler.rateLimiting.Ip
+import com.soundcloud.publicApiStrangler.rateLimiting.{Consumer, Ip, RateLimit}
 import com.soundcloud.scalakit.finagle.http.{AlwaysMatchesPathMatcher, HandlerRequest}
+import com.soundcloud.scalakit.test.UnitSpecification
+import com.twitter.finagle.Service
+import com.twitter.finagle.http.{Request, Response}
+import com.twitter.util.{Await, Future}
+import org.jboss.netty.handler.codec.http._
+import org.mockito.Mockito._
 
 class RateLimitingFilterSpec extends UnitSpecification {
 

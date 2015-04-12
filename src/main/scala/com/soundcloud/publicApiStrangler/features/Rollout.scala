@@ -15,7 +15,7 @@ object ZookeeperClient {
   private val baseSleepTimeInMiliseconds: Int = 1000
   private val maxNumberOfRetries: Int = 5
 
-  def createCuratorFrameworkZookeeperClient(rolloutAddress: String): CuratorFramework = {
+  def create(rolloutAddress: String): CuratorFramework = {
     val curatorZookeeperClient = CuratorFrameworkFactory.newClient(rolloutAddress, retryPolicy)
 
     curatorZookeeperClient.start()
@@ -26,8 +26,8 @@ object ZookeeperClient {
 }
 
 object RolloutBuilder {
-  def build(rolloutAddress: String, applicationName:String ): Rollout = {
-    val client = ZookeeperClient.createCuratorFrameworkZookeeperClient(rolloutAddress)
+  def build(rolloutAddress: String, applicationName: String): Rollout = {
+    val client = ZookeeperClient.create(rolloutAddress)
     val zookeeperBaseFeaturesPath = "/" + applicationName + "/features"
 
     try {
@@ -49,14 +49,30 @@ class Rollout(zookeeperCuratorClient: CuratorFramework, zookeeperBaseFeaturesPat
     val activation = percentage.toString.getBytes(Charsets.Utf8)
     try {
       zookeeperCuratorClient.create().creatingParentsIfNeeded().forPath(featurePath(featureName), activation)
-      addZookeeperListenerToFeature(featureName)
+      addListenerToFeature(featureName)
     } catch {
       case e: NodeExistsException =>
         zookeeperCuratorClient.setData().forPath(featurePath(featureName), activation)
     }
   }
 
-  private def addZookeeperListenerToFeature(featureName: String): Unit = {
+  def delete(featureName: String): Unit = {
+    try {
+      zookeeperCuratorClient.delete().forPath(featurePath(featureName))
+    } catch {
+      case _: NoNodeException =>
+    }
+  }
+
+  def allFeatures(): Map[String, Int] = {
+    zookeeperCuratorClient.getChildren.forPath(zookeeperBaseFeaturesPath).asScala.map { feature =>
+      feature -> activationForFeature(feature)
+    }.toMap
+  }
+
+  def isActive(featureName: String): Boolean = Random.nextInt(100) <= activationForFeature(featureName)
+
+  private def addListenerToFeature(featureName: String): Unit = {
     val featureFlag = new NodeCache(zookeeperCuratorClient, featurePath(featureName))
     featureFlag.getListenable.addListener(new NodeCacheListener {
       override def nodeChanged(): Unit = {
@@ -73,37 +89,18 @@ class Rollout(zookeeperCuratorClient: CuratorFramework, zookeeperBaseFeaturesPat
 
   private def featurePath(featureName: String): String = zookeeperBaseFeaturesPath + "/" + featureName
 
-  def delete(featureName: String): Unit = {
-    try {
-      zookeeperCuratorClient.delete().forPath(featurePath(featureName))
-    } catch {
-      case _: NoNodeException =>
-    }
-  }
-
-  def allFeatures(): Map[String, Int] = {
-    zookeeperCuratorClient.getChildren.forPath(zookeeperBaseFeaturesPath).asScala.map { feature =>
-      feature -> activationForFeature(feature)
-    }.toMap
-  }
-
-  def isActive(featureName: String): Boolean = return Random.nextInt(100) <= activationForFeature(featureName)
-
   private def activationForFeature(featureName: String): Int = {
     try {
       activationsMap.get(featureName) match {
         case Some(percentage) => percentage
         case None => {
-          addZookeeperListenerToFeature(featureName)
+          addListenerToFeature(featureName)
           val data = zookeeperCuratorClient.getData.forPath(featurePath(featureName))
-          val percentage = Integer.parseInt(new String(data, Charsets.Utf8))
-
-          return percentage
+          Integer.parseInt(new String(data, Charsets.Utf8))
         }
       }
     } catch {
-      case e: NoNodeException => return 0
+      case e: NoNodeException => 0
     }
   }
-
 }

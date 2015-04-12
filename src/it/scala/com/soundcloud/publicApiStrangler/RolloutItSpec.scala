@@ -12,7 +12,6 @@ class RolloutItSpec extends UnitSpecification {
   trait FeaturesContext extends VerifiedMocks {
     val config = new BazookaConfig
     val rolloutAddress = config.get("ZOOKEEPER_SERVERS")
-    val zookeeper = ZookeeperClient.createCuratorFrameworkZookeeperClient(rolloutAddress)
     val rollout = RolloutBuilder.build(rolloutAddress, config.getApplicationName)
 
     def newFeatureName(): String = "feature_" + new Random().nextInt(Integer.MAX_VALUE)
@@ -33,11 +32,7 @@ class RolloutItSpec extends UnitSpecification {
 
     rollout.allFeatures.keys must containAllOf(features)
   }
-
-  "returns false if feature is not enabled" in new NewFeatureContext {
-    rollout.isActive(featureName) mustEqual false
-  }
-
+  
   "returns true if feature is enabled for 100%" in new NewFeatureContext {
     rollout.activate(featureName, 100)
     rollout.isActive(featureName) mustEqual true
@@ -55,6 +50,8 @@ class RolloutItSpec extends UnitSpecification {
   }
 
   "picks up changes done directly in zookeeper" in new NewFeatureContext {
+    val zookeeper = ZookeeperClient.create(rolloutAddress)
+
     rollout.activate(featureName, 0)
     rollout.isActive(featureName) mustEqual false
     zookeeper.setData().forPath("/" + config.getApplicationName + "/features/" + featureName, "100".getBytes(Charsets.Utf8))

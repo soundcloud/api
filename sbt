@@ -1,4 +1,2 @@
-#!/bin/bash
-ENV=$(cat development.properties)
-echo $ENV
-eval $ENV vendor/sbt/bin/sbt $@
+#!/bin/bash +x
+eval vendor/sbt/bin/sbt -Duser.home=$HOME -J-Xmx3G -J-Xms512m -Dsbt.log.noformat=true -Dsbt.boot.properties=project/sbt.boot.properties "$@"

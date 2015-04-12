@@ -14,7 +14,6 @@ class RateLimitCounter(memcached: MemcachedClient) {
   val unusedFlag = 0
 
   def incr(entry: UsageEntry): Future[Long] = {
-
     memcached.incr(entry.key).flatMap {
       case Some(value) => Future.value(value: Long)
       case None => addToMemcached(entry)

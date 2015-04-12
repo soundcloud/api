@@ -1,0 +1,10 @@
+#!/bin/bash
+
+# Detects what is the correct IP the docker agent is running on
+if [[ "$OSTYPE" =~ ^darwin ]]; then
+    IP=`boot2docker ip`
+else
+    IP=`/sbin/ip route|awk '/default/ { print $3 }'`
+fi
+
+echo $IP
