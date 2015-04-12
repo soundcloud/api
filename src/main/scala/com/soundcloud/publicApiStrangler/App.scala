@@ -21,7 +21,6 @@ import com.twitter.finagle.http.filter.ExceptionFilter
 object App
   extends BffInjectionBasedApp
   with BazookaConfigComponent
-  with GeoIpComponent
   with AuthenticatorComponent
   with OkidokiComponent
   with TimelineComponent
@@ -29,7 +28,7 @@ object App
   with PublicApiClientComponent
   with GatekeeperComponent {
 
-  private val userAuthentication = createUserAuthentication(authenticatorClient.cacheKeyAndSession, geoIpClient.get)
+  private val userAuthentication = createUserAuthentication
 
   private val moshimoshiService = JsonService(
     ServiceConfig("moshimoshi", config.get(ResourceName("MOSHIMOSHI"), ConfigConvention.BASE_URL), config)
