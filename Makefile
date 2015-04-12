@@ -1,45 +1,13 @@
 SBT := vendor/sbt/bin/sbt -Duser.home=$(shell echo "$$HOME") -Dsbt.boot.properties=project/sbt.boot.properties -J-Xmx3G -J-Xms512m
-LOAD_ENV := $(shell echo "$$(./development.properties.sh development.properties) $$1" | tr '\n' ' ')
-LOAD_IT_ENV := $(shell echo "MEMCACHED_TEST_HOST=`bin/docker-host-ip` MEMCACHED_TEST_PORT=11211")
+LOAD_ENV := $(shell echo "$$(./development.properties.sh default.properties) $$1" | tr '\n' ' ')
+LOAD_INTEGRATION_TESTS_ENV := $(shell echo "$$(./integration.properties.sh) $$1" | tr '\n' ' ')
 
-VENDOR_DIR=$(PWD)/vendor
-BIN_DIR=$(PWD)/vendor/bin
-
-PLATFORM := $(shell sh -c 'uname -s 2>/dev/null')
-
-JRE=jre-8u31
-JRE_TARBALL=http://files.int.s-cloud.net/java/jre/$(JRE)-linux-x64.tar.gz
-JRE_DIR=$(VENDOR_DIR)/$(JRE)
-
-export PATH:=$(JRE_DIR)/bin:$(PATH)
-
-.install.jre:
-ifeq ($(PLATFORM), Linux)
-	mkdir -p $(JRE_DIR)
-	curl -L $(JRE_TARBALL) | tar xz -C $(JRE_DIR) --strip-components 1
-endif
-	touch $@
-
-remove.ivy.lock:
-	rm -f .ivy2/.sbt.ivy.lock
-
-all: remove.ivy.lock .install.jre
-	$(SBT) clean test startScript
-
-compile:
-	$(SBT) compile
-
-# bazooka target
-build: remove.ivy.lock .install.jre
-	$(SBT) clean startScript
+PIPELINE_NUMBER ?= stable
 
 run: _dev_docker_compose
 	$(LOAD_ENV) $(SBT) run
 
 precheckin: test it-test
-
-ci: remove.ivy.lock remove.install.jre .install.jre
-	$(SBT) -no-colors clean test startScript
 
 it-test: _dev_docker_compose
 	$(LOAD_ENV) $(LOAD_IT_ENV) $(SBT) it:test
@@ -47,11 +15,20 @@ it-test: _dev_docker_compose
 test:
 	$(SBT) test
 
-clean: remove.ivy.lock .install.jre
-	$(SBT) clean
+interactive: _dev_docker_compose
+	$(LOAD_ENV) $(SBT)
 
-remove.install.jre:
-		rm -f .install.jre
+dev: _dev_docker_compose
+
+deploy-de:
+	HEALTH_PATH=/-/health SCALE_STEP=1 BAZOOKA_APP=public-api-strangler BAZOOKA_ZONE=de INSTANCES=8 PROCESS_TYPE=api python bin/deploy.py
+
+deploy-db:
+	HEALTH_PATH=/-/health SCALE_STEP=5 BAZOOKA_APP=public-api-strangler BAZOOKA_ZONE=db INSTANCES=100 PROCESS_TYPE=api python bin/deploy.py
+
+run: _dev_docker_compose
+	$(LOAD_ENV) $(SBT) run
 
 _dev_docker_compose:
 	docker-compose up -d
+

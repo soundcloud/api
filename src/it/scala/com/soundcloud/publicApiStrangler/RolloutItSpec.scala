@@ -53,7 +53,7 @@ class RolloutItSpec extends UnitSpecification {
     val activations = randomIds.map(id => rollout.isActiveForId(featureName, Some(id)))
     activations.percentageSatisfying(_ == true).tap("Activations percentage") must beCloseTo(43, delta = 7)
   }
-  
+
   "supports consistent id-based rollouts, for alphanumeric ids" in new NewFeatureContext {
     val sampleSize = 500
     val randomIds = NonUniformRandomDataGenerator
@@ -80,7 +80,7 @@ class RolloutItSpec extends UnitSpecification {
   }
 
   "is disabled if feature doesn't exist" in new NewFeatureContext {
-    rollout.isActive(featureName) mustEqual false
+    rollout.isActive(newFeatureName()) mustEqual false
   }
 
   "picks up changes done directly in zookeeper" in new NewFeatureContext {
@@ -94,7 +94,7 @@ class RolloutItSpec extends UnitSpecification {
   "removes a feature successfully" in new NewFeatureContext {
     rollout.activate(featureName, 100)
     rollout.delete(featureName)
-    rollout.isActive(featureName) mustEqual false
+    rollout.isActive(featureName) must beFalse.eventually(retries = 2, sleep = 1.second)
   }
 
   "ignores non existing features when deleting" in new NewFeatureContext {

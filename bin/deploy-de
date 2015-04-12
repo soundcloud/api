@@ -1,0 +1,3 @@
+#/bin/bash +x 
+
+crun bazooka-cli 'make deploy-de'

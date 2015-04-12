@@ -1,18 +1,18 @@
 import sbt.Keys._
 import sbt._
 
-import com.typesafe.sbt.SbtStartScript
+import com.typesafe.sbt.packager.archetypes.JavaAppPackaging
 import io.gatling.sbt.GatlingPlugin
 import net.virtualvoid.sbt.graph.Plugin.graphSettings
-
+import com.typesafe.sbt.SbtNativePackager.autoImport._
 
 object JvmConfiguration {
   val expectedJavaVersion: String = "1.8"
 
   def assertUsingExpectedJavaVersion() = {
     val javaVersion = sys.props("java.version")
-    val isJava7 = javaVersion.startsWith(expectedJavaVersion)
-    require(isJava7, s"Java $expectedJavaVersion is required for this project ($javaVersion found)")
+    val isJava8 = javaVersion.startsWith(expectedJavaVersion)
+    require(isJava8, s"Java $expectedJavaVersion is required for this project ($javaVersion found)")
   }
 
   val javacOptions = Seq("-Xlint:unchecked", "-source", expectedJavaVersion, "-target", expectedJavaVersion)
@@ -55,8 +55,8 @@ object PublicApiStranglerBuild extends Build {
 
   lazy val gatlingDependencies = defaultSettings ++ Seq(
     libraryDependencies ++= Seq(
-      "io.gatling.highcharts" % "gatling-charts-highcharts" % "2.1.4" % "it,test",
-      "io.gatling" % "gatling-test-framework" % "2.1.4" % "it,test")
+      "io.gatling.highcharts" % "gatling-charts-highcharts" % "2.1.4",
+      "io.gatling" % "gatling-test-framework" % "2.1.4")
   )
 
   lazy val performanceTests = Project(id = "performance",
@@ -73,6 +73,6 @@ object PublicApiStranglerBuild extends Build {
     .settings(defaultSettings: _*)
     .settings(Defaults.itSettings: _*)
     .settings(mainClass in Compile := Some("com.soundcloud.publicApiStrangler.App"): _*)
-    .settings(SbtStartScript.startScriptForClassesSettings: _*)
     .settings(net.virtualvoid.sbt.graph.Plugin.graphSettings: _*)
+    .enablePlugins(JavaAppPackaging)
 }

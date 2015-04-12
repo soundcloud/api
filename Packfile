@@ -8,9 +8,16 @@
 
   "environment": {
     "default": "default.properties",
-    "production_overrides": "production.overrides"
+    "production_overrides": "production.overrides.enc"
   },
-  
+
+  "bazooka": {
+    "zones": [
+      "db",
+      "de"
+    ]
+  },
+
   "entry_points": {
     "api": "bin/public-api-strangler"
   },
@@ -20,5 +27,9 @@
       "runtime": "builder",
       "cmd": "make precheckin"
     }
-  }
+  },
+
+  "apt_dependencies": [],
+
+  "service_dependencies": []
 }

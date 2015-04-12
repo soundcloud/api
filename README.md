@@ -1,13 +1,13 @@
 # Public-API Strangler
 
-An implementation of the [Strangler Pattern](http://martinfowler.com/bliki/StranglerApplication.html) for the mothership's Public API
+An implementation of the [Strangler Pattern](http://martinfowler.com/bliki/StranglerApplication.html) for the mothership's Public API.
 
 ## Team
 
 * Team: Core Services <core-services@soundcloud.com>
 * IRC: #coreservices. Slack: #core-services.
 * Telemetry: [Promdash](http://promdash/public-api-strangler)
-* Issue Tracker: [Jira Board](https://soundcloud.atlassian.net/secure/RapidBoard.jspa?rapidView=128)
+* Issue Tracker: [Jira Board](https://soundcloud.atlassian.net/secure/RapidBoard.jspa?rapidView=128).
 
 ## How to develop locally
 
