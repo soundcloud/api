@@ -61,10 +61,6 @@ class StreamMapperSpec extends UnitSpecification with Fixtures {
       result.collection.head must beAnInstanceOf[TrackTimelineItem]
     }
 
-    "filters-out invalid content" in new Cursor {
-      result.collection.map(_.`type`).contains("promoted:stream") mustEqual false
-    }
-
     "builds a nextHref" in new Cursor {
       result.nextHref mustEqual Some(s"https://foo.com/something?limit=100&cursor=$nextUuid")
     }

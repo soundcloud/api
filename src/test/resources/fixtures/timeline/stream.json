@@ -1,38 +1,6 @@
 {
    "events":[
       {
-         "type":"promoted:stream",
-         "id":"soundcloud:sounds:152426976",
-         "timestamp":"2014/08/12 09:15:15 +0000",
-         "urn":"soundcloud:tracks:152426976",
-         "actor":"soundcloud:users:12326939",
-         "target":null,
-         "promoted":{
-            "ad_urn":"adswizz:ads:932",
-            "session_id":"87295646f435edcb257c27dc8f1c1db",
-            "user_id":"7add2d9d4cff41f6822229645920fa4c",
-            "geo_id":"de%7C%7C%7C%7C51.0%7C9.0%7C%7C%7C%7C%3A%3Affff%3A178.249.136.126%7Csoundcloud+ltd.",
-            "tracking":{
-               "repost_click":"https://promoted.soundcloud.com/track?reqType=SCRepostClicked&protocolVersion=2.0&adId=932&zoneId=39&cb=c3e22df46cb34a0da772a9632762788f",
-               "ad_click":"https://promoted.soundcloud.com/track?reqType=SCAdClicked&protocolVersion=2.0&adId=932&zoneId=39&cb=8d95c281b42941a29a4f2843288aecc0",
-               "impression":[
-                  "https://promoted.soundcloud.com/impression?adData=instance%3Asoundcloud%3Bad_id%3A932%3Bview_key%3A1407834915256966%3Bzone_id%3A39&loc=&listenerId=7add2d9d4cff41f6822229645920fa4c&sessionId=87295646f435edcb257c27dc8f1c1db&ip=%3A%3Affff%3A178.249.136.126&OAGEO=ZGUlN0MlN0MlN0MlN0M1MS4wJTdDOS4wJTdDJTdDJTdDJTdDJTNBJTNBZmZmZiUzQTE3OC4yNDkuMTM2LjEyNiU3Q3NvdW5kY2xvdWQrbHRkLg==&user_agent=curl%2F7.30.0&cbs=2083098"
-               ],
-               "sound_skip":"https://promoted.soundcloud.com/track?reqType=SCSoundSkipped&protocolVersion=2.0&adId=932&zoneId=39&cb=e0d83540a1564b6aa7f1de074e8b1bdc",
-               "profile_click":"https://promoted.soundcloud.com/track?reqType=SCProfileClicked&protocolVersion=2.0&adId=932&zoneId=39&cb=d68af7cd1fe245ff9772cb009149757a",
-               "share_click":"https://promoted.soundcloud.com/track?reqType=SCShareClicked&protocolVersion=2.0&adId=932&zoneId=39&cb=14dca7ad79a844f699625d8f9030e8b0",
-               "sound_play":"https://promoted.soundcloud.com/track?reqType=SCSoundPlayed&protocolVersion=2.0&adId=932&zoneId=39&cb=a4a81f2b64b247db9b478a7d3766e230",
-               "add_to_set_click":"https://promoted.soundcloud.com/track?reqType=SCAddToSetClicked&protocolVersion=2.0&adId=932&zoneId=39&cb=b88c627bd9ec4434bebe9c65c80e2fc8",
-               "sponsor_click":"https://promoted.soundcloud.com/track?reqType=SCSponsorClicked&protocolVersion=2.0&adId=932&zoneId=39&cb=b58e2f4454dc4d6191c9ff699f3272e9",
-               "follow_click":"https://promoted.soundcloud.com/track?reqType=SCFollowClicked&protocolVersion=2.0&adId=932&zoneId=39&cb=75ddb61f4eed4318b13259b2edaeb4b4",
-               "sound_click":"https://promoted.soundcloud.com/track?reqType=SCSoundClicked&protocolVersion=2.0&adId=932&zoneId=39&cb=d11ec4e14b744ce9be9c78b8d505b497",
-               "purchase_click":"https://promoted.soundcloud.com/track?reqType=SCPurchaseClicked&protocolVersion=2.0&adId=932&zoneId=39&cb=c26f6c7f31024148976377114cdf0684",
-               "like_click":"https://promoted.soundcloud.com/track?reqType=SCLikeClicked&protocolVersion=2.0&adId=932&zoneId=39&cb=ade9385f0ad14b4291fd73817bdaad75",
-               "sound_finish":"https://promoted.soundcloud.com/track?reqType=SCSoundFinished&protocolVersion=2.0&adId=932&zoneId=39&cb=4885b1ae7e6f478f853b8882578db70c"
-            }
-         }
-      },
-      {
          "type":"track:repost",
          "timestamp":"2014/08/12 08:26:26 +0000",
          "urn":"soundcloud:tracks:131352352",
