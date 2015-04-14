@@ -1,5 +1,6 @@
 package com.soundcloud.publicApiStrangler.features
 
+import com.soundcloud.scalakit.Urn
 import com.twitter.io.Charsets
 import org.apache.curator.framework.recipes.cache.{NodeCache, NodeCacheListener}
 import org.apache.curator.framework.{CuratorFramework, CuratorFrameworkFactory}
@@ -71,6 +72,14 @@ class Rollout(zookeeperCuratorClient: CuratorFramework, zookeeperBaseFeaturesPat
   }
 
   def isActive(featureName: String): Boolean = Random.nextInt(100) <= activationForFeature(featureName)
+
+  def isActiveForUser(featureName: String, user: Urn): Boolean = {
+    if(activationForFeature(featureName) == 100) {
+      true
+    } else {
+      user.getIdentifier.toLong % 100 < activationForFeature(featureName)
+    }
+  }
 
   private def addListenerToFeature(featureName: String): Unit = {
     val featureFlag = new NodeCache(zookeeperCuratorClient, featurePath(featureName))

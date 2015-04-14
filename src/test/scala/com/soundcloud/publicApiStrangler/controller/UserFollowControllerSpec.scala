@@ -1,17 +1,21 @@
 package com.soundcloud.publicApiStrangler.controller
 
+import com.soundcloud.bff.finagle.Request
 import com.soundcloud.bff.services.JsonService
 import com.soundcloud.bff.test.InjectionBasedControllerSpecification
 import com.soundcloud.jvmkit.{Geo => JvmGeo}
 import com.soundcloud.publicApiStrangler.clients.{PageInfo, Affiliation, FollowsPage, FollowsClient}
+import com.soundcloud.publicApiStrangler.features.Rollout
 import com.soundcloud.publicApiStrangler.support.DispatchToMothershipHandler
 import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures
 import com.soundcloud.scalakit.finagle.http.{HandlerRequest, OkStatus}
 import com.soundcloud.scalakit.finagle.jsonservice.{JsonResponse, Params}
+import com.soundcloud.scalakit.test.VerifiedMocks
 import com.soundcloud.scalakit.{Geo, Path, Urn, UserSession}
 import com.soundcloud.service.client.OkidokiClient
 import com.twitter.finagle.http.{Response, Status}
 import com.twitter.util.Future
+import org.jboss.netty.handler.codec.http.{HttpHeaders, HttpResponse}
 import org.joda.time.{DateTime, DateTimeUtils}
 import org.specs2.mutable.BeforeAfter
 import play.api.libs.json._
@@ -21,14 +25,15 @@ class UserFollowControllerSpec extends InjectionBasedControllerSpecification wit
   // changes to DateTimeUtils are not thread-safe
   sequential
 
-  trait Context extends Scope with BeforeAfter {
+  trait Context extends Scope with BeforeAfter with VerifiedMocks {
     val fallbackMock = mock[DispatchToMothershipHandler]
     val okidokiMock = mock[OkidokiClient]
     val followsMock = mock[FollowsClient]
+    val rollout = mock[Rollout]
     val userUrn = Urn("soundcloud:users:999")
     lazy val geo = Geo("US")
     val session = UserSession(userUrn, Urn("soundcloud:applications:v2"), geo, Set.empty)
-    lazy val controller = new UserFollowController(fakeUserAuthentication(session), fallbackMock, okidokiMock, followsMock, "http://foo")
+    lazy val controller = new UserFollowController(fakeUserAuthentication(session), fallbackMock, okidokiMock, followsMock, "http://foo", rollout)
     lazy val userMock = mock[JsObject]
     lazy val okidokiResponse = Future(List(userMock))
 
@@ -36,6 +41,7 @@ class UserFollowControllerSpec extends InjectionBasedControllerSpecification wit
 
     override def before = {
       DateTimeUtils.setCurrentMillisFixed(now)
+      rollout.isActiveForUser("follows-reads", userUrn) returns true
       okidokiMock.fetch(session, Set(userUrn)) returns okidokiResponse
     }
 
@@ -44,9 +50,20 @@ class UserFollowControllerSpec extends InjectionBasedControllerSpecification wit
     }
   }
 
+  trait FallbackContext extends Context {
+    val expectedResponse = mock[Response]
+
+    override def before = {
+      rollout.isActiveForUser("follows-reads", userUrn) returns false
+
+      expectedResponse.headers() returns HttpHeaders.EMPTY_HEADERS
+      expectedResponse.getStatusCode() returns Status.EnhanceYourCalm.getCode
+      when(fallbackMock.defaultHandling(any[HandlerRequest])).thenReturn(Future.value(expectedResponse))
+    }
+  }
+
   "GET /users/:id/followers/followed_by/:other_id" >> {
     "fetches followings" in new Context {
-
       override def before = {
         super.before
         val values = Seq(
@@ -62,6 +79,11 @@ class UserFollowControllerSpec extends InjectionBasedControllerSpecification wit
       val json = Json.parse(response.body)
       (json \ "collection").as[Seq[JsObject]].size ==== 1
       (json \ "next_href").asOpt[String] ==== Some("http://foo/users/1/followers/followed_by/2?last_id=123-1234&page_size=2")
+    }
+
+    "fall back to moshi when not rolling out" in new FallbackContext {
+      val response = get(controller, "/users/1/followers/followed_by/2", Map("limit" -> "10"))
+      response.status ==== Status.EnhanceYourCalm
     }
   }
 

@@ -6,6 +6,7 @@ import com.soundcloud.bff.nextbff.mapping.{Mapping, MappingContext}
 import com.soundcloud.bff.web.{BffInjectionBasedController, UserAuthentication}
 import com.soundcloud.jvmkit.Geo
 import com.soundcloud.publicApiStrangler.clients.{FollowsPage, PageInfo, FollowsClient}
+import com.soundcloud.publicApiStrangler.features.Rollout
 import com.soundcloud.publicApiStrangler.mapping.timeline.User
 import com.soundcloud.publicApiStrangler.support.DispatchToMothershipHandler
 import com.soundcloud.scalakit.finagle.http.{AlwaysMatchesPathMatcher, HandlerRequest}
@@ -24,7 +25,8 @@ class UserFollowController(userAuthentication: UserAuthentication,
                            fallback: DispatchToMothershipHandler,
                            okidoki: OkidokiClient,
                            follows: FollowsClient,
-                           baseUrl: String)
+                           baseUrl: String,
+                           rollout: Rollout)
   extends BffInjectionBasedController {
 
   val followRestrictions = {
@@ -125,17 +127,25 @@ class UserFollowController(userAuthentication: UserAuthentication,
                                fetchFunction: (UserSession, Int) => Future[FollowsPage],
                                mapUsers: List[User] => List[Any] = mapUsersToUsers): Future[ResponseBuilder] = {
     userAuthentication.withLoggedInUser(request) { (session, userUrn) =>
-      for {
-        affiliations <- fetchFunction(session, pageSizeParam(request))
-        urns = affiliations.values.map(_.user)
-        users <- fetchUsers(session, urns.toSet)
-      } yield {
-        render.json(Map(
-          "collection" -> mapUsers(users),
-          "next_href" -> nextHref(baseUrl, request.request.path, affiliations.page, request.params)
-        ))
+      if(rollingOutReads(session)) {
+        for {
+          affiliations <- fetchFunction(session, pageSizeParam(request))
+          urns = affiliations.values.map(_.user)
+          users <- fetchUsers(session, urns.toSet)
+        } yield {
+          render.json(Map(
+            "collection" -> mapUsers(users),
+            "next_href" -> nextHref(baseUrl, request.request.path, affiliations.page, request.params)
+          ))
+        }
+      } else {
+        fallbackToMothership(request)
       }
     }
+  }
+
+  private def rollingOutReads(session: UserSession): Boolean = {
+    rollout.isActiveForUser("follows-reads", session.getUser)
   }
 
   private def nextHref(baseUrl: String, path: String, pageInfo: PageInfo, requestParams: Map[String, String]): Option[String] = {

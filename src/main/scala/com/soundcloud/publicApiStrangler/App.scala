@@ -80,17 +80,16 @@ object App
       trackStreamSnipHandler)
   }
 
-
   val rollout = RolloutBuilder.build(config.get("ZOOKEEPER_SERVERS"), config.getApplicationName)
   private val rolloutController = new RolloutController(rollout)
-
 
   private val userFollowController = new UserFollowController(
     userAuthentication,
     mothershipDispatcher,
     okidokiClient,
     followsClient,
-    baseUrl
+    baseUrl,
+    rollout
   )
 
   override val fallbackHandler = Some(mothershipDispatcher)
