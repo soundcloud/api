@@ -29,6 +29,9 @@ all: remove.ivy.lock .install.jre
 build: remove.ivy.lock .install.jre
 	$(SBT) clean startScript
 
+run: _dev_docker_compose
+	$(LOAD_ENV) $(SBT) run
+
 precheckin: test it-test
 
 ci: remove.ivy.lock remove.install.jre .install.jre
