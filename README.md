@@ -34,10 +34,10 @@ Activating it will make the strangler return HTTP 200 with empty body on request
 
 ### Links to rollout
 
-http://rollout-web.int.s-cloud.net/activations/disable_cheap_groups_endpoints
-http://rollout-web.int.s-cloud.net/activations/disable_expensive_groups_endpoints
+http://gatekeeper.int.s-cloud.net/activations/disable_cheap_groups_endpoints
+http://gatekeeper.int.s-cloud.net/activations/disable_expensive_groups_endpoints
 
-Alternatively you can go to do http://rollout-web.int.s-cloud.net/features and click on the "On" button for the feature.
+Alternatively you can go to do http://gatekeeper.int.s-cloud.net/features and click on the "On" button for the feature.
 
 ## FAQ
 
