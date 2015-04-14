@@ -4,10 +4,12 @@ addSbtPlugin("com.typesafe.sbt" % "sbt-start-script" % "0.10.0")
 
 addSbtPlugin("net.virtual-void" % "sbt-dependency-graph" % "0.7.4")
 
+addSbtPlugin("org.scoverage" %% "sbt-scoverage" % "1.0.4")
+
 addSbtPlugin("com.github.mpeltonen" % "sbt-idea" % "1.6.0")
 
 addSbtPlugin("com.typesafe.sbteclipse" % "sbteclipse-plugin" % "2.4.0")
 
-addSbtPlugin("org.ensime" % "ensime-sbt-cmd" % "0.1.2")
+addSbtPlugin("com.typesafe.sbt" % "sbt-native-packager" % "1.0.0-RC1")
 
-addSbtPlugin("com.typesafe.sbt" % "sbt-start-script" % "0.10.0")
+addSbtPlugin("io.gatling" % "gatling-sbt" % "2.1.0")

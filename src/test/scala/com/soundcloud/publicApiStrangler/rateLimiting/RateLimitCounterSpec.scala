@@ -1,14 +1,13 @@
 package com.soundcloud.publicApiStrangler.rateLimiting
 
-import com.twitter.finagle.memcached.{Client => MemcachedClient, MockClient}
-import scala.util.Random
 import com.soundcloud.jvmkit.ResourceName
-import com.twitter.util.{Duration, Await}
 import com.soundcloud.scalakit.test.UnitSpecification
+import com.twitter.finagle.memcached.{Client => MemcachedClient, MockClient}
+import com.twitter.util.{Await, Duration}
+
+import scala.util.Random
 
 class RateLimitCounterSpec extends UnitSpecification {
-  sequential
-
   trait ExternalMemcachedProcess extends Scope {
     val memcached = new MockClient
     val rateLimitCounter = new RateLimitCounter(memcached)

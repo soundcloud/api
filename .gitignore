@@ -45,3 +45,6 @@ production.json
 staging.json
 .install.jre
 .java-version
+.ivy2
+.sbt
+plumber

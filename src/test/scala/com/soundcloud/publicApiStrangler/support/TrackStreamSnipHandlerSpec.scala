@@ -1,19 +1,17 @@
 package com.soundcloud.publicApiStrangler.support
 
 import com.soundcloud.bff.authorization.ContentAuthorizationService
-import com.soundcloud.bff.finagle.{ResponseBuilder, Request}
+import com.soundcloud.bff.finagle.{Request, ResponseBuilder}
 import com.soundcloud.bff.media.{MediaUrl, MediaUrlsRepository}
 import com.soundcloud.bff.test.UnitSpecification
 import com.soundcloud.jvmkit.policies.{ContentAuthorization, ContentPolicy}
 import com.soundcloud.jvmkit.{Urn, UserSession}
 import com.soundcloud.publicApiStrangler.mapper.trackstreams.TrackStreamResponseMapper
-import com.twitter.util.{Future, Await}
-
-
+import com.twitter.util.{Await, Future}
 
 class TrackStreamSnipHandlerSpec extends UnitSpecification {
 
-  "TrackStreamSnipHandler" should  {
+  "TrackStreamSnipHandler" should {
 
     trait Context extends Scope {
       val mothershipDispatcher = mock[DispatchToMothershipHandler]
@@ -35,7 +33,7 @@ class TrackStreamSnipHandlerSpec extends UnitSpecification {
       contentAuthService.findRulesApplicableTo(userSession, Seq(trackUrn)) returns
         Future.value(Seq(contentAuth))
 
-      def responseBuilder(statusCode:Int) =
+      def responseBuilder(statusCode: Int) =
         Future.value(new ResponseBuilder().status(statusCode))
 
     }

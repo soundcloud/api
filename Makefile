@@ -1,4 +1,5 @@
-SBT = SBT_OPTS="-Xms512M -Xmx2G -Xss1M" ./sbt
+SBT := vendor/sbt/bin/sbt -Duser.home=$(shell echo "$$HOME") -Dsbt.boot.properties=project/sbt.boot.properties -J-Xmx3G -J-Xms512m
+LOAD_ENV := $(shell echo "$$(./development.properties.sh development.properties) $$1" | tr '\n' ' ')
 
 VENDOR_DIR=$(PWD)/vendor
 BIN_DIR=$(PWD)/vendor/bin
@@ -28,11 +29,22 @@ all: remove.ivy.lock .install.jre
 build: remove.ivy.lock .install.jre
 	$(SBT) clean startScript
 
+precheckin: test it-test
+
 ci: remove.ivy.lock remove.install.jre .install.jre
 	$(SBT) -no-colors clean test startScript
+
+it-test: _dev_docker_compose
+	$(LOAD_ENV) $(SBT) it:test
+
+test:
+	$(SBT) test
 
 clean: remove.ivy.lock .install.jre
 	$(SBT) clean
 
 remove.install.jre:
 		rm -f .install.jre
+
+_dev_docker_compose:
+	docker-compose up -d

@@ -7,6 +7,7 @@ import com.soundcloud.bff.services.JsonService
 import com.soundcloud.jvmkit.config.ConfigConvention
 import com.soundcloud.publicApiStrangler.authorization.{AuthorizeHttpResponse, ContentAuthorizationFilter}
 import com.soundcloud.publicApiStrangler.controller._
+import com.soundcloud.publicApiStrangler.features.{RolloutBuilder, RolloutController, ZookeeperClient, Rollout}
 import com.soundcloud.publicApiStrangler.mapper.timeline.e1.{ActivitiesMapper, StreamMapper}
 import com.soundcloud.publicApiStrangler.mapper.timeline.publicApi.ActivitiesWithOriginMapper
 import com.soundcloud.publicApiStrangler.mapper.timeline.{EntityMapper, EntitySummaryMapper}
@@ -20,7 +21,6 @@ import com.twitter.finagle.http.filter.ExceptionFilter
 object App
   extends BffInjectionBasedApp
   with BazookaConfigComponent
-  with GeoIpComponent
   with AuthenticatorComponent
   with OkidokiComponent
   with TimelineComponent
@@ -28,7 +28,7 @@ object App
   with PublicApiClientComponent
   with GatekeeperComponent {
 
-  private val userAuthentication = createUserAuthentication(authenticatorClient.cacheKeyAndSession, geoIpClient.get)
+  private val userAuthentication = createUserAuthentication
 
   private val moshimoshiService = JsonService(
     ServiceConfig("moshimoshi", config.get(ResourceName("MOSHIMOSHI"), ConfigConvention.BASE_URL), config)
@@ -81,6 +81,9 @@ object App
       trackStreamSnipHandler)
   }
 
+  val rollout = RolloutBuilder.build(config.get("ZOOKEEPER_SERVERS"), config.getApplicationName)
+  private val rolloutController = new RolloutController(rollout)
+
   private val userFollowController = new UserFollowController(userAuthentication, mothershipDispatcher, moshimoshiService)
 
   override val fallbackHandler = Some(mothershipDispatcher)
@@ -93,6 +96,7 @@ object App
 
   override val controllers = Set(
     timelineController,
+    rolloutController,
     groupController,
     trackStreamsController,
     userFollowController

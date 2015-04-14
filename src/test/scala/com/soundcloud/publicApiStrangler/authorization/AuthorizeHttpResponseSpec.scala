@@ -68,7 +68,7 @@ class AuthorizeHttpResponseSpec extends UnitSpecification with Fixtures {
 
     def policies: Seq[ContentPolicy]
 
-    def mockWaveFormUrlsRepoExpectations: Unit = {}
+    def mockWaveFormUrlsRepoExpectations(): Unit = {}
 
     val authorizations = tracksArray.as[Seq[bff.JsValue]]
       .map(_ \ "id")
@@ -80,7 +80,7 @@ class AuthorizeHttpResponseSpec extends UnitSpecification with Fixtures {
     override def before = {
       when(contentAuthorization.findRulesApplicableTo(===(session), any[Seq[Urn]]))
         .thenReturn(Future(authorizations))
-      mockWaveFormUrlsRepoExpectations
+      mockWaveFormUrlsRepoExpectations()
     }
   }
 
@@ -104,7 +104,7 @@ class AuthorizeHttpResponseSpec extends UnitSpecification with Fixtures {
 
     override def policies = Seq(ContentPolicy.SNIP, ContentPolicy.SNIP, ContentPolicy.SNIP)
 
-    override def mockWaveFormUrlsRepoExpectations = {
+    override def mockWaveFormUrlsRepoExpectations() = {
       val trackWaveformUrls = Map(
         Urn("soundcloud", "tracks", "49438146") -> TrackWaveformUrl("RhJ436DPf2Vx", new Url("http://bla"), new Url("http://bla2"), "stream", None),
         Urn("soundcloud", "tracks", "49437906") -> TrackWaveformUrl("DWpqP6aFqglm", new Url("http://bla3"), new Url("http://bla4"), "stream", None),
@@ -120,7 +120,7 @@ class AuthorizeHttpResponseSpec extends UnitSpecification with Fixtures {
   "trims a list if a track is blocked others are snip" in new TrackArrayContext {
     override def policies = Seq(ContentPolicy.SNIP, ContentPolicy.BLOCK, ContentPolicy.SNIP)
 
-    override def mockWaveFormUrlsRepoExpectations = {
+    override def mockWaveFormUrlsRepoExpectations() = {
       val trackWaveformUrls = Map(
         Urn("soundcloud", "tracks", "49438146") -> TrackWaveformUrl("RhJ436DPf2Vx", new Url("http://bla"), new Url("http://bla2"), "stream", None),
         Urn("soundcloud", "tracks", "48031525") -> TrackWaveformUrl("sDWnMpZaIQ9Z", new Url("http://bla5"), new Url("http://bla6"), "stream", None)

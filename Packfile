@@ -1,0 +1,24 @@
+{
+  "name":          "public-api-strangler",
+  "archetype":     "scala",
+  "runtime":       "jdk-8",
+
+  "description":   "An implementation of the Strangler Pattern for the mothership's Public API",
+  "url":           "https://github.com/soundcloud/public-api-strangler",
+
+  "environment": {
+    "default": "default.properties",
+    "production_overrides": "production.overrides"
+  },
+  
+  "entry_points": {
+    "api": "bin/public-api-strangler"
+  },
+
+  "targets": {
+    "precheckin": {
+      "runtime": "builder",
+      "cmd": "make precheckin"
+    }
+  }
+}

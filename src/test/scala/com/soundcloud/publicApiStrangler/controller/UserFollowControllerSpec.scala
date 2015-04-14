@@ -14,10 +14,6 @@ import org.specs2.mutable.BeforeAfter
 import play.api.libs.json.{JsNull, JsObject, Json}
 
 class UserFollowControllerSpec extends InjectionBasedControllerSpecification {
-
-  // changes to DateTimeUtils are not thread-safe
-  sequential
-
   trait Context extends Scope with BeforeAfter {
     val fallbackMock = mock[DispatchToMothershipHandler]
     val moshimoshiMock = mock[JsonService]
