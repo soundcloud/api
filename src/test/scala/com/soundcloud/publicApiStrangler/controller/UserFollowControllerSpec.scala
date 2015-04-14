@@ -70,7 +70,7 @@ class UserFollowControllerSpec extends InjectionBasedControllerSpecification wit
           Affiliation("123-123", "2012-02-13T23:30:13.000+0000", Urn("soundcloud:users:12490957"), Urn("soundcloud:users:100"))
         )
         val pageInfo = PageInfo(Some("123-1234"), 2)
-        followsMock.mutualFollowers(session, Urn("soundcloud:users:1"), Urn("soundcloud:users:2"), 10) returns Future.value(FollowsPage(values, pageInfo))
+        followsMock.mutualFollowers(session, Urn("soundcloud:users:1"), Urn("soundcloud:users:2"), 10, None) returns Future.value(FollowsPage(values, pageInfo))
         okidokiMock.fetch(session, values.map(_.user).toSet) returns Future.value(okidokiUsers.as[List[JsObject]])
       }
 
@@ -96,7 +96,7 @@ class UserFollowControllerSpec extends InjectionBasedControllerSpecification wit
           Affiliation("123-123", "2012-02-13T23:30:13.000+0000", Urn("soundcloud:users:12490957"), Urn("soundcloud:users:100"))
         )
         val pageInfo = PageInfo(Some("123-1234"), 2)
-        followsMock.followingsNotFollowedBy(session, Urn("soundcloud:users:1"), Urn("soundcloud:users:2"), 10) returns Future.value(FollowsPage(values, pageInfo))
+        followsMock.followingsNotFollowedBy(session, Urn("soundcloud:users:1"), Urn("soundcloud:users:2"), 10, None) returns Future.value(FollowsPage(values, pageInfo))
         okidokiMock.fetch(session, values.map(_.user).toSet) returns Future.value(okidokiUsers.as[List[JsObject]])
       }
 
@@ -117,11 +117,11 @@ class UserFollowControllerSpec extends InjectionBasedControllerSpecification wit
           Affiliation("123-123", "2012-02-13T23:30:13.000+0000", Urn("soundcloud:users:12490957"), Urn("soundcloud:users:100"))
         )
         val pageInfo = PageInfo(Some("123-1234"), 2)
-        followsMock.mutualFollowings(session, Urn("soundcloud:users:1"), Urn("soundcloud:users:2"), 10) returns Future.value(FollowsPage(values, pageInfo))
+        followsMock.mutualFollowings(session, Urn("soundcloud:users:1"), Urn("soundcloud:users:2"), 10, Some("2")) returns Future.value(FollowsPage(values, pageInfo))
         okidokiMock.fetch(session, values.map(_.user).toSet) returns Future.value(okidokiUsers.as[List[JsObject]])
       }
 
-      val response = get(controller, "/users/1/followings/common_to/2", Map("limit" -> "10"))
+      val response = get(controller, "/users/1/followings/common_to/2", Map("limit" -> "10", "last_id" -> "2"))
       response.status ==== Status.Ok
       val json = Json.parse(response.body)
       (json \ "collection").as[Seq[JsObject]].size ==== 1
@@ -138,7 +138,7 @@ class UserFollowControllerSpec extends InjectionBasedControllerSpecification wit
           Affiliation("123-123", "2012-02-13T23:30:13.000+0000", Urn("soundcloud:users:12490957"), Urn("soundcloud:users:100"))
         )
         val pageInfo = PageInfo(Some("123-1234"), 2)
-        followsMock.followings(session, 10) returns Future.value(FollowsPage(values, pageInfo))
+        followsMock.followings(session, 10, None) returns Future.value(FollowsPage(values, pageInfo))
         okidokiMock.fetch(session, values.map(_.user).toSet) returns Future.value(okidokiUsers.as[List[JsObject]])
       }
 
@@ -160,7 +160,7 @@ class UserFollowControllerSpec extends InjectionBasedControllerSpecification wit
           Affiliation("123-123", "2012-02-13T23:30:13.000+0000", Urn("soundcloud:users:12490957"), Urn("soundcloud:users:100"))
         )
         val pageInfo = PageInfo(Some("123-1234"), 2)
-        followsMock.followers(session, 10) returns Future.value(FollowsPage(values, pageInfo))
+        followsMock.followers(session, 10, None) returns Future.value(FollowsPage(values, pageInfo))
         okidokiMock.fetch(session, values.map(_.user).toSet) returns Future.value(okidokiUsers.as[List[JsObject]])
       }
 
@@ -181,7 +181,7 @@ class UserFollowControllerSpec extends InjectionBasedControllerSpecification wit
           Affiliation("123-123", "2012-02-13T23:30:13.000+0000", Urn("soundcloud:users:12490957"), Urn("soundcloud:users:100"))
         )
         val pageInfo = PageInfo(Some("123-1234"), 2)
-        followsMock.followings(session, 10) returns Future.value(FollowsPage(values, pageInfo))
+        followsMock.followings(session, 10, None) returns Future.value(FollowsPage(values, pageInfo))
         okidokiMock.fetch(session, values.map(_.user).toSet) returns Future.value(okidokiUsers.as[List[JsObject]])
       }
 
@@ -202,7 +202,7 @@ class UserFollowControllerSpec extends InjectionBasedControllerSpecification wit
           Affiliation("123-123", "2012-02-13T23:30:13.000+0000", Urn("soundcloud:users:12490957"), Urn("soundcloud:users:100"))
         )
         val pageInfo = PageInfo(Some("123-1234"), 2)
-        followsMock.followers(session, 10) returns Future.value(FollowsPage(values, pageInfo))
+        followsMock.followers(session, 10, Some("foo")) returns Future.value(FollowsPage(values, pageInfo))
         okidokiMock.fetch(session, values.map(_.user).toSet) returns Future.value(okidokiUsers.as[List[JsObject]])
       }
 

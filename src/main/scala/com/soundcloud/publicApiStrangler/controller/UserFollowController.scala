@@ -76,7 +76,7 @@ class UserFollowController(userAuthentication: UserAuthentication,
         _,
         Urn(s"soundcloud:users:${request.routeParams("id")}"),
         Urn(s"soundcloud:users:${request.routeParams("other_id")}"),
-        _
+        _, _
       )
     )
   }
@@ -88,7 +88,7 @@ class UserFollowController(userAuthentication: UserAuthentication,
         _,
         Urn(s"soundcloud:users:${request.routeParams("id")}"),
         Urn(s"soundcloud:users:${request.routeParams("other_id")}"),
-        _
+        _, _
       )
     )
   }
@@ -100,7 +100,7 @@ class UserFollowController(userAuthentication: UserAuthentication,
         _,
         Urn(s"soundcloud:users:${request.routeParams("id")}"),
         Urn(s"soundcloud:users:${request.routeParams("other_id")}"),
-        _
+        _, _
       )
     )
   }
@@ -123,13 +123,15 @@ class UserFollowController(userAuthentication: UserAuthentication,
       .map(_.toInt).getOrElse(50)
   }
 
+  private def lastIdParam(request: Request) = request.params.get("last_id")
+
   private def fetchFromFollows(request: Request,
-                               fetchFunction: (UserSession, Int) => Future[FollowsPage],
+                               fetchFunction: (UserSession, Int, Option[String]) => Future[FollowsPage],
                                mapUsers: List[User] => List[Any] = mapUsersToUsers): Future[ResponseBuilder] = {
     userAuthentication.withLoggedInUser(request) { (session, userUrn) =>
       if(rollingOutReads(session)) {
         for {
-          affiliations <- fetchFunction(session, pageSizeParam(request))
+          affiliations <- fetchFunction(session, pageSizeParam(request), lastIdParam(request))
           urns = affiliations.values.map(_.user)
           users <- fetchUsers(session, urns.toSet)
         } yield {

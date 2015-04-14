@@ -11,50 +11,57 @@ import play.api.libs.json.JsObject
 
 class FollowsClient(jsonService: JsonService) {
 
-  def mutualFollowers(userSession: UserSession, user: Urn, otherUser: Urn, pageSize: Int): Future[FollowsPage] = {
+  def mutualFollowers(userSession: UserSession, user: Urn, otherUser: Urn, pageSize: Int, lastId: Option[String]): Future[FollowsPage] = {
     fetchPage(
       userSession,
       Path() / "users" / user.getString / "mutual_followers" / otherUser.getString,
-      pageSize
+      pageSize,
+      lastId
     )
   }
 
-  def followingsNotFollowedBy(userSession: UserSession, user: Urn, otherUser: Urn, pageSize: Int): Future[FollowsPage] = {
+  def followingsNotFollowedBy(userSession: UserSession, user: Urn, otherUser: Urn, pageSize: Int, lastId: Option[String]): Future[FollowsPage] = {
     fetchPage(
       userSession,
       Path() / "users" / user.getString / "followings_not_followed" / otherUser.getString,
-      pageSize
+      pageSize,
+      lastId
     )
   }
 
-  def mutualFollowings(userSession: UserSession, user: Urn, otherUser: Urn, pageSize: Int): Future[FollowsPage] = {
+  def mutualFollowings(userSession: UserSession, user: Urn, otherUser: Urn, pageSize: Int, lastId: Option[String]): Future[FollowsPage] = {
     fetchPage(
       userSession,
       Path() / "users" / user.getString / "mutual_followings" / otherUser.getString,
-      pageSize
+      pageSize,
+      lastId
     )
   }
 
-  def followers(userSession: UserSession, pageSize: Int): Future[FollowsPage] = {
+  def followers(userSession: UserSession, pageSize: Int, lastId: Option[String]): Future[FollowsPage] = {
     fetchPage(
       userSession,
       Path() / "users" / userSession.getUser.getString / "followers",
-      pageSize
+      pageSize,
+      lastId
     )
   }
 
-  def followings(userSession: UserSession, pageSize: Int): Future[FollowsPage] = {
+  def followings(userSession: UserSession, pageSize: Int, lastId: Option[String]): Future[FollowsPage] = {
     fetchPage(
       userSession,
       Path() / "users" / userSession.getUser.getString / "followings",
-      pageSize
+      pageSize,
+      lastId
     )
   }
 
-  private def fetchPage(userSession: UserSession, path: Path, pageSize: Int): Future[FollowsPage] = {
+  private def fetchPage(userSession: UserSession, path: Path, pageSize: Int, lastId: Option[String]): Future[FollowsPage] = {
+    val params = Map("page_size" -> pageSize.toString) ++ lastId.map("last_id" -> _)
+
     jsonService.get(userSession,
       path,
-      Map("page_size" -> pageSize)
+      params
     ).map {
       case JsonResponse(OkStatus, data, _, _) =>
         val values = (data \ "value").as[Seq[JsObject]].map { value =>
