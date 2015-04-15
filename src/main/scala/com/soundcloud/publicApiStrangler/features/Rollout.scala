@@ -12,9 +12,9 @@ import scala.collection.JavaConverters._
 import scala.util.Random
 
 object ZookeeperClient {
-  val retryPolicy = new ExponentialBackoffRetry(baseSleepTimeInMiliseconds, maxNumberOfRetries)
   private val baseSleepTimeInMiliseconds: Int = 1000
   private val maxNumberOfRetries: Int = 5
+  val retryPolicy = new ExponentialBackoffRetry(baseSleepTimeInMiliseconds, maxNumberOfRetries)
 
   def create(rolloutAddress: String): CuratorFramework = {
     val curatorZookeeperClient = CuratorFrameworkFactory.newClient(rolloutAddress, retryPolicy)
