@@ -133,7 +133,7 @@ class UserFollowController(userAuthentication: UserAuthentication,
       .map(_.toInt).getOrElse(50)
   }
 
-  private def lastIdParam(request: Request) = request.params.get("last_id")
+  private def cursorParam(request: Request) = request.params.get("cursor")
 
   private def fetchFromFollows(request: Request,
                                fetchFunction: (UserSession, Int, Option[String]) => Future[FollowsPage],
@@ -142,7 +142,7 @@ class UserFollowController(userAuthentication: UserAuthentication,
     userAuthentication.withLoggedInUser(request) { (session, userUrn) =>
       if(rollingOutReads(session)) {
         for {
-          affiliations <- fetchFunction(session, pageSizeParam(request), lastIdParam(request))
+          affiliations <- fetchFunction(session, pageSizeParam(request), cursorParam(request))
           urns = users(affiliations.values)
           users <- fetchUsers(session, urns.toSet)
         } yield {
@@ -163,7 +163,7 @@ class UserFollowController(userAuthentication: UserAuthentication,
 
   private def nextHref(baseUrl: String, path: String, pageInfo: PageInfo, requestParams: Map[String, String]): Option[String] = {
     pageInfo.lastId.map { nextId =>
-      val params = requestParams ++ Map("last_id" -> nextId, "page_size" -> pageInfo.size) -- Seq("limit")
+      val params = requestParams ++ Map("cursor" -> nextId, "page_size" -> pageInfo.size) -- Seq("limit")
       baseUrl + path + "?" + params.map { case(k, v) => s"$k=$v" }.mkString("&")
     }
   }

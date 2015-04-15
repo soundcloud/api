@@ -78,7 +78,7 @@ class UserFollowControllerSpec extends InjectionBasedControllerSpecification wit
       response.status ==== Status.Ok
       val json = Json.parse(response.body)
       (json \ "collection").as[Seq[JsObject]].size ==== 1
-      (json \ "next_href").asOpt[String] ==== Some("http://foo/users/1/followers/followed_by/2?last_id=123-1234&page_size=2")
+      (json \ "next_href").asOpt[String] ==== Some("http://foo/users/1/followers/followed_by/2?page_size=2&cursor=123-1234")
     }
 
     "fall back to moshi when not rolling out" in new FallbackContext {
@@ -104,7 +104,7 @@ class UserFollowControllerSpec extends InjectionBasedControllerSpecification wit
       response.status ==== Status.Ok
       val json = Json.parse(response.body)
       (json \ "collection").as[Seq[JsObject]].size ==== 1
-      (json \ "next_href").asOpt[String] ==== Some("http://foo/users/1/followings/not_followed_by/2?last_id=123-1234&page_size=2")
+      (json \ "next_href").asOpt[String] ==== Some("http://foo/users/1/followings/not_followed_by/2?page_size=2&cursor=123-1234")
     }
   }
 
@@ -121,11 +121,11 @@ class UserFollowControllerSpec extends InjectionBasedControllerSpecification wit
         okidokiMock.fetch(session, values.map(_.target).toSet) returns Future.value(okidokiUsers.as[List[JsObject]])
       }
 
-      val response = get(controller, "/users/1/followings/common_to/2", Map("limit" -> "10", "last_id" -> "2"))
+      val response = get(controller, "/users/1/followings/common_to/2", Map("limit" -> "10", "cursor" -> "2"))
       response.status ==== Status.Ok
       val json = Json.parse(response.body)
       (json \ "collection").as[Seq[JsObject]].size ==== 1
-      (json \ "next_href").asOpt[String] ==== Some("http://foo/users/1/followings/common_to/2?last_id=123-1234&page_size=2")
+      (json \ "next_href").asOpt[String] ==== Some("http://foo/users/1/followings/common_to/2?page_size=2&cursor=123-1234")
     }
   }
 
@@ -146,7 +146,7 @@ class UserFollowControllerSpec extends InjectionBasedControllerSpecification wit
       response.status ==== Status.Ok
       val json = Json.parse(response.body)
       (json \ "collection") ==== JsArray(Seq(JsNumber(123)))
-      (json \ "next_href").asOpt[String] ==== Some("http://foo/me/followings/ids?last_id=123-1234&page_size=2")
+      (json \ "next_href").asOpt[String] ==== Some("http://foo/me/followings/ids?page_size=2&cursor=123-1234")
     }
   }
 
@@ -168,7 +168,7 @@ class UserFollowControllerSpec extends InjectionBasedControllerSpecification wit
       response.status ==== Status.Ok
       val json = Json.parse(response.body)
       (json \ "collection") ==== JsArray(Seq(JsNumber(123)))
-      (json \ "next_href").asOpt[String] ==== Some("http://foo/me/followers/ids?last_id=123-1234&page_size=2")
+      (json \ "next_href").asOpt[String] ==== Some("http://foo/me/followers/ids?page_size=2&cursor=123-1234")
     }
   }
 
@@ -189,7 +189,7 @@ class UserFollowControllerSpec extends InjectionBasedControllerSpecification wit
       response.status ==== Status.Ok
       val json = Json.parse(response.body)
       (json \ "collection").as[Seq[JsObject]].size ==== 1
-      (json \ "next_href").asOpt[String] ==== Some("http://foo/me/followings?client_id=FOO&last_id=123-1234&page_size=2")
+      (json \ "next_href").asOpt[String] ==== Some("http://foo/me/followings?client_id=FOO&page_size=2&cursor=123-1234")
     }
   }
 
@@ -206,11 +206,11 @@ class UserFollowControllerSpec extends InjectionBasedControllerSpecification wit
         okidokiMock.fetch(session, values.map(_.user).toSet) returns Future.value(okidokiUsers.as[List[JsObject]])
       }
 
-      val response = get(controller, "/me/followers", Map("limit" -> "10", "last_id" -> "foo"))
+      val response = get(controller, "/me/followers", Map("limit" -> "10", "cursor" -> "foo"))
       response.status ==== Status.Ok
       val json = Json.parse(response.body)
       (json \ "collection").as[Seq[JsObject]].size ==== 1
-      (json \ "next_href").asOpt[String] ==== Some("http://foo/me/followers?last_id=123-1234&page_size=2")
+      (json \ "next_href").asOpt[String] ==== Some("http://foo/me/followers?page_size=2&cursor=123-1234")
     }
   }
 
