@@ -9,6 +9,10 @@ An implementation of the [Strangler Pattern](http://martinfowler.com/bliki/Stran
 * Telemetry: [Promdash](http://promdash/public-api-strangler)
 * Issue Tracker: [Jira Board](https://soundcloud.atlassian.net/secure/RapidBoard.jspa?rapidView=128)
 
+## How to develop locally
+
+Take a look in [CONTRIBUTING.md](Contibuting.md). This application uses docker-compose to orchestrate its dependencies. In order to run the application locally, please make sure to have docker and docker-compose installed. Before commiting, make sure to run `make precheckin` and that the tests are passing
+
 ## How to deploy
 
 This project uses bucha as a deployment tool. In order to deploy the application, run:

@@ -9,6 +9,6 @@ For external contributions (coming from non mantainers of this system) to these 
 
 ## Local environment
 
-Depends on boot2docker and fig being setup and working properly.
+Depends on boot2docker and docker-compose being setup and working properly.
 
 make precheckin (run all the integration and unit tests. Run this before commiting)
