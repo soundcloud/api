@@ -1,4 +1,4 @@
-package com.soundcloud.publicApiStrangler.rateLimiting
+package com.soundcloud.publicApiStrangler.rateLimitingOld
 
 trait Consumer {
   def identifier: String

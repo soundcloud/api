@@ -1,10 +1,10 @@
-package com.soundcloud.publicApiStrangler.rateLimiting.framework
+package com.soundcloud.publicApiStrangler.rateLimitingOld.framework
 
 import com.soundcloud.jvmkit.circuitbreakers.CircuitBreaker
 import com.soundcloud.jvmkit.config.ConfigConvention
 import com.soundcloud.jvmkit.Clock
-import com.soundcloud.publicApiStrangler.rateLimiting.web.RateLimitingFilter
-import com.soundcloud.publicApiStrangler.rateLimiting.{DefaultTimeWindow, RateLimit, RateLimitCounter}
+import com.soundcloud.publicApiStrangler.rateLimitingOld.web.RateLimitingFilter
+import com.soundcloud.publicApiStrangler.rateLimitingOld.{DefaultTimeWindow, RateLimit, RateLimitCounter}
 import com.soundcloud.scalakit.ResourceName
 import com.soundcloud.scalakit.finagle.CircuitBreakerFilter
 import com.soundcloud.scalakit.framework.ScAppComponent

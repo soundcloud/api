@@ -1,4 +1,4 @@
-package com.soundcloud.publicApiStrangler.rateLimiting
+package com.soundcloud.publicApiStrangler.rateLimitingOld
 
 import com.twitter.util.{Time, Future}
 import com.twitter.finagle.memcached.{Client => MemcachedClient}

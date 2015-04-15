@@ -1,4 +1,4 @@
-package com.soundcloud.publicApiStrangler.rateLimiting
+package com.soundcloud.publicApiStrangler.rateLimitingOld
 
 import org.joda.time.DateTime
 import com.twitter.util.TimeConversions._

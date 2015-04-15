@@ -1,7 +1,7 @@
-package com.soundcloud.publicApiStrangler.rateLimiting.web
+package com.soundcloud.publicApiStrangler.rateLimitingOld.web
 
-import com.soundcloud.publicApiStrangler.rateLimiting
-import com.soundcloud.publicApiStrangler.rateLimiting.{Consumer, Ip, RateLimit}
+import com.soundcloud.publicApiStrangler.rateLimitingOld
+import com.soundcloud.publicApiStrangler.rateLimitingOld.{Consumer, Ip, RateLimit}
 import com.soundcloud.jvmkit.logging.SoundCloudLoggerFactory
 import com.soundcloud.scalakit.finagle.http.HandlerRequest
 import com.twitter.finagle.http.Response

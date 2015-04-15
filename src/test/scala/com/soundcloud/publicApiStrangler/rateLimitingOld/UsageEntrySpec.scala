@@ -1,4 +1,4 @@
-package com.soundcloud.publicApiStrangler.rateLimiting
+package com.soundcloud.publicApiStrangler.rateLimitingOld
 
 import com.soundcloud.scalakit.test.UnitSpecification
 import org.joda.time.DateTime

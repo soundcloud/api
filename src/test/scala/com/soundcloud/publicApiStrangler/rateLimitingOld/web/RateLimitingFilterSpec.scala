@@ -1,6 +1,6 @@
-package com.soundcloud.publicApiStrangler.rateLimiting.web
+package com.soundcloud.publicApiStrangler.rateLimitingOld.web
 
-import com.soundcloud.publicApiStrangler.rateLimiting.{Consumer, Ip, RateLimit}
+import com.soundcloud.publicApiStrangler.rateLimitingOld.{Consumer, Ip, RateLimit}
 import com.soundcloud.scalakit.finagle.http.{AlwaysMatchesPathMatcher, HandlerRequest}
 import com.soundcloud.scalakit.test.UnitSpecification
 import com.twitter.finagle.Service
