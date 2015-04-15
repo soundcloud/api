@@ -5,7 +5,7 @@ import com.soundcloud.bff.finagle.{Request, ResponseBuilder}
 import com.soundcloud.bff.nextbff.mapping.{Mapping, MappingContext}
 import com.soundcloud.bff.web.{BffInjectionBasedController, UserAuthentication}
 import com.soundcloud.jvmkit.Geo
-import com.soundcloud.publicApiStrangler.clients.{FollowsPage, PageInfo, FollowsClient}
+import com.soundcloud.publicApiStrangler.clients.{Affiliation, FollowsPage, PageInfo, FollowsClient}
 import com.soundcloud.publicApiStrangler.features.Rollout
 import com.soundcloud.publicApiStrangler.mapping.timeline.User
 import com.soundcloud.publicApiStrangler.support.DispatchToMothershipHandler
@@ -77,7 +77,9 @@ class UserFollowController(userAuthentication: UserAuthentication,
         Urn(s"soundcloud:users:${request.routeParams("id")}"),
         Urn(s"soundcloud:users:${request.routeParams("other_id")}"),
         _, _
-      )
+      ),
+      mapUsersToUsers,
+      contacts
     )
   }
 
@@ -89,7 +91,9 @@ class UserFollowController(userAuthentication: UserAuthentication,
         Urn(s"soundcloud:users:${request.routeParams("id")}"),
         Urn(s"soundcloud:users:${request.routeParams("other_id")}"),
         _, _
-      )
+      ),
+      mapUsersToUsers,
+      contacts
     )
   }
 
@@ -101,21 +105,27 @@ class UserFollowController(userAuthentication: UserAuthentication,
         Urn(s"soundcloud:users:${request.routeParams("id")}"),
         Urn(s"soundcloud:users:${request.routeParams("other_id")}"),
         _, _
-      )
+      ),
+      mapUsersToUsers,
+      fans
     )
   }
 
-  private def fetchFollowers(request: Request): Future[ResponseBuilder] = fetchFromFollows(request, follows.followers)
+  private def fetchFollowers(request: Request): Future[ResponseBuilder] = fetchFromFollows(request, follows.followers, mapUsersToUsers, fans)
 
-  private def fetchFollowings(request: Request) = fetchFromFollows(request, follows.followings)
+  private def fetchFollowings(request: Request) = fetchFromFollows(request, follows.followings, mapUsersToUsers, contacts)
 
-  private def fetchFollowingIds(request: Request) = fetchFromFollows(request, follows.followings, userIds)
+  private def fetchFollowingIds(request: Request) = fetchFromFollows(request, follows.followings, userIds, contacts)
 
-  private def fetchFollowerIds(request: Request) = fetchFromFollows(request, follows.followers, userIds)
+  private def fetchFollowerIds(request: Request) = fetchFromFollows(request, follows.followers, userIds, fans)
 
   private def mapUsersToUsers(users: List[User]): List[Any] = users
 
   private def userIds(users: List[User]): List[Any] = users.map(u => u.id)
+
+  private def fans(affiliations: Seq[Affiliation]): Seq[Urn] = affiliations.map(_.user)
+
+  private def contacts(affiliations: Seq[Affiliation]): Seq[Urn] = affiliations.map(_.target)
 
   private def pageSizeParam(request: Request) = {
     request.params.get("limit")
@@ -127,12 +137,13 @@ class UserFollowController(userAuthentication: UserAuthentication,
 
   private def fetchFromFollows(request: Request,
                                fetchFunction: (UserSession, Int, Option[String]) => Future[FollowsPage],
-                               mapUsers: List[User] => List[Any] = mapUsersToUsers): Future[ResponseBuilder] = {
+                               mapUsers: List[User] => List[Any] = mapUsersToUsers,
+                               users: Seq[Affiliation] => Seq[Urn]): Future[ResponseBuilder] = {
     userAuthentication.withLoggedInUser(request) { (session, userUrn) =>
       if(rollingOutReads(session)) {
         for {
           affiliations <- fetchFunction(session, pageSizeParam(request), lastIdParam(request))
-          urns = affiliations.values.map(_.user)
+          urns = users(affiliations.values)
           users <- fetchUsers(session, urns.toSet)
         } yield {
           render.json(Map(

@@ -97,7 +97,7 @@ class UserFollowControllerSpec extends InjectionBasedControllerSpecification wit
         )
         val pageInfo = PageInfo(Some("123-1234"), 2)
         followsMock.followingsNotFollowedBy(session, Urn("soundcloud:users:1"), Urn("soundcloud:users:2"), 10, None) returns Future.value(FollowsPage(values, pageInfo))
-        okidokiMock.fetch(session, values.map(_.user).toSet) returns Future.value(okidokiUsers.as[List[JsObject]])
+        okidokiMock.fetch(session, values.map(_.target).toSet) returns Future.value(okidokiUsers.as[List[JsObject]])
       }
 
       val response = get(controller, "/users/1/followings/not_followed_by/2", Map("limit" -> "10"))
@@ -118,7 +118,7 @@ class UserFollowControllerSpec extends InjectionBasedControllerSpecification wit
         )
         val pageInfo = PageInfo(Some("123-1234"), 2)
         followsMock.mutualFollowings(session, Urn("soundcloud:users:1"), Urn("soundcloud:users:2"), 10, Some("2")) returns Future.value(FollowsPage(values, pageInfo))
-        okidokiMock.fetch(session, values.map(_.user).toSet) returns Future.value(okidokiUsers.as[List[JsObject]])
+        okidokiMock.fetch(session, values.map(_.target).toSet) returns Future.value(okidokiUsers.as[List[JsObject]])
       }
 
       val response = get(controller, "/users/1/followings/common_to/2", Map("limit" -> "10", "last_id" -> "2"))
@@ -139,7 +139,7 @@ class UserFollowControllerSpec extends InjectionBasedControllerSpecification wit
         )
         val pageInfo = PageInfo(Some("123-1234"), 2)
         followsMock.followings(session, 10, None) returns Future.value(FollowsPage(values, pageInfo))
-        okidokiMock.fetch(session, values.map(_.user).toSet) returns Future.value(okidokiUsers.as[List[JsObject]])
+        okidokiMock.fetch(session, values.map(_.target).toSet) returns Future.value(okidokiUsers.as[List[JsObject]])
       }
 
       val response = get(controller, "/me/followings/ids", Map("limit" -> "10"))
@@ -182,7 +182,7 @@ class UserFollowControllerSpec extends InjectionBasedControllerSpecification wit
         )
         val pageInfo = PageInfo(Some("123-1234"), 2)
         followsMock.followings(session, 10, None) returns Future.value(FollowsPage(values, pageInfo))
-        okidokiMock.fetch(session, values.map(_.user).toSet) returns Future.value(okidokiUsers.as[List[JsObject]])
+        okidokiMock.fetch(session, values.map(_.target).toSet) returns Future.value(okidokiUsers.as[List[JsObject]])
       }
 
       val response = get(controller, "/me/followings", Map("limit" -> "10", "client_id" -> "FOO"))
