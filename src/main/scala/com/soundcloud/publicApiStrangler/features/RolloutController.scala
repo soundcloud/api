@@ -6,8 +6,8 @@ import com.soundcloud.bff.web.BffInjectionBasedController
 class RolloutController(rollout: Rollout) extends BffInjectionBasedController {
 
   get("/-/features") { _ =>
-    val activationsMap = rollout.allFeatures().map { feature =>
-      Map("name" -> feature._1, "percentage" -> feature._2)
+    val activationsMap = rollout.allFeatures.map {
+      case(feature: String, percentage: Int) => Map("name" -> feature, "percentage" -> percentage)
     }
 
     Future(render.json(

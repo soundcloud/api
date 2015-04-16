@@ -6,6 +6,7 @@ import com.soundcloud.bff.media.{MediaUrlsRepository, WaveformUrlsRepository}
 import com.soundcloud.bff.services.JsonService
 import com.soundcloud.jvmkit.config.ConfigConvention
 import com.soundcloud.publicApiStrangler.authorization.{AuthorizeHttpResponse, ContentAuthorizationFilter}
+import com.soundcloud.publicApiStrangler.clients.FollowsComponent
 import com.soundcloud.publicApiStrangler.controller._
 import com.soundcloud.publicApiStrangler.features.{RolloutBuilder, RolloutController, ZookeeperClient, Rollout}
 import com.soundcloud.publicApiStrangler.mapper.timeline.e1.{ActivitiesMapper, StreamMapper}
@@ -26,20 +27,17 @@ object App
   with TimelineComponent
   with LieblingComponent
   with PublicApiClientComponent
+  with FollowsComponent
   with GatekeeperComponent {
 
   private val userAuthentication = createUserAuthentication
 
-  private val moshimoshiService = JsonService(
-    ServiceConfig("moshimoshi", config.get(ResourceName("MOSHIMOSHI"), ConfigConvention.BASE_URL), config)
-  )
   private val okidokiService = JsonService(
     ServiceConfig("okidoki", config.get(ResourceName("OKIDOKI"), ConfigConvention.SRV_RECORD), config)
   )
   private val mediaService = JsonService(
     ServiceConfig("mediaservice", config.get(ResourceName("MEDIASERVICE"), ConfigConvention.SRV_RECORD), config)
   )
-
   private val authsyService = JsonService(
     ServiceConfig("authsy", config.get(ResourceName("AUTHSY"), ConfigConvention.SRV_RECORD), config)
   )
@@ -51,8 +49,9 @@ object App
 
   private val mothershipDispatcher = new DispatchToMothershipHandler(publicApiClient)
 
+  private val baseUrl = config.get("APP_BASE_URL", true)
+
   private val timelineController = {
-    val baseUrl = config.get("APP_BASE_URL", true)
     val entitySummaryMapper = new EntitySummaryMapper(okidokiClient, baseUrl)
     val entityMapper = new EntityMapper(okidokiClient, lieblingClient, baseUrl, entitySummaryMapper)
     val streamMapper = new StreamMapper(timelineClient, entityMapper, entitySummaryMapper)
@@ -84,7 +83,14 @@ object App
   val rollout = RolloutBuilder.build(config.get("ZOOKEEPER_SERVERS"), config.getApplicationName)
   private val rolloutController = new RolloutController(rollout)
 
-  private val userFollowController = new UserFollowController(userAuthentication, mothershipDispatcher, moshimoshiService)
+  private val userFollowController = new UserFollowController(
+    userAuthentication,
+    mothershipDispatcher,
+    okidokiClient,
+    followsClient,
+    baseUrl,
+    rollout
+  )
 
   override val fallbackHandler = Some(mothershipDispatcher)
 

@@ -2,6 +2,7 @@ package com.soundcloud.publicApiStrangler
 
 import com.soundcloud.jvmkit.config.BazookaConfig
 import com.soundcloud.publicApiStrangler.features.{RolloutBuilder, ZookeeperClient}
+import com.soundcloud.scalakit.Urn
 import com.soundcloud.scalakit.test.{UnitSpecification, VerifiedMocks}
 import com.twitter.io.Charsets
 
@@ -31,6 +32,12 @@ class RolloutItSpec extends UnitSpecification {
     features.foreach(featureName => rollout.activate(featureName, 0))
 
     rollout.allFeatures.keys must containAllOf(features)
+  }
+
+  "supports consistent user-based rollouts" in new NewFeatureContext {
+    rollout.activate(featureName, 98)
+    rollout.isActiveForUser(featureName, Urn("soundcloud:users:997")) mustEqual true
+    rollout.isActiveForUser(featureName, Urn("soundcloud:users:999")) mustEqual false
   }
   
   "returns true if feature is enabled for 100%" in new NewFeatureContext {

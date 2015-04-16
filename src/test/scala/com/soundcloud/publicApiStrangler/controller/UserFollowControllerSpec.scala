@@ -1,27 +1,48 @@
 package com.soundcloud.publicApiStrangler.controller
 
+import com.soundcloud.bff.finagle.Request
 import com.soundcloud.bff.services.JsonService
 import com.soundcloud.bff.test.InjectionBasedControllerSpecification
 import com.soundcloud.jvmkit.{Geo => JvmGeo}
+import com.soundcloud.publicApiStrangler.clients.{PageInfo, Affiliation, FollowsPage, FollowsClient}
+import com.soundcloud.publicApiStrangler.features.Rollout
 import com.soundcloud.publicApiStrangler.support.DispatchToMothershipHandler
+import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures
 import com.soundcloud.scalakit.finagle.http.{HandlerRequest, OkStatus}
 import com.soundcloud.scalakit.finagle.jsonservice.{JsonResponse, Params}
+import com.soundcloud.scalakit.test.VerifiedMocks
 import com.soundcloud.scalakit.{Geo, Path, Urn, UserSession}
+import com.soundcloud.service.client.OkidokiClient
 import com.twitter.finagle.http.{Response, Status}
 import com.twitter.util.Future
+import org.jboss.netty.handler.codec.http.{HttpHeaders, HttpResponse}
 import org.joda.time.{DateTime, DateTimeUtils}
 import org.specs2.mutable.BeforeAfter
-import play.api.libs.json.{JsNull, JsObject, Json}
+import play.api.libs.json._
 
-class UserFollowControllerSpec extends InjectionBasedControllerSpecification {
-  trait Context extends Scope with BeforeAfter {
+class UserFollowControllerSpec extends InjectionBasedControllerSpecification with Fixtures {
+
+  // changes to DateTimeUtils are not thread-safe
+  sequential
+
+  trait Context extends Scope with BeforeAfter with VerifiedMocks {
     val fallbackMock = mock[DispatchToMothershipHandler]
-    val moshimoshiMock = mock[JsonService]
+    val okidokiMock = mock[OkidokiClient]
+    val followsMock = mock[FollowsClient]
+    val rollout = mock[Rollout]
+    val userUrn = Urn("soundcloud:users:999")
+    lazy val geo = Geo("US")
+    val session = UserSession(userUrn, Urn("soundcloud:applications:v2"), geo, Set.empty)
+    lazy val controller = new UserFollowController(fakeUserAuthentication(session), fallbackMock, okidokiMock, followsMock, "http://foo", rollout)
+    lazy val userMock = mock[JsObject]
+    lazy val okidokiResponse = Future(List(userMock))
 
     val now = System.currentTimeMillis()
 
     override def before = {
       DateTimeUtils.setCurrentMillisFixed(now)
+      rollout.isActiveForUser("follows-reads", userUrn) returns true
+      okidokiMock.fetch(session, Set(userUrn)) returns okidokiResponse
     }
 
     override def after = {
@@ -29,12 +50,172 @@ class UserFollowControllerSpec extends InjectionBasedControllerSpecification {
     }
   }
 
+  trait FallbackContext extends Context {
+    val expectedResponse = mock[Response]
+
+    override def before = {
+      rollout.isActiveForUser("follows-reads", userUrn) returns false
+
+      expectedResponse.headers() returns HttpHeaders.EMPTY_HEADERS
+      expectedResponse.getStatusCode() returns Status.EnhanceYourCalm.getCode
+      when(fallbackMock.defaultHandling(any[HandlerRequest])).thenReturn(Future.value(expectedResponse))
+    }
+  }
+
+  "GET /users/:id/followers/followed_by/:other_id" >> {
+    "fetches followings" in new Context {
+      override def before = {
+        super.before
+        val values = Seq(
+          Affiliation("123-123", "2012-02-13T23:30:13.000+0000", Urn("soundcloud:users:12490957"), Urn("soundcloud:users:100"))
+        )
+        val pageInfo = PageInfo(Some("123-1234"), 2)
+        followsMock.mutualFollowers(session, Urn("soundcloud:users:1"), Urn("soundcloud:users:2"), 10, None) returns Future.value(FollowsPage(values, pageInfo))
+        okidokiMock.fetch(session, values.map(_.user).toSet) returns Future.value(okidokiUsers.as[List[JsObject]])
+      }
+
+      val response = get(controller, "/users/1/followers/followed_by/2", Map("limit" -> "10"))
+      response.status ==== Status.Ok
+      val json = Json.parse(response.body)
+      (json \ "collection").as[Seq[JsObject]].size ==== 1
+      (json \ "next_href").asOpt[String] ==== Some("http://foo/users/1/followers/followed_by/2?page_size=2&cursor=123-1234")
+    }
+
+    "fall back to moshi when not rolling out" in new FallbackContext {
+      val response = get(controller, "/users/1/followers/followed_by/2", Map("limit" -> "10"))
+      response.status ==== Status.EnhanceYourCalm
+    }
+  }
+
+  "GET /users/:id/followings/not_followed_by/:other_id" >> {
+    "fetches followings" in new Context {
+
+      override def before = {
+        super.before
+        val values = Seq(
+          Affiliation("123-123", "2012-02-13T23:30:13.000+0000", Urn("soundcloud:users:12490957"), Urn("soundcloud:users:100"))
+        )
+        val pageInfo = PageInfo(Some("123-1234"), 2)
+        followsMock.followingsNotFollowedBy(session, Urn("soundcloud:users:1"), Urn("soundcloud:users:2"), 10, None) returns Future.value(FollowsPage(values, pageInfo))
+        okidokiMock.fetch(session, values.map(_.target).toSet) returns Future.value(okidokiUsers.as[List[JsObject]])
+      }
+
+      val response = get(controller, "/users/1/followings/not_followed_by/2", Map("limit" -> "10"))
+      response.status ==== Status.Ok
+      val json = Json.parse(response.body)
+      (json \ "collection").as[Seq[JsObject]].size ==== 1
+      (json \ "next_href").asOpt[String] ==== Some("http://foo/users/1/followings/not_followed_by/2?page_size=2&cursor=123-1234")
+    }
+  }
+
+  "GET /users/:id/followings/common_to/:other_id" >> {
+    "fetches followings" in new Context {
+
+      override def before = {
+        super.before
+        val values = Seq(
+          Affiliation("123-123", "2012-02-13T23:30:13.000+0000", Urn("soundcloud:users:12490957"), Urn("soundcloud:users:100"))
+        )
+        val pageInfo = PageInfo(Some("123-1234"), 2)
+        followsMock.mutualFollowings(session, Urn("soundcloud:users:1"), Urn("soundcloud:users:2"), 10, Some("2")) returns Future.value(FollowsPage(values, pageInfo))
+        okidokiMock.fetch(session, values.map(_.target).toSet) returns Future.value(okidokiUsers.as[List[JsObject]])
+      }
+
+      val response = get(controller, "/users/1/followings/common_to/2", Map("limit" -> "10", "cursor" -> "2"))
+      response.status ==== Status.Ok
+      val json = Json.parse(response.body)
+      (json \ "collection").as[Seq[JsObject]].size ==== 1
+      (json \ "next_href").asOpt[String] ==== Some("http://foo/users/1/followings/common_to/2?page_size=2&cursor=123-1234")
+    }
+  }
+
+  "GET /me/followings/ids" >> {
+    "fetches a user's followings" in new Context {
+
+      override def before = {
+        super.before
+        val values = Seq(
+          Affiliation("123-123", "2012-02-13T23:30:13.000+0000", Urn("soundcloud:users:12490957"), Urn("soundcloud:users:100"))
+        )
+        val pageInfo = PageInfo(Some("123-1234"), 2)
+        followsMock.followings(session, 10, None) returns Future.value(FollowsPage(values, pageInfo))
+        okidokiMock.fetch(session, values.map(_.target).toSet) returns Future.value(okidokiUsers.as[List[JsObject]])
+      }
+
+      val response = get(controller, "/me/followings/ids", Map("limit" -> "10"))
+      response.status ==== Status.Ok
+      val json = Json.parse(response.body)
+      (json \ "collection") ==== JsArray(Seq(JsNumber(123)))
+      (json \ "next_href").asOpt[String] ==== Some("http://foo/me/followings/ids?page_size=2&cursor=123-1234")
+    }
+  }
+
+
+  "GET /me/followers/ids" >> {
+    "fetches a user's followings" in new Context {
+
+      override def before = {
+        super.before
+        val values = Seq(
+          Affiliation("123-123", "2012-02-13T23:30:13.000+0000", Urn("soundcloud:users:12490957"), Urn("soundcloud:users:100"))
+        )
+        val pageInfo = PageInfo(Some("123-1234"), 2)
+        followsMock.followers(session, 10, None) returns Future.value(FollowsPage(values, pageInfo))
+        okidokiMock.fetch(session, values.map(_.user).toSet) returns Future.value(okidokiUsers.as[List[JsObject]])
+      }
+
+      val response = get(controller, "/me/followers/ids", Map("limit" -> "10"))
+      response.status ==== Status.Ok
+      val json = Json.parse(response.body)
+      (json \ "collection") ==== JsArray(Seq(JsNumber(123)))
+      (json \ "next_href").asOpt[String] ==== Some("http://foo/me/followers/ids?page_size=2&cursor=123-1234")
+    }
+  }
+
+  "GET /me/followings" >> {
+    "fetches a user's followings" in new Context {
+
+      override def before = {
+        super.before
+        val values = Seq(
+          Affiliation("123-123", "2012-02-13T23:30:13.000+0000", Urn("soundcloud:users:12490957"), Urn("soundcloud:users:100"))
+        )
+        val pageInfo = PageInfo(Some("123-1234"), 2)
+        followsMock.followings(session, 10, None) returns Future.value(FollowsPage(values, pageInfo))
+        okidokiMock.fetch(session, values.map(_.target).toSet) returns Future.value(okidokiUsers.as[List[JsObject]])
+      }
+
+      val response = get(controller, "/me/followings", Map("limit" -> "10", "client_id" -> "FOO"))
+      response.status ==== Status.Ok
+      val json = Json.parse(response.body)
+      (json \ "collection").as[Seq[JsObject]].size ==== 1
+      (json \ "next_href").asOpt[String] ==== Some("http://foo/me/followings?client_id=FOO&page_size=2&cursor=123-1234")
+    }
+  }
+
+  "GET /me/followers" >> {
+    "fetches a user's followers" in new Context {
+
+      override def before = {
+        super.before
+        val values = Seq(
+          Affiliation("123-123", "2012-02-13T23:30:13.000+0000", Urn("soundcloud:users:12490957"), Urn("soundcloud:users:100"))
+        )
+        val pageInfo = PageInfo(Some("123-1234"), 2)
+        followsMock.followers(session, 10, Some("foo")) returns Future.value(FollowsPage(values, pageInfo))
+        okidokiMock.fetch(session, values.map(_.user).toSet) returns Future.value(okidokiUsers.as[List[JsObject]])
+      }
+
+      val response = get(controller, "/me/followers", Map("limit" -> "10", "cursor" -> "foo"))
+      response.status ==== Status.Ok
+      val json = Json.parse(response.body)
+      (json \ "collection").as[Seq[JsObject]].size ==== 1
+      (json \ "next_href").asOpt[String] ==== Some("http://foo/me/followers?page_size=2&cursor=123-1234")
+    }
+  }
+
   "PUT /me/followings/:id" >> {
     "should allow user to follow a profile without age restrictions" in new Context {
-      val userUrn = Urn("soundcloud:users:999")
-      val session = UserSession(userUrn, Urn("soundcloud:applications:v2"), Geo("US"), Set.empty)
-      val controller = new UserFollowController(fakeUserAuthentication(session), fallbackMock, moshimoshiMock)
-
       fallbackMock.defaultHandling(any[HandlerRequest]) returns Future.value(Response(Status.Ok))
 
       val response = put(controller, "/me/followings/4321", Map("client_id" -> "YOUR_CLIENT_ID"))
@@ -42,13 +223,9 @@ class UserFollowControllerSpec extends InjectionBasedControllerSpecification {
     }
 
     "should allow adult US user to follow an age restricted profile" in new Context {
-      val userUrn = Urn("soundcloud:users:999")
-      val session = UserSession(userUrn, Urn("soundcloud:applications:v2"), Geo("US"), Set.empty)
-      val controller = new UserFollowController(fakeUserAuthentication(session), fallbackMock, moshimoshiMock)
-
-      val userDob = new DateTime(now).minusYears(21).toString("yyyy/MM/dd")
-      val moshimoshiResp = JsonResponse(OkStatus, Json.obj("date_of_birth" -> userDob))
-      moshimoshiMock.get(===(session), ===(Path() / "users" / userUrn), any[Params], any[Params]) returns Future.value(moshimoshiResp)
+      override lazy val userMock = Json.obj(
+        "date_of_birth" -> new DateTime(now).minusYears(21).toString("yyyy/MM/dd")
+      )
 
       fallbackMock.defaultHandling(any[HandlerRequest]) returns Future.value(Response(Status.Ok))
 
@@ -57,14 +234,9 @@ class UserFollowControllerSpec extends InjectionBasedControllerSpecification {
     }
 
     "should not permit US minor to follow an age restricted profile" in new Context {
-      val userUrn = Urn("soundcloud:users:999")
-      val userDob = new DateTime(now).minusYears(18).toString("yyyy/MM/dd")
-      val session = UserSession(userUrn, Urn("soundcloud:applications:v2"), Geo("US"), Set.empty)
-
-      val controller = new UserFollowController(fakeUserAuthentication(session), fallbackMock, moshimoshiMock)
-
-      val moshimoshiResp = JsonResponse(OkStatus, Json.obj("date_of_birth" -> userDob))
-      moshimoshiMock.get(===(session), ===(Path() / "users" / userUrn), any[Params], any[Params]) returns Future.value(moshimoshiResp)
+      override lazy val userMock = Json.obj(
+        "date_of_birth" -> new DateTime(now).minusYears(18).toString("yyyy/MM/dd")
+      )
 
       val response = put(controller, "/me/followings/32326572", Map("client_id" -> "YOUR_CLIENT_ID"))
 
@@ -75,13 +247,10 @@ class UserFollowControllerSpec extends InjectionBasedControllerSpecification {
     }
 
     "should allow adult DE user to follow an age restricted profile" in new Context {
-      val userUrn = Urn("soundcloud:users:999")
-      val session = UserSession(userUrn, Urn("soundcloud:applications:v2"), Geo("DE"), Set.empty)
-      val controller = new UserFollowController(fakeUserAuthentication(session), fallbackMock, moshimoshiMock)
-
-      val userDob = new DateTime(now).minusYears(18).toString("yyyy/MM/dd")
-      val moshimoshiResp = JsonResponse(OkStatus, Json.obj("date_of_birth" -> userDob))
-      moshimoshiMock.get(===(session), ===(Path() / "users" / userUrn), any[Params], any[Params]) returns Future.value(moshimoshiResp)
+      override lazy val geo = Geo("DE")
+      override lazy val userMock = Json.obj(
+        "date_of_birth" -> new DateTime(now).minusYears(18).toString("yyyy/MM/dd")
+      )
 
       fallbackMock.defaultHandling(any[HandlerRequest]) returns Future.value(Response(Status.Ok))
 
@@ -91,13 +260,10 @@ class UserFollowControllerSpec extends InjectionBasedControllerSpecification {
     }
 
     "should not permit DE minor to follow an age restricted profile" in new Context {
-      val userUrn = Urn("soundcloud:users:999")
-      val session = UserSession(userUrn, Urn("soundcloud:applications:v2"), Geo("DE"), Set.empty)
-      val controller = new UserFollowController(fakeUserAuthentication(session), fallbackMock, moshimoshiMock)
-
-      val userDob = new DateTime(now).minusYears(16).toString("yyyy/MM/dd")
-      val moshimoshiResp = JsonResponse(OkStatus, Json.obj("date_of_birth" -> userDob))
-      moshimoshiMock.get(===(session), ===(Path() / "users" / userUrn), any[Params], any[Params]) returns Future.value(moshimoshiResp)
+      override lazy val geo = Geo("DE")
+      override lazy val userMock = Json.obj(
+        "date_of_birth" -> new DateTime(now).minusYears(16).toString("yyyy/MM/dd")
+      )
 
       val response = put(controller, "/me/followings/32326572", Map("client_id" -> "YOUR_CLIENT_ID"))
 
@@ -108,12 +274,10 @@ class UserFollowControllerSpec extends InjectionBasedControllerSpecification {
     }
 
     "should not permit user without a date of birth to follow an age restricted profile" in new Context {
-      val userUrn = Urn("soundcloud:users:999")
-      val session = UserSession(userUrn, Urn("soundcloud:applications:v2"), JvmGeo.UNKNOWN_GEO, Set.empty)
-      val controller = new UserFollowController(fakeUserAuthentication(session), fallbackMock, moshimoshiMock)
-
-      val moshimoshiResp = JsonResponse(OkStatus, Json.obj("date_of_birth" -> JsNull))
-      moshimoshiMock.get(===(session), ===(Path() / "users" / userUrn), any[Params], any[Params]) returns Future.value(moshimoshiResp)
+      override lazy val geo = JvmGeo.UNKNOWN_GEO
+      override lazy val userMock = Json.obj(
+        "date_of_birth" -> JsNull
+      )
 
       val response = put(controller, "/me/followings/32326572", Map("client_id" -> "YOUR_CLIENT_ID"))
 

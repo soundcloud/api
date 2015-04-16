@@ -1,26 +1,32 @@
 package com.soundcloud.publicApiStrangler.controller
 
+import com.soundcloud.bff.{ Json => BffJson }
 import com.soundcloud.bff.finagle.{Request, ResponseBuilder}
-import com.soundcloud.bff.services.JsonService
+import com.soundcloud.bff.nextbff.mapping.{Mapping, MappingContext}
 import com.soundcloud.bff.web.{BffInjectionBasedController, UserAuthentication}
 import com.soundcloud.jvmkit.Geo
+import com.soundcloud.publicApiStrangler.clients.{Affiliation, FollowsPage, PageInfo, FollowsClient}
+import com.soundcloud.publicApiStrangler.features.Rollout
+import com.soundcloud.publicApiStrangler.mapping.timeline.User
 import com.soundcloud.publicApiStrangler.support.DispatchToMothershipHandler
-import com.soundcloud.scalakit.finagle.http.{AlwaysMatchesPathMatcher, HandlerRequest, OkStatus}
-import com.soundcloud.scalakit.finagle.jsonservice.Params
-import com.soundcloud.scalakit.{Path, UTF8, Urn, UserSession}
+import com.soundcloud.scalakit.finagle.http.{AlwaysMatchesPathMatcher, HandlerRequest}
+import com.soundcloud.scalakit.{UTF8, Urn, UserSession}
+import com.soundcloud.service.client.OkidokiClient
 import com.twitter.finagle.http.Status
 import com.twitter.util.Future
 import org.joda.time.format.DateTimeFormat
 import org.joda.time.{LocalDate, Years}
-import play.api.libs.json.Json
+import play.api.libs.json.{JsArray, JsNumber, JsValue, Json}
 
 import scala.collection.JavaConversions._
 import scala.io.Source
 
-class UserFollowController(
-                            userAuthentication: UserAuthentication,
-                            fallback: DispatchToMothershipHandler,
-                            moshimoshi: JsonService)
+class UserFollowController(userAuthentication: UserAuthentication,
+                           fallback: DispatchToMothershipHandler,
+                           okidoki: OkidokiClient,
+                           follows: FollowsClient,
+                           baseUrl: String,
+                           rollout: Rollout)
   extends BffInjectionBasedController {
 
   val followRestrictions = {
@@ -33,6 +39,14 @@ class UserFollowController(
   }
 
   val formatter = DateTimeFormat.forPattern("yyyy/M/d")
+
+  get("/me/followings")(fetchFollowings)
+  get("/me/followers")(fetchFollowers)
+  get("/me/followers/ids")(fetchFollowerIds)
+  get("/me/followings/ids")(fetchFollowingIds)
+  get("/users/:id/followers/followed_by/:other_id")(fetchMutualFollowers)
+  get("/users/:id/followings/not_followed_by/:other_id")(fetchFollowingsNotFollowedBy)
+  get("/users/:id/followings/common_to/:other_id")(fetchMutualFollowings)
 
   get("/me/followings/:id")(fallbackToMothership)
   head("/me/followings/:id")(fallbackToMothership)
@@ -55,17 +69,121 @@ class UserFollowController(
     }
   }
 
+  private def fetchFollowingsNotFollowedBy(request: Request): Future[ResponseBuilder] = {
+    fetchFromFollows(
+      request,
+      follows.followingsNotFollowedBy(
+        _,
+        Urn(s"soundcloud:users:${request.routeParams("id")}"),
+        Urn(s"soundcloud:users:${request.routeParams("other_id")}"),
+        _, _
+      ),
+      mapUsersToUsers,
+      contacts
+    )
+  }
+
+  private def fetchMutualFollowings(request: Request): Future[ResponseBuilder] = {
+    fetchFromFollows(
+      request,
+      follows.mutualFollowings(
+        _,
+        Urn(s"soundcloud:users:${request.routeParams("id")}"),
+        Urn(s"soundcloud:users:${request.routeParams("other_id")}"),
+        _, _
+      ),
+      mapUsersToUsers,
+      contacts
+    )
+  }
+
+  private def fetchMutualFollowers(request: Request): Future[ResponseBuilder] = {
+    fetchFromFollows(
+      request,
+      follows.mutualFollowers(
+        _,
+        Urn(s"soundcloud:users:${request.routeParams("id")}"),
+        Urn(s"soundcloud:users:${request.routeParams("other_id")}"),
+        _, _
+      ),
+      mapUsersToUsers,
+      fans
+    )
+  }
+
+  private def fetchFollowers(request: Request): Future[ResponseBuilder] = fetchFromFollows(request, follows.followers, mapUsersToUsers, fans)
+
+  private def fetchFollowings(request: Request) = fetchFromFollows(request, follows.followings, mapUsersToUsers, contacts)
+
+  private def fetchFollowingIds(request: Request) = fetchFromFollows(request, follows.followings, userIds, contacts)
+
+  private def fetchFollowerIds(request: Request) = fetchFromFollows(request, follows.followers, userIds, fans)
+
+  private def mapUsersToUsers(users: List[User]): List[Any] = users
+
+  private def userIds(users: List[User]): List[Any] = users.map(u => u.id)
+
+  private def fans(affiliations: Seq[Affiliation]): Seq[Urn] = affiliations.map(_.user)
+
+  private def contacts(affiliations: Seq[Affiliation]): Seq[Urn] = affiliations.map(_.target)
+
+  private def pageSizeParam(request: Request) = {
+    request.params.get("limit")
+      .orElse(request.params.get("page_size"))
+      .map(_.toInt).getOrElse(50)
+  }
+
+  private def cursorParam(request: Request) = request.params.get("cursor")
+
+  private def fetchFromFollows(request: Request,
+                               fetchFunction: (UserSession, Int, Option[String]) => Future[FollowsPage],
+                               mapUsers: List[User] => List[Any] = mapUsersToUsers,
+                               users: Seq[Affiliation] => Seq[Urn]): Future[ResponseBuilder] = {
+    userAuthentication.withLoggedInUser(request) { (session, userUrn) =>
+      if(rollingOutReads(session)) {
+        for {
+          affiliations <- fetchFunction(session, pageSizeParam(request), cursorParam(request))
+          urns = users(affiliations.values)
+          users <- fetchUsers(session, urns.toSet)
+        } yield {
+          render.json(Map(
+            "collection" -> mapUsers(users),
+            "next_href" -> nextHref(baseUrl, request.request.path, affiliations.page, request.params)
+          ))
+        }
+      } else {
+        fallbackToMothership(request)
+      }
+    }
+  }
+
+  private def rollingOutReads(session: UserSession): Boolean = {
+    rollout.isActiveForUser("follows-reads", session.getUser)
+  }
+
+  private def nextHref(baseUrl: String, path: String, pageInfo: PageInfo, requestParams: Map[String, String]): Option[String] = {
+    pageInfo.lastId.map { nextId =>
+      val params = requestParams ++ Map("cursor" -> nextId, "page_size" -> pageInfo.size) -- Seq("limit")
+      baseUrl + path + "?" + params.map { case(k, v) => s"$k=$v" }.mkString("&")
+    }
+  }
+
+  private def fetchUsers(session: UserSession, urns: Set[Urn]): Future[List[User]] = {
+    val context = new MappingContext(session)
+    okidoki.fetch(session, urns).map { users =>
+      users.map(user => new User(user, baseUrl)(context))
+    }
+  }
+
   private def findAgeRestriction(userId: String, geo: Geo): Option[Long] = {
     val restrictions = followRestrictions \ userId \ "age"
     (restrictions \ geo.getCountryCode).asOpt[Long].orElse((restrictions \ "*").asOpt[Long])
   }
 
   private def findUserAge(session: UserSession, userUrn: Urn): Future[Option[Long]] = {
-    moshimoshi.get(session, Path() / "users" / userUrn, Params.empty).map { response =>
-      response.status match {
-        case OkStatus => (response.body \ "date_of_birth").asOpt[String].map(currentAge)
-        case _ => None
-      }
+    okidoki.fetch(session, Set(userUrn)).map {
+      case user :: xs => (user \ "date_of_birth").asOpt[String].map(currentAge)
+      case _ => None
     }
   }
 

@@ -20,4 +20,5 @@ trait Fixtures {
   val lieblingLikesInfo = withContentsOf("liebling", "likes_info")
 
   val okidokiFetch = withContentsOf("okidoki", "fetch")
+  val okidokiUsers = withContentsOf("okidoki", "users")
 }
