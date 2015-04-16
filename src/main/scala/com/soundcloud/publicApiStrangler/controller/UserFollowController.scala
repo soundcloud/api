@@ -3,9 +3,8 @@ package com.soundcloud.publicApiStrangler.controller
 import com.soundcloud.bff.finagle.{Request, ResponseBuilder}
 import com.soundcloud.bff.nextbff.mapping.MappingContext
 import com.soundcloud.bff.web.{BffInjectionBasedController, UserAuthentication}
-import com.soundcloud.bff.{Json => BffJson}
-import com.soundcloud.jvmkit.{UserSession, Geo}
-import com.soundcloud.publicApiStrangler.clients.{Affiliation, FollowsClient, FollowsPage, PageInfo}
+import com.soundcloud.jvmkit.{Geo, UserSession}
+import com.soundcloud.publicApiStrangler.clients.{Following, FollowsClient, FollowsPage, PageInfo}
 import com.soundcloud.publicApiStrangler.features.Rollout
 import com.soundcloud.publicApiStrangler.mapping.timeline.User
 import com.soundcloud.publicApiStrangler.support.DispatchToMothershipHandler
@@ -135,9 +134,9 @@ class UserFollowController(userAuthentication: UserAuthentication,
 
   private def userIds(users: List[User]): List[Any] = users.map(u => u.id)
 
-  private def fans(affiliations: Seq[Affiliation]): Seq[Urn] = affiliations.map(_.user)
+  private def fans(affiliations: Seq[Following]): Seq[Urn] = affiliations.map(_.user)
 
-  private def contacts(affiliations: Seq[Affiliation]): Seq[Urn] = affiliations.map(_.target)
+  private def contacts(affiliations: Seq[Following]): Seq[Urn] = affiliations.map(_.target)
 
   private def pageSizeParam(request: Request) = {
     request.params.get("limit")
@@ -150,7 +149,7 @@ class UserFollowController(userAuthentication: UserAuthentication,
   private def fetchFromFollows(request: Request,
                                fetchFunction: (UserSession, Int, Option[String]) => Future[FollowsPage],
                                mapUsers: List[User] => List[Any] = mapUsersToUsers,
-                               users: Seq[Affiliation] => Seq[Urn],
+                               users: Seq[Following] => Seq[Urn],
                                requireLogin: Boolean): Future[ResponseBuilder] = {
     authenticateIfNeeded(request, requireLogin) { (session: UserSession) =>
       if(rollingOutReads(session)) {
