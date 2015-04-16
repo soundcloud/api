@@ -4,13 +4,13 @@ import com.soundcloud.bff.finagle.{Request, ResponseBuilder}
 import com.soundcloud.bff.nextbff.mapping.MappingContext
 import com.soundcloud.bff.web.{BffInjectionBasedController, UserAuthentication}
 import com.soundcloud.bff.{Json => BffJson}
-import com.soundcloud.jvmkit.Geo
+import com.soundcloud.jvmkit.{UserSession, Geo}
 import com.soundcloud.publicApiStrangler.clients.{Affiliation, FollowsClient, FollowsPage, PageInfo}
 import com.soundcloud.publicApiStrangler.features.Rollout
 import com.soundcloud.publicApiStrangler.mapping.timeline.User
 import com.soundcloud.publicApiStrangler.support.DispatchToMothershipHandler
 import com.soundcloud.scalakit.finagle.http.{AlwaysMatchesPathMatcher, HandlerRequest}
-import com.soundcloud.scalakit.{UTF8, Urn, UserSession}
+import com.soundcloud.scalakit.{UTF8, Urn}
 import com.soundcloud.service.client.OkidokiClient
 import com.twitter.finagle.http.Status
 import com.twitter.util.Future
@@ -40,15 +40,20 @@ class UserFollowController(userAuthentication: UserAuthentication,
 
   val formatter = DateTimeFormat.forPattern("yyyy/M/d")
 
-  get("/me/followings")(fetchFollowings)
-  get("/me/followers")(fetchFollowers)
-  get("/me/followers/ids")(fetchFollowerIds)
-  get("/me/followings/ids")(fetchFollowingIds)
+  // anonymous endpoints
+  get("/users/:id/followings")(fetchFollowingsWithoutAuth)
+  get("/users/:id/followings.json")(fetchFollowingsWithoutAuth)
+  get("/users/:id/followers")(fetchFollowersWithoutAuth)
+  get("/users/:id/followers.json")(fetchFollowersWithoutAuth)
   get("/users/:id/followers/followed_by/:other_id")(fetchMutualFollowers)
   get("/users/:id/followings/not_followed_by/:other_id")(fetchFollowingsNotFollowedBy)
   get("/users/:id/followings/common_to/:other_id")(fetchMutualFollowings)
 
-  get("/me/followings/:id")(fallbackToMothership)
+  // logged-in only endpoints
+  get("/me/followings")(fetchFollowings)
+  get("/me/followers")(fetchMyFollowers)
+  get("/me/followers/ids")(fetchMyFollowerIds)
+  get("/me/followings/ids")(fetchMyFollowingIds)
   head("/me/followings/:id")(fallbackToMothership)
   post("/me/followings/:id")(fallbackToMothership)
   patch("/me/followings/:id")(fallbackToMothership)
@@ -79,7 +84,8 @@ class UserFollowController(userAuthentication: UserAuthentication,
         _, _
       ),
       mapUsersToUsers,
-      contacts
+      contacts,
+      requireLogin = false
     )
   }
 
@@ -93,7 +99,8 @@ class UserFollowController(userAuthentication: UserAuthentication,
         _, _
       ),
       mapUsersToUsers,
-      contacts
+      contacts,
+      requireLogin = false
     )
   }
 
@@ -107,17 +114,22 @@ class UserFollowController(userAuthentication: UserAuthentication,
         _, _
       ),
       mapUsersToUsers,
-      fans
+      fans,
+      requireLogin = false
     )
   }
 
-  private def fetchFollowers(request: Request): Future[ResponseBuilder] = fetchFromFollows(request, follows.followers, mapUsersToUsers, fans)
+  private def fetchFollowersWithoutAuth(request: Request): Future[ResponseBuilder] = fetchFromFollows(request, follows.followers, mapUsersToUsers, fans, requireLogin = false)
 
-  private def fetchFollowings(request: Request) = fetchFromFollows(request, follows.followings, mapUsersToUsers, contacts)
+  private def fetchFollowingsWithoutAuth(request: Request): Future[ResponseBuilder] = fetchFromFollows(request, follows.followings, mapUsersToUsers, contacts, requireLogin = false)
 
-  private def fetchFollowingIds(request: Request) = fetchFromFollows(request, follows.followings, userIds, contacts)
+  private def fetchMyFollowers(request: Request): Future[ResponseBuilder] = fetchFromFollows(request, follows.followers, mapUsersToUsers, fans, requireLogin = true)
 
-  private def fetchFollowerIds(request: Request) = fetchFromFollows(request, follows.followers, userIds, fans)
+  private def fetchFollowings(request: Request) = fetchFromFollows(request, follows.followings, mapUsersToUsers, contacts, requireLogin = true)
+
+  private def fetchMyFollowingIds(request: Request) = fetchFromFollows(request, follows.followings, userIds, contacts, requireLogin = true)
+
+  private def fetchMyFollowerIds(request: Request) = fetchFromFollows(request, follows.followers, userIds, fans, requireLogin = true)
 
   private def mapUsersToUsers(users: List[User]): List[Any] = users
 
@@ -138,8 +150,9 @@ class UserFollowController(userAuthentication: UserAuthentication,
   private def fetchFromFollows(request: Request,
                                fetchFunction: (UserSession, Int, Option[String]) => Future[FollowsPage],
                                mapUsers: List[User] => List[Any] = mapUsersToUsers,
-                               users: Seq[Affiliation] => Seq[Urn]): Future[ResponseBuilder] = {
-    userAuthentication.withLoggedInUser(request) { (session, userUrn) =>
+                               users: Seq[Affiliation] => Seq[Urn],
+                               requireLogin: Boolean): Future[ResponseBuilder] = {
+    authenticateIfNeeded(request, requireLogin) { (session: UserSession) =>
       if(rollingOutReads(session)) {
         for {
           affiliations <- fetchFunction(session, pageSizeParam(request), cursorParam(request))
@@ -154,6 +167,14 @@ class UserFollowController(userAuthentication: UserAuthentication,
       } else {
         fallbackToMothership(request)
       }
+    }
+  }
+
+  private def authenticateIfNeeded(request: Request, requireLogin: Boolean)(withSession: UserSession => Future[ResponseBuilder]) = {
+    if(requireLogin) {
+      userAuthentication.withLoggedInUser(request) { (loggedIn, _) => withSession(loggedIn) }
+    } else {
+      userAuthentication.withUserSession(request)(withSession)
     }
   }
 
