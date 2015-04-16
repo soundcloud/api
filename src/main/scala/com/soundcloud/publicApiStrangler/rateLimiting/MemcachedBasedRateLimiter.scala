@@ -20,7 +20,7 @@ class MemcachedBasedRateLimiter(
           for {
             serializedExpiry <- memcachedClient.get(clientSpecificRateLimit.expiryKey)
             expiry = serializedExpiry.map(deserializeTime)
-          } yield RateLimitStatus.Reached(expiry)
+          } yield RateLimitStatus.Reached(rateLimit.maximumNrOfRequests, expiry)
         case Some(_) =>
           def tolerateCornerCase(updatedCount: Option[Long]) = updatedCount.getOrElse(1L)
           for {
