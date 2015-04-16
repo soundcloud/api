@@ -7,9 +7,8 @@ import org.jboss.netty.buffer.ChannelBuffers
 
 class MemcachedBasedRateLimiter(
   memcachedClient: MemcachedClient,
-  rateLimit: RateLimit,
-  applicationName: ResourceName,
-  clock: Clock
+  val rateLimit: RateLimit,
+  applicationName: ResourceName
 ) extends RateLimiter {
 
   def advanceRateLimitStatus(apiClient: ApiClient): Future[RateLimitStatus] = {
@@ -29,7 +28,7 @@ class MemcachedBasedRateLimiter(
             expiry <- memcachedClient.get(clientSpecificRateLimit.expiryKey).map(_.map(deserializeTime))
           } yield RateLimitStatus.Advancing(rateLimit.maximumNrOfRequests - updatedRequestCount, expiry)
         case None =>
-          val expiry = clock.now + clientSpecificRateLimit.rateLimit.ttl
+          val expiry = Time.now + clientSpecificRateLimit.rateLimit.ttl
           val one = ChannelBuffers.copiedBuffer("1".getBytes("UTF-8"))
           for {
             updatedRequestCount <- memcachedClient.add(clientSpecificRateLimit.counterKey, one, expiry)

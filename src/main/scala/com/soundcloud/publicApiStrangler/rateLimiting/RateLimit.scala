@@ -10,7 +10,7 @@ sealed trait RateLimit {
 
 object RateLimit {
   case class General(ttl: Duration, maximumNrOfRequests: Int) extends RateLimit {
-    def identifier: String = s"$maximumNrOfRequests/${ttl.inSeconds}seconds"
+    def identifier: String = s"${maximumNrOfRequests}_requests_per_${ttl.inSeconds}_seconds"
   }
 }
 
