@@ -1,12 +1,18 @@
 package com.soundcloud.publicApiStrangler.rateLimiting
 
+import com.soundcloud.jvmkit.ResourceName
 import com.soundcloud.scalakit.Urn
 import com.soundcloud.scalakit.cache.MemcachedClient
 import com.twitter.util.{Time, Duration, Future}
 
-case class ApiClient(value: Urn) {
-  lazy val counterKey = ""
-  lazy val expiryKey = ""
+case class ApiClient(urn: Urn) {
+  def identifier: String = urn.getIdentifier
+}
+
+case class ClientSpecificRateLimit(apiClient: ApiClient, rateLimit: RateLimit, applicationName: ResourceName) {
+  lazy val prefix = s"${applicationName.getName}.rateLimit.${apiClient.identifier}.${rateLimit.identifier}"
+  lazy val counterKey = s"$prefix.counter"
+  lazy val expiryKey = s"$prefix.expiry"
 }
 
 sealed trait RateLimit {
@@ -14,36 +20,41 @@ sealed trait RateLimit {
   def maximumNrOfRequests: Int
   def identifier: String
 }
+
 case class GeneralRateLimit(ttl: Duration, maximumNrOfRequests: Int) extends RateLimit {
-  override def identifier: String = s""
+  def identifier: String = s"$maximumNrOfRequests/${ttl.inSeconds}seconds"
 }
 
 trait RateLimiter {
   def exceedsRateLimit(apiClient: ApiClient): Future[Boolean]
 }
 
-class MemcachedBasedRateLimiter(memcachedClient: MemcachedClient, ttl: Duration, limit: Int) extends RateLimiter {
+class Clock {
+  def now = Time.now
+}
 
+class MemcachedBasedRateLimiter(
+  memcachedClient: MemcachedClient,
+  rateLimit: RateLimit,
+  applicationName: ResourceName,
+  clock: Clock
+) extends RateLimiter {
 
   def exceedsRateLimit(apiClient: ApiClient): Future[Boolean] = {
+    val clientSpecificRateLimit = ClientSpecificRateLimit(apiClient, rateLimit, applicationName)
     for {
-      nrOfApiCalls <- memcachedClient.get(apiClient.counterKey).map(_.map(_.toLong))
-      reachedLimit = nrOfApiCalls.exists(_ == limit)
-      _ <- when(!reachedLimit) { incrementOrAdd(apiClient, expiry(ttl)) }
+      nrOfApiCalls <- memcachedClient.get(clientSpecificRateLimit.counterKey).map(_.map(_.toLong))
+      reachedLimit = nrOfApiCalls.exists(_ == rateLimit.maximumNrOfRequests)
+      _ <- Future.when(!reachedLimit) { incrementOrAdd(clientSpecificRateLimit) }
     } yield reachedLimit
   }
 
-  private def expiry(ttl: Duration): Time = Time.now + ttl
-
-  private def incrementOrAdd(apiClient: ApiClient, expiry: Time): Future[Long] = {
+  private def incrementOrAdd(clientSpecificRateLimit: ClientSpecificRateLimit): Future[Long] = {
+    val expiry = clock.now + clientSpecificRateLimit.rateLimit.ttl
     for {
-      counter <- memcachedClient.incrementOrAdd(apiClient.counterKey, expiry, 1L)
-      _ <- when(counter == 1) { memcachedClient.set(apiClient.expiryKey, serializeTime(expiry))}
+      counter <- memcachedClient.incrementOrAdd(clientSpecificRateLimit.counterKey, expiry, 1L)
+      _ <- Future.when(counter == 1) { memcachedClient.set(clientSpecificRateLimit.expiryKey, serializeTime(expiry))}
     } yield counter
-  }
-
-  def when[A](cond: Boolean)(f: => Future[A]): Future[Unit] = {
-    if (cond) f.map(_ => ()) else Future(())
   }
 
   private def serializeTime(time: Time): String = time.inNanoseconds.toString
