@@ -1,12 +1,16 @@
 package com.soundcloud.publicApiStrangler.rateLimiting
 
 import com.soundcloud.jvmkit.ResourceName
+import com.soundcloud.jvmkit.logging.SoundCloudLoggerFactory
 import com.soundcloud.publicApiStrangler.rateLimiting.RateLimitStatus
 import com.soundcloud.scalakit.cache.{Cache, MemcachedClient}
 import com.twitter.util.{Future, Time, TimeFormat}
 import org.jboss.netty.buffer.ChannelBuffers
+import play.api.libs.json.Json
 
 class CacheBasedRateLimiter(cache: Cache, val rateLimit: RateLimit, applicationName: ResourceName) extends RateLimiter {
+
+  val logger = SoundCloudLoggerFactory.getLogger(this.getClass)
 
   def advanceRateLimitStatus(apiClient: ApiClient): Future[RateLimitStatus] = {
     val mediator = new RateLimiterCacheMediator(cache, rateLimit, apiClient, applicationName)
@@ -17,7 +21,9 @@ class CacheBasedRateLimiter(cache: Cache, val rateLimit: RateLimit, applicationN
         mediator.requestsMadeSoFar.flatMap {
           case Some(number) if number == rateLimit.maximumNrOfRequests =>
             Future.join(mediator.expiry, mediator.markAsReached).map { case (expiry, _) =>
-              RateLimitStatus.Reached(rateLimit.maximumNrOfRequests, expiry)
+              val status = RateLimitStatus.Reached(rateLimit.maximumNrOfRequests, expiry)
+              logger.info(s"client-urn=${apiClient.urn} rate-limit-status='${Json.stringify(Json.toJson(status))}'")
+              status
             }
           case Some(_) =>
             Future.join(mediator.updateRequestCount, mediator.expiry).map { case (updatedRequestCount, expiry) =>
