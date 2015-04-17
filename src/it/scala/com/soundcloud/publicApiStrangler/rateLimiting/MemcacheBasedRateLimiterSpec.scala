@@ -25,7 +25,7 @@ class MemcacheBasedRateLimiterSpec extends UnitSpecification with NoTimeConversi
   val cache = MemcachedClient(config, ResourceName("MEMCACHED_TEST"))
   val duration = 1L.second
   val rateLimit = RateLimit.General(duration, 4)
-  val rateLimiter = new MemcachedBasedRateLimiter(cache, rateLimit, ResourceName("TEST_APP"))
+  val rateLimiter = new CacheBasedRateLimiter(cache, rateLimit, ResourceName("TEST_APP"))
 
   val apiClient = ApiClient(Urn("soundcloud", "applications", "1234"))
 
@@ -67,7 +67,7 @@ class MemcacheBasedRateLimiterSpec extends UnitSpecification with NoTimeConversi
       Await.result(rateLimiter.advanceRateLimitStatus(apiClient))
       val status = Await.result(rateLimiter.advanceRateLimitStatus(apiClient))
       status must beLike {
-        case RateLimitStatus.Reached(Some(_)) => ok
+        case RateLimitStatus.Reached(_, Some(_)) => ok
       }
     }
 

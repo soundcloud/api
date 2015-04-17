@@ -13,9 +13,12 @@ import com.soundcloud.publicApiStrangler.mapper.timeline.e1.{ActivitiesMapper, S
 import com.soundcloud.publicApiStrangler.mapper.timeline.publicApi.ActivitiesWithOriginMapper
 import com.soundcloud.publicApiStrangler.mapper.timeline.{EntityMapper, EntitySummaryMapper}
 import com.soundcloud.publicApiStrangler.mapper.trackstreams.{TrackStreamJsonResponseMapper, TrackStreamRedirectResponseMapper}
+import com.soundcloud.publicApiStrangler.rateLimiting.{RateLimiterProvider, CacheBasedRateLimiter, RateLimit, RateLimitingFilter}
 import com.soundcloud.publicApiStrangler.support._
 import com.soundcloud.scalakit.ResourceName
+import com.soundcloud.scalakit.cache.MemcachedClient
 import com.soundcloud.service.component._
+import com.twitter.conversions.time.intToTimeableNumber
 import com.twitter.finagle.http.Request
 import com.twitter.finagle.http.filter.ExceptionFilter
 
@@ -94,10 +97,13 @@ object App
 
   override val fallbackHandler = Some(mothershipDispatcher)
 
+  private val rateLimiterProvider = new RateLimiterProvider(config, cache)
+
   override val customFilters = List(
     new ExceptionFilter[Request],
     new AcceptOnlyJsonRequestFilter(Set("/crossdomain.xml")),
-    new ContentAuthorizationFilter(authorizeContent)
+    new ContentAuthorizationFilter(authorizeContent),
+    new RateLimitingFilter(rateLimiterProvider, userAuthentication)
   )
 
   override val controllers = Set(
