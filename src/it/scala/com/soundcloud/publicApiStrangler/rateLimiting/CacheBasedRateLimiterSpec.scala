@@ -13,7 +13,7 @@ import org.specs2.matcher.MatchResult
 import org.specs2.time.NoTimeConversions
 import scala.{concurrent => Stdlib}
 
-class MemcacheBasedRateLimiterSpec extends UnitSpecification with NoTimeConversions {
+class CacheBasedRateLimiterSpec extends UnitSpecification with NoTimeConversions {
   sequential
 
   final def toChannelBuffer(value: String) = {
