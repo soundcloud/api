@@ -13,6 +13,7 @@ import com.twitter.util.TimeConversions._
 import org.jboss.netty.handler.codec.http.{DefaultHttpHeaders, HttpHeaders}
 import org.specs2.time.NoTimeConversions
 import play.api.libs.json._
+import com.soundcloud.publicApiStrangler.standards.PublicApiStandards._
 
 class RateLimitingFilterSpec extends UnitSpecification with NoTimeConversions {
 
@@ -52,7 +53,7 @@ class RateLimitingFilterSpec extends UnitSpecification with NoTimeConversions {
       val json = Json.parse(response.getContentString()).as[JsObject]
       json \ "rate_limit_status" ==== JsString("reached")
       json \ "max_nr_of_requests" ==== JsNumber(30)
-      json \ "reset_time" ==== Json.toJson(expiry)(RateLimitStatus.timeWrites)
+      json \ "reset_time" ==== Json.toJson(expiry)
       there was no(next.apply(any))
     }
   }
