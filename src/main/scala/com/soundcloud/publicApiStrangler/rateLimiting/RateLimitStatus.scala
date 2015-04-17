@@ -13,7 +13,7 @@ object RateLimitStatus {
   private val timeFormat = new TimeFormat("yyyy/MM/dd hh:mm:ss ZZZZ")
 
   // TODO: MOVE TO JVMKIT
-  private implicit val timeWrites: Writes[Time] = Writes(timeFormat.format _ andThen JsString)
+  implicit val timeWrites: Writes[Time] = Writes(timeFormat.format _ andThen JsString)
 
   implicit val writes: Writes[RateLimitStatus] = Writes {
 

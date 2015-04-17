@@ -20,7 +20,7 @@ class RateLimitingFilter(rateLimiter: RateLimiter, userAuthentication: UserAuthe
       for {
         status <- rateLimiter.advanceRateLimitStatus(apiClient)
         response <- status match {
-          case status@RateLimitStatus.Reached(_, _) =>
+          case status @ RateLimitStatus.Reached(_, _) =>
             Future.value(render.typedJson(status).status(HttpResponseStatus.TOO_MANY_REQUESTS.getCode).build)
           case RateLimitStatus.Advancing(_, _) =>
             next(request)
