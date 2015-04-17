@@ -49,7 +49,7 @@ class MemcacheBasedRateLimiterSpec extends UnitSpecification with NoTimeConversi
 
     "register an API client on its first request" in {
       val status = Await.result(rateLimiter.advanceRateLimitStatus(apiClient))
-      dispatchAfterDuration(duration + 1L.second, finalTestToken)(finalTest) // Unfortunately we have to chime this in here
+      dispatchAfterDuration(duration + 2L.seconds, finalTestToken)(finalTest) // Unfortunately we have to chime this in here
       status must beLike {
         case RateLimitStatus.Advancing(3, Some(_)) => ok
       }
