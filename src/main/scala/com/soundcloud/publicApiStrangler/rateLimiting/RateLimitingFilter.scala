@@ -8,7 +8,6 @@ import com.soundcloud.publicApiStrangler.features.{Features, Rollout}
 import com.twitter.finagle.http.{Request, Response}
 import com.twitter.finagle.{Service, SimpleFilter}
 import com.twitter.util.Future
-import com.soundcloud.scalakit.utilities.OptionExtensions._
 import org.jboss.netty.handler.codec.http.HttpResponseStatus
 
 class RateLimitingFilter(

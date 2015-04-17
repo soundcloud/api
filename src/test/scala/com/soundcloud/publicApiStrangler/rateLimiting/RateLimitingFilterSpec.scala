@@ -4,16 +4,17 @@ import com.soundcloud.bff.finagle.ResponseBuilder
 import com.soundcloud.bff.security.AuthenticatorService
 import com.soundcloud.bff.web.UserAuthentication
 import com.soundcloud.jvmkit.UserSession
+import com.soundcloud.publicApiStrangler.features.Rollout
+import com.soundcloud.publicApiStrangler.standards.PublicApiStandards._
 import com.soundcloud.scalakit.Urn
 import com.soundcloud.scalakit.test.UnitSpecification
 import com.twitter.finagle.Service
-import com.twitter.finagle.http.{CookieMap, Request, Response}
-import com.twitter.util.{Await, Time, Future}
+import com.twitter.finagle.http.{Request, Response}
 import com.twitter.util.TimeConversions._
-import org.jboss.netty.handler.codec.http.{DefaultHttpHeaders, HttpHeaders}
+import com.twitter.util.{Await, Future, Time}
+import org.jboss.netty.handler.codec.http.DefaultHttpHeaders
 import org.specs2.time.NoTimeConversions
 import play.api.libs.json._
-import com.soundcloud.publicApiStrangler.standards.PublicApiStandards._
 
 class RateLimitingFilterSpec extends UnitSpecification with NoTimeConversions {
 
@@ -23,17 +24,27 @@ class RateLimitingFilterSpec extends UnitSpecification with NoTimeConversions {
 
     trait Context extends Scope {
       val mockRateLimiter = mock[RateLimiter]
+
       val mockAuthenticatorService = mock[AuthenticatorService]
+
       val mockUserAuthentication = new UserAuthentication(mockAuthenticatorService)
+
       val next = mock[Service[Request, Response]]
+
       val mockRequest = mock[Request]
       mockRequest.headers() returns new DefaultHttpHeaders()
       val mockResponse = new ResponseBuilder().build
+
       val mockSession = mock[UserSession]
       mockSession.getAgent returns Urn("soundcloud", "applications", "mockagent")
+
       val mockRateLimiterProvider = mock[RateLimiterProvider]
       mockRateLimiterProvider.rateLimiters returns Set(mockRateLimiter)
-      val filter = new RateLimitingFilter(mockRateLimiterProvider, mockUserAuthentication)
+
+      val mockRollout = mock[Rollout]
+      mockRollout.isActive(any) returns true
+
+      val filter = new RateLimitingFilter(mockRateLimiterProvider, mockUserAuthentication, mockRollout)
     }
 
     "let requests pass through to the service when the client hasn't reached their limit" in new Context {
