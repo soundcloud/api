@@ -1,7 +1,8 @@
 package com.soundcloud.publicApiStrangler
 
 import com.soundcloud.jvmkit.config.BazookaConfig
-import com.soundcloud.publicApiStrangler.features.{RolloutBuilder, ZookeeperClient}
+import com.soundcloud.publicApiStrangler.features.RolloutBuilder
+import com.soundcloud.publicApiStrangler.zookeeper.ZookeeperClientFactory
 import com.soundcloud.scalakit.Urn
 import com.soundcloud.scalakit.test.{UnitSpecification, VerifiedMocks}
 import com.twitter.io.Charsets
@@ -12,8 +13,9 @@ class RolloutItSpec extends UnitSpecification {
 
   trait FeaturesContext extends VerifiedMocks {
     val config = new BazookaConfig
-    val rolloutAddress = config.get("ZOOKEEPER_SERVERS")
-    val rollout = RolloutBuilder.build(rolloutAddress, config.getApplicationName)
+    val factory = new ZookeeperClientFactory
+    val zookeeperClient = factory.create(config)
+    val rollout = RolloutBuilder.build(zookeeperClient, config.getApplicationName)
 
     def newFeatureName(): String = "feature_" + new Random().nextInt(Integer.MAX_VALUE)
   }
@@ -57,11 +59,10 @@ class RolloutItSpec extends UnitSpecification {
   }
 
   "picks up changes done directly in zookeeper" in new NewFeatureContext {
-    val zookeeper = ZookeeperClient.create(rolloutAddress)
-
+    val anotherClient = factory.create(config)
     rollout.activate(featureName, 0)
     rollout.isActive(featureName) mustEqual false
-    zookeeper.setData().forPath("/" + config.getApplicationName + "/features/" + featureName, "100".getBytes(Charsets.Utf8))
+    anotherClient.setData().forPath("/" + config.getApplicationName + "/features/" + featureName, "100".getBytes(Charsets.Utf8))
 
     rollout.isActive(featureName) mustEqual true
   }
@@ -80,7 +81,7 @@ class RolloutItSpec extends UnitSpecification {
   }
 
   "returns a empty array of features when asking for all features of a non existing application" in new FeaturesContext {
-    val nonExistingApplicationRollout = RolloutBuilder.build(rolloutAddress, "nonExistingApplication")
+    val nonExistingApplicationRollout = RolloutBuilder.build(zookeeperClient, "nonExistingApplication")
     nonExistingApplicationRollout.allFeatures().size mustEqual 0
   }
 }
