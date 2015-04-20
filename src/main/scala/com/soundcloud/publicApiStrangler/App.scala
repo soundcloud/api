@@ -104,13 +104,13 @@ object App
 
   override val fallbackHandler = Some(mothershipDispatcher)
 
-  private val rateLimiterProvider = new RateLimiterProvider(config, cache)
+  private val rateLimiter = RateLimiter.from(cache, config)
 
   override val customFilters = List(
     new ExceptionFilter[Request],
     new AcceptOnlyJsonRequestFilter(Set("/crossdomain.xml")),
     new ContentAuthorizationFilter(authorizeContent),
-    new RateLimitingFilter(rateLimiterProvider, userAuthentication, rollout, whitelistingService)
+    new RateLimitingFilter(rateLimiter, userAuthentication, rollout, whitelistingService)
   )
 
   override val controllers = Set(

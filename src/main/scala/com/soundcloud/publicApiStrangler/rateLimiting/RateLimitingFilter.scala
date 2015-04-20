@@ -11,15 +11,13 @@ import com.twitter.util.Future
 import org.jboss.netty.handler.codec.http.HttpResponseStatus
 
 class RateLimitingFilter(
-  rateLimiterProvider: RateLimiterProvider,
+  rateLimiter: RateLimiter,
   userAuthentication: UserAuthentication,
   rollout: Rollout,
   whitelistingService: WhitelistingService
 ) extends SimpleFilter[Request, Response] {
 
   val logger = SoundCloudLoggerFactory.getLogger(this.getClass)
-
-  val rateLimiter = rateLimiterProvider.rateLimiters.head // We only have one atm
 
   def apply(request: Request, next: Service[Request, Response]): Future[Response] = {
     if (!rollout.isActive(Features.ProbeRateLimits)) {

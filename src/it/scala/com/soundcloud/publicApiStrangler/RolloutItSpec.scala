@@ -72,7 +72,7 @@ class RolloutItSpec extends UnitSpecification {
     rollout.delete(featureName)
     rollout.isActive(featureName) mustEqual false
 
-    rollout.allFeatures() must not contain(featureName, any[Int])
+    rollout.allFeatures() must not contain((featureName, any[Int]))
   }
 
   "ignores non existing features when deleting" in new NewFeatureContext {

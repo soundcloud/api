@@ -39,15 +39,12 @@ class RateLimitingFilterSpec extends UnitSpecification with NoTimeConversions {
       val mockAgentUrn = Urn("soundcloud", "applications", "mockagent")
       mockSession.getAgent returns mockAgentUrn
 
-      val mockRateLimiterProvider = mock[RateLimiterProvider]
-      mockRateLimiterProvider.rateLimiters returns Set(mockRateLimiter)
-
       val mockRollout = mock[Rollout]
       mockRollout.isActive(any) returns true
 
       val mockWhitelistingService = mock[WhitelistingService]
 
-      val filter = new RateLimitingFilter(mockRateLimiterProvider, mockUserAuthentication, mockRollout, mockWhitelistingService)
+      val filter = new RateLimitingFilter(mockRateLimiter, mockUserAuthentication, mockRollout, mockWhitelistingService)
     }
 
     "let requests pass through to the service when the client hasn't reached their limit" in new Context {
