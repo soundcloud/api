@@ -1,5 +1,7 @@
 package com.soundcloud.publicApiStrangler.features
 
+import java.util.concurrent.ConcurrentHashMap
+
 import com.soundcloud.scalakit.Urn
 import com.twitter.io.Charsets
 import org.apache.curator.framework.CuratorFramework
@@ -26,8 +28,7 @@ object RolloutBuilder {
 class Rollout(zookeeperCuratorClient: CuratorFramework, zookeeperBaseFeaturesPath: String) {
   private val logger = LoggerFactory.getLogger(this.getClass.getName)
 
-  @volatile
-  private var activationsMap: Map[String, Int] = Map.empty
+  private val activationsMap = new ConcurrentHashMap[String, Int]
 
   def activate(featureName: String, percentage: Int): Unit = {
     val activation = percentage.toString.getBytes(Charsets.Utf8)
@@ -70,7 +71,7 @@ class Rollout(zookeeperCuratorClient: CuratorFramework, zookeeperBaseFeaturesPat
       override def nodeChanged(): Unit = {
         try {
           val dataFromZNode = featureFlag.getCurrentData
-          activationsMap += featureName -> new String(dataFromZNode.getData, Charsets.Utf8).toInt
+          activationsMap.put(featureName, new String(dataFromZNode.getData, Charsets.Utf8).toInt)
         }
         catch {
           case e: Exception => logger.error("Exception while fetching properties from zookeeper ZNode, reason: " + e.getCause)
@@ -83,7 +84,7 @@ class Rollout(zookeeperCuratorClient: CuratorFramework, zookeeperBaseFeaturesPat
 
   private def activationForFeature(featureName: String): Int = {
     try {
-      activationsMap.get(featureName) match {
+      Option(activationsMap.get(featureName)) match {
         case Some(percentage) => percentage
         case None => {
           addListenerToFeature(featureName)
