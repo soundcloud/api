@@ -1,15 +1,16 @@
 package com.soundcloud.publicApiStrangler.rateLimiting
 
-import java.util.{Collections, Set => JavaSet}
 import java.util.concurrent.ConcurrentHashMap
+import java.util.{Collections, Set => JavaSet}
 
 import com.soundcloud.jvmkit.logging.SoundCloudLoggerFactory
 import com.soundcloud.scalakit.Urn
 import com.twitter.util.Future
 import org.apache.curator.framework.CuratorFramework
-import org.apache.curator.framework.recipes.cache.{PathChildrenCacheEvent, PathChildrenCacheListener, PathChildrenCache}
+import org.apache.curator.framework.recipes.cache.{PathChildrenCache, PathChildrenCacheEvent, PathChildrenCacheListener}
 import org.apache.zookeeper.CreateMode
 import org.apache.zookeeper.KeeperException.{NoNodeException, NodeExistsException}
+
 import scala.collection.JavaConverters._
 import scala.collection.immutable.TreeSet
 
@@ -28,9 +29,20 @@ class WhitelistingService(zookeeperClient: CuratorFramework, applicationName: St
   }
 
   private val childrenCache = new PathChildrenCache(zookeeperClient, basePath, false)
-  childrenCache.start(PathChildrenCache.StartMode.NORMAL)
 
-  val FullPath = ".*/(.*)".r
+  private val FullPath = ".*/(.*)".r
+
+  locally {
+    childrenCache.start(PathChildrenCache.StartMode.BUILD_INITIAL_CACHE)
+
+    val urnsFromPersistence = childrenCache.getCurrentData.asScala.map { data =>
+      val FullPath(clientId) = data.getPath
+      Urn("soundcloud", "applications", clientId)
+    }
+
+    urnsFromPersistence foreach whitelistCache.add
+  }
+
 
   childrenCache.getListenable.addListener(new PathChildrenCacheListener {
     override def childEvent(client: CuratorFramework, event: PathChildrenCacheEvent) = (event.getType, event.getData.getPath) match {
