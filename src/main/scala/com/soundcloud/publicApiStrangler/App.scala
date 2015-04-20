@@ -110,7 +110,7 @@ object App
     new ExceptionFilter[Request],
     new AcceptOnlyJsonRequestFilter(Set("/crossdomain.xml")),
     new ContentAuthorizationFilter(authorizeContent),
-    new RateLimitingFilter(rateLimiterProvider, userAuthentication, rollout)
+    new RateLimitingFilter(rateLimiterProvider, userAuthentication, rollout, whitelistingService)
   )
 
   override val controllers = Set(
