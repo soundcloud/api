@@ -13,7 +13,7 @@ import com.soundcloud.publicApiStrangler.mapper.timeline.e1.{ActivitiesMapper, S
 import com.soundcloud.publicApiStrangler.mapper.timeline.publicApi.ActivitiesWithOriginMapper
 import com.soundcloud.publicApiStrangler.mapper.timeline.{EntityMapper, EntitySummaryMapper}
 import com.soundcloud.publicApiStrangler.mapper.trackstreams.{TrackStreamJsonResponseMapper, TrackStreamRedirectResponseMapper}
-import com.soundcloud.publicApiStrangler.rateLimiting.{RateLimiterProvider, CacheBasedRateLimiter, RateLimit, RateLimitingFilter}
+import com.soundcloud.publicApiStrangler.rateLimiting._
 import com.soundcloud.publicApiStrangler.support._
 import com.soundcloud.publicApiStrangler.zookeeper.ZookeeperClientFactory
 import com.soundcloud.scalakit.ResourceName
@@ -65,6 +65,12 @@ object App
     new TimelineController(userAuthentication, streamMapper, activitiesMapper, publicActivitiesMapper, pagination)
   }
 
+  private val zookeeperClientFactory = new ZookeeperClientFactory
+  private val zookeeperClient = zookeeperClientFactory.create(config)
+
+  private val whitelistingService = new WhitelistingService(zookeeperClient, config.getApplicationName)
+  private val rateLimitingController = new RateLimitingController(whitelistingService)
+
   private val groupController = {
     val forwardHandler = new ForwardRequestHandler(publicApiClient)
     new GroupController(userAuthentication, gatekeeperClient, forwardHandler)
@@ -83,9 +89,6 @@ object App
       mothershipDispatcher,
       trackStreamSnipHandler)
   }
-
-  private val zookeeperClientFactory = new ZookeeperClientFactory
-  private val zookeeperClient = zookeeperClientFactory.create(config)
 
   val rollout = RolloutBuilder.build(zookeeperClient, config.getApplicationName)
   private val rolloutController = new RolloutController(rollout)
@@ -115,6 +118,7 @@ object App
     rolloutController,
     groupController,
     trackStreamsController,
-    userFollowController
+    userFollowController,
+    rateLimitingController
   )
 }
