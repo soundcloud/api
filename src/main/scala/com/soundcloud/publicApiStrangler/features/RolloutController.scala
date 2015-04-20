@@ -7,7 +7,7 @@ class RolloutController(rollout: Rollout) extends BffInjectionBasedController {
 
   get("/-/features") { _ =>
     val activationsMap = rollout.allFeatures.map {
-      case(feature: String, percentage: Int) => Map("name" -> feature, "percentage" -> percentage)
+      case (feature, percentage) => Map[String, Any]("name" -> feature, "percentage" -> percentage)
     }
 
     Future(render.json(

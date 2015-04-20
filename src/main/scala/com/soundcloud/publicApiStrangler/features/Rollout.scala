@@ -2,35 +2,17 @@ package com.soundcloud.publicApiStrangler.features
 
 import com.soundcloud.scalakit.Urn
 import com.twitter.io.Charsets
+import org.apache.curator.framework.CuratorFramework
 import org.apache.curator.framework.recipes.cache.{NodeCache, NodeCacheListener}
-import org.apache.curator.framework.{CuratorFramework, CuratorFrameworkFactory}
-import org.apache.curator.retry.ExponentialBackoffRetry
 import org.apache.zookeeper.KeeperException.{NoNodeException, NodeExistsException}
 import org.slf4j.LoggerFactory
 
 import scala.collection.JavaConverters._
 import scala.util.Random
 
-object ZookeeperClient {
-  private val baseSleepTimeInMiliseconds: Int = 1000
-  private val maxNumberOfRetries: Int = 5
-  val retryPolicy = new ExponentialBackoffRetry(baseSleepTimeInMiliseconds, maxNumberOfRetries)
-
-  def create(rolloutAddress: String): CuratorFramework = {
-    val curatorZookeeperClient = CuratorFrameworkFactory.newClient(rolloutAddress, retryPolicy)
-
-    curatorZookeeperClient.start()
-    curatorZookeeperClient.blockUntilConnected()
-
-    curatorZookeeperClient
-  }
-}
-
 object RolloutBuilder {
-  def build(rolloutAddress: String, applicationName: String): Rollout = {
-    val client = ZookeeperClient.create(rolloutAddress)
+  def build(client: CuratorFramework, applicationName: String): Rollout = {
     val zookeeperBaseFeaturesPath = "/" + applicationName + "/features"
-
     try {
       client.create().creatingParentsIfNeeded().forPath(zookeeperBaseFeaturesPath)
     } catch {
@@ -43,8 +25,9 @@ object RolloutBuilder {
 
 class Rollout(zookeeperCuratorClient: CuratorFramework, zookeeperBaseFeaturesPath: String) {
   private val logger = LoggerFactory.getLogger(this.getClass.getName)
+
   @volatile
-  private var activationsMap: Map[String, Integer] = Map.empty
+  private var activationsMap: Map[String, Int] = Map.empty
 
   def activate(featureName: String, percentage: Int): Unit = {
     val activation = percentage.toString.getBytes(Charsets.Utf8)

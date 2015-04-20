@@ -8,12 +8,13 @@ import com.soundcloud.jvmkit.config.ConfigConvention
 import com.soundcloud.publicApiStrangler.authorization.{AuthorizeHttpResponse, ContentAuthorizationFilter}
 import com.soundcloud.publicApiStrangler.clients.FollowsComponent
 import com.soundcloud.publicApiStrangler.controller._
-import com.soundcloud.publicApiStrangler.features.{RolloutBuilder, RolloutController, ZookeeperClient, Rollout}
+import com.soundcloud.publicApiStrangler.features.{RolloutBuilder, RolloutController, Rollout}
 import com.soundcloud.publicApiStrangler.mapper.timeline.e1.{ActivitiesMapper, StreamMapper}
 import com.soundcloud.publicApiStrangler.mapper.timeline.publicApi.ActivitiesWithOriginMapper
 import com.soundcloud.publicApiStrangler.mapper.timeline.{EntityMapper, EntitySummaryMapper}
 import com.soundcloud.publicApiStrangler.mapper.trackstreams.{TrackStreamJsonResponseMapper, TrackStreamRedirectResponseMapper}
 import com.soundcloud.publicApiStrangler.support._
+import com.soundcloud.publicApiStrangler.zookeeper.ZookeeperClientFactory
 import com.soundcloud.scalakit.ResourceName
 import com.soundcloud.service.component._
 import com.twitter.finagle.http.Request
@@ -80,7 +81,10 @@ object App
       trackStreamSnipHandler)
   }
 
-  val rollout = RolloutBuilder.build(config.get("ZOOKEEPER_SERVERS"), config.getApplicationName)
+  private val zookeeperClientFactory = new ZookeeperClientFactory
+  private val zookeeperClient = zookeeperClientFactory.create(config)
+
+  val rollout = RolloutBuilder.build(zookeeperClient, config.getApplicationName)
   private val rolloutController = new RolloutController(rollout)
 
   private val userFollowController = new UserFollowController(
