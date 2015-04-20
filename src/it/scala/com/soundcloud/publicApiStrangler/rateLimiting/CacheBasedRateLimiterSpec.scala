@@ -27,7 +27,6 @@ class CacheBasedRateLimiterSpec extends UnitSpecification with NoTimeConversions
   val rateLimit = RateLimit.General(duration, 4)
   val rateLimiter = new CacheBasedRateLimiter(cache, rateLimit, ResourceName("TEST_APP"))
 
-  val apiClient = ApiClient(Urn("soundcloud", "applications", "1234"))
 
   def dispatchAfterDuration[A](duration: Duration, promise: Stdlib.Promise[A])(f: => A): Unit = {
     new Timer().schedule(new TimerTask {
@@ -37,42 +36,76 @@ class CacheBasedRateLimiterSpec extends UnitSpecification with NoTimeConversions
     }, duration.inMillis)
   }
 
-  "The MemcacheBasedRateLimiter" should {
+  "The CacheBasedRateLimiter" should {
 
-    val finalTestToken = Stdlib.Promise[MatchResult[RateLimitStatus]]()
-    def finalTest: MatchResult[RateLimitStatus] = {
-      val status = Await.result(rateLimiter.advanceRateLimitStatus(apiClient))
-      status must beLike {
-        case RateLimitStatus.Advancing(_, Some(_)) => ok
+    "Rate limiting flow" in {
+      val apiClient = ApiClient(Urn("soundcloud", "applications", "1234"))
+
+      val finalTestToken = Stdlib.Promise[MatchResult[RateLimitStatus]]()
+      def finalTest: MatchResult[RateLimitStatus] = {
+        val status = Await.result(rateLimiter.advanceRateLimitStatus(apiClient))
+        status must beLike {
+          case RateLimitStatus.Advancing(_, Some(_)) => ok
+        }
+      }
+
+      "register an API client on its first request" in {
+        val status = Await.result(rateLimiter.advanceRateLimitStatus(apiClient))
+        dispatchAfterDuration(duration + 2L.seconds, finalTestToken)(finalTest) // Unfortunately we have to chime this in here
+        status must beLike {
+          case RateLimitStatus.Advancing(3, Some(_)) => ok
+        }
+      }
+
+      "keep advancing while the limit is not reached" in {
+        Await.result(rateLimiter.advanceRateLimitStatus(apiClient))
+        val status = Await.result(rateLimiter.advanceRateLimitStatus(apiClient))
+        status must beLike {
+          case RateLimitStatus.Advancing(1, Some(_)) => ok
+        }
+      }
+
+      "stop advancing once the limit is reached" in {
+        Await.result(rateLimiter.advanceRateLimitStatus(apiClient))
+        val status = Await.result(rateLimiter.advanceRateLimitStatus(apiClient))
+        status must beLike {
+          case RateLimitStatus.Reached(_, Some(_)) => ok
+        }
+      }
+
+      "advance again after the first time interval has passed" in {
+        Stdlib.Await.result(finalTestToken.future, Stdlib.duration.Duration.Inf)
       }
     }
 
-    "register an API client on its first request" in {
-      val status = Await.result(rateLimiter.advanceRateLimitStatus(apiClient))
-      dispatchAfterDuration(duration + 2L.seconds, finalTestToken)(finalTest) // Unfortunately we have to chime this in here
-      status must beLike {
-        case RateLimitStatus.Advancing(3, Some(_)) => ok
-      }
-    }
+    "Rate limiting query flow" in {
+      val apiClient = ApiClient(Urn("soundcloud", "applications", "1235"))
 
-    "keep advancing while the limit is not reached" in {
-      Await.result(rateLimiter.advanceRateLimitStatus(apiClient))
-      val status = Await.result(rateLimiter.advanceRateLimitStatus(apiClient))
-      status must beLike {
-        case RateLimitStatus.Advancing(1, Some(_)) => ok
+      "Query for as yet unknown client" in {
+        val status = Await.result(rateLimiter.rateLimitStatus(apiClient))
+        status ==== RateLimitStatus.Advancing(4, None)
       }
-    }
 
-    "stop advancing once the limit is reached" in {
-      Await.result(rateLimiter.advanceRateLimitStatus(apiClient))
-      val status = Await.result(rateLimiter.advanceRateLimitStatus(apiClient))
-      status must beLike {
-        case RateLimitStatus.Reached(_, Some(_)) => ok
+      "Query for a client that has not reached its limit" in {
+        Await.result(rateLimiter.advanceRateLimitStatus(apiClient))
+        Await.result(rateLimiter.advanceRateLimitStatus(apiClient))
+        val status = Await.result(rateLimiter.rateLimitStatus(apiClient))
+        status must beLike {
+          case RateLimitStatus.Advancing(2, Some(_)) => ok
+        }
       }
-    }
 
-    "advance again after the first time interval has passed" in {
-      Stdlib.Await.result(finalTestToken.future, Stdlib.duration.Duration.Inf)
+      "Query for a client that has reached its limit" in {
+        Await.result(rateLimiter.advanceRateLimitStatus(apiClient))
+        Await.result(rateLimiter.advanceRateLimitStatus(apiClient))
+        Await.result(rateLimiter.advanceRateLimitStatus(apiClient))
+        Await.result(rateLimiter.advanceRateLimitStatus(apiClient))
+        val status = Await.result(rateLimiter.rateLimitStatus(apiClient))
+        status must beLike {
+          case RateLimitStatus.Reached(4, Some(_)) => ok
+        }
+      }
+
     }
   }
 }

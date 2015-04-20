@@ -35,4 +35,17 @@ class CacheBasedRateLimiter(cache: Cache, val rateLimit: RateLimit, applicationN
       }
     }
   }
+
+  def rateLimitStatus(apiClient: ApiClient): Future[RateLimitStatus] = {
+    val mediator = new RateLimiterCacheMediator(cache, rateLimit, apiClient, applicationName)
+    Future.join(mediator.expiry, mediator.alreadyReached) flatMap { case (expiry, alreadyReached) =>
+      if (alreadyReached)
+        Future(RateLimitStatus.Reached(rateLimit.maximumNrOfRequests, expiry))
+      else
+        mediator.requestsMadeSoFar map { requestsOpt =>
+          val requests = requestsOpt.getOrElse(0L)
+          RateLimitStatus.Advancing(rateLimit.maximumNrOfRequests - requests, expiry)
+        }
+    }
+  }
 }

@@ -7,6 +7,7 @@ import com.twitter.util.Future
 trait RateLimiter {
   def rateLimit: RateLimit
   def advanceRateLimitStatus(apiClient: ApiClient): Future[RateLimitStatus]
+  def rateLimitStatus(apiClient: ApiClient): Future[RateLimitStatus]
 }
 
 object RateLimiter {
