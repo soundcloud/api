@@ -2,10 +2,8 @@ package com.soundcloud.publicApiStrangler.rateLimiting
 
 import com.soundcloud.jvmkit.ResourceName
 import com.soundcloud.jvmkit.logging.SoundCloudLoggerFactory
-import com.soundcloud.publicApiStrangler.rateLimiting.RateLimitStatus
-import com.soundcloud.scalakit.cache.{Cache, MemcachedClient}
-import com.twitter.util.{Future, Time, TimeFormat}
-import org.jboss.netty.buffer.ChannelBuffers
+import com.soundcloud.scalakit.cache.Cache
+import com.twitter.util.Future
 import play.api.libs.json.Json
 
 class CacheBasedRateLimiter(cache: Cache, val rateLimit: RateLimit, applicationName: ResourceName) extends RateLimiter {
