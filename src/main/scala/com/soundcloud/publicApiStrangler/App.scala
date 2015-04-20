@@ -69,7 +69,9 @@ object App
   private val zookeeperClient = zookeeperClientFactory.create(config)
 
   private val whitelistingService = new WhitelistingService(zookeeperClient, config.getApplicationName)
-  private val rateLimitingController = new RateLimitingController(whitelistingService)
+
+  private val rateLimiter = RateLimiter.from(cache, config)
+  private val rateLimitingController = new RateLimitingController(whitelistingService, rateLimiter)
 
   private val groupController = {
     val forwardHandler = new ForwardRequestHandler(publicApiClient)
@@ -103,8 +105,6 @@ object App
   )
 
   override val fallbackHandler = Some(mothershipDispatcher)
-
-  private val rateLimiter = RateLimiter.from(cache, config)
 
   override val customFilters = List(
     new ExceptionFilter[Request],
