@@ -1,5 +1,6 @@
 SBT := vendor/sbt/bin/sbt -Duser.home=$(shell echo "$$HOME") -Dsbt.boot.properties=project/sbt.boot.properties -J-Xmx3G -J-Xms512m
 LOAD_ENV := $(shell echo "$$(./development.properties.sh development.properties) $$1" | tr '\n' ' ')
+LOAD_IT_ENV := $(shell echo "MEMCACHED_TEST_HOST=`bin/docker-host-ip` MEMCACHED_TEST_PORT=11211")
 
 VENDOR_DIR=$(PWD)/vendor
 BIN_DIR=$(PWD)/vendor/bin
@@ -38,7 +39,7 @@ ci: remove.ivy.lock remove.install.jre .install.jre
 	$(SBT) -no-colors clean test startScript
 
 it-test: _dev_docker_compose
-	$(LOAD_ENV) $(SBT) it:test
+	$(LOAD_ENV) $(LOAD_IT_ENV) $(SBT) it:test
 
 test:
 	$(SBT) test

@@ -1,26 +1,28 @@
 package com.soundcloud.publicApiStrangler.rateLimiting
 
-import com.twitter.util.{Throw, Return, Future}
-import com.soundcloud.jvmkit.ResourceName
-import com.soundcloud.jvmkit.logging.SoundCloudLoggerFactory
-import org.jboss.netty.buffer.ChannelBuffers
+import com.twitter.util.Duration
 
-class RateLimit(protectedResource: ResourceName, counter: RateLimitCounter, maximumPerWindow: Long, clock: () => TimeWindow) {
-  val logger = SoundCloudLoggerFactory.getLogger(this.getClass)
+sealed trait RateLimit {
+  def ttl: Duration
+  def maximumNrOfRequests: Long
+  def identifier: String
+}
 
-  val zero = ChannelBuffers.copiedBuffer("0".getBytes("UTF-8"))
-  val whatToReturnWhenAnErrorHappens = 0L
-  val unusedFlag = 0
+object RateLimit {
 
-  val metricPrefix = s"ratelimit.${protectedResource.getName}"
+  case class General(ttl: Duration, maximumNrOfRequests: Long) extends RateLimit {
+    def identifier: String = s"${maximumNrOfRequests}_requests_per_${ttl.inSeconds}_seconds"
+  }
 
-  def checkIfAllowed(consumer: Consumer): Future[Boolean] = {
-    val timeWindow = clock()
-    val usage = UsageEntry(protectedResource, consumer, timeWindow)
+  object General {
+    val Pattern = "([0-9]+) per (.+)".r
 
-    counter.incr(usage).map{
-      count => logger.debug(s"Consumer [${usage.key}}] has [$count] hits")
-        count
-    }.map(_ < maximumPerWindow)
+    def parse(s: String): Set[RateLimit] = {
+      s.split(",\\s*").map {
+        case Pattern(maximumNrOfRequests, ttlString) => General(Duration.parse(ttlString), maximumNrOfRequests.toLong)
+      }.toSet
+    }
   }
 }
+
+

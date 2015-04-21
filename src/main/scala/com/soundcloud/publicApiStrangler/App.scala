@@ -17,6 +17,7 @@ import com.soundcloud.publicApiStrangler.mapper.timeline.publicApi.ActivitiesWit
 import com.soundcloud.publicApiStrangler.mapper.timeline.{EntityMapper, EntitySummaryMapper}
 import com.soundcloud.publicApiStrangler.mapper.trackstreams.{TrackStreamJsonResponseMapper, TrackStreamRedirectResponseMapper}
 import com.soundcloud.publicApiStrangler.mapper.waveform.WaveformMapper
+import com.soundcloud.publicApiStrangler.rateLimiting._
 import com.soundcloud.publicApiStrangler.support._
 import com.soundcloud.publicApiStrangler.zookeeper.ZookeeperClientFactory
 import com.soundcloud.scalakit.ResourceName
@@ -70,6 +71,13 @@ object App
     new TimelineController(userAuthentication, streamMapper, activitiesMapper, publicActivitiesMapper, pagination)
   }
 
+  private val zookeeperClientFactory = new ZookeeperClientFactory
+  private val zookeeperClient = zookeeperClientFactory.create(config)
+
+  private val whitelistingService = new WhitelistingService(zookeeperClient, config.getApplicationName)
+
+  private val rateLimiter = RateLimiter.from(cache, config)
+
   private val groupController = {
     val forwardHandler = new ForwardRequestHandler(publicApiClient)
     new GroupController(userAuthentication, gatekeeperClient, forwardHandler)
@@ -88,9 +96,6 @@ object App
       mothershipDispatcher,
       trackStreamSnipHandler)
   }
-
-  private val zookeeperClientFactory = new ZookeeperClientFactory
-  private val zookeeperClient = zookeeperClientFactory.create(config)
 
   val rollout = RolloutBuilder.build(zookeeperClient, config.getApplicationName)
   private val rolloutController = new RolloutController(rollout)
@@ -127,7 +132,8 @@ object App
   override val customFilters = List(
     new ExceptionFilter[Request],
     new AcceptOnlyJsonRequestFilter(Set("/crossdomain.xml")),
-    new ContentAuthorizationFilter(authorizeContent)
+    new ContentAuthorizationFilter(authorizeContent),
+    new RateLimitingFilter(rateLimiter, userAuthentication, rollout, whitelistingService)
   )
 
 
