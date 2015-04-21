@@ -17,7 +17,11 @@ class Track(jsonValue: JsValue,
   val commentable = (json \ "commentable").asOpt[Boolean]
   val description = (json \ "description").asOpt[String]
   val download_count = (json \ "downloads_count").asOpt[Int]
-  val downloadable = (json \ "downloadable").asOpt[Boolean]
+  val downloadable = for {
+    downloadable <- (json \ "downloadable").asOpt[Boolean]
+    has_downloads_left <- (json \ "has_downloads_left").asOpt[Boolean]
+  } yield (downloadable && has_downloads_left)
+
   val embeddable_by = (json \ "embeddable_by").asOpt[String]
   val favoritings_count = (json \ "favoritings_count").asOpt[Int]
   val genre = (json \ "genre").asOpt[String]

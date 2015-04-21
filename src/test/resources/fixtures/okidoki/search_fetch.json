@@ -97,6 +97,7 @@
     "description": "",
     "disabled_at": null,
     "downloadable": true,
+    "has_downloads_left": true,
     "duration": 269555,
     "isrc": "",
     "label_id": null,
