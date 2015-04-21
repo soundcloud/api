@@ -20,7 +20,8 @@ class TrackSummary(jsonValue: JsValue,
   val title = (json \ "title").asOpt[String]
   val duration = (json \ "duration").asOpt[Int]
   val sharing = (json \ "sharing").asOpt[String]
-  val waveform_url = (json \ "waveform_url").asOpt[String]
+  // Option[Any] so we can override with an embedded attribute when calling WaveformMapper
+  val waveform_url: Option[Any] = (json \ "waveform_url").asOpt[String]
   val stream_url = s"$baseUrl/tracks/$id/stream" // (json \ "stream_url").asOpt[String] // original url not supported by android
   val uri = s"$baseUrl/tracks/$id"
   val user_id = userId

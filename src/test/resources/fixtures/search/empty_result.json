@@ -1,0 +1,10 @@
+{
+  "qid": "qid123",
+  "query": "superweirdquery",
+  "docs": [],
+  "total_results": 0,
+  "query_time_in_millis": 169,
+  "offset": 0,
+  "limit": 10,
+  "took": "174.67691ms"
+}

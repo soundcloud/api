@@ -1,0 +1,20 @@
+{
+  "qid": "qid123",
+  "query": "query",
+  "docs": [
+    {
+      "urn": "soundcloud:tracks:3406"
+    },
+    {
+      "urn": "soundcloud:tracks:157"
+    },
+    {
+      "urn": "soundcloud:tracks:4876"
+    }
+  ],
+  "total_results": 5,
+  "query_time_in_millis": 23,
+  "offset": 0,
+  "limit": 3,
+  "took": "26.449946ms"
+}

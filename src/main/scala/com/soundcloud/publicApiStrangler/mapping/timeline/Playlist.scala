@@ -11,7 +11,7 @@ class Playlist(jsonValue: JsValue,
                entitySummaryMapper: EntitySummaryMapper)(implicit context: MappingContext)
   extends PlaylistSummary(jsonValue, baseUrl, entitySummaryMapper) {
 
-  val likes_count = likesByUrn(urn)
+  val likes_count: Option[Any] = likesByUrn.get(urn)
 
   // deprecated fields, kept for structure only
   val downloadable = None

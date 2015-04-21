@@ -13,14 +13,13 @@ class User(jsonValue: JsValue, baseUrl: String)(implicit context: MappingContext
   val description = (json \ "description").asOpt[String]
   val followers_count = (json \ "followers_count").asOpt[Int]
   val country = (json \ "country").asOpt[String]
-  val track_count = (json \ "track_count").asOpt[Int]
+  val track_count = (json \ "tracks_count").asOpt[Int]
   val public_favorites_count = (json \ "public_favorites_count").asOpt[Int]
   val followings_count = (json \ "followings_count").asOpt[Int]
   val plan = (json \ "plan").asOpt[String]
-  val subscriptions = (json \ "subscriptions").asOpt[String]
   val myspace_name = nameInNetwork("myspace")
   val discogs_name = nameInNetwork("discogs")
-  val website_title = nameInNetwork("personal")
+  val website_title = nameInNetwork("personal", "title")
   val website = nameInNetwork("personal", "url")
 
 
@@ -38,6 +37,6 @@ class User(jsonValue: JsValue, baseUrl: String)(implicit context: MappingContext
   val comments_count = None
   val online = false
   val likes_count = None
-  val playlist_count = None
+  val playlist_count: Option[Int] = None
 
 }

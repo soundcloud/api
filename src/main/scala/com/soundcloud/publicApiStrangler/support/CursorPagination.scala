@@ -1,18 +1,14 @@
 package com.soundcloud.publicApiStrangler.support
 
-import com.soundcloud.bff.nextbff.pagination.{ CursorBasedPage, PageBuilder }
-import com.soundcloud.scalakit._
-import com.twitter.finagle.http.Request
 import com.soundcloud.bff.finagle.ResponseBuilder
-import com.twitter.util.Future
-import com.twitter.util.Try
-import com.twitter.util.Return
-import com.twitter.util.Throw
+import com.soundcloud.bff.nextbff.pagination.{CursorBasedPage, PageBuilder}
+import com.twitter.finagle.http.Request
+import com.twitter.util.{Future, Return, Throw, Try}
 
 class CursorPagination(baseUrl: String) {
 
-  def withPage(request: Request, urn: Urn)(f: CursorBasedPage[Urn] => Future[ResponseBuilder]) =
-    Try(PageBuilder(request, baseUrl)(urn).buildCursorBased()) match {
+  def withPage[T](request: Request, param: T)(f: CursorBasedPage[T] => Future[ResponseBuilder]) =
+    Try(PageBuilder(request, baseUrl)(param).buildCursorBased()) match {
       case Return(page)     => f(page)
       case Throw(exception) => new ResponseBuilder().badRequest.toFuture
     }
