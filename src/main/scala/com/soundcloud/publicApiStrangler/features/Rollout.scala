@@ -93,7 +93,9 @@ class Rollout(zookeeperCuratorClient: CuratorFramework, zookeeperBaseFeaturesPat
         }
       }
     } catch {
-      case e: NoNodeException => 0
+      case e: NoNodeException =>
+	    activate(featureName, 0)
+ 	    0
     }
   }
 }
