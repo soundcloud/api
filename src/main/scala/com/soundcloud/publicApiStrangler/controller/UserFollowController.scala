@@ -158,7 +158,7 @@ class UserFollowController(userAuthentication: UserAuthentication,
   }
 
   private def rollingOutReads(session: UserSession): Boolean = {
-    rollout.isActiveForUser("follows-reads", session.getUser)
+    rollout.isActiveForId("follows-reads", session.getUser)
   }
 
   private def nextHref(baseUrl: String, path: String, pageInfo: PageInfo, requestParams: Map[String, String]): Option[String] = {

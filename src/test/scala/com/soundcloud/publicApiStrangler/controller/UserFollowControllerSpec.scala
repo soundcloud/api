@@ -41,7 +41,7 @@ class UserFollowControllerSpec extends InjectionBasedControllerSpecification wit
 
     override def before = {
       DateTimeUtils.setCurrentMillisFixed(now)
-      rollout.isActiveForUser("follows-reads", userUrn) returns true
+      rollout.isActiveForId("follows-reads", userUrn) returns true
       okidokiMock.fetch(session, Set(userUrn)) returns okidokiResponse
     }
 
@@ -54,7 +54,7 @@ class UserFollowControllerSpec extends InjectionBasedControllerSpecification wit
     val expectedResponse = mock[Response]
 
     override def before = {
-      rollout.isActiveForUser("follows-reads", userUrn) returns false
+      rollout.isActiveForId("follows-reads", userUrn) returns false
 
       expectedResponse.headers() returns HttpHeaders.EMPTY_HEADERS
       expectedResponse.getStatusCode() returns Status.EnhanceYourCalm.getCode
