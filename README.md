@@ -21,6 +21,9 @@ This project uses bucha as a deployment tool. In order to deploy the application
 bin/bucha api deploy
 ```
 
+## CI
+[http://jenkins.int.s-cloud.net/job/public-api-strangler_master_precheckin](http://jenkins.int.s-cloud.net/job/public-api-strangler_master_precheckin)
+
 ## Groups endpoint kill switch
 
 The strangler has support for removing access to expensive endpoints that are harmful to our site-wide stability if abused or scrapped by a malicious user.
