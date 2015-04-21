@@ -71,7 +71,6 @@ object App
   private val whitelistingService = new WhitelistingService(zookeeperClient, config.getApplicationName)
 
   private val rateLimiter = RateLimiter.from(cache, config)
-  private val rateLimitingController = new RateLimitingController(whitelistingService, rateLimiter)
 
   private val groupController = {
     val forwardHandler = new ForwardRequestHandler(publicApiClient)
@@ -118,7 +117,6 @@ object App
     rolloutController,
     groupController,
     trackStreamsController,
-    userFollowController,
-    rateLimitingController
+    userFollowController
   )
 }
