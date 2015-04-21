@@ -49,7 +49,7 @@ class Rollout(zookeeperCuratorClient: CuratorFramework, zookeeperBaseFeaturesPat
     }
   }
 
-  def allFeatures(): Map[String, Int] = {
+  def allFeatures: Map[String, Int] = {
     zookeeperCuratorClient.getChildren.forPath(zookeeperBaseFeaturesPath).asScala.map { feature =>
       feature -> activationForFeature(feature)
     }.toMap
@@ -57,27 +57,22 @@ class Rollout(zookeeperCuratorClient: CuratorFramework, zookeeperBaseFeaturesPat
 
   def isActive(featureName: String): Boolean = Random.nextInt(100) <= activationForFeature(featureName)
 
-  def isActiveForUser(featureName: String, user: Urn): Boolean = {
-    if(activationForFeature(featureName) == 100) {
-      true
-    } else {
-      user.getIdentifier.toLong % 100 < activationForFeature(featureName)
-    }
+  def isActiveForId(featureName: String, id: Urn): Boolean = {
+    activationForFeature(featureName) == 100 || (id.getIdentifier.toLong % 100 < activationForFeature(featureName))
   }
 
   private def addListenerToFeature(featureName: String): Unit = {
     val featureFlag = new NodeCache(zookeeperCuratorClient, featurePath(featureName))
-    featureFlag.getListenable.addListener(new NodeCacheListener {
+    featureFlag.getListenable addListener new NodeCacheListener {
       override def nodeChanged(): Unit = {
         try {
           val dataFromZNode = featureFlag.getCurrentData
           activationsMap.put(featureName, new String(dataFromZNode.getData, Charsets.Utf8).toInt)
-        }
-        catch {
+        } catch {
           case e: Exception => logger.error("Exception while fetching properties from zookeeper ZNode, reason: " + e.getCause)
         }
       }
-    })
+    }
   }
 
   private def featurePath(featureName: String): String = zookeeperBaseFeaturesPath + "/" + featureName
@@ -93,7 +88,9 @@ class Rollout(zookeeperCuratorClient: CuratorFramework, zookeeperBaseFeaturesPat
         }
       }
     } catch {
-      case e: NoNodeException => 0
+      case e: NoNodeException =>
+	    activate(featureName, 0)
+ 	    0
     }
   }
 }
