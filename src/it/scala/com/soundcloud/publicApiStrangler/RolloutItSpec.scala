@@ -71,8 +71,6 @@ class RolloutItSpec extends UnitSpecification {
     rollout.activate(featureName, 100)
     rollout.delete(featureName)
     rollout.isActive(featureName) mustEqual false
-
-    rollout.allFeatures() must not contain((featureName, any[Int]))
   }
 
   "ignores non existing features when deleting" in new NewFeatureContext {
@@ -82,6 +80,6 @@ class RolloutItSpec extends UnitSpecification {
 
   "returns a empty array of features when asking for all features of a non existing application" in new FeaturesContext {
     val nonExistingApplicationRollout = RolloutBuilder.build(zookeeperClient, "nonExistingApplication")
-    nonExistingApplicationRollout.allFeatures().size mustEqual 0
+    nonExistingApplicationRollout.allFeatures.size mustEqual 0
   }
 }
