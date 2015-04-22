@@ -40,7 +40,7 @@ class RateLimitEventListener(config: Config) extends EventListener[RateLimitEven
   private def inc(counter: Counter, client: ApiClient): Unit = {
     counter
       .newPartial()
-      .labelPair("client_urn", client.urn.toString)
+      .labelPair("client_urn", client.urn.getString)
       .apply()
       .increment()
   }
