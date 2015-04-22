@@ -25,8 +25,10 @@ class CacheBasedRateLimiterSpec extends UnitSpecification with NoTimeConversions
   val cache = MemcachedClient(config, ResourceName("MEMCACHED_TEST"))
   val duration = 1L.second
   val rateLimit = RateLimit.General(duration, 4)
-  val rateLimiter = new CacheBasedRateLimiter(cache, rateLimit, ResourceName("TEST_APP"))
 
+  val noOpListener = mock[RateLimitEventListener]
+  
+  val rateLimiter = new CacheBasedRateLimiter(cache, rateLimit, ResourceName("TEST_APP"), noOpListener)
 
   def dispatchAfterDuration[A](duration: Duration, promise: Stdlib.Promise[A])(f: => A): Unit = {
     new Timer().schedule(new TimerTask {
