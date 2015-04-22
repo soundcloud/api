@@ -59,6 +59,26 @@ Routing of search requests is controlled via rollout flags.
 1. [`search_avoid_mothership_for_groups`](http://gatekeeper.int.s-cloud.net/activations/search_avoid_mothership_for_groups)
    -> uses microservices for /groups?q= instead of mothership
 
+## Rate limiting whitelist
+The ratelimiting feature makes use of a whitelist of client application URNs that will never be rate-limited. The source of truth for this whitelist is the ZooKeeper cluster.
+
+In the near future, it will be possible to add clients to the whitelist or remove them by means of of a corresponding internal service that will expose appropriate resources over HTTP.
+
+Until that service is in place, updating the whitelist has to be done with a simple Python script located in this repository, which will remove the previous whitelist from ZooKeeper and replace it with the whitelist in `ratelimiting_whitelist.txt`. This at least allows us to quickly add clients to the whitelist without requiring a deployment.
+
+### Requirements
+Make sure you have Python and the [zk-shell](https://github.com/rgs1/zk_shell) command-line utility installed on your machine:
+
+`pip install zk-shell`
+
+### How to update the whitelist
+
+1. Change the file `ratelimiting_whitelist.txt` to contain exactly those client app URNs that should be on the whitelist. Each URN must be in a separate line.
+2. Run `./update_ratelimiting_whitelist.py`. The script will print out what it's doing, indicating a successful run with a `Done!` at the end.
+
+If you want to do a dry run, testing your update against a local ZooKeeper server, replace the line `zookeeper_server = zookeeper_host()` with `zookeeper_server = 'localhost'`.
+
+
 ## FAQ
 
 ### What should I read before asking questions?
