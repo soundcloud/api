@@ -77,7 +77,9 @@ object App
 
   private val whitelistingService = new WhitelistingService(zookeeperClient, config.getApplicationName)
 
-  private val rateLimitEventListener = new RateLimitEventListener(config)
+  private val prometheusLabelsSafeGuard = new PrometheusLabelsSafeGuard(cache, config, config.getApplicationResourceName)
+  private val rateLimitMetrics = new RateLimitMetrics(prometheusLabelsSafeGuard, config)
+  private val rateLimitEventListener = new RateLimitEventListener(rateLimitMetrics)
 
   private val rateLimiter = RateLimiter.from(cache, config, rateLimitEventListener)
 
