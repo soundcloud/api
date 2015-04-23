@@ -20,7 +20,7 @@ def app_name():
             return result.group(1)
     
 whitelist_path = "/" + app_name() + "/ratelimits/whitelist"
-zookeeper_server = 'localhost'
+zookeeper_server = zookeeper_host()
    
 def create_command(node):
     return "create " + node + " '' false false true"  
