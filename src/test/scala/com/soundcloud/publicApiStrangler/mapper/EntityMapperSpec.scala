@@ -8,6 +8,7 @@ import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures
 import com.soundcloud.scalakit.Urn
 import com.soundcloud.scalakit.test.VerifiedMocks
 import com.soundcloud.service.client.{LieblingClient, OkidokiClient}
+import com.soundcloud.service.response.representation.liebling.LikesCount
 import com.twitter.util.{Await, Future}
 import play.api.libs.json.JsObject
 
@@ -34,8 +35,8 @@ class EntityMapperSpec extends UnitSpecification with Fixtures {
       when(okidokiClient.fetch(===(session), any[Set[Urn]])).thenReturn(
         Future(okidokiFetch.as[List[JsObject]])
       )
-      when(lieblingClient.likesCounts(===(session), any[List[Urn]])).thenReturn(
-        Future(lieblingLikesInfo.as[JsObject])
+      when(lieblingClient.likeCounts(===(session), any[List[Urn]])).thenReturn(
+        Future((lieblingLikesInfo.as[JsObject] \ "likes_counts").as[List[LikesCount]])
       )
     }
 
