@@ -1,11 +1,21 @@
 package com.soundcloud.publicApiStrangler.mapping.search
 
+import com.fasterxml.jackson.annotation.{JsonIgnore, JsonValue}
 import com.soundcloud.bff._
-import com.soundcloud.bff.nextbff.mapping.JsonMapping
+import com.soundcloud.bff.nextbff.mapper.EmbeddedItem
+import com.soundcloud.bff.nextbff.mapping.{JsonMapping, Mapping}
 import com.soundcloud.bff.nextbff.pagination.OffsetBasedPage
 import com.soundcloud.publicApiStrangler.mapper.search.SearchEntityMapper
 import com.soundcloud.scalakit._
 import play.api.libs.json.JsValue
+
+trait Pagination[T] {
+  this: Mapping =>
+
+  val collection: Seq[T]
+
+  def next_href: Option[String]
+}
 
 trait SearchFacet extends JsonMapping {
   val name = (json \ "name").as[String]
@@ -28,15 +38,28 @@ trait Faceted {
     facetsJson.map(facet => new JsonMapping(facet) with SearchFacet)
   }
 }
-
-
 trait Search extends JsonMapping {
   def entityMapper: SearchEntityMapper
 
-  val collection = (json \ "docs")
+  // ignored so that implementations can choose how to expose the results
+  @JsonIgnore
+  protected val mapSearchResults = (json \ "docs")
     .as[List[JsObject]]
     .map(doc => Urn((doc \ "urn").as[String]))
     .map(entityMapper.embed)
+
+}
+
+trait LegacySearch extends Search {
+
+  @JsonValue
+  def value = mapSearchResults
+
+}
+
+trait PaginatedSearch extends Search with Pagination[EmbeddedItem[JsonMapping]] {
+
+  val collection = mapSearchResults
 
   lazy val next_href = {
     val nextOffset = (json \ "offset").as[Int] + (json \ "limit").as[Int]
@@ -48,6 +71,4 @@ trait Search extends JsonMapping {
   }
 
   protected def currentPage: OffsetBasedPage[_]
-
-
 }
