@@ -1,0 +1,11 @@
+46941 # SoundCloud.com (currently being abused)
+124   # SoundCloud iOS
+3152  # SoundCloud Android
+3273  # Mobile Soundcloud
+65097 # Mobi (new mobile soundcloud)
+-1    # Classic
+43164 # SoundCloud Player Widget
+90575 # SoundCloud Visual Embed Player
+60973 # SoundCloud Flash Widget
+66151 # Old mobi web
+3537  # SoundCloud Desktop
