@@ -11,33 +11,33 @@ class RateLimiterCacheMediator(cache: Cache, rateLimit: RateLimit, apiClient: Ap
   private val clientSpecificRateLimit = ClientSpecificRateLimit(apiClient, rateLimit, applicationName)
 
   def alreadyReached: Future[Boolean] = {
-    cache.get(clientSpecificRateLimit.reachedKey).map(_.isDefined)
+    cache.get(clientSpecificRateLimit.reachedCacheKey).map(_.isDefined)
   }
 
   def requestsMadeSoFar: Future[Option[Long]] = {
-    cache.get(clientSpecificRateLimit.counterKey).map(_.map(_.toLong))
+    cache.get(clientSpecificRateLimit.counterCacheKey).map(_.map(_.toLong))
   }
 
   lazy val expiry: Future[Option[Time]] = {
-    cache.get(clientSpecificRateLimit.expiryKey).map(_.map(deserializeTime))
+    cache.get(clientSpecificRateLimit.expiryCacheKey).map(_.map(deserializeTime))
   }
 
   def updateRequestCount: Future[Long] = {
-    cache.incr(clientSpecificRateLimit.counterKey).map(_.get)
+    cache.incr(clientSpecificRateLimit.counterCacheKey).map(_.get)
   }
 
   def establish: Future[Time] = {
     val expiry = Time.now + clientSpecificRateLimit.rateLimit.ttl
     for {
-      updatedRequestCount <- cache.add(clientSpecificRateLimit.counterKey, one, expiry)
-      _ <- cache.set(clientSpecificRateLimit.expiryKey, serializeTime(expiry))
+      updatedRequestCount <- cache.add(clientSpecificRateLimit.counterCacheKey, one, expiry)
+      _ <- cache.set(clientSpecificRateLimit.expiryCacheKey, serializeTime(expiry))
     } yield expiry
   }
 
   def markAsReached: Future[Unit] = {
     for {
       e <- expiry
-      _ <- cache.set(clientSpecificRateLimit.reachedKey, "reached", e.get)
+      _ <- cache.set(clientSpecificRateLimit.reachedCacheKey, "reached", e.get)
     } yield ()
   }
 }

@@ -16,11 +16,11 @@ class ClientSpecificRateLimitSpec extends UnitSpecification with NoTimeConversio
     )
 
     "provide the correct counter key" in {
-      limit.counterKey ==== "WOBBLY.rateLimit.client_21329.300_requests_per_3_seconds.counter"
+      limit.counterCacheKey ==== "WOBBLY.rateLimit.client_21329.300_requests_per_3_seconds.counter"
     }
 
     "provide the correct expiry key" in {
-      limit.expiryKey ==== "WOBBLY.rateLimit.client_21329.300_requests_per_3_seconds.expiry"
+      limit.expiryCacheKey ==== "WOBBLY.rateLimit.client_21329.300_requests_per_3_seconds.expiry"
     }
   }
 }
