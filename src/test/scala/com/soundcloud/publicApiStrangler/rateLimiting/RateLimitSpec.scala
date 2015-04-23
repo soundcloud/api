@@ -8,7 +8,7 @@ class RateLimitSpec extends UnitSpecification with NoTimeConversions {
 
   "RateLimit" should {
     "parse a comma-separated list of general rate limits into a set" in {
-      val s = "15000 per 1.day,500 per 30.minutes, 30 per 2.seconds"
+      val s = "15000 per PT24H,500 per PT30M, 30 per PT2S"
       RateLimit.General.parse(s) ==== Set(
         RateLimit.General(1.day, 15000),
         RateLimit.General(30.minutes, 500),
@@ -17,7 +17,7 @@ class RateLimitSpec extends UnitSpecification with NoTimeConversions {
     }
 
     "parse a single rate limit into a one-element set" in {
-      val s = "15000 per 1.day"
+      val s = "15000 per PT24H"
       RateLimit.General.parse(s) ==== Set(RateLimit.General(1.day, 15000))
     }
   }
