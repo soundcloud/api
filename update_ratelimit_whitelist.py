@@ -20,7 +20,7 @@ def app_name():
             return result.group(1)
     
 whitelist_path = "/" + app_name() + "/ratelimits/whitelist"
-zookeeper_server = zookeeper_host()
+zookeeper_server = 'localhost'
    
 def create_command(node):
     return "create " + node + " '' false false true"  
@@ -40,17 +40,22 @@ def delete_whitelist(zookeeper_host):
 def create_whitelist(zookeeper_host):
     create_node_recursively(whitelist_path, zookeeper_host)
 
+def client_urn_and_comment(line):
+  result = re.match( r'(.*?)#(.*)', line)
+  if result:
+      return (result.group(1).strip(), result.group(2).strip())
+
 def whitelisted_clients():
     with open('ratelimiting_whitelist.txt', 'r') as f:
-        return [urn.rstrip() for urn in f.readlines()]
+        return [client_urn_and_comment(line.rstrip()) for line in f.readlines()]
 
 def whitelisted_client_path(urn):
     return whitelist_path + '/' + urn
 
 def populate_whitelist(zookeeper_host):
-    for urn in whitelisted_clients():
+    for (urn, comment) in whitelisted_clients():
         create_node_recursively(whitelisted_client_path(urn), zookeeper_host)
-        print "added to whitelist: " + urn
+        print "added to whitelist: " + urn + " (" + comment + ")"
     
 def run():        
     print "Updating whitelist on ZooKeeper server " + zookeeper_server + "..." 
