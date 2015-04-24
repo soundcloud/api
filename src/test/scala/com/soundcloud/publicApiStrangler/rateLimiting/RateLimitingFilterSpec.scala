@@ -4,7 +4,7 @@ import com.soundcloud.bff.finagle.ResponseBuilder
 import com.soundcloud.bff.security.AuthenticatorService
 import com.soundcloud.bff.web.UserAuthentication
 import com.soundcloud.jvmkit.UserSession
-import com.soundcloud.publicApiStrangler.features.Rollout
+import com.soundcloud.publicApiStrangler.features.{Features, Rollout}
 import com.soundcloud.publicApiStrangler.standards.PublicApiStandards._
 import com.soundcloud.scalakit.Urn
 import com.soundcloud.scalakit.test.UnitSpecification
@@ -40,14 +40,33 @@ class RateLimitingFilterSpec extends UnitSpecification with NoTimeConversions {
       mockSession.getAgent returns mockAgentUrn
 
       val mockRollout = mock[Rollout]
-      mockRollout.isActive(any) returns true
 
       val mockWhitelistingService = mock[WhitelistingService]
 
       val filter = new RateLimitingFilter(mockRateLimiter, mockUserAuthentication, mockRollout, mockWhitelistingService)
     }
 
+    "let requests pass through if probe ratelimits flag is not active for client" in new Context {
+      mockRollout.isActiveForId(===(Features.ProbeRateLimits), any) returns false
+      mockAuthenticatorService.cacheKeyAndSessionFor(any, any) returns Future.value((Some("inconsequential"), mockSession))
+      next.apply(any) returns Future.value(mockResponse)
+      there was no(mockRateLimiter).advanceRateLimitStatus(any)
+      there was no(mockWhitelistingService).hasClientWhitelisted(any)
+      Await.result(filter.apply(mockRequest, next)) ==== mockResponse
+    }
+
+    "let requests pass through if enforce ratelimits flag is not active for client" in new Context {
+      mockRollout.isActiveForId(===(Features.ProbeRateLimits), any) returns true
+      mockRollout.isActiveForId(===(Features.EnforceRateLimits), any) returns false
+      mockAuthenticatorService.cacheKeyAndSessionFor(any, any) returns Future.value((Some("inconsequential"), mockSession))
+      next.apply(any) returns Future.value(mockResponse)
+      mockRateLimiter.advanceRateLimitStatus(any[ApiClient]) returns Future.value(RateLimitStatus.Advancing(20, Some(expiry)))
+      there was no(mockWhitelistingService).hasClientWhitelisted(any)
+      Await.result(filter.apply(mockRequest, next)) ==== mockResponse
+    }
+
     "let requests pass through to the service when the client hasn't reached their limit" in new Context {
+      mockRollout.isActiveForId(any, any) returns true
       mockRateLimiter.advanceRateLimitStatus(any[ApiClient]) returns Future.value(RateLimitStatus.Advancing(20, Some(expiry)))
       mockAuthenticatorService.cacheKeyAndSessionFor(any, any) returns Future.value((Some("inconsequential"), mockSession))
       next.apply(any) returns Future.value(mockResponse)
@@ -57,6 +76,7 @@ class RateLimitingFilterSpec extends UnitSpecification with NoTimeConversions {
     }
 
     "respond with 429 and reset info if the client has reached their limit" in new Context {
+      mockRollout.isActiveForId(any, any) returns true
       mockRateLimiter.advanceRateLimitStatus(any[ApiClient]) returns Future.value(RateLimitStatus.Reached(30, Some(expiry)))
       mockAuthenticatorService.cacheKeyAndSessionFor(any, any) returns Future.value((Some("inconsequential"), mockSession))
       mockWhitelistingService.hasClientWhitelisted(any) returns false
@@ -68,10 +88,11 @@ class RateLimitingFilterSpec extends UnitSpecification with NoTimeConversions {
       json \ "rate_limit_status" ==== JsString("reached")
       json \ "max_nr_of_requests" ==== JsNumber(30)
       json \ "reset_time" ==== Json.toJson(expiry)
-      there was no(next.apply(any))
+      there was no(next).apply(any)
     }
 
     "not rate-limit the client if they are whitelisted" in new Context {
+      mockRollout.isActiveForId(any, any) returns true
       mockAuthenticatorService.cacheKeyAndSessionFor(any, any) returns Future.value((Some("inconsequential"), mockSession))
       next.apply(any) returns Future.value(mockResponse)
       mockWhitelistingService.hasClientWhitelisted(mockAgentUrn) returns true

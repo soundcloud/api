@@ -20,28 +20,25 @@ class RateLimitingFilter(
   val logger = SoundCloudLoggerFactory.getLogger(this.getClass)
 
   def apply(request: Request, next: Service[Request, Response]): Future[Response] = {
-    if (!rollout.isActive(Features.ProbeRateLimits)) {
-      next(request)
-    } else {
-      val enforce = rollout.isActive(Features.EnforceRateLimits)
-      userAuthentication.withUserSession(new BffRequest(request)) {
-        case session: FailsafeUserSession => next(request) // no rate limiting if there is no authenticated client; next filter should take care of authorization
-        case session =>
-          val apiClient = ApiClient(session.getAgent)
-          if (whitelistingService.hasClientWhitelisted(apiClient.urn))
-            next(request)
-          else {
-            for {
-              status <- rateLimiter.advanceRateLimitStatus(apiClient)
-              response <- (enforce, status) match {
-                case (true, status @ RateLimitStatus.Reached(_, _)) =>
-                  Future.value(new ResponseBuilder().typedJson(status).status(HttpResponseStatus.TOO_MANY_REQUESTS.getCode).build)
-                case (_, _) =>
-                  next(request)
-              }
-            } yield response
-          }
-      }
+    userAuthentication.withUserSession(new BffRequest(request)) {
+      case session: FailsafeUserSession =>
+        next(request) // no rate limiting if there is no authenticated client; next filter should take care of authorization
+      case session =>
+        val apiClient = ApiClient(session.getAgent)
+        if (!rollout.isActiveForId(Features.ProbeRateLimits, apiClient.urn) || whitelistingService.hasClientWhitelisted(apiClient.urn))
+          next(request)
+        else {
+          val enforce = rollout.isActiveForId(Features.EnforceRateLimits, apiClient.urn)
+          for {
+            status <- rateLimiter.advanceRateLimitStatus(apiClient)
+            response <- (enforce, status) match {
+              case (true, status @ RateLimitStatus.Reached(_, _)) =>
+                Future.value(new ResponseBuilder().typedJson(status).status(HttpResponseStatus.TOO_MANY_REQUESTS.getCode).build)
+              case (_, _) =>
+                next(request)
+            }
+          } yield response
+        }
     }
   }
 }
