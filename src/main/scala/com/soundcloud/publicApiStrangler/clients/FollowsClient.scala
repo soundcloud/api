@@ -65,7 +65,7 @@ class FollowsClient(jsonService: JsonService) {
     ).map {
       case JsonResponse(OkStatus, data, _, _) =>
         val values = (data \ "value").as[Seq[JsObject]].map { value =>
-          Affiliation(
+          Following(
             (value \ "id").as[String],
             (value \ "created").as[String],
             Urn((value \ "target").as[String]),
@@ -85,6 +85,6 @@ class FollowsClient(jsonService: JsonService) {
   }
 }
 
-case class Affiliation(id: String, created: String, target: Urn, user: Urn)
+case class Following(id: String, created: String, target: Urn, user: Urn)
 case class PageInfo(lastId: Option[String], size: Int)
-case class FollowsPage(values: Seq[Affiliation], page: PageInfo)
+case class FollowsPage(values: Seq[Following], page: PageInfo)
