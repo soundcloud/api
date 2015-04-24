@@ -9,7 +9,6 @@ import com.soundcloud.publicApiStrangler.authorization.{AuthorizeHttpResponse, C
 import com.soundcloud.publicApiStrangler.clients.FollowsComponent
 import com.soundcloud.publicApiStrangler.controller._
 import com.soundcloud.publicApiStrangler.features.{RolloutBuilder, RolloutController}
-import com.soundcloud.publicApiStrangler.headers.DefaultResponseHeadersFilter
 import com.soundcloud.publicApiStrangler.mapper.liebling.LikeCountMapper
 import com.soundcloud.publicApiStrangler.mapper.purchaselink.TrackPurchaseLinkMapper
 import com.soundcloud.publicApiStrangler.mapper.search.{PlaylistTracksMapper, SearchEntityMapper, SearchMapper, SearchRepository}
@@ -138,8 +137,7 @@ object App
     new ExceptionFilter[Request],
     new AcceptOnlyJsonRequestFilter(Set("/crossdomain.xml")),
     new ContentAuthorizationFilter(authorizeContent),
-    new RateLimitingFilter(rateLimiter, userAuthentication, rollout, whitelistingService),
-    new DefaultResponseHeadersFilter
+    new RateLimitingFilter(rateLimiter, userAuthentication, rollout, whitelistingService)
   )
 
 

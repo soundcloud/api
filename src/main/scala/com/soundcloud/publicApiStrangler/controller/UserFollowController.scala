@@ -1,11 +1,11 @@
 package com.soundcloud.publicApiStrangler.controller
 
+import com.soundcloud.bff.{ Json => BffJson }
 import com.soundcloud.bff.finagle.{Request, ResponseBuilder}
-import com.soundcloud.bff.nextbff.mapping.MappingContext
+import com.soundcloud.bff.nextbff.mapping.{Mapping, MappingContext}
 import com.soundcloud.bff.web.{BffInjectionBasedController, UserAuthentication}
-import com.soundcloud.bff.{Json => BffJson}
 import com.soundcloud.jvmkit.Geo
-import com.soundcloud.publicApiStrangler.clients.{Affiliation, FollowsClient, FollowsPage, PageInfo}
+import com.soundcloud.publicApiStrangler.clients.{Affiliation, FollowsPage, PageInfo, FollowsClient}
 import com.soundcloud.publicApiStrangler.features.Rollout
 import com.soundcloud.publicApiStrangler.mapping.timeline.User
 import com.soundcloud.publicApiStrangler.support.DispatchToMothershipHandler
@@ -16,7 +16,7 @@ import com.twitter.finagle.http.Status
 import com.twitter.util.Future
 import org.joda.time.format.DateTimeFormat
 import org.joda.time.{LocalDate, Years}
-import play.api.libs.json.Json
+import play.api.libs.json.{JsArray, JsNumber, JsValue, Json}
 
 import scala.collection.JavaConversions._
 import scala.io.Source
@@ -195,12 +195,14 @@ class UserFollowController(userAuthentication: UserAuthentication,
   private def denyAgeRestricted(age: Long): Future[ResponseBuilder] = {
     render.json(Map("errors" -> Seq(Map("error_message" -> "DENY_AGE_RESTRICTED", "age" -> age))))
       .status(Status.Forbidden.getCode)
+      .headers(DefaultResponseHeaders.defaultHeaders)
       .toFuture
   }
 
   private def denyAgeUnknown: Future[ResponseBuilder] = {
     render.json(Map("errors" -> Seq(Map("error_message" -> "DENY_AGE_UNKNOWN"))))
       .status(Status.Forbidden.getCode)
+      .headers(DefaultResponseHeaders.defaultHeaders)
       .toFuture
   }
 
