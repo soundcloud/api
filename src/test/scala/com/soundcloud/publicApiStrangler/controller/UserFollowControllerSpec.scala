@@ -4,7 +4,7 @@ import com.soundcloud.bff.finagle.Request
 import com.soundcloud.bff.services.JsonService
 import com.soundcloud.bff.test.InjectionBasedControllerSpecification
 import com.soundcloud.jvmkit.{Geo => JvmGeo}
-import com.soundcloud.publicApiStrangler.clients.{PageInfo, Following, FollowsPage, FollowsClient}
+import com.soundcloud.publicApiStrangler.clients.{PageInfo, Affiliation, FollowsPage, FollowsClient}
 import com.soundcloud.publicApiStrangler.features.Rollout
 import com.soundcloud.publicApiStrangler.support.DispatchToMothershipHandler
 import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures
@@ -67,7 +67,7 @@ class UserFollowControllerSpec extends InjectionBasedControllerSpecification wit
       override def before = {
         super.before
         val values = Seq(
-          Following("123-123", "2012-02-13T23:30:13.000+0000", Urn("soundcloud:users:12490957"), Urn("soundcloud:users:100"))
+          Affiliation("123-123", "2012-02-13T23:30:13.000+0000", Urn("soundcloud:users:12490957"), Urn("soundcloud:users:100"))
         )
         val pageInfo = PageInfo(Some("123-1234"), 2)
         followsMock.mutualFollowers(session, Urn("soundcloud:users:1"), Urn("soundcloud:users:2"), 10, None) returns Future.value(FollowsPage(values, pageInfo))
@@ -93,7 +93,7 @@ class UserFollowControllerSpec extends InjectionBasedControllerSpecification wit
       override def before = {
         super.before
         val values = Seq(
-          Following("123-123", "2012-02-13T23:30:13.000+0000", Urn("soundcloud:users:12490957"), Urn("soundcloud:users:100"))
+          Affiliation("123-123", "2012-02-13T23:30:13.000+0000", Urn("soundcloud:users:12490957"), Urn("soundcloud:users:100"))
         )
         val pageInfo = PageInfo(Some("123-1234"), 2)
         followsMock.followingsNotFollowedBy(session, Urn("soundcloud:users:1"), Urn("soundcloud:users:2"), 10, None) returns Future.value(FollowsPage(values, pageInfo))
@@ -114,7 +114,7 @@ class UserFollowControllerSpec extends InjectionBasedControllerSpecification wit
       override def before = {
         super.before
         val values = Seq(
-          Following("123-123", "2012-02-13T23:30:13.000+0000", Urn("soundcloud:users:12490957"), Urn("soundcloud:users:100"))
+          Affiliation("123-123", "2012-02-13T23:30:13.000+0000", Urn("soundcloud:users:12490957"), Urn("soundcloud:users:100"))
         )
         val pageInfo = PageInfo(Some("123-1234"), 2)
         followsMock.mutualFollowings(session, Urn("soundcloud:users:1"), Urn("soundcloud:users:2"), 10, Some("2")) returns Future.value(FollowsPage(values, pageInfo))
@@ -135,7 +135,7 @@ class UserFollowControllerSpec extends InjectionBasedControllerSpecification wit
       override def before = {
         super.before
         val values = Seq(
-          Following("123-123", "2012-02-13T23:30:13.000+0000", Urn("soundcloud:users:12490957"), Urn("soundcloud:users:100"))
+          Affiliation("123-123", "2012-02-13T23:30:13.000+0000", Urn("soundcloud:users:12490957"), Urn("soundcloud:users:100"))
         )
         val pageInfo = PageInfo(Some("123-1234"), 2)
         followsMock.followings(session, 10, None) returns Future.value(FollowsPage(values, pageInfo))
@@ -157,7 +157,7 @@ class UserFollowControllerSpec extends InjectionBasedControllerSpecification wit
       override def before = {
         super.before
         val values = Seq(
-          Following("123-123", "2012-02-13T23:30:13.000+0000", Urn("soundcloud:users:12490957"), Urn("soundcloud:users:100"))
+          Affiliation("123-123", "2012-02-13T23:30:13.000+0000", Urn("soundcloud:users:12490957"), Urn("soundcloud:users:100"))
         )
         val pageInfo = PageInfo(Some("123-1234"), 2)
         followsMock.followers(session, 10, None) returns Future.value(FollowsPage(values, pageInfo))
@@ -178,7 +178,7 @@ class UserFollowControllerSpec extends InjectionBasedControllerSpecification wit
       override def before = {
         super.before
         val values = Seq(
-          Following("123-123", "2012-02-13T23:30:13.000+0000", Urn("soundcloud:users:12490957"), Urn("soundcloud:users:100"))
+          Affiliation("123-123", "2012-02-13T23:30:13.000+0000", Urn("soundcloud:users:12490957"), Urn("soundcloud:users:100"))
         )
         val pageInfo = PageInfo(Some("123-1234"), 2)
         followsMock.followings(session, 10, None) returns Future.value(FollowsPage(values, pageInfo))
@@ -199,7 +199,7 @@ class UserFollowControllerSpec extends InjectionBasedControllerSpecification wit
       override def before = {
         super.before
         val values = Seq(
-          Following("123-123", "2012-02-13T23:30:13.000+0000", Urn("soundcloud:users:12490957"), Urn("soundcloud:users:100"))
+          Affiliation("123-123", "2012-02-13T23:30:13.000+0000", Urn("soundcloud:users:12490957"), Urn("soundcloud:users:100"))
         )
         val pageInfo = PageInfo(Some("123-1234"), 2)
         followsMock.followers(session, 10, Some("foo")) returns Future.value(FollowsPage(values, pageInfo))
