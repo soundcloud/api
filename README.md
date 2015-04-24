@@ -73,8 +73,17 @@ Make sure you have Python and the [zk-shell](https://github.com/rgs1/zk_shell) c
 
 ### How to update the whitelist
 
+If you want to replace the current version of the whitelist with a new one, do this:
+
 1. Change the file `ratelimiting_whitelist.txt` to contain exactly those client app URNs that should be on the whitelist. Each URN must be in a separate line.
-2. Run `./update_ratelimiting_whitelist.py`. The script will print out what it's doing, indicating a successful run with a `Done!` at the end.
+2. Run `./update_ratelimiting_whitelist.py -u ratelimiting_whitelist.txt`. The script will print out what it's doing, indicating a successful run with a `Done!` at the end.
+
+Adding or removing an individual client is a lot faster and should be preferred:
+
+```
+./update_ratelimit_whitelist.py -a 123242
+./update_ratelimit_whitelist.py -r 123243
+```
 
 If you want to do a dry run, testing your update against a local ZooKeeper server, replace the line `zookeeper_server = zookeeper_host()` with `zookeeper_server = 'localhost'`.
 

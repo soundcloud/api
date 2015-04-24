@@ -3,6 +3,7 @@
 import re
 import subprocess
 import sys
+import argparse
 
 def production_properties():
     with open('production.properties', 'r') as f:
@@ -21,7 +22,7 @@ def app_name():
             return result.group(1)
     
 whitelist_path = "/" + app_name() + "/ratelimits/whitelist"
-zookeeper_server = zookeeper_host()
+zookeeper_server = 'localhost'
    
 def create_command(node):
     return "create " + node + " '' false false true"  
@@ -46,25 +47,25 @@ def client_id_and_comment(line):
   if result:
       return (result.group(1).strip(), result.group(2).strip())
 
-def whitelisted_clients():
-    with open('ratelimiting_whitelist.txt', 'r') as f:
+def whitelisted_clients(whitelist_file):
+    with open(whitelist_file, 'r') as f:
         return [client_id_and_comment(line.rstrip()) for line in f.readlines()]
 
 def whitelisted_client_path(id):
     return whitelist_path + '/' + id
 
-def populate_whitelist(zookeeper_host):
-    for (id, comment) in whitelisted_clients():
+def populate_whitelist(whitelist_file, zookeeper_host):
+    for (id, comment) in whitelisted_clients(whitelist_file):
         create_node_recursively(whitelisted_client_path(id), zookeeper_host)
         print "added to whitelist: " + id + " (" + comment + ")"
 
-def update():
+def update(whitelist_file):
     print "Updating whitelist on ZooKeeper server " + zookeeper_server + "..." 
     print "Removing previous whitelist..."  
     delete_whitelist(zookeeper_server)
     print "Creating new empty whitelist..."    
     create_whitelist(zookeeper_server)
-    populate_whitelist(zookeeper_server)
+    populate_whitelist(whitelist_file, zookeeper_server)
     print "Done!"
  
 def parse_client_id():
@@ -74,22 +75,25 @@ def parse_client_id():
     else:
         return sys.argv[2].strip()
     
+def parse_args():
+    parser = argparse.ArgumentParser()
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument("-a", "--add", nargs = 1, metavar='CLIENT_ID', help="Add the client to the whitelist")
+    group.add_argument("-r", "--remove", nargs = 1, metavar='CLIENT_ID', help="Remove the client from the whitelist")
+    group.add_argument("-u", "--update", nargs = 1, metavar='FILE', help="Update the whitelist setting it to the content of the given file")
+    return (parser, parser.parse_args())
+
 def run():
-    if len(sys.argv) > 1:
-        command = sys.argv[1]
-        if command == 'add':
-            client = parse_client_id()
-            create_node_recursively(whitelisted_client_path(client), zookeeper_server)
-            print "Added " + client + " to the whitelist"
-        elif command == 'remove':
-            client = parse_client_id()
-            delete_node_recursively(whitelisted_client_path(client), zookeeper_server)
-            print "Remove " + client + " to the whitelist"
-        elif command == 'update':
-            update()
-        else:
-            print "Unsupported command."
+    (parser, parsed) = parse_args()
+    if parsed.add:
+        create_node_recursively(whitelisted_client_path(parsed.add[0]), zookeeper_server)
+        print "Added " + parsed.add[0] + " to the whitelist" 
+    elif parsed.remove:
+        delete_node_recursively(whitelisted_client_path(parsed.remove[0]), zookeeper_server)
+        print "Remove " + parsed.remove[0] + " to the whitelist"  
+    elif parsed.update:
+        update(parsed.update[0])
     else:
-        print "No command specified."
-    
+        parser.print_help()
+        
 run()
