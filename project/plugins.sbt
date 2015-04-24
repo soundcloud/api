@@ -2,7 +2,7 @@ resolvers += Resolver.url("SoundCloud Internal - Proxy Releases", new URL("http:
 
 addSbtPlugin("com.typesafe.sbt" % "sbt-start-script" % "0.10.0")
 
-addSbtPlugin("net.virtual-void" % "sbt-dependency-graph" % "0.7.4")
+addSbtPlugin("net.virtual-void" % "sbt-dependency-graph" % "0.7.5")
 
 addSbtPlugin("org.scoverage" %% "sbt-scoverage" % "1.0.4")
 
