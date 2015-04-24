@@ -2,6 +2,7 @@
 
 import re
 import subprocess
+import sys
 
 def production_properties():
     with open('production.properties', 'r') as f:
@@ -40,24 +41,24 @@ def delete_whitelist(zookeeper_host):
 def create_whitelist(zookeeper_host):
     create_node_recursively(whitelist_path, zookeeper_host)
 
-def client_urn_and_comment(line):
+def client_id_and_comment(line):
   result = re.match( r'(.*?)#(.*)', line)
   if result:
       return (result.group(1).strip(), result.group(2).strip())
 
 def whitelisted_clients():
     with open('ratelimiting_whitelist.txt', 'r') as f:
-        return [client_urn_and_comment(line.rstrip()) for line in f.readlines()]
+        return [client_id_and_comment(line.rstrip()) for line in f.readlines()]
 
-def whitelisted_client_path(urn):
-    return whitelist_path + '/' + urn
+def whitelisted_client_path(id):
+    return whitelist_path + '/' + id
 
 def populate_whitelist(zookeeper_host):
-    for (urn, comment) in whitelisted_clients():
-        create_node_recursively(whitelisted_client_path(urn), zookeeper_host)
-        print "added to whitelist: " + urn + " (" + comment + ")"
-    
-def run():        
+    for (id, comment) in whitelisted_clients():
+        create_node_recursively(whitelisted_client_path(id), zookeeper_host)
+        print "added to whitelist: " + id + " (" + comment + ")"
+
+def update():
     print "Updating whitelist on ZooKeeper server " + zookeeper_server + "..." 
     print "Removing previous whitelist..."  
     delete_whitelist(zookeeper_server)
@@ -65,5 +66,30 @@ def run():
     create_whitelist(zookeeper_server)
     populate_whitelist(zookeeper_server)
     print "Done!"
+ 
+def parse_client_id():
+    if len(sys.argv) != 3:
+        print "Wrong number of arguments"
+        sys.exit(1)
+    else:
+        return sys.argv[2].strip()
+    
+def run():
+    if len(sys.argv) > 1:
+        command = sys.argv[1]
+        if command == 'add':
+            client = parse_client_id()
+            create_node_recursively(whitelisted_client_path(client), zookeeper_server)
+            print "Added " + client + " to the whitelist"
+        elif command == 'remove':
+            client = parse_client_id()
+            delete_node_recursively(whitelisted_client_path(client), zookeeper_server)
+            print "Remove " + client + " to the whitelist"
+        elif command == 'update':
+            update()
+        else:
+            print "Unsupported command."
+    else:
+        print "No command specified."
     
 run()
