@@ -29,6 +29,8 @@ class SearchTrack(session: UserSession,
                   (implicit if_this_is_named_context_then_serialization_fails: MappingContext)
   extends Track(jsonValue, Map.empty, baseUrl, entitySummaryMapper) {
 
+     // TODO: fix this logic once soundcloud/soundcloud#3045 is merged:
+     // in mothership, :downloadable => !!track.downloadable && (track.downloads_left > 0)
      val download_url = if (hasDownloadLink)
        (json \ "download_url").asOpt[String]
      else

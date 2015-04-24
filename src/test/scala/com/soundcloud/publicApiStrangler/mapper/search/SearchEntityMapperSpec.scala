@@ -114,7 +114,6 @@ class SearchEntityMapperSpec extends UnitSpecification with Fixtures {
     (trackJson \ "kind").as[String] ==== "track"
     (trackJson \ "waveform_url").as[String] ==== "https://w1.sndcdn.com/b5uH7mT3hjkm_m.png"
     (trackJson \ "duration").asOpt[Int] ==== Some(269555)
-    (trackJson \ "downloadable").asOpt[Boolean] ==== Some(true)
     (trackJson \ "download_url").asOpt[String] ==== Some("https://api.soundcloud.com/tracks/15273221/download")
 
     (userJson \ "kind").as[String] ==== "user"
