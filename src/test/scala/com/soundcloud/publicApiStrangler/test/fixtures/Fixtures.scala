@@ -19,10 +19,6 @@ trait Fixtures {
 
   val lieblingLikesInfo = withContentsOf("liebling", "likes_info")
 
-  val followsError = withContentsOf("follows", "follow_failed_normal")
-  val followsAgeRestrictedError = withContentsOf("follows", "follow_failed_age_restricted")
-  val followsAgeUnknownError = withContentsOf("follows", "follow_failed_age_unknown")
-
   val okidokiFetch = withContentsOf("okidoki", "fetch")
   val okidokiUsers = withContentsOf("okidoki", "users")
 }

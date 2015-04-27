@@ -5,6 +5,7 @@ import com.soundcloud.bff.finagle.{Request, ResponseBuilder}
 import com.soundcloud.bff.media.MediaUrlsRepository
 import com.soundcloud.jvmkit.policies.{ContentAuthorization, ContentPolicy}
 import com.soundcloud.jvmkit.{Urn, UserSession}
+import com.soundcloud.publicApiStrangler.controller.DefaultResponseHeaders
 import com.soundcloud.publicApiStrangler.mapper.trackstreams.TrackStreamResponseMapper
 import com.twitter.util.Future
 
@@ -39,7 +40,7 @@ class TrackStreamSnipHandler(mothershipDispatcher:DispatchToMothershipHandler,
 
   private def replaceStream(session:UserSession, trackUrn:Urn, contentAuth:ContentAuthorization, mapper: TrackStreamResponseMapper) : Future[ResponseBuilder] = {
     val mediaUrls = mediaUrlsRepository.byUrn(session, trackUrn, contentAuth, false)
-    mapper.map(mediaUrls)
+    mapper.map(mediaUrls).map(_.headers(DefaultResponseHeaders.defaultHeaders))
   }
 
 

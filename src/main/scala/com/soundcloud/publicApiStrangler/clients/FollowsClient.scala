@@ -2,25 +2,14 @@ package com.soundcloud.publicApiStrangler.clients
 
 import com.soundcloud.bff.services.JsonService
 import com.soundcloud.jvmkit.UserSession
-import com.soundcloud.scalakit.finagle.http.{PreconditionFailedStatus, CreatedStatus, OkStatus}
+import com.soundcloud.scalakit.finagle.http.OkStatus
 import com.soundcloud.scalakit.finagle.jsonservice.{JsonResponse, Params}
 import com.soundcloud.scalakit.{Path, Urn}
 import com.twitter.util.Future
-import play.api.libs.json.{JsString, Json, JsValue, JsObject}
+import play.api.libs.json.JsObject
 
 
 class FollowsClient(jsonService: JsonService) {
-
-  def follow(userSession: UserSession, target: Urn): Future[FollowResponse] = {
-    jsonService.post(userSession,
-      Path() / "follow" / target.getString,
-      Params.empty,
-      None
-    ).map {
-      case JsonResponse(CreatedStatus, _, _, _) => FollowSuccessful(target)
-      case JsonResponse(PreconditionFailedStatus, data, _, _) => FollowFailed(data)
-    }
-  }
 
   def mutualFollowers(userSession: UserSession, user: Urn, otherUser: Urn, pageSize: Int, lastId: Option[String]): Future[FollowsPage] = {
     fetchPage(
@@ -76,7 +65,7 @@ class FollowsClient(jsonService: JsonService) {
     ).map {
       case JsonResponse(OkStatus, data, _, _) =>
         val values = (data \ "value").as[Seq[JsObject]].map { value =>
-          Following(
+          Affiliation(
             (value \ "id").as[String],
             (value \ "created").as[String],
             Urn((value \ "target").as[String]),
@@ -96,22 +85,6 @@ class FollowsClient(jsonService: JsonService) {
   }
 }
 
-case class Following(id: String, created: String, target: Urn, user: Urn)
+case class Affiliation(id: String, created: String, target: Urn, user: Urn)
 case class PageInfo(lastId: Option[String], size: Int)
-case class FollowsPage(values: Seq[Following], page: PageInfo)
-
-trait FollowResponse
-case class FollowSuccessful(target: Urn) extends FollowResponse
-case class FollowFailed(response: JsValue) extends FollowResponse {
-
-  def status = (response \ "error" \ "status").as[Int]
-
-  def message: String = (response \ "error" \ "message").asOpt[String].getOrElse(name)
-
-  def name = (response \ "error" \ "name").as[String]
-
-  def isAgeRestricted = name == "AgeRestrictedException"
-
-  def isAgeUnknown = name == "AgeUnknownException"
-
-}
+case class FollowsPage(values: Seq[Affiliation], page: PageInfo)
