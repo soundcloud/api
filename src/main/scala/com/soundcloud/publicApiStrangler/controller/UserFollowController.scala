@@ -3,7 +3,7 @@ package com.soundcloud.publicApiStrangler.controller
 import com.soundcloud.bff.finagle.{Request, ResponseBuilder}
 import com.soundcloud.bff.nextbff.mapping.MappingContext
 import com.soundcloud.bff.web.{BffInjectionBasedController, UserAuthentication}
-import com.soundcloud.jvmkit.{Geo, LoggedInUserSession, UserSession}
+import com.soundcloud.scalakit.{Geo, LoggedInUserSession, UserSession}
 import com.soundcloud.publicApiStrangler.clients.{Following, FollowsClient, FollowsPage, PageInfo, _}
 import com.soundcloud.publicApiStrangler.features.Rollout
 import com.soundcloud.publicApiStrangler.mapping.timeline.User
@@ -204,7 +204,7 @@ class UserFollowController(userAuthentication: UserAuthentication,
                                users: Seq[Following] => Seq[Urn],
                                requireLogin: Boolean): Future[ResponseBuilder] = {
     authenticateIfNeeded(request, requireLogin) { (session: UserSession) =>
-      if(rollingOutReads(session)) {
+      if(rollingOutReads(session, request, requireLogin)) {
         for {
           affiliations <- fetchFunction(session, pageSizeParam(request), cursorParam(request))
           urns = users(affiliations.values)
@@ -229,12 +229,17 @@ class UserFollowController(userAuthentication: UserAuthentication,
     }
   }
 
-  private def rollingOutReads(session: UserSession): Boolean = {
-    rollout.isActiveForId("follows-reads", session.getUser)
+  private def rollingOutReads(session: UserSession, request: Request, requireLogin: Boolean): Boolean = {
+    val user = if(requireLogin) {
+      session.getUser
+    } else {
+      Urn(s"soundcloud:users:${request.routeParams("id")}")
+    }
+    rollout.isActiveForId("follows-reads", Option(user))
   }
 
   private def rollingOutWrites(session: UserSession): Boolean = {
-    rollout.isActiveForId("follows-writes", session.getUser)
+    rollout.isActiveForId("follows-writes", Option(session.getUser))
   }
 
   private def nextHref(baseUrl: String, path: String, pageInfo: PageInfo, requestParams: Map[String, String]): Option[String] = {

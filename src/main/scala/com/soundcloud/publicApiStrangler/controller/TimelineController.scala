@@ -3,7 +3,6 @@ package com.soundcloud.publicApiStrangler.controller
 import com.soundcloud.bff.finagle.{Request => BffRequest}
 import com.soundcloud.bff.web.{BffInjectionBasedController, UserAuthentication}
 import com.soundcloud.jvmkit.{LoggedInUserSession, Urn}
-import com.soundcloud.publicApiStrangler.headers.DefaultResponseHeaders
 import com.soundcloud.publicApiStrangler.mapper.timeline._
 import com.soundcloud.publicApiStrangler.mapper.timeline.e1.{ActivitiesMapper, StreamMapper}
 import com.soundcloud.publicApiStrangler.mapper.timeline.publicApi.ActivitiesWithOriginMapper

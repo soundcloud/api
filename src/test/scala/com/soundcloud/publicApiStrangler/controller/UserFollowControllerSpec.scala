@@ -37,8 +37,8 @@ class UserFollowControllerSpec extends InjectionBasedControllerSpecification wit
 
     override def before = {
       DateTimeUtils.setCurrentMillisFixed(now)
-      rollout.isActiveForId("follows-reads", userUrn) returns true
-      rollout.isActiveForId("follows-writes", userUrn) returns true
+      rollout.isActiveForId("follows-reads", Some(userUrn)) returns true
+      rollout.isActiveForId("follows-writes", Some(userUrn)) returns true
       okidokiMock.fetch(session, Set(userUrn)) returns okidokiResponse
     }
 
@@ -52,8 +52,8 @@ class UserFollowControllerSpec extends InjectionBasedControllerSpecification wit
 
     override def before = {
       super.before
-      rollout.isActiveForId("follows-reads", userUrn) returns false
-      rollout.isActiveForId("follows-writes", userUrn) returns false
+      rollout.isActiveForId("follows-reads", Some(userUrn)) returns false
+      rollout.isActiveForId("follows-writes", Some(userUrn)) returns false
 
       when(fallbackMock.defaultHandling(any[HandlerRequest])).thenReturn(Future.value(expectedResponse))
     }
@@ -64,22 +64,22 @@ class UserFollowControllerSpec extends InjectionBasedControllerSpecification wit
       override def before = {
         super.before
         val values = Seq(
-          Following("123-123", "2012-02-13T23:30:13.000+0000", Urn("soundcloud:users:12490957"), Urn("soundcloud:users:100"))
+          Following("123-123", "2012-02-13T23:30:13.000+0000", userUrn, Urn("soundcloud:users:100"))
         )
         val pageInfo = PageInfo(Some("123-1234"), 2)
-        followsMock.mutualFollowers(session, Urn("soundcloud:users:1"), Urn("soundcloud:users:2"), 10, None) returns Future.value(FollowsPage(values, pageInfo))
+        followsMock.mutualFollowers(session, userUrn, Urn("soundcloud:users:2"), 10, None) returns Future.value(FollowsPage(values, pageInfo))
         okidokiMock.fetch(session, values.map(_.user).toSet) returns Future.value(okidokiUsers.as[List[JsObject]])
       }
 
-      val response = get(controller, "/users/1/followers/followed_by/2", Map("limit" -> "10"))
+      val response = get(controller, "/users/999/followers/followed_by/2", Map("limit" -> "10"))
       response.status ==== Status.Ok
       val json = Json.parse(response.body)
       (json \ "collection").as[Seq[JsObject]].size ==== 1
-      (json \ "next_href").asOpt[String] ==== Some("http://foo/users/1/followers/followed_by/2?page_size=2&cursor=123-1234")
+      (json \ "next_href").asOpt[String] ==== Some("http://foo/users/999/followers/followed_by/2?page_size=2&cursor=123-1234")
     }
 
     "fall back to moshi when not rolling out" in new FallbackContext {
-      val response = get(controller, "/users/1/followers/followed_by/2", Map("limit" -> "10"))
+      val response = get(controller, "/users/999/followers/followed_by/2", Map("limit" -> "10"))
       response.status ==== expectedResponse.status
     }
   }
@@ -93,15 +93,15 @@ class UserFollowControllerSpec extends InjectionBasedControllerSpecification wit
           Following("123-123", "2012-02-13T23:30:13.000+0000", Urn("soundcloud:users:12490957"), Urn("soundcloud:users:100"))
         )
         val pageInfo = PageInfo(Some("123-1234"), 2)
-        followsMock.followingsNotFollowedBy(session, Urn("soundcloud:users:1"), Urn("soundcloud:users:2"), 10, None) returns Future.value(FollowsPage(values, pageInfo))
+        followsMock.followingsNotFollowedBy(session, Urn("soundcloud:users:999"), Urn("soundcloud:users:2"), 10, None) returns Future.value(FollowsPage(values, pageInfo))
         okidokiMock.fetch(session, values.map(_.target).toSet) returns Future.value(okidokiUsers.as[List[JsObject]])
       }
 
-      val response = get(controller, "/users/1/followings/not_followed_by/2", Map("limit" -> "10"))
+      val response = get(controller, "/users/999/followings/not_followed_by/2", Map("limit" -> "10"))
       response.status ==== Status.Ok
       val json = Json.parse(response.body)
       (json \ "collection").as[Seq[JsObject]].size ==== 1
-      (json \ "next_href").asOpt[String] ==== Some("http://foo/users/1/followings/not_followed_by/2?page_size=2&cursor=123-1234")
+      (json \ "next_href").asOpt[String] ==== Some("http://foo/users/999/followings/not_followed_by/2?page_size=2&cursor=123-1234")
     }
   }
 
@@ -114,15 +114,15 @@ class UserFollowControllerSpec extends InjectionBasedControllerSpecification wit
           Following("123-123", "2012-02-13T23:30:13.000+0000", Urn("soundcloud:users:12490957"), Urn("soundcloud:users:100"))
         )
         val pageInfo = PageInfo(Some("123-1234"), 2)
-        followsMock.mutualFollowings(session, Urn("soundcloud:users:1"), Urn("soundcloud:users:2"), 10, Some("2")) returns Future.value(FollowsPage(values, pageInfo))
+        followsMock.mutualFollowings(session, Urn("soundcloud:users:999"), Urn("soundcloud:users:2"), 10, Some("2")) returns Future.value(FollowsPage(values, pageInfo))
         okidokiMock.fetch(session, values.map(_.target).toSet) returns Future.value(okidokiUsers.as[List[JsObject]])
       }
 
-      val response = get(controller, "/users/1/followings/common_to/2", Map("limit" -> "10", "cursor" -> "2"))
+      val response = get(controller, "/users/999/followings/common_to/2", Map("limit" -> "10", "cursor" -> "2"))
       response.status ==== Status.Ok
       val json = Json.parse(response.body)
       (json \ "collection").as[Seq[JsObject]].size ==== 1
-      (json \ "next_href").asOpt[String] ==== Some("http://foo/users/1/followings/common_to/2?page_size=2&cursor=123-1234")
+      (json \ "next_href").asOpt[String] ==== Some("http://foo/users/999/followings/common_to/2?page_size=2&cursor=123-1234")
     }
   }
 

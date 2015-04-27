@@ -57,8 +57,11 @@ class Rollout(zookeeperCuratorClient: CuratorFramework, zookeeperBaseFeaturesPat
 
   def isActive(featureName: String): Boolean = Random.nextInt(100) <= activationForFeature(featureName)
 
-  def isActiveForId(featureName: String, id: Urn): Boolean = {
-    activationForFeature(featureName) == 100 || (id.getIdentifier.toLong % 100 < activationForFeature(featureName))
+  def isActiveForId(featureName: String, id: Option[Urn]): Boolean = {
+    activationForFeature(featureName) == 100 ||
+      id.exists { userId =>
+        userId.getIdentifier.toLong % 100 < activationForFeature(featureName)
+      }
   }
 
   private def addListenerToFeature(featureName: String): Unit = {
