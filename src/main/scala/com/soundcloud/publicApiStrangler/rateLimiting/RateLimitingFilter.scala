@@ -25,10 +25,10 @@ class RateLimitingFilter(
         next(request) // no rate limiting if there is no authenticated client; next filter should take care of authorization
       case session =>
         val apiClient = ApiClient(session.getAgent)
-        if (!rollout.isActiveForId(Features.ProbeRateLimits, apiClient.urn) || whitelistingService.hasClientWhitelisted(apiClient.urn))
+        if (!rollout.isActiveForId(Features.ProbeRateLimits, Option(apiClient.urn)) || whitelistingService.hasClientWhitelisted(apiClient.urn))
           next(request)
         else {
-          val enforce = rollout.isActiveForId(Features.EnforceRateLimits, apiClient.urn)
+          val enforce = rollout.isActiveForId(Features.EnforceRateLimits, Option(apiClient.urn))
           for {
             status <- rateLimiter.advanceRateLimitStatus(apiClient)
             response <- (enforce, status) match {
