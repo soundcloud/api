@@ -134,7 +134,7 @@ object App
 
   override val fallbackHandler = Some(mothershipDispatcher)
 
-  override val additionalFilters = List(
+  override lazy val additionalFilters = List(
     new ExceptionFilter[Request],
     new AcceptOnlyJsonRequestFilter(Set("/crossdomain.xml")),
     new ContentAuthorizationFilter(authorizeContent),
