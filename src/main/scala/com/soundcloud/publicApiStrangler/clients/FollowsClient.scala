@@ -49,19 +49,19 @@ class FollowsClient(jsonService: JsonService) {
     )
   }
 
-  def followers(userSession: UserSession, pageSize: Int, lastId: Option[String]): Future[FollowsPage] = {
+  def followers(userSession: UserSession, user: Urn, pageSize: Int, lastId: Option[String]): Future[FollowsPage] = {
     fetchPage(
       userSession,
-      Path() / "users" / userSession.getUser.getString / "followers",
+      Path() / "users" / user.getString / "followers",
       pageSize,
       lastId
     )
   }
 
-  def followings(userSession: UserSession, pageSize: Int, lastId: Option[String]): Future[FollowsPage] = {
+  def followings(userSession: UserSession, user: Urn, pageSize: Int, lastId: Option[String]): Future[FollowsPage] = {
     fetchPage(
       userSession,
-      Path() / "users" / userSession.getUser.getString / "followings",
+      Path() / "users" / user.getString / "followings",
       pageSize,
       lastId
     )

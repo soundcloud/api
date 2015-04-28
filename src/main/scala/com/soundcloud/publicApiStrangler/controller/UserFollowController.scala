@@ -60,7 +60,7 @@ class UserFollowController(userAuthentication: UserAuthentication,
 
   put("/me/followings/:id") { request =>
     userAuthentication.withLoggedInUser(request) { (session, userUrn) =>
-      if(rollingOutWrites(session)) {
+      if(rollingOutWrites(userUrn)) {
         val user = Urn("soundcloud:users:" + request.routeParams.get("id").get)
         follows.follow(session, user).flatMap {
           case success: FollowSuccessful => renderFollow(session, success)
@@ -130,7 +130,7 @@ class UserFollowController(userAuthentication: UserAuthentication,
       request,
       follows.followingsNotFollowedBy(
         _,
-        Urn(s"soundcloud:users:${request.routeParams("id")}"),
+        _,
         Urn(s"soundcloud:users:${request.routeParams("other_id")}"),
         _, _
       ),
@@ -145,7 +145,7 @@ class UserFollowController(userAuthentication: UserAuthentication,
       request,
       follows.mutualFollowings(
         _,
-        Urn(s"soundcloud:users:${request.routeParams("id")}"),
+        _,
         Urn(s"soundcloud:users:${request.routeParams("other_id")}"),
         _, _
       ),
@@ -160,7 +160,7 @@ class UserFollowController(userAuthentication: UserAuthentication,
       request,
       follows.mutualFollowers(
         _,
-        Urn(s"soundcloud:users:${request.routeParams("id")}"),
+        _,
         Urn(s"soundcloud:users:${request.routeParams("other_id")}"),
         _, _
       ),
@@ -199,14 +199,14 @@ class UserFollowController(userAuthentication: UserAuthentication,
   private def cursorParam(request: Request) = request.params.get("cursor")
 
   private def fetchFromFollows(request: Request,
-                               fetchFunction: (UserSession, Int, Option[String]) => Future[FollowsPage],
+                               fetchFunction: (UserSession, Urn, Int, Option[String]) => Future[FollowsPage],
                                mapUsers: List[User] => List[Any] = mapUsersToUsers,
                                users: Seq[Following] => Seq[Urn],
                                requireLogin: Boolean): Future[ResponseBuilder] = {
-    authenticateIfNeeded(request, requireLogin) { (session: UserSession) =>
-      if(rollingOutReads(session, request, requireLogin)) {
+    authenticateIfNeeded(request, requireLogin) { (session: UserSession, userToFetch: Urn) =>
+      if(rollingOutReads(userToFetch)) {
         for {
-          affiliations <- fetchFunction(session, pageSizeParam(request), cursorParam(request))
+          affiliations <- fetchFunction(session, userToFetch, pageSizeParam(request), cursorParam(request))
           urns = users(affiliations.values)
           users <- fetchUsers(session, urns.toSet)
         } yield {
@@ -221,26 +221,17 @@ class UserFollowController(userAuthentication: UserAuthentication,
     }
   }
 
-  private def authenticateIfNeeded(request: Request, requireLogin: Boolean)(withSession: UserSession => Future[ResponseBuilder]) = {
+  private def authenticateIfNeeded(request: Request, requireLogin: Boolean)(withSession: (UserSession, Urn) => Future[ResponseBuilder]) = {
     if(requireLogin) {
-      userAuthentication.withLoggedInUser(request) { (loggedIn, _) => withSession(loggedIn) }
+      userAuthentication.withLoggedInUser(request) { (loggedIn, _) => withSession(loggedIn, loggedIn.getUser) }
     } else {
-      userAuthentication.withUserSession(request)(withSession)
+      userAuthentication.withUserSession(request){ s => withSession(s, Urn(s"soundcloud:users:${request.routeParams("id")}")) }
     }
   }
 
-  private def rollingOutReads(session: UserSession, request: Request, requireLogin: Boolean): Boolean = {
-    val user = if(requireLogin) {
-      session.getUser
-    } else {
-      Urn(s"soundcloud:users:${request.routeParams("id")}")
-    }
-    rollout.isActiveForId("follows-reads", Option(user))
-  }
+  private def rollingOutReads(userToFetch: Urn): Boolean = rollout.isActiveForId("follows-reads", Option(userToFetch))
 
-  private def rollingOutWrites(session: UserSession): Boolean = {
-    rollout.isActiveForId("follows-writes", Option(session.getUser))
-  }
+  private def rollingOutWrites(userUrn: Urn): Boolean = rollout.isActiveForId("follows-writes", Option(userUrn))
 
   private def nextHref(baseUrl: String, path: String, pageInfo: PageInfo, requestParams: Map[String, String]): Option[String] = {
     pageInfo.lastId.map { nextId =>
