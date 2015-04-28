@@ -3,8 +3,8 @@ package com.soundcloud.publicApiStrangler.amqp
 import com.rabbitmq.client._
 import com.soundcloud.jvmkit.config.BazookaConfig
 import com.soundcloud.publicApiStrangler.amqp.AmqpPublisherSpec.ConsumerProbe
-import com.twitter.common.util.Timer
-import com.twitter.io.{Charsets, Buf}
+import com.soundcloud.publicApiStrangler.test.data.SemanticEventTestData
+import com.twitter.io.Charsets
 import com.twitter.util.TimeConversions._
 import com.twitter.util._
 import org.specs2.mutable.Specification
@@ -12,7 +12,7 @@ import org.specs2.specification.Scope
 import org.specs2.time.NoTimeConversions
 import play.api.libs.json.Json
 
-class AmqpPublisherSpec extends Specification with NoTimeConversions {
+class AmqpPublisherSpec extends Specification with NoTimeConversions with SemanticEventTestData {
 
   "AmqpPublisher" should {
 
@@ -24,13 +24,12 @@ class AmqpPublisherSpec extends Specification with NoTimeConversions {
     }
 
     "publish an event that should eventually be received" in new Context {
-      val res = publisher.publish("someRoutingKey", Json.obj("event" -> "some_type"))
+      val res = publisher.publish("someRoutingKey", event)
       val message = Await.result(probe.receive(5.seconds))
       message.envelope.getRoutingKey ==== "someRoutingKey"
       message.envelope.getExchange ==== "publicapistrangler"
-      Json.parse(message.body) ==== Json.obj("event" -> "some_type")
+      Json.parse(message.body) ==== eventJson
     }
-
   }
 }
 
@@ -48,7 +47,6 @@ object AmqpPublisherSpec {
       channel.basicConsume(queueName, true, "myConsumerTag", new ProbingConsumer(channel, promise))
       promise.within(new JavaTimer(), timeout)
     }
-
   }
 
   case class Message(envelope: Envelope, properties: BasicProperties, body: String)
@@ -63,5 +61,4 @@ object AmqpPublisherSpec {
       promise.setValue(message)
     }
   }
-
 }

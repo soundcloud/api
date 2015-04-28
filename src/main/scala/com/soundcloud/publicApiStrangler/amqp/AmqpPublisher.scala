@@ -3,9 +3,10 @@ package com.soundcloud.publicApiStrangler.amqp
 import java.util.concurrent.Executors
 
 import com.rabbitmq.client.{ConnectionFactory, MessageProperties}
+import com.soundcloud.publicApiStrangler.rateLimiting.semanticevents.{SemanticEventPayload, SemanticEvent}
 import com.twitter.io.Charsets
 import com.twitter.util.{Future, FuturePool}
-import play.api.libs.json.{Json, Writes}
+import play.api.libs.json.{Writes, Json}
 
 object AmqpPublisher {
   private val ExchangeName = "publicapistrangler"
@@ -13,7 +14,7 @@ object AmqpPublisher {
 
 class AmqpPublisher(connectionFactory: ConnectionFactory) {
 
-  def publish[Event : Writes](routingKey: String, event: Event): Future[Unit] = bulkheaded {
+  def publish[E <: SemanticEventPayload : Writes](routingKey: String, event: SemanticEvent[E]): Future[Unit] = bulkheaded {
     val json = Json.toJson(event)
     val payload = Json.stringify(json).getBytes(Charsets.Utf8)
     channel.basicPublish(AmqpPublisher.ExchangeName, routingKey, MessageProperties.PERSISTENT_TEXT_PLAIN, payload)
@@ -32,6 +33,4 @@ class AmqpPublisher(connectionFactory: ConnectionFactory) {
   }
 
   private val bulkheaded = FuturePool(Executors.newFixedThreadPool(8))
-
-
 }
