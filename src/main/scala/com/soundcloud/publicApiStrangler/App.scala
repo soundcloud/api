@@ -133,10 +133,11 @@ object App
 
   override val fallbackHandler = Some(mothershipDispatcher)
 
-  override val customFilters = List(
+  override val additionalFilters = List(
     new ExceptionFilter[Request],
     new AcceptOnlyJsonRequestFilter(Set("/crossdomain.xml")),
-    new ContentAuthorizationFilter(authorizeContent)
+    new ContentAuthorizationFilter(authorizeContent),
+    new RateLimitingFilter(rateLimiter, userAuthentication, rollout, whitelistingService)
   )
 
   override val controllers = Set(
