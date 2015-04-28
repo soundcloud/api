@@ -77,7 +77,7 @@ class SearchController(userAuthentication: UserAuthentication,
     userAuthentication.withUserSession(request) { session =>
       if (rollout.isActive(featureName)) {
         val page = PageBuilder(request, baseUrl)(searchRequest)
-          .allowExtraParams(searchRequest.paginationParams)
+          .allowExtraParams(searchRequest.paginationParams + SearchMapper.LinkedPartitioning)
           .buildOffsetBased()
         searchMapper.materialize(session, page).map {
           case Some(info) => render.json(info)
