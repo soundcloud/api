@@ -1,6 +1,6 @@
 package com.soundcloud.publicApiStrangler.rateLimiting.semanticevents
 
-import org.joda.time.format.ISOPeriodFormat
+import org.joda.time.format.{ISODateTimeFormat, ISOPeriodFormat}
 import org.joda.time.{DateTime, Period}
 import play.api.libs.json._
 
@@ -27,11 +27,15 @@ object RateLimitingQuotaReached {
     reset: DateTime
   )
 
-  private implicit val periodWrites: Writes[Period] = Writes(ISOPeriodFormat.standard().print _ andThen JsString)
+  implicit val dateTimeWrites: Writes[DateTime] = Writes { dt =>
+    JsString(ISODateTimeFormat.dateTime().print(dt))
+  }
 
-  private implicit val contextWrites: Writes[Context] = Json.writes[Context]
+  implicit val periodWrites: Writes[Period] = Writes(ISOPeriodFormat.standard().print _ andThen JsString)
 
-  private implicit val payloadWrites: Writes[Payload] = Json.writes[Payload]
+  implicit val contextWrites: Writes[Context] = Json.writes[Context]
+
+  implicit val payloadWrites: Writes[Payload] = Json.writes[Payload]
 
   implicit val rateLimitingQuotaReachedWrites: Writes[RateLimitingQuotaReached] = Json.writes[RateLimitingQuotaReached]
 
