@@ -46,7 +46,7 @@ class TimelineController(
           mapper.materialize(session, page).map {
             case Some(info) => render.json(info)
             case None => render.notFound
-          }.map(_.headers(DefaultResponseHeaders.defaultHeaders))
+          }
         }
     }
 

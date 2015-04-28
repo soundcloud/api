@@ -1,4 +1,4 @@
-package com.soundcloud.publicApiStrangler.controller
+package com.soundcloud.publicApiStrangler.headers
 
 /**
  * Default headers returned by public api.

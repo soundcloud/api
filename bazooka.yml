@@ -2,7 +2,8 @@ api:
   env: production.properties
   instances: 100
   proc: api
-  irc-channel: ops
+  log-channel: core-services
+  log: slack
   app: public-api-strangler
   scale-method: stepped
   auto-scale-down: true
@@ -13,7 +14,8 @@ api-de:
   env: production.properties.de
   instances: 8
   proc: api
-  irc-channel: ops
+  log-channel: core-services
+  log: slack
   app: public-api-strangler
   scale-method: stepped
   auto-scale-down: true
