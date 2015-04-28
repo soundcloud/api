@@ -64,6 +64,8 @@ object PublicApiStranglerBuild extends Build {
     .configs(GatlingPlugin.Gatling)
     .settings(gatlingDependencies: _*)
 
+  lazy val IntegrationTest = config("it") extend(Test)
+
   lazy val root = Project(id = "public-api-strangler",
     base = file("."))
     .configs(IntegrationTest)
