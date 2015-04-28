@@ -38,8 +38,9 @@ class RolloutItSpec extends UnitSpecification {
 
   "supports consistent id-based rollouts" in new NewFeatureContext {
     rollout.activate(featureName, 98)
-    rollout.isActiveForId(featureName, Urn("soundcloud:users:997")) mustEqual true
-    rollout.isActiveForId(featureName, Urn("soundcloud:users:999")) mustEqual false
+    rollout.isActiveForId(featureName, Some(Urn("soundcloud:users:997"))) mustEqual true
+    rollout.isActiveForId(featureName, None) mustEqual false
+    rollout.isActiveForId(featureName, Some(Urn("soundcloud:users:999"))) mustEqual false
   }
   
   "returns true if feature is enabled for 100%" in new NewFeatureContext {
