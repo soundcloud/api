@@ -31,19 +31,21 @@ class Rollout(zookeeperCuratorClient: CuratorFramework, zookeeperBaseFeaturesPat
   private val activationsMap = new ConcurrentHashMap[String, Int]
 
   def activate(featureName: String, percentage: Int): Unit = {
-    val activation = percentage.toString.getBytes(Charsets.Utf8)
+    val percentageString = percentage.toString.getBytes(Charsets.Utf8)
     try {
-      zookeeperCuratorClient.create().creatingParentsIfNeeded().forPath(featurePath(featureName), activation)
+      zookeeperCuratorClient.create().creatingParentsIfNeeded().forPath(featurePath(featureName), percentageString)
       addListenerToFeature(featureName)
     } catch {
       case e: NodeExistsException =>
-        zookeeperCuratorClient.setData().forPath(featurePath(featureName), activation)
+        zookeeperCuratorClient.setData().forPath(featurePath(featureName), percentageString)
     }
+    activationsMap.put(featureName, percentage)
   }
 
   def delete(featureName: String): Unit = {
     try {
       zookeeperCuratorClient.delete().forPath(featurePath(featureName))
+      activationsMap.remove(featureName)
     } catch {
       case _: NoNodeException =>
     }
@@ -65,6 +67,7 @@ class Rollout(zookeeperCuratorClient: CuratorFramework, zookeeperBaseFeaturesPat
 
   private def addListenerToFeature(featureName: String): Unit = {
     val featureFlag = new NodeCache(zookeeperCuratorClient, featurePath(featureName))
+    featureFlag.start()
     featureFlag.getListenable addListener new NodeCacheListener {
       override def nodeChanged(): Unit = {
         try {

@@ -92,8 +92,7 @@ class RolloutItSpec extends UnitSpecification {
     rollout.activate(featureName, 0)
     rollout.isActive(featureName) mustEqual false
     anotherClient.setData().forPath("/" + config.getApplicationName + "/features/" + featureName, "100".getBytes(Charsets.Utf8))
-
-    rollout.isActive(featureName) mustEqual true
+    rollout.isActive(featureName) must beTrue.eventually(retries = 2, sleep = 1.second)
   }
 
   "removes a feature successfully" in new NewFeatureContext {
