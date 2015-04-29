@@ -1,10 +1,13 @@
 package com.soundcloud.publicApiStrangler
 
+import java.security.SecureRandom
+
 import com.soundcloud.jvmkit.config.BazookaConfig
 import com.soundcloud.publicApiStrangler.features.RolloutBuilder
 import com.soundcloud.publicApiStrangler.zookeeper.ZookeeperClientFactory
 import com.soundcloud.scalakit.Urn
 import com.soundcloud.scalakit.test.{UnitSpecification, VerifiedMocks}
+import com.soundcloud.scalakit.utilities.DebugUtilities.Tappable
 import com.twitter.io.Charsets
 
 import scala.util.Random
@@ -36,13 +39,38 @@ class RolloutItSpec extends UnitSpecification {
     rollout.allFeatures.keys must containAllOf(features)
   }
 
-  "supports consistent id-based rollouts" in new NewFeatureContext {
-    rollout.activate(featureName, 98)
-    rollout.isActiveForId(featureName, Some(Urn("soundcloud:users:997"))) mustEqual true
-    rollout.isActiveForId(featureName, None) mustEqual false
-    rollout.isActiveForId(featureName, Some(Urn("soundcloud:users:999"))) mustEqual false
+  "supports consistent id-based rollouts, for numeric ids" in new NewFeatureContext {
+    rollout.activate(featureName, 43)
+
+    val randomGen: () => String = {
+      val sr = new SecureRandom
+      () => sr.nextInt.toString
+    }
+
+    val randomIds = Stream.continually(randomGen()).map(_.mkString).take(500).toVector.map(Urn("soundcloud", "users", _))
+
+    val activations = randomIds.map(id => rollout.isActiveForId(featureName, Some(id)))
+    val activatedOnesCount = (activations.count(identity).toDouble * 100 / activations.size).toInt
+
+    activatedOnesCount.tap("Activations count") must beCloseTo(43, 4)
   }
   
+  "supports consistent id-based rollouts, for alphanumeric ids" in new NewFeatureContext {
+    rollout.activate(featureName, 43)
+
+    val randomGen: () => String = {
+      val sr = new SecureRandom
+      () => Seq.tabulate(6)(_ => ((sr.nextInt.abs % 25) + 97).toChar).mkString
+    }
+
+    val randomIds = Stream.continually(randomGen()).map(_.mkString).take(500).toVector.map(Urn("soundcloud", "users", _))
+
+    val activations = randomIds.map(id => rollout.isActiveForId(featureName, Some(id)))
+    val activatedOnesCount = (activations.count(identity).toDouble * 100 / activations.size).toInt
+
+    activatedOnesCount.tap("Activations count") must beCloseTo(43, 4)
+  }
+
   "returns true if feature is enabled for 100%" in new NewFeatureContext {
     rollout.activate(featureName, 100)
     rollout.isActive(featureName) mustEqual true
