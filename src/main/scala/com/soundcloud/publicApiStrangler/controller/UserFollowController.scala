@@ -3,13 +3,12 @@ package com.soundcloud.publicApiStrangler.controller
 import com.soundcloud.bff.finagle.{Request, ResponseBuilder}
 import com.soundcloud.bff.nextbff.mapping.MappingContext
 import com.soundcloud.bff.web.{BffInjectionBasedController, UserAuthentication}
-import com.soundcloud.scalakit.{Geo, LoggedInUserSession, UserSession}
-import com.soundcloud.publicApiStrangler.clients.{Following, FollowsClient, FollowsPage, PageInfo, _}
+import com.soundcloud.follows._
 import com.soundcloud.publicApiStrangler.features.Rollout
 import com.soundcloud.publicApiStrangler.mapping.timeline.User
 import com.soundcloud.publicApiStrangler.support.DispatchToMothershipHandler
 import com.soundcloud.scalakit.finagle.http.{AlwaysMatchesPathMatcher, HandlerRequest}
-import com.soundcloud.scalakit.{UTF8, Urn}
+import com.soundcloud.scalakit.{Geo, LoggedInUserSession, UTF8, Urn, UserSession}
 import com.soundcloud.service.client.OkidokiClient
 import com.twitter.finagle.http.Status
 import com.twitter.util.Future
@@ -44,7 +43,7 @@ class UserFollowController(userAuthentication: UserAuthentication,
   get("/users/:id/followings.json")(fetchFollowingsWithoutAuth)
   get("/users/:id/followers")(fetchFollowersWithoutAuth)
   get("/users/:id/followers.json")(fetchFollowersWithoutAuth)
-  get("/users/:id/followers/followed_by/:other_id")(fetchMutualFollowers)
+  get("/users/:id/followers/followed_by/:other_id")(fetchFollowersFollowed)
   get("/users/:id/followings/not_followed_by/:other_id")(fetchFollowingsNotFollowedBy)
   get("/users/:id/followings/common_to/:other_id")(fetchMutualFollowings)
 
@@ -126,61 +125,49 @@ class UserFollowController(userAuthentication: UserAuthentication,
   }
 
   private def fetchFollowingsNotFollowedBy(request: Request): Future[ResponseBuilder] = {
-    fetchFromFollows(
+    fetchUrns(
       request,
       follows.followingsNotFollowedBy(
         _,
         _,
-        Urn(s"soundcloud:users:${request.routeParams("other_id")}"),
-        _, _
-      ),
-      mapUsersToUsers,
-      contacts,
-      requireLogin = false
+        Urn(s"soundcloud:users:${request.routeParams("other_id")}")
+      )
     )
   }
 
   private def fetchMutualFollowings(request: Request): Future[ResponseBuilder] = {
-    fetchFromFollows(
+    fetchUrns(
       request,
       follows.mutualFollowings(
         _,
         _,
-        Urn(s"soundcloud:users:${request.routeParams("other_id")}"),
-        _, _
-      ),
-      mapUsersToUsers,
-      contacts,
-      requireLogin = false
+        Urn(s"soundcloud:users:${request.routeParams("other_id")}")
+      )
     )
   }
 
-  private def fetchMutualFollowers(request: Request): Future[ResponseBuilder] = {
-    fetchFromFollows(
+  private def fetchFollowersFollowed(request: Request): Future[ResponseBuilder] = {
+    fetchUrns(
       request,
-      follows.mutualFollowers(
+      follows.followersFollowed(
         _,
         _,
-        Urn(s"soundcloud:users:${request.routeParams("other_id")}"),
-        _, _
-      ),
-      mapUsersToUsers,
-      fans,
-      requireLogin = false
+        Urn(s"soundcloud:users:${request.routeParams("other_id")}")
+      )
     )
   }
 
-  private def fetchFollowersWithoutAuth(request: Request): Future[ResponseBuilder] = fetchFromFollows(request, follows.followers, mapUsersToUsers, fans, requireLogin = false)
+  private def fetchFollowersWithoutAuth(request: Request): Future[ResponseBuilder] = fetchPage(request, follows.followers, mapUsersToUsers, fans, requireLogin = false)
 
-  private def fetchFollowingsWithoutAuth(request: Request): Future[ResponseBuilder] = fetchFromFollows(request, follows.followings, mapUsersToUsers, contacts, requireLogin = false)
+  private def fetchFollowingsWithoutAuth(request: Request): Future[ResponseBuilder] = fetchPage(request, follows.followings, mapUsersToUsers, contacts, requireLogin = false)
 
-  private def fetchMyFollowers(request: Request): Future[ResponseBuilder] = fetchFromFollows(request, follows.followers, mapUsersToUsers, fans, requireLogin = true)
+  private def fetchMyFollowers(request: Request): Future[ResponseBuilder] = fetchPage(request, follows.followers, mapUsersToUsers, fans, requireLogin = true)
 
-  private def fetchFollowings(request: Request) = fetchFromFollows(request, follows.followings, mapUsersToUsers, contacts, requireLogin = true)
+  private def fetchFollowings(request: Request) = fetchPage(request, follows.followings, mapUsersToUsers, contacts, requireLogin = true)
 
-  private def fetchMyFollowingIds(request: Request) = fetchFromFollows(request, follows.followings, userIds, contacts, requireLogin = true)
+  private def fetchMyFollowingIds(request: Request) = fetchPage(request, follows.followings, userIds, contacts, requireLogin = true)
 
-  private def fetchMyFollowerIds(request: Request) = fetchFromFollows(request, follows.followers, userIds, fans, requireLogin = true)
+  private def fetchMyFollowerIds(request: Request) = fetchPage(request, follows.followers, userIds, fans, requireLogin = true)
 
   private def mapUsersToUsers(users: List[User]): List[Any] = users
 
@@ -198,11 +185,30 @@ class UserFollowController(userAuthentication: UserAuthentication,
 
   private def cursorParam(request: Request) = request.params.get("cursor")
 
-  private def fetchFromFollows(request: Request,
-                               fetchFunction: (UserSession, Urn, Int, Option[String]) => Future[FollowsPage],
-                               mapUsers: List[User] => List[Any] = mapUsersToUsers,
-                               users: Seq[Following] => Seq[Urn],
-                               requireLogin: Boolean): Future[ResponseBuilder] = {
+  private def fetchUrns(request: Request,
+                               fetchFunction: (UserSession, Urn) => Future[UrnsPage]): Future[ResponseBuilder] = {
+    authenticateIfNeeded(request, requireLogin = false) { (session: UserSession, userToFetch: Urn) =>
+      if(rollingOutReads(userToFetch)) {
+        for {
+          response <- fetchFunction(session, userToFetch)
+          urns = response.values
+          users <- fetchUsers(session, urns.toSet)
+        } yield {
+          render.json(Map(
+            "collection" -> mapUsersToUsers(users)
+          ))
+        }
+      } else {
+        fallbackToMothership(request)
+      }
+    }
+  }
+
+  private def fetchPage(request: Request,
+                         fetchFunction: (UserSession, Urn, Int, Option[String]) => Future[FollowsPage],
+                         mapUsers: List[User] => List[Any] = mapUsersToUsers,
+                         users: Seq[Following] => Seq[Urn],
+                         requireLogin: Boolean): Future[ResponseBuilder] = {
     authenticateIfNeeded(request, requireLogin) { (session: UserSession, userToFetch: Urn) =>
       if(rollingOutReads(userToFetch)) {
         for {
