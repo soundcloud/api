@@ -102,5 +102,14 @@ class RateLimitingFilterSpec extends UnitSpecification with NoTimeConversions {
       there was no(mockRateLimiter).advanceRateLimitStatus(ApiClient(mockAgentUrn))
       result ==== mockResponse
     }
+
+    "call the next service in case of unexpected errors" in new Context {
+      mockRollout.isActiveForId(any, any) throws new RuntimeException("Unexpected error.")
+      mockAuthenticatorService.cacheKeyAndSessionFor(any, any) returns Future.value((Some("inconsequential"), mockSession))
+      next.apply(any) returns Future.value(mockResponse)
+
+      val result = Await.result(filter.apply(mockRequest, next))
+      result ==== mockResponse
+    }
   }
 }

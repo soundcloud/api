@@ -39,6 +39,10 @@ class RateLimitingFilter(
             }
           } yield response
         }
+    } rescue {
+      case ex: Exception =>
+        logger.error("Something went wrong while trying to rate-limit the request.", ex)
+        next(request)
     }
   }
 }
