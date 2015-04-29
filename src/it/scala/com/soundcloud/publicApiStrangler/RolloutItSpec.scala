@@ -4,6 +4,8 @@ import java.security.SecureRandom
 
 import com.soundcloud.jvmkit.config.BazookaConfig
 import com.soundcloud.publicApiStrangler.features.RolloutBuilder
+import com.soundcloud.publicApiStrangler.test.util.NonUniformRandomDataGenerator
+import com.soundcloud.publicApiStrangler.test.util.SeqExtensions.RichSeq
 import com.soundcloud.publicApiStrangler.zookeeper.ZookeeperClientFactory
 import com.soundcloud.scalakit.Urn
 import com.soundcloud.scalakit.test.{UnitSpecification, VerifiedMocks}
@@ -40,35 +42,29 @@ class RolloutItSpec extends UnitSpecification {
   }
 
   "supports consistent id-based rollouts, for numeric ids" in new NewFeatureContext {
+    val sampleSize = 500
+    val randomIds = NonUniformRandomDataGenerator
+      .positiveInts
+      .map(id => Urn("soundcloud", "users", id.toString))
+      .take(sampleSize)
+
     rollout.activate(featureName, 43)
 
-    val randomGen: () => String = {
-      val sr = new SecureRandom
-      () => sr.nextInt.toString
-    }
-
-    val randomIds = Stream.continually(randomGen()).map(_.mkString).take(500).toVector.map(Urn("soundcloud", "users", _))
-
     val activations = randomIds.map(id => rollout.isActiveForId(featureName, Some(id)))
-    val activatedOnesCount = (activations.count(identity).toDouble * 100 / activations.size).toInt
-
-    activatedOnesCount.tap("Activations count") must beCloseTo(43, 4)
+    activations.percentageSatisfying(_ == true).tap("Activations percentage") must beCloseTo(43, delta = 7)
   }
   
   "supports consistent id-based rollouts, for alphanumeric ids" in new NewFeatureContext {
+    val sampleSize = 500
+    val randomIds = NonUniformRandomDataGenerator
+      .lowerCaseAlphabeticalStrings(stringLength = 7)
+      .map(id => Urn("soundcloud", "users", id.toString))
+      .take(sampleSize)
+
     rollout.activate(featureName, 43)
 
-    val randomGen: () => String = {
-      val sr = new SecureRandom
-      () => Seq.tabulate(6)(_ => ((sr.nextInt.abs % 25) + 97).toChar).mkString
-    }
-
-    val randomIds = Stream.continually(randomGen()).map(_.mkString).take(500).toVector.map(Urn("soundcloud", "users", _))
-
     val activations = randomIds.map(id => rollout.isActiveForId(featureName, Some(id)))
-    val activatedOnesCount = (activations.count(identity).toDouble * 100 / activations.size).toInt
-
-    activatedOnesCount.tap("Activations count") must beCloseTo(43, 4)
+    activations.percentageSatisfying(_ == true).tap("Activations percentage") must beCloseTo(43, delta = 7)
   }
 
   "returns true if feature is enabled for 100%" in new NewFeatureContext {
