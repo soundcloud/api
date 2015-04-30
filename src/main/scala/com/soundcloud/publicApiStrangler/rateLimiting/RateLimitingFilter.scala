@@ -1,5 +1,7 @@
 package com.soundcloud.publicApiStrangler.rateLimiting
 
+import java.util.concurrent.atomic.AtomicBoolean
+
 import com.soundcloud.bff.finagle.{Request => BffRequest, ResponseBuilder}
 import com.soundcloud.bff.web.UserAuthentication
 import com.soundcloud.jvmkit.FailsafeUserSession
@@ -20,14 +22,21 @@ class RateLimitingFilter(
   val logger = SoundCloudLoggerFactory.getLogger(this.getClass)
 
   def apply(request: Request, next: Service[Request, Response]): Future[Response] = {
+    val nextWasCalled = new AtomicBoolean(false)
+
+    def invokeNext = {
+      nextWasCalled.set(true)
+      next(request)
+    }
+
     userAuthentication.withUserSession(new BffRequest(request)) {
       case session: FailsafeUserSession =>
-        next(request) // no rate limiting if there is no authenticated client; next filter should take care of authorization
+        invokeNext // no rate limiting if there is no authenticated client; next filter should take care of authorization
       case session =>
         val apiClient = ApiClient(session.getAgent)
-        if (!rollout.isActiveForId(Features.ProbeRateLimits, Option(apiClient.urn)) || whitelistingService.hasClientWhitelisted(apiClient.urn))
-          next(request)
-        else {
+        if (!rollout.isActiveForId(Features.ProbeRateLimits, Option(apiClient.urn)) || whitelistingService.hasClientWhitelisted(apiClient.urn)) {
+          invokeNext
+        } else {
           val enforce = rollout.isActiveForId(Features.EnforceRateLimits, Option(apiClient.urn))
           for {
             status <- rateLimiter.advanceRateLimitStatus(apiClient)
@@ -35,12 +44,12 @@ class RateLimitingFilter(
               case (true, status @ RateLimitStatus.Reached(_, _)) =>
                 Future.value(new ResponseBuilder().typedJson(status).status(HttpResponseStatus.TOO_MANY_REQUESTS.getCode).build)
               case (_, _) =>
-                next(request)
+                invokeNext
             }
           } yield response
         }
     } rescue {
-      case ex: Exception =>
+      case ex: Exception if !nextWasCalled.get() =>
         logger.error("Something went wrong while trying to rate-limit the request.", ex)
         next(request)
     }

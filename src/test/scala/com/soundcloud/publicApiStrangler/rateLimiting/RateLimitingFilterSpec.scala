@@ -103,13 +103,24 @@ class RateLimitingFilterSpec extends UnitSpecification with NoTimeConversions {
       result ==== mockResponse
     }
 
-    "call the next service in case of unexpected errors" in new Context {
+    "call the next service in case of unexpected errors, not caused by downstream" in new Context {
       mockRollout.isActiveForId(any, any) throws new RuntimeException("Unexpected error.")
       mockAuthenticatorService.cacheKeyAndSessionFor(any, any) returns Future.value((Some("inconsequential"), mockSession))
       next.apply(any) returns Future.value(mockResponse)
 
       val result = Await.result(filter.apply(mockRequest, next))
       result ==== mockResponse
+    }
+
+    "not call next again if a downstream error is propagated to the filter" in new Context {
+      mockRollout.isActiveForId(any, any) returns false
+      mockAuthenticatorService.cacheKeyAndSessionFor(any, any) returns Future.value((Some("inconsequential"), mockSession))
+      next.apply(any) returns Future.exception(new RuntimeException)
+
+      def result = Await.result(filter.apply(mockRequest, next))
+
+      result must throwA[RuntimeException]
+      there was one(next).apply(any)
     }
   }
 }
