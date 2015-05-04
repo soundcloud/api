@@ -1,7 +1,7 @@
 package com.soundcloud.publicApiStrangler.rateLimiting
 
 import com.soundcloud.bff.finagle.ResponseBuilder
-import com.soundcloud.bff.security.AuthenticatorService
+import com.soundcloud.bff.security.{CacheKeyAndSession, AuthenticatorService}
 import com.soundcloud.bff.web.UserAuthentication
 import com.soundcloud.jvmkit.UserSession
 import com.soundcloud.publicApiStrangler.features.{Features, Rollout}
@@ -48,7 +48,7 @@ class RateLimitingFilterSpec extends UnitSpecification with NoTimeConversions {
 
     "let requests pass through if probe ratelimits flag is not active for client" in new Context {
       mockRollout.isActiveForId(===(Features.ProbeRateLimits), any) returns false
-      mockAuthenticatorService.cacheKeyAndSessionFor(any, any) returns Future.value((Some("inconsequential"), mockSession))
+      mockAuthenticatorService.cacheKeyAndSessionFor(any, any) returns Future.value(CacheKeyAndSession(Some("inconsequential"), mockSession))
       next.apply(any) returns Future.value(mockResponse)
       there was no(mockRateLimiter).advanceRateLimitStatus(any)
       there was no(mockWhitelistingService).hasClientWhitelisted(any)
@@ -58,7 +58,7 @@ class RateLimitingFilterSpec extends UnitSpecification with NoTimeConversions {
     "let requests pass through if enforce ratelimits flag is not active for client" in new Context {
       mockRollout.isActiveForId(===(Features.ProbeRateLimits), any) returns true
       mockRollout.isActiveForId(===(Features.EnforceRateLimits), any) returns false
-      mockAuthenticatorService.cacheKeyAndSessionFor(any, any) returns Future.value((Some("inconsequential"), mockSession))
+      mockAuthenticatorService.cacheKeyAndSessionFor(any, any) returns Future.value(CacheKeyAndSession(Some("inconsequential"), mockSession))
       next.apply(any) returns Future.value(mockResponse)
       mockRateLimiter.advanceRateLimitStatus(any[ApiClient]) returns Future.value(RateLimitStatus.Advancing(20, Some(expiry)))
       there was no(mockWhitelistingService).hasClientWhitelisted(any)
@@ -68,7 +68,7 @@ class RateLimitingFilterSpec extends UnitSpecification with NoTimeConversions {
     "let requests pass through to the service when the client hasn't reached their limit" in new Context {
       mockRollout.isActiveForId(any, any) returns true
       mockRateLimiter.advanceRateLimitStatus(any[ApiClient]) returns Future.value(RateLimitStatus.Advancing(20, Some(expiry)))
-      mockAuthenticatorService.cacheKeyAndSessionFor(any, any) returns Future.value((Some("inconsequential"), mockSession))
+      mockAuthenticatorService.cacheKeyAndSessionFor(any, any) returns Future.value(CacheKeyAndSession(Some("inconsequential"), mockSession))
       next.apply(any) returns Future.value(mockResponse)
       mockWhitelistingService.hasClientWhitelisted(any) returns false
 
@@ -78,7 +78,7 @@ class RateLimitingFilterSpec extends UnitSpecification with NoTimeConversions {
     "respond with 429 and reset info if the client has reached their limit" in new Context {
       mockRollout.isActiveForId(any, any) returns true
       mockRateLimiter.advanceRateLimitStatus(any[ApiClient]) returns Future.value(RateLimitStatus.Reached(30, Some(expiry)))
-      mockAuthenticatorService.cacheKeyAndSessionFor(any, any) returns Future.value((Some("inconsequential"), mockSession))
+      mockAuthenticatorService.cacheKeyAndSessionFor(any, any) returns Future.value(CacheKeyAndSession(Some("inconsequential"), mockSession))
       mockWhitelistingService.hasClientWhitelisted(any) returns false
 
       val response = Await.result(filter.apply(mockRequest, next))
@@ -93,7 +93,7 @@ class RateLimitingFilterSpec extends UnitSpecification with NoTimeConversions {
 
     "not rate-limit the client if they are whitelisted" in new Context {
       mockRollout.isActiveForId(any, any) returns true
-      mockAuthenticatorService.cacheKeyAndSessionFor(any, any) returns Future.value((Some("inconsequential"), mockSession))
+      mockAuthenticatorService.cacheKeyAndSessionFor(any, any) returns Future.value(CacheKeyAndSession(Some("inconsequential"), mockSession))
       next.apply(any) returns Future.value(mockResponse)
       mockWhitelistingService.hasClientWhitelisted(mockAgentUrn) returns true
 
@@ -105,7 +105,7 @@ class RateLimitingFilterSpec extends UnitSpecification with NoTimeConversions {
 
     "call the next service in case of unexpected errors, not caused by downstream" in new Context {
       mockRollout.isActiveForId(any, any) throws new RuntimeException("Unexpected error.")
-      mockAuthenticatorService.cacheKeyAndSessionFor(any, any) returns Future.value((Some("inconsequential"), mockSession))
+      mockAuthenticatorService.cacheKeyAndSessionFor(any, any) returns Future.value(CacheKeyAndSession(Some("inconsequential"), mockSession))
       next.apply(any) returns Future.value(mockResponse)
 
       val result = Await.result(filter.apply(mockRequest, next))
@@ -114,7 +114,7 @@ class RateLimitingFilterSpec extends UnitSpecification with NoTimeConversions {
 
     "not call next again if a downstream error is propagated to the filter" in new Context {
       mockRollout.isActiveForId(any, any) returns false
-      mockAuthenticatorService.cacheKeyAndSessionFor(any, any) returns Future.value((Some("inconsequential"), mockSession))
+      mockAuthenticatorService.cacheKeyAndSessionFor(any, any) returns Future.value(CacheKeyAndSession(Some("inconsequential"), mockSession))
       next.apply(any) returns Future.exception(new RuntimeException)
 
       def result = Await.result(filter.apply(mockRequest, next))
