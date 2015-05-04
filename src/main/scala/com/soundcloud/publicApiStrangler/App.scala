@@ -4,9 +4,9 @@ import com.soundcloud.bff._
 import com.soundcloud.bff.authorization.ContentAuthorizationService
 import com.soundcloud.bff.media.{MediaUrlsRepository, WaveformUrlsRepository}
 import com.soundcloud.bff.services.JsonService
+import com.soundcloud.follows.FollowsComponent
 import com.soundcloud.jvmkit.config.ConfigConvention
 import com.soundcloud.publicApiStrangler.authorization.{AuthorizeHttpResponse, ContentAuthorizationFilter}
-import com.soundcloud.publicApiStrangler.clients.FollowsComponent
 import com.soundcloud.publicApiStrangler.controller._
 import com.soundcloud.publicApiStrangler.features.{RolloutBuilder, RolloutController}
 import com.soundcloud.publicApiStrangler.headers.DefaultResponseHeadersFilter

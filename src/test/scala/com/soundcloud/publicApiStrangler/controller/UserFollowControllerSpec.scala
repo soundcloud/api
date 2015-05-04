@@ -1,8 +1,8 @@
 package com.soundcloud.publicApiStrangler.controller
 
 import com.soundcloud.bff.test.InjectionBasedControllerSpecification
+import com.soundcloud.follows._
 import com.soundcloud.jvmkit.{Geo => JvmGeo}
-import com.soundcloud.publicApiStrangler.clients.{Following, FollowsClient, FollowsPage, PageInfo, _}
 import com.soundcloud.publicApiStrangler.features.Rollout
 import com.soundcloud.publicApiStrangler.support.DispatchToMothershipHandler
 import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures
@@ -64,18 +64,18 @@ class UserFollowControllerSpec extends InjectionBasedControllerSpecification wit
       override def before = {
         super.before
         val values = Seq(
-          Following("123-123", "2012-02-13T23:30:13.000+0000", userUrn, Urn("soundcloud:users:100"))
+          userUrn, Urn("soundcloud:users:100")
         )
         val pageInfo = PageInfo(Some("123-1234"), 2)
-        followsMock.mutualFollowers(session, userUrn, Urn("soundcloud:users:2"), 10, None) returns Future.value(FollowsPage(values, pageInfo))
-        okidokiMock.fetch(session, values.map(_.user).toSet) returns Future.value(okidokiUsers.as[List[JsObject]])
+        followsMock.followersFollowed(session, userUrn, Urn("soundcloud:users:2")) returns Future.value(UrnsPage(values))
+        okidokiMock.fetch(session, values.toSet) returns Future.value(okidokiUsers.as[List[JsObject]])
       }
 
       val response = get(controller, "/users/999/followers/followed_by/2", Map("limit" -> "10"))
       response.status ==== Status.Ok
       val json = Json.parse(response.body)
       (json \ "collection").as[Seq[JsObject]].size ==== 1
-      (json \ "next_href").asOpt[String] ==== Some("http://foo/users/999/followers/followed_by/2?page_size=2&cursor=123-1234")
+      (json \ "next_href").asOpt[String] ==== None
     }
 
     "fall back to moshi when not rolling out" in new FallbackContext {
@@ -90,18 +90,18 @@ class UserFollowControllerSpec extends InjectionBasedControllerSpecification wit
       override def before = {
         super.before
         val values = Seq(
-          Following("123-123", "2012-02-13T23:30:13.000+0000", Urn("soundcloud:users:12490957"), Urn("soundcloud:users:100"))
+          Urn("soundcloud:users:12490957"), Urn("soundcloud:users:100")
         )
         val pageInfo = PageInfo(Some("123-1234"), 2)
-        followsMock.followingsNotFollowedBy(session, Urn("soundcloud:users:999"), Urn("soundcloud:users:2"), 10, None) returns Future.value(FollowsPage(values, pageInfo))
-        okidokiMock.fetch(session, values.map(_.target).toSet) returns Future.value(okidokiUsers.as[List[JsObject]])
+        followsMock.followingsNotFollowedBy(session, Urn("soundcloud:users:999"), Urn("soundcloud:users:2")) returns Future.value(UrnsPage(values))
+        okidokiMock.fetch(session, values.toSet) returns Future.value(okidokiUsers.as[List[JsObject]])
       }
 
       val response = get(controller, "/users/999/followings/not_followed_by/2", Map("limit" -> "10"))
       response.status ==== Status.Ok
       val json = Json.parse(response.body)
       (json \ "collection").as[Seq[JsObject]].size ==== 1
-      (json \ "next_href").asOpt[String] ==== Some("http://foo/users/999/followings/not_followed_by/2?page_size=2&cursor=123-1234")
+      (json \ "next_href").asOpt[String] ==== None
     }
   }
 
@@ -111,18 +111,18 @@ class UserFollowControllerSpec extends InjectionBasedControllerSpecification wit
       override def before = {
         super.before
         val values = Seq(
-          Following("123-123", "2012-02-13T23:30:13.000+0000", Urn("soundcloud:users:12490957"), Urn("soundcloud:users:100"))
+          Urn("soundcloud:users:12490957"), Urn("soundcloud:users:100")
         )
         val pageInfo = PageInfo(Some("123-1234"), 2)
-        followsMock.mutualFollowings(session, Urn("soundcloud:users:999"), Urn("soundcloud:users:2"), 10, Some("2")) returns Future.value(FollowsPage(values, pageInfo))
-        okidokiMock.fetch(session, values.map(_.target).toSet) returns Future.value(okidokiUsers.as[List[JsObject]])
+        followsMock.mutualFollowings(session, Urn("soundcloud:users:999"), Urn("soundcloud:users:2")) returns Future.value(UrnsPage(values))
+        okidokiMock.fetch(session, values.toSet) returns Future.value(okidokiUsers.as[List[JsObject]])
       }
 
       val response = get(controller, "/users/999/followings/common_to/2", Map("limit" -> "10", "cursor" -> "2"))
       response.status ==== Status.Ok
       val json = Json.parse(response.body)
       (json \ "collection").as[Seq[JsObject]].size ==== 1
-      (json \ "next_href").asOpt[String] ==== Some("http://foo/users/999/followings/common_to/2?page_size=2&cursor=123-1234")
+      (json \ "next_href").asOpt[String] ==== None
     }
   }
 
