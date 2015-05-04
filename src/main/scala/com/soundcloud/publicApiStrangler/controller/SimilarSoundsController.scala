@@ -54,8 +54,10 @@ class SimilarSoundsController(
   }
 
   private def shouldPaginate(params: Params) = {
-    val param = params.getOrElse(SimilarSoundsMapping.LinkedPartitioning, StringParam(""))
-    param.value.exists(_.nonEmpty)
+    params
+      .get(SimilarSoundsMapping.LinkedPartitioning)
+      .flatMap(_.value.headOption)
+      .exists(_.nonEmpty)
   }
 
 }
