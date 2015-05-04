@@ -24,11 +24,10 @@ class SimilarSoundsMapper(
    */
   override def mapNonEmptyInputs(session: UserSession, inputs: Set[OffsetBasedPage[Urn]])
                                 (implicit context: MappingContext): Future[Map[OffsetBasedPage[Urn], SimilarSoundsMapping]] = {
-    Future.collect(inputs.map {
-      input =>
-        mapSingleInput(session, input).map {
-          opt => opt.map(similarSoundsMapping => Some(input -> similarSoundsMapping)).getOrElse(None)
-        }
+    Future.collect(inputs.map { input =>
+      mapSingleInput(session, input).map {
+        opt => opt.map(similarSoundsMapping => Some(input -> similarSoundsMapping)).getOrElse(None)
+      }
     }.toList).map(_.flatten.toMap)
   }
 
@@ -40,15 +39,13 @@ class SimilarSoundsMapper(
                      seedTrack: OffsetBasedPage[Urn])
                     (implicit context: MappingContext): Future[Option[SimilarSoundsMapping]] = {
     val (page, pageSize) = offsetBasedToPageBased(seedTrack.offset, seedTrack.limit)
-    similarSoundsClient.fetchSimilar(session, seedTrack.param, page, pageSize, "", None).map {
-      opt =>
-        opt.map(
-          similarSounds =>
-            new ObjectMapping[SimilarSounds](similarSounds) with SimilarSoundsMapping {
-              override def currentPage: OffsetBasedPage[_] = seedTrack
-              override def searchEntityMapper: SearchEntityMapper = searchEntityMapperxx
-            }
-        )
+    similarSoundsClient.fetchSimilar(session, seedTrack.param, page, pageSize, "", None).map { opt =>
+      opt.map(similarSounds =>
+        new ObjectMapping[SimilarSounds](similarSounds) with SimilarSoundsMapping {
+          override def currentPage: OffsetBasedPage[_] = seedTrack
+          override def searchEntityMapper: SearchEntityMapper = searchEntityMapperxx
+        }
+      )
     }
   }
 
@@ -58,10 +55,10 @@ class SimilarSoundsMapper(
    *
    */
   def offsetBasedToPageBased(offset: Int, limit: Int): (Int, Int) = {
-    limit match {
-      case limit if limit > 0 => ((offset / limit) + 1, limit)
-      case _ => (0, 0)
-    }
+    if (limit > 0)
+      ((offset / limit) + 1, limit)
+    else
+      (0, 0)
   }
 
 }
