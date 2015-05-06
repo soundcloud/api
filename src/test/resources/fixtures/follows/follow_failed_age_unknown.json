@@ -1,1 +1,1 @@
-{"error":{"name":"AgeUnknownException","message":"meh.","status":412}}
+{"error":{"name":"AgeUnknownUser","message":"meh.","status":412}}

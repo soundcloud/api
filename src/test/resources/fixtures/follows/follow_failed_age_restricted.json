@@ -1,1 +1,1 @@
-{"error":{"name":"AgeRestrictedException","message":"This message will be ignored.","status":412}}
+{"error":{"name":"AgeRestrictedUser","message":"This message will be ignored.","status":412}}
