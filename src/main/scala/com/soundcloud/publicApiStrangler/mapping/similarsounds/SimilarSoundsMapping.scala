@@ -24,6 +24,8 @@ trait SimilarSoundsMapping extends ObjectMapping[SimilarSounds] {
       None
   }
 
+  val version = "baseline"
+
 }
 
 object SimilarSoundsMapping {
