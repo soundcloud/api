@@ -11,3 +11,4 @@
 3537    # SoundCloud Desktop
 99561   # SoundCloud Kik Messenger Card
 120502  # Twitter Partner
+42975   # SoundCloud Notifications
