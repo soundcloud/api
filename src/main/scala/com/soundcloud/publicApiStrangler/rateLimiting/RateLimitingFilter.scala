@@ -1,17 +1,15 @@
 package com.soundcloud.publicApiStrangler.rateLimiting
 
-import java.util.concurrent.atomic.AtomicBoolean
-
 import com.soundcloud.bff.finagle.{Request => BffRequest, ResponseBuilder}
 import com.soundcloud.bff.web.UserAuthentication
 import com.soundcloud.jvmkit.FailsafeUserSession
 import com.soundcloud.jvmkit.logging.SoundCloudLoggerFactory
 import com.soundcloud.publicApiStrangler.features.{Features, Rollout}
+import com.soundcloud.scalakit.UserSession
 import com.twitter.finagle.http.{Request, Response}
 import com.twitter.finagle.{Service, SimpleFilter}
 import com.twitter.util.Future
 import org.jboss.netty.handler.codec.http.HttpResponseStatus
-import com.soundcloud.scalakit.UserSession
 
 class RateLimitingFilter(
   rateLimiter: RateLimiter,
@@ -24,7 +22,7 @@ class RateLimitingFilter(
 
   def apply(request: Request, next: Service[Request, Response]): Future[Response] = {
     userAuthentication.withUserSession(new BffRequest(request)) { session =>
-      Verdict on session flatMap {
+      Verdict.on(session).flatMap {
         case Pass =>
           next(request)
         case Block(status) =>
@@ -40,13 +38,13 @@ class RateLimitingFilter(
   object Verdict {
     def on(session: UserSession): Future[Verdict] = {
       val apiClient = ApiClient(session.getAgent)
-      val verdict = (session, apiClient, RolloutStatus forApiClient apiClient) match {
+      val verdict = (session, apiClient, RolloutStatus.forApiClient(apiClient)) match {
         case (_: FailsafeUserSession, _, _) | (_, Whitelisted(), _) | (_, _, Disabled) =>
           Future(Pass)
         case (_, _, Probing) =>
           rateLimiter.advanceRateLimitStatus(apiClient).map(_ => Pass)
         case (_, _, Enforcing) =>
-          rateLimiter.advanceRateLimitStatus(apiClient) map {
+          rateLimiter.advanceRateLimitStatus(apiClient).map {
             case s @ RateLimitStatus.Reached(_, _) => Block(s)
             case _                                 => Pass
           }
