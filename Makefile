@@ -26,6 +26,9 @@ remove.ivy.lock:
 all: remove.ivy.lock .install.jre
 	$(SBT) clean test startScript
 
+compile:
+	$(SBT) compile
+
 # bazooka target
 build: remove.ivy.lock .install.jre
 	$(SBT) clean startScript
