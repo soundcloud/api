@@ -16,9 +16,7 @@ import org.joda.time.{DateTime, DateTimeUtils}
 import org.specs2.mutable.BeforeAfter
 import play.api.libs.json._
 
-class UserFollowControllerSpec extends InjectionBasedControllerSpecification with Fixtures {
-
-  // changes to DateTimeUtils are not thread-safe
+class UserFollowControllerSpec extends InjectionBasedControllerSpecification with Fixtures{
   sequential
 
   trait Context extends Scope with BeforeAfter with VerifiedMocks {

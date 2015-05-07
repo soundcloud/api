@@ -1,0 +1,9 @@
+#!/bin/bash +x
+
+./bin/shutdown_containers
+# Plumber might be in current work directory or in path
+PATH=.:$PATH
+crun builder 'make it-test'
+result=$?
+./bin/shutdown_containers
+exit ${result}

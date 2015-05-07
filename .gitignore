@@ -48,3 +48,5 @@ staging.json
 .ivy2
 .sbt
 plumber
+bazooka-target
+production.overrides

@@ -1,2 +1,0 @@
-api: ./bin/run-api
-

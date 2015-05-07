@@ -1,0 +1,3 @@
+#!/bin/bash +x
+
+crun jdk-8 'make test'
