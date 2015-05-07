@@ -8,8 +8,10 @@ import com.soundcloud.publicApiStrangler.features.{Features, Rollout}
 import com.soundcloud.scalakit.UserSession
 import com.twitter.finagle.http.{Request, Response}
 import com.twitter.finagle.{Service, SimpleFilter}
-import com.twitter.util.Future
+import com.twitter.util.{Future}
 import org.jboss.netty.handler.codec.http.HttpResponseStatus
+
+import scala.util.control.NonFatal
 
 class RateLimitingFilter(
   rateLimiter: RateLimiter,
@@ -50,7 +52,7 @@ class RateLimitingFilter(
           }
       }
       verdict handle {
-        case ex: Exception =>
+        case NonFatal(ex) =>
           logger.error("Something went wrong while trying to rate-limit the request.", ex)
           Pass
       }
@@ -71,7 +73,7 @@ class RateLimitingFilter(
       else
         Enforcing
     } catch {
-      case ex: Exception =>
+      case NonFatal(ex) =>
         logger.error("Something went wrong while trying to read the feature flags.", ex)
         Disabled
     }
