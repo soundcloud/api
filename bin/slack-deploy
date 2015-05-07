@@ -15,5 +15,5 @@ curl -H "Content-Type: application/json" -X POST -d '{
   "color": "#36a64f",
   "fallback": "Deployed public-api-strangler build ${PIPELINE_NUMBER} version ${GIT_SHA}",
   "mrkdwn_in": ["text"],
-  "channel": "#test",
+  "channel": "#core-services",
   "message": '"$SLACKDATA"'}' http://unslacked.int.s-cloud.net
