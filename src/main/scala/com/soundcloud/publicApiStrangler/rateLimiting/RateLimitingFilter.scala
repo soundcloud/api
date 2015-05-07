@@ -22,42 +22,66 @@ class RateLimitingFilter(
 
   val logger = SoundCloudLoggerFactory.getLogger(this.getClass)
 
-  def apply(request: Request, next: Service[Request, Response]): Future[Response] =
+  def apply(request: Request, next: Service[Request, Response]): Future[Response] = {
     userAuthentication.withUserSession(new BffRequest(request)) { session =>
-      limitReached(session).flatMap {
-        case Some(status) =>
-          Future.value(new ResponseBuilder().typedJson(status).status(HttpResponseStatus.TOO_MANY_REQUESTS.getCode).build)
-        case None =>
+      Verdict on session flatMap {
+        case Pass =>
           next(request)
+        case Block(status) =>
+          Future.value(new ResponseBuilder().typedJson(status).status(HttpResponseStatus.TOO_MANY_REQUESTS.getCode).build)
       }
     }
+  }
 
-  private def limitReached(session: UserSession): Future[Option[RateLimitStatus.Reached]] =
-    session match {
-      case session: FailsafeUserSession =>
-        Future.None
-      case session =>
-        Future.Unit.flatMap { _ =>
-          limitReached(ApiClient(session.getAgent))
-        }.handle {
-          case ex: Exception =>
-            logger.error("Something went wrong while trying to rate-limit the request.", ex)
-            None
-        }
+  sealed trait Verdict
+  case object Pass extends Verdict
+  case class Block(status: RateLimitStatus.Reached) extends Verdict
+
+  object Verdict {
+    def on(session: UserSession): Future[Verdict] = {
+      val apiClient = ApiClient(session.getAgent)
+      val verdict = (session, apiClient, RolloutStatus forApiClient apiClient) match {
+        case (_: FailsafeUserSession, _, _) | (_, Whitelisted(), _) | (_, _, Disabled) =>
+          Future(Pass)
+        case (_, _, Probing) =>
+          rateLimiter.advanceRateLimitStatus(apiClient).map(_ => Pass)
+        case (_, _, Enforcing) =>
+          rateLimiter.advanceRateLimitStatus(apiClient) map {
+            case s @ RateLimitStatus.Reached(_, _) => Block(s)
+            case _                                 => Pass
+          }
+      }
+      verdict handle {
+        case ex: Exception =>
+          logger.error("Something went wrong while trying to rate-limit the request.", ex)
+          Pass
+      }
     }
+  }
 
-  private def limitReached(apiClient: ApiClient) =
-    if (!rollout.isActiveForId(Features.ProbeRateLimits, Option(apiClient.urn)) ||
-      whitelistingService.hasClientWhitelisted(apiClient.urn))
-      Future.None
-    else
-      applyLimit(apiClient)
+  sealed trait RolloutStatus
+  case object Probing extends RolloutStatus
+  case object Enforcing extends RolloutStatus
+  case object Disabled extends RolloutStatus
 
-  private def applyLimit(apiClient: ApiClient) =
-    rateLimiter.advanceRateLimitStatus(apiClient).map {
-      case status: RateLimitStatus.Reached if (rollout.isActiveForId(Features.EnforceRateLimits, Option(apiClient.urn))) =>
-        Option(status)
-      case _ =>
-        None
+  object RolloutStatus {
+    def forApiClient(apiClient: ApiClient): RolloutStatus = try {
+      if (!rollout.isActiveForId(Features.ProbeRateLimits, Some(apiClient.urn)))
+        Disabled
+      else if (!rollout.isActiveForId(Features.EnforceRateLimits, Some(apiClient.urn)))
+        Probing
+      else
+        Enforcing
+    } catch {
+      case ex: Exception =>
+        logger.error("Something went wrong while trying to read the feature flags.", ex)
+        Disabled
     }
+  }
+
+  object Whitelisted {
+    def unapply(apiClient: ApiClient): Boolean = {
+      whitelistingService.hasClientWhitelisted(apiClient.urn)
+    }
+  }
 }
