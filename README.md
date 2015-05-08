@@ -15,14 +15,14 @@ Take a look in [CONTRIBUTING.md](CONTRIBUTING.md). This application uses docker-
 
 ## How to deploy
 
-This project uses bucha as a deployment tool. In order to deploy the application, run:
+Use jenkins to deploy the application. For the master branch and deployment pipeline: [http://jenkins.cs.dev.s-cloud.net/view/public-api-strangler/](http://jenkins.cs.dev.s-cloud.net)
 
-```
-bin/bucha api deploy
-```
 
 ## CI
-[http://jenkins.int.s-cloud.net/job/public-api-strangler_master_precheckin](http://jenkins.int.s-cloud.net/job/public-api-strangler_master_precheckin)
+For the master branch and deployment pipeline: [http://jenkins.cs.dev.s-cloud.net/view/public-api-strangler/](http://jenkins.cs.dev.s-cloud.net/view/public-api-strangler/)
+
+The PR precheckin builds are still on jenkins.int due the laufbursche integration present there: [http://jenkins.int.s-cloud.net/job/public-api-strangler_master_precheckin](http://jenkins.int.s-cloud.net/job/public-api-strangler_master_precheckin)
+
 
 ## Groups endpoint kill switch
 
