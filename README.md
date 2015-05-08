@@ -19,9 +19,9 @@ Use jenkins to deploy the application. For the master branch and deployment pipe
 
 
 ## CI
-For the master branch and deployment pipeline: [http://jenkins.cs.dev.s-cloud.net/view/public-api-strangler/](http://jenkins.cs.dev.s-cloud.net/view/public-api-strangler/)
+For the master branch and deployment pipeline: [http://jenkins.cs.dev.s-cloud.net/view/public-api-strangler/](http://jenkins.cs.dev.s-cloud.net/view/public-api-strangler/).
 
-The PR precheckin builds are still on jenkins.int due the laufbursche integration present there: [http://jenkins.int.s-cloud.net/job/public-api-strangler_master_precheckin](http://jenkins.int.s-cloud.net/job/public-api-strangler_master_precheckin)
+The PR precheckin builds are still on jenkins.int due the laufbursche integration present there: [http://jenkins.int.s-cloud.net/job/public-api-strangler_master_precheckin](http://jenkins.int.s-cloud.net/job/public-api-strangler_master_precheckin).
 
 
 ## Groups endpoint kill switch
