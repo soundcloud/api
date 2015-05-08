@@ -50,3 +50,4 @@ staging.json
 plumber
 bazooka-target
 production.overrides
+diff-*
