@@ -30,29 +30,35 @@ class WhitelistingService(zookeeperClient: CuratorFramework, applicationName: St
 
   private val childrenCache = new PathChildrenCache(zookeeperClient, basePath, false)
 
+  childrenCache.start(PathChildrenCache.StartMode.BUILD_INITIAL_CACHE)
+
   private val FullPath = ".*/(.*)".r
 
-  locally {
-    childrenCache.start(PathChildrenCache.StartMode.BUILD_INITIAL_CACHE)
-
-    val urnsFromPersistence = childrenCache.getCurrentData.asScala.map { data =>
-      val FullPath(clientId) = data.getPath
-      Urn("soundcloud", "applications", clientId)
-    }
-
-    urnsFromPersistence foreach whitelistCache.add
-  }
-
+  rebuildLocalCache()
 
   childrenCache.getListenable.addListener(new PathChildrenCacheListener {
-    override def childEvent(client: CuratorFramework, event: PathChildrenCacheEvent) = (event.getType, event.getData.getPath) match {
+    override def childEvent(client: CuratorFramework, event: PathChildrenCacheEvent): Unit = (event.getType, event.getData.getPath) match {
       case (PathChildrenCacheEvent.Type.CHILD_ADDED, FullPath(clientId)) =>
         whitelistCache.add(Urn("soundcloud", "applications", clientId))
+        logger.info("Added client to whitelist: {}", clientId)
       case (PathChildrenCacheEvent.Type.CHILD_REMOVED, FullPath(clientId)) =>
         whitelistCache.remove(Urn("soundcloud", "applications", clientId))
-      case _ =>
+        logger.info("Removed client from whitelist: {}", clientId)
+      case (PathChildrenCacheEvent.Type.INITIALIZED, FullPath(path)) =>
+        rebuildLocalCache()
+        logger.info("Rebuilt local cache of whitelisted clients")
+      case (eventType, _) =>
+        logger.info("Something else happened: {}", eventType)
     }
   })
+
+  private def rebuildLocalCache(): Unit = {
+    for {
+      data <- childrenCache.getCurrentData.asScala
+      FullPath(clientId) = data.getPath
+    } whitelistCache.add(Urn("soundcloud", "applications", clientId))
+  }
+
 
   def whitelistClient(client: Urn): Future[Unit] = Future {
     val path = s"$basePath/${client.getIdentifier}"

@@ -1,14 +1,25 @@
 package com.soundcloud.publicApiStrangler.rateLimiting
 
+import java.util.TimerTask
+import java.util.concurrent.Executors
+
 import com.soundcloud.jvmkit.config.BazookaConfig
 import com.soundcloud.publicApiStrangler.zookeeper.ZookeeperClientFactory
 import com.soundcloud.scalakit.Urn
 import com.soundcloud.scalakit.test.UnitSpecification
-import com.twitter.util.Await
+import com.twitter.util.{Duration, Await}
+import org.specs2.matcher.MatchResult
 import org.specs2.specification.AfterEach
+import org.specs2.time.NoTimeConversions
+import com.twitter.util.TimeConversions._
 
-class WhitelistingServiceSpec extends UnitSpecification {
+class WhitelistingServiceSpec extends UnitSpecification with NoTimeConversions {
   sequential
+
+  def afterDuration[A](duration: Duration)(assertion: => MatchResult[A]): MatchResult[A] = {
+    Thread.sleep(duration.inMilliseconds)
+    assertion
+  }
 
   "The whitelisting service" should {
 
@@ -18,7 +29,7 @@ class WhitelistingServiceSpec extends UnitSpecification {
       val zookeeperClient = factory.create(config)
 
       override def after = {
-        zookeeperClient.delete().deletingChildrenIfNeeded().forPath(s"/${config.getApplicationName}")
+        zookeeperClient.delete().deletingChildrenIfNeeded().forPath(s"/${config.getApplicationName}/ratelimits/whitelist")
       }
     }
 
@@ -70,6 +81,28 @@ class WhitelistingServiceSpec extends UnitSpecification {
       val freshService = new WhitelistingService(zookeeperClient, config.getApplicationName)
       freshService.hasClientWhitelisted(Urn("soundcloud", "applications", "test-client-1")) must beTrue
       freshService.hasClientWhitelisted(Urn("soundcloud", "applications", "test-client-2")) must beTrue
+
+      Executors.newSingleThreadExecutor().submit(new Runnable {
+        override def run(): Unit = {
+          anotherClient.create().forPath(s"/${config.getApplicationName}/ratelimits/whitelist/test-client-3")
+        }
+      })
+      freshService.hasClientWhitelisted(Urn("soundcloud", "applications", "test-client-3")) must beTrue.eventually(
+        retries = 3, sleep = org.specs2.time.Duration.fromScalaDuration(scala.concurrent.duration.Duration("100 milliseconds"))
+      )
+    }
+
+    "In an event that the base path is tampered with externally, the whitelist will never receive updates again (doh!)" in new Context with WhitelistServiceCreation {
+      val anotherClient = factory.create(config)
+      val client1 = Urn("soundcloud", "applications", "testclient-1")
+      val client2 = Urn("soundcloud", "applications", "testclient-tampered")
+      Await.result(whitelistingService.whitelistClient(client1))
+      anotherClient.delete().deletingChildrenIfNeeded().forPath(s"/${config.getApplicationName}/ratelimits/whitelist")
+      whitelistingService.hasClientWhitelisted(client1) must beFalse
+      anotherClient.create().creatingParentsIfNeeded().forPath(s"/${config.getApplicationName}/ratelimits/whitelist/testclient-tampered")
+      afterDuration(1.second) {
+        whitelistingService.hasClientWhitelisted(client2) must beFalse // sadly
+      }
     }
   }
 }
