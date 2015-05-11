@@ -23,22 +23,14 @@ class RateLimitingFilter(
   val logger = SoundCloudLoggerFactory.getLogger(this.getClass)
 
   def apply(request: Request, next: Service[Request, Response]): Future[Response] = {
-    if (!isWired)
-      next(request)
-    else {
-      userAuthentication.withUserSession(new BffRequest(request)) { session =>
-        Verdict.on(session).flatMap {
-          case Pass =>
-            next(request)
-          case Block(status) =>
-            Future.value(new ResponseBuilder().typedJson(status).status(HttpResponseStatus.TOO_MANY_REQUESTS.getCode).build)
-        }
+    userAuthentication.withUserSession(new BffRequest(request)) { session =>
+      Verdict.on(session).flatMap {
+        case Pass =>
+          next(request)
+        case Block(status) =>
+          Future.value(new ResponseBuilder().typedJson(status).status(HttpResponseStatus.TOO_MANY_REQUESTS.getCode).build)
       }
     }
-  }
-
-  private def isWired: Boolean = {
-    rollout.isActive(Features.WireRateLimits)
   }
 
   sealed trait Verdict

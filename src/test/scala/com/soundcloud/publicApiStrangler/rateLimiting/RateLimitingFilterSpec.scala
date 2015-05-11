@@ -46,14 +46,7 @@ class RateLimitingFilterSpec extends UnitSpecification with NoTimeConversions {
       val filter = new RateLimitingFilter(mockRateLimiter, mockUserAuthentication, mockRollout, mockWhitelistingService)
     }
 
-    "let requests pass through if the ratelimits are not to be wired" in new Context {
-      mockRollout.isActive(Features.WireRateLimits) returns false
-      next.apply(any) returns Future.value(mockResponse)
-      Await.result(filter.apply(mockRequest, next)) ==== mockResponse
-    }
-
     "let requests pass through if probe ratelimits flag is not active for client" in new Context {
-      mockRollout.isActive(Features.WireRateLimits) returns true
       mockRollout.isActiveForId(===(Features.ProbeRateLimits), any) returns false
       mockAuthenticatorService.cacheKeyAndSessionFor(any, any) returns Future.value(CacheKeyAndSession(Some("inconsequential"), mockSession))
       next.apply(any) returns Future.value(mockResponse)
@@ -63,7 +56,6 @@ class RateLimitingFilterSpec extends UnitSpecification with NoTimeConversions {
     }
 
     "let requests pass through if enforce ratelimits flag is not active for client" in new Context {
-      mockRollout.isActive(Features.WireRateLimits) returns true
       mockRollout.isActiveForId(===(Features.ProbeRateLimits), any) returns true
       mockRollout.isActiveForId(===(Features.EnforceRateLimits), any) returns false
       mockAuthenticatorService.cacheKeyAndSessionFor(any, any) returns Future.value(CacheKeyAndSession(Some("inconsequential"), mockSession))
@@ -74,7 +66,6 @@ class RateLimitingFilterSpec extends UnitSpecification with NoTimeConversions {
     }
 
     "let requests pass through to the service when the client hasn't reached their limit" in new Context {
-      mockRollout.isActive(Features.WireRateLimits) returns true
       mockRollout.isActiveForId(any, any) returns true
       mockRateLimiter.advanceRateLimitStatus(any[ApiClient]) returns Future.value(RateLimitStatus.Advancing(20, Some(expiry)))
       mockAuthenticatorService.cacheKeyAndSessionFor(any, any) returns Future.value(CacheKeyAndSession(Some("inconsequential"), mockSession))
@@ -85,7 +76,6 @@ class RateLimitingFilterSpec extends UnitSpecification with NoTimeConversions {
     }
 
     "respond with 429 and reset info if the client has reached their limit" in new Context {
-      mockRollout.isActive(Features.WireRateLimits) returns true
       mockRollout.isActiveForId(any, any) returns true
       mockRateLimiter.advanceRateLimitStatus(any[ApiClient]) returns Future.value(RateLimitStatus.Reached(30, Some(expiry)))
       mockAuthenticatorService.cacheKeyAndSessionFor(any, any) returns Future.value(CacheKeyAndSession(Some("inconsequential"), mockSession))
@@ -102,7 +92,6 @@ class RateLimitingFilterSpec extends UnitSpecification with NoTimeConversions {
     }
 
     "not rate-limit the client if they are whitelisted" in new Context {
-      mockRollout.isActive(Features.WireRateLimits) returns true
       mockRollout.isActiveForId(any, any) returns true
       mockAuthenticatorService.cacheKeyAndSessionFor(any, any) returns Future.value(CacheKeyAndSession(Some("inconsequential"), mockSession))
       next.apply(any) returns Future.value(mockResponse)
@@ -115,7 +104,6 @@ class RateLimitingFilterSpec extends UnitSpecification with NoTimeConversions {
     }
 
     "call the next service in case of unexpected errors, not caused by downstream" in new Context {
-      mockRollout.isActive(Features.WireRateLimits) returns true
       mockRollout.isActiveForId(any, any) throws new RuntimeException("Unexpected error.")
       mockAuthenticatorService.cacheKeyAndSessionFor(any, any) returns Future.value(CacheKeyAndSession(Some("inconsequential"), mockSession))
       next.apply(any) returns Future.value(mockResponse)
@@ -125,7 +113,6 @@ class RateLimitingFilterSpec extends UnitSpecification with NoTimeConversions {
     }
 
     "not call next again if a downstream error is propagated to the filter" in new Context {
-      mockRollout.isActive(Features.WireRateLimits) returns true
       mockRollout.isActiveForId(any, any) returns false
       mockAuthenticatorService.cacheKeyAndSessionFor(any, any) returns Future.value(CacheKeyAndSession(Some("inconsequential"), mockSession))
       next.apply(any) returns Future.exception(new RuntimeException)
