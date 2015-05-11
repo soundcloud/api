@@ -49,7 +49,9 @@ class RateLimitingFilterSpec extends UnitSpecification with NoTimeConversions {
     "let requests pass through if probe ratelimits flag is not active for client" in new Context {
       mockRollout.isActiveForId(===(Features.ProbeRateLimits), any) returns false
       mockAuthenticatorService.cacheKeyAndSessionFor(any, any) returns Future.value(CacheKeyAndSession(Some("inconsequential"), mockSession))
+      mockRequest.path returns "/some-path"
       next.apply(any) returns Future.value(mockResponse)
+
       there was no(mockRateLimiter).advanceRateLimitStatus(any)
       there was no(mockWhitelistingService).hasClientWhitelisted(any)
       Await.result(filter.apply(mockRequest, next)) ==== mockResponse
@@ -61,6 +63,8 @@ class RateLimitingFilterSpec extends UnitSpecification with NoTimeConversions {
       mockAuthenticatorService.cacheKeyAndSessionFor(any, any) returns Future.value(CacheKeyAndSession(Some("inconsequential"), mockSession))
       next.apply(any) returns Future.value(mockResponse)
       mockRateLimiter.advanceRateLimitStatus(any[ApiClient]) returns Future.value(RateLimitStatus.Advancing(20, Some(expiry)))
+      mockRequest.path returns "/some-path"
+
       there was no(mockWhitelistingService).hasClientWhitelisted(any)
       Await.result(filter.apply(mockRequest, next)) ==== mockResponse
     }
@@ -71,6 +75,7 @@ class RateLimitingFilterSpec extends UnitSpecification with NoTimeConversions {
       mockAuthenticatorService.cacheKeyAndSessionFor(any, any) returns Future.value(CacheKeyAndSession(Some("inconsequential"), mockSession))
       next.apply(any) returns Future.value(mockResponse)
       mockWhitelistingService.hasClientWhitelisted(any) returns false
+      mockRequest.path returns "/some-path"
 
       Await.result(filter.apply(mockRequest, next)) ==== mockResponse
     }
@@ -80,6 +85,7 @@ class RateLimitingFilterSpec extends UnitSpecification with NoTimeConversions {
       mockRateLimiter.advanceRateLimitStatus(any[ApiClient]) returns Future.value(RateLimitStatus.Reached(30, Some(expiry)))
       mockAuthenticatorService.cacheKeyAndSessionFor(any, any) returns Future.value(CacheKeyAndSession(Some("inconsequential"), mockSession))
       mockWhitelistingService.hasClientWhitelisted(any) returns false
+      mockRequest.path returns "/some-path"
 
       val response = Await.result(filter.apply(mockRequest, next))
 
@@ -96,6 +102,7 @@ class RateLimitingFilterSpec extends UnitSpecification with NoTimeConversions {
       mockAuthenticatorService.cacheKeyAndSessionFor(any, any) returns Future.value(CacheKeyAndSession(Some("inconsequential"), mockSession))
       next.apply(any) returns Future.value(mockResponse)
       mockWhitelistingService.hasClientWhitelisted(mockAgentUrn) returns true
+      mockRequest.path returns "/some-path"
 
       val result = Await.result(filter.apply(mockRequest, next))
 
@@ -107,6 +114,7 @@ class RateLimitingFilterSpec extends UnitSpecification with NoTimeConversions {
       mockRollout.isActiveForId(any, any) throws new RuntimeException("Unexpected error.")
       mockAuthenticatorService.cacheKeyAndSessionFor(any, any) returns Future.value(CacheKeyAndSession(Some("inconsequential"), mockSession))
       next.apply(any) returns Future.value(mockResponse)
+      mockRequest.path returns "/some-path"
 
       val result = Await.result(filter.apply(mockRequest, next))
       result ==== mockResponse
@@ -116,11 +124,22 @@ class RateLimitingFilterSpec extends UnitSpecification with NoTimeConversions {
       mockRollout.isActiveForId(any, any) returns false
       mockAuthenticatorService.cacheKeyAndSessionFor(any, any) returns Future.value(CacheKeyAndSession(Some("inconsequential"), mockSession))
       next.apply(any) returns Future.exception(new RuntimeException)
+      mockRequest.path returns "/some-path"
 
       def result = Await.result(filter.apply(mockRequest, next))
 
       result must throwA[RuntimeException]
       there was one(next).apply(any)
+    }
+
+    "call the next service if the route is an internal one" in new Context {
+      next.apply(any) returns Future.value(mockResponse)
+      mockRequest.path returns "/-/health"
+
+      val result = Await.result(filter.apply(mockRequest, next))
+
+      there was no(mockAuthenticatorService).cacheKeyAndSessionFor(any, any)
+      result ==== mockResponse
     }
   }
 }

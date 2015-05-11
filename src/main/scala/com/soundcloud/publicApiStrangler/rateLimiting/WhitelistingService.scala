@@ -88,3 +88,4 @@ class WhitelistingService(zookeeperClient: CuratorFramework, applicationName: St
     whitelistCache.contains(client)
   }
 }
+
