@@ -98,7 +98,6 @@ class CacheBasedRateLimiterSpec extends UnitSpecification with NoTimeConversions
           case RateLimitStatus.Reached(4, Some(_)) => ok
         }
       }
-
     }
   }
 }

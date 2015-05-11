@@ -22,8 +22,8 @@ class RateLimiterCacheMediator(cache: Cache, rateLimit: RateLimit, apiClient: Ap
     cache.get(clientSpecificRateLimit.expiryCacheKey).map(_.map(deserializeTime))
   }
 
-  def updateRequestCount: Future[Long] = {
-    cache.incr(clientSpecificRateLimit.counterCacheKey).map(_.get)
+  def updateRequestCount: Future[Option[Long]] = {
+    cache.incr(clientSpecificRateLimit.counterCacheKey)
   }
 
   def establish: Future[Time] = {
@@ -36,8 +36,8 @@ class RateLimiterCacheMediator(cache: Cache, rateLimit: RateLimit, apiClient: Ap
 
   def markAsReached: Future[Unit] = {
     for {
-      e <- expiry
-      _ <- cache.set(clientSpecificRateLimit.reachedCacheKey, "reached", e.get)
+      Some(e) <- expiry
+      _ <- cache.set(clientSpecificRateLimit.reachedCacheKey, "reached", e)
     } yield ()
   }
 }

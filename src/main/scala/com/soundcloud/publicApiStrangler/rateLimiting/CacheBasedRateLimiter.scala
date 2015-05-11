@@ -23,14 +23,13 @@ class CacheBasedRateLimiter(
           case Some(number) if number == rateLimit.maximumNrOfRequests =>
             Future.join(mediator.expiry, mediator.markAsReached).map { case (expiry, _) =>
               val status = RateLimitStatus.Reached(rateLimit.maximumNrOfRequests, expiry)
-              val time = LocalDateTime.now
               listener.notify(RateLimitEvent.Reached(status, apiClient))
               listener.notify(RateLimitEvent.Overflowing(apiClient))
               status
             }
           case Some(_) =>
             Future.join(mediator.updateRequestCount, mediator.expiry).map { case (updatedRequestCount, expiry) =>
-              RateLimitStatus.Advancing(rateLimit.maximumNrOfRequests - updatedRequestCount, expiry)
+              RateLimitStatus.Advancing(rateLimit.maximumNrOfRequests - updatedRequestCount.getOrElse(1L), expiry)
             }
           case None =>
             mediator.establish.map { expiry =>
