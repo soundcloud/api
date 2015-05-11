@@ -57,7 +57,9 @@ class Rollout(zookeeperCuratorClient: CuratorFramework, zookeeperBaseFeaturesPat
     }.toMap
   }
 
-  def isActive(featureName: String): Boolean = Random.nextInt(100) <= activationForFeature(featureName)
+  def isActive(featureName: String): Boolean = {
+    Random.nextInt(100) < activationForFeature(featureName)
+  }
 
   def isActiveForId(featureName: String, idUrn: Option[Urn]): Boolean = {
     activationForFeature(featureName) == 100 || idUrn.exists { case Urn(_, _, id) =>

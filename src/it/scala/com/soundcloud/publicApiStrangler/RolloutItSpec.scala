@@ -11,6 +11,7 @@ import com.soundcloud.scalakit.Urn
 import com.soundcloud.scalakit.test.{UnitSpecification, VerifiedMocks}
 import com.soundcloud.scalakit.utilities.DebugUtilities.Tappable
 import com.twitter.io.Charsets
+import org.specs2.matcher.MatchResult
 
 import scala.util.Random
 
@@ -18,6 +19,7 @@ class RolloutItSpec extends UnitSpecification {
 
   trait FeaturesContext extends VerifiedMocks {
     val config = new BazookaConfig
+
     val factory = new ZookeeperClientFactory
     val zookeeperClient = factory.create(config)
     val rollout = RolloutBuilder.build(zookeeperClient, config.getApplicationName)
@@ -27,6 +29,10 @@ class RolloutItSpec extends UnitSpecification {
 
   trait NewFeatureContext extends FeaturesContext {
     val featureName = newFeatureName()
+  }
+
+  def ranSufficientNumberOfTimes(f: => Unit): Unit = {
+    (0 to 400).foreach(_ => f)
   }
 
   "returns all the features for the given application" in new FeaturesContext {
@@ -69,7 +75,15 @@ class RolloutItSpec extends UnitSpecification {
 
   "returns true if feature is enabled for 100%" in new NewFeatureContext {
     rollout.activate(featureName, 100)
-    rollout.isActive(featureName) mustEqual true
+    ranSufficientNumberOfTimes {
+      rollout.isActive(featureName) mustEqual true
+    }
+  }
+
+  "distributes the activation in accordance with the configured percentage" in new NewFeatureContext {
+    rollout.activate(featureName, 43)
+    val activations = (0 to 400).map(_ => rollout.isActive(featureName))
+    activations.percentageSatisfying(_ == true) must beCloseTo(43, delta = 7)
   }
 
   "is able to activate a feature multiple times with different percentages" in new NewFeatureContext {
@@ -79,8 +93,10 @@ class RolloutItSpec extends UnitSpecification {
     rollout.isActive(featureName) mustEqual false
   }
 
-  "is disabled if feature doesn't exist" in new NewFeatureContext {
-    rollout.isActive(newFeatureName()) mustEqual false
+  "is disabled if feature doesn't exist or has an activation of 0 percent" in new NewFeatureContext {
+    ranSufficientNumberOfTimes {
+      rollout.isActive(newFeatureName()) mustEqual false
+    }
   }
 
   "picks up changes done directly in zookeeper" in new NewFeatureContext {
