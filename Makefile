@@ -10,7 +10,7 @@ run: _dev_docker_compose
 precheckin: test it-test
 
 it-test: _dev_docker_compose
-	$(LOAD_ENV) $(LOAD_IT_ENV) $(SBT) it:test
+	$(LOAD_ENV) $(LOAD_INTEGRATION_TESTS_ENV) $(SBT) it:test
 
 test:
 	$(SBT) test
