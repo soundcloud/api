@@ -82,9 +82,9 @@ object App
 
   private val prometheusLabelsSafeGuard = new PrometheusLabelsSafeGuard(cache, config, config.getApplicationResourceName)
   private val rateLimitMetrics = new RateLimitMetrics(prometheusLabelsSafeGuard, config)
-  private val rateLimitEventListener = new RateLimitEventListener(rateLimitMetrics)
+  private val rateLimitEventListeners = new TelemetryRateLimitEventListener(rateLimitMetrics) :: Nil
 
-  private val rateLimiter = RateLimiter.from(cache, config, rateLimitEventListener)
+  private val rateLimiter = RateLimiter.from(cache, config, rateLimitEventListeners)
 
   private val groupController = {
     val forwardHandler = new ForwardRequestHandler(publicApiClient)

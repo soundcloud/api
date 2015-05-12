@@ -11,9 +11,9 @@ trait RateLimiter {
 }
 
 object RateLimiter {
-  def from(cache: Cache, config: Config, listener: EventListener[RateLimitEvent]): RateLimiter = {
+  def from(cache: Cache, config: Config, listeners: Seq[EventListener[RateLimitEvent]]): RateLimiter = {
     val rateLimits = RateLimit.General.parse(config.get("GENERAL_RATE_LIMITS"))
-    val rateLimiters = rateLimits.map(new CacheBasedRateLimiter(cache, _, config.getApplicationResourceName, listener))
+    val rateLimiters = rateLimits.map(new CacheBasedRateLimiter(cache, _, config.getApplicationResourceName, listeners))
     rateLimiters.head // We have just one atm
   }
 }

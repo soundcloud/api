@@ -57,8 +57,8 @@ class RateLimitingFilter(
           rateLimiter.advanceRateLimitStatus(apiClient).map(_ => Pass)
         case (_, _, Enforcing) =>
           rateLimiter.advanceRateLimitStatus(apiClient).map {
-            case s @ RateLimitStatus.Reached(_, _) => Block(s)
-            case _                                 => Pass
+            case s: RateLimitStatus.Reached => Block(s)
+            case _                          => Pass
           }
       }
       verdict handle {
