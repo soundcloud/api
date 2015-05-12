@@ -5,10 +5,11 @@ import com.soundcloud.bff.web.UserAuthentication
 import com.soundcloud.jvmkit.FailsafeUserSession
 import com.soundcloud.jvmkit.logging.SoundCloudLoggerFactory
 import com.soundcloud.publicApiStrangler.features.{Features, Rollout}
+import com.soundcloud.ratelimiting.whitelisting.ApplicationLevelWhitelistProxy
 import com.soundcloud.scalakit.UserSession
 import com.twitter.finagle.http.{Request, Response}
 import com.twitter.finagle.{Service, SimpleFilter}
-import com.twitter.util.{Future}
+import com.twitter.util.Future
 import org.jboss.netty.handler.codec.http.HttpResponseStatus
 
 import scala.util.control.NonFatal
@@ -17,7 +18,7 @@ class RateLimitingFilter(
   rateLimiter: RateLimiter,
   userAuthentication: UserAuthentication,
   rollout: Rollout,
-  whitelistingService: WhitelistingService
+  whitelistProxy: ApplicationLevelWhitelistProxy
 ) extends SimpleFilter[Request, Response] {
 
   val logger = SoundCloudLoggerFactory.getLogger(this.getClass)
@@ -90,7 +91,7 @@ class RateLimitingFilter(
 
   object Whitelisted {
     def unapply(apiClient: ApiClient): Boolean = {
-      whitelistingService.hasClientWhitelisted(apiClient.urn)
+      whitelistProxy.hasClientWhitelisted(apiClient.urn)
     }
   }
 

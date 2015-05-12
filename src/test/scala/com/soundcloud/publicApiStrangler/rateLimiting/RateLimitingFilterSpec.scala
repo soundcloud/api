@@ -6,6 +6,7 @@ import com.soundcloud.bff.web.UserAuthentication
 import com.soundcloud.jvmkit.UserSession
 import com.soundcloud.publicApiStrangler.features.{Features, Rollout}
 import com.soundcloud.publicApiStrangler.standards.PublicApiStandards._
+import com.soundcloud.ratelimiting.whitelisting.ApplicationLevelWhitelistProxy
 import com.soundcloud.scalakit.Urn
 import com.soundcloud.scalakit.test.UnitSpecification
 import com.twitter.finagle.Service
@@ -41,7 +42,7 @@ class RateLimitingFilterSpec extends UnitSpecification with NoTimeConversions {
 
       val mockRollout = mock[Rollout]
 
-      val mockWhitelistingService = mock[WhitelistingService]
+      val mockWhitelistingService = mock[ApplicationLevelWhitelistProxy]
 
       val filter = new RateLimitingFilter(mockRateLimiter, mockUserAuthentication, mockRollout, mockWhitelistingService)
     }

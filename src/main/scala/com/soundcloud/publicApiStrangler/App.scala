@@ -22,6 +22,7 @@ import com.soundcloud.publicApiStrangler.mapper.waveform.WaveformMapper
 import com.soundcloud.publicApiStrangler.rateLimiting._
 import com.soundcloud.publicApiStrangler.support._
 import com.soundcloud.publicApiStrangler.zookeeper.ZookeeperClientFactory
+import com.soundcloud.ratelimiting.whitelisting.{WhitelistZookeeperPath, ApplicationLevelWhitelistProxy}
 import com.soundcloud.scalakit.ResourceName
 import com.soundcloud.service.component._
 import com.twitter.finagle.http.Request
@@ -77,7 +78,7 @@ object App
   private val zookeeperClientFactory = new ZookeeperClientFactory
   private val zookeeperClient = zookeeperClientFactory.create(config)
 
-  private val whitelistingService = new WhitelistingService(zookeeperClient, config.getApplicationName)
+  private val whitelistingProxy = new ApplicationLevelWhitelistProxy(zookeeperClient, WhitelistZookeeperPath.Base / config.getApplicationName)
 
   private val prometheusLabelsSafeGuard = new PrometheusLabelsSafeGuard(cache, config, config.getApplicationResourceName)
   private val rateLimitMetrics = new RateLimitMetrics(prometheusLabelsSafeGuard, config)
