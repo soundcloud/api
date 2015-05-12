@@ -32,3 +32,5 @@ run: _dev_docker_compose
 _dev_docker_compose:
 	docker-compose up -d
 
+compile:
+	$(SBT) compile
