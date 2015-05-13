@@ -165,7 +165,6 @@ object App
     new ExceptionFilter[Request],
     new AcceptOnlyJsonRequestFilter(Set("/crossdomain.xml")),
     new ContentAuthorizationFilter(authorizeContent),
-    new RateLimitingFilter(rateLimiter, userAuthentication, rollout, whitelistingProxy),
     new DefaultResponseHeadersFilter
   )
 
