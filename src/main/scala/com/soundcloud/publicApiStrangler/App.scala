@@ -8,7 +8,7 @@ import com.soundcloud.follows.FollowsComponent
 import com.soundcloud.jvmkit.config.ConfigConvention
 import com.soundcloud.publicApiStrangler.authorization.{AuthorizeHttpResponse, ContentAuthorizationFilter}
 import com.soundcloud.publicApiStrangler.controller._
-import com.soundcloud.publicApiStrangler.features.{RolloutBuilder, RolloutController}
+import com.soundcloud.publicApiStrangler.features.RolloutBuilder
 import com.soundcloud.publicApiStrangler.headers.DefaultResponseHeadersFilter
 import com.soundcloud.publicApiStrangler.mapper.liebling.LikeCountMapper
 import com.soundcloud.publicApiStrangler.mapper.purchaselink.TrackPurchaseLinkMapper
