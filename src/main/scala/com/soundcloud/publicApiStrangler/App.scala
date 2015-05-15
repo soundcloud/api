@@ -106,7 +106,6 @@ object App
   }
 
   val rollout = RolloutBuilder.build(zookeeperClient, config.getApplicationName)
-  private val rolloutController = new RolloutController(rollout)
 
   private val userFollowController = new UserFollowController(
     userAuthentication,
@@ -170,7 +169,6 @@ object App
 
   override val controllers = Set(
     timelineController,
-    rolloutController,
     groupController,
     trackStreamsController,
     userFollowController,
