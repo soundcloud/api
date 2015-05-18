@@ -20,22 +20,22 @@ class PublishingDecisionSpec extends UnitSpecification {
 
     "decide not to publish if the event is an Overflowing event" in new Context {
       val event = RateLimitEvent.Overflowing(someClient)
-      PublishingDecision(event) ==== Left(())
+      PublishingDecision.shouldPublish(event) ==== PublishingDecision.DoNotPublish
     }
 
     "decide not to publish if the event is a PercentageReached with a non-checkpoint percentage of the limit" in new Context {
-      PublishingDecision(event(17)) ==== Left(())
+      PublishingDecision.shouldPublish(event(17)) ==== PublishingDecision.DoNotPublish
     }
 
     "decide to publish if the event is a PercentageReached with a checkpoint percentage of the limit" in new Context {
       val events = event(75) :: event(90) :: Nil
-      (events map PublishingDecision) ==== (events map Right.apply)
+      (events map PublishingDecision.shouldPublish) ==== (events map PublishingDecision.DoPublish.apply)
     }
 
     "decide to publish if the event is a LimitReached event" in new Context {
       val event = RateLimitEvent.LimitReached(
         RateLimitStatus.Reached(100, Duration.fromSeconds(50), resetTime), someClient)
-      PublishingDecision(event) ==== Right(event)
+      PublishingDecision.shouldPublish(event) ==== PublishingDecision.DoPublish(event)
     }
 
   }

@@ -14,9 +14,10 @@ object ReportingRateLimitEventListener {
 class ReportingRateLimitEventListener(service: RateLimitEventsClient) extends EventListener[RateLimitEvent] {
 
   def notify(event: RateLimitEvent): Unit = FuturePool.unboundedPool {
-    PublishingDecision(event).right.foreach { reached =>
-      service.publish(ReportingRateLimitEventListener.session, EventMapper(reached, event.occurredAt))
-    }
+    for {
+      eventToBePublished <- PublishingDecision.shouldPublish(event)
+      mappedEvent         = EventMapper(eventToBePublished, event.occurredAt)
+    } yield service.publish(ReportingRateLimitEventListener.session, mappedEvent)
   }
 
 }
