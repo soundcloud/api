@@ -1,7 +1,5 @@
 package com.soundcloud.publicApiStrangler.rateLimiting
 
-import java.util.concurrent.Executors
-
 import com.soundcloud.jvmkit.logging.SoundCloudLoggerFactory
 import com.twitter.util.FuturePool
 import play.api.libs.json.Json
@@ -10,9 +8,7 @@ class TelemetryRateLimitEventListener(rateLimitMetrics: RateLimitMetrics) extend
 
   private val logger = SoundCloudLoggerFactory.getLogger(this.getClass)
 
-  private val bulkheaded = FuturePool(Executors.newFixedThreadPool(4))
-
-  def notify(event: RateLimitEvent): Unit = bulkheaded {
+  def notify(event: RateLimitEvent): Unit = FuturePool.unboundedPool {
     event match {
       case RateLimitEvent.LimitReached(status, client)  =>
         rateLimitMetrics.incrementRateLimitReachedCounter(client)
