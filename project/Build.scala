@@ -1,10 +1,8 @@
-import sbt.Keys._
-import sbt._
-
 import com.typesafe.sbt.packager.archetypes.JavaAppPackaging
 import io.gatling.sbt.GatlingPlugin
 import net.virtualvoid.sbt.graph.Plugin.graphSettings
-import com.typesafe.sbt.SbtNativePackager.autoImport._
+import sbt.Keys._
+import sbt._
 
 object JvmConfiguration {
   val expectedJavaVersion: String = "1.8"
@@ -44,7 +42,7 @@ object PublicApiStranglerBuild extends Build {
       libraryDependencies ++= Seq(
         "com.soundcloud"     %% "bff"                 % "14.1.0",
         "com.soundcloud"     %% "follows-client"      % "0.0.2",
-        "com.soundcloud"     %% "ratelimitinglib"     % "0.0.5",
+        "com.soundcloud"     %% "ratelimitinglib"     % "0.0.6",
         "com.soundcloud"     %% "sc-services"         % "18.0.5",
         "com.fasterxml.uuid" %  "java-uuid-generator" % "3.1.3",
         "commons-codec"      %  "commons-codec"       % "1.9",

@@ -20,9 +20,11 @@ import com.soundcloud.publicApiStrangler.mapper.timeline.{EntityMapper, EntitySu
 import com.soundcloud.publicApiStrangler.mapper.trackstreams.{TrackStreamJsonResponseMapper, TrackStreamRedirectResponseMapper}
 import com.soundcloud.publicApiStrangler.mapper.waveform.WaveformMapper
 import com.soundcloud.publicApiStrangler.rateLimiting._
+import com.soundcloud.publicApiStrangler.rateLimiting.reporting.ReportingRateLimitEventListener
 import com.soundcloud.publicApiStrangler.support._
 import com.soundcloud.publicApiStrangler.zookeeper.ZookeeperClientFactory
-import com.soundcloud.ratelimiting.whitelisting.{WhitelistZookeeperPath, ApplicationLevelWhitelistProxy}
+import com.soundcloud.ratelimiting.client.RateLimitingEventsClient
+import com.soundcloud.ratelimiting.whitelisting.{ApplicationLevelWhitelistProxy, WhitelistZookeeperPath}
 import com.soundcloud.scalakit.ResourceName
 import com.soundcloud.service.component._
 import com.twitter.finagle.http.Request
@@ -82,7 +84,12 @@ object App
 
   private val prometheusLabelsSafeGuard = new PrometheusLabelsSafeGuard(cache, config, config.getApplicationResourceName)
   private val rateLimitMetrics = new RateLimitMetrics(prometheusLabelsSafeGuard, config)
-  private val rateLimitEventListeners = new TelemetryRateLimitEventListener(rateLimitMetrics) :: Nil
+  private val telemetryRateLimitEventListener = new TelemetryRateLimitEventListener(rateLimitMetrics)
+
+  private val rateLimitEventsClient = RateLimitingEventsClient(config, telemetry)
+  private val reportingRateLimitEventListener = new ReportingRateLimitEventListener(rateLimitEventsClient)
+
+  private val rateLimitEventListeners = telemetryRateLimitEventListener :: reportingRateLimitEventListener :: Nil
 
   private val rateLimiter = RateLimiter.from(cache, config, rateLimitEventListeners)
 
