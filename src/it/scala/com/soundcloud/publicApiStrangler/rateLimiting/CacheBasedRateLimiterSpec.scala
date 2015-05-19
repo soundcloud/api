@@ -2,11 +2,14 @@ package com.soundcloud.publicApiStrangler.rateLimiting
 
 import com.soundcloud.bff.test.UnitSpecification
 import com.soundcloud.jvmkit.config.BazookaConfig
+import com.soundcloud.publicApiStrangler.support.TimeConversions._
+import com.soundcloud.ratelimiting.types.RateLimit
 import com.soundcloud.scalakit.{Urn, ResourceName}
 import com.soundcloud.scalakit.cache.MemcachedClient
 import com.twitter.conversions.time._
 import com.twitter.util.{Duration, Await}
 import org.jboss.netty.buffer.ChannelBuffers
+import org.joda.time.Period
 import org.specs2.matcher.MatchResult
 import org.specs2.time.NoTimeConversions
 
@@ -25,7 +28,7 @@ class CacheBasedRateLimiterSpec extends UnitSpecification with NoTimeConversions
   val config = new BazookaConfig()
 
   val cache = MemcachedClient(config, ResourceName("MEMCACHED_TEST"))
-  val duration = 1L.second
+  val duration = Period.seconds(1)
   val rateLimit = RateLimit.General(duration, 4)
   
   val rateLimiter = new CacheBasedRateLimiter(cache, rateLimit, ResourceName("TEST_APP"), Seq.empty)
@@ -74,7 +77,7 @@ class CacheBasedRateLimiterSpec extends UnitSpecification with NoTimeConversions
 
       "Query for as yet unknown client" in {
         val status = Await.result(rateLimiter.rateLimitStatus(apiClient))
-        status ==== RateLimitStatus.Advancing(0, 4, duration, None)
+        status ==== RateLimitStatus.Advancing(0, 4, duration.toTwitterDuration, None)
       }
 
       "Query for a client that has not reached its limit" in {

@@ -1,8 +1,10 @@
 package com.soundcloud.publicApiStrangler.rateLimiting
 
+import com.soundcloud.ratelimiting.types.RateLimit
 import com.twitter.util._
 import play.api.libs.json.{Json, Writes}
 import com.soundcloud.publicApiStrangler.standards.PublicApiStandards._
+import com.soundcloud.publicApiStrangler.support.TimeConversions._
 
 sealed trait RateLimitStatus {
   def requestCount: Long
@@ -37,13 +39,13 @@ object RateLimitStatus {
 
   object Reached {
     def from(rateLimit: RateLimit)(resetTime: Option[Time]): Reached = {
-      Reached(rateLimit.maximumNrOfRequests, rateLimit.ttl, resetTime)
+      Reached(rateLimit.maximumNrOfRequests, rateLimit.timeWindow.toTwitterDuration, resetTime)
     }
   }
 
   object Advancing {
     def from(rateLimit: RateLimit)(requestCount: Long, resetTime: Option[Time]): Advancing = {
-      Advancing(requestCount, rateLimit.maximumNrOfRequests, rateLimit.ttl, resetTime)
+      Advancing(requestCount, rateLimit.maximumNrOfRequests, rateLimit.timeWindow.toTwitterDuration, resetTime)
     }
   }
 

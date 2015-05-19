@@ -1,9 +1,11 @@
 package com.soundcloud.publicApiStrangler.rateLimiting
 
 import com.soundcloud.jvmkit.ResourceName
+import com.soundcloud.ratelimiting.types.RateLimit
 import com.soundcloud.scalakit.cache.Cache
 import com.twitter.util.{TimeFormat, Time, Future}
 import org.jboss.netty.buffer.ChannelBuffers
+import com.soundcloud.publicApiStrangler.support.TimeConversions._
 
 class RateLimiterCacheMediator(cache: Cache, rateLimit: RateLimit, apiClient: ApiClient, applicationName: ResourceName) {
   import RateLimiterCacheMediator._
@@ -27,7 +29,7 @@ class RateLimiterCacheMediator(cache: Cache, rateLimit: RateLimit, apiClient: Ap
   }
 
   def establish: Future[Time] = {
-    val expiry = Time.now + clientSpecificRateLimit.rateLimit.ttl
+    val expiry = Time.now + clientSpecificRateLimit.rateLimit.timeWindow.toTwitterDuration
     for {
       updatedRequestCount <- cache.add(clientSpecificRateLimit.counterCacheKey, one, expiry)
       _ <- cache.set(clientSpecificRateLimit.expiryCacheKey, serializeTime(expiry))
