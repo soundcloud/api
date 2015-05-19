@@ -25,6 +25,7 @@ class RateLimitingFilterSpec extends UnitSpecification with NoTimeConversions {
 
     trait Context extends Scope {
       val mockRateLimiter = mock[RateLimiter]
+      mockRateLimiter.appliesTo(any).returns(true)
 
       val mockAuthenticatorService = mock[AuthenticatorService]
 
@@ -142,5 +143,17 @@ class RateLimitingFilterSpec extends UnitSpecification with NoTimeConversions {
       there was no(mockAuthenticatorService).cacheKeyAndSessionFor(any, any)
       result ==== mockResponse
     }
+
+    "call the next service if the ratelimiter does not apply to the request route" in new Context {
+      next.apply(any) returns Future.value(mockResponse)
+      mockRequest.path returns "/notapplicable"
+      mockRateLimiter.appliesTo(mockRequest).returns(false)
+
+      val result = Await.result(filter.apply(mockRequest, next))
+
+      there was no(mockAuthenticatorService).cacheKeyAndSessionFor(any, any)
+      result ==== mockResponse
+    }
+
   }
 }
