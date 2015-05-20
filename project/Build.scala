@@ -46,7 +46,6 @@ object PublicApiStranglerBuild extends Build {
         "com.soundcloud"     %% "sc-services"         % "18.0.5",
         "com.fasterxml.uuid" %  "java-uuid-generator" % "3.1.3",
         "commons-codec"      %  "commons-codec"       % "1.9",
-        "com.rabbitmq"       %  "amqp-client"         % "3.5.1",
         "org.apache.curator" % "curator-framework"    % "2.7.1",
         "org.apache.curator" % "curator-recipes"      % "2.7.1"
       ).map(_.exclude("org.slf4j", "slf4j-jdk14"))
