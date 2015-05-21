@@ -24,7 +24,7 @@ class RateLimitingFilter(
   val logger = SoundCloudLoggerFactory.getLogger(this.getClass)
 
   def apply(request: Request, next: Service[Request, Response]): Future[Response] = {
-    bypassForInternalRoutes(request, next) getOrElse {
+    bypassForInapplicableRoutes(request, next) getOrElse {
       userAuthentication.withUserSession(new BffRequest(request)) { session =>
         Verdict.on(session).flatMap {
           case Pass =>
@@ -36,10 +36,11 @@ class RateLimitingFilter(
     }
   }
 
-  def bypassForInternalRoutes(request: Request, next: Service[Request, Response]): Option[Future[Response]] = {
+  def bypassForInapplicableRoutes(request: Request, next: Service[Request, Response]): Option[Future[Response]] = {
     request match {
-      case InternalRoute() => Some(next(request))
-      case _               => None
+      case InternalRoute()      => Some(next(request))
+      case RateLimiterApplies() => None
+      case _                    => Some(next(request))
     }
   }
 
@@ -100,4 +101,11 @@ class RateLimitingFilter(
       request.path.startsWith("/-/")
     }
   }
+
+  object RateLimiterApplies {
+    def unapply(request: Request): Boolean = {
+      rateLimiter.appliesTo(request)
+    }
+  }
+
 }

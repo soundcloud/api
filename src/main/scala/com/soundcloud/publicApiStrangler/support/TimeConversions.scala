@@ -10,6 +10,12 @@ object TimeConversions {
     }
   }
 
+  implicit class RichJodaPeriod(val p: org.joda.time.Period) extends AnyVal {
+    def toTwitterDuration: com.twitter.util.Duration = {
+      com.twitter.util.Duration.fromSeconds(p.toStandardSeconds.getSeconds)
+    }
+  }
+
   implicit class RichTwitterTime(val t: com.twitter.util.Time) extends AnyVal {
     def toJodaDateTime: org.joda.time.DateTime = {
       new org.joda.time.DateTime(t.inMilliseconds, DateTimeZone.UTC)

@@ -1,17 +1,18 @@
 package com.soundcloud.publicApiStrangler.rateLimiting
 
-import com.soundcloud.scalakit.{ResourceName, Urn}
+import com.soundcloud.ratelimiting.types.RateLimit
 import com.soundcloud.scalakit.test.UnitSpecification
+import com.soundcloud.scalakit.{ResourceName, Urn}
+import org.joda.time.Period
 import org.specs2.time.NoTimeConversions
 
 class ClientSpecificRateLimitSpec extends UnitSpecification with NoTimeConversions {
-  import com.twitter.conversions.time.longToTimeableNumber
 
   "A ClientSpecificRateLimit" should {
 
     val limit = ClientSpecificRateLimit(
       ApiClient(Urn("soundcloud", "applications", "21329")),
-      RateLimit.General(3L.seconds, 300),
+      RateLimit.General(Period.seconds(3), 300),
       ResourceName("wobbly")
     )
 

@@ -1,17 +1,22 @@
 package com.soundcloud.publicApiStrangler.rateLimiting
 
+import com.soundcloud.ratelimiting.types.RateLimit
 import com.soundcloud.scalakit.ResourceName
 import com.soundcloud.scalakit.cache.Cache
+import com.twitter.finagle.http.Request
 import com.twitter.util.Future
 
 class CacheBasedRateLimiter(cache: Cache,
-                             val rateLimit: RateLimit,
-                             applicationName: ResourceName,
-                             listeners: Seq[EventListener[RateLimitEvent]]
-                             ) extends RateLimiter {
+                            rateLimit: RateLimit,
+                            applicationName: ResourceName,
+                            listeners: Seq[EventListener[RateLimitEvent]]) extends RateLimiter {
 
   val Reached = RateLimitStatus.Reached.from(rateLimit) _
   val Advancing = RateLimitStatus.Advancing.from(rateLimit) _
+
+  def appliesTo(request: Request) = {
+    rateLimit.appliesTo(request.path)
+  }
 
   def advanceRateLimitStatus(apiClient: ApiClient): Future[RateLimitStatus] = {
     val mediator = new RateLimiterCacheMediator(cache, rateLimit, apiClient, applicationName)
