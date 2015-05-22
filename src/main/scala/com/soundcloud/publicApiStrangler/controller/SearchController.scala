@@ -3,12 +3,15 @@ package com.soundcloud.publicApiStrangler.controller
 import com.soundcloud.bff.Future
 import com.soundcloud.bff.finagle.{Request, ResponseBuilder}
 import com.soundcloud.bff.nextbff.pagination.PageBuilder
+import com.soundcloud.bff.nextbff.repository.RepositoryException
 import com.soundcloud.bff.web.{BffInjectionBasedController, UserAuthentication}
 import com.soundcloud.publicApiStrangler.features.Rollout
 import com.soundcloud.publicApiStrangler.mapper.search.SearchMapper
 import com.soundcloud.publicApiStrangler.mapping.search.SearchDispatcherRequest
 import com.soundcloud.publicApiStrangler.support.DispatchToMothershipHandler
+import com.soundcloud.scalakit.finagle.http.BadRequestStatus
 import com.twitter.finagle.http.ParamMap
+import com.twitter.util.Try
 
 /**
  * Redirects search queries on to search-dispatcher and fetches meta data.
@@ -76,12 +79,20 @@ class SearchController(userAuthentication: UserAuthentication,
   private def search(request: Request, searchRequest: SearchDispatcherRequest, featureName: String): Future[ResponseBuilder] = {
     userAuthentication.withUserSession(request) { session =>
       if (rollout.isActive(featureName)) {
+
+        val o = Try(request.params("offset").toInt)
+        val l = Try(request.params("limit").toInt)
+        if (o.isThrow || l.isThrow) return Future(render.badRequest)
+
         val page = PageBuilder(request, baseUrl)(searchRequest)
           .allowExtraParams(searchRequest.paginationParams + SearchMapper.LinkedPartitioning)
           .buildOffsetBased()
         searchMapper.materialize(session, page).map {
           case Some(info) => render.json(info)
           case _ => render.notFound
+        } handle {
+          case RepositoryException(BadRequestStatus, _) =>
+            render.badRequest
         }
       }
       else {
