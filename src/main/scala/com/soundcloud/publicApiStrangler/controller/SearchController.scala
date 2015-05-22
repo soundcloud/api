@@ -11,6 +11,7 @@ import com.soundcloud.publicApiStrangler.mapping.search.SearchDispatcherRequest
 import com.soundcloud.publicApiStrangler.support.DispatchToMothershipHandler
 import com.soundcloud.scalakit.finagle.http.BadRequestStatus
 import com.twitter.finagle.http.ParamMap
+import com.twitter.util.Try
 
 /**
  * Redirects search queries on to search-dispatcher and fetches meta data.
@@ -78,21 +79,20 @@ class SearchController(userAuthentication: UserAuthentication,
   private def search(request: Request, searchRequest: SearchDispatcherRequest, featureName: String): Future[ResponseBuilder] = {
     userAuthentication.withUserSession(request) { session =>
       if (rollout.isActive(featureName)) {
-        try {
-          val page = PageBuilder(request, baseUrl)(searchRequest)
-            .allowExtraParams(searchRequest.paginationParams + SearchMapper.LinkedPartitioning)
-            .buildOffsetBased()
-          searchMapper.materialize(session, page).map {
-            case Some(info) => render.json(info)
-            case _ => render.notFound
-          } handle {
-            case RepositoryException(BadRequestStatus, _) =>
-              render.badRequest
-          }
-        } catch {
-          // buildOffsetBased throws a NumberFormatException if offset/limit params are empty/invalid.
-          case _: NumberFormatException =>
-            Future.value(render.badRequest)
+
+        val o = Try(request.params("offset").toInt)
+        val l = Try(request.params("limit").toInt)
+        if (o.isThrow || l.isThrow) return Future(render.badRequest)
+
+        val page = PageBuilder(request, baseUrl)(searchRequest)
+          .allowExtraParams(searchRequest.paginationParams + SearchMapper.LinkedPartitioning)
+          .buildOffsetBased()
+        searchMapper.materialize(session, page).map {
+          case Some(info) => render.json(info)
+          case _ => render.notFound
+        } handle {
+          case RepositoryException(BadRequestStatus, _) =>
+            render.badRequest
         }
       }
       else {
