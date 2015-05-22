@@ -124,21 +124,44 @@ class SearchControllerSpec extends InjectionBasedControllerSpecification {
     }
 
     "Pagination error handling" >> {
-      "400 when offset is junk" in new Context {
+      "200 when no pagination params" in new Context {
         when(rolloutMock.isActive(anyString)).thenReturn(true)
 
         endpoints.foreach { case (apiEndPoint, dispatcherRequest) =>
-          val response = get(controller, apiEndPoint, Map("q" -> "foo", "offset" -> "not_a_number", "limit" -> "1"), Map("Host" -> "api.soundcloud.com"))
+          val request = com.twitter.finagle.http.Request(apiEndPoint.s, queryParams.toSeq: _*)
+          val query = dispatcherRequest(request)
+          val page = OffsetBasedPage(query, "http://api.soundcloud.com", apiEndPoint, queryParams, 0, 10)
+
+          when(verified(searchMapperMock).materialize(anonymousSession, page))
+            .thenReturn(Future(Some(searchMock)))
+
+          val response = get(controller, apiEndPoint, Map("q" -> "foo"), Map("Host" -> "api.soundcloud.com"))
+          response.code ==== 200
+          doesNotForward(response)
+        }
+
+      }
+
+      "400 when offset/limit is junk" in new Context {
+        when(rolloutMock.isActive(anyString)).thenReturn(true)
+        for {
+          (apiEndPoint, dispatcherRequest) <- endpoints
+          param <- Seq("offset", "limit")
+        } {
+          val response = get(controller, apiEndPoint, Map("q" -> "foo", param -> "not_a_number"), Map("Host" -> "api.soundcloud.com"))
           response.code ==== 400
           doesNotForward(response)
         }
       }
 
-      "400 when limit is junk" in new Context {
+      "400 when limit/offset is present, but empty" in new Context {
         when(rolloutMock.isActive(anyString)).thenReturn(true)
 
-        endpoints.foreach { case (apiEndPoint, dispatcherRequest) =>
-          val response = get(controller, apiEndPoint, Map("q" -> "foo", "offset" -> "0", "limit" -> "not_a_number"), Map("Host" -> "api.soundcloud.com"))
+        for {
+          (apiEndPoint, dispatcherRequest) <- endpoints
+          param <- Seq("offset", "limit")
+        } {
+          val response = get(controller, apiEndPoint, Map("q" -> "foo", "offset" -> ""), Map("Host" -> "api.soundcloud.com"))
           response.code ==== 400
           doesNotForward(response)
         }
