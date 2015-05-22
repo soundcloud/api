@@ -6,7 +6,7 @@
 GITHUB_COMMIT="https://github.com/soundcloud/public-api-strangler/commit/${GIT_SHA}/"
 
 SLACKDATA=$(cat <<EOF
-"slog: Deployed *<https://github.com/soundcloud/public-api-strangler/|public-api-strangler>* build *<${BUILD_URL}|${PIPELINE_NUMBER}>* version *<${GITHUB_COMMIT}|${GIT_SHA}>* to bazooka $1"
+"slog: Deployed *<https://github.com/soundcloud/public-api-strangler/|#public-api-strangler>* build *<${BUILD_URL}|${PIPELINE_NUMBER}>* version *<${GITHUB_COMMIT}|${GIT_SHA}>* to bazooka $1"
 EOF
 )
 
