@@ -42,7 +42,7 @@ object PublicApiStranglerBuild extends Build {
       libraryDependencies ++= Seq(
         "com.soundcloud"     %% "bff"                 % "14.2.0",
         "com.soundcloud"     %% "follows-client"      % "0.0.2",
-        "com.soundcloud"     %% "ratelimitinglib"     % "0.0.9",
+        "com.soundcloud"     %% "ratelimitinglib"     % "0.0.11",
         "com.soundcloud"     %% "sc-services"         % "18.0.5",
         "com.fasterxml.uuid" %  "java-uuid-generator" % "3.1.3",
         "commons-codec"      %  "commons-codec"       % "1.9",

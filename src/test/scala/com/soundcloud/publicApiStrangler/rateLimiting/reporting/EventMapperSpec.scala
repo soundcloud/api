@@ -1,41 +1,43 @@
 package com.soundcloud.publicApiStrangler.rateLimiting.reporting
 
-import com.soundcloud.publicApiStrangler.rateLimiting.RateLimitEvent.{PercentageReached, LimitReached}
+import com.soundcloud.publicApiStrangler.rateLimiting.RateLimitEvent.{LimitReached, PercentageReached}
 import com.soundcloud.publicApiStrangler.rateLimiting.{ApiClient, RateLimitStatus}
-import com.soundcloud.ratelimiting.events
-import com.soundcloud.ratelimiting.types
+import com.soundcloud.publicApiStrangler.support.TimeConversions._
+import com.soundcloud.ratelimiting.{events, types}
+import com.soundcloud.ratelimiting.types.{RateLimitIdentity, RateLimit}
 import com.soundcloud.scalakit.Urn
 import com.soundcloud.scalakit.test.UnitSpecification
-import com.twitter.util.{Time, Duration}
-import org.joda.time.{Period, DateTime}
-import com.soundcloud.publicApiStrangler.support.TimeConversions._
+import com.twitter.util.Time
+import org.joda.time.{DateTime, Period}
 
 class EventMapperSpec extends UnitSpecification {
 
   "EventMapper" should {
 
-    "map a strangler LimitReached event to the corresponding ratelimitinglib event" in {
+    trait Context extends Scope {
       val resetTime = Time.now
       val occurredAt = DateTime.now()
       val testApp = Urn("soundcloud", "applications", "test-app")
+      val rateLimit = RateLimit.General(Period.seconds(40), 200)
+      val rateLimitIdentity = RateLimitIdentity.forRateLimit(rateLimit)
+    }
+
+    "map a strangler LimitReached event to the corresponding ratelimitinglib event" in new Context {
       val limitReached = LimitReached(
-        RateLimitStatus.Reached(200, Duration.fromSeconds(40), Some(resetTime)),
+        RateLimitStatus.Reached(rateLimit, Some(resetTime)),
         ApiClient(testApp))
 
       val result = EventMapper(limitReached, occurredAt)
       result ==== events.Event(
         occurredAt,
         Urn("soundcloud", "systems", "public-api-strangler"),
-        events.LimitReached(types.ApiClient(testApp), types.RateLimit.General(Period.seconds(40), 200), Some(resetTime.toJodaDateTime))
+        events.LimitReached(types.ApiClient(testApp), rateLimitIdentity, Some(resetTime.toJodaDateTime))
       )
     }
 
-    "map a strangler PercentageReached event to the corresponding ratelimitinglib CheckpointReached event" in {
-      val resetTime = Time.now
-      val occurredAt = DateTime.now()
-      val testApp = Urn("soundcloud", "applications", "test-app")
+    "map a strangler PercentageReached event to the corresponding ratelimitinglib CheckpointReached event" in new Context {
       val limitReached = PercentageReached(
-        RateLimitStatus.Advancing(100, 200, Duration.fromSeconds(40), Some(resetTime)),
+        RateLimitStatus.Advancing(rateLimit, 100, Some(resetTime)),
         ApiClient(testApp))
 
       val result = EventMapper(limitReached, occurredAt)
@@ -44,7 +46,7 @@ class EventMapperSpec extends UnitSpecification {
         Urn("soundcloud", "systems", "public-api-strangler"),
         events.CheckpointReached(
           types.ApiClient(testApp),
-          types.RateLimit.General(Period.seconds(40), 200),
+          rateLimitIdentity,
           Some(resetTime.toJodaDateTime),
           100
         )

@@ -1,9 +1,11 @@
 package com.soundcloud.publicApiStrangler.rateLimiting.reporting
 
 import com.soundcloud.publicApiStrangler.rateLimiting.{ApiClient, RateLimitEvent, RateLimitStatus}
+import com.soundcloud.ratelimiting.types.RateLimit
 import com.soundcloud.scalakit.Urn
 import com.soundcloud.scalakit.test.UnitSpecification
-import com.twitter.util.{Duration, Time}
+import com.twitter.util.Time
+import org.joda.time.Period
 
 class PublishingDecisionSpec extends UnitSpecification {
 
@@ -12,9 +14,10 @@ class PublishingDecisionSpec extends UnitSpecification {
     trait Context extends Scope {
       val someClient = ApiClient(Urn("soundcloud", "applications", "test-app"))
       val resetTime = Some(Time.now)
+      val rateLimit = RateLimit.General(Period.seconds(50), 100)
       def event(percentage: Int) = {
         RateLimitEvent.PercentageReached(RateLimitStatus.Advancing(
-          percentage, 100, Duration.fromSeconds(50), resetTime), someClient)
+          rateLimit, percentage, resetTime), someClient)
       }
     }
 
@@ -34,7 +37,7 @@ class PublishingDecisionSpec extends UnitSpecification {
 
     "decide to publish if the event is a LimitReached event" in new Context {
       val event = RateLimitEvent.LimitReached(
-        RateLimitStatus.Reached(100, Duration.fromSeconds(50), resetTime), someClient)
+        RateLimitStatus.Reached(rateLimit, resetTime), someClient)
       PublishingDecision.shouldPublish(event) ==== PublishingDecision.DoPublish(event)
     }
 

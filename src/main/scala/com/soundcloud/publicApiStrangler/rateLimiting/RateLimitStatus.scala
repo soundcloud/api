@@ -1,36 +1,32 @@
 package com.soundcloud.publicApiStrangler.rateLimiting
 
-import com.soundcloud.ratelimiting.types.RateLimit
-import com.twitter.util._
-import play.api.libs.json.{Json, Writes}
 import com.soundcloud.publicApiStrangler.standards.PublicApiStandards._
+import com.soundcloud.ratelimiting.types.{RateLimitIdentity, RateLimit}
 import com.soundcloud.publicApiStrangler.support.TimeConversions._
 
+import com.twitter.util._
+import play.api.libs.json.{Json, Writes}
+import com.soundcloud.ratelimiting.events.JsonProtocol._
+
 sealed trait RateLimitStatus {
+  def rateLimit: RateLimit
   def requestCount: Long
-  def maxNrOfRequests: Long
-  def duration: Duration
+  lazy val maxNrOfRequests: Long = rateLimit.maximumNrOfRequests
+  lazy val duration: Duration = rateLimit.timeWindow.toTwitterDuration
   def resetTime: Option[Time]
   def percentageUsed: Int
 }
 
 object RateLimitStatus {
 
-  case class Reached(
-                      maxNrOfRequests: Long,
-                      duration: Duration,
-                      resetTime: Option[Time]) extends RateLimitStatus {
+  case class Reached(rateLimit: RateLimit, resetTime: Option[Time]) extends RateLimitStatus {
 
     val requestCount = maxNrOfRequests
     val percentageUsed = 100
 
   }
 
-  case class Advancing(
-                        requestCount: Long,
-                        maxNrOfRequests: Long,
-                        duration: Duration,
-                        resetTime: Option[Time]) extends RateLimitStatus {
+  case class Advancing(rateLimit: RateLimit, requestCount: Long, resetTime: Option[Time]) extends RateLimitStatus {
 
     val remainingRequests = maxNrOfRequests - requestCount
     val percentageUsed = (requestCount / maxNrOfRequests).toInt
@@ -39,13 +35,13 @@ object RateLimitStatus {
 
   object Reached {
     def from(rateLimit: RateLimit)(resetTime: Option[Time]): Reached = {
-      Reached(rateLimit.maximumNrOfRequests, rateLimit.timeWindow.toTwitterDuration, resetTime)
+      Reached(rateLimit, resetTime)
     }
   }
 
   object Advancing {
     def from(rateLimit: RateLimit)(requestCount: Long, resetTime: Option[Time]): Advancing = {
-      Advancing(requestCount, rateLimit.maximumNrOfRequests, rateLimit.timeWindow.toTwitterDuration, resetTime)
+      Advancing(rateLimit, requestCount, resetTime)
     }
   }
 
