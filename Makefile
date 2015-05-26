@@ -26,9 +26,6 @@ deploy-de:
 deploy-db:
 	HEALTH_PATH=/-/health SCALE_STEP=5 BAZOOKA_APP=public-api-strangler BAZOOKA_ZONE=db INSTANCES=100 PROCESS_TYPE=api python bin/deploy.py
 
-run: _dev_docker_compose
-	$(LOAD_ENV) $(SBT) run
-
 _dev_docker_compose:
 	docker-compose up -d
 
