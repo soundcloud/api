@@ -4,12 +4,14 @@ package com.soundcloud.publicApiStrangler.controller
 import com.soundcloud.bff.Future
 import com.soundcloud.bff.finagle.{Request, ResponseBuilder}
 import com.soundcloud.bff.nextbff.pagination.OffsetBasedPage
+import com.soundcloud.bff.nextbff.repository.RepositoryException
 import com.soundcloud.bff.nextbff.test.JsonMappingMock
 import com.soundcloud.bff.test.InjectionBasedControllerSpecification
 import com.soundcloud.publicApiStrangler.features.Rollout
 import com.soundcloud.publicApiStrangler.mapper.search.SearchMapper
 import com.soundcloud.publicApiStrangler.mapping.search.{Search, SearchDispatcherRequest}
 import com.soundcloud.publicApiStrangler.support.DispatchToMothershipHandler
+import com.soundcloud.scalakit.finagle.http.BadRequestStatus
 import com.soundcloud.scalakit.test.VerifiedMocks
 import org.jboss.netty.handler.codec.http.HttpResponseStatus
 import org.mockito.Mockito.times
@@ -23,6 +25,7 @@ class SearchControllerSpec extends InjectionBasedControllerSpecification {
 
     val controller = new SearchController(fakeUserAuthentication(anonymousSession), searchMapperMock, "http://api.soundcloud.com", rolloutMock, fallbackMock)
 
+    // just so we can distinguish a forwarded request. Typically, this would be 200.
     val forwardStatus = HttpResponseStatus.FOUND.getCode
     val forwardContent = "forwardContent"
 
@@ -31,12 +34,11 @@ class SearchControllerSpec extends InjectionBasedControllerSpecification {
         .returns(Future(new ResponseBuilder().body(forwardContent).status(forwardStatus)))
 
     def stillForwards(response: MockResponse) = {
-      response.code ==== 302
+      response.code ==== forwardStatus
       response.body ==== "forwardContent"
     }
 
     def doesNotForward(response: MockResponse) = {
-      response.code ==== 200
       there was noCallsTo(fallbackMock)
     }
   }
@@ -118,6 +120,68 @@ class SearchControllerSpec extends InjectionBasedControllerSpecification {
         response.code ==== 200
         response.jsonBody ==== searchMock.json
         doesNotForward(response)
+      }
+    }
+
+    "Pagination error handling" >> {
+      "200 when no pagination params" in new Context {
+        when(rolloutMock.isActive(anyString)).thenReturn(true)
+
+        endpoints.foreach { case (apiEndPoint, dispatcherRequest) =>
+          val request = com.twitter.finagle.http.Request(apiEndPoint.s, queryParams.toSeq: _*)
+          val query = dispatcherRequest(request)
+          val page = OffsetBasedPage(query, "http://api.soundcloud.com", apiEndPoint, queryParams, 0, 10)
+
+          when(verified(searchMapperMock).materialize(anonymousSession, page))
+            .thenReturn(Future(Some(searchMock)))
+
+          val response = get(controller, apiEndPoint, Map("q" -> "foo"), Map("Host" -> "api.soundcloud.com"))
+          response.code ==== 200
+          doesNotForward(response)
+        }
+
+      }
+
+      "400 when offset/limit is junk" in new Context {
+        when(rolloutMock.isActive(anyString)).thenReturn(true)
+        for {
+          (apiEndPoint, dispatcherRequest) <- endpoints
+          param <- Seq("offset", "limit")
+        } {
+          val response = get(controller, apiEndPoint, Map("q" -> "foo", param -> "not_a_number"), Map("Host" -> "api.soundcloud.com"))
+          response.code ==== 400
+          doesNotForward(response)
+        }
+      }
+
+      "400 when limit/offset is present, but empty" in new Context {
+        when(rolloutMock.isActive(anyString)).thenReturn(true)
+
+        for {
+          (apiEndPoint, dispatcherRequest) <- endpoints
+          param <- Seq("offset", "limit")
+        } {
+          val response = get(controller, apiEndPoint, Map("q" -> "foo", "offset" -> ""), Map("Host" -> "api.soundcloud.com"))
+          response.code ==== 400
+          doesNotForward(response)
+        }
+      }
+
+      "400 when dispatcher returns a 400" in new Context {
+        when(rolloutMock.isActive(anyString)).thenReturn(true)
+
+        endpoints.foreach { case (apiEndPoint, dispatcherRequest) =>
+          val request = com.twitter.finagle.http.Request(apiEndPoint.s, extraParams.toSeq: _*)
+          val query = dispatcherRequest(request)
+          val page = OffsetBasedPage(query, "http://api.soundcloud.com", apiEndPoint, extraParams, 0, 10)
+
+          when(verified(searchMapperMock).materialize(anonymousSession, page))
+            .thenReturn(Future.exception(RepositoryException(BadRequestStatus, "oh, behave!")))
+
+          val response = get(controller, apiEndPoint, extraParams, Map("Host" -> "api.soundcloud.com"))
+          response.code ==== 400
+          doesNotForward(response)
+        }
       }
     }
   }
