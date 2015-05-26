@@ -49,12 +49,13 @@ object RateLimitStatus {
     case reached: Reached =>
       Json.obj(
         "rate_limit_status" -> "reached",
-        "max_nr_of_requests" -> reached.maxNrOfRequests,
+        "rate_limit" -> RateLimitIdentity.forRateLimit(reached.rateLimit),
         "reset_time" -> reached.resetTime
       )
     case advancing: Advancing =>
       Json.obj(
         "rate_limit_status" -> "advancing",
+        "rate_limit" -> RateLimitIdentity.forRateLimit(advancing.rateLimit),
         "remaining_requests" -> advancing.remainingRequests,
         "reset_time" -> advancing.resetTime
       )

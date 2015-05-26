@@ -11,6 +11,7 @@ import com.twitter.finagle.http.{Request, Response}
 import com.twitter.finagle.{Service, SimpleFilter}
 import com.twitter.util.Future
 import org.jboss.netty.handler.codec.http.HttpResponseStatus
+import play.api.libs.json.{JsObject, Json}
 
 import scala.util.control.NonFatal
 
@@ -30,7 +31,7 @@ class RateLimitingFilter(
           case Pass =>
             next(request)
           case Block(status) =>
-            Future.value(new ResponseBuilder().typedJson(status).status(HttpResponseStatus.TOO_MANY_REQUESTS.getCode).build)
+            Future.value(errorResponse(status))
         }
       }
     }
@@ -106,6 +107,23 @@ class RateLimitingFilter(
     def unapply(request: Request): Boolean = {
       rateLimiter.appliesTo(request)
     }
+  }
+
+  private def errorResponse(status: RateLimitStatus.Reached): Response = {
+    new ResponseBuilder()
+      .typedJson(errorResponseBody(status))
+      .status(HttpResponseStatus.TOO_MANY_REQUESTS.getCode)
+      .build
+  }
+
+  private def errorResponseBody(status: RateLimitStatus.Reached): JsObject = {
+    Json.obj(
+      "errors" -> Json.arr(
+        Json.obj(
+          "meta" -> Json.toJson(status)
+        )
+      )
+    )
   }
 
 }

@@ -97,9 +97,16 @@ class RateLimitingFilterSpec extends UnitSpecification with NoTimeConversions {
 
       response.statusCode ==== 429
       val json = Json.parse(response.getContentString()).as[JsObject]
-      json \ "rate_limit_status" ==== JsString("reached")
-      json \ "max_nr_of_requests" ==== JsNumber(30)
-      json \ "reset_time" ==== Json.toJson(expiry)
+      val errors = json \ "errors" \\ "meta"
+      errors must haveSize(1)
+      val meta = errors.head
+      meta \ "rate_limit_status" ==== JsString("reached")
+      meta \ "rate_limit" ==== Json.obj(
+        "max_nr_of_requests" -> 30,
+        "time_window" -> "PT2S",
+        "group" -> "global"
+      )
+      meta \ "reset_time" ==== Json.toJson(expiry)
       there was no(next).apply(any)
     }
 
