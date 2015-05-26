@@ -25,13 +25,16 @@ class RateLimitingFilter(
   val logger = SoundCloudLoggerFactory.getLogger(this.getClass)
 
   def apply(request: Request, next: Service[Request, Response]): Future[Response] = {
-    bypassForInapplicableRoutes(request, next) getOrElse {
-      userAuthentication.withUserSession(new BffRequest(request)) { session =>
-        Verdict.on(session).flatMap {
-          case Pass =>
-            next(request)
-          case Block(status) =>
-            Future.value(errorResponse(status))
+    if (!rollout.isActive(Features.WireRateLimits)) next(request)
+    else {
+      bypassForInapplicableRoutes(request, next) getOrElse {
+        userAuthentication.withUserSession(new BffRequest(request)) { session =>
+          Verdict.on(session).flatMap {
+            case Pass =>
+              next(request)
+            case Block(status) =>
+              Future.value(errorResponse(status))
+          }
         }
       }
     }

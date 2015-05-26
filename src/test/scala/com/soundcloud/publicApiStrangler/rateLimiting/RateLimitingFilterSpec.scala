@@ -50,6 +50,19 @@ class RateLimitingFilterSpec extends UnitSpecification with NoTimeConversions {
       val mockWhitelistingService = mock[ApplicationLevelWhitelistProxy]
 
       val filter = new RateLimitingFilter(mockRateLimiter, mockUserAuthentication, mockRollout, mockWhitelistingService)
+
+      mockRollout.isActive(===(Features.WireRateLimits)) returns true
+    }
+
+    "let requests pass through if wire ratelimits flag is not active" in new Context {
+      mockRollout.isActive(===(Features.WireRateLimits)) returns false
+      mockRequest.path returns "/some-path"
+      next.apply(any) returns Future.value(mockResponse)
+
+      there was no (mockAuthenticatorService).cacheKeyAndSessionFor(any, any)
+      there was no(mockRateLimiter).advanceRateLimitStatus(any)
+      there was no(mockWhitelistingService).hasClientWhitelisted(any)
+      Await.result(filter.apply(mockRequest, next)) ==== mockResponse
     }
 
     "let requests pass through if probe ratelimits flag is not active for client" in new Context {
