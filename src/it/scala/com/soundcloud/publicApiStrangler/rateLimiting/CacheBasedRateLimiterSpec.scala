@@ -27,7 +27,7 @@ class CacheBasedRateLimiterSpec extends UnitSpecification with NoTimeConversions
   val config = new BazookaConfig()
 
   val cache = MemcachedClient(config, ResourceName("MEMCACHED_TEST"))
-  val duration = Period.seconds(1)
+  val duration = Period.seconds(5)
   val rateLimit = RateLimit.General(duration, 4)
   
   val rateLimiter = new CacheBasedRateLimiter(cache, rateLimit, ResourceName("TEST_APP"), Seq.empty)
@@ -61,7 +61,7 @@ class CacheBasedRateLimiterSpec extends UnitSpecification with NoTimeConversions
       }
 
       "advance again after the first time interval has passed" in {
-        afterDuration(4.seconds) {
+        afterDuration(7.seconds) {
           val status = Await.result(rateLimiter.advanceRateLimitStatus(apiClient))
           status must beAnInstanceOf[RateLimitStatus.Advancing]
           status must beLike {
