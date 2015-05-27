@@ -6,6 +6,7 @@ import com.soundcloud.bff.web.UserAuthentication
 import com.soundcloud.jvmkit.UserSession
 import com.soundcloud.publicApiStrangler.features.{Features, Rollout}
 import com.soundcloud.publicApiStrangler.standards.PublicApiStandards._
+import com.soundcloud.ratelimiting.types.RateLimit
 import com.soundcloud.ratelimiting.whitelisting.ApplicationLevelWhitelistProxy
 import com.soundcloud.scalakit.Urn
 import com.soundcloud.scalakit.test.UnitSpecification
@@ -14,6 +15,7 @@ import com.twitter.finagle.http.{Request, Response}
 import com.twitter.util.TimeConversions._
 import com.twitter.util.{Await, Future, Time}
 import org.jboss.netty.handler.codec.http.DefaultHttpHeaders
+import org.joda.time.Period
 import org.specs2.time.NoTimeConversions
 import play.api.libs.json._
 
@@ -24,6 +26,8 @@ class RateLimitingFilterSpec extends UnitSpecification with NoTimeConversions {
     val expiry = Time.now + 5.minutes
 
     trait Context extends Scope {
+      val rateLimit = RateLimit.General(Period.seconds(2), 30)
+
       val mockRateLimiter = mock[RateLimiter]
       mockRateLimiter.appliesTo(any).returns(true)
 
@@ -64,7 +68,7 @@ class RateLimitingFilterSpec extends UnitSpecification with NoTimeConversions {
       mockRollout.isActiveForId(===(Features.EnforceRateLimits), any) returns false
       mockAuthenticatorService.cacheKeyAndSessionFor(any, any) returns Future.value(CacheKeyAndSession(Some("inconsequential"), mockSession))
       next.apply(any) returns Future.value(mockResponse)
-      mockRateLimiter.advanceRateLimitStatus(any[ApiClient]) returns Future.value(RateLimitStatus.Advancing(20, 30, 2.seconds, Some(expiry)))
+      mockRateLimiter.advanceRateLimitStatus(any[ApiClient]) returns Future.value(RateLimitStatus.Advancing(rateLimit, 20, Some(expiry)))
       mockRequest.path returns "/some-path"
 
       there was no(mockWhitelistingService).hasClientWhitelisted(any)
@@ -73,7 +77,7 @@ class RateLimitingFilterSpec extends UnitSpecification with NoTimeConversions {
 
     "let requests pass through to the service when the client hasn't reached their limit" in new Context {
       mockRollout.isActiveForId(any, any) returns true
-      mockRateLimiter.advanceRateLimitStatus(any[ApiClient]) returns Future.value(RateLimitStatus.Advancing(2, 20, 2.seconds, Some(expiry)))
+      mockRateLimiter.advanceRateLimitStatus(any[ApiClient]) returns Future.value(RateLimitStatus.Advancing(rateLimit, 2, Some(expiry)))
       mockAuthenticatorService.cacheKeyAndSessionFor(any, any) returns Future.value(CacheKeyAndSession(Some("inconsequential"), mockSession))
       next.apply(any) returns Future.value(mockResponse)
       mockWhitelistingService.hasClientWhitelisted(any) returns false
@@ -84,7 +88,7 @@ class RateLimitingFilterSpec extends UnitSpecification with NoTimeConversions {
 
     "respond with 429 and reset info if the client has reached their limit" in new Context {
       mockRollout.isActiveForId(any, any) returns true
-      mockRateLimiter.advanceRateLimitStatus(any[ApiClient]) returns Future.value(RateLimitStatus.Reached(30, 2.seconds, Some(expiry)))
+      mockRateLimiter.advanceRateLimitStatus(any[ApiClient]) returns Future.value(RateLimitStatus.Reached(rateLimit, Some(expiry)))
       mockAuthenticatorService.cacheKeyAndSessionFor(any, any) returns Future.value(CacheKeyAndSession(Some("inconsequential"), mockSession))
       mockWhitelistingService.hasClientWhitelisted(any) returns false
       mockRequest.path returns "/some-path"
@@ -93,9 +97,16 @@ class RateLimitingFilterSpec extends UnitSpecification with NoTimeConversions {
 
       response.statusCode ==== 429
       val json = Json.parse(response.getContentString()).as[JsObject]
-      json \ "rate_limit_status" ==== JsString("reached")
-      json \ "max_nr_of_requests" ==== JsNumber(30)
-      json \ "reset_time" ==== Json.toJson(expiry)
+      val errors = json \ "errors" \\ "meta"
+      errors must haveSize(1)
+      val meta = errors.head
+      meta \ "rate_limit_status" ==== JsString("reached")
+      meta \ "rate_limit" ==== Json.obj(
+        "max_nr_of_requests" -> 30,
+        "time_window" -> "PT2S",
+        "group" -> "global"
+      )
+      meta \ "reset_time" ==== Json.toJson(expiry)
       there was no(next).apply(any)
     }
 

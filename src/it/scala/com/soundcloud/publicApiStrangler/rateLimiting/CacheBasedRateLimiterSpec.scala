@@ -2,7 +2,6 @@ package com.soundcloud.publicApiStrangler.rateLimiting
 
 import com.soundcloud.bff.test.UnitSpecification
 import com.soundcloud.jvmkit.config.BazookaConfig
-import com.soundcloud.publicApiStrangler.support.TimeConversions._
 import com.soundcloud.ratelimiting.types.RateLimit
 import com.soundcloud.scalakit.{Urn, ResourceName}
 import com.soundcloud.scalakit.cache.MemcachedClient
@@ -41,7 +40,7 @@ class CacheBasedRateLimiterSpec extends UnitSpecification with NoTimeConversions
       "register an API client on its first request" in {
         val status = Await.result(rateLimiter.advanceRateLimitStatus(apiClient))
         status must beLike {
-          case RateLimitStatus.Advancing(1, _, _, Some(_)) => ok
+          case RateLimitStatus.Advancing(_, 1, Some(_)) => ok
         }
       }
 
@@ -49,7 +48,7 @@ class CacheBasedRateLimiterSpec extends UnitSpecification with NoTimeConversions
         Await.result(rateLimiter.advanceRateLimitStatus(apiClient))
         val status = Await.result(rateLimiter.advanceRateLimitStatus(apiClient))
         status must beLike {
-          case RateLimitStatus.Advancing(3, _, _, Some(_)) => ok
+          case RateLimitStatus.Advancing(_, 3, Some(_)) => ok
         }
       }
 
@@ -57,7 +56,7 @@ class CacheBasedRateLimiterSpec extends UnitSpecification with NoTimeConversions
         Await.result(rateLimiter.advanceRateLimitStatus(apiClient))
         val status = Await.result(rateLimiter.advanceRateLimitStatus(apiClient))
         status must beLike {
-          case RateLimitStatus.Reached(_, _, Some(_)) => ok
+          case RateLimitStatus.Reached(_, Some(_)) => ok
         }
       }
 
@@ -66,7 +65,7 @@ class CacheBasedRateLimiterSpec extends UnitSpecification with NoTimeConversions
           val status = Await.result(rateLimiter.advanceRateLimitStatus(apiClient))
           status must beAnInstanceOf[RateLimitStatus.Advancing]
           status must beLike {
-            case RateLimitStatus.Advancing(1, _, _, Some(_)) => ok
+            case RateLimitStatus.Advancing(_, 1, Some(_)) => ok
           }
         }
       }
@@ -77,7 +76,7 @@ class CacheBasedRateLimiterSpec extends UnitSpecification with NoTimeConversions
 
       "Query for as yet unknown client" in {
         val status = Await.result(rateLimiter.rateLimitStatus(apiClient))
-        status ==== RateLimitStatus.Advancing(0, 4, duration.toTwitterDuration, None)
+        status ==== RateLimitStatus.Advancing(rateLimit, 0, None)
       }
 
       "Query for a client that has not reached its limit" in {
@@ -85,7 +84,7 @@ class CacheBasedRateLimiterSpec extends UnitSpecification with NoTimeConversions
         Await.result(rateLimiter.advanceRateLimitStatus(apiClient))
         val status = Await.result(rateLimiter.rateLimitStatus(apiClient))
         status must beLike {
-          case RateLimitStatus.Advancing(2, _, _, Some(_)) => ok
+          case RateLimitStatus.Advancing(_, 2, Some(_)) => ok
         }
       }
 
@@ -96,7 +95,7 @@ class CacheBasedRateLimiterSpec extends UnitSpecification with NoTimeConversions
         Await.result(rateLimiter.advanceRateLimitStatus(apiClient))
         val status = Await.result(rateLimiter.rateLimitStatus(apiClient))
         status must beLike {
-          case RateLimitStatus.Reached(4, _, Some(_)) => ok
+          case RateLimitStatus.Reached(`rateLimit`, Some(_)) => ok
         }
       }
     }
