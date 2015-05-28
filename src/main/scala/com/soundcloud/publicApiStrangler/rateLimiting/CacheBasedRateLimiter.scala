@@ -26,7 +26,7 @@ class CacheBasedRateLimiter(cache: Cache,
         mediator.expiry.map(Reached)
       } else {
         mediator.requestsMadeSoFar.flatMap {
-          case Some(number) if number == rateLimit.maximumNrOfRequests =>
+          case Some(number) if number >= rateLimit.maximumNrOfRequests =>
             Future.join(mediator.expiry, mediator.markAsReached).map { case (expiry, _) =>
               val status = Reached(expiry)
               notifyListeners(RateLimitEvent.LimitReached(status, apiClient))
