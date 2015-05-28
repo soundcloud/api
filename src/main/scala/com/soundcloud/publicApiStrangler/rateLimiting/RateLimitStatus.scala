@@ -29,7 +29,7 @@ object RateLimitStatus {
   case class Advancing(rateLimit: RateLimit, requestCount: Long, resetTime: Option[Time]) extends RateLimitStatus {
 
     val remainingRequests = maxNrOfRequests - requestCount
-    val percentageUsed = (requestCount / maxNrOfRequests).toInt
+    val percentageUsed = (requestCount.toDouble / maxNrOfRequests * 100).toInt
 
   }
 

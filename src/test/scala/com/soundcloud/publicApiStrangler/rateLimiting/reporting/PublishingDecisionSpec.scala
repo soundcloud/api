@@ -31,7 +31,12 @@ class PublishingDecisionSpec extends UnitSpecification {
     }
 
     "decide to publish if the event is a PercentageReached with a checkpoint percentage of the limit" in new Context {
-      val events = event(75) :: event(90) :: Nil
+      val events = event(75) :: event(90) :: event(100) :: Nil
+      (events map PublishingDecision.shouldPublish) ==== (events map PublishingDecision.DoPublish.apply)
+    }
+
+    "decide to publish if the event is a PercentageReached with a checkpoint request count of 15K or 65K" in new Context {
+      val events = event(15000) :: event(65000) :: Nil
       (events map PublishingDecision.shouldPublish) ==== (events map PublishingDecision.DoPublish.apply)
     }
 

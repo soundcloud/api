@@ -9,10 +9,14 @@ object PublishingDecision {
   val DoNotPublish = None
   val DoPublish = Some
 
+  private val percentagesToPublish = Set(100, 90, 75)
+  private val requestCountsToPublish = Set(15000L, 65000L)
+
   def shouldPublish(event: RateLimitEvent): PublishingDecision = event match {
-    case reached: RateLimitEvent.Reached =>
-      def threshold(percentage: Int): Int = (reached.status.maxNrOfRequests * percentage / 100).toInt
-      if (Set(reached.status.maxNrOfRequests, threshold(90), threshold(75))(reached.status.requestCount)) {
+    case reached: RateLimitEvent.LimitReached =>
+      DoPublish(reached)
+    case reached: RateLimitEvent.PercentageReached =>
+      if (percentagesToPublish(reached.status.percentageUsed) || requestCountsToPublish(reached.status.requestCount)) {
         DoPublish(reached)
       } else DoNotPublish
     case _ => DoNotPublish
