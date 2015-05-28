@@ -14,10 +14,10 @@ class PublishingDecisionSpec extends UnitSpecification {
     trait Context extends Scope {
       val someClient = ApiClient(Urn("soundcloud", "applications", "test-app"))
       val resetTime = Some(Time.now)
-      val rateLimit = RateLimit.General(Period.seconds(50), 100)
-      def event(percentage: Int) = {
+      val rateLimit = RateLimit.General(Period.seconds(50), 5000 * 100)
+      def event(requestCount: Int) = {
         RateLimitEvent.PercentageReached(RateLimitStatus.Advancing(
-          rateLimit, percentage, resetTime), someClient)
+          rateLimit, requestCount, resetTime), someClient)
       }
     }
 
@@ -27,11 +27,12 @@ class PublishingDecisionSpec extends UnitSpecification {
     }
 
     "decide not to publish if the event is a PercentageReached with a non-checkpoint percentage of the limit" in new Context {
-      PublishingDecision.shouldPublish(event(17)) ==== PublishingDecision.DoNotPublish
+      PublishingDecision.shouldPublish(event(17 * 5000)) ==== PublishingDecision.DoNotPublish
+      PublishingDecision.shouldPublish(event(5000 * 75 + 1)) ==== PublishingDecision.DoNotPublish
     }
 
     "decide to publish if the event is a PercentageReached with a checkpoint percentage of the limit" in new Context {
-      val events = event(75) :: event(90) :: event(100) :: Nil
+      val events = event(5000 * 75) :: event(5000 * 90) :: event(5000 * 100) :: Nil
       (events map PublishingDecision.shouldPublish) ==== (events map PublishingDecision.DoPublish.apply)
     }
 
