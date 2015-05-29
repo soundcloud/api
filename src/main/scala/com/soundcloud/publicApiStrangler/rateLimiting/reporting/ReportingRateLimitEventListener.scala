@@ -16,8 +16,7 @@ class ReportingRateLimitEventListener(service: RateLimitEventsClient) extends Ev
   def notify(event: RateLimitEvent): Unit = FuturePool.unboundedPool {
     for {
       eventToBePublished <- PublishingDecision.shouldPublish(event)
-      mappedEvent         = EventMapper(eventToBePublished, event.occurredAt)
+      mappedEvent         = EventMapper(eventToBePublished)
     } yield service.publish(ReportingRateLimitEventListener.session, mappedEvent)
   }
-
 }
