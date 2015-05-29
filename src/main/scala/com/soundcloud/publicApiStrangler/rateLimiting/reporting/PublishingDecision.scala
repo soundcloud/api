@@ -16,11 +16,10 @@ object PublishingDecision {
     case reached: RateLimitEvent.LimitReached =>
       DoPublish(reached)
     case reached: RateLimitEvent.PercentageReached =>
-      def threshold(percentage: Double): Long = (reached.status.maxNrOfRequests * percentage / 100).toLong
+      def threshold(percentage: Double): Long = (reached.status.maximumNrOfRequests * percentage / 100).toLong
       if (percentagesToPublish.map(threshold).contains(reached.status.requestCount) || requestCountsToPublish(reached.status.requestCount)) {
         DoPublish(reached)
       } else DoNotPublish
     case _ => DoNotPublish
   }
-
 }

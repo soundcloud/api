@@ -8,56 +8,28 @@ import com.twitter.util._
 import play.api.libs.json.{Json, Writes}
 import com.soundcloud.ratelimiting.events.JsonProtocol._
 
-sealed trait RateLimitStatus {
-  def rateLimit: RateLimit
-  def requestCount: Long
-  lazy val maxNrOfRequests: Long = rateLimit.maximumNrOfRequests
+case class RateLimitStatus(rateLimit: RateLimit,
+                           requestCount: Int,
+                           resetTime: Option[Time]) {
+
+  lazy val hasReached: Boolean = maximumNrOfRequests == requestCount
+  lazy val remainingRequests: Int = maximumNrOfRequests - requestCount
+  lazy val percentageUsed: Int = (requestCount.toDouble / maximumNrOfRequests * 100).toInt
+  lazy val maximumNrOfRequests: Int = rateLimit.maximumNrOfRequests.toInt
   lazy val duration: Duration = rateLimit.timeWindow.toTwitterDuration
-  def resetTime: Option[Time]
-  def percentageUsed: Int
 }
 
 object RateLimitStatus {
 
-  case class Reached(rateLimit: RateLimit, resetTime: Option[Time]) extends RateLimitStatus {
-
-    val requestCount = maxNrOfRequests
-    val percentageUsed = 100
-
+  def reached(rateLimit: RateLimit, resetTime: Option[Time]): RateLimitStatus = {
+    RateLimitStatus(rateLimit, rateLimit.maximumNrOfRequests.toInt, resetTime)
   }
 
-  case class Advancing(rateLimit: RateLimit, requestCount: Long, resetTime: Option[Time]) extends RateLimitStatus {
-
-    val remainingRequests = maxNrOfRequests - requestCount
-    val percentageUsed = (requestCount.toDouble / maxNrOfRequests * 100).toInt
-
-  }
-
-  object Reached {
-    def from(rateLimit: RateLimit)(resetTime: Option[Time]): Reached = {
-      Reached(rateLimit, resetTime)
-    }
-  }
-
-  object Advancing {
-    def from(rateLimit: RateLimit)(requestCount: Long, resetTime: Option[Time]): Advancing = {
-      Advancing(rateLimit, requestCount, resetTime)
-    }
-  }
-
-  implicit val writes: Writes[RateLimitStatus] = Writes {
-    case reached: Reached =>
-      Json.obj(
-        "rate_limit_status" -> "reached",
-        "rate_limit" -> RateLimitIdentity.forRateLimit(reached.rateLimit),
-        "reset_time" -> reached.resetTime
-      )
-    case advancing: Advancing =>
-      Json.obj(
-        "rate_limit_status" -> "advancing",
-        "rate_limit" -> RateLimitIdentity.forRateLimit(advancing.rateLimit),
-        "remaining_requests" -> advancing.remainingRequests,
-        "reset_time" -> advancing.resetTime
-      )
+  implicit val writes: Writes[RateLimitStatus] = Writes { rateLimitStatus =>
+    Json.obj(
+      "rate_limit" -> RateLimitIdentity.forRateLimit(rateLimitStatus.rateLimit),
+      "remaining_requests" -> rateLimitStatus.remainingRequests,
+      "reset_time" -> rateLimitStatus.resetTime
+    )
   }
 }

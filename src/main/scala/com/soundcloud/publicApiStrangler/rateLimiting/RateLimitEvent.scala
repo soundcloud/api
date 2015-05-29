@@ -13,7 +13,7 @@ object RateLimitEvent {
     def apiClient: ApiClient
   }
 
-  case class LimitReached(status: RateLimitStatus.Reached, apiClient: ApiClient) extends Reached
-  case class PercentageReached(status: RateLimitStatus.Advancing, apiClient: ApiClient) extends Reached
+  case class LimitReached(status: RateLimitStatus, apiClient: ApiClient) extends Reached
+  case class PercentageReached(status: RateLimitStatus, apiClient: ApiClient) extends Reached
   case class Overflowing(apiClient: ApiClient) extends RateLimitEvent
 }

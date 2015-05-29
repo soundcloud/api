@@ -18,19 +18,19 @@ private[reporting] object EventMapper extends ((Reached, DateTime) => events.Eve
     events.Event(occurredAt, ReportingRateLimitEventListener.stranglerUrn, payload)
   }
 
-  private def limitReached(reached: RateLimitStatus.Reached, client: ApiClient): events.LimitReached = {
+  private def limitReached(reached: RateLimitStatus, client: ApiClient): events.LimitReached = {
     events.LimitReached(
       types.ApiClient(client.urn),
       RateLimitIdentity.forRateLimit(reached.rateLimit),
       reached.resetTime.map(_.toJodaDateTime))
   }
 
-  private def checkpointReached(reached: RateLimitStatus.Advancing, client: ApiClient): events.CheckpointReached = {
+  private def checkpointReached(reached: RateLimitStatus, client: ApiClient): events.CheckpointReached = {
     events.CheckpointReached(
       types.ApiClient(client.urn),
       RateLimitIdentity.forRateLimit(reached.rateLimit),
       reached.resetTime.map(_.toJodaDateTime),
-      reached.requestCount.toInt)
+      reached.requestCount)
   }
 
 }

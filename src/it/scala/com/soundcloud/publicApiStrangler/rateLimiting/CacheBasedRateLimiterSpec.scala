@@ -40,7 +40,7 @@ class CacheBasedRateLimiterSpec extends UnitSpecification with NoTimeConversions
       "register an API client on its first request" in {
         val status = Await.result(rateLimiter.advanceRateLimitStatus(apiClient))
         status must beLike {
-          case RateLimitStatus.Advancing(_, 1, Some(_)) => ok
+          case RateLimitStatus(_, 1, Some(_)) => ok
         }
       }
 
@@ -48,7 +48,7 @@ class CacheBasedRateLimiterSpec extends UnitSpecification with NoTimeConversions
         Await.result(rateLimiter.advanceRateLimitStatus(apiClient))
         val status = Await.result(rateLimiter.advanceRateLimitStatus(apiClient))
         status must beLike {
-          case RateLimitStatus.Advancing(_, 3, Some(_)) => ok
+          case RateLimitStatus(_, 3, Some(_)) => ok
         }
       }
 
@@ -56,16 +56,15 @@ class CacheBasedRateLimiterSpec extends UnitSpecification with NoTimeConversions
         Await.result(rateLimiter.advanceRateLimitStatus(apiClient))
         val status = Await.result(rateLimiter.advanceRateLimitStatus(apiClient))
         status must beLike {
-          case RateLimitStatus.Reached(_, Some(_)) => ok
+          case RateLimitStatus(_, 4, Some(_)) => ok
         }
       }
 
       "advance again after the first time interval has passed" in {
         afterDuration(7.seconds) {
           val status = Await.result(rateLimiter.advanceRateLimitStatus(apiClient))
-          status must beAnInstanceOf[RateLimitStatus.Advancing]
           status must beLike {
-            case RateLimitStatus.Advancing(_, 1, Some(_)) => ok
+            case RateLimitStatus(_, 1, Some(_)) => ok
           }
         }
       }
@@ -76,7 +75,7 @@ class CacheBasedRateLimiterSpec extends UnitSpecification with NoTimeConversions
 
       "Query for as yet unknown client" in {
         val status = Await.result(rateLimiter.rateLimitStatus(apiClient))
-        status ==== RateLimitStatus.Advancing(rateLimit, 0, None)
+        status ==== RateLimitStatus(rateLimit, 0, None)
       }
 
       "Query for a client that has not reached its limit" in {
@@ -84,7 +83,7 @@ class CacheBasedRateLimiterSpec extends UnitSpecification with NoTimeConversions
         Await.result(rateLimiter.advanceRateLimitStatus(apiClient))
         val status = Await.result(rateLimiter.rateLimitStatus(apiClient))
         status must beLike {
-          case RateLimitStatus.Advancing(_, 2, Some(_)) => ok
+          case RateLimitStatus(_, 2, Some(_)) => ok
         }
       }
 
@@ -95,7 +94,7 @@ class CacheBasedRateLimiterSpec extends UnitSpecification with NoTimeConversions
         Await.result(rateLimiter.advanceRateLimitStatus(apiClient))
         val status = Await.result(rateLimiter.rateLimitStatus(apiClient))
         status must beLike {
-          case RateLimitStatus.Reached(`rateLimit`, Some(_)) => ok
+          case RateLimitStatus(`rateLimit`, 4, Some(_)) => ok
         }
       }
     }

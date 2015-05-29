@@ -81,7 +81,7 @@ class RateLimitingFilterSpec extends UnitSpecification with NoTimeConversions {
       mockRollout.isActiveForId(===(Features.EnforceRateLimits), any) returns false
       mockAuthenticatorService.cacheKeyAndSessionFor(any, any) returns Future.value(CacheKeyAndSession(Some("inconsequential"), mockSession))
       next.apply(any) returns Future.value(mockResponse)
-      mockRateLimiter.advanceRateLimitStatus(any[ApiClient]) returns Future.value(RateLimitStatus.Advancing(rateLimit, 20, Some(expiry)))
+      mockRateLimiter.advanceRateLimitStatus(any[ApiClient]) returns Future.value(RateLimitStatus(rateLimit, 20, Some(expiry)))
       mockRequest.path returns "/some-path"
 
       there was no(mockWhitelistingService).hasClientWhitelisted(any)
@@ -90,7 +90,7 @@ class RateLimitingFilterSpec extends UnitSpecification with NoTimeConversions {
 
     "let requests pass through to the service when the client hasn't reached their limit" in new Context {
       mockRollout.isActiveForId(any, any) returns true
-      mockRateLimiter.advanceRateLimitStatus(any[ApiClient]) returns Future.value(RateLimitStatus.Advancing(rateLimit, 2, Some(expiry)))
+      mockRateLimiter.advanceRateLimitStatus(any[ApiClient]) returns Future.value(RateLimitStatus(rateLimit, 2, Some(expiry)))
       mockAuthenticatorService.cacheKeyAndSessionFor(any, any) returns Future.value(CacheKeyAndSession(Some("inconsequential"), mockSession))
       next.apply(any) returns Future.value(mockResponse)
       mockWhitelistingService.hasClientWhitelisted(any) returns false
@@ -101,7 +101,7 @@ class RateLimitingFilterSpec extends UnitSpecification with NoTimeConversions {
 
     "respond with 429 and reset info if the client has reached their limit" in new Context {
       mockRollout.isActiveForId(any, any) returns true
-      mockRateLimiter.advanceRateLimitStatus(any[ApiClient]) returns Future.value(RateLimitStatus.Reached(rateLimit, Some(expiry)))
+      mockRateLimiter.advanceRateLimitStatus(any[ApiClient]) returns Future.value(RateLimitStatus.reached(rateLimit, Some(expiry)))
       mockAuthenticatorService.cacheKeyAndSessionFor(any, any) returns Future.value(CacheKeyAndSession(Some("inconsequential"), mockSession))
       mockWhitelistingService.hasClientWhitelisted(any) returns false
       mockRequest.path returns "/some-path"
@@ -113,13 +113,13 @@ class RateLimitingFilterSpec extends UnitSpecification with NoTimeConversions {
       val errors = json \ "errors" \\ "meta"
       errors must haveSize(1)
       val meta = errors.head
-      meta \ "rate_limit_status" ==== JsString("reached")
       meta \ "rate_limit" ==== Json.obj(
         "max_nr_of_requests" -> 30,
         "time_window" -> "PT2S",
         "group" -> "global"
       )
       meta \ "reset_time" ==== Json.toJson(expiry)
+      meta \ "remaining_requests" ==== JsNumber(0)
       there was no(next).apply(any)
     }
 
@@ -178,6 +178,5 @@ class RateLimitingFilterSpec extends UnitSpecification with NoTimeConversions {
       there was no(mockAuthenticatorService).cacheKeyAndSessionFor(any, any)
       result ==== mockResponse
     }
-
   }
 }

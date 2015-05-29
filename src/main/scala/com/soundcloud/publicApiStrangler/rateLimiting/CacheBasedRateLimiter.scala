@@ -4,15 +4,15 @@ import com.soundcloud.ratelimiting.types.RateLimit
 import com.soundcloud.scalakit.ResourceName
 import com.soundcloud.scalakit.cache.Cache
 import com.twitter.finagle.http.Request
-import com.twitter.util.Future
+import com.twitter.util.{Time, Future}
 
 class CacheBasedRateLimiter(cache: Cache,
                             rateLimit: RateLimit,
                             applicationName: ResourceName,
                             listeners: Seq[EventListener[RateLimitEvent]]) extends RateLimiter {
 
-  val Reached = RateLimitStatus.Reached.from(rateLimit) _
-  val Advancing = RateLimitStatus.Advancing.from(rateLimit) _
+  val advancing = RateLimitStatus(rateLimit, _: Int, _: Option[Time])
+  val reached = RateLimitStatus.reached(rateLimit, _: Option[Time])
 
   def appliesTo(request: Request) = {
     rateLimit.appliesTo(request.path)
@@ -23,24 +23,24 @@ class CacheBasedRateLimiter(cache: Cache,
     mediator.alreadyReached.flatMap { alreadyReached =>
       if (alreadyReached) {
         notifyListeners(RateLimitEvent.Overflowing(apiClient))
-        mediator.expiry.map(Reached)
+        mediator.expiry.map(reached)
       } else {
         mediator.requestsMadeSoFar.flatMap {
           case Some(number) if number >= rateLimit.maximumNrOfRequests =>
             Future.join(mediator.expiry, mediator.markAsReached).map { case (expiry, _) =>
-              val status = Reached(expiry)
+              val status = reached(expiry)
               notifyListeners(RateLimitEvent.LimitReached(status, apiClient))
               notifyListeners(RateLimitEvent.Overflowing(apiClient))
               status
             }
           case Some(_) =>
             Future.join(mediator.updateRequestCount, mediator.expiry).map { case (updatedRequestCount, expiry) =>
-              val status = Advancing(updatedRequestCount.getOrElse(1), expiry)
+              val status = advancing(updatedRequestCount.map(_.toInt).getOrElse(1), expiry)
               notifyListeners(RateLimitEvent.PercentageReached(status, apiClient))
               status
             }
           case None =>
-            mediator.establish.map { expiry => Advancing(1, Some(expiry)) }
+            mediator.establish.map { expiry => advancing(1, Some(expiry)) }
         }
       }
     }
@@ -50,11 +50,11 @@ class CacheBasedRateLimiter(cache: Cache,
     val mediator = new RateLimiterCacheMediator(cache, rateLimit, apiClient, applicationName)
     Future.join(mediator.expiry, mediator.alreadyReached) flatMap { case (expiry, alreadyReached) =>
       if (alreadyReached)
-        Future(Reached(expiry))
+        Future(reached(expiry))
       else
         mediator.requestsMadeSoFar map { requestsOpt =>
-          val requests = requestsOpt.getOrElse(0L)
-          Advancing(requests, expiry)
+          val requests = requestsOpt.map(_.toInt).getOrElse(0)
+          advancing(requests, expiry)
         }
     }
   }

@@ -16,7 +16,7 @@ class PublishingDecisionSpec extends UnitSpecification {
       val resetTime = Some(Time.now)
       val rateLimit = RateLimit.General(Period.seconds(50), 5000 * 100)
       def event(requestCount: Int) = {
-        RateLimitEvent.PercentageReached(RateLimitStatus.Advancing(
+        RateLimitEvent.PercentageReached(RateLimitStatus(
           rateLimit, requestCount, resetTime), someClient)
       }
     }
@@ -43,10 +43,8 @@ class PublishingDecisionSpec extends UnitSpecification {
 
     "decide to publish if the event is a LimitReached event" in new Context {
       val event = RateLimitEvent.LimitReached(
-        RateLimitStatus.Reached(rateLimit, resetTime), someClient)
+        RateLimitStatus.reached(rateLimit, resetTime), someClient)
       PublishingDecision.shouldPublish(event) ==== PublishingDecision.DoPublish(event)
     }
-
   }
-
 }

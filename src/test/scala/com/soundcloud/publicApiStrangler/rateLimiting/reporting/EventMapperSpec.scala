@@ -24,7 +24,7 @@ class EventMapperSpec extends UnitSpecification {
 
     "map a strangler LimitReached event to the corresponding ratelimitinglib event" in new Context {
       val limitReached = LimitReached(
-        RateLimitStatus.Reached(rateLimit, Some(resetTime)),
+        RateLimitStatus.reached(rateLimit, Some(resetTime)),
         ApiClient(testApp))
 
       val result = EventMapper(limitReached, occurredAt)
@@ -37,7 +37,7 @@ class EventMapperSpec extends UnitSpecification {
 
     "map a strangler PercentageReached event to the corresponding ratelimitinglib CheckpointReached event" in new Context {
       val limitReached = PercentageReached(
-        RateLimitStatus.Advancing(rateLimit, 100, Some(resetTime)),
+        RateLimitStatus(rateLimit, 100, Some(resetTime)),
         ApiClient(testApp))
 
       val result = EventMapper(limitReached, occurredAt)
@@ -52,8 +52,5 @@ class EventMapperSpec extends UnitSpecification {
         )
       )
     }
-
-
   }
-
 }

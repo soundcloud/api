@@ -20,7 +20,6 @@ class TelemetryRateLimitEventListener(rateLimitMetrics: RateLimitMetrics) extend
   }
 
   def reportingThresholds(status: RateLimitStatus): Set[Long] = {
-    Set(status.maxNrOfRequests / 90, status.maxNrOfRequests / 75)
+    Set(status.maximumNrOfRequests / 90, status.maximumNrOfRequests / 75)
   }
-
 }

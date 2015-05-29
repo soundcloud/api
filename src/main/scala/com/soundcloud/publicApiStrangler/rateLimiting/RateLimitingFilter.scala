@@ -50,7 +50,7 @@ class RateLimitingFilter(
 
   sealed trait Verdict
   case object Pass extends Verdict
-  case class Block(status: RateLimitStatus.Reached) extends Verdict
+  case class Block(status: RateLimitStatus) extends Verdict
 
   object Verdict {
     def on(session: UserSession): Future[Verdict] = {
@@ -61,9 +61,8 @@ class RateLimitingFilter(
         case (_, _, Probing) =>
           rateLimiter.advanceRateLimitStatus(apiClient).map(_ => Pass)
         case (_, _, Enforcing) =>
-          rateLimiter.advanceRateLimitStatus(apiClient).map {
-            case s: RateLimitStatus.Reached => Block(s)
-            case _                          => Pass
+          rateLimiter.advanceRateLimitStatus(apiClient).map { status =>
+            if (status.hasReached) Block(status) else Pass
           }
       }
       verdict handle {
@@ -112,14 +111,14 @@ class RateLimitingFilter(
     }
   }
 
-  private def errorResponse(status: RateLimitStatus.Reached): Response = {
+  private def errorResponse(status: RateLimitStatus): Response = {
     new ResponseBuilder()
       .typedJson(errorResponseBody(status))
       .status(HttpResponseStatus.TOO_MANY_REQUESTS.getCode)
       .build
   }
 
-  private def errorResponseBody(status: RateLimitStatus.Reached): JsObject = {
+  private def errorResponseBody(status: RateLimitStatus): JsObject = {
     Json.obj(
       "errors" -> Json.arr(
         Json.obj(
@@ -128,5 +127,4 @@ class RateLimitingFilter(
       )
     )
   }
-
 }
