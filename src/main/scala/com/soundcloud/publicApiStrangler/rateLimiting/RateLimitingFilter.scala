@@ -62,7 +62,7 @@ class RateLimitingFilter(
           rateLimiter.advanceRateLimitStatus(apiClient).map(_ => Pass)
         case (_, _, Enforcing) =>
           rateLimiter.advanceRateLimitStatus(apiClient).map { status =>
-            if (status.hasReached) Block(status) else Pass
+            if (status.hasReachedLimit) Block(status) else Pass
           }
       }
       verdict handle {

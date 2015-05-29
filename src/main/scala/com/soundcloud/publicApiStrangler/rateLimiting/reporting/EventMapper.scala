@@ -1,19 +1,19 @@
 package com.soundcloud.publicApiStrangler.rateLimiting.reporting
 
-import com.soundcloud.publicApiStrangler.rateLimiting.{ApiClient, RateLimitStatus, RateLimitEvent}
-import com.soundcloud.publicApiStrangler.rateLimiting.RateLimitEvent.Reached
-import com.soundcloud.ratelimiting.types.RateLimitIdentity
-import com.soundcloud.ratelimiting.{types, events}
+import com.soundcloud.publicApiStrangler.rateLimiting.RateLimitEvent.CheckpointReached
+import com.soundcloud.publicApiStrangler.rateLimiting.{ApiClient, RateLimitStatus}
 import com.soundcloud.publicApiStrangler.support.TimeConversions._
-
+import com.soundcloud.ratelimiting.types.RateLimitIdentity
+import com.soundcloud.ratelimiting.{events, types}
 import org.joda.time.DateTime
 
-private[reporting] object EventMapper extends ((Reached, DateTime) => events.Event[events.ReachedEventPayload]) {
+private[reporting] object EventMapper extends ((CheckpointReached, DateTime) => events.Event[events.ReachedEventPayload]) {
 
-  def apply(reached: Reached, occurredAt: DateTime): events.Event[events.ReachedEventPayload] = {
-    val payload = reached match {
-      case RateLimitEvent.LimitReached(status, client) => limitReached(status, client)
-      case RateLimitEvent.PercentageReached(status, client) => checkpointReached(status, client)
+  def apply(event: CheckpointReached, occurredAt: DateTime): events.Event[events.ReachedEventPayload] = {
+    val payload = if (event.hasReachedLimit) {
+      limitReached(event.status, event.apiClient)
+    } else {
+      checkpointReached(event.status, event.apiClient)
     }
     events.Event(occurredAt, ReportingRateLimitEventListener.stranglerUrn, payload)
   }
@@ -32,5 +32,4 @@ private[reporting] object EventMapper extends ((Reached, DateTime) => events.Eve
       reached.resetTime.map(_.toJodaDateTime),
       reached.requestCount)
   }
-
 }

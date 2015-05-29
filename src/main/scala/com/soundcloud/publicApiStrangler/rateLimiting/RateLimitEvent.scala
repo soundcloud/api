@@ -8,12 +8,8 @@ sealed trait RateLimitEvent {
 }
 
 object RateLimitEvent {
-  sealed trait Reached extends RateLimitEvent {
-    def status: RateLimitStatus
-    def apiClient: ApiClient
+  case class CheckpointReached(status: RateLimitStatus, apiClient: ApiClient) extends RateLimitEvent {
+    def hasReachedLimit: Boolean = status.hasReachedLimit
   }
-
-  case class LimitReached(status: RateLimitStatus, apiClient: ApiClient) extends Reached
-  case class PercentageReached(status: RateLimitStatus, apiClient: ApiClient) extends Reached
   case class Overflowing(apiClient: ApiClient) extends RateLimitEvent
 }

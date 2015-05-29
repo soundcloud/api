@@ -1,6 +1,6 @@
 package com.soundcloud.publicApiStrangler.rateLimiting.reporting
 
-import com.soundcloud.publicApiStrangler.rateLimiting.RateLimitEvent.{LimitReached, PercentageReached}
+import com.soundcloud.publicApiStrangler.rateLimiting.RateLimitEvent.CheckpointReached
 import com.soundcloud.publicApiStrangler.rateLimiting.{ApiClient, RateLimitStatus}
 import com.soundcloud.publicApiStrangler.support.TimeConversions._
 import com.soundcloud.ratelimiting.{events, types}
@@ -22,8 +22,8 @@ class EventMapperSpec extends UnitSpecification {
       val rateLimitIdentity = RateLimitIdentity.forRateLimit(rateLimit)
     }
 
-    "map a strangler LimitReached event to the corresponding ratelimitinglib event" in new Context {
-      val limitReached = LimitReached(
+    "map a strangler CheckpointReached event that has reached limit to the corresponding ratelimitinglib event" in new Context {
+      val limitReached = CheckpointReached(
         RateLimitStatus.reached(rateLimit, Some(resetTime)),
         ApiClient(testApp))
 
@@ -35,8 +35,8 @@ class EventMapperSpec extends UnitSpecification {
       )
     }
 
-    "map a strangler PercentageReached event to the corresponding ratelimitinglib CheckpointReached event" in new Context {
-      val limitReached = PercentageReached(
+    "map a strangler CheckpointReached event that has reached an interesting point to the corresponding ratelimitinglib CheckpointReached event" in new Context {
+      val limitReached = CheckpointReached(
         RateLimitStatus(rateLimit, 100, Some(resetTime)),
         ApiClient(testApp))
 

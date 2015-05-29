@@ -12,7 +12,7 @@ case class RateLimitStatus(rateLimit: RateLimit,
                            requestCount: Int,
                            resetTime: Option[Time]) {
 
-  lazy val hasReached: Boolean = maximumNrOfRequests == requestCount
+  lazy val hasReachedLimit: Boolean = maximumNrOfRequests == requestCount
   lazy val remainingRequests: Int = maximumNrOfRequests - requestCount
   lazy val percentageUsed: Int = (requestCount.toDouble / maximumNrOfRequests * 100).toInt
   lazy val maximumNrOfRequests: Int = rateLimit.maximumNrOfRequests.toInt
