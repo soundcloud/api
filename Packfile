@@ -22,13 +22,6 @@
     "api": "bin/public-api-strangler"
   },
 
-  "targets": {
-    "precheckin": {
-      "runtime": "builder",
-      "cmd": "make precheckin"
-    }
-  },
-
   "apt_dependencies": [],
 
   "service_dependencies": []

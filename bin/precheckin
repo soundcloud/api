@@ -3,7 +3,7 @@
 ./bin/shutdown_containers
 # Plumber might be in current work directory or in path
 PATH=.:$PATH
-plumber run precheckin
+crun builder "make precheckin"
 result=$?
 ./bin/shutdown_containers
 exit ${result}
