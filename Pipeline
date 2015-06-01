@@ -4,7 +4,7 @@
             "name": "build",
             "jobs": [
                 { "unit-tests": {"cmd": "./bin/unit-test", "no-clean": true } },
-                { "pacakge-artifacts": {"cmd": "plumber package debian,docker,bazooka && plumber publish testing", "no-clean": true }}
+                { "package-artifacts": {"cmd": "plumber package debian,docker,bazooka && plumber publish testing", "no-clean": true }}
             ],
             "next-stages": [ "test" ]
         },
