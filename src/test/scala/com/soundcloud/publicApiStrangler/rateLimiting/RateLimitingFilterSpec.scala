@@ -28,7 +28,7 @@ class RateLimitingFilterSpec extends UnitSpecification with NoTimeConversions {
     trait Context extends Scope {
       val rateLimit = RateLimit.General(Period.seconds(2), 30)
 
-      val mockRateLimiter = mock[CompositeRateLimiter]
+      val mockRateLimiter = mock[RateLimiter]
       mockRateLimiter.appliesTo(any).returns(true)
 
       val mockAuthenticatorService = mock[AuthenticatorService]
@@ -60,7 +60,7 @@ class RateLimitingFilterSpec extends UnitSpecification with NoTimeConversions {
       next.apply(any) returns Future.value(mockResponse)
 
       there was no (mockAuthenticatorService).cacheKeyAndSessionFor(any, any)
-      there was no(mockRateLimiter).advanceRateLimitStatus(any, any)
+      there was no(mockRateLimiter).advanceRateLimitStatus(any)
       there was no(mockWhitelistingService).hasClientWhitelisted(any)
       Await.result(filter.apply(mockRequest, next)) ==== mockResponse
     }
@@ -71,7 +71,7 @@ class RateLimitingFilterSpec extends UnitSpecification with NoTimeConversions {
       mockRequest.path returns "/some-path"
       next.apply(any) returns Future.value(mockResponse)
 
-      there was no(mockRateLimiter).advanceRateLimitStatus(any, any)
+      there was no(mockRateLimiter).advanceRateLimitStatus(any)
       there was no(mockWhitelistingService).hasClientWhitelisted(any)
       Await.result(filter.apply(mockRequest, next)) ==== mockResponse
     }
@@ -81,8 +81,7 @@ class RateLimitingFilterSpec extends UnitSpecification with NoTimeConversions {
       mockRollout.isActiveForId(===(Features.EnforceRateLimits), any) returns false
       mockAuthenticatorService.cacheKeyAndSessionFor(any, any) returns Future.value(CacheKeyAndSession(Some("inconsequential"), mockSession))
       next.apply(any) returns Future.value(mockResponse)
-      mockRateLimiter.advanceRateLimitStatus(any[ApiClient], any[Request]) returns Future.value(
-        CompositeRateLimitStatus(Set(RateLimitStatus(rateLimit, 20, Some(expiry)))))
+      mockRateLimiter.advanceRateLimitStatus(any[ApiClient]) returns Future.value(RateLimitStatus(rateLimit, 20, Some(expiry)))
       mockRequest.path returns "/some-path"
 
       there was no(mockWhitelistingService).hasClientWhitelisted(any)
@@ -91,8 +90,7 @@ class RateLimitingFilterSpec extends UnitSpecification with NoTimeConversions {
 
     "let requests pass through to the service when the client hasn't reached their limit" in new Context {
       mockRollout.isActiveForId(any, any) returns true
-      mockRateLimiter.advanceRateLimitStatus(any[ApiClient], any[Request]) returns Future.value(
-        CompositeRateLimitStatus(Set(RateLimitStatus(rateLimit, 2, Some(expiry)))))
+      mockRateLimiter.advanceRateLimitStatus(any[ApiClient]) returns Future.value(RateLimitStatus(rateLimit, 2, Some(expiry)))
       mockAuthenticatorService.cacheKeyAndSessionFor(any, any) returns Future.value(CacheKeyAndSession(Some("inconsequential"), mockSession))
       next.apply(any) returns Future.value(mockResponse)
       mockWhitelistingService.hasClientWhitelisted(any) returns false
@@ -103,8 +101,7 @@ class RateLimitingFilterSpec extends UnitSpecification with NoTimeConversions {
 
     "respond with 429 and reset info if the client has reached their limit" in new Context {
       mockRollout.isActiveForId(any, any) returns true
-      mockRateLimiter.advanceRateLimitStatus(any[ApiClient], any[Request]) returns Future.value(
-        CompositeRateLimitStatus(Set(RateLimitStatus.reached(rateLimit, Some(expiry)))))
+      mockRateLimiter.advanceRateLimitStatus(any[ApiClient]) returns Future.value(RateLimitStatus.reached(rateLimit, Some(expiry)))
       mockAuthenticatorService.cacheKeyAndSessionFor(any, any) returns Future.value(CacheKeyAndSession(Some("inconsequential"), mockSession))
       mockWhitelistingService.hasClientWhitelisted(any) returns false
       mockRequest.path returns "/some-path"
@@ -135,7 +132,7 @@ class RateLimitingFilterSpec extends UnitSpecification with NoTimeConversions {
 
       val result = Await.result(filter.apply(mockRequest, next))
 
-      there was no(mockRateLimiter).advanceRateLimitStatus(ApiClient(mockAgentUrn), mockRequest)
+      there was no(mockRateLimiter).advanceRateLimitStatus(ApiClient(mockAgentUrn))
       result ==== mockResponse
     }
 
