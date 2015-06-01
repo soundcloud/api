@@ -16,7 +16,7 @@ import play.api.libs.json.{JsObject, Json}
 import scala.util.control.NonFatal
 
 class RateLimitingFilter(
-  rateLimiter: RateLimiter,
+  rateLimiter: CompositeRateLimiter,
   userAuthentication: UserAuthentication,
   rollout: Rollout,
   whitelistProxy: ApplicationLevelWhitelistProxy
@@ -29,7 +29,7 @@ class RateLimitingFilter(
     else {
       bypassForInapplicableRoutes(request, next) getOrElse {
         userAuthentication.withUserSession(new BffRequest(request)) { session =>
-          Verdict.on(session).flatMap {
+          Verdict.on(session, request).flatMap {
             case Pass =>
               next(request)
             case Block(status) =>
@@ -50,18 +50,18 @@ class RateLimitingFilter(
 
   sealed trait Verdict
   case object Pass extends Verdict
-  case class Block(status: RateLimitStatus) extends Verdict
+  case class Block(status: CompositeRateLimitStatus) extends Verdict
 
   object Verdict {
-    def on(session: UserSession): Future[Verdict] = {
+    def on(session: UserSession, request: Request): Future[Verdict] = {
       val apiClient = ApiClient(session.getAgent)
       val verdict = (session, apiClient, RolloutStatus.forApiClient(apiClient)) match {
         case (_: FailsafeUserSession, _, _) | (_, Whitelisted(), _) | (_, _, Disabled) =>
           Future(Pass)
         case (_, _, Probing) =>
-          rateLimiter.advanceRateLimitStatus(apiClient).map(_ => Pass)
+          rateLimiter.advanceRateLimitStatus(apiClient, request).map(_ => Pass)
         case (_, _, Enforcing) =>
-          rateLimiter.advanceRateLimitStatus(apiClient).map { status =>
+          rateLimiter.advanceRateLimitStatus(apiClient, request).map { status =>
             if (status.hasReachedLimit) Block(status) else Pass
           }
       }
@@ -111,20 +111,18 @@ class RateLimitingFilter(
     }
   }
 
-  private def errorResponse(status: RateLimitStatus): Response = {
+  private def errorResponse(status: CompositeRateLimitStatus): Response = {
     new ResponseBuilder()
       .typedJson(errorResponseBody(status))
       .status(HttpResponseStatus.TOO_MANY_REQUESTS.getCode)
       .build
   }
 
-  private def errorResponseBody(status: RateLimitStatus): JsObject = {
-    Json.obj(
-      "errors" -> Json.arr(
-        Json.obj(
-          "meta" -> Json.toJson(status)
-        )
-      )
-    )
+  private def errorResponseBody(status: CompositeRateLimitStatus): JsObject = {
+    val errors = status.statuses.map(statusToError)
+    Json.obj("errors" -> errors)
   }
+
+  private def statusToError(status: RateLimitStatus) = Json.obj("meta" -> Json.toJson(status))
+
 }

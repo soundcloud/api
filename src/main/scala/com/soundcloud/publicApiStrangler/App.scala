@@ -91,7 +91,7 @@ object App
 
   private val rateLimitEventListeners = telemetryRateLimitEventListener :: reportingRateLimitEventListener :: Nil
 
-  private val rateLimiter = RateLimiter.from(cache, config, rateLimitEventListeners)
+  private val rateLimiter = new CompositeRateLimiter(RateLimiter.from(cache, config, rateLimitEventListeners))
 
   private val groupController = {
     val forwardHandler = new ForwardRequestHandler(publicApiClient)
