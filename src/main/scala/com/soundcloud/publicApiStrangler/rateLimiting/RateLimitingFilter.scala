@@ -29,7 +29,7 @@ class RateLimitingFilter(
     else {
       bypassForInapplicableRoutes(request, next) getOrElse {
         userAuthentication.withUserSession(new BffRequest(request)) { session =>
-          Verdict.on(session).flatMap {
+          Verdict.on(session, request).flatMap {
             case Pass =>
               next(request)
             case Block(status) =>
@@ -53,15 +53,15 @@ class RateLimitingFilter(
   case class Block(status: CompositeRateLimitStatus) extends Verdict
 
   object Verdict {
-    def on(session: UserSession): Future[Verdict] = {
+    def on(session: UserSession, request: Request): Future[Verdict] = {
       val apiClient = ApiClient(session.getAgent)
       val verdict = (session, apiClient, RolloutStatus.forApiClient(apiClient)) match {
         case (_: FailsafeUserSession, _, _) | (_, Whitelisted(), _) | (_, _, Disabled) =>
           Future(Pass)
         case (_, _, Probing) =>
-          rateLimiter.advanceRateLimitStatus(apiClient).map(_ => Pass)
+          rateLimiter.advanceRateLimitStatus(apiClient, request).map(_ => Pass)
         case (_, _, Enforcing) =>
-          rateLimiter.advanceRateLimitStatus(apiClient).map { status =>
+          rateLimiter.advanceRateLimitStatus(apiClient, request).map { status =>
             if (status.hasReachedLimit) Block(status) else Pass
           }
       }
