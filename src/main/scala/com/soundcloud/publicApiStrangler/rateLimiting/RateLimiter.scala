@@ -13,10 +13,8 @@ trait RateLimiter {
 }
 
 object RateLimiter {
-  def from(cache: Cache, config: Config, listeners: Seq[EventListener[RateLimitEvent]]): RateLimiter = {
-    val spec = config.get("ENDPOINT_GROUP_SPECIFIC_RATE_LIMITS")
-    val rateLimits = RateLimit.EndpointGroupSpecific.parse(spec)
-    val rateLimiters = rateLimits.map(new CacheBasedRateLimiter(cache, _, config.getApplicationResourceName, listeners))
-    rateLimiters.head // We have just one atm
+  def from(cache: Cache, config: Config, listeners: Seq[EventListener[RateLimitEvent]]): Seq[RateLimiter] = {
+    val rateLimits = RateLimit.parse(config.get("RATE_LIMITS"))
+    rateLimits.map(new CacheBasedRateLimiter(cache, _, config.getApplicationResourceName, listeners))
   }
 }
