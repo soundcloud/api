@@ -16,7 +16,7 @@ import play.api.libs.json.{JsObject, Json}
 import scala.util.control.NonFatal
 
 class RateLimitingFilter(
-  rateLimiter: RateLimiter,
+  rateLimiter: CompositeRateLimiter,
   userAuthentication: UserAuthentication,
   rollout: Rollout,
   whitelistProxy: ApplicationLevelWhitelistProxy
@@ -50,7 +50,7 @@ class RateLimitingFilter(
 
   sealed trait Verdict
   case object Pass extends Verdict
-  case class Block(status: RateLimitStatus) extends Verdict
+  case class Block(status: CompositeRateLimitStatus) extends Verdict
 
   object Verdict {
     def on(session: UserSession): Future[Verdict] = {
@@ -111,20 +111,18 @@ class RateLimitingFilter(
     }
   }
 
-  private def errorResponse(status: RateLimitStatus): Response = {
+  private def errorResponse(status: CompositeRateLimitStatus): Response = {
     new ResponseBuilder()
       .typedJson(errorResponseBody(status))
       .status(HttpResponseStatus.TOO_MANY_REQUESTS.getCode)
       .build
   }
 
-  private def errorResponseBody(status: RateLimitStatus): JsObject = {
-    Json.obj(
-      "errors" -> Json.arr(
-        Json.obj(
-          "meta" -> Json.toJson(status)
-        )
-      )
-    )
+  private def errorResponseBody(status: CompositeRateLimitStatus): JsObject = {
+    val errors = status.statuses.map(statusToError)
+    Json.obj("errors" -> errors)
   }
+
+  private def statusToError(status: RateLimitStatus) = Json.obj("meta" -> Json.toJson(status))
+
 }
