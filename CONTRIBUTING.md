@@ -8,6 +8,10 @@ For external contributions (coming from non mantainers of this system) to these 
 
 ## Local environment
 
-Depends on boot2docker and docker-compose being setup and working properly.
+Depends on [boot2docker](http://boot2docker.io/) and [docker-compose](https://docs.docker.com/compose) being setup and working properly. Here are some articles on how to get these two installed. 
+
+[Docker compose](https://docs.docker.com/compose/install/)
+[Docker on MacOSX](https://docs.docker.com/installation/mac/)
+[Docker on Ubuntu](https://docs.docker.com/installation/ubuntulinux/)
 
 make precheckin (run all the integration and unit tests. Run this before commiting)

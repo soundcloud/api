@@ -11,7 +11,13 @@ An implementation of the [Strangler Pattern](http://martinfowler.com/bliki/Stran
 
 ## How to develop locally
 
-Take a look in [CONTRIBUTING.md](CONTRIBUTING.md). This application uses docker-compose to orchestrate its dependencies. In order to run the application locally, please make sure to have docker and docker-compose installed. Before commiting, make sure to run `make precheckin` and that the tests are passing.
+Take a look in [CONTRIBUTING.md](CONTRIBUTING.md). This application uses [boot2docker](http://boot2docker.io/) and [docker-compose](https://docs.docker.com/compose) to orchestrate its dependencies. In order to run the application locally, please make sure to have docker and docker-compose installed. Before commiting, make sure to run `make precheckin` and that the tests are passing.
+
+Here are some articles on how to get these two installed. 
+
+[Docker compose](https://docs.docker.com/compose/install/)
+[Docker on MacOSX](https://docs.docker.com/installation/mac/)
+[Docker on Ubuntu](https://docs.docker.com/installation/ubuntulinux/)
 
 The precheckin tests uses crun, one of the [cd-tools](https://github.com/soundcloud/cd-tools) make sure to have this installed locally. Check the installation documentation in the [project's README](https://github.com/soundcloud/cd-tools#installation).
 
