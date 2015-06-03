@@ -102,8 +102,9 @@ class RolloutItSpec extends UnitSpecification {
   "picks up changes done directly in zookeeper" in new NewFeatureContext {
     val anotherClient = factory.create(config)
     rollout.activate(featureName, 0)
+
     rollout.isActive(featureName) mustEqual false
-    anotherClient.setData().forPath("/" + config.getApplicationName + "/features/" + featureName, "100".getBytes(Charsets.Utf8))
+    anotherClient.setData().forPath("/" + config.getApplicationName + "/rollouts/" + featureName, "100".getBytes(Charsets.Utf8))
     rollout.isActive(featureName) must beTrue.eventually(retries = 3, sleep = 1.second)
   }
 

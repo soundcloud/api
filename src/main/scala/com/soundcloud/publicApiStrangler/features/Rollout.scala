@@ -14,7 +14,7 @@ import scala.util.Random
 
 object RolloutBuilder {
   def build(client: CuratorFramework, applicationName: String): Rollout = {
-    val zookeeperBaseFeaturesPath = "/" + applicationName + "/features"
+    val zookeeperBaseFeaturesPath = "/" + applicationName + "/rollouts"
     try {
       client.create().creatingParentsIfNeeded().forPath(zookeeperBaseFeaturesPath)
     } catch {
