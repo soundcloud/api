@@ -15,9 +15,9 @@ Take a look in [CONTRIBUTING.md](CONTRIBUTING.md). This application uses [boot2d
 
 Here are some articles on how to get these two installed. 
 
-[Docker compose](https://docs.docker.com/compose/install/)
-[Docker on MacOSX](https://docs.docker.com/installation/mac/)
-[Docker on Ubuntu](https://docs.docker.com/installation/ubuntulinux/)
+* [Docker compose](https://docs.docker.com/compose/install/) 
+* [Docker on MacOSX](https://docs.docker.com/installation/mac/)
+* [Docker on Ubuntu](https://docs.docker.com/installation/ubuntulinux/)
 
 The precheckin tests uses crun, one of the [cd-tools](https://github.com/soundcloud/cd-tools) make sure to have this installed locally. Check the installation documentation in the [project's README](https://github.com/soundcloud/cd-tools#installation).
 
