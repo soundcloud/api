@@ -5,6 +5,7 @@ import com.soundcloud.bff.finagle.{Request, ResponseBuilder}
 import com.soundcloud.bff.nextbff.pagination.PageBuilder
 import com.soundcloud.bff.nextbff.repository.RepositoryException
 import com.soundcloud.bff.web.{BffInjectionBasedController, UserAuthentication}
+import com.soundcloud.publicApiStrangler.controller.SearchController._
 import com.soundcloud.publicApiStrangler.features.Rollout
 import com.soundcloud.publicApiStrangler.mapper.search.SearchMapper
 import com.soundcloud.publicApiStrangler.mapping.search.SearchDispatcherRequest
@@ -106,10 +107,16 @@ class SearchController(userAuthentication: UserAuthentication,
 
           case _ => Future.value(render.badRequest)
         }
-      }
+      }.map(_.header("Cache-Control", s"public, max-age=$MaxCacheAge, must-revalidate"))
+      
       else {
         fallback.dispatch(request)
       }
     }
   }
 }
+
+object SearchController {
+  val MaxCacheAge = 60
+}
+
