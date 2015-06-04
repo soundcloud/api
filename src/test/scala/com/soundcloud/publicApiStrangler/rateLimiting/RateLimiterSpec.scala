@@ -8,16 +8,16 @@ import com.twitter.util.{Future, Await, Time}
 import org.jboss.netty.handler.codec.http.DefaultHttpHeaders
 import org.joda.time.Period
 
-class CompositeRateLimiterSpec extends UnitSpecification {
+class RateLimiterSpec extends UnitSpecification {
 
-  "CompositeRateLimiter" should {
+  "RateLimiter" should {
 
     trait Context extends Scope {
       val rateLimit1 = RateLimit.General(Period.hours(24), 15000)
       val rateLimit2 = RateLimit.General(Period.hours(1), 150)
-      val rateLimiter1 = mock[RateLimiter]
-      val rateLimiter2 = mock[RateLimiter]
-      val compositeRateLimiter = new CompositeRateLimiter(Seq(rateLimiter1, rateLimiter2))
+      val rateLimiter1 = mock[IndividualRateLimiter]
+      val rateLimiter2 = mock[IndividualRateLimiter]
+      val compositeRateLimiter = new RateLimiter(Seq(rateLimiter1, rateLimiter2))
       val request = mock[Request]
       val apiClient = ApiClient(Urn("soundcloud", "applications", "test"))
       request.headers() returns new DefaultHttpHeaders()

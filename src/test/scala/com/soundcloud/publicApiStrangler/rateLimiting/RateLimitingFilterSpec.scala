@@ -28,7 +28,7 @@ class RateLimitingFilterSpec extends UnitSpecification with NoTimeConversions {
     trait Context extends Scope {
       val rateLimit = RateLimit.General(Period.seconds(2), 30)
 
-      val mockRateLimiter = mock[CompositeRateLimiter]
+      val mockRateLimiter = mock[RateLimiter]
       mockRateLimiter.appliesTo(any).returns(true)
 
       val mockAuthenticatorService = mock[AuthenticatorService]

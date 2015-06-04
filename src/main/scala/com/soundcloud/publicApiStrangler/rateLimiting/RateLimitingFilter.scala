@@ -16,7 +16,7 @@ import play.api.libs.json.{JsObject, Json}
 import scala.util.control.NonFatal
 
 class RateLimitingFilter(
-  rateLimiter: CompositeRateLimiter,
+  rateLimiter: RateLimiter,
   userAuthentication: UserAuthentication,
   rollout: Rollout,
   whitelistProxy: ApplicationLevelWhitelistProxy

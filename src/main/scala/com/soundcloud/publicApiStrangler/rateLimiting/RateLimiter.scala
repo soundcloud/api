@@ -2,72 +2,36 @@ package com.soundcloud.publicApiStrangler.rateLimiting
 
 import com.soundcloud.jvmkit.config.Config
 import com.soundcloud.ratelimiting.types.RateLimit
-import com.soundcloud.scalakit.ResourceName
 import com.soundcloud.scalakit.cache.Cache
 import com.twitter.finagle.http.Request
-import com.twitter.util.{Time, Future}
+import com.twitter.util.Future
 
-class RateLimiter(cache: Cache,
-                  rateLimit: RateLimit,
-                  applicationName: ResourceName,
-                  listeners: Seq[EventListener[RateLimitEvent]]) {
-
-  val advancing = RateLimitStatus(rateLimit, _: Int, _: Option[Time])
-  val reached = RateLimitStatus.reached(rateLimit, _: Option[Time])
-
-  def appliesTo(request: Request) = {
-    rateLimit.appliesTo(request.path)
+class RateLimiter(rateLimiters: Seq[IndividualRateLimiter]) {
+  private def applicableRateLimiters(request: Request): Seq[IndividualRateLimiter] = {
+    rateLimiters.filter(_ appliesTo request)
   }
 
-  def advanceRateLimitStatus(apiClient: ApiClient): Future[RateLimitStatus] = {
-    val mediator = new RateLimiterCacheMediator(cache, rateLimit, apiClient, applicationName)
-    mediator.alreadyReached.flatMap { alreadyReached =>
-      if (alreadyReached) {
-        notifyListeners(RateLimitEvent.Overflowing(apiClient))
-        mediator.expiry.map(reached)
-      } else {
-        mediator.requestsMadeSoFar.flatMap {
-          case Some(number) if number >= rateLimit.maximumNrOfRequests =>
-            Future.join(mediator.expiry, mediator.markAsReached).map { case (expiry, _) =>
-              val status = reached(expiry)
-              notifyListeners(RateLimitEvent.CheckpointReached(status, apiClient))
-              notifyListeners(RateLimitEvent.Overflowing(apiClient))
-              status
-            }
-          case Some(_) =>
-            Future.join(mediator.updateRequestCount, mediator.expiry).map { case (updatedRequestCount, expiry) =>
-              val status = advancing(updatedRequestCount.map(_.toInt).getOrElse(1), expiry)
-              notifyListeners(RateLimitEvent.CheckpointReached(status, apiClient))
-              status
-            }
-          case None =>
-            mediator.establish.map { expiry => advancing(1, Some(expiry)) }
-        }
-      }
+  def appliesTo(request: Request): Boolean = {
+    applicableRateLimiters(request).nonEmpty
+  }
+
+  def advanceRateLimitStatus(apiClient: ApiClient, request: Request): Future[CompositeRateLimitStatus] = {
+    val limiters = applicableRateLimiters(request)
+    for {
+      statuses <- Future.collect(limiters.map(_.rateLimitStatus(apiClient)))
+      oldCompositeStatus = CompositeRateLimitStatus(statuses.toSet)
+      updatedStatuses <- if (!oldCompositeStatus.hasReachedLimit) Future.collect(limiters.map(_.advanceRateLimitStatus(apiClient))).map(Some(_)) else Future.None
+      updatedCompositeStatus = updatedStatuses.map(s => CompositeRateLimitStatus(s.toSet))
+    } yield {
+      updatedCompositeStatus getOrElse oldCompositeStatus
     }
-  }
-
-  def rateLimitStatus(apiClient: ApiClient): Future[RateLimitStatus] = {
-    val mediator = new RateLimiterCacheMediator(cache, rateLimit, apiClient, applicationName)
-    Future.join(mediator.expiry, mediator.alreadyReached) flatMap { case (expiry, alreadyReached) =>
-      if (alreadyReached)
-        Future(reached(expiry))
-      else
-        mediator.requestsMadeSoFar map { requestsOpt =>
-          val requests = requestsOpt.map(_.toInt).getOrElse(0)
-          advancing(requests, expiry)
-        }
-    }
-  }
-
-  def notifyListeners(event: RateLimitEvent): Unit = {
-    listeners.foreach(_.notify(event))
   }
 }
 
 object RateLimiter {
-  def from(cache: Cache, config: Config, listeners: Seq[EventListener[RateLimitEvent]]): Seq[RateLimiter] = {
+  def from(cache: Cache, config: Config, listeners: Seq[EventListener[RateLimitEvent]]): RateLimiter = {
     val rateLimits = RateLimit.parse(config.get("RATE_LIMITS"))
-    rateLimits.map(new RateLimiter(cache, _, config.getApplicationResourceName, listeners))
+    val individualRateLimiters = rateLimits.map(new IndividualRateLimiter(cache, _, config.getApplicationResourceName, listeners))
+    new RateLimiter(individualRateLimiters)
   }
 }
