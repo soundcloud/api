@@ -57,16 +57,9 @@ Alternatively you can go to do http://gatekeeper.int.s-cloud.net/features and cl
 
 ## Search leaving mothership
 
-Routing of search requests is controlled via rollout flags.
-
-1. [`search_avoid_mothership_for_tracks`](http://gatekeeper.int.s-cloud.net/activations/search_avoid_mothership_for_tracks)
-   -> uses microservices for /tracks?q= instead of mothership
-1. [`search_avoid_mothership_for_users`](http://gatekeeper.int.s-cloud.net/activations/search_avoid_mothership_for_users)
-   -> uses microservices for /users?q= instead of mothership
-1. [`search_avoid_mothership_for_playlists`](http://gatekeeper.int.s-cloud.net/activations/search_avoid_mothership_for_playlists)
-   -> uses microservices for /playlists?q= instead of mothership
-1. [`search_avoid_mothership_for_groups`](http://gatekeeper.int.s-cloud.net/activations/search_avoid_mothership_for_groups)
-   -> uses microservices for /groups?q= instead of mothership
+Routing of search requests is controlled via rollout flags. See
+[Search Wiki](https://github.com/soundcloud/search/wiki/Search-Firefighting#search-in-public-api-strangler-is-misbehaving)
+for instructions on how to change rollout percentage values.
 
 ## Rate limiting whitelist
 The ratelimiting feature makes use of a whitelist of client application URNs that will never be rate-limited. The source of truth for this whitelist is the ZooKeeper cluster.
