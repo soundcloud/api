@@ -12,7 +12,7 @@ import org.joda.time.Period
 import org.specs2.matcher.MatchResult
 import org.specs2.time.NoTimeConversions
 
-class CacheBasedRateLimiterSpec extends UnitSpecification with NoTimeConversions {
+class RateLimiterSpec extends UnitSpecification with NoTimeConversions {
   sequential
 
   final def toChannelBuffer(value: String) = {
@@ -30,9 +30,9 @@ class CacheBasedRateLimiterSpec extends UnitSpecification with NoTimeConversions
   val duration = Period.seconds(5)
   val rateLimit = RateLimit.General(duration, 4)
   
-  val rateLimiter = new CacheBasedRateLimiter(cache, rateLimit, ResourceName("TEST_APP"), Seq.empty)
+  val rateLimiter = new RateLimiter(cache, rateLimit, ResourceName("TEST_APP"), Seq.empty)
 
-  "The CacheBasedRateLimiter" should {
+  "The RateLimiter" should {
 
     "Rate limiting flow" in {
       val apiClient = ApiClient(Urn("soundcloud", "applications", "1234"))
