@@ -25,6 +25,7 @@ The precheckin tests uses crun, one of the [cd-tools](https://github.com/soundcl
 
 Use jenkins to deploy the application. For the master branch and deployment pipeline: [http://jenkins.cs.dev.s-cloud.net/view/public-api-strangler/](http://jenkins.cs.dev.s-cloud.net)
 
+Please see [CONTRIBUTING.md](https://github.com/soundcloud/public-api-strangler/blob/master/CONTRIBUTING.md#making-a-change) for guidelines for outside contributors.
 
 ## CI
 For the master branch and deployment pipeline: [http://jenkins.cs.dev.s-cloud.net/view/public-api-strangler/](http://jenkins.cs.dev.s-cloud.net/view/public-api-strangler/).
