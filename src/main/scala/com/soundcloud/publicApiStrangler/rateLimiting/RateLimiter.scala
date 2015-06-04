@@ -6,9 +6,9 @@ import com.soundcloud.scalakit.cache.Cache
 import com.twitter.finagle.http.Request
 import com.twitter.util.Future
 
-class RateLimiter(rateLimiters: Seq[IndividualRateLimiter]) {
+class RateLimiter(val groupName: String, individualRateLimiters: Seq[IndividualRateLimiter]) {
   private def applicableRateLimiters(request: Request): Seq[IndividualRateLimiter] = {
-    rateLimiters.filter(_ appliesTo request)
+    individualRateLimiters.filter(_ appliesTo request)
   }
 
   def appliesTo(request: Request): Boolean = {
@@ -32,6 +32,6 @@ object RateLimiter {
   def from(cache: Cache, config: Config, listeners: Seq[EventListener[RateLimitEvent]]): RateLimiter = {
     val rateLimits = RateLimit.parse(config.get("RATE_LIMITS"))
     val individualRateLimiters = rateLimits.map(new IndividualRateLimiter(cache, _, config.getApplicationResourceName, listeners))
-    new RateLimiter(individualRateLimiters)
+    new RateLimiter("default", individualRateLimiters)
   }
 }

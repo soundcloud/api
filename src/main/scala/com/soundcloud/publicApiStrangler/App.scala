@@ -91,7 +91,8 @@ object App
 
   private val rateLimitEventListeners = telemetryRateLimitEventListener :: reportingRateLimitEventListener :: Nil
 
-  private val rateLimiter = RateLimiter.from(cache, config, rateLimitEventListeners)
+  private val defaultRateLimiter = RateLimiter.from(cache, config, rateLimitEventListeners)
+  private val rateLimiterRegistry = new RateLimiterRegistry(defaultRateLimiter)
 
   private val groupController = {
     val forwardHandler = new ForwardRequestHandler(publicApiClient)
@@ -173,7 +174,7 @@ object App
     new ExceptionFilter[Request],
     new AcceptOnlyJsonRequestFilter(Set("/crossdomain.xml", "/robots.txt")),
     new ContentAuthorizationFilter(authorizeContent),
-    new RateLimitingFilter(rateLimiter, userAuthentication, rollout, whitelistingProxy),
+    new RateLimitingFilter(rateLimiterRegistry, userAuthentication, rollout, whitelistingProxy),
     new DefaultResponseHeadersFilter
   )
 

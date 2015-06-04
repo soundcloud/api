@@ -28,7 +28,10 @@ class RateLimitingFilterSpec extends UnitSpecification with NoTimeConversions {
     trait Context extends Scope {
       val rateLimit = RateLimit.General(Period.seconds(2), 30)
 
+      val mockRateLimiterRegistry = mock[RateLimiterRegistry]
       val mockRateLimiter = mock[RateLimiter]
+
+      mockRateLimiterRegistry.lookup(any) returns mockRateLimiter
       mockRateLimiter.appliesTo(any).returns(true)
 
       val mockAuthenticatorService = mock[AuthenticatorService]
@@ -49,7 +52,7 @@ class RateLimitingFilterSpec extends UnitSpecification with NoTimeConversions {
 
       val mockWhitelistingService = mock[ApplicationLevelWhitelistProxy]
 
-      val filter = new RateLimitingFilter(mockRateLimiter, mockUserAuthentication, mockRollout, mockWhitelistingService)
+      val filter = new RateLimitingFilter(mockRateLimiterRegistry, mockUserAuthentication, mockRollout, mockWhitelistingService)
 
       mockRollout.isActive(===(Features.WireRateLimits)) returns true
     }
@@ -172,13 +175,13 @@ class RateLimitingFilterSpec extends UnitSpecification with NoTimeConversions {
     }
 
     "call the next service if the ratelimiter does not apply to the request route" in new Context {
+      mockAuthenticatorService.cacheKeyAndSessionFor(any, any) returns Future.value(CacheKeyAndSession(Some("inconsequential"), mockSession))
       next.apply(any) returns Future.value(mockResponse)
       mockRequest.path returns "/notapplicable"
       mockRateLimiter.appliesTo(mockRequest).returns(false)
 
       val result = Await.result(filter.apply(mockRequest, next))
 
-      there was no(mockAuthenticatorService).cacheKeyAndSessionFor(any, any)
       result ==== mockResponse
     }
   }

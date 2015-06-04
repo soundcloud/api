@@ -16,7 +16,7 @@ import play.api.libs.json.{JsObject, Json}
 import scala.util.control.NonFatal
 
 class RateLimitingFilter(
-  rateLimiter: RateLimiter,
+  rateLimiterRegistry: RateLimiterRegistry,
   userAuthentication: UserAuthentication,
   rollout: Rollout,
   whitelistProxy: ApplicationLevelWhitelistProxy
@@ -29,7 +29,9 @@ class RateLimitingFilter(
     else {
       bypassForInapplicableRoutes(request, next) getOrElse {
         userAuthentication.withUserSession(new BffRequest(request)) { session =>
-          Verdict.on(session, request).flatMap {
+          val apiClient = ApiClient(session.getAgent)
+          val rateLimiter = rateLimiterRegistry.lookup(apiClient)
+          Verdict.on(session, request, apiClient, rateLimiter).flatMap {
             case Pass =>
               next(request)
             case Block(status) =>
@@ -42,9 +44,8 @@ class RateLimitingFilter(
 
   def bypassForInapplicableRoutes(request: Request, next: Service[Request, Response]): Option[Future[Response]] = {
     request match {
-      case InternalRoute()      => Some(next(request))
-      case RateLimiterApplies() => None
-      case _                    => Some(next(request))
+      case InternalRoute() => Some(next(request))
+      case _               => None
     }
   }
 
@@ -53,14 +54,17 @@ class RateLimitingFilter(
   case class Block(status: CompositeRateLimitStatus) extends Verdict
 
   object Verdict {
-    def on(session: UserSession, request: Request): Future[Verdict] = {
+    def on(session: UserSession, request: Request, apiClient: ApiClient, rateLimiter: RateLimiter): Future[Verdict] = {
       val apiClient = ApiClient(session.getAgent)
-      val verdict = (session, apiClient, RolloutStatus.forApiClient(apiClient)) match {
-        case (_: FailsafeUserSession, _, _) | (_, Whitelisted(), _) | (_, _, Disabled) =>
+      val rolloutStatus = RolloutStatus.forApiClient(apiClient)
+      val verdict = if (shouldBailOut(session, request, apiClient, rateLimiter)) {
+        Future(Pass)
+      } else rolloutStatus match {
+        case Disabled =>
           Future(Pass)
-        case (_, _, Probing) =>
+        case Probing =>
           rateLimiter.advanceRateLimitStatus(apiClient, request).map(_ => Pass)
-        case (_, _, Enforcing) =>
+        case Enforcing =>
           rateLimiter.advanceRateLimitStatus(apiClient, request).map { status =>
             if (status.hasReachedLimit) Block(status) else Pass
           }
@@ -70,6 +74,12 @@ class RateLimitingFilter(
           logger.error("Something went wrong while trying to rate-limit the request.", ex)
           Pass
       }
+    }
+
+    def shouldBailOut(session: UserSession, request: Request, apiClient: ApiClient, rateLimiter: RateLimiter): Boolean = {
+      session.isInstanceOf[FailsafeUserSession] ||
+        whitelistProxy.hasClientWhitelisted(apiClient.urn) ||
+        !rateLimiter.appliesTo(request)
     }
   }
 
@@ -93,21 +103,9 @@ class RateLimitingFilter(
     }
   }
 
-  object Whitelisted {
-    def unapply(apiClient: ApiClient): Boolean = {
-      whitelistProxy.hasClientWhitelisted(apiClient.urn)
-    }
-  }
-
   object InternalRoute {
     def unapply(request: Request): Boolean = {
       request.path.startsWith("/-/")
-    }
-  }
-
-  object RateLimiterApplies {
-    def unapply(request: Request): Boolean = {
-      rateLimiter.appliesTo(request)
     }
   }
 
