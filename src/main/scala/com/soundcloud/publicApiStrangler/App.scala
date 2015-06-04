@@ -165,11 +165,13 @@ object App
     )
   }
 
+  private val robotsTxtController = new StaticResponseController("/robots.txt", "User-agent: *\nDisallow: \n")
+
   override val fallbackHandler = Some(mothershipDispatcher)
 
   override lazy val additionalFilters = List(
     new ExceptionFilter[Request],
-    new AcceptOnlyJsonRequestFilter(Set("/crossdomain.xml")),
+    new AcceptOnlyJsonRequestFilter(Set("/crossdomain.xml", "/robots.txt")),
     new ContentAuthorizationFilter(authorizeContent),
     new RateLimitingFilter(rateLimiter, userAuthentication, rollout, whitelistingProxy),
     new DefaultResponseHeadersFilter
@@ -181,6 +183,7 @@ object App
     trackStreamsController,
     userFollowController,
     searchController,
-    similarSoundsController
+    similarSoundsController,
+    robotsTxtController
   )
 }
