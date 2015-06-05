@@ -86,48 +86,8 @@ for instructions on how to change rollout percentage values.
 
 The ratelimiting feature makes use of a whitelist of client application URNs
 that will never be rate-limited. The source of truth for this whitelist is the
-ZooKeeper cluster.
-
-In the near future, it will be possible to add clients to the whitelist or
-remove them by means of of a corresponding internal service that will expose
-appropriate resources over HTTP.
-
-Until that service is in place, updating the whitelist has to be done with a
-simple Python script located in this repository, which will remove the previous
-whitelist from ZooKeeper and replace it with the whitelist in
-`ratelimiting_whitelist.txt`. This at least allows us to quickly add clients to
-the whitelist without requiring a deployment.
-
-### Requirements
-
-Make sure you have Python and the [zk-shell](https://github.com/rgs1/zk_shell)
-command-line utility installed on your machine:
-
-`pip install zk-shell`
-
-### How to update the whitelist
-
-If you want to replace the current version of the whitelist with a new one, do this:
-
-1. Change the file `ratelimiting_whitelist.txt` to contain exactly those client
-   app URNs that should be on the whitelist. Each URN must be in a separate
-   line.
-2. Run `./update_ratelimiting_whitelist.py -u ratelimiting_whitelist.txt`. The
-   script will print out what it's doing, indicating a successful run with a
-   `Done!` at the end.
-
-**WARNING:** Using this removes the entire path, and then adds the entries. As
-a result, the updates will never take effect without a server restart. Because
-of that, **always** use the following procedure instead:
-
-```
-./update_ratelimit_whitelist.py -a 123242
-./update_ratelimit_whitelist.py -r 123243
-```
-
-If you want to do a dry run, testing your update against a local ZooKeeper
-server, replace the line `zookeeper_server = zookeeper_host()` with
-`zookeeper_server = 'localhost'`.
+ZooKeeper cluster and is managed by the
+[Rate Limiting Service](https://github.com/soundcloud/ratelimiting/).
 
 ## FAQ
 
