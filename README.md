@@ -20,9 +20,9 @@ dependencies. In order to run the application locally, please make sure to have
 docker and docker-compose installed. Before commiting, make sure to run `make
 precheckin` and that the tests are passing.
 
-Here are some articles on how to get these two installed. 
+Here are some articles on how to get these two installed.
 
-* [Docker compose](https://docs.docker.com/compose/install/) 
+* [Docker compose](https://docs.docker.com/compose/install/)
 * [Docker on MacOSX](https://docs.docker.com/installation/mac/)
 * [Docker on Ubuntu](https://docs.docker.com/installation/ubuntulinux/)
 
@@ -114,7 +114,7 @@ If you want to replace the current version of the whitelist with a new one, do t
    line.
 2. Run `./update_ratelimiting_whitelist.py -u ratelimiting_whitelist.txt`. The
    script will print out what it's doing, indicating a successful run with a
-   `Done!` at the end. 
+   `Done!` at the end.
 
 **WARNING:** Using this removes the entire path, and then adds the entries. As
 a result, the updates will never take effect without a server restart. Because
