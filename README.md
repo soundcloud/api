@@ -1,6 +1,8 @@
 # Public-API Strangler
 
-An implementation of the [Strangler Pattern](http://martinfowler.com/bliki/StranglerApplication.html) for the mothership's Public API.
+An implementation of the [Strangler
+Pattern](http://martinfowler.com/bliki/StranglerApplication.html) for the
+mothership's Public API.
 
 ## Team
 
@@ -11,7 +13,12 @@ An implementation of the [Strangler Pattern](http://martinfowler.com/bliki/Stran
 
 ## How to develop locally
 
-Take a look in [CONTRIBUTING.md](CONTRIBUTING.md). This application uses [boot2docker](http://boot2docker.io/) and [docker-compose](https://docs.docker.com/compose) to orchestrate its dependencies. In order to run the application locally, please make sure to have docker and docker-compose installed. Before commiting, make sure to run `make precheckin` and that the tests are passing.
+Take a look in [CONTRIBUTING.md](CONTRIBUTING.md). This application uses
+[boot2docker](http://boot2docker.io/) and
+[docker-compose](https://docs.docker.com/compose) to orchestrate its
+dependencies. In order to run the application locally, please make sure to have
+docker and docker-compose installed. Before commiting, make sure to run `make
+precheckin` and that the tests are passing.
 
 Here are some articles on how to get these two installed. 
 
@@ -19,34 +26,48 @@ Here are some articles on how to get these two installed.
 * [Docker on MacOSX](https://docs.docker.com/installation/mac/)
 * [Docker on Ubuntu](https://docs.docker.com/installation/ubuntulinux/)
 
-The precheckin tests uses crun, one of the [cd-tools](https://github.com/soundcloud/cd-tools) make sure to have this installed locally. Check the installation documentation in the [project's README](https://github.com/soundcloud/cd-tools#installation).
+The precheckin tests uses crun, one of the
+[cd-tools](https://github.com/soundcloud/cd-tools) make sure to have this
+installed locally. Check the installation documentation in the [project's
+README](https://github.com/soundcloud/cd-tools#installation).
 
 ## How to deploy
 
-Use jenkins to deploy the application. For the master branch and deployment pipeline: [http://jenkins.cs.dev.s-cloud.net/view/public-api-strangler/](http://jenkins.cs.dev.s-cloud.net)
+Use jenkins to deploy the application. For the master branch and deployment
+pipeline:
+[http://jenkins.cs.dev.s-cloud.net/view/public-api-strangler/](http://jenkins.cs.dev.s-cloud.net)
 
-Please see [CONTRIBUTING.md](https://github.com/soundcloud/public-api-strangler/blob/master/CONTRIBUTING.md#making-a-change) for guidelines for outside contributors.
+Please see
+[CONTRIBUTING.md](https://github.com/soundcloud/public-api-strangler/blob/master/CONTRIBUTING.md#making-a-change)
+for guidelines for outside contributors.
 
 ## CI
-For the master branch and deployment pipeline: [http://jenkins.cs.dev.s-cloud.net/view/public-api-strangler/](http://jenkins.cs.dev.s-cloud.net/view/public-api-strangler/).
 
-The PR precheckin builds are still on jenkins.int due the laufbursche integration present there: [http://jenkins.int.s-cloud.net/job/public-api-strangler_master_precheckin](http://jenkins.int.s-cloud.net/job/public-api-strangler_master_precheckin).
+For the master branch and deployment pipeline:
+[http://jenkins.cs.dev.s-cloud.net/view/public-api-strangler/](http://jenkins.cs.dev.s-cloud.net/view/public-api-strangler/).
 
+The PR precheckin builds are still on jenkins.int due the laufbursche
+integration present there:
+[http://jenkins.int.s-cloud.net/job/public-api-strangler_master_precheckin](http://jenkins.int.s-cloud.net/job/public-api-strangler_master_precheckin).
 
 ## Groups endpoint kill switch
 
-The strangler has support for removing access to expensive endpoints that are harmful to our site-wide stability if abused or scrapped by a malicious user.
+The strangler has support for removing access to expensive endpoints that are
+harmful to our site-wide stability if abused or scrapped by a malicious user.
 
 ### How to use it
 
 There are two features flags:
 
-    1. disable_cheap_groups_endpoints ->  disables both  /users/:id/groups.json  and /groups/:id.json
-    2. disable_expensive_groups_endpoints -> disables both /groups/:id/users.json and /groups/:id/users
+1. `disable_cheap_groups_endpoints` ->  disables both  /users/:id/groups.json
+   and /groups/:id.json
+2. `disable_expensive_groups_endpoints` -> disables both /groups/:id/users.json
+   and /groups/:id/users
 
 Go to rollout and activate the features to the group `all`.
 
-Activating it will make the strangler return HTTP 200 with empty body on requests to the corresponding.
+Activating it will make the strangler return HTTP 200 with empty body on
+requests to the corresponding.
 
 ### Links to rollout
 
@@ -62,14 +83,25 @@ Routing of search requests is controlled via rollout flags. See
 for instructions on how to change rollout percentage values.
 
 ## Rate limiting whitelist
-The ratelimiting feature makes use of a whitelist of client application URNs that will never be rate-limited. The source of truth for this whitelist is the ZooKeeper cluster.
 
-In the near future, it will be possible to add clients to the whitelist or remove them by means of of a corresponding internal service that will expose appropriate resources over HTTP.
+The ratelimiting feature makes use of a whitelist of client application URNs
+that will never be rate-limited. The source of truth for this whitelist is the
+ZooKeeper cluster.
 
-Until that service is in place, updating the whitelist has to be done with a simple Python script located in this repository, which will remove the previous whitelist from ZooKeeper and replace it with the whitelist in `ratelimiting_whitelist.txt`. This at least allows us to quickly add clients to the whitelist without requiring a deployment.
+In the near future, it will be possible to add clients to the whitelist or
+remove them by means of of a corresponding internal service that will expose
+appropriate resources over HTTP.
+
+Until that service is in place, updating the whitelist has to be done with a
+simple Python script located in this repository, which will remove the previous
+whitelist from ZooKeeper and replace it with the whitelist in
+`ratelimiting_whitelist.txt`. This at least allows us to quickly add clients to
+the whitelist without requiring a deployment.
 
 ### Requirements
-Make sure you have Python and the [zk-shell](https://github.com/rgs1/zk_shell) command-line utility installed on your machine:
+
+Make sure you have Python and the [zk-shell](https://github.com/rgs1/zk_shell)
+command-line utility installed on your machine:
 
 `pip install zk-shell`
 
@@ -77,22 +109,30 @@ Make sure you have Python and the [zk-shell](https://github.com/rgs1/zk_shell) c
 
 If you want to replace the current version of the whitelist with a new one, do this:
 
-1. Change the file `ratelimiting_whitelist.txt` to contain exactly those client app URNs that should be on the whitelist. Each URN must be in a separate line.
-2. Run `./update_ratelimiting_whitelist.py -u ratelimiting_whitelist.txt`. The script will print out what it's doing, indicating a successful run with a `Done!` at the end. 
+1. Change the file `ratelimiting_whitelist.txt` to contain exactly those client
+   app URNs that should be on the whitelist. Each URN must be in a separate
+   line.
+2. Run `./update_ratelimiting_whitelist.py -u ratelimiting_whitelist.txt`. The
+   script will print out what it's doing, indicating a successful run with a
+   `Done!` at the end. 
 
-**WARNING:** Using this removes the entire path, and then adds the entries. As a result, the updates will never take effect without a server restart. Because of that, **always** use the following procedure instead:
+**WARNING:** Using this removes the entire path, and then adds the entries. As
+a result, the updates will never take effect without a server restart. Because
+of that, **always** use the following procedure instead:
 
 ```
 ./update_ratelimit_whitelist.py -a 123242
 ./update_ratelimit_whitelist.py -r 123243
 ```
 
-If you want to do a dry run, testing your update against a local ZooKeeper server, replace the line `zookeeper_server = zookeeper_host()` with `zookeeper_server = 'localhost'`.
-
+If you want to do a dry run, testing your update against a local ZooKeeper
+server, replace the line `zookeeper_server = zookeeper_host()` with
+`zookeeper_server = 'localhost'`.
 
 ## FAQ
 
 ### What should I read before asking questions?
+
 That's a great question! Try these first:
 
 * [Strangler Application, by Martin Fowler](http://martinfowler.com/bliki/StranglerApplication.html)
@@ -100,26 +140,28 @@ That's a great question! Try these first:
 * [An Introduction to Finagle](http://twitter.github.io/scala_school/finagle.html)
 
 ### Is this going to replace the current public api?
-Yes and no. This will be the first service hit when someone invokes
-`api.soundcloud.com`, but it doesn't aim to replace the [Mothership](http://github.com/soundcloud/soundcloud).
 
-The Mothership and its ecosystem implement a lot of different concerns
-and
-[Bounded Contexts](http://martinfowler.com/bliki/BoundedContext.html).
-One of the concerns is to provide a gateway from the internet to
-internal services, like search, payments, uploads and streamming.
-While there is no plan to port them to this service immediately, new
-services and huge enough refactorings of old services should consider
-this system, and not the mothership, as its main way out to the
-internet.
+Yes and no. This will be the first service hit when someone invokes
+`api.soundcloud.com`, but it doesn't aim to replace the
+[Mothership](http://github.com/soundcloud/soundcloud).
+
+The Mothership and its ecosystem implement a lot of different concerns and
+[Bounded Contexts](http://martinfowler.com/bliki/BoundedContext.html). One of
+the concerns is to provide a gateway from the internet to internal services,
+like search, payments, uploads and streamming. While there is no plan to port
+them to this service immediately, new services and huge enough refactorings of
+old services should consider this system, and not the mothership, as its main
+way out to the internet.
 
 ### Will this become the new public API?
+
 No. If you are interested in what is coming for the API, please reach
 out to the platform team:
 [platform@soundcloud.com](platform@soundcloud.com). This is just a
 smart proxy to the old API.
 
 ### Besides enablign the Strangler Pattern, what are the benefits of this layer?
+
 Several small features, like rate-limiting and other security checks,
 are implemented at this layer, without having to touch the mothership
 code.
