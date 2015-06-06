@@ -5,7 +5,7 @@ import com.soundcloud.bff.authorization.ContentAuthorizationService
 import com.soundcloud.bff.media.{TrackWaveformUrlMapper, WaveformUrlsRepository}
 import com.soundcloud.bff.nextbff.mapping.MappingContext
 import com.soundcloud.bff.test.UnitSpecification
-import com.soundcloud.jvmkit.policies.{ContentAuthorization, ContentPolicy, Reason}
+import com.soundcloud.jvmkit.policies.{MonetizationModel, ContentAuthorization, ContentPolicy, Reason}
 import com.soundcloud.publicApiStrangler.mapper.liebling.LikeCountMapper
 import com.soundcloud.publicApiStrangler.mapper.purchaselink.TrackPurchaseLinkMapper
 import com.soundcloud.publicApiStrangler.mapper.timeline.EntitySummaryMapper
@@ -63,7 +63,7 @@ class SearchEntityMapperSpec extends UnitSpecification with Fixtures {
 
 
     val authorizations = Seq(
-      new ContentAuthorization(Urn("soundcloud:tracks:15273221"), ContentPolicy.ALLOW, Reason.UNKNOWN)
+      new ContentAuthorization(Urn("soundcloud:tracks:15273221"), ContentPolicy.ALLOW, Reason.UNKNOWN, MonetizationModel.NOT_APPLICABLE)
     )
     val okidokiFetch = withContentsOf("okidoki", "search_fetch")
       .as[List[JsObject]]
