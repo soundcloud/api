@@ -1,5 +1,4 @@
 import com.typesafe.sbt.packager.archetypes.JavaAppPackaging
-import io.gatling.sbt.GatlingPlugin
 import net.virtualvoid.sbt.graph.Plugin.graphSettings
 import sbt.Keys._
 import sbt._
@@ -50,18 +49,6 @@ object PublicApiStranglerBuild extends Build {
         "org.apache.curator" % "curator-recipes"      % "2.7.1"
       )
     )
-
-  lazy val gatlingDependencies = defaultSettings ++ Seq(
-    libraryDependencies ++= Seq(
-      "io.gatling.highcharts" % "gatling-charts-highcharts" % "2.1.4",
-      "io.gatling" % "gatling-test-framework" % "2.1.4")
-  )
-
-  lazy val performanceTests = Project(id = "performance",
-    base = file("performanceTests"))
-    .enablePlugins(GatlingPlugin)
-    .configs(GatlingPlugin.Gatling)
-    .settings(gatlingDependencies: _*)
 
   lazy val IntegrationTest = config("it") extend(Test)
 
