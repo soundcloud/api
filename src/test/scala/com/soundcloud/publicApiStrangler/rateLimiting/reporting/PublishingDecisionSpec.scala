@@ -1,7 +1,8 @@
 package com.soundcloud.publicApiStrangler.rateLimiting.reporting
 
 import com.soundcloud.publicApiStrangler.rateLimiting.{ApiClient, RateLimitEvent, RateLimitStatus}
-import com.soundcloud.ratelimiting.types.RateLimit
+import com.soundcloud.ratelimiting.core.RateLimit
+import com.soundcloud.ratelimiting.core.RateLimit.EndpointGroupSpecific.EndpointGroup
 import com.soundcloud.scalakit.Urn
 import com.soundcloud.scalakit.test.UnitSpecification
 import com.twitter.util.Time
@@ -14,7 +15,7 @@ class PublishingDecisionSpec extends UnitSpecification {
     trait Context extends Scope {
       val someClient = ApiClient(Urn("soundcloud", "applications", "test-app"))
       val resetTime = Some(Time.now)
-      val rateLimit = RateLimit.General(Period.seconds(50), 5000 * 100)
+      val rateLimit = RateLimit.EndpointGroupSpecific(EndpointGroup("default", ".*".r), Period.seconds(50), 5000 * 100)
       def event(requestCount: Int) = {
         RateLimitEvent.CheckpointReached(RateLimitStatus(
           rateLimit, requestCount, resetTime), someClient)

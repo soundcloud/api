@@ -1,7 +1,7 @@
 package com.soundcloud.publicApiStrangler.rateLimiting
 
 import com.soundcloud.jvmkit.config.Config
-import com.soundcloud.ratelimiting.types.RateLimit
+import com.soundcloud.ratelimiting.core.RateLimit
 import com.soundcloud.scalakit.cache.Cache
 import com.twitter.finagle.http.Request
 import com.twitter.util.Future

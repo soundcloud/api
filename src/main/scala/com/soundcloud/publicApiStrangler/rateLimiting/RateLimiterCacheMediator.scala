@@ -2,7 +2,7 @@ package com.soundcloud.publicApiStrangler.rateLimiting
 
 import com.soundcloud.jvmkit.ResourceName
 import com.soundcloud.publicApiStrangler.support.TimeConversions._
-import com.soundcloud.ratelimiting.types.RateLimit
+import com.soundcloud.ratelimiting.core.RateLimit
 import com.soundcloud.scalakit.cache.Cache
 import com.twitter.util.{Future, Time, TimeFormat}
 import org.jboss.netty.buffer.ChannelBuffers

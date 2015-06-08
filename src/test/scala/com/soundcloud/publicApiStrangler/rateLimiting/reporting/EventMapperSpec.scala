@@ -3,12 +3,13 @@ package com.soundcloud.publicApiStrangler.rateLimiting.reporting
 import com.soundcloud.publicApiStrangler.rateLimiting.RateLimitEvent.CheckpointReached
 import com.soundcloud.publicApiStrangler.rateLimiting.{ApiClient, RateLimitStatus}
 import com.soundcloud.publicApiStrangler.support.TimeConversions._
-import com.soundcloud.ratelimiting.{events, types}
-import com.soundcloud.ratelimiting.types.{RateLimitIdentity, RateLimit}
+import com.soundcloud.ratelimiting.core.RateLimit.EndpointGroupSpecific.EndpointGroup
+import com.soundcloud.ratelimiting.core.{RateLimit, RateLimitIdentity, ApiClient => LibApiClient}
+import com.soundcloud.ratelimiting.events
 import com.soundcloud.scalakit.Urn
 import com.soundcloud.scalakit.test.UnitSpecification
 import com.twitter.util.Time
-import org.joda.time.{DateTimeZone, DateTime, Period}
+import org.joda.time.Period
 
 class EventMapperSpec extends UnitSpecification {
 
@@ -17,7 +18,7 @@ class EventMapperSpec extends UnitSpecification {
     trait Context extends Scope {
       val resetTime = Time.now
       val testApp = Urn("soundcloud", "applications", "test-app")
-      val rateLimit = RateLimit.General(Period.seconds(40), 200)
+      val rateLimit = RateLimit.EndpointGroupSpecific(EndpointGroup("default", ".*".r), Period.seconds(40), 200)
       val rateLimitIdentity = RateLimitIdentity.forRateLimit(rateLimit)
     }
 
@@ -30,7 +31,7 @@ class EventMapperSpec extends UnitSpecification {
       result ==== events.Event(
         limitReached.occurredAt,
         Urn("soundcloud", "systems", "public-api-strangler"),
-        events.ReachedEventPayload(types.ApiClient(testApp), rateLimitIdentity, Some(resetTime.toJodaDateTime), 200)
+        events.ReachedEventPayload(LibApiClient(testApp), rateLimitIdentity, Some(resetTime.toJodaDateTime), 200)
       )
     }
   }

@@ -1,12 +1,12 @@
 package com.soundcloud.publicApiStrangler.rateLimiting
 
 import com.soundcloud.publicApiStrangler.standards.PublicApiStandards._
-import com.soundcloud.ratelimiting.types.{RateLimitIdentity, RateLimit}
+import com.soundcloud.ratelimiting.core.{RateLimitIdentity, RateLimit}
 import com.soundcloud.publicApiStrangler.support.TimeConversions._
 
 import com.twitter.util._
 import play.api.libs.json.{Json, Writes}
-import com.soundcloud.ratelimiting.events.JsonProtocol._
+import com.soundcloud.ratelimiting.events.EventsJsonProtocol._
 
 case class RateLimitStatus(rateLimit: RateLimit,
                            requestCount: Int,

@@ -6,7 +6,8 @@ import com.soundcloud.bff.web.UserAuthentication
 import com.soundcloud.jvmkit.UserSession
 import com.soundcloud.publicApiStrangler.features.{Features, Rollout}
 import com.soundcloud.publicApiStrangler.standards.PublicApiStandards._
-import com.soundcloud.ratelimiting.types.RateLimit
+import com.soundcloud.ratelimiting.core.RateLimit
+import com.soundcloud.ratelimiting.core.RateLimit.EndpointGroupSpecific.EndpointGroup
 import com.soundcloud.ratelimiting.whitelisting.ApplicationLevelWhitelistProxy
 import com.soundcloud.scalakit.Urn
 import com.soundcloud.scalakit.test.UnitSpecification
@@ -26,7 +27,7 @@ class RateLimitingFilterSpec extends UnitSpecification with NoTimeConversions {
     val expiry = Time.now + 5.minutes
 
     trait Context extends Scope {
-      val rateLimit = RateLimit.General(Period.seconds(2), 30)
+      val rateLimit = RateLimit.EndpointGroupSpecific(EndpointGroup("global", ".*".r), Period.seconds(2), 30)
 
       val mockRateLimiterRegistry = mock[RateLimiterRegistry]
       val mockRateLimiter = mock[RateLimiter]

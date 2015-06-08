@@ -1,7 +1,8 @@
 package com.soundcloud.publicApiStrangler.rateLimiting
 
 import com.soundcloud.bff.test.UnitSpecification
-import com.soundcloud.ratelimiting.types.RateLimit
+import com.soundcloud.ratelimiting.core.RateLimit
+import com.soundcloud.ratelimiting.core.RateLimit.EndpointGroupSpecific.EndpointGroup
 import com.soundcloud.scalakit.Urn
 import com.twitter.finagle.http.Request
 import com.twitter.util.{Future, Await, Time}
@@ -13,8 +14,9 @@ class RateLimiterSpec extends UnitSpecification {
   "RateLimiter" should {
 
     trait Context extends Scope {
-      val rateLimit1 = RateLimit.General(Period.hours(24), 15000)
-      val rateLimit2 = RateLimit.General(Period.hours(1), 150)
+      val endpointGroup = EndpointGroup("default", ".*".r)
+      val rateLimit1 = RateLimit.EndpointGroupSpecific(endpointGroup, Period.hours(24), 15000)
+      val rateLimit2 = RateLimit.EndpointGroupSpecific(endpointGroup, Period.hours(1), 150)
       val individualRateLimiter1 = mock[IndividualRateLimiter]
       val individualRateLimiter2 = mock[IndividualRateLimiter]
       val rateLimiter = new RateLimiter("default", Seq(individualRateLimiter1, individualRateLimiter2))

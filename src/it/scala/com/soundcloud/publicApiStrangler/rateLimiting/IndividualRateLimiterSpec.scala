@@ -2,7 +2,8 @@ package com.soundcloud.publicApiStrangler.rateLimiting
 
 import com.soundcloud.bff.test.UnitSpecification
 import com.soundcloud.jvmkit.config.BazookaConfig
-import com.soundcloud.ratelimiting.types.RateLimit
+import com.soundcloud.ratelimiting.core.RateLimit
+import com.soundcloud.ratelimiting.core.RateLimit.EndpointGroupSpecific.EndpointGroup
 import com.soundcloud.scalakit.{Urn, ResourceName}
 import com.soundcloud.scalakit.cache.MemcachedClient
 import com.twitter.conversions.time._
@@ -28,7 +29,7 @@ class IndividualRateLimiterSpec extends UnitSpecification with NoTimeConversions
 
   val cache = MemcachedClient(config, ResourceName("MEMCACHED_TEST"))
   val duration = Period.seconds(5)
-  val rateLimit = RateLimit.General(duration, 4)
+  val rateLimit = RateLimit.EndpointGroupSpecific(EndpointGroup("default", ".*".r), duration, 4)
   
   val rateLimiter = new IndividualRateLimiter(cache, rateLimit, ResourceName("TEST_APP"), Seq.empty)
 
