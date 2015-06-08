@@ -112,7 +112,7 @@ class SearchMapperSpec extends UnitSpecification {
         mapper.map(request, json) match {
           case search: LegacySearch =>
             val docs = (json \ "docs").as[JsArray]
-            search.value.size ==== 3
+            search.json ==== json
           case x => failure("bad mapping, expected LegacySearch, got " + x)
         }
       }
@@ -121,7 +121,7 @@ class SearchMapperSpec extends UnitSpecification {
     "empty response" in new LegacyContext {
       requests.foreach { request =>
         mapper.map(request, emptyJson) match {
-          case search: LegacySearch => search.value.size ==== 0
+          case search: LegacySearch => search.json ==== emptyJson
           case x => failure("bad mapping, expected LegacySearch, got " + x)
         }
       }
