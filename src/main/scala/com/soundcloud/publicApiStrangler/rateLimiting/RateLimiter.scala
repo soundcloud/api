@@ -1,7 +1,7 @@
 package com.soundcloud.publicApiStrangler.rateLimiting
 
-import com.soundcloud.jvmkit.config.Config
-import com.soundcloud.ratelimiting.core.RateLimit
+import com.soundcloud.ratelimiting.core.RateLimitGroup
+import com.soundcloud.scalakit.ResourceName
 import com.soundcloud.scalakit.cache.Cache
 import com.twitter.finagle.http.Request
 import com.twitter.util.Future
@@ -29,9 +29,17 @@ class RateLimiter(val groupName: String, individualRateLimiters: Seq[IndividualR
 }
 
 object RateLimiter {
-  def from(cache: Cache, config: Config, listeners: Seq[EventListener[RateLimitEvent]]): RateLimiter = {
-    val rateLimits = RateLimit.parse(config.get("RATE_LIMITS"))
-    val individualRateLimiters = rateLimits.map(new IndividualRateLimiter(cache, _, config.getApplicationResourceName, listeners))
-    new RateLimiter("default", individualRateLimiters)
+
+  def from(
+      cache: Cache,
+      rateLimitGroup: RateLimitGroup,
+      listeners: Seq[EventListener[RateLimitEvent]],
+      applicationResourceName: ResourceName): RateLimiter = {
+
+    val individualLimiters = rateLimitGroup.rateLimits.map { rateLimit =>
+      new IndividualRateLimiter(cache, rateLimit, applicationResourceName, listeners)
+    }
+    new RateLimiter(rateLimitGroup.id, individualLimiters)
   }
+
 }

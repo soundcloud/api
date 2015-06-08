@@ -6,7 +6,7 @@ import com.soundcloud.jvmkit.config.BazookaConfig
 import com.soundcloud.publicApiStrangler.features.RolloutBuilder
 import com.soundcloud.publicApiStrangler.test.util.NonUniformRandomDataGenerator
 import com.soundcloud.publicApiStrangler.test.util.SeqExtensions.RichSeq
-import com.soundcloud.publicApiStrangler.zookeeper.ZookeeperClientFactory
+import com.soundcloud.publicApiStrangler.zookeeper.CuratorFrameworkFactory
 import com.soundcloud.scalakit.Urn
 import com.soundcloud.scalakit.test.{UnitSpecification, VerifiedMocks}
 import com.soundcloud.scalakit.utilities.DebugUtilities.Tappable
@@ -20,7 +20,7 @@ class RolloutItSpec extends UnitSpecification {
   trait FeaturesContext extends VerifiedMocks {
     val config = new BazookaConfig
 
-    val factory = new ZookeeperClientFactory
+    val factory = new CuratorFrameworkFactory
     val zookeeperClient = factory.create(config)
     val rollout = RolloutBuilder.build(zookeeperClient, config.getApplicationName)
 

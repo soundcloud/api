@@ -32,7 +32,7 @@ class RateLimitingFilterSpec extends UnitSpecification with NoTimeConversions {
       val mockRateLimiterRegistry = mock[RateLimiterRegistry]
       val mockRateLimiter = mock[RateLimiter]
 
-      mockRateLimiterRegistry.lookup(any) returns mockRateLimiter
+      mockRateLimiterRegistry.lookup(any) returns Future.value(mockRateLimiter)
       mockRateLimiter.appliesTo(any).returns(true)
 
       val mockAuthenticatorService = mock[AuthenticatorService]

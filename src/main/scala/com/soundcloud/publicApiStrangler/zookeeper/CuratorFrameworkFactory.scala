@@ -1,10 +1,10 @@
 package com.soundcloud.publicApiStrangler.zookeeper
 
 import com.soundcloud.jvmkit.config.Config
-import org.apache.curator.framework.{CuratorFramework, CuratorFrameworkFactory}
+import org.apache.curator.framework.{CuratorFramework, CuratorFrameworkFactory => ApacheCuratorFrameworkFactory}
 import org.apache.curator.retry.ExponentialBackoffRetry
 
-class ZookeeperClientFactory {
+class CuratorFrameworkFactory {
 
   private val baseSleepTimeInMiliseconds = 1000
   private val maxNumberOfRetries = 5
@@ -13,7 +13,7 @@ class ZookeeperClientFactory {
 
   def create(config: Config): CuratorFramework = {
     val zookeeperServers = config.get("ZOOKEEPER_SERVERS")
-    val curatorZookeeperClient = CuratorFrameworkFactory.newClient(zookeeperServers, retryPolicy)
+    val curatorZookeeperClient = ApacheCuratorFrameworkFactory.newClient(zookeeperServers, retryPolicy)
 
     curatorZookeeperClient.start()
     curatorZookeeperClient.blockUntilConnected()

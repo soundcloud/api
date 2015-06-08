@@ -30,12 +30,13 @@ class RateLimitingFilter(
       bypassForInapplicableRoutes(request, next) getOrElse {
         userAuthentication.withUserSession(new BffRequest(request)) { session =>
           val apiClient = ApiClient(session.getAgent)
-          val rateLimiter = rateLimiterRegistry.lookup(apiClient)
-          Verdict.on(session, request, apiClient, rateLimiter).flatMap {
-            case Pass =>
-              next(request)
-            case Block(status) =>
-              Future.value(errorResponse(status))
+          rateLimiterRegistry.lookup(apiClient) flatMap { rateLimiter =>
+            Verdict.on(session, request, apiClient, rateLimiter).flatMap {
+              case Pass =>
+                next(request)
+              case Block(status) =>
+                Future.value(errorResponse(status))
+            }
           }
         }
       }

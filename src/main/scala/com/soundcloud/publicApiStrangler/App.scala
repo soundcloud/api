@@ -22,9 +22,11 @@ import com.soundcloud.publicApiStrangler.mapper.waveform.WaveformMapper
 import com.soundcloud.publicApiStrangler.rateLimiting._
 import com.soundcloud.publicApiStrangler.rateLimiting.reporting.ReportingRateLimitEventListener
 import com.soundcloud.publicApiStrangler.support._
-import com.soundcloud.publicApiStrangler.zookeeper.ZookeeperClientFactory
+import com.soundcloud.publicApiStrangler.zookeeper.CuratorFrameworkFactory
 import com.soundcloud.ratelimiting.client.RateLimitingEventsClient
+import com.soundcloud.ratelimiting.groups.RateLimitGroupRepository
 import com.soundcloud.ratelimiting.whitelisting.{ApplicationLevelWhitelistProxy, WhitelistZookeeperPath}
+import com.soundcloud.ratelimiting.zookeeper.{ZkChildrenCachingStoreFactory, ZooKeeperClient}
 import com.soundcloud.scalakit.ResourceName
 import com.soundcloud.service.component._
 import com.twitter.finagle.http.Request
@@ -77,10 +79,12 @@ object App
     new TimelineController(userAuthentication, streamMapper, activitiesMapper, publicActivitiesMapper, pagination)
   }
 
-  private val zookeeperClientFactory = new ZookeeperClientFactory
-  private val zookeeperClient = zookeeperClientFactory.create(config)
+  private val curatorFrameworkFactory = new CuratorFrameworkFactory
+  private val curatorFramework = curatorFrameworkFactory.create(config)
 
-  private val whitelistingProxy = new ApplicationLevelWhitelistProxy(zookeeperClient, WhitelistZookeeperPath.Base / config.getApplicationName)
+  private val zooKeeperClient = new ZooKeeperClient(curatorFramework)
+
+  private val whitelistingProxy = new ApplicationLevelWhitelistProxy(curatorFramework, WhitelistZookeeperPath.Base / config.getApplicationName)
 
   private val prometheusLabelsSafeGuard = new PrometheusLabelsSafeGuard(cache, config, config.getApplicationResourceName)
   private val rateLimitMetrics = new RateLimitMetrics(prometheusLabelsSafeGuard, config)
@@ -91,8 +95,10 @@ object App
 
   private val rateLimitEventListeners = telemetryRateLimitEventListener :: reportingRateLimitEventListener :: Nil
 
-  private val defaultRateLimiter = RateLimiter.from(cache, config, rateLimitEventListeners)
-  private val rateLimiterRegistry = new RateLimiterRegistry(defaultRateLimiter)
+  private val zkStoreFactory = new ZkChildrenCachingStoreFactory(zooKeeperClient)
+  private val rateLimitGroupRepository = new RateLimitGroupRepository(zkStoreFactory)
+
+  private val rateLimiterRegistry = new RateLimiterRegistry(rateLimitGroupRepository, rateLimitEventListeners, cache, config.getApplicationResourceName)
 
   private val groupController = {
     val forwardHandler = new ForwardRequestHandler(publicApiClient)
@@ -113,7 +119,7 @@ object App
       trackStreamSnipHandler)
   }
 
-  val rollout = RolloutBuilder.build(zookeeperClient, config.getApplicationName)
+  val rollout = RolloutBuilder.build(curatorFramework, config.getApplicationName)
 
   private val userFollowController = new UserFollowController(
     userAuthentication,
