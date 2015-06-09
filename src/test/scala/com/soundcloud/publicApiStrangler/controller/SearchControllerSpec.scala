@@ -123,6 +123,25 @@ class SearchControllerSpec extends InjectionBasedControllerSpecification {
       }
     }
 
+    "response contains a caching header" in new Context {
+      when(rolloutMock.isActive(anyString)).thenReturn(true)
+
+      endpoints.foreach { case (apiEndPoint, dispatcherRequest) =>
+        val request = com.twitter.finagle.http.Request(apiEndPoint.s, queryParams.toSeq: _*)
+        val query = dispatcherRequest(request)
+        val page = OffsetBasedPage(query, "http://api.soundcloud.com", apiEndPoint, queryParams, 0, 10)
+
+        when(verified(searchMapperMock).materialize(anonymousSession, page))
+          .thenReturn(Future(Some(searchMock)))
+
+        val response = get(controller, apiEndPoint, Map("q" -> "foo"), Map("Host" -> "api.soundcloud.com"))
+        response.code ==== 200
+        response.getHeader("Cache-Control") must contain ("max-age=" + SearchController.MaxCacheAge)
+        response.getHeader("Cache-Control") must contain ("public")
+        doesNotForward(response)
+      }
+    }
+
     "Pagination error handling" >> {
       "200 when no pagination params" in new Context {
         when(rolloutMock.isActive(anyString)).thenReturn(true)
