@@ -2,7 +2,7 @@ package com.soundcloud.publicApiStrangler.rateLimiting.reporting
 
 import com.soundcloud.jvmkit.Geo
 import com.soundcloud.publicApiStrangler.rateLimiting.{EventListener, RateLimitEvent}
-import com.soundcloud.ratelimiting.client.RateLimitEventsClient
+import com.soundcloud.ratelimiting.gateways.RateLimitEventsGateway
 import com.soundcloud.scalakit.{AnonymousUserSession, Urn}
 import com.twitter.util.FuturePool
 
@@ -11,7 +11,7 @@ object ReportingRateLimitEventListener {
   val session = AnonymousUserSession(stranglerUrn, Geo.UNKNOWN_GEO, Set.empty)
 }
 
-class ReportingRateLimitEventListener(service: RateLimitEventsClient) extends EventListener[RateLimitEvent] {
+class ReportingRateLimitEventListener(service: RateLimitEventsGateway) extends EventListener[RateLimitEvent] {
 
   def notify(event: RateLimitEvent): Unit = FuturePool.unboundedPool {
     for {

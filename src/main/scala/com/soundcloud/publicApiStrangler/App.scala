@@ -23,10 +23,10 @@ import com.soundcloud.publicApiStrangler.rateLimiting._
 import com.soundcloud.publicApiStrangler.rateLimiting.reporting.ReportingRateLimitEventListener
 import com.soundcloud.publicApiStrangler.support._
 import com.soundcloud.publicApiStrangler.zookeeper.CuratorFrameworkFactory
-import com.soundcloud.ratelimiting.client.RateLimitingEventsClient
+import com.soundcloud.ratelimiting.gateways.RateLimitEventsGateway
 import com.soundcloud.ratelimiting.groups.RateLimitGroupRepository
 import com.soundcloud.ratelimiting.whitelisting.{ApplicationLevelWhitelistProxy, WhitelistZookeeperPath}
-import com.soundcloud.ratelimiting.zookeeper.{ZkChildrenCachingStoreFactory, ZooKeeperClient}
+import com.soundcloud.ratelimiting.zookeeper.{ZkStoreProvider, ZkChildrenCachingStoreFactory, ZooKeeperClient}
 import com.soundcloud.scalakit.ResourceName
 import com.soundcloud.service.component._
 import com.twitter.finagle.http.Request
@@ -90,13 +90,14 @@ object App
   private val rateLimitMetrics = new RateLimitMetrics(prometheusLabelsSafeGuard, config)
   private val telemetryRateLimitEventListener = new TelemetryRateLimitEventListener(rateLimitMetrics)
 
-  private val rateLimitEventsClient = RateLimitingEventsClient(config, telemetry)
-  private val reportingRateLimitEventListener = new ReportingRateLimitEventListener(rateLimitEventsClient)
+  private val rateLimitEventsGateway = RateLimitEventsGateway(config, telemetry)
+  private val reportingRateLimitEventListener = new ReportingRateLimitEventListener(rateLimitEventsGateway)
 
   private val rateLimitEventListeners = telemetryRateLimitEventListener :: reportingRateLimitEventListener :: Nil
 
   private val zkStoreFactory = new ZkChildrenCachingStoreFactory(zooKeeperClient)
-  private val rateLimitGroupRepository = new RateLimitGroupRepository(zkStoreFactory)
+  private val zkStoreProvider = new ZkStoreProvider(zkStoreFactory)
+  private val rateLimitGroupRepository = new RateLimitGroupRepository(zkStoreProvider)
 
   private val rateLimiterRegistry = new RateLimiterRegistry(rateLimitGroupRepository, rateLimitEventListeners, cache, config.getApplicationResourceName)
 
