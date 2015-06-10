@@ -23,8 +23,9 @@ import com.soundcloud.publicApiStrangler.rateLimiting._
 import com.soundcloud.publicApiStrangler.rateLimiting.reporting.ReportingRateLimitEventListener
 import com.soundcloud.publicApiStrangler.support._
 import com.soundcloud.publicApiStrangler.zookeeper.CuratorFrameworkFactory
+import com.soundcloud.ratelimiting.clients.ClientConfigurationRepository
 import com.soundcloud.ratelimiting.gateways.RateLimitEventsGateway
-import com.soundcloud.ratelimiting.groups.RateLimitGroupRepository
+import com.soundcloud.ratelimiting.groups.{RateLimitGroupLookupService, RateLimitGroupRepository}
 import com.soundcloud.ratelimiting.whitelisting.{ApplicationLevelWhitelistProxy, WhitelistZookeeperPath}
 import com.soundcloud.ratelimiting.zookeeper.{ZkStoreProvider, ZkChildrenCachingStoreFactory, ZooKeeperClient}
 import com.soundcloud.scalakit.ResourceName
@@ -98,8 +99,10 @@ object App
   private val zkStoreFactory = new ZkChildrenCachingStoreFactory(zooKeeperClient)
   private val zkStoreProvider = new ZkStoreProvider(zkStoreFactory)
   private val rateLimitGroupRepository = new RateLimitGroupRepository(zkStoreProvider)
+  private val clientConfigurationRepository = new ClientConfigurationRepository(zkStoreProvider)
+  private val rateLimitGroupLookupService = new RateLimitGroupLookupService(rateLimitGroupRepository, clientConfigurationRepository)
 
-  private val rateLimiterRegistry = new RateLimiterRegistry(rateLimitGroupRepository, rateLimitEventListeners, cache, config.getApplicationResourceName)
+  private val rateLimiterRegistry = new RateLimiterRegistry(rateLimitGroupLookupService, rateLimitEventListeners, cache, config.getApplicationResourceName)
 
   private val groupController = {
     val forwardHandler = new ForwardRequestHandler(publicApiClient)

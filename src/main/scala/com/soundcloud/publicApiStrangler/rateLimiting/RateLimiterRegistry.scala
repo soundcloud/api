@@ -1,12 +1,12 @@
 package com.soundcloud.publicApiStrangler.rateLimiting
 
-import com.soundcloud.ratelimiting.groups.RateLimitGroupRepository
+import com.soundcloud.ratelimiting.groups.RateLimitGroupLookupService
 import com.soundcloud.scalakit.cache.Cache
 import com.soundcloud.scalakit.{ResourceName, Urn}
 import com.twitter.util.Future
 
 class RateLimiterRegistry(
-  rateLimitGroupRepository: RateLimitGroupRepository,
+  rateLimitGroupLookupService: RateLimitGroupLookupService,
   rateLimitEventListeners: Seq[EventListener[RateLimitEvent]],
   cache: Cache,
   applicationResourceName: ResourceName) {
@@ -15,13 +15,8 @@ class RateLimiterRegistry(
 
   def lookup(clientApplication: ApiClient): Future[RateLimiter] = {
     for {
-      defaultGroup <- findDefaultGroup
-    } yield RateLimiter.from(cache, defaultGroup, rateLimitEventListeners, applicationResourceName)
-  }
-
-  private def findDefaultGroup = {
-    rateLimitGroupRepository.forId(application, "default") map (_.getOrElse(throw new RuntimeException(
-      s"No default rate limit configured for $application")))
+      rateLimitGroup <- rateLimitGroupLookupService.rateLimitGroupFor(application, clientApplication.urn)
+    } yield RateLimiter.from(cache, rateLimitGroup, rateLimitEventListeners, applicationResourceName)
   }
 
 }
