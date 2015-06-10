@@ -5,7 +5,6 @@ import com.soundcloud.bff.web.UserAuthentication
 import com.soundcloud.jvmkit.FailsafeUserSession
 import com.soundcloud.jvmkit.logging.SoundCloudLoggerFactory
 import com.soundcloud.publicApiStrangler.features.{Features, Rollout}
-import com.soundcloud.ratelimiting.whitelisting.ApplicationLevelWhitelistProxy
 import com.soundcloud.scalakit.UserSession
 import com.twitter.finagle.http.{Request, Response}
 import com.twitter.finagle.{Service, SimpleFilter}
@@ -18,8 +17,7 @@ import scala.util.control.NonFatal
 class RateLimitingFilter(
   rateLimiterRegistry: RateLimiterRegistry,
   userAuthentication: UserAuthentication,
-  rollout: Rollout,
-  whitelistProxy: ApplicationLevelWhitelistProxy
+  rollout: Rollout
 ) extends SimpleFilter[Request, Response] {
 
   val logger = SoundCloudLoggerFactory.getLogger(this.getClass)
@@ -78,9 +76,7 @@ class RateLimitingFilter(
     }
 
     def shouldBailOut(session: UserSession, request: Request, apiClient: ApiClient, rateLimiter: RateLimiter): Boolean = {
-      session.isInstanceOf[FailsafeUserSession] ||
-        whitelistProxy.hasClientWhitelisted(apiClient.urn) ||
-        !rateLimiter.appliesTo(request)
+      session.isInstanceOf[FailsafeUserSession] || !rateLimiter.appliesTo(request)
     }
   }
 

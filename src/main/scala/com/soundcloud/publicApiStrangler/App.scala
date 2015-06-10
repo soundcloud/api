@@ -26,8 +26,7 @@ import com.soundcloud.publicApiStrangler.zookeeper.CuratorFrameworkFactory
 import com.soundcloud.ratelimiting.clients.ClientConfigurationRepository
 import com.soundcloud.ratelimiting.gateways.RateLimitEventsGateway
 import com.soundcloud.ratelimiting.groups.{RateLimitGroupLookupService, RateLimitGroupRepository}
-import com.soundcloud.ratelimiting.whitelisting.{ApplicationLevelWhitelistProxy, WhitelistZookeeperPath}
-import com.soundcloud.ratelimiting.zookeeper.{ZkStoreProvider, ZkChildrenCachingStoreFactory, ZooKeeperClient}
+import com.soundcloud.ratelimiting.zookeeper.{ZkChildrenCachingStoreFactory, ZkStoreProvider, ZooKeeperClient}
 import com.soundcloud.scalakit.ResourceName
 import com.soundcloud.service.component._
 import com.twitter.finagle.http.Request
@@ -84,8 +83,6 @@ object App
   private val curatorFramework = curatorFrameworkFactory.create(config)
 
   private val zooKeeperClient = new ZooKeeperClient(curatorFramework)
-
-  private val whitelistingProxy = new ApplicationLevelWhitelistProxy(curatorFramework, WhitelistZookeeperPath.Base / config.getApplicationName)
 
   private val prometheusLabelsSafeGuard = new PrometheusLabelsSafeGuard(cache, config, config.getApplicationResourceName)
   private val rateLimitMetrics = new RateLimitMetrics(prometheusLabelsSafeGuard, config)
@@ -184,7 +181,7 @@ object App
     new ExceptionFilter[Request],
     new AcceptOnlyJsonRequestFilter(Set("/crossdomain.xml", "/robots.txt")),
     new ContentAuthorizationFilter(authorizeContent),
-    new RateLimitingFilter(rateLimiterRegistry, userAuthentication, rollout, whitelistingProxy),
+    new RateLimitingFilter(rateLimiterRegistry, userAuthentication, rollout),
     new DefaultResponseHeadersFilter
   )
 
