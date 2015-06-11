@@ -7,7 +7,7 @@ import com.soundcloud.bff.media.{TrackWaveformUrl, WaveformUrlsRepository}
 import com.soundcloud.bff.nextbff.test.FakeUserAuthentication
 import com.soundcloud.bff.security.AuthenticatorService
 import com.soundcloud.bff.test.UnitSpecification
-import com.soundcloud.jvmkit.policies.{MonetizationModel, ContentAuthorization, ContentPolicy, Reason}
+import com.soundcloud.jvmkit.policies.{ContentAuthorization, ContentPolicy, Reason}
 import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures
 import com.soundcloud.scalakit.json.Json
 import com.soundcloud.scalakit.test.VerifiedMocks
@@ -43,7 +43,7 @@ class AuthorizeHttpResponseSpec extends UnitSpecification with Fixtures {
 
     override def before = {
       when(contentAuthorization.findRulesApplicableTo(session, Seq(urn)))
-        .thenReturn(Future(Seq(new ContentAuthorization(urn, policies, Reason.GEO, MonetizationModel.NOT_APPLICABLE))))
+        .thenReturn(Future(Seq(new ContentAuthorization(urn, policies, Reason.GEO))))
     }
   }
 
@@ -74,7 +74,7 @@ class AuthorizeHttpResponseSpec extends UnitSpecification with Fixtures {
       .map(_ \ "id")
       .map(id => Urn("soundcloud:tracks:" + id))
       .zip(policies)
-      .map(tuple => new ContentAuthorization(tuple._1, tuple._2, Reason.GEO, MonetizationModel.NOT_APPLICABLE))
+      .map(tuple => new ContentAuthorization(tuple._1, tuple._2, Reason.GEO))
 
 
     override def before = {
@@ -155,7 +155,7 @@ class AuthorizeHttpResponseSpec extends UnitSpecification with Fixtures {
       .map(_ \ "id")
       .map(id => Urn("soundcloud:tracks:" + id))
       .zip(policies)
-      .map(tuple => new ContentAuthorization(tuple._1, tuple._2, Reason.GEO, MonetizationModel.NOT_APPLICABLE))
+      .map(tuple => new ContentAuthorization(tuple._1, tuple._2, Reason.GEO))
 
     override def before =
       when(contentAuthorization.findRulesApplicableTo(===(session), any[Seq[Urn]]))
@@ -199,7 +199,7 @@ class AuthorizeHttpResponseSpec extends UnitSpecification with Fixtures {
       .map(_ \ "id")
       .map(id => Urn("soundcloud:tracks:" + id))
       .zip(policies)
-      .map(tuple => new ContentAuthorization(tuple._1, tuple._2, Reason.GEO, MonetizationModel.NOT_APPLICABLE))
+      .map(tuple => new ContentAuthorization(tuple._1, tuple._2, Reason.GEO))
 
     override def before =
       when(contentAuthorization.findRulesApplicableTo(===(session), any[Seq[Urn]]))
@@ -223,9 +223,9 @@ class AuthorizeHttpResponseSpec extends UnitSpecification with Fixtures {
     val status = 200
 
     val authorizations = Seq(
-      new ContentAuthorization(Urn("soundcloud:tracks:1"), ContentPolicy.BLOCK, Reason.GEO, MonetizationModel.NOT_APPLICABLE),
-      new ContentAuthorization(Urn("soundcloud:tracks:2"), ContentPolicy.ALLOW, Reason.GEO, MonetizationModel.NOT_APPLICABLE),
-      new ContentAuthorization(Urn("soundcloud:tracks:3"), ContentPolicy.ALLOW, Reason.GEO, MonetizationModel.NOT_APPLICABLE)
+      new ContentAuthorization(Urn("soundcloud:tracks:1"), ContentPolicy.BLOCK, Reason.GEO),
+      new ContentAuthorization(Urn("soundcloud:tracks:2"), ContentPolicy.ALLOW, Reason.GEO),
+      new ContentAuthorization(Urn("soundcloud:tracks:3"), ContentPolicy.ALLOW, Reason.GEO)
     )
 
     override def before =
