@@ -36,7 +36,7 @@ object SearchRepository {
 class SearchMapper(val repository: SearchRepository,
                    submapper: SearchEntityMapper,
                    baseUrl: String)
-  extends FetchMapper[OffsetBasedPage[SearchDispatcherRequest], JsonMapping] {
+  extends FetchMapper[OffsetBasedPage[SearchDispatcherRequest], Search] {
 
   private def shouldPaginate(params: Params) = {
     val param = params.getOrElse(SearchMapper.LinkedPartitioning, StringParam(""))

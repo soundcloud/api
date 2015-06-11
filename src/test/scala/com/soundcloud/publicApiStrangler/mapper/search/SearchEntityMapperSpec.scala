@@ -54,6 +54,8 @@ class SearchEntityMapperSpec extends UnitSpecification with Fixtures {
       "soundcloud:groups:30910"
     ).map(Urn(_))
 
+    val searchResults = Urn("soundcloud:tracks:-1") :: urns // doesn't exist in okidoki response
+
     val likableUrns = Set(
       "soundcloud:tracks:15273221",
       "soundcloud:playlists:685235"
@@ -72,11 +74,11 @@ class SearchEntityMapperSpec extends UnitSpecification with Fixtures {
 
     override def before = {
       // the main metadata fetch
-      when(okidokiClient.fetch(===(session), ===(urns.toSet))).thenReturn(
+      when(okidokiClient.fetch(session, searchResults.toSet)).thenReturn(
         Future(okidokiFetch)
       )
       // embedded entity summaries in tracks/playlists/groups metadata
-      when(okidokiClient.fetch(===(session), ===(urns.toSet.filter(_.getCollection == "users")))).thenReturn(
+      when(okidokiClient.fetch(session, urns.toSet.filter(_.getCollection == "users"))).thenReturn(
         Future(okidokiFetch.filter(json => Urn((json \ "self" \ "urn").as[String]).getCollection == "users"))
       )
       // purchase links in tracks metadata
@@ -88,7 +90,7 @@ class SearchEntityMapperSpec extends UnitSpecification with Fixtures {
       when(okidokiClient.playlistTracks(===(session), ===(Urn("soundcloud:playlists:685235")), any[Option[Int]], any[Option[Int]])).thenReturn(
         Future(TracksWithPagination(Nil, TrackMeta(None)))
       )
-      
+
       // like counts / authenticated user likes
       val expected: PartialFunction[Seq[Urn], MatchResult[_]] =  { case urns: Seq[Urn] => Set(urns: _*) === likableUrns}
       when(lieblingClient.userLikeCounts(===(session), beLike(expected), ===(userUrn), any[Int]))
@@ -101,10 +103,10 @@ class SearchEntityMapperSpec extends UnitSpecification with Fixtures {
       when(waveformUrlsRepository.fetchWaveformUrlsToMap(===(session), any[Map[String, ContentPolicy]])).thenReturn(
         Future(waveforms.map(w => w.trackUid -> w).toMap)
       )
-      
+
     }
 
-    def result = Await.result(mapper.materialize(session, urns))
+    def result = Await.result(mapper.materialize(session, searchResults))
   }
 
   "builds the proper mappings" in new Context {
