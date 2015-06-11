@@ -2,15 +2,15 @@ package com.soundcloud.publicApiStrangler.rateLimiting
 
 import com.soundcloud.jvmkit.ResourceName
 import com.soundcloud.publicApiStrangler.support.TimeConversions._
-import com.soundcloud.ratelimiting.core.RateLimit
+import com.soundcloud.ratelimiting.core.{ClientApplication, RateLimit}
 import com.soundcloud.scalakit.cache.Cache
 import com.twitter.util.{Future, Time, TimeFormat}
 import org.jboss.netty.buffer.ChannelBuffers
 
-class RateLimiterCacheMediator(cache: Cache, rateLimit: RateLimit, apiClient: ApiClient, applicationName: ResourceName) {
+class RateLimiterCacheMediator(cache: Cache, rateLimit: RateLimit, clientApplication: ClientApplication, applicationName: ResourceName) {
   import RateLimiterCacheMediator._
 
-  private val clientSpecificRateLimit = ClientSpecificRateLimit(apiClient, rateLimit, applicationName)
+  private val clientSpecificRateLimit = ClientSpecificRateLimit(clientApplication, rateLimit, applicationName)
 
   def alreadyReached: Future[Boolean] = {
     cache.get(clientSpecificRateLimit.reachedCacheKey).map(_.isDefined)

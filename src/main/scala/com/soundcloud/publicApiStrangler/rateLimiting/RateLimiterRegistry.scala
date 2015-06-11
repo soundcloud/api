@@ -1,5 +1,6 @@
 package com.soundcloud.publicApiStrangler.rateLimiting
 
+import com.soundcloud.ratelimiting.core.ClientApplication
 import com.soundcloud.ratelimiting.groups.RateLimitGroupLookupService
 import com.soundcloud.scalakit.cache.Cache
 import com.soundcloud.scalakit.{ResourceName, Urn}
@@ -13,7 +14,7 @@ class RateLimiterRegistry(
 
   val application = Urn("soundcloud", "systems", applicationResourceName.getName)
 
-  def lookup(clientApplication: ApiClient): Future[RateLimiter] = {
+  def lookup(clientApplication: ClientApplication): Future[RateLimiter] = {
     for {
       rateLimitGroup <- rateLimitGroupLookupService.rateLimitGroupFor(application, clientApplication.urn)
     } yield RateLimiter.from(cache, rateLimitGroup, rateLimitEventListeners, applicationResourceName)

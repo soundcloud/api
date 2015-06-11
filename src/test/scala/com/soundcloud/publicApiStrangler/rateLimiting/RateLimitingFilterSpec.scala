@@ -6,8 +6,7 @@ import com.soundcloud.bff.web.UserAuthentication
 import com.soundcloud.jvmkit.UserSession
 import com.soundcloud.publicApiStrangler.features.{Features, Rollout}
 import com.soundcloud.publicApiStrangler.standards.PublicApiStandards._
-import com.soundcloud.ratelimiting.core.RateLimit
-import com.soundcloud.ratelimiting.core.RateLimit.EndpointGroupSpecific.EndpointGroup
+import com.soundcloud.ratelimiting.core.{ClientApplication, RateLimitMode, EndpointGroup, RateLimit}
 import com.soundcloud.scalakit.Urn
 import com.soundcloud.scalakit.test.UnitSpecification
 import com.twitter.finagle.Service
@@ -26,7 +25,7 @@ class RateLimitingFilterSpec extends UnitSpecification with NoTimeConversions {
     val expiry = Time.now + 5.minutes
 
     trait Context extends Scope {
-      val rateLimit = RateLimit.EndpointGroupSpecific(EndpointGroup("global", ".*".r), Period.seconds(2), 30)
+      val rateLimit = RateLimit(EndpointGroup("global", ".*".r), Period.seconds(2), 30, RateLimitMode.Probing)
 
       val mockRateLimiterRegistry = mock[RateLimiterRegistry]
       val mockRateLimiter = mock[RateLimiter]
@@ -80,7 +79,7 @@ class RateLimitingFilterSpec extends UnitSpecification with NoTimeConversions {
       mockRollout.isActiveForId(===(Features.EnforceRateLimits), any) returns false
       mockAuthenticatorService.cacheKeyAndSessionFor(any, any) returns Future.value(CacheKeyAndSession(Some("inconsequential"), mockSession))
       next.apply(any) returns Future.value(mockResponse)
-      mockRateLimiter.advanceRateLimitStatus(any[ApiClient], any[Request]) returns Future.value(
+      mockRateLimiter.advanceRateLimitStatus(any[ClientApplication], any[Request]) returns Future.value(
         CompositeRateLimitStatus(Set(RateLimitStatus(rateLimit, 20, Some(expiry)))))
       mockRequest.path returns "/some-path"
 
@@ -89,7 +88,7 @@ class RateLimitingFilterSpec extends UnitSpecification with NoTimeConversions {
 
     "let requests pass through to the service when the client hasn't reached their limit" in new Context {
       mockRollout.isActiveForId(any, any) returns true
-      mockRateLimiter.advanceRateLimitStatus(any[ApiClient], any[Request]) returns Future.value(
+      mockRateLimiter.advanceRateLimitStatus(any[ClientApplication], any[Request]) returns Future.value(
         CompositeRateLimitStatus(Set(RateLimitStatus(rateLimit, 2, Some(expiry)))))
       mockAuthenticatorService.cacheKeyAndSessionFor(any, any) returns Future.value(CacheKeyAndSession(Some("inconsequential"), mockSession))
       next.apply(any) returns Future.value(mockResponse)
@@ -100,7 +99,7 @@ class RateLimitingFilterSpec extends UnitSpecification with NoTimeConversions {
 
     "respond with 429 and reset info if the client has reached their limit" in new Context {
       mockRollout.isActiveForId(any, any) returns true
-      mockRateLimiter.advanceRateLimitStatus(any[ApiClient], any[Request]) returns Future.value(
+      mockRateLimiter.advanceRateLimitStatus(any[ClientApplication], any[Request]) returns Future.value(
         CompositeRateLimitStatus(Set(RateLimitStatus.reached(rateLimit, Some(expiry)))))
       mockAuthenticatorService.cacheKeyAndSessionFor(any, any) returns Future.value(CacheKeyAndSession(Some("inconsequential"), mockSession))
       mockRequest.path returns "/some-path"

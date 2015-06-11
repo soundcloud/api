@@ -1,6 +1,7 @@
 package com.soundcloud.publicApiStrangler.rateLimiting
 
 import com.soundcloud.jvmkit.config.Config
+import com.soundcloud.ratelimiting.core.ClientApplication
 import com.soundcloud.scalakit.test.{InMemoryCache, UnitSpecification}
 import com.soundcloud.scalakit.{ResourceName, Urn}
 import com.twitter.util.Await
@@ -15,7 +16,7 @@ class PrometheusLabelsSafeGuardSpec extends UnitSpecification {
       config.get("RATELIMITING_MAX_PROMETHEUS_COUNTER_LABELS") returns "3"
       val cache = new InMemoryCache
       val safeGuard = new PrometheusLabelsSafeGuard(cache, config, appName)
-      val client = ApiClient(Urn("soundcloud", "applications", "123"))
+      val client = ClientApplication(Urn("soundcloud", "applications", "123"))
     }
 
     "return the client identifier as a label if already contained in set" in new Context {

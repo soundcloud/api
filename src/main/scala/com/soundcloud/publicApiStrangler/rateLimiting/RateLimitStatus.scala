@@ -15,14 +15,14 @@ case class RateLimitStatus(rateLimit: RateLimit,
   lazy val hasReachedLimit: Boolean = maximumNrOfRequests == requestCount
   lazy val remainingRequests: Int = maximumNrOfRequests - requestCount
   lazy val percentageUsed: Int = (requestCount.toDouble / maximumNrOfRequests * 100).toInt
-  lazy val maximumNrOfRequests: Int = rateLimit.maximumNrOfRequests.toInt
+  lazy val maximumNrOfRequests: Int = rateLimit.maximumNrOfRequests
   lazy val duration: Duration = rateLimit.timeWindow.toTwitterDuration
 }
 
 object RateLimitStatus {
 
   def reached(rateLimit: RateLimit, resetTime: Option[Time]): RateLimitStatus = {
-    RateLimitStatus(rateLimit, rateLimit.maximumNrOfRequests.toInt, resetTime)
+    RateLimitStatus(rateLimit, rateLimit.maximumNrOfRequests, resetTime)
   }
 
   implicit val writes: Writes[RateLimitStatus] = Writes { rateLimitStatus =>

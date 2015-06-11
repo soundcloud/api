@@ -1,6 +1,6 @@
 package com.soundcloud.publicApiStrangler.rateLimiting
 
-import com.soundcloud.ratelimiting.core.RateLimit
+import com.soundcloud.ratelimiting.core.{ClientApplication, RateLimit}
 import com.soundcloud.scalakit.ResourceName
 import com.soundcloud.scalakit.cache.Cache
 import com.twitter.finagle.http.Request
@@ -18,25 +18,25 @@ class IndividualRateLimiter(cache: Cache,
     rateLimit.appliesTo(request.path)
   }
 
-  def advanceRateLimitStatus(apiClient: ApiClient): Future[RateLimitStatus] = {
-    val mediator = new RateLimiterCacheMediator(cache, rateLimit, apiClient, applicationName)
+  def advanceRateLimitStatus(clientApplication: ClientApplication): Future[RateLimitStatus] = {
+    val mediator = new RateLimiterCacheMediator(cache, rateLimit, clientApplication, applicationName)
     mediator.alreadyReached.flatMap { alreadyReached =>
       if (alreadyReached) {
-        notifyListeners(RateLimitEvent.Overflowing(apiClient))
+        notifyListeners(RateLimitEvent.Overflowing(clientApplication))
         mediator.expiry.map(reached)
       } else {
         mediator.requestsMadeSoFar.flatMap {
           case Some(number) if number >= rateLimit.maximumNrOfRequests =>
             Future.join(mediator.expiry, mediator.markAsReached).map { case (expiry, _) =>
               val status = reached(expiry)
-              notifyListeners(RateLimitEvent.CheckpointReached(status, apiClient))
-              notifyListeners(RateLimitEvent.Overflowing(apiClient))
+              notifyListeners(RateLimitEvent.CheckpointReached(status, clientApplication))
+              notifyListeners(RateLimitEvent.Overflowing(clientApplication))
               status
             }
           case Some(_) =>
             Future.join(mediator.updateRequestCount, mediator.expiry).map { case (updatedRequestCount, expiry) =>
               val status = advancing(updatedRequestCount.map(_.toInt).getOrElse(1), expiry)
-              notifyListeners(RateLimitEvent.CheckpointReached(status, apiClient))
+              notifyListeners(RateLimitEvent.CheckpointReached(status, clientApplication))
               status
             }
           case None =>
@@ -46,8 +46,8 @@ class IndividualRateLimiter(cache: Cache,
     }
   }
 
-  def rateLimitStatus(apiClient: ApiClient): Future[RateLimitStatus] = {
-    val mediator = new RateLimiterCacheMediator(cache, rateLimit, apiClient, applicationName)
+  def rateLimitStatus(clientApplication: ClientApplication): Future[RateLimitStatus] = {
+    val mediator = new RateLimiterCacheMediator(cache, rateLimit, clientApplication, applicationName)
     Future.join(mediator.expiry, mediator.alreadyReached) flatMap { case (expiry, alreadyReached) =>
       if (alreadyReached)
         Future(reached(expiry))

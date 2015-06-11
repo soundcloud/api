@@ -2,6 +2,7 @@ package com.soundcloud.publicApiStrangler.rateLimiting
 
 import com.soundcloud.jvmkit.config.Config
 import com.soundcloud.jvmkit.telemetry.Telemetry
+import com.soundcloud.ratelimiting.core.ClientApplication
 import com.twitter.util.Future
 import io.prometheus.client.metrics.Counter
 
@@ -23,7 +24,7 @@ class RateLimitMetrics(prometheusLabelsSafeGuard: PrometheusLabelsSafeGuard, con
   val incrementRateLimitReachedCounter = inc(ratelimitReachedCounter) _
   val incrementRateLimitOverflowingCounter = inc(ratelimitOverflowingCounter) _
 
-  private def inc(counter: Counter)(client: ApiClient): Future[Unit] = {
+  private def inc(counter: Counter)(client: ClientApplication): Future[Unit] = {
     prometheusLabelsSafeGuard.getSafeLabel(client).map { label =>
       counter
         .newPartial()

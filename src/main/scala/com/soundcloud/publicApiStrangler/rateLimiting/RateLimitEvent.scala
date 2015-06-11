@@ -1,15 +1,16 @@
 package com.soundcloud.publicApiStrangler.rateLimiting
 
+import com.soundcloud.ratelimiting.core.ClientApplication
 import org.joda.time.{DateTime, DateTimeZone}
 
 sealed trait RateLimitEvent {
-  def apiClient: ApiClient
+  def clientApplication: ClientApplication
   val occurredAt: DateTime = DateTime.now(DateTimeZone.UTC)
 }
 
 object RateLimitEvent {
-  case class CheckpointReached(status: RateLimitStatus, apiClient: ApiClient) extends RateLimitEvent {
+  case class CheckpointReached(status: RateLimitStatus, clientApplication: ClientApplication) extends RateLimitEvent {
     def hasReachedLimit: Boolean = status.hasReachedLimit
   }
-  case class Overflowing(apiClient: ApiClient) extends RateLimitEvent
+  case class Overflowing(clientApplication: ClientApplication) extends RateLimitEvent
 }

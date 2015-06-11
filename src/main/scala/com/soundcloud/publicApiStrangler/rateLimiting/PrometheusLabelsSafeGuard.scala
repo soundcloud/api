@@ -2,6 +2,7 @@ package com.soundcloud.publicApiStrangler.rateLimiting
 
 import com.soundcloud.jvmkit.ResourceName
 import com.soundcloud.jvmkit.config.Config
+import com.soundcloud.ratelimiting.core.ClientApplication
 import com.soundcloud.scalakit.cache.Cache
 import com.twitter.util.Future
 
@@ -14,7 +15,7 @@ class PrometheusLabelsSafeGuard(cache: Cache, config: Config, appName: ResourceN
     val maxNrOfLabels = config.get(maxPrometheusCounterLabelsConfigKey).toInt
   }
 
-  def getSafeLabel(client: ApiClient): Future[String] = {
+  def getSafeLabel(client: ClientApplication): Future[String] = {
     existingUniqueClientsInCache flatMap { labels =>
       if (labels(client.identifier)) Future.value(client.identifier)
       else if (labels.size < Constants.maxNrOfLabels) updateClientsInCache(labels + client.identifier).map(_ => client.identifier)
