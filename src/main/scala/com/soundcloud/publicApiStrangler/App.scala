@@ -84,14 +84,10 @@ object App
 
   private val zooKeeperClient = new ZooKeeperClient(curatorFramework)
 
-  private val prometheusLabelsSafeGuard = new PrometheusLabelsSafeGuard(cache, config, config.getApplicationResourceName)
-  private val rateLimitMetrics = new RateLimitMetrics(prometheusLabelsSafeGuard, config)
-  private val telemetryRateLimitEventListener = new TelemetryRateLimitEventListener(rateLimitMetrics)
-
   private val rateLimitEventsGateway = RateLimitEventsGateway(config, telemetry)
   private val reportingRateLimitEventListener = new ReportingRateLimitEventListener(rateLimitEventsGateway)
 
-  private val rateLimitEventListeners = telemetryRateLimitEventListener :: reportingRateLimitEventListener :: Nil
+  private val rateLimitEventListeners = Seq(reportingRateLimitEventListener)
 
   private val zkStoreFactory = new ZkChildrenCachingStoreFactory(zooKeeperClient)
   private val zkStoreProvider = new ZkStoreProvider(zkStoreFactory)
