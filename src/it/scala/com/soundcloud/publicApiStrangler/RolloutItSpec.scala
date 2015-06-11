@@ -12,12 +12,13 @@ import com.soundcloud.scalakit.test.{UnitSpecification, VerifiedMocks}
 import com.soundcloud.scalakit.utilities.DebugUtilities.Tappable
 import com.twitter.io.Charsets
 import org.specs2.matcher.MatchResult
+import org.specs2.time.TimeConversions
 
 import scala.util.Random
 
 class RolloutItSpec extends UnitSpecification {
 
-  trait FeaturesContext extends VerifiedMocks {
+  trait FeaturesContext extends VerifiedMocks with TimeConversions {
     val config = new BazookaConfig
 
     val factory = new CuratorFrameworkFactory
