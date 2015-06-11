@@ -25,7 +25,7 @@ class RateLimitingFilterSpec extends UnitSpecification with NoTimeConversions {
     val expiry = Time.now + 5.minutes
 
     trait Context extends Scope {
-      val rateLimit = RateLimit(EndpointGroup("global", ".*".r), Period.seconds(2), 30, RateLimitMode.Probing)
+      val rateLimit = RateLimit(EndpointGroup("global", ".*".r), Period.seconds(2), 30, RateLimitMode.Enforcing)
 
       val mockRateLimiterRegistry = mock[RateLimiterRegistry]
       val mockRateLimiter = mock[RateLimiter]

@@ -1,6 +1,6 @@
 package com.soundcloud.publicApiStrangler.rateLimiting
 
-import com.soundcloud.ratelimiting.core.{ClientApplication, RateLimitGroup}
+import com.soundcloud.ratelimiting.core.{RateLimitMode, ClientApplication, RateLimitGroup}
 import com.soundcloud.scalakit.ResourceName
 import com.soundcloud.scalakit.cache.Cache
 import com.twitter.finagle.http.Request
@@ -8,7 +8,9 @@ import com.twitter.util.Future
 
 class RateLimiter(val groupName: String, individualRateLimiters: Seq[IndividualRateLimiter]) {
   private def applicableRateLimiters(request: Request): Seq[IndividualRateLimiter] = {
-    individualRateLimiters.filter(_ appliesTo request)
+    individualRateLimiters.filter { limiter =>
+      limiter.appliesTo(request) && limiter.rateLimit.mode != RateLimitMode.Disabled
+    }
   }
 
   def appliesTo(request: Request): Boolean = {

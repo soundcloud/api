@@ -7,7 +7,7 @@ import com.twitter.finagle.http.Request
 import com.twitter.util.{Future, Time}
 
 class IndividualRateLimiter(cache: Cache,
-                            rateLimit: RateLimit,
+                            val rateLimit: RateLimit,
                             applicationName: ResourceName,
                             listeners: Seq[EventListener[RateLimitEvent]]) {
 

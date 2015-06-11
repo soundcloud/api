@@ -14,10 +14,12 @@ class RateLimiterSpec extends UnitSpecification {
 
     trait Context extends Scope {
       val endpointGroup = EndpointGroup("default", ".*".r)
-      val rateLimit1 = RateLimit(endpointGroup, Period.hours(24), 15000, RateLimitMode.Probing)
-      val rateLimit2 = RateLimit(endpointGroup, Period.hours(1), 150, RateLimitMode.Probing)
+      val rateLimit1 = RateLimit(endpointGroup, Period.hours(24), 15000, RateLimitMode.Enforcing)
+      val rateLimit2 = RateLimit(endpointGroup, Period.hours(1), 150, RateLimitMode.Enforcing)
       val individualRateLimiter1 = mock[IndividualRateLimiter]
       val individualRateLimiter2 = mock[IndividualRateLimiter]
+      individualRateLimiter1.rateLimit returns rateLimit1
+      individualRateLimiter2.rateLimit returns rateLimit2
       val rateLimiter = new RateLimiter("default", Seq(individualRateLimiter1, individualRateLimiter2))
       val request = mock[Request]
       val clientApplication = ClientApplication(Urn("soundcloud", "applications", "test"))
@@ -33,6 +35,14 @@ class RateLimiterSpec extends UnitSpecification {
     "not apply to a request if at no constituent applies to it" in new Context {
       individualRateLimiter1.appliesTo(request) returns false
       individualRateLimiter2.appliesTo(request) returns false
+      rateLimiter.appliesTo(request) must beFalse
+    }
+
+    "not apply to a request if no rate limit is enabled" in new Context {
+      individualRateLimiter1.appliesTo(request) returns true
+      individualRateLimiter2.appliesTo(request) returns true
+      individualRateLimiter1.rateLimit returns rateLimit1.copy(mode = RateLimitMode.Disabled)
+      individualRateLimiter2.rateLimit returns rateLimit1.copy(mode = RateLimitMode.Disabled)
       rateLimiter.appliesTo(request) must beFalse
     }
 
