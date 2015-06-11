@@ -2,7 +2,7 @@ package com.soundcloud.publicApiStrangler.controller
 
 import com.soundcloud.bff.test.InjectionBasedControllerSpecification
 import com.soundcloud.follows._
-import com.soundcloud.jvmkit.{Geo => JvmGeo}
+import com.soundcloud.jvmkit.{Geo => JvmGeo, UserSessionBuilder}
 import com.soundcloud.publicApiStrangler.features.Rollout
 import com.soundcloud.publicApiStrangler.support.DispatchToMothershipHandler
 import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures
@@ -26,7 +26,8 @@ class UserFollowControllerSpec extends InjectionBasedControllerSpecification wit
     val rollout = mock[Rollout]
     val userUrn = Urn("soundcloud:users:999")
     lazy val geo = Geo("US")
-    lazy val session = UserSession(userUrn, Urn("soundcloud:applications:v2"), geo, Set.empty)
+    lazy val session = new UserSessionBuilder().setUser(userUrn).setAgent(Urn("soundcloud:applications:v2")).setGeo(geo).build
+
     lazy val controller = new UserFollowController(fakeUserAuthentication(session), fallbackMock, okidokiMock, followsMock, "http://foo", rollout)
     lazy val userMock = okidokiUsers.as[List[JsObject]].head
     lazy val okidokiResponse = Future(List(userMock))
