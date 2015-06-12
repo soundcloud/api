@@ -30,7 +30,8 @@ class EventMapperSpec extends UnitSpecification {
       result ==== events.Event(
         limitReached.occurredAt,
         Urn("soundcloud", "systems", "public-api-strangler"),
-        events.ReachedEventPayload(ClientApplication(testApp), rateLimitIdentity, Some(resetTime.toJodaDateTime), 200)
+        events.ReachedEventPayload(
+          ClientApplication(testApp), rateLimitIdentity, Some(resetTime.toJodaDateTime), 200, RateLimitMode.Probing)
       )
     }
   }

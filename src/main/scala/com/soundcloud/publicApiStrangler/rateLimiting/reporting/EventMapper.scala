@@ -15,7 +15,8 @@ private[reporting] object EventMapper extends (CheckpointReached => Event[Reache
         event.clientApplication,
         RateLimitIdentity.forRateLimit(event.status.rateLimit),
         event.status.resetTime.map(_.toJodaDateTime),
-        event.status.requestCount
+        event.status.requestCount,
+        event.status.rateLimit.mode
       )
     )
   }
