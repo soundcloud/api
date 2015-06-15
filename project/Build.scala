@@ -48,7 +48,11 @@ object PublicApiStranglerBuild extends Build {
         "commons-codec"      %  "commons-codec"       % "1.9",
         "org.apache.curator" % "curator-framework"    % "2.7.1",
         "org.apache.curator" % "curator-recipes"      % "2.7.1"
-      ).map(_.exclude("org.slf4j", "slf4j-jdk14"))
+      ).map { libs =>
+        libs.exclude("commons-logging", "commons-logging")
+          .exclude("org.slf4j", "slf4j-log4j12")
+          .exclude("org.slf4j", "slf4j-jdk14")
+      }
     )
 
   lazy val gatlingDependencies = defaultSettings ++ Seq(
