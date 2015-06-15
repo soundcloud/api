@@ -40,7 +40,7 @@ object PublicApiStranglerBuild extends Build {
       ),
       externalResolvers := Resolver.withDefaultResolvers(resolvers.value, mavenCentral = false),
       libraryDependencies ++= Seq(
-        "com.soundcloud"     %% "bff"                 % "17.0.0",
+        "com.soundcloud"     %% "bff"                 % "17.0.1",
         "com.soundcloud"     %% "follows-client"      % "0.0.2",
         "com.soundcloud"     %% "ratelimitinglib"     % "0.0.21",
         "com.soundcloud"     %% "sc-services"         % "21.1.0",
@@ -48,11 +48,7 @@ object PublicApiStranglerBuild extends Build {
         "commons-codec"      %  "commons-codec"       % "1.9",
         "org.apache.curator" % "curator-framework"    % "2.7.1",
         "org.apache.curator" % "curator-recipes"      % "2.7.1"
-      ).map { libs =>
-        libs.exclude("commons-logging", "commons-logging")
-          .exclude("org.slf4j", "slf4j-log4j12")
-          .exclude("org.slf4j", "slf4j-jdk14")
-      }
+      )
     )
 
   lazy val gatlingDependencies = defaultSettings ++ Seq(
