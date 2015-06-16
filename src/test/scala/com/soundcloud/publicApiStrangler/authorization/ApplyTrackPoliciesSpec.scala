@@ -2,11 +2,13 @@ package com.soundcloud.publicApiStrangler.authorization
 
 import com.soundcloud.bff.media.TrackWaveformUrl
 import com.soundcloud.bff.test.UnitSpecification
-import com.soundcloud.jvmkit.policies.{MonetizationModel, ContentAuthorization, ContentPolicy, Reason}
+import com.soundcloud.jvmkit.policies.ContentAuthorization
 import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures
 import com.soundcloud.scalakit.{Url, Urn, UserSession}
 import play.api.libs.json.JsObject
 import play.api.libs.json.JsValue
+import com.soundcloud.jvmkit.policies.ContentPolicy
+import com.soundcloud.jvmkit.policies.Reason
 import com.soundcloud.publicApiStrangler.authorization.TrackWaveformActionStatus._
 
 class ApplyTrackPoliciesSpec extends UnitSpecification with Fixtures {
@@ -42,7 +44,7 @@ class ApplyTrackPoliciesSpec extends UnitSpecification with Fixtures {
     trait EverythingAuthorized extends Context {
       def rules =
         for (urn <- urns) yield {
-          new ContentAuthorization(urn, ContentPolicy.ALLOW, Reason.GEO, MonetizationModel.NOT_APPLICABLE)
+          new ContentAuthorization(urn, ContentPolicy.ALLOW, Reason.GEO)
         }
 
       def waveformActions =
@@ -63,9 +65,9 @@ class ApplyTrackPoliciesSpec extends UnitSpecification with Fixtures {
       def rules =
         for (urn <- urns) yield {
           if (authorized.contains(urn))
-            new ContentAuthorization(urn, ContentPolicy.ALLOW, Reason.GEO, MonetizationModel.NOT_APPLICABLE)
+            new ContentAuthorization(urn, ContentPolicy.ALLOW, Reason.GEO)
           else
-            new ContentAuthorization(urn, ContentPolicy.BLOCK, Reason.GEO, MonetizationModel.NOT_APPLICABLE)
+            new ContentAuthorization(urn, ContentPolicy.BLOCK, Reason.GEO)
         }
 
       def waveformActions =
@@ -86,9 +88,9 @@ class ApplyTrackPoliciesSpec extends UnitSpecification with Fixtures {
       def rules =
         for (urn <- urns) yield {
           if (snip.contains(urn))
-            new ContentAuthorization(urn, ContentPolicy.SNIP, Reason.GEO, MonetizationModel.NOT_APPLICABLE)
+            new ContentAuthorization(urn, ContentPolicy.SNIP, Reason.GEO)
           else
-            new ContentAuthorization(urn, ContentPolicy.ALLOW, Reason.GEO, MonetizationModel.NOT_APPLICABLE)
+            new ContentAuthorization(urn, ContentPolicy.ALLOW, Reason.GEO)
         }
 
       val urlWithoutDuration = TrackWaveformUrl("uid1", Url("http://preview/jsonurl/noDuration"), Url("http://preview/pngnurl/noDuration"), "stream", None)
@@ -130,9 +132,9 @@ class ApplyTrackPoliciesSpec extends UnitSpecification with Fixtures {
       override def rules =
         for (urn <- urns) yield {
           if (authorized.contains(urn))
-            new ContentAuthorization(urn, ContentPolicy.ALLOW, Reason.GEO, MonetizationModel.NOT_APPLICABLE)
+            new ContentAuthorization(urn, ContentPolicy.ALLOW, Reason.GEO)
           else
-            new ContentAuthorization(urn, ContentPolicy.BLOCK, Reason.GEO, MonetizationModel.NOT_APPLICABLE)
+            new ContentAuthorization(urn, ContentPolicy.BLOCK, Reason.GEO)
         }
 
       def waveformActions =
