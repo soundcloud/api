@@ -1,12 +1,17 @@
 package com.soundcloud.publicApiStrangler.rateLimiting
 
+import com.soundcloud.jvmkit.logging.SoundCloudLoggerFactory
+import com.soundcloud.ratelimiting.clients.ClientConfiguration
 import com.soundcloud.ratelimiting.core.{RateLimitMode, ClientApplication, RateLimitGroup}
-import com.soundcloud.scalakit.ResourceName
+import com.soundcloud.scalakit._
 import com.soundcloud.scalakit.cache.Cache
 import com.twitter.finagle.http.Request
 import com.twitter.util.Future
 
 class RateLimiter(val groupName: String, individualRateLimiters: Seq[IndividualRateLimiter]) {
+
+  private val logger = SoundCloudLoggerFactory.getLogger(this.getClass)
+
   private def applicableRateLimiters(request: Request): Seq[IndividualRateLimiter] = {
     individualRateLimiters.filter { limiter =>
       limiter.appliesTo(request) && limiter.rateLimit.mode != RateLimitMode.Disabled
@@ -19,6 +24,7 @@ class RateLimiter(val groupName: String, individualRateLimiters: Seq[IndividualR
 
   def advanceRateLimitStatus(clientApplication: ClientApplication, request: Request): Future[CompositeRateLimitStatus] = {
     val limiters = applicableRateLimiters(request)
+    log(clientApplication.urn, limiters)
     for {
       statuses <- Future.collect(limiters.map(_.rateLimitStatus(clientApplication)))
       oldCompositeStatus = CompositeRateLimitStatus(statuses.toSet)
@@ -28,6 +34,13 @@ class RateLimiter(val groupName: String, individualRateLimiters: Seq[IndividualR
       updatedCompositeStatus getOrElse oldCompositeStatus
     }
   }
+
+  private def log(clientApplication: Urn, applicableLimiters: Seq[IndividualRateLimiter]) = {
+    if (clientApplication == Urn("soundcloud:applications:164064")) {
+      logger.info(s"Applicable rate limiters: ${applicableLimiters.map(_.rateLimit).mkString(",")}")
+    }
+  }
+
 }
 
 object RateLimiter {
