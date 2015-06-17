@@ -22,14 +22,11 @@ class RateLimitingFilter(
   rollout: Rollout
 ) extends SimpleFilter[Request, Response] {
 
-  private val soundLogger = SoundCloudLoggerFactory.getLogger(this.getClass)
-  private val logger = LoggerFactory.getLogger(this.getClass)
+  private val logger = SoundCloudLoggerFactory.getLogger(this.getClass)
 
   def apply(request: Request, next: Service[Request, Response]): Future[Response] = {
     if (!rollout.isActive(Features.WireRateLimits)) next(request)
     else {
-      logger.info(s"NORMAL_LOGGER Rate limiting a request to ${request.path}")
-      soundLogger.info(s"SOUND_LOGGER Rate limiting a request to ${request.path}")
       bypassForInapplicableRoutes(request, next) getOrElse {
         userAuthentication.withUserSession(new BffRequest(request)) { session =>
           val clientApplication = ClientApplication(session.getAgent)
