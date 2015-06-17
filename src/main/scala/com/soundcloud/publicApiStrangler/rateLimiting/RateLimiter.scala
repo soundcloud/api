@@ -24,7 +24,6 @@ class RateLimiter(val groupName: String, individualRateLimiters: Seq[IndividualR
 
   def advanceRateLimitStatus(clientApplication: ClientApplication, request: Request): Future[CompositeRateLimitStatus] = {
     val limiters = applicableRateLimiters(request)
-    log(clientApplication.urn, limiters)
     for {
       statuses <- Future.collect(limiters.map(_.rateLimitStatus(clientApplication)))
       oldCompositeStatus = CompositeRateLimitStatus(statuses.toSet)
@@ -34,13 +33,6 @@ class RateLimiter(val groupName: String, individualRateLimiters: Seq[IndividualR
       updatedCompositeStatus getOrElse oldCompositeStatus
     }
   }
-
-  private def log(clientApplication: Urn, applicableLimiters: Seq[IndividualRateLimiter]) = {
-    if (clientApplication == Urn("soundcloud:applications:164064")) {
-      logger.error(s"BLUESKIES: Applicable rate limiters: ${applicableLimiters.map(_.rateLimit).mkString(",")}")
-    }
-  }
-
 }
 
 object RateLimiter {
@@ -56,5 +48,4 @@ object RateLimiter {
     }
     new RateLimiter(rateLimitGroup.id, individualLimiters)
   }
-
 }

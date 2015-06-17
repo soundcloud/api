@@ -11,6 +11,7 @@ import com.twitter.finagle.http.{Request, Response}
 import com.twitter.finagle.{Service, SimpleFilter}
 import com.twitter.util.Future
 import org.jboss.netty.handler.codec.http.HttpResponseStatus
+import org.slf4j.LoggerFactory
 import play.api.libs.json.{JsObject, Json}
 
 import scala.util.control.NonFatal
@@ -21,16 +22,18 @@ class RateLimitingFilter(
   rollout: Rollout
 ) extends SimpleFilter[Request, Response] {
 
-  val logger = SoundCloudLoggerFactory.getLogger(this.getClass)
+  private val soundLogger = SoundCloudLoggerFactory.getLogger(this.getClass)
+  private val logger = LoggerFactory.getLogger(this.getClass)
 
   def apply(request: Request, next: Service[Request, Response]): Future[Response] = {
     if (!rollout.isActive(Features.WireRateLimits)) next(request)
     else {
+      logger.info(s"NORMAL_LOGGER Rate limiting a request to ${request.path}")
+      soundLogger.info(s"SOUND_LOGGER Rate limiting a request to ${request.path}")
       bypassForInapplicableRoutes(request, next) getOrElse {
         userAuthentication.withUserSession(new BffRequest(request)) { session =>
           val clientApplication = ClientApplication(session.getAgent)
           rateLimiterRegistry.lookup(clientApplication) flatMap { rateLimiter =>
-
             Verdict.on(session, request, clientApplication, rateLimiter).flatMap {
               case Pass =>
                 next(request)
@@ -79,9 +82,6 @@ class RateLimitingFilter(
 
     def shouldBailOut(session: UserSession, request: Request, clientApplication: ClientApplication, rateLimiter: RateLimiter): Boolean = {
       val rateLimiterApplies = rateLimiter.appliesTo(request)
-      if (clientApplication.urn == Urn("soundcloud:applications:164064")) {
-        logger.error(s"BLUESKIES: Rate limiter ${rateLimiter.groupName} applies == $rateLimiterApplies")
-      }
       session.isInstanceOf[FailsafeUserSession] || !rateLimiterApplies
     }
   }
