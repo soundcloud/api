@@ -37,7 +37,7 @@ class RateLimiter(val groupName: String, individualRateLimiters: Seq[IndividualR
 
   private def log(clientApplication: Urn, applicableLimiters: Seq[IndividualRateLimiter]) = {
     if (clientApplication == Urn("soundcloud:applications:164064")) {
-      logger.info(s"Applicable rate limiters: ${applicableLimiters.map(_.rateLimit).mkString(",")}")
+      logger.error(s"BLUESKIES: Applicable rate limiters: ${applicableLimiters.map(_.rateLimit).mkString(",")}")
     }
   }
 

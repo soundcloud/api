@@ -6,7 +6,7 @@ import com.soundcloud.jvmkit.FailsafeUserSession
 import com.soundcloud.jvmkit.logging.SoundCloudLoggerFactory
 import com.soundcloud.publicApiStrangler.features.{Features, Rollout}
 import com.soundcloud.ratelimiting.core.ClientApplication
-import com.soundcloud.scalakit.UserSession
+import com.soundcloud.scalakit.{Urn, UserSession}
 import com.twitter.finagle.http.{Request, Response}
 import com.twitter.finagle.{Service, SimpleFilter}
 import com.twitter.util.Future
@@ -30,6 +30,7 @@ class RateLimitingFilter(
         userAuthentication.withUserSession(new BffRequest(request)) { session =>
           val clientApplication = ClientApplication(session.getAgent)
           rateLimiterRegistry.lookup(clientApplication) flatMap { rateLimiter =>
+
             Verdict.on(session, request, clientApplication, rateLimiter).flatMap {
               case Pass =>
                 next(request)
@@ -77,7 +78,11 @@ class RateLimitingFilter(
     }
 
     def shouldBailOut(session: UserSession, request: Request, clientApplication: ClientApplication, rateLimiter: RateLimiter): Boolean = {
-      session.isInstanceOf[FailsafeUserSession] || !rateLimiter.appliesTo(request)
+      val rateLimiterApplies = rateLimiter.appliesTo(request)
+      if (clientApplication.urn == Urn("soundcloud:applications:164064")) {
+        logger.error(s"BLUESKIES: Rate limiter ${rateLimiter.groupName} applies == $rateLimiterApplies")
+      }
+      session.isInstanceOf[FailsafeUserSession] || !rateLimiterApplies
     }
   }
 
