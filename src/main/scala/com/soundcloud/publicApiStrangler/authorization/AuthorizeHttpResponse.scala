@@ -34,10 +34,7 @@ class AuthorizeHttpResponse(
             .map(Json.stringify)
             .map(originalResponse.withBody)
             .map(_.status(status))
-            .getOrElse{
-            println("failed here BORA")
-            render.forbidden
-          }
+            .getOrElse(render.forbidden)   
         }
       }
     }
