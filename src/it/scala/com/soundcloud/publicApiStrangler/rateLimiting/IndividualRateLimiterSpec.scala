@@ -40,11 +40,12 @@ class IndividualRateLimiterSpec extends UnitSpecification with NoTimeConversions
       "register an API client on its first request" in {
         val status = Await.result(rateLimiter.advanceRateLimitStatus(clientApplication))
         status must beLike {
-          case RateLimitStatus(_, 1, Some(_)) => ok
+          case RateLimitStatus(_, 0, Some(_)) => ok
         }
       }
 
       "keep advancing while the limit is not reached" in {
+        Await.result(rateLimiter.advanceRateLimitStatus(clientApplication))
         Await.result(rateLimiter.advanceRateLimitStatus(clientApplication))
         val status = Await.result(rateLimiter.advanceRateLimitStatus(clientApplication))
         status must beLike {
@@ -64,7 +65,7 @@ class IndividualRateLimiterSpec extends UnitSpecification with NoTimeConversions
         afterDuration(7.seconds) {
           val status = Await.result(rateLimiter.advanceRateLimitStatus(clientApplication))
           status must beLike {
-            case RateLimitStatus(_, 1, Some(_)) => ok
+            case RateLimitStatus(_, 0, Some(_)) => ok
           }
         }
       }

@@ -26,21 +26,21 @@ class IndividualRateLimiter(cache: Cache,
         mediator.expiry.map(reached)
       } else {
         mediator.requestsMadeSoFar.flatMap {
-          case Some(number) if number >= rateLimit.maximumNrOfRequests =>
+          case Some(number) if number > rateLimit.maximumNrOfRequests =>
             Future.join(mediator.expiry, mediator.markAsReached).map { case (expiry, _) =>
               val status = reached(expiry)
               notifyListeners(RateLimitEvent.CheckpointReached(status, clientApplication))
               notifyListeners(RateLimitEvent.Overflowing(clientApplication))
               status
             }
-          case Some(_) =>
+          case Some(number) =>
             Future.join(mediator.updateRequestCount, mediator.expiry).map { case (updatedRequestCount, expiry) =>
-              val status = advancing(updatedRequestCount.map(_.toInt).getOrElse(1), expiry)
+              val status = advancing(number.toInt, expiry)
               notifyListeners(RateLimitEvent.CheckpointReached(status, clientApplication))
               status
             }
           case None =>
-            mediator.establish.map { expiry => advancing(1, Some(expiry)) }
+            mediator.establish.map { expiry => advancing(0, Some(expiry)) }
         }
       }
     }
