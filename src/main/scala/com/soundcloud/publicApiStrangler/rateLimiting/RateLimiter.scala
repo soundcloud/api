@@ -1,8 +1,6 @@
 package com.soundcloud.publicApiStrangler.rateLimiting
 
-import com.soundcloud.jvmkit.logging.SoundCloudLoggerFactory
-import com.soundcloud.ratelimiting.clients.ClientConfiguration
-import com.soundcloud.ratelimiting.core.{RateLimitMode, ClientApplication, RateLimitGroup}
+import com.soundcloud.ratelimiting.core.{ClientApplication, RateLimitGroup, RateLimitMode}
 import com.soundcloud.scalakit._
 import com.soundcloud.scalakit.cache.Cache
 import com.twitter.finagle.http.Request
@@ -10,16 +8,24 @@ import com.twitter.util.Future
 
 class RateLimiter(val groupName: String, individualRateLimiters: Seq[IndividualRateLimiter]) {
 
-  private val logger = SoundCloudLoggerFactory.getLogger(this.getClass)
-
   private def applicableRateLimiters(request: Request): Seq[IndividualRateLimiter] = {
     individualRateLimiters.filter { limiter =>
       limiter.appliesTo(request) && limiter.rateLimit.mode != RateLimitMode.Disabled
     }
   }
 
+  private def visibleRateLimiters: Seq[IndividualRateLimiter] = {
+    individualRateLimiters.filter(_.rateLimit.mode == RateLimitMode.Enforcing)
+  }
+
   def appliesTo(request: Request): Boolean = {
     applicableRateLimiters(request).nonEmpty
+  }
+
+  def currentStatus(clientApplication: ClientApplication): Future[CompositeRateLimitStatus] = {
+    for {
+      statuses <- Future.collect(visibleRateLimiters.map(_.rateLimitStatus(clientApplication)))
+    } yield CompositeRateLimitStatus(statuses.toSet)
   }
 
   def advanceRateLimitStatus(clientApplication: ClientApplication, request: Request): Future[CompositeRateLimitStatus] = {

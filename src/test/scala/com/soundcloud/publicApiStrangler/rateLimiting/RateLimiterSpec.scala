@@ -16,14 +16,32 @@ class RateLimiterSpec extends UnitSpecification {
       val endpointGroup = EndpointGroup("default", ".*".r)
       val rateLimit1 = RateLimit(endpointGroup, Period.hours(24), 15000, RateLimitMode.Enforcing)
       val rateLimit2 = RateLimit(endpointGroup, Period.hours(1), 150, RateLimitMode.Enforcing)
+      val rateLimit3 = RateLimit(endpointGroup, Period.hours(24), 20000, RateLimitMode.Probing)
+      val rateLimit4 = RateLimit(endpointGroup, Period.hours(24), 20000, RateLimitMode.Disabled)
       val individualRateLimiter1 = mock[IndividualRateLimiter]
       val individualRateLimiter2 = mock[IndividualRateLimiter]
+      val individualRateLimiter3 = mock[IndividualRateLimiter]
+      val individualRateLimiter4 = mock[IndividualRateLimiter]
       individualRateLimiter1.rateLimit returns rateLimit1
       individualRateLimiter2.rateLimit returns rateLimit2
+      individualRateLimiter3.rateLimit returns rateLimit3
+      individualRateLimiter4.rateLimit returns rateLimit4
       val rateLimiter = new RateLimiter("default", Seq(individualRateLimiter1, individualRateLimiter2))
       val request = mock[Request]
       val clientApplication = ClientApplication(Urn("soundcloud", "applications", "test"))
       request.headers() returns new DefaultHttpHeaders()
+    }
+
+    "return current status composed of all visible individual statuses" in new Context {
+      val status1 = RateLimitStatus(rateLimit1, 10000, None)
+      val status2 = RateLimitStatus(rateLimit2, 100, None)
+      individualRateLimiter1.rateLimitStatus(clientApplication) returns Future(status1)
+      individualRateLimiter2.rateLimitStatus(clientApplication) returns Future(status2)
+
+      val limiter = new RateLimiter("default", Seq(
+        individualRateLimiter1, individualRateLimiter2, individualRateLimiter3, individualRateLimiter4))
+
+      Await.result(limiter.currentStatus(clientApplication)) ==== CompositeRateLimitStatus(Set(status1, status2))
     }
 
     "apply to a request if at least one constituent applies to it" in new Context {
