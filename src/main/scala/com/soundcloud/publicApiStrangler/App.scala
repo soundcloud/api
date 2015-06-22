@@ -118,6 +118,8 @@ object App
 
   val rollout = RolloutBuilder.build(curatorFramework, config.getApplicationName)
 
+  val rateLimitStatusController = new RateLimitStatusController(rateLimiterRegistry, userAuthentication, rollout)
+  
   private val userFollowController = new UserFollowController(
     userAuthentication,
     mothershipDispatcher,
@@ -188,6 +190,7 @@ object App
     userFollowController,
     searchController,
     similarSoundsController,
-    robotsTxtController
+    robotsTxtController,
+    rateLimitStatusController
   )
 }
