@@ -1,11 +1,10 @@
 package com.soundcloud.publicApiStrangler.rateLimiting.reporting
 
-import com.soundcloud.publicApiStrangler.rateLimiting.{RateLimitEvent, RateLimitStatus}
-import com.soundcloud.ratelimiting.core.{RateLimitMode, EndpointGroup, ClientApplication, RateLimit}
+import com.soundcloud.ratelimiting.core._
+import com.soundcloud.ratelimiting.events.{Event, ReachedEventPayload}
 import com.soundcloud.scalakit.Urn
 import com.soundcloud.scalakit.test.UnitSpecification
-import com.twitter.util.Time
-import org.joda.time.Period
+import org.joda.time.{DateTime, DateTimeZone, Period}
 
 class PublishingDecisionSpec extends UnitSpecification {
 
@@ -13,38 +12,29 @@ class PublishingDecisionSpec extends UnitSpecification {
 
     trait Context extends Scope {
       val someClient = ClientApplication(Urn("soundcloud", "applications", "test-app"))
-      val resetTime = Some(Time.now)
+      val resetTime = Some(DateTime.now(DateTimeZone.UTC))
       val rateLimit = RateLimit(EndpointGroup("default", ".*".r), Period.seconds(50), 5000 * 100, RateLimitMode.Probing)
       def event(requestCount: Int) = {
-        RateLimitEvent.CheckpointReached(RateLimitStatus(
-          rateLimit, requestCount, resetTime), someClient)
+        Event(DateTime.now(DateTimeZone.UTC), Urn("soundcloud", "systems", "someone"), ReachedEventPayload(
+          someClient, RateLimitIdentity.forRateLimit(rateLimit), resetTime, requestCount, RateLimitMode.Probing
+        ))
       }
     }
 
-    "decide not to publish if the event is an Overflowing event" in new Context {
-      val event = RateLimitEvent.Overflowing(someClient)
-      PublishingDecision.shouldPublish(event) ==== PublishingDecision.DoNotPublish
-    }
-
     "decide not to publish if the event is a PercentageReached with a non-checkpoint percentage of the limit" in new Context {
-      PublishingDecision.shouldPublish(event(17 * 5000)) ==== PublishingDecision.DoNotPublish
-      PublishingDecision.shouldPublish(event(5000 * 75 + 1)) ==== PublishingDecision.DoNotPublish
+      PublishingDecision.shouldPublish(event(17 * 5000)) must beFalse
+      PublishingDecision.shouldPublish(event(5000 * 75 + 1)) must beFalse
     }
 
     "decide to publish if the event is a PercentageReached with a checkpoint percentage of the limit" in new Context {
-      val events = event(5000 * 75) :: event(5000 * 90) :: event(5000 * 100) :: Nil
-      (events map PublishingDecision.shouldPublish) ==== (events map PublishingDecision.DoPublish.apply)
+      PublishingDecision.shouldPublish(event(5000 * 75)) must beTrue
+      PublishingDecision.shouldPublish(event(5000 * 90)) must beTrue
+      PublishingDecision.shouldPublish(event(5000 * 100)) must beTrue
     }
 
     "decide to publish if the event is a PercentageReached with a checkpoint request count of 15K or 65K" in new Context {
-      val events = event(15000) :: event(65000) :: Nil
-      (events map PublishingDecision.shouldPublish) ==== (events map PublishingDecision.DoPublish.apply)
-    }
-
-    "decide to publish if the event is a LimitReached event" in new Context {
-      val event = RateLimitEvent.CheckpointReached(
-        RateLimitStatus.reached(rateLimit, resetTime), someClient)
-      PublishingDecision.shouldPublish(event) ==== PublishingDecision.DoPublish(event)
+      PublishingDecision.shouldPublish(event(15000)) must beTrue
+      PublishingDecision.shouldPublish(event(65000)) must beTrue
     }
   }
 }

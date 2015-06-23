@@ -1,6 +1,7 @@
 package com.soundcloud.publicApiStrangler.rateLimiting
 
 import com.soundcloud.ratelimiting.core.{ClientApplication, RateLimitGroup, RateLimitMode}
+import com.soundcloud.ratelimiting.events.{Event, ReachedEventPayload}
 import com.soundcloud.scalakit._
 import com.soundcloud.scalakit.cache.Cache
 import com.twitter.finagle.http.Request
@@ -46,7 +47,7 @@ object RateLimiter {
   def from(
       cache: Cache,
       rateLimitGroup: RateLimitGroup,
-      listeners: Seq[EventListener[RateLimitEvent]],
+      listeners: Seq[EventListener[Event[ReachedEventPayload]]],
       applicationResourceName: ResourceName): RateLimiter = {
 
     val individualLimiters = rateLimitGroup.rateLimits.map { rateLimit =>
