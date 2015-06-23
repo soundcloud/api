@@ -2,7 +2,8 @@ package com.soundcloud.publicApiStrangler.rateLimiting
 
 import com.soundcloud.bff.test.UnitSpecification
 import com.soundcloud.jvmkit.config.BazookaConfig
-import com.soundcloud.ratelimiting.core.{RateLimitMode, ClientApplication, EndpointGroup, RateLimit}
+import com.soundcloud.ratelimiting.core.RateLimitConfiguration.Bucket
+import com.soundcloud.ratelimiting.core._
 import com.soundcloud.scalakit.{Urn, ResourceName}
 import com.soundcloud.scalakit.cache.MemcachedClient
 import com.twitter.conversions.time._
@@ -28,7 +29,8 @@ class IndividualRateLimiterSpec extends UnitSpecification with NoTimeConversions
 
   val cache = MemcachedClient(config, ResourceName("MEMCACHED_TEST"))
   val duration = Period.seconds(5)
-  val rateLimit = RateLimit(EndpointGroup("default", ".*".r), duration, 4, RateLimitMode.Probing)
+  val rateLimit = RateLimit(EndpointGroup("default", ".*".r), Seq(RateLimitConfiguration(Bucket.Default, duration, 4)), RateLimitMode.Probing)
+  val rateLimitIdentity = RateLimitIdentity.from(rateLimit.default, rateLimit.group, rateLimit.mode)
   
   val rateLimiter = new IndividualRateLimiter(cache, rateLimit, ResourceName("TEST_APP"), Seq.empty)
 
@@ -76,7 +78,7 @@ class IndividualRateLimiterSpec extends UnitSpecification with NoTimeConversions
 
       "Query for as yet unknown client" in {
         val status = Await.result(rateLimiter.rateLimitStatus(clientApplication))
-        status ==== RateLimitStatus(rateLimit, 0, None)
+        status ==== RateLimitStatus(rateLimitIdentity, 0, None)
       }
 
       "Query for a client that has not reached its limit" in {
@@ -95,7 +97,7 @@ class IndividualRateLimiterSpec extends UnitSpecification with NoTimeConversions
         Await.result(rateLimiter.advanceRateLimitStatus(clientApplication))
         val status = Await.result(rateLimiter.rateLimitStatus(clientApplication))
         status must beLike {
-          case RateLimitStatus(`rateLimit`, 4, Some(_)) => ok
+          case RateLimitStatus(`rateLimitIdentity`, 4, Some(_)) => ok
         }
       }
     }

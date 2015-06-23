@@ -7,7 +7,7 @@ object PublishingDecision {
   private val requestCountsToPublish = Set(15000L, 65000L)
 
   def shouldPublish(event: Event[ReachedEventPayload]): Boolean = {
-    def threshold(percentage: Double): Long = (event.payload.rateLimit.maxNrOfRequests * percentage / 100).toLong
+    def threshold(percentage: Double): Long = (event.payload.rateLimit.maximumNrOfRequests * percentage / 100).toLong
     percentagesToPublish.map(threshold).contains(event.payload.requestCount) || requestCountsToPublish(event.payload.requestCount)
   }
 }

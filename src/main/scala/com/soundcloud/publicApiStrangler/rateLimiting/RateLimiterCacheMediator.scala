@@ -29,7 +29,7 @@ class RateLimiterCacheMediator(cache: Cache, rateLimit: RateLimit, clientApplica
   }
 
   def establish: Future[Time] = {
-    val expiry = Time.now + clientSpecificRateLimit.rateLimit.timeWindow.toTwitterDuration
+    val expiry = Time.now + clientSpecificRateLimit.rateLimit.default.timeWindow.toTwitterDuration
     for {
       updatedRequestCount <- cache.add(clientSpecificRateLimit.counterCacheKey, one, expiry)
       _ <- cache.set(clientSpecificRateLimit.expiryCacheKey, serializeTime(expiry), expiry)

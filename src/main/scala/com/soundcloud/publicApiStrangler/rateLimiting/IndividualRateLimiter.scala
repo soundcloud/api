@@ -15,17 +15,16 @@ class IndividualRateLimiter(cache: Cache,
                             applicationName: ResourceName,
                             listeners: Seq[EventListener[Event[ReachedEventPayload]]]) {
 
-  val rateLimitIdentity = RateLimitIdentity.forRateLimit(rateLimit)
+  val rateLimitIdentity = RateLimitIdentity.from(rateLimit.default, rateLimit.group, rateLimit.mode)
 
   def event(clientApplication: ClientApplication, status: RateLimitStatus) = {
     Event(DateTime.now, ReportingRateLimitEventListener.stranglerUrn,
       ReachedEventPayload(
-        clientApplication, rateLimitIdentity,
-        status.resetTime.map(_.toJodaDateTime), status.requestCount, rateLimit.mode))
+        clientApplication, rateLimitIdentity, status.resetTime.map(_.toJodaDateTime), status.requestCount))
   }
 
-  val advancing = RateLimitStatus(rateLimit, _: Int, _: Option[Time])
-  val reached = RateLimitStatus.reached(rateLimit, _: Option[Time])
+  val advancing = RateLimitStatus(rateLimitIdentity, _: Int, _: Option[Time])
+  val reached = RateLimitStatus.reached(rateLimitIdentity, _: Option[Time])
 
   def appliesTo(request: Request) = {
     rateLimit.appliesTo(request.path)
@@ -38,7 +37,7 @@ class IndividualRateLimiter(cache: Cache,
         mediator.expiry.map(reached)
       } else {
         mediator.requestsMadeSoFar.flatMap {
-          case Some(number) if number > rateLimit.maximumNrOfRequests =>
+          case Some(number) if number > rateLimitIdentity.maximumNrOfRequests =>
             Future.join(mediator.expiry, mediator.markAsReached).map { case (expiry, _) =>
               val status = reached(expiry)
               notifyListeners(event(clientApplication, status))
