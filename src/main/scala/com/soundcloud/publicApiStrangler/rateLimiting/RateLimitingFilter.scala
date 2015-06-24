@@ -29,14 +29,17 @@ class RateLimitingFilter(
     else {
       bypassForInapplicableRoutes(request, next) getOrElse {
         userAuthentication.withUserSession(new BffRequest(request)) { session =>
-          val clientApplication = ClientApplication(session.getAgent)
-          rateLimiterRegistry.lookup(clientApplication) flatMap { rateLimiter =>
-            Verdict.on(session, request, clientApplication, rateLimiter).flatMap {
-              case Pass =>
-                next(request)
-              case Block(status) =>
-                Future.value(errorResponse(status))
-            }
+          ActionableAccessMechanism.fromSession(session) match {
+            case None => next(request)
+            case Some(accessMechanism) =>
+              rateLimiterRegistry.lookup(accessMechanism.clientApplication) flatMap { rateLimiter =>
+                Verdict.on(request, rateLimiter, accessMechanism).flatMap {
+                  case Pass =>
+                    next(request)
+                  case Block(status) =>
+                    Future.value(errorResponse(status))
+                }
+              }
           }
         }
       }
@@ -55,31 +58,23 @@ class RateLimitingFilter(
   case class Block(status: CompositeRateLimitStatus) extends Verdict
 
   object Verdict {
-    def on(session: UserSession, request: Request, clientApplication: ClientApplication, rateLimiter: RateLimiter): Future[Verdict] = {
-      val clientApplication = ClientApplication(session.getAgent)
-      val rolloutStatus = RolloutStatus.forApiClient(clientApplication)
-      val verdict = if (shouldBailOut(session, request, clientApplication, rateLimiter)) {
-        Future(Pass)
-      } else rolloutStatus match {
-        case Disabled =>
-          Future(Pass)
-        case Probing =>
-          rateLimiter.advanceRateLimitStatus(clientApplication, request).map(_ => Pass)
-        case Enforcing =>
-          rateLimiter.advanceRateLimitStatus(clientApplication, request).map { status =>
-            status.keepingReachedEnforcedRateLimitStatuses.map(Block).getOrElse(Pass)
-          }
-      }
-      verdict handle {
+    def on(request: Request, rateLimiter: RateLimiter, accessMechanism: ActionableAccessMechanism): Future[Verdict] = {
+      locally {
+        RolloutStatus.forApiClient(accessMechanism.clientApplication) match {
+          case _ if !rateLimiter.appliesTo(request) => Future(Pass)
+          case Disabled                             => Future(Pass)
+          case Probing                              =>
+            rateLimiter.advanceRateLimitStatus(accessMechanism, request).map(_ => Pass)
+          case Enforcing                            =>
+            rateLimiter.advanceRateLimitStatus(accessMechanism, request).map { status =>
+              status.keepingReachedEnforcedRateLimitStatuses.map(Block).getOrElse(Pass)
+            }
+        }
+      } handle {
         case NonFatal(ex) =>
           logger.error("Something went wrong while trying to rate-limit the request.", ex)
           Pass
       }
-    }
-
-    def shouldBailOut(session: UserSession, request: Request, clientApplication: ClientApplication, rateLimiter: RateLimiter): Boolean = {
-      val rateLimiterApplies = rateLimiter.appliesTo(request)
-      session.isInstanceOf[FailsafeUserSession] || !rateLimiterApplies
     }
   }
 
@@ -122,5 +117,4 @@ class RateLimitingFilter(
   }
 
   private def statusToError(status: RateLimitStatus) = Json.obj("meta" -> Json.toJson(status))
-
 }

@@ -23,18 +23,18 @@ class RateLimiter(val groupName: String, individualRateLimiters: Seq[IndividualR
     applicableRateLimiters(request).nonEmpty
   }
 
-  def currentStatus(clientApplication: ClientApplication): Future[CompositeRateLimitStatus] = {
+  def currentStatus(accessMechanism: ActionableAccessMechanism): Future[CompositeRateLimitStatus] = {
     for {
-      statuses <- Future.collect(visibleRateLimiters.map(_.rateLimitStatus(clientApplication)))
+      statuses <- Future.collect(visibleRateLimiters.map(_.rateLimitStatus(accessMechanism)))
     } yield CompositeRateLimitStatus(statuses.toSet)
   }
 
-  def advanceRateLimitStatus(clientApplication: ClientApplication, request: Request): Future[CompositeRateLimitStatus] = {
+  def advanceRateLimitStatus(accessMechanism: ActionableAccessMechanism, request: Request): Future[CompositeRateLimitStatus] = {
     val limiters = applicableRateLimiters(request)
     for {
-      statuses <- Future.collect(limiters.map(_.rateLimitStatus(clientApplication)))
+      statuses <- Future.collect(limiters.map(_.rateLimitStatus(accessMechanism)))
       oldCompositeStatus = CompositeRateLimitStatus(statuses.toSet)
-      updatedStatuses <- if (!oldCompositeStatus.hasReachedLimit) Future.collect(limiters.map(_.advanceRateLimitStatus(clientApplication))).map(Some(_)) else Future.None
+      updatedStatuses <- if (!oldCompositeStatus.hasReachedLimit) Future.collect(limiters.map(_.advanceRateLimitStatus(accessMechanism))).map(Some(_)) else Future.None
       updatedCompositeStatus = updatedStatuses.map(s => CompositeRateLimitStatus(s.toSet))
     } yield {
       updatedCompositeStatus getOrElse oldCompositeStatus

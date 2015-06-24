@@ -11,8 +11,8 @@ class RateLimiterRegistry(
   rateLimitGroupLookupService: RateLimitGroupLookupService,
   rateLimitEventListeners: Seq[EventListener[Event[ReachedEventPayload]]],
   cache: Cache,
-  applicationResourceName: ResourceName) {
-
+  applicationResourceName: ResourceName
+) {
   val application = Urn("soundcloud", "systems", applicationResourceName.getName)
 
   def lookup(clientApplication: ClientApplication): Future[RateLimiter] = {
@@ -20,5 +20,4 @@ class RateLimiterRegistry(
       rateLimitGroup <- rateLimitGroupLookupService.rateLimitGroupFor(application, clientApplication.urn)
     } yield RateLimiter.from(cache, rateLimitGroup, rateLimitEventListeners, applicationResourceName)
   }
-
 }

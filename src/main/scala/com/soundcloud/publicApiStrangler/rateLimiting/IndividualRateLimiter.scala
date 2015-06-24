@@ -30,8 +30,8 @@ class IndividualRateLimiter(cache: Cache,
     rateLimit.appliesTo(request.path)
   }
 
-  def advanceRateLimitStatus(clientApplication: ClientApplication): Future[RateLimitStatus] = {
-    val mediator = new RateLimiterCacheMediator(cache, rateLimit, clientApplication, applicationName)
+  def advanceRateLimitStatus(accessMechanism: ActionableAccessMechanism): Future[RateLimitStatus] = {
+    val mediator = new RateLimiterCacheMediator(cache, rateLimit, accessMechanism.clientApplication, applicationName)
     mediator.alreadyReached.flatMap { alreadyReached =>
       if (alreadyReached) {
         mediator.expiry.map(reached)
@@ -40,13 +40,13 @@ class IndividualRateLimiter(cache: Cache,
           case Some(number) if number > rateLimitIdentity.maximumNrOfRequests =>
             Future.join(mediator.expiry, mediator.markAsReached).map { case (expiry, _) =>
               val status = reached(expiry)
-              notifyListeners(event(clientApplication, status))
+              notifyListeners(event(accessMechanism.clientApplication, status))
               status
             }
           case Some(number) =>
             Future.join(mediator.updateRequestCount, mediator.expiry).map { case (updatedRequestCount, expiry) =>
               val status = advancing(number.toInt, expiry)
-              notifyListeners(event(clientApplication, status))
+              notifyListeners(event(accessMechanism.clientApplication, status))
               status
             }
           case None =>
@@ -56,8 +56,8 @@ class IndividualRateLimiter(cache: Cache,
     }
   }
 
-  def rateLimitStatus(clientApplication: ClientApplication): Future[RateLimitStatus] = {
-    val mediator = new RateLimiterCacheMediator(cache, rateLimit, clientApplication, applicationName)
+  def rateLimitStatus(accessMechanism: ActionableAccessMechanism): Future[RateLimitStatus] = {
+    val mediator = new RateLimiterCacheMediator(cache, rateLimit, accessMechanism.clientApplication, applicationName)
     Future.join(mediator.expiry, mediator.alreadyReached) flatMap { case (expiry, alreadyReached) =>
       if (alreadyReached)
         Future(reached(expiry))

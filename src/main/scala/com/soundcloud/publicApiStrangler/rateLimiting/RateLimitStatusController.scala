@@ -19,15 +19,18 @@ class RateLimitStatusController(
         case _: FailsafeUserSession =>
           Future.value(render.internalServerError)
         case session =>
-          val clientApplication = ClientApplication(session.getAgent)
-          if (!rollout.isActiveForId(Features.EnforceRateLimits, Some(session.getAgent))) {
-            emptyResponse
-          }
-          else {
-            for {
-              rateLimiter <- rateLimiterRegistry.lookup(clientApplication)
-              status <- rateLimiter.currentStatus(clientApplication)
-            } yield render.typedJson(status)
+          ActionableAccessMechanism.fromSession(session) match {
+            case Some(accessMechanism) =>
+              if (!rollout.isActiveForId(Features.EnforceRateLimits, Some(session.getAgent))) {
+                emptyResponse
+              } else {
+                for {
+                  rateLimiter <- rateLimiterRegistry.lookup(accessMechanism.clientApplication)
+                  status <- rateLimiter.currentStatus(accessMechanism)
+                } yield render.typedJson(status)
+              }
+            case _ =>
+              emptyResponse // TBD
           }
       }
     }

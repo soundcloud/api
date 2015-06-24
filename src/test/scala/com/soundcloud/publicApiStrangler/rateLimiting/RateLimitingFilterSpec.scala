@@ -81,7 +81,7 @@ class RateLimitingFilterSpec extends UnitSpecification with NoTimeConversions {
       mockRollout.isActiveForId(===(Features.EnforceRateLimits), any) returns false
       mockAuthenticatorService.cacheKeyAndSessionFor(any, any) returns Future.value(CacheKeyAndSession(Some("inconsequential"), mockSession))
       next.apply(any) returns Future.value(mockResponse)
-      mockRateLimiter.advanceRateLimitStatus(any[ClientApplication], any[Request]) returns Future.value(
+      mockRateLimiter.advanceRateLimitStatus(any[ActionableAccessMechanism], any[Request]) returns Future.value(
         CompositeRateLimitStatus(Set(RateLimitStatus(rateLimitIdentity, 20, Some(expiry)))))
       mockRequest.path returns "/some-path"
 
@@ -90,7 +90,7 @@ class RateLimitingFilterSpec extends UnitSpecification with NoTimeConversions {
 
     "let requests pass through to the service when the client hasn't reached their limit" in new Context {
       mockRollout.isActiveForId(any, any) returns true
-      mockRateLimiter.advanceRateLimitStatus(any[ClientApplication], any[Request]) returns Future.value(
+      mockRateLimiter.advanceRateLimitStatus(any[ActionableAccessMechanism], any[Request]) returns Future.value(
         CompositeRateLimitStatus(Set(RateLimitStatus(rateLimitIdentity, 2, Some(expiry)))))
       mockAuthenticatorService.cacheKeyAndSessionFor(any, any) returns Future.value(CacheKeyAndSession(Some("inconsequential"), mockSession))
       next.apply(any) returns Future.value(mockResponse)
@@ -101,7 +101,7 @@ class RateLimitingFilterSpec extends UnitSpecification with NoTimeConversions {
 
     "respond with 429 and reset info if the client has reached their limit" in new Context {
       mockRollout.isActiveForId(any, any) returns true
-      mockRateLimiter.advanceRateLimitStatus(any[ClientApplication], any[Request]) returns Future.value(
+      mockRateLimiter.advanceRateLimitStatus(any[ActionableAccessMechanism], any[Request]) returns Future.value(
         CompositeRateLimitStatus(Set(RateLimitStatus.reached(rateLimitIdentity, Some(expiry)))))
       mockAuthenticatorService.cacheKeyAndSessionFor(any, any) returns Future.value(CacheKeyAndSession(Some("inconsequential"), mockSession))
       mockRequest.path returns "/some-path"
