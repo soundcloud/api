@@ -16,12 +16,14 @@
                 {
                     "kind": "track",
                     "id": 2,
-                    "policy":"ALLOW"
+                    "policy":"ALLOW",
+                    "monetization_model": "NOT_APPLICABLE"
                 },
                 {
                     "kind": "track",
                     "id": 3,
-                    "policy":"ALLOW"
+                    "policy":"ALLOW",
+                    "monetization_model": "NOT_APPLICABLE"
                 }
             ]
         }

@@ -1,11 +1,9 @@
 package com.soundcloud.publicApiStrangler.authorization
 
-import com.soundcloud.scalakit.Urn
-import com.soundcloud.scalakit.UserSession
-import play.api.libs.json.{JsNumber, JsString, JsObject, JsValue}
-import com.soundcloud.jvmkit.policies.ContentAuthorization
-import com.soundcloud.jvmkit.policies.ContentPolicy
+import com.soundcloud.jvmkit.policies.{ContentAuthorization, ContentPolicy}
 import com.soundcloud.publicApiStrangler.authorization.TrackWaveformActionStatus._
+import com.soundcloud.scalakit.{Urn, UserSession}
+import play.api.libs.json.{JsObject, JsValue, Json}
 
 object ApplyTrackPolicies {
 
@@ -15,41 +13,40 @@ object ApplyTrackPolicies {
   def apply(session: UserSession, visitor: TracksVisitor, rules: Seq[ContentAuthorization], waveforms: List[TrackWaveformAction]) =
     visit(session, visitor, policiesByUrn(rules), waveformsByUrn(waveforms))
 
-  private def visit(session: UserSession, visitor: TracksVisitor, policies: Map[Urn, ContentPolicy], waveformActions: Map[Urn, TrackWaveformAction]) =
+  private def visit(session: UserSession, visitor: TracksVisitor, authorizations: Map[Urn, ContentAuthorization], waveformActions: Map[Urn, TrackWaveformAction]) =
     visitor.apply {
       case (urn, track) =>
-        val policy = policies(urn)
-        if (policy == ContentPolicy.BLOCK)
+        val contentAuth = authorizations(urn)
+        if (contentAuth.getPolicy == ContentPolicy.BLOCK)
           None
         else
-          potentiallyReplaceWaveform(urn, track, policy, waveformActions(urn))
+          potentiallyReplaceWaveform(urn, track, contentAuth, waveformActions(urn))
     }
 
   private def policiesByUrn(rules: Seq[ContentAuthorization]) =
-    rules.map(rule => rule.getUrn -> rule.getPolicy).toMap
+    rules.map(rule => rule.getUrn -> rule).toMap
 
   private def waveformsByUrn(waveforms: List[TrackWaveformAction]) =
     waveforms.map(waveform => waveform.urn -> waveform).toMap
 
-  private def potentiallyReplaceWaveform(urn:Urn, track:Track, policy:ContentPolicy, waveformAction: TrackWaveformAction) : Option[JsValue] = {
+  private def potentiallyReplaceWaveform(urn: Urn, track: Track, contentAuth: ContentAuthorization, waveformAction: TrackWaveformAction): Option[JsValue] = {
     waveformAction.status match {
-      case NeedsModification => replaceWaveformAndDuration(track, waveformAction, policy)
-      case DoesNotNeedModification => Some(track.withPolicies(policy))
+      case NeedsModification => replaceWaveformAndDuration(track, waveformAction, contentAuth)
+      case DoesNotNeedModification => Some(track.withContentAuthorization(contentAuth))
     }
   }
 
-  private def replaceWaveformAndDuration(track:Track, waveformAction:TrackWaveformAction, policy:ContentPolicy) : Option[JsValue] = {
+  private def replaceWaveformAndDuration(track: Track, waveformAction: TrackWaveformAction, contentAuth: ContentAuthorization): Option[JsValue] = {
     val originalTrack = track.json.as[JsObject]
     waveformAction.url.flatMap(_.durationMs) match {
-      case None => waveformAction.url.map(url => new Track(replaceWaveform(originalTrack, url.pngUrl.s)).withPolicies(policy))
-      case Some(duration) => waveformAction.url.map(url => new Track(replaceWaveformAndDuration(originalTrack, url.pngUrl.s, duration)).withPolicies(policy))
+      case None => waveformAction.url.map(url => new Track(replaceWaveform(originalTrack, url.pngUrl.s)).withContentAuthorization(contentAuth))
+      case Some(duration) => waveformAction.url.map(url => new Track(replaceWaveformAndDuration(originalTrack, url.pngUrl.s, duration)).withContentAuthorization(contentAuth))
     }
   }
 
-  private def replaceWaveformAndDuration(originalTrack:JsObject, waveformUrl:String, duration:Int) =
-    replaceWaveform(originalTrack, waveformUrl) ++ (JsObject(Seq(durationJsonPropertyName -> JsNumber(duration))))
+  private def replaceWaveformAndDuration(originalTrack: JsObject, waveformUrl: String, duration: Int) =
+    replaceWaveform(originalTrack, waveformUrl) ++ Json.obj(durationJsonPropertyName -> duration)
 
-  private def replaceWaveform(originalTrack:JsObject, waveformUrl:String) =
-    originalTrack ++ (JsObject(Seq(waveformUrlPropertyName -> JsString(waveformUrl))))
-
+  private def replaceWaveform(originalTrack: JsObject, waveformUrl: String) =
+    originalTrack ++ Json.obj(waveformUrlPropertyName -> waveformUrl)
 }

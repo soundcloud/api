@@ -7,7 +7,7 @@ import com.soundcloud.bff.media.{TrackWaveformUrl, WaveformUrlsRepository}
 import com.soundcloud.bff.nextbff.test.FakeUserAuthentication
 import com.soundcloud.bff.security.AuthenticatorService
 import com.soundcloud.bff.test.UnitSpecification
-import com.soundcloud.jvmkit.policies.{MonetizationModel, ContentAuthorization, ContentPolicy, Reason}
+import com.soundcloud.jvmkit.policies.{ContentAuthorization, ContentPolicy, MonetizationModel, Reason}
 import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures
 import com.soundcloud.scalakit.json.Json
 import com.soundcloud.scalakit.test.VerifiedMocks
@@ -39,24 +39,23 @@ class AuthorizeHttpResponseSpec extends UnitSpecification with Fixtures {
     val status = 200
     val urn = Urn("soundcloud:tracks:153896632")
 
-    def policies: ContentPolicy
+    def policies: ContentAuthorization
 
     override def before = {
-      when(contentAuthorization.findRulesApplicableTo(session, Seq(urn)))
-        .thenReturn(Future(Seq(new ContentAuthorization(urn, policies, Reason.GEO, MonetizationModel.NOT_APPLICABLE))))
+      when(contentAuthorization.findRulesApplicableTo(session, Seq(urn))).thenReturn(Future(Seq(policies)))
     }
   }
 
   "renders the json track if authorized" in new TrackContext {
-    lazy val policies = ContentPolicy.ALLOW
-    lazy val authorizedTrack = new Track(singleTrack).withPolicies(policies)
+    lazy val policies = new ContentAuthorization(urn, ContentPolicy.ALLOW, Reason.GEO, MonetizationModel.NOT_APPLICABLE)
+    lazy val authorizedTrack = new Track(singleTrack).withContentAuthorization(policies)
 
     authorizedResponse.statusCode mustEqual 200
     authorizedResponse.getContentString mustEqual Json.stringify(authorizedTrack)
   }
 
   "renders forbidden if the track isn't authorized" in new TrackContext {
-    lazy val policies = ContentPolicy.BLOCK
+    lazy val policies = new ContentAuthorization(urn, ContentPolicy.BLOCK, Reason.GEO, MonetizationModel.SUB_HIGH_TIER)
 
     authorizedResponse.statusCode mustEqual 403
     authorizedResponse.getContentString mustEqual ""
