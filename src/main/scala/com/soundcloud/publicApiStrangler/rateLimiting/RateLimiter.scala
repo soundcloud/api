@@ -1,6 +1,6 @@
 package com.soundcloud.publicApiStrangler.rateLimiting
 
-import com.soundcloud.ratelimiting.core.{ClientApplication, RateLimitGroup, RateLimitMode}
+import com.soundcloud.ratelimiting.core.{ActionableAccessMechanism, RateLimitGroup, RateLimitMode}
 import com.soundcloud.ratelimiting.events.{Event, ReachedEventPayload}
 import com.soundcloud.scalakit._
 import com.soundcloud.scalakit.cache.Cache

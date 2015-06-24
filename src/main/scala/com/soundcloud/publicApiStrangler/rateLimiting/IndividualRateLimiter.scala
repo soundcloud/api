@@ -2,7 +2,7 @@ package com.soundcloud.publicApiStrangler.rateLimiting
 
 import com.soundcloud.publicApiStrangler.rateLimiting.reporting.ReportingRateLimitEventListener
 import com.soundcloud.publicApiStrangler.support.TimeConversions.RichTwitterTime
-import com.soundcloud.ratelimiting.core.{RateLimitIdentity, ClientApplication, RateLimit}
+import com.soundcloud.ratelimiting.core.{ActionableAccessMechanism, RateLimitIdentity, ClientApplication, RateLimit}
 import com.soundcloud.ratelimiting.events.{Event, ReachedEventPayload}
 import com.soundcloud.scalakit.ResourceName
 import com.soundcloud.scalakit.cache.Cache
@@ -31,7 +31,7 @@ class IndividualRateLimiter(cache: Cache,
   }
 
   def advanceRateLimitStatus(accessMechanism: ActionableAccessMechanism): Future[RateLimitStatus] = {
-    val mediator = new RateLimiterCacheMediator(cache, rateLimit, accessMechanism.clientApplication, applicationName)
+    val mediator = new RateLimiterCacheMediator(cache, rateLimit, accessMechanism, applicationName)
     mediator.alreadyReached.flatMap { alreadyReached =>
       if (alreadyReached) {
         mediator.expiry.map(reached)
@@ -57,7 +57,7 @@ class IndividualRateLimiter(cache: Cache,
   }
 
   def rateLimitStatus(accessMechanism: ActionableAccessMechanism): Future[RateLimitStatus] = {
-    val mediator = new RateLimiterCacheMediator(cache, rateLimit, accessMechanism.clientApplication, applicationName)
+    val mediator = new RateLimiterCacheMediator(cache, rateLimit, accessMechanism, applicationName)
     Future.join(mediator.expiry, mediator.alreadyReached) flatMap { case (expiry, alreadyReached) =>
       if (alreadyReached)
         Future(reached(expiry))

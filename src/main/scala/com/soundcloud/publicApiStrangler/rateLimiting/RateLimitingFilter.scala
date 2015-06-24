@@ -2,16 +2,13 @@ package com.soundcloud.publicApiStrangler.rateLimiting
 
 import com.soundcloud.bff.finagle.{Request => BffRequest, ResponseBuilder}
 import com.soundcloud.bff.web.UserAuthentication
-import com.soundcloud.jvmkit.FailsafeUserSession
 import com.soundcloud.jvmkit.logging.SoundCloudLoggerFactory
 import com.soundcloud.publicApiStrangler.features.{Features, Rollout}
-import com.soundcloud.ratelimiting.core.ClientApplication
-import com.soundcloud.scalakit.{Urn, UserSession}
+import com.soundcloud.ratelimiting.core.{ActionableAccessMechanism, ClientApplication}
 import com.twitter.finagle.http.{Request, Response}
 import com.twitter.finagle.{Service, SimpleFilter}
 import com.twitter.util.Future
 import org.jboss.netty.handler.codec.http.HttpResponseStatus
-import org.slf4j.LoggerFactory
 import play.api.libs.json.{JsObject, Json}
 
 import scala.util.control.NonFatal
