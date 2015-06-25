@@ -1,13 +1,13 @@
 package com.soundcloud.publicApiStrangler.rateLimiting
 
 import com.soundcloud.bff.test.UnitSpecification
-import com.soundcloud.ratelimiting.core.{RateLimitConfiguration, RateLimitIdentity, RateLimitMode}
+import com.soundcloud.ratelimiting.core.{Bucket, RateLimitConfiguration, RateLimitIdentity, RateLimitMode}
 import org.joda.time.Period
 
 class CompositeRateLimitStatusSpec extends UnitSpecification {
   def createStatus(requestCount: Int, max: Int, mode: RateLimitMode) = {
     RateLimitStatus(
-      RateLimitIdentity(RateLimitConfiguration.Bucket.Default, max, Period.hours(1), mode, endpointGroupName = null),
+      RateLimitIdentity(Bucket.ByClient, max, Period.hours(1), mode, endpointGroupName = null),
       requestCount, None
     )
   }

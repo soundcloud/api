@@ -1,7 +1,6 @@
 package com.soundcloud.publicApiStrangler.rateLimiting
 
 import com.soundcloud.bff.test.UnitSpecification
-import com.soundcloud.ratelimiting.core.RateLimitConfiguration.Bucket
 import com.soundcloud.ratelimiting.core._
 import com.soundcloud.scalakit.Urn
 import com.twitter.finagle.http.Request
@@ -16,10 +15,10 @@ class RateLimiterSpec extends UnitSpecification {
     trait Context extends Scope {
       val endpointGroup = EndpointGroup("default", ".*".r)
 
-      val config1 = RateLimitConfiguration(Bucket.Default, Period.hours(24), 15000)
-      val config2 = RateLimitConfiguration(Bucket.Default, Period.hours(1), 150)
-      val config3 = RateLimitConfiguration(Bucket.Default, Period.hours(24), 20000)
-      val config4 = RateLimitConfiguration(Bucket.Default, Period.hours(24), 20000)
+      val config1 = RateLimitConfiguration(Bucket.ByClient, Period.hours(24), 15000)
+      val config2 = RateLimitConfiguration(Bucket.ByClient, Period.hours(1), 150)
+      val config3 = RateLimitConfiguration(Bucket.ByClient, Period.hours(24), 20000)
+      val config4 = RateLimitConfiguration(Bucket.ByClient, Period.hours(24), 20000)
 
       val rateLimit1 = RateLimit(endpointGroup, Seq(config1), RateLimitMode.Enforcing)
       val rateLimit2 = RateLimit(endpointGroup, Seq(config2), RateLimitMode.Enforcing)

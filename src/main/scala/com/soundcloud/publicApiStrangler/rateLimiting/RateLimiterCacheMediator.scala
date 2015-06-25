@@ -1,45 +1,42 @@
 package com.soundcloud.publicApiStrangler.rateLimiting
 
-import com.soundcloud.jvmkit.ResourceName
 import com.soundcloud.publicApiStrangler.support.TimeConversions._
-import com.soundcloud.ratelimiting.core.{ActionableAccessMechanism, MemcachedKeys, RateLimit}
+import com.soundcloud.ratelimiting.core.AccessDependentRateLimit
 import com.soundcloud.scalakit.cache.Cache
 import com.twitter.util.{Future, Time, TimeFormat}
 import org.jboss.netty.buffer.ChannelBuffers
 
-class RateLimiterCacheMediator(cache: Cache, rateLimit: RateLimit, accessMechanism: ActionableAccessMechanism, applicationName: ResourceName) {
+class RateLimiterCacheMediator(cache: Cache, accessDependentRateLimit: AccessDependentRateLimit) {
   import RateLimiterCacheMediator._
 
-  private val memcachedKeys = MemcachedKeys.forTuple(accessMechanism, rateLimit, applicationName)
-
   def alreadyReached: Future[Boolean] = {
-    cache.get(memcachedKeys.reached).map(_.isDefined)
+    cache.get(accessDependentRateLimit.reachedCacheKey).map(_.isDefined)
   }
 
   def requestsMadeSoFar: Future[Option[Long]] = {
-    cache.get(memcachedKeys.counter).map(_.map(_.toLong))
+    cache.get(accessDependentRateLimit.counterCacheKey).map(_.map(_.toLong))
   }
 
   lazy val expiry: Future[Option[Time]] = {
-    cache.get(memcachedKeys.expiry).map(_.map(deserializeTime))
+    cache.get(accessDependentRateLimit.expiryCacheKey).map(_.map(deserializeTime))
   }
 
   def updateRequestCount: Future[Option[Long]] = {
-    cache.incr(memcachedKeys.counter)
+    cache.incr(accessDependentRateLimit.counterCacheKey)
   }
 
   def establish: Future[Time] = {
-    val expiry = Time.now + rateLimit.default.timeWindow.toTwitterDuration
+    val expiry = Time.now + accessDependentRateLimit.suitableConfiguration.timeWindow.toTwitterDuration
     for {
-      updatedRequestCount <- cache.add(memcachedKeys.counter, one, expiry)
-      _ <- cache.set(memcachedKeys.expiry, serializeTime(expiry), expiry)
+      updatedRequestCount <- cache.add(accessDependentRateLimit.counterCacheKey, one, expiry)
+      _ <- cache.set(accessDependentRateLimit.expiryCacheKey, serializeTime(expiry), expiry)
     } yield expiry
   }
 
   def markAsReached: Future[Unit] = {
     for {
       Some(e) <- expiry
-      _ <- cache.set(memcachedKeys.reached, "reached", e)
+      _ <- cache.set(accessDependentRateLimit.reachedCacheKey, "reached", e)
     } yield ()
   }
 }

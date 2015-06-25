@@ -1,6 +1,5 @@
 package com.soundcloud.publicApiStrangler.rateLimiting.reporting
 
-import com.soundcloud.ratelimiting.core.RateLimitConfiguration.Bucket
 import com.soundcloud.ratelimiting.core._
 import com.soundcloud.ratelimiting.events.{Event, ReachedEventPayload}
 import com.soundcloud.scalakit.Urn
@@ -14,10 +13,11 @@ class PublishingDecisionSpec extends UnitSpecification {
     trait Context extends Scope {
       val someClient = ClientApplication(Urn("soundcloud", "applications", "test-app"))
       val resetTime = Some(DateTime.now(DateTimeZone.UTC))
-      val rateLimit = RateLimit(EndpointGroup("default", ".*".r), Seq(RateLimitConfiguration(Bucket.Default, Period.seconds(50), 5000 * 100)), RateLimitMode.Probing)
+      val rateLimitConfiguration = RateLimitConfiguration(Bucket.ByClient, Period.seconds(50), 5000 * 100)
+      val rateLimit = RateLimit(EndpointGroup("default", ".*".r), Seq(rateLimitConfiguration), RateLimitMode.Probing)
       def event(requestCount: Int) = {
         Event(DateTime.now(DateTimeZone.UTC), Urn("soundcloud", "systems", "someone"), ReachedEventPayload(
-          someClient, RateLimitIdentity.from(rateLimit.default, rateLimit.group, rateLimit.mode), resetTime, requestCount
+          someClient, RateLimitIdentity.from(rateLimitConfiguration, rateLimit.group, rateLimit.mode), resetTime, requestCount
         ))
       }
     }
