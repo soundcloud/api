@@ -4,6 +4,7 @@ import com.soundcloud.bff.finagle.{Request => BffRequest, ResponseBuilder}
 import com.soundcloud.bff.web.UserAuthentication
 import com.soundcloud.jvmkit.logging.SoundCloudLoggerFactory
 import com.soundcloud.publicApiStrangler.features.{Features, Rollout}
+import com.soundcloud.publicApiStrangler.utilities.FutureExtensions._
 import com.soundcloud.ratelimiting.core.{ActionableAccessMechanism, ClientApplication}
 import com.twitter.finagle.http.{Request, Response}
 import com.twitter.finagle.{Service, SimpleFilter}
@@ -22,37 +23,29 @@ class RateLimitingFilter(
   private val logger = SoundCloudLoggerFactory.getLogger(this.getClass)
 
   def apply(request: Request, next: Service[Request, Response]): Future[Response] = {
-    if (!rollout.isActive(Features.WireRateLimits)) next(request)
-    else {
-      bypassForInapplicableRoutes(request, next) getOrElse {
+    val rateLimitedResponse = for {
+      _ <- FutureOption.Unit
+      if rollout.isActive(Features.WireRateLimits)
+      if !isInternalRoute(request)
+      wrappedResponse <- FutureOption.sequence {
         userAuthentication.withUserSession(new BffRequest(request)) { session =>
-          ActionableAccessMechanism.fromSession(session) match {
-            case None => next(request)
-            case Some(accessMechanism) =>
-              rateLimiterRegistry.lookup(accessMechanism.clientApplication) flatMap { rateLimiter =>
-                Verdict.on(request, rateLimiter, accessMechanism).flatMap {
-                  case Pass =>
-                    next(request)
-                  case Block(status) =>
-                    Future.value(errorResponse(status))
-                }
-              }
-          }
+          val response = for {
+            accessMechanism <- Future(ActionableAccessMechanism.fromSession(session)).lift
+            rateLimiter <- rateLimiterRegistry.lookup(accessMechanism.clientApplication).map(Some(_)).lift
+            status <- Verdict.on(request, rateLimiter, accessMechanism).lift
+          } yield errorResponse(status)
+          Future.value(response)
         }
       }
-    }
+      response <- wrappedResponse.map(Some(_)).lift
+    } yield response
+
+    rateLimitedResponse.run.flatMap(_.getOrElseF(next(request)))
   }
 
-  def bypassForInapplicableRoutes(request: Request, next: Service[Request, Response]): Option[Future[Response]] = {
-    request match {
-      case InternalRoute() => Some(next(request))
-      case _               => None
-    }
-  }
-
-  sealed trait Verdict
-  case object Pass extends Verdict
-  case class Block(status: CompositeRateLimitStatus) extends Verdict
+  type Verdict = Option[CompositeRateLimitStatus]
+  val Pass = None
+  val Block = Some(_: CompositeRateLimitStatus)
 
   object Verdict {
     def on(request: Request, rateLimiter: RateLimiter, accessMechanism: ActionableAccessMechanism): Future[Verdict] = {
@@ -95,10 +88,8 @@ class RateLimitingFilter(
     }
   }
 
-  object InternalRoute {
-    def unapply(request: Request): Boolean = {
-      request.path.startsWith("/-/")
-    }
+  def isInternalRoute(request: Request): Boolean = {
+    request.path.startsWith("/-/")
   }
 
   private def errorResponse(status: CompositeRateLimitStatus): Response = {
