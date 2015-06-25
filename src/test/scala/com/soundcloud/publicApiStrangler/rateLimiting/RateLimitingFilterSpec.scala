@@ -123,28 +123,6 @@ class RateLimitingFilterSpec extends UnitSpecification with NoTimeConversions {
       there was no(next).apply(any)
     }
     
-    "call the next service in case of unexpected errors, not caused by downstream" in new Context {
-      mockRollout.isActiveForId(any, any) throws new RuntimeException("Unexpected error.")
-      mockAuthenticatorService.cacheKeyAndSessionFor(any, any) returns Future.value(CacheKeyAndSession(Some("inconsequential"), mockSession))
-      next.apply(any) returns Future.value(mockResponse)
-      mockRequest.path returns "/some-path"
-
-      val result = Await.result(filter.apply(mockRequest, next))
-      result ==== mockResponse
-    }
-
-    "not call next again if a downstream error is propagated to the filter" in new Context {
-      mockRollout.isActiveForId(any, any) returns false
-      mockAuthenticatorService.cacheKeyAndSessionFor(any, any) returns Future.value(CacheKeyAndSession(Some("inconsequential"), mockSession))
-      next.apply(any) returns Future.exception(new RuntimeException)
-      mockRequest.path returns "/some-path"
-
-      def result = Await.result(filter.apply(mockRequest, next))
-
-      result must throwA[RuntimeException]
-      there was one(next).apply(any)
-    }
-
     "call the next service if the route is an internal one" in new Context {
       next.apply(any) returns Future.value(mockResponse)
       mockRequest.path returns "/-/health"
@@ -164,6 +142,48 @@ class RateLimitingFilterSpec extends UnitSpecification with NoTimeConversions {
       val result = Await.result(filter.apply(mockRequest, next))
 
       result ==== mockResponse
+    }
+
+    "not call next again if a downstream error is propagated to the filter" in new Context {
+      mockRollout.isActiveForId(any, any) returns false
+      mockAuthenticatorService.cacheKeyAndSessionFor(any, any) returns Future.value(CacheKeyAndSession(Some("inconsequential"), mockSession))
+      next.apply(any) returns Future.exception(new RuntimeException)
+      mockRequest.path returns "/some-path"
+
+      def result = Await.result(filter.apply(mockRequest, next))
+
+      result must throwA[RuntimeException]
+      there was one(next).apply(any)
+    }
+
+    "call the next service in case of unexpected errors, not caused by downstream" should {
+      "error in the context of future" in new Context {
+        val newFilter = new RateLimitingFilter(mockRateLimiterRegistry, mockUserAuthentication, mockRollout) {
+          override def rateLimitedResponse(request: Request): Future[Option[Response]] = {
+            Future.exception(new RuntimeException)
+          }
+        }
+
+        next.apply(any) returns Future.value(mockResponse)
+        mockRequest.path returns "/some-path"
+
+        val result = Await.result(filter.apply(mockRequest, next))
+        result ==== mockResponse
+      }
+
+      "error outside the context of future" in new Context {
+        val newFilter = new RateLimitingFilter(mockRateLimiterRegistry, mockUserAuthentication, mockRollout) {
+          override def rateLimitedResponse(request: Request): Future[Option[Response]] = {
+            throw new RuntimeException
+          }
+        }
+
+        next.apply(any) returns Future.value(mockResponse)
+        mockRequest.path returns "/some-path"
+
+        val result = Await.result(filter.apply(mockRequest, next))
+        result ==== mockResponse
+      }
     }
   }
 }
