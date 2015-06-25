@@ -25,7 +25,7 @@ class RateLimitingFilter(
       wrappedResponse <- FutureOption.sequence {
         userAuthentication.withUserSession(new BffRequest(request)) { session =>
           val response = for {
-            accessMechanism <- Future(ActionableAccessMechanism.fromSession(session)).lift
+            accessMechanism <- Future(ActionableAccessMechanism.fromSession(session, rollout.isActive(Features.PerUserRateLimitBuckets))).lift
             rateLimiter <- rateLimiterRegistry.lookup(accessMechanism.clientApplication).map(Some(_)).lift
             status <- Verdict.on(request, rateLimiter, accessMechanism, rollout).lift
           } yield errorResponse(status)

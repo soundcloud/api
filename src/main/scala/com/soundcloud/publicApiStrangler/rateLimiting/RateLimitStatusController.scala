@@ -15,23 +15,20 @@ class RateLimitStatusController(
   get("/rate_limit_status") { request =>
     if (!rollout.isActive(Features.WireRateLimits)) emptyResponse
     else {
-      userAuthentication.withUserSession(request) {
-        case _: FailsafeUserSession =>
-          Future.value(render.internalServerError)
-        case session =>
-          ActionableAccessMechanism.fromSession(session) match {
-            case Some(accessMechanism) =>
-              if (!rollout.isActiveForId(Features.EnforceRateLimits, Some(session.getAgent))) {
-                emptyResponse
-              } else {
-                for {
-                  rateLimiter <- rateLimiterRegistry.lookup(accessMechanism.clientApplication)
-                  status <- rateLimiter.currentStatus(accessMechanism)
-                } yield render.typedJson(status)
-              }
-            case _ =>
-              emptyResponse // TBD
-          }
+      userAuthentication.withUserSession(request) { session =>
+        ActionableAccessMechanism.fromSession(session, rollout.isActive(Features.PerUserRateLimitBuckets)) match {
+          case Some(accessMechanism) =>
+            if (!rollout.isActiveForId(Features.EnforceRateLimits, Some(session.getAgent))) {
+              emptyResponse
+            } else {
+              for {
+                rateLimiter <- rateLimiterRegistry.lookup(accessMechanism.clientApplication)
+                status <- rateLimiter.currentStatus(accessMechanism)
+              } yield render.typedJson(status)
+            }
+          case _ =>
+            Future.value(render.internalServerError)
+        }
       }
     }
   }
@@ -40,9 +37,6 @@ class RateLimitStatusController(
 
 
   implicit val statusWrites: Writes[CompositeRateLimitStatus] = Writes { status =>
-    Json.obj(
-      "statuses" -> status.statuses
-    )
+    Json.obj("statuses" -> status.statuses)
   }
-
 }
