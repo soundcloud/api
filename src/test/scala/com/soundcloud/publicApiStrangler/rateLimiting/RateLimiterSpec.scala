@@ -40,8 +40,7 @@ class RateLimiterSpec extends UnitSpecification {
 
       val rateLimiter = new RateLimiter("default", Seq(individualRateLimiter1, individualRateLimiter2))
       val request = mock[Request]
-      val clientApplication = ClientApplication(Urn("soundcloud", "applications", "test"))
-      val accessMechanism = ActionableAccessMechanism.Anonymous(clientApplication)
+      val accessMechanism = mock[ActionableAccessMechanism]
       request.headers() returns new DefaultHttpHeaders()
     }
 
