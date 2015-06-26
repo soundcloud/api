@@ -69,14 +69,6 @@ class RateLimiterSpec extends UnitSpecification {
       rateLimiter.appliesTo(request) must beFalse
     }
 
-    "not apply to a request if no rate limit is enabled" in new Context {
-      individualRateLimiter1.appliesTo(request) returns true
-      individualRateLimiter2.appliesTo(request) returns true
-      individualRateLimiter1.rateLimit returns rateLimit1.copy(mode = RateLimitMode.Disabled)
-      individualRateLimiter2.rateLimit returns rateLimit1.copy(mode = RateLimitMode.Disabled)
-      rateLimiter.appliesTo(request) must beFalse
-    }
-
     "not advance any constituent rate limits if at least one of them has already been reached" in new Context {
       individualRateLimiter1.appliesTo(request) returns true
       individualRateLimiter2.appliesTo(request) returns true

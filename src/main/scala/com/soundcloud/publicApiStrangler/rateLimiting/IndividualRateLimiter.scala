@@ -15,9 +15,7 @@ class IndividualRateLimiter(cache: Cache,
                             applicationName: ResourceName,
                             listeners: Seq[EventListener[Event[ReachedEventPayload]]]) {
 
-  def appliesTo(request: Request) = {
-    rateLimit.appliesTo(request.path)
-  }
+  def appliesTo(request: Request) = rateLimit.appliesTo(request.path)
 
   def advanceRateLimitStatus(accessMechanism: ActionableAccessMechanism): Future[RateLimitStatus] = {
     new BoundIndividualRateLimiter(accessMechanism).advanceRateLimitStatus

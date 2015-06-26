@@ -10,9 +10,7 @@ import com.twitter.util.Future
 class RateLimiter(val groupName: String, individualRateLimiters: Seq[IndividualRateLimiter]) {
 
   private def applicableRateLimiters(request: Request): Seq[IndividualRateLimiter] = {
-    individualRateLimiters.filter { limiter =>
-      limiter.appliesTo(request) && limiter.rateLimit.mode != RateLimitMode.Disabled
-    }
+    individualRateLimiters.filter(_ appliesTo request)
   }
 
   private def visibleRateLimiters: Seq[IndividualRateLimiter] = {
