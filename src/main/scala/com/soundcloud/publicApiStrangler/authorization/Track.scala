@@ -1,15 +1,12 @@
 package com.soundcloud.publicApiStrangler.authorization
 
-import com.soundcloud.jvmkit.policies.ContentPolicy
-import play.api.libs.json.JsValue
-import play.api.libs.json.JsObject
-import com.soundcloud.scalakit.json.Json
+import com.soundcloud.bff.Json
+import com.soundcloud.jvmkit.policies.ContentAuthorization
+import play.api.libs.json.{JsObject, JsValue}
 
 class Track(val json: JsValue) {
 
-  def withPolicies(policies: ContentPolicy) =
-    JsObject(json.as[JsObject].fields :+ policyField(policies))
-
-  private def policyField(policies: ContentPolicy) =
-    "policy" -> Json.toJsValue(policies)
+  def withContentAuthorization(auth: ContentAuthorization) = {
+    json.as[JsObject] ++ Json.toJsValue(Map("policy" -> auth.getPolicy, "monetization_model" -> auth.getMonetizationModel))
+  }
 }

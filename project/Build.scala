@@ -40,7 +40,7 @@ object PublicApiStranglerBuild extends Build {
       ),
       externalResolvers := Resolver.withDefaultResolvers(resolvers.value, mavenCentral = false),
       libraryDependencies ++= Seq(
-        "com.soundcloud"     %% "bff"                 % "17.0.1",
+        "com.soundcloud"     %% "bff"                 % "17.0.2",
         "com.soundcloud"     %% "follows-client"      % "0.0.2",
         "com.soundcloud"     %% "ratelimitinglib"     % "0.0.29",
         "com.soundcloud"     %% "sc-services"         % "21.1.0",
