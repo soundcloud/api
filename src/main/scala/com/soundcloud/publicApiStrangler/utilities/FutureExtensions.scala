@@ -46,10 +46,14 @@ object FutureExtensions {
       fof.lift
     }
 
-    implicit def responseLike[R](implicit ev: ResponseLike[R]) = new ResponseLike[FutureOption[R]] {
-      override def setCookie(r: FutureOption[R], key: String, value: String): Unit = r.foreach(ev.setCookie(_, key, value))
-      override def unauthorized: FutureOption[R] = FutureOption.value(ev.unauthorized)
-      override def setHeader(r: FutureOption[R], key: String, value: String): Unit = r.foreach(ev.setHeader(_, key, value))
+    implicit def responseLike[R](implicit ev: ResponseLike[R]): ResponseLike[FutureOption[R]] = {
+      new ResponseLike[FutureOption[R]] {
+        def setCookie(r: FutureOption[R], key: String, value: String): Unit = r.foreach(ev.setCookie(_, key, value))
+        def unauthorized: FutureOption[R] = FutureOption.value(ev.unauthorized)
+        def setHeader(r: FutureOption[R], key: String, value: String): Unit = r.foreach(ev.setHeader(_, key, value))
+        def setCookieIfNotExists(r: FutureOption[R], key: String, value: String): Unit = r.foreach(ev.setCookieIfNotExists(_, key, value))
+        def setHeaderIfNotExists(r: FutureOption[R], key: String, value: String): Unit = r.foreach(ev.setHeaderIfNotExists(_, key, value))
+      }
     }
   }
 
