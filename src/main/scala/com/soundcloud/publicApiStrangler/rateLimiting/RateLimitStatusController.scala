@@ -1,9 +1,8 @@
 package com.soundcloud.publicApiStrangler.rateLimiting
 
 import com.soundcloud.bff.web.{BffInjectionBasedController, UserAuthentication}
-import com.soundcloud.jvmkit.FailsafeUserSession
 import com.soundcloud.publicApiStrangler.features.{Features, Rollout}
-import com.soundcloud.ratelimiting.core.{ActionableAccessMechanism, ClientApplication}
+import com.soundcloud.ratelimiting.core.{CompositeRateLimitStatus, ActionableAccessMechanism, RateLimiterRegistry}
 import com.twitter.util.Future
 import play.api.libs.json.{Json, Writes}
 

@@ -20,16 +20,18 @@ import com.soundcloud.publicApiStrangler.mapper.timeline.{EntityMapper, EntitySu
 import com.soundcloud.publicApiStrangler.mapper.trackstreams.{TrackStreamJsonResponseMapper, TrackStreamRedirectResponseMapper}
 import com.soundcloud.publicApiStrangler.mapper.waveform.WaveformMapper
 import com.soundcloud.publicApiStrangler.rateLimiting._
-import com.soundcloud.publicApiStrangler.rateLimiting.reporting.ReportingRateLimitEventListener
 import com.soundcloud.publicApiStrangler.support._
 import com.soundcloud.publicApiStrangler.zookeeper.CuratorFrameworkFactory
 import com.soundcloud.ratelimiting.clients.ClientConfigurationRepository
+import com.soundcloud.ratelimiting.core.{BffApplication, RateLimiterRegistry, RateLimitingFilter}
 import com.soundcloud.ratelimiting.gateways.RateLimitEventsGateway
 import com.soundcloud.ratelimiting.groups.{RateLimitGroupLookupService, RateLimitGroupRepository}
+import com.soundcloud.ratelimiting.reporting.ReportingRateLimitEventListener
 import com.soundcloud.ratelimiting.zookeeper.{ZkChildrenCachingStoreFactory, ZkStoreProvider, ZooKeeperClient}
-import com.soundcloud.scalakit.ResourceName
+import com.soundcloud.scalakit.{Urn, ResourceName}
 import com.soundcloud.service.component._
 import com.twitter.finagle.http.Request
+import com.soundcloud.jvmkit.{rollout => JvmkitRollout}
 import com.twitter.finagle.http.filter.ExceptionFilter
 
 object App
@@ -43,6 +45,8 @@ object App
   with FollowsComponent
   with GatekeeperComponent
   with SimilarSoundsComponent {
+
+  private val bffApplication = BffApplication(Urn("soundcloud", "systems", "public-api-strangler"), config.getApplicationResourceName)
 
   private val userAuthentication = createUserAuthentication
 
@@ -85,7 +89,7 @@ object App
   private val zooKeeperClient = new ZooKeeperClient(curatorFramework)
 
   private val rateLimitEventsGateway = RateLimitEventsGateway(config, telemetry)
-  private val reportingRateLimitEventListener = new ReportingRateLimitEventListener(rateLimitEventsGateway)
+  private val reportingRateLimitEventListener = new ReportingRateLimitEventListener(rateLimitEventsGateway, bffApplication)
 
   private val rateLimitEventListeners = Seq(reportingRateLimitEventListener)
 
@@ -95,7 +99,7 @@ object App
   private val clientConfigurationRepository = new ClientConfigurationRepository(zkStoreProvider)
   private val rateLimitGroupLookupService = new RateLimitGroupLookupService(rateLimitGroupRepository, clientConfigurationRepository)
 
-  private val rateLimiterRegistry = new RateLimiterRegistry(rateLimitGroupLookupService, rateLimitEventListeners, cache, config.getApplicationResourceName)
+  private val rateLimiterRegistry = new RateLimiterRegistry(rateLimitGroupLookupService, rateLimitEventListeners, cache, bffApplication)
 
   private val groupController = {
     val forwardHandler = new ForwardRequestHandler(publicApiClient)
@@ -117,6 +121,7 @@ object App
   }
 
   val rollout = RolloutBuilder.build(curatorFramework, config.getApplicationName)
+  val jvmkitRollout = new JvmkitRollout.RolloutBuilder(config).build
 
   val rateLimitStatusController = new RateLimitStatusController(rateLimiterRegistry, userAuthentication, rollout)
 
@@ -179,7 +184,7 @@ object App
     new ExceptionFilter[Request],
     new AcceptOnlyJsonRequestFilter(Set("/crossdomain.xml", "/robots.txt")),
     new ContentAuthorizationFilter(authorizeContent),
-    new RateLimitingFilter(rateLimiterRegistry, userAuthentication, rollout),
+    new RateLimitingFilter(rateLimiterRegistry, userAuthentication, jvmkitRollout),
     new DefaultResponseHeadersFilter
   )
 
