@@ -2,9 +2,8 @@ package com.soundcloud.publicApiStrangler.rateLimiting
 
 import com.soundcloud.bff.test.UnitSpecification
 import com.soundcloud.ratelimiting.core._
-import com.soundcloud.scalakit.Urn
 import com.twitter.finagle.http.Request
-import com.twitter.util.{Future, Await, Time}
+import com.twitter.util.{Await, Future, Time}
 import org.jboss.netty.handler.codec.http.DefaultHttpHeaders
 import org.joda.time.Period
 
@@ -33,6 +32,16 @@ class RateLimiterSpec extends UnitSpecification {
       val individualRateLimiter3 = mock[IndividualRateLimiter]
       val individualRateLimiter4 = mock[IndividualRateLimiter]
 
+      val boundIndividualRateLimiter1 = mock[BoundIndividualRateLimiter]
+      val boundIndividualRateLimiter2 = mock[BoundIndividualRateLimiter]
+      val boundIndividualRateLimiter3 = mock[BoundIndividualRateLimiter]
+      val boundIndividualRateLimiter4 = mock[BoundIndividualRateLimiter]
+
+      individualRateLimiter1.bind(any) returns boundIndividualRateLimiter1
+      individualRateLimiter2.bind(any) returns boundIndividualRateLimiter2
+      individualRateLimiter3.bind(any) returns boundIndividualRateLimiter3
+      individualRateLimiter4.bind(any) returns boundIndividualRateLimiter4
+
       individualRateLimiter1.rateLimit returns rateLimit1
       individualRateLimiter2.rateLimit returns rateLimit2
       individualRateLimiter3.rateLimit returns rateLimit3
@@ -47,8 +56,8 @@ class RateLimiterSpec extends UnitSpecification {
     "return current status composed of all visible individual statuses" in new Context {
       val status1 = RateLimitStatus(rateLimitIdentity1, 10000, None)
       val status2 = RateLimitStatus(rateLimitIdentity2, 100, None)
-      individualRateLimiter1.rateLimitStatus(accessMechanism) returns Future(status1)
-      individualRateLimiter2.rateLimitStatus(accessMechanism) returns Future(status2)
+      boundIndividualRateLimiter1.rateLimitStatus returns Future(status1)
+      boundIndividualRateLimiter2.rateLimitStatus returns Future(status2)
 
       val limiter = new RateLimiter("default", Seq(
         individualRateLimiter1, individualRateLimiter2, individualRateLimiter3, individualRateLimiter4))
@@ -73,13 +82,13 @@ class RateLimiterSpec extends UnitSpecification {
       individualRateLimiter2.appliesTo(request) returns true
       val status1 = RateLimitStatus(RateLimitIdentity.from(config1, rateLimit1.group, rateLimit1.mode), 10000, Some(Time.now))
       val status2 = RateLimitStatus.reached(RateLimitIdentity.from(config2, rateLimit2.group, rateLimit2.mode), Some(Time.now))
-      individualRateLimiter1.rateLimitStatus(accessMechanism) returns Future.value(status1)
-      individualRateLimiter2.rateLimitStatus(accessMechanism) returns Future.value(status2)
+      boundIndividualRateLimiter1.rateLimitStatus returns Future.value(status1)
+      boundIndividualRateLimiter2.rateLimitStatus returns Future.value(status2)
       val result = Await.result(rateLimiter.advanceRateLimitStatus(accessMechanism, request))
       result ==== CompositeRateLimitStatus(Set(status1, status2))
       result.hasReachedLimit must beTrue
-      there was no(individualRateLimiter1).advanceRateLimitStatus(accessMechanism)
-      there was no(individualRateLimiter2).advanceRateLimitStatus(accessMechanism)
+      there was no(boundIndividualRateLimiter1).advanceRateLimitStatus
+      there was no(boundIndividualRateLimiter2).advanceRateLimitStatus
     }
 
     "advance all constituent rate limits if none one of them has already been reached" in new Context {
@@ -89,10 +98,10 @@ class RateLimiterSpec extends UnitSpecification {
       val oldStatus2 = RateLimitStatus(rateLimitIdentity2, 100, Some(Time.now))
       val newStatus1 = RateLimitStatus(rateLimitIdentity1, 10001, Some(Time.now))
       val newStatus2 = RateLimitStatus.reached(rateLimitIdentity2, Some(Time.now))
-      individualRateLimiter1.rateLimitStatus(accessMechanism) returns Future.value(oldStatus1)
-      individualRateLimiter2.rateLimitStatus(accessMechanism) returns Future.value(oldStatus2)
-      individualRateLimiter1.advanceRateLimitStatus(accessMechanism) returns Future.value(newStatus1)
-      individualRateLimiter2.advanceRateLimitStatus(accessMechanism) returns Future.value(newStatus2)
+      boundIndividualRateLimiter1.rateLimitStatus returns Future.value(oldStatus1)
+      boundIndividualRateLimiter2.rateLimitStatus returns Future.value(oldStatus2)
+      boundIndividualRateLimiter1.advanceRateLimitStatus returns Future.value(newStatus1)
+      boundIndividualRateLimiter2.advanceRateLimitStatus returns Future.value(newStatus2)
       val result = Await.result(rateLimiter.advanceRateLimitStatus(accessMechanism, request))
       result ==== CompositeRateLimitStatus(Set(newStatus1, newStatus2))
       result.hasReachedLimit must beTrue

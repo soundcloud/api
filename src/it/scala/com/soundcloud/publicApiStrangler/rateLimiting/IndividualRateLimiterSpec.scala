@@ -67,24 +67,24 @@ class IndividualRateLimiterSpec extends UnitSpecification with NoTimeConversions
         object Assembly extends AnonymousAccess with App1234; import Assembly._
 
         "register an API client on its first request" in {
-          val status = Await.result(rateLimiter.advanceRateLimitStatus(accessMechanism))
+          val status = Await.result(rateLimiter.bind(accessMechanism).advanceRateLimitStatus)
           status must beLike {
             case RateLimitStatus(_, 0, Some(_)) => ok
           }
         }
 
         "keep advancing while the limit is not reached" in {
-          Await.result(rateLimiter.advanceRateLimitStatus(accessMechanism))
-          Await.result(rateLimiter.advanceRateLimitStatus(accessMechanism))
-          val status = Await.result(rateLimiter.advanceRateLimitStatus(accessMechanism))
+          Await.result(rateLimiter.bind(accessMechanism).advanceRateLimitStatus)
+          Await.result(rateLimiter.bind(accessMechanism).advanceRateLimitStatus)
+          val status = Await.result(rateLimiter.bind(accessMechanism).advanceRateLimitStatus)
           status must beLike {
             case RateLimitStatus(_, 3, Some(_)) => ok
           }
         }
 
         "stop advancing once the limit is reached" in {
-          Await.result(rateLimiter.advanceRateLimitStatus(accessMechanism))
-          val status = Await.result(rateLimiter.advanceRateLimitStatus(accessMechanism))
+          Await.result(rateLimiter.bind(accessMechanism).advanceRateLimitStatus)
+          val status = Await.result(rateLimiter.bind(accessMechanism).advanceRateLimitStatus)
           status must beLike {
             case RateLimitStatus(_, 4, Some(_)) => ok
           }
@@ -92,7 +92,7 @@ class IndividualRateLimiterSpec extends UnitSpecification with NoTimeConversions
 
         "advance again after the first time interval has passed" in {
           afterDuration(7.seconds) {
-            val status = Await.result(rateLimiter.advanceRateLimitStatus(accessMechanism))
+            val status = Await.result(rateLimiter.bind(accessMechanism).advanceRateLimitStatus)
             status must beLike {
               case RateLimitStatus(_, 0, Some(_)) => ok
             }
@@ -104,25 +104,27 @@ class IndividualRateLimiterSpec extends UnitSpecification with NoTimeConversions
         object Assembly extends LoggedInAccess with App1234; import Assembly._
 
         "register an API client on its first request" in {
-          val status = Await.result(rateLimiter.advanceRateLimitStatus(accessMechanism))
+          val status = Await.result(rateLimiter.bind(accessMechanism).advanceRateLimitStatus)
           status must beLike {
             case RateLimitStatus(_, 0, Some(_)) => ok
           }
         }
 
         "keep advancing while the limit is not reached" in {
-          Await.result(rateLimiter.advanceRateLimitStatus(accessMechanism))
-          Await.result(rateLimiter.advanceRateLimitStatus(accessMechanism))
-          val status = Await.result(rateLimiter.advanceRateLimitStatus(accessMechanism))
+          val boundLimiter = rateLimiter.bind(accessMechanism)
+          Await.result(boundLimiter.advanceRateLimitStatus)
+          Await.result(boundLimiter.advanceRateLimitStatus)
+          val status = Await.result(boundLimiter.advanceRateLimitStatus)
           status must beLike {
             case RateLimitStatus(_, 3, Some(_)) => ok
           }
         }
 
         "stop advancing once the limit is reached" in {
-          Await.result(rateLimiter.advanceRateLimitStatus(accessMechanism))
-          Await.result(rateLimiter.advanceRateLimitStatus(accessMechanism))
-          val status = Await.result(rateLimiter.advanceRateLimitStatus(accessMechanism))
+          val boundLimiter = rateLimiter.bind(accessMechanism)
+          Await.result(boundLimiter.advanceRateLimitStatus)
+          Await.result(boundLimiter.advanceRateLimitStatus)
+          val status = Await.result(boundLimiter.advanceRateLimitStatus)
           status must beLike {
             case RateLimitStatus(_, 5, Some(_)) => ok
           }
@@ -130,7 +132,7 @@ class IndividualRateLimiterSpec extends UnitSpecification with NoTimeConversions
 
         "advance again after the first time interval has passed" in {
           afterDuration(7.seconds) {
-            val status = Await.result(rateLimiter.advanceRateLimitStatus(accessMechanism))
+            val status = Await.result(rateLimiter.bind(accessMechanism).advanceRateLimitStatus)
             status must beLike {
               case RateLimitStatus(_, 0, Some(_)) => ok
             }
@@ -144,25 +146,27 @@ class IndividualRateLimiterSpec extends UnitSpecification with NoTimeConversions
         object Assembly extends AnonymousAccess with App1235; import Assembly._
 
         "Query for as yet unknown client" in {
-          val status = Await.result(rateLimiter.rateLimitStatus(accessMechanism))
+          val status = Await.result(rateLimiter.bind(accessMechanism).rateLimitStatus)
           status ==== RateLimitStatus(rateLimitIdentity, 0, None)
         }
 
         "Query for a client that has not reached its limit" in {
-          Await.result(rateLimiter.advanceRateLimitStatus(accessMechanism))
-          Await.result(rateLimiter.advanceRateLimitStatus(accessMechanism))
-          val status = Await.result(rateLimiter.rateLimitStatus(accessMechanism))
+          val boundLimiter = rateLimiter.bind(accessMechanism)
+          Await.result(boundLimiter.advanceRateLimitStatus)
+          Await.result(boundLimiter.advanceRateLimitStatus)
+          val status = Await.result(boundLimiter.rateLimitStatus)
           status must beLike {
             case RateLimitStatus(_, 2, Some(_)) => ok
           }
         }
 
         "Query for a client that has reached its limit" in {
-          Await.result(rateLimiter.advanceRateLimitStatus(accessMechanism))
-          Await.result(rateLimiter.advanceRateLimitStatus(accessMechanism))
-          Await.result(rateLimiter.advanceRateLimitStatus(accessMechanism))
-          Await.result(rateLimiter.advanceRateLimitStatus(accessMechanism))
-          val status = Await.result(rateLimiter.rateLimitStatus(accessMechanism))
+          val boundLimiter = rateLimiter.bind(accessMechanism)
+          Await.result(boundLimiter.advanceRateLimitStatus)
+          Await.result(boundLimiter.advanceRateLimitStatus)
+          Await.result(boundLimiter.advanceRateLimitStatus)
+          Await.result(boundLimiter.advanceRateLimitStatus)
+          val status = Await.result(boundLimiter.rateLimitStatus)
           status must beLike {
             case RateLimitStatus(`rateLimitIdentity`, 4, Some(_)) => ok
           }
@@ -174,26 +178,29 @@ class IndividualRateLimiterSpec extends UnitSpecification with NoTimeConversions
       object Assembly extends LoggedInAccess with App1235; import Assembly._
 
       "Query for as yet unknown client" in {
-        val status = Await.result(rateLimiter.rateLimitStatus(accessMechanism))
+        val boundLimiter = rateLimiter.bind(accessMechanism)
+        val status = Await.result(boundLimiter.rateLimitStatus)
         status ==== RateLimitStatus(rateLimitIdentity, 0, None)
       }
 
       "Query for a client that has not reached its limit" in {
-        Await.result(rateLimiter.advanceRateLimitStatus(accessMechanism))
-        Await.result(rateLimiter.advanceRateLimitStatus(accessMechanism))
-        val status = Await.result(rateLimiter.rateLimitStatus(accessMechanism))
+        val boundLimiter = rateLimiter.bind(accessMechanism)
+        Await.result(boundLimiter.advanceRateLimitStatus)
+        Await.result(boundLimiter.advanceRateLimitStatus)
+        val status = Await.result(boundLimiter.rateLimitStatus)
         status must beLike {
           case RateLimitStatus(_, 2, Some(_)) => ok
         }
       }
 
       "Query for a client that has reached its limit" in {
-        Await.result(rateLimiter.advanceRateLimitStatus(accessMechanism))
-        Await.result(rateLimiter.advanceRateLimitStatus(accessMechanism))
-        Await.result(rateLimiter.advanceRateLimitStatus(accessMechanism))
-        Await.result(rateLimiter.advanceRateLimitStatus(accessMechanism))
-        Await.result(rateLimiter.advanceRateLimitStatus(accessMechanism))
-        val status = Await.result(rateLimiter.rateLimitStatus(accessMechanism))
+        val boundLimiter = rateLimiter.bind(accessMechanism)
+        Await.result(boundLimiter.advanceRateLimitStatus)
+        Await.result(boundLimiter.advanceRateLimitStatus)
+        Await.result(boundLimiter.advanceRateLimitStatus)
+        Await.result(boundLimiter.advanceRateLimitStatus)
+        Await.result(boundLimiter.advanceRateLimitStatus)
+        val status = Await.result(boundLimiter.rateLimitStatus)
         status must beLike {
           case RateLimitStatus(`rateLimitIdentity`, 5, Some(_)) => ok
         }
