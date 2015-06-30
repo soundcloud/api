@@ -22,6 +22,7 @@ import com.soundcloud.publicApiStrangler.mapper.waveform.WaveformMapper
 import com.soundcloud.publicApiStrangler.support._
 import com.soundcloud.publicApiStrangler.zookeeper.CuratorFrameworkFactory
 import com.soundcloud.ratelimiting.facade._
+import com.soundcloud.scalakit.cache.MemcachedClient
 import com.soundcloud.scalakit.{Urn, ResourceName}
 import com.soundcloud.service.component._
 import com.twitter.finagle.http.Request
@@ -108,7 +109,7 @@ object App
     userAuthentication,
     config,
     telemetry,
-    cache.asInstanceOf,
+    cache.asInstanceOf[MemcachedClient],
     jvmkitRollout
   )
 
