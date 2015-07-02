@@ -4,6 +4,8 @@ LOAD_INTEGRATION_TESTS_ENV := $(shell echo "$$(./integration.properties.sh) $$1"
 
 PIPELINE_NUMBER ?= stable
 
+DEPLOY_SCRIPT ?= $(shell gen-deploy-script --arch=linux --name=public-api-strangler --revision=`git rev-parse --short HEAD`)
+
 run: _dev_docker_compose
 	$(LOAD_ENV) $(SBT) run
 
@@ -21,10 +23,14 @@ interactive: _dev_docker_compose
 dev: _dev_docker_compose
 
 deploy-de:
-	HEALTH_PATH=/-/health SCALE_STEP=1 BAZOOKA_APP=public-api-strangler BAZOOKA_ZONE=de INSTANCES=8 PROCESS_TYPE=api python bin/deploy.py
+	crun bazooka-cli "./$(DEPLOY_SCRIPT) bazooka --boot-timeout=60s --health-port=app \
+		--health-path=/-/health --scale-step=1 --bazooka-zone=de --instance-cnt=8 \
+		--proc=api"
 
 deploy-db:
-	HEALTH_PATH=/-/health SCALE_STEP=5 BAZOOKA_APP=public-api-strangler BAZOOKA_ZONE=db INSTANCES=150 PROCESS_TYPE=api python bin/deploy.py
+	crun bazooka-cli "./$(DEPLOY_SCRIPT) bazooka --boot-timeout=60s --health-port=app \
+		--health-path=/-/health --scale-step=5 --bazooka-zone=db --instance-cnt=150 \
+		--proc=api"
 
 _dev_docker_compose:
 	docker-compose up -d
