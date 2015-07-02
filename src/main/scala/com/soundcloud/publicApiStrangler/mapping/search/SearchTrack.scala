@@ -51,6 +51,7 @@ class SearchTrack(session: UserSession,
      override val waveform_url = fetchWaveformUrl.orElse((json \ "waveform_url").asOpt[String])
      override val purchase_url = Some(trackPurchaseLinkMapper.embedAttr(urn, _.url))
      override val video_url = (json \ "video_url").asOpt[String]
+     override val streamable = (json \ "api_streamable").asOpt[Boolean]
 
      private def fetchWaveformUrl =
        (json \ "uid").asOpt[String] map { uid =>
