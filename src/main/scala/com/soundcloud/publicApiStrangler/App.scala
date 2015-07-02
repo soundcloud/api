@@ -184,6 +184,7 @@ object App
     searchController,
     similarSoundsController,
     robotsTxtController,
-    rateLimitingFacade.rateLimitStatusController
+    rateLimitingFacade.rateLimitStatusController,
+    rateLimitingFacade.rateLimitingDiagnosticsController
   )
 }
