@@ -81,11 +81,6 @@ object App
   private val curatorFrameworkFactory = new CuratorFrameworkFactory
   private val curatorFramework = curatorFrameworkFactory.create(config)
 
-  private val groupController = {
-    val forwardHandler = new ForwardRequestHandler(publicApiClient)
-    new GroupController(userAuthentication, gatekeeperClient, forwardHandler)
-  }
-
   private val trackStreamsController = {
     val trackStreamUrlToJsonResponseMapper = new TrackStreamJsonResponseMapper
     val trackStreamUrlToRedirectMapper = new TrackStreamRedirectResponseMapper
@@ -178,7 +173,6 @@ object App
 
   override val controllers = Set(
     timelineController,
-    groupController,
     trackStreamsController,
     userFollowController,
     searchController,
