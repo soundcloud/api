@@ -28,7 +28,7 @@ deploy-de:
 		--proc=api"
 
 deploy-db:
-	crun bazooka-cli "./$(DEPLOY_SCRIPT) bazooka --boot-timeout=120s -port=tele \
+	crun bazooka-cli "./$(DEPLOY_SCRIPT) bazooka --boot-timeout=120s --health-port=tele \
 		--health-path=/-/health --scale-step=10 --bazooka-zone=db --instance-cnt=150 \
 		--proc=api"
 
