@@ -23,12 +23,12 @@ interactive: _dev_docker_compose
 dev: _dev_docker_compose
 
 deploy-de:
-	crun bazooka-cli "./$(DEPLOY_SCRIPT) bazooka --boot-timeout=120s --health-port=app \
+	crun bazooka-cli "./$(DEPLOY_SCRIPT) bazooka --boot-timeout=120s --health-port=tele \
 		--health-path=/-/health --scale-step=1 --bazooka-zone=de --instance-cnt=8 \
 		--proc=api"
 
 deploy-db:
-	crun bazooka-cli "./$(DEPLOY_SCRIPT) bazooka --boot-timeout=120s --health-port=app \
+	crun bazooka-cli "./$(DEPLOY_SCRIPT) bazooka --boot-timeout=120s -port=tele \
 		--health-path=/-/health --scale-step=10 --bazooka-zone=db --instance-cnt=150 \
 		--proc=api"
 
