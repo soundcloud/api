@@ -29,7 +29,7 @@ deploy-de:
 
 deploy-db:
 	crun bazooka-cli "./$(DEPLOY_SCRIPT) bazooka --boot-timeout=120s --health-port=app \
-		--health-path=/-/health --scale-step=5 --bazooka-zone=db --instance-cnt=150 \
+		--health-path=/-/health --scale-step=1 --bazooka-zone=db --instance-cnt=150 \
 		--proc=api"
 
 _dev_docker_compose:
