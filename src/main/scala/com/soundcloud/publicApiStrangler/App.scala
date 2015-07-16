@@ -104,7 +104,7 @@ object App
     userAuthentication,
     config,
     telemetry,
-    cache.asInstanceOf[MemcachedClient],
+    memcachedClient,
     jvmkitRollout
   )
 
