@@ -6,6 +6,7 @@ import com.soundcloud.bff.media.{MediaUrlsRepository, WaveformUrlsRepository}
 import com.soundcloud.bff.services.JsonService
 import com.soundcloud.follows.FollowsComponent
 import com.soundcloud.jvmkit.config.ConfigConvention
+import com.soundcloud.jvmkit.{rollout => JvmkitRollout}
 import com.soundcloud.publicApiStrangler.authorization.{AuthorizeHttpResponse, ContentAuthorizationFilter}
 import com.soundcloud.publicApiStrangler.controller._
 import com.soundcloud.publicApiStrangler.features.RolloutBuilder
@@ -22,11 +23,9 @@ import com.soundcloud.publicApiStrangler.mapper.waveform.WaveformMapper
 import com.soundcloud.publicApiStrangler.support._
 import com.soundcloud.publicApiStrangler.zookeeper.CuratorFrameworkFactory
 import com.soundcloud.ratelimiting.facade._
-import com.soundcloud.scalakit.cache.MemcachedClient
-import com.soundcloud.scalakit.{Urn, ResourceName}
+import com.soundcloud.scalakit.{ResourceName, Urn}
 import com.soundcloud.service.component._
 import com.twitter.finagle.http.Request
-import com.soundcloud.jvmkit.{rollout => JvmkitRollout}
 import com.twitter.finagle.http.filter.ExceptionFilter
 
 object App
@@ -153,9 +152,7 @@ object App
     new SimilarSoundsController(
       userAuthentication,
       similarSoundsMapper,
-      baseUrl,
-      rollout,
-      mothershipDispatcher
+      baseUrl
     )
   }
 
