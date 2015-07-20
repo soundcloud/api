@@ -21,8 +21,6 @@ class SimilarSoundsController(
                              )
   extends BffInjectionBasedController {
 
-  val similarSoundsFeature = "similar_sounds_strangler_endpoint"
-
   get("/tracks/:trackId/related")(handleSimilarSoundsRequest(_, similarSoundsMapper))
   get("/tracks/:trackId/related.json")(handleSimilarSoundsRequest(_, similarSoundsMapper))
 
