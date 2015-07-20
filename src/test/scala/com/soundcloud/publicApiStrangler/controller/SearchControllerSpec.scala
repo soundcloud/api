@@ -1,13 +1,12 @@
 package com.soundcloud.publicApiStrangler.controller
 
-
 import com.soundcloud.bff.Future
-import com.soundcloud.bff.finagle.{Request, ResponseBuilder}
+import com.soundcloud.bff.finagle.{ResponseBuilder, Request}
 import com.soundcloud.bff.nextbff.pagination.OffsetBasedPage
 import com.soundcloud.bff.nextbff.repository.RepositoryException
 import com.soundcloud.bff.nextbff.test.JsonMappingMock
 import com.soundcloud.bff.test.InjectionBasedControllerSpecification
-import com.soundcloud.publicApiStrangler.features.Rollout
+import com.soundcloud.jvmkit.rollout.{BasicRolloutFeature, Rollout}
 import com.soundcloud.publicApiStrangler.mapper.search.SearchMapper
 import com.soundcloud.publicApiStrangler.mapping.search.{Search, SearchDispatcherRequest}
 import com.soundcloud.publicApiStrangler.support.DispatchToMothershipHandler
@@ -81,14 +80,14 @@ class SearchControllerSpec extends InjectionBasedControllerSpecification {
     }
 
     trait EnabledContext extends Context {
-      when(verified(rolloutMock, times(endpoints.size)).isActive(any[String]))
-        .thenReturn(true)
+      when(verified(rolloutMock, times(endpoints.size)).isActive(any[BasicRolloutFeature]))
+        .thenReturn(Future.True)
 
     }
 
     trait DisabledContext extends Context {
-      when(verified(rolloutMock, times(endpoints.size)).isActive(any[String]))
-        .thenReturn(false)
+      when(verified(rolloutMock, times(endpoints.size)).isActive(any[BasicRolloutFeature]))
+        .thenReturn(Future.False)
     }
 
     "forwards to Mothership when q param not present" in new Context {
@@ -124,7 +123,7 @@ class SearchControllerSpec extends InjectionBasedControllerSpecification {
     }
 
     "response contains a caching header" in new Context {
-      when(rolloutMock.isActive(anyString)).thenReturn(true)
+      when(rolloutMock.isActive(any[BasicRolloutFeature])).thenReturn(Future.True)
 
       endpoints.foreach { case (apiEndPoint, dispatcherRequest) =>
         val request = com.twitter.finagle.http.Request(apiEndPoint.s, queryParams.toSeq: _*)
@@ -144,7 +143,7 @@ class SearchControllerSpec extends InjectionBasedControllerSpecification {
 
     "Pagination error handling" >> {
       "200 when no pagination params" in new Context {
-        when(rolloutMock.isActive(anyString)).thenReturn(true)
+        when(rolloutMock.isActive(any[BasicRolloutFeature])).thenReturn(Future.True)
 
         endpoints.foreach { case (apiEndPoint, dispatcherRequest) =>
           val request = com.twitter.finagle.http.Request(apiEndPoint.s, queryParams.toSeq: _*)
@@ -162,7 +161,7 @@ class SearchControllerSpec extends InjectionBasedControllerSpecification {
       }
 
       "400 when offset/limit is junk" in new Context {
-        when(rolloutMock.isActive(anyString)).thenReturn(true)
+        when(rolloutMock.isActive(any[BasicRolloutFeature])).thenReturn(Future.True)
         for {
           (apiEndPoint, dispatcherRequest) <- endpoints
           param <- Seq("offset", "limit")
@@ -174,7 +173,7 @@ class SearchControllerSpec extends InjectionBasedControllerSpecification {
       }
 
       "400 when limit/offset is present, but empty" in new Context {
-        when(rolloutMock.isActive(anyString)).thenReturn(true)
+        when(rolloutMock.isActive(any[BasicRolloutFeature])).thenReturn(Future.True)
 
         for {
           (apiEndPoint, dispatcherRequest) <- endpoints
@@ -187,7 +186,7 @@ class SearchControllerSpec extends InjectionBasedControllerSpecification {
       }
 
       "400 when dispatcher returns a 400" in new Context {
-        when(rolloutMock.isActive(anyString)).thenReturn(true)
+        when(rolloutMock.isActive(any[BasicRolloutFeature])).thenReturn(Future.True)
 
         endpoints.foreach { case (apiEndPoint, dispatcherRequest) =>
           val request = com.twitter.finagle.http.Request(apiEndPoint.s, extraParams.toSeq: _*)

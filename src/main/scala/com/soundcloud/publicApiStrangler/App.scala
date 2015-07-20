@@ -131,7 +131,7 @@ object App
     )
     val searchRepository = new SearchRepository(searchService)
     val searchMapper = new SearchMapper(searchRepository, entityMapper, baseUrl)
-    new SearchController(userAuthentication, searchMapper, baseUrl, rollout, mothershipDispatcher)
+    new SearchController(userAuthentication, searchMapper, baseUrl, jvmkitRollout, mothershipDispatcher)
   }
 
   private val similarSoundsController = {
