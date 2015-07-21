@@ -1,19 +1,15 @@
 package com.soundcloud.publicApiStrangler.controller
 
+import com.soundcloud.bff.Future
 import com.soundcloud.bff.nextbff.pagination.OffsetBasedPage
 import com.soundcloud.bff.test.InjectionBasedControllerSpecification
 import com.soundcloud.jvmkit.Urn
-import com.soundcloud.publicApiStrangler.features.Rollout
 import com.soundcloud.publicApiStrangler.mapper.similarsounds.SimilarSoundsMapper
 import com.soundcloud.publicApiStrangler.mapping.similarsounds.SimilarSoundsMapping
 import com.soundcloud.publicApiStrangler.support.mapping.ObjectMappingMock
-import com.soundcloud.publicApiStrangler.support.DispatchToMothershipHandler
-import com.soundcloud.service.response.representation.SimilarSounds
 import com.soundcloud.scalakit.test.VerifiedMocks
-import com.soundcloud.bff.Future
+import com.soundcloud.service.response.representation.SimilarSounds
 import org.jboss.netty.handler.codec.http.HttpResponseStatus
-import org.mockito.Mockito.times
-import com.soundcloud.bff.finagle.{Request, ResponseBuilder}
 
 class SimilarSoundsControllerSpec
   extends InjectionBasedControllerSpecification {
