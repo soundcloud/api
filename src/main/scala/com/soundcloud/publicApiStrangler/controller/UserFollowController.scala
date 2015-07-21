@@ -4,7 +4,7 @@ import com.soundcloud.bff.finagle.{Request, ResponseBuilder}
 import com.soundcloud.bff.nextbff.mapping.MappingContext
 import com.soundcloud.bff.web.{BffInjectionBasedController, UserAuthentication}
 import com.soundcloud.follows._
-import com.soundcloud.publicApiStrangler.features.Rollout
+import com.soundcloud.jvmkit.rollout.{BasicRolloutFeature, Rollout}
 import com.soundcloud.publicApiStrangler.mapping.timeline.User
 import com.soundcloud.publicApiStrangler.support.DispatchToMothershipHandler
 import com.soundcloud.scalakit.finagle.http.{AlwaysMatchesPathMatcher, HandlerRequest}
@@ -59,22 +59,23 @@ class UserFollowController(userAuthentication: UserAuthentication,
 
   put("/me/followings/:id") { request =>
     userAuthentication.withLoggedInUser(request) { (session, userUrn) =>
-      if(rollingOutWrites(userUrn)) {
-        val user = Urn("soundcloud:users:" + request.routeParams.get("id").get)
-        follows.follow(session, user).flatMap {
-          case success: FollowSuccessful => renderFollow(session, success)
-          case error: FollowFailed => renderFollowFailed(error, session, user)
-        }
-      } else {
-        val restriction = findAgeRestriction(request.routeParams.get("id").get, session.getGeo)
-        if (restriction.isEmpty) {
-          fallbackToMothership(request)
-        } else {
-          findUserAge(session, userUrn).flatMap {
-            case Some(userAge) => if (userAge < restriction.get) denyAgeRestricted(restriction.get) else fallbackToMothership(request)
-            case _ => denyAgeUnknown
+      rollingOutWrites(userUrn).flatMap{
+        case true =>
+          val user = Urn("soundcloud:users:" + request.routeParams.get("id").get)
+          follows.follow(session, user).flatMap {
+            case success: FollowSuccessful => renderFollow(session, success)
+            case error: FollowFailed => renderFollowFailed(error, session, user)
           }
-        }
+        case false =>
+          val restriction = findAgeRestriction(request.routeParams.get("id").get, session.getGeo)
+          if (restriction.isEmpty) {
+            fallbackToMothership(request)
+          } else {
+            findUserAge(session, userUrn).flatMap {
+              case Some(userAge) => if (userAge < restriction.get) denyAgeRestricted(restriction.get) else fallbackToMothership(request)
+              case _ => denyAgeUnknown
+            }
+          }
       }
     }
   }
@@ -188,18 +189,17 @@ class UserFollowController(userAuthentication: UserAuthentication,
   private def fetchUrns(request: Request,
                                fetchFunction: (UserSession, Urn) => Future[UrnsPage]): Future[ResponseBuilder] = {
     authenticateIfNeeded(request, requireLogin = false) { (session: UserSession, userToFetch: Urn) =>
-      if(rollingOutReads(userToFetch)) {
-        for {
+      rollingOutReads(userToFetch).flatMap {
+        case false => fallbackToMothership(request)
+        case true => for {
           response <- fetchFunction(session, userToFetch)
           urns = response.values
           users <- fetchUsers(session, urns.toSet)
         } yield {
-          render.json(Map(
-            "collection" -> mapUsersToUsers(users)
-          ))
-        }
-      } else {
-        fallbackToMothership(request)
+            render.json(Map(
+              "collection" -> mapUsersToUsers(users)
+            ))
+          }
       }
     }
   }
@@ -210,19 +210,19 @@ class UserFollowController(userAuthentication: UserAuthentication,
                          users: Seq[Following] => Seq[Urn],
                          requireLogin: Boolean): Future[ResponseBuilder] = {
     authenticateIfNeeded(request, requireLogin) { (session: UserSession, userToFetch: Urn) =>
-      if(rollingOutReads(userToFetch)) {
-        for {
+
+      rollingOutReads(userToFetch).flatMap {
+        case false => fallbackToMothership(request)
+        case true => for {
           affiliations <- fetchFunction(session, userToFetch, pageSizeParam(request), cursorParam(request))
           urns = users(affiliations.values)
           users <- fetchUsers(session, urns.toSet)
         } yield {
-          render.json(Map(
-            "collection" -> mapUsers(users),
-            "next_href" -> nextHref(baseUrl, request.request.path, affiliations.page, request.params)
-          ))
-        }
-      } else {
-        fallbackToMothership(request)
+            render.json(Map(
+              "collection" -> mapUsers(users),
+              "next_href" -> nextHref(baseUrl, request.request.path, affiliations.page, request.params)
+            ))
+          }
       }
     }
   }
@@ -235,9 +235,9 @@ class UserFollowController(userAuthentication: UserAuthentication,
     }
   }
 
-  private def rollingOutReads(userToFetch: Urn): Boolean = rollout.isActiveForId("follows-reads", Option(userToFetch))
+  private def rollingOutReads(userToFetch: Urn): Future[Boolean] = rollout.isActiveForUrn(BasicRolloutFeature("follows-reads"), userToFetch)
 
-  private def rollingOutWrites(userUrn: Urn): Boolean = rollout.isActiveForId("follows-writes", Option(userUrn))
+  private def rollingOutWrites(userUrn: Urn): Future[Boolean] = rollout.isActiveForUrn(BasicRolloutFeature("follows-writes"), userUrn)
 
   private def nextHref(baseUrl: String, path: String, pageInfo: PageInfo, requestParams: Map[String, String]): Option[String] = {
     pageInfo.lastId.map { nextId =>

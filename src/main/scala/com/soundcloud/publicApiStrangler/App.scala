@@ -9,7 +9,6 @@ import com.soundcloud.jvmkit.config.ConfigConvention
 import com.soundcloud.jvmkit.{rollout => JvmkitRollout}
 import com.soundcloud.publicApiStrangler.authorization.{AuthorizeHttpResponse, ContentAuthorizationFilter}
 import com.soundcloud.publicApiStrangler.controller._
-import com.soundcloud.publicApiStrangler.features.RolloutBuilder
 import com.soundcloud.publicApiStrangler.headers.DefaultResponseHeadersFilter
 import com.soundcloud.publicApiStrangler.mapper.liebling.LikeCountMapper
 import com.soundcloud.publicApiStrangler.mapper.purchaselink.TrackPurchaseLinkMapper
@@ -94,7 +93,6 @@ object App
       trackStreamSnipHandler)
   }
 
-  val rollout = RolloutBuilder.build(curatorFramework, config.getApplicationName)
   val jvmkitRollout = new JvmkitRollout.RolloutBuilder(config).build
 
   private val rateLimitingFacade = new RateLimitingFacade(
@@ -113,7 +111,7 @@ object App
     okidokiClient,
     followsClient,
     baseUrl,
-    rollout
+    jvmkitRollout
   )
 
   private val searchController = {

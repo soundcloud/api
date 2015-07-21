@@ -2,13 +2,13 @@ package com.soundcloud.publicApiStrangler.controller
 
 import com.soundcloud.bff.test.InjectionBasedControllerSpecification
 import com.soundcloud.follows._
+import com.soundcloud.jvmkit.rollout.{BasicRolloutFeature, Rollout}
 import com.soundcloud.jvmkit.{Geo => JvmGeo, UserSessionBuilder}
-import com.soundcloud.publicApiStrangler.features.Rollout
 import com.soundcloud.publicApiStrangler.support.DispatchToMothershipHandler
 import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures
 import com.soundcloud.scalakit.finagle.http.HandlerRequest
 import com.soundcloud.scalakit.test.VerifiedMocks
-import com.soundcloud.scalakit.{Geo, Urn, UserSession}
+import com.soundcloud.scalakit.{Geo, Urn}
 import com.soundcloud.service.client.OkidokiClient
 import com.twitter.finagle.http.{Response, Status}
 import com.twitter.util.Future
@@ -16,7 +16,7 @@ import org.joda.time.{DateTime, DateTimeUtils}
 import org.specs2.mutable.BeforeAfter
 import play.api.libs.json._
 
-class UserFollowControllerSpec extends InjectionBasedControllerSpecification with Fixtures{
+class UserFollowControllerSpec extends InjectionBasedControllerSpecification with Fixtures {
   sequential
 
   trait Context extends Scope with BeforeAfter with VerifiedMocks {
@@ -35,8 +35,8 @@ class UserFollowControllerSpec extends InjectionBasedControllerSpecification wit
 
     override def before = {
       DateTimeUtils.setCurrentMillisFixed(now)
-      rollout.isActiveForId("follows-reads", Some(userUrn)) returns true
-      rollout.isActiveForId("follows-writes", Some(userUrn)) returns true
+      rollout.isActiveForUrn(BasicRolloutFeature("follows-reads"), userUrn) returns Future.True
+      rollout.isActiveForUrn(BasicRolloutFeature("follows-writes"), userUrn) returns Future.True
       okidokiMock.fetch(session, Set(userUrn)) returns okidokiResponse
     }
 
@@ -50,8 +50,8 @@ class UserFollowControllerSpec extends InjectionBasedControllerSpecification wit
 
     override def before = {
       super.before
-      rollout.isActiveForId("follows-reads", Some(userUrn)) returns false
-      rollout.isActiveForId("follows-writes", Some(userUrn)) returns false
+      rollout.isActiveForUrn(BasicRolloutFeature("follows-reads"), userUrn) returns Future.False
+      rollout.isActiveForUrn(BasicRolloutFeature("follows-writes"), userUrn) returns Future.False
 
       when(fallbackMock.defaultHandling(any[HandlerRequest])).thenReturn(Future.value(expectedResponse))
     }
