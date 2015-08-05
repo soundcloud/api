@@ -1,4 +1,0 @@
-#!/bin/bash +x
-curl -s http://jenkins.cd.dev.s-cloud.net/job/plumber/lastSuccessfulBuild/artifact/plumber-linux -o plumber
-chmod a+x plumber
-bin/precheckin

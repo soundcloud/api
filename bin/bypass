@@ -1,9 +1,0 @@
-#!/bin/bash
-## This script is used to bypass long running commands in case of an emergency deploy is necessary.
-## Use it in your pipeline commands like: bin/bypass || long_running_command
-## In case the last commit message includes the word `hotfix` this script will return 0.
-if git log --oneline -n 1 | grep -i -q hotfix; then
-  exit 0
-else
-  exit 139 # random error number that means execute next command.
-fi

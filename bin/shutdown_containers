@@ -1,3 +1,0 @@
-#!/bin/bash +x
-
-docker stop -t 0 $(docker ps -a -q) && docker rm $(docker ps -a -q)

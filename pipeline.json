@@ -12,13 +12,13 @@
       "jobs": [
         {
           "unit-tests": {
-            "cmd": "./bin/unit-test",
+            "cmd": "make -f Makefile.pipeline unit-test",
             "no-clean": true
           }
         },
         {
           "package-artifacts": {
-            "cmd": "plumber package debian,docker,bazooka && plumber publish testing",
+            "cmd": "make -f Makefile.pipeline package publish",
             "no-clean": true
           }
         }
@@ -32,7 +32,7 @@
       "jobs": [
         {
           "publish-to-stable": {
-            "cmd": "plumber publish stable"
+            "cmd": "make -f Makefile.pipeline promote-to-stable"
           }
         }
       ],
@@ -45,29 +45,19 @@
       "jobs": [
         {
           "publish-to-release": {
-            "cmd": "plumber publish release",
+            "cmd": "make -f Makefile.pipeline promote-to-release",
             "manual": true
           }
         },
         {
           "deploy-de": {
-            "cmd": "./bin/deploy-de"
-          }
-        },
-        {
-          "notify-slack-de": {
-            "cmd": "./bin/slack-deploy de"
+            "cmd": "make -f Makefile.pipeline deploy-de"
           }
         },
         {
           "deploy-db": {
-            "cmd": "./bin/deploy-db",
+            "cmd": "make -f Makefile.pipeline deploy-db",
             "manual": true
-          }
-        },
-        {
-          "notify-slack-db": {
-            "cmd": "./bin/slack-deploy db"
           }
         }
       ],

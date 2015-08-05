@@ -1,0 +1,67 @@
+#####################################################################
+#
+# Project specific variables
+#
+#####################################################################
+
+# This is the configuration that will be used for local testing
+DEFAULT_CONFIG := default.sh
+
+# This should be the same as the name in the manifest.json!!!
+APP_NAME := public-api-strangler
+
+# Here are the endpoints that can be run by this application.
+API_ENTRYPOINT:= api
+
+BAZOOKA_CONFIG := production.dd.enc
+BAZOOKA_ZONES := dd
+RUNTIME_STACK := jdk-8
+BUILD_STACK := jdk-8-dev
+
+DEPLOY_SCRIPT ?= $(shell gen-deploy-script --arch=linux --name=public-api-strangler --revision=`artifact-manager package-version`)
+
+#####################################################################
+
+unit-test:
+	crun $(BUILD_STACK) 'make unit-test'
+
+package: prepare-package-layout
+	docker pull docker.dev.s-cloud.net/$(RUNTIME_STACK):latest
+	artifact-manager package --runtime=$(RUNTIME_STACK)
+	artifact-manager bazooka build --runtime=$(RUNTIME_STACK) \
+				 --proc="$(API_ENTRYPOINT) --config=$(BAZOOKA_CONFIG)"
+
+prepare-package-layout:
+	crun $(BUILD_STACK) 'make sc-debian-layout'
+	gen-wrapper-script --target="bin/$(APP_NAME)" --wrapper=$(API_ENTRYPOINT)
+	gen-postinst-script
+	add-config config/$(DEFAULT_CONFIG)
+	add-config config/$(BAZOOKA_CONFIG)
+
+publish:
+	artifact-manager publish
+	artifact-manager bazooka publish --runtime=$(RUNTIME_STACK) --zones=$(BAZOOKA_ZONES)
+
+promote-to-stable:
+	artifact-manager promote stable
+	artifact-manager bazooka promote stable --zones=$(BAZOOKA_ZONES)
+
+promote-to-release:
+	artifact-manager promote release
+	artifact-manager bazooka promote release --zones=$(BAZOOKA_ZONES)
+
+deploy-de:
+	./bin/notify-slack-deploy de Started
+	crun bazooka-cli "./$(DEPLOY_SCRIPT) bazooka \
+		--boot-timeout=60s --health-port=tele --health-path=/-/health \
+		--scale-step=1 --bazooka-zone=de --instance-cnt=8 \
+		--proc=api"
+	./bin/notify-slack-deploy de Finished
+
+deploy-db:
+	./bin/notify-slack-deploy db Started
+	crun bazooka-cli "./$(DEPLOY_SCRIPT) bazooka \
+		--boot-timeout=60s --health-port=tele --health-path=/-/health \
+		--scale-step=1 --bazooka-zone=db --instance-cnt=100 \
+		--proc=web"
+	./bin/notify-slack-deploy db Finished
