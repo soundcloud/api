@@ -31,6 +31,7 @@
         "jenkins-server": "http://jenkins.cs.dev.s-cloud.net",
         "git-url": "git@github.com:soundcloud/public-api-strangler.git",
         "git-branch": "master",
+        "default-name": "public-api-strangler",
         "job-setup": "ln -sf /data/ivy2 .ivy2",
         "slave-label": "docker"
     }
