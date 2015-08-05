@@ -1,38 +1,82 @@
 {
-    "stages": [
+  "settings": {
+    "default-name": "public-api-strangler",
+    "git-branch": "master",
+    "git-url": "git@github.com:soundcloud/public-api-strangler.git",
+    "jenkins-server": "http://jenkins.cs.dev.s-cloud.net",
+    "job-setup": "ln -sf /data/ivy2 .ivy2",
+    "slave-label": "docker"
+  },
+  "stages": [
+    {
+      "jobs": [
         {
-            "name": "build",
-            "jobs": [
-                { "unit-tests": {"cmd": "./bin/unit-test", "no-clean": true } },
-                { "package-artifacts": {"cmd": "plumber package debian,docker,bazooka && plumber publish testing", "no-clean": true }}
-            ],
-            "next-stages": [ "test" ]
+          "unit-tests": {
+            "cmd": "./bin/unit-test",
+            "no-clean": true
+          }
         },
         {
-            "name": "test",
-            "jobs": [
-                { "integration-tests": {"cmd": "./bin/bypass || ./bin/integration-test", "no-clean": true } },
-                { "publish-to-stable": {"cmd": "plumber publish stable" } }
-            ],
-            "next-stages": [ "deploy" ]
-        },
-        {
-            "name": "deploy",
-            "jobs": [
-                { "publish-to-release": { "cmd": "plumber publish release", "manual": true } },
-                { "deploy-de": {"cmd": "./bin/deploy-de" } },
-                { "notify-slack-de": { "cmd": "./bin/slack-deploy de" } },
-                { "deploy-db": {"cmd": "./bin/deploy-db", "manual": true } },
-                { "notify-slack-db": { "cmd": "./bin/slack-deploy db" } }
-            ]
+          "package-artifacts": {
+            "cmd": "plumber package debian,docker,bazooka && plumber publish testing",
+            "no-clean": true
+          }
         }
-    ],
-    "settings": {
-        "jenkins-server": "http://jenkins.cs.dev.s-cloud.net",
-        "git-url": "git@github.com:soundcloud/public-api-strangler.git",
-        "git-branch": "master",
-        "default-name": "public-api-strangler",
-        "job-setup": "ln -sf /data/ivy2 .ivy2",
-        "slave-label": "docker"
+      ],
+      "name": "build",
+      "next-stages": [
+        "test"
+      ]
+    },
+    {
+      "jobs": [
+        {
+          "integration-tests": {
+            "cmd": "./bin/bypass || ./bin/integration-test",
+            "no-clean": true
+          }
+        },
+        {
+          "publish-to-stable": {
+            "cmd": "plumber publish stable"
+          }
+        }
+      ],
+      "name": "test",
+      "next-stages": [
+        "deploy"
+      ]
+    },
+    {
+      "jobs": [
+        {
+          "publish-to-release": {
+            "cmd": "plumber publish release",
+            "manual": true
+          }
+        },
+        {
+          "deploy-de": {
+            "cmd": "./bin/deploy-de"
+          }
+        },
+        {
+          "notify-slack-de": {
+            "cmd": "./bin/slack-deploy de"
+          }
+        },
+        {
+          "deploy-db": {
+            "cmd": "./bin/deploy-db",
+            "manual": true
+          }
+        },
+        {
+          "notify-slack-db": {
+            "cmd": "./bin/slack-deploy db"
+          }
+        }
+      ]
     }
+  ]
 }
