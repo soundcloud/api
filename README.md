@@ -50,32 +50,6 @@ The PR precheckin builds are still on jenkins.int due the laufbursche
 integration present there:
 [http://jenkins.int.s-cloud.net/job/public-api-strangler_master_precheckin](http://jenkins.int.s-cloud.net/job/public-api-strangler_master_precheckin).
 
-## Groups endpoint kill switch
-
-The strangler has support for removing access to expensive endpoints that are
-harmful to our site-wide stability if abused or scrapped by a malicious user.
-
-### How to use it
-
-There are two features flags:
-
-1. `disable_cheap_groups_endpoints` ->  disables both  /users/:id/groups.json
-   and /groups/:id.json
-2. `disable_expensive_groups_endpoints` -> disables both /groups/:id/users.json
-   and /groups/:id/users
-
-Go to rollout and activate the features to the group `all`.
-
-Activating it will make the strangler return HTTP 200 with empty body on
-requests to the corresponding.
-
-### Links to rollout
-
-http://gatekeeper.int.s-cloud.net/activations/disable_cheap_groups_endpoints
-http://gatekeeper.int.s-cloud.net/activations/disable_expensive_groups_endpoints
-
-Alternatively you can go to do http://gatekeeper.int.s-cloud.net/features and click on the "On" button for the feature.
-
 ## Search leaving mothership
 
 Routing of search requests is controlled via rollout flags. See
