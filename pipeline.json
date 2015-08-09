@@ -23,28 +23,22 @@
           }
         }
       ],
-      "name": "build",
+      "name": "test-and-build",
       "next-stages": [
-        "test"
+        "promote-to-stable"
       ]
     },
     {
       "jobs": [
-        {
-          "integration-tests": {
-            "cmd": "./bin/bypass || ./bin/integration-test",
-            "no-clean": true
-          }
-        },
         {
           "publish-to-stable": {
             "cmd": "plumber publish stable"
           }
         }
       ],
-      "name": "test",
+      "name": "promote-to-stable",
       "next-stages": [
-        "deploy"
+        "release-and-deploy"
       ]
     },
     {
@@ -76,7 +70,8 @@
             "cmd": "./bin/slack-deploy db"
           }
         }
-      ]
+      ],
+      "name": "release-and-deploy"
     }
   ]
 }
