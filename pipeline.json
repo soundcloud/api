@@ -1,0 +1,67 @@
+{
+  "settings": {
+    "default-name": "public-api-strangler",
+    "git-branch": "master",
+    "git-url": "git@github.com:soundcloud/public-api-strangler.git",
+    "jenkins-server": "http://jenkins.cs.dev.s-cloud.net",
+    "job-setup": "ln -sf /data/ivy2 .ivy2",
+    "slave-label": "docker"
+  },
+  "stages": [
+    {
+      "name": "test-and-build",
+      "jobs": [
+        {
+          "unit-tests": {
+            "cmd": "make -f Makefile.pipeline unit-test",
+            "no-clean": true
+          }
+        },
+        {
+          "package-artifacts": {
+            "cmd": "make -f Makefile.pipeline package publish",
+            "no-clean": true
+          }
+        }
+      ],
+      "next-stages": [
+        "promote-to-stable"
+      ]
+    },
+    {
+      "name": "promote-to-stable",
+      "jobs": [
+        {
+          "publish-to-stable": {
+            "cmd": "make -f Makefile.pipeline promote-to-stable"
+          }
+        }
+      ],
+      "next-stages": [
+        "release-and-deploy"
+      ]
+    },
+    {
+      "name": "release-and-deploy",
+      "jobs": [
+        {
+          "publish-to-release": {
+            "cmd": "make -f Makefile.pipeline promote-to-release",
+            "manual": true
+          }
+        },
+        {
+          "deploy-de": {
+            "cmd": "make -f Makefile.pipeline deploy-de"
+          }
+        },
+        {
+          "deploy-db": {
+            "cmd": "make -f Makefile.pipeline deploy-db",
+            "manual": true
+          }
+        }
+      ]
+    }
+  ]
+}

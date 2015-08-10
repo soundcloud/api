@@ -37,10 +37,6 @@ Use jenkins to deploy the application. For the master branch and deployment
 pipeline:
 [http://jenkins.cs.dev.s-cloud.net/view/public-api-strangler/](http://jenkins.cs.dev.s-cloud.net)
 
-### Hotfix support
-
-This project's CI has a `bypass` script built-in, that will skip steps that take too long if a commit message contains the string "hotfix". Use this in case a fast deployment is necessary. 
-
 Please see
 [CONTRIBUTING.md](https://github.com/soundcloud/public-api-strangler/blob/master/CONTRIBUTING.md#making-a-change)
 for guidelines for outside contributors.
@@ -53,32 +49,6 @@ For the master branch and deployment pipeline:
 The PR precheckin builds are still on jenkins.int due the laufbursche
 integration present there:
 [http://jenkins.int.s-cloud.net/job/public-api-strangler_master_precheckin](http://jenkins.int.s-cloud.net/job/public-api-strangler_master_precheckin).
-
-## Groups endpoint kill switch
-
-The strangler has support for removing access to expensive endpoints that are
-harmful to our site-wide stability if abused or scrapped by a malicious user.
-
-### How to use it
-
-There are two features flags:
-
-1. `disable_cheap_groups_endpoints` ->  disables both  /users/:id/groups.json
-   and /groups/:id.json
-2. `disable_expensive_groups_endpoints` -> disables both /groups/:id/users.json
-   and /groups/:id/users
-
-Go to rollout and activate the features to the group `all`.
-
-Activating it will make the strangler return HTTP 200 with empty body on
-requests to the corresponding.
-
-### Links to rollout
-
-http://gatekeeper.int.s-cloud.net/activations/disable_cheap_groups_endpoints
-http://gatekeeper.int.s-cloud.net/activations/disable_expensive_groups_endpoints
-
-Alternatively you can go to do http://gatekeeper.int.s-cloud.net/features and click on the "On" button for the feature.
 
 ## Search leaving mothership
 
