@@ -11,11 +11,11 @@ gh_org_url="https://github.com/soundcloud"
 application="public-api-strangler"
 repo_url="$gh_org_url/$application"
 
-GITHUB_COMMIT="$repo_url/commit/${GIT_SHA}/"
+github_commit="$repo_url/commit/${GIT_SHA}/"
 
 prefix="slog:"
 
-slack_message="${prefix} $action deploy of *<$repo_url|#$application>* build *<${BUILD_URL}|${PIPELINE_NUMBER}>* version *<${GITHUB_COMMIT}|${GIT_SHA}>* to bazooka $zone"
+slack_message="${prefix} $action deploy of *<$repo_url|#$application>* build *<${BUILD_URL}|${PIPELINE_NUMBER}>* version *<${github_commit}|${GIT_SHA}>* to bazooka $zone"
 
 curl -X POST 'http://unslacked.int.s-cloud.net/' \
   -H 'Content-Type: application/json' \
