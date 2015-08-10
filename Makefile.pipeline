@@ -63,5 +63,5 @@ deploy-db:
 	crun bazooka-cli "./$(DEPLOY_SCRIPT) bazooka \
 		--boot-timeout=60s --health-port=app --health-path=/-/health \
 		--scale-step=1 --bazooka-zone=db --instance-cnt=100 \
-		--proc=web"
+		--proc=api"
 	./bin/notify-slack-deploy db Finished
