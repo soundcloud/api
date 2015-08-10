@@ -6,14 +6,14 @@
 zone=$1
 action=$2
 
-channel='#test'
+channel='#core-services'
 gh_org_url="https://github.com/soundcloud"
 application="public-api-strangler"
 repo_url="$gh_org_url/$application"
 
 GITHUB_COMMIT="$repo_url/commit/${GIT_SHA}/"
 
-prefix=":sloth: :" # should be "slog" of course
+prefix="slog:"
 
 slack_message="${prefix} $action deploy of *<$repo_url|#$application>* build *<${BUILD_URL}|${PIPELINE_NUMBER}>* version *<${GITHUB_COMMIT}|${GIT_SHA}>* to bazooka $zone"
 
