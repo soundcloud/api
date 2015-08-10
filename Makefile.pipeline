@@ -28,7 +28,7 @@ unit-test:
 package: prepare-package-layout
 	docker pull docker.dev.s-cloud.net/$(RUNTIME_STACK):latest
 	artifact-manager package --runtime=$(RUNTIME_STACK)
-	artifact-manager bazooka build --runtime=$(RUNTIME_STACK) \
+	artifact-manager bazooka build --zones=$(BAZOOKA_ZONES) --runtime=$(RUNTIME_STACK) \
 				 --proc="$(API_ENTRYPOINT) --config=$(BAZOOKA_CONFIG)"
 
 prepare-package-layout:
