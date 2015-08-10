@@ -53,7 +53,7 @@ promote-to-release:
 deploy-de:
 	./bin/notify-slack-deploy de Started
 	crun bazooka-cli "./$(DEPLOY_SCRIPT) bazooka \
-		--boot-timeout=60s --health-port=tele --health-path=/-/health \
+		--boot-timeout=60s --health-port=app --health-path=/-/health \
 		--scale-step=1 --bazooka-zone=de --instance-cnt=8 \
 		--proc=api"
 	./bin/notify-slack-deploy de Finished
@@ -61,7 +61,7 @@ deploy-de:
 deploy-db:
 	./bin/notify-slack-deploy db Started
 	crun bazooka-cli "./$(DEPLOY_SCRIPT) bazooka \
-		--boot-timeout=60s --health-port=tele --health-path=/-/health \
+		--boot-timeout=60s --health-port=app --health-path=/-/health \
 		--scale-step=1 --bazooka-zone=db --instance-cnt=100 \
 		--proc=web"
 	./bin/notify-slack-deploy db Finished
