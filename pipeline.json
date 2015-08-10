@@ -9,6 +9,7 @@
   },
   "stages": [
     {
+      "name": "test-and-build",
       "jobs": [
         {
           "unit-tests": {
@@ -23,12 +24,12 @@
           }
         }
       ],
-      "name": "test-and-build",
       "next-stages": [
         "promote-to-stable"
       ]
     },
     {
+      "name": "promote-to-stable",
       "jobs": [
         {
           "publish-to-stable": {
@@ -36,12 +37,12 @@
           }
         }
       ],
-      "name": "promote-to-stable",
       "next-stages": [
         "release-and-deploy"
       ]
     },
     {
+      "name": "release-and-deploy",
       "jobs": [
         {
           "publish-to-release": {
@@ -60,8 +61,7 @@
             "manual": true
           }
         }
-      ],
-      "name": "release-and-deploy"
+      ]
     }
   ]
 }
