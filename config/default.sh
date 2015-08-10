@@ -1,6 +1,6 @@
 DOCKER_IP=${DOCKER_IP:-$(docker-ip)}
 
-APP_NAME="public-api-strangler"
+APP_NAME="publicapistrangler"
 
 APP_BASE_URL="https://api.soundcloud.com"
 
