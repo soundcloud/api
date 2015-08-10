@@ -13,7 +13,7 @@ APP_NAME := public-api-strangler
 # Here are the endpoints that can be run by this application.
 API_ENTRYPOINT:= api
 
-BAZOOKA_CONFIG := production.dd.enc
+BAZOOKA_CONFIG := production.enc
 BAZOOKA_ZONES := db,de
 RUNTIME_STACK := jdk-8
 BUILD_STACK := jdk-8-dev
