@@ -14,7 +14,7 @@ APP_NAME := public-api-strangler
 API_ENTRYPOINT:= api
 
 BAZOOKA_CONFIG := production.dd.enc
-BAZOOKA_ZONES := dd
+BAZOOKA_ZONES := db,de
 RUNTIME_STACK := jdk-8
 BUILD_STACK := jdk-8-dev
 
