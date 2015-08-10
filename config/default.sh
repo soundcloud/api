@@ -48,4 +48,7 @@ RATELIMITING_MAX_PROMETHEUS_COUNTER_LABELS="100"
 RATELIMITING_SRV_RECORD="dnssrv!http.api.prod.ratelimiting.dd.srv.int.s-cloud.net"
 
 SEARCH_SRV_RECORD="dnssrv!http.dispatcher.prod.search.dd.srv.int.s-cloud.net"
-TIMELINE_BASE_URL="dnssrv!http.api.prod.timeline.dd.srv.int.s-cloud.net"
+TIMELINE_SRV_RECORD="dnssrv!http.api.prod.timeline.dd.srv.int.s-cloud.net"
+
+LIEBLING_SRV_RECORD="dnssrv!http.web.prod.liebling.dd.srv.int.s-cloud.net"
+SIMILAR_SOUNDS_SRV_RECORD="dnssrv!http.api.prod.similar-sounds.dd.srv.int.s-cloud.net"
