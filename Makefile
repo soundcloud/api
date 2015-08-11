@@ -3,7 +3,7 @@ SBT := vendor/sbt/bin/sbt -Duser.home=$(shell echo "$$HOME") -Dsbt.boot.properti
 run: _dev_docker_compose
 	./bin/source-config --config=config/default.sh $(SBT) run
 
-precheckin: unit-test it-test
+precheckin: unit-test integration-test
 
 integration-test: _dev_docker_compose
 	./bin/source-config --config=config/integration.sh $(SBT) it:test
