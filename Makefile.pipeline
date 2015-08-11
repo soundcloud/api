@@ -38,6 +38,9 @@ prepare-package-layout:
 	add-config config/$(DEFAULT_CONFIG)
 	add-config config/$(BAZOOKA_CONFIG)
 
+remove-containers:
+	remove-containers
+
 publish:
 	artifact-manager publish
 	artifact-manager bazooka publish --runtime=$(RUNTIME_STACK) --zones=$(BAZOOKA_ZONES)

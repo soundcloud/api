@@ -1,0 +1,8 @@
+#!/bin/bash +x
+
+make -f Makefile.pipeline remove-containers
+crun builder "make precheckin"
+result=$?
+make -f Makefile.pipeline remove-containers
+
+exit ${result}
