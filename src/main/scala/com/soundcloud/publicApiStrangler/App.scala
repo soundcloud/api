@@ -7,7 +7,7 @@ import com.soundcloud.bff.services.JsonService
 import com.soundcloud.follows.FollowsComponent
 import com.soundcloud.jvmkit.admin.{RequestMethod, AdminRoute}
 import com.soundcloud.jvmkit.config.ConfigConvention
-import com.soundcloud.jvmkit.{rollout => JvmkitRollout}
+import com.soundcloud.jvmkit.rollout.RolloutBuilder
 import com.soundcloud.publicApiStrangler.authorization.{AuthorizeHttpResponse, ContentAuthorizationFilter}
 import com.soundcloud.publicApiStrangler.controller._
 import com.soundcloud.publicApiStrangler.headers.DefaultResponseHeadersFilter
@@ -95,7 +95,7 @@ object App
       trackStreamSnipHandler)
   }
 
-  val jvmkitRollout = new JvmkitRollout.RolloutBuilder(config).build
+  val rollout = new RolloutBuilder(config).build
 
   private val rateLimitingFacade = new RateLimitingFacade(
     bffApplication,
@@ -104,7 +104,7 @@ object App
     config,
     telemetry,
     memcachedClient,
-    jvmkitRollout
+    rollout
   )
 
   private val userFollowController = new UserFollowController(
@@ -113,7 +113,7 @@ object App
     okidokiClient,
     followsClient,
     baseUrl,
-    jvmkitRollout
+    rollout
   )
 
   private val searchController = {
@@ -131,7 +131,7 @@ object App
     )
     val searchRepository = new SearchRepository(searchService)
     val searchMapper = new SearchMapper(searchRepository, entityMapper, baseUrl)
-    new SearchController(userAuthentication, searchMapper, baseUrl, jvmkitRollout, mothershipDispatcher)
+    new SearchController(userAuthentication, searchMapper, baseUrl, rollout, mothershipDispatcher)
   }
 
   private val similarSoundsController = {
