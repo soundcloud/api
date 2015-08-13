@@ -5,6 +5,7 @@ import com.soundcloud.bff.authorization.ContentAuthorizationService
 import com.soundcloud.bff.media.{MediaUrlsRepository, WaveformUrlsRepository}
 import com.soundcloud.bff.services.JsonService
 import com.soundcloud.follows.FollowsComponent
+import com.soundcloud.jvmkit.admin.{RequestMethod, AdminRoute}
 import com.soundcloud.jvmkit.config.ConfigConvention
 import com.soundcloud.jvmkit.{rollout => JvmkitRollout}
 import com.soundcloud.publicApiStrangler.authorization.{AuthorizeHttpResponse, ContentAuthorizationFilter}
@@ -26,6 +27,7 @@ import com.soundcloud.scalakit.{ResourceName, Urn}
 import com.soundcloud.service.component._
 import com.twitter.finagle.http.Request
 import com.twitter.finagle.http.filter.ExceptionFilter
+import org.eclipse.jetty.server.Handler
 
 object App
   extends BffInjectionBasedApp
@@ -173,7 +175,11 @@ object App
     searchController,
     similarSoundsController,
     robotsTxtController,
-    rateLimitingFacade.rateLimitStatusController,
-    rateLimitingFacade.rateLimitingDiagnosticsController
+    rateLimitingFacade.rateLimitStatusController
+  )
+
+  override val customAdminHandlers: Seq[(AdminRoute, Handler)] = Seq(
+    new AdminRoute(RequestMethod.GET, "/-/rate-limiting-diagnostics") ->
+      rateLimitingFacade.rateLimitingDiagnosticsAdminHandler
   )
 }

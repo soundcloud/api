@@ -9,7 +9,7 @@ object Build extends HttpServerAppBuild(
   ),
   specificLibDependencies = Seq(
       "com.soundcloud"     %% "follows-client"      % "0.0.2",
-      "com.soundcloud"     %% "ratelimitinglib"     % "0.1.12",
+      "com.soundcloud"     %% "ratelimitinglib"     % "0.2.0",
       "com.soundcloud"     %% "sc-services"         % "27.0.0",
       "com.fasterxml.uuid" %  "java-uuid-generator" % "3.1.3",
       "commons-codec"      %  "commons-codec"       % "1.9"
