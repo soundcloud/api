@@ -22,7 +22,7 @@ class TrackStreamSnipHandlerSpec extends UnitSpecification {
 
       val trackId = "334030"
       val request = mock[Request]
-      val paramMap = scala.collection.mutable.Map("trackId" -> trackId)
+      val paramMap = Map("trackId" -> trackId)
       request.routeParams returns paramMap
       val trackUrn = new Urn("soundcloud", "tracks", trackId)
 
@@ -35,7 +35,6 @@ class TrackStreamSnipHandlerSpec extends UnitSpecification {
 
       def responseBuilder(statusCode: Int) =
         Future.value(new ResponseBuilder().status(statusCode))
-
     }
 
     "should return pubapi response in case pubapi returns client error" in new Context {
