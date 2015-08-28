@@ -34,9 +34,7 @@ class EntityMapperSpec extends UnitSpecification with Fixtures {
       when(okidokiClient.fetch(===(session), any[Set[Urn]])).thenReturn(
         Future(okidokiFetch.as[List[JsObject]])
       )
-      when(lieblingClient.likesCounts(===(session), any[List[Urn]])).thenReturn(
-        Future(lieblingLikesInfo.as[JsObject])
-      )
+      when(lieblingClient.likeCounts(===(session), any[List[Urn]])).thenReturn(Future(lieblingLikesCounts))
     }
 
     def result = Await.result(mapper.materialize(session, urns))
