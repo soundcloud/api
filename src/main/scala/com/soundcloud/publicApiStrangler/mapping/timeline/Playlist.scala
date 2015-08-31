@@ -2,16 +2,16 @@ package com.soundcloud.publicApiStrangler.mapping.timeline
 
 import com.soundcloud.bff.nextbff.mapping.MappingContext
 import com.soundcloud.publicApiStrangler.mapper.timeline.EntitySummaryMapper
-import com.soundcloud.scalakit.Urn
+import com.soundcloud.service.response.representation.liebling.LikesCount
 import play.api.libs.json.JsValue
 
 class Playlist(jsonValue: JsValue,
-               likesByUrn: Map[Urn, Int],
+               likesCounts: Seq[LikesCount],
                baseUrl: String,
                entitySummaryMapper: EntitySummaryMapper)(implicit context: MappingContext)
   extends PlaylistSummary(jsonValue, baseUrl, entitySummaryMapper) {
 
-  val likes_count: Option[Any] = likesByUrn.get(urn)
+  val likes_count: Option[Any] = likesCounts.find(_.target_urn == urn).map(_.likes_count)
 
   // deprecated fields, kept for structure only
   val downloadable = None
@@ -21,5 +21,4 @@ class Playlist(jsonValue: JsValue,
   val ean = None
   val purchase_title = None
   val created_with = None
-
 }

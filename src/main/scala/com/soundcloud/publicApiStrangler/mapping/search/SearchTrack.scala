@@ -27,7 +27,7 @@ class SearchTrack(session: UserSession,
                   trackPurchaseLinkMapper: TrackPurchaseLinkMapper)
                  // Yep, that was my reaction, too.
                  (implicit if_this_is_named_context_then_serialization_fails: MappingContext)
-  extends Track(jsonValue, Map.empty, baseUrl, entitySummaryMapper) {
+  extends Track(jsonValue, Seq.empty, baseUrl, entitySummaryMapper) {
 
   val download_url = if (hasDownloadLink)
     (json \ "download_url").asOpt[String]
