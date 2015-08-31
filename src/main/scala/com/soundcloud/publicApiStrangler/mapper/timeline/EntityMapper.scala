@@ -8,6 +8,7 @@ import com.soundcloud.scalakit._
 import com.soundcloud.service.client.{LieblingClient, OkidokiClient}
 import com.soundcloud.service.response.representation.liebling.LikesCount
 import com.twitter.util.Future
+import com.soundcloud.scalakit.Urn.format
 import play.api.libs.json.JsObject
 
 class EntityMapper(okidokiClient: OkidokiClient,
@@ -22,7 +23,7 @@ class EntityMapper(okidokiClient: OkidokiClient,
 
     entitiesF.join(likesCountsF).map { case (entities, likesCounts) =>
       entities.map { entity =>
-        val urn = Urn((entity \ "self" \ "urn").as[String])
+        val urn = (entity \ "self" \ "urn").as[Urn]
         urn -> entityFor(urn, entity, likesCounts)
       }.toMap
     }
