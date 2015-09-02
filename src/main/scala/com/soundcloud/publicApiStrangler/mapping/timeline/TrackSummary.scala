@@ -27,8 +27,10 @@ class TrackSummary(jsonValue: JsValue,
   val user_id = userId
   val user_uri = s"$baseUrl/users/$userId"
 
+
   private def userId = (json \ "user" \ "urn").asOpt[String] match {
     case None => None
     case Some(urn) => Urn(urn).getIdentifier.toInt
   }
+
 }

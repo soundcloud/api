@@ -12,7 +12,7 @@ class SearchPlaylist(jsonValue: JsValue,
                      baseUrl: String,
                      playlistTracksMapper: PlaylistTracksMapper,
                      entitySummaryMapper: EntitySummaryMapper)(implicit context: MappingContext)
-  extends Playlist(jsonValue: JsValue, Seq.empty, baseUrl, entitySummaryMapper) {
+  extends Playlist(jsonValue: JsValue, Map.empty, baseUrl, entitySummaryMapper) {
 
   // we don't need these in search results
   override val secret_token = null

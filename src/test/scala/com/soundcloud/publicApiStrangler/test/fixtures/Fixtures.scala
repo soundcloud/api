@@ -1,8 +1,6 @@
 package com.soundcloud.publicApiStrangler.test.fixtures
 
 import com.soundcloud.bff.test.UnitSpecification
-import com.soundcloud.scalakit.Urn
-import com.soundcloud.service.response.representation.liebling.LikesCount
 
 trait Fixtures {
   this: UnitSpecification =>
@@ -19,11 +17,7 @@ trait Fixtures {
   val timelineStream = withContentsOf("timeline", "stream")
   val timelineActivities = withContentsOf("timeline", "activities")
 
-  val lieblingLikesCounts = List(
-    LikesCount(Urn("soundcloud:tracks:1"), 2L),
-    LikesCount(Urn("soundcloud:playlists:123"), 666L),
-    LikesCount(Urn("soundcloud:tracks:3"), 994L)
-  )
+  val lieblingLikesInfo = withContentsOf("liebling", "likes_info")
 
   val followsError = withContentsOf("follows", "follow_failed_normal")
   val followsAgeRestrictedError = withContentsOf("follows", "follow_failed_age_restricted")

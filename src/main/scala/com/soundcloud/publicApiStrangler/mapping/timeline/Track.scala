@@ -3,12 +3,11 @@ package com.soundcloud.publicApiStrangler.mapping.timeline
 import com.soundcloud.bff.nextbff.mapping.MappingContext
 import com.soundcloud.publicApiStrangler.mapper.timeline.EntitySummaryMapper
 import com.soundcloud.scalakit.Urn
-import com.soundcloud.service.response.representation.liebling.LikesCount
 import play.api.libs.json.JsValue
 
 
 class Track(jsonValue: JsValue,
-            likesCounts: Seq[LikesCount],
+            likesByUrn: Map[Urn, Int],
             baseUrl: String,
             entitySummaryMapper: EntitySummaryMapper)(implicit context: MappingContext)
   extends TrackSummary(jsonValue, baseUrl, entitySummaryMapper) {
@@ -47,7 +46,7 @@ class Track(jsonValue: JsValue,
   val track_type = (json \ "track_type").asOpt[String]
   val user = entitySummaryMapper.embed(Urn((json \ "user" \ "urn").as[String]))
   // Option[Any] so we can override with an embedded attribute when calling Liebling
-  val likes_count: Option[Any] = likesCounts.find(_.target_urn == urn).map(_.likes_count)
+  val likes_count: Option[Any] = likesByUrn.get(urn)
 
   // deprecated fields, kept for structure only
   val attachments_uri: Option[String] = None
@@ -57,4 +56,5 @@ class Track(jsonValue: JsValue,
   val user_favorite: Option[Any] = None
   val user_playback_count: Option[Int] = None
   val video_url: Option[String] = None
+
 }
