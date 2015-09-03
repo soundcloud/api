@@ -25,6 +25,9 @@ DEPLOY_SCRIPT ?= $(shell gen-deploy-script --arch=linux --name=public-api-strang
 unit-test:
 	crun $(BUILD_STACK) 'make unit-test'
 
+integration-test:
+	crun $(BUILD_STACK) 'make integration-test'
+
 package: prepare-package-layout
 	docker pull docker.dev.s-cloud.net/$(RUNTIME_STACK):latest
 	artifact-manager package --runtime=$(RUNTIME_STACK)
