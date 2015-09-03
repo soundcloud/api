@@ -25,7 +25,7 @@
         },
         {
           "integration-tests": {
-            "cmd": "make -f Makefile.pipeline integration-test",
+            "cmd": "make -f Makefile.pipeline remove-containers integration-test remove-containers",
             "no-clean": true
           }
         }
