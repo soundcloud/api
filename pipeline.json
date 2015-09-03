@@ -22,6 +22,12 @@
             "cmd": "make -f Makefile.pipeline package publish",
             "no-clean": true
           }
+        },
+        {
+          "integration-tests": {
+            "cmd": "make -f Makefile.pipeline integration-test",
+            "no-clean": true
+          }
         }
       ],
       "next-stages": [

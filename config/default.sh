@@ -21,7 +21,7 @@ MEMCACHED_PORT="11211"
 MEMCACHED_TEST_HOST="$DOCKER_IP"
 MEMCACHED_TEST_PORT="11211"
 
-ZOOKEEPER_SERVERS="${DOCKER_IP}:2181,${DOCKER_IP}:2888,${DOCKER_IP}:3888"
+ZOOKEEPER_SERVERS="${DOCKER_IP}:2181"
 
 AUTHENTICATOR_SRV_RECORD="dnssrv!http.api.prod.authenticator.dd.srv.int.s-cloud.net"
 AUTHSY_SRV_RECORD="dnssrv!http.api.prod.authsy.dd.srv.int.s-cloud.net"
