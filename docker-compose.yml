@@ -9,6 +9,12 @@ zookeeper:
   ports:
     - "2181:2181"
 
+dev:
+  image: docker.dev.s-cloud.net/base-dev
+  links:
+    - memcached:memcached
+    - zookeeper:zookeeper
+
 # This container is only ever used by tests.
 publicapistrangler:
   image: docker.dev.s-cloud.net/public-api-strangler:${PUBLIC_API_STRANGLER_VERSION}
