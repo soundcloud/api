@@ -1,7 +1,7 @@
 SBT := vendor/sbt/bin/sbt -Duser.home=$(shell echo "$$HOME") -Dsbt.boot.properties=project/sbt.boot.properties -J-Xmx3G -J-Xms512m
 
 run: _dev_docker_compose
-	./bin/source-config --config=config/default.sh $(SBT) run
+	./bin/source-configuration.sh --config=config/default.sh $(SBT) run
 
 precheckin: unit-test integration-test
 
