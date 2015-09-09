@@ -11,7 +11,11 @@ function main {
 
 function start_server {
     make run 2> /dev/null &
-    sleep 30
+    endpoint="http://127.0.0.1:5000/-/health"
+    until $(curl --output /dev/null --silent --fail $endpoint); do
+        echo "Waiting for $endpoint"
+        sleep 5
+    done
 }
 
 main
