@@ -1,0 +1,17 @@
+#!/bin/bash
+
+function main {
+    start_server
+    SERVER_PID=$(jobs -l | awk '{ print $2 }')
+    SERVER_HOST=localhost make run-local-integration-test
+    RESULT=$?
+    kill $SERVER_PID
+    exit $RESULT
+}
+
+function start_server {
+    make run 2> /dev/null &
+    sleep 30
+}
+
+main

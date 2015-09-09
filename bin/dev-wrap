@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+# bin/devwrap This script is used to source a configuration file and make it available in Makefiles and development
+# targets, currently lives inside the project, until further abstracted in a specific cd-tool designed for this purpose
+set -e
+
+DIR=$( cd "$( dirname "$BASH_SOURCE[0]" )" && pwd )
+
+# parse command line for --config and load configuration file
+
+if [[ "$1" == --config=* ]]; then
+  config_file=$DIR/../$(echo $1 | awk -F= '{print $2}')
+fi
+
+if [ -z "$config_file" ]; then
+	echo "usage: create-db --config=<config file>"
+	exit 1
+fi
+
+if [ ! -f "$config_file" ]; then
+  echo "could not load configuraton file $config_file"
+  exit 1
+fi
+echo "loading configuration from $config_file"
+set -a
+source $config_file
+set +a
+shift
+exec $@

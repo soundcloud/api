@@ -15,6 +15,7 @@ class RateLimitingSanitySpecification extends UnitSpecification with SpinningUpA
     val adminServer = TestServer(dockerBasedHost, 5001)
 
     val config = new BazookaConfig
+
     val zookeeperClient = {
       val zookeeperServers = config.get(new ResourceName("ZOOKEEPER"), ConfigConvention.SERVERS)
       val baseSleepTimeInMilliseconds = 1000
@@ -28,6 +29,10 @@ class RateLimitingSanitySpecification extends UnitSpecification with SpinningUpA
   }
 
   "Public API strangler" should {
+    "do a thing" in new Context {
+      server.get(s"/").status ==== 401
+    }
+
     "rate limit test requests" in new Context {
       zookeeperClient.setData("/public-api-strangler/rollouts/wire-rate-limits", "100")
       zookeeperClient.setData("/public-api-strangler/rollouts/probe-rate-limits", "100")
@@ -56,8 +61,8 @@ class RateLimitingSanitySpecification extends UnitSpecification with SpinningUpA
       server.get(s"/tracks/13158665.json?client_id=${GratisMusikDiebstahl.clientId}").status ==== 200
       server.get(s"/tracks/13158665.json?client_id=${GratisMusikDiebstahl.clientId}").status ==== 200
       server.get(s"/tracks/13158665.json?client_id=${GratisMusikDiebstahl.clientId}").status ==== 200
-      
+
       server.get(s"/tracks/13158665.json?client_id=${GratisMusikDiebstahl.clientId}").status ==== 429
-    }.pendingUntilFixed("Unsure what the issue is. Marking as pending to unblock the pipeline.")
+    }
   }
 }
