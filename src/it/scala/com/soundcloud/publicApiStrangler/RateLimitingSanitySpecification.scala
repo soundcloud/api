@@ -29,15 +29,11 @@ class RateLimitingSanitySpecification extends UnitSpecification with SpinningUpA
   }
 
   "Public API strangler" should {
-    "do a thing" in new Context {
-      server.get(s"/").status ==== 401
-    }
-
     "rate limit test requests" in new Context {
-      zookeeperClient.setData("/public-api-strangler/rollouts/wire-rate-limits", "100")
-      zookeeperClient.setData("/public-api-strangler/rollouts/probe-rate-limits", "100")
-      zookeeperClient.setData("/public-api-strangler/rollouts/enforce-rate-limits", "100")
-      zookeeperClient.setData("/ratelimiting/public-api-strangler/ratelimitgroups/default",
+      zookeeperClient.setData("/publicapistrangler/rollouts/wire-rate-limits", "100")
+      zookeeperClient.setData("/publicapistrangler/rollouts/probe-rate-limits", "100")
+      zookeeperClient.setData("/publicapistrangler/rollouts/enforce-rate-limits", "100")
+      zookeeperClient.setData("/ratelimiting/publicapistrangler/ratelimitgroups/default",
         """
           |{
           |  "id":"default",
@@ -49,7 +45,7 @@ class RateLimitingSanitySpecification extends UnitSpecification with SpinningUpA
           |        {
           |          "bucket":"by-client",
           |          "time_window":"PT1M",
-          |          "max_nr_of_requests":3
+          |          "max_nr_of_requests":1
           |        }
           |      ],
           |      "mode":"enforcing"
