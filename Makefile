@@ -8,7 +8,7 @@ precheckin: unit-test local-integration-test
 PUBLIC_API_STRANGLER_VERSION ?= $(shell PIPELINE_NUMBER=$(PIPELINE_NUMBER) artifact-manager package-version)
 
 _testing_publicapistrangler:
-	bin/replace-var.sh docker-compose.yml /tmp/integrationcompose.yml PUBLIC_API_STRANGLER_VERSION=latest PORT=5000 TELE_PORT=5001 DOCKER_IP=$(shell docker-ip)
+	bin/replace-var.sh docker-compose.yml /tmp/integrationcompose.yml PUBLIC_API_STRANGLER_VERSION=$(PUBLIC_API_STRANGLER_VERSION) PORT=5000 TELE_PORT=5001 DOCKER_IP=$(shell docker-ip)
 	docker-compose -f /tmp/integrationcompose.yml -p publicapistrangler up -d publicapistrangler
 
 integration-test: _testing_publicapistrangler
