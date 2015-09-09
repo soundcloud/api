@@ -28,7 +28,12 @@ class RateLimitingSanitySpecification extends UnitSpecification with SpinningUpA
     }
   }
 
-  "Public API strangler" should {
+  "Public API Strangler" should {
+
+    "have the correct app name" in new Context {
+      config.getApplicationName ==== "publicapistrangler"
+    }
+
     "rate limit test requests" in new Context {
       zookeeperClient.setData("/publicapistrangler/rollouts/wire-rate-limits", "100")
       zookeeperClient.setData("/publicapistrangler/rollouts/probe-rate-limits", "100")
