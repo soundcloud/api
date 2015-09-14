@@ -30,15 +30,11 @@ class RateLimitingSanitySpecification extends UnitSpecification with SpinningUpA
 
   "Public API Strangler" should {
 
-    "have the correct app name" in new Context {
-      config.getApplicationName ==== "publicapistrangler"
-    }
-
     "rate limit test requests" in new Context {
       zookeeperClient.setData("/publicapistrangler/rollouts/wire-rate-limits", "100")
       zookeeperClient.setData("/publicapistrangler/rollouts/probe-rate-limits", "100")
       zookeeperClient.setData("/publicapistrangler/rollouts/enforce-rate-limits", "100")
-      zookeeperClient.setData("/ratelimiting/publicapistrangler/ratelimitgroups/default",
+      zookeeperClient.setData("/ratelimiting/public-api-strangler/ratelimitgroups/default",
         """
           |{
           |  "id":"default",
@@ -50,7 +46,7 @@ class RateLimitingSanitySpecification extends UnitSpecification with SpinningUpA
           |        {
           |          "bucket":"by-client",
           |          "time_window":"PT1M",
-          |          "max_nr_of_requests":1
+          |          "max_nr_of_requests":3
           |        }
           |      ],
           |      "mode":"enforcing"
@@ -59,11 +55,13 @@ class RateLimitingSanitySpecification extends UnitSpecification with SpinningUpA
           |}
         """.stripMargin)
 
-      server.get(s"/tracks/13158665.json?client_id=${GratisMusikDiebstahl.clientId}").status ==== 200
-      server.get(s"/tracks/13158665.json?client_id=${GratisMusikDiebstahl.clientId}").status ==== 200
-      server.get(s"/tracks/13158665.json?client_id=${GratisMusikDiebstahl.clientId}").status ==== 200
+      val r1 = server.get(s"/tracks/13158665.json?client_id=${GratisMusikDiebstahl.clientId}")
+      println(r1.body)
+      r1.status ==== 200
+      val r2 = server.get(s"/tracks/13158665.json?client_id=${GratisMusikDiebstahl.clientId}").status ==== 200
+      val r3 = server.get(s"/tracks/13158665.json?client_id=${GratisMusikDiebstahl.clientId}").status ==== 200
 
       server.get(s"/tracks/13158665.json?client_id=${GratisMusikDiebstahl.clientId}").status ==== 429
-    }.pendingUntilFixed("Work out why this fails")
+    }
   }
 }
