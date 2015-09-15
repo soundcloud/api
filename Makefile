@@ -1,4 +1,6 @@
 SBT := vendor/sbt/bin/sbt -Duser.home=$(shell echo "$$HOME") -Dsbt.boot.properties=project/sbt.boot.properties -J-Xmx3G -J-Xms512m
+DEFAULT_CONFIG := bin/dev-wrap --config=config/default.sh
+INTEGRATION_CONFIG := bin/dev-wrap --config=config/integration.sh
 
 PUBLIC_API_STRANGLER_VERSION ?= $(shell PIPELINE_NUMBER=$(PIPELINE_NUMBER) artifact-manager package-version)
 
@@ -10,24 +12,24 @@ _dev_docker_compose:
 	docker-compose up -d dev
 
 _run-local-integration-test:
-	bin/dev-wrap --config=config/default.sh $(SBT) it:test
+	$(DEFAULT_CONFIG) $(SBT) it:test
 
 run: _dev_docker_compose
-	bin/dev-wrap --config=config/default.sh $(SBT) run
+	$(DEFAULT_CONFIG) $(SBT) run
 
 precheckin: unit-test local-integration-test
 
 integration-test: _local_container
-	bin/dev-wrap --config=config/integration.sh $(SBT) it:test
+	$(INTEGRATION_CONFIG) $(SBT) it:test
 
 local-integration-test:
 	bin/local-integration-test
 
 unit-test:
-	bin/dev-wrap --config=config/default.sh $(SBT) test
+	$(DEFAULT_CONFIG) $(SBT) test
 
 interactive: _dev_docker_compose
-	bin/dev-wrap --config=config/default.sh $(SBT)
+	$(DEFAULT_CONFIG) $(SBT)
 
 compile:
 	$(SBT) compile
