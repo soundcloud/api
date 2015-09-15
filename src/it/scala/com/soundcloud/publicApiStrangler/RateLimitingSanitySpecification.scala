@@ -55,11 +55,9 @@ class RateLimitingSanitySpecification extends UnitSpecification with SpinningUpA
           |}
         """.stripMargin)
 
-      val r1 = server.get(s"/tracks/13158665.json?client_id=${GratisMusikDiebstahl.clientId}")
-      println(r1.body)
-      r1.status ==== 200
-      val r2 = server.get(s"/tracks/13158665.json?client_id=${GratisMusikDiebstahl.clientId}").status ==== 200
-      val r3 = server.get(s"/tracks/13158665.json?client_id=${GratisMusikDiebstahl.clientId}").status ==== 200
+      server.get(s"/tracks/13158665.json?client_id=${GratisMusikDiebstahl.clientId}").status ==== 200
+      server.get(s"/tracks/13158665.json?client_id=${GratisMusikDiebstahl.clientId}").status ==== 200
+      server.get(s"/tracks/13158665.json?client_id=${GratisMusikDiebstahl.clientId}").status ==== 200
 
       server.get(s"/tracks/13158665.json?client_id=${GratisMusikDiebstahl.clientId}").status ==== 429
     }

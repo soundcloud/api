@@ -3,7 +3,7 @@
 function main {
     start_server
     SERVER_PID=$(jobs -l | awk '{ print $2 }')
-    SERVER_HOST=localhost make run-local-integration-test
+    SERVER_HOST=localhost make _run-local-integration-test
     RESULT=$?
     kill $SERVER_PID
     exit $RESULT
