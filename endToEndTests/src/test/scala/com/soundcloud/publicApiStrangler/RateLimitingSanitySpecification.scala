@@ -1,9 +1,9 @@
 package com.soundcloud.publicApiStrangler
 
-import com.soundcloud.bff.test.UnitSpecification
 import com.soundcloud.jvmkit.ResourceName
 import com.soundcloud.jvmkit.config.{BazookaConfig, ConfigConvention}
 import com.soundcloud.jvmkit.rollout.ZookeeperClient
+import com.soundcloud.scalakit.test.UnitSpecification
 import com.soundcloud.testutilities.{GratisMusikDiebstahl, SpinningUpAppSupport}
 import org.apache.curator.framework.CuratorFrameworkFactory
 import org.apache.curator.retry.ExponentialBackoffRetry

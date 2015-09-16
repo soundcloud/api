@@ -7,7 +7,7 @@ _dev_docker_compose:
 	docker-compose up -d dev
 
 _run-integration-test:
-	$(DEFAULT_CONFIG) $(SBT) it:test
+	$(DEFAULT_CONFIG) $(SBT) endToEnd/test
 
 run: _dev_docker_compose
 	$(DEFAULT_CONFIG) $(SBT) run
@@ -17,7 +17,7 @@ precheckin: unit-test local-integration-test
 ci-integration-test:
 	bin/replace-var docker-compose.yml /tmp/integrationcompose.yml PUBLIC_API_STRANGLER_VERSION=$(PUBLIC_API_STRANGLER_VERSION) PORT=5000 TELE_PORT=5001 DOCKER_IP=$(shell docker-ip)
 	docker-compose -f /tmp/integrationcompose.yml -p publicapistrangler up -d publicapistrangler
-	bin/dev-wrap --config=config/integration.sh $(SBT) it:test
+	bin/dev-wrap --config=config/integration.sh $(SBT) endToEnd/test
 
 integration-test:
 	bin/integration-test

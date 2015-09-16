@@ -23,9 +23,11 @@ object Build extends HttpServerAppBuild(
     base = file("endToEndTests"),
     settings = generalSettings ++
       Seq(
-        libraryDependencies ++= server.libDependencies,
-        libraryDependencies ++= Seq("com.soundcloud" %% "bff" % "20.1.0")
+        libraryDependencies ++= Seq(
+          "org.specs2" %% "specs2-core" % "3.6.4",
+          "org.specs2" %% "specs2-mock" % "3.6.4",
+          "com.soundcloud" %% "jvmkit" % "20.2.0"
+        )
       )
-  )
-
+    )
 }
