@@ -12,7 +12,7 @@ _run-integration-test:
 run: _dev_docker_compose
 	$(DEFAULT_CONFIG) $(SBT) run
 
-precheckin: unit-test local-integration-test
+precheckin: unit-test integration-test
 
 ci-integration-test:
 	bin/replace-var docker-compose.yml /tmp/integrationcompose.yml PUBLIC_API_STRANGLER_VERSION=$(PUBLIC_API_STRANGLER_VERSION) PORT=5000 TELE_PORT=5001 DOCKER_IP=$(shell docker-ip)
