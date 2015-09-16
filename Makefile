@@ -1,12 +1,7 @@
 SBT := vendor/sbt/bin/sbt -Duser.home=$(shell echo "$$HOME") -Dsbt.boot.properties=project/sbt.boot.properties -J-Xmx3G -J-Xms512m
 DEFAULT_CONFIG := bin/dev-wrap --config=config/default.sh
-INTEGRATION_CONFIG := bin/dev-wrap --config=config/integration.sh
 
 PUBLIC_API_STRANGLER_VERSION ?= $(shell PIPELINE_NUMBER=$(PIPELINE_NUMBER) artifact-manager package-version)
-
-_local_container:
-	bin/replace-var docker-compose.yml /tmp/integrationcompose.yml PUBLIC_API_STRANGLER_VERSION=$(PUBLIC_API_STRANGLER_VERSION) PORT=5000 TELE_PORT=5001 DOCKER_IP=$(shell docker-ip)
-	docker-compose -f /tmp/integrationcompose.yml -p publicapistrangler up -d publicapistrangler
 
 _dev_docker_compose:
 	docker-compose up -d dev
@@ -19,8 +14,10 @@ run: _dev_docker_compose
 
 precheckin: unit-test local-integration-test
 
-integration-test: _local_container
-	$(INTEGRATION_CONFIG) $(SBT) it:test
+ci-integration-test:
+	bin/replace-var docker-compose.yml /tmp/integrationcompose.yml PUBLIC_API_STRANGLER_VERSION=$(PUBLIC_API_STRANGLER_VERSION) PORT=5000 TELE_PORT=5001 DOCKER_IP=$(shell docker-ip)
+	docker-compose -f /tmp/integrationcompose.yml -p publicapistrangler up -d publicapistrangler
+	bin/dev-wrap --config=config/integration.sh $(SBT) it:test
 
 local-integration-test:
 	bin/local-integration-test
