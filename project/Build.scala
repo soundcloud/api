@@ -1,5 +1,6 @@
 import com.soundcloud.jvmkit.sbt.{BffApi, JvmkitApp, HttpServerAppBuild}
 import sbt._
+import sbt.Keys._
 
 object Build extends HttpServerAppBuild(
   JvmkitApp(
@@ -16,5 +17,15 @@ object Build extends HttpServerAppBuild(
   ),
   mainClass = "com.soundcloud.publicApiStrangler.App"
 ) {
-  val endToEnd = Project(id = "endToEnd", base = file("endToEndTests")).dependsOn(serverProject)
+
+  lazy val endToEnd = Project(
+    id = "endToEnd",
+    base = file("endToEndTests"),
+    settings = generalSettings ++
+      Seq(
+        libraryDependencies ++= server.libDependencies,
+        libraryDependencies ++= Seq("com.soundcloud" %% "bff" % "20.1.0")
+      )
+  )
+
 }
