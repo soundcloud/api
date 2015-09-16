@@ -6,7 +6,7 @@ PUBLIC_API_STRANGLER_VERSION ?= $(shell PIPELINE_NUMBER=$(PIPELINE_NUMBER) artif
 _dev_docker_compose:
 	docker-compose up -d dev
 
-_run-local-integration-test:
+_run-integration-test:
 	$(DEFAULT_CONFIG) $(SBT) it:test
 
 run: _dev_docker_compose
@@ -19,8 +19,8 @@ ci-integration-test:
 	docker-compose -f /tmp/integrationcompose.yml -p publicapistrangler up -d publicapistrangler
 	bin/dev-wrap --config=config/integration.sh $(SBT) it:test
 
-local-integration-test:
-	bin/local-integration-test
+integration-test:
+	bin/integration-test
 
 unit-test:
 	$(DEFAULT_CONFIG) $(SBT) test
