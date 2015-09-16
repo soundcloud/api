@@ -15,4 +15,6 @@ object Build extends HttpServerAppBuild(
     "commons-codec"      %  "commons-codec"       % "1.9"
   ),
   mainClass = "com.soundcloud.publicApiStrangler.App"
-)
+) {
+  val endToEnd = Project(id = "endToEnd", base = file("endToEndTests")).dependsOn(serverProject)
+}
