@@ -6,21 +6,21 @@ PUBLIC_API_STRANGLER_VERSION ?= $(shell PIPELINE_NUMBER=$(PIPELINE_NUMBER) artif
 _dev_docker_compose:
 	docker-compose up -d dev
 
-_run-integration-test:
+_run-end-to-end-test:
 	$(DEFAULT_CONFIG) $(SBT) endToEnd/test
 
 run: _dev_docker_compose
 	$(DEFAULT_CONFIG) $(SBT) run
 
-precheckin: unit-test integration-test
+precheckin: unit-test end-to-end-test
 
-ci-integration-test:
+ci-end-to-end-test:
 	bin/replace-var docker-compose.yml /tmp/integrationcompose.yml PUBLIC_API_STRANGLER_VERSION=$(PUBLIC_API_STRANGLER_VERSION) PORT=5000 TELE_PORT=5001 DOCKER_IP=$(shell docker-ip)
 	docker-compose -f /tmp/integrationcompose.yml -p publicapistrangler up -d publicapistrangler
 	bin/dev-wrap --config=config/integration.sh $(SBT) endToEnd/test
 
-integration-test:
-	bin/integration-test
+end-to-end-test:
+	bin/end-to-end-test
 
 unit-test:
 	$(DEFAULT_CONFIG) $(SBT) test

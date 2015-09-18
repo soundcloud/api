@@ -24,8 +24,8 @@
           }
         },
         {
-          "integration-tests": {
-            "cmd": "make -f Makefile.pipeline remove-containers integration-test remove-containers",
+          "end-to-end-tests": {
+            "cmd": "make -f Makefile.pipeline remove-containers end-to-end-test remove-containers",
             "no-clean": true
           }
         }
