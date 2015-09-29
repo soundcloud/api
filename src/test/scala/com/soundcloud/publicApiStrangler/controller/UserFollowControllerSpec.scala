@@ -33,7 +33,7 @@ class UserFollowControllerSpec extends InjectionBasedControllerSpecification wit
 
     val now = System.currentTimeMillis()
 
-    override def before = {
+    override def before: Any = {
       DateTimeUtils.setCurrentMillisFixed(now)
       rollout.isActiveForUrn(BasicRolloutFeature("follows-reads"), userUrn) returns Future.True
       rollout.isActiveForUrn(BasicRolloutFeature("follows-writes"), userUrn) returns Future.True
@@ -48,7 +48,7 @@ class UserFollowControllerSpec extends InjectionBasedControllerSpecification wit
   trait FallbackContext extends Context {
     val expectedResponse = Response(Status.Ok)
 
-    override def before = {
+    override def before: Any = {
       super.before
       rollout.isActiveForUrn(BasicRolloutFeature("follows-reads"), userUrn) returns Future.False
       rollout.isActiveForUrn(BasicRolloutFeature("follows-writes"), userUrn) returns Future.False
@@ -61,9 +61,7 @@ class UserFollowControllerSpec extends InjectionBasedControllerSpecification wit
     "fetches followings" in new Context {
       override def before = {
         super.before
-        val values = Seq(
-          userUrn, Urn("soundcloud:users:100")
-        )
+        val values = Seq(userUrn, Urn("soundcloud:users:100"))
         val pageInfo = PageInfo(Some("123-1234"), 2)
         followsMock.followersFollowed(session, userUrn, Urn("soundcloud:users:2")) returns Future.value(UrnsPage(values))
         okidokiMock.fetch(session, values.toSet) returns Future.value(okidokiUsers.as[List[JsObject]])

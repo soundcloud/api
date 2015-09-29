@@ -15,7 +15,7 @@ class DispatchToMothershipHandler(mothershipClient: Service[HttpRequest, HttpRes
   }
 
   def dispatch(request:Request) : Future[ResponseBuilder] = {
-    dispatchToMothership(request).map(toResponseBuilder(_))
+    dispatchToMothership(request).map(toResponseBuilder)
   }
 
   private def dispatchToMothership(request:Request) : Future[Response] = {
@@ -29,7 +29,7 @@ class DispatchToMothershipHandler(mothershipClient: Service[HttpRequest, HttpRes
     }
   }
 
-  private def toResponseBuilder(response : Response) : ResponseBuilder = {
+  private def toResponseBuilder(response: Response) : ResponseBuilder = {
     val headerMap = response.headers().entries().map(entry => (entry.getKey, entry.getValue)).toMap
     new ResponseBuilder()
       .status(response.getStatus.getCode)

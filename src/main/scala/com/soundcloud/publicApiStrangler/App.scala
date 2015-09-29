@@ -5,7 +5,8 @@ import com.soundcloud.bff.authorization.ContentAuthorizationService
 import com.soundcloud.bff.media.{MediaUrlsRepository, WaveformUrlsRepository}
 import com.soundcloud.bff.services.JsonService
 import com.soundcloud.follows.FollowsComponent
-import com.soundcloud.jvmkit.admin.{RequestMethod, AdminRoute}
+import com.soundcloud.jvmkit.ResourceName
+import com.soundcloud.jvmkit.admin.{AdminRoute, RequestMethod}
 import com.soundcloud.jvmkit.config.ConfigConvention
 import com.soundcloud.jvmkit.rollout.RolloutBuilder
 import com.soundcloud.publicApiStrangler.authorization.{AuthorizeHttpResponse, ContentAuthorizationFilter}
@@ -23,10 +24,8 @@ import com.soundcloud.publicApiStrangler.mapper.waveform.WaveformMapper
 import com.soundcloud.publicApiStrangler.support._
 import com.soundcloud.publicApiStrangler.zookeeper.CuratorFrameworkFactory
 import com.soundcloud.ratelimiting.facade._
-import com.soundcloud.scalakit.{ResourceName, Urn}
+import com.soundcloud.scalakit.Urn
 import com.soundcloud.service.component._
-import com.twitter.finagle.http.Request
-import com.twitter.finagle.http.filter.ExceptionFilter
 import org.eclipse.jetty.server.Handler
 
 object App
@@ -161,7 +160,7 @@ object App
   override val fallbackHandler = Some(mothershipDispatcher)
 
   override lazy val additionalFilters = List(
-    new ExceptionFilter[Request],
+//    new ExceptionFilter[Request],
     new AcceptOnlyJsonRequestFilter(Set("/crossdomain.xml", "/robots.txt")),
     new ContentAuthorizationFilter(authorizeContent),
     rateLimitingFacade.filter,
