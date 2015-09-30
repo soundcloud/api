@@ -1,19 +1,16 @@
 package com.soundcloud.publicApiStrangler.support
 
-import com.soundcloud.scalakit.test.UnitSpecification
+import com.soundcloud.scalakit.finagle.http.RouterResponse
+import com.soundcloud.scalakit.test.{UnitSpecification, VerifiedMocks}
 import com.twitter.finagle.Service
-import com.twitter.finagle.http.Request
-import com.twitter.finagle.http.Response
-import com.twitter.util.Await
-import com.twitter.finagle.http.MediaType
-import com.soundcloud.scalakit.test.VerifiedMocks
-import com.twitter.util.Future
+import com.twitter.finagle.http.{MediaType, Request}
+import com.twitter.util.{Await, Future}
 import org.mockito.Mockito._
 
 class AcceptOnlyJsonRequestFilterSpec extends UnitSpecification {
 
   trait Context extends VerifiedMocks {
-    val next = mock[Service[Request, Response]]
+    val next = mock[Service[Request, RouterResponse]]
     val overridePath = "/testoverride.xml"
     val filter = new AcceptOnlyJsonRequestFilter(Set(overridePath))
     val request: Request
@@ -41,7 +38,7 @@ class AcceptOnlyJsonRequestFilterSpec extends UnitSpecification {
         val request = Request()
         request.accept = header
 
-        val responseFromNextService = mock[Response]
+        val responseFromNextService = mock[RouterResponse]
         when(next.apply(request))
           .thenReturn(Future.value(responseFromNextService))
 
@@ -52,7 +49,7 @@ class AcceptOnlyJsonRequestFilterSpec extends UnitSpecification {
     "using the json suffix" in new Context {
       val request = Request("/test.json")
 
-      val responseFromNextService = mock[Response]
+      val responseFromNextService = mock[RouterResponse]
       when(next.apply(request))
         .thenReturn(Future.value(responseFromNextService))
 
@@ -61,7 +58,7 @@ class AcceptOnlyJsonRequestFilterSpec extends UnitSpecification {
 
     "without the header and extension" in new Context {
       val request = Request()
-      val responseFromNextService = mock[Response]
+      val responseFromNextService = mock[RouterResponse]
       when(verified(next).apply(request))
         .thenReturn(Future.value(responseFromNextService))
 
@@ -71,7 +68,7 @@ class AcceptOnlyJsonRequestFilterSpec extends UnitSpecification {
 
   "allows requests to overriden paths" in new Context {
     val request = Request(overridePath)
-    val responseFromNextService = mock[Response]
+    val responseFromNextService = mock[RouterResponse]
     when(verified(next).apply(request))
       .thenReturn(Future.value(responseFromNextService))
 

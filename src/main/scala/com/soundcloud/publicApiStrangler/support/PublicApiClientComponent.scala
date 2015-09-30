@@ -1,15 +1,15 @@
 package com.soundcloud.publicApiStrangler.support
 
 import com.soundcloud.bff.ConfigComponent
+import com.soundcloud.jvmkit.ResourceName
+import com.soundcloud.jvmkit.config.ConfigConvention
 import com.soundcloud.jvmkit.telemetry.Telemetry
-import com.soundcloud.scalakit.ResourceName
 import com.soundcloud.scalakit.finagle.http.{OutgoingHttpRequestMonitoringFilter, TracingHttp}
 import com.soundcloud.scalakit.finagle.zipkin.ZipkinTracer
 import com.twitter.finagle.Service
 import com.twitter.finagle.builder.ClientBuilder
 import com.twitter.util.TimeConversions._
 import org.jboss.netty.handler.codec.http.{HttpRequest, HttpResponse}
-import com.soundcloud.jvmkit.config.ConfigConvention
 
 trait PublicApiClientComponent {
   this: ConfigComponent =>
@@ -34,8 +34,11 @@ trait PublicApiClientComponent {
         .requestTimeout(30.seconds)
         .tcpConnectTimeout(5.seconds)
         .build()
+    val requestLatencyBuckets = config.get(ResourceName("DEFAULT"), ConfigConvention.REQUEST_LATENCY_BUCKETS,
+      Telemetry.DEFAULT_REQUEST_LATENCY_BUCKETS_MS).split(",").map(_.toDouble)
     val filter =
-      new OutgoingHttpRequestMonitoringFilter[HttpRequest, HttpResponse](ResourceName(svcName), new Telemetry(config))
+      new OutgoingHttpRequestMonitoringFilter[HttpRequest, HttpResponse](ResourceName(svcName), new Telemetry(config),
+        requestLatencyBuckets)
 
     filter andThen client
   }

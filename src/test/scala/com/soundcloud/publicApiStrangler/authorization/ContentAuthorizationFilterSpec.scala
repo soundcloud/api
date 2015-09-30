@@ -3,7 +3,7 @@ package com.soundcloud.publicApiStrangler.authorization
 import com.soundcloud.bff.finagle.{ResponseBuilder, Request => BffRequest}
 import com.soundcloud.bff.test.UnitSpecification
 import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures
-import com.soundcloud.scalakit.finagle.http.{AlwaysMatchesPathMatcher, HandlerRequest}
+import com.soundcloud.scalakit.finagle.http.{RouterResponse, AlwaysMatchesPathMatcher, HandlerRequest}
 import com.twitter.finagle.Service
 import com.twitter.finagle.http.{Request => FinagleRequest, Response => FinagleResponse}
 import com.twitter.util.{Await, Future}
@@ -12,9 +12,9 @@ class ContentAuthorizationFilterSpec extends UnitSpecification with Fixtures {
 
   trait Context extends Scope {
     val someRequest = new HandlerRequest(AlwaysMatchesPathMatcher, FinagleRequest("/something")).request
-    val service = mock[Service[FinagleRequest, FinagleResponse]]
+    val service = mock[Service[FinagleRequest, RouterResponse]]
     val authorizeContent = mock[AuthorizeHttpResponse]
-    val originalResponse = FinagleResponse()
+    val originalResponse = RouterResponse(FinagleResponse(), "undefined")
     val contentAuthorizationFilter = new ContentAuthorizationFilter(authorizeContent)
   }
 
