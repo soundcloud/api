@@ -26,7 +26,10 @@ import com.soundcloud.publicApiStrangler.zookeeper.CuratorFrameworkFactory
 import com.soundcloud.ratelimiting.facade._
 import com.soundcloud.scalakit.Urn
 import com.soundcloud.service.component._
+import com.twitter.finagle.CancelledRequestException
+import com.twitter.finagle.http.Response
 import org.eclipse.jetty.server.Handler
+import org.jboss.netty.handler.codec.http.{HttpResponseStatus, HttpVersion}
 
 object App
   extends BffInjectionBasedApp
@@ -159,8 +162,12 @@ object App
 
   override val fallbackHandler = Some(mothershipDispatcher)
 
+  override def exceptionHandler: PartialFunction[Throwable, Response] = {
+    case ex: CancelledRequestException =>
+      Response(HttpVersion.HTTP_1_1, new HttpResponseStatus(499, "Client Closed Request"))
+  }
+
   override lazy val additionalFilters = List(
-//    new ExceptionFilter[Request],
     new AcceptOnlyJsonRequestFilter(Set("/crossdomain.xml", "/robots.txt")),
     new ContentAuthorizationFilter(authorizeContent),
     rateLimitingFacade.filter,
