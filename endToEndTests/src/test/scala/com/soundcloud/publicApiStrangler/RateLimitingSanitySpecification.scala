@@ -17,7 +17,7 @@ class RateLimitingSanitySpecification extends UnitSpecification with SpinningUpA
     val config = new BazookaConfig
 
     val zookeeperClient = {
-      val zookeeperServers = config.get(ResourceName("ZOOKEEPER"), ConfigConvention.SERVERS)
+      val zookeeperServers = config.get(new ResourceName("ZOOKEEPER"), ConfigConvention.SERVERS)
       val baseSleepTimeInMilliseconds = 1000
       val maxNumberOfRetries = 5
       val retryPolicy = new ExponentialBackoffRetry(baseSleepTimeInMilliseconds, maxNumberOfRetries)
