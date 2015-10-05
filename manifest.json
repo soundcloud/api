@@ -3,6 +3,7 @@
     "description": "An implementation of the Strangler Pattern for the mothership's Public API",
     "contact_email": "core-services@soundcloud.com",
     "owner": "core-services",
+    "type": "external_service",
     "status": "production",
     "alert_service": "https://sndcld.pagerduty.com/services/PVZLXKQ",
     "telemetry_dashboard": "http://promdash/public-api-strangler",
