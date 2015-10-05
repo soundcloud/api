@@ -35,7 +35,7 @@ trait PublicApiClientComponent {
         .tcpConnectTimeout(5.seconds)
         .build()
     val requestLatencyBuckets = config.get(ResourceName("DEFAULT"), ConfigConvention.REQUEST_LATENCY_BUCKETS,
-      Telemetry.DEFAULT_REQUEST_LATENCY_BUCKETS_MS).split(",").map(_.toDouble)
+      Telemetry.DEFAULT_REQUEST_LATENCY_BUCKETS_SECONDS).split(",").map(_.toDouble)
     val filter =
       new OutgoingHttpRequestMonitoringFilter[HttpRequest, HttpResponse](ResourceName(svcName), new Telemetry(config),
         requestLatencyBuckets)

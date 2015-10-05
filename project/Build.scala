@@ -5,7 +5,7 @@ import sbt.Keys._
 object Build extends HttpServerAppBuild(
   JvmkitApp(
     appType = BffApi,
-    jvmKitVersion = "23.0.1",
+    jvmKitVersion = "23.1.2",
     scalaVersion = "2.11.6"
   ),
   libDependencies = Seq(
@@ -26,7 +26,7 @@ object Build extends HttpServerAppBuild(
         libraryDependencies ++= Seq(
           "org.specs2" %% "specs2-core" % "3.6.4",
           "org.specs2" %% "specs2-mock" % "3.6.4",
-          "com.soundcloud" %% "jvmkit" % "23.0.1"
+          "com.soundcloud" %% "jvmkit" % "23.1.2"
         )
       )
     )
