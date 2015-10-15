@@ -58,7 +58,7 @@ promote-to-release:
 
 deploy-db:
 	crun bazooka-cli "./$(DEPLOY_SCRIPT) bazooka --clean-revs \
-		--boot-timeout=60s --health-port=app --health-path=/-/health \
-		--bazooka-zone=db --scale-step=1 --instance-cnt=100 \
+		--boot-timeout=60s --health-port=app --health-path=/tracks/116540862?client_id=hannes_test \
+		--bazooka-zone=db --scale-step=10 --instance-cnt=100 \
 		--proc=api \
 		--slack-channels=#core-services"
