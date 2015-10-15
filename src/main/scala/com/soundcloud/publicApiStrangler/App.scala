@@ -158,8 +158,6 @@ object App
     )
   }
 
-  private val robotsTxtController = new StaticResponseController("/robots.txt", "User-agent: *\nDisallow: \n")
-
   override val fallbackHandler = Some(mothershipDispatcher)
 
   override def exceptionHandler: PartialFunction[Throwable, Response] = {
@@ -168,10 +166,11 @@ object App
   }
 
   override lazy val additionalFilters = List(
-    new AcceptOnlyJsonRequestFilter(Set("/crossdomain.xml", "/robots.txt")),
+    new AcceptOnlyJsonRequestFilter,
     new ContentAuthorizationFilter(authorizeContent),
     rateLimitingFacade.filter,
-    new DefaultResponseHeadersFilter
+    new DefaultResponseHeadersFilter,
+    new StaticFilesFilter
   )
 
   override val controllers = Set(
@@ -180,7 +179,6 @@ object App
     userFollowController,
     searchController,
     similarSoundsController,
-    robotsTxtController,
     rateLimitingFacade.rateLimitStatusController
   )
 
