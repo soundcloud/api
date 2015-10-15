@@ -21,10 +21,13 @@ class StaticFilesFilterSpec extends UnitSpecification {
     Request(HttpMethod.PUT, "/update"),
     Request(HttpMethod.OPTIONS, "/"),
     Request(HttpMethod.HEAD, "/head"),
-    Request(HttpMethod.TRACE, "/deal")
+    Request(HttpMethod.TRACE, "/deal"),
+    Request(HttpMethod.GET, "/non-static"),
+    Request(HttpMethod.GET, "/tracks/213"),
+    Request(HttpMethod.GET, "/nope.txt")
   ) foreach {
     request =>
-      s"Passes through all ${request.method} requests" in new Context {
+      s"Passes through all requests that are not static files, testing ${request.method} request to ${request.path} " in new Context {
         val underlyingResp = Response(Version.Http11, Status.Ok)
         underlyingResp.setContentString("dealwithit")
         val expected = RouterResponse(underlyingResp, "/")
@@ -59,7 +62,7 @@ class StaticFilesFilterSpec extends UnitSpecification {
 
     resp.statusCode ==== Status.Ok.getCode
     resp.contentString ==== filter.crossdomainContents
-    resp.contentLength ==== Some(665)
+    resp.contentLength ==== Some(666)
     resp.contentType ==== Some("text/xml")
 
     resp.headerMap.get("Access-Control-Allow-Headers") ==== Some("Accept, Authorization, Content-Type, Origin")

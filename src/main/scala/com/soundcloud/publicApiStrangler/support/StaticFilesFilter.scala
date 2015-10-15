@@ -1,7 +1,5 @@
 package com.soundcloud.publicApiStrangler.support
 
-import java.nio.charset.Charset
-
 import com.soundcloud.bff.finagle.ResponseBuilder
 import com.soundcloud.scalakit.finagle.http.RouterResponse
 import com.twitter.finagle.http.Request
@@ -13,21 +11,30 @@ import org.jboss.netty.util.CharsetUtil._
 
 class StaticFilesFilter extends SimpleFilter[Request, RouterResponse] {
 
-  val crossdomainContents = """<?xml version="1.0"?>
-                              |<!DOCTYPE cross-domain-policy SYSTEM "http://www.macromedia.com/xml/dtds/cross-domain-policy.dtd">
-                              |<cross-domain-policy>
-                              |  <!--
-                              |    Lock down access to Flash applications served by us.
-                              |    This policy should be served for all domains that Flash apps require
-                              |    access to and that are not serving api, images or stream (those need
-                              |    to be open to third party apps as well).
-                              |  -->
-                              |  <allow-access-from domain="soundcloud.com" />
-                              |  <allow-access-from domain="*.soundcloud.com" secure="false" />
-                              |  <allow-access-from domain="*.sndcdn.com" secure="false" />
-                              |  <site-control permitted-cross-domain-policies="master-only"/>
-                              |</cross-domain-policy>
-                              |""".stripMargin
+  val crossdomainContents =
+    """<?xml version="1.0"?>
+      |<!DOCTYPE cross-domain-policy SYSTEM "http://www.macromedia.com/xml/dtds/cross-domain-policy.dtd">
+      |<cross-domain-policy>
+      |  <!--
+      |    Lock down access to Flash applications served by us.
+      |    This policy should be served for all domains that Flash apps require
+      |    access to and that are not serving api, images or stream (those need
+      |    to be open to third party apps as well).
+      |  -->
+      |  <allow-access-from domain="soundcloud.com" />
+      |  <allow-access-from domain="*.soundcloud.com" secure="false" />
+      |  <allow-access-from domain="*.sndcdn.com" secure="false" />
+      |  <site-control permitted-cross-domain-policies="master-only"/>
+      |</cross-domain-policy>
+      | """.stripMargin
+
+  val robotsContents = "User-agent: *\nDisallow: \n"
+
+  private val oneDayInSeconds = 1.day.inSeconds
+
+  private def contentLength(content: String) = {
+    content.getBytes(UTF_8).length.toString
+  }
 
   override def apply(request: Request, next: Service[Request, RouterResponse]) = {
     (request.method, request.path) match {
@@ -38,39 +45,9 @@ class StaticFilesFilter extends SimpleFilter[Request, RouterResponse] {
   }
 
   private def renderRobots: Future[RouterResponse] = {
-    val charset: Charset = UTF_8
-    val contents = "User-agent: *\nDisallow: \n"
-    val contentLength = contents.getBytes(charset).length.toString
-    val finagleResponse = (new ResponseBuilder)
-      .contentType(s"text/plain; charset=$charset")
-      .header("Content-Length", contentLength)
-      .body(contents).build
-
-    val oneDayInSeconds = 1.day.inSeconds
-
-    Map(
-      "Access-Control-Allow-Headers" -> "Accept, Authorization, Content-Type, Origin",
-      "Access-Control-Allow-Methods" -> "GET, PUT, POST, DELETE",
-      "Access-Control-Allow-Origin" -> "*",
-      "Access-Control-Expose-Headers" -> "Date",
-      "Cache-Control" -> s"public, max-age=$oneDayInSeconds").foreach {
-      case (headerName, headerValue) =>
-        finagleResponse.headers().add(headerName, headerValue)
-    }
-
-    Future.value(
-      RouterResponse(finagleResponse, "/robots.txt")
-    )
-  }
-
-  private def renderCrossdomain: Future[RouterResponse] = {
-    val contentLength = crossdomainContents.getBytes(UTF_8).length.toString
-    val finagleResponse = (new ResponseBuilder)
-      .contentType(s"text/xml")
-      .header("Content-Length", contentLength)
-      .body(crossdomainContents).build
-
-    val oneDayInSeconds = 1.day.inSeconds
+    val responseBuilder = (new ResponseBuilder)
+      .contentType(s"text/plain; charset=UTF-8")
+      .body(robotsContents)
 
     Map(
       "Access-Control-Allow-Headers" -> "Accept, Authorization, Content-Type, Origin",
@@ -78,13 +55,35 @@ class StaticFilesFilter extends SimpleFilter[Request, RouterResponse] {
       "Access-Control-Allow-Origin" -> "*",
       "Access-Control-Expose-Headers" -> "Date",
       "Cache-Control" -> s"public, max-age=$oneDayInSeconds",
-      "Accept-Ranges" -> "bytes").foreach {
+      "Content-Length" -> contentLength(robotsContents)).foreach {
       case (headerName, headerValue) =>
-        finagleResponse.headers().add(headerName, headerValue)
+        responseBuilder.header(headerName, headerValue)
     }
 
     Future.value(
-      RouterResponse(finagleResponse, "/crossdomain.xml")
+      RouterResponse(responseBuilder.build, "/robots.txt")
+    )
+  }
+
+  private def renderCrossdomain: Future[RouterResponse] = {
+    val responseBuilder = (new ResponseBuilder)
+      .contentType(s"text/xml")
+      .body(crossdomainContents)
+
+    Map(
+      "Access-Control-Allow-Headers" -> "Accept, Authorization, Content-Type, Origin",
+      "Access-Control-Allow-Methods" -> "GET, PUT, POST, DELETE",
+      "Access-Control-Allow-Origin" -> "*",
+      "Access-Control-Expose-Headers" -> "Date",
+      "Accept-Ranges" -> "bytes",
+      "Cache-Control" -> s"public, max-age=$oneDayInSeconds",
+      "Content-Length" -> contentLength(crossdomainContents)).foreach {
+      case (headerName, headerValue) =>
+        responseBuilder.header(headerName, headerValue)
+    }
+
+    Future.value(
+      RouterResponse(responseBuilder.build, "/crossdomain.xml")
     )
   }
 }
