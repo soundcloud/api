@@ -30,17 +30,17 @@ object ApplyTrackPolicies {
     waveforms.map(waveform => waveform.urn -> waveform).toMap
 
   private def potentiallyReplaceWaveform(urn: Urn, track: Track, contentAuth: ContentAuthorization, waveformAction: TrackWaveformAction): Option[JsValue] = {
-    waveformAction.status match {
-      case NeedsModification => replaceWaveformAndDuration(track, waveformAction, contentAuth)
-      case DoesNotNeedModification => Some(track.withContentAuthorization(contentAuth))
-    }
+    (waveformAction.status match {
+      case NeedsModification       => replaceWaveformAndDuration(track, waveformAction)
+      case DoesNotNeedModification => Some(track)
+    }).map(_.withContentAuthorization(contentAuth))
   }
 
-  private def replaceWaveformAndDuration(track: Track, waveformAction: TrackWaveformAction, contentAuth: ContentAuthorization): Option[JsValue] = {
+  private def replaceWaveformAndDuration(track: Track, waveformAction: TrackWaveformAction): Option[Track] = {
     val originalTrack = track.json.as[JsObject]
     waveformAction.url.flatMap(_.durationMs) match {
-      case None => waveformAction.url.map(url => new Track(replaceWaveform(originalTrack, url.pngUrl.s)).withContentAuthorization(contentAuth))
-      case Some(duration) => waveformAction.url.map(url => new Track(replaceWaveformAndDuration(originalTrack, url.pngUrl.s, duration)).withContentAuthorization(contentAuth))
+      case None           => waveformAction.url.map(url => new Track(replaceWaveform(originalTrack, url.pngUrl.s)))
+      case Some(duration) => waveformAction.url.map(url => new Track(replaceWaveformAndDuration(originalTrack, url.pngUrl.s, duration)))
     }
   }
 
