@@ -10,10 +10,10 @@ object ApplyTrackPolicies {
   val durationJsonPropertyName = "duration"
   val waveformUrlPropertyName = "waveform_url"
 
-  def apply(session: UserSession, visitor: TracksVisitor, rules: Seq[ContentAuthorization], waveforms: List[TrackWaveformAction]) =
+  def apply(session: UserSession, visitor: TracksVisitor, rules: Seq[ContentAuthorization], waveforms: List[TrackWaveformAction]): Option[JsValue] =
     visit(session, visitor, policiesByUrn(rules), waveformsByUrn(waveforms))
 
-  private def visit(session: UserSession, visitor: TracksVisitor, authorizations: Map[Urn, ContentAuthorization], waveformActions: Map[Urn, TrackWaveformAction]) =
+  private def visit(session: UserSession, visitor: TracksVisitor, authorizations: Map[Urn, ContentAuthorization], waveformActions: Map[Urn, TrackWaveformAction]): Option[JsValue] =
     visitor.apply {
       case (urn, track) =>
         val contentAuth = authorizations(urn)
@@ -23,10 +23,10 @@ object ApplyTrackPolicies {
           potentiallyReplaceWaveform(urn, track, contentAuth, waveformActions(urn))
     }
 
-  private def policiesByUrn(rules: Seq[ContentAuthorization]) =
+  private def policiesByUrn(rules: Seq[ContentAuthorization]): Map[Urn, ContentAuthorization] =
     rules.map(rule => rule.getUrn -> rule).toMap
 
-  private def waveformsByUrn(waveforms: List[TrackWaveformAction]) =
+  private def waveformsByUrn(waveforms: List[TrackWaveformAction]): Map[Urn, TrackWaveformAction] =
     waveforms.map(waveform => waveform.urn -> waveform).toMap
 
   private def potentiallyReplaceWaveform(urn: Urn, track: Track, contentAuth: ContentAuthorization, waveformAction: TrackWaveformAction): Option[JsValue] = {
@@ -44,9 +44,9 @@ object ApplyTrackPolicies {
     }
   }
 
-  private def replaceWaveformAndDuration(originalTrack: JsObject, waveformUrl: String, duration: Int) =
+  private def replaceWaveformAndDuration(originalTrack: JsObject, waveformUrl: String, duration: Int): JsObject =
     replaceWaveform(originalTrack, waveformUrl) ++ Json.obj(durationJsonPropertyName -> duration)
 
-  private def replaceWaveform(originalTrack: JsObject, waveformUrl: String) =
+  private def replaceWaveform(originalTrack: JsObject, waveformUrl: String): JsObject =
     originalTrack ++ Json.obj(waveformUrlPropertyName -> waveformUrl)
 }
