@@ -5,8 +5,7 @@ import com.soundcloud.publicApiStrangler.authorization.TrackWaveformActionStatus
 import com.soundcloud.scalakit.{Urn, UserSession}
 import play.api.libs.json.{JsObject, JsValue, Json}
 
-object ApplyTrackPolicies {
-
+case class TrackPolicyApplicator(clientWhitelist: Set[Urn]) {
   val durationJsonPropertyName = "duration"
   val waveformUrlPropertyName = "waveform_url"
 
@@ -17,10 +16,11 @@ object ApplyTrackPolicies {
     visitor.apply {
       case (urn, track) =>
         val contentAuth = authorizations(urn)
+
         if (contentAuth.getPolicy == ContentPolicy.BLOCK)
           None
         else
-          potentiallyReplaceWaveform(urn, track, contentAuth, waveformActions(urn)).map(_.withContentAuthorization(contentAuth))
+          potentiallyReplaceWaveform(urn, track, contentAuth, waveformActions(urn)).map(potentiallyAddContentAuthorization(_, contentAuth, session))
     }
 
   private def policiesByUrn(rules: Seq[ContentAuthorization]): Map[Urn, ContentAuthorization] =
@@ -28,6 +28,18 @@ object ApplyTrackPolicies {
 
   private def waveformsByUrn(waveforms: List[TrackWaveformAction]): Map[Urn, TrackWaveformAction] =
     waveforms.map(waveform => waveform.urn -> waveform).toMap
+
+  private def potentiallyAddContentAuthorization(track: Track, contentAuthorization: ContentAuthorization, userSession: UserSession): JsObject = {
+    if (userAgentIsWhitelisted(userSession)) {
+      track.withContentAuthorization(contentAuthorization)
+    } else {
+      track.withoutContentAuthorization
+    }
+  }
+
+  private def userAgentIsWhitelisted(userSession: UserSession) = {
+    clientWhitelist.contains(userSession.getAgent())
+  }
 
   private def potentiallyReplaceWaveform(urn: Urn, track: Track, contentAuth: ContentAuthorization, waveformAction: TrackWaveformAction): Option[Track] = {
     waveformAction.status match {

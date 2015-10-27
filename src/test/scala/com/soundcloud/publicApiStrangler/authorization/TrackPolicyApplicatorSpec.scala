@@ -6,9 +6,9 @@ import com.soundcloud.jvmkit.policies.{ContentAuthorization, ContentPolicy, Mone
 import com.soundcloud.publicApiStrangler.authorization.TrackWaveformActionStatus._
 import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures
 import com.soundcloud.scalakit.{Url, Urn, UserSession}
-import play.api.libs.json.{JsObject, JsValue}
+import play.api.libs.json.{JsString, JsObject, JsValue}
 
-class ApplyTrackPoliciesSpec extends UnitSpecification with Fixtures {
+class TrackPolicyApplicatorSpec extends UnitSpecification with Fixtures {
 
   trait Context extends Scope {
     val session = mock[UserSession]
@@ -17,19 +17,20 @@ class ApplyTrackPoliciesSpec extends UnitSpecification with Fixtures {
         .map(track => (track \ "id").as[Int])
         .map(id => Urn(s"soundcloud:tracks:$id"))
 
+    val whitelistedClientUrn = Urn("soundcloud:applications:1000")
+    val nonWhitelistedClientUrn = Urn("soundcloud:applications:2000")
+    val clientWhitelist = Set(whitelistedClientUrn)
+
     def rules: List[ContentAuthorization]
 
     def waveformActions: List[TrackWaveformAction]
 
-    lazy val authorizedTrackIds =
-      extractIds(
-        ApplyTrackPolicies(session, new TracksVisitor(tracksArray), rules, waveformActions).get
-      )
+    lazy val trackPolicy = TrackPolicyApplicator(clientWhitelist)
+    lazy val tracksWithPoliciesApplied = trackPolicy(session, new TracksVisitor(tracksArray), rules, waveformActions).get
 
-    lazy val waveformsAndDurations =
-      extractWaveformAndDuration(
-        ApplyTrackPolicies(session, new TracksVisitor(tracksArray), rules, waveformActions).get
-      )
+    lazy val authorizedTrackIds = extractIds(tracksWithPoliciesApplied)
+
+    lazy val waveformsAndDurations = extractWaveformAndDuration(tracksWithPoliciesApplied)
 
     def extractIds(json: JsValue) =
       json.as[List[JsObject]].map(e => (e \ "id").as[Int])
@@ -55,6 +56,18 @@ class ApplyTrackPoliciesSpec extends UnitSpecification with Fixtures {
       authorizedTrackIds mustEqual extractIds(tracksArray)
       waveformsAndDurations ==== List(("https://w1.sndcdn.com/RhJ436DPf2Vx_m.png", 370348),
         ("https://w1.sndcdn.com/DWpqP6aFqglm_m.png", 68127), ("https://w1.sndcdn.com/sDWnMpZaIQ9Z_m.png", 326183))
+    }
+
+    "all tracks has 'policy' and 'monetization_model' for whitelisted user agent" in new EverythingAuthorized {
+      session.getAgent() returns whitelistedClientUrn
+
+      tracksWithPoliciesApplied.as[List[JsObject]].filter(e => !e.keys.contains("policy") || !e.keys.contains("monetization_model")) must beEmpty
+    }
+
+    "no tracks has 'policy' and 'monetization_model' for non-whitelisted user agent" in new EverythingAuthorized {
+      session.getAgent() returns nonWhitelistedClientUrn
+      
+      tracksWithPoliciesApplied.as[List[JsObject]].filter(e => e.keys.contains("policy") || e.keys.contains("monetization_model")) must beEmpty
     }
 
     trait PartiallyAuthorized extends Context {
@@ -114,7 +127,7 @@ class ApplyTrackPoliciesSpec extends UnitSpecification with Fixtures {
 
       override lazy val authorizedTrackIds =
         extractIds(
-          ApplyTrackPolicies(session, new TracksVisitor(stream), rules, waveformActions).get
+          TrackPolicyApplicator(clientWhitelist)(session, new TracksVisitor(stream), rules, waveformActions).get
         )
 
       override def extractIds(json: JsValue) =
