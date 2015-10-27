@@ -20,7 +20,7 @@ object ApplyTrackPolicies {
         if (contentAuth.getPolicy == ContentPolicy.BLOCK)
           None
         else
-          potentiallyReplaceWaveform(urn, track, contentAuth, waveformActions(urn))
+          potentiallyReplaceWaveform(urn, track, contentAuth, waveformActions(urn)).map(_.withContentAuthorization(contentAuth))
     }
 
   private def policiesByUrn(rules: Seq[ContentAuthorization]): Map[Urn, ContentAuthorization] =
@@ -29,11 +29,11 @@ object ApplyTrackPolicies {
   private def waveformsByUrn(waveforms: List[TrackWaveformAction]): Map[Urn, TrackWaveformAction] =
     waveforms.map(waveform => waveform.urn -> waveform).toMap
 
-  private def potentiallyReplaceWaveform(urn: Urn, track: Track, contentAuth: ContentAuthorization, waveformAction: TrackWaveformAction): Option[JsValue] = {
-    (waveformAction.status match {
+  private def potentiallyReplaceWaveform(urn: Urn, track: Track, contentAuth: ContentAuthorization, waveformAction: TrackWaveformAction): Option[Track] = {
+    waveformAction.status match {
       case NeedsModification       => replaceWaveformAndDuration(track, waveformAction)
       case DoesNotNeedModification => Some(track)
-    }).map(_.withContentAuthorization(contentAuth))
+    }
   }
 
   private def replaceWaveformAndDuration(track: Track, waveformAction: TrackWaveformAction): Option[Track] = {
