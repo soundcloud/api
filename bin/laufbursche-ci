@@ -1,7 +1,7 @@
 #!/bin/bash +x
 
 make -f Makefile.pipeline remove-containers
-crun builder "make precheckin"
+crun builder "make ci"
 result=$?
 make -f Makefile.pipeline remove-containers
 

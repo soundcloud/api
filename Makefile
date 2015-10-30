@@ -14,6 +14,8 @@ run: _dev_docker_compose
 
 precheckin: unit-test end-to-end-test
 
+ci: unit-test ci-end-to-end-test
+
 ci-end-to-end-test:
 	bin/replace-var docker-compose.yml /tmp/integrationcompose.yml PUBLIC_API_STRANGLER_VERSION=$(PUBLIC_API_STRANGLER_VERSION) PORT=5000 TELE_PORT=5001 DOCKER_IP=$(shell docker-ip)
 	docker-compose -f /tmp/integrationcompose.yml -p publicapistrangler up -d publicapistrangler
