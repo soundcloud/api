@@ -15,15 +15,11 @@
             "trackList": [
                 {
                     "kind": "track",
-                    "id": 2,
-                    "policy":"ALLOW",
-                    "monetization_model": "NOT_APPLICABLE"
+                    "id": 2
                 },
                 {
                     "kind": "track",
-                    "id": 3,
-                    "policy":"ALLOW",
-                    "monetization_model": "NOT_APPLICABLE"
+                    "id": 3
                 }
             ]
         }
