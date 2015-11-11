@@ -1,0 +1,48 @@
+{"track": {
+  "geo_blockings": [
+    "DE"
+  ],
+  "restrictions": [
+    "the restriction"
+  ],
+  "publisher_metadata": {
+    "artist": "the artist",
+    "album_title": "the album title",
+    "contains_music": true,
+    "publisher": "the publisher",
+    "iswc": "the iswc",
+    "upc_or_ean": "the upc or ean",
+    "isrc": "the isrc",
+    "explicit": true,
+    "p_line": "the pline",
+    "c_line": "the cline",
+    "writer_composer": "the writer composer",
+    "release_title": "the release title"
+  },
+  "api_streamable": true,
+  "commentable": true,
+  "description": "the description",
+  "downloadable": true,
+  "embeddable": true,
+  "feedable": true,
+  "genre": "the genre",
+  "label_name": "the label name",
+  "license": "the license",
+  "original_filename": "original filename",
+  "permalink": "the permalink",
+  "purchase_title": "the purchase title",
+  "purchase_url": "the purchase url",
+  "release_date": "the release date",
+  "reveal_comments": true,
+  "reveal_stats": true,
+  "sharing": "the sharing",
+  "tag_list": "the tag list",
+  "title": "the title",
+  "replacing_uid": "the replacing uid",
+  "replacing_original_filename": "the replacing filename",
+  "artwork_from_s3": {
+    "bucket": "the bucket",
+    "filename": "the filename"
+  },
+  "published_at": "published at"
+}}
