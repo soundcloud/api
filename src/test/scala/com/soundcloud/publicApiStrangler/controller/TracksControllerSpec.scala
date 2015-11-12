@@ -1,5 +1,6 @@
 package com.soundcloud.publicApiStrangler.controller
 
+import com.soundcloud.publicApiStrangler.mapper.trackcoordinator.TrackCoordinatorMapper
 import com.soundcloud.bff.test.InjectionBasedControllerSpecification
 import com.soundcloud.trackcoordinator.client.mapper.TrackMapper
 import com.soundcloud.trackcoordinator.client.TrackCoordinatorClient
@@ -54,22 +55,22 @@ class TracksControllerSpec extends InjectionBasedControllerSpecification with Fi
 
   "PUT /tracks/:id" >> {
     "succeeds" in new Context {
-      val response = put(controller, "/tracks/999", body = trackCoordinatorUpdate)
+      val response = put(controller, "/tracks/999", body = singleTrack)
       response.status ==== Status.Ok
-      TrackMapper(response.jsonBody) ==== TrackMapper(trackCoordinatorTrack)
+      response.jsonBody ==== trackCoordinatorTrackInPublicApiFormat
     }
 
     "not found" in new Context {
       trackCoordinator.updateTrack(===(session), ===(trackUrn), any, any) returns Future(NotFound)
 
-      val response = put(controller, "/tracks/999", body = trackCoordinatorUpdate)
+      val response = put(controller, "/tracks/999", body = singleTrack)
       response.status ==== Status.NotFound
     }
 
     "errors out in an expected fashion" in new Context {
       trackCoordinator.updateTrack(===(session), ===(trackUrn), any, any) returns Future(Errors(List(Error(412, "OMG SO WRONG"))))
 
-      val response = put(controller, "/tracks/999", body = trackCoordinatorUpdate)
+      val response = put(controller, "/tracks/999", body = singleTrack)
       response.status ==== Status.PreconditionFailed
       val errors = response.jsonBody.as[List[JsObject]]
       (errors(0) \ "status").as[Int] ==== 412
@@ -79,7 +80,7 @@ class TracksControllerSpec extends InjectionBasedControllerSpecification with Fi
     "errors out unexpectedly" in new Context {
       trackCoordinator.updateTrack(===(session), ===(trackUrn), any, any) returns Future(Failure)
 
-      val response = put(controller, "/tracks/999", body = trackCoordinatorUpdate)
+      val response = put(controller, "/tracks/999", body = singleTrack)
       response.status ==== Status.InternalServerError
     }
   }

@@ -1,5 +1,7 @@
 package com.soundcloud.publicApiStrangler.controller
 
+import com.soundcloud.publicApiStrangler.mapper.trackcoordinator.TrackCoordinatorMapper
+import com.soundcloud.service.response.mapper.TrackMapper
 import com.soundcloud.service.request.representation.MissingValue
 import com.soundcloud.scalakit.{Urn, UserSession}
 import com.soundcloud.trackcoordinator.client.representation.{Error, Errors, Failure, NotFound, Result, Success, Track => CoordinatorTrack, TrackUpdate}
@@ -30,8 +32,8 @@ class TracksController(userAuthentication: UserAuthentication,
 
   put("/tracks/:trackId") { request =>
     userAuthentication.withLoggedInUser(request) { (session, _) =>
-      trackCoordinator.updateTrack(session, trackUrn(request), trackUpdateMapper(Json.fromString(request.getContentString) \ "track"), headers(request)).map {
-        case Success(track) => render.json(track)
+      trackCoordinator.updateTrack(session, trackUrn(request), TrackCoordinatorMapper.trackUpdateFromPublicApiTrack(Json.fromString(request.getContentString)), headers(request)).map {
+        case Success(track) => render.json(TrackCoordinatorMapper.publicApiTrackFromCoordinatorTrack(track))
         case NotFound => render.notFound
         case Errors(lst) => renderErrors(lst)
         case _ => render.internalServerError
@@ -61,42 +63,6 @@ class TracksController(userAuthentication: UserAuthentication,
           case IdParamPattern(id) => s"soundcloud:tracks:$id"
           case urn => urn
         })
-  }
-
-    private def trackUpdateMapper(json: JsValue) = new TrackUpdate(
-        monetization = None,
-        publisher_metadata = None,
-        schedule = None,
-        api_streamable = (json \ "api_streamable").asOpt[Boolean],
-        commentable = (json \ "commentable").asOpt[Boolean],
-        description = (json \ "description").asOpt[String],
-        downloadable = (json \ "downloadable").asOpt[Boolean],
-        embeddable = (json \ "embeddable").asOpt[Boolean],
-        feedable = (json \ "feedable").asOpt[Boolean],
-        genre = (json \ "genre").asOpt[String],
-        geo_blockings = (json \ "geo_blockings").asOpt[List[String]],
-        label_name = (json \ "label_name").asOpt[String],
-        license = (json \ "license").asOpt[String],
-        original_filename = (json \ "original_filename").asOpt[String],
-        permalink = (json \ "permalink").as[String],
-        purchase_title = (json \ "purchase_title").asOpt[String],
-        purchase_url = (json \ "purchase_url").asOpt[String],
-        release_date = (json \ "release_date").asOpt[String],
-        reveal_comments = (json \ "reveal_comments").asOpt[Boolean],
-        reveal_stats = (json \ "reveal_stats").asOpt[Boolean],
-        sharing = (json \ "sharing").asOpt[String],
-        tag_list = (json \ "tag_list").asOpt[String],
-        title = (json \ "title").as[String],
-        replacing_uid = (json \ "replacing_uid").asOpt[String],
-        replacing_original_filename = (json \ "replacing_original_filename").asOpt[String],
-        artwork_from_s3 = MissingValue,
-        desired_geo_policy_events = None,
-        restrictions = (json \ "restrictions").asOpt[Set[String]],
-        published_at = MissingValue
-    )
-
-  private val jodaParseReads = new Reads[DateTime] {
-    def reads(json: JsValue) = json.validate[String].map(DateTime.parse)
   }
 
   private def headers(request: Request): Params = request.headerMap.iterator.toMap
