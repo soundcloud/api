@@ -71,10 +71,7 @@ class TracksControllerSpec extends InjectionBasedControllerSpecification with Fi
       trackCoordinator.updateTrack(===(session), ===(trackUrn), any, any) returns Future(Errors(List(Error(412, "OMG SO WRONG"))))
 
       val response = put(controller, "/tracks/999", body = singleTrack)
-      response.status ==== Status.PreconditionFailed
-      val errors = response.jsonBody.as[List[JsObject]]
-      (errors(0) \ "status").as[Int] ==== 412
-      (errors(0) \ "message").as[String] ==== "OMG SO WRONG"
+      response.status ==== Status.UnprocessableEntity
     }
 
     "errors out unexpectedly" in new Context {
@@ -88,7 +85,7 @@ class TracksControllerSpec extends InjectionBasedControllerSpecification with Fi
   "DELETE /tracks/:id" >> {
     "succeeds" in new Context {
       val response = delete(controller, "/tracks/999")
-      response.status ==== Status.Accepted
+      response.status ==== Status.Ok
     }
 
     "not found" in new Context {
@@ -102,10 +99,7 @@ class TracksControllerSpec extends InjectionBasedControllerSpecification with Fi
       trackCoordinator.deleteTrack(session, trackUrn) returns Future(Errors(List(Error(412, "OMG SO WRONG"))))
 
       val response = delete(controller, "/tracks/999")
-      response.status ==== Status.PreconditionFailed
-      val errors = response.jsonBody.as[List[JsObject]]
-      (errors(0) \ "status").as[Int] ==== 412
-      (errors(0) \ "message").as[String] ==== "OMG SO WRONG"
+      response.status ==== Status.InternalServerError
     }
 
     "errors out unexpectedly" in new Context {

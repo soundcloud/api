@@ -35,7 +35,7 @@ class TracksController(userAuthentication: UserAuthentication,
       trackCoordinator.updateTrack(session, trackUrn(request), TrackCoordinatorMapper.trackUpdateFromPublicApiTrack(Json.fromString(request.getContentString)), headers(request)).map {
         case Success(track) => render.json(TrackCoordinatorMapper.publicApiTrackFromCoordinatorTrack(track))
         case NotFound => render.notFound
-        case Errors(lst) => renderErrors(lst)
+        case Errors(lst) => render.status(422)
         case _ => render.internalServerError
       }
     }
@@ -44,9 +44,8 @@ class TracksController(userAuthentication: UserAuthentication,
   delete("/tracks/:trackId") { request =>
     userAuthentication.withLoggedInUser(request) { (session, _) =>
       trackCoordinator.deleteTrack(session, trackUrn(request)).map {
-        case Success(()) => render.accepted
+        case Success(()) => render.ok
         case NotFound => render.notFound
-        case Errors(lst) => renderErrors(lst)
         case _ => render.internalServerError
       }
     }
@@ -61,7 +60,6 @@ class TracksController(userAuthentication: UserAuthentication,
     val IdParamPattern = "(\\d+)".r
     Urn(request.routeParams("trackId") match {
           case IdParamPattern(id) => s"soundcloud:tracks:$id"
-          case urn => urn
         })
   }
 
