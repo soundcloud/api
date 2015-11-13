@@ -4,7 +4,7 @@ import com.soundcloud.publicApiStrangler.mapper.trackcoordinator.TrackCoordinato
 import com.soundcloud.service.response.mapper.TrackMapper
 import com.soundcloud.service.request.representation.MissingValue
 import com.soundcloud.scalakit.{Urn, UserSession}
-import com.soundcloud.trackcoordinator.client.representation.{Error, Errors, Failure, NotFound, Result, Success, Track => CoordinatorTrack, TrackUpdate}
+import com.soundcloud.trackcoordinator.client.representation.{Errors, NotFound, Success, Track => CoordinatorTrack}
 import com.soundcloud.trackcoordinator.client.TrackCoordinatorClient
 import com.soundcloud.bff.finagle.{Request, ResponseBuilder}
 import com.soundcloud.bff.web.{BffInjectionBasedController, UserAuthentication}
@@ -49,11 +49,6 @@ class TracksController(userAuthentication: UserAuthentication,
         case _ => render.internalServerError
       }
     }
-  }
-
-  private def renderErrors(errors: List[Error]) = {
-    val status = errors.map(_.status).max
-    render.typedJson(errors).status(status)
   }
 
   private def trackUrn(request: Request): Urn = {
