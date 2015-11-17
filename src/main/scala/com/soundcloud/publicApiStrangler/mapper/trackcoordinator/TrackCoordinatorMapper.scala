@@ -7,7 +7,7 @@ import com.soundcloud.scalakit.json.{Json => ScJson}
 import play.api.libs.json._
 
 object TrackCoordinatorMapper {
-  def trackUpdateFromPublicApiTrack(str: String): Option[TrackUpdate] = {
+  def trackUpdateFromPublicApiTrack(str: String)(coordinatorTrack: Result[CoordinatorTrack]): Option[TrackUpdate] =
     Try {
       val json = ScJson.fromString(str)
       new TrackUpdate(
@@ -19,9 +19,9 @@ object TrackCoordinatorMapper {
         description = (json \ "description").asOpt[String],
         downloadable = (json \ "downloadable").asOpt[Boolean],
         embeddable = (json \ "embeddable").asOpt[Boolean],
-        feedable = None,
+        feedable = coordinatorTrack.asOption.flatMap(_.feedable),
         genre = (json \ "genre").asOpt[String],
-        geo_blockings = None,
+        geo_blockings = coordinatorTrack.asOption.flatMap(_.geo_blockings),
         label_name = (json \ "label_name").asOpt[String],
         license = (json \ "license").asOpt[String],
         original_filename = None,
@@ -29,20 +29,20 @@ object TrackCoordinatorMapper {
         purchase_title = (json \ "purchase_title").asOpt[String],
         purchase_url = (json \ "purchase_url").asOpt[String],
         release_date = (json \ "release_date").asOpt[String],
-        reveal_comments = None,
-        reveal_stats = None,
+        reveal_comments = coordinatorTrack.asOption.flatMap(_.reveal_comments),
+        reveal_stats = coordinatorTrack.asOption.flatMap(_.reveal_stats),
         sharing = (json \ "sharing").asOpt[String],
         tag_list = (json \ "tag_list").asOpt[String],
         title = (json \ "title").as[String],
         replacing_uid = None,
         replacing_original_filename = None,
         artwork_from_s3 = MissingValue,
-        desired_geo_policy_events = None,
-        restrictions = None,
+        desired_geo_policy_events = coordinatorTrack.asOption.flatMap(_.desired_geo_policy_events),
+        restrictions = coordinatorTrack.asOption.flatMap(_.restrictions.map(_.map(_.getPrintName))),
         published_at = MissingValue
       )
     }.toOption
-  }
+
   def publicApiTrackFromCoordinatorTrack(track: CoordinatorTrack): Track = Track(
     id = track.urn.getIdentifier.toLong,
     created_at = track.created_at,

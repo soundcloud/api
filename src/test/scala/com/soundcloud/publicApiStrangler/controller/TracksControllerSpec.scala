@@ -34,6 +34,7 @@ class TracksControllerSpec extends InjectionBasedControllerSpecification with Fi
 
     trackCoordinator.deleteTrack(session, trackUrn) returns Future(Success(()))
     trackCoordinator.updateTrack(===(session), ===(trackUrn), any, any) returns Future(Success(track))
+    trackCoordinator.fetchTrack(===(session), ===(trackUrn), any) returns Future(Success(track))
     when(fallback.dispatch(any[Request])).thenReturn(Future.value(new ResponseBuilder().status(200)))
   }
 

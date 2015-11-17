@@ -32,18 +32,23 @@ class TracksController(userAuthentication: UserAuthentication,
 
   put("/tracks/:trackId") { request =>
     userAuthentication.withLoggedInUser(request) { (session, _) =>
-      val trackUpdate = TrackCoordinatorMapper.trackUpdateFromPublicApiTrack(request.getContentString)
-      trackUpdate.map { updateCommand =>
-        trackCoordinator.updateTrack(session,
-                                     trackUrn(request),
-                                     updateCommand,
-                                     headers(request)).map {
+      val trackUpdate = TrackCoordinatorMapper.trackUpdateFromPublicApiTrack(request.getContentString) _
+      val urn = trackUrn(request)
+      val result = for {
+        track <- trackCoordinator.fetchTrack(session, urn, Params.empty)
+        update <- trackUpdate(track).map { updateCommand =>
+          trackCoordinator.updateTrack(session,
+                                       urn,
+                                       updateCommand,
+                                       headers(request))
+          }.getOrElse(Future.value(Errors(List.empty)))
+      } yield update
+      result.map {
         case Success(track) => render.json(TrackCoordinatorMapper.publicApiTrackFromCoordinatorTrack(track))
         case NotFound => render.notFound
         case Errors(lst) => render.status(422)
         case _ => render.internalServerError
       }
-      }.getOrElse(Future.value(render.status(422)))
     }
   }
 
