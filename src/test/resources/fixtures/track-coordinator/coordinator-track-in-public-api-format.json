@@ -38,6 +38,13 @@
     "favoritings_count": 0,
     "original_format": "mp3",
     "original_content_size": 6923,
-    "created_with": null,
-    "user_favourite": null
+    "user_favorite": null,
+    "secret_token": "s-8USae",
+    "secret_uri": "https://api.soundcloud.com/tracks/174088262/s-8USae",
+    "kind": "track",
+    "purchase_title": "buy123",
+    "last_modified": "2014/10/27 16:25:25 +0000",
+    "playback_count": 0,
+    "reposts_count": 0,
+    "likes_count": 0
 }

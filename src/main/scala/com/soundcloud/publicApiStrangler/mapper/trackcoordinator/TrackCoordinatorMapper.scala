@@ -46,6 +46,7 @@ object TrackCoordinatorMapper {
   def publicApiTrackFromCoordinatorTrack(track: CoordinatorTrack): Track = Track(
     id = track.urn.getIdentifier.toLong,
     created_at = track.created_at,
+    last_modified = track.last_modified,
     user_id = track.user_urn.getIdentifier.toLong,
     title = track.title,
     permalink = track.permalink,
@@ -54,6 +55,7 @@ object TrackCoordinatorMapper {
     sharing = track.sharing,
     embeddable_by = track.embeddable_by,
     purchase_url = track.purchase_url,
+    purchase_title = track.purchase_title,
     artwork_url = track.artwork_url,
     description = track.description,
     duration = track.duration,
@@ -79,11 +81,15 @@ object TrackCoordinatorMapper {
     isrc = track.isrc,
     key_signature = None,
     comment_count = track.comments_count,
+    playback_count = track.playback_count,
+    likes_count = track.favoritings_count,
+    reposts_count = track.reposts_count,
     download_count = track.downloads_count,
     favoritings_count = track.favoritings_count,
     original_format = track.original_format,
     original_content_size = track.original_content_size,
-    created_with = None,
-    user_favourite = None
+    user_favorite = None,
+    secret_token = track.secret_token,
+    secret_uri = track.uri ++ "/" ++ track.secret_token.getOrElse("")
   )
 }
