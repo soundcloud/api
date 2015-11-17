@@ -80,6 +80,11 @@ class TracksControllerSpec extends InjectionBasedControllerSpecification with Fi
       val response = put(controller, "/tracks/999", body = singleTrack)
       response.status ==== Status.InternalServerError
     }
+
+    "Json body is wrongly formatted" in new Context {
+      val response = put(controller, "/tracks/999", body = JsNull)
+      response.status ==== Status.UnprocessableEntity
+    }
   }
 
   "DELETE /tracks/:id" >> {

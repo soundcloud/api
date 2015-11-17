@@ -2,11 +2,15 @@ package com.soundcloud.publicApiStrangler.mapper.trackcoordinator
 
 import com.soundcloud.trackcoordinator.client.representation.{Error, Errors, Failure, NotFound, Result, Success, Track => CoordinatorTrack, TrackUpdate}
 import com.soundcloud.service.request.representation.MissingValue
+import com.twitter.util.Try
+import com.soundcloud.scalakit.json.{Json => ScJson}
 import play.api.libs.json._
 
 object TrackCoordinatorMapper {
-  def trackUpdateFromPublicApiTrack(json: JsValue): TrackUpdate = {
-    new TrackUpdate(
+  def trackUpdateFromPublicApiTrack(str: String): Option[TrackUpdate] = {
+    Try {
+      val json = ScJson.fromString(str)
+      new TrackUpdate(
         monetization = None,
         publisher_metadata = None,
         schedule = None,
@@ -36,7 +40,8 @@ object TrackCoordinatorMapper {
         desired_geo_policy_events = None,
         restrictions = None,
         published_at = MissingValue
-    )
+      )
+    }.toOption
   }
   def publicApiTrackFromCoordinatorTrack(track: CoordinatorTrack): Track = Track(
     id = track.urn.getIdentifier.toLong,
