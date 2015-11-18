@@ -25,16 +25,21 @@ class TracksControllerSpec extends InjectionBasedControllerSpecification with Fi
   trait Context extends Scope with VerifiedMocks {
     val fallback = mock[DispatchToMothershipHandler]
     val trackCoordinator = mock[TrackCoordinatorClient]
+    val okidoki = mock[OkidokiClient]
     val trackUrn = Urn("soundcloud:tracks:999")
+    val userUrn = Urn("soundcloud:users:102661606")
+    val users = okidokiUsers.as[List[JsObject]]
+    val user = users.head
     val track = TrackMapper(trackCoordinatorTrack)
 
     lazy val geo = Geo("US")
     lazy val session = new UserSessionBuilder().setUser(Urn("soundcloud:users:2")).setAgent(Urn("soundcloud:applications:v2")).setGeo(geo).build()
-    lazy val controller = new TracksController(fakeUserAuthentication(session), trackCoordinator, fallback)
+    lazy val controller = new TracksController(fakeUserAuthentication(session), trackCoordinator, okidoki, fallback)
 
     trackCoordinator.deleteTrack(session, trackUrn) returns Future(Success(()))
     trackCoordinator.updateTrack(===(session), ===(trackUrn), any, any) returns Future(Success(track))
     trackCoordinator.fetchTrack(===(session), ===(trackUrn), any) returns Future(Success(track))
+    okidoki.fetch(===(session), ===(Set(userUrn))) returns Future(List(user))
     when(fallback.dispatch(any[Request])).thenReturn(Future.value(new ResponseBuilder().status(200)))
   }
 

@@ -1,6 +1,7 @@
 package com.soundcloud.publicApiStrangler.controller
 
 import com.soundcloud.publicApiStrangler.mapper.trackcoordinator.TrackCoordinatorMapper
+import com.soundcloud.service.client.OkidokiClient
 import com.soundcloud.service.response.mapper.TrackMapper
 import com.soundcloud.service.request.representation.MissingValue
 import com.soundcloud.scalakit.{Urn, UserSession}
@@ -24,6 +25,7 @@ import org.joda.time.DateTime
  */
 class TracksController(userAuthentication: UserAuthentication,
                        trackCoordinator: TrackCoordinatorClient,
+                       okidokiClient: OkidokiClient,
                        mothershipDispatcher: DispatchToMothershipHandler)
     extends BffInjectionBasedController {
 
@@ -42,11 +44,14 @@ class TracksController(userAuthentication: UserAuthentication,
                                        updateCommand,
                                        headers(request))
           }.getOrElse(Future.value(Errors(List.empty)))
-      } yield update
+        user <- okidokiClient.fetch(session, track.asOption.map(_.user_urn).toSet).map(_.headOption)
+      } yield (user, update)
       result.map {
-        case Success(track) => render.json(TrackCoordinatorMapper.publicApiTrackFromCoordinatorTrack(track))
-        case NotFound => render.notFound
-        case Errors(lst) => render.status(422)
+        case (Some(user), Success(track)) =>
+          render.json(TrackCoordinatorMapper
+                        .publicApiTrackFromCoordinatorTrack(track, user))
+        case (_, NotFound) => render.notFound
+        case (_, Errors(lst)) => render.status(422)
         case _ => render.internalServerError
       }
     }

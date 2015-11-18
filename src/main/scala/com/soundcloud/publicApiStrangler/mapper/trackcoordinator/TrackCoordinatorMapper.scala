@@ -3,6 +3,8 @@ package com.soundcloud.publicApiStrangler.mapper.trackcoordinator
 import com.soundcloud.trackcoordinator.client.representation.{Error, Errors, Failure, NotFound, Result, Success, Track => CoordinatorTrack, TrackUpdate}
 import com.soundcloud.service.request.representation.MissingValue
 import com.twitter.util.Try
+import com.soundcloud.scalakit.Urn
+import com.soundcloud.scalakit.Urn.format
 import com.soundcloud.scalakit.json.{Json => ScJson}
 import play.api.libs.json._
 
@@ -43,11 +45,12 @@ object TrackCoordinatorMapper {
       )
     }.toOption
 
-  def publicApiTrackFromCoordinatorTrack(track: CoordinatorTrack): Track = Track(
+  def publicApiTrackFromCoordinatorTrack(track: CoordinatorTrack, userJson: JsObject): OwnTrack = OwnTrack(
     id = track.urn.getIdentifier.toLong,
     created_at = track.created_at,
     last_modified = track.last_modified,
     user_id = track.user_urn.getIdentifier.toLong,
+    user = ownUser(userJson),
     title = track.title,
     permalink = track.permalink,
     permalink_url = track.permalink_url,
@@ -92,4 +95,15 @@ object TrackCoordinatorMapper {
     secret_token = track.secret_token,
     secret_uri = track.uri ++ "/" ++ track.secret_token.getOrElse("")
   )
+
+  private def ownUser(userJson: JsObject): Option[OwnUser] = Try {
+    val id = (userJson \ "self" \ "urn").as[Urn].getIdentifier.toLong
+    OwnUser(id = id,
+            permalink = (userJson \ "permalink").as[String],
+            username = (userJson \ "username").as[String],
+            last_modified = (userJson \ "last_modified").asOpt[String],
+            uri = s"http://api.soundcloud.com/users/$id",
+            permalink_url = (userJson \ "permalink_url").as[String],
+            avatar_url = (userJson \ "avatar_url").asOpt[String])
+  }.toOption
 }

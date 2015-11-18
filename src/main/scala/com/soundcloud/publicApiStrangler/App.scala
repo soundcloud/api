@@ -119,6 +119,7 @@ object App
 
   private val tracksController = new TracksController(userAuthentication,
                                                       trackCoordinatorClient,
+                                                      okidokiClient,
                                                       mothershipDispatcher)
 
   val rollout = new RolloutBuilder(config).build

@@ -2,6 +2,16 @@
     "id": 174088262,
     "created_at": "2014/10/27 16:25:25 +0000",
     "user_id": 102661606,
+"user": {
+        "id": 123,
+        "kind": "user",
+        "permalink": "adeline",
+        "username": "adeline",
+        "last_modified": "2014/10/04 10:48:34 +0000",
+        "uri": "http://api.soundcloud.com/users/123",
+        "permalink_url": "http://soundcloud.com/adeline",
+        "avatar_url": "https://i1.sndcdn.com/avatars-000092704388-h04iht-large.jpg?86347b7"
+    },
     "title": "Awesome Track",
     "permalink": "awesome-track-2014-10-27-17-25-29-66",
     "permalink_url": "https://soundcloud.com/imprisonedprecision/awesome-track-2014-10-27-17-25-29-66",
