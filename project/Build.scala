@@ -9,11 +9,12 @@ object Build extends HttpServerAppBuild(
     scalaVersion = "2.11.6"
   ),
   libDependencies = Seq(
-    "com.soundcloud"     %% "follows-client"      % "0.0.5",
-    "com.soundcloud"     %% "ratelimitinglib"     % "0.2.8",
-    "com.soundcloud"     %% "sc-services"         % "29.0.0",
-    "com.fasterxml.uuid" %  "java-uuid-generator" % "3.1.3",
-    "commons-codec"      %  "commons-codec"       % "1.9"
+    "com.soundcloud"     %% "follows-client"           % "0.0.5",
+    "com.soundcloud"     %% "ratelimitinglib"          % "0.2.8",
+    "com.soundcloud"     %% "sc-services"              % "29.0.0",
+    "com.soundcloud"     %% "track-coordinator-client" % "19.0.0",
+    "com.fasterxml.uuid" %  "java-uuid-generator"      % "3.1.3",
+    "commons-codec"      %  "commons-codec"            % "1.9"
   ),
   mainClass = "com.soundcloud.publicApiStrangler.App"
 ) {

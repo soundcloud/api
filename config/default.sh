@@ -52,5 +52,7 @@ RATELIMITING_SRV_RECORD="dnssrv!http.api.prod.ratelimiting.dd.srv.int.s-cloud.ne
 SEARCH_SRV_RECORD="dnssrv!http.dispatcher.prod.search.dd.srv.int.s-cloud.net"
 TIMELINE_SRV_RECORD="dnssrv!http.api.prod.timeline.dd.srv.int.s-cloud.net"
 
+TRACK_COORDINATOR_SRV_RECORD="dnssrv!http.coordinator.prod.tracks.dd.srv.int.s-cloud.net"
+
 LIEBLING_SRV_RECORD="dnssrv!http.web.prod.liebling.dd.srv.int.s-cloud.net"
 SIMILAR_SOUNDS_SRV_RECORD="dnssrv!http.api.prod.similar-sounds.dd.srv.int.s-cloud.net"

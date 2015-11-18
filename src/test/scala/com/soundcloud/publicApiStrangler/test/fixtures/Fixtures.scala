@@ -25,4 +25,7 @@ trait Fixtures {
 
   val okidokiFetch = withContentsOf("okidoki", "fetch")
   val okidokiUsers = withContentsOf("okidoki", "users")
+
+  val trackCoordinatorTrack = withContentsOf("track-coordinator", "track")
+  val trackCoordinatorTrackInPublicApiFormat = withContentsOf("track-coordinator", "coordinator-track-in-public-api-format")
 }

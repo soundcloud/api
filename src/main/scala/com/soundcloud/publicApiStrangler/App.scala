@@ -30,6 +30,7 @@ import com.twitter.finagle.CancelledRequestException
 import com.twitter.finagle.http.Response
 import org.eclipse.jetty.server.Handler
 import org.jboss.netty.handler.codec.http.{HttpResponseStatus, HttpVersion}
+import com.soundcloud.trackcoordinator.client.TrackCoordinatorComponent
 
 object App
   extends BffInjectionBasedApp
@@ -41,7 +42,8 @@ object App
   with PublicApiClientComponent
   with FollowsComponent
   with GatekeeperComponent
-  with SimilarSoundsComponent {
+  with SimilarSoundsComponent
+  with TrackCoordinatorComponent {
 
   private val bffApplication = BffApplication(Urn("soundcloud", "systems", "public-api-strangler"), config.getApplicationResourceName)
 
@@ -114,6 +116,11 @@ object App
       mothershipDispatcher,
       trackStreamSnipHandler)
   }
+
+  private val tracksController = new TracksController(userAuthentication,
+                                                      trackCoordinatorClient,
+                                                      okidokiClient,
+                                                      mothershipDispatcher)
 
   val rollout = new RolloutBuilder(config).build
 
@@ -197,7 +204,8 @@ object App
     userFollowController,
     searchController,
     similarSoundsController,
-    rateLimitingFacade.rateLimitStatusController
+    rateLimitingFacade.rateLimitStatusController,
+    tracksController
   )
 
   override val customAdminHandlers: Seq[(AdminRoute, Handler)] = Seq(
