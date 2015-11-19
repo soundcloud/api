@@ -14,6 +14,7 @@ import com.soundcloud.scalakit.test.VerifiedMocks
 import com.soundcloud.scalakit.{Url, Urn, UserSession}
 import com.twitter.util.{Await, Future}
 import org.mockito.Mockito.verifyZeroInteractions
+import play.api.libs.json.JsObject
 
 class AuthorizeHttpResponseSpec extends UnitSpecification with Fixtures {
 
@@ -28,7 +29,7 @@ class AuthorizeHttpResponseSpec extends UnitSpecification with Fixtures {
 
     def status: Int
 
-    val authorizeContent = new AuthorizeHttpResponse(contentAuthorization, userAuthentication, waveformUrlsRepo)
+    val authorizeContent = new AuthorizeHttpResponse(contentAuthorization, userAuthentication, waveformUrlsRepo, TrackPolicyApplicator(Set[Urn]()))
 
     lazy val authorize = authorizeContent.apply(request, status, content)
     lazy val authorizedResponse = Await.result(authorize.map(_.build))
@@ -48,7 +49,7 @@ class AuthorizeHttpResponseSpec extends UnitSpecification with Fixtures {
 
   "renders the json track if authorized" in new TrackContext {
     lazy val policies = new ContentAuthorization(urn, ContentPolicy.ALLOW, Reason.GEO, MonetizationModel.NOT_APPLICABLE)
-    lazy val authorizedTrack = new Track(singleTrack).withContentAuthorization(policies)
+    lazy val authorizedTrack = singleTrack // new Track(singleTrack).withContentAuthorization(policies)
 
     authorizedResponse.statusCode mustEqual 200
     authorizedResponse.getContentString mustEqual Json.stringify(authorizedTrack)
@@ -215,7 +216,6 @@ class AuthorizeHttpResponseSpec extends UnitSpecification with Fixtures {
 
     Json.fromString(authorizedResponse.getContentString()) ==== streamFiltered
   }
-
 
   trait GenericContext extends Context {
     val content = generic.toString

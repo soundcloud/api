@@ -9,7 +9,7 @@ import com.soundcloud.jvmkit.ResourceName
 import com.soundcloud.jvmkit.admin.{AdminRoute, RequestMethod}
 import com.soundcloud.jvmkit.config.ConfigConvention
 import com.soundcloud.jvmkit.rollout.RolloutBuilder
-import com.soundcloud.publicApiStrangler.authorization.{AuthorizeHttpResponse, ContentAuthorizationFilter}
+import com.soundcloud.publicApiStrangler.authorization.{TrackPolicyApplicator, AuthorizeHttpResponse, ContentAuthorizationFilter}
 import com.soundcloud.publicApiStrangler.controller._
 import com.soundcloud.publicApiStrangler.headers.DefaultResponseHeadersFilter
 import com.soundcloud.publicApiStrangler.mapper.liebling.LikeCountMapper
@@ -30,6 +30,7 @@ import com.twitter.finagle.CancelledRequestException
 import com.twitter.finagle.http.Response
 import org.eclipse.jetty.server.Handler
 import org.jboss.netty.handler.codec.http.{HttpResponseStatus, HttpVersion}
+import com.soundcloud.trackcoordinator.client.TrackCoordinatorComponent
 
 object App
   extends BffInjectionBasedApp
@@ -41,7 +42,8 @@ object App
   with PublicApiClientComponent
   with FollowsComponent
   with GatekeeperComponent
-  with SimilarSoundsComponent {
+  with SimilarSoundsComponent
+  with TrackCoordinatorComponent {
 
   private val bffApplication = BffApplication(Urn("soundcloud", "systems", "public-api-strangler"), config.getApplicationResourceName)
 
@@ -64,7 +66,25 @@ object App
   private val contentAuthorizationService = new ContentAuthorizationService(authsyService)
 
   private val waveformUrlsRepo = new WaveformUrlsRepository(okidokiService, mediaService)
-  private val authorizeContent = new AuthorizeHttpResponse(contentAuthorizationService, userAuthentication, waveformUrlsRepo)
+
+  // Whitelist source: http://redash.int.s-cloud.net/queries/632/source
+  private val whitelistedClients: Set[Urn] = Set(
+    "soundcloud:applications:124",    // SoundCloud iOS
+    "soundcloud:applications:3152",   // SoundCloud Android
+    "soundcloud:applications:3273",   // Mobile Soundcloud
+    "soundcloud:applications:3537",   // SoundCloud Desktop
+    "soundcloud:applications:43164",  // SoundCloud Player Widget
+    "soundcloud:applications:46941",  // SoundCloud.com
+    "soundcloud:applications:60973",  // SoundCloud Flash Widget
+    "soundcloud:applications:65097",  // MobileWeb3
+    "soundcloud:applications:66151",  // MobileWeb production
+    "soundcloud:applications:90575",  // SoundCloud Visual Embed Player
+    "soundcloud:applications:99561",  // SoundCloud Kik Messenger Card
+    "soundcloud:applications:120502", // Twitter Partner
+    "soundcloud:applications:135495", // Mobile Web App
+    "soundcloud:applications:167582"  // HEOS by Denon (Production)
+  ).map(new Urn(_))
+  private val authorizeContent = new AuthorizeHttpResponse(contentAuthorizationService, userAuthentication, waveformUrlsRepo, TrackPolicyApplicator(whitelistedClients))
 
   private val mothershipDispatcher = new DispatchToMothershipHandler(publicApiClient)
 
@@ -96,6 +116,11 @@ object App
       mothershipDispatcher,
       trackStreamSnipHandler)
   }
+
+  private val tracksController = new TracksController(userAuthentication,
+                                                      trackCoordinatorClient,
+                                                      okidokiClient,
+                                                      mothershipDispatcher)
 
   val rollout = new RolloutBuilder(config).build
 
@@ -158,8 +183,6 @@ object App
     )
   }
 
-  private val robotsTxtController = new StaticResponseController("/robots.txt", "User-agent: *\nDisallow: \n")
-
   override val fallbackHandler = Some(mothershipDispatcher)
 
   override def exceptionHandler: PartialFunction[Throwable, Response] = {
@@ -168,10 +191,11 @@ object App
   }
 
   override lazy val additionalFilters = List(
-    new AcceptOnlyJsonRequestFilter(Set("/crossdomain.xml", "/robots.txt")),
+    new AcceptOnlyJsonRequestFilter,
     new ContentAuthorizationFilter(authorizeContent),
     rateLimitingFacade.filter,
-    new DefaultResponseHeadersFilter
+    new DefaultResponseHeadersFilter,
+    new StaticFilesFilter
   )
 
   override val controllers = Set(
@@ -180,8 +204,8 @@ object App
     userFollowController,
     searchController,
     similarSoundsController,
-    robotsTxtController,
-    rateLimitingFacade.rateLimitStatusController
+    rateLimitingFacade.rateLimitStatusController,
+    tracksController
   )
 
   override val customAdminHandlers: Seq[(AdminRoute, Handler)] = Seq(

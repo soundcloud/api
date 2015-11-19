@@ -11,7 +11,8 @@ DEFAULT_CONFIG := default.sh
 APP_NAME := public-api-strangler
 
 # Here are the endpoints that can be run by this application.
-API_ENTRYPOINT:= api
+API_ENTRYPOINT     := api
+API_INSTANCE_COUNT := 100
 
 BAZOOKA_CONFIG := production.enc
 BAZOOKA_ZONES := db
@@ -57,9 +58,8 @@ promote-to-release:
 	artifact-manager bazooka promote release --zones=$(BAZOOKA_ZONES)
 
 deploy-db:
-	./bin/notify-slack-deploy db Started
 	crun bazooka-cli "./$(DEPLOY_SCRIPT) bazooka --clean-revs \
-		--boot-timeout=60s --health-port=app --health-path=/-/health \
-  	--bazooka-zone=db --scale-step=1 --instance-cnt=100 \
-		--proc=api"
-	./bin/notify-slack-deploy db Finished
+		--boot-timeout=60s --health-port=app --health-path=/tracks/116540862?client_id=hannes_test \
+		--bazooka-zone=db --scale-step=10 --instance-cnt=$(API_INSTANCE_COUNT) \
+		--proc=api \
+		--slack-channels=#core-services"

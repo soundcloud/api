@@ -13,7 +13,8 @@ import com.twitter.util.Future
 class AuthorizeHttpResponse(
                              contentAuthorization: ContentAuthorizationService,
                              userAuthentication: UserAuthentication,
-                             waveformUrlsRepository: WaveformUrlsRepository) {
+                             waveformUrlsRepository: WaveformUrlsRepository,
+                             trackPolicyApplicator: TrackPolicyApplicator) {
 
   def apply(request: BffRequest, status: Int, body: String): Future[ResponseBuilder] =
     authorize(request, status, body, BuilderResponse(body))
@@ -30,7 +31,7 @@ class AuthorizeHttpResponse(
     userAuthentication.withUserSession(request) { session =>
       contentAuthorization.findRulesApplicableTo(session, urns).flatMap { rules =>
         retrieveWaveforms(session, urns, rules).map { waveforms =>
-          ApplyTrackPolicies(session, visitor, rules, waveforms)
+          trackPolicyApplicator(session, visitor, rules, waveforms)
             .map(Json.stringify)
             .map(originalResponse.withBody)
             .map(_.status(status))

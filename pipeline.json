@@ -58,8 +58,7 @@
         },
         {
           "deploy-db": {
-            "cmd": "make -f Makefile.pipeline deploy-db",
-            "manual": true
+            "cmd": "make -f Makefile.pipeline deploy-db"
           }
         }
       ]
