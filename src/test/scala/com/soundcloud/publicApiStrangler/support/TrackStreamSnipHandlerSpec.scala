@@ -8,11 +8,12 @@ import com.soundcloud.jvmkit.policies.{ContentAuthorization, ContentPolicy}
 import com.soundcloud.jvmkit.{Urn, UserSession}
 import com.soundcloud.publicApiStrangler.mapper.trackstreams.TrackStreamResponseMapper
 import com.twitter.util.{Await, Future}
+import org.jboss.netty.handler.codec.http.HttpResponseStatus
+
+import scala.collection.JavaConverters._
 
 class TrackStreamSnipHandlerSpec extends UnitSpecification {
-
   "TrackStreamSnipHandler" should {
-
     trait Context extends Scope {
       val mothershipDispatcher = mock[DispatchToMothershipHandler]
       val contentAuthService = mock[ContentAuthorizationService]
@@ -20,25 +21,49 @@ class TrackStreamSnipHandlerSpec extends UnitSpecification {
 
       val handler = new TrackStreamSnipHandler(mothershipDispatcher, contentAuthService, mediaUrlsRepository)
 
-      val trackId = "334030"
       val request = mock[Request]
-      val paramMap = Map("trackId" -> trackId)
-      request.routeParams returns paramMap
-      val trackUrn = new Urn("soundcloud", "tracks", trackId)
 
       val userSession = mock[UserSession]
+
       val mapper = mock[TrackStreamResponseMapper]
       val contentAuth = mock[ContentAuthorization]
-
-      contentAuthService.findRulesApplicableTo(userSession, Seq(trackUrn)) returns
-        Future.value(Seq(contentAuth))
 
       def responseBuilder(statusCode: Int) =
         Future.value(new ResponseBuilder().status(statusCode))
     }
 
-    "should return pubapi response in case pubapi returns client error" in new Context {
+    trait Success extends Context {
+      val trackId = "334030"
 
+      val paramMap = Map("trackId" -> trackId)
+      request.routeParams returns paramMap
+      val trackUrn = new Urn("soundcloud", "tracks", trackId)
+
+      contentAuthService.findRulesApplicableTo(userSession, Seq(trackUrn)) returns Future.value(Seq(contentAuth))
+    }
+
+    trait Failure extends Context {
+      val trackId = "non-numeric"
+      val paramMap = Map("trackId" -> trackId)
+      request.routeParams returns paramMap
+      val trackUrn = new Urn("soundcloud", "tracks", trackId)
+    }
+
+    "should return Mothership 404 if id is not numeric" in new Failure {
+      val response = Await.result(handler.handle(request, userSession, mapper)).build
+
+      response.status ==== HttpResponseStatus.NOT_FOUND
+
+      // Mothership headers
+      response.headers.get("Status") ==== "404 Not Found"
+      response.headers.get("Date") must not be null
+      response.headers.get("Content-Type") === "application/json; charset=utf-8"
+
+      there was noCallsTo(contentAuthService)
+      there was noCallsTo(mediaUrlsRepository)
+    }
+
+    "should return pubapi response in case pubapi returns client error" in new Success {
       val clientErrorResponse = responseBuilder(401)
       mothershipDispatcher.dispatch(request) returns clientErrorResponse
       contentAuth.getPolicy returns ContentPolicy.SNIP
@@ -49,8 +74,7 @@ class TrackStreamSnipHandlerSpec extends UnitSpecification {
       there was noCallsTo(mediaUrlsRepository)
     }
 
-    "should return pubapi response in case pubapi returns server error" in new Context {
-
+    "should return pubapi response in case pubapi returns server error" in new Success {
       val serverErrorResponse = responseBuilder(500)
       mothershipDispatcher.dispatch(request) returns serverErrorResponse
       contentAuth.getPolicy returns ContentPolicy.SNIP
@@ -61,9 +85,7 @@ class TrackStreamSnipHandlerSpec extends UnitSpecification {
       there was noCallsTo(mediaUrlsRepository)
     }
 
-
-    "should return pubapi response in case pubapi response is successful and content policy is not SNIP" in new Context {
-
+    "should return pubapi response in case pubapi response is successful and content policy is not SNIP" in new Success {
       val successResponse = responseBuilder(200)
       mothershipDispatcher.dispatch(request) returns successResponse
       contentAuth.getPolicy returns ContentPolicy.ALLOW
@@ -74,8 +96,7 @@ class TrackStreamSnipHandlerSpec extends UnitSpecification {
       there was one(contentAuthService).findRulesApplicableTo(userSession, Seq(trackUrn))
     }
 
-    "should return MediaUrlsRepository response in case pubapi response is successful and content policy is SNIP" in new Context {
-
+    "should return MediaUrlsRepository response in case pubapi response is successful and content policy is SNIP" in new Success {
       val successResponse = responseBuilder(200)
       mothershipDispatcher.dispatch(request) returns successResponse
       contentAuth.getPolicy returns ContentPolicy.SNIP
