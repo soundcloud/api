@@ -227,7 +227,7 @@ class UserFollowControllerSpec extends InjectionBasedControllerSpecification wit
       response.status ==== Status.PreconditionFailed
       val errors = (response.jsonBody \ "errors").as[Seq[JsObject]].head
       (errors \ "error_message").asOpt[String] ==== Option("DENY_AGE_RESTRICTED")
-      (errors \ "age").asOpt[Long] ==== Option(30)
+      (errors \ "age").asOpt[Long] ==== Option(31)
     }
 
     "render the age-unknown errors" in new Context {
