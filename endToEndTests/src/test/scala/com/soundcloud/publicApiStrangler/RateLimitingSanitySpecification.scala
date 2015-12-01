@@ -32,8 +32,7 @@ class RateLimitingSanitySpecification extends UnitSpecification with SpinningUpA
 
     "rate limit test requests" in new Context {
       private def setData(zkClient: ZkClient, path: String, data: String) = {
-        zkClient.create(BasePath.from(path), data.getBytes)
-        zkClient.setData(BasePath.from(path), data.getBytes)
+        zkClient.createRecursively(BasePath.from(path), data.getBytes)
       }
 
       setData(zkClient, "/publicapistrangler/rollouts/wire-rate-limits", "100")
