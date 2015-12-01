@@ -4,14 +4,16 @@ import com.soundcloud.bff.media.MediaUrl
 import com.soundcloud.bff.test.UnitSpecification
 import com.soundcloud.scalakit.Url
 import com.twitter.util.{Await, Future}
+import org.joda.time.DateTime
 
 
 class TrackStreamRedirectResponseMapperSpec extends UnitSpecification {
 
   trait Context extends Scope {
-    val previewMediaUrl = new MediaUrl("preview_mp3_128_url", Url("http://preview"))
-    val httpMediaUrl = new MediaUrl("http_mp3_128_url", Url("http://regular"))
-    val hlsMediaUrl = new MediaUrl("hls_mp3_128_url", Url("http://hls"))
+    val expiresAt = DateTime.now
+    val previewMediaUrl = new MediaUrl("preview_mp3_128_url", Url("http://preview"), expiresAt)
+    val httpMediaUrl = new MediaUrl("http_mp3_128_url", Url("http://regular"), expiresAt)
+    val hlsMediaUrl = new MediaUrl("hls_mp3_128_url", Url("http://hls"), expiresAt)
     val mapper = new TrackStreamRedirectResponseMapper
   }
 

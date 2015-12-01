@@ -122,7 +122,7 @@ object App
                                                       okidokiClient,
                                                       mothershipDispatcher)
 
-  val rollout = new RolloutBuilder(config).build
+  lazy val rolloutClient = new RolloutBuilder(config, telemetry).build
 
   private val rateLimitingFacade = new RateLimitingFacade(
     bffApplication,
@@ -131,7 +131,7 @@ object App
     config,
     telemetry,
     memcachedClient,
-    rollout
+    rolloutClient
   )
 
   private val userFollowController = new UserFollowController(
@@ -140,7 +140,7 @@ object App
     okidokiClient,
     followsClient,
     baseUrl,
-    rollout
+    rolloutClient
   )
 
   private val searchController = {
@@ -158,7 +158,7 @@ object App
     )
     val searchRepository = new SearchRepository(searchService)
     val searchMapper = new SearchMapper(searchRepository, entityMapper, baseUrl)
-    new SearchController(userAuthentication, searchMapper, baseUrl, rollout, mothershipDispatcher)
+    new SearchController(userAuthentication, searchMapper, baseUrl, rolloutClient, mothershipDispatcher)
   }
 
   private val similarSoundsController = {
