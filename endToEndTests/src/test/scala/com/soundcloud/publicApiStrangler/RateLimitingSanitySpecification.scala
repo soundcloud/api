@@ -2,7 +2,7 @@ package com.soundcloud.publicApiStrangler
 
 import com.soundcloud.jvmkit.ResourceName
 import com.soundcloud.jvmkit.config.{BazookaConfig, ConfigConvention}
-import com.soundcloud.jvmkit.rollout.ZookeeperClient
+import com.soundcloud.jvmkit.zookeeper.{BasePath, ZkClient}
 import com.soundcloud.scalakit.test.UnitSpecification
 import com.soundcloud.testutilities.{GratisMusikDiebstahl, SpinningUpAppSupport}
 import org.apache.curator.framework.CuratorFrameworkFactory
@@ -16,7 +16,7 @@ class RateLimitingSanitySpecification extends UnitSpecification with SpinningUpA
 
     val config = new BazookaConfig
 
-    val zookeeperClient = {
+    val zkClient = {
       val zookeeperServers = config.get(ResourceName("ZOOKEEPER"), ConfigConvention.SERVERS)
       val baseSleepTimeInMilliseconds = 1000
       val maxNumberOfRetries = 5
@@ -24,17 +24,21 @@ class RateLimitingSanitySpecification extends UnitSpecification with SpinningUpA
       val curatorZookeeperClient = CuratorFrameworkFactory.newClient(zookeeperServers, retryPolicy)
       curatorZookeeperClient.start()
       curatorZookeeperClient.blockUntilConnected()
-      new ZookeeperClient(curatorZookeeperClient)
+      new ZkClient(curatorZookeeperClient)
     }
   }
 
   "Public API Strangler" should {
 
     "rate limit test requests" in new Context {
-      zookeeperClient.setData("/publicapistrangler/rollouts/wire-rate-limits", "100")
-      zookeeperClient.setData("/publicapistrangler/rollouts/probe-rate-limits", "100")
-      zookeeperClient.setData("/publicapistrangler/rollouts/enforce-rate-limits", "100")
-      zookeeperClient.setData("/ratelimiting/public-api-strangler/ratelimitgroups/default",
+      private def setData(zkClient: ZkClient, path: String, data: String) = {
+        zkClient.setData(BasePath.from(path), data.getBytes)
+      }
+
+      setData(zkClient, "/publicapistrangler/rollouts/wire-rate-limits", "100")
+      setData(zkClient, "/publicapistrangler/rollouts/probe-rate-limits", "100")
+      setData(zkClient, "/publicapistrangler/rollouts/enforce-rate-limits", "100")
+      setData(zkClient, "/ratelimiting/public-api-strangler/ratelimitgroups/default",
         """
           |{
           |  "id":"default",
