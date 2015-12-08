@@ -1,7 +1,8 @@
 package com.soundcloud.publicApiStrangler.controller
 
 import com.soundcloud.bff.test.InjectionBasedControllerSpecification
-import com.soundcloud.follows._
+import com.soundcloud.follows.client.FollowsClient
+import com.soundcloud.follows.client.representation._
 import com.soundcloud.jvmkit.rollout.{BasicRolloutFeature, Rollout}
 import com.soundcloud.jvmkit.{Geo => JvmGeo, UserSessionBuilder}
 import com.soundcloud.publicApiStrangler.support.DispatchToMothershipHandler
@@ -12,7 +13,7 @@ import com.soundcloud.scalakit.{Geo, Urn}
 import com.soundcloud.service.client.OkidokiClient
 import com.twitter.finagle.http.{Response, Status}
 import com.twitter.util.Future
-import org.joda.time.{DateTime, DateTimeUtils}
+import org.joda.time.{LocalDateTime, DateTime, DateTimeUtils}
 import org.specs2.mutable.BeforeAfter
 import play.api.libs.json._
 
@@ -62,8 +63,8 @@ class UserFollowControllerSpec extends InjectionBasedControllerSpecification wit
       override def before = {
         super.before
         val values = Seq(userUrn, Urn("soundcloud:users:100"))
-        val pageInfo = PageInfo(Some("123-1234"), 2)
-        followsMock.followersFollowed(session, userUrn, Urn("soundcloud:users:2")) returns Future.value(UrnsPage(values))
+        val pageInfo = Pagination("123-1234", 2)
+        followsMock.followersFollowedBy(session, userUrn, Urn("soundcloud:users:2")) returns Future.value(Some(UserUrns(values)))
         okidokiMock.fetch(session, values.toSet) returns Future.value(okidokiUsers.as[List[JsObject]])
       }
 
@@ -88,8 +89,8 @@ class UserFollowControllerSpec extends InjectionBasedControllerSpecification wit
         val values = Seq(
           Urn("soundcloud:users:12490957"), Urn("soundcloud:users:100")
         )
-        val pageInfo = PageInfo(Some("123-1234"), 2)
-        followsMock.followingsNotFollowedBy(session, Urn("soundcloud:users:999"), Urn("soundcloud:users:2")) returns Future.value(UrnsPage(values))
+        val pageInfo = Pagination("123-1234", 2)
+        followsMock.followingsNotFollowedBy(session, Urn("soundcloud:users:999"), Urn("soundcloud:users:2")) returns Future.value(Some(UserUrns(values)))
         okidokiMock.fetch(session, values.toSet) returns Future.value(okidokiUsers.as[List[JsObject]])
       }
 
@@ -109,8 +110,8 @@ class UserFollowControllerSpec extends InjectionBasedControllerSpecification wit
         val values = Seq(
           Urn("soundcloud:users:12490957"), Urn("soundcloud:users:100")
         )
-        val pageInfo = PageInfo(Some("123-1234"), 2)
-        followsMock.mutualFollowings(session, Urn("soundcloud:users:999"), Urn("soundcloud:users:2")) returns Future.value(UrnsPage(values))
+        val pageInfo = Pagination("123-1234", 2)
+        followsMock.mutualFollowings(session, Urn("soundcloud:users:999"), Urn("soundcloud:users:2")) returns Future.value(Some(UserUrns(values)))
         okidokiMock.fetch(session, values.toSet) returns Future.value(okidokiUsers.as[List[JsObject]])
       }
 
@@ -128,10 +129,10 @@ class UserFollowControllerSpec extends InjectionBasedControllerSpecification wit
       override def before = {
         super.before
         val values = Seq(
-          Following("123-123", "2012-02-13T23:30:13.000+0000", Urn("soundcloud:users:12490957"), Urn("soundcloud:users:100"))
+          Following("123-123", new LocalDateTime("2012-02-13T23:30:13.000"), Urn("soundcloud:users:12490957"), Urn("soundcloud:users:100"))
         )
-        val pageInfo = PageInfo(Some("123-1234"), 2)
-        followsMock.followings(session, session.getUser, 10, None) returns Future.value(FollowsPage(values, pageInfo))
+        val pageInfo = Pagination("123-1234", 2)
+        followsMock.followings(session, session.getUser, None, 10) returns Future.value(Some(FollowingsPage(values, Some(pageInfo))))
         okidokiMock.fetch(session, values.map(_.target).toSet) returns Future.value(okidokiUsers.as[List[JsObject]])
       }
 
@@ -149,10 +150,10 @@ class UserFollowControllerSpec extends InjectionBasedControllerSpecification wit
       override def before = {
         super.before
         val values = Seq(
-          Following("123-123", "2012-02-13T23:30:13.000+0000", Urn("soundcloud:users:12490957"), Urn("soundcloud:users:100"))
+          Following("123-123", new LocalDateTime("2012-02-13T23:30:13.000"), Urn("soundcloud:users:12490957"), Urn("soundcloud:users:100"))
         )
-        val pageInfo = PageInfo(Some("123-1234"), 2)
-        followsMock.followers(session, session.getUser, 10, None) returns Future.value(FollowsPage(values, pageInfo))
+        val pageInfo = Pagination("123-1234", 2)
+        followsMock.followers(session, session.getUser, None, 10) returns Future.value(Some(FollowingsPage(values, Some(pageInfo))))
         okidokiMock.fetch(session, values.map(_.user).toSet) returns Future.value(okidokiUsers.as[List[JsObject]])
       }
 
@@ -170,10 +171,10 @@ class UserFollowControllerSpec extends InjectionBasedControllerSpecification wit
       override def before = {
         super.before
         val values = Seq(
-          Following("123-123", "2012-02-13T23:30:13.000+0000", Urn("soundcloud:users:12490957"), Urn("soundcloud:users:100"))
+          Following("123-123", new LocalDateTime("2012-02-13T23:30:13.000"), Urn("soundcloud:users:12490957"), Urn("soundcloud:users:100"))
         )
-        val pageInfo = PageInfo(Some("123-1234"), 2)
-        followsMock.followings(session, session.getUser, 10, None) returns Future.value(FollowsPage(values, pageInfo))
+        val pageInfo = Pagination("123-1234", 2)
+        followsMock.followings(session, session.getUser, None, 10) returns Future.value(Some(FollowingsPage(values, Some(pageInfo))))
         okidokiMock.fetch(session, values.map(_.target).toSet) returns Future.value(okidokiUsers.as[List[JsObject]])
       }
 
@@ -191,10 +192,10 @@ class UserFollowControllerSpec extends InjectionBasedControllerSpecification wit
       override def before = {
         super.before
         val values = Seq(
-          Following("123-123", "2012-02-13T23:30:13.000+0000", Urn("soundcloud:users:12490957"), Urn("soundcloud:users:100"))
+          Following("123-123", new LocalDateTime("2012-02-13T23:30:13.000"), Urn("soundcloud:users:12490957"), Urn("soundcloud:users:100"))
         )
-        val pageInfo = PageInfo(Some("123-1234"), 2)
-        followsMock.followers(session, session.getUser, 10, Some("foo")) returns Future.value(FollowsPage(values, pageInfo))
+        val pageInfo = Pagination("123-1234", 2)
+        followsMock.followers(session, session.getUser, Some("foo"), 10) returns Future.value(Some(FollowingsPage(values, Some(pageInfo))))
         okidokiMock.fetch(session, values.map(_.user).toSet) returns Future.value(okidokiUsers.as[List[JsObject]])
       }
 

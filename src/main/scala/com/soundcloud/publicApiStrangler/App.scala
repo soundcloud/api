@@ -4,7 +4,7 @@ import com.soundcloud.bff._
 import com.soundcloud.bff.authorization.ContentAuthorizationService
 import com.soundcloud.bff.media.{MediaUrlsRepository, WaveformUrlsRepository}
 import com.soundcloud.bff.services.JsonService
-import com.soundcloud.follows.FollowsComponent
+import com.soundcloud.follows.client.FollowsComponent
 import com.soundcloud.jvmkit.ResourceName
 import com.soundcloud.jvmkit.admin.{AdminRoute, RequestMethod}
 import com.soundcloud.jvmkit.config.ConfigConvention
