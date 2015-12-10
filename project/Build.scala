@@ -9,7 +9,7 @@ object Build extends HttpServerAppBuild(
     scalaVersion = "2.11.6"
   ),
   libDependencies = Seq(
-    "com.soundcloud"     %% "follows-client"           % "0.0.5",
+    "com.soundcloud"     %% "follows-client"           % "1.0.0",
     "com.soundcloud"     %% "ratelimitinglib"          % "0.2.10",
     "com.soundcloud"     %% "sc-services"              % "29.0.0",
     "com.soundcloud"     %% "track-coordinator-client" % "19.0.0",

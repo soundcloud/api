@@ -3,7 +3,8 @@ package com.soundcloud.publicApiStrangler.controller
 import com.soundcloud.bff.finagle.{Request, ResponseBuilder}
 import com.soundcloud.bff.nextbff.mapping.MappingContext
 import com.soundcloud.bff.web.{BffInjectionBasedController, UserAuthentication}
-import com.soundcloud.follows._
+import com.soundcloud.follows.client._
+import com.soundcloud.follows.client.representation._
 import com.soundcloud.jvmkit.rollout.{BasicRolloutFeature, Rollout}
 import com.soundcloud.publicApiStrangler.mapping.timeline.User
 import com.soundcloud.publicApiStrangler.support.DispatchToMothershipHandler
@@ -150,7 +151,7 @@ class UserFollowController(userAuthentication: UserAuthentication,
   private def fetchFollowersFollowed(request: Request): Future[ResponseBuilder] = {
     fetchUrns(
       request,
-      follows.followersFollowed(
+      follows.followersFollowedBy(
         _,
         _,
         Urn(s"soundcloud:users:${request.routeParams("other_id")}")
@@ -187,42 +188,45 @@ class UserFollowController(userAuthentication: UserAuthentication,
   private def cursorParam(request: Request) = request.params.get("cursor")
 
   private def fetchUrns(request: Request,
-                               fetchFunction: (UserSession, Urn) => Future[UrnsPage]): Future[ResponseBuilder] = {
+                        fetchFunction: (UserSession, Urn) => Future[Option[UserUrns]]): Future[ResponseBuilder] = {
     authenticateIfNeeded(request, requireLogin = false) { (session: UserSession, userToFetch: Urn) =>
       rollingOutReads(userToFetch).flatMap {
         case false => fallbackToMothership(request)
         case true => for {
-          response <- fetchFunction(session, userToFetch)
-          urns = response.values
-          users <- fetchUsers(session, urns.toSet)
+          responseOption <- fetchFunction(session, userToFetch)
+          urns = responseOption.map(_.urns.toSet).getOrElse(Set.empty)
+          users <- fetchUsers(session, urns)
         } yield {
+          responseOption.map { _ =>
             render.json(Map(
               "collection" -> mapUsersToUsers(users)
             ))
-          }
+          }.getOrElse(render.serviceUnavailable)
+        }
       }
     }
   }
 
   private def fetchPage(request: Request,
-                         fetchFunction: (UserSession, Urn, Int, Option[String]) => Future[FollowsPage],
+                         fetchFunction: (UserSession, Urn, Option[String], Int) => Future[Option[FollowingsPage]],
                          mapUsers: List[User] => List[Any] = mapUsersToUsers,
                          users: Seq[Following] => Seq[Urn],
                          requireLogin: Boolean): Future[ResponseBuilder] = {
     authenticateIfNeeded(request, requireLogin) { (session: UserSession, userToFetch: Urn) =>
-
       rollingOutReads(userToFetch).flatMap {
         case false => fallbackToMothership(request)
         case true => for {
-          affiliations <- fetchFunction(session, userToFetch, pageSizeParam(request), cursorParam(request))
-          urns = users(affiliations.values)
-          users <- fetchUsers(session, urns.toSet)
+          affiliationsOption <- fetchFunction(session, userToFetch, cursorParam(request), pageSizeParam(request))
+          urns = affiliationsOption.map(page => users(page.followings).toSet).getOrElse(Set.empty)
+          users <- fetchUsers(session, urns)
         } yield {
+          affiliationsOption.map { affiliations =>
             render.json(Map(
               "collection" -> mapUsers(users),
-              "next_href" -> nextHref(baseUrl, request.request.path, affiliations.page, request.params)
+              "next_href" -> nextHref(baseUrl, request.request.path, affiliations.next, request.params)
             ))
-          }
+          }.getOrElse(render.serviceUnavailable)
+        }
       }
     }
   }
@@ -239,9 +243,9 @@ class UserFollowController(userAuthentication: UserAuthentication,
 
   private def rollingOutWrites(userUrn: Urn): Future[Boolean] = rollout.isActiveForUrn(BasicRolloutFeature("follows-writes"), userUrn)
 
-  private def nextHref(baseUrl: String, path: String, pageInfo: PageInfo, requestParams: Map[String, String]): Option[String] = {
-    pageInfo.lastId.map { nextId =>
-      val params = requestParams ++ Map("cursor" -> nextId, "page_size" -> pageInfo.size) -- Seq("limit")
+  private def nextHref(baseUrl: String, path: String, next: Option[Pagination], requestParams: Map[String, String]): Option[String] = {
+    next.map { pagination =>
+      val params = requestParams ++ Map("cursor" -> pagination.cursor, "page_size" -> pagination.page_size) -- Seq("limit")
       baseUrl + path + "?" + params.map { case(k, v) => s"$k=$v" }.mkString("&")
     }
   }
