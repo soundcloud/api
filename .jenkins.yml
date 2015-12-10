@@ -1,3 +1,0 @@
-precheckin:
-  script: bin/laufbursche-ci
-  label: docker

@@ -46,10 +46,6 @@ for guidelines for outside contributors.
 For the master branch and deployment pipeline:
 [http://jenkins.cs.dev.s-cloud.net/view/public-api-strangler/](http://jenkins.cs.dev.s-cloud.net/view/public-api-strangler/).
 
-The PR precheckin builds are still on jenkins.int due the laufbursche
-integration present there:
-[http://jenkins.int.s-cloud.net/job/public-api-strangler_master_precheckin](http://jenkins.int.s-cloud.net/job/public-api-strangler_master_precheckin).
-
 ## Search leaving mothership
 
 Routing of search requests is controlled via rollout flags. See

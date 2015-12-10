@@ -1,8 +1,0 @@
-#!/bin/bash +x
-
-make -f Makefile.pipeline remove-containers
-crun builder "make ci"
-result=$?
-make -f Makefile.pipeline remove-containers
-
-exit ${result}
