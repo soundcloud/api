@@ -123,6 +123,7 @@ object App
                                                       mothershipDispatcher)
 
   lazy val rolloutClient = new RolloutBuilder(config, telemetry).build
+  override lazy val rollout = Some(rolloutClient)
 
   private val rateLimitingFacade = new RateLimitingFacade(
     bffApplication,
