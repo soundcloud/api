@@ -122,7 +122,7 @@ object App
                                                       okidokiClient,
                                                       mothershipDispatcher)
 
-  lazy val rolloutClient = new RolloutBuilder(config, telemetry).build
+  lazy val rolloutClient = new RolloutBuilder(config, telemetry).build("public-api-strangler")
   override lazy val rollout = Some(rolloutClient)
 
   private val rateLimitingFacade = new RateLimitingFacade(
