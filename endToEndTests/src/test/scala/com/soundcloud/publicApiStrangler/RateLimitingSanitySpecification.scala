@@ -35,9 +35,9 @@ class RateLimitingSanitySpecification extends UnitSpecification with SpinningUpA
         zkClient.createRecursively(BasePath.from(path), data.getBytes)
       }
 
-      setData(zkClient, "/publicapistrangler/rollouts/wire-rate-limits", "100")
-      setData(zkClient, "/publicapistrangler/rollouts/probe-rate-limits", "100")
-      setData(zkClient, "/publicapistrangler/rollouts/enforce-rate-limits", "100")
+      setData(zkClient, "/public-api-strangler/rollouts/wire-rate-limits", "100")
+      setData(zkClient, "/public-api-strangler/rollouts/probe-rate-limits", "100")
+      setData(zkClient, "/public-api-strangler/rollouts/enforce-rate-limits", "100")
       setData(zkClient, "/ratelimiting/public-api-strangler/ratelimitgroups/default",
         """
           |{
