@@ -5,13 +5,13 @@ import sbt.Keys._
 object Build extends HttpServerAppBuild(
   JvmkitApp(
     appType = BffApi,
-    jvmKitVersion = "24.6.1-SNAPSHOT",
+    jvmKitVersion = "25.0.2-AUTH-CONS-SUBS-SNAPSHOT",
     scalaVersion = "2.11.6"
   ),
   libDependencies = Seq(
     "com.soundcloud"     %% "follows-client"           % "1.0.0",
     "com.soundcloud"     %% "ratelimitinglib"          % "0.2.10",
-    "com.soundcloud"     %% "sc-services"              % "31.0.1-SNAPSHOT",
+    "com.soundcloud"     %% "sc-services"              % "32.0.0",
     "com.soundcloud"     %% "track-coordinator-client" % "19.0.0",
     "com.fasterxml.uuid" %  "java-uuid-generator"      % "3.1.3",
     "commons-codec"      %  "commons-codec"            % "1.9"
