@@ -35,7 +35,6 @@ import com.soundcloud.trackcoordinator.client.TrackCoordinatorComponent
 object App
   extends BffInjectionBasedApp
   with BazookaConfigComponent
-  with AuthenticatorComponent
   with OkidokiComponent
   with TimelineComponent
   with LieblingComponent
