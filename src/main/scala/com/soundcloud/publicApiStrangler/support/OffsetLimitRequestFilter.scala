@@ -21,7 +21,9 @@ class OffsetLimitRequestFilter(enabled: () => Future[Boolean], paths: Seq[String
 
   private def denial = Future.value(RouterResponse(mimicMotherShipBadRequestResponseBuilder.build, null))
 
-  private def optStringToOptInt(offset: Option[String]) = offset.map(_.trim).filter(_.forall(_.isDigit)).map(_.toInt)
+  private def optStringToOptInt(string: Option[String]) = {
+    string.map(_.trim).filter(!_.isEmpty).filter(_.forall(_.isDigit)).map(_.toInt)
+  }
 
   private lazy val mimicMotherShipBadRequestResponseBuilder = {
     new ResponseBuilder().

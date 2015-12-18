@@ -77,6 +77,12 @@ class OffsetLimitRequestFilterSpec extends UnitSpecification {
 
           response mustEqual responseFromNextService
         }
+
+        "passes through empty offset values" in new EnabledContext {
+          val request = Request(path, "offset" -> "")
+
+          response mustEqual responseFromNextService
+        }
       }
 
       "when disabled" >> {
