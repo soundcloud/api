@@ -8,7 +8,7 @@ import com.soundcloud.follows.client.FollowsComponent
 import com.soundcloud.jvmkit.ResourceName
 import com.soundcloud.jvmkit.admin.{AdminRoute, RequestMethod}
 import com.soundcloud.jvmkit.config.ConfigConvention
-import com.soundcloud.jvmkit.rollout.RolloutBuilder
+import com.soundcloud.jvmkit.rollout.{BasicRolloutFeature, RolloutBuilder}
 import com.soundcloud.publicApiStrangler.authorization.{TrackPolicyApplicator, AuthorizeHttpResponse, ContentAuthorizationFilter}
 import com.soundcloud.publicApiStrangler.controller._
 import com.soundcloud.publicApiStrangler.headers.DefaultResponseHeadersFilter
@@ -28,6 +28,7 @@ import com.soundcloud.scalakit.Urn
 import com.soundcloud.service.component._
 import com.twitter.finagle.CancelledRequestException
 import com.twitter.finagle.http.Response
+import com.twitter.util
 import org.eclipse.jetty.server.Handler
 import org.jboss.netty.handler.codec.http.{HttpResponseStatus, HttpVersion}
 import com.soundcloud.trackcoordinator.client.TrackCoordinatorComponent
@@ -191,8 +192,33 @@ object App
       Response(HttpVersion.HTTP_1_1, new HttpResponseStatus(499, "Client Closed Request"))
   }
 
+  private val limitOffsetEnabled = () => rolloutClient.isActive(BasicRolloutFeature("offset_limit"))
+  private val limitOffsetPaths = Seq(
+    """/e1/me/likes""",
+    """/e1/me/playlist_likes""",
+    """/e1/me/playlist_likes/ids""",
+    """/e1/me/track_likes""",
+    """/e1/me/track_likes/ids""",
+
+    """/e1/users/\d+/likes""",
+    """/e1/users/\d+/playlist_likes""",
+    """/e1/users/\d+/playlist_likes/ids""",
+    """/e1/users/\d+/track_likes""",
+    """/e1/users/\d+/track_likes/ids""",
+
+    """/me/favorites""",
+    """/me/favorites/ids""",
+
+    """/tracks/\d+/favoriters""",
+
+    """/users/\d+/favorites""",
+    """/users/\d+/favorites/ids"""
+  )
+  private val limitOffset = 200
+
   override lazy val additionalFilters = List(
     new AcceptOnlyJsonRequestFilter,
+    new OffsetLimitRequestFilter(limitOffsetEnabled, limitOffsetPaths, limitOffset),
     new ContentAuthorizationFilter(authorizeContent),
     rateLimitingFacade.filter,
     new DefaultResponseHeadersFilter,
