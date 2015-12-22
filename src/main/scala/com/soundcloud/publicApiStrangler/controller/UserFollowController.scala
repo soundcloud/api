@@ -56,6 +56,8 @@ class UserFollowController(userAuthentication: UserAuthentication,
   get("/me/followers/ids.json")(fetchMyFollowerIds)
   get("/me/followings/ids")(fetchMyFollowingIds)
   get("/me/followings/ids.json")(fetchMyFollowingIds)
+  get("/me/followers/:id")(fetchPossibleFollower)
+  get("/me/followings/:id")(fetchPossibleFollowing)
   head("/me/followings/:id")(fallbackToMothership)
   post("/me/followings/:id")(fallbackToMothership)
   patch("/me/followings/:id")(fallbackToMothership)
@@ -174,6 +176,10 @@ class UserFollowController(userAuthentication: UserAuthentication,
 
   private def fetchMyFollowerIds(request: Request) = fetchPage(request, follows.followers, userIds, fans, requireLogin = true)
 
+  private def fetchPossibleFollowing(request: Request) = fetchUser(request, follows.filterFollowings)
+
+  private def fetchPossibleFollower(request: Request) = fetchUser(request, follows.filterFollowers)
+
   private def mapUsersToUsers(users: List[User]): List[Any] = users
 
   private def userIds(users: List[User]): List[Any] = users.map(u => u.id)
@@ -233,6 +239,33 @@ class UserFollowController(userAuthentication: UserAuthentication,
       }
     }
   }
+
+  private def fetchUser(request: Request,
+                        filteringFunction: (UserSession, Urn, Seq[Urn]) => Future[Option[FilteredUserUrns]]): Future[ResponseBuilder] =
+    authenticateIfNeeded(request, requireLogin = true) { (session: UserSession, loggedInUser: Urn) =>
+      val userId = request.routeParams.get("id").get
+      val user = Urn("soundcloud:users:" + userId)
+
+      rollingOutReads(loggedInUser).flatMap {
+        case false => fallbackToMothership(request)
+        case true => for {
+          filteredOption <- filteringFunction(session, loggedInUser, Seq(user))
+          urns = filteredOption.map(_.included).getOrElse(Set.empty)
+          users <- fetchUsers(session, urns)
+        } yield {
+          filteredOption.map { _ =>
+            if (users.nonEmpty) {
+              render
+                .status(Status.SeeOther.getCode)
+                .header("Location", s"$baseUrl/users/${userId}")
+                .json(users.head)
+            } else {
+              render.notFound
+            }
+          }.getOrElse(render.serviceUnavailable)
+        }
+      }
+    }
 
   private def authenticateIfNeeded(request: Request, requireLogin: Boolean)(withSession: (UserSession, Urn) => Future[ResponseBuilder]) = {
     if(requireLogin) {
