@@ -38,3 +38,5 @@ sc-debian-layout: clean
 
 clean:
 	rm -rf target
+
+.PHONY: _dev_docker_compose
