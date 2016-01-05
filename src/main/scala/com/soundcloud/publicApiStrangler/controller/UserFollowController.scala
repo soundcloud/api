@@ -177,9 +177,9 @@ class UserFollowController(userAuthentication: UserAuthentication,
 
   private def fetchMyFollowerIds(request: Request) = fetchPage(request, follows.followers, userIds, fans, requireLogin = true)
 
-  private def fetchPossibleFollowing(request: Request) = fetchUser(request, follows.filterFollowings)
+  private def fetchPossibleFollowing(request: Request) = fetchUser(request, follows.filterFollowings, requireLogin = true)
 
-  private def fetchPossibleFollower(request: Request) = fetchUser(request, follows.filterFollowers)
+  private def fetchPossibleFollower(request: Request) = fetchUser(request, follows.filterFollowers, requireLogin = true)
 
   private def mapUsersToUsers(users: List[User]): List[Any] = users
 
@@ -242,8 +242,9 @@ class UserFollowController(userAuthentication: UserAuthentication,
   }
 
   private def fetchUser(request: Request,
-                        filteringFunction: (UserSession, Urn, Seq[Urn]) => Future[Option[FilteredUserUrns]]): Future[ResponseBuilder] =
-    authenticateIfNeeded(request, requireLogin = true) { (session: UserSession, loggedInUser: Urn) =>
+                        filteringFunction: (UserSession, Urn, Seq[Urn]) => Future[Option[FilteredUserUrns]],
+                        requireLogin: Boolean): Future[ResponseBuilder] =
+    authenticateIfNeeded(request, requireLogin) { (session: UserSession, loggedInUser: Urn) =>
       val userId = request.routeParams.get("id").get
       val user = Urn("soundcloud:users:" + userId)
 
