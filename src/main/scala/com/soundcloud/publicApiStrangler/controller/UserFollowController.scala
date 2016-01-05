@@ -48,6 +48,8 @@ class UserFollowController(userAuthentication: UserAuthentication,
   get("/users/:id/followers/followed_by/:other_id")(fetchFollowersFollowed)
   get("/users/:id/followings/not_followed_by/:other_id")(fetchFollowingsNotFollowedBy)
   get("/users/:id/followings/common_to/:other_id")(fetchMutualFollowings)
+  get("/users/:id/followers/:other_id")(fetchPossibleFollowerWithoutAuth)
+  get("/users/:id/followings/:other_id")(fetchPossibleFollowingWithoutAuth)
 
   // logged-in only endpoints
   get("/me/followings")(fetchFollowings)
