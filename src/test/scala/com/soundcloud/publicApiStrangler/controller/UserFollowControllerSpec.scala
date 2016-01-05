@@ -207,7 +207,7 @@ class UserFollowControllerSpec extends InjectionBasedControllerSpecification wit
     }
   }
 
-  "GET /me/followings/:id" >> {
+  "GET /me/followings/:other_id" >> {
     "fetches a following" in new Context {
       override def before = {
         super.before
@@ -245,7 +245,7 @@ class UserFollowControllerSpec extends InjectionBasedControllerSpecification wit
     }
   }
 
-  "GET /me/followers/:id" >> {
+  "GET /me/followers/:other_id" >> {
     "fetches a follower" in new Context {
       override def before = {
         super.before
@@ -281,7 +281,7 @@ class UserFollowControllerSpec extends InjectionBasedControllerSpecification wit
     }
   }
 
-  "PUT /me/followings/:id" >> {
+  "PUT /me/followings/:other_id" >> {
     "follows a profile" in new Context {
       override def before = {
         super.before
