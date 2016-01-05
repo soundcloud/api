@@ -5,7 +5,7 @@ import sbt.Keys._
 object Build extends HttpServerAppBuild(
   JvmkitApp(
     appType = BffApi,
-    jvmKitVersion = "25.0.2-AUTH-CONS-SUBS-SNAPSHOT",
+    jvmKitVersion = "26.0.0",
     scalaVersion = "2.11.6"
   ),
   libDependencies = Seq(
