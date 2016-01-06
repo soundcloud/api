@@ -207,19 +207,32 @@ class UserFollowControllerSpec extends InjectionBasedControllerSpecification wit
     }
   }
 
-  "GET /me/followings/:id" >> {
-    "fetches a following" in new Context {
-      override def before = {
-        super.before
+  trait FetchesFollowingContext extends Context {
+    override def before = {
+      super.before
 
-        val candidateUser = Urn("soundcloud:users:123")
-        val filteredUserUrns = FilteredUserUrns(included = Set(candidateUser), excluded = Set.empty)
+      val candidateUser = Urn("soundcloud:users:123")
+      val filteredUserUrns = FilteredUserUrns(included = Set(candidateUser), excluded = Set.empty)
 
-        followsMock.filterFollowings(session, userUrn, Seq(candidateUser)) returns Future.value(Some(filteredUserUrns))
-        okidokiMock.fetch(session, Set(candidateUser)) returns Future.value(okidokiUsers.as[List[JsObject]])
-      }
+      followsMock.filterFollowings(session, userUrn, Seq(candidateUser)) returns Future.value(Some(filteredUserUrns))
+      okidokiMock.fetch(session, Set(candidateUser)) returns Future.value(okidokiUsers.as[List[JsObject]])
+    }
+  }
 
+  trait FollowingNotFoundContext extends Context {
+    override def before = {
+      super.before
 
+      val candidateUser = Urn("soundcloud:users:123")
+      val filteredUserUrns = FilteredUserUrns(included = Set.empty, excluded = Set(candidateUser))
+
+      followsMock.filterFollowings(session, userUrn, Seq(candidateUser)) returns Future.value(Some(filteredUserUrns))
+      okidokiMock.fetch(session, Set.empty) returns Future.value(List.empty)
+    }
+  }
+
+  "GET /me/followings/:other_id" >> {
+    "fetches a following" in new FetchesFollowingContext {
       val response = get(controller, "/me/followings/123")
       response.status ==== Status.SeeOther
       response.getHeader("Location") ==== "http://foo/users/123"
@@ -228,35 +241,86 @@ class UserFollowControllerSpec extends InjectionBasedControllerSpecification wit
       (json \ "id").as[Long] ==== 123
     }
 
-    "returns not found when the given user is not a following" in new Context {
-      override def before = {
-        super.before
-
-        val candidateUser = Urn("soundcloud:users:123")
-        val filteredUserUrns = FilteredUserUrns(included = Set.empty, excluded = Set(candidateUser))
-
-        followsMock.filterFollowings(session, userUrn, Seq(candidateUser)) returns Future.value(Some(filteredUserUrns))
-        okidokiMock.fetch(session, Set.empty) returns Future.value(List.empty)
-      }
-
-
+    "returns not found when the given user is not a following" in new FollowingNotFoundContext {
       val response = get(controller, "/me/followings/123")
       response.status ==== Status.NotFound
     }
   }
 
-  "GET /me/followers/:id" >> {
-    "fetches a follower" in new Context {
-      override def before = {
-        super.before
+  "GET /me/followings/:other_id.json" >> {
+    "fetches a following" in new FetchesFollowingContext {
+      val response = get(controller, "/me/followings/123.json")
+      response.status ==== Status.SeeOther
+      response.getHeader("Location") ==== "http://foo/users/123"
 
-        val candidateUser = Urn("soundcloud:users:123")
-        val filteredUserUrns = FilteredUserUrns(included = Set(candidateUser), excluded = Set.empty)
+      val json = Json.parse(response.body)
+      (json \ "id").as[Long] ==== 123
+    }
 
-        followsMock.filterFollowers(session, userUrn, Seq(candidateUser)) returns Future.value(Some(filteredUserUrns))
-        okidokiMock.fetch(session, Set(candidateUser)) returns Future.value(okidokiUsers.as[List[JsObject]])
-      }
+    "returns not found when the given user is not a following" in new FollowingNotFoundContext {
+      val response = get(controller, "/me/followings/123.json")
+      response.status ==== Status.NotFound
+    }
+  }
 
+  "GET /users/:id/followings/:other_id" >> {
+    "fetches a following" in new FetchesFollowingContext {
+      val response = get(controller, "/users/999/followings/123")
+      response.status ==== Status.SeeOther
+      response.getHeader("Location") ==== "http://foo/users/123"
+
+      val json = Json.parse(response.body)
+      (json \ "id").as[Long] ==== 123
+    }
+
+    "returns not found when the given user is not a following" in new FollowingNotFoundContext {
+      val response = get(controller, "/users/999/followings/123")
+      response.status ==== Status.NotFound
+    }
+  }
+
+  "GET /users/:id/followings/:other_id.json" >> {
+    "fetches a following" in new FetchesFollowingContext {
+      val response = get(controller, "/users/999/followings/123.json")
+      response.status ==== Status.SeeOther
+      response.getHeader("Location") ==== "http://foo/users/123"
+
+      val json = Json.parse(response.body)
+      (json \ "id").as[Long] ==== 123
+    }
+
+    "returns not found when the given user is not a following" in new FollowingNotFoundContext {
+      val response = get(controller, "/users/999/followings/123.json")
+      response.status ==== Status.NotFound
+    }
+  }
+
+  trait FetchesFollowerContext extends Context {
+    override def before = {
+      super.before
+
+      val candidateUser = Urn("soundcloud:users:123")
+      val filteredUserUrns = FilteredUserUrns(included = Set(candidateUser), excluded = Set.empty)
+
+      followsMock.filterFollowers(session, userUrn, Seq(candidateUser)) returns Future.value(Some(filteredUserUrns))
+      okidokiMock.fetch(session, Set(candidateUser)) returns Future.value(okidokiUsers.as[List[JsObject]])
+    }
+  }
+
+  trait FollowerNotFoundContext extends Context {
+    override def before = {
+      super.before
+
+      val candidateUser = Urn("soundcloud:users:123")
+      val filteredUserUrns = FilteredUserUrns(included = Set.empty, excluded = Set(candidateUser))
+
+      followsMock.filterFollowers(session, userUrn, Seq(candidateUser)) returns Future.value(Some(filteredUserUrns))
+      okidokiMock.fetch(session, Set.empty) returns Future.value(List.empty)
+    }
+  }
+
+  "GET /me/followers/:other_id" >> {
+    "fetches a follower" in new FetchesFollowerContext {
       val response = get(controller, "/me/followers/123")
       response.status ==== Status.SeeOther
       response.getHeader("Location") ==== "http://foo/users/123"
@@ -265,23 +329,62 @@ class UserFollowControllerSpec extends InjectionBasedControllerSpecification wit
       (json \ "id").as[Long] ==== 123
     }
 
-    "returns not found when the given user is not a follower" in new Context {
-      override def before = {
-        super.before
-
-        val candidateUser = Urn("soundcloud:users:123")
-        val filteredUserUrns = FilteredUserUrns(included = Set.empty, excluded = Set(candidateUser))
-
-        followsMock.filterFollowers(session, userUrn, Seq(candidateUser)) returns Future.value(Some(filteredUserUrns))
-        okidokiMock.fetch(session, Set.empty) returns Future.value(List.empty)
-      }
-
+    "returns not found when the given user is not a follower" in new FollowerNotFoundContext {
       val response = get(controller, "/me/followers/123")
       response.status ==== Status.NotFound
     }
   }
 
-  "PUT /me/followings/:id" >> {
+  "GET /me/followers/:other_id.json" >> {
+    "fetches a follower" in new FetchesFollowerContext {
+      val response = get(controller, "/me/followers/123.json")
+      response.status ==== Status.SeeOther
+      response.getHeader("Location") ==== "http://foo/users/123"
+
+      val json = Json.parse(response.body)
+      (json \ "id").as[Long] ==== 123
+    }
+
+    "returns not found when the given user is not a follower" in new FollowerNotFoundContext {
+      val response = get(controller, "/me/followers/123.json")
+      response.status ==== Status.NotFound
+    }
+  }
+
+  "GET /users/:id/followers/:other_id" >> {
+    "fetches a follower" in new FetchesFollowerContext {
+      val response = get(controller, "/users/999/followers/123")
+      response.status ==== Status.SeeOther
+      response.getHeader("Location") ==== "http://foo/users/123"
+
+      val json = Json.parse(response.body)
+      (json \ "id").as[Long] ==== 123
+    }
+
+    "returns not found when the given user is not a follower" in new FollowerNotFoundContext {
+      val response = get(controller, "/users/999/followers/123")
+      response.status ==== Status.NotFound
+    }
+  }
+
+  "GET /users/:id/followers/:other_id.json" >> {
+    "fetches a follower" in new FetchesFollowerContext {
+      val response = get(controller, "/users/999/followers/123.json")
+      response.status ==== Status.SeeOther
+      response.getHeader("Location") ==== "http://foo/users/123"
+
+      val json = Json.parse(response.body)
+      (json \ "id").as[Long] ==== 123
+    }
+
+    "returns not found when the given user is not a follower" in new FollowerNotFoundContext {
+      val response = get(controller, "/users/999/followers/123.json")
+      response.status ==== Status.NotFound
+    }
+  }
+
+
+  "PUT /me/followings/:other_id" >> {
     "follows a profile" in new Context {
       override def before = {
         super.before
