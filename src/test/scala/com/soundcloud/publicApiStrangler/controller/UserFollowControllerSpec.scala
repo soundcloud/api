@@ -247,6 +247,22 @@ class UserFollowControllerSpec extends InjectionBasedControllerSpecification wit
     }
   }
 
+  "GET /me/followings/:other_id.json" >> {
+    "fetches a following" in new FetchesFollowingContext {
+      val response = get(controller, "/me/followings/123.json")
+      response.status ==== Status.SeeOther
+      response.getHeader("Location") ==== "http://foo/users/123"
+
+      val json = Json.parse(response.body)
+      (json \ "id").as[Long] ==== 123
+    }
+
+    "returns not found when the given user is not a following" in new FollowingNotFoundContext {
+      val response = get(controller, "/me/followings/123.json")
+      response.status ==== Status.NotFound
+    }
+  }
+
   "GET /users/:id/followings/:other_id" >> {
     "fetches a following" in new FetchesFollowingContext {
       val response = get(controller, "/users/999/followings/123")
@@ -259,6 +275,22 @@ class UserFollowControllerSpec extends InjectionBasedControllerSpecification wit
 
     "returns not found when the given user is not a following" in new FollowingNotFoundContext {
       val response = get(controller, "/users/999/followings/123")
+      response.status ==== Status.NotFound
+    }
+  }
+
+  "GET /users/:id/followings/:other_id.json" >> {
+    "fetches a following" in new FetchesFollowingContext {
+      val response = get(controller, "/users/999/followings/123.json")
+      response.status ==== Status.SeeOther
+      response.getHeader("Location") ==== "http://foo/users/123"
+
+      val json = Json.parse(response.body)
+      (json \ "id").as[Long] ==== 123
+    }
+
+    "returns not found when the given user is not a following" in new FollowingNotFoundContext {
+      val response = get(controller, "/users/999/followings/123.json")
       response.status ==== Status.NotFound
     }
   }
@@ -303,6 +335,21 @@ class UserFollowControllerSpec extends InjectionBasedControllerSpecification wit
     }
   }
 
+  "GET /me/followers/:other_id.json" >> {
+    "fetches a follower" in new FetchesFollowerContext {
+      val response = get(controller, "/me/followers/123.json")
+      response.status ==== Status.SeeOther
+      response.getHeader("Location") ==== "http://foo/users/123"
+
+      val json = Json.parse(response.body)
+      (json \ "id").as[Long] ==== 123
+    }
+
+    "returns not found when the given user is not a follower" in new FollowerNotFoundContext {
+      val response = get(controller, "/me/followers/123.json")
+      response.status ==== Status.NotFound
+    }
+  }
 
   "GET /users/:id/followers/:other_id" >> {
     "fetches a follower" in new FetchesFollowerContext {
@@ -319,6 +366,23 @@ class UserFollowControllerSpec extends InjectionBasedControllerSpecification wit
       response.status ==== Status.NotFound
     }
   }
+
+  "GET /users/:id/followers/:other_id.json" >> {
+    "fetches a follower" in new FetchesFollowerContext {
+      val response = get(controller, "/users/999/followers/123.json")
+      response.status ==== Status.SeeOther
+      response.getHeader("Location") ==== "http://foo/users/123"
+
+      val json = Json.parse(response.body)
+      (json \ "id").as[Long] ==== 123
+    }
+
+    "returns not found when the given user is not a follower" in new FollowerNotFoundContext {
+      val response = get(controller, "/users/999/followers/123.json")
+      response.status ==== Status.NotFound
+    }
+  }
+
 
   "PUT /me/followings/:other_id" >> {
     "follows a profile" in new Context {

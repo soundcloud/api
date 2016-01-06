@@ -53,7 +53,9 @@ class UserFollowController(userAuthentication: UserAuthentication,
   get("/users/:id/followings/not_followed_by/:other_id")(fetchFollowingsNotFollowedBy)
   get("/users/:id/followings/common_to/:other_id")(fetchMutualFollowings)
   get("/users/:id/followers/:other_id")(fetchPossibleFollowerWithoutAuth)
+  get("/users/:id/followers/:other_id.json")(fetchPossibleFollowerWithoutAuth)
   get("/users/:id/followings/:other_id")(fetchPossibleFollowingWithoutAuth)
+  get("/users/:id/followings/:other_id.json")(fetchPossibleFollowingWithoutAuth)
 
   // logged-in only endpoints
   get("/me/followings")(fetchFollowings)
@@ -67,7 +69,9 @@ class UserFollowController(userAuthentication: UserAuthentication,
   get("/me/followings/ids.json")(fetchMyFollowingIds)
   get("/me/followings/tracks")(fallbackToMothership)
   get("/me/followers/:other_id")(fetchPossibleFollower)
+  get("/me/followers/:other_id.json")(fetchPossibleFollower)
   get("/me/followings/:other_id")(fetchPossibleFollowing)
+  get("/me/followings/:other_id.json")(fetchPossibleFollowing)
   head("/me/followings/:other_id")(fallbackToMothership)
   post("/me/followings/:other_id")(fallbackToMothership)
   patch("/me/followings/:other_id")(fallbackToMothership)
