@@ -45,6 +45,10 @@ class UserFollowController(userAuthentication: UserAuthentication,
   get("/users/:id/followers")(fetchFollowersWithoutAuth)
   get("/users/:id/followers.json")(fetchFollowersWithoutAuth)
   get("/users/:id/followers/recent")(fetchFollowersWithoutAuth)
+  get("/users/:id/followers/ids")(fetchFollowerIdsWithoutAuth)
+  get("/users/:id/followers/ids.json")(fetchFollowerIdsWithoutAuth)
+  get("/users/:id/followings/ids")(fetchFollowingIdsWithoutAuth)
+  get("/users/:id/followings/ids.json")(fetchFollowingIdsWithoutAuth)
   get("/users/:id/followers/followed_by/:other_id")(fetchFollowersFollowed)
   get("/users/:id/followings/not_followed_by/:other_id")(fetchFollowingsNotFollowedBy)
   get("/users/:id/followings/common_to/:other_id")(fetchMutualFollowings)
@@ -53,7 +57,10 @@ class UserFollowController(userAuthentication: UserAuthentication,
 
   // logged-in only endpoints
   get("/me/followings")(fetchFollowings)
+  get("/me/followings.json")(fetchFollowings)
   get("/me/followers")(fetchMyFollowers)
+  get("/me/followers.json")(fetchMyFollowers)
+  get("/me/followers/recent")(fetchMyFollowers)
   get("/me/followers/ids")(fetchMyFollowerIds)
   get("/me/followers/ids.json")(fetchMyFollowerIds)
   get("/me/followings/ids")(fetchMyFollowingIds)
@@ -174,6 +181,10 @@ class UserFollowController(userAuthentication: UserAuthentication,
   private def fetchMyFollowers(request: Request): Future[ResponseBuilder] = fetchPage(request, follows.followers, mapUsersToUsers, fans, requireLogin = true)
 
   private def fetchFollowings(request: Request) = fetchPage(request, follows.followings, mapUsersToUsers, contacts, requireLogin = true)
+
+  private def fetchFollowingIdsWithoutAuth(request: Request) = fetchPage(request, follows.followings, userIds, contacts, requireLogin = false)
+
+  private def fetchFollowerIdsWithoutAuth(request: Request) = fetchPage(request, follows.followers, userIds, fans, requireLogin = false)
 
   private def fetchMyFollowingIds(request: Request) = fetchPage(request, follows.followings, userIds, contacts, requireLogin = true)
 
