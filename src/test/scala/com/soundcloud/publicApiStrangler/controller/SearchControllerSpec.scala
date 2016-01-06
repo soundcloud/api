@@ -108,7 +108,7 @@ class SearchControllerSpec extends InjectionBasedControllerSpecification {
 
     "performs a search when q param is present" in new EnabledContext {
       endpoints.foreach { case (apiEndPoint, dispatcherRequest) =>
-        val request = com.twitter.finagle.http.Request(apiEndPoint.s, extraParams.toSeq: _*)
+        val request = com.twitter.finagle.http.Request(apiEndPoint, extraParams.toSeq: _*)
         val query = dispatcherRequest(request)
         val page = OffsetBasedPage(query, "http://api.soundcloud.com", apiEndPoint, extraParams, 0, 10)
 
@@ -126,7 +126,7 @@ class SearchControllerSpec extends InjectionBasedControllerSpecification {
       when(rolloutMock.isActive(any[BasicRolloutFeature])).thenReturn(Future.True)
 
       endpoints.foreach { case (apiEndPoint, dispatcherRequest) =>
-        val request = com.twitter.finagle.http.Request(apiEndPoint.s, queryParams.toSeq: _*)
+        val request = com.twitter.finagle.http.Request(apiEndPoint, queryParams.toSeq: _*)
         val query = dispatcherRequest(request)
         val page = OffsetBasedPage(query, "http://api.soundcloud.com", apiEndPoint, queryParams, 0, 10)
 
@@ -146,7 +146,7 @@ class SearchControllerSpec extends InjectionBasedControllerSpecification {
         when(rolloutMock.isActive(any[BasicRolloutFeature])).thenReturn(Future.True)
 
         endpoints.foreach { case (apiEndPoint, dispatcherRequest) =>
-          val request = com.twitter.finagle.http.Request(apiEndPoint.s, queryParams.toSeq: _*)
+          val request = com.twitter.finagle.http.Request(apiEndPoint, queryParams.toSeq: _*)
           val query = dispatcherRequest(request)
           val page = OffsetBasedPage(query, "http://api.soundcloud.com", apiEndPoint, queryParams, 0, 10)
 
@@ -189,7 +189,7 @@ class SearchControllerSpec extends InjectionBasedControllerSpecification {
         when(rolloutMock.isActive(any[BasicRolloutFeature])).thenReturn(Future.True)
 
         endpoints.foreach { case (apiEndPoint, dispatcherRequest) =>
-          val request = com.twitter.finagle.http.Request(apiEndPoint.s, extraParams.toSeq: _*)
+          val request = com.twitter.finagle.http.Request(apiEndPoint, extraParams.toSeq: _*)
           val query = dispatcherRequest(request)
           val page = OffsetBasedPage(query, "http://api.soundcloud.com", apiEndPoint, extraParams, 0, 10)
 
