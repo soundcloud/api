@@ -3,18 +3,18 @@ package com.soundcloud.publicApiStrangler.mapper.timeline.publicApi
 import com.soundcloud.bff.nextbff.pagination.CursorBasedPage
 import com.soundcloud.bff.test.UnitSpecification
 import com.soundcloud.publicApiStrangler.mapper.timeline.{EntityMapper, EntitySummaryMapper}
-import com.soundcloud.publicApiStrangler.mapping.timeline.publicApi.{TimelineWithOrigin, TimelineItemWithOrigin}
+import com.soundcloud.publicApiStrangler.mapping.timeline.publicApi.{TimelineItemWithOrigin, TimelineWithOrigin}
 import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures
 import com.soundcloud.scalakit.test.VerifiedMocks
 import com.soundcloud.scalakit.{Urn, UserSession}
-import com.soundcloud.service.client.TimelineClient
+import com.soundcloud.services.timeline.TimelineJsonClient
 import com.twitter.util.{Await, Future}
 import play.api.libs.json.JsObject
 
 class ActivitiesWithOriginMapperSpec extends UnitSpecification with Fixtures {
 
   trait Context extends VerifiedMocks {
-    val timelineClient = mock[TimelineClient]
+    val timelineClient = mock[TimelineJsonClient]
     val entityMapper = mock[EntityMapper]
     val entitySummaryMapper = mock[EntitySummaryMapper]
     val mapper = new ActivitiesWithOriginMapper(timelineClient, entityMapper, entitySummaryMapper)

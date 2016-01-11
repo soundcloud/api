@@ -9,7 +9,7 @@ import com.soundcloud.jvmkit.ResourceName
 import com.soundcloud.jvmkit.admin.{AdminRoute, RequestMethod}
 import com.soundcloud.jvmkit.config.ConfigConvention
 import com.soundcloud.jvmkit.rollout.{BasicRolloutFeature, RolloutBuilder}
-import com.soundcloud.publicApiStrangler.authorization.{TrackPolicyApplicator, AuthorizeHttpResponse, ContentAuthorizationFilter}
+import com.soundcloud.publicApiStrangler.authorization.{AuthorizeHttpResponse, ContentAuthorizationFilter, TrackPolicyApplicator}
 import com.soundcloud.publicApiStrangler.controller._
 import com.soundcloud.publicApiStrangler.headers.DefaultResponseHeadersFilter
 import com.soundcloud.publicApiStrangler.mapper.liebling.LikeCountMapper
@@ -25,19 +25,19 @@ import com.soundcloud.publicApiStrangler.support._
 import com.soundcloud.publicApiStrangler.zookeeper.CuratorFrameworkFactory
 import com.soundcloud.ratelimiting.facade._
 import com.soundcloud.scalakit.Urn
-import com.soundcloud.service.component._
+import com.soundcloud.service.component.{GatekeeperComponent, LieblingComponent, OkidokiComponent, SimilarSoundsComponent}
+import com.soundcloud.services.timeline.TimelineJsonComponent
+import com.soundcloud.trackcoordinator.client.TrackCoordinatorComponent
 import com.twitter.finagle.CancelledRequestException
 import com.twitter.finagle.http.Response
-import com.twitter.util
 import org.eclipse.jetty.server.Handler
 import org.jboss.netty.handler.codec.http.{HttpResponseStatus, HttpVersion}
-import com.soundcloud.trackcoordinator.client.TrackCoordinatorComponent
 
 object App
   extends BffInjectionBasedApp
   with BazookaConfigComponent
   with OkidokiComponent
-  with TimelineComponent
+  with TimelineJsonComponent
   with LieblingComponent
   with PublicApiClientComponent
   with FollowsComponent

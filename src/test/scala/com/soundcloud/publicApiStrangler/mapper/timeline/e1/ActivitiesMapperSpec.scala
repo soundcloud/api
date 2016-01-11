@@ -7,14 +7,14 @@ import com.soundcloud.publicApiStrangler.mapping.timeline.e1.{TimelineWithUuids,
 import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures
 import com.soundcloud.scalakit.test.VerifiedMocks
 import com.soundcloud.scalakit.{Urn, UserSession}
-import com.soundcloud.service.client.TimelineClient
+import com.soundcloud.services.timeline.TimelineJsonClient
 import com.twitter.util.{Await, Future}
 import play.api.libs.json.JsObject
 
 class ActivitiesMapperSpec extends UnitSpecification with Fixtures {
 
   trait Context extends VerifiedMocks {
-    val timelineClient = mock[TimelineClient]
+    val timelineClient = mock[TimelineJsonClient]
     val entityMapper = mock[EntityMapper]
     val entitySummaryMapper = mock[EntitySummaryMapper]
     val mapper = new ActivitiesMapper(timelineClient, entityMapper, entitySummaryMapper)
