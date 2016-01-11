@@ -1,0 +1,124 @@
+<pipeline name="public-api-strangler" labeltemplate="${COUNT}-${git[:7]}" isLocked="false">
+  <materials>
+    <git url="git@github.com:soundcloud/public-api-strangler.git" materialName="git"/>
+  </materials>
+  <stage name="test">
+    <jobs>
+      <job name="unit-tests">
+        <tasks>
+          <exec command="ln">
+            <arg>-sf</arg>
+            <arg>/data/ivy2</arg>
+            <arg>.ivy2</arg>
+            <runif status="passed" />
+          </exec>
+          <exec command="ln">
+            <arg>-sf</arg>
+            <arg>/data/sbt</arg>
+            <arg>.sbt</arg>
+            <runif status="passed" />
+          </exec>        
+           <exec command="make">
+             <arg>-f</arg>
+             <arg>Makefile.pipeline</arg>
+             <arg>unit-test</arg>
+             <runif status="passed"/>
+           </exec>
+        </tasks>
+      </job>
+    </jobs>
+  </stage>
+  <stage name="package">
+    <jobs>
+      <job name="package-artifacts">
+        <tasks>
+          <exec command="ln">
+            <arg>-sf</arg>
+            <arg>/data/ivy2</arg>
+            <arg>.ivy2</arg>
+            <runif status="passed" />
+          </exec>
+          <exec command="ln">
+            <arg>-sf</arg>
+            <arg>/data/sbt</arg>
+            <arg>.sbt</arg>
+            <runif status="passed" />
+          </exec>          
+           <exec command="make">
+             <arg>-f</arg>
+             <arg>Makefile.pipeline</arg>
+             <arg>package</arg>
+             <arg>publish</arg>
+             <runif status="passed"/>
+           </exec>
+        </tasks>
+      </job>
+    </jobs>
+  </stage>
+  <stage name="end-to-end-tests">
+    <jobs>
+      <job name="end-to-end-tests">
+        <tasks>
+          <exec command="ln">
+            <arg>-sf</arg>
+            <arg>/data/ivy2</arg>
+            <arg>.ivy2</arg>
+            <runif status="passed" />
+          </exec>
+          <exec command="ln">
+            <arg>-sf</arg>
+            <arg>/data/sbt</arg>
+            <arg>.sbt</arg>
+            <runif status="passed" />
+          </exec>          
+           <exec command="make">
+             <arg>-f</arg>
+             <arg>Makefile.pipeline</arg>             
+             <arg>end-to-end-test</arg>
+             <arg>remove-containers</arg>
+             <runif status="passed"/>
+           </exec>
+        </tasks>
+      </job>
+    </jobs>
+  </stage>
+  <stage name="promote-to-stable">
+    <jobs>
+      <job name="publish-to-stable">
+        <tasks>
+           <exec command="make">
+             <arg>-f</arg>
+             <arg>Makefile.pipeline</arg>
+             <arg>promote-to-stable</arg>
+             <runif status="passed"/>
+           </exec>
+        </tasks>
+      </job>
+    </jobs>
+  </stage>
+  <stage name="release-and-deploy">
+    <approval type="manual" />
+    <jobs>
+      <job name="publish-to-release">
+        <tasks>
+           <exec command="make">
+             <arg>-f</arg>
+             <arg>Makefile.pipeline</arg>
+             <arg>promote-to-release</arg>
+             <runif status="passed"/>
+           </exec>
+        </tasks>
+      </job>
+      <job name="deploy-db">
+        <tasks>
+           <exec command="make">
+             <arg>-f</arg>
+             <arg>Makefile.pipeline</arg>
+             <arg>deploy-db</arg>
+             <runif status="passed"/>
+           </exec>
+        </tasks>
+      </job>
+    </jobs>
+  </stage>
+</pipeline>

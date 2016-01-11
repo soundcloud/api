@@ -3,7 +3,7 @@
 function main {
     start_server
     SERVER_PID=$(jobs -l | awk '{ print $2 }')
-    SERVER_HOST=localhost make _run-end-to-end-test
+    SERVER_HOST=$(docker-ip) make _run-end-to-end-test
     RESULT=$?
     kill $SERVER_PID
     exit $RESULT
@@ -11,7 +11,7 @@ function main {
 
 function start_server {
     make run 2> /dev/null &
-    endpoint="http://127.0.0.1:5000/-/health"
+    endpoint="http://$(docker-ip):5000/-/health"
     until $(curl --output /dev/null --silent --fail $endpoint); do
         echo "Waiting for $endpoint"
         sleep 5

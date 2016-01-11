@@ -33,9 +33,9 @@ README](https://github.com/soundcloud/cd-tools#installation).
 
 ## How to deploy
 
-Use jenkins to deploy the application. For the master branch and deployment
+Use cd to deploy the application. For the master branch and deployment
 pipeline:
-[http://jenkins.cs.dev.s-cloud.net/view/public-api-strangler/](http://jenkins.cs.dev.s-cloud.net)
+[https://ci.dev.s-cloud.net/go/tab/pipeline/history/public-api-strangler](https://ci.dev.s-cloud.net/go/tab/pipeline/history/public-api-strangler)
 
 Please see
 [CONTRIBUTING.md](https://github.com/soundcloud/public-api-strangler/blob/master/CONTRIBUTING.md#making-a-change)
@@ -44,7 +44,7 @@ for guidelines for outside contributors.
 ## CI
 
 For the master branch and deployment pipeline:
-[http://jenkins.cs.dev.s-cloud.net/view/public-api-strangler/](http://jenkins.cs.dev.s-cloud.net/view/public-api-strangler/).
+[https://ci.dev.s-cloud.net/go/tab/pipeline/history/public-api-strangler](https://ci.dev.s-cloud.net/go/tab/pipeline/history/public-api-strangler).
 
 ## Search leaving mothership
 

@@ -20,14 +20,15 @@ RUNTIME_STACK := jdk-8
 BUILD_STACK := jdk-8-dev
 
 DEPLOY_SCRIPT ?= $(shell gen-deploy-script --arch=linux --name=public-api-strangler --revision=`artifact-manager package-version`)
+PUBLIC_API_STRANGLER_VERSION ?= $(shell artifact-manager package-version)
 
 #####################################################################
 
 unit-test:
 	crun $(BUILD_STACK) 'make unit-test'
 
-end-to-end-test:
-	crun $(BUILD_STACK) 'make end-to-end-test'
+end-to-end-test: remove-containers
+	crun $(BUILD_STACK) 'env PUBLIC_API_STRANGLER_VERSION=$(PUBLIC_API_STRANGLER_VERSION) make end-to-end-test'
 
 package: prepare-package-layout
 	docker pull docker.dev.s-cloud.net/$(RUNTIME_STACK):latest
@@ -63,3 +64,10 @@ deploy-db:
 		--bazooka-zone=db --scale-step=10 --instance-cnt=$(API_INSTANCE_COUNT) \
 		--proc=api \
 		--slack-channels=#core-services"
+
+update-go-pipeline:
+	go-pipeline update --config=pipeline.xml --group=core-services
+
+sync-go-pipeline:
+	go-pipeline get --name=public-api-strangler > pipeline.xml
+	git diff pipeline.xml
