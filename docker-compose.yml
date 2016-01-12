@@ -20,8 +20,8 @@ publicapistrangler:
   image: docker.dev.s-cloud.net/public-api-strangler:${PUBLIC_API_STRANGLER_VERSION}
   command: bash -lex -c "./api --config=default.sh"
   ports:
-    - "${PORT}:5000"
-    - "${TELE_PORT}:5001"
+    - "5000:5000"
+    - "5001:5001"
   environment:
     - DOCKER_IP=${DOCKER_IP}
   links:
