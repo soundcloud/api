@@ -13,6 +13,7 @@ class TimelineController(
                           streamMapper: StreamMapper,
                           activitiesMapper: ActivitiesMapper,
                           publicActivitiesMapper: ActivitiesWithOriginMapper,
+                          followingsTracksMapper: FollowingsTracksMapper,
                           pagination: CursorPagination
                           ) extends BffInjectionBasedController {
 
@@ -38,6 +39,8 @@ class TimelineController(
   get("/me/activities/all/own")(renderActivities(_, publicActivitiesMapper))
   get("/me/activities/all/own.json")(renderActivities(_, publicActivitiesMapper))
 
+  // For the IFTTT integration
+  get("/me/followings/tracks")(renderActivities(_, followingsTracksMapper))
 
   private def renderActivities(request: BffRequest, mapper: TimelineMapper) =
     userAuthentication.withLoggedInUser(request) {
