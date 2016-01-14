@@ -1,7 +1,6 @@
 package com.soundcloud.publicApiStrangler.authorization
 
 import com.soundcloud.bff
-import com.soundcloud.bff.authorization.ContentAuthorizationService
 import com.soundcloud.bff.finagle.{Request => BffRequest}
 import com.soundcloud.bff.media.{TrackWaveformUrl, WaveformUrlsRepository}
 import com.soundcloud.bff.nextbff.test.FakeUserAuthentication
@@ -14,13 +13,12 @@ import com.soundcloud.scalakit.test.VerifiedMocks
 import com.soundcloud.scalakit.{Url, Urn, UserSession}
 import com.twitter.util.{Await, Future}
 import org.mockito.Mockito.verifyZeroInteractions
-import play.api.libs.json.JsObject
 
 class AuthorizeHttpResponseSpec extends UnitSpecification with Fixtures {
 
   trait Context extends VerifiedMocks {
     val session = mock[UserSession]
-    val contentAuthorization = mock[ContentAuthorizationService]
+    val contentAuthorization = mock[ContentAuthorizationRules]
     val waveformUrlsRepo = mock[WaveformUrlsRepository]
     val request = mock[BffRequest]
     val userAuthentication = new FakeUserAuthentication(mock[AuthenticatorService])(session)
@@ -43,7 +41,7 @@ class AuthorizeHttpResponseSpec extends UnitSpecification with Fixtures {
     def policies: ContentAuthorization
 
     override def before = {
-      when(contentAuthorization.findRulesApplicableTo(session, Seq(urn))).thenReturn(Future(Seq(policies)))
+      when(contentAuthorization.fetchRules(session, Seq(urn))).thenReturn(Future(Seq(policies)))
     }
   }
 
@@ -76,9 +74,8 @@ class AuthorizeHttpResponseSpec extends UnitSpecification with Fixtures {
       .zip(policies)
       .map(tuple => new ContentAuthorization(tuple._1, tuple._2, Reason.GEO, MonetizationModel.NOT_APPLICABLE))
 
-
     override def before = {
-      when(contentAuthorization.findRulesApplicableTo(===(session), any[Seq[Urn]]))
+      when(contentAuthorization.fetchRules(===(session), any[Seq[Urn]]))
         .thenReturn(Future(authorizations))
       mockWaveFormUrlsRepoExpectations()
     }
@@ -158,7 +155,7 @@ class AuthorizeHttpResponseSpec extends UnitSpecification with Fixtures {
       .map(tuple => new ContentAuthorization(tuple._1, tuple._2, Reason.GEO, MonetizationModel.NOT_APPLICABLE))
 
     override def before =
-      when(contentAuthorization.findRulesApplicableTo(===(session), any[Seq[Urn]]))
+      when(contentAuthorization.fetchRules(===(session), any[Seq[Urn]]))
         .thenReturn(Future(authorizations))
   }
 
@@ -202,7 +199,7 @@ class AuthorizeHttpResponseSpec extends UnitSpecification with Fixtures {
       .map(tuple => new ContentAuthorization(tuple._1, tuple._2, Reason.GEO, MonetizationModel.NOT_APPLICABLE))
 
     override def before =
-      when(contentAuthorization.findRulesApplicableTo(===(session), any[Seq[Urn]]))
+      when(contentAuthorization.fetchRules(===(session), any[Seq[Urn]]))
         .thenReturn(Future(authorizations))
   }
 
@@ -228,7 +225,7 @@ class AuthorizeHttpResponseSpec extends UnitSpecification with Fixtures {
     )
 
     override def before =
-      when(contentAuthorization.findRulesApplicableTo(===(session), any[Seq[Urn]]))
+      when(contentAuthorization.fetchRules(===(session), any[Seq[Urn]]))
         .thenReturn(Future(authorizations))
   }
 

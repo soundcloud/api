@@ -1,11 +1,11 @@
 package com.soundcloud.publicApiStrangler.mapper.search
 
 import com.soundcloud.bff.Json
-import com.soundcloud.bff.authorization.ContentAuthorizationService
 import com.soundcloud.bff.media.{TrackWaveformUrlMapper, WaveformUrlsRepository}
 import com.soundcloud.bff.nextbff.mapping.MappingContext
 import com.soundcloud.bff.test.UnitSpecification
-import com.soundcloud.jvmkit.policies.{MonetizationModel, ContentAuthorization, ContentPolicy, Reason}
+import com.soundcloud.jvmkit.policies.{ContentAuthorization, ContentPolicy, MonetizationModel, Reason}
+import com.soundcloud.publicApiStrangler.authorization.ContentAuthorizationRules
 import com.soundcloud.publicApiStrangler.mapper.liebling.LikeCountMapper
 import com.soundcloud.publicApiStrangler.mapper.purchaselink.TrackPurchaseLinkMapper
 import com.soundcloud.publicApiStrangler.mapper.timeline.EntitySummaryMapper
@@ -14,11 +14,11 @@ import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures
 import com.soundcloud.scalakit.Urn
 import com.soundcloud.scalakit.test.VerifiedMocks
 import com.soundcloud.service.client.{LieblingClient, OkidokiClient}
-import com.soundcloud.service.response.representation.{TrackMeta, TracksWithPagination, TrackPurchaseLink}
 import com.soundcloud.service.response.representation.liebling.UserLikesCount
+import com.soundcloud.service.response.representation.{TrackMeta, TrackPurchaseLink, TracksWithPagination}
 import com.twitter.util.{Await, Future}
 import org.specs2.matcher.MatchResult
-import play.api.libs.json.{JsValue, JsObject}
+import play.api.libs.json.{JsObject, JsValue}
 
 class SearchEntityMapperSpec extends UnitSpecification with Fixtures {
 
@@ -29,7 +29,7 @@ class SearchEntityMapperSpec extends UnitSpecification with Fixtures {
     val session = loggedInSession(userUrn)
 
     val okidokiClient = mock[OkidokiClient]
-    val contentAuthorizationService = mock[ContentAuthorizationService]
+    val contentAuthorizationService = mock[ContentAuthorizationRules]
     val trackPurchaseLinkMapper = new TrackPurchaseLinkMapper(okidokiClient)
     val lieblingClient = mock[LieblingClient]
     val likeCountMapper = new LikeCountMapper(lieblingClient)
@@ -61,7 +61,6 @@ class SearchEntityMapperSpec extends UnitSpecification with Fixtures {
       "soundcloud:playlists:685235"
     ).map(Urn(_))
 
-
     val authorizations = Seq(
       new ContentAuthorization(Urn("soundcloud:tracks:15273221"), ContentPolicy.ALLOW, Reason.UNKNOWN, MonetizationModel.NOT_APPLICABLE)
     )
@@ -92,14 +91,14 @@ class SearchEntityMapperSpec extends UnitSpecification with Fixtures {
       )
 
       // like counts / authenticated user likes
-      val expected: PartialFunction[Seq[Urn], MatchResult[_]] =  { case urns: Seq[Urn] => Set(urns: _*) === likableUrns}
+      val expected: PartialFunction[Seq[Urn], MatchResult[_]] = {
+        case urns: Seq[Urn] => Set(urns: _*) === likableUrns
+      }
       when(lieblingClient.userLikeCounts(===(session), beLike(expected), ===(userUrn), any[Int]))
         .thenReturn(Future(lieblingLikesInfo))
 
       // waveform URLs
-      when(contentAuthorizationService.findRulesApplicableTo(===(session), any[Seq[Urn]])).thenReturn(
-        Future(authorizations)
-      )
+      when(contentAuthorizationService.fetchRules(===(session), any[Seq[Urn]])).thenReturn(Future.value(authorizations))
       when(waveformUrlsRepository.fetchWaveformUrlsToMap(===(session), any[Map[String, ContentPolicy]])).thenReturn(
         Future(waveforms.map(w => w.trackUid -> w).toMap)
       )

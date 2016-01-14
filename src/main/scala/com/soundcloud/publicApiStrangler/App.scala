@@ -9,7 +9,7 @@ import com.soundcloud.jvmkit.ResourceName
 import com.soundcloud.jvmkit.admin.{AdminRoute, RequestMethod}
 import com.soundcloud.jvmkit.config.ConfigConvention
 import com.soundcloud.jvmkit.rollout.{BasicRolloutFeature, RolloutBuilder}
-import com.soundcloud.publicApiStrangler.authorization.{AuthorizeHttpResponse, ContentAuthorizationFilter, TrackPolicyApplicator}
+import com.soundcloud.publicApiStrangler.authorization._
 import com.soundcloud.publicApiStrangler.controller._
 import com.soundcloud.publicApiStrangler.headers.DefaultResponseHeadersFilter
 import com.soundcloud.publicApiStrangler.mapper.liebling.LikeCountMapper
@@ -63,29 +63,36 @@ object App
     ServiceConfig("search", config.get(ResourceName("SEARCH"), ConfigConvention.SRV_RECORD), config)
   )
 
-  private val contentAuthorizationService = new ContentAuthorizationService(authsyService)
+  private val subscriptionsService = JsonService(
+    ServiceConfig("user_subscriptions", config.get(ResourceName("USER_SUBSCRIPTIONS"), ConfigConvention.SRV_RECORD), config)
+  )
+
+  private val contentAuthorizationRules = new ContentAuthorizationRules(
+    new ContentAuthorizationService(authsyService),
+    new SubscriptionsService(subscriptionsService))
+
 
   private val waveformUrlsRepo = new WaveformUrlsRepository(okidokiService, mediaService)
 
   // Whitelist source: http://redash.int.s-cloud.net/queries/632/source
   private val whitelistedClients: Set[Urn] = Set(
-    "soundcloud:systems:soundcloud",  // Agent returned by Authenticator for those with _soundcloud_session cookie
-    "soundcloud:applications:124",    // SoundCloud iOS
-    "soundcloud:applications:3152",   // SoundCloud Android
-    "soundcloud:applications:3273",   // Mobile Soundcloud
-    "soundcloud:applications:3537",   // SoundCloud Desktop
-    "soundcloud:applications:43164",  // SoundCloud Player Widget
-    "soundcloud:applications:46941",  // SoundCloud.com
-    "soundcloud:applications:60973",  // SoundCloud Flash Widget
-    "soundcloud:applications:65097",  // MobileWeb3
-    "soundcloud:applications:66151",  // MobileWeb production
-    "soundcloud:applications:90575",  // SoundCloud Visual Embed Player
-    "soundcloud:applications:99561",  // SoundCloud Kik Messenger Card
+    "soundcloud:systems:soundcloud", // Agent returned by Authenticator for those with _soundcloud_session cookie
+    "soundcloud:applications:124", // SoundCloud iOS
+    "soundcloud:applications:3152", // SoundCloud Android
+    "soundcloud:applications:3273", // Mobile Soundcloud
+    "soundcloud:applications:3537", // SoundCloud Desktop
+    "soundcloud:applications:43164", // SoundCloud Player Widget
+    "soundcloud:applications:46941", // SoundCloud.com
+    "soundcloud:applications:60973", // SoundCloud Flash Widget
+    "soundcloud:applications:65097", // MobileWeb3
+    "soundcloud:applications:66151", // MobileWeb production
+    "soundcloud:applications:90575", // SoundCloud Visual Embed Player
+    "soundcloud:applications:99561", // SoundCloud Kik Messenger Card
     "soundcloud:applications:120502", // Twitter Partner
     "soundcloud:applications:135495", // Mobile Web App
-    "soundcloud:applications:167582"  // HEOS by Denon (Production)
+    "soundcloud:applications:167582" // HEOS by Denon (Production)
   ).map(new Urn(_))
-  private val authorizeContent = new AuthorizeHttpResponse(contentAuthorizationService, userAuthentication, waveformUrlsRepo, TrackPolicyApplicator(whitelistedClients))
+  private val authorizeContent = new AuthorizeHttpResponse(contentAuthorizationRules, userAuthentication, waveformUrlsRepo, TrackPolicyApplicator(whitelistedClients))
 
   private val mothershipDispatcher = new DispatchToMothershipHandler(publicApiClient)
 
@@ -110,7 +117,7 @@ object App
     val trackStreamUrlToRedirectMapper = new TrackStreamRedirectResponseMapper
 
     val mediaUrlsRepository = new MediaUrlsRepository(okidokiService, mediaService)
-    val trackStreamSnipHandler = new TrackStreamHandler(mothershipDispatcher, contentAuthorizationService, mediaUrlsRepository)
+    val trackStreamSnipHandler = new TrackStreamHandler(mothershipDispatcher, contentAuthorizationRules, mediaUrlsRepository)
     new TrackStreamsController(
       userAuthentication,
       trackStreamUrlToJsonResponseMapper,
@@ -120,9 +127,9 @@ object App
   }
 
   private val tracksController = new TracksController(userAuthentication,
-                                                      trackCoordinatorClient,
-                                                      okidokiClient,
-                                                      mothershipDispatcher)
+    trackCoordinatorClient,
+    okidokiClient,
+    mothershipDispatcher)
 
   lazy val rolloutClient = new RolloutBuilder(config, telemetry).build("public-api-strangler")
   override lazy val rollout = Some(rolloutClient)
@@ -152,7 +159,7 @@ object App
     val entityMapper = new SearchEntityMapper(
       okidokiClient,
       baseUrl,
-      contentAuthorizationService,
+      contentAuthorizationRules,
       new WaveformMapper(waveformUrlsRepo),
       new TrackPurchaseLinkMapper(okidokiClient),
       new LikeCountMapper(lieblingClient),
@@ -170,7 +177,7 @@ object App
     val searchEntityMapper = new SearchEntityMapper(
       okidokiClient,
       baseUrl,
-      contentAuthorizationService,
+      contentAuthorizationRules,
       new WaveformMapper(waveformUrlsRepo),
       new TrackPurchaseLinkMapper(okidokiClient),
       new LikeCountMapper(lieblingClient),
