@@ -1,0 +1,87 @@
+
+<pipeline isLocked="false" labeltemplate="${COUNT}-${public-api-strangler-pr[:7]}" name="public-api-strangler-pr">
+  <materials>
+    <scm dest="pr" ref="55fc33ad-3802-4c6d-90dd-acb22134ca51" />
+  </materials>
+  <stage name="test">
+    <jobs>
+      <job name="unit-tests">
+        <tasks>
+          <exec command="ln" workingdir="pr">
+            <arg>-sf</arg>
+            <arg>/data/ivy2</arg>
+            <arg>.ivy2</arg>
+            <runif status="passed" />
+          </exec>
+          <exec command="ln" workingdir="pr">
+            <arg>-sf</arg>
+            <arg>/data/sbt</arg>
+            <arg>.sbt</arg>
+            <runif status="passed" />
+          </exec>
+          <exec command="make" workingdir="pr">
+            <arg>-f</arg>
+            <arg>Makefile.pipeline</arg>
+            <arg>unit-test</arg>
+            <runif status="passed" />
+          </exec>
+        </tasks>
+      </job>
+    </jobs>
+  </stage>
+  <stage name="package">
+    <jobs>
+      <job name="package-artifacts">
+        <tasks>
+          <exec command="ln" workingdir="pr">
+            <arg>-sf</arg>
+            <arg>/data/ivy2</arg>
+            <arg>.ivy2</arg>
+            <runif status="passed" />
+          </exec>
+          <exec command="ln" workingdir="pr">
+            <arg>-sf</arg>
+            <arg>/data/sbt</arg>
+            <arg>.sbt</arg>
+            <runif status="passed" />
+          </exec>
+          <exec command="make" workingdir="pr">
+            <arg>-f</arg>
+            <arg>Makefile.pipeline</arg>
+            <arg>package</arg>
+            <arg>publish</arg>
+            <runif status="passed" />
+          </exec>
+        </tasks>
+      </job>
+    </jobs>
+  </stage>
+  <stage name="end-to-end-tests">
+    <jobs>
+      <job name="end-to-end-tests">
+        <tasks>
+          <exec command="ln" workingdir="pr">
+            <arg>-sf</arg>
+            <arg>/data/ivy2</arg>
+            <arg>.ivy2</arg>
+            <runif status="passed" />
+          </exec>
+          <exec command="ln" workingdir="pr">
+            <arg>-sf</arg>
+            <arg>/data/sbt</arg>
+            <arg>.sbt</arg>
+            <runif status="passed" />
+          </exec>
+          <exec command="make" workingdir="pr">
+            <arg>-f</arg>
+            <arg>Makefile.pipeline</arg>
+            <arg>end-to-end-test</arg>
+            <arg>remove-containers</arg>
+            <runif status="passed" />
+          </exec>
+        </tasks>
+      </job>
+    </jobs>
+  </stage>
+</pipeline>
+  
