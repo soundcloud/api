@@ -69,6 +69,7 @@ object App
 
   // Whitelist source: http://redash.int.s-cloud.net/queries/632/source
   private val whitelistedClients: Set[Urn] = Set(
+    "soundcloud:systems:soundcloud",  // Agent returned by Authenticator for those with _soundcloud_session cookie
     "soundcloud:applications:124",    // SoundCloud iOS
     "soundcloud:applications:3152",   // SoundCloud Android
     "soundcloud:applications:3273",   // Mobile Soundcloud
