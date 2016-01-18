@@ -4,7 +4,7 @@ import com.soundcloud.bff.finagle.{Request, ResponseBuilder}
 import com.soundcloud.bff.web.{BffInjectionBasedController, UserAuthentication}
 import com.soundcloud.jvmkit.UserSession
 import com.soundcloud.publicApiStrangler.mapper.trackstreams.{TrackStreamJsonResponseMapper, TrackStreamRedirectResponseMapper, TrackStreamResponseMapper}
-import com.soundcloud.publicApiStrangler.support.{DispatchToMothershipHandler, TrackStreamSnipHandler}
+import com.soundcloud.publicApiStrangler.support.{DispatchToMothershipHandler, TrackStreamHandler}
 import com.twitter.util.Future
 
 
@@ -17,7 +17,7 @@ class TrackStreamsController(
                               trackStreamUrlToJsonResponseMapper: TrackStreamJsonResponseMapper,
                               trackStreamUrlToRedirectMapper: TrackStreamRedirectResponseMapper,
                               mothershipDispatcher: DispatchToMothershipHandler,
-                              trackStreamSnipHandler: TrackStreamSnipHandler
+                              trackStreamHandler: TrackStreamHandler
                               )
   extends BffInjectionBasedController {
 
@@ -31,7 +31,7 @@ class TrackStreamsController(
   private def handleStreamRequest(request: Request, mapper: TrackStreamResponseMapper): Future[ResponseBuilder] = {
     userAuthentication.withUserSession(request) {
       (session: UserSession) =>
-        trackStreamSnipHandler.handle(request, session, mapper)
+        trackStreamHandler.handle(request, session, mapper)
     }
   }
 }
