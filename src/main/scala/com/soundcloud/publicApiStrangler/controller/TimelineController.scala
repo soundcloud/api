@@ -6,13 +6,16 @@ import com.soundcloud.jvmkit.{LoggedInUserSession, Urn}
 import com.soundcloud.publicApiStrangler.mapper.timeline._
 import com.soundcloud.publicApiStrangler.mapper.timeline.e1.{ActivitiesMapper, StreamMapper}
 import com.soundcloud.publicApiStrangler.mapper.timeline.publicApi.ActivitiesWithOriginMapper
+import com.soundcloud.publicApiStrangler.mapping.timeline.e1.TrackTimelineItem
 import com.soundcloud.publicApiStrangler.support._
+import play.api.libs.json.Json
 
 class TimelineController(
                           userAuthentication: UserAuthentication,
                           streamMapper: StreamMapper,
                           activitiesMapper: ActivitiesMapper,
                           publicActivitiesMapper: ActivitiesWithOriginMapper,
+                          followingsTracksMapper: FollowingsTracksMapper,
                           pagination: CursorPagination
                           ) extends BffInjectionBasedController {
 
@@ -38,6 +41,8 @@ class TimelineController(
   get("/me/activities/all/own")(renderActivities(_, publicActivitiesMapper))
   get("/me/activities/all/own.json")(renderActivities(_, publicActivitiesMapper))
 
+  // For the IFTTT integration
+  get("/me/followings/tracks")(renderFollowingsTracks(_, followingsTracksMapper))
 
   private def renderActivities(request: BffRequest, mapper: TimelineMapper) =
     userAuthentication.withLoggedInUser(request) {
@@ -45,6 +50,29 @@ class TimelineController(
         pagination.withPage(request, userUrn) { page =>
           mapper.materialize(session, page).map {
             case Some(info) => render.json(info)
+            case None => render.notFound
+          }
+        }
+    }
+
+  private def renderFollowingsTracks(request: BffRequest, mapper: TimelineMapper) =
+    userAuthentication.withLoggedInUser(request) {
+      (session: LoggedInUserSession, userUrn: Urn) =>
+        pagination.withPage(request, userUrn) { page =>
+          mapper.materialize(session, page).map {
+            case Some(info) =>
+              val tracks = info.collection.map {
+                _.asInstanceOf[TrackTimelineItem].track
+              }
+
+              if (request.getParam("linked_partitioning", "0") == "1")
+                render.json(Map(
+                  "next_href" -> info.nextHref,
+                  "collection" -> tracks
+                ))
+              else
+                render.json(tracks)
+
             case None => render.notFound
           }
         }

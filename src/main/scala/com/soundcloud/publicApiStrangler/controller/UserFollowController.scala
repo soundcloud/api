@@ -67,7 +67,6 @@ class UserFollowController(userAuthentication: UserAuthentication,
   get("/me/followers/ids.json")(fetchMyFollowerIds)
   get("/me/followings/ids")(fetchMyFollowingIds)
   get("/me/followings/ids.json")(fetchMyFollowingIds)
-  get("/me/followings/tracks")(fallbackToMothership)
   get("/me/followers/:other_id")(fetchPossibleFollower)
   get("/me/followers/:other_id.json")(fetchPossibleFollower)
   get("/me/followings/:other_id")(fetchPossibleFollowing)

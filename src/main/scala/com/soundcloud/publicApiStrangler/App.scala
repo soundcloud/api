@@ -9,7 +9,7 @@ import com.soundcloud.jvmkit.ResourceName
 import com.soundcloud.jvmkit.admin.{AdminRoute, RequestMethod}
 import com.soundcloud.jvmkit.config.ConfigConvention
 import com.soundcloud.jvmkit.rollout.{BasicRolloutFeature, RolloutBuilder}
-import com.soundcloud.publicApiStrangler.authorization.{TrackPolicyApplicator, AuthorizeHttpResponse, ContentAuthorizationFilter}
+import com.soundcloud.publicApiStrangler.authorization.{AuthorizeHttpResponse, ContentAuthorizationFilter, TrackPolicyApplicator}
 import com.soundcloud.publicApiStrangler.controller._
 import com.soundcloud.publicApiStrangler.headers.DefaultResponseHeadersFilter
 import com.soundcloud.publicApiStrangler.mapper.liebling.LikeCountMapper
@@ -18,26 +18,26 @@ import com.soundcloud.publicApiStrangler.mapper.search.{PlaylistTracksMapper, Se
 import com.soundcloud.publicApiStrangler.mapper.similarsounds.SimilarSoundsMapper
 import com.soundcloud.publicApiStrangler.mapper.timeline.e1.{ActivitiesMapper, StreamMapper}
 import com.soundcloud.publicApiStrangler.mapper.timeline.publicApi.ActivitiesWithOriginMapper
-import com.soundcloud.publicApiStrangler.mapper.timeline.{EntityMapper, EntitySummaryMapper}
+import com.soundcloud.publicApiStrangler.mapper.timeline.{EntityMapper, EntitySummaryMapper, FollowingsTracksMapper}
 import com.soundcloud.publicApiStrangler.mapper.trackstreams.{TrackStreamJsonResponseMapper, TrackStreamRedirectResponseMapper}
 import com.soundcloud.publicApiStrangler.mapper.waveform.WaveformMapper
 import com.soundcloud.publicApiStrangler.support._
 import com.soundcloud.publicApiStrangler.zookeeper.CuratorFrameworkFactory
 import com.soundcloud.ratelimiting.facade._
 import com.soundcloud.scalakit.Urn
-import com.soundcloud.service.component._
+import com.soundcloud.service.component.{GatekeeperComponent, LieblingComponent, OkidokiComponent, SimilarSoundsComponent}
+import com.soundcloud.services.timeline.TimelineJsonComponent
+import com.soundcloud.trackcoordinator.client.TrackCoordinatorComponent
 import com.twitter.finagle.CancelledRequestException
 import com.twitter.finagle.http.Response
-import com.twitter.util
 import org.eclipse.jetty.server.Handler
 import org.jboss.netty.handler.codec.http.{HttpResponseStatus, HttpVersion}
-import com.soundcloud.trackcoordinator.client.TrackCoordinatorComponent
 
 object App
   extends BffInjectionBasedApp
   with BazookaConfigComponent
   with OkidokiComponent
-  with TimelineComponent
+  with TimelineJsonComponent
   with LieblingComponent
   with PublicApiClientComponent
   with FollowsComponent
@@ -97,8 +97,9 @@ object App
     val streamMapper = new StreamMapper(timelineClient, entityMapper, entitySummaryMapper)
     val activitiesMapper = new ActivitiesMapper(timelineClient, entityMapper, entitySummaryMapper)
     val publicActivitiesMapper = new ActivitiesWithOriginMapper(timelineClient, entityMapper, entitySummaryMapper)
+    val followingsTracksMapper = new FollowingsTracksMapper(timelineClient, entityMapper, entitySummaryMapper)
     val pagination = new CursorPagination(baseUrl)
-    new TimelineController(userAuthentication, streamMapper, activitiesMapper, publicActivitiesMapper, pagination)
+    new TimelineController(userAuthentication, streamMapper, activitiesMapper, publicActivitiesMapper, followingsTracksMapper, pagination)
   }
 
   private val curatorFrameworkFactory = new CuratorFrameworkFactory
