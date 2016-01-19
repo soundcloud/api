@@ -24,7 +24,11 @@ function start_server {
     until $(curl --output /dev/null --silent --fail $endpoint); do
         echo "Waiting for $endpoint"
 	let RETRY-=1
-	if [ $RETRY -eq 0 ]; then echo "Timeout"; exit 1; fi
+	if [ $RETRY -eq 0 ]; then 
+        echo "Timeout when waiting for public-api-strangler to come up."; 
+        docker logs publicapistrangler_publicapistrangler_1
+        exit 1; 
+    fi
         sleep ${RETRY_WAIT}
     done
 }
