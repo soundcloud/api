@@ -63,10 +63,11 @@ trait SpinningUpAppSupport { this: Specification =>
     private def defaultHeaders = new DefaultHttpHeaders(true)
   }
 
-  def dockerBasedHost = {
+  def dockerBasedHost: String = {
     val host = sys.env.get("SERVER_HOST")
     if (host.isEmpty)
       throw new IllegalStateException("SERVER_HOST env variable not found.")
+    host.get
   }
 
   class ServerUnderTestException(reason: String) extends RuntimeException(reason)
