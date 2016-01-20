@@ -29,4 +29,6 @@ trait Fixtures {
 
   val trackCoordinatorTrack = withContentsOf("track-coordinator", "track")
   val trackCoordinatorTrackInPublicApiFormat = withContentsOf("track-coordinator", "coordinator-track-in-public-api-format")
+
+  val consumerSubscription = withContentsOf("subscriptions", "consumer-subscription")
 }

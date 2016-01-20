@@ -1,11 +1,11 @@
 package com.soundcloud.publicApiStrangler.support
 
-import com.soundcloud.bff.authorization.ContentAuthorizationService
 import com.soundcloud.bff.finagle.{Request, ResponseBuilder}
 import com.soundcloud.bff.media.{MediaUrl, MediaUrlsRepository}
 import com.soundcloud.bff.test.UnitSpecification
 import com.soundcloud.jvmkit.policies.{Reason, ContentAuthorization, ContentPolicy}
 import com.soundcloud.jvmkit.{Urn, UserSession}
+import com.soundcloud.publicApiStrangler.authorization.ContentAuthorizationRules
 import com.soundcloud.publicApiStrangler.mapper.trackstreams.TrackStreamResponseMapper
 import com.twitter.util.{Await, Future}
 import org.jboss.netty.handler.codec.http.HttpResponseStatus
@@ -16,9 +16,9 @@ class TrackStreamHandlerSpec extends UnitSpecification {
   "TrackStreamHandler" should {
     trait Context extends Scope {
       val mothershipDispatcher = mock[DispatchToMothershipHandler]
-      val contentAuthService = mock[ContentAuthorizationService]
+      val contentAuthRules = mock[ContentAuthorizationRules]
       val mediaUrlsRepository = mock[MediaUrlsRepository]
-      val handler = new TrackStreamHandler(mothershipDispatcher, contentAuthService, mediaUrlsRepository)
+      val handler = new TrackStreamHandler(mothershipDispatcher, contentAuthRules, mediaUrlsRepository)
       val request = mock[Request]
       val userSession = mock[UserSession]
       val mapper = mock[TrackStreamResponseMapper]
@@ -37,7 +37,7 @@ class TrackStreamHandlerSpec extends UnitSpecification {
       val paramMap = Map("trackId" -> trackId)
       request.routeParams returns paramMap
       val trackUrn = new Urn("soundcloud", "tracks", trackId)
-      contentAuthService.findRulesApplicableTo(userSession, Seq(trackUrn)) returns Future.value(Seq(contentAuth))
+      contentAuthRules.fetchRules(userSession, Seq(trackUrn)) returns Future.value(Seq(contentAuth))
     }
 
     trait Failure extends Context {
@@ -57,7 +57,7 @@ class TrackStreamHandlerSpec extends UnitSpecification {
       response.headers.get("Content-Type") ==== "application/json; charset=utf-8"
       Json.parse(response.contentString) // Make sure we have valid json
       response.contentString ==== "{\"errors\":[{\"error_message\":\"404 - Not Found\"}]}"
-      there was noCallsTo(contentAuthService)
+      there was noCallsTo(contentAuthRules)
       there was noCallsTo(mediaUrlsRepository)
     }
 
@@ -68,7 +68,7 @@ class TrackStreamHandlerSpec extends UnitSpecification {
 
       val responseBuilder = Await.result(handler.handle(request, userSession, mapper))
       Await.result(clientErrorResponse) ==== responseBuilder
-      there was one(contentAuthService).findRulesApplicableTo(userSession, Seq(trackUrn))
+      there was one(contentAuthRules).fetchRules(userSession, Seq(trackUrn))
       there was noCallsTo(mediaUrlsRepository)
     }
 
@@ -79,7 +79,7 @@ class TrackStreamHandlerSpec extends UnitSpecification {
 
       val responseBuilder = Await.result(handler.handle(request, userSession, mapper))
       Await.result(serverErrorResponse) ==== responseBuilder
-      there was one(contentAuthService).findRulesApplicableTo(userSession, Seq(trackUrn))
+      there was one(contentAuthRules).fetchRules(userSession, Seq(trackUrn))
       there was noCallsTo(mediaUrlsRepository)
     }
 
@@ -91,7 +91,7 @@ class TrackStreamHandlerSpec extends UnitSpecification {
       val responseBuilder = Await.result(handler.handle(request, userSession, mapper))
       Await.result(successResponse) ==== responseBuilder
       there was noCallsTo(mediaUrlsRepository)
-      there was one(contentAuthService).findRulesApplicableTo(userSession, Seq(trackUrn))
+      there was one(contentAuthRules).fetchRules(userSession, Seq(trackUrn))
     }
 
     "return pubapi response in case pubapi response is successful and ContentPolicy = MONETIZE" in new Success {
@@ -102,7 +102,7 @@ class TrackStreamHandlerSpec extends UnitSpecification {
       val responseBuilder = Await.result(handler.handle(request, userSession, mapper))
       Await.result(successResponse) ==== responseBuilder
       there was noCallsTo(mediaUrlsRepository)
-      there was one(contentAuthService).findRulesApplicableTo(userSession, Seq(trackUrn))
+      there was one(contentAuthRules).fetchRules(userSession, Seq(trackUrn))
     }
 
     "return MediaUrlsRepository response in case pubapi response is successful and content policy is SNIP" in new Success {
@@ -120,7 +120,7 @@ class TrackStreamHandlerSpec extends UnitSpecification {
       Await.result(mapperResponse) ==== responseBuilder
 
       there was one(mediaUrlsRepository).byUrn(userSession, trackUrn, contentAuth)
-      there was one(contentAuthService).findRulesApplicableTo(userSession, Seq(trackUrn))
+      there was one(contentAuthRules).fetchRules(userSession, Seq(trackUrn))
     }
 
     "return 401 - Unauthorized when content policy is BLOCK and anonymous user" in new Success {
@@ -140,7 +140,7 @@ class TrackStreamHandlerSpec extends UnitSpecification {
       Json.parse(response.contentString) // Make sure we have valid json
       response.contentString ==== "{\"errors\":[{\"error_message\":\"401 - Unauthorized\"}]}"
       there was noCallsTo(mediaUrlsRepository)
-      there was one(contentAuthService).findRulesApplicableTo(userSession, Seq(trackUrn))
+      there was one(contentAuthRules).fetchRules(userSession, Seq(trackUrn))
     }
 
     "return 403 - Forbidden when content policy is BLOCK and logged in user" in new Success {
@@ -160,7 +160,7 @@ class TrackStreamHandlerSpec extends UnitSpecification {
       Json.parse(response.contentString) // Make sure we have valid json
       response.contentString ==== "{\"errors\":[{\"error_message\":\"403 - Forbidden\"}]}"
       there was noCallsTo(mediaUrlsRepository)
-      there was one(contentAuthService).findRulesApplicableTo(userSession, Seq(trackUrn))
+      there was one(contentAuthRules).fetchRules(userSession, Seq(trackUrn))
     }
 
   }

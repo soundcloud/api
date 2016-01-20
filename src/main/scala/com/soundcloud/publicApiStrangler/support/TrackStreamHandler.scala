@@ -1,10 +1,10 @@
 package com.soundcloud.publicApiStrangler.support
 
-import com.soundcloud.bff.authorization.ContentAuthorizationService
 import com.soundcloud.bff.finagle.{Request, ResponseBuilder}
 import com.soundcloud.bff.media.MediaUrlsRepository
 import com.soundcloud.jvmkit.policies.{ContentAuthorization, ContentPolicy}
 import com.soundcloud.jvmkit.{Urn, UserSession}
+import com.soundcloud.publicApiStrangler.authorization.ContentAuthorizationRules
 import com.soundcloud.publicApiStrangler.mapper.trackstreams.TrackStreamResponseMapper
 import com.twitter.util.Future
 import org.jboss.netty.handler.codec.http.HttpResponseStatus
@@ -19,8 +19,8 @@ import org.joda.time.format.DateTimeFormat
  * do not support yet in bff apps or authsy.
  */
 class TrackStreamHandler(mothershipDispatcher: DispatchToMothershipHandler,
-                             contentAuthService: ContentAuthorizationService,
-                             mediaUrlsRepository: MediaUrlsRepository) {
+                         contentAuthRules: ContentAuthorizationRules,
+                         mediaUrlsRepository: MediaUrlsRepository) {
 
   def handle(request: Request, userSession: UserSession, mapper: TrackStreamResponseMapper): Future[ResponseBuilder] = {
     val trackUrn = new Urn("soundcloud", "tracks", request.routeParams("trackId"))
@@ -45,10 +45,9 @@ class TrackStreamHandler(mothershipDispatcher: DispatchToMothershipHandler,
   }
 
 
-  private def contentAuthFor(session: UserSession, trackUrn: Urn): Future[ContentAuthorization] = {
-    val contentAuthorizations = contentAuthService.findRulesApplicableTo(session, Seq(trackUrn))
-    contentAuthorizations.map(ca => ca.head)
-  }
+  private def contentAuthFor(session: UserSession, trackUrn: Urn): Future[ContentAuthorization] =
+    contentAuthRules.fetchRules(session, Seq(trackUrn)).map(ca => ca.head)
+
 
   private def replaceStream(session: UserSession, trackUrn: Urn, contentAuth: ContentAuthorization, mapper: TrackStreamResponseMapper): Future[ResponseBuilder] = {
     val mediaUrls = mediaUrlsRepository.byUrn(session, trackUrn, contentAuth, false)

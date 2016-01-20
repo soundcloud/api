@@ -55,3 +55,5 @@ TRACK_COORDINATOR_SRV_RECORD="expdnssrv!http.coordinator.prod.tracks.dd.srv.int.
 
 LIEBLING_SRV_RECORD="expdnssrv!http.web.prod.liebling.dd.srv.int.s-cloud.net"
 SIMILAR_SOUNDS_SRV_RECORD="expdnssrv!http.api.prod.similar-sounds.dd.srv.int.s-cloud.net"
+
+USER_SUBSCRIPTIONS_SRV_RECORD="dnssrv!http.server.sandbox.subscriptions.dd.srv.int.s-cloud.net"

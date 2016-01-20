@@ -1,19 +1,19 @@
 package com.soundcloud.publicApiStrangler.mapper.search
 
-import com.soundcloud.bff.authorization.ContentAuthorizationService
 import com.soundcloud.bff.nextbff.mapping.MappingContext
 import com.soundcloud.bff.nextbff.pagination.OffsetBasedPage
 import com.soundcloud.bff.test.UnitSpecification
 import com.soundcloud.jvmkit.UserSession
+import com.soundcloud.publicApiStrangler.authorization.ContentAuthorizationRules
 import com.soundcloud.publicApiStrangler.mapping.search.{LegacySearch, PaginatedSearch, SearchDispatcherRequest}
 import com.soundcloud.scalakit.Urn
+import com.soundcloud.scalakit.Urn.format
 import com.soundcloud.scalakit.finagle.jsonservice._
 import com.soundcloud.scalakit.json.{Json => ScalakitJson}
 import com.soundcloud.scalakit.test.VerifiedMocks
-import com.soundcloud.scalakit.Urn.format
 import com.soundcloud.service.client.OkidokiClient
 import com.twitter.util.{Await, Future}
-import play.api.libs.json.{Json => PlayJson, JsNull, JsArray, JsObject}
+import play.api.libs.json.{JsArray, JsNull, JsObject, Json => PlayJson}
 
 class SearchMapperSpec extends UnitSpecification {
 
@@ -40,7 +40,7 @@ class SearchMapperSpec extends UnitSpecification {
 
   "filters search results that aren't known to okidoki" in new Context {
     val okidokiMock = mock[OkidokiClient]
-    val caMock = mock[ContentAuthorizationService]
+    val caMock = mock[ContentAuthorizationRules]
     val searchEntityMapper = new SearchEntityMapper(okidokiMock, null, caMock, null, null, null, null, null)
     val searchMapper = new SearchMapper(searchRepoMock, searchEntityMapper, baseUrl)
     private val request = pagedRequest(Map.empty)
@@ -53,7 +53,7 @@ class SearchMapperSpec extends UnitSpecification {
     when(okidokiMock.fetch(sessionMock, urns.toSet))
       .thenReturn(Future.value(List.empty))
 
-    when(caMock.findRulesApplicableTo(===(sessionMock), any[Seq[Urn]]))
+    when(caMock.fetchRules(===(sessionMock), any[Seq[Urn]]))
       .thenReturn(Future.value(Seq.empty))
 
     val mapped = Await.result(searchMapper.materialize(sessionMock, request)).get
@@ -83,7 +83,7 @@ class SearchMapperSpec extends UnitSpecification {
         mapper.map(request, json) match {
           case search: PaginatedSearch =>
             // tracks.json: 3 results, 5 total results
-            search.next_href must beSome { s: String => s.contains("offset=3")}
+            search.next_href must beSome { s: String => s.contains("offset=3") }
           case x => failure("bad mapping, expected PaginatedSearch, got " + x)
         }
       }

@@ -2,17 +2,22 @@ import com.soundcloud.jvmkit.sbt.{BffApi, JvmkitApp, HttpServerAppBuild}
 import sbt._
 import sbt.Keys._
 
+object BuildProperties {
+
+  val jvmkitVersion = "27.0.0"
+}
+
 object Build extends HttpServerAppBuild(
   JvmkitApp(
     appType = BffApi,
-    jvmKitVersion = "26.1.0",
+    jvmKitVersion = BuildProperties.jvmkitVersion,
     scalaVersion = "2.11.6"
   ),
   libDependencies = Seq(
     "com.soundcloud"     %% "follows-client"           % "1.0.0",
     "com.soundcloud"     %% "timeline-client"          % "0.1.2",
     "com.soundcloud"     %% "ratelimitinglib"          % "0.3.0",
-    "com.soundcloud"     %% "sc-services"              % "32.0.0",
+    "com.soundcloud"     %% "sc-services"              % "33.0.0",
     "com.soundcloud"     %% "track-coordinator-client" % "19.0.0",
     "com.fasterxml.uuid" %  "java-uuid-generator"      % "3.1.3",
     "commons-codec"      %  "commons-codec"            % "1.9"
@@ -28,7 +33,7 @@ object Build extends HttpServerAppBuild(
         libraryDependencies ++= Seq(
           "org.specs2" %% "specs2-core" % "3.6.4",
           "org.specs2" %% "specs2-mock" % "3.6.4",
-          "com.soundcloud" %% "jvmkit" % "26.1.0"
+          "com.soundcloud" %% "jvmkit" % BuildProperties.jvmkitVersion
         )
       )
     )

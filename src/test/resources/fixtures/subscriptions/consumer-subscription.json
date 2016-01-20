@@ -1,0 +1,23 @@
+{
+  "kind": "consumer-subscription",
+  "package": {
+    "urn": "soundcloud:payments:packages:39",
+    "name": "Monthly Go plan",
+    "vendor": "v2",
+    "product": "consumer-subscription",
+    "plan": "go",
+    "term": "monthly",
+    "price": {
+      "amount": 599,
+      "currency": "EUR",
+      "display": "5.99"
+    }
+  },
+  "expires_at": "2015-03-25T09:18:12Z",
+  "bought_at": "2015-03-24T09:18:11Z",
+  "recurring": true,
+  "trial": false,
+  "country_code": "US",
+  "started_at": "2015-03-24T09:18:11Z",
+  "order_urn": "soundcloud:payments:orders:2830fd5c0af711e5803c0cc47a12171a"
+}
