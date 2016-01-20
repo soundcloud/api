@@ -499,4 +499,26 @@ class UserFollowControllerSpec extends InjectionBasedControllerSpecification wit
       }
     }
   }
+
+  "DELETE /me/followings/:other_id" >> {
+    "unfollows a profile" in new Context {
+      override def before = {
+        super.before
+        followsMock.unfollow(session, userUrn) returns Future.value(UnfollowSuccessful(userUrn))
+      }
+
+      val response = delete(controller, "/me/followings/999", Map("client_id" -> "YOUR_CLIENT_ID"))
+      response.status ==== Status.Ok
+    }
+
+    "render errors" in new Context {
+      override def before = {
+        super.before
+        followsMock.unfollow(session, userUrn) returns Future.value(UnfollowFailed(followsError))
+      }
+
+      val response = delete(controller, "/me/followings/999", Map("client_id" -> "YOUR_CLIENT_ID"))
+      response.status ==== Status.PreconditionFailed
+    }
+  }
 }

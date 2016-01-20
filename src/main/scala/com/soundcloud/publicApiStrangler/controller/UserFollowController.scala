@@ -72,13 +72,14 @@ class UserFollowController(userAuthentication: UserAuthentication,
   get("/me/followings/:other_id")(fetchPossibleFollowing)
   get("/me/followings/:other_id.json")(fetchPossibleFollowing)
   head("/me/followings/:other_id")(fallbackToMothership)
-  post("/me/followings/:other_id")(fallbackToMothership)
-  patch("/me/followings/:other_id")(fallbackToMothership)
-  delete("/me/followings/:other_id")(fallbackToMothership)
 
-  put("/me/followings/:other_id") { request =>
+  post("/me/followings/:other_id")(follow)
+  put("/me/followings/:other_id")(follow)
+  delete("/me/followings/:other_id")(unfollow)
+
+  private def follow(request: Request): Future[ResponseBuilder] = {
     userAuthentication.withLoggedInUser(request) { (session, userUrn) =>
-      rollingOutWrites(userUrn).flatMap{
+      rollingOutWrites(userUrn).flatMap {
         case true =>
           val user = Urn("soundcloud:users:" + request.routeParams.get("other_id").get)
           follows.follow(session, user).flatMap {
@@ -95,6 +96,21 @@ class UserFollowController(userAuthentication: UserAuthentication,
               case _ => denyAgeUnknown
             }
           }
+      }
+    }
+  }
+
+  private def unfollow(request: Request): Future[ResponseBuilder] = {
+    userAuthentication.withLoggedInUser(request) { (session, userUrn) =>
+      rollingOutWrites(userUrn).flatMap {
+        case true =>
+          val user = Urn("soundcloud:users:" + request.routeParams.get("other_id").get)
+          follows.unfollow(session, user).map {
+            case success: UnfollowSuccessful => render.status(Status.Ok.getCode)
+            case error: UnfollowFailed => render.status(error.status)
+          }
+        case false =>
+          fallbackToMothership(request)
       }
     }
   }
