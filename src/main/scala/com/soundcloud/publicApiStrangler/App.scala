@@ -110,7 +110,7 @@ object App
     val trackStreamUrlToRedirectMapper = new TrackStreamRedirectResponseMapper
 
     val mediaUrlsRepository = new MediaUrlsRepository(okidokiService, mediaService)
-    val trackStreamSnipHandler = new TrackStreamSnipHandler(mothershipDispatcher, contentAuthorizationService, mediaUrlsRepository)
+    val trackStreamSnipHandler = new TrackStreamHandler(mothershipDispatcher, contentAuthorizationService, mediaUrlsRepository)
     new TrackStreamsController(
       userAuthentication,
       trackStreamUrlToJsonResponseMapper,
