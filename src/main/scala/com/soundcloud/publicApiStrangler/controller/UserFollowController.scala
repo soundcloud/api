@@ -107,7 +107,7 @@ class UserFollowController(userAuthentication: UserAuthentication,
           val user = Urn("soundcloud:users:" + request.routeParams.get("other_id").get)
           follows.unfollow(session, user).map {
             case success: UnfollowSuccessful => render.status(Status.Ok.getCode)
-            case error: UnfollowFailed => render.status(error.status)
+            case error: UnfollowFailed => render.status(backwardsCompatibleFollowFailedStatusCode(error.status))
           }
         case false =>
           fallbackToMothership(request)
@@ -117,15 +117,20 @@ class UserFollowController(userAuthentication: UserAuthentication,
 
   private def renderFollowFailed(error: FollowFailed, session: UserSession, userUrn: Urn): Future[ResponseBuilder] = {
     fetchUserAgeIfNeeded(error, session, userUrn).map { userAge =>
-      render.status(error.status).typedJson(
-        Json.obj(
-          "errors" -> Json.arr(
-            fieldsWithAgeRestrictionHack(error, userAge)
+      render
+        .status(backwardsCompatibleFollowFailedStatusCode(error.status))
+        .typedJson(
+          Json.obj(
+            "errors" -> Json.arr(
+              fieldsWithAgeRestrictionHack(error, userAge)
+            )
           )
         )
-      )
     }
   }
+
+  private def backwardsCompatibleFollowFailedStatusCode(statusCode: Int) =
+    if (statusCode == Status.BadRequest.getCode) Status.UnprocessableEntity.getCode else statusCode
 
   private def fetchUserAgeIfNeeded(fail: FollowFailed, session: UserSession, userUrn: Urn): Future[Option[Int]] = {
     if(fail.isAgeRestricted) {
