@@ -11,7 +11,10 @@ _run-end-to-end-test:
 
 run: _dev_docker_compose
 
-precheckin: unit-test end-to-end-test
+precheckin:
+	make unit-test
+	make -f Makefile.pipeline package publish
+	make end-to-end-test
 
 end-to-end-test:
 	bin/end-to-end-test
