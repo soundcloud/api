@@ -10,6 +10,7 @@ import com.soundcloud.jvmkit.admin.{AdminRoute, RequestMethod}
 import com.soundcloud.jvmkit.config.ConfigConvention
 import com.soundcloud.jvmkit.rollout.{BasicRolloutFeature, RolloutBuilder}
 import com.soundcloud.publicApiStrangler.authorization._
+import com.soundcloud.publicApiStrangler.client.followcounts.FollowCountsClient
 import com.soundcloud.publicApiStrangler.controller._
 import com.soundcloud.publicApiStrangler.headers.DefaultResponseHeadersFilter
 import com.soundcloud.publicApiStrangler.mapper.liebling.LikeCountMapper
@@ -70,6 +71,8 @@ object App
   private val stitch4countsService = JsonService(
     ServiceConfig("stitch4counts", config.get(ResourceName("STITCH4COUNTS"), ConfigConvention.SRV_RECORD), config)
   )
+
+  private val followCountsClient = new FollowCountsClient(stitch4countsService, config)
 
   private val contentAuthorizationRules = new ContentAuthorizationRules(
     new ContentAuthorizationService(authsyService),
