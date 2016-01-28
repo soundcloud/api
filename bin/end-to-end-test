@@ -5,32 +5,32 @@ RETRY=30
 RETRY_WAIT=5
 
 if [ -z ${SERVER_HOST} ]; then
-	echo SERVER_HOST is empty
-	exit 1
+  echo SERVER_HOST is empty
+  exit 1
 fi
 
 function main {
-    start_server
-    SERVER_PID=$(jobs -l | awk '{ print $2 }')
-    SERVER_HOST=${SERVER_HOST} make _run-end-to-end-test
-    RESULT=$?
-    kill $SERVER_PID
-    exit $RESULT
+  start_server
+  SERVER_PID=$(jobs -l | awk '{ print $2 }')
+  SERVER_HOST=${SERVER_HOST} make _run-end-to-end-test
+  RESULT=$?
+  kill $SERVER_PID
+  exit $RESULT
 }
 
 function start_server {
-    make run 2> /dev/null &
-    endpoint="http://${SERVER_HOST}:5000/-/health"
-    until $(curl --output /dev/null --silent --fail $endpoint); do
-        echo "Waiting for $endpoint"
-	let RETRY-=1
-	if [ $RETRY -eq 0 ]; then 
-        echo "Timeout when waiting for public-api-strangler to come up."; 
-        docker logs publicapistrangler_publicapistrangler_1
-        exit 1; 
+  make run 2> /dev/null &
+  endpoint="http://${SERVER_HOST}:5000/-/health"
+  until $(curl --output /dev/null --silent --fail $endpoint); do
+    echo "Waiting for $endpoint"
+    let RETRY-=1
+    if [ $RETRY -eq 0 ]; then
+      echo "Timeout when waiting for public-api-strangler to come up.";
+      logs publicapistrangler_publicapistrangler_1
+      exit 1;
     fi
-        sleep ${RETRY_WAIT}
-    done
+    sleep ${RETRY_WAIT}
+  done
 }
 
 main

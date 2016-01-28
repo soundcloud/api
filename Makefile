@@ -10,7 +10,7 @@ _run-end-to-end-test:
 	$(DEFAULT_CONFIG) $(SBT) endToEnd/test
 
 run: _dev_docker_compose
-	
+
 precheckin: unit-test end-to-end-test
 
 end-to-end-test:
