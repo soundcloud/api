@@ -26,7 +26,7 @@ function start_server {
     let RETRY-=1
     if [ $RETRY -eq 0 ]; then
       echo "Timeout when waiting for public-api-strangler to come up.";
-      logs publicapistrangler_publicapistrangler_1
+      docker logs publicapistrangler_publicapistrangler_1
       exit 1;
     fi
     sleep ${RETRY_WAIT}
