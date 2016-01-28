@@ -7,6 +7,7 @@ import com.soundcloud.jvmkit.policies.{Reason, ContentAuthorization, ContentPoli
 import com.soundcloud.jvmkit.{Urn, UserSession}
 import com.soundcloud.publicApiStrangler.authorization.ContentAuthorizationRules
 import com.soundcloud.publicApiStrangler.mapper.trackstreams.TrackStreamResponseMapper
+import com.twitter.finagle.http.Status
 import com.twitter.util.{Await, Future}
 import org.jboss.netty.handler.codec.http.HttpResponseStatus
 import play.api.libs.json.Json
@@ -50,11 +51,11 @@ class TrackStreamHandlerSpec extends UnitSpecification {
     "return Mothership 404 if id is not numeric" in new Failure {
       val response = Await.result(handler.handle(request, userSession, mapper)).build
 
-      response.status ==== HttpResponseStatus.NOT_FOUND
+      response.status ==== Status.NotFound
       // Mothership headers
-      response.headers.get("Status") ==== "404 Not Found"
-      response.headers.get("Date") must not be null
-      response.headers.get("Content-Type") ==== "application/json; charset=utf-8"
+      response.headerMap.get("Status") ==== Some("404 Not Found")
+      response.headerMap.get("Date") must not be None
+      response.headerMap.get("Content-Type") ==== Some("application/json; charset=utf-8")
       Json.parse(response.contentString) // Make sure we have valid json
       response.contentString ==== "{\"errors\":[{\"error_message\":\"404 - Not Found\"}]}"
       there was noCallsTo(contentAuthRules)
@@ -131,12 +132,12 @@ class TrackStreamHandlerSpec extends UnitSpecification {
       userSession.isAnonymous returns true
 
       val response = Await.result(handler.handle(request, userSession, mapper)).build
-      response.status ==== HttpResponseStatus.UNAUTHORIZED
+      response.status ==== Status.Unauthorized
 
       // Mothership headers
-      response.headers.get("Status") ==== "401 Unauthorized"
-      response.headers.get("Date") must not be null
-      response.headers.get("Content-Type") ==== "application/json; charset=utf-8"
+      response.headerMap.get("Status") ==== Some("401 Unauthorized")
+      response.headerMap.get("Date") must not be None
+      response.headerMap.get("Content-Type") ==== Some("application/json; charset=utf-8")
       Json.parse(response.contentString) // Make sure we have valid json
       response.contentString ==== "{\"errors\":[{\"error_message\":\"401 - Unauthorized\"}]}"
       there was noCallsTo(mediaUrlsRepository)
@@ -151,12 +152,12 @@ class TrackStreamHandlerSpec extends UnitSpecification {
       userSession.isAnonymous returns false
 
       val response = Await.result(handler.handle(request, userSession, mapper)).build
-      response.status ==== HttpResponseStatus.FORBIDDEN
+      response.status ==== Status.Forbidden
 
       // Mothership headers
-      response.headers.get("Status") ==== "403 Forbidden"
-      response.headers.get("Date") must not be null
-      response.headers.get("Content-Type") ==== "application/json; charset=utf-8"
+      response.headerMap.get("Status") ==== Some("403 Forbidden")
+      response.headerMap.get("Date") must not be None
+      response.headerMap.get("Content-Type") ==== Some("application/json; charset=utf-8")
       Json.parse(response.contentString) // Make sure we have valid json
       response.contentString ==== "{\"errors\":[{\"error_message\":\"403 - Forbidden\"}]}"
       there was noCallsTo(mediaUrlsRepository)

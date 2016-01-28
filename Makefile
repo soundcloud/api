@@ -23,7 +23,7 @@ end-to-end-test:
 unit-test:
 	$(DEFAULT_CONFIG) $(SBT) test
 
-interactive: _dev_docker_compose
+interactive:
 	$(DEFAULT_CONFIG) $(SBT)
 
 compile:

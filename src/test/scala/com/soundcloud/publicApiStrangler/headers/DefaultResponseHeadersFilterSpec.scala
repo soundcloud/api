@@ -24,21 +24,21 @@ class DefaultResponseHeadersFilterSpec extends UnitSpecification {
   "adds all the headers" in new Context {
     val response = Await.result(filter(request, next))
     DefaultResponseHeaders.defaultHeaders.foreach { case(k, v) =>
-      response.headers().get(k) === v
+      response.headerMap.get(k) ==== Some(v)
     }
   }
 
   trait ExistingHeadersContext extends Context {
     override def before = {
       val response = RouterResponse(request.response, "undefined")
-      response.headers().add("Access-Control-Allow-Origin", "Somewhere Else")
+      response.headerMap.add("Access-Control-Allow-Origin", "Somewhere Else")
       when(next.apply(request)).thenReturn(Future.value(response))
     }
   }
 
   "doesn't duplicate headers" in new ExistingHeadersContext {
     val response = Await.result(filter(request, next))
-    val noDupsAllowed = response.headers().entries().map { e => e.getKey }.filter(k => k == "Access-Control-Allow-Origin")
+    val noDupsAllowed = response.headerMap.iterator.map { case (key, _) => key }.filter(k => k == "Access-Control-Allow-Origin")
     noDupsAllowed.size === 1
   }
 

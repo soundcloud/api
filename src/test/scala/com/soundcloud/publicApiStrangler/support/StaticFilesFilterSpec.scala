@@ -5,7 +5,6 @@ import com.soundcloud.scalakit.test.{UnitSpecification, VerifiedMocks}
 import com.twitter.finagle.Service
 import com.twitter.finagle.http._
 import com.twitter.util.{Await, Future}
-import org.jboss.netty.handler.codec.http.HttpMethod
 
 class StaticFilesFilterSpec extends UnitSpecification {
 
@@ -15,16 +14,16 @@ class StaticFilesFilterSpec extends UnitSpecification {
   }
 
   List(
-    Request(HttpMethod.DELETE, "/dummy"),
-    Request(HttpMethod.CONNECT, "/not-found"),
-    Request(HttpMethod.POST, "/post"),
-    Request(HttpMethod.PUT, "/update"),
-    Request(HttpMethod.OPTIONS, "/"),
-    Request(HttpMethod.HEAD, "/head"),
-    Request(HttpMethod.TRACE, "/deal"),
-    Request(HttpMethod.GET, "/non-static"),
-    Request(HttpMethod.GET, "/tracks/213"),
-    Request(HttpMethod.GET, "/nope.txt")
+    Request(Method.Delete, "/dummy"),
+    Request(Method.Connect, "/not-found"),
+    Request(Method.Post, "/post"),
+    Request(Method.Put, "/update"),
+    Request(Method.Options, "/"),
+    Request(Method.Head, "/head"),
+    Request(Method.Trace, "/deal"),
+    Request(Method.Get, "/non-static"),
+    Request(Method.Get, "/tracks/213"),
+    Request(Method.Get, "/nope.txt")
   ) foreach {
     request =>
       s"Passes through all requests that are not static files, testing ${request.method} request to ${request.path} " in new Context {
@@ -35,16 +34,16 @@ class StaticFilesFilterSpec extends UnitSpecification {
         next.apply(request) returns (Future(expected))
 
         val resp = Await.result(filter(request, next))
-        resp.statusCode ==== Status.Ok.getCode
+        resp.statusCode ==== Status.Ok.code
         resp.contentString ==== "dealwithit"
       }
   }
 
   "serves robots.txt" in new Context {
-    val request = Request(HttpMethod.GET, "/robots.txt")
+    val request = Request(Method.Get, "/robots.txt")
     val resp = Await.result(filter(request, next))
 
-    resp.statusCode ==== Status.Ok.getCode
+    resp.statusCode ==== Status.Ok.code
     resp.contentString ==== "User-agent: *\nDisallow: \n"
     resp.contentLength ==== Some(25L)
     resp.contentType ==== Some("text/plain; charset=UTF-8")
@@ -57,10 +56,10 @@ class StaticFilesFilterSpec extends UnitSpecification {
   }
 
   "serves crossdomain.xml" in new Context {
-    val request = Request(HttpMethod.GET, "/crossdomain.xml")
+    val request = Request(Method.Get, "/crossdomain.xml")
     val resp = Await.result(filter(request, next))
 
-    resp.statusCode ==== Status.Ok.getCode
+    resp.statusCode ==== Status.Ok.code
     resp.contentString ==== filter.crossdomainContents
     resp.contentLength ==== Some(666)
     resp.contentType ==== Some("text/xml")

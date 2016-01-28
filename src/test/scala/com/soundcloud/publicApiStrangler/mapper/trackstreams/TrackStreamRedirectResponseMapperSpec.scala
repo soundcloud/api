@@ -25,7 +25,7 @@ class TrackStreamRedirectResponseMapperSpec extends UnitSpecification {
 
       response.getStatusCode() mustEqual 302
       response.getContentString() mustEqual "{\"status\":\"302 - Found\",\"location\":\"http://regular\"}"
-      response.headers().get("Location") mustEqual "http://regular"
+      response.headerMap.get("Location") ==== Some("http://regular")
     }
 
     "Filter out not needed urls in case multiple are provided" in new Context {
@@ -34,7 +34,7 @@ class TrackStreamRedirectResponseMapperSpec extends UnitSpecification {
 
       response.getStatusCode() mustEqual 302
       response.getContentString() mustEqual "{\"status\":\"302 - Found\",\"location\":\"http://regular\"}"
-      response.headers().get("Location") mustEqual "http://regular"
+      response.headerMap.get("Location") ==== Some("http://regular")
     }
 
     "Return not found response in case expected url is not returned" in new Context {

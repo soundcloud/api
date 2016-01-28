@@ -6,22 +6,19 @@ import com.soundcloud.bff.web.{BffInjectionBasedController, UserAuthentication}
 import com.soundcloud.follows.client._
 import com.soundcloud.follows.client.representation._
 import com.soundcloud.follows.client.representation.follow._
-import com.soundcloud.follows.client.representation.unfollow.{NotFollowing, UnfollowSuccessful, UserNotFound => UnfollowUserNotFound, UserAsTarget => UnfollowUserAsTarget, UnknownError => UnfollowUnknownError}
+import com.soundcloud.follows.client.representation.unfollow.{NotFollowing, UnfollowSuccessful, UnknownError => UnfollowUnknownError, UserAsTarget => UnfollowUserAsTarget, UserNotFound => UnfollowUserNotFound}
 import com.soundcloud.jvmkit.rollout.{BasicRolloutFeature, Rollout}
 import com.soundcloud.publicApiStrangler.client.followcounts.{FollowCounts, FollowCountsClient}
 import com.soundcloud.publicApiStrangler.mapping.timeline.User
 import com.soundcloud.publicApiStrangler.support.DispatchToMothershipHandler
-import com.soundcloud.scalakit.finagle.http.{AlwaysMatchesPathMatcher, HandlerRequest}
 import com.soundcloud.scalakit.{Geo, LoggedInUserSession, UTF8, Urn, UserSession}
 import com.soundcloud.service.client.OkidokiClient
 import com.twitter.finagle.http.Status
 import com.twitter.util.Future
-import org.jboss.netty.handler.codec.http.HttpResponseStatus
 import org.joda.time.format.DateTimeFormat
 import org.joda.time.{LocalDate, Years}
-import play.api.libs.json.{JsObject, Json}
+import play.api.libs.json.Json
 
-import scala.collection.JavaConversions._
 import scala.io.Source
 
 class UserFollowController(userAuthentication: UserAuthentication,
@@ -160,25 +157,22 @@ class UserFollowController(userAuthentication: UserAuthentication,
       }
     }
   }
-
-  private def backwardsCompatibleFollowFailedStatusCode(statusCode: Int) =
-    if (statusCode == Status.BadRequest.getCode) Status.UnprocessableEntity.getCode else statusCode
-
+  
   private def renderFollow(session: LoggedInUserSession, target: Urn): Future[ResponseBuilder] = {
     fetchUsers(session, Set(target)).map { users =>
       render.json(users.headOption)
-          .status(Status.Created.getCode)
+          .status(Status.Created.code)
     }
   }
 
-  private def renderStatus(status: HttpResponseStatus) =
-    render.json(Map("status" -> s"${status.getCode} - ${status.getReasonPhrase}"))
-      .status(status.getCode)
+  private def renderStatus(status: Status) =
+    render.json(Map("status" -> s"${status} - ${status.reason}"))
+      .status(status.code)
       .toFuture
 
-  private def renderError(status: HttpResponseStatus) =
-    render.json(Map("errors" -> Seq(Map("error_message" -> s"${status.getCode} - ${status.getReasonPhrase}"))))
-      .status(status.getCode)
+  private def renderError(status: Status) =
+    render.json(Map("errors" -> Seq(Map("error_message" -> s"${status.code} - ${status.reason}"))))
+      .status(status.code)
       .toFuture
 
 
@@ -265,21 +259,21 @@ class UserFollowController(userAuthentication: UserAuthentication,
           urns = responseOption.map(_.urns.toSet).getOrElse(Set.empty)
           users <- fetchUsers(session, urns)
         } yield {
-          responseOption.map { _ =>
-            render.json(Map(
-              "collection" -> mapUsersToUsers(users)
-            ))
-          }.getOrElse(render.serviceUnavailable)
-        }
+            responseOption.map { _ =>
+              render.json(Map(
+                "collection" -> mapUsersToUsers(users)
+              ))
+            }.getOrElse(render.serviceUnavailable)
+          }
       }
     }
   }
 
   private def fetchPage(request: Request,
-                         fetchFunction: (UserSession, Urn, Option[String], Int) => Future[Option[FollowingsPage]],
-                         mapUsers: List[User] => List[Any] = mapUsersToUsers,
-                         users: Seq[Following] => Seq[Urn],
-                         requireLogin: Boolean): Future[ResponseBuilder] = {
+                        fetchFunction: (UserSession, Urn, Option[String], Int) => Future[Option[FollowingsPage]],
+                        mapUsers: List[User] => List[Any] = mapUsersToUsers,
+                        users: Seq[Following] => Seq[Urn],
+                        requireLogin: Boolean): Future[ResponseBuilder] = {
     authenticateIfNeeded(request, requireLogin) { (session: UserSession, userToFetch: Urn) =>
       rollingOutReads(userToFetch).flatMap {
         case false => fallback.dispatch(request)
@@ -288,13 +282,13 @@ class UserFollowController(userAuthentication: UserAuthentication,
           urns = affiliationsOption.map(page => users(page.followings).toSet).getOrElse(Set.empty)
           users <- fetchUsers(session, urns)
         } yield {
-          affiliationsOption.map { affiliations =>
-            render.json(Map(
-              "collection" -> mapUsers(users),
-              "next_href" -> nextHref(baseUrl, request.request.path, affiliations.next, request.params)
-            ))
-          }.getOrElse(render.serviceUnavailable)
-        }
+            affiliationsOption.map { affiliations =>
+              render.json(Map(
+                "collection" -> mapUsers(users),
+                "next_href" -> nextHref(baseUrl, request.request.path, affiliations.next, request.params)
+              ))
+            }.getOrElse(render.serviceUnavailable)
+          }
       }
     }
   }
@@ -313,25 +307,25 @@ class UserFollowController(userAuthentication: UserAuthentication,
           urns = filteredOption.map(_.included).getOrElse(Set.empty)
           users <- fetchUsers(session, urns)
         } yield {
-          filteredOption.map { _ =>
-            if (users.nonEmpty) {
-              render
-                .status(Status.SeeOther.getCode)
-                .header("Location", s"$baseUrl/users/${userId}")
-                .json(users.head)
-            } else {
-              render.notFound
-            }
-          }.getOrElse(render.serviceUnavailable)
-        }
+            filteredOption.map { _ =>
+              if (users.nonEmpty) {
+                render
+                  .status(Status.SeeOther.code)
+                  .header("Location", s"$baseUrl/users/${userId}")
+                  .json(users.head)
+              } else {
+                render.notFound
+              }
+            }.getOrElse(render.serviceUnavailable)
+          }
       }
     }
 
   private def authenticateIfNeeded(request: Request, requireLogin: Boolean)(withSession: (UserSession, Urn) => Future[ResponseBuilder]) = {
-    if(requireLogin) {
+    if (requireLogin) {
       userAuthentication.withLoggedInUser(request) { (loggedIn, _) => withSession(loggedIn, loggedIn.getUser) }
     } else {
-      userAuthentication.withUserSession(request){ s => withSession(s, Urn(s"soundcloud:users:${request.routeParams("id")}")) }
+      userAuthentication.withUserSession(request) { s => withSession(s, Urn(s"soundcloud:users:${request.routeParams("id")}")) }
     }
   }
 
@@ -344,7 +338,7 @@ class UserFollowController(userAuthentication: UserAuthentication,
   private def nextHref(baseUrl: String, path: String, next: Option[Pagination], requestParams: Map[String, String]): Option[String] = {
     next.map { pagination =>
       val params = requestParams ++ Map("cursor" -> pagination.cursor, "page_size" -> pagination.page_size) -- Seq("limit")
-      baseUrl + path + "?" + params.map { case(k, v) => s"$k=$v" }.mkString("&")
+      baseUrl + path + "?" + params.map { case (k, v) => s"$k=$v" }.mkString("&")
     }
   }
 
@@ -388,13 +382,14 @@ class UserFollowController(userAuthentication: UserAuthentication,
 
   private def denyAgeRestricted(age: Long): Future[ResponseBuilder] = {
     render.json(Map("errors" -> Seq(Map("error_message" -> "DENY_AGE_RESTRICTED", "age" -> age))))
-      .status(Status.Forbidden.getCode)
+      .status(Status.Forbidden.code)
       .toFuture
   }
 
   private def denyAgeUnknown: Future[ResponseBuilder] = {
     render.json(Map("errors" -> Seq(Map("error_message" -> "DENY_AGE_UNKNOWN"))))
-      .status(Status.Forbidden.getCode)
+      .status(Status.Forbidden.code)
       .toFuture
   }
+
 }
