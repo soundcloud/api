@@ -5,6 +5,8 @@ import com.soundcloud.bff.nextbff.mapping.MappingContext
 import com.soundcloud.bff.web.{BffInjectionBasedController, UserAuthentication}
 import com.soundcloud.follows.client._
 import com.soundcloud.follows.client.representation._
+import com.soundcloud.follows.client.representation.follow._
+import com.soundcloud.follows.client.representation.unfollow.{NotFollowing, UnfollowSuccessful, UserNotFound => UnfollowUserNotFound, UserAsTarget => UnfollowUserAsTarget, UnknownError => UnfollowUnknownError}
 import com.soundcloud.jvmkit.rollout.{BasicRolloutFeature, Rollout}
 import com.soundcloud.publicApiStrangler.mapping.timeline.User
 import com.soundcloud.publicApiStrangler.support.DispatchToMothershipHandler
@@ -13,6 +15,7 @@ import com.soundcloud.scalakit.{Geo, LoggedInUserSession, UTF8, Urn, UserSession
 import com.soundcloud.service.client.OkidokiClient
 import com.twitter.finagle.http.Status
 import com.twitter.util.Future
+import org.jboss.netty.handler.codec.http.HttpResponseStatus
 import org.joda.time.format.DateTimeFormat
 import org.joda.time.{LocalDate, Years}
 import play.api.libs.json.{JsObject, Json}
@@ -83,8 +86,19 @@ class UserFollowController(userAuthentication: UserAuthentication,
         case true =>
           val user = Urn("soundcloud:users:" + request.routeParams.get("other_id").get)
           follows.follow(session, user).flatMap {
-            case success: FollowSuccessful => renderFollow(session, success)
-            case error: FollowFailed => renderFollowFailed(error, session, user)
+            case _: FollowingCreated => renderFollow(session, user)
+            case AlreadyFollowing => renderStatus(Status.Ok)
+            case UserNotFound => renderError(Status.NotFound)
+            case SpamBlocked => renderError(Status.TooManyRequests)
+            case MaxFollowingsReached => renderError(Status.UnprocessableEntity)
+            case BlockedByTarget => renderError(Status.Forbidden)
+            case UserAsTarget => renderError(Status.BadRequest)
+            case AgeRestrictedUser =>  findUserAge(session, userUrn).flatMap {
+              case Some(userAge) => denyAgeRestricted(userAge)
+              case _ => denyAgeUnknown
+            }
+            case AgeUnknownUser => denyAgeUnknown
+            case _: UnknownError => renderError(Status.InternalServerError)
           }
         case false =>
           val restriction = findAgeRestriction(request.routeParams.get("other_id").get, session.getGeo)
@@ -105,9 +119,11 @@ class UserFollowController(userAuthentication: UserAuthentication,
       rollingOutWrites(userUrn).flatMap {
         case true =>
           val user = Urn("soundcloud:users:" + request.routeParams.get("other_id").get)
-          follows.unfollow(session, user).map {
-            case success: UnfollowSuccessful => render.status(Status.Ok.getCode)
-            case error: UnfollowFailed => render.status(backwardsCompatibleFollowFailedStatusCode(error.status))
+          follows.unfollow(session, user).flatMap {
+            case UnfollowSuccessful => renderStatus(Status.Ok)
+            case UnfollowUserNotFound => renderError(Status.NotFound)
+            case UnfollowUserAsTarget | NotFollowing => renderError(Status.UnprocessableEntity)
+            case _: UnfollowUnknownError => renderError(Status.InternalServerError)
           }
         case false =>
           fallbackToMothership(request)
@@ -115,55 +131,26 @@ class UserFollowController(userAuthentication: UserAuthentication,
     }
   }
 
-  private def renderFollowFailed(error: FollowFailed, session: UserSession, userUrn: Urn): Future[ResponseBuilder] = {
-    fetchUserAgeIfNeeded(error, session, userUrn).map { userAge =>
-      render
-        .status(backwardsCompatibleFollowFailedStatusCode(error.status))
-        .typedJson(
-          Json.obj(
-            "errors" -> Json.arr(
-              fieldsWithAgeRestrictionHack(error, userAge)
-            )
-          )
-        )
-    }
-  }
-
   private def backwardsCompatibleFollowFailedStatusCode(statusCode: Int) =
     if (statusCode == Status.BadRequest.getCode) Status.UnprocessableEntity.getCode else statusCode
 
-  private def fetchUserAgeIfNeeded(fail: FollowFailed, session: UserSession, userUrn: Urn): Future[Option[Int]] = {
-    if(fail.isAgeRestricted) {
-      findUserAge(session, userUrn)
-    } else {
-      Future { None }
+  private def renderFollow(session: LoggedInUserSession, target: Urn): Future[ResponseBuilder] = {
+    fetchUsers(session, Set(target)).map { users =>
+      render.json(users.headOption)
+          .status(Status.Created.getCode)
     }
   }
 
-  // for some reason, the strangler response now includes an "age" field on the error object.
-  private def fieldsWithAgeRestrictionHack(error: FollowFailed, userAge: Option[Int]): JsObject = {
-    error.name match {
-      case _ if userAge.isDefined && error.isAgeRestricted =>
-        Json.obj(
-          "error_message" -> "DENY_AGE_RESTRICTED",
-          "age" -> userAge.get
-        )
-      case _ if error.isAgeUnknown | error.isAgeRestricted => // couldn't fetch the age thing or age is unknown
-        Json.obj(
-          "error_message" -> "DENY_AGE_UNKNOWN"
-        )
-      case other =>
-        Json.obj("error_message" -> error.message)
-    }
-  }
+  private def renderStatus(status: HttpResponseStatus) =
+    render.json(Map("status" -> s"${status.getCode} - ${status.getReasonPhrase}"))
+      .status(status.getCode)
+      .toFuture
 
-  private def renderFollow(session: LoggedInUserSession, follow: FollowSuccessful): Future[ResponseBuilder] = {
-    fetchUsers(session, Set(follow.target)).map { users =>
-      render.json(
-        users.headOption
-      )
-    }
-  }
+  private def renderError(status: HttpResponseStatus) =
+    render.json(Map("errors" -> Seq(Map("error_message" -> s"${status.getCode} - ${status.getReasonPhrase}"))))
+      .status(status.getCode)
+      .toFuture
+
 
   private def fetchFollowingsNotFollowedBy(request: Request): Future[ResponseBuilder] = {
     fetchUrns(
