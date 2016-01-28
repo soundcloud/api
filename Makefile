@@ -13,6 +13,7 @@ run: _dev_docker_compose
 
 precheckin:
 	make unit-test
+	mkdir -p ./target/bazooka/build
 	make -f Makefile.pipeline package publish
 	make end-to-end-test
 
