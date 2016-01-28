@@ -1,7 +1,7 @@
 #!/bin/bash
 
 SERVER_HOST=$(docker-ip)
-RETRY=30
+RETRY=300
 RETRY_WAIT=5
 
 if [ -z ${SERVER_HOST} ]; then
