@@ -157,11 +157,11 @@ class UserFollowController(userAuthentication: UserAuthentication,
       }
     }
   }
-  
+
   private def renderFollow(session: LoggedInUserSession, target: Urn): Future[ResponseBuilder] = {
     fetchUsers(session, Set(target)).map { users =>
       render.json(users.headOption)
-          .status(Status.Created.code)
+        .status(Status.Created.code)
     }
   }
 
@@ -174,7 +174,6 @@ class UserFollowController(userAuthentication: UserAuthentication,
     render.json(Map("errors" -> Seq(Map("error_message" -> s"${status.code} - ${status.reason}"))))
       .status(status.code)
       .toFuture
-
 
   private def fetchFollowingsNotFollowedBy(request: Request): Future[ResponseBuilder] = {
     fetchUrns(
