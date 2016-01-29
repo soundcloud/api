@@ -161,37 +161,31 @@ object App
     rolloutClient
   )
 
+  private val followCountsFromStitchEnabled = () => rolloutClient.isActive(BasicRolloutFeature("follow-counts-from-stitch"))
+  private val searchEntityMapper = new SearchEntityMapper(
+    okidokiClient,
+    followCountsClient,
+    baseUrl,
+    contentAuthorizationRules,
+    followCountsFromStitchEnabled,
+    new WaveformMapper(waveformUrlsRepo),
+    new TrackPurchaseLinkMapper(okidokiClient),
+    new LikeCountMapper(lieblingClient),
+    new PlaylistTracksMapper(okidokiClient, baseUrl),
+    new EntitySummaryMapper(okidokiClient, baseUrl)
+  )
+
   private val searchController = {
     val baseUrl = config.get("APP_BASE_URL", true)
     val waveformUrlsRepo = new WaveformUrlsRepository(okidokiService, mediaService)
-    val entityMapper = new SearchEntityMapper(
-      okidokiClient,
-      baseUrl,
-      contentAuthorizationRules,
-      new WaveformMapper(waveformUrlsRepo),
-      new TrackPurchaseLinkMapper(okidokiClient),
-      new LikeCountMapper(lieblingClient),
-      new PlaylistTracksMapper(okidokiClient, baseUrl),
-      new EntitySummaryMapper(okidokiClient, baseUrl)
-    )
     val searchRepository = new SearchRepository(searchService)
-    val searchMapper = new SearchMapper(searchRepository, entityMapper, baseUrl)
+    val searchMapper = new SearchMapper(searchRepository, searchEntityMapper, baseUrl)
     new SearchController(userAuthentication, searchMapper, baseUrl, rolloutClient, mothershipDispatcher)
   }
 
   private val similarSoundsController = {
     val baseUrl = config.get("APP_BASE_URL", true)
     val waveformUrlsRepo = new WaveformUrlsRepository(okidokiService, mediaService)
-    val searchEntityMapper = new SearchEntityMapper(
-      okidokiClient,
-      baseUrl,
-      contentAuthorizationRules,
-      new WaveformMapper(waveformUrlsRepo),
-      new TrackPurchaseLinkMapper(okidokiClient),
-      new LikeCountMapper(lieblingClient),
-      new PlaylistTracksMapper(okidokiClient, baseUrl),
-      new EntitySummaryMapper(okidokiClient, baseUrl)
-    )
     val similarSoundsMapper = new SimilarSoundsMapper(similarSoundsClient, searchEntityMapper)
 
     new SimilarSoundsController(
