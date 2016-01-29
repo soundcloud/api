@@ -5,7 +5,7 @@ memcached:
     - "11211:11211"
 
 zookeeper:
-  image: jplock/zookeeper:3.4.5
+  image: docker.dev.s-cloud.net/sc-zookeeper
   ports:
     - "2181:2181"
 
