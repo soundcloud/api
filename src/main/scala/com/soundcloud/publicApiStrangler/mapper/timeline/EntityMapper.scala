@@ -3,6 +3,7 @@ package com.soundcloud.publicApiStrangler.mapper.timeline
 import com.soundcloud.bff.nextbff.mapper.Mapper
 import com.soundcloud.bff.nextbff.mapping.{JsonMapping, MappingContext}
 import com.soundcloud.jvmkit.UserSession
+import com.soundcloud.publicApiStrangler.client.followcounts.FollowCountsClient
 import com.soundcloud.publicApiStrangler.mapping.timeline.{Comment, Playlist, Track, User}
 import com.soundcloud.scalakit._
 import com.soundcloud.service.client.{LieblingClient, OkidokiClient}
@@ -11,12 +12,13 @@ import play.api.libs.json.JsObject
 
 class EntityMapper(okidokiClient: OkidokiClient,
                    lieblingClient: LieblingClient,
+                   followCountsClient: FollowCountsClient,
                    baseUrl: String,
                    entitySummaryMapper: EntitySummaryMapper)
   extends Mapper[Urn, JsonMapping] {
 
   override def map(session: UserSession, inputs: Set[Urn])(implicit context: MappingContext): Future[Map[Urn, JsonMapping]] = {
-    val likes = lieblingClient.likesCounts(session, inputs.toList)
+    val likes = lieblingClient.likesCounts(session, filterByCollection(inputs.toList, List("tracks", "playlists")))
     val entities = okidokiClient.fetch(session, inputs)
 
     entities.join(likes).map {
@@ -30,6 +32,8 @@ class EntityMapper(okidokiClient: OkidokiClient,
     }.map(_.toMap)
   }
 
+  private def filterByCollection(inputs: List[Urn], collections: List[String]): List[Urn] =
+    inputs.filter(urn => collections.contains(urn.getCollection))
 
   private def entityFor(urn: Urn, entityData: JsObject, likesCounts: Map[Urn, Int])(implicit context: MappingContext) = {
     urn.getCollection match {
@@ -46,5 +50,4 @@ class EntityMapper(okidokiClient: OkidokiClient,
         Urn((obj \ "target_urn").as[String]) -> (obj \ "likes_count").asOpt[Int].getOrElse(0)
     }.toMap.withDefaultValue(0)
   }
-
 }

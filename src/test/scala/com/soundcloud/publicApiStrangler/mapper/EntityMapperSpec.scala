@@ -16,30 +16,28 @@ class EntityMapperSpec extends UnitSpecification with Fixtures {
   trait Context extends VerifiedMocks {
     val okidokiClient = mock[OkidokiClient]
     val lieblingClient = mock[LieblingClient]
-    val entityMapper = mock[EntityMapper]
     val entitySummaryMapper = mock[EntitySummaryMapper]
-    val mapper = new EntityMapper(okidokiClient, lieblingClient, "https://foo.com", entitySummaryMapper)
+    val entityMapper = new EntityMapper(okidokiClient, lieblingClient, "https://foo.com", entitySummaryMapper)
     val session = mock[UserSession]
-    val urns = List(
-      "soundcloud:users:123",
+    val likeUrns = List(
       "soundcloud:tracks:131352352",
-      "soundcloud:playlists:123",
-      "soundcloud:comments:205752728").map(Urn(_))
-
-    val userUrns = List(
-      "soundcloud:users:4037",
-      "soundcloud:tracks:6457573").map(Urn(_))
+      "soundcloud:playlists:123"
+    ).map(Urn(_))
+    val urns = likeUrns ++ List(
+      "soundcloud:users:123",
+      "soundcloud:comments:205752728"
+    ).map(Urn(_))
 
     override def before = {
       when(okidokiClient.fetch(===(session), any[Set[Urn]])).thenReturn(
         Future(okidokiFetch.as[List[JsObject]])
       )
-      when(lieblingClient.likesCounts(===(session), any[List[Urn]])).thenReturn(
+      when(lieblingClient.likesCounts(===(session), ===(likeUrns))).thenReturn(
         Future(lieblingLikesInfo.as[JsObject])
       )
     }
 
-    def result = Await.result(mapper.materialize(session, urns))
+    def result = Await.result(entityMapper.materialize(session, urns))
   }
 
   "builds the proper mappings" in new Context {
