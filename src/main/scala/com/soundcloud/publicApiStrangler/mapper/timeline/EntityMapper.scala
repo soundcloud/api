@@ -33,7 +33,7 @@ class EntityMapper(okidokiClient: OkidokiClient,
 
   private def entityFor(urn: Urn, entityData: JsObject, likesCounts: Map[Urn, Int])(implicit context: MappingContext) = {
     urn.getCollection match {
-      case "users" => new User(entityData, baseUrl)
+      case "users" => new User(entityData, baseUrl, None)
       case "tracks" => new Track(entityData, likesCounts, baseUrl, entitySummaryMapper)
       case "playlists" => new Playlist(entityData, likesCounts, baseUrl, entitySummaryMapper)
       case "comments" => new Comment(entityData, baseUrl, entitySummaryMapper)

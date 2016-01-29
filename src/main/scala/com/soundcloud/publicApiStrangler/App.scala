@@ -156,6 +156,7 @@ object App
     mothershipDispatcher,
     okidokiClient,
     followsClient,
+    followCountsClient,
     baseUrl,
     rolloutClient
   )

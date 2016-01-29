@@ -6,6 +6,7 @@ import com.soundcloud.bff.web.{BffInjectionBasedController, UserAuthentication}
 import com.soundcloud.follows.client._
 import com.soundcloud.follows.client.representation._
 import com.soundcloud.jvmkit.rollout.{BasicRolloutFeature, Rollout}
+import com.soundcloud.publicApiStrangler.client.followcounts.{FollowCounts, FollowCountsClient}
 import com.soundcloud.publicApiStrangler.mapping.timeline.User
 import com.soundcloud.publicApiStrangler.support.DispatchToMothershipHandler
 import com.soundcloud.scalakit.finagle.http.{AlwaysMatchesPathMatcher, HandlerRequest}
@@ -24,6 +25,7 @@ class UserFollowController(userAuthentication: UserAuthentication,
                            fallback: DispatchToMothershipHandler,
                            okidoki: OkidokiClient,
                            follows: FollowsClient,
+                           followCountsClient: FollowCountsClient,
                            baseUrl: String,
                            rollout: Rollout)
   extends BffInjectionBasedController {
@@ -322,6 +324,8 @@ class UserFollowController(userAuthentication: UserAuthentication,
 
   private def rollingOutWrites(userUrn: Urn): Future[Boolean] = rollout.isActiveForUrn(BasicRolloutFeature("follows-writes"), userUrn)
 
+  private def rollingOutCountsFromStitch(): Future[Boolean] = rollout.isActive(BasicRolloutFeature("follow-counts-from-stitch"))
+
   private def nextHref(baseUrl: String, path: String, next: Option[Pagination], requestParams: Map[String, String]): Option[String] = {
     next.map { pagination =>
       val params = requestParams ++ Map("cursor" -> pagination.cursor, "page_size" -> pagination.page_size) -- Seq("limit")
@@ -331,8 +335,22 @@ class UserFollowController(userAuthentication: UserAuthentication,
 
   private def fetchUsers(session: UserSession, urns: Set[Urn]): Future[List[User]] = {
     val context = new MappingContext(session)
-    okidoki.fetch(session, urns).map { users =>
-      users.map(user => new User(user, baseUrl)(context))
+    for {
+      (users, followCountsMap) <- Future.join(
+        okidoki.fetch(session, urns),
+        rollingOutCountsFromStitch().flatMap {
+          case true =>
+            followCountsClient
+              .counts(session, urns.toSeq)
+              .map(_.map(followCounts => (followCounts.userUrn, followCounts)).toMap)
+          case false => Future.value(Map.empty[Urn, FollowCounts])
+        }
+      )
+    } yield {
+      users.map { user =>
+        val followCounts = followCountsMap.get(Urn((user \ "self" \ "urn").as[String]))
+        new User(user, baseUrl, followCounts)(context)
+      }
     }
   }
 

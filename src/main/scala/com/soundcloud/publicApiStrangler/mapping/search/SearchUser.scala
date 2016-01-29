@@ -14,7 +14,7 @@ class SearchUser(jsonValue: JsValue,
                  baseUrl: String)
                 // Yep, that was my reaction, too.
                 (implicit if_this_is_named_context_then_serialization_fails: MappingContext)
-  extends User(jsonValue, baseUrl) {
+  extends User(jsonValue, baseUrl, None) {
 
   // TODO: add comments_count, likes_count, reposts_count fields iff widget needs them
 
