@@ -1,5 +1,6 @@
 package com.soundcloud.publicApiStrangler.controller
 
+import com.soundcloud.bff.finagle.ResponseBuilder
 import com.soundcloud.bff.test.InjectionBasedControllerSpecification
 import com.soundcloud.follows.client.FollowsClient
 import com.soundcloud.follows.client.representation._
@@ -8,13 +9,12 @@ import com.soundcloud.jvmkit.{Geo => JvmGeo, UserSessionBuilder}
 import com.soundcloud.publicApiStrangler.client.followcounts.{FollowCounts, FollowCountsClient}
 import com.soundcloud.publicApiStrangler.support.DispatchToMothershipHandler
 import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures
-import com.soundcloud.scalakit.finagle.http.HandlerRequest
 import com.soundcloud.scalakit.test.VerifiedMocks
 import com.soundcloud.scalakit.{Geo, Urn}
 import com.soundcloud.service.client.OkidokiClient
-import com.twitter.finagle.http.{Response, Status}
+import com.twitter.finagle.http.{Request, Status}
 import com.twitter.util.Future
-import org.joda.time.{LocalDateTime, DateTime, DateTimeUtils}
+import org.joda.time.{DateTime, DateTimeUtils, LocalDateTime}
 import org.specs2.mutable.BeforeAfter
 import play.api.libs.json._
 
@@ -52,14 +52,15 @@ class UserFollowControllerSpec extends InjectionBasedControllerSpecification wit
   }
 
   trait FallbackContext extends Context {
-    val expectedResponse = Response(Status.Ok)
+    private val expectedResponseBuilder = new ResponseBuilder().status(Status.Ok.getCode)
+    val expectedResponse = expectedResponseBuilder.build
 
     override def before: Any = {
       super.before
       rollout.isActiveForUrn(BasicRolloutFeature("follows-reads"), userUrn) returns Future.False
       rollout.isActiveForUrn(BasicRolloutFeature("follows-writes"), userUrn) returns Future.False
 
-      when(fallbackMock.defaultHandling(any[HandlerRequest])).thenReturn(Future.value(expectedResponse))
+      when(fallbackMock.dispatch(any[Request])).thenReturn(Future.value(expectedResponseBuilder))
     }
   }
 
