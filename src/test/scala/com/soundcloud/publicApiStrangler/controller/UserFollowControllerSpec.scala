@@ -3,6 +3,8 @@ package com.soundcloud.publicApiStrangler.controller
 import com.soundcloud.bff.test.InjectionBasedControllerSpecification
 import com.soundcloud.follows.client.FollowsClient
 import com.soundcloud.follows.client.representation._
+import com.soundcloud.follows.client.representation.follow.{FollowingCreated, UserNotFound, AgeUnknownUser, AgeRestrictedUser}
+import com.soundcloud.follows.client.representation.unfollow.{UserAsTarget, UnfollowSuccessful}
 import com.soundcloud.jvmkit.rollout.{BasicRolloutFeature, Rollout}
 import com.soundcloud.jvmkit.{Geo => JvmGeo, UserSessionBuilder}
 import com.soundcloud.publicApiStrangler.support.DispatchToMothershipHandler
@@ -388,21 +390,22 @@ class UserFollowControllerSpec extends InjectionBasedControllerSpecification wit
     "follows a profile" in new Context {
       override def before = {
         super.before
-        followsMock.follow(session, userUrn) returns Future.value(FollowSuccessful(userUrn))
+        val following = Following("1", LocalDateTime.now, userUrn, Urn("soundcloud:users:999"))
+        followsMock.follow(session, userUrn) returns Future.value(FollowingCreated(following))
       }
 
       val response = put(controller, "/me/followings/999", Map("client_id" -> "YOUR_CLIENT_ID"))
-      response.status ==== Status.Ok
+      response.status ==== Status.Created
     }
 
     "render the age-restricted errors" in new Context {
       override def before = {
         super.before
-        followsMock.follow(session, userUrn) returns Future.value(FollowFailed(followsAgeRestrictedError))
+        followsMock.follow(session, userUrn) returns Future.value(AgeRestrictedUser)
       }
 
       val response = put(controller, "/me/followings/999", Map("client_id" -> "YOUR_CLIENT_ID"))
-      response.status ==== Status.PreconditionFailed
+      response.status ==== Status.Forbidden
       val errors = (response.jsonBody \ "errors").as[Seq[JsObject]].head
       (errors \ "error_message").asOpt[String] ==== Option("DENY_AGE_RESTRICTED")
       (errors \ "age").asOpt[Long] ==== Option(31)
@@ -411,11 +414,11 @@ class UserFollowControllerSpec extends InjectionBasedControllerSpecification wit
     "render the age-unknown errors" in new Context {
       override def before = {
         super.before
-        followsMock.follow(session, userUrn) returns Future.value(FollowFailed(followsAgeUnknownError))
+        followsMock.follow(session, userUrn) returns Future.value(AgeUnknownUser)
       }
 
       val response = put(controller, "/me/followings/999", Map("client_id" -> "YOUR_CLIENT_ID"))
-      response.status ==== Status.PreconditionFailed
+      response.status ==== Status.Forbidden
       val errors = (response.jsonBody \ "errors").as[Seq[JsObject]].head
       (errors \ "error_message").asOpt[String] ==== Option("DENY_AGE_UNKNOWN")
     }
@@ -423,13 +426,13 @@ class UserFollowControllerSpec extends InjectionBasedControllerSpecification wit
     "render regular errors" in new Context {
       override def before = {
         super.before
-        followsMock.follow(session, userUrn) returns Future.value(FollowFailed(followsError))
+        followsMock.follow(session, userUrn) returns Future.value(UserNotFound)
       }
 
       val response = put(controller, "/me/followings/999", Map("client_id" -> "YOUR_CLIENT_ID"))
-      response.status ==== Status.PreconditionFailed
+      response.status ==== Status.NotFound
       val errors = (response.jsonBody \ "errors").as[Seq[JsObject]].head
-      (errors \ "error_message").asOpt[String] ==== Option("foo")
+      (errors \ "error_message").asOpt[String] ==== Option("404 - Not Found")
     }
 
     "fallback to mothership" >> {
@@ -504,7 +507,7 @@ class UserFollowControllerSpec extends InjectionBasedControllerSpecification wit
     "unfollows a profile" in new Context {
       override def before = {
         super.before
-        followsMock.unfollow(session, userUrn) returns Future.value(UnfollowSuccessful(userUrn))
+        followsMock.unfollow(session, userUrn) returns Future.value(UnfollowSuccessful)
       }
 
       val response = delete(controller, "/me/followings/999", Map("client_id" -> "YOUR_CLIENT_ID"))
@@ -514,11 +517,11 @@ class UserFollowControllerSpec extends InjectionBasedControllerSpecification wit
     "render errors" in new Context {
       override def before = {
         super.before
-        followsMock.unfollow(session, userUrn) returns Future.value(UnfollowFailed(followsError))
+        followsMock.unfollow(session, userUrn) returns Future.value(UserAsTarget)
       }
 
       val response = delete(controller, "/me/followings/999", Map("client_id" -> "YOUR_CLIENT_ID"))
-      response.status ==== Status.PreconditionFailed
+      response.status ==== Status.UnprocessableEntity
     }
   }
 }

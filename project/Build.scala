@@ -14,7 +14,7 @@ object Build extends HttpServerAppBuild(
     scalaVersion = "2.11.6"
   ),
   libDependencies = Seq(
-    "com.soundcloud"     %% "follows-client"           % "1.0.2",
+    "com.soundcloud"     %% "follows-client"           % "2.0.0",
     "com.soundcloud"     %% "timeline-client"          % "0.1.2",
     "com.soundcloud"     %% "ratelimitinglib"          % "0.3.0",
     "com.soundcloud"     %% "sc-services"              % "33.0.0",
