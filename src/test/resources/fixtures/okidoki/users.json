@@ -1,5 +1,6 @@
 [
   {
+    "kind": "user",
     "city": "London",
     "country_code": null,
     "first_name": "Adeline",

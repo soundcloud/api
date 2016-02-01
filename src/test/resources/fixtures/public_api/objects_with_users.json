@@ -1,0 +1,73 @@
+
+[
+  {
+    "connection_ids" : [
+      1,
+      2
+    ],
+    "kind" : "friend",
+    "user" : {
+      "permalink_url" : "http://test.host/eliseo_kautzer",
+      "avatar_url" : "http://assets.sc.host/images/default_avatar_large.png",
+      "website" : null,
+      "first_name" : "Aric",
+      "followers_count" : 1234,
+      "public_favorites_count" : 0,
+      "id" : 1111,
+      "last_modified" : "2016/02/03 10:27:29 +0000",
+      "myspace_name" : null,
+      "country" : null,
+      "followings_count" : 4567,
+      "city" : null,
+      "username" : "eliseo_kautzer",
+      "last_name" : "Kunde",
+      "online" : false,
+      "permalink" : "eliseo_kautzer",
+      "website_title" : null,
+      "kind" : "user",
+      "subscriptions" : [],
+      "uri" : "http://api.test.host/users/1055964856",
+      "playlist_count" : 0,
+      "track_count" : 0,
+      "plan" : "Free",
+      "discogs_name" : null,
+      "full_name" : "Aric Kunde",
+      "description" : null
+    }
+  },
+  {
+    "user" : {
+      "website" : null,
+      "first_name" : "Fred",
+      "avatar_url" : "http://assets.sc.host/images/default_avatar_large.png",
+      "permalink_url" : "http://test.host/emmanuel_gutmann",
+      "country" : null,
+      "last_modified" : "2016/02/03 10:27:29 +0000",
+      "myspace_name" : null,
+      "id" : 2222,
+      "followers_count" : 919,
+      "public_favorites_count" : 0,
+      "kind" : "user",
+      "online" : false,
+      "permalink" : "emmanuel_gutmann",
+      "website_title" : null,
+      "last_name" : "Smith",
+      "followings_count" : 4,
+      "username" : "emmanuel_gutmann",
+      "city" : null,
+      "full_name" : "Fred Smith",
+      "description" : null,
+      "plan" : "Free",
+      "discogs_name" : null,
+      "track_count" : 0,
+      "playlist_count" : 0,
+      "subscriptions" : [],
+      "uri" : "http://api.test.host/users/1055964857"
+    },
+    "kind" : "friend",
+    "connection_ids" : [
+      1,
+      2
+    ]
+  }
+]
