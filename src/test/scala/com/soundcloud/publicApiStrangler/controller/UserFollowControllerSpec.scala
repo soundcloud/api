@@ -1,5 +1,6 @@
 package com.soundcloud.publicApiStrangler.controller
 
+import com.soundcloud.bff.finagle.ResponseBuilder
 import com.soundcloud.bff.test.InjectionBasedControllerSpecification
 import com.soundcloud.follows.client.FollowsClient
 import com.soundcloud.follows.client.representation._
@@ -7,15 +8,15 @@ import com.soundcloud.follows.client.representation.follow.{FollowingCreated, Us
 import com.soundcloud.follows.client.representation.unfollow.{UserAsTarget, UnfollowSuccessful}
 import com.soundcloud.jvmkit.rollout.{BasicRolloutFeature, Rollout}
 import com.soundcloud.jvmkit.{Geo => JvmGeo, UserSessionBuilder}
+import com.soundcloud.publicApiStrangler.client.followcounts.{FollowCounts, FollowCountsClient}
 import com.soundcloud.publicApiStrangler.support.DispatchToMothershipHandler
 import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures
-import com.soundcloud.scalakit.finagle.http.HandlerRequest
 import com.soundcloud.scalakit.test.VerifiedMocks
 import com.soundcloud.scalakit.{Geo, Urn}
 import com.soundcloud.service.client.OkidokiClient
-import com.twitter.finagle.http.{Response, Status}
+import com.twitter.finagle.http.{Request, Status}
 import com.twitter.util.Future
-import org.joda.time.{LocalDateTime, DateTime, DateTimeUtils}
+import org.joda.time.{DateTime, DateTimeUtils, LocalDateTime}
 import org.specs2.mutable.BeforeAfter
 import play.api.libs.json._
 
@@ -26,20 +27,24 @@ class UserFollowControllerSpec extends InjectionBasedControllerSpecification wit
     val fallbackMock = mock[DispatchToMothershipHandler]
     val okidokiMock = mock[OkidokiClient]
     val followsMock = mock[FollowsClient]
+    val followCountsClientMock = mock[FollowCountsClient]
     val rollout = mock[Rollout]
     val userUrn = Urn("soundcloud:users:999")
     lazy val geo = Geo("US")
     lazy val session = new UserSessionBuilder().setUser(userUrn).setAgent(Urn("soundcloud:applications:v2")).setGeo(geo).build()
-    lazy val controller = new UserFollowController(fakeUserAuthentication(session), fallbackMock, okidokiMock, followsMock, "http://foo", rollout)
+    lazy val controller = new UserFollowController(fakeUserAuthentication(session), fallbackMock, okidokiMock, followsMock, followCountsClientMock, "http://foo", rollout)
     lazy val userMock = okidokiUsers.as[List[JsObject]].head
     lazy val okidokiResponse = Future(List(userMock))
 
     val now = System.currentTimeMillis()
 
+    def followCountsFlag: Boolean = false
+
     override def before: Any = {
       DateTimeUtils.setCurrentMillisFixed(now)
       rollout.isActiveForUrn(BasicRolloutFeature("follows-reads"), userUrn) returns Future.True
       rollout.isActiveForUrn(BasicRolloutFeature("follows-writes"), userUrn) returns Future.True
+      rollout.isActive(BasicRolloutFeature("follow-counts-from-stitch")) returns Future.value(followCountsFlag)
       okidokiMock.fetch(session, Set(userUrn)) returns okidokiResponse
     }
 
@@ -49,20 +54,21 @@ class UserFollowControllerSpec extends InjectionBasedControllerSpecification wit
   }
 
   trait FallbackContext extends Context {
-    val expectedResponse = Response(Status.Ok)
+    private val expectedResponseBuilder = new ResponseBuilder().status(Status.Ok.getCode)
+    val expectedResponse = expectedResponseBuilder.build
 
     override def before: Any = {
       super.before
       rollout.isActiveForUrn(BasicRolloutFeature("follows-reads"), userUrn) returns Future.False
       rollout.isActiveForUrn(BasicRolloutFeature("follows-writes"), userUrn) returns Future.False
 
-      when(fallbackMock.defaultHandling(any[HandlerRequest])).thenReturn(Future.value(expectedResponse))
+      when(fallbackMock.dispatch(any[Request])).thenReturn(Future.value(expectedResponseBuilder))
     }
   }
 
   "GET /users/:id/followers/followed_by/:other_id" >> {
     "fetches followings" in new Context {
-      override def before = {
+      override def before: Any = {
         super.before
         val values = Seq(userUrn, Urn("soundcloud:users:100"))
         val pageInfo = Pagination("123-1234", 2)
@@ -86,7 +92,7 @@ class UserFollowControllerSpec extends InjectionBasedControllerSpecification wit
   "GET /users/:id/followings/not_followed_by/:other_id" >> {
     "fetches followings" in new Context {
 
-      override def before = {
+      override def before: Any = {
         super.before
         val values = Seq(
           Urn("soundcloud:users:12490957"), Urn("soundcloud:users:100")
@@ -107,7 +113,7 @@ class UserFollowControllerSpec extends InjectionBasedControllerSpecification wit
   "GET /users/:id/followings/common_to/:other_id" >> {
     "fetches followings" in new Context {
 
-      override def before = {
+      override def before: Any = {
         super.before
         val values = Seq(
           Urn("soundcloud:users:12490957"), Urn("soundcloud:users:100")
@@ -128,7 +134,7 @@ class UserFollowControllerSpec extends InjectionBasedControllerSpecification wit
   "GET /me/followings/ids" >> {
     "fetches a user's followings" in new Context {
 
-      override def before = {
+      override def before: Any = {
         super.before
         val values = Seq(
           Following("123-123", new LocalDateTime("2012-02-13T23:30:13.000"), Urn("soundcloud:users:12490957"), Urn("soundcloud:users:100"))
@@ -149,7 +155,7 @@ class UserFollowControllerSpec extends InjectionBasedControllerSpecification wit
   "GET /me/followers/ids" >> {
     "fetches a user's followings" in new Context {
 
-      override def before = {
+      override def before: Any = {
         super.before
         val values = Seq(
           Following("123-123", new LocalDateTime("2012-02-13T23:30:13.000"), Urn("soundcloud:users:12490957"), Urn("soundcloud:users:100"))
@@ -168,30 +174,56 @@ class UserFollowControllerSpec extends InjectionBasedControllerSpecification wit
   }
 
   "GET /me/followings" >> {
-    "fetches a user's followings" in new Context {
+    trait FollowingsContext extends Context {
 
-      override def before = {
+      val followings = Seq(
+        Following("123-123", new LocalDateTime("2012-02-13T23:30:13.000"), Urn("soundcloud:users:123"), userUrn)
+      )
+
+      override def before: Any = {
         super.before
-        val values = Seq(
-          Following("123-123", new LocalDateTime("2012-02-13T23:30:13.000"), Urn("soundcloud:users:12490957"), Urn("soundcloud:users:100"))
-        )
         val pageInfo = Pagination("123-1234", 2)
-        followsMock.followings(session, session.getUser, None, 10) returns Future.value(Some(FollowingsPage(values, Some(pageInfo))))
-        okidokiMock.fetch(session, values.map(_.target).toSet) returns Future.value(okidokiUsers.as[List[JsObject]])
+        followsMock.followings(session, session.getUser, None, 10) returns Future.value(Some(FollowingsPage(followings, Some(pageInfo))))
+        okidokiMock.fetch(session, followings.map(_.target).toSet) returns Future.value(okidokiUsers.as[List[JsObject]])
+      }
+    }
+
+    "fetches a user's followings" >> {
+
+      "with follow counts flag off" in new FollowingsContext {
+        val response = get(controller, "/me/followings", Map("limit" -> "10", "client_id" -> "FOO"))
+        response.status ==== Status.Ok
+        val json = Json.parse(response.body)
+        (json \ "collection").as[Seq[JsObject]].size ==== 1
+        (json \ "next_href").asOpt[String] ==== Some("http://foo/me/followings?client_id=FOO&page_size=2&cursor=123-1234")
+        (json \ "collection" \\ "followers_count").head.as[Long] ==== 20976
+        (json \ "collection" \\ "followings_count").head.as[Long] ==== 118
       }
 
-      val response = get(controller, "/me/followings", Map("limit" -> "10", "client_id" -> "FOO"))
-      response.status ==== Status.Ok
-      val json = Json.parse(response.body)
-      (json \ "collection").as[Seq[JsObject]].size ==== 1
-      (json \ "next_href").asOpt[String] ==== Some("http://foo/me/followings?client_id=FOO&page_size=2&cursor=123-1234")
+      "with follow counts flag on" in new FollowingsContext {
+
+        override def followCountsFlag: Boolean = true
+
+        override def before: Any = {
+          super.before
+          followCountsClientMock.counts(session, followings.map(_.target)) returns Future.value(Seq(FollowCounts(followings.head.target, 1111, 2222)))
+        }
+
+        val response = get(controller, "/me/followings", Map("limit" -> "10", "client_id" -> "FOO"))
+        response.status ==== Status.Ok
+        val json = Json.parse(response.body)
+        (json \ "collection").as[Seq[JsObject]].size ==== 1
+        (json \ "next_href").asOpt[String] ==== Some("http://foo/me/followings?client_id=FOO&page_size=2&cursor=123-1234")
+        (json \ "collection" \\ "followers_count").head.as[Long] ==== 1111
+        (json \ "collection" \\ "followings_count").head.as[Long] ==== 2222
+      }
     }
   }
 
   "GET /me/followers" >> {
     "fetches a user's followers" in new Context {
 
-      override def before = {
+      override def before: Any = {
         super.before
         val values = Seq(
           Following("123-123", new LocalDateTime("2012-02-13T23:30:13.000"), Urn("soundcloud:users:12490957"), Urn("soundcloud:users:100"))
@@ -210,7 +242,7 @@ class UserFollowControllerSpec extends InjectionBasedControllerSpecification wit
   }
 
   trait FetchesFollowingContext extends Context {
-    override def before = {
+    override def before: Any = {
       super.before
 
       val candidateUser = Urn("soundcloud:users:123")
@@ -222,7 +254,7 @@ class UserFollowControllerSpec extends InjectionBasedControllerSpecification wit
   }
 
   trait FollowingNotFoundContext extends Context {
-    override def before = {
+    override def before: Any = {
       super.before
 
       val candidateUser = Urn("soundcloud:users:123")
@@ -298,7 +330,7 @@ class UserFollowControllerSpec extends InjectionBasedControllerSpecification wit
   }
 
   trait FetchesFollowerContext extends Context {
-    override def before = {
+    override def before: Any = {
       super.before
 
       val candidateUser = Urn("soundcloud:users:123")
@@ -310,7 +342,7 @@ class UserFollowControllerSpec extends InjectionBasedControllerSpecification wit
   }
 
   trait FollowerNotFoundContext extends Context {
-    override def before = {
+    override def before: Any = {
       super.before
 
       val candidateUser = Urn("soundcloud:users:123")
@@ -388,7 +420,7 @@ class UserFollowControllerSpec extends InjectionBasedControllerSpecification wit
 
   "PUT /me/followings/:other_id" >> {
     "follows a profile" in new Context {
-      override def before = {
+      override def before: Any = {
         super.before
         val following = Following("1", LocalDateTime.now, userUrn, Urn("soundcloud:users:999"))
         followsMock.follow(session, userUrn) returns Future.value(FollowingCreated(following))
@@ -399,7 +431,7 @@ class UserFollowControllerSpec extends InjectionBasedControllerSpecification wit
     }
 
     "render the age-restricted errors" in new Context {
-      override def before = {
+      override def before: Any = {
         super.before
         followsMock.follow(session, userUrn) returns Future.value(AgeRestrictedUser)
       }
@@ -412,7 +444,7 @@ class UserFollowControllerSpec extends InjectionBasedControllerSpecification wit
     }
 
     "render the age-unknown errors" in new Context {
-      override def before = {
+      override def before: Any = {
         super.before
         followsMock.follow(session, userUrn) returns Future.value(AgeUnknownUser)
       }
@@ -424,7 +456,7 @@ class UserFollowControllerSpec extends InjectionBasedControllerSpecification wit
     }
 
     "render regular errors" in new Context {
-      override def before = {
+      override def before: Any = {
         super.before
         followsMock.follow(session, userUrn) returns Future.value(UserNotFound)
       }
@@ -505,7 +537,7 @@ class UserFollowControllerSpec extends InjectionBasedControllerSpecification wit
 
   "DELETE /me/followings/:other_id" >> {
     "unfollows a profile" in new Context {
-      override def before = {
+      override def before: Any = {
         super.before
         followsMock.unfollow(session, userUrn) returns Future.value(UnfollowSuccessful)
       }
@@ -515,7 +547,7 @@ class UserFollowControllerSpec extends InjectionBasedControllerSpecification wit
     }
 
     "render errors" in new Context {
-      override def before = {
+      override def before: Any = {
         super.before
         followsMock.unfollow(session, userUrn) returns Future.value(UserAsTarget)
       }

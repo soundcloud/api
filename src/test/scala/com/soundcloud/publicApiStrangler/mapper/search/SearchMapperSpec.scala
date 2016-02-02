@@ -41,7 +41,7 @@ class SearchMapperSpec extends UnitSpecification {
   "filters search results that aren't known to okidoki" in new Context {
     val okidokiMock = mock[OkidokiClient]
     val caMock = mock[ContentAuthorizationRules]
-    val searchEntityMapper = new SearchEntityMapper(okidokiMock, null, caMock, null, null, null, null, null)
+    val searchEntityMapper = new SearchEntityMapper(okidokiMock, null, baseUrl, caMock, () => Future.False, null, null, null, null, null)
     val searchMapper = new SearchMapper(searchRepoMock, searchEntityMapper, baseUrl)
     private val request = pagedRequest(Map.empty)
 

@@ -8,6 +8,7 @@ import com.soundcloud.follows.client.representation._
 import com.soundcloud.follows.client.representation.follow._
 import com.soundcloud.follows.client.representation.unfollow.{NotFollowing, UnfollowSuccessful, UserNotFound => UnfollowUserNotFound, UserAsTarget => UnfollowUserAsTarget, UnknownError => UnfollowUnknownError}
 import com.soundcloud.jvmkit.rollout.{BasicRolloutFeature, Rollout}
+import com.soundcloud.publicApiStrangler.client.followcounts.{FollowCounts, FollowCountsClient}
 import com.soundcloud.publicApiStrangler.mapping.timeline.User
 import com.soundcloud.publicApiStrangler.support.DispatchToMothershipHandler
 import com.soundcloud.scalakit.finagle.http.{AlwaysMatchesPathMatcher, HandlerRequest}
@@ -27,6 +28,7 @@ class UserFollowController(userAuthentication: UserAuthentication,
                            fallback: DispatchToMothershipHandler,
                            okidoki: OkidokiClient,
                            follows: FollowsClient,
+                           followCountsClient: FollowCountsClient,
                            baseUrl: String,
                            rollout: Rollout)
   extends BffInjectionBasedController {
@@ -74,7 +76,7 @@ class UserFollowController(userAuthentication: UserAuthentication,
   get("/me/followers/:other_id.json")(fetchPossibleFollower)
   get("/me/followings/:other_id")(fetchPossibleFollowing)
   get("/me/followings/:other_id.json")(fetchPossibleFollowing)
-  head("/me/followings/:other_id")(fallbackToMothership)
+  head("/me/followings/:other_id")(fallback.dispatch)
 
   post("/me/followings/:other_id")(follow)
   put("/me/followings/:other_id")(follow)
@@ -103,10 +105,10 @@ class UserFollowController(userAuthentication: UserAuthentication,
         case false =>
           val restriction = findAgeRestriction(request.routeParams.get("other_id").get, session.getGeo)
           if (restriction.isEmpty) {
-            fallbackToMothership(request)
+            fallback.dispatch(request)
           } else {
             findUserAge(session, userUrn).flatMap {
-              case Some(userAge) => if (userAge < restriction.get) denyAgeRestricted(restriction.get) else fallbackToMothership(request)
+              case Some(userAge) => if (userAge < restriction.get) denyAgeRestricted(restriction.get) else fallback.dispatch(request)
               case _ => denyAgeUnknown
             }
           }
@@ -126,7 +128,7 @@ class UserFollowController(userAuthentication: UserAuthentication,
             case _: UnfollowUnknownError => renderError(Status.InternalServerError)
           }
         case false =>
-          fallbackToMothership(request)
+          fallback.dispatch(request)
       }
     }
   }
@@ -229,7 +231,7 @@ class UserFollowController(userAuthentication: UserAuthentication,
                         fetchFunction: (UserSession, Urn) => Future[Option[UserUrns]]): Future[ResponseBuilder] = {
     authenticateIfNeeded(request, requireLogin = false) { (session: UserSession, userToFetch: Urn) =>
       rollingOutReads(userToFetch).flatMap {
-        case false => fallbackToMothership(request)
+        case false => fallback.dispatch(request)
         case true => for {
           responseOption <- fetchFunction(session, userToFetch)
           urns = responseOption.map(_.urns.toSet).getOrElse(Set.empty)
@@ -252,7 +254,7 @@ class UserFollowController(userAuthentication: UserAuthentication,
                          requireLogin: Boolean): Future[ResponseBuilder] = {
     authenticateIfNeeded(request, requireLogin) { (session: UserSession, userToFetch: Urn) =>
       rollingOutReads(userToFetch).flatMap {
-        case false => fallbackToMothership(request)
+        case false => fallback.dispatch(request)
         case true => for {
           affiliationsOption <- fetchFunction(session, userToFetch, cursorParam(request), pageSizeParam(request))
           urns = affiliationsOption.map(page => users(page.followings).toSet).getOrElse(Set.empty)
@@ -277,7 +279,7 @@ class UserFollowController(userAuthentication: UserAuthentication,
       val user = Urn("soundcloud:users:" + userId)
 
       rollingOutReads(loggedInUser).flatMap {
-        case false => fallbackToMothership(request)
+        case false => fallback.dispatch(request)
         case true => for {
           filteredOption <- filteringFunction(session, loggedInUser, Seq(user))
           urns = filteredOption.map(_.included).getOrElse(Set.empty)
@@ -309,6 +311,8 @@ class UserFollowController(userAuthentication: UserAuthentication,
 
   private def rollingOutWrites(userUrn: Urn): Future[Boolean] = rollout.isActiveForUrn(BasicRolloutFeature("follows-writes"), userUrn)
 
+  private def rollingOutCountsFromStitch(): Future[Boolean] = rollout.isActive(BasicRolloutFeature("follow-counts-from-stitch"))
+
   private def nextHref(baseUrl: String, path: String, next: Option[Pagination], requestParams: Map[String, String]): Option[String] = {
     next.map { pagination =>
       val params = requestParams ++ Map("cursor" -> pagination.cursor, "page_size" -> pagination.page_size) -- Seq("limit")
@@ -318,8 +322,22 @@ class UserFollowController(userAuthentication: UserAuthentication,
 
   private def fetchUsers(session: UserSession, urns: Set[Urn]): Future[List[User]] = {
     val context = new MappingContext(session)
-    okidoki.fetch(session, urns).map { users =>
-      users.map(user => new User(user, baseUrl)(context))
+    for {
+      (users, followCountsMap) <- Future.join(
+        okidoki.fetch(session, urns),
+        rollingOutCountsFromStitch().flatMap {
+          case true =>
+            followCountsClient
+              .counts(session, urns.toSeq)
+              .map(_.map(followCounts => (followCounts.userUrn, followCounts)).toMap)
+          case false => Future.value(Map.empty[Urn, FollowCounts])
+        }
+      )
+    } yield {
+      users.map { user =>
+        val followCounts = followCountsMap.get(Urn((user \ "self" \ "urn").as[String]))
+        new User(user, baseUrl, followCounts)(context)
+      }
     }
   }
 
@@ -350,12 +368,5 @@ class UserFollowController(userAuthentication: UserAuthentication,
     render.json(Map("errors" -> Seq(Map("error_message" -> "DENY_AGE_UNKNOWN"))))
       .status(Status.Forbidden.getCode)
       .toFuture
-  }
-
-  private def fallbackToMothership(request: Request): Future[ResponseBuilder] = {
-    fallback.defaultHandling(new HandlerRequest(AlwaysMatchesPathMatcher, request)).map { response =>
-      val headers = response.headers().entries().map(e => e.getKey -> e.getValue).toMap
-      new ResponseBuilder().status(response.getStatusCode()).body(response.getContentString()).headers(headers)
-    }
   }
 }

@@ -6,6 +6,7 @@ import com.soundcloud.bff.nextbff.mapping.MappingContext
 import com.soundcloud.bff.test.UnitSpecification
 import com.soundcloud.jvmkit.policies.{ContentAuthorization, ContentPolicy, MonetizationModel, Reason}
 import com.soundcloud.publicApiStrangler.authorization.ContentAuthorizationRules
+import com.soundcloud.publicApiStrangler.client.followcounts.{FollowCounts, FollowCountsClient}
 import com.soundcloud.publicApiStrangler.mapper.liebling.LikeCountMapper
 import com.soundcloud.publicApiStrangler.mapper.purchaselink.TrackPurchaseLinkMapper
 import com.soundcloud.publicApiStrangler.mapper.timeline.EntitySummaryMapper
@@ -29,6 +30,7 @@ class SearchEntityMapperSpec extends UnitSpecification with Fixtures {
     val session = loggedInSession(userUrn)
 
     val okidokiClient = mock[OkidokiClient]
+    val followCountsClient = mock[FollowCountsClient]
     val contentAuthorizationService = mock[ContentAuthorizationRules]
     val trackPurchaseLinkMapper = new TrackPurchaseLinkMapper(okidokiClient)
     val lieblingClient = mock[LieblingClient]
@@ -38,8 +40,10 @@ class SearchEntityMapperSpec extends UnitSpecification with Fixtures {
     private val playlistTracksMapper = new PlaylistTracksMapper(okidokiClient, baseUrl)
     val mapper = new SearchEntityMapper(
       okidokiClient,
+      followCountsClient,
       baseUrl,
       contentAuthorizationService,
+      () => Future.value(followCountsFlag),
       new WaveformMapper(waveformUrlsRepository),
       trackPurchaseLinkMapper,
       likeCountMapper,
@@ -71,7 +75,9 @@ class SearchEntityMapperSpec extends UnitSpecification with Fixtures {
     val waveforms = (new TrackWaveformUrlMapper).map(withContentsOf("waveform", "search_waveform"))
       .filterNot(_.isPreview)
 
-    override def before = {
+    def followCountsFlag: Boolean = false
+
+    override def before: Any = {
       // the main metadata fetch
       when(okidokiClient.fetch(session, searchResults.toSet)).thenReturn(
         Future(okidokiFetch)
@@ -102,36 +108,76 @@ class SearchEntityMapperSpec extends UnitSpecification with Fixtures {
       when(waveformUrlsRepository.fetchWaveformUrlsToMap(===(session), any[Map[String, ContentPolicy]])).thenReturn(
         Future(waveforms.map(w => w.trackUid -> w).toMap)
       )
-
     }
 
     def result = Await.result(mapper.materialize(session, searchResults))
   }
 
-  "builds the proper mappings" in new Context {
-    result.size mustEqual 4
-    val List(userJson, trackJson, playlistJson, groupJson) = result.map(Json.toJsValue)
+  "builds the proper mappings" >> {
+    "with follow counts flag off" in new Context {
+      result.size mustEqual 4
+      val List(userJson, trackJson, playlistJson, groupJson) = result.map(Json.toJsValue)
 
-    (trackJson \ "kind").as[String] ==== "track"
-    (trackJson \ "waveform_url").as[String] ==== "https://w1.sndcdn.com/b5uH7mT3hjkm_m.png"
-    (trackJson \ "duration").asOpt[Int] ==== Some(269555)
-    (trackJson \ "streamable").asOpt[Boolean] ==== Some(false)
-    (trackJson \ "downloadable").asOpt[Boolean] ==== Some(true)
-    (trackJson \ "download_url").asOpt[String] ==== Some("https://api.soundcloud.com/tracks/15273221/download")
+      (trackJson \ "kind").as[String] ==== "track"
+      (trackJson \ "waveform_url").as[String] ==== "https://w1.sndcdn.com/b5uH7mT3hjkm_m.png"
+      (trackJson \ "duration").asOpt[Int] ==== Some(269555)
+      (trackJson \ "streamable").asOpt[Boolean] ==== Some(false)
+      (trackJson \ "downloadable").asOpt[Boolean] ==== Some(true)
+      (trackJson \ "download_url").asOpt[String] ==== Some("https://api.soundcloud.com/tracks/15273221/download")
 
-    (userJson \ "kind").as[String] ==== "user"
-    val subs = (userJson \ "subscriptions").as[List[JsObject]]
-    subs must haveSize(1)
-    (subs.head \ "product" \ "id").as[String] ==== "creator-pro-unlimited"
+      (userJson \ "kind").as[String] ==== "user"
+      val subs = (userJson \ "subscriptions").as[List[JsObject]]
+      subs must haveSize(1)
+      (subs.head \ "product" \ "id").as[String] ==== "creator-pro-unlimited"
+      (userJson \ "followers_count").as[Long] ==== 1595672
+      (userJson \ "followings_count").as[Long] ==== 2
 
-    (groupJson \ "kind").as[String] ==== "group"
-    (groupJson \ "uri").as[String] ==== "https://api.soundcloud.com.com/groups/30910"
+      (groupJson \ "kind").as[String] ==== "group"
+      (groupJson \ "uri").as[String] ==== "https://api.soundcloud.com.com/groups/30910"
 
-    (playlistJson \ "kind").as[String] ==== "playlist"
-    (playlistJson \ "tracks_uri").as[String] ==== "https://api.soundcloud.com.com/playlists/685235/tracks"
-    (playlistJson \ "likes_count").as[Int] ==== 666
-    (playlistJson \ "tracks").as[List[JsValue]] must beEmpty
-    (playlistJson \ "secret_token").asOpt[String] ==== None
-    (playlistJson \ "secret_uri").asOpt[String] ==== None
+      (playlistJson \ "kind").as[String] ==== "playlist"
+      (playlistJson \ "tracks_uri").as[String] ==== "https://api.soundcloud.com.com/playlists/685235/tracks"
+      (playlistJson \ "likes_count").as[Int] ==== 666
+      (playlistJson \ "tracks").as[List[JsValue]] must beEmpty
+      (playlistJson \ "secret_token").asOpt[String] ==== None
+      (playlistJson \ "secret_uri").asOpt[String] ==== None
+    }
+
+    "with follow counts flag on" in new Context {
+      override def followCountsFlag: Boolean = true
+
+      override def before: Any = {
+        super.before
+        val fetchedUserUrn = Urn("soundcloud:users:2097360")
+        followCountsClient.counts(session, Seq(fetchedUserUrn)) returns Future.value(Seq(FollowCounts(fetchedUserUrn, 1111, 2222)))
+      }
+
+      result.size mustEqual 4
+      val List(userJson, trackJson, playlistJson, groupJson) = result.map(Json.toJsValue)
+
+      (trackJson \ "kind").as[String] ==== "track"
+      (trackJson \ "waveform_url").as[String] ==== "https://w1.sndcdn.com/b5uH7mT3hjkm_m.png"
+      (trackJson \ "duration").asOpt[Int] ==== Some(269555)
+      (trackJson \ "streamable").asOpt[Boolean] ==== Some(false)
+      (trackJson \ "downloadable").asOpt[Boolean] ==== Some(true)
+      (trackJson \ "download_url").asOpt[String] ==== Some("https://api.soundcloud.com/tracks/15273221/download")
+
+      (userJson \ "kind").as[String] ==== "user"
+      val subs = (userJson \ "subscriptions").as[List[JsObject]]
+      subs must haveSize(1)
+      (subs.head \ "product" \ "id").as[String] ==== "creator-pro-unlimited"
+      (userJson \ "followers_count").as[Long] ==== 1111
+      (userJson \ "followings_count").as[Long] ==== 2222
+
+      (groupJson \ "kind").as[String] ==== "group"
+      (groupJson \ "uri").as[String] ==== "https://api.soundcloud.com.com/groups/30910"
+
+      (playlistJson \ "kind").as[String] ==== "playlist"
+      (playlistJson \ "tracks_uri").as[String] ==== "https://api.soundcloud.com.com/playlists/685235/tracks"
+      (playlistJson \ "likes_count").as[Int] ==== 666
+      (playlistJson \ "tracks").as[List[JsValue]] must beEmpty
+      (playlistJson \ "secret_token").asOpt[String] ==== None
+      (playlistJson \ "secret_uri").asOpt[String] ==== None
+    }
   }
 }

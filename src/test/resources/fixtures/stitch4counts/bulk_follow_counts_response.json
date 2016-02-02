@@ -1,0 +1,22 @@
+{
+  "followerCounts": {
+    "1": {
+      "series": [
+        {
+          "time": 0,
+          "count": 10
+        }
+      ]
+    }
+  },
+  "followingCounts": {
+    "1": {
+      "series": [
+        {
+          "time": 0,
+          "count": 20
+        }
+      ]
+    }
+  }
+}

@@ -10,6 +10,7 @@ import com.soundcloud.jvmkit.admin.{AdminRoute, RequestMethod}
 import com.soundcloud.jvmkit.config.ConfigConvention
 import com.soundcloud.jvmkit.rollout.{BasicRolloutFeature, RolloutBuilder}
 import com.soundcloud.publicApiStrangler.authorization._
+import com.soundcloud.publicApiStrangler.client.followcounts.FollowCountsClient
 import com.soundcloud.publicApiStrangler.controller._
 import com.soundcloud.publicApiStrangler.headers.DefaultResponseHeadersFilter
 import com.soundcloud.publicApiStrangler.mapper.liebling.LikeCountMapper
@@ -67,6 +68,12 @@ object App
     ServiceConfig("user_subscriptions", config.get(ResourceName("USER_SUBSCRIPTIONS"), ConfigConvention.SRV_RECORD), config)
   )
 
+  private val stitch4countsService = JsonService(
+    ServiceConfig("stitch4counts", config.get(ResourceName("STITCH4COUNTS"), ConfigConvention.SRV_RECORD), config)
+  )
+
+  private val followCountsClient = new FollowCountsClient(stitch4countsService, config)
+
   private val contentAuthorizationRules = new ContentAuthorizationRules(
     new ContentAuthorizationService(authsyService),
     new SubscriptionsService(subscriptionsService))
@@ -100,7 +107,7 @@ object App
 
   private val timelineController = {
     val entitySummaryMapper = new EntitySummaryMapper(okidokiClient, baseUrl)
-    val entityMapper = new EntityMapper(okidokiClient, lieblingClient, baseUrl, entitySummaryMapper)
+    val entityMapper = new EntityMapper(okidokiClient, lieblingClient, followCountsClient, baseUrl, entitySummaryMapper, rolloutClient)
     val streamMapper = new StreamMapper(timelineClient, entityMapper, entitySummaryMapper)
     val activitiesMapper = new ActivitiesMapper(timelineClient, entityMapper, entitySummaryMapper)
     val publicActivitiesMapper = new ActivitiesWithOriginMapper(timelineClient, entityMapper, entitySummaryMapper)
@@ -149,41 +156,36 @@ object App
     mothershipDispatcher,
     okidokiClient,
     followsClient,
+    followCountsClient,
     baseUrl,
     rolloutClient
+  )
+
+  private val followCountsFromStitchEnabled = () => rolloutClient.isActive(BasicRolloutFeature("follow-counts-from-stitch"))
+  private val searchEntityMapper = new SearchEntityMapper(
+    okidokiClient,
+    followCountsClient,
+    baseUrl,
+    contentAuthorizationRules,
+    followCountsFromStitchEnabled,
+    new WaveformMapper(waveformUrlsRepo),
+    new TrackPurchaseLinkMapper(okidokiClient),
+    new LikeCountMapper(lieblingClient),
+    new PlaylistTracksMapper(okidokiClient, baseUrl),
+    new EntitySummaryMapper(okidokiClient, baseUrl)
   )
 
   private val searchController = {
     val baseUrl = config.get("APP_BASE_URL", true)
     val waveformUrlsRepo = new WaveformUrlsRepository(okidokiService, mediaService)
-    val entityMapper = new SearchEntityMapper(
-      okidokiClient,
-      baseUrl,
-      contentAuthorizationRules,
-      new WaveformMapper(waveformUrlsRepo),
-      new TrackPurchaseLinkMapper(okidokiClient),
-      new LikeCountMapper(lieblingClient),
-      new PlaylistTracksMapper(okidokiClient, baseUrl),
-      new EntitySummaryMapper(okidokiClient, baseUrl)
-    )
     val searchRepository = new SearchRepository(searchService)
-    val searchMapper = new SearchMapper(searchRepository, entityMapper, baseUrl)
+    val searchMapper = new SearchMapper(searchRepository, searchEntityMapper, baseUrl)
     new SearchController(userAuthentication, searchMapper, baseUrl, rolloutClient, mothershipDispatcher)
   }
 
   private val similarSoundsController = {
     val baseUrl = config.get("APP_BASE_URL", true)
     val waveformUrlsRepo = new WaveformUrlsRepository(okidokiService, mediaService)
-    val searchEntityMapper = new SearchEntityMapper(
-      okidokiClient,
-      baseUrl,
-      contentAuthorizationRules,
-      new WaveformMapper(waveformUrlsRepo),
-      new TrackPurchaseLinkMapper(okidokiClient),
-      new LikeCountMapper(lieblingClient),
-      new PlaylistTracksMapper(okidokiClient, baseUrl),
-      new EntitySummaryMapper(okidokiClient, baseUrl)
-    )
     val similarSoundsMapper = new SimilarSoundsMapper(similarSoundsClient, searchEntityMapper)
 
     new SimilarSoundsController(
