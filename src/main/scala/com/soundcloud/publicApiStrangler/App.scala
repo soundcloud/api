@@ -107,7 +107,9 @@ object App
 
   private val timelineController = {
     val entitySummaryMapper = new EntitySummaryMapper(okidokiClient, baseUrl)
-    val entityMapper = new EntityMapper(okidokiClient, lieblingClient, followCountsClient, baseUrl, entitySummaryMapper, () => rolloutClient.isActive(BasicRolloutFeature("follow-counts-from-stitch")))
+    val entityMapper = new EntityMapper(
+      okidokiClient, lieblingClient, followCountsClient, baseUrl,
+      entitySummaryMapper, () => rolloutClient.isActive(BasicRolloutFeature("follow-counts-from-stitch")))
     val streamMapper = new StreamMapper(timelineClient, entityMapper, entitySummaryMapper)
     val activitiesMapper = new ActivitiesMapper(timelineClient, entityMapper, entitySummaryMapper)
     val publicActivitiesMapper = new ActivitiesWithOriginMapper(timelineClient, entityMapper, entitySummaryMapper)
@@ -161,13 +163,12 @@ object App
     rolloutClient
   )
 
-  private val followCountsFromStitchEnabled = () => rolloutClient.isActive(BasicRolloutFeature("follow-counts-from-stitch"))
   private val searchEntityMapper = new SearchEntityMapper(
     okidokiClient,
     followCountsClient,
     baseUrl,
     contentAuthorizationRules,
-    followCountsFromStitchEnabled,
+    () => rolloutClient.isActive(BasicRolloutFeature("follow-counts-from-stitch")),
     new WaveformMapper(waveformUrlsRepo),
     new TrackPurchaseLinkMapper(okidokiClient),
     new LikeCountMapper(lieblingClient),
@@ -194,6 +195,13 @@ object App
       baseUrl
     )
   }
+
+  private val likesController = new LikesController(
+    userAuthentication,
+    mothershipDispatcher,
+    followCountsClient,
+    () => rolloutClient.isActive(BasicRolloutFeature("follow-counts-from-stitch-likes"))
+  )
 
   override val fallbackHandler = Some(mothershipDispatcher)
 
@@ -242,7 +250,8 @@ object App
     searchController,
     similarSoundsController,
     rateLimitingFacade.rateLimitStatusController,
-    tracksController
+    tracksController,
+    likesController
   )
 
   override val customAdminHandlers: Seq[(AdminRoute, Handler)] = Seq(

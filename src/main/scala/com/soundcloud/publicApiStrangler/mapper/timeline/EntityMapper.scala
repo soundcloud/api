@@ -3,7 +3,6 @@ package com.soundcloud.publicApiStrangler.mapper.timeline
 import com.soundcloud.bff.nextbff.mapper.Mapper
 import com.soundcloud.bff.nextbff.mapping.{JsonMapping, MappingContext}
 import com.soundcloud.jvmkit.UserSession
-import com.soundcloud.jvmkit.rollout.{BasicRolloutFeature, Rollout}
 import com.soundcloud.publicApiStrangler.client.followcounts.{FollowCounts, FollowCountsClient}
 import com.soundcloud.publicApiStrangler.mapping.timeline.{Comment, Playlist, Track, User}
 import com.soundcloud.scalakit._
