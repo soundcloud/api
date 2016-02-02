@@ -107,7 +107,7 @@ object App
 
   private val timelineController = {
     val entitySummaryMapper = new EntitySummaryMapper(okidokiClient, baseUrl)
-    val entityMapper = new EntityMapper(okidokiClient, lieblingClient, followCountsClient, baseUrl, entitySummaryMapper, rolloutClient)
+    val entityMapper = new EntityMapper(okidokiClient, lieblingClient, followCountsClient, baseUrl, entitySummaryMapper, () => rolloutClient.isActive(BasicRolloutFeature("follow-counts-from-stitch")))
     val streamMapper = new StreamMapper(timelineClient, entityMapper, entitySummaryMapper)
     val activitiesMapper = new ActivitiesMapper(timelineClient, entityMapper, entitySummaryMapper)
     val publicActivitiesMapper = new ActivitiesWithOriginMapper(timelineClient, entityMapper, entitySummaryMapper)

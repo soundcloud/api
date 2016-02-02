@@ -19,9 +19,9 @@ class EntityMapperSpec extends UnitSpecification with Fixtures {
     val okidokiClient = mock[OkidokiClient]
     val lieblingClient = mock[LieblingClient]
     val followCountsClient = mock[FollowCountsClient]
-    val rollout = mock[Rollout]
+    val getFollowCountsFromStitch: () => Future[Boolean]
     val entitySummaryMapper = mock[EntitySummaryMapper]
-    val entityMapper = new EntityMapper(okidokiClient, lieblingClient, followCountsClient, "https://foo.com", entitySummaryMapper, rollout)
+    lazy val entityMapper = new EntityMapper(okidokiClient, lieblingClient, followCountsClient, "https://foo.com", entitySummaryMapper, getFollowCountsFromStitch)
     val session = mock[UserSession]
     val likeUrns = List(
       "soundcloud:tracks:131352352",
@@ -32,28 +32,27 @@ class EntityMapperSpec extends UnitSpecification with Fixtures {
       "soundcloud:comments:205752728"
     ).map(Urn(_))
 
-    def followCountsFlag: Boolean = false
-
     override def before: Any = {
       when(okidokiClient.fetch(===(session), any[Set[Urn]])) thenReturn
         Future(okidokiFetch.as[List[JsObject]])
 
       when(lieblingClient.likesCounts(===(session), ===(likeUrns))) thenReturn
         Future(lieblingLikesInfo.as[JsObject])
-
-      when(rollout.isActive(BasicRolloutFeature("follow-counts-from-stitch"))) thenReturn
-        Future.value(followCountsFlag)
     }
 
     def result = Await.result(entityMapper.materialize(session, urns))
   }
 
   "builds the proper mappings" in new Context {
+    val getFollowCountsFromStitch = () => Future.False
+
     result.size mustEqual 4
   }
 
   "injects the base URL and likes counts" >> {
     "with follow counts flag off" in new Context {
+      val getFollowCountsFromStitch = () => Future.False
+
       val playlist: Playlist = result.filter(t => t.isInstanceOf[Playlist]).head.asInstanceOf[Playlist]
 
       playlist.tracks_uri mustEqual "https://foo.com/playlists/123/tracks"
@@ -70,7 +69,7 @@ class EntityMapperSpec extends UnitSpecification with Fixtures {
     }
 
     "with follow counts flag on" in new Context {
-      override def followCountsFlag: Boolean = true
+      val getFollowCountsFromStitch = () => Future.True
 
       override def before: Any = {
         super.before
