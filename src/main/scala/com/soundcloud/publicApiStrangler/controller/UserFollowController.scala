@@ -18,7 +18,6 @@ import com.twitter.util.Future
 import org.joda.time.format.DateTimeFormat
 import org.joda.time.{LocalDate, Years}
 import play.api.libs.json.Json
-
 import scala.io.Source
 
 class UserFollowController(userAuthentication: UserAuthentication,
