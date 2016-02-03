@@ -203,6 +203,13 @@ object App
     () => rolloutClient.isActive(BasicRolloutFeature("follow-counts-from-stitch-likes"))
   )
 
+  private val friendsController = new FriendsController(
+    userAuthentication,
+    mothershipDispatcher,
+    followCountsClient,
+    () => rolloutClient.isActive(BasicRolloutFeature("follow-counts-from-stitch-friends"))
+  )
+
   override val fallbackHandler = Some(mothershipDispatcher)
 
   override def exceptionHandler: PartialFunction[Throwable, Response] = {
@@ -251,7 +258,8 @@ object App
     similarSoundsController,
     rateLimitingFacade.rateLimitStatusController,
     tracksController,
-    likesController
+    likesController,
+    friendsController
   )
 
   override val customAdminHandlers: Seq[(AdminRoute, Handler)] = Seq(
