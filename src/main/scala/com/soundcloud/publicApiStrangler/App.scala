@@ -239,6 +239,13 @@ object App
     () => rolloutClient.isActive(BasicRolloutFeature("follow-counts-from-stitch-reposters"))
   )
 
+  private val userController = new UserController(
+    userAuthentication,
+    mothershipDispatcher,
+    followCountsClient,
+    () => rolloutClient.isActive(BasicRolloutFeature("follow-counts-from-stitch-user"))
+  )
+
   override val fallbackHandler = Some(mothershipDispatcher)
 
   override def exceptionHandler: PartialFunction[Throwable, Response] = {
@@ -291,7 +298,8 @@ object App
     friendsController,
     groupUsersController,
     suggestedUsersController,
-    repostersController
+    repostersController,
+    userController
   )
 
   override val customAdminHandlers: Seq[(AdminRoute, Handler)] = Seq(
