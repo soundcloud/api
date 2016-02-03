@@ -1,28 +1,29 @@
 package com.soundcloud.publicApiStrangler.controller
 
-import com.soundcloud.bff.Future
 import com.soundcloud.bff.finagle.{Request, ResponseBuilder}
 import com.soundcloud.bff.nextbff.pagination.PageBuilder
 import com.soundcloud.bff.nextbff.repository.RepositoryException
 import com.soundcloud.bff.web.{BffInjectionBasedController, UserAuthentication}
-import com.soundcloud.jvmkit.rollout.{BasicRolloutFeature, Rollout}
+import com.soundcloud.publicApiStrangler.client.followcounts.FollowCountsClient
 import com.soundcloud.publicApiStrangler.controller.SearchController._
 import com.soundcloud.publicApiStrangler.mapper.search.SearchMapper
 import com.soundcloud.publicApiStrangler.mapping.search.SearchDispatcherRequest
 import com.soundcloud.publicApiStrangler.support.DispatchToMothershipHandler
 import com.soundcloud.scalakit.finagle.http.BadRequestStatus
 import com.twitter.finagle.http.ParamMap
-import com.twitter.util.{Return, Try}
+import com.twitter.util.{Future, Return, Try}
 
 /**
  * Redirects search queries on to search-dispatcher and fetches meta data.
  */
-class SearchController(userAuthentication: UserAuthentication,
+class SearchController(val userAuthentication: UserAuthentication,
+                       val mothershipDispatcher: DispatchToMothershipHandler,
+                       val followCountsClient: FollowCountsClient,
+                       val useStitchForFollowCounts: () => Future[Boolean],
+                       avoidMothershipFor: String => Future[Boolean],
                        searchMapper: SearchMapper,
-                       baseUrl: String,
-                       rollout: Rollout,
-                       fallback: DispatchToMothershipHandler)
-  extends BffInjectionBasedController {
+                       baseUrl: String)
+  extends BffInjectionBasedController with FollowCountsHelper {
 
   get("/tracks")(dispatchTrackRequest)
   get("/tracks/")(dispatchTrackRequest)
@@ -40,37 +41,49 @@ class SearchController(userAuthentication: UserAuthentication,
   get("/playlists")(dispatchPlaylistRequest)
   get("/playlists.json")(dispatchPlaylistRequest)
 
+  // NOTE: The following are a quick-fix in order to fetch follow counts from Stitch instead of Mothership.
+  // These endpoints are NOT properly strangled.
+
+  get("/search")(dispatchToMothershipWithFollowCounts)
+  get("/search.json")(dispatchToMothershipWithFollowCounts)
+
+  get("/search/universal")(dispatchToMothershipWithFollowCounts)
+  get("/search/universal.json")(dispatchToMothershipWithFollowCounts)
+
+  get("/search/people")(dispatchToMothershipWithFollowCounts)
+  get("/search/people.json")(dispatchToMothershipWithFollowCounts)
+
   private def dispatchUserRequest = dispatchRequest(
     Set("q"),
     SearchDispatcherRequest.userSearch,
-    BasicRolloutFeature("search_avoid_mothership_for_users")
+    "users"
   )
 
   private def dispatchGroupRequest = dispatchRequest(
     Set("q"),
     SearchDispatcherRequest.groupSearch,
-    BasicRolloutFeature("search_avoid_mothership_for_groups")
+    "groups"
   )
 
   private def dispatchPlaylistRequest = dispatchRequest(
     Set("q", "license"),
     SearchDispatcherRequest.playlistSearch,
-    BasicRolloutFeature("search_avoid_mothership_for_playlists")
+    "playlists"
   )
 
   private def dispatchTrackRequest = dispatchRequest(
     Set("q", "genres", "tags", "license"),
     SearchDispatcherRequest.trackSearch,
-    BasicRolloutFeature("search_avoid_mothership_for_tracks")
+    "tracks"
   )
 
   /**
    * Perform a search for tracks. Logic to determine whether this is a search
    * and if we should forward the request to Mothership.
    */
-  private def dispatchRequest(searchParams: Set[String], makeRequest: Request => SearchDispatcherRequest, featureName: BasicRolloutFeature): BffRequestHandler = request =>
+  private def dispatchRequest(searchParams: Set[String], makeRequest: Request => SearchDispatcherRequest, featureName: String): BffRequestHandler = request =>
     if (isSearchRequest(request.params, searchParams)) search(request, makeRequest(request), featureName)
-    else fallback.dispatch(request)
+    else mothershipDispatcher.dispatch(request)
 
   private def isSearchRequest(params: ParamMap, searchParams: Set[String]): Boolean = {
     val paramsWithContent = params.collect { case (k, v) if v != null && v.nonEmpty => k }.toSet
@@ -83,9 +96,9 @@ class SearchController(userAuthentication: UserAuthentication,
       case _ => Return(true)
     }
 
-  private def search(request: Request, searchRequest: SearchDispatcherRequest, featureName: BasicRolloutFeature): Future[ResponseBuilder] = {
+  private def search(request: Request, searchRequest: SearchDispatcherRequest, featureName: String): Future[ResponseBuilder] = {
     userAuthentication.withUserSession(request) { session =>
-      rollout.isActive(featureName).flatMap{
+      avoidMothershipFor(featureName).flatMap{
         isActive =>
           if (isActive) {
 
@@ -111,7 +124,7 @@ class SearchController(userAuthentication: UserAuthentication,
             }
           }.map(_.header("Cache-Control", s"public, max-age=$MaxCacheAge, must-revalidate"))
           else {
-            fallback.dispatch(request)
+            mothershipDispatcher.dispatch(request)
           }
       }
     }
@@ -121,4 +134,3 @@ class SearchController(userAuthentication: UserAuthentication,
 object SearchController {
   val MaxCacheAge = 60
 }
-

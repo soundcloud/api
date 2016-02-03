@@ -181,7 +181,15 @@ object App
     val waveformUrlsRepo = new WaveformUrlsRepository(okidokiService, mediaService)
     val searchRepository = new SearchRepository(searchService)
     val searchMapper = new SearchMapper(searchRepository, searchEntityMapper, baseUrl)
-    new SearchController(userAuthentication, searchMapper, baseUrl, rolloutClient, mothershipDispatcher)
+    new SearchController(
+      userAuthentication,
+      mothershipDispatcher,
+      followCountsClient,
+      () => rolloutClient.isActive(BasicRolloutFeature("follow-counts-from-stitch-search")),
+      feature => rolloutClient.isActive(BasicRolloutFeature(s"search_avoid_mothership_for_$feature")),
+      searchMapper,
+      baseUrl
+    )
   }
 
   private val similarSoundsController = {
