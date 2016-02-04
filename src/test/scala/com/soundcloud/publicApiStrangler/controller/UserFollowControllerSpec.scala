@@ -417,6 +417,18 @@ class UserFollowControllerSpec extends InjectionBasedControllerSpecification wit
     }
   }
 
+  "PUT /me/followings/:other_id.json" >> {
+    "works like the route without .json" in new Context {
+      override def before: Any = {
+        super.before
+        val following = Following("1", LocalDateTime.now, userUrn, Urn("soundcloud:users:999"))
+        followsMock.follow(session, userUrn) returns Future.value(FollowingCreated(following))
+      }
+
+      val response = put(controller, "/me/followings/999.json", Map("client_id" -> "YOUR_CLIENT_ID"))
+      response.status ==== Status.Created
+    }
+  }
 
   "PUT /me/followings/:other_id" >> {
     "follows a profile" in new Context {
@@ -532,6 +544,18 @@ class UserFollowControllerSpec extends InjectionBasedControllerSpecification wit
         val errors = (response.jsonBody \ "errors").as[Seq[JsObject]].head
         (errors \ "error_message").asOpt[String] ==== Option("DENY_AGE_UNKNOWN")
       }
+    }
+  }
+
+  "DELETE /me/followings/:other_id.json" >> {
+    "works like the route without .json" in new Context {
+      override def before: Any = {
+        super.before
+        followsMock.unfollow(session, userUrn) returns Future.value(UnfollowSuccessful)
+      }
+
+      val response = delete(controller, "/me/followings/999.json", Map("client_id" -> "YOUR_CLIENT_ID"))
+      response.status ==== Status.Ok
     }
   }
 
