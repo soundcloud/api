@@ -116,7 +116,6 @@ trait PublicApiClientComponent {
         .configured(Transporter.ConnectTimeout(5.seconds))
         .configured(FailFast(true))
         .filtered(retryFilter)
-        .filtered(FollowRedirectsFilter)
         .filtered(new OutgoingHttpRequestMonitoringFilter[Request, Response](ResourceName(svcName), telemetry, requestLatencyBuckets))
         .newService(config.get(ResourceName("MOTHERSHIP_API_SERVER"), ConfigConvention.SRV_RECORD))
 
