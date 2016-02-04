@@ -7,7 +7,7 @@ import com.soundcloud.publicApiStrangler.support.DispatchToMothershipHandler
 import com.soundcloud.scalakit._
 import com.soundcloud.scalakit.finagle.http.{AlwaysMatchesPathMatcher, HandlerRequest}
 import com.twitter.finagle.http.Response
-import com.twitter.util.Future
+import com.twitter.util.{Try, Future}
 import play.api.libs.json.{JsArray, JsObject, JsValue, Json}
 
 import scala.collection.JavaConversions._
@@ -26,28 +26,20 @@ trait FollowCountsHelper {
       case true =>
         userAuthentication.withUserSession(request) { session =>
           mothershipDispatcher.defaultHandling(new HandlerRequest(AlwaysMatchesPathMatcher, request)).flatMap { response =>
-            if (response.getStatusCode() < 300) {
-              val responseJson = Json.parse(response.getContentString())
-              val userUrns = extractUserUrns(responseJson)
-              if (userUrns.isEmpty) {
-                toResponseBuilder(response).toFuture
-              }
-              else {
-                followCountsClient.counts(session, userUrns.toSeq).map(_.map(fc => (fc.userUrn, fc)).toMap).map { followCountsMap =>
-                  if (followCountsMap.isEmpty) {
-                    toResponseBuilder(response)
-                  }
-                  else {
-                    val content = injectFollowCounts(responseJson, followCountsMap).toString
-                    response.setContentString(content)
-                    toResponseBuilder(response)
-                  }
+            (for {
+              _ <- if (response.getStatusCode() < 300) Some() else None
+              responseJson <- Try(Json.parse(response.getContentString())).toOption
+              userUrns = extractUserUrns(responseJson)
+              if userUrns.nonEmpty
+            } yield {
+              followCountsClient.counts(session, userUrns.toSeq).map(_.map(fc => (fc.userUrn, fc)).toMap).map { followCountsMap =>
+                if (followCountsMap.nonEmpty) {
+                  val content = injectFollowCounts(responseJson, followCountsMap).toString
+                  response.setContentString(content)
                 }
+                toResponseBuilder(response)
               }
-            }
-            else {
-              toResponseBuilder(response).toFuture
-            }
+            }).getOrElse(toResponseBuilder(response).toFuture)
           }
         }
     }

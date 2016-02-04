@@ -13,7 +13,7 @@ import com.soundcloud.scalakit.finagle.http.HandlerRequest
 import com.soundcloud.scalakit.test.VerifiedMocks
 import com.twitter.finagle.http.{Request => FinagleRequest}
 import com.twitter.util.{Await, Future}
-import play.api.libs.json.{JsValue, Json}
+import play.api.libs.json.{JsNull, JsValue, Json}
 
 class FollowCountsHelperSpec  extends UnitSpecification with Fixtures {
 
@@ -44,7 +44,6 @@ class FollowCountsHelperSpec  extends UnitSpecification with Fixtures {
     def responseBuilder = new ResponseBuilder()
       .status(responseStatus)
       .body(responseBody.toString())
-
   }
 
   trait FollowCountsOffContext extends Context {
@@ -74,6 +73,16 @@ class FollowCountsHelperSpec  extends UnitSpecification with Fixtures {
   }
 
   "when follow counts flag is on" >> {
+    "with a non-JSON response" in new FollowCountsOnContext {
+      override def responseBody = JsNull
+
+      override def responseBuilder = new ResponseBuilder()
+        .status(responseStatus)
+        .body("No a JSON response")
+
+      Await.result(helper.dispatchToMothershipWithFollowCounts(request)).build.getContentString() ==== "No a JSON response"
+    }
+
     "with a non-OK status code" in new FollowCountsOnContext {
       override def responseStatus = 500
 
