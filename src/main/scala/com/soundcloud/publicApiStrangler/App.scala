@@ -105,9 +105,13 @@ object App
 
   private val baseUrl = config.get("APP_BASE_URL", true)
 
+  private val readFollowCountsFromStitch = () => rolloutClient.isActive(BasicRolloutFeature("follow-counts-from-stitch"))
+
   private val timelineController = {
     val entitySummaryMapper = new EntitySummaryMapper(okidokiClient, baseUrl)
-    val entityMapper = new EntityMapper(okidokiClient, lieblingClient, followCountsClient, baseUrl, entitySummaryMapper, () => rolloutClient.isActive(BasicRolloutFeature("follow-counts-from-stitch")))
+    val entityMapper = new EntityMapper(
+      okidokiClient, lieblingClient, followCountsClient, baseUrl,
+      entitySummaryMapper, readFollowCountsFromStitch)
     val streamMapper = new StreamMapper(timelineClient, entityMapper, entitySummaryMapper)
     val activitiesMapper = new ActivitiesMapper(timelineClient, entityMapper, entitySummaryMapper)
     val publicActivitiesMapper = new ActivitiesWithOriginMapper(timelineClient, entityMapper, entitySummaryMapper)
@@ -161,13 +165,12 @@ object App
     rolloutClient
   )
 
-  private val followCountsFromStitchEnabled = () => rolloutClient.isActive(BasicRolloutFeature("follow-counts-from-stitch"))
   private val searchEntityMapper = new SearchEntityMapper(
     okidokiClient,
     followCountsClient,
     baseUrl,
     contentAuthorizationRules,
-    followCountsFromStitchEnabled,
+    readFollowCountsFromStitch,
     new WaveformMapper(waveformUrlsRepo),
     new TrackPurchaseLinkMapper(okidokiClient),
     new LikeCountMapper(lieblingClient),
@@ -177,23 +180,70 @@ object App
 
   private val searchController = {
     val baseUrl = config.get("APP_BASE_URL", true)
-    val waveformUrlsRepo = new WaveformUrlsRepository(okidokiService, mediaService)
     val searchRepository = new SearchRepository(searchService)
     val searchMapper = new SearchMapper(searchRepository, searchEntityMapper, baseUrl)
-    new SearchController(userAuthentication, searchMapper, baseUrl, rolloutClient, mothershipDispatcher)
+    new SearchController(
+      userAuthentication,
+      mothershipDispatcher,
+      followCountsClient,
+      () => rolloutClient.isActive(BasicRolloutFeature("follow-counts-from-stitch-search")),
+      feature => rolloutClient.isActive(BasicRolloutFeature(s"search_avoid_mothership_for_$feature")),
+      searchMapper,
+      baseUrl
+    )
   }
 
   private val similarSoundsController = {
     val baseUrl = config.get("APP_BASE_URL", true)
-    val waveformUrlsRepo = new WaveformUrlsRepository(okidokiService, mediaService)
     val similarSoundsMapper = new SimilarSoundsMapper(similarSoundsClient, searchEntityMapper)
-
     new SimilarSoundsController(
       userAuthentication,
       similarSoundsMapper,
       baseUrl
     )
   }
+
+  private val likesController = new LikesController(
+    userAuthentication,
+    mothershipDispatcher,
+    followCountsClient,
+    () => rolloutClient.isActive(BasicRolloutFeature("follow-counts-from-stitch-likes"))
+  )
+
+  private val friendsController = new FriendsController(
+    userAuthentication,
+    mothershipDispatcher,
+    followCountsClient,
+    () => rolloutClient.isActive(BasicRolloutFeature("follow-counts-from-stitch-friends"))
+  )
+
+  private val groupUsersController = new GroupUsersController(
+    userAuthentication,
+    mothershipDispatcher,
+    followCountsClient,
+    () => rolloutClient.isActive(BasicRolloutFeature("follow-counts-from-stitch-group-users"))
+  )
+
+  private val suggestedUsersController = new SuggestedUsersController(
+    userAuthentication,
+    mothershipDispatcher,
+    followCountsClient,
+    () => rolloutClient.isActive(BasicRolloutFeature("follow-counts-from-stitch-suggested-users"))
+  )
+
+  private val repostersController = new RepostersController(
+    userAuthentication,
+    mothershipDispatcher,
+    followCountsClient,
+    () => rolloutClient.isActive(BasicRolloutFeature("follow-counts-from-stitch-reposters"))
+  )
+
+  private val userController = new UserController(
+    userAuthentication,
+    mothershipDispatcher,
+    followCountsClient,
+    () => rolloutClient.isActive(BasicRolloutFeature("follow-counts-from-stitch-user"))
+  )
 
   override val fallbackHandler = Some(mothershipDispatcher)
 
@@ -242,7 +292,13 @@ object App
     searchController,
     similarSoundsController,
     rateLimitingFacade.rateLimitStatusController,
-    tracksController
+    tracksController,
+    likesController,
+    friendsController,
+    groupUsersController,
+    suggestedUsersController,
+    repostersController,
+    userController
   )
 
   override val customAdminHandlers: Seq[(AdminRoute, Handler)] = Seq(

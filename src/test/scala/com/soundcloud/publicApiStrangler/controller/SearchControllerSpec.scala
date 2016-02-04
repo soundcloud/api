@@ -7,6 +7,7 @@ import com.soundcloud.bff.nextbff.repository.RepositoryException
 import com.soundcloud.bff.nextbff.test.JsonMappingMock
 import com.soundcloud.bff.test.InjectionBasedControllerSpecification
 import com.soundcloud.jvmkit.rollout.{BasicRolloutFeature, Rollout}
+import com.soundcloud.publicApiStrangler.client.followcounts.FollowCountsClient
 import com.soundcloud.publicApiStrangler.mapper.search.SearchMapper
 import com.soundcloud.publicApiStrangler.mapping.search.{Search, SearchDispatcherRequest}
 import com.soundcloud.publicApiStrangler.support.DispatchToMothershipHandler
@@ -18,11 +19,19 @@ import org.mockito.Mockito.times
 class SearchControllerSpec extends InjectionBasedControllerSpecification {
 
   trait ForwardContext extends Scope {
-    val rolloutMock = mock[Rollout]
     val fallbackMock = mock[DispatchToMothershipHandler]
     val searchMapperMock = mock[SearchMapper]
+    val followCountsClientMock = mock[FollowCountsClient]
 
-    val controller = new SearchController(fakeUserAuthentication(anonymousSession), searchMapperMock, "http://api.soundcloud.com", rolloutMock, fallbackMock)
+    val controller = new SearchController(
+      fakeUserAuthentication(anonymousSession),
+      fallbackMock,
+      followCountsClientMock,
+      () => Future.False,
+      _ => Future.value(avoidMothershipFlag),
+      searchMapperMock,
+      "http://api.soundcloud.com"
+    )
 
     // just so we can distinguish a forwarded request. Typically, this would be 200.
     val forwardStatus = HttpResponseStatus.FOUND.getCode
@@ -40,6 +49,8 @@ class SearchControllerSpec extends InjectionBasedControllerSpecification {
     def doesNotForward(response: MockResponse) = {
       there was noCallsTo(fallbackMock)
     }
+
+    def avoidMothershipFlag: Boolean
   }
 
 
@@ -76,21 +87,19 @@ class SearchControllerSpec extends InjectionBasedControllerSpecification {
       abstract class SearchMock extends JsonMappingMock with Search
 
       val searchMock = JsonMappingMock.prepare[SearchMock]
-
     }
 
     trait EnabledContext extends Context {
-      when(verified(rolloutMock, times(endpoints.size)).isActive(any[BasicRolloutFeature]))
-        .thenReturn(Future.True)
-
+      def avoidMothershipFlag = true
     }
 
     trait DisabledContext extends Context {
-      when(verified(rolloutMock, times(endpoints.size)).isActive(any[BasicRolloutFeature]))
-        .thenReturn(Future.False)
+      def avoidMothershipFlag = false
     }
 
     "forwards to Mothership when q param not present" in new Context {
+      def avoidMothershipFlag = true
+
       endpoints.foreach { case (apiEndPoint, dispatcherEndPoint) =>
         expectForwardedRequest
         val response = get(controller, apiEndPoint)
@@ -123,7 +132,7 @@ class SearchControllerSpec extends InjectionBasedControllerSpecification {
     }
 
     "response contains a caching header" in new Context {
-      when(rolloutMock.isActive(any[BasicRolloutFeature])).thenReturn(Future.True)
+      def avoidMothershipFlag = true
 
       endpoints.foreach { case (apiEndPoint, dispatcherRequest) =>
         val request = com.twitter.finagle.http.Request(apiEndPoint, queryParams.toSeq: _*)
@@ -143,7 +152,7 @@ class SearchControllerSpec extends InjectionBasedControllerSpecification {
 
     "Pagination error handling" >> {
       "200 when no pagination params" in new Context {
-        when(rolloutMock.isActive(any[BasicRolloutFeature])).thenReturn(Future.True)
+        def avoidMothershipFlag = true
 
         endpoints.foreach { case (apiEndPoint, dispatcherRequest) =>
           val request = com.twitter.finagle.http.Request(apiEndPoint, queryParams.toSeq: _*)
@@ -161,7 +170,8 @@ class SearchControllerSpec extends InjectionBasedControllerSpecification {
       }
 
       "400 when offset/limit is junk" in new Context {
-        when(rolloutMock.isActive(any[BasicRolloutFeature])).thenReturn(Future.True)
+        def avoidMothershipFlag = true
+
         for {
           (apiEndPoint, dispatcherRequest) <- endpoints
           param <- Seq("offset", "limit")
@@ -173,7 +183,7 @@ class SearchControllerSpec extends InjectionBasedControllerSpecification {
       }
 
       "400 when limit/offset is present, but empty" in new Context {
-        when(rolloutMock.isActive(any[BasicRolloutFeature])).thenReturn(Future.True)
+        def avoidMothershipFlag = true
 
         for {
           (apiEndPoint, dispatcherRequest) <- endpoints
@@ -186,7 +196,7 @@ class SearchControllerSpec extends InjectionBasedControllerSpecification {
       }
 
       "400 when dispatcher returns a 400" in new Context {
-        when(rolloutMock.isActive(any[BasicRolloutFeature])).thenReturn(Future.True)
+        def avoidMothershipFlag = true
 
         endpoints.foreach { case (apiEndPoint, dispatcherRequest) =>
           val request = com.twitter.finagle.http.Request(apiEndPoint, extraParams.toSeq: _*)
