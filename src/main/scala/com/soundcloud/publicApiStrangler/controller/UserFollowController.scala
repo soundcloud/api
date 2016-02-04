@@ -45,42 +45,70 @@ class UserFollowController(userAuthentication: UserAuthentication,
   val formatter = DateTimeFormat.forPattern("yyyy/M/d")
 
   // anonymous endpoints
+
   get("/users/:id/followings")(fetchFollowingsWithoutAuth)
   get("/users/:id/followings.json")(fetchFollowingsWithoutAuth)
+
   get("/users/:id/followers")(fetchFollowersWithoutAuth)
   get("/users/:id/followers.json")(fetchFollowersWithoutAuth)
+
   get("/users/:id/followers/recent")(fetchFollowersWithoutAuth)
+  get("/users/:id/followers/recent.json")(fetchFollowersWithoutAuth)
+
   get("/users/:id/followers/ids")(fetchFollowerIdsWithoutAuth)
   get("/users/:id/followers/ids.json")(fetchFollowerIdsWithoutAuth)
+
   get("/users/:id/followings/ids")(fetchFollowingIdsWithoutAuth)
   get("/users/:id/followings/ids.json")(fetchFollowingIdsWithoutAuth)
+
   get("/users/:id/followers/followed_by/:other_id")(fetchFollowersFollowed)
+  get("/users/:id/followers/followed_by/:other_id.json")(fetchFollowersFollowed)
+
   get("/users/:id/followings/not_followed_by/:other_id")(fetchFollowingsNotFollowedBy)
+  get("/users/:id/followings/not_followed_by/:other_id.json")(fetchFollowingsNotFollowedBy)
+
   get("/users/:id/followings/common_to/:other_id")(fetchMutualFollowings)
+  get("/users/:id/followings/common_to/:other_id.json")(fetchMutualFollowings)
+
   get("/users/:id/followers/:other_id")(fetchPossibleFollowerWithoutAuth)
   get("/users/:id/followers/:other_id.json")(fetchPossibleFollowerWithoutAuth)
+
   get("/users/:id/followings/:other_id")(fetchPossibleFollowingWithoutAuth)
   get("/users/:id/followings/:other_id.json")(fetchPossibleFollowingWithoutAuth)
 
   // logged-in only endpoints
+
   get("/me/followings")(fetchFollowings)
   get("/me/followings.json")(fetchFollowings)
+
   get("/me/followers")(fetchMyFollowers)
   get("/me/followers.json")(fetchMyFollowers)
+
   get("/me/followers/recent")(fetchMyFollowers)
+  get("/me/followers/recent.json")(fetchMyFollowers)
+
   get("/me/followers/ids")(fetchMyFollowerIds)
   get("/me/followers/ids.json")(fetchMyFollowerIds)
+
   get("/me/followings/ids")(fetchMyFollowingIds)
   get("/me/followings/ids.json")(fetchMyFollowingIds)
+
   get("/me/followers/:other_id")(fetchPossibleFollower)
   get("/me/followers/:other_id.json")(fetchPossibleFollower)
+
   get("/me/followings/:other_id")(fetchPossibleFollowing)
   get("/me/followings/:other_id.json")(fetchPossibleFollowing)
+
   head("/me/followings/:other_id")(fallback.dispatch)
+  head("/me/followings/:other_id.json")(fallback.dispatch)
 
   post("/me/followings/:other_id")(follow)
+  post("/me/followings/:other_id.json")(follow)
   put("/me/followings/:other_id")(follow)
+  put("/me/followings/:other_id.json")(follow)
+
   delete("/me/followings/:other_id")(unfollow)
+  delete("/me/followings/:other_id.json")(unfollow)
 
   private def follow(request: Request): Future[ResponseBuilder] = {
     userAuthentication.withLoggedInUser(request) { (session, userUrn) =>
