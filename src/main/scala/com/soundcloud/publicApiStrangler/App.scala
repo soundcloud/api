@@ -105,11 +105,13 @@ object App
 
   private val baseUrl = config.get("APP_BASE_URL", true)
 
+  private val readFollowCountsFromStitch = () => rolloutClient.isActive(BasicRolloutFeature("follow-counts-from-stitch"))
+
   private val timelineController = {
     val entitySummaryMapper = new EntitySummaryMapper(okidokiClient, baseUrl)
     val entityMapper = new EntityMapper(
       okidokiClient, lieblingClient, followCountsClient, baseUrl,
-      entitySummaryMapper, () => rolloutClient.isActive(BasicRolloutFeature("follow-counts-from-stitch")))
+      entitySummaryMapper, readFollowCountsFromStitch)
     val streamMapper = new StreamMapper(timelineClient, entityMapper, entitySummaryMapper)
     val activitiesMapper = new ActivitiesMapper(timelineClient, entityMapper, entitySummaryMapper)
     val publicActivitiesMapper = new ActivitiesWithOriginMapper(timelineClient, entityMapper, entitySummaryMapper)
@@ -168,7 +170,7 @@ object App
     followCountsClient,
     baseUrl,
     contentAuthorizationRules,
-    () => rolloutClient.isActive(BasicRolloutFeature("follow-counts-from-stitch")),
+    readFollowCountsFromStitch,
     new WaveformMapper(waveformUrlsRepo),
     new TrackPurchaseLinkMapper(okidokiClient),
     new LikeCountMapper(lieblingClient),
@@ -178,7 +180,6 @@ object App
 
   private val searchController = {
     val baseUrl = config.get("APP_BASE_URL", true)
-    val waveformUrlsRepo = new WaveformUrlsRepository(okidokiService, mediaService)
     val searchRepository = new SearchRepository(searchService)
     val searchMapper = new SearchMapper(searchRepository, searchEntityMapper, baseUrl)
     new SearchController(
@@ -194,9 +195,7 @@ object App
 
   private val similarSoundsController = {
     val baseUrl = config.get("APP_BASE_URL", true)
-    val waveformUrlsRepo = new WaveformUrlsRepository(okidokiService, mediaService)
     val similarSoundsMapper = new SimilarSoundsMapper(similarSoundsClient, searchEntityMapper)
-
     new SimilarSoundsController(
       userAuthentication,
       similarSoundsMapper,
