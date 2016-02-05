@@ -4,7 +4,7 @@ import sbt.Keys._
 
 object BuildProperties {
 
-  val jvmkitVersion = "28.0.1-FINAGLE631-SNAPSHOT"
+  val jvmkitVersion = "28.0.1-FINAGLE633-SNAPSHOT"
 }
 
 object Build extends HttpServerAppBuild(
@@ -16,8 +16,8 @@ object Build extends HttpServerAppBuild(
   libDependencies = Seq(
     "com.soundcloud"     %% "follows-client"           % "2.0.0",
     "com.soundcloud"     %% "timeline-client"          % "0.1.2",
-    "com.soundcloud"     %% "ratelimitinglib"          % "0.3.1-FINAGLE631-SNAPSHOT",
-    "com.soundcloud"     %% "sc-services"              % "33.0.1-FINAGLE631-SNAPSHOT",
+    "com.soundcloud"     %% "ratelimitinglib"          % "0.3.1-FINAGLE633-SNAPSHOT",
+    "com.soundcloud"     %% "sc-services"              % "33.0.1-FINAGLE633-SNAPSHOT",
     "com.soundcloud"     %% "track-coordinator-client" % "19.0.0",
     "com.fasterxml.uuid" %  "java-uuid-generator"      % "3.1.3",
     "commons-codec"      %  "commons-codec"            % "1.9"
