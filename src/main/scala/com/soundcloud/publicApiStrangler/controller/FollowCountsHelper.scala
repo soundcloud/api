@@ -107,9 +107,11 @@ trait FollowCountsHelper {
   }
 
   private def toResponseBuilder(response: Response): ResponseBuilder = {
-    val headerMap = response.headers().entries().map(entry => (entry.getKey, entry.getValue)).toMap
+    val headerMap = response.headerMap.iterator.map {
+      case (key, value) => (key, value)
+    }.toMap
     new ResponseBuilder()
-      .status(response.getStatus.getCode)
+      .status(response.statusCode)
       .body(response.getContentString())
       .headers(headerMap)
   }
