@@ -54,7 +54,7 @@ class UserFollowControllerSpec extends InjectionBasedControllerSpecification wit
   }
 
   trait FallbackContext extends Context {
-    private val expectedResponseBuilder = new ResponseBuilder().status(Status.Ok.getCode)
+    private val expectedResponseBuilder = new ResponseBuilder().status(Status.Ok.code)
     val expectedResponse = expectedResponseBuilder.build
 
     override def before: Any = {

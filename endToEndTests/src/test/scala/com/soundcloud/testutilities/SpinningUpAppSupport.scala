@@ -5,16 +5,13 @@ import com.soundcloud.scalakit.finagle.http.{SuccessfulStatusClass, StatusCode}
 import com.soundcloud.scalakit.json.Json
 import com.twitter.finagle
 import com.twitter.finagle.builder.ClientBuilder
-import com.twitter.finagle.http.{MediaType, Http}
+import com.twitter.finagle.http._
 import com.twitter.util.{Await, Duration}
-import org.jboss.netty.buffer.ChannelBuffers
-import org.jboss.netty.handler.codec.http.HttpHeaders.Names._
-import org.jboss.netty.handler.codec.http.HttpVersion._
-import org.jboss.netty.handler.codec.http._
-import org.jboss.netty.util.CharsetUtil._
 import org.specs2.mutable.Specification
 import org.specs2.specification.Scope
-import scala.sys.process.Process
+import java.nio.charset.StandardCharsets
+
+
 
 trait SpinningUpAppSupport { this: Specification =>
 
@@ -28,7 +25,7 @@ trait SpinningUpAppSupport { this: Specification =>
     val serverUrl = s"http://$serverAddress"
     val healthEndpointUrl = new URL(serverUrl + "/-/health")
 
-    private lazy val client: finagle.Service[HttpRequest, HttpResponse] = {
+    private lazy val client: finagle.Service[Request, Response] = {
       ClientBuilder()
         .codec(Http())
         .hosts(serverAddress)
@@ -36,31 +33,33 @@ trait SpinningUpAppSupport { this: Specification =>
         .build()
     }
 
-    def get(path: String, headers: HttpHeaders = defaultHeaders): IntegrationTestHttpResponse =
-      executeRequest(HttpMethod.GET, path, "", headers)
+    def get(path: String, headers: HeaderMap = defaultHeaders): IntegrationTestHttpResponse =
+      executeRequest(Method.Get, path, "", headers)
 
-    def post(path: String, body: String, headers: HttpHeaders = defaultHeaders): IntegrationTestHttpResponse =
-      executeRequest(HttpMethod.POST, path, body, headers)
+    def post(path: String, body: String, headers: HeaderMap = defaultHeaders): IntegrationTestHttpResponse =
+      executeRequest(Method.Post, path, body, headers)
 
-    def put(path: String, body: String, headers: HttpHeaders = defaultHeaders): IntegrationTestHttpResponse =
-      executeRequest(HttpMethod.PUT, path, body, headers)
+    def put(path: String, body: String, headers: HeaderMap = defaultHeaders): IntegrationTestHttpResponse =
+      executeRequest(Method.Put, path, body, headers)
 
     def delete(path: String): IntegrationTestHttpResponse =
-      executeRequest(HttpMethod.DELETE, path, "", defaultHeaders)
+      executeRequest(Method.Delete, path, "", defaultHeaders)
 
-    protected def executeRequest(method: HttpMethod, path: String, body: String, headers: HttpHeaders) = {
-      val request = new DefaultHttpRequest(HTTP_1_1, method, path)
-      request.headers().add(headers)
-      request.headers().add(CONTENT_TYPE, "application/json")
-      val buffer = ChannelBuffers.copiedBuffer(body, UTF_8)
-      request.headers().add(CONTENT_LENGTH, String.valueOf(buffer.readableBytes()))
-      request.setContent(buffer)
+    protected def executeRequest(method: Method, path: String, body: String, headers: HeaderMap) = {
+      val request = Request(Version.Http11, method, path)
+      headers.foreach {
+        case (key, value) =>
+          request.headerMap.add(key, value)
+      }
+      request.headerMap.add("Content-Type", "application/json")
+      request.headerMap.add("Content-Length", String.valueOf(body.getBytes(StandardCharsets.UTF_8).length))
+      request.contentString = body
 
       val response = Await.result(client(request), timeout)
       new IntegrationTestHttpResponse(response)
     }
 
-    private def defaultHeaders = new DefaultHttpHeaders(true)
+    private def defaultHeaders = HeaderMap()
   }
 
   def dockerBasedHost: String = {
@@ -72,21 +71,21 @@ trait SpinningUpAppSupport { this: Specification =>
 
   class ServerUnderTestException(reason: String) extends RuntimeException(reason)
 
-  class IntegrationTestHttpResponse(response: HttpResponse) {
-    lazy val body = response.getContent.toString(UTF_8)
-    lazy val status = response.getStatus.getCode
-    lazy val headers = response.headers()
-    lazy val location = response.headers().get(LOCATION)
+  class IntegrationTestHttpResponse(response: Response) {
+    lazy val body = response.contentString
+    lazy val status = response.status.code
+    lazy val headers = response.headerMap
+    lazy val location = response.headerMap.get("Location").getOrElse(null)
     lazy val json = {
-      if (new StatusCode(response.getStatus.getCode).statusClass == SuccessfulStatusClass) {
-        val contentType = response.headers().get(CONTENT_TYPE)
+      if (new StatusCode(response.status.code).statusClass == SuccessfulStatusClass) {
+        val contentType = response.headerMap.get("Content-Type").get
         if (contentType.startsWith(MediaType.Json)) {
           Json.fromString(body)
         } else {
           throw new ServerUnderTestException(s"Invalid content type in response: $contentType")
         }
       } else {
-        throw new ServerUnderTestException(s"Invalid response. Status: ${response.getStatus}. Body: $body")
+        throw new ServerUnderTestException(s"Invalid response. Status: ${response.status}. Body: $body")
       }
     }
   }

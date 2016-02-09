@@ -10,8 +10,8 @@ class DefaultResponseHeadersFilter extends SimpleFilter[Request, RouterResponse]
   override def apply(request: Request, next: Service[Request, RouterResponse]): Future[RouterResponse] = {
     next(request).map { response =>
       DefaultResponseHeaders.defaultHeaders.collect {
-        case (headerName, headerValue) if response.headers().get(headerName) == null =>
-          response.headers().add(headerName, headerValue)
+        case (headerName, headerValue) if response.headerMap.get(headerName) == None =>
+          response.headerMap.put(headerName, headerValue)
       }
       response
     }

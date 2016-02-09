@@ -2,11 +2,10 @@ package com.soundcloud.publicApiStrangler.support
 
 import com.soundcloud.bff.finagle.ResponseBuilder
 import com.soundcloud.scalakit.finagle.http.RouterResponse
-import com.twitter.finagle.http.Request
+import com.twitter.finagle.http.{Method, Request}
 import com.twitter.finagle.{Service, SimpleFilter}
 import com.twitter.util.Future
 import com.twitter.util.TimeConversions._
-import org.jboss.netty.handler.codec.http.HttpMethod
 import org.jboss.netty.util.CharsetUtil._
 
 class StaticFilesFilter extends SimpleFilter[Request, RouterResponse] {
@@ -38,8 +37,8 @@ class StaticFilesFilter extends SimpleFilter[Request, RouterResponse] {
 
   override def apply(request: Request, next: Service[Request, RouterResponse]) = {
     (request.method, request.path) match {
-      case (HttpMethod.GET, "/robots.txt") => renderRobots
-      case (HttpMethod.GET, "/crossdomain.xml") => renderCrossdomain
+      case (Method.Get, "/robots.txt") => renderRobots
+      case (Method.Get, "/crossdomain.xml") => renderCrossdomain
       case _ => next(request)
     }
   }

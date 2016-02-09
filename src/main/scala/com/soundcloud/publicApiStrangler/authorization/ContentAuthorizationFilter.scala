@@ -24,8 +24,8 @@ class ContentAuthorizationFilter(authorizeContent: AuthorizeHttpResponse) extend
     }
 
   private def body(response: RouterResponse) =
-    response.getContent().toString(UTF8)
+    response.contentString
 
   private def headersMap(response: RouterResponse) =
-    response.headers().entries.map(e => e.getKey -> e.getValue).toMap
+    response.headerMap.entrySet.map(e => e.getKey -> e.getValue).toMap
 }

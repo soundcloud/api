@@ -1,28 +1,23 @@
 package com.soundcloud.publicApiStrangler.support
 
-import java.nio.charset.Charset
-
 import com.soundcloud.scalakit.finagle.http.{AlwaysMatchesPathMatcher, HandlerRequest}
 import com.soundcloud.scalakit.test.UnitSpecification
 import com.twitter.finagle.Service
-import com.twitter.finagle.http.{Request, Response, Status, Version}
+import com.twitter.finagle.http._
 import com.twitter.util.{Await, Future}
-import org.jboss.netty.buffer.ChannelBuffers
-import org.jboss.netty.handler.codec.http._
 
 class DispatchToMothershipHandlerSpec extends UnitSpecification {
   "dispatches requests to the mothership" >> {
 
     trait Context extends Scope {
-      val mothershipClient = mock[Service[HttpRequest, HttpResponse]]
+      val mothershipClient = mock[Service[Request, Response]]
       val handler = new DispatchToMothershipHandler(mothershipClient)
 
-      val httpResponse = new DefaultHttpResponse(Version.Http11, Status.Ok)
-      httpResponse.headers().add("header1", "valueHeader1").add("header2", "valueHeader2")
-      httpResponse.setContent(ChannelBuffers.copiedBuffer("body content", Charset.forName("UTF-8")))
-      val response = Response (httpResponse)
+      val response = Response(Status.Ok)
+      response.headerMap.add("header1", "valueHeader1").add("header2", "valueHeader2")
+      response.contentString = "body content"
 
-      val request = Request(new DefaultHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.CONNECT, "/"))
+      val request = Request(Version.Http11, Method.Connect, "/")
       val handlerRequest = new HandlerRequest(AlwaysMatchesPathMatcher, request)
     }
 
@@ -36,8 +31,8 @@ class DispatchToMothershipHandlerSpec extends UnitSpecification {
         mothershipClient(any[Request]) returns (Future.value(response))
         val responseFromBuilder = Await.result(handler.dispatch(request)).build
         responseFromBuilder.getStatusCode() ==== response.getStatusCode()
-        responseFromBuilder.headers().get("header1") ==== "valueHeader1"
-        responseFromBuilder.headers().get("header2") ==== "valueHeader2"
+        responseFromBuilder.headerMap.get("header1") ==== Some("valueHeader1")
+        responseFromBuilder.headerMap.get("header2") ==== Some("valueHeader2")
         responseFromBuilder.getContentString() ==== "body content"
       }
 

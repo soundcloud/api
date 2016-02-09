@@ -247,11 +247,6 @@ object App
 
   override val fallbackHandler = Some(mothershipDispatcher)
 
-  override def exceptionHandler: PartialFunction[Throwable, Response] = {
-    case ex: CancelledRequestException =>
-      Response(HttpVersion.HTTP_1_1, new HttpResponseStatus(499, "Client Closed Request"))
-  }
-
   private val limitOffsetEnabled = () => rolloutClient.isActive(BasicRolloutFeature("offset_limit"))
   private val limitOffsetPaths = Seq(
     """/e1/me/likes""",
