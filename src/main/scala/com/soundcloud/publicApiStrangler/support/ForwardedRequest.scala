@@ -17,7 +17,7 @@ object ForwardedRequest {
   }
 
   private def copyContent(originalRequest: Request, newRequest: Request) = {
-    newRequest.setContentString(originalRequest.getContentString())
+    newRequest.content_=(originalRequest.content)
   }
 
   private def copyHeaders(originalRequest: Request, newRequest: Request) = {
