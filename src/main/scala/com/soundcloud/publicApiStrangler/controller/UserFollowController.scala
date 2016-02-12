@@ -29,15 +29,6 @@ class UserFollowController(userAuthentication: UserAuthentication,
                            rollout: Rollout)
   extends BffInjectionBasedController {
 
-  val followRestrictions = {
-    val source = Source.fromInputStream(getClass.getResourceAsStream("/user-follow-restrictions.json"), UTF8.name())
-    try {
-      Json.parse(source.mkString)
-    } finally {
-      source.close()
-    }
-  }
-
   val formatter = DateTimeFormat.forPattern("yyyy/M/d")
 
   // anonymous endpoints
@@ -108,51 +99,33 @@ class UserFollowController(userAuthentication: UserAuthentication,
 
   private def follow(request: Request): Future[ResponseBuilder] = {
     userAuthentication.withLoggedInUser(request) { (session, userUrn) =>
-      rollingOutWrites(userUrn).flatMap {
-        case true =>
-          val user = Urn("soundcloud:users:" + request.routeParams.get("other_id").get)
-          follows.follow(session, user).flatMap {
-            case _: FollowingCreated => renderFollow(session, user)
-            case AlreadyFollowing => renderStatus(Status.Ok)
-            case UserNotFound => renderError(Status.NotFound)
-            case SpamBlocked => renderError(Status.TooManyRequests)
-            case MaxFollowingsReached => renderError(Status.UnprocessableEntity)
-            case BlockedByTarget => renderError(Status.Forbidden)
-            case UserAsTarget => renderError(Status.BadRequest)
-            case AgeRestrictedUser =>  findUserAge(session, userUrn).flatMap {
-              case Some(userAge) => denyAgeRestricted(userAge)
-              case _ => denyAgeUnknown
-            }
-            case AgeUnknownUser => denyAgeUnknown
-            case _: UnknownError => renderError(Status.InternalServerError)
-          }
-        case false =>
-          val restriction = findAgeRestriction(request.routeParams.get("other_id").get, session.getGeo)
-          if (restriction.isEmpty) {
-            fallback.dispatch(request)
-          } else {
-            findUserAge(session, userUrn).flatMap {
-              case Some(userAge) => if (userAge < restriction.get) denyAgeRestricted(restriction.get) else fallback.dispatch(request)
-              case _ => denyAgeUnknown
-            }
-          }
+      val user = Urn("soundcloud:users:" + request.routeParams.get("other_id").get)
+      follows.follow(session, user).flatMap {
+        case _: FollowingCreated => renderFollow(session, user)
+        case AlreadyFollowing => renderStatus(Status.Ok)
+        case UserNotFound => renderError(Status.NotFound)
+        case SpamBlocked => renderError(Status.TooManyRequests)
+        case MaxFollowingsReached => renderError(Status.UnprocessableEntity)
+        case BlockedByTarget => renderError(Status.Forbidden)
+        case UserAsTarget => renderError(Status.BadRequest)
+        case AgeRestrictedUser =>  findUserAge(session, userUrn).flatMap {
+          case Some(userAge) => denyAgeRestricted(userAge)
+          case _ => denyAgeUnknown
+        }
+        case AgeUnknownUser => denyAgeUnknown
+        case _: UnknownError => renderError(Status.InternalServerError)
       }
     }
   }
 
   private def unfollow(request: Request): Future[ResponseBuilder] = {
     userAuthentication.withLoggedInUser(request) { (session, userUrn) =>
-      rollingOutWrites(userUrn).flatMap {
-        case true =>
-          val user = Urn("soundcloud:users:" + request.routeParams.get("other_id").get)
-          follows.unfollow(session, user).flatMap {
-            case UnfollowSuccessful => renderStatus(Status.Ok)
-            case UnfollowUserNotFound => renderError(Status.NotFound)
-            case UnfollowUserAsTarget | NotFollowing => renderError(Status.UnprocessableEntity)
-            case _: UnfollowUnknownError => renderError(Status.InternalServerError)
-          }
-        case false =>
-          fallback.dispatch(request)
+      val user = Urn("soundcloud:users:" + request.routeParams.get("other_id").get)
+      follows.unfollow(session, user).flatMap {
+        case UnfollowSuccessful => renderStatus(Status.Ok)
+        case UnfollowUserNotFound => renderError(Status.NotFound)
+        case UnfollowUserAsTarget | NotFollowing => renderError(Status.UnprocessableEntity)
+        case _: UnfollowUnknownError => renderError(Status.InternalServerError)
       }
     }
   }
@@ -250,19 +223,16 @@ class UserFollowController(userAuthentication: UserAuthentication,
   private def fetchUrns(request: Request,
                         fetchFunction: (UserSession, Urn) => Future[Option[UserUrns]]): Future[ResponseBuilder] = {
     authenticateIfNeeded(request, requireLogin = false) { (session: UserSession, userToFetch: Urn) =>
-      rollingOutReads(userToFetch).flatMap {
-        case false => fallback.dispatch(request)
-        case true => for {
-          responseOption <- fetchFunction(session, userToFetch)
-          urns = responseOption.map(_.urns.toSet).getOrElse(Set.empty)
-          users <- fetchUsers(session, urns)
-        } yield {
-            responseOption.map { _ =>
-              render.json(Map(
-                "collection" -> mapUsersToUsers(users)
-              ))
-            }.getOrElse(render.serviceUnavailable)
-          }
+      for {
+        responseOption <- fetchFunction(session, userToFetch)
+        urns = responseOption.map(_.urns.toSet).getOrElse(Set.empty)
+        users <- fetchUsers(session, urns)
+      } yield {
+        responseOption.map { _ =>
+          render.json(Map(
+                        "collection" -> mapUsersToUsers(users)
+                      ))
+        }.getOrElse(render.serviceUnavailable)
       }
     }
   }
@@ -273,20 +243,17 @@ class UserFollowController(userAuthentication: UserAuthentication,
                         users: Seq[Following] => Seq[Urn],
                         requireLogin: Boolean): Future[ResponseBuilder] = {
     authenticateIfNeeded(request, requireLogin) { (session: UserSession, userToFetch: Urn) =>
-      rollingOutReads(userToFetch).flatMap {
-        case false => fallback.dispatch(request)
-        case true => for {
-          affiliationsOption <- fetchFunction(session, userToFetch, cursorParam(request), pageSizeParam(request))
-          urns = affiliationsOption.map(page => users(page.followings).toSet).getOrElse(Set.empty)
-          users <- fetchUsers(session, urns)
-        } yield {
-            affiliationsOption.map { affiliations =>
-              render.json(Map(
-                "collection" -> mapUsers(users),
-                "next_href" -> nextHref(baseUrl, request.request.path, affiliations.next, request.params)
+      for {
+        affiliationsOption <- fetchFunction(session, userToFetch, cursorParam(request), pageSizeParam(request))
+        urns = affiliationsOption.map(page => users(page.followings).toSet).getOrElse(Set.empty)
+        users <- fetchUsers(session, urns)
+      } yield {
+        affiliationsOption.map { affiliations =>
+          render.json(Map(
+                        "collection" -> mapUsers(users),
+                        "next_href" -> nextHref(baseUrl, request.request.path, affiliations.next, request.params)
               ))
-            }.getOrElse(render.serviceUnavailable)
-          }
+        }.getOrElse(render.serviceUnavailable)
       }
     }
   }
@@ -298,24 +265,21 @@ class UserFollowController(userAuthentication: UserAuthentication,
       val userId = request.routeParams.get("other_id").get
       val user = Urn("soundcloud:users:" + userId)
 
-      rollingOutReads(loggedInUser).flatMap {
-        case false => fallback.dispatch(request)
-        case true => for {
-          filteredOption <- filteringFunction(session, loggedInUser, Seq(user))
-          urns = filteredOption.map(_.included).getOrElse(Set.empty)
-          users <- fetchUsers(session, urns)
-        } yield {
-            filteredOption.map { _ =>
-              if (users.nonEmpty) {
-                render
-                  .status(Status.SeeOther.code)
-                  .header("Location", s"$baseUrl/users/${userId}")
-                  .json(users.head)
-              } else {
-                render.notFound
-              }
-            }.getOrElse(render.serviceUnavailable)
+      for {
+        filteredOption <- filteringFunction(session, loggedInUser, Seq(user))
+        urns = filteredOption.map(_.included).getOrElse(Set.empty)
+        users <- fetchUsers(session, urns)
+      } yield {
+        filteredOption.map { _ =>
+          if (users.nonEmpty) {
+            render
+              .status(Status.SeeOther.code)
+              .header("Location", s"$baseUrl/users/${userId}")
+              .json(users.head)
+          } else {
+            render.notFound
           }
+        }.getOrElse(render.serviceUnavailable)
       }
     }
 
@@ -326,10 +290,6 @@ class UserFollowController(userAuthentication: UserAuthentication,
       userAuthentication.withUserSession(request) { s => withSession(s, Urn(s"soundcloud:users:${request.routeParams("id")}")) }
     }
   }
-
-  private def rollingOutReads(userToFetch: Urn): Future[Boolean] = rollout.isActiveForUrn(BasicRolloutFeature("follows-reads"), userToFetch)
-
-  private def rollingOutWrites(userUrn: Urn): Future[Boolean] = rollout.isActiveForUrn(BasicRolloutFeature("follows-writes"), userUrn)
 
   private def rollingOutCountsFromStitch(): Future[Boolean] = rollout.isActive(BasicRolloutFeature("follow-counts-from-stitch"))
 
@@ -359,11 +319,6 @@ class UserFollowController(userAuthentication: UserAuthentication,
         new User(user, baseUrl, followCounts)(context)
       }
     }
-  }
-
-  private def findAgeRestriction(userId: String, geo: Geo): Option[Long] = {
-    val restrictions = followRestrictions \ userId \ "age"
-    (restrictions \ geo.getCountryCode).asOpt[Long].orElse((restrictions \ "*").asOpt[Long])
   }
 
   private def findUserAge(session: UserSession, userUrn: Urn): Future[Option[Int]] = {
