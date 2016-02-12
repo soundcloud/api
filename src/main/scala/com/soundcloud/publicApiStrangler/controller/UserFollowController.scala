@@ -29,15 +29,6 @@ class UserFollowController(userAuthentication: UserAuthentication,
                            rollout: Rollout)
   extends BffInjectionBasedController {
 
-  val followRestrictions = {
-    val source = Source.fromInputStream(getClass.getResourceAsStream("/user-follow-restrictions.json"), UTF8.name())
-    try {
-      Json.parse(source.mkString)
-    } finally {
-      source.close()
-    }
-  }
-
   val formatter = DateTimeFormat.forPattern("yyyy/M/d")
 
   // anonymous endpoints
@@ -328,11 +319,6 @@ class UserFollowController(userAuthentication: UserAuthentication,
         new User(user, baseUrl, followCounts)(context)
       }
     }
-  }
-
-  private def findAgeRestriction(userId: String, geo: Geo): Option[Long] = {
-    val restrictions = followRestrictions \ userId \ "age"
-    (restrictions \ geo.getCountryCode).asOpt[Long].orElse((restrictions \ "*").asOpt[Long])
   }
 
   private def findUserAge(session: UserSession, userUrn: Urn): Future[Option[Int]] = {
