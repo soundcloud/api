@@ -42,27 +42,12 @@ class UserFollowControllerSpec extends InjectionBasedControllerSpecification wit
 
     override def before: Any = {
       DateTimeUtils.setCurrentMillisFixed(now)
-      rollout.isActiveForUrn(BasicRolloutFeature("follows-reads"), userUrn) returns Future.True
-      rollout.isActiveForUrn(BasicRolloutFeature("follows-writes"), userUrn) returns Future.True
       rollout.isActive(BasicRolloutFeature("follow-counts-from-stitch")) returns Future.value(followCountsFlag)
       okidokiMock.fetch(session, Set(userUrn)) returns okidokiResponse
     }
 
     override def after = {
       DateTimeUtils.setCurrentMillisSystem()
-    }
-  }
-
-  trait FallbackContext extends Context {
-    private val expectedResponseBuilder = new ResponseBuilder().status(Status.Ok.code)
-    val expectedResponse = expectedResponseBuilder.build
-
-    override def before: Any = {
-      super.before
-      rollout.isActiveForUrn(BasicRolloutFeature("follows-reads"), userUrn) returns Future.False
-      rollout.isActiveForUrn(BasicRolloutFeature("follows-writes"), userUrn) returns Future.False
-
-      when(fallbackMock.dispatch(any[Request])).thenReturn(Future.value(expectedResponseBuilder))
     }
   }
 
@@ -81,11 +66,6 @@ class UserFollowControllerSpec extends InjectionBasedControllerSpecification wit
       val json = Json.parse(response.body)
       (json \ "collection").as[Seq[JsObject]].size ==== 1
       (json \ "next_href").asOpt[String] ==== None
-    }
-
-    "fall back to moshi when not rolling out" in new FallbackContext {
-      val response = get(controller, "/users/999/followers/followed_by/2", Map("limit" -> "10"))
-      response.status ==== expectedResponse.status
     }
   }
 
@@ -479,72 +459,6 @@ class UserFollowControllerSpec extends InjectionBasedControllerSpecification wit
       (errors \ "error_message").asOpt[String] ==== Option("404 - Not Found")
     }
 
-    "fallback to mothership" >> {
-      "should allow user to follow a profile without age restrictions" in new FallbackContext {
-        val response = put(controller, "/me/followings/4321", Map("client_id" -> "YOUR_CLIENT_ID"))
-        response.status ==== Status.Ok
-      }
-
-      "should allow adult US user to follow an age restricted profile" in new FallbackContext {
-        override lazy val userMock = Json.obj(
-          "date_of_birth" -> new DateTime(now).minusYears(21).toString("yyyy/MM/dd")
-        )
-
-        val response = put(controller, "/me/followings/32326572", Map("client_id" -> "YOUR_CLIENT_ID"))
-        response.status ==== Status.Ok
-      }
-
-      "should not permit US minor to follow an age restricted profile" in new FallbackContext {
-        override lazy val userMock = Json.obj(
-          "date_of_birth" -> new DateTime(now).minusYears(18).toString("yyyy/MM/dd")
-        )
-
-        val response = put(controller, "/me/followings/32326572", Map("client_id" -> "YOUR_CLIENT_ID"))
-
-        response.status ==== Status.Forbidden
-        val errors = (response.jsonBody \ "errors").as[Seq[JsObject]].head
-        (errors \ "error_message").asOpt[String] ==== Option("DENY_AGE_RESTRICTED")
-        (errors \ "age").asOpt[Long] ==== Option(21)
-      }
-
-      "should allow adult DE user to follow an age restricted profile" in new FallbackContext {
-        override lazy val geo = Geo("DE")
-        override lazy val userMock = Json.obj(
-          "date_of_birth" -> new DateTime(now).minusYears(18).toString("yyyy/MM/dd")
-        )
-
-        val response = put(controller, "/me/followings/32326572", Map("client_id" -> "YOUR_CLIENT_ID"))
-
-        response.status ==== Status.Ok
-      }
-
-      "should not permit DE minor to follow an age restricted profile" in new FallbackContext {
-        override lazy val geo = Geo("DE")
-        override lazy val userMock = Json.obj(
-          "date_of_birth" -> new DateTime(now).minusYears(16).toString("yyyy/MM/dd")
-        )
-
-        val response = put(controller, "/me/followings/32326572", Map("client_id" -> "YOUR_CLIENT_ID"))
-
-        response.status ==== Status.Forbidden
-        val errors = (response.jsonBody \ "errors").as[Seq[JsObject]].head
-        (errors \ "error_message").asOpt[String] ==== Option("DENY_AGE_RESTRICTED")
-        (errors \ "age").asOpt[Long] ==== Option(18)
-      }
-
-      "should not permit user without a date of birth to follow an age restricted profile" in new FallbackContext {
-        override lazy val geo = JvmGeo.UNKNOWN_GEO
-        override lazy val userMock = Json.obj(
-          "date_of_birth" -> JsNull
-        )
-
-        val response = put(controller, "/me/followings/32326572", Map("client_id" -> "YOUR_CLIENT_ID"))
-
-        response.status ==== Status.Forbidden
-        val errors = (response.jsonBody \ "errors").as[Seq[JsObject]].head
-        (errors \ "error_message").asOpt[String] ==== Option("DENY_AGE_UNKNOWN")
-      }
-    }
   }
 
   "DELETE /me/followings/:other_id.json" >> {
