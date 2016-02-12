@@ -37,7 +37,7 @@ MEDIASERVICE_SRV_RECORD="dnssrv!http.urlgen.prod.media-service.dd.srv.int.s-clou
 RATE_LIMIT_MEMCACHED_SERVERS="$DOCKER_IP"
 
 MOSHIMOSHI_BASE_URL="http://moshimoshi.int.s-cloud.net"
-MOTHERSHIP_API_SERVER_SRV_RECORD="dnssrv!http.haproxy.prod.public-api.db.srv.int.s-cloud.net"
+MOTHERSHIP_API_SERVER_SRV_RECORD="dnssrv!http.passenger.prod.public-api.db.srv.int.s-cloud.net"
 
 OKIDOKI_SRV_RECORD="dnssrv!http.okidoki.prod.moshimoshi.dd.srv.int.s-cloud.net"
 
