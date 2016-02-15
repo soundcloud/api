@@ -50,7 +50,6 @@ object SearchDispatcherRequest {
     case (k, v) if TrackParamMappings contains k => TrackParamMappings(k) -> v
     case ("filter", v) if v.value contains "downloadable" => "filter.downloadable" -> StringParam("true")
     case ("filter", v) if v.value contains "streamable" => "filter.streamable" -> StringParam("true")
-    // XXX: API docs: "types" query param
   }
 
   private val CommonParamMappings = Map(
