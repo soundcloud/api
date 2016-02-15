@@ -2,18 +2,57 @@ package com.soundcloud.publicApiStrangler.mapper.search
 
 import com.soundcloud.bff.nextbff.mapping.MappingContext
 import com.soundcloud.bff.nextbff.pagination.OffsetBasedPage
+import com.soundcloud.bff.services.{JsonService => BffJsonService}
 import com.soundcloud.bff.test.UnitSpecification
 import com.soundcloud.jvmkit.UserSession
 import com.soundcloud.publicApiStrangler.authorization.ContentAuthorizationRules
 import com.soundcloud.publicApiStrangler.mapping.search.{LegacySearch, PaginatedSearch, SearchDispatcherRequest}
 import com.soundcloud.scalakit.Urn
 import com.soundcloud.scalakit.Urn.format
+import com.soundcloud.scalakit.finagle.http.OkStatus
 import com.soundcloud.scalakit.finagle.jsonservice._
 import com.soundcloud.scalakit.json.{Json => ScalakitJson}
 import com.soundcloud.scalakit.test.VerifiedMocks
 import com.soundcloud.service.client.OkidokiClient
 import com.twitter.util.{Await, Future}
 import play.api.libs.json.{JsArray, JsNull, JsObject, Json => PlayJson}
+
+class SearchRepositorySpec extends UnitSpecification {
+  trait Context extends VerifiedMocks {
+    val highTierParams = Params("filter.content_tier" -> "FREE", "filter.content_country" -> "US")
+
+    lazy val session = loggedInSession(Urn("soundcloud:users:123"))
+    lazy val mockService = mock[BffJsonService]
+    lazy val repo = new SearchRepository(mockService)
+  }
+
+  "track search" >> {
+    "adds filter.content_type=FREE and filter.content_country=<countryCode>" in new Context {
+      val response = withContentsOf("search", "tracks").as[JsObject]
+      doReturn(Future.value(JsonResponse(OkStatus, response))).when(mockService)
+        .get(session, SearchRepository.TracksPath, highTierParams + ("q" -> "bar"), Params.empty)
+      val request = OffsetBasedPage(
+        SearchDispatcherRequest(SearchRepository.TracksPath, Set.empty, Map.empty)(x => x),
+        "http://localhost", "/search/tracks", Params("q" -> "bar"), 0, 10
+      )
+      Await.result(repo.fetch(session, request)) ==== Some(response)
+    }
+  }
+
+  "universal search" >> {
+    "adds filter.content_type=FREE and filter.content_country=<countryCode>" in new Context {
+      val response = withContentsOf("search", "tracks").as[JsObject]
+      doReturn(Future.value(JsonResponse(OkStatus, response))).when(mockService)
+        .get(session, SearchRepository.UniversalPath, highTierParams + ("q" -> "bar"), Params.empty)
+      val request = OffsetBasedPage(
+        SearchDispatcherRequest(SearchRepository.UniversalPath, Set.empty, Map.empty)(x => x),
+        "http://localhost", "/search/universal", Params("q" -> "bar"), 0, 10
+      )
+      Await.result(repo.fetch(session, request)) ==== Some(response)
+    }
+  }
+
+}
 
 class SearchMapperSpec extends UnitSpecification {
 
