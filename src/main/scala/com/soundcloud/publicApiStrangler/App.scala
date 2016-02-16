@@ -68,11 +68,11 @@ object App
     ServiceConfig("user_subscriptions", config.get(ResourceName("USER_SUBSCRIPTIONS"), ConfigConvention.SRV_RECORD), config)
   )
 
-  private val stitch4countsService = JsonService(
-    ServiceConfig("stitch4counts", config.get(ResourceName("STITCH4COUNTS"), ConfigConvention.SRV_RECORD), config)
+  private val stitch4followsService = JsonService(
+    ServiceConfig("stitch4follows", config.get(ResourceName("STITCH4FOLLOWS"), ConfigConvention.SRV_RECORD), config)
   )
 
-  private val followCountsClient = new FollowCountsClient(stitch4countsService, config)
+  private val followCountsClient = new FollowCountsClient(stitch4followsService, config)
 
   private val contentAuthorizationRules = new ContentAuthorizationRules(
     new ContentAuthorizationService(authsyService),
