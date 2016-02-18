@@ -15,7 +15,7 @@ class FollowCountsClient(client: JsonService, config: Config) {
   private val batchSize = config.get("STITCH_BULK_FETCH_MAX_ENTRIES", DataSensitivity.NON_SENSITIVE).toInt
 
   def counts(session: UserSession, userUrns: Seq[Urn]): Future[Seq[FollowCounts]] = {
-    val userIds = userUrns.map(_.getIdentifier)
+    val userIds = userUrns.map(_.getIdentifier).distinct
 
     batch(batchSize, userIds) { userIds =>
       val bulkParams = Params(
