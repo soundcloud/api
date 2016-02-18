@@ -60,4 +60,4 @@ USER_SUBSCRIPTIONS_SRV_RECORD="dnssrv!http.server.sandbox.subscriptions.dd.srv.i
 
 STITCH4COUNTS_SRV_RECORD="dnssrv!http.web.prod.stitch4counts.dd.srv.int.s-cloud.net"
 STITCH4FOLLOWS_SRV_RECORD="dnssrv!http.web-follows.prod.stitch4counts.dd.srv.int.s-cloud.net"
-STITCH_BULK_FETCH_MAX_ENTRIES="10"
+STITCH_BULK_FETCH_MAX_ENTRIES="7"
