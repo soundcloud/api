@@ -7,7 +7,7 @@ import com.soundcloud.bff.nextbff.repository.{IndividualFetchRepository, SafeJso
 import com.soundcloud.bff.repository.JsonServiceRepository
 import com.soundcloud.bff.services.JsonService
 import com.soundcloud.jvmkit.UserSession
-import com.soundcloud.publicApiStrangler.mapping.search.{Search, LegacySearch, PaginatedSearch, SearchDispatcherRequest}
+import com.soundcloud.publicApiStrangler.mapping.search.{LegacySearch, PaginatedSearch, Search, SearchDispatcherRequest}
 import com.soundcloud.scalakit._
 import com.soundcloud.scalakit.finagle.jsonservice.{Params, StringParam}
 import play.api.libs.json.JsValue
@@ -19,9 +19,22 @@ class SearchRepository(searchService: JsonService)
   override def fetch(session: UserSession, input: OffsetBasedPage[SearchDispatcherRequest]) =
     fetch(session,
       input.param.searchPath,
-      input.param.mapParams(input.extraParams.filterKeys(_ != SearchMapper.LinkedPartitioning)),
+      createParams(session, input),
       input.param.searchHeaders)
       .map(toJsonObject).map(Option(_))
+
+  def createParams(session: UserSession, input: OffsetBasedPage[SearchDispatcherRequest]): Params = {
+    val dispatcherRequest = input.param
+    val mappedInputParams = dispatcherRequest.mapParams(input.extraParams.filterKeys(_ != SearchMapper.LinkedPartitioning))
+    dispatcherRequest.searchPath match {
+      case SearchRepository.TracksPath | SearchRepository.UniversalPath =>
+        mappedInputParams ++ Params(
+          "filter.content_tier" -> "FREE",
+          "filter.content_country" -> session.getGeo.getCountryCode
+        )
+      case _ => mappedInputParams
+    }
+  }
 }
 
 object SearchRepository {
