@@ -15,7 +15,9 @@ precheckin:
 	make unit-test
 	mkdir -p ./target/bazooka/build
 	make -f Makefile.pipeline package publish
+	remove-containers
 	make end-to-end-test
+	remove-containers
 
 end-to-end-test:
 	bin/end-to-end-test
