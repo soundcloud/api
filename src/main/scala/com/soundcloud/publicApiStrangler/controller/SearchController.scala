@@ -56,7 +56,8 @@ class SearchController(val userAuthentication: UserAuthentication,
   private def dispatchUserRequest = dispatchRequest(
     Set("q"),
     SearchDispatcherRequest.userSearch,
-    "users"
+    "users",
+    dispatchToMothershipWithFollowCounts _
   )
 
   private def dispatchGroupRequest = dispatchRequest(
@@ -81,9 +82,9 @@ class SearchController(val userAuthentication: UserAuthentication,
    * Perform a search for tracks. Logic to determine whether this is a search
    * and if we should forward the request to Mothership.
    */
-  private def dispatchRequest(searchParams: Set[String], makeRequest: Request => SearchDispatcherRequest, featureName: String): BffRequestHandler = request =>
-    if (isSearchRequest(request.params, searchParams)) search(request, makeRequest(request), featureName)
-    else mothershipDispatcher.dispatch(request)
+  private def dispatchRequest(searchParams: Set[String], makeRequest: Request => SearchDispatcherRequest, featureName: String, mothershipDispatcherFn: Request => Future[ResponseBuilder] = mothershipDispatcher.dispatch _): BffRequestHandler = request =>
+    if (isSearchRequest(request.params, searchParams)) search(request, makeRequest(request), featureName, mothershipDispatcherFn)
+    else mothershipDispatcherFn(request)
 
   private def isSearchRequest(params: ParamMap, searchParams: Set[String]): Boolean = {
     val paramsWithContent = params.collect { case (k, v) if v != null && v.nonEmpty => k }.toSet
@@ -96,7 +97,7 @@ class SearchController(val userAuthentication: UserAuthentication,
       case _ => Return(true)
     }
 
-  private def search(request: Request, searchRequest: SearchDispatcherRequest, featureName: String): Future[ResponseBuilder] = {
+  private def search(request: Request, searchRequest: SearchDispatcherRequest, featureName: String, mothershipDispatcherFn: Request => Future[ResponseBuilder] = mothershipDispatcher.dispatch _): Future[ResponseBuilder] = {
     userAuthentication.withUserSession(request) { session =>
       avoidMothershipFor(featureName).flatMap{
         isActive =>
@@ -124,7 +125,7 @@ class SearchController(val userAuthentication: UserAuthentication,
             }
           }.map(_.header("Cache-Control", s"public, max-age=$MaxCacheAge, must-revalidate"))
           else {
-            mothershipDispatcher.dispatch(request)
+            mothershipDispatcherFn(request)
           }
       }
     }
