@@ -97,6 +97,40 @@ class UserFollowController(userAuthentication: UserAuthentication,
   delete("/me/followings/:other_id")(unfollow)
   delete("/me/followings/:other_id.json")(unfollow)
 
+  // Legacy logged-in endpoints
+
+  get("/v1/me/followings")(fetchFollowings)
+  get("/v1/me/followings.json")(fetchFollowings)
+
+  get("/v1/me/followers")(fetchMyFollowers)
+  get("/v1/me/followers.json")(fetchMyFollowers)
+
+  get("/v1/me/followers/recent")(fetchMyFollowers)
+  get("/v1/me/followers/recent.json")(fetchMyFollowers)
+
+  get("/v1/me/followers/ids")(fetchMyFollowerIds)
+  get("/v1/me/followers/ids.json")(fetchMyFollowerIds)
+
+  get("/v1/me/followings/ids")(fetchMyFollowingIds)
+  get("/v1/me/followings/ids.json")(fetchMyFollowingIds)
+
+  get("/v1/me/followers/:other_id")(fetchPossibleFollower)
+  get("/v1/me/followers/:other_id.json")(fetchPossibleFollower)
+
+  get("/v1/me/followings/:other_id")(fetchPossibleFollowing)
+  get("/v1/me/followings/:other_id.json")(fetchPossibleFollowing)
+
+  head("/v1/me/followings/:other_id")(fallback.dispatch)
+  head("/v1/me/followings/:other_id.json")(fallback.dispatch)
+
+  post("/v1/me/followings/:other_id")(follow)
+  post("/v1/me/followings/:other_id.json")(follow)
+  put("/v1/me/followings/:other_id")(follow)
+  put("/v1/me/followings/:other_id.json")(follow)
+
+  delete("/v1/me/followings/:other_id")(unfollow)
+  delete("/v1/me/followings/:other_id.json")(unfollow)
+
   private def follow(request: Request): Future[ResponseBuilder] = {
     userAuthentication.withLoggedInUser(request) { (session, userUrn) =>
       val user = Urn("soundcloud:users:" + request.routeParams.get("other_id").get)
