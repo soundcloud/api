@@ -33,11 +33,11 @@ class User(jsonValue: JsValue, baseUrl: String, maybeFollowCounts: Option[Follow
     }
   }
 
-  // deprecated fields, kept for structure only
-  val reposts_count = None
-  val comments_count = None
+  // deprecated fields
+  val reposts_count = (json \ "reposts_count").asOpt[Int]
+  val comments_count = (json \ "comments_count").asOpt[Int]
   val online = false
-  val likes_count = None
-  val playlist_count: Option[Int] = None
+  val likes_count = (json \ "likes_count").asOpt[Int]
+  val playlist_count: Option[Int] = (json \ "public_playlists_count").asOpt[Int]
 
 }
