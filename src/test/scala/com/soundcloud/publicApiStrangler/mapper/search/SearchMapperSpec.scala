@@ -7,6 +7,7 @@ import com.soundcloud.bff.test.UnitSpecification
 import com.soundcloud.jvmkit.UserSession
 import com.soundcloud.publicApiStrangler.authorization.ContentAuthorizationRules
 import com.soundcloud.publicApiStrangler.mapping.search.{LegacySearch, PaginatedSearch, SearchDispatcherRequest}
+import com.soundcloud.publicApiStrangler.client.followcounts.{FollowCounts, FollowCountsClient}
 import com.soundcloud.scalakit.Urn
 import com.soundcloud.scalakit.Urn.format
 import com.soundcloud.scalakit.finagle.http.OkStatus
@@ -80,7 +81,8 @@ class SearchMapperSpec extends UnitSpecification {
   "filters search results that aren't known to okidoki" in new Context {
     val okidokiMock = mock[OkidokiClient]
     val caMock = mock[ContentAuthorizationRules]
-    val searchEntityMapper = new SearchEntityMapper(okidokiMock, null, baseUrl, caMock, () => Future.False, null, null, null, null, null)
+    val followCountsClient = mock[FollowCountsClient]
+    val searchEntityMapper = new SearchEntityMapper(okidokiMock, followCountsClient, baseUrl, caMock, null, null, null, null, null)
     val searchMapper = new SearchMapper(searchRepoMock, searchEntityMapper, baseUrl)
     private val request = pagedRequest(Map.empty)
 
@@ -94,6 +96,10 @@ class SearchMapperSpec extends UnitSpecification {
 
     when(caMock.fetchRules(===(sessionMock), any[Seq[Urn]]))
       .thenReturn(Future.value(Seq.empty))
+
+    when(followCountsClient.counts(sessionMock, Seq.empty))
+      .thenReturn(Future.value(Seq.empty))
+
 
     val mapped = Await.result(searchMapper.materialize(sessionMock, request)).get
     val result = PlayJson.parse(ScalakitJson.asString(mapped)).as[JsArray]

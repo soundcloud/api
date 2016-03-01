@@ -43,7 +43,6 @@ class SearchEntityMapperSpec extends UnitSpecification with Fixtures {
       followCountsClient,
       baseUrl,
       contentAuthorizationService,
-      () => Future.value(followCountsFlag),
       new WaveformMapper(waveformUrlsRepository),
       trackPurchaseLinkMapper,
       likeCountMapper,
@@ -75,7 +74,6 @@ class SearchEntityMapperSpec extends UnitSpecification with Fixtures {
     val waveforms = (new TrackWaveformUrlMapper).map(withContentsOf("waveform", "search_waveform"))
       .filterNot(_.isPreview)
 
-    def followCountsFlag: Boolean = false
 
     override def before: Any = {
       // the main metadata fetch
@@ -114,38 +112,7 @@ class SearchEntityMapperSpec extends UnitSpecification with Fixtures {
   }
 
   "builds the proper mappings" >> {
-    "with follow counts flag off" in new Context {
-      result.size mustEqual 4
-      val List(userJson, trackJson, playlistJson, groupJson) = result.map(Json.toJsValue)
-
-      (trackJson \ "kind").as[String] ==== "track"
-      (trackJson \ "waveform_url").as[String] ==== "https://w1.sndcdn.com/b5uH7mT3hjkm_m.png"
-      (trackJson \ "duration").asOpt[Int] ==== Some(269555)
-      (trackJson \ "streamable").asOpt[Boolean] ==== Some(false)
-      (trackJson \ "downloadable").asOpt[Boolean] ==== Some(true)
-      (trackJson \ "download_url").asOpt[String] ==== Some("https://api.soundcloud.com/tracks/15273221/download")
-
-      (userJson \ "kind").as[String] ==== "user"
-      val subs = (userJson \ "subscriptions").as[List[JsObject]]
-      subs must haveSize(1)
-      (subs.head \ "product" \ "id").as[String] ==== "creator-pro-unlimited"
-      (userJson \ "followers_count").as[Long] ==== 1595672
-      (userJson \ "followings_count").as[Long] ==== 2
-
-      (groupJson \ "kind").as[String] ==== "group"
-      (groupJson \ "uri").as[String] ==== "https://api.soundcloud.com.com/groups/30910"
-
-      (playlistJson \ "kind").as[String] ==== "playlist"
-      (playlistJson \ "tracks_uri").as[String] ==== "https://api.soundcloud.com.com/playlists/685235/tracks"
-      (playlistJson \ "likes_count").as[Int] ==== 666
-      (playlistJson \ "tracks").as[List[JsValue]] must beEmpty
-      (playlistJson \ "secret_token").asOpt[String] ==== None
-      (playlistJson \ "secret_uri").asOpt[String] ==== None
-    }
-
-    "with follow counts flag on" in new Context {
-      override def followCountsFlag: Boolean = true
-
+    "with follow counts" in new Context {
       override def before: Any = {
         super.before
         val fetchedUserUrn = Urn("soundcloud:users:2097360")

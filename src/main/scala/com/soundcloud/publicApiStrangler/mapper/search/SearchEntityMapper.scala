@@ -21,7 +21,6 @@ class SearchEntityMapper(okidokiClient: OkidokiClient,
                          followCountsClient: FollowCountsClient,
                          baseUrl: String,
                          contentAuthorization: ContentAuthorizationRules,
-                         followCountsFromStitchEnabled: () => Future[Boolean],
                          waveform: WaveformMapper,
                          trackPurchaseLinkMapper: TrackPurchaseLinkMapper,
                          likeCountMapper: LikeCountMapper,
@@ -38,13 +37,9 @@ class SearchEntityMapper(okidokiClient: OkidokiClient,
       (entities, authorizations, followCountsMap) <- Future.join(
         okidokiClient.fetch(session, inputs),
         contentAuthorization.fetchRules(session, trackUrns.toSeq).map(authorizationsByUrn),
-        followCountsFromStitchEnabled().flatMap {
-          case true =>
-            followCountsClient
-              .counts(session, userUrns.toList)
-              .map(_.map(followCounts => (followCounts.userUrn, followCounts)).toMap)
-          case false => Future.value(Map.empty[Urn, FollowCounts])
-        }
+        followCountsClient
+          .counts(session, userUrns.toList)
+          .map(_.map(followCounts => (followCounts.userUrn, followCounts)).toMap)
       )
     } yield {
       entities.map {

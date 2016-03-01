@@ -14,8 +14,7 @@ class EntityMapper(okidokiClient: OkidokiClient,
                    lieblingClient: LieblingClient,
                    followCountsClient: FollowCountsClient,
                    baseUrl: String,
-                   entitySummaryMapper: EntitySummaryMapper,
-                   getFollowCountsFromStitch: () => Future[Boolean])
+                   entitySummaryMapper: EntitySummaryMapper)
   extends Mapper[Urn, JsonMapping] {
 
   override def map(session: UserSession, inputs: Set[Urn])(implicit context: MappingContext): Future[Map[Urn, JsonMapping]] = {
@@ -23,13 +22,9 @@ class EntityMapper(okidokiClient: OkidokiClient,
       (entities, likes, followCountsMap) <- Future.join(
         okidokiClient.fetch(session, inputs),
         lieblingClient.likesCounts(session, filterByCollection(inputs.toList, List("tracks", "playlists"))),
-        getFollowCountsFromStitch().flatMap {
-          case true =>
-            followCountsClient
-              .counts(session, filterByCollection(inputs.toList, List("users")))
-              .map(_.map(followCounts => (followCounts.userUrn, followCounts)).toMap)
-          case false => Future.value(Map.empty[Urn, FollowCounts])
-        }
+        followCountsClient
+          .counts(session, filterByCollection(inputs.toList, List("users")))
+          .map(_.map(followCounts => (followCounts.userUrn, followCounts)).toMap)
       )
     } yield {
       val likesCounts = likeCounts(likes)

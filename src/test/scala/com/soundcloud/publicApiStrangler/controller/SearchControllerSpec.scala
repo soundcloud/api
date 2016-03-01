@@ -6,12 +6,13 @@ import com.soundcloud.bff.nextbff.pagination.OffsetBasedPage
 import com.soundcloud.bff.nextbff.repository.RepositoryException
 import com.soundcloud.bff.nextbff.test.JsonMappingMock
 import com.soundcloud.bff.test.InjectionBasedControllerSpecification
-import com.soundcloud.jvmkit.rollout.{BasicRolloutFeature, Rollout}
-import com.soundcloud.publicApiStrangler.client.followcounts.FollowCountsClient
+import com.soundcloud.publicApiStrangler.client.followcounts.{FollowCounts, FollowCountsClient}
 import com.soundcloud.publicApiStrangler.mapper.search.SearchMapper
 import com.soundcloud.publicApiStrangler.mapping.search.{Search, SearchDispatcherRequest}
 import com.soundcloud.publicApiStrangler.support.DispatchToMothershipHandler
 import com.soundcloud.scalakit.finagle.http.BadRequestStatus
+import com.soundcloud.scalakit.finagle.http.HandlerRequest
+import com.soundcloud.scalakit._
 import com.soundcloud.scalakit.test.VerifiedMocks
 import org.jboss.netty.handler.codec.http.HttpResponseStatus
 import org.mockito.Mockito.times
@@ -19,6 +20,7 @@ import org.mockito.Mockito.times
 class SearchControllerSpec extends InjectionBasedControllerSpecification {
 
   trait ForwardContext extends Scope {
+    def followCountsSeq: Seq[FollowCounts] = Seq.empty
     val fallbackMock = mock[DispatchToMothershipHandler]
     val searchMapperMock = mock[SearchMapper]
     val followCountsClientMock = mock[FollowCountsClient]
@@ -27,7 +29,6 @@ class SearchControllerSpec extends InjectionBasedControllerSpecification {
       fakeUserAuthentication(anonymousSession),
       fallbackMock,
       followCountsClientMock,
-      () => Future.False,
       _ => Future.value(avoidMothershipFlag),
       searchMapperMock,
       "http://api.soundcloud.com"
@@ -37,9 +38,15 @@ class SearchControllerSpec extends InjectionBasedControllerSpecification {
     val forwardStatus = HttpResponseStatus.FOUND.getCode
     val forwardContent = "forwardContent"
 
-    def expectForwardedRequest =
+    def expectForwardedRequest = {
+      val responseBuilder = new ResponseBuilder().body(forwardContent).status(forwardStatus)
+      fallbackMock.defaultHandling(any[HandlerRequest]) returns Future.value(responseBuilder.build)
+
       fallbackMock.dispatch(any[Request])
-        .returns(Future(new ResponseBuilder().body(forwardContent).status(forwardStatus)))
+        .returns(Future(responseBuilder))
+
+      followCountsClientMock.counts(any[UserSession], any[Seq[Urn]]) returns Future.value(followCountsSeq)
+    }
 
     def stillForwards(response: MockResponse) = {
       response.code ==== forwardStatus

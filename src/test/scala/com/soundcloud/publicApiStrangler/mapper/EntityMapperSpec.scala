@@ -2,7 +2,6 @@ package com.soundcloud.publicApiStrangler.mapper
 
 import com.soundcloud.bff.test.UnitSpecification
 import com.soundcloud.jvmkit.UserSession
-import com.soundcloud.jvmkit.rollout.{BasicRolloutFeature, Rollout}
 import com.soundcloud.publicApiStrangler.client.followcounts.{FollowCounts, FollowCountsClient}
 import com.soundcloud.publicApiStrangler.mapper.timeline.{EntityMapper, EntitySummaryMapper}
 import com.soundcloud.publicApiStrangler.mapping.timeline.{Playlist, Track, User}
@@ -16,12 +15,12 @@ import play.api.libs.json.JsObject
 class EntityMapperSpec extends UnitSpecification with Fixtures {
 
   trait Context extends VerifiedMocks {
+    val userUrn = Urn("soundcloud", "users", "123")
     val okidokiClient = mock[OkidokiClient]
     val lieblingClient = mock[LieblingClient]
     val followCountsClient = mock[FollowCountsClient]
-    val getFollowCountsFromStitch: () => Future[Boolean]
     val entitySummaryMapper = mock[EntitySummaryMapper]
-    lazy val entityMapper = new EntityMapper(okidokiClient, lieblingClient, followCountsClient, "https://foo.com", entitySummaryMapper, getFollowCountsFromStitch)
+    lazy val entityMapper = new EntityMapper(okidokiClient, lieblingClient, followCountsClient, "https://foo.com", entitySummaryMapper)
     val session = mock[UserSession]
     val likeUrns = List(
       "soundcloud:tracks:131352352",
@@ -38,46 +37,20 @@ class EntityMapperSpec extends UnitSpecification with Fixtures {
 
       when(lieblingClient.likesCounts(===(session), ===(likeUrns))) thenReturn
         Future(lieblingLikesInfo.as[JsObject])
+
+      when(followCountsClient.counts(session, Seq(userUrn))) thenReturn
+        Future.value(Seq(FollowCounts(userUrn, 1111, 2222)))
     }
 
     def result = Await.result(entityMapper.materialize(session, urns))
   }
 
   "builds the proper mappings" in new Context {
-    val getFollowCountsFromStitch = () => Future.False
-
     result.size mustEqual 4
   }
 
   "injects the base URL and likes counts" >> {
-    "with follow counts flag off" in new Context {
-      val getFollowCountsFromStitch = () => Future.False
-
-      val playlist: Playlist = result.filter(t => t.isInstanceOf[Playlist]).head.asInstanceOf[Playlist]
-
-      playlist.tracks_uri mustEqual "https://foo.com/playlists/123/tracks"
-      playlist.likes_count mustEqual Some(666)
-      val user: User = result.filter(t => t.isInstanceOf[User]).head.asInstanceOf[User]
-
-      user.website_title mustEqual Some("Adeline Website")
-      user.track_count mustEqual Some(49)
-      user.followers_count ==== Some(20976)
-      user.followings_count ==== Some(118)
-
-      val track: Track = result.filter(t => t.isInstanceOf[Track]).head.asInstanceOf[Track]
-      track.downloadable mustEqual Some(false) // downloadable respects `has_downloads_left`
-    }
-
     "with follow counts flag on" in new Context {
-      val getFollowCountsFromStitch = () => Future.True
-
-      override def before: Any = {
-        super.before
-        val userUrn = Urn("soundcloud", "users", "123")
-        when(followCountsClient.counts(session, Seq(userUrn))) thenReturn
-          Future.value(Seq(FollowCounts(userUrn, 1111, 2222)))
-      }
-
       val playlist: Playlist = result.filter(t => t.isInstanceOf[Playlist]).head.asInstanceOf[Playlist]
 
       playlist.tracks_uri mustEqual "https://foo.com/playlists/123/tracks"

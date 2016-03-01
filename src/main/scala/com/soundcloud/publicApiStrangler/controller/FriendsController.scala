@@ -9,8 +9,7 @@ import com.twitter.util.Future
   * These endpoints are NOT properly strangled. */
 class FriendsController(val userAuthentication: UserAuthentication,
                         val mothershipDispatcher: DispatchToMothershipHandler,
-                        val followCountsClient: FollowCountsClient,
-                        val useStitchForFollowCounts: () => Future[Boolean])
+                        val followCountsClient: FollowCountsClient)
   extends BffInjectionBasedController with FollowCountsHelper {
 
   get("/me/connections/friends")(dispatchToMothershipWithFollowCounts)
