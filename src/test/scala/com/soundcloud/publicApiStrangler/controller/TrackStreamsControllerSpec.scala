@@ -15,14 +15,12 @@ class TrackStreamsControllerSpec extends InjectionBasedControllerSpecification {
 
     val trackStreamUrlToJsonResponseMapperMock = mock[TrackStreamJsonResponseMapper]
     val trackStreamUrlToRedirectMapperMock = mock[TrackStreamRedirectResponseMapper]
-    val mothershipDispatcherMock = mock[DispatchToMothershipHandler]
     val trackStreamSnipHandlerMock = mock[TrackStreamHandler]
 
     val controller = new TrackStreamsController(
       fakeUserAuthentication(session),
       trackStreamUrlToJsonResponseMapperMock,
       trackStreamUrlToRedirectMapperMock,
-      mothershipDispatcherMock,
       trackStreamSnipHandlerMock
     )
 
@@ -36,7 +34,6 @@ class TrackStreamsControllerSpec extends InjectionBasedControllerSpecification {
 
       response.code ==== 200
       there was one(trackStreamSnipHandlerMock).handle(any[Request], any[UserSession], any[TrackStreamJsonResponseMapper])
-      there was noCallsTo(mothershipDispatcherMock)
     }
 
     def forwardWithRedirectResponseMapper(controller: TrackStreamsController, path: String) = {
@@ -49,7 +46,6 @@ class TrackStreamsControllerSpec extends InjectionBasedControllerSpecification {
 
       response.code ==== 200
       there was one(trackStreamSnipHandlerMock).handle(any[Request], any[UserSession], any[TrackStreamRedirectResponseMapper])
-      there was noCallsTo(mothershipDispatcherMock)
     }
   }
 

@@ -30,6 +30,7 @@ class TrackStreamHandler(mothershipDispatcher: DispatchToMothershipHandler,
       responses.flatMap {
         case (mothershipResponse: ResponseBuilder, contentAuth: ContentAuthorization) =>
           if (mothershipResponse.build.getStatusCode < 400) {
+            contentAuth.getMonetizationModel
             contentAuth.getPolicy match {
               case ContentPolicy.ALLOW | ContentPolicy.MONETIZE => Future.value(mothershipResponse)
               case ContentPolicy.SNIP => replaceStream(userSession, trackUrn, contentAuth, mapper)

@@ -133,7 +133,6 @@ object App
       userAuthentication,
       trackStreamUrlToJsonResponseMapper,
       trackStreamUrlToRedirectMapper,
-      mothershipDispatcher,
       trackStreamSnipHandler)
   }
 

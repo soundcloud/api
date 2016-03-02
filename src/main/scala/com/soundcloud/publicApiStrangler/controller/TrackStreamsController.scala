@@ -16,7 +16,6 @@ class TrackStreamsController(
                               userAuthentication: UserAuthentication,
                               trackStreamUrlToJsonResponseMapper: TrackStreamJsonResponseMapper,
                               trackStreamUrlToRedirectMapper: TrackStreamRedirectResponseMapper,
-                              mothershipDispatcher: DispatchToMothershipHandler,
                               trackStreamHandler: TrackStreamHandler
                               )
   extends BffInjectionBasedController {
