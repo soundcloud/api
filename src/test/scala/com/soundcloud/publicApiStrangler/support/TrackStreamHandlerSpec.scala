@@ -19,7 +19,7 @@ class TrackStreamHandlerSpec extends UnitSpecification {
       val mothershipDispatcher = mock[DispatchToMothershipHandler]
       val contentAuthRules = mock[ContentAuthorizationRules]
       val mediaUrlsRepository = mock[MediaUrlsRepository]
-      val handler = new TrackStreamHandler(mothershipDispatcher, contentAuthRules, mediaUrlsRepository)
+      val handler = new TrackStreamHandler(mothershipDispatcher, contentAuthRules, mediaUrlsRepository, new HighTierTesting)
       val request = mock[Request]
       val userSession = mock[UserSession]
       val mapper = mock[TrackStreamResponseMapper]
