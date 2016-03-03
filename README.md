@@ -31,6 +31,15 @@ The precheckin tests uses crun, one of the
 installed locally. Check the installation documentation in the [project's
 README](https://github.com/soundcloud/cd-tools#installation).
 
+### Useful commands while making changes to public-api-strangler
+
+* `while (!done) {`
+  * `// hack hack hack`
+  * `make -f Makefile.pipeline package && make run`
+  * `curl "$(docker-ip):5000/my-endpoint"`
+  * `docker logs -f publicapistrangler_publicapistrangler_1`
+* `}`
+
 ## How to deploy
 
 Use cd to deploy the application. For the master branch and deployment
