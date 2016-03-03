@@ -26,13 +26,11 @@ import com.soundcloud.publicApiStrangler.support._
 import com.soundcloud.publicApiStrangler.zookeeper.CuratorFrameworkFactory
 import com.soundcloud.ratelimiting.facade._
 import com.soundcloud.scalakit.Urn
+import com.soundcloud.scalakit.cache.MemcachedClient
 import com.soundcloud.service.component.{GatekeeperComponent, LieblingComponent, OkidokiComponent, SimilarSoundsComponent}
 import com.soundcloud.services.timeline.TimelineJsonComponent
 import com.soundcloud.trackcoordinator.client.TrackCoordinatorComponent
-import com.twitter.finagle.CancelledRequestException
-import com.twitter.finagle.http.Response
 import org.eclipse.jetty.server.Handler
-import org.jboss.netty.handler.codec.http.{HttpResponseStatus, HttpVersion}
 
 object App
   extends BffInjectionBasedApp
@@ -144,6 +142,7 @@ object App
   lazy val rolloutClient = new RolloutBuilder(config, telemetry).build("public-api-strangler")
   override lazy val rollout = Some(rolloutClient)
 
+  lazy val memcachedClient = MemcachedClient(config)
   private val rateLimitingFacade = new RateLimitingFacade(
     bffApplication,
     curatorFramework,
