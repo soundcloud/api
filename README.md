@@ -35,7 +35,7 @@ README](https://github.com/soundcloud/cd-tools#installation).
 
 * `while (!done) {`
   * `// hack hack hack`
-  * `make -f Makefile package && make run`
+  * `make -f Makefile.pipeline package && make run`
   * `curl "$(docker-ip):5000/my-endpoint"`
   * `docker logs -f publicapistrangler_publicapistrangler_1`
 * `}`
