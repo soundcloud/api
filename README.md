@@ -31,7 +31,7 @@ The precheckin tests uses crun, one of the
 installed locally. Check the installation documentation in the [project's
 README](https://github.com/soundcloud/cd-tools#installation).
 
-### But really, how do I hack on this?
+### Useful commands while making changes to public-api-strangler
 
 * `while (!done) {`
   * `// hack hack hack`
