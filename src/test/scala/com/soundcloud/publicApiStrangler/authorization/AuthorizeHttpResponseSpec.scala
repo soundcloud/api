@@ -21,7 +21,7 @@ class AuthorizeHttpResponseSpec extends UnitSpecification with Fixtures {
     val contentAuthorization = mock[ContentAuthorizationRules]
     val waveformUrlsRepo = mock[WaveformUrlsRepository]
     val request = mock[BffRequest]
-    val userAuthentication = new FakeUserAuthentication(mock[AuthenticatorService])(session)
+    val userAuthentication = new FakeUserAuthentication(session)
 
     def content: String
 

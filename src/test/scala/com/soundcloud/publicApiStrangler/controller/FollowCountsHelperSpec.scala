@@ -19,7 +19,7 @@ class FollowCountsHelperSpec  extends UnitSpecification with Fixtures {
 
   trait Context extends Scope with VerifiedMocks {
     val session = mock[UserSession]
-    val userAuthenticationMock = new FakeUserAuthentication(mock[AuthenticatorService])(session)
+    val userAuthenticationMock = new FakeUserAuthentication(session)
     val followCountsClientMock = mock[FollowCountsClient]
     val mothershipDispatcherMock = mock[DispatchToMothershipHandler]
     val request = new Request(mock[FinagleRequest])
