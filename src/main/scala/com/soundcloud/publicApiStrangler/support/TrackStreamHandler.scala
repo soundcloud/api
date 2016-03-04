@@ -12,16 +12,15 @@ import org.joda.time.DateTime
 import org.joda.time.format.DateTimeFormat
 
 /**
-  * Forwards stream requests to public api but intervene in case content policy for track is SNIP
-  * or BLOCK.
-  *
-  * We still forward request to public-api because it has support for play restrictions which we
-  * do not support yet in bff apps or authsy.
-  */
+ * Forwards stream requests to public api but intervene in case content policy for track is SNIP
+ * or BLOCK.
+ *
+ * We still forward request to public-api because it has support for play restrictions which we
+ * do not support yet in bff apps or authsy.
+ */
 class TrackStreamHandler(mothershipDispatcher: DispatchToMothershipHandler,
                          contentAuthRules: ContentAuthorizationRules,
-                         mediaUrlsRepository: MediaUrlsRepository,
-                         highTierTesting: HighTierTesting) {
+                         mediaUrlsRepository: MediaUrlsRepository) {
 
   def handle(request: Request, userSession: UserSession, mapper: TrackStreamResponseMapper): Future[ResponseBuilder] = {
     val trackUrn = new Urn("soundcloud", "tracks", request.routeParams("trackId"))
@@ -31,22 +30,12 @@ class TrackStreamHandler(mothershipDispatcher: DispatchToMothershipHandler,
       responses.flatMap {
         case (mothershipResponse: ResponseBuilder, contentAuth: ContentAuthorization) =>
           if (mothershipResponse.build.getStatusCode < 400) {
+            contentAuth.getMonetizationModel
             contentAuth.getPolicy match {
-
-              case ContentPolicy.ALLOW | ContentPolicy.MONETIZE =>
-                Future.value(mothershipResponse)
-
-              case ContentPolicy.SNIP =>
-                replaceStream(userSession, trackUrn, contentAuth, mapper)
-
-              case ContentPolicy.BLOCK if (highTierTesting.isEnabled(contentAuth.getMonetizationModel, userSession, request)) =>
-                replaceStream(userSession, trackUrn, contentAuth, mapper)
-
-              case ContentPolicy.BLOCK if (userSession.isAnonymous) =>
-                Future.value(generateResponseFor(HttpResponseStatus.UNAUTHORIZED))
-
-              case ContentPolicy.BLOCK =>
-                Future.value(generateResponseFor(HttpResponseStatus.FORBIDDEN))
+              case ContentPolicy.ALLOW | ContentPolicy.MONETIZE => Future.value(mothershipResponse)
+              case ContentPolicy.SNIP => replaceStream(userSession, trackUrn, contentAuth, mapper)
+              case ContentPolicy.BLOCK if (userSession.isAnonymous) => Future.value(generateResponseFor(HttpResponseStatus.UNAUTHORIZED))
+              case ContentPolicy.BLOCK => Future.value(generateResponseFor(HttpResponseStatus.FORBIDDEN))
             }
           } else
             Future.value(mothershipResponse)
