@@ -7,7 +7,7 @@ import com.soundcloud.jvmkit.policies.{Reason, ContentAuthorization, ContentPoli
 import com.soundcloud.jvmkit.{Urn, UserSession}
 import com.soundcloud.publicApiStrangler.authorization.ContentAuthorizationRules
 import com.soundcloud.publicApiStrangler.mapper.trackstreams.TrackStreamResponseMapper
-import com.twitter.finagle.http.Status
+import com.twitter.finagle.http.{HeaderMap, Status}
 import com.twitter.util.{Await, Future}
 import org.jboss.netty.handler.codec.http.HttpResponseStatus
 import play.api.libs.json.Json
@@ -117,10 +117,30 @@ class TrackStreamHandlerSpec extends UnitSpecification {
       mediaUrlsRepository.byUrn(userSession, trackUrn, contentAuth) returns mediaUrls
       mapper.map(mediaUrls) returns mapperResponse
 
+      request.headerMap returns HeaderMap(("x-forwarded-proto" -> "http"))
       val responseBuilder = Await.result(handler.handle(request, userSession, mapper))
       Await.result(mapperResponse) ==== responseBuilder
 
       there was one(mediaUrlsRepository).byUrn(userSession, trackUrn, contentAuth)
+      there was one(contentAuthRules).fetchRules(userSession, Seq(trackUrn))
+    }
+
+    "return https MediaUrlsRepository response in case pubapi response is successful and content policy is SNIP" in new Success {
+      request.headerMap returns HeaderMap(("x-forwarded-proto" -> "https"))
+      val successResponse = responseBuilder(200)
+      mothershipDispatcher.dispatch(request) returns successResponse
+      contentAuth.getPolicy returns ContentPolicy.SNIP
+
+      val mediaUrl1 = mock[MediaUrl]
+      val mediaUrls = Future.value(Set(mediaUrl1))
+      val mapperResponse = Future.value(new ResponseBuilder().status(200).header("Content-Type", "application/json"))
+      mediaUrlsRepository.byUrn(userSession, trackUrn, contentAuth, true) returns mediaUrls
+      mapper.map(mediaUrls) returns mapperResponse
+
+      val responseBuilder = Await.result(handler.handle(request, userSession, mapper))
+      Await.result(mapperResponse) ==== responseBuilder
+
+      there was one(mediaUrlsRepository).byUrn(userSession, trackUrn, contentAuth, true)
       there was one(contentAuthRules).fetchRules(userSession, Seq(trackUrn))
     }
 

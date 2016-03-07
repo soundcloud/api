@@ -33,7 +33,7 @@ class TrackStreamHandler(mothershipDispatcher: DispatchToMothershipHandler,
             contentAuth.getMonetizationModel
             contentAuth.getPolicy match {
               case ContentPolicy.ALLOW | ContentPolicy.MONETIZE => Future.value(mothershipResponse)
-              case ContentPolicy.SNIP => replaceStream(userSession, trackUrn, contentAuth, mapper)
+              case ContentPolicy.SNIP => replaceStream(userSession, trackUrn, contentAuth, mapper, isHttpsRequest(request))
               case ContentPolicy.BLOCK if (userSession.isAnonymous) => Future.value(generateResponseFor(HttpResponseStatus.UNAUTHORIZED))
               case ContentPolicy.BLOCK => Future.value(generateResponseFor(HttpResponseStatus.FORBIDDEN))
             }
@@ -45,13 +45,18 @@ class TrackStreamHandler(mothershipDispatcher: DispatchToMothershipHandler,
     }
   }
 
+  private def isHttpsRequest(request: Request) : Boolean =
+    request.headerMap.get("x-forwarded-proto") match {
+      case Some(protocol) => protocol.toLowerCase() == "https"
+      case _ => false
+    }
 
   private def contentAuthFor(session: UserSession, trackUrn: Urn): Future[ContentAuthorization] =
     contentAuthRules.fetchRules(session, Seq(trackUrn)).map(ca => ca.head)
 
 
-  private def replaceStream(session: UserSession, trackUrn: Urn, contentAuth: ContentAuthorization, mapper: TrackStreamResponseMapper): Future[ResponseBuilder] = {
-    val mediaUrls = mediaUrlsRepository.byUrn(session, trackUrn, contentAuth, false)
+  private def replaceStream(session: UserSession, trackUrn: Urn, contentAuth: ContentAuthorization, mapper: TrackStreamResponseMapper, useHttps: Boolean = false): Future[ResponseBuilder] = {
+    val mediaUrls = mediaUrlsRepository.byUrn(session, trackUrn, contentAuth, useHttps)
     mapper.map(mediaUrls)
   }
 
