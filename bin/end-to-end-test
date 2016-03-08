@@ -33,4 +33,13 @@ function start_server {
   done
 }
 
+# Ensures fast failure on Docker issues
+make _dev_docker_compose
+RESULT=$?
+if [ $RESULT != 0 ]; then
+  echo "make _dev_docker_compose failed"
+  exit
+fi
+
+# Run the main
 main
