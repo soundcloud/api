@@ -26,7 +26,6 @@ class FollowCountsHelperSpec  extends UnitSpecification with Fixtures {
 
     val helper = new FollowCountsHelper {
       override def userAuthentication = userAuthenticationMock
-      override def useStitchForFollowCounts = () => Future.value(followCountsFlag)
       override def followCountsClient = followCountsClientMock
       override def mothershipDispatcher = mothershipDispatcherMock
     }
@@ -66,13 +65,7 @@ class FollowCountsHelperSpec  extends UnitSpecification with Fixtures {
     }
   }
 
-  "when follow counts flag is off" in new FollowCountsOffContext {
-    override def responseBody = user
-
-    Await.result(helper.dispatchToMothershipWithFollowCounts(request)).build.getContentString() ==== responseBody.toString()
-  }
-
-  "when follow counts flag is on" >> {
+  "follow counts" >> {
     "with a non-JSON response" in new FollowCountsOnContext {
       override def responseBody = JsNull
 

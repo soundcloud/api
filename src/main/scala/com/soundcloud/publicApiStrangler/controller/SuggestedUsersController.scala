@@ -9,8 +9,7 @@ import com.twitter.util.Future
   * These endpoints are NOT properly strangled. */
 class SuggestedUsersController(val userAuthentication: UserAuthentication,
                                val mothershipDispatcher: DispatchToMothershipHandler,
-                               val followCountsClient: FollowCountsClient,
-                               val useStitchForFollowCounts: () => Future[Boolean])
+                               val followCountsClient: FollowCountsClient)
   extends BffInjectionBasedController with FollowCountsHelper {
 
   get("/me/suggested/users/:category")(dispatchToMothershipWithFollowCounts)

@@ -17,31 +17,25 @@ trait FollowCountsHelper {
   def userAuthentication: UserAuthentication
   def mothershipDispatcher: DispatchToMothershipHandler
   def followCountsClient: FollowCountsClient
-  def useStitchForFollowCounts: () => Future[Boolean]
 
   def dispatchToMothershipWithFollowCounts(request: Request): Future[ResponseBuilder] = {
-    useStitchForFollowCounts().flatMap {
-      case false => mothershipDispatcher.dispatch(request)
-
-      case true =>
-        userAuthentication.withUserSession(request) { session =>
-          mothershipDispatcher.defaultHandling(new HandlerRequest(AlwaysMatchesPathMatcher, request)).flatMap { response =>
-            (for {
-              _ <- if (response.getStatusCode() < 300) Some() else None
-              responseJson <- Try(Json.parse(response.getContentString())).toOption
-              userUrns = extractUserUrns(responseJson)
-              if userUrns.nonEmpty
-            } yield {
-              followCountsClient.counts(session, userUrns.toSeq).map(_.map(fc => (fc.userUrn, fc)).toMap).map { followCountsMap =>
-                if (followCountsMap.nonEmpty) {
-                  val content = injectFollowCounts(responseJson, followCountsMap).toString
-                  response.setContentString(content)
-                }
-                toResponseBuilder(response)
-              }
-            }).getOrElse(toResponseBuilder(response).toFuture)
-          }
-        }
+    userAuthentication.withUserSession(request) { session =>
+      mothershipDispatcher.defaultHandling(new HandlerRequest(AlwaysMatchesPathMatcher, request)).flatMap { response =>
+        (for {
+           _ <- if (response.getStatusCode() < 300) Some() else None
+           responseJson <- Try(Json.parse(response.getContentString())).toOption
+           userUrns = extractUserUrns(responseJson)
+           if userUrns.nonEmpty
+         } yield {
+           followCountsClient.counts(session, userUrns.toSeq).map(_.map(fc => (fc.userUrn, fc)).toMap).map { followCountsMap =>
+             if (followCountsMap.nonEmpty) {
+               val content = injectFollowCounts(responseJson, followCountsMap).toString
+               response.setContentString(content)
+             }
+             toResponseBuilder(response)
+           }
+         }).getOrElse(toResponseBuilder(response).toFuture)
+      }
     }
   }
 

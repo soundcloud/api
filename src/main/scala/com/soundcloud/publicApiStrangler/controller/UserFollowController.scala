@@ -7,7 +7,6 @@ import com.soundcloud.follows.client._
 import com.soundcloud.follows.client.representation._
 import com.soundcloud.follows.client.representation.follow._
 import com.soundcloud.follows.client.representation.unfollow.{NotFollowing, UnfollowSuccessful, UnknownError => UnfollowUnknownError, UserAsTarget => UnfollowUserAsTarget, UserNotFound => UnfollowUserNotFound}
-import com.soundcloud.jvmkit.rollout.{BasicRolloutFeature, Rollout}
 import com.soundcloud.publicApiStrangler.client.followcounts.{FollowCounts, FollowCountsClient}
 import com.soundcloud.publicApiStrangler.mapping.timeline.User
 import com.soundcloud.publicApiStrangler.support.DispatchToMothershipHandler
@@ -25,8 +24,7 @@ class UserFollowController(userAuthentication: UserAuthentication,
                            okidoki: OkidokiClient,
                            follows: FollowsClient,
                            followCountsClient: FollowCountsClient,
-                           baseUrl: String,
-                           rollout: Rollout)
+                           baseUrl: String)
   extends BffInjectionBasedController {
 
   val formatter = DateTimeFormat.forPattern("yyyy/M/d")
@@ -325,8 +323,6 @@ class UserFollowController(userAuthentication: UserAuthentication,
     }
   }
 
-  private def rollingOutCountsFromStitch(): Future[Boolean] = rollout.isActive(BasicRolloutFeature("follow-counts-from-stitch"))
-
   private def nextHref(baseUrl: String, path: String, next: Option[Pagination], requestParams: Map[String, String]): Option[String] = {
     next.map { pagination =>
       val params = requestParams ++ Map("cursor" -> pagination.cursor, "page_size" -> pagination.page_size) -- Seq("limit")
@@ -339,13 +335,9 @@ class UserFollowController(userAuthentication: UserAuthentication,
     for {
       (users, followCountsMap) <- Future.join(
         okidoki.fetch(session, urns),
-        rollingOutCountsFromStitch().flatMap {
-          case true =>
-            followCountsClient
-              .counts(session, urns.toSeq)
-              .map(_.map(followCounts => (followCounts.userUrn, followCounts)).toMap)
-          case false => Future.value(Map.empty[Urn, FollowCounts])
-        }
+        followCountsClient
+          .counts(session, urns.toSeq)
+          .map(_.map(followCounts => (followCounts.userUrn, followCounts)).toMap)
       )
     } yield {
       users.map { user =>

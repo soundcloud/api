@@ -19,7 +19,6 @@ import com.twitter.util.{Future, Return, Try}
 class SearchController(val userAuthentication: UserAuthentication,
                        val mothershipDispatcher: DispatchToMothershipHandler,
                        val followCountsClient: FollowCountsClient,
-                       val useStitchForFollowCounts: () => Future[Boolean],
                        avoidMothershipFor: String => Future[Boolean],
                        searchMapper: SearchMapper,
                        baseUrl: String)
@@ -43,7 +42,6 @@ class SearchController(val userAuthentication: UserAuthentication,
 
   // NOTE: The following are a quick-fix in order to fetch follow counts from Stitch instead of Mothership.
   // These endpoints are NOT properly strangled.
-
   get("/search")(dispatchToMothershipWithFollowCounts)
   get("/search.json")(dispatchToMothershipWithFollowCounts)
 
@@ -124,9 +122,8 @@ class SearchController(val userAuthentication: UserAuthentication,
               case _ => Future.value(render.badRequest)
             }
           }.map(_.header("Cache-Control", s"public, max-age=$MaxCacheAge, must-revalidate"))
-          else {
+          else
             mothershipDispatcherFn(request)
-          }
       }
     }
   }
