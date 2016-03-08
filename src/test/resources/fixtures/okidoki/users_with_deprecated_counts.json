@@ -1,0 +1,56 @@
+[
+  {
+    "city": "Ibiza/Barcelona",
+    "country_code": null,
+    "first_name": "Adeline",
+    "last_name": "",
+    "permalink": "adeline",
+    "private_playlists_count": 2,
+    "private_tracks_count": 28,
+    "public_playlists_count": 10001,
+    "public_tracks_count": 32,
+    "tracks_count": 61,
+    "username": "adeline",
+    "country": null,
+    "full_name": "Adeline",
+    "created_at": "2007/09/12 00:06:00 +0000",
+    "activated_at": "2007/09/12 08:55:00 +0000",
+    "followers_count": 0,
+    "followings_count": 0,
+    "public_favorites_count": 10010,
+    "self": {
+      "urn": "soundcloud:users:123",
+      "url": "http://moshimoshi.int.s-cloud.net/users/soundcloud:users:123"
+    },
+    "primary_email": "adeline@kth.se",
+    "primary_email_confirmed": true,
+    "groups_count": 0,
+    "links": [
+
+    ],
+    "plan": "Pro Plus",
+    "quota": {
+      "seconds_used": 118041.318
+    },
+    "avatar_url": "https://i1.sndcdn.com/avatars-000186314139-46cthb-large.jpg",
+    "original_avatar_url": "https://i1.sndcdn.com/avatars-000186314139-46cthb-original.jpg",
+    "permalink_url": "http://soundcloud.com/adeline",
+    "description": "All booking at booking@adelinemusic.com Thanks!\n\nAdeline is a producer and vocalist with a unique style that has won her fans across the globe. She’s a diminutive figure punching well above her weight in the DJ booth and studio and always manages to have crowds in the palm of her hand. Brought up in the rolling Swedish countryside, Adeline couldn’t resist the allure of the underground club scene in Stockholm and with countrywoman La Fleur started performing as Housewives. Before long she was presenting on Scandinavia’s biggest radio show as well as working as a curator for SoundCloud.\n\nIn recent years she has spent time in New York, Milan and Berlin and then landed in London before moving to Ibiza where she secured her own residency at Pacha’s Destino venue as well as Tox, playing alongside the likes of AudioFly, DJ Tennis and Blond:ish. Never far from radio, Adeline also hosts her own show on Pulse and has interviewed the likes of Cassy, Ryan Crosson and tINI as a result. With a strong sense of self and an ability to lay down hypnotizing chords and wobbly bass next to magic melodies, Adeline’s own playful vocals are the icing on the cake. Her first releases were snapped up by established labels like Get Physical’s Kindisch and climbed up the Beatport charts, staying in the Top 20 for three weeks. More material followed on LA’s Culprit label and London’s Resonance Records, as did gigs at Sonar and Eastern Electrics and collaborations with No Regular Play’s Greg Paulus. Recently she has spent time crafting new records including a couple of remixes. Now that Adeline has established herself, she continues to confound expectation and is a rightfully respected modern talent.\n",
+    "frozen": false,
+    "favoriting_note": "A new favorite:",
+    "publishing_note": "My new sounds:",
+    "subscriptions": [
+    ],
+    "updated_at": "2016/03/08 12:13:23 +0000",
+    "last_modified": "2016/03/08 12:13:23 +0000",
+    "date_of_birth": "1984/12/01",
+    "gender": "female",
+    "default_license": null,
+    "default_license_simple": "all-rights-reserved",
+    "stealth": false,
+    "locale": "",
+    "comments_count": 10100,
+    "reposts_count": 11000,
+    "verified": false
+  }
+]
