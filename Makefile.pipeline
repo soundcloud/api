@@ -4,8 +4,7 @@
 #
 #####################################################################
 
-# This is the configuration that will be used for local testing
-DEFAULT_CONFIG := default.sh
+DEVELOPMENT_CONFIG := development.sh
 
 # This should be the same as the name in the manifest.json!!!
 APP_NAME := public-api-strangler
@@ -14,7 +13,7 @@ APP_NAME := public-api-strangler
 API_ENTRYPOINT     := api
 API_INSTANCE_COUNT := 100
 
-BAZOOKA_CONFIG := production.enc
+BAZOOKA_CONFIG := production.sh
 BAZOOKA_ZONES := db
 RUNTIME_STACK := jdk-8
 BUILD_STACK := jdk-8-dev
@@ -40,7 +39,7 @@ prepare-package-layout:
 	crun $(BUILD_STACK) 'make sc-debian-layout'
 	gen-wrapper-script --target="bin/$(APP_NAME)" --wrapper=$(API_ENTRYPOINT)
 	gen-postinst-script
-	add-config config/$(DEFAULT_CONFIG)
+	add-config config/$(DEVELOPMENT_CONFIG)
 	add-config config/$(BAZOOKA_CONFIG)
 
 remove-containers:
