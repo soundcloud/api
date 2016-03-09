@@ -1,46 +1,13 @@
 # public-api-strangler
 
 An implementation of the [Strangler
-Pattern](http://martinfowler.com/bliki/StranglerApplication.html) for the
-mothership's Public API.
+Pattern](http://martinfowler.com/bliki/StranglerApplication.html) for Mothership's Public API.
 
-## Team
+## Development
 
-* Team: Core Services <core-services@soundcloud.com>
-* IRC: #coreservices. Slack: #core-services.
-* Telemetry: [Promdash](http://promdash/public-api-strangler)
-* Issue Tracker: [Jira Board](https://soundcloud.atlassian.net/secure/RapidBoard.jspa?rapidView=128).
-
-## How to develop locally
-
-Take a look in [CONTRIBUTING.md](CONTRIBUTING.md). This application uses
-[boot2docker](http://boot2docker.io/) and
-[docker-compose](https://docs.docker.com/compose) to orchestrate its
-dependencies. In order to run the application locally, please make sure to have
-docker and docker-compose installed. Before commiting, make sure to run `make
-precheckin` and that the tests are passing.
-
-Here are some articles on how to get these two installed.
-
-* [Docker compose](https://docs.docker.com/compose/install/)
-* [Docker on MacOSX](https://docs.docker.com/installation/mac/)
-* [Docker on Ubuntu](https://docs.docker.com/installation/ubuntulinux/)
-
-The precheckin tests uses crun, one of the
-[cd-tools](https://github.com/soundcloud/cd-tools) make sure to have this
-installed locally. Check the installation documentation in the [project's
-README](https://github.com/soundcloud/cd-tools#installation).
-
-### Useful commands while making changes to public-api-strangler
-
-```
-while (!done) {
-  // hack hack hack
-  make -f Makefile.pipeline package && make run
-  curl "$(docker-ip):5000/my-endpoint"
-  docker logs -f publicapistrangler_publicapistrangler_1
-}
-```
+* `make precheckin` – run all the tests.
+* `make unit-test` – run just the unit tests.
+* `make interactive` – start an SBT console.
 
 ## Contributing
 
@@ -48,17 +15,28 @@ Please see
 [CONTRIBUTING.md](https://github.com/soundcloud/public-api-strangler/blob/master/CONTRIBUTING.md#making-a-change)
 for guidelines for outside contributors.
 
-## Search leaving mothership
+#### Useful commands while making changes
+
+```
+// hack hack hack
+make -f Makefile.pipeline package && make run
+curl "$(docker-ip):5000/my-endpoint"
+docker logs -f publicapistrangler_publicapistrangler_1
+```
+
+## Notes
+
+#### Search leaving Mothership
 
 Routing of search requests is controlled via rollout flags. See
 [Search Wiki](https://github.com/soundcloud/search/wiki/Search-Firefighting#search-in-public-api-strangler-is-misbehaving)
 for instructions on how to change rollout percentage values.
 
-## Rate limiting whitelist
+#### Rate limiting whitelist
 
-The ratelimiting feature makes use of a whitelist of client application URNs
+The rate limiting feature makes use of a whitelist of client application URNs
 that will never be rate-limited. The source of truth for this whitelist is the
-ZooKeeper cluster and is managed by the
+Zookeeper cluster and is managed by the
 [Rate Limiting Service](https://github.com/soundcloud/ratelimiting/).
 
 ## FAQ
