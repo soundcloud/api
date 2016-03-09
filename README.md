@@ -1,4 +1,4 @@
-# Public-API Strangler
+# public-api-strangler
 
 An implementation of the [Strangler
 Pattern](http://martinfowler.com/bliki/StranglerApplication.html) for the
@@ -33,27 +33,20 @@ README](https://github.com/soundcloud/cd-tools#installation).
 
 ### Useful commands while making changes to public-api-strangler
 
-* `while (!done) {`
-  * `// hack hack hack`
-  * `make -f Makefile.pipeline package && make run`
-  * `curl "$(docker-ip):5000/my-endpoint"`
-  * `docker logs -f publicapistrangler_publicapistrangler_1`
-* `}`
+```
+while (!done) {
+  // hack hack hack
+  make -f Makefile.pipeline package && make run
+  curl "$(docker-ip):5000/my-endpoint"
+  docker logs -f publicapistrangler_publicapistrangler_1
+}
+```
 
-## How to deploy
-
-Use cd to deploy the application. For the master branch and deployment
-pipeline:
-[https://ci.dev.s-cloud.net/go/tab/pipeline/history/public-api-strangler](https://ci.dev.s-cloud.net/go/tab/pipeline/history/public-api-strangler)
+## Contributing
 
 Please see
 [CONTRIBUTING.md](https://github.com/soundcloud/public-api-strangler/blob/master/CONTRIBUTING.md#making-a-change)
 for guidelines for outside contributors.
-
-## CI
-
-For the master branch and deployment pipeline:
-[https://ci.dev.s-cloud.net/go/tab/pipeline/history/public-api-strangler](https://ci.dev.s-cloud.net/go/tab/pipeline/history/public-api-strangler).
 
 ## Search leaving mothership
 
@@ -70,7 +63,7 @@ ZooKeeper cluster and is managed by the
 
 ## FAQ
 
-### What should I read before asking questions?
+#### What should I read before asking questions?
 
 That's a great question! Try these first:
 
@@ -78,7 +71,7 @@ That's a great question! Try these first:
 * [Legacy Application Strangulation : Case Studies, by Paul Hammant](http://paulhammant.com/2013/07/14/legacy-application-strangulation-case-studies/)
 * [An Introduction to Finagle](http://twitter.github.io/scala_school/finagle.html)
 
-### Is this going to replace the current public api?
+#### Is this going to replace the current public API?
 
 Yes and no. This will be the first service hit when someone invokes
 `api.soundcloud.com`, but it doesn't aim to replace the
@@ -92,14 +85,14 @@ them to this service immediately, new services and huge enough refactorings of
 old services should consider this system, and not the mothership, as its main
 way out to the internet.
 
-### Will this become the new public API?
+#### Will this become the new public API?
 
 No. If you are interested in what is coming for the API, please reach
 out to the platform team:
 [platform@soundcloud.com](platform@soundcloud.com). This is just a
 smart proxy to the old API.
 
-### Besides enablign the Strangler Pattern, what are the benefits of this layer?
+#### Besides enabling the Strangler Pattern, what are the benefits of this layer?
 
 Several small features, like rate-limiting and other security checks,
 are implemented at this layer, without having to touch the mothership
