@@ -1,6 +1,7 @@
 package com.soundcloud.publicApiStrangler.controller
 
 import com.soundcloud.bff.finagle.{Request, ResponseBuilder}
+import com.soundcloud.bff.security.RequestForAuthenticator
 import com.soundcloud.bff.web.{BffInjectionBasedController, UserAuthentication}
 import com.soundcloud.jvmkit.UserSession
 import com.soundcloud.publicApiStrangler.mapper.trackstreams.{TrackStreamJsonResponseMapper, TrackStreamRedirectResponseMapper, TrackStreamResponseMapper}
@@ -28,6 +29,7 @@ class TrackStreamsController(
   get("/tracks/:trackId/stream.json")(handleStreamRequest(_, trackStreamUrlToRedirectMapper))
 
   private def handleStreamRequest(request: Request, mapper: TrackStreamResponseMapper): Future[ResponseBuilder] = {
+
     userAuthentication.withUserSession(request) {
       (session: UserSession) =>
         trackStreamHandler.handle(request, session, mapper)
