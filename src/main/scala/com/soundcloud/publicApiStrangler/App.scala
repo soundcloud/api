@@ -258,9 +258,12 @@ object App
   )
   private val limitOffset = 200
 
+  private val cookieRemovalFilterEnabled = () => rolloutClient.isActive(BasicRolloutFeature("remove_cookie_header"))
+
   override lazy val additionalFilters = List(
     new AcceptOnlyJsonRequestFilter,
     new OffsetLimitRequestFilter(limitOffsetEnabled, limitOffsetPaths, limitOffset),
+    new CookieHeaderRemovalFilter(cookieRemovalFilterEnabled),
     new ContentAuthorizationFilter(authorizeContent),
     rateLimitingFacade.filter,
     new DefaultResponseHeadersFilter,
