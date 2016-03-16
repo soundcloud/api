@@ -16,12 +16,19 @@ case class TrackPolicyApplicator(clientWhitelist: Set[Urn]) {
     visitor.apply {
       case (urn, track) =>
         val contentAuth = authorizations(urn)
-
-        if (contentAuth.getPolicy == ContentPolicy.BLOCK)
+        if (blockTrack(contentAuth, session))
           None
         else
           potentiallyReplaceWaveform(urn, track, contentAuth, waveformActions(urn)).map(potentiallyAddContentAuthorization(_, contentAuth, session))
     }
+
+  private def blockTrack(contentAuth: ContentAuthorization, userSession: UserSession): Boolean = {
+    contentAuth.getPolicy match {
+      case ContentPolicy.MONETIZE => !userAgentIsWhitelisted(userSession)
+      case ContentPolicy.BLOCK => true
+      case _ => false
+    }
+  }
 
   private def policiesByUrn(rules: Seq[ContentAuthorization]): Map[Urn, ContentAuthorization] =
     rules.map(rule => rule.getUrn -> rule).toMap
@@ -38,7 +45,7 @@ case class TrackPolicyApplicator(clientWhitelist: Set[Urn]) {
   }
 
   private def userAgentIsWhitelisted(userSession: UserSession) = {
-    clientWhitelist.contains(userSession.getAgent())
+    clientWhitelist.contains(userSession.getAgent)
   }
 
   private def potentiallyReplaceWaveform(urn: Urn, track: Track, contentAuth: ContentAuthorization, waveformAction: TrackWaveformAction): Option[Track] = {
