@@ -6,7 +6,7 @@ import com.soundcloud.jvmkit.policies.{ContentAuthorization, ContentPolicy, Mone
 import com.soundcloud.publicApiStrangler.authorization.TrackWaveformActionStatus._
 import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures
 import com.soundcloud.scalakit.{Url, Urn, UserSession}
-import play.api.libs.json.{JsString, JsObject, JsValue}
+import play.api.libs.json.{JsObject, JsValue}
 
 class TrackPolicyApplicatorSpec extends UnitSpecification with Fixtures {
 
@@ -59,27 +59,27 @@ class TrackPolicyApplicatorSpec extends UnitSpecification with Fixtures {
     }
 
     "all tracks has 'policy' and 'monetization_model' for whitelisted user agent" in new EverythingAuthorized {
-      session.getAgent() returns whitelistedClientUrn
+      session.getAgent returns whitelistedClientUrn
 
       tracksWithPoliciesApplied.as[List[JsObject]].filter(e => !e.keys.contains("policy") || !e.keys.contains("monetization_model")) must beEmpty
     }
 
     "no tracks has 'policy' and 'monetization_model' for non-whitelisted user agent" in new EverythingAuthorized {
-      session.getAgent() returns nonWhitelistedClientUrn
-      
+      session.getAgent returns nonWhitelistedClientUrn
+
       tracksWithPoliciesApplied.as[List[JsObject]].filter(e => e.keys.contains("policy") || e.keys.contains("monetization_model")) must beEmpty
     }
 
     trait PartiallyAuthorized extends Context {
-      val authorized = urns.take(2)
+      val allowedTrackUrn = Urn("soundcloud:tracks:49438146")
+      val monetizedTrackUrn = Urn("soundcloud:tracks:49437906")
+      val blockedTrackUrn = Urn("soundcloud:tracks:48031525")
 
-      def rules =
-        for (urn <- urns) yield {
-          if (authorized.contains(urn))
-            new ContentAuthorization(urn, ContentPolicy.ALLOW, Reason.GEO, MonetizationModel.NOT_APPLICABLE)
-          else
-            new ContentAuthorization(urn, ContentPolicy.BLOCK, Reason.GEO, MonetizationModel.NOT_APPLICABLE)
-        }
+      def rules = List(
+        new ContentAuthorization(allowedTrackUrn, ContentPolicy.ALLOW, Reason.GEO, MonetizationModel.NOT_APPLICABLE),
+        new ContentAuthorization(monetizedTrackUrn, ContentPolicy.MONETIZE, Reason.GEO, MonetizationModel.SUB_HIGH_TIER),
+        new ContentAuthorization(blockedTrackUrn, ContentPolicy.BLOCK, Reason.GEO, MonetizationModel.NOT_APPLICABLE)
+      )
 
       def waveformActions =
         for (urn <- urns) yield {
@@ -87,10 +87,20 @@ class TrackPolicyApplicatorSpec extends UnitSpecification with Fixtures {
         }
     }
 
-    "some authorized tracks" in new PartiallyAuthorized {
-      authorizedTrackIds mustEqual authorized.map(_.getIdentifier.toInt)
-      waveformsAndDurations ==== List(("https://w1.sndcdn.com/RhJ436DPf2Vx_m.png", 370348),
+    "returns allowed and monietized tracks for whitelisted clients" in new PartiallyAuthorized {
+      session.getAgent returns whitelistedClientUrn
+
+      authorizedTrackIds mustEqual List(allowedTrackUrn, monetizedTrackUrn).map(_.getIdentifier.toInt)
+      waveformsAndDurations ==== List(
+        ("https://w1.sndcdn.com/RhJ436DPf2Vx_m.png", 370348),
         ("https://w1.sndcdn.com/DWpqP6aFqglm_m.png", 68127))
+    }
+
+    "returns only allowed tracks for non-whitelisted clients" in new PartiallyAuthorized {
+      session.getAgent returns nonWhitelistedClientUrn
+
+      authorizedTrackIds mustEqual List(allowedTrackUrn).map(_.getIdentifier.toInt)
+      waveformsAndDurations ==== List(("https://w1.sndcdn.com/RhJ436DPf2Vx_m.png", 370348))
     }
 
     trait SomeAreSnip extends Context {
@@ -115,7 +125,8 @@ class TrackPolicyApplicatorSpec extends UnitSpecification with Fixtures {
 
     "some tracks have content policy SNIP" in new SomeAreSnip {
       authorizedTrackIds ==== extractIds(tracksArray)
-      waveformsAndDurations ==== List(("http://preview/pngnurl/noDuration", 370348),
+      waveformsAndDurations ==== List(
+        ("http://preview/pngnurl/noDuration", 370348),
         ("https://w1.sndcdn.com/DWpqP6aFqglm_m.png", 68127),
         ("http://preview/pngnurl/withDuration", 90000))
     }
