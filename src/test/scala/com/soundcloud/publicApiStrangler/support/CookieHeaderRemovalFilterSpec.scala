@@ -1,11 +1,11 @@
 package com.soundcloud.publicApiStrangler.support
 
+import com.soundcloud.bff.finagle.ResponseBuilder
 import com.soundcloud.scalakit.finagle.http.RouterResponse
 import com.soundcloud.scalakit.test.{UnitSpecification, VerifiedMocks}
 import com.twitter.finagle.Service
-import com.twitter.finagle.http.{Status, Response, Request}
+import com.twitter.finagle.http.{Request, Response}
 import com.twitter.util.{Await, Future}
-import com.soundcloud.bff.finagle.ResponseBuilder
 import play.api.libs.json.{JsObject, JsString, Json}
 
 class CookieHeaderRemovalFilterSpec extends UnitSpecification {
@@ -23,20 +23,9 @@ class CookieHeaderRemovalFilterSpec extends UnitSpecification {
 
   trait Context extends VerifiedMocks {
     val next = new CookieCheckingService
-    val enabled: () => Future[Boolean]
-
     val request = Request("/tracks/123/stream.json")
     request.headerMap.set("Cookie", "sc_anonymous_id=111111-222222-333333-444444;")
-
-    lazy val filter = new CookieHeaderRemovalFilter(enabled)
-  }
-
-  trait EnabledContext extends Context {
-    val enabled = () => Future.True
-  }
-
-  trait DisabledContext extends Context {
-    val enabled = () => Future.False
+    lazy val filter = new CookieHeaderRemovalFilter
   }
 
   private def cookieFor(response: Response): Option[String] = {
@@ -44,17 +33,8 @@ class CookieHeaderRemovalFilterSpec extends UnitSpecification {
     (json \ "Cookie").asOpt[String]
   }
 
-  "when enabled" >> {
-    "it removes the Cookie header" in new EnabledContext {
-      val cookie = cookieFor(Await.result(filter(request, next)))
-      cookie must beNone
-    }
-  }
-
-  "when disabled" >> {
-    "it leaves the Cookie header intact" in new DisabledContext {
-      val cookie = cookieFor(Await.result(filter(request, next)))
-      cookie must beSome("sc_anonymous_id=111111-222222-333333-444444;")
-    }
+  "it removes the Cookie header" in new Context {
+    val cookie = cookieFor(Await.result(filter(request, next)))
+    cookie must beNone
   }
 }
