@@ -1,11 +1,11 @@
 package com.soundcloud.publicApiStrangler.support
 
+import com.soundcloud.bff.finagle.ResponseBuilder
 import com.soundcloud.scalakit.finagle.http.RouterResponse
 import com.soundcloud.scalakit.test.{UnitSpecification, VerifiedMocks}
 import com.twitter.finagle.Service
-import com.twitter.finagle.http.{Status, Response, Request}
+import com.twitter.finagle.http.{Request, Response}
 import com.twitter.util.{Await, Future}
-import com.soundcloud.bff.finagle.ResponseBuilder
 import play.api.libs.json.{JsObject, JsString, Json}
 
 class CookieHeaderRemovalFilterSpec extends UnitSpecification {
@@ -25,7 +25,7 @@ class CookieHeaderRemovalFilterSpec extends UnitSpecification {
     val next = new CookieCheckingService
     val request = Request("/tracks/123/stream.json")
     request.headerMap.set("Cookie", "sc_anonymous_id=111111-222222-333333-444444;")
-    lazy val filter = new CookieHeaderRemovalFilter(enabled)
+    lazy val filter = new CookieHeaderRemovalFilter
   }
 
   private def cookieFor(response: Response): Option[String] = {
