@@ -123,7 +123,7 @@ object App
     val trackStreamUrlToJsonResponseMapper = new TrackStreamJsonResponseMapper
     val trackStreamUrlToRedirectMapper = new TrackStreamRedirectResponseMapper
 
-    val mediaUrlsRepository = new MediaUrlsRepository(okidokiService, mediaService)
+    val mediaUrlsRepository = new MediaUrlsRepository(mediaService)
     val trackStreamSnipHandler = new TrackStreamHandler(mothershipDispatcher, contentAuthorizationRules, mediaUrlsRepository)
     new TrackStreamsController(
       userAuthentication,
