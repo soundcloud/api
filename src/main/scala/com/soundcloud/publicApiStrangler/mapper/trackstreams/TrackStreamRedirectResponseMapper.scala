@@ -25,6 +25,9 @@ class TrackStreamRedirectResponseMapper extends TrackStreamResponseMapper {
   private def buildResponse(url:MediaUrl) : ResponseBuilder = {
     val content = Json.obj("status" -> "302 - Found", "location" -> url.url.s)
     new ResponseBuilder().typedJson(content).header("Location", url.url.s).status(302)
+
   }
+
+  new ResponseBuilder().status(200)
 
 }
