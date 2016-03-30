@@ -7,7 +7,7 @@ import com.soundcloud.jvmkit.policies.{Reason, ContentAuthorization, ContentPoli
 import com.soundcloud.jvmkit.{Urn, UserSession}
 import com.soundcloud.publicApiStrangler.authorization.ContentAuthorizationRules
 import com.soundcloud.publicApiStrangler.mapper.trackstreams.TrackStreamResponseMapper
-import com.twitter.finagle.http.{HeaderMap, Status}
+import com.twitter.finagle.http.{Method, HeaderMap, Status}
 import com.twitter.util.{Await, Future}
 import org.jboss.netty.handler.codec.http.HttpResponseStatus
 import play.api.libs.json.Json
@@ -21,6 +21,9 @@ class TrackStreamHandlerSpec extends UnitSpecification {
       val mediaUrlsRepository = mock[MediaUrlsRepository]
       val handler = new TrackStreamHandler(mothershipDispatcher, contentAuthRules, mediaUrlsRepository)
       val request = mock[Request]
+
+      request.method returns Method.Get
+
       val userSession = mock[UserSession]
       val mapper = mock[TrackStreamResponseMapper]
       val contentAuth = mock[ContentAuthorization]
@@ -106,7 +109,31 @@ class TrackStreamHandlerSpec extends UnitSpecification {
       there was one(contentAuthRules).fetchRules(userSession, Seq(trackUrn))
     }
 
-    "return MediaUrlsRepository response in case pubapi response is successful and content policy is SNIP" in new Success {
+    "HEAD return MediaUrlsRepository response in case pubapi response is successful and content policy is SNIP" in new Success {
+      val successResponse = responseBuilder(200)
+      mothershipDispatcher.dispatch(request) returns successResponse
+      contentAuth.getPolicy returns ContentPolicy.SNIP
+
+      val mediaUrl1 = mock[MediaUrl]
+      val mediaUrls = Future.value(Set(mediaUrl1))
+      val mapperResponse = Future.value(new ResponseBuilder().status(200).header("Content-Type", "application/json"))
+      mediaUrlsRepository.byUrn(userSession, trackUrn, contentAuth) returns mediaUrls
+      mapper.map(mediaUrls) returns mapperResponse
+
+      request.headerMap returns HeaderMap(("x-forwarded-proto" -> "http"))
+
+      request.method returns Method.Head
+
+      val responseBuilder = Await.result(handler.handle(request, userSession, mapper))
+
+      // Must have an empty response body.
+      val response = responseBuilder.build
+      response.headerMap.get("Content-Length") ==== Some("0")
+      response.headerMap.get("Content-Type") must beNone
+      response.contentString ==== ""
+    }
+
+    "GET return MediaUrlsRepository response in case pubapi response is successful and content policy is SNIP" in new Success {
       val successResponse = responseBuilder(200)
       mothershipDispatcher.dispatch(request) returns successResponse
       contentAuth.getPolicy returns ContentPolicy.SNIP
@@ -125,7 +152,33 @@ class TrackStreamHandlerSpec extends UnitSpecification {
       there was one(contentAuthRules).fetchRules(userSession, Seq(trackUrn))
     }
 
-    "return https MediaUrlsRepository response in case pubapi response is successful and content policy is SNIP" in new Success {
+    "HEAD return https MediaUrlsRepository response in case pubapi response is successful and content policy is SNIP" in new Success {
+      request.headerMap returns HeaderMap(("x-forwarded-proto" -> "https"))
+      val successResponse = responseBuilder(200)
+      mothershipDispatcher.dispatch(request) returns successResponse
+      contentAuth.getPolicy returns ContentPolicy.SNIP
+
+      val mediaUrl1 = mock[MediaUrl]
+      val mediaUrls = Future.value(Set(mediaUrl1))
+      val mapperResponse = Future.value(new ResponseBuilder().status(200).header("Content-Type", "application/json"))
+      mediaUrlsRepository.byUrn(userSession, trackUrn, contentAuth, true) returns mediaUrls
+      mapper.map(mediaUrls) returns mapperResponse
+
+      request.method returns Method.Head
+
+      val responseBuilder = Await.result(handler.handle(request, userSession, mapper))
+
+      // Must have an empty response body.
+      val response = responseBuilder.build
+      response.headerMap.get("Content-Length") ==== Some("0")
+      response.headerMap.get("Content-Type") must beNone
+      response.contentString ==== ""
+
+      there was one(mediaUrlsRepository).byUrn(userSession, trackUrn, contentAuth, true)
+      there was one(contentAuthRules).fetchRules(userSession, Seq(trackUrn))
+    }
+
+    "GET return https MediaUrlsRepository response in case pubapi response is successful and content policy is SNIP" in new Success {
       request.headerMap returns HeaderMap(("x-forwarded-proto" -> "https"))
       val successResponse = responseBuilder(200)
       mothershipDispatcher.dispatch(request) returns successResponse
@@ -144,7 +197,31 @@ class TrackStreamHandlerSpec extends UnitSpecification {
       there was one(contentAuthRules).fetchRules(userSession, Seq(trackUrn))
     }
 
-    "return 401 - Unauthorized when content policy is BLOCK and anonymous user" in new Success {
+    "HEAD return 401 - Unauthorized when content policy is BLOCK and anonymous user" in new Success {
+      val successResponse = responseBuilder(200)
+      mothershipDispatcher.dispatch(request) returns successResponse
+      contentAuth.getPolicy returns ContentPolicy.BLOCK
+      contentAuth.getReason returns Reason.GEO
+      userSession.isAnonymous returns true
+
+      request.method returns Method.Head
+
+      val response = Await.result(handler.handle(request, userSession, mapper)).build
+      response.status ==== Status.Unauthorized
+
+      response.headerMap.get("Status") ==== Some("401 Unauthorized")
+      response.headerMap.get("Date") must not be None
+
+      // Must have an empty response body.
+      response.headerMap.get("Content-Type") must beNone
+      response.headerMap.get("Content-Length") ==== Some("0")
+      response.contentString ==== ""
+
+      there was noCallsTo(mediaUrlsRepository)
+      there was one(contentAuthRules).fetchRules(userSession, Seq(trackUrn))
+    }
+
+    "GET return 401 - Unauthorized when content policy is BLOCK and anonymous user" in new Success {
       val successResponse = responseBuilder(200)
       mothershipDispatcher.dispatch(request) returns successResponse
       contentAuth.getPolicy returns ContentPolicy.BLOCK
@@ -164,7 +241,31 @@ class TrackStreamHandlerSpec extends UnitSpecification {
       there was one(contentAuthRules).fetchRules(userSession, Seq(trackUrn))
     }
 
-    "return 403 - Forbidden when content policy is BLOCK and logged in user" in new Success {
+    "HEAD return 403 - Forbidden when content policy is BLOCK and logged in user" in new Success {
+      val successResponse = responseBuilder(200)
+      mothershipDispatcher.dispatch(request) returns successResponse
+      contentAuth.getPolicy returns ContentPolicy.BLOCK
+      contentAuth.getReason returns Reason.UNKNOWN
+      userSession.isAnonymous returns false
+
+      request.method returns Method.Head
+
+      val response = Await.result(handler.handle(request, userSession, mapper)).build
+      response.status ==== Status.Forbidden
+
+      response.headerMap.get("Status") ==== Some("403 Forbidden")
+      response.headerMap.get("Date") must not be None
+
+      // Must have an empty response body.
+      response.headerMap.get("Content-Type") must beNone
+      response.headerMap.get("Content-Length") ==== Some("0")
+      response.contentString ==== ""
+
+      there was noCallsTo(mediaUrlsRepository)
+      there was one(contentAuthRules).fetchRules(userSession, Seq(trackUrn))
+    }
+
+    "GET return 403 - Forbidden when content policy is BLOCK and logged in user" in new Success {
       val successResponse = responseBuilder(200)
       mothershipDispatcher.dispatch(request) returns successResponse
       contentAuth.getPolicy returns ContentPolicy.BLOCK
