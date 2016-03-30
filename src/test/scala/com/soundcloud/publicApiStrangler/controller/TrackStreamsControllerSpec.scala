@@ -47,6 +47,18 @@ class TrackStreamsControllerSpec extends InjectionBasedControllerSpecification {
       response.code ==== 200
       there was one(trackStreamSnipHandlerMock).handle(any[Request], any[UserSession], any[TrackStreamRedirectResponseMapper])
     }
+
+    def forwardHeadWithRedirectResponseMapper(controller: TrackStreamsController, path: String) = {
+      val expectedResponseBuilder = new ResponseBuilder().ok
+
+      trackStreamSnipHandlerMock.handle(any[Request], any[UserSession], org.mockito.Matchers.eq(trackStreamUrlToRedirectMapperMock))
+        .returns(Future.value(expectedResponseBuilder))
+
+      val response = head(controller, path)
+
+      response.code ==== 200
+      there was one(trackStreamSnipHandlerMock).handle(any[Request], any[UserSession], any[TrackStreamRedirectResponseMapper])
+    }
   }
 
   "forward request to /tracks/:trackId/streams to handler that knows how to deal with snip content type and return response unchanged." in new Context {
@@ -71,5 +83,21 @@ class TrackStreamsControllerSpec extends InjectionBasedControllerSpecification {
 
   "forward request to /tracks/:trackId/stream.json to handler that knows how to deal with snip content type and return response unchanged." in new Context {
     forwardWithRedirectResponseMapper(controller, "/tracks/5/stream.json")
+  }
+
+  "forward HEAD request to /tracks/:trackId/stream to handler that knows how to deal with snip content type and return response unchanged." in new Context {
+    forwardHeadWithRedirectResponseMapper(controller, "/tracks/5/stream")
+  }
+
+  "forward HEAD request to /tracks/:trackId/stream.json to handler that knows how to deal with snip content type and return response unchanged." in new Context {
+    forwardHeadWithRedirectResponseMapper(controller, "/tracks/5/stream.json")
+  }
+
+  "forward HEAD request to /tracks/:trackId/stream to handler that knows how to deal with snip content type and return response unchanged." in new Context {
+    forwardHeadWithRedirectResponseMapper(controller, "/tracks/5/streams")
+  }
+
+  "forward HEAD request to /tracks/:trackId/stream.json to handler that knows how to deal with snip content type and return response unchanged." in new Context {
+    forwardHeadWithRedirectResponseMapper(controller, "/tracks/5/streams.json")
   }
 }
