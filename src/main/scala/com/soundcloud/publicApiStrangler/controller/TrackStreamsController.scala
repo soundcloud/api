@@ -23,14 +23,18 @@ class TrackStreamsController(
 
   get("/tracks/:trackId/streams")(handleStreamRequest(_, trackStreamUrlToJsonResponseMapper))
   get("/tracks/:trackId/streams.json")(handleStreamRequest(_, trackStreamUrlToJsonResponseMapper))
+  head("/tracks/:trackId/streams")(handleStreamRequest(_, trackStreamUrlToJsonResponseMapper))
+  head("/tracks/:trackId/streams.json")(handleStreamRequest(_, trackStreamUrlToJsonResponseMapper))
+
   get("/i1/tracks/:trackId/streams")(handleStreamRequest(_, trackStreamUrlToJsonResponseMapper))
   get("/i1/tracks/:trackId/streams.json")(handleStreamRequest(_, trackStreamUrlToJsonResponseMapper))
+  head("/i1/tracks/:trackId/streams")(handleStreamRequest(_, trackStreamUrlToJsonResponseMapper))
+  head("/i1/tracks/:trackId/streams.json")(handleStreamRequest(_, trackStreamUrlToJsonResponseMapper))
 
   get("/tracks/:trackId/stream")(handleStreamRequest(_, trackStreamUrlToRedirectMapper))
   get("/tracks/:trackId/stream.json")(handleStreamRequest(_, trackStreamUrlToRedirectMapper))
-
-//  head("/tracks/:trackId/stream")(handleStreamRequest(_, trackStreamUrlToRedirectMapper))
-//  head("/tracks/:trackId/stream.json")(handleStreamRequest(_, trackStreamUrlToRedirectMapper))
+  head("/tracks/:trackId/stream")(handleStreamRequest(_, trackStreamUrlToRedirectMapper))
+  head("/tracks/:trackId/stream.json")(handleStreamRequest(_, trackStreamUrlToRedirectMapper))
 
   private def handleStreamRequest(request: Request, mapper: TrackStreamResponseMapper): Future[ResponseBuilder] = {
 
