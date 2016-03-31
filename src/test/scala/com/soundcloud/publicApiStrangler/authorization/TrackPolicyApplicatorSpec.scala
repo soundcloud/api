@@ -87,7 +87,7 @@ class TrackPolicyApplicatorSpec extends UnitSpecification with Fixtures {
         }
     }
 
-    "returns allowed and monietized tracks for whitelisted clients" in new PartiallyAuthorized {
+    "returns allowed and monetized tracks for whitelisted clients" in new PartiallyAuthorized {
       session.getAgent returns whitelistedClientUrn
 
       authorizedTrackIds mustEqual List(allowedTrackUrn, monetizedTrackUrn).map(_.getIdentifier.toInt)
@@ -101,6 +101,35 @@ class TrackPolicyApplicatorSpec extends UnitSpecification with Fixtures {
 
       authorizedTrackIds mustEqual List(allowedTrackUrn).map(_.getIdentifier.toInt)
       waveformsAndDurations ==== List(("https://w1.sndcdn.com/RhJ436DPf2Vx_m.png", 370348))
+    }
+
+    trait AdSupported extends Context {
+      val allowedTrackUrn = Urn("soundcloud:tracks:49438146")
+      val monetizedHighTierTrackUrn = Urn("soundcloud:tracks:49437906")
+      val monetizedAdSupportedTrackUrn = Urn("soundcloud:tracks:48031525")
+
+      def rules = List(
+        new ContentAuthorization(allowedTrackUrn, ContentPolicy.ALLOW, Reason.GEO, MonetizationModel.NOT_APPLICABLE),
+        new ContentAuthorization(monetizedHighTierTrackUrn, ContentPolicy.MONETIZE, Reason.GEO, MonetizationModel.SUB_HIGH_TIER),
+        new ContentAuthorization(monetizedAdSupportedTrackUrn, ContentPolicy.MONETIZE, Reason.GEO, MonetizationModel.AD_SUPPORTED)
+      )
+
+      def waveformActions =
+        for (urn <- urns) yield {
+          TrackWaveformAction(urn, DoesNotNeedModification, None)
+        }
+    }
+
+    "returns allowed, tiered and ad-supported tracks for whitelisted clients" in new AdSupported {
+      session.getAgent returns whitelistedClientUrn
+
+      authorizedTrackIds mustEqual List(allowedTrackUrn, monetizedHighTierTrackUrn, monetizedAdSupportedTrackUrn).map(_.getIdentifier.toInt)
+    }
+
+    "returns only allowed and ad-supported tracks for non-whitelisted clients" in new AdSupported {
+      session.getAgent returns nonWhitelistedClientUrn
+
+      authorizedTrackIds mustEqual List(allowedTrackUrn, monetizedAdSupportedTrackUrn).map(_.getIdentifier.toInt)
     }
 
     trait SomeAreSnip extends Context {
