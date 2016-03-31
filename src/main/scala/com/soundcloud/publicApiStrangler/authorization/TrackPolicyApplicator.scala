@@ -1,6 +1,6 @@
 package com.soundcloud.publicApiStrangler.authorization
 
-import com.soundcloud.jvmkit.policies.{ContentAuthorization, ContentPolicy}
+import com.soundcloud.jvmkit.policies.{ContentAuthorization, ContentPolicy, MonetizationModel}
 import com.soundcloud.publicApiStrangler.authorization.TrackWaveformActionStatus._
 import com.soundcloud.scalakit.{Urn, UserSession}
 import play.api.libs.json.{JsObject, JsValue, Json}
@@ -16,17 +16,20 @@ case class TrackPolicyApplicator(clientWhitelist: Set[Urn]) {
     visitor.apply {
       case (urn, track) =>
         val contentAuth = authorizations(urn)
-        if (blockTrack(contentAuth, session))
-          None
-        else
+        if (allowTrack(contentAuth, session))
           potentiallyReplaceWaveform(urn, track, contentAuth, waveformActions(urn)).map(potentiallyAddContentAuthorization(_, contentAuth, session))
+        else
+          None
     }
 
-  private def blockTrack(contentAuth: ContentAuthorization, userSession: UserSession): Boolean = {
+  private def allowTrack(contentAuth: ContentAuthorization, userSession: UserSession): Boolean = {
     contentAuth.getPolicy match {
-      case ContentPolicy.MONETIZE => !userAgentIsWhitelisted(userSession)
-      case ContentPolicy.BLOCK => true
-      case _ => false
+      case ContentPolicy.BLOCK => false
+      case ContentPolicy.MONETIZE => contentAuth.getMonetizationModel match {
+        case MonetizationModel.SUB_HIGH_TIER | MonetizationModel.SUB_MID_TIER => userAgentIsWhitelisted(userSession)
+        case _ => true
+      }
+      case _ => true
     }
   }
 
@@ -50,7 +53,7 @@ case class TrackPolicyApplicator(clientWhitelist: Set[Urn]) {
 
   private def potentiallyReplaceWaveform(urn: Urn, track: Track, contentAuth: ContentAuthorization, waveformAction: TrackWaveformAction): Option[Track] = {
     waveformAction.status match {
-      case NeedsModification       => replaceWaveformAndDuration(track, waveformAction)
+      case NeedsModification => replaceWaveformAndDuration(track, waveformAction)
       case DoesNotNeedModification => Some(track)
     }
   }
@@ -58,7 +61,7 @@ case class TrackPolicyApplicator(clientWhitelist: Set[Urn]) {
   private def replaceWaveformAndDuration(track: Track, waveformAction: TrackWaveformAction): Option[Track] = {
     val originalTrack = track.json.as[JsObject]
     waveformAction.url.flatMap(_.durationMs) match {
-      case None           => waveformAction.url.map(url => new Track(replaceWaveform(originalTrack, url.pngUrl.s)))
+      case None => waveformAction.url.map(url => new Track(replaceWaveform(originalTrack, url.pngUrl.s)))
       case Some(duration) => waveformAction.url.map(url => new Track(replaceWaveformAndDuration(originalTrack, url.pngUrl.s, duration)))
     }
   }
