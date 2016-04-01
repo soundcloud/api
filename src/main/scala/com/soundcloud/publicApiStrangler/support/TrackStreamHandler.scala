@@ -57,7 +57,7 @@ class TrackStreamHandler(mothershipDispatcher: DispatchToMothershipHandler,
 
   private def replaceStream(request: Request, session: UserSession, trackUrn: Urn, contentAuth: ContentAuthorization, mapper: TrackStreamResponseMapper, useHttps: Boolean = false): Future[ResponseBuilder] = {
     val mediaUrls = mediaUrlsRepository.byUrn(session, trackUrn, contentAuth, useHttps)
-    val isHeadRequest = request.method != Method.Head
+    val isHeadRequest = request.method == Method.Head
     mapper.map(mediaUrls, isHeadRequest)
   }
 

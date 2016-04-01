@@ -6,7 +6,7 @@ import com.twitter.util.Future
 import play.api.libs.json.Json
 
 /**
- * Maps track stream Media Urls to our expected json response.
+ * Maps track stream media URLs to our expected JSON response.
  */
 class TrackStreamJsonResponseMapper extends TrackStreamResponseMapper {
 

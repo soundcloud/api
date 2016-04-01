@@ -20,7 +20,7 @@ class TrackStreamRedirectResponseMapperSpec extends UnitSpecification {
   "TrackStreamRedirectResponseMapper" should {
 
     "Return redirect response in case expected url is provided" in new Context {
-      val responseBuilder = Await.result(mapper.map(Future.value(Set(httpMediaUrl))))
+      val responseBuilder = Await.result(mapper.map(Future.value(Set(httpMediaUrl)), false))
       val response = responseBuilder.build
 
       response.getStatusCode() mustEqual 302
@@ -29,7 +29,7 @@ class TrackStreamRedirectResponseMapperSpec extends UnitSpecification {
     }
 
     "Filter out not needed urls in case multiple are provided" in new Context {
-      val responseBuilder = Await.result(mapper.map(Future.value(Set(hlsMediaUrl, previewMediaUrl, httpMediaUrl))))
+      val responseBuilder = Await.result(mapper.map(Future.value(Set(hlsMediaUrl, previewMediaUrl, httpMediaUrl)), false))
       val response = responseBuilder.build
 
       response.getStatusCode() mustEqual 302
@@ -38,7 +38,7 @@ class TrackStreamRedirectResponseMapperSpec extends UnitSpecification {
     }
 
     "Return not found response in case expected url is not returned" in new Context {
-      val responseBuilder = Await.result(mapper.map(Future.value(Set(hlsMediaUrl, previewMediaUrl))))
+      val responseBuilder = Await.result(mapper.map(Future.value(Set(hlsMediaUrl, previewMediaUrl)), false))
       val response = responseBuilder.build
 
       response.getStatusCode() mustEqual 404
@@ -47,5 +47,5 @@ class TrackStreamRedirectResponseMapperSpec extends UnitSpecification {
 
   }
 
-
+  // TODO HEAD requests
 }

@@ -20,21 +20,40 @@ class TrackStreamJsonResponseMapperSpec extends UnitSpecification {
 
   "TrackStreamJsonResponseMapper" should {
 
-    "Build json response with status code 200 and all urls when urls are available" in new Context {
-      val responseBuilder = Await.result(mapper.map(Future.value(Set(httpMediaUrl, rtmpMediaUrl, hlsMediaUrl, previewMediaUrl))))
-      val response = responseBuilder.build
+    "when URLs are available" >> {
+      trait AllUrlsAvailableContext extends Context {
+        val urls = Future.value(Set(httpMediaUrl, rtmpMediaUrl, hlsMediaUrl, previewMediaUrl))
+        val responseBuilder = Await.result(mapper.map(urls, false))
+        val response = responseBuilder.build
+      }
 
-      response.getStatusCode() mustEqual 200
-      response.getContentString() mustEqual """{"http_mp3_128_url":"http://regular","rtmp_mp3_128_url":"http://rtmp","hls_mp3_128_url":"http://hls","preview_mp3_128_url":"http://preview"}"""
+      "return a 200" in new AllUrlsAvailableContext {
+        response.getStatusCode() mustEqual 200
+      }
+
+      "return all URLs as JSON" in new AllUrlsAvailableContext {
+        response.getContentString() mustEqual """{"http_mp3_128_url":"http://regular","rtmp_mp3_128_url":"http://rtmp","hls_mp3_128_url":"http://hls","preview_mp3_128_url":"http://preview"}"""
+      }
     }
 
-    "Return Not Found response in case no urls are returned" in new Context {
-      val responseBuilder = Await.result(mapper.map(Future.value(Set())))
-      val response = responseBuilder.build
+    "when no URLs are available" >> {
 
-      response.getStatusCode() mustEqual 404
-      response.getContentString() mustEqual ""
+      trait NoUrlsAvailableContext extends Context {
+        val urls = Future.value(Set[MediaUrl]())
+        val responseBuilder = Await.result(mapper.map(urls, false))
+        val response = responseBuilder.build
+      }
+
+      "return a 404" in new NoUrlsAvailableContext {
+        response.getStatusCode() mustEqual 404
+      }
+
+      "return an empty body" in new NoUrlsAvailableContext {
+        response.getContentString() mustEqual ""
+      }
     }
+
+    // TODO: HEAD requests
   }
 
 }
