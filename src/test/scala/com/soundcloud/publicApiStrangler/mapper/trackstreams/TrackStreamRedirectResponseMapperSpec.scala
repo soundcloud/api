@@ -17,35 +17,109 @@ class TrackStreamRedirectResponseMapperSpec extends UnitSpecification {
     val mapper = new TrackStreamRedirectResponseMapper
   }
 
-  "TrackStreamRedirectResponseMapper" should {
-
-    "Return redirect response in case expected url is provided" in new Context {
-      val responseBuilder = Await.result(mapper.map(Future.value(Set(httpMediaUrl)), false))
-      val response = responseBuilder.build
-
-      response.getStatusCode() mustEqual 302
-      response.getContentString() mustEqual "{\"status\":\"302 - Found\",\"location\":\"http://regular\"}"
-      response.headerMap.get("Location") ==== Some("http://regular")
-    }
-
-    "Filter out not needed urls in case multiple are provided" in new Context {
-      val responseBuilder = Await.result(mapper.map(Future.value(Set(hlsMediaUrl, previewMediaUrl, httpMediaUrl)), false))
-      val response = responseBuilder.build
-
-      response.getStatusCode() mustEqual 302
-      response.getContentString() mustEqual "{\"status\":\"302 - Found\",\"location\":\"http://regular\"}"
-      response.headerMap.get("Location") ==== Some("http://regular")
-    }
-
-    "Return not found response in case expected url is not returned" in new Context {
-      val responseBuilder = Await.result(mapper.map(Future.value(Set(hlsMediaUrl, previewMediaUrl)), false))
-      val response = responseBuilder.build
-
-      response.getStatusCode() mustEqual 404
-      response.getContentString() mustEqual ""
-    }
-
+  trait ExpectedUrlProvidedContext extends Context {
+    val urls = Future.value(Set(httpMediaUrl))
+    lazy val response = Await.result(mapper.map(urls, false)).build
+    lazy val headResponse = Await.result(mapper.map(urls, true)).build
   }
 
-  // TODO HEAD requests
+  trait SeveralUrlsProvidedContext extends Context {
+    val urls = Future.value(Set(hlsMediaUrl, previewMediaUrl, httpMediaUrl))
+    lazy val response = Await.result(mapper.map(urls, false)).build
+    lazy val headResponse = Await.result(mapper.map(urls, true)).build
+  }
+
+  trait ExpectedUrlNotProvidedContext extends Context {
+    val urls = Future.value(Set(hlsMediaUrl, previewMediaUrl))
+    lazy val response = Await.result(mapper.map(urls, false)).build
+    lazy val headResponse = Await.result(mapper.map(urls, true)).build
+  }
+
+  "TrackStreamRedirectResponseMapper" should {
+
+    "when expected URL is provided" >> {
+
+      "and it is a GET request" >> {
+        "return a 302" in new ExpectedUrlProvidedContext {
+          response.getStatusCode() mustEqual 302
+        }
+
+        "return a Location header" in new ExpectedUrlProvidedContext {
+          response.headerMap.get("Location") ==== Some("http://regular")
+        }
+
+        "return a JSON response body" in new ExpectedUrlProvidedContext {
+          response.contentString mustEqual """{"status":"302 - Found","location":"http://regular"}"""
+        }
+      }
+
+      "and it is a HEAD request" >> {
+        "return a 302" in new ExpectedUrlProvidedContext {
+          headResponse.getStatusCode() mustEqual 302
+        }
+
+        "return a Location header" in new ExpectedUrlProvidedContext {
+          headResponse.headerMap.get("Location") ==== Some("http://regular")
+        }
+
+        "return no response body" in new ExpectedUrlProvidedContext {
+          headResponse.contentString mustEqual ""
+        }
+      }
+    }
+
+    "when several URLs are provided" >> {
+
+      "and it is a GET request" >> {
+        "return a 302" in new SeveralUrlsProvidedContext {
+          response.getStatusCode() mustEqual 302
+        }
+
+        "return a Location header" in new SeveralUrlsProvidedContext {
+          response.headerMap.get("Location") ==== Some("http://regular")
+        }
+
+        "return a JSON response body" in new SeveralUrlsProvidedContext {
+          response.getContentString() mustEqual """{"status":"302 - Found","location":"http://regular"}"""
+        }
+      }
+
+      "and it is a HEAD request" >> {
+        "return a 302" in new SeveralUrlsProvidedContext {
+          headResponse.getStatusCode() mustEqual 302
+        }
+
+        "return a Location header" in new SeveralUrlsProvidedContext {
+          headResponse.headerMap.get("Location") ==== Some("http://regular")
+        }
+
+        "return no response body" in new SeveralUrlsProvidedContext {
+          headResponse.getContentString() mustEqual ""
+        }
+      }
+    }
+
+    "when expected URL is not provided" >> {
+
+      "and it is a GET request" >> {
+        "return a 404" in new ExpectedUrlNotProvidedContext {
+          response.getStatusCode() mustEqual 404
+        }
+
+        "return no content" in new ExpectedUrlNotProvidedContext {
+          response.getContentString() mustEqual ""
+        }
+      }
+
+      "and it is a HEAD request" >> {
+        "return a 404" in new ExpectedUrlNotProvidedContext {
+          headResponse.getStatusCode() mustEqual 404
+        }
+
+        "return no content" in new ExpectedUrlNotProvidedContext {
+          headResponse.getContentString() mustEqual ""
+        }
+      }
+    }
+  }
 }
