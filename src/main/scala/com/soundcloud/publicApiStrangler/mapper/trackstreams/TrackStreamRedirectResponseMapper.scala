@@ -17,17 +17,19 @@ class TrackStreamRedirectResponseMapper extends TrackStreamResponseMapper {
     filteredUrls.map { set =>
       set.headOption match {
         case None => new ResponseBuilder().notFound
-        case Some(url) => buildResponse(url, isHeadRequest)
+        case Some(url) => mapResponse(url, isHeadRequest)
       }
     }
   }
 
-  private def buildResponse(url: MediaUrl, isHeadRequest: Boolean): ResponseBuilder = {
-    val content = Json.obj("status" -> "302 - Found", "location" -> url.url.s)
-    if(isHeadRequest) {
-      new ResponseBuilder().header("Location", url.url.s).status(302)
-    } else {
-      new ResponseBuilder().typedJson(content).header("Location", url.url.s).status(302)
+  private def mapResponse(url: MediaUrl, isHeadRequest: Boolean): ResponseBuilder = {
+    val builder = new ResponseBuilder().header("Location", url.url.s).status(302)
+
+    if (!isHeadRequest) {
+      val content = Json.obj("status" -> "302 - Found", "location" -> url.url.s)
+      builder.typedJson(content)
     }
+
+    builder
   }
 }
