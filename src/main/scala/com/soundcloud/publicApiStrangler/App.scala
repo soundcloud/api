@@ -34,7 +34,7 @@ import org.eclipse.jetty.server.Handler
 
 object App
   extends BffInjectionBasedApp
-  with BazookaConfigComponent
+  with AppConfigComponent
   with OkidokiComponent
   with TimelineJsonComponent
   with LieblingComponent
