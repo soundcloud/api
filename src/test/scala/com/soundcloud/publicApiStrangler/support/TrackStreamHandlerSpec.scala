@@ -116,21 +116,16 @@ class TrackStreamHandlerSpec extends UnitSpecification {
 
       val mediaUrl1 = mock[MediaUrl]
       val mediaUrls = Future.value(Set(mediaUrl1))
-      val mapperResponse = Future.value(new ResponseBuilder().status(200).header("Content-Type", "application/json"))
+      val mapperResponse = Future.value(new ResponseBuilder().status(200))
       mediaUrlsRepository.byUrn(userSession, trackUrn, contentAuth) returns mediaUrls
-      mapper.map(mediaUrls) returns mapperResponse
+      mapper.map(mediaUrls, true) returns mapperResponse
 
       request.headerMap returns HeaderMap(("x-forwarded-proto" -> "http"))
 
       request.method returns Method.Head
 
-      val responseBuilder = Await.result(handler.handle(request, userSession, mapper))
-
-      // Must have an empty response body.
-      val response = responseBuilder.build
-      response.headerMap.get("Content-Length") ==== Some("0")
-      response.headerMap.get("Content-Type") must beNone
-      response.contentString ==== ""
+      val response = Await.result(handler.handle(request, userSession, mapper))
+      response ==== Await.result(mapperResponse)
     }
 
     "GET return MediaUrlsRepository response in case pubapi response is successful and content policy is SNIP" in new Success {
@@ -142,7 +137,7 @@ class TrackStreamHandlerSpec extends UnitSpecification {
       val mediaUrls = Future.value(Set(mediaUrl1))
       val mapperResponse = Future.value(new ResponseBuilder().status(200).header("Content-Type", "application/json"))
       mediaUrlsRepository.byUrn(userSession, trackUrn, contentAuth) returns mediaUrls
-      mapper.map(mediaUrls) returns mapperResponse
+      mapper.map(mediaUrls, false) returns mapperResponse
 
       request.headerMap returns HeaderMap(("x-forwarded-proto" -> "http"))
       val responseBuilder = Await.result(handler.handle(request, userSession, mapper))
@@ -162,17 +157,12 @@ class TrackStreamHandlerSpec extends UnitSpecification {
       val mediaUrls = Future.value(Set(mediaUrl1))
       val mapperResponse = Future.value(new ResponseBuilder().status(200).header("Content-Type", "application/json"))
       mediaUrlsRepository.byUrn(userSession, trackUrn, contentAuth, true) returns mediaUrls
-      mapper.map(mediaUrls) returns mapperResponse
+      mapper.map(mediaUrls, true) returns mapperResponse
 
       request.method returns Method.Head
 
-      val responseBuilder = Await.result(handler.handle(request, userSession, mapper))
-
-      // Must have an empty response body.
-      val response = responseBuilder.build
-      response.headerMap.get("Content-Length") ==== Some("0")
-      response.headerMap.get("Content-Type") must beNone
-      response.contentString ==== ""
+      val response = Await.result(handler.handle(request, userSession, mapper))
+      response ==== Await.result(mapperResponse)
 
       there was one(mediaUrlsRepository).byUrn(userSession, trackUrn, contentAuth, true)
       there was one(contentAuthRules).fetchRules(userSession, Seq(trackUrn))
@@ -188,7 +178,7 @@ class TrackStreamHandlerSpec extends UnitSpecification {
       val mediaUrls = Future.value(Set(mediaUrl1))
       val mapperResponse = Future.value(new ResponseBuilder().status(200).header("Content-Type", "application/json"))
       mediaUrlsRepository.byUrn(userSession, trackUrn, contentAuth, true) returns mediaUrls
-      mapper.map(mediaUrls) returns mapperResponse
+      mapper.map(mediaUrls, false) returns mapperResponse
 
       val responseBuilder = Await.result(handler.handle(request, userSession, mapper))
       Await.result(mapperResponse) ==== responseBuilder

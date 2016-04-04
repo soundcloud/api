@@ -37,10 +37,8 @@ class TrackStreamsController(
   head("/tracks/:trackId/stream.json")(handleStreamRequest(_, trackStreamUrlToRedirectMapper))
 
   private def handleStreamRequest(request: Request, mapper: TrackStreamResponseMapper): Future[ResponseBuilder] = {
-
-    userAuthentication.withUserSession(request) {
-      (session: UserSession) =>
-        trackStreamHandler.handle(request, session, mapper)
+    userAuthentication.withUserSession(request) { session =>
+      trackStreamHandler.handle(request, session, mapper)
     }
   }
 }

@@ -31,15 +31,15 @@ class TrackStreamHandler(mothershipDispatcher: DispatchToMothershipHandler,
       responses.flatMap {
         case (mothershipResponse: ResponseBuilder, contentAuth: ContentAuthorization) =>
           if (mothershipResponse.build.getStatusCode < 400) {
-            contentAuth.getMonetizationModel
             contentAuth.getPolicy match {
               case ContentPolicy.ALLOW | ContentPolicy.MONETIZE => Future.value(mothershipResponse)
               case ContentPolicy.SNIP => replaceStream(request, userSession, trackUrn, contentAuth, mapper, isHttpsRequest(request))
               case ContentPolicy.BLOCK if (userSession.isAnonymous) => Future.value(generateResponseFor(request, HttpResponseStatus.UNAUTHORIZED))
               case ContentPolicy.BLOCK => Future.value(generateResponseFor(request, HttpResponseStatus.FORBIDDEN))
             }
-          } else
+          } else {
             Future.value(mothershipResponse)
+          }
       }
     } else {
       Future.value(generateResponseFor(request, HttpResponseStatus.NOT_FOUND))
@@ -55,14 +55,10 @@ class TrackStreamHandler(mothershipDispatcher: DispatchToMothershipHandler,
   private def contentAuthFor(session: UserSession, trackUrn: Urn): Future[ContentAuthorization] =
     contentAuthRules.fetchRules(session, Seq(trackUrn)).map(ca => ca.head)
 
-
   private def replaceStream(request: Request, session: UserSession, trackUrn: Urn, contentAuth: ContentAuthorization, mapper: TrackStreamResponseMapper, useHttps: Boolean = false): Future[ResponseBuilder] = {
     val mediaUrls = mediaUrlsRepository.byUrn(session, trackUrn, contentAuth, useHttps)
-    if (request.method != Method.Head) {
-      mapper.map(mediaUrls)
-    } else {
-      Future.value(new ResponseBuilder())
-    }
+    val isHeadRequest = request.method == Method.Head
+    mapper.map(mediaUrls, isHeadRequest)
   }
 
   private def urnWithNumericIdentifier(urn: Urn) = urn.getIdentifier.matches("\\d+")
