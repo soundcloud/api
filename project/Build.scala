@@ -8,6 +8,7 @@ object BuildProperties {
 
 object Build extends HttpServerAppBuild(
   JvmkitApp(
+    name = "public-api-strangler",
     appType = BffApi,
     jvmKitVersion = BuildProperties.jvmkitVersion,
     scalaVersion = "2.11.6"
