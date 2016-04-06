@@ -3,11 +3,12 @@ import sbt._
 import sbt.Keys._
 
 object BuildProperties {
-  val jvmkitVersion = "34.1.0"
+  val jvmkitVersion = "36.1.0"
 }
 
 object Build extends HttpServerAppBuild(
   JvmkitApp(
+    name = "public-api-strangler",
     appType = BffApi,
     jvmKitVersion = BuildProperties.jvmkitVersion,
     scalaVersion = "2.11.6"

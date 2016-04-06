@@ -3,6 +3,9 @@ DEVELOPMENT_CONFIG := bin/dev-wrap --config=config/development.sh
 
 PUBLIC_API_STRANGLER_VERSION ?= $(shell artifact-manager package-version)
 
+.PHONY: default
+default: precheckin
+
 _dev_docker_compose:
 	env DOCKER_IP=$(shell docker-ip) PUBLIC_API_STRANGLER_VERSION=$(PUBLIC_API_STRANGLER_VERSION) docker-compose up -d publicapistrangler
 
