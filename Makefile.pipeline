@@ -12,6 +12,8 @@ APP_NAME := public-api-strangler
 # Here are the endpoints that can be run by this application.
 API_ENTRYPOINT     := api
 API_INSTANCE_COUNT := 100
+APIUPLOADTEST_ENTRYPOINT     := apiuploadtest
+APIUPLOADTEST_INSTANCE_COUNT := 2
 
 BAZOOKA_CONFIG := production.sh
 BAZOOKA_ZONES := db
@@ -34,10 +36,13 @@ package: prepare-package-layout
 	artifact-manager package --runtime=$(RUNTIME_STACK)
 	artifact-manager bazooka build --zones=$(BAZOOKA_ZONES) --runtime=$(RUNTIME_STACK) \
 				 --proc="$(API_ENTRYPOINT) --config=$(BAZOOKA_CONFIG)"
+	artifact-manager bazooka build --zones=$(BAZOOKA_ZONES) --runtime=$(RUNTIME_STACK) \
+				 --proc="$(APIUPLOADTEST_ENTRYPOINT) --config=$(BAZOOKA_CONFIG)"
 
 prepare-package-layout:
 	crun $(BUILD_STACK) 'make sc-debian-layout'
 	gen-wrapper-script --target="bin/$(APP_NAME)" --wrapper=$(API_ENTRYPOINT)
+	gen-wrapper-script --target="bin/$(APP_NAME)" --wrapper=$(APIUPLOADTEST_ENTRYPOINT)
 	gen-postinst-script
 	add-config config/$(DEVELOPMENT_CONFIG)
 	add-config config/$(BAZOOKA_CONFIG)
@@ -61,7 +66,12 @@ deploy-db:
 	crun bazooka-cli "./$(DEPLOY_SCRIPT) bazooka --clean-revs \
 		--boot-timeout=60s --health-port=app --health-path=/tracks/116540862?client_id=hannes_test \
 		--bazooka-zone=db --scale-step=10 --instance-cnt=$(API_INSTANCE_COUNT) \
-		--proc=api \
+		--proc=$(API_ENTRYPOINT) \
+		--slack-channels=#core-services"
+	crun bazooka-cli "./$(DEPLOY_SCRIPT) bazooka --clean-revs \
+		--boot-timeout=60s --health-port=app --health-path=/tracks/116540862?client_id=hannes_test \
+		--bazooka-zone=db --scale-step=10 --instance-cnt=$(APIUPLOADTEST_INSTANCE_COUNT) \
+		--proc=$(APIUPLOADTEST_ENTRYPOINT) \
 		--slack-channels=#core-services"
 
 update-go-pipeline:
