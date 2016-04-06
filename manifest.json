@@ -9,6 +9,9 @@
     "alert_service": "https://sndcld.pagerduty.com/services/PVZLXKQ",
     "telemetry_dashboard": "http://promdash/public-api-strangler",
     "data_sensitivity": ["user_urn", "other_user_data", "pid"],
+    "slo": {
+      "metrics_server": "prometheus-core-services.int.s-cloud.net:9090"
+    },
     "dependencies": [
       "authenticator",
       "authsy",
