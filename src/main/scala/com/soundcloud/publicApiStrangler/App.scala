@@ -7,7 +7,7 @@ import com.soundcloud.bff.services.JsonService
 import com.soundcloud.follows.client.FollowsComponent
 import com.soundcloud.jvmkit.ResourceName
 import com.soundcloud.jvmkit.admin.{AdminRoute, RequestMethod}
-import com.soundcloud.jvmkit.config.{DataSensitivity, ConfigConvention}
+import com.soundcloud.jvmkit.config.ConfigConvention
 import com.soundcloud.jvmkit.rollout.{BasicRolloutFeature, RolloutBuilder}
 import com.soundcloud.publicApiStrangler.authorization._
 import com.soundcloud.publicApiStrangler.client.followcounts.FollowCountsClient
@@ -101,7 +101,7 @@ object App
 
   private val mothershipDispatcher = new DispatchToMothershipHandler(publicApiClient)
 
-  private val baseUrl = config.get("APP_BASE_URL", DataSensitivity.NON_SENSITIVE)
+  private val baseUrl = config.get("APP_BASE_URL", true)
 
   private val timelineController = {
     val entitySummaryMapper = new EntitySummaryMapper(okidokiClient, baseUrl)
@@ -173,6 +173,7 @@ object App
   )
 
   private val searchController = {
+    val baseUrl = config.get("APP_BASE_URL", true)
     val searchRepository = new SearchRepository(searchService)
     val searchMapper = new SearchMapper(searchRepository, searchEntityMapper, baseUrl)
     new SearchController(
@@ -186,6 +187,7 @@ object App
   }
 
   private val similarSoundsController = {
+    val baseUrl = config.get("APP_BASE_URL", true)
     val similarSoundsMapper = new SimilarSoundsMapper(similarSoundsClient, searchEntityMapper)
     new SimilarSoundsController(
       userAuthentication,
