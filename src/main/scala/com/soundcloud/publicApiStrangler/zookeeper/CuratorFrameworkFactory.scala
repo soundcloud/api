@@ -1,6 +1,6 @@
 package com.soundcloud.publicApiStrangler.zookeeper
 
-import com.soundcloud.jvmkit.config.Config
+import com.soundcloud.jvmkit.config.{DataSensitivity, Config}
 import org.apache.curator.framework.{CuratorFramework, CuratorFrameworkFactory => ApacheCuratorFrameworkFactory}
 import org.apache.curator.retry.ExponentialBackoffRetry
 
@@ -12,7 +12,7 @@ class CuratorFrameworkFactory {
   val retryPolicy = new ExponentialBackoffRetry(baseSleepTimeInMiliseconds, maxNumberOfRetries)
 
   def create(config: Config): CuratorFramework = {
-    val zookeeperServers = config.get("ZOOKEEPER_SERVERS")
+    val zookeeperServers = config.get("ZOOKEEPER_SERVERS", DataSensitivity.NON_SENSITIVE)
     val curatorZookeeperClient = ApacheCuratorFrameworkFactory.newClient(zookeeperServers, retryPolicy)
 
     curatorZookeeperClient.start()
