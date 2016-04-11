@@ -104,7 +104,15 @@
            <exec command="make">
              <arg>-f</arg>
              <arg>Makefile.pipeline</arg>
-             <arg>deploy-db</arg>
+             <arg>deploy-db-api</arg>
+             <runif status="passed"/>
+           </exec>
+        </tasks>
+        <tasks>
+           <exec command="make">
+             <arg>-f</arg>
+             <arg>Makefile.pipeline</arg>
+             <arg>deploy-db-apiuploadtest</arg>
              <runif status="passed"/>
            </exec>
         </tasks>
