@@ -99,16 +99,12 @@
              <arg>promote-to-release</arg>
              <runif status="passed"/>
            </exec>
-        </tasks>
-        <tasks>
            <exec command="make">
              <arg>-f</arg>
              <arg>Makefile.pipeline</arg>
              <arg>deploy-db-api</arg>
              <runif status="passed"/>
            </exec>
-        </tasks>
-        <tasks>
            <exec command="make">
              <arg>-f</arg>
              <arg>Makefile.pipeline</arg>
