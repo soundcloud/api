@@ -35,8 +35,7 @@ package: prepare-package-layout
 	docker pull docker.dev.s-cloud.net/$(RUNTIME_STACK):latest
 	artifact-manager package --runtime=$(RUNTIME_STACK)
 	artifact-manager bazooka build --zones=$(BAZOOKA_ZONES) --runtime=$(RUNTIME_STACK) \
-				 --proc="$(API_ENTRYPOINT) --config=$(BAZOOKA_CONFIG)"
-	artifact-manager bazooka build --zones=$(BAZOOKA_ZONES) --runtime=$(RUNTIME_STACK) \
+				 --proc="$(API_ENTRYPOINT) --config=$(BAZOOKA_CONFIG)" \
 				 --proc="$(APIUPLOADTEST_ENTRYPOINT) --config=$(BAZOOKA_CONFIG)"
 
 prepare-package-layout:
@@ -62,12 +61,16 @@ promote-to-release:
 	artifact-manager promote release
 	artifact-manager bazooka promote release --zones=$(BAZOOKA_ZONES)
 
-deploy-db:
+.PHONY: deploy-db-api
+deploy-db-api:
 	crun bazooka-cli "./$(DEPLOY_SCRIPT) bazooka --clean-revs \
 		--boot-timeout=60s --health-port=app --health-path=/tracks/116540862?client_id=hannes_test \
 		--bazooka-zone=db --scale-step=10 --instance-cnt=$(API_INSTANCE_COUNT) \
 		--proc=$(API_ENTRYPOINT) \
 		--slack-channels=#core-services"
+
+.PHONY: deploy-db-apiuploadtest
+deploy-db-apiuploadtest:
 	crun bazooka-cli "./$(DEPLOY_SCRIPT) bazooka --clean-revs \
 		--boot-timeout=60s --health-port=app --health-path=/tracks/116540862?client_id=hannes_test \
 		--bazooka-zone=db --scale-step=10 --instance-cnt=$(APIUPLOADTEST_INSTANCE_COUNT) \
