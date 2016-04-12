@@ -3,7 +3,7 @@ import sbt._
 import sbt.Keys._
 
 object BuildProperties {
-  val jvmkitVersion = "37.0.0"
+  val jvmkitVersion = "37.0.1-RETRY-SNAPSHOT"
 }
 
 object Build extends HttpServerAppBuild(
