@@ -4,7 +4,6 @@ import com.soundcloud.bff._
 import com.soundcloud.bff.authorization.ContentAuthorizationService
 import com.soundcloud.bff.media.{MediaUrlsRepository, WaveformUrlsRepository}
 import com.soundcloud.bff.services.JsonService
-import com.soundcloud.follows.client.FollowsComponent
 import com.soundcloud.jvmkit.ResourceName
 import com.soundcloud.jvmkit.admin.{AdminRoute, RequestMethod}
 import com.soundcloud.jvmkit.config.{DataSensitivity, ConfigConvention}
@@ -27,16 +26,14 @@ import com.soundcloud.publicApiStrangler.zookeeper.CuratorFrameworkFactory
 import com.soundcloud.ratelimiting.facade._
 import com.soundcloud.scalakit.Urn
 import com.soundcloud.scalakit.cache.MemcachedClient
-import com.soundcloud.service.component.{GatekeeperComponent, LieblingComponent, OkidokiComponent, SimilarSoundsComponent}
-import com.soundcloud.services.timeline.TimelineJsonComponent
-import com.soundcloud.trackcoordinator.client.TrackCoordinatorComponent
 import org.eclipse.jetty.server.Handler
+import com.soundcloud.publicApiStrangler.client._
 
 object App
   extends BffInjectionBasedApp
   with AppConfigComponent
   with OkidokiComponent
-  with TimelineJsonComponent
+  with TimelineComponent
   with LieblingComponent
   with PublicApiClientComponent
   with FollowsComponent
