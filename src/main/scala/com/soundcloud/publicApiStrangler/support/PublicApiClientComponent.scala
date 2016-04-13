@@ -25,33 +25,6 @@ trait PublicApiClientComponent {
   this: ConfigComponent =>
 
   lazy val publicApiClient: Service[Request, Response] = {
-//    val svcName = "public-api"
-//    val client =
-//      ClientBuilder()
-//        .codec(TracingHttp())
-//        .daemon(true)
-//        .hostConnectionCoresize(10)
-//        .hostConnectionIdleTime(5.seconds)
-//        .hostConnectionLimit(100)
-//        .hostConnectionMaxIdleTime(5.seconds)
-//        .hostConnectionMaxLifeTime(30.seconds)
-//        .dest(config.get(ResourceName("MOTHERSHIP_API_SERVER"), ConfigConvention.SRV_RECORD))
-//        .keepAlive(true)
-//        .failFast(true)
-//        .tracer(ZipkinTracer(config))
-//        .retries(3)
-//        .name(svcName)
-//        .requestTimeout(30.seconds)
-//        .tcpConnectTimeout(5.seconds)
-//        .build()
-//    val requestLatencyBuckets = config.get(ResourceName("DEFAULT"), ConfigConvention.REQUEST_LATENCY_BUCKETS,
-//      Telemetry.DEFAULT_REQUEST_LATENCY_BUCKETS_SECONDS).split(",").map(_.toDouble)
-//    val filter =
-//      new OutgoingHttpRequestMonitoringFilter[HttpRequest, HttpResponse](ResourceName(svcName), new Telemetry(config),
-//        requestLatencyBuckets)
-//
-//    filter andThen client
-
     val svcName = "public-api"
     val telemetry = new Telemetry(config)
     val tracer = ZipkinTracer(config)
