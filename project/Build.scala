@@ -3,7 +3,7 @@ import sbt._
 import sbt.Keys._
 
 object BuildProperties {
-  val jvmkitVersion = "38.0.0"
+  val jvmkitVersion = "38.1.0"
 }
 
 object Build extends HttpServerAppBuild(
@@ -16,7 +16,7 @@ object Build extends HttpServerAppBuild(
   libDependencies = Seq(
     "com.soundcloud"     %% "follows-client"           % "2.0.0",
     "com.soundcloud"     %% "timeline-client"          % "0.1.2",
-    "com.soundcloud"     %% "ratelimitinglib"          % "0.4.4",
+    "com.soundcloud"     %% "ratelimitinglib"          % "0.4.5",
     "com.soundcloud"     %% "sc-services"              % "35.0.1",
     "com.soundcloud"     %% "track-coordinator-client" % "19.0.0",
     "com.fasterxml.uuid" %  "java-uuid-generator"      % "3.1.3",

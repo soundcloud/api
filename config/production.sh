@@ -66,3 +66,5 @@ ZOOKEEPER_SERVERS="10.33.25.61:2181,10.33.18.53:2181,10.33.32.31:2181,10.33.33.5
 STITCH4COUNTS_SRV_RECORD="dnssrv!http.web.prod.stitch4counts.dd.srv.int.s-cloud.net"
 STITCH4FOLLOWS_SRV_RECORD="dnssrv!http.web-follows.prod.stitch4counts.dd.srv.int.s-cloud.net"
 STITCH_BULK_FETCH_MAX_ENTRIES="7"
+
+USE_FINAGLE_CIRCUIT_BREAKER="true"
