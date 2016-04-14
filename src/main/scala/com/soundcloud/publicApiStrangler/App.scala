@@ -92,7 +92,13 @@ object App
     "soundcloud:applications:99561", // SoundCloud Kik Messenger Card
     "soundcloud:applications:120502", // Twitter Partner
     "soundcloud:applications:135495", // Mobile Web App
-    "soundcloud:applications:167582" // HEOS by Denon (Production)
+    "soundcloud:applications:167582", // HEOS by Denon (Production)
+
+    // other whitelisted apps
+    "soundcloud:applications:59007",
+    "soundcloud:applications:62023",
+    "soundcloud:applications:265616",
+    "soundcloud:applications:265183"
   ).map(new Urn(_))
   private val authorizeContent = new AuthorizeHttpResponse(contentAuthorizationRules, userAuthentication, waveformUrlsRepo, TrackPolicyApplicator(whitelistedClients))
 
