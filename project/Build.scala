@@ -33,7 +33,9 @@ object Build extends HttpServerAppBuild(
         libraryDependencies ++= Seq(
           "org.specs2" %% "specs2-core" % "3.6.4",
           "org.specs2" %% "specs2-mock" % "3.6.4",
-          "com.soundcloud" %% "jvmkit" % BuildProperties.jvmkitVersion
+          "com.soundcloud" %% "jvmkit" % BuildProperties.jvmkitVersion,
+          "org.apache.httpcomponents" % "httpclient" % "4.5.2",
+          "org.apache.httpcomponents" % "httpmime" % "4.5.2"
         )
       )
     )

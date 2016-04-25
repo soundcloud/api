@@ -45,6 +45,9 @@ trait SpinningUpAppSupport { this: Specification =>
     def delete(path: String): IntegrationTestHttpResponse =
       executeRequest(Method.Delete, path, "", defaultHeaders)
 
+    def executeRequest(request: Request) =
+      new IntegrationTestHttpResponse(Await.result(client(request), timeout))
+
     protected def executeRequest(method: Method, path: String, body: String, headers: HeaderMap) = {
       val request = Request(Version.Http11, method, path)
       headers.foreach {
