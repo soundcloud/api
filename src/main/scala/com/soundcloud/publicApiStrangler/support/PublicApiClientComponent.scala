@@ -78,6 +78,7 @@ trait PublicApiClientComponent {
     val client: Service[Request, Response] =
       Http
         .client
+        .withStreaming(config.get(ResourceName("MOTHERSHIP_API_STREAMING"), ConfigConvention.ENABLED).toBoolean)
         .configured(param.Label(svcName))
         .configured(param.Timer(timer))
         .configured(param.Stats(statsReceiver))
@@ -85,7 +86,7 @@ trait PublicApiClientComponent {
         .configured(connectionParams)
         .configured(expirationParams)
         .configured(keepaliveParams)
-        .configured(TimeoutFilter.Param(30.seconds))
+        .configured(TimeoutFilter.Param(config.get(ResourceName("MOTHERSHIP_API"), ConfigConvention.REQUEST_TIMEOUT_MILLIS).toInt.milliseconds))
         .configured(Transporter.ConnectTimeout(5.seconds))
         .configured(FailFast(true))
         .filtered(retryFilter)

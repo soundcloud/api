@@ -19,6 +19,7 @@ APIUPLOADTEST_INSTANCE_COUNT := 2
 
 API_CONFIG := production_api.sh
 APITRACKUPLOAD_CONFIG := production_apitrackupload.sh
+APIUPLOADTEST_CONFIG := production_apiuploadtest.sh
 BAZOOKA_ZONES := db
 RUNTIME_STACK := jdk-8
 BUILD_STACK := jdk-8-dev
@@ -40,7 +41,7 @@ package: prepare-package-layout
 	artifact-manager bazooka build --zones=$(BAZOOKA_ZONES) --runtime=$(RUNTIME_STACK) \
 				 --proc="$(API_ENTRYPOINT) --config=$(API_CONFIG)" \
 				 --proc="$(APITRACKUPLOAD_ENTRYPOINT) --config=$(APITRACKUPLOAD_CONFIG)" \
-				 --proc="$(APIUPLOADTEST_ENTRYPOINT) --config=$(API_CONFIG)"
+				 --proc="$(APIUPLOADTEST_ENTRYPOINT) --config=$(APIUPLOADTEST_CONFIG)"
 
 prepare-package-layout:
 	crun $(BUILD_STACK) 'make sc-debian-layout'
@@ -51,6 +52,7 @@ prepare-package-layout:
 	add-config config/$(DEVELOPMENT_CONFIG)
 	add-config config/$(API_CONFIG)
 	add-config config/$(APITRACKUPLOAD_CONFIG)
+	add-config config/$(APIUPLOADTEST_CONFIG)
 
 remove-containers:
 	remove-containers
