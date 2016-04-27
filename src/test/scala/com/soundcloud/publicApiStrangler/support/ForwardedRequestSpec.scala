@@ -1,68 +1,143 @@
 package com.soundcloud.publicApiStrangler.support
 
+import java.io.InputStream
+import java.net.InetSocketAddress
+
 import com.soundcloud.scalakit.test.UnitSpecification
-import com.twitter.finagle.http.Version.Http11
-import com.twitter.finagle.http.{Method, Request}
-import com.twitter.io.Buf
-import java.nio.file.{Files, Paths}
+import com.twitter.finagle.http.{Method, Request, Response}
+import com.twitter.finagle.{Http, Service}
+import com.twitter.util.{Await, Duration, Future}
+import okhttp3.mockwebserver.{MockResponse, MockWebServer}
+import org.apache.http.client.methods.{HttpGet, HttpPost, HttpPut}
+import org.apache.http.entity.mime.MultipartEntityBuilder
+import org.apache.http.entity.{ContentType, StringEntity}
+import org.apache.http.impl.client.HttpClients
+import org.specs2.mutable.BeforeAfter
 
 class ForwardedRequestSpec extends UnitSpecification {
+  trait Context extends BeforeAfter {
+    val server = new MockWebServer()
+    val client = Http.client.withStreaming(enabled = false).newService(s"localhost:${server.getPort}")
 
-  "copies the request" >> {
-    trait Context extends Scope {
-      def makeRequest(method: Method, uri: String, body: Array[Byte], headers: Map[String, String]) = {
-
-        val request = Request(Http11, method, uri)
-        request.content_=(Buf.ByteArray.Owned(body))
-        headers.foreach {
-          case (k, v) => request.headerMap.put(k, v)
+    def stranglerService: Service[Request, Response] =
+      new Service[Request, Response] {
+        def apply(request: Request): Future[Response] = {
+          client.apply(ForwardedRequest(request))
         }
-        request
       }
 
-      def stringToBytes(value: String) = value.getBytes("UTF-8")
+    val stranglerServer = Http.server.withStreaming(true).serve(new InetSocketAddress(0), stranglerService)
+    val stranglerServerPort = stranglerServer.boundAddress.asInstanceOf[InetSocketAddress].getPort
+    val stranglerClient = Http.client.newService(s"localhost:$stranglerServerPort")
+
+    override def before: Any = {
 
     }
 
-    "sends same methods" in new Context {
-      val request = makeRequest(Method.Post, "/", stringToBytes(""), Map("" -> "a"))
-      ForwardedRequest(request).method must_== (Method.Post)
+    override def after: Any = {
+      server.shutdown()
+      Await.result(stranglerServer.close(Duration.fromMilliseconds(500)))
+      Await.result(stranglerClient.close(Duration.fromMilliseconds(500)))
+      Await.result(client.close(Duration.fromMilliseconds(500)))
+    }
+  }
+
+  "properly forwards GET request" in new Context {
+    server.enqueue(new MockResponse().setBody("donkey"))
+
+    val request = new HttpGet(s"http://localhost:$stranglerServerPort/tracks")
+    request.addHeader("X-Favourite-Animal", "zebra")
+    val httpclient = HttpClients.createDefault()
+    val response = httpclient.execute(request)
+
+    val recordedRequest = server.takeRequest()
+    recordedRequest.getMethod ==== "GET"
+    recordedRequest.getPath ==== "/tracks"
+    recordedRequest.getBody.readUtf8() ==== ""
+    recordedRequest.getHeader("Host") ==== "api.soundcloud.com"
+    recordedRequest.getHeader("X-Forwarded-Proto") ==== "https"
+    recordedRequest.getHeader("Transfer-Encoding") ==== null
+    recordedRequest.getHeader("Content-Length") ==== null
+    recordedRequest.getHeader("X-Favourite-Animal") ==== "zebra"
+  }
+
+  "properly forwards POST request" in new Context {
+    server.enqueue(new MockResponse().setBody("donkey"))
+
+    val request = new HttpPost(s"http://localhost:$stranglerServerPort/tracks")
+    request.addHeader("X-Favourite-Animal", "zebra")
+    request.setEntity(new StringEntity("giraffe", ContentType.TEXT_PLAIN))
+    val httpclient = HttpClients.createDefault()
+    val response = httpclient.execute(request)
+
+    val recordedRequest = server.takeRequest()
+    recordedRequest.getMethod ==== "POST"
+    recordedRequest.getPath ==== "/tracks"
+    recordedRequest.getBody.readUtf8() ==== "giraffe"
+    recordedRequest.getHeader("Host") ==== "api.soundcloud.com"
+    recordedRequest.getHeader("X-Forwarded-Proto") ==== "https"
+    recordedRequest.getHeader("Transfer-Encoding") ==== null
+    recordedRequest.getHeader("Content-Length") ==== "7"
+    recordedRequest.getHeader("X-Favourite-Animal") ==== "zebra"
+  }
+
+  "properly forwards PUT request" in new Context {
+    server.enqueue(new MockResponse().setBody("donkey"))
+
+    val request = new HttpPut(s"http://localhost:$stranglerServerPort/tracks")
+    request.addHeader("X-Favourite-Animal", "zebra")
+    request.setEntity(new StringEntity("giraffe", ContentType.TEXT_PLAIN))
+    val httpclient = HttpClients.createDefault()
+    val response = httpclient.execute(request)
+
+    val recordedRequest = server.takeRequest()
+    recordedRequest.getMethod ==== "PUT"
+    recordedRequest.getPath ==== "/tracks"
+    recordedRequest.getBody.readUtf8() ==== "giraffe"
+    recordedRequest.getHeader("Host") ==== "api.soundcloud.com"
+    recordedRequest.getHeader("X-Forwarded-Proto") ==== "https"
+    recordedRequest.getHeader("Transfer-Encoding") ==== null
+    recordedRequest.getHeader("Content-Length") ==== "7"
+    recordedRequest.getHeader("X-Favourite-Animal") ==== "zebra"
+  }
+
+  "sends multipart POST requests as chunked" in new Context {
+    server.enqueue(new MockResponse().setBody("okey dokey"))
+
+    // Create stream
+    val streamLength = 10
+    val inputStream: InputStream = new InputStream {
+      var count = 0
+      def read: Int = {
+        count += 1
+        if (count > streamLength)
+          -1
+        else
+          '\0'
+      }
     }
 
-    "sends same body string value" in new Context {
-      val body = "abcdef"
-      val inputBodyByteArray = stringToBytes(body)
-      val request = makeRequest(Method.Post, "/track", inputBodyByteArray, Map("" -> "a"))
-      val forwardedRequest = ForwardedRequest(request)
-      forwardedRequest.getContentString() must_== (body)
+    // Build request
+    val request = new HttpPost(s"http://localhost:$stranglerServerPort/tracks")
+    val reqEntity = MultipartEntityBuilder.create()
+      .addBinaryBody("track[asset_data]", inputStream, ContentType.APPLICATION_OCTET_STREAM, "donkey_song.mp3")
+      .build()
+    request.setEntity(reqEntity)
 
-      val forwardedBodyByteArray = new Array[Byte](inputBodyByteArray.length)
-      forwardedRequest.content.write(forwardedBodyByteArray, 0)
-      forwardedBodyByteArray must beEqualTo(inputBodyByteArray)
+    // Make request
+    val httpclient = HttpClients.createDefault()
+    val response = httpclient.execute(request)
 
-    }
-
-    "sends same body binary value" in new Context {
-      val bodyInput = Files.readAllBytes(Paths.get("src/test/resources/soundcloud_logo.png"))
-      val request = makeRequest(Method.Post, "/", bodyInput, Map("" -> "a"))
-      val bodyInputAsBuffer = Buf.ByteArray.Owned(bodyInput)
-      val bodyForwardedRequestAsBuf = ForwardedRequest(request).content
-      bodyForwardedRequestAsBuf.length mustEqual bodyInputAsBuffer.length
-      bodyForwardedRequestAsBuf must beEqualTo(bodyInputAsBuffer)
-    }
-
-
-    "sends same headers" in new Context {
-      val headers = Map("abc" -> "123")
-      val request = makeRequest(Method.Post, "/", stringToBytes("body"), headers)
-      ForwardedRequest(request).headerMap.get("abc") must_== Some("123")
-    }
-
-    "adds mandatory headers" in new Context {
-      val request = makeRequest(Method.Post, "/", stringToBytes("body"), Map())
-      val headers = ForwardedRequest(request).headerMap
-      headers.get("X-Forwarded-Proto") must_== (Some("https"))
-      headers.get("Host") must_== (Some("api.soundcloud.com"))
-    }
+    // Verify
+    val recordedRequest = server.takeRequest()
+    recordedRequest.getHeader("Transfer-Encoding") ==== "chunked"
+    recordedRequest.getHeader("Content-Length") ==== null
+    recordedRequest.getHeader("Host") ==== "api.soundcloud.com"
+    recordedRequest.getHeader("X-Forwarded-Proto") ==== "https"
+    val requestBody = recordedRequest.getBody.readUtf8()
+    requestBody.contains("\r\nContent-Disposition: form-data; name=\"track[asset_data]\"; filename=\"donkey_song.mp3\"\r\n") ==== true
+    requestBody.contains("\r\nContent-Type: application/octet-stream\r\n") ==== true
+    requestBody.contains("\r\nContent-Transfer-Encoding: binary\r\n") ==== true
+    requestBody.contains("\r\n\r\n" + ("\u0000" * 10) + "\r\n--") ==== true
   }
 }

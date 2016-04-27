@@ -20,7 +20,10 @@ object Build extends HttpServerAppBuild(
     "com.soundcloud"     %% "sc-services"              % "39.0.0",
     "com.soundcloud"     %% "track-coordinator-client" % "19.0.0",
     "com.fasterxml.uuid" %  "java-uuid-generator"      % "3.1.3",
-    "commons-codec"      %  "commons-codec"            % "1.9"
+    "commons-codec"      %  "commons-codec"            % "1.9",
+    "com.squareup.okhttp3"      % "mockwebserver" % "3.2.0" % "test",
+    "org.apache.httpcomponents" % "httpclient"    % "4.5.2" % "test",
+    "org.apache.httpcomponents" % "httpmime"      % "4.5.2" % "test"
   ),
   mainClass = "com.soundcloud.publicApiStrangler.App"
 ) {
