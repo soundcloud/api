@@ -63,7 +63,7 @@ USER_SUBSCRIPTIONS_SRV_RECORD="dnssrv!http.server.production.subscriptions.dd.sr
 
 RATELIMIT_MAX_CONN="999999"
 
-MEMCACHED_HOST="ip-10-33-34-33.m03.ams5.s-cloud.net,ip-10-33-33-27.m02.ams5.s-cloud.net,ip-10-33-20-35.n05.ams5.s-cloud.net,ip-10-33-24-62.n10.ams5.s-cloud.net,ip-10-33-41-34.m11.ams5.s-cloud.net"
+MEMCACHED_HOST="ip-10-33-34-33.m03.ams5.s-cloud.net,ip-10-33-20-35.n05.ams5.s-cloud.net,ip-10-33-24-62.n10.ams5.s-cloud.net,ip-10-33-41-34.m11.ams5.s-cloud.net"
 ZOOKEEPER_SERVERS="10.33.25.61:2181,10.33.18.53:2181,10.33.32.31:2181,10.33.33.54:2181,10.33.37.50:2181"
 
 STITCH4COUNTS_SRV_RECORD="dnssrv!http.web.prod.stitch4counts.dd.srv.int.s-cloud.net"
