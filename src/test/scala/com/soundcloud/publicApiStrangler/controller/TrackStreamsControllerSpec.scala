@@ -74,29 +74,32 @@ class TrackStreamsControllerSpec extends InjectionBasedControllerSpecification {
   }
 
   Seq("", "/", ".json").foreach { end: String => {
-      s"forward request to /tracks/:trackId/stream${end} to handler that knows how to deal with snip content type and return response unchanged." in new Context {
-        forwardWithRedirectResponseMapper(controller, s"/tracks/5/stream${end}")
+    Seq("", "/v1").foreach { start: String => {
+      s"forward request to ${start}/tracks/:trackId/stream${end} to handler that knows how to deal with snip content type and return response unchanged." in new Context {
+        forwardWithRedirectResponseMapper(controller, s"${start}/tracks/5/stream${end}")
       }
 
-      s"forward HEAD request to /tracks/:trackId/stream${end} to handler that knows how to deal with snip content type and return response unchanged." in new Context {
-        forwardHeadWithRedirectResponseMapper(controller, s"/tracks/5/stream${end}")
+      s"forward HEAD request to ${start}/tracks/:trackId/stream${end} to handler that knows how to deal with snip content type and return response unchanged." in new Context {
+        forwardHeadWithRedirectResponseMapper(controller, s"${start}/tracks/5/stream${end}")
       }
 
-      s"forward request to /tracks/:trackId/streams${end} to handler that knows how to deal with snip content type and return response unchanged." in new Context {
-        forwardWithJsonResponseMapper(controller, s"/tracks/5/streams${end}")
+      s"forward request to ${start}/tracks/:trackId/streams${end} to handler that knows how to deal with snip content type and return response unchanged." in new Context {
+        forwardWithJsonResponseMapper(controller, s"${start}/tracks/5/streams${end}")
       }
 
-      s"forward HEAD request to /tracks/:trackId/streams${end} to handler that knows how to deal with snip content type and return response unchanged." in new Context {
-        forwardHeadWithJsonResponseMapper(controller, s"/tracks/5/streams${end}")
-      }
-
-      s"forward request to /i1/tracks/:trackId/streams${end} to handler that knows how to deal with snip content type and return response unchanged." in new Context {
-        forwardWithJsonResponseMapper(controller, s"/i1/tracks/5/streams${end}")
-      }
-
-      s"forward HEAD request to /i1/tracks/:trackId/streams${end} to handler that knows how to deal with snip content type and return response unchanged." in new Context {
-        forwardHeadWithJsonResponseMapper(controller, s"/i1/tracks/5/streams${end}")
+      s"forward HEAD request to ${start}/tracks/:trackId/streams${end} to handler that knows how to deal with snip content type and return response unchanged." in new Context {
+        forwardHeadWithJsonResponseMapper(controller, s"${start}/tracks/5/streams${end}")
       }
     }
+    }
+
+    s"forward request to /i1/tracks/:trackId/streams${end} to handler that knows how to deal with snip content type and return response unchanged." in new Context {
+      forwardWithJsonResponseMapper(controller, s"/i1/tracks/5/streams${end}")
+    }
+
+    s"forward HEAD request to /i1/tracks/:trackId/streams${end} to handler that knows how to deal with snip content type and return response unchanged." in new Context {
+      forwardHeadWithJsonResponseMapper(controller, s"/i1/tracks/5/streams${end}")
+    }
+  }
   }
 }

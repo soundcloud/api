@@ -22,14 +22,17 @@ class TrackStreamsController(
   extends BffInjectionBasedController {
 
   Seq("", "/", ".json").foreach { end: String => {
-      get(s"/tracks/:trackId/streams${end}")(handleStreamRequest(_, trackStreamUrlToJsonResponseMapper))
-      head(s"/tracks/:trackId/streams${end}")(handleStreamRequest(_, trackStreamUrlToJsonResponseMapper))
+    Seq("", "/v1").foreach { start: String => {
+        get(s"${start}/tracks/:trackId/streams${end}")(handleStreamRequest(_, trackStreamUrlToJsonResponseMapper))
+        head(s"${start}/tracks/:trackId/streams${end}")(handleStreamRequest(_, trackStreamUrlToJsonResponseMapper))
 
-      get(s"/tracks/:trackId/stream${end}")(handleStreamRequest(_, trackStreamUrlToRedirectMapper))
-      head(s"/tracks/:trackId/stream${end}")(handleStreamRequest(_, trackStreamUrlToRedirectMapper))
+        get(s"${start}/tracks/:trackId/stream${end}")(handleStreamRequest(_, trackStreamUrlToRedirectMapper))
+        head(s"${start}/tracks/:trackId/stream${end}")(handleStreamRequest(_, trackStreamUrlToRedirectMapper))
+      }
+    }
 
-      get(s"/i1/tracks/:trackId/streams${end}")(handleStreamRequest(_, trackStreamUrlToJsonResponseMapper))
-      head(s"/i1/tracks/:trackId/streams${end}")(handleStreamRequest(_, trackStreamUrlToJsonResponseMapper))
+    get(s"/i1/tracks/:trackId/streams${end}")(handleStreamRequest(_, trackStreamUrlToJsonResponseMapper))
+    head(s"/i1/tracks/:trackId/streams${end}")(handleStreamRequest(_, trackStreamUrlToJsonResponseMapper))
     }
   }
 
