@@ -21,26 +21,17 @@ class TrackStreamsController(
                               )
   extends BffInjectionBasedController {
 
-  get("/tracks/:trackId/streams")(handleStreamRequest(_, trackStreamUrlToJsonResponseMapper))
-  get("/tracks/:trackId/streams/")(handleStreamRequest(_, trackStreamUrlToJsonResponseMapper))
-  get("/tracks/:trackId/streams.json")(handleStreamRequest(_, trackStreamUrlToJsonResponseMapper))
-  head("/tracks/:trackId/streams")(handleStreamRequest(_, trackStreamUrlToJsonResponseMapper))
-  head("/tracks/:trackId/streams/")(handleStreamRequest(_, trackStreamUrlToJsonResponseMapper))
-  head("/tracks/:trackId/streams.json")(handleStreamRequest(_, trackStreamUrlToJsonResponseMapper))
+  Seq("", "/", ".json").foreach { end: String => {
+      get(s"/tracks/:trackId/streams${end}")(handleStreamRequest(_, trackStreamUrlToJsonResponseMapper))
+      head(s"/tracks/:trackId/streams${end}")(handleStreamRequest(_, trackStreamUrlToJsonResponseMapper))
 
-  get("/tracks/:trackId/stream")(handleStreamRequest(_, trackStreamUrlToRedirectMapper))
-  get("/tracks/:trackId/stream/")(handleStreamRequest(_, trackStreamUrlToRedirectMapper))
-  get("/tracks/:trackId/stream.json")(handleStreamRequest(_, trackStreamUrlToRedirectMapper))
-  head("/tracks/:trackId/stream")(handleStreamRequest(_, trackStreamUrlToRedirectMapper))
-  head("/tracks/:trackId/stream/")(handleStreamRequest(_, trackStreamUrlToRedirectMapper))
-  head("/tracks/:trackId/stream.json")(handleStreamRequest(_, trackStreamUrlToRedirectMapper))
+      get(s"/tracks/:trackId/stream${end}")(handleStreamRequest(_, trackStreamUrlToRedirectMapper))
+      head(s"/tracks/:trackId/stream${end}")(handleStreamRequest(_, trackStreamUrlToRedirectMapper))
 
-  get("/i1/tracks/:trackId/streams")(handleStreamRequest(_, trackStreamUrlToJsonResponseMapper))
-  get("/i1/tracks/:trackId/streams/")(handleStreamRequest(_, trackStreamUrlToJsonResponseMapper))
-  get("/i1/tracks/:trackId/streams.json")(handleStreamRequest(_, trackStreamUrlToJsonResponseMapper))
-  head("/i1/tracks/:trackId/streams")(handleStreamRequest(_, trackStreamUrlToJsonResponseMapper))
-  head("/i1/tracks/:trackId/streams/")(handleStreamRequest(_, trackStreamUrlToJsonResponseMapper))
-  head("/i1/tracks/:trackId/streams.json")(handleStreamRequest(_, trackStreamUrlToJsonResponseMapper))
+      get(s"/i1/tracks/:trackId/streams${end}")(handleStreamRequest(_, trackStreamUrlToJsonResponseMapper))
+      head(s"/i1/tracks/:trackId/streams${end}")(handleStreamRequest(_, trackStreamUrlToJsonResponseMapper))
+    }
+  }
 
   private def handleStreamRequest(request: Request, mapper: TrackStreamResponseMapper): Future[ResponseBuilder] = {
     userAuthentication.withUserSession(request) { session =>
