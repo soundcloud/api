@@ -20,10 +20,7 @@ object Build extends HttpServerAppBuild(
     "com.soundcloud"     %% "sc-services"              % "39.0.0",
     "com.soundcloud"     %% "track-coordinator-client" % "19.0.0",
     "com.fasterxml.uuid" %  "java-uuid-generator"      % "3.1.3",
-    "commons-codec"      %  "commons-codec"            % "1.9",
-    "com.squareup.okhttp3"      % "mockwebserver" % "3.2.0" % "test",
-    "org.apache.httpcomponents" % "httpclient"    % "4.5.2" % "test",
-    "org.apache.httpcomponents" % "httpmime"      % "4.5.2" % "test"
+    "commons-codec"      %  "commons-codec"            % "1.9"
   ),
   mainClass = "com.soundcloud.publicApiStrangler.App"
 ) {
@@ -36,9 +33,7 @@ object Build extends HttpServerAppBuild(
         libraryDependencies ++= Seq(
           "org.specs2" %% "specs2-core" % "3.6.4",
           "org.specs2" %% "specs2-mock" % "3.6.4",
-          "com.soundcloud" %% "jvmkit" % BuildProperties.jvmkitVersion,
-          "org.apache.httpcomponents" % "httpclient" % "4.5.2",
-          "org.apache.httpcomponents" % "httpmime" % "4.5.2"
+          "com.soundcloud" %% "jvmkit" % BuildProperties.jvmkitVersion
         )
       )
     )

@@ -2,23 +2,23 @@ package com.soundcloud.publicApiStrangler.support
 
 import com.soundcloud.bff.ConfigComponent
 import com.soundcloud.jvmkit.ResourceName
-import com.soundcloud.jvmkit.config.{ConfigConvention, DataSensitivity}
+import com.soundcloud.jvmkit.config.ConfigConvention
 import com.soundcloud.jvmkit.telemetry.Telemetry
-import com.soundcloud.scalakit.finagle.{CircuitBreakerFilter, FollowRedirectsFilter}
-import com.soundcloud.scalakit.finagle.http.OutgoingHttpRequestMonitoringFilter
+import com.soundcloud.scalakit.finagle.{FollowRedirectsFilter, CircuitBreakerFilter}
+import com.soundcloud.scalakit.finagle.http.{OutgoingHttpRequestMonitoringFilter}
 import com.soundcloud.scalakit.finagle.telemetry.SoundCloudStatsReceiver
 import com.soundcloud.scalakit.finagle.zipkin.ZipkinTracer
 import com.twitter.finagle.service.FailFastFactory.FailFast
 import com.twitter.finagle.stats.NullStatsReceiver
-import com.twitter.finagle.{Http, Service, param}
-import com.twitter.finagle.client.{DefaultPool, Transporter}
-import com.twitter.finagle.http.{Request, Response}
+import com.twitter.finagle.{param, Http, Service}
+import com.twitter.finagle.client.{Transporter, DefaultPool}
+import com.twitter.finagle.http.{Response, Request}
 import com.twitter.finagle.param.HighResTimer
 import com.twitter.finagle.service._
 import com.twitter.finagle.service.RetryPolicy.RetryableWriteException
 import com.twitter.finagle.transport.Transport
 import com.twitter.finagle.util.DefaultTimer
-import com.twitter.util.{Duration, Throw, Try}
+import com.twitter.util.{Try, Duration, Throw}
 import com.twitter.util.TimeConversions._
 
 trait PublicApiClientComponent {
@@ -91,7 +91,7 @@ trait PublicApiClientComponent {
         .configured(FailFast(true))
         .filtered(retryFilter)
         .filtered(new OutgoingHttpRequestMonitoringFilter[Request, Response](ResourceName(svcName), telemetry, requestLatencyBuckets))
-        .newService(config.get("MOTHERSHIP_API_SERVER", DataSensitivity.NON_SENSITIVE))
+        .newService(config.get(ResourceName("MOTHERSHIP_API_SERVER"), ConfigConvention.SRV_RECORD))
 
     client
 
