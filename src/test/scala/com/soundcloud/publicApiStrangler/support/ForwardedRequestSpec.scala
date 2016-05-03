@@ -111,6 +111,31 @@ class ForwardedRequestSpec extends UnitSpecification {
     recordedRequest.getHeader("X-Favourite-Animal") ==== "zebra"
   }
 
+  "properly forwards POST request with Connection: close" in new Context {
+    server.enqueue(new MockResponse().setBody("donkey"))
+
+    val request = new HttpPost(s"http://localhost:$stranglerServerPort/tracks")
+    request.addHeader("X-Favourite-Animal", "zebra")
+    request.addHeader("Connection", "close")
+    request.setEntity(new StringEntity("giraffe", ContentType.TEXT_PLAIN))
+    val httpclient = HttpClients.createDefault()
+    val response = httpclient.execute(request)
+    response.getStatusLine.getStatusCode ==== 200
+    EntityUtils.toString(response.getEntity) ==== "donkey"
+
+
+    val recordedRequest = server.takeRequest()
+    recordedRequest.getMethod ==== "POST"
+    recordedRequest.getPath ==== "/tracks"
+    recordedRequest.getBody.readUtf8() ==== "giraffe"
+    recordedRequest.getHeader("Host") ==== "api.soundcloud.com"
+    recordedRequest.getHeader("X-Forwarded-Proto") ==== "https"
+    recordedRequest.getHeader("Transfer-Encoding") ==== null
+    recordedRequest.getHeader("Content-Length") ==== "7"
+    recordedRequest.getHeader("X-Favourite-Animal") ==== "zebra"
+  }.pendingUntilFixed("This simulates the issue we had with failing POST oauth2/token requests")
+
+
   "sends multipart POST requests as chunked" in new Context {
     server.enqueue(new MockResponse().setBody("okey dokey"))
 
