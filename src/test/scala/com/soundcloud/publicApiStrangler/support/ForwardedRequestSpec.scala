@@ -133,7 +133,8 @@ class ForwardedRequestSpec extends UnitSpecification {
     recordedRequest.getHeader("Transfer-Encoding") ==== null
     recordedRequest.getHeader("Content-Length") ==== "7"
     recordedRequest.getHeader("X-Favourite-Animal") ==== "zebra"
-  }.pendingUntilFixed("This simulates the issue we had with failing POST oauth2/token requests")
+    recordedRequest.getHeader("Connection") ==== "close"
+  }
 
 
   "sends multipart POST requests as chunked" in new Context {
