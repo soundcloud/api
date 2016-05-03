@@ -42,7 +42,7 @@ RATE_LIMIT_MEMCACHED_SERVERS="$DOCKER_IP"
 
 MOSHIMOSHI_BASE_URL="http://moshimoshi.int.s-cloud.net"
 
-MOTHERSHIP_API_SERVER_SRV_RECORD="dnssrv!http.passenger.prod.public-api.db.srv.int.s-cloud.net"
+MOTHERSHIP_API_SERVER="dnssrv!http.passenger.prod.public-api.db.srv.int.s-cloud.net"
 MOTHERSHIP_API_STREAMING_ENABLED="false"
 MOTHERSHIP_API_REQUEST_TIMEOUT_MILLIS="300000"
 
