@@ -3,6 +3,7 @@ package com.soundcloud.publicApiStrangler.support
 import java.io.InputStream
 import java.net.InetSocketAddress
 
+import com.soundcloud.jvmkit.logging.SoundCloudLoggerFactory
 import com.soundcloud.scalakit.test.UnitSpecification
 import com.twitter.finagle.http.{Method, Request, Response}
 import com.twitter.finagle.{Http, Service}
@@ -12,9 +13,12 @@ import org.apache.http.client.methods.{HttpGet, HttpPost, HttpPut}
 import org.apache.http.entity.mime.MultipartEntityBuilder
 import org.apache.http.entity.{ContentType, StringEntity}
 import org.apache.http.impl.client.HttpClients
+import org.apache.http.util.EntityUtils
 import org.specs2.mutable.BeforeAfter
 
 class ForwardedRequestSpec extends UnitSpecification {
+
+
   trait Context extends BeforeAfter {
     val server = new MockWebServer()
     val client = Http.client.withStreaming(enabled = false).newService(s"localhost:${server.getPort}")
@@ -49,6 +53,8 @@ class ForwardedRequestSpec extends UnitSpecification {
     request.addHeader("X-Favourite-Animal", "zebra")
     val httpclient = HttpClients.createDefault()
     val response = httpclient.execute(request)
+    response.getStatusLine.getStatusCode ==== 200
+    EntityUtils.toString(response.getEntity) ==== "donkey"
 
     val recordedRequest = server.takeRequest()
     recordedRequest.getMethod ==== "GET"
@@ -69,6 +75,8 @@ class ForwardedRequestSpec extends UnitSpecification {
     request.setEntity(new StringEntity("giraffe", ContentType.TEXT_PLAIN))
     val httpclient = HttpClients.createDefault()
     val response = httpclient.execute(request)
+    response.getStatusLine.getStatusCode ==== 200
+    EntityUtils.toString(response.getEntity) ==== "donkey"
 
     val recordedRequest = server.takeRequest()
     recordedRequest.getMethod ==== "POST"
@@ -89,6 +97,8 @@ class ForwardedRequestSpec extends UnitSpecification {
     request.setEntity(new StringEntity("giraffe", ContentType.TEXT_PLAIN))
     val httpclient = HttpClients.createDefault()
     val response = httpclient.execute(request)
+    response.getStatusLine.getStatusCode ==== 200
+    EntityUtils.toString(response.getEntity) ==== "donkey"
 
     val recordedRequest = server.takeRequest()
     recordedRequest.getMethod ==== "PUT"
@@ -127,6 +137,8 @@ class ForwardedRequestSpec extends UnitSpecification {
     // Make request
     val httpclient = HttpClients.createDefault()
     val response = httpclient.execute(request)
+    response.getStatusLine.getStatusCode ==== 200
+    EntityUtils.toString(response.getEntity) ==== "okey dokey"
 
     // Verify
     val recordedRequest = server.takeRequest()
