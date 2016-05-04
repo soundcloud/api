@@ -27,3 +27,12 @@ publicapistrangler:
   links:
     - memcached:memcached
     - zookeeper:zookeeper
+    - publicapistub:publicapistub
+
+publicapistub:
+  image: docker.dev.s-cloud.net/ruby-2.3
+  command: bash -ex -c "gem install sinatra ; ruby /tmp/pas/tools/public-api-stub.rb"
+  volumes:
+    - .:/tmp/pas
+  ports:
+    - "4567:4567"
