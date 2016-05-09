@@ -1,4 +1,4 @@
-APP_NAME="publicapistranglertrackupload"
+APP_NAME="publicapistrangler"
 
 FINAGLE_METRICS_ENABLED="true"
 JAVA_OPTS="-XX:+UseCompressedOops -XX:MaxDirectMemorySize=1G -XX:+UseConcMarkSweepGC -XX:NewRatio=1 -Xmx2G -Xms1G -XX:ParallelGCThreads=2 -Dcom.twitter.jvm.numProcs=5"
