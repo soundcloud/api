@@ -13,7 +13,7 @@ APP_NAME := public-api-strangler
 API_ENTRYPOINT     := api
 API_INSTANCE_COUNT := 100
 APITRACKUPLOAD_ENTRYPOINT     := apitrackupload
-APITRACKUPLOAD_INSTANCE_COUNT := 2
+APITRACKUPLOAD_INSTANCE_COUNT := 10
 
 API_CONFIG := production_api.sh
 APITRACKUPLOAD_CONFIG := production_apitrackupload.sh
