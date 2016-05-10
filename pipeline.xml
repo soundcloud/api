@@ -111,12 +111,6 @@
              <arg>deploy-db-apitrackupload</arg>
              <runif status="passed"/>
            </exec>
-           <exec command="make">
-             <arg>-f</arg>
-             <arg>Makefile.pipeline</arg>
-             <arg>deploy-db-apiuploadtest</arg>
-             <runif status="passed"/>
-           </exec>
         </tasks>
       </job>
     </jobs>
