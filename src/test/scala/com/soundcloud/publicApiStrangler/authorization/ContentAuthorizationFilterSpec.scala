@@ -3,15 +3,26 @@ package com.soundcloud.publicApiStrangler.authorization
 import com.soundcloud.bff.finagle.{ResponseBuilder, Request => BffRequest}
 import com.soundcloud.bff.test.UnitSpecification
 import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures
-import com.soundcloud.scalakit.finagle.http.{RouterResponse, AlwaysMatchesPathMatcher, HandlerRequest}
+import com.soundcloud.scalakit.finagle.http.{AlwaysMatchesPathMatcher, HandlerRequest, RouterResponse}
 import com.twitter.finagle.Service
-import com.twitter.finagle.http.{Request => FinagleRequest, Response => FinagleResponse}
+import com.twitter.finagle.http.{Method, Request => FinagleRequest, Response => FinagleResponse}
 import com.twitter.util.{Await, Future}
+import org.mockito.ArgumentMatcher
+import org.mockito.Matchers.{eq => eqTo, argThat => argT}
 
 class ContentAuthorizationFilterSpec extends UnitSpecification with Fixtures {
 
   trait Context extends Scope {
     val someRequest = new HandlerRequest(AlwaysMatchesPathMatcher, FinagleRequest("/something")).request
+
+    // We need to use a custom matcher because equals doesn't work anymore since Finagle 6.35 :(
+    val requestMatcher = new ArgumentMatcher[BffRequest] {
+      override def matches(argument: scala.Any): Boolean = {
+        val request = argument.asInstanceOf[BffRequest]
+        request.path.equals("/something") &&  request.method.equals(Method.Get)
+      }
+    }
+
     val service = mock[Service[FinagleRequest, RouterResponse]]
     val authorizeContent = mock[AuthorizeHttpResponse]
     val originalResponse = RouterResponse(FinagleResponse(), "undefined")
@@ -19,11 +30,12 @@ class ContentAuthorizationFilterSpec extends UnitSpecification with Fixtures {
   }
 
   "when the response doesnt contain tracks" >> {
+
     "returns the response unchanged" in new Context {
       val expectedResponseBuilder = new ResponseBuilder().body(originalResponse.contentString).status(originalResponse.statusCode)
 
-      service.apply(new BffRequest(someRequest)) returns Future.value(originalResponse)
-      authorizeContent.apply(new BffRequest(someRequest), originalResponse.statusCode, originalResponse.contentString) returns
+      service.apply(argT(requestMatcher)) returns Future.value(originalResponse)
+      authorizeContent.apply(argT(requestMatcher), eqTo(originalResponse.statusCode), eqTo(originalResponse.contentString)) returns
         Future.value(expectedResponseBuilder)
 
       val authorizedResponse = Await.result(contentAuthorizationFilter.apply(someRequest, service))
@@ -40,8 +52,8 @@ class ContentAuthorizationFilterSpec extends UnitSpecification with Fixtures {
       val expectedResponseBuilder = new ResponseBuilder().body(bodyWithAuthorizationInformation).status(originalResponse.statusCode)
       val expectedResponse = expectedResponseBuilder.build
 
-      service.apply(new BffRequest(someRequest)) returns Future.value(originalResponse)
-      authorizeContent.apply(new BffRequest(someRequest), originalResponse.statusCode, originalResponse.contentString) returns
+      service.apply(argT(requestMatcher)) returns Future.value(originalResponse)
+      authorizeContent.apply(argT(requestMatcher), eqTo(originalResponse.statusCode), eqTo(originalResponse.contentString)) returns
         Future.value(expectedResponseBuilder)
 
       val authorizedResponse = Await.result(contentAuthorizationFilter.apply(someRequest, service))
