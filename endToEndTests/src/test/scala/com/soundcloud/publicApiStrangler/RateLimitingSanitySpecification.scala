@@ -1,7 +1,6 @@
 package com.soundcloud.publicApiStrangler
 
-import com.soundcloud.jvmkit.ResourceName
-import com.soundcloud.jvmkit.config.{AppConfig, ConfigConvention}
+import com.soundcloud.jvmkit.config.AppConfig
 import com.soundcloud.jvmkit.zookeeper.{BasePath, ZkClient}
 import com.soundcloud.scalakit.test.UnitSpecification
 import com.soundcloud.testutilities.{GratisMusikDiebstahl, SpinningUpAppSupport}
@@ -11,13 +10,13 @@ import org.apache.curator.retry.ExponentialBackoffRetry
 class RateLimitingSanitySpecification extends UnitSpecification with SpinningUpAppSupport {
 
   trait Context extends super.Context {
-    val server = TestServer(dockerBasedHost, 5000)
-    val adminServer = TestServer(dockerBasedHost, 5001)
+    val server = TestServer(dockerHostName, 5000)
+    val adminServer = TestServer(dockerHostName, 5001)
 
     val config = new AppConfig
 
     val zkClient = {
-      val zookeeperServers = config.get(ResourceName("ZOOKEEPER"), ConfigConvention.SERVERS)
+      val zookeeperServers = "docker:2181"
       val baseSleepTimeInMilliseconds = 1000
       val maxNumberOfRetries = 5
       val retryPolicy = new ExponentialBackoffRetry(baseSleepTimeInMilliseconds, maxNumberOfRetries)

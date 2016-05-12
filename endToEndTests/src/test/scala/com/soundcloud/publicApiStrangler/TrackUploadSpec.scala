@@ -12,8 +12,8 @@ import org.apache.http.util.EntityUtils
 
 class TrackUploadSpec extends UnitSpecification with SpinningUpAppSupport {
   trait Context extends super.Context {
-    val server = TestServer(dockerBasedHost, 5000)
-    val adminServer = TestServer(dockerBasedHost, 5001)
+    val server = TestServer(dockerHostName, 5000)
+    val adminServer = TestServer(dockerHostName, 5001)
   }
 
   "Public API Strangler" should {
@@ -32,7 +32,7 @@ class TrackUploadSpec extends UnitSpecification with SpinningUpAppSupport {
       }
 
       // Build request
-      val request = new HttpPost(s"http://$dockerBasedHost:5000/tracks")
+      val request = new HttpPost(s"http://${dockerHostName}:5000/tracks")
       val reqEntity = MultipartEntityBuilder.create()
         .addBinaryBody("track[asset_data]", inputStream, ContentType.APPLICATION_OCTET_STREAM, "donkey_song.mp3")
         .build()

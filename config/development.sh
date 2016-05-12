@@ -1,5 +1,3 @@
-DOCKER_IP=${DOCKER_IP:-$(docker-ip)}
-
 APP_NAME="publicapistrangler"
 APP_BASE_URL="https://api.soundcloud.com"
 
@@ -20,14 +18,14 @@ PUBLICAPISTRANGLER_MAX_REQUEST_SIZE_MB="500"
 PUBLICAPISTRANGLER_STREAMING="true"
 PUBLICAPISTRANGLER_REQUEST_TIMEOUT_MILLIS="300000"
 
-MEMCACHED_HOST="$DOCKER_IP"
+MEMCACHED_HOST="memcached"
 MEMCACHED_PORT="11211"
-MEMCACHED_TEST_HOST="$DOCKER_IP"
+MEMCACHED_TEST_HOST="memcached"
 MEMCACHED_TEST_PORT="11211"
 
 DEFAULT_REQUEST_LATENCY_BUCKETS="0.001,0.005,0.010,0.020,0.050,0.100,0.200,0.300,0.500,0.750,1,5"
 
-ZOOKEEPER_SERVERS="${DOCKER_IP}:2181"
+ZOOKEEPER_SERVERS=zookeeper:2181
 
 AUTHENTICATOR_SRV_RECORD="dnssrv!http.api.prod.authenticator.dd.srv.int.s-cloud.net"
 AUTHSY_SRV_RECORD="dnssrv!http.api.prod.authsy.dd.srv.int.s-cloud.net"
@@ -38,11 +36,11 @@ GATEKEEPER_SRV_RECORD="dnssrv!http.api.prod.gatekeeper.dd.srv.int.s-cloud.net"
 GEOIP_SRV_RECORD="dnssrv!http.geoip2http.prod.geoip.dd.srv.int.s-cloud.net"
 MEDIASERVICE_SRV_RECORD="dnssrv!http.urlgen.prod.media-service.dd.srv.int.s-cloud.net"
 
-RATE_LIMIT_MEMCACHED_SERVERS="$DOCKER_IP"
+RATE_LIMIT_MEMCACHED_SERVERS="memcached"
 
 MOSHIMOSHI_BASE_URL="http://moshimoshi.int.s-cloud.net"
 
-MOTHERSHIP_API_SERVER="$DOCKER_IP:4567"
+MOTHERSHIP_API_SERVER="publicapistub:4567"
 MOTHERSHIP_API_STREAMING_ENABLED="false"
 MOTHERSHIP_API_REQUEST_TIMEOUT_MILLIS="300000"
 

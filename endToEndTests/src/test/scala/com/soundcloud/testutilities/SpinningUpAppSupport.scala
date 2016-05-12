@@ -65,12 +65,8 @@ trait SpinningUpAppSupport { this: Specification =>
     private def defaultHeaders = HeaderMap()
   }
 
-  def dockerBasedHost: String = {
-    val host = sys.env.get("SERVER_HOST")
-    if (host.isEmpty)
-      throw new IllegalStateException("SERVER_HOST env variable not found.")
-    host.get
-  }
+  def dockerHostName: String = "docker"
+
 
   class ServerUnderTestException(reason: String) extends RuntimeException(reason)
 

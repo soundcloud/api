@@ -12,7 +12,7 @@ fi
 function main {
   start_server
   SERVER_PID=$(jobs -l | awk '{ print $2 }')
-  SERVER_HOST=${SERVER_HOST} make _run-end-to-end-test
+  make _run-end-to-end-test
   RESULT=$?
   kill $SERVER_PID
   exit $RESULT
