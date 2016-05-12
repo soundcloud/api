@@ -6,7 +6,7 @@ import com.soundcloud.bff.media.{MediaUrlsRepository, WaveformUrlsRepository}
 import com.soundcloud.bff.services.JsonService
 import com.soundcloud.jvmkit.ResourceName
 import com.soundcloud.jvmkit.admin.{AdminRoute, RequestMethod}
-import com.soundcloud.jvmkit.config.{DataSensitivity, ConfigConvention}
+import com.soundcloud.jvmkit.config.{ConfigConvention, DataSensitivity}
 import com.soundcloud.jvmkit.rollout.{BasicRolloutFeature, RolloutBuilder}
 import com.soundcloud.publicApiStrangler.authorization._
 import com.soundcloud.publicApiStrangler.client.followcounts.FollowCountsClient
@@ -28,6 +28,7 @@ import com.soundcloud.scalakit.Urn
 import com.soundcloud.scalakit.cache.MemcachedClient
 import org.eclipse.jetty.server.Handler
 import com.soundcloud.publicApiStrangler.client._
+import com.soundcloud.scalakit.finagle.jsonservice.{JsonClient, ServiceEntryPoint}
 
 object App
   extends BffInjectionBasedApp
@@ -65,6 +66,14 @@ object App
 
   private val stitch4followsService = JsonService(
     ServiceConfig("stitch4follows", config.get(ResourceName("STITCH4FOLLOWS"), ConfigConvention.SRV_RECORD), config)
+  )
+
+  private val gobblyClient = new GobblyClient(
+    JsonClient(
+      ResourceName("gobbly"),
+      ServiceEntryPoint(config.get(ResourceName("GOBBLY"), ConfigConvention.SRV_RECORD)),
+      config,
+      telemetry)
   )
 
   private val followCountsClient = new FollowCountsClient(stitch4followsService, config)
@@ -138,7 +147,8 @@ object App
   private val tracksController = new TracksController(userAuthentication,
     trackCoordinatorClient,
     okidokiClient,
-    mothershipDispatcher)
+    mothershipDispatcher,
+    gobblyClient)
 
   lazy val rolloutClient = new RolloutBuilder(config, telemetry).build("public-api-strangler")
   override lazy val rollout = Some(rolloutClient)

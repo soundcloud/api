@@ -5,8 +5,9 @@ import com.soundcloud.bff.test.InjectionBasedControllerSpecification
 import com.soundcloud.trackcoordinator.client.mapper.TrackMapper
 import com.soundcloud.trackcoordinator.client.TrackCoordinatorClient
 import com.soundcloud.jvmkit.rollout.{BasicRolloutFeature, Rollout}
-import com.soundcloud.jvmkit.{Geo => JvmGeo, UserSessionBuilder}
-import com.soundcloud.trackcoordinator.client.representation.{Error, Errors, Failure, NotFound, Result, Success, Track => CoordinatorTrack, TrackUpdate}
+import com.soundcloud.jvmkit.{UserSessionBuilder, Geo => JvmGeo}
+import com.soundcloud.publicApiStrangler.client.{GobblyClient, ClientError => GobblyClientError, Error => GobblyError, Result => GobblyResult, ServerError => GobblyServerError, Success => GobblySuccess}
+import com.soundcloud.trackcoordinator.client.representation.{Error, Errors, Failure, NotFound, Result, Success, TrackUpdate, Track => CoordinatorTrack}
 import com.soundcloud.publicApiStrangler.support.DispatchToMothershipHandler
 import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures
 import com.soundcloud.scalakit.finagle.http.HandlerRequest
@@ -15,6 +16,9 @@ import com.soundcloud.scalakit.{Geo, Urn}
 import com.soundcloud.service.client.OkidokiClient
 import com.twitter.finagle.http.{Request, Response, Status}
 import com.soundcloud.bff.finagle.ResponseBuilder
+import com.soundcloud.publicApiStrangler.client.GobblyClient
+import com.soundcloud.scalakit.json.Json
+import play.api.libs.json.{Json => PlayJson}
 import com.twitter.util.Future
 import org.joda.time.{DateTime, DateTimeUtils}
 import org.specs2.mutable.BeforeAfter
@@ -26,6 +30,7 @@ class TracksControllerSpec extends InjectionBasedControllerSpecification with Fi
     val fallback = mock[DispatchToMothershipHandler]
     val trackCoordinator = mock[TrackCoordinatorClient]
     val okidoki = mock[OkidokiClient]
+    val gobblyClient = mock[GobblyClient]
     val trackUrn = Urn("soundcloud:tracks:999")
     val userUrn = Urn("soundcloud:users:102661606")
     val users = okidokiUsers.as[List[JsObject]]
@@ -34,7 +39,8 @@ class TracksControllerSpec extends InjectionBasedControllerSpecification with Fi
 
     lazy val geo = Geo("US")
     lazy val session = new UserSessionBuilder().setUser(Urn("soundcloud:users:2")).setAgent(Urn("soundcloud:applications:v2")).setGeo(geo).build()
-    lazy val controller = new TracksController(fakeUserAuthentication(session), trackCoordinator, okidoki, fallback)
+    lazy val controller = new TracksController(fakeUserAuthentication(session), trackCoordinator, okidoki, fallback, gobblyClient)
+
 
     trackCoordinator.deleteTrack(session, trackUrn) returns Future(Success(()))
     trackCoordinator.updateTrack(===(session), ===(trackUrn), any, any) returns Future(Success(track))
@@ -43,6 +49,11 @@ class TracksControllerSpec extends InjectionBasedControllerSpecification with Fi
     when(fallback.dispatch(any[Request])).thenReturn(Future.value(new ResponseBuilder().status(200)))
   }
 
+  trait ContextWithGobbly extends Context {
+    def gobblyResponse: GobblyResult[Boolean] = GobblySuccess(false) // “false” means not HT
+
+    gobblyClient.allTracksManagedByFeedsForWrite(any, ===(List(trackUrn))) returns Future(gobblyResponse)
+  }
 
   "GET /tracks/:id" >> {
     "falls back onto moshi" in new Context {
@@ -60,36 +71,36 @@ class TracksControllerSpec extends InjectionBasedControllerSpecification with Fi
 
 
   "PUT /tracks/:id" >> {
-    "succeeds" in new Context {
-      val response = put(controller, "/tracks/999", body = singleTrack)
-      response.status ==== Status.Ok
-      response.jsonBody ==== trackCoordinatorTrackInPublicApiFormat
-    }
-
-    "not found" in new Context {
-      trackCoordinator.updateTrack(===(session), ===(trackUrn), any, any) returns Future(NotFound)
+    "passes through requests" in new ContextWithGobbly {
+      when(fallback.dispatch(any[Request])).thenReturn(Future.value(new ResponseBuilder().status(201).body("Thank you for creating")))
 
       val response = put(controller, "/tracks/999", body = singleTrack)
-      response.status ==== Status.NotFound
+      response.status ==== Status.Created
+      response.body ==== "Thank you for creating"
     }
 
-    "errors out in an expected fashion" in new Context {
-      trackCoordinator.updateTrack(===(session), ===(trackUrn), any, any) returns Future(Errors(List(Error(412, "OMG SO WRONG"))))
+    "refuses updating HT tracks" in new ContextWithGobbly {
+      override def gobblyResponse = GobblySuccess(true)
 
       val response = put(controller, "/tracks/999", body = singleTrack)
-      response.status ==== Status.UnprocessableEntity
+      response.status ==== Status.Unauthorized
+      response.jsonBody ==== PlayJson.obj("reason" -> "not allowed")
     }
 
-    "errors out unexpectedly" in new Context {
-      trackCoordinator.updateTrack(===(session), ===(trackUrn), any, any) returns Future(Failure)
+    "errors if Gobbly server throws up" in new ContextWithGobbly {
+      override def gobblyResponse = GobblyServerError(GobblyError("blergh"))
 
       val response = put(controller, "/tracks/999", body = singleTrack)
       response.status ==== Status.InternalServerError
+      response.body ==== ""
     }
 
-    "Json body is wrongly formatted" in new Context {
-      val response = put(controller, "/tracks/999", body = JsNull)
-      response.status ==== Status.UnprocessableEntity
+    "errors if Gobbly client throws up" in new ContextWithGobbly {
+      override def gobblyResponse = GobblyClientError(GobblyError("blergh"))
+
+      val response = put(controller, "/tracks/999", body = singleTrack)
+      response.status ==== Status.InternalServerError
+      response.body ==== ""
     }
   }
 
