@@ -2,7 +2,8 @@ package com.soundcloud.publicApiStrangler.controller
 
 import com.soundcloud.bff.finagle.Request
 import com.soundcloud.bff.web.{BffInjectionBasedController, UserAuthentication}
-import com.soundcloud.publicApiStrangler.client.{GobblyClient, ClientError => GobblyClientError, Result => GobblyResult, ServerError => GobblyServerError, Success => GobblySuccess}
+import com.soundcloud.publicApiStrangler.client.GobblyClient
+import com.soundcloud.publicApiStrangler.client.gobbly.{ClientError => GobblyClientError, ServerError => GobblyServerError, Success => GobblySuccess}
 import com.soundcloud.publicApiStrangler.support.DispatchToMothershipHandler
 import com.soundcloud.scalakit.Urn
 import com.soundcloud.scalakit.finagle.jsonservice.Params
