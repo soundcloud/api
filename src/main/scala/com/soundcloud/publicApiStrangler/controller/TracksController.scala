@@ -1,21 +1,16 @@
 package com.soundcloud.publicApiStrangler.controller
 
-import com.soundcloud.publicApiStrangler.mapper.trackcoordinator.TrackCoordinatorMapper
-import com.soundcloud.service.client.OkidokiClient
-import com.soundcloud.service.response.mapper.TrackMapper
-import com.soundcloud.service.request.representation.MissingValue
-import com.soundcloud.scalakit.{Urn, UserSession}
-import com.soundcloud.trackcoordinator.client.representation.{Errors, NotFound, Success, Track => CoordinatorTrack}
-import com.soundcloud.trackcoordinator.client.TrackCoordinatorClient
-import com.soundcloud.bff.finagle.{Request, ResponseBuilder}
+import com.soundcloud.bff.finagle.Request
 import com.soundcloud.bff.web.{BffInjectionBasedController, UserAuthentication}
-import com.soundcloud.scalakit.finagle.jsonservice.Params
-import com.soundcloud.jvmkit.UserSession
+import com.soundcloud.publicApiStrangler.client.{GobblyClient, ClientError => GobblyClientError, Result => GobblyResult, ServerError => GobblyServerError, Success => GobblySuccess}
 import com.soundcloud.publicApiStrangler.support.DispatchToMothershipHandler
+import com.soundcloud.scalakit.Urn
+import com.soundcloud.scalakit.finagle.jsonservice.Params
+import com.soundcloud.service.client.OkidokiClient
+import com.soundcloud.trackcoordinator.client.TrackCoordinatorClient
+import com.soundcloud.trackcoordinator.client.representation.{NotFound, Success, Track => CoordinatorTrack}
 import com.twitter.util.Future
-import play.api.libs.json.{JsValue, JsObject, Reads}
-import com.soundcloud.scalakit.json.Json
-import org.joda.time.DateTime
+import play.api.libs.json.Json
 
 
 /**
@@ -26,7 +21,8 @@ import org.joda.time.DateTime
 class TracksController(userAuthentication: UserAuthentication,
                        trackCoordinator: TrackCoordinatorClient,
                        okidokiClient: OkidokiClient,
-                       mothershipDispatcher: DispatchToMothershipHandler)
+                       mothershipDispatcher: DispatchToMothershipHandler,
+                       gobbly: GobblyClient)
     extends BffInjectionBasedController {
 
   get("/tracks/:trackId")(request => mothershipDispatcher.dispatch(request))
@@ -34,25 +30,12 @@ class TracksController(userAuthentication: UserAuthentication,
 
   put("/tracks/:trackId") { request =>
     userAuthentication.withLoggedInUser(request) { (session, _) =>
-      val trackUpdate = TrackCoordinatorMapper.trackUpdateFromPublicApiTrack(request.getContentString) _
       val urn = trackUrn(request)
-      val result = for {
-        track <- trackCoordinator.fetchTrack(session, urn, Params.empty)
-        update <- trackUpdate(track).map { updateCommand =>
-          trackCoordinator.updateTrack(session,
-                                       urn,
-                                       updateCommand,
-                                       headers(request))
-          }.getOrElse(Future.value(Errors(List.empty)))
-        user <- okidokiClient.fetch(session, track.asOption.map(_.user_urn).toSet).map(_.headOption)
-      } yield (user, update)
-      result.map {
-        case (Some(user), Success(track)) =>
-          render.json(TrackCoordinatorMapper
-                        .publicApiTrackFromCoordinatorTrack(track, user))
-        case (_, NotFound) => render.notFound
-        case (_, Errors(lst)) => render.status(422)
-        case _ => render.internalServerError
+      gobbly.allTracksManagedByFeedsForWrite(session, List(urn)).flatMap {
+        case GobblySuccess(true) => Future.value(render.unauthorized.typedJson(Json.obj("reason" -> "not allowed")))
+        case GobblySuccess(false) => mothershipDispatcher.dispatch(request)
+        case GobblyServerError(errors) => Future.value(render.internalServerError)
+        case GobblyClientError(errors) => Future.value(render.internalServerError)
       }
     }
   }
