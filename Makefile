@@ -11,7 +11,7 @@ PUBLIC_API_STRANGLER_VERSION ?= $(shell artifact-manager package-version)
 default: precheckin
 
 _dev_docker_compose:
-	PUBLIC_API_STRANGLER_VERSION=$(PUBLIC_API_STRANGLER_VERSION) docker-compose up -d publicapistrangler
+	PUBLIC_API_STRANGLER_VERSION=$(PUBLIC_API_STRANGLER_VERSION) docker-compose up --force-recreate -d publicapistrangler
 
 _run-end-to-end-test:
 	crun $(BUILD_STACK) --docker-options="--add-host=docker:$(shell docker-ip)" -- $(SBT) endToEnd/test
@@ -22,9 +22,8 @@ precheckin:
 	make unit-test
 	mkdir -p ./target/bazooka/build
 	make -f Makefile.pipeline package
-	remove-containers
 	make end-to-end-test
-	remove-containers
+	docker-compose stop
 
 end-to-end-test:
 	bin/end-to-end-test
