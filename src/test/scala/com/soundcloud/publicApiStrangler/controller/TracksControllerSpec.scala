@@ -6,7 +6,8 @@ import com.soundcloud.trackcoordinator.client.mapper.TrackMapper
 import com.soundcloud.trackcoordinator.client.TrackCoordinatorClient
 import com.soundcloud.jvmkit.rollout.{BasicRolloutFeature, Rollout}
 import com.soundcloud.jvmkit.{UserSessionBuilder, Geo => JvmGeo}
-import com.soundcloud.publicApiStrangler.client.{GobblyClient, ClientError => GobblyClientError, Error => GobblyError, Result => GobblyResult, ServerError => GobblyServerError, Success => GobblySuccess}
+import com.soundcloud.publicApiStrangler.client.GobblyClient
+import com.soundcloud.publicApiStrangler.client.gobbly.{ClientError => GobblyClientError, Error => GobblyError, Result => GobblyResult, ServerError => GobblyServerError, Success => GobblySuccess}
 import com.soundcloud.trackcoordinator.client.representation.{Error, Errors, Failure, NotFound, Result, Success, TrackUpdate, Track => CoordinatorTrack}
 import com.soundcloud.publicApiStrangler.support.DispatchToMothershipHandler
 import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures
