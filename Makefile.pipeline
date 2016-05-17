@@ -49,7 +49,7 @@ prepare-package-layout:
 	add-config config/$(APITRACKUPLOAD_CONFIG)
 
 remove-containers:
-	remove-containers
+	docker-compose stop
 
 publish:
 	artifact-manager publish

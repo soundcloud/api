@@ -1,5 +1,9 @@
-SBT := vendor/sbt/bin/sbt -Duser.home=$(shell echo "$$HOME") -Dsbt.boot.properties=project/sbt.boot.properties -J-Xmx3G -J-Xms512m
-DEVELOPMENT_CONFIG := bin/dev-wrap --config=config/development.sh
+BUILD_STACK := sbt
+
+PWD?=$(HOME)
+define SBT
+	sbt -Duser.home=$(PWD)
+endef
 
 PUBLIC_API_STRANGLER_VERSION ?= $(shell artifact-manager package-version)
 
@@ -7,35 +11,34 @@ PUBLIC_API_STRANGLER_VERSION ?= $(shell artifact-manager package-version)
 default: precheckin
 
 _dev_docker_compose:
-	env DOCKER_IP=$(shell docker-ip) PUBLIC_API_STRANGLER_VERSION=$(PUBLIC_API_STRANGLER_VERSION) docker-compose up -d publicapistrangler
+	PUBLIC_API_STRANGLER_VERSION=$(PUBLIC_API_STRANGLER_VERSION) docker-compose up --force-recreate -d publicapistrangler
 
 _run-end-to-end-test:
-	$(DEVELOPMENT_CONFIG) $(SBT) endToEnd/test
+	crun $(BUILD_STACK) --docker-options="--add-host=docker:$(shell docker-ip)" -- $(SBT) endToEnd/test
 
 run: _dev_docker_compose
 
 precheckin:
 	make unit-test
 	mkdir -p ./target/bazooka/build
-	make -f Makefile.pipeline package publish
-	remove-containers
+	make -f Makefile.pipeline package
 	make end-to-end-test
-	remove-containers
+	docker-compose stop
 
 end-to-end-test:
 	bin/end-to-end-test
 
 unit-test:
-	$(DEVELOPMENT_CONFIG) $(SBT) test
+	crun $(BUILD_STACK) -- $(SBT) test
 
 interactive:
-	$(DEVELOPMENT_CONFIG) $(SBT)
+	crun $(BUILD_STACK) -- $(SBT)
 
 compile:
-	$(SBT) compile
+	crun $(BUILD_STACK) -- $(SBT) compile
 
 sc-debian-layout: clean
-	$(SBT) scDebianLayout:packageBin
+	crun $(BUILD_STACK) -- $(SBT) scDebianLayout:packageBin
 
 clean:
 	rm -rf target
