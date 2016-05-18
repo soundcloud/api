@@ -29,7 +29,7 @@ class RateLimitingSanitySpecification extends UnitSpecification with SpinningUpA
 
   "Public API Strangler" should {
 
-    "rate limit test requests" in new Context {
+    "rate limit test requests satisfying custom classifier, with search query params" in new Context {
       private def setData(zkClient: ZkClient, path: String, data: String) = {
         zkClient.createRecursively(BasePath.from(path), data.getBytes)
       }
@@ -43,8 +43,20 @@ class RateLimitingSanitySpecification extends UnitSpecification with SpinningUpA
           |  "id":"default",
           |  "rate_limits": [
           |    {
-          |      "name":"limit-all-the-things",
-          |      "matching":".*",
+          |      "name":"limit-foo",
+          |      "matching":"/foo",
+          |      "configurations": [
+          |        {
+          |          "bucket":"by-client",
+          |          "time_window":"PT1M",
+          |          "max_nr_of_requests":1000
+          |        }
+          |      ],
+          |      "mode":"probing"
+          |    },
+          |    {
+          |      "name":"search",
+          |      "matching":"",
           |      "configurations": [
           |        {
           |          "bucket":"by-client",
@@ -62,7 +74,20 @@ class RateLimitingSanitySpecification extends UnitSpecification with SpinningUpA
       server.get(s"/tracks/13158665.json?client_id=${GratisMusikDiebstahl.clientId}").status ==== 200
       server.get(s"/tracks/13158665.json?client_id=${GratisMusikDiebstahl.clientId}").status ==== 200
 
-      server.get(s"/tracks/13158665.json?client_id=${GratisMusikDiebstahl.clientId}").status ==== 429
+      server.get(s"/tracks/13158665.json?client_id=${GratisMusikDiebstahl.clientId}&q=search-foo").status ==== 200
+      server.get(s"/tracks/13158665.json?client_id=${GratisMusikDiebstahl.clientId}&license=search-bar").status ==== 200
+      server.get(s"/tracks/13158665.json?client_id=${GratisMusikDiebstahl.clientId}&tags=search-baz").status ==== 200
+
+      server.get(s"/tracks/13158665.json?client_id=${GratisMusikDiebstahl.clientId}&q=search-foo").status ==== 429
+      server.get(s"/tracks/13158665.json?client_id=${GratisMusikDiebstahl.clientId}&license=search-foo").status ==== 429
+      server.get(s"/tracks/13158665.json?client_id=${GratisMusikDiebstahl.clientId}&tags=search-foo").status ==== 429
+      server.get(s"/tracks/13158665.json?client_id=${GratisMusikDiebstahl.clientId}&genres=search-foo").status ==== 429
+
+      server.get(s"/search?q=foo&client_id=${GratisMusikDiebstahl.clientId}").status ==== 429
+      server.get(s"/v1/tracks?q=foo&client_id=${GratisMusikDiebstahl.clientId}").status ==== 429
+
+      server.get(s"/tracks/13158665.json?client_id=${GratisMusikDiebstahl.clientId}&foo=search-foo").status ==== 200
+      server.get(s"/tracks/13158665.json?client_id=${GratisMusikDiebstahl.clientId}").status ==== 200
     }
   }
 }
