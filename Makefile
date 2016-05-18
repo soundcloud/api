@@ -32,7 +32,7 @@ unit-test:
 	crun $(BUILD_STACK) -- $(SBT) test
 
 interactive:
-	crun $(BUILD_STACK) -- $(SBT)
+	crun -i $(BUILD_STACK) -- $(SBT)
 
 compile:
 	crun $(BUILD_STACK) -- $(SBT) compile
