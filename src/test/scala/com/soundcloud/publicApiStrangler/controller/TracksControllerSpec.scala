@@ -70,7 +70,6 @@ class TracksControllerSpec extends InjectionBasedControllerSpecification with Fi
     }
   }
 
-
   "PUT /tracks/:id" >> {
     "passes through requests" in new ContextWithGobbly {
       when(fallback.dispatch(any[Request])).thenReturn(Future.value(new ResponseBuilder().status(201).body("Thank you for creating")))
@@ -100,6 +99,40 @@ class TracksControllerSpec extends InjectionBasedControllerSpecification with Fi
       override def gobblyResponse = GobblyClientError(GobblyError("blergh"))
 
       val response = put(controller, "/tracks/999", body = singleTrack)
+      response.status ==== Status.InternalServerError
+      response.body ==== ""
+    }
+  }
+
+  "PUT /tracks/:id.json" >> {
+    "passes through requests" in new ContextWithGobbly {
+      when(fallback.dispatch(any[Request])).thenReturn(Future.value(new ResponseBuilder().status(201).body("Thank you for creating")))
+
+      val response = put(controller, "/tracks/999.json", body = singleTrack)
+      response.status ==== Status.Created
+      response.body ==== "Thank you for creating"
+    }
+
+    "refuses updating HT tracks" in new ContextWithGobbly {
+      override def gobblyResponse = GobblySuccess(true)
+
+      val response = put(controller, "/tracks/999.json", body = singleTrack)
+      response.status ==== Status.Unauthorized
+      response.jsonBody ==== PlayJson.obj("reason" -> "not allowed")
+    }
+
+    "errors if Gobbly server throws up" in new ContextWithGobbly {
+      override def gobblyResponse = GobblyServerError(GobblyError("blergh"))
+
+      val response = put(controller, "/tracks/999.json", body = singleTrack)
+      response.status ==== Status.InternalServerError
+      response.body ==== ""
+    }
+
+    "errors if Gobbly client throws up" in new ContextWithGobbly {
+      override def gobblyResponse = GobblyClientError(GobblyError("blergh"))
+
+      val response = put(controller, "/tracks/999.json", body = singleTrack)
       response.status ==== Status.InternalServerError
       response.body ==== ""
     }
