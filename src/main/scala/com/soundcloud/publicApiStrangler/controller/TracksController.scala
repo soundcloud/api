@@ -1,6 +1,6 @@
 package com.soundcloud.publicApiStrangler.controller
 
-import com.soundcloud.bff.finagle.Request
+import com.soundcloud.bff.finagle.{Request, ResponseBuilder}
 import com.soundcloud.bff.web.{BffInjectionBasedController, UserAuthentication}
 import com.soundcloud.publicApiStrangler.client.GobblyClient
 import com.soundcloud.publicApiStrangler.client.gobbly.{ClientError => GobblyClientError, ServerError => GobblyServerError, Success => GobblySuccess}
@@ -29,17 +29,8 @@ class TracksController(userAuthentication: UserAuthentication,
   get("/tracks/:trackId")(request => mothershipDispatcher.dispatch(request))
   post("/tracks/:trackId")(request => mothershipDispatcher.dispatch(request))
 
-  put("/tracks/:trackId") { request =>
-    userAuthentication.withLoggedInUser(request) { (session, _) =>
-      val urn = trackUrn(request)
-      gobbly.allTracksManagedByFeedsForWrite(session, List(urn)).flatMap {
-        case GobblySuccess(true) => Future.value(render.unauthorized.typedJson(Json.obj("reason" -> "not allowed")))
-        case GobblySuccess(false) => mothershipDispatcher.dispatch(request)
-        case GobblyServerError(errors) => Future.value(render.internalServerError)
-        case GobblyClientError(errors) => Future.value(render.internalServerError)
-      }
-    }
-  }
+  put("/tracks/:trackId")(handlePut)
+  put("/tracks/:trackId.json")(handlePut)
 
   delete("/tracks/:trackId") { request =>
     userAuthentication.withLoggedInUser(request) { (session, _) =>
@@ -50,6 +41,17 @@ class TracksController(userAuthentication: UserAuthentication,
       }
     }
   }
+
+  private def handlePut(request: Request): Future[ResponseBuilder] =
+    userAuthentication.withLoggedInUser(request) { (session, _) =>
+      val urn = trackUrn(request)
+      gobbly.allTracksManagedByFeedsForWrite(session, List(urn)).flatMap {
+        case GobblySuccess(true) => Future.value(render.unauthorized.typedJson(Json.obj("reason" -> "not allowed")))
+        case GobblySuccess(false) => mothershipDispatcher.dispatch(request)
+        case GobblyServerError(errors) => Future.value(render.internalServerError)
+        case GobblyClientError(errors) => Future.value(render.internalServerError)
+      }
+    }
 
   private def trackUrn(request: Request): Urn = {
     val IdParamPattern = "(\\d+)".r
