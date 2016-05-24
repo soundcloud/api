@@ -160,7 +160,7 @@ object App
   private val searchParams = Seq("q", "genres", "license", "tags")
   private val rateLimitZKBucket = "search"
 
-  def searchRequests: RateLimitClassifier.customClassifier = {
+  def searchRequests: RateLimitClassifier.rateLimitClassifier = {
     case req: Request if searchParams.find(x => req.params.contains(x)).isDefined => true
   }
   private val rateLimitingFacade = new RateLimitingFacade(
