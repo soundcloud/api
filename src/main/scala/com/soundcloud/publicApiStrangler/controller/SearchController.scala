@@ -51,30 +51,36 @@ class SearchController(val userAuthentication: UserAuthentication,
   get("/search/people")(dispatchToMothershipWithFollowCounts)
   get("/search/people.json")(dispatchToMothershipWithFollowCounts)
 
+
+
   private def dispatchUserRequest = dispatchRequest(
-    Set("q"),
+    defaultParams,
     SearchDispatcherRequest.userSearch,
     "users",
     dispatchToMothershipWithFollowCounts _
   )
 
   private def dispatchGroupRequest = dispatchRequest(
-    Set("q"),
+    defaultParams,
     SearchDispatcherRequest.groupSearch,
     "groups"
   )
 
-  private def dispatchPlaylistRequest = dispatchRequest(
-    Set("q", "license"),
-    SearchDispatcherRequest.playlistSearch,
-    "playlists"
-  )
+  private def dispatchPlaylistRequest = {
+    dispatchRequest(
+      playlistParams,
+      SearchDispatcherRequest.playlistSearch,
+      "playlists"
+    )
+  }
 
-  private def dispatchTrackRequest = dispatchRequest(
-    Set("q", "genres", "tags", "license"),
-    SearchDispatcherRequest.trackSearch,
-    "tracks"
-  )
+  private def dispatchTrackRequest = {
+    dispatchRequest(
+      trackParams,
+      SearchDispatcherRequest.trackSearch,
+      "tracks"
+    )
+  }
 
   /**
    * Perform a search for tracks. Logic to determine whether this is a search
@@ -131,4 +137,8 @@ class SearchController(val userAuthentication: UserAuthentication,
 
 object SearchController {
   val MaxCacheAge = 60
+  val defaultParams = Set("q")
+  val playlistParams = Set("q", "license")
+  val trackParams = Set("q", "genres", "tags", "license")
 }
+
