@@ -12,6 +12,7 @@ import com.soundcloud.jvmkit.rollout.{BasicRolloutFeature, RolloutBuilder}
 import com.soundcloud.publicApiStrangler.authorization._
 import com.soundcloud.publicApiStrangler.client._
 import com.soundcloud.publicApiStrangler.client.followcounts.FollowCountsClient
+import com.soundcloud.publicApiStrangler.controller.SearchController._
 import com.soundcloud.publicApiStrangler.controller._
 import com.soundcloud.publicApiStrangler.headers.DefaultResponseHeadersFilter
 import com.soundcloud.publicApiStrangler.mapper.liebling.LikeCountMapper
@@ -157,7 +158,7 @@ object App
 
   lazy val memcachedClient = MemcachedClient(config)
 
-  private val searchParams = Seq("q", "genres", "license", "tags")
+  private val searchParams = defaultParams ++ trackParams ++ playlistParams
   private val rateLimitZKBucket = "search"
 
   def searchRequests: RateLimitClassifier.rateLimitClassifier = {
