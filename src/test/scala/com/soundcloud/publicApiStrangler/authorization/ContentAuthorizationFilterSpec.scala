@@ -34,9 +34,8 @@ class ContentAuthorizationFilterSpec extends UnitSpecification with Fixtures {
     "returns the response unchanged" in new Context {
       val expectedResponseBuilder = new ResponseBuilder().body(originalResponse.contentString).status(originalResponse.statusCode)
 
-      service.apply(argT(requestMatcher)) returns Future.value(originalResponse)
-      authorizeContent.apply(argT(requestMatcher), eqTo(originalResponse.statusCode), eqTo(originalResponse.contentString)) returns
-        Future.value(expectedResponseBuilder)
+      service.apply(any[BffRequest]) returns Future.value(originalResponse)
+      authorizeContent.apply(any[BffRequest], ===(originalResponse.statusCode), ===(originalResponse.contentString)) returns Future.value(expectedResponseBuilder)
 
       val authorizedResponse = Await.result(contentAuthorizationFilter.apply(someRequest, service))
 
@@ -52,9 +51,8 @@ class ContentAuthorizationFilterSpec extends UnitSpecification with Fixtures {
       val expectedResponseBuilder = new ResponseBuilder().body(bodyWithAuthorizationInformation).status(originalResponse.statusCode)
       val expectedResponse = expectedResponseBuilder.build
 
-      service.apply(argT(requestMatcher)) returns Future.value(originalResponse)
-      authorizeContent.apply(argT(requestMatcher), eqTo(originalResponse.statusCode), eqTo(originalResponse.contentString)) returns
-        Future.value(expectedResponseBuilder)
+      service.apply(any[BffRequest]) returns Future.value(originalResponse)
+      authorizeContent.apply(any[BffRequest], ===(originalResponse.statusCode), ===(originalResponse.contentString)) returns Future.value(expectedResponseBuilder)
 
       val authorizedResponse = Await.result(contentAuthorizationFilter.apply(someRequest, service))
 

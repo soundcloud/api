@@ -28,6 +28,7 @@ DEFAULT_REQUEST_LATENCY_BUCKETS="0.001,0.005,0.010,0.020,0.050,0.100,0.200,0.300
 ZOOKEEPER_SERVERS=zookeeper:2181
 
 AUTHENTICATOR_SRV_RECORD="dnssrv!http.api.prod.authenticator.dd.srv.int.s-cloud.net"
+AUTHENTICATOR_JSONCLIENT_REQUEST_TIMEOUT_MILLIS=10000
 AUTHSY_SRV_RECORD="dnssrv!http.api.prod.authsy.dd.srv.int.s-cloud.net"
 FOLLOWS_SRV_RECORD="dnssrv!http.api.prod.follows.dd.srv.int.s-cloud.net"
 GOBBLY_SRV_RECORD="dnssrv!http.api.prod.gobbly.dd.srv.int.s-cloud.net"
