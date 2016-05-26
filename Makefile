@@ -25,8 +25,7 @@ precheckin:
 	make end-to-end-test
 	docker-compose stop
 
-end-to-end-test:
-	bin/end-to-end-test
+end-to-end-test: _dev_docker_compose _run-end-to-end-test
 
 unit-test:
 	crun $(BUILD_STACK) -- $(SBT) test
