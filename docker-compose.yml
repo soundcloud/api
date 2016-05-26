@@ -37,4 +37,3 @@ publicapistub:
     - .:/tmp/pas
   ports:
     - "4567:4567"
-
