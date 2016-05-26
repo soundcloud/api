@@ -11,13 +11,9 @@ import org.apache.http.impl.client.HttpClients
 import org.apache.http.util.EntityUtils
 
 class TrackUploadSpec extends UnitSpecification with SpinningUpAppSupport {
-  trait Context extends super.Context {
-    val server = TestServer(dockerHostName, 5000)
-    val adminServer = TestServer(dockerHostName, 5001)
-  }
 
   "Public API Strangler" should {
-    "properly stream large files" in new Context {
+    "properly stream large files" in new Scope {
       // Create stream
       val streamLength = 500000000 // 500 MB
       val inputStream: InputStream = new InputStream {
