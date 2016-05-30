@@ -19,7 +19,6 @@ API_CONFIG := production_api.sh
 APITRACKUPLOAD_CONFIG := production_apitrackupload.sh
 BAZOOKA_ZONES := db
 RUNTIME_STACK := jdk-8
-BUILD_STACK := jdk-8-dev
 
 DEPLOY_SCRIPT ?= $(shell gen-deploy-script --arch=linux --name=public-api-strangler --revision=`artifact-manager package-version`)
 PUBLIC_API_STRANGLER_VERSION ?= $(shell artifact-manager package-version)

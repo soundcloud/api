@@ -1,5 +1,3 @@
-BUILD_STACK := sbt
-
 PUBLIC_API_STRANGLER_VERSION ?= $(shell artifact-manager package-version)
 
 .PHONY: default
@@ -14,24 +12,26 @@ precheckin:
 	make end-to-end-test
 	docker-compose stop
 
-end-to-end-test:
-	PUBLIC_API_STRANGLER_VERSION=$(PUBLIC_API_STRANGLER_VERSION) docker-compose up --force-recreate -d publicapistrangler
-	crun $(BUILD_STACK) --docker-options="--add-host=docker:$(shell docker-ip)" -- sbt endToEnd/test
-	docker-compose stop
+end-to-end-test: _dev_docker_compose
+	crun sbt --docker-options="--add-host=docker:$(shell docker-ip)" -- sbt endToEnd/test
 
 unit-test:
-	crun $(BUILD_STACK) -- sbt test
+	crun sbt -- sbt test
 
 interactive:
-	crun -i $(BUILD_STACK) -- sbt
+	crun -i sbt -- sbt
 
 compile:
-	crun $(BUILD_STACK) -- sbt compile
+	crun sbt -- sbt compile
 
 sc-debian-layout: clean
-	crun $(BUILD_STACK) -- sbt scDebianLayout:packageBin
+	crun sbt -- sbt scDebianLayout:packageBin
 
 clean:
 	rm -rf target
+	rm -rf project/project
+	rm -rf project/target
 
 .PHONY: _dev_docker_compose
+_dev_docker_compose:
+	PUBLIC_API_STRANGLER_VERSION=$(PUBLIC_API_STRANGLER_VERSION) docker-compose up --force-recreate -d publicapistrangler
