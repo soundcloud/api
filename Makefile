@@ -1,5 +1,10 @@
 PUBLIC_API_STRANGLER_VERSION ?= $(shell artifact-manager package-version)
 
+PWD?=$(HOME)
+define SBT
+	sbt -Duser.home=$(PWD)
+endef
+
 .PHONY: default
 default: precheckin
 
@@ -13,19 +18,19 @@ precheckin:
 	docker-compose stop
 
 end-to-end-test: _dev_docker_compose
-	crun sbt --docker-options="--add-host=docker:$(shell docker-ip)" -- sbt endToEnd/test
+	crun sbt --docker-options="--add-host=docker:$(shell docker-ip)" -- $(SBT) endToEnd/test
 
 unit-test:
-	crun sbt -- sbt test
+	crun sbt -- $(SBT) test
 
 interactive:
-	crun -i sbt -- sbt
+	crun -i sbt -- $(SBT)
 
 compile:
-	crun sbt -- sbt compile
+	crun sbt -- $(SBT) compile
 
 sc-debian-layout: clean
-	crun sbt -- sbt scDebianLayout:packageBin
+	crun sbt -- $(SBT) scDebianLayout:packageBin
 
 clean:
 	rm -rf target
