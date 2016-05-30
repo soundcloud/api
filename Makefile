@@ -10,12 +10,6 @@ PUBLIC_API_STRANGLER_VERSION ?= $(shell artifact-manager package-version)
 .PHONY: default
 default: precheckin
 
-_dev_docker_compose:
-	PUBLIC_API_STRANGLER_VERSION=$(PUBLIC_API_STRANGLER_VERSION) docker-compose up --force-recreate -d publicapistrangler
-
-_run-end-to-end-test:
-	crun $(BUILD_STACK) --docker-options="--add-host=docker:$(shell docker-ip)" -- $(SBT) endToEnd/test
-
 run: _dev_docker_compose
 
 precheckin:
@@ -25,7 +19,10 @@ precheckin:
 	make end-to-end-test
 	docker-compose stop
 
-end-to-end-test: _dev_docker_compose _run-end-to-end-test
+end-to-end-test:
+	PUBLIC_API_STRANGLER_VERSION=$(PUBLIC_API_STRANGLER_VERSION) docker-compose up --force-recreate -d publicapistrangler
+	crun $(BUILD_STACK) --docker-options="--add-host=docker:$(shell docker-ip)" -- $(SBT) endToEnd/test
+	docker-compose stop
 
 unit-test:
 	crun $(BUILD_STACK) -- $(SBT) test

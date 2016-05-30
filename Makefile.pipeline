@@ -27,10 +27,10 @@ PUBLIC_API_STRANGLER_VERSION ?= $(shell artifact-manager package-version)
 #####################################################################
 
 unit-test:
-	crun $(BUILD_STACK) 'make unit-test'
+	make unit-test
 
 end-to-end-test: remove-containers
-	crun $(BUILD_STACK) 'env PUBLIC_API_STRANGLER_VERSION=$(PUBLIC_API_STRANGLER_VERSION) make end-to-end-test'
+	env PUBLIC_API_STRANGLER_VERSION=$(PUBLIC_API_STRANGLER_VERSION) make end-to-end-test
 
 package: prepare-package-layout
 	docker pull docker.dev.s-cloud.net/$(RUNTIME_STACK):latest
@@ -40,7 +40,7 @@ package: prepare-package-layout
 				 --proc="$(APITRACKUPLOAD_ENTRYPOINT) --config=$(APITRACKUPLOAD_CONFIG)"
 
 prepare-package-layout:
-	crun $(BUILD_STACK) 'make sc-debian-layout'
+	make sc-debian-layout
 	gen-wrapper-script --target="bin/$(APP_NAME)" --wrapper=$(API_ENTRYPOINT)
 	gen-wrapper-script --target="bin/$(APP_NAME)" --wrapper=$(APITRACKUPLOAD_ENTRYPOINT)
 	gen-postinst-script
