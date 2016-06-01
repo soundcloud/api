@@ -41,14 +41,6 @@ Zookeeper cluster and is managed by the
 
 ## FAQ
 
-#### What should I read before asking questions?
-
-That's a great question! Try these first:
-
-* [Strangler Application, by Martin Fowler](http://martinfowler.com/bliki/StranglerApplication.html)
-* [Legacy Application Strangulation : Case Studies, by Paul Hammant](http://paulhammant.com/2013/07/14/legacy-application-strangulation-case-studies/)
-* [An Introduction to Finagle](http://twitter.github.io/scala_school/finagle.html)
-
 #### Is this going to replace the current public API?
 
 Yes and no. This will be the first service hit when someone invokes
@@ -75,3 +67,14 @@ smart proxy to the old API.
 Several small features, like rate-limiting and other security checks,
 are implemented at this layer, without having to touch the mothership
 code.
+
+## External resources
+
+The Strangler pattern:
+
+* [_StranglerApplication_, by Martin Fowler](http://martinfowler.com/bliki/StranglerApplication.html)
+* [_Legacy Application Strangulation: Case Studies_, by Paul Hammant](http://paulhammant.com/2013/07/14/legacy-application-strangulation-case-studies/)
+
+Finagle:
+
+* [An Introduction to Finagle](http://twitter.github.io/scala_school/finagle.html)
