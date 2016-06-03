@@ -33,7 +33,7 @@ class FollowCountsClientSpec extends UnitSpecification {
         )
       )
       when(jsonService.get(anonymousSession, Path() / "bulk", bulkParams, Params.empty)) thenReturn
-        Future.value(JsonResponse(OkStatus, withContentsOf("stitch4counts", "bulk_follow_counts_response")))
+        Future.value(JsonResponse(OkStatus, withContentsOf("stitch4follows", "bulk_follow_counts_response")))
 
       when(config.get("STITCH_BULK_FETCH_MAX_ENTRIES", DataSensitivity.NON_SENSITIVE)).thenReturn("10")
     }
