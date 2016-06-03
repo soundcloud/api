@@ -286,8 +286,8 @@ object App
     new AcceptOnlyJsonRequestFilter,
     new OffsetLimitRequestFilter(limitOffsetEnabled, limitOffsetPaths, limitOffset),
     new CookieHeaderRemovalFilter,
-    new ExceptForTrackUploadsFilter(new ContentAuthorizationFilter(authorizeContent)),
-    new ExceptForTrackUploadsFilter(rateLimitingFacade.filter),
+    new ContentAuthorizationFilter(authorizeContent),
+    rateLimitingFacade.filter,
     new DefaultResponseHeadersFilter,
     new StaticFilesFilter
   )
