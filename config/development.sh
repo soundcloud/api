@@ -60,7 +60,7 @@ SLO_AVAILABILITY_TARGET=0.99999
 
 TIMELINE_JSONCLIENT_REQUEST_TIMEOUT_MILLIS="2000"
 
-SEARCH_SRV_RECORD="dnssrv!http.dispatcher.prod.search.dd.srv.int.s-cloud.net"
+SEARCH_SRV_RECORD="dnssrv!http.publicapi.prod.search.dd.srv.int.s-cloud.net"
 TIMELINE_SRV_RECORD="dnssrv!http.api.prod.timeline.dd.srv.int.s-cloud.net"
 
 TRACK_COORDINATOR_SRV_RECORD="dnssrv!http.coordinator.prod.tracks.dd.srv.int.s-cloud.net"
