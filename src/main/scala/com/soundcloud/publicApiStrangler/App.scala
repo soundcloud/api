@@ -261,7 +261,10 @@ object App
     mothershipDispatcher
   )
 
-  override val fallbackHandler = Some(mothershipDispatcher)
+  private val whatToStrangle = List(".*")
+
+  override val fallbackHandler = Some(new SpecificStranglingHandler(mothershipDispatcher,
+                                                                    whatToStrangle))
 
   private val limitOffsetEnabled = () => rolloutClient.isActive(BasicRolloutFeature("offset_limit"))
   private val limitOffsetPaths = Seq(
