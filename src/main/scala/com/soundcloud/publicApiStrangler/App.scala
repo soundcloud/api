@@ -283,19 +283,19 @@ object App
 
   private val whatToStrangle = List(
     // Endpoints we officially support: https://developers.soundcloud.com/docs/api/reference
-    """/connect""",
-    """/oauth2/token""",
-    """/users/\d+""",
-    """/tracks/\d+""",
-    """/playlists/\d+""",
-    """/groups/\d+""",
-    """/comments/\d+""",
-    """/me""",
-    """/me/connections""",
-    """/me/connections/\d+""",
-    """/apps""",
-    """/resolve""",
-    """/oembed""",
+    """/connect(\.(json))?""",
+    """/oauth2/token(\.(json))?""",
+    """/users/\d+(\.(json))?""",
+    """/tracks/\d+(\.(json))?""",
+    """/playlists/\d+(\.(json))?""",
+    """/groups/\d+(\.(json))?""",
+    """/comments/\d+(\.(json))?""",
+    """/me(\.(json))?""",
+    """/me/connections(\.(json))?""",
+    """/me/connections/\d+(\.(json))?""",
+    """/apps(\.(json))?""",
+    """/resolve(\.(json))?""",
+    """/oembed(\.(json))?""",
     // Everything else, to be compatible with what we have right now
     ".*"
   )
