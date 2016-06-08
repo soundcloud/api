@@ -261,10 +261,29 @@ object App
     mothershipDispatcher
   )
 
-  private val whatToStrangle = List(".*")
+  private val whatToStrangle = List(
+    // Endpoints we officially support: https://developers.soundcloud.com/docs/api/reference
+    """/connect""",
+    """/oauth2/token""",
+    """/users/\d+""",
+    """/tracks/\d+""",
+    """/playlists/\d+""",
+    """/groups/\d+""",
+    """/comments/\d+""",
+    """/me""",
+    """/me/connections""",
+    """/me/connections/\d+""",
+    """/apps""",
+    """/resolve""",
+    """/oembed""",
+    // Everything else, to be compatible with what we have right now
+    ".*"
+  )
 
-  override val fallbackHandler = Some(new SpecificStranglingHandler(mothershipDispatcher,
-                                                                    whatToStrangle))
+  override val fallbackHandler = Some(
+    new SpecificStranglingHandler(mothershipDispatcher,
+                                  whatToStrangle,
+                                  telemetry))
 
   private val limitOffsetEnabled = () => rolloutClient.isActive(BasicRolloutFeature("offset_limit"))
   private val limitOffsetPaths = Seq(
