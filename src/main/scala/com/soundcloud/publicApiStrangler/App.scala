@@ -255,6 +255,12 @@ object App
     followCountsClient
   )
 
+  private val playlistsController = new PlaylistsController(
+    userAuthentication,
+    okidokiClient,
+    mothershipDispatcher
+  )
+
   override val fallbackHandler = Some(mothershipDispatcher)
 
   private val limitOffsetEnabled = () => rolloutClient.isActive(BasicRolloutFeature("offset_limit"))
@@ -305,7 +311,8 @@ object App
     groupUsersController,
     suggestedUsersController,
     repostersController,
-    userController
+    userController,
+    playlistsController
   )
 
   override val customAdminHandlers: Seq[(AdminRoute, Handler)] = Seq(
