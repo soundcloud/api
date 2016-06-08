@@ -4,7 +4,7 @@ import com.soundcloud.bff.finagle.ResponseBuilder
 import com.soundcloud.scalakit.finagle.http.{HandlerRequest, HttpHandler}
 import com.soundcloud.scalakit.Urn
 import com.twitter.finagle.Service
-import com.twitter.finagle.http.{Status, Request, Response}
+import com.twitter.finagle.http.Response
 import com.twitter.util.Future
 import com.soundcloud.jvmkit.telemetry.Telemetry
 import com.soundcloud.scalakit.notifier.AirbrakeNotifier
@@ -28,25 +28,17 @@ class SpecificStranglingHandler(whereToDispatch: HttpHandler, pathsPatternsToDis
     val agent = Option(request.userSession.getAgent)
 
     logFallthroughRequest(strangledBy, agent, request.request.path)
-
-    (strangledBy, agent) match {
-      case (None, Some(agent)) if officialSoundCloudApps.contains(agent) =>
-        dispatchFun(request)
-      case (Some(_), _) => dispatchFun(request)
-      case _ => Future.value(error)
-    }
-  }
-
-  private lazy val error = {
-    val response = Response()
-    response.status = Status.NotFound
-    response
+    dispatchFun(request)
   }
 
   private def logFallthroughRequest(strangledBy: Option[String], agent: Option[Urn], path: String): Unit = {
     val label = strangledBy.getOrElse("NOT_STRANGLED")
-    val agentUrn = agent.getOrElse(Urn("soundcloud:applications:unknown"))
+    val agentUrn = agent.flatMap { agent =>
+      officialSoundCloudApps.collectFirst { case app if app == agent => app }
+    }.getOrElse(Urn("soundcloud:applications:external"))
+
     fallthroughCounter.labels(label, agentUrn.getString).inc()
+
     if(strangledBy.isEmpty)
       AirbrakeNotifier.notify(s"Got a fallthrough request to an unstrangled endpoint $path from ${agentUrn.getString}")
   }
