@@ -261,6 +261,12 @@ object App
     mothershipDispatcher
   )
 
+  private val officialSoundCloudApps = List(
+    Urn("soundcloud:applications:124"), // SoundCloud iOS
+    Urn("soundcloud:applications:3152"), // SoundCloud Android
+    Urn("soundcloud:applications:65097") // mobile web app in production
+  )
+
   private val whatToStrangle = List(
     // Endpoints we officially support: https://developers.soundcloud.com/docs/api/reference
     """/connect""",
@@ -283,6 +289,7 @@ object App
   override val fallbackHandler = Some(
     new SpecificStranglingHandler(mothershipDispatcher,
                                   whatToStrangle,
+                                  officialSoundCloudApps,
                                   telemetry))
 
   private val limitOffsetEnabled = () => rolloutClient.isActive(BasicRolloutFeature("offset_limit"))
