@@ -7,9 +7,9 @@ import com.twitter.finagle.Service
 import com.twitter.finagle.http.Response
 import com.twitter.util.Future
 import com.soundcloud.jvmkit.telemetry.Telemetry
-import com.soundcloud.scalakit.notifier.AirbrakeNotifier
+import scala.util.matching.Regex
 
-class SpecificStranglingHandler(whereToDispatch: HttpHandler, pathsPatternsToDispatch: List[String], officialSoundCloudApps: List[Urn], telemetry: Telemetry) extends HttpHandler {
+class SpecificStranglingHandler(whereToDispatch: HttpHandler, pathsPatternsToDispatch: List[Regex], officialSoundCloudApps: List[Urn], telemetry: Telemetry) extends HttpHandler {
 
   private val fallthroughCounter = telemetry.counter(
     "fallthrough_strangled_by",
@@ -23,11 +23,11 @@ class SpecificStranglingHandler(whereToDispatch: HttpHandler, pathsPatternsToDis
 
   private def dispatchIfRecognizedPattern(request: HandlerRequest, dispatchFun: HandlerRequest => Future[Response]): Future[Response] = {
     val strangledBy = pathsPatternsToDispatch.collectFirst {
-      case path if request.request.path.matches(path) => path
+      case path if path.findFirstIn(request.request.path).isDefined => path
     }
     val agent = Option(request.userSession.getAgent)
 
-    logFallthroughRequest(strangledBy, agent, request.request.path)
+    logFallthroughRequest(strangledBy.map(_.toString), agent, request.request.path)
     dispatchFun(request)
   }
 
@@ -38,8 +38,5 @@ class SpecificStranglingHandler(whereToDispatch: HttpHandler, pathsPatternsToDis
     }.getOrElse(Urn("soundcloud:applications:external"))
 
     fallthroughCounter.labels(label, agentUrn.getString).inc()
-
-    if(strangledBy.isEmpty)
-      AirbrakeNotifier.notify(s"Got a fallthrough request to an unstrangled endpoint $path from ${agentUrn.getString}")
   }
 }
