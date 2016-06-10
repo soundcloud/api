@@ -2,7 +2,7 @@ PUBLIC_API_STRANGLER_VERSION ?= $(shell artifact-manager package-version)
 
 PWD?=$(HOME)
 define SBT
-	sbt -Duser.home=$(PWD)
+	sbt
 endef
 
 .PHONY: default
