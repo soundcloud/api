@@ -300,14 +300,11 @@ object App
     ".*"
   )
 
-  private val sendUnknownFallthroughPathsToAirbrake = () => rolloutClient.isActive(BasicRolloutFeature("send_unknown_fallthrough_paths_to_airbrake"))
-
   override val fallbackHandler = Some(
     new SpecificStranglingHandler(mothershipDispatcher,
                                   whatToStrangle,
                                   officialSoundCloudApps,
-                                  telemetry,
-                                  sendUnknownFallthroughPathsToAirbrake))
+                                  telemetry))
 
   private val limitOffsetEnabled = () => rolloutClient.isActive(BasicRolloutFeature("offset_limit"))
   private val limitOffsetPaths = Seq(

@@ -9,7 +9,7 @@ import com.twitter.util.Future
 import com.soundcloud.jvmkit.telemetry.Telemetry
 import com.soundcloud.scalakit.notifier.AirbrakeNotifier
 
-class SpecificStranglingHandler(whereToDispatch: HttpHandler, pathsPatternsToDispatch: List[String], officialSoundCloudApps: List[Urn], telemetry: Telemetry, sendToAirbrake: () => Future[Boolean]) extends HttpHandler {
+class SpecificStranglingHandler(whereToDispatch: HttpHandler, pathsPatternsToDispatch: List[String], officialSoundCloudApps: List[Urn], telemetry: Telemetry) extends HttpHandler {
 
   private val fallthroughCounter = telemetry.counter(
     "fallthrough_strangled_by",
@@ -39,17 +39,7 @@ class SpecificStranglingHandler(whereToDispatch: HttpHandler, pathsPatternsToDis
 
     fallthroughCounter.labels(label, agentUrn.getString).inc()
 
-    val sanitizedPath = sanitize(path)
-
-    if(strangledBy.isEmpty || strangledBy.map(_ == ".*").getOrElse(true))
-      sendToAirbrake().onSuccess { toAirbrake =>
-        if(toAirbrake)
-          AirbrakeNotifier.notify(s"Got a fallthrough request to an unstrangled endpoint $sanitizedPath from ${agentUrn.getString}")
-      }
+    if(strangledBy.isEmpty)
+      AirbrakeNotifier.notify(s"Got a fallthrough request to an unstrangled endpoint $path from ${agentUrn.getString}")
   }
-
-  private def sanitize(path: String) = {
-    path.replaceAll("""\d+""", ":id").takeWhile(_ != '?')
-  }
-
 }
