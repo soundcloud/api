@@ -1,7 +1,7 @@
 APP_NAME="publicapistrangler"
 
 FINAGLE_METRICS_ENABLED="true"
-JAVA_OPTS="-XX:+UseCompressedOops -XX:+UseConcMarkSweepGC -XX:NewRatio=1 -Xmx2G -Xms1G -XX:ParallelGCThreads=2 -Dcom.twitter.jvm.numProcs=10"
+JAVA_OPTS="-XX:+UseCompressedOops -XX:+UseConcMarkSweepGC -XX:NewRatio=1 -Xmx2G -Xms2G -XX:ParallelGCThreads=2 -Dcom.twitter.jvm.numProcs=10"
 
 APP_BASE_URL="https://api.soundcloud.com"
 
