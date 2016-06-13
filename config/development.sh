@@ -1,4 +1,4 @@
-APP_NAME="publicapistrangler"
+APP_NAME="public-api-strangler"
 APP_BASE_URL="https://api.soundcloud.com"
 
 ADMIN_APP_TIMEOUT_MILLIS="30000"
