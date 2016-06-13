@@ -154,7 +154,7 @@ object App
     mothershipDispatcher,
     gobblyClient)
 
-  lazy val rolloutClient = new RolloutBuilder(config, telemetry).build("public-api-strangler")
+  lazy val rolloutClient = new RolloutBuilder(config, telemetry).build
   override lazy val rollout = Some(rolloutClient)
 
   lazy val memcachedClient = MemcachedClient(config)
