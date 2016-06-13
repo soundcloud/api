@@ -281,50 +281,65 @@ object App
     Urn("soundcloud:applications:179522")  // Facebook Partner Internal
   )
 
-  private val whatToStrangle = List(
+  private val whatToStrangle = {
     // Endpoints we officially support: https://developers.soundcloud.com/docs/api/reference
-    """(\/[evi]1)?/connect(\.(json))?""".r,
-    """(\/[evi]1)?/oauth2/token(\.(json))?""".r,
-    """(\/[evi]1)?/users/\d+(\.(json))?""".r,
-    """(\/[evi]1)?/tracks/\d+(\.(json))?""".r,
-    """(\/[evi]1)?/playlists/\d+(\.(json))?""".r,
-    """(\/[evi]1)?/groups/\d+(\.(json))?""".r,
-    """(\/[evi]1)?/comments/\d+(\.(json))?""".r,
-    """(\/[evi]1)?/me(\.(json))?""".r,
-    """(\/[evi]1)?/me/connections(\.(json))?""".r,
-    """(\/[evi]1)?/me/connections/\d+(\.(json))?""".r,
-    """(\/[evi]1)?/apps(\.(json))?""".r,
-    """(\/[evi]1)?/resolve(\.(json))?""".r,
-    """(\/[evi]1)?/oembed(\.(json))?""".r,
+    val officiallySupported = List(
+      """/connect""",
+      """/oauth2/token""",
+      """/users/\d+""",
+      """/tracks/\d+""",
+      """/playlists/\d+""",
+      """/groups/\d+""",
+      """/comments/\d+""",
+      """/me""",
+      """/me/connections""",
+      """/me/connections/\d+""",
+      """/apps""",
+      """/resolve""",
+      """/oembed"""
+    )
+
     // Newly discovered endpoints:
-    """(\/[evi]1)?/announcements(\.(json))?""".r,
-    """(\/[evi]1)?/search/sounds(\.(json))?""".r,
-    """(\/[evi]1)?/transcodings/.*(\.(json))?""".r,
-    """(\/[evi]1)?/me/track_likes/ids(\.(json))?""".r,
-    """(\/[evi]1)?/me/playlist_likes/ids(\.(json))?""".r,
-    """(\/[evi]1)?/me/shortcuts(\.(json))?""".r,
-    """(\/[evi]1)?/me/favorites(\.(json))?""".r,
-    """(\/[evi]1)?/me/tracks(\.(json))?""".r,
-    """(\/[evi]1)?/me/track_reposts/ids(\.(json))?""".r,
-    """(\/[evi]1)?/me/playlist_reposts/ids(\.(json))?""".r,
-    """(\/[evi]1)?/tracks/\d+/download(\.(json))?""".r,
-    """(\/[evi]1)?/tracks/\d+/comments(\.(json))?""".r,
-    """(\/[evi]1)?/tracks/\d+/streams(\.(json))?""".r,
-    """(\/[evi]1)?/users/\d+/groups(\.(json))?""".r,
-    """(\/[evi]1)?/users/\d+/favorites(\.(json))?""".r,
-    """(\/[evi]1)?/users/\d+/tracks(\.(json))?""".r,
-    """(\/[evi]1)?/users/\d+/comments(\.(json))?""".r,
-    """(\/[evi]1)?/users/\d+/playlists(\.(json))?""".r,
-    """(\/[evi]1)?/users/\d+/web-profiles(\.(json))?""".r,
-    """(\/[evi]1)?/users/\w/groups(\.(json))?""".r,
-    """(\/[evi]1)?/users/\w/favorites(\.(json))?""".r,
-    """(\/[evi]1)?/users/\w/tracks(\.(json))?""".r,
-    """(\/[evi]1)?/users/\w/comments(\.(json))?""".r,
-    """(\/[evi]1)?/users/\w/playlists(\.(json))?""".r,
-    """(\/[evi]1)?/users/\w/web-profiles(\.(json))?""".r,
+    val newlyDiscovered = List(
+      """/announcements""",
+      """/search/sounds""",
+      """/e1/playlists/\d+/domain-lockings""",
+      """/e1/shorten""",
+      """/i1/comments/\d+/spam""",
+      """/transcodings/.*""",
+      """/me/track_likes/ids""",
+      """/me/playlist_likes/ids""",
+      """/me/shortcuts""",
+      """/me/favorites""",
+      """/me/tracks""",
+      """/me/track_reposts/ids""",
+      """/me/playlist_reposts/ids""",
+      """/me/stats""",
+      """/tracks/\d+/download""",
+      """/tracks/\d+/comments""",
+      """/tracks/\d+/streams""",
+      """/i1/tracks/\d+/streams""",
+      """/users/\d+/groups""",
+      """/users/\d+/favorites""",
+      """/users/\d+/tracks""",
+      """/users/\d+/comments""",
+      """/users/\d+/playlists""",
+      """/users/\d+/web-profiles""",
+      """/users/\w/groups""",
+      """/users/\w/favorites""",
+      """/users/\w/tracks""",
+      """/users/\w/comments""",
+      """/users/\w/playlists""",
+      """/users/\w/web-profiles"""
+    )
+
     // Everything else, to be compatible with what we have right now
-    ".*".r
-  )
+    val unknown = List(".*".r)
+
+    val everything = officiallySupported ++ newlyDiscovered
+
+    everything.map { endpoint => s"""(/v1)?$endpoint(.(json))?""".r } ++ unknown
+  }
 
   override val fallbackHandler = Some(
     new SpecificStranglingHandler(mothershipDispatcher,
