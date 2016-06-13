@@ -35,15 +35,15 @@ import org.eclipse.jetty.server.Handler
 
 object App
   extends BffInjectionBasedApp
-  with AppConfigComponent
-  with OkidokiComponent
-  with TimelineComponent
-  with LieblingComponent
-  with PublicApiClientComponent
-  with FollowsComponent
-  with GatekeeperComponent
-  with SimilarSoundsComponent
-  with TrackCoordinatorComponent {
+    with AppConfigComponent
+    with OkidokiComponent
+    with TimelineComponent
+    with LieblingComponent
+    with PublicApiClientComponent
+    with FollowsComponent
+    with GatekeeperComponent
+    with SimilarSoundsComponent
+    with TrackCoordinatorComponent {
 
   private val bffApplication = BffApplication(Urn("soundcloud", "systems", "public-api-strangler"), config.getApplicationResourceName)
 
@@ -165,6 +165,7 @@ object App
   def searchRequests: RateLimitClassifier.rateLimitClassifier = {
     case req: Request if searchParams.find(x => req.params.contains(x)).isDefined => true
   }
+
   private val rateLimitingFacade = new RateLimitingFacade(
     bffApplication,
     curatorFramework,
@@ -262,23 +263,23 @@ object App
   )
 
   private val officialSoundCloudApps = List(
-    Urn("soundcloud:applications:46941"),  // SoundCloud.com (currently being abused) Internal
-    Urn("soundcloud:applications:124"),  // SoundCloud iOS Internal
-    Urn("soundcloud:applications:3152"),  // SoundCloud Android Internal
-    Urn("soundcloud:applications:3273"),  // Mobile Soundcloud Internal
-    Urn("soundcloud:applications:65097"),  // Mobi (new mobile soundcloud) Internal
-    Urn("soundcloud:applications:-1"),  // Classic Internal
-    Urn("soundcloud:applications:43164"),  // SoundCloud Player Widget Internal
-    Urn("soundcloud:applications:90575"),  // SoundCloud Visual Embed Player Internal
-    Urn("soundcloud:applications:60973"),  // SoundCloud Flash Widget Internal
-    Urn("soundcloud:applications:66151"),  // Old mobi web Internal
-    Urn("soundcloud:applications:3537"),  // SoundCloud Desktop Internal
-    Urn("soundcloud:applications:99561"),  // SoundCloud Kik Messenger Card Internal
-    Urn("soundcloud:applications:120502"),  // Twitter Partner Internal
-    Urn("soundcloud:applications:42975"),  // SoundCloud Notifications Internal
-    Urn("soundcloud:applications:147241"),  // SoundCloud Jobs Page Internal
-    Urn("soundcloud:applications:140141"),  // SoundCloud Chromecast Receiver Internal
-    Urn("soundcloud:applications:179522")  // Facebook Partner Internal
+    Urn("soundcloud:applications:46941"), // SoundCloud.com (currently being abused) Internal
+    Urn("soundcloud:applications:124"), // SoundCloud iOS Internal
+    Urn("soundcloud:applications:3152"), // SoundCloud Android Internal
+    Urn("soundcloud:applications:3273"), // Mobile Soundcloud Internal
+    Urn("soundcloud:applications:65097"), // Mobi (new mobile soundcloud) Internal
+    Urn("soundcloud:applications:-1"), // Classic Internal
+    Urn("soundcloud:applications:43164"), // SoundCloud Player Widget Internal
+    Urn("soundcloud:applications:90575"), // SoundCloud Visual Embed Player Internal
+    Urn("soundcloud:applications:60973"), // SoundCloud Flash Widget Internal
+    Urn("soundcloud:applications:66151"), // Old mobi web Internal
+    Urn("soundcloud:applications:3537"), // SoundCloud Desktop Internal
+    Urn("soundcloud:applications:99561"), // SoundCloud Kik Messenger Card Internal
+    Urn("soundcloud:applications:120502"), // Twitter Partner Internal
+    Urn("soundcloud:applications:42975"), // SoundCloud Notifications Internal
+    Urn("soundcloud:applications:147241"), // SoundCloud Jobs Page Internal
+    Urn("soundcloud:applications:140141"), // SoundCloud Chromecast Receiver Internal
+    Urn("soundcloud:applications:179522") // Facebook Partner Internal
   )
 
   private val whatToStrangle = List(
@@ -302,9 +303,9 @@ object App
 
   override val fallbackHandler = Some(
     new SpecificStranglingHandler(mothershipDispatcher,
-                                  whatToStrangle,
-                                  officialSoundCloudApps,
-                                  telemetry))
+      whatToStrangle,
+      officialSoundCloudApps,
+      telemetry))
 
   private val limitOffsetEnabled = () => rolloutClient.isActive(BasicRolloutFeature("offset_limit"))
   private val limitOffsetPaths = Seq(
