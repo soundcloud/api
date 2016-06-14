@@ -64,7 +64,7 @@ class RateLimitingSanitySpecification extends UnitSpecification with SpinningUpA
         |    },
         |    {
         |      "name": "plays",
-        |      "matching": "(\/i1)?\/tracks\/(.+)\/stream.*",
+        |      "matching": "",
         |      "configurations": [
         |          {
         |              "bucket": "by-client",
