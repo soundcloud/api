@@ -25,54 +25,63 @@ class RateLimitingSanitySpecification extends UnitSpecification with SpinningUpA
       curatorZookeeperClient.blockUntilConnected()
       new ZkClient(curatorZookeeperClient)
     }
+
+    private[RateLimitingSanitySpecification] def setData(zkClient: ZkClient, path: String, data: String) = {
+      zkClient.createRecursively(BasePath.from(path), data.getBytes)
+    }
+
+    setData(zkClient, "/public-api-strangler/rollouts/wire-rate-limits", "100")
+    setData(zkClient, "/public-api-strangler/rollouts/probe-rate-limits", "100")
+    setData(zkClient, "/public-api-strangler/rollouts/enforce-rate-limits", "100")
+    setData(zkClient, "/ratelimiting/public-api-strangler/ratelimitgroups/default",
+      """
+        |{
+        |  "id":"default",
+        |  "rate_limits": [
+        |    {
+        |      "name":"limit-foo",
+        |      "matching":"/foo",
+        |      "configurations": [
+        |        {
+        |          "bucket":"by-client",
+        |          "time_window":"PT1M",
+        |          "max_nr_of_requests":1000
+        |        }
+        |      ],
+        |      "mode":"probing"
+        |    },
+        |    {
+        |      "name":"search",
+        |      "matching":"",
+        |      "configurations": [
+        |        {
+        |          "bucket":"by-client",
+        |          "time_window":"PT1M",
+        |          "max_nr_of_requests":3
+        |        }
+        |      ],
+        |      "mode":"enforcing"
+        |    },
+        |    {
+        |      "name": "plays",
+        |      "matching": "(\/i1)?\/tracks\/(.+)\/stream.*",
+        |      "configurations": [
+        |          {
+        |              "bucket": "by-client",
+        |              "time_window": "PT1M",
+        |              "max_nr_of_requests": 3
+        |          }
+        |      ],
+        |      "mode": "enforcing"
+        |    }
+        |  ]
+        |}
+      """.stripMargin)
   }
 
   "Public API Strangler" should {
 
     "rate limit test requests satisfying custom classifier, with search query params" in new Context {
-      private def setData(zkClient: ZkClient, path: String, data: String) = {
-        zkClient.createRecursively(BasePath.from(path), data.getBytes)
-      }
-
-      setData(zkClient, "/public-api-strangler/rollouts/wire-rate-limits", "100")
-      setData(zkClient, "/public-api-strangler/rollouts/probe-rate-limits", "100")
-      setData(zkClient, "/public-api-strangler/rollouts/enforce-rate-limits", "100")
-      setData(zkClient, "/ratelimiting/public-api-strangler/ratelimitgroups/default",
-        """
-          |{
-          |  "id":"default",
-          |  "rate_limits": [
-          |    {
-          |      "name":"limit-foo",
-          |      "matching":"/foo",
-          |      "configurations": [
-          |        {
-          |          "bucket":"by-client",
-          |          "time_window":"PT1M",
-          |          "max_nr_of_requests":1000
-          |        }
-          |      ],
-          |      "mode":"probing"
-          |    },
-          |    {
-          |      "name":"search",
-          |      "matching":"",
-          |      "configurations": [
-          |        {
-          |          "bucket":"by-client",
-          |          "time_window":"PT1M",
-          |          "max_nr_of_requests":3
-          |        }
-          |      ],
-          |      "mode":"enforcing"
-          |    }
-          |  ]
-          |}
-        """.stripMargin)
-
-      server.get(s"/tracks/13158665.json?client_id=${GratisMusikDiebstahl.clientId}").status ==== 200
-      server.get(s"/tracks/13158665.json?client_id=${GratisMusikDiebstahl.clientId}").status ==== 200
-      server.get(s"/tracks/13158665.json?client_id=${GratisMusikDiebstahl.clientId}").status ==== 200
 
       server.get(s"/tracks/13158665.json?client_id=${GratisMusikDiebstahl.clientId}&q=search-foo").status ==== 200
       server.get(s"/tracks/13158665.json?client_id=${GratisMusikDiebstahl.clientId}&license=search-bar").status ==== 200
@@ -88,6 +97,15 @@ class RateLimitingSanitySpecification extends UnitSpecification with SpinningUpA
 
       server.get(s"/tracks/13158665.json?client_id=${GratisMusikDiebstahl.clientId}&foo=search-foo").status ==== 200
       server.get(s"/tracks/13158665.json?client_id=${GratisMusikDiebstahl.clientId}").status ==== 200
+    }
+
+    "ratelimit requests for track streams injected via config in code, and not ZK" in new Context {
+      server.get(s"/i1/tracks/177748926/streams?client_id=6320d5b73121db59e21259fc688d940c").status ==== 200
+      server.get(s"/i1/tracks/177748926/streams?client_id=6320d5b73121db59e21259fc688d940c").status ==== 200
+      server.get(s"/i1/tracks/177748926/streams?client_id=6320d5b73121db59e21259fc688d940c").status ==== 200
+
+      server.get(s"/i1/tracks/177748926/streams?client_id=6320d5b73121db59e21259fc688d940c").status ==== 429
+
     }
   }
 }

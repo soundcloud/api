@@ -32,6 +32,8 @@ import com.soundcloud.scalakit.Urn
 import com.soundcloud.scalakit.cache.MemcachedClient
 import com.soundcloud.scalakit.finagle.jsonservice.{JsonClient, ServiceEntryPoint}
 import org.eclipse.jetty.server.Handler
+import com.soundcloud.ratelimiting.internal.utilities.RegexExtensions._
+
 
 object App
   extends BffInjectionBasedApp
@@ -160,11 +162,18 @@ object App
   lazy val memcachedClient = MemcachedClient(config)
 
   private val searchParams = defaultParams ++ trackParams ++ playlistParams
-  private val rateLimitZKBucket = "search"
-
+  private val searchZKBucket = "search"
   def searchRequests: RateLimitClassifier.rateLimitClassifier = {
     case req: Request if searchParams.find(x => req.params.contains(x)).isDefined => true
   }
+  private val searchRateLimiter = new RateLimitClassifier(searchZKBucket, searchRequests)
+
+  private val playsRegex = """(\/i1)?\/tracks\/(.+)\/stream.*""".r
+  private val playsZKBucket = "plays"
+  def playRequests: RateLimitClassifier.rateLimitClassifier = {
+    case req: Request if playsRegex =~ req.path => true
+  }
+  private val playsRateLimiter = new RateLimitClassifier(playsZKBucket, playRequests)
 
   private val rateLimitingFacade = new RateLimitingFacade(
     bffApplication,
@@ -174,7 +183,7 @@ object App
     telemetry,
     memcachedClient,
     rolloutClient,
-    Some(new RateLimitClassifier(rateLimitZKBucket, searchRequests))
+    Some(Seq(playsRateLimiter, searchRateLimiter))
   )
 
   private val userFollowController = new UserFollowController(

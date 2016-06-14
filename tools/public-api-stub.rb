@@ -36,3 +36,8 @@ get '/-/health' do
   # Kristof told me to write this
   'Okey dokey'
 end
+
+get '/i1/tracks/:id/streams' do
+  content_type 'application/json'
+  '{}'
+end
