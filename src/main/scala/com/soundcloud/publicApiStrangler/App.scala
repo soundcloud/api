@@ -295,24 +295,65 @@ object App
     Urn("soundcloud:applications:179522") // Facebook Partner Internal
   )
 
-  private val whatToStrangle = List(
+  private val whatToStrangle = {
     // Endpoints we officially support: https://developers.soundcloud.com/docs/api/reference
-    """/connect(\.(json))?""",
-    """/oauth2/token(\.(json))?""",
-    """/users/\d+(\.(json))?""",
-    """/tracks/\d+(\.(json))?""",
-    """/playlists/\d+(\.(json))?""",
-    """/groups/\d+(\.(json))?""",
-    """/comments/\d+(\.(json))?""",
-    """/me(\.(json))?""",
-    """/me/connections(\.(json))?""",
-    """/me/connections/\d+(\.(json))?""",
-    """/apps(\.(json))?""",
-    """/resolve(\.(json))?""",
-    """/oembed(\.(json))?""",
+    val officiallySupported = List(
+      """/connect""",
+      """/oauth2/token""",
+      """/users/\d+""",
+      """/tracks/\d+""",
+      """/playlists/\d+""",
+      """/groups/\d+""",
+      """/comments/\d+""",
+      """/me""",
+      """/me/connections""",
+      """/me/connections/\d+""",
+      """/apps""",
+      """/resolve""",
+      """/oembed"""
+    )
+
+    // Newly discovered endpoints:
+    val newlyDiscovered = List(
+      """/announcements""",
+      """/search/sounds""",
+      """/e1/playlists/\d+/domain-lockings""",
+      """/e1/shorten""",
+      """/i1/comments/\d+/spam""",
+      """/transcodings/.*""",
+      """/me/track_likes/ids""",
+      """/me/playlist_likes/ids""",
+      """/me/shortcuts""",
+      """/me/favorites""",
+      """/me/tracks""",
+      """/me/track_reposts/ids""",
+      """/me/playlist_reposts/ids""",
+      """/me/stats""",
+      """/tracks/\d+/download""",
+      """/tracks/\d+/comments""",
+      """/tracks/\d+/streams""",
+      """/i1/tracks/\d+/streams""",
+      """/users/\d+/groups""",
+      """/users/\d+/favorites""",
+      """/users/\d+/tracks""",
+      """/users/\d+/comments""",
+      """/users/\d+/playlists""",
+      """/users/\d+/web-profiles""",
+      """/users/\w/groups""",
+      """/users/\w/favorites""",
+      """/users/\w/tracks""",
+      """/users/\w/comments""",
+      """/users/\w/playlists""",
+      """/users/\w/web-profiles"""
+    )
+
     // Everything else, to be compatible with what we have right now
-    ".*"
-  )
+    val unknown = List(".*".r)
+
+    val everything = officiallySupported ++ newlyDiscovered
+
+    everything.map { endpoint => s"""(/v1)?$endpoint(.(json))?""".r } ++ unknown
+  }
 
   override val fallbackHandler = Some(
     new SpecificStranglingHandler(mothershipDispatcher,
