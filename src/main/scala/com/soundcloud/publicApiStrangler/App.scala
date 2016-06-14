@@ -8,7 +8,7 @@ import com.soundcloud.bff.services.JsonService
 import com.soundcloud.jvmkit.ResourceName
 import com.soundcloud.jvmkit.admin.{AdminRoute, RequestMethod}
 import com.soundcloud.jvmkit.config.{ConfigConvention, DataSensitivity}
-import com.soundcloud.jvmkit.rollout.{BasicRolloutFeature, RolloutBuilder}
+import com.soundcloud.jvmkit.rollout.{Rollout, BasicRolloutFeature, RolloutBuilder}
 import com.soundcloud.publicApiStrangler.authorization._
 import com.soundcloud.publicApiStrangler.client._
 import com.soundcloud.publicApiStrangler.client.followcounts.FollowCountsClient
@@ -202,23 +202,11 @@ object App
     val searchRepository = new SearchRepository(searchService)
     val searchMapper = new SearchMapper(searchRepository, searchEntityMapper, baseUrl)
 
-    def isActiveForFeature(feature: String): Future[Boolean] = {
-      val featureFlags = Map(
-        "users" -> "search_avoid_mothership_for_users",
-        "groups" -> "search_avoid_mothership_for_groups",
-        "playlists" -> "search_avoid_mothership_for_playlists",
-        "tracks" -> "search_avoid_mothership_for_tracks"
-      ).withDefault(f => s"search_avoid_mothership_for_$f")
-
-      val flag = BasicRolloutFeature(featureFlags(feature))
-      rolloutClient.isActive(flag)
-    }
-
     new SearchController(
       userAuthentication,
       mothershipDispatcher,
       followCountsClient,
-      isActiveForFeature,
+      new SearchControllerRolloutChecks(rolloutClient),
       searchMapper,
       baseUrl
     )
@@ -417,4 +405,11 @@ object App
     new AdminRoute(RequestMethod.GET, "/-/rate-limiting-diagnostics") ->
       rateLimitingFacade.rateLimitingDiagnosticsAdminHandler
   )
+}
+
+class SearchControllerRolloutChecks(rolloutClient: Rollout) {
+  def avoidForTracks = rolloutClient.isActive(BasicRolloutFeature("search_avoid_mothership_for_tracks"))
+  def avoidForUsers = rolloutClient.isActive(BasicRolloutFeature("search_avoid_mothership_for_users"))
+  def avoidForGroups = rolloutClient.isActive(BasicRolloutFeature("search_avoid_mothership_for_groups"))
+  def avoidForPlaylists = rolloutClient.isActive(BasicRolloutFeature("search_avoid_mothership_for_playlists"))
 }

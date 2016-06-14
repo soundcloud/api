@@ -1,5 +1,6 @@
 package com.soundcloud.publicApiStrangler.controller
 
+import com.soundcloud.publicApiStrangler.SearchControllerRolloutChecks
 import com.soundcloud.bff.finagle.{Request, ResponseBuilder}
 import com.soundcloud.bff.nextbff.pagination.PageBuilder
 import com.soundcloud.bff.nextbff.repository.RepositoryException
@@ -19,11 +20,11 @@ import com.twitter.util.{Future, Return, Try}
 class SearchController(val userAuthentication: UserAuthentication,
                        val mothershipDispatcher: DispatchToMothershipHandler,
                        val followCountsClient: FollowCountsClient,
-                       avoidMothershipFor: String => Future[Boolean],
+                       avoidMothershipFor: SearchControllerRolloutChecks,
                        searchMapper: SearchMapper,
                        baseUrl: String)
   extends BffInjectionBasedController with FollowCountsHelper {
-
+  
   get("/tracks")(dispatchTrackRequest)
   get("/tracks/")(dispatchTrackRequest)
   get("/tracks.json")(dispatchTrackRequest)
@@ -56,21 +57,21 @@ class SearchController(val userAuthentication: UserAuthentication,
   private def dispatchUserRequest = dispatchRequest(
     defaultParams,
     SearchDispatcherRequest.userSearch,
-    "users",
+    () => avoidMothershipFor.avoidForUsers,
     dispatchToMothershipWithFollowCounts _
   )
 
   private def dispatchGroupRequest = dispatchRequest(
     defaultParams,
     SearchDispatcherRequest.groupSearch,
-    "groups"
+    () => avoidMothershipFor.avoidForGroups
   )
 
   private def dispatchPlaylistRequest = {
     dispatchRequest(
       playlistParams,
       SearchDispatcherRequest.playlistSearch,
-      "playlists"
+      () => avoidMothershipFor.avoidForPlaylists
     )
   }
 
@@ -78,7 +79,7 @@ class SearchController(val userAuthentication: UserAuthentication,
     dispatchRequest(
       trackParams,
       SearchDispatcherRequest.trackSearch,
-      "tracks"
+      () => avoidMothershipFor.avoidForTracks
     )
   }
 
@@ -86,8 +87,8 @@ class SearchController(val userAuthentication: UserAuthentication,
    * Perform a search for tracks. Logic to determine whether this is a search
    * and if we should forward the request to Mothership.
    */
-  private def dispatchRequest(searchParams: Set[String], makeRequest: Request => SearchDispatcherRequest, featureName: String, mothershipDispatcherFn: Request => Future[ResponseBuilder] = mothershipDispatcher.dispatch _): BffRequestHandler = request =>
-    if (isSearchRequest(request.params, searchParams)) search(request, makeRequest(request), featureName, mothershipDispatcherFn)
+  private def dispatchRequest(searchParams: Set[String], makeRequest: Request => SearchDispatcherRequest, avoidMothershipFor: () => Future[Boolean], mothershipDispatcherFn: Request => Future[ResponseBuilder] = mothershipDispatcher.dispatch _): BffRequestHandler = request =>
+    if (isSearchRequest(request.params, searchParams)) search(request, makeRequest(request), avoidMothershipFor, mothershipDispatcherFn)
     else mothershipDispatcherFn(request)
 
   private def isSearchRequest(params: ParamMap, searchParams: Set[String]): Boolean = {
@@ -101,9 +102,9 @@ class SearchController(val userAuthentication: UserAuthentication,
       case _ => Return(true)
     }
 
-  private def search(request: Request, searchRequest: SearchDispatcherRequest, featureName: String, mothershipDispatcherFn: Request => Future[ResponseBuilder] = mothershipDispatcher.dispatch _): Future[ResponseBuilder] = {
+  private def search(request: Request, searchRequest: SearchDispatcherRequest, avoidMothershipFor: () => Future[Boolean], mothershipDispatcherFn: Request => Future[ResponseBuilder] = mothershipDispatcher.dispatch _): Future[ResponseBuilder] = {
     userAuthentication.withUserSession(request) { session =>
-      avoidMothershipFor(featureName).flatMap{
+      avoidMothershipFor().flatMap{
         isActive =>
           if (isActive) {
 
