@@ -29,13 +29,21 @@ interactive:
 compile:
 	crun sbt -- $(SBT) compile
 
-sc-debian-layout: clean
+sc-debian-layout: clean patched-jdk
 	crun sbt -- $(SBT) scDebianLayout:packageBin
 
 clean:
 	rm -rf target
 	rm -rf project/project
 	rm -rf project/target
+	rm -rf jdk/target
+
+.PHONY: patched-jdk
+patched-jdk: jdk/target/sun/nio/ch/Util.class
+
+jdk/target/sun/nio/ch/Util.class: jdk/src/share/classes/sun/nio/ch/Util.java
+	mkdir -p jdk/target
+	javac -d jdk/target $<
 
 .PHONY: _dev_docker_compose
 _dev_docker_compose:
