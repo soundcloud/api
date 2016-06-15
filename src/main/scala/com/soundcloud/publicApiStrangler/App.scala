@@ -317,6 +317,7 @@ object App
     val newlyDiscovered = List(
       """/announcements""",
       """/search/sounds""",
+      """/search/sets""",
       """/e1/playlists/\d+/domain-lockings""",
       """/e1/shorten""",
       """/i1/comments/\d+/spam""",
@@ -331,20 +332,26 @@ object App
       """/me/stats""",
       """/tracks/\d+/download""",
       """/tracks/\d+/comments""",
+      """/tracks/\d+/stream""",
       """/tracks/\d+/streams""",
+      """/tracks/\d+/related""",
       """/i1/tracks/\d+/streams""",
+      """/playlists/\d+""",
+      """/playlists/[a-zA-Z0-9\-\_]+""",
+      """/upload/policy""",
       """/users/\d+/groups""",
       """/users/\d+/favorites""",
       """/users/\d+/tracks""",
       """/users/\d+/comments""",
       """/users/\d+/playlists""",
       """/users/\d+/web-profiles""",
-      """/users/\w/groups""",
-      """/users/\w/favorites""",
-      """/users/\w/tracks""",
-      """/users/\w/comments""",
-      """/users/\w/playlists""",
-      """/users/\w/web-profiles"""
+      """/users/[a-zA-Z0-9\_\-]+""",
+      """/users/[a-zA-Z0-9\_\-]+/groups""",
+      """/users/[a-zA-Z0-9\-\_]+/favorites""",
+      """/users/[a-zA-Z0-9\-\_]+/tracks""",
+      """/users/[a-zA-Z0-9\-\_]+/comments""",
+      """/users/[a-zA-Z0-9\-\_]+/playlists""",
+      """/users/[a-zA-Z0-9\-\_]+/web-profiles"""
     )
 
     // Everything else, to be compatible with what we have right now
