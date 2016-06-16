@@ -359,7 +359,10 @@ object App
 
     val everything = officiallySupported ++ newlyDiscovered
 
-    everything.map { endpoint => s"""(/v1)?$endpoint(.(json))?""".r } ++ unknown
+    everything.flatMap { endpoint =>
+      val res = s"$endpoint(.json)?"
+      List(res.r, s"/v1$res".r)
+    } ++ unknown
   }
 
   override val fallbackHandler = Some(
