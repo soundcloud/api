@@ -63,6 +63,13 @@ class TracksControllerSpec extends InjectionBasedControllerSpecification with Fi
     }
   }
 
+  "GET /tracks/:id.json" >> {
+    "falls back onto moshi" in new Context {
+      val response = get(controller, "/tracks/999.json")
+      response.status ==== Status.Ok
+    }
+  }
+
   "POST /tracks/:id" >> {
     "falls back onto moshi" in new Context {
       val response = post(controller, "/tracks/999")
