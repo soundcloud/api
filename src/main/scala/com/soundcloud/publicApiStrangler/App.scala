@@ -346,6 +346,7 @@ object App
       """/playlists/\d+""",
       """/playlists/[a-zA-Z0-9\-\_]+""",
       """/upload/policy""",
+      """/users""",
       """/users/\d+/groups""",
       """/users/\d+/favorites""",
       """/users/\d+/tracks""",
