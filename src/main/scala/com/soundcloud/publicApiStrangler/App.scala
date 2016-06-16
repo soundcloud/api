@@ -2,7 +2,6 @@ package com.soundcloud.publicApiStrangler
 
 import com.soundcloud.bff._
 import com.soundcloud.bff.authorization.ContentAuthorizationService
-import com.soundcloud.bff.finagle.Request
 import com.soundcloud.bff.media.{MediaUrlsRepository, WaveformUrlsRepository}
 import com.soundcloud.bff.services.JsonService
 import com.soundcloud.jvmkit.ResourceName
@@ -12,7 +11,6 @@ import com.soundcloud.jvmkit.rollout.{BasicRolloutFeature, RolloutBuilder}
 import com.soundcloud.publicApiStrangler.authorization._
 import com.soundcloud.publicApiStrangler.client._
 import com.soundcloud.publicApiStrangler.client.followcounts.FollowCountsClient
-import com.soundcloud.publicApiStrangler.controller.SearchController._
 import com.soundcloud.publicApiStrangler.controller._
 import com.soundcloud.publicApiStrangler.headers.DefaultResponseHeadersFilter
 import com.soundcloud.publicApiStrangler.mapper.liebling.LikeCountMapper
@@ -27,11 +25,11 @@ import com.soundcloud.publicApiStrangler.mapper.waveform.WaveformMapper
 import com.soundcloud.publicApiStrangler.support._
 import com.soundcloud.publicApiStrangler.zookeeper.CuratorFrameworkFactory
 import com.soundcloud.ratelimiting.facade._
-import com.soundcloud.ratelimiting.internal.core.RateLimitClassifier
 import com.soundcloud.scalakit.Urn
 import com.soundcloud.scalakit.cache.MemcachedClient
 import com.soundcloud.scalakit.finagle.jsonservice.{JsonClient, ServiceEntryPoint}
 import org.eclipse.jetty.server.Handler
+
 
 object App
   extends BffInjectionBasedApp
@@ -159,12 +157,6 @@ object App
 
   lazy val memcachedClient = MemcachedClient(config)
 
-  private val searchParams = defaultParams ++ trackParams ++ playlistParams
-  private val rateLimitZKBucket = "search"
-
-  def searchRequests: RateLimitClassifier.rateLimitClassifier = {
-    case req: Request if searchParams.find(x => req.params.contains(x)).isDefined => true
-  }
 
   private val rateLimitingFacade = new RateLimitingFacade(
     bffApplication,
@@ -174,7 +166,7 @@ object App
     telemetry,
     memcachedClient,
     rolloutClient,
-    Some(new RateLimitClassifier(rateLimitZKBucket, searchRequests))
+    Some(Seq(RateLimits.playsRateLimiter, RateLimits.searchRateLimiter))
   )
 
   private val userFollowController = new UserFollowController(
