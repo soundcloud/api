@@ -29,7 +29,7 @@ trait SpinningUpAppSupport { this: Specification =>
       ClientBuilder()
         .codec(Http())
         .hosts(serverAddress)
-        .hostConnectionLimit(1)
+        .hostConnectionLimit(25)
         .build()
     }
 
