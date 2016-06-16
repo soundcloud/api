@@ -27,6 +27,7 @@ class TracksController(userAuthentication: UserAuthentication,
     extends BffInjectionBasedController {
 
   get("/tracks/:trackId")(request => mothershipDispatcher.dispatch(request))
+  get("/tracks/:trackId.json")(request => mothershipDispatcher.dispatch(request))
   post("/tracks/:trackId")(request => mothershipDispatcher.dispatch(request))
 
   put("/tracks/:trackId")(handlePut)
@@ -56,8 +57,8 @@ class TracksController(userAuthentication: UserAuthentication,
   private def trackUrn(request: Request): Urn = {
     val IdParamPattern = "(\\d+)".r
     Urn(request.routeParams("trackId") match {
-          case IdParamPattern(id) => s"soundcloud:tracks:$id"
-        })
+      case IdParamPattern(id) => s"soundcloud:tracks:$id"
+    })
   }
 
   private def headers(request: Request): Params = request.headerMap.iterator.toMap
