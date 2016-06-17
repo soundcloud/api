@@ -271,6 +271,10 @@ object App
     mothershipDispatcher
   )
 
+  private val announcementsController = new AnnouncementsController(
+    mothershipDispatcher
+  )
+
   private val officialSoundCloudApps = List(
     Urn("soundcloud:applications:46941"), // SoundCloud.com (currently being abused) Internal
     Urn("soundcloud:applications:124"), // SoundCloud iOS Internal
@@ -425,7 +429,8 @@ object App
     repostersController,
     userController,
     playlistsController,
-    resolveController
+    resolveController,
+    announcementsController
   )
 
   override val customAdminHandlers: Seq[(AdminRoute, Handler)] = Seq(
