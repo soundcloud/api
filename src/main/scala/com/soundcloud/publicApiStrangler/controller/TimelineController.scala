@@ -8,7 +8,6 @@ import com.soundcloud.publicApiStrangler.mapper.timeline.e1.{ActivitiesMapper, S
 import com.soundcloud.publicApiStrangler.mapper.timeline.publicApi.ActivitiesWithOriginMapper
 import com.soundcloud.publicApiStrangler.mapping.timeline.e1.TrackTimelineItem
 import com.soundcloud.publicApiStrangler.support._
-import play.api.libs.json.Json
 
 class TimelineController(
                           userAuthentication: UserAuthentication,

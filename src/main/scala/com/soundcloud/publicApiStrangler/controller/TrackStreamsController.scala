@@ -1,11 +1,9 @@
 package com.soundcloud.publicApiStrangler.controller
 
 import com.soundcloud.bff.finagle.{Request, ResponseBuilder}
-import com.soundcloud.bff.security.RequestForAuthenticator
 import com.soundcloud.bff.web.{BffInjectionBasedController, UserAuthentication}
-import com.soundcloud.jvmkit.UserSession
 import com.soundcloud.publicApiStrangler.mapper.trackstreams.{TrackStreamJsonResponseMapper, TrackStreamRedirectResponseMapper, TrackStreamResponseMapper}
-import com.soundcloud.publicApiStrangler.support.{DispatchToMothershipHandler, TrackStreamHandler}
+import com.soundcloud.publicApiStrangler.support.TrackStreamHandler
 import com.twitter.util.Future
 
 

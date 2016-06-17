@@ -7,17 +7,15 @@ import com.soundcloud.follows.client._
 import com.soundcloud.follows.client.representation._
 import com.soundcloud.follows.client.representation.follow._
 import com.soundcloud.follows.client.representation.unfollow.{NotFollowing, UnfollowSuccessful, UnknownError => UnfollowUnknownError, UserAsTarget => UnfollowUserAsTarget, UserNotFound => UnfollowUserNotFound}
-import com.soundcloud.publicApiStrangler.client.followcounts.{FollowCounts, FollowCountsClient}
+import com.soundcloud.publicApiStrangler.client.followcounts.FollowCountsClient
 import com.soundcloud.publicApiStrangler.mapping.timeline.User
 import com.soundcloud.publicApiStrangler.support.DispatchToMothershipHandler
-import com.soundcloud.scalakit.{Geo, LoggedInUserSession, UTF8, Urn, UserSession}
+import com.soundcloud.scalakit.{LoggedInUserSession, Urn, UserSession}
 import com.soundcloud.service.client.OkidokiClient
 import com.twitter.finagle.http.Status
 import com.twitter.util.Future
 import org.joda.time.format.DateTimeFormat
 import org.joda.time.{LocalDate, Years}
-import play.api.libs.json.Json
-import scala.io.Source
 
 class UserFollowController(userAuthentication: UserAuthentication,
                            fallback: DispatchToMothershipHandler,
