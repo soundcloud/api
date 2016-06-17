@@ -2,15 +2,13 @@ package com.soundcloud.publicApiStrangler.controller
 
 import com.soundcloud.bff.finagle.{Request, ResponseBuilder}
 import com.soundcloud.bff.web.UserAuthentication
-import com.soundcloud.publicApiStrangler.client.followcounts.{FollowCountsClient, FollowCounts}
+import com.soundcloud.publicApiStrangler.client.followcounts.{FollowCounts, FollowCountsClient}
 import com.soundcloud.publicApiStrangler.support.DispatchToMothershipHandler
 import com.soundcloud.scalakit._
 import com.soundcloud.scalakit.finagle.http.{AlwaysMatchesPathMatcher, HandlerRequest}
 import com.twitter.finagle.http.Response
-import com.twitter.util.{Try, Future}
+import com.twitter.util.{Future, Try}
 import play.api.libs.json.{JsArray, JsObject, JsValue, Json}
-
-import scala.collection.JavaConversions._
 
 trait FollowCountsHelper {
 
