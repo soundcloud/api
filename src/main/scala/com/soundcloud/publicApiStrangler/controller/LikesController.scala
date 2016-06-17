@@ -13,6 +13,8 @@ class LikesController(val userAuthentication: UserAuthentication,
   extends BffInjectionBasedController with FollowCountsHelper {
 
   get("/tracks/:id/favoriters")(dispatchToMothershipWithFollowCounts)
+  get("/tracks/:id/favoriters.json")(dispatchToMothershipWithFollowCounts)
 
   get("/tracks/:id/favoriters/:user_id")(dispatchToMothershipWithFollowCounts)
+  get("/tracks/:id/favoriters/:user_id.json")(dispatchToMothershipWithFollowCounts)
 }
