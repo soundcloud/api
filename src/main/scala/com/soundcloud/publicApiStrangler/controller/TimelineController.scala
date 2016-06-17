@@ -42,6 +42,7 @@ class TimelineController(
 
   // For the IFTTT integration
   get("/me/followings/tracks")(renderFollowingsTracks(_, followingsTracksMapper))
+  get("/me/followings/tracks.json")(renderFollowingsTracks(_, followingsTracksMapper))
 
   private def renderActivities(request: BffRequest, mapper: TimelineMapper) =
     userAuthentication.withLoggedInUser(request) {
