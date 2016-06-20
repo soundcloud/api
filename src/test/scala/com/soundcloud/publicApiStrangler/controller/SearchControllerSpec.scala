@@ -6,6 +6,7 @@ import com.soundcloud.bff.nextbff.pagination.OffsetBasedPage
 import com.soundcloud.bff.nextbff.repository.RepositoryException
 import com.soundcloud.bff.nextbff.test.JsonMappingMock
 import com.soundcloud.bff.test.InjectionBasedControllerSpecification
+import com.soundcloud.publicApiStrangler.SearchControllerRolloutChecks
 import com.soundcloud.publicApiStrangler.client.followcounts.{FollowCounts, FollowCountsClient}
 import com.soundcloud.publicApiStrangler.mapper.search.SearchMapper
 import com.soundcloud.publicApiStrangler.mapping.search.{Search, SearchDispatcherRequest}
@@ -24,12 +25,13 @@ class SearchControllerSpec extends InjectionBasedControllerSpecification {
     val fallbackMock = mock[DispatchToMothershipHandler]
     val searchMapperMock = mock[SearchMapper]
     val followCountsClientMock = mock[FollowCountsClient]
+    val searchControllerRolloutChecksMock = mock[SearchControllerRolloutChecks]
 
     val controller = new SearchController(
       fakeUserAuthentication(anonymousSession),
       fallbackMock,
       followCountsClientMock,
-      _ => Future.value(avoidMothershipFlag),
+      searchControllerRolloutChecksMock,
       searchMapperMock,
       "http://api.soundcloud.com"
     )
@@ -56,8 +58,6 @@ class SearchControllerSpec extends InjectionBasedControllerSpecification {
     def doesNotForward(response: MockResponse) = {
       there was noCallsTo(fallbackMock)
     }
-
-    def avoidMothershipFlag: Boolean
   }
 
 
@@ -97,16 +97,20 @@ class SearchControllerSpec extends InjectionBasedControllerSpecification {
     }
 
     trait EnabledContext extends Context {
-      def avoidMothershipFlag = true
+      searchControllerRolloutChecksMock.avoidForGroups returns Future.True
+      searchControllerRolloutChecksMock.avoidForUsers returns Future.True
+      searchControllerRolloutChecksMock.avoidForTracks returns Future.True
+      searchControllerRolloutChecksMock.avoidForPlaylists returns Future.True
     }
 
     trait DisabledContext extends Context {
-      def avoidMothershipFlag = false
+      searchControllerRolloutChecksMock.avoidForGroups returns Future.False
+      searchControllerRolloutChecksMock.avoidForUsers returns Future.False
+      searchControllerRolloutChecksMock.avoidForTracks returns Future.False
+      searchControllerRolloutChecksMock.avoidForPlaylists returns Future.False
     }
 
     "forwards to Mothership when q param not present" in new Context {
-      def avoidMothershipFlag = true
-
       endpoints.foreach { case (apiEndPoint, dispatcherEndPoint) =>
         expectForwardedRequest
         val response = get(controller, apiEndPoint)
@@ -138,9 +142,7 @@ class SearchControllerSpec extends InjectionBasedControllerSpecification {
       }
     }
 
-    "response contains a caching header" in new Context {
-      def avoidMothershipFlag = true
-
+    "response contains a caching header" in new EnabledContext {
       endpoints.foreach { case (apiEndPoint, dispatcherRequest) =>
         val request = com.twitter.finagle.http.Request(apiEndPoint, queryParams.toSeq: _*)
         val query = dispatcherRequest(request)
@@ -158,8 +160,7 @@ class SearchControllerSpec extends InjectionBasedControllerSpecification {
     }
 
     "Pagination error handling" >> {
-      "200 when no pagination params" in new Context {
-        def avoidMothershipFlag = true
+      "200 when no pagination params" in new EnabledContext {
 
         endpoints.foreach { case (apiEndPoint, dispatcherRequest) =>
           val request = com.twitter.finagle.http.Request(apiEndPoint, queryParams.toSeq: _*)
@@ -173,12 +174,9 @@ class SearchControllerSpec extends InjectionBasedControllerSpecification {
           response.code ==== 200
           doesNotForward(response)
         }
-
       }
 
-      "400 when offset/limit is junk" in new Context {
-        def avoidMothershipFlag = true
-
+      "400 when offset/limit is junk" in new EnabledContext {
         for {
           (apiEndPoint, dispatcherRequest) <- endpoints
           param <- Seq("offset", "limit")
@@ -189,9 +187,7 @@ class SearchControllerSpec extends InjectionBasedControllerSpecification {
         }
       }
 
-      "400 when limit/offset is present, but empty" in new Context {
-        def avoidMothershipFlag = true
-
+      "400 when limit/offset is present, but empty" in new EnabledContext {
         for {
           (apiEndPoint, dispatcherRequest) <- endpoints
           param <- Seq("offset", "limit")
@@ -202,9 +198,7 @@ class SearchControllerSpec extends InjectionBasedControllerSpecification {
         }
       }
 
-      "400 when dispatcher returns a 400" in new Context {
-        def avoidMothershipFlag = true
-
+      "400 when dispatcher returns a 400" in new EnabledContext {
         endpoints.foreach { case (apiEndPoint, dispatcherRequest) =>
           val request = com.twitter.finagle.http.Request(apiEndPoint, extraParams.toSeq: _*)
           val query = dispatcherRequest(request)
