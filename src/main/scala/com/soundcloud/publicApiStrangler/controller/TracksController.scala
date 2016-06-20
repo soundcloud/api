@@ -28,7 +28,9 @@ class TracksController(userAuthentication: UserAuthentication,
 
   get("/tracks/:trackId")(request => mothershipDispatcher.dispatch(request))
   get("/tracks/:trackId.json")(request => mothershipDispatcher.dispatch(request))
+
   post("/tracks/:trackId")(request => mothershipDispatcher.dispatch(request))
+  post("/tracks/:trackId.json")(request => mothershipDispatcher.dispatch(request))
 
   put("/tracks/:trackId")(handlePut)
   put("/tracks/:trackId.json")(handlePut)
