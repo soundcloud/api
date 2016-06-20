@@ -77,6 +77,13 @@ class TracksControllerSpec extends InjectionBasedControllerSpecification with Fi
     }
   }
 
+  "POST /tracks/:id.json" >> {
+    "falls back onto moshi" in new Context {
+      val response = post(controller, "/tracks/999.json")
+      response.status ==== Status.Ok
+    }
+  }
+
   "PUT /tracks/:id" >> {
     "passes through requests" in new ContextWithGobbly {
       when(fallback.dispatch(any[Request])).thenReturn(Future.value(new ResponseBuilder().status(201).body("Thank you for creating")))
