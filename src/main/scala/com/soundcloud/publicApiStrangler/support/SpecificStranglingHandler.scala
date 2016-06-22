@@ -22,6 +22,7 @@ class SpecificStranglingHandler(whereToDispatch: HttpHandler, pathsPatternsToDis
     }
   }
 
+  // This won't work yet, because the request isn't populated with a user session.
   private def agentFor(request: HandlerRequest): Urn = {
     Option(request.userSession.getAgent).flatMap { agent =>
       officialSoundCloudApps.collectFirst { case app if app == agent => app }
