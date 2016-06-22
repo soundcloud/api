@@ -33,7 +33,7 @@ class SpecificStranglingHandlerSpec extends UnitSpecification {
     val config = new InMemoryConfig
     val collectorRegistry = new CollectorRegistry
     val telemetry = new Telemetry(new InMemoryConfig, collectorRegistry)
-    val counter = telemetry.counter("fallthrough_strangled_by", "testing counter", "path_pattern", "agent_urn")
+    val counter = telemetry.counter("fallthrough_strangled_by", "testing counter", "method", "path_pattern", "agent_urn")
 
     next.defaultHandling(request) returns Future(mock[Response])
     val handler = new SpecificStranglingHandler(next, pathPatternsToDispatch, officialApps, counter)
@@ -65,16 +65,16 @@ class SpecificStranglingHandlerSpec extends UnitSpecification {
     "it increments the counter with the path pattern, if it is recognised" in new KnownUrlContext {
       Await.result(handler.apply(request))
       val count = collectorRegistry.getSampleValue("fallthrough_strangled_by",
-        Array("path_pattern", "agent_urn", "system"),
-        Array("/search/sounds", "soundcloud:applications:124", "TEST-APP"))
+        Array("method", "path_pattern", "agent_urn", "system"),
+        Array("GET", "/search/sounds", "soundcloud:applications:124", "TEST-APP"))
       count ==== 1.0
     }
 
     "it increments the counter with 'UNKNOWN' if it is not recognised" in new UnknownUrlContext {
       Await.result(handler.apply(request))
       val count = collectorRegistry.getSampleValue("fallthrough_strangled_by",
-        Array("path_pattern", "agent_urn", "system"),
-        Array("UNKNOWN", "soundcloud:applications:124", "TEST-APP"))
+        Array("method", "path_pattern", "agent_urn", "system"),
+        Array("GET", "UNKNOWN", "soundcloud:applications:124", "TEST-APP"))
       count ==== 1.0
     }
   }
@@ -96,16 +96,16 @@ class SpecificStranglingHandlerSpec extends UnitSpecification {
     "it increments the counter with the agent URN, if it is recognised" in new KnownAgentContext {
       Await.result(handler.apply(request))
       val count = collectorRegistry.getSampleValue("fallthrough_strangled_by",
-        Array("path_pattern", "agent_urn", "system"),
-        Array("/search/sounds", "soundcloud:applications:124", "TEST-APP"))
+        Array("method", "path_pattern", "agent_urn", "system"),
+        Array("GET", "/search/sounds", "soundcloud:applications:124", "TEST-APP"))
       count ==== 1.0
     }
 
     "it increments the counter with 'soundcloud:applications:external, if it is not recognised" in new UnknownAgentContext {
       Await.result(handler.apply(request))
       val count = collectorRegistry.getSampleValue("fallthrough_strangled_by",
-        Array("path_pattern", "agent_urn", "system"),
-        Array("/search/sounds", "soundcloud:applications:external", "TEST-APP"))
+        Array("method", "path_pattern", "agent_urn", "system"),
+        Array("GET", "/search/sounds", "soundcloud:applications:external", "TEST-APP"))
       count ==== 1.0
     }
   }

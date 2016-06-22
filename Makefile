@@ -20,6 +20,8 @@ precheckin:
 end-to-end-test: _dev_docker_compose
 	crun sbt --docker-options="--add-host=docker:$(shell docker-ip)" -- $(SBT) endToEnd/test
 
+test: unit-test
+
 unit-test:
 	crun sbt -- $(SBT) test
 

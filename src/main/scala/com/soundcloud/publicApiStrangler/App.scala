@@ -366,6 +366,7 @@ object App
   private val fallthroughCounter = telemetry.counter(
     "fallthrough_strangled_by",
     "Fallthrough requests by the path pattern that strangles them",
+    "method",
     "path_pattern",
     "agent_urn"
   )

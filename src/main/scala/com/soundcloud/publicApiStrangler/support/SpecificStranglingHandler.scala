@@ -33,6 +33,6 @@ class SpecificStranglingHandler(whereToDispatch: HttpHandler, pathsPatternsToDis
     val strangledBy = patternFor(request)
     val pathPattern = strangledBy.map(_.toString).getOrElse("UNKNOWN")
     val agent = agentFor(request)
-    counter.labels(pathPattern, agent.getString).inc()
+    counter.labels(request.method.toString, pathPattern, agent.getString).inc()
   }
 }
