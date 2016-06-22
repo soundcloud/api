@@ -13,7 +13,9 @@ class UserController(val userAuthentication: UserAuthentication,
 
   get("/users/:id")(dispatchToMothershipWithFollowCounts)
   get("/users/:id.json")(dispatchToMothershipWithFollowCounts)
+  get("/users/:id.json/")(dispatchToMothershipWithFollowCounts)
 
   get("/me")(dispatchToMothershipWithFollowCounts)
   get("/me.json")(dispatchToMothershipWithFollowCounts)
+  get("/me.json/")(dispatchToMothershipWithFollowCounts)
 }
