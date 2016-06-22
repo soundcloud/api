@@ -361,11 +361,18 @@ object App
     } ++ unknown
   }
 
+  private val fallthroughCounter = telemetry.counter(
+    "fallthrough_strangled_by",
+    "Fallthrough requests by the path pattern that strangles them",
+    "path_pattern",
+    "agent_urn"
+  )
+
   override val fallbackHandler = Some(
     new SpecificStranglingHandler(mothershipDispatcher,
       whatToStrangle,
       officialSoundCloudApps,
-      telemetry))
+      fallthroughCounter))
 
   private val limitOffsetEnabled = () => rolloutClient.isActive(BasicRolloutFeature("offset_limit"))
   private val limitOffsetPaths = Seq(
@@ -383,9 +390,7 @@ object App
 
     """/me/favorites""",
     """/me/favorites/ids""",
-
     """/tracks/\d+/favoriters""",
-
     """/users/\d+/favorites""",
     """/users/\d+/favorites/ids"""
   )

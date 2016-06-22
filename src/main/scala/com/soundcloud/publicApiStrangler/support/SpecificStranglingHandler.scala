@@ -1,44 +1,38 @@
 package com.soundcloud.publicApiStrangler.support
 
-import com.soundcloud.bff.finagle.ResponseBuilder
-import com.soundcloud.scalakit.finagle.http.{HandlerRequest, HttpHandler}
+import com.soundcloud.jvmkit.telemetry.{Counter, Telemetry}
 import com.soundcloud.scalakit.Urn
-import com.twitter.finagle.Service
-import com.twitter.finagle.http.{Method, Response}
+import com.soundcloud.scalakit.finagle.http.{HandlerRequest, HttpHandler}
+import com.twitter.finagle.http.Response
 import com.twitter.util.Future
-import com.soundcloud.jvmkit.telemetry.Telemetry
 
 import scala.util.matching.Regex
 
-class SpecificStranglingHandler(whereToDispatch: HttpHandler, pathsPatternsToDispatch: List[Regex], officialSoundCloudApps: List[Urn], telemetry: Telemetry) extends HttpHandler {
+class SpecificStranglingHandler(whereToDispatch: HttpHandler, pathsPatternsToDispatch: List[Regex],
+                                officialSoundCloudApps: List[Urn], counter: Counter) extends HttpHandler {
 
-  private val fallthroughCounter = telemetry.counter(
-    "fallthrough_strangled_by",
-    "Fallthrough requests by the path pattern that strangles them",
-    "path_pattern",
-    "agent_urn",
-    "method"
-  )
-
-  override def defaultHandling(handlerRequest: HandlerRequest): Future[Response] =
-    dispatchIfRecognizedPattern(handlerRequest, whereToDispatch.defaultHandling)
-
-  private def dispatchIfRecognizedPattern(request: HandlerRequest, dispatchFun: HandlerRequest => Future[Response]): Future[Response] = {
-    val strangledBy = pathsPatternsToDispatch.collectFirst {
-      case path if path.findFirstIn(request.request.path).isDefined => path
-    }
-    val agent = Option(request.userSession.getAgent)
-
-    logFallthroughRequest(strangledBy.map(_.toString), agent, request.request.path, request.request.method)
-    dispatchFun(request)
+  override def defaultHandling(request: HandlerRequest): Future[Response] = {
+    logFallthroughRequest(request)
+    whereToDispatch.defaultHandling(request)
   }
 
-  private def logFallthroughRequest(strangledBy: Option[String], agent: Option[Urn], path: String, method: Method): Unit = {
-    val label = strangledBy.getOrElse("NOT_STRANGLED")
-    val agentUrn = agent.flatMap { agent =>
+  private def patternFor(request: HandlerRequest): Option[Regex] = {
+    pathsPatternsToDispatch.collectFirst {
+      case path if path.findFirstIn(request.request.path).isDefined => path
+    }
+  }
+
+  // This won't work yet, because the request isn't populated with a user session.
+  private def agentFor(request: HandlerRequest): Urn = {
+    Option(request.userSession.getAgent).flatMap { agent =>
       officialSoundCloudApps.collectFirst { case app if app == agent => app }
     }.getOrElse(Urn("soundcloud:applications:external"))
+  }
 
-    fallthroughCounter.labels(label, agentUrn.getString, method.toString).inc()
+  private def logFallthroughRequest(request: HandlerRequest): Unit = {
+    val strangledBy = patternFor(request)
+    val pathPattern = strangledBy.map(_.toString).getOrElse("UNKNOWN")
+    val agent = agentFor(request)
+    counter.labels(pathPattern, agent.getString).inc()
   }
 }
