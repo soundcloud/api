@@ -356,7 +356,9 @@ object App
     val everything = officiallySupported ++ newlyDiscovered
 
     everything.flatMap { endpoint =>
-      val res = s"$endpoint(.json)?"
+      // Wrap regex with start and end anchors. May have .json at the end. May have trailing slash.
+      val res = "^" + endpoint + "(\\.json)?/?$"
+      // Endpoints may be prefixed with v1: treat these separately.
       List(res.r, s"/v1$res".r)
     } ++ unknown
   }
