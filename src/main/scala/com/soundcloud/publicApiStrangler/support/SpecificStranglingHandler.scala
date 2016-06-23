@@ -2,7 +2,7 @@ package com.soundcloud.publicApiStrangler.support
 
 import com.soundcloud.jvmkit.telemetry.Counter
 import com.soundcloud.scalakit.Urn
-import com.soundcloud.scalakit.finagle.http.{HandlerRequest, HttpHandler}
+import com.soundcloud.scalakit.finagle.http.{PathPattern, HandlerRequest, HttpHandler}
 import com.soundcloud.scalakit.notifier.AirbrakeNotifier
 import com.twitter.finagle.http.Response
 import com.twitter.finagle.http.Status.{Informational, Redirection, Successful}
@@ -19,12 +19,13 @@ class SpecificStranglingHandler(whereToDispatch: HttpHandler, pathsPatternsToDis
       response =>
 
         // let's see what paths we are serving but not explicitly strangling
-        if (patternFor(request).isEmpty) {
-          response.status match {
-            case Informational(_) | Successful(_) | Redirection(_) =>
-              val message = s"Unstrangled working endpoint: ${request.request.path}"
-              AirbrakeNotifier.notify(request.request, response.getStatusCode, message)
-          }
+        patternFor(request).filterNot(_.regex == ".*").foreach {
+          pathPattern =>
+            response.status match {
+              case Informational(_) | Successful(_) | Redirection(_) =>
+                val message = s"Unstrangled working endpoint: ${request.request.path}"
+                AirbrakeNotifier.notify(request.request, response.getStatusCode, message)
+            }
         }
     }
   }
