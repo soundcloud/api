@@ -15,19 +15,7 @@ class SpecificStranglingHandler(whereToDispatch: HttpHandler, pathsPatternsToDis
 
   override def defaultHandling(request: HandlerRequest): Future[Response] = {
     logFallthroughRequest(request)
-    whereToDispatch.defaultHandling(request).onSuccess {
-      response =>
-
-        // let's see what paths we are serving but not explicitly strangling
-        patternFor(request).filterNot(_.regex == ".*").foreach {
-          pathPattern =>
-            response.status match {
-              case Informational(_) | Successful(_) | Redirection(_) =>
-                val message = s"Unstrangled working endpoint: ${request.request.path}"
-                AirbrakeNotifier.notify(request.request, response.getStatusCode, message)
-            }
-        }
-    }
+    whereToDispatch.defaultHandling(request)
   }
 
   private def patternFor(request: HandlerRequest): Option[Regex] = {
