@@ -1,5 +1,8 @@
 APP_NAME="public-api-strangler"
 
+AIRBRAKE_API_KEY="0dccaaf944f97d1d349c4e028bba83da"
+AIRBRAKE_NOTIFY_ON_SERVER_ERROR="false
+
 FINAGLE_METRICS_ENABLED="true"
 JAVA_OPTS="-XX:+UseCompressedOops -XX:+UseConcMarkSweepGC -XX:NewRatio=1 -Xmx2G -Xms2G -XX:ParallelGCThreads=2 -Dcom.twitter.jvm.numProcs=10"
 
