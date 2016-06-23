@@ -1,7 +1,7 @@
 APP_NAME="public-api-strangler"
 
 AIRBRAKE_API_KEY="0dccaaf944f97d1d349c4e028bba83da"
-AIRBRAKE_NOTIFY_ON_SERVER_ERROR="false
+AIRBRAKE_NOTIFY_ON_SERVER_ERROR="false"
 
 JAVA_OPTS="-XX:+UseCompressedOops -XX:MaxDirectMemorySize=1G -XX:+UseConcMarkSweepGC -XX:NewRatio=1 -Xmx2G -Xms1G -XX:ParallelGCThreads=2 -Dcom.twitter.jvm.numProcs=5 -Xbootclasspath/p:jdk/target"
 
