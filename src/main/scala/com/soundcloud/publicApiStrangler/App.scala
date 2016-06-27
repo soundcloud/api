@@ -294,6 +294,7 @@ object App
       """/groups/\d+""",
       """/comments/\d+""",
       """/me""",
+      """/me/groups""",
       """/me/connections""",
       """/me/connections/\d+""",
       """/apps""",
@@ -347,7 +348,19 @@ object App
       """/users/[a-zA-Z0-9\-\_]+/tracks""",
       """/users/[a-zA-Z0-9\-\_]+/comments""",
       """/users/[a-zA-Z0-9\-\_]+/playlists""",
-      """/users/[a-zA-Z0-9\-\_]+/web-profiles"""
+      """/users/[a-zA-Z0-9\-\_]+/web-profiles""",
+
+      // https://github.com/soundcloud/soundcloud/blob/master/config/routes.rb#L228-L238
+      """/e1/me/likes""",
+      """/e1/me/sounds""",
+      """/e1/me/reposts""",
+      """/e1/me/track_likes""",
+      """/e1/me/track_reposts""",
+      """/e1/me/playlist_likes""",
+      """/e1/me/playlist_reposts""",
+
+      // https://github.com/soundcloud/soundcloud/blob/master/config/routes.rb#L240-L246
+      """/i1/me/shortcuts"""
     )
 
     // Everything else, to be compatible with what we have right now
@@ -358,7 +371,7 @@ object App
     everything.flatMap { endpoint =>
       // Wrap regex with start and end anchors. May have .json at the end. May have trailing slash.
       val res = "^" + endpoint + "(\\.json)?/?$"
-      // Endpoints may be prefixed with v1: treat these separately.
+      // All endpoints may be prefixed with v1 - record these separately
       List(res.r, s"/v1$res".r)
     } ++ unknown
   }
