@@ -27,6 +27,13 @@ class UserControllerSpec extends InjectionBasedControllerSpecification {
     }
   }
 
+  "GET /users/:id/" >> {
+    "falls back to Mothership" in new Context {
+      val response = get(controller, "/users/7110/")
+      response.status ==== Status.Ok
+    }
+  }
+
   "GET /users/:id.json" >> {
     "falls back to Mothership" in new Context {
       val response = get(controller, "/users/7110.json")
@@ -44,6 +51,13 @@ class UserControllerSpec extends InjectionBasedControllerSpecification {
   "GET /users/me" >> {
     "falls back to Mothership" in new Context {
       val response = get(controller, "/users/me")
+      response.status ==== Status.Ok
+    }
+  }
+
+  "GET /users/me/" >> {
+    "falls back to Mothership" in new Context {
+      val response = get(controller, "/users/me/")
       response.status ==== Status.Ok
     }
   }
