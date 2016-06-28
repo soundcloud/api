@@ -25,24 +25,18 @@ class UserControllerSpec extends InjectionBasedControllerSpecification {
       val response = get(controller, "/users/7110")
       response.status ==== Status.Ok
     }
-  }
 
-  "GET /users/:id/" >> {
-    "falls back to Mothership" in new Context {
+    "falls back to Mothership with trailing slash" in new Context {
       val response = get(controller, "/users/7110/")
       response.status ==== Status.Ok
     }
-  }
 
-  "GET /users/:id.json" >> {
-    "falls back to Mothership" in new Context {
+    "falls back to Mothership with .json" in new Context {
       val response = get(controller, "/users/7110.json")
       response.status ==== Status.Ok
     }
-  }
 
-  "GET /users/:id.json/" >> {
-    "falls back to Mothership" in new Context {
+    "falls back to Mothership with .json and trailing slash" in new Context {
       val response = get(controller, "/users/7110.json/")
       response.status ==== Status.Ok
     }
@@ -53,25 +47,63 @@ class UserControllerSpec extends InjectionBasedControllerSpecification {
       val response = get(controller, "/users/me")
       response.status ==== Status.Ok
     }
-  }
 
-  "GET /users/me/" >> {
-    "falls back to Mothership" in new Context {
+    "falls back to Mothership with trailing slash" in new Context {
       val response = get(controller, "/users/me/")
       response.status ==== Status.Ok
     }
-  }
 
-  "GET /users/me.json" >> {
-    "falls back to Mothership" in new Context {
+    "falls back to Mothership with .json" in new Context {
       val response = get(controller, "/users/me.json")
+      response.status ==== Status.Ok
+    }
+
+    "falls back to Mothership with .json and trailing slash" in new Context {
+      val response = get(controller, "/users/me.json/")
       response.status ==== Status.Ok
     }
   }
 
-  "GET /users/me.json/" >> {
+  "GET /users/:id/tracks" >> {
     "falls back to Mothership" in new Context {
-      val response = get(controller, "/users/me.json/")
+      val response = get(controller, "/users/7110/tracks")
+      response.status ==== Status.Ok
+    }
+
+    "falls back to Mothership with trailing slash" in new Context {
+      val response = get(controller, "/users/7110/tracks/")
+      response.status ==== Status.Ok
+    }
+
+    "falls back to Mothership with .json" in new Context {
+      val response = get(controller, "/users/7110/tracks.json")
+      response.status ==== Status.Ok
+    }
+
+    "falls back to Mothership with .json and trailing slash" in new Context {
+      val response = get(controller, "/users/7110/tracks.json/")
+      response.status ==== Status.Ok
+    }
+  }
+
+  "GET /users/:id/comments" >> {
+    "falls back to Mothership" in new Context {
+      val response = get(controller, "/users/7110/comments")
+      response.status ==== Status.Ok
+    }
+
+    "falls back to Mothership with trailing slash" in new Context {
+      val response = get(controller, "/users/7110/comments/")
+      response.status ==== Status.Ok
+    }
+
+    "falls back to Mothership with .json" in new Context {
+      val response = get(controller, "/users/7110/comments.json")
+      response.status ==== Status.Ok
+    }
+
+    "falls back to Mothership with .json and trailing slash" in new Context {
+      val response = get(controller, "/users/7110/comments.json/")
       response.status ==== Status.Ok
     }
   }
