@@ -225,7 +225,7 @@ object App
     followCountsClient
   )
 
-  private val groupUsersController = new GroupUsersController(
+  private val groupUsersController = new GroupsController(
     userAuthentication,
     mothershipDispatcher,
     followCountsClient
@@ -333,6 +333,7 @@ object App
       """/tracks/[a-zA-Z0-9\-\_]+/related""",
       """/i1/tracks/[a-zA-Z0-9\-\_]+/streams""",
       """/playlists/\d+""",
+      """/playlists/\d+/tracks""",
       """/playlists/[a-zA-Z0-9\-\_]+""",
       """/upload/policy""",
       """/users""",
@@ -358,6 +359,10 @@ object App
       """/e1/me/track_reposts""",
       """/e1/me/playlist_likes""",
       """/e1/me/playlist_reposts""",
+      """/e1/me/track_likes/ids""",
+      """/e1/me/track_reposts/ids""",
+      """/e1/me/playlist_likes/ids""",
+      """/e1/me/playlist_reposts/ids""",
 
       // https://github.com/soundcloud/soundcloud/blob/master/config/routes.rb#L240-L246
       """/i1/me/shortcuts"""

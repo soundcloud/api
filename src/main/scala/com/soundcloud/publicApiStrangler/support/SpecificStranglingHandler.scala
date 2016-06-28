@@ -2,10 +2,8 @@ package com.soundcloud.publicApiStrangler.support
 
 import com.soundcloud.jvmkit.telemetry.Counter
 import com.soundcloud.scalakit.Urn
-import com.soundcloud.scalakit.finagle.http.{PathPattern, HandlerRequest, HttpHandler}
-import com.soundcloud.scalakit.notifier.AirbrakeNotifier
+import com.soundcloud.scalakit.finagle.http.{HandlerRequest, HttpHandler}
 import com.twitter.finagle.http.Response
-import com.twitter.finagle.http.Status.{Informational, Redirection, Successful}
 import com.twitter.util.Future
 
 import scala.util.matching.Regex
