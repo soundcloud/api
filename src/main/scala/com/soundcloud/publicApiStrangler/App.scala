@@ -324,6 +324,7 @@ object App
       """/tracks/\d+/stream""",
       """/tracks/\d+/streams""",
       """/tracks/\d+/related""",
+      """/tracks/\d+/groups""",
       """/i1/tracks/\d+/streams""",
       """/tracks/[a-zA-Z0-9\-\_]+""",
       """/tracks/[a-zA-Z0-9\-\_]+/download""",
@@ -349,7 +350,11 @@ object App
       """/users/[a-zA-Z0-9\-\_]+/tracks""",
       """/users/[a-zA-Z0-9\-\_]+/comments""",
       """/users/[a-zA-Z0-9\-\_]+/playlists""",
+      """/users/[a-zA-Z0-9\-\_]+/playlists/\d+""",
       """/users/[a-zA-Z0-9\-\_]+/web-profiles""",
+      """/users/\d+/followings/not_followed_by/""",
+      """/e1/users/\d+/sounds""",
+      """/e1/users/\d+/likes""",
 
       // https://github.com/soundcloud/soundcloud/blob/master/config/routes.rb#L228-L238
       """/e1/me/likes""",
@@ -375,9 +380,12 @@ object App
 
     everything.flatMap { endpoint =>
       // Wrap regex with start and end anchors. May have .json at the end. May have trailing slash.
-      val res = "^" + endpoint + "(\\.json)?/?$"
+      val patternWithOptionalJsonAndSlash = endpoint + "(\\.json)?/?"
+      val originalPattern = ("^" + patternWithOptionalJsonAndSlash + "$").r
+      val v1Pattern = ("^/v1" + patternWithOptionalJsonAndSlash + "$").r
+
       // All endpoints may be prefixed with v1 - record these separately
-      List(res.r, s"/v1$res".r)
+      List(originalPattern, v1Pattern)
     } ++ unknown
   }
 
