@@ -1,6 +1,7 @@
 package com.soundcloud.publicApiStrangler.support
 
 import com.soundcloud.jvmkit.telemetry.Counter
+import com.soundcloud.publicApiStrangler.support.SpecificStranglingHandler.externalAppUrn
 import com.soundcloud.scalakit.Urn
 import com.soundcloud.scalakit.finagle.http.{HandlerRequest, HttpHandler}
 import com.twitter.finagle.http.Response
@@ -26,7 +27,7 @@ class SpecificStranglingHandler(whereToDispatch: HttpHandler, pathsPatternsToDis
   private def agentFor(request: HandlerRequest): Urn = {
     Option(request.userSession.getAgent).flatMap { agent =>
       officialSoundCloudApps.collectFirst { case app if app == agent => app }
-    }.getOrElse(Urn("soundcloud:applications:external"))
+    }.getOrElse(externalAppUrn)
   }
 
   private def logFallthroughRequest(request: HandlerRequest): Unit = {
@@ -35,4 +36,8 @@ class SpecificStranglingHandler(whereToDispatch: HttpHandler, pathsPatternsToDis
     val agent = agentFor(request)
     counter.labels(request.method.toString, pathPattern, agent.getString).inc()
   }
+}
+
+object SpecificStranglingHandler{
+  private final val externalAppUrn = Urn("soundcloud:applications:external")
 }
