@@ -168,7 +168,7 @@ class UserFollowController(userAuthentication: UserAuthentication,
   }
 
   private def renderStatus(status: Status) =
-    render.json(Map("status" -> s"${status} - ${status.reason}"))
+    render.json(Map("status" -> s"$status - ${status.reason}"))
       .status(status.code)
       .toFuture
 
@@ -304,7 +304,7 @@ class UserFollowController(userAuthentication: UserAuthentication,
           if (users.nonEmpty) {
             render
               .status(Status.SeeOther.code)
-              .header("Location", s"$baseUrl/users/${userId}")
+              .header("Location", s"$baseUrl/users/$userId")
               .json(users.head)
           } else {
             render.notFound

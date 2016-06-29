@@ -18,16 +18,16 @@ class TrackStreamsController(userAuthentication: UserAuthentication,
 
   Seq("", "/", ".json").foreach { end: String => {
     Seq("", "/v1").foreach { start: String => {
-        get(s"${start}/tracks/:trackId/streams${end}")(handleStreamRequest(_, trackStreamUrlToJsonResponseMapper))
-        head(s"${start}/tracks/:trackId/streams${end}")(handleStreamRequest(_, trackStreamUrlToJsonResponseMapper))
+        get(s"$start/tracks/:trackId/streams$end")(handleStreamRequest(_, trackStreamUrlToJsonResponseMapper))
+        head(s"$start/tracks/:trackId/streams$end")(handleStreamRequest(_, trackStreamUrlToJsonResponseMapper))
 
-        get(s"${start}/tracks/:trackId/stream${end}")(handleStreamRequest(_, trackStreamUrlToRedirectMapper))
-        head(s"${start}/tracks/:trackId/stream${end}")(handleStreamRequest(_, trackStreamUrlToRedirectMapper))
+        get(s"$start/tracks/:trackId/stream$end")(handleStreamRequest(_, trackStreamUrlToRedirectMapper))
+        head(s"$start/tracks/:trackId/stream$end")(handleStreamRequest(_, trackStreamUrlToRedirectMapper))
       }
     }
 
-    get(s"/i1/tracks/:trackId/streams${end}")(handleStreamRequest(_, trackStreamUrlToJsonResponseMapper))
-    head(s"/i1/tracks/:trackId/streams${end}")(handleStreamRequest(_, trackStreamUrlToJsonResponseMapper))
+    get(s"/i1/tracks/:trackId/streams$end")(handleStreamRequest(_, trackStreamUrlToJsonResponseMapper))
+    head(s"/i1/tracks/:trackId/streams$end")(handleStreamRequest(_, trackStreamUrlToJsonResponseMapper))
     }
   }
 
