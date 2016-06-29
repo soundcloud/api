@@ -26,11 +26,11 @@ class TracksController(userAuthentication: UserAuthentication,
                        gobbly: GobblyClient)
     extends BffInjectionBasedController {
 
-  get("/tracks/:trackId")(request => mothershipDispatcher.dispatch(request))
-  get("/tracks/:trackId.json")(request => mothershipDispatcher.dispatch(request))
+  get("/tracks/:trackId")(mothershipDispatcher.dispatch)
+  get("/tracks/:trackId.json")(mothershipDispatcher.dispatch)
 
-  post("/tracks/:trackId")(request => mothershipDispatcher.dispatch(request))
-  post("/tracks/:trackId.json")(request => mothershipDispatcher.dispatch(request))
+  post("/tracks/:trackId")(mothershipDispatcher.dispatch)
+  post("/tracks/:trackId.json")(mothershipDispatcher.dispatch)
 
   put("/tracks/:trackId")(handlePut)
   put("/tracks/:trackId.json")(handlePut)
