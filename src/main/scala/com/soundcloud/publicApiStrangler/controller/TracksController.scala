@@ -35,7 +35,9 @@ class TracksController(userAuthentication: UserAuthentication,
   put("/tracks/:trackId")(handlePut)
   put("/tracks/:trackId.json")(handlePut)
 
-  delete("/tracks/:trackId") { request =>
+  delete("/tracks/:trackId")(handleDelete)
+
+  private def handleDelete(request: Request): Future[ResponseBuilder] = {
     userAuthentication.withLoggedInUser(request) { (session, _) =>
       trackCoordinator.deleteTrack(session, trackUrn(request)).map {
         case Success(()) => render.ok
