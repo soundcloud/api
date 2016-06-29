@@ -52,8 +52,6 @@ class SearchController(val userAuthentication: UserAuthentication,
   get("/search/people")(dispatchToMothershipWithFollowCounts)
   get("/search/people.json")(dispatchToMothershipWithFollowCounts)
 
-
-
   private def dispatchUserRequest = dispatchRequest(
     defaultParams,
     SearchDispatcherRequest.userSearch,
@@ -67,13 +65,11 @@ class SearchController(val userAuthentication: UserAuthentication,
     () => avoidMothershipFor.avoidForGroups
   )
 
-  private def dispatchPlaylistRequest = {
-    dispatchRequest(
-      playlistParams,
-      SearchDispatcherRequest.playlistSearch,
-      () => avoidMothershipFor.avoidForPlaylists
-    )
-  }
+  private def dispatchPlaylistRequest = dispatchRequest(
+    playlistParams,
+    SearchDispatcherRequest.playlistSearch,
+    () => avoidMothershipFor.avoidForPlaylists
+  )
 
   private def dispatchTrackRequest = {
     dispatchRequest(
@@ -87,25 +83,35 @@ class SearchController(val userAuthentication: UserAuthentication,
    * Perform a search for tracks. Logic to determine whether this is a search
    * and if we should forward the request to Mothership.
    */
-  private def dispatchRequest(searchParams: Set[String], makeRequest: Request => SearchDispatcherRequest, avoidMothershipFor: () => Future[Boolean], mothershipDispatcherFn: Request => Future[ResponseBuilder] = mothershipDispatcher.dispatch): BffRequestHandler = request =>
-    if (isSearchRequest(request.params, searchParams)) search(request, makeRequest(request), avoidMothershipFor, mothershipDispatcherFn)
-    else mothershipDispatcherFn(request)
+  private def dispatchRequest(searchParams: Set[String],
+                              makeRequest: Request => SearchDispatcherRequest,
+                              avoidMothershipFor: () => Future[Boolean],
+                              mothershipDispatcherFn: Request => Future[ResponseBuilder] = mothershipDispatcher.dispatch): BffRequestHandler = { request =>
+    if (isSearchRequest(request.params, searchParams)) {
+      search(request, makeRequest(request), avoidMothershipFor, mothershipDispatcherFn)
+    } else {
+      mothershipDispatcherFn(request)
+    }
+  }
 
   private def isSearchRequest(params: ParamMap, searchParams: Set[String]): Boolean = {
     val paramsWithContent = params.collect { case (k, v) if v != null && v.nonEmpty => k }.toSet
     (searchParams intersect paramsWithContent).nonEmpty
   }
 
-  private def validateParam(request: Request, param: String, pred: Int => Boolean) =
+  private def validateParam(request: Request, param: String, pred: Int => Boolean) = {
     request.params.get(param) match {
       case Some(value) => Try(value.toInt).map(pred)
       case _ => Return(true)
     }
+  }
 
-  private def search(request: Request, searchRequest: SearchDispatcherRequest, avoidMothershipFor: () => Future[Boolean], mothershipDispatcherFn: Request => Future[ResponseBuilder] = mothershipDispatcher.dispatch): Future[ResponseBuilder] = {
+  private def search(request: Request,
+                     searchRequest: SearchDispatcherRequest,
+                     avoidMothershipFor: () => Future[Boolean],
+                     mothershipDispatcherFn: Request => Future[ResponseBuilder] = mothershipDispatcher.dispatch): Future[ResponseBuilder] = {
     userAuthentication.withUserSession(request) { session =>
-      avoidMothershipFor().flatMap{
-        isActive =>
+      avoidMothershipFor().flatMap { isActive =>
           if (isActive) {
 
             val validPagination = for {
@@ -129,8 +135,9 @@ class SearchController(val userAuthentication: UserAuthentication,
               case _ => Future.value(render.badRequest)
             }
           }.map(_.header("Cache-Control", s"public, max-age=$MaxCacheAge, must-revalidate"))
-          else
-            mothershipDispatcherFn(request)
+        else {
+          mothershipDispatcherFn(request)
+        }
       }
     }
   }
