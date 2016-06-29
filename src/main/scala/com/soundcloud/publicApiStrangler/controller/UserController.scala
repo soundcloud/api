@@ -16,6 +16,16 @@ class UserController(val userAuthentication: UserAuthentication,
   get("/users/:id.json")(dispatchToMothershipWithFollowCounts)
   get("/users/:id.json/")(dispatchToMothershipWithFollowCounts)
 
+  get("/users/:id/tracks")(dispatchToMothershipWithFollowCounts)
+  get("/users/:id/tracks/")(dispatchToMothershipWithFollowCounts)
+  get("/users/:id/tracks.json")(dispatchToMothershipWithFollowCounts)
+  get("/users/:id/tracks.json/")(dispatchToMothershipWithFollowCounts)
+
+  get("/users/:id/comments")(dispatchToMothershipWithFollowCounts)
+  get("/users/:id/comments/")(dispatchToMothershipWithFollowCounts)
+  get("/users/:id/comments.json")(dispatchToMothershipWithFollowCounts)
+  get("/users/:id/comments.json/")(dispatchToMothershipWithFollowCounts)
+
   get("/me")(dispatchToMothershipWithFollowCounts)
   get("/me/")(dispatchToMothershipWithFollowCounts)
   get("/me.json")(dispatchToMothershipWithFollowCounts)
