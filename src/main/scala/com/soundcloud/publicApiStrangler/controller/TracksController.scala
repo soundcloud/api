@@ -6,7 +6,6 @@ import com.soundcloud.publicApiStrangler.client.GobblyClient
 import com.soundcloud.publicApiStrangler.client.gobbly.{ClientError => GobblyClientError, ServerError => GobblyServerError, Success => GobblySuccess}
 import com.soundcloud.publicApiStrangler.support.DispatchToMothershipHandler
 import com.soundcloud.scalakit.Urn
-import com.soundcloud.scalakit.finagle.jsonservice.Params
 import com.soundcloud.service.client.OkidokiClient
 import com.soundcloud.trackcoordinator.client.TrackCoordinatorClient
 import com.soundcloud.trackcoordinator.client.representation.{NotFound, Success, Track => CoordinatorTrack}
