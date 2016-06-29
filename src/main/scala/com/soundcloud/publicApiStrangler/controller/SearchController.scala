@@ -87,7 +87,7 @@ class SearchController(val userAuthentication: UserAuthentication,
    * Perform a search for tracks. Logic to determine whether this is a search
    * and if we should forward the request to Mothership.
    */
-  private def dispatchRequest(searchParams: Set[String], makeRequest: Request => SearchDispatcherRequest, avoidMothershipFor: () => Future[Boolean], mothershipDispatcherFn: Request => Future[ResponseBuilder] = mothershipDispatcher.dispatch _): BffRequestHandler = request =>
+  private def dispatchRequest(searchParams: Set[String], makeRequest: Request => SearchDispatcherRequest, avoidMothershipFor: () => Future[Boolean], mothershipDispatcherFn: Request => Future[ResponseBuilder] = mothershipDispatcher.dispatch): BffRequestHandler = request =>
     if (isSearchRequest(request.params, searchParams)) search(request, makeRequest(request), avoidMothershipFor, mothershipDispatcherFn)
     else mothershipDispatcherFn(request)
 
@@ -102,7 +102,7 @@ class SearchController(val userAuthentication: UserAuthentication,
       case _ => Return(true)
     }
 
-  private def search(request: Request, searchRequest: SearchDispatcherRequest, avoidMothershipFor: () => Future[Boolean], mothershipDispatcherFn: Request => Future[ResponseBuilder] = mothershipDispatcher.dispatch _): Future[ResponseBuilder] = {
+  private def search(request: Request, searchRequest: SearchDispatcherRequest, avoidMothershipFor: () => Future[Boolean], mothershipDispatcherFn: Request => Future[ResponseBuilder] = mothershipDispatcher.dispatch): Future[ResponseBuilder] = {
     userAuthentication.withUserSession(request) { session =>
       avoidMothershipFor().flatMap{
         isActive =>
