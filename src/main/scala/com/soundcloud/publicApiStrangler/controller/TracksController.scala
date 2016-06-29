@@ -35,10 +35,10 @@ class TracksController(userAuthentication: UserAuthentication,
   get("/tracks/:trackId/comments.json")(mothershipDispatcher.dispatch)
   get("/tracks/:trackId/comments.json/")(mothershipDispatcher.dispatch)
 
-  get("/tracks/:trackId/downloads")(mothershipDispatcher.dispatch)
-  get("/tracks/:trackId/downloads/")(mothershipDispatcher.dispatch)
-  get("/tracks/:trackId/downloads.json")(mothershipDispatcher.dispatch)
-  get("/tracks/:trackId/downloads.json/")(mothershipDispatcher.dispatch)
+  get("/tracks/:trackId/download")(mothershipDispatcher.dispatch)
+  get("/tracks/:trackId/download/")(mothershipDispatcher.dispatch)
+  get("/tracks/:trackId/download.json")(mothershipDispatcher.dispatch)
+  get("/tracks/:trackId/download.json/")(mothershipDispatcher.dispatch)
 
   post("/tracks/:trackId")(mothershipDispatcher.dispatch)
   post("/tracks/:trackId.json")(mothershipDispatcher.dispatch)
