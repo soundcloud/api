@@ -64,6 +64,4 @@ class TracksController(userAuthentication: UserAuthentication,
       case IdParamPattern(id) => s"soundcloud:tracks:$id"
     })
   }
-
-  private def headers(request: Request): Params = request.headerMap.iterator.toMap
 }
