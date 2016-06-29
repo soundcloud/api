@@ -77,6 +77,50 @@ class TracksControllerSpec extends InjectionBasedControllerSpecification with Fi
     }
   }
 
+  "GET /tracks/:id/comments" >> {
+    "falls back to Mothership" in new Context {
+      val response = get(controller, "/tracks/999/comments")
+      response.status ==== Status.Ok
+    }
+
+    "falls back to Mothership with trailing slash" in new Context {
+      val response = get(controller, "/tracks/999/comments/")
+      response.status ==== Status.Ok
+    }
+
+    "falls back to Mothership with .json" in new Context {
+      val response = get(controller, "/tracks/999/comments.json")
+      response.status ==== Status.Ok
+    }
+
+    "falls back to Mothership with .json and trailing slash" in new Context {
+      val response = get(controller, "/tracks/999/comments.json/")
+      response.status ==== Status.Ok
+    }
+  }
+
+  "GET /tracks/:id/download" >> {
+    "falls back to Mothership" in new Context {
+      val response = get(controller, "/tracks/999/download")
+      response.status ==== Status.Ok
+    }
+
+    "falls back to Mothership with trailing slash" in new Context {
+      val response = get(controller, "/tracks/999/download/")
+      response.status ==== Status.Ok
+    }
+
+    "falls back to Mothership with .json" in new Context {
+      val response = get(controller, "/tracks/999/download.json")
+      response.status ==== Status.Ok
+    }
+
+    "falls back to Mothership with .json and trailing slash" in new Context {
+      val response = get(controller, "/tracks/999/download.json/")
+      response.status ==== Status.Ok
+    }
+  }
+
   "POST /tracks/:id" >> {
     "falls back to Mothership" in new Context {
       val response = post(controller, "/tracks/999")
