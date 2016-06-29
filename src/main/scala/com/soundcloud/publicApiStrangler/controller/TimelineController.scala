@@ -9,14 +9,12 @@ import com.soundcloud.publicApiStrangler.mapper.timeline.publicApi.ActivitiesWit
 import com.soundcloud.publicApiStrangler.mapping.timeline.e1.TrackTimelineItem
 import com.soundcloud.publicApiStrangler.support._
 
-class TimelineController(
-                          userAuthentication: UserAuthentication,
-                          streamMapper: StreamMapper,
-                          activitiesMapper: ActivitiesMapper,
-                          publicActivitiesMapper: ActivitiesWithOriginMapper,
-                          followingsTracksMapper: FollowingsTracksMapper,
-                          pagination: CursorPagination
-                          ) extends BffInjectionBasedController {
+class TimelineController(userAuthentication: UserAuthentication,
+                         streamMapper: StreamMapper,
+                         activitiesMapper: ActivitiesMapper,
+                         publicActivitiesMapper: ActivitiesWithOriginMapper,
+                         followingsTracksMapper: FollowingsTracksMapper,
+                         pagination: CursorPagination) extends BffInjectionBasedController {
 
   // Android & iPad specific
   get("/e1/me/activities")(renderActivities(_, activitiesMapper))

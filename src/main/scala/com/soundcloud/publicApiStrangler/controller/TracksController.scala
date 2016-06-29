@@ -6,7 +6,6 @@ import com.soundcloud.publicApiStrangler.client.GobblyClient
 import com.soundcloud.publicApiStrangler.client.gobbly.{ClientError => GobblyClientError, ServerError => GobblyServerError, Success => GobblySuccess}
 import com.soundcloud.publicApiStrangler.support.DispatchToMothershipHandler
 import com.soundcloud.scalakit.Urn
-import com.soundcloud.scalakit.finagle.jsonservice.Params
 import com.soundcloud.service.client.OkidokiClient
 import com.soundcloud.trackcoordinator.client.TrackCoordinatorClient
 import com.soundcloud.trackcoordinator.client.representation.{NotFound, Success, Track => CoordinatorTrack}
@@ -26,16 +25,30 @@ class TracksController(userAuthentication: UserAuthentication,
                        gobbly: GobblyClient)
     extends BffInjectionBasedController {
 
-  get("/tracks/:trackId")(request => mothershipDispatcher.dispatch(request))
-  get("/tracks/:trackId.json")(request => mothershipDispatcher.dispatch(request))
+  get("/tracks/:trackId")(mothershipDispatcher.dispatch)
+  get("/tracks/:trackId/")(mothershipDispatcher.dispatch)
+  get("/tracks/:trackId.json")(mothershipDispatcher.dispatch)
+  get("/tracks/:trackId.json/")(mothershipDispatcher.dispatch)
 
-  post("/tracks/:trackId")(request => mothershipDispatcher.dispatch(request))
-  post("/tracks/:trackId.json")(request => mothershipDispatcher.dispatch(request))
+  get("/tracks/:trackId/comments")(mothershipDispatcher.dispatch)
+  get("/tracks/:trackId/comments/")(mothershipDispatcher.dispatch)
+  get("/tracks/:trackId/comments.json")(mothershipDispatcher.dispatch)
+  get("/tracks/:trackId/comments.json/")(mothershipDispatcher.dispatch)
+
+  get("/tracks/:trackId/download")(mothershipDispatcher.dispatch)
+  get("/tracks/:trackId/download/")(mothershipDispatcher.dispatch)
+  get("/tracks/:trackId/download.json")(mothershipDispatcher.dispatch)
+  get("/tracks/:trackId/download.json/")(mothershipDispatcher.dispatch)
+
+  post("/tracks/:trackId")(mothershipDispatcher.dispatch)
+  post("/tracks/:trackId.json")(mothershipDispatcher.dispatch)
 
   put("/tracks/:trackId")(handlePut)
   put("/tracks/:trackId.json")(handlePut)
 
-  delete("/tracks/:trackId") { request =>
+  delete("/tracks/:trackId")(handleDelete)
+
+  private def handleDelete(request: Request): Future[ResponseBuilder] = {
     userAuthentication.withLoggedInUser(request) { (session, _) =>
       trackCoordinator.deleteTrack(session, trackUrn(request)).map {
         case Success(()) => render.ok
@@ -62,6 +75,4 @@ class TracksController(userAuthentication: UserAuthentication,
       case IdParamPattern(id) => s"soundcloud:tracks:$id"
     })
   }
-
-  private def headers(request: Request): Params = request.headerMap.iterator.toMap
 }

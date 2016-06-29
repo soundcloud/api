@@ -8,13 +8,13 @@ import com.twitter.finagle.http.{Request, Status}
 import com.twitter.util.Future
 import org.mockito.Mockito.when
 
-class UserControllerSpec extends InjectionBasedControllerSpecification {
+class UsersControllerSpec extends InjectionBasedControllerSpecification {
 
   trait Context extends Scope {
     val userAuthentication = fakeUserAuthentication(anonymousSession)
     val mothershipDispatcher = mock[DispatchToMothershipHandler]
     val followCountsClient = mock[FollowCountsClient]
-    val controller = new UserController(userAuthentication, mothershipDispatcher, followCountsClient)
+    val controller = new UsersController(userAuthentication, mothershipDispatcher, followCountsClient)
 
     val success = Future.value(new ResponseBuilder().status(200).build)
     when(mothershipDispatcher.defaultHandling(any)).thenReturn(success)

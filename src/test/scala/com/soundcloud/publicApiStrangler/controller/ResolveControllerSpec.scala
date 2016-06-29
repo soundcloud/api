@@ -30,10 +30,8 @@ class ResolveControllerSpec extends InjectionBasedControllerSpecification with F
       val response = get(controller, "/resolve")
       response.status ==== Status.Ok
     }
-  }
 
-  "GET /resolve.json" >> {
-    "falls back to Mothership" in new Context {
+    "falls back to Mothership with .json" in new Context {
       val response = get(controller, "/resolve.json")
       response.status ==== Status.Ok
     }

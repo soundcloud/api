@@ -6,31 +6,28 @@ import com.soundcloud.publicApiStrangler.mapper.trackstreams.{TrackStreamJsonRes
 import com.soundcloud.publicApiStrangler.support.TrackStreamHandler
 import com.twitter.util.Future
 
-
 /**
  * Overrides the public api endpoints used to retrieve track streams.
  * Reason for overriding is to add support for SNIP content policy.
  */
-class TrackStreamsController(
-                              userAuthentication: UserAuthentication,
-                              trackStreamUrlToJsonResponseMapper: TrackStreamJsonResponseMapper,
-                              trackStreamUrlToRedirectMapper: TrackStreamRedirectResponseMapper,
-                              trackStreamHandler: TrackStreamHandler
-                              )
+class TrackStreamsController(userAuthentication: UserAuthentication,
+                             trackStreamUrlToJsonResponseMapper: TrackStreamJsonResponseMapper,
+                             trackStreamUrlToRedirectMapper: TrackStreamRedirectResponseMapper,
+                             trackStreamHandler: TrackStreamHandler)
   extends BffInjectionBasedController {
 
   Seq("", "/", ".json").foreach { end: String => {
     Seq("", "/v1").foreach { start: String => {
-        get(s"${start}/tracks/:trackId/streams${end}")(handleStreamRequest(_, trackStreamUrlToJsonResponseMapper))
-        head(s"${start}/tracks/:trackId/streams${end}")(handleStreamRequest(_, trackStreamUrlToJsonResponseMapper))
+        get(s"$start/tracks/:trackId/streams$end")(handleStreamRequest(_, trackStreamUrlToJsonResponseMapper))
+        head(s"$start/tracks/:trackId/streams$end")(handleStreamRequest(_, trackStreamUrlToJsonResponseMapper))
 
-        get(s"${start}/tracks/:trackId/stream${end}")(handleStreamRequest(_, trackStreamUrlToRedirectMapper))
-        head(s"${start}/tracks/:trackId/stream${end}")(handleStreamRequest(_, trackStreamUrlToRedirectMapper))
+        get(s"$start/tracks/:trackId/stream$end")(handleStreamRequest(_, trackStreamUrlToRedirectMapper))
+        head(s"$start/tracks/:trackId/stream$end")(handleStreamRequest(_, trackStreamUrlToRedirectMapper))
       }
     }
 
-    get(s"/i1/tracks/:trackId/streams${end}")(handleStreamRequest(_, trackStreamUrlToJsonResponseMapper))
-    head(s"/i1/tracks/:trackId/streams${end}")(handleStreamRequest(_, trackStreamUrlToJsonResponseMapper))
+    get(s"/i1/tracks/:trackId/streams$end")(handleStreamRequest(_, trackStreamUrlToJsonResponseMapper))
+    head(s"/i1/tracks/:trackId/streams$end")(handleStreamRequest(_, trackStreamUrlToJsonResponseMapper))
     }
   }
 

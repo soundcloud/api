@@ -42,7 +42,6 @@ class TracksControllerSpec extends InjectionBasedControllerSpecification with Fi
     lazy val session = new UserSessionBuilder().setUser(Urn("soundcloud:users:2")).setAgent(Urn("soundcloud:applications:v2")).setGeo(geo).build()
     lazy val controller = new TracksController(fakeUserAuthentication(session), trackCoordinator, okidoki, fallback, gobblyClient)
 
-
     trackCoordinator.deleteTrack(session, trackUrn) returns Future(Success(()))
     trackCoordinator.updateTrack(===(session), ===(trackUrn), any, any) returns Future(Success(track))
     trackCoordinator.fetchTrack(===(session), ===(trackUrn), any) returns Future(Success(track))
@@ -57,28 +56,78 @@ class TracksControllerSpec extends InjectionBasedControllerSpecification with Fi
   }
 
   "GET /tracks/:id" >> {
-    "falls back onto moshi" in new Context {
+    "falls back to Mothership" in new Context {
       val response = get(controller, "/tracks/999")
+      response.status ==== Status.Ok
+    }
+
+    "falls back to Mothership with trailing slash" in new Context {
+      val response = get(controller, "/tracks/999/")
+      response.status ==== Status.Ok
+    }
+
+    "falls back to Mothership with .json" in new Context {
+      val response = get(controller, "/tracks/999.json")
+      response.status ==== Status.Ok
+    }
+
+    "falls back to Mothership with .json and trailing slash" in new Context {
+      val response = get(controller, "/tracks/999.json/")
       response.status ==== Status.Ok
     }
   }
 
-  "GET /tracks/:id.json" >> {
-    "falls back onto moshi" in new Context {
-      val response = get(controller, "/tracks/999.json")
+  "GET /tracks/:id/comments" >> {
+    "falls back to Mothership" in new Context {
+      val response = get(controller, "/tracks/999/comments")
+      response.status ==== Status.Ok
+    }
+
+    "falls back to Mothership with trailing slash" in new Context {
+      val response = get(controller, "/tracks/999/comments/")
+      response.status ==== Status.Ok
+    }
+
+    "falls back to Mothership with .json" in new Context {
+      val response = get(controller, "/tracks/999/comments.json")
+      response.status ==== Status.Ok
+    }
+
+    "falls back to Mothership with .json and trailing slash" in new Context {
+      val response = get(controller, "/tracks/999/comments.json/")
+      response.status ==== Status.Ok
+    }
+  }
+
+  "GET /tracks/:id/download" >> {
+    "falls back to Mothership" in new Context {
+      val response = get(controller, "/tracks/999/download")
+      response.status ==== Status.Ok
+    }
+
+    "falls back to Mothership with trailing slash" in new Context {
+      val response = get(controller, "/tracks/999/download/")
+      response.status ==== Status.Ok
+    }
+
+    "falls back to Mothership with .json" in new Context {
+      val response = get(controller, "/tracks/999/download.json")
+      response.status ==== Status.Ok
+    }
+
+    "falls back to Mothership with .json and trailing slash" in new Context {
+      val response = get(controller, "/tracks/999/download.json/")
       response.status ==== Status.Ok
     }
   }
 
   "POST /tracks/:id" >> {
-    "falls back onto moshi" in new Context {
+    "falls back to Mothership" in new Context {
       val response = post(controller, "/tracks/999")
       response.status ==== Status.Ok
     }
-  }
 
-  "POST /tracks/:id.json" >> {
-    "falls back onto moshi" in new Context {
+    "falls back to Mothership with .json" in new Context {
       val response = post(controller, "/tracks/999.json")
       response.status ==== Status.Ok
     }

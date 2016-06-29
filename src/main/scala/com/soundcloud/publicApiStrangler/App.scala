@@ -243,7 +243,7 @@ object App
     followCountsClient
   )
 
-  private val userController = new UserController(
+  private val userController = new UsersController(
     userAuthentication,
     mothershipDispatcher,
     followCountsClient
