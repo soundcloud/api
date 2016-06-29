@@ -6,17 +6,14 @@ import com.soundcloud.publicApiStrangler.mapper.trackstreams.{TrackStreamJsonRes
 import com.soundcloud.publicApiStrangler.support.TrackStreamHandler
 import com.twitter.util.Future
 
-
 /**
  * Overrides the public api endpoints used to retrieve track streams.
  * Reason for overriding is to add support for SNIP content policy.
  */
-class TrackStreamsController(
-                              userAuthentication: UserAuthentication,
-                              trackStreamUrlToJsonResponseMapper: TrackStreamJsonResponseMapper,
-                              trackStreamUrlToRedirectMapper: TrackStreamRedirectResponseMapper,
-                              trackStreamHandler: TrackStreamHandler
-                              )
+class TrackStreamsController(userAuthentication: UserAuthentication,
+                             trackStreamUrlToJsonResponseMapper: TrackStreamJsonResponseMapper,
+                             trackStreamUrlToRedirectMapper: TrackStreamRedirectResponseMapper,
+                             trackStreamHandler: TrackStreamHandler)
   extends BffInjectionBasedController {
 
   Seq("", "/", ".json").foreach { end: String => {
