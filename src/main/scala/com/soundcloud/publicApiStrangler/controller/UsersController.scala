@@ -6,9 +6,9 @@ import com.soundcloud.publicApiStrangler.support.DispatchToMothershipHandler
 
 /** NOTE: This is a quick-fix in order to fetch follow counts from Stitch instead of Mothership.
   * These endpoints are NOT properly strangled. */
-class UserController(val userAuthentication: UserAuthentication,
-                     val mothershipDispatcher: DispatchToMothershipHandler,
-                     val followCountsClient: FollowCountsClient)
+class UsersController(val userAuthentication: UserAuthentication,
+                      val mothershipDispatcher: DispatchToMothershipHandler,
+                      val followCountsClient: FollowCountsClient)
   extends BffInjectionBasedController with FollowCountsHelper {
 
   get("/users/:id")(dispatchToMothershipWithFollowCounts)
