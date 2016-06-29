@@ -27,7 +27,9 @@ class TracksController(userAuthentication: UserAuthentication,
     extends BffInjectionBasedController {
 
   get("/tracks/:trackId")(mothershipDispatcher.dispatch)
+  get("/tracks/:trackId/")(mothershipDispatcher.dispatch)
   get("/tracks/:trackId.json")(mothershipDispatcher.dispatch)
+  get("/tracks/:trackId.json/")(mothershipDispatcher.dispatch)
 
   post("/tracks/:trackId")(mothershipDispatcher.dispatch)
   post("/tracks/:trackId.json")(mothershipDispatcher.dispatch)

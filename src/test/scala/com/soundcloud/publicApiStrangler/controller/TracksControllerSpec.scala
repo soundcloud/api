@@ -61,8 +61,18 @@ class TracksControllerSpec extends InjectionBasedControllerSpecification with Fi
       response.status ==== Status.Ok
     }
 
+    "falls back to Mothership with trailing slash" in new Context {
+      val response = get(controller, "/tracks/999/")
+      response.status ==== Status.Ok
+    }
+
     "falls back to Mothership with .json" in new Context {
       val response = get(controller, "/tracks/999.json")
+      response.status ==== Status.Ok
+    }
+
+    "falls back to Mothership with .json and trailing slash" in new Context {
+      val response = get(controller, "/tracks/999.json/")
       response.status ==== Status.Ok
     }
   }
