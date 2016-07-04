@@ -7,18 +7,6 @@
     <jobs>
       <job name="unit-tests">
         <tasks>
-          <exec command="ln" workingdir="pr">
-            <arg>-sf</arg>
-            <arg>/data/ivy2</arg>
-            <arg>.ivy2</arg>
-            <runif status="passed" />
-          </exec>
-          <exec command="ln" workingdir="pr">
-            <arg>-sf</arg>
-            <arg>/data/sbt</arg>
-            <arg>.sbt</arg>
-            <runif status="passed" />
-          </exec>
           <exec command="make" workingdir="pr">
             <arg>-f</arg>
             <arg>Makefile.pipeline</arg>
@@ -33,18 +21,6 @@
     <jobs>
       <job name="package-artifacts">
         <tasks>
-          <exec command="ln" workingdir="pr">
-            <arg>-sf</arg>
-            <arg>/data/ivy2</arg>
-            <arg>.ivy2</arg>
-            <runif status="passed" />
-          </exec>
-          <exec command="ln" workingdir="pr">
-            <arg>-sf</arg>
-            <arg>/data/sbt</arg>
-            <arg>.sbt</arg>
-            <runif status="passed" />
-          </exec>
           <exec command="make" workingdir="pr">
             <arg>-f</arg>
             <arg>Makefile.pipeline</arg>
@@ -60,18 +36,6 @@
     <jobs>
       <job name="end-to-end-tests">
         <tasks>
-          <exec command="ln" workingdir="pr">
-            <arg>-sf</arg>
-            <arg>/data/ivy2</arg>
-            <arg>.ivy2</arg>
-            <runif status="passed" />
-          </exec>
-          <exec command="ln" workingdir="pr">
-            <arg>-sf</arg>
-            <arg>/data/sbt</arg>
-            <arg>.sbt</arg>
-            <runif status="passed" />
-          </exec>
           <exec command="make" workingdir="pr">
             <arg>-f</arg>
             <arg>Makefile.pipeline</arg>
