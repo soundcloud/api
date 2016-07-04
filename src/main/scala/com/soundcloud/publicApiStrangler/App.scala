@@ -2,12 +2,13 @@ package com.soundcloud.publicApiStrangler
 
 import com.soundcloud.bff._
 import com.soundcloud.bff.authorization.ContentAuthorizationService
+import com.soundcloud.bff.filter.SessionCache
 import com.soundcloud.bff.media.{MediaUrlsRepository, WaveformUrlsRepository}
 import com.soundcloud.bff.services.JsonService
 import com.soundcloud.jvmkit.ResourceName
 import com.soundcloud.jvmkit.admin.{AdminRoute, RequestMethod}
 import com.soundcloud.jvmkit.config.{ConfigConvention, DataSensitivity}
-import com.soundcloud.jvmkit.rollout.{Rollout, BasicRolloutFeature, RolloutBuilder}
+import com.soundcloud.jvmkit.rollout.{BasicRolloutFeature, Rollout, RolloutBuilder}
 import com.soundcloud.publicApiStrangler.authorization._
 import com.soundcloud.publicApiStrangler.client._
 import com.soundcloud.publicApiStrangler.client.followcounts.FollowCountsClient
@@ -433,7 +434,8 @@ object App
     new ExceptForTrackUploadsFilter(new ContentAuthorizationFilter(authorizeContent)),
     new ExceptForTrackUploadsFilter(rateLimitingFacade.filter),
     new DefaultResponseHeadersFilter,
-    new StaticFilesFilter
+    new StaticFilesFilter,
+    new SessionCache(userAuthentication)
   )
 
   override val controllers = Set(
