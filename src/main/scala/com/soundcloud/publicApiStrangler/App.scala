@@ -427,6 +427,7 @@ object App
   private val limitOffset = 200
 
 
+  private val sessionCacheFilter = new SessionCache(userAuthentication)
   override lazy val additionalFilters = List(
     new AcceptOnlyJsonRequestFilter,
     new OffsetLimitRequestFilter(limitOffsetEnabled, limitOffsetPaths, limitOffset),
@@ -435,7 +436,7 @@ object App
     new ExceptForTrackUploadsFilter(rateLimitingFacade.filter),
     new DefaultResponseHeadersFilter,
     new StaticFilesFilter,
-    new SessionCache(userAuthentication)
+    new ExceptForTrackUploadsFilter(sessionCacheFilter)
   )
 
   override val controllers = Set(
