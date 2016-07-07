@@ -435,8 +435,8 @@ object App
     new ExceptForTrackUploadsFilter(new ContentAuthorizationFilter(authorizeContent)),
     new ExceptForTrackUploadsFilter(rateLimitingFacade.filter),
     new DefaultResponseHeadersFilter,
-    new StaticFilesFilter,
-    new ExceptForTrackUploadsFilter(sessionCacheFilter)
+    new ExceptForTrackUploadsFilter(sessionCacheFilter),
+    new StaticFilesFilter
   )
 
   override val controllers = Set(
