@@ -49,7 +49,7 @@ patched-jdk: jdk/target/sun/nio/ch/Util.class
 
 jdk/target/sun/nio/ch/Util.class: jdk/src/share/classes/sun/nio/ch/Util.java
 	mkdir -p jdk/target
-	javac -d jdk/target $<
+	crun jdk-8 -- javac -d jdk/target $<
 
 .PHONY: _dev_docker_compose
 _dev_docker_compose:
