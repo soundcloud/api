@@ -24,7 +24,6 @@ class SearchEntityMapper(okidokiClient: OkidokiClient,
                          waveform: WaveformMapper,
                          trackPurchaseLinkMapper: TrackPurchaseLinkMapper,
                          likeCountMapper: LikeCountMapper,
-                         playlistTracksMapper: PlaylistTracksMapper,
                          entitySummaryMapper: EntitySummaryMapper)
   extends Mapper[Urn, JsonMapping]
   with InputValidation[Urn, JsonMapping] {
@@ -58,7 +57,7 @@ class SearchEntityMapper(okidokiClient: OkidokiClient,
     urn.getCollection match {
       case "users" => new SearchUser(entityData, baseUrl, followCountsMap.get(urn))
       case "tracks" => new SearchTrack(session, entityData, likeCountMapper, baseUrl, entitySummaryMapper, contentAuthorization(urn), waveform, trackPurchaseLinkMapper)
-      case "playlists" => new SearchPlaylist(entityData, likeCountMapper, baseUrl, playlistTracksMapper, entitySummaryMapper)
+      case "playlists" => new SearchPlaylist(entityData, likeCountMapper, baseUrl, entitySummaryMapper)
       case "groups" => new SearchGroup(entityData, baseUrl, entitySummaryMapper)
     }
   }

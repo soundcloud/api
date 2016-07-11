@@ -6,8 +6,8 @@ import com.soundcloud.bff.services.{JsonService => BffJsonService}
 import com.soundcloud.bff.test.UnitSpecification
 import com.soundcloud.jvmkit.UserSession
 import com.soundcloud.publicApiStrangler.authorization.ContentAuthorizationRules
+import com.soundcloud.publicApiStrangler.client.followcounts.FollowCountsClient
 import com.soundcloud.publicApiStrangler.mapping.search.{LegacySearch, PaginatedSearch, SearchDispatcherRequest}
-import com.soundcloud.publicApiStrangler.client.followcounts.{FollowCounts, FollowCountsClient}
 import com.soundcloud.scalakit.Urn
 import com.soundcloud.scalakit.Urn.format
 import com.soundcloud.scalakit.finagle.http.OkStatus
@@ -82,7 +82,7 @@ class SearchMapperSpec extends UnitSpecification {
     val okidokiMock = mock[OkidokiClient]
     val caMock = mock[ContentAuthorizationRules]
     val followCountsClient = mock[FollowCountsClient]
-    val searchEntityMapper = new SearchEntityMapper(okidokiMock, followCountsClient, baseUrl, caMock, null, null, null, null, null)
+    val searchEntityMapper = new SearchEntityMapper(okidokiMock, followCountsClient, baseUrl, caMock, null, null, null, null)
     val searchMapper = new SearchMapper(searchRepoMock, searchEntityMapper, baseUrl)
     private val request = pagedRequest(Map.empty)
 
