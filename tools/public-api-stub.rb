@@ -27,6 +27,11 @@ post '/tracks' do
   calc_result_from_io(params['track']['asset_data'][:tempfile])
 end
 
+post '/oauth2/token' do
+  content_type 'application/json'
+  '{"OK"}'
+end
+
 get '/tracks/:id' do
   content_type 'application/json'
   '{}'
