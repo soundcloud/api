@@ -37,7 +37,6 @@ class SearchEntityMapperSpec extends UnitSpecification with Fixtures {
     val likeCountMapper = new LikeCountMapper(lieblingClient)
     val waveformUrlsRepository = mock[WaveformUrlsRepository]
     val entitySummaryMapper = new EntitySummaryMapper(okidokiClient, baseUrl)
-    private val playlistTracksMapper = new PlaylistTracksMapper(okidokiClient, baseUrl)
     val mapper = new SearchEntityMapper(
       okidokiClient,
       followCountsClient,
@@ -46,7 +45,6 @@ class SearchEntityMapperSpec extends UnitSpecification with Fixtures {
       new WaveformMapper(waveformUrlsRepository),
       trackPurchaseLinkMapper,
       likeCountMapper,
-      playlistTracksMapper,
       entitySummaryMapper
     )
 
@@ -142,7 +140,6 @@ class SearchEntityMapperSpec extends UnitSpecification with Fixtures {
       (playlistJson \ "kind").as[String] ==== "playlist"
       (playlistJson \ "tracks_uri").as[String] ==== "https://api.soundcloud.com.com/playlists/685235/tracks"
       (playlistJson \ "likes_count").as[Int] ==== 666
-      (playlistJson \ "tracks").as[List[JsValue]] must beEmpty
       (playlistJson \ "secret_token").asOpt[String] ==== None
       (playlistJson \ "secret_uri").asOpt[String] ==== None
     }
