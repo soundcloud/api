@@ -15,4 +15,3 @@ staging.json
 .ivy2
 .sbt
 production.overrides
-config/baremetal.sh
