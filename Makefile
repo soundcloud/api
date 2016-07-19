@@ -25,7 +25,6 @@ test: unit-test
 unit-test:
 	crun sbt -- $(SBT) test
 
-# config/baremetal.sh should export all the necessary env vars
 interactive-lite:
 	source config/baremetal.sh && $(SBT)
 
