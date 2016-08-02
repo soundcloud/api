@@ -153,10 +153,14 @@ object App
     mothershipDispatcher,
     gobblyClient)
 
-  private val singleTrackController = new SingleTrackController(userAuthentication, mothershipDispatcher)
-
   lazy val rolloutClient = new RolloutBuilder(config, telemetry).build
   override lazy val rollout = Some(rolloutClient)
+
+  private val singleTrackController = new SingleTrackController(
+    userAuthentication,
+    mothershipDispatcher,
+    mothershipDispatcher, // this argument will turn into a track service and it will gradually recieve traffic.
+    new SingleTrackEndpointRollout(rolloutClient))
 
   lazy val memcachedClient = MemcachedClient(config)
 
@@ -475,4 +479,9 @@ class SearchControllerRolloutChecks(rolloutClient: Rollout) {
   def avoidForUsers = rolloutClient.isActive(BasicRolloutFeature("search_avoid_mothership_for_users"))
   def avoidForGroups = rolloutClient.isActive(BasicRolloutFeature("search_avoid_mothership_for_groups"))
   def avoidForPlaylists = rolloutClient.isActive(BasicRolloutFeature("search_avoid_mothership_for_playlists"))
+}
+
+class SingleTrackEndpointRollout(rolloutClient: Rollout) {
+  val flag = BasicRolloutFeature("strangle_single_track_endpoint")
+  def strangleSingleTrackEndpoint(trackUrn: Urn) = rolloutClient.isActiveForUrn(flag, trackUrn)
 }
