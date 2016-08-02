@@ -72,3 +72,5 @@ USER_SUBSCRIPTIONS_SRV_RECORD="dnssrv!http.server.sandbox.subscriptions.dd.srv.i
 
 STITCH4FOLLOWS_SRV_RECORD="dnssrv!http.web-follows.prod.stitch4counts.dd.srv.int.s-cloud.net"
 STITCH_BULK_FETCH_MAX_ENTRIES="7"
+
+APP_SILOING_BLACKLIST_APPS="soundcloud:applications:124,soundcloud:applications:3152,soundcloud:applications:65097"

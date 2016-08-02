@@ -31,7 +31,6 @@ import com.soundcloud.scalakit.cache.MemcachedClient
 import com.soundcloud.scalakit.finagle.jsonservice.{JsonClient, ServiceEntryPoint}
 import org.eclipse.jetty.server.Handler
 
-
 object App
   extends BffInjectionBasedApp
     with AppConfigComponent
@@ -112,6 +111,13 @@ object App
     "soundcloud:applications:265616",
     "soundcloud:applications:265183"
   ).map(new Urn(_))
+
+  private val blacklistOfAppIdsForUserSiloing: Set[Urn] =
+    config.get("APP_SILOING_BLACKLIST_APPS", DataSensitivity.NON_SENSITIVE)
+      .split(",")
+      .map(appId => Urn(appId.trim))
+      .toSet
+
   private val authorizeContent = new AuthorizeHttpResponse(contentAuthorizationRules, userAuthentication, waveformUrlsRepo, TrackPolicyApplicator(whitelistedClients))
 
   private val mothershipDispatcher = new DispatchToMothershipHandler(publicApiClient)
@@ -140,11 +146,19 @@ object App
 
     val mediaUrlsRepository = new MediaUrlsRepository(mediaService)
     val trackStreamSnipHandler = new TrackStreamHandler(mothershipDispatcher, contentAuthorizationRules, mediaUrlsRepository)
+    val rolloutCheckForSiloingFunc = {
+      val siloingEnabledFeature = BasicRolloutFeature("app-siloing-enabled")
+      () => rolloutClient.isActive(siloingEnabledFeature)
+    }
+    val publicApiSiloing = new PublicApiSiloing(rolloutCheckForSiloingFunc, blacklistOfAppIdsForUserSiloing, telemetry)
+
     new TrackStreamsController(
       userAuthentication,
       trackStreamUrlToJsonResponseMapper,
       trackStreamUrlToRedirectMapper,
-      trackStreamSnipHandler)
+      trackStreamSnipHandler,
+      publicApiSiloing
+    )
   }
 
   private val tracksController = new TracksController(userAuthentication,
