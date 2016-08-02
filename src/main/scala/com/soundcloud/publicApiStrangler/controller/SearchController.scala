@@ -125,7 +125,7 @@ class SearchController(val userAuthentication: UserAuthentication,
                   .allowExtraParams(searchRequest.paginationParams + SearchMapper.LinkedPartitioning)
                   .buildOffsetBased()
                 searchMapper.materialize(session, page).map {
-                  case Some(info) => render.json(info)
+                  case Some(info) => render.anyJson(info)
                   case _ => render.notFound
                 } handle {
                   case RepositoryException(BadRequestStatus, _) =>
