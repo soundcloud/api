@@ -1,29 +1,21 @@
 package com.soundcloud.publicApiStrangler.controller
 
-import com.soundcloud.publicApiStrangler.mapper.trackcoordinator.TrackCoordinatorMapper
+import com.soundcloud.bff.finagle.ResponseBuilder
 import com.soundcloud.bff.test.InjectionBasedControllerSpecification
-import com.soundcloud.trackcoordinator.client.mapper.TrackMapper
-import com.soundcloud.trackcoordinator.client.TrackCoordinatorClient
-import com.soundcloud.jvmkit.rollout.{BasicRolloutFeature, Rollout}
-import com.soundcloud.jvmkit.{UserSessionBuilder, Geo => JvmGeo}
+import com.soundcloud.jvmkit.{Geo => JvmGeo, UserSessionBuilder}
 import com.soundcloud.publicApiStrangler.client.GobblyClient
 import com.soundcloud.publicApiStrangler.client.gobbly.{ClientError => GobblyClientError, Error => GobblyError, Result => GobblyResult, ServerError => GobblyServerError, Success => GobblySuccess}
-import com.soundcloud.trackcoordinator.client.representation.{Error, Errors, Failure, NotFound, Result, Success, TrackUpdate, Track => CoordinatorTrack}
 import com.soundcloud.publicApiStrangler.support.DispatchToMothershipHandler
 import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures
-import com.soundcloud.scalakit.finagle.http.HandlerRequest
 import com.soundcloud.scalakit.test.VerifiedMocks
 import com.soundcloud.scalakit.{Geo, Urn}
 import com.soundcloud.service.client.OkidokiClient
-import com.twitter.finagle.http.{Request, Response, Status}
-import com.soundcloud.bff.finagle.ResponseBuilder
-import com.soundcloud.publicApiStrangler.client.GobblyClient
-import com.soundcloud.scalakit.json.Json
-import play.api.libs.json.{Json => PlayJson}
+import com.soundcloud.trackcoordinator.client.TrackCoordinatorClient
+import com.soundcloud.trackcoordinator.client.mapper.TrackMapper
+import com.soundcloud.trackcoordinator.client.representation.{Error, Errors, Failure, NotFound, Success, Track => CoordinatorTrack}
+import com.twitter.finagle.http.{Request, Status}
 import com.twitter.util.Future
-import org.joda.time.{DateTime, DateTimeUtils}
-import org.specs2.mutable.BeforeAfter
-import play.api.libs.json._
+import play.api.libs.json.{Json => PlayJson, _}
 
 class TracksControllerSpec extends InjectionBasedControllerSpecification with Fixtures {
 
@@ -56,16 +48,6 @@ class TracksControllerSpec extends InjectionBasedControllerSpecification with Fi
   }
 
   "GET /tracks/:id" >> {
-    "falls back to Mothership" in new Context {
-      val response = get(controller, "/tracks/999")
-      response.status ==== Status.Ok
-    }
-
-    "falls back to Mothership with trailing slash" in new Context {
-      val response = get(controller, "/tracks/999/")
-      response.status ==== Status.Ok
-    }
-
     "falls back to Mothership with .json" in new Context {
       val response = get(controller, "/tracks/999.json")
       response.status ==== Status.Ok

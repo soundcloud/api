@@ -153,6 +153,8 @@ object App
     mothershipDispatcher,
     gobblyClient)
 
+  private val singleTrackController = new SingleTrackController(userAuthentication, mothershipDispatcher)
+
   lazy val rolloutClient = new RolloutBuilder(config, telemetry).build
   override lazy val rollout = Some(rolloutClient)
 
@@ -449,6 +451,7 @@ object App
     similarSoundsController,
     rateLimitingFacade.rateLimitStatusController,
     tracksController,
+    singleTrackController,
     likesController,
     friendsController,
     groupUsersController,

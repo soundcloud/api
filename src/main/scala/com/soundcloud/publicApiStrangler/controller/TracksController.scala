@@ -8,10 +8,9 @@ import com.soundcloud.publicApiStrangler.support.DispatchToMothershipHandler
 import com.soundcloud.scalakit.Urn
 import com.soundcloud.service.client.OkidokiClient
 import com.soundcloud.trackcoordinator.client.TrackCoordinatorClient
-import com.soundcloud.trackcoordinator.client.representation.{NotFound, Success, Track => CoordinatorTrack}
+import com.soundcloud.trackcoordinator.client.representation.{NotFound, Success}
 import com.twitter.util.Future
 import play.api.libs.json.Json
-
 
 /**
  * Overrides the public api endpoints for editing tracks
@@ -25,8 +24,6 @@ class TracksController(userAuthentication: UserAuthentication,
                        gobbly: GobblyClient)
     extends BffInjectionBasedController {
 
-  get("/tracks/:trackId")(mothershipDispatcher.dispatch)
-  get("/tracks/:trackId/")(mothershipDispatcher.dispatch)
   get("/tracks/:trackId.json")(mothershipDispatcher.dispatch)
   get("/tracks/:trackId.json/")(mothershipDispatcher.dispatch)
 
