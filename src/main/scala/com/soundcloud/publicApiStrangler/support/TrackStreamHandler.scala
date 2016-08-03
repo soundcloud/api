@@ -3,11 +3,11 @@ package com.soundcloud.publicApiStrangler.support
 import com.soundcloud.bff.finagle.{Request, ResponseBuilder}
 import com.soundcloud.bff.media.MediaUrlsRepository
 import com.soundcloud.jvmkit.policies.{ContentAuthorization, ContentPolicy}
-import com.soundcloud.jvmkit.{Urn, UserSession}
+import com.soundcloud.jvmkit.{MalformedUrnException, Urn, UserSession}
 import com.soundcloud.publicApiStrangler.authorization.ContentAuthorizationRules
 import com.soundcloud.publicApiStrangler.mapper.trackstreams.TrackStreamResponseMapper
 import com.twitter.finagle.http.Method
-import com.twitter.util.Future
+import com.twitter.util.{Future, Return, Throw, Try}
 import org.jboss.netty.handler.codec.http.HttpResponseStatus
 import org.joda.time.DateTime
 import org.joda.time.format.DateTimeFormat
@@ -23,30 +23,34 @@ class TrackStreamHandler(mothershipDispatcher: DispatchToMothershipHandler,
                          contentAuthRules: ContentAuthorizationRules,
                          mediaUrlsRepository: MediaUrlsRepository) {
 
-  def handle(request: Request, userSession: UserSession, mapper: TrackStreamResponseMapper): Future[ResponseBuilder] = {
-    val trackUrn = new Urn("soundcloud", "tracks", request.routeParams("trackId"))
-
-    if (urnWithNumericIdentifier(trackUrn)) {
-      val responses = Future.join(mothershipDispatcher.dispatch(request), contentAuthFor(userSession, trackUrn))
-      responses.flatMap {
-        case (mothershipResponse: ResponseBuilder, contentAuth: ContentAuthorization) =>
-          if (mothershipResponse.build.getStatusCode < 400) {
-            contentAuth.getPolicy match {
-              case ContentPolicy.ALLOW | ContentPolicy.MONETIZE => Future.value(mothershipResponse)
-              case ContentPolicy.SNIP => replaceStream(request, userSession, trackUrn, contentAuth, mapper, isHttpsRequest(request))
-              case ContentPolicy.BLOCK if (userSession.isAnonymous) => Future.value(generateResponseFor(request, HttpResponseStatus.UNAUTHORIZED))
-              case ContentPolicy.BLOCK => Future.value(generateResponseFor(request, HttpResponseStatus.FORBIDDEN))
-            }
-          } else {
-            Future.value(mothershipResponse)
+  def handle(request: Request, userSession: UserSession, mapper: TrackStreamResponseMapper): Future[ResponseBuilder] =
+    Try(new Urn("soundcloud", "tracks", request.routeParams("trackId"))) match {
+      case Return(trackUrn) =>
+        if (urnWithNumericIdentifier(trackUrn)) {
+          val responses = Future.join(mothershipDispatcher.dispatch(request), contentAuthFor(userSession, trackUrn))
+          responses.flatMap {
+            case (mothershipResponse: ResponseBuilder, contentAuth: ContentAuthorization) =>
+              if (mothershipResponse.build.getStatusCode < 400) {
+                contentAuth.getPolicy match {
+                  case ContentPolicy.ALLOW | ContentPolicy.MONETIZE => Future.value(mothershipResponse)
+                  case ContentPolicy.SNIP => replaceStream(request, userSession, trackUrn, contentAuth, mapper, isHttpsRequest(request))
+                  case ContentPolicy.BLOCK if (userSession.isAnonymous) => Future.value(generateResponseFor(request, HttpResponseStatus.UNAUTHORIZED))
+                  case ContentPolicy.BLOCK => Future.value(generateResponseFor(request, HttpResponseStatus.FORBIDDEN))
+                }
+              } else {
+                Future.value(mothershipResponse)
+              }
           }
+        } else {
+          Future.value(generateResponseFor(request, HttpResponseStatus.NOT_FOUND))
+        }
+      case Throw(exception) => exception match {
+        case ex: MalformedUrnException => Future.value(generateResponseFor(request, HttpResponseStatus.NOT_FOUND))
+        case _ => Future.value(generateResponseFor(request, HttpResponseStatus.INTERNAL_SERVER_ERROR))
       }
-    } else {
-      Future.value(generateResponseFor(request, HttpResponseStatus.NOT_FOUND))
     }
-  }
 
-  private def isHttpsRequest(request: Request) : Boolean =
+  private def isHttpsRequest(request: Request): Boolean =
     request.headerMap.get("x-forwarded-proto") match {
       case Some(protocol) => protocol.toLowerCase() == "https"
       case _ => false

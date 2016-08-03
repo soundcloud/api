@@ -36,7 +36,7 @@ class TrackStreamHandlerSpec extends UnitSpecification {
 
     }
 
-    trait Success extends Context {
+    trait ValidUrnContext extends Context {
       val trackId = "334030"
       val paramMap = Map("trackId" -> trackId)
       request.routeParams returns paramMap
@@ -44,14 +44,29 @@ class TrackStreamHandlerSpec extends UnitSpecification {
       contentAuthRules.fetchRules(userSession, Seq(trackUrn)) returns Future.value(Seq(contentAuth))
     }
 
-    trait Failure extends Context {
+    trait NonNumericUrnContext extends Context {
       val trackId = "non-numeric"
       val paramMap = Map("trackId" -> trackId)
       request.routeParams returns paramMap
       val trackUrn = new Urn("soundcloud", "tracks", trackId)
     }
 
-    "return Mothership 404 if id is not numeric" in new Failure {
+    "when the URN contains invalid characters" >> {
+
+      trait InvalidUrnContext extends Context {
+        val trackId = "non-numeric"
+        val paramMap = Map("trackId" -> "1298!!!!")
+        request.routeParams returns paramMap
+        val trackUrn = new Urn("soundcloud", "tracks", trackId)
+      }
+
+      "a 404 is returned" in new InvalidUrnContext {
+        val response = Await.result(handler.handle(request, userSession, mapper)).build
+        response.status ==== Status.NotFound
+      }
+    }
+
+    "return Mothership 404 if id is not numeric" in new NonNumericUrnContext {
       val response = Await.result(handler.handle(request, userSession, mapper)).build
 
       response.status ==== Status.NotFound
@@ -65,7 +80,7 @@ class TrackStreamHandlerSpec extends UnitSpecification {
       there was noCallsTo(mediaUrlsRepository)
     }
 
-    "return pubapi response in case pubapi returns client error" in new Success {
+    "return pubapi response in case pubapi returns client error" in new ValidUrnContext {
       val clientErrorResponse = responseBuilder(401)
       mothershipDispatcher.dispatch(request) returns clientErrorResponse
       contentAuth.getPolicy returns ContentPolicy.SNIP
@@ -76,7 +91,7 @@ class TrackStreamHandlerSpec extends UnitSpecification {
       there was noCallsTo(mediaUrlsRepository)
     }
 
-    "return pubapi response in case pubapi returns server error" in new Success {
+    "return pubapi response in case pubapi returns server error" in new ValidUrnContext {
       val serverErrorResponse = responseBuilder(500)
       mothershipDispatcher.dispatch(request) returns serverErrorResponse
       contentAuth.getPolicy returns ContentPolicy.SNIP
@@ -87,7 +102,7 @@ class TrackStreamHandlerSpec extends UnitSpecification {
       there was noCallsTo(mediaUrlsRepository)
     }
 
-    "return pubapi response in case pubapi response is successful and ContentPolicy = ALLOW" in new Success {
+    "return pubapi response in case pubapi response is successful and ContentPolicy = ALLOW" in new ValidUrnContext {
       val successResponse = responseBuilder(200)
       mothershipDispatcher.dispatch(request) returns successResponse
       contentAuth.getPolicy returns ContentPolicy.ALLOW
@@ -98,7 +113,7 @@ class TrackStreamHandlerSpec extends UnitSpecification {
       there was one(contentAuthRules).fetchRules(userSession, Seq(trackUrn))
     }
 
-    "return pubapi response in case pubapi response is successful and ContentPolicy = MONETIZE" in new Success {
+    "return pubapi response in case pubapi response is successful and ContentPolicy = MONETIZE" in new ValidUrnContext {
       val successResponse = responseBuilder(200)
       mothershipDispatcher.dispatch(request) returns successResponse
       contentAuth.getPolicy returns ContentPolicy.MONETIZE
@@ -109,7 +124,7 @@ class TrackStreamHandlerSpec extends UnitSpecification {
       there was one(contentAuthRules).fetchRules(userSession, Seq(trackUrn))
     }
 
-    "HEAD return MediaUrlsRepository response in case pubapi response is successful and content policy is SNIP" in new Success {
+    "HEAD return MediaUrlsRepository response in case pubapi response is successful and content policy is SNIP" in new ValidUrnContext {
       val successResponse = responseBuilder(200)
       mothershipDispatcher.dispatch(request) returns successResponse
       contentAuth.getPolicy returns ContentPolicy.SNIP
@@ -128,7 +143,7 @@ class TrackStreamHandlerSpec extends UnitSpecification {
       response ==== Await.result(mapperResponse)
     }
 
-    "GET return MediaUrlsRepository response in case pubapi response is successful and content policy is SNIP" in new Success {
+    "GET return MediaUrlsRepository response in case pubapi response is successful and content policy is SNIP" in new ValidUrnContext {
       val successResponse = responseBuilder(200)
       mothershipDispatcher.dispatch(request) returns successResponse
       contentAuth.getPolicy returns ContentPolicy.SNIP
@@ -147,7 +162,7 @@ class TrackStreamHandlerSpec extends UnitSpecification {
       there was one(contentAuthRules).fetchRules(userSession, Seq(trackUrn))
     }
 
-    "HEAD return https MediaUrlsRepository response in case pubapi response is successful and content policy is SNIP" in new Success {
+    "HEAD return https MediaUrlsRepository response in case pubapi response is successful and content policy is SNIP" in new ValidUrnContext {
       request.headerMap returns HeaderMap(("x-forwarded-proto" -> "https"))
       val successResponse = responseBuilder(200)
       mothershipDispatcher.dispatch(request) returns successResponse
@@ -168,7 +183,7 @@ class TrackStreamHandlerSpec extends UnitSpecification {
       there was one(contentAuthRules).fetchRules(userSession, Seq(trackUrn))
     }
 
-    "GET return https MediaUrlsRepository response in case pubapi response is successful and content policy is SNIP" in new Success {
+    "GET return https MediaUrlsRepository response in case pubapi response is successful and content policy is SNIP" in new ValidUrnContext {
       request.headerMap returns HeaderMap(("x-forwarded-proto" -> "https"))
       val successResponse = responseBuilder(200)
       mothershipDispatcher.dispatch(request) returns successResponse
@@ -187,7 +202,7 @@ class TrackStreamHandlerSpec extends UnitSpecification {
       there was one(contentAuthRules).fetchRules(userSession, Seq(trackUrn))
     }
 
-    "HEAD return 401 - Unauthorized when content policy is BLOCK and anonymous user" in new Success {
+    "HEAD return 401 - Unauthorized when content policy is BLOCK and anonymous user" in new ValidUrnContext {
       val successResponse = responseBuilder(200)
       mothershipDispatcher.dispatch(request) returns successResponse
       contentAuth.getPolicy returns ContentPolicy.BLOCK
@@ -211,7 +226,7 @@ class TrackStreamHandlerSpec extends UnitSpecification {
       there was one(contentAuthRules).fetchRules(userSession, Seq(trackUrn))
     }
 
-    "GET return 401 - Unauthorized when content policy is BLOCK and anonymous user" in new Success {
+    "GET return 401 - Unauthorized when content policy is BLOCK and anonymous user" in new ValidUrnContext {
       val successResponse = responseBuilder(200)
       mothershipDispatcher.dispatch(request) returns successResponse
       contentAuth.getPolicy returns ContentPolicy.BLOCK
@@ -231,7 +246,7 @@ class TrackStreamHandlerSpec extends UnitSpecification {
       there was one(contentAuthRules).fetchRules(userSession, Seq(trackUrn))
     }
 
-    "HEAD return 403 - Forbidden when content policy is BLOCK and logged in user" in new Success {
+    "HEAD return 403 - Forbidden when content policy is BLOCK and logged in user" in new ValidUrnContext {
       val successResponse = responseBuilder(200)
       mothershipDispatcher.dispatch(request) returns successResponse
       contentAuth.getPolicy returns ContentPolicy.BLOCK
@@ -255,7 +270,7 @@ class TrackStreamHandlerSpec extends UnitSpecification {
       there was one(contentAuthRules).fetchRules(userSession, Seq(trackUrn))
     }
 
-    "GET return 403 - Forbidden when content policy is BLOCK and logged in user" in new Success {
+    "GET return 403 - Forbidden when content policy is BLOCK and logged in user" in new ValidUrnContext {
       val successResponse = responseBuilder(200)
       mothershipDispatcher.dispatch(request) returns successResponse
       contentAuth.getPolicy returns ContentPolicy.BLOCK
