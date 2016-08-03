@@ -17,7 +17,7 @@ class DispatchToMothershipHandler(mothershipClient: Service[Request, Response]) 
     dispatchToMothership(request).map(toResponseBuilder)
   }
 
-  private def dispatchToMothership(request:Request) : Future[Response] = {
+  def dispatchToMothership(request:Request) : Future[Response] = {
     request.host = "api.soundcloud.com"
     mothershipClient(ForwardedRequest(request)).handle {
       case exception: Exception =>

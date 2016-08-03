@@ -23,6 +23,7 @@ import com.soundcloud.publicApiStrangler.mapper.timeline.publicApi.ActivitiesWit
 import com.soundcloud.publicApiStrangler.mapper.timeline.{EntityMapper, EntitySummaryMapper, FollowingsTracksMapper}
 import com.soundcloud.publicApiStrangler.mapper.trackstreams.{TrackStreamJsonResponseMapper, TrackStreamRedirectResponseMapper}
 import com.soundcloud.publicApiStrangler.mapper.waveform.WaveformMapper
+import com.soundcloud.publicApiStrangler.singleTrackEndpointMigration.{ResponseComparison, TracksService, SingleTrackController}
 import com.soundcloud.publicApiStrangler.support._
 import com.soundcloud.publicApiStrangler.zookeeper.CuratorFrameworkFactory
 import com.soundcloud.ratelimiting.facade._
@@ -173,8 +174,9 @@ object App
   private val singleTrackController = new SingleTrackController(
     userAuthentication,
     mothershipDispatcher,
-    mothershipDispatcher, // this argument will turn into a track service and it will gradually recieve traffic.
-    new SingleTrackEndpointRollout(rolloutClient))
+    new TracksService,
+    new ResponseComparison(telemetry)
+    )
 
   lazy val memcachedClient = MemcachedClient(config)
 
