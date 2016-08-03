@@ -16,7 +16,8 @@ class SingleTrackController(userAuthentication: UserAuthentication,
                             mothershipDispatcher: DispatchToMothershipHandler,
                             tracksService: TracksService,
                             responseComparison: ResponseComparison,
-                            telemetry: Telemetry)
+                            telemetry: Telemetry,
+                            singleTrackEndpointRollout: Urn => Future[Boolean])
   extends BffInjectionBasedController {
 
   private val numericRegexp = """\d+""".r
@@ -37,10 +38,16 @@ class SingleTrackController(userAuthentication: UserAuthentication,
         val trackId = req.routeParams("trackId")
         Try(Urn("soundcloud", "tracks", trackId)) match {
           case Return(urn@Urn(_, _, numericRegexp())) => {
-            Future.join(legacyResponse(req), migrationResponse(session, urn)) map {
-              case (legacyResponseResult, migrationResponseResult) =>
-                responseComparison.report(legacyResponseResult, migrationResponseResult)
-                toResponseBuilder(legacyResponseResult)
+
+            singleTrackEndpointRollout(urn).flatMap{
+              case true =>
+                Future.join(legacyResponse(req), migrationResponse(session, urn)) map {
+                  case (legacyResponseResult, migrationResponseResult) =>
+                    responseComparison.report(legacyResponseResult, migrationResponseResult)
+                    toResponseBuilder(legacyResponseResult)
+                }
+              case false =>
+                legacyResponse(req).map(toResponseBuilder)
             }
           }
 

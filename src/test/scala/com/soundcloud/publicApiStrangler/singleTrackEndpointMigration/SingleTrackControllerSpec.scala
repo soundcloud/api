@@ -23,15 +23,35 @@ class SingleTrackControllerSpec extends InjectionBasedControllerSpecification {
     val telemetry = new Telemetry(config, collectorRegistry)
 
     val session = new UserSessionBuilder().build()
-    val controller = new SingleTrackController(
+    def controller(rollout: Urn => Future[Boolean]) = new SingleTrackController(
       fakeUserAuthentication(session),
       fallback,
       tracksService,
       responseComparison,
-      telemetry)
+      telemetry,
+      rollout)
 
 
     val trackUrn = Urn("soundcloud:tracks:987")
+  }
+
+  List("/tracks/987", "/tracks/987/").foreach {
+    path =>
+      s"when rollout is off uses fallback, path: $path" in new Context {
+        val legacyResponseString = "{\"kind\":\"track\",\"id\":987,\"user_id\":111}"
+        val legacyResponse = Response()
+        legacyResponse.setContentString(legacyResponseString)
+        when(fallback.dispatchToMothership(any[Request])).thenReturn(Future.value(legacyResponse))
+
+        val rollout = (urn: Urn) => {
+          urn ==== trackUrn
+          Future.False
+        }
+
+        val response = get(controller(rollout), path)
+        response.status ==== Status.Ok
+        response.body ==== legacyResponseString
+      }
   }
 
   List("/tracks/__12", "/tracks/__12/").foreach {
@@ -40,7 +60,8 @@ class SingleTrackControllerSpec extends InjectionBasedControllerSpecification {
         val legacyResponse = Response(Status.NotFound)
         when(fallback.dispatchToMothership(any[Request])).thenReturn(Future.value(legacyResponse))
 
-        val response = get(controller, path)
+        val rollout = (urn: Urn) => Future.True
+        val response = get(controller(rollout), path)
 
         val errCount = collectorRegistry.getSampleValue(
           "non_numeric_track_id",
@@ -59,7 +80,8 @@ class SingleTrackControllerSpec extends InjectionBasedControllerSpecification {
         legacyResponse.setContentString(legacyResponseString)
         when(fallback.dispatchToMothership(any[Request])).thenReturn(Future.value(legacyResponse))
 
-        val response = get(controller, path)
+        val rollout = (urn: Urn) => Future.True
+        val response = get(controller(rollout), path)
         response.status ==== Status.Ok
 
         val errCount = collectorRegistry.getSampleValue(
@@ -83,7 +105,8 @@ class SingleTrackControllerSpec extends InjectionBasedControllerSpecification {
         val migrationResponseString = "{\"kind\":\"track\",\"id\":987,\"user_id\":112}"
         when(tracksService.track(session, trackUrn)).thenReturn(Future.value(Some(migrationResponseObject)))
 
-        val response = get(controller, path)
+        val rollout = (urn: Urn) => Future.True
+        val response = get(controller(rollout), path)
         verify(responseComparison).report(
           like[Response] { case r => r.contentString ==== legacyResponseString },
           like[Response] { case r => r.contentString ==== migrationResponseString }
@@ -102,7 +125,8 @@ class SingleTrackControllerSpec extends InjectionBasedControllerSpecification {
 
         when(tracksService.track(session, trackUrn)).thenReturn(Future.None)
 
-        val response = get(controller, path)
+        val rollout = (urn: Urn) => Future.True
+        val response = get(controller(rollout), path)
         verify(responseComparison).report(
           any[Response],
           like[Response] { case r => r.status ==== Status.NotFound }

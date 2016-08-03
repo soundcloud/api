@@ -179,7 +179,8 @@ object App
     mothershipDispatcher,
     new TracksService(trackmetadataClient),
     new ResponseComparison(telemetry),
-    telemetry
+    telemetry,
+    new SingleTrackEndpointRollout(rolloutClient).strangle
     )
 
   lazy val memcachedClient = MemcachedClient(config)
@@ -502,5 +503,5 @@ class SearchControllerRolloutChecks(rolloutClient: Rollout) {
 
 class SingleTrackEndpointRollout(rolloutClient: Rollout) {
   val flag = BasicRolloutFeature("strangle_single_track_endpoint")
-  def strangleSingleTrackEndpoint(trackUrn: Urn) = rolloutClient.isActiveForUrn(flag, trackUrn)
+  def strangle(trackUrn: Urn) = rolloutClient.isActiveForUrn(flag, trackUrn)
 }
