@@ -35,18 +35,16 @@ class SingleTrackControllerSpec extends InjectionBasedControllerSpecification {
 
   List("/tracks/__12", "/tracks/__12/").foreach {
     path =>
-      s"returns 404 on invalid track urn identifier, path: $path" in new Context {
+      s"returns 4xx when fallback returns 4xx on non numeric track ids, path: $path" in new Context {
+        val legacyResponse = Response(Status.NotFound)
+        when(fallback.dispatchToMothership(any[Request])).thenReturn(Future.value(legacyResponse))
+
         val response = get(controller, path)
-        response.status ==== Status.NotFound
-        response.getHeader("Status") ==== "404 Not Found"
-        response.getHeaders.get("Date") must beSome[String]
-        response.getHeader("Content-Type") ==== "application/json; charset=utf-8"
-        response.body ==== """{"errors":[{"error_message":"404 - Not Found - Track id is not valid"}]}"""
 
         val errCount = collectorRegistry.getSampleValue(
           "non_numeric_track_id",
-          Array("type", "system"),
-          Array("invalid","TEST-APP")
+          Array("statusCode", "system"),
+          Array("404", "TEST-APP")
         )
         errCount == 1
       }
@@ -54,7 +52,7 @@ class SingleTrackControllerSpec extends InjectionBasedControllerSpecification {
 
   List("/tracks/permalinktrack", "/tracks/permalinktrack/").foreach {
     path =>
-      s"returns 200 on non numeric track id and reports it to telemetry, path: $path" in new Context {
+      s"returns 200 when fallback returns 200 on non numeric track ids, path: $path" in new Context {
         val legacyResponseString = "{\"kind\":\"track\",\"id\":987,\"user_id\":111}"
         val legacyResponse = Response()
         legacyResponse.setContentString(legacyResponseString)
@@ -65,8 +63,8 @@ class SingleTrackControllerSpec extends InjectionBasedControllerSpecification {
 
         val errCount = collectorRegistry.getSampleValue(
           "non_numeric_track_id",
-          Array("type", "system"),
-          Array("valid","TEST-APP")
+          Array("statusCode", "system"),
+          Array("200", "TEST-APP")
         )
         errCount == 1
       }

@@ -7,7 +7,7 @@ import com.soundcloud.publicApiStrangler.support.DispatchToMothershipHandler
 import com.soundcloud.scalakit.Urn
 import com.soundcloud.scalakit.json.Json
 import com.twitter.finagle.http.Response
-import com.twitter.util.{Future, Return, Throw, Try}
+import com.twitter.util.{Future, Return, Try}
 import org.jboss.netty.handler.codec.http.HttpResponseStatus
 import org.joda.time.DateTime
 import org.joda.time.format.DateTimeFormat
@@ -28,7 +28,7 @@ class SingleTrackController(userAuthentication: UserAuthentication,
   private val nonNumericTrackIdCounter = telemetry.counter(
     "non_numeric_track_id",
     "counter for non numeric track ids",
-    "type"
+    "statusCode"
   )
 
   get("/tracks/:trackId")(renderTrack)
@@ -36,7 +36,8 @@ class SingleTrackController(userAuthentication: UserAuthentication,
 
   private def renderTrack(req: Request): Future[ResponseBuilder] = {
 
-    Try(Urn("soundcloud", "tracks", req.routeParams("trackId"))) match {
+    val trackId = req.routeParams("trackId")
+    Try(Urn("soundcloud", "tracks", trackId)) match {
       case Return(urn@Urn(_, _, numericRegexp())) => {
         Future.join(legacyResponse(req), migrationResponse(urn)) map {
           case (legacyResponseResult, migrationResponseResult) =>
@@ -45,25 +46,13 @@ class SingleTrackController(userAuthentication: UserAuthentication,
         }
       }
 
-      case Return(urn) =>
-        nonNumericTrackIdCounter.labels("valid").inc() // valid non numeric identifier
-        legacyResponse(req).map(toResponseBuilder)
-
-      case Throw(_) =>
-        nonNumericTrackIdCounter.labels("invalid").inc() // invalid identifier
-        Future.value(invalidTrackIdRespone)
+      case _ =>
+        legacyResponse(req).map {
+          case res =>
+            nonNumericTrackIdCounter.labels(res.statusCode.toString).inc()
+            toResponseBuilder(res)
+        }
     }
-  }
-
-  private def invalidTrackIdRespone = {
-    val status = HttpResponseStatus.NOT_FOUND
-    val errorMessage = s"${status.getCode} - ${status.getReasonPhrase} - Track id is not valid"
-
-    render.notFound.
-      header("Status", status.getCode + " " + status.getReasonPhrase).
-      header("Date", DateTime.now.toString(DateTimeFormat.forPattern("E, d MMM yyyy HH:mm:ss z"))).
-      header("Content-Type", "application/json; charset=utf-8").
-      body(s"""{"errors":[{"error_message":"$errorMessage"}]}""")
   }
 
   private def legacyResponse(req: Request): Future[Response] =
