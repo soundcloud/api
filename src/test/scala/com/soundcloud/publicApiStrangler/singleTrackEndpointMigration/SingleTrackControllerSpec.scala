@@ -2,10 +2,13 @@ package com.soundcloud.publicApiStrangler.singleTrackEndpointMigration
 
 import com.soundcloud.bff.test.InjectionBasedControllerSpecification
 import com.soundcloud.jvmkit.UserSessionBuilder
+import com.soundcloud.jvmkit.telemetry.Telemetry
+import com.soundcloud.jvmkit.test.InMemoryConfig
 import com.soundcloud.publicApiStrangler.support.DispatchToMothershipHandler
 import com.soundcloud.scalakit.Urn
 import com.twitter.finagle.http.{Request, Response, Status}
 import com.twitter.util.Future
+import io.prometheus.client.CollectorRegistry
 import org.mockito.Mockito.{verify, when}
 
 class SingleTrackControllerSpec extends InjectionBasedControllerSpecification {
@@ -15,7 +18,16 @@ class SingleTrackControllerSpec extends InjectionBasedControllerSpecification {
     val tracksService = mock[TracksService]
     val responseComparison = mock[ResponseComparison]
 
-    val controller = new SingleTrackController(fakeUserAuthentication(session), fallback, tracksService, responseComparison)
+    val config = new InMemoryConfig
+    val collectorRegistry = new CollectorRegistry
+    val telemetry = new Telemetry(config, collectorRegistry)
+
+    val controller = new SingleTrackController(
+      fakeUserAuthentication(session),
+      fallback,
+      tracksService,
+      responseComparison,
+      telemetry)
 
     val session = new UserSessionBuilder().build()
     val trackUrn = Urn("soundcloud:tracks:987")
@@ -23,13 +35,40 @@ class SingleTrackControllerSpec extends InjectionBasedControllerSpecification {
 
   List("/tracks/__12", "/tracks/__12/").foreach {
     path =>
-      s"returns 404 on unexpected track id, path: $path" in new Context {
-        val response = get(controller, "/tracks/__12")
+      s"returns 404 on invalid track urn identifier, path: $path" in new Context {
+        val response = get(controller, path)
         response.status ==== Status.NotFound
         response.getHeader("Status") ==== "404 Not Found"
         response.getHeaders.get("Date") must beSome[String]
         response.getHeader("Content-Type") ==== "application/json; charset=utf-8"
         response.body ==== """{"errors":[{"error_message":"404 - Not Found - Track id is not valid"}]}"""
+
+        val errCount = collectorRegistry.getSampleValue(
+          "non_numeric_track_id",
+          Array("type", "system"),
+          Array("invalid","TEST-APP")
+        )
+        errCount == 1
+      }
+  }
+
+  List("/tracks/permalinktrack", "/tracks/permalinktrack/").foreach {
+    path =>
+      s"returns 200 on non numeric track id and reports it to telemetry, path: $path" in new Context {
+        val legacyResponseString = "{\"kind\":\"track\",\"id\":987,\"user_id\":111}"
+        val legacyResponse = Response()
+        legacyResponse.setContentString(legacyResponseString)
+        when(fallback.dispatchToMothership(any[Request])).thenReturn(Future.value(legacyResponse))
+
+        val response = get(controller, path)
+        response.status ==== Status.Ok
+
+        val errCount = collectorRegistry.getSampleValue(
+          "non_numeric_track_id",
+          Array("type", "system"),
+          Array("valid","TEST-APP")
+        )
+        errCount == 1
       }
   }
 

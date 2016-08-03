@@ -175,7 +175,8 @@ object App
     userAuthentication,
     mothershipDispatcher,
     new TracksService,
-    new ResponseComparison(telemetry)
+    new ResponseComparison(telemetry),
+    telemetry
     )
 
   lazy val memcachedClient = MemcachedClient(config)

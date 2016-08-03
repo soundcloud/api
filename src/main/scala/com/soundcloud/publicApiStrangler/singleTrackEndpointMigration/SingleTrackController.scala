@@ -2,6 +2,7 @@ package com.soundcloud.publicApiStrangler.singleTrackEndpointMigration
 
 import com.soundcloud.bff.finagle.{Request, ResponseBuilder}
 import com.soundcloud.bff.web.{BffInjectionBasedController, UserAuthentication}
+import com.soundcloud.jvmkit.telemetry.Telemetry
 import com.soundcloud.publicApiStrangler.support.DispatchToMothershipHandler
 import com.soundcloud.scalakit.Urn
 import com.soundcloud.scalakit.json.Json
@@ -18,23 +19,39 @@ import scala.collection.JavaConversions._
 class SingleTrackController(userAuthentication: UserAuthentication,
                             mothershipDispatcher: DispatchToMothershipHandler,
                             tracksService: TracksService,
-                            responseComparison: ResponseComparison)
+                            responseComparison: ResponseComparison,
+                            telemetry: Telemetry)
   extends BffInjectionBasedController {
+
+  private val numericRegexp = """\d+""".r
+
+  private val nonNumericTrackIdCounter = telemetry.counter(
+    "non_numeric_track_id",
+    "counter for non numeric track ids",
+    "type"
+  )
 
   get("/tracks/:trackId")(renderTrack)
   get("/tracks/:trackId/")(renderTrack)
 
   private def renderTrack(req: Request): Future[ResponseBuilder] = {
-    Try(Urn("soundcloud", "tracks", req.routeParams("trackId"))) match {
-      case Throw(_) => Future.value(invalidTrackIdRespone)
 
-      case Return(urn) => {
+    Try(Urn("soundcloud", "tracks", req.routeParams("trackId"))) match {
+      case Return(urn@Urn(_, _, numericRegexp())) => {
         Future.join(legacyResponse(req), migrationResponse(urn)) map {
           case (legacyResponseResult, migrationResponseResult) =>
             responseComparison.report(legacyResponseResult.contentString, migrationResponseResult.contentString)
             toResponseBuilder(legacyResponseResult)
         }
       }
+
+      case Return(urn) =>
+        nonNumericTrackIdCounter.labels("valid").inc() // valid non numeric identifier
+        legacyResponse(req).map(toResponseBuilder)
+
+      case Throw(_) =>
+        nonNumericTrackIdCounter.labels("invalid").inc() // invalid identifier
+        Future.value(invalidTrackIdRespone)
     }
   }
 
