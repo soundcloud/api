@@ -24,9 +24,12 @@ class SingleTrackControllerSpec extends InjectionBasedControllerSpecification {
   List("/tracks/__12", "/tracks/__12/").foreach {
     path =>
       s"returns 404 on unexpected track id, path: $path" in new Context {
-        val response = get(controller, path)
+        val response = get(controller, "/tracks/__12")
         response.status ==== Status.NotFound
-        response.body ==== "Track id is not valid."
+        response.getHeader("Status") ==== "404 Not Found"
+        response.getHeaders.get("Date") must beSome[String]
+        response.getHeader("Content-Type") ==== "application/json; charset=utf-8"
+        response.body ==== """{"errors":[{"error_message":"404 - Not Found - Track id is not valid"}]}"""
       }
   }
 

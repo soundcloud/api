@@ -7,6 +7,9 @@ import com.soundcloud.scalakit.Urn
 import com.soundcloud.scalakit.json.Json
 import com.twitter.finagle.http.Response
 import com.twitter.util.{Future, Return, Throw, Try}
+import org.jboss.netty.handler.codec.http.HttpResponseStatus
+import org.joda.time.DateTime
+import org.joda.time.format.DateTimeFormat
 import play.api.libs.json.{Json => PlayJson}
 
 import scala.collection.JavaConversions._
@@ -23,7 +26,7 @@ class SingleTrackController(userAuthentication: UserAuthentication,
 
   private def renderTrack(req: Request): Future[ResponseBuilder] = {
     Try(Urn("soundcloud", "tracks", req.routeParams("trackId"))) match {
-      case Throw(_) => Future.value(render.notFound.body("Track id is not valid."))
+      case Throw(_) => Future.value(invalidTrackIdRespone)
 
       case Return(urn) => {
         Future.join(legacyResponse(req), migrationResponse(urn)) map {
@@ -33,6 +36,17 @@ class SingleTrackController(userAuthentication: UserAuthentication,
         }
       }
     }
+  }
+
+  private def invalidTrackIdRespone = {
+    val status = HttpResponseStatus.NOT_FOUND
+    val errorMessage = s"${status.getCode} - ${status.getReasonPhrase} - Track id is not valid"
+
+    render.notFound.
+      header("Status", status.getCode + " " + status.getReasonPhrase).
+      header("Date", DateTime.now.toString(DateTimeFormat.forPattern("E, d MMM yyyy HH:mm:ss z"))).
+      header("Content-Type", "application/json; charset=utf-8").
+      body(s"""{"errors":[{"error_message":"$errorMessage"}]}""")
   }
 
   private def legacyResponse(req: Request): Future[Response] =
