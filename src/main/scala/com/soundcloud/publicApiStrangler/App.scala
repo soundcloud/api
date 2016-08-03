@@ -23,6 +23,7 @@ import com.soundcloud.publicApiStrangler.mapper.timeline.publicApi.ActivitiesWit
 import com.soundcloud.publicApiStrangler.mapper.timeline.{EntityMapper, EntitySummaryMapper, FollowingsTracksMapper}
 import com.soundcloud.publicApiStrangler.mapper.trackstreams.{TrackStreamJsonResponseMapper, TrackStreamRedirectResponseMapper}
 import com.soundcloud.publicApiStrangler.mapper.waveform.WaveformMapper
+import com.soundcloud.publicApiStrangler.singleTrackEndpointMigration.trackmetadataclient.TrackmetadataClient
 import com.soundcloud.publicApiStrangler.singleTrackEndpointMigration.{ResponseComparison, TracksService, SingleTrackController}
 import com.soundcloud.publicApiStrangler.support._
 import com.soundcloud.publicApiStrangler.zookeeper.CuratorFrameworkFactory
@@ -79,6 +80,8 @@ object App
   )
 
   private val followCountsClient = new FollowCountsClient(stitch4followsService, config)
+
+  private val trackmetadataClient = TrackmetadataClient(config, telemetry)
 
   private val contentAuthorizationRules = new ContentAuthorizationRules(
     new ContentAuthorizationService(authsyService),
@@ -174,13 +177,12 @@ object App
   private val singleTrackController = new SingleTrackController(
     userAuthentication,
     mothershipDispatcher,
-    new TracksService,
+    new TracksService(trackmetadataClient),
     new ResponseComparison(telemetry),
     telemetry
     )
 
   lazy val memcachedClient = MemcachedClient(config)
-
 
   private val rateLimitingFacade = new RateLimitingFacade(
     bffApplication,

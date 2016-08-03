@@ -9,7 +9,7 @@ import com.soundcloud.scalakit.{Path, Urn}
 import com.twitter.util.Future
 import play.api.libs.json._
 
-class TrackMetadataClient(service: JsonClient) {
+class TrackmetadataClient(service: JsonClient) {
 
   def track(session: UserSession, urn: Urn, secretToken: Option[String] = None): Future[Option[Track]] = {
     val params = secretToken.map(t => Params("secret_token" -> t)).getOrElse(Params.empty)
@@ -37,12 +37,12 @@ class TrackMetadataClient(service: JsonClient) {
   private def jsonToTracks(json: JsValue): List[Track] = (json \ "data").as[List[Track]]
 }
 
-object TrackMetadataClient {
+object TrackmetadataClient {
   def apply(config: Config, telemetry: Telemetry, customEntryPoint: Option[ServiceEntryPoint] = None) = {
     val resourceName = ResourceName("trackmetadata")
     val entryPoint = customEntryPoint.getOrElse(ServiceEntryPoint(config.get(resourceName, ConfigConvention.SRV_RECORD)))
     val jsonClient = JsonClient(resourceName, entryPoint, config, telemetry)
 
-    new TrackMetadataClient(jsonClient)
+    new TrackmetadataClient(jsonClient)
   }
 }

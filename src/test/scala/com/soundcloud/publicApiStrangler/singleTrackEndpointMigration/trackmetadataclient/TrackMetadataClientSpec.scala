@@ -14,7 +14,7 @@ class TrackMetadataClientSpec extends UnitSpecification with Fixtures{
 
   trait Context extends VerifiedMocks {
     val service = mock[JsonClient]
-    val trackmetadataClient = new TrackMetadataClient(service)
+    val trackmetadataClient = new TrackmetadataClient(service)
   }
 
   "#track" >> {

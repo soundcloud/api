@@ -2,6 +2,7 @@ package com.soundcloud.publicApiStrangler.singleTrackEndpointMigration
 
 import com.soundcloud.jvmkit.telemetry.Telemetry
 import com.soundcloud.scalakit.json.Json
+import com.twitter.finagle.http.Response
 import com.twitter.util.{Return, Try}
 import play.api.libs.json.JsObject
 
@@ -16,24 +17,28 @@ class ResponseComparison(telemetry: Telemetry) {
     0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55
   )
 
-  def report(originalResponseBody: String, migrationResponseBody: String): Unit = {
+  def report(originalRes: Response, migrationRes: Response): Unit = {
 
-    val mainJsonTry = Try(Json.fromString(originalResponseBody).as[JsObject])
-    val migrationJsonTry = Try(Json.fromString(migrationResponseBody).as[JsObject])
+    if (originalRes.status == migrationRes.status) {
+      val mainJsonTry = Try(Json.fromString(originalRes.contentString).as[JsObject])
+      val migrationJsonTry = Try(Json.fromString(migrationRes.contentString).as[JsObject])
 
-    (mainJsonTry, migrationJsonTry) match {
-      case (Return(mainJson), Return(migrationJson)) => {
-        val extraAttributesCount = (migrationJson.fieldSet.map(_._1) diff mainJson.fieldSet.map(_._1)).size
+      (mainJsonTry, migrationJsonTry) match {
+        case (Return(mainJson), Return(migrationJson)) => {
+          val extraAttributesCount = (migrationJson.fieldSet.map(_._1) diff mainJson.fieldSet.map(_._1)).size
 
-        val differentAttributeCount = mainJson.fields.count {
-          case (key, jsValue) =>
-            jsValue != migrationJson \ key
+          val differentAttributeCount = mainJson.fields.count {
+            case (key, jsValue) =>
+              jsValue != migrationJson \ key
+          }
+
+          comparisonMetric.labels("success").observe(differentAttributeCount + extraAttributesCount)
         }
 
-        comparisonMetric.labels("success").observe(differentAttributeCount + extraAttributesCount)
+        case _ => comparisonMetric.labels("jsonFailure").observe(0)
       }
-
-      case _ => comparisonMetric.labels("failure").observe(0)
+    } else {
+      comparisonMetric.labels("statusCodeFailure").observe(0)
     }
   }
 }

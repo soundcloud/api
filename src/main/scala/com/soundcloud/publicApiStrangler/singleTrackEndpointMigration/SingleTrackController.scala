@@ -4,17 +4,13 @@ import com.soundcloud.bff.finagle.{Request, ResponseBuilder}
 import com.soundcloud.bff.web.{BffInjectionBasedController, UserAuthentication}
 import com.soundcloud.jvmkit.telemetry.Telemetry
 import com.soundcloud.publicApiStrangler.support.DispatchToMothershipHandler
-import com.soundcloud.scalakit.Urn
+import com.soundcloud.scalakit.{Urn, UserSession}
 import com.soundcloud.scalakit.json.Json
-import com.twitter.finagle.http.Response
+import com.twitter.finagle.http.{Status, Response}
 import com.twitter.util.{Future, Return, Try}
-import org.jboss.netty.handler.codec.http.HttpResponseStatus
-import org.joda.time.DateTime
-import org.joda.time.format.DateTimeFormat
 import play.api.libs.json.{Json => PlayJson}
 
 import scala.collection.JavaConversions._
-
 
 class SingleTrackController(userAuthentication: UserAuthentication,
                             mothershipDispatcher: DispatchToMothershipHandler,
@@ -36,21 +32,24 @@ class SingleTrackController(userAuthentication: UserAuthentication,
 
   private def renderTrack(req: Request): Future[ResponseBuilder] = {
 
-    val trackId = req.routeParams("trackId")
-    Try(Urn("soundcloud", "tracks", trackId)) match {
-      case Return(urn@Urn(_, _, numericRegexp())) => {
-        Future.join(legacyResponse(req), migrationResponse(urn)) map {
-          case (legacyResponseResult, migrationResponseResult) =>
-            responseComparison.report(legacyResponseResult.contentString, migrationResponseResult.contentString)
-            toResponseBuilder(legacyResponseResult)
-        }
-      }
+    userAuthentication.withUserSession(req) {
+      case session =>
+        val trackId = req.routeParams("trackId")
+        Try(Urn("soundcloud", "tracks", trackId)) match {
+          case Return(urn@Urn(_, _, numericRegexp())) => {
+            Future.join(legacyResponse(req), migrationResponse(session, urn)) map {
+              case (legacyResponseResult, migrationResponseResult) =>
+                responseComparison.report(legacyResponseResult, migrationResponseResult)
+                toResponseBuilder(legacyResponseResult)
+            }
+          }
 
-      case _ =>
-        legacyResponse(req).map {
-          case res =>
-            nonNumericTrackIdCounter.labels(res.statusCode.toString).inc()
-            toResponseBuilder(res)
+          case _ =>
+            legacyResponse(req).map {
+              case res =>
+                nonNumericTrackIdCounter.labels(res.statusCode.toString).inc()
+                toResponseBuilder(res)
+            }
         }
     }
   }
@@ -58,13 +57,15 @@ class SingleTrackController(userAuthentication: UserAuthentication,
   private def legacyResponse(req: Request): Future[Response] =
     mothershipDispatcher.dispatchToMothership(req)
 
-  private def migrationResponse(urn: Urn): Future[Response] = {
-    tracksService.track(urn).map {
-      track =>
+  private def migrationResponse(session: UserSession, urn: Urn): Future[Response] = {
+    tracksService.track(session, urn).map {
+      case Some(track) =>
         val res = Response()
         implicit val format = PlayJson.format[SingleTrackPublicApiRepresentation] // Sam really enjoys this
         res.setContentString(Json.stringify(track))
         res
+      case None =>
+        Response(Status.NotFound)
     }
   }
 

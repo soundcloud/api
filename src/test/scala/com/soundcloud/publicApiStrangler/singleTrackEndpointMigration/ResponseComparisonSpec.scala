@@ -3,6 +3,7 @@ package com.soundcloud.publicApiStrangler.singleTrackEndpointMigration
 import com.soundcloud.jvmkit.telemetry.Telemetry
 import com.soundcloud.jvmkit.test.InMemoryConfig
 import com.soundcloud.scalakit.test.UnitSpecification
+import com.twitter.finagle.http.{Status, Response}
 import io.prometheus.client.CollectorRegistry
 
 class ResponseComparisonSpec extends UnitSpecification {
@@ -12,6 +13,26 @@ class ResponseComparisonSpec extends UnitSpecification {
     val collectorRegistry = new CollectorRegistry
     val telemetry = new Telemetry(config, collectorRegistry)
     val responseComparison = new ResponseComparison(telemetry)
+
+    def generateResponse(contentString: String) = {
+      val res = Response()
+      res.setContentString(contentString)
+      res
+    }
+  }
+
+  "reports different response statuses" in new Context {
+    val originalRes = Response(Status.NotFound)
+    val migrationRes = Response(Status.Ok)
+
+    responseComparison.report(originalRes, migrationRes)
+
+    val value = collectorRegistry.getSampleValue(
+      "single_track_endpoint_comparison_sum",
+      Array("status", "system"),
+      Array("statusCodeFailure", "TEST-APP")
+    )
+    value ==== 0
   }
 
   "reports zero differences when responses are the same" in new Context {
@@ -20,9 +41,11 @@ class ResponseComparisonSpec extends UnitSpecification {
       ("{}", "{}"),
       ("{\"id\":987}", "{\"id\":987}")
     ).foreach {
-      case (originalResponse, migrationResponse) =>
+      case (originalResponseString, migrationResponseString) =>
+        val originalRes = generateResponse(originalResponseString)
+        val migrationRes = generateResponse(migrationResponseString)
 
-        responseComparison.report(originalResponse, migrationResponse)
+        responseComparison.report(originalRes, migrationRes)
         val value = collectorRegistry.getSampleValue(
           "single_track_endpoint_comparison_sum",
           Array("status", "system"),
@@ -43,9 +66,11 @@ class ResponseComparisonSpec extends UnitSpecification {
       ("{\"kind\":\"track\",\"id\":987,\"user_id\":111}",
         "{\"kind\":\"track2\",\"id\":981,\"user_id\":112}") -> (2 + 1 + 3)
     ).foreach {
-      case ((originalResponse, migrationResponse), expectedCount) =>
+      case ((originalResponseString, migrationResponseString), expectedCount) =>
+        val originalRes = generateResponse(originalResponseString)
+        val migrationRes = generateResponse(migrationResponseString)
 
-        responseComparison.report(originalResponse, migrationResponse)
+        responseComparison.report(originalRes, migrationRes)
         val value = collectorRegistry.getSampleValue(
           "single_track_endpoint_comparison_sum",
           Array("status", "system"),
@@ -66,9 +91,11 @@ class ResponseComparisonSpec extends UnitSpecification {
       ("{\"kind\":\"track\",\"id\":987,\"user_id\":111}",
         "{}") -> (1 + 2 + 3)
     ).foreach {
-      case ((originalResponse, migrationResponse), expectedCount) =>
+      case ((originalResponseString, migrationResponseString), expectedCount) =>
+        val originalRes = generateResponse(originalResponseString)
+        val migrationRes = generateResponse(migrationResponseString)
 
-        responseComparison.report(originalResponse, migrationResponse)
+        responseComparison.report(originalRes, migrationRes)
         val value = collectorRegistry.getSampleValue(
           "single_track_endpoint_comparison_sum",
           Array("status", "system"),
@@ -86,9 +113,11 @@ class ResponseComparisonSpec extends UnitSpecification {
       ("{\"kind\":\"track\"}",
         "{\"kind\":\"track\",\"id\":988,\"user_id\":111}") -> (1 + 2)
     ).foreach {
-      case ((originalResponse, migrationResponse), expectedCount) =>
+      case ((originalResponseString, migrationResponseString), expectedCount) =>
+        val originalRes = generateResponse(originalResponseString)
+        val migrationRes = generateResponse(migrationResponseString)
 
-        responseComparison.report(originalResponse, migrationResponse)
+        responseComparison.report(originalRes, migrationRes)
         val value = collectorRegistry.getSampleValue(
           "single_track_endpoint_comparison_sum",
           Array("status", "system"),
@@ -106,13 +135,15 @@ class ResponseComparisonSpec extends UnitSpecification {
       ("{\"kind\":\"track\"}",
         "{\"kind\":\"track\",\"id\"") -> 2 // invalid json
     ).foreach {
-      case ((originalResponse, migrationResponse), expectedCount) =>
+      case ((originalResponseString, migrationResponseString), expectedCount) =>
+        val originalRes = generateResponse(originalResponseString)
+        val migrationRes = generateResponse(migrationResponseString)
 
-        responseComparison.report(originalResponse, migrationResponse)
+        responseComparison.report(originalRes, migrationRes)
         val value = collectorRegistry.getSampleValue(
           "single_track_endpoint_comparison_count",
           Array("status", "system"),
-          Array("failure", "TEST-APP")
+          Array("jsonFailure", "TEST-APP")
         )
         value ==== expectedCount
     }

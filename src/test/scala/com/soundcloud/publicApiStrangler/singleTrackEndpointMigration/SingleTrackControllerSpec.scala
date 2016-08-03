@@ -22,6 +22,7 @@ class SingleTrackControllerSpec extends InjectionBasedControllerSpecification {
     val collectorRegistry = new CollectorRegistry
     val telemetry = new Telemetry(config, collectorRegistry)
 
+    val session = new UserSessionBuilder().build()
     val controller = new SingleTrackController(
       fakeUserAuthentication(session),
       fallback,
@@ -29,7 +30,7 @@ class SingleTrackControllerSpec extends InjectionBasedControllerSpecification {
       responseComparison,
       telemetry)
 
-    val session = new UserSessionBuilder().build()
+
     val trackUrn = Urn("soundcloud:tracks:987")
   }
 
@@ -78,12 +79,34 @@ class SingleTrackControllerSpec extends InjectionBasedControllerSpecification {
         legacyResponse.setContentString(legacyResponseString)
         when(fallback.dispatchToMothership(any[Request])).thenReturn(Future.value(legacyResponse))
 
-        val migrationResponse = SingleTrackPublicApiRepresentation("track", 987, 112)
+        val migrationResponseObject = SingleTrackPublicApiRepresentation("track", 987, 112)
         val migrationResponseString = "{\"kind\":\"track\",\"id\":987,\"user_id\":112}"
-        when(tracksService.track(trackUrn)).thenReturn(Future.value(migrationResponse))
+        when(tracksService.track(session, trackUrn)).thenReturn(Future.value(Some(migrationResponseObject)))
 
         val response = get(controller, path)
-        verify(responseComparison).report(legacyResponseString, migrationResponseString)
+        verify(responseComparison).report(
+          like[Response] { case r => r.contentString ==== legacyResponseString },
+          like[Response] { case r => r.contentString ==== migrationResponseString }
+        )
+        response.status ==== Status.Ok
+      }
+  }
+
+  List("/tracks/987", "/tracks/987/").foreach {
+    path =>
+      s"reports http status differences between legacy and migration, path: $path" in new Context {
+        val legacyResponseString = "{\"kind\":\"track\",\"id\":987,\"user_id\":111}"
+        val legacyResponse = Response()
+        legacyResponse.setContentString(legacyResponseString)
+        when(fallback.dispatchToMothership(any[Request])).thenReturn(Future.value(legacyResponse))
+
+        when(tracksService.track(session, trackUrn)).thenReturn(Future.None)
+
+        val response = get(controller, path)
+        verify(responseComparison).report(
+          any[Response],
+          like[Response] { case r => r.status ==== Status.NotFound }
+        )
         response.status ==== Status.Ok
       }
   }
