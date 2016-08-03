@@ -34,4 +34,9 @@ trait Fixtures {
   val trackCoordinatorTrackInPublicApiFormat = withContentsOf("track-coordinator", "coordinator-track-in-public-api-format")
 
   val consumerSubscription = withContentsOf("subscriptions", "consumer-subscription")
+
+  val trackmetadataClientEmptyTracks = withContentsOf("trackmetadataclient", "empty_tracks")
+  val trackmetadataClientMultipleTracks = withContentsOf("trackmetadataclient", "multiple_tracks")
+  val trackmetadataClientTracks_2 = withContentsOf("trackmetadataclient", "track2")
+  val trackmetadataClientTracks_1_3 = withContentsOf("trackmetadataclient", "tracks_1_3")
 }
