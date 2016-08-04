@@ -4,9 +4,9 @@ import com.soundcloud.bff.finagle.{Request, ResponseBuilder}
 import com.soundcloud.bff.web.{BffInjectionBasedController, UserAuthentication}
 import com.soundcloud.jvmkit.telemetry.Telemetry
 import com.soundcloud.publicApiStrangler.support.DispatchToMothershipHandler
-import com.soundcloud.scalakit.json.Json
 import com.soundcloud.scalakit.{Urn, UserSession}
-import com.twitter.finagle.http.{Response, Status}
+import com.soundcloud.scalakit.json.Json
+import com.twitter.finagle.http.{Status, Response}
 import com.twitter.util.{Future, Return, Try}
 import play.api.libs.json.{Json => PlayJson}
 
@@ -33,15 +33,13 @@ class SingleTrackController(userAuthentication: UserAuthentication,
 
   private def renderTrack(req: Request): Future[ResponseBuilder] = {
 
-    stripConditionalRequestHeaders(req)
-
     userAuthentication.withUserSession(req) {
       case session =>
         val trackId = req.routeParams("trackId")
         Try(Urn("soundcloud", "tracks", trackId)) match {
           case Return(urn@Urn(_, _, numericRegexp())) => {
 
-            singleTrackEndpointRollout(urn).flatMap {
+            singleTrackEndpointRollout(urn).flatMap{
               case true =>
                 Future.join(legacyResponse(req), migrationResponse(session, urn)) map {
                   case (legacyResponseResult, migrationResponseResult) =>
@@ -84,13 +82,5 @@ class SingleTrackController(userAuthentication: UserAuthentication,
       .status(response.status.code)
       .body(response.getContentString())
       .headers(headerMap)
-  }
-
-  /*
-  * If-None-Match header causes mothership to return 304
-  * We decided not to support this behavior
-  */
-  private def stripConditionalRequestHeaders(req: Request): Option[String] = {
-    req.headerMap.remove("If-None-Match")
   }
 }
