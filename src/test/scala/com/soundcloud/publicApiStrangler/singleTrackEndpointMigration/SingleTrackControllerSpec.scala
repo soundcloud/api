@@ -144,7 +144,7 @@ class SingleTrackControllerSpec extends InjectionBasedControllerSpecification {
         })).thenReturn(Future.value(Response()))
 
         val rollout = (urn: Urn) => Future.False
-        val response = get(controller(rollout), path,Map.empty,Map("If-None-Match" -> "a8d3ba6d09b68691b77dc75dfcd7a477"))
+        val response = get(controller(rollout), path, Map.empty, Map("If-None-Match" -> "a8d3ba6d09b68691b77dc75dfcd7a477"))
 
         response.status ==== Status.Ok
       }
