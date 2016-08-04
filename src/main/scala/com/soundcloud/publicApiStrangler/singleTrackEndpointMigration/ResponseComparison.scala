@@ -14,7 +14,7 @@ class ResponseComparison(telemetry: Telemetry) {
     "single_track_endpoint_comparison",
     "distribution of number of different attributes that are served from strangler implementation",
     List("status"),
-    0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55
+    (0 to 60).toList.map(_.toDouble): _*
   )
 
   def report(originalRes: Response, migrationRes: Response): Unit = {
