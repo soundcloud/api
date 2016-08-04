@@ -23,6 +23,7 @@ class SingleTrackControllerSpec extends InjectionBasedControllerSpecification {
     val telemetry = new Telemetry(config, collectorRegistry)
 
     val session = new UserSessionBuilder().build()
+    val trackUrn = Urn("soundcloud:tracks:987")
 
     def controller(rollout: Urn => Future[Boolean]) = new SingleTrackController(
       fakeUserAuthentication(session),
@@ -31,9 +32,6 @@ class SingleTrackControllerSpec extends InjectionBasedControllerSpecification {
       responseComparison,
       telemetry,
       rollout)
-
-
-    val trackUrn = Urn("soundcloud:tracks:987")
   }
 
   List("/tracks/987", "/tracks/987/").foreach {
