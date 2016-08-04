@@ -17,6 +17,12 @@ class ResponseComparison(telemetry: Telemetry) {
     (0 to 60).toList.map(_.toDouble): _*
   )
 
+  val statusCodeDifferenceCounter = telemetry.counter(
+    "single_track_endpoint_status_code_difference",
+    "counter for response comparison where status codes are different",
+    "legacy", "migration"
+  )
+
   def report(originalRes: Response, migrationRes: Response): Unit = {
 
     if (originalRes.status == migrationRes.status) {
@@ -39,6 +45,7 @@ class ResponseComparison(telemetry: Telemetry) {
       }
     } else {
       comparisonMetric.labels("statusCodeFailure").observe(0)
+      statusCodeDifferenceCounter.labels(originalRes.statusCode.toString,migrationRes.statusCode.toString).inc()
     }
   }
 }

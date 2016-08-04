@@ -3,7 +3,7 @@ package com.soundcloud.publicApiStrangler.singleTrackEndpointMigration
 import com.soundcloud.jvmkit.telemetry.Telemetry
 import com.soundcloud.jvmkit.test.InMemoryConfig
 import com.soundcloud.scalakit.test.UnitSpecification
-import com.twitter.finagle.http.{Status, Response}
+import com.twitter.finagle.http.{Response, Status}
 import io.prometheus.client.CollectorRegistry
 
 class ResponseComparisonSpec extends UnitSpecification {
@@ -27,12 +27,19 @@ class ResponseComparisonSpec extends UnitSpecification {
 
     responseComparison.report(originalRes, migrationRes)
 
-    val value = collectorRegistry.getSampleValue(
+    val histogramCount = collectorRegistry.getSampleValue(
       "single_track_endpoint_comparison_sum",
       Array("status", "system"),
       Array("statusCodeFailure", "TEST-APP")
     )
-    value ==== 0
+    histogramCount ==== 0
+
+    val counterValue = collectorRegistry.getSampleValue(
+      "single_track_endpoint_status_code_difference",
+      Array("legacy", "migration", "system"),
+      Array("404", "200", "TEST-APP")
+    )
+    counterValue ==== 1
   }
 
   "reports zero differences when responses are the same" in new Context {
