@@ -23,6 +23,7 @@ class SingleTrackControllerSpec extends InjectionBasedControllerSpecification {
     val telemetry = new Telemetry(config, collectorRegistry)
 
     val session = new UserSessionBuilder().build()
+
     def controller(rollout: Urn => Future[Boolean]) = new SingleTrackController(
       fakeUserAuthentication(session),
       fallback,
@@ -131,6 +132,22 @@ class SingleTrackControllerSpec extends InjectionBasedControllerSpecification {
           any[Response],
           like[Response] { case r => r.status ==== Status.NotFound }
         )
+        response.status ==== Status.Ok
+      }
+  }
+
+  List("/tracks/987", "/tracks/987/").foreach {
+    path =>
+      s"removes conditional request headers, path: $path" in new Context {
+
+        when(fallback.dispatchToMothership(like[Request] {
+          case r =>
+            r.headerMap.get("If-None-Match") must beNone
+        })).thenReturn(Future.value(Response()))
+
+        val rollout = (urn: Urn) => Future.False
+        val response = get(controller(rollout), path,Map.empty,Map("If-None-Match" -> "a8d3ba6d09b68691b77dc75dfcd7a477"))
+
         response.status ==== Status.Ok
       }
   }
