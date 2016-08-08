@@ -3,6 +3,7 @@ package com.soundcloud.publicApiStrangler.singleTrackEndpointMigration
 import com.soundcloud.bff.finagle.{Request, ResponseBuilder}
 import com.soundcloud.bff.web.{BffInjectionBasedController, UserAuthentication}
 import com.soundcloud.jvmkit.telemetry.Telemetry
+import com.soundcloud.publicApiStrangler.singleTrackEndpointMigration.trackmetadataclient.TrackmetadataClient
 import com.soundcloud.publicApiStrangler.support.DispatchToMothershipHandler
 import com.soundcloud.scalakit.json.Json
 import com.soundcloud.scalakit.{Urn, UserSession}
@@ -14,7 +15,7 @@ import scala.collection.JavaConversions._
 
 class SingleTrackController(userAuthentication: UserAuthentication,
                             mothershipDispatcher: DispatchToMothershipHandler,
-                            tracksService: TracksService,
+                            trackmetadataClient: TrackmetadataClient,
                             responseComparison: ResponseComparison,
                             telemetry: Telemetry,
                             singleTrackEndpointRollout: Urn => Future[Boolean])
@@ -38,9 +39,10 @@ class SingleTrackController(userAuthentication: UserAuthentication,
     userAuthentication.withUserSession(req) {
       case session =>
         val trackId = req.routeParams("trackId")
-        Try(Urn("soundcloud", "tracks", trackId)) match {
-          case Return(urn@Urn(_, _, numericRegexp())) => {
 
+        Try(Urn("soundcloud", "tracks", trackId)) match {
+
+          case Return(urn@Urn(_, _, numericRegexp())) => {
             singleTrackEndpointRollout(urn).flatMap {
               case true =>
                 Future.join(legacyResponse(req), migrationResponse(session, urn)) map {
@@ -67,12 +69,20 @@ class SingleTrackController(userAuthentication: UserAuthentication,
     mothershipDispatcher.dispatchToMothership(req)
 
   private def migrationResponse(session: UserSession, urn: Urn): Future[Response] = {
-    tracksService.track(session, urn).map {
+    trackmetadataClient.track(session, urn, None).map {
       case Some(track) =>
-        val res = Response()
-        implicit val format = PlayJson.format[SingleTrackPublicApiRepresentation] // Sam really enjoys this
-        res.setContentString(Json.stringify(track))
-        res
+
+        if (track.public) {
+          val res = Response()
+          val singleTrackPublicApiRepresentation = new SingleTrackPublicApiRepresentation(
+            "track",
+            track.urn.getIdentifier.toLong,
+            track.user_urn.getIdentifier.toLong)
+          res.setContentString(Json.stringify(singleTrackPublicApiRepresentation))
+          res
+        } else {
+          Response(Status.Unauthorized)
+        }
       case None =>
         Response(Status.NotFound)
     }

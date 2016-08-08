@@ -4,6 +4,7 @@ import com.soundcloud.bff.test.InjectionBasedControllerSpecification
 import com.soundcloud.jvmkit.UserSessionBuilder
 import com.soundcloud.jvmkit.telemetry.Telemetry
 import com.soundcloud.jvmkit.test.InMemoryConfig
+import com.soundcloud.publicApiStrangler.singleTrackEndpointMigration.trackmetadataclient._
 import com.soundcloud.publicApiStrangler.support.DispatchToMothershipHandler
 import com.soundcloud.scalakit.Urn
 import com.twitter.finagle.http.{Request, Response, Status}
@@ -15,7 +16,7 @@ class SingleTrackControllerSpec extends InjectionBasedControllerSpecification {
 
   trait Context extends Scope {
     val fallback = mock[DispatchToMothershipHandler]
-    val tracksService = mock[TracksService]
+    val trackmetadataClient = mock[TrackmetadataClient]
     val responseComparison = mock[ResponseComparison]
 
     val config = new InMemoryConfig
@@ -28,7 +29,7 @@ class SingleTrackControllerSpec extends InjectionBasedControllerSpecification {
     def controller(rollout: Urn => Future[Boolean]) = new SingleTrackController(
       fakeUserAuthentication(session),
       fallback,
-      tracksService,
+      trackmetadataClient,
       responseComparison,
       telemetry,
       rollout)
@@ -100,9 +101,12 @@ class SingleTrackControllerSpec extends InjectionBasedControllerSpecification {
         legacyResponse.setContentString(legacyResponseString)
         when(fallback.dispatchToMothership(any[Request])).thenReturn(Future.value(legacyResponse))
 
-        val migrationResponseObject = SingleTrackPublicApiRepresentation("track", 987, 112)
+        val isPublic = true;
+        val trackmetadataTrack = Track(trackUrn, Urn("soundcloud:users:112"), false, None, null, None, false, 0, None, null, null, None,
+          isPublic, null, List.empty, List.empty, null, None, None, false, false, false, None, null, None, None, None, None,
+          EmbeddingPermission.None, None, Artwork(None), None)
         val migrationResponseString = "{\"kind\":\"track\",\"id\":987,\"user_id\":112}"
-        when(tracksService.track(session, trackUrn)).thenReturn(Future.value(Some(migrationResponseObject)))
+        when(trackmetadataClient.track(session, trackUrn, None)).thenReturn(Future.value(Some(trackmetadataTrack)))
 
         val rollout = (urn: Urn) => Future.True
         val response = get(controller(rollout), path)
@@ -117,18 +121,37 @@ class SingleTrackControllerSpec extends InjectionBasedControllerSpecification {
   List("/tracks/987", "/tracks/987/").foreach {
     path =>
       s"reports http status differences between legacy and migration, path: $path" in new Context {
-        val legacyResponseString = "{\"kind\":\"track\",\"id\":987,\"user_id\":111}"
         val legacyResponse = Response()
-        legacyResponse.setContentString(legacyResponseString)
         when(fallback.dispatchToMothership(any[Request])).thenReturn(Future.value(legacyResponse))
 
-        when(tracksService.track(session, trackUrn)).thenReturn(Future.None)
+        when(trackmetadataClient.track(session, trackUrn, None)).thenReturn(Future.None)
 
         val rollout = (urn: Urn) => Future.True
         val response = get(controller(rollout), path)
         verify(responseComparison).report(
           any[Response],
           like[Response] { case r => r.status ==== Status.NotFound }
+        )
+        response.status ==== Status.Ok
+      }
+  }
+
+  List("/tracks/987", "/tracks/987/").foreach {
+    path =>
+      s"migration code returns 401 when track is not public for path: $path" in new Context {
+        val legacyResponse = Response()
+        when(fallback.dispatchToMothership(any[Request])).thenReturn(Future.value(legacyResponse))
+
+        val trackmetadataTrack = Track(trackUrn, Urn("soundcloud:users:112"), false, None, null, None, false, 0, None, null, null, None,
+          false, null, List.empty, List.empty, null, None, None, false, false, false, None, null, None, None, None, None,
+          EmbeddingPermission.None, None, Artwork(None), None)
+        when(trackmetadataClient.track(session, trackUrn, None)).thenReturn(Future.value(Some(trackmetadataTrack)))
+
+        val rollout = (urn: Urn) => Future.True
+        val response = get(controller(rollout), path)
+        verify(responseComparison).report(
+          any[Response],
+          like[Response] { case r => r.status ==== Status.Unauthorized }
         )
         response.status ==== Status.Ok
       }

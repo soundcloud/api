@@ -177,7 +177,7 @@ object App
   private val singleTrackController = new SingleTrackController(
     userAuthentication,
     mothershipDispatcher,
-    new TracksService(trackmetadataClient),
+    trackmetadataClient,
     new ResponseComparison(telemetry),
     telemetry,
     new SingleTrackEndpointRollout(rolloutClient).strangle
