@@ -80,7 +80,7 @@ class SingleTrackController(userAuthentication: UserAuthentication,
           res.setContentString(Json.stringify(singleTrackPublicApiRepresentation))
           res
         } else {
-          Response(Status.Unauthorized)
+          Response(Status.NotFound)
         }
       case None =>
         Response(Status.NotFound)

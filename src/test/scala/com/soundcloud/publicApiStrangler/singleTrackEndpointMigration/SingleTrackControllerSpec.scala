@@ -140,7 +140,7 @@ class SingleTrackControllerSpec extends InjectionBasedControllerSpecification {
 
   List("/tracks/987", "/tracks/987/").foreach {
     path =>
-      s"migration code returns 401 when track is not public for path: $path" in new Context {
+      s"migration code returns 404 when track is not public for path: $path" in new Context {
         val legacyResponse = Response()
         when(fallback.dispatchToMothership(any[Request])).thenReturn(Future.value(legacyResponse))
 
@@ -154,7 +154,7 @@ class SingleTrackControllerSpec extends InjectionBasedControllerSpecification {
         verify(responseComparison).report(
           any[Request],
           any[Response],
-          like[Response] { case r => r.status ==== Status.Unauthorized }
+          like[Response] { case r => r.status ==== Status.NotFound }
         )
         response.status ==== Status.Ok
       }
