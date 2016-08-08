@@ -6,7 +6,7 @@ import com.soundcloud.jvmkit.telemetry.Telemetry
 import com.soundcloud.jvmkit.test.InMemoryConfig
 import com.soundcloud.publicApiStrangler.singleTrackEndpointMigration.trackmetadataclient._
 import com.soundcloud.publicApiStrangler.support.DispatchToMothershipHandler
-import com.soundcloud.scalakit.Urn
+import com.soundcloud.scalakit.{UserSession, Urn}
 import com.twitter.finagle.http.{Request, Response, Status}
 import com.twitter.util.Future
 import io.prometheus.client.CollectorRegistry
@@ -26,7 +26,7 @@ class SingleTrackControllerSpec extends InjectionBasedControllerSpecification {
     val session = new UserSessionBuilder().build()
     val trackUrn = Urn("soundcloud:tracks:987")
 
-    def controller(rollout: Urn => Future[Boolean]) = new SingleTrackController(
+    def controller(rollout: Urn => Future[Boolean], session: UserSession) = new SingleTrackController(
       fakeUserAuthentication(session),
       fallback,
       trackmetadataClient,
@@ -48,7 +48,7 @@ class SingleTrackControllerSpec extends InjectionBasedControllerSpecification {
           Future.False
         }
 
-        val response = get(controller(rollout), path)
+        val response = get(controller(rollout, session), path)
         response.status ==== Status.Ok
         response.body ==== legacyResponseString
       }
@@ -61,7 +61,7 @@ class SingleTrackControllerSpec extends InjectionBasedControllerSpecification {
         when(fallback.dispatchToMothership(any[Request])).thenReturn(Future.value(legacyResponse))
 
         val rollout = (urn: Urn) => Future.True
-        val response = get(controller(rollout), path)
+        val response = get(controller(rollout, session), path)
 
         val errCount = collectorRegistry.getSampleValue(
           "non_numeric_track_id",
@@ -81,7 +81,7 @@ class SingleTrackControllerSpec extends InjectionBasedControllerSpecification {
         when(fallback.dispatchToMothership(any[Request])).thenReturn(Future.value(legacyResponse))
 
         val rollout = (urn: Urn) => Future.True
-        val response = get(controller(rollout), path)
+        val response = get(controller(rollout, session), path)
         response.status ==== Status.Ok
 
         val errCount = collectorRegistry.getSampleValue(
@@ -109,7 +109,7 @@ class SingleTrackControllerSpec extends InjectionBasedControllerSpecification {
         when(trackmetadataClient.track(session, trackUrn, None)).thenReturn(Future.value(Some(trackmetadataTrack)))
 
         val rollout = (urn: Urn) => Future.True
-        val response = get(controller(rollout), path)
+        val response = get(controller(rollout, session), path)
         verify(responseComparison).report(
           like[Response] { case r => r.contentString ==== legacyResponseString },
           like[Response] { case r => r.contentString ==== migrationResponseString }
@@ -127,7 +127,7 @@ class SingleTrackControllerSpec extends InjectionBasedControllerSpecification {
         when(trackmetadataClient.track(session, trackUrn, None)).thenReturn(Future.None)
 
         val rollout = (urn: Urn) => Future.True
-        val response = get(controller(rollout), path)
+        val response = get(controller(rollout, session), path)
         verify(responseComparison).report(
           any[Response],
           like[Response] { case r => r.status ==== Status.NotFound }
@@ -148,10 +148,34 @@ class SingleTrackControllerSpec extends InjectionBasedControllerSpecification {
         when(trackmetadataClient.track(session, trackUrn, None)).thenReturn(Future.value(Some(trackmetadataTrack)))
 
         val rollout = (urn: Urn) => Future.True
-        val response = get(controller(rollout), path)
+        val response = get(controller(rollout, session), path)
         verify(responseComparison).report(
           any[Response],
           like[Response] { case r => r.status ==== Status.Unauthorized }
+        )
+        response.status ==== Status.Ok
+      }
+  }
+
+  List("/tracks/987", "/tracks/987/").foreach {
+    path =>
+      s"migration code allows access to private tracks if the owner is making the request, for path: $path" in new Context {
+        val legacyResponse = Response()
+        when(fallback.dispatchToMothership(any[Request])).thenReturn(Future.value(legacyResponse))
+
+        val ownerUrn = Urn("soundcloud:users:112")
+        val ownerSession = new UserSessionBuilder().setUser(ownerUrn).build
+
+        val trackmetadataTrack = Track(trackUrn, ownerUrn, false, None, null, None, false, 0, None, null, null, None,
+          false, null, List.empty, List.empty, null, None, None, false, false, false, None, null, None, None, None, None,
+          EmbeddingPermission.None, None, Artwork(None), None)
+        when(trackmetadataClient.track(ownerSession, trackUrn, None)).thenReturn(Future.value(Some(trackmetadataTrack)))
+
+        val rollout = (urn: Urn) => Future.True
+        val response = get(controller(rollout, ownerSession), path)
+        verify(responseComparison).report(
+          any[Response],
+          like[Response] { case r => r.status ==== Status.Ok }
         )
         response.status ==== Status.Ok
       }
@@ -167,7 +191,7 @@ class SingleTrackControllerSpec extends InjectionBasedControllerSpecification {
         })).thenReturn(Future.value(Response()))
 
         val rollout = (urn: Urn) => Future.False
-        val response = get(controller(rollout), path, Map.empty, Map("If-None-Match" -> "a8d3ba6d09b68691b77dc75dfcd7a477"))
+        val response = get(controller(rollout, session), path, Map.empty, Map("If-None-Match" -> "a8d3ba6d09b68691b77dc75dfcd7a477"))
 
         response.status ==== Status.Ok
       }

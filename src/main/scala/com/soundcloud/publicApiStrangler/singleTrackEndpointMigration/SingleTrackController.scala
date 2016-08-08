@@ -72,7 +72,7 @@ class SingleTrackController(userAuthentication: UserAuthentication,
     trackmetadataClient.track(session, urn, None).map {
       case Some(track) =>
 
-        if (track.public) {
+        if (track.public || track.user_urn == session.getUser) {
           val res = Response()
           val singleTrackPublicApiRepresentation = new SingleTrackPublicApiRepresentation(
             "track",
