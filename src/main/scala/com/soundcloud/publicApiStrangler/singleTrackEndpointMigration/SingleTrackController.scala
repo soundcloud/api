@@ -9,7 +9,6 @@ import com.soundcloud.scalakit.json.Json
 import com.soundcloud.scalakit.{Urn, UserSession}
 import com.twitter.finagle.http.{Response, Status}
 import com.twitter.util.{Future, Return, Try}
-import play.api.libs.json.{Json => PlayJson}
 
 import scala.collection.JavaConversions._
 
@@ -33,7 +32,6 @@ class SingleTrackController(userAuthentication: UserAuthentication,
   get("/tracks/:trackId/")(renderTrack)
 
   private def renderTrack(req: Request): Future[ResponseBuilder] = {
-
     stripConditionalRequestHeaders(req)
 
     userAuthentication.withUserSession(req) {
@@ -45,7 +43,8 @@ class SingleTrackController(userAuthentication: UserAuthentication,
           case Return(urn@Urn(_, _, numericRegexp())) => {
             singleTrackEndpointRollout(urn).flatMap {
               case true =>
-                Future.join(legacyResponse(req), migrationResponse(session, urn)) map {
+                val secretToken = req.params.get("secret_token")
+                Future.join(legacyResponse(req), migrationResponse(session, urn, secretToken)) map {
                   case (legacyResponseResult, migrationResponseResult) =>
                     responseComparison.report(legacyResponseResult, migrationResponseResult)
                     toResponseBuilder(legacyResponseResult)
@@ -68,11 +67,11 @@ class SingleTrackController(userAuthentication: UserAuthentication,
   private def legacyResponse(req: Request): Future[Response] =
     mothershipDispatcher.dispatchToMothership(req)
 
-  private def migrationResponse(session: UserSession, urn: Urn): Future[Response] = {
+  private def migrationResponse(session: UserSession, urn: Urn, secret: Option[String]): Future[Response] = {
     trackmetadataClient.track(session, urn, None).map {
       case Some(track) =>
 
-        if (track.public || track.user_urn == session.getUser) {
+        if (track.public || track.user_urn == session.getUser || (secret.filter(_ == track.secret_token).isDefined)) {
           val res = Response()
           val singleTrackPublicApiRepresentation = new SingleTrackPublicApiRepresentation(
             "track",

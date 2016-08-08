@@ -159,7 +159,7 @@ class SingleTrackControllerSpec extends InjectionBasedControllerSpecification {
 
   List("/tracks/987", "/tracks/987/").foreach {
     path =>
-      s"migration code allows access to private tracks if the owner is making the request, for path: $path" in new Context {
+      s"migration code allows access to private tracks if the owner is making the request for path: $path" in new Context {
         val legacyResponse = Response()
         when(fallback.dispatchToMothership(any[Request])).thenReturn(Future.value(legacyResponse))
 
@@ -173,6 +173,28 @@ class SingleTrackControllerSpec extends InjectionBasedControllerSpecification {
 
         val rollout = (urn: Urn) => Future.True
         val response = get(controller(rollout, ownerSession), path)
+        verify(responseComparison).report(
+          any[Response],
+          like[Response] { case r => r.status ==== Status.Ok }
+        )
+        response.status ==== Status.Ok
+      }
+  }
+
+  List("/tracks/987", "/tracks/987/").foreach {
+    path =>
+      s"migration code allows access to private tracks if there is a correct secret token for path: $path" in new Context {
+        val legacyResponse = Response()
+        when(fallback.dispatchToMothership(any[Request])).thenReturn(Future.value(legacyResponse))
+
+        private val secret_token = "secr3t-Token"
+        val trackmetadataTrack = Track(trackUrn, Urn("soundcloud:users:112"), false, None, null, None, false, 0, None, null, null, None,
+          false, secret_token, List.empty, List.empty, null, None, None, false, false, false, None, null, None, None, None, None,
+          EmbeddingPermission.None, None, Artwork(None), None)
+        when(trackmetadataClient.track(session, trackUrn, None)).thenReturn(Future.value(Some(trackmetadataTrack)))
+
+        val rollout = (urn: Urn) => Future.True
+        val response = get(controller(rollout, session), path, Map("secret_token" -> secret_token))
         verify(responseComparison).report(
           any[Response],
           like[Response] { case r => r.status ==== Status.Ok }
