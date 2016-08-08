@@ -1,5 +1,6 @@
 package com.soundcloud.publicApiStrangler.singleTrackEndpointMigration
 
+import com.soundcloud.jvmkit.logging.SoundCloudLoggerFactory
 import com.soundcloud.jvmkit.telemetry.Telemetry
 import com.soundcloud.scalakit.json.Json
 import com.twitter.finagle.http.{Request, Response}
@@ -9,6 +10,8 @@ import play.api.libs.json.JsObject
 import scala.collection.JavaConversions._
 
 class ResponseComparison(telemetry: Telemetry) {
+
+  private val logger = SoundCloudLoggerFactory.getLogger("SingleTrackComparison")
 
   val comparisonMetric = telemetry.histogram(
     "single_track_endpoint_comparison",
@@ -45,11 +48,19 @@ class ResponseComparison(telemetry: Telemetry) {
       }
     } else {
       comparisonMetric.labels("statusCodeFailure").observe(0)
-      statusCodeDifferenceCounter.labels(originalRes.statusCode.toString,migrationRes.statusCode.toString).inc()
+      statusCodeDifferenceCounter.labels(originalRes.statusCode.toString, migrationRes.statusCode.toString).inc()
 
-      println("============tracks/:id endpoint status difference=========")
-      println(request)
-      println(request.headerMap)
+      logger.info("============tracks/:id endpoint status difference1=========")
+      logger.info(request.toString)
+      logger.info(request.headerMap.toString)
+      logger.info(originalRes.toString)
+      logger.info(migrationRes.toString)
+
+      println("============tracks/:id endpoint status difference2=========")
+      println("=====REQ:", request)
+      println("=====HEADERS:", request.headerMap)
+      println("=====LEG RES:", originalRes.statusCode, originalRes)
+      println("=====MIG RES:", migrationRes.statusCode, migrationRes)
     }
   }
 }
