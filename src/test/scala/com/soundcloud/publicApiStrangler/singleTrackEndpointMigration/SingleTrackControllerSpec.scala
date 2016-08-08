@@ -111,6 +111,7 @@ class SingleTrackControllerSpec extends InjectionBasedControllerSpecification {
         val rollout = (urn: Urn) => Future.True
         val response = get(controller(rollout, session), path)
         verify(responseComparison).report(
+          any[Request],
           like[Response] { case r => r.contentString ==== legacyResponseString },
           like[Response] { case r => r.contentString ==== migrationResponseString }
         )
@@ -129,6 +130,7 @@ class SingleTrackControllerSpec extends InjectionBasedControllerSpecification {
         val rollout = (urn: Urn) => Future.True
         val response = get(controller(rollout, session), path)
         verify(responseComparison).report(
+          any[Request],
           any[Response],
           like[Response] { case r => r.status ==== Status.NotFound }
         )
@@ -150,6 +152,7 @@ class SingleTrackControllerSpec extends InjectionBasedControllerSpecification {
         val rollout = (urn: Urn) => Future.True
         val response = get(controller(rollout, session), path)
         verify(responseComparison).report(
+          any[Request],
           any[Response],
           like[Response] { case r => r.status ==== Status.Unauthorized }
         )
@@ -174,6 +177,7 @@ class SingleTrackControllerSpec extends InjectionBasedControllerSpecification {
         val rollout = (urn: Urn) => Future.True
         val response = get(controller(rollout, ownerSession), path)
         verify(responseComparison).report(
+          any[Request],
           any[Response],
           like[Response] { case r => r.status ==== Status.Ok }
         )
@@ -196,6 +200,7 @@ class SingleTrackControllerSpec extends InjectionBasedControllerSpecification {
         val rollout = (urn: Urn) => Future.True
         val response = get(controller(rollout, session), path, Map("secret_token" -> secret_token))
         verify(responseComparison).report(
+          any[Request],
           any[Response],
           like[Response] { case r => r.status ==== Status.Ok }
         )

@@ -3,7 +3,7 @@ package com.soundcloud.publicApiStrangler.singleTrackEndpointMigration
 import com.soundcloud.jvmkit.telemetry.Telemetry
 import com.soundcloud.jvmkit.test.InMemoryConfig
 import com.soundcloud.scalakit.test.UnitSpecification
-import com.twitter.finagle.http.{Response, Status}
+import com.twitter.finagle.http.{Request, Response, Status}
 import io.prometheus.client.CollectorRegistry
 
 class ResponseComparisonSpec extends UnitSpecification {
@@ -25,7 +25,7 @@ class ResponseComparisonSpec extends UnitSpecification {
     val originalRes = Response(Status.NotFound)
     val migrationRes = Response(Status.Ok)
 
-    responseComparison.report(originalRes, migrationRes)
+    responseComparison.report(Request(), originalRes, migrationRes)
 
     val histogramCount = collectorRegistry.getSampleValue(
       "single_track_endpoint_comparison_sum",
@@ -52,7 +52,7 @@ class ResponseComparisonSpec extends UnitSpecification {
         val originalRes = generateResponse(originalResponseString)
         val migrationRes = generateResponse(migrationResponseString)
 
-        responseComparison.report(originalRes, migrationRes)
+        responseComparison.report(Request(), originalRes, migrationRes)
         val value = collectorRegistry.getSampleValue(
           "single_track_endpoint_comparison_sum",
           Array("status", "system"),
@@ -77,7 +77,7 @@ class ResponseComparisonSpec extends UnitSpecification {
         val originalRes = generateResponse(originalResponseString)
         val migrationRes = generateResponse(migrationResponseString)
 
-        responseComparison.report(originalRes, migrationRes)
+        responseComparison.report(Request(), originalRes, migrationRes)
         val value = collectorRegistry.getSampleValue(
           "single_track_endpoint_comparison_sum",
           Array("status", "system"),
@@ -102,7 +102,7 @@ class ResponseComparisonSpec extends UnitSpecification {
         val originalRes = generateResponse(originalResponseString)
         val migrationRes = generateResponse(migrationResponseString)
 
-        responseComparison.report(originalRes, migrationRes)
+        responseComparison.report(Request(), originalRes, migrationRes)
         val value = collectorRegistry.getSampleValue(
           "single_track_endpoint_comparison_sum",
           Array("status", "system"),
@@ -124,7 +124,7 @@ class ResponseComparisonSpec extends UnitSpecification {
         val originalRes = generateResponse(originalResponseString)
         val migrationRes = generateResponse(migrationResponseString)
 
-        responseComparison.report(originalRes, migrationRes)
+        responseComparison.report(Request(), originalRes, migrationRes)
         val value = collectorRegistry.getSampleValue(
           "single_track_endpoint_comparison_sum",
           Array("status", "system"),
@@ -146,7 +146,7 @@ class ResponseComparisonSpec extends UnitSpecification {
         val originalRes = generateResponse(originalResponseString)
         val migrationRes = generateResponse(migrationResponseString)
 
-        responseComparison.report(originalRes, migrationRes)
+        responseComparison.report(Request(), originalRes, migrationRes)
         val value = collectorRegistry.getSampleValue(
           "single_track_endpoint_comparison_count",
           Array("status", "system"),

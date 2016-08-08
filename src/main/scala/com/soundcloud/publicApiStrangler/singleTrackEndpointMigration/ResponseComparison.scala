@@ -2,7 +2,7 @@ package com.soundcloud.publicApiStrangler.singleTrackEndpointMigration
 
 import com.soundcloud.jvmkit.telemetry.Telemetry
 import com.soundcloud.scalakit.json.Json
-import com.twitter.finagle.http.Response
+import com.twitter.finagle.http.{Request, Response}
 import com.twitter.util.{Return, Try}
 import play.api.libs.json.JsObject
 
@@ -23,7 +23,7 @@ class ResponseComparison(telemetry: Telemetry) {
     "legacy", "migration"
   )
 
-  def report(originalRes: Response, migrationRes: Response): Unit = {
+  def report(request: Request, originalRes: Response, migrationRes: Response): Unit = {
 
     if (originalRes.status == migrationRes.status) {
       val mainJsonTry = Try(Json.fromString(originalRes.contentString).as[JsObject])
@@ -46,6 +46,10 @@ class ResponseComparison(telemetry: Telemetry) {
     } else {
       comparisonMetric.labels("statusCodeFailure").observe(0)
       statusCodeDifferenceCounter.labels(originalRes.statusCode.toString,migrationRes.statusCode.toString).inc()
+
+      println("============tracks/:id endpoint status difference=========")
+      println(request)
+      println(request.headerMap)
     }
   }
 }

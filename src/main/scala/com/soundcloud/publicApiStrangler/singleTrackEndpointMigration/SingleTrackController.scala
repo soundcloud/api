@@ -46,7 +46,7 @@ class SingleTrackController(userAuthentication: UserAuthentication,
                 val secretToken = req.params.get("secret_token")
                 Future.join(legacyResponse(req), migrationResponse(session, urn, secretToken)) map {
                   case (legacyResponseResult, migrationResponseResult) =>
-                    responseComparison.report(legacyResponseResult, migrationResponseResult)
+                    responseComparison.report(req, legacyResponseResult, migrationResponseResult)
                     toResponseBuilder(legacyResponseResult)
                 }
               case false =>
