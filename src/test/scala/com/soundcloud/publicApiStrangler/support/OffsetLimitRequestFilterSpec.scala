@@ -21,10 +21,9 @@ class OffsetLimitRequestFilterSpec extends UnitSpecification {
 
     def offsetAtLimitRequest(path: String) = Request(path, "offset" -> maxOffset.toString)
 
-    val enabledCheck: () => Future[Boolean]
     val paths = Seq( """/users/\d+/favorites""", """/users/\d+/likes""")
 
-    lazy val filter = new OffsetLimitRequestFilter(enabledCheck, paths, maxOffset)
+    lazy val filter = new OffsetLimitRequestFilter(paths, maxOffset)
 
     lazy val response = {
       when(next.apply(request))
@@ -32,14 +31,6 @@ class OffsetLimitRequestFilterSpec extends UnitSpecification {
 
       Await.result(filter(request, next))
     }
-  }
-
-  trait EnabledContext extends Context {
-    val enabledCheck = () => Future.True
-  }
-
-  trait DisabledContext extends Context {
-    val enabledCheck = () => Future.False
   }
 
   for (
@@ -52,42 +43,34 @@ class OffsetLimitRequestFilterSpec extends UnitSpecification {
   ) yield {
     s"for matched path $path" >> {
       "when enabled" >> {
-        "handles offset over limit" in new EnabledContext {
+        "handles offset over limit" in new Context {
           val request = offsetOverLimitRequest(path)
 
           response.statusCode mustEqual 403
           verifyNoMoreInteractions(next)
         }
 
-        "handles offset over limit with trailing spaces" in new EnabledContext {
+        "handles offset over limit with trailing spaces" in new Context {
           val request = Request(path, "offset" -> ((maxOffset + 1).toString + " "))
 
           response.statusCode mustEqual 403
           verifyNoMoreInteractions(next)
         }
 
-        "passes through offset at limit" in new EnabledContext {
+        "passes through offset at limit" in new Context {
           val request = offsetAtLimitRequest(path)
 
           response mustEqual responseFromNextService
         }
 
-        "passes through non-numeric offset values" in new EnabledContext {
+        "passes through non-numeric offset values" in new Context {
           val request = Request(path, "offset" -> "abc")
 
           response mustEqual responseFromNextService
         }
 
-        "passes through empty offset values" in new EnabledContext {
+        "passes through empty offset values" in new Context {
           val request = Request(path, "offset" -> "")
-
-          response mustEqual responseFromNextService
-        }
-      }
-
-      "when disabled" >> {
-        "passes through offset over limit" in new DisabledContext {
-          val request = offsetOverLimitRequest(path)
 
           response mustEqual responseFromNextService
         }
@@ -101,13 +84,13 @@ class OffsetLimitRequestFilterSpec extends UnitSpecification {
     )
   ) yield {
     s"for unmatched path $path" >> {
-      "passes through offset over limit" in new EnabledContext {
+      "passes through offset over limit" in new Context {
         val request = offsetOverLimitRequest(path)
 
         response mustEqual responseFromNextService
       }
 
-      "passes through offset at limit" in new EnabledContext {
+      "passes through offset at limit" in new Context {
         val request = offsetAtLimitRequest(path)
 
         response mustEqual responseFromNextService

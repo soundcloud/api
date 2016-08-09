@@ -9,13 +9,11 @@ import org.joda.time.DateTime
 import org.joda.time.format.DateTimeFormat
 import play.api.libs.json.{JsArray, JsObject, JsString, Json}
 
-class OffsetLimitRequestFilter(enabled: () => Future[Boolean], paths: Seq[String], maxOffset: Int) extends SimpleFilter[Request, RouterResponse] {
+class OffsetLimitRequestFilter(paths: Seq[String], maxOffset: Int) extends SimpleFilter[Request, RouterResponse] {
   override def apply(request: Request, next: Service[Request, RouterResponse]) = {
-    enabled().flatMap { enabled =>
-      (enabled, paths.exists(request.path.matches), optStringToOptInt(request.params.get("offset"))) match {
-        case (true, true, Some(offset)) if offset > maxOffset => denial
-        case _ => next(request)
-      }
+    (paths.exists(request.path.matches), optStringToOptInt(request.params.get("offset"))) match {
+      case (true, Some(offset)) if offset > maxOffset => denial
+      case _ => next(request)
     }
   }
 

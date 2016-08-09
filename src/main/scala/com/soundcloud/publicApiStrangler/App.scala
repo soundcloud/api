@@ -435,7 +435,6 @@ object App
       officialSoundCloudApps,
       fallthroughCounter))
 
-  private val limitOffsetEnabled = () => rolloutClient.isActive(BasicRolloutFeature("offset_limit"))
   private val limitOffsetPaths = Seq(
     """/e1/me/likes""",
     """/e1/me/playlist_likes""",
@@ -464,7 +463,7 @@ object App
     new DefaultResponseHeadersFilter,
     new SessionCache(userAuthentication),
     new CookieHeaderRemovalFilter,
-    new OffsetLimitRequestFilter(limitOffsetEnabled, limitOffsetPaths, limitOffset),
+    new OffsetLimitRequestFilter(limitOffsetPaths, limitOffset),
     new AcceptOnlyJsonRequestFilter,
     new StaticFilesFilter
   )
