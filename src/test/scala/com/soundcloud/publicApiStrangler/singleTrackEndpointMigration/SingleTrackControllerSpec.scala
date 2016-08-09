@@ -29,13 +29,14 @@ class SingleTrackControllerSpec extends InjectionBasedControllerSpecification {
     val session = new UserSessionBuilder().build()
     val trackUrn = Urn("soundcloud:tracks:987")
 
-    def controller(session: UserSession) = new SingleTrackController(
+    def controller(rollout: () => Future[Boolean], session: UserSession) = new SingleTrackController(
       fakeUserAuthentication(session),
       fallback,
       contentAuthorizationFilter,
       tracksService,
       responseComparison,
-      telemetry)
+      telemetry,
+      rollout)
   }
 
   List("/tracks/987", "/tracks/987/").foreach {
@@ -46,11 +47,9 @@ class SingleTrackControllerSpec extends InjectionBasedControllerSpecification {
           case r =>
             r.headerMap.get("If-None-Match") must beNone
         })).thenReturn(Future.value(Response()))
-        when(contentAuthorizationFilter.apply(any[Request], any[Service[Request, RouterResponse]])).
-          thenReturn(Future.value(RouterResponse(Response(), "undefined")))
         when(tracksService.track(session, trackUrn, None)).thenReturn(Future.value(Response()))
 
-        val response = get(controller(session), path, Map.empty, Map("If-None-Match" -> "a8d3ba6d09b68691b77dc75dfcd7a477"))
+        val response = get(controller(() => Future.False, session), path, Map.empty, Map("If-None-Match" -> "a8d3ba6d09b68691b77dc75dfcd7a477"))
 
         response.status ==== Status.Ok
       }
@@ -58,7 +57,7 @@ class SingleTrackControllerSpec extends InjectionBasedControllerSpecification {
 
   List("/tracks/987", "/tracks/987/").foreach {
     path =>
-      s"Adds magic skip auth content header for path: $path" in new Context {
+      s"Does content auth when the rollout is enabled for path: $path" in new Context {
 
         when(fallback.dispatchToMothership(like[Request] {
           case r =>
@@ -68,7 +67,7 @@ class SingleTrackControllerSpec extends InjectionBasedControllerSpecification {
           thenReturn(Future.value(RouterResponse(Response(), "undefined")))
         when(tracksService.track(session, trackUrn, None)).thenReturn(Future.value(Response()))
 
-        val response = get(controller(session), path, Map.empty, Map("If-None-Match" -> "a8d3ba6d09b68691b77dc75dfcd7a477"))
+        val response = get(controller(() => Future.True, session), path, Map.empty, Map("If-None-Match" -> "a8d3ba6d09b68691b77dc75dfcd7a477"))
 
         response.getHeaders.get(ContentAuthorizationFilter.skipContentAuthHeader) must beSome
       }
@@ -81,11 +80,9 @@ class SingleTrackControllerSpec extends InjectionBasedControllerSpecification {
           s"uses fallback when there is a non-numeric track identifier for path: $path for status: $status" in new Context {
             val legacyResponse = Response(status)
             when(fallback.dispatchToMothership(any[Request])).thenReturn(Future.value(legacyResponse))
-            when(contentAuthorizationFilter.apply(any[Request], any[Service[Request, RouterResponse]])).
-              thenReturn(Future.value(RouterResponse(legacyResponse, "undefined")))
             when(tracksService.track(session, trackUrn, None)).thenReturn(Future.value(Response()))
 
-            val response = get(controller(session), path)
+            val response = get(controller(() => Future.False, session), path)
 
             val errCount = collectorRegistry.getSampleValue(
               "non_numeric_track_id",
@@ -119,11 +116,9 @@ class SingleTrackControllerSpec extends InjectionBasedControllerSpecification {
           testCaseTitle in new Context {
 
             when(fallback.dispatchToMothership(any[Request])).thenReturn(Future.value(legacyResponse))
-            when(contentAuthorizationFilter.apply(any[Request], any[Service[Request, RouterResponse]])).
-              thenReturn(Future.value(RouterResponse(legacyResponse, "undefined")))
             when(tracksService.track(session, trackUrn, None)).thenReturn(Future.value(migrationResponse))
 
-            val response = get(controller(session), path)
+            val response = get(controller(() => Future.False, session), path)
 
             verify(responseComparison).report(
               any[Request],

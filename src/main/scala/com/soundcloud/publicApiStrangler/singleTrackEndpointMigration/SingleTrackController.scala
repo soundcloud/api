@@ -18,7 +18,8 @@ class SingleTrackController(userAuthentication: UserAuthentication,
                             contentAuthorizationFilter: ContentAuthorizationFilter,
                             tracksService: TracksService,
                             responseComparison: ResponseComparison,
-                            telemetry: Telemetry)
+                            telemetry: Telemetry,
+                            contentAuthEnabledInController: () => Future[Boolean])
   extends BffInjectionBasedController {
 
   private val numericRegexp = """\d+""".r
@@ -57,15 +58,20 @@ class SingleTrackController(userAuthentication: UserAuthentication,
                 toResponseBuilder(res)
             }
         }
-    }.map(addSkipContentAuthHeader)
+    }
   }
 
   private def legacyResponse(req: Request): Future[Response] = {
-    val service = new Service[FinagleRequest, RouterResponse] {
-      override def apply(request: FinagleRequest): Future[RouterResponse] =
-        mothershipDispatcher.dispatchToMothership(req).map(RouterResponse(_, "undefined"))
+    contentAuthEnabledInController().flatMap {
+      case true =>
+        val service = new Service[FinagleRequest, RouterResponse] {
+          override def apply(request: FinagleRequest): Future[RouterResponse] =
+            mothershipDispatcher.dispatchToMothership(req).map(RouterResponse(_, "undefined"))
+        }
+        contentAuthorizationFilter(req, service).map(_.underlying).map(addSkipContentAuthHeader)
+      case false =>
+        mothershipDispatcher.dispatchToMothership(req)
     }
-    contentAuthorizationFilter(req, service).map(_.underlying)
   }
 
   private def migrationResponse(session: UserSession, urn: Urn, secret: Option[String]): Future[Response] = {
@@ -85,8 +91,9 @@ class SingleTrackController(userAuthentication: UserAuthentication,
   * and its existence causes content authorization to be skipped on the filter for this response.
   * We are doing this because we manually do the content authorization in the controller.
   */
-  private def addSkipContentAuthHeader(responseBuilder: ResponseBuilder): ResponseBuilder = {
-    responseBuilder.header(ContentAuthorizationFilter.skipContentAuthHeader, "true")
+  private def addSkipContentAuthHeader(response: Response): Response = {
+    response.headerMap.add(ContentAuthorizationFilter.skipContentAuthHeader, "true")
+    response
   }
 
   /*
