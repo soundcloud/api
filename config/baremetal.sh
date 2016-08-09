@@ -1,5 +1,7 @@
 export APP_NAME="public-api-strangler"
 
+JAVA_OPTS="-XX:MaxMetaspaceSize=2G -XX:+UseCompressedOops -XX:+UseConcMarkSweepGC -XX:NewRatio=1 -Xmx2G -Xms2G -XX:ParallelGCThreads=2 -Dcom.twitter.jvm.numProcs=10"
+
 export APP_BASE_URL="https://api.soundcloud.com"
 
 export ADMIN_APP_TIMEOUT_MILLIS="30000"
