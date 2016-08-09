@@ -459,13 +459,13 @@ object App
 
 
   override lazy val additionalFilters = List(
-    new AcceptOnlyJsonRequestFilter,
-    new OffsetLimitRequestFilter(limitOffsetEnabled, limitOffsetPaths, limitOffset),
-    new CookieHeaderRemovalFilter,
     new ExceptForTrackUploadsFilter(new ContentAuthorizationFilter(authorizeContent)),
     new ExceptForTrackUploadsFilter(rateLimitingFacade.filter),
     new DefaultResponseHeadersFilter,
     new SessionCache(userAuthentication),
+    new CookieHeaderRemovalFilter,
+    new OffsetLimitRequestFilter(limitOffsetEnabled, limitOffsetPaths, limitOffset),
+    new AcceptOnlyJsonRequestFilter,
     new StaticFilesFilter
   )
 
