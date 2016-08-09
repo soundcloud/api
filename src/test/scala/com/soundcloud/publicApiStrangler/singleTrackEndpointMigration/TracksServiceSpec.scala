@@ -1,6 +1,8 @@
 package com.soundcloud.publicApiStrangler.singleTrackEndpointMigration
 
 import com.soundcloud.jvmkit.UserSessionBuilder
+import com.soundcloud.jvmkit.policies.{ContentAuthorization, ContentPolicy, MonetizationModel, Reason}
+import com.soundcloud.publicApiStrangler.authorization.ContentAuthorizationRules
 import com.soundcloud.publicApiStrangler.singleTrackEndpointMigration.trackmetadataclient.{Artwork, EmbeddingPermission, Track, TrackmetadataClient}
 import com.soundcloud.scalakit.Urn
 import com.soundcloud.scalakit.test.UnitSpecification
@@ -12,7 +14,8 @@ class TracksServiceSpec extends UnitSpecification {
 
   trait Context extends Scope {
     val trackmetadataClient = mock[TrackmetadataClient]
-    val tracksService = new TracksService(trackmetadataClient)
+    val contentAuthorization = mock[ContentAuthorizationRules]
+    val tracksService = new TracksService(trackmetadataClient, contentAuthorization)
     val trackUrn = Urn("soundcloud:tracks:987")
 
     val session = anonymousSession
@@ -23,8 +26,10 @@ class TracksServiceSpec extends UnitSpecification {
     val trackmetadataTrack = Track(trackUrn, Urn("soundcloud:users:112"), false, None, null, None, false, 0, None, null, null, None,
       isPublic, null, List.empty, List.empty, null, None, None, false, false, false, None, null, None, None, None, None,
       EmbeddingPermission.None, None, Artwork(None), None)
+    val contentAuth = new ContentAuthorization(trackUrn, ContentPolicy.ALLOW, Reason.DEFAULT, MonetizationModel.AD_SUPPORTED)
 
     when(trackmetadataClient.track(session, trackUrn)).thenReturn(Future.value(Some(trackmetadataTrack)))
+    when(contentAuthorization.fetchRules(session, Seq(trackUrn))).thenReturn(Future.value(Seq(contentAuth)))
 
     val expectedResponseString = "{\"kind\":\"track\",\"id\":987,\"user_id\":112}"
     val response = Await.result(tracksService.track(session, trackUrn, None))
@@ -59,8 +64,10 @@ class TracksServiceSpec extends UnitSpecification {
     val trackmetadataTrack = Track(trackUrn, Urn("soundcloud:users:112"), false, None, null, None, false, 0, None, null, null, None,
       isPublic, null, List.empty, List.empty, null, None, None, false, false, false, None, null, None, None, None, None,
       EmbeddingPermission.None, None, Artwork(None), None)
+    val contentAuth = new ContentAuthorization(trackUrn, ContentPolicy.ALLOW, Reason.DEFAULT, MonetizationModel.AD_SUPPORTED)
 
     when(trackmetadataClient.track(ownerSession, trackUrn)).thenReturn(Future.value(Some(trackmetadataTrack)))
+    when(contentAuthorization.fetchRules(ownerSession, Seq(trackUrn))).thenReturn(Future.value(Seq(contentAuth)))
 
     val response = Await.result(tracksService.track(ownerSession, trackUrn, None))
     response.status ==== Status.Ok
@@ -86,10 +93,27 @@ class TracksServiceSpec extends UnitSpecification {
     val trackmetadataTrack = Track(trackUrn, Urn("soundcloud:users:112"), false, None, null, None, false, 0, None, null, null, None,
       isPublic, secretToken, List.empty, List.empty, null, None, None, false, false, false, None, null, None, None, None, None,
       EmbeddingPermission.None, None, Artwork(None), None)
+    val contentAuth = new ContentAuthorization(trackUrn, ContentPolicy.ALLOW, Reason.DEFAULT, MonetizationModel.AD_SUPPORTED)
 
     when(trackmetadataClient.track(session, trackUrn)).thenReturn(Future.value(Some(trackmetadataTrack)))
+    when(contentAuthorization.fetchRules(session, Seq(trackUrn))).thenReturn(Future.value(Seq(contentAuth)))
 
     val response = Await.result(tracksService.track(session, trackUrn, Some(secretToken)))
     response.status ==== Status.Ok
+  }
+
+  "Returns 404 for blocked tracks" in new Context {
+    val isPublic = true
+    val trackmetadataTrack = Track(trackUrn, Urn("soundcloud:users:112"), false, None, null, None, false, 0, None, null, null, None,
+      isPublic, null, List.empty, List.empty, null, None, None, false, false, false, None, null, None, None, None, None,
+      EmbeddingPermission.None, None, Artwork(None), None)
+    val contentAuth = new ContentAuthorization(trackUrn, ContentPolicy.BLOCK, Reason.DEFAULT, MonetizationModel.AD_SUPPORTED)
+
+    when(trackmetadataClient.track(session, trackUrn)).thenReturn(Future.value(Some(trackmetadataTrack)))
+    when(contentAuthorization.fetchRules(session, Seq(trackUrn))).thenReturn(Future.value(Seq(contentAuth)))
+
+    val response = Await.result(tracksService.track(session, trackUrn, None))
+
+    response.status ==== Status.NotFound
   }
 }
