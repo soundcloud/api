@@ -3,18 +3,16 @@ package com.soundcloud.publicApiStrangler.singleTrackEndpointMigration
 import com.soundcloud.bff.finagle.{Request, ResponseBuilder}
 import com.soundcloud.bff.web.{BffInjectionBasedController, UserAuthentication}
 import com.soundcloud.jvmkit.telemetry.Telemetry
-import com.soundcloud.publicApiStrangler.singleTrackEndpointMigration.trackmetadataclient.TrackmetadataClient
 import com.soundcloud.publicApiStrangler.support.DispatchToMothershipHandler
-import com.soundcloud.scalakit.json.Json
 import com.soundcloud.scalakit.{Urn, UserSession}
-import com.twitter.finagle.http.{Response, Status}
+import com.twitter.finagle.http.Response
 import com.twitter.util.{Future, Return, Try}
 
 import scala.collection.JavaConversions._
 
 class SingleTrackController(userAuthentication: UserAuthentication,
                             mothershipDispatcher: DispatchToMothershipHandler,
-                            trackmetadataClient: TrackmetadataClient,
+                            tracksService: TracksService,
                             responseComparison: ResponseComparison,
                             telemetry: Telemetry,
                             singleTrackEndpointRollout: Urn => Future[Boolean])
@@ -68,23 +66,7 @@ class SingleTrackController(userAuthentication: UserAuthentication,
     mothershipDispatcher.dispatchToMothership(req)
 
   private def migrationResponse(session: UserSession, urn: Urn, secret: Option[String]): Future[Response] = {
-    trackmetadataClient.track(session, urn, None).map {
-      case Some(track) =>
-
-        if (track.public || track.user_urn == session.getUser || (secret.filter(_ == track.secret_token).isDefined)) {
-          val res = Response()
-          val singleTrackPublicApiRepresentation = new SingleTrackPublicApiRepresentation(
-            "track",
-            track.urn.getIdentifier.toLong,
-            track.user_urn.getIdentifier.toLong)
-          res.setContentString(Json.stringify(singleTrackPublicApiRepresentation))
-          res
-        } else {
-          Response(Status.NotFound)
-        }
-      case None =>
-        Response(Status.NotFound)
-    }
+    tracksService.track(session, urn, None)
   }
 
   private def toResponseBuilder(response: Response): ResponseBuilder = {
