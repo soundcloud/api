@@ -1,27 +1,19 @@
 package com.soundcloud.publicApiStrangler.authorization
 
-import com.soundcloud.bff.finagle.{ResponseBuilder, Request => BffRequest}
+import com.soundcloud.bff.finagle.{Request => BffRequest, ResponseBuilder}
 import com.soundcloud.bff.test.UnitSpecification
 import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures
 import com.soundcloud.scalakit.finagle.http.{AlwaysMatchesPathMatcher, HandlerRequest, RouterResponse}
 import com.twitter.finagle.Service
-import com.twitter.finagle.http.{Method, Request => FinagleRequest, Response => FinagleResponse}
+import com.twitter.finagle.http.{Request => FinagleRequest, Response => FinagleResponse}
 import com.twitter.util.{Await, Future}
-import org.mockito.ArgumentMatcher
-import org.mockito.Matchers.{eq => eqTo, argThat => argT}
+import org.mockito.Matchers.{argThat => argT, eq => eqTo}
 
 class ContentAuthorizationFilterSpec extends UnitSpecification with Fixtures {
 
   trait Context extends Scope {
     val someRequest = new HandlerRequest(AlwaysMatchesPathMatcher, FinagleRequest("/something")).request
 
-    // We need to use a custom matcher because equals doesn't work anymore since Finagle 6.35 :(
-    val requestMatcher = new ArgumentMatcher[BffRequest] {
-      override def matches(argument: scala.Any): Boolean = {
-        val request = argument.asInstanceOf[BffRequest]
-        request.path.equals("/something") &&  request.method.equals(Method.Get)
-      }
-    }
 
     val service = mock[Service[FinagleRequest, RouterResponse]]
     val authorizeContent = mock[AuthorizeHttpResponse]
