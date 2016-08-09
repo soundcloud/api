@@ -24,7 +24,7 @@ class TracksServiceSpec extends UnitSpecification {
       isPublic, null, List.empty, List.empty, null, None, None, false, false, false, None, null, None, None, None, None,
       EmbeddingPermission.None, None, Artwork(None), None)
 
-    when(trackmetadataClient.track(session, trackUrn, None)).thenReturn(Future.value(Some(trackmetadataTrack)))
+    when(trackmetadataClient.track(session, trackUrn)).thenReturn(Future.value(Some(trackmetadataTrack)))
 
     val expectedResponseString = "{\"kind\":\"track\",\"id\":987,\"user_id\":112}"
     val response = Await.result(tracksService.track(session, trackUrn, None))
@@ -34,7 +34,7 @@ class TracksServiceSpec extends UnitSpecification {
   }
 
   "Returns 404 for non existing tracks" in new Context {
-    when(trackmetadataClient.track(session, trackUrn, None)).thenReturn(Future.None)
+    when(trackmetadataClient.track(session, trackUrn)).thenReturn(Future.None)
 
     val response = Await.result(tracksService.track(session, trackUrn, None))
     response.status ==== Status.NotFound
@@ -46,7 +46,7 @@ class TracksServiceSpec extends UnitSpecification {
       isPublic, null, List.empty, List.empty, null, None, None, false, false, false, None, null, None, None, None, None,
       EmbeddingPermission.None, None, Artwork(None), None)
 
-    when(trackmetadataClient.track(session, trackUrn, None)).thenReturn(Future.value(Some(trackmetadataTrack)))
+    when(trackmetadataClient.track(session, trackUrn)).thenReturn(Future.value(Some(trackmetadataTrack)))
 
     val response = Await.result(tracksService.track(session, trackUrn, None))
     response.status ==== Status.NotFound
@@ -60,7 +60,7 @@ class TracksServiceSpec extends UnitSpecification {
       isPublic, null, List.empty, List.empty, null, None, None, false, false, false, None, null, None, None, None, None,
       EmbeddingPermission.None, None, Artwork(None), None)
 
-    when(trackmetadataClient.track(ownerSession, trackUrn, None)).thenReturn(Future.value(Some(trackmetadataTrack)))
+    when(trackmetadataClient.track(ownerSession, trackUrn)).thenReturn(Future.value(Some(trackmetadataTrack)))
 
     val response = Await.result(tracksService.track(ownerSession, trackUrn, None))
     response.status ==== Status.Ok
@@ -74,7 +74,7 @@ class TracksServiceSpec extends UnitSpecification {
       isPublic, secretToken, List.empty, List.empty, null, None, None, false, false, false, None, null, None, None, None, None,
       EmbeddingPermission.None, None, Artwork(None), None)
 
-    when(trackmetadataClient.track(session, trackUrn, None)).thenReturn(Future.value(Some(trackmetadataTrack)))
+    when(trackmetadataClient.track(session, trackUrn)).thenReturn(Future.value(Some(trackmetadataTrack)))
 
     val response = Await.result(tracksService.track(session, trackUrn, Some(wrongSecretToken)))
     response.status ==== Status.NotFound
@@ -87,7 +87,7 @@ class TracksServiceSpec extends UnitSpecification {
       isPublic, secretToken, List.empty, List.empty, null, None, None, false, false, false, None, null, None, None, None, None,
       EmbeddingPermission.None, None, Artwork(None), None)
 
-    when(trackmetadataClient.track(session, trackUrn, None)).thenReturn(Future.value(Some(trackmetadataTrack)))
+    when(trackmetadataClient.track(session, trackUrn)).thenReturn(Future.value(Some(trackmetadataTrack)))
 
     val response = Await.result(tracksService.track(session, trackUrn, Some(secretToken)))
     response.status ==== Status.Ok

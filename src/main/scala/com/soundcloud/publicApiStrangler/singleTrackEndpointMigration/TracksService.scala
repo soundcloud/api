@@ -8,7 +8,7 @@ import com.twitter.util.Future
 
 class TracksService(trackmetadataClient: TrackmetadataClient) {
   def track(session: UserSession, urn: Urn, secretToken: Option[String]): Future[Response] = {
-    trackmetadataClient.track(session, urn, None).map {
+    trackmetadataClient.track(session, urn).map {
 
       case Some(track) =>
         if (isAuthorized(session, secretToken, track)) {

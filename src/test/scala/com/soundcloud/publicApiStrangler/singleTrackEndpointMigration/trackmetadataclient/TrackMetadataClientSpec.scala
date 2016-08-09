@@ -79,19 +79,6 @@ class TrackMetadataClientSpec extends UnitSpecification with Fixtures{
         track.artwork.filename ==== Some("artworks-000001073830-j0xbmn-original.jpg")
         track.published_at ==== Some(new LocalDateTime(1989, 12, 22, 0, 0))
       }
-
-      "with secret token" >> {
-
-        trait SecretTokenContext extends TrackContext {
-          when(verified(service).get(anonymousSession, path, Params("secret_token" -> "token123"), Params.empty))
-            .thenReturn(Future(JsonResponse(OkStatus, trackmetadataClientTracks_2)))
-        }
-
-        "returns None" in new SecretTokenContext {
-          val track = Await.result(trackmetadataClient.track(anonymousSession, urn, Some("token123")))
-          track must beSome[Track]
-        }
-      }
     }
   }
 

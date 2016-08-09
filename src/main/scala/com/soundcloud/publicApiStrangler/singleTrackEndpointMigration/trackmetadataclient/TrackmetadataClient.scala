@@ -11,9 +11,8 @@ import play.api.libs.json._
 
 class TrackmetadataClient(service: JsonClient) {
 
-  def track(session: UserSession, urn: Urn, secretToken: Option[String] = None): Future[Option[Track]] = {
-    val params = secretToken.map(t => Params("secret_token" -> t)).getOrElse(Params.empty)
-    service.get(session, Path() / "tracks" / urn, params, Params.empty).map {
+  def track(session: UserSession, urn: Urn): Future[Option[Track]] = {
+    service.get(session, Path() / "tracks" / urn, Params.empty, Params.empty).map {
       case JsonResponse(OkStatus, json, _, _) => Some(jsonToTrack(json))
       case _ => None
     }
