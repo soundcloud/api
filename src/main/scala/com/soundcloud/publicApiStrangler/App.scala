@@ -456,7 +456,6 @@ object App
   )
   private val limitOffset = 200
 
-
   override lazy val additionalFilters = List(
     new ExceptForTrackUploadsFilter(new ContentAuthorizationFilter(authorizeContent)),
     new ExceptForTrackUploadsFilter(rateLimitingFacade.filter),
