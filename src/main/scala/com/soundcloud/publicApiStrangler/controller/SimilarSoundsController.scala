@@ -35,7 +35,7 @@ class SimilarSoundsController(
             buildOffsetBased(0)
 
           mapper.materialize(session, page).map {
-            case Some(info) => render.json(if (shouldPaginate(request.params)) info else info.collection)
+            case Some(info) => render.anyJson(if (shouldPaginate(request.params)) info else info.collection)
             case None => render.notFound
           }.map(_.headers(DefaultResponseHeaders.defaultHeaders))
       }

@@ -16,6 +16,7 @@ import com.twitter.finagle.http.Status
 import com.twitter.util.Future
 import org.joda.time.format.DateTimeFormat
 import org.joda.time.{LocalDate, Years}
+import play.api.libs.json.{JsArray, JsNumber, JsObject, JsString}
 
 class UserFollowController(userAuthentication: UserAuthentication,
                            fallback: DispatchToMothershipHandler,
@@ -162,7 +163,7 @@ class UserFollowController(userAuthentication: UserAuthentication,
 
   private def renderFollow(session: LoggedInUserSession, target: Urn): Future[ResponseBuilder] = {
     fetchUsers(session, Set(target)).map { users =>
-      render.json(users.headOption)
+      render.anyJson(users.headOption)
         .status(Status.Created.code)
     }
   }
@@ -259,7 +260,7 @@ class UserFollowController(userAuthentication: UserAuthentication,
         users <- fetchUsers(session, urns)
       } yield {
         responseOption.map { _ =>
-          render.json(Map(
+          render.anyJson(Map(
                         "collection" -> mapUsersToUsers(users)
                       ))
         }.getOrElse(render.serviceUnavailable)
@@ -279,7 +280,7 @@ class UserFollowController(userAuthentication: UserAuthentication,
         users <- fetchUsers(session, urns)
       } yield {
         affiliationsOption.map { affiliations =>
-          render.json(Map(
+          render.anyJson(Map(
                         "collection" -> mapUsers(users),
                         "next_href" -> nextHref(baseUrl, request.request.path, affiliations.next, request.params)
               ))
@@ -305,7 +306,7 @@ class UserFollowController(userAuthentication: UserAuthentication,
             render
               .status(Status.SeeOther.code)
               .header("Location", s"$baseUrl/users/$userId")
-              .json(users.head)
+              .anyJson(users.head)
           } else {
             render.notFound
           }
@@ -358,13 +359,20 @@ class UserFollowController(userAuthentication: UserAuthentication,
   }
 
   private def denyAgeRestricted(age: Long): Future[ResponseBuilder] = {
-    render.json(Map("errors" -> Seq(Map("error_message" -> "DENY_AGE_RESTRICTED", "age" -> age))))
+    val errors = JsArray(Seq(JsObject(Seq(
+      "error_message" -> JsString("DENY_AGE_RESTRICTED"),
+      "age" -> JsNumber(age)
+    ))))
+    render.json(JsObject(Seq("errors" -> errors)))
       .status(Status.Forbidden.code)
       .toFuture
   }
 
   private def denyAgeUnknown: Future[ResponseBuilder] = {
-    render.json(Map("errors" -> Seq(Map("error_message" -> "DENY_AGE_UNKNOWN"))))
+    val errors = JsArray(Seq(JsObject(Seq(
+      "error_message" -> JsString("DENY_AGE_UNKNOWN")
+    ))))
+    render.json(JsObject(Seq("errors" -> errors)))
       .status(Status.Forbidden.code)
       .toFuture
   }

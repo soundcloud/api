@@ -47,7 +47,7 @@ class TimelineController(userAuthentication: UserAuthentication,
       (session: LoggedInUserSession, userUrn: Urn) =>
         pagination.withPage(request, userUrn) { page =>
           mapper.materialize(session, page).map {
-            case Some(info) => render.json(info)
+            case Some(info) => render.anyJson(info)
             case None => render.notFound
           }
         }
@@ -64,12 +64,12 @@ class TimelineController(userAuthentication: UserAuthentication,
               }
 
               if (request.getParam("linked_partitioning", "0") == "1")
-                render.json(Map(
+                render.anyJson(Map(
                   "next_href" -> info.nextHref,
                   "collection" -> tracks
                 ))
               else
-                render.json(tracks)
+                render.anyJson(tracks)
 
             case None => render.notFound
           }
