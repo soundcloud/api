@@ -181,8 +181,7 @@ object App
       mothershipDispatcher,
       tracksService,
       new ResponseComparison(telemetry),
-      telemetry,
-      new SingleTrackEndpointRollout(rolloutClient).strangle
+      telemetry
     )
   }
 
@@ -502,9 +501,4 @@ class SearchControllerRolloutChecks(rolloutClient: Rollout) {
   def avoidForUsers = rolloutClient.isActive(BasicRolloutFeature("search_avoid_mothership_for_users"))
   def avoidForGroups = rolloutClient.isActive(BasicRolloutFeature("search_avoid_mothership_for_groups"))
   def avoidForPlaylists = rolloutClient.isActive(BasicRolloutFeature("search_avoid_mothership_for_playlists"))
-}
-
-class SingleTrackEndpointRollout(rolloutClient: Rollout) {
-  val flag = BasicRolloutFeature("strangle_single_track_endpoint")
-  def strangle(trackUrn: Urn) = rolloutClient.isActiveForUrn(flag, trackUrn)
 }

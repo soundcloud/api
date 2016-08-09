@@ -25,13 +25,12 @@ class SingleTrackControllerSpec extends InjectionBasedControllerSpecification {
     val session = new UserSessionBuilder().build()
     val trackUrn = Urn("soundcloud:tracks:987")
 
-    def controller(rollout: Urn => Future[Boolean], session: UserSession) = new SingleTrackController(
+    def controller(session: UserSession) = new SingleTrackController(
       fakeUserAuthentication(session),
       fallback,
       tracksService,
       responseComparison,
-      telemetry,
-      rollout)
+      telemetry)
   }
 
   List("/tracks/987", "/tracks/987/").foreach {
@@ -42,30 +41,11 @@ class SingleTrackControllerSpec extends InjectionBasedControllerSpecification {
           case r =>
             r.headerMap.get("If-None-Match") must beNone
         })).thenReturn(Future.value(Response()))
+        when(tracksService.track(session, trackUrn, None)).thenReturn(Future.value(Response()))
 
-        val rollout = (urn: Urn) => Future.False
-        val response = get(controller(rollout, session), path, Map.empty, Map("If-None-Match" -> "a8d3ba6d09b68691b77dc75dfcd7a477"))
+        val response = get(controller(session), path, Map.empty, Map("If-None-Match" -> "a8d3ba6d09b68691b77dc75dfcd7a477"))
 
         response.status ==== Status.Ok
-      }
-  }
-
-  List("/tracks/987", "/tracks/987/").foreach {
-    path =>
-      s"when rollout is off uses fallback for path: $path" in new Context {
-        val legacyResponseString = "{\"kind\":\"track\",\"id\":987,\"user_id\":111}"
-        val legacyResponse = Response()
-        legacyResponse.setContentString(legacyResponseString)
-        when(fallback.dispatchToMothership(any[Request])).thenReturn(Future.value(legacyResponse))
-
-        val rollout = (urn: Urn) => {
-          urn ==== trackUrn
-          Future.False
-        }
-
-        val response = get(controller(rollout, session), path)
-        response.status ==== Status.Ok
-        response.body ==== legacyResponseString
       }
   }
 
@@ -76,9 +56,9 @@ class SingleTrackControllerSpec extends InjectionBasedControllerSpecification {
           s"uses fallback when there is a non-numeric track identifier for path: $path for status: $status" in new Context {
             val legacyResponse = Response(status)
             when(fallback.dispatchToMothership(any[Request])).thenReturn(Future.value(legacyResponse))
+            when(tracksService.track(session, trackUrn, None)).thenReturn(Future.value(Response()))
 
-            val rollout = (urn: Urn) => Future.True
-            val response = get(controller(rollout, session), path)
+            val response = get(controller(session), path)
 
             val errCount = collectorRegistry.getSampleValue(
               "non_numeric_track_id",
@@ -114,8 +94,7 @@ class SingleTrackControllerSpec extends InjectionBasedControllerSpecification {
             when(fallback.dispatchToMothership(any[Request])).thenReturn(Future.value(legacyResponse))
             when(tracksService.track(session, trackUrn, None)).thenReturn(Future.value(migrationResponse))
 
-            val rollout = (urn: Urn) => Future.True
-            val response = get(controller(rollout, session), path)
+            val response = get(controller(session), path)
 
             verify(responseComparison).report(
               any[Request],
