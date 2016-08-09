@@ -1,14 +1,14 @@
 package com.soundcloud.publicApiStrangler.authorization
 
 import com.soundcloud.bff.finagle.{Request => BffRequest}
-import com.soundcloud.scalakit.UTF8
 import com.soundcloud.scalakit.finagle.http.RouterResponse
 import com.twitter.finagle.http.Request
 import com.twitter.finagle.{Service, SimpleFilter}
 
 import scala.collection.JavaConversions._
 
-class ContentAuthorizationFilter(authorizeContent: AuthorizeHttpResponse) extends SimpleFilter[Request, RouterResponse] {
+class ContentAuthorizationFilter(authorizeContent: AuthorizeHttpResponse)
+  extends SimpleFilter[Request, RouterResponse] {
 
   override def apply(request: Request, next: Service[Request, RouterResponse]) = {
     val req = new BffRequest(request)
