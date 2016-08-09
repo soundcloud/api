@@ -2,7 +2,7 @@ package com.soundcloud.publicApiStrangler.authorization
 
 import com.soundcloud.bff.finagle.{Request => BffRequest, ResponseBuilder}
 import com.soundcloud.bff.test.UnitSpecification
-import com.soundcloud.publicApiStrangler.authorization.ContentAuthorizationFilter.SkipContentAuthHeader
+import com.soundcloud.publicApiStrangler.authorization.ContentAuthorizationFilter.skipContentAuthHeader
 import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures
 import com.soundcloud.scalakit.finagle.http.{AlwaysMatchesPathMatcher, HandlerRequest, RouterResponse}
 import com.twitter.finagle.Service
@@ -22,14 +22,14 @@ class ContentAuthorizationFilterSpec extends UnitSpecification with Fixtures {
 
   "when the response has the magic Skip-Content-Auth header" >> {
     "skips the content authorization" in new Context {
-      originalResponse.headerMap.add(SkipContentAuthHeader, "true")
+      originalResponse.headerMap.add(skipContentAuthHeader, "true")
       service.apply(any[BffRequest]) returns Future.value(originalResponse)
 
       val authorizedResponse = Await.result(contentAuthorizationFilter.apply(someRequest, service))
 
       authorizedResponse.status mustEqual originalResponse.status
       authorizedResponse.contentString mustEqual originalResponse.contentString
-      authorizedResponse.headerMap.get(SkipContentAuthHeader) must beNone
+      authorizedResponse.headerMap.get(skipContentAuthHeader) must beNone
     }
   }
 

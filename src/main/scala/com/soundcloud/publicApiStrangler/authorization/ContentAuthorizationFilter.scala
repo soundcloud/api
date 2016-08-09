@@ -1,7 +1,7 @@
 package com.soundcloud.publicApiStrangler.authorization
 
 import com.soundcloud.bff.finagle.{Request => BffRequest}
-import com.soundcloud.publicApiStrangler.authorization.ContentAuthorizationFilter.SkipContentAuthHeader
+import com.soundcloud.publicApiStrangler.authorization.ContentAuthorizationFilter.skipContentAuthHeader
 import com.soundcloud.scalakit.finagle.http.RouterResponse
 import com.twitter.finagle.http.Request
 import com.twitter.finagle.{Service, SimpleFilter}
@@ -17,8 +17,8 @@ class ContentAuthorizationFilter(authorizeContent: AuthorizeHttpResponse)
 
     next(req).flatMap {
       case response =>
-        if (response.headerMap.contains(SkipContentAuthHeader)) {
-          response.headerMap.remove(SkipContentAuthHeader)
+        if (response.headerMap.contains(skipContentAuthHeader)) {
+          response.headerMap.remove(skipContentAuthHeader)
           Future.value(RouterResponse(response, "undefined"))
         } else {
           authorize(req, response).map(RouterResponse(_, "undefined"))
@@ -39,5 +39,5 @@ class ContentAuthorizationFilter(authorizeContent: AuthorizeHttpResponse)
 }
 
 object ContentAuthorizationFilter {
-  val SkipContentAuthHeader = "Skip-Content-Auth"
+  val skipContentAuthHeader = "Skip-Content-Auth"
 }
