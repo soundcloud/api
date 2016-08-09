@@ -53,14 +53,8 @@ class ResponseComparison(telemetry: Telemetry) {
       logger.info("============tracks/:id endpoint status difference1=========")
       logger.info(request.toString)
       logger.info(request.headerMap.toString)
-      logger.info(originalRes.toString)
-      logger.info(migrationRes.toString)
-
-      println("============tracks/:id endpoint status difference2=========")
-      println("=====REQ:", request)
-      println("=====HEADERS:", request.headerMap)
-      println("=====LEG RES:", originalRes.statusCode, originalRes)
-      println("=====MIG RES:", migrationRes.statusCode, migrationRes)
+      logger.info(s"legacy res : ${originalRes.toString}")
+      logger.info(s"migration res : ${migrationRes.toString}")
     }
   }
 }
