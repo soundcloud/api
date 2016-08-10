@@ -2,35 +2,23 @@ package com.soundcloud.publicApiStrangler.authorization
 
 import com.soundcloud.bff.finagle.{Request => BffRequest, ResponseBuilder}
 import com.soundcloud.bff.test.UnitSpecification
-import com.soundcloud.publicApiStrangler.authorization.ContentAuthorizationFilter.SkipContentAuthHeader
 import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures
 import com.soundcloud.scalakit.finagle.http.{AlwaysMatchesPathMatcher, HandlerRequest, RouterResponse}
 import com.twitter.finagle.Service
 import com.twitter.finagle.http.{Request => FinagleRequest, Response => FinagleResponse}
 import com.twitter.util.{Await, Future}
+import org.mockito.Matchers.{argThat => argT, eq => eqTo}
 
 class ContentAuthorizationFilterSpec extends UnitSpecification with Fixtures {
 
   trait Context extends Scope {
     val someRequest = new HandlerRequest(AlwaysMatchesPathMatcher, FinagleRequest("/something")).request
 
+
     val service = mock[Service[FinagleRequest, RouterResponse]]
     val authorizeContent = mock[AuthorizeHttpResponse]
     val originalResponse = RouterResponse(FinagleResponse(), "undefined")
     val contentAuthorizationFilter = new ContentAuthorizationFilter(authorizeContent)
-  }
-
-  "when the response has the magic Skip-Content-Auth header" >> {
-    "skips the content authorization" in new Context {
-      originalResponse.headerMap.add(SkipContentAuthHeader, "true")
-      service.apply(any[BffRequest]) returns Future.value(originalResponse)
-
-      val authorizedResponse = Await.result(contentAuthorizationFilter.apply(someRequest, service))
-
-      authorizedResponse.status mustEqual originalResponse.status
-      authorizedResponse.contentString mustEqual originalResponse.contentString
-      authorizedResponse.headerMap.get(SkipContentAuthHeader) must beNone
-    }
   }
 
   "when the response doesnt contain tracks" >> {
