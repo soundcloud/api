@@ -226,7 +226,6 @@ object App
       userAuthentication,
       mothershipDispatcher,
       followCountsClient,
-      new SearchControllerRolloutChecks(rolloutClient),
       searchMapper,
       baseUrl
     )
@@ -492,11 +491,4 @@ object App
     new AdminRoute(RequestMethod.GET, "/-/rate-limiting-diagnostics") ->
       rateLimitingFacade.rateLimitingDiagnosticsAdminHandler
   )
-}
-
-class SearchControllerRolloutChecks(rolloutClient: Rollout) {
-  def avoidForTracks = rolloutClient.isActive(BasicRolloutFeature("search_avoid_mothership_for_tracks"))
-  def avoidForUsers = rolloutClient.isActive(BasicRolloutFeature("search_avoid_mothership_for_users"))
-  def avoidForGroups = rolloutClient.isActive(BasicRolloutFeature("search_avoid_mothership_for_groups"))
-  def avoidForPlaylists = rolloutClient.isActive(BasicRolloutFeature("search_avoid_mothership_for_playlists"))
 }
