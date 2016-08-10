@@ -4,11 +4,8 @@ import com.soundcloud.bff.test.InjectionBasedControllerSpecification
 import com.soundcloud.jvmkit.UserSessionBuilder
 import com.soundcloud.jvmkit.telemetry.Telemetry
 import com.soundcloud.jvmkit.test.InMemoryConfig
-import com.soundcloud.publicApiStrangler.authorization.ContentAuthorizationFilter
 import com.soundcloud.publicApiStrangler.support.DispatchToMothershipHandler
-import com.soundcloud.scalakit.finagle.http.RouterResponse
 import com.soundcloud.scalakit.{Urn, UserSession}
-import com.twitter.finagle.Service
 import com.twitter.finagle.http.{Request, Response, Status}
 import com.twitter.util.Future
 import io.prometheus.client.CollectorRegistry
@@ -18,7 +15,6 @@ class SingleTrackControllerSpec extends InjectionBasedControllerSpecification {
 
   trait Context extends Scope {
     val fallback = mock[DispatchToMothershipHandler]
-    val contentAuthorizationFilter = mock[ContentAuthorizationFilter]
     val tracksService = mock[TracksService]
     val responseComparison = mock[ResponseComparison]
 
@@ -32,7 +28,6 @@ class SingleTrackControllerSpec extends InjectionBasedControllerSpecification {
     def controller(session: UserSession) = new SingleTrackController(
       fakeUserAuthentication(session),
       fallback,
-      contentAuthorizationFilter,
       tracksService,
       responseComparison,
       telemetry)
@@ -40,37 +35,17 @@ class SingleTrackControllerSpec extends InjectionBasedControllerSpecification {
 
   List("/tracks/987", "/tracks/987/").foreach {
     path =>
-      s"removes conditional request headers for path: $path" in new Context {
+      s"removes conditional request headers, path: $path" in new Context {
 
         when(fallback.dispatchToMothership(like[Request] {
           case r =>
             r.headerMap.get("If-None-Match") must beNone
         })).thenReturn(Future.value(Response()))
-        when(contentAuthorizationFilter.apply(any[Request], any[Service[Request, RouterResponse]])).
-          thenReturn(Future.value(RouterResponse(Response(), "undefined")))
         when(tracksService.track(session, trackUrn, None)).thenReturn(Future.value(Response()))
 
         val response = get(controller(session), path, Map.empty, Map("If-None-Match" -> "a8d3ba6d09b68691b77dc75dfcd7a477"))
 
         response.status ==== Status.Ok
-      }
-  }
-
-  List("/tracks/987", "/tracks/987/").foreach {
-    path =>
-      s"Adds magic skip auth content header for path: $path" in new Context {
-
-        when(fallback.dispatchToMothership(like[Request] {
-          case r =>
-            r.headerMap.get("If-None-Match") must beNone
-        })).thenReturn(Future.value(Response()))
-        when(contentAuthorizationFilter.apply(any[Request], any[Service[Request, RouterResponse]])).
-          thenReturn(Future.value(RouterResponse(Response(), "undefined")))
-        when(tracksService.track(session, trackUrn, None)).thenReturn(Future.value(Response()))
-
-        val response = get(controller(session), path, Map.empty, Map("If-None-Match" -> "a8d3ba6d09b68691b77dc75dfcd7a477"))
-
-        response.getHeaders.get(ContentAuthorizationFilter.skipContentAuthHeader) must beSome
       }
   }
 
@@ -81,8 +56,6 @@ class SingleTrackControllerSpec extends InjectionBasedControllerSpecification {
           s"uses fallback when there is a non-numeric track identifier for path: $path for status: $status" in new Context {
             val legacyResponse = Response(status)
             when(fallback.dispatchToMothership(any[Request])).thenReturn(Future.value(legacyResponse))
-            when(contentAuthorizationFilter.apply(any[Request], any[Service[Request, RouterResponse]])).
-              thenReturn(Future.value(RouterResponse(legacyResponse, "undefined")))
             when(tracksService.track(session, trackUrn, None)).thenReturn(Future.value(Response()))
 
             val response = get(controller(session), path)
@@ -119,8 +92,6 @@ class SingleTrackControllerSpec extends InjectionBasedControllerSpecification {
           testCaseTitle in new Context {
 
             when(fallback.dispatchToMothership(any[Request])).thenReturn(Future.value(legacyResponse))
-            when(contentAuthorizationFilter.apply(any[Request], any[Service[Request, RouterResponse]])).
-              thenReturn(Future.value(RouterResponse(legacyResponse, "undefined")))
             when(tracksService.track(session, trackUrn, None)).thenReturn(Future.value(migrationResponse))
 
             val response = get(controller(session), path)

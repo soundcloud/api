@@ -179,7 +179,6 @@ object App
     new SingleTrackController(
       userAuthentication,
       mothershipDispatcher,
-      new ContentAuthorizationFilter(authorizeContent),
       tracksService,
       new ResponseComparison(telemetry),
       telemetry

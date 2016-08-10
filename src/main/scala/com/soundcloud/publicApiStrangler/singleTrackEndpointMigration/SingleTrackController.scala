@@ -3,19 +3,15 @@ package com.soundcloud.publicApiStrangler.singleTrackEndpointMigration
 import com.soundcloud.bff.finagle.{Request, ResponseBuilder}
 import com.soundcloud.bff.web.{BffInjectionBasedController, UserAuthentication}
 import com.soundcloud.jvmkit.telemetry.Telemetry
-import com.soundcloud.publicApiStrangler.authorization.ContentAuthorizationFilter
 import com.soundcloud.publicApiStrangler.support.DispatchToMothershipHandler
-import com.soundcloud.scalakit.finagle.http.RouterResponse
 import com.soundcloud.scalakit.{Urn, UserSession}
-import com.twitter.finagle.Service
-import com.twitter.finagle.http.{Request => FinagleRequest, Response}
+import com.twitter.finagle.http.Response
 import com.twitter.util.{Future, Return, Try}
 
 import scala.collection.JavaConversions._
 
 class SingleTrackController(userAuthentication: UserAuthentication,
                             mothershipDispatcher: DispatchToMothershipHandler,
-                            contentAuthorizationFilter: ContentAuthorizationFilter,
                             tracksService: TracksService,
                             responseComparison: ResponseComparison,
                             telemetry: Telemetry)
@@ -57,16 +53,11 @@ class SingleTrackController(userAuthentication: UserAuthentication,
                 toResponseBuilder(res)
             }
         }
-    }.map(addSkipContentAuthHeader)
+    }
   }
 
-  private def legacyResponse(req: Request): Future[Response] = {
-    val service = new Service[FinagleRequest, RouterResponse] {
-      override def apply(request: FinagleRequest): Future[RouterResponse] =
-        mothershipDispatcher.dispatchToMothership(req).map(RouterResponse(_, "undefined"))
-    }
-    contentAuthorizationFilter(req, service).map(_.underlying)
-  }
+  private def legacyResponse(req: Request): Future[Response] =
+    mothershipDispatcher.dispatchToMothership(req)
 
   private def migrationResponse(session: UserSession, urn: Urn, secret: Option[String]): Future[Response] = {
     tracksService.track(session, urn, None)
@@ -78,15 +69,6 @@ class SingleTrackController(userAuthentication: UserAuthentication,
       .status(response.status.code)
       .body(response.getContentString())
       .headers(headerMap)
-  }
-
-  /*
-  * This magic header is picked up in ContentAuthorizationFilter
-  * and its existence causes content authorization to be skipped on the filter for this response.
-  * We are doing this because we manually do the content authorization in the controller.
-  */
-  private def addSkipContentAuthHeader(responseBuilder: ResponseBuilder): ResponseBuilder = {
-    responseBuilder.header(ContentAuthorizationFilter.skipContentAuthHeader, "true")
   }
 
   /*
