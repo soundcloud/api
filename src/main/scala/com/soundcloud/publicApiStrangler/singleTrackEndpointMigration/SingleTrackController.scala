@@ -60,7 +60,7 @@ class SingleTrackController(userAuthentication: UserAuthentication,
     mothershipDispatcher.dispatchToMothership(req)
 
   private def migrationResponse(session: UserSession, urn: Urn, secret: Option[String]): Future[Response] = {
-    tracksService.track(session, urn, None)
+    tracksService.track(session, urn, secret)
   }
 
   private def toResponseBuilder(response: Response): ResponseBuilder = {

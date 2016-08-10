@@ -35,8 +35,7 @@ class SingleTrackControllerSpec extends InjectionBasedControllerSpecification {
 
   List("/tracks/987", "/tracks/987/").foreach {
     path =>
-      s"removes conditional request headers, path: $path" in new Context {
-
+      s"removes conditional request headers for path: $path" in new Context {
         when(fallback.dispatchToMothership(like[Request] {
           case r =>
             r.headerMap.get("If-None-Match") must beNone
@@ -44,7 +43,6 @@ class SingleTrackControllerSpec extends InjectionBasedControllerSpecification {
         when(tracksService.track(session, trackUrn, None)).thenReturn(Future.value(Response()))
 
         val response = get(controller(session), path, Map.empty, Map("If-None-Match" -> "a8d3ba6d09b68691b77dc75dfcd7a477"))
-
         response.status ==== Status.Ok
       }
   }
@@ -59,7 +57,6 @@ class SingleTrackControllerSpec extends InjectionBasedControllerSpecification {
             when(tracksService.track(session, trackUrn, None)).thenReturn(Future.value(Response()))
 
             val response = get(controller(session), path)
-
             val errCount = collectorRegistry.getSampleValue(
               "non_numeric_track_id",
               Array("statusCode", "system"),
@@ -67,6 +64,17 @@ class SingleTrackControllerSpec extends InjectionBasedControllerSpecification {
             )
             errCount == 1
           }
+      }
+  }
+
+  List("/tracks/987", "/tracks/987/").foreach {
+    path =>
+      s"Passes secret token to tracks service for path: $path" in new Context {
+        when(fallback.dispatchToMothership(any[Request] )).thenReturn(Future.value(Response()))
+        when(tracksService.track(session, trackUrn, Some("s3cret"))).thenReturn(Future.value(Response()))
+
+        val response = get(controller(session), path, Map("secret_token" -> "s3cret"))
+        response.status ==== Status.Ok
       }
   }
 
