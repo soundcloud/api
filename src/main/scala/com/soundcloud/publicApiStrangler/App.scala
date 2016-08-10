@@ -182,8 +182,8 @@ object App
       new ContentAuthorizationFilter(authorizeContent),
       tracksService,
       new ResponseComparison(telemetry),
-      telemetry,
-      () => new SingleTrackEndpointContentAuthorization(rolloutClient).authorizeInController)
+      telemetry
+    )
   }
 
   lazy val memcachedClient = MemcachedClient(config)
@@ -500,10 +500,4 @@ class SearchControllerRolloutChecks(rolloutClient: Rollout) {
   def avoidForUsers = rolloutClient.isActive(BasicRolloutFeature("search_avoid_mothership_for_users"))
   def avoidForGroups = rolloutClient.isActive(BasicRolloutFeature("search_avoid_mothership_for_groups"))
   def avoidForPlaylists = rolloutClient.isActive(BasicRolloutFeature("search_avoid_mothership_for_playlists"))
-}
-
-class SingleTrackEndpointContentAuthorization(rolloutClient: Rollout) {
-  def authorizeInController = rolloutClient.isActive(
-    BasicRolloutFeature("single_track_endpoint_content_authorization_in_controller")
-  )
 }
