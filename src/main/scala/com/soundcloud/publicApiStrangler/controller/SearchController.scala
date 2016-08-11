@@ -12,15 +12,16 @@ import com.soundcloud.publicApiStrangler.support.DispatchToMothershipHandler
 import com.soundcloud.scalakit.finagle.http.BadRequestStatus
 import com.twitter.finagle.http.ParamMap
 import com.twitter.util.{Future, Return, Try}
-
+import com.soundcloud.jvmkit.telemetry.Counter
 /**
   * Redirects search queries on to search-dispatcher and fetches meta data.
   */
 class SearchController(val userAuthentication: UserAuthentication,
                        val mothershipDispatcher: DispatchToMothershipHandler,
+                       val mothershipCounter: Counter,
                        val followCountsClient: FollowCountsClient,
-                       searchMapper: SearchMapper,
-                       baseUrl: String)
+                       val searchMapper: SearchMapper,
+                       val baseUrl: String)
   extends BffInjectionBasedController with FollowCountsHelper {
 
   get("/tracks")(dispatchTrackRequest)
@@ -86,6 +87,7 @@ class SearchController(val userAuthentication: UserAuthentication,
       // XXX: these are requests like /tracks without query params.
       // Mothership allows callers to page through our users/tracks/... in database order.
       // Do we even want this (afaik undocumented) functionality?
+      mothershipCounter.labels(request.path).inc()
       mothershipDispatcherFn(request)
     }
   }

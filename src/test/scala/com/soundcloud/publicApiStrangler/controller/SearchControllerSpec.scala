@@ -6,6 +6,8 @@ import com.soundcloud.bff.nextbff.pagination.OffsetBasedPage
 import com.soundcloud.bff.nextbff.repository.RepositoryException
 import com.soundcloud.bff.nextbff.test.JsonMappingMock
 import com.soundcloud.bff.test.InjectionBasedControllerSpecification
+import com.soundcloud.jvmkit.telemetry.Telemetry
+import com.soundcloud.jvmkit.test.InMemoryConfig
 import com.soundcloud.publicApiStrangler.client.followcounts.{FollowCounts, FollowCountsClient}
 import com.soundcloud.publicApiStrangler.mapper.search.SearchMapper
 import com.soundcloud.publicApiStrangler.mapping.search.{Search, SearchDispatcherRequest}
@@ -13,6 +15,7 @@ import com.soundcloud.publicApiStrangler.support.DispatchToMothershipHandler
 import com.soundcloud.scalakit._
 import com.soundcloud.scalakit.finagle.http.{BadRequestStatus, HandlerRequest}
 import com.soundcloud.scalakit.test.VerifiedMocks
+import io.prometheus.client.CollectorRegistry
 import org.jboss.netty.handler.codec.http.HttpResponseStatus
 
 class SearchControllerSpec extends InjectionBasedControllerSpecification {
@@ -20,12 +23,14 @@ class SearchControllerSpec extends InjectionBasedControllerSpecification {
   trait ForwardContext extends Scope {
     def followCountsSeq: Seq[FollowCounts] = Seq.empty
     val fallbackMock = mock[DispatchToMothershipHandler]
+    val fallbackCounter = new Telemetry(new InMemoryConfig, new CollectorRegistry).counter("foo", "bar", "path")
     val searchMapperMock = mock[SearchMapper]
     val followCountsClientMock = mock[FollowCountsClient]
 
     val controller = new SearchController(
       fakeUserAuthentication(anonymousSession),
       fallbackMock,
+      fallbackCounter,
       followCountsClientMock,
       searchMapperMock,
       "http://api.soundcloud.com"
@@ -95,6 +100,7 @@ class SearchControllerSpec extends InjectionBasedControllerSpecification {
       endpoints.foreach { case (apiEndPoint, dispatcherEndPoint) =>
         expectForwardedRequest
         val response = get(controller, apiEndPoint)
+        fallbackCounter.labels(apiEndPoint).get() ==== 1.0
         stillForwards(response)
       }
     }

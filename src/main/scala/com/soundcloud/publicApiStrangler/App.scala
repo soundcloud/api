@@ -221,10 +221,16 @@ object App
   private val searchController = {
     val searchRepository = new SearchRepository(searchService)
     val searchMapper = new SearchMapper(searchRepository, searchEntityMapper, baseUrl)
+    val mothershipCounter = telemetry.counter(
+      "search_mothership_fallback_total",
+      "Number of requests to search endpoints with missing/invalid query parameters that get propagated to Mothership",
+      "path"
+    )
 
     new SearchController(
       userAuthentication,
       mothershipDispatcher,
+      mothershipCounter,
       followCountsClient,
       searchMapper,
       baseUrl
