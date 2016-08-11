@@ -221,12 +221,17 @@ object App
   private val searchController = {
     val searchRepository = new SearchRepository(searchService)
     val searchMapper = new SearchMapper(searchRepository, searchEntityMapper, baseUrl)
+    val mothershipCounter = telemetry.counter(
+      "search_mothership_fallback_total",
+      "Number of requests to search endpoints with missing/invalid query parameters that get propagated to Mothership",
+      "path"
+    )
 
     new SearchController(
       userAuthentication,
       mothershipDispatcher,
+      mothershipCounter,
       followCountsClient,
-      new SearchControllerRolloutChecks(rolloutClient),
       searchMapper,
       baseUrl
     )
@@ -492,11 +497,4 @@ object App
     new AdminRoute(RequestMethod.GET, "/-/rate-limiting-diagnostics") ->
       rateLimitingFacade.rateLimitingDiagnosticsAdminHandler
   )
-}
-
-class SearchControllerRolloutChecks(rolloutClient: Rollout) {
-  def avoidForTracks = rolloutClient.isActive(BasicRolloutFeature("search_avoid_mothership_for_tracks"))
-  def avoidForUsers = rolloutClient.isActive(BasicRolloutFeature("search_avoid_mothership_for_users"))
-  def avoidForGroups = rolloutClient.isActive(BasicRolloutFeature("search_avoid_mothership_for_groups"))
-  def avoidForPlaylists = rolloutClient.isActive(BasicRolloutFeature("search_avoid_mothership_for_playlists"))
 }

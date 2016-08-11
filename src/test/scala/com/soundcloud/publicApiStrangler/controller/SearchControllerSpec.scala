@@ -1,37 +1,37 @@
 package com.soundcloud.publicApiStrangler.controller
 
 import com.soundcloud.bff.Future
-import com.soundcloud.bff.finagle.{ResponseBuilder, Request}
+import com.soundcloud.bff.finagle.{Request, ResponseBuilder}
 import com.soundcloud.bff.nextbff.pagination.OffsetBasedPage
 import com.soundcloud.bff.nextbff.repository.RepositoryException
 import com.soundcloud.bff.nextbff.test.JsonMappingMock
 import com.soundcloud.bff.test.InjectionBasedControllerSpecification
-import com.soundcloud.publicApiStrangler.SearchControllerRolloutChecks
+import com.soundcloud.jvmkit.telemetry.Telemetry
+import com.soundcloud.jvmkit.test.InMemoryConfig
 import com.soundcloud.publicApiStrangler.client.followcounts.{FollowCounts, FollowCountsClient}
 import com.soundcloud.publicApiStrangler.mapper.search.SearchMapper
 import com.soundcloud.publicApiStrangler.mapping.search.{Search, SearchDispatcherRequest}
 import com.soundcloud.publicApiStrangler.support.DispatchToMothershipHandler
-import com.soundcloud.scalakit.finagle.http.BadRequestStatus
-import com.soundcloud.scalakit.finagle.http.HandlerRequest
 import com.soundcloud.scalakit._
+import com.soundcloud.scalakit.finagle.http.{BadRequestStatus, HandlerRequest}
 import com.soundcloud.scalakit.test.VerifiedMocks
+import io.prometheus.client.CollectorRegistry
 import org.jboss.netty.handler.codec.http.HttpResponseStatus
-import org.mockito.Mockito.times
 
 class SearchControllerSpec extends InjectionBasedControllerSpecification {
 
   trait ForwardContext extends Scope {
     def followCountsSeq: Seq[FollowCounts] = Seq.empty
     val fallbackMock = mock[DispatchToMothershipHandler]
+    val fallbackCounter = new Telemetry(new InMemoryConfig, new CollectorRegistry).counter("foo", "bar", "path")
     val searchMapperMock = mock[SearchMapper]
     val followCountsClientMock = mock[FollowCountsClient]
-    val searchControllerRolloutChecksMock = mock[SearchControllerRolloutChecks]
 
     val controller = new SearchController(
       fakeUserAuthentication(anonymousSession),
       fallbackMock,
+      fallbackCounter,
       followCountsClientMock,
-      searchControllerRolloutChecksMock,
       searchMapperMock,
       "http://api.soundcloud.com"
     )
@@ -96,37 +96,16 @@ class SearchControllerSpec extends InjectionBasedControllerSpecification {
       val searchMock = JsonMappingMock.prepare[SearchMock]
     }
 
-    trait EnabledContext extends Context {
-      searchControllerRolloutChecksMock.avoidForGroups returns Future.True
-      searchControllerRolloutChecksMock.avoidForUsers returns Future.True
-      searchControllerRolloutChecksMock.avoidForTracks returns Future.True
-      searchControllerRolloutChecksMock.avoidForPlaylists returns Future.True
-    }
-
-    trait DisabledContext extends Context {
-      searchControllerRolloutChecksMock.avoidForGroups returns Future.False
-      searchControllerRolloutChecksMock.avoidForUsers returns Future.False
-      searchControllerRolloutChecksMock.avoidForTracks returns Future.False
-      searchControllerRolloutChecksMock.avoidForPlaylists returns Future.False
-    }
-
     "forwards to Mothership when q param not present" in new Context {
       endpoints.foreach { case (apiEndPoint, dispatcherEndPoint) =>
         expectForwardedRequest
         val response = get(controller, apiEndPoint)
+        fallbackCounter.labels(apiEndPoint).get() ==== 1.0
         stillForwards(response)
       }
     }
 
-    "forwards to Mothership when feature not enabled" in new DisabledContext {
-      endpoints.foreach { case (apiEndPoint, dispatcherEndPoint) =>
-        expectForwardedRequest
-        val response = get(controller, apiEndPoint, extraParams, Map("Host" -> "api.soundcloud.com"))
-        stillForwards(response)
-      }
-    }
-
-    "performs a search when q param is present" in new EnabledContext {
+    "performs a search when q param is present" in new Context {
       endpoints.foreach { case (apiEndPoint, dispatcherRequest) =>
         val request = com.twitter.finagle.http.Request(apiEndPoint, extraParams.toSeq: _*)
         val query = dispatcherRequest(request)
@@ -142,7 +121,7 @@ class SearchControllerSpec extends InjectionBasedControllerSpecification {
       }
     }
 
-    "response contains a caching header" in new EnabledContext {
+    "response contains a caching header" in new Context {
       endpoints.foreach { case (apiEndPoint, dispatcherRequest) =>
         val request = com.twitter.finagle.http.Request(apiEndPoint, queryParams.toSeq: _*)
         val query = dispatcherRequest(request)
@@ -160,7 +139,7 @@ class SearchControllerSpec extends InjectionBasedControllerSpecification {
     }
 
     "Pagination error handling" >> {
-      "200 when no pagination params" in new EnabledContext {
+      "200 when no pagination params" in new Context {
 
         endpoints.foreach { case (apiEndPoint, dispatcherRequest) =>
           val request = com.twitter.finagle.http.Request(apiEndPoint, queryParams.toSeq: _*)
@@ -176,7 +155,7 @@ class SearchControllerSpec extends InjectionBasedControllerSpecification {
         }
       }
 
-      "400 when offset/limit is junk" in new EnabledContext {
+      "400 when offset/limit is junk" in new Context {
         for {
           (apiEndPoint, dispatcherRequest) <- endpoints
           param <- Seq("offset", "limit")
@@ -187,7 +166,7 @@ class SearchControllerSpec extends InjectionBasedControllerSpecification {
         }
       }
 
-      "400 when limit/offset is present, but empty" in new EnabledContext {
+      "400 when limit/offset is present, but empty" in new Context {
         for {
           (apiEndPoint, dispatcherRequest) <- endpoints
           param <- Seq("offset", "limit")
@@ -198,7 +177,7 @@ class SearchControllerSpec extends InjectionBasedControllerSpecification {
         }
       }
 
-      "400 when dispatcher returns a 400" in new EnabledContext {
+      "400 when dispatcher returns a 400" in new Context {
         endpoints.foreach { case (apiEndPoint, dispatcherRequest) =>
           val request = com.twitter.finagle.http.Request(apiEndPoint, extraParams.toSeq: _*)
           val query = dispatcherRequest(request)
