@@ -43,7 +43,7 @@ class TracksServiceSpec extends UnitSpecification {
     response.status ==== Status.NotFound
   }
 
-  "Returns 404 for non existing tracks" in new Context {
+  "Returns 404 when track is disabled" in new Context {
     val isPublic = true
     val disabledAt = Some(LocalDateTime.now())
     val trackmetadataTrack = Track(trackUrn, Urn("soundcloud:users:112"), false, None, null, disabledAt, false, 0, None, null, null, None,
@@ -56,7 +56,7 @@ class TracksServiceSpec extends UnitSpecification {
     response.status ==== Status.NotFound
   }
 
-  "Returns 404 when track is disabled" in new Context {
+  "Returns 404 when track is not public" in new Context {
     val isPublic = false
     val trackmetadataTrack = Track(trackUrn, Urn("soundcloud:users:112"), false, None, null, None, false, 0, None, null, null, None,
       isPublic, null, List.empty, List.empty, null, None, None, false, false, false, None, null, None, None, None, None,
