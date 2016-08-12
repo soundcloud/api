@@ -7,6 +7,7 @@ import com.soundcloud.scalakit.Urn
 import com.soundcloud.scalakit.test.UnitSpecification
 import com.twitter.finagle.http.Status
 import com.twitter.util.{Await, Future}
+import org.joda.time.LocalDateTime
 import org.mockito.Mockito._
 
 class TracksServiceSpec extends UnitSpecification {
@@ -42,7 +43,20 @@ class TracksServiceSpec extends UnitSpecification {
     response.status ==== Status.NotFound
   }
 
-  "Returns 404 when track is not public" in new Context {
+  "Returns 404 for non existing tracks" in new Context {
+    val isPublic = true
+    val disabledAt = Some(LocalDateTime.now())
+    val trackmetadataTrack = Track(trackUrn, Urn("soundcloud:users:112"), false, None, null, disabledAt, false, 0, None, null, null, None,
+      isPublic, null, List.empty, List.empty, null, None, None, false, false, false, None, null, None, None, None, None,
+      EmbeddingPermission.None, None, Artwork(None), None)
+
+    when(trackmetadataClient.track(session, trackUrn)).thenReturn(Future.value(Some(trackmetadataTrack)))
+
+    val response = Await.result(tracksService.track(session, trackUrn, None))
+    response.status ==== Status.NotFound
+  }
+
+  "Returns 404 when track is disabled" in new Context {
     val isPublic = false
     val trackmetadataTrack = Track(trackUrn, Urn("soundcloud:users:112"), false, None, null, None, false, 0, None, null, null, None,
       isPublic, null, List.empty, List.empty, null, None, None, false, false, false, None, null, None, None, None, None,

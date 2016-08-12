@@ -13,7 +13,10 @@ class TracksService(
     trackmetadataClient.track(session, urn).map {
 
       case Some(track) =>
-        if (isPrivacyAuthorized(session, secretToken, track)) {
+        if (
+          isPrivacyAuthorized(session, secretToken, track) &&
+          isDisabled(track) == false
+        ) {
           val res = Response()
           val singleTrackPublicApiRepresentation = new SingleTrackPublicApiRepresentation(
             "track",
@@ -34,5 +37,9 @@ class TracksService(
     track.public ||
       track.user_urn == session.getUser ||
       (secretToken.filter(_ == track.secret_token).isDefined)
+  }
+
+  private def isDisabled(track: Track): Boolean = {
+    track.disabled_at.isDefined
   }
 }
