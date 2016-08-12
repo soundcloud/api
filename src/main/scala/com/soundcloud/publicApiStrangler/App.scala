@@ -175,7 +175,7 @@ object App
   override lazy val rollout = Some(rolloutClient)
 
   private val singleTrackController = {
-    val tracksService = new TracksService(trackmetadataClient, contentAuthorizationRules)
+    val tracksService = new TracksService(trackmetadataClient)
     new SingleTrackController(
       userAuthentication,
       mothershipDispatcher,
