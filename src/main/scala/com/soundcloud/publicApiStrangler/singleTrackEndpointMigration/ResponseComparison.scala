@@ -26,6 +26,12 @@ class ResponseComparison(telemetry: Telemetry) {
     "legacy", "migration"
   )
 
+  val failuresCounter = telemetry.counter(
+    "single_track_endpoint_failures",
+    "counter for response comparison failures",
+    "type"
+  )
+
   def report(request: Request, originalRes: Response, migrationRes: Response): Unit = {
 
     if (originalRes.status == migrationRes.status) {
@@ -52,25 +58,24 @@ class ResponseComparison(telemetry: Telemetry) {
             logger.info(migrationRes.contentString)
             logger.info(legacyResult.toString)
             logger.info(migrationResult.toString)
-            comparisonMetric.labels("jsonFailure").observe(0)
+            failuresCounter.labels("jsonFailure").inc()
         }
       } else {
-        comparisonMetric.labels("unexpectedMoshiStatusCode").observe(0)
         logger.info("============tracks/:id endpoint unexpected moshi status=========")
         logger.info(request.toString)
         logger.info(request.headerMap.toString)
         logger.info(s"legacy res : ${originalRes.toString}")
         logger.info(s"migration res : ${migrationRes.toString}")
+        failuresCounter.labels("unexpectedMoshiStatusCode").inc()
       }
     } else {
-      comparisonMetric.labels("statusCodeFailure").observe(0)
-      statusCodeDifferenceCounter.labels(originalRes.statusCode.toString, migrationRes.statusCode.toString).inc()
-
       logger.info("============tracks/:id endpoint status difference1=========")
       logger.info(request.toString)
       logger.info(request.headerMap.toString)
       logger.info(s"legacy res : ${originalRes.toString}")
       logger.info(s"migration res : ${migrationRes.toString}")
+      failuresCounter.labels("differentStatusCodes").inc()
+      statusCodeDifferenceCounter.labels(originalRes.statusCode.toString, migrationRes.statusCode.toString).inc()
     }
   }
 

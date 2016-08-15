@@ -6,8 +6,6 @@ import com.soundcloud.scalakit.test.UnitSpecification
 import com.twitter.finagle.http.{Request, Response, Status}
 import io.prometheus.client.CollectorRegistry
 
-import scala.collection.JavaConversions._
-
 class ResponseComparisonSpec extends UnitSpecification {
 
   trait Context extends Scope {
@@ -29,12 +27,12 @@ class ResponseComparisonSpec extends UnitSpecification {
 
     responseComparison.report(Request(), originalRes, migrationRes)
 
-    val histogramCount = collectorRegistry.getSampleValue(
-      "single_track_endpoint_comparison_sum",
-      Array("status", "system"),
-      Array("statusCodeFailure", "TEST-APP")
+    val failuresCount = collectorRegistry.getSampleValue(
+      "single_track_endpoint_failures",
+      Array("type", "system"),
+      Array("differentStatusCodes", "TEST-APP")
     )
-    histogramCount ==== 0
+    failuresCount ==== 1
 
     val counterValue = collectorRegistry.getSampleValue(
       "single_track_endpoint_status_code_difference",
@@ -50,12 +48,12 @@ class ResponseComparisonSpec extends UnitSpecification {
 
     responseComparison.report(Request(), originalRes, migrationRes)
 
-    val histogramCount = collectorRegistry.getSampleValue(
-      "single_track_endpoint_comparison_count",
-      Array("status", "system"),
+    val failuresCount = collectorRegistry.getSampleValue(
+      "single_track_endpoint_failures",
+      Array("type", "system"),
       Array("unexpectedMoshiStatusCode", "TEST-APP")
     )
-    histogramCount ==== 1
+    failuresCount ==== 1
   }
 
   "reports zero differences when responses are the same" in new Context {
@@ -164,8 +162,8 @@ class ResponseComparisonSpec extends UnitSpecification {
 
         responseComparison.report(Request(), originalRes, migrationRes)
         val value = collectorRegistry.getSampleValue(
-          "single_track_endpoint_comparison_count",
-          Array("status", "system"),
+          "single_track_endpoint_failures",
+          Array("type", "system"),
           Array("jsonFailure", "TEST-APP")
         )
         value ==== expectedCount
