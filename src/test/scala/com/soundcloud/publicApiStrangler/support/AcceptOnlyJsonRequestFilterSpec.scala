@@ -13,8 +13,10 @@ class AcceptOnlyJsonRequestFilterSpec extends UnitSpecification {
     val next = mock[Service[Request, RouterResponse]]
     val filter = new AcceptOnlyJsonRequestFilter
     val request: Request
-    lazy val response =
+    def response =
       Await.result(filter(request, next))
+
+    val expectedAcceptHeader = "application/json"
   }
 
   "allows json request" >> {
@@ -37,8 +39,10 @@ class AcceptOnlyJsonRequestFilterSpec extends UnitSpecification {
         request.accept = header
 
         val responseFromNextService = mock[RouterResponse]
-        when(next.apply(request))
-          .thenReturn(Future.value(responseFromNextService))
+        when(next.apply(like[Request]{
+          case req =>
+            req.acceptMediaTypes ==== Seq(expectedAcceptHeader)
+        })).thenReturn(Future.value(responseFromNextService))
 
         response mustEqual responseFromNextService
       }
@@ -48,8 +52,10 @@ class AcceptOnlyJsonRequestFilterSpec extends UnitSpecification {
       val request = Request("/test.json")
 
       val responseFromNextService = mock[RouterResponse]
-      when(next.apply(request))
-        .thenReturn(Future.value(responseFromNextService))
+      when(next.apply(like[Request]{
+        case req =>
+          req.acceptMediaTypes ==== Seq(expectedAcceptHeader)
+      })).thenReturn(Future.value(responseFromNextService))
 
       response mustEqual responseFromNextService
     }
@@ -57,11 +63,26 @@ class AcceptOnlyJsonRequestFilterSpec extends UnitSpecification {
     "without the header and extension" in new Context {
       val request = Request()
       val responseFromNextService = mock[RouterResponse]
-      when(verified(next).apply(request))
-        .thenReturn(Future.value(responseFromNextService))
+      when(next.apply(like[Request]{
+        case req =>
+          req.acceptMediaTypes ==== Seq(expectedAcceptHeader)
+      })).thenReturn(Future.value(responseFromNextService))
 
       response mustEqual responseFromNextService
     }
+  }
+
+  "sets accept header to application/json for XML+* requests" in new Context {
+    val request = Request()
+    request.accept = "application/xml;q=0.8,*/*;q=0.5"
+
+    val responseFromNextService = mock[RouterResponse]
+    when(next.apply(like[Request]{
+      case req =>
+        req.acceptMediaTypes ==== Seq(expectedAcceptHeader)
+    })).thenReturn(Future.value(responseFromNextService))
+
+    response mustEqual responseFromNextService
   }
 
   "rejects non-json requests with a 406 response" >> {

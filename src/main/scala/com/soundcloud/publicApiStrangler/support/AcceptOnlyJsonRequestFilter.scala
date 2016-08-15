@@ -12,9 +12,10 @@ import com.twitter.util.Future
 class AcceptOnlyJsonRequestFilter extends SimpleFilter[Request, RouterResponse] {
 
   override def apply(request: Request, next: Service[Request, RouterResponse]) =
-    if (isJsonRequest(request))
+    if (isJsonRequest(request)) {
+      request.accept = "application/json"
       next(request)
-    else
+    } else
       Future.value(RouterResponse(Response(Version.Http11, Status.NotAcceptable), "undefined"))
 
   private def isJsonRequest(request: Request) =
