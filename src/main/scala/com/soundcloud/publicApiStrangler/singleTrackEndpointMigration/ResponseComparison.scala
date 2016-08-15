@@ -31,14 +31,14 @@ class ResponseComparison(telemetry: Telemetry) {
     if (originalRes.status == migrationRes.status) {
 
       if (migrationRes.status == Status.Ok || migrationRes.status == Status.NotFound) {
-        val mainJsonTry = Try(Json.fromString(originalRes.contentString).as[JsObject])
+        val legacyJsonTry = Try(Json.fromString(originalRes.contentString).as[JsObject])
         val migrationJsonTry = Try(Json.fromString(migrationRes.contentString).as[JsObject])
 
-        (mainJsonTry, migrationJsonTry) match {
-          case (Return(mainJson), Return(migrationJson)) => {
-            val extraAttributesCount = (migrationJson.fieldSet.map(_._1) diff mainJson.fieldSet.map(_._1)).size
+        (legacyJsonTry, migrationJsonTry) match {
+          case (Return(legacyJson), Return(migrationJson)) => {
+            val extraAttributesCount = (migrationJson.fieldSet.map(_._1) diff legacyJson.fieldSet.map(_._1)).size
 
-            val differentAttributeCount = mainJson.fields.count {
+            val differentAttributeCount = legacyJson.fields.count {
               case (key, jsValue) =>
                 jsValue != migrationJson \ key
             }
@@ -46,7 +46,13 @@ class ResponseComparison(telemetry: Telemetry) {
             comparisonMetric.labels("success").observe(differentAttributeCount + extraAttributesCount)
           }
 
-          case _ => comparisonMetric.labels("jsonFailure").observe(0)
+          case (legacyResult, migrationResult) =>
+            logger.info("============tracks/:id endpoint json parse failure=========")
+            logger.info(originalRes.contentString)
+            logger.info(migrationRes.contentString)
+            logger.info(legacyResult.toString)
+            logger.info(migrationResult.toString)
+            comparisonMetric.labels("jsonFailure").observe(0)
         }
       } else {
         comparisonMetric.labels("unexpectedMoshiStatusCode").observe(0)
