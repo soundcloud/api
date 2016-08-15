@@ -85,6 +85,19 @@ class AcceptOnlyJsonRequestFilterSpec extends UnitSpecification {
     response mustEqual responseFromNextService
   }
 
+  "removes format query param" in new Context {
+    val request = Request("/", ("format", "xml"), ("animal", "donkey"))
+
+    val responseFromNextService = mock[RouterResponse]
+    when(next.apply(like[Request]{
+      case req =>
+        req.containsParam("animal") ==== true
+        req.containsParam("format") ==== false
+    })).thenReturn(Future.value(responseFromNextService))
+
+    response mustEqual responseFromNextService
+  }
+
   "rejects non-json requests with a 406 response" >> {
 
     "using the suffix" in new Context {
