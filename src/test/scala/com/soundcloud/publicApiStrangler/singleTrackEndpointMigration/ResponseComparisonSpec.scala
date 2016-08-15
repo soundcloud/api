@@ -69,8 +69,8 @@ class ResponseComparisonSpec extends UnitSpecification {
         responseComparison.report(Request(), originalRes, migrationRes)
         val value = collectorRegistry.getSampleValue(
           "single_track_endpoint_comparison_sum",
-          Array("status", "system"),
-          Array("success", "TEST-APP")
+          Array("system"),
+          Array("TEST-APP")
         )
         value ==== 0
     }
@@ -94,8 +94,8 @@ class ResponseComparisonSpec extends UnitSpecification {
         responseComparison.report(Request(), originalRes, migrationRes)
         val value = collectorRegistry.getSampleValue(
           "single_track_endpoint_comparison_sum",
-          Array("status", "system"),
-          Array("success", "TEST-APP")
+          Array("system"),
+          Array("TEST-APP")
         )
         value ==== expectedCount
 
@@ -126,8 +126,8 @@ class ResponseComparisonSpec extends UnitSpecification {
         responseComparison.report(Request(), originalRes, migrationRes)
         val value = collectorRegistry.getSampleValue(
           "single_track_endpoint_comparison_sum",
-          Array("status", "system"),
-          Array("success", "TEST-APP")
+          Array("system"),
+          Array("TEST-APP")
         )
         value ==== expectedCount
 
@@ -155,8 +155,8 @@ class ResponseComparisonSpec extends UnitSpecification {
         responseComparison.report(Request(), originalRes, migrationRes)
         val value = collectorRegistry.getSampleValue(
           "single_track_endpoint_comparison_sum",
-          Array("status", "system"),
-          Array("success", "TEST-APP")
+          Array("system"),
+          Array("TEST-APP")
         )
         value ==== expectedCount
 

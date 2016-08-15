@@ -16,7 +16,7 @@ class ResponseComparison(telemetry: Telemetry) {
   val comparisonMetric = telemetry.histogram(
     "single_track_endpoint_comparison",
     "distribution of number of different attributes that are served from strangler implementation",
-    List("status"),
+    List(),
     (0 to 60).toList.map(_.toDouble): _*
   )
 
@@ -54,7 +54,7 @@ class ResponseComparison(telemetry: Telemetry) {
               failuresCounter.labels("differentBodyAttributesCount").inc()
             }
 
-            comparisonMetric.labels("success").observe(differentAttributeCount + extraAttributesCount)
+            comparisonMetric.labels().observe(differentAttributeCount + extraAttributesCount)
           }
 
           case (legacyResult, migrationResult) =>
