@@ -25,7 +25,10 @@ class AcceptOnlyJsonRequestFilter extends SimpleFilter[Request, RouterResponse] 
   private def requestWithoutFormatParam(originalRequest: Request): Request = {
     new RequestProxy {
       def request = originalRequest
-      override def params = originalRequest.params - "format"
+
+      override def params =
+        if (originalRequest.params.get("format") == Some("xml")) originalRequest.params - "format"
+        else originalRequest.params
     }
   }
 }

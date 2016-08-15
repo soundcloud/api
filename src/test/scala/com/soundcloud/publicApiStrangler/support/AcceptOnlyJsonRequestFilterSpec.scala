@@ -85,7 +85,7 @@ class AcceptOnlyJsonRequestFilterSpec extends UnitSpecification {
     response mustEqual responseFromNextService
   }
 
-  "removes format query param" in new Context {
+  "removes format=xml query param" in new Context {
     val request = Request("/", ("format", "xml"), ("animal", "donkey"))
 
     val responseFromNextService = mock[RouterResponse]
@@ -93,6 +93,19 @@ class AcceptOnlyJsonRequestFilterSpec extends UnitSpecification {
       case req =>
         req.containsParam("animal") ==== true
         req.containsParam("format") ==== false
+    })).thenReturn(Future.value(responseFromNextService))
+
+    response mustEqual responseFromNextService
+  }
+
+  "retains format=stuff query param" in new Context {
+    val request = Request("/", ("format", "stuff"), ("animal", "donkey"))
+
+    val responseFromNextService = mock[RouterResponse]
+    when(next.apply(like[Request]{
+      case req =>
+        req.containsParam("animal") ==== true
+        req.containsParam("format") ==== true
     })).thenReturn(Future.value(responseFromNextService))
 
     response mustEqual responseFromNextService
