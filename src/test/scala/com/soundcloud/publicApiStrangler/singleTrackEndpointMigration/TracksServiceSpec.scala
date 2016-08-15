@@ -41,6 +41,7 @@ class TracksServiceSpec extends UnitSpecification {
 
     val response = Await.result(tracksService.track(session, trackUrn, None))
     response.status ==== Status.NotFound
+    response.contentString ==== """{"errors":[{"error_message":"404 - Not Found"}]}"""
   }
 
   "Returns 404 when track is disabled" in new Context {
@@ -54,6 +55,7 @@ class TracksServiceSpec extends UnitSpecification {
 
     val response = Await.result(tracksService.track(session, trackUrn, None))
     response.status ==== Status.NotFound
+    response.contentString ==== """{"errors":[{"error_message":"404 - Not Found"}]}"""
   }
 
   "Returns 404 when track is not public" in new Context {
@@ -66,6 +68,7 @@ class TracksServiceSpec extends UnitSpecification {
 
     val response = Await.result(tracksService.track(session, trackUrn, None))
     response.status ==== Status.NotFound
+    response.contentString ==== """{"errors":[{"error_message":"404 - Not Found"}]}"""
   }
 
   "Returns 200 for private tracks if the owner is requesting" in new Context {
@@ -95,6 +98,7 @@ class TracksServiceSpec extends UnitSpecification {
 
     val response = Await.result(tracksService.track(session, trackUrn, Some(wrongSecretToken)))
     response.status ==== Status.NotFound
+    response.contentString ==== """{"errors":[{"error_message":"404 - Not Found"}]}"""
   }
 
   "Returns 200 for private tracks if there is a correct secret token" in new Context {

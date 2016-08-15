@@ -25,12 +25,18 @@ class TracksService(
           res.setContentString(Json.stringify(singleTrackPublicApiRepresentation))
           res
         } else {
-          Response(Status.NotFound)
+          generateNotFoundResponse
         }
 
       case None =>
-        Response(Status.NotFound)
+        generateNotFoundResponse
     }
+  }
+
+  def generateNotFoundResponse: Response = {
+    val res = Response(Status.NotFound)
+    res.setContentString("""{"errors":[{"error_message":"404 - Not Found"}]}""")
+    res
   }
 
   private def isPrivacyAuthorized(session: UserSession, secretToken: Option[String], track: Track): Boolean = {
