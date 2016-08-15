@@ -66,6 +66,8 @@ class ResponseComparison(telemetry: Telemetry) {
             logger.info(migrationRes.contentString)
             logger.info(legacyResult.toString)
             logger.info(migrationResult.toString)
+            logger.info(request.toString)
+            logger.info(request.headerMap.toString)
             failuresCounter.labels("jsonFailure").inc()
         }
       } else {
