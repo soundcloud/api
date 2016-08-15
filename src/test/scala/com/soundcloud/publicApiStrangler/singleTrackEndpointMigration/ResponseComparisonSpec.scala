@@ -79,15 +79,15 @@ class ResponseComparisonSpec extends UnitSpecification {
   "reports number of different attributes when responses are NOT the same" in new Context {
     List(
       ("{\"kind\":\"track\",\"id\":987,\"user_id\":111}",
-        "{\"kind\":\"track2\",\"id\":988,\"user_id\":111}") -> 2,
+        "{\"kind\":\"track2\",\"id\":988,\"user_id\":111}") ->(2, 1),
 
       ("{\"kind\":\"track\",\"id\":987,\"user_id\":111}",
-        "{\"kind\":\"track\",\"id\":988,\"user_id\":111}") -> (2 + 1),
+        "{\"kind\":\"track\",\"id\":988,\"user_id\":111}") ->((2 + 1), 2),
 
       ("{\"kind\":\"track\",\"id\":987,\"user_id\":111}",
-        "{\"kind\":\"track2\",\"id\":981,\"user_id\":112}") -> (2 + 1 + 3)
+        "{\"kind\":\"track2\",\"id\":981,\"user_id\":112}") ->((2 + 1 + 3), 3)
     ).foreach {
-      case ((originalResponseString, migrationResponseString), expectedCount) =>
+      case ((originalResponseString, migrationResponseString), (expectedCount, index)) =>
         val originalRes = generateResponse(originalResponseString)
         val migrationRes = generateResponse(migrationResponseString)
 
@@ -98,21 +98,28 @@ class ResponseComparisonSpec extends UnitSpecification {
           Array("success", "TEST-APP")
         )
         value ==== expectedCount
+
+        val failuresCount = collectorRegistry.getSampleValue(
+          "single_track_endpoint_failures",
+          Array("type", "system"),
+          Array("differentBodyAttributesCount", "TEST-APP")
+        )
+        failuresCount ==== index
     }
   }
 
   "reports missing attributes as difference" in new Context {
     List(
       ("{\"kind\":\"track\",\"id\":987,\"user_id\":111}",
-        "{\"kind\":\"track\",\"id\":987}") -> 1,
+        "{\"kind\":\"track\",\"id\":987}") ->(1, 1),
 
       ("{\"kind\":\"track\",\"id\":987,\"user_id\":111}",
-        "{\"kind\":\"track\"}") -> (1 + 2),
+        "{\"kind\":\"track\"}") ->((1 + 2), 2),
 
       ("{\"kind\":\"track\",\"id\":987,\"user_id\":111}",
-        "{}") -> (1 + 2 + 3)
+        "{}") ->((1 + 2 + 3), 3)
     ).foreach {
-      case ((originalResponseString, migrationResponseString), expectedCount) =>
+      case ((originalResponseString, migrationResponseString), (expectedCount, index)) =>
         val originalRes = generateResponse(originalResponseString)
         val migrationRes = generateResponse(migrationResponseString)
 
@@ -123,18 +130,25 @@ class ResponseComparisonSpec extends UnitSpecification {
           Array("success", "TEST-APP")
         )
         value ==== expectedCount
+
+        val failuresCount = collectorRegistry.getSampleValue(
+          "single_track_endpoint_failures",
+          Array("type", "system"),
+          Array("differentBodyAttributesCount", "TEST-APP")
+        )
+        failuresCount ==== index
     }
   }
 
   "reports extra attributes as difference" in new Context {
     List(
       ("{\"kind\":\"track\",\"id\":987,\"user_id\":111}",
-        "{\"kind\":\"track\",\"id\":987,\"user_id\":111,\"user_id_2\":111}") -> 1,
+        "{\"kind\":\"track\",\"id\":987,\"user_id\":111,\"user_id_2\":111}") ->(1, 1),
 
       ("{\"kind\":\"track\"}",
-        "{\"kind\":\"track\",\"id\":988,\"user_id\":111}") -> (1 + 2)
+        "{\"kind\":\"track\",\"id\":988,\"user_id\":111}") ->((1 + 2), 2)
     ).foreach {
-      case ((originalResponseString, migrationResponseString), expectedCount) =>
+      case ((originalResponseString, migrationResponseString), (expectedCount, index)) =>
         val originalRes = generateResponse(originalResponseString)
         val migrationRes = generateResponse(migrationResponseString)
 
@@ -145,6 +159,13 @@ class ResponseComparisonSpec extends UnitSpecification {
           Array("success", "TEST-APP")
         )
         value ==== expectedCount
+
+        val failuresCount = collectorRegistry.getSampleValue(
+          "single_track_endpoint_failures",
+          Array("type", "system"),
+          Array("differentBodyAttributesCount", "TEST-APP")
+        )
+        failuresCount ==== index
     }
   }
 

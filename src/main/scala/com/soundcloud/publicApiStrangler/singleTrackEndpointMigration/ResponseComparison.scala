@@ -49,6 +49,11 @@ class ResponseComparison(telemetry: Telemetry) {
                 jsValue != migrationJson \ key
             }
 
+            val differencesCount = differentAttributeCount + extraAttributesCount
+            if (differencesCount > 0) {
+              failuresCounter.labels("differentBodyAttributesCount").inc()
+            }
+
             comparisonMetric.labels("success").observe(differentAttributeCount + extraAttributesCount)
           }
 
