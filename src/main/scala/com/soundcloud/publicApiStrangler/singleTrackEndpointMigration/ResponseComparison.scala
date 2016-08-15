@@ -3,7 +3,7 @@ package com.soundcloud.publicApiStrangler.singleTrackEndpointMigration
 import com.soundcloud.jvmkit.logging.SoundCloudLoggerFactory
 import com.soundcloud.jvmkit.telemetry.Telemetry
 import com.soundcloud.scalakit.json.Json
-import com.twitter.finagle.http.{Request, Response}
+import com.twitter.finagle.http.{Request, Response, Status}
 import com.twitter.util.{Return, Try}
 import play.api.libs.json.JsObject
 
@@ -29,22 +29,32 @@ class ResponseComparison(telemetry: Telemetry) {
   def report(request: Request, originalRes: Response, migrationRes: Response): Unit = {
 
     if (originalRes.status == migrationRes.status) {
-      val mainJsonTry = Try(Json.fromString(originalRes.contentString).as[JsObject])
-      val migrationJsonTry = Try(Json.fromString(migrationRes.contentString).as[JsObject])
 
-      (mainJsonTry, migrationJsonTry) match {
-        case (Return(mainJson), Return(migrationJson)) => {
-          val extraAttributesCount = (migrationJson.fieldSet.map(_._1) diff mainJson.fieldSet.map(_._1)).size
+      if (migrationRes.status == Status.Ok || migrationRes.status == Status.NotFound) {
+        val mainJsonTry = Try(Json.fromString(originalRes.contentString).as[JsObject])
+        val migrationJsonTry = Try(Json.fromString(migrationRes.contentString).as[JsObject])
 
-          val differentAttributeCount = mainJson.fields.count {
-            case (key, jsValue) =>
-              jsValue != migrationJson \ key
+        (mainJsonTry, migrationJsonTry) match {
+          case (Return(mainJson), Return(migrationJson)) => {
+            val extraAttributesCount = (migrationJson.fieldSet.map(_._1) diff mainJson.fieldSet.map(_._1)).size
+
+            val differentAttributeCount = mainJson.fields.count {
+              case (key, jsValue) =>
+                jsValue != migrationJson \ key
+            }
+
+            comparisonMetric.labels("success").observe(differentAttributeCount + extraAttributesCount)
           }
 
-          comparisonMetric.labels("success").observe(differentAttributeCount + extraAttributesCount)
+          case _ => comparisonMetric.labels("jsonFailure").observe(0)
         }
-
-        case _ => comparisonMetric.labels("jsonFailure").observe(0)
+      } else {
+        comparisonMetric.labels("unexpectedMoshiStatusCode").observe(0)
+        logger.info("============tracks/:id endpoint unexpected moshi status=========")
+        logger.info(request.toString)
+        logger.info(request.headerMap.toString)
+        logger.info(s"legacy res : ${originalRes.toString}")
+        logger.info(s"migration res : ${migrationRes.toString}")
       }
     } else {
       comparisonMetric.labels("statusCodeFailure").observe(0)
@@ -57,4 +67,5 @@ class ResponseComparison(telemetry: Telemetry) {
       logger.info(s"migration res : ${migrationRes.toString}")
     }
   }
+
 }

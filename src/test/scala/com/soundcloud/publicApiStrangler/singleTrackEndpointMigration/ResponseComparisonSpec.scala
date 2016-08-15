@@ -6,6 +6,8 @@ import com.soundcloud.scalakit.test.UnitSpecification
 import com.twitter.finagle.http.{Request, Response, Status}
 import io.prometheus.client.CollectorRegistry
 
+import scala.collection.JavaConversions._
+
 class ResponseComparisonSpec extends UnitSpecification {
 
   trait Context extends Scope {
@@ -40,6 +42,20 @@ class ResponseComparisonSpec extends UnitSpecification {
       Array("404", "200", "TEST-APP")
     )
     counterValue ==== 1
+  }
+
+  "reports unexpected moshi statuses" in new Context {
+    val originalRes = Response(Status.Gone)
+    val migrationRes = Response(Status.Gone)
+
+    responseComparison.report(Request(), originalRes, migrationRes)
+
+    val histogramCount = collectorRegistry.getSampleValue(
+      "single_track_endpoint_comparison_count",
+      Array("status", "system"),
+      Array("unexpectedMoshiStatusCode", "TEST-APP")
+    )
+    histogramCount ==== 1
   }
 
   "reports zero differences when responses are the same" in new Context {
