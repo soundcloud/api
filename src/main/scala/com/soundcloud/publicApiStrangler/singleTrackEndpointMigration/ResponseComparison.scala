@@ -3,7 +3,7 @@ package com.soundcloud.publicApiStrangler.singleTrackEndpointMigration
 import com.soundcloud.jvmkit.logging.SoundCloudLoggerFactory
 import com.soundcloud.jvmkit.telemetry.Telemetry
 import com.soundcloud.scalakit.json.Json
-import com.twitter.finagle.http.{Request, Response, Status}
+import com.twitter.finagle.http.{HeaderMap, Request, Response, Status}
 import com.twitter.util.{Return, Try}
 import play.api.libs.json.JsObject
 
@@ -42,19 +42,19 @@ class ResponseComparison(telemetry: Telemetry) {
 
         (legacyJsonTry, migrationJsonTry) match {
           case (Return(legacyJson), Return(migrationJson)) => {
-            val extraAttributesCount = (migrationJson.fieldSet.map(_._1) diff legacyJson.fieldSet.map(_._1)).size
 
-            val differentAttributeCount = legacyJson.fields.count {
-              case (key, jsValue) =>
-                jsValue != migrationJson \ key
-            }
+            val bodyDiffCount = calcBodyDiffCount(legacyJson, migrationJson)
+            val headerDiffCount = calcHeaderDiffCount(originalRes.headerMap, migrationRes.headerMap)
 
-            val differencesCount = differentAttributeCount + extraAttributesCount
-            if (differencesCount > 0) {
+            if (bodyDiffCount > 0) {
               failuresCounter.labels("differentBodyAttributesCount").inc()
             }
 
-            comparisonMetric.labels().observe(differentAttributeCount + extraAttributesCount)
+            if (headerDiffCount > 0) {
+              failuresCounter.labels("differentHeaderCount").inc()
+            }
+
+            comparisonMetric.labels().observe(bodyDiffCount)
           }
 
           case (legacyResult, migrationResult) =>
@@ -84,4 +84,25 @@ class ResponseComparison(telemetry: Telemetry) {
     }
   }
 
+  private def calcBodyDiffCount(legacyJson: JsObject, migrationJson: JsObject): Int = {
+    val extraAttributesCount = (migrationJson.fieldSet.map(_._1) diff legacyJson.fieldSet.map(_._1)).size
+
+    val differentAttributeCount = legacyJson.fields.count {
+      case (key, jsValue) =>
+        jsValue != migrationJson \ key
+    }
+
+    differentAttributeCount + extraAttributesCount
+  }
+
+  private def calcHeaderDiffCount(legacyHeaders: HeaderMap, migrationHeaders: HeaderMap): Int = {
+    val extraHeaders = migrationHeaders.keys.toSeq diff legacyHeaders.keys.toSeq
+
+    val differentAttributeCount = legacyHeaders.count {
+      case (key, value) =>
+        Some(value) != migrationHeaders.get(key)
+    }
+
+    extraHeaders.size + differentAttributeCount
+  }
 }

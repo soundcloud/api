@@ -191,4 +191,69 @@ class ResponseComparisonSpec extends UnitSpecification {
     }
   }
 
+  "reports number of different headers when original has more" in new Context {
+    val originalRes = generateResponse("{}")
+    originalRes.headerMap.add("X-MovieName", "se7en")
+    val migrationRes = generateResponse("{}")
+
+    responseComparison.report(Request(), originalRes, migrationRes)
+
+    val value = collectorRegistry.getSampleValue(
+      "single_track_endpoint_failures",
+      Array("type", "system"),
+      Array("differentHeaderCount", "TEST-APP")
+    )
+    value ==== 1
+  }
+
+  "reports number of different headers when original has fewer" in new Context {
+    val originalRes = generateResponse("{}")
+    val migrationRes = generateResponse("{}")
+    migrationRes.headerMap.add("X-MovieName", "se7en")
+
+    responseComparison.report(Request(), originalRes, migrationRes)
+
+    val value = collectorRegistry.getSampleValue(
+      "single_track_endpoint_failures",
+      Array("type", "system"),
+      Array("differentHeaderCount", "TEST-APP")
+    )
+    value ==== 1
+  }
+
+  "reports number of different headers when values for same header name differ" in new Context {
+    val originalRes = generateResponse("{}")
+    originalRes.headerMap.add("X-MovieName", "8ight")
+    val migrationRes = generateResponse("{}")
+    migrationRes.headerMap.add("X-MovieName", "se7en")
+
+    responseComparison.report(Request(), originalRes, migrationRes)
+
+    val value = collectorRegistry.getSampleValue(
+      "single_track_endpoint_failures",
+      Array("type", "system"),
+      Array("differentHeaderCount", "TEST-APP")
+    )
+    value ==== 1
+  }
+
+  "reports number of different headers when lots of headers are different" in new Context {
+    val originalRes = generateResponse("{}")
+    originalRes.headerMap.add("X-Animal", "giraffe")
+    originalRes.headerMap.add("X-MovieName", "8ight")
+    originalRes.headerMap.add("X-FavoriteColor", "orange")
+    val migrationRes = generateResponse("{}")
+    migrationRes.headerMap.add("X-Animal", "giraffe")
+    migrationRes.headerMap.add("X-MovieName", "se7en")
+    migrationRes.headerMap.add("X-Awesomeness", "9000")
+
+    responseComparison.report(Request(), originalRes, migrationRes)
+
+    val value = collectorRegistry.getSampleValue(
+      "single_track_endpoint_failures",
+      Array("type", "system"),
+      Array("differentHeaderCount", "TEST-APP")
+    )
+    value ==== 1
+  }
 }
