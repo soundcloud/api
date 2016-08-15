@@ -51,6 +51,9 @@ class ResponseComparison(telemetry: Telemetry) {
             }
 
             if (headerDiffCount > 0) {
+              logger.info("============tracks/:id endpoint header difference=========")
+              logger.info(originalRes.headerMap.toString)
+              logger.info(migrationRes.headerMap.toString)
               failuresCounter.labels("differentHeaderCount").inc()
             }
 
