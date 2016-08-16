@@ -3,7 +3,10 @@ package com.soundcloud.publicApiStrangler.support
 import com.soundcloud.scalakit.finagle.http.RouterResponse
 import com.twitter.finagle.Service
 import com.twitter.finagle.SimpleFilter
-import com.twitter.finagle.http._
+import com.twitter.finagle.http.Request
+import com.twitter.finagle.http.Response
+import com.twitter.finagle.http.Status
+import com.twitter.finagle.http.Version
 import com.twitter.util.Future
 
 class AcceptOnlyJsonRequestFilter extends SimpleFilter[Request, RouterResponse] {
@@ -11,7 +14,7 @@ class AcceptOnlyJsonRequestFilter extends SimpleFilter[Request, RouterResponse] 
   override def apply(request: Request, next: Service[Request, RouterResponse]) =
     if (isJsonRequest(request)) {
       request.accept = "application/json"
-      next(requestWithoutFormatParam(request))
+      next(request)
     } else
       Future.value(RouterResponse(Response(Version.Http11, Status.NotAcceptable), "undefined"))
 
@@ -21,14 +24,4 @@ class AcceptOnlyJsonRequestFilter extends SimpleFilter[Request, RouterResponse] 
       	request.acceptMediaTypes.find(_ == "*/*").isDefined ||
         request.acceptMediaTypes.find(_ == "*").isDefined ||
         request.acceptMediaTypes.find(_.matches("(text|application)/(x-)?j(avascript|son)")).isDefined)
-
-  private def requestWithoutFormatParam(originalRequest: Request): Request = {
-    new RequestProxy {
-      def request = originalRequest
-
-      override def params =
-        if (originalRequest.params.get("format") == Some("xml")) originalRequest.params - "format"
-        else originalRequest.params
-    }
-  }
 }
