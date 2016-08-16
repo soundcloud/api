@@ -36,6 +36,22 @@ class TracksServiceSpec extends UnitSpecification {
     response.contentString ==== expectedResponseString
   }
 
+  "Returns a response with the right headers" in new Context {
+    val isPublic = true
+    val trackmetadataTrack = Track(trackUrn, Urn("soundcloud:users:112"), false, None, null, None, false, 0, None, null, null, None,
+      isPublic, null, List.empty, List.empty, null, None, None, false, false, false, None, null, None, None, None, None,
+      EmbeddingPermission.None, None, Artwork(None), None)
+    val contentAuth = new ContentAuthorization(trackUrn, ContentPolicy.ALLOW, Reason.DEFAULT, MonetizationModel.AD_SUPPORTED)
+
+    when(trackmetadataClient.track(session, trackUrn)).thenReturn(Future.value(Some(trackmetadataTrack)))
+
+    val expectedResponseString = "{\"kind\":\"track\",\"id\":987,\"user_id\":112}"
+    val response = Await.result(tracksService.track(session, trackUrn, None))
+
+    response.headerMap.get("Content-Length") ==== Some("39")
+    response.headerMap.get("Content-Type") ==== Some("application/json")
+  }
+
   "Returns 404 for non existing tracks" in new Context {
     when(trackmetadataClient.track(session, trackUrn)).thenReturn(Future.None)
 
