@@ -6,22 +6,11 @@ import com.soundcloud.scalakit.{Urn, UserSession}
 import com.twitter.finagle.http.{Response, Status}
 import com.twitter.util.Future
 
-class TracksService(
-                     trackmetadataClient: TrackmetadataClient
-                   ) {
+class TracksService(trackmetadataClient: TrackmetadataClient) {
   def track(session: UserSession, urn: Urn, secretToken: Option[String]): Future[Response] = {
     trackmetadataClient.track(session, urn).map {
-
       case Some(track) =>
-        if (
-          isPrivacyAuthorized(session, secretToken, track) &&
-          isDisabled(track) == false
-        ) {
-          generateSingleTrackResponse(track)
-        } else {
-          generateNotFoundResponse
-        }
-
+        if (isTrackAccessible(session, secretToken, track)) generateSingleTrackResponse(track) else generateNotFoundResponse
       case None =>
         generateNotFoundResponse
     }
@@ -43,6 +32,9 @@ class TracksService(
     res.setContentString(Json.stringify(singleTrackPublicApiRepresentation))
     res
   }
+
+  private def isTrackAccessible(session: UserSession, secretToken: Option[String], track: Track): Boolean =
+    isPrivacyAuthorized(session, secretToken, track) && !isDisabled(track)
 
   private def isPrivacyAuthorized(session: UserSession, secretToken: Option[String], track: Track): Boolean = {
     track.public ||
