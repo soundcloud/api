@@ -17,13 +17,7 @@ class TracksService(
           isPrivacyAuthorized(session, secretToken, track) &&
           isDisabled(track) == false
         ) {
-          val res = Response()
-          val singleTrackPublicApiRepresentation = new SingleTrackPublicApiRepresentation(
-            "track",
-            track.urn.getIdentifier.toLong,
-            track.user_urn.getIdentifier.toLong)
-          res.setContentString(Json.stringify(singleTrackPublicApiRepresentation))
-          res
+          generateSingleTrackResponse(track)
         } else {
           generateNotFoundResponse
         }
@@ -33,9 +27,20 @@ class TracksService(
     }
   }
 
-  def generateNotFoundResponse: Response = {
+  private def generateNotFoundResponse: Response = {
     val res = Response(Status.NotFound)
     res.setContentString("""{"errors":[{"error_message":"404 - Not Found"}]}""")
+    res
+  }
+
+  private def generateSingleTrackResponse(track: Track) = {
+    val singleTrackPublicApiRepresentation = new SingleTrackPublicApiRepresentation(
+      "track",
+      track.urn.getIdentifier.toLong,
+      track.user_urn.getIdentifier.toLong)
+
+    val res = Response()
+    res.setContentString(Json.stringify(singleTrackPublicApiRepresentation))
     res
   }
 
