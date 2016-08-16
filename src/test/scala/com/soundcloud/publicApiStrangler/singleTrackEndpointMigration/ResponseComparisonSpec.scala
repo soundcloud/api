@@ -237,6 +237,50 @@ class ResponseComparisonSpec extends UnitSpecification {
     value ==== 1
   }
 
+  "does not report difference for ignored headers" in new Context {
+    val originalHeaderValue = "donkey"
+    val migrationHeaderValue = "giraffe"
+
+    val originalRes = generateResponse("{}")
+    originalRes.headerMap.add("Access-Control-Allow-Headers", originalHeaderValue)
+    originalRes.headerMap.add("Access-Control-Allow-Methods", originalHeaderValue)
+    originalRes.headerMap.add("Access-Control-Allow-Origin", originalHeaderValue)
+    originalRes.headerMap.add("Access-Control-Expose-Headers", originalHeaderValue)
+    originalRes.headerMap.add("Cache-Control", originalHeaderValue)
+    originalRes.headerMap.add("Connection", originalHeaderValue)
+    originalRes.headerMap.add("Date", originalHeaderValue)
+    originalRes.headerMap.add("ETag", originalHeaderValue)
+    originalRes.headerMap.add("Server", originalHeaderValue)
+    originalRes.headerMap.add("Status", originalHeaderValue)
+    originalRes.headerMap.add("Vary", originalHeaderValue)
+    originalRes.headerMap.add("X-Powered-By", originalHeaderValue)
+    originalRes.headerMap.add("X-Runtime", originalHeaderValue)
+
+    val migrationRes = generateResponse("{}")
+    migrationRes.headerMap.add("Access-Control-Allow-Headers", migrationHeaderValue)
+    migrationRes.headerMap.add("Access-Control-Allow-Methods", migrationHeaderValue)
+    migrationRes.headerMap.add("Access-Control-Allow-Origin", migrationHeaderValue)
+    migrationRes.headerMap.add("Access-Control-Expose-Headers", migrationHeaderValue)
+    migrationRes.headerMap.add("Cache-Control", migrationHeaderValue)
+    migrationRes.headerMap.add("Connection", migrationHeaderValue)
+    migrationRes.headerMap.add("Date", migrationHeaderValue)
+    migrationRes.headerMap.add("ETag", migrationHeaderValue)
+    migrationRes.headerMap.add("Server", migrationHeaderValue)
+    migrationRes.headerMap.add("Status", migrationHeaderValue)
+    migrationRes.headerMap.add("Vary", migrationHeaderValue)
+    migrationRes.headerMap.add("X-Powered-By", migrationHeaderValue)
+    migrationRes.headerMap.add("X-Runtime", migrationHeaderValue)
+
+    responseComparison.report(Request(), originalRes, migrationRes)
+
+    val value = collectorRegistry.getSampleValue(
+      "single_track_endpoint_failures",
+      Array("type", "system"),
+      Array("differentHeaderCount", "TEST-APP")
+    )
+    value ==== null
+  }
+
   "reports number of different headers when lots of headers are different" in new Context {
     val originalRes = generateResponse("{}")
     originalRes.headerMap.add("X-Animal", "giraffe")
