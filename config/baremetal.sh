@@ -77,3 +77,5 @@ export AUTHENTICATOR_CLIENT_FAILURE_ACCRUAL_WINDOW="1000"
 export AUTHENTICATOR_CLIENT_FAILURE_ACCRUAL_MARK_DEAD_FOR_MILLIS="100"
 
 export TRACKMETADATA_SRV_RECORD="dnssrv!http.api.prod.trackmetadata.dd.srv.int.s-cloud.net"
+
+export APP_SILOING_BLACKLIST_APPS="soundcloud:applications:124,soundcloud:applications:3152,soundcloud:applications:65097"
