@@ -25,20 +25,27 @@ class AcceptOnlyJsonRequestFilter(stripXml: () => Future[Boolean]) extends Simpl
         request.acceptMediaTypes.find(_ == "*").isDefined ||
         request.acceptMediaTypes.find(_.matches("(text|application)/(x-)?j(avascript|son)")).isDefined)
 
+  private def isGet(request: Request) =
+    request.method == Method.Get
+
   private def stripFormatParam(request: Request): Future[Request] = {
-    stripXml().map {
-      case true =>
-        val paramsWithoutFormat = request.params.toIterable.filter { case (k, v) => k != "format" }
-        val req = Request(request.path, paramsWithoutFormat.toSeq: _*)
-        req.version_=(request.version)
-        req.method_=(request.method)
-        request.headerMap.foreach {
-          case (k, v) =>
-            req.headerMap.add(k, v)
-        }
-        req
-      case false =>
-        request
+    if (isGet(request) == false) {
+      Future.value(request)
+    } else {
+      stripXml().map {
+        case true =>
+          val paramsWithoutFormat = request.params.toIterable.filter { case (k, v) => k != "format" }
+          val req = Request(request.path, paramsWithoutFormat.toSeq: _*)
+          req.version_=(request.version)
+          req.method_=(request.method)
+          request.headerMap.foreach {
+            case (k, v) =>
+              req.headerMap.add(k, v)
+          }
+          req
+        case false =>
+          request
+      }
     }
   }
 }

@@ -3,7 +3,7 @@ package com.soundcloud.publicApiStrangler.support
 import com.soundcloud.scalakit.finagle.http.RouterResponse
 import com.soundcloud.scalakit.test.{UnitSpecification, VerifiedMocks}
 import com.twitter.finagle.Service
-import com.twitter.finagle.http.{MediaType, Request}
+import com.twitter.finagle.http.{Method, MediaType, Request}
 import com.twitter.util.{Await, Future}
 import org.mockito.Mockito._
 
@@ -30,6 +30,17 @@ class AcceptOnlyJsonRequestFilterSpec extends UnitSpecification {
   "doesn't modify incoming request when rollout is off" in new Context {
     val filter = new AcceptOnlyJsonRequestFilter(() => Future.False)
     val request = Request("/test", "format" -> "xml")
+
+    val responseFromNextService = mock[RouterResponse]
+    when(next.apply(request)).thenReturn(Future.value(responseFromNextService))
+
+    Await.result(filter(request, next)) mustEqual responseFromNextService
+  }
+
+  "doesn't modify incoming request if request method is NOT GET" in new Context {
+    val filter = new AcceptOnlyJsonRequestFilter(() => Future.True)
+    val request = Request("/test", "format" -> "xml")
+    request.method_=(Method.Put)
 
     val responseFromNextService = mock[RouterResponse]
     when(next.apply(request)).thenReturn(Future.value(responseFromNextService))
