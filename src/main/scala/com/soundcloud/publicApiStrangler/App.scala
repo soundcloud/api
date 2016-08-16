@@ -468,7 +468,7 @@ object App
     new SessionCache(userAuthentication),
     new CookieHeaderRemovalFilter,
     new OffsetLimitRequestFilter(limitOffsetPaths, limitOffset),
-    new AcceptOnlyJsonRequestFilter,
+    new AcceptOnlyJsonRequestFilter(() => new StripXmlRollout(rolloutClient).stripXml),
     new StaticFilesFilter
   )
 
@@ -497,4 +497,8 @@ object App
     new AdminRoute(RequestMethod.GET, "/-/rate-limiting-diagnostics") ->
       rateLimitingFacade.rateLimitingDiagnosticsAdminHandler
   )
+}
+
+class StripXmlRollout(rollout: Rollout) {
+  def stripXml: Future[Boolean] = rollout.isActive(BasicRolloutFeature("strip_format_xml_param"))
 }
