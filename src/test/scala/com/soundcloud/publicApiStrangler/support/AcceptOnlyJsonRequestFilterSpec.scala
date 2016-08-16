@@ -19,6 +19,20 @@ class AcceptOnlyJsonRequestFilterSpec extends UnitSpecification {
     val expectedAcceptHeader = "application/json"
   }
 
+  "strips format query parameter" in new Context {
+
+
+    val request = Request("/test", "format" -> "xml")
+
+    val responseFromNextService = mock[RouterResponse]
+    when(next.apply(like[Request]{
+      case req =>
+        req.params.get("format") must beNone
+    })).thenReturn(Future.value(responseFromNextService))
+
+    response mustEqual responseFromNextService
+  }
+
   "allows json request" >> {
     for (
       header <- List(
