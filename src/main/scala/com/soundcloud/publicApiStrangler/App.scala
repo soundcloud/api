@@ -462,6 +462,7 @@ object App
   private val limitOffset = 200
 
   override lazy val additionalFilters = List(
+    new SuccesfulResponseTypeMetricFilter(telemetry),
     new ExceptForTrackUploadsFilter(new ContentAuthorizationFilter(authorizeContent)),
     new ExceptForTrackUploadsFilter(rateLimitingFacade.filter),
     new DefaultResponseHeadersFilter,
