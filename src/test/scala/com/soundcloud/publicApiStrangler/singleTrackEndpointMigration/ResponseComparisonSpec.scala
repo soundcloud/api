@@ -32,14 +32,14 @@ class ResponseComparisonSpec extends UnitSpecification {
       Array("type", "system"),
       Array("differentStatusCodes", "TEST-APP")
     )
-    failuresCount ==== 1
+    failuresCount ==== 1d
 
     val counterValue = collectorRegistry.getSampleValue(
       "single_track_endpoint_status_code_difference",
       Array("legacy", "migration", "system"),
       Array("404", "200", "TEST-APP")
     )
-    counterValue ==== 1
+    counterValue ==== 1d
   }
 
   "reports unexpected moshi statuses" in new Context {
@@ -53,7 +53,7 @@ class ResponseComparisonSpec extends UnitSpecification {
       Array("type", "system"),
       Array("unexpectedMoshiStatusCode", "TEST-APP")
     )
-    failuresCount ==== 1
+    failuresCount ==== 1d
   }
 
   "reports zero differences when responses are the same" in new Context {
@@ -72,8 +72,21 @@ class ResponseComparisonSpec extends UnitSpecification {
           Array("system"),
           Array("TEST-APP")
         )
-        value ==== 0
+        value ==== 0d
     }
+  }
+
+  "reports zero differences when identical json is wrapped in jsonp text" in new Context {
+    val originalRes = generateResponse("{\"id\":987}")
+    val migrationRes = generateResponse("""/**/__jp0({"id":987});""")
+
+    responseComparison.report(Request(), originalRes, migrationRes)
+    val value = collectorRegistry.getSampleValue(
+      "single_track_endpoint_comparison_sum",
+      Array("system"),
+      Array("TEST-APP")
+    )
+    value ==== 0d
   }
 
   "reports number of different attributes when responses are NOT the same" in new Context {
@@ -97,14 +110,14 @@ class ResponseComparisonSpec extends UnitSpecification {
           Array("system"),
           Array("TEST-APP")
         )
-        value ==== expectedCount
+        value ==== expectedCount.toDouble
 
         val failuresCount = collectorRegistry.getSampleValue(
           "single_track_endpoint_failures",
           Array("type", "system"),
           Array("differentBodyAttributesCount", "TEST-APP")
         )
-        failuresCount ==== index
+        failuresCount ==== index.toDouble
     }
   }
 
@@ -129,14 +142,14 @@ class ResponseComparisonSpec extends UnitSpecification {
           Array("system"),
           Array("TEST-APP")
         )
-        value ==== expectedCount
+        value ==== expectedCount.toDouble
 
         val failuresCount = collectorRegistry.getSampleValue(
           "single_track_endpoint_failures",
           Array("type", "system"),
           Array("differentBodyAttributesCount", "TEST-APP")
         )
-        failuresCount ==== index
+        failuresCount ==== index.toDouble
     }
   }
 
@@ -158,14 +171,14 @@ class ResponseComparisonSpec extends UnitSpecification {
           Array("system"),
           Array("TEST-APP")
         )
-        value ==== expectedCount
+        value ==== expectedCount.toDouble
 
         val failuresCount = collectorRegistry.getSampleValue(
           "single_track_endpoint_failures",
           Array("type", "system"),
           Array("differentBodyAttributesCount", "TEST-APP")
         )
-        failuresCount ==== index
+        failuresCount ==== index.toDouble
     }
   }
 
@@ -187,7 +200,7 @@ class ResponseComparisonSpec extends UnitSpecification {
           Array("type", "system"),
           Array("jsonFailure", "TEST-APP")
         )
-        value ==== expectedCount
+        value ==== expectedCount.toDouble
     }
   }
 
@@ -203,7 +216,7 @@ class ResponseComparisonSpec extends UnitSpecification {
       Array("type", "system"),
       Array("differentHeaderCount", "TEST-APP")
     )
-    value ==== 1
+    value ==== 1.toDouble
   }
 
   "reports number of different headers when original has fewer" in new Context {
@@ -218,7 +231,7 @@ class ResponseComparisonSpec extends UnitSpecification {
       Array("type", "system"),
       Array("differentHeaderCount", "TEST-APP")
     )
-    value ==== 1
+    value ==== 1.toDouble
   }
 
   "reports number of different headers when values for same header name differ" in new Context {
@@ -234,7 +247,7 @@ class ResponseComparisonSpec extends UnitSpecification {
       Array("type", "system"),
       Array("differentHeaderCount", "TEST-APP")
     )
-    value ==== 1
+    value ==== 1.toDouble
   }
 
   "does not report difference for ignored headers" in new Context {
@@ -280,7 +293,7 @@ class ResponseComparisonSpec extends UnitSpecification {
       Array("type", "system"),
       Array("differentHeaderCount", "TEST-APP")
     )
-    value ==== null
+    value must beNull
   }
 
   "reports number of different headers when lots of headers are different" in new Context {
@@ -300,6 +313,6 @@ class ResponseComparisonSpec extends UnitSpecification {
       Array("type", "system"),
       Array("differentHeaderCount", "TEST-APP")
     )
-    value ==== 1
+    value ==== 1d
   }
 }

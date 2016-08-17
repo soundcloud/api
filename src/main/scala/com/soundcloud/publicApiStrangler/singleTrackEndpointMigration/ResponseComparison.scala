@@ -38,7 +38,9 @@ class ResponseComparison(telemetry: Telemetry) {
 
       if (migrationRes.status == Status.Ok || migrationRes.status == Status.NotFound) {
         val legacyJsonTry = Try(Json.fromString(originalRes.contentString).as[JsObject])
-        val migrationJsonTry = Try(Json.fromString(migrationRes.contentString).as[JsObject])
+
+        val sanitizedMigrationResponseString = stringJsonpString(migrationRes.contentString)
+        val migrationJsonTry = Try(Json.fromString(sanitizedMigrationResponseString).as[JsObject])
 
         (legacyJsonTry, migrationJsonTry) match {
           case (Return(legacyJson), Return(migrationJson)) => {
@@ -47,46 +49,75 @@ class ResponseComparison(telemetry: Telemetry) {
             val headerDiffCount = calcHeaderDiffCount(originalRes.headerMap, migrationRes.headerMap)
 
             if (bodyDiffCount > 0) {
-              failuresCounter.labels("differentBodyAttributesCount").inc()
+              reportBodyDifference
             }
 
             if (headerDiffCount > 0) {
-              logger.info("============tracks/:id endpoint header difference=========")
-              logger.info(originalRes.headerMap.toString)
-              logger.info(migrationRes.headerMap.toString)
-              failuresCounter.labels("differentHeaderCount").inc()
+              reportHeaderDIfference(originalRes, migrationRes)
             }
 
             comparisonMetric.labels().observe(bodyDiffCount)
           }
 
           case (legacyResult, migrationResult) =>
-            logger.info("============tracks/:id endpoint json parse failure=========")
-            logger.info(originalRes.contentString)
-            logger.info(migrationRes.contentString)
-            logger.info(legacyResult.toString)
-            logger.info(migrationResult.toString)
-            logger.info(request.toString)
-            logger.info(request.headerMap.toString)
-            failuresCounter.labels("jsonFailure").inc()
+            reportJsonFailure(request, originalRes, migrationRes, legacyResult, migrationResult)
         }
       } else {
-        logger.info("============tracks/:id endpoint unexpected moshi status=========")
-        logger.info(request.toString)
-        logger.info(request.headerMap.toString)
-        logger.info(s"legacy res : ${originalRes.toString}")
-        logger.info(s"migration res : ${migrationRes.toString}")
-        failuresCounter.labels("unexpectedMoshiStatusCode").inc()
+        reportUnexpectedMoshiStatus(request, originalRes, migrationRes)
       }
     } else {
-      logger.info("============tracks/:id endpoint status difference=========")
-      logger.info(request.toString)
-      logger.info(request.headerMap.toString)
-      logger.info(s"legacy res : ${originalRes.toString}")
-      logger.info(s"migration res : ${migrationRes.toString}")
-      failuresCounter.labels("differentStatusCodes").inc()
-      statusCodeDifferenceCounter.labels(originalRes.statusCode.toString, migrationRes.statusCode.toString).inc()
+      reportStatusDifference(request, originalRes, migrationRes)
     }
+  }
+
+  private def stringJsonpString(contentString: String): String = {
+    val jsonpRegex = """^\/\*\*\/.*(\{.*\})\);$""".r
+
+    contentString match {
+      case jsonpRegex(json) => json
+      case _ => contentString
+    }
+  }
+
+  private def reportBodyDifference: Unit = {
+    failuresCounter.labels("differentBodyAttributesCount").inc()
+  }
+
+  private def reportHeaderDIfference(originalRes: Response, migrationRes: Response): Unit = {
+    logger.info("============tracks/:id endpoint header difference=========")
+    logger.info(originalRes.headerMap.toString)
+    logger.info(migrationRes.headerMap.toString)
+    failuresCounter.labels("differentHeaderCount").inc()
+  }
+
+  def reportJsonFailure(request: Request, originalRes: Response, migrationRes: Response, legacyResult: Try[JsObject], migrationResult: Try[JsObject]): Unit = {
+    logger.info("============tracks/:id endpoint json parse failure=========")
+    logger.info(originalRes.contentString)
+    logger.info(migrationRes.contentString)
+    logger.info(legacyResult.toString)
+    logger.info(migrationResult.toString)
+    logger.info(request.toString)
+    logger.info(request.headerMap.toString)
+    failuresCounter.labels("jsonFailure").inc()
+  }
+
+  private def reportUnexpectedMoshiStatus(request: Request, originalRes: Response, migrationRes: Response): Unit = {
+    logger.info("============tracks/:id endpoint unexpected moshi status=========")
+    logger.info(request.toString)
+    logger.info(request.headerMap.toString)
+    logger.info(s"legacy res : ${originalRes.toString}")
+    logger.info(s"migration res : ${migrationRes.toString}")
+    failuresCounter.labels("unexpectedMoshiStatusCode").inc()
+  }
+
+  private def reportStatusDifference(request: Request, originalRes: Response, migrationRes: Response): Unit = {
+    logger.info("============tracks/:id endpoint status difference=========")
+    logger.info(request.toString)
+    logger.info(request.headerMap.toString)
+    logger.info(s"legacy res : ${originalRes.toString}")
+    logger.info(s"migration res : ${migrationRes.toString}")
+    failuresCounter.labels("differentStatusCodes").inc()
+    statusCodeDifferenceCounter.labels(originalRes.statusCode.toString, migrationRes.statusCode.toString).inc()
   }
 
   private def calcBodyDiffCount(legacyJson: JsObject, migrationJson: JsObject): Int = {
