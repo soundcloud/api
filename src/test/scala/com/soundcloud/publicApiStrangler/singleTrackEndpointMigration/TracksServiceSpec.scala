@@ -49,7 +49,7 @@ class TracksServiceSpec extends UnitSpecification {
     val response = Await.result(tracksService.track(session, trackUrn, None))
 
     response.headerMap.get("Content-Length") ==== Some("39")
-    response.headerMap.get("Content-Type") ==== Some("application/json")
+    response.headerMap.get("Content-Type") ==== Some("application/json; charset=utf-8")
   }
 
   "Returns 404 for non existing tracks" in new Context {
