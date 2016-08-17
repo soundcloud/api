@@ -1,5 +1,7 @@
 package com.soundcloud.publicApiStrangler.singleTrackEndpointMigration
 
+import org.joda.time.LocalDateTime
+
 import com.soundcloud.publicApiStrangler.singleTrackEndpointMigration.trackmetadataclient.{Artwork, EmbeddingPermission, Track}
 import com.soundcloud.scalakit.Urn
 import com.soundcloud.scalakit.test.UnitSpecification
@@ -13,15 +15,51 @@ class TrackRepresentationSpec extends UnitSpecification {
   }
 
   "serialises to JSON correctly" in new Context {
-    val track = Track(trackUrn, Urn("soundcloud:users:112"), false, None, null, None, false, 0, None, null, null, None,
-      true, null, List.empty, List.empty, null, None, None, false, false, false, None, null, None, None, None, None,
-      EmbeddingPermission.None, None, Artwork(None), None)
+    val track = Track(
+      urn = trackUrn,
+      user_urn = Urn("soundcloud:users:112"),
+      commentable = false,
+      description = None,
+      created_at = new LocalDateTime(2016, 5, 19, 18, 3, 4),
+      disabled_at = None,
+      downloadable = false,
+      duration = 120,
+      genre = None,
+      last_modified = null,
+      permalink = null,
+      permalink_url = None,
+      public = true,
+      secret_token = null,
+      user_tags = List("dubstep", "folk"),
+      machine_tags = List("system:foo", "system:bar"),
+      title = null,
+      uid = None,
+      api_streamable = None,
+      streamable = false,
+      reveal_comments = false,
+      reveal_stats = false,
+      label_name = None,
+      license = null,
+      embeddable = None,
+      release_year = None,
+      release_month = None,
+      release_day = None,
+      embeddableBy = EmbeddingPermission.Me,
+      releaseDate = None,
+      artwork = Artwork(filename = Some("http://example.com/art/work.jpg")),
+      published_at = None)
     val trackRepresentation = TrackRepresentation(track, userUrn)
 
     Json.toJson(trackRepresentation) ==== Json.obj(
       "kind" -> "track",
       "id" -> 1324,
-      "user_id" -> 3456
+      "user_id" -> 3456,
+      "duration" -> 120,
+      "created_at" -> new LocalDateTime(2016, 5, 19, 18, 3, 4).toString,
+      "commentable" -> false,
+      "embeddable_by" -> "me",
+      "tag_list" -> "dubstep, folk, system:foo, system:bar",
+      "artwork_url" -> "http://example.com/art/work.jpg"
     )
   }
 }

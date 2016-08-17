@@ -17,19 +17,22 @@ class TracksServiceSpec extends UnitSpecification {
     val tracksService = new TracksService(trackmetadataClient)
     val trackUrn = Urn("soundcloud:tracks:987")
 
+    val isPublic = true
+    val disabledAt: Option[LocalDateTime] = None
+    val secretToken = "secr3t-Token"
+    val createdAt = new LocalDateTime(2016, 5, 19, 18, 3, 4)
+
+    val trackmetadataTrack = Track(urn = trackUrn, user_urn = Urn("soundcloud:users:112"), commentable = false, description = None, created_at = createdAt, disabled_at = disabledAt, downloadable = false, duration = 0, genre = None, last_modified = null, permalink = null, permalink_url = None, public = isPublic, secret_token = secretToken, user_tags = List.empty, machine_tags = List.empty, title = null, uid = None, api_streamable = None, streamable = false, reveal_comments = false, reveal_stats = false, label_name = None, license = null, embeddable = None, release_year = None, release_month = None, release_day = None, embeddableBy = EmbeddingPermission.None, releaseDate = None, artwork = Artwork(None), published_at = None)
+
     val session = anonymousSession
   }
 
   "Returns 200 for public tracks" in new Context {
-    val isPublic = true
-    val trackmetadataTrack = Track(trackUrn, Urn("soundcloud:users:112"), false, None, null, None, false, 0, None, null, null, None,
-      isPublic, null, List.empty, List.empty, null, None, None, false, false, false, None, null, None, None, None, None,
-      EmbeddingPermission.None, None, Artwork(None), None)
     val contentAuth = new ContentAuthorization(trackUrn, ContentPolicy.ALLOW, Reason.DEFAULT, MonetizationModel.AD_SUPPORTED)
 
     when(trackmetadataClient.track(session, trackUrn)).thenReturn(Future.value(Some(trackmetadataTrack)))
 
-    val expectedResponseString = "{\"kind\":\"track\",\"id\":987,\"user_id\":112}"
+    val expectedResponseString = "{\"kind\":\"track\",\"id\":987,\"user_id\":112,\"duration\":0,\"created_at\":\"2016-05-19T18:03:04.000\",\"commentable\":false,\"embeddable_by\":\"none\",\"tag_list\":\"\",\"artwork_url\":null}"
     val response = Await.result(tracksService.track(session, trackUrn, None))
 
     response.status ==== Status.Ok
@@ -37,10 +40,6 @@ class TracksServiceSpec extends UnitSpecification {
   }
 
   "Returns a response with the right headers" in new Context {
-    val isPublic = true
-    val trackmetadataTrack = Track(trackUrn, Urn("soundcloud:users:112"), false, None, null, None, false, 0, None, null, null, None,
-      isPublic, null, List.empty, List.empty, null, None, None, false, false, false, None, null, None, None, None, None,
-      EmbeddingPermission.None, None, Artwork(None), None)
     val contentAuth = new ContentAuthorization(trackUrn, ContentPolicy.ALLOW, Reason.DEFAULT, MonetizationModel.AD_SUPPORTED)
 
     when(trackmetadataClient.track(session, trackUrn)).thenReturn(Future.value(Some(trackmetadataTrack)))
@@ -61,11 +60,7 @@ class TracksServiceSpec extends UnitSpecification {
   }
 
   "Returns 404 when track is disabled" in new Context {
-    val isPublic = true
-    val disabledAt = Some(LocalDateTime.now())
-    val trackmetadataTrack = Track(trackUrn, Urn("soundcloud:users:112"), false, None, null, disabledAt, false, 0, None, null, null, None,
-      isPublic, null, List.empty, List.empty, null, None, None, false, false, false, None, null, None, None, None, None,
-      EmbeddingPermission.None, None, Artwork(None), None)
+    override val disabledAt = Some(LocalDateTime.now())
 
     when(trackmetadataClient.track(session, trackUrn)).thenReturn(Future.value(Some(trackmetadataTrack)))
 
@@ -75,10 +70,7 @@ class TracksServiceSpec extends UnitSpecification {
   }
 
   "Returns 404 when track is not public" in new Context {
-    val isPublic = false
-    val trackmetadataTrack = Track(trackUrn, Urn("soundcloud:users:112"), false, None, null, None, false, 0, None, null, null, None,
-      isPublic, null, List.empty, List.empty, null, None, None, false, false, false, None, null, None, None, None, None,
-      EmbeddingPermission.None, None, Artwork(None), None)
+    override val isPublic = false
 
     when(trackmetadataClient.track(session, trackUrn)).thenReturn(Future.value(Some(trackmetadataTrack)))
 
@@ -90,10 +82,6 @@ class TracksServiceSpec extends UnitSpecification {
   "Returns 200 for private tracks if the owner is requesting" in new Context {
     val ownerUrn = Urn("soundcloud:users:112")
     val ownerSession = new UserSessionBuilder().setUser(ownerUrn).build
-    val isPublic = false
-    val trackmetadataTrack = Track(trackUrn, Urn("soundcloud:users:112"), false, None, null, None, false, 0, None, null, null, None,
-      isPublic, null, List.empty, List.empty, null, None, None, false, false, false, None, null, None, None, None, None,
-      EmbeddingPermission.None, None, Artwork(None), None)
     val contentAuth = new ContentAuthorization(trackUrn, ContentPolicy.ALLOW, Reason.DEFAULT, MonetizationModel.AD_SUPPORTED)
 
     when(trackmetadataClient.track(ownerSession, trackUrn)).thenReturn(Future.value(Some(trackmetadataTrack)))
@@ -103,12 +91,8 @@ class TracksServiceSpec extends UnitSpecification {
   }
 
   "Returns 404 for private tracks if there is an incorrect secret token" in new Context {
-    val isPublic = false
-    val secretToken = "secr3t-Token"
+    override val isPublic = false
     val wrongSecretToken = "secr3tTokenWRONG"
-    val trackmetadataTrack = Track(trackUrn, Urn("soundcloud:users:112"), false, None, null, None, false, 0, None, null, null, None,
-      isPublic, secretToken, List.empty, List.empty, null, None, None, false, false, false, None, null, None, None, None, None,
-      EmbeddingPermission.None, None, Artwork(None), None)
 
     when(trackmetadataClient.track(session, trackUrn)).thenReturn(Future.value(Some(trackmetadataTrack)))
 
@@ -118,11 +102,6 @@ class TracksServiceSpec extends UnitSpecification {
   }
 
   "Returns 200 for private tracks if there is a correct secret token" in new Context {
-    val isPublic = false
-    val secretToken = "secr3t-Token"
-    val trackmetadataTrack = Track(trackUrn, Urn("soundcloud:users:112"), false, None, null, None, false, 0, None, null, null, None,
-      isPublic, secretToken, List.empty, List.empty, null, None, None, false, false, false, None, null, None, None, None, None,
-      EmbeddingPermission.None, None, Artwork(None), None)
     val contentAuth = new ContentAuthorization(trackUrn, ContentPolicy.ALLOW, Reason.DEFAULT, MonetizationModel.AD_SUPPORTED)
 
     when(trackmetadataClient.track(session, trackUrn)).thenReturn(Future.value(Some(trackmetadataTrack)))
