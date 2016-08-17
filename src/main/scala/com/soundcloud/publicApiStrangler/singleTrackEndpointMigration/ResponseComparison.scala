@@ -79,7 +79,7 @@ class ResponseComparison(telemetry: Telemetry) {
         failuresCounter.labels("unexpectedMoshiStatusCode").inc()
       }
     } else {
-      logger.info("============tracks/:id endpoint status difference1=========")
+      logger.info("============tracks/:id endpoint status difference=========")
       logger.info(request.toString)
       logger.info(request.headerMap.toString)
       logger.info(s"legacy res : ${originalRes.toString}")

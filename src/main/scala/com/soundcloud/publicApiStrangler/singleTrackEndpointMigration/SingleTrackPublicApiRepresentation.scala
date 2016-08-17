@@ -1,13 +1,19 @@
 package com.soundcloud.publicApiStrangler.singleTrackEndpointMigration
 
-import play.api.libs.json.Json
+import com.soundcloud.jvmkit.Urn
+import play.api.libs.json._
 
 case class SingleTrackPublicApiRepresentation(
-                                               kind: String,
-                                               id: Long,
-                                               user_id: Long
-                                             )
+  urn: Urn,
+  user_urn: Urn
+)
 
 object SingleTrackPublicApiRepresentation {
-  implicit val format = Json.format[SingleTrackPublicApiRepresentation] // Sam really enjoys this
+  implicit val writes = new Writes[SingleTrackPublicApiRepresentation] {
+    override def writes(rep: SingleTrackPublicApiRepresentation): JsValue = Json.obj(
+      "kind" -> "track",
+      "id" -> rep.urn.getIdentifier.toLong,
+      "user_id" -> rep.user_urn.getIdentifier.toLong
+    )
+  }
 }
