@@ -71,7 +71,7 @@ class ResponseComparison(telemetry: Telemetry) {
   }
 
   private def stringJsonpString(contentString: String): String = {
-    val jsonpRegex = """^\/\*\*\/.*\((\{.*\})\);$""".r
+    val jsonpRegex = """\/\*\*\/.*\((\{.*\})\);""".r
 
     contentString match {
       case jsonpRegex(json) => json
