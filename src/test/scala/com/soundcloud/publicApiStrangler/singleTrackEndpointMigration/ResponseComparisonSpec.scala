@@ -77,8 +77,8 @@ class ResponseComparisonSpec extends UnitSpecification {
   }
 
   "reports zero differences when identical json is wrapped in jsonp text" in new Context {
-    val originalRes = generateResponse("{\"id\":987}")
-    val migrationRes = generateResponse("""/**/__jp0({"id":987});""")
+    val originalRes = generateResponse("{\"kind\":\"track\",\"id\":270851500,\"user\":{\"id\":2541840,\"kind\":\"user\"}}")
+    val migrationRes = generateResponse("/**/__jp11({\"kind\":\"track\",\"id\":270851500,\"user\":{\"id\":2541840,\"kind\":\"user\"}});")
 
     responseComparison.report(Request(), originalRes, migrationRes)
     val value = collectorRegistry.getSampleValue(
