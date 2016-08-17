@@ -22,19 +22,22 @@ class TracksService(trackmetadataClient: TrackmetadataClient) {
   }
 
   private def generateSingleTrackResponse(track: Track) = {
+    val contentString = jsonForTrack(track)
+    val contentLength = contentString.getBytes("UTF-8").length
+
+    val res = Response()
+    res.setContentString(contentString)
+    res.contentType = "application/json"
+    res.contentLength = contentLength
+    res
+  }
+
+  private def jsonForTrack(track: Track) = {
     val singleTrackPublicApiRepresentation = new SingleTrackPublicApiRepresentation(
       "track",
       track.urn.getIdentifier.toLong,
       track.user_urn.getIdentifier.toLong)
-
-    val contentString = Json.stringify(singleTrackPublicApiRepresentation)
-    val contentLength = contentString.getBytes("UTF-8").length
-
-    val res = Response()
-    res.setContentString(Json.stringify(singleTrackPublicApiRepresentation))
-    res.contentType = "application/json"
-    res.contentLength = contentLength
-    res
+    Json.stringify(singleTrackPublicApiRepresentation)
   }
 
   private def isTrackAccessible(session: UserSession, secretToken: Option[String], track: Track): Boolean =
