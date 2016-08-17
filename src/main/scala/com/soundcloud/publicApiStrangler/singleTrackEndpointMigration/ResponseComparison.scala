@@ -117,6 +117,7 @@ class ResponseComparison(telemetry: Telemetry) {
     "Access-Control-Allow-Origin",
     "Access-Control-Expose-Headers",
     "Cache-Control",
+    "Content-Length",
     "Connection",
     "Date",
     "ETag",
