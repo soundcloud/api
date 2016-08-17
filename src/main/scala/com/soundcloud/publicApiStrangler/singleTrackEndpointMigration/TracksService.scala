@@ -33,8 +33,8 @@ class TracksService(trackmetadataClient: TrackmetadataClient) {
   }
 
   private def jsonForTrack(track: Track) = {
-    val singleTrackPublicApiRepresentation = new SingleTrackPublicApiRepresentation(
-      urn = track.urn,
+    val singleTrackPublicApiRepresentation = new TrackRepresentation(
+      track = track,
       user_urn = track.user_urn)
     Json.stringify(singleTrackPublicApiRepresentation)
   }
