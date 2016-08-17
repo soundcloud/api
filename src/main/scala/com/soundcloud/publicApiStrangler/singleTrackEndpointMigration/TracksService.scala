@@ -6,38 +6,42 @@ import com.soundcloud.scalakit.{Urn, UserSession}
 import com.twitter.finagle.http.{Response, Status}
 import com.twitter.util.Future
 
-class TracksService(
-                     trackmetadataClient: TrackmetadataClient
-                   ) {
-  def track(session: UserSession, urn: Urn, secretToken: Option[String]): Future[Response] = {
+class TracksService(trackmetadataClient: TrackmetadataClient) {
+  def track(session: UserSession, urn: Urn, secretToken: Option[String]): Future[Response] =
     trackmetadataClient.track(session, urn).map {
-
       case Some(track) =>
-        if (
-          isPrivacyAuthorized(session, secretToken, track) &&
-          isDisabled(track) == false
-        ) {
-          val res = Response()
-          val singleTrackPublicApiRepresentation = new SingleTrackPublicApiRepresentation(
-            "track",
-            track.urn.getIdentifier.toLong,
-            track.user_urn.getIdentifier.toLong)
-          res.setContentString(Json.stringify(singleTrackPublicApiRepresentation))
-          res
-        } else {
-          generateNotFoundResponse
-        }
-
+        if (isTrackAccessible(session, secretToken, track)) generateSingleTrackResponse(track) else generateNotFoundResponse
       case None =>
         generateNotFoundResponse
     }
-  }
 
-  def generateNotFoundResponse: Response = {
+  private def generateNotFoundResponse: Response = {
     val res = Response(Status.NotFound)
     res.setContentString("""{"errors":[{"error_message":"404 - Not Found"}]}""")
     res
   }
+
+  private def generateSingleTrackResponse(track: Track) = {
+    val contentString = jsonForTrack(track)
+    val contentLength = contentString.getBytes("UTF-8").length
+
+    val res = Response()
+    res.setContentString(contentString)
+    res.contentType = "application/json"
+    res.contentLength = contentLength
+    res
+  }
+
+  private def jsonForTrack(track: Track) = {
+    val singleTrackPublicApiRepresentation = new SingleTrackPublicApiRepresentation(
+      "track",
+      track.urn.getIdentifier.toLong,
+      track.user_urn.getIdentifier.toLong)
+    Json.stringify(singleTrackPublicApiRepresentation)
+  }
+
+  private def isTrackAccessible(session: UserSession, secretToken: Option[String], track: Track): Boolean =
+    isPrivacyAuthorized(session, secretToken, track) && !isDisabled(track)
 
   private def isPrivacyAuthorized(session: UserSession, secretToken: Option[String], track: Track): Boolean = {
     track.public ||
@@ -45,7 +49,6 @@ class TracksService(
       (secretToken.filter(_ == track.secret_token).isDefined)
   }
 
-  private def isDisabled(track: Track): Boolean = {
+  private def isDisabled(track: Track): Boolean =
     track.disabled_at.isDefined
-  }
 }
