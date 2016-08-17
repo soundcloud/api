@@ -34,7 +34,7 @@ class AcceptOnlyJsonRequestFilter(stripXml: () => Future[Boolean]) extends Simpl
     } else {
       stripXml().map {
         case true =>
-          val paramsWithoutFormat = request.params.toIterable.filter { case (k, v) => k != "format" }
+          val paramsWithoutFormat = request.params.toIterable.filterNot { case (k, v) => k == "format" && v == "xml" }
           val req = Request(request.path, paramsWithoutFormat.toSeq: _*)
           req.version_=(request.version)
           req.method_=(request.method)

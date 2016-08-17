@@ -14,6 +14,19 @@ class AcceptOnlyJsonRequestFilterSpec extends UnitSpecification {
     val expectedAcceptHeader = "application/json"
   }
 
+  "doesn't strip the format query parameter if the value is not xml" in new Context {
+    val filter = new AcceptOnlyJsonRequestFilter(() => Future.True)
+    val request = Request("/test", "format" -> "json")
+
+    val responseFromNextService = mock[RouterResponse]
+    when(next.apply(like[Request] {
+      case req =>
+        req.params.get("format") must beSome("json")
+    })).thenReturn(Future.value(responseFromNextService))
+
+    Await.result(filter(request, next)) mustEqual responseFromNextService
+  }
+
   "strips format query parameter when rollout is on" in new Context {
     val filter = new AcceptOnlyJsonRequestFilter(() => Future.True)
     val request = Request("/test", "format" -> "xml")
