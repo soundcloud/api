@@ -27,7 +27,7 @@ class TracksService(trackmetadataClient: TrackmetadataClient) {
 
     val res = Response()
     res.setContentString(contentString)
-    res.contentType = "application/json"
+    res.contentType = "application/json; charset=utf-8"
     res.contentLength = contentLength
     res
   }
