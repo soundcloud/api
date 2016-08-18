@@ -9,9 +9,9 @@ import com.twitter.util.Future
 class TracksService(trackmetadataClient: TrackmetadataClient) {
   def track(session: UserSession, urn: Urn, secretToken: Option[String]): Future[Response] =
     trackmetadataClient.track(session, urn).map {
-      case Some(track) =>
-        if (isTrackAccessible(session, secretToken, track)) generateSingleTrackResponse(track) else generateNotFoundResponse
-      case None =>
+      case Some(track) if (isTrackAccessible(session, secretToken, track)) =>
+        generateSingleTrackResponse(track)
+      case _ =>
         generateNotFoundResponse
     }
 
