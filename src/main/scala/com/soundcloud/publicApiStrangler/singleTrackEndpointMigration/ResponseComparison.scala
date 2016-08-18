@@ -37,10 +37,10 @@ class ResponseComparison(telemetry: Telemetry) {
     if (originalRes.status == migrationRes.status) {
 
       if (migrationRes.status == Status.Ok || migrationRes.status == Status.NotFound) {
-        val legacyJsonTry = Try(Json.fromString(originalRes.contentString).as[JsObject])
+        val sanitizedLegacyResponseString = stringJsonpString(originalRes.contentString)
+        val legacyJsonTry = Try(Json.fromString(sanitizedLegacyResponseString).as[JsObject])
 
-        val sanitizedMigrationResponseString = stringJsonpString(migrationRes.contentString)
-        val migrationJsonTry = Try(Json.fromString(sanitizedMigrationResponseString).as[JsObject])
+        val migrationJsonTry = Try(Json.fromString(migrationRes.contentString).as[JsObject])
 
         (legacyJsonTry, migrationJsonTry) match {
           case (Return(legacyJson), Return(migrationJson)) => {
@@ -70,10 +70,11 @@ class ResponseComparison(telemetry: Telemetry) {
   }
 
   private def stringJsonpString(contentString: String): String = {
-    if (contentString.startsWith("/**/")) {
-      contentString.substring(contentString.indexOf('(') + 1, contentString.lastIndexOf(')'))
-    } else {
-      contentString
+    val jsonpRegex = """\/\*\*\/.*\((\{.*\})\);""".r
+
+    contentString match {
+      case jsonpRegex(json) => json
+      case _ => contentString
     }
   }
 
