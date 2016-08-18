@@ -16,15 +16,18 @@ class TracksService(trackmetadataClient: TrackmetadataClient) {
     }
 
   private def generateNotFoundResponse: Response = {
+    val contentString = """{"errors":[{"error_message":"404 - Not Found"}]}"""
+    val contentLength = contentString.getBytes("UTF-8").length
     val res = Response(Status.NotFound)
-    res.setContentString("""{"errors":[{"error_message":"404 - Not Found"}]}""")
+    res.setContentString(contentString )
+    res.contentType = "application/json; charset=utf-8"
+    res.contentLength = contentLength
     res
   }
 
   private def generateSingleTrackResponse(track: Track) = {
     val contentString = jsonForTrack(track)
     val contentLength = contentString.getBytes("UTF-8").length
-
     val res = Response()
     res.setContentString(contentString)
     res.contentType = "application/json; charset=utf-8"

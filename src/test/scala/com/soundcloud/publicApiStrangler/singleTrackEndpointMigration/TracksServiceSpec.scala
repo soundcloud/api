@@ -87,6 +87,15 @@ class TracksServiceSpec extends UnitSpecification {
     response.contentString ==== """{"errors":[{"error_message":"404 - Not Found"}]}"""
   }
 
+  "Returns a Not Found response with the right headers" in new Context {
+    when(trackmetadataClient.track(session, trackUrn)).thenReturn(Future.None)
+
+    val response = Await.result(tracksService.track(session, trackUrn, None))
+
+    response.headerMap.get("Content-Length") must beSome("48")
+    response.headerMap.get("Content-Type") must beSome("application/json; charset=utf-8")
+  }
+
   "Returns 404 when track is disabled" in new Context {
     val disabledAt = Some(LocalDateTime.now())
     val track = trackmetadataTrack(disabledAt)
