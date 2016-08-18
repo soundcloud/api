@@ -50,9 +50,9 @@ class ResponseComparison(telemetry: Telemetry) {
               reportBodyDifference
             }
 
-            val headerDifferences = calcHeaderDiffCount(legacyRes.headerMap, migrationRes.headerMap)
-            if (headerDifferences.size > 0) {
-              reportHeaderDifference(legacyRes, migrationRes, headerDifferences)
+            val differentHeaders = getDifferentHeaders(legacyRes.headerMap, migrationRes.headerMap)
+            if (differentHeaders.size > 0) {
+              reportHeaderDifference(legacyRes, migrationRes, differentHeaders)
             }
 
             comparisonMetric.labels().observe(bodyDiffCount)
@@ -132,7 +132,7 @@ class ResponseComparison(telemetry: Telemetry) {
     differentAttributeCount + extraAttributesCount
   }
 
-  private def calcHeaderDiffCount(legacyHeaders: HeaderMap, migrationHeaders: HeaderMap): Seq[String] = {
+  private def getDifferentHeaders(legacyHeaders: HeaderMap, migrationHeaders: HeaderMap): Seq[String] = {
     val extraHeaders = (migrationHeaders.keys.toSeq diff legacyHeaders.keys.toSeq)
 
     val filteredLegacyHeaders = legacyHeaders.filter {
