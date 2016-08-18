@@ -46,14 +46,13 @@ class ResponseComparison(telemetry: Telemetry) {
           case (Return(legacyJson), Return(migrationJson)) => {
 
             val bodyDiffCount = calcBodyDiffCount(legacyJson, migrationJson)
-            val headerDiffCount = calcHeaderDiffCount(originalRes.headerMap, migrationRes.headerMap)
-
             if (bodyDiffCount > 0) {
               reportBodyDifference
             }
 
-            if (headerDiffCount > 0) {
-              reportHeaderDIfference(originalRes, migrationRes)
+            val headerDifferences = calcHeaderDiffCount(originalRes.headerMap, migrationRes.headerMap)
+            if (headerDifferences.size > 0) {
+              reportHeaderDifference(originalRes, migrationRes, headerDifferences)
             }
 
             comparisonMetric.labels().observe(bodyDiffCount)
@@ -82,10 +81,12 @@ class ResponseComparison(telemetry: Telemetry) {
     failuresCounter.labels("differentBodyAttributesCount").inc()
   }
 
-  private def reportHeaderDIfference(originalRes: Response, migrationRes: Response): Unit = {
+  private def reportHeaderDifference(originalRes: Response, migrationRes: Response, differentHeaders: Seq[String]): Unit = {
     logger.info("============tracks/:id endpoint header difference=========")
     logger.info(originalRes.headerMap.toString)
     logger.info(migrationRes.headerMap.toString)
+    logger.info(s"Different headers : $differentHeaders")
+
     failuresCounter.labels("differentHeaderCount").inc()
   }
 
@@ -130,15 +131,15 @@ class ResponseComparison(telemetry: Telemetry) {
     differentAttributeCount + extraAttributesCount
   }
 
-  private def calcHeaderDiffCount(legacyHeaders: HeaderMap, migrationHeaders: HeaderMap): Int = {
+  private def calcHeaderDiffCount(legacyHeaders: HeaderMap, migrationHeaders: HeaderMap): Seq[String] = {
     val extraHeaders = (migrationHeaders.keys.toSeq diff legacyHeaders.keys.toSeq) diff ignoredHeaders
 
-    val differentAttributeCount = legacyHeaders.count {
+    val differentAttributeCount = legacyHeaders.filter {
       case (key, value) =>
         !ignoredHeadersSet.contains(key) && value != migrationHeaders.get(key)
-    }
+    }.keys.toSeq
 
-    extraHeaders.size + differentAttributeCount
+    extraHeaders ++ differentAttributeCount
   }
 
   private val ignoredHeaders = Seq(
