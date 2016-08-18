@@ -3,6 +3,7 @@ package com.soundcloud.publicApiStrangler.singleTrackEndpointMigration
 import com.soundcloud.jvmkit.UserSessionBuilder
 import com.soundcloud.publicApiStrangler.singleTrackEndpointMigration.trackmetadataclient.{Artwork, EmbeddingPermission, Track, TrackmetadataClient}
 import com.soundcloud.scalakit.Urn
+import com.soundcloud.scalakit.json.Json
 import com.soundcloud.scalakit.test.UnitSpecification
 import com.twitter.finagle.http.Status
 import com.twitter.util.{Await, Future}
@@ -17,6 +18,7 @@ class TracksServiceSpec extends UnitSpecification {
     val trackUrn = Urn("soundcloud:tracks:987")
 
     val createdAt = new LocalDateTime(2016, 5, 19, 18, 3, 4)
+    val lastModified = new LocalDateTime(2016, 5, 20, 18, 3, 4)
 
     def trackmetadataTrack(
                             disabledAt: Option[LocalDateTime] = None,
@@ -33,7 +35,7 @@ class TracksServiceSpec extends UnitSpecification {
         downloadable = false,
         duration = 0,
         genre = None,
-        last_modified = null,
+        last_modified = lastModified,
         permalink = null,
         permalink_url = None,
         public = isPublic,
@@ -61,9 +63,12 @@ class TracksServiceSpec extends UnitSpecification {
   }
 
   "Returns 200 for public tracks" in new Context {
-    when(trackmetadataClient.track(session, trackUrn)).thenReturn(Future.value(Some(trackmetadataTrack())))
+    val track = trackmetadataTrack()
+    when(trackmetadataClient.track(session, trackUrn)).thenReturn(Future.value(Some(track)))
 
-    val expectedResponseString = "{\"kind\":\"track\",\"id\":987,\"user_id\":112,\"duration\":0,\"created_at\":\"2016-05-19T18:03:04.000\",\"commentable\":false,\"embeddable_by\":\"none\",\"tag_list\":\"\",\"artwork_url\":null}"
+    val expectedTrackRepresentation = TrackRepresentation(track, Urn(s"soundcloud:urn:112"))
+    val expectedResponseString = Json.stringify(expectedTrackRepresentation)
+
     val response = Await.result(tracksService.track(session, trackUrn, None))
 
     response.status ==== Status.Ok
@@ -75,7 +80,7 @@ class TracksServiceSpec extends UnitSpecification {
 
     val response = Await.result(tracksService.track(session, trackUrn, None))
 
-    response.headerMap.get("Content-Length") must beSome("167")
+    response.headerMap.get("Content-Length") must beSome("213")
     response.headerMap.get("Content-Type") must beSome("application/json; charset=utf-8")
   }
 

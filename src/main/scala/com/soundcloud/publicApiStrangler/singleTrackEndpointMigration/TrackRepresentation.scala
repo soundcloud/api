@@ -2,6 +2,7 @@ package com.soundcloud.publicApiStrangler.singleTrackEndpointMigration
 
 import com.soundcloud.jvmkit.Urn
 import com.soundcloud.publicApiStrangler.singleTrackEndpointMigration.trackmetadataclient.Track
+import org.joda.time.format.DateTimeFormat
 import play.api.libs.json._
 
 /*
@@ -9,7 +10,6 @@ The following fields are not yet included in the track representation. Add them,
 
 "state": "finished",
 "original_content_size": 78361171,
-"last_modified": "2013/12/13 20:34:14 +0000",
 "sharing": "public",
 "permalink": "business-mix",
 "streamable": true,
@@ -45,22 +45,28 @@ The following fields are not yet included in the track representation. Add them,
 */
 
 case class TrackRepresentation(
-  track: Track,
-  user_urn: Urn
-)
+                                track: Track,
+                                userUrn: Urn
+                              )
 
 object TrackRepresentation {
+  private val dateTimeFormat = DateTimeFormat.forPattern("yyyy/MM/dd HH:mm:ss +0000")
+
   implicit val writes = new Writes[TrackRepresentation] {
-    override def writes(rep: TrackRepresentation): JsValue = Json.obj(
-      "kind" -> "track",
-      "id" -> rep.track.urn.getIdentifier.toLong,
-      "user_id" -> rep.user_urn.getIdentifier.toLong,
-      "duration" -> rep.track.duration,
-      "created_at" -> rep.track.created_at.toString,
-      "commentable" -> rep.track.commentable,
-      "embeddable_by" -> rep.track.embeddableBy,
-      "tag_list" -> (rep.track.user_tags ++ rep.track.machine_tags).mkString(", "),
-      "artwork_url" -> rep.track.artwork.filename
-    )
+    override def writes(rep: TrackRepresentation): JsValue =
+      Json.obj(
+        "kind" -> "track",
+        "id" -> rep.track.urn.getIdentifier.toLong,
+        "created_at" -> rep.track.created_at.toString(dateTimeFormat),
+        "user_id" -> rep.userUrn.getIdentifier.toLong,
+        "duration" -> rep.track.duration,
+        "commentable" -> rep.track.commentable,
+        //"state" ->
+        // original_content_size ->
+        "last_modified" -> rep.track.last_modified.toString(dateTimeFormat),
+        "embeddable_by" -> rep.track.embeddableBy,
+        "tag_list" -> (rep.track.user_tags ++ rep.track.machine_tags).mkString(", "),
+        "artwork_url" -> rep.track.artwork.filename
+      )
   }
 }

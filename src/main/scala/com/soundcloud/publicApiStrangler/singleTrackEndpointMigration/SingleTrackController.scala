@@ -59,9 +59,8 @@ class SingleTrackController(userAuthentication: UserAuthentication,
   private def legacyResponse(req: Request): Future[Response] =
     mothershipDispatcher.dispatchToMothership(req)
 
-  private def migrationResponse(session: UserSession, urn: Urn, secret: Option[String]): Future[Response] = {
+  private def migrationResponse(session: UserSession, urn: Urn, secret: Option[String]): Future[Response] =
     tracksService.track(session, urn, secret)
-  }
 
   private def toResponseBuilder(response: Response): ResponseBuilder = {
     val headerMap = response.headerMap.entrySet().map(entry => (entry.getKey, entry.getValue)).toMap
