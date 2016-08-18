@@ -8,7 +8,7 @@
     "runtime": "jdk-8",
     "status": "production",
     "alert_service": "https://sndcld.pagerduty.com/services/PVZLXKQ",
-    "telemetry_dashboard": "http://grafana.int.s-cloud.net/dashboard/db/jvmkit-generic?var-prometheus=core-services&var-system=public-api-strangler&var-job=public-api-strangler",
+    "telemetry_dashboard": "http://grafana.int.s-cloud.net/dashboard/db/jvmkit-generic?var-prometheus=public-api-strangler&var-system=public-api-strangler&var-job=public-api-strangler",
     "ci_dashboard": "https://ci.dev.s-cloud.net/go/tab/pipeline/history/public-api-strangler",
     "runbook": "http://eng-doc.int.s-cloud.net/runbooks/core-services/public-api-strangler",
     "data_sensitivity": ["user_urn", "other_user_data", "pid"],
