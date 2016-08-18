@@ -204,6 +204,23 @@ class ResponseComparisonSpec extends UnitSpecification {
     }
   }
 
+  "Does not report failures when headers are same" in new Context {
+    val legacyRes = generateResponse("{}")
+    legacyRes.headerMap.add("Content-Type", "application/json; charset=utf-8")
+    val migrationRes = generateResponse("{}")
+    migrationRes.headerMap.add("Content-Type", "application/json; charset=utf-8")
+
+    responseComparison.report(Request(), legacyRes, migrationRes)
+
+    val value = collectorRegistry.getSampleValue(
+      "single_track_endpoint_failures",
+      Array("type", "system"),
+      Array("differentHeaderCount", "TEST-APP")
+    )
+    value must beNull
+  }
+
+
   "reports number of different headers when original has more" in new Context {
     val legacyRes = generateResponse("{}")
     legacyRes.headerMap.add("X-MovieName", "se7en")

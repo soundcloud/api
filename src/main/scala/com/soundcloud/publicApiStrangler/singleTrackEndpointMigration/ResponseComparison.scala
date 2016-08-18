@@ -133,11 +133,17 @@ class ResponseComparison(telemetry: Telemetry) {
   }
 
   private def calcHeaderDiffCount(legacyHeaders: HeaderMap, migrationHeaders: HeaderMap): Seq[String] = {
-    val extraHeaders = (migrationHeaders.keys.toSeq diff legacyHeaders.keys.toSeq) diff ignoredHeaders
+    val extraHeaders = (migrationHeaders.keys.toSeq diff legacyHeaders.keys.toSeq)
 
-    val differentAttributeCount = legacyHeaders.filter {
+    val filteredLegacyHeaders = legacyHeaders.filter {
       case (key, value) =>
-        !ignoredHeadersSet.contains(key) && value != migrationHeaders.get(key)
+        ignoredHeaders.contains(key) == false
+    }
+
+    val differentAttributeCount = filteredLegacyHeaders.filter {
+      case (key, value) =>
+          migrationHeaders.get(key).isEmpty ||
+          value != migrationHeaders.get(key).get
     }.keys.toSeq
 
     extraHeaders ++ differentAttributeCount
