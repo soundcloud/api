@@ -7,20 +7,25 @@ import com.twitter.finagle.http.{Response, Status}
 import com.twitter.util.Future
 
 class TracksService(trackmetadataClient: TrackmetadataClient) {
-  def track(session: UserSession, urn: Urn, secretToken: Option[String]): Future[Response] =
+
+  private val errorString = """{"errors":[{"error_message":"404 - Not Found"}]}"""
+
+  def track(session: UserSession, urn: Urn, secretToken: Option[String], callback: Option[String]): Future[Response] =
     trackmetadataClient.track(session, urn).map {
       case Some(track) if (isTrackAccessible(session, secretToken, track)) =>
-        generateSingleTrackResponse(track)
+        val contentString = jsonpWrapper(callback, jsonForTrack(track))
+        generateResponse(Status.Ok, contentString)
       case _ =>
-        generateNotFoundResponse
+        val contentString = jsonpWrapper(callback, errorString)
+        generateResponse(Status.NotFound, contentString)
     }
 
-  private def generateNotFoundResponse: Response = {
-    val contentString = """{"errors":[{"error_message":"404 - Not Found"}]}"""
-    generateResponse(Status.NotFound, contentString)
-  }
-
-  private def generateSingleTrackResponse(track: Track): Response = generateResponse(Status.Ok, jsonForTrack(track))
+  /**
+    * This JsonpWrapper logic should go to filter,
+    * but should be applied only to the migrated endpoitns.
+    */
+  private def jsonpWrapper(callback: Option[String], contentString: String): String =
+    callback.map(cb => s"/**/$cb($contentString);").getOrElse(contentString)
 
   private def generateResponse(status: Status, content: String): Response = {
     val contentLength = content.getBytes("UTF-8").length

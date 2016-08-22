@@ -69,16 +69,29 @@ class TracksServiceSpec extends UnitSpecification {
     val expectedTrackRepresentation = TrackRepresentation(track, Urn(s"soundcloud:urn:112"))
     val expectedResponseString = Json.stringify(expectedTrackRepresentation)
 
-    val response = Await.result(tracksService.track(session, trackUrn, None))
+    val response = Await.result(tracksService.track(session, trackUrn, None, None))
 
     response.status ==== Status.Ok
     response.contentString ==== expectedResponseString
   }
 
+  "Wraps track data in jsonp if `callback` param is defined" in new Context {
+    val track = trackmetadataTrack()
+    when(trackmetadataClient.track(session, trackUrn)).thenReturn(Future.value(Some(track)))
+
+    val expectedTrackRepresentation = TrackRepresentation(track, Urn(s"soundcloud:urn:112"))
+    val expectedResponseString = Json.stringify(expectedTrackRepresentation)
+
+    val response = Await.result(tracksService.track(session, trackUrn, None, Some("js_callback_fn")))
+
+    response.status ==== Status.Ok
+    response.contentString ==== s"/**/js_callback_fn($expectedResponseString);"
+  }
+
   "Returns a response with the right headers" in new Context {
     when(trackmetadataClient.track(session, trackUrn)).thenReturn(Future.value(Some(trackmetadataTrack())))
 
-    val response = Await.result(tracksService.track(session, trackUrn, None))
+    val response = Await.result(tracksService.track(session, trackUrn, None, None))
 
     response.headerMap.get("Content-Length") must beSome("213")
     response.headerMap.get("Content-Type") must beSome("application/json; charset=utf-8")
@@ -87,15 +100,23 @@ class TracksServiceSpec extends UnitSpecification {
   "Returns 404 for non existing tracks" in new Context {
     when(trackmetadataClient.track(session, trackUrn)).thenReturn(Future.None)
 
-    val response = Await.result(tracksService.track(session, trackUrn, None))
+    val response = Await.result(tracksService.track(session, trackUrn, None, None))
     response.status ==== Status.NotFound
     response.contentString ==== """{"errors":[{"error_message":"404 - Not Found"}]}"""
   }
 
-  "Returns a Not Found response with the right headers" in new Context {
+  "Wraps error message in jsonp if `callback` param is defined" in new Context {
     when(trackmetadataClient.track(session, trackUrn)).thenReturn(Future.None)
 
-    val response = Await.result(tracksService.track(session, trackUrn, None))
+    val response = Await.result(tracksService.track(session, trackUrn, None, Some("js_callback_fn")))
+    response.status ==== Status.NotFound
+    response.contentString ==== """/**/js_callback_fn({"errors":[{"error_message":"404 - Not Found"}]});"""
+  }
+
+  "Returns 404 response with the right headers" in new Context {
+    when(trackmetadataClient.track(session, trackUrn)).thenReturn(Future.None)
+
+    val response = Await.result(tracksService.track(session, trackUrn, None, None))
 
     response.headerMap.get("Content-Length") must beSome("48")
     response.headerMap.get("Content-Type") must beSome("application/json; charset=utf-8")
@@ -106,7 +127,7 @@ class TracksServiceSpec extends UnitSpecification {
     val track = trackmetadataTrack(disabledAt)
     when(trackmetadataClient.track(session, trackUrn)).thenReturn(Future.value(Some(track)))
 
-    val response = Await.result(tracksService.track(session, trackUrn, None))
+    val response = Await.result(tracksService.track(session, trackUrn, None, None))
     response.status ==== Status.NotFound
     response.contentString ==== """{"errors":[{"error_message":"404 - Not Found"}]}"""
   }
@@ -115,7 +136,7 @@ class TracksServiceSpec extends UnitSpecification {
     val track = trackmetadataTrack(isPublic = false)
     when(trackmetadataClient.track(session, trackUrn)).thenReturn(Future.value(Some(track)))
 
-    val response = Await.result(tracksService.track(session, trackUrn, None))
+    val response = Await.result(tracksService.track(session, trackUrn, None, None))
     response.status ==== Status.NotFound
     response.contentString ==== """{"errors":[{"error_message":"404 - Not Found"}]}"""
   }
@@ -125,7 +146,7 @@ class TracksServiceSpec extends UnitSpecification {
     val ownerSession = new UserSessionBuilder().setUser(ownerUrn).build
     when(trackmetadataClient.track(ownerSession, trackUrn)).thenReturn(Future.value(Some(trackmetadataTrack())))
 
-    val response = Await.result(tracksService.track(ownerSession, trackUrn, None))
+    val response = Await.result(tracksService.track(ownerSession, trackUrn, None, None))
     response.status ==== Status.Ok
   }
 
@@ -134,7 +155,7 @@ class TracksServiceSpec extends UnitSpecification {
     val track = trackmetadataTrack(isPublic = false)
     when(trackmetadataClient.track(session, trackUrn)).thenReturn(Future.value(Some(track)))
 
-    val response = Await.result(tracksService.track(session, trackUrn, Some(wrongSecretToken)))
+    val response = Await.result(tracksService.track(session, trackUrn, Some(wrongSecretToken), None))
     response.status ==== Status.NotFound
     response.contentString ==== """{"errors":[{"error_message":"404 - Not Found"}]}"""
   }
@@ -144,7 +165,7 @@ class TracksServiceSpec extends UnitSpecification {
     val track = trackmetadataTrack(isPublic = false, secretToken = correctSecretToken)
     when(trackmetadataClient.track(session, trackUrn)).thenReturn(Future.value(Some(track)))
 
-    val response = Await.result(tracksService.track(session, trackUrn, Some(correctSecretToken)))
+    val response = Await.result(tracksService.track(session, trackUrn, Some(correctSecretToken), None))
     response.status ==== Status.Ok
   }
 }

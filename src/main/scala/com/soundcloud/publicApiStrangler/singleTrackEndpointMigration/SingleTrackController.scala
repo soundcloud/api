@@ -39,7 +39,8 @@ class SingleTrackController(userAuthentication: UserAuthentication,
 
           case Return(urn@Urn(_, _, numericRegexp())) => {
             val secretToken = req.params.get("secret_token")
-            Future.join(legacyResponse(req), migrationResponse(session, urn, secretToken)) map {
+            val callback = req.params.get("callback")
+            Future.join(legacyResponse(req), migrationResponse(session, urn, secretToken, callback)) map {
               case (legacyResponseResult, migrationResponseResult) =>
                 responseComparison.report(req, legacyResponseResult, migrationResponseResult)
                 toResponseBuilder(legacyResponseResult)
@@ -59,8 +60,8 @@ class SingleTrackController(userAuthentication: UserAuthentication,
   private def legacyResponse(req: Request): Future[Response] =
     mothershipDispatcher.dispatchToMothership(req)
 
-  private def migrationResponse(session: UserSession, urn: Urn, secret: Option[String]): Future[Response] =
-    tracksService.track(session, urn, secret)
+  private def migrationResponse(session: UserSession, urn: Urn, secret: Option[String], callback: Option[String]): Future[Response] =
+    tracksService.track(session, urn, secret, callback)
 
   private def toResponseBuilder(response: Response): ResponseBuilder = {
     val headerMap = response.headerMap.entrySet().map(entry => (entry.getKey, entry.getValue)).toMap
