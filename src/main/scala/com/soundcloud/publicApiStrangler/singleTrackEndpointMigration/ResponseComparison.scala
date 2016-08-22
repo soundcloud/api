@@ -157,7 +157,7 @@ class ResponseComparison(telemetry: Telemetry) {
 
     val filteredLegacyHeaders = legacyHeaders.filter {
       case (key, value) =>
-        ignoredHeaders.contains(key) == false
+        !ignoredHeaders.contains(key)
     }
 
     val differentAttributeCount = filteredLegacyHeaders.filter {

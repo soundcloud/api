@@ -29,7 +29,7 @@ class AcceptOnlyJsonRequestFilter(stripXml: () => Future[Boolean]) extends Simpl
     request.method == Method.Get
 
   private def stripFormatParam(request: Request): Future[Request] = {
-    if (isGet(request) == false) {
+    if (!isGet(request)) {
       Future.value(request)
     } else {
       stripXml().map {
