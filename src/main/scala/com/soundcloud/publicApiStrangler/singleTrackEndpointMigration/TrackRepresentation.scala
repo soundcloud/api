@@ -10,7 +10,6 @@ The following fields are not yet included in the track representation. Add them,
 
 "state": "finished",
 "original_content_size": 78361171,
-"sharing": "public",
 "permalink": "business-mix",
 "streamable": true,
 "downloadable": true,
@@ -64,6 +63,7 @@ object TrackRepresentation {
         //"state" ->
         // original_content_size ->
         "last_modified" -> rep.track.last_modified.toString(dateTimeFormat),
+        "sharing" -> (if (rep.track.public) "public" else "private"),
         "embeddable_by" -> rep.track.embeddableBy,
         "tag_list" -> (rep.track.user_tags ++ rep.track.machine_tags).mkString(", "),
         "artwork_url" -> rep.track.artwork.filename
