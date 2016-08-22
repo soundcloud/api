@@ -109,6 +109,7 @@ object App
     "soundcloud:applications:167582", // HEOS by Denon (Production)
 
     // other whitelisted apps
+    "soundcloud:applications:288860",
     "soundcloud:applications:271862",
     "soundcloud:applications:59007",
     "soundcloud:applications:62023",
