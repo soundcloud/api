@@ -34,47 +34,67 @@ class ResponseComparison(telemetry: Telemetry) {
 
   def report(request: Request, legacyRes: Response, migrationRes: Response): Unit = {
 
-    if (legacyRes.status == migrationRes.status) {
+    if (legacyRes.status != migrationRes.status) {
 
-      if (migrationRes.status == Status.Ok || migrationRes.status == Status.NotFound) {
-        val sanitizedLegacyResponseString = stringJsonpString(legacyRes.contentString)
-        val legacyJsonTry = Try(Json.fromString(sanitizedLegacyResponseString).as[JsObject])
-
-        val migrationJsonTry = Try(Json.fromString(migrationRes.contentString).as[JsObject])
-
-        (legacyJsonTry, migrationJsonTry) match {
-          case (Return(legacyJson), Return(migrationJson)) => {
-
-            val bodyDiffCount = calcBodyDiffCount(legacyJson, migrationJson)
-            if (bodyDiffCount > 0) {
-              reportBodyDifference
-            }
-
-            val differentHeaders = getDifferentHeaders(legacyRes.headerMap, migrationRes.headerMap)
-            if (differentHeaders.size > 0) {
-              reportHeaderDifference(legacyRes, migrationRes, differentHeaders)
-            }
-
-            comparisonMetric.labels().observe(bodyDiffCount)
-          }
-
-          case (legacyResult, migrationResult) =>
-            reportJsonFailure(request, legacyRes, migrationRes, legacyResult, migrationResult)
-        }
-      } else {
-        reportUnexpectedMoshiStatus(request, legacyRes, migrationRes)
-      }
-    } else {
       reportStatusDifference(request, legacyRes, migrationRes)
+
+    } else if (migrationRes.status != Status.Ok && migrationRes.status != Status.NotFound) {
+
+      reportUnexpectedMoshiStatus(request, legacyRes, migrationRes)
+
+    } else {
+
+      val (legacyCallback, legacyJson) = pluckCallbackAndData(legacyRes.contentString)
+      val (migrationCallback, migrationJson) = pluckCallbackAndData(migrationRes.contentString)
+
+      compareHeaders(legacyRes, migrationRes)
+      compareJsonpData(legacyCallback, migrationCallback)
+      compareJsonBody(request, legacyRes, migrationRes, legacyJson, migrationJson)
     }
   }
 
-  private def stringJsonpString(contentString: String): String = {
-    val jsonpRegex = """\/\*\*\/.*\((\{.*\})\);""".r
+  private def compareHeaders(legacyRes: Response, migrationRes: Response): Unit = {
+    val differentHeaders = getDifferentHeaders(legacyRes.headerMap, migrationRes.headerMap)
+    if (differentHeaders.size > 0) {
+      reportHeaderDifference(legacyRes, migrationRes, differentHeaders)
+    }
+  }
+
+  private def compareJsonpData(legacyCallback: Option[String], migrationCallback: Option[String]): Unit = {
+    if (legacyCallback != migrationCallback) {
+      failuresCounter.labels("jsonpTextFailure").inc()
+    }
+  }
+
+  private def compareJsonBody(request: Request, legacyRes: Response, migrationRes: Response, legacyJson: String, migrationJson: String): Unit = {
+    val legacyJsonTry = Try(Json.fromString(legacyJson).as[JsObject])
+    val migrationJsonTry = Try(Json.fromString(migrationJson).as[JsObject])
+
+    (legacyJsonTry, migrationJsonTry) match {
+      case (Return(legacyJson), Return(migrationJson)) => {
+
+        val bodyDiffCount = calcBodyDiffCount(legacyJson, migrationJson)
+        if (bodyDiffCount > 0) {
+          reportBodyDifference
+        }
+
+        comparisonMetric.labels().observe(bodyDiffCount)
+      }
+      case (legacyResult, migrationResult) =>
+        reportJsonFailure(request, legacyRes, migrationRes, legacyResult, migrationResult)
+    }
+  }
+
+  /**
+    * This method will parse out callback function name and json data if response is a jsonp
+    * If response is not json it will return the whole content as data
+    */
+  private def pluckCallbackAndData(contentString: String): (Option[String], String) = {
+    val jsonpRegex = """\/\*\*\/(.*)\((\{.*\})\);""".r
 
     contentString match {
-      case jsonpRegex(json) => json
-      case _ => contentString
+      case jsonpRegex(callback, json) => (Some(callback), json)
+      case _ => (None, contentString)
     }
   }
 
@@ -142,7 +162,7 @@ class ResponseComparison(telemetry: Telemetry) {
 
     val differentAttributeCount = filteredLegacyHeaders.filter {
       case (key, value) =>
-          migrationHeaders.get(key).isEmpty ||
+        migrationHeaders.get(key).isEmpty ||
           value != migrationHeaders.get(key).get
     }.keys.toSeq
 
@@ -165,6 +185,4 @@ class ResponseComparison(telemetry: Telemetry) {
     "X-Powered-By",
     "X-Runtime"
   )
-
-  private val ignoredHeadersSet = ignoredHeaders.toSet
 }
