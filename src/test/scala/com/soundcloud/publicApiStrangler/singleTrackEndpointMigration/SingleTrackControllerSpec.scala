@@ -49,28 +49,28 @@ class SingleTrackControllerSpec extends InjectionBasedControllerSpecification {
 
   List("/tracks/__12", "/tracks/__12/", "/tracks/permalinktrack", "/tracks/permalinktrack/").foreach {
     path =>
-      List(Status.NotFound, Status.Ok).foreach {
-        case status =>
-          s"uses fallback when there is a non-numeric track identifier for path: $path for status: $status" in new Context {
-            val legacyResponse = Response(status)
-            when(fallback.dispatchToMothership(any[Request])).thenReturn(Future.value(legacyResponse))
-            when(tracksService.track(session, trackUrn, None, None)).thenReturn(Future.value(Response()))
+      s"returns 404 for non-numeric track identifier for path: $path" in new Context {
+        val response = get(controller(session), path)
+        response.status ==== Status.NotFound
+        response.body ==== """{"errors":[{"error_message":"404 - Not Found"}]}"""
+        response.getHeaders.get("Content-Length") must beSome("48")
+      }
+  }
 
-            val response = get(controller(session), path)
-            val errCount = collectorRegistry.getSampleValue(
-              "non_numeric_track_id",
-              Array("statusCode", "system"),
-              Array(status.code.toString, "TEST-APP")
-            )
-            errCount == 1
-          }
+  List("/tracks/__12", "/tracks/__12/", "/tracks/permalinktrack", "/tracks/permalinktrack/").foreach {
+    path =>
+      s"returns 404 wrapped in jsonp for non-numeric track identifier when callback param is provided for path: $path" in new Context {
+        val response = get(controller(session), path, Map("callback" -> "js_callback_fn"))
+        response.status ==== Status.NotFound
+        response.body ==== """/**/js_callback_fn({"errors":[{"error_message":"404 - Not Found"}]});"""
+        response.getHeaders.get("Content-Length") must beSome("69")
       }
   }
 
   List("/tracks/987", "/tracks/987/").foreach {
     path =>
       s"Passes secret token to tracks service for path: $path" in new Context {
-        when(fallback.dispatchToMothership(any[Request] )).thenReturn(Future.value(Response()))
+        when(fallback.dispatchToMothership(any[Request])).thenReturn(Future.value(Response()))
         when(tracksService.track(session, trackUrn, Some("s3cret"), None)).thenReturn(Future.value(Response()))
 
         val response = get(controller(session), path, Map("secret_token" -> "s3cret"))
@@ -81,7 +81,7 @@ class SingleTrackControllerSpec extends InjectionBasedControllerSpecification {
   List("/tracks/987", "/tracks/987/").foreach {
     path =>
       s"Passes callback parameters to tracks service for path: $path" in new Context {
-        when(fallback.dispatchToMothership(any[Request] )).thenReturn(Future.value(Response()))
+        when(fallback.dispatchToMothership(any[Request])).thenReturn(Future.value(Response()))
         when(tracksService.track(session, trackUrn, None, Some("js_callback_dn"))).thenReturn(Future.value(Response()))
 
         val response = get(controller(session), path, Map("callback" -> "js_callback_dn"))

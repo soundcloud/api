@@ -5,7 +5,7 @@ import com.soundcloud.bff.web.{BffInjectionBasedController, UserAuthentication}
 import com.soundcloud.jvmkit.telemetry.Telemetry
 import com.soundcloud.publicApiStrangler.support.DispatchToMothershipHandler
 import com.soundcloud.scalakit.{Urn, UserSession}
-import com.twitter.finagle.http.Response
+import com.twitter.finagle.http.{Response, Status}
 import com.twitter.util.{Future, Return, Try}
 
 import scala.collection.JavaConversions._
@@ -19,12 +19,6 @@ class SingleTrackController(userAuthentication: UserAuthentication,
 
   private val numericRegexp = """\d+""".r
 
-  private val nonNumericTrackIdCounter = telemetry.counter(
-    "non_numeric_track_id",
-    "counter for non numeric track ids",
-    "statusCode"
-  )
-
   get("/tracks/:trackId")(renderTrack)
   get("/tracks/:trackId/")(renderTrack)
 
@@ -34,12 +28,13 @@ class SingleTrackController(userAuthentication: UserAuthentication,
     userAuthentication.withUserSession(req) {
       case session =>
         val trackId = req.routeParams("trackId")
+        val callback = req.params.get("callback")
 
         Try(Urn("soundcloud", "tracks", trackId)) match {
 
           case Return(urn@Urn(_, _, numericRegexp())) => {
             val secretToken = req.params.get("secret_token")
-            val callback = req.params.get("callback")
+
             Future.join(legacyResponse(req), migrationResponse(session, urn, secretToken, callback)) map {
               case (legacyResponseResult, migrationResponseResult) =>
                 responseComparison.report(req, legacyResponseResult, migrationResponseResult)
@@ -48,13 +43,20 @@ class SingleTrackController(userAuthentication: UserAuthentication,
           }
 
           case _ =>
-            legacyResponse(req).map {
-              case res =>
-                nonNumericTrackIdCounter.labels(res.statusCode.toString).inc()
-                toResponseBuilder(res)
-            }
+            generateNotFound(callback)
         }
     }
+  }
+
+  private def generateNotFound(callback: Option[String]): Future[ResponseBuilder] = {
+    val errorString = """{"errors":[{"error_message":"404 - Not Found"}]}"""
+    val contentString = callback.map(cb => s"/**/$cb($errorString);").getOrElse(errorString)
+    val contentLength = contentString.getBytes("UTF-8").length
+    val res = Response(Status.NotFound)
+    res.setContentString(contentString)
+    res.contentType = "application/json; charset=utf-8"
+    res.contentLength = contentLength
+    Future.value(toResponseBuilder(res))
   }
 
   private def legacyResponse(req: Request): Future[Response] =
