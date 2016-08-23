@@ -89,6 +89,8 @@ class TrackRepresentationSpec extends UnitSpecification {
     trackJson \ "license" ==== JsString("all-rights-reserved")
     trackJson \ "uri" ==== JsString("https://api.soundcloud.com/tracks/1324")
     trackJson \ "user" \ "id" ==== JsNumber(3456)
+    trackJson \ "user" \ "kind" ==== JsString("user")
+    trackJson \ "user" \ "permalink" ==== JsString("giraffe")
     trackJson \ "permalink_url" ==== JsString("http://soundcloud.com/nirvana/plsty-remix")
     trackJson \ "artwork_url" ==== JsString("https://i1.sndcdn.com/artworks-FuwbhSJORvKH-0-original.jpg")
   }

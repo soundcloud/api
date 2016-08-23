@@ -3,6 +3,7 @@ package com.soundcloud.publicApiStrangler.singleTrackEndpointMigration
 import com.soundcloud.publicApiStrangler.singleTrackEndpointMigration.trackmetadataclient.Track
 import com.soundcloud.service.response.representation.User
 import org.joda.time.format.DateTimeFormat
+import play.api.libs.json.Json.JsValueWrapper
 import play.api.libs.json._
 
 case class TrackRepresentation(track: Track, user: User)
@@ -47,9 +48,7 @@ object TrackRepresentation {
         // original_format
         "license" -> rep.track.license,
         "uri" -> s"https://api.soundcloud.com/tracks/${rep.track.urn.getIdentifier}",
-        "user" -> Json.obj(
-          "id" -> rep.user.urn.getIdentifier.toLong
-        ),
+        "user" -> writeUser(rep),
         // user_playback_count
         // user_favorite
         "permalink_url" -> rep.track.permalink_url,
@@ -69,5 +68,13 @@ object TrackRepresentation {
         // policy
         // monetization_model
       )
+  }
+
+  private def writeUser(rep: TrackRepresentation): JsValueWrapper = {
+    Json.obj(
+      "id" -> rep.user.urn.getIdentifier.toLong,
+      "kind" -> "user",
+      "permalink" -> rep.user.permalink
+    )
   }
 }
