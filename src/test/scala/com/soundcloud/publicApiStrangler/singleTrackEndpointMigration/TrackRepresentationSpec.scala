@@ -22,7 +22,7 @@ class TrackRepresentationSpec extends UnitSpecification {
       duration = 120,
       genre = None,
       last_modified = new LocalDateTime(2016, 8, 8, 13, 28, 53),
-      permalink = null,
+      permalink = "plsty-remix",
       permalink_url = None,
       public = true,
       secret_token = null,
@@ -57,7 +57,10 @@ class TrackRepresentationSpec extends UnitSpecification {
     trackJson \ "duration" ==== JsNumber(120)
     trackJson \ "commentable" ==== JsBoolean(false)
     trackJson \ "last_modified" ==== JsString("2016/08/08 13:28:53 +0000")
+    trackJson \ "permalink" ==== JsString("plsty-remix")
+    trackJson \ "streamable" ==== JsBoolean(false)
     trackJson \ "embeddable_by" ==== JsString("me")
+    trackJson \ "downloadable" ==== JsBoolean(false)
     trackJson \ "tag_list" ==== JsString("dubstep, folk, system:foo, system:bar")
     trackJson \ "artwork_url" ==== JsString("http://example.com/art/work.jpg")
   }
