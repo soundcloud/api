@@ -15,12 +15,12 @@ class TrackRepresentationSpec extends UnitSpecification {
       urn = trackUrn,
       user_urn = Urn("soundcloud:users:112"),
       commentable = false,
-      description = None,
+      description = Some("Follow @samstarling !"),
       created_at = new LocalDateTime(2015, 2, 15, 16, 47, 27),
       disabled_at = None,
       downloadable = false,
       duration = 120,
-      genre = None,
+      genre = Some("future bass"),
       last_modified = new LocalDateTime(2016, 8, 8, 13, 28, 53),
       permalink = "plsty-remix",
       permalink_url = None,
@@ -28,7 +28,7 @@ class TrackRepresentationSpec extends UnitSpecification {
       secret_token = null,
       user_tags = List("dubstep", "folk"),
       machine_tags = List("system:foo", "system:bar"),
-      title = null,
+      title = "Baby Bash",
       uid = None,
       api_streamable = None,
       streamable = false,
@@ -61,6 +61,9 @@ class TrackRepresentationSpec extends UnitSpecification {
     trackJson \ "streamable" ==== JsBoolean(false)
     trackJson \ "embeddable_by" ==== JsString("me")
     trackJson \ "downloadable" ==== JsBoolean(false)
+    trackJson \ "genre" ==== JsString("future bass")
+    trackJson \ "title" ==== JsString("Baby Bash")
+    trackJson \ "description" ==== JsString("Follow @samstarling !")
     trackJson \ "tag_list" ==== JsString("dubstep, folk, system:foo, system:bar")
     trackJson \ "artwork_url" ==== JsString("http://example.com/art/work.jpg")
   }

@@ -8,16 +8,6 @@ import play.api.libs.json._
 /*
 The following fields are not yet included in the track representation. Add them, and remove them from this list:
 
-"state": "finished",
-"original_content_size": 78361171,
-"streamable": true,
-"downloadable": true,
-"purchase_url": null,
-"label_id": null,
-"purchase_title": null,
-"genre": "house",
-"title": "Business Mix",
-"description": "",
 "label_name": null,
 "release": null,
 "track_type": null,
@@ -67,6 +57,12 @@ object TrackRepresentation {
         "streamable" -> rep.track.streamable,
         "embeddable_by" -> rep.track.embeddableBy,
         "downloadable" -> rep.track.downloadable,
+        // "purchase_url" ->
+        // "label_id" ->
+        // "purchase_title" ->
+        "genre" -> rep.track.genre,
+        "title" -> rep.track.title,
+        "description" -> rep.track.description,
         "tag_list" -> (rep.track.user_tags ++ rep.track.machine_tags).mkString(", "),
         "artwork_url" -> rep.track.artwork.filename
       )
