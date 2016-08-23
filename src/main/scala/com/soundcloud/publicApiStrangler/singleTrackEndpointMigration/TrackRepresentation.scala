@@ -8,7 +8,6 @@ import play.api.libs.json._
 /*
 The following fields are not yet included in the track representation. Add them, and remove them from this list:
 
-"label_name": null,
 "release": null,
 "track_type": null,
 "key_signature": null,
@@ -63,6 +62,7 @@ object TrackRepresentation {
         "genre" -> rep.track.genre,
         "title" -> rep.track.title,
         "description" -> rep.track.description,
+        "label_name" -> rep.track.label_name,
         "tag_list" -> (rep.track.user_tags ++ rep.track.machine_tags).mkString(", "),
         "artwork_url" -> rep.track.artwork.filename
       )

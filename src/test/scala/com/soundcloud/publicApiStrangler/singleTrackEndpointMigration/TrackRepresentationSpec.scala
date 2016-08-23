@@ -34,7 +34,7 @@ class TrackRepresentationSpec extends UnitSpecification {
       streamable = false,
       reveal_comments = false,
       reveal_stats = false,
-      label_name = None,
+      label_name = Some("Denis Owns"),
       license = null,
       embeddable = None,
       release_year = None,
@@ -64,6 +64,7 @@ class TrackRepresentationSpec extends UnitSpecification {
     trackJson \ "genre" ==== JsString("future bass")
     trackJson \ "title" ==== JsString("Baby Bash")
     trackJson \ "description" ==== JsString("Follow @samstarling !")
+    trackJson \ "label_name" ==== JsString("Denis Owns")
     trackJson \ "tag_list" ==== JsString("dubstep, folk, system:foo, system:bar")
     trackJson \ "artwork_url" ==== JsString("http://example.com/art/work.jpg")
   }
