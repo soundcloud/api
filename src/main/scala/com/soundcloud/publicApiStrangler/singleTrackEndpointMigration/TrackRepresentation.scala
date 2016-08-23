@@ -1,14 +1,11 @@
 package com.soundcloud.publicApiStrangler.singleTrackEndpointMigration
 
-import com.soundcloud.jvmkit.Urn
 import com.soundcloud.publicApiStrangler.singleTrackEndpointMigration.trackmetadataclient.Track
+import com.soundcloud.service.response.representation.User
 import org.joda.time.format.DateTimeFormat
 import play.api.libs.json._
 
-case class TrackRepresentation(
-                                track: Track,
-                                userUrn: Urn
-                              )
+case class TrackRepresentation(track: Track, user: User)
 
 object TrackRepresentation {
   private val dateTimeFormat = DateTimeFormat.forPattern("yyyy/MM/dd HH:mm:ss +0000")
@@ -19,7 +16,7 @@ object TrackRepresentation {
         "kind" -> "track",
         "id" -> rep.track.urn.getIdentifier.toLong,
         "created_at" -> rep.track.created_at.toString(dateTimeFormat),
-        "user_id" -> rep.userUrn.getIdentifier.toLong,
+        "user_id" -> rep.user.urn.getIdentifier.toLong,
         "duration" -> rep.track.duration,
         "commentable" -> rep.track.commentable,
         //"state" ->

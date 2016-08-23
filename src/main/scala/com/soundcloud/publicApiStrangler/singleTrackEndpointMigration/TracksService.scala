@@ -3,22 +3,33 @@ package com.soundcloud.publicApiStrangler.singleTrackEndpointMigration
 import com.soundcloud.publicApiStrangler.singleTrackEndpointMigration.trackmetadataclient.{Track, TrackmetadataClient}
 import com.soundcloud.scalakit.json.Json
 import com.soundcloud.scalakit.{Urn, UserSession}
+import com.soundcloud.service.client.OkidokiClient
+import com.soundcloud.service.response.representation.User
 import com.twitter.finagle.http.{Response, Status}
 import com.twitter.util.Future
 
-class TracksService(trackmetadataClient: TrackmetadataClient) {
+class TracksService(trackmetadataClient: TrackmetadataClient, okidokiClient: OkidokiClient) {
 
   private val errorString = """{"errors":[{"error_message":"404 - Not Found"}]}"""
 
-  def track(session: UserSession, urn: Urn, secretToken: Option[String], callback: Option[String]): Future[Response] =
-    trackmetadataClient.track(session, urn).map {
-      case Some(track) if (isTrackAccessible(session, secretToken, track)) =>
-        val contentString = jsonpWrapper(callback, jsonForTrack(track))
-        generateResponse(Status.Ok, contentString)
+  def track(session: UserSession, urn: Urn, secretToken: Option[String], callback: Option[String]): Future[Response] = {
+    val content =
+      trackmetadataClient.track(session, urn).flatMap {
+        case Some(track) if isTrackAccessible(session, secretToken, track) =>
+          fetchUserForTrack(track, session).map {
+            case Some(user) => Some(jsonForTrack(track, user))
+            case _ => None
+          }
+        case _ => Future.value(None)
+      }
+
+    content map {
+      case Some(content) =>
+        generateResponse(Status.Ok, jsonpWrapper(callback, content))
       case _ =>
-        val contentString = jsonpWrapper(callback, errorString)
-        generateResponse(Status.NotFound, contentString)
+        generateResponse(Status.NotFound, jsonpWrapper(callback, errorString))
     }
+  }
 
   /**
     * This JsonpWrapper logic should go to filter,
@@ -36,12 +47,11 @@ class TracksService(trackmetadataClient: TrackmetadataClient) {
     res
   }
 
-  private def jsonForTrack(track: Track) = {
-    val singleTrackPublicApiRepresentation = new TrackRepresentation(
-      track = track,
-      userUrn = track.user_urn)
-    Json.stringify(singleTrackPublicApiRepresentation)
-  }
+  private def fetchUserForTrack(track: Track, session: UserSession): Future[Option[User]] =
+    okidokiClient.fetchUserObjects(session, Set(track.user_urn)).map(_.headOption)
+
+  private def jsonForTrack(track: Track, user: User) =
+    Json.stringify(new TrackRepresentation(track, user))
 
   private def isTrackAccessible(session: UserSession, secretToken: Option[String], track: Track): Boolean =
     isPrivacyAuthorized(session, secretToken, track) && !isDisabled(track)

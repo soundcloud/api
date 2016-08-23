@@ -5,6 +5,8 @@ import com.soundcloud.publicApiStrangler.singleTrackEndpointMigration.trackmetad
 import com.soundcloud.scalakit.Urn
 import com.soundcloud.scalakit.json.Json
 import com.soundcloud.scalakit.test.UnitSpecification
+import com.soundcloud.service.client.OkidokiClient
+import com.soundcloud.service.response.representation.User
 import com.twitter.finagle.http.Status
 import com.twitter.util.{Await, Future}
 import org.joda.time.LocalDateTime
@@ -14,9 +16,28 @@ class TracksServiceSpec extends UnitSpecification {
 
   trait Context extends Scope {
     val trackmetadataClient = mock[TrackmetadataClient]
-    val tracksService = new TracksService(trackmetadataClient)
-    val trackUrn = Urn("soundcloud:tracks:987")
+    val okidokiClient = mock[OkidokiClient]
 
+    val tracksService = new TracksService(trackmetadataClient, okidokiClient)
+
+    val userUrn = Urn("soundcloud:users:112")
+
+    def user =
+      User(
+        urn = userUrn,
+        permalink = "giraffe",
+        username = "Dr. G. Raffe",
+        avatar_url = "http://example.com/giraffe.jpg",
+        permalink_url = "http://soundcloud.com/denis",
+        city = None,
+        country = None,
+        tracks_count = 1,
+        followers_count = Some(20000),
+        followings_count = Some(20),
+        verified = false,
+        description = Some("I am a nice person"))
+
+    val trackUrn = Urn("soundcloud:tracks:987")
     val createdAt = new LocalDateTime(2016, 5, 19, 18, 3, 4)
     val lastModified = new LocalDateTime(2016, 5, 20, 18, 3, 4)
 
@@ -27,7 +48,7 @@ class TracksServiceSpec extends UnitSpecification {
                           ) =
       Track(
         urn = trackUrn,
-        user_urn = Urn("soundcloud:users:112"),
+        user_urn = userUrn,
         commentable = false,
         description = None,
         created_at = createdAt,
@@ -65,8 +86,9 @@ class TracksServiceSpec extends UnitSpecification {
   "Returns 200 for public tracks" in new Context {
     val track = trackmetadataTrack()
     when(trackmetadataClient.track(session, trackUrn)).thenReturn(Future.value(Some(track)))
+    when(okidokiClient.fetchUserObjects(session, Set(userUrn))).thenReturn(Future.value(List(user)))
 
-    val expectedTrackRepresentation = TrackRepresentation(track, Urn(s"soundcloud:urn:112"))
+    val expectedTrackRepresentation = TrackRepresentation(track, user)
     val expectedResponseString = Json.stringify(expectedTrackRepresentation)
 
     val response = Await.result(tracksService.track(session, trackUrn, None, None))
@@ -78,8 +100,9 @@ class TracksServiceSpec extends UnitSpecification {
   "Wraps track data in jsonp if `callback` param is defined" in new Context {
     val track = trackmetadataTrack()
     when(trackmetadataClient.track(session, trackUrn)).thenReturn(Future.value(Some(track)))
+    when(okidokiClient.fetchUserObjects(session, Set(userUrn))).thenReturn(Future.value(List(user)))
 
-    val expectedTrackRepresentation = TrackRepresentation(track, Urn(s"soundcloud:urn:112"))
+    val expectedTrackRepresentation = TrackRepresentation(track, user)
     val expectedResponseString = Json.stringify(expectedTrackRepresentation)
 
     val response = Await.result(tracksService.track(session, trackUrn, None, Some("js_callback_fn")))
@@ -90,6 +113,7 @@ class TracksServiceSpec extends UnitSpecification {
 
   "Returns a response with the right headers" in new Context {
     when(trackmetadataClient.track(session, trackUrn)).thenReturn(Future.value(Some(trackmetadataTrack())))
+    when(okidokiClient.fetchUserObjects(session, Set(userUrn))).thenReturn(Future.value(List(user)))
 
     val response = Await.result(tracksService.track(session, trackUrn, None, None))
 
@@ -142,9 +166,9 @@ class TracksServiceSpec extends UnitSpecification {
   }
 
   "Returns 200 for private tracks if the owner is requesting" in new Context {
-    val ownerUrn = Urn("soundcloud:users:112")
-    val ownerSession = new UserSessionBuilder().setUser(ownerUrn).build
+    val ownerSession = new UserSessionBuilder().setUser(userUrn).build
     when(trackmetadataClient.track(ownerSession, trackUrn)).thenReturn(Future.value(Some(trackmetadataTrack())))
+    when(okidokiClient.fetchUserObjects(ownerSession, Set(userUrn))).thenReturn(Future.value(List(user)))
 
     val response = Await.result(tracksService.track(ownerSession, trackUrn, None, None))
     response.status ==== Status.Ok
@@ -164,6 +188,7 @@ class TracksServiceSpec extends UnitSpecification {
     val correctSecretToken = "aSecre_t"
     val track = trackmetadataTrack(isPublic = false, secretToken = correctSecretToken)
     when(trackmetadataClient.track(session, trackUrn)).thenReturn(Future.value(Some(track)))
+    when(okidokiClient.fetchUserObjects(session, Set(userUrn))).thenReturn(Future.value(List(user)))
 
     val response = Await.result(tracksService.track(session, trackUrn, Some(correctSecretToken), None))
     response.status ==== Status.Ok
