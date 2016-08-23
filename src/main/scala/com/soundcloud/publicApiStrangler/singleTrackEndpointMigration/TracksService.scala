@@ -50,12 +50,8 @@ class TracksService(trackmetadataClient: TrackmetadataClient, okidokiClient: Oki
   private def fetchUserForTrack(track: Track, session: UserSession): Future[Option[User]] =
     okidokiClient.fetchUserObjects(session, Set(track.user_urn)).map(_.headOption)
 
-  private def jsonForTrack(track: Track, user: User) = {
-    val singleTrackPublicApiRepresentation = new TrackRepresentation(
-      track = track,
-      userUrn = track.user_urn)
-    Json.stringify(singleTrackPublicApiRepresentation)
-  }
+  private def jsonForTrack(track: Track, user: User) =
+    Json.stringify(new TrackRepresentation(track, user))
 
   private def isTrackAccessible(session: UserSession, secretToken: Option[String], track: Track): Boolean =
     isPrivacyAuthorized(session, secretToken, track) && !isDisabled(track)

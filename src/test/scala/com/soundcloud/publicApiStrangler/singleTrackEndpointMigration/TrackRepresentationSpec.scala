@@ -3,6 +3,7 @@ package com.soundcloud.publicApiStrangler.singleTrackEndpointMigration
 import com.soundcloud.publicApiStrangler.singleTrackEndpointMigration.trackmetadataclient.{Artwork, EmbeddingPermission, Track}
 import com.soundcloud.scalakit.Urn
 import com.soundcloud.scalakit.test.UnitSpecification
+import com.soundcloud.service.response.representation.User
 import org.joda.time.LocalDateTime
 import play.api.libs.json.{JsBoolean, JsNumber, JsString, Json}
 
@@ -11,6 +12,22 @@ class TrackRepresentationSpec extends UnitSpecification {
   trait Context extends Scope {
     val trackUrn = new Urn("soundcloud", "tracks", "1324")
     val userUrn = new Urn("soundcloud", "users", "3456")
+
+    val defaultUser =
+      User(
+        urn = userUrn,
+        permalink = "giraffe",
+        username = "Dr. G. Raffe",
+        avatar_url = "http://example.com/giraffe.jpg",
+        permalink_url = "http://soundcloud.com/denis",
+        city = None,
+        country = None,
+        tracks_count = 1,
+        followers_count = Some(20000),
+        followings_count = Some(20),
+        verified = false,
+        description = Some("I am a nice person"))
+
     val defaultTrack = Track(
       urn = trackUrn,
       user_urn = Urn("soundcloud:users:112"),
@@ -47,7 +64,7 @@ class TrackRepresentationSpec extends UnitSpecification {
   }
 
   "serialises to JSON correctly" in new Context {
-    val trackRepresentation = TrackRepresentation(defaultTrack, userUrn)
+    val trackRepresentation = TrackRepresentation(defaultTrack, defaultUser)
     val trackJson = Json.toJson(trackRepresentation)
 
     trackJson \ "kind" ==== JsString("track")
@@ -77,12 +94,12 @@ class TrackRepresentationSpec extends UnitSpecification {
 
   "sharing" in new Context {
     val publicTrack = defaultTrack.copy(public = true)
-    val publicTrackRepresentation = TrackRepresentation(publicTrack, userUrn)
+    val publicTrackRepresentation = TrackRepresentation(publicTrack, defaultUser)
     val publicTrackJson = Json.toJson(publicTrackRepresentation)
     publicTrackJson \ "sharing" ==== JsString("public")
 
     val privateTrack = defaultTrack.copy(public = false)
-    val privateTrackRepresentation = TrackRepresentation(privateTrack, userUrn)
+    val privateTrackRepresentation = TrackRepresentation(privateTrack, defaultUser)
     val privateTrackJson = Json.toJson(privateTrackRepresentation)
     privateTrackJson \ "sharing" ==== JsString("private")
   }

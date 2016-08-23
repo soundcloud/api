@@ -88,7 +88,7 @@ class TracksServiceSpec extends UnitSpecification {
     when(trackmetadataClient.track(session, trackUrn)).thenReturn(Future.value(Some(track)))
     when(okidokiClient.fetchUserObjects(session, Set(userUrn))).thenReturn(Future.value(List(user)))
 
-    val expectedTrackRepresentation = TrackRepresentation(track, userUrn)
+    val expectedTrackRepresentation = TrackRepresentation(track, user)
     val expectedResponseString = Json.stringify(expectedTrackRepresentation)
 
     val response = Await.result(tracksService.track(session, trackUrn, None, None))
@@ -102,7 +102,7 @@ class TracksServiceSpec extends UnitSpecification {
     when(trackmetadataClient.track(session, trackUrn)).thenReturn(Future.value(Some(track)))
     when(okidokiClient.fetchUserObjects(session, Set(userUrn))).thenReturn(Future.value(List(user)))
 
-    val expectedTrackRepresentation = TrackRepresentation(track, userUrn)
+    val expectedTrackRepresentation = TrackRepresentation(track, user)
     val expectedResponseString = Json.stringify(expectedTrackRepresentation)
 
     val response = Await.result(tracksService.track(session, trackUrn, None, Some("js_callback_fn")))
