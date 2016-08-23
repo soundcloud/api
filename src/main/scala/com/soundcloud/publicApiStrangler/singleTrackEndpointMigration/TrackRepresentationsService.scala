@@ -8,7 +8,7 @@ import com.soundcloud.service.response.representation.User
 import com.twitter.finagle.http.{Response, Status}
 import com.twitter.util.Future
 
-class TracksService(trackmetadataClient: TrackmetadataClient, okidokiClient: OkidokiClient) {
+class TrackRepresentationsService(trackmetadataClient: TrackmetadataClient, okidokiClient: OkidokiClient) {
 
   private val errorString = """{"errors":[{"error_message":"404 - Not Found"}]}"""
 

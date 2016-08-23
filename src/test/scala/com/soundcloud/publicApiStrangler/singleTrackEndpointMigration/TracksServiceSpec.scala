@@ -18,7 +18,7 @@ class TracksServiceSpec extends UnitSpecification {
     val trackmetadataClient = mock[TrackmetadataClient]
     val okidokiClient = mock[OkidokiClient]
 
-    val tracksService = new TracksService(trackmetadataClient, okidokiClient)
+    val tracksService = new TrackRepresentationsService(trackmetadataClient, okidokiClient)
 
     val userUrn = Urn("soundcloud:users:112")
 

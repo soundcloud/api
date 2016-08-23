@@ -24,7 +24,7 @@ import com.soundcloud.publicApiStrangler.mapper.timeline.{EntityMapper, EntitySu
 import com.soundcloud.publicApiStrangler.mapper.trackstreams.{TrackStreamJsonResponseMapper, TrackStreamRedirectResponseMapper}
 import com.soundcloud.publicApiStrangler.mapper.waveform.WaveformMapper
 import com.soundcloud.publicApiStrangler.singleTrackEndpointMigration.trackmetadataclient.TrackmetadataClient
-import com.soundcloud.publicApiStrangler.singleTrackEndpointMigration.{ResponseComparison, SingleTrackController, TracksService}
+import com.soundcloud.publicApiStrangler.singleTrackEndpointMigration.{ResponseComparison, SingleTrackController, TrackRepresentationsService}
 import com.soundcloud.publicApiStrangler.support._
 import com.soundcloud.publicApiStrangler.zookeeper.CuratorFrameworkFactory
 import com.soundcloud.ratelimiting.facade._
@@ -176,7 +176,7 @@ object App
   override lazy val rollout = Some(rolloutClient)
 
   private val singleTrackController = {
-    val tracksService = new TracksService(trackmetadataClient, okidokiClient)
+    val tracksService = new TrackRepresentationsService(trackmetadataClient, okidokiClient)
     new SingleTrackController(
       userAuthentication,
       mothershipDispatcher,

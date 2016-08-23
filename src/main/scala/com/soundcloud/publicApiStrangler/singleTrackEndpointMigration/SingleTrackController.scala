@@ -12,7 +12,7 @@ import scala.collection.JavaConversions._
 
 class SingleTrackController(userAuthentication: UserAuthentication,
                             mothershipDispatcher: DispatchToMothershipHandler,
-                            tracksService: TracksService,
+                            tracksService: TrackRepresentationsService,
                             responseComparison: ResponseComparison,
                             telemetry: Telemetry)
   extends BffInjectionBasedController {

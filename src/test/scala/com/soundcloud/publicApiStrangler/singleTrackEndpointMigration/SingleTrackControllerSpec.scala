@@ -15,7 +15,7 @@ class SingleTrackControllerSpec extends InjectionBasedControllerSpecification {
 
   trait Context extends Scope {
     val fallback = mock[DispatchToMothershipHandler]
-    val tracksService = mock[TracksService]
+    val tracksService = mock[TrackRepresentationsService]
     val responseComparison = mock[ResponseComparison]
 
     val config = new InMemoryConfig
