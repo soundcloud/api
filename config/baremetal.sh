@@ -23,7 +23,7 @@ export AUTHSY_SRV_RECORD="dnssrv!http.api.prod.authsy.dd.srv.int.s-cloud.net"
 export FOLLOWS_SRV_RECORD="dnssrv!http.api.prod.follows.dd.srv.int.s-cloud.net"
 export GOBBLY_SRV_RECORD="dnssrv!http.api.prod.gobbly.dd.srv.int.s-cloud.net"
 export GATEKEEPER_SRV_RECORD="dnssrv!http.api.prod.gatekeeper.dd.srv.int.s-cloud.net"
-
+export PUBMESE_ADDRESS="dnssrv!http.web.prod.pubmese.dd.srv.int.s-cloud.net"
 export GEOIP_SRV_RECORD="dnssrv!http.geoip2http.prod.geoip.dd.srv.int.s-cloud.net"
 export MEDIASERVICE_SRV_RECORD="dnssrv!http.urlgen.prod.media-service.dd.srv.int.s-cloud.net"
 

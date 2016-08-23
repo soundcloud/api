@@ -12,6 +12,7 @@ import com.soundcloud.jvmkit.rollout.{BasicRolloutFeature, Rollout, RolloutBuild
 import com.soundcloud.publicApiStrangler.authorization._
 import com.soundcloud.publicApiStrangler.client._
 import com.soundcloud.publicApiStrangler.client.followcounts.FollowCountsClient
+import com.soundcloud.publicApiStrangler.client.pubmese.PubmeseClient
 import com.soundcloud.publicApiStrangler.controller._
 import com.soundcloud.publicApiStrangler.headers.DefaultResponseHeadersFilter
 import com.soundcloud.publicApiStrangler.mapper.liebling.LikeCountMapper
@@ -31,6 +32,7 @@ import com.soundcloud.ratelimiting.facade._
 import com.soundcloud.scalakit.Urn
 import com.soundcloud.scalakit.cache.MemcachedClient
 import com.soundcloud.scalakit.finagle.jsonservice.{JsonClient, ServiceEntryPoint}
+import com.soundcloud.service.client.OkidokiClient
 import org.eclipse.jetty.server.Handler
 
 object App
@@ -48,6 +50,16 @@ object App
   private val bffApplication = BffApplication(Urn("soundcloud", "systems", "public-api-strangler"), config.getApplicationResourceName)
 
   private val userAuthentication = createUserAuthentication
+
+  val pubmeseJsonClient =
+    JsonClient(
+      ResourceName("pubmese"),
+      ServiceEntryPoint(config.get(ResourceName("PUBMESE"), ConfigConvention.ADDRESS)),
+      config,
+      telemetry
+    )
+
+  val pubmeseClient = new PubmeseClient(pubmeseJsonClient)
 
   private val okidokiService = JsonService(
     ServiceConfig("okidoki", config.get(ResourceName("OKIDOKI"), ConfigConvention.SRV_RECORD), config)
@@ -176,7 +188,12 @@ object App
   override lazy val rollout = Some(rolloutClient)
 
   private val singleTrackController = {
-    val tracksService = new TrackRepresentationsService(trackmetadataClient, okidokiClient)
+    val tracksService = new TrackRepresentationsService(
+      trackmetadataClient,
+      okidokiClient,
+      pubmeseClient
+    )
+
     new SingleTrackController(
       userAuthentication,
       mothershipDispatcher,
