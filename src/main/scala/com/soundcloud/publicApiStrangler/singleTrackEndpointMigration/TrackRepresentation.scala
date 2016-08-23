@@ -74,7 +74,12 @@ object TrackRepresentation {
     Json.obj(
       "id" -> rep.user.urn.getIdentifier.toLong,
       "kind" -> "user",
-      "permalink" -> rep.user.permalink
+      "permalink" -> rep.user.permalink,
+      "username" -> rep.user.username,
+      // last_modified
+      "uri" -> s"https://api.soundcloud.com/users/${rep.user.urn.getIdentifier}",
+      "permalink_url" -> rep.user.permalink_url,
+      "avatar_url" -> rep.user.avatar_url
     )
   }
 }

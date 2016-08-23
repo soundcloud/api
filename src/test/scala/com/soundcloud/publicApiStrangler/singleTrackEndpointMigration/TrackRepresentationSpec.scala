@@ -19,7 +19,7 @@ class TrackRepresentationSpec extends UnitSpecification {
         permalink = "giraffe",
         username = "Dr. G. Raffe",
         avatar_url = "http://example.com/giraffe.jpg",
-        permalink_url = "http://soundcloud.com/denis",
+        permalink_url = "https://soundcloud.com/denis",
         city = None,
         country = None,
         tracks_count = 1,
@@ -93,6 +93,15 @@ class TrackRepresentationSpec extends UnitSpecification {
     trackJson \ "user" \ "permalink" ==== JsString("giraffe")
     trackJson \ "permalink_url" ==== JsString("http://soundcloud.com/nirvana/plsty-remix")
     trackJson \ "artwork_url" ==== JsString("https://i1.sndcdn.com/artworks-FuwbhSJORvKH-0-original.jpg")
+
+    val userJson = trackJson \ "user"
+
+    userJson \ "id" ==== JsNumber(3456)
+    userJson \ "kind" ==== JsString("user")
+    userJson \ "permalink" ==== JsString("giraffe")
+    userJson \ "uri" ==== JsString("https://api.soundcloud.com/users/3456")
+    userJson \ "permalink_url" ==== JsString("https://soundcloud.com/denis")
+    userJson \ "avatar_url" ==== JsString("http://example.com/giraffe.jpg")
   }
 
   "sharing" in new Context {
