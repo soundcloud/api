@@ -12,7 +12,7 @@ import com.twitter.util.{Await, Future}
 import org.joda.time.LocalDateTime
 import org.mockito.Mockito._
 
-class TracksServiceSpec extends UnitSpecification {
+class TrackRepresentationsServiceSpec extends UnitSpecification {
 
   trait Context extends Scope {
     val trackmetadataClient = mock[TrackmetadataClient]
