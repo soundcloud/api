@@ -37,9 +37,9 @@ class TrackRepresentationSpec extends UnitSpecification {
       label_name = Some("Denis Owns"),
       license = null,
       embeddable = None,
-      release_year = None,
-      release_month = None,
-      release_day = None,
+      release_year = Some(1991),
+      release_month = Some(1),
+      release_day = Some(2),
       embeddableBy = EmbeddingPermission.Me,
       releaseDate = None,
       artwork = Artwork(filename = Some("http://example.com/art/work.jpg")),
@@ -65,6 +65,9 @@ class TrackRepresentationSpec extends UnitSpecification {
     trackJson \ "title" ==== JsString("Baby Bash")
     trackJson \ "description" ==== JsString("Follow @samstarling !")
     trackJson \ "label_name" ==== JsString("Denis Owns")
+    trackJson \ "release_year" ==== JsNumber(1991)
+    trackJson \ "release_month" ==== JsNumber(1)
+    trackJson \ "release_day" ==== JsNumber(2)
     trackJson \ "tag_list" ==== JsString("dubstep, folk, system:foo, system:bar")
     trackJson \ "artwork_url" ==== JsString("http://example.com/art/work.jpg")
   }

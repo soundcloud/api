@@ -8,15 +8,6 @@ import play.api.libs.json._
 /*
 The following fields are not yet included in the track representation. Add them, and remove them from this list:
 
-"release": null,
-"track_type": null,
-"key_signature": null,
-"isrc": null,
-"video_url": null,
-"bpm": null,
-"release_year": null,
-"release_month": null,
-"release_day": null,
 "original_format": "mp3",
 "license": "all-rights-reserved",
 "uri": "https://api.soundcloud.com/tracks/124707269",
@@ -63,6 +54,15 @@ object TrackRepresentation {
         "title" -> rep.track.title,
         "description" -> rep.track.description,
         "label_name" -> rep.track.label_name,
+        // "release" ->
+        // track_type
+        // key_signature
+        // isrc
+        // video_url
+        // bpm
+        "release_year" -> rep.track.release_year,
+        "release_month" -> rep.track.release_month,
+        "release_day" -> rep.track.release_day,
         "tag_list" -> (rep.track.user_tags ++ rep.track.machine_tags).mkString(", "),
         "artwork_url" -> rep.track.artwork.filename
       )
