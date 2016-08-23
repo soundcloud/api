@@ -5,22 +5,6 @@ import com.soundcloud.publicApiStrangler.singleTrackEndpointMigration.trackmetad
 import org.joda.time.format.DateTimeFormat
 import play.api.libs.json._
 
-/*
-The following fields are not yet included in the track representation. Add them, and remove them from this list:
-
-
-
-"permalink_url": "http://soundcloud.com/cal_green/business-mix",
-"waveform_url": "https://w1.sndcdn.com/63Vb39yH93WZ_m.png",
-"stream_url": "https://api.soundcloud.com/tracks/124707269/stream",
-"download_url": "https://api.soundcloud.com/tracks/124707269/download",
-"playback_count": 56,
-"download_count": 17,
-"favoritings_count": 4,
-"comment_count": 2,
-"attachments_uri": "https://api.soundcloud.com/tracks/124707269/attachments"
-*/
-
 case class TrackRepresentation(
                                 track: Track,
                                 userUrn: Urn
@@ -73,6 +57,18 @@ object TrackRepresentation {
         // Probably we need to copy the logic at
         // https://github.com/soundcloud/api-web/blob/master/src/main/scala/com/soundcloud/api/web/representation/helpers/ResourceURLs.scala#L72
         "artwork_url" -> rep.track.artwork.filename.map(file => s"https://i1.sndcdn.com/$file")
+        // waveform_url
+        // stream_url
+        // playback_count
+        // download_url
+        // download_count
+        // favoritings_count
+        // comment_count
+        // likes_count
+        // reposts_count
+        // attachments_uri
+        // policy
+        // monetization_model
       )
   }
 }
