@@ -48,7 +48,7 @@ object TrackRepresentation {
         "license" -> rep.track.license,
         "uri" -> s"https://api.soundcloud.com/tracks/${rep.track.urn.getIdentifier}",
         "user" -> Json.obj(
-          "id" -> rep.user.urn.getIdentifier
+          "id" -> rep.user.urn.getIdentifier.toLong
         ),
         // user_playback_count
         // user_favorite
