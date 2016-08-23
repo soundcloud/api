@@ -47,7 +47,9 @@ object TrackRepresentation {
         // original_format
         "license" -> rep.track.license,
         "uri" -> s"https://api.soundcloud.com/tracks/${rep.track.urn.getIdentifier}",
-        // "user"
+        "user" -> Json.obj(
+          "id" -> rep.user.urn.getIdentifier
+        ),
         // user_playback_count
         // user_favorite
         "permalink_url" -> rep.track.permalink_url,
