@@ -42,6 +42,7 @@ object TrackRepresentation {
         // original_content_size ->
         "last_modified" -> rep.track.last_modified.toString(dateTimeFormat),
         "sharing" -> (if (rep.track.public) "public" else "private"),
+        "tag_list" -> (rep.track.user_tags ++ rep.track.machine_tags).mkString(", "),
         "permalink" -> rep.track.permalink,
         "streamable" -> rep.track.streamable,
         "embeddable_by" -> rep.track.embeddableBy,
@@ -69,11 +70,9 @@ object TrackRepresentation {
         // user_playback_count
         // user_favorite
         "permalink_url" -> rep.track.permalink_url,
-
-
-
-        "tag_list" -> (rep.track.user_tags ++ rep.track.machine_tags).mkString(", "),
-        "artwork_url" -> rep.track.artwork.filename
+        // Probably we need to copy the logic at
+        // https://github.com/soundcloud/api-web/blob/master/src/main/scala/com/soundcloud/api/web/representation/helpers/ResourceURLs.scala#L72
+        "artwork_url" -> rep.track.artwork.filename.map(file => s"https://i1.sndcdn.com/$file")
       )
   }
 }

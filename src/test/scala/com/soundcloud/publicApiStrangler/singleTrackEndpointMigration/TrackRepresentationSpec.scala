@@ -42,7 +42,7 @@ class TrackRepresentationSpec extends UnitSpecification {
       release_day = Some(2),
       embeddableBy = EmbeddingPermission.Me,
       releaseDate = None,
-      artwork = Artwork(filename = Some("http://example.com/art/work.jpg")),
+      artwork = Artwork(filename = Some("artworks-FuwbhSJORvKH-0-original.jpg")),
       published_at = None)
   }
 
@@ -57,6 +57,7 @@ class TrackRepresentationSpec extends UnitSpecification {
     trackJson \ "duration" ==== JsNumber(120)
     trackJson \ "commentable" ==== JsBoolean(false)
     trackJson \ "last_modified" ==== JsString("2016/08/08 13:28:53 +0000")
+    trackJson \ "tag_list" ==== JsString("dubstep, folk, system:foo, system:bar")
     trackJson \ "permalink" ==== JsString("plsty-remix")
     trackJson \ "streamable" ==== JsBoolean(false)
     trackJson \ "embeddable_by" ==== JsString("me")
@@ -71,11 +72,7 @@ class TrackRepresentationSpec extends UnitSpecification {
     trackJson \ "license" ==== JsString("all-rights-reserved")
     trackJson \ "uri" ==== JsString("https://api.soundcloud.com/tracks/1324")
     trackJson \ "permalink_url" ==== JsString("http://soundcloud.com/nirvana/plsty-remix")
-
-
-
-    trackJson \ "tag_list" ==== JsString("dubstep, folk, system:foo, system:bar")
-    trackJson \ "artwork_url" ==== JsString("http://example.com/art/work.jpg")
+    trackJson \ "artwork_url" ==== JsString("https://i1.sndcdn.com/artworks-FuwbhSJORvKH-0-original.jpg")
   }
 
   "sharing" in new Context {
