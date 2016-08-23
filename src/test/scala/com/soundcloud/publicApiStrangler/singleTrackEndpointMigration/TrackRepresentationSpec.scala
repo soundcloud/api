@@ -23,7 +23,7 @@ class TrackRepresentationSpec extends UnitSpecification {
       genre = Some("future bass"),
       last_modified = new LocalDateTime(2016, 8, 8, 13, 28, 53),
       permalink = "plsty-remix",
-      permalink_url = None,
+      permalink_url = Some("http://soundcloud.com/nirvana/plsty-remix"),
       public = true,
       secret_token = null,
       user_tags = List("dubstep", "folk"),
@@ -35,7 +35,7 @@ class TrackRepresentationSpec extends UnitSpecification {
       reveal_comments = false,
       reveal_stats = false,
       label_name = Some("Denis Owns"),
-      license = null,
+      license = "all-rights-reserved",
       embeddable = None,
       release_year = Some(1991),
       release_month = Some(1),
@@ -68,6 +68,12 @@ class TrackRepresentationSpec extends UnitSpecification {
     trackJson \ "release_year" ==== JsNumber(1991)
     trackJson \ "release_month" ==== JsNumber(1)
     trackJson \ "release_day" ==== JsNumber(2)
+    trackJson \ "license" ==== JsString("all-rights-reserved")
+    trackJson \ "uri" ==== JsString("https://api.soundcloud.com/tracks/1324")
+    trackJson \ "permalink_url" ==== JsString("http://soundcloud.com/nirvana/plsty-remix")
+
+
+
     trackJson \ "tag_list" ==== JsString("dubstep, folk, system:foo, system:bar")
     trackJson \ "artwork_url" ==== JsString("http://example.com/art/work.jpg")
   }

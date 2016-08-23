@@ -8,9 +8,8 @@ import play.api.libs.json._
 /*
 The following fields are not yet included in the track representation. Add them, and remove them from this list:
 
-"original_format": "mp3",
-"license": "all-rights-reserved",
-"uri": "https://api.soundcloud.com/tracks/124707269",
+
+
 "permalink_url": "http://soundcloud.com/cal_green/business-mix",
 "waveform_url": "https://w1.sndcdn.com/63Vb39yH93WZ_m.png",
 "stream_url": "https://api.soundcloud.com/tracks/124707269/stream",
@@ -63,6 +62,16 @@ object TrackRepresentation {
         "release_year" -> rep.track.release_year,
         "release_month" -> rep.track.release_month,
         "release_day" -> rep.track.release_day,
+        // original_format
+        "license" -> rep.track.license,
+        "uri" -> s"https://api.soundcloud.com/tracks/${rep.track.urn.getIdentifier}",
+        // "user"
+        // user_playback_count
+        // user_favorite
+        "permalink_url" -> rep.track.permalink_url,
+
+
+
         "tag_list" -> (rep.track.user_tags ++ rep.track.machine_tags).mkString(", "),
         "artwork_url" -> rep.track.artwork.filename
       )
