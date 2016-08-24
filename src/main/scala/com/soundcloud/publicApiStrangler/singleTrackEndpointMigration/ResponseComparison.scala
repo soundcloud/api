@@ -146,7 +146,7 @@ class ResponseComparison(telemetry: Telemetry) {
 
     val differentAttributeCount = legacyJson.fields.count {
       case (key, jsValue) =>
-        jsValue != migrationJson \ key
+        key != "isrc" && jsValue != migrationJson \ key
     }
 
     differentAttributeCount + extraAttributesCount

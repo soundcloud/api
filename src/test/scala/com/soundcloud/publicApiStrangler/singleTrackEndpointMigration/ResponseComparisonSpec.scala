@@ -174,6 +174,35 @@ class ResponseComparisonSpec extends UnitSpecification {
       }
     }
 
+    "does not report ISRC differences" in new Context {
+      List(
+        ("{\"kind\":\"track\",\"id\":987,\"isrc\":\"D0NK3Y\"}",
+          "{\"kind\":\"track\",\"id\":987,\"isrc\"::\"D0NK3Y\"}"),
+
+        ("{\"kind\":\"track\",\"id\":987,\"isrc\":\"D0NK3Y\"}",
+          "{\"kind\":\"track\",\"id\":987,\"isrc\":\"DONK4Y\"}")
+      ).foreach {
+        case ((legacyResponseString, migrationResponseString)) =>
+          val legacyRes = generateResponse(legacyResponseString)
+          val migrationRes = generateResponse(migrationResponseString)
+
+          responseComparison.report(Request(), legacyRes, migrationRes)
+          val value = collectorRegistry.getSampleValue(
+            "single_track_endpoint_comparison_sum",
+            Array("system"),
+            Array("TEST-APP")
+          )
+          (if (Option(value).isDefined) value else 0.0d) ==== 0.0d
+
+          val failuresCount = collectorRegistry.getSampleValue(
+            "single_track_endpoint_failures",
+            Array("type", "system"),
+            Array("differentBodyAttributesCount", "TEST-APP")
+          )
+          failuresCount ==== null
+      }
+    }
+
     "reports any errors happening during comparison" in new Context {
       List(
         ("{\"kind\":}", // invalid json
