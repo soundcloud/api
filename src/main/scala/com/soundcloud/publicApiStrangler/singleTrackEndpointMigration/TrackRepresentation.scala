@@ -31,19 +31,19 @@ object TrackRepresentation {
         "streamable" -> rep.track.streamable,
         "embeddable_by" -> rep.track.embeddableBy,
         "downloadable" -> rep.track.downloadable,
-        // "purchase_url" ->
+        // "purchase_url" --> track metadata
         // "label_id" ->
-        // "purchase_title" ->
+        // "purchase_title" --> track metadata
         "genre" -> rep.track.genre,
         "title" -> rep.track.title,
         "description" -> rep.track.description,
         "label_name" -> rep.track.label_name,
-        // "release" ->
-        // track_type
-        // key_signature
+        // "release" --> track metadata
+        // track_type --> track metadata
+        // key_signature --> track metadata
         "isrc" -> rep.isrc.map(_.toString),
-        // video_url
-        // bpm
+        // video_url --> track metadata
+        // bpm --> track metadata
         "release_year" -> rep.track.release_year,
         "release_month" -> rep.track.release_month,
         "release_day" -> rep.track.release_day,
@@ -51,22 +51,20 @@ object TrackRepresentation {
         "license" -> rep.track.license,
         "uri" -> s"https://api.soundcloud.com/tracks/${rep.track.urn.getIdentifier}",
         "user" -> writeUser(rep),
-        // user_playback_count
-        // user_favorite
+        // user_favorite --> liebling
         "permalink_url" -> rep.track.permalink_url,
         // Probably we need to copy the logic at
         // https://github.com/soundcloud/api-web/blob/master/src/main/scala/com/soundcloud/api/web/representation/helpers/ResourceURLs.scala#L72
         "artwork_url" -> rep.track.artwork.filename.map(file => s"https://i1.sndcdn.com/$file")
-        // waveform_url
-        // stream_url
-        // playback_count
-        // download_url
-        // download_count
-        // favoritings_count
-        // comment_count
-        // likes_count
-        // reposts_count
-        // attachments_uri
+        // waveform_url --> media service
+        // stream_url --> build ourselves
+        // playback_count --> stitch
+        // download_url --> build ourselves
+        // download_count --> stitch
+        // favoritings_count --> stitch
+        // comment_count --> stitch
+        // likes_count --> stitch
+        // reposts_count --> stitch
       )
   }
 
