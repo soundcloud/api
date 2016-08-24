@@ -203,7 +203,7 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
     response.status ==== Status.NotFound
   }
 
-  "Returns 404 for public tracks if user can not be fetched" in new Context {
+  "Returns 503 for public tracks if user can not be fetched" in new Context {
     val publicTrack = trackmetadataTrack()
     when(trackmetadataClient.track(session, trackUrn)).thenReturn(Future.value(Some(publicTrack)))
     when(okidokiClient.fetchUserObjects(session, Set(userUrn))).thenReturn(Future.exception(new Exception("asd")))
