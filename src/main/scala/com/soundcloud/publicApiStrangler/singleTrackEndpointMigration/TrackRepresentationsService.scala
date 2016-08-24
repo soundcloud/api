@@ -6,28 +6,32 @@ import com.soundcloud.scalakit.{Urn, UserSession}
 import com.soundcloud.service.client.OkidokiClient
 import com.soundcloud.service.response.representation.User
 import com.twitter.finagle.http.{Response, Status}
-import com.twitter.util.Future
+import com.twitter.util.{Future, NonFatal}
 
 class TrackRepresentationsService(trackmetadataClient: TrackmetadataClient, okidokiClient: OkidokiClient) {
 
-  private val errorString = """{"errors":[{"error_message":"404 - Not Found"}]}"""
+  private val notFoundErrorString = """{"errors":[{"error_message":"404 - Not Found"}]}"""
+  private val serviceUnavailableErrorString = """{"errors":[{"error_message":"503 - Service Unavailable"}]}"""
+
 
   def track(session: UserSession, urn: Urn, secretToken: Option[String], callback: Option[String]): Future[Response] = {
-    val content =
-      trackmetadataClient.track(session, urn).flatMap {
-        case Some(track) if isTrackAccessible(session, secretToken, track) =>
-          fetchUserForTrack(track, session).map {
-            case Some(user) => Some(jsonForTrack(track, user))
-            case _ => None
-          }
-        case _ => Future.value(None)
-      }
+    trackmetadataClient.track(session, urn).flatMap {
+      case Some(track) if isTrackAccessible(session, secretToken, track) =>
+        fetchUserForTrack(track, session)
+          .map {
+            case Some(user) =>
+              val content = jsonForTrack(track, user)
+              generateResponse(Status.Ok, jsonpWrapper(callback, content))
 
-    content map {
-      case Some(content) =>
-        generateResponse(Status.Ok, jsonpWrapper(callback, content))
+            case _ =>
+              generateResponse(Status.NotFound, jsonpWrapper(callback, notFoundErrorString))
+          }
+          .handle {
+            case NonFatal(ex) =>
+              generateResponse(Status.ServiceUnavailable, jsonpWrapper(callback, serviceUnavailableErrorString))
+          }
       case _ =>
-        generateResponse(Status.NotFound, jsonpWrapper(callback, errorString))
+        Future.value(generateResponse(Status.NotFound, jsonpWrapper(callback, notFoundErrorString)))
     }
   }
 
