@@ -67,8 +67,6 @@ object TrackRepresentation {
         // likes_count
         // reposts_count
         // attachments_uri
-        // policy
-        // monetization_model
       )
   }
 
