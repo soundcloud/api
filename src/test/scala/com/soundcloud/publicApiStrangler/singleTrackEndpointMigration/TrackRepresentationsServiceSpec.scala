@@ -1,6 +1,7 @@
 package com.soundcloud.publicApiStrangler.singleTrackEndpointMigration
 
 import com.soundcloud.jvmkit.UserSessionBuilder
+import com.soundcloud.publicApiStrangler.client.pubmese.{Isrc, PubmeseClient}
 import com.soundcloud.publicApiStrangler.singleTrackEndpointMigration.trackmetadataclient.{Artwork, EmbeddingPermission, Track, TrackmetadataClient}
 import com.soundcloud.scalakit.Urn
 import com.soundcloud.scalakit.json.Json
@@ -17,8 +18,13 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
   trait Context extends Scope {
     val trackmetadataClient = mock[TrackmetadataClient]
     val okidokiClient = mock[OkidokiClient]
+    val pubmeseClient = mock[PubmeseClient]
 
-    val tracksService = new TrackRepresentationsService(trackmetadataClient, okidokiClient)
+    val tracksService = new TrackRepresentationsService(
+      trackmetadataClient,
+      okidokiClient,
+      pubmeseClient
+    )
 
     val userUrn = Urn("soundcloud:users:112")
 
@@ -80,6 +86,9 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
         artwork = Artwork(None),
         published_at = None)
 
+    def isrc(wrapped: String = "US-S1Z-99-00001"): Option[Isrc] =
+      Some(Isrc(wrapped))
+
     val session = anonymousSession
   }
 
@@ -87,8 +96,9 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
     val track = trackmetadataTrack()
     when(trackmetadataClient.track(session, trackUrn)).thenReturn(Future.value(Some(track)))
     when(okidokiClient.fetchUserObjects(session, Set(userUrn))).thenReturn(Future.value(List(user)))
+    when(pubmeseClient.isrcForTrack(session, trackUrn)).thenReturn(Future.value(isrc()))
 
-    val expectedTrackRepresentation = TrackRepresentation(track, user)
+    val expectedTrackRepresentation = TrackRepresentation(track, user, isrc())
     val expectedResponseString = Json.stringify(expectedTrackRepresentation)
 
     val response = Await.result(tracksService.track(session, trackUrn, None, None))
@@ -101,8 +111,9 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
     val track = trackmetadataTrack()
     when(trackmetadataClient.track(session, trackUrn)).thenReturn(Future.value(Some(track)))
     when(okidokiClient.fetchUserObjects(session, Set(userUrn))).thenReturn(Future.value(List(user)))
+    when(pubmeseClient.isrcForTrack(session, trackUrn)).thenReturn(Future.value(isrc()))
 
-    val expectedTrackRepresentation = TrackRepresentation(track, user)
+    val expectedTrackRepresentation = TrackRepresentation(track, user, isrc())
     val expectedResponseString = Json.stringify(expectedTrackRepresentation)
 
     val response = Await.result(tracksService.track(session, trackUrn, None, Some("js_callback_fn")))
@@ -114,15 +125,17 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
   "Returns a response with the right headers" in new Context {
     when(trackmetadataClient.track(session, trackUrn)).thenReturn(Future.value(Some(trackmetadataTrack())))
     when(okidokiClient.fetchUserObjects(session, Set(userUrn))).thenReturn(Future.value(List(user)))
+    when(pubmeseClient.isrcForTrack(session, trackUrn)).thenReturn(Future.value(isrc()))
 
     val response = Await.result(tracksService.track(session, trackUrn, None, None))
 
-    response.headerMap.get("Content-Length") must beSome("711")
+    response.headerMap.get("Content-Length") must beSome("736")
     response.headerMap.get("Content-Type") must beSome("application/json; charset=utf-8")
   }
 
   "Returns 404 for non existing tracks" in new Context {
     when(trackmetadataClient.track(session, trackUrn)).thenReturn(Future.None)
+    when(pubmeseClient.isrcForTrack(session, trackUrn)).thenReturn(Future.value(isrc()))
 
     val response = Await.result(tracksService.track(session, trackUrn, None, None))
     response.status ==== Status.NotFound
@@ -131,6 +144,7 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
 
   "Wraps error message in jsonp if `callback` param is defined" in new Context {
     when(trackmetadataClient.track(session, trackUrn)).thenReturn(Future.None)
+    when(pubmeseClient.isrcForTrack(session, trackUrn)).thenReturn(Future.value(isrc()))
 
     val response = Await.result(tracksService.track(session, trackUrn, None, Some("js_callback_fn")))
     response.status ==== Status.NotFound
@@ -139,6 +153,7 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
 
   "Returns 404 response with the right headers" in new Context {
     when(trackmetadataClient.track(session, trackUrn)).thenReturn(Future.None)
+    when(pubmeseClient.isrcForTrack(session, trackUrn)).thenReturn(Future.value(isrc()))
 
     val response = Await.result(tracksService.track(session, trackUrn, None, None))
 
@@ -150,6 +165,7 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
     val disabledAt = Some(LocalDateTime.now())
     val track = trackmetadataTrack(disabledAt)
     when(trackmetadataClient.track(session, trackUrn)).thenReturn(Future.value(Some(track)))
+    when(pubmeseClient.isrcForTrack(session, trackUrn)).thenReturn(Future.value(isrc()))
 
     val response = Await.result(tracksService.track(session, trackUrn, None, None))
     response.status ==== Status.NotFound
@@ -159,6 +175,7 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
   "Returns 404 when track is not public" in new Context {
     val track = trackmetadataTrack(isPublic = false)
     when(trackmetadataClient.track(session, trackUrn)).thenReturn(Future.value(Some(track)))
+    when(pubmeseClient.isrcForTrack(session, trackUrn)).thenReturn(Future.value(isrc()))
 
     val response = Await.result(tracksService.track(session, trackUrn, None, None))
     response.status ==== Status.NotFound
@@ -169,6 +186,7 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
     val ownerSession = new UserSessionBuilder().setUser(userUrn).build
     when(trackmetadataClient.track(ownerSession, trackUrn)).thenReturn(Future.value(Some(trackmetadataTrack())))
     when(okidokiClient.fetchUserObjects(ownerSession, Set(userUrn))).thenReturn(Future.value(List(user)))
+    when(pubmeseClient.isrcForTrack(ownerSession, trackUrn)).thenReturn(Future.value(isrc()))
 
     val response = Await.result(tracksService.track(ownerSession, trackUrn, None, None))
     response.status ==== Status.Ok
@@ -178,6 +196,7 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
     val wrongSecretToken = "secr3tTokenWRONG"
     val track = trackmetadataTrack(isPublic = false)
     when(trackmetadataClient.track(session, trackUrn)).thenReturn(Future.value(Some(track)))
+    when(pubmeseClient.isrcForTrack(session, trackUrn)).thenReturn(Future.value(isrc()))
 
     val response = Await.result(tracksService.track(session, trackUrn, Some(wrongSecretToken), None))
     response.status ==== Status.NotFound
@@ -189,6 +208,7 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
     val track = trackmetadataTrack(isPublic = false, secretToken = correctSecretToken)
     when(trackmetadataClient.track(session, trackUrn)).thenReturn(Future.value(Some(track)))
     when(okidokiClient.fetchUserObjects(session, Set(userUrn))).thenReturn(Future.value(List(user)))
+    when(pubmeseClient.isrcForTrack(session, trackUrn)).thenReturn(Future.value(isrc()))
 
     val response = Await.result(tracksService.track(session, trackUrn, Some(correctSecretToken), None))
     response.status ==== Status.Ok
@@ -198,6 +218,7 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
     val publicTrack = trackmetadataTrack()
     when(trackmetadataClient.track(session, trackUrn)).thenReturn(Future.value(Some(publicTrack)))
     when(okidokiClient.fetchUserObjects(session, Set(userUrn))).thenReturn(Future.value(List.empty))
+    when(pubmeseClient.isrcForTrack(session, trackUrn)).thenReturn(Future.value(isrc()))
 
     val response = Await.result(tracksService.track(session, trackUrn, None, None))
     response.status ==== Status.NotFound
@@ -207,10 +228,26 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
     val publicTrack = trackmetadataTrack()
     when(trackmetadataClient.track(session, trackUrn)).thenReturn(Future.value(Some(publicTrack)))
     when(okidokiClient.fetchUserObjects(session, Set(userUrn))).thenReturn(Future.exception(new Exception("asd")))
+    when(pubmeseClient.isrcForTrack(session, trackUrn)).thenReturn(Future.value(isrc()))
 
     val response = Await.result(tracksService.track(session, trackUrn, None, None))
     response.status ==== Status.ServiceUnavailable
     response.contentString ==== """{"errors":[{"error_message":"503 - Service Unavailable"}]}"""
     response.headerMap.get("Content-Length") must beSome("58")
+  }
+
+  "Returns empty ISRC when Pubmese is failing" in new Context {
+    val track = trackmetadataTrack()
+    when(trackmetadataClient.track(session, trackUrn)).thenReturn(Future.value(Some(track)))
+    when(okidokiClient.fetchUserObjects(session, Set(userUrn))).thenReturn(Future.value(List(user)))
+    when(pubmeseClient.isrcForTrack(session, trackUrn)).thenReturn(Future.exception(new RuntimeException("bewm! hahahaaa")))
+
+    val expectedTrackRepresentation = TrackRepresentation(track, user, None)
+    val expectedResponseString = Json.stringify(expectedTrackRepresentation)
+
+    val response = Await.result(tracksService.track(session, trackUrn, None, None))
+
+    response.status ==== Status.Ok
+    response.contentString ==== expectedResponseString
   }
 }

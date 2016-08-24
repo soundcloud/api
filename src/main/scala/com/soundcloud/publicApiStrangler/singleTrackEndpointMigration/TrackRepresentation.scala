@@ -1,12 +1,14 @@
 package com.soundcloud.publicApiStrangler.singleTrackEndpointMigration
 
+import com.soundcloud.publicApiStrangler.client.pubmese.Isrc
 import com.soundcloud.publicApiStrangler.singleTrackEndpointMigration.trackmetadataclient.Track
 import com.soundcloud.service.response.representation.User
 import org.joda.time.format.DateTimeFormat
 import play.api.libs.json.Json.JsValueWrapper
 import play.api.libs.json._
 
-case class TrackRepresentation(track: Track, user: User)
+case class TrackRepresentation(track: Track, user: User, isrc: Option[Isrc])
+
 
 object TrackRepresentation {
   private val dateTimeFormat = DateTimeFormat.forPattern("yyyy/MM/dd HH:mm:ss +0000")
@@ -39,7 +41,7 @@ object TrackRepresentation {
         // "release" ->
         // track_type
         // key_signature
-        // isrc
+        "isrc" -> rep.isrc.map(_.toString),
         // video_url
         // bpm
         "release_year" -> rep.track.release_year,

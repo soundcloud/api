@@ -1,5 +1,6 @@
 package com.soundcloud.publicApiStrangler.singleTrackEndpointMigration
 
+import com.soundcloud.publicApiStrangler.client.pubmese.Isrc
 import com.soundcloud.publicApiStrangler.singleTrackEndpointMigration.trackmetadataclient.{Artwork, EmbeddingPermission, Track}
 import com.soundcloud.scalakit.Urn
 import com.soundcloud.scalakit.test.UnitSpecification
@@ -61,10 +62,12 @@ class TrackRepresentationSpec extends UnitSpecification {
       releaseDate = None,
       artwork = Artwork(filename = Some("artworks-FuwbhSJORvKH-0-original.jpg")),
       published_at = None)
+
+    val defaultIsrc = Some(Isrc("US-S1Z-99-00001"))
   }
 
   "serialises to JSON correctly" in new Context {
-    val trackRepresentation = TrackRepresentation(defaultTrack, defaultUser)
+    val trackRepresentation = TrackRepresentation(defaultTrack, defaultUser, defaultIsrc)
     val trackJson = Json.toJson(trackRepresentation)
 
     trackJson \ "kind" ==== JsString("track")
@@ -83,6 +86,7 @@ class TrackRepresentationSpec extends UnitSpecification {
     trackJson \ "title" ==== JsString("Baby Bash")
     trackJson \ "description" ==== JsString("Follow @samstarling !")
     trackJson \ "label_name" ==== JsString("Denis Owns")
+    trackJson \ "isrc" ==== JsString("US-S1Z-99-00001")
     trackJson \ "release_year" ==== JsNumber(1991)
     trackJson \ "release_month" ==== JsNumber(1)
     trackJson \ "release_day" ==== JsNumber(2)
@@ -103,12 +107,12 @@ class TrackRepresentationSpec extends UnitSpecification {
 
   "sharing" in new Context {
     val publicTrack = defaultTrack.copy(public = true)
-    val publicTrackRepresentation = TrackRepresentation(publicTrack, defaultUser)
+    val publicTrackRepresentation = TrackRepresentation(publicTrack, defaultUser, defaultIsrc)
     val publicTrackJson = Json.toJson(publicTrackRepresentation)
     publicTrackJson \ "sharing" ==== JsString("public")
 
     val privateTrack = defaultTrack.copy(public = false)
-    val privateTrackRepresentation = TrackRepresentation(privateTrack, defaultUser)
+    val privateTrackRepresentation = TrackRepresentation(privateTrack, defaultUser, defaultIsrc)
     val privateTrackJson = Json.toJson(privateTrackRepresentation)
     privateTrackJson \ "sharing" ==== JsString("private")
   }
