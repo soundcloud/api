@@ -194,12 +194,23 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
     response.status ==== Status.Ok
   }
 
-  "Returns 404 for public tracks if user can not be fetched" in new Context {
+  "Returns 404 for public tracks if user does not exist" in new Context {
     val publicTrack = trackmetadataTrack()
     when(trackmetadataClient.track(session, trackUrn)).thenReturn(Future.value(Some(publicTrack)))
     when(okidokiClient.fetchUserObjects(session, Set(userUrn))).thenReturn(Future.value(List.empty))
 
     val response = Await.result(tracksService.track(session, trackUrn, None, None))
     response.status ==== Status.NotFound
+  }
+
+  "Returns 404 for public tracks if user can not be fetched" in new Context {
+    val publicTrack = trackmetadataTrack()
+    when(trackmetadataClient.track(session, trackUrn)).thenReturn(Future.value(Some(publicTrack)))
+    when(okidokiClient.fetchUserObjects(session, Set(userUrn))).thenReturn(Future.exception(new Exception("asd")))
+
+    val response = Await.result(tracksService.track(session, trackUrn, None, None))
+    response.status ==== Status.ServiceUnavailable
+    response.contentString ==== """{"errors":[{"error_message":"503 - Service Unavailable"}]}"""
+    response.headerMap.get("Content-Length") must beSome("58")
   }
 }
