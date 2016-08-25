@@ -2,14 +2,13 @@ package com.soundcloud.publicApiStrangler.client.followcounts
 
 import java.net.URLEncoder
 
-import com.soundcloud.bff.NonFatal
 import com.soundcloud.bff.services.JsonService
 import com.soundcloud.jvmkit.config.{Config, DataSensitivity}
 import com.soundcloud.publicApiStrangler.support.BatchingUtilities._
 import com.soundcloud.scalakit._
 import com.soundcloud.scalakit.finagle.http.OkStatus
 import com.soundcloud.scalakit.finagle.jsonservice.{JsonResponse, Params}
-import com.twitter.util.Future
+import com.twitter.util.{Future, NonFatal}
 import play.api.libs.json.JsObject
 
 class FollowCountsClient(client: JsonService, config: Config) {
