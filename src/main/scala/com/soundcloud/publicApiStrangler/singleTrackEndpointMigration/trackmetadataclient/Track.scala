@@ -37,7 +37,13 @@ case class Track(urn: Urn,
                  embeddableBy: EmbeddingPermission,
                  releaseDate: Option[LocalDateTime],
                  artwork: Artwork,
-                 published_at: Option[LocalDateTime])
+                 published_at: Option[LocalDateTime],
+                 purchase_url: Option[String],
+                 purchase_title: Option[String],
+                 bpm: Option[Double],
+                 track_type: Option[String],
+                 release: Option[String],
+                 key_signature: Option[String])
 
 case class Artwork(filename: Option[String])
 
@@ -88,7 +94,13 @@ object Track {
           embeddableBy = (json \ "embeddable_by").as[EmbeddingPermission],
           releaseDate = (json \ "release_date").asOpt[LocalDateTime],
           artwork = (json \ "artwork").as[Artwork],
-          published_at = (json \ "published_at").asOpt[LocalDateTime]
+          published_at = (json \ "published_at").asOpt[LocalDateTime],
+          purchase_url = (json \ "purchase_url").asOpt[String],
+          purchase_title = (json \ "purchase_title").asOpt[String],
+          bpm = (json \ "bpm").asOpt[Double],
+          track_type = (json \ "track_type").asOpt[String],
+          release = (json \ "release").asOpt[String],
+          key_signature = (json \ "key_signature").asOpt[String]
         )
       )
     } catch {
