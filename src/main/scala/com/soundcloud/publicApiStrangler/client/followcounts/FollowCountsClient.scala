@@ -2,9 +2,10 @@ package com.soundcloud.publicApiStrangler.client.followcounts
 
 import java.net.URLEncoder
 
-import com.soundcloud.publicApiStrangler.support.BatchingUtilities._
+import com.soundcloud.bff.NonFatal
 import com.soundcloud.bff.services.JsonService
-import com.soundcloud.jvmkit.config.{DataSensitivity, Config}
+import com.soundcloud.jvmkit.config.{Config, DataSensitivity}
+import com.soundcloud.publicApiStrangler.support.BatchingUtilities._
 import com.soundcloud.scalakit._
 import com.soundcloud.scalakit.finagle.http.OkStatus
 import com.soundcloud.scalakit.finagle.jsonservice.{JsonResponse, Params}
@@ -30,6 +31,8 @@ class FollowCountsClient(client: JsonService, config: Config) {
         (followerCounts.keys ++ followingCounts.keys).toSeq.distinct.map { urn =>
           FollowCounts(urn, followerCounts.getOrElse(urn, 0), followingCounts.getOrElse(urn, 0))
         }
+      }.handle {
+        case NonFatal(e) => Seq.empty
       }
     }
   }

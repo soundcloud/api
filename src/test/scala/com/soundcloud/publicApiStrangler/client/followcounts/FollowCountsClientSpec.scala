@@ -4,22 +4,28 @@ import java.net.URLEncoder
 
 import com.soundcloud.bff.services.JsonService
 import com.soundcloud.bff.test.UnitSpecification
-import com.soundcloud.jvmkit.config.{Config, DataSensitivity}
-import com.soundcloud.scalakit.finagle.http.OkStatus
+import com.soundcloud.jvmkit.test.InMemoryConfig
+import com.soundcloud.scalakit.finagle.http.{InternalServerErrorStatus, OkStatus}
 import com.soundcloud.scalakit.finagle.jsonservice.{JsonResponse, Params}
 import com.soundcloud.scalakit.test.VerifiedMocks
 import com.soundcloud.scalakit.{Path, Urn}
 import com.twitter.util.{Await, Future}
+import play.api.libs.json.JsNull
 
 class FollowCountsClientSpec extends UnitSpecification {
 
   trait Context extends VerifiedMocks {
-    val user = Urn("soundcloud", "users", "1")
+    lazy val jsonService = mock[JsonService]
+    lazy val user = Urn("soundcloud", "users", "1")
 
-    val jsonService = mock[JsonService]
-    val config = mock[Config]
+    val config = new InMemoryConfig
+    config.set("STITCH_BULK_FETCH_MAX_ENTRIES", "10")
 
     lazy val client = new FollowCountsClient(jsonService, config)
+
+    lazy val result = Await.result(client.counts(anonymousSession, Seq(user)))
+
+    def response: Future[JsonResponse]
 
     override def before = {
       val bulkParams = Params(
@@ -32,16 +38,26 @@ class FollowCountsClientSpec extends UnitSpecification {
           "UTF-8"
         )
       )
-      when(jsonService.get(anonymousSession, Path() / "bulk", bulkParams, Params.empty)) thenReturn
-        Future.value(JsonResponse(OkStatus, withContentsOf("stitch4follows", "bulk_follow_counts_response")))
 
-      when(config.get("STITCH_BULK_FETCH_MAX_ENTRIES", DataSensitivity.NON_SENSITIVE)).thenReturn("10")
+      when(jsonService.get(anonymousSession, Path() / "bulk", bulkParams, Params.empty)) thenReturn response
     }
   }
 
-  "counts" in new Context {
-    val result = Await.result(client.counts(anonymousSession, Seq(user)))
+  "returns counts on successful response" in new Context {
+    override def response = Future.value(JsonResponse(OkStatus, withContentsOf("stitch4follows", "bulk_follow_counts_response")))
 
     result ==== Seq(FollowCounts(user, 10, 20))
+  }
+
+  "returns empty set when server responds with a non OK status" in new Context {
+    override def response = Future.value(JsonResponse(InternalServerErrorStatus, JsNull))
+
+    result ==== Seq.empty
+  }
+
+  "returns empty set when server responds with an exception" in new Context {
+    override def response = Future.exception(new Exception())
+
+    result ==== Seq.empty
   }
 }
