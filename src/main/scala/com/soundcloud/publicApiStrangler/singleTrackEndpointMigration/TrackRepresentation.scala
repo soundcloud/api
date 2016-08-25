@@ -32,19 +32,19 @@ object TrackRepresentation {
         "streamable" -> rep.track.streamable,
         "embeddable_by" -> rep.track.embeddableBy,
         "downloadable" -> rep.track.downloadable,
-        // "purchase_url" --> track metadata
+        "purchase_url" -> rep.track.purchase_url,
+        "purchase_title" -> rep.track.purchase_title,
         // "label_id" ->
-        // "purchase_title" --> track metadata
         "genre" -> rep.track.genre,
         "title" -> rep.track.title,
         "description" -> rep.track.description,
         "label_name" -> rep.track.label_name,
-        // "release" --> track metadata
-        // track_type --> track metadata
-        // key_signature --> track metadata
+        "release" -> rep.track.release,
+        "track_type" -> rep.track.track_type,
+        "key_signature" -> rep.track.key_signature,
         "isrc" -> rep.isrc.map(_.toString),
         // video_url --> track metadata
-        // bpm --> track metadata
+        "bpm" -> rep.track.bpm,
         "release_year" -> rep.track.release_year,
         "release_month" -> rep.track.release_month,
         "release_day" -> rep.track.release_day,

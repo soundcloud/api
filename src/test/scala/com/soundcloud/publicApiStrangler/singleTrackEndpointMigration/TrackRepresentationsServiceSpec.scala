@@ -84,7 +84,14 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
         embeddableBy = EmbeddingPermission.None,
         releaseDate = None,
         artwork = Artwork(None),
-        published_at = None)
+        published_at = None,
+        purchase_url = Some("http://example.com/buy/7890"),
+        purchase_title = Some("buy me pls"),
+        bpm = Some(120.7),
+        track_type = Some("original"),
+        release = Some("DR012"),
+        key_signature = Some("Emaj")
+      )
 
     def isrc(wrapped: String = "US-S1Z-99-00001"): Option[Isrc] =
       Some(Isrc(wrapped))
@@ -129,7 +136,7 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
 
     val response = Await.result(tracksService.track(session, trackUrn, None, None))
 
-    response.headerMap.get("Content-Length") must beSome("860")
+    response.headerMap.get("Content-Length") must beSome("1012")
     response.headerMap.get("Content-Type") must beSome("application/json; charset=utf-8")
   }
 

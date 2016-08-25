@@ -61,7 +61,13 @@ class TrackRepresentationSpec extends UnitSpecification {
       embeddableBy = EmbeddingPermission.Me,
       releaseDate = None,
       artwork = Artwork(filename = Some("artworks-FuwbhSJORvKH-0-original.jpg")),
-      published_at = None)
+      published_at = None,
+      purchase_url = Some("http://example.com/buy/7890"),
+      purchase_title = Some("buy me pls"),
+      bpm = Some(120.7),
+      track_type = Some("original"),
+      release = Some("DR012"),
+      key_signature = Some("Emaj"))
 
     val defaultIsrc = Some(Isrc("US-S1Z-99-00001"))
   }
@@ -96,6 +102,12 @@ class TrackRepresentationSpec extends UnitSpecification {
     trackJson \ "artwork_url" ==== JsString("https://i1.sndcdn.com/artworks-FuwbhSJORvKH-0-original.jpg")
     trackJson \ "stream_url" ==== JsString("https://api.soundcloud.com/tracks/1324/stream")
     trackJson \ "download_url" ==== JsString("https://api.soundcloud.com/tracks/1324/download")
+    trackJson \ "purchase_url" ==== JsString("http://example.com/buy/7890")
+    trackJson \ "purchase_title" ==== JsString("buy me pls")
+    trackJson \ "bpm" ==== JsNumber(120.7)
+    trackJson \ "track_type" ==== JsString("original")
+    trackJson \ "release" ==== JsString("DR012")
+    trackJson \ "key_signature" ==== JsString("Emaj")
 
     val userJson = trackJson \ "user"
 
