@@ -7,8 +7,9 @@ import org.joda.time.format.DateTimeFormat
 import play.api.libs.json.Json.JsValueWrapper
 import play.api.libs.json._
 
-case class TrackRepresentation(track: Track, user: User, isrc: Option[Isrc])
-
+case class TrackRepresentation(track: Track, user: User, isrc: Option[Isrc]) {
+  def id = track.urn.getIdentifier.toLong
+}
 
 object TrackRepresentation {
   private val dateTimeFormat = DateTimeFormat.forPattern("yyyy/MM/dd HH:mm:ss +0000")
@@ -17,7 +18,7 @@ object TrackRepresentation {
     override def writes(rep: TrackRepresentation): JsValue =
       Json.obj(
         "kind" -> "track",
-        "id" -> rep.track.urn.getIdentifier.toLong,
+        "id" -> rep.id,
         "created_at" -> rep.track.created_at.toString(dateTimeFormat),
         "user_id" -> rep.user.urn.getIdentifier.toLong,
         "duration" -> rep.track.duration,
@@ -49,15 +50,15 @@ object TrackRepresentation {
         "release_day" -> rep.track.release_day,
         // original_format
         "license" -> rep.track.license,
-        "uri" -> s"https://api.soundcloud.com/tracks/${rep.track.urn.getIdentifier}",
+        "uri" -> s"https://api.soundcloud.com/tracks/${rep.id}",
         "user" -> writeUser(rep),
         // user_favorite --> liebling
         "permalink_url" -> rep.track.permalink_url,
         // Probably we need to copy the logic at
         // https://github.com/soundcloud/api-web/blob/master/src/main/scala/com/soundcloud/api/web/representation/helpers/ResourceURLs.scala#L72
-        "artwork_url" -> rep.track.artwork.filename.map(file => s"https://i1.sndcdn.com/$file")
+        "artwork_url" -> rep.track.artwork.filename.map(file => s"https://i1.sndcdn.com/$file"),
         // waveform_url --> media service
-        // stream_url --> build ourselves
+        "stream_url" -> s"https://api.soundcloud.com/tracks/${rep.id}/stream"
         // playback_count --> stitch
         // download_url --> build ourselves
         // download_count --> stitch

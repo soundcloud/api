@@ -94,6 +94,7 @@ class TrackRepresentationSpec extends UnitSpecification {
     trackJson \ "uri" ==== JsString("https://api.soundcloud.com/tracks/1324")
     trackJson \ "permalink_url" ==== JsString("http://soundcloud.com/nirvana/plsty-remix")
     trackJson \ "artwork_url" ==== JsString("https://i1.sndcdn.com/artworks-FuwbhSJORvKH-0-original.jpg")
+    trackJson \ "stream_url" ==== JsString("https://api.soundcloud.com/tracks/1324/stream")
 
     val userJson = trackJson \ "user"
 
