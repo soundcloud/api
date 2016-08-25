@@ -58,9 +58,9 @@ object TrackRepresentation {
         // https://github.com/soundcloud/api-web/blob/master/src/main/scala/com/soundcloud/api/web/representation/helpers/ResourceURLs.scala#L72
         "artwork_url" -> rep.track.artwork.filename.map(file => s"https://i1.sndcdn.com/$file"),
         // waveform_url --> media service
-        "stream_url" -> s"https://api.soundcloud.com/tracks/${rep.id}/stream"
+        "stream_url" -> s"https://api.soundcloud.com/tracks/${rep.id}/stream",
         // playback_count --> stitch
-        // download_url --> build ourselves
+        "download_url" -> s"https://api.soundcloud.com/tracks/${rep.id}/download"
         // download_count --> stitch
         // favoritings_count --> stitch
         // comment_count --> stitch
