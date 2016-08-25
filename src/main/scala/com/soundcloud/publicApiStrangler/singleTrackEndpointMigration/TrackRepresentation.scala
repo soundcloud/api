@@ -34,7 +34,7 @@ object TrackRepresentation {
         "downloadable" -> rep.track.downloadable,
         "purchase_url" -> rep.track.purchase_url,
         "purchase_title" -> rep.track.purchase_title,
-        // "label_id" ->
+        "label_id" -> rep.track.label_id,
         "genre" -> rep.track.genre,
         "title" -> rep.track.title,
         "description" -> rep.track.description,
@@ -43,7 +43,7 @@ object TrackRepresentation {
         "track_type" -> rep.track.track_type,
         "key_signature" -> rep.track.key_signature,
         "isrc" -> rep.isrc.map(_.toString),
-        // video_url --> track metadata
+        "video_url" -> rep.track.video_url,
         "bpm" -> rep.track.bpm,
         "release_year" -> rep.track.release_year,
         "release_month" -> rep.track.release_month,

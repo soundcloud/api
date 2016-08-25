@@ -67,7 +67,10 @@ class TrackRepresentationSpec extends UnitSpecification {
       bpm = Some(120.7),
       track_type = Some("original"),
       release = Some("DR012"),
-      key_signature = Some("Emaj"))
+      key_signature = Some("Emaj"),
+      video_url = Some("http://example.com/video.mp4"),
+      label_id = Some(8701)
+    )
 
     val defaultIsrc = Some(Isrc("US-S1Z-99-00001"))
   }
@@ -108,6 +111,8 @@ class TrackRepresentationSpec extends UnitSpecification {
     trackJson \ "track_type" ==== JsString("original")
     trackJson \ "release" ==== JsString("DR012")
     trackJson \ "key_signature" ==== JsString("Emaj")
+    trackJson \ "video_url" ==== JsString("http://example.com/video.mp4")
+    trackJson \ "label_id" ==== JsNumber(8701)
 
     val userJson = trackJson \ "user"
 

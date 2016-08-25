@@ -90,7 +90,9 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
         bpm = Some(120.7),
         track_type = Some("original"),
         release = Some("DR012"),
-        key_signature = Some("Emaj")
+        key_signature = Some("Emaj"),
+        video_url = Some("http://example.com/video.mp4"),
+        label_id = Some(8701)
       )
 
     def isrc(wrapped: String = "US-S1Z-99-00001"): Option[Isrc] =
@@ -136,7 +138,7 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
 
     val response = Await.result(tracksService.track(session, trackUrn, None, None))
 
-    response.headerMap.get("Content-Length") must beSome("1012")
+    response.headerMap.get("Content-Length") must beSome("1071")
     response.headerMap.get("Content-Type") must beSome("application/json; charset=utf-8")
   }
 
