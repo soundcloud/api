@@ -26,6 +26,7 @@ GATEKEEPER_SRV_RECORD="dnssrv!http.api.prod.gatekeeper.dd.srv.int.s-cloud.net"
 PUBMESE_ADDRESS="dnssrv!http.web.prod.pubmese.dd.srv.int.s-cloud.net"
 GEOIP_SRV_RECORD="dnssrv!http.geoip2http.prod.geoip.dd.srv.int.s-cloud.net"
 MEDIASERVICE_SRV_RECORD="dnssrv!http.urlgen.prod.media-service.dd.srv.int.s-cloud.net"
+STITCH_ADDRESS="dnssrv!http.web.prod.stitch4counts.dd.srv.int.s-cloud.net"
 
 RATE_LIMIT_MEMCACHED_SERVERS="$DOCKER_IP"
 
