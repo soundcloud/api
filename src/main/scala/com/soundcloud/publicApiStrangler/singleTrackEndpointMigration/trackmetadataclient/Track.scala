@@ -43,7 +43,9 @@ case class Track(urn: Urn,
                  bpm: Option[Double],
                  track_type: Option[String],
                  release: Option[String],
-                 key_signature: Option[String])
+                 key_signature: Option[String],
+                 video_url: Option[String],
+                 label_id: Option[Int])
 
 case class Artwork(filename: Option[String])
 
@@ -100,7 +102,9 @@ object Track {
           bpm = (json \ "bpm").asOpt[Double],
           track_type = (json \ "track_type").asOpt[String],
           release = (json \ "release").asOpt[String],
-          key_signature = (json \ "key_signature").asOpt[String]
+          key_signature = (json \ "key_signature").asOpt[String],
+          video_url = (json \ "video_url").asOpt[String],
+          label_id = (json \ "label_id").asOpt[Int]
         )
       )
     } catch {
