@@ -1,13 +1,18 @@
 package com.soundcloud.publicApiStrangler.singleTrackEndpointMigration
 
 import com.soundcloud.publicApiStrangler.client.pubmese.Isrc
+import com.soundcloud.publicApiStrangler.client.stitch.StitchCounts
 import com.soundcloud.publicApiStrangler.singleTrackEndpointMigration.trackmetadataclient.Track
 import com.soundcloud.service.response.representation.User
 import org.joda.time.format.DateTimeFormat
 import play.api.libs.json.Json.JsValueWrapper
 import play.api.libs.json._
 
-case class TrackRepresentation(track: Track, user: User, isrc: Option[Isrc]) {
+case class TrackRepresentation(
+  track: Track,
+  user: User,
+  isrc: Option[Isrc],
+  counts: StitchCounts) {
   def id = track.urn.getIdentifier.toLong
 }
 
