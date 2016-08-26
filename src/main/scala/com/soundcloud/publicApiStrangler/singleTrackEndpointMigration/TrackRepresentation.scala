@@ -63,12 +63,10 @@ object TrackRepresentation {
         // https://github.com/soundcloud/api-web/blob/master/src/main/scala/com/soundcloud/api/web/representation/helpers/ResourceURLs.scala#L72
         "artwork_url" -> rep.track.artwork.filename.map(file => s"https://i1.sndcdn.com/$file"),
         // waveform_url --> media service
-        // playback_count --> stitch
-        // download_count --> stitch
-        // favoritings_count --> stitch
-        // comment_count --> stitch
-        // likes_count --> stitch
-        // reposts_count --> stitch
+        "playback_count" -> rep.counts.playback_count,
+        "download_count" -> rep.counts.download_count,
+        "favoritings_count" -> rep.counts.favoritings_count,
+        "comment_count" -> rep.counts.comment_count,
 
         // Conditional attributes (already exposed)
         // TODO: expose conditionally

@@ -147,7 +147,7 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
 
     val response = Await.result(tracksService.track(session, trackUrn, None, None))
 
-    response.headerMap.get("Content-Length") must beSome("1071")
+    response.headerMap.get("Content-Length") must beSome("1157")
     response.headerMap.get("Content-Type") must beSome("application/json; charset=utf-8")
   }
 

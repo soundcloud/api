@@ -116,6 +116,10 @@ class TrackRepresentationSpec extends UnitSpecification {
     trackJson \ "key_signature" ==== JsString("Emaj")
     trackJson \ "video_url" ==== JsString("http://example.com/video.mp4")
     trackJson \ "label_id" ==== JsNumber(8701)
+    trackJson \ "playback_count" ==== JsNumber(111)
+    trackJson \ "download_count" ==== JsNumber(222)
+    trackJson \ "favoritings_count" ==== JsNumber(333)
+    trackJson \ "comment_count" ==== JsNumber(444)
 
     val userJson = trackJson \ "user"
 
