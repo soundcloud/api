@@ -58,14 +58,33 @@ object TrackRepresentation {
         // https://github.com/soundcloud/api-web/blob/master/src/main/scala/com/soundcloud/api/web/representation/helpers/ResourceURLs.scala#L72
         "artwork_url" -> rep.track.artwork.filename.map(file => s"https://i1.sndcdn.com/$file"),
         // waveform_url --> media service
-        "stream_url" -> s"https://api.soundcloud.com/tracks/${rep.id}/stream",
         // playback_count --> stitch
-        "download_url" -> s"https://api.soundcloud.com/tracks/${rep.id}/download"
         // download_count --> stitch
         // favoritings_count --> stitch
         // comment_count --> stitch
         // likes_count --> stitch
         // reposts_count --> stitch
+
+        // Conditional attributes (already exposed)
+        // TODO: expose conditionally
+        "stream_url" -> s"https://api.soundcloud.com/tracks/${rep.id}/stream",
+        "download_url" -> s"https://api.soundcloud.com/tracks/${rep.id}/download"
+
+        // Conditional attributes (not yet exposed)
+        // created_with
+        // secret_token
+        // secret_uri
+        // attachments
+        // attachments_uri
+        // likes_count
+        // reposts_count
+        // available_country_codes
+        // downloads_remaining
+        // artwork_url
+        // domain_lockings
+        // user_favorite
+        // user_playback_count
+        // label
       )
   }
 
