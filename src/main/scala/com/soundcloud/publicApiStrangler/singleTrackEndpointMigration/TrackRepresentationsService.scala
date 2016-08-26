@@ -25,11 +25,11 @@ class TrackRepresentationsService(
       case Some(track) if isTrackAccessible(session, secretToken, track) =>
         val userF = fetchUserForTrack(track, session)
         val countsF = userF.flatMap {
-          case Some(user) => stitchClient.countsForTrack(session, urn, user.urn).map(Some(_))
+          case Some(user) => stitchClient.countsForTrack(session, urn, user.urn).map(Some(_)).liftToTry.map(_.getOrElse(None))
           case None => Future.value(None)
         }
         Future.join(isrcF, userF, countsF).map {
-          case (isrc, Some(user), Some(counts)) =>
+          case (isrc, Some(user), counts) =>
             val content = jsonForTrack(track, user, isrc, counts)
             generateResponse(Status.Ok, jsonpWrapper(callback, content))
           case _ =>
@@ -63,8 +63,11 @@ class TrackRepresentationsService(
   private def fetchUserForTrack(track: Track, session: UserSession): Future[Option[User]] =
     okidokiClient.fetchUserObjects(session, Set(track.user_urn)).map(_.headOption)
 
-  private def jsonForTrack(track: Track, user: User, isrc: Option[Isrc], counts: StitchCounts) =
-    Json.stringify(new TrackRepresentation(track, user, isrc, counts))
+  private def jsonForTrack(track: Track, user: User, isrc: Option[Isrc], counts: Option[StitchCounts]) =
+    Json.stringify(new TrackRepresentation(track, user, isrc, getCounts(counts)))
+
+  private def getCounts(counts: Option[StitchCounts]): StitchCounts =
+    counts.getOrElse(StitchCounts(0, 0, 0, 0))
 
   private def isTrackAccessible(session: UserSession, secretToken: Option[String], track: Track): Boolean =
     isPrivacyAuthorized(session, secretToken, track) && !isDisabled(track)

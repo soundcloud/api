@@ -273,4 +273,20 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
     response.status ==== Status.Ok
     response.contentString ==== expectedResponseString
   }
+
+  "Returns empty counts if Stitch is failing" in new Context {
+    val track = trackmetadataTrack()
+    when(trackmetadataClient.track(session, trackUrn)).thenReturn(Future.value(Some(track)))
+    when(okidokiClient.fetchUserObjects(session, Set(userUrn))).thenReturn(Future.value(List(user)))
+    when(pubmeseClient.isrcForTrack(session, trackUrn)).thenReturn(Future.value(isrc()))
+    when(stitchClient.countsForTrack(session, trackUrn, userUrn)).thenReturn(Future.exception(new RuntimeException("bewm! hahahaaa")))
+
+    val expectedTrackRepresentation = TrackRepresentation(track, user, isrc(), StitchCounts(0, 0, 0, 0))
+    val expectedResponseString = Json.stringify(expectedTrackRepresentation)
+
+    val response = Await.result(tracksService.track(session, trackUrn, None, None))
+
+    response.status ==== Status.Ok
+    response.contentString ==== expectedResponseString
+  }
 }
