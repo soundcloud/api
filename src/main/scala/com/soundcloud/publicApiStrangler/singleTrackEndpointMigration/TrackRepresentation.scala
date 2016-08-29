@@ -12,7 +12,8 @@ case class TrackRepresentation(
   track: Track,
   user: User,
   isrc: Option[Isrc],
-  counts: StitchCounts) {
+  counts: StitchCounts,
+  label: Option[User]) {
   def id = track.urn.getIdentifier.toLong
 }
 
@@ -56,7 +57,7 @@ object TrackRepresentation {
         // original_format
         "license" -> rep.track.license,
         "uri" -> s"https://api.soundcloud.com/tracks/${rep.id}",
-        "user" -> writeUser(rep),
+        "user" -> writeUser(rep.user),
         // user_favorite --> liebling
         "permalink_url" -> rep.track.permalink_url,
         // Probably we need to copy the logic at
@@ -71,7 +72,8 @@ object TrackRepresentation {
         // Conditional attributes (already exposed)
         // TODO: expose conditionally
         "stream_url" -> s"https://api.soundcloud.com/tracks/${rep.id}/stream",
-        "download_url" -> s"https://api.soundcloud.com/tracks/${rep.id}/download"
+        "download_url" -> s"https://api.soundcloud.com/tracks/${rep.id}/download",
+        "label" -> rep.label.map(writeUser).getOrElse(JsNull)
 
         // Conditional attributes (not yet exposed)
         // created_with
@@ -91,16 +93,16 @@ object TrackRepresentation {
       )
   }
 
-  private def writeUser(rep: TrackRepresentation): JsValueWrapper = {
+  private def writeUser(user: User): JsValueWrapper = {
     Json.obj(
-      "id" -> rep.user.urn.getIdentifier.toLong,
+      "id" -> user.urn.getIdentifier.toLong,
       "kind" -> "user",
-      "permalink" -> rep.user.permalink,
-      "username" -> rep.user.username,
+      "permalink" -> user.permalink,
+      "username" -> user.username,
       // last_modified
-      "uri" -> s"https://api.soundcloud.com/users/${rep.user.urn.getIdentifier}",
-      "permalink_url" -> rep.user.permalink_url,
-      "avatar_url" -> rep.user.avatar_url
+      "uri" -> s"https://api.soundcloud.com/users/${user.urn.getIdentifier}",
+      "permalink_url" -> user.permalink_url,
+      "avatar_url" -> user.avatar_url
     )
   }
 }
