@@ -1,5 +1,6 @@
 package com.soundcloud.publicApiStrangler.singleTrackEndpointMigration
 
+import com.soundcloud.bff.JsObject
 import com.soundcloud.publicApiStrangler.client.pubmese.Isrc
 import com.soundcloud.publicApiStrangler.client.stitch.StitchCounts
 import com.soundcloud.publicApiStrangler.singleTrackEndpointMigration.trackmetadataclient.{Artwork, EmbeddingPermission, Track}
@@ -14,8 +15,9 @@ class TrackRepresentationSpec extends UnitSpecification {
   trait Context extends Scope {
     val trackUrn = new Urn("soundcloud", "tracks", "1324")
     val userUrn = new Urn("soundcloud", "users", "3456")
+    val labelUrn: Option[Urn] = Some(new Urn("soundcloud", "users", "999"))
 
-    val defaultUser =
+    def defaultUser =
       User(
         urn = userUrn,
         permalink = "giraffe",
@@ -30,7 +32,23 @@ class TrackRepresentationSpec extends UnitSpecification {
         verified = false,
         description = Some("I am a nice person"))
 
-    val defaultTrack = Track(
+    def defaultLabel: Option[User] =
+      labelUrn.map(urn =>
+        User(
+          urn = urn,
+          permalink = "raz",
+          username = "Raz Putin",
+          avatar_url = "http://example.com/raz.jpg",
+          permalink_url = "https://soundcloud.com/raz",
+          city = None,
+          country = None,
+          tracks_count = 4,
+          followers_count = Some(10000),
+          followings_count = Some(10),
+          verified = true,
+          description = Some("Psychonaut Music Inc.")))
+
+    def defaultTrack = Track(
       urn = trackUrn,
       user_urn = Urn("soundcloud:users:112"),
       commentable = false,
@@ -70,16 +88,16 @@ class TrackRepresentationSpec extends UnitSpecification {
       release = Some("DR012"),
       key_signature = Some("Emaj"),
       video_url = Some("http://example.com/video.mp4"),
-      label_id = Some(8701)
+      label_id = labelUrn.map(_.getIdentifier.toInt)
     )
 
-    val defaultIsrc = Some(Isrc("US-S1Z-99-00001"))
+    def defaultIsrc = Some(Isrc("US-S1Z-99-00001"))
 
-    val defaultCounts = StitchCounts(111, 222, 333, 444)
+    def defaultCounts = StitchCounts(111, 222, 333, 444)
   }
 
   "serialises to JSON correctly" in new Context {
-    val trackRepresentation = TrackRepresentation(defaultTrack, defaultUser, defaultIsrc, defaultCounts)
+    val trackRepresentation = TrackRepresentation(defaultTrack, defaultUser, defaultIsrc, defaultCounts, defaultLabel)
     val trackJson = Json.toJson(trackRepresentation)
 
     trackJson \ "kind" ==== JsString("track")
@@ -115,31 +133,48 @@ class TrackRepresentationSpec extends UnitSpecification {
     trackJson \ "release" ==== JsString("DR012")
     trackJson \ "key_signature" ==== JsString("Emaj")
     trackJson \ "video_url" ==== JsString("http://example.com/video.mp4")
-    trackJson \ "label_id" ==== JsNumber(8701)
+    trackJson \ "label_id" ==== JsNumber(999)
     trackJson \ "playback_count" ==== JsNumber(111)
     trackJson \ "download_count" ==== JsNumber(222)
     trackJson \ "favoritings_count" ==== JsNumber(333)
     trackJson \ "comment_count" ==== JsNumber(444)
 
     val userJson = trackJson \ "user"
-
     userJson \ "id" ==== JsNumber(3456)
     userJson \ "kind" ==== JsString("user")
     userJson \ "permalink" ==== JsString("giraffe")
     userJson \ "uri" ==== JsString("https://api.soundcloud.com/users/3456")
     userJson \ "permalink_url" ==== JsString("https://soundcloud.com/denis")
     userJson \ "avatar_url" ==== JsString("http://example.com/giraffe.jpg")
+
+    val labelJson = trackJson \ "label"
+    labelJson \ "id" ==== JsNumber(999)
+    labelJson \ "kind" ==== JsString("user")
+    labelJson \ "permalink" ==== JsString("raz")
+    labelJson \ "uri" ==== JsString("https://api.soundcloud.com/users/999")
+    labelJson \ "permalink_url" ==== JsString("https://soundcloud.com/raz")
+    labelJson \ "avatar_url" ==== JsString("http://example.com/raz.jpg")
   }
+
 
   "sharing" in new Context {
     val publicTrack = defaultTrack.copy(public = true)
-    val publicTrackRepresentation = TrackRepresentation(publicTrack, defaultUser, defaultIsrc, defaultCounts)
+    val publicTrackRepresentation = TrackRepresentation(publicTrack, defaultUser, defaultIsrc, defaultCounts, defaultLabel)
     val publicTrackJson = Json.toJson(publicTrackRepresentation)
     publicTrackJson \ "sharing" ==== JsString("public")
 
     val privateTrack = defaultTrack.copy(public = false)
-    val privateTrackRepresentation = TrackRepresentation(privateTrack, defaultUser, defaultIsrc, defaultCounts)
+    val privateTrackRepresentation = TrackRepresentation(privateTrack, defaultUser, defaultIsrc, defaultCounts, defaultLabel)
     val privateTrackJson = Json.toJson(privateTrackRepresentation)
     privateTrackJson \ "sharing" ==== JsString("private")
+  }
+
+  "no label_id" in new Context {
+    override val labelUrn = None
+
+    val trackRepresentation = TrackRepresentation(defaultTrack, defaultUser, defaultIsrc, defaultCounts, defaultLabel)
+    val trackJson = Json.toJson(trackRepresentation)
+
+    trackJson.as[JsObject].keys.contains("label") ==== false
   }
 }

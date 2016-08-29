@@ -5,14 +5,14 @@ import com.soundcloud.publicApiStrangler.client.stitch.StitchCounts
 import com.soundcloud.publicApiStrangler.singleTrackEndpointMigration.trackmetadataclient.Track
 import com.soundcloud.service.response.representation.User
 import org.joda.time.format.DateTimeFormat
-import play.api.libs.json.Json.JsValueWrapper
 import play.api.libs.json._
 
 case class TrackRepresentation(
   track: Track,
   user: User,
   isrc: Option[Isrc],
-  counts: StitchCounts) {
+  counts: StitchCounts,
+  label: Option[User]) {
   def id = track.urn.getIdentifier.toLong
 }
 
@@ -20,8 +20,8 @@ object TrackRepresentation {
   private val dateTimeFormat = DateTimeFormat.forPattern("yyyy/MM/dd HH:mm:ss +0000")
 
   implicit val writes = new Writes[TrackRepresentation] {
-    override def writes(rep: TrackRepresentation): JsValue =
-      Json.obj(
+    override def writes(rep: TrackRepresentation): JsValue = {
+      val coreObject = Json.obj(
         "kind" -> "track",
         "id" -> rep.id,
         "created_at" -> rep.track.created_at.toString(dateTimeFormat),
@@ -56,7 +56,7 @@ object TrackRepresentation {
         // original_format
         "license" -> rep.track.license,
         "uri" -> s"https://api.soundcloud.com/tracks/${rep.id}",
-        "user" -> writeUser(rep),
+        "user" -> writeUser(rep.user),
         // user_favorite --> liebling
         "permalink_url" -> rep.track.permalink_url,
         // Probably we need to copy the logic at
@@ -87,20 +87,28 @@ object TrackRepresentation {
         // domain_lockings
         // user_favorite
         // user_playback_count
-        // label
       )
+
+      coreObject ++
+        labelObjectFor(rep)
+    }
   }
 
-  private def writeUser(rep: TrackRepresentation): JsValueWrapper = {
+  private def labelObjectFor(rep: TrackRepresentation): JsObject =
+    rep.label match {
+      case Some(user) => Json.obj("label" -> writeUser(user))
+      case None => Json.obj()
+    }
+
+  private def writeUser(user: User): JsValue =
     Json.obj(
-      "id" -> rep.user.urn.getIdentifier.toLong,
+      "id" -> user.urn.getIdentifier.toLong,
       "kind" -> "user",
-      "permalink" -> rep.user.permalink,
-      "username" -> rep.user.username,
+      "permalink" -> user.permalink,
+      "username" -> user.username,
       // last_modified
-      "uri" -> s"https://api.soundcloud.com/users/${rep.user.urn.getIdentifier}",
-      "permalink_url" -> rep.user.permalink_url,
-      "avatar_url" -> rep.user.avatar_url
+      "uri" -> s"https://api.soundcloud.com/users/${user.urn.getIdentifier}",
+      "permalink_url" -> user.permalink_url,
+      "avatar_url" -> user.avatar_url
     )
-  }
 }

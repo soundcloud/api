@@ -24,13 +24,14 @@ class TrackRepresentationsService(
     trackmetadataClient.track(session, urn).flatMap {
       case Some(track) if isTrackAccessible(session, secretToken, track) =>
         val userF = fetchUserForTrack(track, session)
+        val labelF = fetchLabelForTrack(track, session)
         val countsF = userF.flatMap {
           case Some(user) => stitchClient.countsForTrack(session, urn, user.urn).map(Some(_)).liftToTry.map(_.getOrElse(None))
           case None => Future.value(None)
         }
-        Future.join(isrcF, userF, countsF).map {
-          case (isrc, Some(user), counts) =>
-            val content = jsonForTrack(track, user, isrc, counts)
+        Future.join(isrcF, userF, countsF, labelF).map {
+          case (isrc, Some(user), counts, label) =>
+            val content = jsonForTrack(track, user, isrc, counts, label)
             generateResponse(Status.Ok, jsonpWrapper(callback, content))
           case _ =>
             generateResponse(Status.NotFound, jsonpWrapper(callback, notFoundErrorString))
@@ -61,10 +62,18 @@ class TrackRepresentationsService(
   }
 
   private def fetchUserForTrack(track: Track, session: UserSession): Future[Option[User]] =
-    okidokiClient.fetchUserObjects(session, Set(track.user_urn)).map(_.headOption)
+    fetchUser(track.user_urn, session)
 
-  private def jsonForTrack(track: Track, user: User, isrc: Option[Isrc], counts: Option[StitchCounts]) =
-    Json.stringify(new TrackRepresentation(track, user, isrc, getCounts(counts)))
+  private def fetchLabelForTrack(track: Track, session: UserSession): Future[Option[User]] = track.label_id match {
+    case Some(label_id) => fetchUser(new Urn("soundcloud", "users", label_id.toString), session)
+    case None => Future.value(None)
+  }
+
+  private def fetchUser(userUrn: Urn, session: UserSession): Future[Option[User]] =
+    okidokiClient.fetchUserObjects(session, Set(userUrn)).map(_.headOption)
+
+  private def jsonForTrack(track: Track, user: User, isrc: Option[Isrc], counts: Option[StitchCounts], label: Option[User]) =
+    Json.stringify(new TrackRepresentation(track, user, isrc, getCounts(counts), label))
 
   private def getCounts(counts: Option[StitchCounts]): StitchCounts =
     counts.getOrElse(StitchCounts(0, 0, 0, 0))
@@ -72,11 +81,8 @@ class TrackRepresentationsService(
   private def isTrackAccessible(session: UserSession, secretToken: Option[String], track: Track): Boolean =
     isPrivacyAuthorized(session, secretToken, track) && !isDisabled(track)
 
-  private def isPrivacyAuthorized(session: UserSession, secretToken: Option[String], track: Track): Boolean = {
-    track.public ||
-      track.user_urn == session.getUser ||
-      (secretToken.filter(_ == track.secret_token).isDefined)
-  }
+  private def isPrivacyAuthorized(session: UserSession, secretToken: Option[String], track: Track): Boolean =
+    track.public || track.user_urn == session.getUser || secretToken.contains(track.secret_token)
 
   private def isDisabled(track: Track): Boolean =
     track.disabled_at.isDefined
