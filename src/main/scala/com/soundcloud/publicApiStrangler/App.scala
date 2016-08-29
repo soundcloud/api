@@ -13,6 +13,7 @@ import com.soundcloud.publicApiStrangler.authorization._
 import com.soundcloud.publicApiStrangler.client._
 import com.soundcloud.publicApiStrangler.client.followcounts.FollowCountsClient
 import com.soundcloud.publicApiStrangler.client.pubmese.PubmeseClient
+import com.soundcloud.publicApiStrangler.client.stitch.StitchClient
 import com.soundcloud.publicApiStrangler.controller._
 import com.soundcloud.publicApiStrangler.headers.DefaultResponseHeadersFilter
 import com.soundcloud.publicApiStrangler.mapper.liebling.LikeCountMapper
@@ -58,8 +59,16 @@ object App
       config,
       telemetry
     )
-
   val pubmeseClient = new PubmeseClient(pubmeseJsonClient)
+
+  val stitchJsonClient =
+    JsonClient(
+      ResourceName("stitch"),
+      ServiceEntryPoint(config.get(ResourceName("STITCH"), ConfigConvention.ADDRESS)),
+      config,
+      telemetry
+    )
+  val stitchClient = new StitchClient(stitchJsonClient)
 
   private val okidokiService = JsonService(
     ServiceConfig("okidoki", config.get(ResourceName("OKIDOKI"), ConfigConvention.SRV_RECORD), config)
@@ -191,7 +200,8 @@ object App
     val tracksService = new TrackRepresentationsService(
       trackmetadataClient,
       okidokiClient,
-      pubmeseClient
+      pubmeseClient,
+      stitchClient
     )
 
     new SingleTrackController(

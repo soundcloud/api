@@ -2,6 +2,7 @@ package com.soundcloud.publicApiStrangler.singleTrackEndpointMigration
 
 import com.soundcloud.jvmkit.UserSessionBuilder
 import com.soundcloud.publicApiStrangler.client.pubmese.{Isrc, PubmeseClient}
+import com.soundcloud.publicApiStrangler.client.stitch.{StitchClient, StitchCounts}
 import com.soundcloud.publicApiStrangler.singleTrackEndpointMigration.trackmetadataclient.{Artwork, EmbeddingPermission, Track, TrackmetadataClient}
 import com.soundcloud.scalakit.Urn
 import com.soundcloud.scalakit.json.Json
@@ -19,11 +20,13 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
     val trackmetadataClient = mock[TrackmetadataClient]
     val okidokiClient = mock[OkidokiClient]
     val pubmeseClient = mock[PubmeseClient]
+    val stitchClient = mock[StitchClient]
 
     val tracksService = new TrackRepresentationsService(
       trackmetadataClient,
       okidokiClient,
-      pubmeseClient
+      pubmeseClient,
+      stitchClient
     )
 
     val userUrn = Urn("soundcloud:users:112")
@@ -98,6 +101,9 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
     def isrc(wrapped: String = "US-S1Z-99-00001"): Option[Isrc] =
       Some(Isrc(wrapped))
 
+    def stitchCounts: StitchCounts =
+      StitchCounts(111, 222, 333, 444)
+
     val session = anonymousSession
   }
 
@@ -106,8 +112,9 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
     when(trackmetadataClient.track(session, trackUrn)).thenReturn(Future.value(Some(track)))
     when(okidokiClient.fetchUserObjects(session, Set(userUrn))).thenReturn(Future.value(List(user)))
     when(pubmeseClient.isrcForTrack(session, trackUrn)).thenReturn(Future.value(isrc()))
+    when(stitchClient.countsForTrack(session, trackUrn, userUrn)).thenReturn(Future.value(stitchCounts))
 
-    val expectedTrackRepresentation = TrackRepresentation(track, user, isrc())
+    val expectedTrackRepresentation = TrackRepresentation(track, user, isrc(), stitchCounts)
     val expectedResponseString = Json.stringify(expectedTrackRepresentation)
 
     val response = Await.result(tracksService.track(session, trackUrn, None, None))
@@ -121,8 +128,9 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
     when(trackmetadataClient.track(session, trackUrn)).thenReturn(Future.value(Some(track)))
     when(okidokiClient.fetchUserObjects(session, Set(userUrn))).thenReturn(Future.value(List(user)))
     when(pubmeseClient.isrcForTrack(session, trackUrn)).thenReturn(Future.value(isrc()))
+    when(stitchClient.countsForTrack(session, trackUrn, userUrn)).thenReturn(Future.value(stitchCounts))
 
-    val expectedTrackRepresentation = TrackRepresentation(track, user, isrc())
+    val expectedTrackRepresentation = TrackRepresentation(track, user, isrc(), stitchCounts)
     val expectedResponseString = Json.stringify(expectedTrackRepresentation)
 
     val response = Await.result(tracksService.track(session, trackUrn, None, Some("js_callback_fn")))
@@ -135,10 +143,11 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
     when(trackmetadataClient.track(session, trackUrn)).thenReturn(Future.value(Some(trackmetadataTrack())))
     when(okidokiClient.fetchUserObjects(session, Set(userUrn))).thenReturn(Future.value(List(user)))
     when(pubmeseClient.isrcForTrack(session, trackUrn)).thenReturn(Future.value(isrc()))
+    when(stitchClient.countsForTrack(session, trackUrn, userUrn)).thenReturn(Future.value(stitchCounts))
 
     val response = Await.result(tracksService.track(session, trackUrn, None, None))
 
-    response.headerMap.get("Content-Length") must beSome("1071")
+    response.headerMap.get("Content-Length") must beSome("1157")
     response.headerMap.get("Content-Type") must beSome("application/json; charset=utf-8")
   }
 
@@ -196,6 +205,7 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
     when(trackmetadataClient.track(ownerSession, trackUrn)).thenReturn(Future.value(Some(trackmetadataTrack())))
     when(okidokiClient.fetchUserObjects(ownerSession, Set(userUrn))).thenReturn(Future.value(List(user)))
     when(pubmeseClient.isrcForTrack(ownerSession, trackUrn)).thenReturn(Future.value(isrc()))
+    when(stitchClient.countsForTrack(ownerSession, trackUrn, userUrn)).thenReturn(Future.value(stitchCounts))
 
     val response = Await.result(tracksService.track(ownerSession, trackUrn, None, None))
     response.status ==== Status.Ok
@@ -218,6 +228,7 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
     when(trackmetadataClient.track(session, trackUrn)).thenReturn(Future.value(Some(track)))
     when(okidokiClient.fetchUserObjects(session, Set(userUrn))).thenReturn(Future.value(List(user)))
     when(pubmeseClient.isrcForTrack(session, trackUrn)).thenReturn(Future.value(isrc()))
+    when(stitchClient.countsForTrack(session, trackUrn, userUrn)).thenReturn(Future.value(stitchCounts))
 
     val response = Await.result(tracksService.track(session, trackUrn, Some(correctSecretToken), None))
     response.status ==== Status.Ok
@@ -228,6 +239,7 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
     when(trackmetadataClient.track(session, trackUrn)).thenReturn(Future.value(Some(publicTrack)))
     when(okidokiClient.fetchUserObjects(session, Set(userUrn))).thenReturn(Future.value(List.empty))
     when(pubmeseClient.isrcForTrack(session, trackUrn)).thenReturn(Future.value(isrc()))
+    when(stitchClient.countsForTrack(session, trackUrn, userUrn)).thenReturn(Future.value(stitchCounts))
 
     val response = Await.result(tracksService.track(session, trackUrn, None, None))
     response.status ==== Status.NotFound
@@ -238,6 +250,7 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
     when(trackmetadataClient.track(session, trackUrn)).thenReturn(Future.value(Some(publicTrack)))
     when(okidokiClient.fetchUserObjects(session, Set(userUrn))).thenReturn(Future.exception(new Exception("asd")))
     when(pubmeseClient.isrcForTrack(session, trackUrn)).thenReturn(Future.value(isrc()))
+    when(stitchClient.countsForTrack(session, trackUrn, userUrn)).thenReturn(Future.value(stitchCounts))
 
     val response = Await.result(tracksService.track(session, trackUrn, None, None))
     response.status ==== Status.ServiceUnavailable
@@ -250,8 +263,25 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
     when(trackmetadataClient.track(session, trackUrn)).thenReturn(Future.value(Some(track)))
     when(okidokiClient.fetchUserObjects(session, Set(userUrn))).thenReturn(Future.value(List(user)))
     when(pubmeseClient.isrcForTrack(session, trackUrn)).thenReturn(Future.exception(new RuntimeException("bewm! hahahaaa")))
+    when(stitchClient.countsForTrack(session, trackUrn, userUrn)).thenReturn(Future.value(stitchCounts))
 
-    val expectedTrackRepresentation = TrackRepresentation(track, user, None)
+    val expectedTrackRepresentation = TrackRepresentation(track, user, None, stitchCounts)
+    val expectedResponseString = Json.stringify(expectedTrackRepresentation)
+
+    val response = Await.result(tracksService.track(session, trackUrn, None, None))
+
+    response.status ==== Status.Ok
+    response.contentString ==== expectedResponseString
+  }
+
+  "Returns empty counts if Stitch is failing" in new Context {
+    val track = trackmetadataTrack()
+    when(trackmetadataClient.track(session, trackUrn)).thenReturn(Future.value(Some(track)))
+    when(okidokiClient.fetchUserObjects(session, Set(userUrn))).thenReturn(Future.value(List(user)))
+    when(pubmeseClient.isrcForTrack(session, trackUrn)).thenReturn(Future.value(isrc()))
+    when(stitchClient.countsForTrack(session, trackUrn, userUrn)).thenReturn(Future.exception(new RuntimeException("bewm! hahahaaa")))
+
+    val expectedTrackRepresentation = TrackRepresentation(track, user, isrc(), StitchCounts(0, 0, 0, 0))
     val expectedResponseString = Json.stringify(expectedTrackRepresentation)
 
     val response = Await.result(tracksService.track(session, trackUrn, None, None))

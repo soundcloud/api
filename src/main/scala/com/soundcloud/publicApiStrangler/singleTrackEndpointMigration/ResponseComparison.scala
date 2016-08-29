@@ -5,7 +5,7 @@ import com.soundcloud.jvmkit.telemetry.Telemetry
 import com.soundcloud.scalakit.json.Json
 import com.twitter.finagle.http.{HeaderMap, Request, Response, Status}
 import com.twitter.util.{Return, Try}
-import play.api.libs.json.JsObject
+import play.api.libs.json.{JsObject, JsValue}
 
 import scala.collection.JavaConversions._
 
@@ -145,12 +145,19 @@ class ResponseComparison(telemetry: Telemetry) {
     val extraAttributesCount = (migrationJson.fieldSet.map(_._1) diff legacyJson.fieldSet.map(_._1)).size
 
     val differentAttributeCount = legacyJson.fields.count {
-      case (key, jsValue) =>
-        key != "isrc" && jsValue != migrationJson \ key
+      case (key, jsValue) => !isAttributeIdentical(key, jsValue, migrationJson \ key)
     }
 
     differentAttributeCount + extraAttributesCount
   }
+
+  private def isAttributeIdentical(key: String, oldValue: JsValue, newValue: JsValue): Boolean =
+    oldValue == newValue ||
+      key == "isrc" ||
+      key == "playback_count" ||
+      key == "download_count" ||
+      key == "favoritings_count" ||
+      key == "comment_count"
 
   private def getDifferentHeaders(legacyHeaders: HeaderMap, migrationHeaders: HeaderMap): Seq[String] = {
     val extraHeaders = (migrationHeaders.keys.toSeq diff legacyHeaders.keys.toSeq)

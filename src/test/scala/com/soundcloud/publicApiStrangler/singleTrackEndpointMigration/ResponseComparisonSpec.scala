@@ -203,6 +203,34 @@ class ResponseComparisonSpec extends UnitSpecification {
       }
     }
 
+    "does not report count differences" in new Context {
+      List(
+        ("{\"playback_count\":1}", "{\"playback_count\":2}"),
+        ("{\"download_count\":1}", "{\"download_count\":2}"),
+        ("{\"favoritings_count\":1}", "{\"favoritings_count\":2}"),
+        ("{\"comment_count\":1}", "{\"comment_count\":2}")
+      ).foreach {
+        case ((legacyResponseString, migrationResponseString)) =>
+          val legacyRes = generateResponse(legacyResponseString)
+          val migrationRes = generateResponse(migrationResponseString)
+
+          responseComparison.report(Request(), legacyRes, migrationRes)
+          val value = collectorRegistry.getSampleValue(
+            "single_track_endpoint_comparison_sum",
+            Array("system"),
+            Array("TEST-APP")
+          )
+          value ==== 0.0d
+
+          val failuresCount = collectorRegistry.getSampleValue(
+            "single_track_endpoint_failures",
+            Array("type", "system"),
+            Array("differentBodyAttributesCount", "TEST-APP")
+          )
+          failuresCount ==== null
+      }
+    }
+
     "reports any errors happening during comparison" in new Context {
       List(
         ("{\"kind\":}", // invalid json
