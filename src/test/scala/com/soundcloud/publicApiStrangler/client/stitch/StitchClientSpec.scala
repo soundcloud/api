@@ -22,68 +22,43 @@ class StitchClientSpec extends UnitSpecification {
 
     def resultF = client.countsForTrack(session, urn, userUrn)
 
-    lazy val path = Path() / "ts"
+    lazy val path = Path() / "bulk"
     val session = anonymousSession
     val urn = Urn("soundcloud:tracks:123")
     val userUrn = Urn("soundcloud:users:8700")
 
     def stitchKey = s"${userUrn.getIdentifier}|${urn.getIdentifier}"
-    def genMockResponseContents(count: Int) =
+
+    def genMockResponseContentBit(cat: String, count: Int) =
       Json.obj(
-        stitchKey -> Json.obj(
-          "series" -> Seq(
-            Json.obj(
-              "time" -> 0,
-              "count" -> count))))
+        cat -> Json.obj(
+          stitchKey -> Json.obj(
+            "series" -> Seq(
+              Json.obj(
+                "time" -> 0,
+                "count" -> count)))))
 
-    def mockPlaybackCount: Int = 111
-    def mockPlaybackResponseStatus: StatusCode = OkStatus
-    def mockPlaybackResponseContents = genMockResponseContents(mockPlaybackCount)
-    def mockPlaybackResponse =
+    def mockResponseContents =
+      genMockResponseContentBit("p", 111) ++
+        genMockResponseContentBit("d", 222) ++
+        genMockResponseContentBit("l", 333) ++
+        genMockResponseContentBit("c", 444)
+
+    def mockResponseStatus: StatusCode = OkStatus
+    def mockResponse =
       Future.value(
         JsonResponse(
-          mockPlaybackResponseStatus,
-          mockPlaybackResponseContents))
+          mockResponseStatus,
+          mockResponseContents))
 
-    def mockDownloadCount: Int = 222
-    def mockDownloadResponseStatus: StatusCode = OkStatus
-    def mockDownloadResponseContents = genMockResponseContents(mockDownloadCount)
-    def mockDownloadResponse =
-      Future.value(
-        JsonResponse(
-          mockDownloadResponseStatus,
-          mockDownloadResponseContents))
+    val expectedParams = Params(
+      "p" -> s"/ts?c=p.o.t&r=a&k=$stitchKey",
+      "d" -> s"/ts?c=d.o.t&r=a&k=$stitchKey",
+      "l" -> s"/ts?c=l.o.t&r=a&k=$stitchKey",
+      "c" -> s"/ts?c=c.o.t&r=a&k=$stitchKey")
 
-    def mockFavoritingsCount: Int = 333
-    def mockFavoritingsResponseStatus: StatusCode = OkStatus
-    def mockFavoritingsResponseContents = genMockResponseContents(mockFavoritingsCount)
-    def mockFavoritingsResponse =
-      Future.value(
-        JsonResponse(
-          mockFavoritingsResponseStatus,
-          mockFavoritingsResponseContents))
-
-    def mockCommentsCount: Int = 444
-    def mockCommentsResponseStatus: StatusCode = OkStatus
-    def mockCommentsResponseContents = genMockResponseContents(mockCommentsCount)
-    def mockCommentsResponse =
-      Future.value(
-        JsonResponse(
-          mockCommentsResponseStatus,
-          mockCommentsResponseContents))
-
-    def e[T](x: T) = beTypedEqualTo(x)
-    val expectedParams = Map("keys" -> StringParam(stitchKey), "r" -> StringParam("a"))
-    def paramsForCat(cat: String) = expectedParams + ("c" -> StringParam(cat))
-
-    when(jsonClient.get(e(session), e(path), e(paramsForCat("p.o.t")), any))
-      .thenReturn(mockPlaybackResponse)
-    when(jsonClient.get(e(session), e(path), e(paramsForCat("d.o.t")), any))
-      .thenReturn(mockDownloadResponse)
-    when(jsonClient.get(e(session), e(path), e(paramsForCat("l.o.t")), any))
-      .thenReturn(mockFavoritingsResponse)
-    when(jsonClient.get(e(session), e(path), e(paramsForCat("c.o.t")), any))
-      .thenReturn(mockCommentsResponse)
+    when(jsonClient.get(beTypedEqualTo(session), beTypedEqualTo(Path() / "bulk"), beTypedEqualTo(expectedParams), any))
+      .thenReturn(mockResponse)
   }
 
   "200 response" in new Context {
@@ -91,12 +66,12 @@ class StitchClientSpec extends UnitSpecification {
   }
 
   "500 response" in new Context {
-    override def mockPlaybackResponseStatus = InternalServerErrorStatus
+    override def mockResponseStatus = InternalServerErrorStatus
     resultT.isThrow === true
   }
 
   "exception response" in new Context {
-    override def mockPlaybackResponse = Future.exception(new RuntimeException("kaboom"))
+    override def mockResponse = Future.exception(new RuntimeException("kaboom"))
     resultT.isThrow === true
   }
 }
