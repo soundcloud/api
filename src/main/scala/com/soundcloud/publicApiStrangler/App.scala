@@ -80,8 +80,6 @@ object App
     ServiceConfig("authsy", config.get(ResourceName("AUTHSY"), ConfigConvention.SRV_RECORD), config)
   )
 
-  val moshimoshiClient = new MoshimoshiClient(okidokiJsonClient)
-
   private val searchService = JsonService(
     ServiceConfig("search", config.get(ResourceName("SEARCH"), ConfigConvention.SRV_RECORD), config)
   )
@@ -203,8 +201,7 @@ object App
       trackmetadataClient,
       okidokiClient,
       pubmeseClient,
-      stitchClient,
-      moshimoshiClient
+      stitchClient
     )
 
     new SingleTrackController(

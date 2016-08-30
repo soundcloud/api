@@ -1,11 +1,11 @@
 package com.soundcloud.publicApiStrangler.singleTrackEndpointMigration
 
-import com.soundcloud.publicApiStrangler.client.pubmese.{Isrc, PubmeseClient}
+import com.soundcloud.publicApiStrangler.client.pubmese.PubmeseClient
 import com.soundcloud.publicApiStrangler.client.stitch.{StitchClient, StitchCounts}
 import com.soundcloud.publicApiStrangler.singleTrackEndpointMigration.trackmetadataclient.{Track, TrackmetadataClient}
 import com.soundcloud.scalakit.json.Json
 import com.soundcloud.scalakit.{Urn, UserSession}
-import com.soundcloud.service.client.{MoshimoshiClient, OkidokiClient}
+import com.soundcloud.service.client.OkidokiClient
 import com.soundcloud.service.response.representation.User
 import com.twitter.finagle.http.{Response, Status}
 import com.twitter.util.{Future, NonFatal}
@@ -14,15 +14,14 @@ class TrackRepresentationsService(
   trackmetadataClient: TrackmetadataClient,
   okidokiClient: OkidokiClient,
   pubmeseClient: PubmeseClient,
-  stitchClient: StitchClient,
-  moshimoshiClient: MoshimoshiClient) {
+  stitchClient: StitchClient) {
 
   private val notFoundErrorString = """{"errors":[{"error_message":"404 - Not Found"}]}"""
   private val serviceUnavailableErrorString = """{"errors":[{"error_message":"503 - Service Unavailable"}]}"""
 
   def track(session: UserSession, urn: Urn, secretToken: Option[String], callback: Option[String]): Future[Response] = {
     val isrcF = pubmeseClient.isrcForTrack(session, urn).handle { case NonFatal(ex) => None }
-    val geoblockingsF = moshimoshiClient.fetchTrackGeoblockings(session, urn).handle { case NonFatal(ex) => None }
+    val geoblockingsF = okidokiClient.fetchTrackGeoblockings(session, urn).handle { case NonFatal(ex) => None }
 
     trackmetadataClient.track(session, urn).flatMap {
       case Some(track) if isTrackAccessible(session, secretToken, track) =>
