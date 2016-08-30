@@ -1,6 +1,7 @@
 package com.soundcloud.publicApiStrangler.singleTrackEndpointMigration
 
 import com.soundcloud.jvmkit.Country
+import com.soundcloud.publicApiStrangler.client.DomainLocking
 import com.soundcloud.publicApiStrangler.client.pubmese.Isrc
 import com.soundcloud.publicApiStrangler.client.stitch.StitchCounts
 import com.soundcloud.publicApiStrangler.singleTrackEndpointMigration.trackmetadataclient.Track
@@ -14,7 +15,8 @@ case class TrackRepresentation(
   isrc: Option[Isrc],
   counts: StitchCounts,
   label: Option[User],
-  geoblockings: Option[Geoblockings]) {
+  geoblockings: Option[Geoblockings],
+  domainlockings: Seq[DomainLocking]) {
   def id = track.urn.getIdentifier.toLong
 }
 
@@ -93,7 +95,8 @@ object TrackRepresentation {
 
       coreObject ++
         labelObjectFor(rep) ++
-        geoblockingsObjectFor(rep)
+        geoblockingsObjectFor(rep) ++
+        domainLockingsObjectFor(rep)
     }
   }
 
@@ -108,6 +111,10 @@ object TrackRepresentation {
       case Some(list) => Json.obj("available_country_codes" -> Country.officiallyAssignedAlpha2Codes.--(list))
       case None => Json.obj()
     }
+
+  private def domainLockingsObjectFor(rep: TrackRepresentation): JsObject =
+    if (rep.domainlockings.isEmpty) Json.obj()
+    else Json.obj("domain_lockings" -> rep.domainlockings.map(dl => Json.obj("domain" -> dl.domain)))
 
   private def writeUser(user: User): JsValue =
     Json.obj(

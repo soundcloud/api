@@ -1,6 +1,7 @@
 package com.soundcloud.publicApiStrangler.singleTrackEndpointMigration
 
 import com.soundcloud.bff.JsObject
+import com.soundcloud.publicApiStrangler.client.DomainLocking
 import com.soundcloud.publicApiStrangler.client.pubmese.Isrc
 import com.soundcloud.publicApiStrangler.client.stitch.StitchCounts
 import com.soundcloud.publicApiStrangler.singleTrackEndpointMigration.trackmetadataclient.{Artwork, EmbeddingPermission, Track}
@@ -16,6 +17,17 @@ class TrackRepresentationSpec extends UnitSpecification {
     val trackUrn = new Urn("soundcloud", "tracks", "1324")
     val userUrn = new Urn("soundcloud", "users", "3456")
     val labelUrn: Option[Urn] = Some(new Urn("soundcloud", "users", "999"))
+
+    def createTrackRepresentation(
+      track: Track = defaultTrack,
+      user: User = defaultUser,
+      isrc: Option[Isrc] = defaultIsrc,
+      counts: StitchCounts = defaultCounts,
+      label: Option[User] = defaultLabel,
+      geoblockings: Option[Geoblockings] = defaultGeoblockings,
+      domainlockings: Seq[DomainLocking] = defaultDomainLockings) =
+      TrackRepresentation(
+        track, user, isrc, counts, label, geoblockings, domainlockings)
 
     def defaultUser =
       User(
@@ -96,11 +108,16 @@ class TrackRepresentationSpec extends UnitSpecification {
     def defaultCounts = StitchCounts(111, 222, 333, 444)
 
     def defaultGeoblockings: Option[Geoblockings] = Some(List("DE", "FR"))
+
+    def defaultDomainLockings: Seq[DomainLocking] = Seq(
+      DomainLocking(
+        domain = "example.com",
+        trackUrn = trackUrn,
+        urn = Urn("soundcloud:domain-lockings:97802143")))
   }
 
   "serialises to JSON correctly" in new Context {
-    val trackRepresentation = TrackRepresentation(defaultTrack, defaultUser, defaultIsrc, defaultCounts, defaultLabel, defaultGeoblockings)
-    val trackJson = Json.toJson(trackRepresentation)
+    val trackJson = Json.toJson(createTrackRepresentation())
 
     trackJson \ "kind" ==== JsString("track")
     trackJson \ "id" ==== JsNumber(1324)
@@ -173,17 +190,19 @@ class TrackRepresentationSpec extends UnitSpecification {
     labelJson \ "uri" ==== JsString("https://api.soundcloud.com/users/999")
     labelJson \ "permalink_url" ==== JsString("https://soundcloud.com/raz")
     labelJson \ "avatar_url" ==== JsString("http://example.com/raz.jpg")
-  }
 
+    val domainLockingJson = trackJson \ "domain_lockings"
+    domainLockingJson(0) \ "domain" ==== JsString("example.com")
+  }
 
   "sharing" in new Context {
     val publicTrack = defaultTrack.copy(public = true)
-    val publicTrackRepresentation = TrackRepresentation(publicTrack, defaultUser, defaultIsrc, defaultCounts, defaultLabel, defaultGeoblockings)
+    val publicTrackRepresentation = createTrackRepresentation(track = publicTrack)
     val publicTrackJson = Json.toJson(publicTrackRepresentation)
     publicTrackJson \ "sharing" ==== JsString("public")
 
     val privateTrack = defaultTrack.copy(public = false)
-    val privateTrackRepresentation = TrackRepresentation(privateTrack, defaultUser, defaultIsrc, defaultCounts, defaultLabel, defaultGeoblockings)
+    val privateTrackRepresentation = createTrackRepresentation(track = privateTrack)
     val privateTrackJson = Json.toJson(privateTrackRepresentation)
     privateTrackJson \ "sharing" ==== JsString("private")
   }
@@ -191,18 +210,23 @@ class TrackRepresentationSpec extends UnitSpecification {
   "no label_id" in new Context {
     override val labelUrn = None
 
-    val trackRepresentation = TrackRepresentation(defaultTrack, defaultUser, defaultIsrc, defaultCounts, defaultLabel, defaultGeoblockings)
+    val trackRepresentation = createTrackRepresentation()
     val trackJson = Json.toJson(trackRepresentation)
 
     trackJson.as[JsObject].keys.contains("label") ==== false
   }
 
   "no geoblockings" in new Context {
-    override val defaultGeoblockings = None
-
-    val trackRepresentation = TrackRepresentation(defaultTrack, defaultUser, defaultIsrc, defaultCounts, defaultLabel, defaultGeoblockings)
+    val trackRepresentation = createTrackRepresentation(geoblockings = None)
     val trackJson = Json.toJson(trackRepresentation)
 
     trackJson.as[JsObject].keys.contains("available_country_codes") ==== false
+  }
+
+  "no domainlockings" in new Context {
+    val trackRepresentation = createTrackRepresentation(domainlockings = Seq())
+    val trackJson = Json.toJson(trackRepresentation)
+
+    trackJson.as[JsObject].keys.contains("domain_lockings") ==== false
   }
 }
