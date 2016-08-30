@@ -12,114 +12,204 @@ import com.soundcloud.service.response.representation.{Geoblockings, User}
 import org.joda.time.LocalDateTime
 import play.api.libs.json._
 
-class TrackRepresentationSpec extends UnitSpecification {
+trait TrackRepresentationLikeSpecContext {
+  implicit val trackRepresentationWrites = TrackRepresentation.writes
 
-  trait Context extends Scope {
-    val trackUrn = new Urn("soundcloud", "tracks", "1324")
-    val userUrn = new Urn("soundcloud", "users", "3456")
-    val labelUrn: Option[Urn] = Some(new Urn("soundcloud", "users", "999"))
+  val trackUrn = new Urn("soundcloud", "tracks", "1324")
+  val userUrn = new Urn("soundcloud", "users", "3456")
+  val labelUrn = new Urn("soundcloud", "users", "999")
 
-    def createTrackRepresentation(
-      userSession: UserSession = defaultUserSession,
-      track: Track = defaultTrack,
-      user: User = defaultUser,
-      isrc: Option[Isrc] = defaultIsrc,
-      counts: StitchCounts = defaultCounts,
-      label: Option[User] = defaultLabel,
-      geoblockings: Option[Geoblockings] = defaultGeoblockings,
-      domainlockings: Seq[DomainLocking] = defaultDomainLockings) =
-      TrackRepresentation(
-        userSession, track, user, isrc, counts, label, geoblockings, domainlockings)
+  def createTrackRepresentation(
+    track: Track = defaultTrack,
+    user: User = defaultUser,
+    isrc: Option[Isrc] = defaultIsrc,
+    counts: StitchCounts = defaultCounts,
+    label: Option[User] = Some(defaultLabel),
+    geoblockings: Option[Geoblockings] = Some(defaultGeoblockings),
+    domainlockings: Seq[DomainLocking] = defaultDomainLockings) =
+    TrackRepresentation(
+      track, user, isrc, counts, label, geoblockings, domainlockings)
 
-    def defaultLoggedInUserUrn = new Urn("soundcloud", "users", "79241")
-    def defaultUserSession = loggedInSession(defaultLoggedInUserUrn)
+  def defaultLoggedInUserUrn = new Urn("soundcloud", "users", "79241")
 
-    def defaultUser =
-      User(
-        urn = userUrn,
-        permalink = "giraffe",
-        username = "Dr. G. Raffe",
-        avatar_url = "http://example.com/giraffe.jpg",
-        permalink_url = "https://soundcloud.com/denis",
-        city = None,
-        country = None,
-        tracks_count = 1,
-        followers_count = Some(20000),
-        followings_count = Some(20),
-        verified = false,
-        description = Some("I am a nice person"))
+  def defaultUser =
+    User(
+      urn = userUrn,
+      permalink = "giraffe",
+      username = "Dr. G. Raffe",
+      avatar_url = "http://example.com/giraffe.jpg",
+      permalink_url = "https://soundcloud.com/denis",
+      city = None,
+      country = None,
+      tracks_count = 1,
+      followers_count = Some(20000),
+      followings_count = Some(20),
+      verified = false,
+      description = Some("I am a nice person"))
 
-    def defaultLabel: Option[User] =
-      labelUrn.map(urn =>
-        User(
-          urn = urn,
-          permalink = "raz",
-          username = "Raz Putin",
-          avatar_url = "http://example.com/raz.jpg",
-          permalink_url = "https://soundcloud.com/raz",
-          city = None,
-          country = None,
-          tracks_count = 4,
-          followers_count = Some(10000),
-          followings_count = Some(10),
-          verified = true,
-          description = Some("Psychonaut Music Inc.")))
+  def defaultLabelUrn = Some(labelUrn)
 
-    def defaultTrack = Track(
-      urn = trackUrn,
-      user_urn = userUrn,
-      commentable = false,
-      description = Some("Follow @samstarling !"),
-      created_at = new LocalDateTime(2015, 2, 15, 16, 47, 27),
-      disabled_at = None,
-      downloadable = false,
-      duration = 120,
-      genre = Some("future bass"),
-      last_modified = new LocalDateTime(2016, 8, 8, 13, 28, 53),
-      permalink = "plsty-remix",
-      permalink_url = Some("http://soundcloud.com/nirvana/plsty-remix"),
-      public = true,
-      secret_token = "s-53CR37",
-      user_tags = List("dubstep", "folk"),
-      machine_tags = List("system:foo", "system:bar"),
-      title = "Baby Bash",
-      uid = None,
-      api_streamable = None,
-      streamable = false,
-      reveal_comments = false,
-      reveal_stats = false,
-      label_name = Some("Denis Owns"),
-      license = "all-rights-reserved",
-      embeddable = None,
-      release_year = Some(1991),
-      release_month = Some(1),
-      release_day = Some(2),
-      embeddableBy = EmbeddingPermission.Me,
-      releaseDate = None,
-      artwork = Artwork(filename = Some("artworks-FuwbhSJORvKH-0-original.jpg")),
-      published_at = None,
-      purchase_url = Some("http://example.com/buy/7890"),
-      purchase_title = Some("buy me pls"),
-      bpm = Some(120.7),
-      track_type = Some("original"),
-      release = Some("DR012"),
-      key_signature = Some("Emaj"),
-      video_url = Some("http://example.com/video.mp4"),
-      label_id = labelUrn.map(_.getIdentifier.toInt)
-    )
+  def defaultLabel: User =
+    User(
+      urn = labelUrn,
+      permalink = "raz",
+      username = "Raz Putin",
+      avatar_url = "http://example.com/raz.jpg",
+      permalink_url = "https://soundcloud.com/raz",
+      city = None,
+      country = None,
+      tracks_count = 4,
+      followers_count = Some(10000),
+      followings_count = Some(10),
+      verified = true,
+      description = Some("Psychonaut Music Inc."))
 
-    def defaultIsrc = Some(Isrc("US-S1Z-99-00001"))
+  def defaultTrack = Track(
+    urn = trackUrn,
+    user_urn = userUrn,
+    commentable = false,
+    description = Some("Follow @samstarling !"),
+    created_at = new LocalDateTime(2015, 2, 15, 16, 47, 27),
+    disabled_at = None,
+    downloadable = false,
+    duration = 120,
+    genre = Some("future bass"),
+    last_modified = new LocalDateTime(2016, 8, 8, 13, 28, 53),
+    permalink = "plsty-remix",
+    permalink_url = Some("http://soundcloud.com/nirvana/plsty-remix"),
+    public = true,
+    secret_token = "s-53CR37",
+    user_tags = List("dubstep", "folk"),
+    machine_tags = List("system:foo", "system:bar"),
+    title = "Baby Bash",
+    uid = None,
+    api_streamable = None,
+    streamable = false,
+    reveal_comments = false,
+    reveal_stats = false,
+    label_name = Some("Denis Owns"),
+    license = "all-rights-reserved",
+    embeddable = None,
+    release_year = Some(1991),
+    release_month = Some(1),
+    release_day = Some(2),
+    embeddableBy = EmbeddingPermission.Me,
+    releaseDate = None,
+    artwork = Artwork(filename = Some("artworks-FuwbhSJORvKH-0-original.jpg")),
+    published_at = None,
+    purchase_url = Some("http://example.com/buy/7890"),
+    purchase_title = Some("buy me pls"),
+    bpm = Some(120.7),
+    track_type = Some("original"),
+    release = Some("DR012"),
+    key_signature = Some("Emaj"),
+    video_url = Some("http://example.com/video.mp4"),
+    label_id = defaultLabelUrn.map(_.getIdentifier.toInt)
+  )
 
-    def defaultCounts = StitchCounts(111, 222, 333, 444)
+  def defaultIsrc = Some(Isrc("US-S1Z-99-00001"))
 
-    def defaultGeoblockings: Option[Geoblockings] = Some(List("DE", "FR"))
+  def defaultCounts = StitchCounts(111, 222, 333, 444)
 
-    def defaultDomainLockings: Seq[DomainLocking] = Seq(
-      DomainLocking(
-        domain = "example.com",
-        trackUrn = trackUrn,
-        urn = Urn("soundcloud:domain-lockings:97802143")))
+  def defaultGeoblockings: Geoblockings = List("DE", "FR")
+
+  def defaultDomainLockings: Seq[DomainLocking] = Seq(
+    DomainLocking(
+      domain = "example.com",
+      trackUrn = trackUrn,
+      urn = Urn("soundcloud:domain-lockings:97802143")))
+}
+
+class TrackRepresentationSecretTokenDecoratorSpec extends UnitSpecification {
+  trait Context extends Scope with TrackRepresentationLikeSpecContext {
+    implicit val writes = TrackRepresentationSecretTokenDecorator.writes
+
+    val track: Track = defaultTrack
+    val wrapped: TrackRepresentationLike = createTrackRepresentation()
+    val decorator = TrackRepresentationSecretTokenDecorator(track, wrapped)
   }
+
+  "adds secret token stuff" in new Context {
+    val json = Json.toJson(decorator)
+
+    json \ "secret_token" ==== JsString("s-53CR37")
+    json \ "secret_url" ==== JsString("https://api.soundcloud.com/tracks/1324?secret_token=s-53CR37")
+  }
+}
+
+class TrackRepresentationGeoblockingsDecoratorSpec extends UnitSpecification {
+  trait Context extends Scope with TrackRepresentationLikeSpecContext {
+    implicit val writes = TrackRepresentationGeoblockingsDecorator.writes
+
+    val geoblockings: Geoblockings = List("DE", "FR")
+    val wrapped: TrackRepresentationLike = createTrackRepresentation()
+    val decorator = TrackRepresentationGeoblockingsDecorator(geoblockings, wrapped)
+  }
+
+  "adds geoblocking info" in new Context {
+    val json = Json.toJson(decorator)
+
+    (json \ "available_country_codes").as[JsArray].value.sortBy(_.as[JsString].value) ==== Seq(
+      "AD", "AE", "AF", "AG", "AI", "AL", "AM", "AO", "AQ", "AR", "AS", "AT", "AU", "AW", "AX", "AZ",
+      "BA", "BB", "BD", "BE", "BF", "BG", "BH", "BI", "BJ", "BL", "BM", "BN", "BO", "BQ", "BR", "BS",
+      "BT", "BV", "BW", "BY", "BZ", "CA", "CC", "CD", "CF", "CG", "CH", "CI", "CK", "CL", "CM", "CN",
+      "CO", "CR", "CU", "CV", "CW", "CX", "CY", "CZ",       "DJ", "DK", "DM", "DO", "DZ", "EC", "EE",
+      "EG", "EH", "ER", "ES", "ET", "FI", "FJ", "FK", "FM", "FO",       "GA", "GB", "GD", "GE", "GF",
+      "GG", "GH", "GI", "GL", "GM", "GN", "GP", "GQ", "GR", "GS", "GT", "GU", "GW", "GY", "HK", "HM",
+      "HN", "HR", "HT", "HU", "ID", "IE", "IL", "IM", "IN", "IO", "IQ", "IR", "IS", "IT", "JE", "JM",
+      "JO", "JP", "KE", "KG", "KH", "KI", "KM", "KN", "KP", "KR", "KW", "KY", "KZ", "LA", "LB", "LC",
+      "LI", "LK", "LR", "LS", "LT", "LU", "LV", "LY", "MA", "MC", "MD", "ME", "MF", "MG", "MH", "MK",
+      "ML", "MM", "MN", "MO", "MP", "MQ", "MR", "MS", "MT", "MU", "MV", "MW", "MX", "MY", "MZ", "NA",
+      "NC", "NE", "NF", "NG", "NI", "NL", "NO", "NP", "NR", "NU", "NZ", "OM", "PA", "PE", "PF", "PG",
+      "PH", "PK", "PL", "PM", "PN", "PR", "PS", "PT", "PW", "PY", "QA", "RE", "RO", "RS", "RU", "RW",
+      "SA", "SB", "SC", "SD", "SE", "SG", "SH", "SI", "SJ", "SK", "SL", "SM", "SN", "SO", "SR", "SS",
+      "ST", "SV", "SX", "SY", "SZ", "TC", "TD", "TF", "TG", "TH", "TJ", "TK", "TL", "TM", "TN", "TO",
+      "TR", "TT", "TV", "TW", "TZ", "UA", "UG", "UM", "US", "UY", "UZ", "VA", "VC", "VE", "VG", "VI",
+      "VN", "VU", "WF", "WS", "YE", "YT", "ZA", "ZM", "ZW").map(JsString(_))
+  }
+}
+
+class TrackRepresentationLabelDecoratorSpec extends UnitSpecification {
+  trait Context extends Scope with TrackRepresentationLikeSpecContext {
+    implicit val writes = TrackRepresentationLabelDecorator.writes
+
+    val label: User = defaultLabel
+    val wrapped: TrackRepresentationLike = createTrackRepresentation()
+    val decorator = TrackRepresentationLabelDecorator(label, wrapped)
+  }
+
+  "adds label info" in new Context {
+    val json = Json.toJson(decorator)
+
+    val labelJson = json \ "label"
+    labelJson \ "id" ==== JsNumber(999)
+    labelJson \ "kind" ==== JsString("user")
+    labelJson \ "permalink" ==== JsString("raz")
+    labelJson \ "uri" ==== JsString("https://api.soundcloud.com/users/999")
+    labelJson \ "permalink_url" ==== JsString("https://soundcloud.com/raz")
+    labelJson \ "avatar_url" ==== JsString("http://example.com/raz.jpg")
+  }
+}
+
+class TrackRepresentationDomainLockingsDecoratorSpec extends UnitSpecification {
+  trait Context extends Scope with TrackRepresentationLikeSpecContext {
+    implicit val writes = TrackRepresentationDomainLockingsDecorator.writes
+
+    val domainLockings = defaultDomainLockings
+    val wrapped: TrackRepresentationLike = createTrackRepresentation()
+    val decorator = TrackRepresentationDomainLockingsDecorator(domainLockings, wrapped)
+  }
+
+  "adds domain locking info" in new Context {
+    val json = Json.toJson(decorator)
+
+    val domainLockingJson = json \ "domain_lockings"
+    domainLockingJson(0) \ "domain" ==== JsString("example.com")
+  }
+}
+
+class TrackRepresentationSpec extends UnitSpecification {
+  trait Context extends Scope with TrackRepresentationLikeSpecContext
 
   "serialises to JSON correctly" in new Context {
     val trackJson = Json.toJson(createTrackRepresentation())
@@ -162,23 +252,6 @@ class TrackRepresentationSpec extends UnitSpecification {
     trackJson \ "download_count" ==== JsNumber(222)
     trackJson \ "favoritings_count" ==== JsNumber(333)
     trackJson \ "comment_count" ==== JsNumber(444)
-    (trackJson \ "available_country_codes").as[JsArray].value.sortBy(_.as[JsString].value) ==== Seq(
-      "AD", "AE", "AF", "AG", "AI", "AL", "AM", "AO", "AQ", "AR", "AS", "AT", "AU", "AW", "AX", "AZ",
-      "BA", "BB", "BD", "BE", "BF", "BG", "BH", "BI", "BJ", "BL", "BM", "BN", "BO", "BQ", "BR", "BS",
-      "BT", "BV", "BW", "BY", "BZ", "CA", "CC", "CD", "CF", "CG", "CH", "CI", "CK", "CL", "CM", "CN",
-      "CO", "CR", "CU", "CV", "CW", "CX", "CY", "CZ",       "DJ", "DK", "DM", "DO", "DZ", "EC", "EE",
-      "EG", "EH", "ER", "ES", "ET", "FI", "FJ", "FK", "FM", "FO",       "GA", "GB", "GD", "GE", "GF",
-      "GG", "GH", "GI", "GL", "GM", "GN", "GP", "GQ", "GR", "GS", "GT", "GU", "GW", "GY", "HK", "HM",
-      "HN", "HR", "HT", "HU", "ID", "IE", "IL", "IM", "IN", "IO", "IQ", "IR", "IS", "IT", "JE", "JM",
-      "JO", "JP", "KE", "KG", "KH", "KI", "KM", "KN", "KP", "KR", "KW", "KY", "KZ", "LA", "LB", "LC",
-      "LI", "LK", "LR", "LS", "LT", "LU", "LV", "LY", "MA", "MC", "MD", "ME", "MF", "MG", "MH", "MK",
-      "ML", "MM", "MN", "MO", "MP", "MQ", "MR", "MS", "MT", "MU", "MV", "MW", "MX", "MY", "MZ", "NA",
-      "NC", "NE", "NF", "NG", "NI", "NL", "NO", "NP", "NR", "NU", "NZ", "OM", "PA", "PE", "PF", "PG",
-      "PH", "PK", "PL", "PM", "PN", "PR", "PS", "PT", "PW", "PY", "QA", "RE", "RO", "RS", "RU", "RW",
-      "SA", "SB", "SC", "SD", "SE", "SG", "SH", "SI", "SJ", "SK", "SL", "SM", "SN", "SO", "SR", "SS",
-      "ST", "SV", "SX", "SY", "SZ", "TC", "TD", "TF", "TG", "TH", "TJ", "TK", "TL", "TM", "TN", "TO",
-      "TR", "TT", "TV", "TW", "TZ", "UA", "UG", "UM", "US", "UY", "UZ", "VA", "VC", "VE", "VG", "VI",
-      "VN", "VU", "WF", "WS", "YE", "YT", "ZA", "ZM", "ZW").map(JsString(_))
 
     val userJson = trackJson \ "user"
     userJson \ "id" ==== JsNumber(3456)
@@ -187,17 +260,6 @@ class TrackRepresentationSpec extends UnitSpecification {
     userJson \ "uri" ==== JsString("https://api.soundcloud.com/users/3456")
     userJson \ "permalink_url" ==== JsString("https://soundcloud.com/denis")
     userJson \ "avatar_url" ==== JsString("http://example.com/giraffe.jpg")
-
-    val labelJson = trackJson \ "label"
-    labelJson \ "id" ==== JsNumber(999)
-    labelJson \ "kind" ==== JsString("user")
-    labelJson \ "permalink" ==== JsString("raz")
-    labelJson \ "uri" ==== JsString("https://api.soundcloud.com/users/999")
-    labelJson \ "permalink_url" ==== JsString("https://soundcloud.com/raz")
-    labelJson \ "avatar_url" ==== JsString("http://example.com/raz.jpg")
-
-    val domainLockingJson = trackJson \ "domain_lockings"
-    domainLockingJson(0) \ "domain" ==== JsString("example.com")
   }
 
   "sharing" in new Context {
@@ -210,36 +272,5 @@ class TrackRepresentationSpec extends UnitSpecification {
     val privateTrackRepresentation = createTrackRepresentation(track = privateTrack)
     val privateTrackJson = Json.toJson(privateTrackRepresentation)
     privateTrackJson \ "sharing" ==== JsString("private")
-  }
-
-  "no label_id" in new Context {
-    override val labelUrn = None
-
-    val trackRepresentation = createTrackRepresentation()
-    val trackJson = Json.toJson(trackRepresentation)
-
-    trackJson.as[JsObject].keys.contains("label") ==== false
-  }
-
-  "no geoblockings" in new Context {
-    val trackRepresentation = createTrackRepresentation(geoblockings = None)
-    val trackJson = Json.toJson(trackRepresentation)
-
-    trackJson.as[JsObject].keys.contains("available_country_codes") ==== false
-  }
-
-  "no domainlockings" in new Context {
-    val trackRepresentation = createTrackRepresentation(domainlockings = Seq())
-    val trackJson = Json.toJson(trackRepresentation)
-
-    trackJson.as[JsObject].keys.contains("domain_lockings") ==== false
-  }
-
-  "not logged in as same user" in new Context {
-    val otherTrackRep = createTrackRepresentation(userSession = loggedInSession(Urn("soundcloud:users:98745")))
-    val myTrackRep = createTrackRepresentation(userSession = loggedInSession(userUrn))
-
-    Json.toJson(otherTrackRep).as[JsObject].keys.contains("secret_token") ==== false
-    Json.toJson(myTrackRep) \ "secret_token" ==== JsString("s-53CR37")
   }
 }

@@ -9,15 +9,95 @@ import com.soundcloud.service.response.representation.{Geoblockings, User}
 import org.joda.time.format.DateTimeFormat
 import play.api.libs.json._
 
+sealed trait TrackRepresentationLike
+
+object TrackRepresentationLike {
+  implicit val writes: Writes[TrackRepresentationLike] = Writes[TrackRepresentationLike] {
+    case t: TrackRepresentationSecretTokenDecorator => TrackRepresentationSecretTokenDecorator.writes.writes(t)
+    case t: TrackRepresentationLabelDecorator => TrackRepresentationLabelDecorator.writes.writes(t)
+    case t: TrackRepresentationGeoblockingsDecorator => TrackRepresentationGeoblockingsDecorator.writes.writes(t)
+    case t: TrackRepresentationDomainLockingsDecorator => TrackRepresentationDomainLockingsDecorator.writes.writes(t)
+    case t: TrackRepresentation => TrackRepresentation.writes.writes(t)
+  }
+
+  implicit val userWrites = Writes[User] { user =>
+    Json.obj(
+      "id" -> user.urn.getIdentifier.toLong,
+      "kind" -> "user",
+      "permalink" -> user.permalink,
+      "username" -> user.username,
+      // last_modified
+      "uri" -> s"https://api.soundcloud.com/users/${user.urn.getIdentifier}",
+      "permalink_url" -> user.permalink_url,
+      "avatar_url" -> user.avatar_url
+    )
+  }
+}
+
+case class TrackRepresentationSecretTokenDecorator(
+  track: Track,
+  wrapped: TrackRepresentationLike
+) extends TrackRepresentationLike
+
+object TrackRepresentationSecretTokenDecorator {
+  implicit val writes = Writes[TrackRepresentationSecretTokenDecorator] { dec =>
+    Json.toJson(dec.wrapped).as[JsObject] ++ Json.obj(
+      "secret_token" -> dec.track.secret_token,
+      "secret_url" -> s"https://api.soundcloud.com/tracks/${dec.track.urn.getIdentifier}?secret_token=${dec.track.secret_token}"
+    )
+  }
+}
+
+case class TrackRepresentationLabelDecorator(
+  label: User,
+  wrapped: TrackRepresentationLike
+) extends TrackRepresentationLike
+
+object TrackRepresentationLabelDecorator {
+  // FIXME: ugly to have to import it here
+  import TrackRepresentationLike.userWrites
+
+  implicit val writes = Writes[TrackRepresentationLabelDecorator] { dec =>
+    Json.toJson(dec.wrapped).as[JsObject] ++ Json.obj(
+      "label" -> dec.label
+    )
+  }
+}
+
+case class TrackRepresentationGeoblockingsDecorator(
+  geoblockings: Geoblockings,
+  wrapped: TrackRepresentationLike
+) extends TrackRepresentationLike
+
+object TrackRepresentationGeoblockingsDecorator {
+  implicit val writes = Writes[TrackRepresentationGeoblockingsDecorator] { dec =>
+    Json.toJson(dec.wrapped).as[JsObject] ++ Json.obj(
+      "available_country_codes" -> Country.officiallyAssignedAlpha2Codes.--(dec.geoblockings)
+    )
+  }
+}
+
+case class TrackRepresentationDomainLockingsDecorator(
+  domainLockings: Seq[DomainLocking],
+  wrapped: TrackRepresentationLike
+) extends TrackRepresentationLike
+
+object TrackRepresentationDomainLockingsDecorator {
+  implicit val writes = Writes[TrackRepresentationDomainLockingsDecorator] { dec =>
+    Json.toJson(dec.wrapped).as[JsObject] ++ Json.obj(
+      "domain_lockings" -> dec.domainLockings.map(dl => Json.obj("domain" -> dl.domain))
+    )
+  }
+}
+
 case class TrackRepresentation(
-  userSession: UserSession,
   track: Track,
   user: User,
   isrc: Option[Isrc],
   counts: StitchCounts,
   label: Option[User],
   geoblockings: Option[Geoblockings],
-  domainlockings: Seq[DomainLocking]) {
+  domainlockings: Seq[DomainLocking]) extends TrackRepresentationLike {
   def id = track.urn.getIdentifier.toLong
 }
 
@@ -25,8 +105,11 @@ object TrackRepresentation {
   private val dateTimeFormat = DateTimeFormat.forPattern("yyyy/MM/dd HH:mm:ss +0000")
 
   implicit val writes = new Writes[TrackRepresentation] {
+    // FIXME: ugly to have to import it here
+    import TrackRepresentationLike.userWrites
+
     override def writes(rep: TrackRepresentation): JsValue = {
-      val coreObject = Json.obj(
+      Json.obj(
         "kind" -> "track",
         "id" -> rep.id,
         "created_at" -> rep.track.created_at.toString(dateTimeFormat),
@@ -61,7 +144,7 @@ object TrackRepresentation {
         // original_format
         "license" -> rep.track.license,
         "uri" -> s"https://api.soundcloud.com/tracks/${rep.id}",
-        "user" -> writeUser(rep.user),
+        "user" -> rep.user,
         // user_favorite --> liebling
         "permalink_url" -> rep.track.permalink_url,
         // Probably we need to copy the logic at
@@ -89,49 +172,6 @@ object TrackRepresentation {
         // user_favorite
         // user_playback_count
       )
-
-      coreObject ++
-        labelObjectFor(rep) ++
-        geoblockingsObjectFor(rep) ++
-        domainLockingsObjectFor(rep) ++
-        secretTokenObjectFor(rep)
     }
   }
-
-  private def labelObjectFor(rep: TrackRepresentation): JsObject =
-    rep.label match {
-      case Some(user) => Json.obj("label" -> writeUser(user))
-      case None => Json.obj()
-    }
-
-  private def geoblockingsObjectFor(rep: TrackRepresentation): JsObject =
-    rep.geoblockings match {
-      case Some(list) => Json.obj("available_country_codes" -> Country.officiallyAssignedAlpha2Codes.--(list))
-      case None => Json.obj()
-    }
-
-  private def domainLockingsObjectFor(rep: TrackRepresentation): JsObject =
-    if (rep.domainlockings.isEmpty) Json.obj()
-    else Json.obj("domain_lockings" -> rep.domainlockings.map(dl => Json.obj("domain" -> dl.domain)))
-
-  private def secretTokenObjectFor(rep: TrackRepresentation): JsObject =
-    if (rep.track.user_urn == rep.userSession.getUser)
-      Json.obj(
-        "secret_token" -> rep.track.secret_token,
-        "secret_url" -> s"https://api.soundcloud.com/tracks/${rep.track.urn.getIdentifier}?secret_token=${rep.track.secret_token}"
-      )
-    else
-      Json.obj()
-
-  private def writeUser(user: User): JsValue =
-    Json.obj(
-      "id" -> user.urn.getIdentifier.toLong,
-      "kind" -> "user",
-      "permalink" -> user.permalink,
-      "username" -> user.username,
-      // last_modified
-      "uri" -> s"https://api.soundcloud.com/users/${user.urn.getIdentifier}",
-      "permalink_url" -> user.permalink_url,
-      "avatar_url" -> user.avatar_url
-    )
 }
