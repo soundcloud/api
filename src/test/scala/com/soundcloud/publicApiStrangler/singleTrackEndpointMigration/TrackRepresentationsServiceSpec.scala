@@ -7,8 +7,9 @@ import com.soundcloud.publicApiStrangler.singleTrackEndpointMigration.trackmetad
 import com.soundcloud.scalakit.Urn
 import com.soundcloud.scalakit.json.Json
 import com.soundcloud.scalakit.test.UnitSpecification
-import com.soundcloud.service.client.OkidokiClient
-import com.soundcloud.service.response.representation.User
+import com.soundcloud.service.client.{MoshimoshiClient, OkidokiClient}
+import com.soundcloud.service.response.mapper.GeoblockingMapper
+import com.soundcloud.service.response.representation._
 import com.twitter.finagle.http.Status
 import com.twitter.util.{Await, Future}
 import org.joda.time.LocalDateTime
@@ -21,12 +22,14 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
     val okidokiClient = mock[OkidokiClient]
     val pubmeseClient = mock[PubmeseClient]
     val stitchClient = mock[StitchClient]
+    val moshimoshiClient = mock[MoshimoshiClient]
 
     val tracksService = new TrackRepresentationsService(
       trackmetadataClient,
       okidokiClient,
       pubmeseClient,
-      stitchClient
+      stitchClient,
+      moshimoshiClient
     )
 
     val userUrn = Urn("soundcloud:users:112")
@@ -65,6 +68,8 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
     val trackUrn = Urn("soundcloud:tracks:987")
     val createdAt = new LocalDateTime(2016, 5, 19, 18, 3, 4)
     val lastModified = new LocalDateTime(2016, 5, 20, 18, 3, 4)
+
+    def geoblockings: Option[Geoblockings] = Some(List("DE", "FR"))
 
     def trackmetadataTrack(
                             disabledAt: Option[LocalDateTime] = None,
@@ -130,8 +135,9 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
     when(okidokiClient.fetchUserObjects(session, Set(labelUrn))).thenReturn(Future.value(List(label)))
     when(pubmeseClient.isrcForTrack(session, trackUrn)).thenReturn(Future.value(isrc()))
     when(stitchClient.countsForTrack(session, trackUrn, userUrn)).thenReturn(Future.value(stitchCounts))
+    when(moshimoshiClient.fetchTrackGeoblockings(session, trackUrn)).thenReturn(Future.value(geoblockings))
 
-    val expectedTrackRepresentation = TrackRepresentation(track, user, isrc(), stitchCounts, Some(label))
+    val expectedTrackRepresentation = TrackRepresentation(track, user, isrc(), stitchCounts, Some(label), geoblockings)
     val expectedResponseString = Json.stringify(expectedTrackRepresentation)
 
     val response = Await.result(tracksService.track(session, trackUrn, None, None))
@@ -147,8 +153,9 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
     when(okidokiClient.fetchUserObjects(session, Set(labelUrn))).thenReturn(Future.value(List(label)))
     when(pubmeseClient.isrcForTrack(session, trackUrn)).thenReturn(Future.value(isrc()))
     when(stitchClient.countsForTrack(session, trackUrn, userUrn)).thenReturn(Future.value(stitchCounts))
+    when(moshimoshiClient.fetchTrackGeoblockings(session, trackUrn)).thenReturn(Future.value(geoblockings))
 
-    val expectedTrackRepresentation = TrackRepresentation(track, user, isrc(), stitchCounts, Some(label))
+    val expectedTrackRepresentation = TrackRepresentation(track, user, isrc(), stitchCounts, Some(label), geoblockings)
     val expectedResponseString = Json.stringify(expectedTrackRepresentation)
 
     val response = Await.result(tracksService.track(session, trackUrn, None, Some("js_callback_fn")))
@@ -163,16 +170,18 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
     when(okidokiClient.fetchUserObjects(session, Set(labelUrn))).thenReturn(Future.value(List(label)))
     when(pubmeseClient.isrcForTrack(session, trackUrn)).thenReturn(Future.value(isrc()))
     when(stitchClient.countsForTrack(session, trackUrn, userUrn)).thenReturn(Future.value(stitchCounts))
+    when(moshimoshiClient.fetchTrackGeoblockings(session, trackUrn)).thenReturn(Future.value(geoblockings))
 
     val response = Await.result(tracksService.track(session, trackUrn, None, None))
 
-    response.headerMap.get("Content-Length") must beSome("1362")
+    response.headerMap.get("Content-Length") must beSome("2625")
     response.headerMap.get("Content-Type") must beSome("application/json; charset=utf-8")
   }
 
   "Returns 404 for non existing tracks" in new Context {
     when(trackmetadataClient.track(session, trackUrn)).thenReturn(Future.None)
     when(pubmeseClient.isrcForTrack(session, trackUrn)).thenReturn(Future.value(isrc()))
+    when(moshimoshiClient.fetchTrackGeoblockings(session, trackUrn)).thenReturn(Future.value(geoblockings))
 
     val response = Await.result(tracksService.track(session, trackUrn, None, None))
     response.status ==== Status.NotFound
@@ -182,6 +191,7 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
   "Wraps error message in jsonp if `callback` param is defined" in new Context {
     when(trackmetadataClient.track(session, trackUrn)).thenReturn(Future.None)
     when(pubmeseClient.isrcForTrack(session, trackUrn)).thenReturn(Future.value(isrc()))
+    when(moshimoshiClient.fetchTrackGeoblockings(session, trackUrn)).thenReturn(Future.value(geoblockings))
 
     val response = Await.result(tracksService.track(session, trackUrn, None, Some("js_callback_fn")))
     response.status ==== Status.NotFound
@@ -191,6 +201,7 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
   "Returns 404 response with the right headers" in new Context {
     when(trackmetadataClient.track(session, trackUrn)).thenReturn(Future.None)
     when(pubmeseClient.isrcForTrack(session, trackUrn)).thenReturn(Future.value(isrc()))
+    when(moshimoshiClient.fetchTrackGeoblockings(session, trackUrn)).thenReturn(Future.value(geoblockings))
 
     val response = Await.result(tracksService.track(session, trackUrn, None, None))
 
@@ -203,6 +214,7 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
     val track = trackmetadataTrack(disabledAt)
     when(trackmetadataClient.track(session, trackUrn)).thenReturn(Future.value(Some(track)))
     when(pubmeseClient.isrcForTrack(session, trackUrn)).thenReturn(Future.value(isrc()))
+    when(moshimoshiClient.fetchTrackGeoblockings(session, trackUrn)).thenReturn(Future.value(geoblockings))
 
     val response = Await.result(tracksService.track(session, trackUrn, None, None))
     response.status ==== Status.NotFound
@@ -213,6 +225,7 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
     val track = trackmetadataTrack(isPublic = false)
     when(trackmetadataClient.track(session, trackUrn)).thenReturn(Future.value(Some(track)))
     when(pubmeseClient.isrcForTrack(session, trackUrn)).thenReturn(Future.value(isrc()))
+    when(moshimoshiClient.fetchTrackGeoblockings(session, trackUrn)).thenReturn(Future.value(geoblockings))
 
     val response = Await.result(tracksService.track(session, trackUrn, None, None))
     response.status ==== Status.NotFound
@@ -226,6 +239,7 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
     when(okidokiClient.fetchUserObjects(ownerSession, Set(labelUrn))).thenReturn(Future.value(List(label)))
     when(pubmeseClient.isrcForTrack(ownerSession, trackUrn)).thenReturn(Future.value(isrc()))
     when(stitchClient.countsForTrack(ownerSession, trackUrn, userUrn)).thenReturn(Future.value(stitchCounts))
+    when(moshimoshiClient.fetchTrackGeoblockings(ownerSession, trackUrn)).thenReturn(Future.value(geoblockings))
 
     val response = Await.result(tracksService.track(ownerSession, trackUrn, None, None))
     response.status ==== Status.Ok
@@ -236,6 +250,7 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
     val track = trackmetadataTrack(isPublic = false)
     when(trackmetadataClient.track(session, trackUrn)).thenReturn(Future.value(Some(track)))
     when(pubmeseClient.isrcForTrack(session, trackUrn)).thenReturn(Future.value(isrc()))
+    when(moshimoshiClient.fetchTrackGeoblockings(session, trackUrn)).thenReturn(Future.value(geoblockings))
 
     val response = Await.result(tracksService.track(session, trackUrn, Some(wrongSecretToken), None))
     response.status ==== Status.NotFound
@@ -250,6 +265,7 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
     when(okidokiClient.fetchUserObjects(session, Set(labelUrn))).thenReturn(Future.value(List(label)))
     when(pubmeseClient.isrcForTrack(session, trackUrn)).thenReturn(Future.value(isrc()))
     when(stitchClient.countsForTrack(session, trackUrn, userUrn)).thenReturn(Future.value(stitchCounts))
+    when(moshimoshiClient.fetchTrackGeoblockings(session, trackUrn)).thenReturn(Future.value(geoblockings))
 
     val response = Await.result(tracksService.track(session, trackUrn, Some(correctSecretToken), None))
     response.status ==== Status.Ok
@@ -262,6 +278,7 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
     when(okidokiClient.fetchUserObjects(session, Set(labelUrn))).thenReturn(Future.value(List(label)))
     when(pubmeseClient.isrcForTrack(session, trackUrn)).thenReturn(Future.value(isrc()))
     when(stitchClient.countsForTrack(session, trackUrn, userUrn)).thenReturn(Future.value(stitchCounts))
+    when(moshimoshiClient.fetchTrackGeoblockings(session, trackUrn)).thenReturn(Future.value(geoblockings))
 
     val response = Await.result(tracksService.track(session, trackUrn, None, None))
     response.status ==== Status.NotFound
@@ -273,6 +290,7 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
     when(okidokiClient.fetchUserObjects(session, Set(userUrn))).thenReturn(Future.exception(new Exception("asd")))
     when(okidokiClient.fetchUserObjects(session, Set(labelUrn))).thenReturn(Future.value(List(label)))
     when(pubmeseClient.isrcForTrack(session, trackUrn)).thenReturn(Future.value(isrc()))
+    when(moshimoshiClient.fetchTrackGeoblockings(session, trackUrn)).thenReturn(Future.value(geoblockings))
 
     val response = Await.result(tracksService.track(session, trackUrn, None, None))
     response.status ==== Status.ServiceUnavailable
@@ -287,6 +305,7 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
     when(okidokiClient.fetchUserObjects(session, Set(labelUrn))).thenReturn(Future.exception(new Exception("asd")))
     when(pubmeseClient.isrcForTrack(session, trackUrn)).thenReturn(Future.value(isrc()))
     when(stitchClient.countsForTrack(session, trackUrn, userUrn)).thenReturn(Future.value(stitchCounts))
+    when(moshimoshiClient.fetchTrackGeoblockings(session, trackUrn)).thenReturn(Future.value(geoblockings))
 
     val response = Await.result(tracksService.track(session, trackUrn, None, None))
     response.status ==== Status.ServiceUnavailable
@@ -301,8 +320,9 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
     when(okidokiClient.fetchUserObjects(session, Set(labelUrn))).thenReturn(Future.value(List(label)))
     when(pubmeseClient.isrcForTrack(session, trackUrn)).thenReturn(Future.exception(new RuntimeException("bewm! hahahaaa")))
     when(stitchClient.countsForTrack(session, trackUrn, userUrn)).thenReturn(Future.value(stitchCounts))
+    when(moshimoshiClient.fetchTrackGeoblockings(session, trackUrn)).thenReturn(Future.value(geoblockings))
 
-    val expectedTrackRepresentation = TrackRepresentation(track, user, None, stitchCounts, Some(label))
+    val expectedTrackRepresentation = TrackRepresentation(track, user, None, stitchCounts, Some(label), geoblockings)
     val expectedResponseString = Json.stringify(expectedTrackRepresentation)
 
     val response = Await.result(tracksService.track(session, trackUrn, None, None))
@@ -318,8 +338,27 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
     when(okidokiClient.fetchUserObjects(session, Set(labelUrn))).thenReturn(Future.value(List(label)))
     when(pubmeseClient.isrcForTrack(session, trackUrn)).thenReturn(Future.value(isrc()))
     when(stitchClient.countsForTrack(session, trackUrn, userUrn)).thenReturn(Future.exception(new RuntimeException("bewm! hahahaaa")))
+    when(moshimoshiClient.fetchTrackGeoblockings(session, trackUrn)).thenReturn(Future.value(geoblockings))
 
-    val expectedTrackRepresentation = TrackRepresentation(track, user, isrc(), StitchCounts(0, 0, 0, 0), Some(label))
+    val expectedTrackRepresentation = TrackRepresentation(track, user, isrc(), StitchCounts(0, 0, 0, 0), Some(label), geoblockings)
+    val expectedResponseString = Json.stringify(expectedTrackRepresentation)
+
+    val response = Await.result(tracksService.track(session, trackUrn, None, None))
+
+    response.status ==== Status.Ok
+    response.contentString ==== expectedResponseString
+  }
+
+  "Returns empty geoblockings if Moshimoshi is failing" in new Context {
+    val track = trackmetadataTrack()
+    when(trackmetadataClient.track(session, trackUrn)).thenReturn(Future.value(Some(track)))
+    when(okidokiClient.fetchUserObjects(session, Set(userUrn))).thenReturn(Future.value(List(user)))
+    when(okidokiClient.fetchUserObjects(session, Set(labelUrn))).thenReturn(Future.value(List(label)))
+    when(pubmeseClient.isrcForTrack(session, trackUrn)).thenReturn(Future.value(isrc()))
+    when(stitchClient.countsForTrack(session, trackUrn, userUrn)).thenReturn(Future.value(stitchCounts))
+    when(moshimoshiClient.fetchTrackGeoblockings(session, trackUrn)).thenReturn(Future.exception(new RuntimeException("bewm! hahahaaa")))
+
+    val expectedTrackRepresentation = TrackRepresentation(track, user, isrc(), stitchCounts, Some(label), None)
     val expectedResponseString = Json.stringify(expectedTrackRepresentation)
 
     val response = Await.result(tracksService.track(session, trackUrn, None, None))

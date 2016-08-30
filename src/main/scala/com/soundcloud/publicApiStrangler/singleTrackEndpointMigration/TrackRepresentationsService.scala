@@ -5,7 +5,7 @@ import com.soundcloud.publicApiStrangler.client.stitch.{StitchClient, StitchCoun
 import com.soundcloud.publicApiStrangler.singleTrackEndpointMigration.trackmetadataclient.{Track, TrackmetadataClient}
 import com.soundcloud.scalakit.json.Json
 import com.soundcloud.scalakit.{Urn, UserSession}
-import com.soundcloud.service.client.OkidokiClient
+import com.soundcloud.service.client.{MoshimoshiClient, OkidokiClient}
 import com.soundcloud.service.response.representation.User
 import com.twitter.finagle.http.{Response, Status}
 import com.twitter.util.{Future, NonFatal}
@@ -14,13 +14,16 @@ class TrackRepresentationsService(
   trackmetadataClient: TrackmetadataClient,
   okidokiClient: OkidokiClient,
   pubmeseClient: PubmeseClient,
-  stitchClient: StitchClient) {
+  stitchClient: StitchClient,
+  moshimoshiClient: MoshimoshiClient) {
 
   private val notFoundErrorString = """{"errors":[{"error_message":"404 - Not Found"}]}"""
   private val serviceUnavailableErrorString = """{"errors":[{"error_message":"503 - Service Unavailable"}]}"""
 
   def track(session: UserSession, urn: Urn, secretToken: Option[String], callback: Option[String]): Future[Response] = {
-    val isrcF = pubmeseClient.isrcForTrack(session, urn).handle { case ex: Exception => None }
+    val isrcF = pubmeseClient.isrcForTrack(session, urn).handle { case NonFatal(ex) => None }
+    val geoblockingsF = moshimoshiClient.fetchTrackGeoblockings(session, urn).handle { case NonFatal(ex) => None }
+
     trackmetadataClient.track(session, urn).flatMap {
       case Some(track) if isTrackAccessible(session, secretToken, track) =>
         val userF = fetchUserForTrack(track, session)
@@ -29,10 +32,17 @@ class TrackRepresentationsService(
           case Some(user) => stitchClient.countsForTrack(session, urn, user.urn).map(Some(_)).liftToTry.map(_.getOrElse(None))
           case None => Future.value(None)
         }
-        Future.join(isrcF, userF, countsF, labelF).map {
-          case (isrc, Some(user), counts, label) =>
-            val content = jsonForTrack(track, user, isrc, counts, label)
-            generateResponse(Status.Ok, jsonpWrapper(callback, content))
+        Future.join(isrcF, userF, countsF, labelF, geoblockingsF).map {
+          case (isrc, Some(user), counts, label, geoblockings) =>
+            val rep = TrackRepresentation(
+              track = track,
+              user = user,
+              isrc = isrc,
+              counts = getCounts(counts),
+              label = label,
+              geoblockings = geoblockings
+            )
+            generateResponse(Status.Ok, jsonpWrapper(callback, Json.stringify(rep)))
           case _ =>
             generateResponse(Status.NotFound, jsonpWrapper(callback, notFoundErrorString))
         }
@@ -71,9 +81,6 @@ class TrackRepresentationsService(
 
   private def fetchUser(userUrn: Urn, session: UserSession): Future[Option[User]] =
     okidokiClient.fetchUserObjects(session, Set(userUrn)).map(_.headOption)
-
-  private def jsonForTrack(track: Track, user: User, isrc: Option[Isrc], counts: Option[StitchCounts], label: Option[User]) =
-    Json.stringify(new TrackRepresentation(track, user, isrc, getCounts(counts), label))
 
   private def getCounts(counts: Option[StitchCounts]): StitchCounts =
     counts.getOrElse(StitchCounts(0, 0, 0, 0))

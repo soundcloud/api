@@ -6,9 +6,9 @@ import com.soundcloud.publicApiStrangler.client.stitch.StitchCounts
 import com.soundcloud.publicApiStrangler.singleTrackEndpointMigration.trackmetadataclient.{Artwork, EmbeddingPermission, Track}
 import com.soundcloud.scalakit.Urn
 import com.soundcloud.scalakit.test.UnitSpecification
-import com.soundcloud.service.response.representation.User
+import com.soundcloud.service.response.representation.{Geoblockings, User}
 import org.joda.time.LocalDateTime
-import play.api.libs.json.{JsBoolean, JsNumber, JsString, Json}
+import play.api.libs.json._
 
 class TrackRepresentationSpec extends UnitSpecification {
 
@@ -94,10 +94,12 @@ class TrackRepresentationSpec extends UnitSpecification {
     def defaultIsrc = Some(Isrc("US-S1Z-99-00001"))
 
     def defaultCounts = StitchCounts(111, 222, 333, 444)
+
+    def defaultGeoblockings: Option[Geoblockings] = Some(List("DE", "FR"))
   }
 
   "serialises to JSON correctly" in new Context {
-    val trackRepresentation = TrackRepresentation(defaultTrack, defaultUser, defaultIsrc, defaultCounts, defaultLabel)
+    val trackRepresentation = TrackRepresentation(defaultTrack, defaultUser, defaultIsrc, defaultCounts, defaultLabel, defaultGeoblockings)
     val trackJson = Json.toJson(trackRepresentation)
 
     trackJson \ "kind" ==== JsString("track")
@@ -138,6 +140,23 @@ class TrackRepresentationSpec extends UnitSpecification {
     trackJson \ "download_count" ==== JsNumber(222)
     trackJson \ "favoritings_count" ==== JsNumber(333)
     trackJson \ "comment_count" ==== JsNumber(444)
+    (trackJson \ "available_country_codes").as[JsArray].value.sortBy(_.as[JsString].value) ==== Seq(
+      "AD", "AE", "AF", "AG", "AI", "AL", "AM", "AO", "AQ", "AR", "AS", "AT", "AU", "AW", "AX", "AZ",
+      "BA", "BB", "BD", "BE", "BF", "BG", "BH", "BI", "BJ", "BL", "BM", "BN", "BO", "BQ", "BR", "BS",
+      "BT", "BV", "BW", "BY", "BZ", "CA", "CC", "CD", "CF", "CG", "CH", "CI", "CK", "CL", "CM", "CN",
+      "CO", "CR", "CU", "CV", "CW", "CX", "CY", "CZ",       "DJ", "DK", "DM", "DO", "DZ", "EC", "EE",
+      "EG", "EH", "ER", "ES", "ET", "FI", "FJ", "FK", "FM", "FO",       "GA", "GB", "GD", "GE", "GF",
+      "GG", "GH", "GI", "GL", "GM", "GN", "GP", "GQ", "GR", "GS", "GT", "GU", "GW", "GY", "HK", "HM",
+      "HN", "HR", "HT", "HU", "ID", "IE", "IL", "IM", "IN", "IO", "IQ", "IR", "IS", "IT", "JE", "JM",
+      "JO", "JP", "KE", "KG", "KH", "KI", "KM", "KN", "KP", "KR", "KW", "KY", "KZ", "LA", "LB", "LC",
+      "LI", "LK", "LR", "LS", "LT", "LU", "LV", "LY", "MA", "MC", "MD", "ME", "MF", "MG", "MH", "MK",
+      "ML", "MM", "MN", "MO", "MP", "MQ", "MR", "MS", "MT", "MU", "MV", "MW", "MX", "MY", "MZ", "NA",
+      "NC", "NE", "NF", "NG", "NI", "NL", "NO", "NP", "NR", "NU", "NZ", "OM", "PA", "PE", "PF", "PG",
+      "PH", "PK", "PL", "PM", "PN", "PR", "PS", "PT", "PW", "PY", "QA", "RE", "RO", "RS", "RU", "RW",
+      "SA", "SB", "SC", "SD", "SE", "SG", "SH", "SI", "SJ", "SK", "SL", "SM", "SN", "SO", "SR", "SS",
+      "ST", "SV", "SX", "SY", "SZ", "TC", "TD", "TF", "TG", "TH", "TJ", "TK", "TL", "TM", "TN", "TO",
+      "TR", "TT", "TV", "TW", "TZ", "UA", "UG", "UM", "US", "UY", "UZ", "VA", "VC", "VE", "VG", "VI",
+      "VN", "VU", "WF", "WS", "YE", "YT", "ZA", "ZM", "ZW").map(JsString(_))
 
     val userJson = trackJson \ "user"
     userJson \ "id" ==== JsNumber(3456)
@@ -159,12 +178,12 @@ class TrackRepresentationSpec extends UnitSpecification {
 
   "sharing" in new Context {
     val publicTrack = defaultTrack.copy(public = true)
-    val publicTrackRepresentation = TrackRepresentation(publicTrack, defaultUser, defaultIsrc, defaultCounts, defaultLabel)
+    val publicTrackRepresentation = TrackRepresentation(publicTrack, defaultUser, defaultIsrc, defaultCounts, defaultLabel, defaultGeoblockings)
     val publicTrackJson = Json.toJson(publicTrackRepresentation)
     publicTrackJson \ "sharing" ==== JsString("public")
 
     val privateTrack = defaultTrack.copy(public = false)
-    val privateTrackRepresentation = TrackRepresentation(privateTrack, defaultUser, defaultIsrc, defaultCounts, defaultLabel)
+    val privateTrackRepresentation = TrackRepresentation(privateTrack, defaultUser, defaultIsrc, defaultCounts, defaultLabel, defaultGeoblockings)
     val privateTrackJson = Json.toJson(privateTrackRepresentation)
     privateTrackJson \ "sharing" ==== JsString("private")
   }
@@ -172,9 +191,18 @@ class TrackRepresentationSpec extends UnitSpecification {
   "no label_id" in new Context {
     override val labelUrn = None
 
-    val trackRepresentation = TrackRepresentation(defaultTrack, defaultUser, defaultIsrc, defaultCounts, defaultLabel)
+    val trackRepresentation = TrackRepresentation(defaultTrack, defaultUser, defaultIsrc, defaultCounts, defaultLabel, defaultGeoblockings)
     val trackJson = Json.toJson(trackRepresentation)
 
     trackJson.as[JsObject].keys.contains("label") ==== false
+  }
+
+  "no geoblockings" in new Context {
+    override val defaultGeoblockings = None
+
+    val trackRepresentation = TrackRepresentation(defaultTrack, defaultUser, defaultIsrc, defaultCounts, defaultLabel, defaultGeoblockings)
+    val trackJson = Json.toJson(trackRepresentation)
+
+    trackJson.as[JsObject].keys.contains("available_country_codes") ==== false
   }
 }

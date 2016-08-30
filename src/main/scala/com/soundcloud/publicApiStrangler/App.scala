@@ -33,7 +33,7 @@ import com.soundcloud.ratelimiting.facade._
 import com.soundcloud.scalakit.Urn
 import com.soundcloud.scalakit.cache.MemcachedClient
 import com.soundcloud.scalakit.finagle.jsonservice.{JsonClient, ServiceEntryPoint}
-import com.soundcloud.service.client.OkidokiClient
+import com.soundcloud.service.client.{MoshimoshiClient, OkidokiClient}
 import org.eclipse.jetty.server.Handler
 
 object App
@@ -79,6 +79,8 @@ object App
   private val authsyService = JsonService(
     ServiceConfig("authsy", config.get(ResourceName("AUTHSY"), ConfigConvention.SRV_RECORD), config)
   )
+
+  val moshimoshiClient = new MoshimoshiClient(okidokiJsonClient)
 
   private val searchService = JsonService(
     ServiceConfig("search", config.get(ResourceName("SEARCH"), ConfigConvention.SRV_RECORD), config)
@@ -201,7 +203,8 @@ object App
       trackmetadataClient,
       okidokiClient,
       pubmeseClient,
-      stitchClient
+      stitchClient,
+      moshimoshiClient
     )
 
     new SingleTrackController(
