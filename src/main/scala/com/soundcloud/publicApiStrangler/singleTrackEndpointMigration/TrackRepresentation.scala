@@ -1,9 +1,10 @@
 package com.soundcloud.publicApiStrangler.singleTrackEndpointMigration
 
+import com.soundcloud.jvmkit.Country
 import com.soundcloud.publicApiStrangler.client.pubmese.Isrc
 import com.soundcloud.publicApiStrangler.client.stitch.StitchCounts
 import com.soundcloud.publicApiStrangler.singleTrackEndpointMigration.trackmetadataclient.Track
-import com.soundcloud.service.response.representation.User
+import com.soundcloud.service.response.representation.{Geoblockings, User}
 import org.joda.time.format.DateTimeFormat
 import play.api.libs.json._
 
@@ -12,7 +13,8 @@ case class TrackRepresentation(
   user: User,
   isrc: Option[Isrc],
   counts: StitchCounts,
-  label: Option[User]) {
+  label: Option[User],
+  geoblockings: Option[Geoblockings]) {
   def id = track.urn.getIdentifier.toLong
 }
 
@@ -90,13 +92,20 @@ object TrackRepresentation {
       )
 
       coreObject ++
-        labelObjectFor(rep)
+        labelObjectFor(rep) ++
+        geoblockingsObjectFor(rep)
     }
   }
 
   private def labelObjectFor(rep: TrackRepresentation): JsObject =
     rep.label match {
       case Some(user) => Json.obj("label" -> writeUser(user))
+      case None => Json.obj()
+    }
+
+  private def geoblockingsObjectFor(rep: TrackRepresentation): JsObject =
+    rep.geoblockings match {
+      case Some(list) => Json.obj("available_country_codes" -> Country.officiallyAssignedAlpha2Codes.--(list))
       case None => Json.obj()
     }
 
