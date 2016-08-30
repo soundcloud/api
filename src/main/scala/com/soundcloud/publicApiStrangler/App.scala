@@ -196,10 +196,12 @@ object App
   lazy val rolloutClient = new RolloutBuilder(config, telemetry).build
   override lazy val rollout = Some(rolloutClient)
 
+  val richOkidokiClient = new RichOkidokiClient(okidokiJsonClient)
+
   private val singleTrackController = {
     val tracksService = new TrackRepresentationsService(
       trackmetadataClient,
-      okidokiClient,
+      richOkidokiClient,
       pubmeseClient,
       stitchClient
     )

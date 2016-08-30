@@ -1,18 +1,18 @@
 package com.soundcloud.publicApiStrangler.singleTrackEndpointMigration
 
+import com.soundcloud.publicApiStrangler.client.RichOkidokiClient
 import com.soundcloud.publicApiStrangler.client.pubmese.PubmeseClient
 import com.soundcloud.publicApiStrangler.client.stitch.{StitchClient, StitchCounts}
 import com.soundcloud.publicApiStrangler.singleTrackEndpointMigration.trackmetadataclient.{Track, TrackmetadataClient}
 import com.soundcloud.scalakit.json.Json
 import com.soundcloud.scalakit.{Urn, UserSession}
-import com.soundcloud.service.client.OkidokiClient
 import com.soundcloud.service.response.representation.User
 import com.twitter.finagle.http.{Response, Status}
 import com.twitter.util.{Future, NonFatal}
 
 class TrackRepresentationsService(
   trackmetadataClient: TrackmetadataClient,
-  okidokiClient: OkidokiClient,
+  okidokiClient: RichOkidokiClient,
   pubmeseClient: PubmeseClient,
   stitchClient: StitchClient) {
 
@@ -22,6 +22,7 @@ class TrackRepresentationsService(
   def track(session: UserSession, urn: Urn, secretToken: Option[String], callback: Option[String]): Future[Response] = {
     val isrcF = pubmeseClient.isrcForTrack(session, urn).handle { case NonFatal(ex) => None }
     val geoblockingsF = okidokiClient.fetchTrackGeoblockings(session, urn).handle { case NonFatal(ex) => None }
+    val domainlockingsF = okidokiClient.fetchTrackDomainLockings(session, urn).handle { case NonFatal(ex) => Seq() }
 
     trackmetadataClient.track(session, urn).flatMap {
       case Some(track) if isTrackAccessible(session, secretToken, track) =>
@@ -31,15 +32,16 @@ class TrackRepresentationsService(
           case Some(user) => stitchClient.countsForTrack(session, urn, user.urn).map(Some(_)).liftToTry.map(_.getOrElse(None))
           case None => Future.value(None)
         }
-        Future.join(isrcF, userF, countsF, labelF, geoblockingsF).map {
-          case (isrc, Some(user), counts, label, geoblockings) =>
+        Future.join(isrcF, userF, countsF, labelF, geoblockingsF, domainlockingsF).map {
+          case (isrc, Some(user), counts, label, geoblockings, domainlockings) =>
             val rep = TrackRepresentation(
               track = track,
               user = user,
               isrc = isrc,
               counts = getCounts(counts),
               label = label,
-              geoblockings = geoblockings
+              geoblockings = geoblockings,
+              domainlockings = domainlockings
             )
             generateResponse(Status.Ok, jsonpWrapper(callback, Json.stringify(rep)))
           case _ =>
