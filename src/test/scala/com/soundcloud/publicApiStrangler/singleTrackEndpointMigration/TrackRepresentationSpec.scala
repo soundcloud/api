@@ -1,6 +1,7 @@
 package com.soundcloud.publicApiStrangler.singleTrackEndpointMigration
 
 import com.soundcloud.bff.JsObject
+import com.soundcloud.jvmkit.UserSession
 import com.soundcloud.publicApiStrangler.client.DomainLocking
 import com.soundcloud.publicApiStrangler.client.pubmese.Isrc
 import com.soundcloud.publicApiStrangler.client.stitch.StitchCounts
@@ -19,6 +20,7 @@ class TrackRepresentationSpec extends UnitSpecification {
     val labelUrn: Option[Urn] = Some(new Urn("soundcloud", "users", "999"))
 
     def createTrackRepresentation(
+      userSession: UserSession = defaultUserSession,
       track: Track = defaultTrack,
       user: User = defaultUser,
       isrc: Option[Isrc] = defaultIsrc,
@@ -27,7 +29,10 @@ class TrackRepresentationSpec extends UnitSpecification {
       geoblockings: Option[Geoblockings] = defaultGeoblockings,
       domainlockings: Seq[DomainLocking] = defaultDomainLockings) =
       TrackRepresentation(
-        track, user, isrc, counts, label, geoblockings, domainlockings)
+        userSession, track, user, isrc, counts, label, geoblockings, domainlockings)
+
+    def defaultLoggedInUserUrn = new Urn("soundcloud", "users", "79241")
+    def defaultUserSession = loggedInSession(defaultLoggedInUserUrn)
 
     def defaultUser =
       User(
@@ -62,7 +67,7 @@ class TrackRepresentationSpec extends UnitSpecification {
 
     def defaultTrack = Track(
       urn = trackUrn,
-      user_urn = Urn("soundcloud:users:112"),
+      user_urn = userUrn,
       commentable = false,
       description = Some("Follow @samstarling !"),
       created_at = new LocalDateTime(2015, 2, 15, 16, 47, 27),
@@ -74,7 +79,7 @@ class TrackRepresentationSpec extends UnitSpecification {
       permalink = "plsty-remix",
       permalink_url = Some("http://soundcloud.com/nirvana/plsty-remix"),
       public = true,
-      secret_token = null,
+      secret_token = "s-53CR37",
       user_tags = List("dubstep", "folk"),
       machine_tags = List("system:foo", "system:bar"),
       title = "Baby Bash",
@@ -228,5 +233,13 @@ class TrackRepresentationSpec extends UnitSpecification {
     val trackJson = Json.toJson(trackRepresentation)
 
     trackJson.as[JsObject].keys.contains("domain_lockings") ==== false
+  }
+
+  "not logged in as same user" in new Context {
+    val otherTrackRep = createTrackRepresentation(userSession = loggedInSession(Urn("soundcloud:users:98745")))
+    val myTrackRep = createTrackRepresentation(userSession = loggedInSession(userUrn))
+
+    Json.toJson(otherTrackRep).as[JsObject].keys.contains("secret_token") ==== false
+    Json.toJson(myTrackRep) \ "secret_token" ==== JsString("s-53CR37")
   }
 }

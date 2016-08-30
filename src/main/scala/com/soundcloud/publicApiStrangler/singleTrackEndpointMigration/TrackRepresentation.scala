@@ -1,6 +1,6 @@
 package com.soundcloud.publicApiStrangler.singleTrackEndpointMigration
 
-import com.soundcloud.jvmkit.Country
+import com.soundcloud.jvmkit.{Country, UserSession}
 import com.soundcloud.publicApiStrangler.client.DomainLocking
 import com.soundcloud.publicApiStrangler.client.pubmese.Isrc
 import com.soundcloud.publicApiStrangler.client.stitch.StitchCounts
@@ -10,6 +10,7 @@ import org.joda.time.format.DateTimeFormat
 import play.api.libs.json._
 
 case class TrackRepresentation(
+  userSession: UserSession,
   track: Track,
   user: User,
   isrc: Option[Isrc],
@@ -79,16 +80,12 @@ object TrackRepresentation {
 
         // Conditional attributes (not yet exposed)
         // created_with
-        // secret_token
-        // secret_uri
         // attachments
         // attachments_uri
         // likes_count
         // reposts_count
-        // available_country_codes
         // downloads_remaining
         // artwork_url
-        // domain_lockings
         // user_favorite
         // user_playback_count
       )
@@ -96,7 +93,8 @@ object TrackRepresentation {
       coreObject ++
         labelObjectFor(rep) ++
         geoblockingsObjectFor(rep) ++
-        domainLockingsObjectFor(rep)
+        domainLockingsObjectFor(rep) ++
+        secretTokenObjectFor(rep)
     }
   }
 
@@ -115,6 +113,15 @@ object TrackRepresentation {
   private def domainLockingsObjectFor(rep: TrackRepresentation): JsObject =
     if (rep.domainlockings.isEmpty) Json.obj()
     else Json.obj("domain_lockings" -> rep.domainlockings.map(dl => Json.obj("domain" -> dl.domain)))
+
+  private def secretTokenObjectFor(rep: TrackRepresentation): JsObject =
+    if (rep.track.user_urn == rep.userSession.getUser)
+      Json.obj(
+        "secret_token" -> rep.track.secret_token,
+        "secret_url" -> s"https://api.soundcloud.com/tracks/${rep.track.urn.getIdentifier}?secret_token=${rep.track.secret_token}"
+      )
+    else
+      Json.obj()
 
   private def writeUser(user: User): JsValue =
     Json.obj(
