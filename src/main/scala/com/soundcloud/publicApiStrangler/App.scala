@@ -203,7 +203,8 @@ object App
       trackmetadataClient,
       richOkidokiClient,
       pubmeseClient,
-      stitchClient
+      stitchClient,
+      lieblingClient
     )
 
     new SingleTrackController(

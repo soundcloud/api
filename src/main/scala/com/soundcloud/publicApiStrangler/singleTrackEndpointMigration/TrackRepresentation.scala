@@ -17,6 +17,7 @@ object TrackRepresentationLike {
     case t: TrackRepresentationLabelDecorator => TrackRepresentationLabelDecorator.writes.writes(t)
     case t: TrackRepresentationGeoblockingsDecorator => TrackRepresentationGeoblockingsDecorator.writes.writes(t)
     case t: TrackRepresentationDomainLockingsDecorator => TrackRepresentationDomainLockingsDecorator.writes.writes(t)
+    case t: TrackRepresentationUserFavoriteDecorator => TrackRepresentationUserFavoriteDecorator.writes.writes(t)
     case t: TrackRepresentation => TrackRepresentation.writes.writes(t)
   }
 
@@ -30,6 +31,19 @@ object TrackRepresentationLike {
       "uri" -> s"https://api.soundcloud.com/users/${user.urn.getIdentifier}",
       "permalink_url" -> user.permalink_url,
       "avatar_url" -> user.avatar_url
+    )
+  }
+}
+
+case class TrackRepresentationUserFavoriteDecorator(
+  isLiked: Boolean,
+  wrapped: TrackRepresentationLike
+) extends TrackRepresentationLike
+
+object TrackRepresentationUserFavoriteDecorator {
+  implicit val writes = Writes[TrackRepresentationUserFavoriteDecorator] { dec =>
+    Json.toJson(dec.wrapped).as[JsObject] ++ Json.obj(
+      "user_favorite" -> dec.isLiked.toString
     )
   }
 }

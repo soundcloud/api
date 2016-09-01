@@ -8,7 +8,9 @@ import com.soundcloud.publicApiStrangler.singleTrackEndpointMigration.trackmetad
 import com.soundcloud.scalakit.Urn
 import com.soundcloud.scalakit.json.Json
 import com.soundcloud.scalakit.test.UnitSpecification
+import com.soundcloud.service.client.LieblingClient
 import com.soundcloud.service.response.representation._
+import com.soundcloud.service.response.representation.liebling.UserLikesCount
 import com.twitter.finagle.http.Status
 import com.twitter.util.{Await, Future}
 import org.joda.time.LocalDateTime
@@ -24,12 +26,14 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
     val okidokiClient = mock[RichOkidokiClient]
     val pubmeseClient = mock[PubmeseClient]
     val stitchClient = mock[StitchClient]
+    val lieblingClient = mock[LieblingClient]
 
     val tracksService = new TrackRepresentationsService(
       trackmetadataClient,
       okidokiClient,
       pubmeseClient,
-      stitchClient
+      stitchClient,
+      lieblingClient
     )
 
     val userUrn = Urn("soundcloud:users:112")
@@ -140,7 +144,10 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
     def stitchCounts: StitchCounts =
       StitchCounts(111, 222, 333, 444)
 
-    val session = anonymousSession
+    def userLikesCount: UserLikesCount =
+      UserLikesCount(Set.empty, List.empty)
+
+    val session: UserSession = anonymousSession
   }
 
   "Returns 200 for public tracks" in new Context {
@@ -153,6 +160,7 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
     when(okidokiClient.fetchTrackGeoblockings(session, trackUrn)).thenReturn(Future.value(geoblockings))
     when(okidokiClient.fetchTrackDomainLockings(session, trackUrn)).thenReturn(Future.value(domainLockings))
     when(okidokiClient.fetchTrackAudioMetadata(session, trackUrn)).thenReturn(Future.value(Some(trackAudioMetadata)))
+    when(lieblingClient.userLikeCounts(session, List(trackUrn), session.getUser)).thenReturn(Future.value(userLikesCount))
 
     val response = Await.result(tracksService.track(session, trackUrn, None, None))
 
@@ -170,6 +178,7 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
     when(okidokiClient.fetchTrackGeoblockings(session, trackUrn)).thenReturn(Future.value(geoblockings))
     when(okidokiClient.fetchTrackDomainLockings(session, trackUrn)).thenReturn(Future.value(domainLockings))
     when(okidokiClient.fetchTrackAudioMetadata(session, trackUrn)).thenReturn(Future.value(Some(trackAudioMetadata)))
+    when(lieblingClient.userLikeCounts(session, List(trackUrn), session.getUser)).thenReturn(Future.value(userLikesCount))
 
     val response = Await.result(tracksService.track(session, trackUrn, None, Some("js_callback_fn")))
 
@@ -187,6 +196,7 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
     when(okidokiClient.fetchTrackGeoblockings(session, trackUrn)).thenReturn(Future.value(geoblockings))
     when(okidokiClient.fetchTrackDomainLockings(session, trackUrn)).thenReturn(Future.value(domainLockings))
     when(okidokiClient.fetchTrackAudioMetadata(session, trackUrn)).thenReturn(Future.value(Some(trackAudioMetadata)))
+    when(lieblingClient.userLikeCounts(session, List(trackUrn), session.getUser)).thenReturn(Future.value(userLikesCount))
 
     val response = Await.result(tracksService.track(session, trackUrn, None, None))
 
@@ -269,6 +279,7 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
     when(okidokiClient.fetchTrackGeoblockings(ownerSession, trackUrn)).thenReturn(Future.value(geoblockings))
     when(okidokiClient.fetchTrackDomainLockings(ownerSession, trackUrn)).thenReturn(Future.value(domainLockings))
     when(okidokiClient.fetchTrackAudioMetadata(ownerSession, trackUrn)).thenReturn(Future.value(Some(trackAudioMetadata)))
+    when(lieblingClient.userLikeCounts(ownerSession, List(trackUrn), ownerSession.getUser)).thenReturn(Future.value(userLikesCount))
 
     val response = Await.result(tracksService.track(ownerSession, trackUrn, None, None))
     response.status ==== Status.Ok
@@ -299,6 +310,7 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
     when(okidokiClient.fetchTrackGeoblockings(session, trackUrn)).thenReturn(Future.value(geoblockings))
     when(okidokiClient.fetchTrackDomainLockings(session, trackUrn)).thenReturn(Future.value(domainLockings))
     when(okidokiClient.fetchTrackAudioMetadata(session, trackUrn)).thenReturn(Future.value(Some(trackAudioMetadata)))
+    when(lieblingClient.userLikeCounts(session, List(trackUrn), session.getUser)).thenReturn(Future.value(userLikesCount))
 
     val response = Await.result(tracksService.track(session, trackUrn, Some(correctSecretToken), None))
     response.status ==== Status.Ok
@@ -314,6 +326,7 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
     when(okidokiClient.fetchTrackGeoblockings(session, trackUrn)).thenReturn(Future.value(geoblockings))
     when(okidokiClient.fetchTrackDomainLockings(session, trackUrn)).thenReturn(Future.value(domainLockings))
     when(okidokiClient.fetchTrackAudioMetadata(session, trackUrn)).thenReturn(Future.value(Some(trackAudioMetadata)))
+    when(lieblingClient.userLikeCounts(session, List(trackUrn), session.getUser)).thenReturn(Future.value(userLikesCount))
 
     val response = Await.result(tracksService.track(session, trackUrn, None, None))
     response.status ==== Status.NotFound
@@ -328,6 +341,7 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
     when(okidokiClient.fetchTrackGeoblockings(session, trackUrn)).thenReturn(Future.value(geoblockings))
     when(okidokiClient.fetchTrackDomainLockings(session, trackUrn)).thenReturn(Future.value(domainLockings))
     when(okidokiClient.fetchTrackAudioMetadata(session, trackUrn)).thenReturn(Future.value(Some(trackAudioMetadata)))
+    when(lieblingClient.userLikeCounts(session, List(trackUrn), session.getUser)).thenReturn(Future.value(userLikesCount))
 
     val response = Await.result(tracksService.track(session, trackUrn, None, None))
     response.status ==== Status.ServiceUnavailable
@@ -345,6 +359,7 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
     when(okidokiClient.fetchTrackGeoblockings(session, trackUrn)).thenReturn(Future.value(geoblockings))
     when(okidokiClient.fetchTrackDomainLockings(session, trackUrn)).thenReturn(Future.value(domainLockings))
     when(okidokiClient.fetchTrackAudioMetadata(session, trackUrn)).thenReturn(Future.value(Some(trackAudioMetadata)))
+    when(lieblingClient.userLikeCounts(session, List(trackUrn), session.getUser)).thenReturn(Future.value(userLikesCount))
 
     val response = Await.result(tracksService.track(session, trackUrn, None, None))
     response.status ==== Status.ServiceUnavailable
@@ -362,6 +377,7 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
     when(okidokiClient.fetchTrackGeoblockings(session, trackUrn)).thenReturn(Future.value(geoblockings))
     when(okidokiClient.fetchTrackDomainLockings(session, trackUrn)).thenReturn(Future.value(domainLockings))
     when(okidokiClient.fetchTrackAudioMetadata(session, trackUrn)).thenReturn(Future.value(Some(trackAudioMetadata)))
+    when(lieblingClient.userLikeCounts(session, List(trackUrn), session.getUser)).thenReturn(Future.value(userLikesCount))
 
     val response = Await.result(tracksService.track(session, trackUrn, None, None))
 
@@ -379,6 +395,7 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
     when(okidokiClient.fetchTrackGeoblockings(session, trackUrn)).thenReturn(Future.value(geoblockings))
     when(okidokiClient.fetchTrackDomainLockings(session, trackUrn)).thenReturn(Future.value(domainLockings))
     when(okidokiClient.fetchTrackAudioMetadata(session, trackUrn)).thenReturn(Future.value(Some(trackAudioMetadata)))
+    when(lieblingClient.userLikeCounts(session, List(trackUrn), session.getUser)).thenReturn(Future.value(userLikesCount))
 
     val response = Await.result(tracksService.track(session, trackUrn, None, None))
 
@@ -400,6 +417,7 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
     when(okidokiClient.fetchTrackGeoblockings(session, trackUrn)).thenReturn(Future.exception(new RuntimeException("bewm! hahahaaa")))
     when(okidokiClient.fetchTrackDomainLockings(session, trackUrn)).thenReturn(Future.value(domainLockings))
     when(okidokiClient.fetchTrackAudioMetadata(session, trackUrn)).thenReturn(Future.value(Some(trackAudioMetadata)))
+    when(lieblingClient.userLikeCounts(session, List(trackUrn), session.getUser)).thenReturn(Future.value(userLikesCount))
 
     val response = Await.result(tracksService.track(session, trackUrn, None, None))
 
@@ -417,6 +435,7 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
     when(okidokiClient.fetchTrackGeoblockings(session, trackUrn)).thenReturn(Future.value(geoblockings))
     when(okidokiClient.fetchTrackDomainLockings(session, trackUrn)).thenReturn(Future.exception(new RuntimeException("bewm! hahahaaa")))
     when(okidokiClient.fetchTrackAudioMetadata(session, trackUrn)).thenReturn(Future.value(Some(trackAudioMetadata)))
+    when(lieblingClient.userLikeCounts(session, List(trackUrn), session.getUser)).thenReturn(Future.value(userLikesCount))
 
     val response = Await.result(tracksService.track(session, trackUrn, None, None))
 
@@ -434,11 +453,74 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
     when(okidokiClient.fetchTrackGeoblockings(session, trackUrn)).thenReturn(Future.value(geoblockings))
     when(okidokiClient.fetchTrackDomainLockings(session, trackUrn)).thenReturn(Future.value(domainLockings))
     when(okidokiClient.fetchTrackAudioMetadata(session, trackUrn)).thenReturn(Future.exception(new RuntimeException("bewm! hahahaaa")))
+    when(lieblingClient.userLikeCounts(session, List(trackUrn), session.getUser)).thenReturn(Future.value(userLikesCount))
 
     val response = Await.result(tracksService.track(session, trackUrn, None, None))
 
     response.status ==== Status.ServiceUnavailable
     response.contentString ==== """{"errors":[{"error_message":"503 - Service Unavailable"}]}"""
     response.headerMap.get("Content-Length") must beSome("58")
+  }
+
+  "user_favorite" >> {
+
+    "is true when the user has favourited the track, and is logged in" in new Context {
+      val track = trackmetadataTrack()
+      override val userLikesCount = UserLikesCount(Set(track.urn), List.empty)
+      override val session = new UserSessionBuilder().setUser(userUrn).build
+      when(trackmetadataClient.track(session, trackUrn)).thenReturn(Future.value(Some(track)))
+      when(okidokiClient.fetchUserObjects(session, Set(userUrn))).thenReturn(Future.value(List(user)))
+      when(okidokiClient.fetchUserObjects(session, Set(labelUrn))).thenReturn(Future.value(List(label)))
+      when(pubmeseClient.isrcForTrack(session, trackUrn)).thenReturn(Future.value(isrc()))
+      when(stitchClient.countsForTrack(session, trackUrn, userUrn)).thenReturn(Future.value(stitchCounts))
+      when(okidokiClient.fetchTrackGeoblockings(session, trackUrn)).thenReturn(Future.value(geoblockings))
+      when(okidokiClient.fetchTrackDomainLockings(session, trackUrn)).thenReturn(Future.exception(new RuntimeException("bewm! hahahaaa")))
+      when(okidokiClient.fetchTrackAudioMetadata(session, trackUrn)).thenReturn(Future.value(Some(trackAudioMetadata)))
+      when(lieblingClient.userLikeCounts(session, List(trackUrn), session.getUser)).thenReturn(Future.value(userLikesCount))
+
+      val response = Await.result(tracksService.track(session, trackUrn, None, None))
+
+      response.status ==== Status.Ok
+      val json = Json.fromResponse(response)
+      json \ "user_favorite" ==== JsString("true")
+    }
+
+    "is false when the user has not favourited the track, and is logged in" in new Context {
+      val track = trackmetadataTrack()
+      override val userLikesCount = UserLikesCount(Set.empty, List.empty)
+      override val session = new UserSessionBuilder().setUser(userUrn).build
+      when(trackmetadataClient.track(session, trackUrn)).thenReturn(Future.value(Some(track)))
+      when(okidokiClient.fetchUserObjects(session, Set(userUrn))).thenReturn(Future.value(List(user)))
+      when(okidokiClient.fetchUserObjects(session, Set(labelUrn))).thenReturn(Future.value(List(label)))
+      when(pubmeseClient.isrcForTrack(session, trackUrn)).thenReturn(Future.value(isrc()))
+      when(stitchClient.countsForTrack(session, trackUrn, userUrn)).thenReturn(Future.value(stitchCounts))
+      when(okidokiClient.fetchTrackGeoblockings(session, trackUrn)).thenReturn(Future.value(geoblockings))
+      when(okidokiClient.fetchTrackDomainLockings(session, trackUrn)).thenReturn(Future.exception(new RuntimeException("bewm! hahahaaa")))
+      when(okidokiClient.fetchTrackAudioMetadata(session, trackUrn)).thenReturn(Future.value(Some(trackAudioMetadata)))
+      when(lieblingClient.userLikeCounts(session, List(trackUrn), session.getUser)).thenReturn(Future.value(userLikesCount))
+
+      val response = Await.result(tracksService.track(session, trackUrn, None, None))
+
+      response.status ==== Status.Ok
+      val json = Json.fromResponse(response)
+      json \ "user_favorite" ==== JsString("false")
+    }
+
+    "is not present when the user is not logged in" in new Context {
+      val track = trackmetadataTrack()
+      override val userLikesCount = UserLikesCount(Set.empty, List.empty)
+      when(trackmetadataClient.track(session, trackUrn)).thenReturn(Future.value(Some(track)))
+      when(okidokiClient.fetchUserObjects(session, Set(userUrn))).thenReturn(Future.value(List(user)))
+      when(okidokiClient.fetchUserObjects(session, Set(labelUrn))).thenReturn(Future.value(List(label)))
+      when(pubmeseClient.isrcForTrack(session, trackUrn)).thenReturn(Future.value(isrc()))
+      when(stitchClient.countsForTrack(session, trackUrn, userUrn)).thenReturn(Future.value(stitchCounts))
+      when(okidokiClient.fetchTrackGeoblockings(session, trackUrn)).thenReturn(Future.value(geoblockings))
+      when(okidokiClient.fetchTrackDomainLockings(session, trackUrn)).thenReturn(Future.exception(new RuntimeException("bewm! hahahaaa")))
+      when(okidokiClient.fetchTrackAudioMetadata(session, trackUrn)).thenReturn(Future.value(Some(trackAudioMetadata)))
+
+      val response = Await.result(tracksService.track(session, trackUrn, None, None))
+      response.status ==== Status.Ok
+      Json.fromResponse(response).as[JsObject].keys.contains("user_favorite") ==== false
+    }
   }
 }
