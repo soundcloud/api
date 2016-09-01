@@ -33,6 +33,16 @@ object DomainLocking {
   }
 }
 
+case class TrackAudioMetadata(
+  state: String,
+  original_format: String,
+  original_content_size: Long
+)
+
+object TrackAudioMetadata {
+  implicit val trackAudioMetadataReads = Json.reads[TrackAudioMetadata]
+}
+
 class RichOkidokiClient(service: JsonClient,
   addToPlaylistResponseMapper: AddToPlaylistResponseMapper = new AddToPlaylistResponseMapper,
   deleteFromPlaylistResponseMapper: DeleteFromPlaylistResponseMapper = new DeleteFromPlaylistResponseMapper,
@@ -51,6 +61,12 @@ class RichOkidokiClient(service: JsonClient,
   def fetchTrackDomainLockings(session: UserSession, trackUrn: Urn): Future[Seq[DomainLocking]] =
     fetch(service, session, Path() / "tracks" / trackUrn.getIdentifier / "domain_lockings") map {
       case JsonResponse(OkStatus, body, _, _) => body.as[List[DomainLocking]]
+      case _ => throw new RuntimeException("Unexpected response status")
+    }
+
+  def fetchTrackAudioMetadata(session: UserSession, trackUrn: Urn): Future[TrackAudioMetadata] =
+    fetch(service, session, Path() / "tracks" / trackUrn / "audio") map {
+      case JsonResponse(OkStatus, body, _, _) => body.as[TrackAudioMetadata]
       case _ => throw new RuntimeException("Unexpected response status")
     }
 }

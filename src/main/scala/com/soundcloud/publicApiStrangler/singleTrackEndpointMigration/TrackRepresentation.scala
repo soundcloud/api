@@ -1,7 +1,7 @@
 package com.soundcloud.publicApiStrangler.singleTrackEndpointMigration
 
 import com.soundcloud.jvmkit.{Country, UserSession}
-import com.soundcloud.publicApiStrangler.client.DomainLocking
+import com.soundcloud.publicApiStrangler.client.{DomainLocking, TrackAudioMetadata}
 import com.soundcloud.publicApiStrangler.client.pubmese.Isrc
 import com.soundcloud.publicApiStrangler.client.stitch.StitchCounts
 import com.soundcloud.publicApiStrangler.singleTrackEndpointMigration.trackmetadataclient.Track
@@ -97,7 +97,8 @@ case class TrackRepresentation(
   counts: StitchCounts,
   label: Option[User],
   geoblockings: Option[Geoblockings],
-  domainlockings: Seq[DomainLocking]) extends TrackRepresentationLike {
+  domainlockings: Seq[DomainLocking],
+  audioMetadata: TrackAudioMetadata) extends TrackRepresentationLike {
   def id = track.urn.getIdentifier.toLong
 }
 
@@ -116,8 +117,8 @@ object TrackRepresentation {
         "user_id" -> rep.user.urn.getIdentifier.toLong,
         "duration" -> rep.track.duration,
         "commentable" -> rep.track.commentable,
-        //"state" ->
-        // original_content_size ->
+        "state" -> rep.audioMetadata.state,
+        "original_content_size" -> rep.audioMetadata.original_content_size,
         "last_modified" -> rep.track.last_modified.toString(dateTimeFormat),
         "sharing" -> (if (rep.track.public) "public" else "private"),
         "tag_list" -> (rep.track.user_tags ++ rep.track.machine_tags).mkString(", "),
@@ -141,7 +142,7 @@ object TrackRepresentation {
         "release_year" -> rep.track.release_year,
         "release_month" -> rep.track.release_month,
         "release_day" -> rep.track.release_day,
-        // original_format
+        "original_format" -> rep.audioMetadata.original_format,
         "license" -> rep.track.license,
         "uri" -> s"https://api.soundcloud.com/tracks/${rep.id}",
         "user" -> rep.user,
