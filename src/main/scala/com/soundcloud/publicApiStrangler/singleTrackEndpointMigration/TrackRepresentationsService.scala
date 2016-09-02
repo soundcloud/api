@@ -1,6 +1,6 @@
 package com.soundcloud.publicApiStrangler.singleTrackEndpointMigration
 
-import com.soundcloud.publicApiStrangler.client.{DomainLocking, RichOkidokiClient}
+import com.soundcloud.publicApiStrangler.client.{DomainLocking, RichOkidokiClient, TrackAudioMetadata}
 import com.soundcloud.publicApiStrangler.client.pubmese.{Isrc, PubmeseClient}
 import com.soundcloud.publicApiStrangler.client.stitch.{StitchClient, StitchCounts}
 import com.soundcloud.publicApiStrangler.singleTrackEndpointMigration.trackmetadataclient.{Track, TrackmetadataClient}
@@ -24,6 +24,7 @@ class TrackRepresentationsService(
     val isrcF = pubmeseClient.isrcForTrack(session, urn).handle { case NonFatal(ex) => None }
     val geoblockingsF = okidokiClient.fetchTrackGeoblockings(session, urn).handle { case NonFatal(ex) => None }
     val domainlockingsF = okidokiClient.fetchTrackDomainLockings(session, urn).handle { case NonFatal(ex) => Seq() }
+    val audioF = okidokiClient.fetchTrackAudioMetadata(session, urn)
     implicit val trackRepresentationWrites = TrackRepresentation.writes
 
     trackmetadataClient.track(session, urn).flatMap {
@@ -34,8 +35,8 @@ class TrackRepresentationsService(
           case Some(user) => stitchClient.countsForTrack(session, urn, user.urn).map(Some(_)).liftToTry.map(_.getOrElse(None))
           case None => Future.value(None)
         }
-        Future.join(isrcF, userF, countsF, labelF, geoblockingsF, domainlockingsF).map {
-          case (isrc, Some(user), counts, label, geoblockings, domainlockings) =>
+        Future.join(isrcF, userF, countsF, labelF, geoblockingsF, domainlockingsF, audioF).map {
+          case (isrc, Some(user), counts, label, geoblockings, domainlockings, audio) =>
             val rep = buildTrackRepresentationLike(
               userSession = session,
               track = track,
@@ -44,7 +45,8 @@ class TrackRepresentationsService(
               counts = getCounts(counts),
               label = label,
               geoblockings = geoblockings,
-              domainlockings = domainlockings
+              domainlockings = domainlockings,
+              trackAudioMetadata = audio
             )
 
             generateResponse(Status.Ok, jsonpWrapper(callback, Json.stringify(rep)))
@@ -84,7 +86,8 @@ class TrackRepresentationsService(
     counts: StitchCounts,
     label: Option[User],
     geoblockings: Option[Geoblockings],
-    domainlockings: Seq[DomainLocking]
+    domainlockings: Seq[DomainLocking],
+    trackAudioMetadata: TrackAudioMetadata
   ): TrackRepresentationLike = {
     val basicTrackRep = TrackRepresentation(
       track = track,
@@ -93,7 +96,8 @@ class TrackRepresentationsService(
       counts = counts,
       label = label,
       geoblockings = geoblockings,
-      domainlockings = domainlockings
+      domainlockings = domainlockings,
+      audioMetadata = trackAudioMetadata
     )
 
     // FIXME: with less mutation pls, and  proper use of options pls

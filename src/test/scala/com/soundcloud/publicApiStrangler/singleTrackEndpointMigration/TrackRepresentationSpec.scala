@@ -2,7 +2,7 @@ package com.soundcloud.publicApiStrangler.singleTrackEndpointMigration
 
 import com.soundcloud.bff.JsObject
 import com.soundcloud.jvmkit.UserSession
-import com.soundcloud.publicApiStrangler.client.DomainLocking
+import com.soundcloud.publicApiStrangler.client.{DomainLocking, TrackAudioMetadata}
 import com.soundcloud.publicApiStrangler.client.pubmese.Isrc
 import com.soundcloud.publicApiStrangler.client.stitch.StitchCounts
 import com.soundcloud.publicApiStrangler.singleTrackEndpointMigration.trackmetadataclient.{Artwork, EmbeddingPermission, Track}
@@ -26,11 +26,19 @@ trait TrackRepresentationLikeSpecContext {
     counts: StitchCounts = defaultCounts,
     label: Option[User] = Some(defaultLabel),
     geoblockings: Option[Geoblockings] = Some(defaultGeoblockings),
-    domainlockings: Seq[DomainLocking] = defaultDomainLockings) =
+    domainlockings: Seq[DomainLocking] = defaultDomainLockings,
+    audioMetadata: TrackAudioMetadata = defaultTrackAudioMetadata) =
     TrackRepresentation(
-      track, user, isrc, counts, label, geoblockings, domainlockings)
+      track, user, isrc, counts, label, geoblockings, domainlockings, audioMetadata)
 
   def defaultLoggedInUserUrn = new Urn("soundcloud", "users", "79241")
+
+  def defaultTrackAudioMetadata =
+    TrackAudioMetadata(
+      state = "finished",
+      original_format = "vqf",
+      original_content_size = 9001
+    )
 
   def defaultUser =
     User(
@@ -252,6 +260,9 @@ class TrackRepresentationSpec extends UnitSpecification {
     trackJson \ "download_count" ==== JsNumber(222)
     trackJson \ "favoritings_count" ==== JsNumber(333)
     trackJson \ "comment_count" ==== JsNumber(444)
+    trackJson \ "state" ==== JsString("finished")
+    trackJson \ "original_format" ==== JsString("vqf")
+    trackJson \ "original_content_size" ==== JsNumber(9001)
 
     val userJson = trackJson \ "user"
     userJson \ "id" ==== JsNumber(3456)
