@@ -4,7 +4,7 @@ import com.soundcloud.jvmkit.UserSession
 import com.soundcloud.scalakit._
 import com.soundcloud.scalakit.finagle.http._
 import com.soundcloud.scalakit.finagle.jsonservice.{JsonClient, JsonResponse}
-import com.soundcloud.service.client.{OkidokiClient, ResponseHandlers}
+import com.soundcloud.service.client.{OkidokiClient}
 import com.soundcloud.service.response.mapper._
 import com.soundcloud.service.response.mapper.spotlight.SpotlightResponseMapper
 import com.soundcloud.service.response.representation._
