@@ -1,12 +1,12 @@
 package com.soundcloud.publicApiStrangler.client
 
-import com.soundcloud.scalakit.finagle.http.{InternalServerErrorStatus, NotFoundStatus, OkStatus, StatusCode}
+import com.soundcloud.scalakit.finagle.http.{InternalServerErrorStatus, OkStatus, StatusCode}
 import com.soundcloud.scalakit.finagle.jsonservice.{JsonClient, JsonResponse}
 import com.soundcloud.scalakit.test.UnitSpecification
 import com.soundcloud.scalakit.{Path, Urn}
 import com.twitter.util.{Await, Future}
-import play.api.libs.json.Json
 import org.mockito.Mockito._
+import play.api.libs.json.{JsArray, JsValue, Json}
 
 class RichOkidokiClientSpec extends UnitSpecification {
   trait GenericContext[T] extends Scope {
@@ -43,8 +43,28 @@ class RichOkidokiClientSpec extends UnitSpecification {
 
     def resultF = client.fetchTrackDomainLockings(session, urn)
 
+    lazy val path = Path() / "tracks" / urn.getIdentifier / "domain_lockings"
     val session = anonymousSession
     val urn = Urn("soundcloud:tracks:123")
+
+    def mockTrackDomainLockings: Seq[DomainLocking] = Seq(
+      DomainLocking(
+        domain = "example.com",
+        urn = Urn("soundcloud:domain-lockings:1"),
+        trackUrn = Urn("soundcloud:tracks:2")))
+    def mockResponseContents: JsValue = JsArray(
+      Seq(
+        Json.obj(
+          "domain" -> "example.com",
+          "self" -> Json.obj(
+            "urn" -> "soundcloud:domain-lockings:112358"
+          ),
+          "track_urn" -> "soundcloud:tracks:12")))
+    def mockResponseStatus: StatusCode = OkStatus
+    def mockResponse = Future.value(JsonResponse(mockResponseStatus, mockResponseContents))
+
+    when(jsonClient.get(beTypedEqualTo(session), beTypedEqualTo(path), any, any))
+      .thenReturn(mockResponse)
   }
 
   "track audio" >> {
@@ -71,5 +91,27 @@ class RichOkidokiClientSpec extends UnitSpecification {
     }
   }
 
-  // TODO: add domain locking tests
+  "track domain lockings" >> {
+    "200 response" in new TrackDomainLockingsContext {
+      result ==== Seq(DomainLocking(domain = "example.com", urn = Urn("soundcloud:domain-lockings:112358"), trackUrn = Urn("soundcloud:tracks:12")))
+    }
+
+    "404 response" in new TrackDomainLockingsContext {
+      override def mockResponseStatus = InternalServerErrorStatus
+
+      resultT.isThrow === true
+    }
+
+    "500 response" in new TrackDomainLockingsContext {
+      override def mockResponseStatus = InternalServerErrorStatus
+
+      resultT.isThrow === true
+    }
+
+    "exception response" in new TrackAudioMetadataContext {
+      override def mockResponse = Future.exception(new RuntimeException("kaboom"))
+
+      resultT.isThrow === true
+    }
+  }
 }
