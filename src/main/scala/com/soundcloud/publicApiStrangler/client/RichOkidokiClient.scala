@@ -64,9 +64,10 @@ class RichOkidokiClient(service: JsonClient,
       case _ => throw new RuntimeException("Unexpected response status")
     }
 
-  def fetchTrackAudioMetadata(session: UserSession, trackUrn: Urn): Future[TrackAudioMetadata] =
+  def fetchTrackAudioMetadata(session: UserSession, trackUrn: Urn): Future[Option[TrackAudioMetadata]] =
     fetch(service, session, Path() / "tracks" / trackUrn / "audio") map {
-      case JsonResponse(OkStatus, body, _, _) => body.as[TrackAudioMetadata]
+      case JsonResponse(OkStatus, body, _, _) => body.as[Option[TrackAudioMetadata]]
+      case JsonResponse(NotFoundStatus, _, _, _) => None
       case _ => throw new RuntimeException("Unexpected response status")
     }
 }

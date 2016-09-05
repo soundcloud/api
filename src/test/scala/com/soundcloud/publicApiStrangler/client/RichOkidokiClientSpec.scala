@@ -15,7 +15,7 @@ class RichOkidokiClientSpec extends UnitSpecification {
     def resultT = Await.result(resultF.liftToTry)
   }
 
-  trait TrackAudioMetadataContext extends GenericContext[TrackAudioMetadata] {
+  trait TrackAudioMetadataContext extends GenericContext[Option[TrackAudioMetadata]] {
     val jsonClient = mock[JsonClient]
     lazy val client = new RichOkidokiClient(jsonClient)
 
@@ -49,7 +49,7 @@ class RichOkidokiClientSpec extends UnitSpecification {
 
   "track audio" >> {
     "200 response" in new TrackAudioMetadataContext {
-      result ==== TrackAudioMetadata("finished", "vqf", 9001)
+      result ==== Some(TrackAudioMetadata("finished", "vqf", 9001))
     }
 
     "404 response" in new TrackAudioMetadataContext {
