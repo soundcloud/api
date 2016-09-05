@@ -36,7 +36,7 @@ class TrackRepresentationsService(
           case None => Future.value(None)
         }
         Future.join(isrcF, userF, countsF, labelF, geoblockingsF, domainlockingsF, audioF).map {
-          case (isrc, Some(user), counts, label, geoblockings, domainlockings, audio) =>
+          case (isrc, Some(user), counts, label, geoblockings, domainlockings, Some(audio)) =>
             val rep = buildTrackRepresentationLike(
               userSession = session,
               track = track,
