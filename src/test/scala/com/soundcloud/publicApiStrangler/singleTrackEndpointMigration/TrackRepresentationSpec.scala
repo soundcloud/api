@@ -199,6 +199,31 @@ class TrackRepresentationLabelDecoratorSpec extends UnitSpecification {
   }
 }
 
+class TrackRepresentationUserFavoriteDecoratorSpec extends UnitSpecification {
+
+  trait Context extends Scope with TrackRepresentationLikeSpecContext {
+    implicit val writes = TrackRepresentationUserFavoriteDecorator.writes
+
+    val wrapped: TrackRepresentationLike = createTrackRepresentation()
+  }
+
+  "adds user favourite information when track is liked" in new Context {
+    val isFavorite = true
+    val decorator = TrackRepresentationUserFavoriteDecorator(isFavorite, wrapped)
+    val json = Json.toJson(decorator)
+
+    json \ "user_favorite" ==== JsString("true")
+  }
+
+  "adds user favourite information when track is not liked" in new Context {
+    val isFavorite = false
+    val decorator = TrackRepresentationUserFavoriteDecorator(isFavorite, wrapped)
+    val json = Json.toJson(decorator)
+
+    json \ "user_favorite" ==== JsString("false")
+  }
+}
+
 class TrackRepresentationDomainLockingsDecoratorSpec extends UnitSpecification {
   trait Context extends Scope with TrackRepresentationLikeSpecContext {
     implicit val writes = TrackRepresentationDomainLockingsDecorator.writes

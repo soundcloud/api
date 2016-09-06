@@ -6,6 +6,7 @@ import com.soundcloud.publicApiStrangler.client.stitch.{StitchClient, StitchCoun
 import com.soundcloud.publicApiStrangler.singleTrackEndpointMigration.trackmetadataclient.{Track, TrackmetadataClient}
 import com.soundcloud.scalakit.json.Json
 import com.soundcloud.scalakit.{Urn, UserSession}
+import com.soundcloud.service.client.LieblingClient
 import com.soundcloud.service.response.representation._
 import com.twitter.finagle.http.{Response, Status}
 import com.twitter.util.{Future, NonFatal}
@@ -15,7 +16,8 @@ class TrackRepresentationsService(
   trackmetadataClient: TrackmetadataClient,
   okidokiClient: RichOkidokiClient,
   pubmeseClient: PubmeseClient,
-  stitchClient: StitchClient) {
+  stitchClient: StitchClient,
+  lieblingClient: LieblingClient) {
 
   private val notFoundErrorString = """{"errors":[{"error_message":"404 - Not Found"}]}"""
   private val serviceUnavailableErrorString = """{"errors":[{"error_message":"503 - Service Unavailable"}]}"""
@@ -31,12 +33,14 @@ class TrackRepresentationsService(
       case Some(track) if isTrackAccessible(session, secretToken, track) =>
         val userF = fetchUserForTrack(track, session)
         val labelF = fetchLabelForTrack(track, session)
+        val isLikedF = fetchUserLikesTrack(track, session)
         val countsF = userF.flatMap {
           case Some(user) => stitchClient.countsForTrack(session, urn, user.urn).map(Some(_)).liftToTry.map(_.getOrElse(None))
           case None => Future.value(None)
         }
-        Future.join(isrcF, userF, countsF, labelF, geoblockingsF, domainlockingsF, audioF).map {
-          case (isrc, Some(user), counts, label, geoblockings, domainlockings, Some(audio)) =>
+
+        Future.join(isrcF, userF, countsF, labelF, geoblockingsF, domainlockingsF, audioF, isLikedF).map {
+          case (isrc, Some(user), counts, label, geoblockings, domainlockings, Some(audio), isLiked) =>
             val rep = buildTrackRepresentationLike(
               userSession = session,
               track = track,
@@ -46,7 +50,8 @@ class TrackRepresentationsService(
               label = label,
               geoblockings = geoblockings,
               domainlockings = domainlockings,
-              trackAudioMetadata = audio
+              trackAudioMetadata = audio,
+              isLiked = isLiked
             )
 
             generateResponse(Status.Ok, jsonpWrapper(callback, Json.stringify(rep)))
@@ -87,7 +92,8 @@ class TrackRepresentationsService(
     label: Option[User],
     geoblockings: Option[Geoblockings],
     domainlockings: Seq[DomainLocking],
-    trackAudioMetadata: TrackAudioMetadata
+    trackAudioMetadata: TrackAudioMetadata,
+    isLiked: Boolean
   ): TrackRepresentationLike = {
     val basicTrackRep = TrackRepresentation(
       track = track,
@@ -108,6 +114,8 @@ class TrackRepresentationsService(
       rep = TrackRepresentationGeoblockingsDecorator(geoblockings.get, rep)
     if (!domainlockings.isEmpty)
       rep = TrackRepresentationDomainLockingsDecorator(domainlockings, rep)
+    if (!userSession.isAnonymous)
+      rep = TrackRepresentationUserFavoriteDecorator(isLiked, rep)
     rep
   }
 
@@ -118,6 +126,13 @@ class TrackRepresentationsService(
     case Some(label_id) => fetchUser(new Urn("soundcloud", "users", label_id.toString), session)
     case None => Future.value(None)
   }
+
+  private def fetchUserLikesTrack(track: Track, session: UserSession): Future[Boolean] =
+    Option(session.getUser) match {
+      case Some(user) => lieblingClient.userLikeCounts(session, List(track.urn), session.getUser)
+        .map(_.liked_track_urns.contains(track.urn))
+      case None => Future.value(false)
+    }
 
   private def fetchUser(userUrn: Urn, session: UserSession): Future[Option[User]] =
     okidokiClient.fetchUserObjects(session, Set(userUrn)).map(_.headOption)
