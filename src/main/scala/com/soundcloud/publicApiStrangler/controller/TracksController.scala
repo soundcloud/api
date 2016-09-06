@@ -24,9 +24,6 @@ class TracksController(userAuthentication: UserAuthentication,
                        gobbly: GobblyClient)
     extends BffInjectionBasedController {
 
-  get("/tracks/:trackId.json")(mothershipDispatcher.dispatch)
-  get("/tracks/:trackId.json/")(mothershipDispatcher.dispatch)
-
   get("/tracks/:trackId/comments")(mothershipDispatcher.dispatch)
   get("/tracks/:trackId/comments/")(mothershipDispatcher.dispatch)
   get("/tracks/:trackId/comments.json")(mothershipDispatcher.dispatch)
