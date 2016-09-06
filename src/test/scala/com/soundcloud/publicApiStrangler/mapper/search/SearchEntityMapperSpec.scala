@@ -1,8 +1,7 @@
 package com.soundcloud.publicApiStrangler.mapper.search
 
-import com.soundcloud.bff.Json
 import com.soundcloud.bff.media.{TrackWaveformUrlMapper, WaveformUrlsRepository}
-import com.soundcloud.bff.nextbff.mapping.MappingContext
+import com.soundcloud.bff.nextbff.mapping.{Mapping, MappingContext}
 import com.soundcloud.bff.test.UnitSpecification
 import com.soundcloud.jvmkit.policies.{ContentAuthorization, ContentPolicy, MonetizationModel, Reason}
 import com.soundcloud.publicApiStrangler.authorization.ContentAuthorizationRules
@@ -13,13 +12,16 @@ import com.soundcloud.publicApiStrangler.mapper.timeline.EntitySummaryMapper
 import com.soundcloud.publicApiStrangler.mapper.waveform.WaveformMapper
 import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures
 import com.soundcloud.scalakit.Urn
+import com.soundcloud.scalakit.json.Json
 import com.soundcloud.scalakit.test.VerifiedMocks
 import com.soundcloud.service.client.{LieblingClient, OkidokiClient}
 import com.soundcloud.service.response.representation.liebling.UserLikesCount
 import com.soundcloud.service.response.representation.{TrackMeta, TrackPurchaseLink, TracksWithPagination}
 import com.twitter.util.{Await, Future}
 import org.specs2.matcher.MatchResult
-import play.api.libs.json.{JsObject, JsValue}
+import play.api.libs.json.{JsObject, JsValue, Json}
+import com.soundcloud.scalakit.json.{Json => ScalakitJson}
+import play.api.libs.json.{JsObject, JsValue, Json => PlayJson}
 
 class SearchEntityMapperSpec extends UnitSpecification with Fixtures {
 
@@ -111,6 +113,8 @@ class SearchEntityMapperSpec extends UnitSpecification with Fixtures {
 
   "builds the proper mappings" >> {
     "with follow counts" in new Context {
+      def mappingToJsObject(m: Mapping): JsObject = PlayJson.parse(ScalakitJson.asString(m)).as[JsObject]
+
       override def before: Any = {
         super.before
         val fetchedUserUrn = Urn("soundcloud:users:2097360")
@@ -118,7 +122,7 @@ class SearchEntityMapperSpec extends UnitSpecification with Fixtures {
       }
 
       result.size mustEqual 4
-      val List(userJson, trackJson, playlistJson, groupJson) = result.map(Json.toJsValue)
+      val List(userJson, trackJson, playlistJson, groupJson) = result.map(mappingToJsObject _)
 
       (trackJson \ "kind").as[String] ==== "track"
       (trackJson \ "waveform_url").as[String] ==== "https://w1.sndcdn.com/b5uH7mT3hjkm_m.png"
