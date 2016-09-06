@@ -21,6 +21,8 @@ class SingleTrackController(userAuthentication: UserAuthentication,
 
   get("/tracks/:trackId")(renderTrack)
   get("/tracks/:trackId/")(renderTrack)
+  get("/tracks/:trackId.json")(renderTrack)
+  get("/tracks/:trackId.json/")(renderTrack)
 
   private def renderTrack(req: Request): Future[ResponseBuilder] = {
     stripConditionalRequestHeaders(req)

@@ -33,7 +33,11 @@ class SingleTrackControllerSpec extends InjectionBasedControllerSpecification {
       telemetry)
   }
 
-  List("/tracks/987", "/tracks/987/").foreach {
+  val validPaths = List("/tracks/987", "/tracks/987/", "/tracks/987.json", "/tracks/987.json/")
+  val nonNumericPaths = List("/tracks/__12", "/tracks/__12/", "/tracks/permalinktrack", "/tracks/permalinktrack/",
+    "/tracks/permalinktrack.json", "/tracks/permalinktrack.json/")
+
+  validPaths.foreach {
     path =>
       s"removes conditional request headers for path: $path" in new Context {
         when(fallback.dispatchToMothership(like[Request] {
@@ -47,7 +51,7 @@ class SingleTrackControllerSpec extends InjectionBasedControllerSpecification {
       }
   }
 
-  List("/tracks/__12", "/tracks/__12/", "/tracks/permalinktrack", "/tracks/permalinktrack/").foreach {
+  nonNumericPaths.foreach {
     path =>
       s"returns 404 for non-numeric track identifier for path: $path" in new Context {
         val response = get(controller(session), path)
@@ -57,7 +61,7 @@ class SingleTrackControllerSpec extends InjectionBasedControllerSpecification {
       }
   }
 
-  List("/tracks/__12", "/tracks/__12/", "/tracks/permalinktrack", "/tracks/permalinktrack/").foreach {
+  nonNumericPaths.foreach {
     path =>
       s"returns 404 wrapped in jsonp for non-numeric track identifier when callback param is provided for path: $path" in new Context {
         val response = get(controller(session), path, Map("callback" -> "js_callback_fn"))
@@ -67,7 +71,7 @@ class SingleTrackControllerSpec extends InjectionBasedControllerSpecification {
       }
   }
 
-  List("/tracks/987", "/tracks/987/").foreach {
+  validPaths.foreach {
     path =>
       s"Passes secret token to tracks service for path: $path" in new Context {
         when(fallback.dispatchToMothership(any[Request])).thenReturn(Future.value(Response()))
@@ -78,7 +82,7 @@ class SingleTrackControllerSpec extends InjectionBasedControllerSpecification {
       }
   }
 
-  List("/tracks/987", "/tracks/987/").foreach {
+  validPaths.foreach {
     path =>
       s"Passes callback parameters to tracks service for path: $path" in new Context {
         when(fallback.dispatchToMothership(any[Request])).thenReturn(Future.value(Response()))
@@ -89,7 +93,7 @@ class SingleTrackControllerSpec extends InjectionBasedControllerSpecification {
       }
   }
 
-  List("/tracks/987", "/tracks/987/").foreach {
+  validPaths.foreach {
     path =>
       val legacyResponseString = "{\"kind\":\"track\",\"id\":987,\"user_id\":111}"
       val legacyResponse = Response()

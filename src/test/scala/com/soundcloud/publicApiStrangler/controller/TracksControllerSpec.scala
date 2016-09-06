@@ -46,19 +46,7 @@ class TracksControllerSpec extends InjectionBasedControllerSpecification with Fi
 
     gobblyClient.allTracksManagedByFeedsForWrite(any, ===(List(trackUrn))) returns Future(gobblyResponse)
   }
-
-  "GET /tracks/:id" >> {
-    "falls back to Mothership with .json" in new Context {
-      val response = get(controller, "/tracks/999.json")
-      response.status ==== Status.Ok
-    }
-
-    "falls back to Mothership with .json and trailing slash" in new Context {
-      val response = get(controller, "/tracks/999.json/")
-      response.status ==== Status.Ok
-    }
-  }
-
+  
   "GET /tracks/:id/comments" >> {
     "falls back to Mothership" in new Context {
       val response = get(controller, "/tracks/999/comments")
