@@ -32,6 +32,18 @@ class ResponseComparison(telemetry: Telemetry) {
     "type"
   )
 
+  val attributeOnlyPresentInCounter = telemetry.counter(
+    "attribute_only_present_in",
+    "counter for attributes only present in one of the two responses",
+    "response", "attribute"
+  )
+
+  val attributeValueDifferentCounter = telemetry.counter(
+    "attribute_value_different",
+    "counter for attributes where the values are different",
+    "attribute"
+  )
+
   def report(request: Request, legacyRes: Response, migrationRes: Response): Unit = {
 
     if (legacyRes.status != migrationRes.status) {
@@ -70,8 +82,12 @@ class ResponseComparison(telemetry: Telemetry) {
     val legacyJsonTry = Try(Json.fromString(legacyJson).as[JsObject])
     val migrationJsonTry = Try(Json.fromString(migrationJson).as[JsObject])
 
+
     (legacyJsonTry, migrationJsonTry) match {
       case (Return(legacyJson), Return(migrationJson)) => {
+
+        reportAttributesOnlyPresentInOneResponse(legacyJson, migrationJson)
+        reportAttributeValueDifferences(legacyJson, migrationJson)
 
         val bodyDiffCount = calcBodyDiffCount(legacyJson, migrationJson)
         if (bodyDiffCount > 0) {
@@ -139,6 +155,28 @@ class ResponseComparison(telemetry: Telemetry) {
     logger.info(s"migration res : ${migrationRes.toString}")
     failuresCounter.labels("differentStatusCodes").inc()
     statusCodeDifferenceCounter.labels(legacyRes.statusCode.toString, migrationRes.statusCode.toString).inc()
+  }
+
+  private def reportAttributesOnlyPresentInOneResponse(legacyJson: JsObject, migrationJson: JsObject): Unit = {
+    val legacyAttributes = legacyJson.fieldSet.map(_._1)
+    val migrationAttributes = migrationJson.fieldSet.map(_._1)
+    val attributesOnlyInLegacy = legacyAttributes -- migrationAttributes
+    val attributesOnlyInMigration = migrationAttributes -- legacyAttributes
+
+    attributesOnlyInLegacy.foreach(attr => attributeOnlyPresentInCounter.labels("legacy", attr).inc())
+    attributesOnlyInMigration.foreach(attr => attributeOnlyPresentInCounter.labels("migration", attr).inc())
+  }
+
+  private def reportAttributeValueDifferences(legacyJson: JsObject, migrationJson: JsObject): Unit = {
+    val legacyAttributes = legacyJson.fieldSet.map(_._1)
+    val migrationAttributes = migrationJson.fieldSet.map(_._1)
+    val attributesPresentInBothResponses = legacyAttributes.intersect(migrationAttributes)
+
+    attributesPresentInBothResponses.foreach(attr => {
+      val legacyValue = legacyJson \ attr
+      val migrationValue = migrationJson \ attr
+      if (legacyValue != migrationValue) attributeValueDifferentCounter.labels(attr).inc()
+    })
   }
 
   private def calcBodyDiffCount(legacyJson: JsObject, migrationJson: JsObject): Int = {
