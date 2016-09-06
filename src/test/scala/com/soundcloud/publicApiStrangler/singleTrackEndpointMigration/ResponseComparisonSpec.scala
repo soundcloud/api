@@ -81,6 +81,45 @@ class ResponseComparisonSpec extends UnitSpecification {
       }
     }
 
+    "reports attributes that are only present in the legacy response" in new Context {
+      val legacyRes = generateResponse("""{"kind": "track", "id": 100}""")
+      val migrationRes = generateResponse("""{"kind": "track"}""")
+
+      responseComparison.report(Request(), legacyRes, migrationRes)
+      val value = collectorRegistry.getSampleValue(
+        "attribute_only_present_in",
+        Array("response", "attribute", "system"),
+        Array("legacy", "id", "TEST-APP")
+      )
+      value ==== 1d
+    }
+
+    "reports attributes that are only present in the migration response" in new Context {
+      val legacyRes = generateResponse("""{"kind": "track", "id": 100}""")
+      val migrationRes = generateResponse("""{"kind": "track", "id": 100, "user_id": 7110}""")
+
+      responseComparison.report(Request(), legacyRes, migrationRes)
+      val value = collectorRegistry.getSampleValue(
+        "attribute_only_present_in",
+        Array("response", "attribute", "system"),
+        Array("migration", "user_id", "TEST-APP")
+      )
+      value ==== 1d
+    }
+
+    "reports attributes that have different values" in new Context {
+      val legacyRes = generateResponse("""{"kind": "track", "sounds_really_great": "true"}""")
+      val migrationRes = generateResponse("""{"kind": "track", "sounds_really_great": "false"}""")
+
+      responseComparison.report(Request(), legacyRes, migrationRes)
+      val value = collectorRegistry.getSampleValue(
+        "attribute_value_different",
+        Array("attribute", "system"),
+        Array("sounds_really_great", "TEST-APP")
+      )
+      value ==== 1d
+    }
+
     "reports number of different attributes when responses are NOT the same" in new Context {
       List(
         ("{\"kind\":\"track\",\"id\":987,\"user_id\":111}",
