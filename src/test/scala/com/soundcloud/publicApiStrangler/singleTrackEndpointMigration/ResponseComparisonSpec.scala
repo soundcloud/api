@@ -206,6 +206,40 @@ class ResponseComparisonSpec extends UnitSpecification {
       ) must beNull
     }
 
+    "ignores reposts_count in legacy response" in new Context {
+      val legacyRes = generateResponse("""{"kind": "track", "reposts_count": 123}""")
+      val migrationRes = generateResponse("""{"kind": "track"}""")
+
+      responseComparison.report(Request(), legacyRes, migrationRes)
+      collectorRegistry.getSampleValue(
+        "attribute_value_different",
+        Array("attribute", "system"),
+        Array("reposts_count", "TEST-APP")
+      ) must beNull
+      collectorRegistry.getSampleValue(
+        "attribute_only_present_in",
+        Array("response", "attribute", "system"),
+        Array("legacy", "reposts_count", "TEST-APP")
+      ) must beNull
+    }
+
+    "ignores likes_count in legacy response" in new Context {
+      val legacyRes = generateResponse("""{"kind": "track", "likes_count": 123}""")
+      val migrationRes = generateResponse("""{"kind": "track"}""")
+
+      responseComparison.report(Request(), legacyRes, migrationRes)
+      collectorRegistry.getSampleValue(
+        "attribute_value_different",
+        Array("attribute", "system"),
+        Array("reposts_count", "TEST-APP")
+      ) must beNull
+      collectorRegistry.getSampleValue(
+        "attribute_only_present_in",
+        Array("response", "attribute", "system"),
+        Array("legacy", "likes_count", "TEST-APP")
+      ) must beNull
+    }
+
     "records stream_url difference when present in both" in new Context {
       val legacyRes = generateResponse("""{"kind": "track", "stream_url": "http://example.com/happy_snail_song.mp3"}""")
       val migrationRes = generateResponse("""{"kind": "track", "stream_url": "http://example.com/muzik.mp5"}""")
