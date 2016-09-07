@@ -24,7 +24,7 @@ class TrackRepresentationsService(
 
   def track(session: UserSession, urn: Urn, secretToken: Option[String], callback: Option[String]): Future[Response] = {
     val isrcF = pubmeseClient.isrcForTrack(session, urn).handle { case NonFatal(ex) => None }
-    val geoblockingsF = okidokiClient.fetchTrackGeoblockings(session, urn).handle { case NonFatal(ex) => None }
+    val geoblockingsF = fetchGeoblockings(session, urn).handle { case NonFatal(ex) => None }
     val domainlockingsF = okidokiClient.fetchTrackDomainLockings(session, urn).handle { case NonFatal(ex) => Seq() }
     val audioF = okidokiClient.fetchTrackAudioMetadata(session, urn)
     implicit val trackRepresentationWrites = TrackRepresentation.writes
@@ -133,6 +133,13 @@ class TrackRepresentationsService(
       case Some(user) => lieblingClient.userLikeCounts(session, List(track.urn), session.getUser)
         .map(_.liked_track_urns.contains(track.urn))
       case None => Future.value(false)
+    }
+
+  private def fetchGeoblockings(session: UserSession, urn: Urn): Future[Option[Geoblockings]] =
+    // fetchTrackGeoblockings can return Some with zero geoblockings, which this method turns into None
+    okidokiClient.fetchTrackGeoblockings(session, urn).map {
+      case Some(geoblockings) => if (geoblockings.isEmpty) None else Some(geoblockings)
+      case None => None
     }
 
   private def fetchUser(userUrn: Urn, session: UserSession): Future[Option[User]] =
