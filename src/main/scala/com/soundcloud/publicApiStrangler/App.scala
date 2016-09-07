@@ -9,6 +9,7 @@ import com.soundcloud.jvmkit.ResourceName
 import com.soundcloud.jvmkit.admin.{AdminRoute, RequestMethod}
 import com.soundcloud.jvmkit.config.{ConfigConvention, DataSensitivity}
 import com.soundcloud.jvmkit.rollout.{BasicRolloutFeature, Rollout, RolloutBuilder}
+import com.soundcloud.jvmkit.zookeeper.CuratorFrameworkFactory
 import com.soundcloud.publicApiStrangler.authorization._
 import com.soundcloud.publicApiStrangler.client._
 import com.soundcloud.publicApiStrangler.client.followcounts.FollowCountsClient
@@ -28,12 +29,10 @@ import com.soundcloud.publicApiStrangler.mapper.waveform.WaveformMapper
 import com.soundcloud.publicApiStrangler.singleTrackEndpointMigration.trackmetadataclient.TrackmetadataClient
 import com.soundcloud.publicApiStrangler.singleTrackEndpointMigration.{ResponseComparison, SingleTrackController, TrackRepresentationsService}
 import com.soundcloud.publicApiStrangler.support._
-import com.soundcloud.publicApiStrangler.zookeeper.CuratorFrameworkFactory
 import com.soundcloud.ratelimiting.facade._
 import com.soundcloud.scalakit.Urn
 import com.soundcloud.scalakit.cache.MemcachedClient
 import com.soundcloud.scalakit.finagle.jsonservice.{JsonClient, ServiceEntryPoint}
-import com.soundcloud.service.client.{MoshimoshiClient, OkidokiClient}
 import org.eclipse.jetty.server.Handler
 
 object App
@@ -163,8 +162,7 @@ object App
     new TimelineController(userAuthentication, streamMapper, activitiesMapper, publicActivitiesMapper, followingsTracksMapper, pagination)
   }
 
-  private val curatorFrameworkFactory = new CuratorFrameworkFactory
-  private val curatorFramework = curatorFrameworkFactory.create(config)
+  private val curatorFramework = CuratorFrameworkFactory.create(config)
 
   private val trackStreamsController = {
     val trackStreamUrlToJsonResponseMapper = new TrackStreamJsonResponseMapper
