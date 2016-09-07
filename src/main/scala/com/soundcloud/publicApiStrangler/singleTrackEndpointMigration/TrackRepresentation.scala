@@ -169,9 +169,6 @@ object TrackRepresentation {
         "download_count" -> rep.counts.download_count,
         "favoritings_count" -> rep.counts.favoritings_count,
         "comment_count" -> rep.counts.comment_count,
-
-        // Conditional attributes (already exposed)
-        // TODO: expose conditionally
         "stream_url" -> s"https://api.soundcloud.com/tracks/${rep.id}/stream",
         "download_url" -> s"https://api.soundcloud.com/tracks/${rep.id}/download"
 

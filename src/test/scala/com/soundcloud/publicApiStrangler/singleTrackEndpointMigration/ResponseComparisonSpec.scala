@@ -159,6 +159,58 @@ class ResponseComparisonSpec extends UnitSpecification {
       value ==== 1d
     }
 
+    "ignores download_url when only present in migrated response" in new Context {
+      val legacyRes = generateResponse("""{"kind": "track"}""")
+      val migrationRes = generateResponse("""{"kind": "track", "download_url": "http://example.com/muzik.mp5"}""")
+
+      responseComparison.report(Request(), legacyRes, migrationRes)
+      val value = collectorRegistry.getSampleValue(
+        "attribute_value_different",
+        Array("attribute", "system"),
+        Array("download_url", "TEST-APP")
+      )
+      value must beNull
+    }
+
+    "records download_url difference when present in both" in new Context {
+      val legacyRes = generateResponse("""{"kind": "track", "download_url": "http://example.com/happy_snail_song.mp3"}""")
+      val migrationRes = generateResponse("""{"kind": "track", "download_url": "http://example.com/muzik.mp5"}""")
+
+      responseComparison.report(Request(), legacyRes, migrationRes)
+      val value = collectorRegistry.getSampleValue(
+        "attribute_value_different",
+        Array("attribute", "system"),
+        Array("download_url", "TEST-APP")
+      )
+      value ==== 1d
+    }
+
+    "ignores stream_url when only present in migrated response" in new Context {
+      val legacyRes = generateResponse("""{"kind": "track"}""")
+      val migrationRes = generateResponse("""{"kind": "track", "stream_url": "http://example.com/muzik.mp5"}""")
+
+      responseComparison.report(Request(), legacyRes, migrationRes)
+      val value = collectorRegistry.getSampleValue(
+        "attribute_value_different",
+        Array("attribute", "system"),
+        Array("stream_url", "TEST-APP")
+      )
+      value must beNull
+    }
+
+    "records stream_url difference when present in both" in new Context {
+      val legacyRes = generateResponse("""{"kind": "track", "stream_url": "http://example.com/happy_snail_song.mp3"}""")
+      val migrationRes = generateResponse("""{"kind": "track", "stream_url": "http://example.com/muzik.mp5"}""")
+
+      responseComparison.report(Request(), legacyRes, migrationRes)
+      val value = collectorRegistry.getSampleValue(
+        "attribute_value_different",
+        Array("attribute", "system"),
+        Array("stream_url", "TEST-APP")
+      )
+      value ==== 1d
+    }
+
     "reports number of different attributes when responses are NOT the same" in new Context {
       List(
         ("{\"kind\":\"track\",\"id\":987,\"user_id\":111}",

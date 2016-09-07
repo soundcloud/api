@@ -182,6 +182,8 @@ class ResponseComparison(telemetry: Telemetry) {
           val legacyString = legacyValue.as[JsString].value
           val migrationString = migrationValue.as[JsString].value
           legacyString.replaceFirst("^http://", "https://") != migrationString
+        case "download_url" | "stream_url" =>
+          legacyValue.asOpt[JsString].isDefined && legacyValue != migrationValue
         case _ => legacyValue != migrationValue
       }
 
