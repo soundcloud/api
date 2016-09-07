@@ -158,6 +158,15 @@ class ResponseComparison(telemetry: Telemetry) {
   }
 
   private def reportAttributesOnlyPresentInOneResponse(legacyJson: JsObject, migrationJson: JsObject): Unit = {
+    // reposts_count, likes_count
+    //    Present in the legacy response for compatibility with the android app. No longer relevant,
+    //    and therefore not migrated.
+    //
+    // download_url, stream_url
+    //    Conditionally present in the legacy response, and unconditionally present in the migrated
+    //    response. Reproducing the logic for determining whether a track is downloadable or
+    //    streamable was deemed not worth it, especially considering that these URLs are trivial to
+    //    reconstruct based off the track ID.
     val ignoredLegacyAttributes = Set("reposts_count", "likes_count")
     val ignoredMigrationAttributes = Set("download_url", "stream_url")
 
@@ -180,12 +189,18 @@ class ResponseComparison(telemetry: Telemetry) {
       val migrationValue = migrationJson \ attr
 
       val isDifferent = attr match {
-        case "isrc" => false
+        case "isrc" =>
+          // The ISRC is now obtained from Pubmese rather than Mothership. Pubmese is the authoritative
+          // source for ISRCs.
+          false
         case "permalink_url" =>
+          // The legacy response serves permalink URLs with http://, while the migrated response serves
+          // them with https:// instead.
           val legacyString = legacyValue.as[JsString].value
           val migrationString = migrationValue.as[JsString].value
           legacyString.replaceFirst("^http://", "https://") != migrationString
-        case _ => legacyValue != migrationValue
+        case _ =>
+          legacyValue != migrationValue
       }
 
       if (isDifferent) attributeValueDifferentCounter.labels(attr).inc()
