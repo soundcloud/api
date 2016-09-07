@@ -5,7 +5,7 @@ import com.soundcloud.jvmkit.telemetry.Telemetry
 import com.soundcloud.scalakit.json.Json
 import com.twitter.finagle.http.{HeaderMap, Request, Response, Status}
 import com.twitter.util.{Return, Try}
-import play.api.libs.json.{JsObject, JsValue}
+import play.api.libs.json.{JsObject, JsString, JsValue}
 
 import scala.collection.JavaConversions._
 
@@ -175,7 +175,17 @@ class ResponseComparison(telemetry: Telemetry) {
     attributesPresentInBothResponses.foreach(attr => {
       val legacyValue = legacyJson \ attr
       val migrationValue = migrationJson \ attr
-      if (legacyValue != migrationValue) attributeValueDifferentCounter.labels(attr).inc()
+
+      val isDifferent = attr match {
+        case "isrc" => false
+        case "permalink_url" =>
+          val legacyString = legacyValue.as[JsString].value
+          val migrationString = migrationValue.as[JsString].value
+          legacyString.replaceFirst("^http://", "https://") != migrationString
+        case _ => legacyValue != migrationValue
+      }
+
+      if (isDifferent) attributeValueDifferentCounter.labels(attr).inc()
     })
   }
 

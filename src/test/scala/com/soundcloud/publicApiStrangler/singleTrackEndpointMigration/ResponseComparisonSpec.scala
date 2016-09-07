@@ -120,6 +120,45 @@ class ResponseComparisonSpec extends UnitSpecification {
       value ==== 1d
     }
 
+    "ignores ISRC when comparing attributes" in new Context {
+      val legacyRes = generateResponse("""{"kind": "track", "isrc": "foo"}""")
+      val migrationRes = generateResponse("""{"kind": "track", "isrc": "bar"}""")
+
+      responseComparison.report(Request(), legacyRes, migrationRes)
+      val value = collectorRegistry.getSampleValue(
+        "attribute_value_different",
+        Array("attribute", "system"),
+        Array("isrc", "TEST-APP")
+      )
+      value must beNull
+    }
+
+    "treats HTTP/HTTPS as identical when comparing permalink_url attribute" in new Context {
+      val legacyRes = generateResponse("""{"kind": "track", "permalink_url": "http://example.com/123"}""")
+      val migrationRes = generateResponse("""{"kind": "track", "permalink_url": "https://example.com/123"}""")
+
+      responseComparison.report(Request(), legacyRes, migrationRes)
+      val value = collectorRegistry.getSampleValue(
+        "attribute_value_different",
+        Array("attribute", "system"),
+        Array("permalink_url", "TEST-APP")
+      )
+      value must beNull
+    }
+
+    "records permalink_url differences" in new Context {
+      val legacyRes = generateResponse("""{"kind": "track", "permalink_url": "http://example.com/456"}""")
+      val migrationRes = generateResponse("""{"kind": "track", "permalink_url": "https://example.com/123"}""")
+
+      responseComparison.report(Request(), legacyRes, migrationRes)
+      val value = collectorRegistry.getSampleValue(
+        "attribute_value_different",
+        Array("attribute", "system"),
+        Array("permalink_url", "TEST-APP")
+      )
+      value ==== 1d
+    }
+
     "reports number of different attributes when responses are NOT the same" in new Context {
       List(
         ("{\"kind\":\"track\",\"id\":987,\"user_id\":111}",
