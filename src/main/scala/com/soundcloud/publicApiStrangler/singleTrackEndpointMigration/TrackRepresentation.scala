@@ -118,6 +118,7 @@ case class TrackRepresentation(
 
 object TrackRepresentation {
   private val dateTimeFormat = DateTimeFormat.forPattern("yyyy/MM/dd HH:mm:ss +0000")
+  private val cdnRoot = "https://i1.sndcdn.com"
 
   implicit val writes = new Writes[TrackRepresentation] {
     // FIXME: ugly to have to import it here
@@ -162,9 +163,7 @@ object TrackRepresentation {
         "user" -> rep.user,
         // user_favorite --> liebling
         "permalink_url" -> rep.track.permalink_url,
-        // Probably we need to copy the logic at
-        // https://github.com/soundcloud/api-web/blob/master/src/main/scala/com/soundcloud/api/web/representation/helpers/ResourceURLs.scala#L72
-        "artwork_url" -> rep.track.artwork.filename.map(file => s"https://i1.sndcdn.com/$file"),
+        "artwork_url" -> rep.track.artwork.filename.map(imageUrl(_)),
         // waveform_url --> media service
         "playback_count" -> rep.counts.playback_count,
         "download_count" -> rep.counts.download_count,
@@ -187,6 +186,15 @@ object TrackRepresentation {
         // user_favorite
         // user_playback_count
       )
+    }
+
+    private def imageUrl(imageFile: String): String = {
+      val s3FilenamePattern = """(.*)-original\.(\w*)""".r
+
+      imageFile match {
+        case s3FilenamePattern(s3filename, extension) => cdnRoot + s"/$s3filename-large.$extension"
+        case _ => cdnRoot + "/" + imageFile
+      }
     }
   }
 }
