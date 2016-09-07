@@ -158,7 +158,7 @@ class ResponseComparison(telemetry: Telemetry) {
   }
 
   private def reportAttributesOnlyPresentInOneResponse(legacyJson: JsObject, migrationJson: JsObject): Unit = {
-    val ignoredLegacyAttributes = Set()
+    val ignoredLegacyAttributes = Set("reposts_count", "likes_count")
     val ignoredMigrationAttributes = Set("download_url", "stream_url")
 
     val legacyAttributes = legacyJson.fieldSet.map(_._1)
