@@ -158,10 +158,13 @@ class ResponseComparison(telemetry: Telemetry) {
   }
 
   private def reportAttributesOnlyPresentInOneResponse(legacyJson: JsObject, migrationJson: JsObject): Unit = {
+    val ignoredLegacyAttributes = Set()
+    val ignoredMigrationAttributes = Set("download_url", "stream_url")
+
     val legacyAttributes = legacyJson.fieldSet.map(_._1)
     val migrationAttributes = migrationJson.fieldSet.map(_._1)
-    val attributesOnlyInLegacy = legacyAttributes -- migrationAttributes
-    val attributesOnlyInMigration = migrationAttributes -- legacyAttributes
+    val attributesOnlyInLegacy = legacyAttributes -- migrationAttributes -- ignoredLegacyAttributes
+    val attributesOnlyInMigration = migrationAttributes -- legacyAttributes -- ignoredMigrationAttributes
 
     attributesOnlyInLegacy.foreach(attr => attributeOnlyPresentInCounter.labels("legacy", attr).inc())
     attributesOnlyInMigration.foreach(attr => attributeOnlyPresentInCounter.labels("migration", attr).inc())
@@ -182,8 +185,6 @@ class ResponseComparison(telemetry: Telemetry) {
           val legacyString = legacyValue.as[JsString].value
           val migrationString = migrationValue.as[JsString].value
           legacyString.replaceFirst("^http://", "https://") != migrationString
-        case "download_url" | "stream_url" =>
-          legacyValue.asOpt[JsString].isDefined && legacyValue != migrationValue
         case _ => legacyValue != migrationValue
       }
 

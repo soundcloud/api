@@ -164,12 +164,16 @@ class ResponseComparisonSpec extends UnitSpecification {
       val migrationRes = generateResponse("""{"kind": "track", "download_url": "http://example.com/muzik.mp5"}""")
 
       responseComparison.report(Request(), legacyRes, migrationRes)
-      val value = collectorRegistry.getSampleValue(
+      collectorRegistry.getSampleValue(
         "attribute_value_different",
         Array("attribute", "system"),
         Array("download_url", "TEST-APP")
-      )
-      value must beNull
+      ) must beNull
+      collectorRegistry.getSampleValue(
+        "attribute_only_present_in",
+        Array("response", "attribute", "system"),
+        Array("migration", "download_url", "TEST-APP")
+      ) must beNull
     }
 
     "records download_url difference when present in both" in new Context {
@@ -190,12 +194,16 @@ class ResponseComparisonSpec extends UnitSpecification {
       val migrationRes = generateResponse("""{"kind": "track", "stream_url": "http://example.com/muzik.mp5"}""")
 
       responseComparison.report(Request(), legacyRes, migrationRes)
-      val value = collectorRegistry.getSampleValue(
+      collectorRegistry.getSampleValue(
         "attribute_value_different",
         Array("attribute", "system"),
         Array("stream_url", "TEST-APP")
-      )
-      value must beNull
+      ) must beNull
+      collectorRegistry.getSampleValue(
+        "attribute_only_present_in",
+        Array("response", "attribute", "system"),
+        Array("migration", "stream_url", "TEST-APP")
+      ) must beNull
     }
 
     "records stream_url difference when present in both" in new Context {
