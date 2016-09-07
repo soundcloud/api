@@ -270,7 +270,7 @@ class TrackRepresentationSpec extends UnitSpecification {
     trackJson \ "license" ==== JsString("all-rights-reserved")
     trackJson \ "uri" ==== JsString("https://api.soundcloud.com/tracks/1324")
     trackJson \ "permalink_url" ==== JsString("http://soundcloud.com/nirvana/plsty-remix")
-    trackJson \ "artwork_url" ==== JsString("https://i1.sndcdn.com/artworks-FuwbhSJORvKH-0-original.jpg")
+    trackJson \ "artwork_url" ==== JsString("https://i1.sndcdn.com/artworks-FuwbhSJORvKH-0-large.jpg")
     trackJson \ "stream_url" ==== JsString("https://api.soundcloud.com/tracks/1324/stream")
     trackJson \ "download_url" ==== JsString("https://api.soundcloud.com/tracks/1324/download")
     trackJson \ "purchase_url" ==== JsString("http://example.com/buy/7890")
@@ -308,5 +308,12 @@ class TrackRepresentationSpec extends UnitSpecification {
     val privateTrackRepresentation = createTrackRepresentation(track = privateTrack)
     val privateTrackJson = Json.toJson(privateTrackRepresentation)
     privateTrackJson \ "sharing" ==== JsString("private")
+  }
+
+  "weird artwork filename" in new Context {
+    val track = defaultTrack.copy(artwork = Artwork(filename = Some("adfhlsh.jpg")))
+    val trackRep = createTrackRepresentation(track = track)
+    val trackJson = Json.toJson(trackRep)
+    trackJson \ "artwork_url" ==== JsString("https://i1.sndcdn.com/adfhlsh.jpg")
   }
 }

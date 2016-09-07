@@ -106,7 +106,6 @@ class TrackRepresentationsService(
       audioMetadata = trackAudioMetadata
     )
 
-    // FIXME: with less mutation pls, and  proper use of options pls
     var rep: TrackRepresentationLike = basicTrackRep
     if (track.user_urn == userSession.getUser)
       rep = TrackRepresentationSecretTokenDecorator(track, rep)
