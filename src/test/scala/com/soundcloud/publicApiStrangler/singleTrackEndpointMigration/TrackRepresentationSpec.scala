@@ -241,6 +241,21 @@ class TrackRepresentationDomainLockingsDecoratorSpec extends UnitSpecification {
   }
 }
 
+class TrackRepresentationUserPlaybackCountDecoratorSpec extends UnitSpecification {
+  trait Context extends Scope with TrackRepresentationLikeSpecContext {
+    implicit val writes = TrackRepresentationUserPlaybackCountDecorator.writes
+
+    val wrapped: TrackRepresentationLike = createTrackRepresentation()
+    val decorator = TrackRepresentationUserPlaybackCountDecorator(wrapped)
+  }
+
+  "adds a user playback count of 1" in new Context {
+    val json = Json.toJson(decorator)
+
+    json \ "user_playback_count" ==== JsNumber(1)
+  }
+}
+
 class TrackRepresentationSpec extends UnitSpecification {
   trait Context extends Scope with TrackRepresentationLikeSpecContext
 

@@ -18,6 +18,7 @@ object TrackRepresentationLike {
     case t: TrackRepresentationGeoblockingsDecorator => TrackRepresentationGeoblockingsDecorator.writes.writes(t)
     case t: TrackRepresentationDomainLockingsDecorator => TrackRepresentationDomainLockingsDecorator.writes.writes(t)
     case t: TrackRepresentationUserFavoriteDecorator => TrackRepresentationUserFavoriteDecorator.writes.writes(t)
+    case t: TrackRepresentationUserPlaybackCountDecorator => TrackRepresentationUserPlaybackCountDecorator.writes.writes(t)
     case t: TrackRepresentation => TrackRepresentation.writes.writes(t)
   }
 
@@ -31,6 +32,20 @@ object TrackRepresentationLike {
       "uri" -> s"https://api.soundcloud.com/users/${user.urn.getIdentifier}",
       "permalink_url" -> user.permalink_url,
       "avatar_url" -> user.avatar_url
+    )
+  }
+}
+
+case class TrackRepresentationUserPlaybackCountDecorator(
+  wrapped: TrackRepresentationLike
+) extends TrackRepresentationLike
+
+object TrackRepresentationUserPlaybackCountDecorator {
+
+  // This is also hard-coded to be 1 inside Mothership
+  implicit val writes = Writes[TrackRepresentationUserPlaybackCountDecorator] { dec =>
+    Json.toJson(dec.wrapped).as[JsObject] ++ Json.obj(
+      "user_playback_count" -> 1
     )
   }
 }

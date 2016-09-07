@@ -113,8 +113,10 @@ class TrackRepresentationsService(
       rep = TrackRepresentationGeoblockingsDecorator(geoblockings.get, rep)
     if (!domainlockings.isEmpty)
       rep = TrackRepresentationDomainLockingsDecorator(domainlockings, rep)
-    if (!userSession.isAnonymous)
+    if (!userSession.isAnonymous) {
       rep = TrackRepresentationUserFavoriteDecorator(isLiked, rep)
+      rep = TrackRepresentationUserPlaybackCountDecorator(rep)
+    }
     rep
   }
 
