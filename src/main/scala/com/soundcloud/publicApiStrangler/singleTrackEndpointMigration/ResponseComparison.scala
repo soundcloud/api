@@ -131,39 +131,47 @@ class ResponseComparison(telemetry: Telemetry) {
     (attributesOnlyInLegacy, attributesOnlyInMigration)
   }
 
-  private def reportAttributesOnlyPresentInOneResponse(legacyJson: JsObject, migrationJson: JsObject): Unit = {
-    val (attributesOnlyInLegacy, attributesOnlyInMigration) = detectAttributesOnlyPresentInOneResponse(legacyJson, migrationJson)
-
-    attributesOnlyInLegacy.foreach(attr => attributeOnlyPresentInCounter.labels("legacy", attr).inc())
-    attributesOnlyInMigration.foreach(attr => attributeOnlyPresentInCounter.labels("migration", attr).inc())
-  }
-
-  private def reportAttributeValueDifferences(legacyJson: JsObject, migrationJson: JsObject): Unit = {
+  private def detectAttributeValueDifferences(legacyJson: JsObject, migrationJson: JsObject): Set[String] = {
     val legacyAttributes = legacyJson.fieldSet.map(_._1)
     val migrationAttributes = migrationJson.fieldSet.map(_._1)
     val attributesPresentInBothResponses = legacyAttributes.intersect(migrationAttributes)
 
-    attributesPresentInBothResponses.foreach(attr => {
-      val legacyValue = legacyJson \ attr
-      val migrationValue = migrationJson \ attr
+    attributesPresentInBothResponses.filter {
+      attr => {
+        val legacyValue = legacyJson \ attr
+        val migrationValue = migrationJson \ attr
 
-      val isDifferent = attr match {
-        case "isrc" =>
-          // The ISRC is now obtained from Pubmese rather than Mothership. Pubmese is the authoritative
-          // source for ISRCs.
-          false
-        case "permalink_url" =>
-          // The legacy response serves permalink URLs with http://, while the migrated response serves
-          // them with https:// instead.
-          val legacyString = legacyValue.as[JsString].value
-          val migrationString = migrationValue.as[JsString].value
-          legacyString.replaceFirst("^http://", "https://") != migrationString
-        case _ =>
-          legacyValue != migrationValue
+        val isDifferent = attr match {
+          case "isrc" =>
+            // The ISRC is now obtained from Pubmese rather than Mothership. Pubmese is the authoritative
+            // source for ISRCs.
+            false
+          case "permalink_url" =>
+            // The legacy response serves permalink URLs with http://, while the migrated response serves
+            // them with https:// instead.
+            val legacyString = legacyValue.as[JsString].value
+            val migrationString = migrationValue.as[JsString].value
+            legacyString.replaceFirst("^http://", "https://") != migrationString
+          case _ =>
+            legacyValue != migrationValue
+        }
+
+        isDifferent
       }
+    }
+  }
 
-      if (isDifferent) attributeValueDifferentCounter.labels(attr).inc()
-    })
+  private def reportAttributesOnlyPresentInOneResponse(legacyJson: JsObject, migrationJson: JsObject): Unit = {
+    val (attributesOnlyInLegacy, attributesOnlyInMigration) = detectAttributesOnlyPresentInOneResponse(legacyJson, migrationJson)
+
+    attributesOnlyInLegacy.foreach(attributeOnlyPresentInCounter.labels("legacy", _).inc())
+    attributesOnlyInMigration.foreach(attributeOnlyPresentInCounter.labels("migration", _).inc())
+  }
+
+  private def reportAttributeValueDifferences(legacyJson: JsObject, migrationJson: JsObject): Unit = {
+    val differentAttributes = detectAttributeValueDifferences(legacyJson, migrationJson)
+
+    differentAttributes.foreach(attributeValueDifferentCounter.labels(_).inc())
   }
 
   private def getDifferentHeaders(legacyHeaders: HeaderMap, migrationHeaders: HeaderMap): Seq[String] = {
