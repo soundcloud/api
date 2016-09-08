@@ -4,6 +4,7 @@ import com.soundcloud.jvmkit.telemetry.Telemetry
 import com.soundcloud.scalakit.json.Json
 import com.twitter.finagle.http.{HeaderMap, Request, Response, Status}
 import com.twitter.util.{Return, Try}
+import scala.collection.Set
 import play.api.libs.json.{JsObject, JsString}
 
 class ResponseComparison(telemetry: Telemetry) {
@@ -103,7 +104,13 @@ class ResponseComparison(telemetry: Telemetry) {
     statusCodeDifferenceCounter.labels(legacyRes.statusCode.toString, migrationRes.statusCode.toString).inc()
   }
 
-  private def reportAttributesOnlyPresentInOneResponse(legacyJson: JsObject, migrationJson: JsObject): Unit = {
+  case class AttributesDifference(
+    attributesOnlyInLegacy: Set[String],
+    attributesOnlyInMigration: Set[String],
+    attributesWithDifferentValues: Set[String]
+  )
+
+  private def detectAttributesOnlyPresentInOneResponse(legacyJson: JsObject, migrationJson: JsObject): (Set[String], Set[String]) = {
     // reposts_count, likes_count
     //    Present in the legacy response for compatibility with the android app. No longer relevant,
     //    and therefore not migrated.
@@ -120,6 +127,12 @@ class ResponseComparison(telemetry: Telemetry) {
     val migrationAttributes = migrationJson.fieldSet.map(_._1)
     val attributesOnlyInLegacy = legacyAttributes -- migrationAttributes -- ignoredLegacyAttributes
     val attributesOnlyInMigration = migrationAttributes -- legacyAttributes -- ignoredMigrationAttributes
+
+    (attributesOnlyInLegacy, attributesOnlyInMigration)
+  }
+
+  private def reportAttributesOnlyPresentInOneResponse(legacyJson: JsObject, migrationJson: JsObject): Unit = {
+    val (attributesOnlyInLegacy, attributesOnlyInMigration) = detectAttributesOnlyPresentInOneResponse(legacyJson, migrationJson)
 
     attributesOnlyInLegacy.foreach(attr => attributeOnlyPresentInCounter.labels("legacy", attr).inc())
     attributesOnlyInMigration.foreach(attr => attributeOnlyPresentInCounter.labels("migration", attr).inc())
