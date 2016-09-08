@@ -1,13 +1,18 @@
 package com.soundcloud.publicApiStrangler.singleTrackEndpointMigration
 
+import com.soundcloud.bff.JsNumber
+import com.soundcloud.jvmkit.logging.SoundCloudLoggerFactory
 import com.soundcloud.jvmkit.telemetry.Telemetry
 import com.soundcloud.scalakit.json.Json
 import com.twitter.finagle.http.{HeaderMap, Request, Response, Status}
 import com.twitter.util.{Return, Try}
+
 import scala.collection.Set
 import play.api.libs.json.{JsObject, JsString}
 
 class ResponseComparison(telemetry: Telemetry) {
+  private val logger = SoundCloudLoggerFactory.getLogger(this.getClass.getName)
+
   val statusCodeDifferenceCounter = telemetry.counter(
     "single_track_endpoint_status_code_difference",
     "counter for response comparison where status codes are different",
@@ -64,12 +69,9 @@ class ResponseComparison(telemetry: Telemetry) {
     val legacyJsonTry = Try(Json.fromString(legacyJson).as[JsObject])
     val migrationJsonTry = Try(Json.fromString(migrationJson).as[JsObject])
 
-
     (legacyJsonTry, migrationJsonTry) match {
-      case (Return(legacyJson), Return(migrationJson)) => {
-        reportAttributesOnlyPresentInOneResponse(legacyJson, migrationJson)
-        reportAttributeValueDifferences(legacyJson, migrationJson)
-      }
+      case (Return(legacyJson), Return(migrationJson)) =>
+        reportAttributeDifferences(legacyJson, migrationJson)
       case (legacyResult, migrationResult) =>
         reportJsonFailure(request, legacyRes, migrationRes, legacyResult, migrationResult)
     }
@@ -104,12 +106,6 @@ class ResponseComparison(telemetry: Telemetry) {
     statusCodeDifferenceCounter.labels(legacyRes.statusCode.toString, migrationRes.statusCode.toString).inc()
   }
 
-  case class AttributesDifference(
-    attributesOnlyInLegacy: Set[String],
-    attributesOnlyInMigration: Set[String],
-    attributesWithDifferentValues: Set[String]
-  )
-
   private def detectAttributesOnlyPresentInOneResponse(legacyJson: JsObject, migrationJson: JsObject): (Set[String], Set[String]) = {
     // reposts_count, likes_count
     //    Present in the legacy response for compatibility with the android app. No longer relevant,
@@ -131,7 +127,7 @@ class ResponseComparison(telemetry: Telemetry) {
     (attributesOnlyInLegacy, attributesOnlyInMigration)
   }
 
-  private def detectAttributeValueDifferences(legacyJson: JsObject, migrationJson: JsObject): Set[String] = {
+  private def detectAttributesWithDifferentValues(legacyJson: JsObject, migrationJson: JsObject): Set[String] = {
     val legacyAttributes = legacyJson.fieldSet.map(_._1)
     val migrationAttributes = migrationJson.fieldSet.map(_._1)
     val attributesPresentInBothResponses = legacyAttributes.intersect(migrationAttributes)
@@ -161,17 +157,19 @@ class ResponseComparison(telemetry: Telemetry) {
     }
   }
 
-  private def reportAttributesOnlyPresentInOneResponse(legacyJson: JsObject, migrationJson: JsObject): Unit = {
+  private def reportAttributeDifferences(legacyJson: JsObject, migrationJson: JsObject): Unit = {
     val (attributesOnlyInLegacy, attributesOnlyInMigration) = detectAttributesOnlyPresentInOneResponse(legacyJson, migrationJson)
+    val attributesWithDifferentValues = detectAttributesWithDifferentValues(legacyJson, migrationJson)
+
+    val attributesWithDifferences = attributesOnlyInLegacy ++ attributesOnlyInMigration ++ attributesWithDifferentValues
+    if (attributesWithDifferences.nonEmpty) {
+      val trackId = (legacyJson \ "id").as[JsNumber].value
+      logger.info(s"Found different responses for legacy/migration for track soundcloud:tracks:${trackId}")
+    }
 
     attributesOnlyInLegacy.foreach(attributeOnlyPresentInCounter.labels("legacy", _).inc())
     attributesOnlyInMigration.foreach(attributeOnlyPresentInCounter.labels("migration", _).inc())
-  }
-
-  private def reportAttributeValueDifferences(legacyJson: JsObject, migrationJson: JsObject): Unit = {
-    val differentAttributes = detectAttributeValueDifferences(legacyJson, migrationJson)
-
-    differentAttributes.foreach(attributeValueDifferentCounter.labels(_).inc())
+    attributesWithDifferentValues.foreach(attributeValueDifferentCounter.labels(_).inc())
   }
 
   private def getDifferentHeaders(legacyHeaders: HeaderMap, migrationHeaders: HeaderMap): Seq[String] = {

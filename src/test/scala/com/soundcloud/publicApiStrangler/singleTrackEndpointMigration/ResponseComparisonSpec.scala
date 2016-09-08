@@ -80,8 +80,8 @@ class ResponseComparisonSpec extends UnitSpecification {
     }
 
     "reports attributes that have different values" in new Context {
-      val legacyRes = generateResponse("""{"kind": "track", "sounds_really_great": "true"}""")
-      val migrationRes = generateResponse("""{"kind": "track", "sounds_really_great": "false"}""")
+      val legacyRes = generateResponse("""{"kind": "track", "id": 4, "sounds_really_great": "true"}""")
+      val migrationRes = generateResponse("""{"kind": "track", "id": 4, "sounds_really_great": "false"}""")
 
       responseComparison.report(Request(), legacyRes, migrationRes)
       val value = collectorRegistry.getSampleValue(
@@ -93,8 +93,8 @@ class ResponseComparisonSpec extends UnitSpecification {
     }
 
     "ignores ISRC when comparing attributes" in new Context {
-      val legacyRes = generateResponse("""{"kind": "track", "isrc": "foo"}""")
-      val migrationRes = generateResponse("""{"kind": "track", "isrc": "bar"}""")
+      val legacyRes = generateResponse("""{"kind": "track", "id": 4, "isrc": "foo"}""")
+      val migrationRes = generateResponse("""{"kind": "track", "id": 4, "isrc": "bar"}""")
 
       responseComparison.report(Request(), legacyRes, migrationRes)
       val value = collectorRegistry.getSampleValue(
@@ -106,8 +106,8 @@ class ResponseComparisonSpec extends UnitSpecification {
     }
 
     "treats HTTP/HTTPS as identical when comparing permalink_url attribute" in new Context {
-      val legacyRes = generateResponse("""{"kind": "track", "permalink_url": "http://example.com/123"}""")
-      val migrationRes = generateResponse("""{"kind": "track", "permalink_url": "https://example.com/123"}""")
+      val legacyRes = generateResponse("""{"kind": "track", "id": 4, "permalink_url": "http://example.com/123"}""")
+      val migrationRes = generateResponse("""{"kind": "track", "id": 4, "permalink_url": "https://example.com/123"}""")
 
       responseComparison.report(Request(), legacyRes, migrationRes)
       val value = collectorRegistry.getSampleValue(
@@ -119,8 +119,8 @@ class ResponseComparisonSpec extends UnitSpecification {
     }
 
     "records permalink_url differences" in new Context {
-      val legacyRes = generateResponse("""{"kind": "track", "permalink_url": "http://example.com/456"}""")
-      val migrationRes = generateResponse("""{"kind": "track", "permalink_url": "https://example.com/123"}""")
+      val legacyRes = generateResponse("""{"kind": "track", "id": 4, "permalink_url": "http://example.com/456"}""")
+      val migrationRes = generateResponse("""{"kind": "track", "id": 4, "permalink_url": "https://example.com/123"}""")
 
       responseComparison.report(Request(), legacyRes, migrationRes)
       val value = collectorRegistry.getSampleValue(
@@ -132,8 +132,8 @@ class ResponseComparisonSpec extends UnitSpecification {
     }
 
     "ignores download_url when only present in migrated response" in new Context {
-      val legacyRes = generateResponse("""{"kind": "track"}""")
-      val migrationRes = generateResponse("""{"kind": "track", "download_url": "http://example.com/muzik.mp5"}""")
+      val legacyRes = generateResponse("""{"kind": "track", "id": 4}""")
+      val migrationRes = generateResponse("""{"kind": "track", "id": 4, "download_url": "http://example.com/muzik.mp5"}""")
 
       responseComparison.report(Request(), legacyRes, migrationRes)
       collectorRegistry.getSampleValue(
@@ -149,8 +149,8 @@ class ResponseComparisonSpec extends UnitSpecification {
     }
 
     "records download_url difference when present in both" in new Context {
-      val legacyRes = generateResponse("""{"kind": "track", "download_url": "http://example.com/happy_snail_song.mp3"}""")
-      val migrationRes = generateResponse("""{"kind": "track", "download_url": "http://example.com/muzik.mp5"}""")
+      val legacyRes = generateResponse("""{"kind": "track", "id": 4, "download_url": "http://example.com/happy_snail_song.mp3"}""")
+      val migrationRes = generateResponse("""{"kind": "track", "id": 4, "download_url": "http://example.com/muzik.mp5"}""")
 
       responseComparison.report(Request(), legacyRes, migrationRes)
       val value = collectorRegistry.getSampleValue(
@@ -162,8 +162,8 @@ class ResponseComparisonSpec extends UnitSpecification {
     }
 
     "ignores stream_url when only present in migrated response" in new Context {
-      val legacyRes = generateResponse("""{"kind": "track"}""")
-      val migrationRes = generateResponse("""{"kind": "track", "stream_url": "http://example.com/muzik.mp5"}""")
+      val legacyRes = generateResponse("""{"kind": "track", "id": 4}""")
+      val migrationRes = generateResponse("""{"kind": "track", "id": 4, "stream_url": "http://example.com/muzik.mp5"}""")
 
       responseComparison.report(Request(), legacyRes, migrationRes)
       collectorRegistry.getSampleValue(
@@ -179,8 +179,8 @@ class ResponseComparisonSpec extends UnitSpecification {
     }
 
     "ignores reposts_count in legacy response" in new Context {
-      val legacyRes = generateResponse("""{"kind": "track", "reposts_count": 123}""")
-      val migrationRes = generateResponse("""{"kind": "track"}""")
+      val legacyRes = generateResponse("""{"kind": "track", "id": 4, "reposts_count": 123}""")
+      val migrationRes = generateResponse("""{"kind": "track", "id": 4}""")
 
       responseComparison.report(Request(), legacyRes, migrationRes)
       collectorRegistry.getSampleValue(
@@ -196,8 +196,8 @@ class ResponseComparisonSpec extends UnitSpecification {
     }
 
     "ignores likes_count in legacy response" in new Context {
-      val legacyRes = generateResponse("""{"kind": "track", "likes_count": 123}""")
-      val migrationRes = generateResponse("""{"kind": "track"}""")
+      val legacyRes = generateResponse("""{"kind": "track", "id": 4, "likes_count": 123}""")
+      val migrationRes = generateResponse("""{"kind": "track", "id": 4}""")
 
       responseComparison.report(Request(), legacyRes, migrationRes)
       collectorRegistry.getSampleValue(
@@ -213,8 +213,8 @@ class ResponseComparisonSpec extends UnitSpecification {
     }
 
     "records stream_url difference when present in both" in new Context {
-      val legacyRes = generateResponse("""{"kind": "track", "stream_url": "http://example.com/happy_snail_song.mp3"}""")
-      val migrationRes = generateResponse("""{"kind": "track", "stream_url": "http://example.com/muzik.mp5"}""")
+      val legacyRes = generateResponse("""{"kind": "track", "id": 4, "stream_url": "http://example.com/happy_snail_song.mp3"}""")
+      val migrationRes = generateResponse("""{"kind": "track", "id": 4, "stream_url": "http://example.com/muzik.mp5"}""")
 
       responseComparison.report(Request(), legacyRes, migrationRes)
       val value = collectorRegistry.getSampleValue(
