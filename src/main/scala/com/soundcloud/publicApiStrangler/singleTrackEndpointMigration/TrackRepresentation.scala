@@ -72,7 +72,7 @@ object TrackRepresentationSecretTokenDecorator {
   implicit val writes = Writes[TrackRepresentationSecretTokenDecorator] { dec =>
     Json.toJson(dec.wrapped).as[JsObject] ++ Json.obj(
       "secret_token" -> dec.track.secret_token,
-      "secret_url" -> s"https://api.soundcloud.com/tracks/${dec.track.urn.getIdentifier}?secret_token=${dec.track.secret_token}"
+      "secret_uri" -> s"https://api.soundcloud.com/tracks/${dec.track.urn.getIdentifier}?secret_token=${dec.track.secret_token}"
     )
   }
 }

@@ -141,7 +141,7 @@ class TrackRepresentationSecretTokenDecoratorSpec extends UnitSpecification {
     val json = Json.toJson(decorator)
 
     json \ "secret_token" ==== JsString("s-53CR37")
-    json \ "secret_url" ==== JsString("https://api.soundcloud.com/tracks/1324?secret_token=s-53CR37")
+    json \ "secret_uri" ==== JsString("https://api.soundcloud.com/tracks/1324?secret_token=s-53CR37")
   }
 }
 
