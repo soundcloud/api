@@ -176,27 +176,14 @@ object TrackRepresentation {
         "license" -> rep.track.license,
         "uri" -> s"https://api.soundcloud.com/tracks/${rep.id}",
         "user" -> rep.user,
-        // user_favorite --> liebling
         "permalink_url" -> rep.track.permalink_url,
         "artwork_url" -> rep.track.artwork.filename.map(imageUrl(_)),
-        // waveform_url --> media service
         "playback_count" -> rep.counts.playback_count,
         "download_count" -> rep.counts.download_count,
         "favoritings_count" -> rep.counts.favoritings_count,
         "comment_count" -> rep.counts.comment_count,
         "stream_url" -> s"https://api.soundcloud.com/tracks/${rep.id}/stream",
         "download_url" -> s"https://api.soundcloud.com/tracks/${rep.id}/download"
-
-        // Conditional attributes (not yet exposed)
-        // created_with
-        // attachments
-        // attachments_uri
-        // likes_count
-        // reposts_count
-        // downloads_remaining
-        // artwork_url
-        // user_favorite
-        // user_playback_count
       )
     }
 
