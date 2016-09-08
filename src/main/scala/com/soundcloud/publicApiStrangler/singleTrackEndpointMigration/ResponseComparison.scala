@@ -1,25 +1,12 @@
 package com.soundcloud.publicApiStrangler.singleTrackEndpointMigration
 
-import com.soundcloud.jvmkit.logging.SoundCloudLoggerFactory
 import com.soundcloud.jvmkit.telemetry.Telemetry
 import com.soundcloud.scalakit.json.Json
 import com.twitter.finagle.http.{HeaderMap, Request, Response, Status}
 import com.twitter.util.{Return, Try}
-import play.api.libs.json.{JsObject, JsString, JsValue}
-
-import scala.collection.JavaConversions._
+import play.api.libs.json.{JsObject, JsString}
 
 class ResponseComparison(telemetry: Telemetry) {
-
-  private val logger = SoundCloudLoggerFactory.getLogger("SingleTrackComparison")
-
-  val comparisonMetric = telemetry.histogram(
-    "single_track_endpoint_comparison",
-    "distribution of number of different attributes that are served from strangler implementation",
-    List(),
-    (0 to 60).toList.map(_.toDouble): _*
-  )
-
   val statusCodeDifferenceCounter = telemetry.counter(
     "single_track_endpoint_status_code_difference",
     "counter for response comparison where status codes are different",
@@ -45,17 +32,11 @@ class ResponseComparison(telemetry: Telemetry) {
   )
 
   def report(request: Request, legacyRes: Response, migrationRes: Response): Unit = {
-
     if (legacyRes.status != migrationRes.status) {
-
       reportStatusDifference(request, legacyRes, migrationRes)
-
     } else if (migrationRes.status != Status.Ok && migrationRes.status != Status.NotFound) {
-
       reportUnexpectedMoshiStatus(request, legacyRes, migrationRes)
-
     } else {
-
       val (legacyCallback, legacyJson) = pluckCallbackAndData(legacyRes.contentString)
       val (migrationCallback, migrationJson) = pluckCallbackAndData(migrationRes.contentString)
 
@@ -85,16 +66,8 @@ class ResponseComparison(telemetry: Telemetry) {
 
     (legacyJsonTry, migrationJsonTry) match {
       case (Return(legacyJson), Return(migrationJson)) => {
-
         reportAttributesOnlyPresentInOneResponse(legacyJson, migrationJson)
         reportAttributeValueDifferences(legacyJson, migrationJson)
-
-        val bodyDiffCount = calcBodyDiffCount(legacyJson, migrationJson)
-        if (bodyDiffCount > 0) {
-          reportBodyDifference
-        }
-
-        comparisonMetric.labels().observe(bodyDiffCount)
       }
       case (legacyResult, migrationResult) =>
         reportJsonFailure(request, legacyRes, migrationRes, legacyResult, migrationResult)
@@ -114,46 +87,19 @@ class ResponseComparison(telemetry: Telemetry) {
     }
   }
 
-  private def reportBodyDifference: Unit = {
-    failuresCounter.labels("differentBodyAttributesCount").inc()
-  }
-
   private def reportHeaderDifference(legacyRes: Response, migrationRes: Response, differentHeaders: Seq[String]): Unit = {
-    logger.info("============tracks/:id endpoint header difference=========")
-    logger.info(legacyRes.headerMap.toString)
-    logger.info(migrationRes.headerMap.toString)
-    logger.info(s"Different headers : $differentHeaders")
-
     failuresCounter.labels("differentHeaderCount").inc()
   }
 
   def reportJsonFailure(request: Request, legacyRes: Response, migrationRes: Response, legacyResult: Try[JsObject], migrationResult: Try[JsObject]): Unit = {
-    logger.info("============tracks/:id endpoint json parse failure=========")
-    logger.info(legacyRes.contentString)
-    logger.info(migrationRes.contentString)
-    logger.info(legacyResult.toString)
-    logger.info(migrationResult.toString)
-    logger.info(request.toString)
-    logger.info(request.headerMap.toString)
     failuresCounter.labels("jsonFailure").inc()
   }
 
   private def reportUnexpectedMoshiStatus(request: Request, legacyRes: Response, migrationRes: Response): Unit = {
-    logger.info("============tracks/:id endpoint unexpected moshi status=========")
-    logger.info(request.toString)
-    logger.info(request.headerMap.toString)
-    logger.info(s"legacy res : ${legacyRes.toString}")
-    logger.info(s"migration res : ${migrationRes.toString}")
     failuresCounter.labels("unexpectedMoshiStatusCode").inc()
   }
 
   private def reportStatusDifference(request: Request, legacyRes: Response, migrationRes: Response): Unit = {
-    logger.info("============tracks/:id endpoint status difference=========")
-    logger.info(request.toString)
-    logger.info(request.headerMap.toString)
-    logger.info(s"legacy res : ${legacyRes.toString}")
-    logger.info(s"migration res : ${migrationRes.toString}")
-    failuresCounter.labels("differentStatusCodes").inc()
     statusCodeDifferenceCounter.labels(legacyRes.statusCode.toString, migrationRes.statusCode.toString).inc()
   }
 
@@ -206,24 +152,6 @@ class ResponseComparison(telemetry: Telemetry) {
       if (isDifferent) attributeValueDifferentCounter.labels(attr).inc()
     })
   }
-
-  private def calcBodyDiffCount(legacyJson: JsObject, migrationJson: JsObject): Int = {
-    val extraAttributesCount = (migrationJson.fieldSet.map(_._1) diff legacyJson.fieldSet.map(_._1)).size
-
-    val differentAttributeCount = legacyJson.fields.count {
-      case (key, jsValue) => !isAttributeIdentical(key, jsValue, migrationJson \ key)
-    }
-
-    differentAttributeCount + extraAttributesCount
-  }
-
-  private def isAttributeIdentical(key: String, oldValue: JsValue, newValue: JsValue): Boolean =
-    oldValue == newValue ||
-      key == "isrc" ||
-      key == "playback_count" ||
-      key == "download_count" ||
-      key == "favoritings_count" ||
-      key == "comment_count"
 
   private def getDifferentHeaders(legacyHeaders: HeaderMap, migrationHeaders: HeaderMap): Seq[String] = {
     val extraHeaders = (migrationHeaders.keys.toSeq diff legacyHeaders.keys.toSeq)
