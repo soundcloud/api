@@ -29,13 +29,6 @@ class ResponseComparisonSpec extends UnitSpecification {
 
       responseComparison.report(Request(), legacyRes, migrationRes)
 
-      val failuresCount = collectorRegistry.getSampleValue(
-        "single_track_endpoint_failures",
-        Array("type", "system"),
-        Array("differentStatusCodes", "TEST-APP")
-      )
-      failuresCount ==== 1d
-
       val counterValue = collectorRegistry.getSampleValue(
         "single_track_endpoint_status_code_difference",
         Array("legacy", "migration", "system"),
@@ -60,27 +53,6 @@ class ResponseComparisonSpec extends UnitSpecification {
   }
 
   "body checks" >> {
-
-    "reports zero differences when responses are the same" in new Context {
-      List(
-        ("{\"kind\":\"track\",\"id\":987,\"user_id\":111}", "{\"kind\":\"track\",\"id\":987,\"user_id\":111}"),
-        ("{}", "{}"),
-        ("{\"id\":987}", "{\"id\":987}")
-      ).foreach {
-        case (legacyResponseString, migrationResponseString) =>
-          val legacyRes = generateResponse(legacyResponseString)
-          val migrationRes = generateResponse(migrationResponseString)
-
-          responseComparison.report(Request(), legacyRes, migrationRes)
-          val value = collectorRegistry.getSampleValue(
-            "single_track_endpoint_comparison_sum",
-            Array("system"),
-            Array("TEST-APP")
-          )
-          value ==== 0d
-      }
-    }
-
     "reports attributes that are only present in the legacy response" in new Context {
       val legacyRes = generateResponse("""{"kind": "track", "id": 100}""")
       val migrationRes = generateResponse("""{"kind": "track"}""")
@@ -108,8 +80,8 @@ class ResponseComparisonSpec extends UnitSpecification {
     }
 
     "reports attributes that have different values" in new Context {
-      val legacyRes = generateResponse("""{"kind": "track", "sounds_really_great": "true"}""")
-      val migrationRes = generateResponse("""{"kind": "track", "sounds_really_great": "false"}""")
+      val legacyRes = generateResponse("""{"kind": "track", "id": 4, "sounds_really_great": "true"}""")
+      val migrationRes = generateResponse("""{"kind": "track", "id": 4, "sounds_really_great": "false"}""")
 
       responseComparison.report(Request(), legacyRes, migrationRes)
       val value = collectorRegistry.getSampleValue(
@@ -121,8 +93,8 @@ class ResponseComparisonSpec extends UnitSpecification {
     }
 
     "ignores ISRC when comparing attributes" in new Context {
-      val legacyRes = generateResponse("""{"kind": "track", "isrc": "foo"}""")
-      val migrationRes = generateResponse("""{"kind": "track", "isrc": "bar"}""")
+      val legacyRes = generateResponse("""{"kind": "track", "id": 4, "isrc": "foo"}""")
+      val migrationRes = generateResponse("""{"kind": "track", "id": 4, "isrc": "bar"}""")
 
       responseComparison.report(Request(), legacyRes, migrationRes)
       val value = collectorRegistry.getSampleValue(
@@ -134,8 +106,8 @@ class ResponseComparisonSpec extends UnitSpecification {
     }
 
     "treats HTTP/HTTPS as identical when comparing permalink_url attribute" in new Context {
-      val legacyRes = generateResponse("""{"kind": "track", "permalink_url": "http://example.com/123"}""")
-      val migrationRes = generateResponse("""{"kind": "track", "permalink_url": "https://example.com/123"}""")
+      val legacyRes = generateResponse("""{"kind": "track", "id": 4, "permalink_url": "http://example.com/123"}""")
+      val migrationRes = generateResponse("""{"kind": "track", "id": 4, "permalink_url": "https://example.com/123"}""")
 
       responseComparison.report(Request(), legacyRes, migrationRes)
       val value = collectorRegistry.getSampleValue(
@@ -147,8 +119,8 @@ class ResponseComparisonSpec extends UnitSpecification {
     }
 
     "records permalink_url differences" in new Context {
-      val legacyRes = generateResponse("""{"kind": "track", "permalink_url": "http://example.com/456"}""")
-      val migrationRes = generateResponse("""{"kind": "track", "permalink_url": "https://example.com/123"}""")
+      val legacyRes = generateResponse("""{"kind": "track", "id": 4, "permalink_url": "http://example.com/456"}""")
+      val migrationRes = generateResponse("""{"kind": "track", "id": 4, "permalink_url": "https://example.com/123"}""")
 
       responseComparison.report(Request(), legacyRes, migrationRes)
       val value = collectorRegistry.getSampleValue(
@@ -160,8 +132,8 @@ class ResponseComparisonSpec extends UnitSpecification {
     }
 
     "ignores download_url when only present in migrated response" in new Context {
-      val legacyRes = generateResponse("""{"kind": "track"}""")
-      val migrationRes = generateResponse("""{"kind": "track", "download_url": "http://example.com/muzik.mp5"}""")
+      val legacyRes = generateResponse("""{"kind": "track", "id": 4}""")
+      val migrationRes = generateResponse("""{"kind": "track", "id": 4, "download_url": "http://example.com/muzik.mp5"}""")
 
       responseComparison.report(Request(), legacyRes, migrationRes)
       collectorRegistry.getSampleValue(
@@ -177,8 +149,8 @@ class ResponseComparisonSpec extends UnitSpecification {
     }
 
     "records download_url difference when present in both" in new Context {
-      val legacyRes = generateResponse("""{"kind": "track", "download_url": "http://example.com/happy_snail_song.mp3"}""")
-      val migrationRes = generateResponse("""{"kind": "track", "download_url": "http://example.com/muzik.mp5"}""")
+      val legacyRes = generateResponse("""{"kind": "track", "id": 4, "download_url": "http://example.com/happy_snail_song.mp3"}""")
+      val migrationRes = generateResponse("""{"kind": "track", "id": 4, "download_url": "http://example.com/muzik.mp5"}""")
 
       responseComparison.report(Request(), legacyRes, migrationRes)
       val value = collectorRegistry.getSampleValue(
@@ -190,8 +162,8 @@ class ResponseComparisonSpec extends UnitSpecification {
     }
 
     "ignores stream_url when only present in migrated response" in new Context {
-      val legacyRes = generateResponse("""{"kind": "track"}""")
-      val migrationRes = generateResponse("""{"kind": "track", "stream_url": "http://example.com/muzik.mp5"}""")
+      val legacyRes = generateResponse("""{"kind": "track", "id": 4}""")
+      val migrationRes = generateResponse("""{"kind": "track", "id": 4, "stream_url": "http://example.com/muzik.mp5"}""")
 
       responseComparison.report(Request(), legacyRes, migrationRes)
       collectorRegistry.getSampleValue(
@@ -207,8 +179,8 @@ class ResponseComparisonSpec extends UnitSpecification {
     }
 
     "ignores reposts_count in legacy response" in new Context {
-      val legacyRes = generateResponse("""{"kind": "track", "reposts_count": 123}""")
-      val migrationRes = generateResponse("""{"kind": "track"}""")
+      val legacyRes = generateResponse("""{"kind": "track", "id": 4, "reposts_count": 123}""")
+      val migrationRes = generateResponse("""{"kind": "track", "id": 4}""")
 
       responseComparison.report(Request(), legacyRes, migrationRes)
       collectorRegistry.getSampleValue(
@@ -224,8 +196,8 @@ class ResponseComparisonSpec extends UnitSpecification {
     }
 
     "ignores likes_count in legacy response" in new Context {
-      val legacyRes = generateResponse("""{"kind": "track", "likes_count": 123}""")
-      val migrationRes = generateResponse("""{"kind": "track"}""")
+      val legacyRes = generateResponse("""{"kind": "track", "id": 4, "likes_count": 123}""")
+      val migrationRes = generateResponse("""{"kind": "track", "id": 4}""")
 
       responseComparison.report(Request(), legacyRes, migrationRes)
       collectorRegistry.getSampleValue(
@@ -241,8 +213,8 @@ class ResponseComparisonSpec extends UnitSpecification {
     }
 
     "records stream_url difference when present in both" in new Context {
-      val legacyRes = generateResponse("""{"kind": "track", "stream_url": "http://example.com/happy_snail_song.mp3"}""")
-      val migrationRes = generateResponse("""{"kind": "track", "stream_url": "http://example.com/muzik.mp5"}""")
+      val legacyRes = generateResponse("""{"kind": "track", "id": 4, "stream_url": "http://example.com/happy_snail_song.mp3"}""")
+      val migrationRes = generateResponse("""{"kind": "track", "id": 4, "stream_url": "http://example.com/muzik.mp5"}""")
 
       responseComparison.report(Request(), legacyRes, migrationRes)
       val value = collectorRegistry.getSampleValue(
@@ -251,156 +223,6 @@ class ResponseComparisonSpec extends UnitSpecification {
         Array("stream_url", "TEST-APP")
       )
       value ==== 1d
-    }
-
-    "reports number of different attributes when responses are NOT the same" in new Context {
-      List(
-        ("{\"kind\":\"track\",\"id\":987,\"user_id\":111}",
-          "{\"kind\":\"track2\",\"id\":988,\"user_id\":111}") ->(2, 1),
-
-        ("{\"kind\":\"track\",\"id\":987,\"user_id\":111}",
-          "{\"kind\":\"track\",\"id\":988,\"user_id\":111}") ->((2 + 1), 2),
-
-        ("{\"kind\":\"track\",\"id\":987,\"user_id\":111}",
-          "{\"kind\":\"track2\",\"id\":981,\"user_id\":112}") ->((2 + 1 + 3), 3)
-      ).foreach {
-        case ((legacyResponseString, migrationResponseString), (expectedCount, index)) =>
-          val legacyRes = generateResponse(legacyResponseString)
-          val migrationRes = generateResponse(migrationResponseString)
-
-          responseComparison.report(Request(), legacyRes, migrationRes)
-          val value = collectorRegistry.getSampleValue(
-            "single_track_endpoint_comparison_sum",
-            Array("system"),
-            Array("TEST-APP")
-          )
-          value ==== expectedCount.toDouble
-
-          val failuresCount = collectorRegistry.getSampleValue(
-            "single_track_endpoint_failures",
-            Array("type", "system"),
-            Array("differentBodyAttributesCount", "TEST-APP")
-          )
-          failuresCount ==== index.toDouble
-      }
-    }
-
-    "reports missing attributes as difference" in new Context {
-      List(
-        ("{\"kind\":\"track\",\"id\":987,\"user_id\":111}",
-          "{\"kind\":\"track\",\"id\":987}") ->(1, 1),
-
-        ("{\"kind\":\"track\",\"id\":987,\"user_id\":111}",
-          "{\"kind\":\"track\"}") ->((1 + 2), 2),
-
-        ("{\"kind\":\"track\",\"id\":987,\"user_id\":111}",
-          "{}") ->((1 + 2 + 3), 3)
-      ).foreach {
-        case ((legacyResponseString, migrationResponseString), (expectedCount, index)) =>
-          val legacyRes = generateResponse(legacyResponseString)
-          val migrationRes = generateResponse(migrationResponseString)
-
-          responseComparison.report(Request(), legacyRes, migrationRes)
-          val value = collectorRegistry.getSampleValue(
-            "single_track_endpoint_comparison_sum",
-            Array("system"),
-            Array("TEST-APP")
-          )
-          value ==== expectedCount.toDouble
-
-          val failuresCount = collectorRegistry.getSampleValue(
-            "single_track_endpoint_failures",
-            Array("type", "system"),
-            Array("differentBodyAttributesCount", "TEST-APP")
-          )
-          failuresCount ==== index.toDouble
-      }
-    }
-
-    "reports extra attributes as difference" in new Context {
-      List(
-        ("{\"kind\":\"track\",\"id\":987,\"user_id\":111}",
-          "{\"kind\":\"track\",\"id\":987,\"user_id\":111,\"user_id_2\":111}") ->(1, 1),
-
-        ("{\"kind\":\"track\"}",
-          "{\"kind\":\"track\",\"id\":988,\"user_id\":111}") ->((1 + 2), 2)
-      ).foreach {
-        case ((legacyResponseString, migrationResponseString), (expectedCount, index)) =>
-          val legacyRes = generateResponse(legacyResponseString)
-          val migrationRes = generateResponse(migrationResponseString)
-
-          responseComparison.report(Request(), legacyRes, migrationRes)
-          val value = collectorRegistry.getSampleValue(
-            "single_track_endpoint_comparison_sum",
-            Array("system"),
-            Array("TEST-APP")
-          )
-          value ==== expectedCount.toDouble
-
-          val failuresCount = collectorRegistry.getSampleValue(
-            "single_track_endpoint_failures",
-            Array("type", "system"),
-            Array("differentBodyAttributesCount", "TEST-APP")
-          )
-          failuresCount ==== index.toDouble
-      }
-    }
-
-    "does not report ISRC differences" in new Context {
-      List(
-        ("{\"kind\":\"track\",\"id\":987,\"isrc\":\"D0NK3Y\"}",
-          "{\"kind\":\"track\",\"id\":987,\"isrc\":\"D0NK3Y\"}"),
-
-        ("{\"kind\":\"track\",\"id\":987,\"isrc\":\"D0NK3Y\"}",
-          "{\"kind\":\"track\",\"id\":987,\"isrc\":\"DONK4Y\"}")
-      ).foreach {
-        case ((legacyResponseString, migrationResponseString)) =>
-          val legacyRes = generateResponse(legacyResponseString)
-          val migrationRes = generateResponse(migrationResponseString)
-
-          responseComparison.report(Request(), legacyRes, migrationRes)
-          val value = collectorRegistry.getSampleValue(
-            "single_track_endpoint_comparison_sum",
-            Array("system"),
-            Array("TEST-APP")
-          )
-          value ==== 0.0d
-
-          val failuresCount = collectorRegistry.getSampleValue(
-            "single_track_endpoint_failures",
-            Array("type", "system"),
-            Array("differentBodyAttributesCount", "TEST-APP")
-          )
-          failuresCount ==== null
-      }
-    }
-
-    "does not report count differences" in new Context {
-      List(
-        ("{\"playback_count\":1}", "{\"playback_count\":2}"),
-        ("{\"download_count\":1}", "{\"download_count\":2}"),
-        ("{\"favoritings_count\":1}", "{\"favoritings_count\":2}"),
-        ("{\"comment_count\":1}", "{\"comment_count\":2}")
-      ).foreach {
-        case ((legacyResponseString, migrationResponseString)) =>
-          val legacyRes = generateResponse(legacyResponseString)
-          val migrationRes = generateResponse(migrationResponseString)
-
-          responseComparison.report(Request(), legacyRes, migrationRes)
-          val value = collectorRegistry.getSampleValue(
-            "single_track_endpoint_comparison_sum",
-            Array("system"),
-            Array("TEST-APP")
-          )
-          value ==== 0.0d
-
-          val failuresCount = collectorRegistry.getSampleValue(
-            "single_track_endpoint_failures",
-            Array("type", "system"),
-            Array("differentBodyAttributesCount", "TEST-APP")
-          )
-          failuresCount ==== null
-      }
     }
 
     "reports any errors happening during comparison" in new Context {
@@ -432,12 +254,6 @@ class ResponseComparisonSpec extends UnitSpecification {
       val migrationRes = generateResponse("/**/__jp11({\"kind\":\"track\",\"id\":270851500,\"user\":{\"id\":2541840,\"kind\":\"user\"}});")
 
       responseComparison.report(Request(), legacyRes, migrationRes)
-      val jsonComparisonFailure = collectorRegistry.getSampleValue(
-        "single_track_endpoint_comparison_sum",
-        Array("system"),
-        Array("TEST-APP")
-      )
-      jsonComparisonFailure ==== 0d
       val jsonpTextFailure = collectorRegistry.getSampleValue(
         "single_track_endpoint_failures",
         Array("type", "system"),
