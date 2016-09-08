@@ -87,8 +87,8 @@ trait TrackRepresentationLikeSpecContext {
     permalink_url = Some("http://soundcloud.com/nirvana/plsty-remix"),
     public = true,
     secret_token = "s-53CR37",
-    user_tags = List("dubstep", "folk"),
-    machine_tags = List("system:foo", "system:bar"),
+    user_tags = List("dubstep", "folk", "tag with spaces"),
+    machine_tags = List("system:foo", "system:bar", "awesomeness:very high"),
     title = "Baby Bash",
     uid = None,
     api_streamable = None,
@@ -269,7 +269,7 @@ class TrackRepresentationSpec extends UnitSpecification {
     trackJson \ "duration" ==== JsNumber(120)
     trackJson \ "commentable" ==== JsBoolean(false)
     trackJson \ "last_modified" ==== JsString("2016/08/08 13:28:53 +0000")
-    trackJson \ "tag_list" ==== JsString("dubstep, folk, system:foo, system:bar")
+    trackJson \ "tag_list" ==== JsString("dubstep folk \"tag with spaces\" system:foo system:bar \"awesomeness:very high\"")
     trackJson \ "permalink" ==== JsString("plsty-remix")
     trackJson \ "streamable" ==== JsBoolean(false)
     trackJson \ "embeddable_by" ==== JsString("me")

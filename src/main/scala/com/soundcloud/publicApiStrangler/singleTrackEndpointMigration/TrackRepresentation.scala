@@ -151,7 +151,7 @@ object TrackRepresentation {
         "original_content_size" -> rep.audioMetadata.original_content_size,
         "last_modified" -> rep.track.last_modified.toString(dateTimeFormat),
         "sharing" -> (if (rep.track.public) "public" else "private"),
-        "tag_list" -> (rep.track.user_tags ++ rep.track.machine_tags).mkString(", "),
+        "tag_list" -> mkTagList(rep),
         "permalink" -> rep.track.permalink,
         "streamable" -> rep.track.streamable,
         "embeddable_by" -> rep.track.embeddableBy,
@@ -199,6 +199,15 @@ object TrackRepresentation {
         // user_playback_count
       )
     }
+
+    private def mkTagList(rep: TrackRepresentation): String =
+      (rep.track.user_tags ++ rep.track.machine_tags).map(quoteTagIfNecessary _)mkString(" ")
+
+    private def quoteTagIfNecessary(tag: String): String =
+      if (tag.exists(_.isSpaceChar))
+        "\"" + tag + "\""
+      else
+        tag
 
     private def imageUrl(imageFile: String): String = {
       val s3FilenamePattern = """(.*)-original\.(\w*)""".r
