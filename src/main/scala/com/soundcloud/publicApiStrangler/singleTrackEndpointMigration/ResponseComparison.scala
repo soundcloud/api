@@ -161,15 +161,21 @@ class ResponseComparison(telemetry: Telemetry) {
     val (attributesOnlyInLegacy, attributesOnlyInMigration) = detectAttributesOnlyPresentInOneResponse(legacyJson, migrationJson)
     val attributesWithDifferentValues = detectAttributesWithDifferentValues(legacyJson, migrationJson)
 
+    lazy val trackId = (legacyJson \ "id").as[JsNumber].value
+
     val attributesWithDifferences = attributesOnlyInLegacy ++ attributesOnlyInMigration ++ attributesWithDifferentValues
     if (attributesWithDifferences.nonEmpty) {
-      val trackId = (legacyJson \ "id").as[JsNumber].value
       logger.info(s"Found different responses for legacy/migration for track soundcloud:tracks:$trackId")
     }
 
     attributesOnlyInLegacy.foreach(attributeOnlyPresentInCounter.labels("legacy", _).inc())
     attributesOnlyInMigration.foreach(attributeOnlyPresentInCounter.labels("migration", _).inc())
     attributesWithDifferentValues.foreach(attributeValueDifferentCounter.labels(_).inc())
+
+    val attributesToPrint = attributesWithDifferences.intersect(printableAttributes)
+    attributesToPrint.foreach { attr =>
+      logger.info(s"soundcloud:tracks:$trackId, attr $attr: legacy = ${legacyJson \ attr}, migration = ${migrationJson \ attr}")
+    }
   }
 
   private def getDifferentHeaders(legacyHeaders: HeaderMap, migrationHeaders: HeaderMap): Seq[String] = {
@@ -188,6 +194,10 @@ class ResponseComparison(telemetry: Telemetry) {
 
     extraHeaders ++ differentAttributeCount
   }
+
+  private val printableAttributes = Set(
+    "tag_list"
+  )
 
   private val ignoredHeaders = Seq(
     "Access-Control-Allow-Headers",
