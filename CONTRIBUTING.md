@@ -1,9 +1,5 @@
 # Developing Public API Strangler
 
-## Requirements
-
-You’ll need [Docker](https://www.docker.com/products/docker).
-
 ## Useful `make` targets
 
 * `make precheckin` – run all the tests.
