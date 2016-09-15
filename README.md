@@ -10,12 +10,6 @@ See [CONTRIBUTING.md](https://github.com/soundcloud/public-api-strangler/blob/ma
 
 ## Notes
 
-### Search leaving Mothership
-
-Routing of search requests is controlled via rollout flags. See
-[Search Wiki](https://github.com/soundcloud/search/wiki/Search-Firefighting#search-in-public-api-strangler-is-misbehaving)
-for instructions on how to change rollout percentage values.
-
 ### Rate limiting whitelist
 
 The rate limiting feature makes use of a whitelist of client application URNs
