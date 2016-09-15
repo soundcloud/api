@@ -1,19 +1,23 @@
 # Developing Public API Strangler
 
+## Useful `make` targets
+
+* `make precheckin` – run all the tests.
+* `make unit-test` – run just the unit tests.
+* `make interactive` – start an SBT console.
+
+## Running Public API Strangler locally
+
+```
+make -f Makefile.pipeline package && make run
+curl "$(docker-ip):5000/my-endpoint"
+docker logs -f publicapistrangler_publicapistrangler_1
+```
+
 ## Making a change
 
-Master should always have the version currently deployed. It is fine to commit directly to master and make sure that cd is always green and deployed. PR's are mostly used for asking for feedback, comments and external contributions, not as a hard requirement to ship code. It is fine to put something in production and then, in a separate commit, address stylistic and non blocking issues.
+Master should always have the version currently deployed. It is fine to commit directly to master, and make sure that the CD pipeline is always green, and that master is always deployed. Pull requests are mostly used for asking for feedback, comments and external contributions, and are not treated as a hard requirement to ship code. Deploy early and often.
 
-For external contributions (coming from non mantainers of this system) to these projects, as Service Custodians we (core-services) kindly ask people to open PR's or pair with one of us in order to make sure that these contributions aligns with the plans and the idioms in this codebase and our release schedules.
+For external contributions (contributions coming from non-maintainers of this system), please talk to us (Core Services) to ensure that we’re aligned on the contribution, and then open a pull request, or—even better—ask to pair with one of us.
 
-Please do not merge / deploy your own changes, and have the service custodians (core-services) perform the merge.
-
-## Local environment
-
-Depends on [boot2docker](http://boot2docker.io/) and [docker-compose](https://docs.docker.com/compose) being setup and working properly. Here are some articles on how to get these two installed. 
-
-* [Docker compose](https://docs.docker.com/compose/install/)
-* [Docker on MacOSX](https://docs.docker.com/installation/mac/)
-* [Docker on Ubuntu](https://docs.docker.com/installation/ubuntulinux/)
-
-make precheckin (run all the integration and unit tests. Run this before commiting)
+Do not merge or deploy changes unless you are a Core Services team member.
