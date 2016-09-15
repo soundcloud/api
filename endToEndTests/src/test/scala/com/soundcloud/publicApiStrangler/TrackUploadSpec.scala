@@ -28,7 +28,7 @@ class TrackUploadSpec extends UnitSpecification with SpinningUpAppSupport {
       }
 
       // Build request
-      val request = new HttpPost(s"http://${dockerHostName}:5000/tracks")
+      val request = new HttpPost(s"http://strangler:5000/tracks")
       val reqEntity = MultipartEntityBuilder.create()
         .addBinaryBody("track[asset_data]", inputStream, ContentType.APPLICATION_OCTET_STREAM, "donkey_song.mp3")
         .build()
