@@ -65,9 +65,6 @@ trait SpinningUpAppSupport { this: Specification =>
     private def defaultHeaders = HeaderMap()
   }
 
-  def dockerHostName: String = "docker"
-
-
   class ServerUnderTestException(reason: String) extends RuntimeException(reason)
 
   class IntegrationTestHttpResponse(response: Response) {

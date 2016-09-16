@@ -10,13 +10,13 @@ import org.apache.curator.retry.ExponentialBackoffRetry
 class RateLimitingSanitySpecification extends UnitSpecification with SpinningUpAppSupport {
 
   trait Context extends super.Context {
-    val server = TestServer(dockerHostName, 5000)
-    val adminServer = TestServer(dockerHostName, 5001)
+    val server = TestServer("strangler", 5000)
+    val adminServer = TestServer("strangler", 5001)
 
     val config = new AppConfig
 
     val zkClient = {
-      val zookeeperServers = "docker:2181"
+      val zookeeperServers = "zookeeper:2181"
       val baseSleepTimeInMilliseconds = 1000
       val maxNumberOfRetries = 5
       val retryPolicy = new ExponentialBackoffRetry(baseSleepTimeInMilliseconds, maxNumberOfRetries)

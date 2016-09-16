@@ -9,7 +9,7 @@ class SessionExemptedEndpointsSpec extends UnitSpecification with SpinningUpAppS
   "Public API Strangler" should {
 
     trait Context extends Scope {
-      val server = TestServer(dockerHostName, 5000)
+      val server = TestServer("strangler", 5000)
     }
 
     "return success when probing health check endpoint" in new Context {
