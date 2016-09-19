@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+
+url=$1
+interval=10
+
+until $(curl --output /dev/null --silent --fail $url); do
+    echo "Waiting for $url"
+    sleep $interval
+done
