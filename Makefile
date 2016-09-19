@@ -2,6 +2,7 @@ PUBLIC_API_STRANGLER_VERSION ?= $(shell artifact-manager package-version)
 
 STRANGLER_CONTAINER ?= $(shell docker ps --filter "ancestor=docker.dev.s-cloud.net/public-api-strangler:$(PUBLIC_API_STRANGLER_VERSION)" --format "{{.Names}}")
 ZOOKEEPER_CONTAINER ?= $(shell docker ps --filter "ancestor=docker.dev.s-cloud.net/sc-zookeeper" --format "{{.Names}}")
+DOCKER_IP ?= $(shell docker-ip)
 
 PWD?=$(HOME)
 define SBT
@@ -21,7 +22,8 @@ precheckin:
 	docker-compose stop
 
 end-to-end-test: _dev_docker_compose
-	docker ps -a
+	bin/wait-for-http $(DOCKER_IP):4567/-/health # wait for publicapistub
+	bin/wait-for-http $(DOCKER_IP):5000/-/health # wait for publicapistrangler
 	crun sbt --docker-options="--link=$(STRANGLER_CONTAINER):strangler --link=$(ZOOKEEPER_CONTAINER):zookeeper" -- $(SBT) endToEnd/test
 
 test: unit-test
