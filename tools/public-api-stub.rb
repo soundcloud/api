@@ -34,7 +34,7 @@ end
 
 get '/tracks/:id' do
   content_type 'application/json'
-  '{}'
+  '{"id":12345}'
 end
 
 get '/-/health' do
