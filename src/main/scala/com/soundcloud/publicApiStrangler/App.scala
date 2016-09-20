@@ -13,6 +13,7 @@ import com.soundcloud.jvmkit.zookeeper.CuratorFrameworkFactory
 import com.soundcloud.publicApiStrangler.authorization._
 import com.soundcloud.publicApiStrangler.client._
 import com.soundcloud.publicApiStrangler.client.followcounts.FollowCountsClient
+import com.soundcloud.publicApiStrangler.client.mediaservice.MediaServiceUrlGenClient
 import com.soundcloud.publicApiStrangler.client.pubmese.PubmeseClient
 import com.soundcloud.publicApiStrangler.client.stitch.StitchClient
 import com.soundcloud.publicApiStrangler.controller._
@@ -68,6 +69,15 @@ object App
       telemetry
     )
   val stitchClient = new StitchClient(stitchJsonClient)
+
+  val mediaServiceUrlGenJsonClient =
+    JsonClient(
+      ResourceName("mediaservice_urlgen"),
+      ServiceEntryPoint(config.get(ResourceName("MEDIASERVICE"), ConfigConvention.SRV_RECORD)),
+      config,
+      telemetry
+    )
+  val mediaServiceUrlGenClient = new MediaServiceUrlGenClient(mediaServiceUrlGenJsonClient)
 
   private val okidokiService = JsonService(
     ServiceConfig("okidoki", config.get(ResourceName("OKIDOKI"), ConfigConvention.SRV_RECORD), config)
@@ -202,7 +212,8 @@ object App
       richOkidokiClient,
       pubmeseClient,
       stitchClient,
-      lieblingClient
+      lieblingClient,
+      mediaServiceUrlGenClient
     )
 
     new SingleTrackController(

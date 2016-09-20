@@ -1,6 +1,7 @@
 package com.soundcloud.publicApiStrangler.singleTrackEndpointMigration
 
 import com.soundcloud.jvmkit.{Country, UserSession}
+import com.soundcloud.publicApiStrangler.client.mediaservice.WaveformUrl
 import com.soundcloud.publicApiStrangler.client.{DomainLocking, TrackAudioMetadata}
 import com.soundcloud.publicApiStrangler.client.pubmese.Isrc
 import com.soundcloud.publicApiStrangler.client.stitch.StitchCounts
@@ -19,6 +20,7 @@ object TrackRepresentationLike {
     case t: TrackRepresentationDomainLockingsDecorator => TrackRepresentationDomainLockingsDecorator.writes.writes(t)
     case t: TrackRepresentationUserFavoriteDecorator => TrackRepresentationUserFavoriteDecorator.writes.writes(t)
     case t: TrackRepresentationUserPlaybackCountDecorator => TrackRepresentationUserPlaybackCountDecorator.writes.writes(t)
+    case t: TrackRepresentationWaveformUrlDecorator => TrackRepresentationWaveformUrlDecorator.writes.writes(t)
     case t: TrackRepresentation => TrackRepresentation.writes.writes(t)
   }
 
@@ -116,6 +118,21 @@ object TrackRepresentationDomainLockingsDecorator {
     Json.toJson(dec.wrapped).as[JsObject] ++ Json.obj(
       "domain_lockings" -> dec.domainLockings.map(dl => Json.obj("domain" -> dl.domain))
     )
+  }
+}
+
+case class TrackRepresentationWaveformUrlDecorator(
+  waveformUrls: Seq[WaveformUrl],
+  wrapped: TrackRepresentationLike
+) extends TrackRepresentationLike
+
+object TrackRepresentationWaveformUrlDecorator {
+  implicit val writes = Writes[TrackRepresentationWaveformUrlDecorator] { dec =>
+    val attribute = dec.waveformUrls.find(_.label == "stream") match {
+      case Some(url) => Json.obj("waveform_url" -> url.png)
+      case _ => Json.obj()
+    }
+    Json.toJson(dec.wrapped).as[JsObject] ++ attribute
   }
 }
 

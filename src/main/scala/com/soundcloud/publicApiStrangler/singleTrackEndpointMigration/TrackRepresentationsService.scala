@@ -1,5 +1,6 @@
 package com.soundcloud.publicApiStrangler.singleTrackEndpointMigration
 
+import com.soundcloud.publicApiStrangler.client.mediaservice.{MediaServiceUrlGenClient, WaveformUrl}
 import com.soundcloud.publicApiStrangler.client.{DomainLocking, RichOkidokiClient, TrackAudioMetadata}
 import com.soundcloud.publicApiStrangler.client.pubmese.{Isrc, PubmeseClient}
 import com.soundcloud.publicApiStrangler.client.stitch.{StitchClient, StitchCounts}
@@ -10,14 +11,14 @@ import com.soundcloud.service.client.LieblingClient
 import com.soundcloud.service.response.representation._
 import com.twitter.finagle.http.{Response, Status}
 import com.twitter.util.{Future, NonFatal}
-import play.api.libs.json.{Json => PlayJson}
 
 class TrackRepresentationsService(
   trackmetadataClient: TrackmetadataClient,
   okidokiClient: RichOkidokiClient,
   pubmeseClient: PubmeseClient,
   stitchClient: StitchClient,
-  lieblingClient: LieblingClient) {
+  lieblingClient: LieblingClient,
+  mediaUrlGenClient: MediaServiceUrlGenClient) {
 
   private val notFoundErrorString = """{"errors":[{"error_message":"404 - Not Found"}]}"""
   private val serviceUnavailableErrorString = """{"errors":[{"error_message":"503 - Service Unavailable"}]}"""
@@ -34,13 +35,14 @@ class TrackRepresentationsService(
         val userF = fetchUserForTrack(track, session)
         val labelF = fetchLabelForTrack(track, session)
         val isLikedF = fetchUserLikesTrack(track, session)
+        val waveformUrlsF = fetchWaveformUrls(track, session)
         val countsF = userF.flatMap {
           case Some(user) => stitchClient.countsForTrack(session, urn, user.urn).map(Some(_)).liftToTry.map(_.getOrElse(None))
           case None => Future.value(None)
         }
 
-        Future.join(isrcF, userF, countsF, labelF, geoblockingsF, domainlockingsF, audioF, isLikedF).map {
-          case (isrc, Some(user), counts, label, geoblockings, domainlockings, Some(audio), isLiked) =>
+        Future.join(isrcF, userF, countsF, labelF, geoblockingsF, domainlockingsF, audioF, isLikedF, waveformUrlsF).map {
+          case (isrc, Some(user), counts, label, geoblockings, domainlockings, Some(audio), isLiked, waveformUrls) =>
             val rep = buildTrackRepresentationLike(
               userSession = session,
               track = track,
@@ -51,7 +53,8 @@ class TrackRepresentationsService(
               geoblockings = geoblockings,
               domainlockings = domainlockings,
               trackAudioMetadata = audio,
-              isLiked = isLiked
+              isLiked = isLiked,
+              waveformUrls = waveformUrls
             )
 
             generateResponse(Status.Ok, jsonpWrapper(callback, Json.stringify(rep)))
@@ -93,7 +96,8 @@ class TrackRepresentationsService(
     geoblockings: Option[Geoblockings],
     domainlockings: Seq[DomainLocking],
     trackAudioMetadata: TrackAudioMetadata,
-    isLiked: Boolean
+    isLiked: Boolean,
+    waveformUrls: Seq[WaveformUrl]
   ): TrackRepresentationLike = {
     val basicTrackRep = TrackRepresentation(
       track = track,
@@ -117,6 +121,7 @@ class TrackRepresentationsService(
       rep = TrackRepresentationUserFavoriteDecorator(isLiked, rep)
       rep = TrackRepresentationUserPlaybackCountDecorator(rep)
     }
+    rep = TrackRepresentationWaveformUrlDecorator(waveformUrls, rep)
     rep
   }
 
@@ -144,6 +149,9 @@ class TrackRepresentationsService(
 
   private def fetchUser(userUrn: Urn, session: UserSession): Future[Option[User]] =
     okidokiClient.fetchUserObjects(session, Set(userUrn)).map(_.headOption)
+
+  private def fetchWaveformUrls(track: Track, session: UserSession): Future[Seq[WaveformUrl]] =
+    mediaUrlGenClient.waveformUrls(session, track.uid)
 
   private def getCounts(counts: Option[StitchCounts]): StitchCounts =
     counts.getOrElse(StitchCounts(0, 0, 0, 0))

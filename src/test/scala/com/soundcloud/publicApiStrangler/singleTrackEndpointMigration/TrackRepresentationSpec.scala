@@ -2,6 +2,7 @@ package com.soundcloud.publicApiStrangler.singleTrackEndpointMigration
 
 import com.soundcloud.bff.JsObject
 import com.soundcloud.jvmkit.UserSession
+import com.soundcloud.publicApiStrangler.client.mediaservice.WaveformUrl
 import com.soundcloud.publicApiStrangler.client.{DomainLocking, TrackAudioMetadata}
 import com.soundcloud.publicApiStrangler.client.pubmese.Isrc
 import com.soundcloud.publicApiStrangler.client.stitch.StitchCounts
@@ -90,7 +91,7 @@ trait TrackRepresentationLikeSpecContext {
     user_tags = List("dubstep", "folk", "tag with spaces"),
     machine_tags = List("system:foo", "system:bar", "awesomeness:very high"),
     title = "Baby Bash",
-    uid = None,
+    uid = Some("a1b2c3"),
     api_streamable = None,
     streamable = false,
     reveal_comments = false,
@@ -253,6 +254,43 @@ class TrackRepresentationUserPlaybackCountDecoratorSpec extends UnitSpecificatio
     val json = Json.toJson(decorator)
 
     json \ "user_playback_count" ==== JsNumber(1)
+  }
+}
+
+class TrackRepresentationWaveformUrlDecoratorSpec extends UnitSpecification {
+  trait Context extends Scope with TrackRepresentationLikeSpecContext {
+    implicit val writes = TrackRepresentationWaveformUrlDecorator.writes
+    val wrapped: TrackRepresentationLike = createTrackRepresentation()
+  }
+
+  "adds the PNG URL of the track's 'stream' waveform" in new Context {
+    val decorator = TrackRepresentationWaveformUrlDecorator(Seq(
+      WaveformUrl("stream",
+        "https://foo.sndcdn.com/stream/a1b2c3.json",
+        "https://bar.sndcdn.com/stream/a1b2c3.png"),
+      WaveformUrl("preview",
+        "https://foo.sndcdn.com/preview/a1b2c3.json",
+        "https://bar.sndcdn.com/preview/a1b2c3.png")), wrapped)
+    val json = Json.toJson(decorator)
+
+    (json \ "waveform_url").as[String] ==== "https://bar.sndcdn.com/stream/a1b2c3.png"
+  }
+
+  "does not add a waveform_url if there is no 'stream'-type waveform URL" in new Context {
+    val decorator = TrackRepresentationWaveformUrlDecorator(Seq(
+      WaveformUrl("honeybadger",
+        "https://foo.sndcdn.com/stream/a1b2c3.json",
+        "https://bar.sndcdn.com/stream/a1b2c3.png")), wrapped)
+    val json = Json.toJson(decorator)
+
+    json.as[JsObject].keys.contains("waveform_url") ==== false
+  }
+
+  "does not add a waveform_url if no waveforms are provided" in new Context {
+    val decorator = TrackRepresentationWaveformUrlDecorator(Seq.empty, wrapped)
+    val json = Json.toJson(decorator)
+
+    json.as[JsObject].keys.contains("waveform_url") ==== false
   }
 }
 
