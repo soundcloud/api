@@ -19,7 +19,7 @@ class MediaServiceUrlGenClient(jsonClient: JsonClient) {
   }
 
   private def parseUrls(json: JsValue): Seq[WaveformUrl] = {
-    (json \ "response" \ "urls").as[JsArray].value.map { urlJson =>
+    ((json \ "response")(0) \ "urls").as[JsArray].value.map { urlJson =>
       val label = (urlJson \ "label").as[String]
       val json = (urlJson \ "json").as[String]
       val png = (urlJson \ "png").as[String]

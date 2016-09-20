@@ -32,11 +32,11 @@ class MediaServiceUrlGenClientSpec extends UnitSpecification {
     val session = anonymousSession
     def response = Future.value(
       JsonResponse(OkStatus, Json.obj(
-        "response" -> Json.obj(
+        "response" -> Json.arr(Json.obj(
           "uid" -> uid,
           "urls" -> Json.arr(urlJson("stream", uid), urlJson("preview", uid))
         )
-      ))
+      )))
     )
     when(jsonClient.get(beTypedEqualTo(session), beTypedEqualTo(Path() / "waveforms"),
       beTypedEqualTo(Params("uid" -> uid)), any)).thenReturn(response)
