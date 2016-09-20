@@ -2,8 +2,16 @@
 
 url=$1
 interval=10
+attempts=0
+max_attempts=10
 
 until $(curl --output /dev/null --silent --fail $url); do
-    echo "Waiting for $url"
+    ((attempts++))
+    echo "Waiting for $url (attempt $attempts of $max_attempts)"
     sleep $interval
+    if [ "$attempts" -ge $max_attempts ]
+    then
+        echo "Timed out while waiting for $url"
+        break
+    fi
 done
