@@ -2,8 +2,7 @@ package com.soundcloud.publicApiStrangler.support
 
 import com.soundcloud.bff.ConfigComponent
 import com.soundcloud.jvmkit.ResourceName
-import com.soundcloud.jvmkit.config.DataSensitivity.NON_SENSITIVE
-import com.soundcloud.jvmkit.config.{ConfigConvention, DataSensitivity}
+import com.soundcloud.jvmkit.config.ConfigConvention.ADDRESS
 import com.soundcloud.jvmkit.telemetry.Telemetry
 import com.soundcloud.scalakit.finagle.http.HttpClientBuilder
 import com.soundcloud.scalakit.finagle.jsonservice.ServiceEntryPoint
@@ -23,7 +22,7 @@ trait PublicApiClientComponent {
     }
 
     new HttpClientBuilder(ResourceName("PUBLIC_API"),
-                          ServiceEntryPoint(config.get("PUBLIC_API_SRV_RECORD", NON_SENSITIVE)),
+                          ServiceEntryPoint(config.get(ResourceName("PUBLIC_API"), ADDRESS)),
                           config,
                           telemetry,
                           retry=Some(writeExceptions)).client

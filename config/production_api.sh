@@ -32,7 +32,7 @@ RATE_LIMIT_MEMCACHED_SERVERS="$DOCKER_IP"
 
 MOSHIMOSHI_BASE_URL="http://moshimoshi.int.s-cloud.net"
 
-PUBLIC_API_SRV_RECORD="dnssrv!http.passenger.prod.public-api.db.srv.int.s-cloud.net"
+PUBLIC_API_ADDRESS="dnssrv!http.passenger.prod.public-api.db.srv.int.s-cloud.net"
 PUBLIC_API_JSONCLIENT_REQUEST_TIMEOUT_MILLIS="30000"
 
 OKIDOKI_SRV_RECORD="dnssrv!http.okidoki.prod.moshimoshi.dd.srv.int.s-cloud.net"
