@@ -1,5 +1,6 @@
 package com.soundcloud.publicApiStrangler.singleTrackEndpointMigration
 
+import com.soundcloud.jvmkit.logging.SoundCloudLoggerFactory
 import com.soundcloud.publicApiStrangler.client.mediaservice.{MediaServiceUrlGenClient, WaveformUrl}
 import com.soundcloud.publicApiStrangler.client.{DomainLocking, RichOkidokiClient, TrackAudioMetadata}
 import com.soundcloud.publicApiStrangler.client.pubmese.{Isrc, PubmeseClient}
@@ -20,6 +21,7 @@ class TrackRepresentationsService(
   lieblingClient: LieblingClient,
   mediaUrlGenClient: MediaServiceUrlGenClient) {
 
+  private val logger = SoundCloudLoggerFactory.getLogger(this.getClass.getName)
   private val notFoundErrorString = """{"errors":[{"error_message":"404 - Not Found"}]}"""
   private val serviceUnavailableErrorString = """{"errors":[{"error_message":"503 - Service Unavailable"}]}"""
 
@@ -63,6 +65,7 @@ class TrackRepresentationsService(
         }
         .handle {
           case NonFatal(ex) =>
+            logger.error("Error while generating legacy response", ex)
             generateResponse(Status.ServiceUnavailable, jsonpWrapper(callback, serviceUnavailableErrorString))
         }
       case _ =>
