@@ -41,9 +41,9 @@ STITCH_ADDRESS="dnssrv!http.web.prod.stitch4counts.dd.srv.int.s-cloud.net"
 RATE_LIMIT_MEMCACHED_SERVERS="memcached"
 
 MOSHIMOSHI_BASE_URL="http://moshimoshi.int.s-cloud.net"
-PUBLIC_API_ADDRESS="publicapistub:4567"
 
-PUBLIC_API__REQUEST_TIMEOUT_MILLIS="300000"
+PUBLIC_API_ADDRESS="publicapistub:4567"
+PUBLIC_API_CLIENT_REQUEST_TIMEOUT_MILLIS="300000"
 
 OKIDOKI_SRV_RECORD="dnssrv!http.okidoki.prod.moshimoshi.dd.srv.int.s-cloud.net"
 
