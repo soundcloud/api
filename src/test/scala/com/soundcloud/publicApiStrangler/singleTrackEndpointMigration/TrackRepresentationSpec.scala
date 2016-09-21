@@ -323,7 +323,7 @@ class TrackRepresentationSpec extends UnitSpecification {
     trackJson \ "duration" ==== JsNumber(120)
     trackJson \ "commentable" ==== JsBoolean(false)
     trackJson \ "last_modified" ==== JsString("2016/08/08 13:28:53 +0000")
-    trackJson \ "tag_list" ==== JsString("dubstep folk \"tag with spaces\" system:foo system:bar \"awesomeness:very high\"")
+    trackJson \ "tag_list" ==== JsString("system:foo system:bar \"awesomeness:very high\" dubstep folk \"tag with spaces\"")
     trackJson \ "permalink" ==== JsString("plsty-remix")
     trackJson \ "streamable" ==== JsBoolean(false)
     trackJson \ "embeddable_by" ==== JsString("me")

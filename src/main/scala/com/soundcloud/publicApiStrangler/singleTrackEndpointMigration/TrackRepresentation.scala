@@ -220,7 +220,7 @@ object TrackRepresentation {
     }
 
     private def mkTagList(rep: TrackRepresentation): String =
-      (rep.track.user_tags ++ rep.track.machine_tags).map(quoteTagIfNecessary _)mkString(" ")
+      (rep.track.machine_tags ++ rep.track.user_tags).map(quoteTagIfNecessary _).mkString(" ")
 
     private def quoteTagIfNecessary(tag: String): String =
       if (tag.exists(_.isSpaceChar))
