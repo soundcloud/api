@@ -1,6 +1,6 @@
 package com.soundcloud.publicApiStrangler.singleTrackEndpointMigration
 
-import com.soundcloud.jvmkit.{Country, UserSession}
+import com.soundcloud.jvmkit.{Country, Urn, UserSession}
 import com.soundcloud.publicApiStrangler.client.mediaservice.WaveformUrl
 import com.soundcloud.publicApiStrangler.client.{DomainLocking, TrackAudioMetadata}
 import com.soundcloud.publicApiStrangler.client.pubmese.Isrc
@@ -21,6 +21,7 @@ object TrackRepresentationLike {
     case t: TrackRepresentationUserFavoriteDecorator => TrackRepresentationUserFavoriteDecorator.writes.writes(t)
     case t: TrackRepresentationUserPlaybackCountDecorator => TrackRepresentationUserPlaybackCountDecorator.writes.writes(t)
     case t: TrackRepresentationWaveformUrlDecorator => TrackRepresentationWaveformUrlDecorator.writes.writes(t)
+    case t: TrackRepresentationAttachmentsUriDecorator => TrackRepresentationAttachmentsUriDecorator.writes.writes(t)
     case t: TrackRepresentation => TrackRepresentation.writes.writes(t)
   }
 
@@ -133,6 +134,20 @@ object TrackRepresentationWaveformUrlDecorator {
       case _ => Json.obj()
     }
     Json.toJson(dec.wrapped).as[JsObject] ++ attribute
+  }
+}
+
+case class TrackRepresentationAttachmentsUriDecorator(
+  trackUrn: Urn,
+  wrapped: TrackRepresentationLike
+) extends TrackRepresentationLike
+
+object TrackRepresentationAttachmentsUriDecorator {
+  implicit val writes = Writes[TrackRepresentationAttachmentsUriDecorator] { dec =>
+    val id = dec.trackUrn.getIdentifier
+    Json.toJson(dec.wrapped).as[JsObject] ++ Json.obj(
+      "attachments_uri" -> s"https://api.soundcloud.com/tracks/${id}/attachments"
+    )
   }
 }
 

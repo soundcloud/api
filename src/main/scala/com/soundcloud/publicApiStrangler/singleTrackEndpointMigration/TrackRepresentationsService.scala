@@ -118,13 +118,14 @@ class TrackRepresentationsService(
       rep = TrackRepresentationSecretTokenDecorator(track, rep)
     if (geoblockings.isDefined)
       rep = TrackRepresentationGeoblockingsDecorator(geoblockings.get, rep)
-    if (!domainlockings.isEmpty)
+    if (domainlockings.nonEmpty)
       rep = TrackRepresentationDomainLockingsDecorator(domainlockings, rep)
     if (!userSession.isAnonymous) {
       rep = TrackRepresentationUserFavoriteDecorator(isLiked, rep)
       rep = TrackRepresentationUserPlaybackCountDecorator(rep)
     }
     rep = TrackRepresentationWaveformUrlDecorator(waveformUrls, rep)
+    rep = TrackRepresentationAttachmentsUriDecorator(track.urn, rep) // TODO: make conditional on representation type
     rep
   }
 
