@@ -196,7 +196,9 @@ class ResponseComparison(telemetry: Telemetry) {
   }
 
   private val printableAttributes = Set(
-    "tag_list"
+    "tag_list",
+    "purchase_url",
+    "purchase_title"
   )
 
   private val ignoredHeaders = Seq(
