@@ -3,11 +3,10 @@ package com.soundcloud.bff.nextbff.mapper
 import com.soundcloud.bff.nextbff.mapping.{Mapping, MappingContext}
 import com.soundcloud.bff.nextbff.repository.BulkFetchRepository
 import com.soundcloud.bff.test.UnitSpecification
-import com.soundcloud.bff.{Future, JsValue}
-import com.soundcloud.jvmkit.UserSession
-import com.soundcloud.scalakit.Urn
+import com.soundcloud.jvmkit.{Urn, UserSession}
 import com.soundcloud.scalakit.test.VerifiedMocks
-import com.twitter.util.Await
+import com.twitter.util.{Await, Future}
+import play.api.libs.json.JsValue
 
 class FetchMapperSpec extends UnitSpecification {
 

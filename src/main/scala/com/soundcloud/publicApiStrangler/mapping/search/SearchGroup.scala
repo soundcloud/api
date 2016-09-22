@@ -1,9 +1,9 @@
 package com.soundcloud.publicApiStrangler.mapping.search
 
 import com.soundcloud.bff.nextbff.mapping.{JsonMapping, MappingContext}
+import com.soundcloud.jvmkit.Urn
 import com.soundcloud.publicApiStrangler.mapper.timeline.EntitySummaryMapper
 import com.soundcloud.publicApiStrangler.mapping.timeline.UrnSupport
-import com.soundcloud.scalakit.Urn
 import play.api.libs.json.JsValue
 
 class SearchGroup(jsonValue: JsValue,
@@ -26,5 +26,5 @@ class SearchGroup(jsonValue: JsValue,
   val permalink_url = (json \ "permalink_url").as[String]
 
   val creator = (json \ "creator" \ "urn").asOpt[String]
-    .map(s => entitySummaryMapper.embed(Urn(s)))
+    .map(s => entitySummaryMapper.embed(new Urn(s)))
 }

@@ -1,11 +1,9 @@
 package com.soundcloud.bff.nextbff.repository
 
-import com.soundcloud.bff._
 import com.soundcloud.bff.test.UnitSpecification
-import com.soundcloud.jvmkit.UserSession
-import com.soundcloud.scalakit.Urn
-import com.twitter.util.Await
-import play.api.libs.json.Json
+import com.soundcloud.jvmkit.{Urn, UserSession}
+import com.twitter.util.{Await, Future}
+import play.api.libs.json.{JsObject, JsString, Json}
 
 class BulkFetchByUrnRepositorySpec extends UnitSpecification {
 
@@ -13,8 +11,8 @@ class BulkFetchByUrnRepositorySpec extends UnitSpecification {
 
     trait Context extends Scope {
       val session = mock[UserSession]
-      val urn1 = Urn("soundcloud:users:1")
-      val urn2 = Urn("soundcloud:users:2")
+      val urn1 = new Urn("soundcloud:users:1")
+      val urn2 = new Urn("soundcloud:users:2")
       val urns = Set(urn1, urn2)
 
       val json1 = Json.obj("self" -> Json.obj("urn" -> JsString("soundcloud:users:1")))

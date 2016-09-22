@@ -1,11 +1,11 @@
 package com.soundcloud.bff.nextbff.repository
 
-import com.soundcloud.bff._
 import com.soundcloud.bff.repository.JsonServiceRepository
+import com.soundcloud.bff.services.JsonService
 import com.soundcloud.bff.test.UnitSpecification
+import com.soundcloud.jvmkit.{Urn, UserSession}
 import com.soundcloud.scalakit.test.VerifiedMocks
-import com.soundcloud.scalakit.{Urn, UserSession}
-import com.twitter.util.Await
+import com.twitter.util.{Await, Future}
 import org.mockito.Matchers
 import play.api.libs.json.Json
 
@@ -15,7 +15,7 @@ class CachingByUrnSpec extends UnitSpecification {
     val service = smartMock[JsonService]
     val urnsCache = smartMock[UrnsCache]
     val session = smartMock[UserSession]
-    val urns = Set(Urn("soundcloud:users:321321"), Urn("soundcloud:users:4444"))
+    val urns = Set(new Urn("soundcloud:users:321321"), new Urn("soundcloud:users:4444"))
     val cacheExpirationTimeMinutes = 1
     val jsObject = Json.obj()
 

@@ -1,10 +1,9 @@
 package com.soundcloud.bff.nextbff.repository
 
-import com.soundcloud.bff.Future
 import com.soundcloud.bff.test.UnitSpecification
 import com.soundcloud.jvmkit.{Urn, UserSession}
 import com.soundcloud.scalakit.test.VerifiedMocks
-import com.twitter.util.Await
+import com.twitter.util.{Await, Future}
 import play.api.libs.json.JsValue
 
 class IndividualFetchRepositorySpec extends UnitSpecification {

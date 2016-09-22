@@ -3,20 +3,20 @@ package com.soundcloud.bff.nextbff.repository
 import java.util.concurrent.TimeUnit
 
 import com.soundcloud.bff.test.UnitSpecification
-import com.soundcloud.bff.{Future, JsObject}
-import com.soundcloud.scalakit.Urn
+import com.soundcloud.jvmkit.Urn
 import com.soundcloud.scalakit.cache.Cache
 import com.soundcloud.scalakit.json.Json
 import com.soundcloud.scalakit.test.VerifiedMocks
-import com.twitter.util.Await
+import com.twitter.util.{Await, Future}
 import org.mockito.Mockito.verify
+import play.api.libs.json.JsObject
 
 class UrnsCacheSpec extends UnitSpecification {
 
   trait Context extends VerifiedMocks {
     val cacheExpirationTime = 10
-    val urn1 = Urn("some:urn:one")
-    val urn2 = Urn("some:urn:two")
+    val urn1 = new Urn("some:urn:one")
+    val urn2 = new Urn("some:urn:two")
     val urns = List(urn1, urn2)
 
     val cache = mock[Cache]

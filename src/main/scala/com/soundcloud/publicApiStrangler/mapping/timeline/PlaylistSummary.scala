@@ -1,8 +1,8 @@
 package com.soundcloud.publicApiStrangler.mapping.timeline
 
 import com.soundcloud.bff.nextbff.mapping.{JsonMapping, MappingContext}
+import com.soundcloud.jvmkit.Urn
 import com.soundcloud.publicApiStrangler.mapper.timeline.EntitySummaryMapper
-import com.soundcloud.scalakit.Urn
 import play.api.libs.json.JsValue
 
 class PlaylistSummary(jsonValue: JsValue,
@@ -43,7 +43,7 @@ class PlaylistSummary(jsonValue: JsValue,
 
   private def userUrn: Option[Urn] = (json \ "user" \ "urn").asOpt[String] match {
     case None => None
-    case Some(urn) => Some(Urn(urn))
+    case Some(urn) => Some(new Urn(urn))
   }
 
 }

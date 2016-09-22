@@ -1,9 +1,9 @@
 package com.soundcloud.publicApiStrangler.support.mapping
 
-import com.soundcloud.bff._
 import com.soundcloud.bff.nextbff.mapper.Mapper
 import com.soundcloud.bff.nextbff.mapping.{Mapping, MappingContext}
 import com.soundcloud.jvmkit.UserSession
+import com.twitter.util.Future
 
 trait InputValidation[I, O <: Mapping] {
   this: Mapper[I, O] =>

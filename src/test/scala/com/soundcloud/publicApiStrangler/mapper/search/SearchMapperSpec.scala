@@ -4,25 +4,24 @@ import com.soundcloud.bff.nextbff.mapping.MappingContext
 import com.soundcloud.bff.nextbff.pagination.OffsetBasedPage
 import com.soundcloud.bff.services.{JsonService => BffJsonService}
 import com.soundcloud.bff.test.UnitSpecification
-import com.soundcloud.jvmkit.UserSession
+import com.soundcloud.jvmkit.{Urn, UserSession}
 import com.soundcloud.publicApiStrangler.authorization.ContentAuthorizationRules
 import com.soundcloud.publicApiStrangler.client.followcounts.FollowCountsClient
 import com.soundcloud.publicApiStrangler.mapping.search.{LegacySearch, PaginatedSearch, SearchDispatcherRequest}
-import com.soundcloud.scalakit.Urn
 import com.soundcloud.scalakit.Urn.format
 import com.soundcloud.scalakit.finagle.http.OkStatus
 import com.soundcloud.scalakit.finagle.jsonservice._
-import com.soundcloud.scalakit.json.{Json => ScalakitJson}
+import com.soundcloud.scalakit.json.UntypedJson
 import com.soundcloud.scalakit.test.VerifiedMocks
 import com.soundcloud.service.client.OkidokiClient
 import com.twitter.util.{Await, Future}
-import play.api.libs.json.{JsArray, JsNull, JsObject, Json => PlayJson}
+import play.api.libs.json.{JsArray, JsNull, JsObject, Json}
 
 class SearchRepositorySpec extends UnitSpecification {
   trait Context extends VerifiedMocks {
     val highTierParams = Params("filter.content_tier" -> "FREE", "filter.content_country" -> "US")
 
-    lazy val session = loggedInSession(Urn("soundcloud:users:123"))
+    lazy val session = loggedInSession(new Urn("soundcloud:users:123"))
     lazy val mockService = mock[BffJsonService]
     lazy val repo = new SearchRepository(mockService)
   }
@@ -102,7 +101,7 @@ class SearchMapperSpec extends UnitSpecification {
 
 
     val mapped = Await.result(searchMapper.materialize(sessionMock, request)).get
-    val result = PlayJson.parse(ScalakitJson.asString(mapped)).as[JsArray]
+    val result = Json.parse(UntypedJson.asString(mapped)).as[JsArray]
 
     result.value.count { _ == JsNull } ==== 0
   }

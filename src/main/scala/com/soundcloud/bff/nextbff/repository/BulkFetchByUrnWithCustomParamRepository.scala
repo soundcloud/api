@@ -1,7 +1,6 @@
 package com.soundcloud.bff.nextbff.repository
 
-import com.soundcloud.jvmkit.UserSession
-import com.soundcloud.scalakit.Urn
+import com.soundcloud.jvmkit.{Urn, UserSession}
 import com.twitter.util.Future
 import play.api.libs.json.JsObject
 
@@ -18,7 +17,7 @@ trait BulkFetchByUrnWithCustomParamRepository[I] extends BulkFetchRepository[I] 
     )
 
   private def extractUrn(obj: JsObject) =
-    Urn((obj \ "self" \ "urn").as[String])
+    new Urn((obj \ "self" \ "urn").as[String])
 
   def fetch(session: UserSession, params: Set[I]): Future[List[JsObject]]
 

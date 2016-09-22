@@ -5,9 +5,8 @@ import java.util.UUID
 import com.soundcloud.bff.nextbff.mapper.Mapper
 import com.soundcloud.bff.nextbff.mapping.MappingContext
 import com.soundcloud.bff.nextbff.pagination.CursorBasedPage
-import com.soundcloud.jvmkit.UserSession
+import com.soundcloud.jvmkit.{Urn, UserSession}
 import com.soundcloud.publicApiStrangler.mapping.timeline.Timeline
-import com.soundcloud.scalakit.Urn
 import com.soundcloud.scalakit.finagle.jsonservice.StringParam
 import com.twitter.util.Future
 

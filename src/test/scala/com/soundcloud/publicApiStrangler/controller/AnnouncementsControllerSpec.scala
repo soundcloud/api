@@ -2,15 +2,11 @@ package com.soundcloud.publicApiStrangler.controller
 
 import com.soundcloud.bff.finagle.ResponseBuilder
 import com.soundcloud.bff.test.InjectionBasedControllerSpecification
-import com.soundcloud.jvmkit.{Geo => JvmGeo}
-import com.soundcloud.publicApiStrangler.client.gobbly.{ClientError => GobblyClientError, Error => GobblyError, Result => GobblyResult, ServerError => GobblyServerError, Success => GobblySuccess}
 import com.soundcloud.publicApiStrangler.support.DispatchToMothershipHandler
 import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures
 import com.soundcloud.scalakit.test.VerifiedMocks
-import com.soundcloud.trackcoordinator.client.representation.{Track => CoordinatorTrack}
 import com.twitter.finagle.http.{Request, Status}
 import com.twitter.util.Future
-import play.api.libs.json.{Json => PlayJson}
 
 class AnnouncementsControllerSpec extends InjectionBasedControllerSpecification with Fixtures {
 

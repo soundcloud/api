@@ -1,8 +1,8 @@
 package com.soundcloud.publicApiStrangler.support
 
+import com.soundcloud.jvmkit.Urn
 import com.soundcloud.jvmkit.telemetry.Counter
 import com.soundcloud.publicApiStrangler.support.SpecificStranglingHandler.externalAppUrn
-import com.soundcloud.scalakit.Urn
 import com.soundcloud.scalakit.finagle.http.{HandlerRequest, HttpHandler}
 import com.twitter.finagle.http.Response
 import com.twitter.util.Future
@@ -34,10 +34,10 @@ class SpecificStranglingHandler(whereToDispatch: HttpHandler, pathsPatternsToDis
     val strangledBy = patternFor(request)
     val pathPattern = strangledBy.map(_.toString).getOrElse("UNKNOWN")
     val agent = agentFor(request)
-    counter.labels(request.method.toString, pathPattern, agent.getString).inc()
+    counter.labels(request.method.toString, pathPattern, agent.toString).inc()
   }
 }
 
 object SpecificStranglingHandler{
-  private final val externalAppUrn = Urn("soundcloud:applications:external")
+  private final val externalAppUrn = new Urn("soundcloud:applications:external")
 }

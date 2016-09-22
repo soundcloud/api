@@ -1,7 +1,7 @@
 package com.soundcloud.publicApiStrangler.authorization
 
+import com.soundcloud.jvmkit.Urn
 import scala.collection.mutable.ListBuffer
-import com.soundcloud.scalakit.Urn
 import com.soundcloud.scalakit.json.Json
 
 object CollectTrackUrns {

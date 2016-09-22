@@ -1,11 +1,10 @@
 package com.soundcloud.publicApiStrangler.singleTrackEndpointMigration
 
 import com.soundcloud.bff.test.InjectionBasedControllerSpecification
-import com.soundcloud.jvmkit.UserSessionBuilder
+import com.soundcloud.jvmkit.{Urn, UserSession, UserSessionBuilder}
 import com.soundcloud.jvmkit.telemetry.Telemetry
 import com.soundcloud.jvmkit.test.InMemoryConfig
 import com.soundcloud.publicApiStrangler.support.DispatchToMothershipHandler
-import com.soundcloud.scalakit.{Urn, UserSession}
 import com.twitter.finagle.http.{Request, Response, Status}
 import com.twitter.util.Future
 import io.prometheus.client.CollectorRegistry
@@ -23,7 +22,7 @@ class SingleTrackControllerSpec extends InjectionBasedControllerSpecification {
     val telemetry = new Telemetry(config, collectorRegistry)
 
     val session = new UserSessionBuilder().build()
-    val trackUrn = Urn("soundcloud:tracks:987")
+    val trackUrn = new Urn("soundcloud:tracks:987")
 
     def controller(session: UserSession) = new SingleTrackController(
       fakeUserAuthentication(session),

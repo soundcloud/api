@@ -1,10 +1,10 @@
 package com.soundcloud.publicApiStrangler.client
 
-import com.soundcloud.jvmkit.UserSession
-import com.soundcloud.scalakit._
+import com.soundcloud.jvmkit.{Urn, UserSession}
+import com.soundcloud.scalakit.Path
 import com.soundcloud.scalakit.finagle.http._
 import com.soundcloud.scalakit.finagle.jsonservice.{JsonClient, JsonResponse}
-import com.soundcloud.service.client.{OkidokiClient}
+import com.soundcloud.service.client.OkidokiClient
 import com.soundcloud.service.response.mapper._
 import com.soundcloud.service.response.mapper.spotlight.SpotlightResponseMapper
 import com.soundcloud.service.response.representation._
@@ -23,8 +23,8 @@ object DomainLocking {
         JsSuccess(
           DomainLocking(
             domain = (json \ "domain").as[String],
-            urn = Urn((json \ "self" \ "urn").as[String]),
-            trackUrn = Urn((json \ "track_urn").as[String])
+            urn = new Urn((json \ "self" \ "urn").as[String]),
+            trackUrn = new Urn((json \ "track_urn").as[String])
           )
         )
       } catch {

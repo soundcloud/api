@@ -1,20 +1,20 @@
 package com.soundcloud.publicApiStrangler.controller
 
-import com.soundcloud.bff.Future
 import com.soundcloud.bff.finagle.{Request, ResponseBuilder}
 import com.soundcloud.bff.nextbff.pagination.OffsetBasedPage
 import com.soundcloud.bff.nextbff.repository.RepositoryException
 import com.soundcloud.bff.nextbff.test.JsonMappingMock
 import com.soundcloud.bff.test.InjectionBasedControllerSpecification
+import com.soundcloud.jvmkit.{Urn, UserSession}
 import com.soundcloud.jvmkit.telemetry.Telemetry
 import com.soundcloud.jvmkit.test.InMemoryConfig
 import com.soundcloud.publicApiStrangler.client.followcounts.{FollowCounts, FollowCountsClient}
 import com.soundcloud.publicApiStrangler.mapper.search.SearchMapper
 import com.soundcloud.publicApiStrangler.mapping.search.{Search, SearchDispatcherRequest}
 import com.soundcloud.publicApiStrangler.support.DispatchToMothershipHandler
-import com.soundcloud.scalakit._
 import com.soundcloud.scalakit.finagle.http.{BadRequestStatus, HandlerRequest}
 import com.soundcloud.scalakit.test.VerifiedMocks
+import com.twitter.util.Future
 import io.prometheus.client.CollectorRegistry
 import org.jboss.netty.handler.codec.http.HttpResponseStatus
 

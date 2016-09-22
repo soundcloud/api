@@ -2,7 +2,7 @@ package com.soundcloud.publicApiStrangler.mapper.search
 
 import com.soundcloud.bff.nextbff.mapper.Mapper
 import com.soundcloud.bff.nextbff.mapping.{JsonMapping, MappingContext}
-import com.soundcloud.jvmkit.UserSession
+import com.soundcloud.jvmkit.{Urn, UserSession}
 import com.soundcloud.jvmkit.policies.ContentAuthorization
 import com.soundcloud.publicApiStrangler.authorization.ContentAuthorizationRules
 import com.soundcloud.publicApiStrangler.client.followcounts.{FollowCounts, FollowCountsClient}
@@ -12,7 +12,6 @@ import com.soundcloud.publicApiStrangler.mapper.timeline.EntitySummaryMapper
 import com.soundcloud.publicApiStrangler.mapper.waveform.WaveformMapper
 import com.soundcloud.publicApiStrangler.mapping.search._
 import com.soundcloud.publicApiStrangler.support.mapping.InputValidation
-import com.soundcloud.scalakit.Urn
 import com.soundcloud.service.client.OkidokiClient
 import com.twitter.util.Future
 import play.api.libs.json.JsObject
@@ -43,7 +42,7 @@ class SearchEntityMapper(okidokiClient: OkidokiClient,
     } yield {
       entities.map {
         entity =>
-          val urn = Urn((entity \ "self" \ "urn").as[String])
+          val urn = new Urn((entity \ "self" \ "urn").as[String])
           urn -> entityFor(session, urn, entity, authorizations, followCountsMap)
       }.toMap
     }

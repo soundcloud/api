@@ -2,10 +2,10 @@ package com.soundcloud.publicApiStrangler.mapping.timeline
 
 import java.util.UUID
 
-import com.fasterxml.jackson.annotation.{JsonIgnore, JsonInclude}
+import com.fasterxml.jackson.annotation.JsonInclude
 import com.soundcloud.bff.nextbff.mapping.{JsonMapping, MappingContext}
 import com.soundcloud.bff.nextbff.pagination.CursorBasedPage
-import com.soundcloud.scalakit.Urn
+import com.soundcloud.jvmkit.Urn
 import com.soundcloud.scalakit.finagle.jsonservice.Params
 import play.api.libs.json.{JsObject, JsValue}
 

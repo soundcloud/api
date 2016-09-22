@@ -1,6 +1,5 @@
 package com.soundcloud.publicApiStrangler.controller
 
-import com.soundcloud.bff.Future
 import com.soundcloud.bff.nextbff.pagination.OffsetBasedPage
 import com.soundcloud.bff.test.InjectionBasedControllerSpecification
 import com.soundcloud.jvmkit.Urn
@@ -9,6 +8,7 @@ import com.soundcloud.publicApiStrangler.mapping.similarsounds.SimilarSoundsMapp
 import com.soundcloud.publicApiStrangler.support.mapping.ObjectMappingMock
 import com.soundcloud.scalakit.test.VerifiedMocks
 import com.soundcloud.service.response.representation.SimilarSounds
+import com.twitter.util.Future
 import org.jboss.netty.handler.codec.http.HttpResponseStatus
 
 class SimilarSoundsControllerSpec

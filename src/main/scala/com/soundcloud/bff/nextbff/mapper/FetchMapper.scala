@@ -1,9 +1,9 @@
 package com.soundcloud.bff.nextbff.mapper
 
-import com.soundcloud.bff.JsValue
 import com.soundcloud.bff.nextbff.mapping.{Mapping, MappingContext}
 import com.soundcloud.bff.nextbff.repository.BulkFetchRepository
 import com.soundcloud.jvmkit.UserSession
+import play.api.libs.json.JsValue
 
 /**
  * Maps from an inp ut to output, where the output is a mapping object.

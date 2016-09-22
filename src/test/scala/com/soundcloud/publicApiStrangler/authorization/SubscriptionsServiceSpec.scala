@@ -1,13 +1,14 @@
 package com.soundcloud.publicApiStrangler.authorization
 
+import com.soundcloud.bff.services.JsonService
 import com.soundcloud.bff.test.UnitSpecification
-import com.soundcloud.bff.{JsonService, _}
 import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures
 import com.soundcloud.scalakit.finagle.http.{InternalServerErrorStatus, OkStatus}
-import com.soundcloud.scalakit.finagle.jsonservice._
+import com.soundcloud.scalakit.finagle.jsonservice.{JsonResponse, Params}
 import com.soundcloud.scalakit.{Path, Urn}
 import com.soundcloud.service.response.mapper.UnhandledResponseException
 import com.twitter.util.{Await, Future}
+import play.api.libs.json.JsNull
 
 class SubscriptionsServiceSpec extends UnitSpecification with Fixtures {
 

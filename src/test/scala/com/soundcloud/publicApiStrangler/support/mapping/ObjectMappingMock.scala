@@ -1,9 +1,8 @@
 package com.soundcloud.publicApiStrangler.support.mapping
 
 import com.fasterxml.jackson.annotation.JsonValue
-import com.soundcloud.bff._
 import org.mockito.Mockito
-import play.api.libs.json.JsValue
+import play.api.libs.json.{JsObject, JsString, JsValue}
 
 abstract class ObjectMappingMock[R: Manifest]
   extends ObjectMapping[R](Mockito.mock(manifest[R].runtimeClass).asInstanceOf[R])(null) {

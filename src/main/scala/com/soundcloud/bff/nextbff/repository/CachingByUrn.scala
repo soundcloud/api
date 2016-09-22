@@ -1,7 +1,7 @@
 package com.soundcloud.bff.nextbff.repository
 
-import com.soundcloud.bff._
-import com.soundcloud.scalakit.{Urn, UserSession}
+import com.soundcloud.jvmkit.{Urn, UserSession}
+import play.api.libs.json.JsObject
 
 object CachingByUrn {
   private val defaultExpirationTime = 60

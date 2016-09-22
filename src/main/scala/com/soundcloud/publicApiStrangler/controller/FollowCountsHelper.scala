@@ -2,9 +2,9 @@ package com.soundcloud.publicApiStrangler.controller
 
 import com.soundcloud.bff.finagle.{Request, ResponseBuilder}
 import com.soundcloud.bff.web.UserAuthentication
+import com.soundcloud.jvmkit.Urn
 import com.soundcloud.publicApiStrangler.client.followcounts.{FollowCounts, FollowCountsClient}
 import com.soundcloud.publicApiStrangler.support.DispatchToMothershipHandler
-import com.soundcloud.scalakit._
 import com.soundcloud.scalakit.finagle.http.{AlwaysMatchesPathMatcher, HandlerRequest}
 import com.twitter.finagle.http.Response
 import com.twitter.util.{Future, Try}
@@ -52,7 +52,7 @@ trait FollowCountsHelper {
   private def extractUserUrnsFromList(values: Seq[JsValue]): Set[Urn] =
     values
       .flatMap(getUserId)
-      .map(id => Urn("soundcloud", "users", id.toString))
+      .map(id => new Urn("soundcloud", "users", id.toString))
       .toSet
 
   private def getUserId(jsValue: JsValue): Option[Int] =
@@ -85,7 +85,7 @@ trait FollowCountsHelper {
         (jsValue \ "kind").asOpt[String].flatMap {
           case "user" =>
             (jsValue \ "id").asOpt[Int].flatMap { id =>
-              followCountsMap.get(Urn("soundcloud", "users", id.toString)).map { followCounts =>
+              followCountsMap.get(new Urn("soundcloud", "users", id.toString)).map { followCounts =>
                 jsValue.as[JsObject] ++ Json.obj(
                   "followers_count" -> followCounts.followers,
                   "followings_count" -> followCounts.followings

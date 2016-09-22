@@ -3,6 +3,7 @@ package com.soundcloud.publicApiStrangler.mapper.search
 import com.soundcloud.bff.media.{TrackWaveformUrlMapper, WaveformUrlsRepository}
 import com.soundcloud.bff.nextbff.mapping.{Mapping, MappingContext}
 import com.soundcloud.bff.test.UnitSpecification
+import com.soundcloud.jvmkit.Urn
 import com.soundcloud.jvmkit.policies.{ContentAuthorization, ContentPolicy, MonetizationModel, Reason}
 import com.soundcloud.publicApiStrangler.authorization.ContentAuthorizationRules
 import com.soundcloud.publicApiStrangler.client.followcounts.{FollowCounts, FollowCountsClient}
@@ -11,24 +12,21 @@ import com.soundcloud.publicApiStrangler.mapper.purchaselink.TrackPurchaseLinkMa
 import com.soundcloud.publicApiStrangler.mapper.timeline.EntitySummaryMapper
 import com.soundcloud.publicApiStrangler.mapper.waveform.WaveformMapper
 import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures
-import com.soundcloud.scalakit.Urn
-import com.soundcloud.scalakit.json.Json
+import com.soundcloud.scalakit.json.UntypedJson
 import com.soundcloud.scalakit.test.VerifiedMocks
 import com.soundcloud.service.client.{LieblingClient, OkidokiClient}
 import com.soundcloud.service.response.representation.liebling.UserLikesCount
 import com.soundcloud.service.response.representation.{TrackMeta, TrackPurchaseLink, TracksWithPagination}
 import com.twitter.util.{Await, Future}
 import org.specs2.matcher.MatchResult
-import play.api.libs.json.{JsObject, JsValue, Json}
-import com.soundcloud.scalakit.json.{Json => ScalakitJson}
-import play.api.libs.json.{JsObject, JsValue, Json => PlayJson}
+import play.api.libs.json.{JsObject, Json}
 
 class SearchEntityMapperSpec extends UnitSpecification with Fixtures {
 
   trait Context extends VerifiedMocks {
     implicit val context = mock[MappingContext]
     val baseUrl = "https://api.soundcloud.com.com"
-    val userUrn = Urn("soundcloud:users:1")
+    val userUrn = new Urn("soundcloud:users:1")
     val session = loggedInSession(userUrn)
 
     val okidokiClient = mock[OkidokiClient]
@@ -55,17 +53,17 @@ class SearchEntityMapperSpec extends UnitSpecification with Fixtures {
       "soundcloud:tracks:15273221",
       "soundcloud:playlists:685235",
       "soundcloud:groups:30910"
-    ).map(Urn(_))
+    ).map(new Urn(_))
 
-    val searchResults = Urn("soundcloud:tracks:-1") :: urns // doesn't exist in okidoki response
+    val searchResults = new Urn("soundcloud:tracks:-1") :: urns // doesn't exist in okidoki response
 
     val likableUrns = Set(
       "soundcloud:tracks:15273221",
       "soundcloud:playlists:685235"
-    ).map(Urn(_))
+    ).map(new Urn(_))
 
     val authorizations = Seq(
-      new ContentAuthorization(Urn("soundcloud:tracks:15273221"), ContentPolicy.ALLOW, Reason.UNKNOWN, MonetizationModel.NOT_APPLICABLE)
+      new ContentAuthorization(new Urn("soundcloud:tracks:15273221"), ContentPolicy.ALLOW, Reason.UNKNOWN, MonetizationModel.NOT_APPLICABLE)
     )
     val okidokiFetch = withContentsOf("okidoki", "search_fetch")
       .as[List[JsObject]]
@@ -82,15 +80,15 @@ class SearchEntityMapperSpec extends UnitSpecification with Fixtures {
       )
       // embedded entity summaries in tracks/playlists/groups metadata
       when(okidokiClient.fetch(session, urns.toSet.filter(_.getCollection == "users"))).thenReturn(
-        Future(okidokiFetch.filter(json => Urn((json \ "self" \ "urn").as[String]).getCollection == "users"))
+        Future(okidokiFetch.filter(json => new Urn((json \ "self" \ "urn").as[String]).getCollection == "users"))
       )
       // purchase links in tracks metadata
       when(okidokiClient.trackPurchaseLinks(session, urns.filter(_.getCollection == "tracks").toSet)).thenReturn(
-        Future(List(TrackPurchaseLink(Urn("soundcloud:tracks:15273221"), Some("itunes"), "http://example.org")))
+        Future(List(TrackPurchaseLink(new Urn("soundcloud:tracks:15273221"), Some("itunes"), "http://example.org")))
       )
       // track metadata for a playlist -- one call per playlist :(
       // should probably return some non-empty list
-      when(okidokiClient.playlistTracks(===(session), ===(Urn("soundcloud:playlists:685235")), any[Option[Int]], any[Option[Int]])).thenReturn(
+      when(okidokiClient.playlistTracks(===(session), ===(new Urn("soundcloud:playlists:685235")), any[Option[Int]], any[Option[Int]])).thenReturn(
         Future(TracksWithPagination(Nil, TrackMeta(None)))
       )
 
@@ -113,11 +111,11 @@ class SearchEntityMapperSpec extends UnitSpecification with Fixtures {
 
   "builds the proper mappings" >> {
     "with follow counts" in new Context {
-      def mappingToJsObject(m: Mapping): JsObject = PlayJson.parse(ScalakitJson.asString(m)).as[JsObject]
+      def mappingToJsObject(m: Mapping): JsObject = Json.parse(UntypedJson.asString(m)).as[JsObject]
 
       override def before: Any = {
         super.before
-        val fetchedUserUrn = Urn("soundcloud:users:2097360")
+        val fetchedUserUrn = new Urn("soundcloud:users:2097360")
         followCountsClient.counts(session, Seq(fetchedUserUrn)) returns Future.value(Seq(FollowCounts(fetchedUserUrn, 1111, 2222)))
       }
 

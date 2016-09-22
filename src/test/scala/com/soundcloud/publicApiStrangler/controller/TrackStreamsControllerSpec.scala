@@ -2,16 +2,16 @@ package com.soundcloud.publicApiStrangler.controller
 
 import com.soundcloud.bff.finagle.{Request, ResponseBuilder}
 import com.soundcloud.bff.test.InjectionBasedControllerSpecification
+import com.soundcloud.jvmkit.{Urn, UserSession}
 import com.soundcloud.publicApiStrangler.mapper.trackstreams.{TrackStreamJsonResponseMapper, TrackStreamRedirectResponseMapper}
 import com.soundcloud.publicApiStrangler.support.TrackStreamHandler
 import com.soundcloud.publicApiStrangler.test.FakePublicApiSiloing
-import com.soundcloud.scalakit.{Urn, UserSession}
 import com.twitter.util.Future
 
 class TrackStreamsControllerSpec extends InjectionBasedControllerSpecification {
 
   trait Context extends Scope {
-    val user = Urn("soundcloud:users:1234")
+    val user = new Urn("soundcloud:users:1234")
     val session = loggedInSession(user)
 
     val trackStreamUrlToJsonResponseMapperMock = mock[TrackStreamJsonResponseMapper]

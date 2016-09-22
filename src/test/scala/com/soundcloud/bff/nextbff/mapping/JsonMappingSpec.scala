@@ -1,9 +1,8 @@
 package com.soundcloud.bff.nextbff.mapping
 
-import com.soundcloud.bff.JsNull
 import com.soundcloud.bff.test.UnitSpecification
-import com.soundcloud.scalakit.json.Json
-import play.api.libs.json.{Json => PlayJson}
+import com.soundcloud.scalakit.json.UntypedJson
+import play.api.libs.json.{JsNull, Json => PlayJson}
 
 class JsonMappingSpec extends UnitSpecification {
 
@@ -14,6 +13,6 @@ class JsonMappingSpec extends UnitSpecification {
   }
 
   "doesn't render the json field" in new Context {
-    Json.write(mapping) ==== "{}"
+    UntypedJson.write(mapping) ==== "{}"
   }
 }

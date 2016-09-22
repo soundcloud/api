@@ -2,8 +2,7 @@ package com.soundcloud.bff.nextbff.test
 
 import com.soundcloud.bff.finagle.{Request, ResponseBuilder}
 import com.soundcloud.bff.test.UnitSpecification
-import com.soundcloud.jvmkit.UserSessionBuilder
-import com.soundcloud.scalakit._
+import com.soundcloud.jvmkit.{AnonymousUserSession, UserSessionBuilder}
 import com.soundcloud.scalakit.test.VerifiedMocks
 import com.twitter.util.{Await, Future}
 

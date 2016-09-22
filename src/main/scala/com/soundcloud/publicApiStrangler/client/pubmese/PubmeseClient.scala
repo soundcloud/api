@@ -1,10 +1,10 @@
 package com.soundcloud.publicApiStrangler.client.pubmese
 
-import com.soundcloud.jvmkit.UserSession
+import com.soundcloud.jvmkit.{Urn, UserSession}
 import com.soundcloud.scalakit.Urn.format
 import com.soundcloud.scalakit.finagle.http.{NotFoundStatus, OkStatus}
 import com.soundcloud.scalakit.finagle.jsonservice.{JsonClient, JsonResponse}
-import com.soundcloud.scalakit.{Path, Urn}
+import com.soundcloud.scalakit.Path
 import com.twitter.util.Future
 
 class PubmeseClient(jsonClient: JsonClient) {

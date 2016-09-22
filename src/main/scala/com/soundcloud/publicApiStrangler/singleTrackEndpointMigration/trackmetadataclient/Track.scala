@@ -1,6 +1,6 @@
 package com.soundcloud.publicApiStrangler.singleTrackEndpointMigration.trackmetadataclient
 
-import com.soundcloud.scalakit.Urn
+import com.soundcloud.jvmkit.Urn
 import com.soundcloud.scalakit.Urn.format
 import org.joda.time.LocalDateTime
 import play.api.data.validation.ValidationError

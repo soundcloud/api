@@ -1,6 +1,6 @@
 package com.soundcloud.bff.nextbff.repository
 
-import com.soundcloud.scalakit.Urn
+import com.soundcloud.jvmkit.Urn
 
 trait BulkFetchByUrnRepository extends BulkFetchByUrnWithCustomParamRepository[Urn] {
 
