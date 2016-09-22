@@ -34,9 +34,9 @@ RATE_LIMIT_MEMCACHED_SERVERS="$DOCKER_IP"
 
 MOSHIMOSHI_BASE_URL="http://moshimoshi.int.s-cloud.net"
 
-MOTHERSHIP_API_SERVER="dnssrv!http.passenger.prod.public-api.db.srv.int.s-cloud.net"
-MOTHERSHIP_API_STREAMING_ENABLED="true"
-MOTHERSHIP_API_REQUEST_TIMEOUT_MILLIS="3600000"
+PUBLIC_API_ADDRESS="dnssrv!http.passenger.prod.public-api.db.srv.int.s-cloud.net"
+PUBLIC_API_CLIENT_STREAMING="true"
+PUBLIC_API_CLIENT_REQUEST_TIMEOUT_MILLIS="3600000"
 
 OKIDOKI_SRV_RECORD="dnssrv!http.okidoki.prod.moshimoshi.dd.srv.int.s-cloud.net"
 
