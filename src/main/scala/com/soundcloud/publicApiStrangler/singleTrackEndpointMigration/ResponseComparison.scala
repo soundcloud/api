@@ -196,8 +196,28 @@ class ResponseComparison(telemetry: Telemetry) {
   }
 
   private val printableAttributes = Set(
+    "artwork_url",
+    "available_country_codes",
+    "bpm",
+    "description",
+    "download_url",
+    "duration",
+    "genre",
+    "label_name",
+    "last_modified",
+    "original_content_size",
+    "original_format",
+    "permalink_url",
+    "release_day",
+    "release_month",
+    "release_year",
+    "state",
+    "stream_url",
+    "streamable",
     "tag_list",
-    "uri"
+    "title",
+    "uri",
+    "waveform_url"
   )
 
   private val ignoredHeaders = Seq(
