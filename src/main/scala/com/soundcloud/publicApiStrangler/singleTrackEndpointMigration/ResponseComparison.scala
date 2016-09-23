@@ -148,6 +148,10 @@ class ResponseComparison(telemetry: Telemetry) {
             val legacyString = legacyValue.as[JsString].value
             val migrationString = migrationValue.as[JsString].value
             legacyString.replaceFirst("^http://", "https://") != migrationString
+          case "tag_list" =>
+            val legacyString = legacyValue.as[JsString].value
+            val migrationString = migrationValue.as[JsString].value
+            legacyString.split("\\s+").sorted == migrationString.split("\\s+").sorted
           case _ =>
             legacyValue != migrationValue
         }
