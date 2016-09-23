@@ -8,6 +8,7 @@ import com.soundcloud.publicApiStrangler.client.stitch.StitchCounts
 import com.soundcloud.publicApiStrangler.singleTrackEndpointMigration.trackmetadataclient.Track
 import com.soundcloud.service.response.representation.{Geoblockings, User}
 import org.joda.time.format.DateTimeFormat
+import org.owasp.html.{ElementPolicy, HtmlPolicyBuilder}
 import play.api.libs.json._
 
 sealed trait TrackRepresentationLike
@@ -189,15 +190,15 @@ object TrackRepresentation {
         "embeddable_by" -> rep.track.embeddableBy,
         "downloadable" -> rep.track.downloadable,
         "purchase_url" -> rep.track.purchase_url,
-        "purchase_title" -> rep.track.purchase_title,
+        "purchase_title" -> rep.track.purchase_title.map(sanitize),
         "label_id" -> rep.track.label_id,
-        "genre" -> rep.track.genre,
-        "title" -> rep.track.title,
-        "description" -> rep.track.description,
-        "label_name" -> rep.track.label_name,
-        "release" -> rep.track.release,
-        "track_type" -> rep.track.track_type,
-        "key_signature" -> rep.track.key_signature,
+        "genre" -> rep.track.genre.map(sanitize),
+        "title" -> sanitize(rep.track.title),
+        "description" -> rep.track.description.map(sanitize),
+        "label_name" -> rep.track.label_name.map(sanitize),
+        "release" -> rep.track.release.map(sanitize),
+        "track_type" -> rep.track.track_type.map(sanitize),
+        "key_signature" -> rep.track.key_signature.map(sanitize),
         "isrc" -> rep.isrc.map(_.toString),
         "video_url" -> rep.track.video_url,
         "bpm" -> rep.track.bpm,
@@ -218,6 +219,28 @@ object TrackRepresentation {
         "download_url" -> s"https://api.soundcloud.com/tracks/${rep.id}/download"
       )
     }
+
+    private lazy val targetBlankSanitizationPolicy =
+      new ElementPolicy() {
+        override def apply(elementName: String, attributes: java.util.List[String]): String = {
+          attributes.add("target")
+          attributes.add("_blank")
+          elementName
+        }
+      }
+
+    private lazy val sanitizationPolicy =
+      new HtmlPolicyBuilder()
+        .allowElements("a", "b", "i", "p", "br")
+        .requireRelNofollowOnLinks()
+        .skipRelsOnLinks("noreferrer", "noopener") // TODO: Probably a good idea to have both of these!
+        .allowElements(targetBlankSanitizationPolicy, "a")
+        .allowAttributes("href").onElements("a")
+        .allowStandardUrlProtocols()
+        .toFactory()
+
+    private def sanitize(s: String): String =
+      sanitizationPolicy.sanitize(s)
 
     private def mkTagList(rep: TrackRepresentation): String =
       (rep.track.machine_tags ++ rep.track.user_tags).map(quoteTagIfNecessary _).mkString(" ")
