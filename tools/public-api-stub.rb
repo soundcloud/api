@@ -37,6 +37,10 @@ get '/tracks/:id' do
   '{"id":12345}'
 end
 
+get '/tracks/:id/stream' do
+  redirect to('/streams-endpoint')
+end
+
 get '/-/health' do
   # Kristof told me to write this
   'Okey dokey'
