@@ -21,7 +21,6 @@ object Build extends HttpServerAppBuild(
     "com.soundcloud"     %% "track-coordinator-client" % "19.0.0",
     "com.fasterxml.uuid" %  "java-uuid-generator"      % "3.1.3",
     "commons-codec"      %  "commons-codec"            % "1.9",
-    "com.googlecode.owasp-java-html-sanitizer" % "owasp-java-html-sanitizer" % "20160827.1",
     "com.squareup.okhttp3"      % "mockwebserver" % "3.2.0" % "test",
     "org.apache.httpcomponents" % "httpclient"    % "4.5.2" % "test",
     "org.apache.httpcomponents" % "httpmime"      % "4.5.2" % "test"

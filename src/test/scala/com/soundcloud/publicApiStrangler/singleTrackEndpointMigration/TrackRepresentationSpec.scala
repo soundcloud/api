@@ -330,7 +330,7 @@ class TrackRepresentationSpec extends UnitSpecification {
     trackJson \ "downloadable" ==== JsBoolean(false)
     trackJson \ "genre" ==== JsString("future bass")
     trackJson \ "title" ==== JsString("Baby Bash")
-    trackJson \ "description" ==== JsString("Follow &#64;samstarling !")
+    trackJson \ "description" ==== JsString("Follow @samstarling !")
     trackJson \ "label_name" ==== JsString("Denis Owns")
     trackJson \ "isrc" ==== JsString("US-S1Z-99-00001")
     trackJson \ "release_year" ==== JsNumber(1991)
@@ -365,64 +365,6 @@ class TrackRepresentationSpec extends UnitSpecification {
     userJson \ "uri" ==== JsString("https://api.soundcloud.com/users/3456")
     userJson \ "permalink_url" ==== JsString("https://soundcloud.com/denis")
     userJson \ "avatar_url" ==== JsString("http://example.com/giraffe.jpg")
-  }
-
-  trait SanitizationSpecContext extends Context {
-    def exposedValueFor(fieldName: String, track: Track): String = {
-      val trackRep = createTrackRepresentation(track = track)
-      val trackJson = Json.toJson(trackRep)
-      val json = trackJson \ fieldName
-
-      json match {
-        case JsString(v) => v
-        case _ => s"<not a string: $json>"
-      }
-    }
-  }
-
-  "sanitization" >> {
-    "keeps <b>" in new SanitizationSpecContext {
-      exposedValueFor("description", defaultTrack.copy(description = Some("hello <b>world</b>"))) ==== "hello <b>world</b>"
-    }
-
-    "keeps <i>" in new SanitizationSpecContext {
-      exposedValueFor("description", defaultTrack.copy(description = Some("hello <i>world</i>"))) ==== "hello <i>world</i>"
-    }
-
-    "keeps <p>" in new SanitizationSpecContext {
-      exposedValueFor("description", defaultTrack.copy(description = Some("<p>Hello.</p><p>World.</p>"))) ==== "<p>Hello.</p><p>World.</p>"
-    }
-
-    "keeps <br>" in new SanitizationSpecContext {
-      exposedValueFor("description", defaultTrack.copy(description = Some("hello<br>beautiful<br/>world"))) ==== "hello<br />beautiful<br />world"
-    }
-
-    "keeps <a>" in new SanitizationSpecContext {
-      exposedValueFor("description", defaultTrack.copy(description = Some("<a href=\"http://example.com/kittens\">kittens</a>"))) ==== "<a href=\"http://example.com/kittens\" target=\"_blank\" rel=\"nofollow\">kittens</a>"
-    }
-
-    "removes bad attributes" in new SanitizationSpecContext {
-      exposedValueFor("description", defaultTrack.copy(description = Some("hello <i onclick=\"do_naughty_thing()\">world</i>"))) ==== "hello <i>world</i>"
-    }
-
-    "removes other tags" in new SanitizationSpecContext {
-      exposedValueFor("description", defaultTrack.copy(description = Some("hello <small>world</small> <script>omg</script>"))) ==== "hello world "
-    }
-
-    "fixes broken tags" in new SanitizationSpecContext {
-      exposedValueFor("description", defaultTrack.copy(description = Some("hello <i>world"))) ==== "hello <i>world</i>"
-    }
-
-    "sanitizes all values" in new SanitizationSpecContext {
-      exposedValueFor("description", defaultTrack.copy(description = Some("hello <i>world</i><script>naughty();</script>"))) ==== "hello <i>world</i>"
-      exposedValueFor("title", defaultTrack.copy(title = "hello <i>world</i><script>naughty();</script>")) ==== "hello <i>world</i>"
-      exposedValueFor("genre", defaultTrack.copy(genre = Some("hello <i>world</i><script>naughty();</script>"))) ==== "hello <i>world</i>"
-      exposedValueFor("key_signature", defaultTrack.copy(key_signature = Some("hello <i>world</i><script>naughty();</script>"))) ==== "hello <i>world</i>"
-      exposedValueFor("track_type", defaultTrack.copy(track_type = Some("hello <i>world</i><script>naughty();</script>"))) ==== "hello <i>world</i>"
-      exposedValueFor("label_name", defaultTrack.copy(label_name = Some("hello <i>world</i><script>naughty();</script>"))) ==== "hello <i>world</i>"
-      exposedValueFor("release", defaultTrack.copy(release = Some("hello <i>world</i><script>naughty();</script>"))) ==== "hello <i>world</i>"
-      exposedValueFor("purchase_title", defaultTrack.copy(purchase_title = Some("hello <i>world</i><script>naughty();</script>"))) ==== "hello <i>world</i>"
-    }
   }
 
   "sharing" in new Context {
