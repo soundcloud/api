@@ -42,7 +42,6 @@ object SearchRepository {
   val TracksPath = Path() / "search" / "tracks"
   val UsersPath = Path() / "search" / "users"
   val PlaylistsPath = Path() / "search" / "playlists"
-  val GroupsPath = Path() / "search" / "groups"
 }
 
 

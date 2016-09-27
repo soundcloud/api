@@ -5,9 +5,9 @@ import com.soundcloud.bff.nextbff.pagination.OffsetBasedPage
 import com.soundcloud.bff.nextbff.repository.RepositoryException
 import com.soundcloud.bff.nextbff.test.JsonMappingMock
 import com.soundcloud.bff.test.InjectionBasedControllerSpecification
-import com.soundcloud.jvmkit.{Urn, UserSession}
 import com.soundcloud.jvmkit.telemetry.Telemetry
 import com.soundcloud.jvmkit.test.InMemoryConfig
+import com.soundcloud.jvmkit.{Urn, UserSession}
 import com.soundcloud.publicApiStrangler.client.followcounts.{FollowCounts, FollowCountsClient}
 import com.soundcloud.publicApiStrangler.mapper.search.SearchMapper
 import com.soundcloud.publicApiStrangler.mapping.search.{Search, SearchDispatcherRequest}
@@ -60,7 +60,6 @@ class SearchControllerSpec extends InjectionBasedControllerSpecification {
     }
   }
 
-
   "when resource that supports search is called" >> {
 
     val endpoints = Seq(
@@ -74,15 +73,8 @@ class SearchControllerSpec extends InjectionBasedControllerSpecification {
       ("/users", SearchDispatcherRequest.userSearch),
       ("/users.json", SearchDispatcherRequest.userSearch),
 
-      ("/groups", SearchDispatcherRequest.groupSearch),
-      ("/groups.json", SearchDispatcherRequest.groupSearch),
-
       ("/playlists", SearchDispatcherRequest.playlistSearch),
       ("/playlists.json", SearchDispatcherRequest.playlistSearch)
-
-      //        ("/search", UniversalPath, searchMapperMock),
-      //        ("/search/playlists", PlaylistsPath, searchMapperMock),
-      //        ("/search/groups", GroupsPath, searchMapperMock)
     )
 
     trait Context extends VerifiedMocks with ForwardContext {

@@ -20,63 +20,103 @@ class GroupsControllerSpec extends InjectionBasedControllerSpecification {
     when(mothershipDispatcher.defaultHandling(any)).thenReturn(success)
   }
 
-  "GET /groups/:group_id/users" >> {
-    "falls back to Mothership" in new Context {
-      val response = get(controller, "/groups/12345/users")
+  "GET /groups" >> {
+    "returns empty list" in new Context {
+      val response = get(controller, "/groups")
       response.status ==== Status.Ok
+      response.body ==== "[]"
     }
 
-    "falls back .json requests to Mothership" in new Context {
-      val response = get(controller, "/groups/12345/users.json")
+    "returns empty list" in new Context {
+      val response = get(controller, "/groups.json")
       response.status ==== Status.Ok
+      response.body ==== "[]"
+    }
+  }
+
+  "GET /me/groups" >> {
+    "returns empty list" in new Context {
+      val response = get(controller, "/me/groups")
+      response.status ==== Status.Ok
+      response.body ==== "[]"
+    }
+
+    "returns empty list" in new Context {
+      val response = get(controller, "/me/groups.json")
+      response.status ==== Status.Ok
+      response.body ==== "[]"
+    }
+  }
+
+  "GET /groups/:group_id" >> {
+    "returns not found" in new Context {
+      val response = get(controller, "/groups/12345")
+      response.status ==== Status.NotFound
+    }
+
+    "returns not found" in new Context {
+      val response = get(controller, "/groups/12345.json")
+      response.status ==== Status.NotFound
+    }
+  }
+
+  "GET /groups/:group_id/users" >> {
+    "returns not found" in new Context {
+      val response = get(controller, "/groups/12345/users")
+      response.status ==== Status.NotFound
+    }
+
+    "returns not found" in new Context {
+      val response = get(controller, "/groups/12345/users.json")
+      response.status ==== Status.NotFound
     }
   }
 
   "GET /groups/:group_id/moderators" >> {
-    "falls back to Mothership" in new Context {
+    "returns not found" in new Context {
       val response = get(controller, "/groups/12345/moderators")
-      response.status ==== Status.Ok
+      response.status ==== Status.NotFound
     }
 
-    "falls back .json requests to Mothership" in new Context {
+    "returns not found" in new Context {
       val response = get(controller, "/groups/12345/moderators.json")
-      response.status ==== Status.Ok
+      response.status ==== Status.NotFound
     }
   }
 
   "GET /groups/:group_id/contributors" >> {
-    "falls back to Mothership" in new Context {
+    "returns not found" in new Context {
       val response = get(controller, "/groups/12345/contributors")
-      response.status ==== Status.Ok
+      response.status ==== Status.NotFound
     }
 
-    "falls back .json requests to Mothership" in new Context {
+    "returns not found" in new Context {
       val response = get(controller, "/groups/12345/contributors.json")
-      response.status ==== Status.Ok
+      response.status ==== Status.NotFound
     }
   }
 
   "GET /groups/:group_id/members" >> {
-    "falls back to Mothership" in new Context {
+    "returns not found" in new Context {
       val response = get(controller, "/groups/12345/members")
-      response.status ==== Status.Ok
+      response.status ==== Status.NotFound
     }
 
-    "falls back .json requests to Mothership" in new Context {
+    "returns not found" in new Context {
       val response = get(controller, "/groups/12345/members.json")
-      response.status ==== Status.Ok
+      response.status ==== Status.NotFound
     }
   }
 
   "GET /groups/:group_id/tracks" >> {
-    "falls back to Mothership" in new Context {
+    "returns not found" in new Context {
       val response = get(controller, "/groups/12345/tracks")
-      response.status ==== Status.Ok
+      response.status ==== Status.NotFound
     }
 
-    "falls back .json requests to Mothership" in new Context {
+    "returns not found" in new Context {
       val response = get(controller, "/groups/12345/tracks.json")
-      response.status ==== Status.Ok
+      response.status ==== Status.NotFound
     }
   }
 }
