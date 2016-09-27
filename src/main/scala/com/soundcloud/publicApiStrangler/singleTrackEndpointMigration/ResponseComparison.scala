@@ -203,15 +203,20 @@ class ResponseComparison(telemetry: Telemetry) {
     "artwork_url",
     "available_country_codes",
     "bpm",
+    "comment_count",
     "description",
+    "download_count",
     "download_url",
+    "downloadable",
     "duration",
+    "favoritings_count",
     "genre",
     "label_name",
     "last_modified",
     "original_content_size",
     "original_format",
     "permalink_url",
+    "playback_count",
     "release_day",
     "release_month",
     "release_year",
@@ -221,6 +226,7 @@ class ResponseComparison(telemetry: Telemetry) {
     "tag_list",
     "title",
     "uri",
+    "user_favorite",
     "waveform_url"
   )
 
