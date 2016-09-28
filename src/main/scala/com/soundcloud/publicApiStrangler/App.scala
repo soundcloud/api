@@ -301,8 +301,7 @@ object App
 
   private val groupsController = new GroupsController(
     userAuthentication,
-    mothershipDispatcher,
-    followCountsClient
+    mothershipDispatcher
   )
 
   private val suggestedUsersController = new SuggestedUsersController(

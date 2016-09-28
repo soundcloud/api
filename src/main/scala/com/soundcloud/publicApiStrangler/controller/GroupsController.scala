@@ -8,9 +8,8 @@ import com.twitter.util.Future
 import play.api.libs.json.JsArray
 
 class GroupsController(val userAuthentication: UserAuthentication,
-                       val mothershipDispatcher: DispatchToMothershipHandler,
-                       val followCountsClient: FollowCountsClient)
-  extends BffInjectionBasedController with FollowCountsHelper {
+                       val mothershipDispatcher: DispatchToMothershipHandler)
+  extends BffInjectionBasedController {
 
   get("/groups")(emptyList)
   get("/groups.json")(emptyList)

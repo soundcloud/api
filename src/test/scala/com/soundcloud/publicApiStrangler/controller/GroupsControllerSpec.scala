@@ -13,8 +13,7 @@ class GroupsControllerSpec extends InjectionBasedControllerSpecification {
   trait Context extends Scope with VerifiedMocks {
     val userAuthentication = fakeUserAuthentication(anonymousSession)
     val mothershipDispatcher = mock[DispatchToMothershipHandler]
-    val followCountsClient = mock[FollowCountsClient]
-    val controller = new GroupsController(userAuthentication, mothershipDispatcher, followCountsClient)
+    val controller = new GroupsController(userAuthentication, mothershipDispatcher)
 
     val success = Future.value(new ResponseBuilder().status(200).build)
     when(mothershipDispatcher.defaultHandling(any)).thenReturn(success)
