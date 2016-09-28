@@ -12,71 +12,112 @@ import com.twitter.util.Future
 class GroupsControllerSpec extends InjectionBasedControllerSpecification {
   trait Context extends Scope with VerifiedMocks {
     val userAuthentication = fakeUserAuthentication(anonymousSession)
-    val mothershipDispatcher = mock[DispatchToMothershipHandler]
-    val followCountsClient = mock[FollowCountsClient]
-    val controller = new GroupsController(userAuthentication, mothershipDispatcher, followCountsClient)
+    val controller = new GroupsController(userAuthentication)
+  }
 
-    val success = Future.value(new ResponseBuilder().status(200).build)
-    when(mothershipDispatcher.defaultHandling(any)).thenReturn(success)
+  "GET /groups" >> {
+    "returns empty list" in new Context {
+      val response = get(controller, "/groups")
+      response.status ==== Status.Ok
+      response.body ==== "[]"
+    }
+
+    "returns empty list" in new Context {
+      val response = get(controller, "/groups.json")
+      response.status ==== Status.Ok
+      response.body ==== "[]"
+    }
+
+    "returns empty list" in new Context {
+      val response = get(controller, "/groups/")
+      response.status ==== Status.Ok
+      response.body ==== "[]"
+    }
+
+    "returns empty list" in new Context {
+      val response = get(controller, "/groups.json/")
+      response.status ==== Status.Ok
+      response.body ==== "[]"
+    }
+  }
+
+  "GET /me/groups" >> {
+    "returns empty list" in new Context {
+      val response = get(controller, "/me/groups")
+      response.status ==== Status.Ok
+      response.body ==== "[]"
+    }
+
+    "returns empty list" in new Context {
+      val response = get(controller, "/me/groups.json")
+      response.status ==== Status.Ok
+      response.body ==== "[]"
+    }
+
+    "returns empty list" in new Context {
+      val response = get(controller, "/me/groups/")
+      response.status ==== Status.Ok
+      response.body ==== "[]"
+    }
+
+    "returns empty list" in new Context {
+      val response = get(controller, "/me/groups.json/")
+      response.status ==== Status.Ok
+      response.body ==== "[]"
+    }
+  }
+
+  "GET /groups/:group_id" >> {
+    "returns not found" in new Context {
+      List("/groups/123", "/groups/123/", "/groups/123.json", "/groups/123.json/").foreach { path =>
+        val response = get(controller, path)
+        response.status ==== Status.NotFound
+      }
+    }
   }
 
   "GET /groups/:group_id/users" >> {
-    "falls back to Mothership" in new Context {
-      val response = get(controller, "/groups/12345/users")
-      response.status ==== Status.Ok
-    }
-
-    "falls back .json requests to Mothership" in new Context {
-      val response = get(controller, "/groups/12345/users.json")
-      response.status ==== Status.Ok
+    "returns not found" in new Context {
+      List("/groups/123/users", "/groups/123/users/", "/groups/123/users.json", "/groups/123/users.json/").foreach { path =>
+        val response = get(controller, path)
+        response.status ==== Status.NotFound
+      }
     }
   }
 
   "GET /groups/:group_id/moderators" >> {
-    "falls back to Mothership" in new Context {
-      val response = get(controller, "/groups/12345/moderators")
-      response.status ==== Status.Ok
-    }
-
-    "falls back .json requests to Mothership" in new Context {
-      val response = get(controller, "/groups/12345/moderators.json")
-      response.status ==== Status.Ok
+    "returns not found" in new Context {
+      List("/groups/123/moderators", "/groups/123/moderators/", "/groups/123/moderators.json", "/groups/123/moderators.json/").foreach { path =>
+        val response = get(controller, path)
+        response.status ==== Status.NotFound
+      }
     }
   }
 
   "GET /groups/:group_id/contributors" >> {
-    "falls back to Mothership" in new Context {
-      val response = get(controller, "/groups/12345/contributors")
-      response.status ==== Status.Ok
-    }
-
-    "falls back .json requests to Mothership" in new Context {
-      val response = get(controller, "/groups/12345/contributors.json")
-      response.status ==== Status.Ok
+    "returns not found" in new Context {
+      List("/groups/123/contributors", "/groups/123/contributors/", "/groups/123/contributors.json", "/groups/123/contributors.json/").foreach { path =>
+        val response = get(controller, path)
+        response.status ==== Status.NotFound
+      }
     }
   }
 
   "GET /groups/:group_id/members" >> {
-    "falls back to Mothership" in new Context {
-      val response = get(controller, "/groups/12345/members")
-      response.status ==== Status.Ok
-    }
-
-    "falls back .json requests to Mothership" in new Context {
-      val response = get(controller, "/groups/12345/members.json")
-      response.status ==== Status.Ok
+    "returns not found" in new Context {
+      List("/groups/123/members", "/groups/123/members/", "/groups/123/members.json", "/groups/123/members.json/").foreach { path =>
+        val response = get(controller, path)
+        response.status ==== Status.NotFound
+      }
     }
   }
 
   "GET /groups/:group_id/tracks" >> {
-    "falls back to Mothership" in new Context {
-      val response = get(controller, "/groups/12345/tracks")
-      response.status ==== Status.Ok
-    }
-
-    "falls back .json requests to Mothership" in new Context {
-      val response = get(controller, "/groups/12345/tracks.json")
-      response.status ==== Status.Ok
+    "returns not found" in new Context {
+      List("/groups/123/tracks", "/groups/123/tracks/", "/groups/123/tracks.json", "/groups/123/tracks.json/").foreach { path =>
+        val response = get(controller, path)
+        response.status ==== Status.NotFound
+      }
     }
   }
 }

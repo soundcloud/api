@@ -19,7 +19,11 @@ import play.api.libs.json.{JsArray, JsNull, JsObject, Json}
 
 class SearchRepositorySpec extends UnitSpecification {
   trait Context extends VerifiedMocks {
-    val highTierParams = Params("filter.content_tier" -> "FREE", "filter.content_country" -> "US")
+    val commonParams = Params(
+      "filter.content_tier" -> "FREE",
+      "filter.content_country" -> "US",
+      "filter.model" -> "sound,set,person"
+    )
 
     lazy val session = loggedInSession(new Urn("soundcloud:users:123"))
     lazy val mockService = mock[BffJsonService]
@@ -30,7 +34,7 @@ class SearchRepositorySpec extends UnitSpecification {
     "adds filter.content_type=FREE and filter.content_country=<countryCode>" in new Context {
       val response = withContentsOf("search", "tracks").as[JsObject]
       doReturn(Future.value(JsonResponse(OkStatus, response))).when(mockService)
-        .get(session, SearchRepository.TracksPath, highTierParams + ("q" -> "bar"), Params.empty)
+        .get(session, SearchRepository.TracksPath, commonParams + ("q" -> "bar"), Params.empty)
       val request = OffsetBasedPage(
         SearchDispatcherRequest(SearchRepository.TracksPath, Set.empty, Map.empty)(x => x),
         "http://localhost", "/search/tracks", Params("q" -> "bar"), 0, 10
@@ -43,7 +47,7 @@ class SearchRepositorySpec extends UnitSpecification {
     "adds filter.content_type=FREE and filter.content_country=<countryCode>" in new Context {
       val response = withContentsOf("search", "tracks").as[JsObject]
       doReturn(Future.value(JsonResponse(OkStatus, response))).when(mockService)
-        .get(session, SearchRepository.UniversalPath, highTierParams + ("q" -> "bar"), Params.empty)
+        .get(session, SearchRepository.UniversalPath, commonParams + ("q" -> "bar"), Params.empty)
       val request = OffsetBasedPage(
         SearchDispatcherRequest(SearchRepository.UniversalPath, Set.empty, Map.empty)(x => x),
         "http://localhost", "/search/universal", Params("q" -> "bar"), 0, 10
