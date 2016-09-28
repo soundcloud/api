@@ -190,25 +190,5 @@
       "urn": "soundcloud:users:2097360",
       "url": "http://moshimoshi.int.s-cloud.net/users/soundcloud:users:2097360"
     }
-  },
-  {
-    "created_at": "2011/06/27 04:51:28 +0000",
-    "description": "just grab it and throw it up, just here to bring some foo lovin' to soundcloud.",
-    "name": "Foo Fighters",
-    "permalink": "foo-fighters",
-    "short_description": "all things Foos. covers, live bootlegs, whatever you feel like.",
-    "members_count": 428,
-    "track_count": 268,
-    "moderated": false,
-    "self": {
-      "urn": "soundcloud:groups:30910",
-      "url": "http://moshimoshi.int.s-cloud.net/groups/soundcloud:groups:30910"
-    },
-    "permalink_url": "http://soundcloud.com/groups/foo-fighters",
-    "creator": {
-      "urn": "soundcloud:users:2097360",
-      "url": "http://moshimoshi.int.s-cloud.net/users/soundcloud:users:2097360"
-    },
-    "artwork_url": "http://i1.sndcdn.com/artworks-000008656992-e5ywex-large.jpg"
   }
 ]
