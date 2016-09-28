@@ -4,8 +4,8 @@ import com.soundcloud.bff.ConfigComponent
 import com.soundcloud.jvmkit.ResourceName
 import com.soundcloud.jvmkit.config.ConfigConvention.ADDRESS
 import com.soundcloud.jvmkit.telemetry.Telemetry
+import com.soundcloud.scalakit.finagle.dns.ServiceEntryPoint
 import com.soundcloud.scalakit.finagle.http.HttpClientBuilder
-import com.soundcloud.scalakit.finagle.jsonservice.ServiceEntryPoint
 import com.twitter.finagle.Service
 import com.twitter.finagle.http.{Request, Response}
 import com.twitter.finagle.service.RetryPolicy.RetryableWriteException
