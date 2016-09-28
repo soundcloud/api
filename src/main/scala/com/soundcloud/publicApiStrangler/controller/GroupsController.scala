@@ -10,33 +10,25 @@ import play.api.libs.json.JsArray
 class GroupsController(val userAuthentication: UserAuthentication)
   extends BffInjectionBasedController {
 
-  get("/groups")(emptyList)
-  get("/groups.json")(emptyList)
-  get("/groups/")(emptyList)
-  get("/groups.json/")(emptyList)
+  getWithVariants("/groups")(emptyList)
+  getWithVariants("/me/groups")(emptyList)
+  getWithVariants("/groups/:group_id")(notFound)
+  getWithVariants("/groups/:group_id/users")(notFound)
+  getWithVariants("/groups/:group_id/moderators")(notFound)
+  getWithVariants("/groups/:group_id/contributors")(notFound)
+  getWithVariants("/groups/:group_id/members")(notFound)
+  getWithVariants("/groups/:group_id/tracks")(notFound)
 
-  get("/me/groups")(emptyList)
-  get("/me/groups.json")(emptyList)
-  get("/me/groups/")(emptyList)
-  get("/me/groups.json/")(emptyList)
+  private def variantsOf(s: String) = List(
+    s,
+    s + '/',
+    s + ".json",
+    s + ".json/"
+  )
 
-  get("/groups/:group_id")(notFound)
-  get("/groups/:group_id.json")(notFound)
-
-  get("/groups/:group_id/users")(notFound)
-  get("/groups/:group_id/users.json")(notFound)
-
-  get("/groups/:group_id/moderators")(notFound)
-  get("/groups/:group_id/moderators.json")(notFound)
-
-  get("/groups/:group_id/contributors")(notFound)
-  get("/groups/:group_id/contributors.json")(notFound)
-
-  get("/groups/:group_id/members")(notFound)
-  get("/groups/:group_id/members.json")(notFound)
-
-  get("/groups/:group_id/tracks")(notFound)
-  get("/groups/:group_id/tracks.json")(notFound)
+  // Same as #get, but also handles variants with .json and with a trailing slash
+  private def getWithVariants(s: String)(callback: BffRequestHandler) =
+    variantsOf(s).foreach(get(_)(callback))
 
   private def emptyList(request: Request): Future[ResponseBuilder] =
     new ResponseBuilder().ok.json(JsArray()).toFuture
