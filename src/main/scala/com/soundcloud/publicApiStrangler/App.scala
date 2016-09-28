@@ -299,8 +299,10 @@ object App
     followCountsClient
   )
 
-  private val groupsController = new GroupsController(
-    userAuthentication
+  private val groupUsersController = new GroupsController(
+    userAuthentication,
+    mothershipDispatcher,
+    followCountsClient
   )
 
   private val suggestedUsersController = new SuggestedUsersController(
@@ -367,8 +369,10 @@ object App
       """/users/\d+""",
       """/tracks/\d+""",
       """/playlists/\d+""",
+      """/groups/\d+""",
       """/comments/\d+""",
       """/me""",
+      """/me/groups""",
       """/me/connections""",
       """/me/connections/\d+""",
       """/apps""",
@@ -521,7 +525,7 @@ object App
     singleTrackController,
     likesController,
     friendsController,
-    groupsController,
+    groupUsersController,
     suggestedUsersController,
     repostersController,
     userController,

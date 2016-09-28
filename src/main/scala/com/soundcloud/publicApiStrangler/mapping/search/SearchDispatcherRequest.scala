@@ -83,6 +83,9 @@ object SearchDispatcherRequest {
   val userSearch: Request => SearchDispatcherRequest = request =>
     raw(SearchRepository.UsersPath, request, CommonParamMappings.keySet, mapCommonParams)
 
+  val groupSearch: Request => SearchDispatcherRequest = request =>
+    raw(SearchRepository.GroupsPath, request, CommonParamMappings.keySet, mapCommonParams)
+
   val playlistSearch: Request => SearchDispatcherRequest = request =>
     raw(SearchRepository.PlaylistsPath, request, CommonParamMappings.keySet ++ PlaylistParamMappings.keySet, mapPlaylistParams)
 
