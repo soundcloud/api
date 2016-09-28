@@ -14,9 +14,13 @@ class GroupsController(val userAuthentication: UserAuthentication,
 
   get("/groups")(emptyList)
   get("/groups.json")(emptyList)
+  get("/groups/")(emptyList)
+  get("/groups.json/")(emptyList)
 
   get("/me/groups")(emptyList)
   get("/me/groups.json")(emptyList)
+  get("/me/groups/")(emptyList)
+  get("/me/groups.json/")(emptyList)
 
   get("/groups/:group_id")(notFound)
   get("/groups/:group_id.json")(notFound)

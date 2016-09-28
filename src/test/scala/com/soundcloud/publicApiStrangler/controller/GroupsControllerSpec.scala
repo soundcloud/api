@@ -32,6 +32,18 @@ class GroupsControllerSpec extends InjectionBasedControllerSpecification {
       response.status ==== Status.Ok
       response.body ==== "[]"
     }
+
+    "returns empty list" in new Context {
+      val response = get(controller, "/groups/")
+      response.status ==== Status.Ok
+      response.body ==== "[]"
+    }
+
+    "returns empty list" in new Context {
+      val response = get(controller, "/groups.json/")
+      response.status ==== Status.Ok
+      response.body ==== "[]"
+    }
   }
 
   "GET /me/groups" >> {
@@ -43,6 +55,18 @@ class GroupsControllerSpec extends InjectionBasedControllerSpecification {
 
     "returns empty list" in new Context {
       val response = get(controller, "/me/groups.json")
+      response.status ==== Status.Ok
+      response.body ==== "[]"
+    }
+
+    "returns empty list" in new Context {
+      val response = get(controller, "/me/groups/")
+      response.status ==== Status.Ok
+      response.body ==== "[]"
+    }
+
+    "returns empty list" in new Context {
+      val response = get(controller, "/me/groups.json/")
       response.status ==== Status.Ok
       response.body ==== "[]"
     }
