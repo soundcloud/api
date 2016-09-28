@@ -388,6 +388,13 @@ class TrackRepresentationSpec extends UnitSpecification {
     privateTrackJson \ "sharing" ==== JsString("private")
   }
 
+  "strangely specific bpm values" in new Context {
+    val track = defaultTrack.copy(bpm = Some(128.10000610351562))
+    val trackRep = createTrackRepresentation(track = track)
+    val trackJson = Json.toJson(trackRep)
+    trackJson \ "bpm" ==== JsNumber(128.1)
+  }
+
   "weird artwork filename" in new Context {
     val track = defaultTrack.copy(artwork = Artwork(filename = Some("adfhlsh.jpg")))
     val trackRep = createTrackRepresentation(track = track)
