@@ -206,17 +206,42 @@ object TrackRepresentation {
         "release_day" -> rep.track.release_day,
         "original_format" -> rep.audioMetadata.original_format,
         "license" -> rep.track.license,
-        "uri" -> s"https://api.soundcloud.com/tracks/${rep.id}",
+        "uri" -> urlFor(rep),
         "user" -> rep.user,
-        "permalink_url" -> rep.track.permalink_url,
+        "permalink_url" -> permalinkFor(rep.track),
         "artwork_url" -> rep.track.artwork.filename.map(imageUrl(_)),
         "playback_count" -> rep.counts.playback_count,
         "download_count" -> rep.counts.download_count,
         "favoritings_count" -> rep.counts.favoritings_count,
         "comment_count" -> rep.counts.comment_count,
-        "stream_url" -> s"https://api.soundcloud.com/tracks/${rep.id}/stream",
-        "download_url" -> s"https://api.soundcloud.com/tracks/${rep.id}/download"
+        "stream_url" -> urlFor(rep, "stream"),
+        "download_url" -> urlFor(rep, "download")
       )
+    }
+
+    private def permalinkFor(track: Track) = {
+      track.permalink_url.map { url =>
+        if (track.public)
+          url
+        else
+          s"${url}/${track.secret_token}"
+      }
+    }
+
+    private val baseUrl = "https://api.soundcloud.com/tracks"
+
+    private def urlFor(rep: TrackRepresentation) = {
+      if (rep.track.public)
+        s"${baseUrl}/${rep.id}"
+      else
+        s"${baseUrl}/${rep.id}?secret_token=${rep.track.secret_token}"
+    }
+
+    private def urlFor(rep: TrackRepresentation, subresource: String) = {
+      if (rep.track.public)
+        s"${baseUrl}/${rep.id}/$subresource"
+      else
+        s"${baseUrl}/${rep.id}/$subresource?secret_token=${rep.track.secret_token}"
     }
 
     private def mkTagList(rep: TrackRepresentation): String =
