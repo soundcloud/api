@@ -1,14 +1,12 @@
 package com.soundcloud.publicApiStrangler.singleTrackEndpointMigration
 
-import com.soundcloud.bff.JsNumber
 import com.soundcloud.jvmkit.logging.SoundCloudLoggerFactory
 import com.soundcloud.jvmkit.telemetry.Telemetry
 import com.soundcloud.scalakit.json.Json
 import com.twitter.finagle.http.{HeaderMap, Request, Response, Status}
 import com.twitter.util.{Return, Try}
-
 import scala.collection.Set
-import play.api.libs.json.{JsObject, JsString}
+import play.api.libs.json.{JsNumber, JsObject, JsString}
 
 class ResponseComparison(telemetry: Telemetry) {
   private val logger = SoundCloudLoggerFactory.getLogger(this.getClass.getName)

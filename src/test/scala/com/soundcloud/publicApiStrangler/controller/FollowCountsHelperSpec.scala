@@ -1,19 +1,17 @@
 package com.soundcloud.publicApiStrangler.controller
 
-import com.soundcloud.bff.JsArray
 import com.soundcloud.bff.finagle.{Request, ResponseBuilder}
 import com.soundcloud.bff.nextbff.test.FakeUserAuthentication
-import com.soundcloud.bff.security.AuthenticatorService
 import com.soundcloud.bff.test.UnitSpecification
+import com.soundcloud.jvmkit.{Urn, UserSession}
 import com.soundcloud.publicApiStrangler.client.followcounts.{FollowCounts, FollowCountsClient}
 import com.soundcloud.publicApiStrangler.support.DispatchToMothershipHandler
 import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures
-import com.soundcloud.scalakit._
 import com.soundcloud.scalakit.finagle.http.HandlerRequest
 import com.soundcloud.scalakit.test.VerifiedMocks
 import com.twitter.finagle.http.{Request => FinagleRequest}
 import com.twitter.util.{Await, Future}
-import play.api.libs.json.{JsNull, JsValue, Json}
+import play.api.libs.json.{JsArray, JsNull, JsValue, Json}
 
 class FollowCountsHelperSpec  extends UnitSpecification with Fixtures {
 
@@ -30,9 +28,9 @@ class FollowCountsHelperSpec  extends UnitSpecification with Fixtures {
       override def mothershipDispatcher = mothershipDispatcherMock
     }
 
-    val user1 = Urn("soundcloud", "users", "183")
-    val user2 = Urn("soundcloud", "users", "1111")
-    val user3 = Urn("soundcloud", "users", "2222")
+    val user1 = new Urn("soundcloud", "users", "183")
+    val user2 = new Urn("soundcloud", "users", "1111")
+    val user3 = new Urn("soundcloud", "users", "2222")
 
     def followCountsFlag: Boolean
 

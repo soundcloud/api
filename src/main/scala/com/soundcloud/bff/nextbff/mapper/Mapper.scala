@@ -1,9 +1,9 @@
 package com.soundcloud.bff.nextbff.mapper
 
 import com.fasterxml.jackson.annotation.JsonIgnoreType
-import com.soundcloud.bff.Future
 import com.soundcloud.bff.nextbff.mapping.{Mapping, MappingContext}
 import com.soundcloud.jvmkit.UserSession
+import com.twitter.util.Future
 
 @JsonIgnoreType
 trait Mapper[I, O <: Mapping] { outer =>

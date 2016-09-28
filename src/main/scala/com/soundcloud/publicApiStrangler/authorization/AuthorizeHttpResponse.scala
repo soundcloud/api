@@ -1,12 +1,12 @@
 package com.soundcloud.publicApiStrangler.authorization
 
-import com.soundcloud.bff.finagle.{Request => BffRequest, ResponseBuilder}
+import com.soundcloud.bff.finagle.{ResponseBuilder, Request => BffRequest}
 import com.soundcloud.bff.media.WaveformUrlsRepository
 import com.soundcloud.bff.web.UserAuthentication
+import com.soundcloud.jvmkit.{Urn, UserSession}
 import com.soundcloud.jvmkit.policies.{ContentAuthorization, ContentPolicy}
 import com.soundcloud.publicApiStrangler.authorization.TrackWaveformActionStatus._
 import com.soundcloud.scalakit.json.Json
-import com.soundcloud.scalakit.{Urn, UserSession}
 import com.twitter.util.Future
 
 class AuthorizeHttpResponse(

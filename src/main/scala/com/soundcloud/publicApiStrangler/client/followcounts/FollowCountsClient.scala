@@ -3,9 +3,10 @@ package com.soundcloud.publicApiStrangler.client.followcounts
 import java.net.URLEncoder
 
 import com.soundcloud.bff.services.JsonService
+import com.soundcloud.jvmkit.{Urn, UserSession}
 import com.soundcloud.jvmkit.config.{Config, DataSensitivity}
 import com.soundcloud.publicApiStrangler.support.BatchingUtilities._
-import com.soundcloud.scalakit._
+import com.soundcloud.scalakit.Path
 import com.soundcloud.scalakit.finagle.http.OkStatus
 import com.soundcloud.scalakit.finagle.jsonservice.{JsonResponse, Params}
 import com.twitter.util.{Future, NonFatal}
@@ -55,7 +56,7 @@ class FollowCountsClient(client: JsonService, config: Config) {
         body.as[JsObject].value.toMap.mapValues { individualResponseJson =>
           individualResponseJson.as[JsObject].value.toMap.flatMap { case (userId, jsonValue) =>
             val value = (individualResponseJson \ userId \ "series" \\ "count").headOption.map(_.as[Long])
-            value.map(Urn("soundcloud", "users", userId) -> _)
+            value.map(new Urn("soundcloud", "users", userId) -> _)
           }
         }
       case _ =>

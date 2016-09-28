@@ -1,0 +1,7 @@
+{
+  "error": {
+    "name": "MaxFollowingsReached",
+    "message": "user has reached the maximum follow limit"
+  }
+}
+

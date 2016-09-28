@@ -1,8 +1,8 @@
 package com.soundcloud.publicApiStrangler.authorization
 
+import com.soundcloud.jvmkit.{Urn, UserSession}
 import com.soundcloud.jvmkit.policies.{ContentAuthorization, ContentPolicy, MonetizationModel}
 import com.soundcloud.publicApiStrangler.authorization.TrackWaveformActionStatus._
-import com.soundcloud.scalakit.{Urn, UserSession}
 import play.api.libs.json.{JsObject, JsValue, Json}
 
 case class TrackPolicyApplicator(clientWhitelist: Set[Urn]) {

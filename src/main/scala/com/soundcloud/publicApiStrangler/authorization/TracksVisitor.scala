@@ -1,10 +1,9 @@
 package com.soundcloud.publicApiStrangler.authorization
 
+import com.soundcloud.jvmkit.Urn
 import play.api.libs.json.JsValue
 import play.api.libs.json.JsObject
 import play.api.libs.json.JsArray
-import com.soundcloud.scalakit.Urn
-import play.api.libs.json.JsString
 
 class TracksVisitor(val wrapped: JsValue) {
 
@@ -33,7 +32,7 @@ class TracksVisitor(val wrapped: JsValue) {
 
   private def visitTrack(json: JsObject, visit: VisitTrack) = {
     val id = (json \ "id").as[Int]
-    val urn = Urn(s"soundcloud:tracks:$id")
+    val urn = new Urn(s"soundcloud:tracks:$id")
     visit(urn, new Track(json))
   }
 

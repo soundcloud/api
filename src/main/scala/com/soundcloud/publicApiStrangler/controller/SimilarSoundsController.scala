@@ -3,11 +3,10 @@ package com.soundcloud.publicApiStrangler.controller
 import com.soundcloud.bff.finagle.{Request, ResponseBuilder}
 import com.soundcloud.bff.nextbff.pagination.PageBuilder
 import com.soundcloud.bff.web.{BffInjectionBasedController, UserAuthentication}
-import com.soundcloud.jvmkit.UserSession
+import com.soundcloud.jvmkit.{Urn, UserSession}
 import com.soundcloud.publicApiStrangler.headers.DefaultResponseHeaders
 import com.soundcloud.publicApiStrangler.mapper.similarsounds.SimilarSoundsMapper
 import com.soundcloud.publicApiStrangler.mapping.similarsounds.SimilarSoundsMapping
-import com.soundcloud.scalakit.Urn
 import com.soundcloud.scalakit.finagle.jsonservice.Params
 import com.twitter.util.Future
 

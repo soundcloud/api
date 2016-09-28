@@ -2,9 +2,10 @@ package com.soundcloud.publicApiStrangler.singleTrackEndpointMigration.trackmeta
 
 import com.soundcloud.jvmkit.config.{Config, ConfigConvention}
 import com.soundcloud.jvmkit.telemetry.Telemetry
-import com.soundcloud.jvmkit.{ResourceName, UserSession}
+import com.soundcloud.jvmkit.{ResourceName, Urn, UserSession}
+import com.soundcloud.scalakit.finagle.dns.ServiceEntryPoint
 import com.soundcloud.scalakit.finagle.http.OkStatus
-import com.soundcloud.scalakit.finagle.jsonservice.{JsonClient, JsonResponse, Params, ServiceEntryPoint}
+import com.soundcloud.scalakit.finagle.jsonservice.{JsonClient, JsonResponse, Params}
 import com.soundcloud.scalakit.{Path, Urn}
 import com.twitter.util.Future
 import play.api.libs.json._

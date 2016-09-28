@@ -1,9 +1,9 @@
 package com.soundcloud.bff.nextbff.mapping
 
 import com.fasterxml.jackson.annotation.JsonIgnoreType
-import com.soundcloud.bff.Future
 import com.soundcloud.bff.nextbff.mapper.{Embedded, Mapper}
 import com.soundcloud.jvmkit.UserSession
+import com.twitter.util.Future
 
 import scala.collection.mutable.{Map => MutableMap, Set => MutableSet}
 

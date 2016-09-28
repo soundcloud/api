@@ -1,8 +1,8 @@
 package com.soundcloud.publicApiStrangler.mapping.timeline
 
 import com.soundcloud.bff.nextbff.mapping.MappingContext
+import com.soundcloud.jvmkit.Urn
 import com.soundcloud.publicApiStrangler.mapper.timeline.EntitySummaryMapper
-import com.soundcloud.scalakit.Urn
 import play.api.libs.json.JsValue
 
 class Playlist(jsonValue: JsValue,

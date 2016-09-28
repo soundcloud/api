@@ -1,11 +1,11 @@
 package com.soundcloud.publicApiStrangler.client
 
-import com.soundcloud.jvmkit.UserSession
+import com.soundcloud.jvmkit.{Urn, UserSession}
 import com.soundcloud.publicApiStrangler.client.gobbly.{Error, Result, ServerError, Success}
+import com.soundcloud.scalakit.Path
 import com.soundcloud.scalakit.Urn.format
 import com.soundcloud.scalakit.finagle.http.OkStatus
 import com.soundcloud.scalakit.finagle.jsonservice.{JsonClient, JsonResponse, Params}
-import com.soundcloud.scalakit.{Path, Urn}
 import com.twitter.util.{Future, NonFatal}
 
 /**

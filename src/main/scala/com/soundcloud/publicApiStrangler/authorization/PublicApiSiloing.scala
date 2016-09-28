@@ -1,8 +1,7 @@
 package com.soundcloud.publicApiStrangler.authorization
 
 import com.soundcloud.bff.finagle.ResponseLike
-import com.soundcloud.jvmkit.UserSession
-import com.soundcloud.scalakit.Urn
+import com.soundcloud.jvmkit.{Urn, UserSession}
 import com.twitter.util.Future
 import com.soundcloud.jvmkit.telemetry.Telemetry
 

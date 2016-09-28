@@ -26,7 +26,7 @@ class TrackStreamJsonResponseMapper extends TrackStreamResponseMapper {
     if(!isHeadRequest) {
       val jsonObjects = mediaUrls.map(url => Json.obj(url.name -> url.url.s))
       val json = jsonObjects.reduceLeft(_ ++ _)
-      builder.typedJson(json)
+      builder.json(json)
     }
 
     builder

@@ -2,13 +2,13 @@ package com.soundcloud.publicApiStrangler.controller
 
 import com.soundcloud.bff.finagle.{Request, ResponseBuilder}
 import com.soundcloud.bff.web.{BffInjectionBasedController, UserAuthentication}
+import com.soundcloud.jvmkit.Urn
 import com.soundcloud.publicApiStrangler.client.GobblyClient
 import com.soundcloud.publicApiStrangler.client.gobbly.{ClientError => GobblyClientError, ServerError => GobblyServerError, Success => GobblySuccess}
+import com.soundcloud.publicApiStrangler.client.trackcoordinator.TrackCoordinatorClient
+import com.soundcloud.publicApiStrangler.client.trackcoordinator.datatypes._
 import com.soundcloud.publicApiStrangler.support.DispatchToMothershipHandler
-import com.soundcloud.scalakit.Urn
 import com.soundcloud.service.client.OkidokiClient
-import com.soundcloud.trackcoordinator.client.TrackCoordinatorClient
-import com.soundcloud.trackcoordinator.client.representation.{NotFound, Success}
 import com.twitter.util.Future
 import play.api.libs.json.Json
 
@@ -65,7 +65,7 @@ class TracksController(userAuthentication: UserAuthentication,
 
   private def trackUrn(request: Request): Urn = {
     val IdParamPattern = "(\\d+)".r
-    Urn(request.routeParams("trackId") match {
+    new Urn(request.routeParams("trackId") match {
       case IdParamPattern(id) => s"soundcloud:tracks:$id"
     })
   }

@@ -1,11 +1,10 @@
 package com.soundcloud.bff.nextbff.mapping
 
-import com.soundcloud.bff.Future
 import com.soundcloud.bff.nextbff.mapper.{EmbeddedItem, Mapper}
 import com.soundcloud.bff.test.UnitSpecification
 import com.soundcloud.jvmkit.{Urn, UserSession}
 import com.soundcloud.scalakit.test.VerifiedMocks
-import com.twitter.util.Await
+import com.twitter.util.{Await, Future}
 
 class MappingContextSpec extends UnitSpecification {
 

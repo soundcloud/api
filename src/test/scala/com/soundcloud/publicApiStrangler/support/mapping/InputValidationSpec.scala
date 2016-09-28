@@ -1,12 +1,10 @@
 package com.soundcloud.publicApiStrangler.support.mapping
 
-import com.soundcloud.bff._
 import com.soundcloud.bff.nextbff.mapper.Mapper
 import com.soundcloud.bff.nextbff.mapping.{Mapping, MappingContext}
 import com.soundcloud.bff.test.UnitSpecification
-import com.soundcloud.jvmkit.UserSession
-import com.soundcloud.scalakit.Urn
-import com.twitter.util.Await
+import com.soundcloud.jvmkit.{Urn, UserSession}
+import com.twitter.util.{Await, Future}
 
 class InputValidationSpec extends UnitSpecification {
 
@@ -35,7 +33,7 @@ class InputValidationSpec extends UnitSpecification {
 
       trait TestContext extends Context {
 
-        val urn = Urn("soundcloud:tracks:1")
+        val urn = new Urn("soundcloud:tracks:1")
         val expectedInputs = Set(urn)
         val expectedResult = Future.value(Map(urn -> new Mapping {}))
 

@@ -1,5 +1,6 @@
 package com.soundcloud.publicApiStrangler.client.followcounts
 
+import com.soundcloud.jvmkit.Urn
 import com.soundcloud.scalakit._
 
 /** Describes count information for a given user.

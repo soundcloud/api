@@ -1,14 +1,13 @@
 package com.soundcloud.publicApiStrangler.mapping.search
 
 import com.fasterxml.jackson.annotation.{JsonIgnore, JsonValue}
-import com.soundcloud.bff._
 import com.soundcloud.bff.nextbff.mapper.EmbeddedItem
 import com.soundcloud.bff.nextbff.mapping.JsonMapping
 import com.soundcloud.bff.nextbff.pagination.OffsetBasedPage
+import com.soundcloud.jvmkit.Urn
 import com.soundcloud.publicApiStrangler.mapper.search.SearchEntityMapper
-import com.soundcloud.scalakit._
 import com.soundcloud.scalakit.Urn.format
-import play.api.libs.json.JsValue
+import play.api.libs.json.{JsObject, JsValue}
 
 trait Pagination[T] {
   def next_href: Option[String]

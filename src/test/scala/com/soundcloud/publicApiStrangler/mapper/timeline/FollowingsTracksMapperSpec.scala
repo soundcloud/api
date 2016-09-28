@@ -4,7 +4,7 @@ import com.soundcloud.bff.nextbff.pagination.CursorBasedPage
 import com.soundcloud.bff.test.UnitSpecification
 import com.soundcloud.publicApiStrangler.mapping.timeline.e1.{TimelineWithUuids, TrackTimelineItem}
 import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures
-import com.soundcloud.scalakit._
+import com.soundcloud.jvmkit.{Urn, UserSession}
 import com.soundcloud.scalakit.test.VerifiedMocks
 import com.soundcloud.services.timeline.TimelineJsonClient
 import com.twitter.util.{Await, Future}
@@ -18,7 +18,7 @@ class FollowingsTracksMapperSpec extends UnitSpecification with Fixtures {
     val entitySummaryMapper = mock[EntitySummaryMapper]
     val mapper = new FollowingsTracksMapper(timelineClient, entityMapper, entitySummaryMapper)
     val session = mock[UserSession]
-    val urn = Urn("soundcloud:users:1")
+    val urn = new Urn("soundcloud:users:1")
     val uuid = "41d4f7d6-6480-0000-6291-bef9209ec18e"
     val nextUuid = "41d5160c-5ac0-0000-61dc-d68a12e0c3c7"
     val futureUuid = "41d51624-6140-0000-6191-c98a01a7ddc9"

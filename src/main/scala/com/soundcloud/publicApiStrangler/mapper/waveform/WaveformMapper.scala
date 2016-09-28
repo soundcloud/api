@@ -1,6 +1,5 @@
 package com.soundcloud.publicApiStrangler.mapper.waveform
 
-import com.soundcloud.bff.Future
 import com.soundcloud.bff.media.WaveformUrlsRepository
 import com.soundcloud.bff.nextbff.mapper.Mapper
 import com.soundcloud.bff.nextbff.mapping.MappingContext
@@ -8,6 +7,7 @@ import com.soundcloud.jvmkit.UserSession
 import com.soundcloud.jvmkit.policies.ContentPolicy
 import com.soundcloud.publicApiStrangler.mapping.Waveform
 import com.soundcloud.publicApiStrangler.support.mapping.{InputValidation, ObjectMapping}
+import com.twitter.util.Future
 
 class WaveformMapper(waveformUrlsRepo: WaveformUrlsRepository)
   extends Mapper[WaveformRequestParams, Waveform]

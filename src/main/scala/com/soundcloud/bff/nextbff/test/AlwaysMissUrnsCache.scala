@@ -1,9 +1,10 @@
 package com.soundcloud.bff.nextbff.test
 
 import com.soundcloud.bff.nextbff.repository.UrnsCache
-import com.soundcloud.bff.{Future, JsObject}
-import com.soundcloud.scalakit.Urn
+import com.soundcloud.jvmkit.Urn
 import com.soundcloud.scalakit.test.AlwaysMissCache
+import play.api.libs.json.JsObject
+import com.twitter.util.Future
 
 class AlwaysMissUrnsCache extends UrnsCache(AlwaysMissCache) {
 

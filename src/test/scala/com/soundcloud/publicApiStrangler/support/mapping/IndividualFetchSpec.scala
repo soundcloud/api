@@ -1,12 +1,10 @@
 package com.soundcloud.publicApiStrangler.support.mapping
 
-import com.soundcloud.bff._
 import com.soundcloud.bff.nextbff.mapper.Mapper
 import com.soundcloud.bff.nextbff.mapping.{Mapping, MappingContext}
 import com.soundcloud.bff.test.UnitSpecification
-import com.soundcloud.jvmkit.UserSession
-import com.soundcloud.scalakit._
-import com.twitter.util.Await
+import com.soundcloud.jvmkit.{Urn, UserSession}
+import com.twitter.util.{Await, Future}
 
 class IndividualFetchSpec extends UnitSpecification {
 
@@ -19,7 +17,7 @@ class IndividualFetchSpec extends UnitSpecification {
     "there is only one input" >> {
       trait TestContext extends Context {
 
-        val urn = Urn("soundcloud:tracks:1")
+        val urn = new Urn("soundcloud:tracks:1")
         val expectedResult = new Mapping {}
 
         val mapper = new Mapper[Urn, Mapping] with InputValidation[Urn, Mapping] with IndividualFetch[Urn, Mapping] {
@@ -38,9 +36,9 @@ class IndividualFetchSpec extends UnitSpecification {
     "there are multiple inputs" >> {
       trait TestContext extends Context {
 
-        val urn1 = Urn("soundcloud:tracks:1")
-        val urn2 = Urn("soundcloud:tracks:2")
-        val urn3 = Urn("soundcloud:tracks:3")
+        val urn1 = new Urn("soundcloud:tracks:1")
+        val urn2 = new Urn("soundcloud:tracks:2")
+        val urn3 = new Urn("soundcloud:tracks:3")
         val expectedResult = new Mapping {}
 
         val mapper = new Mapper[Urn, Mapping] with InputValidation[Urn, Mapping] with IndividualFetch[Urn, Mapping] {

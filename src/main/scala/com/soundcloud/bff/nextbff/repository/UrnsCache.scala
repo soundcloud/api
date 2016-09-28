@@ -2,10 +2,11 @@ package com.soundcloud.bff.nextbff.repository
 
 import java.util.concurrent.TimeUnit.MINUTES
 
-import com.soundcloud.bff.{Future, JsObject}
-import com.soundcloud.scalakit.Urn
+import com.soundcloud.jvmkit.Urn
 import com.soundcloud.scalakit.cache.Cache
 import com.soundcloud.scalakit.json.Json
+import com.twitter.util.Future
+import play.api.libs.json.JsObject
 
 class UrnsCache(cache: Cache) {
 
@@ -30,7 +31,7 @@ class UrnsCache(cache: Cache) {
   private def collectFromCache(urns: List[Urn]) = {
     val futures =
       for (urn <- urns) yield {
-        cache.get(urn.getString).map {
+        cache.get(urn.toString).map {
           json =>
             urn -> json.map(Json.fromString).map(_.as[JsObject])
         }
@@ -61,7 +62,7 @@ class UrnsCache(cache: Cache) {
   private def addUrnsToCache(recoveredByUrn: Map[Urn, JsObject], cacheAllowed: JsObject => Boolean, cacheExpirationTimeMinutes: Int) =
     for ((urn, json) <- recoveredByUrn; if (cacheAllowed(json)))
       cache.set(
-        urn.getString,
+        urn.toString,
         Json.stringify(json),
         cacheExpirationTimeMinutes,
         MINUTES)

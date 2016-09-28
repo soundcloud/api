@@ -3,14 +3,12 @@ package com.soundcloud.publicApiStrangler.mapper.similarsounds
 import com.soundcloud.bff.nextbff.mapping.MappingContext
 import com.soundcloud.bff.nextbff.pagination.OffsetBasedPage
 import com.soundcloud.bff.test.InjectionBasedControllerSpecification
-import com.soundcloud.jvmkit.UserSession
+import com.soundcloud.jvmkit.{Urn, UserSession}
 import com.soundcloud.publicApiStrangler.mapper.search.SearchEntityMapper
-import com.soundcloud.scalakit.Urn
 import com.soundcloud.scalakit.test.VerifiedMocks
 import com.soundcloud.service.client.SimilarSoundsClient
 import com.soundcloud.service.response.representation.{SimilarSounds, SimilarSoundsMeta}
-import com.twitter.util.Await
-import com.soundcloud.bff.Future
+import com.twitter.util.{Await, Future}
 import org.mockito.Mockito._
 
 class SimilarSoundsMapperSpec
@@ -28,8 +26,8 @@ class SimilarSoundsMapperSpec
 
   "maps similar sounds to json" in new Context {
     val returnedSimilarSounds = SimilarSounds(
-      Seq(Urn("soundcloud:tracks:1")),
-      SimilarSoundsMeta(0, 10, "variant", "source", Urn("soundcloud:systems:123"), "", "")
+      Seq(new Urn("soundcloud:tracks:1")),
+      SimilarSoundsMeta(0, 10, "variant", "source", new Urn("soundcloud:systems:123"), "", "")
     )
 
     // mock client returns fake result
@@ -37,7 +35,7 @@ class SimilarSoundsMapperSpec
       thenReturn(Future.value(Some(returnedSimilarSounds)))
 
     // verify that entityMapper is called with fake results from mock client
-    when(verified(entityMapperMock).embed(List(Urn("soundcloud:tracks:1")))).
+    when(verified(entityMapperMock).embed(List(new Urn("soundcloud:tracks:1")))).
       thenReturn(null)
 
     val similarSounds = similarSoundsMapper.mapSingleInput(anonymousSession, page)

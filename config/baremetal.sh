@@ -63,7 +63,7 @@ export USER_SUBSCRIPTIONS_SRV_RECORD="dnssrv!http.server.production.subscription
 export RATELIMIT_MAX_CONN="999999"
 
 export MEMCACHED_HOST="ip-10-33-34-33.m03.ams5.s-cloud.net,ip-10-33-20-35.n05.ams5.s-cloud.net,ip-10-33-24-62.n10.ams5.s-cloud.net,ip-10-33-41-34.m11.ams5.s-cloud.net"
-export ZOOKEEPER_SERVERS="10.33.25.61:2181,10.33.18.53:2181,10.33.32.31:2181,10.33.33.54:2181,10.33.37.50:2181"
+export ZOOKEEPER_ADDRESS="10.33.25.61:2181,10.33.18.53:2181,10.33.32.31:2181,10.33.33.54:2181,10.33.37.50:2181"
 
 export STITCH4FOLLOWS_SRV_RECORD="dnssrv!http.web-follows.prod.stitch4counts.dd.srv.int.s-cloud.net"
 export STITCH_BULK_FETCH_MAX_ENTRIES="7"

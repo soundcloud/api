@@ -1,9 +1,8 @@
 package com.soundcloud.bff.nextbff.test
 
-import com.soundcloud.bff.finagle.{Request => BffRequest, ResponseLike}
+import com.soundcloud.bff.finagle.{ResponseLike, Request => BffRequest}
 import com.soundcloud.bff.web.UserAuthentication
-import com.soundcloud.jvmkit.{LoggedInUserSession, UserSession}
-import com.soundcloud.scalakit.Urn
+import com.soundcloud.jvmkit.{LoggedInUserSession, Urn, UserSession}
 import com.twitter.util.Future
 
 class FakeUserAuthentication(session: UserSession) extends UserAuthentication {

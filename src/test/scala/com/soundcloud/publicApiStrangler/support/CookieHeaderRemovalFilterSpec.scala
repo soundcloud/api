@@ -16,7 +16,7 @@ class CookieHeaderRemovalFilterSpec extends UnitSpecification {
         request.headerMap.toSeq.map {
           case (k: String, v: String) => (k, JsString(v))
         }
-      val response = new ResponseBuilder().typedJson(JsObject(headers)).build
+      val response = new ResponseBuilder().json(JsObject(headers)).build
       Future.value(RouterResponse(response, "/foo"))
     }
   }

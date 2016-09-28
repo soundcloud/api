@@ -2,17 +2,16 @@ package com.soundcloud.publicApiStrangler.controller
 
 import com.soundcloud.bff.finagle.ResponseBuilder
 import com.soundcloud.bff.test.InjectionBasedControllerSpecification
-import com.soundcloud.jvmkit.{Geo => JvmGeo, UserSessionBuilder}
+import com.soundcloud.jvmkit.{Geo, Urn, UserSessionBuilder}
 import com.soundcloud.publicApiStrangler.client.GobblyClient
 import com.soundcloud.publicApiStrangler.client.gobbly.{ClientError => GobblyClientError, Error => GobblyError, Result => GobblyResult, ServerError => GobblyServerError, Success => GobblySuccess}
+import com.soundcloud.publicApiStrangler.client.trackcoordinator.TrackCoordinatorClient
 import com.soundcloud.publicApiStrangler.support.DispatchToMothershipHandler
 import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures
 import com.soundcloud.scalakit.test.VerifiedMocks
-import com.soundcloud.scalakit.{Geo, Urn}
+import com.soundcloud.publicApiStrangler.client.trackcoordinator.datatypes.{ClientError, NotFound, ServerError, Success}
 import com.soundcloud.service.client.OkidokiClient
-import com.soundcloud.trackcoordinator.client.TrackCoordinatorClient
-import com.soundcloud.trackcoordinator.client.mapper.TrackMapper
-import com.soundcloud.trackcoordinator.client.representation.{Error, Errors, Failure, NotFound, Success, Track => CoordinatorTrack}
+import com.soundcloud.service.response.representation.Track
 import com.twitter.finagle.http.{Request, Status}
 import com.twitter.util.Future
 import play.api.libs.json.{Json => PlayJson, _}
@@ -24,19 +23,17 @@ class TracksControllerSpec extends InjectionBasedControllerSpecification with Fi
     val trackCoordinator = mock[TrackCoordinatorClient]
     val okidoki = mock[OkidokiClient]
     val gobblyClient = mock[GobblyClient]
-    val trackUrn = Urn("soundcloud:tracks:999")
-    val userUrn = Urn("soundcloud:users:102661606")
+    val trackUrn = new Urn("soundcloud:tracks:999")
+    val userUrn = new Urn("soundcloud:users:102661606")
     val users = okidokiUsers.as[List[JsObject]]
     val user = users.head
-    val track = TrackMapper(trackCoordinatorTrack)
+    val track = mock[Track]
 
-    lazy val geo = Geo("US")
-    lazy val session = new UserSessionBuilder().setUser(Urn("soundcloud:users:2")).setAgent(Urn("soundcloud:applications:v2")).setGeo(geo).build()
+    lazy val geo = new Geo("US")
+    lazy val session = new UserSessionBuilder().setUser(new Urn("soundcloud:users:2")).setAgent(new Urn("soundcloud:applications:v2")).setGeo(geo).build()
     lazy val controller = new TracksController(fakeUserAuthentication(session), trackCoordinator, okidoki, fallback, gobblyClient)
 
     trackCoordinator.deleteTrack(session, trackUrn) returns Future(Success(()))
-    trackCoordinator.updateTrack(===(session), ===(trackUrn), any, any) returns Future(Success(track))
-    trackCoordinator.fetchTrack(===(session), ===(trackUrn), any) returns Future(Success(track))
     okidoki.fetch(===(session), ===(Set(userUrn))) returns Future(List(user))
     when(fallback.dispatch(any[Request])).thenReturn(Future.value(new ResponseBuilder().status(200)))
   }
@@ -184,15 +181,15 @@ class TracksControllerSpec extends InjectionBasedControllerSpecification with Fi
       response.status ==== Status.NotFound
     }
 
-    "errors out in an expected fashion" in new Context {
-      trackCoordinator.deleteTrack(session, trackUrn) returns Future(Errors(List(Error(412, "OMG SO WRONG"))))
+    "handles server errors from Track Coordinator" in new Context {
+      trackCoordinator.deleteTrack(session, trackUrn) returns Future(ServerError.empty)
 
       val response = delete(controller, "/tracks/999")
       response.status ==== Status.InternalServerError
     }
 
-    "errors out unexpectedly" in new Context {
-      trackCoordinator.deleteTrack(session, trackUrn) returns Future(Failure)
+    "handles client errors from Track Coordinator" in new Context {
+      trackCoordinator.deleteTrack(session, trackUrn) returns Future(ClientError.empty)
 
       val response = delete(controller, "/tracks/999")
       response.status ==== Status.InternalServerError

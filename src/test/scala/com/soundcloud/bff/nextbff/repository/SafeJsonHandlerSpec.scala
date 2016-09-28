@@ -1,10 +1,9 @@
 package com.soundcloud.bff.nextbff.repository
 
-import com.soundcloud.bff.JsNull
 import com.soundcloud.bff.test.UnitSpecification
 import com.soundcloud.scalakit.finagle.http.{InternalServerErrorStatus, OkStatus}
 import com.soundcloud.scalakit.finagle.jsonservice.JsonResponse
-import play.api.libs.json.Json
+import play.api.libs.json.{JsNull, Json}
 
 import scala.language.reflectiveCalls
 

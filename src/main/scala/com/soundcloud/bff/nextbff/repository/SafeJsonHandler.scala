@@ -1,8 +1,8 @@
 package com.soundcloud.bff.nextbff.repository
 
-import com.soundcloud.bff.{JsArray, JsObject}
 import com.soundcloud.scalakit.finagle.http.SuccessfulStatusClass
 import com.soundcloud.scalakit.finagle.jsonservice.JsonResponse
+import play.api.libs.json.{JsArray, JsObject}
 
 trait SafeJsonHandler {
 

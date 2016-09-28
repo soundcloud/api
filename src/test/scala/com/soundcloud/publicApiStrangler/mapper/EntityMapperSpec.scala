@@ -1,12 +1,11 @@
 package com.soundcloud.publicApiStrangler.mapper
 
 import com.soundcloud.bff.test.UnitSpecification
-import com.soundcloud.jvmkit.UserSession
+import com.soundcloud.jvmkit.{Urn, UserSession}
 import com.soundcloud.publicApiStrangler.client.followcounts.{FollowCounts, FollowCountsClient}
 import com.soundcloud.publicApiStrangler.mapper.timeline.{EntityMapper, EntitySummaryMapper}
 import com.soundcloud.publicApiStrangler.mapping.timeline.{Playlist, Track, User}
 import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures
-import com.soundcloud.scalakit.Urn
 import com.soundcloud.scalakit.test.VerifiedMocks
 import com.soundcloud.service.client.{LieblingClient, OkidokiClient}
 import com.twitter.util.{Await, Future}
@@ -15,7 +14,7 @@ import play.api.libs.json.JsObject
 class EntityMapperSpec extends UnitSpecification with Fixtures {
 
   trait Context extends VerifiedMocks {
-    val userUrn = Urn("soundcloud", "users", "123")
+    val userUrn = new Urn("soundcloud", "users", "123")
     val okidokiClient = mock[OkidokiClient]
     val lieblingClient = mock[LieblingClient]
     val followCountsClient = mock[FollowCountsClient]
@@ -25,11 +24,11 @@ class EntityMapperSpec extends UnitSpecification with Fixtures {
     val likeUrns = List(
       "soundcloud:tracks:131352352",
       "soundcloud:playlists:123"
-    ).map(Urn(_))
+    ).map(new Urn(_))
     val urns = likeUrns ++ List(
       "soundcloud:users:123",
       "soundcloud:comments:205752728"
-    ).map(Urn(_))
+    ).map(new Urn(_))
 
     override def before: Any = {
       when(okidokiClient.fetch(===(session), any[Set[Urn]])) thenReturn

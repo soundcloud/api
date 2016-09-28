@@ -1,0 +1,7 @@
+{
+  "error": {
+    "name": "UserAsTarget",
+    "message": "user is also the target"
+  }
+}
+

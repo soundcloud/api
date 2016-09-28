@@ -4,8 +4,8 @@ import com.soundcloud.bff._
 import com.soundcloud.bff.authorization.ContentAuthorizationService
 import com.soundcloud.bff.filter.SessionCache
 import com.soundcloud.bff.media.{MediaUrlsRepository, WaveformUrlsRepository}
-import com.soundcloud.bff.services.JsonService
-import com.soundcloud.jvmkit.ResourceName
+import com.soundcloud.bff.services.{JsonService, ServiceConfig}
+import com.soundcloud.jvmkit.{ResourceName, Urn}
 import com.soundcloud.jvmkit.admin.{AdminRoute, RequestMethod}
 import com.soundcloud.jvmkit.config.{ConfigConvention, DataSensitivity}
 import com.soundcloud.jvmkit.rollout.{BasicRolloutFeature, Rollout, RolloutBuilder}
@@ -31,9 +31,10 @@ import com.soundcloud.publicApiStrangler.singleTrackEndpointMigration.trackmetad
 import com.soundcloud.publicApiStrangler.singleTrackEndpointMigration.{ResponseComparison, SingleTrackController, TrackRepresentationsService}
 import com.soundcloud.publicApiStrangler.support._
 import com.soundcloud.ratelimiting.facade._
-import com.soundcloud.scalakit.Urn
 import com.soundcloud.scalakit.cache.MemcachedClient
-import com.soundcloud.scalakit.finagle.jsonservice.{JsonClient, ServiceEntryPoint}
+import com.soundcloud.scalakit.finagle.dns.ServiceEntryPoint
+import com.soundcloud.scalakit.finagle.jsonservice.JsonClient
+import com.twitter.util.Future
 import org.eclipse.jetty.server.Handler
 
 object App
@@ -48,7 +49,7 @@ object App
     with SimilarSoundsComponent
     with TrackCoordinatorComponent {
 
-  private val bffApplication = BffApplication(Urn("soundcloud", "systems", "public-api-strangler"), config.getApplicationResourceName)
+  private val bffApplication = BffApplication(new Urn("soundcloud", "systems", "public-api-strangler"), config.getApplicationResourceName)
 
   private val userAuthentication = createUserAuthentication
 
@@ -150,7 +151,7 @@ object App
   private val blacklistOfAppIdsForUserSiloing: Set[Urn] =
     config.get("APP_SILOING_BLACKLIST_APPS", DataSensitivity.NON_SENSITIVE)
       .split(",")
-      .map(appId => Urn(appId.trim))
+      .map(appId => new Urn(appId.trim))
       .toSet
 
   private val authorizeContent = new AuthorizeHttpResponse(contentAuthorizationRules, userAuthentication, waveformUrlsRepo, TrackPolicyApplicator(whitelistedClients))
@@ -341,23 +342,23 @@ object App
   )
 
   private val officialSoundCloudApps = List(
-    Urn("soundcloud:applications:46941"), // SoundCloud.com (currently being abused) Internal
-    Urn("soundcloud:applications:124"), // SoundCloud iOS Internal
-    Urn("soundcloud:applications:3152"), // SoundCloud Android Internal
-    Urn("soundcloud:applications:3273"), // Mobile Soundcloud Internal
-    Urn("soundcloud:applications:65097"), // Mobi (new mobile soundcloud) Internal
-    Urn("soundcloud:applications:-1"), // Classic Internal
-    Urn("soundcloud:applications:43164"), // SoundCloud Player Widget Internal
-    Urn("soundcloud:applications:90575"), // SoundCloud Visual Embed Player Internal
-    Urn("soundcloud:applications:60973"), // SoundCloud Flash Widget Internal
-    Urn("soundcloud:applications:66151"), // Old mobi web Internal
-    Urn("soundcloud:applications:3537"), // SoundCloud Desktop Internal
-    Urn("soundcloud:applications:99561"), // SoundCloud Kik Messenger Card Internal
-    Urn("soundcloud:applications:120502"), // Twitter Partner Internal
-    Urn("soundcloud:applications:42975"), // SoundCloud Notifications Internal
-    Urn("soundcloud:applications:147241"), // SoundCloud Jobs Page Internal
-    Urn("soundcloud:applications:140141"), // SoundCloud Chromecast Receiver Internal
-    Urn("soundcloud:applications:179522") // Facebook Partner Internal
+    new Urn("soundcloud:applications:46941"), // SoundCloud.com (currently being abused) Internal
+    new Urn("soundcloud:applications:124"), // SoundCloud iOS Internal
+    new Urn("soundcloud:applications:3152"), // SoundCloud Android Internal
+    new Urn("soundcloud:applications:3273"), // Mobile Soundcloud Internal
+    new Urn("soundcloud:applications:65097"), // Mobi (new mobile soundcloud) Internal
+    new Urn("soundcloud:applications:-1"), // Classic Internal
+    new Urn("soundcloud:applications:43164"), // SoundCloud Player Widget Internal
+    new Urn("soundcloud:applications:90575"), // SoundCloud Visual Embed Player Internal
+    new Urn("soundcloud:applications:60973"), // SoundCloud Flash Widget Internal
+    new Urn("soundcloud:applications:66151"), // Old mobi web Internal
+    new Urn("soundcloud:applications:3537"), // SoundCloud Desktop Internal
+    new Urn("soundcloud:applications:99561"), // SoundCloud Kik Messenger Card Internal
+    new Urn("soundcloud:applications:120502"), // Twitter Partner Internal
+    new Urn("soundcloud:applications:42975"), // SoundCloud Notifications Internal
+    new Urn("soundcloud:applications:147241"), // SoundCloud Jobs Page Internal
+    new Urn("soundcloud:applications:140141"), // SoundCloud Chromecast Receiver Internal
+    new Urn("soundcloud:applications:179522") // Facebook Partner Internal
   )
 
   private val whatToStrangle = {

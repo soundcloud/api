@@ -2,7 +2,7 @@ package com.soundcloud.publicApiStrangler.mapper.timeline
 
 import com.soundcloud.bff.nextbff.mapper.Mapper
 import com.soundcloud.bff.nextbff.mapping.{JsonMapping, MappingContext}
-import com.soundcloud.jvmkit.UserSession
+import com.soundcloud.jvmkit.{Urn, UserSession}
 import com.soundcloud.publicApiStrangler.client.followcounts.{FollowCounts, FollowCountsClient}
 import com.soundcloud.publicApiStrangler.mapping.timeline.{Comment, Playlist, Track, User}
 import com.soundcloud.scalakit._
@@ -30,7 +30,7 @@ class EntityMapper(okidokiClient: OkidokiClient,
       val likesCounts = likeCounts(likes)
       entities.map {
         entity =>
-          val urn = Urn((entity \ "self" \ "urn").as[String])
+          val urn = new Urn((entity \ "self" \ "urn").as[String])
           urn -> entityFor(urn, entity, likesCounts, followCountsMap)
       }.toMap
     }
@@ -56,7 +56,7 @@ class EntityMapper(okidokiClient: OkidokiClient,
   private def likeCounts(likesInfo: JsObject): Map[Urn, Int] = {
     (likesInfo \  "likes_counts").as[Seq[JsObject]].map {
       obj =>
-        Urn((obj \ "target_urn").as[String]) -> (obj \ "likes_count").asOpt[Int].getOrElse(0)
+        new Urn((obj \ "target_urn").as[String]) -> (obj \ "likes_count").asOpt[Int].getOrElse(0)
     }.toMap.withDefaultValue(0)
   }
 }
