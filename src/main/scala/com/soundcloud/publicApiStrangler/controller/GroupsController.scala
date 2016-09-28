@@ -7,8 +7,7 @@ import com.soundcloud.publicApiStrangler.support.DispatchToMothershipHandler
 import com.twitter.util.Future
 import play.api.libs.json.JsArray
 
-class GroupsController(val userAuthentication: UserAuthentication,
-                       val mothershipDispatcher: DispatchToMothershipHandler)
+class GroupsController(val userAuthentication: UserAuthentication)
   extends BffInjectionBasedController {
 
   get("/groups")(emptyList)

@@ -300,8 +300,7 @@ object App
   )
 
   private val groupsController = new GroupsController(
-    userAuthentication,
-    mothershipDispatcher
+    userAuthentication
   )
 
   private val suggestedUsersController = new SuggestedUsersController(

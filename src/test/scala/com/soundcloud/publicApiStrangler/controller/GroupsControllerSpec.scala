@@ -12,11 +12,7 @@ import com.twitter.util.Future
 class GroupsControllerSpec extends InjectionBasedControllerSpecification {
   trait Context extends Scope with VerifiedMocks {
     val userAuthentication = fakeUserAuthentication(anonymousSession)
-    val mothershipDispatcher = mock[DispatchToMothershipHandler]
-    val controller = new GroupsController(userAuthentication, mothershipDispatcher)
-
-    val success = Future.value(new ResponseBuilder().status(200).build)
-    when(mothershipDispatcher.defaultHandling(any)).thenReturn(success)
+    val controller = new GroupsController(userAuthentication)
   }
 
   "GET /groups" >> {
