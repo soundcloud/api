@@ -76,6 +76,26 @@ class GroupsControllerSpec extends InjectionBasedControllerSpecification {
     }
   }
 
+  "GET /users/:x/groups" >> {
+    "returns not found" in new Context {
+      List("/users/123/groups", "/users/123/groups/", "/users/123/groups.json", "/users/123/groups.json/").foreach { path =>
+        val response = get(controller, path)
+        response.status ==== Status.Ok
+        response.body ==== "[]"
+      }
+    }
+  }
+
+  "GET /tracks/:x/groups" >> {
+    "returns not found" in new Context {
+      List("/tracks/123/groups", "/tracks/123/groups/", "/tracks/123/groups.json", "/tracks/123/groups.json/").foreach { path =>
+        val response = get(controller, path)
+        response.status ==== Status.Ok
+        response.body ==== "[]"
+      }
+    }
+  }
+
   "GET /groups/:group_id/users" >> {
     "returns not found" in new Context {
       List("/groups/123/users", "/groups/123/users/", "/groups/123/users.json", "/groups/123/users.json/").foreach { path =>
