@@ -19,12 +19,6 @@ import play.api.libs.json.{JsArray, JsNull, JsObject, Json}
 
 class SearchRepositorySpec extends UnitSpecification {
   trait Context extends VerifiedMocks {
-    val commonParams = Params(
-      "filter.content_tier" -> "FREE",
-      "filter.content_country" -> "US",
-      "filter.model" -> "sound,set,person"
-    )
-
     lazy val session = loggedInSession(new Urn("soundcloud:users:123"))
     lazy val mockService = mock[BffJsonService]
     lazy val repo = new SearchRepository(mockService)
@@ -32,6 +26,11 @@ class SearchRepositorySpec extends UnitSpecification {
 
   "track search" >> {
     "adds filter.content_type=FREE and filter.content_country=<countryCode>" in new Context {
+      val commonParams = Params(
+        "filter.content_tier" -> "FREE",
+        "filter.content_country" -> "US"
+      )
+
       val response = withContentsOf("search", "tracks").as[JsObject]
       doReturn(Future.value(JsonResponse(OkStatus, response))).when(mockService)
         .get(session, SearchRepository.TracksPath, commonParams + ("q" -> "bar"), Params.empty)
@@ -44,7 +43,13 @@ class SearchRepositorySpec extends UnitSpecification {
   }
 
   "universal search" >> {
-    "adds filter.content_type=FREE and filter.content_country=<countryCode>" in new Context {
+    "adds filter.content_type=FREE and filter.content_country=<countryCode> and filter.model=sound,set,person" in new Context {
+      val commonParams = Params(
+        "filter.content_tier" -> "FREE",
+        "filter.content_country" -> "US",
+        "filter.model" -> "sound,set,person"
+      )
+
       val response = withContentsOf("search", "tracks").as[JsObject]
       doReturn(Future.value(JsonResponse(OkStatus, response))).when(mockService)
         .get(session, SearchRepository.UniversalPath, commonParams + ("q" -> "bar"), Params.empty)
