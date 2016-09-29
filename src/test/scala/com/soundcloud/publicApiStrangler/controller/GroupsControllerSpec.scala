@@ -16,54 +16,22 @@ class GroupsControllerSpec extends InjectionBasedControllerSpecification {
   }
 
   "GET /groups" >> {
-    "returns empty list" in new Context {
-      val response = get(controller, "/groups")
-      response.status ==== Status.Ok
-      response.body ==== "[]"
-    }
-
-    "returns empty list" in new Context {
-      val response = get(controller, "/groups.json")
-      response.status ==== Status.Ok
-      response.body ==== "[]"
-    }
-
-    "returns empty list" in new Context {
-      val response = get(controller, "/groups/")
-      response.status ==== Status.Ok
-      response.body ==== "[]"
-    }
-
-    "returns empty list" in new Context {
-      val response = get(controller, "/groups.json/")
-      response.status ==== Status.Ok
-      response.body ==== "[]"
+    "returns not found" in new Context {
+      List("/groups", "/groups/", "/groups.json", "/groups.json/").foreach { path =>
+        val response = get(controller, path)
+        response.status ==== Status.Ok
+        response.body ==== "[]"
+      }
     }
   }
 
   "GET /me/groups" >> {
-    "returns empty list" in new Context {
-      val response = get(controller, "/me/groups")
-      response.status ==== Status.Ok
-      response.body ==== "[]"
-    }
-
-    "returns empty list" in new Context {
-      val response = get(controller, "/me/groups.json")
-      response.status ==== Status.Ok
-      response.body ==== "[]"
-    }
-
-    "returns empty list" in new Context {
-      val response = get(controller, "/me/groups/")
-      response.status ==== Status.Ok
-      response.body ==== "[]"
-    }
-
-    "returns empty list" in new Context {
-      val response = get(controller, "/me/groups.json/")
-      response.status ==== Status.Ok
-      response.body ==== "[]"
+    "returns not found" in new Context {
+      List("/me/groups", "/me/groups/", "/me/groups.json", "/me/groups.json/").foreach { path =>
+        val response = get(controller, path)
+        response.status ==== Status.Ok
+        response.body ==== "[]"
+      }
     }
   }
 
