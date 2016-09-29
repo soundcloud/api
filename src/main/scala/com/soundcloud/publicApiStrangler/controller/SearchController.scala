@@ -13,7 +13,6 @@ import com.soundcloud.scalakit.finagle.http.BadRequestStatus
 import com.twitter.finagle.http.ParamMap
 import com.twitter.util.{Future, Return, Try}
 import com.soundcloud.jvmkit.telemetry.Counter
-import play.api.libs.json.JsArray
 /**
   * Redirects search queries on to search-dispatcher and fetches meta data.
   */
@@ -35,6 +34,9 @@ class SearchController(val userAuthentication: UserAuthentication,
   get("/users")(dispatchUserRequest)
   get("/users.json")(dispatchUserRequest)
 
+  get("/groups")(dispatchGroupRequest)
+  get("/groups.json")(dispatchGroupRequest)
+
   get("/playlists")(dispatchPlaylistRequest)
   get("/playlists.json")(dispatchPlaylistRequest)
 
@@ -53,6 +55,11 @@ class SearchController(val userAuthentication: UserAuthentication,
     defaultParams,
     SearchDispatcherRequest.userSearch,
     dispatchToMothershipWithFollowCounts
+  )
+
+  private def dispatchGroupRequest = dispatchRequest(
+    defaultParams,
+    SearchDispatcherRequest.groupSearch
   )
 
   private def dispatchPlaylistRequest = dispatchRequest(

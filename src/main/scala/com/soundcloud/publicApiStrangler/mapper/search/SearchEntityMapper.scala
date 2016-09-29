@@ -57,6 +57,7 @@ class SearchEntityMapper(okidokiClient: OkidokiClient,
       case "users" => new SearchUser(entityData, baseUrl, followCountsMap.get(urn))
       case "tracks" => new SearchTrack(session, entityData, likeCountMapper, baseUrl, entitySummaryMapper, contentAuthorization(urn), waveform, trackPurchaseLinkMapper)
       case "playlists" => new SearchPlaylist(entityData, likeCountMapper, baseUrl, entitySummaryMapper)
+      case "groups" => new SearchGroup(entityData, baseUrl, entitySummaryMapper)
     }
   }
 
