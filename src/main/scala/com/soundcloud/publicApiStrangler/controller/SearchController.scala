@@ -4,6 +4,7 @@ import com.soundcloud.bff.finagle.{Request, ResponseBuilder}
 import com.soundcloud.bff.nextbff.pagination.PageBuilder
 import com.soundcloud.bff.nextbff.repository.RepositoryException
 import com.soundcloud.bff.web.{BffInjectionBasedController, UserAuthentication}
+import com.soundcloud.jvmkit.telemetry.Counter
 import com.soundcloud.publicApiStrangler.client.followcounts.FollowCountsClient
 import com.soundcloud.publicApiStrangler.controller.SearchController._
 import com.soundcloud.publicApiStrangler.mapper.search.SearchMapper
@@ -12,8 +13,6 @@ import com.soundcloud.publicApiStrangler.support.DispatchToMothershipHandler
 import com.soundcloud.scalakit.finagle.http.BadRequestStatus
 import com.twitter.finagle.http.ParamMap
 import com.twitter.util.{Future, Return, Try}
-import com.soundcloud.jvmkit.telemetry.Counter
-import play.api.libs.json.JsArray
 /**
   * Redirects search queries on to search-dispatcher and fetches meta data.
   */
