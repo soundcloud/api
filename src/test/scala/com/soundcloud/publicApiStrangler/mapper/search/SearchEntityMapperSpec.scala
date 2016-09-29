@@ -119,8 +119,8 @@ class SearchEntityMapperSpec extends UnitSpecification with Fixtures {
         followCountsClient.counts(session, Seq(fetchedUserUrn)) returns Future.value(Seq(FollowCounts(fetchedUserUrn, 1111, 2222)))
       }
 
-      result.size mustEqual 3
-      val List(userJson, trackJson, playlistJson) = result.map(mappingToJsObject _)
+      result.size mustEqual 4
+      val List(userJson, trackJson, playlistJson, groupJson) = result.map(mappingToJsObject _)
 
       (trackJson \ "kind").as[String] ==== "track"
       (trackJson \ "waveform_url").as[String] ==== "https://w1.sndcdn.com/b5uH7mT3hjkm_m.png"
@@ -135,6 +135,9 @@ class SearchEntityMapperSpec extends UnitSpecification with Fixtures {
       (subs.head \ "product" \ "id").as[String] ==== "creator-pro-unlimited"
       (userJson \ "followers_count").as[Long] ==== 1111
       (userJson \ "followings_count").as[Long] ==== 2222
+
+      (groupJson \ "kind").as[String] ==== "group"
+      (groupJson \ "uri").as[String] ==== "https://api.soundcloud.com.com/groups/30910"
 
       (playlistJson \ "kind").as[String] ==== "playlist"
       (playlistJson \ "tracks_uri").as[String] ==== "https://api.soundcloud.com.com/playlists/685235/tracks"
