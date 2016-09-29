@@ -1,28 +1,36 @@
 package com.soundcloud.publicApiStrangler.controller
 
+import com.soundcloud.bff.finagle.{Request, ResponseBuilder}
 import com.soundcloud.bff.web.{BffInjectionBasedController, UserAuthentication}
-import com.soundcloud.publicApiStrangler.client.followcounts.FollowCountsClient
-import com.soundcloud.publicApiStrangler.support.DispatchToMothershipHandler
+import com.twitter.util.Future
+import play.api.libs.json.JsArray
 
-/** NOTE: This is a quick-fix in order to fetch follow counts from Stitch instead of Mothership.
-  * These endpoints are NOT properly strangled. */
-class GroupsController(val userAuthentication: UserAuthentication,
-                       val mothershipDispatcher: DispatchToMothershipHandler,
-                       val followCountsClient: FollowCountsClient)
-  extends BffInjectionBasedController with FollowCountsHelper {
+class GroupsController(val userAuthentication: UserAuthentication)
+  extends BffInjectionBasedController {
 
-  get("/groups/:group_id/users")(dispatchToMothershipWithFollowCounts)
-  get("/groups/:group_id/users.json")(dispatchToMothershipWithFollowCounts)
+  getWithVariants("/groups")(emptyList)
+  getWithVariants("/me/groups")(emptyList)
+  getWithVariants("/groups/:group_id")(notFound)
+  getWithVariants("/groups/:group_id/users")(notFound)
+  getWithVariants("/groups/:group_id/moderators")(notFound)
+  getWithVariants("/groups/:group_id/contributors")(notFound)
+  getWithVariants("/groups/:group_id/members")(notFound)
+  getWithVariants("/groups/:group_id/tracks")(notFound)
 
-  get("/groups/:group_id/moderators")(dispatchToMothershipWithFollowCounts)
-  get("/groups/:group_id/moderators.json")(dispatchToMothershipWithFollowCounts)
+  private def variantsOf(s: String) = List(
+    s,
+    s + '/',
+    s + ".json",
+    s + ".json/"
+  )
 
-  get("/groups/:group_id/contributors")(dispatchToMothershipWithFollowCounts)
-  get("/groups/:group_id/contributors.json")(dispatchToMothershipWithFollowCounts)
+  // Same as #get, but also handles variants with .json and with a trailing slash
+  private def getWithVariants(s: String)(callback: BffRequestHandler) =
+    variantsOf(s).foreach(get(_)(callback))
 
-  get("/groups/:group_id/members")(dispatchToMothershipWithFollowCounts)
-  get("/groups/:group_id/members.json")(dispatchToMothershipWithFollowCounts)
+  private def emptyList(request: Request): Future[ResponseBuilder] =
+    new ResponseBuilder().ok.json(JsArray()).toFuture
 
-  get("/groups/:group_id/tracks")(dispatchToMothershipWithFollowCounts)
-  get("/groups/:group_id/tracks.json")(dispatchToMothershipWithFollowCounts)
+  private def notFound(request: Request): Future[ResponseBuilder] =
+    new ResponseBuilder().notFound.toFuture
 }
