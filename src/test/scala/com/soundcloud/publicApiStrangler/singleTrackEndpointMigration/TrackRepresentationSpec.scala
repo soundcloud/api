@@ -366,16 +366,6 @@ class TrackRepresentationSpec extends UnitSpecification {
     userJson \ "avatar_url" ==== JsString("http://example.com/giraffe.jpg")
   }
 
-  "serializes private tracks to JSON correctly" in new Context {
-    val privateTrack = defaultTrack.copy(public = false, secret_token = "s-4kT0a")
-    val privateTrackJson = Json.toJson(createTrackRepresentation(track = privateTrack))
-
-    privateTrackJson \ "uri" ==== JsString("https://api.soundcloud.com/tracks/1324?secret_token=s-4kT0a")
-    privateTrackJson \ "stream_url" ==== JsString("https://api.soundcloud.com/tracks/1324/stream?secret_token=s-4kT0a")
-    privateTrackJson \ "download_url" ==== JsString("https://api.soundcloud.com/tracks/1324/download?secret_token=s-4kT0a")
-    privateTrackJson \ "permalink_url" ==== JsString("http://soundcloud.com/nirvana/plsty-remix/s-4kT0a")
-  }
-
   "sharing" in new Context {
     val publicTrack = defaultTrack.copy(public = true)
     val publicTrackRepresentation = createTrackRepresentation(track = publicTrack)
