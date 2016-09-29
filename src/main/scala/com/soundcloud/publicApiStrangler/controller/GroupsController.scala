@@ -10,6 +10,9 @@ class GroupsController(val userAuthentication: UserAuthentication)
 
   getWithVariants("/groups")(emptyList)
   getWithVariants("/me/groups")(emptyList)
+  getWithVariants("/users/:user_id/groups")(emptyList)
+  getWithVariants("/tracks/:track_id/groups")(emptyList)
+
   getWithVariants("/groups/:group_id")(notFound)
   getWithVariants("/groups/:group_id/users")(notFound)
   getWithVariants("/groups/:group_id/moderators")(notFound)
