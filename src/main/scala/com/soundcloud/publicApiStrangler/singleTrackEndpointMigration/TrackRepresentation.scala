@@ -200,7 +200,7 @@ object TrackRepresentation {
         "key_signature" -> rep.track.key_signature,
         "isrc" -> rep.isrc.map(_.toString),
         "video_url" -> rep.track.video_url,
-        "bpm" -> rep.track.bpm,
+        "bpm" -> rep.track.bpm.map(roundBpm(_)),
         "release_year" -> rep.track.release_year,
         "release_month" -> rep.track.release_month,
         "release_day" -> rep.track.release_day,
@@ -243,6 +243,9 @@ object TrackRepresentation {
       else
         s"${baseUrl}/${rep.id}/$subresource?secret_token=${rep.track.secret_token}"
     }
+
+    private def roundBpm(f: Double): Double =
+      (f * 10000.0).round.toDouble / 10000.0
 
     private def mkTagList(rep: TrackRepresentation): String =
       (rep.track.machine_tags ++ rep.track.user_tags).map(quoteTagIfNecessary _).mkString(" ")
