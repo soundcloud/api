@@ -35,8 +35,7 @@ class SearchRepository(searchService: JsonService)
       case SearchRepository.UniversalPath =>
         mappedInputParams ++ Params(
           "filter.content_tier" -> "FREE",
-          "filter.content_country" -> session.getGeo.getCountryCode,
-          "filter.model" -> "sound,set,person"
+          "filter.content_country" -> session.getGeo.getCountryCode
         )
       case _ => mappedInputParams
     }
