@@ -1,5 +1,7 @@
 # Public API Strangler
 
+**Service discovery name:** `http.api.prod.public-api.db.srv.int.s-cloud.net`
+
 An implementation of the [_strangler_ pattern](http://martinfowler.com/bliki/StranglerApplication.html) for Mothership's Public API.
 
 Several small features, like rate-limiting and other security checks, are implemented at this layer, rather than in the Mothership codebase.
