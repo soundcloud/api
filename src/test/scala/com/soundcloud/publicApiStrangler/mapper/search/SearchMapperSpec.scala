@@ -43,11 +43,10 @@ class SearchRepositorySpec extends UnitSpecification {
   }
 
   "universal search" >> {
-    "adds filter.content_type=FREE and filter.content_country=<countryCode> and filter.model=sound,set,person" in new Context {
+    "adds filter.content_type=FREE and filter.content_country=<countryCode>" in new Context {
       val commonParams = Params(
         "filter.content_tier" -> "FREE",
-        "filter.content_country" -> "US",
-        "filter.model" -> "sound,set,person"
+        "filter.content_country" -> "US"
       )
 
       val response = withContentsOf("search", "tracks").as[JsObject]

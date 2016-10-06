@@ -27,16 +27,10 @@ class SearchRepository(searchService: JsonService)
     val dispatcherRequest = input.param
     val mappedInputParams = dispatcherRequest.mapParams(input.extraParams.filterKeys(_ != SearchMapper.LinkedPartitioning))
     dispatcherRequest.searchPath match {
-      case SearchRepository.TracksPath =>
+      case SearchRepository.TracksPath | SearchRepository.UniversalPath =>
         mappedInputParams ++ Params(
           "filter.content_tier" -> "FREE",
           "filter.content_country" -> session.getGeo.getCountryCode
-        )
-      case SearchRepository.UniversalPath =>
-        mappedInputParams ++ Params(
-          "filter.content_tier" -> "FREE",
-          "filter.content_country" -> session.getGeo.getCountryCode,
-          "filter.model" -> "sound,set,person"
         )
       case _ => mappedInputParams
     }
