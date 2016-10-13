@@ -56,7 +56,8 @@ class TrackRepresentationsService(
               domainlockings = domainlockings,
               trackAudioMetadata = audio,
               isLiked = isLiked,
-              waveformUrls = waveformUrls
+              waveformUrls = waveformUrls,
+              secretTokenParameter = secretToken
             )
 
             generateResponse(Status.Ok, jsonpWrapper(callback, Json.stringify(rep)))
@@ -100,7 +101,8 @@ class TrackRepresentationsService(
     domainlockings: Seq[DomainLocking],
     trackAudioMetadata: TrackAudioMetadata,
     isLiked: Boolean,
-    waveformUrls: Seq[WaveformUrl]
+    waveformUrls: Seq[WaveformUrl],
+    secretTokenParameter: Option[String]
   ): TrackRepresentationLike = {
     val basicTrackRep = TrackRepresentation(
       track = track,
@@ -123,6 +125,9 @@ class TrackRepresentationsService(
     if (!userSession.isAnonymous) {
       rep = TrackRepresentationUserFavoriteDecorator(isLiked, rep)
       rep = TrackRepresentationUserPlaybackCountDecorator(rep)
+    }
+    secretTokenParameter.map { secret =>
+      rep = TrackRepresentationSecretTokenUriParamDecorator(rep, secret)
     }
     rep = TrackRepresentationWaveformUrlDecorator(waveformUrls, rep)
     rep = TrackRepresentationAttachmentsUriDecorator(track.urn, rep) // TODO: make conditional on representation type
