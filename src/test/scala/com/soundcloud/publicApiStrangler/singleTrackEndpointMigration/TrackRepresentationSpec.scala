@@ -304,7 +304,32 @@ class TrackRepresentationAttachmentsUriDecoratorSpec extends UnitSpecification {
 
     (json \ "attachments_uri").as[String] ==== "https://api.soundcloud.com/tracks/1324/attachments"
   }
+}
 
+class TrackRepresentationSecretTokenUriParamDecoratorSpec extends UnitSpecification {
+  trait Context extends Scope with TrackRepresentationLikeSpecContext {
+    implicit val writes = TrackRepresentationSecretTokenUriParamDecorator.writes
+
+    val wrapped: TrackRepresentationLike = createTrackRepresentation()
+    val decorator = TrackRepresentationSecretTokenUriParamDecorator(wrapped, "bl3rkbi3")
+    val json = Json.toJson(decorator)
+  }
+
+  "adds the secret token to the URI" in new Context {
+    json \ "uri" ==== JsString("https://api.soundcloud.com/tracks/1324?secret_token=bl3rkbi3")
+  }
+
+  "adds the secret token to the stream_url" in new Context {
+    json \ "stream_url" ==== JsString("https://api.soundcloud.com/tracks/1324/stream?secret_token=bl3rkbi3")
+  }
+
+  "adds the secret token to the download_url" in new Context {
+    json \ "download_url" ==== JsString("https://api.soundcloud.com/tracks/1324/download?secret_token=bl3rkbi3")
+  }
+
+  "adds the secret token to the permalink_url" in new Context {
+    json \ "permalink_url" ==== JsString("http://soundcloud.com/nirvana/plsty-remix/bl3rkbi3")
+  }
 }
 
 class TrackRepresentationSpec extends UnitSpecification {
