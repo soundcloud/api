@@ -225,7 +225,8 @@ class ResponseComparison(telemetry: Telemetry) {
     "title",
     "uri",
     "user_favorite",
-    "waveform_url"
+    "waveform_url",
+    "user"
   )
 
   private val ignoredHeaders = Seq(
