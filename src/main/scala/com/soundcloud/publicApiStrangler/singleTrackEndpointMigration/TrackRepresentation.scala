@@ -22,6 +22,7 @@ object TrackRepresentationLike {
     case t: TrackRepresentationUserPlaybackCountDecorator => TrackRepresentationUserPlaybackCountDecorator.writes.writes(t)
     case t: TrackRepresentationWaveformUrlDecorator => TrackRepresentationWaveformUrlDecorator.writes.writes(t)
     case t: TrackRepresentationAttachmentsUriDecorator => TrackRepresentationAttachmentsUriDecorator.writes.writes(t)
+    case t: TrackRepresentationSecretTokenUriParamDecorator => TrackRepresentationSecretTokenUriParamDecorator.writes.writes(t)
     case t: TrackRepresentation => TrackRepresentation.writes.writes(t)
   }
 
@@ -151,6 +152,29 @@ object TrackRepresentationAttachmentsUriDecorator {
   }
 }
 
+case class TrackRepresentationSecretTokenUriParamDecorator(
+  wrapped: TrackRepresentationLike,
+  secretParam: String
+) extends TrackRepresentationLike
+
+object TrackRepresentationSecretTokenUriParamDecorator {
+  implicit val writes = Writes[TrackRepresentationSecretTokenUriParamDecorator] { dec =>
+    val json = Json.toJson(dec.wrapped).as[JsObject]
+    json ++
+      valueFor(json, "uri", (uri) => { s"$uri?secret_token=${dec.secretParam}" }) ++
+      valueFor(json, "stream_url", (uri) => { s"$uri?secret_token=${dec.secretParam}" }) ++
+      valueFor(json, "download_url", (uri) => { s"$uri?secret_token=${dec.secretParam}" }) ++
+      valueFor(json, "permalink_url", (uri) => { s"$uri/${dec.secretParam}" })
+  }
+
+  private def valueFor(json: JsObject, param: String, transform: (String) => String): JsObject = {
+    (json \ param).asOpt[String] match {
+      case Some(value) => Json.obj(param -> JsString(transform(value)))
+      case None => Json.obj()
+    }
+  }
+}
+
 case class TrackRepresentation(
   track: Track,
   user: User,
@@ -230,19 +254,9 @@ object TrackRepresentation {
 
     private val baseUrl = "https://api.soundcloud.com/tracks"
 
-    private def urlFor(rep: TrackRepresentation) = {
-      if (rep.track.public)
-        s"${baseUrl}/${rep.id}"
-      else
-        s"${baseUrl}/${rep.id}?secret_token=${rep.track.secret_token}"
-    }
+    private def urlFor(rep: TrackRepresentation) = s"${baseUrl}/${rep.id}"
 
-    private def urlFor(rep: TrackRepresentation, subresource: String) = {
-      if (rep.track.public)
-        s"${baseUrl}/${rep.id}/$subresource"
-      else
-        s"${baseUrl}/${rep.id}/$subresource?secret_token=${rep.track.secret_token}"
-    }
+    private def urlFor(rep: TrackRepresentation, subresource: String) = s"${baseUrl}/${rep.id}/$subresource"
 
     private def roundBpm(f: Double): Double =
       (f * 10000.0).round.toDouble / 10000.0

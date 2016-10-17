@@ -1,12 +1,11 @@
 package com.soundcloud.publicApiStrangler.singleTrackEndpointMigration
 
-import com.soundcloud.jvmkit.UserSession
+import com.soundcloud.jvmkit.Urn
 import com.soundcloud.publicApiStrangler.client.mediaservice.WaveformUrl
-import com.soundcloud.publicApiStrangler.client.{DomainLocking, TrackAudioMetadata}
 import com.soundcloud.publicApiStrangler.client.pubmese.Isrc
 import com.soundcloud.publicApiStrangler.client.stitch.StitchCounts
+import com.soundcloud.publicApiStrangler.client.{DomainLocking, TrackAudioMetadata}
 import com.soundcloud.publicApiStrangler.singleTrackEndpointMigration.trackmetadataclient.{Artwork, EmbeddingPermission, Track}
-import com.soundcloud.jvmkit.Urn
 import com.soundcloud.scalakit.test.UnitSpecification
 import com.soundcloud.service.response.representation.{Geoblockings, User}
 import org.joda.time.LocalDateTime
@@ -28,8 +27,7 @@ trait TrackRepresentationLikeSpecContext {
     geoblockings: Option[Geoblockings] = Some(defaultGeoblockings),
     domainlockings: Seq[DomainLocking] = defaultDomainLockings,
     audioMetadata: TrackAudioMetadata = defaultTrackAudioMetadata) =
-    TrackRepresentation(
-      track, user, isrc, counts, label, geoblockings, domainlockings, audioMetadata)
+    TrackRepresentation(track, user, isrc, counts, label, geoblockings, domainlockings, audioMetadata)
 
   def defaultLoggedInUserUrn = new Urn("soundcloud", "users", "79241")
 
@@ -306,7 +304,32 @@ class TrackRepresentationAttachmentsUriDecoratorSpec extends UnitSpecification {
 
     (json \ "attachments_uri").as[String] ==== "https://api.soundcloud.com/tracks/1324/attachments"
   }
+}
 
+class TrackRepresentationSecretTokenUriParamDecoratorSpec extends UnitSpecification {
+  trait Context extends Scope with TrackRepresentationLikeSpecContext {
+    implicit val writes = TrackRepresentationSecretTokenUriParamDecorator.writes
+
+    val wrapped: TrackRepresentationLike = createTrackRepresentation()
+    val decorator = TrackRepresentationSecretTokenUriParamDecorator(wrapped, "bl3rkbi3")
+    val json = Json.toJson(decorator)
+  }
+
+  "adds the secret token to the URI" in new Context {
+    json \ "uri" ==== JsString("https://api.soundcloud.com/tracks/1324?secret_token=bl3rkbi3")
+  }
+
+  "adds the secret token to the stream_url" in new Context {
+    json \ "stream_url" ==== JsString("https://api.soundcloud.com/tracks/1324/stream?secret_token=bl3rkbi3")
+  }
+
+  "adds the secret token to the download_url" in new Context {
+    json \ "download_url" ==== JsString("https://api.soundcloud.com/tracks/1324/download?secret_token=bl3rkbi3")
+  }
+
+  "adds the secret token to the permalink_url" in new Context {
+    json \ "permalink_url" ==== JsString("http://soundcloud.com/nirvana/plsty-remix/bl3rkbi3")
+  }
 }
 
 class TrackRepresentationSpec extends UnitSpecification {
@@ -364,16 +387,6 @@ class TrackRepresentationSpec extends UnitSpecification {
     userJson \ "uri" ==== JsString("https://api.soundcloud.com/users/3456")
     userJson \ "permalink_url" ==== JsString("https://soundcloud.com/denis")
     userJson \ "avatar_url" ==== JsString("http://example.com/giraffe.jpg")
-  }
-
-  "serializes private tracks to JSON correctly" in new Context {
-    val privateTrack = defaultTrack.copy(public = false, secret_token = "s-4kT0a")
-    val privateTrackJson = Json.toJson(createTrackRepresentation(track = privateTrack))
-
-    privateTrackJson \ "uri" ==== JsString("https://api.soundcloud.com/tracks/1324?secret_token=s-4kT0a")
-    privateTrackJson \ "stream_url" ==== JsString("https://api.soundcloud.com/tracks/1324/stream?secret_token=s-4kT0a")
-    privateTrackJson \ "download_url" ==== JsString("https://api.soundcloud.com/tracks/1324/download?secret_token=s-4kT0a")
-    privateTrackJson \ "permalink_url" ==== JsString("http://soundcloud.com/nirvana/plsty-remix/s-4kT0a")
   }
 
   "sharing" in new Context {

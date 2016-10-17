@@ -481,4 +481,27 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
       Json.fromResponse(response).as[JsObject].keys.contains("waveform_url") ==== false
     }
   }
+
+  "secret_token parameter in URIs" >> {
+    "appends the secret token when one is given" in new Context {
+      val track = trackmetadataTrack().copy(permalink_url = Some("http://soundcloud.com/foo/bar"))
+      setUpMocksForExistingTrack(track, session)
+
+      val response = Await.result(tracksService.track(session, trackUrn, Some("s-4kT0a"), None))
+      val json = Json.fromResponse(response)
+      json \ "uri" ==== JsString("https://api.soundcloud.com/tracks/987?secret_token=s-4kT0a")
+      json \ "stream_url" ==== JsString("https://api.soundcloud.com/tracks/987/stream?secret_token=s-4kT0a")
+      json \ "download_url" ==== JsString("https://api.soundcloud.com/tracks/987/download?secret_token=s-4kT0a")
+      json \ "permalink_url" ==== JsString("http://soundcloud.com/foo/bar/s-4kT0a")
+    }
+
+    "does not add a secret token to null values" in new Context {
+      val track = trackmetadataTrack().copy(permalink_url = None)
+      setUpMocksForExistingTrack(track, session)
+
+      val response = Await.result(tracksService.track(session, trackUrn, Some("s-4kT0a"), None))
+      val json = Json.fromResponse(response)
+      json \ "permalink_url" ==== JsNull
+    }
+  }
 }
