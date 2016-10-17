@@ -62,7 +62,7 @@ case class TrackRepresentationUserFavoriteDecorator(
 object TrackRepresentationUserFavoriteDecorator {
   implicit val writes = Writes[TrackRepresentationUserFavoriteDecorator] { dec =>
     Json.toJson(dec.wrapped).as[JsObject] ++ Json.obj(
-      "user_favorite" -> dec.isLiked.toString
+      "user_favorite" -> dec.isLiked
     )
   }
 }

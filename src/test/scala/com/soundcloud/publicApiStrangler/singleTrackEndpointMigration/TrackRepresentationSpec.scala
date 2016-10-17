@@ -210,7 +210,7 @@ class TrackRepresentationUserFavoriteDecoratorSpec extends UnitSpecification {
     val decorator = TrackRepresentationUserFavoriteDecorator(isFavorite, wrapped)
     val json = Json.toJson(decorator)
 
-    json \ "user_favorite" ==== JsString("true")
+    json \ "user_favorite" ==== JsBoolean(true)
   }
 
   "adds user favourite information when track is not liked" in new Context {
@@ -218,7 +218,7 @@ class TrackRepresentationUserFavoriteDecoratorSpec extends UnitSpecification {
     val decorator = TrackRepresentationUserFavoriteDecorator(isFavorite, wrapped)
     val json = Json.toJson(decorator)
 
-    json \ "user_favorite" ==== JsString("false")
+    json \ "user_favorite" ==== JsBoolean(false)
   }
 }
 

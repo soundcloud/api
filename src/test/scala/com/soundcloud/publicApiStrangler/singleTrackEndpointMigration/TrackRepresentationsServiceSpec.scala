@@ -17,7 +17,7 @@ import com.twitter.util.{Await, Future}
 import org.joda.time.LocalDateTime
 import org.mockito.Mockito._
 import org.specs2.specification.{BeforeAfterEach, BeforeEach}
-import play.api.libs.json.{JsNull, JsNumber, JsObject, JsString}
+import play.api.libs.json._
 
 class TrackRepresentationsServiceSpec extends UnitSpecification {
 
@@ -404,7 +404,7 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
 
       response.status ==== Status.Ok
       val json = Json.fromResponse(response)
-      json \ "user_favorite" ==== JsString("true")
+      json \ "user_favorite" ==== JsBoolean(true)
     }
 
     "is false when the user has not favourited the track, and is logged in" in new Context {
@@ -418,7 +418,7 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
 
       response.status ==== Status.Ok
       val json = Json.fromResponse(response)
-      json \ "user_favorite" ==== JsString("false")
+      json \ "user_favorite" ==== JsBoolean(false)
     }
 
     "is not present when the user is not logged in" in new Context {
