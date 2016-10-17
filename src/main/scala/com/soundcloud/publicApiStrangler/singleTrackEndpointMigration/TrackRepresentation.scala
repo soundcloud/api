@@ -232,7 +232,7 @@ object TrackRepresentation {
         "license" -> rep.track.license,
         "uri" -> urlFor(rep),
         "user" -> rep.user,
-        "permalink_url" -> permalinkFor(rep.track),
+        "permalink_url" -> rep.track.permalink_url,
         "artwork_url" -> rep.track.artwork.filename.map(imageUrl(_)),
         "playback_count" -> rep.counts.playback_count,
         "download_count" -> rep.counts.download_count,
@@ -241,15 +241,6 @@ object TrackRepresentation {
         "stream_url" -> urlFor(rep, "stream"),
         "download_url" -> urlFor(rep, "download")
       )
-    }
-
-    private def permalinkFor(track: Track) = {
-      track.permalink_url.map { url =>
-        if (track.public)
-          url
-        else
-          s"${url}/${track.secret_token}"
-      }
     }
 
     private val baseUrl = "https://api.soundcloud.com/tracks"
