@@ -56,7 +56,8 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
         followers_count = Some(20000),
         followings_count = Some(20),
         verified = false,
-        description = Some("I am a nice person"))
+        description = Some("I am a nice person"),
+        updated_at = Some("2016/10/10 11:21:36 +0000"))
 
     def label =
       User(
@@ -71,7 +72,8 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
         followers_count = Some(10000),
         followings_count = Some(10),
         verified = true,
-        description = Some("Psychonaut Music Inc."))
+        description = Some("Psychonaut Music Inc."),
+        updated_at = Some("2016/10/10 11:21:36 +0000"))
 
     val trackUrn = Urn("soundcloud:tracks:987")
     val createdAt = new LocalDateTime(2016, 5, 19, 18, 3, 4)
