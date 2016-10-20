@@ -262,16 +262,10 @@ object TrackRepresentation {
         tag
 
     private def releaseDayFor(rep: TrackRepresentation): Option[Int] =
-      rep.track.release_year match {
-        case Some(_) => rep.track.release_day.orElse(Some(1))
-        case _ => None
-      }
+      rep.track.release_year.map(_ => rep.track.release_day.getOrElse(1))
 
     private def releaseMonthFor(rep: TrackRepresentation): Option[Int] =
-      rep.track.release_year match {
-        case Some(_) => rep.track.release_month.orElse(Some(1))
-        case _ => None
-      }
+      rep.track.release_year.map(_ => rep.track.release_month.getOrElse(1))
 
     private def imageUrl(imageFile: String): String = {
       val s3FilenamePattern = """(.*)-original\.(\w*)""".r
