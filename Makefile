@@ -31,7 +31,7 @@ precheckin:
 end-to-end-test: _dev_docker_compose
 	bin/wait-for-http $(DOCKER_IP):4567/-/health # wait for publicapistub
 	bin/wait-for-http $(DOCKER_IP):5000/-/health # wait for publicapistrangler
-	crun sbt --docker-options="--link=$(STRANGLER_CONTAINER):strangler --link=$(ZOOKEEPER_CONTAINER):zookeeper" -- $(SBT) endToEnd/test
+	crun sbt --docker-options="--link=$(STRANGLER_CONTAINER):strangler --link=$(ZOOKEEPER_CONTAINER):zookeeper" -- vendor/sbt/bin/sbt endToEnd/test
 
 test: unit-test
 
