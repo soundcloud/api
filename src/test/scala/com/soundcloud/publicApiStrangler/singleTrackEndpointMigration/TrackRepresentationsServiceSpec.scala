@@ -1,12 +1,12 @@
 package com.soundcloud.publicApiStrangler.singleTrackEndpointMigration
 
-import com.soundcloud.jvmkit.{UserSession, UserSessionBuilder}
+import com.soundcloud.jvmkit.{Urn, UserSession, UserSessionBuilder}
 import com.soundcloud.publicApiStrangler.client.mediaservice.{MediaServiceUrlGenClient, WaveformUrl}
 import com.soundcloud.publicApiStrangler.client.{DomainLocking, RichOkidokiClient, TrackAudioMetadata}
 import com.soundcloud.publicApiStrangler.client.pubmese.{Isrc, PubmeseClient}
+import com.soundcloud.publicApiStrangler.client.quota.UserQuotaClient
 import com.soundcloud.publicApiStrangler.client.stitch.{StitchClient, StitchCounts}
 import com.soundcloud.publicApiStrangler.singleTrackEndpointMigration.trackmetadataclient.{Artwork, EmbeddingPermission, Track, TrackmetadataClient}
-import com.soundcloud.scalakit.Urn
 import com.soundcloud.scalakit.json.Json
 import com.soundcloud.scalakit.test.UnitSpecification
 import com.soundcloud.service.client.LieblingClient
@@ -16,7 +16,6 @@ import com.twitter.finagle.http.Status
 import com.twitter.util.{Await, Future}
 import org.joda.time.LocalDateTime
 import org.mockito.Mockito._
-import org.specs2.specification.{BeforeAfterEach, BeforeEach}
 import play.api.libs.json._
 
 class TrackRepresentationsServiceSpec extends UnitSpecification {
@@ -30,6 +29,7 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
     val stitchClient = mock[StitchClient]
     val lieblingClient = mock[LieblingClient]
     val mediaUrlGenClient = mock[MediaServiceUrlGenClient]
+    val userQuotaClient = mock[UserQuotaClient]
 
     val tracksService = new TrackRepresentationsService(
       trackmetadataClient,
@@ -37,11 +37,12 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
       pubmeseClient,
       stitchClient,
       lieblingClient,
-      mediaUrlGenClient
+      mediaUrlGenClient,
+      userQuotaClient
     )
 
-    val userUrn = Urn("soundcloud:users:112")
-    val labelUrn = Urn("soundcloud:users:678")
+    val userUrn = new Urn("soundcloud:users:112")
+    val labelUrn = new Urn("soundcloud:users:678")
 
     def user =
       User(
@@ -99,7 +100,8 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
     def trackmetadataTrack(
       disabledAt: Option[LocalDateTime] = None,
       isPublic: Boolean = true,
-      secretToken: String = "secr3t-Token") =
+      secretToken: String = "secr3t-Token",
+      isDownloadable: Boolean = false) =
       Track(
         urn = trackUrn,
         user_urn = userUrn,
@@ -107,7 +109,7 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
         description = None,
         created_at = createdAt,
         disabled_at = disabledAt,
-        downloadable = false,
+        downloadable = isDownloadable,
         duration = 0,
         genre = None,
         last_modified = lastModified,
@@ -174,6 +176,7 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
       when(okidokiClient.fetchTrackAudioMetadata(session, trackUrn)).thenReturn(Future.value(Some(trackAudioMetadata)))
       when(lieblingClient.userLikeCounts(session, List(trackUrn), session.getUser)).thenReturn(Future.value(userLikesCount))
       when(mediaUrlGenClient.waveformUrls(session, track.uid)).thenReturn(Future.value(waveformUrls))
+      when(userQuotaClient.downloadsPerTrack(session, Set(track.user_urn))).thenReturn(Future.value(Map.empty[Urn, Int]))
     }
 
     def setUpMocksForNonExistingTrack = {
@@ -504,6 +507,52 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
       val response = Await.result(tracksService.track(session, trackUrn, Some("s-4kT0a"), None))
       val json = Json.fromResponse(response)
       json \ "permalink_url" ==== JsNull
+    }
+  }
+
+  "downloadable" >> {
+    "is true when track is downloadable, and below user's quota" in new Context {
+      val track = trackmetadataTrack(isDownloadable = true)
+      setUpMocksForExistingTrack(track, session)
+      userQuotaClient.downloadsPerTrack(session, Set(track.user_urn)) returns Future.value(Map(userUrn -> 100))
+      stitchClient.countsForTrack(session, trackUrn, userUrn) returns Future.value(StitchCounts(0, 90, 0, 0))
+
+      val response = Await.result(tracksService.track(session, trackUrn, None, None))
+      val json = Json.fromResponse(response)
+      json \ "downloadable" ==== JsBoolean(true)
+    }
+
+    "it true when track is downloadable, and use has no quota" in new Context {
+      val track = trackmetadataTrack(isDownloadable = true)
+      setUpMocksForExistingTrack(track, session)
+      userQuotaClient.downloadsPerTrack(session, Set(track.user_urn)) returns Future.value(Map.empty[Urn, Int])
+      stitchClient.countsForTrack(session, trackUrn, userUrn) returns Future.value(StitchCounts(0, 90, 0, 0))
+
+      val response = Await.result(tracksService.track(session, trackUrn, None, None))
+      val json = Json.fromResponse(response)
+      json \ "downloadable" ==== JsBoolean(true)
+    }
+
+    "is false when track is downloadable, and above user's quota" in new Context {
+      val track = trackmetadataTrack(isDownloadable = true)
+      setUpMocksForExistingTrack(track, session)
+      userQuotaClient.downloadsPerTrack(session, Set(track.user_urn)) returns Future.value(Map(userUrn -> 100))
+      stitchClient.countsForTrack(session, trackUrn, userUrn) returns Future.value(StitchCounts(0, 110, 0, 0))
+
+      val response = Await.result(tracksService.track(session, trackUrn, None, None))
+      val json = Json.fromResponse(response)
+      json \ "downloadable" ==== JsBoolean(false)
+    }
+
+    "is false when track is not downloadable, and below user's quota" in new Context {
+      val track = trackmetadataTrack(isDownloadable = false)
+      setUpMocksForExistingTrack(track, session)
+      userQuotaClient.downloadsPerTrack(session, Set(track.user_urn)) returns Future.value(Map(userUrn -> 100))
+      stitchClient.countsForTrack(session, trackUrn, userUrn) returns Future.value(StitchCounts(0, 90, 0, 0))
+
+      val response = Await.result(tracksService.track(session, trackUrn, None, None))
+      val json = Json.fromResponse(response)
+      json \ "downloadable" ==== JsBoolean(false)
     }
   }
 }

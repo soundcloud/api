@@ -1,0 +1,14 @@
+[
+  {
+    "downloads_per_track": 100,
+    "self": {
+      "urn": "soundcloud:users:1"
+    }
+  },
+  {
+    "downloads_per_track": 200,
+    "self": {
+      "urn": "soundcloud:users:2"
+    }
+  }
+]

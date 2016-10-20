@@ -23,6 +23,7 @@ object TrackRepresentationLike {
     case t: TrackRepresentationWaveformUrlDecorator => TrackRepresentationWaveformUrlDecorator.writes.writes(t)
     case t: TrackRepresentationAttachmentsUriDecorator => TrackRepresentationAttachmentsUriDecorator.writes.writes(t)
     case t: TrackRepresentationSecretTokenUriParamDecorator => TrackRepresentationSecretTokenUriParamDecorator.writes.writes(t)
+    case t: TrackRepresentationQuotaDecorator => TrackRepresentationQuotaDecorator.writes.writes(t)
     case t: TrackRepresentation => TrackRepresentation.writes.writes(t)
   }
 
@@ -175,6 +176,27 @@ object TrackRepresentationSecretTokenUriParamDecorator {
   }
 }
 
+case class TrackRepresentationQuotaDecorator(
+  downloadable: Boolean,
+  downloadsPerTrack: Option[Int],
+  downloadCount: Int,
+  wrapped: TrackRepresentationLike
+) extends TrackRepresentationLike
+
+object TrackRepresentationQuotaDecorator {
+  implicit val writes = Writes[TrackRepresentationQuotaDecorator] { dec =>
+    val downloadable = (dec.downloadable, dec.downloadsPerTrack) match {
+      case (false, _) => false
+      case (true, None) => true // Stitch returned no data, default to whatever the track is set to
+      case (true, Some(quota)) => dec.downloadCount < quota
+    }
+
+    Json.toJson(dec.wrapped).as[JsObject] ++ Json.obj(
+      "downloadable" -> downloadable
+    )
+  }
+}
+
 case class TrackRepresentation(
   track: Track,
   user: User,
@@ -211,7 +233,6 @@ object TrackRepresentation {
         "permalink" -> rep.track.permalink,
         "streamable" -> rep.track.streamable,
         "embeddable_by" -> rep.track.embeddableBy,
-        "downloadable" -> rep.track.downloadable,
         "purchase_url" -> rep.track.purchase_url,
         "purchase_title" -> rep.track.purchase_title,
         "label_id" -> rep.track.label_id,

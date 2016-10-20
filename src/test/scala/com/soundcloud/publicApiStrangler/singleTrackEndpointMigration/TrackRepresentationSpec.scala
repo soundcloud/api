@@ -334,6 +334,32 @@ class TrackRepresentationSecretTokenUriParamDecoratorSpec extends UnitSpecificat
   }
 }
 
+class TrackRepresentationQuotaDecoratorSpec extends UnitSpecification {
+  trait Context extends Scope with TrackRepresentationLikeSpecContext {
+    implicit val writes = TrackRepresentationQuotaDecorator.writes
+
+    val wrapped: TrackRepresentationLike = createTrackRepresentation()
+  }
+
+  "adds downloadable as true when the track is downloadable, and below the user's quota" in new Context {
+    val decorator = TrackRepresentationQuotaDecorator(true, Some(100), 90, wrapped)
+    val json = Json.toJson(decorator)
+    json \ "downloadable" ==== JsBoolean(true)
+  }
+
+  "adds downloadable as false when the track is downloadable, and above the user's quota" in new Context {
+    val decorator = TrackRepresentationQuotaDecorator(true, Some(100), 110, wrapped)
+    val json = Json.toJson(decorator)
+    json \ "downloadable" ==== JsBoolean(false)
+  }
+
+  "uses the 'downloadable' value, when the user has no quota" in new Context {
+    val decorator = TrackRepresentationQuotaDecorator(false, None, 90, wrapped)
+    val json = Json.toJson(decorator)
+    json \ "downloadable" ==== JsBoolean(false)
+  }
+}
+
 class TrackRepresentationSpec extends UnitSpecification {
   trait Context extends Scope with TrackRepresentationLikeSpecContext
 
@@ -351,7 +377,6 @@ class TrackRepresentationSpec extends UnitSpecification {
     trackJson \ "permalink" ==== JsString("plsty-remix")
     trackJson \ "streamable" ==== JsBoolean(false)
     trackJson \ "embeddable_by" ==== JsString("me")
-    trackJson \ "downloadable" ==== JsBoolean(false)
     trackJson \ "genre" ==== JsString("future bass")
     trackJson \ "title" ==== JsString("Baby Bash")
     trackJson \ "description" ==== JsString("Follow @samstarling !")

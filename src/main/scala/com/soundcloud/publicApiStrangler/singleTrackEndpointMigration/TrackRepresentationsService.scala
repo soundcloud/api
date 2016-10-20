@@ -5,6 +5,7 @@ import com.soundcloud.jvmkit.logging.SoundCloudLoggerFactory
 import com.soundcloud.publicApiStrangler.client.mediaservice.{MediaServiceUrlGenClient, WaveformUrl}
 import com.soundcloud.publicApiStrangler.client.{DomainLocking, RichOkidokiClient, TrackAudioMetadata}
 import com.soundcloud.publicApiStrangler.client.pubmese.{Isrc, PubmeseClient}
+import com.soundcloud.publicApiStrangler.client.quota.UserQuotaClient
 import com.soundcloud.publicApiStrangler.client.stitch.{StitchClient, StitchCounts}
 import com.soundcloud.publicApiStrangler.singleTrackEndpointMigration.trackmetadataclient.{Track, TrackmetadataClient}
 import com.soundcloud.scalakit.json.Json
@@ -19,7 +20,8 @@ class TrackRepresentationsService(
   pubmeseClient: PubmeseClient,
   stitchClient: StitchClient,
   lieblingClient: LieblingClient,
-  mediaUrlGenClient: MediaServiceUrlGenClient) {
+  mediaUrlGenClient: MediaServiceUrlGenClient,
+  userQuotaClient: UserQuotaClient) {
 
   private val logger = SoundCloudLoggerFactory.getLogger(this.getClass.getName)
   private val notFoundErrorString = """{"errors":[{"error_message":"404 - Not Found"}]}"""
@@ -38,13 +40,14 @@ class TrackRepresentationsService(
         val labelF = fetchLabelForTrack(track, session)
         val isLikedF = fetchUserLikesTrack(track, session)
         val waveformUrlsF = fetchWaveformUrls(track, session)
+        val downloadsPerTrackF = fetchDownloadsPerTrack(track, session)
         val countsF = userF.flatMap {
           case Some(user) => stitchClient.countsForTrack(session, urn, user.urn).map(Some(_)).liftToTry.map(_.getOrElse(None))
           case None => Future.value(None)
         }
 
-        Future.join(isrcF, userF, countsF, labelF, geoblockingsF, domainlockingsF, audioF, isLikedF, waveformUrlsF).map {
-          case (isrc, Some(user), counts, label, geoblockings, domainlockings, Some(audio), isLiked, waveformUrls) =>
+        Future.join(isrcF, userF, countsF, labelF, geoblockingsF, domainlockingsF, audioF, isLikedF, waveformUrlsF, downloadsPerTrackF).map {
+          case (isrc, Some(user), counts, label, geoblockings, domainlockings, Some(audio), isLiked, waveformUrls, downloadsPerTrack) =>
             val rep = buildTrackRepresentationLike(
               userSession = session,
               track = track,
@@ -57,7 +60,8 @@ class TrackRepresentationsService(
               trackAudioMetadata = audio,
               isLiked = isLiked,
               waveformUrls = waveformUrls,
-              secretTokenParameter = secretToken
+              secretTokenParameter = secretToken,
+              downloadsPerTrack = downloadsPerTrack
             )
 
             generateResponse(Status.Ok, jsonpWrapper(callback, Json.stringify(rep)))
@@ -102,7 +106,8 @@ class TrackRepresentationsService(
     trackAudioMetadata: TrackAudioMetadata,
     isLiked: Boolean,
     waveformUrls: Seq[WaveformUrl],
-    secretTokenParameter: Option[String]
+    secretTokenParameter: Option[String],
+    downloadsPerTrack: Option[Int]
   ): TrackRepresentationLike = {
     val basicTrackRep = TrackRepresentation(
       track = track,
@@ -129,6 +134,7 @@ class TrackRepresentationsService(
     secretTokenParameter.map { secret =>
       rep = TrackRepresentationSecretTokenUriParamDecorator(rep, secret)
     }
+    rep = TrackRepresentationQuotaDecorator(track.downloadable, downloadsPerTrack, counts.download_count, rep)
     rep = TrackRepresentationWaveformUrlDecorator(waveformUrls, rep)
     rep = TrackRepresentationAttachmentsUriDecorator(track.urn, rep) // TODO: make conditional on representation type
     rep
@@ -161,6 +167,9 @@ class TrackRepresentationsService(
 
   private def fetchWaveformUrls(track: Track, session: UserSession): Future[Seq[WaveformUrl]] =
     mediaUrlGenClient.waveformUrls(session, track.uid)
+
+  private def fetchDownloadsPerTrack(track: Track, session: UserSession): Future[Option[Int]] =
+    userQuotaClient.downloadsPerTrack(session, Set(track.user_urn)).map(_.get(track.user_urn))
 
   private def getCounts(counts: Option[StitchCounts]): StitchCounts =
     counts.getOrElse(StitchCounts(0, 0, 0, 0))
