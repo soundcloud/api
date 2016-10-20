@@ -341,22 +341,25 @@ class TrackRepresentationQuotaDecoratorSpec extends UnitSpecification {
     val wrapped: TrackRepresentationLike = createTrackRepresentation()
   }
 
-  "adds downloadable as true when the track is downloadable, and below the user's quota" in new Context {
+  "adds downloadable as true and number remaining when the track is downloadable, and below the user's quota" in new Context {
     val decorator = TrackRepresentationQuotaDecorator(true, Some(100), 90, wrapped)
     val json = Json.toJson(decorator)
     json \ "downloadable" ==== JsBoolean(true)
+    json \ "downloads_remaining" ==== JsNumber(10)
   }
 
   "adds downloadable as false when the track is downloadable, and above the user's quota" in new Context {
     val decorator = TrackRepresentationQuotaDecorator(true, Some(100), 110, wrapped)
     val json = Json.toJson(decorator)
     json \ "downloadable" ==== JsBoolean(false)
+    json.as[JsObject].keys.contains("downloads_remaining") ==== false
   }
 
   "uses the 'downloadable' value, when the user has no quota" in new Context {
     val decorator = TrackRepresentationQuotaDecorator(false, None, 90, wrapped)
     val json = Json.toJson(decorator)
     json \ "downloadable" ==== JsBoolean(false)
+    json.as[JsObject].keys.contains("downloads_remaining") ==== false
   }
 }
 
