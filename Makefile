@@ -5,9 +5,16 @@ ZOOKEEPER_CONTAINER ?= $(shell docker ps --filter "ancestor=docker.dev.s-cloud.n
 DOCKER_IP ?= $(shell docker-ip)
 
 PWD?=$(HOME)
-define SBT
-	sbt
-endef
+
+ifeq ($(USE_CRUN),false)
+	SBT = vendor/sbt/bin/sbt
+	SBT_INTERACTIVE = $(SBT)
+	JAVAC = javac
+else
+	SBT = crun sbt -- sbt
+	SBT_INTERACTIVE = crun -i sbt -- sbt
+	JAVAC = crun jdk-8 -- javac
+endif
 
 .PHONY: default
 default: precheckin
@@ -29,19 +36,19 @@ end-to-end-test: _dev_docker_compose
 test: unit-test
 
 unit-test:
-	crun sbt -- $(SBT) test
+	$(SBT) test
 
 interactive-lite:
 	source config/baremetal.sh && $(SBT)
 
 interactive:
-	crun -i sbt -- $(SBT)
+	$(SBT_INTERACTIVE)
 
 compile:
-	crun sbt -- $(SBT) compile
+	$(SBT) compile
 
 sc-debian-layout: clean patched-jdk
-	crun sbt -- $(SBT) scDebianLayout:packageBin
+	$(SBT) scDebianLayout:packageBin
 
 clean:
 	rm -rf target
@@ -54,7 +61,7 @@ patched-jdk: jdk/target/sun/nio/ch/Util.class
 
 jdk/target/sun/nio/ch/Util.class: jdk/src/share/classes/sun/nio/ch/Util.java
 	mkdir -p jdk/target
-	crun jdk-8 -- javac -d jdk/target $<
+	$(JAVAC) -d jdk/target $<
 
 .PHONY: _dev_docker_compose
 _dev_docker_compose:

@@ -6,6 +6,8 @@
 * `make unit-test` – run just the unit tests.
 * `make interactive` – start an SBT console.
 
+Set the `USE_CRUN` environment variable to `false` to avoid using crun when possible.
+
 ## Running Public API Strangler locally
 
 ```
