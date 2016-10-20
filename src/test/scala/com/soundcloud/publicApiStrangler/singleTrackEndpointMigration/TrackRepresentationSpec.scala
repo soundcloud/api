@@ -411,6 +411,14 @@ class TrackRepresentationSpec extends UnitSpecification {
     trackJson \ "bpm" ==== JsNumber(128.1)
   }
 
+  "no release day/month" in new Context {
+    val track = defaultTrack.copy(release_month = None, release_day = None)
+    val trackRep = createTrackRepresentation(track = track)
+    val trackJson = Json.toJson(trackRep)
+    trackJson \ "release_month" ==== JsNumber(1)
+    trackJson \ "release_day" ==== JsNumber(1)
+  }
+
   "weird artwork filename" in new Context {
     val track = defaultTrack.copy(artwork = Artwork(filename = Some("adfhlsh.jpg")))
     val trackRep = createTrackRepresentation(track = track)
