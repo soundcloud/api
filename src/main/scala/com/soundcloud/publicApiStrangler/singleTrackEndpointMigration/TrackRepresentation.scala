@@ -226,8 +226,8 @@ object TrackRepresentation {
         "video_url" -> rep.track.video_url,
         "bpm" -> rep.track.bpm.map(roundBpm(_)),
         "release_year" -> rep.track.release_year,
-        "release_month" -> rep.track.release_month,
-        "release_day" -> rep.track.release_day,
+        "release_month" -> releaseMonthFor(rep),
+        "release_day" -> releaseDayFor(rep),
         "original_format" -> rep.audioMetadata.original_format,
         "license" -> rep.track.license,
         "uri" -> urlFor(rep),
@@ -260,6 +260,12 @@ object TrackRepresentation {
         "\"" + tag + "\""
       else
         tag
+
+    private def releaseDayFor(rep: TrackRepresentation): Int =
+      rep.track.release_day.getOrElse(1)
+
+    private def releaseMonthFor(rep: TrackRepresentation): Int =
+      rep.track.release_month.getOrElse(1)
 
     private def imageUrl(imageFile: String): String = {
       val s3FilenamePattern = """(.*)-original\.(\w*)""".r
