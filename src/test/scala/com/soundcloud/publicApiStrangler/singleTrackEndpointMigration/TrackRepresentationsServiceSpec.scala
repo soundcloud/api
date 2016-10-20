@@ -555,4 +555,47 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
       json \ "downloadable" ==== JsBoolean(false)
     }
   }
+
+  "downloads_remaining" >> {
+    "is shown when track is downloadable, and below user's quota" in new Context {
+      val track = trackmetadataTrack(isDownloadable = true)
+      setUpMocksForExistingTrack(track, session)
+      userQuotaClient.downloadsPerTrack(session, Set(track.user_urn)) returns Future.value(Map(userUrn -> 100))
+      stitchClient.countsForTrack(session, trackUrn, userUrn) returns Future.value(StitchCounts(0, 90, 0, 0))
+
+      val response = Await.result(tracksService.track(session, trackUrn, None, None))
+      val json = Json.fromResponse(response)
+      json \ "downloads_remaining" ==== JsNumber(10)
+    }
+
+    "it not shown when track is downloadable, and user has no quota" in new Context {
+      val track = trackmetadataTrack(isDownloadable = true)
+      setUpMocksForExistingTrack(track, session)
+      userQuotaClient.downloadsPerTrack(session, Set(track.user_urn)) returns Future.value(Map.empty[Urn, Int])
+      stitchClient.countsForTrack(session, trackUrn, userUrn) returns Future.value(StitchCounts(0, 90, 0, 0))
+
+      val response = Await.result(tracksService.track(session, trackUrn, None, None))
+      Json.fromResponse(response).as[JsObject].keys.contains("downloads_remaining") ==== false
+    }
+
+    "is not shown when track is downloadable, and above user's quota" in new Context {
+      val track = trackmetadataTrack(isDownloadable = true)
+      setUpMocksForExistingTrack(track, session)
+      userQuotaClient.downloadsPerTrack(session, Set(track.user_urn)) returns Future.value(Map(userUrn -> 100))
+      stitchClient.countsForTrack(session, trackUrn, userUrn) returns Future.value(StitchCounts(0, 110, 0, 0))
+
+      val response = Await.result(tracksService.track(session, trackUrn, None, None))
+      Json.fromResponse(response).as[JsObject].keys.contains("downloads_remaining") ==== false
+    }
+
+    "is not shown when track is not downloadable" in new Context {
+      val track = trackmetadataTrack(isDownloadable = false)
+      setUpMocksForExistingTrack(track, session)
+      userQuotaClient.downloadsPerTrack(session, Set(track.user_urn)) returns Future.value(Map(userUrn -> 100))
+      stitchClient.countsForTrack(session, trackUrn, userUrn) returns Future.value(StitchCounts(0, 90, 0, 0))
+
+      val response = Await.result(tracksService.track(session, trackUrn, None, None))
+      Json.fromResponse(response).as[JsObject].keys.contains("downloads_remaining") ==== false
+    }
+  }
 }

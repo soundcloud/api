@@ -190,10 +190,18 @@ object TrackRepresentationQuotaDecorator {
       case (true, None) => true // Stitch returned no data, default to whatever the track is set to
       case (true, Some(quota)) => dec.downloadCount < quota
     }
+    val downloadableJson = Json.obj("downloadable" -> downloadable)
 
-    Json.toJson(dec.wrapped).as[JsObject] ++ Json.obj(
-      "downloadable" -> downloadable
-    )
+    val downloadsRemaining = (dec.downloadable, dec.downloadsPerTrack) match {
+      case (true, Some(quota)) => quota - dec.downloadCount
+      case _ => 0
+    }
+    val downloadsRemainingJson = if(downloadable && downloadsRemaining > 0)
+      Json.obj("downloads_remaining" -> downloadsRemaining)
+    else
+      Json.obj()
+
+    Json.toJson(dec.wrapped).as[JsObject] ++ downloadableJson ++ downloadsRemainingJson
   }
 }
 
