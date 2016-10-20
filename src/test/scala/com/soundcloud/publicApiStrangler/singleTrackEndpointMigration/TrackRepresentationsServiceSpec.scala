@@ -1,12 +1,12 @@
 package com.soundcloud.publicApiStrangler.singleTrackEndpointMigration
 
-import com.soundcloud.jvmkit.{UserSession, UserSessionBuilder}
+import com.soundcloud.jvmkit.{Urn, UserSession, UserSessionBuilder}
 import com.soundcloud.publicApiStrangler.client.mediaservice.{MediaServiceUrlGenClient, WaveformUrl}
 import com.soundcloud.publicApiStrangler.client.{DomainLocking, RichOkidokiClient, TrackAudioMetadata}
 import com.soundcloud.publicApiStrangler.client.pubmese.{Isrc, PubmeseClient}
+import com.soundcloud.publicApiStrangler.client.quota.UserQuotaClient
 import com.soundcloud.publicApiStrangler.client.stitch.{StitchClient, StitchCounts}
 import com.soundcloud.publicApiStrangler.singleTrackEndpointMigration.trackmetadataclient.{Artwork, EmbeddingPermission, Track, TrackmetadataClient}
-import com.soundcloud.scalakit.Urn
 import com.soundcloud.scalakit.json.Json
 import com.soundcloud.scalakit.test.UnitSpecification
 import com.soundcloud.service.client.LieblingClient
@@ -16,7 +16,6 @@ import com.twitter.finagle.http.Status
 import com.twitter.util.{Await, Future}
 import org.joda.time.LocalDateTime
 import org.mockito.Mockito._
-import org.specs2.specification.{BeforeAfterEach, BeforeEach}
 import play.api.libs.json._
 
 class TrackRepresentationsServiceSpec extends UnitSpecification {
@@ -30,6 +29,7 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
     val stitchClient = mock[StitchClient]
     val lieblingClient = mock[LieblingClient]
     val mediaUrlGenClient = mock[MediaServiceUrlGenClient]
+    val userQuotaClient = mock[UserQuotaClient]
 
     val tracksService = new TrackRepresentationsService(
       trackmetadataClient,
@@ -37,11 +37,12 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
       pubmeseClient,
       stitchClient,
       lieblingClient,
-      mediaUrlGenClient
+      mediaUrlGenClient,
+      userQuotaClient
     )
 
-    val userUrn = Urn("soundcloud:users:112")
-    val labelUrn = Urn("soundcloud:users:678")
+    val userUrn = new Urn("soundcloud:users:112")
+    val labelUrn = new Urn("soundcloud:users:678")
 
     def user =
       User(
@@ -174,6 +175,7 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
       when(okidokiClient.fetchTrackAudioMetadata(session, trackUrn)).thenReturn(Future.value(Some(trackAudioMetadata)))
       when(lieblingClient.userLikeCounts(session, List(trackUrn), session.getUser)).thenReturn(Future.value(userLikesCount))
       when(mediaUrlGenClient.waveformUrls(session, track.uid)).thenReturn(Future.value(waveformUrls))
+      when(userQuotaClient.downloadsPerTrack(session, Set(track.user_urn))).thenReturn(Future.value(Map.empty[Urn, Int]))
     }
 
     def setUpMocksForNonExistingTrack = {

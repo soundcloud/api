@@ -5,6 +5,7 @@ import com.soundcloud.jvmkit.logging.SoundCloudLoggerFactory
 import com.soundcloud.publicApiStrangler.client.mediaservice.{MediaServiceUrlGenClient, WaveformUrl}
 import com.soundcloud.publicApiStrangler.client.{DomainLocking, RichOkidokiClient, TrackAudioMetadata}
 import com.soundcloud.publicApiStrangler.client.pubmese.{Isrc, PubmeseClient}
+import com.soundcloud.publicApiStrangler.client.quota.UserQuotaClient
 import com.soundcloud.publicApiStrangler.client.stitch.{StitchClient, StitchCounts}
 import com.soundcloud.publicApiStrangler.singleTrackEndpointMigration.trackmetadataclient.{Track, TrackmetadataClient}
 import com.soundcloud.scalakit.json.Json
@@ -19,7 +20,8 @@ class TrackRepresentationsService(
   pubmeseClient: PubmeseClient,
   stitchClient: StitchClient,
   lieblingClient: LieblingClient,
-  mediaUrlGenClient: MediaServiceUrlGenClient) {
+  mediaUrlGenClient: MediaServiceUrlGenClient,
+  userQuotaClient: UserQuotaClient) {
 
   private val logger = SoundCloudLoggerFactory.getLogger(this.getClass.getName)
   private val notFoundErrorString = """{"errors":[{"error_message":"404 - Not Found"}]}"""
@@ -38,6 +40,7 @@ class TrackRepresentationsService(
         val labelF = fetchLabelForTrack(track, session)
         val isLikedF = fetchUserLikesTrack(track, session)
         val waveformUrlsF = fetchWaveformUrls(track, session)
+        val downloadsPerTrackF = fetchDownloadsPerTrack(track, session)
         val countsF = userF.flatMap {
           case Some(user) => stitchClient.countsForTrack(session, urn, user.urn).map(Some(_)).liftToTry.map(_.getOrElse(None))
           case None => Future.value(None)
@@ -161,6 +164,9 @@ class TrackRepresentationsService(
 
   private def fetchWaveformUrls(track: Track, session: UserSession): Future[Seq[WaveformUrl]] =
     mediaUrlGenClient.waveformUrls(session, track.uid)
+
+  private def fetchDownloadsPerTrack(track: Track, session: UserSession): Future[Option[Int]] =
+    userQuotaClient.downloadsPerTrack(session, Set(track.user_urn)).map(_.get(track.user_urn))
 
   private def getCounts(counts: Option[StitchCounts]): StitchCounts =
     counts.getOrElse(StitchCounts(0, 0, 0, 0))

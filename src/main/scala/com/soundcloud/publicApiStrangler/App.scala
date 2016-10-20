@@ -15,6 +15,7 @@ import com.soundcloud.publicApiStrangler.client._
 import com.soundcloud.publicApiStrangler.client.followcounts.FollowCountsClient
 import com.soundcloud.publicApiStrangler.client.mediaservice.MediaServiceUrlGenClient
 import com.soundcloud.publicApiStrangler.client.pubmese.PubmeseClient
+import com.soundcloud.publicApiStrangler.client.quota.UserQuotaClient
 import com.soundcloud.publicApiStrangler.client.stitch.StitchClient
 import com.soundcloud.publicApiStrangler.controller._
 import com.soundcloud.publicApiStrangler.headers.DefaultResponseHeadersFilter
@@ -207,6 +208,8 @@ object App
 
   val richOkidokiClient = new RichOkidokiClient(okidokiJsonClient)
 
+  val userQuotaClient = new UserQuotaClient(okidokiJsonClient)
+
   private val singleTrackController = {
     val tracksService = new TrackRepresentationsService(
       trackmetadataClient,
@@ -214,7 +217,8 @@ object App
       pubmeseClient,
       stitchClient,
       lieblingClient,
-      mediaServiceUrlGenClient
+      mediaServiceUrlGenClient,
+      userQuotaClient
     )
 
     new SingleTrackController(
