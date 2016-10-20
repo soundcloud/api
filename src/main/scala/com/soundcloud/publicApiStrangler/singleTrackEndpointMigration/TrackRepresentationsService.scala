@@ -46,8 +46,8 @@ class TrackRepresentationsService(
           case None => Future.value(None)
         }
 
-        Future.join(isrcF, userF, countsF, labelF, geoblockingsF, domainlockingsF, audioF, isLikedF, waveformUrlsF).map {
-          case (isrc, Some(user), counts, label, geoblockings, domainlockings, Some(audio), isLiked, waveformUrls) =>
+        Future.join(isrcF, userF, countsF, labelF, geoblockingsF, domainlockingsF, audioF, isLikedF, waveformUrlsF, downloadsPerTrackF).map {
+          case (isrc, Some(user), counts, label, geoblockings, domainlockings, Some(audio), isLiked, waveformUrls, downloadsPerTrack) =>
             val rep = buildTrackRepresentationLike(
               userSession = session,
               track = track,
@@ -60,7 +60,8 @@ class TrackRepresentationsService(
               trackAudioMetadata = audio,
               isLiked = isLiked,
               waveformUrls = waveformUrls,
-              secretTokenParameter = secretToken
+              secretTokenParameter = secretToken,
+              downloadsPerTrack = downloadsPerTrack
             )
 
             generateResponse(Status.Ok, jsonpWrapper(callback, Json.stringify(rep)))
@@ -105,7 +106,8 @@ class TrackRepresentationsService(
     trackAudioMetadata: TrackAudioMetadata,
     isLiked: Boolean,
     waveformUrls: Seq[WaveformUrl],
-    secretTokenParameter: Option[String]
+    secretTokenParameter: Option[String],
+    downloadsPerTrack: Option[Int]
   ): TrackRepresentationLike = {
     val basicTrackRep = TrackRepresentation(
       track = track,
@@ -132,6 +134,7 @@ class TrackRepresentationsService(
     secretTokenParameter.map { secret =>
       rep = TrackRepresentationSecretTokenUriParamDecorator(rep, secret)
     }
+    rep = TrackRepresentationQuotaDecorator(track.downloadable, downloadsPerTrack, counts.download_count, rep)
     rep = TrackRepresentationWaveformUrlDecorator(waveformUrls, rep)
     rep = TrackRepresentationAttachmentsUriDecorator(track.urn, rep) // TODO: make conditional on representation type
     rep

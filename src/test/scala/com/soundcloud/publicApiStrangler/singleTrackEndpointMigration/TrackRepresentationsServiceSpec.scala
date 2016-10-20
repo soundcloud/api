@@ -100,7 +100,8 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
     def trackmetadataTrack(
       disabledAt: Option[LocalDateTime] = None,
       isPublic: Boolean = true,
-      secretToken: String = "secr3t-Token") =
+      secretToken: String = "secr3t-Token",
+      isDownloadable: Boolean = false) =
       Track(
         urn = trackUrn,
         user_urn = userUrn,
@@ -108,7 +109,7 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
         description = None,
         created_at = createdAt,
         disabled_at = disabledAt,
-        downloadable = false,
+        downloadable = isDownloadable,
         duration = 0,
         genre = None,
         last_modified = lastModified,
@@ -506,6 +507,52 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
       val response = Await.result(tracksService.track(session, trackUrn, Some("s-4kT0a"), None))
       val json = Json.fromResponse(response)
       json \ "permalink_url" ==== JsNull
+    }
+  }
+
+  "downloadable" >> {
+    "is true when track is downloadable, and below user's quota" in new Context {
+      val track = trackmetadataTrack(isDownloadable = true)
+      setUpMocksForExistingTrack(track, session)
+      userQuotaClient.downloadsPerTrack(session, Set(track.user_urn)) returns Future.value(Map(userUrn -> 100))
+      stitchClient.countsForTrack(session, trackUrn, userUrn) returns Future.value(StitchCounts(0, 90, 0, 0))
+
+      val response = Await.result(tracksService.track(session, trackUrn, None, None))
+      val json = Json.fromResponse(response)
+      json \ "downloadable" ==== JsBoolean(true)
+    }
+
+    "it true when track is downloadable, and use has no quota" in new Context {
+      val track = trackmetadataTrack(isDownloadable = true)
+      setUpMocksForExistingTrack(track, session)
+      userQuotaClient.downloadsPerTrack(session, Set(track.user_urn)) returns Future.value(Map.empty[Urn, Int])
+      stitchClient.countsForTrack(session, trackUrn, userUrn) returns Future.value(StitchCounts(0, 90, 0, 0))
+
+      val response = Await.result(tracksService.track(session, trackUrn, None, None))
+      val json = Json.fromResponse(response)
+      json \ "downloadable" ==== JsBoolean(true)
+    }
+
+    "is false when track is downloadable, and above user's quota" in new Context {
+      val track = trackmetadataTrack(isDownloadable = true)
+      setUpMocksForExistingTrack(track, session)
+      userQuotaClient.downloadsPerTrack(session, Set(track.user_urn)) returns Future.value(Map(userUrn -> 100))
+      stitchClient.countsForTrack(session, trackUrn, userUrn) returns Future.value(StitchCounts(0, 110, 0, 0))
+
+      val response = Await.result(tracksService.track(session, trackUrn, None, None))
+      val json = Json.fromResponse(response)
+      json \ "downloadable" ==== JsBoolean(false)
+    }
+
+    "is false when track is not downloadable, and below user's quota" in new Context {
+      val track = trackmetadataTrack(isDownloadable = false)
+      setUpMocksForExistingTrack(track, session)
+      userQuotaClient.downloadsPerTrack(session, Set(track.user_urn)) returns Future.value(Map(userUrn -> 100))
+      stitchClient.countsForTrack(session, trackUrn, userUrn) returns Future.value(StitchCounts(0, 90, 0, 0))
+
+      val response = Await.result(tracksService.track(session, trackUrn, None, None))
+      val json = Json.fromResponse(response)
+      json \ "downloadable" ==== JsBoolean(false)
     }
   }
 }
