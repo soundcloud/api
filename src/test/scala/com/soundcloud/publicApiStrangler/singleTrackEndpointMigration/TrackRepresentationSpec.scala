@@ -341,25 +341,46 @@ class TrackRepresentationQuotaDecoratorSpec extends UnitSpecification {
     val wrapped: TrackRepresentationLike = createTrackRepresentation()
   }
 
-  "adds downloadable as true and number remaining when the track is downloadable, and below the user's quota" in new Context {
-    val decorator = TrackRepresentationQuotaDecorator(true, Some(100), 90, wrapped)
-    val json = Json.toJson(decorator)
-    json \ "downloadable" ==== JsBoolean(true)
-    json \ "downloads_remaining" ==== JsNumber(10)
+  "downloadable" >> {
+    "adds downloadable as true when the track is downloadable, and below the user's quota" in new Context {
+      val decorator = TrackRepresentationQuotaDecorator(true, Some(100), 90, false, wrapped)
+      val json = Json.toJson(decorator)
+      json \ "downloadable" ==== JsBoolean(true)
+    }
+
+    "adds downloadable as false when the track is downloadable, and above the user's quota" in new Context {
+      val decorator = TrackRepresentationQuotaDecorator(true, Some(100), 110, false, wrapped)
+      val json = Json.toJson(decorator)
+      json \ "downloadable" ==== JsBoolean(false)
+      json.as[JsObject].keys.contains("downloads_remaining") ==== false
+    }
+
+    "uses the 'downloadable' value, when the user has no quota" in new Context {
+      val decorator = TrackRepresentationQuotaDecorator(false, None, 90, false, wrapped)
+      val json = Json.toJson(decorator)
+      json \ "downloadable" ==== JsBoolean(false)
+      json.as[JsObject].keys.contains("downloads_remaining") ==== false
+    }
   }
 
-  "adds downloadable as false when the track is downloadable, and above the user's quota" in new Context {
-    val decorator = TrackRepresentationQuotaDecorator(true, Some(100), 110, wrapped)
-    val json = Json.toJson(decorator)
-    json \ "downloadable" ==== JsBoolean(false)
-    json.as[JsObject].keys.contains("downloads_remaining") ==== false
-  }
+  "downloads_remaining" >> {
+    "adds number of downloads remaining, if the requesting user is the owner" in new Context {
+      val decorator = TrackRepresentationQuotaDecorator(true, Some(100), 90, true, wrapped)
+      val json = Json.toJson(decorator)
+      json \ "downloads_remaining" ==== JsNumber(10)
+    }
 
-  "uses the 'downloadable' value, when the user has no quota" in new Context {
-    val decorator = TrackRepresentationQuotaDecorator(false, None, 90, wrapped)
-    val json = Json.toJson(decorator)
-    json \ "downloadable" ==== JsBoolean(false)
-    json.as[JsObject].keys.contains("downloads_remaining") ==== false
+    "does not add number of downloads remaining, if the requesting user is not the owner" in new Context {
+      val decorator = TrackRepresentationQuotaDecorator(true, Some(100), 90, false, wrapped)
+      val json = Json.toJson(decorator)
+      json.as[JsObject].keys.contains("downloads_remaining") ==== false
+    }
+
+    "does not add number of downloads remaining, if user is owner but track has no downloads remaining" in new Context {
+      val decorator = TrackRepresentationQuotaDecorator(true, Some(100), 100, true, wrapped)
+      val json = Json.toJson(decorator)
+      json.as[JsObject].keys.contains("downloads_remaining") ==== false
+    }
   }
 }
 
