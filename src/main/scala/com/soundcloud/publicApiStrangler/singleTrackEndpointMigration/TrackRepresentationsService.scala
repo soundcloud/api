@@ -121,6 +121,7 @@ class TrackRepresentationsService(
     )
 
     var rep: TrackRepresentationLike = basicTrackRep
+    // TODO Consider an "owning user" decorator
     if (track.user_urn == userSession.getUser)
       rep = TrackRepresentationSecretTokenDecorator(track, rep)
     if (geoblockings.isDefined)
@@ -134,7 +135,8 @@ class TrackRepresentationsService(
     secretTokenParameter.map { secret =>
       rep = TrackRepresentationSecretTokenUriParamDecorator(rep, secret)
     }
-    rep = TrackRepresentationQuotaDecorator(track.downloadable, downloadsPerTrack, counts.download_count, rep)
+    val userIsOwner = track.user_urn == userSession.getUser
+    rep = TrackRepresentationQuotaDecorator(track.downloadable, downloadsPerTrack, counts.download_count, userIsOwner, rep)
     rep = TrackRepresentationWaveformUrlDecorator(waveformUrls, rep)
     rep = TrackRepresentationAttachmentsUriDecorator(track.urn, rep) // TODO: make conditional on representation type
     rep

@@ -180,6 +180,7 @@ case class TrackRepresentationQuotaDecorator(
   downloadable: Boolean,
   downloadsPerTrack: Option[Int],
   downloadCount: Int,
+  userIsOwner: Boolean,
   wrapped: TrackRepresentationLike
 ) extends TrackRepresentationLike
 
@@ -196,7 +197,7 @@ object TrackRepresentationQuotaDecorator {
       case (true, Some(quota)) => quota - dec.downloadCount
       case _ => 0
     }
-    val downloadsRemainingJson = if(downloadable && downloadsRemaining > 0)
+    val downloadsRemainingJson = if(downloadsRemaining > 0 && dec.userIsOwner)
       Json.obj("downloads_remaining" -> downloadsRemaining)
     else
       Json.obj()
