@@ -1,6 +1,7 @@
 package com.soundcloud.publicApiStrangler.singleTrackEndpointMigration.trackmetadataclient
 
 import com.soundcloud.jvmkit.Urn
+import com.soundcloud.publicApiStrangler.support.HtmlSanitizer
 import com.soundcloud.scalakit.Urn.format
 import org.joda.time.LocalDateTime
 import play.api.data.validation.ValidationError
@@ -68,7 +69,7 @@ object Track {
           urn = (json \ "urn").as[Urn],
           user_urn = (json \ "user_urn").as[Urn],
           commentable = (json \ "commentable").as[Boolean],
-          description = (json \ "description").asOpt[String],
+          description = (json \ "description").asOpt[String].map(HtmlSanitizer.sanitize(_)),
           created_at = (json \ "created_at").as[LocalDateTime],
           disabled_at = (json \ "disabled_at").asOpt[LocalDateTime],
           downloadable = (json \ "downloadable").as[Boolean],
