@@ -9,11 +9,11 @@ class HtmlSanitizerSpec extends Specification {
 
     "html encode special characters" in new Scope {
 
-      HtmlSanitizer.sanitize("<3") ==== "&lt;3"
+      HtmlSanitizer.sanitize("<3") ==== "<3"
     }
 
     "sanitize script tags in html" in new Scope{
-      HtmlSanitizer.sanitize("<p><script><b>foo</b></script></p> & bar") ==== "<p></p> &amp; bar"
+      HtmlSanitizer.sanitize("<p><script><b>foo</b></script></p> & bar") ==== "<p></p> & bar"
     }
 
     "leave valid html unaltered" in new Scope {
@@ -21,9 +21,8 @@ class HtmlSanitizerSpec extends Specification {
       HtmlSanitizer.sanitize(validHtml) ==== validHtml
     }
 
-    "leave html encoded string unaltered" in new Scope {
-      private val encodedHtml = "&lt;3"
-      HtmlSanitizer.sanitize(encodedHtml) ==== encodedHtml
+    "unescape entities " in new Scope {
+      HtmlSanitizer.sanitize("&lt;3") ==== "<3"
     }
 
     "handle non-UTF8 characters" in new Scope {
