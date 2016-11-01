@@ -95,6 +95,13 @@ class TrackMetadataClientSpec extends UnitSpecification with Fixtures{
         val track = response.get
 
         track.description ==== Some("alltime classic")
+        track.title ==== "<p> Foo Bar!! </p>"
+        track.genre ==== Some("Dance <3")
+        track.purchase_title ==== Some("So & So")
+        track.label_name ==== Some("Someone@somewhere.com")
+        track.track_type ==== Some("something sane")
+        track.release ==== Some("<li> Release </li>")
+        track.key_signature ==== Some("011ACFDVKFJ011ACFDVKFJ")
 
       }
     }
