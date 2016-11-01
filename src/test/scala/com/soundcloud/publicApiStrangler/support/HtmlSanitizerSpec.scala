@@ -25,6 +25,10 @@ class HtmlSanitizerSpec extends Specification {
       HtmlSanitizer.sanitize("&lt;3") ==== "<3"
     }
 
+    "sanitize everything inside  malformed HTML entities" in new Scope {
+      HtmlSanitizer.sanitize("Foo <script> bar baz quax") ==== "Foo"
+    }
+
     "handle non-UTF8 characters" in new Scope {
       private val nonUtf8Characters = "Foo\\xbar@soundcloud.com"
       HtmlSanitizer.sanitize(nonUtf8Characters) ==== nonUtf8Characters
