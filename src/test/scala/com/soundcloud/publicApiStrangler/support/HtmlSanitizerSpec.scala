@@ -33,6 +33,23 @@ class HtmlSanitizerSpec extends Specification {
       private val nonUtf8Characters = "Foo\\xbar@soundcloud.com"
       HtmlSanitizer.sanitize(nonUtf8Characters) ==== nonUtf8Characters
     }
+
+    "prunes extra  whitespaces" in new Scope {
+      HtmlSanitizer.sanitize("        Foo          Bar      ") ==== "Foo Bar"
+    }
+
+    "removes leading and trailing whitespace" in new Scope {
+      HtmlSanitizer.sanitize("Foo      ") ==== "Foo"
+      HtmlSanitizer.sanitize("      Bar") ==== "Bar"
+    }
+
+    "removes linebreaks " in new Scope {
+      HtmlSanitizer.sanitize("Foo\n\nBar") ==== "Foo Bar"
+    }
+
+    "removes carriage return" in new Scope {
+      HtmlSanitizer.sanitize("Foo \r\r Bar") ==== "Foo Bar"
+    }
   }
 
 }
