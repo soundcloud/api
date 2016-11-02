@@ -1,12 +1,14 @@
 package com.soundcloud.publicApiStrangler.singleTrackEndpointMigration
 
+import com.soundcloud.jvmkit.Country
 import com.soundcloud.jvmkit.logging.SoundCloudLoggerFactory
 import com.soundcloud.jvmkit.telemetry.Telemetry
 import com.soundcloud.scalakit.json.Json
 import com.twitter.finagle.http.{HeaderMap, Request, Response, Status}
 import com.twitter.util.{Return, Try}
+
 import scala.collection.Set
-import play.api.libs.json.{JsNumber, JsObject, JsString}
+import play.api.libs.json._
 
 class ResponseComparison(telemetry: Telemetry) {
   private val logger = SoundCloudLoggerFactory.getLogger(this.getClass.getName)
@@ -114,6 +116,7 @@ class ResponseComparison(telemetry: Telemetry) {
     //    response. Reproducing the logic for determining whether a track is downloadable or
     //    streamable was deemed not worth it, especially considering that these URLs are trivial to
     //    reconstruct based off the track ID.
+
     val ignoredLegacyAttributes = Set("reposts_count", "likes_count")
     val ignoredMigrationAttributes = Set("download_url", "stream_url")
 
@@ -150,6 +153,8 @@ class ResponseComparison(telemetry: Telemetry) {
             val legacyString = legacyValue.as[JsString].value
             val migrationString = migrationValue.as[JsString].value
             legacyString.split("\\s+").sorted == migrationString.split("\\s+").sorted
+          case "available_country_codes" =>
+            areAvailableCountryCodesDifferent(legacyValue, migrationValue)
           case _ =>
             legacyValue != migrationValue
         }
@@ -157,6 +162,16 @@ class ResponseComparison(telemetry: Telemetry) {
         isDifferent
       }
     }
+  }
+
+  private def areAvailableCountryCodesDifferent(legacyValue: JsValue, migrationValue: JsValue): Boolean = {
+    // Mothership’s response can contain country codes that are not officially assigned ISO 3166-1 alpha-2
+    // country codes. Public API Strangler’s response does not contain such country codes.
+
+    val legacyArray = legacyValue.as[JsArray].value.map(_.as[JsString].value)
+    val migrationArray = migrationValue.as[JsArray].value.map(_.as[JsString].value)
+
+    Country.officiallyAssignedAlpha2Codes.intersect(legacyArray.toSet) != migrationArray.toSet
   }
 
   private def reportAttributeDifferences(legacyJson: JsObject, migrationJson: JsObject): Unit = {
