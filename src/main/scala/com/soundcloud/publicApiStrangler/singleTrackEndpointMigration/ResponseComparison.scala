@@ -215,6 +215,8 @@ class ResponseComparison(telemetry: Telemetry) {
     "original_format",
     "permalink_url",
     "playback_count",
+    "purchase_url",
+    "purchase_title",
     "release_day",
     "release_month",
     "release_year",
