@@ -242,6 +242,37 @@ class ResponseComparisonSpec extends UnitSpecification {
       ) must beNull
     }
 
+    "records difference in available_country_codes" in new Context {
+      val legacyRes = generateResponse("""{"kind": "track", "id": 4, "available_country_codes": ["BE"]}""")
+      val migrationRes = generateResponse("""{"kind": "track", "id": 4, "available_country_codes": ["FR"]}""")
+
+      responseComparison.report(Request(), legacyRes, migrationRes)
+      val value = collectorRegistry.getSampleValue(
+        "attribute_value_different",
+        Array("attribute", "system"),
+        Array("available_country_codes", "TEST-APP")
+      )
+
+      value ==== 1d
+    }
+
+    "ignores difference for non-existant country codes in available_country_codes" in new Context {
+      val legacyRes = generateResponse("""{"kind": "track", "id": 4, "available_country_codes": ["BE","XX"]}""")
+      val migrationRes = generateResponse("""{"kind": "track", "id": 4, "available_country_codes": ["BE"]}""")
+
+      responseComparison.report(Request(), legacyRes, migrationRes)
+      collectorRegistry.getSampleValue(
+        "attribute_value_different",
+        Array("attribute", "system"),
+        Array("available_country_codes", "TEST-APP")
+      ) must beNull
+      collectorRegistry.getSampleValue(
+        "attribute_only_present_in",
+        Array("response", "attribute", "system"),
+        Array("legacy", "available_country_codes", "TEST-APP")
+      ) must beNull
+    }
+
     "reports any errors happening during comparison" in new Context {
       List(
         ("{\"kind\":}", // invalid json
