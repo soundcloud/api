@@ -50,6 +50,11 @@ class HtmlSanitizerSpec extends Specification {
     "removes carriage return" in new Scope {
       HtmlSanitizer.sanitize("Foo \r\r Bar") ==== "Foo Bar"
     }
+
+    "document behaviour of anchor tags" in new Scope {
+      HtmlSanitizer.sanitize("<a href=\"https://www.foo/bar\">baz</a>") ====
+                             "<a href=\"https://www.foo/bar\" rel=\"nofollow\">baz</a>"
+    }
   }
 
 }
