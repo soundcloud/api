@@ -1,6 +1,7 @@
 package com.soundcloud.publicApiStrangler.singleTrackEndpointMigration.trackmetadataclient
 
 import com.soundcloud.jvmkit.Urn
+import com.soundcloud.publicApiStrangler.support.HtmlSanitizer
 import com.soundcloud.scalakit.Urn.format
 import org.joda.time.LocalDateTime
 import play.api.data.validation.ValidationError
@@ -68,12 +69,12 @@ object Track {
           urn = (json \ "urn").as[Urn],
           user_urn = (json \ "user_urn").as[Urn],
           commentable = (json \ "commentable").as[Boolean],
-          description = (json \ "description").asOpt[String],
+          description = (json \ "description").asOpt[String].map(HtmlSanitizer.sanitize(_)),
           created_at = (json \ "created_at").as[LocalDateTime],
           disabled_at = (json \ "disabled_at").asOpt[LocalDateTime],
           downloadable = (json \ "downloadable").as[Boolean],
           duration = (json \ "duration").as[Int],
-          genre = (json \ "genre").asOpt[String],
+          genre = (json \ "genre").asOpt[String].map(HtmlSanitizer.sanitize(_)),
           last_modified = (json \ "last_modified").as[LocalDateTime],
           permalink = (json \ "permalink").as[String],
           permalink_url = (json \ "permalink_url").asOpt[String],
@@ -81,13 +82,13 @@ object Track {
           secret_token = (json \ "secret_token").as[String],
           user_tags = (json \ "user_tags").as[List[String]],
           machine_tags = (json \ "machine_tags").as[List[String]],
-          title = (json \ "title").as[String],
+          title = HtmlSanitizer.sanitize((json \ "title").as[String]),
           uid = (json \ "uid").asOpt[String],
           api_streamable = (json \ "api_streamable").asOpt[Boolean],
           streamable = (json \ "streamable").as[Boolean],
           reveal_comments = (json \ "reveal_comments").as[Boolean],
           reveal_stats = (json \ "reveal_stats").as[Boolean],
-          label_name = (json \ "label_name").asOpt[String],
+          label_name = (json \ "label_name").asOpt[String].map(HtmlSanitizer.sanitize(_)),
           license = (json \ "license").as[String],
           embeddable = (json \ "embeddable").asOpt[Boolean],
           release_year = (json \ "release_year").asOpt[Int],
@@ -98,11 +99,11 @@ object Track {
           artwork = (json \ "artwork").as[Artwork],
           published_at = (json \ "published_at").asOpt[LocalDateTime],
           purchase_url = (json \ "purchase_url").asOpt[String],
-          purchase_title = (json \ "purchase_title").asOpt[String],
+          purchase_title = (json \ "purchase_title").asOpt[String].map(HtmlSanitizer.sanitize(_)),
           bpm = (json \ "bpm").asOpt[Double],
-          track_type = (json \ "track_type").asOpt[String],
-          release = (json \ "release").asOpt[String],
-          key_signature = (json \ "key_signature").asOpt[String],
+          track_type = (json \ "track_type").asOpt[String].map(HtmlSanitizer.sanitize(_)),
+          release = (json \ "release").asOpt[String].map(HtmlSanitizer.sanitize(_)),
+          key_signature = (json \ "key_signature").asOpt[String].map(HtmlSanitizer.sanitize(_)),
           video_url = (json \ "video_url").asOpt[String],
           label_id = (json \ "label_id").asOpt[Int]
         )

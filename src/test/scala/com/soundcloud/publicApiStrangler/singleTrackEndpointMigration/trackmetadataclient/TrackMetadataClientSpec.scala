@@ -80,6 +80,31 @@ class TrackMetadataClientSpec extends UnitSpecification with Fixtures{
         track.published_at ==== Some(new LocalDateTime(1989, 12, 22, 0, 0))
       }
     }
+
+    "track with rogue attributes" >> {
+
+      trait RogueTrack extends TrackContext {
+        when(verified(service).get(anonymousSession, path, Params.empty, Params.empty))
+          .thenReturn(Future(JsonResponse(OkStatus, trackmetadataClientTracks_rogue)))
+      }
+
+      "sanitize attributes" in new RogueTrack {
+        val response = Await.result(trackmetadataClient.track(anonymousSession, urn))
+
+        response must beSome[Track]
+        val track = response.get
+
+        track.description ==== Some("alltime classic")
+        track.title ==== "<p> Foo Bar!! </p>"
+        track.genre ==== Some("Dance <3")
+        track.purchase_title ==== Some("So & So")
+        track.label_name ==== Some("Someone@somewhere.com")
+        track.track_type ==== Some("something sane")
+        track.release ==== Some("<li> Release </li>")
+        track.key_signature ==== Some("011ACFDVKFJ011ACFDVKFJ")
+
+      }
+    }
   }
 
   "#tracks" >> {

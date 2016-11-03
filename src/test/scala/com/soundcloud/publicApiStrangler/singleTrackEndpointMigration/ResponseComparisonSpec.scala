@@ -105,6 +105,19 @@ class ResponseComparisonSpec extends UnitSpecification {
       value must beNull
     }
 
+    "ignores whitespace pruning in genre comparison" in new Context {
+      val legacyRes = generateResponse("""{"kind": "track", "id": 4, "genre": "   Foo    Bar   "}""")
+      val migrationRes = generateResponse("""{"kind": "track", "id": 4, "genre": "Foo Bar"}""")
+
+      responseComparison.report(Request(), legacyRes, migrationRes)
+      val value = collectorRegistry.getSampleValue(
+        "attribute_value_different",
+        Array("attribute", "system"),
+        Array("genre", "TEST-APP")
+      )
+      value must beNull
+    }
+
     "treats HTTP/HTTPS as identical when comparing permalink_url attribute" in new Context {
       val legacyRes = generateResponse("""{"kind": "track", "id": 4, "permalink_url": "http://example.com/123"}""")
       val migrationRes = generateResponse("""{"kind": "track", "id": 4, "permalink_url": "https://example.com/123"}""")
@@ -384,7 +397,7 @@ class ResponseComparisonSpec extends UnitSpecification {
     }
   }
 
-  "body checks" >> {
+  "response header checks" >> {
 
     "Does not report failures when headers are same" in new Context {
       val legacyRes = generateResponse("{}")
