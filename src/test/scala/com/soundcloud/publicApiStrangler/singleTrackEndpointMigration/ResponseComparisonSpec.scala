@@ -4,6 +4,7 @@ import com.soundcloud.jvmkit.telemetry.Telemetry
 import com.soundcloud.jvmkit.test.InMemoryConfig
 import com.soundcloud.scalakit.test.UnitSpecification
 import com.twitter.finagle.http.{Request, Response, Status}
+import com.twitter.util.{Await, NonFatal}
 import io.prometheus.client.CollectorRegistry
 
 class ResponseComparisonSpec extends UnitSpecification {
@@ -512,6 +513,23 @@ class ResponseComparisonSpec extends UnitSpecification {
         Array("differentHeaderCount", "TEST-APP")
       )
       value ==== 1d
+    }
+  }
+
+  "handling failure" >> {
+    "does not allow exceptions to propagate" in new Context {
+
+      val legacy = mock[Response]
+      val migration = mock[Response]
+
+      legacy.status throws new RuntimeException("Oh noes")
+      migration.status throws new RuntimeException("We're all doomed")
+
+      try {
+        responseComparison.report(Request(), legacy, migration)
+      } catch {
+        case NonFatal(_) => ko("Shouldn't have thrown an exception")
+      }
     }
   }
 }

@@ -5,7 +5,7 @@ import com.soundcloud.jvmkit.logging.SoundCloudLoggerFactory
 import com.soundcloud.jvmkit.telemetry.Telemetry
 import com.soundcloud.scalakit.json.Json
 import com.twitter.finagle.http.{HeaderMap, Request, Response, Status}
-import com.twitter.util.{Return, Try}
+import com.twitter.util.{NonFatal, Return, Try}
 
 import scala.collection.Set
 import play.api.libs.json._
@@ -38,17 +38,24 @@ class ResponseComparison(telemetry: Telemetry) {
   )
 
   def report(request: Request, legacyRes: Response, migrationRes: Response): Unit = {
-    if (legacyRes.status != migrationRes.status) {
-      reportStatusDifference(request, legacyRes, migrationRes)
-    } else if (migrationRes.status != Status.Ok && migrationRes.status != Status.NotFound) {
-      reportUnexpectedMoshiStatus(request, legacyRes, migrationRes)
-    } else {
-      val (legacyCallback, legacyJson) = pluckCallbackAndData(legacyRes.contentString)
-      val (migrationCallback, migrationJson) = pluckCallbackAndData(migrationRes.contentString)
+    try {
+      if (legacyRes.status != migrationRes.status) {
+        reportStatusDifference(request, legacyRes, migrationRes)
+      } else if (migrationRes.status != Status.Ok && migrationRes.status != Status.NotFound) {
+        reportUnexpectedMoshiStatus(request, legacyRes, migrationRes)
+      } else {
+        val (legacyCallback, legacyJson) = pluckCallbackAndData(legacyRes.contentString)
+        val (migrationCallback, migrationJson) = pluckCallbackAndData(migrationRes.contentString)
 
-      compareHeaders(legacyRes, migrationRes)
-      compareJsonpData(legacyCallback, migrationCallback)
-      compareJsonBody(request, legacyRes, migrationRes, legacyJson, migrationJson)
+        compareHeaders(legacyRes, migrationRes)
+        compareJsonpData(legacyCallback, migrationCallback)
+        compareJsonBody(request, legacyRes, migrationRes, legacyJson, migrationJson)
+      }
+    } catch {
+      case NonFatal(ex) => {
+        logger.error(s"Exception occurred during response comparison:", ex)
+        failuresCounter.labels("exception_during_comparison").inc()
+      }
     }
   }
 
