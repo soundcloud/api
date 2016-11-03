@@ -153,8 +153,6 @@ class ResponseComparison(telemetry: Telemetry) {
             isTagListDifferent(legacyValue, migrationValue)
           case "available_country_codes" =>
             areAvailableCountryCodesDifferent(legacyValue, migrationValue)
-          case "genre" =>
-            legacyValue.as[JsString].value.trim.replaceAll(" +", " ") != migrationValue.as[JsString].value
           case _ =>
             legacyValue != migrationValue
         }
