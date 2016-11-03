@@ -225,9 +225,43 @@ class ResponseComparisonSpec extends UnitSpecification {
       value ==== 1d
     }
 
+    "does not record tag_list difference if tag list is the same (simple case)" in new Context {
+      val legacyRes    = generateResponse("""{"kind": "track", "id": 4, "tag_list": "abc"}""")
+      val migrationRes = generateResponse("""{"kind": "track", "id": 4, "tag_list": "abc"}""")
+
+      responseComparison.report(Request(), legacyRes, migrationRes)
+      collectorRegistry.getSampleValue(
+        "attribute_value_different",
+        Array("attribute", "system"),
+        Array("tag_list", "TEST-APP")
+      ) must beNull
+      collectorRegistry.getSampleValue(
+        "attribute_only_present_in",
+        Array("response", "attribute", "system"),
+        Array("legacy", "likes_count", "TEST-APP")
+      ) must beNull
+    }
+
+    "does not record tag_list difference if tag list is the same" in new Context {
+      val legacyRes    = generateResponse("""{"kind": "track", "id": 4, "tag_list": "m a y n o:oo=ooo b:bb=bbb z:zz=\"z z z\" p:pp=ppp"}""")
+      val migrationRes = generateResponse("""{"kind": "track", "id": 4, "tag_list": "m a y n o:oo=ooo b:bb=bbb z:zz=\"z z z\" p:pp=ppp"}""")
+
+      responseComparison.report(Request(), legacyRes, migrationRes)
+      collectorRegistry.getSampleValue(
+        "attribute_value_different",
+        Array("attribute", "system"),
+        Array("tag_list", "TEST-APP")
+      ) must beNull
+      collectorRegistry.getSampleValue(
+        "attribute_only_present_in",
+        Array("response", "attribute", "system"),
+        Array("legacy", "likes_count", "TEST-APP")
+      ) must beNull
+    }
+
     "does not record tag_list difference if sorting is different" in new Context {
-      val legacyRes = generateResponse("""{"kind": "track", "id": 4, "tag_list": "m a y n o:oo=ooo b:bb=bbb z:zz=\"z z z\" p:pp=ppp"}""")
-      val migrationRes = generateResponse("""{"kind": "track", "id": 4, "tag_list": "n p:pp=ppp a y o:oo=ooo m z:zz=\"z z z\" b:bb=bbb"}""")
+      val legacyRes    = generateResponse("""{"kind": "track", "id": 4, "tag_list": "m a y n o:oo=ooo b:bb=bbb z:zz=\"z z z\" p:pp=ppp"}""")
+      val migrationRes = generateResponse("""{"kind": "track", "id": 4, "tag_list": "a m n y o:oo=ooo b:bb=bbb z:zz=\"z z z\" p:pp=ppp"}""")
 
       responseComparison.report(Request(), legacyRes, migrationRes)
       collectorRegistry.getSampleValue(

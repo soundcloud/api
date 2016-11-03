@@ -150,9 +150,7 @@ class ResponseComparison(telemetry: Telemetry) {
             val migrationString = migrationValue.as[JsString].value
             legacyString.replaceFirst("^http://", "https://") != migrationString
           case "tag_list" =>
-            val legacyString = legacyValue.as[JsString].value
-            val migrationString = migrationValue.as[JsString].value
-            legacyString.split("\\s+").sorted == migrationString.split("\\s+").sorted
+            isTagListDifferent(legacyValue, migrationValue)
           case "available_country_codes" =>
             areAvailableCountryCodesDifferent(legacyValue, migrationValue)
           case _ =>
@@ -162,6 +160,13 @@ class ResponseComparison(telemetry: Telemetry) {
         isDifferent
       }
     }
+  }
+
+  private def isTagListDifferent(legacyValue: JsValue, migrationValue: JsValue): Boolean = {
+    val legacyString = legacyValue.as[JsString].value
+    val migrationString = migrationValue.as[JsString].value
+
+    !legacyString.split("\\s+").sorted.sameElements(migrationString.split("\\s+").sorted)
   }
 
   private def areAvailableCountryCodesDifferent(legacyValue: JsValue, migrationValue: JsValue): Boolean = {
