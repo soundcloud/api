@@ -350,7 +350,7 @@ class ResponseComparisonSpec extends UnitSpecification {
     }
   }
 
-  "body checks" >> {
+  "response header checks" >> {
 
     "Does not report failures when headers are same" in new Context {
       val legacyRes = generateResponse("{}")
