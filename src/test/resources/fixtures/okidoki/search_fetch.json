@@ -149,7 +149,9 @@
     "user": {
       "urn": "soundcloud:users:2097360",
       "url": "http://moshimoshi.int.s-cloud.net/users/soundcloud:users:2097360"
-    }
+    },
+    "purchase_url": "http://example.com/store/music",
+    "purchase_title": "i need the money ok"
   },
   {
     "created_at": "2011/04/01 16:45:47 +0000",
