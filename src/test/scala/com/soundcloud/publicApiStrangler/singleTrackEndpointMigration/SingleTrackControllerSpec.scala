@@ -5,6 +5,7 @@ import com.soundcloud.jvmkit.{Urn, UserSession, UserSessionBuilder}
 import com.soundcloud.jvmkit.telemetry.Telemetry
 import com.soundcloud.jvmkit.test.InMemoryConfig
 import com.soundcloud.publicApiStrangler.support.DispatchToMothershipHandler
+import com.soundcloud.scalakit.test.UnitSpecification
 import com.twitter.finagle.http.{Request, Response, Status}
 import com.twitter.util.Future
 import io.prometheus.client.CollectorRegistry
@@ -133,5 +134,13 @@ class SingleTrackControllerSpec extends InjectionBasedControllerSpecification {
             response.status ==== legacyResponse.status
           }
       }
+  }
+
+  "Does not fail the request when the migration response fails" in new Context {
+    val ex = new RuntimeException("boom")
+    when(fallback.dispatchToMothership(any[Request])).thenReturn(Future.value(Response()))
+    when(tracksService.track(session, trackUrn, None, None)).thenReturn(Future.exception(ex))
+    val response = get(controller(session), "/tracks/987", Map.empty, Map.empty)
+    response.status ==== Status.Ok
   }
 }
