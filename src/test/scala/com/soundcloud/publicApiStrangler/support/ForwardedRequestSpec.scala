@@ -149,7 +149,7 @@ class ForwardedRequestSpec extends UnitSpecification {
         if (count > streamLength)
           -1
         else
-          '\0'
+          '\u0000'
       }
     }
 
