@@ -7,7 +7,7 @@ import com.soundcloud.jvmkit.{Urn, UserSession}
 import com.soundcloud.publicApiStrangler.mapper.search.SearchEntityMapper
 import com.soundcloud.publicApiStrangler.mapping.similarsounds.SimilarSoundsMapping
 import com.soundcloud.publicApiStrangler.support.mapping.{InputValidation, ObjectMapping}
-import com.soundcloud.scalakit.Urn
+import com.soundcloud.jvmkit.Urn
 import com.soundcloud.service.client.SimilarSoundsClient
 import com.soundcloud.service.response.representation.SimilarSounds
 import com.twitter.util.Future

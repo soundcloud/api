@@ -2,7 +2,7 @@ package com.soundcloud.publicApiStrangler.authorization
 
 import com.soundcloud.bff.test.UnitSpecification
 import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures
-import com.soundcloud.scalakit.Urn
+import com.soundcloud.jvmkit.Urn
 
 class CollectTrackUrnsSpec extends UnitSpecification with Fixtures {
 

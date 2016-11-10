@@ -4,7 +4,7 @@ import com.soundcloud.bff.finagle.Request
 import com.soundcloud.jvmkit.UserSessionBuilder
 import com.soundcloud.jvmkit.telemetry.Telemetry
 import com.soundcloud.jvmkit.test.InMemoryConfig
-import com.soundcloud.scalakit.Urn
+import com.soundcloud.jvmkit.Urn
 import com.soundcloud.scalakit.finagle.http.{HandlerRequest, HttpHandler}
 import com.soundcloud.scalakit.test.{UnitSpecification, VerifiedMocks}
 import com.twitter.finagle.http.{Method, Response}

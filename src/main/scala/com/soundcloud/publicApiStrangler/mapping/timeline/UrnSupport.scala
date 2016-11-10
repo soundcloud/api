@@ -1,7 +1,7 @@
 package com.soundcloud.publicApiStrangler.mapping.timeline
 
 import com.soundcloud.bff.nextbff.mapping.JsonMapping
-import com.soundcloud.scalakit.Urn
+import com.soundcloud.jvmkit.Urn
 
 
 trait UrnSupport {

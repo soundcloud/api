@@ -3,7 +3,7 @@ package com.soundcloud.publicApiStrangler.mapping.search
 import com.soundcloud.bff.nextbff.mapping.MappingContext
 import com.soundcloud.publicApiStrangler.client.followcounts.FollowCounts
 import com.soundcloud.publicApiStrangler.mapping.timeline.User
-import com.soundcloud.scalakit.Urn
+import com.soundcloud.jvmkit.Urn
 import play.api.libs.json.{JsObject, JsValue}
 
 /**
