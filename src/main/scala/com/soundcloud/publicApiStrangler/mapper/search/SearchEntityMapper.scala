@@ -7,7 +7,6 @@ import com.soundcloud.jvmkit.policies.ContentAuthorization
 import com.soundcloud.publicApiStrangler.authorization.ContentAuthorizationRules
 import com.soundcloud.publicApiStrangler.client.followcounts.{FollowCounts, FollowCountsClient}
 import com.soundcloud.publicApiStrangler.mapper.liebling.LikeCountMapper
-import com.soundcloud.publicApiStrangler.mapper.purchaselink.TrackPurchaseLinkMapper
 import com.soundcloud.publicApiStrangler.mapper.timeline.EntitySummaryMapper
 import com.soundcloud.publicApiStrangler.mapper.waveform.WaveformMapper
 import com.soundcloud.publicApiStrangler.mapping.search._
@@ -21,7 +20,6 @@ class SearchEntityMapper(okidokiClient: OkidokiClient,
                          baseUrl: String,
                          contentAuthorization: ContentAuthorizationRules,
                          waveform: WaveformMapper,
-                         trackPurchaseLinkMapper: TrackPurchaseLinkMapper,
                          likeCountMapper: LikeCountMapper,
                          entitySummaryMapper: EntitySummaryMapper)
   extends Mapper[Urn, JsonMapping]
@@ -55,7 +53,7 @@ class SearchEntityMapper(okidokiClient: OkidokiClient,
                        (implicit context: MappingContext) = {
     urn.getCollection match {
       case "users" => new SearchUser(entityData, baseUrl, followCountsMap.get(urn))
-      case "tracks" => new SearchTrack(session, entityData, likeCountMapper, baseUrl, entitySummaryMapper, contentAuthorization(urn), waveform, trackPurchaseLinkMapper)
+      case "tracks" => new SearchTrack(session, entityData, likeCountMapper, baseUrl, entitySummaryMapper, contentAuthorization(urn), waveform)
       case "playlists" => new SearchPlaylist(entityData, likeCountMapper, baseUrl, entitySummaryMapper)
     }
   }

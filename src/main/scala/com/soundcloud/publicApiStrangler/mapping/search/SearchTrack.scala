@@ -5,7 +5,6 @@ import com.soundcloud.bff.nextbff.mapping.MappingContext
 import com.soundcloud.jvmkit.{Urn, UserSession}
 import com.soundcloud.jvmkit.policies.ContentAuthorization
 import com.soundcloud.publicApiStrangler.mapper.liebling.LikeCountMapper
-import com.soundcloud.publicApiStrangler.mapper.purchaselink.TrackPurchaseLinkMapper
 import com.soundcloud.publicApiStrangler.mapper.timeline.EntitySummaryMapper
 import com.soundcloud.publicApiStrangler.mapper.waveform.{WaveformMapper, WaveformRequestParams}
 import com.soundcloud.publicApiStrangler.mapping.timeline.Track
@@ -22,8 +21,7 @@ class SearchTrack(session: UserSession,
                   baseUrl: String,
                   entitySummaryMapper: EntitySummaryMapper,
                   @JsonIgnore contentAuthorization: ContentAuthorization,
-                  waveform: WaveformMapper,
-                  trackPurchaseLinkMapper: TrackPurchaseLinkMapper)
+                  waveform: WaveformMapper)
                  // Yep, that was my reaction, too.
                  (implicit if_this_is_named_context_then_serialization_fails: MappingContext)
   extends Track(jsonValue, Map.empty, baseUrl, entitySummaryMapper) {
@@ -48,7 +46,6 @@ class SearchTrack(session: UserSession,
   override val release = (json \ "release").asOpt[String].orElse(Some(""))
   override val attachments_uri = Some(uri + "/attachments")
   override val waveform_url = fetchWaveformUrl.orElse((json \ "waveform_url").asOpt[String])
-  override val purchase_url = Some(trackPurchaseLinkMapper.embedAttr(urn, _.url))
   override val video_url = (json \ "video_url").asOpt[String]
   override val streamable = (json \ "api_streamable").asOpt[Boolean]
 

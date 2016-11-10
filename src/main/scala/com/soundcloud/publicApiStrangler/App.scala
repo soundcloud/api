@@ -20,7 +20,6 @@ import com.soundcloud.publicApiStrangler.client.stitch.StitchClient
 import com.soundcloud.publicApiStrangler.controller._
 import com.soundcloud.publicApiStrangler.headers.DefaultResponseHeadersFilter
 import com.soundcloud.publicApiStrangler.mapper.liebling.LikeCountMapper
-import com.soundcloud.publicApiStrangler.mapper.purchaselink.TrackPurchaseLinkMapper
 import com.soundcloud.publicApiStrangler.mapper.search.{SearchEntityMapper, SearchMapper, SearchRepository}
 import com.soundcloud.publicApiStrangler.mapper.similarsounds.SimilarSoundsMapper
 import com.soundcloud.publicApiStrangler.mapper.timeline.e1.{ActivitiesMapper, StreamMapper}
@@ -258,7 +257,6 @@ object App
     baseUrl,
     contentAuthorizationRules,
     new WaveformMapper(waveformUrlsRepo),
-    new TrackPurchaseLinkMapper(okidokiClient),
     new LikeCountMapper(lieblingClient),
     new EntitySummaryMapper(okidokiClient, baseUrl)
   )
