@@ -1,12 +1,12 @@
 package com.soundcloud.publicApiStrangler.client.stitch
 
-import com.soundcloud.scalakit.finagle.http.{InternalServerErrorStatus, NotFoundStatus, OkStatus, StatusCode}
-import com.soundcloud.scalakit.finagle.jsonservice.{JsonClient, JsonResponse, Params, StringParam}
+import com.soundcloud.scalakit.finagle.http.{InternalServerErrorStatus, OkStatus, StatusCode}
+import com.soundcloud.scalakit.finagle.jsonservice.{JsonClient, JsonResponse, Params}
 import com.soundcloud.scalakit.test.UnitSpecification
 import com.soundcloud.scalakit.{Path, Urn}
 import com.twitter.util.{Await, Future}
-import play.api.libs.json.{JsArray, Json}
 import org.mockito.Mockito._
+import play.api.libs.json.Json
 
 class StitchClientSpec extends UnitSpecification {
   trait GenericContext[T] extends Scope {
