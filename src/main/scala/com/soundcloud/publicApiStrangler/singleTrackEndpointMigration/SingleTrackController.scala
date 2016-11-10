@@ -3,7 +3,6 @@ package com.soundcloud.publicApiStrangler.singleTrackEndpointMigration
 import com.soundcloud.bff.finagle.{Request, ResponseBuilder}
 import com.soundcloud.bff.web.{BffInjectionBasedController, UserAuthentication}
 import com.soundcloud.jvmkit.{Urn, UserSession}
-import com.soundcloud.scalakit.{Urn => ScalaKitUrn}
 import com.soundcloud.jvmkit.telemetry.Telemetry
 import com.soundcloud.publicApiStrangler.support.DispatchToMothershipHandler
 import com.twitter.finagle.http.{Response, Status}
@@ -35,7 +34,7 @@ class SingleTrackController(userAuthentication: UserAuthentication,
 
         Try(new Urn("soundcloud", "tracks", trackId)) match {
 
-          case Return(urn@ScalaKitUrn(_, _, numericRegexp())) => {
+          case Return(urn@Urn(_, _, numericRegexp())) => {
             val secretToken = req.params.get("secret_token")
 
             Future.join(legacyResponse(req), migrationResponse(session, urn, secretToken, callback)) map {
