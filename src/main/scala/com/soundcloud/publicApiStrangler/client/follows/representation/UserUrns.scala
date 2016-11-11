@@ -1,7 +1,7 @@
 package com.soundcloud.publicApiStrangler.client.follows.representation
 
 import com.soundcloud.jvmkit.Urn
-import com.soundcloud.scalakit.Urn.format
+import com.soundcloud.jvmkit.Urn.format
 import play.api.libs.json.{Json, Reads}
 
 case class UserUrns(urns: Seq[Urn])

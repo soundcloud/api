@@ -1,9 +1,10 @@
 package com.soundcloud.publicApiStrangler.client.quota
 
 import com.soundcloud.bff.test.UnitSpecification
+import com.soundcloud.jvmkit.Urn
+import com.soundcloud.scalakit.Path
 import com.soundcloud.scalakit.finagle.http.{InternalServerErrorStatus, OkStatus}
 import com.soundcloud.scalakit.finagle.jsonservice.{JsonClient, JsonResponse, Params}
-import com.soundcloud.scalakit.{Path, Urn}
 import com.twitter.util.{Await, Future}
 import play.api.libs.json.JsNull
 

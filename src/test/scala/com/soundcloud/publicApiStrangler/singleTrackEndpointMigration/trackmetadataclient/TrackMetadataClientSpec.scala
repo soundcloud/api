@@ -1,11 +1,12 @@
 package com.soundcloud.publicApiStrangler.singleTrackEndpointMigration.trackmetadataclient
 
-import com.soundcloud.scalakit.{Path, Urn}
+import com.soundcloud.bff.test.UnitSpecification
+import com.soundcloud.jvmkit.Urn
+import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures
+import com.soundcloud.scalakit.Path
 import com.soundcloud.scalakit.finagle.http.{NotFoundStatus, OkStatus}
 import com.soundcloud.scalakit.finagle.jsonservice.{JsonClient, JsonResponse, Params}
 import com.soundcloud.scalakit.test.VerifiedMocks
-import com.soundcloud.bff.test.UnitSpecification
-import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures
 import com.twitter.util.{Await, Future}
 import org.joda.time.LocalDateTime
 import play.api.libs.json.JsNull

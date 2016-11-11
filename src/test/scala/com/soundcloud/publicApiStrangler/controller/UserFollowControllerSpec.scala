@@ -1,18 +1,16 @@
 package com.soundcloud.publicApiStrangler.controller
 
 import com.soundcloud.bff.test.InjectionBasedControllerSpecification
-import com.soundcloud.jvmkit.UserSessionBuilder
-import com.soundcloud.publicApiStrangler.client.followcounts._
+import com.soundcloud.jvmkit.{Urn, UserSessionBuilder, Geo => JvmGeo}
+import com.soundcloud.publicApiStrangler.client.followcounts.{FollowCounts, FollowCountsClient}
 import com.soundcloud.publicApiStrangler.client.follows.FollowsClient
 import com.soundcloud.publicApiStrangler.client.follows.representation._
 import com.soundcloud.publicApiStrangler.client.follows.representation.follow.{AgeRestrictedUser, AgeUnknownUser, FollowingCreated, UserNotFound}
 import com.soundcloud.publicApiStrangler.client.follows.representation.unfollow.{UnfollowSuccessful, UserAsTarget}
-import com.soundcloud.jvmkit.{UserSessionBuilder, Geo => JvmGeo}
-import com.soundcloud.publicApiStrangler.client.followcounts.{FollowCounts, FollowCountsClient}
 import com.soundcloud.publicApiStrangler.support.DispatchToMothershipHandler
 import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures
+import com.soundcloud.scalakit.Geo
 import com.soundcloud.scalakit.test.VerifiedMocks
-import com.soundcloud.scalakit.{Geo, Urn}
 import com.soundcloud.service.client.OkidokiClient
 import com.twitter.finagle.http.Status
 import com.twitter.util.Future

@@ -1,7 +1,7 @@
 package com.soundcloud.publicApiStrangler.client.stitch
 
 import com.soundcloud.jvmkit.{Urn, UserSession}
-import com.soundcloud.scalakit.Urn.format
+import com.soundcloud.jvmkit.Urn.format
 import com.soundcloud.scalakit.finagle.http.OkStatus
 import com.soundcloud.scalakit.finagle.jsonservice.{JsonClient, JsonResponse, Params}
 import com.soundcloud.scalakit.Path

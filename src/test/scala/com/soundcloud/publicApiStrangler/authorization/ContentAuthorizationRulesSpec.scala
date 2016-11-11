@@ -3,7 +3,7 @@ package com.soundcloud.publicApiStrangler.authorization
 import com.soundcloud.bff.authorization.ContentAuthorizationService
 import com.soundcloud.jvmkit.policies.{ContentAuthorization, ContentPolicy, MonetizationModel, Reason}
 import com.soundcloud.jvmkit.{UserSession, UserTier}
-import com.soundcloud.scalakit.Urn
+import com.soundcloud.jvmkit.Urn
 import com.soundcloud.scalakit.test.UnitSpecification
 import com.twitter.util.{Await, Future}
 import org.mockito.Mockito._
