@@ -1,6 +1,6 @@
 # Public API Strangler
 
-**Service discovery name:** `http.api.prod.public-api.db.srv.int.s-cloud.net`
+**Service discovery name:** `http.strangler.prod.public-api.db.srv.int.s-cloud.net`
 
 An implementation of the [_strangler_ pattern](http://martinfowler.com/bliki/StranglerApplication.html) for Mothership's Public API.
 
