@@ -29,6 +29,14 @@
              <arg>remove-containers</arg>
              <runif status="passed"/>
            </exec>
+        </tasks>
+      </job>
+    </jobs>
+  </stage>
+  <stage name="promote-to-stable">
+    <jobs>
+      <job name="promote-to-stable">
+        <tasks>
            <exec command="make">
              <arg>-f</arg>
              <arg>Makefile.pipeline</arg>
