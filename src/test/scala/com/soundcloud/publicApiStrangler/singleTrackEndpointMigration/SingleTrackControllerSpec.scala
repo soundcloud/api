@@ -134,11 +134,4 @@ class SingleTrackControllerSpec extends InjectionBasedControllerSpecification {
           }
       }
   }
-
-  "Does not fail the request when the migration response fails" in new Context {
-    when(fallback.dispatchToMothership(any[Request])).thenReturn(Future.value(Response()))
-    when(tracksService.track(session, trackUrn, None, None)).thenReturn.(Future.exception(new RuntimeException("boom")))
-    val response = get(controller(session), "/tracks/987", Map.empty, Map.empty)
-    response.status ==== Status.Ok
-  }
 }

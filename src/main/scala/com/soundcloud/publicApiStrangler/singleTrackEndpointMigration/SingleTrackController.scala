@@ -6,7 +6,7 @@ import com.soundcloud.jvmkit.{Urn, UserSession}
 import com.soundcloud.jvmkit.telemetry.Telemetry
 import com.soundcloud.publicApiStrangler.support.DispatchToMothershipHandler
 import com.twitter.finagle.http.{Response, Status}
-import com.twitter.util.{Future, NonFatal, Return, Try}
+import com.twitter.util.{Future, Return, Try}
 
 import scala.collection.JavaConversions._
 
@@ -38,10 +38,8 @@ class SingleTrackController(userAuthentication: UserAuthentication,
             val secretToken = req.params.get("secret_token")
 
             Future.join(legacyResponse(req), migrationResponse(session, urn, secretToken, callback)) map {
-              case (legacyResponseResult, Return(migrationResponseResult)) =>
+              case (legacyResponseResult, migrationResponseResult) =>
                 responseComparison.report(req, legacyResponseResult, migrationResponseResult)
-                toResponseBuilder(legacyResponseResult)
-              case (legacyResponseResult, _) =>
                 toResponseBuilder(legacyResponseResult)
             }
           }
@@ -66,9 +64,8 @@ class SingleTrackController(userAuthentication: UserAuthentication,
   private def legacyResponse(req: Request): Future[Response] =
     mothershipDispatcher.dispatchToMothership(req)
 
-  private def migrationResponse(session: UserSession, urn: Urn, secret: Option[String], callback: Option[String]): Future[Try[Response]] = {
-    tracksService.track(session, urn, secret, callback).map(Try(_))
-  }
+  private def migrationResponse(session: UserSession, urn: Urn, secret: Option[String], callback: Option[String]): Future[Response] =
+    tracksService.track(session, urn, secret, callback)
 
   private def toResponseBuilder(response: Response): ResponseBuilder = {
     val headerMap = response.headerMap.entrySet().map(entry => (entry.getKey, entry.getValue)).toMap
