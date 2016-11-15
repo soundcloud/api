@@ -119,7 +119,8 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
       isPublic: Boolean = true,
       secretToken: String = "secr3t-Token",
       isDownloadable: Boolean = false,
-      user: Urn = trackOwnerUrn) =
+      user: Urn = trackOwnerUrn,
+      label_id: Option[Int] = Some(labelUrn.getIdentifier.toInt)) =
       Track(
         urn = trackUrn,
         user_urn = user,
@@ -160,7 +161,7 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
         release = Some("DR012"),
         key_signature = Some("Emaj"),
         video_url = Some("http://example.com/video.mp4"),
-        label_id = Some(labelUrn.getIdentifier.toInt)
+        label_id = label_id
       )
 
     def isrc(wrapped: String = "US-S1Z-99-00001"): Option[Isrc] =
@@ -504,6 +505,24 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
 
       val response = Await.result(tracksService.track(session, trackUrn, None, None))
       Json.fromResponse(response).as[JsObject].keys.contains("waveform_url") ==== false
+    }
+  }
+
+  "label" >> {
+    "is present when track has a a label" in new Context {
+      val track = trackmetadataTrack()
+      setUpMocksForExistingTrack(track, session)
+
+      val response = Await.result(tracksService.track(session, trackUrn, None, None))
+      Json.fromResponse(response).as[JsObject].keys.contains("label") ==== true
+    }
+
+    "it not present when urlgen returns no stream URLs" in new Context {
+      val track = trackmetadataTrack(label_id = None)
+      setUpMocksForExistingTrack(track, session)
+
+      val response = Await.result(tracksService.track(session, trackUrn, None, None))
+      Json.fromResponse(response).as[JsObject].keys.contains("label") ==== false
     }
   }
 
