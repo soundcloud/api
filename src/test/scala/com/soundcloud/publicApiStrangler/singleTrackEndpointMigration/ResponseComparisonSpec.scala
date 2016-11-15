@@ -277,6 +277,74 @@ class ResponseComparisonSpec extends UnitSpecification {
       ) must beNull
     }
 
+    "does not record comment_count difference" in new Context {
+      val legacyRes    = generateResponse("""{"kind": "track", "id": 4, "comment_count": 123}""")
+      val migrationRes = generateResponse("""{"kind": "track", "id": 4, "comment_count": 456}""")
+
+      responseComparison.report(Request(), legacyRes, migrationRes)
+      collectorRegistry.getSampleValue(
+        "attribute_value_different",
+        Array("attribute", "system"),
+        Array("comment_count", "TEST-APP")
+      ) must beNull
+      collectorRegistry.getSampleValue(
+        "attribute_only_present_in",
+        Array("response", "attribute", "system"),
+        Array("legacy", "comment_count", "TEST-APP")
+      ) must beNull
+    }
+
+    "does not record favoritings_count difference" in new Context {
+      val legacyRes    = generateResponse("""{"kind": "track", "id": 4, "favoritings_count": 123}""")
+      val migrationRes = generateResponse("""{"kind": "track", "id": 4, "favoritings_count": 456}""")
+
+      responseComparison.report(Request(), legacyRes, migrationRes)
+      collectorRegistry.getSampleValue(
+        "attribute_value_different",
+        Array("attribute", "system"),
+        Array("favoritings_count", "TEST-APP")
+      ) must beNull
+      collectorRegistry.getSampleValue(
+        "attribute_only_present_in",
+        Array("response", "attribute", "system"),
+        Array("legacy", "favoritings_count", "TEST-APP")
+      ) must beNull
+    }
+
+    "does not record playback_count difference" in new Context {
+      val legacyRes    = generateResponse("""{"kind": "track", "id": 4, "playback_count": 123}""")
+      val migrationRes = generateResponse("""{"kind": "track", "id": 4, "playback_count": 456}""")
+
+      responseComparison.report(Request(), legacyRes, migrationRes)
+      collectorRegistry.getSampleValue(
+        "attribute_value_different",
+        Array("attribute", "system"),
+        Array("playback_count", "TEST-APP")
+      ) must beNull
+      collectorRegistry.getSampleValue(
+        "attribute_only_present_in",
+        Array("response", "attribute", "system"),
+        Array("legacy", "playback_count", "TEST-APP")
+      ) must beNull
+    }
+
+    "does not record download_count difference" in new Context {
+      val legacyRes    = generateResponse("""{"kind": "track", "id": 4, "download_count": 123}""")
+      val migrationRes = generateResponse("""{"kind": "track", "id": 4, "download_count": 456}""")
+
+      responseComparison.report(Request(), legacyRes, migrationRes)
+      collectorRegistry.getSampleValue(
+        "attribute_value_different",
+        Array("attribute", "system"),
+        Array("download_count", "TEST-APP")
+      ) must beNull
+      collectorRegistry.getSampleValue(
+        "attribute_only_present_in",
+        Array("response", "attribute", "system"),
+        Array("legacy", "download_count", "TEST-APP")
+      ) must beNull
+    }
+
     "records difference in available_country_codes" in new Context {
       val legacyRes = generateResponse("""{"kind": "track", "id": 4, "available_country_codes": ["BE"]}""")
       val migrationRes = generateResponse("""{"kind": "track", "id": 4, "available_country_codes": ["FR"]}""")
