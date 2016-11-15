@@ -106,6 +106,19 @@ class ResponseComparisonSpec extends UnitSpecification {
       value must beNull
     }
 
+  "does not raise exception when genre is null" in new Context {
+      val legacyRes = generateResponse("""{"kind": "track", "id": 4, "genre": null }""")
+      val migrationRes = generateResponse("""{"kind": "track", "id": 4, "genre": ""}""")
+
+      responseComparison.report(Request(), legacyRes, migrationRes)
+      val value = collectorRegistry.getSampleValue(
+        "attribute_value_different",
+        Array("attribute", "system"),
+        Array("genre", "TEST-APP")
+      )
+      value must beNull
+    }
+
     "treats HTTP/HTTPS as identical when comparing permalink_url attribute" in new Context {
       val legacyRes = generateResponse("""{"kind": "track", "id": 4, "permalink_url": "http://example.com/123"}""")
       val migrationRes = generateResponse("""{"kind": "track", "id": 4, "permalink_url": "https://example.com/123"}""")
