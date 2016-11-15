@@ -36,7 +36,7 @@ object TrackRepresentationLike {
       "last_modified" -> user.updated_at,
       "uri" -> s"https://api.soundcloud.com/users/${user.urn.getIdentifier}",
       "permalink_url" -> user.permalink_url,
-      "avatar_url" -> user.avatar_url
+      "avatar_url" -> user.avatar_url.replaceAll("\\?[0-9]+$", "").replaceAll("^http:", "https:")
     )
   }
 }
