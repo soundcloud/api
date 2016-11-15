@@ -146,6 +146,9 @@ class ResponseComparison(telemetry: Telemetry) {
         val migrationValue = migrationJson \ attr
 
         val isDifferent = attr match {
+          case "comment_count" | "download_count" | "favoritings_count" | "playback_count" =>
+            // Counts in Mothership are not reliable, and so Public API Strangler fetches counts from Stitch instead.
+            false
           case "isrc" =>
             // The ISRC is now obtained from Pubmese rather than Mothership. Pubmese is the authoritative
             // source for ISRCs.
