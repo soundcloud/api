@@ -239,6 +239,7 @@ class ResponseComparison(telemetry: Telemetry) {
     "duration",
     "favoritings_count",
     "genre",
+    "label",
     "label_name",
     "last_modified",
     "original_content_size",
