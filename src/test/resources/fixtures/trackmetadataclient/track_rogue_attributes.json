@@ -1,0 +1,48 @@
+{
+  "data" : {
+    "urn": "soundcloud:tracks:2",
+    "description": "<script><p>fpp bar!!</p></script>alltime classic",
+    "genre": "<script><p>fpp bar!!</p></script>Dance <3<script><p>fpp bar!!</p></script>",
+    "purchase_title": "<script><p>fpp bar!!</p></script>So & So<script><p>fpp bar!!</p></script>",
+    "title": "<p> Foo Bar!! </p>",
+    "label_name": "Someone@somewhere.com",
+    "track_type": "something sane",
+    "key_signature": "011ACFDVKFJ<script>God help you</script>011ACFDVKFJ",
+    "release": "<li> Release </li>",
+    "created_at": "2007-10-18T11:27:04.000",
+    "disabled_at": "2011-01-27T09:00:51.000",
+    "commentable": true,
+    "downloadable": false,
+    "duration": 85800,
+    "last_modified": "2011-01-27T09:00:51.000",
+    "permalink": "jsb",
+    "permalink_url": "https://soundcloud.com/yvg/jsb",
+    "public": false,
+    "secret_token": "s-s3cret",
+    "user_tags": [
+      "music",
+      "spoken words"
+    ],
+    "machine_tags": [
+      "ns:machine_tag=value",
+      "ns:machine_tag=value2"
+    ],
+    "uid": "SZFrxdDlaSmh",
+    "user_urn": "soundcloud:users:435",
+    "api_streamable": true,
+    "streamable": true,
+    "reveal_comments": true,
+    "reveal_stats": true,
+    "license": "wtfpl",
+    "embeddable": true,
+    "release_year": 1989,
+    "release_month": 12,
+    "release_day": 22,
+    "embeddable_by": "all",
+    "release_date": "1989-12-22T00:00:00.000",
+    "artwork": {
+      "filename": "artworks-000001073830-j0xbmn-original.jpg"
+    },
+    "published_at": "1989-12-22T00:00:00.000"
+  }
+}

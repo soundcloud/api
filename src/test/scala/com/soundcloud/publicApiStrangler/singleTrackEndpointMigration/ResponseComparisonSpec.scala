@@ -106,8 +106,21 @@ class ResponseComparisonSpec extends UnitSpecification {
       value must beNull
     }
 
-  "does not raise exception when genre is null" in new Context {
-      val legacyRes = generateResponse("""{"kind": "track", "id": 4, "genre": null }""")
+    "ignores whitespace pruning in genre comparison" in new Context {
+      val legacyRes = generateResponse("""{"kind": "track", "id": 4, "genre": "   Foo    Bar   "}""")
+      val migrationRes = generateResponse("""{"kind": "track", "id": 4, "genre": "Foo Bar"}""")
+
+      responseComparison.report(Request(), legacyRes, migrationRes)
+      val value = collectorRegistry.getSampleValue(
+        "attribute_value_different",
+        Array("attribute", "system"),
+        Array("genre", "TEST-APP")
+      )
+      value must beNull
+    }
+
+    "interprets null in genre for migration response as equivalent to empty string in legacy " in new Context {
+      val legacyRes = generateResponse("""{"kind": "track", "id": 4, "genre": null}""")
       val migrationRes = generateResponse("""{"kind": "track", "id": 4, "genre": ""}""")
 
       responseComparison.report(Request(), legacyRes, migrationRes)
@@ -466,7 +479,7 @@ class ResponseComparisonSpec extends UnitSpecification {
     }
   }
 
-  "body checks" >> {
+  "response header checks" >> {
 
     "Does not report failures when headers are same" in new Context {
       val legacyRes = generateResponse("{}")
