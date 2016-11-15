@@ -135,6 +135,9 @@ class TrackRepresentationsService(
     secretTokenParameter.map { secret =>
       rep = TrackRepresentationSecretTokenUriParamDecorator(rep, secret)
     }
+    label.map { label =>
+      rep = TrackRepresentationLabelDecorator(label, rep)
+    }
     val userIsOwner = track.user_urn == userSession.getUser
     rep = TrackRepresentationQuotaDecorator(track.downloadable, downloadsPerTrack, counts.download_count, userIsOwner, rep)
     rep = TrackRepresentationWaveformUrlDecorator(waveformUrls, rep)
