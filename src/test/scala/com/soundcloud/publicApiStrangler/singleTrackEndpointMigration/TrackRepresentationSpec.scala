@@ -43,7 +43,7 @@ trait TrackRepresentationLikeSpecContext {
       urn = userUrn,
       permalink = "giraffe",
       username = "Dr. G. Raffe",
-      avatar_url = "http://example.com/giraffe.jpg",
+      avatar_url = "http://example.com/giraffe.jpg?123456789",
       permalink_url = "https://soundcloud.com/denis",
       city = None,
       country = None,
@@ -61,7 +61,7 @@ trait TrackRepresentationLikeSpecContext {
       urn = labelUrn,
       permalink = "raz",
       username = "Raz Putin",
-      avatar_url = "http://example.com/raz.jpg",
+      avatar_url = "http://example.com/raz.jpg?123456789",
       permalink_url = "https://soundcloud.com/raz",
       city = None,
       country = None,
@@ -195,7 +195,7 @@ class TrackRepresentationLabelDecoratorSpec extends UnitSpecification {
     labelJson \ "permalink" ==== JsString("raz")
     labelJson \ "uri" ==== JsString("https://api.soundcloud.com/users/999")
     labelJson \ "permalink_url" ==== JsString("https://soundcloud.com/raz")
-    labelJson \ "avatar_url" ==== JsString("http://example.com/raz.jpg")
+    labelJson \ "avatar_url" ==== JsString("https://example.com/raz.jpg")
   }
 }
 
@@ -437,7 +437,7 @@ class TrackRepresentationSpec extends UnitSpecification {
     userJson \ "permalink" ==== JsString("giraffe")
     userJson \ "uri" ==== JsString("https://api.soundcloud.com/users/3456")
     userJson \ "permalink_url" ==== JsString("https://soundcloud.com/denis")
-    userJson \ "avatar_url" ==== JsString("http://example.com/giraffe.jpg")
+    userJson \ "avatar_url" ==== JsString("https://example.com/giraffe.jpg")
     userJson \ "last_modified" ==== JsString("2016/10/10 11:21:36 +0000")
   }
 
@@ -483,5 +483,26 @@ class TrackRepresentationSpec extends UnitSpecification {
     val trackRep = createTrackRepresentation(track = track)
     val trackJson = Json.toJson(trackRep)
     trackJson \ "artwork_url" ==== JsString("https://i1.sndcdn.com/adfhlsh.jpg")
+  }
+
+  "user avatar URL with HTTP and no trailing number" in new Context {
+    val user = defaultUser.copy(avatar_url = "http://example.com/img.png")
+    val trackRep = createTrackRepresentation(track = defaultTrack, user = user)
+    val trackJson = Json.toJson(trackRep)
+    trackJson \ "user" \ "avatar_url" ==== JsString("https://example.com/img.png")
+  }
+
+  "user avatar URL with HTTP and trailing number" in new Context {
+    val user = defaultUser.copy(avatar_url = "http://example.com/img.png?123")
+    val trackRep = createTrackRepresentation(track = defaultTrack, user = user)
+    val trackJson = Json.toJson(trackRep)
+    trackJson \ "user" \ "avatar_url" ==== JsString("https://example.com/img.png")
+  }
+
+  "user avatar URL with HTTPS and trailing number" in new Context {
+    val user = defaultUser.copy(avatar_url = "https://example.com/img.png?123")
+    val trackRep = createTrackRepresentation(track = defaultTrack, user = user)
+    val trackJson = Json.toJson(trackRep)
+    trackJson \ "user" \ "avatar_url" ==== JsString("https://example.com/img.png")
   }
 }
