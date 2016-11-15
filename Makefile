@@ -7,8 +7,8 @@ DOCKER_IP ?= $(shell docker-ip)
 PWD?=$(HOME)
 
 ifeq ($(USE_CRUN),false)
-	SBT = vendor/sbt/bin/sbt
-	SBT_INTERACTIVE = $(SBT)
+	SBT = sbt
+	SBT_INTERACTIVE = sbt
 	JAVAC = javac
 else
 	SBT = crun sbt -- sbt
