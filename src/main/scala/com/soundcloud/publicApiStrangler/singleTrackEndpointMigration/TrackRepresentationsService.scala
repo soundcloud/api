@@ -67,12 +67,11 @@ class TrackRepresentationsService(
             generateResponse(Status.Ok, jsonpWrapper(callback, Json.stringify(rep)))
           case _ =>
             generateResponse(Status.NotFound, jsonpWrapper(callback, notFoundErrorString))
+        } handle {
+          case NonFatal(ex) =>
+            logger.error("Error while generating legacy response", ex)
+            generateResponse(Status.ServiceUnavailable, jsonpWrapper(callback, serviceUnavailableErrorString))
         }
-          .handle {
-            case NonFatal(ex) =>
-              logger.error("Error while generating legacy response", ex)
-              generateResponse(Status.ServiceUnavailable, jsonpWrapper(callback, serviceUnavailableErrorString))
-          }
       case _ =>
         Future.value(generateResponse(Status.NotFound, jsonpWrapper(callback, notFoundErrorString)))
     }
@@ -95,20 +94,20 @@ class TrackRepresentationsService(
   }
 
   private def buildTrackRepresentationLike(
-                                            userSession: UserSession,
-                                            track: Track,
-                                            user: User,
-                                            isrc: Option[Isrc],
-                                            counts: StitchCounts,
-                                            label: Option[User],
-                                            geoblockings: Option[Geoblockings],
-                                            domainlockings: Seq[DomainLocking],
-                                            trackAudioMetadata: TrackAudioMetadata,
-                                            isLiked: Boolean,
-                                            waveformUrls: Seq[WaveformUrl],
-                                            secretTokenParameter: Option[String],
-                                            downloadsPerTrack: Option[Int]
-                                          ): TrackRepresentationLike = {
+    userSession: UserSession,
+    track: Track,
+    user: User,
+    isrc: Option[Isrc],
+    counts: StitchCounts,
+    label: Option[User],
+    geoblockings: Option[Geoblockings],
+    domainlockings: Seq[DomainLocking],
+    trackAudioMetadata: TrackAudioMetadata,
+    isLiked: Boolean,
+    waveformUrls: Seq[WaveformUrl],
+    secretTokenParameter: Option[String],
+    downloadsPerTrack: Option[Int]
+  ): TrackRepresentationLike = {
     val basicTrackRep = TrackRepresentation(
       track = track,
       user = user,
