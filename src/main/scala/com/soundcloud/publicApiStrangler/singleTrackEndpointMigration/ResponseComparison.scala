@@ -247,6 +247,7 @@ class ResponseComparison(telemetry: Telemetry) {
     "download_count",
     "download_url",
     "downloadable",
+    "downloads_remaining",
     "duration",
     "favoritings_count",
     "genre",
