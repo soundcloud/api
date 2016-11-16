@@ -8,16 +8,16 @@ import com.twitter.util.{Future, NonFatal}
 import play.api.libs.json.{Json, Reads}
 
 class UserQuotaClient(jsonClient: JsonClient) {
-  def downloadsPerTrack(session: UserSession, userUrns: Set[Urn]): Future[Map[Urn, Int]] = {
+  def downloadsPerTrack(session: UserSession, userUrns: Set[Urn]): Future[Map[Urn, Option[Int]]] = {
     jsonClient.get(session, Path() / "users" / "quotas", userUrns, Params.empty) map {
       case JsonResponse(OkStatus, body, _, _) => {
         body.as[List[DownloadsPerTrack]].map { entry =>
-          entry.self.urn -> entry.downloads_per_track.getOrElse(Int.MaxValue)
+          entry.self.urn -> entry.downloads_per_track
         }.toMap
       }
-      case _ => Map.empty[Urn, Int]
+      case _ => Map.empty[Urn, Option[Int]]
     } handle {
-      case NonFatal(_) => Map.empty[Urn, Int]
+      case NonFatal(_) => Map.empty[Urn, Option[Int]]
     }
   }
 }

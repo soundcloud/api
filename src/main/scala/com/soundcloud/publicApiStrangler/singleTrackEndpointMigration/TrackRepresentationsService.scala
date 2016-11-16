@@ -67,8 +67,7 @@ class TrackRepresentationsService(
             generateResponse(Status.Ok, jsonpWrapper(callback, Json.stringify(rep)))
           case _ =>
             generateResponse(Status.NotFound, jsonpWrapper(callback, notFoundErrorString))
-        }
-        .handle {
+        } handle {
           case NonFatal(ex) =>
             logger.error("Error while generating legacy response", ex)
             generateResponse(Status.ServiceUnavailable, jsonpWrapper(callback, serviceUnavailableErrorString))
@@ -161,7 +160,7 @@ class TrackRepresentationsService(
     }
 
   private def fetchGeoblockings(session: UserSession, urn: Urn): Future[Option[Geoblockings]] =
-    // fetchTrackGeoblockings can return Some with zero geoblockings, which this method turns into None
+  // fetchTrackGeoblockings can return Some with zero geoblockings, which this method turns into None
     okidokiClient.fetchTrackGeoblockings(session, urn).map {
       case Some(geoblockings) => if (geoblockings.isEmpty) None else Some(geoblockings)
       case None => None
@@ -173,8 +172,11 @@ class TrackRepresentationsService(
   private def fetchWaveformUrls(track: Track, session: UserSession): Future[Seq[WaveformUrl]] =
     mediaUrlGenClient.waveformUrls(session, track.uid)
 
-  private def fetchDownloadsPerTrack(track: Track, session: UserSession): Future[Option[Int]] =
-    userQuotaClient.downloadsPerTrack(session, Set(track.user_urn)).map(_.get(track.user_urn))
+  private def fetchDownloadsPerTrack(track: Track, session: UserSession): Future[Option[Int]] = {
+    userQuotaClient.downloadsPerTrack(session, Set(track.user_urn))
+      .map(_.get(track.user_urn))
+      .map(_.getOrElse(None))
+  }
 
   private def getCounts(counts: Option[StitchCounts]): StitchCounts =
     counts.getOrElse(StitchCounts(0, 0, 0, 0))

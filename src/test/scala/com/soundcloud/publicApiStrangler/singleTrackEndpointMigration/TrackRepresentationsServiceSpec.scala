@@ -196,7 +196,7 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
       when(okidokiClient.fetchTrackAudioMetadata(session, trackUrn)).thenReturn(Future.value(Some(trackAudioMetadata)))
       when(lieblingClient.userLikeCounts(session, List(trackUrn), session.getUser)).thenReturn(Future.value(userLikesCount))
       when(mediaUrlGenClient.waveformUrls(session, track.uid)).thenReturn(Future.value(waveformUrls))
-      when(userQuotaClient.downloadsPerTrack(session, Set(track.user_urn))).thenReturn(Future.value(Map.empty[Urn, Int]))
+      when(userQuotaClient.downloadsPerTrack(session, Set(track.user_urn))).thenReturn(Future.value(Map.empty[Urn, Option[Int]]))
     }
 
     def setUpMocksForNonExistingTrack = {
@@ -553,7 +553,7 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
     "is true when track is downloadable, and below user's quota" in new Context {
       val track = trackmetadataTrack(isDownloadable = true)
       setUpMocksForExistingTrack(track, session)
-      userQuotaClient.downloadsPerTrack(session, Set(track.user_urn)) returns Future.value(Map(track.user_urn -> 100))
+      userQuotaClient.downloadsPerTrack(session, Set(track.user_urn)) returns Future.value(Map(track.user_urn -> Some(100)))
       stitchClient.countsForTrack(session, trackUrn, track.user_urn) returns Future.value(StitchCounts(0, 90, 0, 0))
 
       val response = Await.result(tracksService.track(session, trackUrn, None, None))
@@ -564,7 +564,7 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
     "it true when track is downloadable, and use has no quota" in new Context {
       val track = trackmetadataTrack(isDownloadable = true)
       setUpMocksForExistingTrack(track, session)
-      userQuotaClient.downloadsPerTrack(session, Set(track.user_urn)) returns Future.value(Map.empty[Urn, Int])
+      userQuotaClient.downloadsPerTrack(session, Set(track.user_urn)) returns Future.value(Map(track.user_urn -> None))
       stitchClient.countsForTrack(session, trackUrn, track.user_urn) returns Future.value(StitchCounts(0, 90, 0, 0))
 
       val response = Await.result(tracksService.track(session, trackUrn, None, None))
@@ -575,7 +575,7 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
     "is false when track is downloadable, and above user's quota" in new Context {
       val track = trackmetadataTrack(isDownloadable = true)
       setUpMocksForExistingTrack(track, session)
-      userQuotaClient.downloadsPerTrack(session, Set(track.user_urn)) returns Future.value(Map(track.user_urn -> 100))
+      userQuotaClient.downloadsPerTrack(session, Set(track.user_urn)) returns Future.value(Map(track.user_urn -> Some(100)))
       stitchClient.countsForTrack(session, trackUrn, track.user_urn) returns Future.value(StitchCounts(0, 100, 0, 0))
 
       val response = Await.result(tracksService.track(session, trackUrn, None, None))
@@ -586,7 +586,7 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
     "is false when track is not downloadable, and below user's quota" in new Context {
       val track = trackmetadataTrack(isDownloadable = false)
       setUpMocksForExistingTrack(track, session)
-      userQuotaClient.downloadsPerTrack(session, Set(track.user_urn)) returns Future.value(Map(track.user_urn -> 100))
+      userQuotaClient.downloadsPerTrack(session, Set(track.user_urn)) returns Future.value(Map(track.user_urn -> Some(100)))
       stitchClient.countsForTrack(session, trackUrn, track.user_urn) returns Future.value(StitchCounts(0, 90, 0, 0))
 
       val response = Await.result(tracksService.track(session, trackUrn, None, None))
@@ -602,7 +602,7 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
       "it is not shown" in new Context {
         val track = trackmetadataTrack(isDownloadable = true)
         setUpMocksForExistingTrack(track, session)
-        userQuotaClient.downloadsPerTrack(session, Set(track.user_urn)) returns Future.value(Map(track.user_urn -> 100))
+        userQuotaClient.downloadsPerTrack(session, Set(track.user_urn)) returns Future.value(Map(track.user_urn -> Some(100)))
         stitchClient.countsForTrack(session, trackUrn, track.user_urn) returns Future.value(StitchCounts(0, 90, 0, 0))
 
         val response = Await.result(tracksService.track(session, trackUrn, None, None))
@@ -615,7 +615,7 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
       "is shown when track is downloadable, and below quota" in new Context {
         val track = trackmetadataTrack(isDownloadable = true, user = session.getUser)
         setUpMocksForExistingTrack(track, session)
-        userQuotaClient.downloadsPerTrack(session, Set(track.user_urn)) returns Future.value(Map(track.user_urn -> 100))
+        userQuotaClient.downloadsPerTrack(session, Set(track.user_urn)) returns Future.value(Map(track.user_urn -> Some(100)))
         stitchClient.countsForTrack(session, trackUrn, track.user_urn) returns Future.value(StitchCounts(0, 90, 0, 0))
 
         val response = Await.result(tracksService.track(session, trackUrn, None, None))
@@ -623,10 +623,10 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
         json \ "downloads_remaining" ==== JsNumber(10)
       }
 
-      "it not shown when track is downloadable, but user has no quota (eg. is unlimited)" in new Context {
+      "it not shown when track is downloadable, but the track's user has no quota (eg. is unlimited)" in new Context {
         val track = trackmetadataTrack(isDownloadable = true, user = session.getUser)
         setUpMocksForExistingTrack(track, session)
-        userQuotaClient.downloadsPerTrack(session, Set(track.user_urn)) returns Future.value(Map.empty[Urn, Int])
+        userQuotaClient.downloadsPerTrack(session, Set(track.user_urn)) returns Future.value(Map(track.user_urn -> None))
         stitchClient.countsForTrack(session, trackUrn, track.user_urn) returns Future.value(StitchCounts(0, 90, 0, 0))
 
         val response = Await.result(tracksService.track(session, trackUrn, None, None))
@@ -636,7 +636,7 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
       "is not shown when no downloads remain" in new Context {
         val track = trackmetadataTrack(isDownloadable = true, user = session.getUser)
         setUpMocksForExistingTrack(track, session)
-        userQuotaClient.downloadsPerTrack(session, Set(track.user_urn)) returns Future.value(Map(track.user_urn -> 100))
+        userQuotaClient.downloadsPerTrack(session, Set(track.user_urn)) returns Future.value(Map(track.user_urn -> Some(100)))
         stitchClient.countsForTrack(session, trackUrn, track.user_urn) returns Future.value(StitchCounts(0, 100, 0, 0))
 
         val response = Await.result(tracksService.track(session, trackUrn, None, None))
@@ -646,7 +646,7 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
       "is not shown when track is not downloadable" in new Context {
         val track = trackmetadataTrack(isDownloadable = false, user = session.getUser)
         setUpMocksForExistingTrack(track, session)
-        userQuotaClient.downloadsPerTrack(session, Set(track.user_urn)) returns Future.value(Map(track.user_urn -> 100))
+        userQuotaClient.downloadsPerTrack(session, Set(track.user_urn)) returns Future.value(Map(track.user_urn -> Some(100)))
         stitchClient.countsForTrack(session, trackUrn, track.user_urn) returns Future.value(StitchCounts(0, 90, 0, 0))
 
         val response = Await.result(tracksService.track(session, trackUrn, None, None))
