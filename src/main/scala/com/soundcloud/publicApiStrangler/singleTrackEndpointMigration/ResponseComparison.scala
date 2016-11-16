@@ -6,6 +6,7 @@ import com.soundcloud.jvmkit.telemetry.Telemetry
 import com.soundcloud.scalakit.json.Json
 import com.twitter.finagle.http.{HeaderMap, Request, Response, Status}
 import com.twitter.util.{NonFatal, Return, Try}
+import play.api.data.validation.ValidationError
 
 import scala.collection.Set
 import play.api.libs.json._
@@ -36,6 +37,14 @@ class ResponseComparison(telemetry: Telemetry) {
     "counter for attributes where the values are different",
     "attribute"
   )
+
+  implicit object JsStringReads extends Reads[JsString] {
+    def reads(json: JsValue) = json match {
+      case JsNull => JsSuccess(JsString(""))
+      case s: JsString => JsSuccess(s)
+      case _ => JsError(Seq(JsPath() -> Seq(ValidationError("error.expected.jsstring"))))
+    }
+  }
 
   def report(request: Request, legacyRes: Response, migrationRes: Response): Unit = {
     try {
@@ -163,6 +172,8 @@ class ResponseComparison(telemetry: Telemetry) {
             isTagListDifferent(legacyValue, migrationValue)
           case "available_country_codes" =>
             areAvailableCountryCodesDifferent(legacyValue, migrationValue)
+          case "genre" | "description"| "label_name"| "purchase_title"| "track_type"| "release" | "key_signature" =>
+            legacyValue.as[JsString].value.trim.replaceAll(" +", " ") != migrationValue.as[JsString].value
           case _ =>
             legacyValue != migrationValue
         }
