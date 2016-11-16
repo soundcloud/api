@@ -46,19 +46,19 @@ class UserQuotaClientSpec extends UnitSpecification {
       val result = Await.result(userQuotaClient.downloadsPerTrack(session, userUrns))
       result must haveSize(2)
       result must haveKey(userUrn1)
-      result(userUrn1) ==== 100
+      result(userUrn1) ==== Some(100)
       result must haveKey(userUrn2)
-      result(userUrn2) ==== 200
+      result(userUrn2) ==== Some(200)
     }
 
-    "if user has unlimited, assume Int.Max" in new Context {
+    "if user has unlimited, return None" in new Context {
       val fixture = withContentsOf("quota", "user_quota_multiple_missing_quota")
       jsonClient.get(session, path, userUrns, Params.empty) returns Future.value(JsonResponse(OkStatus, fixture))
 
       val result = Await.result(userQuotaClient.downloadsPerTrack(session, userUrns))
       result must haveSize(2)
       result must haveKey(userUrn2)
-      result(userUrn2) ==== Int.MaxValue
+      result(userUrn2) ==== None
     }
   }
 }
