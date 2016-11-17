@@ -106,7 +106,7 @@ class ResponseComparisonSpec extends UnitSpecification {
       value must beNull
     }
 
-    "ignores whitespace pruning in genre comparison" in new Context {
+    "does not ignore whitespace pruning in genre comparison" in new Context {
       val legacyRes = generateResponse("""{"kind": "track", "id": 4, "genre": "   Foo    Bar   "}""")
       val migrationRes = generateResponse("""{"kind": "track", "id": 4, "genre": "Foo Bar"}""")
 
@@ -116,7 +116,7 @@ class ResponseComparisonSpec extends UnitSpecification {
         Array("attribute", "system"),
         Array("genre", "TEST-APP")
       )
-      value must beNull
+      value mustEqual 1.0
     }
 
     "interprets null in genre for migration response as equivalent to empty string in legacy " in new Context {
