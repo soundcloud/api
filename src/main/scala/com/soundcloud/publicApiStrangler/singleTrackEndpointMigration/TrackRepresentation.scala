@@ -188,7 +188,7 @@ object TrackRepresentationQuotaDecorator {
   implicit val writes = Writes[TrackRepresentationQuotaDecorator] { dec =>
     val downloadable = (dec.downloadable, dec.downloadsPerTrack) match {
       case (false, _) => false
-      case (true, None) => true // Stitch returned no data, default to whatever the track is set to
+      case (true, None) => dec.downloadable // User has no quota, default to 'downloadable' setting
       case (true, Some(quota)) => dec.downloadCount < quota
     }
     val downloadableJson = Json.obj("downloadable" -> downloadable)

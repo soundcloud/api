@@ -342,24 +342,44 @@ class TrackRepresentationQuotaDecoratorSpec extends UnitSpecification {
   }
 
   "downloadable" >> {
-    "adds downloadable as true when the track is downloadable, and below the user's quota" in new Context {
-      val decorator = TrackRepresentationQuotaDecorator(true, Some(100), 90, false, wrapped)
-      val json = Json.toJson(decorator)
-      json \ "downloadable" ==== JsBoolean(true)
+    "when the track is downloadable" >> {
+      "adds downloadable as true when downloads are below the user's quota" in new Context {
+        val decorator = TrackRepresentationQuotaDecorator(true, Some(100), 90, false, wrapped)
+        val json = Json.toJson(decorator)
+        json \ "downloadable" ==== JsBoolean(true)
+      }
+
+      "adds downloadable as false when downloads are exactly at the user's quota" in new Context {
+        val decorator = TrackRepresentationQuotaDecorator(true, Some(100), 100, false, wrapped)
+        val json = Json.toJson(decorator)
+        json \ "downloadable" ==== JsBoolean(false)
+      }
+
+      "adds downloadable as false when downloads are above the user's quota" in new Context {
+        val decorator = TrackRepresentationQuotaDecorator(true, Some(100), 1000, false, wrapped)
+        val json = Json.toJson(decorator)
+        json \ "downloadable" ==== JsBoolean(false)
+      }
+
+      "adds downloadable as true when the user has no quota (ie. unlimited)" in new Context {
+        val decorator = TrackRepresentationQuotaDecorator(true, None, 1000, false, wrapped)
+        val json = Json.toJson(decorator)
+        json \ "downloadable" ==== JsBoolean(true)
+      }
     }
 
-    "adds downloadable as false when the track is downloadable, and above the user's quota" in new Context {
-      val decorator = TrackRepresentationQuotaDecorator(true, Some(100), 110, false, wrapped)
-      val json = Json.toJson(decorator)
-      json \ "downloadable" ==== JsBoolean(false)
-      json.as[JsObject].keys.contains("downloads_remaining") ==== false
-    }
+    "when the track is not downloadable" >> {
+      "adds downloadable as false when downloads are below the user's quota" in new Context {
+        val decorator = TrackRepresentationQuotaDecorator(false, Some(100), 90, false, wrapped)
+        val json = Json.toJson(decorator)
+        json \ "downloadable" ==== JsBoolean(false)
+      }
 
-    "uses the 'downloadable' value, when the user has no quota" in new Context {
-      val decorator = TrackRepresentationQuotaDecorator(false, None, 90, false, wrapped)
-      val json = Json.toJson(decorator)
-      json \ "downloadable" ==== JsBoolean(false)
-      json.as[JsObject].keys.contains("downloads_remaining") ==== false
+      "adds downloadable as false when the user has no quota (ie. unlimited)" in new Context {
+        val decorator = TrackRepresentationQuotaDecorator(false, None, 90, false, wrapped)
+        val json = Json.toJson(decorator)
+        json \ "downloadable" ==== JsBoolean(false)
+      }
     }
   }
 
