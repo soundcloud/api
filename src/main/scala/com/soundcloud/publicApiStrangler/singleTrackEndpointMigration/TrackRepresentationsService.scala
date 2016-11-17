@@ -119,6 +119,11 @@ class TrackRepresentationsService(
       audioMetadata = trackAudioMetadata
     )
 
+    // Temporary logging for 'downloadable' difference debugging
+    logger.info(s"Track: ${track.urn}. Downloadable: ${track.downloadable}. " +
+      s"Downloads per track: ${downloadsPerTrack}. " +
+      s"Download count: ${counts.download_count}.")
+
     var rep: TrackRepresentationLike = basicTrackRep
     // TODO Consider an "owning user" decorator
     if (track.user_urn == userSession.getUser)
