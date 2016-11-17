@@ -25,8 +25,8 @@ class HtmlSanitizerSpec extends Specification {
       HtmlSanitizer.sanitize("&lt;3") ==== "<3"
     }
 
-    "sanitize everything inside  malformed HTML entities" in new Scope {
-      HtmlSanitizer.sanitize("Foo <script> bar baz quax") ==== "Foo"
+    "sanitize everything inside malformed HTML entities" in new Scope {
+      HtmlSanitizer.sanitize("Foo <script> bar baz quax") ==== "Foo "
     }
 
     "handle non-UTF8 characters" in new Scope {
@@ -34,21 +34,22 @@ class HtmlSanitizerSpec extends Specification {
       HtmlSanitizer.sanitize(nonUtf8Characters) ==== nonUtf8Characters
     }
 
-    "prunes extra  whitespaces" in new Scope {
-      HtmlSanitizer.sanitize("        Foo          Bar      ") ==== "Foo Bar"
+    "does not prune extra whitespaces" in new Scope {
+      private val original = "        Foo          Bar      "
+      HtmlSanitizer.sanitize(original) ==== original
     }
 
-    "removes leading and trailing whitespace" in new Scope {
-      HtmlSanitizer.sanitize("Foo      ") ==== "Foo"
-      HtmlSanitizer.sanitize("      Bar") ==== "Bar"
+    "does not remove leading and trailing whitespace" in new Scope {
+      HtmlSanitizer.sanitize("Foo      ") ==== "Foo      "
+      HtmlSanitizer.sanitize("      Bar") ==== "      Bar"
     }
 
-    "removes linebreaks " in new Scope {
-      HtmlSanitizer.sanitize("Foo\n\nBar") ==== "Foo Bar"
+    "does not remove linebreaks" in  new Scope {
+      HtmlSanitizer.sanitize("Foo\n\nBar") ==== "Foo\n\nBar"
     }
 
-    "removes carriage return" in new Scope {
-      HtmlSanitizer.sanitize("Foo \r\r Bar") ==== "Foo Bar"
+    "does not remove carriage return" in new Scope {
+      HtmlSanitizer.sanitize("Foo \r\r Bar") ==== "Foo \r\r Bar"
     }
 
     "document behaviour of anchor tags" in new Scope {
