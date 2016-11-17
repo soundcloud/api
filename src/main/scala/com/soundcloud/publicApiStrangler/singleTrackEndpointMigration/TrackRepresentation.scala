@@ -24,6 +24,7 @@ object TrackRepresentationLike {
     case t: TrackRepresentationAttachmentsUriDecorator => TrackRepresentationAttachmentsUriDecorator.writes.writes(t)
     case t: TrackRepresentationSecretTokenUriParamDecorator => TrackRepresentationSecretTokenUriParamDecorator.writes.writes(t)
     case t: TrackRepresentationQuotaDecorator => TrackRepresentationQuotaDecorator.writes.writes(t)
+    case t: TrackRepresentationCountsDecorator => TrackRepresentationCountsDecorator.writes.writes(t)
     case t: TrackRepresentation => TrackRepresentation.writes.writes(t)
   }
 
@@ -37,6 +38,22 @@ object TrackRepresentationLike {
       "uri" -> s"https://api.soundcloud.com/users/${user.urn.getIdentifier}",
       "permalink_url" -> user.permalink_url,
       "avatar_url" -> user.avatar_url.replaceAll("\\?[0-9]+$", "").replaceAll("^http:", "https:")
+    )
+  }
+}
+
+case class TrackRepresentationCountsDecorator(
+  counts: StitchCounts,
+  wrapped: TrackRepresentationLike
+) extends TrackRepresentationLike
+
+object TrackRepresentationCountsDecorator {
+  implicit val writes = Writes[TrackRepresentationCountsDecorator] { dec =>
+    Json.toJson(dec.wrapped).as[JsObject] ++ Json.obj(
+      "playback_count" -> dec.counts.playback_count,
+      "download_count" -> dec.counts.download_count,
+      "favoritings_count" -> dec.counts.favoritings_count,
+      "comment_count" -> dec.counts.comment_count
     )
   }
 }
@@ -264,10 +281,6 @@ object TrackRepresentation {
         "user" -> rep.user,
         "permalink_url" -> rep.track.permalink_url,
         "artwork_url" -> rep.track.artwork.filename.map(imageUrl(_)),
-        "playback_count" -> rep.counts.playback_count,
-        "download_count" -> rep.counts.download_count,
-        "favoritings_count" -> rep.counts.favoritings_count,
-        "comment_count" -> rep.counts.comment_count,
         "stream_url" -> urlFor(rep, "stream"),
         "download_url" -> urlFor(rep, "download")
       )
