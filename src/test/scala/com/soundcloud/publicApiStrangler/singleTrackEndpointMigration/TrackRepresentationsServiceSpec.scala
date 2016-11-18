@@ -642,20 +642,6 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
   }
 
   "counts" >> {
-    "returns no counts if requester is not uploader" in new Context {
-      val track = trackmetadataTrack()
-      setUpMocksForExistingTrack(track, session)
-
-      val response = Await.result(tracksService.track(session, trackUrn, None, None))
-
-      response.status ==== Status.Ok
-      val json = Json.fromResponse(response)
-      json.as[JsObject].keys.contains("playback_count") ==== false
-      json.as[JsObject].keys.contains("download_count") ==== false
-      json.as[JsObject].keys.contains("favoritings_count") ==== false
-      json.as[JsObject].keys.contains("comment_count") ==== false
-    }
-
     "requesting as uploader" >> {
       "returns proper counts" in new Context {
         override val session = new UserSessionBuilder().setUser(trackOwnerUrn).build
@@ -691,34 +677,52 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
       }
     }
 
-    "track has public stats" >> {
-      "returns proper counts" in new Context {
-        val track = trackmetadataTrack(reveal_stats = true)
-        setUpMocksForExistingTrack(track, session)
+    "not requesting as uploader" >> {
+      "track stats are not public" >> {
+        "returns no counts" in new Context {
+          val track = trackmetadataTrack()
+          setUpMocksForExistingTrack(track, session)
 
-        val response = Await.result(tracksService.track(session, trackUrn, None, None))
+          val response = Await.result(tracksService.track(session, trackUrn, None, None))
 
-        response.status ==== Status.Ok
-        val json = Json.fromResponse(response)
-        json \ "playback_count" ==== JsNumber(111)
-        json \ "download_count" ==== JsNumber(222)
-        json \ "favoritings_count" ==== JsNumber(333)
-        json \ "comment_count" ==== JsNumber(444)
+          response.status ==== Status.Ok
+          val json = Json.fromResponse(response)
+          json.as[JsObject].keys.contains("playback_count") ==== false
+          json.as[JsObject].keys.contains("download_count") ==== false
+          json.as[JsObject].keys.contains("favoritings_count") ==== false
+          json.as[JsObject].keys.contains("comment_count") ==== false
+        }
       }
 
-      "returns empty counts if Stitch is failing" in new Context {
-        val track = trackmetadataTrack(reveal_stats = true)
-        setUpMocksForExistingTrack(track, session)
-        when(stitchClient.countsForTrack(session, trackUrn, trackOwnerUrn)).thenReturn(Future.exception(new RuntimeException("bewm! hahahaaa")))
+      "track has public stats" >> {
+        "returns proper counts" in new Context {
+          val track = trackmetadataTrack(reveal_stats = true)
+          setUpMocksForExistingTrack(track, session)
 
-        val response = Await.result(tracksService.track(session, trackUrn, None, None))
+          val response = Await.result(tracksService.track(session, trackUrn, None, None))
 
-        response.status ==== Status.Ok
-        val json = Json.fromResponse(response)
-        json \ "playback_count" ==== JsNumber(0)
-        json \ "download_count" ==== JsNumber(0)
-        json \ "favoritings_count" ==== JsNumber(0)
-        json \ "comment_count" ==== JsNumber(0)
+          response.status ==== Status.Ok
+          val json = Json.fromResponse(response)
+          json \ "playback_count" ==== JsNumber(111)
+          json \ "download_count" ==== JsNumber(222)
+          json \ "favoritings_count" ==== JsNumber(333)
+          json \ "comment_count" ==== JsNumber(444)
+        }
+
+        "returns empty counts if Stitch is failing" in new Context {
+          val track = trackmetadataTrack(reveal_stats = true)
+          setUpMocksForExistingTrack(track, session)
+          when(stitchClient.countsForTrack(session, trackUrn, trackOwnerUrn)).thenReturn(Future.exception(new RuntimeException("bewm! hahahaaa")))
+
+          val response = Await.result(tracksService.track(session, trackUrn, None, None))
+
+          response.status ==== Status.Ok
+          val json = Json.fromResponse(response)
+          json \ "playback_count" ==== JsNumber(0)
+          json \ "download_count" ==== JsNumber(0)
+          json \ "favoritings_count" ==== JsNumber(0)
+          json \ "comment_count" ==== JsNumber(0)
+        }
       }
     }
   }
