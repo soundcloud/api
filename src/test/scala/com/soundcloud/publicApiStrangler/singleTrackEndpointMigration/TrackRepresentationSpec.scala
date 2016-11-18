@@ -199,6 +199,25 @@ class TrackRepresentationLabelDecoratorSpec extends UnitSpecification {
   }
 }
 
+class TrackRepresentationCountsDecoratorSpec extends UnitSpecification {
+  trait Context extends Scope with TrackRepresentationLikeSpecContext {
+    implicit val writes = TrackRepresentationCountsDecorator.writes
+
+    val counts = StitchCounts(111, 222, 333, 444)
+    val wrapped: TrackRepresentationLike = createTrackRepresentation()
+    val decorator = TrackRepresentationCountsDecorator(counts, wrapped)
+  }
+
+  "adds counts" in new Context {
+    val json = Json.toJson(decorator)
+
+    json \ "playback_count" ==== JsNumber(111)
+    json \ "download_count" ==== JsNumber(222)
+    json \ "favoritings_count" ==== JsNumber(333)
+    json \ "comment_count" ==== JsNumber(444)
+  }
+}
+
 class TrackRepresentationUserFavoriteDecoratorSpec extends UnitSpecification {
 
   trait Context extends Scope with TrackRepresentationLikeSpecContext {
@@ -443,10 +462,6 @@ class TrackRepresentationSpec extends UnitSpecification {
     trackJson \ "key_signature" ==== JsString("Emaj")
     trackJson \ "video_url" ==== JsString("http://example.com/video.mp4")
     trackJson \ "label_id" ==== JsNumber(999)
-    trackJson \ "playback_count" ==== JsNumber(111)
-    trackJson \ "download_count" ==== JsNumber(222)
-    trackJson \ "favoritings_count" ==== JsNumber(333)
-    trackJson \ "comment_count" ==== JsNumber(444)
     trackJson \ "state" ==== JsString("finished")
     trackJson \ "original_format" ==== JsString("vqf")
     trackJson \ "original_content_size" ==== JsNumber(9001)

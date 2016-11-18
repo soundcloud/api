@@ -120,7 +120,8 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
       secretToken: String = "secr3t-Token",
       isDownloadable: Boolean = false,
       user: Urn = trackOwnerUrn,
-      label_id: Option[Int] = Some(labelUrn.getIdentifier.toInt)) =
+      label_id: Option[Int] = Some(labelUrn.getIdentifier.toInt),
+      reveal_stats: Boolean = false) =
       Track(
         urn = trackUrn,
         user_urn = user,
@@ -143,7 +144,7 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
         api_streamable = None,
         streamable = false,
         reveal_comments = false,
-        reveal_stats = false,
+        reveal_stats = reveal_stats,
         label_name = None,
         license = null,
         embeddable = None,
@@ -355,21 +356,6 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
 
     response.status ==== Status.Ok
     Json.fromResponse(response) \ "isrc" ==== JsNull
-  }
-
-  "Returns empty counts if Stitch is failing" in new Context {
-    val track = trackmetadataTrack()
-    setUpMocksForExistingTrack(track, session)
-    when(stitchClient.countsForTrack(session, trackUrn, trackOwnerUrn)).thenReturn(Future.exception(new RuntimeException("bewm! hahahaaa")))
-
-    val response = Await.result(tracksService.track(session, trackUrn, None, None))
-
-    response.status ==== Status.Ok
-    val json = Json.fromResponse(response)
-    json \ "playback_count" ==== JsNumber(0)
-    json \ "download_count" ==== JsNumber(0)
-    json \ "favoritings_count" ==== JsNumber(0)
-    json \ "comment_count" ==== JsNumber(0)
   }
 
   "Returns no geoblockings if Moshimoshi is failing" in new Context {
@@ -651,6 +637,88 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
 
         val response = Await.result(tracksService.track(session, trackUrn, None, None))
         Json.fromResponse(response).as[JsObject].keys.contains("downloads_remaining") ==== false
+      }
+    }
+  }
+
+  "counts" >> {
+    "returns no counts if requester is not uploader" in new Context {
+      val track = trackmetadataTrack()
+      setUpMocksForExistingTrack(track, session)
+
+      val response = Await.result(tracksService.track(session, trackUrn, None, None))
+
+      response.status ==== Status.Ok
+      val json = Json.fromResponse(response)
+      json.as[JsObject].keys.contains("playback_count") ==== false
+      json.as[JsObject].keys.contains("download_count") ==== false
+      json.as[JsObject].keys.contains("favoritings_count") ==== false
+      json.as[JsObject].keys.contains("comment_count") ==== false
+    }
+
+    "requesting as uploader" >> {
+      "returns proper counts" in new Context {
+        override val session = new UserSessionBuilder().setUser(trackOwnerUrn).build
+
+        val track = trackmetadataTrack()
+        setUpMocksForExistingTrack(track, session)
+
+        val response = Await.result(tracksService.track(session, trackUrn, None, None))
+
+        response.status ==== Status.Ok
+        val json = Json.fromResponse(response)
+        json \ "playback_count" ==== JsNumber(111)
+        json \ "download_count" ==== JsNumber(222)
+        json \ "favoritings_count" ==== JsNumber(333)
+        json \ "comment_count" ==== JsNumber(444)
+      }
+
+      "returns empty counts if Stitch is failing" in new Context {
+        override val session = new UserSessionBuilder().setUser(trackOwnerUrn).build
+
+        val track = trackmetadataTrack()
+        setUpMocksForExistingTrack(track, session)
+        when(stitchClient.countsForTrack(session, trackUrn, trackOwnerUrn)).thenReturn(Future.exception(new RuntimeException("bewm! hahahaaa")))
+
+        val response = Await.result(tracksService.track(session, trackUrn, None, None))
+
+        response.status ==== Status.Ok
+        val json = Json.fromResponse(response)
+        json \ "playback_count" ==== JsNumber(0)
+        json \ "download_count" ==== JsNumber(0)
+        json \ "favoritings_count" ==== JsNumber(0)
+        json \ "comment_count" ==== JsNumber(0)
+      }
+    }
+
+    "track has public stats" >> {
+      "returns proper counts" in new Context {
+        val track = trackmetadataTrack(reveal_stats = true)
+        setUpMocksForExistingTrack(track, session)
+
+        val response = Await.result(tracksService.track(session, trackUrn, None, None))
+
+        response.status ==== Status.Ok
+        val json = Json.fromResponse(response)
+        json \ "playback_count" ==== JsNumber(111)
+        json \ "download_count" ==== JsNumber(222)
+        json \ "favoritings_count" ==== JsNumber(333)
+        json \ "comment_count" ==== JsNumber(444)
+      }
+
+      "returns empty counts if Stitch is failing" in new Context {
+        val track = trackmetadataTrack(reveal_stats = true)
+        setUpMocksForExistingTrack(track, session)
+        when(stitchClient.countsForTrack(session, trackUrn, trackOwnerUrn)).thenReturn(Future.exception(new RuntimeException("bewm! hahahaaa")))
+
+        val response = Await.result(tracksService.track(session, trackUrn, None, None))
+
+        response.status ==== Status.Ok
+        val json = Json.fromResponse(response)
+        json \ "playback_count" ==== JsNumber(0)
+        json \ "download_count" ==== JsNumber(0)
+        json \ "favoritings_count" ==== JsNumber(0)
+        json \ "comment_count" ==== JsNumber(0)
       }
     }
   }
