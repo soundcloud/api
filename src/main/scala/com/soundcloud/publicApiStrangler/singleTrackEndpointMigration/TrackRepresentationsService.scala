@@ -132,6 +132,8 @@ class TrackRepresentationsService(
       rep = TrackRepresentationSecretTokenDecorator(track, rep)
     if (userIsOwner || track.reveal_stats)
       rep = TrackRepresentationCountsDecorator(counts, rep)
+    if ((userIsOwner || track.reveal_stats) && track.reveal_comments)
+      rep = TrackRepresentationCommentCountDecorator(counts, rep)
     if (geoblockings.isDefined)
       rep = TrackRepresentationGeoblockingsDecorator(geoblockings.get, rep)
     if (domainlockings.nonEmpty)

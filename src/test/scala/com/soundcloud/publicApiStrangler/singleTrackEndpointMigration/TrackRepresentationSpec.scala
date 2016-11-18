@@ -214,6 +214,21 @@ class TrackRepresentationCountsDecoratorSpec extends UnitSpecification {
     json \ "playback_count" ==== JsNumber(111)
     json \ "download_count" ==== JsNumber(222)
     json \ "favoritings_count" ==== JsNumber(333)
+  }
+}
+
+class TrackRepresentationCommentCountDecoratorSpec extends UnitSpecification {
+  trait Context extends Scope with TrackRepresentationLikeSpecContext {
+    implicit val writes = TrackRepresentationCommentCountDecorator.writes
+
+    val counts = StitchCounts(1, 2, 3, 444)
+    val wrapped: TrackRepresentationLike = createTrackRepresentation()
+    val decorator = TrackRepresentationCommentCountDecorator(counts, wrapped)
+  }
+
+  "adds counts" in new Context {
+    val json = Json.toJson(decorator)
+
     json \ "comment_count" ==== JsNumber(444)
   }
 }

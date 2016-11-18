@@ -25,6 +25,7 @@ object TrackRepresentationLike {
     case t: TrackRepresentationSecretTokenUriParamDecorator => TrackRepresentationSecretTokenUriParamDecorator.writes.writes(t)
     case t: TrackRepresentationQuotaDecorator => TrackRepresentationQuotaDecorator.writes.writes(t)
     case t: TrackRepresentationCountsDecorator => TrackRepresentationCountsDecorator.writes.writes(t)
+    case t: TrackRepresentationCommentCountDecorator => TrackRepresentationCommentCountDecorator.writes.writes(t)
     case t: TrackRepresentation => TrackRepresentation.writes.writes(t)
   }
 
@@ -52,7 +53,19 @@ object TrackRepresentationCountsDecorator {
     Json.toJson(dec.wrapped).as[JsObject] ++ Json.obj(
       "playback_count" -> dec.counts.playback_count,
       "download_count" -> dec.counts.download_count,
-      "favoritings_count" -> dec.counts.favoritings_count,
+      "favoritings_count" -> dec.counts.favoritings_count
+    )
+  }
+}
+
+case class TrackRepresentationCommentCountDecorator(
+  counts: StitchCounts,
+  wrapped: TrackRepresentationLike
+) extends TrackRepresentationLike
+
+object TrackRepresentationCommentCountDecorator {
+  implicit val writes = Writes[TrackRepresentationCommentCountDecorator] { dec =>
+    Json.toJson(dec.wrapped).as[JsObject] ++ Json.obj(
       "comment_count" -> dec.counts.comment_count
     )
   }
