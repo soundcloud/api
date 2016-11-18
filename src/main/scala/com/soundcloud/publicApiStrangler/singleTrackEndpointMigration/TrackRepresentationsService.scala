@@ -130,7 +130,7 @@ class TrackRepresentationsService(
     // TODO Consider an "owning user" decorator
     if (userIsOwner)
       rep = TrackRepresentationSecretTokenDecorator(track, rep)
-    if (userIsOwner)
+    if (userIsOwner || track.reveal_stats)
       rep = TrackRepresentationCountsDecorator(counts, rep)
     if (geoblockings.isDefined)
       rep = TrackRepresentationGeoblockingsDecorator(geoblockings.get, rep)
