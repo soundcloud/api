@@ -121,7 +121,8 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
       isDownloadable: Boolean = false,
       user: Urn = trackOwnerUrn,
       label_id: Option[Int] = Some(labelUrn.getIdentifier.toInt),
-      reveal_stats: Boolean = false) =
+      reveal_stats: Boolean = false,
+      reveal_comments: Boolean = true) =
       Track(
         urn = trackUrn,
         user_urn = user,
@@ -143,7 +144,7 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
         uid = Some("a1b2c3"),
         api_streamable = None,
         streamable = false,
-        reveal_comments = false,
+        reveal_comments = reveal_comments,
         reveal_stats = reveal_stats,
         label_name = None,
         license = null,
@@ -656,7 +657,6 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
         json \ "playback_count" ==== JsNumber(111)
         json \ "download_count" ==== JsNumber(222)
         json \ "favoritings_count" ==== JsNumber(333)
-        json \ "comment_count" ==== JsNumber(444)
       }
 
       "returns empty counts if Stitch is failing" in new Context {
@@ -674,6 +674,32 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
         json \ "download_count" ==== JsNumber(0)
         json \ "favoritings_count" ==== JsNumber(0)
         json \ "comment_count" ==== JsNumber(0)
+      }
+
+      "includes comment_count if reveal_comments = true" in new Context {
+        override val session = new UserSessionBuilder().setUser(trackOwnerUrn).build
+
+        val track = trackmetadataTrack()
+        setUpMocksForExistingTrack(track, session)
+
+        val response = Await.result(tracksService.track(session, trackUrn, None, None))
+
+        response.status ==== Status.Ok
+        val json = Json.fromResponse(response)
+        json \ "comment_count" ==== JsNumber(444)
+      }
+
+      "does not include comment_count if reveal_comments = false" in new Context {
+        override val session = new UserSessionBuilder().setUser(trackOwnerUrn).build
+
+        val track = trackmetadataTrack(reveal_comments = false)
+        setUpMocksForExistingTrack(track, session)
+
+        val response = Await.result(tracksService.track(session, trackUrn, None, None))
+
+        response.status ==== Status.Ok
+        val json = Json.fromResponse(response)
+        json.as[JsObject].keys.contains("comment_count") ==== false
       }
     }
 
@@ -707,6 +733,28 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
           json \ "download_count" ==== JsNumber(222)
           json \ "favoritings_count" ==== JsNumber(333)
           json \ "comment_count" ==== JsNumber(444)
+        }
+
+        "includes comment_count if reveal_comments = true" in new Context {
+          val track = trackmetadataTrack(reveal_stats = true)
+          setUpMocksForExistingTrack(track, session)
+
+          val response = Await.result(tracksService.track(session, trackUrn, None, None))
+
+          response.status ==== Status.Ok
+          val json = Json.fromResponse(response)
+          json \ "comment_count" ==== JsNumber(444)
+        }
+
+        "does not include comment_count if reveal_comments = false" in new Context {
+          val track = trackmetadataTrack(reveal_stats = true, reveal_comments = false)
+          setUpMocksForExistingTrack(track, session)
+
+          val response = Await.result(tracksService.track(session, trackUrn, None, None))
+
+          response.status ==== Status.Ok
+          val json = Json.fromResponse(response)
+          json.as[JsObject].keys.contains("comment_count") ==== false
         }
 
         "returns empty counts if Stitch is failing" in new Context {
