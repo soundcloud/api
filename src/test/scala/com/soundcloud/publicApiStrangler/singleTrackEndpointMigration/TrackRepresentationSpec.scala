@@ -91,7 +91,7 @@ trait TrackRepresentationLikeSpecContext {
     machine_tags = List("system:foo", "system:bar", "awesomeness:very high"),
     title = "Baby Bash",
     uid = Some("a1b2c3"),
-    api_streamable = None,
+    api_streamable = Some(true),
     streamable = false,
     reveal_comments = false,
     reveal_stats = false,
@@ -453,7 +453,6 @@ class TrackRepresentationSpec extends UnitSpecification {
     trackJson \ "last_modified" ==== JsString("2016/08/08 13:28:53 +0000")
     trackJson \ "tag_list" ==== JsString("system:foo system:bar \"awesomeness:very high\" dubstep folk \"tag with spaces\"")
     trackJson \ "permalink" ==== JsString("plsty-remix")
-    trackJson \ "streamable" ==== JsBoolean(false)
     trackJson \ "embeddable_by" ==== JsString("me")
     trackJson \ "genre" ==== JsString("future bass")
     trackJson \ "title" ==== JsString("Baby Bash")
@@ -489,6 +488,18 @@ class TrackRepresentationSpec extends UnitSpecification {
     userJson \ "permalink_url" ==== JsString("https://soundcloud.com/denis")
     userJson \ "avatar_url" ==== JsString("https://example.com/giraffe.jpg")
     userJson \ "last_modified" ==== JsString("2016/10/10 11:21:36 +0000")
+  }
+
+  "streamable" >> {
+    "true if api_streamable = true" in new Context {
+      val trackJson = Json.toJson(createTrackRepresentation(track = defaultTrack.copy(api_streamable = Some(true))))
+      trackJson \ "streamable" ==== JsBoolean(true)
+    }
+
+    "false if api_streamable = false" in new Context {
+      val trackJson = Json.toJson(createTrackRepresentation(track = defaultTrack.copy(api_streamable = Some(false))))
+      trackJson \ "streamable" ==== JsBoolean(false)
+    }
   }
 
   "sharing" in new Context {

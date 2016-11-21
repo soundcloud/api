@@ -85,7 +85,7 @@ object Track {
           title = HtmlSanitizer.sanitize((json \ "title").as[String]),
           uid = (json \ "uid").asOpt[String],
           api_streamable = (json \ "api_streamable").asOpt[Boolean],
-          streamable = (json \ "streamable").as[Boolean],
+          streamable = (json \ "api_streamable").as[Boolean],
           reveal_comments = (json \ "reveal_comments").as[Boolean],
           reveal_stats = (json \ "reveal_stats").as[Boolean],
           label_name = (json \ "label_name").asOpt[String].map(HtmlSanitizer.sanitize(_)),

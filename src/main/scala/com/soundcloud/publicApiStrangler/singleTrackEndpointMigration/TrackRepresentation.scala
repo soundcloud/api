@@ -270,7 +270,7 @@ object TrackRepresentation {
         "sharing" -> (if (rep.track.public) "public" else "private"),
         "tag_list" -> mkTagList(rep),
         "permalink" -> rep.track.permalink,
-        "streamable" -> rep.track.streamable,
+        "streamable" -> rep.track.api_streamable,
         "embeddable_by" -> rep.track.embeddableBy,
         "purchase_url" -> rep.track.purchase_url,
         "purchase_title" -> rep.track.purchase_title,
