@@ -371,6 +371,23 @@ class ResponseComparisonSpec extends UnitSpecification {
       ) must beNull
     }
 
+    "does not record downloadable difference" in new Context {
+      val legacyRes = generateResponse("""{"kind": "track", "id": 4, "downloadable": true}""")
+      val migrationRes = generateResponse("""{"kind": "track", "id": 4, "downloadable": false}""")
+
+      responseComparison.report(Request(), legacyRes, migrationRes)
+      collectorRegistry.getSampleValue(
+        "attribute_value_different",
+        Array("attribute", "system"),
+        Array("downloadable", "TEST-APP")
+      ) must beNull
+      collectorRegistry.getSampleValue(
+        "attribute_only_present_in",
+        Array("response", "attribute", "system"),
+        Array("legacy", "downloadable", "TEST-APP")
+      ) must beNull
+    }
+
     "records difference in available_country_codes" in new Context {
       val legacyRes = generateResponse("""{"kind": "track", "id": 4, "available_country_codes": ["BE"]}""")
       val migrationRes = generateResponse("""{"kind": "track", "id": 4, "available_country_codes": ["FR"]}""")
