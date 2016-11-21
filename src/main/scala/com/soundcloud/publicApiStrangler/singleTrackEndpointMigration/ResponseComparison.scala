@@ -158,6 +158,10 @@ class ResponseComparison(telemetry: Telemetry) {
           case "comment_count" | "download_count" | "favoritings_count" | "playback_count" =>
             // Counts in Mothership are not reliable, and so Public API Strangler fetches counts from Stitch instead.
             false
+          case "downloadable" =>
+            // This boolean flag relies on the download count, and as such will also vary in line with the differences
+            // between counts from Mothership and Stitch.
+            false
           case "isrc" =>
             // The ISRC is now obtained from Pubmese rather than Mothership. Pubmese is the authoritative
             // source for ISRCs.
