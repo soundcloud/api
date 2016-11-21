@@ -3,9 +3,8 @@ package com.soundcloud.publicApiStrangler.support
 import java.io.InputStream
 import java.net.InetSocketAddress
 
-import com.soundcloud.jvmkit.logging.SoundCloudLoggerFactory
 import com.soundcloud.scalakit.test.UnitSpecification
-import com.twitter.finagle.http.{Method, Request, Response}
+import com.twitter.finagle.http.{Request, Response}
 import com.twitter.finagle.{Http, Service}
 import com.twitter.util.{Await, Duration, Future}
 import okhttp3.mockwebserver.{MockResponse, MockWebServer}
@@ -17,7 +16,6 @@ import org.apache.http.util.EntityUtils
 import org.specs2.mutable.BeforeAfter
 
 class ForwardedRequestSpec extends UnitSpecification {
-
 
   trait Context extends BeforeAfter {
     val server = new MockWebServer()
