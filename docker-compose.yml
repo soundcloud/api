@@ -1,11 +1,13 @@
 ---
 memcached:
   image: memcached
+  container_name: strangler_memcached
   ports:
     - "11211:11211"
 
 zookeeper:
   image: docker.dev.s-cloud.net/sc-zookeeper
+  container_name: strangler_zk
   ports:
     - "2181:2181"
 
@@ -18,6 +20,7 @@ dev:
 # This container is only ever used by tests.
 publicapistrangler:
   image: docker.dev.s-cloud.net/public-api-strangler:${PUBLIC_API_STRANGLER_VERSION}
+  container_name: strangler_api
   command: bash -lex -c "./api --config=development.sh"
   ports:
     - "5000:5000"
