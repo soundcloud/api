@@ -265,7 +265,7 @@ class ResponseComparisonSpec extends UnitSpecification {
       collectorRegistry.getSampleValue(
         "attribute_only_present_in",
         Array("response", "attribute", "system"),
-        Array("legacy", "likes_count", "TEST-APP")
+        Array("legacy", "tag_list", "TEST-APP")
       ) must beNull
     }
 
