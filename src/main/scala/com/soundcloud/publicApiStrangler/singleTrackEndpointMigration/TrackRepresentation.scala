@@ -324,10 +324,10 @@ object TrackRepresentation {
       rep.track.release_year.map(_ => rep.track.release_month.getOrElse(1))
 
     private def imageUrl(imageFile: String): String = {
-      val s3FilenamePattern = """(.*)-original\.(\w*)""".r
+      val s3FilenamePattern = """(.*)-original\.\w*""".r
 
       imageFile match {
-        case s3FilenamePattern(s3filename, extension) => cdnRoot + s"/$s3filename-large.$extension"
+        case s3FilenamePattern(s3filename) => cdnRoot + s"/$s3filename-large.jpg"
         case _ => cdnRoot + "/" + imageFile
       }
     }
