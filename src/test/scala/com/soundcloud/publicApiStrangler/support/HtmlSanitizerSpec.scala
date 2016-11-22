@@ -53,8 +53,8 @@ class HtmlSanitizerSpec extends Specification {
     }
 
     "document behaviour of anchor tags" in new Scope {
-      HtmlSanitizer.sanitize("<a href=\"https://www.foo/bar\">baz</a>") ====
-                             "<a href=\"https://www.foo/bar\" rel=\"nofollow\">baz</a>"
+      HtmlSanitizer.sanitize("<a href=\"https://www.foo/bar\" target=\"_blank\">baz</a>") ====
+                             "<a href=\"https://www.foo/bar\" target=\"_blank\" rel=\"nofollow\">baz</a>"
     }
   }
 
