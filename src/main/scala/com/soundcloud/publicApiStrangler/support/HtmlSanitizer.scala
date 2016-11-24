@@ -9,7 +9,8 @@ import org.jsoup.safety.Whitelist
 object HtmlSanitizer {
 
   def sanitize(htmlString: String) = {
-    val sanitized = Jsoup.clean(htmlString, "", Whitelist.basic(), new OutputSettings().prettyPrint(false))
+    val sanitized = Jsoup.clean(htmlString, "", Whitelist.basic().addAttributes("a", "target"),
+                                                new OutputSettings().prettyPrint(false))
     Parser.unescapeEntities(sanitized, true)
   }
 
