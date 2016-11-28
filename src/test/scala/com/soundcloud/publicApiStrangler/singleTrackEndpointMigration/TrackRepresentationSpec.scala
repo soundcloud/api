@@ -343,28 +343,50 @@ class TrackRepresentationAttachmentsUriDecoratorSpec extends UnitSpecification {
 }
 
 class TrackRepresentationSecretTokenUriParamDecoratorSpec extends UnitSpecification {
-  trait Context extends Scope with TrackRepresentationLikeSpecContext {
-    implicit val writes = TrackRepresentationSecretTokenUriParamDecorator.writes
+  "when all URL fields are present" >> {
+    trait UrlsPresentContext extends Scope with TrackRepresentationLikeSpecContext {
+      implicit val writes = TrackRepresentationSecretTokenUriParamDecorator.writes
 
-    val wrapped: TrackRepresentationLike = createTrackRepresentation()
-    val decorator = TrackRepresentationSecretTokenUriParamDecorator(wrapped, "bl3rkbi3")
-    val json = Json.toJson(decorator)
+      val wrapped = createTrackRepresentation()
+      val decorator = TrackRepresentationSecretTokenUriParamDecorator(wrapped, "bl3rkbi3")
+      val json = Json.toJson(decorator)
+    }
+
+    "adds the secret token to the URI" in new UrlsPresentContext {
+      json \ "uri" ==== JsString("https://api.soundcloud.com/tracks/1324?secret_token=bl3rkbi3")
+    }
+
+    "adds the secret token to the stream_url" in new UrlsPresentContext {
+      json \ "stream_url" ==== JsString("https://api.soundcloud.com/tracks/1324/stream?secret_token=bl3rkbi3")
+    }
+
+    "adds the secret token to the download_url" in new UrlsPresentContext {
+      json \ "download_url" ==== JsString("https://api.soundcloud.com/tracks/1324/download?secret_token=bl3rkbi3")
+    }
+
+    "adds the secret token to the permalink_url" in new UrlsPresentContext {
+      json \ "permalink_url" ==== JsString("http://soundcloud.com/nirvana/plsty-remix/bl3rkbi3")
+    }
   }
 
-  "adds the secret token to the URI" in new Context {
-    json \ "uri" ==== JsString("https://api.soundcloud.com/tracks/1324?secret_token=bl3rkbi3")
-  }
+  // Some clients do this, according to our logs
+  "when a particular URL field has a badly-encoded secret token" >> {
+    trait BadlyFormedSecretTokenContext extends Scope with TrackRepresentationLikeSpecContext {
+      implicit val writes = TrackRepresentationSecretTokenUriParamDecorator.writes
 
-  "adds the secret token to the stream_url" in new Context {
-    json \ "stream_url" ==== JsString("https://api.soundcloud.com/tracks/1324/stream?secret_token=bl3rkbi3")
-  }
+      val track = defaultTrack.copy()
+      val wrapped = createTrackRepresentation(track = defaultTrack)
+      val decorator = TrackRepresentationSecretTokenUriParamDecorator(wrapped, "badgers?format=json")
+      val json = Json.toJson(decorator)
+    }
 
-  "adds the secret token to the download_url" in new Context {
-    json \ "download_url" ==== JsString("https://api.soundcloud.com/tracks/1324/download?secret_token=bl3rkbi3")
-  }
+    "correctly encodes it into the URI" in new BadlyFormedSecretTokenContext {
+      json \ "uri" ==== JsString("https://api.soundcloud.com/tracks/1324?secret_token=badgers%3Fformat%3Djson")
+    }
 
-  "adds the secret token to the permalink_url" in new Context {
-    json \ "permalink_url" ==== JsString("http://soundcloud.com/nirvana/plsty-remix/bl3rkbi3")
+    "correctly encodes it into the permalink_url" in new BadlyFormedSecretTokenContext {
+      json \ "permalink_url" ==== JsString("http://soundcloud.com/nirvana/plsty-remix/badgers%3Fformat%3Djson")
+    }
   }
 }
 
