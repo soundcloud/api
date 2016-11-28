@@ -223,14 +223,10 @@ object TrackRepresentationQuotaDecorator {
     }
     val downloadableJson = Json.obj("downloadable" -> downloadable)
 
-    val downloadsRemaining = (dec.downloadable, dec.downloadsPerTrack) match {
-      case (true, Some(quota)) => quota - dec.downloadCount
-      case _ => 0
+    val downloadsRemainingJson = dec.downloadsPerTrack.map(_ - dec.downloadCount) match {
+      case Some(remaining) if dec.userIsOwner => Json.obj("downloads_remaining" -> remaining)
+      case _ => Json.obj()
     }
-    val downloadsRemainingJson = if(downloadsRemaining > 0 && dec.userIsOwner)
-      Json.obj("downloads_remaining" -> downloadsRemaining)
-    else
-      Json.obj()
 
     Json.toJson(dec.wrapped).as[JsObject] ++ downloadableJson ++ downloadsRemainingJson
   }

@@ -585,7 +585,6 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
   "downloads_remaining" >> {
 
     "when the requesting user is not the owner of the track" >> {
-
       "it is not shown" in new Context {
         val track = trackmetadataTrack(isDownloadable = true)
         setUpMocksForExistingTrack(track, session)
@@ -598,8 +597,7 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
     }
 
     "when the requesting user is the owner of the track" >> {
-
-      "is shown when track is downloadable, and below quota" in new Context {
+      "is shown when track is below quota" in new Context {
         val track = trackmetadataTrack(isDownloadable = true, user = session.getUser)
         setUpMocksForExistingTrack(track, session)
         userQuotaClient.downloadsPerTrack(session, Set(track.user_urn)) returns Future.value(Map(track.user_urn -> Some(100)))
@@ -610,7 +608,7 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
         json \ "downloads_remaining" ==== JsNumber(10)
       }
 
-      "it not shown when track is downloadable, but the track's user has no quota (eg. is unlimited)" in new Context {
+      "it not shown when the track's user has no quota (eg. is unlimited)" in new Context {
         val track = trackmetadataTrack(isDownloadable = true, user = session.getUser)
         setUpMocksForExistingTrack(track, session)
         userQuotaClient.downloadsPerTrack(session, Set(track.user_urn)) returns Future.value(Map(track.user_urn -> None))
@@ -620,24 +618,26 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
         Json.fromResponse(response).as[JsObject].keys.contains("downloads_remaining") ==== false
       }
 
-      "is not shown when no downloads remain" in new Context {
+      "is shown when no downloads remain" in new Context {
         val track = trackmetadataTrack(isDownloadable = true, user = session.getUser)
         setUpMocksForExistingTrack(track, session)
         userQuotaClient.downloadsPerTrack(session, Set(track.user_urn)) returns Future.value(Map(track.user_urn -> Some(100)))
         stitchClient.countsForTrack(session, trackUrn, track.user_urn) returns Future.value(StitchCounts(0, 100, 0, 0))
 
         val response = Await.result(tracksService.track(session, trackUrn, None, None))
-        Json.fromResponse(response).as[JsObject].keys.contains("downloads_remaining") ==== false
+        val json = Json.fromResponse(response)
+        json \ "downloads_remaining" ==== JsNumber(0)
       }
 
-      "is not shown when track is not downloadable" in new Context {
+      "is shown even if track is not downloadable" in new Context {
         val track = trackmetadataTrack(isDownloadable = false, user = session.getUser)
         setUpMocksForExistingTrack(track, session)
         userQuotaClient.downloadsPerTrack(session, Set(track.user_urn)) returns Future.value(Map(track.user_urn -> Some(100)))
         stitchClient.countsForTrack(session, trackUrn, track.user_urn) returns Future.value(StitchCounts(0, 90, 0, 0))
 
         val response = Await.result(tracksService.track(session, trackUrn, None, None))
-        Json.fromResponse(response).as[JsObject].keys.contains("downloads_remaining") ==== false
+        val json = Json.fromResponse(response)
+        json \ "downloads_remaining" ==== JsNumber(10)
       }
     }
   }
