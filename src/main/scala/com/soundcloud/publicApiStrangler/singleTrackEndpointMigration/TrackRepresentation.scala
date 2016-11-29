@@ -1,6 +1,8 @@
 package com.soundcloud.publicApiStrangler.singleTrackEndpointMigration
 
-import com.soundcloud.jvmkit.{Country, Urn, UserSession}
+import java.net.URLEncoder
+
+import com.soundcloud.jvmkit.{Country, Urn}
 import com.soundcloud.publicApiStrangler.client.mediaservice.WaveformUrl
 import com.soundcloud.publicApiStrangler.client.{DomainLocking, TrackAudioMetadata}
 import com.soundcloud.publicApiStrangler.client.pubmese.Isrc
@@ -191,16 +193,25 @@ case class TrackRepresentationSecretTokenUriParamDecorator(
 object TrackRepresentationSecretTokenUriParamDecorator {
   implicit val writes = Writes[TrackRepresentationSecretTokenUriParamDecorator] { dec =>
     val json = Json.toJson(dec.wrapped).as[JsObject]
-    json ++
-      valueFor(json, "uri", (uri) => { s"$uri?secret_token=${dec.secretParam}" }) ++
-      valueFor(json, "stream_url", (uri) => { s"$uri?secret_token=${dec.secretParam}" }) ++
-      valueFor(json, "download_url", (uri) => { s"$uri?secret_token=${dec.secretParam}" }) ++
-      valueFor(json, "permalink_url", (uri) => { s"$uri/${dec.secretParam}" })
+
+    json ++ addSecretToFieldAsParam("uri", json, dec) ++
+      addSecretToFieldAsParam("stream_url", json, dec) ++
+      addSecretToFieldAsParam("download_url", json, dec) ++
+      addSecretToFieldAsPath("permalink_url", json, dec)
   }
 
-  private def valueFor(json: JsObject, param: String, transform: (String) => String): JsObject = {
-    (json \ param).asOpt[String] match {
-      case Some(value) => Json.obj(param -> JsString(transform(value)))
+  private def addSecretToFieldAsParam(fieldName: String, json: JsObject, dec: TrackRepresentationSecretTokenUriParamDecorator): JsObject = {
+    val secret = URLEncoder.encode(dec.secretParam, "UTF-8")
+    (json \ fieldName).asOpt[String] match {
+      case Some(value) => Json.obj(fieldName -> s"$value?secret_token=$secret")
+      case None => Json.obj()
+    }
+  }
+
+  private def addSecretToFieldAsPath(fieldName: String, json: JsObject, dec: TrackRepresentationSecretTokenUriParamDecorator): JsObject = {
+    val secret = URLEncoder.encode(dec.secretParam, "UTF-8")
+    (json \ fieldName).asOpt[String] match {
+      case Some(value) => Json.obj(fieldName -> s"$value/$secret")
       case None => Json.obj()
     }
   }
