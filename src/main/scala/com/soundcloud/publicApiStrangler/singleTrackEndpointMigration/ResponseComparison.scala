@@ -119,6 +119,7 @@ class ResponseComparison(telemetry: Telemetry) {
   }
 
   private def reportStatusDifference(request: Request, legacyRes: Response, migrationRes: Response): Unit = {
+    logger.info(s"status code difference (legacy = ${legacyRes.statusCode}, migration = ${migrationRes.statusCode}) for ${request.method} ${request.path}")
     statusCodeDifferenceCounter.labels(legacyRes.statusCode.toString, migrationRes.statusCode.toString).inc()
   }
 
