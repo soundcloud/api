@@ -8,7 +8,6 @@ import com.twitter.util.{Await, NonFatal}
 import io.prometheus.client.CollectorRegistry
 
 class ResponseComparisonSpec extends UnitSpecification {
-
   trait Context extends Scope {
     val config = new InMemoryConfig
     val collectorRegistry = new CollectorRegistry
@@ -128,6 +127,19 @@ class ResponseComparisonSpec extends UnitSpecification {
         "attribute_value_different",
         Array("attribute", "system"),
         Array("genre", "TEST-APP")
+      )
+      value must beNull
+    }
+
+    "ignores target attribute in description anchor tags" in new Context {
+      val legacyRes = generateResponse("""{"kind": "track", "id": 4, "description": "<a href=\"https://theartistunion.com/tracks/9a2f32\" rel=\"nofollow\">"}""")
+      val migrationRes = generateResponse("""{"kind": "track", "id": 4, "description": "<a href=\"https://theartistunion.com/tracks/9a2f32\" rel=\"nofollow\" target=\"_blank\">"}""")
+
+      responseComparison.report(Request(), legacyRes, migrationRes)
+      val value = collectorRegistry.getSampleValue(
+        "attribute_value_different",
+        Array("attribute", "system"),
+        Array("description", "TEST-APP")
       )
       value must beNull
     }
