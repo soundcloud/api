@@ -145,6 +145,45 @@ class ResponseComparisonSpec extends UnitSpecification {
       value must beNull
     }
 
+    "ignores /preferFlash=false&useHTML5Audio=true in permalink_url" in new Context {
+      val legacyRes = generateResponse("""{"kind": "track", "id": 4, "permalink_url": "https://example.com/123/preferFlash=false&useHTML5Audio=true"}""")
+      val migrationRes = generateResponse("""{"kind": "track", "id": 4, "permalink_url": "https://example.com/123"}""")
+
+      responseComparison.report(Request(), legacyRes, migrationRes)
+      val value = collectorRegistry.getSampleValue(
+        "attribute_value_different",
+        Array("attribute", "system"),
+        Array("permalink_url", "TEST-APP")
+      )
+      value must beNull
+    }
+
+    "ignores /preferFlash=false&useHTML5Audio=true in uri" in new Context {
+      val legacyRes = generateResponse("""{"kind": "track", "id": 4, "uri": "https://example.com/123/preferFlash=false&useHTML5Audio=true"}""")
+      val migrationRes = generateResponse("""{"kind": "track", "id": 4, "uri": "https://example.com/123"}""")
+
+      responseComparison.report(Request(), legacyRes, migrationRes)
+      val value = collectorRegistry.getSampleValue(
+        "attribute_value_different",
+        Array("attribute", "system"),
+        Array("uri", "TEST-APP")
+      )
+      value must beNull
+    }
+
+    "ignores /preferFlash=false&useHTML5Audio=true in stream_url" in new Context {
+      val legacyRes = generateResponse("""{"kind": "track", "id": 4, "stream_url": "https://example.com/123/preferFlash=false&useHTML5Audio=true"}""")
+      val migrationRes = generateResponse("""{"kind": "track", "id": 4, "stream_url": "https://example.com/123"}""")
+
+      responseComparison.report(Request(), legacyRes, migrationRes)
+      val value = collectorRegistry.getSampleValue(
+        "attribute_value_different",
+        Array("attribute", "system"),
+        Array("stream_url", "TEST-APP")
+      )
+      value must beNull
+    }
+
     "records permalink_url differences" in new Context {
       val legacyRes = generateResponse("""{"kind": "track", "id": 4, "permalink_url": "http://example.com/456"}""")
       val migrationRes = generateResponse("""{"kind": "track", "id": 4, "permalink_url": "https://example.com/123"}""")
