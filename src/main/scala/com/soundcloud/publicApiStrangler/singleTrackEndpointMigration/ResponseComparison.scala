@@ -166,12 +166,8 @@ class ResponseComparison(telemetry: Telemetry) {
             // The ISRC is now obtained from Pubmese rather than Mothership. Pubmese is the authoritative
             // source for ISRCs.
             false
-          case "permalink_url" =>
-            // The legacy response serves permalink URLs with http://, while the migrated response serves
-            // them with https:// instead.
-            val legacyString = legacyValue.as[JsString].value
-            val migrationString = migrationValue.as[JsString].value
-            legacyString.replaceFirst("^http://", "https://") != migrationString
+          case "permalink_url", "uri", "stream_url" =>
+            isUrlDifferent(legacyValue, migrationValue)
           case "tag_list" =>
             isTagListDifferent(legacyValue, migrationValue)
           case "available_country_codes" =>
@@ -185,6 +181,16 @@ class ResponseComparison(telemetry: Telemetry) {
         isDifferent
       }
     }
+  }
+
+  private def isUrlDifferent(legacyValue: JsValue, migrationValue: JsValue): Boolean = {
+    // The legacy response serves permalink URLs with http://, while the migrated response serves
+    // them with https:// instead.
+
+    val legacyString = legacyValue.as[JsString].value
+    val migrationString = migrationValue.as[JsString].value
+
+    legacyString.replaceFirst("^http://", "https://") != migrationString
   }
 
   private def isTagListDifferent(legacyValue: JsValue, migrationValue: JsValue): Boolean = {
