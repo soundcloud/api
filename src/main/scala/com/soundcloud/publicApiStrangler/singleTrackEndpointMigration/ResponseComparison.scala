@@ -176,11 +176,11 @@ class ResponseComparison(telemetry: Telemetry) {
             isTagListDifferent(legacyValue, migrationValue)
           case "available_country_codes" =>
             areAvailableCountryCodesDifferent(legacyValue, migrationValue)
-          case "description" =>
+          case "description" | "genre"  | "purchase_title"  =>
             val legacyString = legacyValue.as[JsString].value
             val migrationString = migrationValue.as[JsString].value
             legacyString.replace(" target=\"_blank\"", "") != migrationString.replace(" target=\"_blank\"", "")
-          case "genre" | "label_name"| "purchase_title"| "track_type"| "release" | "key_signature" =>
+          case "label_name" | "track_type"| "release" | "key_signature" =>
             legacyValue.as[JsString].value != migrationValue.as[JsString].value
           case _ =>
             legacyValue != migrationValue
