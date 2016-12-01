@@ -13,8 +13,8 @@ import scala.collection.JavaConversions._
 class SingleTrackController(userAuthentication: UserAuthentication,
                             mothershipDispatcher: DispatchToMothershipHandler,
                             tracksService: TrackRepresentationsService,
-                            responseComparison: ResponseComparison,
-                            telemetry: Telemetry)
+                            telemetry: Telemetry,
+                            shouldRespondWithTrackMetadata: () => Future[Boolean])
   extends BffInjectionBasedController {
 
   private val numericRegexp = """\d+""".r
@@ -37,15 +37,11 @@ class SingleTrackController(userAuthentication: UserAuthentication,
           case Return(urn@Urn(_, _, numericRegexp())) => {
             val secretToken = req.params.get("secret_token")
 
-            Future.join(legacyResponse(req), migrationResponse(session, urn, secretToken, callback)) map {
-              case (legacyResponseResult, Return(migrationResponseResult)) =>
-                responseComparison.report(req, legacyResponseResult, migrationResponseResult)
-                toResponseBuilder(legacyResponseResult)
-              case (legacyResponseResult, _) =>
-                toResponseBuilder(legacyResponseResult)
+            shouldRespondWithTrackMetadata().flatMap {
+              case true => migrationResponse(session, urn, secretToken, callback)
+              case false => legacyResponse(req)
             }
           }
-
           case _ =>
             generateNotFound(callback)
         }
@@ -63,11 +59,17 @@ class SingleTrackController(userAuthentication: UserAuthentication,
     Future.value(toResponseBuilder(res))
   }
 
-  private def legacyResponse(req: Request): Future[Response] =
-    mothershipDispatcher.dispatchToMothership(req)
+  private def legacyResponse(req: Request): Future[ResponseBuilder] =
+    mothershipDispatcher.dispatchToMothership(req).liftToTry.map {
+      case Return(response) => toResponseBuilder(response)
+      case _ => new ResponseBuilder().status(Status.InternalServerError.code)
+    }
 
-  private def migrationResponse(session: UserSession, urn: Urn, secret: Option[String], callback: Option[String]): Future[Try[Response]] = {
-    tracksService.track(session, urn, secret, callback).liftToTry
+  private def migrationResponse(session: UserSession, urn: Urn, secret: Option[String], callback: Option[String]): Future[ResponseBuilder] = {
+    tracksService.track(session, urn, secret, callback).liftToTry.map {
+      case Return(response) => toResponseBuilder(response)
+      case _ => new ResponseBuilder().status(Status.InternalServerError.code)
+    }
   }
 
   private def toResponseBuilder(response: Response): ResponseBuilder = {

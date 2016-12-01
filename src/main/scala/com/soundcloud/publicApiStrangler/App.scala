@@ -28,7 +28,7 @@ import com.soundcloud.publicApiStrangler.mapper.timeline.{EntityMapper, EntitySu
 import com.soundcloud.publicApiStrangler.mapper.trackstreams.{TrackStreamJsonResponseMapper, TrackStreamRedirectResponseMapper}
 import com.soundcloud.publicApiStrangler.mapper.waveform.WaveformMapper
 import com.soundcloud.publicApiStrangler.singleTrackEndpointMigration.trackmetadataclient.TrackmetadataClient
-import com.soundcloud.publicApiStrangler.singleTrackEndpointMigration.{ResponseComparison, SingleTrackController, TrackRepresentationsService}
+import com.soundcloud.publicApiStrangler.singleTrackEndpointMigration.{SingleTrackController, TrackRepresentationsService}
 import com.soundcloud.publicApiStrangler.support._
 import com.soundcloud.ratelimiting.facade._
 import com.soundcloud.scalakit.cache.MemcachedClient
@@ -224,8 +224,8 @@ object App
       userAuthentication,
       mothershipDispatcher,
       tracksService,
-      new ResponseComparison(telemetry),
-      telemetry
+      telemetry,
+      () => rolloutClient.isActive(BasicRolloutFeature("load_track_from_trackmetadata"))
     )
   }
 
