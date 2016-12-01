@@ -152,7 +152,7 @@ class SingleTrackControllerSpec extends InjectionBasedControllerSpecification {
   validPaths.foreach {
     path =>
       s"When loading tracks from public-api for: $path" >> {
-        trait FromTrackMetadata extends Context with Before {
+        trait FromPublicApi extends Context with Before {
           override def shouldRespondWithTrackMetadata = false
 
           val defaultJsonResponse = """{"pass-through":"for sure"}"""
@@ -171,7 +171,7 @@ class SingleTrackControllerSpec extends InjectionBasedControllerSpecification {
           }
         }
 
-        "it passes 200 through with the json" in new FromTrackMetadata {
+        "it passes 200 through with the json" in new FromPublicApi {
           override def publicApiResponse = Future.value(newResponse(200))
 
           val response = get(controller(session), path)
@@ -179,7 +179,7 @@ class SingleTrackControllerSpec extends InjectionBasedControllerSpecification {
           response.body ==== defaultJsonResponse
         }
 
-        "it passes 404 through with the json" in new FromTrackMetadata {
+        "it passes 404 through with the json" in new FromPublicApi {
           override def publicApiResponse = Future.value(newResponse(404))
 
           val response = get(controller(session), path)
@@ -187,7 +187,7 @@ class SingleTrackControllerSpec extends InjectionBasedControllerSpecification {
           response.body ==== defaultJsonResponse
         }
 
-        "it passes 500 through with the json" in new FromTrackMetadata {
+        "it passes 500 through with the json" in new FromPublicApi {
           override def publicApiResponse = Future.value(newResponse(500))
 
           val response = get(controller(session), path)
@@ -195,7 +195,7 @@ class SingleTrackControllerSpec extends InjectionBasedControllerSpecification {
           response.body ==== defaultJsonResponse
         }
 
-        "it returns 500 when there are exceptions" in new FromTrackMetadata {
+        "it returns 500 when there are exceptions" in new FromPublicApi {
           override def publicApiResponse = Future.exception(new RuntimeException("BAD THINGS"))
 
           val response = get(controller(session), path)
