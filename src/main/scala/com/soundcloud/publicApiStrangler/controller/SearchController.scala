@@ -11,6 +11,7 @@ import com.soundcloud.publicApiStrangler.mapper.search.SearchMapper
 import com.soundcloud.publicApiStrangler.mapping.search.SearchDispatcherRequest
 import com.soundcloud.publicApiStrangler.support.DispatchToMothershipHandler
 import com.soundcloud.scalakit.finagle.http.BadRequestStatus
+import com.soundcloud.service.client.LieblingClient
 import com.twitter.finagle.http.ParamMap
 import com.twitter.util.{Future, Return, Try}
 /**
@@ -21,7 +22,8 @@ class SearchController(val userAuthentication: UserAuthentication,
                        val mothershipCounter: Counter,
                        val followCountsClient: FollowCountsClient,
                        val searchMapper: SearchMapper,
-                       val baseUrl: String)
+                       val baseUrl: String,
+                       val lieblingClient: LieblingClient)
   extends BffInjectionBasedController with FollowCountsHelper {
 
   get("/tracks")(dispatchTrackRequest)

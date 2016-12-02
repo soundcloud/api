@@ -276,7 +276,8 @@ object App
       mothershipCounter,
       followCountsClient,
       searchMapper,
-      baseUrl
+      baseUrl,
+      lieblingClient
     )
   }
 
@@ -292,13 +293,15 @@ object App
   private val likesController = new LikesController(
     userAuthentication,
     mothershipDispatcher,
-    followCountsClient
+    followCountsClient,
+    lieblingClient
   )
 
   private val friendsController = new FriendsController(
     userAuthentication,
     mothershipDispatcher,
-    followCountsClient
+    followCountsClient,
+    lieblingClient
   )
 
   private val groupsController = new GroupsController(
@@ -308,19 +311,22 @@ object App
   private val suggestedUsersController = new SuggestedUsersController(
     userAuthentication,
     mothershipDispatcher,
-    followCountsClient
+    followCountsClient,
+    lieblingClient
   )
 
   private val repostersController = new RepostersController(
     userAuthentication,
     mothershipDispatcher,
-    followCountsClient
+    followCountsClient,
+    lieblingClient
   )
 
   private val userController = new UsersController(
     userAuthentication,
     mothershipDispatcher,
-    followCountsClient
+    followCountsClient,
+    lieblingClient
   )
 
   private val playlistsController = new PlaylistsController(

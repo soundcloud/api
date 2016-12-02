@@ -5,8 +5,8 @@
     "description": "Musician & Founder/CTO SoundCloud",
     "discogs_name": null,
     "first_name": "Eric",
-    "followers_count": 122684,
-    "followings_count": 1300,
+    "followers_count": 0,
+    "followings_count": 0,
     "full_name": "Eric Wahlforss",
     "id": 183,
     "kind": "user",
@@ -17,7 +17,7 @@
     "permalink_url": "http://soundcloud.com/forss",
     "plan": "Pro Plus",
     "playlist_count": 4,
-    "public_favorites_count": 321,
+    "public_favorites_count": 0,
     "subscriptions": [
         {
             "product": {

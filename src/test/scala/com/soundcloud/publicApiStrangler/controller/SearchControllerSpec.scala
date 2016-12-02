@@ -14,6 +14,7 @@ import com.soundcloud.publicApiStrangler.mapping.search.{Search, SearchDispatche
 import com.soundcloud.publicApiStrangler.support.DispatchToMothershipHandler
 import com.soundcloud.scalakit.finagle.http.{BadRequestStatus, HandlerRequest}
 import com.soundcloud.scalakit.test.VerifiedMocks
+import com.soundcloud.service.client.LieblingClient
 import com.twitter.util.Future
 import io.prometheus.client.CollectorRegistry
 import org.jboss.netty.handler.codec.http.HttpResponseStatus
@@ -26,6 +27,7 @@ class SearchControllerSpec extends InjectionBasedControllerSpecification {
     val fallbackCounter = new Telemetry(new InMemoryConfig, new CollectorRegistry).counter("foo", "bar", "path")
     val searchMapperMock = mock[SearchMapper]
     val followCountsClientMock = mock[FollowCountsClient]
+    val lieblingClientMock = mock[LieblingClient]
 
     val controller = new SearchController(
       fakeUserAuthentication(anonymousSession),
@@ -33,7 +35,8 @@ class SearchControllerSpec extends InjectionBasedControllerSpecification {
       fallbackCounter,
       followCountsClientMock,
       searchMapperMock,
-      "http://api.soundcloud.com"
+      "http://api.soundcloud.com",
+      lieblingClientMock
     )
 
     // just so we can distinguish a forwarded request. Typically, this would be 200.

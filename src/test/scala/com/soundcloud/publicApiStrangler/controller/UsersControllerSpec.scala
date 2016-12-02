@@ -4,6 +4,7 @@ import com.soundcloud.bff.finagle.ResponseBuilder
 import com.soundcloud.bff.test.InjectionBasedControllerSpecification
 import com.soundcloud.publicApiStrangler.client.followcounts.FollowCountsClient
 import com.soundcloud.publicApiStrangler.support.DispatchToMothershipHandler
+import com.soundcloud.service.client.LieblingClient
 import com.twitter.finagle.http.{Request, Status}
 import com.twitter.util.Future
 import org.mockito.Mockito.when
@@ -14,7 +15,8 @@ class UsersControllerSpec extends InjectionBasedControllerSpecification {
     val userAuthentication = fakeUserAuthentication(anonymousSession)
     val mothershipDispatcher = mock[DispatchToMothershipHandler]
     val followCountsClient = mock[FollowCountsClient]
-    val controller = new UsersController(userAuthentication, mothershipDispatcher, followCountsClient)
+    val lieblingClient = mock[LieblingClient]
+    val controller = new UsersController(userAuthentication, mothershipDispatcher, followCountsClient, lieblingClient)
 
     val success = Future.value(new ResponseBuilder().status(200).build)
     when(mothershipDispatcher.defaultHandling(any)).thenReturn(success)

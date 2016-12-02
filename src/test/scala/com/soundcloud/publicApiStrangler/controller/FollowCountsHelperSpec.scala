@@ -9,6 +9,8 @@ import com.soundcloud.publicApiStrangler.support.DispatchToMothershipHandler
 import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures
 import com.soundcloud.scalakit.finagle.http.HandlerRequest
 import com.soundcloud.scalakit.test.VerifiedMocks
+import com.soundcloud.service.client.LieblingClient
+import com.soundcloud.service.response.representation.liebling.LikesCount
 import com.twitter.finagle.http.{Request => FinagleRequest}
 import com.twitter.util.{Await, Future}
 import play.api.libs.json.{JsArray, JsNull, JsValue, Json}
@@ -19,6 +21,7 @@ class FollowCountsHelperSpec  extends UnitSpecification with Fixtures {
     val session = mock[UserSession]
     val userAuthenticationMock = new FakeUserAuthentication(session)
     val followCountsClientMock = mock[FollowCountsClient]
+    val lieblingClientMock = mock[LieblingClient]
     val mothershipDispatcherMock = mock[DispatchToMothershipHandler]
     val request = new Request(mock[FinagleRequest])
 
@@ -26,13 +29,12 @@ class FollowCountsHelperSpec  extends UnitSpecification with Fixtures {
       override def userAuthentication = userAuthenticationMock
       override def followCountsClient = followCountsClientMock
       override def mothershipDispatcher = mothershipDispatcherMock
+      override def lieblingClient = lieblingClientMock
     }
 
     val user1 = new Urn("soundcloud", "users", "183")
     val user2 = new Urn("soundcloud", "users", "1111")
     val user3 = new Urn("soundcloud", "users", "2222")
-
-    def followCountsFlag: Boolean
 
     def responseStatus: Int = 200
 
@@ -41,30 +43,22 @@ class FollowCountsHelperSpec  extends UnitSpecification with Fixtures {
     def responseBuilder = new ResponseBuilder()
       .status(responseStatus)
       .body(responseBody.toString())
-  }
-
-  trait FollowCountsOffContext extends Context {
-    def followCountsFlag: Boolean = false
-
-    override def before = {
-      when(mothershipDispatcherMock.dispatch(request)) thenReturn responseBuilder.toFuture
-    }
-  }
-
-  trait FollowCountsOnContext extends Context {
-    override def followCountsFlag = true
 
     def userUrns: Seq[Urn] = Seq.empty
     def followCountsSeq: Seq[FollowCounts] = Seq.empty
+    def likeCountsList: List[LikesCount] = List.empty
+
+    def responseContent = Json.parse(Await.result(helper.dispatchToMothershipWithFollowCounts(request)).build.getContentString())
 
     override def before = {
       when(mothershipDispatcherMock.defaultHandling(any[HandlerRequest])) thenReturn Future.value(responseBuilder.build)
       when(followCountsClientMock.counts(session, userUrns)) thenReturn Future.value(followCountsSeq)
+      when(lieblingClientMock.likeCounts(session, userUrns)) thenReturn Future.value(likeCountsList)
     }
   }
 
   "follow counts" >> {
-    "with a non-JSON response" in new FollowCountsOnContext {
+    "with a non-JSON response" in new Context {
       override def responseBody = JsNull
 
       override def responseBuilder = new ResponseBuilder()
@@ -74,70 +68,102 @@ class FollowCountsHelperSpec  extends UnitSpecification with Fixtures {
       Await.result(helper.dispatchToMothershipWithFollowCounts(request)).build.getContentString() ==== "No a JSON response"
     }
 
-    "with a non-OK status code" in new FollowCountsOnContext {
+    "with a non-OK status code" in new Context {
       override def responseStatus = 500
 
       override def responseBody = user
 
-      Await.result(helper.dispatchToMothershipWithFollowCounts(request)).build.getContentString() ==== responseBody.toString()
+      responseContent ==== responseBody
     }
 
     "with an OK status code" >> {
       "with no follow counts from client" >> {
-        "with single object" in new FollowCountsOnContext {
+        "with single object" in new Context {
           override def responseBody = user
 
           override def userUrns = Seq(user1)
-
-          Await.result(helper.dispatchToMothershipWithFollowCounts(request)).build.getContentString() ==== responseBody.toString()
+          responseContent ==== responseBody
         }
 
-        "with users in the top level" in new FollowCountsOnContext {
+        "with users in the top level" in new Context {
           override def responseBody = users
 
           override def userUrns = Seq(user2, user3)
 
-          Await.result(helper.dispatchToMothershipWithFollowCounts(request)).build.getContentString() ==== responseBody.toString()
+          responseContent ==== responseBody
         }
 
-        "with users in a collection" in new FollowCountsOnContext {
+        "with users in a collection" in new Context {
           override def responseBody = usersInCollection
 
           override def userUrns = Seq(user2, user3)
 
-          Await.result(helper.dispatchToMothershipWithFollowCounts(request)).build.getContentString() ==== responseBody.toString()
+          responseContent ==== responseBody
         }
-        
-        "with objects containing a user" in new FollowCountsOnContext {
+
+        "with objects containing a user" in new Context {
           override def responseBody = objectsWithUsers
 
           override def userUrns = Seq(user2, user3)
 
-          Await.result(helper.dispatchToMothershipWithFollowCounts(request)).build.getContentString() ==== responseBody.toString()
-        } 
+          responseContent ==== responseBody
+        }
+      }
+
+      "with no like counts from client" >> {
+        "with single object" in new Context {
+          override def responseBody = user
+
+          override def userUrns = Seq(user1)
+          responseContent ==== responseBody
+        }
+
+        "with users in the top level" in new Context {
+          override def responseBody = users
+
+          override def userUrns = Seq(user2, user3)
+
+          responseContent ==== responseBody
+        }
+
+        "with users in a collection" in new Context {
+          override def responseBody = usersInCollection
+
+          override def userUrns = Seq(user2, user3)
+
+          responseContent ==== responseBody
+        }
+
+        "with objects containing a user" in new Context {
+          override def responseBody = objectsWithUsers
+
+          override def userUrns = Seq(user2, user3)
+
+          responseContent ==== responseBody
+        }
       }
 
       "with follow counts from client" >> {
-        "with single object" in new FollowCountsOnContext {
+        "with single object" in new Context {
           override def responseBody = user
 
           override def userUrns = Seq(user1)
 
           override def followCountsSeq = Seq(FollowCounts(user1, 100, 200))
 
-          val result = Json.parse(Await.result(helper.dispatchToMothershipWithFollowCounts(request)).build.getContentString())
+          val result = responseContent
           (result \ "followers_count").as[Long] ==== 100
           (result \ "followings_count").as[Long] ==== 200
         }
 
-        "with users in the top level" in new FollowCountsOnContext {
+        "with users in the top level" in new Context {
           override def responseBody = users
 
           override def userUrns = Seq(user2, user3)
 
           override def followCountsSeq = Seq(FollowCounts(user2, 100, 200), FollowCounts(user3, 300, 400))
 
-          val result = Json.parse(Await.result(helper.dispatchToMothershipWithFollowCounts(request)).build.getContentString())
+          val result = responseContent
           val values = result.as[JsArray].value
 
           values.size ==== 2
@@ -149,14 +175,14 @@ class FollowCountsHelperSpec  extends UnitSpecification with Fixtures {
           (values.last \ "followings_count").as[Long] ==== 400
         }
 
-        "with users in a collection" in new FollowCountsOnContext {
+        "with users in a collection" in new Context {
           override def responseBody = usersInCollection
 
           override def userUrns = Seq(user2, user3)
 
           override def followCountsSeq = Seq(FollowCounts(user2, 100, 200), FollowCounts(user3, 300, 400))
 
-          val result = Json.parse(Await.result(helper.dispatchToMothershipWithFollowCounts(request)).build.getContentString())
+          val result = responseContent
           val values = (result \ "collection").as[JsArray].value
 
           values.size ==== 2
@@ -168,14 +194,14 @@ class FollowCountsHelperSpec  extends UnitSpecification with Fixtures {
           (values.last \ "followings_count").as[Long] ==== 400
         }
 
-        "with objects containing a user" in new FollowCountsOnContext {
+        "with objects containing a user" in new Context {
           override def responseBody = objectsWithUsers
 
           override def userUrns = Seq(user2, user3)
 
           override def followCountsSeq = Seq(FollowCounts(user2, 100, 200), FollowCounts(user3, 300, 400))
 
-          val result = Json.parse(Await.result(helper.dispatchToMothershipWithFollowCounts(request)).build.getContentString())
+          val result = responseContent
           val values = result.as[JsArray].value
 
           values.size ==== 2
@@ -185,6 +211,66 @@ class FollowCountsHelperSpec  extends UnitSpecification with Fixtures {
 
           (values.last \ "user" \ "followers_count").as[Long] ==== 300
           (values.last \ "user" \ "followings_count").as[Long] ==== 400
+        }
+      }
+
+      "with like counts from client" >> {
+        "with single object" in new Context {
+          override def responseBody = user
+
+          override def userUrns = Seq(user1)
+
+          override def likeCountsList = List(LikesCount(user1, 100))
+
+          (responseContent \ "public_favorites_count").as[Long] ==== 100
+        }
+
+        "with users in the top level" in new Context {
+          override def responseBody = users
+
+          override def userUrns = Seq(user2, user3)
+
+          override def likeCountsList = List(LikesCount(user2, 100), LikesCount(user3, 300))
+
+          val result = responseContent
+          val values = result.as[JsArray].value
+
+          values.size ==== 2
+
+          (values.head \ "public_favorites_count").as[Long] ==== 100
+          (values.last \ "public_favorites_count").as[Long] ==== 300
+        }
+
+        "with users in a collection" in new Context {
+          override def responseBody = usersInCollection
+
+          override def userUrns = Seq(user2, user3)
+
+          override def likeCountsList = List(LikesCount(user2, 100), LikesCount(user3, 300))
+
+          val result = Json.parse(Await.result(helper.dispatchToMothershipWithFollowCounts(request)).build.getContentString())
+          val values = (result \ "collection").as[JsArray].value
+
+          values.size ==== 2
+
+          (values.head \ "public_favorites_count").as[Long] ==== 100
+          (values.last \ "public_favorites_count").as[Long] ==== 300
+        }
+
+        "with objects containing a user" in new Context {
+          override def responseBody = objectsWithUsers
+
+          override def userUrns = Seq(user2, user3)
+
+          override def likeCountsList = List(LikesCount(user2, 100), LikesCount(user3, 300))
+
+          val result = Json.parse(Await.result(helper.dispatchToMothershipWithFollowCounts(request)).build.getContentString())
+          val values = result.as[JsArray].value
+
+          values.size ==== 2
+
+          (values.head \ "user" \ "public_favorites_count").as[Long] ==== 100
+          (values.last \ "user" \ "public_favorites_count").as[Long] ==== 300
         }
       }
     }
