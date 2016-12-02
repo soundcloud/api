@@ -11,7 +11,7 @@ class SuggestedUsersController(val userAuthentication: UserAuthentication,
                                val mothershipDispatcher: DispatchToMothershipHandler,
                                val followCountsClient: FollowCountsClient,
                                val lieblingClient: LieblingClient)
-  extends BffInjectionBasedController with FollowCountsHelper {
+  extends BffInjectionBasedController with CountsHelper {
 
   get("/me/suggested/users/:category")(dispatchToMothershipWithFollowCounts)
   get("/me/suggested/users/:category.json")(dispatchToMothershipWithFollowCounts)

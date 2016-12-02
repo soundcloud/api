@@ -11,7 +11,7 @@ class RepostersController(val userAuthentication: UserAuthentication,
                           val mothershipDispatcher: DispatchToMothershipHandler,
                           val followCountsClient: FollowCountsClient,
                           val lieblingClient: LieblingClient)
-  extends BffInjectionBasedController with FollowCountsHelper {
+  extends BffInjectionBasedController with CountsHelper {
 
   get("/e1/tracks/:id/reposters")(dispatchToMothershipWithFollowCounts)
   get("/e1/tracks/:id/reposters.json")(dispatchToMothershipWithFollowCounts)

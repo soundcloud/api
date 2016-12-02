@@ -25,7 +25,7 @@ class FollowCountsHelperSpec  extends UnitSpecification with Fixtures {
     val mothershipDispatcherMock = mock[DispatchToMothershipHandler]
     val request = new Request(mock[FinagleRequest])
 
-    val helper = new FollowCountsHelper {
+    val helper = new CountsHelper {
       override def userAuthentication = userAuthenticationMock
       override def followCountsClient = followCountsClientMock
       override def mothershipDispatcher = mothershipDispatcherMock

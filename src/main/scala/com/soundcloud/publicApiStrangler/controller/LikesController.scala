@@ -11,7 +11,7 @@ class LikesController(val userAuthentication: UserAuthentication,
                       val mothershipDispatcher: DispatchToMothershipHandler,
                       val followCountsClient: FollowCountsClient,
                       val lieblingClient: LieblingClient)
-  extends BffInjectionBasedController with FollowCountsHelper {
+  extends BffInjectionBasedController with CountsHelper {
 
   get("/tracks/:id/favoriters")(dispatchToMothershipWithFollowCounts)
   get("/tracks/:id/favoriters.json")(dispatchToMothershipWithFollowCounts)

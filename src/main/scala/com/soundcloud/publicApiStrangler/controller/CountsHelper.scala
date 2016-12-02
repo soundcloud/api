@@ -13,7 +13,7 @@ import com.twitter.util.{Future, Try}
 import play.api.libs.json.Json.JsValueWrapper
 import play.api.libs.json.{JsArray, JsObject, JsValue, Json}
 
-trait FollowCountsHelper {
+trait CountsHelper {
 
   def userAuthentication: UserAuthentication
   def mothershipDispatcher: DispatchToMothershipHandler

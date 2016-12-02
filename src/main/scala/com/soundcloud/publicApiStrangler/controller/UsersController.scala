@@ -11,7 +11,7 @@ class UsersController(val userAuthentication: UserAuthentication,
                       val mothershipDispatcher: DispatchToMothershipHandler,
                       val followCountsClient: FollowCountsClient,
                       val lieblingClient: LieblingClient)
-  extends BffInjectionBasedController with FollowCountsHelper {
+  extends BffInjectionBasedController with CountsHelper {
 
   get("/users/:id")(dispatchToMothershipWithFollowCounts)
   get("/users/:id/")(dispatchToMothershipWithFollowCounts)

@@ -24,7 +24,7 @@ class SearchController(val userAuthentication: UserAuthentication,
                        val searchMapper: SearchMapper,
                        val baseUrl: String,
                        val lieblingClient: LieblingClient)
-  extends BffInjectionBasedController with FollowCountsHelper {
+  extends BffInjectionBasedController with CountsHelper {
 
   get("/tracks")(dispatchTrackRequest)
   get("/tracks/")(dispatchTrackRequest)
