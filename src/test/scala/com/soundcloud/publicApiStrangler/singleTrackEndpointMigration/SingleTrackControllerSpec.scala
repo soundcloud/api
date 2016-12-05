@@ -1,22 +1,21 @@
 package com.soundcloud.publicApiStrangler.singleTrackEndpointMigration
 
 import com.soundcloud.bff.test.InjectionBasedControllerSpecification
-import com.soundcloud.jvmkit.{Urn, UserSession, UserSessionBuilder}
 import com.soundcloud.jvmkit.telemetry.Telemetry
 import com.soundcloud.jvmkit.test.InMemoryConfig
+import com.soundcloud.jvmkit.{Urn, UserSession, UserSessionBuilder}
 import com.soundcloud.publicApiStrangler.support.DispatchToMothershipHandler
-import com.soundcloud.scalakit.test.UnitSpecification
 import com.twitter.finagle.http.{Request, Response, Status}
 import com.twitter.util.Future
 import io.prometheus.client.CollectorRegistry
-import org.mockito.Mockito.{verify, when}
+import org.mockito.Mockito.when
+import org.specs2.mutable.Before
 
 class SingleTrackControllerSpec extends InjectionBasedControllerSpecification {
 
   trait Context extends Scope {
     val fallback = mock[DispatchToMothershipHandler]
     val tracksService = mock[TrackRepresentationsService]
-    val responseComparison = mock[ResponseComparison]
 
     val config = new InMemoryConfig
     val collectorRegistry = new CollectorRegistry
@@ -25,12 +24,14 @@ class SingleTrackControllerSpec extends InjectionBasedControllerSpecification {
     val session = new UserSessionBuilder().build()
     val trackUrn = new Urn("soundcloud:tracks:987")
 
+    def shouldRespondWithTrackMetadata = true
+
     def controller(session: UserSession) = new SingleTrackController(
       fakeUserAuthentication(session),
       fallback,
       tracksService,
-      responseComparison,
-      telemetry)
+      telemetry,
+      () => Future.value(shouldRespondWithTrackMetadata))
   }
 
   val validPaths = List("/tracks/987", "/tracks/987/", "/tracks/987.json", "/tracks/987.json/")
@@ -95,52 +96,108 @@ class SingleTrackControllerSpec extends InjectionBasedControllerSpecification {
 
   validPaths.foreach {
     path =>
-      val legacyResponseString = "{\"kind\":\"track\",\"id\":987,\"user_id\":111}"
-      val legacyResponse = Response()
-      legacyResponse.setContentString(legacyResponseString)
+      s"When loading tracks from trackmetadata for: $path" >> {
+        trait FromTrackMetadata extends Context {
+          override def shouldRespondWithTrackMetadata = true
 
-      val migrationResponseString = "{\"kind\":\"track\",\"id\":987,\"user_id\":112}"
-      val migrationResponse = Response()
-      migrationResponse.setContentString(migrationResponseString)
+          val defaultJsonResponse = """{"pass-through":"for sure"}"""
 
-      List(
-        legacyResponse -> migrationResponse,
-        legacyResponse -> Response(),
-        legacyResponse -> Response(Status.NotFound),
-        Response(Status.NotFound) -> migrationResponse
-      ).foreach {
-        case (legacyResponse, migrationResponse) =>
-          val testCaseTitle = s"compares responses where there is a numeric trackidentifier " +
-            s"for path: $path for responses ${legacyResponse.status}, ${migrationResponse.status}"
-          testCaseTitle in new Context {
-
-            when(fallback.dispatchToMothership(any[Request])).thenReturn(Future.value(legacyResponse))
-            when(tracksService.track(session, trackUrn, None, None)).thenReturn(Future.value(migrationResponse))
-
-            val response = get(controller(session), path)
-
-            verify(responseComparison).report(
-              any[Request],
-              like[Response] { case r =>
-                r.contentString ==== legacyResponse.contentString
-                r.status ==== legacyResponse.status
-              },
-              like[Response] {
-                case r =>
-                  r.contentString ==== migrationResponse.contentString
-                  r.status ==== migrationResponse.status
-              }
-            )
-            response.status ==== legacyResponse.status
+          def newResponse(code: Int) = {
+            val response = Response()
+            response.setContentString(defaultJsonResponse)
+            response.setStatusCode(code)
+            response
           }
+
+          def trackMetadataResponse: Future[Response]
+
+          when(tracksService.track(session, trackUrn, None, None)).thenReturn(trackMetadataResponse)
+        }
+
+        "it passes 200 through with the json" in new FromTrackMetadata {
+          override def trackMetadataResponse = Future.value(newResponse(200))
+
+          val response = get(controller(session), path)
+          response.status.code ==== 200
+          response.body ==== defaultJsonResponse
+        }
+
+        "it passes 404 through with the json" in new FromTrackMetadata {
+          override def trackMetadataResponse = Future.value(newResponse(404))
+
+          val response = get(controller(session), path)
+          response.status.code ==== 404
+          response.body ==== defaultJsonResponse
+        }
+
+        "it passes 500 through with the json" in new FromTrackMetadata {
+          override def trackMetadataResponse = Future.value(newResponse(500))
+
+          val response = get(controller(session), path)
+          response.status.code ==== 500
+          response.body ==== defaultJsonResponse
+        }
+
+        "it returns 500 when there are exceptions" in new FromTrackMetadata {
+          override def trackMetadataResponse = Future.exception(new RuntimeException("BAD THINGS"))
+
+          val response = get(controller(session), path)
+          response.status.code ==== 500
+        }
       }
   }
 
-  "Does not fail the request when the migration response fails" in new Context {
-    val ex = new RuntimeException("boom")
-    when(fallback.dispatchToMothership(any[Request])).thenReturn(Future.value(Response()))
-    when(tracksService.track(session, trackUrn, None, None)).thenReturn(Future.exception(ex))
-    val response = get(controller(session), "/tracks/987", Map.empty, Map.empty)
-    response.status ==== Status.Ok
+  validPaths.foreach {
+    path =>
+      s"When loading tracks from public-api for: $path" >> {
+        trait FromPublicApi extends Context {
+          override def shouldRespondWithTrackMetadata = false
+
+          val defaultJsonResponse = """{"pass-through":"for sure"}"""
+
+          def newResponse(code: Int) = {
+            val response = Response()
+            response.setContentString(defaultJsonResponse)
+            response.setStatusCode(code)
+            response
+          }
+
+          def publicApiResponse: Future[Response]
+
+          when(fallback.dispatchToMothership(any[Request])).thenReturn(publicApiResponse)
+        }
+
+        "it passes 200 through with the json" in new FromPublicApi {
+          override def publicApiResponse = Future.value(newResponse(200))
+
+          val response = get(controller(session), path)
+          response.status.code ==== 200
+          response.body ==== defaultJsonResponse
+        }
+
+        "it passes 404 through with the json" in new FromPublicApi {
+          override def publicApiResponse = Future.value(newResponse(404))
+
+          val response = get(controller(session), path)
+          response.status.code ==== 404
+          response.body ==== defaultJsonResponse
+        }
+
+        "it passes 500 through with the json" in new FromPublicApi {
+          override def publicApiResponse = Future.value(newResponse(500))
+
+          val response = get(controller(session), path)
+          response.status.code ==== 500
+          response.body ==== defaultJsonResponse
+        }
+
+        "it returns 500 when there are exceptions" in new FromPublicApi {
+          override def publicApiResponse = Future.exception(new RuntimeException("BAD THINGS"))
+
+          val response = get(controller(session), path)
+          response.status.code ==== 500
+        }
+
+      }
   }
 }
