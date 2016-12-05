@@ -97,7 +97,7 @@ class SingleTrackControllerSpec extends InjectionBasedControllerSpecification {
   validPaths.foreach {
     path =>
       s"When loading tracks from trackmetadata for: $path" >> {
-        trait FromTrackMetadata extends Context with Before {
+        trait FromTrackMetadata extends Context {
           override def shouldRespondWithTrackMetadata = true
 
           val defaultJsonResponse = """{"pass-through":"for sure"}"""
@@ -111,9 +111,7 @@ class SingleTrackControllerSpec extends InjectionBasedControllerSpecification {
 
           def trackMetadataResponse: Future[Response]
 
-          override def before: Any = {
-            when(tracksService.track(session, trackUrn, None, None)).thenReturn(trackMetadataResponse)
-          }
+          when(tracksService.track(session, trackUrn, None, None)).thenReturn(trackMetadataResponse)
         }
 
         "it passes 200 through with the json" in new FromTrackMetadata {
@@ -152,7 +150,7 @@ class SingleTrackControllerSpec extends InjectionBasedControllerSpecification {
   validPaths.foreach {
     path =>
       s"When loading tracks from public-api for: $path" >> {
-        trait FromPublicApi extends Context with Before {
+        trait FromPublicApi extends Context {
           override def shouldRespondWithTrackMetadata = false
 
           val defaultJsonResponse = """{"pass-through":"for sure"}"""
@@ -166,9 +164,7 @@ class SingleTrackControllerSpec extends InjectionBasedControllerSpecification {
 
           def publicApiResponse: Future[Response]
 
-          override def before: Any = {
-            when(fallback.dispatchToMothership(any[Request])).thenReturn(publicApiResponse)
-          }
+          when(fallback.dispatchToMothership(any[Request])).thenReturn(publicApiResponse)
         }
 
         "it passes 200 through with the json" in new FromPublicApi {
