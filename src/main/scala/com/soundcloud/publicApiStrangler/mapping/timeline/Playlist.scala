@@ -6,7 +6,7 @@ import com.soundcloud.publicApiStrangler.mapper.timeline.EntitySummaryMapper
 import play.api.libs.json.JsValue
 
 class Playlist(jsonValue: JsValue,
-               likesByUrn: Map[Urn, Int],
+               likesByUrn: Map[Urn, Long],
                baseUrl: String,
                entitySummaryMapper: EntitySummaryMapper)(implicit context: MappingContext)
   extends PlaylistSummary(jsonValue, baseUrl, entitySummaryMapper) {

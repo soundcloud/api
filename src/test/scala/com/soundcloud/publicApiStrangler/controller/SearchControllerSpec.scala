@@ -9,12 +9,12 @@ import com.soundcloud.jvmkit.telemetry.Telemetry
 import com.soundcloud.jvmkit.test.InMemoryConfig
 import com.soundcloud.jvmkit.{Urn, UserSession}
 import com.soundcloud.publicApiStrangler.client.followcounts.{FollowCounts, FollowCountsClient}
+import com.soundcloud.publicApiStrangler.client.liebling.LieblingClient
 import com.soundcloud.publicApiStrangler.mapper.search.SearchMapper
 import com.soundcloud.publicApiStrangler.mapping.search.{Search, SearchDispatcherRequest}
 import com.soundcloud.publicApiStrangler.support.DispatchToMothershipHandler
 import com.soundcloud.scalakit.finagle.http.{BadRequestStatus, HandlerRequest}
 import com.soundcloud.scalakit.test.VerifiedMocks
-import com.soundcloud.service.client.LieblingClient
 import com.twitter.util.Future
 import io.prometheus.client.CollectorRegistry
 import org.jboss.netty.handler.codec.http.HttpResponseStatus

@@ -6,12 +6,12 @@ import com.soundcloud.bff.nextbff.repository.RepositoryException
 import com.soundcloud.bff.web.{BffInjectionBasedController, UserAuthentication}
 import com.soundcloud.jvmkit.telemetry.Counter
 import com.soundcloud.publicApiStrangler.client.followcounts.FollowCountsClient
+import com.soundcloud.publicApiStrangler.client.liebling.LieblingClient
 import com.soundcloud.publicApiStrangler.controller.SearchController._
 import com.soundcloud.publicApiStrangler.mapper.search.SearchMapper
 import com.soundcloud.publicApiStrangler.mapping.search.SearchDispatcherRequest
 import com.soundcloud.publicApiStrangler.support.DispatchToMothershipHandler
 import com.soundcloud.scalakit.finagle.http.BadRequestStatus
-import com.soundcloud.service.client.LieblingClient
 import com.twitter.finagle.http.ParamMap
 import com.twitter.util.{Future, Return, Try}
 /**

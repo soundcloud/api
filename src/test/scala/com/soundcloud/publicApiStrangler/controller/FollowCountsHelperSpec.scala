@@ -5,12 +5,11 @@ import com.soundcloud.bff.nextbff.test.FakeUserAuthentication
 import com.soundcloud.bff.test.UnitSpecification
 import com.soundcloud.jvmkit.{Urn, UserSession}
 import com.soundcloud.publicApiStrangler.client.followcounts.{FollowCounts, FollowCountsClient}
+import com.soundcloud.publicApiStrangler.client.liebling.{LieblingClient, LikesCount}
 import com.soundcloud.publicApiStrangler.support.DispatchToMothershipHandler
 import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures
 import com.soundcloud.scalakit.finagle.http.HandlerRequest
 import com.soundcloud.scalakit.test.VerifiedMocks
-import com.soundcloud.service.client.LieblingClient
-import com.soundcloud.service.response.representation.liebling.LikesCount
 import com.twitter.finagle.http.{Request => FinagleRequest}
 import com.twitter.util.{Await, Future}
 import play.api.libs.json.{JsArray, JsNull, JsValue, Json}

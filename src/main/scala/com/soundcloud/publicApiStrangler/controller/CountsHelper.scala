@@ -4,10 +4,9 @@ import com.soundcloud.bff.finagle.{Request, ResponseBuilder}
 import com.soundcloud.bff.web.UserAuthentication
 import com.soundcloud.jvmkit.Urn
 import com.soundcloud.publicApiStrangler.client.followcounts.{FollowCounts, FollowCountsClient}
+import com.soundcloud.publicApiStrangler.client.liebling.{LieblingClient, LikesCount}
 import com.soundcloud.publicApiStrangler.support.DispatchToMothershipHandler
 import com.soundcloud.scalakit.finagle.http.{AlwaysMatchesPathMatcher, HandlerRequest}
-import com.soundcloud.service.client.LieblingClient
-import com.soundcloud.service.response.representation.liebling.LikesCount
 import com.twitter.finagle.http.Response
 import com.twitter.util.{Future, Try}
 import play.api.libs.json.Json.JsValueWrapper

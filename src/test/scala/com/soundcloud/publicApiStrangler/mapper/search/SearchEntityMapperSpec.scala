@@ -7,14 +7,14 @@ import com.soundcloud.jvmkit.Urn
 import com.soundcloud.jvmkit.policies.{ContentAuthorization, ContentPolicy, MonetizationModel, Reason}
 import com.soundcloud.publicApiStrangler.authorization.ContentAuthorizationRules
 import com.soundcloud.publicApiStrangler.client.followcounts.{FollowCounts, FollowCountsClient}
+import com.soundcloud.publicApiStrangler.client.liebling.{LieblingClient, UserLikesCount}
 import com.soundcloud.publicApiStrangler.mapper.liebling.LikeCountMapper
 import com.soundcloud.publicApiStrangler.mapper.timeline.EntitySummaryMapper
 import com.soundcloud.publicApiStrangler.mapper.waveform.WaveformMapper
 import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures
 import com.soundcloud.scalakit.json.UntypedJson
 import com.soundcloud.scalakit.test.VerifiedMocks
-import com.soundcloud.service.client.{LieblingClient, OkidokiClient}
-import com.soundcloud.service.response.representation.liebling.UserLikesCount
+import com.soundcloud.service.client.OkidokiClient
 import com.soundcloud.service.response.representation.{TrackMeta, TracksWithPagination}
 import com.twitter.util.{Await, Future}
 import org.specs2.matcher.MatchResult

@@ -3,8 +3,8 @@ package com.soundcloud.publicApiStrangler.controller
 import com.soundcloud.bff.finagle.ResponseBuilder
 import com.soundcloud.bff.test.InjectionBasedControllerSpecification
 import com.soundcloud.publicApiStrangler.client.followcounts.FollowCountsClient
+import com.soundcloud.publicApiStrangler.client.liebling.LieblingClient
 import com.soundcloud.publicApiStrangler.support.DispatchToMothershipHandler
-import com.soundcloud.service.client.LieblingClient
 import com.twitter.finagle.http.{Request, Status}
 import com.twitter.util.Future
 import org.mockito.Mockito.when

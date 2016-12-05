@@ -4,9 +4,9 @@ import com.soundcloud.bff.nextbff.mapper.Mapper
 import com.soundcloud.bff.nextbff.mapping.{JsonMapping, MappingContext}
 import com.soundcloud.jvmkit.{Urn, UserSession}
 import com.soundcloud.publicApiStrangler.client.followcounts.{FollowCounts, FollowCountsClient}
+import com.soundcloud.publicApiStrangler.client.liebling.LieblingClient
 import com.soundcloud.publicApiStrangler.mapping.timeline.{Comment, Playlist, Track, User}
-import com.soundcloud.scalakit._
-import com.soundcloud.service.client.{LieblingClient, OkidokiClient}
+import com.soundcloud.service.client.OkidokiClient
 import com.twitter.util.Future
 import play.api.libs.json.JsObject
 
@@ -21,13 +21,13 @@ class EntityMapper(okidokiClient: OkidokiClient,
     for {
       (entities, likes, followCountsMap) <- Future.join(
         okidokiClient.fetch(session, inputs),
-        lieblingClient.likesCounts(session, filterByCollection(inputs.toList, List("tracks", "playlists"))),
+        lieblingClient.likeCounts(session, filterByCollection(inputs.toList, List("tracks", "playlists"))),
         followCountsClient
           .counts(session, filterByCollection(inputs.toList, List("users")))
           .map(_.map(followCounts => (followCounts.userUrn, followCounts)).toMap)
       )
     } yield {
-      val likesCounts = likeCounts(likes)
+      val likesCounts = likes.map(like => (like.target_urn -> like.likes_count)).toMap
       entities.map {
         entity =>
           val urn = new Urn((entity \ "self" \ "urn").as[String])
@@ -41,10 +41,10 @@ class EntityMapper(okidokiClient: OkidokiClient,
 
   private def entityFor(urn: Urn,
                         entityData: JsObject,
-                        likesCounts: Map[Urn, Int],
+                        likesCounts: Map[Urn, Long],
                         followCountsMap: Map[Urn, FollowCounts])
                        (implicit context: MappingContext) = {
-    
+
     urn.getCollection match {
       case "users" => new User(entityData, baseUrl, followCountsMap.get(urn))
       case "tracks" => new Track(entityData, likesCounts, baseUrl, entitySummaryMapper)
@@ -53,10 +53,4 @@ class EntityMapper(okidokiClient: OkidokiClient,
     }
   }
 
-  private def likeCounts(likesInfo: JsObject): Map[Urn, Int] = {
-    (likesInfo \  "likes_counts").as[Seq[JsObject]].map {
-      obj =>
-        new Urn((obj \ "target_urn").as[String]) -> (obj \ "likes_count").asOpt[Int].getOrElse(0)
-    }.toMap.withDefaultValue(0)
-  }
 }
