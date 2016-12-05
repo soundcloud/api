@@ -65,17 +65,17 @@ trait CountsHelper {
         json.as[JsObject] ++ Json.obj("collection" -> injectKeys(collection, fn))
 
       case _ => json match {
-        case JsArray(values) => JsArray(values.map(injectKeysIntoObject(_, fn)))
-        case single: JsObject => injectKeysIntoObject(single, fn)
+        case JsArray(values) => JsArray(values.map(injectKeysIntoUser(_, fn)))
+        case single: JsObject => injectKeysIntoUser(single, fn)
         case _ => json
       }
     }
 
   }
-  private def injectKeysIntoObject(jsValue: JsValue, fn: Int => Seq[(String, JsValueWrapper)]): JsValue = {
+  private def injectKeysIntoUser(jsValue: JsValue, fn: Int => Seq[(String, JsValueWrapper)]): JsValue = {
     jsValue \ "user" match {
       case user: JsObject =>
-        jsValue.as[JsObject] ++ Json.obj("user" -> injectKeysIntoObject(user, fn))
+        jsValue.as[JsObject] ++ Json.obj("user" -> injectKeysIntoUser(user, fn))
 
       case _ =>
         (jsValue \ "kind").asOpt[String].flatMap {
