@@ -29,14 +29,23 @@ class SearchControllerSpec extends InjectionBasedControllerSpecification {
     val followCountsClientMock = mock[FollowCountsClient]
     val lieblingClientMock = mock[LieblingClient]
 
+    val authentication = fakeUserAuthentication(anonymousSession)
+    val userRelatedMothershipDispatcher = new UserRelatedMothershipDispatcher(
+      authentication,
+      fallbackMock,
+      followCountsClientMock,
+      lieblingClientMock
+    )
+
     val controller = new SearchController(
-      fakeUserAuthentication(anonymousSession),
+      authentication,
       fallbackMock,
       fallbackCounter,
       followCountsClientMock,
       searchMapperMock,
       "http://api.soundcloud.com",
-      lieblingClientMock
+      lieblingClientMock,
+      userRelatedMothershipDispatcher
     )
 
     // just so we can distinguish a forwarded request. Typically, this would be 200.

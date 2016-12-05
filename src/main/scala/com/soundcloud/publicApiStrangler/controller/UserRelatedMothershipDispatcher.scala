@@ -12,21 +12,19 @@ import com.twitter.util.{Future, Try}
 import play.api.libs.json.Json.JsValueWrapper
 import play.api.libs.json.{JsArray, JsObject, JsValue, Json}
 
-trait CountsHelper {
+class UserRelatedMothershipDispatcher(userAuthentication: UserAuthentication,
+                                      mothershipDispatcher: DispatchToMothershipHandler,
+                                      followCountsClient: FollowCountsClient,
+                                      lieblingClient: LieblingClient) {
 
-  def userAuthentication: UserAuthentication
-  def mothershipDispatcher: DispatchToMothershipHandler
-  def followCountsClient: FollowCountsClient
-  def lieblingClient: LieblingClient
-
-  def dispatchToMothershipWithCounts(request: Request): Future[ResponseBuilder] = {
+  def dispatchToMothership(request: Request): Future[ResponseBuilder] = {
     userAuthentication.withUserSession(request) { session =>
       mothershipDispatcher.defaultHandling(new HandlerRequest(AlwaysMatchesPathMatcher, request)).flatMap(response => {
         (for {
-           _ <- if (response.getStatusCode() < 300) Some() else None
-           responseJson <- Try(Json.parse(response.getContentString())).toOption
-           userUrns = extractUserUrns(responseJson)
-           if userUrns.nonEmpty
+          _ <- if (response.getStatusCode() < 300) Some() else None
+          responseJson <- Try(Json.parse(response.getContentString())).toOption
+          userUrns = extractUserUrns(responseJson)
+          if userUrns.nonEmpty
         } yield {
           val followsRequest = followCountsClient.counts(session, userUrns.toSeq)
           val lieblingRequest = lieblingClient.likeCounts(session, userUrns.toSeq)
@@ -52,7 +50,7 @@ trait CountsHelper {
               response.setContentString(content)
             }
 
-            toResponseBuilder(response)
+              toResponseBuilder(response)
           }
         }).getOrElse(toResponseBuilder(response).toFuture)
       })
@@ -124,4 +122,5 @@ trait CountsHelper {
       .body(response.getContentString())
       .headers(headerMap)
   }
+
 }

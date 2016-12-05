@@ -17,14 +17,14 @@ import com.twitter.util.{Future, Return, Try}
 /**
   * Redirects search queries on to search-dispatcher and fetches meta data.
   */
-class SearchController(val userAuthentication: UserAuthentication,
-                       val mothershipDispatcher: DispatchToMothershipHandler,
-                       val mothershipCounter: Counter,
-                       val followCountsClient: FollowCountsClient,
-                       val searchMapper: SearchMapper,
-                       val baseUrl: String,
-                       val lieblingClient: LieblingClient)
-  extends BffInjectionBasedController with CountsHelper {
+class SearchController(userAuthentication: UserAuthentication,
+                       mothershipDispatcher: DispatchToMothershipHandler,
+                       mothershipCounter: Counter,
+                       followCountsClient: FollowCountsClient,
+                       searchMapper: SearchMapper,
+                       baseUrl: String,
+                       lieblingClient: LieblingClient,
+                       userRelatedMothershipDispatcher: UserRelatedMothershipDispatcher) extends BffInjectionBasedController {
 
   get("/tracks")(dispatchTrackRequest)
   get("/tracks/")(dispatchTrackRequest)
@@ -39,21 +39,19 @@ class SearchController(val userAuthentication: UserAuthentication,
   get("/playlists")(dispatchPlaylistRequest)
   get("/playlists.json")(dispatchPlaylistRequest)
 
-  // NOTE: The following are a quick-fix in order to fetch follow counts from Stitch instead of Mothership.
-  // These endpoints are NOT properly strangled.
-  get("/search")(dispatchToMothershipWithCounts)
-  get("/search.json")(dispatchToMothershipWithCounts)
+  get("/search")(userRelatedMothershipDispatcher.dispatchToMothership _)
+  get("/search.json")(userRelatedMothershipDispatcher.dispatchToMothership _)
 
-  get("/search/universal")(dispatchToMothershipWithCounts)
-  get("/search/universal.json")(dispatchToMothershipWithCounts)
+  get("/search/universal")(userRelatedMothershipDispatcher.dispatchToMothership _)
+  get("/search/universal.json")(userRelatedMothershipDispatcher.dispatchToMothership _)
 
-  get("/search/people")(dispatchToMothershipWithCounts)
-  get("/search/people.json")(dispatchToMothershipWithCounts)
+  get("/search/people")(userRelatedMothershipDispatcher.dispatchToMothership _)
+  get("/search/people.json")(userRelatedMothershipDispatcher.dispatchToMothership _)
 
   private def dispatchUserRequest = dispatchRequest(
     defaultParams,
     SearchDispatcherRequest.userSearch,
-    dispatchToMothershipWithCounts
+    userRelatedMothershipDispatcher.dispatchToMothership _
   )
 
   private def dispatchPlaylistRequest = dispatchRequest(

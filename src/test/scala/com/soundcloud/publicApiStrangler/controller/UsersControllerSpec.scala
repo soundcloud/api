@@ -13,13 +13,11 @@ class UsersControllerSpec extends InjectionBasedControllerSpecification {
 
   trait Context extends Scope {
     val userAuthentication = fakeUserAuthentication(anonymousSession)
-    val mothershipDispatcher = mock[DispatchToMothershipHandler]
-    val followCountsClient = mock[FollowCountsClient]
-    val lieblingClient = mock[LieblingClient]
-    val controller = new UsersController(userAuthentication, mothershipDispatcher, followCountsClient, lieblingClient)
+    val userRelatedMothershipDispatcher = mock[UserRelatedMothershipDispatcher]
+    val controller = new UsersController(userRelatedMothershipDispatcher)
 
-    val success = Future.value(new ResponseBuilder().status(200).build)
-    when(mothershipDispatcher.defaultHandling(any)).thenReturn(success)
+    val success = Future.value(new ResponseBuilder().status(200))
+    when(userRelatedMothershipDispatcher.dispatchToMothership(any)).thenReturn(success)
   }
 
   "GET /users/:id" >> {

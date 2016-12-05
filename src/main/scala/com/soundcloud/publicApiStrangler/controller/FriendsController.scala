@@ -5,14 +5,8 @@ import com.soundcloud.publicApiStrangler.client.followcounts.FollowCountsClient
 import com.soundcloud.publicApiStrangler.client.liebling.LieblingClient
 import com.soundcloud.publicApiStrangler.support.DispatchToMothershipHandler
 
-/** NOTE: This is a quick-fix in order to fetch follow counts from Stitch instead of Mothership.
-  * These endpoints are NOT properly strangled. */
-class FriendsController(val userAuthentication: UserAuthentication,
-                        val mothershipDispatcher: DispatchToMothershipHandler,
-                        val followCountsClient: FollowCountsClient,
-                        val lieblingClient: LieblingClient)
-  extends BffInjectionBasedController with CountsHelper {
+class FriendsController(userRelatedMothershipDispatcher: UserRelatedMothershipDispatcher) extends BffInjectionBasedController {
 
-  get("/me/connections/friends")(dispatchToMothershipWithCounts)
-  get("/me/connections/friends.json")(dispatchToMothershipWithCounts)
+  get("/me/connections/friends")(userRelatedMothershipDispatcher.dispatchToMothership _)
+  get("/me/connections/friends.json")(userRelatedMothershipDispatcher.dispatchToMothership _)
 }

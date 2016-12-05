@@ -14,7 +14,7 @@ import com.twitter.finagle.http.{Request => FinagleRequest}
 import com.twitter.util.{Await, Future}
 import play.api.libs.json.{JsArray, JsNull, JsValue, Json}
 
-class FollowCountsHelperSpec  extends UnitSpecification with Fixtures {
+class UserRelatedMothershipDispatcherSpec extends UnitSpecification with Fixtures {
 
   trait Context extends Scope with VerifiedMocks {
     val session = mock[UserSession]
@@ -24,12 +24,12 @@ class FollowCountsHelperSpec  extends UnitSpecification with Fixtures {
     val mothershipDispatcherMock = mock[DispatchToMothershipHandler]
     val request = new Request(mock[FinagleRequest])
 
-    val helper = new CountsHelper {
-      override def userAuthentication = userAuthenticationMock
-      override def followCountsClient = followCountsClientMock
-      override def mothershipDispatcher = mothershipDispatcherMock
-      override def lieblingClient = lieblingClientMock
-    }
+    val dispatcher = new UserRelatedMothershipDispatcher(
+      userAuthenticationMock,
+      mothershipDispatcherMock,
+      followCountsClientMock,
+      lieblingClientMock
+    )
 
     val user1 = new Urn("soundcloud", "users", "183")
     val user2 = new Urn("soundcloud", "users", "1111")
@@ -47,7 +47,7 @@ class FollowCountsHelperSpec  extends UnitSpecification with Fixtures {
     def followCountsSeq: Seq[FollowCounts] = Seq.empty
     def likeCountsList: List[LikesCount] = List.empty
 
-    def responseContent = Json.parse(Await.result(helper.dispatchToMothershipWithCounts(request)).build.getContentString())
+    def responseContent = Json.parse(Await.result(dispatcher.dispatchToMothership(request)).build.getContentString())
 
     override def before = {
       when(mothershipDispatcherMock.defaultHandling(any[HandlerRequest])) thenReturn Future.value(responseBuilder.build)
@@ -64,7 +64,7 @@ class FollowCountsHelperSpec  extends UnitSpecification with Fixtures {
         .status(responseStatus)
         .body("No a JSON response")
 
-      Await.result(helper.dispatchToMothershipWithCounts(request)).build.getContentString() ==== "No a JSON response"
+      Await.result(dispatcher.dispatchToMothership(request)).build.getContentString() ==== "No a JSON response"
     }
 
     "with a non-OK status code" in new Context {
@@ -247,7 +247,7 @@ class FollowCountsHelperSpec  extends UnitSpecification with Fixtures {
 
           override def likeCountsList = List(LikesCount(user2, 100), LikesCount(user3, 300))
 
-          val result = Json.parse(Await.result(helper.dispatchToMothershipWithCounts(request)).build.getContentString())
+          val result = Json.parse(Await.result(dispatcher.dispatchToMothership(request)).build.getContentString())
           val values = (result \ "collection").as[JsArray].value
 
           values.size ==== 2
@@ -263,7 +263,7 @@ class FollowCountsHelperSpec  extends UnitSpecification with Fixtures {
 
           override def likeCountsList = List(LikesCount(user2, 100), LikesCount(user3, 300))
 
-          val result = Json.parse(Await.result(helper.dispatchToMothershipWithCounts(request)).build.getContentString())
+          val result = Json.parse(Await.result(dispatcher.dispatchToMothership(request)).build.getContentString())
           val values = result.as[JsArray].value
 
           values.size ==== 2

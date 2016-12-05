@@ -160,6 +160,12 @@ object App
 
   private val baseUrl = config.get("APP_BASE_URL", DataSensitivity.NON_SENSITIVE)
 
+  private val userRelatedMothershipDispatcher = new UserRelatedMothershipDispatcher(
+    userAuthentication,
+    mothershipDispatcher,
+    followCountsClient,
+    lieblingClient)
+
   private val timelineController = {
     val entitySummaryMapper = new EntitySummaryMapper(okidokiClient, baseUrl)
     val entityMapper = new EntityMapper(
@@ -277,7 +283,8 @@ object App
       followCountsClient,
       searchMapper,
       baseUrl,
-      lieblingClient
+      lieblingClient,
+      userRelatedMothershipDispatcher
     )
   }
 
@@ -290,44 +297,19 @@ object App
     )
   }
 
-  private val likesController = new LikesController(
-    userAuthentication,
-    mothershipDispatcher,
-    followCountsClient,
-    lieblingClient
-  )
+  private val likesController = new LikesController(userRelatedMothershipDispatcher)
 
-  private val friendsController = new FriendsController(
-    userAuthentication,
-    mothershipDispatcher,
-    followCountsClient,
-    lieblingClient
-  )
+  private val friendsController = new FriendsController(userRelatedMothershipDispatcher)
 
   private val groupsController = new GroupsController(
     userAuthentication
   )
 
-  private val suggestedUsersController = new SuggestedUsersController(
-    userAuthentication,
-    mothershipDispatcher,
-    followCountsClient,
-    lieblingClient
-  )
+  private val suggestedUsersController = new SuggestedUsersController(userRelatedMothershipDispatcher)
 
-  private val repostersController = new RepostersController(
-    userAuthentication,
-    mothershipDispatcher,
-    followCountsClient,
-    lieblingClient
-  )
+  private val repostersController = new RepostersController(userRelatedMothershipDispatcher)
 
-  private val userController = new UsersController(
-    userAuthentication,
-    mothershipDispatcher,
-    followCountsClient,
-    lieblingClient
-  )
+  private val userController = new UsersController(userRelatedMothershipDispatcher)
 
   private val playlistsController = new PlaylistsController(
     userAuthentication,

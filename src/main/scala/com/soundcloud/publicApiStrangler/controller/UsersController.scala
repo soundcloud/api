@@ -5,31 +5,25 @@ import com.soundcloud.publicApiStrangler.client.followcounts.FollowCountsClient
 import com.soundcloud.publicApiStrangler.client.liebling.LieblingClient
 import com.soundcloud.publicApiStrangler.support.DispatchToMothershipHandler
 
-/** NOTE: This is a quick-fix in order to fetch follow counts from Stitch instead of Mothership.
-  * These endpoints are NOT properly strangled. */
-class UsersController(val userAuthentication: UserAuthentication,
-                      val mothershipDispatcher: DispatchToMothershipHandler,
-                      val followCountsClient: FollowCountsClient,
-                      val lieblingClient: LieblingClient)
-  extends BffInjectionBasedController with CountsHelper {
+class UsersController(userRelatedMothershipDispatcher: UserRelatedMothershipDispatcher) extends BffInjectionBasedController {
 
-  get("/users/:id")(dispatchToMothershipWithCounts)
-  get("/users/:id/")(dispatchToMothershipWithCounts)
-  get("/users/:id.json")(dispatchToMothershipWithCounts)
-  get("/users/:id.json/")(dispatchToMothershipWithCounts)
+  get("/users/:id")(userRelatedMothershipDispatcher.dispatchToMothership _)
+  get("/users/:id/")(userRelatedMothershipDispatcher.dispatchToMothership _)
+  get("/users/:id.json")(userRelatedMothershipDispatcher.dispatchToMothership _)
+  get("/users/:id.json/")(userRelatedMothershipDispatcher.dispatchToMothership _)
 
-  get("/users/:id/tracks")(dispatchToMothershipWithCounts)
-  get("/users/:id/tracks/")(dispatchToMothershipWithCounts)
-  get("/users/:id/tracks.json")(dispatchToMothershipWithCounts)
-  get("/users/:id/tracks.json/")(dispatchToMothershipWithCounts)
+  get("/users/:id/tracks")(userRelatedMothershipDispatcher.dispatchToMothership _)
+  get("/users/:id/tracks/")(userRelatedMothershipDispatcher.dispatchToMothership _)
+  get("/users/:id/tracks.json")(userRelatedMothershipDispatcher.dispatchToMothership _)
+  get("/users/:id/tracks.json/")(userRelatedMothershipDispatcher.dispatchToMothership _)
 
-  get("/users/:id/comments")(dispatchToMothershipWithCounts)
-  get("/users/:id/comments/")(dispatchToMothershipWithCounts)
-  get("/users/:id/comments.json")(dispatchToMothershipWithCounts)
-  get("/users/:id/comments.json/")(dispatchToMothershipWithCounts)
+  get("/users/:id/comments")(userRelatedMothershipDispatcher.dispatchToMothership _)
+  get("/users/:id/comments/")(userRelatedMothershipDispatcher.dispatchToMothership _)
+  get("/users/:id/comments.json")(userRelatedMothershipDispatcher.dispatchToMothership _)
+  get("/users/:id/comments.json/")(userRelatedMothershipDispatcher.dispatchToMothership _)
 
-  get("/me")(dispatchToMothershipWithCounts)
-  get("/me/")(dispatchToMothershipWithCounts)
-  get("/me.json")(dispatchToMothershipWithCounts)
-  get("/me.json/")(dispatchToMothershipWithCounts)
+  get("/me")(userRelatedMothershipDispatcher.dispatchToMothership _)
+  get("/me/")(userRelatedMothershipDispatcher.dispatchToMothership _)
+  get("/me.json")(userRelatedMothershipDispatcher.dispatchToMothership _)
+  get("/me.json/")(userRelatedMothershipDispatcher.dispatchToMothership _)
 }

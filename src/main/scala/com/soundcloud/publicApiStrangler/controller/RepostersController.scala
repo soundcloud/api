@@ -5,17 +5,11 @@ import com.soundcloud.publicApiStrangler.client.followcounts.FollowCountsClient
 import com.soundcloud.publicApiStrangler.client.liebling.LieblingClient
 import com.soundcloud.publicApiStrangler.support.DispatchToMothershipHandler
 
-/** NOTE: This is a quick-fix in order to fetch follow counts from Stitch instead of Mothership.
-  * These endpoints are NOT properly strangled. */
-class RepostersController(val userAuthentication: UserAuthentication,
-                          val mothershipDispatcher: DispatchToMothershipHandler,
-                          val followCountsClient: FollowCountsClient,
-                          val lieblingClient: LieblingClient)
-  extends BffInjectionBasedController with CountsHelper {
+class RepostersController(userRelatedMothershipDispatcher: UserRelatedMothershipDispatcher) extends BffInjectionBasedController {
 
-  get("/e1/tracks/:id/reposters")(dispatchToMothershipWithCounts)
-  get("/e1/tracks/:id/reposters.json")(dispatchToMothershipWithCounts)
+  get("/e1/tracks/:id/reposters")(userRelatedMothershipDispatcher.dispatchToMothership _)
+  get("/e1/tracks/:id/reposters.json")(userRelatedMothershipDispatcher.dispatchToMothership _)
 
-  get("/e1/playlists/:id/reposters")(dispatchToMothershipWithCounts)
-  get("/e1/playlists/:id/reposters.json")(dispatchToMothershipWithCounts)
+  get("/e1/playlists/:id/reposters")(userRelatedMothershipDispatcher.dispatchToMothership _)
+  get("/e1/playlists/:id/reposters.json")(userRelatedMothershipDispatcher.dispatchToMothership _)
 }
