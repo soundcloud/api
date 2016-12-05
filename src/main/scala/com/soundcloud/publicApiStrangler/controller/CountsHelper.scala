@@ -19,7 +19,7 @@ trait CountsHelper {
   def followCountsClient: FollowCountsClient
   def lieblingClient: LieblingClient
 
-  def dispatchToMothershipWithFollowCounts(request: Request): Future[ResponseBuilder] = {
+  def dispatchToMothershipWithCounts(request: Request): Future[ResponseBuilder] = {
     userAuthentication.withUserSession(request) { session =>
       mothershipDispatcher.defaultHandling(new HandlerRequest(AlwaysMatchesPathMatcher, request)).flatMap(response => {
         (for {

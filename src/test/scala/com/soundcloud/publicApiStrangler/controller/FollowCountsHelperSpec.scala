@@ -47,7 +47,7 @@ class FollowCountsHelperSpec  extends UnitSpecification with Fixtures {
     def followCountsSeq: Seq[FollowCounts] = Seq.empty
     def likeCountsList: List[LikesCount] = List.empty
 
-    def responseContent = Json.parse(Await.result(helper.dispatchToMothershipWithFollowCounts(request)).build.getContentString())
+    def responseContent = Json.parse(Await.result(helper.dispatchToMothershipWithCounts(request)).build.getContentString())
 
     override def before = {
       when(mothershipDispatcherMock.defaultHandling(any[HandlerRequest])) thenReturn Future.value(responseBuilder.build)
@@ -64,7 +64,7 @@ class FollowCountsHelperSpec  extends UnitSpecification with Fixtures {
         .status(responseStatus)
         .body("No a JSON response")
 
-      Await.result(helper.dispatchToMothershipWithFollowCounts(request)).build.getContentString() ==== "No a JSON response"
+      Await.result(helper.dispatchToMothershipWithCounts(request)).build.getContentString() ==== "No a JSON response"
     }
 
     "with a non-OK status code" in new Context {
@@ -247,7 +247,7 @@ class FollowCountsHelperSpec  extends UnitSpecification with Fixtures {
 
           override def likeCountsList = List(LikesCount(user2, 100), LikesCount(user3, 300))
 
-          val result = Json.parse(Await.result(helper.dispatchToMothershipWithFollowCounts(request)).build.getContentString())
+          val result = Json.parse(Await.result(helper.dispatchToMothershipWithCounts(request)).build.getContentString())
           val values = (result \ "collection").as[JsArray].value
 
           values.size ==== 2
@@ -263,7 +263,7 @@ class FollowCountsHelperSpec  extends UnitSpecification with Fixtures {
 
           override def likeCountsList = List(LikesCount(user2, 100), LikesCount(user3, 300))
 
-          val result = Json.parse(Await.result(helper.dispatchToMothershipWithFollowCounts(request)).build.getContentString())
+          val result = Json.parse(Await.result(helper.dispatchToMothershipWithCounts(request)).build.getContentString())
           val values = result.as[JsArray].value
 
           values.size ==== 2

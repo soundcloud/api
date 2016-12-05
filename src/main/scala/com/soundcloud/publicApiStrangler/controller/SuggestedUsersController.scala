@@ -13,9 +13,9 @@ class SuggestedUsersController(val userAuthentication: UserAuthentication,
                                val lieblingClient: LieblingClient)
   extends BffInjectionBasedController with CountsHelper {
 
-  get("/me/suggested/users/:category")(dispatchToMothershipWithFollowCounts)
-  get("/me/suggested/users/:category.json")(dispatchToMothershipWithFollowCounts)
+  get("/me/suggested/users/:category")(dispatchToMothershipWithCounts)
+  get("/me/suggested/users/:category.json")(dispatchToMothershipWithCounts)
 
-  get("/users/suggested")(dispatchToMothershipWithFollowCounts)
-  get("/users/suggested.json")(dispatchToMothershipWithFollowCounts)
+  get("/users/suggested")(dispatchToMothershipWithCounts)
+  get("/users/suggested.json")(dispatchToMothershipWithCounts)
 }

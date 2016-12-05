@@ -41,19 +41,19 @@ class SearchController(val userAuthentication: UserAuthentication,
 
   // NOTE: The following are a quick-fix in order to fetch follow counts from Stitch instead of Mothership.
   // These endpoints are NOT properly strangled.
-  get("/search")(dispatchToMothershipWithFollowCounts)
-  get("/search.json")(dispatchToMothershipWithFollowCounts)
+  get("/search")(dispatchToMothershipWithCounts)
+  get("/search.json")(dispatchToMothershipWithCounts)
 
-  get("/search/universal")(dispatchToMothershipWithFollowCounts)
-  get("/search/universal.json")(dispatchToMothershipWithFollowCounts)
+  get("/search/universal")(dispatchToMothershipWithCounts)
+  get("/search/universal.json")(dispatchToMothershipWithCounts)
 
-  get("/search/people")(dispatchToMothershipWithFollowCounts)
-  get("/search/people.json")(dispatchToMothershipWithFollowCounts)
+  get("/search/people")(dispatchToMothershipWithCounts)
+  get("/search/people.json")(dispatchToMothershipWithCounts)
 
   private def dispatchUserRequest = dispatchRequest(
     defaultParams,
     SearchDispatcherRequest.userSearch,
-    dispatchToMothershipWithFollowCounts
+    dispatchToMothershipWithCounts
   )
 
   private def dispatchPlaylistRequest = dispatchRequest(

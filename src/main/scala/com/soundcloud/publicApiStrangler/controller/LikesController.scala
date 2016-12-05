@@ -13,9 +13,9 @@ class LikesController(val userAuthentication: UserAuthentication,
                       val lieblingClient: LieblingClient)
   extends BffInjectionBasedController with CountsHelper {
 
-  get("/tracks/:id/favoriters")(dispatchToMothershipWithFollowCounts)
-  get("/tracks/:id/favoriters.json")(dispatchToMothershipWithFollowCounts)
+  get("/tracks/:id/favoriters")(dispatchToMothershipWithCounts)
+  get("/tracks/:id/favoriters.json")(dispatchToMothershipWithCounts)
 
-  get("/tracks/:id/favoriters/:user_id")(dispatchToMothershipWithFollowCounts)
-  get("/tracks/:id/favoriters/:user_id.json")(dispatchToMothershipWithFollowCounts)
+  get("/tracks/:id/favoriters/:user_id")(dispatchToMothershipWithCounts)
+  get("/tracks/:id/favoriters/:user_id.json")(dispatchToMothershipWithCounts)
 }

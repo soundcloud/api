@@ -13,6 +13,6 @@ class FriendsController(val userAuthentication: UserAuthentication,
                         val lieblingClient: LieblingClient)
   extends BffInjectionBasedController with CountsHelper {
 
-  get("/me/connections/friends")(dispatchToMothershipWithFollowCounts)
-  get("/me/connections/friends.json")(dispatchToMothershipWithFollowCounts)
+  get("/me/connections/friends")(dispatchToMothershipWithCounts)
+  get("/me/connections/friends.json")(dispatchToMothershipWithCounts)
 }

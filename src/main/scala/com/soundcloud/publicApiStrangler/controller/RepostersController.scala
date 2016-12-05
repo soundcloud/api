@@ -13,9 +13,9 @@ class RepostersController(val userAuthentication: UserAuthentication,
                           val lieblingClient: LieblingClient)
   extends BffInjectionBasedController with CountsHelper {
 
-  get("/e1/tracks/:id/reposters")(dispatchToMothershipWithFollowCounts)
-  get("/e1/tracks/:id/reposters.json")(dispatchToMothershipWithFollowCounts)
+  get("/e1/tracks/:id/reposters")(dispatchToMothershipWithCounts)
+  get("/e1/tracks/:id/reposters.json")(dispatchToMothershipWithCounts)
 
-  get("/e1/playlists/:id/reposters")(dispatchToMothershipWithFollowCounts)
-  get("/e1/playlists/:id/reposters.json")(dispatchToMothershipWithFollowCounts)
+  get("/e1/playlists/:id/reposters")(dispatchToMothershipWithCounts)
+  get("/e1/playlists/:id/reposters.json")(dispatchToMothershipWithCounts)
 }
