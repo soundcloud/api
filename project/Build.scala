@@ -3,7 +3,7 @@ import sbt._
 import sbt.Keys._
 
 object BuildProperties {
-  val jvmkitVersion = "48.3.0"
+  val jvmkitVersion = "50.1.0"
 }
 
 object Build extends HttpServerAppBuild(
@@ -35,6 +35,7 @@ object Build extends HttpServerAppBuild(
         "org.specs2" %% "specs2-core" % "3.6.4",
         "org.specs2" %% "specs2-mock" % "3.6.4",
         "com.soundcloud" %% "jvmkit" % BuildProperties.jvmkitVersion,
+        "com.soundcloud" %% "jvmkit-testing" % BuildProperties.jvmkitVersion % "test",
         "org.apache.httpcomponents" % "httpclient" % "4.5.2",
         "org.apache.httpcomponents" % "httpmime" % "4.5.2"
       ))
