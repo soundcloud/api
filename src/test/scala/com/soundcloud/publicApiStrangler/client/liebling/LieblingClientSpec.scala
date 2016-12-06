@@ -105,6 +105,56 @@ class LieblingClientSpec extends UnitSpecification {
     }
   }
 
+  "#userTotalLikeCounts" >> {
+    trait UserTotalLikeCounts extends Context {
+      val userUrn2 = Urn("soundcloud:users:1293871")
+      val userUrn3 = Urn("soundcloud:users:29874198372")
+
+      val lieblingUserTotalLikeCount = Json.parse(
+        s"""{
+            |  "users": [{
+            |    "user_urn": "${userUrn.toString}",
+            |    "track_likes_count": 194,
+            |    "playlist_likes_count": 19
+            |  }, {
+            |    "user_urn": "${userUrn2.toString}",
+            |    "track_likes_count": 100,
+            |    "playlist_likes_count": 200
+            |  }]
+            |}
+      """.stripMargin)
+
+      val targetUrns = List(userUrn, userUrn2, userUrn3)
+
+      lazy val result = Await.result(client.userTotalLikeCount(session, targetUrns))
+    }
+
+    "successful response" in new UserTotalLikeCounts {
+      expectOkResponse(Path() / "users_counts", lieblingUserTotalLikeCount, Map("for_urns" -> List(userUrn, userUrn2, userUrn3)))
+
+      result.size ==== 2
+      result(0).user_urn ==== userUrn
+      result(0).track_likes_count ==== 194
+      result(0).playlist_likes_count ==== 19
+      result(0).totalLikeCount ==== 213
+
+      result(1).user_urn ==== userUrn2
+      result(1).track_likes_count ==== 100
+      result(1).playlist_likes_count ==== 200
+      result(1).totalLikeCount ==== 300
+    }
+
+    "unsuccessful response" in new UserTotalLikeCounts {
+      service.get(
+        session,
+        Path() / "users_counts",
+        Map("for_urns" -> targetUrns),
+        Params.empty) returns Future.exception(new RuntimeException("noooo"))
+
+      result.size ==== 0
+    }
+  }
+
   private def expectOkResponse(path: Path, expected: JsValue, params: Params = Params.empty, headers: Params = Params.empty)
                       (implicit service: JsonClient, session: UserSession) =
     expectResponse(path, params, HttpMethod.GET, headers, OkStatus, ExpectedBody(expected))

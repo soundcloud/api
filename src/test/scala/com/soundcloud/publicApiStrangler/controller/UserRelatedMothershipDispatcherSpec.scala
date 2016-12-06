@@ -5,7 +5,7 @@ import com.soundcloud.bff.nextbff.test.FakeUserAuthentication
 import com.soundcloud.bff.test.UnitSpecification
 import com.soundcloud.jvmkit.{Urn, UserSession}
 import com.soundcloud.publicApiStrangler.client.followcounts.{FollowCounts, FollowCountsClient}
-import com.soundcloud.publicApiStrangler.client.liebling.{LieblingClient, LikesCount}
+import com.soundcloud.publicApiStrangler.client.liebling.{LieblingClient, LikesCount, UserTotalLikes}
 import com.soundcloud.publicApiStrangler.support.DispatchToMothershipHandler
 import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures
 import com.soundcloud.scalakit.finagle.http.HandlerRequest
@@ -45,14 +45,14 @@ class UserRelatedMothershipDispatcherSpec extends UnitSpecification with Fixture
 
     def userUrns: Seq[Urn] = Seq.empty
     def followCountsSeq: Seq[FollowCounts] = Seq.empty
-    def likeCountsList: List[LikesCount] = List.empty
+    def userTotalLikesList: List[UserTotalLikes] = List.empty
 
     def responseContent = Json.parse(Await.result(dispatcher.dispatchToMothership(request)).build.getContentString())
 
     override def before = {
       when(mothershipDispatcherMock.defaultHandling(any[HandlerRequest])) thenReturn Future.value(responseBuilder.build)
       when(followCountsClientMock.counts(session, userUrns)) thenReturn Future.value(followCountsSeq)
-      when(lieblingClientMock.likeCounts(session, userUrns)) thenReturn Future.value(likeCountsList)
+      when(lieblingClientMock.userTotalLikeCount(session, userUrns)) thenReturn Future.value(userTotalLikesList)
     }
   }
 
@@ -219,9 +219,9 @@ class UserRelatedMothershipDispatcherSpec extends UnitSpecification with Fixture
 
           override def userUrns = Seq(user1)
 
-          override def likeCountsList = List(LikesCount(user1, 100))
+          override def userTotalLikesList = List(UserTotalLikes(user1, 100, 200))
 
-          (responseContent \ "public_favorites_count").as[Long] ==== 100
+          (responseContent \ "public_favorites_count").as[Long] ==== 300
         }
 
         "with users in the top level" in new Context {
@@ -229,15 +229,15 @@ class UserRelatedMothershipDispatcherSpec extends UnitSpecification with Fixture
 
           override def userUrns = Seq(user2, user3)
 
-          override def likeCountsList = List(LikesCount(user2, 100), LikesCount(user3, 300))
+          override def userTotalLikesList = List(UserTotalLikes(user2, 100, 200), UserTotalLikes(user3, 300, 400))
 
           val result = responseContent
           val values = result.as[JsArray].value
 
           values.size ==== 2
 
-          (values.head \ "public_favorites_count").as[Long] ==== 100
-          (values.last \ "public_favorites_count").as[Long] ==== 300
+          (values.head \ "public_favorites_count").as[Long] ==== 300
+          (values.last \ "public_favorites_count").as[Long] ==== 700
         }
 
         "with users in a collection" in new Context {
@@ -245,7 +245,7 @@ class UserRelatedMothershipDispatcherSpec extends UnitSpecification with Fixture
 
           override def userUrns = Seq(user2, user3)
 
-          override def likeCountsList = List(LikesCount(user2, 100), LikesCount(user3, 300))
+          override def userTotalLikesList = List(UserTotalLikes(user2, 100, 0), UserTotalLikes(user3, 300, 1))
 
           val result = Json.parse(Await.result(dispatcher.dispatchToMothership(request)).build.getContentString())
           val values = (result \ "collection").as[JsArray].value
@@ -253,7 +253,7 @@ class UserRelatedMothershipDispatcherSpec extends UnitSpecification with Fixture
           values.size ==== 2
 
           (values.head \ "public_favorites_count").as[Long] ==== 100
-          (values.last \ "public_favorites_count").as[Long] ==== 300
+          (values.last \ "public_favorites_count").as[Long] ==== 301
         }
 
         "with objects containing a user" in new Context {
@@ -261,14 +261,14 @@ class UserRelatedMothershipDispatcherSpec extends UnitSpecification with Fixture
 
           override def userUrns = Seq(user2, user3)
 
-          override def likeCountsList = List(LikesCount(user2, 100), LikesCount(user3, 300))
+          override def userTotalLikesList = List(UserTotalLikes(user2, 100, 1), UserTotalLikes(user3, 300, 0))
 
           val result = Json.parse(Await.result(dispatcher.dispatchToMothership(request)).build.getContentString())
           val values = result.as[JsArray].value
 
           values.size ==== 2
 
-          (values.head \ "user" \ "public_favorites_count").as[Long] ==== 100
+          (values.head \ "user" \ "public_favorites_count").as[Long] ==== 101
           (values.last \ "user" \ "public_favorites_count").as[Long] ==== 300
         }
       }

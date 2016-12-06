@@ -4,7 +4,7 @@ import com.soundcloud.bff.finagle.{Request, ResponseBuilder}
 import com.soundcloud.bff.web.UserAuthentication
 import com.soundcloud.jvmkit.Urn
 import com.soundcloud.publicApiStrangler.client.followcounts.{FollowCounts, FollowCountsClient}
-import com.soundcloud.publicApiStrangler.client.liebling.{LieblingClient, LikesCount}
+import com.soundcloud.publicApiStrangler.client.liebling.{LieblingClient, LikesCount, UserTotalLikes}
 import com.soundcloud.publicApiStrangler.support.DispatchToMothershipHandler
 import com.soundcloud.scalakit.finagle.http.{AlwaysMatchesPathMatcher, HandlerRequest}
 import com.twitter.finagle.http.Response
@@ -27,23 +27,22 @@ class UserRelatedMothershipDispatcher(userAuthentication: UserAuthentication,
           if userUrns.nonEmpty
         } yield {
           val followsRequest = followCountsClient.counts(session, userUrns.toSeq)
-          val lieblingRequest = lieblingClient.likeCounts(session, userUrns.toSeq)
+          val lieblingRequest = lieblingClient.userTotalLikeCount(session, userUrns.toSeq)
 
           Future.join(followsRequest, lieblingRequest).map {
             case (followCountsResponse, lieblingCountsResponse) => {
               val followCountsMap = followCountsResponse.map(count => (count.userUrn, count)).toMap
-              val lieblingCountsMap = lieblingCountsResponse.map(count => (count.target_urn, count)).toMap
-
+              val lieblingCountsMap = lieblingCountsResponse.map(count => (count.user_urn, count)).toMap
 
               val content: String = injectKeys(responseJson, (id) => {
                 val userUrn = new Urn("soundcloud", "users", id.toString)
                 val followCounts = followCountsMap.get(userUrn).getOrElse(FollowCounts(userUrn, 0, 0))
-                val lieblingCounts = lieblingCountsMap.get(userUrn).getOrElse(LikesCount(userUrn, 0))
+                val lieblingCounts = lieblingCountsMap.get(userUrn).getOrElse(UserTotalLikes(userUrn, 0, 0))
 
                 List(
                   "followers_count" -> followCounts.followers,
                   "followings_count" -> followCounts.followings,
-                  "public_favorites_count" -> lieblingCounts.likes_count
+                  "public_favorites_count" -> lieblingCounts.totalLikeCount
                 )
               }).toString
 

@@ -9,6 +9,9 @@ import com.soundcloud.service.client.{FetchClient, ResponseHandlers}
 import com.twitter.util.{Future, NonFatal}
 import play.api.libs.json.{JsObject, Json, Reads, Writes}
 
+/**
+ * https://github.com/soundcloud/liebling/tree/master/doc
+ */
 class LieblingClient(jsonClient: JsonClient) extends FetchClient {
   val logger = SoundCloudLoggerFactory.getLogger(getClass)
 
@@ -24,6 +27,16 @@ class LieblingClient(jsonClient: JsonClient) extends FetchClient {
         logger.error("error getting counts from Liebling", ex)
         Future.value(List.empty)
     }
+
+  def userTotalLikeCount(session: UserSession, urns: Seq[Urn]): Future[List[UserTotalLikes]] = {
+    fetchLikes(session, Path() / "users_counts", Map("for_urns" -> urns))
+      .map(json => (json \ "users").as[List[UserTotalLikes]])
+      .rescue {
+        case NonFatal(ex) =>
+          logger.error("error getting counts from Liebling", ex)
+          Future.value(List.empty)
+      }
+  }
 
   def userLikeCounts(session: UserSession, targetUrns: Seq[Urn], user: Urn, batchSize: Int = 25): Future[UserLikesCount] = {
     val fetch: (Seq[Urn]) => Future[UserLikesCount] = batch => fetchLikes(
@@ -70,4 +83,14 @@ case class UserLikesCount(liked_track_urns: Set[Urn], likes_counts: List[LikesCo
 object UserLikesCount {
   implicit val writes: Writes[UserLikesCount] = Json.writes[UserLikesCount]
   implicit val reads: Reads[UserLikesCount] = Json.reads[UserLikesCount]
+}
+
+
+case class UserTotalLikes(user_urn: Urn, track_likes_count: Long, playlist_likes_count: Long) {
+  def totalLikeCount = track_likes_count + playlist_likes_count
+}
+
+object UserTotalLikes {
+  implicit val writes: Writes[UserTotalLikes] = Json.writes[UserTotalLikes]
+  implicit val reads: Reads[UserTotalLikes] = Json.reads[UserTotalLikes]
 }
