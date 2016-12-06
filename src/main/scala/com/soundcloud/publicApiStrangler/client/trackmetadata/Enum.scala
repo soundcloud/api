@@ -1,4 +1,4 @@
-package com.soundcloud.publicApiStrangler.singleTrackEndpointMigration.trackmetadataclient
+package com.soundcloud.publicApiStrangler.client.trackmetadata
 
 import play.api.libs.json._
 
