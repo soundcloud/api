@@ -160,11 +160,13 @@ object App
 
   private val baseUrl = config.get("APP_BASE_URL", DataSensitivity.NON_SENSITIVE)
 
+  val loadUserLikeCountsFromLieblingFeatureFlag = BasicRolloutFeature("load_user_like_counts_from_liebling")
   private val userRelatedMothershipDispatcher = new UserRelatedMothershipDispatcher(
     userAuthentication,
     mothershipDispatcher,
     followCountsClient,
-    lieblingClient)
+    lieblingClient,
+    () => rolloutClient.isActive(loadUserLikeCountsFromLieblingFeatureFlag))
 
   private val timelineController = {
     val entitySummaryMapper = new EntitySummaryMapper(okidokiClient, baseUrl)

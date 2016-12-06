@@ -34,7 +34,8 @@ class SearchControllerSpec extends InjectionBasedControllerSpecification {
       authentication,
       fallbackMock,
       followCountsClientMock,
-      lieblingClientMock
+      lieblingClientMock,
+      () => Future.value(true)
     )
 
     val controller = new SearchController(
