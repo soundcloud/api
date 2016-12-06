@@ -1,16 +1,15 @@
-package com.soundcloud.publicApiStrangler.singleTrackEndpointMigration
+package com.soundcloud.publicApiStrangler.controller
 
 import com.soundcloud.bff.test.InjectionBasedControllerSpecification
 import com.soundcloud.jvmkit.telemetry.Telemetry
 import com.soundcloud.jvmkit.test.InMemoryConfig
 import com.soundcloud.jvmkit.{Urn, UserSession, UserSessionBuilder}
-import com.soundcloud.publicApiStrangler.controller.SingleTrackController
+import com.soundcloud.publicApiStrangler.singleTrackEndpointMigration.TrackRepresentationsService
 import com.soundcloud.publicApiStrangler.support.DispatchToMothershipHandler
 import com.twitter.finagle.http.{Request, Response, Status}
 import com.twitter.util.Future
 import io.prometheus.client.CollectorRegistry
 import org.mockito.Mockito.when
-import org.specs2.mutable.Before
 
 class SingleTrackControllerSpec extends InjectionBasedControllerSpecification {
 
