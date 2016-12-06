@@ -1,4 +1,4 @@
-package com.soundcloud.publicApiStrangler.singleTrackEndpointMigration.trackmetadataclient
+package com.soundcloud.publicApiStrangler.client.trackmetadata
 
 import com.soundcloud.jvmkit.config.{Config, ConfigConvention}
 import com.soundcloud.jvmkit.telemetry.Telemetry

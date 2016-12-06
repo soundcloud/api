@@ -1,7 +1,8 @@
-package com.soundcloud.publicApiStrangler.singleTrackEndpointMigration.trackmetadataclient
+package com.soundcloud.publicApiStrangler.client.trackmetadata
 
 import com.soundcloud.bff.test.UnitSpecification
 import com.soundcloud.jvmkit.Urn
+import com.soundcloud.publicApiStrangler.client.trackmetadata.{EmbeddingPermission, Track, TrackmetadataClient}
 import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures
 import com.soundcloud.scalakit.Path
 import com.soundcloud.scalakit.finagle.http.{NotFoundStatus, OkStatus}
