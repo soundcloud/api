@@ -6,7 +6,6 @@ import com.soundcloud.publicApiStrangler.client.pubmese.Isrc
 import com.soundcloud.publicApiStrangler.client.stitch.StitchCounts
 import com.soundcloud.publicApiStrangler.client.trackmetadata.{Artwork, EmbeddingPermission, Track}
 import com.soundcloud.publicApiStrangler.client.{DomainLocking, TrackAudioMetadata}
-import com.soundcloud.publicApiStrangler.singleTrackEndpointMigration.trackmetadataclient.Artwork
 import com.soundcloud.scalakit.test.UnitSpecification
 import com.soundcloud.service.response.representation.{Geoblockings, User}
 import org.joda.time.LocalDateTime

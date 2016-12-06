@@ -1,4 +1,4 @@
-package com.soundcloud.publicApiStrangler.singleTrackEndpointMigration.trackmetadataclient
+package com.soundcloud.publicApiStrangler.client.trackmetadata
 
 import com.soundcloud.bff.test.UnitSpecification
 import com.soundcloud.jvmkit.Urn
