@@ -28,7 +28,7 @@ import com.soundcloud.publicApiStrangler.mapper.timeline.publicApi.ActivitiesWit
 import com.soundcloud.publicApiStrangler.mapper.timeline.{EntityMapper, EntitySummaryMapper, FollowingsTracksMapper}
 import com.soundcloud.publicApiStrangler.mapper.trackstreams.{TrackStreamJsonResponseMapper, TrackStreamRedirectResponseMapper}
 import com.soundcloud.publicApiStrangler.mapper.waveform.WaveformMapper
-import com.soundcloud.publicApiStrangler.singleTrackEndpointMigration.{SingleTrackController, TrackRepresentationsService}
+import com.soundcloud.publicApiStrangler.singleTrackEndpointMigration.TrackRepresentationsService
 import com.soundcloud.publicApiStrangler.support._
 import com.soundcloud.ratelimiting.facade._
 import com.soundcloud.scalakit.cache.MemcachedClient

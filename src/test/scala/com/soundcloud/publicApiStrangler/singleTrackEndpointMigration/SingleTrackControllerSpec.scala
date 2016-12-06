@@ -4,6 +4,7 @@ import com.soundcloud.bff.test.InjectionBasedControllerSpecification
 import com.soundcloud.jvmkit.telemetry.Telemetry
 import com.soundcloud.jvmkit.test.InMemoryConfig
 import com.soundcloud.jvmkit.{Urn, UserSession, UserSessionBuilder}
+import com.soundcloud.publicApiStrangler.controller.SingleTrackController
 import com.soundcloud.publicApiStrangler.support.DispatchToMothershipHandler
 import com.twitter.finagle.http.{Request, Response, Status}
 import com.twitter.util.Future
