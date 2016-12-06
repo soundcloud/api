@@ -12,6 +12,28 @@ import com.twitter.util.{Future, Try}
 import play.api.libs.json.Json.JsValueWrapper
 import play.api.libs.json.{JsArray, JsObject, JsValue, Json}
 
+/**
+  * So this class is weird. It grew out of this abstraction:
+  * https://github.com/soundcloud/public-api-strangler/blob/884e0/src/main/scala/com/soundcloud/publicApiStrangler/controller/FollowCountsHelper.scala
+  * which was created to load follower count information into the many ways the public-api returns user representations.
+  * currently it also load like counts from liebling.
+  *
+  * To understand what it does, first look for usages of the `dispatchToMothership` method below.
+  * It essentially "plugs in" to any json response coming from the mothership and looks for things that look like
+  * User representations. If it finds one, it tries to load the Follow/Like counts and injects that data into the
+  * representation with which it was provided.
+  *
+  * For instance, some mothership endpoints return users that look like:
+  * { id: 1, name: Filipe }
+  * but sometimes:
+  * [ { id: 1, name: Filipe }, { id: 2, name: Argha } ]
+  * and sometimes:
+  * [ { kind: friend, connection_ids: [...], user: { ... } ]
+  * and some other formats as well.
+  *
+  * And this abstraction tries to look for the right place to insert the `followers_count`, `followings_count`,
+  * and `public_favorites_count` keys, with the counts themselves coming from the upstream services that serve them.
+  */
 class UserRelatedMothershipDispatcher(userAuthentication: UserAuthentication,
                                       mothershipDispatcher: DispatchToMothershipHandler,
                                       followCountsClient: FollowCountsClient,
