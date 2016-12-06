@@ -8,6 +8,7 @@ import com.soundcloud.publicApiStrangler.client.pubmese.{Isrc, PubmeseClient}
 import com.soundcloud.publicApiStrangler.client.quota.UserQuotaClient
 import com.soundcloud.publicApiStrangler.client.stitch.{StitchClient, StitchCounts}
 import com.soundcloud.publicApiStrangler.client.trackmetadata.{Track, TrackmetadataClient}
+import com.soundcloud.publicApiStrangler.representation._
 import com.soundcloud.scalakit.json.Json
 import com.soundcloud.service.client.LieblingClient
 import com.soundcloud.service.response.representation._

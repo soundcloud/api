@@ -1,4 +1,4 @@
-package com.soundcloud.publicApiStrangler.singleTrackEndpointMigration
+package com.soundcloud.publicApiStrangler.representation
 
 import com.soundcloud.jvmkit.Urn
 import com.soundcloud.publicApiStrangler.client.mediaservice.WaveformUrl
@@ -6,6 +6,7 @@ import com.soundcloud.publicApiStrangler.client.pubmese.Isrc
 import com.soundcloud.publicApiStrangler.client.stitch.StitchCounts
 import com.soundcloud.publicApiStrangler.client.trackmetadata.{Artwork, EmbeddingPermission, Track}
 import com.soundcloud.publicApiStrangler.client.{DomainLocking, TrackAudioMetadata}
+import com.soundcloud.publicApiStrangler.representation._
 import com.soundcloud.scalakit.test.UnitSpecification
 import com.soundcloud.service.response.representation.{Geoblockings, User}
 import org.joda.time.LocalDateTime
