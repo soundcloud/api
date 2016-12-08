@@ -13,16 +13,17 @@ import com.soundcloud.publicApiStrangler.mapper.timeline.EntitySummaryMapper
 import com.soundcloud.publicApiStrangler.mapper.waveform.WaveformMapper
 import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures
 import com.soundcloud.scalakit.json.UntypedJson
-import com.soundcloud.scalakit.test.VerifiedMocks
 import com.soundcloud.service.client.OkidokiClient
 import com.soundcloud.service.response.representation.{TrackMeta, TracksWithPagination}
 import com.twitter.util.{Await, Future}
 import org.specs2.matcher.MatchResult
 import play.api.libs.json.{JsObject, Json}
+import org.mockito.Mockito.when
+import org.specs2.mutable.Before
 
 class SearchEntityMapperSpec extends UnitSpecification with Fixtures {
 
-  trait Context extends VerifiedMocks {
+  trait Context extends Scope with Before {
     implicit val context = mock[MappingContext]
     val baseUrl = "https://api.soundcloud.com.com"
     val userUrn = new Urn("soundcloud:users:1")

@@ -6,14 +6,15 @@ import com.soundcloud.bff.test.UnitSpecification
 import com.soundcloud.jvmkit.Urn
 import com.soundcloud.scalakit.cache.Cache
 import com.soundcloud.scalakit.json.Json
-import com.soundcloud.scalakit.test.VerifiedMocks
 import com.twitter.util.{Await, Future}
 import org.mockito.Mockito.verify
 import play.api.libs.json.JsObject
+import org.mockito.Mockito.when
+import org.specs2.mutable.Before
 
 class UrnsCacheSpec extends UnitSpecification {
 
-  trait Context extends VerifiedMocks {
+  trait Context extends Scope with Before {
     val cacheExpirationTime = 10
     val urn1 = new Urn("some:urn:one")
     val urn2 = new Urn("some:urn:two")
@@ -34,7 +35,7 @@ class UrnsCacheSpec extends UnitSpecification {
     val jsonResult1 = "{\"id\":\"some:urn:one\"}"
     val jsonResult2 = "{\"id\":\"some:urn:two\"}"
 
-    override def before = {
+    override def before: Any = {
       when(cache.get(any[String]))
         .thenReturn(Future.value(Option(jsonResult1)))
         .thenReturn(Future.value(Option(jsonResult2)))
@@ -51,7 +52,7 @@ class UrnsCacheSpec extends UnitSpecification {
     val jsonResult1 = "{\"id\":\"some:urn:one\"}"
     val jsonResult2 = "{\"id\":\"some:urn:two\"}"
 
-    override def before = {
+    override def before: Any = {
       when(cache.get(any[String]))
         .thenReturn(Future.value(Option(jsonResult1)))
         .thenReturn(Future.value(None))
@@ -95,11 +96,10 @@ class UrnsCacheSpec extends UnitSpecification {
     val jsonResult1 = "{\"id\":\"some:urn:one\"}"
     val jsonResult2 = "{\"id\":\"some:urn:two\"}"
 
-    override def before = {
+    override def before: Any = {
       when(cache.get(any[String]))
         .thenReturn(Future.value(None))
         .thenReturn(Future.value(None))
-      super.before
     }
   }
 

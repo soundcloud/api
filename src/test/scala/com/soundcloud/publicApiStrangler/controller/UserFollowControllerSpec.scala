@@ -10,7 +10,6 @@ import com.soundcloud.publicApiStrangler.client.follows.representation.unfollow.
 import com.soundcloud.publicApiStrangler.support.DispatchToMothershipHandler
 import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures
 import com.soundcloud.scalakit.Geo
-import com.soundcloud.scalakit.test.VerifiedMocks
 import com.soundcloud.service.client.OkidokiClient
 import com.twitter.finagle.http.Status
 import com.twitter.util.Future
@@ -21,7 +20,7 @@ import play.api.libs.json._
 class UserFollowControllerSpec extends InjectionBasedControllerSpecification with Fixtures {
   sequential
 
-  trait Context extends Scope with BeforeAfter with VerifiedMocks {
+  trait Context extends Scope with BeforeAfter {
     val fallbackMock = mock[DispatchToMothershipHandler]
     val okidokiMock = mock[OkidokiClient]
     val followsMock = mock[FollowsClient]

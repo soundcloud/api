@@ -5,15 +5,16 @@ import com.soundcloud.bff.test.UnitSpecification
 import com.soundcloud.publicApiStrangler.mapper.timeline.{EntityMapper, EntitySummaryMapper}
 import com.soundcloud.publicApiStrangler.mapping.timeline.e1.{TimelineWithUuids, TrackTimelineItem}
 import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures
-import com.soundcloud.scalakit.test.VerifiedMocks
 import com.soundcloud.jvmkit.{Urn, UserSession}
 import com.soundcloud.services.timeline.TimelineJsonClient
 import com.twitter.util.{Await, Future}
 import play.api.libs.json.JsObject
+import org.mockito.Mockito.when
+import org.specs2.mutable.Before
 
 class ActivitiesMapperSpec extends UnitSpecification with Fixtures {
 
-  trait Context extends VerifiedMocks {
+  trait Context extends Scope with Before {
     val timelineClient = mock[TimelineJsonClient]
     val entityMapper = mock[EntityMapper]
     val entitySummaryMapper = mock[EntitySummaryMapper]
@@ -33,7 +34,7 @@ class ActivitiesMapperSpec extends UnitSpecification with Fixtures {
     trait Cursor extends Context {
       val page = CursorBasedPage(urn, "https://foo.com", "/something", Map(), Some(uuid), 100)
 
-      override def before = {
+      override def before: Any = {
         when(timelineClient.activities(session, Some(uuid), 100, false, Some("uuid"))).thenReturn(Future(timelineActivities.as[JsObject]))
       }
     }
@@ -56,7 +57,7 @@ class ActivitiesMapperSpec extends UnitSpecification with Fixtures {
     trait ReverseCursor extends Context {
       val page = CursorBasedPage(urn, "https://foo.com", "/something", Map("uuid[to]" -> uuid), None, 100)
 
-      override def before = {
+      override def before: Any = {
         when(timelineClient.activities(session, Some(uuid), 100, true, Some("uuid"))).thenReturn(Future(timelineActivities.as[JsObject]))
       }
     }

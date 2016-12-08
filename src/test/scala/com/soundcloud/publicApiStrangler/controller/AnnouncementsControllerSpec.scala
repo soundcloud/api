@@ -4,13 +4,13 @@ import com.soundcloud.bff.finagle.ResponseBuilder
 import com.soundcloud.bff.test.InjectionBasedControllerSpecification
 import com.soundcloud.publicApiStrangler.support.DispatchToMothershipHandler
 import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures
-import com.soundcloud.scalakit.test.VerifiedMocks
 import com.twitter.finagle.http.{Request, Status}
 import com.twitter.util.Future
+import org.mockito.Mockito.when
 
 class AnnouncementsControllerSpec extends InjectionBasedControllerSpecification with Fixtures {
 
-  trait Context extends Scope with VerifiedMocks {
+  trait Context extends Scope {
     val fallback = mock[DispatchToMothershipHandler]
     lazy val controller = new AnnouncementsController(fallback)
     when(fallback.dispatch(any[Request])).thenReturn(Future.value(new ResponseBuilder().status(200)))

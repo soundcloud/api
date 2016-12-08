@@ -8,17 +8,17 @@ import com.soundcloud.publicApiStrangler.client.gobbly.{ClientError => GobblyCli
 import com.soundcloud.publicApiStrangler.client.trackcoordinator.TrackCoordinatorClient
 import com.soundcloud.publicApiStrangler.support.DispatchToMothershipHandler
 import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures
-import com.soundcloud.scalakit.test.VerifiedMocks
 import com.soundcloud.publicApiStrangler.client.trackcoordinator.datatypes.{ClientError, NotFound, ServerError, Success}
 import com.soundcloud.service.client.OkidokiClient
 import com.soundcloud.service.response.representation.Track
 import com.twitter.finagle.http.{Request, Status}
 import com.twitter.util.Future
 import play.api.libs.json.{Json => PlayJson, _}
+import org.mockito.Mockito.when
 
 class TracksControllerSpec extends InjectionBasedControllerSpecification with Fixtures {
 
-  trait Context extends Scope with VerifiedMocks {
+  trait Context extends Scope {
     val fallback = mock[DispatchToMothershipHandler]
     val trackCoordinator = mock[TrackCoordinatorClient]
     val okidoki = mock[OkidokiClient]
@@ -43,7 +43,7 @@ class TracksControllerSpec extends InjectionBasedControllerSpecification with Fi
 
     gobblyClient.allTracksManagedByFeedsForWrite(any, ===(List(trackUrn))) returns Future(gobblyResponse)
   }
-  
+
   "GET /tracks/:id/comments" >> {
     "falls back to Mothership" in new Context {
       val response = get(controller, "/tracks/999/comments")

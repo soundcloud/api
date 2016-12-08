@@ -8,9 +8,8 @@ import com.soundcloud.scalakit.test.VerifiedMocks
 import com.twitter.finagle.http.Status
 import com.twitter.util.Future
 
-
 class GroupsControllerSpec extends InjectionBasedControllerSpecification {
-  trait Context extends Scope with VerifiedMocks {
+  trait Context extends Scope {
     val userAuthentication = fakeUserAuthentication(anonymousSession)
     val controller = new GroupsController(userAuthentication)
   }

@@ -3,12 +3,13 @@ package com.soundcloud.bff.nextbff.mapper
 import com.soundcloud.bff.nextbff.mapping.{Mapping, MappingContext}
 import com.soundcloud.bff.test.UnitSpecification
 import com.soundcloud.jvmkit.{Urn, UserSession}
-import com.soundcloud.scalakit.test.VerifiedMocks
 import com.twitter.util.{Await, Future}
+import org.specs2.mutable.Before
+import org.mockito.Mockito.when
 
 class MapperSpec extends UnitSpecification {
 
-  trait EmbeddedContext extends VerifiedMocks {
+  trait EmbeddedContext extends Scope {
     val session = mock[UserSession]
     implicit val context = new MappingContext(session)
 
@@ -61,7 +62,7 @@ class MapperSpec extends UnitSpecification {
     result.params ==== urns
   }
 
-  trait MaterializeContext extends VerifiedMocks {
+  trait MaterializeContext extends Scope {
     val session = mock[UserSession]
     implicit val context = new MappingContext(session)
 
@@ -78,12 +79,12 @@ class MapperSpec extends UnitSpecification {
     }
   }
 
-  trait MaterializeItemContext extends MaterializeContext {
+  trait MaterializeItemContext extends MaterializeContext with Before {
 
     val input = new Urn("soundcloud:users:333")
     val mapResult = Map[Any, Mapping](input -> new Mapping {})
 
-    override def before = {
+    override def before: Any = {
       when(mapMock.map(session, Set(input))).thenReturn(Future(mapResult))
     }
   }
@@ -93,7 +94,7 @@ class MapperSpec extends UnitSpecification {
       mapResult.values.headOption
   }
 
-  trait MaterializeListContext extends MaterializeContext {
+  trait MaterializeListContext extends MaterializeContext with Before {
 
     val urn1 = new Urn("soundcloud:users:333")
     val urn2 = new Urn("soundcloud:users:222")
@@ -101,7 +102,7 @@ class MapperSpec extends UnitSpecification {
 
     val mapResult = Map[Any, Mapping](urn1 -> new Mapping {}, urn2 -> new Mapping {})
 
-    override def before = {
+    override def before: Any = {
       when(mapMock.map(session, inputs.toSet)).thenReturn(Future(mapResult))
     }
   }

@@ -6,15 +6,15 @@ import com.soundcloud.jvmkit.{Urn, UserSessionBuilder}
 import com.soundcloud.publicApiStrangler.support.DispatchToMothershipHandler
 import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures
 import com.soundcloud.scalakit.Geo
-import com.soundcloud.scalakit.test.VerifiedMocks
 import com.soundcloud.service.client.OkidokiClient
 import com.soundcloud.service.response.representation.{DeletePlaylistResponse, ForbiddenDeletePlaylistResponse, InvalidUrnDeletePlaylistResponse, NotAuthorizedDeletePlaylistResponse, OkDeletePlaylistResponse}
 import com.twitter.finagle.http.{Request, Status}
 import com.twitter.util.Future
+import org.mockito.Mockito.when
 
 class PlaylistsControllerSpec extends InjectionBasedControllerSpecification with Fixtures {
 
-  trait Context extends Scope with VerifiedMocks {
+  trait Context extends Scope {
     lazy val geo = Geo("US")
     lazy val session = new UserSessionBuilder()
       .setUser(Urn("soundcloud:users:2"))

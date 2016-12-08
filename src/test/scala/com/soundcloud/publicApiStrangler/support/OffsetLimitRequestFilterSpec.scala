@@ -1,15 +1,16 @@
 package com.soundcloud.publicApiStrangler.support
 
 import com.soundcloud.scalakit.finagle.http.RouterResponse
-import com.soundcloud.scalakit.test.{UnitSpecification, VerifiedMocks}
+import com.soundcloud.scalakit.test.{UnitSpecification}
 import com.twitter.finagle.Service
 import com.twitter.finagle.http.Request
 import com.twitter.util.{Await, Future}
 import org.mockito.Mockito._
+import org.mockito.Mockito.when
 
 class OffsetLimitRequestFilterSpec extends UnitSpecification {
 
-  trait Context extends VerifiedMocks {
+  trait Context extends Scope {
     val next = mock[Service[Request, RouterResponse]]
 
     val responseFromNextService = mock[RouterResponse]

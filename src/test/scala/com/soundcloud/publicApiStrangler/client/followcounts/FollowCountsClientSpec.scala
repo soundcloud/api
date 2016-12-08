@@ -9,13 +9,14 @@ import com.soundcloud.jvmkit.test.InMemoryConfig
 import com.soundcloud.scalakit.Path
 import com.soundcloud.scalakit.finagle.http.{InternalServerErrorStatus, OkStatus}
 import com.soundcloud.scalakit.finagle.jsonservice.{JsonResponse, Params}
-import com.soundcloud.scalakit.test.VerifiedMocks
 import com.twitter.util.{Await, Future}
 import play.api.libs.json.JsNull
+import org.mockito.Mockito.when
+import org.specs2.mutable.Before
 
 class FollowCountsClientSpec extends UnitSpecification {
 
-  trait Context extends VerifiedMocks {
+  trait Context extends Scope with Before {
     lazy val jsonService = mock[JsonService]
     lazy val user = Urn("soundcloud", "users", "1")
 
@@ -28,7 +29,7 @@ class FollowCountsClientSpec extends UnitSpecification {
 
     def response: Future[JsonResponse]
 
-    override def before = {
+    override def before: Any = {
       val bulkParams = Params(
         "followingCounts" -> URLEncoder.encode(
           s"/timeseries?resolution=alltime&category=f.u&minus-category=n.f.u&keys=${user.getIdentifier}",

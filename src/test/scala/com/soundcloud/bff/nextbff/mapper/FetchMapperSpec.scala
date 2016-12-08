@@ -4,13 +4,14 @@ import com.soundcloud.bff.nextbff.mapping.{Mapping, MappingContext}
 import com.soundcloud.bff.nextbff.repository.BulkFetchRepository
 import com.soundcloud.bff.test.UnitSpecification
 import com.soundcloud.jvmkit.{Urn, UserSession}
-import com.soundcloud.scalakit.test.VerifiedMocks
 import com.twitter.util.{Await, Future}
 import play.api.libs.json.JsValue
+import org.mockito.Mockito.when
+import org.specs2.mutable.Before
 
 class FetchMapperSpec extends UnitSpecification {
 
-  trait Context extends VerifiedMocks {
+  trait Context extends Scope with Before {
     implicit val context = mock[MappingContext]
     val session = mock[UserSession]
     val repositoryMock = mock[BulkFetchRepository[Urn]]
@@ -29,7 +30,7 @@ class FetchMapperSpec extends UnitSpecification {
         TestMapping(param, jsValue)
     }
 
-    override def before = {
+    override def before: Any = {
       when(repositoryMock.bulkFetch(session, Set(urn1, urn2)))
         .thenReturn(Future(jsonMap))
     }

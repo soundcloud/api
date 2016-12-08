@@ -10,7 +10,7 @@ import com.twitter.finagle.http.Status
 import com.twitter.util.{Await, Future}
 
 class PublicApiSiloingSpec extends UnitSpecification {
-  trait Context extends VerifiedMocks{
+  trait Context extends Scope {
 
     protected val request = mock[Request]
     private val rollout = mock[Rollout]

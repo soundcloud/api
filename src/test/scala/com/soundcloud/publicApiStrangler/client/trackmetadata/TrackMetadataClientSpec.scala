@@ -2,19 +2,18 @@ package com.soundcloud.publicApiStrangler.client.trackmetadata
 
 import com.soundcloud.bff.test.UnitSpecification
 import com.soundcloud.jvmkit.Urn
-import com.soundcloud.publicApiStrangler.client.trackmetadata.{EmbeddingPermission, Track, TrackmetadataClient}
 import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures
 import com.soundcloud.scalakit.Path
 import com.soundcloud.scalakit.finagle.http.{NotFoundStatus, OkStatus}
 import com.soundcloud.scalakit.finagle.jsonservice.{JsonClient, JsonResponse, Params}
-import com.soundcloud.scalakit.test.VerifiedMocks
 import com.twitter.util.{Await, Future}
 import org.joda.time.LocalDateTime
+import org.mockito.Mockito.{verify, when}
 import play.api.libs.json.JsNull
 
 class TrackMetadataClientSpec extends UnitSpecification with Fixtures{
 
-  trait Context extends VerifiedMocks {
+  trait Context extends Scope {
     val service = mock[JsonClient]
     val trackmetadataClient = new TrackmetadataClient(service)
   }
@@ -28,19 +27,21 @@ class TrackMetadataClientSpec extends UnitSpecification with Fixtures{
     "track is not found" >> {
 
       trait NotFoundContext extends TrackContext {
-        when(verified(service).get(anonymousSession, path, Params.empty, Params.empty))
+        when(service.get(anonymousSession, path, Params.empty, Params.empty))
           .thenReturn(Future(JsonResponse(NotFoundStatus, JsNull)))
       }
 
       "returns None" in new NotFoundContext {
         val track = Await.result(trackmetadataClient.track(anonymousSession, urn))
         track must beNone
+
+        verify(service).get(anonymousSession, path, Params.empty, Params.empty)
       }
     }
 
     "track is found" >> {
       trait FoundContext extends TrackContext {
-        when(verified(service).get(anonymousSession, path, Params.empty, Params.empty))
+        when(service.get(anonymousSession, path, Params.empty, Params.empty))
           .thenReturn(Future(JsonResponse(OkStatus, trackmetadataClientTracks_2)))
       }
 
@@ -80,13 +81,15 @@ class TrackMetadataClientSpec extends UnitSpecification with Fixtures{
         track.releaseDate ==== Some(new LocalDateTime(1989, 12, 22, 0, 0))
         track.artwork.filename ==== Some("artworks-000001073830-j0xbmn-original.jpg")
         track.published_at ==== Some(new LocalDateTime(1989, 12, 22, 0, 0))
+
+        verify(service).get(anonymousSession, path, Params.empty, Params.empty)
       }
     }
 
     "track with rogue attributes" >> {
 
       trait RogueTrack extends TrackContext {
-        when(verified(service).get(anonymousSession, path, Params.empty, Params.empty))
+        when(service.get(anonymousSession, path, Params.empty, Params.empty))
           .thenReturn(Future(JsonResponse(OkStatus, trackmetadataClientTracks_rogue)))
       }
 
@@ -127,6 +130,7 @@ class TrackMetadataClientSpec extends UnitSpecification with Fixtures{
 
       "parses downloadable correctly" in new NulledBooleansTrack {
         track.downloadable ==== None
+        verify(service).get(anonymousSession, path, Params.empty, Params.empty)
       }
     }
   }
@@ -144,19 +148,21 @@ class TrackMetadataClientSpec extends UnitSpecification with Fixtures{
 
     "no tracks are found" >> {
       trait NoneFoundContext extends TracksContext  {
-        when(verified(service).get(anonymousSession, path, urns, Params.empty))
+        when(service.get(anonymousSession, path, urns, Params.empty))
           .thenReturn(Future(JsonResponse(OkStatus, trackmetadataClientEmptyTracks)))
       }
 
       "returns empty list" in new NoneFoundContext {
         val tracks = Await.result(trackmetadataClient.tracks(anonymousSession, urns))
         tracks must beEmpty
+
+        verify(service).get(anonymousSession, path, urns, Params.empty)
       }
     }
 
     "all of the tracks are found" >> {
       trait NoneFoundContext extends TracksContext  {
-        when(verified(service).get(anonymousSession, path, urns, Params.empty))
+        when(service.get(anonymousSession, path, urns, Params.empty))
           .thenReturn(Future(JsonResponse(OkStatus, trackmetadataClientMultipleTracks)))
       }
 
@@ -164,12 +170,14 @@ class TrackMetadataClientSpec extends UnitSpecification with Fixtures{
         val tracks = Await.result(trackmetadataClient.tracks(anonymousSession, urns))
         tracks must haveSize(3)
         tracks.map(_.urn) must contain(urn1, urn2, urn3)
+
+        verify(service).get(anonymousSession, path, urns, Params.empty)
       }
     }
 
     "some tracks are found" >> {
       trait SomeFoundContext extends TracksContext  {
-        when(verified(service).get(anonymousSession, path, urns, Params.empty))
+        when(service.get(anonymousSession, path, urns, Params.empty))
           .thenReturn(Future(JsonResponse(OkStatus, trackmetadataClientTracks_1_3)))
       }
 
@@ -177,21 +185,26 @@ class TrackMetadataClientSpec extends UnitSpecification with Fixtures{
         val tracks = Await.result(trackmetadataClient.tracks(anonymousSession, Set(urn1, urn2, urn3)))
         tracks must haveSize(2)
         tracks.map(_.urn) must contain(urn1, urn3)
+
+        verify(service).get(anonymousSession, path, urns, Params.empty)
       }
     }
 
     "Track urn count is more than batch limit" >> {
       trait BatchContext extends TracksContext  {
-        when(verified(service).get(anonymousSession, path, Set(urn1, urn2), Params.empty))
+        when(service.get(anonymousSession, path, Set(urn1, urn2), Params.empty))
           .thenReturn(Future(JsonResponse(OkStatus, trackmetadataClientTracks_1_3)))
 
-        when(verified(service).get(anonymousSession, path, Set(urn3), Params.empty))
+        when(service.get(anonymousSession, path, Set(urn3), Params.empty))
           .thenReturn(Future(JsonResponse(OkStatus, trackmetadataClientTracks_1_3)))
       }
 
       "returns list of found tracks" in new BatchContext {
         val tracks = Await.result(trackmetadataClient.tracks(anonymousSession, Set(urn1, urn2, urn3), 2))
         tracks must haveSize(4)
+
+        verify(service).get(anonymousSession, path, Set(urn1, urn2), Params.empty)
+        verify(service).get(anonymousSession, path, Set(urn3), Params.empty)
       }
     }
   }

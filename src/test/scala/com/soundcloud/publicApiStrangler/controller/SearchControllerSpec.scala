@@ -14,10 +14,10 @@ import com.soundcloud.publicApiStrangler.mapper.search.SearchMapper
 import com.soundcloud.publicApiStrangler.mapping.search.{Search, SearchDispatcherRequest}
 import com.soundcloud.publicApiStrangler.support.DispatchToMothershipHandler
 import com.soundcloud.scalakit.finagle.http.{BadRequestStatus, HandlerRequest}
-import com.soundcloud.scalakit.test.VerifiedMocks
 import com.twitter.util.Future
 import io.prometheus.client.CollectorRegistry
 import org.jboss.netty.handler.codec.http.HttpResponseStatus
+import org.mockito.Mockito.{when, verify}
 
 class SearchControllerSpec extends InjectionBasedControllerSpecification {
 
@@ -90,7 +90,7 @@ class SearchControllerSpec extends InjectionBasedControllerSpecification {
       ("/playlists.json", SearchDispatcherRequest.playlistSearch)
     )
 
-    trait Context extends VerifiedMocks with ForwardContext {
+    trait Context extends ForwardContext {
       val queryParams = Map("q" -> "foo")
       val pageParams = Map("offset" -> "0", "limit" -> "10")
       val extraParams = pageParams ++ queryParams
@@ -116,13 +116,15 @@ class SearchControllerSpec extends InjectionBasedControllerSpecification {
         val query = dispatcherRequest(request)
         val page = OffsetBasedPage(query, "http://api.soundcloud.com", apiEndPoint, extraParams, 0, 10)
 
-        when(verified(searchMapperMock).materialize(anonymousSession, page))
+        when(searchMapperMock.materialize(anonymousSession, page))
           .thenReturn(Future(Some(searchMock)))
 
         val response = get(controller, apiEndPoint, extraParams, Map("Host" -> "api.soundcloud.com"))
         response.code ==== 200
         response.jsonBody ==== searchMock.json
         doesNotForward(response)
+
+        verify(searchMapperMock).materialize(anonymousSession, page)
       }
     }
 
@@ -132,7 +134,7 @@ class SearchControllerSpec extends InjectionBasedControllerSpecification {
         val query = dispatcherRequest(request)
         val page = OffsetBasedPage(query, "http://api.soundcloud.com", apiEndPoint, queryParams, 0, 10)
 
-        when(verified(searchMapperMock).materialize(anonymousSession, page))
+        when(searchMapperMock.materialize(anonymousSession, page))
           .thenReturn(Future(Some(searchMock)))
 
         val response = get(controller, apiEndPoint, Map("q" -> "foo"), Map("Host" -> "api.soundcloud.com"))
@@ -140,6 +142,8 @@ class SearchControllerSpec extends InjectionBasedControllerSpecification {
         response.getHeader("Cache-Control") must contain ("max-age=" + SearchController.MaxCacheAge)
         response.getHeader("Cache-Control") must contain ("public")
         doesNotForward(response)
+
+        verify(searchMapperMock).materialize(anonymousSession, page)
       }
     }
 
@@ -151,12 +155,14 @@ class SearchControllerSpec extends InjectionBasedControllerSpecification {
           val query = dispatcherRequest(request)
           val page = OffsetBasedPage(query, "http://api.soundcloud.com", apiEndPoint, queryParams, 0, 10)
 
-          when(verified(searchMapperMock).materialize(anonymousSession, page))
+          when(searchMapperMock.materialize(anonymousSession, page))
             .thenReturn(Future(Some(searchMock)))
 
           val response = get(controller, apiEndPoint, Map("q" -> "foo"), Map("Host" -> "api.soundcloud.com"))
           response.code ==== 200
           doesNotForward(response)
+
+          verify(searchMapperMock).materialize(anonymousSession, page)
         }
       }
 
@@ -188,12 +194,14 @@ class SearchControllerSpec extends InjectionBasedControllerSpecification {
           val query = dispatcherRequest(request)
           val page = OffsetBasedPage(query, "http://api.soundcloud.com", apiEndPoint, extraParams, 0, 10)
 
-          when(verified(searchMapperMock).materialize(anonymousSession, page))
+          when(searchMapperMock.materialize(anonymousSession, page))
             .thenReturn(Future.exception(RepositoryException(BadRequestStatus, "oh, behave!")))
 
           val response = get(controller, apiEndPoint, extraParams, Map("Host" -> "api.soundcloud.com"))
           response.code ==== 400
           doesNotForward(response)
+
+          verify(searchMapperMock).materialize(anonymousSession, page)
         }
       }
     }

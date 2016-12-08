@@ -8,7 +8,6 @@ import com.soundcloud.publicApiStrangler.client.followcounts.FollowCountsClient
 import com.soundcloud.publicApiStrangler.client.follows._
 import com.soundcloud.publicApiStrangler.client.follows.representation._
 import com.soundcloud.publicApiStrangler.client.follows.representation.follow._
-import com.soundcloud.publicApiStrangler.client.follows.representation.follow.{SpamBlocked => FollowSpamBlocked}
 import com.soundcloud.publicApiStrangler.client.follows.representation.unfollow.{NotFollowing, UnfollowSuccessful, UnknownError => UnfollowUnknownError, UserAsTarget => UnfollowUserAsTarget, UserNotFound => UnfollowUserNotFound}
 import com.soundcloud.publicApiStrangler.mapping.timeline.User
 import com.soundcloud.publicApiStrangler.support.DispatchToMothershipHandler
@@ -145,7 +144,7 @@ class UserFollowController(userAuthentication: UserAuthentication,
           case _ => denyAgeUnknown
         }
         case AgeUnknownUser => denyAgeUnknown
-        case _: UnknownError => renderError(Status.InternalServerError)
+        case _: UnknownError | BulkFollowFailed(_) => renderError(Status.InternalServerError)
       }
     }
   }

@@ -3,12 +3,13 @@ package com.soundcloud.bff.nextbff.mapping
 import com.soundcloud.bff.nextbff.mapper.{EmbeddedItem, Mapper}
 import com.soundcloud.bff.test.UnitSpecification
 import com.soundcloud.jvmkit.{Urn, UserSession}
-import com.soundcloud.scalakit.test.VerifiedMocks
 import com.twitter.util.{Await, Future}
+import org.mockito.Mockito.when
+import org.specs2.mutable.Before
 
 class MappingContextSpec extends UnitSpecification {
 
-  trait AttachContext extends VerifiedMocks {
+  trait AttachContext extends Scope {
     val session = mock[UserSession]
     implicit val context = new MappingContext(session)
     val mapper = mock[Mapper[Any, Mapping]]
@@ -21,11 +22,11 @@ class MappingContextSpec extends UnitSpecification {
     (context.attach(EmbeddedItem(mapper, urn)) eq embedded) must beTrue
   }
 
-  trait MaterializeContext extends AttachContext {
+  trait MaterializeContext extends AttachContext with Before {
     val mapping = new Mapping {}
     val mapResult = Map[Any, Mapping](urn -> mapping)
 
-    override def before = {
+    override def before: Any = {
       when(mapper.map(session, Set(urn)))
         .thenReturn(Future(mapResult))
 

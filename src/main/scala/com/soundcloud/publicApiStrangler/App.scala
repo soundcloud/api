@@ -9,6 +9,7 @@ import com.soundcloud.jvmkit.{ResourceName, Urn}
 import com.soundcloud.jvmkit.admin.{AdminRoute, RequestMethod}
 import com.soundcloud.jvmkit.config.{ConfigConvention, DataSensitivity}
 import com.soundcloud.jvmkit.rollout.{BasicRolloutFeature, Rollout, RolloutBuilder}
+import com.soundcloud.jvmkit.telemetry.Telemetry
 import com.soundcloud.jvmkit.zookeeper.CuratorFrameworkFactory
 import com.soundcloud.publicApiStrangler.authorization._
 import com.soundcloud.publicApiStrangler.client._
@@ -32,6 +33,7 @@ import com.soundcloud.publicApiStrangler.singleTrackEndpointMigration.TrackRepre
 import com.soundcloud.publicApiStrangler.support._
 import com.soundcloud.ratelimiting.facade._
 import com.soundcloud.scalakit.cache.MemcachedClient
+import com.soundcloud.scalakit.finagle.config.MemcachedClientConfig
 import com.soundcloud.scalakit.finagle.dns.ServiceEntryPoint
 import com.soundcloud.scalakit.finagle.jsonservice.JsonClient
 import com.twitter.util.Future
@@ -236,7 +238,12 @@ object App
     )
   }
 
-  lazy val memcachedClient = MemcachedClient(config)
+  val memcachedResourceName = ResourceName("MEMCACHED")
+  lazy val memcachedClient = MemcachedClient(
+    memcachedResourceName,
+    new MemcachedClientConfig(memcachedResourceName, config),
+    config,
+    telemetry)
 
   private val rateLimitingFacade = new RateLimitingFacade(
     bffApplication,

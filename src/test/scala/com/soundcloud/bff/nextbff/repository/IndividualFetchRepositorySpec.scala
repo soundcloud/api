@@ -2,9 +2,10 @@ package com.soundcloud.bff.nextbff.repository
 
 import com.soundcloud.bff.test.UnitSpecification
 import com.soundcloud.jvmkit.{Urn, UserSession}
-import com.soundcloud.scalakit.test.VerifiedMocks
 import com.twitter.util.{Await, Future}
+import org.specs2.mutable.Before
 import play.api.libs.json.JsValue
+import org.mockito.Mockito.when
 
 class IndividualFetchRepositorySpec extends UnitSpecification {
 
@@ -12,7 +13,7 @@ class IndividualFetchRepositorySpec extends UnitSpecification {
     def fetch(session: UserSession, input: Urn): Future[JsValue]
   }
 
-  trait Context extends VerifiedMocks {
+  trait Context extends Scope with Before {
 
     val session = mock[UserSession]
     val urn1 = new Urn("soundcloud:users:3232")
@@ -28,7 +29,7 @@ class IndividualFetchRepositorySpec extends UnitSpecification {
         serviceMock.fetch(session, input).map(Option(_))
     }
 
-    override def before =
+    override def before: Any =
       when(serviceMock.fetch(any, any))
         .thenReturn(Future(json1))
         .thenReturn(Future(json2))

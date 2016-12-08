@@ -3,16 +3,18 @@ package com.soundcloud.publicApiStrangler.client.follows
 import com.soundcloud.jvmkit.{Urn, UserSessionBuilder}
 import com.soundcloud.publicApiStrangler.client.follows.representation._
 import com.soundcloud.publicApiStrangler.client.follows.representation.follow._
-import com.soundcloud.publicApiStrangler.client.follows.representation.unfollow.{UserNotFound => UnfollowUserNotFound, UnfollowSuccessful, UserAsTarget => UnfollowUserAsTarget, UnknownError => UnfollowUnknownError, NotFollowing => UnfollowNotFollowing}
+import com.soundcloud.publicApiStrangler.client.follows.representation.unfollow.{UnfollowSuccessful, NotFollowing => UnfollowNotFollowing, UnknownError => UnfollowUnknownError, UserAsTarget => UnfollowUserAsTarget, UserNotFound => UnfollowUserNotFound}
 import com.soundcloud.scalakit.finagle.http.{ForbiddenStatus, UnprocessableEntityStatus, _}
 import com.soundcloud.scalakit.finagle.jsonservice.{JsonClient, JsonResponse, Params}
-import com.soundcloud.scalakit.test.{UnitSpecification, VerifiedMocks}
+import com.soundcloud.scalakit.test.UnitSpecification
 import com.soundcloud.scalakit.{Geo, Path}
 import com.twitter.util.{Await, Future}
 import org.joda.time.LocalDateTime
 import play.api.libs.json.{JsNull, JsString, JsValue, Json}
 
 import scala.io.{Codec, Source}
+import org.mockito.Mockito.{when, verify}
+import org.specs2.mutable.After
 
 object Fixtures {
   lazy val emptyFollowingsPage = fileJson("empty_followings_page")
@@ -36,7 +38,7 @@ object Fixtures {
 
 class FollowsClientSpec extends UnitSpecification {
 
-  trait Context extends VerifiedMocks {
+  trait Context extends Scope {
     val user = new Urn("soundcloud:users:1")
     val anotherUser = new Urn("soundcloud:users:2")
     val yetAnotherUser = new Urn("soundcloud:users:3")
@@ -47,7 +49,7 @@ class FollowsClientSpec extends UnitSpecification {
 
   "#follow" >> {
 
-    trait FollowContext extends Context {
+    trait FollowContext extends Context with After {
       val path = Path() / "follow" / anotherUser
 
       lazy val geo = Geo("US")
@@ -56,8 +58,12 @@ class FollowsClientSpec extends UnitSpecification {
       lazy val result = Await.result(client.follow(session, anotherUser))
 
       def mockWith(status: StatusCode, body: JsValue) =
-        when(verified(serviceMock).post(session, path, Params.empty, Params.empty, None))
+        when(serviceMock.post(session, path, Params.empty, Params.empty, None))
           .thenReturn(Future(JsonResponse(status, body)))
+
+      override def after: Any = {
+        verify(serviceMock).post(session, path, Params.empty, Params.empty, None)
+      }
     }
 
     "returns the created following when a new following is created" in new FollowContext {
@@ -131,7 +137,7 @@ class FollowsClientSpec extends UnitSpecification {
 
   "#bulkFollow" >> {
 
-    trait FollowCotext extends Context {
+    trait FollowCotext extends Context with After {
       val path = Path() / "bulkfollow"
 
       lazy val geo = Geo("US")
@@ -140,8 +146,12 @@ class FollowsClientSpec extends UnitSpecification {
       lazy val result = Await.result(client.bulkFollow(session, List(anotherUser)))
 
       def mockWith(status: StatusCode, body: JsValue) =
-        when(verified(serviceMock).post(session, path, Params("urns" -> List(anotherUser)), Params.empty, None))
+        when(serviceMock.post(session, path, Params("urns" -> List(anotherUser)), Params.empty, None))
           .thenReturn(Future(JsonResponse(status, body)))
+
+      override def after: Any = {
+        verify(serviceMock).post(session, path, Params("urns" -> List(anotherUser)), Params.empty, None)
+      }
     }
 
     "returns the target when following is successful" in new FollowCotext {
@@ -165,7 +175,7 @@ class FollowsClientSpec extends UnitSpecification {
 
   "#unfollow" >> {
 
-    trait UnfollowCotext extends Context {
+    trait UnfollowCotext extends Context with After {
       val path = Path() / "unfollow" / anotherUser
 
       lazy val geo = Geo("US")
@@ -174,8 +184,12 @@ class FollowsClientSpec extends UnitSpecification {
       lazy val result = Await.result(client.unfollow(session, anotherUser))
 
       def mockWith(status: StatusCode, body: JsValue) =
-        when(verified(serviceMock).delete(session, path, Params.empty, Params.empty, None))
+        when(serviceMock.delete(session, path, Params.empty, Params.empty, None))
           .thenReturn(Future(JsonResponse(status, body)))
+
+      override def after: Any = {
+        verify(serviceMock).delete(session, path, Params.empty, Params.empty, None)
+      }
     }
 
     "returns the success of an unfollowing" in new UnfollowCotext {
@@ -213,15 +227,19 @@ class FollowsClientSpec extends UnitSpecification {
 
   "#followings" >> {
 
-    trait FollowingsContext extends Context {
+    trait FollowingsContext extends Context with After {
       val path = Path() / "users" / user / "followings"
-      val params = Params("last_id" ->  "12345", "page_size" -> 1)
+      val params = Params("last_id" -> "12345", "page_size" -> 1)
 
       lazy val result = Await.result(client.followings(anonymousSession, user, Some("12345"), 1))
 
       def mockWith(status: StatusCode, body: JsValue) =
-        when(verified(serviceMock).get(anonymousSession, path, params, Params.empty))
+        when(serviceMock.get(anonymousSession, path, params, Params.empty))
           .thenReturn(Future(JsonResponse(status, body)))
+
+      override def after: Any = {
+        verify(serviceMock).get(anonymousSession, path, params, Params.empty)
+      }
     }
 
     "returns none when an error happens" in new FollowingsContext {
@@ -257,15 +275,19 @@ class FollowsClientSpec extends UnitSpecification {
 
   "#followers" >> {
 
-    trait FollowersContext extends Context {
+    trait FollowersContext extends Context with After {
       val path = Path() / "users" / anotherUser / "followers"
-      val params = Params("last_id" ->  "12345", "page_size" -> 1)
+      val params = Params("last_id" -> "12345", "page_size" -> 1)
 
       lazy val result = Await.result(client.followers(anonymousSession, anotherUser, Some("12345"), 1))
 
       def mockWith(status: StatusCode, body: JsValue) =
-        when(verified(serviceMock).get(anonymousSession, path, params, Params.empty))
+        when(serviceMock.get(anonymousSession, path, params, Params.empty))
           .thenReturn(Future(JsonResponse(status, body)))
+
+      override def after: Any = {
+        verify(serviceMock).get(anonymousSession, path, params, Params.empty)
+      }
     }
 
     "returns none when an error happens" in new FollowersContext {
@@ -301,17 +323,21 @@ class FollowsClientSpec extends UnitSpecification {
 
   "#filterFollowings" >> {
 
-    trait FilterFollowingsContext extends Context {
+    trait FilterFollowingsContext extends Context with After {
       val included = Seq(anotherUser)
       val excluded = Seq(yetAnotherUser)
       val path = Path() / "users" / user / "filter_followings"
-      val params = Params("urns" -> (included ++ excluded).map(_.toString).mkString(","))
+      val params = Params("urns" -> (included ++ excluded))
 
       lazy val result = Await.result(client.filterFollowings(anonymousSession, user, included ++ excluded))
 
       def mockWith(status: StatusCode, body: JsValue) =
-        when(verified(serviceMock).get(anonymousSession, path, params, Params.empty))
+        when(serviceMock.get(anonymousSession, path, params, Params.empty))
           .thenReturn(Future(JsonResponse(status, body)))
+
+      override def after: Any = {
+        verify(serviceMock).get(anonymousSession, path, params, Params.empty)
+      }
     }
 
     "returns none when an error happens" in new FilterFollowingsContext {
@@ -329,17 +355,21 @@ class FollowsClientSpec extends UnitSpecification {
 
   "#filterFollowers" >> {
 
-    trait FilterFollowersContext extends Context {
+    trait FilterFollowersContext extends Context with After {
       val included = Seq(anotherUser)
       val excluded = Seq(yetAnotherUser)
       val path = Path() / "users" / user / "filter_followers"
-      val params = Params("urns" -> (included ++ excluded).map(_.toString).mkString(","))
+      val params = Params("urns" -> (included ++ excluded))
 
       lazy val result = Await.result(client.filterFollowers(anonymousSession, user, included ++ excluded))
 
       def mockWith(status: StatusCode, body: JsValue) =
-        when(verified(serviceMock).get(anonymousSession, path, params, Params.empty))
+        when(serviceMock.get(anonymousSession, path, params, Params.empty))
           .thenReturn(Future(JsonResponse(status, body)))
+
+      override def after: Any = {
+        verify(serviceMock).get(anonymousSession, path, params, Params.empty)
+      }
     }
 
     "returns none when an error happens" in new FilterFollowersContext {
@@ -357,14 +387,18 @@ class FollowsClientSpec extends UnitSpecification {
 
   "#followersFollowedBy" >> {
 
-    trait FollowersFollowedByContext extends Context {
+    trait FollowersFollowedByContext extends Context with After {
       val path = Path() / "users" / user / "followers_followed" / anotherUser
 
       lazy val result = Await.result(client.followersFollowedBy(anonymousSession, user, anotherUser))
 
       def mockWith(status: StatusCode, body: JsValue) =
-        when(verified(serviceMock).get(anonymousSession, path, Params.empty, Params.empty))
+        when(serviceMock.get(anonymousSession, path, Params.empty, Params.empty))
           .thenReturn(Future(JsonResponse(status, body)))
+
+      override def after: Any = {
+        verify(serviceMock).get(anonymousSession, path, Params.empty, Params.empty)
+      }
     }
 
     "returns none when an error happens" in new FollowersFollowedByContext {
@@ -388,14 +422,18 @@ class FollowsClientSpec extends UnitSpecification {
 
   "#followingsNotFollowedBy" >> {
 
-    trait FollowingsNotFollowedByContext extends Context {
+    trait FollowingsNotFollowedByContext extends Context with After {
       val path = Path() / "users" / user / "followings_not_followed" / anotherUser
 
       lazy val result = Await.result(client.followingsNotFollowedBy(anonymousSession, user, anotherUser))
 
       def mockWith(status: StatusCode, body: JsValue) =
-        when(verified(serviceMock).get(anonymousSession, path, Params.empty, Params.empty))
+        when(serviceMock.get(anonymousSession, path, Params.empty, Params.empty))
           .thenReturn(Future(JsonResponse(status, body)))
+
+      override def after: Any = {
+        verify(serviceMock).get(anonymousSession, path, Params.empty, Params.empty)
+      }
     }
 
     "returns none when an error happens" in new FollowingsNotFollowedByContext {
@@ -419,14 +457,18 @@ class FollowsClientSpec extends UnitSpecification {
 
   "#mutualFollowings" >> {
 
-    trait FollowingsNotFollowedByContext extends Context {
+    trait FollowingsNotFollowedByContext extends Context with After {
       val path = Path() / "users" / user / "mutual_followings" / anotherUser
 
       lazy val result = Await.result(client.mutualFollowings(anonymousSession, user, anotherUser))
 
       def mockWith(status: StatusCode, body: JsValue) =
-        when(verified(serviceMock).get(anonymousSession, path, Params.empty, Params.empty))
+        when(serviceMock.get(anonymousSession, path, Params.empty, Params.empty))
           .thenReturn(Future(JsonResponse(status, body)))
+
+      override def after: Any = {
+        verify(serviceMock).get(anonymousSession, path, Params.empty, Params.empty)
+      }
     }
 
     "returns none when an error happens" in new FollowingsNotFollowedByContext {
