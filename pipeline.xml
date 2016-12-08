@@ -21,9 +21,7 @@
       <job name="end-to-end-tests">
         <tasks>
            <exec command="make">
-             <arg>remove-containers</arg>
              <arg>end-to-end-test</arg>
-             <arg>remove-containers</arg>
              <runif status="passed"/>
            </exec>
         </tasks>
