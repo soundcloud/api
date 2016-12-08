@@ -24,14 +24,11 @@ class SingleTrackControllerSpec extends InjectionBasedControllerSpecification {
     val session = new UserSessionBuilder().build()
     val trackUrn = new Urn("soundcloud:tracks:987")
 
-    def shouldRespondWithTrackMetadata = true
-
     def controller(session: UserSession) = new SingleTrackController(
       fakeUserAuthentication(session),
       fallback,
       tracksService,
-      telemetry,
-      () => Future.value(shouldRespondWithTrackMetadata))
+      telemetry)
   }
 
   val validPaths = List("/tracks/987", "/tracks/987/", "/tracks/987.json", "/tracks/987.json/")
@@ -98,8 +95,6 @@ class SingleTrackControllerSpec extends InjectionBasedControllerSpecification {
     path =>
       s"When loading tracks from trackmetadata for: $path" >> {
         trait FromTrackMetadata extends Context {
-          override def shouldRespondWithTrackMetadata = true
-
           val defaultJsonResponse = """{"pass-through":"for sure"}"""
 
           def newResponse(code: Int) = {
@@ -144,60 +139,6 @@ class SingleTrackControllerSpec extends InjectionBasedControllerSpecification {
           val response = get(controller(session), path)
           response.status.code ==== 500
         }
-      }
-  }
-
-  validPaths.foreach {
-    path =>
-      s"When loading tracks from public-api for: $path" >> {
-        trait FromPublicApi extends Context {
-          override def shouldRespondWithTrackMetadata = false
-
-          val defaultJsonResponse = """{"pass-through":"for sure"}"""
-
-          def newResponse(code: Int) = {
-            val response = Response()
-            response.setContentString(defaultJsonResponse)
-            response.setStatusCode(code)
-            response
-          }
-
-          def publicApiResponse: Future[Response]
-
-          when(fallback.dispatchToMothership(any[Request])).thenReturn(publicApiResponse)
-        }
-
-        "it passes 200 through with the json" in new FromPublicApi {
-          override def publicApiResponse = Future.value(newResponse(200))
-
-          val response = get(controller(session), path)
-          response.status.code ==== 200
-          response.body ==== defaultJsonResponse
-        }
-
-        "it passes 404 through with the json" in new FromPublicApi {
-          override def publicApiResponse = Future.value(newResponse(404))
-
-          val response = get(controller(session), path)
-          response.status.code ==== 404
-          response.body ==== defaultJsonResponse
-        }
-
-        "it passes 500 through with the json" in new FromPublicApi {
-          override def publicApiResponse = Future.value(newResponse(500))
-
-          val response = get(controller(session), path)
-          response.status.code ==== 500
-          response.body ==== defaultJsonResponse
-        }
-
-        "it returns 500 when there are exceptions" in new FromPublicApi {
-          override def publicApiResponse = Future.exception(new RuntimeException("BAD THINGS"))
-
-          val response = get(controller(session), path)
-          response.status.code ==== 500
-        }
-
       }
   }
 }

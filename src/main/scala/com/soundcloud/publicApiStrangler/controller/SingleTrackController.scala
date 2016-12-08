@@ -14,8 +14,7 @@ import scala.collection.JavaConversions._
 class SingleTrackController(userAuthentication: UserAuthentication,
                             mothershipDispatcher: DispatchToMothershipHandler,
                             tracksService: TrackRepresentationsService,
-                            telemetry: Telemetry,
-                            shouldRespondWithTrackMetadata: () => Future[Boolean])
+                            telemetry: Telemetry)
   extends BffInjectionBasedController {
 
   private val numericRegexp = """\d+""".r
@@ -37,10 +36,9 @@ class SingleTrackController(userAuthentication: UserAuthentication,
 
           case Return(urn@Urn(_, _, numericRegexp())) => {
             val secretToken = req.params.get("secret_token")
-
-            shouldRespondWithTrackMetadata().flatMap {
-              case true => migrationResponse(session, urn, secretToken, callback)
-              case false => legacyResponse(req)
+            tracksService.track(session, urn, secretToken, callback).liftToTry.map {
+              case Return(response) => toResponseBuilder(response)
+              case _ => new ResponseBuilder().status(Status.InternalServerError.code)
             }
           }
           case _ =>
@@ -58,19 +56,6 @@ class SingleTrackController(userAuthentication: UserAuthentication,
     res.contentType = "application/json; charset=utf-8"
     res.contentLength = contentLength
     Future.value(toResponseBuilder(res))
-  }
-
-  private def legacyResponse(req: Request): Future[ResponseBuilder] =
-    mothershipDispatcher.dispatchToMothership(req).liftToTry.map {
-      case Return(response) => toResponseBuilder(response)
-      case _ => new ResponseBuilder().status(Status.InternalServerError.code)
-    }
-
-  private def migrationResponse(session: UserSession, urn: Urn, secret: Option[String], callback: Option[String]): Future[ResponseBuilder] = {
-    tracksService.track(session, urn, secret, callback).liftToTry.map {
-      case Return(response) => toResponseBuilder(response)
-      case _ => new ResponseBuilder().status(Status.InternalServerError.code)
-    }
   }
 
   private def toResponseBuilder(response: Response): ResponseBuilder = {

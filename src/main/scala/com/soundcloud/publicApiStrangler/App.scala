@@ -232,8 +232,7 @@ object App
       userAuthentication,
       mothershipDispatcher,
       tracksService,
-      telemetry,
-      () => rolloutClient.isActive(BasicRolloutFeature("load_track_from_trackmetadata"))
+      telemetry
     )
   }
 
