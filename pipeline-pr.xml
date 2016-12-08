@@ -9,7 +9,7 @@
           <exec command="make" workingdir="pr">
             <arg>-f</arg>
             <arg>Makefile.pipeline</arg>
-            <arg>unit-test</arg>
+            <arg>test</arg>
             <arg>package</arg>
             <arg>publish</arg>
             <runif status="passed" />
