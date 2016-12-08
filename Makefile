@@ -1,65 +1,37 @@
-PUBLIC_API_STRANGLER_VERSION ?= $(shell artifact-manager package-version)
-DOCKER_IP ?= $(shell docker-ip)
-
-PWD?=$(HOME)
-
 ifeq ($(USE_CRUN),false)
 	SBT = sbt
 	SBT_INTERACTIVE = sbt
-	JAVAC = javac
 else
 	SBT = crun sbt -- sbt
 	SBT_INTERACTIVE = crun -i sbt -- sbt
-	JAVAC = crun jdk-8 -- javac
 endif
 
-.PHONY: default
 default: precheckin
 
-run: _dev_docker_compose
+run:
+	docker-compose up --force-recreate -d
+	crun sbt -i --docker-options="-p5000:5000 --link=strangler_zk --link=strangler_memcached --env-file=config/development" -- sbt run
 
 precheckin:
 	make unit-test
-	mkdir -p ./target/bazooka/build
 	make -f Makefile.pipeline package
 	make end-to-end-test
-	docker-compose stop
 
-end-to-end-test: _dev_docker_compose
-	bin/wait-for-http $(DOCKER_IP):4567/-/health # wait for publicapistub
-	bin/wait-for-http $(DOCKER_IP):5000/-/health # wait for publicapistrangler
+end-to-end-test:
+	echo "This assumes you've run make -f Makefile.pipeline package before"
+	PUBLIC_API_STRANGLER_VERSION=$(shell artifact-manager package-version) docker-compose -f docker-compose-e2e-tests.yml up --force-recreate -d publicapistrangler
+	bin/wait-for-http localhost:4567/-/health # wait for publicapistub
+	bin/wait-for-http localhost:5000/-/health # wait for publicapistrangler
 	crun sbt --docker-options="--link=strangler_api:strangler --link=strangler_zk:zookeeper" -- sbt endToEnd/test
 
-test: unit-test
-
-unit-test:
+test:
 	$(SBT) test
-
-interactive-lite:
-	source config/baremetal.sh && $(SBT)
 
 interactive:
 	$(SBT_INTERACTIVE)
-
-compile:
-	$(SBT) compile
-
-sc-debian-layout: clean patched-jdk
-	$(SBT) scDebianLayout:packageBin
 
 clean:
 	rm -rf target
 	rm -rf project/project
 	rm -rf project/target
 	rm -rf jdk/target
-
-.PHONY: patched-jdk
-patched-jdk: jdk/target/sun/nio/ch/Util.class
-
-jdk/target/sun/nio/ch/Util.class: jdk/src/share/classes/sun/nio/ch/Util.java
-	mkdir -p jdk/target
-	$(JAVAC) -d jdk/target $<
-
-.PHONY: _dev_docker_compose
-_dev_docker_compose:
-	PUBLIC_API_STRANGLER_VERSION=$(PUBLIC_API_STRANGLER_VERSION) docker-compose up --force-recreate -d publicapistrangler
