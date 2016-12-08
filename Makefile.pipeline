@@ -14,6 +14,9 @@ RUNTIME_STACK := jdk-8
 DEPLOY_SCRIPT ?= $(shell gen-deploy-script --arch=linux --name=public-api-strangler --revision=`artifact-manager package-version`)
 PUBLIC_API_STRANGLER_VERSION ?= $(shell artifact-manager package-version)
 
+test:
+	make test
+
 package: prepare-package-layout
 	docker pull docker.dev.s-cloud.net/$(RUNTIME_STACK):latest
 	artifact-manager package --runtime=$(RUNTIME_STACK)
