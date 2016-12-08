@@ -6,6 +6,7 @@ import com.soundcloud.bff.nextbff.repository.RepositoryException
 import com.soundcloud.bff.web.{BffInjectionBasedController, UserAuthentication}
 import com.soundcloud.jvmkit.telemetry.Counter
 import com.soundcloud.publicApiStrangler.client.followcounts.FollowCountsClient
+import com.soundcloud.publicApiStrangler.client.liebling.LieblingClient
 import com.soundcloud.publicApiStrangler.controller.SearchController._
 import com.soundcloud.publicApiStrangler.mapper.search.SearchMapper
 import com.soundcloud.publicApiStrangler.mapping.search.SearchDispatcherRequest
@@ -16,13 +17,14 @@ import com.twitter.util.{Future, Return, Try}
 /**
   * Redirects search queries on to search-dispatcher and fetches meta data.
   */
-class SearchController(val userAuthentication: UserAuthentication,
-                       val mothershipDispatcher: DispatchToMothershipHandler,
-                       val mothershipCounter: Counter,
-                       val followCountsClient: FollowCountsClient,
-                       val searchMapper: SearchMapper,
-                       val baseUrl: String)
-  extends BffInjectionBasedController with FollowCountsHelper {
+class SearchController(userAuthentication: UserAuthentication,
+                       mothershipDispatcher: DispatchToMothershipHandler,
+                       mothershipCounter: Counter,
+                       followCountsClient: FollowCountsClient,
+                       searchMapper: SearchMapper,
+                       baseUrl: String,
+                       lieblingClient: LieblingClient,
+                       userRelatedMothershipDispatcher: UserRelatedMothershipDispatcher) extends BffInjectionBasedController {
 
   get("/tracks")(dispatchTrackRequest)
   get("/tracks/")(dispatchTrackRequest)
@@ -37,21 +39,19 @@ class SearchController(val userAuthentication: UserAuthentication,
   get("/playlists")(dispatchPlaylistRequest)
   get("/playlists.json")(dispatchPlaylistRequest)
 
-  // NOTE: The following are a quick-fix in order to fetch follow counts from Stitch instead of Mothership.
-  // These endpoints are NOT properly strangled.
-  get("/search")(dispatchToMothershipWithFollowCounts)
-  get("/search.json")(dispatchToMothershipWithFollowCounts)
+  get("/search")(userRelatedMothershipDispatcher.dispatchToMothership _)
+  get("/search.json")(userRelatedMothershipDispatcher.dispatchToMothership _)
 
-  get("/search/universal")(dispatchToMothershipWithFollowCounts)
-  get("/search/universal.json")(dispatchToMothershipWithFollowCounts)
+  get("/search/universal")(userRelatedMothershipDispatcher.dispatchToMothership _)
+  get("/search/universal.json")(userRelatedMothershipDispatcher.dispatchToMothership _)
 
-  get("/search/people")(dispatchToMothershipWithFollowCounts)
-  get("/search/people.json")(dispatchToMothershipWithFollowCounts)
+  get("/search/people")(userRelatedMothershipDispatcher.dispatchToMothership _)
+  get("/search/people.json")(userRelatedMothershipDispatcher.dispatchToMothership _)
 
   private def dispatchUserRequest = dispatchRequest(
     defaultParams,
     SearchDispatcherRequest.userSearch,
-    dispatchToMothershipWithFollowCounts
+    userRelatedMothershipDispatcher.dispatchToMothership _
   )
 
   private def dispatchPlaylistRequest = dispatchRequest(

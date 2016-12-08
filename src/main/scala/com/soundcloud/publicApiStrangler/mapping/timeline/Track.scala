@@ -7,7 +7,7 @@ import play.api.libs.json.JsValue
 
 
 class Track(jsonValue: JsValue,
-            likesByUrn: Map[Urn, Int],
+            likesByUrn: Map[Urn, Long],
             baseUrl: String,
             entitySummaryMapper: EntitySummaryMapper)(implicit context: MappingContext)
   extends TrackSummary(jsonValue, baseUrl, entitySummaryMapper) {

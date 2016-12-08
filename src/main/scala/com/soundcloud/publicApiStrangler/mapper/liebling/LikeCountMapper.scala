@@ -3,10 +3,9 @@ package com.soundcloud.publicApiStrangler.mapper.liebling
 import com.soundcloud.bff.nextbff.mapper.Mapper
 import com.soundcloud.bff.nextbff.mapping.MappingContext
 import com.soundcloud.jvmkit.{Urn, UserSession}
+import com.soundcloud.publicApiStrangler.client.liebling.{LieblingClient, LikesCount, UserLikesCount}
 import com.soundcloud.publicApiStrangler.mapping.liebling.LikeInfo
 import com.soundcloud.publicApiStrangler.support.mapping.{InputValidation, ObjectMapping}
-import com.soundcloud.service.client.LieblingClient
-import com.soundcloud.service.response.representation.liebling.{LikesCount, UserLikesCount}
 import com.twitter.util.Future
 
 class LikeCountMapper(lieblingClient: LieblingClient) extends Mapper[Urn, LikeInfo]

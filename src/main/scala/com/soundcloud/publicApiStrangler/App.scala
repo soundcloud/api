@@ -160,6 +160,14 @@ object App
 
   private val baseUrl = config.get("APP_BASE_URL", DataSensitivity.NON_SENSITIVE)
 
+  val loadUserLikeCountsFromLieblingFeatureFlag = BasicRolloutFeature("load_user_like_counts_from_liebling")
+  private val userRelatedMothershipDispatcher = new UserRelatedMothershipDispatcher(
+    userAuthentication,
+    mothershipDispatcher,
+    followCountsClient,
+    lieblingClient,
+    () => rolloutClient.isActive(loadUserLikeCountsFromLieblingFeatureFlag))
+
   private val timelineController = {
     val entitySummaryMapper = new EntitySummaryMapper(okidokiClient, baseUrl)
     val entityMapper = new EntityMapper(
@@ -276,7 +284,9 @@ object App
       mothershipCounter,
       followCountsClient,
       searchMapper,
-      baseUrl
+      baseUrl,
+      lieblingClient,
+      userRelatedMothershipDispatcher
     )
   }
 
@@ -289,39 +299,19 @@ object App
     )
   }
 
-  private val likesController = new LikesController(
-    userAuthentication,
-    mothershipDispatcher,
-    followCountsClient
-  )
+  private val likesController = new LikesController(userRelatedMothershipDispatcher)
 
-  private val friendsController = new FriendsController(
-    userAuthentication,
-    mothershipDispatcher,
-    followCountsClient
-  )
+  private val friendsController = new FriendsController(userRelatedMothershipDispatcher)
 
   private val groupsController = new GroupsController(
     userAuthentication
   )
 
-  private val suggestedUsersController = new SuggestedUsersController(
-    userAuthentication,
-    mothershipDispatcher,
-    followCountsClient
-  )
+  private val suggestedUsersController = new SuggestedUsersController(userRelatedMothershipDispatcher)
 
-  private val repostersController = new RepostersController(
-    userAuthentication,
-    mothershipDispatcher,
-    followCountsClient
-  )
+  private val repostersController = new RepostersController(userRelatedMothershipDispatcher)
 
-  private val userController = new UsersController(
-    userAuthentication,
-    mothershipDispatcher,
-    followCountsClient
-  )
+  private val userController = new UsersController(userRelatedMothershipDispatcher)
 
   private val playlistsController = new PlaylistsController(
     userAuthentication,

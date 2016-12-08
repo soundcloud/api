@@ -9,6 +9,7 @@ import com.soundcloud.jvmkit.telemetry.Telemetry
 import com.soundcloud.jvmkit.test.InMemoryConfig
 import com.soundcloud.jvmkit.{Urn, UserSession}
 import com.soundcloud.publicApiStrangler.client.followcounts.{FollowCounts, FollowCountsClient}
+import com.soundcloud.publicApiStrangler.client.liebling.LieblingClient
 import com.soundcloud.publicApiStrangler.mapper.search.SearchMapper
 import com.soundcloud.publicApiStrangler.mapping.search.{Search, SearchDispatcherRequest}
 import com.soundcloud.publicApiStrangler.support.DispatchToMothershipHandler
@@ -26,14 +27,26 @@ class SearchControllerSpec extends InjectionBasedControllerSpecification {
     val fallbackCounter = new Telemetry(new InMemoryConfig, new CollectorRegistry).counter("foo", "bar", "path")
     val searchMapperMock = mock[SearchMapper]
     val followCountsClientMock = mock[FollowCountsClient]
+    val lieblingClientMock = mock[LieblingClient]
+
+    val authentication = fakeUserAuthentication(anonymousSession)
+    val userRelatedMothershipDispatcher = new UserRelatedMothershipDispatcher(
+      authentication,
+      fallbackMock,
+      followCountsClientMock,
+      lieblingClientMock,
+      () => Future.value(true)
+    )
 
     val controller = new SearchController(
-      fakeUserAuthentication(anonymousSession),
+      authentication,
       fallbackMock,
       fallbackCounter,
       followCountsClientMock,
       searchMapperMock,
-      "http://api.soundcloud.com"
+      "http://api.soundcloud.com",
+      lieblingClientMock,
+      userRelatedMothershipDispatcher
     )
 
     // just so we can distinguish a forwarded request. Typically, this would be 200.

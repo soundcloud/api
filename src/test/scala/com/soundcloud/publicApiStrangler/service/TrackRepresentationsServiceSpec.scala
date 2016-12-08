@@ -1,6 +1,7 @@
 package com.soundcloud.publicApiStrangler.singleTrackEndpointMigration
 
 import com.soundcloud.jvmkit.{Urn, UserSession, UserSessionBuilder}
+import com.soundcloud.publicApiStrangler.client.liebling.{LieblingClient, UserLikesCount}
 import com.soundcloud.publicApiStrangler.client.mediaservice.{MediaServiceUrlGenClient, WaveformUrl}
 import com.soundcloud.publicApiStrangler.client.{DomainLocking, RichOkidokiClient, TrackAudioMetadata}
 import com.soundcloud.publicApiStrangler.client.pubmese.{Isrc, PubmeseClient}
@@ -10,9 +11,7 @@ import com.soundcloud.publicApiStrangler.client.trackmetadata.{Artwork, Embeddin
 import com.soundcloud.publicApiStrangler.representation.TrackRepresentation
 import com.soundcloud.scalakit.json.Json
 import com.soundcloud.scalakit.test.UnitSpecification
-import com.soundcloud.service.client.LieblingClient
-import com.soundcloud.service.response.representation._
-import com.soundcloud.service.response.representation.liebling.UserLikesCount
+import com.soundcloud.service.response.representation.{Geoblockings, User}
 import com.twitter.finagle.http.Status
 import com.twitter.util.{Await, Future}
 import org.joda.time.LocalDateTime
