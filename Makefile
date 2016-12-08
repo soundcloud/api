@@ -12,6 +12,8 @@ RUNTIME_STACK := jdk-8
 
 DEPLOY_SCRIPT ?= $(shell gen-deploy-script --arch=linux --name=public-api-strangler --revision=`artifact-manager package-version`)
 
+DOCKER_IP ?= $(shell docker-ip)
+
 ifeq ($(USE_CRUN),false)
 	SBT = sbt
 	SBT_INTERACTIVE = sbt
@@ -34,8 +36,8 @@ precheckin:
 end-to-end-test:
 	echo "This assumes you've run make package before"
 	PUBLIC_API_STRANGLER_VERSION=$(shell artifact-manager package-version) docker-compose -f docker-compose-e2e-tests.yml up --force-recreate -d publicapistrangler
-	bin/wait-for-http localhost:4567/-/health # wait for publicapistub
-	bin/wait-for-http localhost:5000/-/health # wait for publicapistrangler
+	bin/wait-for-http $(DOCKER_IP):4567/-/health # wait for publicapistub
+	bin/wait-for-http $(DOCKER_IP):5000/-/health # wait for publicapistrangler
 	crun sbt --docker-options="--link=strangler_api:strangler --link=strangler_zk:zookeeper" -- sbt endToEnd/test
 
 test:
