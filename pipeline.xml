@@ -4,12 +4,19 @@
   </materials>
   <stage name="test">
     <jobs>
-      <job name="unit-tests">
+      <job name="unit-tests-and-publish">
         <tasks>
            <exec command="make">
              <arg>test</arg>
+             <runif status="passed"/>
+           </exec>
+           <exec command="make">
              <arg>package</arg>
+             <runif status="passed"/>
+           </exec>
+           <exec command="make">
              <arg>publish</arg>
+             <arg>publish-deploy</arg>
              <runif status="passed"/>
            </exec>
         </tasks>
@@ -55,6 +62,14 @@
            </exec>
            <exec command="make">
              <arg>deploy-db-apitrackupload</arg>
+             <runif status="passed"/>
+           </exec>
+           <exec command="make">
+             <arg>deploy-k8s-api</arg>
+             <runif status="passed"/>
+           </exec>
+           <exec command="make">
+             <arg>deploy-k8s-apitrackupload</arg>
              <runif status="passed"/>
            </exec>
         </tasks>
