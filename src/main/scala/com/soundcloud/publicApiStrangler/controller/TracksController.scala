@@ -56,7 +56,7 @@ class TracksController(userAuthentication: UserAuthentication,
     userAuthentication.withLoggedInUser(request) { (session, _) =>
       val urn = trackUrn(request)
       gobbly.allTracksManagedByFeedsForWrite(session, List(urn)).flatMap {
-        case GobblySuccess(true) => Future.value(render.unauthorized.typedJson(Json.obj("reason" -> "not allowed")))
+        case GobblySuccess(true) => Future.value(render.unauthorized.json(Json.obj("reason" -> "not allowed")))
         case GobblySuccess(false) => mothershipDispatcher.dispatch(request)
         case GobblyServerError(errors) => Future.value(render.internalServerError)
         case GobblyClientError(errors) => Future.value(render.internalServerError)
