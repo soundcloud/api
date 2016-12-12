@@ -2,15 +2,15 @@ package com.soundcloud.publicApiStrangler
 
 import java.io.InputStream
 
-import com.soundcloud.scalakit.test.UnitSpecification
-import com.soundcloud.testutilities.SpinningUpAppSupport
 import org.apache.http.client.methods.HttpPost
 import org.apache.http.entity.ContentType
 import org.apache.http.entity.mime.MultipartEntityBuilder
 import org.apache.http.impl.client.HttpClients
 import org.apache.http.util.EntityUtils
+import org.specs2.mutable.Specification
+import org.specs2.specification.Scope
 
-class TrackUploadSpec extends UnitSpecification with SpinningUpAppSupport {
+class TrackUploadSpec extends Specification {
 
   "Public API Strangler" should {
     "properly stream large files" in new Scope {

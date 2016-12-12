@@ -1,10 +1,11 @@
 package com.soundcloud.publicApiStrangler
 
-import com.soundcloud.scalakit.test.UnitSpecification
 import com.soundcloud.testutilities.SpinningUpAppSupport
 import com.twitter.finagle.http.{HeaderMap, Status}
+import org.specs2.mutable.Specification
+import org.specs2.specification.Scope
 
-class SessionExemptedEndpointsSpec extends UnitSpecification with SpinningUpAppSupport {
+class SessionExemptedEndpointsSpec extends Specification with SpinningUpAppSupport {
 
   "Public API Strangler" should {
 

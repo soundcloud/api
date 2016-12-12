@@ -2,14 +2,15 @@ package com.soundcloud.publicApiStrangler
 
 import com.soundcloud.jvmkit.config.AppConfig
 import com.soundcloud.jvmkit.zookeeper.{BasePath, ZkClient}
-import com.soundcloud.scalakit.test.UnitSpecification
 import com.soundcloud.testutilities.{GratisMusikDiebstahl, SpinningUpAppSupport}
 import org.apache.curator.framework.CuratorFrameworkFactory
 import org.apache.curator.retry.ExponentialBackoffRetry
+import org.specs2.mutable.Specification
+import org.specs2.specification.Scope
 
-class RateLimitingSanitySpecification extends UnitSpecification with SpinningUpAppSupport {
+class RateLimitingSanitySpecification extends Specification with SpinningUpAppSupport {
 
-  trait Context extends super.Context {
+  trait Context extends Scope {
     val server = TestServer("strangler", 5000)
     val adminServer = TestServer("strangler", 5001)
 
