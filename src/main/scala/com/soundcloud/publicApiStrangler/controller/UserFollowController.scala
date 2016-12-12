@@ -16,7 +16,7 @@ import com.twitter.finagle.http.Status
 import com.twitter.util.Future
 import org.joda.time.format.DateTimeFormat
 import org.joda.time.{LocalDate, Years}
-import play.api.libs.json.{JsArray, JsNumber, JsObject, JsString}
+import play.api.libs.json._
 
 class UserFollowController(userAuthentication: UserAuthentication,
                            fallback: DispatchToMothershipHandler,
@@ -163,18 +163,17 @@ class UserFollowController(userAuthentication: UserAuthentication,
 
   private def renderFollow(session: LoggedInUserSession, target: Urn): Future[ResponseBuilder] = {
     fetchUsers(session, Set(target)).map { users =>
-      render.anyJson(users.headOption)
-        .status(Status.Created.code)
+      render.json(users.headOption).status(Status.Created.code)
     }
   }
 
   private def renderStatus(status: Status) =
-    render.json(Map("status" -> s"$status - ${status.reason}"))
+    render.json(Json.obj("status" -> s"$status - ${status.reason}"))
       .status(status.code)
       .toFuture
 
   private def renderError(status: Status) =
-    render.json(Map("errors" -> Seq(Map("error_message" -> s"${status.code} - ${status.reason}"))))
+    render.json(Json.obj("errors" -> Seq(Map("error_message" -> s"${status.code} - ${status.reason}"))))
       .status(status.code)
       .toFuture
 
@@ -235,9 +234,9 @@ class UserFollowController(userAuthentication: UserAuthentication,
 
   private def fetchPossibleFollower(request: Request) = fetchUser(request, follows.filterFollowers, requireLogin = true)
 
-  private def mapUsersToUsers(users: List[User]): List[Any] = users
+  private def mapUsersToUsers(users: List[User]): List[JsValue] = Json.toJson(users).as[List[JsValue]]
 
-  private def userIds(users: List[User]): List[Any] = users.map(u => u.id)
+  private def userIds(users: List[User]): List[JsValue] = Json.toJson(users.map(u => u.id)).as[List[JsValue]]
 
   private def fans(affiliations: Seq[Following]): Seq[Urn] = affiliations.map(_.user)
 
@@ -260,19 +259,17 @@ class UserFollowController(userAuthentication: UserAuthentication,
         users <- fetchUsers(session, urns)
       } yield {
         responseOption.map { _ =>
-          render.anyJson(Map(
-                        "collection" -> mapUsersToUsers(users)
-                      ))
+          render.json(Json.obj("collection" -> mapUsersToUsers(users)))
         }.getOrElse(render.serviceUnavailable)
       }
     }
   }
 
-  private def fetchPage(request: Request,
-                        fetchFunction: (UserSession, Urn, Option[String], Int) => Future[Option[FollowingsPage]],
-                        mapUsers: List[User] => List[Any] = mapUsersToUsers,
-                        users: Seq[Following] => Seq[Urn],
-                        requireLogin: Boolean): Future[ResponseBuilder] = {
+  private def fetchPage[T](request: Request,
+                           fetchFunction: (UserSession, Urn, Option[String], Int) => Future[Option[FollowingsPage]],
+                           mapUsers: List[User] => List[JsValue] = mapUsersToUsers,
+                           users: Seq[Following] => Seq[Urn],
+                           requireLogin: Boolean): Future[ResponseBuilder] = {
     authenticateIfNeeded(request, requireLogin) { (session: UserSession, userToFetch: Urn) =>
       for {
         affiliationsOption <- fetchFunction(session, userToFetch, cursorParam(request), pageSizeParam(request))
@@ -280,10 +277,9 @@ class UserFollowController(userAuthentication: UserAuthentication,
         users <- fetchUsers(session, urns)
       } yield {
         affiliationsOption.map { affiliations =>
-          render.anyJson(Map(
-                        "collection" -> mapUsers(users),
-                        "next_href" -> nextHref(baseUrl, request.request.path, affiliations.next, request.params)
-              ))
+          render.json(Json.obj(
+            "collection" -> mapUsers(users),
+            "next_href" -> nextHref(baseUrl, request.request.path, affiliations.next, request.params)))
         }.getOrElse(render.serviceUnavailable)
       }
     }
@@ -306,7 +302,7 @@ class UserFollowController(userAuthentication: UserAuthentication,
             render
               .status(Status.SeeOther.code)
               .header("Location", s"$baseUrl/users/$userId")
-              .anyJson(users.head)
+              .json(users.head)
           } else {
             render.notFound
           }
@@ -376,5 +372,4 @@ class UserFollowController(userAuthentication: UserAuthentication,
       .status(Status.Forbidden.code)
       .toFuture
   }
-
 }
