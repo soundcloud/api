@@ -15,3 +15,5 @@ staging.json
 .ivy2
 .sbt
 production.overrides
+.kube/
+.oracle_jre_usage/
