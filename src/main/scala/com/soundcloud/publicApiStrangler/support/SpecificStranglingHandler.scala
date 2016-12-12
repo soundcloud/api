@@ -35,6 +35,10 @@ class SpecificStranglingHandler(whereToDispatch: HttpHandler, pathsPatternsToDis
     val pathPattern = strangledBy.map(_.toString).getOrElse("UNKNOWN")
     val agent = agentFor(request)
     counter.labels(request.method.toString, pathPattern, agent.toString).inc()
+    if (pathPattern == "UNKNOWN" || pathPattern == ".*") {
+      logger.info(s"Request for unknown endpoint: pathPattern='$pathPattern', agent='$agent', "+
+                  s"method='${request.method.toString}', path='${request.request.path}'")
+    }
   }
 }
 
