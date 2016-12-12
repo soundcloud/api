@@ -1,4 +1,4 @@
-APP_NAME := public-api-strangler
+APP_NAME := $(shell manifest name)
 
 API_ENTRYPOINT     := api
 API_INSTANCE_COUNT := 100
@@ -13,6 +13,8 @@ RUNTIME_STACK := jdk-8
 DEPLOY_SCRIPT ?= $(shell gen-deploy-script --arch=linux --name=public-api-strangler --revision=`artifact-manager package-version`)
 
 DOCKER_IP ?= $(shell docker-ip)
+
+CLUSTER ?= k2
 
 ifeq ($(USE_CRUN),false)
 	SBT = sbt
@@ -83,6 +85,30 @@ publish:
 	artifact-manager publish
 	artifact-manager bazooka publish --runtime=$(RUNTIME_STACK) --zones=$(BAZOOKA_ZONES)
 
+# TODO: update glimpse entries to be "prod"
+publish-deploy:
+	artifact-manager deploy publish \
+		--cluster=$(CLUSTER) \
+		--component="$(API_ENTRYPOINT)" \
+		--command "./$(API_ENTRYPOINT) --config=$(API_CONFIG)" \
+		--public \
+		--ingress http://$(APP_NAME).$(CLUSTER).lb.s-cloud.net:http \
+		--ingress http://$(APP_NAME).int.s-cloud.net:http \
+		--ingress http://public-api.int.s-cloud.net:http \
+		--ingress http://api.soundcloud.com:http \
+		--glimpse http.strangler.test.public-api \
+		--slack-channel '#core-services' \
+		--prometheus.port telemetry
+	artifact-manager deploy publish \
+		--cluster=$(CLUSTER) \
+		--component="$(APITRACKUPLOAD_ENTRYPOINT)" \
+		--command "./$(APITRACKUPLOAD_ENTRYPOINT) --config=$(APITRACKUPLOAD_CONFIG)" \
+		--public \
+		--ingress http://$(APP_NAME)-trackupload.$(CLUSTER).lb.s-cloud.net:http \
+		--glimpse http.strangler-trackupload.test.public-api \
+		--slack-channel '#core-services' \
+		--prometheus.port telemetry
+
 promote-to-stable:
 	artifact-manager promote stable
 	artifact-manager bazooka promote stable --zones=$(BAZOOKA_ZONES)
@@ -106,3 +132,11 @@ deploy-db-apitrackupload:
 		--bazooka-zone=db --scale-step=10 --instance-cnt=$(APITRACKUPLOAD_INSTANCE_COUNT) \
 		--proc=$(APITRACKUPLOAD_ENTRYPOINT) \
 		--slack-channels=#core-services"
+
+.PHONY: deploy-k8s-api
+deploy-k8s-api:
+	artifact-manager deploy run --cluster="$(CLUSTER)" --component="$(API_ENTRYPOINT)"
+
+.PHONY: deploy-k8s-apitrackupload
+deploy-k8s-apitrackupload:
+	artifact-manager deploy run --cluster="$(CLUSTER)" --component="$(APITRACKUPLOAD_ENTRYPOINT)"
