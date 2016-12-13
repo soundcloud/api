@@ -53,7 +53,7 @@ class TrackMetadataClientSpec extends UnitSpecification with Fixtures{
         track.created_at ==== LocalDateTime.parse("2007-10-18T11:27:04.000")
         track.description ==== Some("alltime classic")
         track.disabled_at ==== Some(LocalDateTime.parse("2011-01-27T09:00:51.000"))
-        track.downloadable ==== false
+        track.downloadable ==== Some(false)
         track.duration ==== 85800
         track.genre ==== Some("Dance")
         track.last_modified ==== LocalDateTime.parse("2011-01-27T09:00:51.000")
@@ -67,7 +67,7 @@ class TrackMetadataClientSpec extends UnitSpecification with Fixtures{
         track.urn ==== Urn("soundcloud:tracks:2")
         track.user_urn ==== Urn("soundcloud:users:435")
         track.api_streamable ==== Some(true)
-        track.streamable ==== true
+        track.streamable ==== Some(true)
         track.reveal_comments ==== true
         track.reveal_stats ==== true
         track.label_name ==== Some("some-label")
@@ -104,7 +104,29 @@ class TrackMetadataClientSpec extends UnitSpecification with Fixtures{
         track.track_type ==== Some("something sane")
         track.release ==== Some("<li> Release </li>")
         track.key_signature ==== Some("011ACFDVKFJ011ACFDVKFJ")
+      }
+    }
 
+    "track where nullable boolean fields are null" >> {
+
+      trait NulledBooleansTrack extends TrackContext {
+        when(verified(service).get(anonymousSession, path, Params.empty, Params.empty))
+          .thenReturn(Future(JsonResponse(OkStatus, trackmetadataClientNullableBooleans)))
+        val response = Await.result(trackmetadataClient.track(anonymousSession, urn))
+        response must beSome[Track]
+        val track = response.get
+      }
+
+      "parses streamable correctly" in new NulledBooleansTrack {
+        track.streamable ==== None
+      }
+
+      "parses api_streamable correctly" in new NulledBooleansTrack {
+        track.api_streamable ==== None
+      }
+
+      "parses downloadable correctly" in new NulledBooleansTrack {
+        track.downloadable ==== None
       }
     }
   }

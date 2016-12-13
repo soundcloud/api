@@ -40,4 +40,5 @@ trait Fixtures {
   val trackmetadataClientTracks_2 = withContentsOf("trackmetadataclient", "track2")
   val trackmetadataClientTracks_rogue = withContentsOf("trackmetadataclient", "track_rogue_attributes")
   val trackmetadataClientTracks_1_3 = withContentsOf("trackmetadataclient", "tracks_1_3")
+  val trackmetadataClientNullableBooleans = withContentsOf("trackmetadataclient", "nullable_booleans")
 }
