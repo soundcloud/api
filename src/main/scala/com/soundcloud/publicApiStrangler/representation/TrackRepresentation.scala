@@ -218,7 +218,7 @@ object TrackRepresentationSecretTokenUriParamDecorator {
 }
 
 case class TrackRepresentationQuotaDecorator(
-  downloadable: Boolean,
+  downloadable: Option[Boolean],
   downloadsPerTrack: Option[Int],
   downloadCount: Int,
   userIsOwner: Boolean,
@@ -227,9 +227,11 @@ case class TrackRepresentationQuotaDecorator(
 
 object TrackRepresentationQuotaDecorator {
   implicit val writes = Writes[TrackRepresentationQuotaDecorator] { dec =>
-    val downloadable = (dec.downloadable, dec.downloadsPerTrack) match {
+
+    val trackDownloadable = dec.downloadable.getOrElse(false)
+    val downloadable: Boolean = (trackDownloadable, dec.downloadsPerTrack) match {
       case (false, _) => false
-      case (true, None) => dec.downloadable // User has no quota, default to 'downloadable' setting
+      case (true, None) => trackDownloadable // User has no quota, default to track's 'downloadable' setting
       case (true, Some(quota)) => dec.downloadCount < quota
     }
     val downloadableJson = Json.obj("downloadable" -> downloadable)
