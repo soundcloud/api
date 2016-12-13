@@ -143,7 +143,7 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
         title = null,
         uid = Some("a1b2c3"),
         api_streamable = None,
-        streamable = None,
+        streamable = true,
         reveal_comments = reveal_comments,
         reveal_stats = reveal_stats,
         label_name = None,
