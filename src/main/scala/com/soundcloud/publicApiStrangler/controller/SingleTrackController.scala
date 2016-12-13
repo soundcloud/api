@@ -2,12 +2,13 @@ package com.soundcloud.publicApiStrangler.controller
 
 import com.soundcloud.bff.finagle.{Request, ResponseBuilder}
 import com.soundcloud.bff.web.{BffInjectionBasedController, UserAuthentication}
+import com.soundcloud.jvmkit.logging.SoundCloudLoggerFactory
 import com.soundcloud.jvmkit.telemetry.Telemetry
 import com.soundcloud.jvmkit.{Urn, UserSession}
 import com.soundcloud.publicApiStrangler.singleTrackEndpointMigration.TrackRepresentationsService
 import com.soundcloud.publicApiStrangler.support.DispatchToMothershipHandler
 import com.twitter.finagle.http.{Response, Status}
-import com.twitter.util.{Future, Return, Try}
+import com.twitter.util.{Future, Return, Throw, Try}
 
 import scala.collection.JavaConversions._
 
@@ -16,6 +17,8 @@ class SingleTrackController(userAuthentication: UserAuthentication,
                             tracksService: TrackRepresentationsService,
                             telemetry: Telemetry)
   extends BffInjectionBasedController {
+
+  private val logger = SoundCloudLoggerFactory.getLogger(this.getClass.getName)
 
   private val numericRegexp = """\d+""".r
 
@@ -38,11 +41,13 @@ class SingleTrackController(userAuthentication: UserAuthentication,
             val secretToken = req.params.get("secret_token")
             tracksService.track(session, urn, secretToken, callback).liftToTry.map {
               case Return(response) => toResponseBuilder(response)
-              case _ => new ResponseBuilder().status(Status.InternalServerError.code)
+              case Throw(ex) => {
+                logger.error("Error while fetching from TrackRepresentationsService", ex)
+                new ResponseBuilder().status(Status.InternalServerError.code)
+              }
             }
           }
-          case _ =>
-            generateNotFound(callback)
+          case _ => generateNotFound(callback)
         }
     }
   }
