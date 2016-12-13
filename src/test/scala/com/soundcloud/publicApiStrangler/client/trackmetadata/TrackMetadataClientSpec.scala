@@ -67,7 +67,7 @@ class TrackMetadataClientSpec extends UnitSpecification with Fixtures{
         track.urn ==== Urn("soundcloud:tracks:2")
         track.user_urn ==== Urn("soundcloud:users:435")
         track.api_streamable ==== Some(true)
-        track.streamable ==== Some(true)
+        track.streamable ==== true
         track.reveal_comments ==== true
         track.reveal_stats ==== true
         track.label_name ==== Some("some-label")
@@ -115,10 +115,6 @@ class TrackMetadataClientSpec extends UnitSpecification with Fixtures{
         val response = Await.result(trackmetadataClient.track(anonymousSession, urn))
         response must beSome[Track]
         val track = response.get
-      }
-
-      "parses streamable correctly" in new NulledBooleansTrack {
-        track.streamable ==== None
       }
 
       "parses api_streamable correctly" in new NulledBooleansTrack {
