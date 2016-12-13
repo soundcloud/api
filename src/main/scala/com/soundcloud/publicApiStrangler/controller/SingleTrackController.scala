@@ -18,8 +18,6 @@ class SingleTrackController(userAuthentication: UserAuthentication,
                             telemetry: Telemetry)
   extends BffInjectionBasedController {
 
-  private val logger = SoundCloudLoggerFactory.getLogger(this.getClass.getName)
-
   private val numericRegexp = """\d+""".r
 
   get("/tracks/:trackId")(renderTrack)
