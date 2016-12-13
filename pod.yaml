@@ -38,3 +38,5 @@ containers:
 volumes:
   - name: tmp
     emptyDir: {}
+# To allow track uploads to finish, raise the termination grace period
+terminationGracePeriodSeconds: 180
