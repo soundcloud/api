@@ -93,7 +93,7 @@ trait TrackRepresentationLikeSpecContext {
     title = "Baby Bash",
     uid = Some("a1b2c3"),
     api_streamable = Some(true),
-    streamable = false,
+    streamable = Some(false),
     reveal_comments = false,
     reveal_stats = false,
     label_name = Some("Denis Owns"),
