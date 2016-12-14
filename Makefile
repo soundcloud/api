@@ -85,7 +85,6 @@ publish:
 	artifact-manager publish
 	artifact-manager bazooka publish --runtime=$(RUNTIME_STACK) --zones=$(BAZOOKA_ZONES)
 
-# TODO: update glimpse entries to be "prod"
 publish-deploy:
 	artifact-manager deploy publish \
 		--cluster=$(CLUSTER) \
@@ -96,7 +95,7 @@ publish-deploy:
 		--ingress http://$(APP_NAME).int.s-cloud.net:http \
 		--ingress http://public-api.int.s-cloud.net:http \
 		--ingress http://api.soundcloud.com:http \
-		--glimpse http.strangler.test.public-api \
+		--glimpse http.strangler.prod.public-api \
 		--slack-channel '#core-services' \
 		--prometheus.port telemetry
 	artifact-manager deploy publish \
