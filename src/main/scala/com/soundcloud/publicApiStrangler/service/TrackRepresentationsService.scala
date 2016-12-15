@@ -25,14 +25,14 @@ class TrackRepresentationsService(
 
   private val logger = SoundCloudLoggerFactory.getLogger(this.getClass.getName)
 
-  def track(session: UserSession, urn: Urn, secretToken: Option[String], callback: Option[String]): Future[Result[TrackRepresentationLike]] = {
+  def track(session: UserSession, urn: Urn, secretTokenInRequest: Option[String], callback: Option[String]): Future[Result[TrackRepresentationLike]] = {
     val isrcF = pubmeseClient.isrcForTrack(session, urn).handle { case NonFatal(ex) => None }
     val geoblockingsF = fetchGeoblockings(session, urn).handle { case NonFatal(ex) => None }
     val domainlockingsF = okidokiClient.fetchTrackDomainLockings(session, urn).handle { case NonFatal(ex) => Seq() }
     val audioF = okidokiClient.fetchTrackAudioMetadata(session, urn)
 
     trackmetadataClient.track(session, urn).flatMap {
-      case Some(track) if isTrackAccessible(session, secretToken, track) =>
+      case Some(track) if isTrackAccessible(session, secretTokenInRequest, track) =>
         val userF = fetchUserForTrack(track, session)
         val labelF = fetchLabelForTrack(track, session)
         val isLikedF = fetchUserLikesTrack(track, session)
@@ -59,7 +59,7 @@ class TrackRepresentationsService(
               trackAudioMetadata = audio,
               isLiked = isLiked,
               waveformUrls = waveformUrls,
-              secretTokenParameter = secretToken,
+              secretTokenParameter = secretTokenInRequest,
               downloadsPerTrack = downloadsPerTrack
             )
 
@@ -169,11 +169,11 @@ class TrackRepresentationsService(
   private def getCounts(counts: Option[StitchCounts]): StitchCounts =
     counts.getOrElse(StitchCounts(0, 0, 0, 0))
 
-  private def isTrackAccessible(session: UserSession, secretToken: Option[String], track: Track): Boolean =
-    isPrivacyAuthorized(session, secretToken, track) && !isDisabled(track)
+  private def isTrackAccessible(session: UserSession, secretTokenInRequest: Option[String], track: Track): Boolean =
+    isPrivacyAuthorized(session, secretTokenInRequest, track) && !isDisabled(track)
 
-  private def isPrivacyAuthorized(session: UserSession, secretToken: Option[String], track: Track): Boolean =
-    track.public || track.user_urn == session.getUser || secretToken.contains(track.secret_token)
+  private def isPrivacyAuthorized(session: UserSession, secretTokenInRequest: Option[String], track: Track): Boolean =
+    track.public || track.user_urn == session.getUser || secretTokenInRequest.contains(track.secret_token)
 
   private def isDisabled(track: Track): Boolean =
     track.disabled_at.isDefined
