@@ -2,14 +2,13 @@ package com.soundcloud.publicApiStrangler.controller
 
 import com.soundcloud.bff.finagle.{Request, ResponseBuilder}
 import com.soundcloud.bff.web.{BffInjectionBasedController, UserAuthentication}
-import com.soundcloud.jvmkit.Urn
+import com.soundcloud.jvmkit.logging.SoundCloudLoggerFactory
 import com.soundcloud.jvmkit.telemetry.Telemetry
-import com.soundcloud.publicApiStrangler.client.trackcoordinator.datatypes.{NotFound, ServerError, Success}
-import com.soundcloud.publicApiStrangler.TrackRepresentationsService
+import com.soundcloud.jvmkit.{Urn, UserSession}
+import com.soundcloud.publicApiStrangler.singleTrackEndpointMigration.TrackRepresentationsService
 import com.soundcloud.publicApiStrangler.support.DispatchToMothershipHandler
-import com.soundcloud.scalakit.json.Json
 import com.twitter.finagle.http.{Response, Status}
-import com.twitter.util.{Future, NonFatal, Return, Try}
+import com.twitter.util.{Future, Return, Throw, Try}
 
 import scala.collection.JavaConversions._
 
@@ -38,29 +37,20 @@ class SingleTrackController(userAuthentication: UserAuthentication,
 
           case Return(urn@Urn(_, _, numericRegexp())) => {
             val secretToken = req.params.get("secret_token")
-            tracksService.track(session, urn, secretToken, callback).map {
-              case Success(trackRep) => toResponseBuilder(generateResponse(Status.Ok, Json.stringify(trackRep)))
-              case NotFound => generateNotFound(callback)
-              case _ => {
-                logger.error(s"Something went wrong while trying to fetch $urn")
-                toResponseBuilder(generateResponse(Status.InternalServerError, "Something went wrong while fetching a track"))
-              }
-
-            } handle {
-              case NonFatal(e) => {
-                logger.error(e.getMessage)
-                toResponseBuilder(generateResponse(Status.InternalServerError, "An unexpected error occured while fetching a track"))
+            tracksService.track(session, urn, secretToken, callback).liftToTry.map {
+              case Return(response) => toResponseBuilder(response)
+              case Throw(ex) => {
+                logger.error("Error while fetching from TrackRepresentationsService", ex)
+                new ResponseBuilder().status(Status.InternalServerError.code)
               }
             }
           }
-
-          case _ => Future.value(generateNotFound(callback))
-
+          case _ => generateNotFound(callback)
         }
     }
   }
 
-  private def generateNotFound(callback: Option[String]): ResponseBuilder= {
+  private def generateNotFound(callback: Option[String]): Future[ResponseBuilder] = {
     val errorString = """{"errors":[{"error_message":"404 - Not Found"}]}"""
     val contentString = callback.map(cb => s"/**/$cb($errorString);").getOrElse(errorString)
     val contentLength = contentString.getBytes("UTF-8").length
@@ -68,27 +58,8 @@ class SingleTrackController(userAuthentication: UserAuthentication,
     res.setContentString(contentString)
     res.contentType = "application/json; charset=utf-8"
     res.contentLength = contentLength
-    toResponseBuilder(res)
+    Future.value(toResponseBuilder(res))
   }
-
-  private def generateResponse(status: Status, content: String): Response = {
-    val contentLength = content.getBytes("UTF-8").length
-    val res = Response(status)
-    res.setContentString(content)
-    res.contentType = "application/json; charset=utf-8"
-    res.contentLength = contentLength
-    res
-  }
-
-  /**
-    * This JsonpWrapper logic should go to filter,
-    * but should be applied only to the migrated endpoitns.
-    */
-  private def jsonpWrapper(callback: Option[String], contentString: String): String =
-    callback.map(cb => s"/**/$cb($contentString);").getOrElse(contentString)
-
-  private val notFoundErrorString = """{"errors":[{"error_message":"404 - Not Found"}]}"""
-  private val serviceUnavailableErrorString = """{"errors":[{"error_message":"503 - Service Unavailable"}]}"""
 
   private def toResponseBuilder(response: Response): ResponseBuilder = {
     val headerMap = response.headerMap.entrySet().map(entry => (entry.getKey, entry.getValue)).toMap
