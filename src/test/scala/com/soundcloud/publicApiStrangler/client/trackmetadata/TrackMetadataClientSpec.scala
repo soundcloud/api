@@ -113,7 +113,7 @@ class TrackMetadataClientSpec extends UnitSpecification with Fixtures{
     "track where nullable boolean fields are null" >> {
 
       trait NulledBooleansTrack extends TrackContext {
-        when(verified(service).get(anonymousSession, path, Params.empty, Params.empty))
+        when(service.get(anonymousSession, path, Params.empty, Params.empty))
           .thenReturn(Future(JsonResponse(OkStatus, trackmetadataClientNullableBooleans)))
         val response = Await.result(trackmetadataClient.track(anonymousSession, urn))
         response must beSome[Track]
