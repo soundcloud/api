@@ -1,7 +1,7 @@
 package com.soundcloud.publicApiStrangler.headers
 
 import com.soundcloud.scalakit.finagle.http.RouterResponse
-import com.soundcloud.scalakit.test.{UnitSpecification, VerifiedMocks}
+import com.soundcloud.scalakit.test.UnitSpecification
 import com.twitter.finagle.Service
 import com.twitter.finagle.http.Request
 import com.twitter.util.{Await, Future}

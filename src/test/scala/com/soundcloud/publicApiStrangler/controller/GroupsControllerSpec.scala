@@ -4,7 +4,6 @@ import com.soundcloud.bff.finagle.ResponseBuilder
 import com.soundcloud.bff.test.InjectionBasedControllerSpecification
 import com.soundcloud.publicApiStrangler.client.followcounts.FollowCountsClient
 import com.soundcloud.publicApiStrangler.support.DispatchToMothershipHandler
-import com.soundcloud.scalakit.test.VerifiedMocks
 import com.twitter.finagle.http.Status
 import com.twitter.util.Future
 
