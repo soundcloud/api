@@ -40,21 +40,7 @@ case class TrackAudioMetadata(
 )
 
 object TrackAudioMetadata {
-  implicit val reads = new Reads[TrackAudioMetadata]{
-    override def reads(json: JsValue): JsResult[TrackAudioMetadata] =
-      try {
-        JsSuccess(
-          TrackAudioMetadata(
-            state = (json \ "state").as[String],
-            original_format = (json \ "original_content_size").asOpt[String],
-            original_content_size = (json \ "original_format").asOpt[Long]
-          )
-        )
-      } catch {
-        case ex: Exception => JsError(ex.getMessage)
-      }
-
-  }
+  implicit val reads = Json.reads[TrackAudioMetadata]
 }
 
 class RichOkidokiClient(service: JsonClient,
