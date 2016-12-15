@@ -35,12 +35,26 @@ object DomainLocking {
 
 case class TrackAudioMetadata(
   state: String,
-  original_format: String,
-  original_content_size: Long
+  original_format: Option[String],
+  original_content_size: Option[Long]
 )
 
 object TrackAudioMetadata {
-  implicit val trackAudioMetadataReads = Json.reads[TrackAudioMetadata]
+  implicit val reads = new Reads[TrackAudioMetadata]{
+    override def reads(json: JsValue): JsResult[TrackAudioMetadata] =
+      try {
+        JsSuccess(
+          TrackAudioMetadata(
+            state = (json \ "state").as[String],
+            original_format = (json \ "original_content_size").asOpt[String],
+            original_content_size = (json \ "original_format").asOpt[Long]
+          )
+        )
+      } catch {
+        case ex: Exception => JsError(ex.getMessage)
+      }
+
+  }
 }
 
 class RichOkidokiClient(service: JsonClient,

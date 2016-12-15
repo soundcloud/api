@@ -115,14 +115,14 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
       )
 
     def trackmetadataTrack(
-      disabledAt: Option[LocalDateTime] = None,
-      isPublic: Boolean = true,
-      secretToken: String = "secr3t-Token",
-      isDownloadable: Boolean = false,
-      user: Urn = trackOwnerUrn,
-      label_id: Option[Int] = Some(labelUrn.getIdentifier.toInt),
-      reveal_stats: Boolean = false,
-      reveal_comments: Boolean = true) =
+                            disabledAt: Option[LocalDateTime] = None,
+                            isPublic: Boolean = true,
+                            secretToken: String = "secr3t-Token",
+                            isDownloadable: Boolean = false,
+                            user: Urn = trackOwnerUrn,
+                            label_id: Option[Int] = Some(labelUrn.getIdentifier.toInt),
+                            reveal_stats: Boolean = false,
+                            reveal_comments: Boolean = true) =
       Track(
         urn = trackUrn,
         user_urn = user,
@@ -419,9 +419,9 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
     trackRepLike match {
       case Success(rep) => {
         val audioMetadata = Json.toJsValue(rep)
-        audioMetadata  \ "state" ==== JsString("storing")
-        audioMetadata  \ "original_content_size" ==== JsNull
-        audioMetadata  \ "original_format" ==== JsNull
+        audioMetadata \ "state" ==== JsString("storing")
+        audioMetadata \ "original_content_size" ==== JsNull
+        audioMetadata \ "original_format" ==== JsNull
 
       }
     }
@@ -879,7 +879,7 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
               json \ "favoritings_count" ==== JsNumber(0)
               json \ "comment_count" ==== JsNumber(0)
           }
-                  }
+        }
       }
     }
   }
