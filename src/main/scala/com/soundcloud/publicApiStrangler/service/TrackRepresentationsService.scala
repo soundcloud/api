@@ -7,6 +7,7 @@ import com.soundcloud.publicApiStrangler.client.mediaservice.{MediaServiceUrlGen
 import com.soundcloud.publicApiStrangler.client.pubmese.{Isrc, PubmeseClient}
 import com.soundcloud.publicApiStrangler.client.quota.UserQuotaClient
 import com.soundcloud.publicApiStrangler.client.stitch.{StitchClient, StitchCounts}
+// FIXME: Do not use result types from Track Coordinator
 import com.soundcloud.publicApiStrangler.client.trackcoordinator.datatypes.{Error, Result, ServerError, NotFound => TrackNotFound, Success => SuccessResult}
 import com.soundcloud.publicApiStrangler.client.trackmetadata.{Track, TrackmetadataClient}
 import com.soundcloud.publicApiStrangler.client.{DomainLocking, RichOkidokiClient, TrackAudioMetadata}
