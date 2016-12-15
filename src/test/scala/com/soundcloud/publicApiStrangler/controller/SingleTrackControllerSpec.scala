@@ -98,7 +98,7 @@ class SingleTrackControllerSpec extends InjectionBasedControllerSpecification {
     label = None,
     geoblockings = None,
     domainlockings = Seq(),
-    audioMetadata = new TrackAudioMetadata("lol", "donkey", 123))
+    audioMetadata = new TrackAudioMetadata("lol", Some("donkey"), Some(123)))
 
 
   trait Context extends Scope {

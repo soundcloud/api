@@ -110,8 +110,8 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
     def trackAudioMetadata =
       TrackAudioMetadata(
         state = "failed",
-        original_content_size = 9001,
-        original_format = "vqf"
+        original_content_size = Some(9001),
+        original_format = Some("vqf")
       )
 
     def trackmetadataTrack(
@@ -328,13 +328,13 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
     }
   }
 
-  "Returns None for public tracks if user does not exist" in new Context {
+  "Returns NotFound for public tracks if user does not exist" in new Context {
     val track = trackmetadataTrack()
     setUpMocksForExistingTrack(track, session)
     when(okidokiClient.fetchUserObjects(session, Set(trackOwnerUrn))).thenReturn(Future.value(List.empty))
 
     val trackRepLike = Await.result(tracksService.track(session, trackUrn, None, None))
-    trackRepLike ==== ServerError(Error("Something went wrong while fetching dependencies"))
+    trackRepLike ==== NotFound
   }
 
   /*
@@ -408,6 +408,25 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
         Json.toJsValue(rep).as[JsObject].keys.contains("domain_lockings") ==== false
     }
   }
+
+  "Returns Success when partial audio metadata for a track is unavailable" in new Context {
+    val track = trackmetadataTrack()
+    setUpMocksForExistingTrack(track, session)
+    when(okidokiClient.fetchTrackAudioMetadata(session, trackUrn)).thenReturn(Future.value(Some(TrackAudioMetadata("storing", None, None))))
+
+    val trackRepLike = Await.result(tracksService.track(session, trackUrn, None, None))
+
+    trackRepLike match {
+      case Success(rep) => {
+        val audioMetadata = Json.toJsValue(rep)
+        audioMetadata  \ "state" ==== JsString("storing")
+        audioMetadata  \ "original_content_size" ==== JsNull
+        audioMetadata  \ "original_format" ==== JsNull
+
+      }
+    }
+  }
+
 
   /*
   "Returns 503 if Moshimoshi is failing for the audio endpoint" in new Context {
@@ -524,7 +543,7 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
       when(mediaUrlGenClient.waveformUrlsAsResult(session, track.uid)).thenReturn(Future.value(ServerError(Error("Something wrong with media service"))))
 
       val trackRepLike = Await.result(tracksService.track(session, trackUrn, None, None))
-      trackRepLike ==== ServerError(Error("Something went wrong while fetching dependencies"))
+      trackRepLike ==== NotFound
     }
   }
 

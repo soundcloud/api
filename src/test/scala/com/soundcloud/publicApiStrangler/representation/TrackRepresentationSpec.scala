@@ -35,8 +35,8 @@ trait TrackRepresentationLikeSpecContext {
   def defaultTrackAudioMetadata =
     TrackAudioMetadata(
       state = "finished",
-      original_format = "vqf",
-      original_content_size = 9001
+      original_format = Some("vqf"),
+      original_content_size = Some(9001)
     )
 
   def defaultUser =
