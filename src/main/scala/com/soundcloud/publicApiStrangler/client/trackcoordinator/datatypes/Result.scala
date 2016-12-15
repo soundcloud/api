@@ -3,7 +3,7 @@ package com.soundcloud.publicApiStrangler.client.trackcoordinator.datatypes
 import com.soundcloud.scalakit.finagle.http.{ForbiddenStatus, OkStatus, UnauthorizedStatus}
 import com.soundcloud.scalakit.finagle.jsonservice.JsonResponse
 import com.twitter.util.Future
-import play.api.libs.json.{JsValue, Json}
+import play.api.libs.json.{JsValue, Json, Writes}
 
 trait Result[+A] {
   def map[B](fn: A => B): Result[B]
