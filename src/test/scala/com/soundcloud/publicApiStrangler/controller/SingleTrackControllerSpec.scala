@@ -52,7 +52,7 @@ class SingleTrackControllerSpec extends InjectionBasedControllerSpecification {
       title = null,
       uid = Some("a1b2c3"),
       api_streamable = None,
-      streamable = false,
+      streamable = Some(false),
       reveal_comments = reveal_comments,
       reveal_stats = reveal_stats,
       label_name = None,
