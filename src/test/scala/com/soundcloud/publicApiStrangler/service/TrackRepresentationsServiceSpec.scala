@@ -1,4 +1,4 @@
-package com.soundcloud.publicApiStrangler.singleTrackEndpointMigration
+package com.soundcloud.publicApiStrangler
 
 import com.soundcloud.jvmkit.{Urn, UserSession, UserSessionBuilder}
 import com.soundcloud.publicApiStrangler.client.liebling.{LieblingClient, UserLikesCount}

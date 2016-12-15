@@ -10,7 +10,7 @@ import com.soundcloud.publicApiStrangler.client.stitch.StitchCounts
 import com.soundcloud.publicApiStrangler.client.trackcoordinator.datatypes.{NotFound, Result, ServerError, Success}
 import com.soundcloud.publicApiStrangler.client.trackmetadata.{Artwork, EmbeddingPermission, Track}
 import com.soundcloud.publicApiStrangler.representation.{TrackRepresentation, TrackRepresentationLike}
-import com.soundcloud.publicApiStrangler.singleTrackEndpointMigration.TrackRepresentationsService
+import com.soundcloud.publicApiStrangler.TrackRepresentationsService
 import com.soundcloud.publicApiStrangler.support.DispatchToMothershipHandler
 import com.soundcloud.scalakit.json
 import com.soundcloud.service.response.representation.{Geoblockings, User}

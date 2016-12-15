@@ -5,7 +5,7 @@ import com.soundcloud.bff.web.{BffInjectionBasedController, UserAuthentication}
 import com.soundcloud.jvmkit.Urn
 import com.soundcloud.jvmkit.telemetry.Telemetry
 import com.soundcloud.publicApiStrangler.client.trackcoordinator.datatypes.{NotFound, ServerError, Success}
-import com.soundcloud.publicApiStrangler.singleTrackEndpointMigration.TrackRepresentationsService
+import com.soundcloud.publicApiStrangler.TrackRepresentationsService
 import com.soundcloud.publicApiStrangler.support.DispatchToMothershipHandler
 import com.soundcloud.scalakit.json.Json
 import com.twitter.finagle.http.{Response, Status}

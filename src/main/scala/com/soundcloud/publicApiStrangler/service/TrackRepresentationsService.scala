@@ -1,4 +1,4 @@
-package com.soundcloud.publicApiStrangler.singleTrackEndpointMigration
+package com.soundcloud.publicApiStrangler
 
 import com.soundcloud.jvmkit.logging.SoundCloudLoggerFactory
 import com.soundcloud.jvmkit.{Urn, UserSession}
