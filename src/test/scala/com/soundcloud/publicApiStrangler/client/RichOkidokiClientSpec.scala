@@ -7,7 +7,7 @@ import com.soundcloud.scalakit.finagle.jsonservice.{JsonClient, JsonResponse}
 import com.soundcloud.scalakit.test.UnitSpecification
 import com.twitter.util.{Await, Future}
 import org.mockito.Mockito._
-import play.api.libs.json.{JsArray, JsValue, Json}
+import play.api.libs.json.{JsArray, JsNull, JsValue, Json}
 
 class RichOkidokiClientSpec extends UnitSpecification {
   trait GenericContext[T] extends Scope {
@@ -26,7 +26,7 @@ class RichOkidokiClientSpec extends UnitSpecification {
     val session = anonymousSession
     val urn = Urn("soundcloud:tracks:123")
 
-    def mockTrackAudioMetadata: TrackAudioMetadata = TrackAudioMetadata("finished", "vqf", 9001)
+    def mockTrackAudioMetadata: TrackAudioMetadata = TrackAudioMetadata("finished", Some("vqf"), Some(9001))
     def mockResponseContents = Json.obj(
       "state" -> mockTrackAudioMetadata.state,
       "original_content_size" -> mockTrackAudioMetadata.original_content_size,
@@ -70,7 +70,15 @@ class RichOkidokiClientSpec extends UnitSpecification {
 
   "track audio" >> {
     "200 response" in new TrackAudioMetadataContext {
-      result ==== Some(TrackAudioMetadata("finished", "vqf", 9001))
+      result ==== Some(TrackAudioMetadata("finished", Some("vqf"), Some(9001)))
+    }
+
+    "200 response with null values for size and format" in new TrackAudioMetadataContext {
+      override def mockResponse = Future.value(JsonResponse(mockResponseStatus, Json.obj("state" -> "storing", "original_content_size" -> JsNull, "original_format" -> JsNull)))
+
+      result.get.state ==== "storing"
+      result.get.original_format ==== None
+      result.get.original_content_size ==== None
     }
 
     "404 response" in new TrackAudioMetadataContext {

@@ -70,7 +70,7 @@ class ForwardedRequestSpec extends UnitSpecification {
 
     val request = new HttpPost(s"http://localhost:$stranglerServerPort/tracks")
     request.addHeader("X-Favourite-Animal", "zebra")
-    request.setEntity(new StringEntity("giraffe", ContentType.TEXT_PLAIN))
+    request.setEntity(new StringEntity("giraffe"))
     val httpclient = HttpClients.createDefault()
     val response = httpclient.execute(request)
     response.getStatusLine.getStatusCode ==== 200
@@ -92,7 +92,7 @@ class ForwardedRequestSpec extends UnitSpecification {
 
     val request = new HttpPut(s"http://localhost:$stranglerServerPort/tracks")
     request.addHeader("X-Favourite-Animal", "zebra")
-    request.setEntity(new StringEntity("giraffe", ContentType.TEXT_PLAIN))
+    request.setEntity(new StringEntity("giraffe"))
     val httpclient = HttpClients.createDefault()
     val response = httpclient.execute(request)
     response.getStatusLine.getStatusCode ==== 200
@@ -115,7 +115,7 @@ class ForwardedRequestSpec extends UnitSpecification {
     val request = new HttpPost(s"http://localhost:$stranglerServerPort/tracks")
     request.addHeader("X-Favourite-Animal", "zebra")
     request.addHeader("Connection", "close")
-    request.setEntity(new StringEntity("giraffe", ContentType.TEXT_PLAIN))
+    request.setEntity(new StringEntity("giraffe"))
     val httpclient = HttpClients.createDefault()
     val response = httpclient.execute(request)
     response.getStatusLine.getStatusCode ==== 200

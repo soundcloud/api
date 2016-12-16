@@ -35,12 +35,12 @@ object DomainLocking {
 
 case class TrackAudioMetadata(
   state: String,
-  original_format: String,
-  original_content_size: Long
+  original_format: Option[String],
+  original_content_size: Option[Long]
 )
 
 object TrackAudioMetadata {
-  implicit val trackAudioMetadataReads = Json.reads[TrackAudioMetadata]
+  implicit val reads = Json.reads[TrackAudioMetadata]
 }
 
 class RichOkidokiClient(service: JsonClient,
