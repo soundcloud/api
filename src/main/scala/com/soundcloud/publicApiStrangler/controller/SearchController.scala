@@ -34,6 +34,7 @@ class SearchController(userAuthentication: UserAuthentication,
   get("/v1/tracks.json")(dispatchTrackRequest)
 
   get("/users")(dispatchUserRequest)
+  get("/users/")(dispatchUserRequest) // some clients use this URL pattern
   get("/users.json")(dispatchUserRequest)
 
   get("/playlists")(dispatchPlaylistRequest)
