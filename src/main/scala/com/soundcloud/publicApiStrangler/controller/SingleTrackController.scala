@@ -29,49 +29,44 @@ class SingleTrackController(userAuthentication: UserAuthentication,
   private def renderTrack(req: Request): Future[ResponseBuilder] = {
     stripConditionalRequestHeaders(req)
 
-    userAuthentication.withUserSession(req) {
-      case session =>
-        val trackId = req.routeParams("trackId")
-        val callback = req.params.get("callback")
+    userAuthentication.withUserSession(req) { case session =>
+      val trackId = req.routeParams("trackId")
+      val callback = req.params.get("callback")
 
-        Try(new Urn("soundcloud", "tracks", trackId)) match {
-
-          case Return(urn@Urn(_, _, numericRegexp())) => {
-            val secretToken = req.params.get("secret_token")
-            tracksService.track(session, urn, secretToken, callback).map {
-              case Success(trackRep) => toResponseBuilder(generateResponse(Status.Ok, Json.stringify(trackRep)))
-              case NotFound => generateNotFound(callback)
-              case _ => {
-                logger.error(s"Something went wrong while trying to fetch $urn")
-                toResponseBuilder(generateResponse(Status.InternalServerError, "Something went wrong while fetching a track"))
-              }
-
-            } handle {
-              case NonFatal(e) => {
-                logger.error(e.getMessage)
-                toResponseBuilder(generateResponse(Status.InternalServerError, "An unexpected error occured while fetching a track"))
-              }
+      Try(new Urn("soundcloud", "tracks", trackId)) match {
+        case Return(urn@Urn(_, _, numericRegexp())) => {
+          val secretToken = req.params.get("secret_token")
+          tracksService.track(session, urn, secretToken, callback).map {
+            case Success(trackRep) => toResponseBuilder(generateResponse(Status.Ok, Json.stringify(trackRep), callback))
+            case NotFound => generateNotFound(callback)
+            case _ => {
+              logger.error(s"Something went wrong while trying to fetch $urn")
+              toResponseBuilder(generateResponse(Status.InternalServerError, "Something went wrong while fetching a track", callback))
+            }
+          } handle {
+            case NonFatal(e) => {
+              logger.error(e.getMessage)
+              toResponseBuilder(generateResponse(Status.InternalServerError, "An unexpected error occured while fetching a track", callback))
             }
           }
-
-          case _ => Future.value(generateNotFound(callback))
-
         }
+        case _ => Future.value(generateNotFound(callback))
+      }
     }
   }
 
   private def generateNotFound(callback: Option[String]): ResponseBuilder= {
-    val errorString = """{"errors":[{"error_message":"404 - Not Found"}]}"""
-    val contentString = callback.map(cb => s"/**/$cb($errorString);").getOrElse(errorString)
-    val contentLength = contentString.getBytes("UTF-8").length
+    val content = jsonpWrapper(callback, notFoundErrorString)
+    val contentLength = content.getBytes("UTF-8").length
     val res = Response(Status.NotFound)
-    res.setContentString(contentString)
+    res.setContentString(content)
     res.contentType = "application/json; charset=utf-8"
     res.contentLength = contentLength
     toResponseBuilder(res)
   }
 
-  private def generateResponse(status: Status, content: String): Response = {
+  private def generateResponse(status: Status, rawContent: String, callback: Option[String]): Response = {
+    val content = jsonpWrapper(callback, rawContent)
     val contentLength = content.getBytes("UTF-8").length
     val res = Response(status)
     res.setContentString(content)
@@ -88,7 +83,6 @@ class SingleTrackController(userAuthentication: UserAuthentication,
     callback.map(cb => s"/**/$cb($contentString);").getOrElse(contentString)
 
   private val notFoundErrorString = """{"errors":[{"error_message":"404 - Not Found"}]}"""
-  private val serviceUnavailableErrorString = """{"errors":[{"error_message":"503 - Service Unavailable"}]}"""
 
   private def toResponseBuilder(response: Response): ResponseBuilder = {
     val headerMap = response.headerMap.entrySet().map(entry => (entry.getKey, entry.getValue)).toMap

@@ -4,22 +4,21 @@ import com.soundcloud.bff.test.InjectionBasedControllerSpecification
 import com.soundcloud.jvmkit.telemetry.Telemetry
 import com.soundcloud.jvmkit.test.InMemoryConfig
 import com.soundcloud.jvmkit.{Urn, UserSession, UserSessionBuilder}
-import com.soundcloud.publicApiStrangler.client.{DomainLocking, TrackAudioMetadata}
-import com.soundcloud.publicApiStrangler.client.pubmese.Isrc
+import com.soundcloud.publicApiStrangler.TrackRepresentationsService
+import com.soundcloud.publicApiStrangler.client.TrackAudioMetadata
 import com.soundcloud.publicApiStrangler.client.stitch.StitchCounts
-import com.soundcloud.publicApiStrangler.client.trackcoordinator.datatypes.{NotFound, Result, ServerError, Success}
+import com.soundcloud.publicApiStrangler.client.trackcoordinator.datatypes.{NotFound, Result, Success}
 import com.soundcloud.publicApiStrangler.client.trackmetadata.{Artwork, EmbeddingPermission, Track}
 import com.soundcloud.publicApiStrangler.representation.{TrackRepresentation, TrackRepresentationLike}
-import com.soundcloud.publicApiStrangler.TrackRepresentationsService
 import com.soundcloud.publicApiStrangler.support.DispatchToMothershipHandler
-import com.soundcloud.scalakit.json
-import com.soundcloud.service.response.representation.{Geoblockings, User}
+import com.soundcloud.scalakit.json.Json
+import com.soundcloud.service.response.representation.User
 import com.twitter.finagle.http.{Request, Response, Status}
 import com.twitter.util.Future
 import io.prometheus.client.CollectorRegistry
 import org.joda.time.LocalDateTime
 import org.mockito.Mockito.when
-import play.api.libs.json.Json
+
 
 class SingleTrackControllerSpec extends InjectionBasedControllerSpecification {
 
@@ -100,10 +99,9 @@ class SingleTrackControllerSpec extends InjectionBasedControllerSpecification {
     domainlockings = Seq(),
     audioMetadata = new TrackAudioMetadata("lol", Some("donkey"), Some(123)))
 
-
   trait Context extends Scope {
     val fallback = mock[DispatchToMothershipHandler]
-    val tracksService = mock[TrackRepresentationsService]
+    val trackRepresentationsService = mock[TrackRepresentationsService]
 
     val config = new InMemoryConfig
     val collectorRegistry = new CollectorRegistry
@@ -115,7 +113,7 @@ class SingleTrackControllerSpec extends InjectionBasedControllerSpecification {
     def controller(session: UserSession) = new SingleTrackController(
       fakeUserAuthentication(session),
       fallback,
-      tracksService,
+      trackRepresentationsService,
       telemetry)
   }
 
@@ -130,7 +128,7 @@ class SingleTrackControllerSpec extends InjectionBasedControllerSpecification {
           case r =>
             r.headerMap.get("If-None-Match") must beNone
         })).thenReturn(Future.value(Response()))
-        when(tracksService.track(session, trackUrn, None, None)).thenReturn((Future.value(Success(trackRepresentation))))
+        when(trackRepresentationsService.track(session, trackUrn, None, None)).thenReturn(Future.value(Success(trackRepresentation)))
 
         val response = get(controller(session), path, Map.empty, Map("If-None-Match" -> "a8d3ba6d09b68691b77dc75dfcd7a477"))
         response.status ==== Status.Ok
@@ -161,7 +159,7 @@ class SingleTrackControllerSpec extends InjectionBasedControllerSpecification {
     path =>
       s"Passes secret token to tracks service for path: $path" in new Context {
         when(fallback.dispatchToMothership(any[Request])).thenReturn(Future.value(Response()))
-        when(tracksService.track(session, trackUrn, Some("s3cret"), None)).thenReturn(Future.value(Success(trackRepresentation)))
+        when(trackRepresentationsService.track(session, trackUrn, Some("s3cret"), None)).thenReturn(Future.value(Success(trackRepresentation)))
 
         val response = get(controller(session), path, Map("secret_token" -> "s3cret"))
         response.status ==== Status.Ok
@@ -172,57 +170,73 @@ class SingleTrackControllerSpec extends InjectionBasedControllerSpecification {
     path =>
       s"Passes callback parameters to tracks service for path: $path" in new Context {
         when(fallback.dispatchToMothership(any[Request])).thenReturn(Future.value(Response()))
-        when(tracksService.track(session, trackUrn, None, Some("js_callback_dn"))).thenReturn(Future.value(Success(trackRepresentation)))
+        when(trackRepresentationsService.track(session, trackUrn, None, Some("js_callback_dn"))).thenReturn(Future.value(Success(trackRepresentation)))
 
         val response = get(controller(session), path, Map("callback" -> "js_callback_dn"))
         response.status ==== Status.Ok
       }
   }
 
-  validPaths.foreach {
-    path =>
-      s"When loading tracks from trackmetadata for: $path" >> {
-        trait FromTrackMetadata extends Context {
-          val defaultJsonResponse = """{"pass-through":"for sure"}"""
-
-          def newResponse(code: Int) = {
-            val response = Response()
-            response.setContentString(defaultJsonResponse)
-            response.setStatusCode(code)
-            response
-          }
-
-          def trackRepresentationLike: Future[Result[TrackRepresentationLike]]
-
-          when(tracksService.track(session, trackUrn, None, None)).thenReturn(trackRepresentationLike)
-        }
-
-        "it returns 200 for Some()" in new FromTrackMetadata {
-          override def trackRepresentationLike = Future.value(Success(trackRepresentation))
-
-
-          val response = get(controller(session), path)
-          response.status.code ==== 200
-
-          import TrackRepresentation.writes
-          response.body ==== json.Json.stringify(trackRepresentation)
-        }
-
-        "it returns 404 None " in new FromTrackMetadata {
-          override def trackRepresentationLike = Future.value(NotFound)
-
-          val response = get(controller(session), path)
-          response.status.code ==== 404
-          response.body ==== """{"errors":[{"error_message":"404 - Not Found"}]}"""
-        }
-
-        "it returns 500 for failed futures" in new FromTrackMetadata {
-          override def trackRepresentationLike = Future.exception(new RuntimeException("An unexpected error occured while fetching a track"))
-
-          val response = get(controller(session), path)
-          response.status.code ==== 500
-          response.body ==== "An unexpected error occured while fetching a track"
-        }
+  validPaths.foreach { path =>
+    s"When loading tracks from trackmetadata for: $path" >> {
+      trait FromTrackMetadata extends Context {
+        def trackRepresentationLike: Future[Result[TrackRepresentationLike]]
+        when(trackRepresentationsService.track(session, trackUrn, None, None)).thenReturn(trackRepresentationLike)
       }
+
+      "it returns 200 for Some()" in new FromTrackMetadata {
+        override def trackRepresentationLike = Future.value(Success(trackRepresentation))
+
+        val response = get(controller(session), path)
+        response.status.code ==== 200
+
+        import TrackRepresentation.writes
+        response.body ==== Json.stringify(trackRepresentation)
+      }
+
+      "it returns 404 for None" in new FromTrackMetadata {
+        override def trackRepresentationLike = Future.value(NotFound)
+
+        val response = get(controller(session), path)
+        response.status.code ==== 404
+        response.body ==== """{"errors":[{"error_message":"404 - Not Found"}]}"""
+      }
+
+      "it returns 500 for failed futures" in new FromTrackMetadata {
+        override def trackRepresentationLike = Future.exception(new RuntimeException("An unexpected error occured while fetching a track"))
+
+        val response = get(controller(session), path)
+        response.status.code ==== 500
+        response.body ==== "An unexpected error occured while fetching a track"
+      }
+    }
+  }
+
+  trait JsonpSupportContext extends Context {
+    def trackRepresentationLike: Future[Result[TrackRepresentationLike]]
+    when(trackRepresentationsService.track(session, trackUrn, None, Some("myFunctionName"))).thenReturn(trackRepresentationLike)
+
+  }
+
+  validPaths.foreach { path =>
+    s"returns a JSONP response for $path, when a callback parameter is provided" in new JsonpSupportContext {
+      override def trackRepresentationLike = Future.value(Success(trackRepresentation))
+
+      val response = get(controller(session), path, Map("callback" -> "myFunctionName"))
+      import TrackRepresentation.writes
+      val expectedJson = Json.stringify(trackRepresentation)
+      val expectedBody = s"/**/myFunctionName($expectedJson);"
+      response.code ==== 200
+      response.body ==== expectedBody
+    }
+
+    s"returns a JSONP response for 404s at $path, when a callback parameter is provided" in new JsonpSupportContext {
+      override def trackRepresentationLike = Future.value(NotFound)
+
+      val response = get(controller(session), path, Map("callback" -> "myFunctionName"))
+      val expectedBody = """/**/myFunctionName({"errors":[{"error_message":"404 - Not Found"}]});"""
+      response.code ==== 404
+      response.body ==== expectedBody
+    }
   }
 }
