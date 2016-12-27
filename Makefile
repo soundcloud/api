@@ -42,7 +42,7 @@ end-to-end-test:
 	bin/wait-for-http $(DOCKER_IP):5000/-/health # wait for publicapistrangler
 	crun sbt --docker-options="--link=strangler_api:strangler --link=strangler_zk:zookeeper" -- sbt endToEnd/test
 
-test:
+unit-test:
 	$(SBT) test
 
 interactive:
