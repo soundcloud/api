@@ -32,7 +32,7 @@ run:
 
 precheckin:
 	make unit-test
-	make -f Makefile.pipeline package
+	make package
 	make end-to-end-test
 
 end-to-end-test:
