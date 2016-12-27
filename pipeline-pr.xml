@@ -7,7 +7,7 @@
       <job name="unit-tests">
         <tasks>
           <exec command="make" workingdir="pr">
-            <arg>test</arg>
+            <arg>unit-test</arg>
             <arg>package</arg>
             <arg>publish</arg>
             <runif status="passed" />
