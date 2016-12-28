@@ -4,14 +4,15 @@ import com.soundcloud.bff.repository.JsonServiceRepository
 import com.soundcloud.bff.services.JsonService
 import com.soundcloud.bff.test.UnitSpecification
 import com.soundcloud.jvmkit.{Urn, UserSession}
-import com.soundcloud.scalakit.test.VerifiedMocks
 import com.twitter.util.{Await, Future}
 import org.mockito.Matchers
 import play.api.libs.json.Json
+import org.mockito.Mockito.when
+import org.specs2.mutable.Before
 
 class CachingByUrnSpec extends UnitSpecification {
 
-  trait Context extends VerifiedMocks {
+  trait Context extends Scope with Before {
     val service = smartMock[JsonService]
     val urnsCache = smartMock[UrnsCache]
     val session = smartMock[UserSession]
@@ -25,7 +26,7 @@ class CachingByUrnSpec extends UnitSpecification {
 
     val subject = new CachingByUrn(repo, urnsCache, cacheExpirationTimeMinutes)
 
-    override def before = {
+    override def before: Any = {
       when(urnsCache.get(Matchers.eq(urns.toList), Matchers.any(), Matchers.eq(cacheExpirationTimeMinutes), Matchers.any()))
         .thenReturn(Future.value(Map(urns.head -> jsObject)))
     }

@@ -8,15 +8,15 @@ import com.soundcloud.jvmkit.{Urn, UserSession}
 import com.soundcloud.jvmkit.policies.{ContentAuthorization, ContentPolicy, MonetizationModel, Reason}
 import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures
 import com.soundcloud.scalakit.json.Json
-import com.soundcloud.scalakit.test.VerifiedMocks
 import com.soundcloud.scalakit.Url
 import com.twitter.util.{Await, Future}
-import org.mockito.Mockito.verifyZeroInteractions
+import org.specs2.mutable.Before
 import play.api.libs.json.JsValue
+import org.mockito.Mockito.{when, verifyZeroInteractions}
 
 class AuthorizeHttpResponseSpec extends UnitSpecification with Fixtures {
 
-  trait Context extends VerifiedMocks {
+  trait Context extends Scope {
     val session = mock[UserSession]
     val contentAuthorization = mock[ContentAuthorizationRules]
     val waveformUrlsRepo = mock[WaveformUrlsRepository]
@@ -33,14 +33,14 @@ class AuthorizeHttpResponseSpec extends UnitSpecification with Fixtures {
     lazy val authorizedResponse = Await.result(authorize.map(_.build))
   }
 
-  trait TrackContext extends Context {
+  trait TrackContext extends Context with Before {
     val content = singleTrack.toString
     val status = 200
     val urn = new Urn("soundcloud:tracks:153896632")
 
     def policies: ContentAuthorization
 
-    override def before = {
+    override def before: Any = {
       when(contentAuthorization.fetchRules(session, Seq(urn))).thenReturn(Future(Seq(policies)))
     }
   }
@@ -60,7 +60,7 @@ class AuthorizeHttpResponseSpec extends UnitSpecification with Fixtures {
     authorizedResponse.getContentString mustEqual ""
   }
 
-  trait TrackArrayContext extends Context {
+  trait TrackArrayContext extends Context with Before {
     val content = tracksArray.toString
     val status = 200
 
@@ -74,7 +74,7 @@ class AuthorizeHttpResponseSpec extends UnitSpecification with Fixtures {
       .zip(policies)
       .map(tuple => new ContentAuthorization(tuple._1, tuple._2, Reason.GEO, MonetizationModel.NOT_APPLICABLE))
 
-    override def before = {
+    override def before: Any = {
       when(contentAuthorization.fetchRules(===(session), any[Seq[Urn]]))
         .thenReturn(Future(authorizations))
       mockWaveFormUrlsRepoExpectations()
@@ -142,7 +142,7 @@ class AuthorizeHttpResponseSpec extends UnitSpecification with Fixtures {
     verifyZeroInteractions(contentAuthorization)
   }
 
-  trait PlaylistContext extends Context {
+  trait PlaylistContext extends Context with Before {
     val content = playlist.toString
     val status = 200
 
@@ -154,7 +154,7 @@ class AuthorizeHttpResponseSpec extends UnitSpecification with Fixtures {
       .zip(policies)
       .map(tuple => new ContentAuthorization(tuple._1, tuple._2, Reason.GEO, MonetizationModel.NOT_APPLICABLE))
 
-    override def before =
+    override def before: Any =
       when(contentAuthorization.fetchRules(===(session), any[Seq[Urn]]))
         .thenReturn(Future(authorizations))
   }
@@ -186,7 +186,7 @@ class AuthorizeHttpResponseSpec extends UnitSpecification with Fixtures {
     (Json.fromString(authorizedResponse.getContentString) \ "tracks").as[Seq[JsValue]].size mustEqual 7
   }
 
-  trait StreamContext extends Context {
+  trait StreamContext extends Context with Before {
     val content = stream.toString
     val status = 200
 
@@ -198,7 +198,7 @@ class AuthorizeHttpResponseSpec extends UnitSpecification with Fixtures {
       .zip(policies)
       .map(tuple => new ContentAuthorization(tuple._1, tuple._2, Reason.GEO, MonetizationModel.NOT_APPLICABLE))
 
-    override def before =
+    override def before: Any =
       when(contentAuthorization.fetchRules(===(session), any[Seq[Urn]]))
         .thenReturn(Future(authorizations))
   }
@@ -214,7 +214,7 @@ class AuthorizeHttpResponseSpec extends UnitSpecification with Fixtures {
     Json.fromString(authorizedResponse.getContentString()) ==== streamFiltered
   }
 
-  trait GenericContext extends Context {
+  trait GenericContext extends Context with Before {
     val content = generic.toString
     val status = 200
 
@@ -224,7 +224,7 @@ class AuthorizeHttpResponseSpec extends UnitSpecification with Fixtures {
       new ContentAuthorization(new Urn("soundcloud:tracks:3"), ContentPolicy.ALLOW, Reason.GEO, MonetizationModel.NOT_APPLICABLE)
     )
 
-    override def before =
+      override def before: Any =
       when(contentAuthorization.fetchRules(===(session), any[Seq[Urn]]))
         .thenReturn(Future(authorizations))
   }

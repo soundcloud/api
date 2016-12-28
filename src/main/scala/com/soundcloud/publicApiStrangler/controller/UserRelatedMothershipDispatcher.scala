@@ -43,17 +43,22 @@ class UserRelatedMothershipDispatcher(userAuthentication: UserAuthentication,
   def dispatchToMothership(request: Request): Future[ResponseBuilder] = {
     userAuthentication.withUserSession(request) { session =>
       mothershipDispatcher.defaultHandling(new HandlerRequest(AlwaysMatchesPathMatcher, request)).flatMap(response => {
-        (for {
-          _ <- if (response.getStatusCode() < 300) Some() else None
-          responseJson <- Try(Json.parse(response.getContentString())).toOption
-          userUrns = extractUserUrns(responseJson)
-          if userUrns.nonEmpty
-        } yield {
-          shouldLoadCountsFromLiebling().flatMap {
-            case true => requestWithLiebling(session, userUrns, responseJson, response)
-            case false => requestWithoutLiebling(session, userUrns, responseJson, response)
-          }
-        }).getOrElse(toResponseBuilder(response).toFuture)
+        lazy val defaultResponse = toResponseBuilder(response).toFuture
+
+        if (response.getStatusCode() < 300) {
+          (for {
+            responseJson <- Try(Json.parse(response.getContentString())).toOption
+            userUrns = extractUserUrns(responseJson)
+            if userUrns.nonEmpty
+          } yield {
+            shouldLoadCountsFromLiebling().flatMap {
+              case true => requestWithLiebling(session, userUrns, responseJson, response)
+              case false => requestWithoutLiebling(session, userUrns, responseJson, response)
+            }
+          }).getOrElse(defaultResponse)
+        } else {
+          defaultResponse
+        }
       })
     }
   }

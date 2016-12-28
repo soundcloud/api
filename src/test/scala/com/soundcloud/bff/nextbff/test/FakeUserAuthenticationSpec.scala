@@ -3,12 +3,11 @@ package com.soundcloud.bff.nextbff.test
 import com.soundcloud.bff.finagle.{Request, ResponseBuilder}
 import com.soundcloud.bff.test.UnitSpecification
 import com.soundcloud.jvmkit.{AnonymousUserSession, UserSessionBuilder}
-import com.soundcloud.scalakit.test.VerifiedMocks
 import com.twitter.util.{Await, Future}
 
 class FakeUserAuthenticationSpec extends UnitSpecification {
 
-  trait AnonymousUserContext extends VerifiedMocks {
+  trait AnonymousUserContext extends Scope {
     val anonymousSession = (new UserSessionBuilder)
       .build.asInstanceOf[AnonymousUserSession]
     val blankRequest = mock[Request]
@@ -17,7 +16,7 @@ class FakeUserAuthenticationSpec extends UnitSpecification {
       .withLoggedInUser(blankRequest) { (session, urn) =>
         Future.value(new ResponseBuilder().ok.build)
       }
-    lazy val result = 
+    lazy val result =
       Await.result(subject)
   }
 

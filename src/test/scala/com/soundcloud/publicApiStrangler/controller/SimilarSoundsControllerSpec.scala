@@ -6,16 +6,16 @@ import com.soundcloud.jvmkit.Urn
 import com.soundcloud.publicApiStrangler.mapper.similarsounds.SimilarSoundsMapper
 import com.soundcloud.publicApiStrangler.mapping.similarsounds.SimilarSoundsMapping
 import com.soundcloud.publicApiStrangler.support.mapping.ObjectMappingMock
-import com.soundcloud.scalakit.test.VerifiedMocks
 import com.soundcloud.service.response.representation.SimilarSounds
 import com.twitter.util.Future
 import org.jboss.netty.handler.codec.http.HttpResponseStatus
+import org.mockito.Mockito.{when, verify}
 
 class SimilarSoundsControllerSpec
   extends InjectionBasedControllerSpecification {
 
 
-  trait Context extends VerifiedMocks with Scope {
+  trait Context extends Scope {
     val session = fakeUserAuthentication(anonymousSession)
     val similarSoundsMapperMock = mock[SimilarSoundsMapper]
     val similarSoundsController = new SimilarSoundsController(session, similarSoundsMapperMock, "http://api.soundcloud.com")
@@ -30,11 +30,13 @@ class SimilarSoundsControllerSpec
       abstract class SimilarSoundsMock extends ObjectMappingMock[SimilarSounds] with SimilarSoundsMapping
       val similarSoundsMock = ObjectMappingMock.prepare[SimilarSoundsMock]
 
-      when(verified(similarSoundsMapperMock).materialize(anonymousSession, page)).
+      when(similarSoundsMapperMock.materialize(anonymousSession, page)).
         thenReturn(Future(Some(similarSoundsMock)))
 
       val response = get(similarSoundsController, path)
       response.code ==== 200
+
+      verify(similarSoundsMapperMock).materialize(anonymousSession, page)
     }
   }
 
@@ -50,10 +52,12 @@ class SimilarSoundsControllerSpec
     val param = new Urn("soundcloud:tracks:123")
     val page = OffsetBasedPage(param, "http://api.soundcloud.com", "/tracks/123/related", Map.empty[String, String], 3, 22)
 
-    when(verified(similarSoundsMapperMock).materialize(anonymousSession, page)).
+    when(similarSoundsMapperMock.materialize(anonymousSession, page)).
       thenReturn(Future.value(None))
 
     val response = get(similarSoundsController, "/tracks/123/related?limit=22&offset=3")
     response.code ==== 404
+
+    verify(similarSoundsMapperMock).materialize(anonymousSession, page)
   }
 }

@@ -6,7 +6,7 @@ import com.soundcloud.jvmkit.telemetry.Telemetry
 import com.soundcloud.jvmkit.test.InMemoryConfig
 import com.soundcloud.jvmkit.Urn
 import com.soundcloud.scalakit.finagle.http.{HandlerRequest, HttpHandler}
-import com.soundcloud.scalakit.test.{UnitSpecification, VerifiedMocks}
+import com.soundcloud.scalakit.test.{UnitSpecification}
 import com.twitter.finagle.http.{Method, Response}
 import com.twitter.util.{Await, Future}
 import io.prometheus.client.CollectorRegistry
@@ -14,7 +14,7 @@ import org.mockito.Mockito.verify
 
 class SpecificStranglingHandlerSpec extends UnitSpecification {
 
-  trait Context extends VerifiedMocks {
+  trait Context extends Scope {
     val next = mock[HttpHandler]
 
     val pathPatternsToDispatch = List(

@@ -10,7 +10,6 @@ import com.soundcloud.publicApiStrangler.client.follows.representation.unfollow.
 import com.soundcloud.publicApiStrangler.support.DispatchToMothershipHandler
 import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures
 import com.soundcloud.scalakit.Geo
-import com.soundcloud.scalakit.test.VerifiedMocks
 import com.soundcloud.service.client.OkidokiClient
 import com.twitter.finagle.http.Status
 import com.twitter.util.Future
@@ -21,7 +20,7 @@ import play.api.libs.json._
 class UserFollowControllerSpec extends InjectionBasedControllerSpecification with Fixtures {
   sequential
 
-  trait Context extends Scope with BeforeAfter with VerifiedMocks {
+  trait Context extends Scope with BeforeAfter {
     val fallbackMock = mock[DispatchToMothershipHandler]
     val okidokiMock = mock[OkidokiClient]
     val followsMock = mock[FollowsClient]
@@ -34,6 +33,75 @@ class UserFollowControllerSpec extends InjectionBasedControllerSpecification wit
     lazy val okidokiResponse = Future(List(userMock))
 
     val now = System.currentTimeMillis()
+
+    val user123 = Json.parse(
+      """
+        |{
+        |  "avatar_url": "https://i1.sndcdn.com/avatars-000092704388-h04iht-large.jpg?86347b7",
+        |  "id": 123,
+        |  "kind": "user",
+        |  "permalink_url": "http://soundcloud.com/adeline",
+        |  "uri": "http://foo/users/123",
+        |  "username": "adeline",
+        |  "permalink": "adeline",
+        |  "last_modified": "2014/10/04 10:48:34 +0000",
+        |  "first_name": "Adeline",
+        |  "last_name": null,
+        |  "full_name": "Adeline",
+        |  "city": "London",
+        |  "description": "For Adeline bookings worldwide",
+        |  "country": null,
+        |  "track_count": 49,
+        |  "public_favorites_count": 5,
+        |  "followers_count": 1111,
+        |  "followings_count": 2222,
+        |  "plan": "Pro Plus",
+        |  "myspace_name": null,
+        |  "discogs_name": null,
+        |  "website_title": "Adeline Website",
+        |  "website": "http://www.adelinemusic.com",
+        |  "reposts_count": null,
+        |  "comments_count": null,
+        |  "online": false,
+        |  "likes_count": 5,
+        |  "playlist_count": null
+        |}
+      """.stripMargin)
+
+    val anotherUser123 = Json.parse(
+      """
+        |{
+        |  "avatar_url": "https://i1.sndcdn.com/avatars-000092704388-h04iht-large.jpg?86347b7",
+        |  "id": 123,
+        |  "kind": "user",
+        |  "permalink_url": "http://soundcloud.com/adeline",
+        |  "uri": "http://foo/users/123",
+        |  "username": "adeline",
+        |  "permalink": "adeline",
+        |  "last_modified": "2014/10/04 10:48:34 +0000",
+        |  "first_name": "Adeline",
+        |  "last_name": null,
+        |  "full_name": "Adeline",
+        |  "city": "London",
+        |  "description": "For Adeline bookings worldwide",
+        |  "country": null,
+        |  "track_count": 49,
+        |  "public_favorites_count": 5,
+        |  "followers_count": 20976,
+        |  "followings_count": 118,
+        |  "plan": "Pro Plus",
+        |  "myspace_name": null,
+        |  "discogs_name": null,
+        |  "website_title": "Adeline Website",
+        |  "website": "http://www.adelinemusic.com",
+        |  "reposts_count": null,
+        |  "comments_count": null,
+        |  "online": false,
+        |  "likes_count": 5,
+        |  "playlist_count": null
+        |}
+      """.stripMargin
+    )
 
     override def before: Any = {
       DateTimeUtils.setCurrentMillisFixed(now)
@@ -58,15 +126,12 @@ class UserFollowControllerSpec extends InjectionBasedControllerSpecification wit
 
       val response = get(controller, "/users/999/followers/followed_by/2", Map("limit" -> "10"))
       response.status ==== Status.Ok
-      val json = Json.parse(response.body)
-      (json \ "collection").as[Seq[JsObject]].size ==== 1
-      (json \ "next_href").asOpt[String] ==== None
+      response.jsonBody ==== Json.obj("collection" -> List(anotherUser123))
     }
   }
 
   "GET /users/:id/followings/not_followed_by/:other_id" >> {
     "fetches followings" in new Context {
-
       override def before: Any = {
         super.before
         val values = Seq(
@@ -80,9 +145,7 @@ class UserFollowControllerSpec extends InjectionBasedControllerSpecification wit
 
       val response = get(controller, "/users/999/followings/not_followed_by/2", Map("limit" -> "10"))
       response.status ==== Status.Ok
-      val json = Json.parse(response.body)
-      (json \ "collection").as[Seq[JsObject]].size ==== 1
-      (json \ "next_href").asOpt[String] ==== None
+      response.jsonBody ==== Json.obj("collection" -> List(anotherUser123))
     }
   }
 
@@ -102,9 +165,7 @@ class UserFollowControllerSpec extends InjectionBasedControllerSpecification wit
 
       val response = get(controller, "/users/999/followings/common_to/2", Map("limit" -> "10", "cursor" -> "2"))
       response.status ==== Status.Ok
-      val json = Json.parse(response.body)
-      (json \ "collection").as[Seq[JsObject]].size ==== 1
-      (json \ "next_href").asOpt[String] ==== None
+      response.jsonBody ==== Json.obj("collection" -> List(anotherUser123))
     }
   }
 
@@ -124,9 +185,10 @@ class UserFollowControllerSpec extends InjectionBasedControllerSpecification wit
 
       val response = get(controller, "/me/followings/ids", Map("limit" -> "10"))
       response.status ==== Status.Ok
-      val json = Json.parse(response.body)
-      (json \ "collection") ==== JsArray(Seq(JsNumber(123)))
-      (json \ "next_href").asOpt[String] ==== Some("http://foo/me/followings/ids?page_size=2&cursor=123-1234")
+      response.jsonBody ==== Json.obj(
+        "collection" -> List(123),
+        "next_href" -> "http://foo/me/followings/ids?page_size=2&cursor=123-1234"
+      )
     }
   }
 
@@ -146,9 +208,10 @@ class UserFollowControllerSpec extends InjectionBasedControllerSpecification wit
 
       val response = get(controller, "/me/followers/ids", Map("limit" -> "10"))
       response.status ==== Status.Ok
-      val json = Json.parse(response.body)
-      (json \ "collection") ==== JsArray(Seq(JsNumber(123)))
-      (json \ "next_href").asOpt[String] ==== Some("http://foo/me/followers/ids?page_size=2&cursor=123-1234")
+      response.jsonBody ==== Json.obj(
+        "collection" -> List(123),
+        "next_href" -> "http://foo/me/followers/ids?page_size=2&cursor=123-1234"
+      )
     }
   }
 
@@ -178,11 +241,10 @@ class UserFollowControllerSpec extends InjectionBasedControllerSpecification wit
 
         val response = get(controller, "/me/followings", Map("limit" -> "10", "client_id" -> "FOO"))
         response.status ==== Status.Ok
-        val json = Json.parse(response.body)
-        (json \ "collection").as[Seq[JsObject]].size ==== 1
-        (json \ "next_href").asOpt[String] ==== Some("http://foo/me/followings?client_id=FOO&page_size=2&cursor=123-1234")
-        (json \ "collection" \\ "followers_count").head.as[Long] ==== 1111
-        (json \ "collection" \\ "followings_count").head.as[Long] ==== 2222
+        response.jsonBody ==== Json.obj(
+          "collection" -> List(user123),
+          "next_href" -> "http://foo/me/followings?client_id=FOO&page_size=2&cursor=123-1234"
+        )
       }
     }
   }
@@ -203,9 +265,10 @@ class UserFollowControllerSpec extends InjectionBasedControllerSpecification wit
 
       val response = get(controller, "/me/followers", Map("limit" -> "10", "cursor" -> "foo"))
       response.status ==== Status.Ok
-      val json = Json.parse(response.body)
-      (json \ "collection").as[Seq[JsObject]].size ==== 1
-      (json \ "next_href").asOpt[String] ==== Some("http://foo/me/followers?page_size=2&cursor=123-1234")
+      response.jsonBody ==== Json.obj(
+        "collection" -> List(anotherUser123),
+        "next_href" -> "http://foo/me/followers?page_size=2&cursor=123-1234"
+      )
     }
   }
 
@@ -240,14 +303,13 @@ class UserFollowControllerSpec extends InjectionBasedControllerSpecification wit
       val response = get(controller, "/me/followings/123")
       response.status ==== Status.SeeOther
       response.getHeader("Location") ==== "http://foo/users/123"
-
-      val json = Json.parse(response.body)
-      (json \ "id").as[Long] ==== 123
+      response.jsonBody ==== user123
     }
 
     "returns not found when the given user is not a following" in new FollowingNotFoundContext {
       val response = get(controller, "/me/followings/123")
       response.status ==== Status.NotFound
+      response.jsonBody ==== JsNull
     }
   }
 
@@ -256,14 +318,13 @@ class UserFollowControllerSpec extends InjectionBasedControllerSpecification wit
       val response = get(controller, "/me/followings/123.json")
       response.status ==== Status.SeeOther
       response.getHeader("Location") ==== "http://foo/users/123"
-
-      val json = Json.parse(response.body)
-      (json \ "id").as[Long] ==== 123
+      response.jsonBody ==== user123
     }
 
     "returns not found when the given user is not a following" in new FollowingNotFoundContext {
       val response = get(controller, "/me/followings/123.json")
       response.status ==== Status.NotFound
+      response.jsonBody ==== JsNull
     }
   }
 
@@ -272,14 +333,13 @@ class UserFollowControllerSpec extends InjectionBasedControllerSpecification wit
       val response = get(controller, "/users/999/followings/123")
       response.status ==== Status.SeeOther
       response.getHeader("Location") ==== "http://foo/users/123"
-
-      val json = Json.parse(response.body)
-      (json \ "id").as[Long] ==== 123
+      response.jsonBody ==== user123
     }
 
     "returns not found when the given user is not a following" in new FollowingNotFoundContext {
       val response = get(controller, "/users/999/followings/123")
       response.status ==== Status.NotFound
+      response.jsonBody ==== JsNull
     }
   }
 
@@ -288,14 +348,13 @@ class UserFollowControllerSpec extends InjectionBasedControllerSpecification wit
       val response = get(controller, "/users/999/followings/123.json")
       response.status ==== Status.SeeOther
       response.getHeader("Location") ==== "http://foo/users/123"
-
-      val json = Json.parse(response.body)
-      (json \ "id").as[Long] ==== 123
+      response.jsonBody ==== user123
     }
 
     "returns not found when the given user is not a following" in new FollowingNotFoundContext {
       val response = get(controller, "/users/999/followings/123.json")
       response.status ==== Status.NotFound
+      response.jsonBody ==== JsNull
     }
   }
 
@@ -331,13 +390,13 @@ class UserFollowControllerSpec extends InjectionBasedControllerSpecification wit
       response.status ==== Status.SeeOther
       response.getHeader("Location") ==== "http://foo/users/123"
 
-      val json = Json.parse(response.body)
-      (json \ "id").as[Long] ==== 123
+      response.jsonBody ==== user123
     }
 
     "returns not found when the given user is not a follower" in new FollowerNotFoundContext {
       val response = get(controller, "/me/followers/123")
       response.status ==== Status.NotFound
+      response.jsonBody ==== JsNull
     }
   }
 
@@ -347,13 +406,13 @@ class UserFollowControllerSpec extends InjectionBasedControllerSpecification wit
       response.status ==== Status.SeeOther
       response.getHeader("Location") ==== "http://foo/users/123"
 
-      val json = Json.parse(response.body)
-      (json \ "id").as[Long] ==== 123
+      response.jsonBody ==== user123
     }
 
     "returns not found when the given user is not a follower" in new FollowerNotFoundContext {
       val response = get(controller, "/me/followers/123.json")
       response.status ==== Status.NotFound
+      response.jsonBody ==== JsNull
     }
   }
 
@@ -363,13 +422,13 @@ class UserFollowControllerSpec extends InjectionBasedControllerSpecification wit
       response.status ==== Status.SeeOther
       response.getHeader("Location") ==== "http://foo/users/123"
 
-      val json = Json.parse(response.body)
-      (json \ "id").as[Long] ==== 123
+      response.jsonBody ==== user123
     }
 
     "returns not found when the given user is not a follower" in new FollowerNotFoundContext {
       val response = get(controller, "/users/999/followers/123")
       response.status ==== Status.NotFound
+      response.jsonBody ==== JsNull
     }
   }
 
@@ -379,13 +438,13 @@ class UserFollowControllerSpec extends InjectionBasedControllerSpecification wit
       response.status ==== Status.SeeOther
       response.getHeader("Location") ==== "http://foo/users/123"
 
-      val json = Json.parse(response.body)
-      (json \ "id").as[Long] ==== 123
+      response.jsonBody ==== user123
     }
 
     "returns not found when the given user is not a follower" in new FollowerNotFoundContext {
       val response = get(controller, "/users/999/followers/123.json")
       response.status ==== Status.NotFound
+      response.jsonBody ==== JsNull
     }
   }
 
@@ -400,6 +459,7 @@ class UserFollowControllerSpec extends InjectionBasedControllerSpecification wit
 
       val response = put(controller, "/me/followings/999.json", Map("client_id" -> "YOUR_CLIENT_ID"))
       response.status ==== Status.Created
+      response.jsonBody ==== anotherUser123
     }
   }
 
@@ -415,6 +475,7 @@ class UserFollowControllerSpec extends InjectionBasedControllerSpecification wit
 
       val response = put(controller, "/me/followings/999", Map("client_id" -> "YOUR_CLIENT_ID"))
       response.status ==== Status.Created
+      response.jsonBody ==== anotherUser123
     }
 
     "render the age-restricted errors" in new Context {

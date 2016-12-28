@@ -12,13 +12,13 @@ import com.soundcloud.jvmkit.Urn.format
 import com.soundcloud.scalakit.finagle.http.OkStatus
 import com.soundcloud.scalakit.finagle.jsonservice._
 import com.soundcloud.scalakit.json.UntypedJson
-import com.soundcloud.scalakit.test.VerifiedMocks
 import com.soundcloud.service.client.OkidokiClient
 import com.twitter.util.{Await, Future}
 import play.api.libs.json.{JsArray, JsNull, JsObject, Json}
+import org.mockito.Mockito.when
 
 class SearchRepositorySpec extends UnitSpecification {
-  trait Context extends VerifiedMocks {
+  trait Context extends Scope {
     lazy val session = loggedInSession(new Urn("soundcloud:users:123"))
     lazy val mockService = mock[BffJsonService]
     lazy val repo = new SearchRepository(mockService)
@@ -69,7 +69,7 @@ class SearchMapperSpec extends UnitSpecification {
     .map(doc => (doc \ "urn").as[Urn])
   val emptyJson = withContentsOf("search", "empty_result").as[JsObject]
 
-  trait Context extends Scope with VerifiedMocks {
+  trait Context extends Scope {
     val entityMapperMock = mock[SearchEntityMapper]
     val searchRepoMock = mock[SearchRepository]
 

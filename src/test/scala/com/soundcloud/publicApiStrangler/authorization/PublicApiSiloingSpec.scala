@@ -5,12 +5,12 @@ import com.soundcloud.jvmkit.{Urn, UserSession, UserSessionBuilder}
 import com.soundcloud.jvmkit.rollout.{Rollout, RolloutFeature}
 import com.soundcloud.jvmkit.telemetry.Telemetry
 import com.soundcloud.jvmkit.test.InMemoryConfig
-import com.soundcloud.scalakit.test.{UnitSpecification, VerifiedMocks}
+import com.soundcloud.scalakit.test.UnitSpecification
 import com.twitter.finagle.http.Status
 import com.twitter.util.{Await, Future}
 
 class PublicApiSiloingSpec extends UnitSpecification {
-  trait Context extends VerifiedMocks{
+  trait Context extends Scope {
 
     protected val request = mock[Request]
     private val rollout = mock[Rollout]

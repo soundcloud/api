@@ -7,12 +7,12 @@ import com.soundcloud.jvmkit.UserSession
 import com.soundcloud.jvmkit.policies.ContentPolicy
 import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures
 import com.soundcloud.scalakit.Url
-import com.soundcloud.scalakit.test.VerifiedMocks
 import com.twitter.util.{Await, Future}
+import org.mockito.Mockito.{when, verify}
 
 class WaveformMapperSpec extends UnitSpecification with Fixtures  {
 
-  trait Context extends VerifiedMocks {
+  trait Context extends Scope {
     val waveformUrlsRepoMock = mock[WaveformUrlsRepository]
     val mapper = new WaveformMapper(waveformUrlsRepoMock)
     val session = mock[UserSession]
@@ -34,7 +34,7 @@ class WaveformMapperSpec extends UnitSpecification with Fixtures  {
 
       val waveformRequest = WaveformRequestParams(uid, policy)
 
-      when(verified(waveformUrlsRepoMock).fetchWaveformUrlsToMap(session, Map(uid -> policy)))
+      when(waveformUrlsRepoMock.fetchWaveformUrlsToMap(session, Map(uid -> policy)))
         .thenReturn(Future(Map(uid -> waveformUrl)))
     }
 
@@ -44,6 +44,8 @@ class WaveformMapperSpec extends UnitSpecification with Fixtures  {
       actual must haveSize(1)
       actual.keys must contain(waveformRequest)
       actual(waveformRequest).resource ==== waveformUrl
+
+      verify(waveformUrlsRepoMock).fetchWaveformUrlsToMap(session, Map(uid -> policy))
     }
   }
 
@@ -60,7 +62,7 @@ class WaveformMapperSpec extends UnitSpecification with Fixtures  {
       val waveformUrl2 = TrackWaveformUrl(uid2, Url("jsonUrl2"), Url("pngUrl2"), "preview")
       val waveformRequest2 = WaveformRequestParams(uid2, policy2)
 
-      when(verified(waveformUrlsRepoMock).fetchWaveformUrlsToMap(session, Map(uid -> policy, uid2 -> policy2)))
+      when(waveformUrlsRepoMock.fetchWaveformUrlsToMap(session, Map(uid -> policy, uid2 -> policy2)))
         .thenReturn(Future(Map(uid -> waveformUrl, uid2 -> waveformUrl2)))
     }
 
@@ -72,6 +74,8 @@ class WaveformMapperSpec extends UnitSpecification with Fixtures  {
       actual.keys must contain(waveformRequest2)
       actual(waveformRequest).resource ==== waveformUrl
       actual(waveformRequest2).resource ==== waveformUrl2
+
+      verify(waveformUrlsRepoMock).fetchWaveformUrlsToMap(session, Map(uid -> policy, uid2 -> policy2))
     }
   }
 }

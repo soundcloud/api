@@ -7,14 +7,15 @@ import com.soundcloud.publicApiStrangler.client.liebling.{LieblingClient, LikesC
 import com.soundcloud.publicApiStrangler.mapper.timeline.{EntityMapper, EntitySummaryMapper}
 import com.soundcloud.publicApiStrangler.mapping.timeline.{Playlist, Track, User}
 import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures
-import com.soundcloud.scalakit.test.VerifiedMocks
 import com.soundcloud.service.client.OkidokiClient
 import com.twitter.util.{Await, Future}
 import play.api.libs.json.JsObject
+import org.mockito.Mockito.when
+import org.specs2.mutable.Before
 
 class EntityMapperSpec extends UnitSpecification with Fixtures {
 
-  trait Context extends VerifiedMocks {
+  trait Context extends Scope with Before {
     val userUrn = new Urn("soundcloud", "users", "123")
     val okidokiClient = mock[OkidokiClient]
     val lieblingClient = mock[LieblingClient]

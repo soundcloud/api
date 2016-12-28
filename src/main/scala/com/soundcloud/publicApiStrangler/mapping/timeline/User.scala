@@ -2,7 +2,7 @@ package com.soundcloud.publicApiStrangler.mapping.timeline
 
 import com.soundcloud.bff.nextbff.mapping.MappingContext
 import com.soundcloud.publicApiStrangler.client.followcounts.FollowCounts
-import play.api.libs.json.{JsObject, JsValue}
+import play.api.libs.json.{JsObject, JsValue, Json, Writes}
 
 class User(jsonValue: JsValue, baseUrl: String, maybeFollowCounts: Option[FollowCounts])(implicit context: MappingContext)
   extends UserSummary(jsonValue, baseUrl) {
@@ -39,4 +39,41 @@ class User(jsonValue: JsValue, baseUrl: String, maybeFollowCounts: Option[Follow
   val online = false
   val likes_count = (json \ "public_favorites_count").asOpt[Int]
   val playlist_count: Option[Int] = (json \ "public_playlists_count").asOpt[Int]
+}
+
+object User {
+  implicit val writes = new Writes[User] {
+    override def writes(u: User): JsValue = {
+      Json.obj(
+        "avatar_url" -> u.avatar_url,
+        "id" -> u.id,
+        "kind" -> u.kind,
+        "permalink_url" -> u.permalink_url,
+        "uri" -> u.uri,
+        "username" -> u.username,
+        "permalink" -> u.permalink,
+        "last_modified" -> u.last_modified,
+        "first_name" -> u.first_name,
+        "last_name" -> u.last_name,
+        "full_name" -> u.full_name,
+        "city" -> u.city,
+        "description" -> u.description,
+        "country" -> u.country,
+        "track_count" -> u.track_count,
+        "public_favorites_count" -> u.public_favorites_count,
+        "followers_count" -> u.followers_count,
+        "followings_count" -> u.followings_count,
+        "plan" -> u.plan,
+        "myspace_name" -> u.myspace_name,
+        "discogs_name" -> u.discogs_name,
+        "website_title" -> u.website_title,
+        "website" -> u.website,
+        "reposts_count" -> u.reposts_count,
+        "comments_count" -> u.comments_count,
+        "online" -> u.online,
+        "likes_count" -> u.likes_count,
+        "playlist_count" -> u.playlist_count
+      )
+    }
+  }
 }

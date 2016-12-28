@@ -2,7 +2,7 @@ package com.soundcloud.publicApiStrangler.support
 
 import com.soundcloud.bff.finagle.ResponseBuilder
 import com.soundcloud.scalakit.finagle.http.RouterResponse
-import com.soundcloud.scalakit.test.{UnitSpecification, VerifiedMocks}
+import com.soundcloud.scalakit.test.{UnitSpecification}
 import com.twitter.finagle.{Service, SimpleFilter}
 import com.twitter.finagle.http.{Method, Request, Response}
 import com.twitter.util.{Await, Future}
@@ -19,7 +19,7 @@ class ExceptForTrackUploadsFilterSpec extends UnitSpecification {
       Future.value(RouterResponse(new ResponseBuilder().body("original!").build, "/foo"))
   }
 
-  trait Context extends VerifiedMocks {
+  trait Context extends Scope {
     val next = new StubService
     val filter = new ExceptForTrackUploadsFilter(new MyFilter)
 

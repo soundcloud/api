@@ -1,6 +1,7 @@
 package com.soundcloud.publicApiStrangler.client.follows
 
 import com.soundcloud.jvmkit.{Urn, UserSession}
+import com.soundcloud.jvmkit.Urn.format
 import com.soundcloud.publicApiStrangler.client.follows.mapper._
 import com.soundcloud.publicApiStrangler.client.follows.representation.{FilteredUserUrns, FollowingsPage, UserUrns}
 import com.soundcloud.publicApiStrangler.client.follows.representation.follow._
@@ -172,7 +173,7 @@ class FollowsClient(jsonService: JsonClient) extends FetchClient {
     jsonService.get(
       userSession,
       path,
-      Params("urns" -> candidateUsers.map(_.getString).mkString(",")),
+      Params("urns" -> candidateUsers),
       Params.empty
     ).map(SimpleMapper[FilteredUserUrns])
 }

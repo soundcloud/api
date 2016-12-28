@@ -1,21 +1,23 @@
 package com.soundcloud.publicApiStrangler.headers
 
 import com.soundcloud.scalakit.finagle.http.RouterResponse
-import com.soundcloud.scalakit.test.{UnitSpecification, VerifiedMocks}
+import com.soundcloud.scalakit.test.UnitSpecification
 import com.twitter.finagle.Service
 import com.twitter.finagle.http.Request
 import com.twitter.util.{Await, Future}
+import org.mockito.Mockito.when
+import org.specs2.mutable.Before
 
 import scala.collection.JavaConversions._
 
 class DefaultResponseHeadersFilterSpec extends UnitSpecification {
 
-  trait Context extends VerifiedMocks {
+  trait Context extends Scope with Before {
     val next = mock[Service[Request, RouterResponse]]
     val filter = new DefaultResponseHeadersFilter
     val request = Request("/test.json")
 
-    override def before = {
+    override def before: Any = {
       val response = RouterResponse(request.response, "undefined")
       when(next.apply(request)).thenReturn(Future.value(response))
     }
@@ -29,7 +31,7 @@ class DefaultResponseHeadersFilterSpec extends UnitSpecification {
   }
 
   trait ExistingHeadersContext extends Context {
-    override def before = {
+    override def before: Any = {
       val response = RouterResponse(request.response, "undefined")
       response.headerMap.add("Access-Control-Allow-Origin", "Somewhere Else")
       when(next.apply(request)).thenReturn(Future.value(response))

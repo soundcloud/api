@@ -5,16 +5,16 @@ import com.soundcloud.bff.nextbff.pagination.OffsetBasedPage
 import com.soundcloud.bff.test.InjectionBasedControllerSpecification
 import com.soundcloud.jvmkit.{Urn, UserSession}
 import com.soundcloud.publicApiStrangler.mapper.search.SearchEntityMapper
-import com.soundcloud.scalakit.test.VerifiedMocks
 import com.soundcloud.service.client.SimilarSoundsClient
 import com.soundcloud.service.response.representation.{SimilarSounds, SimilarSoundsMeta}
 import com.twitter.util.{Await, Future}
 import org.mockito.Mockito._
+import org.mockito.Mockito.{when, verify, times}
 
 class SimilarSoundsMapperSpec
   extends InjectionBasedControllerSpecification {
 
-  trait Context extends Scope with VerifiedMocks {
+  trait Context extends Scope {
     val similarSoundsClientMock = mock[SimilarSoundsClient]
     val entityMapperMock = mock[SearchEntityMapper]
     val similarSoundsMapper = new SimilarSoundsMapper(similarSoundsClientMock, entityMapperMock)
@@ -31,27 +31,32 @@ class SimilarSoundsMapperSpec
     )
 
     // mock client returns fake result
-    when(verified(similarSoundsClientMock).fetchSimilar(anonymousSession, param, 1, 10, "", None)).
+    when(similarSoundsClientMock.fetchSimilar(anonymousSession, param, 1, 10, "", None)).
       thenReturn(Future.value(Some(returnedSimilarSounds)))
 
     // verify that entityMapper is called with fake results from mock client
-    when(verified(entityMapperMock).embed(List(new Urn("soundcloud:tracks:1")))).
+    when(entityMapperMock.embed(List(new Urn("soundcloud:tracks:1")))).
       thenReturn(null)
 
     val similarSounds = similarSoundsMapper.mapSingleInput(anonymousSession, page)
     Await.result(similarSounds)
+
+    verify(similarSoundsClientMock).fetchSimilar(anonymousSession, param, 1, 10, "", None)
+    verify(similarSoundsClientMock).fetchSimilar(anonymousSession, param, 1, 10, "", None)
   }
 
   "returns empty map if client responds with none" in new Context {
     // return 404 to simulate non existing track
-    when(verified(similarSoundsClientMock, times(2)).fetchSimilar(anonymousSession, param, 1, 10, "", None)).
+    when(similarSoundsClientMock.fetchSimilar(anonymousSession, param, 1, 10, "", None)).
       thenReturn(Future.value(None))
 
     val similarSounds = similarSoundsMapper.mapSingleInput(anonymousSession, page)
     Await.result(similarSounds) ==== None
-    
+
     val emptyMap = similarSoundsMapper.mapNonEmptyInputs(anonymousSession, Set(page))
     Await.result(emptyMap) ==== Map.empty
+
+    verify(similarSoundsClientMock, times(2)).fetchSimilar(anonymousSession, param, 1, 10, "", None)
   }
 
   "transforms offset based pagination to page based" in new Context {
