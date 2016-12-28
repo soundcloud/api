@@ -1,14 +1,17 @@
 package com.soundcloud.publicApiStrangler.client.reposts
 
 import au.com.dius.pact.consumer.dsl.PactDslJsonBody
-import com.soundcloud.publicApiStrangler.client.reposts.RepostsClient.{Created, SpamBlocked}
+import com.soundcloud.jvmkit.Urn
+import com.soundcloud.publicApiStrangler.client.reposts.RepostsClient.SpamBlocked
 import com.twitter.util.Await
 
 class RepostsClientSpamSpec extends RepostsClientSpec {
 
+  override def user = Urn(s"soundcloud:users:2")
+
   val response = buildResponse(
     status = 429,
-    headers = Headers,
+    headers = ResponseHeaders,
     bodyAndMatchers = new PactDslJsonBody()
       .minArrayLike("spam_warnings", 1, 1)
       .stringType("level")
@@ -23,13 +26,13 @@ class RepostsClientSpamSpec extends RepostsClientSpec {
     interactions = List(
       buildInteraction(
         description = "Creating a track repost",
-        maybeState = Some("soundcloud:users:1 is blocked for spam"),
+        maybeState = Some("soundcloud:users:2 is blocked for spam"),
         request = repostTrackRequest,
         response = response
       ),
       buildInteraction(
         description = "Creating a playlist repost",
-        maybeState = Some("soundcloud:users:1 is blocked for spam"),
+        maybeState = Some("soundcloud:users:2 is blocked for spam"),
         request = repostPlaylistRequest,
         response = response
       )

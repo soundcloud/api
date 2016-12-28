@@ -15,19 +15,22 @@ trait RepostsClientSpec extends Specification with PactSpec with UnitSpecsSuppor
   override val consumer = "public-api-strangler"
   override val provider = "reposts"
 
-  val Headers = Map("content-type" -> "application/json;charset=utf-8")
+  val track = Urn("soundcloud:tracks:1")
+  val playlist = Urn("soundcloud:playlists:1")
+  val baseUrl = "http://api.example.com"
 
-  val repostTrackRequest = buildRequest(path = "/tracks/soundcloud:tracks:1/reposts", method = "POST")
-  val unrepostTrackRequest = buildRequest(path = "/tracks/soundcloud:tracks:1/reposts", method = "DELETE")
-  val repostPlaylistRequest = buildRequest(path = "/playlists/soundcloud:playlists:1/reposts", method = "POST")
-  val unrepostPlaylistRequest = buildRequest(path = "/playlists/soundcloud:playlists:1/reposts", method = "DELETE")
+  def user = Urn(s"soundcloud:users:1")
+  lazy val session = new UserSessionBuilder().setUser(user).build()
+
+  val RequestHeaders = Map("Sc-User" -> user.toString)
+  val ResponseHeaders = Map("content-type" -> "application/json;charset=utf-8")
+
+  lazy val repostTrackRequest = buildRequest(path = "/tracks/soundcloud:tracks:1/reposts", method = "POST", headers = RequestHeaders)
+  lazy val unrepostTrackRequest = buildRequest(path = "/tracks/soundcloud:tracks:1/reposts", method = "DELETE", headers = RequestHeaders)
+  lazy val repostPlaylistRequest = buildRequest(path = "/playlists/soundcloud:playlists:1/reposts", method = "POST", headers = RequestHeaders)
+  lazy val unrepostPlaylistRequest = buildRequest(path = "/playlists/soundcloud:playlists:1/reposts", method = "DELETE", headers = RequestHeaders)
 
   trait Context extends Scope {
-    val track = Urn("soundcloud:tracks:1")
-    val playlist = Urn("soundcloud:playlists:1")
-    val session = new UserSessionBuilder().setUser(Urn(s"soundcloud:users:1")).build()
-    val baseUrl = "http://api.example.com"
-
     val client: RepostsClient = {
       val config = new InMemoryConfig
       config.set("APP_NAME", consumer)
