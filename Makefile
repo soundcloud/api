@@ -45,6 +45,12 @@ end-to-end-test:
 unit-test:
 	$(SBT) test
 
+contract-upload:
+	bin/contract-upload
+
+contract-promote:
+	bin/contract-promote
+
 interactive:
 	$(SBT_INTERACTIVE)
 
