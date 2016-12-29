@@ -33,11 +33,11 @@ class RepostsClientUnitSpec extends UnitSpecification {
 
       val result = Await.result(client.repostsCountForUser(anonymousSession, user))
 
-      result.get.urn ==== user
-      result.get.count ==== 17L
+      result.urn ==== user
+      result.count ==== 17L
     }
 
-    "returns None if either upstream call gets a non-ok response" in new Context {
+    "returns a failed future if either upstream call gets a non-OK response" in new Context {
       jsonClient.get(anonymousSession,
         Path() / "users" / "soundcloud:users:1" / "track_reposts" / "count", Params.empty, Params.empty
       ).returns(Future.value(JsonResponse(NotFoundStatus, JsNull)))
@@ -48,12 +48,10 @@ class RepostsClientUnitSpec extends UnitSpecification {
         Json.parse("""{ "counts": [ { "urn": "soundcloud:users:1" , "count": 5 } ] }""")
       )))
 
-      val result = Await.result(client.repostsCountForUser(anonymousSession, user))
-
-      result.isEmpty ==== true
+      Await.result(client.repostsCountForUser(anonymousSession, user).liftToTry).isThrow ==== true
     }
 
-    "returns None if either upstream call returns a non-parsable response" in new Context {
+    "returns a failed future if either upstream call returns a non-parsable response" in new Context {
       jsonClient.get(anonymousSession,
         Path() / "users" / "soundcloud:users:1" / "track_reposts" / "count", Params.empty, Params.empty
       ).returns(Future.value(JsonResponse(OkStatus,
@@ -66,12 +64,10 @@ class RepostsClientUnitSpec extends UnitSpecification {
         Json.parse("""{}""")
       )))
 
-      val result = Await.result(client.repostsCountForUser(anonymousSession, user))
-
-      result.isEmpty ==== true
+      Await.result(client.repostsCountForUser(anonymousSession, user).liftToTry).isThrow ==== true
     }
 
-    "returns None if either upstream call fails" in new Context {
+    "returns a failed future if either upstream call fails" in new Context {
       jsonClient.get(anonymousSession,
         Path() / "users" / "soundcloud:users:1" / "track_reposts" / "count", Params.empty, Params.empty
       ).returns(Future.value(JsonResponse(OkStatus,
@@ -82,9 +78,7 @@ class RepostsClientUnitSpec extends UnitSpecification {
         Path() / "users" / "soundcloud:users:1" / "playlist_reposts" / "count", Params.empty, Params.empty
       ).returns(Future.???)
 
-      val result = Await.result(client.repostsCountForUser(anonymousSession, user))
-
-      result.isEmpty ==== true
+      Await.result(client.repostsCountForUser(anonymousSession, user).liftToTry).isThrow ==== true
     }
 
   }

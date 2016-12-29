@@ -32,21 +32,13 @@ class RepostsClient(jsonClient: JsonClient) extends FetchClient {
       None
     ).map(toResult(_, baseUrl))
 
-  // NOTE:
-  // Twitter's Effective Scala guide says:
-  //   > Do not throw your own exceptions in methods that return Futures.
-  //   > Futures represent both successful and failed computations.
-  //   > Therefore, it’s important that errors involved in that computation are properly encapsulated in the returned Future.
-  // So, it's probably better to just return Future[Count] here.
-  def repostsCountForUser(session: UserSession, user: Urn): Future[Option[Count]] =
-    (
-      for {
-        trackReposts <- getCountForUser(session, user, "track_reposts")
-        playlistReposts <- getCountForUser(session, user, "playlist_reposts")
-      } yield {
-        Some(Count(user, trackReposts.count + playlistReposts.count))
-      }
-    ).rescue { case _ => Future.value(None) }
+  def repostsCountForUser(session: UserSession, user: Urn): Future[Count] =
+    for {
+      trackReposts <- getCountForUser(session, user, "track_reposts")
+      playlistReposts <- getCountForUser(session, user, "playlist_reposts")
+    } yield {
+      Count(user, trackReposts.count + playlistReposts.count)
+    }
 
   private def getCountForUser(session: UserSession, user: Urn, kind: String): Future[Count] =
     jsonClient.get(session, Path() / "users" / user.toString / kind / "count", Params.empty, Params.empty)
