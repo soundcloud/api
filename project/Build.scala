@@ -11,7 +11,7 @@ object Build extends HttpServerAppBuild(
     name = "public-api-strangler",
     appType = BffApi,
     jvmKitVersion = BuildProperties.jvmkitVersion,
-    scalaVersion = "2.11.6"
+    scalaVersion = "2.11.8"
   ),
   libDependencies = Seq(
     "com.soundcloud" %% "sc-services" % "48.0.0",
