@@ -5,18 +5,19 @@ import com.soundcloud.bff.authorization.ContentAuthorizationService
 import com.soundcloud.bff.filter.SessionCache
 import com.soundcloud.bff.media.{MediaUrlsRepository, WaveformUrlsRepository}
 import com.soundcloud.bff.services.{JsonService, ServiceConfig}
-import com.soundcloud.jvmkit.{ResourceName, Urn}
 import com.soundcloud.jvmkit.admin.{AdminRoute, RequestMethod}
 import com.soundcloud.jvmkit.config.{ConfigConvention, DataSensitivity}
 import com.soundcloud.jvmkit.rollout.{BasicRolloutFeature, Rollout, RolloutBuilder}
 import com.soundcloud.jvmkit.telemetry.Telemetry
 import com.soundcloud.jvmkit.zookeeper.CuratorFrameworkFactory
+import com.soundcloud.jvmkit.{ResourceName, Urn}
 import com.soundcloud.publicApiStrangler.authorization._
 import com.soundcloud.publicApiStrangler.client._
 import com.soundcloud.publicApiStrangler.client.followcounts.FollowCountsClient
 import com.soundcloud.publicApiStrangler.client.mediaservice.MediaServiceUrlGenClient
 import com.soundcloud.publicApiStrangler.client.pubmese.PubmeseClient
 import com.soundcloud.publicApiStrangler.client.quota.UserQuotaClient
+import com.soundcloud.publicApiStrangler.client.reposts.RepostsClient
 import com.soundcloud.publicApiStrangler.client.stitch.StitchClient
 import com.soundcloud.publicApiStrangler.client.trackmetadata.TrackmetadataClient
 import com.soundcloud.publicApiStrangler.controller._
@@ -29,7 +30,6 @@ import com.soundcloud.publicApiStrangler.mapper.timeline.publicApi.ActivitiesWit
 import com.soundcloud.publicApiStrangler.mapper.timeline.{EntityMapper, EntitySummaryMapper, FollowingsTracksMapper}
 import com.soundcloud.publicApiStrangler.mapper.trackstreams.{TrackStreamJsonResponseMapper, TrackStreamRedirectResponseMapper}
 import com.soundcloud.publicApiStrangler.mapper.waveform.WaveformMapper
-import com.soundcloud.publicApiStrangler.TrackRepresentationsService
 import com.soundcloud.publicApiStrangler.support._
 import com.soundcloud.ratelimiting.facade._
 import com.soundcloud.scalakit.cache.MemcachedClient
@@ -337,6 +337,18 @@ object App
     mothershipDispatcher
   )
 
+  private val repostsController = {
+    val jsonClient = JsonClient(
+      ResourceName("reposts"),
+      ServiceEntryPoint(config.get(ResourceName("REPOSTS"), ConfigConvention.SRV_RECORD)),
+      config,
+      telemetry
+    )
+    val repostsClient = new RepostsClient(jsonClient)
+    val writeToReposts = BasicRolloutFeature("write_to_reposts_service")
+    new RepostsController(userAuthentication, repostsClient, mothershipDispatcher, () => rolloutClient.isActive(writeToReposts))
+  }
+
   private val officialSoundCloudApps = List(
     new Urn("soundcloud:applications:46941"), // SoundCloud.com (currently being abused) Internal
     new Urn("soundcloud:applications:124"), // SoundCloud iOS Internal
@@ -526,7 +538,8 @@ object App
     playlistsController,
     resolveController,
     announcementsController,
-    oAuthController
+    oAuthController,
+    repostsController
   )
 
   override val customAdminHandlers: Seq[(AdminRoute, Handler)] = Seq(

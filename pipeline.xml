@@ -6,19 +6,23 @@
     <jobs>
       <job name="unit-tests-and-publish">
         <tasks>
-           <exec command="make">
-             <arg>unit-test</arg>
-             <runif status="passed"/>
-           </exec>
-           <exec command="make">
-             <arg>package</arg>
-             <runif status="passed"/>
-           </exec>
-           <exec command="make">
-             <arg>publish</arg>
-             <arg>publish-deploy</arg>
-             <runif status="passed"/>
-           </exec>
+          <exec command="make">
+            <arg>unit-test</arg>
+            <runif status="passed"/>
+          </exec>
+          <exec command="make">
+            <arg>package</arg>
+            <runif status="passed"/>
+          </exec>
+          <exec command="make">
+            <arg>publish</arg>
+           <arg>publish-deploy</arg>
+            <runif status="passed"/>
+          </exec>
+          <exec command="make">
+            <arg>contract-upload</arg>
+            <runif status="passed" />
+          </exec>
         </tasks>
       </job>
     </jobs>
@@ -27,10 +31,10 @@
     <jobs>
       <job name="end-to-end-tests">
         <tasks>
-           <exec command="make">
-             <arg>end-to-end-test</arg>
-             <runif status="passed"/>
-           </exec>
+          <exec command="make">
+            <arg>end-to-end-test</arg>
+            <runif status="passed"/>
+          </exec>
         </tasks>
       </job>
     </jobs>
@@ -39,10 +43,10 @@
     <jobs>
       <job name="promote-to-stable">
         <tasks>
-           <exec command="make">
-             <arg>promote-to-stable</arg>
-             <runif status="passed"/>
-           </exec>
+          <exec command="make">
+            <arg>promote-to-stable</arg>
+            <runif status="passed"/>
+          </exec>
         </tasks>
       </job>
     </jobs>
@@ -52,26 +56,38 @@
     <jobs>
       <job name="promote-to-release-then-deploy">
         <tasks>
-           <exec command="make">
-             <arg>promote-to-release</arg>
-             <runif status="passed"/>
-           </exec>
-           <exec command="make">
-             <arg>deploy-db-api</arg>
-             <runif status="passed"/>
-           </exec>
-           <exec command="make">
-             <arg>deploy-db-apitrackupload</arg>
-             <runif status="passed"/>
-           </exec>
-           <exec command="make">
-             <arg>deploy-k8s-api</arg>
-             <runif status="passed"/>
-           </exec>
-           <exec command="make">
-             <arg>deploy-k8s-apitrackupload</arg>
-             <runif status="passed"/>
-           </exec>
+          <exec command="make">
+            <arg>promote-to-release</arg>
+            <runif status="passed"/>
+          </exec>
+          <exec command="make">
+            <arg>deploy-db-api</arg>
+            <runif status="passed"/>
+          </exec>
+          <exec command="make">
+            <arg>deploy-db-apitrackupload</arg>
+            <runif status="passed"/>
+          </exec>
+          <exec command="make">
+            <arg>deploy-k8s-api</arg>
+            <runif status="passed"/>
+          </exec>
+          <exec command="make">
+            <arg>deploy-k8s-apitrackupload</arg>
+            <runif status="passed"/>
+          </exec>
+        </tasks>
+      </job>
+    </jobs>
+  </stage>
+  <stage name="promote-contract-tests">
+    <jobs>
+      <job name="promote-tests">
+        <tasks>
+          <exec command="make">
+            <arg>contract-promote</arg>
+            <runif status="passed" />
+          </exec>
         </tasks>
       </job>
     </jobs>
