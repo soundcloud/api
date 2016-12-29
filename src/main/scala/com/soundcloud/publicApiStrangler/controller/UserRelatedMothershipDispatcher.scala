@@ -5,6 +5,7 @@ import com.soundcloud.bff.web.UserAuthentication
 import com.soundcloud.jvmkit.{Urn, UserSession}
 import com.soundcloud.publicApiStrangler.client.followcounts.{FollowCounts, FollowCountsClient}
 import com.soundcloud.publicApiStrangler.client.liebling.{LieblingClient, LikesCount, UserTotalLikes}
+import com.soundcloud.publicApiStrangler.client.reposts.RepostsClient
 import com.soundcloud.publicApiStrangler.support.DispatchToMothershipHandler
 import com.soundcloud.scalakit.finagle.http.{AlwaysMatchesPathMatcher, HandlerRequest}
 import com.twitter.finagle.http.Response
@@ -38,7 +39,9 @@ class UserRelatedMothershipDispatcher(userAuthentication: UserAuthentication,
                                       mothershipDispatcher: DispatchToMothershipHandler,
                                       followCountsClient: FollowCountsClient,
                                       lieblingClient: LieblingClient,
-                                      shouldLoadCountsFromLiebling: () => Future[Boolean]) {
+                                      shouldLoadCountsFromLiebling: () => Future[Boolean],
+                                      repostsClient: RepostsClient,
+                                      shouldLoadCountsFromReposts: () => Future[Boolean]) {
 
   def dispatchToMothership(request: Request): Future[ResponseBuilder] = {
     userAuthentication.withUserSession(request) { session =>
@@ -65,10 +68,14 @@ class UserRelatedMothershipDispatcher(userAuthentication: UserAuthentication,
       for {
         followsSubs <- followsSubstitutions(session, userUrns)
         likesSubs <- lieblingSubstitutions(session, userUrns)
+        repostsSubs <- repostsSubstitutions(session, userUrns)
       } yield {
-        userUrns.map { urn =>
-          (urn, followsSubs.getOrElse(urn, List.empty) ++ likesSubs.getOrElse(urn, List.empty))
-        }.toMap
+        userUrns.map { urn => (
+          urn,
+          followsSubs.getOrElse(urn, List.empty)
+            ++ likesSubs.getOrElse(urn, List.empty)
+            ++ repostsSubs.getOrElse(urn, List.empty)
+        ) }.toMap
       }
     ).map { allSubs: Map[Urn,List[(String,JsValueWrapper)]]  =>
       response.setContentString(
@@ -91,6 +98,23 @@ class UserRelatedMothershipDispatcher(userAuthentication: UserAuthentication,
             )
           )}.toMap
       }
+
+  private def repostsSubstitutions(session: UserSession, userUrns: Set[Urn]): Future[Map[Urn,List[(String,JsValueWrapper)]]] =
+    shouldLoadCountsFromReposts().flatMap {
+      case true =>
+        Future.collect(userUrns.toList.map { userUrn => repostsClient.repostsCountForUser(session, userUrn) })
+          .map(_.map(count => (count.urn, count)).toMap)
+          .map { fetchedData: Map[Urn,RepostsClient.Count] =>
+            userUrns
+              .map { urn: Urn => fetchedData.getOrElse(urn, RepostsClient.Count(urn, 0)) }
+              .map { repostsCount => (
+                repostsCount.urn,
+                List("reposts_count" -> Json.toJsFieldJsValueWrapper(repostsCount.count))
+              )}.toMap
+          }
+      case false =>
+        Future.value(Map.empty)
+    }
 
   private def lieblingSubstitutions(session: UserSession, userUrns: Set[Urn]): Future[Map[Urn,List[(String,JsValueWrapper)]]] =
     shouldLoadCountsFromLiebling().flatMap {

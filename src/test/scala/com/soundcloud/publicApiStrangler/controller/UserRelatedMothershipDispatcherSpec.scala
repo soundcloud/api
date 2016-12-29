@@ -6,6 +6,7 @@ import com.soundcloud.bff.test.UnitSpecification
 import com.soundcloud.jvmkit.{Urn, UserSession}
 import com.soundcloud.publicApiStrangler.client.followcounts.{FollowCounts, FollowCountsClient}
 import com.soundcloud.publicApiStrangler.client.liebling.{LieblingClient, UserTotalLikes}
+import com.soundcloud.publicApiStrangler.client.reposts.RepostsClient
 import com.soundcloud.publicApiStrangler.support.DispatchToMothershipHandler
 import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures
 import com.soundcloud.scalakit.finagle.http.HandlerRequest
@@ -22,17 +23,21 @@ class UserRelatedMothershipDispatcherSpec extends UnitSpecification with Fixture
     val userAuthenticationMock = new FakeUserAuthentication(session)
     val followCountsClientMock = mock[FollowCountsClient]
     val lieblingClientMock = mock[LieblingClient]
+    val repostsClientMock = mock[RepostsClient]
     val mothershipDispatcherMock = mock[DispatchToMothershipHandler]
     val request = new Request(mock[FinagleRequest])
 
     def loadUserLikeCountsFromLiebling: Boolean
+    def loadUserRepostCountsFromReposts: Boolean = false
 
     val dispatcher = new UserRelatedMothershipDispatcher(
       userAuthenticationMock,
       mothershipDispatcherMock,
       followCountsClientMock,
       lieblingClientMock,
-      () => Future.value(loadUserLikeCountsFromLiebling)
+      () => Future.value(loadUserLikeCountsFromLiebling),
+      repostsClientMock,
+      () => Future.value(loadUserRepostCountsFromReposts)
     )
 
     val user1 = new Urn("soundcloud", "users", "183")

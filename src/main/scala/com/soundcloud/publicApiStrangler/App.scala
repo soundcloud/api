@@ -17,7 +17,6 @@ import com.soundcloud.publicApiStrangler.client.followcounts.FollowCountsClient
 import com.soundcloud.publicApiStrangler.client.mediaservice.MediaServiceUrlGenClient
 import com.soundcloud.publicApiStrangler.client.pubmese.PubmeseClient
 import com.soundcloud.publicApiStrangler.client.quota.UserQuotaClient
-import com.soundcloud.publicApiStrangler.client.reposts.RepostsClient
 import com.soundcloud.publicApiStrangler.client.stitch.StitchClient
 import com.soundcloud.publicApiStrangler.client.trackmetadata.TrackmetadataClient
 import com.soundcloud.publicApiStrangler.controller._
@@ -47,6 +46,7 @@ object App
     with LieblingComponent
     with PublicApiClientComponent
     with FollowsComponent
+    with RepostsComponent
     with GatekeeperComponent
     with SimilarSoundsComponent
     with TrackCoordinatorComponent {
@@ -162,13 +162,15 @@ object App
 
   private val baseUrl = config.get("APP_BASE_URL", DataSensitivity.NON_SENSITIVE)
 
-  val loadUserLikeCountsFromLieblingFeatureFlag = BasicRolloutFeature("load_user_like_counts_from_liebling")
   private val userRelatedMothershipDispatcher = new UserRelatedMothershipDispatcher(
     userAuthentication,
     mothershipDispatcher,
     followCountsClient,
     lieblingClient,
-    () => rolloutClient.isActive(loadUserLikeCountsFromLieblingFeatureFlag))
+    () => rolloutClient.isActive(BasicRolloutFeature("load_user_like_counts_from_liebling")),
+    repostsClient,
+    () => rolloutClient.isActive(BasicRolloutFeature("load_user_repost_counts_from_reposts"))
+  )
 
   private val timelineController = {
     val entitySummaryMapper = new EntitySummaryMapper(okidokiClient, baseUrl)
@@ -338,13 +340,6 @@ object App
   )
 
   private val repostsController = {
-    val jsonClient = JsonClient(
-      ResourceName("reposts"),
-      ServiceEntryPoint(config.get(ResourceName("REPOSTS"), ConfigConvention.SRV_RECORD)),
-      config,
-      telemetry
-    )
-    val repostsClient = new RepostsClient(jsonClient)
     val writeToReposts = BasicRolloutFeature("write_to_reposts_service")
     new RepostsController(userAuthentication, repostsClient, mothershipDispatcher, () => rolloutClient.isActive(writeToReposts))
   }

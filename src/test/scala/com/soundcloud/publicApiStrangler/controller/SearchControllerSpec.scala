@@ -10,6 +10,7 @@ import com.soundcloud.jvmkit.test.InMemoryConfig
 import com.soundcloud.jvmkit.{Urn, UserSession}
 import com.soundcloud.publicApiStrangler.client.followcounts.{FollowCounts, FollowCountsClient}
 import com.soundcloud.publicApiStrangler.client.liebling.LieblingClient
+import com.soundcloud.publicApiStrangler.client.reposts.RepostsClient
 import com.soundcloud.publicApiStrangler.mapper.search.SearchMapper
 import com.soundcloud.publicApiStrangler.mapping.search.{Search, SearchDispatcherRequest}
 import com.soundcloud.publicApiStrangler.support.DispatchToMothershipHandler
@@ -17,7 +18,7 @@ import com.soundcloud.scalakit.finagle.http.{BadRequestStatus, HandlerRequest}
 import com.twitter.util.Future
 import io.prometheus.client.CollectorRegistry
 import org.jboss.netty.handler.codec.http.HttpResponseStatus
-import org.mockito.Mockito.{when, verify}
+import org.mockito.Mockito.{verify, when}
 
 class SearchControllerSpec extends InjectionBasedControllerSpecification {
 
@@ -28,6 +29,7 @@ class SearchControllerSpec extends InjectionBasedControllerSpecification {
     val searchMapperMock = mock[SearchMapper]
     val followCountsClientMock = mock[FollowCountsClient]
     val lieblingClientMock = mock[LieblingClient]
+    val repostsClientMock = mock[RepostsClient]
 
     val authentication = fakeUserAuthentication(anonymousSession)
     val userRelatedMothershipDispatcher = new UserRelatedMothershipDispatcher(
@@ -35,6 +37,8 @@ class SearchControllerSpec extends InjectionBasedControllerSpecification {
       fallbackMock,
       followCountsClientMock,
       lieblingClientMock,
+      () => Future.value(true),
+      repostsClientMock,
       () => Future.value(true)
     )
 
