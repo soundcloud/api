@@ -36,8 +36,8 @@ PUBMESE_ADDRESS=dnssrv!http.web.prod.pubmese.dd.srv.int.s-cloud.net
 GEOIP_SRV_RECORD=dnssrv!http.geoip2http.prod.geoip.dd.srv.int.s-cloud.net
 MEDIASERVICE_SRV_RECORD=dnssrv!http.urlgen.prod.media-service.dd.srv.int.s-cloud.net
 STITCH_ADDRESS=dnssrv!http.web.prod.stitch4counts.dd.srv.int.s-cloud.net
-REPOSTS_SRV_RECORD="dnssrv!http.api.prod.reposts.dd.srv.int.s-cloud.net"
-REPOSTS_JSONCLIENT_REQUEST_TIMEOUT_MILLIS="5000"
+REPOSTS_SRV_RECORD=dnssrv!http.api.prod.reposts.dd.srv.int.s-cloud.net
+REPOSTS_JSONCLIENT_REQUEST_TIMEOUT_MILLIS=5000
 
 RATE_LIMIT_MEMCACHED_SERVERS=memcached
 
