@@ -9,7 +9,7 @@ import com.soundcloud.publicApiStrangler.client.reposts.RepostsClient
 import com.soundcloud.publicApiStrangler.support.DispatchToMothershipHandler
 import com.soundcloud.scalakit.finagle.http.{AlwaysMatchesPathMatcher, HandlerRequest}
 import com.twitter.finagle.http.Response
-import com.twitter.util.{Future, Try}
+import com.twitter.util.{Future, NonFatal, Try}
 import play.api.libs.json.Json.JsValueWrapper
 import play.api.libs.json.{JsArray, JsObject, JsValue, Json}
 
@@ -99,14 +99,16 @@ class UserRelatedMothershipDispatcher(userAuthentication: UserAuthentication,
           )}.toMap
       }
 
-  private def repostsSubstitutions(session: UserSession, userUrns: Set[Urn]): Future[Map[Urn,List[(String,JsValueWrapper)]]] =
+  private def repostsSubstitutions(session: UserSession, userUrns: Set[Urn]): Future[Map[Urn,List[(String,JsValueWrapper)]]] = {
+    def defaultCount(urn: Urn) = RepostsClient.Count(urn, 0)
     shouldLoadCountsFromReposts().flatMap {
       case true =>
-        Future.collect(userUrns.toList.map { userUrn => repostsClient.repostsCountForUser(session, userUrn) })
-          .map(_.map(count => (count.urn, count)).toMap)
+        Future.collect(userUrns.toList.map { userUrn =>
+          repostsClient.repostsCountForUser(session, userUrn).handle { case NonFatal(_) => defaultCount(userUrn) }
+        }).map(_.map(count => (count.urn, count)).toMap)
           .map { fetchedData: Map[Urn,RepostsClient.Count] =>
             userUrns
-              .map { urn: Urn => fetchedData.getOrElse(urn, RepostsClient.Count(urn, 0)) }
+              .map { urn: Urn => fetchedData.getOrElse(urn, defaultCount(urn)) }
               .map { repostsCount => (
                 repostsCount.urn,
                 List("reposts_count" -> Json.toJsFieldJsValueWrapper(repostsCount.count))
@@ -115,6 +117,7 @@ class UserRelatedMothershipDispatcher(userAuthentication: UserAuthentication,
       case false =>
         Future.value(Map.empty)
     }
+  }
 
   private def lieblingSubstitutions(session: UserSession, userUrns: Set[Urn]): Future[Map[Urn,List[(String,JsValueWrapper)]]] =
     shouldLoadCountsFromLiebling().flatMap {
