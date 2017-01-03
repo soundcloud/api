@@ -33,10 +33,10 @@ class RepostsClient(jsonClient: JsonClient) extends FetchClient {
     ).map(toResult(_, baseUrl))
 
   def repostsCountForUser(session: UserSession, user: Urn): Future[Count] =
-    for {
-      trackReposts <- getCountForUser(session, user, "track_reposts")
-      playlistReposts <- getCountForUser(session, user, "playlist_reposts")
-    } yield {
+    Future.join(
+      getCountForUser(session, user, "track_reposts"),
+      getCountForUser(session, user, "playlist_reposts")
+    ).map { case (trackReposts, playlistReposts) =>
       Count(user, trackReposts.count + playlistReposts.count)
     }
 
