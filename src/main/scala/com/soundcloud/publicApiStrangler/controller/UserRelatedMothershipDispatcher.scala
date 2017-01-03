@@ -15,15 +15,13 @@ import play.api.libs.json.Json.JsValueWrapper
 import play.api.libs.json.{JsArray, JsObject, JsValue, Json}
 
 /**
-  * So this class is weird. It grew out of this abstraction:
+  * This class is weird. It grew out of this abstraction:
   * https://github.com/soundcloud/public-api-strangler/blob/884e0/src/main/scala/com/soundcloud/publicApiStrangler/controller/FollowCountsHelper.scala
   * which was created to load follower count information into the many ways the public-api returns user representations.
-  * currently it also load like counts from liebling.
+  * It now enriches such users representations with counts from several sources.
   *
   * To understand what it does, first look for usages of the `dispatchToMothership` method below.
-  * It essentially "plugs in" to any json response coming from the mothership and looks for things that look like
-  * User representations. If it finds one, it tries to load the Follow/Like counts and injects that data into the
-  * representation with which it was provided.
+  * If there are any users in the Mothership response, it will enrich them with counts from other services.
   *
   * For instance, some mothership endpoints return users that look like:
   * { id: 1, name: Filipe }
@@ -33,8 +31,9 @@ import play.api.libs.json.{JsArray, JsObject, JsValue, Json}
   * [ { kind: friend, connection_ids: [...], user: { ... } ]
   * and some other formats as well.
   *
-  * And this abstraction tries to look for the right place to insert the `followers_count`, `followings_count`,
-  * and `public_favorites_count` keys, with the counts themselves coming from the upstream services that serve them.
+  * And this abstraction tries to look for the right place to insert values for the `followers_count`,
+  * `followings_count`, `public_favorites_count` and other keys, with the counts themselves coming from the
+  * upstream services that are responsible for them.
   */
 class UserRelatedMothershipDispatcher(userAuthentication: UserAuthentication,
                                       mothershipDispatcher: DispatchToMothershipHandler,
