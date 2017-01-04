@@ -12,7 +12,7 @@ Set the `USE_CRUN` environment variable to `false` to avoid using crun when poss
 
 ```
 make run
-curl "https://api.soundcloud.com/users/49416?client_id=$A_VALID_CLIENT_ID"
+curl "http://localhost:5000/tracks?client_id=$A_VALID_CLIENT_ID"
 ```
 
 This runs against production servers.
