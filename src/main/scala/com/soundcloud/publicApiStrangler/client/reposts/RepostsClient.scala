@@ -6,7 +6,7 @@ import com.soundcloud.scalakit.Path
 import com.soundcloud.scalakit.finagle.http._
 import com.soundcloud.scalakit.finagle.jsonservice.{JsonClient, JsonResponse, Params}
 import com.soundcloud.service.client.FetchClient
-import com.twitter.util.Future
+import com.twitter.util.{Future, NonFatal, Try}
 import play.api.libs.json._
 
 /**
@@ -31,6 +31,39 @@ class RepostsClient(jsonClient: JsonClient) extends FetchClient {
       Params.empty,
       None
     ).map(toResult(_, baseUrl))
+
+  def getRepostCountsByUrnIfAvailableOrDefaultToZero(session: UserSession, urns: Set[Urn]): Future[Map[Urn, Long]] =
+    repostCountsForUrns(session, urns)
+      .map(_.map(count => count.urn -> count.count).toMap)
+      .map { fetchedCounts =>
+        urns.toList.map { urn => (urn -> fetchedCounts.getOrElse(urn, 0L)) }.toMap
+      }
+
+  def repostCountsForUrns(session: UserSession, urns: Set[Urn]): Future[Set[Count]] =
+    Future.collect(
+      (urns.filter(_.getCollection == "users").map { userUrn =>
+        repostsCountForUser(session, userUrn).map(Seq(_))
+      } ++ Set(
+        filterAndGetCounts(session, "tracks", urns),
+        filterAndGetCounts(session, "playlists", urns)
+      )).map(f => f.handle { case NonFatal(_) => Seq.empty }).toSeq
+    ).map(_.flatten).map(_.toSet)
+
+  private def filterAndGetCounts(session: UserSession,
+                                 collection: String,
+                                 urns: Set[Urn],
+                                 batchSize: Int = 50): Future[Seq[Count]] = {
+    val filteredUrns = urns.filter(_.getCollection == collection)
+    val path = Path() / collection / "reposts" / "count"
+
+    Future.collect(
+      filteredUrns.grouped(batchSize).map { batchUrns => {
+        val params = Params("urns" -> batchUrns.map(_.toString).mkString(","))
+        jsonClient.get(session, path, params, headers = Params.empty)
+          .map { case JsonResponse(OkStatus, body, _, _) => (body \ "counts").as[Seq[Count]] }
+      }}.map(f => f.handle { case NonFatal(_) => Seq.empty }).toSeq
+    ).map(_.flatten)
+  }
 
   def repostsCountForUser(session: UserSession, user: Urn): Future[Count] =
     Future.join(

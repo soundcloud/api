@@ -7,6 +7,7 @@ import com.soundcloud.publicApiStrangler.client.follows.FollowsClient
 import com.soundcloud.publicApiStrangler.client.follows.representation._
 import com.soundcloud.publicApiStrangler.client.follows.representation.follow.{AgeRestrictedUser, AgeUnknownUser, FollowingCreated, UserNotFound}
 import com.soundcloud.publicApiStrangler.client.follows.representation.unfollow.{UnfollowSuccessful, UserAsTarget}
+import com.soundcloud.publicApiStrangler.client.reposts.RepostsClient
 import com.soundcloud.publicApiStrangler.support.DispatchToMothershipHandler
 import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures
 import com.soundcloud.scalakit.Geo
@@ -25,10 +26,20 @@ class UserFollowControllerSpec extends InjectionBasedControllerSpecification wit
     val okidokiMock = mock[OkidokiClient]
     val followsMock = mock[FollowsClient]
     val followCountsClientMock = mock[FollowCountsClient]
+    val repostsClientMock = mock[RepostsClient]
     val userUrn = Urn("soundcloud:users:999")
     lazy val geo = Geo("US")
     lazy val session = new UserSessionBuilder().setUser(userUrn).setAgent(Urn("soundcloud:applications:v2")).setGeo(geo).build()
-    lazy val controller = new UserFollowController(fakeUserAuthentication(session), fallbackMock, okidokiMock, followsMock, followCountsClientMock, "http://foo")
+    lazy val controller = new UserFollowController(fakeUserAuthentication(session),
+                                                   fallbackMock,
+                                                   okidokiMock,
+                                                   followsMock,
+                                                   followCountsClientMock,
+                                                   repostsClientMock,
+                                                   enrichRepostsCounts = () => Future.value(false),
+                                                   "http://foo")
+
+
     lazy val userMock = okidokiUsers.as[List[JsObject]].head
     lazy val okidokiResponse = Future(List(userMock))
 

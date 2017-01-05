@@ -162,6 +162,9 @@ object App
 
   private val baseUrl = config.get("APP_BASE_URL", DataSensitivity.NON_SENSITIVE)
 
+  private val enrichRepostsCounts: () => Future[Boolean] =
+    () => rolloutClient.isActive(BasicRolloutFeature("load_user_repost_counts_from_reposts"))
+
   private val userRelatedMothershipDispatcher = new UserRelatedMothershipDispatcher(
     userAuthentication,
     mothershipDispatcher,
@@ -169,14 +172,20 @@ object App
     lieblingClient,
     () => rolloutClient.isActive(BasicRolloutFeature("load_user_like_counts_from_liebling")),
     repostsClient,
-    () => rolloutClient.isActive(BasicRolloutFeature("load_user_repost_counts_from_reposts"))
+    enrichRepostsCounts
   )
 
   private val timelineController = {
-    val entitySummaryMapper = new EntitySummaryMapper(okidokiClient, baseUrl)
+    val entitySummaryMapper = new EntitySummaryMapper(okidokiClient, repostsClient, enrichRepostsCounts, baseUrl)
     val entityMapper = new EntityMapper(
-      okidokiClient, lieblingClient, followCountsClient, baseUrl,
-      entitySummaryMapper)
+      okidokiClient,
+      lieblingClient,
+      followCountsClient,
+      repostsClient,
+      enrichRepostsCounts,
+      baseUrl,
+      entitySummaryMapper
+    )
     val streamMapper = new StreamMapper(timelineClient, entityMapper, entitySummaryMapper)
     val activitiesMapper = new ActivitiesMapper(timelineClient, entityMapper, entitySummaryMapper)
     val publicActivitiesMapper = new ActivitiesWithOriginMapper(timelineClient, entityMapper, entitySummaryMapper)
@@ -264,17 +273,21 @@ object App
     okidokiClient,
     followsClient,
     followCountsClient,
+    repostsClient,
+    enrichRepostsCounts,
     baseUrl
   )
 
   private val searchEntityMapper = new SearchEntityMapper(
     okidokiClient,
     followCountsClient,
+    repostsClient,
+    enrichRepostsCounts,
     baseUrl,
     contentAuthorizationRules,
     new WaveformMapper(waveformUrlsRepo),
     new LikeCountMapper(lieblingClient),
-    new EntitySummaryMapper(okidokiClient, baseUrl)
+    new EntitySummaryMapper(okidokiClient, repostsClient, enrichRepostsCounts, baseUrl)
   )
 
   private val searchController = {

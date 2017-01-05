@@ -9,6 +9,7 @@ import com.soundcloud.publicApiStrangler.client.follows._
 import com.soundcloud.publicApiStrangler.client.follows.representation._
 import com.soundcloud.publicApiStrangler.client.follows.representation.follow._
 import com.soundcloud.publicApiStrangler.client.follows.representation.unfollow.{NotFollowing, UnfollowSuccessful, UnknownError => UnfollowUnknownError, UserAsTarget => UnfollowUserAsTarget, UserNotFound => UnfollowUserNotFound}
+import com.soundcloud.publicApiStrangler.client.reposts.RepostsClient
 import com.soundcloud.publicApiStrangler.mapping.timeline.User
 import com.soundcloud.publicApiStrangler.support.DispatchToMothershipHandler
 import com.soundcloud.service.client.OkidokiClient
@@ -23,6 +24,8 @@ class UserFollowController(userAuthentication: UserAuthentication,
                            okidoki: OkidokiClient,
                            follows: FollowsClient,
                            followCountsClient: FollowCountsClient,
+                           repostsClient: RepostsClient,
+                           enrichRepostsCounts: () => Future[Boolean],
                            baseUrl: String)
   extends BffInjectionBasedController {
 
@@ -328,16 +331,21 @@ class UserFollowController(userAuthentication: UserAuthentication,
   private def fetchUsers(session: UserSession, urns: Set[Urn]): Future[List[User]] = {
     val context = new MappingContext(session)
     for {
-      (users, followCountsMap) <- Future.join(
+      (users, followCountsMap, repostCountsByUrn) <- Future.join(
         okidoki.fetch(session, urns),
         followCountsClient
           .counts(session, urns.toSeq)
-          .map(_.map(followCounts => (followCounts.userUrn, followCounts)).toMap)
+          .map(_.map(followCounts => (followCounts.userUrn, followCounts)).toMap),
+        enrichRepostsCounts().flatMap {
+          case true => repostsClient.getRepostCountsByUrnIfAvailableOrDefaultToZero(session, urns)
+          case _ => Future.value(Map.empty[Urn,Long])
+        }
       )
     } yield {
       users.map { user =>
-        val followCounts = followCountsMap.get(new Urn((user \ "self" \ "urn").as[String]))
-        new User(user, baseUrl, followCounts)(context)
+        val userUrn = new Urn((user \ "self" \ "urn").as[String])
+        val followCounts = followCountsMap.get(userUrn)
+        new User(user, baseUrl, followCounts, repostCountsByUrn.get(userUrn))(context)
       }
     }
   }

@@ -8,6 +8,7 @@ import com.soundcloud.jvmkit.policies.{ContentAuthorization, ContentPolicy, Mone
 import com.soundcloud.publicApiStrangler.authorization.ContentAuthorizationRules
 import com.soundcloud.publicApiStrangler.client.followcounts.{FollowCounts, FollowCountsClient}
 import com.soundcloud.publicApiStrangler.client.liebling.{LieblingClient, UserLikesCount}
+import com.soundcloud.publicApiStrangler.client.reposts.RepostsClient
 import com.soundcloud.publicApiStrangler.mapper.liebling.LikeCountMapper
 import com.soundcloud.publicApiStrangler.mapper.timeline.EntitySummaryMapper
 import com.soundcloud.publicApiStrangler.mapper.waveform.WaveformMapper
@@ -31,14 +32,18 @@ class SearchEntityMapperSpec extends UnitSpecification with Fixtures {
 
     val okidokiClient = mock[OkidokiClient]
     val followCountsClient = mock[FollowCountsClient]
+    val repostsClient = mock[RepostsClient]
+    val enrichRepostsCounts = () => Future.value(false)
     val contentAuthorizationService = mock[ContentAuthorizationRules]
     val lieblingClient = mock[LieblingClient]
     val likeCountMapper = new LikeCountMapper(lieblingClient)
     val waveformUrlsRepository = mock[WaveformUrlsRepository]
-    val entitySummaryMapper = new EntitySummaryMapper(okidokiClient, baseUrl)
+    val entitySummaryMapper = new EntitySummaryMapper(okidokiClient, repostsClient, enrichRepostsCounts, baseUrl)
     val mapper = new SearchEntityMapper(
       okidokiClient,
       followCountsClient,
+      repostsClient,
+      enrichRepostsCounts,
       baseUrl,
       contentAuthorizationService,
       new WaveformMapper(waveformUrlsRepository),

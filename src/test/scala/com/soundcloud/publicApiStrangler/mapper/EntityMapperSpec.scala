@@ -4,6 +4,7 @@ import com.soundcloud.bff.test.UnitSpecification
 import com.soundcloud.jvmkit.{Urn, UserSession}
 import com.soundcloud.publicApiStrangler.client.followcounts.{FollowCounts, FollowCountsClient}
 import com.soundcloud.publicApiStrangler.client.liebling.{LieblingClient, LikesCount}
+import com.soundcloud.publicApiStrangler.client.reposts.RepostsClient
 import com.soundcloud.publicApiStrangler.mapper.timeline.{EntityMapper, EntitySummaryMapper}
 import com.soundcloud.publicApiStrangler.mapping.timeline.{Playlist, Track, User}
 import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures
@@ -20,8 +21,16 @@ class EntityMapperSpec extends UnitSpecification with Fixtures {
     val okidokiClient = mock[OkidokiClient]
     val lieblingClient = mock[LieblingClient]
     val followCountsClient = mock[FollowCountsClient]
+    val repostsClient = mock[RepostsClient]
+    val enrichRepostsCounts = () => Future.value(false)
     val entitySummaryMapper = mock[EntitySummaryMapper]
-    lazy val entityMapper = new EntityMapper(okidokiClient, lieblingClient, followCountsClient, "https://foo.com", entitySummaryMapper)
+    lazy val entityMapper = new EntityMapper(okidokiClient,
+                                             lieblingClient,
+                                             followCountsClient,
+                                             repostsClient,
+                                             enrichRepostsCounts,
+                                             "https://foo.com",
+                                             entitySummaryMapper)
     val session = mock[UserSession]
     val likeUrns = List(
       "soundcloud:tracks:131352352",

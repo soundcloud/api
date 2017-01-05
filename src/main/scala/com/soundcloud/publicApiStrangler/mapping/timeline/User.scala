@@ -4,7 +4,10 @@ import com.soundcloud.bff.nextbff.mapping.MappingContext
 import com.soundcloud.publicApiStrangler.client.followcounts.FollowCounts
 import play.api.libs.json.{JsObject, JsValue, Json, Writes}
 
-class User(jsonValue: JsValue, baseUrl: String, maybeFollowCounts: Option[FollowCounts])(implicit context: MappingContext)
+class User(jsonValue: JsValue,
+           baseUrl: String,
+           maybeFollowCounts: Option[FollowCounts],
+           maybeRepostsCount: Option[Long])(implicit context: MappingContext)
   extends UserSummary(jsonValue, baseUrl) {
 
   val first_name = (json \ "first_name").asOpt[String]
@@ -34,7 +37,7 @@ class User(jsonValue: JsValue, baseUrl: String, maybeFollowCounts: Option[Follow
   }
 
   // deprecated fields
-  val reposts_count = (json \ "reposts_count").asOpt[Int]
+  val reposts_count = maybeRepostsCount.orElse((json \ "reposts_count").asOpt[Long])
   val comments_count = (json \ "comments_count").asOpt[Int]
   val online = false
   val likes_count = (json \ "public_favorites_count").asOpt[Int]
