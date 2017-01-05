@@ -222,7 +222,7 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
     }
   }
 
-  "Returns None for non existing tracks" in new Context {
+  "Returns NotFound for non existing tracks" in new Context {
     setUpMocksForNonExistingTrack
 
     val trackRepLike = Await.result(tracksService.track(session, trackUrn, None, None))
@@ -258,7 +258,7 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
     }
   }
 
-  "Returns None for private tracks if there is an incorrect secret token" in new Context {
+  "Returns NotFound for private tracks if there is an incorrect secret token" in new Context {
     val wrongSecretToken = "secr3tTokenWRONG"
     val track = trackmetadataTrack(isPublic = false)
     when(trackmetadataClient.track(session, trackUrn)).thenReturn(Future.value(Some(track)))
@@ -469,7 +469,7 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
       }
     }
 
-    "it is not present when urlgen fails" in new Context {
+    "Returns NotFound when urlgen fails" in new Context {
       val track = trackmetadataTrack()
       setUpMocksForExistingTrack(track, session)
       when(mediaUrlGenClient.waveformUrlsAsResult(session, track.uid)).thenReturn(Future.value(ServerError(Error("Something wrong with media service"))))
