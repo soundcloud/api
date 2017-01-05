@@ -222,56 +222,12 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
     }
   }
 
-  /*
-  "Wraps track data in jsonp if `callback` param is defined" in new Context {
-    val track = trackmetadataTrack()
-    setUpMocksForExistingTrack(track, session)
-
-    val trackRepLike = Await.result(tracksService.track(session, trackUrn, None, Some("js_callback_fn")))
-
-    response.status ==== Status.Ok
-    response.contentString must startWith("/**/js_callback_fn(")
-    response.contentString must endWith(");")
-  }
-
-  "Returns a response with the right headers" in new Context {
-    val track = trackmetadataTrack()
-    setUpMocksForExistingTrack(track, session)
-
-    val trackRepLike = Await.result(tracksService.track(session, trackUrn, None, None))
-
-    response.headerMap.get("Content-Length") must beSome(response.contentString.getBytes("UTF-8").length.toString)
-    response.headerMap.get("Content-Type") must beSome("application/json; charset=utf-8")
-  }
-  */
-
   "Returns None for non existing tracks" in new Context {
     setUpMocksForNonExistingTrack
 
     val trackRepLike = Await.result(tracksService.track(session, trackUrn, None, None))
     trackRepLike ==== NotFound
   }
-
-  /*
-  "Wraps error message in jsonp if `callback` param is defined" in new Context {
-    setUpMocksForNonExistingTrack
-
-    val trackRepLike = Await.result(tracksService.track(session, trackUrn, None, Some("js_callback_fn")))
-    response.status ==== Status.NotFound
-    response.contentString ==== """/**/js_callback_fn({"errors":[{"error_message":"404 - Not Found"}]});"""
-  }
-  */
-
-  /*
-  "Returns 404 response with the right headers" in new Context {
-    setUpMocksForNonExistingTrack
-
-    val trackRepLike = Await.result(tracksService.track(session, trackUrn, None, None))
-
-    response.headerMap.get("Content-Length") must beSome("48")
-    response.headerMap.get("Content-Type") must beSome("application/json; charset=utf-8")
-  }
-  */
 
   "Returns NotFound if track is disabled" in new Context {
     val disabledAt = Some(LocalDateTime.now())
@@ -336,30 +292,6 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
     val trackRepLike = Await.result(tracksService.track(session, trackUrn, None, None))
     trackRepLike ==== NotFound
   }
-
-  /*
-  "Returns 503 for public tracks if user can not be fetched" in new Context {
-    val track = trackmetadataTrack()
-    setUpMocksForExistingTrack(track, session)
-    when(okidokiClient.fetchUserObjects(session, Set(trackOwnerUrn))).thenReturn(Future.exception(new Exception("asd")))
-
-    val trackRepLike = Await.result(tracksService.track(session, trackUrn, None, None))
-    response.status ==== Status.ServiceUnavailable
-    response.contentString ==== """{"errors":[{"error_message":"503 - Service Unavailable"}]}"""
-    response.headerMap.get("Content-Length") must beSome("58")
-  }
-
-  "Returns 503 for public tracks if label can not be fetched" in new Context {
-    val track = trackmetadataTrack()
-    setUpMocksForExistingTrack(track, session)
-    when(okidokiClient.fetchUserObjects(session, Set(labelUrn))).thenReturn(Future.exception(new Exception("asd")))
-
-    val trackRepLike = Await.result(tracksService.track(session, trackUrn, None, None))
-    response.status ==== Status.ServiceUnavailable
-    response.contentString ==== """{"errors":[{"error_message":"503 - Service Unavailable"}]}"""
-    response.headerMap.get("Content-Length") must beSome("58")
-  }
-  */
 
   "Returns null ISRC when Pubmese is failing" in new Context {
     val track = trackmetadataTrack()
