@@ -276,7 +276,7 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
   "Returns NotFound if track is disabled" in new Context {
     val disabledAt = Some(LocalDateTime.now())
     val track = trackmetadataTrack(disabledAt)
-    setUpMocksForNonExistingTrack
+    setUpMocksForExistingTrack(track, session)
 
     val trackRepLike = Await.result(tracksService.track(session, trackUrn, None, None))
     trackRepLike ==== NotFound
@@ -284,7 +284,7 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
 
   "Returns NotFound when track is not public" in new Context {
     val track = trackmetadataTrack(isPublic = false)
-    setUpMocksForNonExistingTrack
+    setUpMocksForExistingTrack(track, session)
 
     val trackRepLike = Await.result(tracksService.track(session, trackUrn, None, None))
     trackRepLike ==== NotFound
