@@ -5,7 +5,6 @@ import au.com.dius.pact.consumer.{PactSpec, UnitSpecsSupport}
 import com.soundcloud.jvmkit.telemetry.Telemetry
 import com.soundcloud.jvmkit.test.InMemoryConfig
 import com.soundcloud.jvmkit.{ResourceName, Urn, UserSessionBuilder}
-import com.soundcloud.publicApiStrangler.client.PactHelper
 import com.soundcloud.publicApiStrangler.client.reposts.RepostsClient._
 import com.soundcloud.scalakit.finagle.dns.ServiceEntryPoint
 import com.soundcloud.scalakit.finagle.jsonservice.JsonClient
@@ -13,7 +12,7 @@ import com.twitter.util.Await
 import org.specs2.matcher.Scope
 import org.specs2.mutable.Specification
 
-class RepostsClientSpec extends Specification with PactSpec with UnitSpecsSupport with PactHelper {
+class RepostsClientSpec extends Specification with PactSpec with UnitSpecsSupport {
 
   override val consumer = "public-api-strangler"
   override val provider = "reposts"
@@ -46,84 +45,85 @@ class RepostsClientSpec extends Specification with PactSpec with UnitSpecsSuppor
       headers = Map("Sc-User" -> user.toString)
     )
 
-  override val pactFragment = buildPactFragment(
-    consumer = consumer,
-    provider = provider,
-    interactions = List(
-      buildInteraction(
-        description = "Creating a track repost",
-        maybeState = Some("soundcloud:tracks:1 was not reposted by soundcloud:users:1"),
-        request = createRequest(Urn("soundcloud:tracks:1"), user),
-        response = buildResponse(status = 201)
-      ),
-      buildInteraction(
-        description = "Creating a playlist repost",
-        maybeState = Some("soundcloud:playlists:1 was not reposted by soundcloud:users:1"),
-        request = createRequest(Urn("soundcloud:playlists:1"), user),
-        response = buildResponse(status = 201)
-      ),
-      buildInteraction(
-        description = "Deleting a track repost",
-        maybeState = Some("soundcloud:tracks:1 was reposted by soundcloud:users:1"),
-        request = deleteRequest(Urn("soundcloud:tracks:1"), user),
-        response = buildResponse(status = 202)
-      ),
-      buildInteraction(
-        description = "Deleting a playlist repost",
-        maybeState = Some("soundcloud:playlists:1 was reposted by soundcloud:users:1"),
-        request = deleteRequest(Urn("soundcloud:playlists:1"), user),
-        response = buildResponse(status = 202)
-      ),
-      buildInteraction(
-        description = "Creating a track repost",
-        maybeState = Some("soundcloud:tracks:2 does not exist"),
-        request = createRequest(Urn("soundcloud:tracks:2"), user),
-        response = buildResponse(status = 404)
-      ),
-      buildInteraction(
-        description = "Creating a playlist repost",
-        maybeState = Some("soundcloud:playlists:2 does not exist"),
-        request = createRequest(Urn("soundcloud:playlists:2"), user),
-        response = buildResponse(status = 404)
-      ),
-      buildInteraction(
-        description = "Creating a track repost",
-        maybeState = Some("soundcloud:tracks:3 was reposted by soundcloud:users:1"),
-        request = createRequest(Urn("soundcloud:tracks:3"), user),
-        response = buildResponse(status = 200)
-      ),
-      buildInteraction(
-        description = "Creating a playlist repost",
-        maybeState = Some("soundcloud:playlists:3 was reposted by soundcloud:users:1"),
-        request = createRequest(Urn("soundcloud:playlists:3"), user),
-        response = buildResponse(status = 200)
-      ),
-      buildInteraction(
-        description = "Deleting a track repost",
-        maybeState = Some("soundcloud:tracks:3 was not reposted by soundcloud:users:1"),
-        request = deleteRequest(Urn("soundcloud:tracks:3"), user),
-        response = buildResponse(status = 404)
-      ),
-      buildInteraction(
-        description = "Deleting a playlist repost",
-        maybeState = Some("soundcloud:playlists:3 was not reposted by soundcloud:users:1"),
-        request = deleteRequest(Urn("soundcloud:playlists:3"), user),
-        response = buildResponse(status = 404)
-      ),
-      buildInteraction(
-        description = "Creating a track repost",
-        maybeState = Some("soundcloud:users:2 is blocked for spam"),
-        request = createRequest(Urn("soundcloud:tracks:4"), spamUser),
-        response = spamResponse
-      ),
-      buildInteraction(
-        description = "Creating a playlist repost",
-        maybeState = Some("soundcloud:users:2 is blocked for spam"),
-        request = createRequest(Urn("soundcloud:playlists:4"), spamUser),
-        response = spamResponse
-      )
+  val trackRepostInteractions = List(
+    buildInteraction(
+      description = "Creating a track repost",
+      maybeState = Some("soundcloud:tracks:1 was not reposted by soundcloud:users:1"),
+      request = createRequest(Urn("soundcloud:tracks:1"), user),
+      response = buildResponse(status = 201)
+    ),
+    buildInteraction(
+      description = "Deleting a track repost",
+      maybeState = Some("soundcloud:tracks:1 was reposted by soundcloud:users:1"),
+      request = deleteRequest(Urn("soundcloud:tracks:1"), user),
+      response = buildResponse(status = 202)
+    ),
+    buildInteraction(
+      description = "Creating a track repost",
+      maybeState = Some("soundcloud:tracks:2 does not exist"),
+      request = createRequest(Urn("soundcloud:tracks:2"), user),
+      response = buildResponse(status = 404)
+    ),
+    buildInteraction(
+      description = "Creating a track repost",
+      maybeState = Some("soundcloud:tracks:3 was reposted by soundcloud:users:1"),
+      request = createRequest(Urn("soundcloud:tracks:3"), user),
+      response = buildResponse(status = 200)
+    ),
+    buildInteraction(
+      description = "Deleting a track repost",
+      maybeState = Some("soundcloud:tracks:3 was not reposted by soundcloud:users:1"),
+      request = deleteRequest(Urn("soundcloud:tracks:3"), user),
+      response = buildResponse(status = 404)
+    ),
+    buildInteraction(
+      description = "Creating a track repost",
+      maybeState = Some("soundcloud:users:2 is blocked for spam"),
+      request = createRequest(Urn("soundcloud:tracks:4"), spamUser),
+      response = spamResponse
     )
   )
+
+  val playlistRepostInteractions = List(
+    buildInteraction(
+      description = "Creating a playlist repost",
+      maybeState = Some("soundcloud:playlists:1 was not reposted by soundcloud:users:1"),
+      request = createRequest(Urn("soundcloud:playlists:1"), user),
+      response = buildResponse(status = 201)
+    ),
+    buildInteraction(
+      description = "Deleting a playlist repost",
+      maybeState = Some("soundcloud:playlists:1 was reposted by soundcloud:users:1"),
+      request = deleteRequest(Urn("soundcloud:playlists:1"), user),
+      response = buildResponse(status = 202)
+    ),
+    buildInteraction(
+      description = "Creating a playlist repost",
+      maybeState = Some("soundcloud:playlists:2 does not exist"),
+      request = createRequest(Urn("soundcloud:playlists:2"), user),
+      response = buildResponse(status = 404)
+    ),
+    buildInteraction(
+      description = "Creating a playlist repost",
+      maybeState = Some("soundcloud:playlists:3 was reposted by soundcloud:users:1"),
+      request = createRequest(Urn("soundcloud:playlists:3"), user),
+      response = buildResponse(status = 200)
+    ),
+    buildInteraction(
+      description = "Deleting a playlist repost",
+      maybeState = Some("soundcloud:playlists:3 was not reposted by soundcloud:users:1"),
+      request = deleteRequest(Urn("soundcloud:playlists:3"), user),
+      response = buildResponse(status = 404)
+    ),
+    buildInteraction(
+      description = "Creating a playlist repost",
+      maybeState = Some("soundcloud:users:2 is blocked for spam"),
+      request = createRequest(Urn("soundcloud:playlists:4"), spamUser),
+      response = spamResponse
+    )
+  )
+
+  override val pactFragment = buildPactFragment(consumer = consumer, provider = provider, trackRepostInteractions ++ playlistRepostInteractions)
 
   pactFragment.description >> {
     trait Context extends Scope {
