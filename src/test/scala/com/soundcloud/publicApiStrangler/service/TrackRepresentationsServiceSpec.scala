@@ -359,8 +359,10 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
     }
   }
 
-
+  // TODO: Changing RichOkidokiClient to not throw exceptions (https://soundcloud.atlassian.net/browse/COS-1068) will
+  //  make it more straight forward to test audio meta data fetch failures.
   /*
+
   "Returns 503 if Moshimoshi is failing for the audio endpoint" in new Context {
     val track = trackmetadataTrack()
     setUpMocksForExistingTrack(track, session)
