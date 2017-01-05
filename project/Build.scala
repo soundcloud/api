@@ -23,7 +23,7 @@ object Build extends HttpServerAppBuild(
     "com.squareup.okhttp3" % "mockwebserver" % "3.2.0" % "test",
     "org.apache.httpcomponents" % "httpclient" % "4.5.2" % "test",
     "org.apache.httpcomponents" % "httpmime" % "4.5.2" % "test",
-    ("au.com.dius" %% "pact-jvm-consumer-specs2" % "3.3.3")
+    ("au.com.dius" %% "pact-jvm-consumer-specs2" % "3.3.4")
       .excludeAll(ExclusionRule(organization = "com.fasterxml.jackson.core"))
   ),
   mainClass = "com.soundcloud.publicApiStrangler.App"
