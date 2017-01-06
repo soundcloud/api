@@ -15,6 +15,7 @@ import com.soundcloud.publicApiStrangler.authorization._
 import com.soundcloud.publicApiStrangler.client._
 import com.soundcloud.publicApiStrangler.client.followcounts.FollowCountsClient
 import com.soundcloud.publicApiStrangler.client.mediaservice.MediaServiceUrlGenClient
+import com.soundcloud.publicApiStrangler.client.playlists.PlaylistsClient
 import com.soundcloud.publicApiStrangler.client.pubmese.PubmeseClient
 import com.soundcloud.publicApiStrangler.client.quota.UserQuotaClient
 import com.soundcloud.publicApiStrangler.client.reposts.RepostsClient
@@ -108,6 +109,14 @@ object App
     JsonClient(
       ResourceName("gobbly"),
       ServiceEntryPoint(config.get(ResourceName("GOBBLY"), ConfigConvention.SRV_RECORD)),
+      config,
+      telemetry)
+  )
+
+  private val playlistsClient = new PlaylistsClient(
+    JsonClient(
+      ResourceName("playlist"),
+      ServiceEntryPoint(config.get(ResourceName("PLAYLIST"), ConfigConvention.BASE_URL)),
       config,
       telemetry)
   )
@@ -227,7 +236,8 @@ object App
       stitchClient,
       lieblingClient,
       mediaServiceUrlGenClient,
-      userQuotaClient
+      userQuotaClient,
+      playlistsClient
     )
 
     new SingleTrackController(

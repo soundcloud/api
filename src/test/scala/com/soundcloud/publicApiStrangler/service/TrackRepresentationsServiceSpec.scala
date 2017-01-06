@@ -3,6 +3,7 @@ package com.soundcloud.publicApiStrangler
 import com.soundcloud.jvmkit.{Urn, UserSession, UserSessionBuilder}
 import com.soundcloud.publicApiStrangler.client.liebling.{LieblingClient, UserLikesCount}
 import com.soundcloud.publicApiStrangler.client.mediaservice.{MediaServiceUrlGenClient, WaveformUrl}
+import com.soundcloud.publicApiStrangler.client.playlists.{Playlist, PlaylistsClient}
 import com.soundcloud.publicApiStrangler.client.pubmese.{Isrc, PubmeseClient}
 import com.soundcloud.publicApiStrangler.client.quota.UserQuotaClient
 import com.soundcloud.publicApiStrangler.client.stitch.{StitchClient, StitchCounts}
@@ -30,6 +31,7 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
     val lieblingClient = mock[LieblingClient]
     val mediaUrlGenClient = mock[MediaServiceUrlGenClient]
     val userQuotaClient = mock[UserQuotaClient]
+    val playlistsClient = mock[PlaylistsClient]
 
     val tracksService = new TrackRepresentationsService(
       trackmetadataClient,
@@ -38,7 +40,8 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
       stitchClient,
       lieblingClient,
       mediaUrlGenClient,
-      userQuotaClient
+      userQuotaClient,
+      playlistsClient
     )
 
     val requestingUserUrn = new Urn("soundcloud:users:112")
@@ -199,8 +202,26 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
       when(lieblingClient.userLikeCounts(session, List(trackUrn), session.getUser)).thenReturn(Future.value(userLikesCount))
       when(mediaUrlGenClient.waveformUrlsAsResult(session, track.uid)).thenReturn(Future.value(Success(waveformUrls)))
       when(userQuotaClient.downloadsPerTrack(session, Set(track.user_urn))).thenReturn(Future.value(Map.empty[Urn, Option[Int]]))
+
+      when(playlistsClient.getPlaylistContainingTrackOwnedByUser(track.urn, track.user_urn)).thenReturn(Future.value(List.empty[Playlist]))
     }
 
+    def setUpMocksForExistingTrackInPlaylists(track: Track, session: UserSession, playlists: List[Playlist]) = {
+      when(trackmetadataClient.track(session, trackUrn)).thenReturn(Future.value(Some(track)))
+      when(okidokiClient.fetchUserObjects(session, Set(requestingUserUrn))).thenReturn(Future.value(List(requestingUser)))
+      when(okidokiClient.fetchUserObjects(session, Set(labelUrn))).thenReturn(Future.value(List(label)))
+      when(okidokiClient.fetchUserObjects(session, Set(trackOwnerUrn))).thenReturn(Future.value(List(trackOwner)))
+      when(pubmeseClient.isrcForTrack(session, trackUrn)).thenReturn(Future.value(isrc()))
+      when(stitchClient.countsForTrack(session, trackUrn, trackOwnerUrn)).thenReturn(Future.value(stitchCounts))
+      when(okidokiClient.fetchTrackGeoblockings(session, trackUrn)).thenReturn(Future.value(geoblockings))
+      when(okidokiClient.fetchTrackDomainLockings(session, trackUrn)).thenReturn(Future.value(domainLockings))
+      when(okidokiClient.fetchTrackAudioMetadata(session, trackUrn)).thenReturn(Future.value(Some(trackAudioMetadata)))
+      when(lieblingClient.userLikeCounts(session, List(trackUrn), session.getUser)).thenReturn(Future.value(userLikesCount))
+      when(mediaUrlGenClient.waveformUrlsAsResult(session, track.uid)).thenReturn(Future.value(Success(waveformUrls)))
+      when(userQuotaClient.downloadsPerTrack(session, Set(track.user_urn))).thenReturn(Future.value(Map.empty[Urn, Option[Int]]))
+
+      when(playlistsClient.getPlaylistContainingTrackOwnedByUser(track.urn, track.user_urn)).thenReturn(Future.value(playlists))
+    }
     def setUpMocksForNonExistingTrack = {
       when(trackmetadataClient.track(session, trackUrn)).thenReturn(Future.None)
       when(pubmeseClient.isrcForTrack(session, trackUrn)).thenReturn(Future.value(isrc()))
@@ -267,6 +288,8 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
     when(okidokiClient.fetchTrackDomainLockings(session, trackUrn)).thenReturn(Future.value(domainLockings))
     when(okidokiClient.fetchTrackAudioMetadata(session, trackUrn)).thenReturn(Future.value(Some(trackAudioMetadata)))
 
+    when(playlistsClient.getPlaylistContainingTrackOwnedByUser(track.urn, track.user_urn)).thenReturn(Future.value(List.empty[Playlist]))
+
     val trackRepLike = Await.result(tracksService.track(session, trackUrn, Some(wrongSecretToken), None))
     trackRepLike ==== NotFound
 
@@ -282,6 +305,41 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
       case Success(rep) =>
         rep must beAnInstanceOf[TrackRepresentationLike]
     }
+  }
+
+  "Returns Some(x) for private tracks if there is a correct secret token for a playlist containing the track belonging to the same user" in new Context {
+    val correctSecretTokenForPlaylistContainingTheTrack = "playlist-secret"
+    val track = trackmetadataTrack(isPublic = false)
+    val playlists = List(Playlist(userUrn = track.user_urn, secretToken = correctSecretTokenForPlaylistContainingTheTrack))
+    setUpMocksForExistingTrackInPlaylists(track, session, playlists)
+
+    val trackRepLike = Await.result(tracksService.track(session, trackUrn, Some(correctSecretTokenForPlaylistContainingTheTrack), None))
+    trackRepLike must beLike {
+      case Success(rep) =>
+        rep must beAnInstanceOf[TrackRepresentationLike]
+    }
+  }
+
+  "Returns None for private tracks if there is an incorrect secret token for a playlist containing the track belonging to the same user" in new Context {
+    val correctSecretTokenForPlaylistContainingTheTrack = "playlist-secret"
+    val incorrectSecretTokenForPlaylistContainingTheTrack = "not-playlist-secret"
+    val track = trackmetadataTrack(isPublic = false)
+    val playlists = List(Playlist(userUrn = track.user_urn, secretToken = correctSecretTokenForPlaylistContainingTheTrack))
+    setUpMocksForExistingTrackInPlaylists(track, session, playlists)
+
+    val trackRepLike = Await.result(tracksService.track(session, trackUrn, Some(incorrectSecretTokenForPlaylistContainingTheTrack), None))
+    trackRepLike ==== NotFound
+  }
+
+  "Returns None for private tracks if there is an correct secret token for a playlist containing the track belonging to another user" in new Context {
+    val correctSecretTokenForPlaylistContainingTheTrack = "playlist-secret"
+    val anotherUser = Urn("soundcloud:users:909")
+    val track = trackmetadataTrack(isPublic = false)
+    val playlists = List(Playlist(userUrn = anotherUser, secretToken = correctSecretTokenForPlaylistContainingTheTrack))
+    setUpMocksForExistingTrackInPlaylists(track, session, playlists)
+
+    val trackRepLike = Await.result(tracksService.track(session, trackUrn, Some(correctSecretTokenForPlaylistContainingTheTrack), None))
+    trackRepLike ==== NotFound
   }
 
   "Returns NotFound for public tracks if user does not exist" in new Context {
