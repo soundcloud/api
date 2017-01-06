@@ -4,6 +4,7 @@ import com.soundcloud.jvmkit.logging.SoundCloudLoggerFactory
 import com.soundcloud.jvmkit.{Urn, UserSession}
 import com.soundcloud.publicApiStrangler.client.liebling.LieblingClient
 import com.soundcloud.publicApiStrangler.client.mediaservice.{MediaServiceUrlGenClient, WaveformUrl}
+import com.soundcloud.publicApiStrangler.client.playlists.PlaylistsClient
 import com.soundcloud.publicApiStrangler.client.pubmese.{Isrc, PubmeseClient}
 import com.soundcloud.publicApiStrangler.client.quota.UserQuotaClient
 import com.soundcloud.publicApiStrangler.client.stitch.{StitchClient, StitchCounts}
@@ -17,13 +18,14 @@ import com.soundcloud.service.response.representation._
 import com.twitter.util.{Future, NonFatal}
 
 class TrackRepresentationsService(
-  trackmetadataClient: TrackmetadataClient,
-  okidokiClient: RichOkidokiClient,
-  pubmeseClient: PubmeseClient,
-  stitchClient: StitchClient,
-  lieblingClient: LieblingClient,
-  mediaUrlGenClient: MediaServiceUrlGenClient,
-  userQuotaClient: UserQuotaClient) {
+                                   trackmetadataClient: TrackmetadataClient,
+                                   okidokiClient: RichOkidokiClient,
+                                   pubmeseClient: PubmeseClient,
+                                   stitchClient: StitchClient,
+                                   lieblingClient: LieblingClient,
+                                   mediaUrlGenClient: MediaServiceUrlGenClient,
+                                   userQuotaClient: UserQuotaClient,
+                                   playlistClient: PlaylistsClient) {
 
   private val logger = SoundCloudLoggerFactory.getLogger(this.getClass.getName)
 
@@ -34,60 +36,60 @@ class TrackRepresentationsService(
     val audioF = okidokiClient.fetchTrackAudioMetadata(session, urn)
 
     trackmetadataClient.track(session, urn).flatMap {
-      case Some(track) if isTrackAccessible(session, secretTokenInRequest, track) =>
-        val userF = fetchUserForTrack(track, session)
-        val labelF = fetchLabelForTrack(track, session)
-        val isLikedF = fetchUserLikesTrack(track, session)
-        val waveformUrlsF = fetchWaveformUrls(track, session)
-        val downloadsPerTrackF = fetchDownloadsPerTrack(track, session)
-        val countsF = userF.flatMap {
-          // FIXME: Overly complicated
-          case Some(user) => stitchClient.countsForTrack(session, urn, user.urn).map(Some(_)).liftToTry.map(_.getOrElse(None))
-          case None => Future.value(None)
-        }
+      case Some(track) => isTrackAccessible(session, secretTokenInRequest, track).flatMap {
+        case true => {
+          val userF = fetchUserForTrack(track, session)
+          val labelF = fetchLabelForTrack(track, session)
+          val isLikedF = fetchUserLikesTrack(track, session)
+          val waveformUrlsF = fetchWaveformUrls(track, session)
+          val downloadsPerTrackF = fetchDownloadsPerTrack(track, session)
+          val countsF = userF.flatMap {
+            // FIXME: Overly complicated
+            case Some(user) => stitchClient.countsForTrack(session, urn, user.urn).map(Some(_)).liftToTry.map(_.getOrElse(None))
+            case None => Future.value(None)
+          }
 
-        Future.join(isrcF, userF, countsF, labelF, geoblockingsF, domainlockingsF, audioF, isLikedF, waveformUrlsF, downloadsPerTrackF).map {
-          case (isrc, Some(user), counts, label, geoblockings, domainlockings, Some(audio), isLiked, SuccessResult(waveformUrls), downloadsPerTrack)
-          =>
-            val rep = buildTrackRepresentationLike(
-              userSession = session,
-              track = track,
-              user = user,
-              isrc = isrc,
-              counts = getCounts(counts),
-              label = label,
-              geoblockings = geoblockings,
-              domainlockings = domainlockings,
-              trackAudioMetadata = audio,
-              isLiked = isLiked,
-              waveformUrls = waveformUrls,
-              secretTokenParameter = secretTokenInRequest,
-              downloadsPerTrack = downloadsPerTrack
-            )
-
-            SuccessResult(rep)
-          case _ => TrackNotFound
+          Future.join(isrcF, userF, countsF, labelF, geoblockingsF, domainlockingsF, audioF, isLikedF, waveformUrlsF, downloadsPerTrackF).map {
+            case (isrc, Some(user), counts, label, geoblockings, domainlockings, Some(audio), isLiked, SuccessResult(waveformUrls), downloadsPerTrack) =>
+              SuccessResult(buildTrackRepresentationLike(
+                userSession = session,
+                track = track,
+                user = user,
+                isrc = isrc,
+                counts = getCounts(counts),
+                label = label,
+                geoblockings = geoblockings,
+                domainlockings = domainlockings,
+                trackAudioMetadata = audio,
+                isLiked = isLiked,
+                waveformUrls = waveformUrls,
+                secretTokenParameter = secretTokenInRequest,
+                downloadsPerTrack = downloadsPerTrack
+              ))
+            case _ => TrackNotFound
+          }
         }
-      case _ =>
-      Future.value(TrackNotFound)
+        case _ => Future.value(TrackNotFound)
+      }
+      case _ => Future.value(TrackNotFound)
     }
   }
 
   private def buildTrackRepresentationLike(
-    userSession: UserSession,
-    track: Track,
-    user: User,
-    isrc: Option[Isrc],
-    counts: StitchCounts,
-    label: Option[User],
-    geoblockings: Option[Geoblockings],
-    domainlockings: Seq[DomainLocking],
-    trackAudioMetadata: TrackAudioMetadata,
-    isLiked: Boolean,
-    waveformUrls: Seq[WaveformUrl],
-    secretTokenParameter: Option[String],
-    downloadsPerTrack: Option[Int]
-  ): TrackRepresentationLike = {
+                                            userSession: UserSession,
+                                            track: Track,
+                                            user: User,
+                                            isrc: Option[Isrc],
+                                            counts: StitchCounts,
+                                            label: Option[User],
+                                            geoblockings: Option[Geoblockings],
+                                            domainlockings: Seq[DomainLocking],
+                                            trackAudioMetadata: TrackAudioMetadata,
+                                            isLiked: Boolean,
+                                            waveformUrls: Seq[WaveformUrl],
+                                            secretTokenParameter: Option[String],
+                                            downloadsPerTrack: Option[Int]
+                                          ): TrackRepresentationLike = {
     val basicTrackRep = TrackRepresentation(
       track = track,
       user = user,
@@ -171,11 +173,25 @@ class TrackRepresentationsService(
   private def getCounts(counts: Option[StitchCounts]): StitchCounts =
     counts.getOrElse(StitchCounts(0, 0, 0, 0))
 
-  private def isTrackAccessible(session: UserSession, secretTokenInRequest: Option[String], track: Track): Boolean =
-    isPrivacyAuthorized(session, secretTokenInRequest, track) && !isDisabled(track)
+  private def isTrackAccessible(session: UserSession, secretTokenInRequest: Option[String], track: Track): Future[Boolean] =
+    if (!isDisabled(track)) isPrivacyAuthorized(session, secretTokenInRequest, track)
+    else Future.False
 
-  private def isPrivacyAuthorized(session: UserSession, secretTokenInRequest: Option[String], track: Track): Boolean =
-    track.public || track.user_urn == session.getUser || secretTokenInRequest.contains(track.secret_token)
+  private def isPrivacyAuthorized(session: UserSession, secretTokenInRequest: Option[String], track: Track): Future[Boolean] = {
+    if (track.public || track.user_urn == session.getUser) Future.True
+    else isAccessGrantedViaSecretToken(secretTokenInRequest, track)
+  }
+
+  private def isAccessGrantedViaSecretToken(secretTokenInRequest: Option[String], track: Track): Future[Boolean] = {
+    secretTokenInRequest match {
+      case None => Future.False
+      case Some(secretToken) => {
+        if (secretToken.equals(track.secret_token)) Future.True
+        else playlistClient.getPlaylistContainingTrackOwnedByUser(track.urn, track.user_urn)
+          .map(_.exists(playlist => playlist.secretToken == secretToken && playlist.userUrn == track.user_urn))
+      }
+    }
+  }
 
   private def isDisabled(track: Track): Boolean =
     track.disabled_at.isDefined
