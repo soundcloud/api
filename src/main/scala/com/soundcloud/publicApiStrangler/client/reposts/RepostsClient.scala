@@ -36,7 +36,7 @@ class RepostsClient(jsonClient: JsonClient) extends FetchClient {
     repostCountsForUrns(session, urns)
       .map(_.map(count => count.urn -> count.count).toMap)
       .map { fetchedCounts =>
-        urns.toList.map { urn => (urn -> fetchedCounts.getOrElse(urn, 0L)) }.toMap
+        urns.toList.map { urn => urn -> fetchedCounts.getOrElse(urn, 0L) }.toMap
       }
 
   def repostCountsForUrns(session: UserSession, urns: Set[Urn]): Future[Set[Count]] =
