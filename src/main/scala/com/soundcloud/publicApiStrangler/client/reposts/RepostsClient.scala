@@ -39,7 +39,7 @@ class RepostsClient(jsonClient: JsonClient) extends FetchClient {
         urns.toList.map { urn => urn -> fetchedCounts.getOrElse(urn, 0L) }.toMap
       }
 
-  def repostCountsForUrns(session: UserSession, urns: Set[Urn]): Future[Set[Count]] =
+  private def repostCountsForUrns(session: UserSession, urns: Set[Urn]): Future[Set[Count]] =
     Future.collect(
       (urns.filter(_.getCollection == "users").map { userUrn =>
         repostsCountForUser(session, userUrn).map(Seq(_))
@@ -65,7 +65,7 @@ class RepostsClient(jsonClient: JsonClient) extends FetchClient {
     ).map(_.flatten)
   }
 
-  def repostsCountForUser(session: UserSession, user: Urn): Future[Count] =
+  private def repostsCountForUser(session: UserSession, user: Urn): Future[Count] =
     Future.join(
       getCountForUser(session, user, "track_reposts"),
       getCountForUser(session, user, "playlist_reposts")

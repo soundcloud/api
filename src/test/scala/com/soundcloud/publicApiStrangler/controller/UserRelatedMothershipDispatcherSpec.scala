@@ -12,8 +12,8 @@ import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures
 import com.soundcloud.scalakit.finagle.http.HandlerRequest
 import com.twitter.finagle.http.{Request => FinagleRequest}
 import com.twitter.util.{Await, Future}
-import org.mockito.Mockito.{never, verify, when}
-import org.specs2.mutable.{After, Before, BeforeAfter}
+import org.mockito.Mockito.when
+import org.specs2.mutable.BeforeAfter
 import play.api.libs.json._
 
 class UserRelatedMothershipDispatcherSpec extends UnitSpecification with Fixtures {
@@ -64,9 +64,8 @@ class UserRelatedMothershipDispatcherSpec extends UnitSpecification with Fixture
       when(mothershipDispatcherMock.defaultHandling(any[HandlerRequest])).thenReturn(Future.value(responseBuilder.build))
       when(followCountsClientMock.counts(session, userUrns)).thenReturn(Future.value(followCountsSeq))
       when(lieblingClientMock.userTotalLikeCount(session, userUrns)).thenReturn(Future.value(userTotalLikesList))
-      userUrns.zip(userRepostsCounts).toMap.foreach { case (userUrn, count) =>
-        when(repostsClientMock.repostsCountForUser(session, userUrn)).thenReturn(Future.value(count))
-      }
+      when(repostsClientMock.getRepostCountsByUrnIfAvailableOrDefaultToZero(session, userUrns.toSet))
+        .thenReturn(Future.value(userUrns.zip(userRepostsCounts.map(_.count)).toMap))
     }
 
     override def after: Any = {
@@ -361,27 +360,6 @@ class UserRelatedMothershipDispatcherSpec extends UnitSpecification with Fixture
         "with the rollout active" >> {
           trait EnrichRepostsCounts extends Context {
             override def loadUserRepostCountsFromReposts = true
-          }
-          "and reposts returns the wrong user" >> {
-            "defaults to zero for a single object" in new EnrichRepostsCounts {
-              override def responseBodyFromMothership = user
-              override def userUrns = Seq(user1)
-              override def userRepostsCounts = List(RepostsClient.Count(user2, 200))
-
-              (resultJson \ "reposts_count").as[Long] ==== 0
-            }
-          }
-          "and reposts returns a failed future" >> {
-            "defaults to zero for users in the top level" in new EnrichRepostsCounts {
-              override def responseBodyFromMothership = users
-              override def userUrns = Seq(user2, user3)
-              override def userRepostsCounts = List(RepostsClient.Count(user2, 200), RepostsClient.Count(user3, 300))
-              when(repostsClientMock.repostsCountForUser(session, user3)).thenReturn(Future.???)
-
-              val values = resultJson.as[JsArray].value
-
-              (values.last \ "reposts_count").as[Long] ==== 0
-            }
           }
           "and reposts returning counts" >> {
             "is done for a single object" in new EnrichRepostsCounts {

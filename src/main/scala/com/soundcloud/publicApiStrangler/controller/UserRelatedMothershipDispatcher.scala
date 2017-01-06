@@ -98,20 +98,10 @@ class UserRelatedMothershipDispatcher(userAuthentication: UserAuthentication,
       }
 
   private def repostsSubstitutions(session: UserSession, userUrns: Set[Urn]): Future[SubstitutionsByUser] = {
-    def defaultCount(urn: Urn) = RepostsClient.Count(urn, 0)
     shouldLoadCountsFromReposts().flatMap {
       case true =>
-        Future.collect(userUrns.toList.map { userUrn =>
-          repostsClient.repostsCountForUser(session, userUrn).handle { case NonFatal(_) => defaultCount(userUrn) }
-        }).map(_.map(count => (count.urn, count)).toMap)
-          .map { fetchedData: Map[Urn,RepostsClient.Count] =>
-            userUrns
-              .map { urn: Urn => fetchedData.getOrElse(urn, defaultCount(urn)) }
-              .map { repostsCount => (
-                repostsCount.urn,
-                List("reposts_count" -> Json.toJsFieldJsValueWrapper(repostsCount.count))
-              )}.toMap
-          }
+        repostsClient.getRepostCountsByUrnIfAvailableOrDefaultToZero(session, userUrns)
+          .map(_.map { case (urn, count) => (urn, List("reposts_count" -> Json.toJsFieldJsValueWrapper(count)) )}.toMap)
       case false =>
         Future.value(Map.empty)
     }
