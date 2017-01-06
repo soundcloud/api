@@ -64,7 +64,7 @@ class UserRelatedMothershipDispatcherSpec extends UnitSpecification with Fixture
       when(mothershipDispatcherMock.defaultHandling(any[HandlerRequest])).thenReturn(Future.value(responseBuilder.build))
       when(followCountsClientMock.counts(session, userUrns)).thenReturn(Future.value(followCountsSeq))
       when(lieblingClientMock.userTotalLikeCount(session, userUrns)).thenReturn(Future.value(userTotalLikesList))
-      when(repostsClientMock.getRepostCountsByUrnIfAvailableOrDefaultToZero(session, userUrns.toSet))
+      when(repostsClientMock.getRepostCountsByUrnWithFallback(session, userUrns.toSet))
         .thenReturn(Future.value(userUrns.zip(userRepostsCounts.map(_.count)).toMap))
     }
 

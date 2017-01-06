@@ -20,7 +20,7 @@ class EntitySummaryMapper(okidokiClient: OkidokiClient,
       enrichRepostsCounts().flatMap {
         case true =>
           val justPlaylistUrns = inputs.filter(_.getCollection == "playlists")
-          repostsClient.getRepostCountsByUrnIfAvailableOrDefaultToZero(session, justPlaylistUrns)
+          repostsClient.getRepostCountsByUrnWithFallback(session, justPlaylistUrns)
         case false =>
           Future.value(Map.empty[Urn,Long])
       }

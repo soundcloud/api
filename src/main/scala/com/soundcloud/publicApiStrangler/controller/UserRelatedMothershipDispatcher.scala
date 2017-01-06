@@ -100,7 +100,7 @@ class UserRelatedMothershipDispatcher(userAuthentication: UserAuthentication,
   private def repostsSubstitutions(session: UserSession, userUrns: Set[Urn]): Future[SubstitutionsByUser] = {
     shouldLoadCountsFromReposts().flatMap {
       case true =>
-        repostsClient.getRepostCountsByUrnIfAvailableOrDefaultToZero(session, userUrns)
+        repostsClient.getRepostCountsByUrnWithFallback(session, userUrns)
           .map(_.map { case (urn, count) => (urn, List("reposts_count" -> Json.toJsFieldJsValueWrapper(count)) )}.toMap)
       case false =>
         Future.value(Map.empty)

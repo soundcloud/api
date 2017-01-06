@@ -29,7 +29,7 @@ class EntityMapper(okidokiClient: OkidokiClient,
           .counts(session, filterByCollection(inputs.toList, List("users")))
           .map(_.map(followCounts => (followCounts.userUrn, followCounts)).toMap),
         enrichRepostsCounts().flatMap {
-          case true => repostsClient.getRepostCountsByUrnIfAvailableOrDefaultToZero(session, inputs)
+          case true => repostsClient.getRepostCountsByUrnWithFallback(session, inputs)
           case false => Future.value(Map.empty[Urn,Long])
         }
       )

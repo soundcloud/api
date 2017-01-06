@@ -337,7 +337,7 @@ class UserFollowController(userAuthentication: UserAuthentication,
           .counts(session, urns.toSeq)
           .map(_.map(followCounts => (followCounts.userUrn, followCounts)).toMap),
         enrichRepostsCounts().flatMap {
-          case true => repostsClient.getRepostCountsByUrnIfAvailableOrDefaultToZero(session, urns)
+          case true => repostsClient.getRepostCountsByUrnWithFallback(session, urns)
           case _ => Future.value(Map.empty[Urn,Long])
         }
       )

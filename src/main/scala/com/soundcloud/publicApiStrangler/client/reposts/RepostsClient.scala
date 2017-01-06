@@ -32,7 +32,7 @@ class RepostsClient(jsonClient: JsonClient) extends FetchClient {
       None
     ).map(toResult(_, baseUrl))
 
-  def getRepostCountsByUrnIfAvailableOrDefaultToZero(session: UserSession, urns: Set[Urn]): Future[Map[Urn, Long]] =
+  def getRepostCountsByUrnWithFallback(session: UserSession, urns: Set[Urn]): Future[Map[Urn, Long]] =
     repostCountsForUrns(session, urns)
       .map(_.map(count => count.urn -> count.count).toMap)
       .map { fetchedCounts =>
@@ -42,17 +42,17 @@ class RepostsClient(jsonClient: JsonClient) extends FetchClient {
   private def repostCountsForUrns(session: UserSession, urns: Set[Urn]): Future[Set[Count]] =
     Future.collect(
       (urns.filter(_.getCollection == "users").map { userUrn =>
-        repostsCountForUser(session, userUrn).map(Seq(_))
+        getUserTotalCount(session, userUrn).map(Seq(_))
       } ++ Set(
-        filterAndGetCounts(session, "tracks", urns),
-        filterAndGetCounts(session, "playlists", urns)
+        filterAndGetBulkCounts(session, "tracks", urns),
+        filterAndGetBulkCounts(session, "playlists", urns)
       )).map(f => f.handle { case NonFatal(_) => Seq.empty }).toSeq
     ).map(_.flatten).map(_.toSet)
 
-  private def filterAndGetCounts(session: UserSession,
-                                 collection: String,
-                                 urns: Set[Urn],
-                                 batchSize: Int = 50): Future[Seq[Count]] = {
+  private def filterAndGetBulkCounts(session: UserSession,
+                                     collection: String,
+                                     urns: Set[Urn],
+                                     batchSize: Int = 50): Future[Seq[Count]] = {
     val filteredUrns = urns.filter(_.getCollection == collection)
     val path = Path() / collection / "reposts" / "count"
 
@@ -65,15 +65,15 @@ class RepostsClient(jsonClient: JsonClient) extends FetchClient {
     ).map(_.flatten)
   }
 
-  private def repostsCountForUser(session: UserSession, user: Urn): Future[Count] =
+  private def getUserTotalCount(session: UserSession, user: Urn): Future[Count] =
     Future.join(
-      getCountForUser(session, user, "track_reposts"),
-      getCountForUser(session, user, "playlist_reposts")
+      getUserCountForKind(session, user, "track_reposts"),
+      getUserCountForKind(session, user, "playlist_reposts")
     ).map { case (trackReposts, playlistReposts) =>
       Count(user, trackReposts.count + playlistReposts.count)
     }
 
-  private def getCountForUser(session: UserSession, user: Urn, kind: String): Future[Count] =
+  private def getUserCountForKind(session: UserSession, user: Urn, kind: String): Future[Count] =
     jsonClient.get(session, Path() / "users" / user.toString / kind / "count", Params.empty, Params.empty)
       .map { case JsonResponse(OkStatus, body, _, _) => (body \ "counts")(0).as[Count] }
 
