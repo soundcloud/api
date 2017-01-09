@@ -6,7 +6,6 @@ import com.soundcloud.scalakit.finagle.http.{InternalServerErrorStatus, NotFound
 import com.soundcloud.scalakit.finagle.jsonservice.{JsonClient, JsonResponse, Params}
 import com.soundcloud.scalakit.test.UnitSpecification
 import com.twitter.util.{Await, Future}
-import org.mockito.Mockito._
 import play.api.libs.json.Json
 
 class PubmeseClientSpec extends UnitSpecification {
@@ -23,7 +22,7 @@ class PubmeseClientSpec extends UnitSpecification {
     def mockResponseStatus: StatusCode = OkStatus
     def mockResponse = Future.value(JsonResponse(mockResponseStatus, Json.obj("isrc" -> mockIsrc.map(_.toString))))
 
-    when(jsonClient.get(session, path, Params.empty, Params.empty)).thenReturn(mockResponse)
+    jsonClient.get(session, path, Params.empty, Params.empty) returns mockResponse
   }
 
   "track exists and has an ISRC" in new Context {
