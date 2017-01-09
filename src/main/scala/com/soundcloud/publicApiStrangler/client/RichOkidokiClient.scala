@@ -73,7 +73,6 @@ class RichOkidokiClient(service: JsonClient,
 
   def fetchTrackGeoblockings(session: UserSession, trackUrns: Set[Urn], batchSize: Int = 50): Future[Map[Urn, Geoblockings]] = {
     def parseJson(body: JsValue): List[(Urn, Geoblockings)] = {
-      println("hello", body)
       (body \ "collection").as[List[JsValue]].map(json => {
         ((json \ "track_urn").as[Urn] -> (json \ "geo_blockings").asOpt[List[String]].getOrElse(List.empty))
       })
