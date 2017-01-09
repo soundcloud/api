@@ -3,7 +3,7 @@ package com.soundcloud.publicApiStrangler.client.pubmese
 import com.soundcloud.jvmkit.Urn
 import com.soundcloud.scalakit.Path
 import com.soundcloud.scalakit.finagle.http.{InternalServerErrorStatus, NotFoundStatus, OkStatus, StatusCode}
-import com.soundcloud.scalakit.finagle.jsonservice.{JsonClient, JsonResponse}
+import com.soundcloud.scalakit.finagle.jsonservice.{JsonClient, JsonResponse, Params}
 import com.soundcloud.scalakit.test.UnitSpecification
 import com.twitter.util.{Await, Future}
 import org.mockito.Mockito._
@@ -31,7 +31,7 @@ class PubmeseClientSpec extends UnitSpecification {
     def mockResponseStatus: StatusCode = OkStatus
     def mockResponse = Future.value(JsonResponse(mockResponseStatus, mockResponseContents))
 
-    when(jsonClient.get(beTypedEqualTo(session), beTypedEqualTo(path), any, any))
+    when(jsonClient.get(session, path, Params.empty, Params.empty))
       .thenReturn(mockResponse)
   }
 
