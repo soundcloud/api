@@ -13,7 +13,6 @@ class PubmeseClientSpec extends UnitSpecification {
   trait GenericContext[T] extends Scope {
     def resultF: Future[T]
     def result = Await.result(resultF)
-    def resultT = Await.result(resultF.liftToTry)
   }
 
   trait Context extends GenericContext[Option[Isrc]] {
@@ -52,11 +51,11 @@ class PubmeseClientSpec extends UnitSpecification {
 
   "500 response" in new Context {
     override def mockResponseStatus = InternalServerErrorStatus
-    resultT.isThrow === true
+    result ==== None
   }
 
   "exception response" in new Context {
     override def mockResponse = Future.exception(new RuntimeException("kaboom"))
-    resultT.isThrow === true
+    result ==== None
   }
 }
