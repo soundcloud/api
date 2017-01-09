@@ -64,6 +64,15 @@ class RichOkidokiClient(service: JsonClient,
       case _ => throw new RuntimeException("Unexpected response status")
     }
 
+  def fetchTracksDomainLockings(session: UserSession, trackUrns: Set[Urn], batchSize: Int = 50): Future[Map[Urn, List[DomainLocking]]] = {
+    inBatches(trackUrns.toList, batchSize) { urnBatch => {
+      service.get(session, Path() / "domain_lockings", Params("track_ids" -> urnBatch.map(_.getIdentifier)), Params.empty).map {
+        case JsonResponse(SuccessfulStatusClass(_), body, _, _) => body.as[List[DomainLocking]]
+        case _ => List.empty
+      }
+    } }.map(_.groupBy(_.trackUrn))
+  }
+
   def fetchTrackAudioMetadata(session: UserSession, trackUrn: Urn): Future[Option[TrackAudioMetadata]] =
     fetch(service, session, Path() / "tracks" / trackUrn / "audio") map {
       case JsonResponse(OkStatus, body, _, _) => body.as[Option[TrackAudioMetadata]]

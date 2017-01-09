@@ -244,4 +244,78 @@ class RichOkidokiClientSpec extends UnitSpecification {
     }
   }
 
+  "#fetchTracksDomainLockings" >> {
+    trait GeoblockingsContext extends GenericContext {
+      val path = Path() / "domain_lockings"
+
+      val urns = Set(
+        Urn("soundcloud:tracks:1"),
+        Urn("soundcloud:tracks:2"),
+        Urn("soundcloud:tracks:3"),
+        Urn("soundcloud:tracks:4"))
+
+      val (firstBatch, secondBatch) = urns.splitAt(2)
+
+      val firstBatchJson = Json.parse(
+        s"""
+          |[
+          |  {
+          |    "domain": "domain1",
+          |    "track_urn": "${firstBatch.head}",
+          |    "self": {
+          |      "urn": "soundcloud:domain-lockings:1"
+          |    }
+          |  }, {
+          |    "domain": "domain2",
+          |    "track_urn": "${firstBatch.head}",
+          |    "self": {
+          |      "urn": "soundcloud:domain-lockings:2"
+          |    }
+          |  }, {
+          |    "domain": "domain3",
+          |    "track_urn": "${firstBatch.last}",
+          |    "self": {
+          |      "urn": "soundcloud:domain-lockings:3"
+          |    }
+          |  }
+          |]
+        """.stripMargin)
+
+      val secondBatchJson = Json.parse(
+        s"""
+           |[
+           |  {
+           |    "domain": "domain4",
+           |    "track_urn": "${secondBatch.head}",
+           |    "self": {
+           |      "urn": "soundcloud:domain-lockings:4"
+           |    }
+           |  }
+           |]
+        """.stripMargin)
+    }
+
+    "200 response" in new GeoblockingsContext {
+      when(jsonClient.get(session, path, Map("track_ids" -> firstBatch.map(_.getIdentifier).toList), Params.empty))
+          .thenReturn(Future.value(JsonResponse(OkStatus, firstBatchJson)))
+      when(jsonClient.get(session, path, Map("track_ids" -> secondBatch.map(_.getIdentifier).toList), Params.empty))
+          .thenReturn(Future.value(JsonResponse(OkStatus, secondBatchJson)))
+
+      val batchSize = 2
+      Await.result(client.fetchTracksDomainLockings(session, urns, batchSize)) ==== Map(
+        Urn("soundcloud:tracks:1") -> List(DomainLocking("domain1", Urn("soundcloud:domain-lockings:1"), Urn("soundcloud:tracks:1")),
+                                           DomainLocking("domain2", Urn("soundcloud:domain-lockings:2"), Urn("soundcloud:tracks:1"))),
+        Urn("soundcloud:tracks:2") -> List(DomainLocking("domain3", Urn("soundcloud:domain-lockings:3"), Urn("soundcloud:tracks:2"))),
+        Urn("soundcloud:tracks:3") -> List(DomainLocking("domain4", Urn("soundcloud:domain-lockings:4"), Urn("soundcloud:tracks:3")))
+      )
+    }
+
+    "500 response"  in new GeoblockingsContext {
+      when(jsonClient.get(session, path, Params("track_ids" -> urns.map(_.getIdentifier).toList), Params.empty))
+        .thenReturn(Future.value(JsonResponse(InternalServerErrorStatus, JsNull)))
+
+      Await.result(client.fetchTracksDomainLockings(session, urns)) ==== Map.empty
+    }
+  }
+
 }
