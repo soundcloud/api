@@ -71,6 +71,21 @@ class RichOkidokiClient(service: JsonClient,
       case _ => throw new RuntimeException("Unexpected response status")
     }
 
+  def fetchTracksAudioMetadata(session: UserSession, trackUrns: Set[Urn], batchSize: Int = 50): Future[Map[Urn, TrackAudioMetadata]] = {
+    def parseJson(body: JsValue): List[(Urn, TrackAudioMetadata)] = {
+      (body \ "collection").as[List[JsValue]].map(json => {
+        ((json \ "track_urn").as[Urn] -> (json).as[TrackAudioMetadata])
+      })
+    }
+
+    inBatches(trackUrns.toList, batchSize) { urnBatch => {
+      service.get(session, Path() / "tracks" / "audio", Params("urns" -> urnBatch), Params.empty).map {
+        case JsonResponse(SuccessfulStatusClass(_), body, _, _) => parseJson(body)
+        case _ => List.empty
+      }
+    } }.map(_.toMap)
+  }
+
   def fetchTrackGeoblockings(session: UserSession, trackUrns: Set[Urn], batchSize: Int = 50): Future[Map[Urn, Geoblockings]] = {
     def parseJson(body: JsValue): List[(Urn, Geoblockings)] = {
       (body \ "collection").as[List[JsValue]].map(json => {

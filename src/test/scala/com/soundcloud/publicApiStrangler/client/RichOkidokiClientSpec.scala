@@ -180,4 +180,68 @@ class RichOkidokiClientSpec extends UnitSpecification {
     }
   }
 
+  "#fetchTracksAudioMetadata" >> {
+    trait GeoblockingsContext extends GenericContext {
+      val path = Path() / "tracks" / "audio"
+
+      val urns = Set(
+        Urn("soundcloud:tracks:1"),
+        Urn("soundcloud:tracks:2"),
+        Urn("soundcloud:tracks:3"),
+        Urn("soundcloud:tracks:4"))
+
+      val (firstBatch, secondBatch) = urns.splitAt(2)
+
+      val firstBatchJson = Json.parse(
+        s"""
+          |{
+          |  "collection": [{
+          |    "track_urn": "${firstBatch.head}",
+          |    "state": "finished",
+          |    "original_content_size": 4,
+          |    "original_format": "mp3"
+          |  }, {
+          |    "track_urn": "${firstBatch.last}",
+          |    "state": "failed",
+          |    "original_content_size": null,
+          |    "original_format": null
+          |  }]
+          |}
+        """.stripMargin)
+
+      val secondBatchJson = Json.parse(
+        s"""
+          |{
+          |  "collection": [{
+          |    "track_urn": "${secondBatch.head}",
+          |    "state": "finished",
+          |    "original_content_size": 5,
+          |    "original_format": "ogg"
+          |  }]
+          |}
+        """.stripMargin)
+    }
+
+    "200 response" in new GeoblockingsContext {
+      when(jsonClient.get(session, path, Map("urns" -> firstBatch.toList), Params.empty))
+          .thenReturn(Future.value(JsonResponse(OkStatus, firstBatchJson)))
+      when(jsonClient.get(session, path, Map("urns" -> secondBatch.toList), Params.empty))
+          .thenReturn(Future.value(JsonResponse(OkStatus, secondBatchJson)))
+
+      val batchSize = 2
+      Await.result(client.fetchTracksAudioMetadata(session, urns, batchSize)) ==== Map(
+        Urn("soundcloud:tracks:1") -> TrackAudioMetadata("finished", Some("mp3"), Some(4)),
+        Urn("soundcloud:tracks:2") -> TrackAudioMetadata("failed", None, None),
+        Urn("soundcloud:tracks:3") -> TrackAudioMetadata("finished", Some("ogg"), Some(5))
+      )
+    }
+
+    "500 response"  in new GeoblockingsContext {
+      when(jsonClient.get(session, path, Params("urns" -> urns.toList), Params.empty))
+        .thenReturn(Future.value(JsonResponse(InternalServerErrorStatus, JsNull)))
+
+      Await.result(client.fetchTracksAudioMetadata(session, urns)) ==== Map.empty
+    }
+  }
+
 }
