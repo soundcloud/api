@@ -128,7 +128,7 @@ class SingleTrackControllerSpec extends InjectionBasedControllerSpecification {
           case r =>
             r.headerMap.get("If-None-Match") must beNone
         })).thenReturn(Future.value(Response()))
-        when(trackRepresentationsService.track(session, trackUrn, None, None)).thenReturn(Future.value(Success(trackRepresentation)))
+        when(trackRepresentationsService.track(session, trackUrn, None)).thenReturn(Future.value(Success(trackRepresentation)))
 
         val response = get(controller(session), path, Map.empty, Map("If-None-Match" -> "a8d3ba6d09b68691b77dc75dfcd7a477"))
         response.status ==== Status.Ok
@@ -159,7 +159,7 @@ class SingleTrackControllerSpec extends InjectionBasedControllerSpecification {
     path =>
       s"Passes secret token to tracks service for path: $path" in new Context {
         when(fallback.dispatchToMothership(any[Request])).thenReturn(Future.value(Response()))
-        when(trackRepresentationsService.track(session, trackUrn, Some("s3cret"), None)).thenReturn(Future.value(Success(trackRepresentation)))
+        when(trackRepresentationsService.track(session, trackUrn, Some("s3cret"))).thenReturn(Future.value(Success(trackRepresentation)))
 
         val response = get(controller(session), path, Map("secret_token" -> "s3cret"))
         response.status ==== Status.Ok
@@ -170,7 +170,7 @@ class SingleTrackControllerSpec extends InjectionBasedControllerSpecification {
     path =>
       s"Passes callback parameters to tracks service for path: $path" in new Context {
         when(fallback.dispatchToMothership(any[Request])).thenReturn(Future.value(Response()))
-        when(trackRepresentationsService.track(session, trackUrn, None, Some("js_callback_dn"))).thenReturn(Future.value(Success(trackRepresentation)))
+        when(trackRepresentationsService.track(session, trackUrn, None)).thenReturn(Future.value(Success(trackRepresentation)))
 
         val response = get(controller(session), path, Map("callback" -> "js_callback_dn"))
         response.status ==== Status.Ok
@@ -181,7 +181,7 @@ class SingleTrackControllerSpec extends InjectionBasedControllerSpecification {
     s"When loading tracks from trackmetadata for: $path" >> {
       trait FromTrackMetadata extends Context {
         def trackRepresentationLike: Future[Result[TrackRepresentationLike]]
-        when(trackRepresentationsService.track(session, trackUrn, None, None)).thenReturn(trackRepresentationLike)
+        when(trackRepresentationsService.track(session, trackUrn, None)).thenReturn(trackRepresentationLike)
       }
 
       "it returns 200 for Some()" in new FromTrackMetadata {
@@ -214,7 +214,7 @@ class SingleTrackControllerSpec extends InjectionBasedControllerSpecification {
 
   trait JsonpSupportContext extends Context {
     def trackRepresentationLike: Future[Result[TrackRepresentationLike]]
-    when(trackRepresentationsService.track(session, trackUrn, None, Some("myFunctionName"))).thenReturn(trackRepresentationLike)
+    when(trackRepresentationsService.track(session, trackUrn, None)).thenReturn(trackRepresentationLike)
 
   }
 

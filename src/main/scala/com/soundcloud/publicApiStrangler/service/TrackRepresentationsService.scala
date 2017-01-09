@@ -29,7 +29,7 @@ class TrackRepresentationsService(
 
   private val logger = SoundCloudLoggerFactory.getLogger(this.getClass.getName)
 
-  def track(session: UserSession, urn: Urn, secretTokenInRequest: Option[String], callback: Option[String]): Future[Result[TrackRepresentationLike]] = {
+  def track(session: UserSession, urn: Urn, secretTokenInRequest: Option[String]): Future[Result[TrackRepresentationLike]] = {
     val isrcF = pubmeseClient.isrcForTrack(session, urn).handle { case NonFatal(ex) => None }
     val geoblockingsF = fetchGeoblockings(session, urn).handle { case NonFatal(ex) => None }
     val domainlockingsF = okidokiClient.fetchTrackDomainLockings(session, urn).handle { case NonFatal(ex) => Seq() }

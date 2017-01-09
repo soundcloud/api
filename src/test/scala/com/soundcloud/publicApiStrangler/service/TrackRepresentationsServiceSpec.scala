@@ -235,7 +235,7 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
     val track = trackmetadataTrack()
     setUpMocksForExistingTrack(track, session)
 
-    val trackRepLike = Await.result(tracksService.track(session, trackUrn, None, None))
+    val trackRepLike = Await.result(tracksService.track(session, trackUrn, None))
 
     trackRepLike match {
       case Success(rep) =>
@@ -246,7 +246,7 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
   "Returns NotFound for non existing tracks" in new Context {
     setUpMocksForNonExistingTrack
 
-    val trackRepLike = Await.result(tracksService.track(session, trackUrn, None, None))
+    val trackRepLike = Await.result(tracksService.track(session, trackUrn, None))
     trackRepLike ==== NotFound
   }
 
@@ -255,7 +255,7 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
     val track = trackmetadataTrack(disabledAt)
     setUpMocksForExistingTrack(track, session)
 
-    val trackRepLike = Await.result(tracksService.track(session, trackUrn, None, None))
+    val trackRepLike = Await.result(tracksService.track(session, trackUrn, None))
     trackRepLike ==== NotFound
   }
 
@@ -263,7 +263,7 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
     val track = trackmetadataTrack(isPublic = false)
     setUpMocksForExistingTrack(track, session)
 
-    val trackRepLike = Await.result(tracksService.track(session, trackUrn, None, None))
+    val trackRepLike = Await.result(tracksService.track(session, trackUrn, None))
     trackRepLike ==== NotFound
   }
 
@@ -272,7 +272,7 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
     val ownerSession = new UserSessionBuilder().setUser(trackOwnerUrn).build
     setUpMocksForExistingTrack(track, ownerSession)
 
-    val trackRepLike = Await.result(tracksService.track(ownerSession, trackUrn, None, None))
+    val trackRepLike = Await.result(tracksService.track(ownerSession, trackUrn, None))
     trackRepLike match {
       case Success(rep) =>
         rep must beAnInstanceOf[TrackRepresentationLike]
@@ -290,7 +290,7 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
 
     when(playlistsClient.getPlaylistContainingTrackOwnedByUser(track.urn, track.user_urn)).thenReturn(Future.value(List.empty[Playlist]))
 
-    val trackRepLike = Await.result(tracksService.track(session, trackUrn, Some(wrongSecretToken), None))
+    val trackRepLike = Await.result(tracksService.track(session, trackUrn, Some(wrongSecretToken)))
     trackRepLike ==== NotFound
 
   }
@@ -300,7 +300,7 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
     val track = trackmetadataTrack(isPublic = false, secretToken = correctSecretToken)
     setUpMocksForExistingTrack(track, session)
 
-    val trackRepLike = Await.result(tracksService.track(session, trackUrn, Some(correctSecretToken), None))
+    val trackRepLike = Await.result(tracksService.track(session, trackUrn, Some(correctSecretToken)))
     trackRepLike match {
       case Success(rep) =>
         rep must beAnInstanceOf[TrackRepresentationLike]
@@ -313,7 +313,7 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
     val playlists = List(Playlist(userUrn = track.user_urn, secretToken = correctSecretTokenForPlaylistContainingTheTrack))
     setUpMocksForExistingTrackInPlaylists(track, session, playlists)
 
-    val trackRepLike = Await.result(tracksService.track(session, trackUrn, Some(correctSecretTokenForPlaylistContainingTheTrack), None))
+    val trackRepLike = Await.result(tracksService.track(session, trackUrn, Some(correctSecretTokenForPlaylistContainingTheTrack)))
     trackRepLike must beLike {
       case Success(rep) =>
         rep must beAnInstanceOf[TrackRepresentationLike]
@@ -327,7 +327,7 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
     val playlists = List(Playlist(userUrn = track.user_urn, secretToken = correctSecretTokenForPlaylistContainingTheTrack))
     setUpMocksForExistingTrackInPlaylists(track, session, playlists)
 
-    val trackRepLike = Await.result(tracksService.track(session, trackUrn, Some(incorrectSecretTokenForPlaylistContainingTheTrack), None))
+    val trackRepLike = Await.result(tracksService.track(session, trackUrn, Some(incorrectSecretTokenForPlaylistContainingTheTrack)))
     trackRepLike ==== NotFound
   }
 
@@ -338,7 +338,7 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
     val playlists = List(Playlist(userUrn = anotherUser, secretToken = correctSecretTokenForPlaylistContainingTheTrack))
     setUpMocksForExistingTrackInPlaylists(track, session, playlists)
 
-    val trackRepLike = Await.result(tracksService.track(session, trackUrn, Some(correctSecretTokenForPlaylistContainingTheTrack), None))
+    val trackRepLike = Await.result(tracksService.track(session, trackUrn, Some(correctSecretTokenForPlaylistContainingTheTrack)))
     trackRepLike ==== NotFound
   }
 
@@ -347,7 +347,7 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
     setUpMocksForExistingTrack(track, session)
     when(okidokiClient.fetchUserObjects(session, Set(trackOwnerUrn))).thenReturn(Future.value(List.empty))
 
-    val trackRepLike = Await.result(tracksService.track(session, trackUrn, None, None))
+    val trackRepLike = Await.result(tracksService.track(session, trackUrn, None))
     trackRepLike ==== NotFound
   }
 
@@ -356,7 +356,7 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
     setUpMocksForExistingTrack(track, session)
     when(pubmeseClient.isrcForTrack(session, trackUrn)).thenReturn(Future.exception(new RuntimeException("bewm! hahahaaa")))
 
-    val trackRepLike = Await.result(tracksService.track(session, trackUrn, None, None))
+    val trackRepLike = Await.result(tracksService.track(session, trackUrn, None))
     trackRepLike match {
       case Success(rep) =>
         Json.toJsValue(rep) \ "isrc" ==== JsNull
@@ -368,7 +368,7 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
     setUpMocksForExistingTrack(track, session)
     when(okidokiClient.fetchTrackGeoblockings(session, trackUrn)).thenReturn(Future.exception(new RuntimeException("bewm! hahahaaa")))
 
-    val trackRepLike = Await.result(tracksService.track(session, trackUrn, None, None))
+    val trackRepLike = Await.result(tracksService.track(session, trackUrn, None))
     trackRepLike match {
       case Success(rep) =>
         Json.toJsValue(rep).as[JsObject].keys.contains("available_country_codes") ==== false
@@ -380,7 +380,7 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
     setUpMocksForExistingTrack(track, session)
     when(okidokiClient.fetchTrackGeoblockings(session, trackUrn)).thenReturn(Future.value(Some(List())))
 
-    val trackRepLike = Await.result(tracksService.track(session, trackUrn, None, None))
+    val trackRepLike = Await.result(tracksService.track(session, trackUrn, None))
     trackRepLike match {
       case Success(rep) =>
         Json.toJsValue(rep).as[JsObject].keys.contains("available_country_codes") ==== false
@@ -392,7 +392,7 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
     setUpMocksForExistingTrack(track, session)
     when(okidokiClient.fetchTrackDomainLockings(session, trackUrn)).thenReturn(Future.exception(new RuntimeException("bewm! hahahaaa")))
 
-    val trackRepLike = Await.result(tracksService.track(session, trackUrn, None, None))
+    val trackRepLike = Await.result(tracksService.track(session, trackUrn, None))
     trackRepLike match {
       case Success(rep) =>
         Json.toJsValue(rep).as[JsObject].keys.contains("domain_lockings") ==== false
@@ -404,7 +404,7 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
     setUpMocksForExistingTrack(track, session)
     when(okidokiClient.fetchTrackAudioMetadata(session, trackUrn)).thenReturn(Future.value(Some(TrackAudioMetadata("storing", None, None))))
 
-    val trackRepLike = Await.result(tracksService.track(session, trackUrn, None, None))
+    val trackRepLike = Await.result(tracksService.track(session, trackUrn, None))
 
     trackRepLike match {
       case Success(rep) => {
@@ -442,7 +442,7 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
       setUpMocksForExistingTrack(track, session)
       when(lieblingClient.userLikeCounts(session, List(trackUrn), session.getUser)).thenReturn(Future.value(userLikesCount))
 
-      val trackRepLike = Await.result(tracksService.track(session, trackUrn, None, None))
+      val trackRepLike = Await.result(tracksService.track(session, trackUrn, None))
       trackRepLike match {
         case Success(rep) =>
           Json.toJsValue(rep) \ "user_favorite" ==== JsBoolean(true)
@@ -456,7 +456,7 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
       setUpMocksForExistingTrack(track, session)
       when(lieblingClient.userLikeCounts(session, List(trackUrn), session.getUser)).thenReturn(Future.value(userLikesCount))
 
-      val trackRepLike = Await.result(tracksService.track(session, trackUrn, None, None))
+      val trackRepLike = Await.result(tracksService.track(session, trackUrn, None))
       trackRepLike match {
         case Success(rep) =>
           Json.toJsValue(rep) \ "user_favorite" ==== JsBoolean(false)
@@ -468,7 +468,7 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
       override val session = anonymousSession
       setUpMocksForExistingTrack(track, session)
 
-      val trackRepLike = Await.result(tracksService.track(session, trackUrn, None, None))
+      val trackRepLike = Await.result(tracksService.track(session, trackUrn, None))
       trackRepLike match {
         case Success(rep) =>
           Json.toJsValue(rep).as[JsObject].keys.contains("user_favorite") ==== false
@@ -483,7 +483,7 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
       setUpMocksForExistingTrack(track, session)
       when(lieblingClient.userLikeCounts(session, List(trackUrn), session.getUser)).thenReturn(Future.value(userLikesCount))
 
-      val trackRepLike = Await.result(tracksService.track(session, trackUrn, None, None))
+      val trackRepLike = Await.result(tracksService.track(session, trackUrn, None))
       trackRepLike match {
         case Success(rep) =>
           Json.toJsValue(rep) \ "user_playback_count" ==== JsNumber(1)
@@ -496,7 +496,7 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
       session.isAnonymous ==== true
       setUpMocksForExistingTrack(track, session)
 
-      val trackRepLike = Await.result(tracksService.track(session, trackUrn, None, None))
+      val trackRepLike = Await.result(tracksService.track(session, trackUrn, None))
       trackRepLike match {
         case Success(rep) =>
           Json.toJsValue(rep).as[JsObject].keys.contains("user_playback_count") ==== false
@@ -509,7 +509,7 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
       val track = trackmetadataTrack()
       setUpMocksForExistingTrack(track, session)
 
-      val trackRepLike = Await.result(tracksService.track(session, trackUrn, None, None))
+      val trackRepLike = Await.result(tracksService.track(session, trackUrn, None))
       trackRepLike match {
         case Success(rep) =>
           Json.toJsValue(rep).as[JsObject].keys.contains("waveform_url") ==== true
@@ -521,7 +521,7 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
       setUpMocksForExistingTrack(track, session)
       when(mediaUrlGenClient.waveformUrlsAsResult(session, track.uid)).thenReturn(Future.value(Success(Seq.empty)))
 
-      val trackRepLike = Await.result(tracksService.track(session, trackUrn, None, None))
+      val trackRepLike = Await.result(tracksService.track(session, trackUrn, None))
 
       trackRepLike match {
         case Success(rep) =>
@@ -534,7 +534,7 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
       setUpMocksForExistingTrack(track, session)
       when(mediaUrlGenClient.waveformUrlsAsResult(session, track.uid)).thenReturn(Future.value(ServerError(Error("Something wrong with media service"))))
 
-      val trackRepLike = Await.result(tracksService.track(session, trackUrn, None, None))
+      val trackRepLike = Await.result(tracksService.track(session, trackUrn, None))
       trackRepLike ==== NotFound
     }
   }
@@ -544,7 +544,7 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
       val track = trackmetadataTrack()
       setUpMocksForExistingTrack(track, session)
 
-      val trackRepLike = Await.result(tracksService.track(session, trackUrn, None, None))
+      val trackRepLike = Await.result(tracksService.track(session, trackUrn, None))
       trackRepLike match {
         case Success(rep) =>
           Json.toJsValue(rep).as[JsObject].keys.contains("label") ==== true
@@ -555,7 +555,7 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
       val track = trackmetadataTrack(label_id = None)
       setUpMocksForExistingTrack(track, session)
 
-      val trackRepLike = Await.result(tracksService.track(session, trackUrn, None, None))
+      val trackRepLike = Await.result(tracksService.track(session, trackUrn, None))
       trackRepLike match {
         case Success(rep) =>
           Json.toJsValue(rep).as[JsObject].keys.contains("label") ==== false
@@ -568,7 +568,7 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
       val track = trackmetadataTrack().copy(permalink_url = Some("http://soundcloud.com/foo/bar"))
       setUpMocksForExistingTrack(track, session)
 
-      val trackRepLike = Await.result(tracksService.track(session, trackUrn, Some("s-4kT0a"), None))
+      val trackRepLike = Await.result(tracksService.track(session, trackUrn, Some("s-4kT0a")))
       trackRepLike match {
         case Success(rep) =>
           val json = Json.toJsValue(rep)
@@ -583,7 +583,7 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
       val track = trackmetadataTrack().copy(permalink_url = None)
       setUpMocksForExistingTrack(track, session)
 
-      val trackRepLike = Await.result(tracksService.track(session, trackUrn, Some("s-4kT0a"), None))
+      val trackRepLike = Await.result(tracksService.track(session, trackUrn, Some("s-4kT0a")))
       trackRepLike match {
         case Success(rep) =>
           val json = Json.toJsValue(rep)
@@ -599,7 +599,7 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
       userQuotaClient.downloadsPerTrack(session, Set(track.user_urn)) returns Future.value(Map(track.user_urn -> Some(100)))
       stitchClient.countsForTrack(session, trackUrn, track.user_urn) returns Future.value(StitchCounts(0, 90, 0, 0))
 
-      val trackRepLike = Await.result(tracksService.track(session, trackUrn, None, None))
+      val trackRepLike = Await.result(tracksService.track(session, trackUrn, None))
       trackRepLike match {
         case Success(rep) =>
           val json = Json.toJsValue(rep)
@@ -613,7 +613,7 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
       userQuotaClient.downloadsPerTrack(session, Set(track.user_urn)) returns Future.value(Map(track.user_urn -> None))
       stitchClient.countsForTrack(session, trackUrn, track.user_urn) returns Future.value(StitchCounts(0, 90, 0, 0))
 
-      val trackRepLike = Await.result(tracksService.track(session, trackUrn, None, None))
+      val trackRepLike = Await.result(tracksService.track(session, trackUrn, None))
       trackRepLike match {
         case Success(rep) =>
           val json = Json.toJsValue(rep)
@@ -627,7 +627,7 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
       userQuotaClient.downloadsPerTrack(session, Set(track.user_urn)) returns Future.value(Map(track.user_urn -> Some(100)))
       stitchClient.countsForTrack(session, trackUrn, track.user_urn) returns Future.value(StitchCounts(0, 100, 0, 0))
 
-      val trackRepLike = Await.result(tracksService.track(session, trackUrn, None, None))
+      val trackRepLike = Await.result(tracksService.track(session, trackUrn, None))
       trackRepLike match {
         case Success(rep) =>
           val json = Json.toJsValue(rep)
@@ -641,7 +641,7 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
       userQuotaClient.downloadsPerTrack(session, Set(track.user_urn)) returns Future.value(Map(track.user_urn -> Some(100)))
       stitchClient.countsForTrack(session, trackUrn, track.user_urn) returns Future.value(StitchCounts(0, 90, 0, 0))
 
-      val trackRepLike = Await.result(tracksService.track(session, trackUrn, None, None))
+      val trackRepLike = Await.result(tracksService.track(session, trackUrn, None))
       trackRepLike match {
         case Success(rep) =>
           val json = Json.toJsValue(rep)
@@ -659,7 +659,7 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
         userQuotaClient.downloadsPerTrack(session, Set(track.user_urn)) returns Future.value(Map(track.user_urn -> Some(100)))
         stitchClient.countsForTrack(session, trackUrn, track.user_urn) returns Future.value(StitchCounts(0, 90, 0, 0))
 
-        val trackRepLike = Await.result(tracksService.track(session, trackUrn, None, None))
+        val trackRepLike = Await.result(tracksService.track(session, trackUrn, None))
         trackRepLike match {
           case Success(rep) =>
             Json.toJsValue(rep).as[JsObject].keys.contains("downloads_remaining") ==== false
@@ -674,7 +674,7 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
         userQuotaClient.downloadsPerTrack(session, Set(track.user_urn)) returns Future.value(Map(track.user_urn -> Some(100)))
         stitchClient.countsForTrack(session, trackUrn, track.user_urn) returns Future.value(StitchCounts(0, 90, 0, 0))
 
-        val trackRepLike = Await.result(tracksService.track(session, trackUrn, None, None))
+        val trackRepLike = Await.result(tracksService.track(session, trackUrn, None))
         trackRepLike match {
           case Success(rep) =>
             val json = Json.toJsValue(rep)
@@ -688,7 +688,7 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
         userQuotaClient.downloadsPerTrack(session, Set(track.user_urn)) returns Future.value(Map(track.user_urn -> None))
         stitchClient.countsForTrack(session, trackUrn, track.user_urn) returns Future.value(StitchCounts(0, 90, 0, 0))
 
-        val trackRepLike = Await.result(tracksService.track(session, trackUrn, None, None))
+        val trackRepLike = Await.result(tracksService.track(session, trackUrn, None))
         trackRepLike match {
           case Success(rep) =>
             Json.toJsValue(rep).as[JsObject].keys.contains("downloads_remaining") ==== false
@@ -701,7 +701,7 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
         userQuotaClient.downloadsPerTrack(session, Set(track.user_urn)) returns Future.value(Map(track.user_urn -> Some(100)))
         stitchClient.countsForTrack(session, trackUrn, track.user_urn) returns Future.value(StitchCounts(0, 100, 0, 0))
 
-        val trackRepLike = Await.result(tracksService.track(session, trackUrn, None, None))
+        val trackRepLike = Await.result(tracksService.track(session, trackUrn, None))
         trackRepLike match {
           case Success(rep) =>
             val json = Json.toJsValue(rep)
@@ -715,7 +715,7 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
         userQuotaClient.downloadsPerTrack(session, Set(track.user_urn)) returns Future.value(Map(track.user_urn -> Some(100)))
         stitchClient.countsForTrack(session, trackUrn, track.user_urn) returns Future.value(StitchCounts(0, 90, 0, 0))
 
-        val trackRepLike = Await.result(tracksService.track(session, trackUrn, None, None))
+        val trackRepLike = Await.result(tracksService.track(session, trackUrn, None))
         trackRepLike match {
           case Success(rep) =>
             val json = Json.toJsValue(rep)
@@ -733,7 +733,7 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
         val track = trackmetadataTrack()
         setUpMocksForExistingTrack(track, session)
 
-        val trackRepLike = Await.result(tracksService.track(session, trackUrn, None, None))
+        val trackRepLike = Await.result(tracksService.track(session, trackUrn, None))
 
         trackRepLike match {
           case Success(rep) =>
@@ -751,7 +751,7 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
         setUpMocksForExistingTrack(track, session)
         when(stitchClient.countsForTrack(session, trackUrn, trackOwnerUrn)).thenReturn(Future.exception(new RuntimeException("bewm! hahahaaa")))
 
-        val trackRepLike = Await.result(tracksService.track(session, trackUrn, None, None))
+        val trackRepLike = Await.result(tracksService.track(session, trackUrn, None))
 
         trackRepLike match {
           case Success(rep) =>
@@ -769,7 +769,7 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
         val track = trackmetadataTrack()
         setUpMocksForExistingTrack(track, session)
 
-        val trackRepLike = Await.result(tracksService.track(session, trackUrn, None, None))
+        val trackRepLike = Await.result(tracksService.track(session, trackUrn, None))
 
         trackRepLike match {
           case Success(rep) =>
@@ -784,7 +784,7 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
         val track = trackmetadataTrack(reveal_comments = false)
         setUpMocksForExistingTrack(track, session)
 
-        val trackRepLike = Await.result(tracksService.track(session, trackUrn, None, None))
+        val trackRepLike = Await.result(tracksService.track(session, trackUrn, None))
 
         trackRepLike match {
           case Success(rep) =>
@@ -800,7 +800,7 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
           val track = trackmetadataTrack()
           setUpMocksForExistingTrack(track, session)
 
-          val trackRepLike = Await.result(tracksService.track(session, trackUrn, None, None))
+          val trackRepLike = Await.result(tracksService.track(session, trackUrn, None))
 
           trackRepLike match {
             case Success(rep) =>
@@ -818,7 +818,7 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
           val track = trackmetadataTrack(reveal_stats = true)
           setUpMocksForExistingTrack(track, session)
 
-          val trackRepLike = Await.result(tracksService.track(session, trackUrn, None, None))
+          val trackRepLike = Await.result(tracksService.track(session, trackUrn, None))
 
           trackRepLike match {
             case Success(rep) =>
@@ -834,7 +834,7 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
           val track = trackmetadataTrack(reveal_stats = true)
           setUpMocksForExistingTrack(track, session)
 
-          val trackRepLike = Await.result(tracksService.track(session, trackUrn, None, None))
+          val trackRepLike = Await.result(tracksService.track(session, trackUrn, None))
 
           trackRepLike match {
             case Success(rep) =>
@@ -847,7 +847,7 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
           val track = trackmetadataTrack(reveal_stats = true, reveal_comments = false)
           setUpMocksForExistingTrack(track, session)
 
-          val trackRepLike = Await.result(tracksService.track(session, trackUrn, None, None))
+          val trackRepLike = Await.result(tracksService.track(session, trackUrn, None))
 
           trackRepLike match {
             case Success(rep) =>
@@ -861,7 +861,7 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
           setUpMocksForExistingTrack(track, session)
           when(stitchClient.countsForTrack(session, trackUrn, trackOwnerUrn)).thenReturn(Future.exception(new RuntimeException("bewm! hahahaaa")))
 
-          val trackRepLike = Await.result(tracksService.track(session, trackUrn, None, None))
+          val trackRepLike = Await.result(tracksService.track(session, trackUrn, None))
 
           trackRepLike match {
             case Success(rep) =>

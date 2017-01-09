@@ -36,7 +36,7 @@ class SingleTrackController(userAuthentication: UserAuthentication,
       Try(new Urn("soundcloud", "tracks", trackId)) match {
         case Return(urn@Urn(_, _, numericRegexp())) => {
           val secretToken = req.params.get("secret_token")
-          tracksService.track(session, urn, secretToken, callback).map {
+          tracksService.track(session, urn, secretToken).map {
             case Success(trackRep) => toResponseBuilder(generateResponse(Status.Ok, Json.stringify(trackRep), callback))
             case NotFound => generateNotFound(callback)
             case _ => {
