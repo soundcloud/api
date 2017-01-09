@@ -3,8 +3,8 @@ package com.soundcloud.publicApiStrangler.client
 import com.soundcloud.jvmkit.{Urn, UserSession}
 import com.soundcloud.scalakit.Path
 import com.soundcloud.scalakit.finagle.http._
-import com.soundcloud.scalakit.finagle.jsonservice.{JsonClient, JsonResponse}
-import com.soundcloud.service.client.OkidokiClient
+import com.soundcloud.scalakit.finagle.jsonservice.{JsonClient, JsonResponse, Params}
+import com.soundcloud.service.client.{OkidokiClient, ResponseHandlers}
 import com.soundcloud.service.response.mapper._
 import com.soundcloud.service.response.mapper.spotlight.SpotlightResponseMapper
 import com.soundcloud.service.response.representation._
@@ -70,4 +70,20 @@ class RichOkidokiClient(service: JsonClient,
       case JsonResponse(NotFoundStatus, _, _, _) => None
       case _ => throw new RuntimeException("Unexpected response status")
     }
+
+  def fetchTrackGeoblockings(session: UserSession, trackUrns: Set[Urn], batchSize: Int = 50): Future[Map[Urn, Geoblockings]] = {
+    def parseJson(body: JsValue): List[(Urn, Geoblockings)] = {
+      println("hello", body)
+      (body \ "collection").as[List[JsValue]].map(json => {
+        ((json \ "track_urn").as[Urn] -> (json \ "geo_blockings").asOpt[List[String]].getOrElse(List.empty))
+      })
+    }
+
+    inBatches(trackUrns.toList, batchSize) { urnBatch => {
+      service.get(session, Path() / "tracks" / "geo_blockings", Params("urns" -> urnBatch), Params.empty).map {
+        case JsonResponse(SuccessfulStatusClass(_), body, _, _) => parseJson(body)
+        case _ => List.empty
+      }
+    } }.map(_.toMap)
+  }
 }
