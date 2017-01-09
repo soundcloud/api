@@ -10,29 +10,22 @@ import org.mockito.Mockito._
 import play.api.libs.json.Json
 
 class PubmeseClientSpec extends UnitSpecification {
-  trait GenericContext[T] extends Scope {
-    def resultF: Future[T]
-    def result = Await.result(resultF)
-  }
-
-  trait Context extends GenericContext[Option[Isrc]] {
+  trait Context extends Scope {
     val jsonClient = mock[JsonClient]
 
     lazy val client = new PubmeseClient(jsonClient)
 
-    def resultF = client.isrcForTrack(session, urn)
+    def result = Await.result(client.isrcForTrack(session, urn))
 
     lazy val path = Path() / "tracks" / urn
     val session = anonymousSession
     val urn = Urn("soundcloud:tracks:123")
 
     def mockIsrc: Option[Isrc] = Some(Isrc("15RC"))
-    def mockResponseContents = Json.obj("isrc" -> mockIsrc.map(_.toString))
     def mockResponseStatus: StatusCode = OkStatus
-    def mockResponse = Future.value(JsonResponse(mockResponseStatus, mockResponseContents))
+    def mockResponse = Future.value(JsonResponse(mockResponseStatus, Json.obj("isrc" -> mockIsrc.map(_.toString))))
 
-    when(jsonClient.get(session, path, Params.empty, Params.empty))
-      .thenReturn(mockResponse)
+    when(jsonClient.get(session, path, Params.empty, Params.empty)).thenReturn(mockResponse)
   }
 
   "track exists and has an ISRC" in new Context {
