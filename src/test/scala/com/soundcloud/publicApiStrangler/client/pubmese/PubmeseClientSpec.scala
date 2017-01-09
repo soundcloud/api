@@ -15,8 +15,6 @@ class PubmeseClientSpec extends UnitSpecification {
 
     lazy val client = new PubmeseClient(jsonClient)
 
-    def result = Await.result(client.isrcForTrack(session, urn))
-
     lazy val path = Path() / "tracks" / urn
     val session = anonymousSession
     val urn = Urn("soundcloud:tracks:123")
@@ -29,26 +27,26 @@ class PubmeseClientSpec extends UnitSpecification {
   }
 
   "track exists and has an ISRC" in new Context {
-    result ==== Some(Isrc("15RC"))
+    Await.result(client.isrcForTrack(session, urn)) ==== Some(Isrc("15RC"))
   }
 
   "track exists but has no ISRC" in new Context {
     override def mockIsrc = None
-    result ==== None
+    Await.result(client.isrcForTrack(session, urn)) ==== None
   }
 
   "track does not exist" in new Context {
     override def mockResponseStatus = NotFoundStatus
-    result ==== None
+    Await.result(client.isrcForTrack(session, urn)) ==== None
   }
 
   "500 response" in new Context {
     override def mockResponseStatus = InternalServerErrorStatus
-    result ==== None
+    Await.result(client.isrcForTrack(session, urn)) ==== None
   }
 
   "exception response" in new Context {
     override def mockResponse = Future.exception(new RuntimeException("kaboom"))
-    result ==== None
+    Await.result(client.isrcForTrack(session, urn)) ==== None
   }
 }
