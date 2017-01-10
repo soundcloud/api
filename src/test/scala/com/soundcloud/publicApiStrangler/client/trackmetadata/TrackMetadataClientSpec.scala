@@ -4,12 +4,12 @@ import com.soundcloud.bff.test.UnitSpecification
 import com.soundcloud.jvmkit.Urn
 import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures
 import com.soundcloud.scalakit.Path
-import com.soundcloud.scalakit.finagle.http.{NotFoundStatus, OkStatus}
+import com.soundcloud.scalakit.finagle.http.{InternalServerErrorStatus, NotFoundStatus, OkStatus}
 import com.soundcloud.scalakit.finagle.jsonservice.{JsonClient, JsonResponse, Params}
 import com.twitter.util.{Await, Future}
 import org.joda.time.LocalDateTime
 import org.mockito.Mockito.{verify, when}
-import play.api.libs.json.JsNull
+import play.api.libs.json.{JsNull, Json}
 
 class TrackMetadataClientSpec extends UnitSpecification with Fixtures{
 
@@ -206,6 +206,37 @@ class TrackMetadataClientSpec extends UnitSpecification with Fixtures{
         verify(service).get(anonymousSession, path, Set(urn1, urn2), Params.empty)
         verify(service).get(anonymousSession, path, Set(urn3), Params.empty)
       }
+    }
+  }
+
+  "#urnsByUser" >> {
+    trait UrnsByUserContext extends Context {
+      val userUrn = Urn("soundcloud:users:1")
+      val urn1 = Urn("soundcloud:tracks:1")
+      val urn2 = Urn("soundcloud:tracks:2")
+
+      val path = Path("/users") / userUrn / "tracks" / "urns"
+
+      val jsonBody = Json.parse(
+        s"""
+           |{
+           |  "data": ["$urn1", "$urn2"]
+           |}
+         """.stripMargin)
+    }
+
+    "200 status" in new UrnsByUserContext {
+      when(service.get(anonymousSession, path, Params.empty, Params.empty))
+        .thenReturn(Future(JsonResponse(OkStatus, jsonBody)))
+
+      Await.result(trackmetadataClient.urnsByUser(anonymousSession, userUrn)) ==== List(urn1, urn2)
+    }
+
+    "500 status" in new UrnsByUserContext {
+      when(service.get(anonymousSession, path, Params.empty, Params.empty))
+        .thenReturn(Future(JsonResponse(InternalServerErrorStatus, JsNull)))
+
+      Await.result(trackmetadataClient.urnsByUser(anonymousSession, userUrn)) ==== List.empty
     }
   }
 }

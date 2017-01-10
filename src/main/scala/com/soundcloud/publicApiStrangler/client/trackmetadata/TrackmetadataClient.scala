@@ -34,6 +34,14 @@ class TrackmetadataClient(service: JsonClient) {
     Future.collect(batchedCalls.toSeq).map(_.flatten.toList)
   }
 
+  def urnsByUser(session: UserSession, userUrn: Urn): Future[List[Urn]] = {
+    service.get(session, Path("/users") / userUrn / "tracks" / "urns", Params.empty, Params.empty).map {
+      case JsonResponse(OkStatus, json, _, _) => (json \ "data").as[List[Urn]]
+      // TODO lets please use results and actually return errors
+      case _ => List.empty
+    }
+  }
+
   private def jsonToTracks(json: JsValue): List[Track] = (json \ "data").as[List[Track]]
 }
 
