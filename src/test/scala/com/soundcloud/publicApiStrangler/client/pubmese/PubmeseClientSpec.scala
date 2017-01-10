@@ -6,51 +6,104 @@ import com.soundcloud.scalakit.finagle.http.{InternalServerErrorStatus, NotFound
 import com.soundcloud.scalakit.finagle.jsonservice.{JsonClient, JsonResponse, Params}
 import com.soundcloud.scalakit.test.UnitSpecification
 import com.twitter.util.{Await, Future}
-import play.api.libs.json.Json
+import play.api.libs.json.{JsNull, Json}
 
 class PubmeseClientSpec extends UnitSpecification {
+
   trait Context extends Scope {
     val jsonClient = mock[JsonClient]
 
     lazy val client = new PubmeseClient(jsonClient)
 
-    lazy val path = Path() / "tracks" / urn
+    val path = Path() / "tracks"
+
     val session = anonymousSession
-    val urn = Urn("soundcloud:tracks:123")
+    val urn1 = Urn("soundcloud:tracks:123")
+    val urn2 = Urn("soundcloud:tracks:456")
+
+    val urns = Seq(urn1, urn2)
+
+    def stubbedRequestFor(urns: Seq[Urn]) =
+      jsonClient.post(session, path, Params.empty, Params.empty, requestBodyFor(urns))
+
+    private def requestBodyFor(urns: Seq[Urn]) = Some(Json.obj("track_urns" -> urns).toString())
   }
 
-  "track exists and has an ISRC" in new Context {
-    jsonClient.get(session, path, Params.empty, Params.empty) returns
-      Future.value(JsonResponse(OkStatus, Json.obj("isrc" -> "15RC")))
+  "single track" >> {
+    "track exists and has an ISRC" in new Context {
+      stubbedRequestFor(Seq(urn1)) returns
+        Future.value(JsonResponse(OkStatus,
+          Json.arr(Json.obj("track_urn" -> urn1, "isrc" -> "15RC"))
+        ))
 
-    Await.result(client.isrcForTrack(session, urn)) ==== Some(Isrc("15RC"))
+      Await.result(client.isrcForTrack(session, urn1)) ==== Some(Isrc("15RC"))
+    }
+
+    "track exists but has no ISRC" in new Context {
+      stubbedRequestFor(Seq(urn1)) returns
+        Future.value(JsonResponse(OkStatus,
+          Json.arr(Json.obj("track_urn" -> urn1, "isrc" -> JsNull))
+        ))
+
+      Await.result(client.isrcForTrack(session, urn1)) ==== None
+    }
+
+    "track does not exist" in new Context {
+      stubbedRequestFor(Seq(urn1)) returns
+        Future.value(JsonResponse(NotFoundStatus,
+          Json.obj()
+        ))
+
+      Await.result(client.isrcForTrack(session, urn1)) ==== None
+    }
   }
 
-  "track exists but has no ISRC" in new Context {
-    jsonClient.get(session, path, Params.empty, Params.empty) returns
-      Future.value(JsonResponse(OkStatus, Json.obj()))
+  "multiple tracks" >> {
+    "track exists and has an ISRC" in new Context {
+      stubbedRequestFor(urns) returns
+        Future.value(JsonResponse(OkStatus, Json.arr(
+          Json.obj("track_urn" -> urn1, "isrc" -> "15RC"),
+          Json.obj("track_urn" -> urn2, "isrc" -> "15RC2"))
+        ))
 
-    Await.result(client.isrcForTrack(session, urn)) ==== None
-  }
+      val result = Await.result(client.isrcsForTracks(session, urns))
+      result.get(urn1) ==== Some(Isrc("15RC"))
+      result.get(urn2) ==== Some(Isrc("15RC2"))
+    }
 
-  "track does not exist" in new Context {
-    jsonClient.get(session, path, Params.empty, Params.empty) returns
-      Future.value(JsonResponse(NotFoundStatus, Json.obj()))
+    "track exists but has no ISRC" in new Context {
+      stubbedRequestFor(urns) returns
+        Future.value(JsonResponse(OkStatus, Json.arr(
+          Json.obj("track_urn" -> urn1, "isrc" -> JsNull),
+          Json.obj("track_urn" -> urn2, "isrc" -> "15RC2"))
+        ))
 
-    Await.result(client.isrcForTrack(session, urn)) ==== None
-  }
+      Await.result(client.isrcsForTracks(session, urns)).get(urn1) ==== None
+    }
 
-  "500 response" in new Context {
-    jsonClient.get(session, path, Params.empty, Params.empty) returns
-      Future.value(JsonResponse(InternalServerErrorStatus, Json.obj()))
+    "track does not exist" in new Context {
+      stubbedRequestFor(urns) returns
+        Future.value(JsonResponse(OkStatus, Json.arr(
+          Json.obj("track_urn" -> urn2, "isrc" -> "15RC2"))
+        ))
 
-    Await.result(client.isrcForTrack(session, urn)) ==== None
-  }
+      Await.result(client.isrcsForTracks(session, urns)).get(urn1) ==== None
+    }
 
-  "exception response" in new Context {
-    jsonClient.get(session, path, Params.empty, Params.empty) returns
-      Future.exception(new RuntimeException("kaboom"))
+    "500 response" in new Context {
+      stubbedRequestFor(urns) returns
+        Future.value(JsonResponse(InternalServerErrorStatus,
+          Json.obj()
+        ))
 
-    Await.result(client.isrcForTrack(session, urn)) ==== None
+      Await.result(client.isrcsForTracks(session, urns)).get(urn1) ==== None
+    }
+
+    "exception response" in new Context {
+      stubbedRequestFor(urns) returns
+        Future.exception(new RuntimeException("kaboom"))
+
+      Await.result(client.isrcsForTracks(session, urns)).get(urn1) ==== None
+    }
   }
 }

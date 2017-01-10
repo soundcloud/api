@@ -6,14 +6,27 @@ import com.soundcloud.scalakit.Path
 import com.soundcloud.scalakit.finagle.http.OkStatus
 import com.soundcloud.scalakit.finagle.jsonservice.{JsonClient, JsonResponse, Params}
 import com.twitter.util.{Future, NonFatal}
+import play.api.libs.json.{Json, Reads}
 
 class PubmeseClient(jsonClient: JsonClient) {
   def isrcForTrack(session: UserSession, trackUrn: Urn): Future[Option[Isrc]] = {
-    jsonClient.get(session, Path() / "tracks" / trackUrn, Params.empty, Params.empty).map {
-      case JsonResponse(OkStatus, body, _, _) => (body \ "isrc").as[Option[String]].map(Isrc(_))
-      case _ => None
+    isrcsForTracks(session, Seq(trackUrn)).map(_.get(trackUrn))
+  }
+
+  def isrcsForTracks(session: UserSession, trackUrns: Seq[Urn]): Future[Map[Urn, Isrc]] = {
+    val requestBody = Some(Json.obj("track_urns" -> trackUrns).toString())
+
+    jsonClient.post(session, Path() / "tracks", Params.empty, Params.empty, requestBody).map {
+      case JsonResponse(OkStatus, body, _, _) => body.as[List[TrackRepresentation]].map { t => t.track_urn -> Isrc(t.isrc) }.toMap
+      case _ => Map.empty[Urn, Isrc]
     }.handle {
-      case NonFatal(ex) => None
+      case NonFatal(ex) => Map.empty[Urn, Isrc]
     }
+  }
+
+  case class TrackRepresentation(track_urn: Urn, isrc: String)
+
+  object TrackRepresentation {
+    implicit val reads: Reads[TrackRepresentation] = Json.reads[TrackRepresentation]
   }
 }
