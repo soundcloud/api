@@ -49,8 +49,8 @@ class TrackRepresentationsService(
             case None => Future.value(None)
           }
 
-          Future.join(isrcF, userF, countsF, labelF, geoblockingsF, domainlockingsF, audioF, isLikedF, waveformUrlsF, downloadsPerTrackF).map {
-            case (isrc, Some(user), counts, label, geoblockings, domainlockings, Some(audio), isLiked, Some(waveformUrls), downloadsPerTrack) =>
+          Future.join(userF, audioF, waveformUrlsF, isrcF, countsF, labelF, geoblockingsF, domainlockingsF, isLikedF, downloadsPerTrackF).map {
+            case (Some(user), Some(audio), Some(waveformUrls), isrc, counts, label, geoblockings, domainlockings, isLiked, downloadsPerTrack) =>
               SuccessResult(buildTrackRepresentationLike(
                 userSession = session,
                 track = track,
