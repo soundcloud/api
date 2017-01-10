@@ -109,4 +109,13 @@ class RichOkidokiClient(service: JsonClient,
       }
     } }.map(_.toMap)
   }
+
+  def fetchUsersMap(session: UserSession, urns: Set[Urn], batchSize: Int = 50): Future[Map[Urn, User]] = {
+    inBatches(urns.toList, batchSize) { urnBatch => {
+      service.get(session, Path() / "users" / "fetch", Params("urns" -> urnBatch), Params.empty).map {
+        case JsonResponse(SuccessfulStatusClass(_), body, _, _) => body.as[List[JsValue]].map(UserMapper(_))
+        case _ => List.empty
+      }
+    } }.map(_.map(user => (user.urn -> user)).toMap)
+  }
 }

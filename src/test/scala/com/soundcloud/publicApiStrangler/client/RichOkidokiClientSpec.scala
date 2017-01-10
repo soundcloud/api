@@ -5,6 +5,7 @@ import com.soundcloud.scalakit.Path
 import com.soundcloud.scalakit.finagle.http.{InternalServerErrorStatus, OkStatus, StatusCode}
 import com.soundcloud.scalakit.finagle.jsonservice.{JsonClient, JsonResponse, Params}
 import com.soundcloud.scalakit.test.UnitSpecification
+import com.soundcloud.service.response.representation.User
 import com.twitter.util.{Await, Future}
 import org.mockito.Mockito._
 import play.api.libs.json.{JsArray, JsNull, JsValue, Json}
@@ -315,6 +316,85 @@ class RichOkidokiClientSpec extends UnitSpecification {
         .thenReturn(Future.value(JsonResponse(InternalServerErrorStatus, JsNull)))
 
       Await.result(client.fetchTracksDomainLockings(session, urns)) ==== Map.empty
+    }
+  }
+
+  "#fetchUsersMap" >> {
+    trait FetchUsersContext extends GenericContext {
+      val path = Path() / "users" / "fetch"
+
+      val urns = Set(
+        Urn("soundcloud:users:1"),
+        Urn("soundcloud:users:2"),
+        Urn("soundcloud:users:3"),
+        Urn("soundcloud:users:4"))
+
+      val (firstBatch, secondBatch) = urns.splitAt(2)
+
+      val firstBatchJson = Json.parse(
+        s"""
+          |[
+          |  {
+          |    "permalink": "permalink1",
+          |    "username": "username1",
+          |    "avatar_url": "avatar_url1",
+          |    "permalink_url": "permalink_url1",
+          |    "tracks_count": 1,
+          |    "verified": false,
+          |    "self": {
+          |      "urn": "soundcloud:users:1"
+          |    }
+          |  }, {
+          |    "permalink": "permalink2",
+          |    "username": "username2",
+          |    "avatar_url": "avatar_url2",
+          |    "permalink_url": "permalink_url2",
+          |    "tracks_count": 2,
+          |    "verified": true,
+          |    "self": {
+          |      "urn": "soundcloud:users:2"
+          |    }
+          |  }
+          |]
+        """.stripMargin)
+
+      val secondBatchJson = Json.parse(
+        s"""
+           |[
+           |  {
+           |    "permalink": "permalink3",
+           |    "username": "username3",
+           |    "avatar_url": "avatar_url3",
+           |    "permalink_url": "permalink_url3",
+           |    "tracks_count": 3,
+           |    "verified": false,
+           |    "self": {
+           |      "urn": "soundcloud:users:3"
+           |    }
+           |  }
+           |]
+        """.stripMargin)
+    }
+
+    "200 response" in new FetchUsersContext {
+      when(jsonClient.get(session, path, Params("urns" -> firstBatch.toList), Params.empty))
+          .thenReturn(Future.value(JsonResponse(OkStatus, firstBatchJson)))
+      when(jsonClient.get(session, path, Params("urns" -> secondBatch.toList), Params.empty))
+          .thenReturn(Future.value(JsonResponse(OkStatus, secondBatchJson)))
+
+      val batchSize = 2
+      Await.result(client.fetchUsersMap(session, urns, batchSize)) ==== Map(
+        Urn("soundcloud:users:1") -> User(firstBatch.head, "permalink1", "username1", "avatar_url1", "permalink_url1", None, None, 1, None, None, false, None, None),
+        Urn("soundcloud:users:2") -> User(firstBatch.last, "permalink2", "username2", "avatar_url2", "permalink_url2", None, None, 2, None, None, true, None, None),
+        Urn("soundcloud:users:3") -> User(secondBatch.head, "permalink3", "username3", "avatar_url3", "permalink_url3", None, None, 3, None, None, false, None, None)
+      )
+    }
+
+    "500 response"  in new FetchUsersContext {
+      when(jsonClient.get(session, path, Params("urns" -> urns.toList), Params.empty))
+        .thenReturn(Future.value(JsonResponse(InternalServerErrorStatus, JsNull)))
+
+      Await.result(client.fetchUsersMap(session, urns)) ==== Map.empty
     }
   }
 
