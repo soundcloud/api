@@ -155,6 +155,22 @@ class LieblingClientSpec extends UnitSpecification {
     }
   }
 
+  "#userLikedTracks" >> {
+    trait UserLikedTracksContext extends Context {
+      val track1 = Urn("soundcloud:tracks:48786981")
+      val track2 = Urn("soundcloud:tracks:2")
+      val trackUrns = Seq(track1, track2)
+
+    }
+
+    "returns if the user has liked the provided tracks" in new UserLikedTracksContext {
+      expectOkResponse(Path() / "likes_info", lieblingLikesCount,
+        Map("for_urns" -> trackUrns, "includes" -> "likes_counts,liked_track_urns", "user_urn" -> userUrn))
+
+      Await.result(client.userLikedTracks(session, trackUrns.toSet, userUrn)) ==== Map(track1 -> true, track2 -> false)
+    }
+  }
+
   private def expectOkResponse(path: Path, expected: JsValue, params: Params = Params.empty, headers: Params = Params.empty)
                       (implicit service: JsonClient, session: UserSession) =
     expectResponse(path, params, HttpMethod.GET, headers, OkStatus, ExpectedBody(expected))

@@ -54,6 +54,17 @@ class LieblingClient(jsonClient: JsonClient) extends FetchClient {
     batched(targetUrns, batchSize)(fetch)(combine)
   }
 
+  /**
+    * Returns a map of track urn to boolean indicating if the provided user has liked that track or not.
+    */
+  def userLikedTracks(session: UserSession, trackUrns: Set[Urn], user: Urn, batchSize: Int = 25): Future[Map[Urn, Boolean]] = {
+    // initialize all track urns as not liked
+    val defaultLikes = trackUrns.map((_ -> false)).toMap
+    userLikeCounts(session, trackUrns.toSeq, user, batchSize).map(userLikeCounts => {
+      userLikeCounts.liked_track_urns.map((_ -> true)).toMap
+    }).map(defaultLikes ++ _)
+  }
+
   private def fetchLikes(session: UserSession, path: Path, params: Params, headers: Params = Params.empty): Future[JsObject] =
     fetch(
       jsonClient,
