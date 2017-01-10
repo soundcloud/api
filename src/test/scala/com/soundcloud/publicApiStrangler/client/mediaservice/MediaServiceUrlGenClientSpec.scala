@@ -2,7 +2,7 @@ package com.soundcloud.publicApiStrangler.client.mediaservice
 
 import com.soundcloud.scalakit.Path
 import com.soundcloud.scalakit.finagle.http.OkStatus
-import com.soundcloud.scalakit.finagle.jsonservice.{JsonClient, JsonResponse, ListParam, Params}
+import com.soundcloud.scalakit.finagle.jsonservice.{JsonClient, JsonResponse, Params}
 import com.soundcloud.scalakit.test.UnitSpecification
 import com.twitter.util.{Await, Future}
 import play.api.libs.json.{JsObject, Json}
@@ -25,7 +25,7 @@ class MediaServiceUrlGenClientSpec extends UnitSpecification {
 
     def trackWaveformsObject(uid: String): JsObject = {
       Json.obj(
-        "uid" -> uid,
+        "uid"  -> uid,
         "urls" -> Json.arr(
           waveformUrlObject("stream", uid),
           waveformUrlObject("preview", uid)
@@ -36,8 +36,8 @@ class MediaServiceUrlGenClientSpec extends UnitSpecification {
     def waveformUrlObject(label: String, uid: String): JsObject = {
       Json.obj(
         "label" -> label,
-        "json" -> s"https://foo.sndcdn.com/$label/$uid.json",
-        "png" -> s"https://bar.sndcdn.com/$label/$uid.png"
+        "json"  -> s"https://foo.sndcdn.com/$label/$uid.json",
+        "png"   -> s"https://bar.sndcdn.com/$label/$uid.png"
       )
     }
   }
@@ -55,26 +55,38 @@ class MediaServiceUrlGenClientSpec extends UnitSpecification {
 
       Await.result(client.waveformUrls(session, Seq(uid1, uid2))) must beLike {
         case Some(map) => {
-          map.get(uid1).get must contain(
-            WaveformUrl("stream",
-              "https://foo.sndcdn.com/stream/a1b2c3.json",
-              "https://bar.sndcdn.com/stream/a1b2c3.png"))
+          map.get(uid1) must beLike {
+            case Some(list) => {
+              list must contain(
+                WaveformUrl("stream",
+                  s"https://foo.sndcdn.com/stream/$uid1.json",
+                  s"https://bar.sndcdn.com/stream/$uid1.png")
+              )
 
-          map.get(uid1).get must contain(
-            WaveformUrl("preview",
-              "https://foo.sndcdn.com/preview/a1b2c3.json",
-              "https://bar.sndcdn.com/preview/a1b2c3.png"))
+              list must contain(
+                WaveformUrl("preview",
+                  s"https://foo.sndcdn.com/preview/$uid1.json",
+                  s"https://bar.sndcdn.com/preview/$uid1.png")
+              )
+            }
+          }
 
-          map.get(uid2).get must contain(
-            WaveformUrl("stream",
-              "https://foo.sndcdn.com/stream/def456.json",
-              "https://bar.sndcdn.com/stream/def456.png"))
+          map.get(uid2) must beLike {
+            case Some(list) => {
+              list must contain(
+                WaveformUrl("stream",
+                  s"https://foo.sndcdn.com/stream/$uid2.json",
+                  s"https://bar.sndcdn.com/stream/$uid2.png")
+              )
 
-          map.get(uid2).get must contain(
-            WaveformUrl("preview",
-              "https://foo.sndcdn.com/preview/def456.json",
-              "https://bar.sndcdn.com/preview/def456.png"))
-      }
+              list must contain(
+                WaveformUrl("preview",
+                  s"https://foo.sndcdn.com/preview/$uid2.json",
+                  s"https://bar.sndcdn.com/preview/$uid2.png")
+              )
+            }
+          }
+        }
       }
     }
 
@@ -91,13 +103,15 @@ class MediaServiceUrlGenClientSpec extends UnitSpecification {
         case Some(list) => {
           list must contain(
             WaveformUrl("stream",
-              "https://foo.sndcdn.com/stream/a1b2c3.json",
-              "https://bar.sndcdn.com/stream/a1b2c3.png"))
+              s"https://foo.sndcdn.com/stream/$uid1.json",
+              s"https://bar.sndcdn.com/stream/$uid1.png")
+          )
 
           list must contain(
             WaveformUrl("preview",
-              "https://foo.sndcdn.com/preview/a1b2c3.json",
-              "https://bar.sndcdn.com/preview/a1b2c3.png"))
+              s"https://foo.sndcdn.com/preview/$uid1.json",
+              s"https://bar.sndcdn.com/preview/$uid1.png")
+          )
         }
       }
     }
