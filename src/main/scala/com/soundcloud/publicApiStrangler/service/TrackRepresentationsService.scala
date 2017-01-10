@@ -50,7 +50,7 @@ class TrackRepresentationsService(
           }
 
           Future.join(isrcF, userF, countsF, labelF, geoblockingsF, domainlockingsF, audioF, isLikedF, waveformUrlsF, downloadsPerTrackF).map {
-            case (isrc, Some(user), counts, label, geoblockings, domainlockings, Some(audio), isLiked, SuccessResult(waveformUrls), downloadsPerTrack) =>
+            case (isrc, Some(user), counts, label, geoblockings, domainlockings, Some(audio), isLiked, Some(waveformUrls), downloadsPerTrack) =>
               SuccessResult(buildTrackRepresentationLike(
                 userSession = session,
                 track = track,
@@ -161,8 +161,8 @@ class TrackRepresentationsService(
   private def fetchUser(userUrn: Urn, session: UserSession): Future[Option[User]] =
     okidokiClient.fetchUserObjects(session, Set(userUrn)).map(_.headOption)
 
-  private def fetchWaveformUrls(track: Track, session: UserSession): Future[Result[Seq[WaveformUrl]]] =
-    mediaUrlGenClient.waveformUrlsAsResult(session, track.uid)
+  private def fetchWaveformUrls(track: Track, session: UserSession): Future[Option[Seq[WaveformUrl]]] =
+    mediaUrlGenClient.waveformUrls(session, track.uid)
 
   private def fetchDownloadsPerTrack(track: Track, session: UserSession): Future[Option[Int]] = {
     userQuotaClient.downloadsPerTrack(session, Set(track.user_urn))

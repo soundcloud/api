@@ -200,7 +200,7 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
       when(okidokiClient.fetchTrackDomainLockings(session, trackUrn)).thenReturn(Future.value(domainLockings))
       when(okidokiClient.fetchTrackAudioMetadata(session, trackUrn)).thenReturn(Future.value(Some(trackAudioMetadata)))
       when(lieblingClient.userLikeCounts(session, List(trackUrn), session.getUser)).thenReturn(Future.value(userLikesCount))
-      when(mediaUrlGenClient.waveformUrlsAsResult(session, track.uid)).thenReturn(Future.value(Success(waveformUrls)))
+      when(mediaUrlGenClient.waveformUrls(session, track.uid)).thenReturn(Future.value(Some(waveformUrls)))
       when(userQuotaClient.downloadsPerTrack(session, Set(track.user_urn))).thenReturn(Future.value(Map.empty[Urn, Option[Int]]))
 
       when(playlistsClient.getPlaylistContainingTrackOwnedByUser(track.urn, track.user_urn)).thenReturn(Future.value(playlists))
@@ -503,7 +503,7 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
     "it not present when urlgen returns no stream URLs" in new Context {
       val track = trackmetadataTrack()
       setUpMocksForExistingTrack(track, session)
-      when(mediaUrlGenClient.waveformUrlsAsResult(session, track.uid)).thenReturn(Future.value(Success(Seq.empty)))
+      when(mediaUrlGenClient.waveformUrls(session, track.uid)).thenReturn(Future.value(Some(Seq.empty)))
 
       val trackRepLike = Await.result(tracksService.track(session, trackUrn, None))
 
@@ -516,7 +516,7 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
     "Returns NotFound when urlgen fails" in new Context {
       val track = trackmetadataTrack()
       setUpMocksForExistingTrack(track, session)
-      when(mediaUrlGenClient.waveformUrlsAsResult(session, track.uid)).thenReturn(Future.value(ServerError(Error("Something wrong with media service"))))
+      when(mediaUrlGenClient.waveformUrls(session, track.uid)).thenReturn(Future.value(None))
 
       val trackRepLike = Await.result(tracksService.track(session, trackUrn, None))
       trackRepLike ==== NotFound
