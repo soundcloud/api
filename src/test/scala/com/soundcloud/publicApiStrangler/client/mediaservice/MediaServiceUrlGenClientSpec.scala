@@ -17,11 +17,15 @@ class MediaServiceUrlGenClientSpec extends UnitSpecification {
 
     val session = anonymousSession
     val uid = "a1b2c3"
+
+    def stubbedResponse: Future[JsonResponse] = {
+      jsonClient.get(session, path, Params("uid" -> uid), Params.empty)
+    }
   }
 
   "waveformUrls" >> {
     "returns an array of waveform URL objects" in new Context {
-      jsonClient.get(session, path, Params("uid" -> uid), Params.empty) returns Future.value(
+      stubbedResponse returns Future.value(
         JsonResponse(OkStatus, Json.obj(
           "response" -> Json.arr(Json.obj(
             "uid" -> uid,
@@ -33,17 +37,19 @@ class MediaServiceUrlGenClientSpec extends UnitSpecification {
         ))
       )
 
-      val result = Await.result(client.waveformUrls(session, Some(uid)))
+      Await.result(client.waveformUrls(session, Some(uid))) must beLike {
+        case Some(list) => {
+          list must contain(
+            WaveformUrl("stream",
+              "https://foo.sndcdn.com/stream/a1b2c3.json",
+              "https://bar.sndcdn.com/stream/a1b2c3.png"))
 
-      result must contain(
-        WaveformUrl("stream",
-          "https://foo.sndcdn.com/stream/a1b2c3.json",
-          "https://bar.sndcdn.com/stream/a1b2c3.png"))
-
-      result must contain(
-        WaveformUrl("preview",
-          "https://foo.sndcdn.com/preview/a1b2c3.json",
-          "https://bar.sndcdn.com/preview/a1b2c3.png"))
+          list must contain(
+            WaveformUrl("preview",
+              "https://foo.sndcdn.com/preview/a1b2c3.json",
+              "https://bar.sndcdn.com/preview/a1b2c3.png"))
+        }
+      }
 
       private def waveformUrlObject(label: String, uid: String): JsObject = {
         Json.obj(
@@ -55,7 +61,12 @@ class MediaServiceUrlGenClientSpec extends UnitSpecification {
     }
 
     "returns an empty array when the UID is absent" in new Context {
-      Await.result(client.waveformUrls(session, None)) must beEmpty
+      Await.result(client.waveformUrls(session, None)) must beLike { case Some(list) => list must beEmpty }
+    }
+
+    "returns None when failing" in new Context {
+      stubbedResponse returns Future.exception(new RuntimeException("fail"))
+      Await.result(client.waveformUrls(session, Some(uid))) must beNone
     }
   }
 }

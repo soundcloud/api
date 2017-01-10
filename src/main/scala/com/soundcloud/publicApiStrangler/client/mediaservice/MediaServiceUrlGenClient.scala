@@ -6,7 +6,7 @@ import com.soundcloud.scalakit.Path
 import com.soundcloud.scalakit.finagle.FinagleLoggerFactory
 import com.soundcloud.scalakit.finagle.http.OkStatus
 import com.soundcloud.scalakit.finagle.jsonservice.{JsonClient, JsonResponse, Params}
-import com.twitter.util.Future
+import com.twitter.util.{Future, NonFatal}
 import play.api.libs.json.{JsArray, JsValue}
 
 case class WaveformUrl(label: String, json: String, png: String)
@@ -14,12 +14,12 @@ case class WaveformUrl(label: String, json: String, png: String)
 class MediaServiceUrlGenClient(jsonClient: JsonClient) {
   val logger = FinagleLoggerFactory.getLogger(this.getClass)
 
-  def waveformUrls(session: UserSession, maybeUid: Option[String]): Future[Seq[WaveformUrl]] = maybeUid match {
-    case None => Future.value(Seq.empty)
+  def waveformUrls(session: UserSession, maybeUid: Option[String]): Future[Option[Seq[WaveformUrl]]] = maybeUid match {
+    case None => Future.value(Some(Seq.empty))
     case Some(uid) => jsonClient.get(session, Path() / "waveforms", Params("uid" -> uid), Params.empty).map {
-      case JsonResponse(OkStatus, body, _, _) => parseUrls(body)
-      case _ => throw new RuntimeException("Unexpected response status")
-    }
+      case JsonResponse(OkStatus, body, _, _) => Some(parseUrls(body))
+      case _ => None
+    } handle { case NonFatal(ex) => None }
   }
 
   def waveformUrlsAsResult(session: UserSession, maybeUid: Option[String]): Future[Result[Seq[WaveformUrl]]] = maybeUid match {
