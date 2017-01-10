@@ -189,24 +189,7 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
 
     val session: UserSession = new UserSessionBuilder().setUser(requestingUserUrn).build()
 
-    def setUpMocksForExistingTrack(track: Track, session: UserSession) = {
-      when(trackmetadataClient.track(session, trackUrn)).thenReturn(Future.value(Some(track)))
-      when(okidokiClient.fetchUserObjects(session, Set(requestingUserUrn))).thenReturn(Future.value(List(requestingUser)))
-      when(okidokiClient.fetchUserObjects(session, Set(labelUrn))).thenReturn(Future.value(List(label)))
-      when(okidokiClient.fetchUserObjects(session, Set(trackOwnerUrn))).thenReturn(Future.value(List(trackOwner)))
-      when(pubmeseClient.isrcForTrack(session, trackUrn)).thenReturn(Future.value(isrc()))
-      when(stitchClient.countsForTrack(session, trackUrn, trackOwnerUrn)).thenReturn(Future.value(stitchCounts))
-      when(okidokiClient.fetchTrackGeoblockings(session, trackUrn)).thenReturn(Future.value(geoblockings))
-      when(okidokiClient.fetchTrackDomainLockings(session, trackUrn)).thenReturn(Future.value(domainLockings))
-      when(okidokiClient.fetchTrackAudioMetadata(session, trackUrn)).thenReturn(Future.value(Some(trackAudioMetadata)))
-      when(lieblingClient.userLikeCounts(session, List(trackUrn), session.getUser)).thenReturn(Future.value(userLikesCount))
-      when(mediaUrlGenClient.waveformUrlsAsResult(session, track.uid)).thenReturn(Future.value(Success(waveformUrls)))
-      when(userQuotaClient.downloadsPerTrack(session, Set(track.user_urn))).thenReturn(Future.value(Map.empty[Urn, Option[Int]]))
-
-      when(playlistsClient.getPlaylistContainingTrackOwnedByUser(track.urn, track.user_urn)).thenReturn(Future.value(List.empty[Playlist]))
-    }
-
-    def setUpMocksForExistingTrackInPlaylists(track: Track, session: UserSession, playlists: List[Playlist]) = {
+    def setUpMocksForExistingTrack(track: Track, session: UserSession, playlists: List[Playlist] = List.empty[Playlist]) = {
       when(trackmetadataClient.track(session, trackUrn)).thenReturn(Future.value(Some(track)))
       when(okidokiClient.fetchUserObjects(session, Set(requestingUserUrn))).thenReturn(Future.value(List(requestingUser)))
       when(okidokiClient.fetchUserObjects(session, Set(labelUrn))).thenReturn(Future.value(List(label)))
@@ -222,6 +205,7 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
 
       when(playlistsClient.getPlaylistContainingTrackOwnedByUser(track.urn, track.user_urn)).thenReturn(Future.value(playlists))
     }
+
     def setUpMocksForNonExistingTrack = {
       when(trackmetadataClient.track(session, trackUrn)).thenReturn(Future.None)
       when(pubmeseClient.isrcForTrack(session, trackUrn)).thenReturn(Future.value(isrc()))
@@ -311,7 +295,7 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
     val correctSecretTokenForPlaylistContainingTheTrack = "playlist-secret"
     val track = trackmetadataTrack(isPublic = false)
     val playlists = List(Playlist(userUrn = track.user_urn, secretToken = correctSecretTokenForPlaylistContainingTheTrack))
-    setUpMocksForExistingTrackInPlaylists(track, session, playlists)
+    setUpMocksForExistingTrack(track, session, playlists)
 
     val trackRepLike = Await.result(tracksService.track(session, trackUrn, Some(correctSecretTokenForPlaylistContainingTheTrack)))
     trackRepLike must beLike {
@@ -325,7 +309,7 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
     val incorrectSecretTokenForPlaylistContainingTheTrack = "not-playlist-secret"
     val track = trackmetadataTrack(isPublic = false)
     val playlists = List(Playlist(userUrn = track.user_urn, secretToken = correctSecretTokenForPlaylistContainingTheTrack))
-    setUpMocksForExistingTrackInPlaylists(track, session, playlists)
+    setUpMocksForExistingTrack(track, session, playlists)
 
     val trackRepLike = Await.result(tracksService.track(session, trackUrn, Some(incorrectSecretTokenForPlaylistContainingTheTrack)))
     trackRepLike ==== NotFound
@@ -336,7 +320,7 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
     val anotherUser = Urn("soundcloud:users:909")
     val track = trackmetadataTrack(isPublic = false)
     val playlists = List(Playlist(userUrn = anotherUser, secretToken = correctSecretTokenForPlaylistContainingTheTrack))
-    setUpMocksForExistingTrackInPlaylists(track, session, playlists)
+    setUpMocksForExistingTrack(track, session, playlists)
 
     val trackRepLike = Await.result(tracksService.track(session, trackUrn, Some(correctSecretTokenForPlaylistContainingTheTrack)))
     trackRepLike ==== NotFound
