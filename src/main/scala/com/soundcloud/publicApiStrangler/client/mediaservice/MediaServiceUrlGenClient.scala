@@ -16,7 +16,7 @@ class MediaServiceUrlGenClient(jsonClient: JsonClient) {
 
   def waveformUrls(session: UserSession, maybeUid: Option[String]): Future[Seq[WaveformUrl]] = maybeUid match {
     case None => Future.value(Seq.empty)
-    case Some(uid) => jsonClient.get(session, Path() / "waveforms", Params("uid" -> uid)).map {
+    case Some(uid) => jsonClient.get(session, Path() / "waveforms", Params("uid" -> uid), Params.empty).map {
       case JsonResponse(OkStatus, body, _, _) => parseUrls(body)
       case _ => throw new RuntimeException("Unexpected response status")
     }
