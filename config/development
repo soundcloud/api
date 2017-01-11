@@ -3,6 +3,9 @@ APP_BASE_URL=https://api.soundcloud.com
 
 ADMIN_APP_TIMEOUT_MILLIS=30000
 
+AIRBRAKE_API_KEY=aaaa
+AIRBRAKE_ENV_NAME=production
+
 ENV=development
 
 PORT=5000

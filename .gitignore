@@ -17,3 +17,4 @@ staging.json
 production.overrides
 .kube/
 .oracle_jre_usage/
+config/production_api.sh
