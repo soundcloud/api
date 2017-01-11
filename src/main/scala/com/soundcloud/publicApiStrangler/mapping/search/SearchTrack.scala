@@ -18,13 +18,14 @@ import play.api.libs.json.JsValue
 class SearchTrack(session: UserSession,
                   jsonValue: JsValue,
                   likeCountMapper: LikeCountMapper,
+                  repostCountsByUrn: Map[Urn,Long],
                   baseUrl: String,
                   entitySummaryMapper: EntitySummaryMapper,
                   @JsonIgnore contentAuthorization: ContentAuthorization,
                   waveform: WaveformMapper)
                  // Yep, that was my reaction, too.
                  (implicit if_this_is_named_context_then_serialization_fails: MappingContext)
-  extends Track(jsonValue, Map.empty, baseUrl, entitySummaryMapper) {
+  extends Track(jsonValue, Map.empty, repostCountsByUrn, baseUrl, entitySummaryMapper) {
 
   val download_url = if (hasDownloadLink)
     (json \ "download_url").asOpt[String]

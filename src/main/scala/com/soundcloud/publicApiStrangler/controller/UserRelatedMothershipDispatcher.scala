@@ -5,23 +5,23 @@ import com.soundcloud.bff.web.UserAuthentication
 import com.soundcloud.jvmkit.{Urn, UserSession}
 import com.soundcloud.publicApiStrangler.client.followcounts.{FollowCounts, FollowCountsClient}
 import com.soundcloud.publicApiStrangler.client.liebling.{LieblingClient, LikesCount, UserTotalLikes}
+import com.soundcloud.publicApiStrangler.client.reposts.RepostsClient
+import com.soundcloud.publicApiStrangler.controller.UserRelatedMothershipDispatcher.SubstitutionsByUser
 import com.soundcloud.publicApiStrangler.support.DispatchToMothershipHandler
 import com.soundcloud.scalakit.finagle.http.{AlwaysMatchesPathMatcher, HandlerRequest}
 import com.twitter.finagle.http.Response
-import com.twitter.util.{Future, Try}
+import com.twitter.util.{Future, NonFatal, Try}
 import play.api.libs.json.Json.JsValueWrapper
 import play.api.libs.json.{JsArray, JsObject, JsValue, Json}
 
 /**
-  * So this class is weird. It grew out of this abstraction:
+  * This class is weird. It grew out of this abstraction:
   * https://github.com/soundcloud/public-api-strangler/blob/884e0/src/main/scala/com/soundcloud/publicApiStrangler/controller/FollowCountsHelper.scala
   * which was created to load follower count information into the many ways the public-api returns user representations.
-  * currently it also load like counts from liebling.
+  * It now enriches such users representations with counts from several sources.
   *
   * To understand what it does, first look for usages of the `dispatchToMothership` method below.
-  * It essentially "plugs in" to any json response coming from the mothership and looks for things that look like
-  * User representations. If it finds one, it tries to load the Follow/Like counts and injects that data into the
-  * representation with which it was provided.
+  * If there are any users in the Mothership response, it will enrich them with counts from other services.
   *
   * For instance, some mothership endpoints return users that look like:
   * { id: 1, name: Filipe }
@@ -31,14 +31,17 @@ import play.api.libs.json.{JsArray, JsObject, JsValue, Json}
   * [ { kind: friend, connection_ids: [...], user: { ... } ]
   * and some other formats as well.
   *
-  * And this abstraction tries to look for the right place to insert the `followers_count`, `followings_count`,
-  * and `public_favorites_count` keys, with the counts themselves coming from the upstream services that serve them.
+  * And this abstraction tries to look for the right place to insert values for the `followers_count`,
+  * `followings_count`, `public_favorites_count` and other keys, with the counts themselves coming from the
+  * upstream services that are responsible for them.
   */
 class UserRelatedMothershipDispatcher(userAuthentication: UserAuthentication,
                                       mothershipDispatcher: DispatchToMothershipHandler,
                                       followCountsClient: FollowCountsClient,
                                       lieblingClient: LieblingClient,
-                                      shouldLoadCountsFromLiebling: () => Future[Boolean]) {
+                                      shouldLoadCountsFromLiebling: () => Future[Boolean],
+                                      repostsClient: RepostsClient,
+                                      shouldLoadCountsFromReposts: () => Future[Boolean]) {
 
   def dispatchToMothership(request: Request): Future[ResponseBuilder] = {
     userAuthentication.withUserSession(request) { session =>
@@ -51,10 +54,7 @@ class UserRelatedMothershipDispatcher(userAuthentication: UserAuthentication,
             userUrns = extractUserUrns(responseJson)
             if userUrns.nonEmpty
           } yield {
-            shouldLoadCountsFromLiebling().flatMap {
-              case true => requestWithLiebling(session, userUrns, responseJson, response)
-              case false => requestWithoutLiebling(session, userUrns, responseJson, response)
-            }
+            enrichResponse(session, userUrns, responseJson, response).map(toResponseBuilder)
           }).getOrElse(defaultResponse)
         } else {
           defaultResponse
@@ -63,56 +63,66 @@ class UserRelatedMothershipDispatcher(userAuthentication: UserAuthentication,
     }
   }
 
-  // TODO remove after feature flag is removed
-  private def requestWithoutLiebling(session: UserSession, userUrns: Set[Urn], responseJson: JsValue, response: Response): Future[ResponseBuilder] = {
-    followCountsClient.counts(session, userUrns.toSeq).map {
-      followCountsResponse => {
-        val followCountsMap = followCountsResponse.map(count => (count.userUrn, count)).toMap
+  private def enrichResponse(session: UserSession, userUrns: Set[Urn], responseJson: JsValue, response: Response): Future[Response] =
+    Future.join(
+      followsSubstitutions(session, userUrns),
+      lieblingSubstitutions(session, userUrns),
+      repostsSubstitutions(session, userUrns)
+    ).map { case (followsSubs, likesSubs, repostsSubs) =>
+      userUrns.map { urn => (
+        urn,
+        followsSubs.getOrElse(urn, List.empty)
+          ++ likesSubs.getOrElse(urn, List.empty)
+          ++ repostsSubs.getOrElse(urn, List.empty)
+      ) }.toMap
+    }.map { allSubs: SubstitutionsByUser  =>
+      response.setContentString(
+        injectKeys(responseJson, id => allSubs.getOrElse(Urn("soundcloud", "users", id.toString), List.empty)).toString
+      )
+      response
+    }
 
-        val content: String = injectKeys(responseJson, (id) => {
-          val userUrn = new Urn("soundcloud", "users", id.toString)
-          val followCounts = followCountsMap.get(userUrn).getOrElse(FollowCounts(userUrn, 0, 0))
-
-          List(
-            "followers_count" -> followCounts.followers,
-            "followings_count" -> followCounts.followings
-          )
-        }).toString
-
-        response.setContentString(content)
+  private def followsSubstitutions(session: UserSession, userUrns: Set[Urn]): Future[SubstitutionsByUser] =
+    followCountsClient.counts(session, userUrns.toSeq)
+      .map(_.map(count => (count.userUrn, count)).toMap)
+      .map { fetchedData: Map[Urn,FollowCounts] =>
+        userUrns
+          .map { urn: Urn => fetchedData.getOrElse(urn, FollowCounts(urn, 0, 0)) }
+          .map { followCounts => (
+            followCounts.userUrn,
+            List(
+              "followers_count" -> Json.toJsFieldJsValueWrapper(followCounts.followers),
+              "followings_count" -> Json.toJsFieldJsValueWrapper(followCounts.followings)
+            )
+          )}.toMap
       }
 
-      toResponseBuilder(response)
+  private def repostsSubstitutions(session: UserSession, userUrns: Set[Urn]): Future[SubstitutionsByUser] = {
+    shouldLoadCountsFromReposts().flatMap {
+      case true =>
+        repostsClient.getRepostCountsByUrnWithFallback(session, userUrns)
+          .map(_.map { case (urn, count) => (urn, List("reposts_count" -> Json.toJsFieldJsValueWrapper(count)) )}.toMap)
+      case false =>
+        Future.value(Map.empty)
     }
   }
 
-  private def requestWithLiebling(session: UserSession, userUrns: Set[Urn], responseJson: JsValue, response: Response): Future[ResponseBuilder] = {
-    val followsRequest = followCountsClient.counts(session, userUrns.toSeq)
-    val lieblingRequest = lieblingClient.userTotalLikeCount(session, userUrns.toSeq)
-
-    Future.join(followsRequest, lieblingRequest).map {
-      case (followCountsResponse, lieblingCountsResponse) => {
-        val followCountsMap = followCountsResponse.map(count => (count.userUrn, count)).toMap
-        val lieblingCountsMap = lieblingCountsResponse.map(count => (count.user_urn, count)).toMap
-
-        val content: String = injectKeys(responseJson, (id) => {
-          val userUrn = new Urn("soundcloud", "users", id.toString)
-          val followCounts = followCountsMap.get(userUrn).getOrElse(FollowCounts(userUrn, 0, 0))
-          val lieblingCounts = lieblingCountsMap.get(userUrn).getOrElse(UserTotalLikes(userUrn, 0, 0))
-
-          List(
-            "followers_count" -> followCounts.followers,
-            "followings_count" -> followCounts.followings,
-            "public_favorites_count" -> lieblingCounts.totalLikeCount
-          )
-        }).toString
-
-        response.setContentString(content)
-      }
-
-      toResponseBuilder(response)
+  private def lieblingSubstitutions(session: UserSession, userUrns: Set[Urn]): Future[SubstitutionsByUser] =
+    shouldLoadCountsFromLiebling().flatMap {
+      case true =>
+        lieblingClient.userTotalLikeCount(session, userUrns.toSeq)
+          .map(_.map(count => (count.user_urn, count)).toMap)
+          .map { fetchedData: Map[Urn,UserTotalLikes] =>
+            userUrns
+              .map { urn: Urn => fetchedData.getOrElse(urn, UserTotalLikes(urn, 0, 0)) }
+              .map { likeCounts => (
+                likeCounts.user_urn,
+                List("public_favorites_count" -> Json.toJsFieldJsValueWrapper(likeCounts.totalLikeCount))
+              )}.toMap
+          }
+      case false =>
+        Future.value(Map.empty)
     }
-  }
 
   private def injectKeys(json: JsValue, fn: Int => Seq[(String, JsValueWrapper)]): JsValue = {
     json \ "collection" match {
@@ -180,4 +190,8 @@ class UserRelatedMothershipDispatcher(userAuthentication: UserAuthentication,
       .headers(headerMap)
   }
 
+}
+
+object UserRelatedMothershipDispatcher {
+  type SubstitutionsByUser = Map[Urn,List[(String,JsValueWrapper)]]
 }

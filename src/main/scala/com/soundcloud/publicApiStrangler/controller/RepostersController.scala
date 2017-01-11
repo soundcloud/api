@@ -1,9 +1,6 @@
 package com.soundcloud.publicApiStrangler.controller
 
-import com.soundcloud.bff.web.{BffInjectionBasedController, UserAuthentication}
-import com.soundcloud.publicApiStrangler.client.followcounts.FollowCountsClient
-import com.soundcloud.publicApiStrangler.client.liebling.LieblingClient
-import com.soundcloud.publicApiStrangler.support.DispatchToMothershipHandler
+import com.soundcloud.bff.web.BffInjectionBasedController
 
 class RepostersController(userRelatedMothershipDispatcher: UserRelatedMothershipDispatcher) extends BffInjectionBasedController {
 

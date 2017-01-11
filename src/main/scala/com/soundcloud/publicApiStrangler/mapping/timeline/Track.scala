@@ -2,12 +2,14 @@ package com.soundcloud.publicApiStrangler.mapping.timeline
 
 import com.soundcloud.bff.nextbff.mapping.MappingContext
 import com.soundcloud.jvmkit.Urn
+import com.soundcloud.publicApiStrangler.client.reposts.RepostsClient
 import com.soundcloud.publicApiStrangler.mapper.timeline.EntitySummaryMapper
 import play.api.libs.json.JsValue
 
 
 class Track(jsonValue: JsValue,
             likesByUrn: Map[Urn, Long],
+            repostCountsByUrn: Map[Urn, Long],
             baseUrl: String,
             entitySummaryMapper: EntitySummaryMapper)(implicit context: MappingContext)
   extends TrackSummary(jsonValue, baseUrl, entitySummaryMapper) {
@@ -39,7 +41,7 @@ class Track(jsonValue: JsValue,
   val release_day = (json \ "release_day").asOpt[Int]
   val release_month = (json \ "release_month").asOpt[Int]
   val release_year = (json \ "release_year").asOpt[Int]
-  val reposts_count = (json \ "reposts_count").asOpt[Int]
+  val reposts_count = repostCountsByUrn.getOrElse(urn, (json \ "reposts_count").asOpt[Long])
   val state = (json \ "state").asOpt[String]
   val streamable = (json \ "streamable").asOpt[Boolean]
   val tag_list = (json \ "tag_list").asOpt[String]

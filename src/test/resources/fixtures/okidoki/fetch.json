@@ -1,7 +1,7 @@
 [
   {
     "commentable": true,
-    "created_at": "2014\/01\/25 19:18:18 +0000",
+    "created_at": "2014/01/25 19:18:18 +0000",
     "description": "Just experimenting.",
     "disabled_at": null,
     "downloadable": true,
@@ -17,7 +17,7 @@
     "title": "Below",
     "track_type": null,
     "uid": "ugboDBASVKED",
-    "updated_at": "2014\/10\/11 20:36:44 +0000",
+    "updated_at": "2014/10/11 20:36:44 +0000",
     "playback_count": 1876,
     "reposts_count": 22,
     "license": "all-rights-reserved",
@@ -26,23 +26,23 @@
     "secret_token": "s-l7jvq",
     "self": {
       "urn": "soundcloud:sounds:131352352",
-      "url": "http:\/\/moshimoshi.int.s-cloud.net\/tracks\/131352352"
+      "url": "http://moshimoshi.int.s-cloud.net/tracks/131352352"
     },
-    "permalink_url": "https:\/\/soundcloud.com\/msbessiebell\/below",
-    "uri": "https:\/\/api.soundcloud.com\/tracks\/131352352",
+    "permalink_url": "https://soundcloud.com/msbessiebell/below",
+    "uri": "https://api.soundcloud.com/tracks/131352352",
     "user": {
       "urn": "soundcloud:users:6457573",
-      "url": "http:\/\/moshimoshi.int.s-cloud.net\/users\/6457573"
+      "url": "http://moshimoshi.int.s-cloud.net/users/6457573"
     },
-    "artwork_url": "https:\/\/i1.sndcdn.com\/artworks-000068979260-mxe8p9-large.jpg?86347b7",
-    "original_artwork_url": "https:\/\/i1.sndcdn.com\/artworks-000068979260-mxe8p9-original.jpg?86347b7",
+    "artwork_url": "https://i1.sndcdn.com/artworks-000068979260-mxe8p9-large.jpg?86347b7",
+    "original_artwork_url": "https://i1.sndcdn.com/artworks-000068979260-mxe8p9-original.jpg?86347b7",
     "downloads_count": 0,
-    "download_url": "https:\/\/api.soundcloud.com\/tracks\/131352352\/download",
+    "download_url": "https://api.soundcloud.com/tracks/131352352/download",
     "favoritings_count": 149,
     "comments_count": 88,
     "genre": "Electronic",
-    "stream_url": "https:\/\/media.soundcloud.com\/stream\/ugboDBASVKED",
-    "waveform_url": "https:\/\/wis.sndcdn.com\/ugboDBASVKED_m.png",
+    "stream_url": "https://media.soundcloud.com/stream/ugboDBASVKED",
+    "waveform_url": "https://wis.sndcdn.com/ugboDBASVKED_m.png",
     "reveal_comments": true,
     "reveal_stats": true,
     "feedable": false,
@@ -56,7 +56,7 @@
     "release_year": null,
     "release_month": null,
     "release_day": null,
-    "last_modified": "2014\/10\/11 20:36:44 +0000"
+    "last_modified": "2014/10/11 20:36:44 +0000"
   },
   {
     "city": "London",
@@ -67,75 +67,75 @@
     "username": "adeline",
     "country": null,
     "full_name": "Adeline",
-    "created_at": "2007\/09\/12 00:06:00 +0000",
-    "activated_at": "2007\/09\/12 08:55:00 +0000",
+    "created_at": "2007/09/12 00:06:00 +0000",
+    "activated_at": "2007/09/12 08:55:00 +0000",
     "followers_count": 20976,
     "followings_count": 118,
     "public_favorites_count": 5,
     "self": {
       "urn": "soundcloud:users:123",
-      "url": "http:\/\/moshimoshi.int.s-cloud.net\/users\/123"
+      "url": "http://moshimoshi.int.s-cloud.net/users/123"
     },
     "primary_email": "adeline@kth.se",
     "groups_count": 0,
     "links": [
       {
-        "created_at": "2014\/01\/31 23:52:29 +0000",
+        "created_at": "2014/01/31 23:52:29 +0000",
         "id": 31075056,
         "network": "personal",
         "title": "Adeline Website",
-        "updated_at": "2014\/01\/31 23:52:29 +0000",
-        "url": "http:\/\/www.adelinemusic.com",
+        "updated_at": "2014/01/31 23:52:29 +0000",
+        "url": "http://www.adelinemusic.com",
         "user_id": 123,
         "username": ""
       },
       {
-        "created_at": "2014\/01\/31 23:52:29 +0000",
+        "created_at": "2014/01/31 23:52:29 +0000",
         "id": 31075057,
         "network": "facebook",
         "title": null,
-        "updated_at": "2014\/01\/31 23:52:29 +0000",
-        "url": "http:\/\/www.facebook.com\/Adelinelive",
+        "updated_at": "2014/01/31 23:52:29 +0000",
+        "url": "http://www.facebook.com/Adelinelive",
         "user_id": 123,
         "username": "Adelinelive"
       },
       {
-        "created_at": "2014\/01\/31 23:52:29 +0000",
+        "created_at": "2014/01/31 23:52:29 +0000",
         "id": 31075058,
         "network": "twitter",
         "title": null,
-        "updated_at": "2014\/01\/31 23:52:29 +0000",
-        "url": "http:\/\/twitter.com\/Adelinelive",
+        "updated_at": "2014/01/31 23:52:29 +0000",
+        "url": "http://twitter.com/Adelinelive",
         "user_id": 123,
         "username": "Adelinelive"
       },
       {
-        "created_at": "2014\/01\/31 23:52:29 +0000",
+        "created_at": "2014/01/31 23:52:29 +0000",
         "id": 31075059,
         "network": "youtube",
         "title": null,
-        "updated_at": "2014\/01\/31 23:52:29 +0000",
-        "url": "http:\/\/www.youtube.com\/watch?v=KQc7UJPMSks",
+        "updated_at": "2014/01/31 23:52:29 +0000",
+        "url": "http://www.youtube.com/watch?v=KQc7UJPMSks",
         "user_id": 123,
         "username": "AdelineOfficial"
       },
       {
-        "created_at": "2014\/01\/31 23:52:29 +0000",
+        "created_at": "2014/01/31 23:52:29 +0000",
         "id": 31075060,
         "network": "residentadvisor",
         "title": "Resident Advisor",
-        "updated_at": "2014\/01\/31 23:52:29 +0000",
-        "url": "http:\/\/www.residentadvisor.net\/dj\/adeline",
+        "updated_at": "2014/01/31 23:52:29 +0000",
+        "url": "http://www.residentadvisor.net/dj/adeline",
         "user_id": 123,
         "username": "adeline"
       },
       {
-        "created_at": "2014\/01\/31 23:52:29 +0000",
+        "created_at": "2014/01/31 23:52:29 +0000",
         "id": 31075061,
         "network": "beatport",
         "title": "Beatport",
-        "updated_at": "2014\/01\/31 23:52:29 +0000",
-        "url": "http:\/\/www.beatport.com\/artist\/adeline\/249796",
+        "updated_at": "2014/01/31 23:52:29 +0000",
+        "url": "http://www.beatport.com/artist/adeline/249796",
         "user_id": 123,
         "username": "adeline"
       }
@@ -144,9 +144,9 @@
     "quota": {
       "seconds_used": 93790.522
     },
-    "avatar_url": "https:\/\/i1.sndcdn.com\/avatars-000092704388-h04iht-large.jpg?86347b7",
-    "original_avatar_url": "https:\/\/i1.sndcdn.com\/avatars-000092704388-h04iht-original.png?86347b7",
-    "permalink_url": "http:\/\/soundcloud.com\/adeline",
+    "avatar_url": "https://i1.sndcdn.com/avatars-000092704388-h04iht-large.jpg?86347b7",
+    "original_avatar_url": "https://i1.sndcdn.com/avatars-000092704388-h04iht-original.png?86347b7",
+    "permalink_url": "http://soundcloud.com/adeline",
     "description": "For Adeline bookings worldwide",
     "frozen": false,
     "favoriting_note": "A new favorite:",
@@ -160,56 +160,56 @@
         }
       }
     ],
-    "updated_at": "2014\/10\/04 10:48:34 +0000",
-    "last_modified": "2014\/10\/04 10:48:34 +0000",
-    "date_of_birth": "1984\/12\/01",
+    "updated_at": "2014/10/04 10:48:34 +0000",
+    "last_modified": "2014/10/04 10:48:34 +0000",
+    "date_of_birth": "1984/12/01",
     "gender": "female",
     "default_license": null,
     "stealth": false
   },
-    {
-      "created_at": "2008\/06\/25 10:27:04 +0000",
-      "description": "Music pitches for adverts",
-      "genre": null,
-      "id": 123,
-      "label_id": null,
-      "label_name": null,
-      "permalink": "my-noisy-matchbox-ad-pitches",
-      "public": true,
-      "purchase_url": null,
-      "release": null,
-      "title": "My Noisy Matchbox ad pitches",
-      "self": {
-        "urn": "soundcloud:sets:123",
-        "url": "http:\/\/moshimoshi.int.s-cloud.net\/playlists\/123"
-      },
-      "permalink_url": "https:\/\/soundcloud.com\/mynoisymatchbox\/sets\/my-noisy-matchbox-ad-pitches",
-      "track_count": 1,
-      "artwork_url": null,
-      "original_artwork_url": null,
-      "duration": 31242,
-      "likes_count": 0,
-      "reposts_count": 0,
-      "sharing": "public",
-      "streamable": true,
-      "license": "all-rights-reserved",
-      "tag_list": "",
-      "embeddable_by": "all",
-      "purchase_title": null,
-      "secret_token": "s-48e4a",
-      "release_date": "",
-      "release_year": null,
-      "release_month": null,
-      "release_day": null,
-      "last_modified": "2008\/06\/25 10:27:04 +0000",
-      "user": {
-        "urn": "soundcloud:users:4037",
-        "url": "http:\/\/moshimoshi.int.s-cloud.net\/users\/4037"
-      }
+  {
+    "created_at": "2008/06/25 10:27:04 +0000",
+    "description": "Music pitches for adverts",
+    "genre": null,
+    "id": 123,
+    "label_id": null,
+    "label_name": null,
+    "permalink": "my-noisy-matchbox-ad-pitches",
+    "public": true,
+    "purchase_url": null,
+    "release": null,
+    "title": "My Noisy Matchbox ad pitches",
+    "self": {
+      "urn": "soundcloud:sets:123",
+      "url": "http://moshimoshi.int.s-cloud.net/playlists/123"
     },
+    "permalink_url": "https://soundcloud.com/mynoisymatchbox/sets/my-noisy-matchbox-ad-pitches",
+    "track_count": 1,
+    "artwork_url": null,
+    "original_artwork_url": null,
+    "duration": 31242,
+    "likes_count": 0,
+    "reposts_count": 0,
+    "sharing": "public",
+    "streamable": true,
+    "license": "all-rights-reserved",
+    "tag_list": "",
+    "embeddable_by": "all",
+    "purchase_title": null,
+    "secret_token": "s-48e4a",
+    "release_date": "",
+    "release_year": null,
+    "release_month": null,
+    "release_day": null,
+    "last_modified": "2008/06/25 10:27:04 +0000",
+    "user": {
+      "urn": "soundcloud:users:4037",
+      "url": "http://moshimoshi.int.s-cloud.net/users/4037"
+    }
+  },
   {
     "body": "noisyyyy",
-    "created_at": "2014\/10\/16 11:58:23 +0000",
+    "created_at": "2014/10/16 11:58:23 +0000",
     "timestamp": 277,
     "track": "soundcloud:sounds:131352352",
     "self": {

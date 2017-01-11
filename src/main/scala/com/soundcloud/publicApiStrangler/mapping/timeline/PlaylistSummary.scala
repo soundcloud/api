@@ -2,12 +2,14 @@ package com.soundcloud.publicApiStrangler.mapping.timeline
 
 import com.soundcloud.bff.nextbff.mapping.{JsonMapping, MappingContext}
 import com.soundcloud.jvmkit.Urn
+import com.soundcloud.publicApiStrangler.client.reposts.RepostsClient
 import com.soundcloud.publicApiStrangler.mapper.timeline.EntitySummaryMapper
 import play.api.libs.json.JsValue
 
 class PlaylistSummary(jsonValue: JsValue,
-               baseUrl: String,
-               entitySummaryMapper: EntitySummaryMapper)(implicit context: MappingContext)
+                      repostCountsByUrn: Map[Urn, Long],
+                      baseUrl: String,
+                      entitySummaryMapper: EntitySummaryMapper)(implicit context: MappingContext)
   extends JsonMapping(jsonValue) with UrnSupport {
 
   val kind = "playlist"
@@ -36,7 +38,7 @@ class PlaylistSummary(jsonValue: JsValue,
   val user_id = if(userUrn.isDefined) userUrn.get.getIdentifier.toInt else None
   val user = if(userUrn.isDefined) entitySummaryMapper.embed(userUrn.get) else None
   val secret_token = (json \ "secret_token").as[String]
-  val reposts_count = (json \ "reposts_count").asOpt[Int]
+  val reposts_count = repostCountsByUrn.getOrElse(urn, (json \ "reposts_count").asOpt[Int])
   val tracks_uri = s"$baseUrl/playlists/$id/tracks"
   val secret_uri = s"$baseUrl/playlists/$id?secret_token=$secret_token"
 
