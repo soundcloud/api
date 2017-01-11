@@ -3,6 +3,7 @@ package com.soundcloud.publicApiStrangler.controller
 import com.soundcloud.bff.finagle.{Request, ResponseBuilder}
 import com.soundcloud.bff.web.{BffInjectionBasedController, UserAuthentication}
 import com.soundcloud.jvmkit.Urn
+import com.soundcloud.publicApiStrangler.TrackRepresentationsService
 import com.soundcloud.publicApiStrangler.client.GobblyClient
 import com.soundcloud.publicApiStrangler.client.gobbly.{ClientError => GobblyClientError, ServerError => GobblyServerError, Success => GobblySuccess}
 import com.soundcloud.publicApiStrangler.client.trackcoordinator.TrackCoordinatorClient
@@ -36,6 +37,8 @@ class TracksController(userAuthentication: UserAuthentication,
 
   post("/tracks/:trackId")(mothershipDispatcher.dispatch)
   post("/tracks/:trackId.json")(mothershipDispatcher.dispatch)
+
+  post("/users/:userId/tracks")(mothershipDispatcher.dispatch)
 
   put("/tracks/:trackId")(handlePut)
   put("/tracks/:trackId.json")(handlePut)

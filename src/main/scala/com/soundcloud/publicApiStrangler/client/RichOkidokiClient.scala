@@ -66,7 +66,7 @@ class RichOkidokiClient(service: JsonClient,
 
   def fetchTracksDomainLockings(session: UserSession, trackUrns: Set[Urn], batchSize: Int = 50): Future[Map[Urn, List[DomainLocking]]] = {
     inBatches(trackUrns.toList, batchSize) { urnBatch => {
-      service.get(session, Path() / "domain_lockings", Params("track_ids" -> urnBatch.map(_.getIdentifier)), Params.empty).map {
+      service.get(session, Path() / "domain_lockings", Params("track_ids" -> urnBatch.map(_.getIdentifier).mkString(",")), Params.empty).map {
         case JsonResponse(SuccessfulStatusClass(_), body, _, _) => body.as[List[DomainLocking]]
         case _ => List.empty
       }
@@ -88,7 +88,7 @@ class RichOkidokiClient(service: JsonClient,
     }
 
     inBatches(trackUrns.toList, batchSize) { urnBatch => {
-      service.get(session, Path() / "tracks" / "audio", Params("urns" -> urnBatch), Params.empty).map {
+      service.get(session, Path() / "tracks" / "audio" / "", Params("urns" -> urnBatch), Params.empty).map {
         case JsonResponse(SuccessfulStatusClass(_), body, _, _) => parseJson(body)
         case _ => List.empty
       }
@@ -103,8 +103,9 @@ class RichOkidokiClient(service: JsonClient,
     }
 
     inBatches(trackUrns.toList, batchSize) { urnBatch => {
-      service.get(session, Path() / "tracks" / "geo_blockings", Params("urns" -> urnBatch), Params.empty).map {
+      service.get(session, Path() / "tracks" / "geo_blockings" / "", Params("urns" -> urnBatch.mkString(",")), Params.empty).map {
         case JsonResponse(SuccessfulStatusClass(_), body, _, _) => parseJson(body)
+        case JsonResponse(_, body, _, _) => List.empty
         case _ => List.empty
       }
     } }.map(_.toMap)
@@ -112,7 +113,7 @@ class RichOkidokiClient(service: JsonClient,
 
   def fetchUsersMap(session: UserSession, urns: Set[Urn], batchSize: Int = 50): Future[Map[Urn, User]] = {
     inBatches(urns.toList, batchSize) { urnBatch => {
-      service.get(session, Path() / "users" / "fetch", Params("urns" -> urnBatch), Params.empty).map {
+      service.get(session, Path() / "users" / "fetch", Params("urns" -> urnBatch.mkString(",")), Params.empty).map {
         case JsonResponse(SuccessfulStatusClass(_), body, _, _) => body.as[List[JsValue]].map(UserMapper(_))
         case _ => List.empty
       }

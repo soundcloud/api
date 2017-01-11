@@ -32,7 +32,7 @@ class TrackRepresentationsService(
   def track(session: UserSession, urn: Urn, secretTokenInRequest: Option[String]): Future[Result[TrackRepresentationLike]] = {
     val isrcF = pubmeseClient.isrcForTrack(session, urn).handle { case NonFatal(ex) => None }
     val geoblockingsF = fetchGeoblockings(session, urn).handle { case NonFatal(ex) => None }
-    val domainlockingsF = okidokiClient.fetchTrackDomainLockings(session, urn).handle { case NonFatal(ex) => Seq() }
+    val domainLockingsF = okidokiClient.fetchTrackDomainLockings(session, urn).handle { case NonFatal(ex) => Seq() }
     val audioF = okidokiClient.fetchTrackAudioMetadata(session, urn)
 
     trackmetadataClient.track(session, urn).flatMap {
@@ -49,8 +49,8 @@ class TrackRepresentationsService(
             case None => Future.value(None)
           }
 
-          Future.join(userF, audioF, waveformUrlsF, isrcF, countsF, labelF, geoblockingsF, domainlockingsF, isLikedF, downloadsPerTrackF).map {
-            case (Some(user), Some(audio), Some(waveformUrls), isrc, counts, label, geoblockings, domainlockings, isLiked, downloadsPerTrack) =>
+          Future.join(userF, audioF, waveformUrlsF, isrcF, countsF, labelF, geoblockingsF, domainLockingsF, isLikedF, downloadsPerTrackF).map {
+            case (Some(user), Some(audio), Some(waveformUrls), isrc, counts, label, geoblockings, domainLockings, isLiked, downloadsPerTrack) =>
               SuccessResult(buildTrackRepresentationLike(
                 userSession = session,
                 track = track,
@@ -59,7 +59,7 @@ class TrackRepresentationsService(
                 counts = getCounts(counts),
                 label = label,
                 geoblockings = geoblockings,
-                domainlockings = domainlockings,
+                domainLockings = domainLockings,
                 trackAudioMetadata = audio,
                 isLiked = isLiked,
                 waveformUrls = waveformUrls,
@@ -75,6 +75,75 @@ class TrackRepresentationsService(
     }
   }
 
+  def tracks(session: UserSession, userUrn: Urn, limit: Option[Int], offset: Option[Int]): Future[List[TrackRepresentationLike]] = {
+    val userAndAllTrackUrnsF = Future.join(
+      okidokiClient.fetchUserObjects(session, Set(userUrn)),
+      trackmetadataClient.urnsByUser(session, userUrn))
+
+    def calculateTrackUrnPage(allUserTrackUrns: List[Urn]) = {
+      val start = offset.getOrElse(0)
+      val end = start + limit.getOrElse(Int.MaxValue)
+      // sort by id desc
+      allUserTrackUrns.sortBy(-_.getIdentifier.toInt).slice(start, end).toSet
+    }
+
+    def allDependenciesOnlyOnTrackUrn(trackUrnsPage: Set[Urn]) = {
+      val tracksF = trackmetadataClient.tracks(session, trackUrnsPage)
+      val isLikedF = lieblingClient.userLikedTracks(session, trackUrnsPage, userUrn)
+      val isrcsF = pubmeseClient.isrcsForTracks(session, trackUrnsPage.toSeq).handle { case NonFatal(_) => Map.empty[Urn, Isrc] }
+      val geoblockingsF = okidokiClient.fetchTrackGeoblockings(session, trackUrnsPage).handle { case NonFatal(_) => Map.empty[Urn, Geoblockings] }
+      val domainLockingsF = okidokiClient.fetchTracksDomainLockings(session, trackUrnsPage).handle { case NonFatal(_) => Map.empty[Urn, List[DomainLocking]] }
+      val audiosF = okidokiClient.fetchTracksAudioMetadata(session, trackUrnsPage).handle { case NonFatal(_) => Map.empty[Urn, TrackAudioMetadata] }
+      val countsF = stitchClient.countsForTracks(session, trackUrnsPage, userUrn).handle { case NonFatal(_) => Map.empty[Urn, StitchCounts] }
+
+      Future.join(tracksF, isLikedF, isrcsF, geoblockingsF, domainLockingsF, audiosF, countsF)
+    }
+
+    def allDependenciesOnTrackObjectList(tracks: List[Track]) = {
+      val labelsF = okidokiClient.fetchUsersMap(session, tracks.map(t => Urn("soundcloud", "users", t.label_id.toString)).toSet)
+      val waveformUrlsF = mediaUrlGenClient.waveformUrls(session, tracks.flatMap(_.uid)).map(_.getOrElse(Map.empty[String, Seq[WaveformUrl]]))
+      val downloadsPerTrackF = fetchDownloadsPerTrack(tracks.toSet, userUrn, session)
+      val accessibilityChecksF = Future.collect(tracks.map(track => isTrackAccessible(session, None, track).map((track.urn, _)))).map(_.toMap)
+
+      Future.join(labelsF, waveformUrlsF, downloadsPerTrackF, accessibilityChecksF)
+    }
+
+    for {
+      (List(user), trackUrns) <- userAndAllTrackUrnsF
+      trackUrnsPage = calculateTrackUrnPage(trackUrns)
+      (tracks, isLiked, isrcs, geoblockings, domainLockings, audios, counts) <- allDependenciesOnlyOnTrackUrn(trackUrnsPage)
+      (labels, waveformUrls, downloadsPerTrack, accessibilityCheck) <- allDependenciesOnTrackObjectList(tracks)
+      sortedAccessibleTracks = tracks.filter(track => accessibilityCheck.get(track.urn).getOrElse(true))
+                                     .sortBy(- _.urn.getIdentifier.toInt)
+    } yield {
+      sortedAccessibleTracks.flatMap(track => {
+        val urn = track.urn
+
+        for {
+          audio <- audios.get(urn)
+          uid <- track.uid
+          waveformUrl <- waveformUrls.get(uid)
+        } yield {
+          buildTrackRepresentationLike(
+            userSession = session,
+            track = track,
+            user = user,
+            isrc = isrcs.get(urn),
+            counts = counts.get(urn).getOrElse(StitchCounts(0, 0, 0, 0)),
+            label = labels.get(urn),
+            geoblockings = geoblockings.get(urn),
+            domainLockings = domainLockings.get(urn).getOrElse(List.empty),
+            trackAudioMetadata = audio,
+            isLiked = isLiked.get(urn).getOrElse(false),
+            waveformUrls = waveformUrl,
+            secretTokenParameter = None,
+            downloadsPerTrack = downloadsPerTrack.get(urn).flatten
+          )
+        }
+      })
+    }
+  }
+
   private def buildTrackRepresentationLike(
                                             userSession: UserSession,
                                             track: Track,
@@ -83,7 +152,7 @@ class TrackRepresentationsService(
                                             counts: StitchCounts,
                                             label: Option[User],
                                             geoblockings: Option[Geoblockings],
-                                            domainlockings: Seq[DomainLocking],
+                                            domainLockings: Seq[DomainLocking],
                                             trackAudioMetadata: TrackAudioMetadata,
                                             isLiked: Boolean,
                                             waveformUrls: Seq[WaveformUrl],
@@ -97,7 +166,7 @@ class TrackRepresentationsService(
       counts = counts,
       label = label,
       geoblockings = geoblockings,
-      domainlockings = domainlockings,
+      domainlockings = domainLockings,
       audioMetadata = trackAudioMetadata
     )
 
@@ -118,8 +187,8 @@ class TrackRepresentationsService(
       rep = TrackRepresentationCommentCountDecorator(counts, rep)
     if (geoblockings.isDefined)
       rep = TrackRepresentationGeoblockingsDecorator(geoblockings.get, rep)
-    if (domainlockings.nonEmpty)
-      rep = TrackRepresentationDomainLockingsDecorator(domainlockings, rep)
+    if (domainLockings.nonEmpty)
+      rep = TrackRepresentationDomainLockingsDecorator(domainLockings, rep)
     if (!userSession.isAnonymous) {
       rep = TrackRepresentationUserFavoriteDecorator(isLiked, rep)
       rep = TrackRepresentationUserPlaybackCountDecorator(rep)
@@ -169,6 +238,9 @@ class TrackRepresentationsService(
       .map(_.get(track.user_urn))
       .map(_.getOrElse(None))
   }
+
+  private def fetchDownloadsPerTrack(track: Set[Track], userUrn: Urn, session: UserSession): Future[Map[Urn, Option[Int]]] =
+    userQuotaClient.downloadsPerTrack(session, Set(userUrn))
 
   private def getCounts(counts: Option[StitchCounts]): StitchCounts =
     counts.getOrElse(StitchCounts(0, 0, 0, 0, 0))
