@@ -24,7 +24,8 @@ class SearchController(userAuthentication: UserAuthentication,
                        searchMapper: SearchMapper,
                        baseUrl: String,
                        lieblingClient: LieblingClient,
-                       userRelatedMothershipDispatcher: UserRelatedMothershipDispatcher) extends BffInjectionBasedController {
+                       userRelatedMothershipDispatcher: UserRelatedMothershipDispatcher,
+                       deleteme: Deleteme) extends BffInjectionBasedController {
 
   get("/tracks")(dispatchTrackRequest)
   get("/tracks/")(dispatchTrackRequest)
@@ -77,11 +78,7 @@ class SearchController(userAuthentication: UserAuthentication,
     if (isSearchRequest(request.params, searchParams)) {
       search(request, makeRequest(request))
     } else {
-      // XXX: these are requests like /tracks without query params.
-      // Mothership allows callers to page through our users/tracks/... in database order.
-      // Do we even want this (afaik undocumented) functionality?
-      mothershipCounter.labels(request.path).inc()
-      mothershipDispatcherFn(request)
+      deleteme.request(request)
     }
   }
 

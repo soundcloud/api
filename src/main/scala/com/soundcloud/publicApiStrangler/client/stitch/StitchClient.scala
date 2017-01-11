@@ -31,6 +31,25 @@ class StitchClient(jsonClient: JsonClient) {
     }
   }
 
+  def countsForTracks(session: UserSession, userToTrackUrn: Set[(Urn, Urn)]): Future[Map[Urn, StitchCounts]] = {
+    val keys = userToTrackUrn.map(key => s"${key._1.getIdentifier}|${key._2.getIdentifier}")
+    val keyParam = keys.map(key => s"k=$key").mkString("&")
+
+    val params = Params(
+      "p" -> pathFor("p", keyParam),
+      "d" -> pathFor("d", keyParam),
+      "l" -> pathFor("l", keyParam),
+      "c" -> pathFor("c", keyParam),
+      "r" -> pathFor("r", keyParam)
+    )
+
+
+    jsonClient.get(session, Path() / "bulk", params).map {
+      case JsonResponse(OkStatus, body, _, _) => parseBody(body, keys)
+      case _ => throw new RuntimeException("Unexpected response status")
+    }
+  }
+
   private def pathFor(cat: String, keyParam: String) =
     s"/ts?c=$cat.o.t&r=a&$keyParam"
 
@@ -44,7 +63,8 @@ class StitchClient(jsonClient: JsonClient) {
         playback_count = parseFn(body \ "p"),
         download_count = parseFn(body \ "d"),
         favoritings_count = parseFn(body \ "l"),
-        comment_count = parseFn(body \ "c")
+        comment_count = parseFn(body \ "c"),
+        repost_count = parseFn(body \ "r")
       )
 
       (urnFromKey, count)
@@ -52,5 +72,5 @@ class StitchClient(jsonClient: JsonClient) {
   }
 
   private def parseCountFromCatBody(key: String)(catBody: JsValue): Int =
-    ((catBody \ key \ "series")(0) \ "count").as[Int]
+    ((catBody \ key \ "series")(0) \ "count").asOpt[Int].getOrElse(0)
 }

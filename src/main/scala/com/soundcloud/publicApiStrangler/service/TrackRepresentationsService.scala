@@ -171,7 +171,7 @@ class TrackRepresentationsService(
   }
 
   private def getCounts(counts: Option[StitchCounts]): StitchCounts =
-    counts.getOrElse(StitchCounts(0, 0, 0, 0))
+    counts.getOrElse(StitchCounts(0, 0, 0, 0, 0))
 
   private def isTrackAccessible(session: UserSession, secretTokenInRequest: Option[String], track: Track): Future[Boolean] =
     if (!isDisabled(track)) isPrivacyAuthorized(session, secretTokenInRequest, track)
