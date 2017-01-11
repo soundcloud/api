@@ -5,7 +5,7 @@ API_INSTANCE_COUNT := 100
 APITRACKUPLOAD_ENTRYPOINT     := apitrackupload
 APITRACKUPLOAD_INSTANCE_COUNT := 10
 
-API_CONFIG := production_api.sh
+API_CONFIG := production_api.sh.enc
 APITRACKUPLOAD_CONFIG := production_apitrackupload.sh
 BAZOOKA_ZONES := db
 RUNTIME_STACK := jdk-8
