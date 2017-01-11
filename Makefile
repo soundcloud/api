@@ -46,10 +46,10 @@ unit-test:
 	$(SBT) test
 
 contract-upload:
-	bin/contract-upload
+	contract-upload
 
 contract-promote:
-	bin/contract-promote
+	contract-promote
 
 interactive:
 	$(SBT_INTERACTIVE)
