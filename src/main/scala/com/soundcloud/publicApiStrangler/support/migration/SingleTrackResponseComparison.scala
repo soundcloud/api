@@ -11,7 +11,7 @@ import play.api.libs.json._
 
 import scala.collection.Set
 
-class ResponseComparison(telemetry: Telemetry) {
+class SingleTrackResponseComparison(telemetry: Telemetry) {
   private val logger = SoundCloudLoggerFactory.getLogger(this.getClass.getName)
 
   val statusCodeDifferenceCounter = telemetry.counter(

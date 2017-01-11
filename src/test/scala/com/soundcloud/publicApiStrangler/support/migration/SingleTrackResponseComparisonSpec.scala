@@ -7,12 +7,12 @@ import com.twitter.finagle.http.{Request, Response, Status}
 import com.twitter.util.NonFatal
 import io.prometheus.client.CollectorRegistry
 
-class ResponseComparisonSpec extends UnitSpecification {
+class SingleTrackResponseComparisonSpec extends UnitSpecification {
   trait Context extends Scope {
     val config = new InMemoryConfig
     val collectorRegistry = new CollectorRegistry
     val telemetry = new Telemetry(config, collectorRegistry)
-    val responseComparison = new ResponseComparison(telemetry)
+    val responseComparison = new SingleTrackResponseComparison(telemetry)
 
     def generateResponse(contentString: String) = {
       val res = Response()
