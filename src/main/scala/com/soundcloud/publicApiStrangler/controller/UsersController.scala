@@ -12,6 +12,11 @@ class UsersController(userRelatedMothershipDispatcher: UserRelatedMothershipDisp
   get("/users/:id.json")(userRelatedMothershipDispatcher.dispatchToMothership _)
   get("/users/:id.json/")(userRelatedMothershipDispatcher.dispatchToMothership _)
 
+  get("/users/:id/tracks")(userRelatedMothershipDispatcher.dispatchToMothership _)
+  get("/users/:id/tracks/")(userRelatedMothershipDispatcher.dispatchToMothership _)
+  get("/users/:id/tracks.json")(userRelatedMothershipDispatcher.dispatchToMothership _)
+  get("/users/:id/tracks.json/")(userRelatedMothershipDispatcher.dispatchToMothership _)
+
   get("/users/:id/comments")(userRelatedMothershipDispatcher.dispatchToMothership _)
   get("/users/:id/comments/")(userRelatedMothershipDispatcher.dispatchToMothership _)
   get("/users/:id/comments.json")(userRelatedMothershipDispatcher.dispatchToMothership _)
