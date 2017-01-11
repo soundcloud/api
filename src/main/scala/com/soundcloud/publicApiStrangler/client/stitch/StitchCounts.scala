@@ -5,5 +5,5 @@ case class StitchCounts(
   download_count: Int,
   favoritings_count: Int,
   comment_count: Int,
-  repost_count: Int
+  repost_count: Int = 0
 )
