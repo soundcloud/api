@@ -239,7 +239,26 @@ object App
 
   val userQuotaClient = new UserQuotaClient(okidokiJsonClient)
 
-  private val singleTrackController = {
+  val tracksService = new TrackRepresentationsService(
+    trackmetadataClient,
+    richOkidokiClient,
+    pubmeseClient,
+    stitchClient,
+    lieblingClient,
+    mediaServiceUrlGenClient,
+    userQuotaClient,
+    playlistsClient
+  )
+
+  private val singleTrackController = new SingleTrackController(
+      userAuthentication,
+      mothershipDispatcher,
+      tracksService,
+      telemetry
+    )
+
+
+  private val userTracksController = {
     val tracksService = new TrackRepresentationsService(
       trackmetadataClient,
       richOkidokiClient,
@@ -251,7 +270,7 @@ object App
       playlistsClient
     )
 
-    new SingleTrackController(
+    new UserTracksController(
       userAuthentication,
       mothershipDispatcher,
       tracksService,
@@ -547,6 +566,7 @@ object App
     rateLimitingFacade.rateLimitStatusController,
     tracksController,
     singleTrackController,
+    userTracksController,
     likesController,
     friendsController,
     groupsController,
