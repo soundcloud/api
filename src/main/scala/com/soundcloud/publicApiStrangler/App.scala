@@ -300,8 +300,6 @@ object App
     new EntitySummaryMapper(okidokiClient, repostsClient, enrichRepostsCounts, baseUrl)
   )
 
-  private val deleteme = new Deleteme(userAuthentication, mothershipDispatcher, stitchClient)
-
   private val searchController = {
     val searchRepository = new SearchRepository(searchService)
     val searchMapper = new SearchMapper(searchRepository, searchEntityMapper, baseUrl)
@@ -319,8 +317,7 @@ object App
       searchMapper,
       baseUrl,
       lieblingClient,
-      userRelatedMothershipDispatcher,
-      deleteme
+      userRelatedMothershipDispatcher
     )
   }
 
