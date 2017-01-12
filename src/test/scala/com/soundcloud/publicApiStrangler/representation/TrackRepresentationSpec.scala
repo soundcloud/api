@@ -118,7 +118,7 @@ trait TrackRepresentationLikeSpecContext {
 
   def defaultIsrc = Some(Isrc("US-S1Z-99-00001"))
 
-  def defaultCounts = StitchCounts(111, 222, 333, 444)
+  def defaultCounts = StitchCounts(111, 222, 333, 444, 555)
 
   def defaultGeoblockings: Geoblockings = List("DE", "FR")
 
@@ -204,7 +204,7 @@ class TrackRepresentationCountsDecoratorSpec extends UnitSpecification {
   trait Context extends Scope with TrackRepresentationLikeSpecContext {
     implicit val writes = TrackRepresentationCountsDecorator.writes
 
-    val counts = StitchCounts(111, 222, 333, 444)
+    val counts = StitchCounts(111, 222, 333, 444, 555)
     val wrapped: TrackRepresentationLike = createTrackRepresentation()
     val decorator = TrackRepresentationCountsDecorator(counts, wrapped)
   }
@@ -215,6 +215,7 @@ class TrackRepresentationCountsDecoratorSpec extends UnitSpecification {
     json \ "playback_count" ==== JsNumber(111)
     json \ "download_count" ==== JsNumber(222)
     json \ "favoritings_count" ==== JsNumber(333)
+    json \ "reposts_count" ==== JsNumber(555)
   }
 }
 
@@ -222,7 +223,7 @@ class TrackRepresentationCommentCountDecoratorSpec extends UnitSpecification {
   trait Context extends Scope with TrackRepresentationLikeSpecContext {
     implicit val writes = TrackRepresentationCommentCountDecorator.writes
 
-    val counts = StitchCounts(1, 2, 3, 444)
+    val counts = StitchCounts(1, 2, 3, 444, 555)
     val wrapped: TrackRepresentationLike = createTrackRepresentation()
     val decorator = TrackRepresentationCommentCountDecorator(counts, wrapped)
   }

@@ -50,10 +50,11 @@ class StitchClientSpec extends UnitSpecification {
                 "count" -> count2)))))
 
     def mockResponseContents =
-      genMockResponseContentBit("p", 111, 222) ++
-        genMockResponseContentBit("d", 333, 444) ++
-        genMockResponseContentBit("l", 555, 666) ++
-        genMockResponseContentBit("c", 777, 888)
+      genMockResponseContentBit("plays", 111, 222) ++
+        genMockResponseContentBit("downloads", 333, 444) ++
+        genMockResponseContentBit("likes", 555, 666) ++
+        genMockResponseContentBit("comments", 777, 888) ++
+        genMockResponseContentBit("reposts", 999, 123)
 
     def mockResponseStatus: StatusCode = OkStatus
     def mockResponse =
@@ -63,10 +64,11 @@ class StitchClientSpec extends UnitSpecification {
           mockResponseContents))
 
     val expectedParams = Params(
-      "p" -> s"/ts?c=p.o.t&r=a&k=$stitchKey1&k=$stitchKey2",
-      "d" -> s"/ts?c=d.o.t&r=a&k=$stitchKey1&k=$stitchKey2",
-      "l" -> s"/ts?c=l.o.t&r=a&k=$stitchKey1&k=$stitchKey2",
-      "c" -> s"/ts?c=c.o.t&r=a&k=$stitchKey1&k=$stitchKey2")
+      "plays" -> s"/ts?category=p.o.t&minus-category=n.p.o.t&resolution=alltime&k=$stitchKey1&k=$stitchKey2",
+      "downloads" -> s"/ts?category=d.o.t&minus-category=n.d.o.t&resolution=alltime&k=$stitchKey1&k=$stitchKey2",
+      "likes" -> s"/ts?category=l.o.t&minus-category=n.l.o.t&resolution=alltime&k=$stitchKey1&k=$stitchKey2",
+      "comments" -> s"/ts?category=c.o.t&minus-category=n.c.o.t&resolution=alltime&k=$stitchKey1&k=$stitchKey2",
+      "reposts" -> s"/ts?category=r.o.t&minus-category=n.r.o.t&resolution=alltime&k=$stitchKey1&k=$stitchKey2")
 
     when(jsonClient.get(beTypedEqualTo(session), beTypedEqualTo(Path() / "bulk"), beTypedEqualTo(expectedParams), any))
       .thenReturn(mockResponse)
@@ -74,8 +76,8 @@ class StitchClientSpec extends UnitSpecification {
 
   "200 response" in new Context {
     result ==== Map(
-      trackUrn1 -> StitchCounts(111, 333, 555, 777),
-      trackUrn2 -> StitchCounts(222, 444, 666, 888))
+      trackUrn1 -> StitchCounts(111, 333, 555, 777, 999),
+      trackUrn2 -> StitchCounts(222, 444, 666, 888, 123))
   }
 
   "500 response" in new Context {

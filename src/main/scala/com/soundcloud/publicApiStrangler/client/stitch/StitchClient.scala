@@ -18,10 +18,11 @@ class StitchClient(jsonClient: JsonClient) {
     val keyParam = keys.map(key => s"k=$key").mkString("&")
 
     val params = Params(
-      "p" -> pathFor("p", keyParam),
-      "d" -> pathFor("d", keyParam),
-      "l" -> pathFor("l", keyParam),
-      "c" -> pathFor("c", keyParam)
+      "plays" -> pathFor("p", keyParam),
+      "downloads" -> pathFor("d", keyParam),
+      "likes" -> pathFor("l", keyParam),
+      "comments" -> pathFor("c", keyParam),
+      "reposts" -> pathFor("r", keyParam)
     )
 
 
@@ -32,7 +33,7 @@ class StitchClient(jsonClient: JsonClient) {
   }
 
   private def pathFor(cat: String, keyParam: String) =
-    s"/ts?c=$cat.o.t&r=a&$keyParam"
+    s"/ts?category=$cat.o.t&minus-category=n.$cat.o.t&resolution=alltime&$keyParam"
 
   private def parseBody[T](body: JsValue, keys: Set[String]): Map[Urn, StitchCounts] = {
     keys.map { key =>
@@ -41,10 +42,11 @@ class StitchClient(jsonClient: JsonClient) {
       val parseFn = parseCountFromCatBody(key) _
 
       val count = StitchCounts(
-        playback_count = parseFn(body \ "p"),
-        download_count = parseFn(body \ "d"),
-        favoritings_count = parseFn(body \ "l"),
-        comment_count = parseFn(body \ "c")
+        playback_count = parseFn(body \ "plays"),
+        download_count = parseFn(body \ "downloads"),
+        favoritings_count = parseFn(body \ "likes"),
+        comment_count = parseFn(body \ "comments"),
+        reposts_count = parseFn(body \ "reposts")
       )
 
       (urnFromKey, count)
@@ -52,5 +54,5 @@ class StitchClient(jsonClient: JsonClient) {
   }
 
   private def parseCountFromCatBody(key: String)(catBody: JsValue): Int =
-    ((catBody \ key \ "series")(0) \ "count").as[Int]
+    ((catBody \ key \ "series")(0) \ "count").asOpt[Int].getOrElse(0)
 }

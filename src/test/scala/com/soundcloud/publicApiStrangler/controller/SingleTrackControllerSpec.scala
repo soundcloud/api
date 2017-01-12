@@ -93,7 +93,7 @@ class SingleTrackControllerSpec extends InjectionBasedControllerSpecification {
     track = trackmetadataTrack(),
     user = user,
     isrc = None,
-    counts = new StitchCounts(1, 2, 3, 4),
+    counts = new StitchCounts(1, 2, 3, 4, 5),
     label = None,
     geoblockings = None,
     domainlockings = Seq(),

@@ -173,7 +173,7 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
       Some(Isrc(wrapped))
 
     def stitchCounts: StitchCounts =
-      StitchCounts(111, 222, 333, 444)
+      StitchCounts(111, 222, 333, 444, 555)
 
     def userLikesCount: UserLikesCount =
       UserLikesCount(Set.empty, List.empty)
@@ -581,7 +581,7 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
       val track = trackmetadataTrack(isDownloadable = true)
       setUpMocksForExistingTrack(track, session)
       userQuotaClient.downloadsPerTrack(session, Set(track.user_urn)) returns Future.value(Map(track.user_urn -> Some(100)))
-      stitchClient.countsForTrack(session, trackUrn, track.user_urn) returns Future.value(StitchCounts(0, 90, 0, 0))
+      stitchClient.countsForTrack(session, trackUrn, track.user_urn) returns Future.value(StitchCounts(0, 90, 0, 0, 0))
 
       val trackRepLike = Await.result(tracksService.track(session, trackUrn, None))
       trackRepLike match {
@@ -595,7 +595,7 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
       val track = trackmetadataTrack(isDownloadable = true)
       setUpMocksForExistingTrack(track, session)
       userQuotaClient.downloadsPerTrack(session, Set(track.user_urn)) returns Future.value(Map(track.user_urn -> None))
-      stitchClient.countsForTrack(session, trackUrn, track.user_urn) returns Future.value(StitchCounts(0, 90, 0, 0))
+      stitchClient.countsForTrack(session, trackUrn, track.user_urn) returns Future.value(StitchCounts(0, 90, 0, 0, 0))
 
       val trackRepLike = Await.result(tracksService.track(session, trackUrn, None))
       trackRepLike match {
@@ -609,7 +609,7 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
       val track = trackmetadataTrack(isDownloadable = true)
       setUpMocksForExistingTrack(track, session)
       userQuotaClient.downloadsPerTrack(session, Set(track.user_urn)) returns Future.value(Map(track.user_urn -> Some(100)))
-      stitchClient.countsForTrack(session, trackUrn, track.user_urn) returns Future.value(StitchCounts(0, 100, 0, 0))
+      stitchClient.countsForTrack(session, trackUrn, track.user_urn) returns Future.value(StitchCounts(0, 100, 0, 0, 0))
 
       val trackRepLike = Await.result(tracksService.track(session, trackUrn, None))
       trackRepLike match {
@@ -623,7 +623,7 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
       val track = trackmetadataTrack(isDownloadable = false)
       setUpMocksForExistingTrack(track, session)
       userQuotaClient.downloadsPerTrack(session, Set(track.user_urn)) returns Future.value(Map(track.user_urn -> Some(100)))
-      stitchClient.countsForTrack(session, trackUrn, track.user_urn) returns Future.value(StitchCounts(0, 90, 0, 0))
+      stitchClient.countsForTrack(session, trackUrn, track.user_urn) returns Future.value(StitchCounts(0, 90, 0, 0, 0))
 
       val trackRepLike = Await.result(tracksService.track(session, trackUrn, None))
       trackRepLike match {
@@ -641,7 +641,7 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
         val track = trackmetadataTrack(isDownloadable = true)
         setUpMocksForExistingTrack(track, session)
         userQuotaClient.downloadsPerTrack(session, Set(track.user_urn)) returns Future.value(Map(track.user_urn -> Some(100)))
-        stitchClient.countsForTrack(session, trackUrn, track.user_urn) returns Future.value(StitchCounts(0, 90, 0, 0))
+        stitchClient.countsForTrack(session, trackUrn, track.user_urn) returns Future.value(StitchCounts(0, 90, 0, 0, 0))
 
         val trackRepLike = Await.result(tracksService.track(session, trackUrn, None))
         trackRepLike match {
@@ -656,7 +656,7 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
         val track = trackmetadataTrack(isDownloadable = true, user = session.getUser)
         setUpMocksForExistingTrack(track, session)
         userQuotaClient.downloadsPerTrack(session, Set(track.user_urn)) returns Future.value(Map(track.user_urn -> Some(100)))
-        stitchClient.countsForTrack(session, trackUrn, track.user_urn) returns Future.value(StitchCounts(0, 90, 0, 0))
+        stitchClient.countsForTrack(session, trackUrn, track.user_urn) returns Future.value(StitchCounts(0, 90, 0, 0, 0))
 
         val trackRepLike = Await.result(tracksService.track(session, trackUrn, None))
         trackRepLike match {
@@ -670,7 +670,7 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
         val track = trackmetadataTrack(isDownloadable = true, user = session.getUser)
         setUpMocksForExistingTrack(track, session)
         userQuotaClient.downloadsPerTrack(session, Set(track.user_urn)) returns Future.value(Map(track.user_urn -> None))
-        stitchClient.countsForTrack(session, trackUrn, track.user_urn) returns Future.value(StitchCounts(0, 90, 0, 0))
+        stitchClient.countsForTrack(session, trackUrn, track.user_urn) returns Future.value(StitchCounts(0, 90, 0, 0, 0))
 
         val trackRepLike = Await.result(tracksService.track(session, trackUrn, None))
         trackRepLike match {
@@ -683,7 +683,7 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
         val track = trackmetadataTrack(isDownloadable = true, user = session.getUser)
         setUpMocksForExistingTrack(track, session)
         userQuotaClient.downloadsPerTrack(session, Set(track.user_urn)) returns Future.value(Map(track.user_urn -> Some(100)))
-        stitchClient.countsForTrack(session, trackUrn, track.user_urn) returns Future.value(StitchCounts(0, 100, 0, 0))
+        stitchClient.countsForTrack(session, trackUrn, track.user_urn) returns Future.value(StitchCounts(0, 100, 0, 0, 0))
 
         val trackRepLike = Await.result(tracksService.track(session, trackUrn, None))
         trackRepLike match {
@@ -697,7 +697,7 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
         val track = trackmetadataTrack(isDownloadable = false, user = session.getUser)
         setUpMocksForExistingTrack(track, session)
         userQuotaClient.downloadsPerTrack(session, Set(track.user_urn)) returns Future.value(Map(track.user_urn -> Some(100)))
-        stitchClient.countsForTrack(session, trackUrn, track.user_urn) returns Future.value(StitchCounts(0, 90, 0, 0))
+        stitchClient.countsForTrack(session, trackUrn, track.user_urn) returns Future.value(StitchCounts(0, 90, 0, 0, 0))
 
         val trackRepLike = Await.result(tracksService.track(session, trackUrn, None))
         trackRepLike match {
@@ -725,6 +725,7 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
             json \ "playback_count" ==== JsNumber(111)
             json \ "download_count" ==== JsNumber(222)
             json \ "favoritings_count" ==== JsNumber(333)
+            json \ "reposts_count" ==== JsNumber(555)
         }
       }
 
@@ -811,6 +812,7 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
               json \ "download_count" ==== JsNumber(222)
               json \ "favoritings_count" ==== JsNumber(333)
               json \ "comment_count" ==== JsNumber(444)
+              json \ "reposts_count" ==== JsNumber(555)
           }
         }
 
@@ -854,6 +856,7 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
               json \ "download_count" ==== JsNumber(0)
               json \ "favoritings_count" ==== JsNumber(0)
               json \ "comment_count" ==== JsNumber(0)
+              json \ "reposts_count" ==== JsNumber(0)
           }
         }
       }
