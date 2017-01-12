@@ -17,20 +17,29 @@ class StitchClient(jsonClient: JsonClient) {
     val keys = trackUrn.map(urn => s"${userUrn.getIdentifier}|${urn.getIdentifier}")
     val keyParam = keys.map(key => s"k=$key").mkString("&")
 
-    val params = Params(
-      "plays" -> pathFor("p", keyParam),
-      "downloads" -> pathFor("d", keyParam),
-      "likes" -> pathFor("l", keyParam),
-      "comments" -> pathFor("c", keyParam),
-      "reposts" -> pathFor("r", keyParam)
-    )
-
-
-    jsonClient.get(session, Path() / "bulk", params).map {
+    jsonClient.get(session, Path() / "bulk", params(keyParam)).map {
       case JsonResponse(OkStatus, body, _, _) => parseBody(body, keys)
       case _ => throw new RuntimeException("Unexpected response status")
     }
   }
+
+  def countsForTracks(session: UserSession, userToTrackUrn: Set[(Urn, Urn)]): Future[Map[Urn, StitchCounts]] = {
+    val keys = userToTrackUrn.map(key => s"${key._1.getIdentifier}|${key._2.getIdentifier}")
+    val keyParam = keys.map(key => s"k=$key").mkString("&")
+
+    jsonClient.get(session, Path() / "bulk", params(keyParam)).map {
+      case JsonResponse(OkStatus, body, _, _) => parseBody(body, keys)
+      case _ => throw new RuntimeException("Unexpected response status")
+    }
+  }
+
+  private def params(keyParam: String) = Params(
+    "plays" -> pathFor("p", keyParam),
+    "downloads" -> pathFor("d", keyParam),
+    "likes" -> pathFor("l", keyParam),
+    "comments" -> pathFor("c", keyParam),
+    "reposts" -> pathFor("r", keyParam)
+  )
 
   private def pathFor(cat: String, keyParam: String) =
     s"/ts?category=$cat.o.t&minus-category=n.$cat.o.t&resolution=alltime&$keyParam"
