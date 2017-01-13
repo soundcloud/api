@@ -10,27 +10,38 @@ import play.api.libs.json.JsValue
 
 class StitchClient(jsonClient: JsonClient) {
   def countsForTrack(session: UserSession, trackUrn: Urn, userUrn: Urn): Future[StitchCounts] = {
-    countsForTracks(session, Set(trackUrn), userUrn).map(_(trackUrn))
+    countsForTracksByUser(session, userUrn, Set(trackUrn)).map(_(trackUrn))
   }
 
-  def countsForTracks(session: UserSession, trackUrn: Set[Urn], userUrn: Urn): Future[Map[Urn, StitchCounts]] = {
-    val keys = trackUrn.map(urn => s"${userUrn.getIdentifier}|${urn.getIdentifier}")
-    val keyParam = keys.map(key => s"k=$key").mkString("&")
+  def countsForTracksByUser(session: UserSession, userUrn: Urn, trackUrns: Set[Urn], batchSize: Int = 50): Future[Map[Urn, StitchCounts]] = {
+    inBatches(trackUrns, batchSize) { trackUrnBatch => {
+      val keys = trackUrnBatch.map(urn => s"${userUrn.getIdentifier}|${urn.getIdentifier}")
+      val keyParam = keys.map(key => s"k=$key").mkString("&")
 
-    jsonClient.get(session, Path() / "bulk", params(keyParam)).map {
+      get(session, params(keyParam), keys)
+    } }.map(_.flatten.toMap)
+  }
+
+  def countsForTracks(session: UserSession, userToTrackUrns: Set[(Urn, Urn)], batchSize: Int = 50): Future[Map[Urn, StitchCounts]] = {
+    inBatches(userToTrackUrns, batchSize) { userToTrackUrnBatch => {
+      val keys = userToTrackUrnBatch.map(key => s"${key._1.getIdentifier}|${key._2.getIdentifier}")
+      val keyParam = keys.map(key => s"k=$key").mkString("&")
+
+      get(session, params(keyParam), keys)
+    } }.map(_.flatten.toMap)
+  }
+
+  private def get(session: UserSession, params: Params, keys: Set[String]) = {
+    jsonClient.get(session, Path() / "bulk", params, Params.empty).map {
       case JsonResponse(OkStatus, body, _, _) => parseBody(body, keys)
       case _ => throw new RuntimeException("Unexpected response status")
     }
   }
 
-  def countsForTracks(session: UserSession, userToTrackUrn: Set[(Urn, Urn)]): Future[Map[Urn, StitchCounts]] = {
-    val keys = userToTrackUrn.map(key => s"${key._1.getIdentifier}|${key._2.getIdentifier}")
-    val keyParam = keys.map(key => s"k=$key").mkString("&")
-
-    jsonClient.get(session, Path() / "bulk", params(keyParam)).map {
-      case JsonResponse(OkStatus, body, _, _) => parseBody(body, keys)
-      case _ => throw new RuntimeException("Unexpected response status")
-    }
+  private def inBatches[A, B](urns: Set[A], batchSize: Int)(f: (Set[A] => Future[B])): Future[Seq[B]] = {
+    Future.collect {
+      urns.grouped(batchSize).map(f).toList
+    }.map(_.toList)
   }
 
   private def params(keyParam: String) = Params(

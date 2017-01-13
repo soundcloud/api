@@ -7,7 +7,7 @@ import com.soundcloud.scalakit.finagle.jsonservice.{JsonClient, JsonResponse, Pa
 import com.soundcloud.scalakit.test.UnitSpecification
 import com.twitter.util.{Await, Future}
 import org.mockito.Mockito._
-import play.api.libs.json.Json
+import play.api.libs.json.{JsNull, JsObject, Json}
 
 class StitchClientSpec extends UnitSpecification {
   trait GenericContext[T] extends Scope {
@@ -21,63 +21,83 @@ class StitchClientSpec extends UnitSpecification {
 
     lazy val client = new StitchClient(jsonClient)
 
-    def resultF = client.countsForTracks(session, trackUrns, userUrn)
+    def resultF = client.countsForTracksByUser(session, userUrn, trackUrns, 2)
 
     lazy val path = Path() / "bulk"
     val session = anonymousSession
 
     val trackUrn1 = Urn("soundcloud:tracks:123")
     val trackUrn2 = Urn("soundcloud:tracks:234987")
+    val trackUrn3 = Urn("soundcloud:tracks:129389")
 
-    val trackUrns = Set(trackUrn1, trackUrn2)
+    val trackUrns = Set(trackUrn1, trackUrn2, trackUrn3)
     val userUrn = Urn("soundcloud:users:8700")
 
     def stitchKey1 = s"${userUrn.getIdentifier}|${trackUrn1.getIdentifier}"
     def stitchKey2 = s"${userUrn.getIdentifier}|${trackUrn2.getIdentifier}"
+    def stitchKey3 = s"${userUrn.getIdentifier}|${trackUrn3.getIdentifier}"
 
-    def genMockResponseContentBit(cat: String, count1: Int, count2: Int) =
-      Json.obj(
-        cat -> Json.obj(
-          stitchKey1 -> Json.obj(
-            "series" -> Seq(
-              Json.obj(
-                "time" -> 0,
-                "count" -> count1))),
-          stitchKey2 -> Json.obj(
-            "series" -> Seq(
-              Json.obj(
-                "time" -> 0,
-                "count" -> count2)))))
+    def genMockResponseContentBit(cat: String, keys: List[(String, Int)]) = {
+      val seriesPerKey = keys.map { case (key, count) =>
+        key -> Json.obj(
+          "series" -> Seq(Json.obj(
+            "time" -> 0,
+            "count" -> count)))
+      }
 
-    def mockResponseContents =
-      genMockResponseContentBit("plays", 111, 222) ++
-        genMockResponseContentBit("downloads", 333, 444) ++
-        genMockResponseContentBit("likes", 555, 666) ++
-        genMockResponseContentBit("comments", 777, 888) ++
-        genMockResponseContentBit("reposts", 999, 123)
+      Json.obj(cat -> JsObject(seriesPerKey))
+    }
+
+    def mockResponseContentsFirstBatch =
+      genMockResponseContentBit("plays", List((stitchKey1, 111), (stitchKey2, 222))) ++
+        genMockResponseContentBit("downloads", List((stitchKey1, 333), (stitchKey2, 444))) ++
+        genMockResponseContentBit("likes", List((stitchKey1, 555), (stitchKey2, 666))) ++
+        genMockResponseContentBit("comments", List((stitchKey1, 777), (stitchKey2, 888))) ++
+        genMockResponseContentBit("reposts", List((stitchKey1, 999), (stitchKey2, 123)))
+
+    def mockResponseContentsSecondBatch =
+      genMockResponseContentBit("plays", List((stitchKey3, 567))) ++
+        genMockResponseContentBit("downloads", List((stitchKey3, 678))) ++
+        genMockResponseContentBit("likes", List((stitchKey3, 789))) ++
+        genMockResponseContentBit("comments", List((stitchKey3, 890))) ++
+        genMockResponseContentBit("reposts", List((stitchKey3, 901)))
 
     def mockResponseStatus: StatusCode = OkStatus
-    def mockResponse =
+    def mockResponseFirstBatch =
       Future.value(
         JsonResponse(
           mockResponseStatus,
-          mockResponseContents))
+          mockResponseContentsFirstBatch))
 
-    val expectedParams = Params(
+    def mockResponseSecondBatch =
+      Future.value(
+        JsonResponse(
+          mockResponseStatus,
+          mockResponseContentsSecondBatch))
+
+    val expectedParamsFirstBatch = Params(
       "plays" -> s"/ts?category=p.o.t&resolution=alltime&k=$stitchKey1&k=$stitchKey2",
       "downloads" -> s"/ts?category=d.o.t&resolution=alltime&k=$stitchKey1&k=$stitchKey2",
       "likes" -> s"/ts?category=l.o.t&minus-category=n.l.o.t&resolution=alltime&k=$stitchKey1&k=$stitchKey2",
       "comments" -> s"/ts?category=c.o.t&minus-category=n.c.o.t&resolution=alltime&k=$stitchKey1&k=$stitchKey2",
       "reposts" -> s"/ts?category=r.o.t&minus-category=n.r.o.t&resolution=alltime&k=$stitchKey1&k=$stitchKey2")
 
-    when(jsonClient.get(beTypedEqualTo(session), beTypedEqualTo(Path() / "bulk"), beTypedEqualTo(expectedParams), any))
-      .thenReturn(mockResponse)
+    val expectedParamsSecondBatch = Params(
+      "plays" -> s"/ts?category=p.o.t&resolution=alltime&k=$stitchKey3",
+      "downloads" -> s"/ts?category=d.o.t&resolution=alltime&k=$stitchKey3",
+      "likes" -> s"/ts?category=l.o.t&minus-category=n.l.o.t&resolution=alltime&k=$stitchKey3",
+      "comments" -> s"/ts?category=c.o.t&minus-category=n.c.o.t&resolution=alltime&k=$stitchKey3",
+      "reposts" -> s"/ts?category=r.o.t&minus-category=n.r.o.t&resolution=alltime&k=$stitchKey3")
+
+    when(jsonClient.get(session, Path() / "bulk", expectedParamsFirstBatch, Params.empty)).thenReturn(mockResponseFirstBatch)
+    when(jsonClient.get(session, Path() / "bulk", expectedParamsSecondBatch, Params.empty)).thenReturn(mockResponseSecondBatch)
   }
 
   "200 response" in new Context {
     result ==== Map(
       trackUrn1 -> StitchCounts(111, 333, 555, 777, 999),
-      trackUrn2 -> StitchCounts(222, 444, 666, 888, 123))
+      trackUrn2 -> StitchCounts(222, 444, 666, 888, 123),
+      trackUrn3 -> StitchCounts(567, 678, 789, 890, 901))
   }
 
   "500 response" in new Context {
@@ -86,7 +106,7 @@ class StitchClientSpec extends UnitSpecification {
   }
 
   "exception response" in new Context {
-    override def mockResponse = Future.exception(new RuntimeException("kaboom"))
+    override def mockResponseFirstBatch = Future.exception(new RuntimeException("kaboom"))
     resultT.isThrow === true
   }
 }
