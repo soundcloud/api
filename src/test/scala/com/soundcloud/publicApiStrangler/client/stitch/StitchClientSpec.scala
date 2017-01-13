@@ -64,8 +64,8 @@ class StitchClientSpec extends UnitSpecification {
           mockResponseContents))
 
     val expectedParams = Params(
-      "plays" -> s"/ts?category=p.o.t&minus-category=n.p.o.t&resolution=alltime&k=$stitchKey1&k=$stitchKey2",
-      "downloads" -> s"/ts?category=d.o.t&minus-category=n.d.o.t&resolution=alltime&k=$stitchKey1&k=$stitchKey2",
+      "plays" -> s"/ts?category=p.o.t&resolution=alltime&k=$stitchKey1&k=$stitchKey2",
+      "downloads" -> s"/ts?category=d.o.t&resolution=alltime&k=$stitchKey1&k=$stitchKey2",
       "likes" -> s"/ts?category=l.o.t&minus-category=n.l.o.t&resolution=alltime&k=$stitchKey1&k=$stitchKey2",
       "comments" -> s"/ts?category=c.o.t&minus-category=n.c.o.t&resolution=alltime&k=$stitchKey1&k=$stitchKey2",
       "reposts" -> s"/ts?category=r.o.t&minus-category=n.r.o.t&resolution=alltime&k=$stitchKey1&k=$stitchKey2")

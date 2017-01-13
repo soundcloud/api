@@ -34,15 +34,17 @@ class StitchClient(jsonClient: JsonClient) {
   }
 
   private def params(keyParam: String) = Params(
-    "plays" -> pathFor("p", keyParam),
-    "downloads" -> pathFor("d", keyParam),
-    "likes" -> pathFor("l", keyParam),
-    "comments" -> pathFor("c", keyParam),
-    "reposts" -> pathFor("r", keyParam)
+    "plays" -> pathFor("p", keyParam, false),
+    "downloads" -> pathFor("d", keyParam, false),
+    "likes" -> pathFor("l", keyParam, true),
+    "comments" -> pathFor("c", keyParam, true),
+    "reposts" -> pathFor("r", keyParam, true)
   )
 
-  private def pathFor(cat: String, keyParam: String) =
-    s"/ts?category=$cat.o.t&minus-category=n.$cat.o.t&resolution=alltime&$keyParam"
+  private def pathFor(cat: String, keyParam: String, withMinusCategory: Boolean) = {
+    val minusCategory = if (withMinusCategory) s"&minus-category=n.$cat.o.t" else ""
+    s"/ts?category=$cat.o.t$minusCategory&resolution=alltime&$keyParam"
+  }
 
   private def parseBody[T](body: JsValue, keys: Set[String]): Map[Urn, StitchCounts] = {
     keys.map { key =>
