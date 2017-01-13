@@ -91,8 +91,7 @@ object RepostsClient {
   case object Failed extends Result
 
   case class Count(urn: Urn, count: Long)
-  implicit val writesCount: Writes[Count] = Json.writes[Count]
-  implicit val readsCount: Reads[Count] = Json.reads[Count]
+  implicit val countFormat: Format[Count] = Json.format[Count]
 
   def toResult(response: JsonResponse, baseUrl: => String): Result = response match {
     case JsonResponse(CreatedStatus, _, _, _) => Created
