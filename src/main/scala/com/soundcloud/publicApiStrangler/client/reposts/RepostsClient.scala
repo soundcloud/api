@@ -6,7 +6,7 @@ import com.soundcloud.scalakit.Path
 import com.soundcloud.scalakit.finagle.http._
 import com.soundcloud.scalakit.finagle.jsonservice.{JsonClient, JsonResponse, Params}
 import com.soundcloud.service.client.FetchClient
-import com.twitter.util.{Future, NonFatal, Try}
+import com.twitter.util.{Future, NonFatal}
 import play.api.libs.json._
 
 /**
