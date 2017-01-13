@@ -11,11 +11,14 @@ import com.soundcloud.scalakit.finagle.jsonservice.JsonClient
 import com.twitter.util.Await
 import org.specs2.matcher.Scope
 import org.specs2.mutable.Specification
+import play.api.libs.json.Json
 
 class RepostsClientSpec extends Specification with PactSpec with UnitSpecsSupport {
 
   override val consumer = "public-api-strangler"
   override val provider = "reposts"
+
+  private val headers = Map("content-type" -> "application/json;charset=utf-8")
 
   private val user = Urn(s"soundcloud:users:1")
   private val spamUser = Urn(s"soundcloud:users:2")
@@ -44,6 +47,67 @@ class RepostsClientSpec extends Specification with PactSpec with UnitSpecsSuppor
       method = "DELETE",
       headers = Map("Sc-User" -> user.toString)
     )
+
+  val countsInteractions = List(
+    buildInteraction(
+      description = "Get count of user's track reposts",
+      maybeState = None,
+      request = buildRequest(path = s"/users/$user/track_reposts/count", method = "GET"),
+      response = buildResponse(
+        status = 200,
+        headers = headers,
+        maybeBody = Some(Json.obj("counts" -> Json.arr(
+          Json.obj("urn" -> user.toString, "count" -> 0L)
+        )).toString)
+      )
+    ),
+    buildInteraction(
+      description = "Get count of user's playlist reposts",
+      maybeState = None,
+      request = buildRequest(path = s"/users/$user/playlist_reposts/count", method = "GET"),
+      response = buildResponse(
+        status = 200,
+        headers = headers,
+        maybeBody = Some(Json.obj("counts" -> Json.arr(
+          Json.obj("urn" -> user.toString, "count" -> 0L)
+        )).toString)
+      )
+    )
+//    ,
+//    buildInteraction(
+//      description = "Get counts of reposts for tracks",
+//      maybeState = None,
+//      request = betterBuildRequest(
+//        path = s"/tracks/reposts/count",
+//        method = "GET",
+//        query = Map("urns" -> Seq("soundcloud:tracks:1", "soundcloud:tracks:2"))
+//      ),
+//      response = buildResponse(
+//        status = 200,
+//        headers = headers,
+//        maybeBody = Some(Json.obj("counts" -> Json.arr(
+//          Json.obj("urn" -> "soundcloud:tracks:1", "count" -> 0L),
+//          Json.obj("urn" -> "soundcloud:tracks:2", "count" -> 0L)
+//        )).toString)
+//      )
+//    ),
+//    buildInteraction(
+//      description = "Get counts of reposts for playlists",
+//      maybeState = None,
+//      request = betterBuildRequest(
+//        path = s"/playlists/reposts/count",
+//        method = "GET",
+//        query = Map("urns" -> Seq("soundcloud:playlists:1", "soundcloud:playlists:2"))
+//      ),
+//      response = buildResponse(
+//        status = 200,
+//        maybeBody = Some(Json.obj("counts" -> Json.arr(
+//          Json.obj("urn" -> "soundcloud:playlists:1", "count" -> 0L),
+//          Json.obj("urn" -> "soundcloud:playlists:2", "count" -> 0L)
+//        )).toString)
+//      )
+//    )
+  )
 
   val trackRepostInteractions = List(
     buildInteraction(
@@ -123,7 +187,11 @@ class RepostsClientSpec extends Specification with PactSpec with UnitSpecsSuppor
     )
   )
 
-  override val pactFragment = buildPactFragment(consumer = consumer, provider = provider, trackRepostInteractions ++ playlistRepostInteractions)
+  override val pactFragment = buildPactFragment(
+    consumer = consumer,
+    provider = provider,
+    trackRepostInteractions ++ playlistRepostInteractions ++ countsInteractions
+  )
 
   pactFragment.description >> {
     trait Context extends Scope {
@@ -241,5 +309,43 @@ class RepostsClientSpec extends Specification with PactSpec with UnitSpecsSuppor
         }
       }
     }
+
+    "#getRepostCountsByUrnWithFallback" >> {
+      "some context" >> {
+        trait CountsContext extends Context {
+          val sessionUser = user
+          val track1 = Urn("soundcloud:tracks:1")
+          val track2 = Urn("soundcloud:tracks:2")
+          val playlist1 = Urn("soundcloud:playlists:1")
+          val playlist2 = Urn("soundcloud:playlists:2")
+        }
+
+        "when data is available" >> {
+          "it returns total reposts by a user" in new CountsContext {
+            Await.result(client.getRepostCountsByUrnWithFallback(session, Set(user))) ==== Map(user -> 0L)
+            skipped("Need the mocks to return different results for track and playlist, so we can assert they are combinded")
+          }
+          "it returns repost counts of different types" in new CountsContext {
+            skipped("Need to mock batch calls for track and playlist reposts")
+            val f = client.getRepostCountsByUrnWithFallback(session, Set(user, track1, track2, playlist1, playlist2))
+            Await.result(f) ==== Map(user -> 0L, track1 -> 0L, track2 -> 0L, playlist1 -> 0L, playlist2 -> 0L)
+          }
+        }
+
+        "when data is not available, but the calls were successful" >> {
+          "it falls back to zero counts for unavailable URNs" in new CountsContext {
+            skipped("Need the mocks to return a successful future with no counts in it")
+          }
+        }
+
+        "when an upstream request fails call fails" >> {
+          "it falls back to zero counts for unavailable URNs" in new CountsContext {
+            skipped("Need a mock to return a failed future")
+          }
+        }
+
+      }
+    }
+
   }
 }
