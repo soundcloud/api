@@ -22,7 +22,7 @@ containers:
     httpGet:
       path: /-/health
       port: 80
-    initialDelaySeconds: 1
+    initialDelaySeconds: 20
     timeoutSeconds: 1
   livenessProbe:
     httpGet:
