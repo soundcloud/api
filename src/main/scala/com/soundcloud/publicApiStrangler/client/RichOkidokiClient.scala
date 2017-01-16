@@ -88,7 +88,8 @@ class RichOkidokiClient(service: JsonClient,
     }
 
     inBatches(trackUrns.toList, batchSize) { urnBatch => {
-      service.get(session, Path() / "tracks" / "audio" / "", Params("urns" -> urnBatch), Params.empty).map {
+      val path = Path() / "tracks" / "audio" // okidoki does unwanted magic without the trailing "/"
+      service.get(session, path / "", Params("urns" -> urnBatch.mkString(",")), Params.empty).map {
         case JsonResponse(SuccessfulStatusClass(_), body, _, _) => parseJson(body)
         case _ => List.empty
       }
@@ -103,7 +104,8 @@ class RichOkidokiClient(service: JsonClient,
     }
 
     inBatches(trackUrns.toList, batchSize) { urnBatch => {
-      service.get(session, Path() / "tracks" / "geo_blockings" / "", Params("urns" -> urnBatch.mkString(",")), Params.empty).map {
+      val path = Path() / "tracks" / "geo_blockings" / "" // okidoki does unwanted magic without the trailing "/"
+      service.get(session, path, Params("urns" -> urnBatch.mkString(",")), Params.empty).map {
         case JsonResponse(SuccessfulStatusClass(_), body, _, _) => parseJson(body)
         case JsonResponse(_, body, _, _) => List.empty
         case _ => List.empty

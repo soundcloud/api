@@ -8,6 +8,7 @@ import com.twitter.finagle.http.Status
 import com.twitter.util.Future
 
 class UserTracksControllerSpec extends InjectionBasedControllerSpecification {
+
   trait Context extends Scope {
     val userAuthentication = fakeUserAuthentication(anonymousSession)
     val mothershipDispatcher = mock[TrackMothershipDispatcherWithCounts]
