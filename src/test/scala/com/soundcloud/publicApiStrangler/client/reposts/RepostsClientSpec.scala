@@ -2,18 +2,21 @@ package com.soundcloud.publicApiStrangler.client.reposts
 
 import au.com.dius.pact.consumer.dsl.PactDslJsonBody
 import au.com.dius.pact.consumer.{PactSpec, UnitSpecsSupport}
+import com.soundcloud.bff.test.UnitSpecification
 import com.soundcloud.jvmkit.telemetry.Telemetry
 import com.soundcloud.jvmkit.test.InMemoryConfig
-import com.soundcloud.jvmkit.{ResourceName, Urn, UserSessionBuilder}
+import com.soundcloud.jvmkit.{ResourceName, Urn, UserSession, UserSessionBuilder}
 import com.soundcloud.publicApiStrangler.client.reposts.RepostsClient._
+import com.soundcloud.scalakit.Path
 import com.soundcloud.scalakit.finagle.dns.ServiceEntryPoint
-import com.soundcloud.scalakit.finagle.jsonservice.JsonClient
-import com.twitter.util.Await
-import org.specs2.matcher.Scope
-import org.specs2.mutable.Specification
+import com.soundcloud.scalakit.finagle.http.OkStatus
+import com.soundcloud.scalakit.finagle.jsonservice.{JsonClient, JsonResponse, Params}
+import com.twitter.finagle.http.HeaderMap
+import com.twitter.util.{Await, Future}
+import org.mockito.Mockito.when
 import play.api.libs.json.Json
 
-class RepostsClientSpec extends Specification with PactSpec with UnitSpecsSupport {
+class RepostsClientSpec extends UnitSpecification with PactSpec with UnitSpecsSupport {
 
   override val consumer = "public-api-strangler"
   override val provider = "reposts"
@@ -56,9 +59,12 @@ class RepostsClientSpec extends Specification with PactSpec with UnitSpecsSuppor
       response = buildResponse(
         status = 200,
         headers = headers,
-        maybeBody = Some(Json.obj("counts" -> Json.arr(
-          Json.obj("urn" -> user.toString, "count" -> 0L)
-        )).toString)
+        bodyAndMatchers = new PactDslJsonBody()
+          .minArrayLike("counts", 1)
+            .stringMatcher("urn", "soundcloud:[a-z0-9-]+:[a-z0-9-]+", user.toString)
+            .integerType("count", 12L)
+            .closeObject()
+          .closeArray()
       )
     ),
     buildInteraction(
@@ -68,45 +74,64 @@ class RepostsClientSpec extends Specification with PactSpec with UnitSpecsSuppor
       response = buildResponse(
         status = 200,
         headers = headers,
+        bodyAndMatchers = new PactDslJsonBody()
+          .minArrayLike("counts", 1)
+            .stringMatcher("urn", "soundcloud:[a-z0-9-]+:[a-z0-9-]+", user.toString)
+            .integerType("count", 13L)
+            .closeObject()
+          .closeArray()
+      )
+    ),
+    buildInteraction(
+      description = "Get counts of reposts for tracks",
+      maybeState = None,
+      request = buildRequest(
+        path = s"/tracks/reposts/count",
+        method = "GET",
+        query = "urns=soundcloud:tracks:2,soundcloud:tracks:1"
+      ),
+      response = buildResponse(
+        status = 200,
+        headers = headers,
         maybeBody = Some(Json.obj("counts" -> Json.arr(
-          Json.obj("urn" -> user.toString, "count" -> 0L)
-        )).toString)
+          Json.obj("urn" -> "soundcloud:tracks:1", "count" -> 12L),
+          Json.obj("urn" -> "soundcloud:tracks:2", "count" -> 13L)
+        )).toString),
+        matchers = Map(
+          "$.body.counts[*].count" -> Map("match" -> "integer"),
+          "$.body.counts[*].urn" -> Map("regex" -> "soundcloud:[a-z0-9-]+:[a-z0-9-]+"),
+          "$.body.counts" -> Map(
+            "min" -> "2",
+            "match" -> "type"
+          )
+        )
+      )
+    ),
+    buildInteraction(
+      description = "Get counts of reposts for playlists",
+      maybeState = None,
+      request = buildRequest(
+        path = s"/playlists/reposts/count",
+        method = "GET",
+        query = "urns=soundcloud:playlists:1,soundcloud:playlists:2"
+      ),
+      response = buildResponse(
+        status = 200,
+        headers = headers,
+        maybeBody = Some(Json.obj("counts" -> Json.arr(
+          Json.obj("urn" -> "soundcloud:playlists:1", "count" -> 14L),
+          Json.obj("urn" -> "soundcloud:playlists:2", "count" -> 15L)
+        )).toString),
+        matchers = Map(
+          "$.body.counts[*].count" -> Map("match" -> "integer"),
+          "$.body.counts[*].urn" -> Map("regex" -> "soundcloud:[a-z0-9-]+:[a-z0-9-]+"),
+          "$.body.counts" -> Map(
+            "min" -> "2",
+            "match" -> "type"
+          )
+        )
       )
     )
-//    ,
-//    buildInteraction(
-//      description = "Get counts of reposts for tracks",
-//      maybeState = None,
-//      request = betterBuildRequest(
-//        path = s"/tracks/reposts/count",
-//        method = "GET",
-//        query = Map("urns" -> Seq("soundcloud:tracks:1", "soundcloud:tracks:2"))
-//      ),
-//      response = buildResponse(
-//        status = 200,
-//        headers = headers,
-//        maybeBody = Some(Json.obj("counts" -> Json.arr(
-//          Json.obj("urn" -> "soundcloud:tracks:1", "count" -> 0L),
-//          Json.obj("urn" -> "soundcloud:tracks:2", "count" -> 0L)
-//        )).toString)
-//      )
-//    ),
-//    buildInteraction(
-//      description = "Get counts of reposts for playlists",
-//      maybeState = None,
-//      request = betterBuildRequest(
-//        path = s"/playlists/reposts/count",
-//        method = "GET",
-//        query = Map("urns" -> Seq("soundcloud:playlists:1", "soundcloud:playlists:2"))
-//      ),
-//      response = buildResponse(
-//        status = 200,
-//        maybeBody = Some(Json.obj("counts" -> Json.arr(
-//          Json.obj("urn" -> "soundcloud:playlists:1", "count" -> 0L),
-//          Json.obj("urn" -> "soundcloud:playlists:2", "count" -> 0L)
-//        )).toString)
-//      )
-//    )
   )
 
   val trackRepostInteractions = List(
@@ -311,39 +336,46 @@ class RepostsClientSpec extends Specification with PactSpec with UnitSpecsSuppor
     }
 
     "#getRepostCountsByUrnWithFallback" >> {
-      "some context" >> {
-        trait CountsContext extends Context {
-          val sessionUser = user
-          val track1 = Urn("soundcloud:tracks:1")
-          val track2 = Urn("soundcloud:tracks:2")
-          val playlist1 = Urn("soundcloud:playlists:1")
-          val playlist2 = Urn("soundcloud:playlists:2")
-        }
+      trait CountsContext extends Context {
+        val sessionUser = user
+        val track1 = Urn("soundcloud:tracks:1")
+        val track2 = Urn("soundcloud:tracks:2")
+        val playlist1 = Urn("soundcloud:playlists:1")
+        val playlist2 = Urn("soundcloud:playlists:2")
+      }
 
-        "when data is available" >> {
-          "it returns total reposts by a user" in new CountsContext {
-            Await.result(client.getRepostCountsByUrnWithFallback(session, Set(user))) ==== Map(user -> 0L)
-            skipped("Need the mocks to return different results for track and playlist, so we can assert they are combinded")
-          }
-          "it returns repost counts of different types" in new CountsContext {
-            skipped("Need to mock batch calls for track and playlist reposts")
-            val f = client.getRepostCountsByUrnWithFallback(session, Set(user, track1, track2, playlist1, playlist2))
-            Await.result(f) ==== Map(user -> 0L, track1 -> 0L, track2 -> 0L, playlist1 -> 0L, playlist2 -> 0L)
-          }
+      "when data is available" >> {
+        "it returns total reposts by a user" in new CountsContext {
+          Await.result(client.getRepostCountsByUrnWithFallback(session, Set(user))) ==== Map(user -> 25L)
         }
-
-        "when data is not available, but the calls were successful" >> {
-          "it falls back to zero counts for unavailable URNs" in new CountsContext {
-            skipped("Need the mocks to return a successful future with no counts in it")
-          }
+        "it returns repost counts of different types" in new CountsContext {
+          val f = client.getRepostCountsByUrnWithFallback(session, Set(user, track1, track2, playlist1, playlist2))
+          Await.result(f) ==== Map(user -> 25L, track1 -> 12L, track2 -> 13L, playlist1 -> 14L, playlist2 -> 15L)
         }
+      }
 
-        "when an upstream request fails call fails" >> {
-          "it falls back to zero counts for unavailable URNs" in new CountsContext {
-            skipped("Need a mock to return a failed future")
-          }
+      trait MockedJsonClient extends Context {
+        val jsonClientMock = mock[JsonClient]
+        val clientWithMock = new RepostsClient(jsonClientMock)
+      }
+
+      "when data is not available, but the calls were successful" >> {
+        "it falls back to zero counts for unavailable URNs" in new CountsContext with MockedJsonClient {
+          when(jsonClientMock.get(any[UserSession], any[Path], any[Params], any[Params])) thenReturn
+            Future.value(JsonResponse(OkStatus, Json.obj("counts" -> Json.arr()), HeaderMap(("content-type", "application/json;charset=utf-8"))))
+
+          val f = clientWithMock.getRepostCountsByUrnWithFallback(session, Set(user, track1, track2, playlist1, playlist2))
+          Await.result(f) ==== Map(user -> 0L, track1 -> 0L, track2 -> 0L, playlist1 -> 0L, playlist2 -> 0L)
         }
+      }
 
+      "when an upstream request fails call fails" >> {
+        "it falls back to zero counts for unavailable URNs" in new CountsContext with MockedJsonClient {
+          when(jsonClientMock.get(any[UserSession], any[Path], any[Params], any[Params])).thenReturn(Future.???)
+          val f = clientWithMock.getRepostCountsByUrnWithFallback(session, Set(user, track1, track2, playlist1, playlist2))
+
+          Await.result(f) ==== Map(user -> 0L, track1 -> 0L, track2 -> 0L, playlist1 -> 0L, playlist2 -> 0L)
+        }
       }
     }
 
