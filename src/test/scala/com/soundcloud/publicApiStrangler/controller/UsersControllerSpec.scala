@@ -64,28 +64,6 @@ class UsersControllerSpec extends InjectionBasedControllerSpecification {
     }
   }
 
-  "GET /users/:id/tracks" >> {
-    "falls back to Mothership" in new Context {
-      val response = get(controller, "/users/7110/tracks")
-      response.status ==== Status.Ok
-    }
-
-    "falls back to Mothership with trailing slash" in new Context {
-      val response = get(controller, "/users/7110/tracks/")
-      response.status ==== Status.Ok
-    }
-
-    "falls back to Mothership with .json" in new Context {
-      val response = get(controller, "/users/7110/tracks.json")
-      response.status ==== Status.Ok
-    }
-
-    "falls back to Mothership with .json and trailing slash" in new Context {
-      val response = get(controller, "/users/7110/tracks.json/")
-      response.status ==== Status.Ok
-    }
-  }
-
   "GET /users/:id/comments" >> {
     "falls back to Mothership" in new Context {
       val response = get(controller, "/users/7110/comments")
