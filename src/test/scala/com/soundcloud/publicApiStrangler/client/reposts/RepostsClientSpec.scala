@@ -88,7 +88,7 @@ class RepostsClientSpec extends UnitSpecification with PactSpec with UnitSpecsSu
       request = buildRequest(
         path = s"/tracks/reposts/count",
         method = "GET",
-        query = "urns=soundcloud:tracks:2,soundcloud:tracks:1"
+        query = "urns=soundcloud:tracks:1,soundcloud:tracks:2"
       ),
       response = buildResponse(
         status = 200,
@@ -349,7 +349,8 @@ class RepostsClientSpec extends UnitSpecification with PactSpec with UnitSpecsSu
           Await.result(client.getRepostCountsByUrnWithFallback(session, Set(user))) ==== Map(user -> 25L)
         }
         "it returns repost counts of different types" in new CountsContext {
-          val f = client.getRepostCountsByUrnWithFallback(session, Set(user, track1, track2, playlist1, playlist2))
+          val urns: Set[Urn] = collection.immutable.TreeSet(user, track1, track2, playlist1, playlist2)
+          val f = client.getRepostCountsByUrnWithFallback(session, urns)
           Await.result(f) ==== Map(user -> 25L, track1 -> 12L, track2 -> 13L, playlist1 -> 14L, playlist2 -> 15L)
         }
       }
