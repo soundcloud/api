@@ -6,6 +6,7 @@ import com.soundcloud.jvmkit.Urn
 import com.soundcloud.jvmkit.telemetry.Telemetry
 import com.soundcloud.publicApiStrangler.TrackRepresentationsService
 import com.soundcloud.publicApiStrangler.support.DispatchToMothershipHandler
+import com.soundcloud.publicApiStrangler.support.migration.TrackCollectionResponseComparison
 import com.soundcloud.scalakit.json.Json
 import com.twitter.finagle.http.{Response, Status}
 import com.twitter.util.{Future, NonFatal, Return, Try}
@@ -20,6 +21,9 @@ class UserTracksController(userAuthentication: UserAuthentication,
 
   private val numericRegexp = """\d+""".r
 
+  private val shouldCompareResponse = () => Future.False
+  private val responseComparison = new TrackCollectionResponseComparison(telemetry)
+
 //  get("/users/:id/tracks")(userRelatedMothershipDispatcher.dispatchToMothership _)
 //  get("/users/:id/tracks/")(userRelatedMothershipDispatcher.dispatchToMothership _)
 //  get("/users/:id/tracks.json")(userRelatedMothershipDispatcher.dispatchToMothership _)
@@ -30,7 +34,26 @@ class UserTracksController(userAuthentication: UserAuthentication,
   get("/users/:userId/tracks.json")(renderTracks)
   get("/users/:userId/tracks.json/")(renderTracks)
 
+  private def handleRequest(req: Request): Future[ResponseBuilder] = {
+    shouldCompareResponse().flatMap {
+      case true  => compareResponse(req)
+      case false => mothershipDispatcher.dispatchToMothership(req)
+    }.map(toResponseBuilder)
+  }
+
+  private def compareResponse(req: Request): Future[Response] = {
+    Future.join(mothershipDispatcher.dispatchToMothership(req), buildResponse(req)).map {
+      case (mothership, migration) =>
+        responseComparison.report(req, mothership, migration)
+        mothership
+    }
+  }
+
   private def renderTracks(req: Request): Future[ResponseBuilder] = {
+    buildResponse(req).map(toResponseBuilder)
+  }
+
+  private def buildResponse(req: Request): Future[Response] = {
     stripConditionalRequestHeaders(req)
 
     userAuthentication.withUserSession(req) { case session =>
@@ -41,11 +64,11 @@ class UserTracksController(userAuthentication: UserAuthentication,
         case Return(urn@Urn(_, _, numericRegexp())) => {
           // TODO add limit and offset
           tracksService.tracks(session, urn, None, None).map { tracks =>
-            toResponseBuilder(generateResponse(Status.Ok, Json.stringify(tracks), callback))
+            generateResponse(Status.Ok, Json.stringify(tracks), callback)
           } handle {
             case NonFatal(e) => {
               logger.error(e.getMessage)
-              toResponseBuilder(generateResponse(Status.InternalServerError, "An unexpected error occured while fetching a track", callback))
+              generateResponse(Status.InternalServerError, "An unexpected error occured while fetching a track", callback)
             }
           }
         }
@@ -54,14 +77,14 @@ class UserTracksController(userAuthentication: UserAuthentication,
     }
   }
 
-  private def generateNotFound(callback: Option[String]): ResponseBuilder = {
+  private def generateNotFound(callback: Option[String]): Response = {
     val content = jsonpWrapper(callback, notFoundErrorString)
     val contentLength = content.getBytes("UTF-8").length
     val res = Response(Status.NotFound)
     res.setContentString(content)
     res.contentType = "application/json; charset=utf-8"
     res.contentLength = contentLength
-    toResponseBuilder(res)
+    res
   }
 
   private def generateResponse(status: Status, rawContent: String, callback: Option[String]): Response = {

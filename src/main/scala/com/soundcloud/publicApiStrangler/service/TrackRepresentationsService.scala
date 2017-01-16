@@ -129,7 +129,7 @@ class TrackRepresentationsService(
             track = track,
             user = user,
             isrc = isrcs.get(urn),
-            counts = counts.get(urn).getOrElse(StitchCounts(0, 0, 0, 0)),
+            counts = counts.get(urn).getOrElse(StitchCounts(0, 0, 0, 0, 0)),
             label = labels.get(urn),
             geoblockings = geoblockings.get(urn),
             domainLockings = domainLockings.get(urn).getOrElse(List.empty),
