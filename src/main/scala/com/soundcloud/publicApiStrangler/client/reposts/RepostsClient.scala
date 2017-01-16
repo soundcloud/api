@@ -52,7 +52,7 @@ class RepostsClient(jsonClient: JsonClient) extends FetchClient {
   private def filterAndGetBulkCounts(session: UserSession,
                                      collection: String,
                                      urns: Set[Urn],
-                                     batchSize: Int = 50): Future[Seq[Count]] = {
+                                     batchSize: Int = 100): Future[Seq[Count]] = {
     val filteredUrns = urns.filter(_.getCollection == collection)
     val path = Path() / collection / "reposts" / "count"
 
