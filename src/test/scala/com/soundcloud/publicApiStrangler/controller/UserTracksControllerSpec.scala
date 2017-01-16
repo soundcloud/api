@@ -1,11 +1,13 @@
 package com.soundcloud.publicApiStrangler.controller
 
-import com.soundcloud.bff.finagle.ResponseBuilder
+import com.soundcloud.bff.finagle.{Request, ResponseBuilder}
 import com.soundcloud.bff.test.InjectionBasedControllerSpecification
 import com.soundcloud.jvmkit.telemetry.Telemetry
 import com.soundcloud.publicApiStrangler.TrackRepresentationsService
 import com.twitter.finagle.http.Status
 import com.twitter.util.Future
+import org.mockito.Mockito.when
+import org.specs2.mock.mockito.MockitoMatchers.any
 
 class UserTracksControllerSpec extends InjectionBasedControllerSpecification {
 
@@ -16,35 +18,40 @@ class UserTracksControllerSpec extends InjectionBasedControllerSpecification {
     val telemetry = mock[Telemetry]
 
     val userRelatedMothershipDispatcher = mock[UserRelatedMothershipDispatcher]
+
+    def compareResponse: Boolean
+
+    val shouldCompareResponse = () => Future.value(compareResponse)
     val controller = new UserTracksController(
       userAuthentication,
       mothershipDispatcher,
       tracksService,
-      telemetry)
+      telemetry,
+      shouldCompareResponse)
 
     val success = Future.value(new ResponseBuilder().status(200))
   }
 
-
-  "GET /users/:id/tracks" >> {
-    "falls back to Mothership" in new Context {
-      val response = get(controller, "/users/7110/tracks")
-      response.status ==== Status.Ok
+  "compareResponse = false" >> {
+    trait ShouldNotCompareResponse extends Context {
+      override def compareResponse = false
     }
 
-    "falls back to Mothership with trailing slash" in new Context {
-      val response = get(controller, "/users/7110/tracks/")
-      response.status ==== Status.Ok
-    }
+    "GET /users/:id/tracks" >> {
+      "falls back to Mothership" in new ShouldNotCompareResponse {
+        when(mothershipDispatcher.request(any[Request])).thenReturn(success)
 
-    "falls back to Mothership with .json" in new Context {
-      val response = get(controller, "/users/7110/tracks.json")
-      response.status ==== Status.Ok
-    }
-
-    "falls back to Mothership with .json and trailing slash" in new Context {
-      val response = get(controller, "/users/7110/tracks.json/")
-      response.status ==== Status.Ok
+        List(
+          "/users/7110/tracks",
+          "/users/7110/tracks/",
+          "/users/7110/tracks.json",
+          "/users/7110/tracks.json/"
+        ).foreach(path => {
+          println(s"For path $path")
+          val response = get(controller, path)
+          response.status ==== Status.Ok
+        })
+      }
     }
   }
 }
