@@ -3,6 +3,7 @@ package com.soundcloud.publicApiStrangler.client
 import com.soundcloud.jvmkit.ResourceName
 import com.soundcloud.jvmkit.config.ConfigConvention
 import com.soundcloud.publicApiStrangler.client.reposts.RepostsClient
+import com.soundcloud.publicApiStrangler.client.followcounts.FollowCountsClient
 import com.soundcloud.scalakit.finagle.dns.ServiceEntryPoint
 import com.soundcloud.scalakit.finagle.jsonservice.JsonClient
 import com.soundcloud.scalakit.framework.ScAppComponent
@@ -17,6 +18,6 @@ trait RepostsComponent {
     telemetry
   )
 
-  lazy val repostsClient = new RepostsClient(repostsService)
+  val repostsClientBuilder = (followCountsClient: FollowCountsClient, okidokiService: JsonClient) => new RepostsClient(repostsService, followCountsClient, okidokiService)
 
 }

@@ -7,6 +7,7 @@ import com.soundcloud.jvmkit.telemetry.Telemetry
 import com.soundcloud.jvmkit.test.InMemoryConfig
 import com.soundcloud.jvmkit.{ResourceName, Urn, UserSession, UserSessionBuilder}
 import com.soundcloud.publicApiStrangler.client.reposts.RepostsClient._
+import com.soundcloud.publicApiStrangler.client.followcounts.{FollowCounts, FollowCountsClient}
 import com.soundcloud.scalakit.Path
 import com.soundcloud.scalakit.finagle.dns.ServiceEntryPoint
 import com.soundcloud.scalakit.finagle.http.OkStatus
@@ -212,6 +213,7 @@ class RepostsClientSpec extends UnitSpecification with PactSpec with UnitSpecsSu
         val config = new InMemoryConfig
         config.set("APP_NAME", consumer)
         config.set(s"${provider.toUpperCase}_JSONCLIENT_REQUEST_TIMEOUT_MILLIS", "5000")
+        config.set("STITCH_BULK_FETCH_MAX_ENTRIES", "200")
 
         val jsonClient = JsonClient(
           ResourceName(provider),
@@ -219,7 +221,20 @@ class RepostsClientSpec extends UnitSpecification with PactSpec with UnitSpecsSu
           config,
           new Telemetry(config)
         )
-        new RepostsClient(jsonClient)
+
+        // TODO
+        val okidokiJsonClient = JsonClient(
+          ResourceName("OKIDOKI"),
+          ServiceEntryPoint("dnssrv!http.okidoki.prod.moshimoshi.dd.srv.int.s-cloud.net"),
+          config,
+          new Telemetry(config))
+        val stitchJsonService = JsonService(
+          ResourceName("STITCH"),
+          ServiceEntryPoint("dnssrv!http.web.prod.stitch4counts.dd.srv.int.s-cloud.net"),
+          config)
+        val followCountsClient = new FollowCountsClient(stitchJsonService, config)
+
+        new RepostsClient(jsonClient, followCountsClient, okidokiJsonClient)
       }
     }
 
