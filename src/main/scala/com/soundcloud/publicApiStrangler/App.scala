@@ -8,7 +8,6 @@ import com.soundcloud.bff.services.{JsonService, ServiceConfig}
 import com.soundcloud.jvmkit.admin.{AdminRoute, RequestMethod}
 import com.soundcloud.jvmkit.config.{ConfigConvention, DataSensitivity}
 import com.soundcloud.jvmkit.rollout.{BasicRolloutFeature, Rollout, RolloutBuilder}
-import com.soundcloud.jvmkit.telemetry.Telemetry
 import com.soundcloud.jvmkit.zookeeper.CuratorFrameworkFactory
 import com.soundcloud.jvmkit.{ResourceName, Urn}
 import com.soundcloud.publicApiStrangler.authorization._
