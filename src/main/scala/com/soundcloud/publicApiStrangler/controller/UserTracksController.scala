@@ -15,12 +15,12 @@ import scala.collection.JavaConversions._
 class UserTracksController(userAuthentication: UserAuthentication,
                            mothershipDispatcher: TrackMothershipDispatcherWithCounts,
                            tracksService: TrackRepresentationsService,
-                           telemetry: Telemetry)
+                           telemetry: Telemetry,
+                           shouldCompareResponse: () => Future[Boolean])
   extends BffInjectionBasedController {
 
   private val numericRegexp = """\d+""".r
 
-  private val shouldCompareResponse = () => Future.True
   private val responseComparison = new TrackCollectionResponseComparison(telemetry)
 
   get("/users/:userId/tracks")(handleRequest)

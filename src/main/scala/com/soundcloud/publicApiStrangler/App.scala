@@ -274,11 +274,14 @@ object App
       mothershipDispatcher,
       stitchClient)
 
+    val shouldCompareResponse = BasicRolloutFeature("compare_response_with_trakmetadata")
+
     new UserTracksController(
       userAuthentication,
       trackMothershipDispatcherWithCounts,
       tracksService,
-      telemetry
+      telemetry,
+      () => rolloutClient.isActive(shouldCompareResponse)
     )
   }
 
