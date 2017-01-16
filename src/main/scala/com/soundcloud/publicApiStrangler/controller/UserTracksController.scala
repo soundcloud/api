@@ -52,7 +52,11 @@ class UserTracksController(userAuthentication: UserAuthentication,
 
       Try(new Urn("soundcloud", "users", userId)) match {
         case Return(urn@Urn(_, _, numericRegexp())) => {
-          // TODO add limit and offset
+          // TODO add pagination support
+          // val limit = Option(req.getParam("limit"))
+          // val offset = Option(req.getParam("offset"))
+          // val createdAtFrom = Option(req.getParams("created_at[from]"))
+          // val createdAtTo = Option(req.getParams("created_at[to]"))
           tracksService.tracks(session, urn, None, None).map { tracks =>
             generateResponse(Status.Ok, Json.stringify(tracks), callback)
           } handle {
