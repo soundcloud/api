@@ -94,7 +94,7 @@ class TrackRepresentationsService(
       val geoblockingsF = okidokiClient.fetchTrackGeoblockings(session, trackUrnsPage).handle { case NonFatal(_) => Map.empty[Urn, Geoblockings] }
       val domainLockingsF = okidokiClient.fetchTracksDomainLockings(session, trackUrnsPage).handle { case NonFatal(_) => Map.empty[Urn, List[DomainLocking]] }
       val audiosF = okidokiClient.fetchTracksAudioMetadata(session, trackUrnsPage).handle { case NonFatal(_) => Map.empty[Urn, TrackAudioMetadata] }
-      val countsF = stitchClient.countsForTracks(session, trackUrnsPage, userUrn).handle { case NonFatal(_) => Map.empty[Urn, StitchCounts] }
+      val countsF = stitchClient.countsForTracksByUser(session, userUrn, trackUrnsPage).handle { case NonFatal(_) => Map.empty[Urn, StitchCounts] }
 
       Future.join(tracksF, isLikedF, isrcsF, geoblockingsF, domainLockingsF, audiosF, countsF)
     }
