@@ -5,7 +5,6 @@ import com.soundcloud.bff.web.{BffInjectionBasedController, UserAuthentication}
 import com.soundcloud.jvmkit.Urn
 import com.soundcloud.jvmkit.telemetry.Telemetry
 import com.soundcloud.publicApiStrangler.TrackRepresentationsService
-import com.soundcloud.publicApiStrangler.support.DispatchToMothershipHandler
 import com.soundcloud.publicApiStrangler.support.migration.TrackCollectionResponseComparison
 import com.soundcloud.scalakit.json.Json
 import com.twitter.finagle.http.{Response, Status}
@@ -14,43 +13,34 @@ import com.twitter.util.{Future, NonFatal, Return, Try}
 import scala.collection.JavaConversions._
 
 class UserTracksController(userAuthentication: UserAuthentication,
-                           mothershipDispatcher: DispatchToMothershipHandler,
+                           mothershipDispatcher: TrackMothershipDispatcherWithCounts,
                            tracksService: TrackRepresentationsService,
                            telemetry: Telemetry)
   extends BffInjectionBasedController {
 
   private val numericRegexp = """\d+""".r
 
-  private val shouldCompareResponse = () => Future.False
+  private val shouldCompareResponse = () => Future.True
   private val responseComparison = new TrackCollectionResponseComparison(telemetry)
 
-//  get("/users/:id/tracks")(userRelatedMothershipDispatcher.dispatchToMothership _)
-//  get("/users/:id/tracks/")(userRelatedMothershipDispatcher.dispatchToMothership _)
-//  get("/users/:id/tracks.json")(userRelatedMothershipDispatcher.dispatchToMothership _)
-//  get("/users/:id/tracks.json/")(userRelatedMothershipDispatcher.dispatchToMothership _)
-
-  get("/users/:userId/tracks")(renderTracks)
-  get("/users/:userId/tracks/")(renderTracks)
-  get("/users/:userId/tracks.json")(renderTracks)
-  get("/users/:userId/tracks.json/")(renderTracks)
+  get("/users/:userId/tracks")(handleRequest)
+  get("/users/:userId/tracks/")(handleRequest)
+  get("/users/:userId/tracks.json")(handleRequest)
+  get("/users/:userId/tracks.json/")(handleRequest)
 
   private def handleRequest(req: Request): Future[ResponseBuilder] = {
     shouldCompareResponse().flatMap {
       case true  => compareResponse(req)
-      case false => mothershipDispatcher.dispatchToMothership(req)
-    }.map(toResponseBuilder)
-  }
-
-  private def compareResponse(req: Request): Future[Response] = {
-    Future.join(mothershipDispatcher.dispatchToMothership(req), buildResponse(req)).map {
-      case (mothership, migration) =>
-        responseComparison.report(req, mothership, migration)
-        mothership
+      case false => mothershipDispatcher.request(req)
     }
   }
 
-  private def renderTracks(req: Request): Future[ResponseBuilder] = {
-    buildResponse(req).map(toResponseBuilder)
+  private def compareResponse(req: Request): Future[ResponseBuilder] = {
+    Future.join(mothershipDispatcher.request(req), buildResponse(req)).map {
+      case (mothership, migration) =>
+        responseComparison.report(req, mothership.build(req), migration)
+        mothership
+    }
   }
 
   private def buildResponse(req: Request): Future[Response] = {

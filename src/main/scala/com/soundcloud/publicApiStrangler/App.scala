@@ -269,9 +269,14 @@ object App
       playlistsClient
     )
 
-    new UserTracksController(
+    val trackMothershipDispatcherWithCounts = new TrackMothershipDispatcherWithCounts(
       userAuthentication,
       mothershipDispatcher,
+      stitchClient)
+
+    new UserTracksController(
+      userAuthentication,
+      trackMothershipDispatcherWithCounts,
       tracksService,
       telemetry
     )
