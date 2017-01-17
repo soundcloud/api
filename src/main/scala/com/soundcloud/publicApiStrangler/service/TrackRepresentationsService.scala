@@ -90,7 +90,7 @@ class TrackRepresentationsService(trackmetadataClient: TrackmetadataClient,
     def allDependenciesOnlyOnTrackUrn(trackUrnsPage: Set[Urn]) = {
       val tracksF = trackmetadataClient.tracks(session, trackUrnsPage)
       val isLikedF = Option(session.getUser).map(user => lieblingClient.userLikedTracks(session, trackUrnsPage, user)).getOrElse(Future.value(Map.empty[Urn, Boolean]))
-      val isrcsF = pubmeseClient.isrcsForTracks(session, trackUrnsPage.toSeq).handle { case NonFatal(_) => Map.empty[Urn, Isrc] }
+      val isrcsF = pubmeseClient.isrcsForTracks(session, trackUrnsPage).handle { case NonFatal(_) => Map.empty[Urn, Isrc] }
       val geoblockingsF = okidokiClient.fetchTrackGeoblockings(session, trackUrnsPage).handle { case NonFatal(_) => Map.empty[Urn, Geoblockings] }
       val domainLockingsF = okidokiClient.fetchTracksDomainLockings(session, trackUrnsPage).handle { case NonFatal(_) => Map.empty[Urn, List[DomainLocking]] }
       val audiosF = okidokiClient.fetchTracksAudioMetadata(session, trackUrnsPage).handle { case NonFatal(_) => Map.empty[Urn, TrackAudioMetadata] }

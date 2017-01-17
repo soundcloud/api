@@ -10,17 +10,17 @@ import play.api.libs.json.{Json, Reads}
 
 class PubmeseClient(jsonClient: JsonClient) {
   def isrcForTrack(session: UserSession, trackUrn: Urn): Future[Option[Isrc]] = {
-    isrcsForTracks(session, Seq(trackUrn)).map(_.get(trackUrn))
+    isrcsForTracks(session, Set(trackUrn)).map(_.get(trackUrn))
   }
 
-  def isrcsForTracks(session: UserSession, trackUrns: Seq[Urn]): Future[Map[Urn, Isrc]] = {
+  def isrcsForTracks(session: UserSession, trackUrns: Set[Urn]): Future[Map[Urn, Isrc]] = {
     val requestBody = Some(Json.obj("track_urns" -> trackUrns).toString())
 
     jsonClient.post(session, Path() / "tracks", Params.empty, Params.empty, requestBody).map {
       case JsonResponse(OkStatus, body, _, _) => body.as[List[TrackRepresentation]].map { t => t.track_urn -> Isrc(t.isrc) }.toMap
       case _ => Map.empty[Urn, Isrc]
     }.handle {
-      case NonFatal(ex) => Map.empty[Urn, Isrc]
+      case NonFatal(_) => Map.empty[Urn, Isrc]
     }
   }
 

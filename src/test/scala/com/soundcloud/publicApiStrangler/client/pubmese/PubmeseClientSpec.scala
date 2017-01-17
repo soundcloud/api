@@ -21,17 +21,17 @@ class PubmeseClientSpec extends UnitSpecification {
     val urn1 = Urn("soundcloud:tracks:123")
     val urn2 = Urn("soundcloud:tracks:456")
 
-    val urns = Seq(urn1, urn2)
+    val urns = Set(urn1, urn2)
 
-    def stubbedRequestFor(urns: Seq[Urn]) =
+    def stubbedRequestFor(urns: Set[Urn]) =
       jsonClient.post(session, path, Params.empty, Params.empty, requestBodyFor(urns))
 
-    private def requestBodyFor(urns: Seq[Urn]) = Some(Json.obj("track_urns" -> urns).toString())
+    private def requestBodyFor(urns: Set[Urn]) = Some(Json.obj("track_urns" -> urns).toString())
   }
 
   "single track" >> {
     "track exists and has an ISRC" in new Context {
-      stubbedRequestFor(Seq(urn1)) returns
+      stubbedRequestFor(Set(urn1)) returns
         Future.value(JsonResponse(OkStatus,
           Json.arr(Json.obj("track_urn" -> urn1, "isrc" -> "15RC"))
         ))
@@ -40,7 +40,7 @@ class PubmeseClientSpec extends UnitSpecification {
     }
 
     "track exists but has no ISRC" in new Context {
-      stubbedRequestFor(Seq(urn1)) returns
+      stubbedRequestFor(Set(urn1)) returns
         Future.value(JsonResponse(OkStatus,
           Json.arr(Json.obj("track_urn" -> urn1, "isrc" -> JsNull))
         ))
@@ -49,7 +49,7 @@ class PubmeseClientSpec extends UnitSpecification {
     }
 
     "track does not exist" in new Context {
-      stubbedRequestFor(Seq(urn1)) returns
+      stubbedRequestFor(Set(urn1)) returns
         Future.value(JsonResponse(NotFoundStatus,
           Json.obj()
         ))
