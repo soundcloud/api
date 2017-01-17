@@ -1,15 +1,12 @@
 package com.soundcloud.publicApiStrangler.support.migration
 
-import com.soundcloud.jvmkit.Country
 import com.soundcloud.jvmkit.logging.SoundCloudLoggerFactory
 import com.soundcloud.jvmkit.telemetry.Telemetry
-import com.soundcloud.scalakit.json.Json
-import com.twitter.finagle.http.{HeaderMap, Request, Response, Status}
+import com.soundcloud.scalakit.notifier.AirbrakeNotifier
+import com.twitter.finagle.http.{HeaderMap, Request, Response}
 import com.twitter.util.{NonFatal, Return, Try}
 import play.api.data.validation.ValidationError
 import play.api.libs.json._
-
-import scala.collection.Set
 
 class TrackCollectionResponseComparison(telemetry: Telemetry) {
   private val logger = SoundCloudLoggerFactory.getLogger(this.getClass.getName)
@@ -54,6 +51,7 @@ class TrackCollectionResponseComparison(telemetry: Telemetry) {
         reportStatusDifference(request, legacyRes, migrationRes)
       } else {
         compareHeaders(legacyRes, migrationRes)
+        compareBodies(request.path, legacyRes, migrationRes)
       }
     } catch {
       case NonFatal(ex) => {
@@ -61,6 +59,64 @@ class TrackCollectionResponseComparison(telemetry: Telemetry) {
         failuresCounter.labels("exception_during_comparison").inc()
       }
     }
+  }
+
+  private def compareBodies(path: String, legacyRes: Response, migrationRes: Response) = {
+    val legacyJsonTry = Try(Json.parse(legacyRes.getContentString()).as[JsValue])
+    val migrationJsonTry = Try(Json.parse(migrationRes.getContentString()).as[JsValue])
+
+    (legacyJsonTry, migrationJsonTry) match {
+      case (Return(legacyJson), Return(migrationJson)) => {
+        (legacyJson, migrationJson) match {
+          case (legacyTracks: JsArray, migrationTracks: JsArray) => {
+            if (legacyTracks.value.size != migrationTracks.value.size) {
+              failuresCounter.labels("legacyAndMigrationArrayDifferentCollectionSize").inc()
+              reportDifferentJson(
+                s"Different amount of tracks without linked partitioning for path ${path}",
+                legacyTracks,
+                migrationTracks)
+            }
+          }
+          case (legacyContent: JsObject, migrationContent: JsObject) => {
+            val legacyTracks = (legacyContent \ "collection").as[JsArray]
+            val migrationTracks = (legacyContent \ "collection").as[JsArray]
+            if (legacyTracks.value.size != migrationTracks.value.size) {
+              failuresCounter.labels("legacyAndMigrationObjectDifferentCollectionSize").inc()
+              reportDifferentJson(
+                s"Different amount of tracks with linked partitioning for path ${path}",
+                legacyTracks,
+                migrationTracks)
+            }
+          }
+          case (legacyJson: JsObject, migrationJson: JsArray) => {
+            failuresCounter.labels("legacyObjectMigrationArray").inc()
+            reportDifferentJson(s"Legacy response is linked partitioned by migration response isn't for path ${path}",
+              legacyJson,
+              migrationJson)
+          }
+          case (legacyJson: JsArray, migrationJson: JsObject) => {
+            failuresCounter.labels("legacyArrayMigrationObject").inc()
+            reportDifferentJson(s"Legacy response is not linked partitioned by migration response is for path ${path}",
+              legacyJson,
+              migrationJson)
+          }
+        }
+      }
+    }
+  }
+
+
+  private def reportDifferentJson(message: String, legacyJson: JsValue, migrationJson: JsValue) = {
+    val fullMessage = s"""
+         |${message}
+         |Legacy response was:
+         |  ${Json.prettyPrint(legacyJson)}
+         |
+         |Migration response was:
+         |  ${Json.prettyPrint(migrationJson)}
+                """.stripMargin
+    logger.info(s"TrackCollectionResponseComparison: $fullMessage")
+    AirbrakeNotifier.notify(fullMessage)
   }
 
   private def compareHeaders(legacyRes: Response, migrationRes: Response): Unit = {
@@ -71,15 +127,12 @@ class TrackCollectionResponseComparison(telemetry: Telemetry) {
   }
 
   private def reportHeaderDifference(legacyRes: Response, migrationRes: Response, differentHeaders: Seq[String]): Unit = {
+    logger.info(s"TrackCollectionResponseComparison: reporting header difference")
     failuresCounter.labels("differentHeaderCount").inc()
   }
 
-  def reportJsonFailure(request: Request, legacyRes: Response, migrationRes: Response, legacyResult: Try[JsObject], migrationResult: Try[JsObject]): Unit = {
-    failuresCounter.labels("jsonFailure").inc()
-  }
-
   private def reportStatusDifference(request: Request, legacyRes: Response, migrationRes: Response): Unit = {
-    logger.info(s"status code difference (legacy = ${legacyRes.statusCode}, migration = ${migrationRes.statusCode}) for ${request.method} ${request.path}")
+    logger.info(s"TrackCollectionResponseComparison: status code difference (legacy = ${legacyRes.statusCode}, migration = ${migrationRes.statusCode}) for ${request.method} ${request.path}")
     statusCodeDifferenceCounter.labels(legacyRes.statusCode.toString, migrationRes.statusCode.toString).inc()
   }
 
