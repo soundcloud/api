@@ -100,9 +100,9 @@ class TrackRepresentationsService(trackmetadataClient: TrackmetadataClient,
     }
 
     def allDependenciesOnTrackObjectList(tracks: List[Track]) = {
-      val labelsF = okidokiClient.fetchUsersMap(session, tracks.map(t => Urn("soundcloud", "users", t.label_id.toString)).toSet)
+      val labelsF = okidokiClient.fetchUsersMap(session, tracks.flatMap(_.label_id).map(labelId => Urn("soundcloud", "users", labelId.toString)).toSet)
       val waveformUrlsF = mediaUrlGenClient.waveformUrls(session, tracks.flatMap(_.uid)).map(_.getOrElse(Map.empty[String, Seq[WaveformUrl]]))
-      val downloadsPerTrackF = fetchDownloadsPerTrack(tracks.toSet, userUrn, session)
+      val downloadsPerTrackF = fetchDownloadsPerTrack(userUrn, session)
       val accessibilityChecksF = trackAccessibilityService.areTracksAccessible(session, tracks)
 
       Future.join(labelsF, waveformUrlsF, downloadsPerTrackF, accessibilityChecksF)
@@ -113,7 +113,8 @@ class TrackRepresentationsService(trackmetadataClient: TrackmetadataClient,
       trackUrnsPage = calculateTrackUrnPage(trackUrns)
       (tracks, isLiked, isrcs, geoblockings, domainLockings, audios, counts) <- allDependenciesOnlyOnTrackUrn(trackUrnsPage)
       (labels, waveformUrls, downloadsPerTrack, accessibilityCheck) <- allDependenciesOnTrackObjectList(tracks)
-      sortedAccessibleTracks = tracks.filter(track => accessibilityCheck.get(track.urn).getOrElse(true))
+      sortedAccessibleTracks = tracks
+        .filter(track => accessibilityCheck.get(track.urn).get) // the service should return values for all urns
         .sortBy(-_.urn.getIdentifier.toInt)
     } yield {
       sortedAccessibleTracks.flatMap(track => {
@@ -155,6 +156,6 @@ class TrackRepresentationsService(trackmetadataClient: TrackmetadataClient,
     okidokiClient.fetchUserObjects(session, Set(userUrn)).map(_.headOption)
 
 
-  private def fetchDownloadsPerTrack(track: Set[Track], userUrn: Urn, session: UserSession): Future[Map[Urn, Option[Int]]] =
+  private def fetchDownloadsPerTrack(userUrn: Urn, session: UserSession): Future[Map[Urn, Option[Int]]] =
     userQuotaClient.downloadsPerTrack(session, Set(userUrn))
 }
