@@ -228,13 +228,8 @@ class RepostsClientSpec extends UnitSpecification with PactSpec with UnitSpecsSu
           ServiceEntryPoint("dnssrv!http.okidoki.prod.moshimoshi.dd.srv.int.s-cloud.net"),
           config,
           new Telemetry(config))
-        val stitchJsonService = JsonService(
-          ResourceName("STITCH"),
-          ServiceEntryPoint("dnssrv!http.web.prod.stitch4counts.dd.srv.int.s-cloud.net"),
-          config)
-        val followCountsClient = new FollowCountsClient(stitchJsonService, config)
 
-        new RepostsClient(jsonClient, followCountsClient, okidokiJsonClient)
+        new RepostsClient(jsonClient, okidokiJsonClient)
       }
     }
 

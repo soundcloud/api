@@ -18,6 +18,6 @@ trait RepostsComponent {
     telemetry
   )
 
-  val repostsClientBuilder = (followCountsClient: FollowCountsClient, okidokiService: JsonClient) => new RepostsClient(repostsService, followCountsClient, okidokiService)
+  val repostsClientBuilder = (okidokiService: JsonClient) => new RepostsClient(repostsService, okidokiService)
 
 }

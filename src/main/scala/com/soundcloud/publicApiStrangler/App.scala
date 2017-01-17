@@ -170,7 +170,7 @@ object App
 
   private val baseUrl = config.get("APP_BASE_URL", DataSensitivity.NON_SENSITIVE)
 
-  private val repostsClient = repostsClientBuilder(followCountsClient, okidokiJsonClient)
+  private val repostsClient = repostsClientBuilder(okidokiJsonClient)
 
   private val enrichRepostsCounts: () => Future[Boolean] =
     () => rolloutClient.isActive(BasicRolloutFeature("load_user_repost_counts_from_reposts"))
@@ -345,7 +345,9 @@ object App
   private val suggestedUsersController = new SuggestedUsersController(userRelatedMothershipDispatcher)
 
   private val repostersController = new RepostersController(userAuthentication,
-                                                            repostsClient)
+                                                            repostsClient,
+                                                            followCountsClient,
+                                                            enrichRepostsCounts)
 
   private val userController = new UsersController(userRelatedMothershipDispatcher)
 

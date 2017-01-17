@@ -2,7 +2,6 @@ package com.soundcloud.publicApiStrangler.client.reposts
 
 import com.soundcloud.jvmkit.{Urn, UserSession}
 import com.soundcloud.publicApiStrangler.client.reposts.RepostsClient._
-import com.soundcloud.publicApiStrangler.client.followcounts.{FollowCounts, FollowCountsClient}
 import com.soundcloud.scalakit.Path
 import com.soundcloud.publicApiStrangler.mapping.timeline.User
 import com.soundcloud.scalakit.finagle.http._
@@ -15,7 +14,7 @@ import play.api.libs.json._
 /**
   * https://github.com/soundcloud/voltron/tree/master/reposts
   */
-class RepostsClient(jsonClient: JsonClient, followCountsClient: FollowCountsClient, okidokiJsonService: JsonClient) extends FetchClient {
+class RepostsClient(jsonClient: JsonClient, okidokiJsonService: JsonClient) extends FetchClient {
 
   def createRepost(session: UserSession, target: Urn, baseUrl: => String): Future[Result] =
     jsonClient.post(
@@ -46,7 +45,7 @@ class RepostsClient(jsonClient: JsonClient, followCountsClient: FollowCountsClie
     fetchAll(
       session,
       Path() / repostableUrn.getCollection / repostableUrn / "reposts")
-      .flatMap(enrichReposts(session, baseUrl))
+      .flatMap(hydrateUsers(session, baseUrl))
 
   private def fetchAll(session: UserSession, path: Path, batchSize: Int = 200): Future[List[JsObject]] = {
     def fetchPage(cursor: Option[String], acc: List[JsObject]): Future[List[JsObject]] = {
@@ -70,43 +69,23 @@ class RepostsClient(jsonClient: JsonClient, followCountsClient: FollowCountsClie
     fetchPage(None, List.empty)
   }
 
-  private def enrichReposts(session: UserSession, baseUrl: String)(reposts: List[JsObject]): Future[List[User]] = {
-    val userUrns = reposts.map(r => (r \ "user").as[Urn])
-    lazy val repostCounts = repostCountsForUrns(session, userUrns.toSet)
-      .map {
-      _.map { case Count(user, count) =>
-        (user, count)
-      }.toMap
-    }
-    lazy val followCounts = followCountsClient.counts(session, userUrns)
-      .map {
-      _.map { case value@FollowCounts(user, _, _) =>
-        (user, value)
-      }.toMap
-    }
-    lazy val hydratedUsers = fetchUsers(session, userUrns.toSet)
-
+  private def hydrateUsers(session: UserSession, baseUrl: String)(reposts: List[JsObject]): Future[List[User]] = {
     val context = new MappingContext(session)
-    for {
-      (countReposts, countFollows, users) <- Future.join(repostCounts,
-                                                         followCounts,
-                                                         hydratedUsers)
-    } yield {
-      users.toList.map { case (urn, jsonUser) =>
-        val followCounts = countFollows.get(urn)
-        val repostsCount = countReposts.get(urn)
-        new User(jsonUser, baseUrl, followCounts, repostsCount)(context)
+    val userUrns = reposts.map(r => (r \ "user").as[Urn])
+    fetchUsers(session, userUrns.toSet).map {
+      _.map { jsonUser =>
+        new User(jsonUser, baseUrl, None, None)(context)
       }
     }
   }
 
-  private def fetchUsers(session: UserSession, urns: Set[Urn], batchSize: Int = 50): Future[Map[Urn, JsObject]] = {
+  private def fetchUsers(session: UserSession, urns: Set[Urn], batchSize: Int = 50): Future[List[JsObject]] = {
     inBatches(urns.toList, batchSize) { urnBatch =>
       okidokiJsonService.get(session, Path() / "users" / "fetch", Params("urns" -> urnBatch), Params.empty).map {
         case JsonResponse(SuccessfulStatusClass(_), body, _, _) => body.as[List[JsObject]]
         case _ => List.empty
       }
-    }.map(_.map(json => ((json \ "self" \ "urn").as[Urn], json)).toMap)
+    }
   }
 
   private def repostCountsForUrns(session: UserSession, urns: Set[Urn]): Future[Set[Count]] =

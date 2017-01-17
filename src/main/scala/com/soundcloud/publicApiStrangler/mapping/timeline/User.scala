@@ -4,7 +4,7 @@ import com.soundcloud.bff.nextbff.mapping.MappingContext
 import com.soundcloud.publicApiStrangler.client.followcounts.FollowCounts
 import play.api.libs.json.{JsObject, JsValue, Json, Writes}
 
-class User(jsonValue: JsValue,
+case class User(jsonValue: JsValue,
            baseUrl: String,
            maybeFollowCounts: Option[FollowCounts],
            maybeRepostsCount: Option[Long])(implicit context: MappingContext)
