@@ -3,12 +3,11 @@ package com.soundcloud.publicApiStrangler
 import com.soundcloud.jvmkit.{Urn, UserSession}
 import com.soundcloud.publicApiStrangler.client.liebling.LieblingClient
 import com.soundcloud.publicApiStrangler.client.mediaservice.{MediaServiceUrlGenClient, WaveformUrl}
-import com.soundcloud.publicApiStrangler.client.playlists.PlaylistsClient
 import com.soundcloud.publicApiStrangler.client.pubmese.{Isrc, PubmeseClient}
 import com.soundcloud.publicApiStrangler.client.quota.UserQuotaClient
 import com.soundcloud.publicApiStrangler.client.stitch.{StitchClient, StitchCounts}
 import com.soundcloud.publicApiStrangler.controller.PublicApiPaginationParams
-import com.soundcloud.publicApiStrangler.service.TrackRepresentationBuilder
+import com.soundcloud.publicApiStrangler.service.{TrackAccessibilityService, TrackRepresentationBuilder}
 
 // FIXME: Do not use result types from Track Coordinator
 import com.soundcloud.publicApiStrangler.client.trackcoordinator.datatypes.{Result, NotFound => TrackNotFound, Success => SuccessResult}
@@ -25,7 +24,7 @@ class TrackRepresentationsService(trackmetadataClient: TrackmetadataClient,
                                   lieblingClient: LieblingClient,
                                   mediaUrlGenClient: MediaServiceUrlGenClient,
                                   userQuotaClient: UserQuotaClient,
-                                  playlistClient: PlaylistsClient,
+                                  trackAccessibilityService: TrackAccessibilityService,
                                   trackRepresentationBuilder: TrackRepresentationBuilder = new TrackRepresentationBuilder) {
 
   def track(session: UserSession, urn: Urn, secretTokenInRequest: Option[String]): Future[Result[TrackRepresentationLike]] = {
@@ -35,7 +34,7 @@ class TrackRepresentationsService(trackmetadataClient: TrackmetadataClient,
     val audioF = okidokiClient.fetchTrackAudioMetadata(session, urn)
 
     trackmetadataClient.track(session, urn).flatMap {
-      case Some(track) => isTrackAccessible(session, secretTokenInRequest, track).flatMap {
+      case Some(track) => trackAccessibilityService.isTrackAccessible(session, secretTokenInRequest, track).flatMap {
         case true => {
           val userForTrackF = fetchUser(track.user_urn, session)
           val labelF = track.label_id.map(labelId =>
@@ -104,7 +103,7 @@ class TrackRepresentationsService(trackmetadataClient: TrackmetadataClient,
       val labelsF = okidokiClient.fetchUsersMap(session, tracks.map(t => Urn("soundcloud", "users", t.label_id.toString)).toSet)
       val waveformUrlsF = mediaUrlGenClient.waveformUrls(session, tracks.flatMap(_.uid)).map(_.getOrElse(Map.empty[String, Seq[WaveformUrl]]))
       val downloadsPerTrackF = fetchDownloadsPerTrack(tracks.toSet, userUrn, session)
-      val accessibilityChecksF = Future.collect(tracks.map(track => isTrackAccessible(session, None, track).map((track.urn, _)))).map(_.toMap)
+      val accessibilityChecksF = trackAccessibilityService.areTracksAccessible(session, tracks)
 
       Future.join(labelsF, waveformUrlsF, downloadsPerTrackF, accessibilityChecksF)
     }
@@ -158,27 +157,4 @@ class TrackRepresentationsService(trackmetadataClient: TrackmetadataClient,
 
   private def fetchDownloadsPerTrack(track: Set[Track], userUrn: Urn, session: UserSession): Future[Map[Urn, Option[Int]]] =
     userQuotaClient.downloadsPerTrack(session, Set(userUrn))
-
-  private def isTrackAccessible(session: UserSession, secretTokenInRequest: Option[String], track: Track): Future[Boolean] = {
-    lazy val isPrivacyAuthorized = {
-      if (track.public || track.user_urn == session.getUser) Future.True
-      else isAccessGrantedViaSecretToken
-    }
-
-    lazy val isAccessGrantedViaSecretToken = {
-      secretTokenInRequest match {
-        case None => Future.False
-        case Some(secretToken) => {
-          if (secretToken.equals(track.secret_token)) Future.True
-          else playlistClient.getPlaylistContainingTrackOwnedByUser(track.urn, track.user_urn)
-            .map(_.exists(playlist => playlist.secretToken == secretToken && playlist.userUrn == track.user_urn))
-        }
-      }
-    }
-
-    val isDisabled = track.disabled_at.isDefined
-
-    if (!isDisabled) isPrivacyAuthorized
-    else Future.False
-  }
 }

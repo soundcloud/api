@@ -29,6 +29,7 @@ import com.soundcloud.publicApiStrangler.mapper.timeline.publicApi.ActivitiesWit
 import com.soundcloud.publicApiStrangler.mapper.timeline.{EntityMapper, EntitySummaryMapper, FollowingsTracksMapper}
 import com.soundcloud.publicApiStrangler.mapper.trackstreams.{TrackStreamJsonResponseMapper, TrackStreamRedirectResponseMapper}
 import com.soundcloud.publicApiStrangler.mapper.waveform.WaveformMapper
+import com.soundcloud.publicApiStrangler.service.TrackAccessibilityService
 import com.soundcloud.publicApiStrangler.support._
 import com.soundcloud.ratelimiting.facade._
 import com.soundcloud.scalakit.cache.MemcachedClient
@@ -238,6 +239,8 @@ object App
 
   val userQuotaClient = new UserQuotaClient(okidokiJsonClient)
 
+  val trackAccessibilityService = new TrackAccessibilityService(playlistsClient)
+
   val tracksService = new TrackRepresentationsService(
     trackmetadataClient,
     richOkidokiClient,
@@ -246,7 +249,7 @@ object App
     lieblingClient,
     mediaServiceUrlGenClient,
     userQuotaClient,
-    playlistsClient
+    trackAccessibilityService
   )
 
   private val singleTrackController = new SingleTrackController(
@@ -256,19 +259,7 @@ object App
       telemetry
     )
 
-
   private val userTracksController = {
-    val tracksService = new TrackRepresentationsService(
-      trackmetadataClient,
-      richOkidokiClient,
-      pubmeseClient,
-      stitchClient,
-      lieblingClient,
-      mediaServiceUrlGenClient,
-      userQuotaClient,
-      playlistsClient
-    )
-
     val trackMothershipDispatcherWithCounts = new TrackMothershipDispatcherWithCounts(
       userAuthentication,
       mothershipDispatcher,

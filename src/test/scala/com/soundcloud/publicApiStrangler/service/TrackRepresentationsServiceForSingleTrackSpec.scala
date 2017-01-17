@@ -11,6 +11,7 @@ import com.soundcloud.publicApiStrangler.client.trackcoordinator.datatypes.{Erro
 import com.soundcloud.publicApiStrangler.client.trackmetadata.{Artwork, EmbeddingPermission, Track, TrackmetadataClient}
 import com.soundcloud.publicApiStrangler.client.{DomainLocking, RichOkidokiClient, TrackAudioMetadata}
 import com.soundcloud.publicApiStrangler.representation.{TrackRepresentation, TrackRepresentationLike}
+import com.soundcloud.publicApiStrangler.service.TrackAccessibilityService
 import com.soundcloud.scalakit.json.Json
 import com.soundcloud.scalakit.test.UnitSpecification
 import com.soundcloud.service.response.representation.{Geoblockings, User}
@@ -19,7 +20,7 @@ import org.joda.time.LocalDateTime
 import org.mockito.Mockito._
 import play.api.libs.json._
 
-class TrackRepresentationsServiceSpec extends UnitSpecification {
+class TrackRepresentationsServiceForSingleTrackSpec extends UnitSpecification {
 
   trait Context extends Scope {
     implicit val trackRepresentationWrites = TrackRepresentation.writes
@@ -32,6 +33,7 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
     val mediaUrlGenClient = mock[MediaServiceUrlGenClient]
     val userQuotaClient = mock[UserQuotaClient]
     val playlistsClient = mock[PlaylistsClient]
+    val trackAccessibilityService = new TrackAccessibilityService(playlistsClient)
 
     val tracksService = new TrackRepresentationsService(
       trackmetadataClient,
@@ -41,7 +43,7 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
       lieblingClient,
       mediaUrlGenClient,
       userQuotaClient,
-      playlistsClient
+      trackAccessibilityService
     )
 
     val requestingUserUrn = new Urn("soundcloud:users:112")
