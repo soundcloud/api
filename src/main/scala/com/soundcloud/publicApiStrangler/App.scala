@@ -344,7 +344,8 @@ object App
 
   private val suggestedUsersController = new SuggestedUsersController(userRelatedMothershipDispatcher)
 
-  private val repostersController = new RepostersController(repostsClient)
+  private val repostersController = new RepostersController(userAuthentication,
+                                                            repostsClient)
 
   private val userController = new UsersController(userRelatedMothershipDispatcher)
 
