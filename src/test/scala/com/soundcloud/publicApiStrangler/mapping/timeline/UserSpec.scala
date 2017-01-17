@@ -11,7 +11,7 @@ class UserSpec extends UnitSpecification {
   val baseUrl = ""
   val maybeFollowCounts = None
 
-  val user = new User(json, baseUrl, maybeFollowCounts, maybeRepostsCount = None)
+  val user = new User(json, baseUrl, maybeFollowCounts, maybeRepostsCount = None, maybeLikesCount = None)
 
   """exposes "deprecated" count fields from Okidoki""" in new Scope {
     user.playlist_count ==== Some(10001)

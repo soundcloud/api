@@ -74,7 +74,7 @@ class RepostsClient(jsonClient: JsonClient, okidokiJsonService: JsonClient) exte
     val userUrns = reposts.map(r => (r \ "user").as[Urn])
     fetchUsers(session, userUrns.toSet).map {
       _.map { jsonUser =>
-        new User(jsonUser, baseUrl, None, None)(context)
+        new User(jsonUser, baseUrl, None, None, None)(context)
       }
     }
   }

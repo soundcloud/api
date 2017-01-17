@@ -3,6 +3,7 @@ package com.soundcloud.publicApiStrangler.controller
 import com.soundcloud.jvmkit.{Urn, UserSession}
 import com.soundcloud.publicApiStrangler.mapping.timeline.User
 import com.soundcloud.publicApiStrangler.client.reposts.RepostsClient
+import com.soundcloud.publicApiStrangler.client.liebling.{LieblingClient, UserTotalLikes}
 import com.soundcloud.publicApiStrangler.client.followcounts.{FollowCounts, FollowCountsClient}
 import com.soundcloud.bff.finagle.{Request, ResponseBuilder}
 import com.soundcloud.bff.web.{BffInjectionBasedController, UserAuthentication}
@@ -11,7 +12,9 @@ import com.twitter.util.Future
 class RepostersController(userAuthentication: UserAuthentication,
                           repostsClient: RepostsClient,
                           followCountsClient: FollowCountsClient,
-                          shouldLoadCountsFromReposts: () => Future[Boolean])
+                          lieblingClient: LieblingClient,
+                          shouldLoadCountsFromReposts: () => Future[Boolean],
+                          shouldLoadCountsFromLiebling: () => Future[Boolean])
     extends BffInjectionBasedController {
 
   get("/e1/tracks/:id/reposters")(reposters("tracks"))
@@ -51,14 +54,26 @@ class RepostersController(userAuthentication: UserAuthentication,
         (user, value)
       }.toMap
     }
+    val likeCounts = lieblingClient.userTotalLikeCount(session, userUrns)
+      .map {
+      _.map { case value@UserTotalLikes(user, _, _) =>
+        (user, value)
+      }.toMap
+    }
+
     for {
-      (countReposts, countFollows) <- Future.join(repostCounts, followCounts)
+      (countReposts, countFollows, countLikes) <- Future.join(repostCounts,
+                                                              followCounts,
+                                                              likeCounts)
     } yield {
       users.toList.map { case user =>
-        val followCounts = countFollows.get(user.urn)
+        val followsCount = countFollows.get(user.urn)
         val repostsCount = countReposts.get(user.urn)
-        user.copy(maybeFollowCounts = followCounts,
-                  maybeRepostsCount = repostsCount)(user.context)
+        val likesCount = countLikes.get(user.urn)
+
+        user.copy(maybeFollowCounts = followsCount,
+                  maybeRepostsCount = repostsCount,
+                  maybeLikesCount = likesCount)(user.context)
       }
     }
   }
