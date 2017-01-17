@@ -8,6 +8,7 @@ import com.soundcloud.publicApiStrangler.client.playlists.PlaylistsClient
 import com.soundcloud.publicApiStrangler.client.pubmese.{Isrc, PubmeseClient}
 import com.soundcloud.publicApiStrangler.client.quota.UserQuotaClient
 import com.soundcloud.publicApiStrangler.client.stitch.{StitchClient, StitchCounts}
+import com.soundcloud.publicApiStrangler.controller.PublicApiPaginationParams
 
 // FIXME: Do not use result types from Track Coordinator
 import com.soundcloud.publicApiStrangler.client.trackcoordinator.datatypes.{Result, NotFound => TrackNotFound, Success => SuccessResult}
@@ -75,14 +76,14 @@ class TrackRepresentationsService(
     }
   }
 
-  def tracks(session: UserSession, userUrn: Urn, limit: Option[Int], offset: Option[Int]): Future[List[TrackRepresentationLike]] = {
+  def tracks(session: UserSession, userUrn: Urn, paginationParams: PublicApiPaginationParams): Future[List[TrackRepresentationLike]] = {
     val userAndAllTrackUrnsF = Future.join(
       okidokiClient.fetchUserObjects(session, Set(userUrn)),
       trackmetadataClient.urnsByUser(session, userUrn))
 
     def calculateTrackUrnPage(allUserTrackUrns: List[Urn]) = {
-      val start = offset.getOrElse(0)
-      val end = start + limit.getOrElse(Int.MaxValue)
+      val start = paginationParams.offset.getOrElse(0)
+      val end = start + paginationParams.limit.getOrElse(Int.MaxValue)
       // sort by id desc
       allUserTrackUrns.sortBy(-_.getIdentifier.toInt).slice(start, end).toSet
     }
