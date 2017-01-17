@@ -52,7 +52,7 @@ class TrackRepresentationsService(trackmetadataClient: TrackmetadataClient,
           Future.join(userForTrackF, audioF, waveformUrlsF, isrcF, countsF, labelF, geoblockingsF, domainLockingsF, isLikedF, downloadsPerTrackF).map {
             case (Some(user), Some(audio), Some(waveformUrls), isrc, counts, label, geoblockings, domainLockings, isLiked, downloadsPerTrack) =>
               SuccessResult(trackRepresentationBuilder.build(
-                userSession = session,
+                sessionUser = Option(session.getUser),
                 track = track,
                 user = user,
                 isrc = isrc,
@@ -125,7 +125,7 @@ class TrackRepresentationsService(trackmetadataClient: TrackmetadataClient,
           waveformUrl <- waveformUrls.get(uid)
         } yield {
           trackRepresentationBuilder.build(
-            userSession = session,
+            sessionUser = Option(session.getUser),
             track = track,
             user = user,
             isrc = isrcs.get(urn),

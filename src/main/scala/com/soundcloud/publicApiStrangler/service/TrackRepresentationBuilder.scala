@@ -1,6 +1,6 @@
 package com.soundcloud.publicApiStrangler.service
 
-import com.soundcloud.jvmkit.UserSession
+import com.soundcloud.jvmkit.Urn
 import com.soundcloud.publicApiStrangler.client.mediaservice.WaveformUrl
 import com.soundcloud.publicApiStrangler.client.pubmese.Isrc
 import com.soundcloud.publicApiStrangler.client.stitch.StitchCounts
@@ -10,7 +10,7 @@ import com.soundcloud.publicApiStrangler.representation.{TrackRepresentation, Tr
 import com.soundcloud.service.response.representation.{Geoblockings, User}
 
 class TrackRepresentationBuilder {
-  def build(userSession: UserSession,
+  def build(sessionUser: Option[Urn],
             track: Track,
             user: User,
             isrc: Option[Isrc],
@@ -34,7 +34,8 @@ class TrackRepresentationBuilder {
       audioMetadata = trackAudioMetadata
     )
 
-    val userIsOwner = track.user_urn == userSession.getUser
+    val userIsOwner = sessionUser.map(track.user_urn == _).getOrElse(false)
+    val isAnonymous = sessionUser.isEmpty
 
     var rep: TrackRepresentationLike = basicTrackRep
     // TODO Consider an "owning user" decorator
@@ -48,7 +49,7 @@ class TrackRepresentationBuilder {
       rep = TrackRepresentationGeoblockingsDecorator(geoblockings.get, rep)
     if (domainLockings.nonEmpty)
       rep = TrackRepresentationDomainLockingsDecorator(domainLockings, rep)
-    if (!userSession.isAnonymous) {
+    if (!isAnonymous) {
       rep = TrackRepresentationUserFavoriteDecorator(isLiked, rep)
       rep = TrackRepresentationUserPlaybackCountDecorator(rep)
     }
