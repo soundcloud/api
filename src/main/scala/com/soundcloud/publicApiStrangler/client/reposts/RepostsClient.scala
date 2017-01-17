@@ -42,16 +42,10 @@ class RepostsClient(jsonClient: JsonClient, followCountsClient: FollowCountsClie
         urns.toList.map { urn => urn -> fetchedCounts.getOrElse(urn, 0L) }.toMap
       }
 
-  def trackReposters(session: UserSession, trackUrn: Urn, baseUrl: String): Future[List[User]] =
+  def reposters(session: UserSession, repostableUrn: Urn, baseUrl: String): Future[List[User]] =
     fetchAll(
       session,
-      Path() / "tracks" / trackUrn /"reposts")
-      .flatMap(enrichReposts(session, baseUrl))
-
-  def playlistReposters(session: UserSession, playlistUrn: Urn, baseUrl: String): Future[List[User]] =
-    fetchAll(
-      session,
-      Path() / "playlists" / playlistUrn /"reposts")
+      Path() / repostableUrn.getCollection / repostableUrn / "reposts")
       .flatMap(enrichReposts(session, baseUrl))
 
   private def fetchAll(session: UserSession, path: Path, batchSize: Int = 200): Future[List[JsObject]] = {

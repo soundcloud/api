@@ -11,25 +11,17 @@ class RepostersController(userAuthentication: UserAuthentication,
                           repostsClient: RepostsClient)
     extends BffInjectionBasedController {
 
-  get("/e1/tracks/:id/reposters")(trackReposters)
-  get("/e1/tracks/:id/reposters.json")(trackReposters)
+  get("/e1/tracks/:id/reposters")(reposters("tracks"))
+  get("/e1/tracks/:id/reposters.json")(reposters("tracks"))
 
-  get("/e1/playlists/:id/reposters")(playlistReposters)
-  get("/e1/playlists/:id/reposters.json")(playlistReposters)
+  get("/e1/playlists/:id/reposters")(reposters("playlists"))
+  get("/e1/playlists/:id/reposters.json")(reposters("playlists"))
 
-  private def trackReposters(request: Request): Future[ResponseBuilder] =
+  private def reposters(repostableType: String)(request: Request): Future[ResponseBuilder] =
     userAuthentication.withUserSession(request) { session =>
-      repostsClient.trackReposters(
+      repostsClient.reposters(
         session,
-        new Urn(s"""soundcloud:tracks:${request.routeParams("id")}"""),
-        baseUrl(request)).map(respond)
-    }
-
-  private def playlistReposters(request: Request): Future[ResponseBuilder] =
-    userAuthentication.withUserSession(request) { session =>
-      repostsClient.playlistReposters(
-        session,
-        new Urn(s"""soundcloud:playlists:${request.routeParams("id")}"""),
+        new Urn(s"""soundcloud:$repostableType:${request.routeParams("id")}"""),
         baseUrl(request)).map(respond)
     }
 
