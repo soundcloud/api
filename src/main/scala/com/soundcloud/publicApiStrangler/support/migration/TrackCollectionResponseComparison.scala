@@ -102,6 +102,16 @@ class TrackCollectionResponseComparison(telemetry: Telemetry) {
           }
         }
       }
+      case (_, Return(_)) => {
+        failuresCounter.labels("legacyFailedToParse").inc()
+      }
+      case (Return(_), _) => {
+        failuresCounter.labels("migrationFailedToParse").inc()
+      }
+      case (_, _) => {
+        failuresCounter.labels("legacyFailedToParse").inc()
+        failuresCounter.labels("migrationFailedToParse").inc()
+      }
     }
   }
 
