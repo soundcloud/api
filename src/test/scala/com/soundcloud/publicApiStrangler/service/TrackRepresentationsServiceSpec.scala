@@ -7,7 +7,7 @@ import com.soundcloud.publicApiStrangler.client.playlists.{Playlist, PlaylistsCl
 import com.soundcloud.publicApiStrangler.client.pubmese.{Isrc, PubmeseClient}
 import com.soundcloud.publicApiStrangler.client.quota.UserQuotaClient
 import com.soundcloud.publicApiStrangler.client.stitch.{StitchClient, StitchCounts}
-import com.soundcloud.publicApiStrangler.client.trackcoordinator.datatypes.{Error, NotFound, ServerError, Success}
+import com.soundcloud.publicApiStrangler.client.trackcoordinator.datatypes.{NotFound, Success}
 import com.soundcloud.publicApiStrangler.client.trackmetadata.{Artwork, EmbeddingPermission, Track, TrackmetadataClient}
 import com.soundcloud.publicApiStrangler.client.{DomainLocking, RichOkidokiClient, TrackAudioMetadata}
 import com.soundcloud.publicApiStrangler.representation.{TrackRepresentation, TrackRepresentationLike}
