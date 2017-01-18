@@ -67,26 +67,44 @@ class TrackAccessibilityServiceSpec extends UnitSpecification {
       }
     }
 
+    List(Option(1), None).flatten
+
     val testData = List(
-      // disabled_at tests
-      TestData(Some(user1), user1, true, now, None, None, None, shouldBeAllowed = false),
-      TestData(Some(user1), user2, true, now, None, None, None, shouldBeAllowed = false),
+      /**
+        * disabled_at:
+        * when the track is disabled, it doesn't matter if the track is public or the session user is the same as the track owner,
+        * the track shouldn't be accessible.
+        */
       TestData(Some(user1), user1, true, now, None, None, None, shouldBeAllowed = false),
       TestData(Some(user1), user2, true, now, None, None, None, shouldBeAllowed = false),
 
-      // privacy tests
+      /**
+        * privacy:
+        * - when the track's public, it should be accessible.
+        * - when the track's private, it should be accessible if the session user is the same as the track owner.
+        */
       TestData(Some(user1), user1, true,  None, None, None, None, shouldBeAllowed = true),
       TestData(Some(user1), user2, true,  None, None, None, None, shouldBeAllowed = true),
       TestData(Some(user1), user1, false, None, None, None, None, shouldBeAllowed = true),
       TestData(Some(user1), user2, false, None, None, None, None, shouldBeAllowed = false),
 
-      // track secret_token tests
+      /**
+        * secret_token
+        * when the track's private and the session user is different from the track owner, the track should only
+        * be accessible if the sent secret_token matches the track's secret_token
+        */
       TestData(Some(user1), user2, false, None, secretToken1, secretToken1, None, shouldBeAllowed = true),
       TestData(Some(user1), user2, false, None, None,         secretToken2, None, shouldBeAllowed = false),
       TestData(Some(user1), user2, false, None, secretToken1, None,         None, shouldBeAllowed = false),
       TestData(Some(user1), user2, false, None, secretToken1, secretToken2, None, shouldBeAllowed = false),
 
-      // playlist secret_token tests
+      /**
+        * playlist secret_token
+        * when the track's private and the session user is different form the track owner, and the sent
+        * secret_token does not match the track's secret token, the track should only be accessible if:
+        * - the track's inside a playlist owned by the track's owner
+        * - the sent secret_token matches the playlist's secret_token
+        */
       TestData(Some(user1), user2, false, None, None, secretToken1, playlist1, shouldBeAllowed = true),
       TestData(Some(user1), user2, false, None, None, secretToken2, playlist1, shouldBeAllowed = false),
       TestData(Some(user1), user2, false, None, None, secretToken1, playlist2, shouldBeAllowed = false),
