@@ -337,7 +337,8 @@ class RepostsClientSpec extends UnitSpecification with PactSpec with UnitSpecsSu
 
       trait MockedJsonClient extends Context {
         val jsonClientMock = mock[JsonClient]
-        val clientWithMock = new RepostsClient(jsonClientMock)
+        val okidokiMock = mock[JsonClient]
+        val clientWithMock = new RepostsClient(jsonClientMock, okidokiMock)
       }
 
       "when data is not available, but the calls were successful" >> {
