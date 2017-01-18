@@ -65,7 +65,7 @@ class TrackRepresentationsServiceForMultipleTracksSpec extends UnitSpecification
 
     def result = Await.result(service.tracks(session, userUrn, paginationParams))
 
-    trackRepository.tracks(session, userUrn, paginationParams).returns(Future.value(tracksResult))
+    trackRepository.tracksByUser(session, userUrn, paginationParams).returns(Future.value(tracksResult))
   }
 
   "#tracks" >> {

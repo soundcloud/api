@@ -46,11 +46,11 @@ class TrackRepositorySpec extends UnitSpecification {
     def trackmetadataTrack(urn: Urn, ownerUrn: Urn, labelId: Option[Int]) =
       TrackMetadataTrackBuilder(urn = urn, user_urn = ownerUrn, label_id = labelId).build
 
-    lazy val result: TracksResult = Await.result(repository.tracks(session, userUrn, paginationParams))
+    lazy val result: TracksResult = Await.result(repository.tracksByUser(session, userUrn, paginationParams))
   }
 
 
-  "#tracks" >> {
+  "#tracksByUser" >> {
     "when requesting tracks from a different user" >> {
       trait AllGoesWell extends Context {
 

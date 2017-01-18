@@ -21,9 +21,9 @@ class TrackRepository(trackmetadataClient: TrackmetadataClient,
                       userQuotaClient: UserQuotaClient,
                       trackAccessibilityService: TrackAccessibilityService) {
 
-  def tracks(session: UserSession,
-             userUrn: Urn,
-             paginationParams: PublicApiPaginationParams): Future[TracksResult] = {
+  def tracksByUser(session: UserSession,
+                   userUrn: Urn,
+                   paginationParams: PublicApiPaginationParams): Future[TracksResult] = {
     val userAndAllTrackUrnsF = Future.join(
       okidokiClient.fetchUserObjects(session, Set(userUrn)),
       trackmetadataClient.urnsByUser(session, userUrn))

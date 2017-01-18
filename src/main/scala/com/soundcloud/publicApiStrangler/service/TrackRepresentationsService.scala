@@ -89,7 +89,7 @@ class TrackRepresentationsService(trackRepository: TrackRepository,
   }
 
   def tracks(session: UserSession, userUrn: Urn, paginationParams: PublicApiPaginationParams): Future[List[TrackRepresentationLike]] = {
-    trackRepository.tracks(session, userUrn, paginationParams).map { tracksResult => {
+    trackRepository.tracksByUser(session, userUrn, paginationParams).map { tracksResult => {
       tracksResult.tracks.map { track =>
         val urn = track.urn
         for {
