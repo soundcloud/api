@@ -3,7 +3,7 @@ package com.soundcloud.publicApiStrangler.client.reposts
 import com.soundcloud.jvmkit.{Urn, UserSession}
 import com.soundcloud.publicApiStrangler.client.reposts.RepostsClient._
 import com.soundcloud.scalakit.Path
-import com.soundcloud.publicApiStrangler.mapping.timeline.User
+import com.soundcloud.publicApiStrangler.mapping.reposts.RepostsUser
 import com.soundcloud.scalakit.finagle.http._
 import com.soundcloud.scalakit.finagle.jsonservice.{JsonClient, JsonResponse, Params}
 import com.soundcloud.service.client.FetchClient
@@ -41,7 +41,7 @@ class RepostsClient(jsonClient: JsonClient, okidokiJsonService: JsonClient) exte
         urns.toList.map { urn => urn -> fetchedCounts.getOrElse(urn, 0L) }.toMap
       }
 
-  def reposters(session: UserSession, repostableUrn: Urn, baseUrl: String): Future[List[User]] =
+  def reposters(session: UserSession, repostableUrn: Urn, baseUrl: String): Future[List[RepostsUser]] =
     fetchAll(
       session,
       Path() / repostableUrn.getCollection / repostableUrn / "reposts")
@@ -69,12 +69,12 @@ class RepostsClient(jsonClient: JsonClient, okidokiJsonService: JsonClient) exte
     fetchPage(None, List.empty)
   }
 
-  private def hydrateUsers(session: UserSession, baseUrl: String)(reposts: List[JsObject]): Future[List[User]] = {
+  private def hydrateUsers(session: UserSession, baseUrl: String)(reposts: List[JsObject]): Future[List[RepostsUser]] = {
     val context = new MappingContext(session)
     val userUrns = reposts.map(r => (r \ "user").as[Urn])
     fetchUsers(session, userUrns.toSet).map {
       _.map { jsonUser =>
-        new User(jsonUser, baseUrl, None, None, None)(context)
+        new RepostsUser(jsonUser, baseUrl, None, None, None)(context)
       }
     }
   }

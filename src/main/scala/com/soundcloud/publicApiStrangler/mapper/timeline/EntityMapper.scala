@@ -54,7 +54,7 @@ class EntityMapper(okidokiClient: OkidokiClient,
                        (implicit context: MappingContext) = {
 
     urn.getCollection match {
-      case "users" => new User(entityData, baseUrl, followCountsMap.get(urn), repostCountsByUrn.get(urn), None)
+      case "users" => new User(entityData, baseUrl, followCountsMap.get(urn), repostCountsByUrn.get(urn))
       case "tracks" => new Track(entityData, likesCounts, repostCountsByUrn, baseUrl, entitySummaryMapper)
       case "playlists" => new Playlist(entityData, likesCounts, repostCountsByUrn, baseUrl, entitySummaryMapper)
       case "comments" => new Comment(entityData, baseUrl, entitySummaryMapper)

@@ -345,7 +345,7 @@ class UserFollowController(userAuthentication: UserAuthentication,
       users.map { user =>
         val userUrn = new Urn((user \ "self" \ "urn").as[String])
         val followCounts = followCountsMap.get(userUrn)
-        new User(user, baseUrl, followCounts, repostCountsByUrn.get(userUrn), None)(context)
+        new User(user, baseUrl, followCounts, repostCountsByUrn.get(userUrn))(context)
       }
     }
   }

@@ -1,7 +1,8 @@
 package com.soundcloud.publicApiStrangler.controller
 
 import com.soundcloud.jvmkit.{Urn, UserSession}
-import com.soundcloud.publicApiStrangler.mapping.timeline.User
+import com.soundcloud.publicApiStrangler.mapping.reposts.RepostsUser
+import com.soundcloud.publicApiStrangler.mapping.reposts.RepostsUser.writes
 import com.soundcloud.publicApiStrangler.client.reposts.RepostsClient
 import com.soundcloud.publicApiStrangler.client.liebling.{LieblingClient, UserTotalLikes}
 import com.soundcloud.publicApiStrangler.client.followcounts.{FollowCounts, FollowCountsClient}
@@ -31,7 +32,7 @@ class RepostersController(userAuthentication: UserAuthentication,
         baseUrl(request)).flatMap(enrichReposts(session, _)).map(respond)
     }
 
-  private def respond(users: List[User]): ResponseBuilder =
+  private def respond(users: List[RepostsUser]): ResponseBuilder =
     render.json(users)
 
   private def baseUrl(request: Request): String = {
@@ -40,7 +41,7 @@ class RepostersController(userAuthentication: UserAuthentication,
     s"$protocol://${request.host.get}"
   }
 
-  private def enrichReposts(session: UserSession, users: List[User]): Future[List[User]] = {
+  private def enrichReposts(session: UserSession, users: List[RepostsUser]): Future[List[RepostsUser]] = {
     val userUrns = users.map(_.urn)
     val repostCounts =
       shouldLoadCountsFromReposts().flatMap {

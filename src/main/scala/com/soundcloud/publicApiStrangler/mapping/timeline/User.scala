@@ -5,11 +5,10 @@ import com.soundcloud.publicApiStrangler.client.followcounts.FollowCounts
 import com.soundcloud.publicApiStrangler.client.liebling.UserTotalLikes
 import play.api.libs.json.{JsObject, JsValue, Json, Writes}
 
-case class User(jsonValue: JsValue,
+class User(jsonValue: JsValue,
            baseUrl: String,
            maybeFollowCounts: Option[FollowCounts],
-           maybeRepostsCount: Option[Long],
-           maybeLikesCount: Option[UserTotalLikes])(implicit context: MappingContext)
+           maybeRepostsCount: Option[Long])(implicit context: MappingContext)
   extends UserSummary(jsonValue, baseUrl) {
 
   val first_name = (json \ "first_name").asOpt[String]
@@ -19,7 +18,7 @@ case class User(jsonValue: JsValue,
   val description = (json \ "description").asOpt[String]
   val country = (json \ "country").asOpt[String]
   val track_count = (json \ "tracks_count").asOpt[Int]
-  val public_favorites_count = maybeLikesCount.map(likesCountFor).orElse((json \ "public_favorites_count").asOpt[Long])
+  val public_favorites_count = (json \ "public_favorites_count").asOpt[Long]
   val followers_count = maybeFollowCounts.map(_.followers).orElse((json \ "followers_count").asOpt[Long])
   val followings_count = maybeFollowCounts.map(_.followings).orElse((json \ "followings_count").asOpt[Long])
   val plan = (json \ "plan").asOpt[String]
@@ -42,11 +41,8 @@ case class User(jsonValue: JsValue,
   val reposts_count = maybeRepostsCount.orElse((json \ "reposts_count").asOpt[Long])
   val comments_count = (json \ "comments_count").asOpt[Int]
   val online = false
-  val likes_count = maybeLikesCount.map(likesCountFor).orElse((json \ "public_favorites_count").asOpt[Long])
+  val likes_count = (json \ "public_favorites_count").asOpt[Long]
   val playlist_count: Option[Int] = (json \ "public_playlists_count").asOpt[Int]
-
-  private def likesCountFor(likes: UserTotalLikes): Long =
-    likes.track_likes_count + likes.playlist_likes_count
 }
 
 object User {
