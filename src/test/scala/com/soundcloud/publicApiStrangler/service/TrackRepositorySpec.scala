@@ -51,7 +51,7 @@ class TrackRepositorySpec extends UnitSpecification {
 
 
   "#tracksByUser" >> {
-    "when requesting tracks from a different user" >> {
+    "when all goes well" >> {
       trait AllGoesWell extends Context {
 
         override def userUrn = Urn("soundcloud:users:9218371")
@@ -98,14 +98,14 @@ class TrackRepositorySpec extends UnitSpecification {
         val accessibilityChecks = Map(
           track1 -> true,
           track2 -> true,
-          track3 -> true
+          track3 -> false
         )
         trackAccessibilityService.areTracksAccessible(session, trackmetadataTracks).returns(Future.value(accessibilityChecks))
       }
 
       "returns the tracks" in new AllGoesWell {
         result ==== TracksResult(
-          trackmetadataTracks,
+          trackmetadataTracks.tail, // track3 was removed for not being accessible
           tracksOwner,
           Map.empty,
           Map.empty,
