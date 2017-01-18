@@ -115,8 +115,7 @@ class TrackRepositorySpec extends UnitSpecification {
           Map.empty,
           Map.empty,
           Map.empty,
-          Map.empty,
-          accessibilityChecks
+          Map.empty
         )
       }
     }

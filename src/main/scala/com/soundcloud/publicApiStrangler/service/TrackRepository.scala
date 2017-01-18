@@ -75,8 +75,7 @@ class TrackRepository(trackmetadataClient: TrackmetadataClient,
         counts,
         labels,
         waveformUrls,
-        downloadsPerTrack,
-        accessibilityCheck)
+        downloadsPerTrack)
     }
   }
 }
@@ -91,5 +90,4 @@ case class TracksResult(tracks: List[Track],
                         counts: Map[Urn, StitchCounts],
                         labels: Map[Urn, User],
                         waveformUrls: Map[String, Seq[WaveformUrl]],
-                        downloadsPerTrack: Map[Urn, Option[Int]],
-                        accessibilityCheck: Map[Urn, Boolean])
+                        downloadsPerTrack: Map[Urn, Option[Int]])

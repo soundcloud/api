@@ -56,10 +56,9 @@ class TrackRepresentationsServiceForMultipleTracksSpec extends UnitSpecification
     val waveformUrls = Seq(WaveformUrl("label1_1", "json1_1", "png1_1"), WaveformUrl("label1_2", "json1_2", "png1_2"))
     val waveformUrlsMap = Map(track.uid.get -> waveformUrls)
     val downloadsPerTrack = Map(track.urn -> Some(10))
-    val accessibilityCheck = Map(track.urn -> true)
 
     val completeTrackResult = TracksResult(
-      tracks, user, isLiked, isrcs, geoblockingsMap, domainLockingsMap, audios, counts, labels, waveformUrlsMap, downloadsPerTrack, accessibilityCheck)
+      tracks, user, isLiked, isrcs, geoblockingsMap, domainLockingsMap, audios, counts, labels, waveformUrlsMap, downloadsPerTrack)
 
     def tracksResult: TracksResult
 
