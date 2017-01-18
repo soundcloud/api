@@ -13,12 +13,12 @@ import com.soundcloud.scalakit.finagle.http.HandlerRequest
 import com.twitter.finagle.http.{Request => FinagleRequest}
 import com.twitter.util.{Await, Future}
 import org.mockito.Mockito.when
-import org.specs2.mutable.BeforeAfter
+import org.specs2.mutable.Before
 import play.api.libs.json._
 
 class UserRelatedMothershipDispatcherSpec extends UnitSpecification with Fixtures {
 
-  trait Context extends Scope with BeforeAfter {
+  trait Context extends Scope with Before {
     val session = mock[UserSession]
     val userAuthenticationMock = new FakeUserAuthentication(session)
     val followCountsClientMock = mock[FollowCountsClient]
@@ -66,9 +66,6 @@ class UserRelatedMothershipDispatcherSpec extends UnitSpecification with Fixture
       when(lieblingClientMock.userTotalLikeCount(session, userUrns)).thenReturn(Future.value(userTotalLikesList))
       when(repostsClientMock.getRepostCountsByUrnWithFallback(session, userUrns.toSet))
         .thenReturn(Future.value(userUrns.zip(userRepostsCounts.map(_.count)).toMap))
-    }
-
-    override def after: Any = {
     }
   }
 

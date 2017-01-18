@@ -41,7 +41,7 @@ class Track(jsonValue: JsValue,
   val release_day = (json \ "release_day").asOpt[Int]
   val release_month = (json \ "release_month").asOpt[Int]
   val release_year = (json \ "release_year").asOpt[Int]
-  val reposts_count = repostCountsByUrn.getOrElse(urn, (json \ "reposts_count").asOpt[Long])
+  val reposts_count = repostCountsByUrn.get(urn).orElse((json \ "reposts_count").asOpt[Long])
   val state = (json \ "state").asOpt[String]
   val streamable = (json \ "streamable").asOpt[Boolean]
   val tag_list = (json \ "tag_list").asOpt[String]
