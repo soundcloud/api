@@ -11,7 +11,7 @@ import com.soundcloud.publicApiStrangler.client.trackcoordinator.datatypes.{Erro
 import com.soundcloud.publicApiStrangler.client.trackmetadata.{Artwork, EmbeddingPermission, Track, TrackmetadataClient}
 import com.soundcloud.publicApiStrangler.client.{DomainLocking, RichOkidokiClient, TrackAudioMetadata}
 import com.soundcloud.publicApiStrangler.representation.{TrackRepresentation, TrackRepresentationLike}
-import com.soundcloud.publicApiStrangler.service.TrackAccessibilityService
+import com.soundcloud.publicApiStrangler.service.{TrackAccessibilityService, TrackRepository}
 import com.soundcloud.scalakit.json.Json
 import com.soundcloud.scalakit.test.UnitSpecification
 import com.soundcloud.service.response.representation.{Geoblockings, User}
@@ -36,6 +36,7 @@ class TrackRepresentationsServiceForSingleTrackSpec extends UnitSpecification {
     val trackAccessibilityService = new TrackAccessibilityService(playlistsClient)
 
     val tracksService = new TrackRepresentationsService(
+      mock[TrackRepository],
       trackmetadataClient,
       okidokiClient,
       pubmeseClient,
