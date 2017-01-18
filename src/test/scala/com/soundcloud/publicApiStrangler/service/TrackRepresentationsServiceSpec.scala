@@ -1,5 +1,6 @@
 package com.soundcloud.publicApiStrangler
 
+import com.soundcloud.jvmkit.ModuleConversions._
 import com.soundcloud.jvmkit.{Urn, UserSession, UserSessionBuilder}
 import com.soundcloud.publicApiStrangler.client.liebling.{LieblingClient, UserLikesCount}
 import com.soundcloud.publicApiStrangler.client.mediaservice.{MediaServiceUrlGenClient, WaveformUrl}

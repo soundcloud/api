@@ -38,6 +38,12 @@ import com.soundcloud.scalakit.finagle.jsonservice.JsonClient
 import com.twitter.util.Future
 import org.eclipse.jetty.server.Handler
 
+import com.soundcloud.jvmkit.module.httpclient.{JsonClient => ModuleJsonClient}
+import com.soundcloud.jvmkit.module.servicediscovery.{ServiceEntryPoint => ModuleServiceEntryPoint}
+import com.soundcloud.jvmkit.module.telemetry.{Telemetry => ModuleTelemetry}
+import com.soundcloud.jvmkit.module.util.config.{AppConfig => ModuleAppConfig, ConfigConvention => ModuleConfigConvention}
+import com.soundcloud.jvmkit.module.util.{ResourceName => ModuleResourceName}
+
 object App
   extends BffInjectionBasedApp
     with AppConfigComponent
@@ -73,12 +79,14 @@ object App
     )
   val stitchClient = new StitchClient(stitchJsonClient)
 
+  val moduleConfig = new ModuleAppConfig()
+  val moduleTelemetry = new ModuleTelemetry(moduleConfig, metricsRegistry)
   val mediaServiceUrlGenJsonClient =
-    JsonClient(
-      ResourceName("mediaservice_urlgen"),
-      ServiceEntryPoint(config.get(ResourceName("MEDIASERVICE"), ConfigConvention.SRV_RECORD)),
-      config,
-      telemetry
+    ModuleJsonClient(
+      ModuleResourceName("mediaservice_urlgen"),
+      ModuleServiceEntryPoint(moduleConfig.get(ModuleResourceName("MEDIASERVICE"), ModuleConfigConvention.SRV_RECORD)),
+      moduleConfig,
+      moduleTelemetry
     )
   val mediaServiceUrlGenClient = new MediaServiceUrlGenClient(mediaServiceUrlGenJsonClient)
 

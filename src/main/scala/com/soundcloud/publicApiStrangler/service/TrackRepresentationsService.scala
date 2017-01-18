@@ -17,6 +17,8 @@ import com.soundcloud.publicApiStrangler.representation._
 import com.soundcloud.service.response.representation._
 import com.twitter.util.{Future, NonFatal}
 
+import com.soundcloud.jvmkit.ModuleConversions._
+
 class TrackRepresentationsService(
                                    trackmetadataClient: TrackmetadataClient,
                                    okidokiClient: RichOkidokiClient,
