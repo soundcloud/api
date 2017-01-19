@@ -61,7 +61,7 @@ class RepostsController(userAuthentication: UserAuthentication,
 
   private def renderResult(result: Result): ResponseBuilder = result match {
     case Created => render.created
-    case Deleted => render.accepted
+    case Deleted => render.ok
     case AlreadyExists => render.ok
     case NotFound => render.notFound
     case spamBlocked: SpamBlocked => render.status(Status.TooManyRequests.code).json(spamBlocked)
