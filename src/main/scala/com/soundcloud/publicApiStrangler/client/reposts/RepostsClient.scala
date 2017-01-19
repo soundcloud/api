@@ -3,7 +3,6 @@ package com.soundcloud.publicApiStrangler.client.reposts
 import com.soundcloud.jvmkit.{Urn, UserSession}
 import com.soundcloud.publicApiStrangler.client.reposts.RepostsClient._
 import com.soundcloud.scalakit.Path
-import com.soundcloud.publicApiStrangler.mapping.reposts.RepostsUser
 import com.soundcloud.scalakit.finagle.http._
 import com.soundcloud.scalakit.finagle.jsonservice.{JsonClient, JsonResponse, Params}
 import com.soundcloud.service.client.FetchClient
@@ -14,7 +13,7 @@ import play.api.libs.json._
 /**
   * https://github.com/soundcloud/voltron/tree/master/reposts
   */
-class RepostsClient(jsonClient: JsonClient, okidokiJsonService: JsonClient) extends FetchClient {
+class RepostsClient(jsonClient: JsonClient) extends FetchClient {
 
   def createRepost(session: UserSession, target: Urn, baseUrl: => String): Future[Result] =
     jsonClient.post(
@@ -41,11 +40,11 @@ class RepostsClient(jsonClient: JsonClient, okidokiJsonService: JsonClient) exte
         urns.toList.map { urn => urn -> fetchedCounts.getOrElse(urn, 0L) }.toMap
       }
 
-  def reposters(session: UserSession, repostableUrn: Urn, baseUrl: String): Future[List[RepostsUser]] =
+  def reposters(session: UserSession, repostableUrn: Urn): Future[List[Urn]] =
     fetchAll(
       session,
       Path() / repostableUrn.getCollection / repostableUrn / "reposts")
-      .flatMap(hydrateUsers(session, baseUrl))
+      .map(_.map(repost => (repost \ "user").as[Urn]))
 
   private def fetchAll(session: UserSession, path: Path, batchSize: Int = 200): Future[List[JsObject]] = {
     def fetchPage(cursor: Option[String], acc: List[JsObject]): Future[List[JsObject]] = {
@@ -67,25 +66,6 @@ class RepostsClient(jsonClient: JsonClient, okidokiJsonService: JsonClient) exte
       }
     }
     fetchPage(None, List.empty)
-  }
-
-  private def hydrateUsers(session: UserSession, baseUrl: String)(reposts: List[JsObject]): Future[List[RepostsUser]] = {
-    val context = new MappingContext(session)
-    val userUrns = reposts.map(r => (r \ "user").as[Urn])
-    fetchUsers(session, userUrns.toSet).map {
-      _.map { jsonUser =>
-        new RepostsUser(jsonUser, baseUrl, None, None, None)(context)
-      }
-    }
-  }
-
-  private def fetchUsers(session: UserSession, urns: Set[Urn], batchSize: Int = 50): Future[List[JsObject]] = {
-    inBatches(urns.toList, batchSize) { urnBatch =>
-      okidokiJsonService.get(session, Path() / "users" / "fetch", Params("urns" -> urnBatch), Params.empty).map {
-        case JsonResponse(SuccessfulStatusClass(_), body, _, _) => body.as[List[JsObject]]
-        case _ => List.empty
-      }
-    }
   }
 
   private def repostCountsForUrns(session: UserSession, urns: Set[Urn]): Future[Set[Count]] =

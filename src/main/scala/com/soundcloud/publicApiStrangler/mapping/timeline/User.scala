@@ -2,7 +2,6 @@ package com.soundcloud.publicApiStrangler.mapping.timeline
 
 import com.soundcloud.bff.nextbff.mapping.MappingContext
 import com.soundcloud.publicApiStrangler.client.followcounts.FollowCounts
-import com.soundcloud.publicApiStrangler.client.liebling.UserTotalLikes
 import play.api.libs.json.{JsObject, JsValue, Json, Writes}
 
 class User(jsonValue: JsValue,

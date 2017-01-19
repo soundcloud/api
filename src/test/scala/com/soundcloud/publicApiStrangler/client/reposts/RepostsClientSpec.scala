@@ -7,7 +7,6 @@ import com.soundcloud.jvmkit.telemetry.Telemetry
 import com.soundcloud.jvmkit.test.InMemoryConfig
 import com.soundcloud.jvmkit.{ResourceName, Urn, UserSession, UserSessionBuilder}
 import com.soundcloud.publicApiStrangler.client.reposts.RepostsClient._
-import com.soundcloud.publicApiStrangler.client.followcounts.{FollowCounts, FollowCountsClient}
 import com.soundcloud.scalakit.Path
 import com.soundcloud.scalakit.finagle.dns.ServiceEntryPoint
 import com.soundcloud.scalakit.finagle.http.OkStatus
@@ -213,7 +212,6 @@ class RepostsClientSpec extends UnitSpecification with PactSpec with UnitSpecsSu
         val config = new InMemoryConfig
         config.set("APP_NAME", consumer)
         config.set(s"${provider.toUpperCase}_JSONCLIENT_REQUEST_TIMEOUT_MILLIS", "5000")
-        config.set("STITCH_BULK_FETCH_MAX_ENTRIES", "200")
 
         val jsonClient = JsonClient(
           ResourceName(provider),
@@ -221,15 +219,7 @@ class RepostsClientSpec extends UnitSpecification with PactSpec with UnitSpecsSu
           config,
           new Telemetry(config)
         )
-
-        // TODO
-        val okidokiJsonClient = JsonClient(
-          ResourceName("OKIDOKI"),
-          ServiceEntryPoint("dnssrv!http.okidoki.prod.moshimoshi.dd.srv.int.s-cloud.net"),
-          config,
-          new Telemetry(config))
-
-        new RepostsClient(jsonClient, okidokiJsonClient)
+        new RepostsClient(jsonClient)
       }
     }
 
@@ -337,8 +327,7 @@ class RepostsClientSpec extends UnitSpecification with PactSpec with UnitSpecsSu
 
       trait MockedJsonClient extends Context {
         val jsonClientMock = mock[JsonClient]
-        val okidokiMock = mock[JsonClient]
-        val clientWithMock = new RepostsClient(jsonClientMock, okidokiMock)
+        val clientWithMock = new RepostsClient(jsonClientMock)
       }
 
       "when data is not available, but the calls were successful" >> {
