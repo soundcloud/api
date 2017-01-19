@@ -1,6 +1,7 @@
 package com.soundcloud.publicApiStrangler.service
 
 import com.soundcloud.jvmkit.Urn
+import com.soundcloud.jvmkit.module.util.{Good, Result}
 import com.soundcloud.publicApiStrangler.client.RichOkidokiClient
 import com.soundcloud.publicApiStrangler.client.liebling.LieblingClient
 import com.soundcloud.publicApiStrangler.client.mediaservice.MediaServiceUrlGenClient
@@ -46,7 +47,7 @@ class TrackRepositorySpec extends UnitSpecification {
     def trackmetadataTrack(urn: Urn, ownerUrn: Urn, labelId: Option[Int]) =
       TrackMetadataTrackBuilder(urn = urn, user_urn = ownerUrn, label_id = labelId).build
 
-    lazy val result: TracksResult = Await.result(repository.tracksByUser(session, userUrn, paginationParams))
+    lazy val result: Result[TracksResult] = Await.result(repository.tracksByUser(session, userUrn, paginationParams).value)
   }
 
 
@@ -88,7 +89,7 @@ class TrackRepositorySpec extends UnitSpecification {
 
         lieblingClient.userLikedTracks(session, trackUrns, sessionUser).returns(Future.value(Map.empty))
 
-        mediaServiceUrlGenClient.waveformUrls(session, trackmetadataTracks.flatMap(_.uid)).returns(Future.value(Some(Map.empty)))
+        mediaServiceUrlGenClient.waveformUrls(session, trackmetadataTracks.flatMap(_.uid)).returns(Future.value(Map.empty))
 
         val userUrnsFromLabelIds = trackmetadataTracks.flatMap(_.label_id).map(id => new Urn("soundcloud", "users", id.toString)).toSet
         richOkidokiClient.fetchUsersMap(session, userUrnsFromLabelIds).returns(Future.value(Map.empty))
@@ -104,7 +105,7 @@ class TrackRepositorySpec extends UnitSpecification {
       }
 
       "returns the tracks" in new AllGoesWell {
-        result ==== TracksResult(
+        result ==== Good(TracksResult(
           trackmetadataTracks.tail, // track3 was removed for not being accessible
           tracksOwner,
           Map.empty,
@@ -116,7 +117,7 @@ class TrackRepositorySpec extends UnitSpecification {
           Map.empty,
           Map.empty,
           Map.empty
-        )
+        ))
       }
     }
   }

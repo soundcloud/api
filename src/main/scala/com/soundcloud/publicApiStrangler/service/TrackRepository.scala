@@ -1,5 +1,7 @@
 package com.soundcloud.publicApiStrangler.service
 
+import com.soundcloud.jvmkit.module.util.{Bad, Error, Good, Result, ResultF}
+import com.soundcloud.jvmkit.module.util.ResultF.joinF
 import com.soundcloud.jvmkit.{Urn, UserSession}
 import com.soundcloud.publicApiStrangler.client.liebling.LieblingClient
 import com.soundcloud.publicApiStrangler.client.mediaservice.{MediaServiceUrlGenClient, WaveformUrl}
@@ -23,10 +25,12 @@ class TrackRepository(trackmetadataClient: TrackmetadataClient,
 
   def tracksByUser(session: UserSession,
                    userUrn: Urn,
-                   paginationParams: PublicApiPaginationParams): Future[TracksResult] = {
-    val userAndAllTrackUrnsF = Future.join(
-      okidokiClient.fetchUserObjects(session, Set(userUrn)),
-      trackmetadataClient.urnsByUser(session, userUrn))
+                   paginationParams: PublicApiPaginationParams): ResultF[TracksResult] = {
+
+    val userAndAllTrackUrnsF = joinF(
+      toResult(okidokiClient.fetchUserObjects(session, Set(userUrn)), "Could not load the tracks' owner"),
+      toResult(trackmetadataClient.urnsByUser(session, userUrn), "Could not load the tracks' urns"))
+
 
     def calculateTrackUrnPage(allUserTrackUrns: List[Urn]) = {
       val start = paginationParams.offset.getOrElse(0)
@@ -35,37 +39,18 @@ class TrackRepository(trackmetadataClient: TrackmetadataClient,
       allUserTrackUrns.sortBy(-_.getIdentifier.toInt).slice(start, end).toSet
     }
 
-    def allDependenciesOnlyOnTrackUrn(trackUrnsPage: Set[Urn]) = {
-      val tracksF = trackmetadataClient.tracks(session, trackUrnsPage)
-      val isLikedF = Option(session.getUser).map(user => lieblingClient.userLikedTracks(session, trackUrnsPage, user)).getOrElse(Future.value(Map.empty[Urn, Boolean]))
-      val isrcsF = pubmeseClient.isrcsForTracks(session, trackUrnsPage).handle { case NonFatal(_) => Map.empty[Urn, Isrc] }
-      val geoblockingsF = okidokiClient.fetchTrackGeoblockings(session, trackUrnsPage).handle { case NonFatal(_) => Map.empty[Urn, Geoblockings] }
-      val domainLockingsF = okidokiClient.fetchTracksDomainLockings(session, trackUrnsPage).handle { case NonFatal(_) => Map.empty[Urn, List[DomainLocking]] }
-      val audiosF = okidokiClient.fetchTracksAudioMetadata(session, trackUrnsPage).handle { case NonFatal(_) => Map.empty[Urn, TrackAudioMetadata] }
-      val countsF = stitchClient.countsForTracksByUser(session, userUrn, trackUrnsPage).handle { case NonFatal(_) => Map.empty[Urn, StitchCounts] }
-
-      Future.join(tracksF, isLikedF, isrcsF, geoblockingsF, domainLockingsF, audiosF, countsF)
-    }
-
-    def allDependenciesOnTrackObjectList(tracks: List[Track]) = {
-      val labelsF = okidokiClient.fetchUsersMap(session, tracks.flatMap(_.label_id).map(labelId => Urn("soundcloud", "users", labelId.toString)).toSet)
-      val waveformUrlsF = mediaUrlGenClient.waveformUrls(session, tracks.flatMap(_.uid)).map(_.getOrElse(Map.empty[String, Seq[WaveformUrl]]))
-      val downloadsPerTrackF = userQuotaClient.downloadsPerTrack(session, Set(userUrn))
-      val accessibilityChecksF = trackAccessibilityService.areTracksAccessible(session, tracks)
-
-      Future.join(labelsF, waveformUrlsF, downloadsPerTrackF, accessibilityChecksF)
-    }
-
     for {
       (List(user), trackUrns) <- userAndAllTrackUrnsF
       trackUrnsPage = calculateTrackUrnPage(trackUrns)
-      (tracks, isLiked, isrcs, geoblockings, domainLockings, audios, counts) <- allDependenciesOnlyOnTrackUrn(trackUrnsPage)
-      (labels, waveformUrls, downloadsPerTrack, accessibilityCheck) <- allDependenciesOnTrackObjectList(tracks)
-      sortedAccessibleTracks = tracks
+      (tracks, isLiked, isrcs, geoblockings, domainLockings, audios, counts) <- allDependenciesOnlyOnTrackUrn(session, userUrn, trackUrnsPage)
+      (labels, waveformUrls, downloadsPerTrack, accessibilityCheck) <- allDependenciesOnTrackObjectList(session, userUrn, tracks)
+    } yield {
+      val sortedAccessibleTracks = tracks
         .filter(track => accessibilityCheck.get(track.urn).get)
         .sortBy(-_.urn.getIdentifier.toInt)
-    } yield {
-      TracksResult(sortedAccessibleTracks,
+
+      TracksResult(
+        sortedAccessibleTracks,
         user,
         isLiked,
         isrcs,
@@ -77,6 +62,36 @@ class TrackRepository(trackmetadataClient: TrackmetadataClient,
         waveformUrls,
         downloadsPerTrack)
     }
+  }
+
+  private def allDependenciesOnlyOnTrackUrn(session: UserSession, userUrn: Urn, trackUrnsPage: Set[Urn]) = {
+    val tracksF = toResult(trackmetadataClient.tracks(session, trackUrnsPage), "Could not load tracks from trackmetadata")
+    val isLikedF = Option(session.getUser)
+      .map(user => toResult(lieblingClient.userLikedTracks(session, trackUrnsPage, user), Map.empty[Urn, Boolean]))
+      .getOrElse(Future.value(Good(Map.empty[Urn, Boolean])))
+    val isrcsF = toResult(pubmeseClient.isrcsForTracks(session, trackUrnsPage), Map.empty[Urn, Isrc])
+    val geoblockingsF = toResult(okidokiClient.fetchTrackGeoblockings(session, trackUrnsPage), Map.empty[Urn, Geoblockings])
+    val domainLockingsF = toResult(okidokiClient.fetchTracksDomainLockings(session, trackUrnsPage), Map.empty[Urn, List[DomainLocking]])
+    val audiosF = toResult(okidokiClient.fetchTracksAudioMetadata(session, trackUrnsPage), Map.empty[Urn, TrackAudioMetadata])
+    val countsF = toResult(stitchClient.countsForTracksByUser(session, userUrn, trackUrnsPage), Map.empty[Urn, StitchCounts])
+
+    joinF(tracksF, isLikedF, isrcsF, geoblockingsF, domainLockingsF, audiosF, countsF)
+  }
+
+  private def allDependenciesOnTrackObjectList(session: UserSession, userUrn: Urn, tracks: List[Track]) = {
+    val labelsF = toResult(okidokiClient.fetchUsersMap(session, tracks.flatMap(_.label_id).map(labelId => Urn("soundcloud", "users", labelId.toString)).toSet), Map.empty[Urn, User])
+    val waveformUrlsF = toResult(mediaUrlGenClient.waveformUrls(session, tracks.flatMap(_.uid)), Map.empty[String, Seq[WaveformUrl]])
+    val downloadsPerTrackF = toResult(userQuotaClient.downloadsPerTrack(session, Set(userUrn)), Map.empty[Urn, Option[Int]])
+    val accessibilityChecksF = trackAccessibilityService.areTracksAccessible(session, tracks).map(Good(_))
+
+    joinF(labelsF, waveformUrlsF, downloadsPerTrackF, accessibilityChecksF)
+  }
+
+  private def toResult[T](future: Future[T], errorMessage: String): Future[Result[T]] = {
+    future.map(Good(_)).handle { case NonFatal(e) => Bad(Error(errorMessage, e)) }
+  }
+  private def toResult[T](future: Future[T], default: T): Future[Result[T]] = {
+    future.map(Good(_)).handle { case NonFatal(e) => Good(default) }
   }
 }
 

@@ -1,5 +1,6 @@
 package com.soundcloud.publicApiStrangler
 
+import com.soundcloud.jvmkit.module.util.ResultF
 import com.soundcloud.jvmkit.{Urn, UserSession}
 import com.soundcloud.publicApiStrangler.client.liebling.LieblingClient
 import com.soundcloud.publicApiStrangler.client.mediaservice.{MediaServiceUrlGenClient, WaveformUrl}
@@ -63,7 +64,7 @@ class TrackRepresentationsService(trackRepository: TrackRepository,
           }
 
           Future.join(userForTrackF, audioF, waveformUrlsF, isrcF, countsF, labelF, geoblockingsF, domainLockingsF, isLikedF, downloadsPerTrackF).map {
-            case (Some(user), Some(audio), Some(waveformUrls), isrc, counts, label, geoblockings, domainLockings, isLiked, downloadsPerTrack) =>
+            case (Some(user), Some(audio), waveformUrls, isrc, counts, label, geoblockings, domainLockings, isLiked, downloadsPerTrack) =>
               SuccessResult(trackRepresentationBuilder.build(
                 sessionUser = Option(session.getUser),
                 track = track,
@@ -88,7 +89,7 @@ class TrackRepresentationsService(trackRepository: TrackRepository,
     }
   }
 
-  def tracks(session: UserSession, userUrn: Urn, paginationParams: PublicApiPaginationParams): Future[List[TrackRepresentationLike]] = {
+  def tracks(session: UserSession, userUrn: Urn, paginationParams: PublicApiPaginationParams): ResultF[List[TrackRepresentationLike]] = {
     trackRepository.tracksByUser(session, userUrn, paginationParams).map { tracksResult => {
       tracksResult.tracks.map { track =>
         val urn = track.urn

@@ -1,6 +1,8 @@
 package com.soundcloud.publicApiStrangler.service
 
 import com.soundcloud.jvmkit.Urn
+import com.soundcloud.jvmkit.module.util.{Good, Result}
+import com.soundcloud.jvmkit.module.util.ResultF.lift
 import com.soundcloud.publicApiStrangler.TrackRepresentationsService
 import com.soundcloud.publicApiStrangler.client.liebling.LieblingClient
 import com.soundcloud.publicApiStrangler.client.mediaservice.{MediaServiceUrlGenClient, WaveformUrl}
@@ -60,83 +62,84 @@ class TrackRepresentationsServiceForMultipleTracksSpec extends UnitSpecification
     val completeTrackResult = TracksResult(
       tracks, user, isLiked, isrcs, geoblockingsMap, domainLockingsMap, audios, counts, labels, waveformUrlsMap, downloadsPerTrack)
 
-    def tracksResult: TracksResult
+    def tracksResult: Result[TracksResult]
 
-    def result = Await.result(service.tracks(session, userUrn, paginationParams))
+    def result = Await.result(service.tracks(session, userUrn, paginationParams).value)
 
-    trackRepository.tracksByUser(session, userUrn, paginationParams).returns(Future.value(tracksResult))
+    trackRepository.tracksByUser(session, userUrn, paginationParams).returns(lift(tracksResult))
   }
 
   "#tracks" >> {
     "when all data is available" >> {
       trait AllData extends Context {
-        override def tracksResult = completeTrackResult
+        override def tracksResult = Good(completeTrackResult)
       }
 
       "it maps the tracks" in new AllData {
-        result ==== List(new TrackRepresentationBuilder().build(
+        result ==== Good(List(new TrackRepresentationBuilder().build(
           Option(session.getUser), track, user, Some(isrc), count, Some(labelUser), Some(geoblockings), domainLockings,
-          audioMetadata, true, waveformUrls, None, Some(10)))
+          audioMetadata, true, waveformUrls, None, Some(10))))
       }
     }
 
     "when the track does not have a uid it maps to nothing" in new Context {
-      override def tracksResult = completeTrackResult.copy(tracks = List(TrackMetadataTrackBuilder(uid = None).build))
+      override def tracksResult = Good(completeTrackResult.copy(tracks = List(TrackMetadataTrackBuilder(uid = None).build)))
 
-      result ==== List()
+      result ==== Good(List())
     }
 
     "when the track's audio is not available it maps to nothing" in new Context {
-      override def tracksResult = completeTrackResult.copy(audios = Map.empty)
+      override def tracksResult = Good(completeTrackResult.copy(audios = Map.empty))
 
-      result ==== List()
+      result ==== Good(List())
     }
 
     "when the track's waveform is not available it maps to nothing" in new Context {
-      override def tracksResult = completeTrackResult.copy(waveformUrls = Map.empty)
+      override def tracksResult = Good(completeTrackResult.copy(waveformUrls = Map.empty))
 
-      result ==== List()
+      result ==== Good(List())
     }
 
     "when the track's waveform is not available it maps to nothing" in new Context {
-      override def tracksResult = completeTrackResult.copy(waveformUrls = Map.empty)
+      override def tracksResult = Good(completeTrackResult.copy(waveformUrls = Map.empty))
 
-      result ==== List()
+      result ==== Good(List())
     }
 
     "when the track's stitch counts are not available it maps zero" in new Context {
-      override def tracksResult = completeTrackResult.copy(counts = Map.empty)
+      override def tracksResult = Good(completeTrackResult.copy(counts = Map.empty))
 
-      result ==== List(new TrackRepresentationBuilder().build(
+      result ==== Good(List(new TrackRepresentationBuilder().build(
         Option(session.getUser), track, user, Some(isrc),
         StitchCounts(0, 0, 0, 0, 0), // relevant bit
-        Some(labelUser), Some(geoblockings), domainLockings, audioMetadata, true, waveformUrls, None, Some(10)))
+        Some(labelUser), Some(geoblockings), domainLockings, audioMetadata, true, waveformUrls, None, Some(10))))
     }
 
     "when the track's domain lockings are not available it maps empty" in new Context {
-      override def tracksResult = completeTrackResult.copy(domainLockings = Map.empty)
+      override def tracksResult = Good(completeTrackResult.copy(domainLockings = Map.empty))
 
-      result ==== List(new TrackRepresentationBuilder().build(
+      result ==== Good(List(new TrackRepresentationBuilder().build(
         Option(session.getUser), track, user, Some(isrc), count, Some(labelUser), Some(geoblockings),
         List.empty, // relevant bit
-        audioMetadata, true, waveformUrls, None, Some(10)))
+        audioMetadata, true, waveformUrls, None, Some(10))))
     }
 
     "when the track's liked status is not available it maps to false" in new Context {
-      override def tracksResult = completeTrackResult.copy(isLiked = Map.empty)
+      override def tracksResult = Good(completeTrackResult.copy(isLiked = Map.empty))
 
-      result ==== List(new TrackRepresentationBuilder().build(
+      result ==== Good(List(new TrackRepresentationBuilder().build(
         Option(session.getUser), track, user, Some(isrc), count, Some(labelUser), Some(geoblockings), domainLockings, audioMetadata,
         false, // relevant bit
-        waveformUrls, None, Some(10))) }
+        waveformUrls, None, Some(10))))
+    }
 
     "when the track's downloads is not available it maps to None" in new Context {
-      override def tracksResult = completeTrackResult.copy(downloadsPerTrack = Map.empty)
+      override def tracksResult = Good(completeTrackResult.copy(downloadsPerTrack = Map.empty))
 
-      result ==== List(new TrackRepresentationBuilder().build(
+      result ==== Good(List(new TrackRepresentationBuilder().build(
         Option(session.getUser), track, user, Some(isrc), count, Some(labelUser), Some(geoblockings), domainLockings, audioMetadata, true, waveformUrls,
         None, // relevant bit
-        None))
+        None)))
     }
   }
 }

@@ -14,20 +14,22 @@ object WaveformUrl {
 }
 
 class MediaServiceUrlGenClient(jsonClient: JsonClient) {
-  def waveformUrls(session: UserSession, maybeUid: Option[String]): Future[Option[Seq[WaveformUrl]]] = maybeUid match {
-    case Some(uid) => waveformUrls(session, Seq(uid)).map(_.flatMap(_.get(uid)))
-    case None => Future.value(Some(Seq.empty))
+  def waveformUrls(session: UserSession, maybeUid: Option[String]): Future[Seq[WaveformUrl]] = maybeUid match {
+    case Some(uid) => waveformUrls(session, Seq(uid)).map(_.get(uid).getOrElse(Seq.empty))
+    case None => Future.value(Seq.empty)
   }
 
-  def waveformUrls(session: UserSession, uids: Seq[String]): Future[Option[Map[String, Seq[WaveformUrl]]]] = uids match {
-    case Nil => Future.value(Some(Map.empty))
-    case uid => getUrls(session, uid) handle { case NonFatal(ex) => None }
+  def waveformUrls(session: UserSession, uids: Seq[String]): Future[Map[String, Seq[WaveformUrl]]] = uids match {
+    case Nil => Future.value(Map.empty)
+    case uid => getUrls(session, uid)
   }
 
-  private def getUrls(session: UserSession, uids: Seq[String]): Future[Option[Map[String, Seq[WaveformUrl]]]] = {
+  private def getUrls(session: UserSession, uids: Seq[String]): Future[Map[String, Seq[WaveformUrl]]] = {
     jsonClient.get(session, Path() / "waveforms", Params("uid" -> uids), Params.empty).map {
-      case JsonResponse(OkStatus, body, _, _) => Some(parseUrls(body))
-      case _ => None
+      case JsonResponse(OkStatus, body, _, _) => parseUrls(body)
+      case _ => Map.empty[String, Seq[WaveformUrl]]
+    }.handle {
+      case NonFatal(e) => Map.empty[String, Seq[WaveformUrl]]
     }
   }
 
