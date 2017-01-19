@@ -91,7 +91,7 @@ class TrackRepository(trackmetadataClient: TrackmetadataClient,
     future.map(Good(_)).handle { case NonFatal(e) => Bad(Error(errorMessage, e)) }
   }
   private def toResult[T](future: Future[T], default: T): Future[Result[T]] = {
-    future.map(Good(_)).handle { case NonFatal(e) => Good(default) }
+    future.map(Good(_)).handle { case NonFatal(_) => Good(default) }
   }
 }
 

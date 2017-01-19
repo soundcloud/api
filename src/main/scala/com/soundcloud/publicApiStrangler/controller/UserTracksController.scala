@@ -57,7 +57,6 @@ class UserTracksController(userAuthentication: UserAuthentication,
             case NonFatal(e) => {
               logger.error(e.getMessage)
               Bad(HttpError(Status.InternalServerError, "An unexpected error occurred while fetching the tracks"))
-
             }
           }
       }
@@ -75,9 +74,7 @@ class UserTracksController(userAuthentication: UserAuthentication,
     }
   }
 
-  case class HttpError(status: Status, message: String) extends ErrorLike {
-
-  }
+  case class HttpError(status: Status, message: String) extends ErrorLike
 
   private def generateNotFound(callback: Option[String]): Response = {
     val content = jsonpWrapper(callback, notFoundErrorString)
