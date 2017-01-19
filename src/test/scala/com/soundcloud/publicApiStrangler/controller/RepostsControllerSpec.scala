@@ -121,7 +121,7 @@ class RepostsControllerSpec extends InjectionBasedControllerSpecification {
 
       "when deleting succeeds" in new DeleteTrackContext {
         override def result = Deleted
-        response.status ==== Status.Accepted
+        response.status ==== Status.Ok
         response.body.length ==== 0
       }
 
@@ -193,7 +193,7 @@ class RepostsControllerSpec extends InjectionBasedControllerSpecification {
 
       "when deleting succeeds" in new DeletePlaylistContext {
         override def result = Deleted
-        response.status ==== Status.Accepted
+        response.status ==== Status.Ok
         response.body.length ==== 0
       }
 
