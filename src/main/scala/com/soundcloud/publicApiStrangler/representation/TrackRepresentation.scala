@@ -252,7 +252,7 @@ case class TrackRepresentation(
   isrc: Option[Isrc],
   counts: StitchCounts,
   label: Option[User],
-  geoblockings: Option[Geoblockings],
+  geoblockings: Geoblockings,
   domainlockings: Seq[DomainLocking],
   audioMetadata: TrackAudioMetadata) extends TrackRepresentationLike {
   def id = track.urn.getIdentifier.toLong

@@ -31,11 +31,11 @@ class TrackRepresentationsService(trackRepository: TrackRepository,
 
   def track(session: UserSession, urn: Urn, secretTokenInRequest: Option[String]): Future[Result[TrackRepresentationLike]] = {
 
-    def fetchGeoblockings(session: UserSession, urn: Urn): Future[Option[Geoblockings]] =
+    def fetchGeoblockings(session: UserSession, urn: Urn): Future[Geoblockings] =
       // fetchTrackGeoblockings can return Some with zero geoblockings, which this method turns into None
       okidokiClient.fetchTrackGeoblockings(session, urn).map {
-        case Some(geoblockings) => if (geoblockings.isEmpty) None else Some(geoblockings)
-        case None => None
+        case Some(geoblockings) => geoblockings
+        case None => List.empty
       }
 
     def fetchUser(userUrn: Urn, session: UserSession): Future[Option[User]] =
@@ -43,7 +43,7 @@ class TrackRepresentationsService(trackRepository: TrackRepository,
 
 
     val isrcF = pubmeseClient.isrcForTrack(session, urn).handle { case NonFatal(ex) => None }
-    val geoblockingsF = fetchGeoblockings(session, urn).handle { case NonFatal(ex) => None }
+    val geoblockingsF = fetchGeoblockings(session, urn).handle { case NonFatal(_) => List.empty }
     val domainLockingsF = okidokiClient.fetchTrackDomainLockings(session, urn).handle { case NonFatal(ex) => Seq() }
     val audioF = okidokiClient.fetchTrackAudioMetadata(session, urn)
 
@@ -105,7 +105,7 @@ class TrackRepresentationsService(trackRepository: TrackRepository,
             isrc = tracksResult.isrcs.get(urn),
             counts = tracksResult.counts.get(urn).getOrElse(StitchCounts(0, 0, 0, 0, 0)),
             label = tracksResult.labels.get(urn),
-            geoblockings = tracksResult.geoblockings.get(urn),
+            geoblockings = tracksResult.geoblockings.get(urn).getOrElse(List.empty),
             domainLockings = tracksResult.domainLockings.get(urn).getOrElse(List.empty),
             trackAudioMetadata = audio,
             isLiked = tracksResult.isLiked.get(urn).getOrElse(false),

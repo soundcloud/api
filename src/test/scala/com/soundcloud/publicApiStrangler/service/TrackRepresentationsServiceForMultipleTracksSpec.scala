@@ -77,7 +77,7 @@ class TrackRepresentationsServiceForMultipleTracksSpec extends UnitSpecification
 
       "it maps the tracks" in new AllData {
         result ==== Good(List(new TrackRepresentationBuilder().build(
-          Option(session.getUser), track, user, Some(isrc), count, Some(labelUser), Some(geoblockings), domainLockings,
+          Option(session.getUser), track, user, Some(isrc), count, Some(labelUser), geoblockings, domainLockings,
           audioMetadata, true, waveformUrls, None, Some(10))))
       }
     }
@@ -112,14 +112,14 @@ class TrackRepresentationsServiceForMultipleTracksSpec extends UnitSpecification
       result ==== Good(List(new TrackRepresentationBuilder().build(
         Option(session.getUser), track, user, Some(isrc),
         StitchCounts(0, 0, 0, 0, 0), // relevant bit
-        Some(labelUser), Some(geoblockings), domainLockings, audioMetadata, true, waveformUrls, None, Some(10))))
+        Some(labelUser), geoblockings, domainLockings, audioMetadata, true, waveformUrls, None, Some(10))))
     }
 
     "when the track's domain lockings are not available it maps empty" in new Context {
       override def tracksResult = Good(completeTrackResult.copy(domainLockings = Map.empty))
 
       result ==== Good(List(new TrackRepresentationBuilder().build(
-        Option(session.getUser), track, user, Some(isrc), count, Some(labelUser), Some(geoblockings),
+        Option(session.getUser), track, user, Some(isrc), count, Some(labelUser), geoblockings,
         List.empty, // relevant bit
         audioMetadata, true, waveformUrls, None, Some(10))))
     }
@@ -128,7 +128,7 @@ class TrackRepresentationsServiceForMultipleTracksSpec extends UnitSpecification
       override def tracksResult = Good(completeTrackResult.copy(isLiked = Map.empty))
 
       result ==== Good(List(new TrackRepresentationBuilder().build(
-        Option(session.getUser), track, user, Some(isrc), count, Some(labelUser), Some(geoblockings), domainLockings, audioMetadata,
+        Option(session.getUser), track, user, Some(isrc), count, Some(labelUser), geoblockings, domainLockings, audioMetadata,
         false, // relevant bit
         waveformUrls, None, Some(10))))
     }
@@ -137,7 +137,7 @@ class TrackRepresentationsServiceForMultipleTracksSpec extends UnitSpecification
       override def tracksResult = Good(completeTrackResult.copy(downloadsPerTrack = Map.empty))
 
       result ==== Good(List(new TrackRepresentationBuilder().build(
-        Option(session.getUser), track, user, Some(isrc), count, Some(labelUser), Some(geoblockings), domainLockings, audioMetadata, true, waveformUrls,
+        Option(session.getUser), track, user, Some(isrc), count, Some(labelUser), geoblockings, domainLockings, audioMetadata, true, waveformUrls,
         None, // relevant bit
         None)))
     }

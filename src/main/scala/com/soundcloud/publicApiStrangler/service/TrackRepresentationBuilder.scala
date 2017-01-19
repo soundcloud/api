@@ -16,7 +16,7 @@ class TrackRepresentationBuilder {
             isrc: Option[Isrc],
             counts: StitchCounts,
             label: Option[User],
-            geoblockings: Option[Geoblockings],
+            geoblockings: Geoblockings,
             domainLockings: Seq[DomainLocking],
             trackAudioMetadata: TrackAudioMetadata,
             isLiked: Boolean,
@@ -45,8 +45,8 @@ class TrackRepresentationBuilder {
       rep = TrackRepresentationCountsDecorator(counts, rep)
     if ((userIsOwner || track.reveal_stats) && track.reveal_comments)
       rep = TrackRepresentationCommentCountDecorator(counts, rep)
-    if (geoblockings.isDefined)
-      rep = TrackRepresentationGeoblockingsDecorator(geoblockings.get, rep)
+    if (!geoblockings.isEmpty)
+      rep = TrackRepresentationGeoblockingsDecorator(geoblockings, rep)
     if (domainLockings.nonEmpty)
       rep = TrackRepresentationDomainLockingsDecorator(domainLockings, rep)
     if (!isAnonymous) {
