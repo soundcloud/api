@@ -111,7 +111,7 @@ publish-deploy:
 		--command "./$(APITRACKUPLOAD_ENTRYPOINT) --config=$(APITRACKUPLOAD_CONFIG)" \
 		--public \
 		--ingress http://$(APP_NAME)-trackupload.$(CLUSTER).lb.s-cloud.net:http \
-		--glimpse http.strangler-trackupload.test.public-api \
+		--glimpse http.strangler-trackupload.prod.public-api \
 		--slack-channel '#core-services' \
 		--prometheus.port telemetry \
 		--strategy.rolling-update.max-surge.percent 10
