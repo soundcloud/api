@@ -8,10 +8,12 @@ import com.soundcloud.jvmkit.Urn
 import com.soundcloud.jvmkit.telemetry.Telemetry
 import com.soundcloud.publicApiStrangler.TrackRepresentationsService
 import com.soundcloud.publicApiStrangler.representation.TrackRepresentationLike
+import com.soundcloud.publicApiStrangler.service.TrackPagination
 import com.soundcloud.publicApiStrangler.support.migration.TrackCollectionResponseComparison
 import com.soundcloud.scalakit.json.Json
 import com.twitter.finagle.http.{Response, Status}
 import com.twitter.util.{Future, NonFatal}
+
 import scala.util.{Success, Try}
 import scala.collection.JavaConversions._
 
@@ -52,7 +54,7 @@ class UserTracksController(userAuthentication: UserAuthentication,
       val callback = req.params.get("callback")
 
       def getResult(urn: Urn) = {
-        tracksService.tracks(session, urn, PublicApiPaginationParams.fromRequest(req))
+        tracksService.tracks(session, urn, TrackPagination.fromRequest(req))
           .handle {
             case NonFatal(e) => {
               logger.error(e.getMessage)

@@ -12,7 +12,6 @@ import com.soundcloud.publicApiStrangler.client.quota.UserQuotaClient
 import com.soundcloud.publicApiStrangler.client.stitch.{StitchClient, StitchCounts}
 import com.soundcloud.publicApiStrangler.client.trackmetadata.TrackmetadataClient
 import com.soundcloud.publicApiStrangler.client.{DomainLocking, RichOkidokiClient, TrackAudioMetadata}
-import com.soundcloud.publicApiStrangler.controller.PublicApiPaginationParams
 import com.soundcloud.publicApiStrangler.test.util.TrackMetadataTrackBuilder
 import com.soundcloud.scalakit.test.UnitSpecification
 import com.soundcloud.service.response.representation.User
@@ -37,7 +36,7 @@ class TrackRepresentationsServiceForMultipleTracksSpec extends UnitSpecification
 
     val session = anonymousSession
     val userUrn: Urn = Urn("soundcloud:users:1")
-    val paginationParams = mock[PublicApiPaginationParams]
+    val paginationParams = mock[TrackPagination]
 
     val track = TrackMetadataTrackBuilder().build
     val tracks = List(track)

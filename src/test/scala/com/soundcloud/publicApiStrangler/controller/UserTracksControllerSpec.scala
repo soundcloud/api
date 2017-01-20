@@ -9,6 +9,7 @@ import com.soundcloud.jvmkit.telemetry.Telemetry
 import com.soundcloud.jvmkit.test.InMemoryConfig
 import com.soundcloud.publicApiStrangler.TrackRepresentationsService
 import com.soundcloud.publicApiStrangler.representation.TrackRepresentationLike
+import com.soundcloud.publicApiStrangler.service.TrackPagination
 import com.twitter.finagle.http.Status
 import com.twitter.util.Future
 import org.mockito.Mockito.when
@@ -66,7 +67,7 @@ class UserTracksControllerSpec extends InjectionBasedControllerSpecification {
       val tracksServiceSuccess = lift(Good(List.empty[TrackRepresentationLike]))
 
       val user = Urn("soundcloud:users:7110")
-      val paginationParams = PublicApiPaginationParams(Some(1), Some(2), true, Some("aaa"), Some("bbb"))
+      val paginationParams = TrackPagination(Some(1), Some(2), true, Some("aaa"), Some("bbb"))
     }
 
     "GET /users/:id/tracks" >> {

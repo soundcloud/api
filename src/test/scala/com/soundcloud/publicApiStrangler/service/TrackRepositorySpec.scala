@@ -10,7 +10,6 @@ import com.soundcloud.publicApiStrangler.client.pubmese.{Isrc, PubmeseClient}
 import com.soundcloud.publicApiStrangler.client.quota.UserQuotaClient
 import com.soundcloud.publicApiStrangler.client.stitch.{StitchClient, StitchCounts}
 import com.soundcloud.publicApiStrangler.client.trackmetadata.TrackmetadataClient
-import com.soundcloud.publicApiStrangler.controller.PublicApiPaginationParams
 import com.soundcloud.publicApiStrangler.test.util.TrackMetadataTrackBuilder
 import com.soundcloud.scalakit.test.UnitSpecification
 import com.soundcloud.service.response.representation.{Geoblockings, User}
@@ -42,7 +41,7 @@ class TrackRepositorySpec extends UnitSpecification {
     lazy val session = loggedInSession(sessionUser)
 
     def userUrn = Urn("soundcloud:users:9218371")
-    def paginationParams: PublicApiPaginationParams
+    def paginationParams: TrackPagination
 
     def trackmetadataTrack(urn: Urn, ownerUrn: Urn, labelId: Option[Int]) =
       TrackMetadataTrackBuilder(urn = urn, user_urn = ownerUrn, label_id = labelId).build
@@ -109,7 +108,7 @@ class TrackRepositorySpec extends UnitSpecification {
   "#tracksByUser" >> {
     "with no pagination params" >> {
       trait NoPaginationParams extends Context {
-        override def paginationParams = new PublicApiPaginationParams(None, None, false, None, None)
+        override def paginationParams = new TrackPagination(None, None, false, None, None)
 
         val goodTracksResult = Good(TracksResult(
           trackmetadataTracks.tail, // track3 was removed for not being accessible

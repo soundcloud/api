@@ -10,7 +10,6 @@ import com.soundcloud.publicApiStrangler.client.quota.UserQuotaClient
 import com.soundcloud.publicApiStrangler.client.stitch.{StitchClient, StitchCounts}
 import com.soundcloud.publicApiStrangler.client.trackmetadata.{Track, TrackmetadataClient}
 import com.soundcloud.publicApiStrangler.client.{DomainLocking, RichOkidokiClient, TrackAudioMetadata}
-import com.soundcloud.publicApiStrangler.controller.PublicApiPaginationParams
 import com.soundcloud.service.response.representation.{Geoblockings, User}
 import com.twitter.util.{Future, NonFatal}
 
@@ -25,29 +24,20 @@ class TrackRepository(trackmetadataClient: TrackmetadataClient,
 
   def tracksByUser(session: UserSession,
                    userUrn: Urn,
-                   paginationParams: PublicApiPaginationParams): ResultF[TracksResult] = {
+                   trackPagination: TrackPagination): ResultF[TracksResult] = {
 
     val userAndAllTrackUrnsF = joinF(
       toResult(okidokiClient.fetchUserObjects(session, Set(userUrn)), "Could not load the tracks' owner"),
       toResult(trackmetadataClient.urnsByUser(session, userUrn), "Could not load the tracks' urns"))
 
-
-    def calculateTrackUrnPage(allUserTrackUrns: List[Urn]) = {
-      val start = paginationParams.offset.getOrElse(0)
-      val end = start + paginationParams.limit.getOrElse(Int.MaxValue)
-      // sort by id desc
-      allUserTrackUrns.sortBy(-_.getIdentifier.toInt).slice(start, end).toSet
-    }
-
     for {
       (List(user), trackUrns) <- userAndAllTrackUrnsF
-      trackUrnsPage = calculateTrackUrnPage(trackUrns)
+      trackUrnsPage = trackPagination.calculateTrackUrnPage(trackUrns)
       (tracks, isLiked, isrcs, geoblockings, domainLockings, audios, counts) <- allDependenciesOnlyOnTrackUrn(session, userUrn, trackUrnsPage)
       (labels, waveformUrls, downloadsPerTrack, accessibilityCheck) <- allDependenciesOnTrackObjectList(session, userUrn, tracks)
     } yield {
-      val sortedAccessibleTracks = tracks
-        .filter(track => accessibilityCheck.get(track.urn).get)
-        .sortBy(-_.urn.getIdentifier.toInt)
+      val accessibleTracks = tracks.filter(track => accessibilityCheck.get(track.urn).get)
+      val sortedAccessibleTracks = trackPagination.calculateFinalPage(accessibleTracks)
 
       TracksResult(
         sortedAccessibleTracks,

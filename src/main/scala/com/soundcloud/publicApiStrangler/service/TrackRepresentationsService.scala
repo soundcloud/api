@@ -7,8 +7,7 @@ import com.soundcloud.publicApiStrangler.client.mediaservice.{MediaServiceUrlGen
 import com.soundcloud.publicApiStrangler.client.pubmese.{Isrc, PubmeseClient}
 import com.soundcloud.publicApiStrangler.client.quota.UserQuotaClient
 import com.soundcloud.publicApiStrangler.client.stitch.{StitchClient, StitchCounts}
-import com.soundcloud.publicApiStrangler.controller.PublicApiPaginationParams
-import com.soundcloud.publicApiStrangler.service.{TrackAccessibilityService, TrackRepository, TrackRepresentationBuilder}
+import com.soundcloud.publicApiStrangler.service.{TrackAccessibilityService, TrackPagination, TrackRepository, TrackRepresentationBuilder}
 
 // FIXME: Do not use result types from Track Coordinator
 import com.soundcloud.publicApiStrangler.client.trackcoordinator.datatypes.{Result, NotFound => TrackNotFound, Success => SuccessResult}
@@ -89,7 +88,7 @@ class TrackRepresentationsService(trackRepository: TrackRepository,
     }
   }
 
-  def tracks(session: UserSession, userUrn: Urn, paginationParams: PublicApiPaginationParams): ResultF[List[TrackRepresentationLike]] = {
+  def tracks(session: UserSession, userUrn: Urn, paginationParams: TrackPagination): ResultF[List[TrackRepresentationLike]] = {
     trackRepository.tracksByUser(session, userUrn, paginationParams).map { tracksResult => {
       tracksResult.tracks.map { track =>
         val urn = track.urn
