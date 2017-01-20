@@ -66,6 +66,8 @@ class TrackRepository(trackmetadataClient: TrackmetadataClient,
 
   private def allDependenciesOnlyOnTrackUrn(session: UserSession, userUrn: Urn, trackUrnsPage: Set[Urn]) = {
     val tracksF = toResult(trackmetadataClient.tracks(session, trackUrnsPage), "Could not load tracks from trackmetadata")
+    val audiosF = toResult(okidokiClient.fetchTracksAudioMetadata(session, trackUrnsPage), "Could not load the audio information")
+
     val isLikedF = Option(session.getUser)
       .map(user => toResult(lieblingClient.userLikedTracks(session, trackUrnsPage, user), Map.empty[Urn, Boolean]))
       .getOrElse(Future.value(Good(Map.empty[Urn, Boolean])))
@@ -74,14 +76,15 @@ class TrackRepository(trackmetadataClient: TrackmetadataClient,
     val domainLockingsF = toResult(okidokiClient.fetchTracksDomainLockings(session, trackUrnsPage), Map.empty[Urn, List[DomainLocking]])
     val countsF = toResult(stitchClient.countsForTracksByUser(session, userUrn, trackUrnsPage), Map.empty[Urn, StitchCounts])
 
-    val audiosF = toResult(okidokiClient.fetchTracksAudioMetadata(session, trackUrnsPage), "Could not load the audio information")
 
     joinF(tracksF, isLikedF, isrcsF, geoblockingsF, domainLockingsF, audiosF, countsF)
   }
 
   private def allDependenciesOnTrackObjectList(session: UserSession, userUrn: Urn, tracks: List[Track]) = {
-    val labelsF = toResult(okidokiClient.fetchUsersMap(session, tracks.flatMap(_.label_id).map(labelId => Urn("soundcloud", "users", labelId.toString)).toSet), Map.empty[Urn, User])
     val waveformUrlsF = toResult(mediaUrlGenClient.waveformUrls(session, tracks.flatMap(_.uid)), "Could not load the tracks' waveforms")
+
+    val userUrnsFromLabelIds = tracks.flatMap(_.label_id).map(labelId => Urn("soundcloud", "users", labelId.toString))
+    val labelsF = toResult(okidokiClient.fetchUsersMap(session, userUrnsFromLabelIds.toSet), Map.empty[Urn, User])
     val downloadsPerTrackF = toResult(userQuotaClient.downloadsPerTrack(session, Set(userUrn)), Map.empty[Urn, Option[Int]])
     val accessibilityChecksF: Future[Result[Map[Urn, Boolean]]] = toResult(
       trackAccessibilityService.areTracksAccessible(session, tracks),
