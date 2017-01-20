@@ -7,7 +7,7 @@ case class PublicApiPaginationParams(limit: Option[Int],
                                      offset: Option[Int],
                                      linkedPartitioning: Boolean,
                                      createdAtFrom: Option[String],
-                                     createdAtTo: Option[String]) {}
+                                     createdAtTo: Option[String])
 
 object PublicApiPaginationParams {
   def fromRequest(req: Request) = {

@@ -72,17 +72,20 @@ class TrackRepository(trackmetadataClient: TrackmetadataClient,
     val isrcsF = toResult(pubmeseClient.isrcsForTracks(session, trackUrnsPage), Map.empty[Urn, Isrc])
     val geoblockingsF = toResult(okidokiClient.fetchTrackGeoblockings(session, trackUrnsPage), Map.empty[Urn, Geoblockings])
     val domainLockingsF = toResult(okidokiClient.fetchTracksDomainLockings(session, trackUrnsPage), Map.empty[Urn, List[DomainLocking]])
-    val audiosF = toResult(okidokiClient.fetchTracksAudioMetadata(session, trackUrnsPage), Map.empty[Urn, TrackAudioMetadata])
     val countsF = toResult(stitchClient.countsForTracksByUser(session, userUrn, trackUrnsPage), Map.empty[Urn, StitchCounts])
+
+    val audiosF = toResult(okidokiClient.fetchTracksAudioMetadata(session, trackUrnsPage), "Could not load the audio information")
 
     joinF(tracksF, isLikedF, isrcsF, geoblockingsF, domainLockingsF, audiosF, countsF)
   }
 
   private def allDependenciesOnTrackObjectList(session: UserSession, userUrn: Urn, tracks: List[Track]) = {
     val labelsF = toResult(okidokiClient.fetchUsersMap(session, tracks.flatMap(_.label_id).map(labelId => Urn("soundcloud", "users", labelId.toString)).toSet), Map.empty[Urn, User])
-    val waveformUrlsF = toResult(mediaUrlGenClient.waveformUrls(session, tracks.flatMap(_.uid)), Map.empty[String, Seq[WaveformUrl]])
+    val waveformUrlsF = toResult(mediaUrlGenClient.waveformUrls(session, tracks.flatMap(_.uid)), "Could not load the tracks' waveforms")
     val downloadsPerTrackF = toResult(userQuotaClient.downloadsPerTrack(session, Set(userUrn)), Map.empty[Urn, Option[Int]])
-    val accessibilityChecksF = trackAccessibilityService.areTracksAccessible(session, tracks).map(Good(_))
+    val accessibilityChecksF: Future[Result[Map[Urn, Boolean]]] = toResult(
+      trackAccessibilityService.areTracksAccessible(session, tracks),
+      tracks.map(t => (t.urn, false)).toMap) // defaults to not accessible if something goes wrong
 
     joinF(labelsF, waveformUrlsF, downloadsPerTrackF, accessibilityChecksF)
   }
@@ -91,7 +94,9 @@ class TrackRepository(trackmetadataClient: TrackmetadataClient,
     future.map(Good(_)).handle { case NonFatal(e) => Bad(Error(errorMessage, e)) }
   }
   private def toResult[T](future: Future[T], default: T): Future[Result[T]] = {
-    future.map(Good(_)).handle { case NonFatal(_) => Good(default) }
+    future
+      .map(Good(_))
+      .handle { case NonFatal(_) => Good(default) }
   }
 }
 

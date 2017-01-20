@@ -33,5 +33,4 @@ class TrackAccessibilityService(playlistsClient: PlaylistsClient) {
     if (!isDisabled) isPrivacyAuthorized
     else Future.False
   }
-
 }
