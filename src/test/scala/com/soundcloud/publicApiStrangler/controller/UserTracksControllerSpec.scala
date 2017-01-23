@@ -1,5 +1,7 @@
 package com.soundcloud.publicApiStrangler.controller
 
+import java.util.TimeZone
+
 import com.soundcloud.bff.finagle.{Request, ResponseBuilder}
 import com.soundcloud.bff.test.InjectionBasedControllerSpecification
 import com.soundcloud.jvmkit.Urn
@@ -12,9 +14,12 @@ import com.soundcloud.publicApiStrangler.representation.TrackRepresentationLike
 import com.soundcloud.publicApiStrangler.service.TrackPagination
 import com.twitter.finagle.http.Status
 import com.twitter.util.Future
+import org.joda.time.{DateTimeZone, LocalDateTime}
 import org.mockito.Mockito.when
 
 class UserTracksControllerSpec extends InjectionBasedControllerSpecification {
+  TimeZone.setDefault(TimeZone.getTimeZone("UTC"))
+  DateTimeZone.setDefault(DateTimeZone.UTC)
 
   trait Context extends Scope {
     val session = loggedInSession(Urn("soundcloud:users:1"))
@@ -67,7 +72,9 @@ class UserTracksControllerSpec extends InjectionBasedControllerSpecification {
       val tracksServiceSuccess = lift(Good(List.empty[TrackRepresentationLike]))
 
       val user = Urn("soundcloud:users:7110")
-      val paginationParams = TrackPagination(Some(1), Some(2), true, Some("aaa"), Some("bbb"))
+      val paginationParams = TrackPagination(Some(1), Some(2), true,
+        Some(new LocalDateTime(2017, 1, 1, 10, 0, 0)),
+        Some(new LocalDateTime(2017, 1, 15, 10, 0, 0)))
     }
 
     "GET /users/:id/tracks" >> {
@@ -75,7 +82,7 @@ class UserTracksControllerSpec extends InjectionBasedControllerSpecification {
         when(mothershipDispatcher.request(any[Request])).thenReturn(mothershipSuccess)
         when(tracksService.tracks(session, user, paginationParams)).thenReturn(tracksServiceSuccess)
 
-        val queryString = "?limit=1&offset=2&linked_partitioning=yes-please&created_at[from]=aaa&created_at[to]=bbb"
+        val queryString = "?limit=1&offset=2&linked_partitioning=yes-please&created_at[from]=2017-01-01%2010:00:00&created_at[to]=2017-01-15%2010:00:00"
 
         List(
           s"/users/7110/tracks$queryString",

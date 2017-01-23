@@ -12,6 +12,7 @@ import com.soundcloud.publicApiStrangler.client.trackmetadata.{Track, Trackmetad
 import com.soundcloud.publicApiStrangler.client.{DomainLocking, RichOkidokiClient, TrackAudioMetadata}
 import com.soundcloud.service.response.representation.{Geoblockings, User}
 import com.twitter.util.{Future, NonFatal}
+import play.api.libs.json.Json
 
 class TrackRepository(trackmetadataClient: TrackmetadataClient,
                       okidokiClient: RichOkidokiClient,

@@ -54,7 +54,7 @@ class UserTracksController(userAuthentication: UserAuthentication,
       val callback = req.params.get("callback")
 
       def getResult(urn: Urn) = {
-        tracksService.tracks(session, urn, TrackPagination.fromRequest(req))
+        tracksService.tracks(session, urn, TrackPagination.fromRequest(req.params))
           .handle {
             case NonFatal(e) => {
               logger.error(e.getMessage)
