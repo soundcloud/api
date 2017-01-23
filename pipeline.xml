@@ -67,14 +67,6 @@
             <runif status="passed"/>
           </exec>
           <exec command="make">
-            <arg>deploy-db-api</arg>
-            <runif status="passed"/>
-          </exec>
-          <exec command="make">
-            <arg>deploy-db-apitrackupload</arg>
-            <runif status="passed"/>
-          </exec>
-          <exec command="make">
             <arg>deploy-k8s-api</arg>
             <runif status="passed"/>
           </exec>

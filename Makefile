@@ -1,16 +1,11 @@
 APP_NAME := $(shell manifest name)
 
 API_ENTRYPOINT     := api
-API_INSTANCE_COUNT := 100
 APITRACKUPLOAD_ENTRYPOINT     := apitrackupload
-APITRACKUPLOAD_INSTANCE_COUNT := 10
 
 API_CONFIG := production_api.sh
 APITRACKUPLOAD_CONFIG := production_apitrackupload.sh
-BAZOOKA_ZONES := db
 RUNTIME_STACK := jdk-8
-
-DEPLOY_SCRIPT ?= $(shell gen-deploy-script --arch=linux --name=public-api-strangler --revision=`artifact-manager package-version`)
 
 DOCKER_IP ?= $(shell docker-ip)
 
@@ -63,9 +58,6 @@ clean:
 package: prepare-package-layout
 	docker pull docker.dev.s-cloud.net/$(RUNTIME_STACK):latest
 	artifact-manager package --runtime=$(RUNTIME_STACK)
-	artifact-manager bazooka build --zones=$(BAZOOKA_ZONES) --runtime=$(RUNTIME_STACK) \
-				 --proc="$(API_ENTRYPOINT) --config=$(API_CONFIG)" \
-				 --proc="$(APITRACKUPLOAD_ENTRYPOINT) --config=$(APITRACKUPLOAD_CONFIG)"
 
 prepare-package-layout: patched-jdk
 	crun sbt -- sbt scDebianLayout:packageBin
@@ -89,7 +81,6 @@ jdk/target/sun/nio/ch/Util.class: jdk/src/share/classes/sun/nio/ch/Util.java
 
 publish:
 	artifact-manager publish
-	artifact-manager bazooka publish --runtime=$(RUNTIME_STACK) --zones=$(BAZOOKA_ZONES)
 
 publish-deploy:
 	artifact-manager deploy publish \
@@ -118,27 +109,9 @@ publish-deploy:
 
 promote-to-stable:
 	artifact-manager promote stable
-	artifact-manager bazooka promote stable --zones=$(BAZOOKA_ZONES)
 
 promote-to-release:
 	artifact-manager promote release
-	artifact-manager bazooka promote release --zones=$(BAZOOKA_ZONES)
-
-.PHONY: deploy-db-api
-deploy-db-api:
-	crun bazooka-cli "./$(DEPLOY_SCRIPT) bazooka --clean-revs \
-		--boot-timeout=60s --health-port=app --health-path=/tracks/116540862?client_id=hannes_test \
-		--bazooka-zone=db --scale-step=10 --instance-cnt=$(API_INSTANCE_COUNT) \
-		--proc=$(API_ENTRYPOINT) \
-		--slack-channels=#core-services"
-
-.PHONY: deploy-db-apitrackupload
-deploy-db-apitrackupload:
-	crun bazooka-cli "./$(DEPLOY_SCRIPT) bazooka --clean-revs \
-		--boot-timeout=60s --health-port=app --health-path=/tracks/116540862?client_id=hannes_test \
-		--bazooka-zone=db --scale-step=10 --instance-cnt=$(APITRACKUPLOAD_INSTANCE_COUNT) \
-		--proc=$(APITRACKUPLOAD_ENTRYPOINT) \
-		--slack-channels=#core-services"
 
 .PHONY: deploy-k8s-api
 deploy-k8s-api:
