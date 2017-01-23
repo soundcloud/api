@@ -23,7 +23,7 @@ default: precheckin
 
 run:
 	docker-compose up --force-recreate -d
-	crun sbt -i --docker-options="-p5000:5000 --link=strangler_zk --link=strangler_memcached --env-file=config/development" -- sbt run
+	crun sbt -i --docker-options="-p 5000:5000 --link=strangler_zk --link=strangler_memcached --env-file=config/development" -- sbt run
 
 precheckin:
 	make unit-test
