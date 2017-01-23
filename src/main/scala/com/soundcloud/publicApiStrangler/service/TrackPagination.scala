@@ -1,5 +1,7 @@
 package com.soundcloud.publicApiStrangler.service
 
+import java.net.URL
+
 import com.soundcloud.jvmkit.Urn
 import com.soundcloud.publicApiStrangler.client.trackmetadata.Track
 import org.joda.time.format.DateTimeFormat
@@ -8,15 +10,19 @@ import org.joda.time.{DateTime, DateTimeZone, LocalDateTime}
 import scala.util.Try
 
 
-case class TrackPagination(limit: Option[Int],
-                           offset: Option[Int],
+case class TrackPagination(maybeLimit: Option[Int],
+                           maybeOffset: Option[Int],
                            linkedPartitioning: Boolean,
                            createdAtFrom: Option[LocalDateTime],
                            createdAtTo: Option[LocalDateTime]) {
 
+  val offset = maybeOffset.getOrElse(0)
+  val limit = maybeLimit.getOrElse(Int.MaxValue)
+
+
   def calculateTrackUrnPage(trackUrns: List[Urn]): Set[Urn] = {
-    val start = offset.getOrElse(0)
-    val end = start + limit.getOrElse(Int.MaxValue)
+    val start = offset
+    val end = start + limit
     // sort by id desc
     trackUrns.sortBy(-_.getIdentifier.toInt).slice(start, end).toSet
   }
@@ -26,6 +32,25 @@ case class TrackPagination(limit: Option[Int],
       .filter(t => createdAtFrom.map(t.created_at.isAfter(_)).getOrElse(true) &&
                    createdAtTo.map(t.created_at.isBefore(_)).getOrElse(true))
       .sortBy(-_.urn.getIdentifier.toInt)
+  }
+
+  def nextHref(url: URL, totalTracks: Int): Option[String] = {
+    val nextOffset = offset + limit
+
+    if (totalTracks < nextOffset) {
+      None
+    } else {
+      val params = url.getQuery.split("&").toList.map(_.split("=").toList).flatMap {
+        case List(key, value) => Some(key, value)
+        case List(key) => Some(key, "")
+        case otherwise => Some(otherwise, "")
+      }.toMap
+
+      val nextParams = params ++ Map("limit" -> limit.toString, "offset" -> nextOffset.toString)
+
+      val nextHref = List(url.toString.split("\\?").head, nextParams.map { case (k, v) => s"$k=$v" }.mkString("&")).mkString("?")
+      Some(nextHref)
+    }
   }
 
 }
