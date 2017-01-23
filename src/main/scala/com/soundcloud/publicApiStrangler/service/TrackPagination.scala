@@ -35,21 +35,25 @@ case class TrackPagination(maybeLimit: Option[Int],
   }
 
   def nextHref(url: URL, totalTracks: Int): Option[String] = {
-    val nextOffset = offset + limit
-
-    if (totalTracks < nextOffset) {
+    if (linkedPartitioning == false) {
       None
     } else {
-      val params = url.getQuery.split("&").toList.map(_.split("=").toList).flatMap {
-        case List(key, value) => Some(key, value)
-        case List(key) => Some(key, "")
-        case otherwise => Some(otherwise, "")
-      }.toMap
+      val nextOffset = offset + limit
 
-      val nextParams = params ++ Map("limit" -> limit.toString, "offset" -> nextOffset.toString)
+      if (totalTracks < nextOffset) {
+        None
+      } else {
+        val params = url.getQuery.split("&").toList.map(_.split("=").toList).flatMap {
+          case List(key, value) => Some(key, value)
+          case List(key) => Some(key, "")
+          case otherwise => Some(otherwise, "")
+        }.toMap
 
-      val nextHref = List(url.toString.split("\\?").head, nextParams.map { case (k, v) => s"$k=$v" }.mkString("&")).mkString("?")
-      Some(nextHref)
+        val nextParams = params ++ Map("limit" -> limit.toString, "offset" -> nextOffset.toString)
+
+        val nextHref = List(url.toString.split("\\?").head, nextParams.map { case (k, v) => s"$k=$v" }.mkString("&")).mkString("?")
+        Some(nextHref)
+      }
     }
   }
 

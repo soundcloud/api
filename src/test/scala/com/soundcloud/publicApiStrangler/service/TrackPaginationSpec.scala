@@ -63,24 +63,35 @@ class TrackPaginationSpec extends UnitSpecification {
   "#nextHref" >> {
     val base = "https://api.soundcloud.com/tracks?"
 
-    "when the number of track urns is greater than the limit + offset" >> {
-      "with limit" >> {
+    "when linked_partitioning=true" >> {
+      "when the number of track urns is greater than the limit + offset" >> {
+        "with limit" >> {
+          val pagination = new TrackPagination(Some(2), None, true, None, None)
+          pagination.nextHref(new URL(s"${base}limit=2&another=value&just-key=&bad"), 100) ====
+            Some(s"${base}another=value&just-key=&bad=&offset=2&limit=2")
+        }
+
+        "with limit and offset" >> {
+          val pagination = new TrackPagination(Some(2), Some(4), true, None, None)
+          pagination.nextHref(new URL(s"${base}limit=2&another=value&just-key=&bad"), 100) ====
+            Some(s"${base}another=value&just-key=&bad=&offset=6&limit=2")
+        }
+      }
+
+      "when the number of track urns is smaller than the limit + offset" >> {
+        val pagination = new TrackPagination(Some(20), Some(10), true, None, None)
+        pagination.nextHref(new URL(s"${base}limit=2&another=value&just-key=&bad"), 29) ==== None
+      }
+    }
+
+    "when linked_partitioning=false returns none" >> {
+      "when the number of track urns is smaller than the limit + offset" >> {
         val pagination = new TrackPagination(Some(2), None, false, None, None)
-        pagination.nextHref(new URL(s"${base}limit=2&another=value&just-key=&bad"), 100) ====
-          Some(s"${base}another=value&just-key=&bad=&offset=2&limit=2")
-      }
-
-      "with limit and offset" >> {
-        val pagination = new TrackPagination(Some(2), Some(4), false, None, None)
-        pagination.nextHref(new URL(s"${base}limit=2&another=value&just-key=&bad"), 100) ====
-          Some(s"${base}another=value&just-key=&bad=&offset=6&limit=2")
+        pagination.nextHref(new URL(s"${base}limit=2&another=value&just-key=&bad"), 100) ==== None
       }
     }
 
-    "when the number of track urns is smaller than the limit + offset" >> {
-      val pagination = new TrackPagination(Some(20), Some(10), false, None, None)
-      pagination.nextHref(new URL(s"${base}limit=2&another=value&just-key=&bad"), 29) ==== None
-    }
+
   }
 
   "pagination with offset" >> {
