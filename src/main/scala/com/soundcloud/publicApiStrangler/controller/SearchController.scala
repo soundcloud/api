@@ -64,7 +64,8 @@ class SearchController(userAuthentication: UserAuthentication,
   private def dispatchTrackRequest = {
     dispatchRequest(
       trackParams,
-      SearchDispatcherRequest.trackSearch
+      SearchDispatcherRequest.trackSearch,
+      trackMothershipDispatcherWithCounts.request _
     )
   }
 
@@ -78,7 +79,7 @@ class SearchController(userAuthentication: UserAuthentication,
     if (isSearchRequest(request.params, searchParams)) {
       search(request, makeRequest(request))
     } else {
-      trackMothershipDispatcherWithCounts.request(request)
+      mothershipDispatcherFn(request)
     }
   }
 
