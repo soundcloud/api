@@ -1,5 +1,7 @@
 package com.soundcloud.publicApiStrangler.controller
 
+import java.net.URL
+
 import com.soundcloud.jvmkit.module.util.Result.TryToResult
 import com.soundcloud.jvmkit.module.util.{Bad, ErrorLike, Good}
 import com.soundcloud.bff.finagle.{Request, ResponseBuilder}
@@ -54,7 +56,7 @@ class UserTracksController(userAuthentication: UserAuthentication,
       val callback = req.params.get("callback")
 
       def getResult(urn: Urn) = {
-        tracksService.tracks(session, urn, TrackPagination.fromRequest(req.params))
+        tracksService.tracks(session, urn, TrackPagination.fromRequest(req.params, new URL(req.uri)))
           .handle {
             case NonFatal(e) => {
               logger.error(e.getMessage)

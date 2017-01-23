@@ -1,5 +1,6 @@
 package com.soundcloud.publicApiStrangler.controller
 
+import java.net.URL
 import java.util.TimeZone
 
 import com.soundcloud.bff.finagle.{Request, ResponseBuilder}
@@ -74,7 +75,8 @@ class UserTracksControllerSpec extends InjectionBasedControllerSpecification {
       val user = Urn("soundcloud:users:7110")
       val paginationParams = TrackPagination(Some(1), Some(2), true,
         Some(new LocalDateTime(2017, 1, 1, 10, 0, 0)),
-        Some(new LocalDateTime(2017, 1, 15, 10, 0, 0)))
+        Some(new LocalDateTime(2017, 1, 15, 10, 0, 0)),
+        new URL("asd"))
     }
 
     "GET /users/:id/tracks" >> {

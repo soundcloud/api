@@ -1,5 +1,7 @@
 package com.soundcloud.publicApiStrangler.service
 
+import java.net.URL
+
 import com.soundcloud.jvmkit.Urn
 import com.soundcloud.jvmkit.module.util.{Bad, Error, Good, Result}
 import com.soundcloud.publicApiStrangler.client.{DomainLocking, RichOkidokiClient, TrackAudioMetadata}
@@ -108,7 +110,7 @@ class TrackRepositorySpec extends UnitSpecification {
   "#tracksByUser" >> {
     "with no pagination params" >> {
       trait NoPaginationParams extends Context {
-        override def paginationParams = new TrackPagination(None, None, false, None, None)
+        override def paginationParams = new TrackPagination(None, None, false, None, None, new URL("https://api.soundcloud.com"))
 
         val goodTracksResult = Good(TracksResult(
           trackmetadataTracks.tail, // track3 was removed for not being accessible

@@ -18,7 +18,7 @@ class TrackPaginationSpec extends UnitSpecification {
   def tracks(size: Int) = Random.shuffle((0 until size).map(n => TrackMetadataTrackBuilder(urn = Urn(s"soundcloud:tracks:${n}")).build)).toList
 
   "empty pagination" >> {
-    val pagination = new TrackPagination(None, None, false, None, None)
+    val pagination = new TrackPagination(None, None, false, None, None, new URL("https://api.soundcloud.com"))
 
     "#calculateTrackUrnPage" >> {
       "returns the urns" >> {
@@ -40,7 +40,7 @@ class TrackPaginationSpec extends UnitSpecification {
   }
 
   "pagination with limit" >> {
-    val pagination = new TrackPagination(Some(2), None, false, None, None)
+    val pagination = new TrackPagination(Some(2), None, false, None, None, new URL("https://api.soundcloud.com"))
 
     "#calculateTrackUrnPage" >> {
       "returns the two most recent urns urns" >> {
@@ -61,33 +61,32 @@ class TrackPaginationSpec extends UnitSpecification {
   }
 
   "#nextHref" >> {
+
     val base = "https://api.soundcloud.com/tracks?"
 
     "when linked_partitioning=true" >> {
       "when the number of track urns is greater than the limit + offset" >> {
         "with limit" >> {
-          val pagination = new TrackPagination(Some(2), None, true, None, None)
-          pagination.nextHref(new URL(s"${base}limit=2&another=value&just-key=&bad"), 100) ====
-            Some(s"${base}another=value&just-key=&bad=&offset=2&limit=2")
+          val pagination = new TrackPagination(Some(2), None, true, None, None, new URL(s"${base}limit=2&another=value&just-key=&bad"))
+          pagination.nextHref(100) ==== Some(s"${base}another=value&just-key=&bad=&offset=2&limit=2")
         }
 
         "with limit and offset" >> {
-          val pagination = new TrackPagination(Some(2), Some(4), true, None, None)
-          pagination.nextHref(new URL(s"${base}limit=2&another=value&just-key=&bad"), 100) ====
-            Some(s"${base}another=value&just-key=&bad=&offset=6&limit=2")
+          val pagination = new TrackPagination(Some(2), Some(4), true, None, None, new URL(s"${base}limit=2&another=value&just-key=&bad"))
+          pagination.nextHref(100) ==== Some(s"${base}another=value&just-key=&bad=&offset=6&limit=2")
         }
       }
 
       "when the number of track urns is smaller than the limit + offset" >> {
-        val pagination = new TrackPagination(Some(20), Some(10), true, None, None)
-        pagination.nextHref(new URL(s"${base}limit=2&another=value&just-key=&bad"), 29) ==== None
+        val pagination = new TrackPagination(Some(20), Some(10), true, None, None, new URL(s"${base}limit=2&another=value&just-key=&bad"))
+        pagination.nextHref(29) ==== None
       }
     }
 
     "when linked_partitioning=false returns none" >> {
       "when the number of track urns is smaller than the limit + offset" >> {
-        val pagination = new TrackPagination(Some(2), None, false, None, None)
-        pagination.nextHref(new URL(s"${base}limit=2&another=value&just-key=&bad"), 100) ==== None
+        val pagination = new TrackPagination(Some(2), None, false, None, None, new URL(s"${base}limit=2&another=value&just-key=&bad"))
+        pagination.nextHref(100) ==== None
       }
     }
 
@@ -95,7 +94,7 @@ class TrackPaginationSpec extends UnitSpecification {
   }
 
   "pagination with offset" >> {
-    val pagination = new TrackPagination(Some(2), Some(2), false, None, None)
+    val pagination = new TrackPagination(Some(2), Some(2), false, None, None, new URL("https://api.soundcloud.com"))
 
     "#calculateTrackUrnPage" >> {
       "returns the two most recent urns urns" >> {
@@ -127,7 +126,7 @@ class TrackPaginationSpec extends UnitSpecification {
       (6, new LocalDateTime(2017, 1, 20, 10, 0, 0))).map { case (id, createdAt) =>
         TrackMetadataTrackBuilder(urn = Urn(s"soundcloud:tracks:${id}"), created_at = createdAt).build }
 
-    val pagination = new TrackPagination(None, None, false, Some(from), Some(to))
+    val pagination = new TrackPagination(None, None, false, Some(from), Some(to), new URL("https://api.soundcloud.com"))
 
     "#calculateTrackUrnPage" >> {
       "returns the urns" >> {
@@ -148,29 +147,30 @@ class TrackPaginationSpec extends UnitSpecification {
 
 
   "parses from a map" >> {
-    def build(m: Map[String, String]) = TrackPagination.fromRequest(m)
+    val url = new URL("https://api.soundcloud.com")
+    def build(m: Map[String, String]) = TrackPagination.fromRequest(m, url)
 
     "limit" >> {
-      build(Map("limit" -> "1")) ==== TrackPagination(Some(1), None, false, None, None)
-      build(Map("limit" -> "1.1")) ==== TrackPagination(None, None, false, None, None)
-      build(Map("limit" -> "a")) ==== TrackPagination(None, None, false, None, None)
+      build(Map("limit" -> "1")) ==== TrackPagination(Some(1), None, false, None, None, url)
+      build(Map("limit" -> "1.1")) ==== TrackPagination(None, None, false, None, None, url)
+      build(Map("limit" -> "a")) ==== TrackPagination(None, None, false, None, None, url)
     }
 
     "offset" >> {
-      build(Map("offset" -> "1")) ==== TrackPagination(None, Some(1), false, None, None)
-      build(Map("offset" -> "1.1")) ==== TrackPagination(None, None, false, None, None)
-      build(Map("offset" -> "a")) ==== TrackPagination(None, None, false, None, None)
+      build(Map("offset" -> "1")) ==== TrackPagination(None, Some(1), false, None, None, url)
+      build(Map("offset" -> "1.1")) ==== TrackPagination(None, None, false, None, None, url)
+      build(Map("offset" -> "a")) ==== TrackPagination(None, None, false, None, None, url)
     }
 
     "linked_partitioning is true when present in any way" >> {
-      build(Map("linked_partitioning" -> "")) ==== TrackPagination(None, None, true, None, None)
-      build(Map("linked_partitioning" -> "false")) ==== TrackPagination(None, None, true, None, None)
-      build(Map("linked_partitioning" -> "1")) ==== TrackPagination(None, None, true, None, None)
-      build(Map("linked_partitioning" -> "WHATEVER")) ==== TrackPagination(None, None, true, None, None)
+      build(Map("linked_partitioning" -> "")) ==== TrackPagination(None, None, true, None, None, url)
+      build(Map("linked_partitioning" -> "false")) ==== TrackPagination(None, None, true, None, None, url)
+      build(Map("linked_partitioning" -> "1")) ==== TrackPagination(None, None, true, None, None, url)
+      build(Map("linked_partitioning" -> "WHATEVER")) ==== TrackPagination(None, None, true, None, None, url)
     }
 
     "created_at[from]" >> {
-      def withCreatedAtFrom(d: Option[LocalDateTime]) = TrackPagination(None, None, false, d, None)
+      def withCreatedAtFrom(d: Option[LocalDateTime]) = TrackPagination(None, None, false, d, None, url)
 
       build(Map("created_at[from]" -> "")) ==== withCreatedAtFrom(None)
       build(Map("created_at[from]" -> "aaa")) ==== withCreatedAtFrom(None)
@@ -181,7 +181,7 @@ class TrackPaginationSpec extends UnitSpecification {
     }
 
     "created_at[to]" >> {
-      def withCreatedAtTo(d: Option[LocalDateTime]) = TrackPagination(None, None, false, None, d)
+      def withCreatedAtTo(d: Option[LocalDateTime]) = TrackPagination(None, None, false, None, d, url)
 
       build(Map("created_at[to]" -> "")) ==== withCreatedAtTo(None)
       build(Map("created_at[to]" -> "aaa")) ==== withCreatedAtTo(None)

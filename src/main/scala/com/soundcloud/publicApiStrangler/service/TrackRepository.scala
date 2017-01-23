@@ -39,6 +39,9 @@ class TrackRepository(trackmetadataClient: TrackmetadataClient,
       val accessibleTracks = tracks.filter(track => accessibilityCheck.get(track.urn).get)
       val sortedAccessibleTracks = trackPagination.calculateFinalPage(accessibleTracks)
 
+
+      val nextHref = trackPagination.nextHref(trackUrns.size)
+
       TracksResult(
         sortedAccessibleTracks,
         user,

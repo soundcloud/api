@@ -14,7 +14,8 @@ case class TrackPagination(maybeLimit: Option[Int],
                            maybeOffset: Option[Int],
                            linkedPartitioning: Boolean,
                            createdAtFrom: Option[LocalDateTime],
-                           createdAtTo: Option[LocalDateTime]) {
+                           createdAtTo: Option[LocalDateTime],
+                           requestUrl: URL) {
 
   val offset = maybeOffset.getOrElse(0)
   val limit = maybeLimit.getOrElse(Int.MaxValue)
@@ -34,7 +35,7 @@ case class TrackPagination(maybeLimit: Option[Int],
       .sortBy(-_.urn.getIdentifier.toInt)
   }
 
-  def nextHref(url: URL, totalTracks: Int): Option[String] = {
+  def nextHref(totalTracks: Int): Option[String] = {
     if (linkedPartitioning == false) {
       None
     } else {
@@ -43,7 +44,7 @@ case class TrackPagination(maybeLimit: Option[Int],
       if (totalTracks < nextOffset) {
         None
       } else {
-        val params = url.getQuery.split("&").toList.map(_.split("=").toList).flatMap {
+        val params = requestUrl.getQuery.split("&").toList.map(_.split("=").toList).flatMap {
           case List(key, value) => Some(key, value)
           case List(key) => Some(key, "")
           case otherwise => Some(otherwise, "")
@@ -51,7 +52,7 @@ case class TrackPagination(maybeLimit: Option[Int],
 
         val nextParams = params ++ Map("limit" -> limit.toString, "offset" -> nextOffset.toString)
 
-        val nextHref = List(url.toString.split("\\?").head, nextParams.map { case (k, v) => s"$k=$v" }.mkString("&")).mkString("?")
+        val nextHref = List(requestUrl.toString.split("\\?").head, nextParams.map { case (k, v) => s"$k=$v" }.mkString("&")).mkString("?")
         Some(nextHref)
       }
     }
@@ -60,13 +61,14 @@ case class TrackPagination(maybeLimit: Option[Int],
 }
 
 object TrackPagination {
-  def fromRequest(params: Map[String, String]) = {
+  def fromRequest(params: Map[String, String], requestUrl: URL) = {
     TrackPagination(
       Try(params.get("limit").map(_.toInt)).toOption.flatten,
       Try(params.get("offset").map(_.toInt)).toOption.flatten,
       params.get("linked_partitioning").isDefined,
       params.get("created_at[from]").flatMap(tryParseDate),
-      params.get("created_at[to]").flatMap(tryParseDate))
+      params.get("created_at[to]").flatMap(tryParseDate),
+      requestUrl)
   }
 
   val oddPatterns = List(
