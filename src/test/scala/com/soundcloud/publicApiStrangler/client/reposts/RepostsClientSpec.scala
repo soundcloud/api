@@ -177,7 +177,7 @@ class RepostsClientSpec extends UnitSpecification with PactSpec with UnitSpecsSu
     ),
     buildInteraction(
       description = "Getting reposts for a track",
-      maybeState = Some("soundcloud:tracks:1 was reposted by soundcloud:users:1"),
+      maybeState = Some("soundcloud:tracks:1 has at least one repost"),
       request = buildRequest(
         path = s"/tracks/${track(1)}/reposts",
         method = "GET",
@@ -187,7 +187,7 @@ class RepostsClientSpec extends UnitSpecification with PactSpec with UnitSpecsSu
     ),
     buildInteraction(
       description = "Getting reposts for a track",
-      maybeState = Some("soundcloud:tracks:1 was reposted by soundcloud:users:1"),
+      maybeState = Some("soundcloud:tracks:2 has no reposts"),
       request = buildRequest(
         path = s"/tracks/${track(2)}/reposts",
         method = "GET",
@@ -236,7 +236,7 @@ class RepostsClientSpec extends UnitSpecification with PactSpec with UnitSpecsSu
     ),
     buildInteraction(
       description = "Getting reposts for a playlist",
-      maybeState = Some("soundcloud:playlists:1 was reposted by soundcloud:users:1"),
+      maybeState = Some("soundcloud:playlists:1 has at least one repost"),
       request = buildRequest(
         path = s"/playlists/${playlist(1)}/reposts",
         method = "GET",
@@ -246,7 +246,7 @@ class RepostsClientSpec extends UnitSpecification with PactSpec with UnitSpecsSu
     ),
     buildInteraction(
       description = "Getting reposts for a playlist",
-      maybeState = Some("soundcloud:playlists:1 was reposted by soundcloud:users:1"),
+      maybeState = Some("soundcloud:playlists:2 has no reposts"),
       request = buildRequest(
         path = s"/playlists/${playlist(2)}/reposts",
         method = "GET",

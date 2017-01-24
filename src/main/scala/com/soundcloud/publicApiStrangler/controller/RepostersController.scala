@@ -56,12 +56,17 @@ class RepostersController(userAuthentication: UserAuthentication,
         (user, value)
       }.toMap
     }
-    val likeCounts = lieblingClient.userTotalLikeCount(session, users)
-      .map {
-      _.map { case value@UserTotalLikes(user, _, _) =>
-        (user, value)
-      }.toMap
-    }
+    val likeCounts =
+      shouldLoadCountsFromLiebling().flatMap {
+        case true =>
+          lieblingClient.userTotalLikeCount(session, users)
+            .map {
+            _.map { case value@UserTotalLikes(user, _, _) =>
+              (user, value)
+            }.toMap
+          }
+        case false => Future.value(Map.empty[Urn, UserTotalLikes])
+      }
 
     val hydratedUsers =
       okidokiClient.fetchRepostsUsersWithoutCounts(session, users.toSet, baseUrl)
