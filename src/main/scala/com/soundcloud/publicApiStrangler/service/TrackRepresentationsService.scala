@@ -88,9 +88,9 @@ class TrackRepresentationsService(trackRepository: TrackRepository,
     }
   }
 
-  def tracks(session: UserSession, userUrn: Urn, paginationParams: TrackPagination): ResultF[List[TrackRepresentationLike]] = {
+  def tracks(session: UserSession, userUrn: Urn, paginationParams: TrackPagination): ResultF[TracksRepresentationResult] = {
     trackRepository.tracksByUser(session, userUrn, paginationParams).map { tracksResult => {
-      tracksResult.tracks.map { track =>
+      val tracks = tracksResult.tracks.map { track =>
         val urn = track.urn
         for {
           audio <- tracksResult.audios.get(urn)
@@ -114,6 +114,10 @@ class TrackRepresentationsService(trackRepository: TrackRepository,
           )
         }
       }.flatten
+
+      TracksRepresentationResult(tracks, tracksResult.nextHref)
     }}
   }
 }
+
+case class TracksRepresentationResult(tracks: List[TrackRepresentationLike], nextHref: Option[String])

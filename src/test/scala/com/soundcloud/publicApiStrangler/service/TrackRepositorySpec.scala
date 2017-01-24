@@ -114,7 +114,7 @@ class TrackRepositorySpec extends UnitSpecification {
 
         val goodTracksResult = Good(TracksResult(
           trackmetadataTracks.tail, // track3 was removed for not being accessible
-          tracksOwner, Map.empty, Map.empty, Map.empty, Map.empty, Map.empty, Map.empty, Map.empty, Map.empty, Map.empty))
+          tracksOwner, Map.empty, Map.empty, Map.empty, Map.empty, Map.empty, Map.empty, Map.empty, Map.empty, Map.empty, None))
       }
 
       "when loading the tracks' owner fails, it fails" in new NoPaginationParams {
@@ -202,7 +202,7 @@ class TrackRepositorySpec extends UnitSpecification {
         override def areTracksAccessibleResponse = badFuture
         result ==== Good(TracksResult(
           List.empty,
-          tracksOwner, Map.empty, Map.empty, Map.empty, Map.empty, Map.empty, Map.empty, Map.empty, Map.empty, Map.empty))
+          tracksOwner, Map.empty, Map.empty, Map.empty, Map.empty, Map.empty, Map.empty, Map.empty, Map.empty, Map.empty, None))
       }
     }
   }

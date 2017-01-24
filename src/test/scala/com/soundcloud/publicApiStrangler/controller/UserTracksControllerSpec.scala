@@ -10,7 +10,7 @@ import com.soundcloud.jvmkit.module.util.Good
 import com.soundcloud.jvmkit.module.util.ResultF.lift
 import com.soundcloud.jvmkit.telemetry.Telemetry
 import com.soundcloud.jvmkit.test.InMemoryConfig
-import com.soundcloud.publicApiStrangler.TrackRepresentationsService
+import com.soundcloud.publicApiStrangler.{TrackRepresentationsService, TracksRepresentationResult}
 import com.soundcloud.publicApiStrangler.representation.TrackRepresentationLike
 import com.soundcloud.publicApiStrangler.service.TrackPagination
 import com.twitter.finagle.http.Status
@@ -70,7 +70,7 @@ class UserTracksControllerSpec extends InjectionBasedControllerSpecification {
     trait ShouldCompareResponse extends Context {
       override def compareResponse = true
 
-      val tracksServiceSuccess = lift(Good(List.empty[TrackRepresentationLike]))
+      val tracksServiceSuccess = lift(Good(TracksRepresentationResult(List.empty[TrackRepresentationLike], None)))
 
       val user = Urn("soundcloud:users:7110")
       val paginationParams = TrackPagination(Some(1), Some(2), true,

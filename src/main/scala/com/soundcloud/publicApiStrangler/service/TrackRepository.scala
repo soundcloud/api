@@ -39,7 +39,6 @@ class TrackRepository(trackmetadataClient: TrackmetadataClient,
       val accessibleTracks = tracks.filter(track => accessibilityCheck.get(track.urn).get)
       val sortedAccessibleTracks = trackPagination.calculateFinalPage(accessibleTracks)
 
-
       val nextHref = trackPagination.nextHref(trackUrns.size)
 
       TracksResult(
@@ -53,7 +52,8 @@ class TrackRepository(trackmetadataClient: TrackmetadataClient,
         counts,
         labels,
         waveformUrls,
-        downloadsPerTrack)
+        downloadsPerTrack,
+        nextHref)
     }
   }
 
@@ -106,4 +106,5 @@ case class TracksResult(tracks: List[Track],
                         counts: Map[Urn, StitchCounts],
                         labels: Map[Urn, User],
                         waveformUrls: Map[String, Seq[WaveformUrl]],
-                        downloadsPerTrack: Map[Urn, Option[Int]])
+                        downloadsPerTrack: Map[Urn, Option[Int]],
+                        nextHref: Option[String])

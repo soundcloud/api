@@ -8,13 +8,13 @@ import com.soundcloud.bff.finagle.{Request, ResponseBuilder}
 import com.soundcloud.bff.web.{BffInjectionBasedController, UserAuthentication}
 import com.soundcloud.jvmkit.Urn
 import com.soundcloud.jvmkit.telemetry.Telemetry
-import com.soundcloud.publicApiStrangler.TrackRepresentationsService
+import com.soundcloud.publicApiStrangler.{TrackRepresentationsService, TracksRepresentationResult}
 import com.soundcloud.publicApiStrangler.representation.TrackRepresentationLike
 import com.soundcloud.publicApiStrangler.service.TrackPagination
 import com.soundcloud.publicApiStrangler.support.migration.TrackCollectionResponseComparison
-import com.soundcloud.scalakit.json.Json
 import com.twitter.finagle.http.{Response, Status}
 import com.twitter.util.{Future, NonFatal}
+import play.api.libs.json.Json
 
 import scala.util.{Success, Try}
 import scala.collection.JavaConversions._
@@ -55,8 +55,10 @@ class UserTracksController(userAuthentication: UserAuthentication,
       val userId = req.routeParams("userId")
       val callback = req.params.get("callback")
 
+      val pagination = TrackPagination.fromRequest(req.params, new URL(req.uri))
+
       def getResult(urn: Urn) = {
-        tracksService.tracks(session, urn, TrackPagination.fromRequest(req.params, new URL(req.uri)))
+        tracksService.tracks(session, urn, pagination)
           .handle {
             case NonFatal(e) => {
               logger.error(e.getMessage)
@@ -68,13 +70,28 @@ class UserTracksController(userAuthentication: UserAuthentication,
       Try(Urn(s"soundcloud:users:$userId")) match {
         case Success(urn@Urn(_, _, numericRegexp())) => {
           getResult(urn).map {
-            case Good(tracks: List[TrackRepresentationLike]) => generateResponse(Status.Ok, Json.stringify(tracks), callback)
+            case Good(tracksRepresentationResult) => {
+              generateResponse(Status.Ok, getRepresentation(tracksRepresentationResult, pagination), callback)
+            }
             case Bad(error: HttpError) => generateResponse(error.status, error.message, callback)
             case Bad(error) => generateResponse(Status.InternalServerError, error.toString, callback)
           }
         }
         case _ => Future.value(generateNotFound(callback))
       }
+    }
+  }
+
+  private def getRepresentation(result: TracksRepresentationResult, pagination: TrackPagination) = {
+    if (pagination.linkedPartitioning) {
+      val tracksJson = Json.obj("collection" -> Json.toJson(result.tracks))
+      val json = result.nextHref.map(nextHref => {
+        tracksJson ++ Json.obj("next_href" -> nextHref)
+      }).getOrElse(tracksJson)
+
+      Json.stringify(json)
+    } else {
+      Json.stringify(Json.toJson(result.tracks))
     }
   }
 
