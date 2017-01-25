@@ -181,7 +181,7 @@ class RepostsClientSpec extends UnitSpecification with PactSpec with UnitSpecsSu
       request = buildRequest(
         path = s"/tracks/${track(1)}/reposts",
         method = "GET",
-        query = "page_size=200"
+        query = "page_size=10"
       ),
       response = getRepostersResponse(track(1), user)
     ),
@@ -191,7 +191,7 @@ class RepostsClientSpec extends UnitSpecification with PactSpec with UnitSpecsSu
       request = buildRequest(
         path = s"/tracks/${track(2)}/reposts",
         method = "GET",
-        query = "page_size=200"
+        query = "page_size=10"
       ),
       response = repostersEmptyResponse
     )
@@ -240,7 +240,7 @@ class RepostsClientSpec extends UnitSpecification with PactSpec with UnitSpecsSu
       request = buildRequest(
         path = s"/playlists/${playlist(1)}/reposts",
         method = "GET",
-        query = "page_size=200"
+        query = "page_size=10"
       ),
       response = getRepostersResponse(playlist(1), user)
     ),
@@ -250,7 +250,7 @@ class RepostsClientSpec extends UnitSpecification with PactSpec with UnitSpecsSu
       request = buildRequest(
         path = s"/playlists/${playlist(2)}/reposts",
         method = "GET",
-        query = "page_size=200"
+        query = "page_size=10"
       ),
       response = repostersEmptyResponse
     )
