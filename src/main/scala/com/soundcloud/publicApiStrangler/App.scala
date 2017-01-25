@@ -280,7 +280,7 @@ object App
       mothershipDispatcher,
       stitchClient)
 
-    val shouldCompareResponse = BasicRolloutFeature("compare_response_with_trakmetadata")
+    val shouldCompareResponse = BasicRolloutFeature("compare_response_with_trackmetadata")
 
     new UserTracksController(
       userAuthentication,
