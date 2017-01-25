@@ -173,15 +173,12 @@ object App
   private val enrichRepostsCounts: () => Future[Boolean] =
     () => rolloutClient.isActive(BasicRolloutFeature("load_user_repost_counts_from_reposts"))
 
-  private val enrichLikesCounts: () => Future[Boolean] =
-    () => rolloutClient.isActive(BasicRolloutFeature("load_user_like_counts_from_liebling"))
-
   private val userRelatedMothershipDispatcher = new UserRelatedMothershipDispatcher(
     userAuthentication,
     mothershipDispatcher,
     followCountsClient,
     lieblingClient,
-    enrichLikesCounts,
+    () => rolloutClient.isActive(BasicRolloutFeature("load_user_like_counts_from_liebling")),
     repostsClient,
     enrichRepostsCounts
   )
@@ -345,13 +342,7 @@ object App
 
   private val suggestedUsersController = new SuggestedUsersController(userRelatedMothershipDispatcher)
 
-  private val repostersController = new RepostersController(userAuthentication,
-                                                            repostsClient,
-                                                            richOkidokiClient,
-                                                            followCountsClient,
-                                                            lieblingClient,
-                                                            enrichRepostsCounts,
-                                                            enrichLikesCounts)
+  private val repostersController = new RepostersController(userRelatedMothershipDispatcher)
 
   private val userController = new UsersController(userRelatedMothershipDispatcher)
 
