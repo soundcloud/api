@@ -28,10 +28,14 @@ class RepostersController(userAuthentication: UserAuthentication,
 
   private def reposters(repostableType: String)(request: Request): Future[ResponseBuilder] =
     userAuthentication.withUserSession(request) { session =>
-      repostsClient.reposters(
-        session,
-        new Urn(s"""soundcloud:$repostableType:${request.routeParams("id")}""")
-      ).flatMap(hydrateUsers(session, baseUrl(request), _)).map(respond)
+      val limit = request.params.get("limit").map(_.toInt).getOrElse(200)
+      if(limit <= 200)
+        repostsClient.reposters(
+          session,
+          new Urn(s"""soundcloud:$repostableType:${request.routeParams("id")}"""),
+          limit
+        ).flatMap(hydrateUsers(session, baseUrl(request), _)).map(respond)
+      else Future.value(render.badRequest)
     }
 
   private def respond(users: List[RepostsUser]): ResponseBuilder =

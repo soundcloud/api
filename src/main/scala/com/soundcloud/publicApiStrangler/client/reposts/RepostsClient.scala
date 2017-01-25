@@ -40,32 +40,24 @@ class RepostsClient(jsonClient: JsonClient) extends FetchClient {
         urns.toList.map { urn => urn -> fetchedCounts.getOrElse(urn, 0L) }.toMap
       }
 
-  def reposters(session: UserSession, repostableUrn: Urn): Future[List[Urn]] =
+  def reposters(session: UserSession, repostableUrn: Urn, limit: Int): Future[List[Urn]] =
     fetchAll(
       session,
-      Path() / repostableUrn.getCollection / repostableUrn / "reposts")
+      Path() / repostableUrn.getCollection / repostableUrn / "reposts",
+      limit)
       .map(_.map(repost => (repost \ "user").as[Urn]))
 
-  private def fetchAll(session: UserSession, path: Path, batchSize: Int = 200): Future[List[JsObject]] = {
-    def fetchPage(cursor: Option[String], acc: List[JsObject]): Future[List[JsObject]] = {
-      jsonClient.get(
-        session,
-        path,
-        Params("page_size" -> batchSize) ++
-          cursor.map(c => Params("cursor" -> c)).getOrElse(Params.empty),
-        Params.empty
-      ).flatMap {
-        case JsonResponse(OkStatus, body, _, _) =>
-          val fetched = (body \ "reposts").as[List[JsObject]]
-          val newAcc = fetched ++ acc
-          val maybeNewCursor = (body \ "next" \ "cursor").asOpt[String]
-          maybeNewCursor.map { newCursor =>
-            fetchPage(Some(newCursor), newAcc)
-          }.getOrElse(Future.value(newAcc))
-        case _ => Future.value(acc)
-      }
+  private def fetchAll(session: UserSession, path: Path, limit: Int): Future[List[JsObject]] = {
+    jsonClient.get(
+      session,
+      path,
+      Params("page_size" -> limit),
+      Params.empty
+    ).map {
+      case JsonResponse(OkStatus, body, _, _) =>
+        (body \ "reposts").as[List[JsObject]]
+      case _ => List.empty
     }
-    fetchPage(None, List.empty)
   }
 
   private def repostCountsForUrns(session: UserSession, urns: Set[Urn]): Future[Set[Count]] =
