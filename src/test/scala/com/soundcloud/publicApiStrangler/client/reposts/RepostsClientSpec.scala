@@ -83,26 +83,6 @@ class RepostsClientSpec extends UnitSpecification with PactSpec with UnitSpecsSu
       )
     )
 
-  def getRepostersResponse(repostable: Urn, user: Urn) =
-    buildResponse(
-      status = 200,
-      headers = commonHeaders,
-      bodyAndMatchers = new PactDslJsonBody()
-        .minArrayLike("reposts", 1)
-        .stringMatcher("user", "soundcloud:[a-z0-9-]+:[a-z0-9-]+", user.toString)
-        .stringMatcher("repostable", "soundcloud:[a-z0-9-]+:[a-z0-9-]+", repostable.toString)
-        .closeObject()
-        .closeArray()
-    )
-
-  val repostersEmptyResponse =
-    buildResponse(
-      status = 200,
-      headers = commonHeaders,
-      maybeBody = Some("""{"reposts":[]}"""),
-      matchers = Map.empty
-    )
-
   val countsInteractions = List(
     buildInteraction(
       description = "Get count of user's track reposts",
@@ -174,26 +154,6 @@ class RepostsClientSpec extends UnitSpecification with PactSpec with UnitSpecsSu
       maybeState = Some("soundcloud:users:2 is blocked for spam"),
       request = createRequest(Urn("soundcloud:tracks:4"), spamUser),
       response = spamResponse
-    ),
-    buildInteraction(
-      description = "Getting reposts for a track",
-      maybeState = Some("soundcloud:tracks:1 has at least one repost"),
-      request = buildRequest(
-        path = s"/tracks/${track(1)}/reposts",
-        method = "GET",
-        query = "page_size=200"
-      ),
-      response = getRepostersResponse(track(1), user)
-    ),
-    buildInteraction(
-      description = "Getting reposts for a track",
-      maybeState = Some("soundcloud:tracks:2 has no reposts"),
-      request = buildRequest(
-        path = s"/tracks/${track(2)}/reposts",
-        method = "GET",
-        query = "page_size=200"
-      ),
-      response = repostersEmptyResponse
     )
   )
 
@@ -233,26 +193,6 @@ class RepostsClientSpec extends UnitSpecification with PactSpec with UnitSpecsSu
       maybeState = Some("soundcloud:users:2 is blocked for spam"),
       request = createRequest(Urn("soundcloud:playlists:4"), spamUser),
       response = spamResponse
-    ),
-    buildInteraction(
-      description = "Getting reposts for a playlist",
-      maybeState = Some("soundcloud:playlists:1 has at least one repost"),
-      request = buildRequest(
-        path = s"/playlists/${playlist(1)}/reposts",
-        method = "GET",
-        query = "page_size=200"
-      ),
-      response = getRepostersResponse(playlist(1), user)
-    ),
-    buildInteraction(
-      description = "Getting reposts for a playlist",
-      maybeState = Some("soundcloud:playlists:2 has no reposts"),
-      request = buildRequest(
-        path = s"/playlists/${playlist(2)}/reposts",
-        method = "GET",
-        query = "page_size=200"
-      ),
-      response = repostersEmptyResponse
     )
   )
 
@@ -406,32 +346,6 @@ class RepostsClientSpec extends UnitSpecification with PactSpec with UnitSpecsSu
           val f = clientWithMock.getRepostCountsByUrnWithFallback(session, Set(user, track(1), track(2), playlist(1), playlist(2)))
 
           Await.result(f) ==== Map(user -> 0L, track(1) -> 0L, track(2) -> 0L, playlist(1) -> 0L, playlist(2) -> 0L)
-        }
-      }
-    }
-
-    "Reposters" >> {
-      trait RepostersContext extends Context {
-        val sessionUser = user
-      }
-
-      "when data is available" >> {
-        "it returns reposters for a track" in new RepostersContext {
-          Await.result(client.reposters(session, track(1))) ==== List(user)
-        }
-
-        "it returns reposters for a playlist" in new RepostersContext {
-          Await.result(client.reposters(session, playlist(1))) ==== List(user)
-        }
-      }
-
-      "when there are no reposters" >> {
-        "it returns an empty list of reposters for a track" in new RepostersContext {
-          Await.result(client.reposters(session, track(2))) ==== Nil
-        }
-
-        "it returns an empty list of reposters for a playlist" in new RepostersContext {
-          Await.result(client.reposters(session, playlist(2))) ==== Nil
         }
       }
     }

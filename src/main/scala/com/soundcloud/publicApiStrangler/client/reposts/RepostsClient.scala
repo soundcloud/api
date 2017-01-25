@@ -6,7 +6,6 @@ import com.soundcloud.scalakit.Path
 import com.soundcloud.scalakit.finagle.http._
 import com.soundcloud.scalakit.finagle.jsonservice.{JsonClient, JsonResponse, Params}
 import com.soundcloud.service.client.FetchClient
-import com.soundcloud.bff.nextbff.mapping.MappingContext
 import com.twitter.util.{Future, NonFatal}
 import play.api.libs.json._
 
@@ -39,34 +38,6 @@ class RepostsClient(jsonClient: JsonClient) extends FetchClient {
       .map { fetchedCounts =>
         urns.toList.map { urn => urn -> fetchedCounts.getOrElse(urn, 0L) }.toMap
       }
-
-  def reposters(session: UserSession, repostableUrn: Urn): Future[List[Urn]] =
-    fetchAll(
-      session,
-      Path() / repostableUrn.getCollection / repostableUrn / "reposts")
-      .map(_.map(repost => (repost \ "user").as[Urn]))
-
-  private def fetchAll(session: UserSession, path: Path, batchSize: Int = 200): Future[List[JsObject]] = {
-    def fetchPage(cursor: Option[String], acc: List[JsObject]): Future[List[JsObject]] = {
-      jsonClient.get(
-        session,
-        path,
-        Params("page_size" -> batchSize) ++
-          cursor.map(c => Params("cursor" -> c)).getOrElse(Params.empty),
-        Params.empty
-      ).flatMap {
-        case JsonResponse(OkStatus, body, _, _) =>
-          val fetched = (body \ "reposts").as[List[JsObject]]
-          val newAcc = fetched ++ acc
-          val maybeNewCursor = (body \ "next" \ "cursor").asOpt[String]
-          maybeNewCursor.map { newCursor =>
-            fetchPage(Some(newCursor), newAcc)
-          }.getOrElse(Future.value(newAcc))
-        case _ => Future.value(acc)
-      }
-    }
-    fetchPage(None, List.empty)
-  }
 
   private def repostCountsForUrns(session: UserSession, urns: Set[Urn]): Future[Set[Count]] =
     Future.collect(
@@ -110,7 +81,7 @@ class RepostsClient(jsonClient: JsonClient) extends FetchClient {
 
 object RepostsClient {
 
-  sealed trait Result
+  trait Result
   case object Created extends Result
   case object Deleted extends Result
   case object AlreadyExists extends Result

@@ -17,7 +17,7 @@ class User(jsonValue: JsValue,
   val description = (json \ "description").asOpt[String]
   val country = (json \ "country").asOpt[String]
   val track_count = (json \ "tracks_count").asOpt[Int]
-  val public_favorites_count = (json \ "public_favorites_count").asOpt[Long]
+  val public_favorites_count = (json \ "public_favorites_count").asOpt[Int]
   val followers_count = maybeFollowCounts.map(_.followers).orElse((json \ "followers_count").asOpt[Long])
   val followings_count = maybeFollowCounts.map(_.followings).orElse((json \ "followings_count").asOpt[Long])
   val plan = (json \ "plan").asOpt[String]
@@ -40,7 +40,7 @@ class User(jsonValue: JsValue,
   val reposts_count = maybeRepostsCount.orElse((json \ "reposts_count").asOpt[Long])
   val comments_count = (json \ "comments_count").asOpt[Int]
   val online = false
-  val likes_count = (json \ "public_favorites_count").asOpt[Long]
+  val likes_count = (json \ "public_favorites_count").asOpt[Int]
   val playlist_count: Option[Int] = (json \ "public_playlists_count").asOpt[Int]
 }
 
