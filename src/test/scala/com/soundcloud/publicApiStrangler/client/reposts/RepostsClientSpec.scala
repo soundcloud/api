@@ -417,21 +417,21 @@ class RepostsClientSpec extends UnitSpecification with PactSpec with UnitSpecsSu
 
       "when data is available" >> {
         "it returns reposters for a track" in new RepostersContext {
-          Await.result(client.reposters(session, track(1), 10)) ==== List(user)
+          Await.result(client.reposters(session, track(1), 10, None)) ==== Reposts(List(user), None)
         }
 
         "it returns reposters for a playlist" in new RepostersContext {
-          Await.result(client.reposters(session, playlist(1), 10)) ==== List(user)
+          Await.result(client.reposters(session, playlist(1), 10, None)) ==== Reposts(List(user), None)
         }
       }
 
       "when there are no reposters" >> {
         "it returns an empty list of reposters for a track" in new RepostersContext {
-          Await.result(client.reposters(session, track(2), 10)) ==== Nil
+          Await.result(client.reposters(session, track(2), 10, None)) ==== Reposts(Nil, None)
         }
 
         "it returns an empty list of reposters for a playlist" in new RepostersContext {
-          Await.result(client.reposters(session, playlist(2), 10)) ==== Nil
+          Await.result(client.reposters(session, playlist(2), 10, None)) ==== Reposts(Nil, None)
         }
       }
     }

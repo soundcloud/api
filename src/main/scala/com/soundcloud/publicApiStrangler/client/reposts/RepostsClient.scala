@@ -10,6 +10,8 @@ import com.soundcloud.bff.nextbff.mapping.MappingContext
 import com.twitter.util.{Future, NonFatal}
 import play.api.libs.json._
 
+case class Reposts(reposts: List[Urn], nextCursor: Option[String])
+
 /**
   * https://github.com/soundcloud/voltron/tree/master/reposts
   */
@@ -40,23 +42,28 @@ class RepostsClient(jsonClient: JsonClient) extends FetchClient {
         urns.toList.map { urn => urn -> fetchedCounts.getOrElse(urn, 0L) }.toMap
       }
 
-  def reposters(session: UserSession, repostableUrn: Urn, limit: Int): Future[List[Urn]] =
+  def reposters(session: UserSession, repostableUrn: Urn, limit: Int, cursor: Option[String]): Future[Reposts] =
     fetchAll(
       session,
       Path() / repostableUrn.getCollection / repostableUrn / "reposts",
-      limit)
-      .map(_.map(repost => (repost \ "user").as[Urn]))
+      limit, cursor).map { case (repostsJson, cursor) =>
+        val reposts = repostsJson.map(repost => (repost \ "user").as[Urn])
+        Reposts(reposts, cursor)
+    }
 
-  private def fetchAll(session: UserSession, path: Path, limit: Int): Future[List[JsObject]] = {
+  private def fetchAll(session: UserSession, path: Path, limit: Int, cursor: Option[String]): Future[(List[JsObject], Option[String])] = {
     jsonClient.get(
       session,
       path,
-      Params("page_size" -> limit),
+      Params("page_size" -> limit) ++
+        cursor.map(c => Params("cursor" -> c)).getOrElse(Params.empty),
       Params.empty
     ).map {
       case JsonResponse(OkStatus, body, _, _) =>
-        (body \ "reposts").as[List[JsObject]]
-      case _ => List.empty
+        val reposts = (body \ "reposts").as[List[JsObject]]
+        val maybeNewCursor = (body \ "next" \ "cursor").asOpt[String]
+        (reposts, maybeNewCursor)
+      case _ => (List.empty, None)
     }
   }
 
