@@ -36,7 +36,7 @@ class UserFollowControllerSpec extends InjectionBasedControllerSpecification wit
                                                    followsMock,
                                                    followCountsClientMock,
                                                    repostsClientMock,
-                                                   enrichRepostsCounts = () => Future.value(false),
+                                                   enrichRepostsCounts = () => Future.value(true),
                                                    "http://foo")
 
 
@@ -133,6 +133,7 @@ class UserFollowControllerSpec extends InjectionBasedControllerSpecification wit
         followsMock.followersFollowedBy(session, userUrn, Urn("soundcloud:users:2")) returns Future.value(Some(UserUrns(values)))
         okidokiMock.fetch(session, values.toSet) returns Future.value(okidokiUsers.as[List[JsObject]])
         followCountsClientMock.counts(session, values) returns Future.value(Seq(FollowCounts(values.last, 1111, 2222)))
+        repostsClientMock.getRepostCountsByUrnWithFallback(session, values.toSet) returns Future.value(Map.empty[Urn,Long])
       }
 
       val response = get(controller, "/users/999/followers/followed_by/2", Map("limit" -> "10"))
@@ -152,6 +153,7 @@ class UserFollowControllerSpec extends InjectionBasedControllerSpecification wit
         followsMock.followingsNotFollowedBy(session, Urn("soundcloud:users:999"), Urn("soundcloud:users:2")) returns Future.value(Some(UserUrns(values)))
         okidokiMock.fetch(session, values.toSet) returns Future.value(okidokiUsers.as[List[JsObject]])
         followCountsClientMock.counts(session, values) returns Future.value(Seq(FollowCounts(values.last, 1111, 2222)))
+        repostsClientMock.getRepostCountsByUrnWithFallback(session, values.toSet) returns Future.value(Map.empty[Urn,Long])
       }
 
       val response = get(controller, "/users/999/followings/not_followed_by/2", Map("limit" -> "10"))
@@ -172,6 +174,7 @@ class UserFollowControllerSpec extends InjectionBasedControllerSpecification wit
         followsMock.mutualFollowings(session, Urn("soundcloud:users:999"), Urn("soundcloud:users:2")) returns Future.value(Some(UserUrns(values)))
         okidokiMock.fetch(session, values.toSet) returns Future.value(okidokiUsers.as[List[JsObject]])
         followCountsClientMock.counts(session, values) returns Future.value(Seq(FollowCounts(values.last, 1111, 2222)))
+        repostsClientMock.getRepostCountsByUrnWithFallback(session, values.toSet) returns Future.value(Map.empty[Urn,Long])
       }
 
       val response = get(controller, "/users/999/followings/common_to/2", Map("limit" -> "10", "cursor" -> "2"))
@@ -192,6 +195,7 @@ class UserFollowControllerSpec extends InjectionBasedControllerSpecification wit
         followsMock.followings(session, session.getUser, None, 10) returns Future.value(Some(FollowingsPage(values, Some(pageInfo))))
         okidokiMock.fetch(session, values.map(_.target).toSet) returns Future.value(okidokiUsers.as[List[JsObject]])
         followCountsClientMock.counts(session, values.map(_.target)) returns Future.value(Seq(FollowCounts(values.map(_.target).last, 1111, 2222)))
+        repostsClientMock.getRepostCountsByUrnWithFallback(session, values.map(_.target).toSet) returns Future.value(Map.empty[Urn,Long])
       }
 
       val response = get(controller, "/me/followings/ids", Map("limit" -> "10"))
@@ -215,6 +219,7 @@ class UserFollowControllerSpec extends InjectionBasedControllerSpecification wit
         followsMock.followers(session, session.getUser, None, 10) returns Future.value(Some(FollowingsPage(values, Some(pageInfo))))
         okidokiMock.fetch(session, values.map(_.user).toSet) returns Future.value(okidokiUsers.as[List[JsObject]])
         followCountsClientMock.counts(session, values.map(_.user)) returns Future.value(Seq(FollowCounts(values.map(_.user).last, 1111, 2222)))
+        repostsClientMock.getRepostCountsByUrnWithFallback(session, values.map(_.user).toSet) returns Future.value(Map.empty[Urn,Long])
       }
 
       val response = get(controller, "/me/followers/ids", Map("limit" -> "10"))
@@ -248,6 +253,7 @@ class UserFollowControllerSpec extends InjectionBasedControllerSpecification wit
         override def before: Any = {
           super.before
           followCountsClientMock.counts(session, followings.map(_.target)) returns Future.value(Seq(FollowCounts(followings.head.target, 1111, 2222)))
+          repostsClientMock.getRepostCountsByUrnWithFallback(session, followings.map(_.target).toSet) returns Future.value(Map.empty[Urn,Long])
         }
 
         val response = get(controller, "/me/followings", Map("limit" -> "10", "client_id" -> "FOO"))
@@ -272,6 +278,7 @@ class UserFollowControllerSpec extends InjectionBasedControllerSpecification wit
         followsMock.followers(session, session.getUser, Some("foo"), 10) returns Future.value(Some(FollowingsPage(values, Some(pageInfo))))
         okidokiMock.fetch(session, values.map(_.user).toSet) returns Future.value(okidokiUsers.as[List[JsObject]])
         followCountsClientMock.counts(session, values.map(_.user)) returns Future.value(Seq(FollowCounts(values.map(_.user).last, 1111, 2222)))
+        repostsClientMock.getRepostCountsByUrnWithFallback(session, values.map(_.user).toSet) returns Future.value(Map.empty[Urn,Long])
       }
 
       val response = get(controller, "/me/followers", Map("limit" -> "10", "cursor" -> "foo"))
@@ -293,6 +300,7 @@ class UserFollowControllerSpec extends InjectionBasedControllerSpecification wit
       followsMock.filterFollowings(session, userUrn, Seq(candidateUser)) returns Future.value(Some(filteredUserUrns))
       okidokiMock.fetch(session, Set(candidateUser)) returns Future.value(okidokiUsers.as[List[JsObject]])
       followCountsClientMock.counts(session, Seq(candidateUser)) returns Future.value(Seq(FollowCounts(candidateUser, 1111, 2222)))
+      repostsClientMock.getRepostCountsByUrnWithFallback(session, Set(candidateUser)) returns Future.value(Map.empty[Urn,Long])
     }
   }
 
@@ -306,6 +314,7 @@ class UserFollowControllerSpec extends InjectionBasedControllerSpecification wit
       followsMock.filterFollowings(session, userUrn, Seq(candidateUser)) returns Future.value(Some(filteredUserUrns))
       okidokiMock.fetch(session, Set.empty) returns Future.value(List.empty)
       followCountsClientMock.counts(session, Seq.empty) returns Future.value(Seq.empty)
+      repostsClientMock.getRepostCountsByUrnWithFallback(session, Set.empty) returns Future.value(Map.empty[Urn,Long])
     }
   }
 
@@ -379,6 +388,7 @@ class UserFollowControllerSpec extends InjectionBasedControllerSpecification wit
       followsMock.filterFollowers(session, userUrn, Seq(candidateUser)) returns Future.value(Some(filteredUserUrns))
       okidokiMock.fetch(session, Set(candidateUser)) returns Future.value(okidokiUsers.as[List[JsObject]])
       followCountsClientMock.counts(session, Seq(candidateUser)) returns Future.value(Seq(FollowCounts(candidateUser, 1111, 2222)))
+      repostsClientMock.getRepostCountsByUrnWithFallback(session, Set(candidateUser)) returns Future.value(Map.empty[Urn,Long])
     }
   }
 
@@ -392,6 +402,7 @@ class UserFollowControllerSpec extends InjectionBasedControllerSpecification wit
       followsMock.filterFollowers(session, userUrn, Seq(candidateUser)) returns Future.value(Some(filteredUserUrns))
       okidokiMock.fetch(session, Set.empty) returns Future.value(List.empty)
       followCountsClientMock.counts(session, Seq.empty) returns Future.value(Seq.empty)
+      repostsClientMock.getRepostCountsByUrnWithFallback(session, Set.empty) returns Future.value(Map.empty[Urn,Long])
     }
   }
 
@@ -466,6 +477,7 @@ class UserFollowControllerSpec extends InjectionBasedControllerSpecification wit
         val following = Following("1", LocalDateTime.now, userUrn, Urn("soundcloud:users:999"))
         followsMock.follow(session, userUrn) returns Future.value(FollowingCreated(following))
         followCountsClientMock.counts(session, Seq(following.target)) returns Future.value(Seq(FollowCounts(following.target, 1111, 2222)))
+        repostsClientMock.getRepostCountsByUrnWithFallback(session, Set(following.target)) returns Future.value(Map.empty[Urn,Long])
       }
 
       val response = put(controller, "/me/followings/999.json", Map("client_id" -> "YOUR_CLIENT_ID"))
@@ -482,6 +494,7 @@ class UserFollowControllerSpec extends InjectionBasedControllerSpecification wit
         followsMock.follow(session, userUrn) returns Future.value(FollowingCreated(following))
 
         followCountsClientMock.counts(session, Seq(following.target)) returns Future.value(Seq(FollowCounts(following.target, 1111, 2222)))
+        repostsClientMock.getRepostCountsByUrnWithFallback(session, Set(following.target)) returns Future.value(Map.empty[Urn,Long])
       }
 
       val response = put(controller, "/me/followings/999", Map("client_id" -> "YOUR_CLIENT_ID"))

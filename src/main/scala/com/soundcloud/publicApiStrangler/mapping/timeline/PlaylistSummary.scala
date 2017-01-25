@@ -38,7 +38,7 @@ class PlaylistSummary(jsonValue: JsValue,
   val user_id = if(userUrn.isDefined) userUrn.get.getIdentifier.toInt else None
   val user = if(userUrn.isDefined) entitySummaryMapper.embed(userUrn.get) else None
   val secret_token = (json \ "secret_token").as[String]
-  val reposts_count = repostCountsByUrn.getOrElse(urn, (json \ "reposts_count").asOpt[Int])
+  val reposts_count = repostCountsByUrn.get(urn).orElse((json \ "reposts_count").asOpt[Long])
   val tracks_uri = s"$baseUrl/playlists/$id/tracks"
   val secret_uri = s"$baseUrl/playlists/$id?secret_token=$secret_token"
 

@@ -6,8 +6,10 @@ import com.soundcloud.scalakit.finagle.http._
 import com.soundcloud.scalakit.finagle.jsonservice.{JsonClient, JsonResponse, Params}
 import com.soundcloud.service.client.{OkidokiClient, ResponseHandlers}
 import com.soundcloud.service.response.mapper._
+import com.soundcloud.publicApiStrangler.mapping.reposts.RepostsUser
 import com.soundcloud.service.response.mapper.spotlight.SpotlightResponseMapper
 import com.soundcloud.service.response.representation._
+import com.soundcloud.bff.nextbff.mapping.MappingContext
 import com.twitter.util.Future
 import play.api.libs.json._
 
@@ -121,4 +123,18 @@ class RichOkidokiClient(service: JsonClient,
       }
     } }.map(_.map(user => (user.urn -> user)).toMap)
   }
+
+  def fetchRepostsUsersWithoutCounts(session: UserSession, urns: Set[Urn], baseUrl: String, batchSize: Int = 50): Future[List[RepostsUser]] = {
+    inBatches(urns.toList, batchSize) { urnBatch =>
+      service.get(session, Path() / "users" / "fetch",
+                  Params("urns" -> urnBatch), Params.empty).map {
+        case JsonResponse(SuccessfulStatusClass(_), body, _, _) =>
+          body.as[List[JsValue]].map { jsonUser =>
+            RepostsUser(jsonUser, baseUrl, None, None, None)(new MappingContext(session))
+          }
+        case _ => List.empty
+      }
+    }
+  }
+
 }

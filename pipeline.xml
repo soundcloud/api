@@ -31,9 +31,15 @@
     <jobs>
       <job name="end-to-end-tests">
         <tasks>
+          <exec command="remove-containers">
+            <runif status="passed"/>
+          </exec>
           <exec command="make">
             <arg>end-to-end-test</arg>
             <runif status="passed"/>
+          </exec>
+          <exec command="remove-containers">
+            <runif status="any"/>
           </exec>
         </tasks>
       </job>
@@ -58,14 +64,6 @@
         <tasks>
           <exec command="make">
             <arg>promote-to-release</arg>
-            <runif status="passed"/>
-          </exec>
-          <exec command="make">
-            <arg>deploy-db-api</arg>
-            <runif status="passed"/>
-          </exec>
-          <exec command="make">
-            <arg>deploy-db-apitrackupload</arg>
             <runif status="passed"/>
           </exec>
           <exec command="make">

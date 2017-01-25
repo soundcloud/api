@@ -33,7 +33,7 @@ class SearchEntityMapperSpec extends UnitSpecification with Fixtures {
     val okidokiClient = mock[OkidokiClient]
     val followCountsClient = mock[FollowCountsClient]
     val repostsClient = mock[RepostsClient]
-    val enrichRepostsCounts = () => Future.value(false)
+    val enrichRepostsCounts = () => Future.value(true)
     val contentAuthorizationService = mock[ContentAuthorizationRules]
     val lieblingClient = mock[LieblingClient]
     val likeCountMapper = new LikeCountMapper(lieblingClient)
@@ -60,10 +60,11 @@ class SearchEntityMapperSpec extends UnitSpecification with Fixtures {
 
     val searchResults = new Urn("soundcloud:tracks:-1") :: urns // doesn't exist in okidoki response
 
-    val likableUrns = Set(
-      "soundcloud:tracks:15273221",
-      "soundcloud:playlists:685235"
-    ).map(new Urn(_))
+    val fetchedUserUrn = new Urn("soundcloud:users:2097360")
+
+    val trackUrn = Urn("soundcloud:tracks:15273221")
+    val playlistUrn = Urn("soundcloud:playlists:685235")
+    val likableUrns = Set(trackUrn, playlistUrn)
 
     val authorizations = Seq(
       new ContentAuthorization(new Urn("soundcloud:tracks:15273221"), ContentPolicy.ALLOW, Reason.UNKNOWN, MonetizationModel.NOT_APPLICABLE)
@@ -98,26 +99,26 @@ class SearchEntityMapperSpec extends UnitSpecification with Fixtures {
       when(lieblingClient.userLikeCounts(===(session), beLike(expected), ===(userUrn), any[Int]))
         .thenReturn(Future(lieblingLikesInfo))
 
+      // reposts_count enrichment
+      when(repostsClient.getRepostCountsByUrnWithFallback(session, Set.empty)) thenReturn Future.value(Map.empty[Urn,Long])
+      when(repostsClient.getRepostCountsByUrnWithFallback(session, searchResults.toSet)) thenReturn
+        Future.value(Map(fetchedUserUrn -> 11L, trackUrn -> 22L, playlistUrn -> 33L))
+
       // waveform URLs
       when(contentAuthorizationService.fetchRules(===(session), any[Seq[Urn]])).thenReturn(Future.value(authorizations))
       when(waveformUrlsRepository.fetchWaveformUrlsToMap(===(session), any[Map[String, ContentPolicy]])).thenReturn(
         Future(waveforms.map(w => w.trackUid -> w).toMap)
       )
+      followCountsClient.counts(session, Seq(fetchedUserUrn)) returns Future.value(Seq(FollowCounts(fetchedUserUrn, 1111, 2222)))
     }
 
     def result = Await.result(mapper.materialize(session, searchResults))
+
+    def mappingToJsObject(m: Mapping): JsObject = Json.parse(UntypedJson.asString(m)).as[JsObject]
   }
 
   "builds the proper mappings" >> {
     "with purchase URL + title" in new Context {
-      def mappingToJsObject(m: Mapping): JsObject = Json.parse(UntypedJson.asString(m)).as[JsObject]
-
-      override def before: Any = {
-        super.before
-        val fetchedUserUrn = new Urn("soundcloud:users:2097360")
-        followCountsClient.counts(session, Seq(fetchedUserUrn)) returns Future.value(Seq(FollowCounts(fetchedUserUrn, 1111, 2222)))
-      }
-
       result.size mustEqual 3
       val List(userJson, trackJson, playlistJson) = result.map(mappingToJsObject _)
 
@@ -126,14 +127,6 @@ class SearchEntityMapperSpec extends UnitSpecification with Fixtures {
     }
 
     "with follow counts" in new Context {
-      def mappingToJsObject(m: Mapping): JsObject = Json.parse(UntypedJson.asString(m)).as[JsObject]
-
-      override def before: Any = {
-        super.before
-        val fetchedUserUrn = new Urn("soundcloud:users:2097360")
-        followCountsClient.counts(session, Seq(fetchedUserUrn)) returns Future.value(Seq(FollowCounts(fetchedUserUrn, 1111, 2222)))
-      }
-
       result.size mustEqual 3
       val List(userJson, trackJson, playlistJson) = result.map(mappingToJsObject _)
 
@@ -156,6 +149,21 @@ class SearchEntityMapperSpec extends UnitSpecification with Fixtures {
       (playlistJson \ "likes_count").as[Int] ==== 666
       (playlistJson \ "secret_token").asOpt[String] ==== None
       (playlistJson \ "secret_uri").asOpt[String] ==== None
+    }
+
+    "with enriched reposts_count fields" in new Context {
+      result.size mustEqual 3
+      val List(userJson, trackJson, playlistJson) = result.map(mappingToJsObject _)
+
+      (userJson \ "kind").as[String] ==== "user"
+      (userJson \ "id").as[Int].toString ==== fetchedUserUrn.getIdentifier
+      (userJson \ "reposts_count").asOpt[Long] ==== Some(11L)
+
+      (trackJson \ "kind").as[String] ==== "track"
+      (trackJson \ "reposts_count").asOpt[Long] ==== Some(22L)
+
+      (playlistJson \ "kind").as[String] ==== "playlist"
+      (playlistJson \ "reposts_count").asOpt[Long] ==== Some(33L)
     }
   }
 }

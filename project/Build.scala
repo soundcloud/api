@@ -1,9 +1,9 @@
-import com.soundcloud.jvmkit.sbt.{BffApi, JvmkitApp, HttpServerAppBuild}
-import sbt._
+import com.soundcloud.jvmkit.sbt.{BffApi, HttpServerAppBuild, JvmkitApp}
 import sbt.Keys._
+import sbt._
 
 object BuildProperties {
-  val jvmkitVersion = "51.0.0"
+  val jvmkitVersion = "51.1.0"
 }
 
 object Build extends HttpServerAppBuild(

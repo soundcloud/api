@@ -91,7 +91,7 @@ class SearchMapperSpec extends UnitSpecification {
     val caMock = mock[ContentAuthorizationRules]
     val followCountsClient = mock[FollowCountsClient]
     val repostsClient = mock[RepostsClient]
-    val enrichRepostsCounts = () => Future.value(false)
+    val enrichRepostsCounts = () => Future.value(true)
     val searchEntityMapper = new SearchEntityMapper(okidokiMock, followCountsClient, repostsClient, enrichRepostsCounts, baseUrl, caMock, null, null, null)
     val searchMapper = new SearchMapper(searchRepoMock, searchEntityMapper, baseUrl)
     private val request = pagedRequest(Map.empty)
@@ -110,6 +110,8 @@ class SearchMapperSpec extends UnitSpecification {
     when(followCountsClient.counts(sessionMock, Seq.empty))
       .thenReturn(Future.value(Seq.empty))
 
+    when(repostsClient.getRepostCountsByUrnWithFallback(sessionMock, urns.toSet))
+      .thenReturn(Future.value(Map.empty[Urn,Long]))
 
     val mapped = Await.result(searchMapper.materialize(sessionMock, request)).get
     val result = Json.parse(UntypedJson.asString(mapped)).as[JsArray]
