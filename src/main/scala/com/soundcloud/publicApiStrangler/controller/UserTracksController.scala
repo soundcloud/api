@@ -2,28 +2,26 @@ package com.soundcloud.publicApiStrangler.controller
 
 import java.net.URL
 
-import com.soundcloud.jvmkit.module.util.Result.TryToResult
-import com.soundcloud.jvmkit.module.util.{Bad, ErrorLike, Good}
 import com.soundcloud.bff.finagle.{Request, ResponseBuilder}
 import com.soundcloud.bff.web.{BffInjectionBasedController, UserAuthentication}
 import com.soundcloud.jvmkit.Urn
+import com.soundcloud.jvmkit.module.util.{Bad, ErrorLike, Good}
 import com.soundcloud.jvmkit.telemetry.Telemetry
-import com.soundcloud.publicApiStrangler.{TrackRepresentationsService, TracksRepresentationResult}
-import com.soundcloud.publicApiStrangler.representation.TrackRepresentationLike
 import com.soundcloud.publicApiStrangler.service.TrackPagination
 import com.soundcloud.publicApiStrangler.support.migration.TrackCollectionResponseComparison
+import com.soundcloud.publicApiStrangler.{TrackRepresentationsService, TracksRepresentationResult}
 import com.twitter.finagle.http.{Response, Status}
 import com.twitter.util.{Future, NonFatal}
 import play.api.libs.json.Json
 
 import scala.util.{Success, Try}
-import scala.collection.JavaConversions._
 
 class UserTracksController(userAuthentication: UserAuthentication,
                            mothershipDispatcher: TrackMothershipDispatcherWithCounts,
                            tracksService: TrackRepresentationsService,
                            telemetry: Telemetry,
-                           shouldCompareResponse: () => Future[Boolean])
+                           shouldCompareResponse: () => Future[Boolean],
+                           baseUrl: String)
   extends BffInjectionBasedController {
 
   private val numericRegexp = """\d+""".r
@@ -55,7 +53,7 @@ class UserTracksController(userAuthentication: UserAuthentication,
       val userId = req.routeParams("userId")
       val callback = req.params.get("callback")
 
-      val pagination = TrackPagination.fromRequest(req.params, new URL(req.uri))
+      val pagination = TrackPagination.fromRequest(req.params, new URL(baseUrl + req.uri))
 
       def getResult(urn: Urn) = {
         tracksService.tracks(session, urn, pagination)

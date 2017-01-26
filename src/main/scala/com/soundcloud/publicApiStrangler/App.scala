@@ -287,7 +287,8 @@ object App
       trackMothershipDispatcherWithCounts,
       tracksService,
       telemetry,
-      () => rolloutClient.isActive(shouldCompareResponse)
+      () => rolloutClient.isActive(shouldCompareResponse),
+      baseUrl
     )
   }
 

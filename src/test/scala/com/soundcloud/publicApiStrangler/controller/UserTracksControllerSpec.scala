@@ -38,7 +38,8 @@ class UserTracksControllerSpec extends InjectionBasedControllerSpecification {
       mothershipDispatcher,
       tracksService,
       telemetry,
-      shouldCompareResponse)
+      shouldCompareResponse,
+      "https://api.soundcloud.com")
 
     val mothershipSuccess = Future.value(new ResponseBuilder().status(200))
   }
@@ -73,16 +74,11 @@ class UserTracksControllerSpec extends InjectionBasedControllerSpecification {
       val tracksServiceSuccess = lift(Good(TracksRepresentationResult(List.empty[TrackRepresentationLike], None)))
 
       val user = Urn("soundcloud:users:7110")
-      val paginationParams = TrackPagination(Some(1), Some(2), true,
-        Some(new LocalDateTime(2017, 1, 1, 10, 0, 0)),
-        Some(new LocalDateTime(2017, 1, 15, 10, 0, 0)),
-        new URL("asd"))
     }
 
     "GET /users/:id/tracks" >> {
       "requests to both mothership and tracks service" in new ShouldCompareResponse {
         when(mothershipDispatcher.request(any[Request])).thenReturn(mothershipSuccess)
-        when(tracksService.tracks(session, user, paginationParams)).thenReturn(tracksServiceSuccess)
 
         val queryString = "?limit=1&offset=2&linked_partitioning=yes-please&created_at[from]=2017-01-01%2010:00:00&created_at[to]=2017-01-15%2010:00:00"
 
@@ -93,6 +89,12 @@ class UserTracksControllerSpec extends InjectionBasedControllerSpecification {
           s"/users/7110/tracks.json/$queryString"
         ).foreach(path => {
           println(s"For path $path")
+          val paginationParams = TrackPagination(Some(1), Some(2), true,
+            Some(new LocalDateTime(2017, 1, 1, 10, 0, 0)),
+            Some(new LocalDateTime(2017, 1, 15, 10, 0, 0)),
+            new URL("https://api.soundcloud.com" + path))
+          when(tracksService.tracks(session, user, paginationParams)).thenReturn(tracksServiceSuccess)
+
           val response = get(controller, path)
           response.status ==== Status.Ok
         })
