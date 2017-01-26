@@ -86,7 +86,7 @@ class RepostersController(userAuthentication: UserAuthentication,
     val hydratedUsers =
       okidokiClient.fetchRepostsUsersWithoutCounts(session,
                                                    reposts.reposts.toSet,
-                                                   url)
+                                                   url, 50)
 
     for {
       (countReposts,
