@@ -71,8 +71,8 @@ class UserTracksController(userAuthentication: UserAuthentication,
             case Good(tracksRepresentationResult) => {
               generateResponse(Status.Ok, getRepresentation(tracksRepresentationResult, pagination), callback)
             }
-            case Bad(error: HttpError) => generateResponse(error.status, error.message, callback)
-            case Bad(error) => generateResponse(Status.InternalServerError, error.toString, callback)
+            case Bad(error: HttpError) => generateResponse(error.status, Json.stringify(Json.obj("error" -> error.message)), callback)
+            case Bad(error) => generateResponse(Status.InternalServerError, Json.stringify(Json.obj("error" -> error.toString)), callback)
           }
         }
         case _ => Future.value(generateNotFound(callback))
