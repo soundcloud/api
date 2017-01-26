@@ -14,11 +14,23 @@ class TrackPaginationSpec extends UnitSpecification {
   TimeZone.setDefault(TimeZone.getTimeZone("UTC"))
   DateTimeZone.setDefault(DateTimeZone.UTC)
 
+  val baseUrl = new URL("https://api.soundcloud.com")
+
   def trackUrns(size: Int) = Random.shuffle((0 until size).map(n => Urn(s"soundcloud:tracks:${n}"))).toList
   def tracks(size: Int) = Random.shuffle((0 until size).map(n => TrackMetadataTrackBuilder(urn = Urn(s"soundcloud:tracks:${n}")).build)).toList
 
+  "defaults" >> {
+    "defaults limit to 50 if not provided" >> {
+      new TrackPagination(None, None, false, None, None, baseUrl).limit ==== 50
+    }
+
+    "caps limit at 200 if not provided" >> {
+      new TrackPagination(Some(201), None, false, None, None, baseUrl).limit ==== 200
+    }
+  }
+
   "empty pagination" >> {
-    val pagination = new TrackPagination(None, None, false, None, None, new URL("https://api.soundcloud.com"))
+    val pagination = new TrackPagination(None, None, false, None, None, baseUrl)
 
     "#calculateTrackUrnPage" >> {
       "returns the urns" >> {
@@ -40,11 +52,15 @@ class TrackPaginationSpec extends UnitSpecification {
   }
 
   "pagination with limit" >> {
-    val pagination = new TrackPagination(Some(2), None, false, None, None, new URL("https://api.soundcloud.com"))
+    val pagination = new TrackPagination(Some(2), None, false, None, None, baseUrl)
 
     "#calculateTrackUrnPage" >> {
-      "returns the two most recent urns urns" >> {
-        pagination.calculateTrackUrnPage(trackUrns(3)) should containAllOf(List(
+      "returns double the limit of the most recent urns" >> {
+        // urns go from 4 to 0
+        // with limit 2 then doubled = 4 to 1
+        pagination.calculateTrackUrnPage(trackUrns(5)) should containAllOf(List(
+          Urn("soundcloud:tracks:4"),
+          Urn("soundcloud:tracks:3"),
           Urn("soundcloud:tracks:2"),
           Urn("soundcloud:tracks:1")))
       }
@@ -94,21 +110,26 @@ class TrackPaginationSpec extends UnitSpecification {
   }
 
   "pagination with offset" >> {
-    val pagination = new TrackPagination(Some(2), Some(2), false, None, None, new URL("https://api.soundcloud.com"))
+    val pagination = new TrackPagination(Some(2), Some(2), false, None, None, baseUrl)
 
     "#calculateTrackUrnPage" >> {
-      "returns the two most recent urns urns" >> {
-        pagination.calculateTrackUrnPage(trackUrns(6)) should containAllOf(List(
+      "returns double the limit of the most recent urns" >> {
+        // urns go from 7 to 0
+        // with 2 offset = 5 to 0
+        // with limit 2 then doubled = 5 to 2
+        pagination.calculateTrackUrnPage(trackUrns(8)) ==== Set(
+          Urn("soundcloud:tracks:5"),
+          Urn("soundcloud:tracks:4"),
           Urn("soundcloud:tracks:3"),
-          Urn("soundcloud:tracks:2")))
+          Urn("soundcloud:tracks:2"))
       }
     }
 
     "#calculateFinalPage" >> {
       "returns the sorted tracks" >> {
-        pagination.calculateFinalPage(tracks(2)).map(_.urn) ==== List(
-          Urn("soundcloud:tracks:1"),
-          Urn("soundcloud:tracks:0"))
+        pagination.calculateFinalPage(tracks(4)).map(_.urn) ==== List(
+          Urn("soundcloud:tracks:3"),
+          Urn("soundcloud:tracks:2"))
       }
     }
   }
@@ -126,7 +147,7 @@ class TrackPaginationSpec extends UnitSpecification {
       (6, new LocalDateTime(2017, 1, 20, 10, 0, 0))).map { case (id, createdAt) =>
         TrackMetadataTrackBuilder(urn = Urn(s"soundcloud:tracks:${id}"), created_at = createdAt).build }
 
-    val pagination = new TrackPagination(None, None, false, Some(from), Some(to), new URL("https://api.soundcloud.com"))
+    val pagination = new TrackPagination(None, None, false, Some(from), Some(to), baseUrl)
 
     "#calculateTrackUrnPage" >> {
       "returns the urns" >> {
@@ -147,7 +168,7 @@ class TrackPaginationSpec extends UnitSpecification {
 
 
   "parses from a map" >> {
-    val url = new URL("https://api.soundcloud.com")
+    val url = baseUrl
     def build(m: Map[String, String]) = TrackPagination.fromRequest(m, url)
 
     "limit" >> {

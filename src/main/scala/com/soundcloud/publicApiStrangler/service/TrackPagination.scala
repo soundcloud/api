@@ -18,12 +18,14 @@ case class TrackPagination(maybeLimit: Option[Int],
                            requestUrl: URL) {
 
   val offset = maybeOffset.getOrElse(0)
-  val limit = maybeLimit.getOrElse(Int.MaxValue)
+
+  // defaults to 50 if not provided, max at 200 to mimic mothership's behaviour
+  val limit = Math.min(maybeLimit.getOrElse(50), 200)
 
 
   def calculateTrackUrnPage(trackUrns: List[Urn]): Set[Urn] = {
     val start = offset
-    val end = start + limit
+    val end = start + limit + limit // over-fetch to compensate for client filtering
     // sort by id desc
     trackUrns.sortBy(-_.getIdentifier.toInt).slice(start, end).toSet
   }
@@ -33,6 +35,7 @@ case class TrackPagination(maybeLimit: Option[Int],
       .filter(t => createdAtFrom.map(t.created_at.isAfter(_)).getOrElse(true) &&
                    createdAtTo.map(t.created_at.isBefore(_)).getOrElse(true))
       .sortBy(-_.urn.getIdentifier.toInt)
+      .slice(0, limit)
   }
 
   def nextHref(totalTracks: Int): Option[String] = {
