@@ -51,7 +51,7 @@ class TrackCollectionResponseComparison(telemetry: Telemetry) {
         reportStatusDifference(request, legacyRes, migrationRes)
       } else {
         compareHeaders(legacyRes, migrationRes)
-        compareBodies(request.path, legacyRes, migrationRes)
+        compareBodies(request.uri, legacyRes, migrationRes)
       }
     } catch {
       case NonFatal(ex) => {
