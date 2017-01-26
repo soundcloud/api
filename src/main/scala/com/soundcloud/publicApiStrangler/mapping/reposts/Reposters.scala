@@ -9,7 +9,7 @@ object Reposters {
   implicit val writes = new Writes[Reposters] {
     override def writes(r: Reposters): JsValue =
       Json.obj("collection" -> r.collection
-                 .map(v => RepostsUser.writes.writes(v)),
-               "next_href" -> r.nextHref)
+                 .map(v => RepostsUser.writes.writes(v))) ++
+        r.nextHref.map(next => Json.obj("next_href" -> next)).getOrElse(Json.obj())
   }
 }

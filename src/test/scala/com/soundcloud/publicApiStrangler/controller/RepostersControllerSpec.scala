@@ -22,6 +22,8 @@ class RepostersControllerSpec extends InjectionBasedControllerSpecification {
     val user = Urn("soundcloud:users:999")
     val track = Urn("soundcloud:tracks:100")
     val playlist = Urn("soundcloud:playlists:200")
+    val noNextHrefTrack = Urn("soundcloud:tracks:101")
+    val noNextHrefPlaylist = Urn("soundcloud:playlists:201")
     val geo = Geo("US")
     val baseUrl = "http://api.example.com"
     val requestHeaders = Map("Host" -> "api.example.com")
@@ -38,6 +40,7 @@ class RepostersControllerSpec extends InjectionBasedControllerSpecification {
   "track reposters" >> {
     trait TrackReposters extends Context {
       val trackReposts = Reposts(List(user), Some("ohai"))
+      val noNextHrefTrackReposts = Reposts(List(user), None)
       val okidokiUsersJson = withContentsOf("okidoki", "users").as[JsArray]
       val okidokiUserResponse = RepostsUser(okidokiUsersJson(0),
                                             baseUrl,
@@ -51,6 +54,10 @@ class RepostersControllerSpec extends InjectionBasedControllerSpecification {
       repostsClient
         .reposters(session, track, 1, Some("hallo"))
         .returns(Future.value(trackReposts))
+
+      repostsClient
+        .reposters(session, noNextHrefTrack, 200, None)
+        .returns(Future.value(noNextHrefTrackReposts))
 
       okidokiClient
         .fetchRepostsUsersWithoutCounts(session, Set(user), baseUrl, 50)
@@ -198,11 +205,58 @@ class RepostersControllerSpec extends InjectionBasedControllerSpecification {
       response.status ==== Status.Ok
       response.jsonBody ==== responseFixture
     }
+
+    "does not return empty next_href" in new TrackReposters {
+      val responseFixture = Json.parse("""
+{
+    "collection": [
+        {
+            "avatar_url": "https://i1.sndcdn.com/avatars-000092704388-h04iht-large.jpg?86347b7",
+            "id": 123,
+            "kind": "user",
+            "permalink_url": "http://soundcloud.com/adeline",
+            "uri": "http://api.example.com/users/123",
+            "username": "adeline",
+            "permalink": "adeline",
+            "last_modified": "2014/10/04 10:48:34 +0000",
+            "first_name": "Adeline",
+            "last_name": null,
+            "full_name": "Adeline",
+            "city": "London",
+            "description": "For Adeline bookings worldwide",
+            "country": null,
+            "track_count": 49,
+            "public_favorites_count": 5,
+            "followers_count": 20976,
+            "followings_count": 118,
+            "plan": "Pro Plus",
+            "myspace_name": null,
+            "discogs_name": null,
+            "website_title": "Adeline Website",
+            "website": "http://www.adelinemusic.com",
+            "reposts_count": null,
+            "comments_count": null,
+            "online": false,
+            "likes_count": 5,
+            "playlist_count": null
+        }
+    ]
+}""")
+      val response = get(controller, s"/e1/tracks/${noNextHrefTrack.getIdentifier}/reposters", Map("linked_partitioning" -> "1"), requestHeaders)
+      val responseJson = get(controller, s"/e1/tracks/${noNextHrefTrack.getIdentifier}/reposters", Map("linked_partitioning" -> "1"), requestHeaders)
+
+      response.status ==== responseJson.status
+      response.jsonBody ==== responseJson.jsonBody
+
+      response.status ==== Status.Ok
+      response.jsonBody ==== responseFixture
+    }
   }
 
   "playlist reposters" >> {
     trait PlaylistReposters extends Context {
       val playlistReposts = Reposts(List(user), Some("ohai"))
+      val noNextHrefPlaylistReposts = Reposts(List(user), None)
       val okidokiUsersJson = withContentsOf("okidoki", "users").as[JsArray]
       val okidokiUserResponse = RepostsUser(okidokiUsersJson(0),
                                             baseUrl,
@@ -216,6 +270,10 @@ class RepostersControllerSpec extends InjectionBasedControllerSpecification {
       repostsClient
         .reposters(session, playlist, 1, Some("hallo"))
         .returns(Future.value(playlistReposts))
+
+      repostsClient
+        .reposters(session, noNextHrefPlaylist, 200, None)
+        .returns(Future.value(noNextHrefPlaylistReposts))
 
       okidokiClient
         .fetchRepostsUsersWithoutCounts(session, Set(user), baseUrl, 50)
@@ -356,6 +414,52 @@ class RepostersControllerSpec extends InjectionBasedControllerSpecification {
 }""")
       val response = get(controller, s"/e1/playlists/${playlist.getIdentifier}/reposters", Map("linked_partitioning" -> "1", "limit" -> "1", "cursor" -> "hallo"), requestHeaders)
       val responseJson = get(controller, s"/e1/playlists/${playlist.getIdentifier}/reposters", Map("linked_partitioning" -> "1", "limit" -> "1", "cursor" -> "hallo"), requestHeaders)
+
+      response.status ==== responseJson.status
+      response.jsonBody ==== responseJson.jsonBody
+
+      response.status ==== Status.Ok
+      response.jsonBody ==== responseFixture
+    }
+
+    "does not return empty next_href" in new PlaylistReposters {
+      val responseFixture = Json.parse("""
+{
+    "collection": [
+        {
+            "avatar_url": "https://i1.sndcdn.com/avatars-000092704388-h04iht-large.jpg?86347b7",
+            "id": 123,
+            "kind": "user",
+            "permalink_url": "http://soundcloud.com/adeline",
+            "uri": "http://api.example.com/users/123",
+            "username": "adeline",
+            "permalink": "adeline",
+            "last_modified": "2014/10/04 10:48:34 +0000",
+            "first_name": "Adeline",
+            "last_name": null,
+            "full_name": "Adeline",
+            "city": "London",
+            "description": "For Adeline bookings worldwide",
+            "country": null,
+            "track_count": 49,
+            "public_favorites_count": 5,
+            "followers_count": 20976,
+            "followings_count": 118,
+            "plan": "Pro Plus",
+            "myspace_name": null,
+            "discogs_name": null,
+            "website_title": "Adeline Website",
+            "website": "http://www.adelinemusic.com",
+            "reposts_count": null,
+            "comments_count": null,
+            "online": false,
+            "likes_count": 5,
+            "playlist_count": null
+        }
+    ]
+}""")
+      val response = get(controller, s"/e1/playlists/${noNextHrefPlaylist.getIdentifier}/reposters", Map("linked_partitioning" -> "1"), requestHeaders)
+      val responseJson = get(controller, s"/e1/playlists/${noNextHrefPlaylist.getIdentifier}/reposters", Map("linked_partitioning" -> "1"), requestHeaders)
 
       response.status ==== responseJson.status
       response.jsonBody ==== responseJson.jsonBody
