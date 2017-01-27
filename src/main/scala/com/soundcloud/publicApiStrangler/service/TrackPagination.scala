@@ -76,7 +76,8 @@ object TrackPagination {
 
   val oddPatterns = List(
     DateTimeFormat.forPattern("yyyy/MM/dd HH:mm:ss Z"),
-    DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss"))
+    DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss"),
+    DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss Z"))
 
   val attempts =
     oddPatterns.map(pattern => (value: String) => DateTime.parse(value, pattern)) ++
