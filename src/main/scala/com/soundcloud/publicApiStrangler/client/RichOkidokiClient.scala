@@ -42,6 +42,8 @@ case class TrackAudioMetadata(
 )
 
 object TrackAudioMetadata {
+  val FinishedState = "finished"
+
   implicit val reads = Json.reads[TrackAudioMetadata]
 }
 

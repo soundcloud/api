@@ -93,10 +93,10 @@ class TrackRepositorySpec extends UnitSpecification {
     val userUrnsFromLabelIds = trackmetadataTracks.flatMap(_.label_id).map(id => new Urn("soundcloud", "users", id.toString)).toSet
     richOkidokiClient.fetchUsersMap(session, userUrnsFromLabelIds).returns(fetchUsersMapResponse)
 
-    val accessibilityChecks = Map(
+    def accessibilityChecks = Map(
       track1 -> true,
       track2 -> true,
-      track3 -> false
+      track3 -> true
     )
     trackAccessibilityService.areTracksAccessible(session, trackmetadataTracks).returns(areTracksAccessibleResponse)
 
@@ -113,7 +113,7 @@ class TrackRepositorySpec extends UnitSpecification {
         override def paginationParams = new TrackPagination(None, None, false, None, None, new URL("https://api.soundcloud.com"))
 
         val goodTracksResult = Good(TracksResult(
-          trackmetadataTracks.tail, // track3 was removed for not being accessible
+          trackmetadataTracks,
           tracksOwner, Map.empty, Map.empty, Map.empty, Map.empty, Map.empty, Map.empty, Map.empty, Map.empty, Map.empty, None))
       }
 
@@ -195,6 +195,35 @@ class TrackRepositorySpec extends UnitSpecification {
         "when loading the user representations for the `label` field fails" in new NoPaginationParams {
           override def fetchUsersMapResponse = badFuture
           result ==== goodTracksResult
+        }
+      }
+
+      "when a track is not accessible" >> {
+        "it does not return it" in new NoPaginationParams {
+          override def accessibilityChecks = Map(
+            track1 -> true,
+            track2 -> true,
+            track3 -> false
+          )
+
+          result ==== Good(TracksResult(
+            trackmetadataTracks.tail, // remove track3 for not being accessible
+            tracksOwner, Map.empty, Map.empty, Map.empty, Map.empty, Map.empty, Map.empty, Map.empty, Map.empty, Map.empty, None))
+        }
+      }
+
+      "when a track's transcoding state is present and different from 'finished'" >> {
+        "it does not return it" in new NoPaginationParams {
+          def audios = Map(
+            track1 -> TrackAudioMetadata("finished", None, None),
+            // track2 -> missing
+            track3 -> TrackAudioMetadata("not-finished", None, None)
+          )
+          override def fetchTracksAudioMetadataResponse = Future.value(audios)
+
+          result ==== Good(TracksResult(
+            trackmetadataTracks.tail, // remove track3 for not being finished
+            tracksOwner, Map.empty, Map.empty, Map.empty, Map.empty, audios, Map.empty, Map.empty, Map.empty, Map.empty, None))
         }
       }
 

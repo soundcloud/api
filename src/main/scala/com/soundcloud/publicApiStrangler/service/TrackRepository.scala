@@ -36,7 +36,10 @@ class TrackRepository(trackmetadataClient: TrackmetadataClient,
       (tracks, isLiked, isrcs, geoblockings, domainLockings, audios, counts) <- allDependenciesOnlyOnTrackUrn(session, userUrn, trackUrnsPage)
       (labels, waveformUrls, downloadsPerTrack, accessibilityCheck) <- allDependenciesOnTrackObjectList(session, userUrn, tracks)
     } yield {
-      val accessibleTracks = tracks.filter(track => accessibilityCheck.get(track.urn).get)
+      val accessibleTracks = tracks
+        .filter(track => accessibilityCheck.get(track.urn).get)
+        .filter(track => audios.get(track.urn).map(_.state == TrackAudioMetadata.FinishedState).getOrElse(true))
+
       val sortedAccessibleTracks = trackPagination.calculateFinalPage(accessibleTracks)
 
       val nextHref = trackPagination.nextHref(trackUrns.size)
