@@ -25,6 +25,9 @@ run:
 	docker-compose up --force-recreate -d
 	crun sbt -i --docker-options="-p 5000:5000 --link=strangler_zk --link=strangler_memcached --env-file=config/development" -- sbt run
 
+run-no-docker:
+	set -o allexport; source config/production_api.sh; set +o allexport; sbt run
+
 precheckin:
 	make unit-test
 	make package

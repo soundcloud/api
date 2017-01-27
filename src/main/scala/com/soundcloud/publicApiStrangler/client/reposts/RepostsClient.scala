@@ -6,8 +6,11 @@ import com.soundcloud.scalakit.Path
 import com.soundcloud.scalakit.finagle.http._
 import com.soundcloud.scalakit.finagle.jsonservice.{JsonClient, JsonResponse, Params}
 import com.soundcloud.service.client.FetchClient
+import com.soundcloud.bff.nextbff.mapping.MappingContext
 import com.twitter.util.{Future, NonFatal}
 import play.api.libs.json._
+
+case class Reposts(reposts: List[Urn], nextCursor: Option[String])
 
 /**
   * https://github.com/soundcloud/voltron/tree/master/reposts
@@ -38,6 +41,31 @@ class RepostsClient(jsonClient: JsonClient) extends FetchClient {
       .map { fetchedCounts =>
         urns.toList.map { urn => urn -> fetchedCounts.getOrElse(urn, 0L) }.toMap
       }
+
+  def reposters(session: UserSession, repostableUrn: Urn, limit: Int, cursor: Option[String]): Future[Reposts] =
+    fetchAll(
+      session,
+      Path() / repostableUrn.getCollection / repostableUrn / "reposts",
+      limit, cursor).map { case (repostsJson, cursor) =>
+        val reposts = repostsJson.map(repost => (repost \ "user").as[Urn])
+        Reposts(reposts, cursor)
+    }
+
+  private def fetchAll(session: UserSession, path: Path, limit: Int, cursor: Option[String]): Future[(List[JsObject], Option[String])] = {
+    jsonClient.get(
+      session,
+      path,
+      Params("page_size" -> limit) ++
+        cursor.map(c => Params("cursor" -> c)).getOrElse(Params.empty),
+      Params.empty
+    ).map {
+      case JsonResponse(OkStatus, body, _, _) =>
+        val reposts = (body \ "reposts").as[List[JsObject]]
+        val maybeNewCursor = (body \ "next" \ "cursor").asOpt[String]
+        (reposts, maybeNewCursor)
+      case _ => (List.empty, None)
+    }
+  }
 
   private def repostCountsForUrns(session: UserSession, urns: Set[Urn]): Future[Set[Count]] =
     Future.collect(
@@ -81,7 +109,7 @@ class RepostsClient(jsonClient: JsonClient) extends FetchClient {
 
 object RepostsClient {
 
-  trait Result
+  sealed trait Result
   case object Created extends Result
   case object Deleted extends Result
   case object AlreadyExists extends Result
