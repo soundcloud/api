@@ -83,7 +83,7 @@ class RepostsClientSpec extends UnitSpecification with PactSpec with UnitSpecsSu
       )
     )
 
-  def getRepostersResponse(repostable: Urn, user: Urn) =
+  def getRepostsResponse(repostable: Urn, user: Urn) =
     buildResponse(
       status = 200,
       headers = commonHeaders,
@@ -176,17 +176,17 @@ class RepostsClientSpec extends UnitSpecification with PactSpec with UnitSpecsSu
       response = spamResponse
     ),
     buildInteraction(
-      description = "Getting reposts for a track",
+      description = "Getting reposters of a track",
       maybeState = Some("soundcloud:tracks:1 has at least one repost"),
       request = buildRequest(
         path = s"/tracks/${track(1)}/reposts",
         method = "GET",
         query = "page_size=10"
       ),
-      response = getRepostersResponse(track(1), user)
+      response = getRepostsResponse(track(1), user)
     ),
     buildInteraction(
-      description = "Getting reposts for a track",
+      description = "Getting reposters of a track",
       maybeState = Some("soundcloud:tracks:2 has no reposts"),
       request = buildRequest(
         path = s"/tracks/${track(2)}/reposts",
@@ -197,7 +197,7 @@ class RepostsClientSpec extends UnitSpecification with PactSpec with UnitSpecsSu
     )
   )
 
-  val playlistRepostInteractions = List(
+  val playlistRepostersInteractions = List(
     buildInteraction(
       description = "Creating a playlist repost",
       maybeState = Some("soundcloud:playlists:1 was not reposted by soundcloud:users:1"),
@@ -235,17 +235,17 @@ class RepostsClientSpec extends UnitSpecification with PactSpec with UnitSpecsSu
       response = spamResponse
     ),
     buildInteraction(
-      description = "Getting reposts for a playlist",
+      description = "Getting reposters of a playlist",
       maybeState = Some("soundcloud:playlists:1 has at least one repost"),
       request = buildRequest(
         path = s"/playlists/${playlist(1)}/reposts",
         method = "GET",
         query = "page_size=10"
       ),
-      response = getRepostersResponse(playlist(1), user)
+      response = getRepostsResponse(playlist(1), user)
     ),
     buildInteraction(
-      description = "Getting reposts for a playlist",
+      description = "Getting reposters of a playlist",
       maybeState = Some("soundcloud:playlists:2 has no reposts"),
       request = buildRequest(
         path = s"/playlists/${playlist(2)}/reposts",
@@ -256,10 +256,36 @@ class RepostsClientSpec extends UnitSpecification with PactSpec with UnitSpecsSu
     )
   )
 
+  val userRepostsInteractions = List(
+    buildInteraction(
+      description = "Getting tracks reposted by a user",
+      maybeState = Some("soundcloud:tracks:1 was reposted by soundcloud:users:1"),
+      request = buildRequest(
+        path = s"/users/${user.toString}/track_reposts",
+        method = "GET",
+        query = "page_size=10"
+      ),
+      response = getRepostsResponse(track(1), user)
+    ),
+    buildInteraction(
+      description = "Getting playlists reposted by a user",
+      maybeState = Some("soundcloud:playlists:1 was reposted by soundcloud:users:1"),
+      request = buildRequest(
+        path = s"/users/${user.toString}/playlist_reposts",
+        method = "GET",
+        query = "page_size=10"
+      ),
+      response = getRepostsResponse(playlist(1), user)
+    )
+  )
+
   override val pactFragment = buildPactFragment(
     consumer = consumer,
     provider = provider,
-    trackRepostInteractions ++ playlistRepostInteractions ++ countsInteractions
+    trackRepostInteractions ++
+      playlistRepostersInteractions ++
+      countsInteractions ++
+      userRepostsInteractions
   )
 
   pactFragment.description >> {
@@ -410,7 +436,7 @@ class RepostsClientSpec extends UnitSpecification with PactSpec with UnitSpecsSu
       }
     }
 
-    "Reposters" >> {
+    "#reposters" >> {
       trait RepostersContext extends Context {
         val sessionUser = user
       }
@@ -436,5 +462,28 @@ class RepostsClientSpec extends UnitSpecification with PactSpec with UnitSpecsSu
       }
     }
 
+    "#trackReposts" >> {
+      trait TrackRepostsContext extends Context {
+        val sessionUser = user
+      }
+
+      "when data is available" >> {
+        "it returns a list of tracks" in new TrackRepostsContext {
+          Await.result(client.trackReposts(session, user, 10, None)) ==== Reposts(List(track(1)), None)
+        }
+      }
+    }
+
+    "#playlistReposts" >> {
+      trait PlaylistRepostsContext extends Context {
+        val sessionUser = user
+      }
+
+      "when data is available" >> {
+        "it returns a list of playlists" in new PlaylistRepostsContext {
+          Await.result(client.playlistReposts(session, user, 10, None)) ==== Reposts(List(playlist(1)), None)
+        }
+      }
+    }
   }
 }

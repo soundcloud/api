@@ -6,7 +6,6 @@ import com.soundcloud.scalakit.Path
 import com.soundcloud.scalakit.finagle.http._
 import com.soundcloud.scalakit.finagle.jsonservice.{JsonClient, JsonResponse, Params}
 import com.soundcloud.service.client.FetchClient
-import com.soundcloud.bff.nextbff.mapping.MappingContext
 import com.twitter.util.{Future, NonFatal}
 import play.api.libs.json._
 
@@ -42,21 +41,39 @@ class RepostsClient(jsonClient: JsonClient) extends FetchClient {
         urns.toList.map { urn => urn -> fetchedCounts.getOrElse(urn, 0L) }.toMap
       }
 
-  def reposters(session: UserSession, repostableUrn: Urn, limit: Int, cursor: Option[String]): Future[Reposts] =
+  def reposters(session: UserSession, repostableUrn: Urn, limit: Int, maybeCursor: Option[String]): Future[Reposts] =
     fetchAll(
       session,
       Path() / repostableUrn.getCollection / repostableUrn / "reposts",
-      limit, cursor).map { case (repostsJson, cursor) =>
-        val reposts = repostsJson.map(repost => (repost \ "user").as[Urn])
-        Reposts(reposts, cursor)
+      limit,
+      maybeCursor
+    ).map { case (repostsJson, cursor) =>
+      val reposts = repostsJson.map(repost => (repost \ "user").as[Urn])
+      Reposts(reposts, cursor)
+    }
+
+  def trackReposts(session: UserSession, user: Urn, limit: Int, maybeCursor: Option[String]): Future[Reposts] =
+    reposts(session, user, "track", limit, maybeCursor)
+
+  def playlistReposts(session: UserSession, user: Urn, limit: Int, maybeCursor: Option[String]): Future[Reposts] =
+    reposts(session, user, "playlist", limit, maybeCursor)
+
+  private def reposts(session: UserSession, user: Urn, kind: String, limit: Int, maybeCursor: Option[String]): Future[Reposts] =
+    fetchAll(
+      session,
+      Path() / "users" / user / s"${kind}_reposts",
+      limit,
+      maybeCursor
+    ).map { case (repostsJson, cursor) =>
+      val reposts = repostsJson.map(repost => (repost \ "repostable").as[Urn])
+      Reposts(reposts, cursor)
     }
 
   private def fetchAll(session: UserSession, path: Path, limit: Int, cursor: Option[String]): Future[(List[JsObject], Option[String])] = {
     jsonClient.get(
       session,
       path,
-      Params("page_size" -> limit) ++
-        cursor.map(c => Params("cursor" -> c)).getOrElse(Params.empty),
+      Params("page_size" -> limit) ++ cursor.map(c => Params("cursor" -> c)).getOrElse(Params.empty),
       Params.empty
     ).map {
       case JsonResponse(OkStatus, body, _, _) =>
@@ -148,5 +165,4 @@ object RepostsClient {
         release_at = if (acknowledgeable) None else (json \ "release_at").asOpt[String]
       )
     }
-
 }
