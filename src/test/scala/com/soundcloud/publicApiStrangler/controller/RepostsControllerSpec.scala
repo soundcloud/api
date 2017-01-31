@@ -3,8 +3,8 @@ package com.soundcloud.publicApiStrangler.controller
 import com.soundcloud.bff.finagle.{Request, ResponseBuilder}
 import com.soundcloud.bff.test.InjectionBasedControllerSpecification
 import com.soundcloud.jvmkit.{Urn, UserSessionBuilder}
-import com.soundcloud.publicApiStrangler.client.reposts.RepostsClient
 import com.soundcloud.publicApiStrangler.client.reposts.RepostsClient._
+import com.soundcloud.publicApiStrangler.client.reposts.{Reposts, RepostsClient}
 import com.soundcloud.publicApiStrangler.support.DispatchToMothershipHandler
 import com.soundcloud.scalakit.Geo
 import com.twitter.finagle.http.Status
@@ -207,6 +207,94 @@ class RepostsControllerSpec extends InjectionBasedControllerSpecification {
         override def result = Failed
         response.status ==== Status.InternalServerError
         response.body.length ==== 0
+      }
+    }
+  }
+
+  "GET /e1/me/track_reposts/ids" >> {
+    "when one page of track reposts is available" >> {
+      trait OnePageRepostedTracksContext extends Context {
+        override def writeToReposts(): Boolean = true
+
+        repostsClient
+          .trackReposts(session, user, RepostsController.LIMIT, None)
+          .returns(Future.value(Reposts(List(track), None)))
+      }
+
+      "it returns 200 OK" in new OnePageRepostedTracksContext {
+        get(controller, "/e1/me/track_reposts/ids", Map(), Map()).status ==== Status.Ok
+      }
+
+      "it returns a list of track IDs" in new OnePageRepostedTracksContext {
+        get(controller, "/e1/me/track_reposts/ids", Map(), Map()).jsonBody.as[List[Long]] ==== List(track.getIdentifier.toLong)
+      }
+    }
+
+    "when two pages of track reposts are available" >> {
+      trait MultiPageRepostedTracksContext extends Context {
+        override def writeToReposts(): Boolean = true
+
+        val track2 = Urn("soundcloud:tracks:101")
+
+        repostsClient
+          .trackReposts(session, user, RepostsController.LIMIT, None)
+          .returns(Future.value(Reposts(List(track), Some("foobar"))))
+
+        repostsClient
+          .trackReposts(session, user, RepostsController.LIMIT, Some("foobar"))
+          .returns(Future.value(Reposts(List(track2), None)))
+      }
+
+      "it returns 200 OK" in new MultiPageRepostedTracksContext {
+        get(controller, "/e1/me/track_reposts/ids", Map(), Map()).status ==== Status.Ok
+      }
+
+      "it returns a list of track IDs" in new MultiPageRepostedTracksContext {
+        get(controller, "/e1/me/track_reposts/ids", Map(), Map()).jsonBody.as[List[Long]] ==== List(track, track2).map(_.getIdentifier.toLong)
+      }
+    }
+  }
+
+  "GET /e1/me/playlist_reposts/ids" >> {
+    "when one page of playlist reposts is available" >> {
+      trait OnePageRepostedPlaylistsContext extends Context {
+        override def writeToReposts(): Boolean = true
+
+        repostsClient
+          .playlistReposts(session, user, RepostsController.LIMIT, None)
+          .returns(Future.value(Reposts(List(playlist), None)))
+      }
+
+      "it returns 200 OK" in new OnePageRepostedPlaylistsContext {
+        get(controller, "/e1/me/playlist_reposts/ids", Map(), Map()).status ==== Status.Ok
+      }
+
+      "it returns a list of playlist IDs" in new OnePageRepostedPlaylistsContext {
+        get(controller, "/e1/me/playlist_reposts/ids", Map(), Map()).jsonBody.as[List[Long]] ==== List(playlist.getIdentifier.toLong)
+      }
+    }
+
+    "when two pages of playlist reposts are available" >> {
+      trait MultiPageRepostedPlaylistsContext extends Context {
+        override def writeToReposts(): Boolean = true
+
+        val playlist2 = Urn("soundcloud:playlists:201")
+
+        repostsClient
+          .playlistReposts(session, user, RepostsController.LIMIT, None)
+          .returns(Future.value(Reposts(List(playlist), Some("foobar"))))
+
+        repostsClient
+          .playlistReposts(session, user, RepostsController.LIMIT, Some("foobar"))
+          .returns(Future.value(Reposts(List(playlist2), None)))
+      }
+
+      "it returns 200 OK" in new MultiPageRepostedPlaylistsContext {
+        get(controller, "/e1/me/playlist_reposts/ids", Map(), Map()).status ==== Status.Ok
+      }
+
+      "it returns a list of playlist IDs" in new MultiPageRepostedPlaylistsContext {
+        get(controller, "/e1/me/playlist_reposts/ids", Map(), Map()).jsonBody.as[List[Long]] ==== List(playlist, playlist2).map(_.getIdentifier.toLong)
       }
     }
   }
