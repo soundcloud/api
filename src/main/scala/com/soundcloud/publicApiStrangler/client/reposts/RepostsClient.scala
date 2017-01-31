@@ -10,6 +10,8 @@ import com.soundcloud.bff.nextbff.mapping.MappingContext
 import com.twitter.util.{Future, NonFatal}
 import play.api.libs.json._
 
+case class Reposts(reposts: List[Urn], nextCursor: Option[String])
+
 /**
   * https://github.com/soundcloud/voltron/tree/master/reposts
   */
@@ -40,32 +42,29 @@ class RepostsClient(jsonClient: JsonClient) extends FetchClient {
         urns.toList.map { urn => urn -> fetchedCounts.getOrElse(urn, 0L) }.toMap
       }
 
-  def reposters(session: UserSession, repostableUrn: Urn): Future[List[Urn]] =
+  def reposters(session: UserSession, repostableUrn: Urn, limit: Int, cursor: Option[String]): Future[Reposts] =
     fetchAll(
       session,
-      Path() / repostableUrn.getCollection / repostableUrn / "reposts")
-      .map(_.map(repost => (repost \ "user").as[Urn]))
-
-  private def fetchAll(session: UserSession, path: Path, batchSize: Int = 200): Future[List[JsObject]] = {
-    def fetchPage(cursor: Option[String], acc: List[JsObject]): Future[List[JsObject]] = {
-      jsonClient.get(
-        session,
-        path,
-        Params("page_size" -> batchSize) ++
-          cursor.map(c => Params("cursor" -> c)).getOrElse(Params.empty),
-        Params.empty
-      ).flatMap {
-        case JsonResponse(OkStatus, body, _, _) =>
-          val fetched = (body \ "reposts").as[List[JsObject]]
-          val newAcc = fetched ++ acc
-          val maybeNewCursor = (body \ "next" \ "cursor").asOpt[String]
-          maybeNewCursor.map { newCursor =>
-            fetchPage(Some(newCursor), newAcc)
-          }.getOrElse(Future.value(newAcc))
-        case _ => Future.value(acc)
-      }
+      Path() / repostableUrn.getCollection / repostableUrn / "reposts",
+      limit, cursor).map { case (repostsJson, cursor) =>
+        val reposts = repostsJson.map(repost => (repost \ "user").as[Urn])
+        Reposts(reposts, cursor)
     }
-    fetchPage(None, List.empty)
+
+  private def fetchAll(session: UserSession, path: Path, limit: Int, cursor: Option[String]): Future[(List[JsObject], Option[String])] = {
+    jsonClient.get(
+      session,
+      path,
+      Params("page_size" -> limit) ++
+        cursor.map(c => Params("cursor" -> c)).getOrElse(Params.empty),
+      Params.empty
+    ).map {
+      case JsonResponse(OkStatus, body, _, _) =>
+        val reposts = (body \ "reposts").as[List[JsObject]]
+        val maybeNewCursor = (body \ "next" \ "cursor").asOpt[String]
+        (reposts, maybeNewCursor)
+      case _ => (List.empty, None)
+    }
   }
 
   private def repostCountsForUrns(session: UserSession, urns: Set[Urn]): Future[Set[Count]] =

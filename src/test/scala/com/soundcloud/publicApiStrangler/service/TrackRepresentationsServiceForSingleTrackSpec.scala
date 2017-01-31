@@ -1,5 +1,6 @@
 package com.soundcloud.publicApiStrangler
 
+import com.soundcloud.jvmkit.ModuleConversions._
 import com.soundcloud.jvmkit.{Urn, UserSession, UserSessionBuilder}
 import com.soundcloud.publicApiStrangler.client.liebling.{LieblingClient, UserLikesCount}
 import com.soundcloud.publicApiStrangler.client.mediaservice.{MediaServiceUrlGenClient, WaveformUrl}
@@ -203,7 +204,7 @@ class TrackRepresentationsServiceForSingleTrackSpec extends UnitSpecification {
       when(okidokiClient.fetchTrackDomainLockings(session, trackUrn)).thenReturn(Future.value(domainLockings))
       when(okidokiClient.fetchTrackAudioMetadata(session, trackUrn)).thenReturn(Future.value(Some(trackAudioMetadata)))
       when(lieblingClient.userLikeCounts(session, List(trackUrn), session.getUser)).thenReturn(Future.value(userLikesCount))
-      when(mediaUrlGenClient.waveformUrls(session, track.uid)).thenReturn(Future.value(waveformUrls))
+      when(mediaUrlGenClient.waveformUrls(track.uid)).thenReturn(Future.value(waveformUrls))
       when(userQuotaClient.downloadsPerTrack(session, Set(track.user_urn))).thenReturn(Future.value(Map.empty[Urn, Option[Int]]))
 
       when(playlistsClient.getPlaylistContainingTrackOwnedByUser(track.urn, track.user_urn)).thenReturn(Future.value(playlists))
@@ -506,7 +507,7 @@ class TrackRepresentationsServiceForSingleTrackSpec extends UnitSpecification {
     "it not present when urlgen returns no stream URLs" in new Context {
       val track = trackmetadataTrack()
       setUpMocksForExistingTrack(track, session)
-      when(mediaUrlGenClient.waveformUrls(session, track.uid)).thenReturn(Future.value(Seq.empty))
+      when(mediaUrlGenClient.waveformUrls(track.uid)).thenReturn(Future.value(Seq.empty))
 
       val trackRepLike = Await.result(tracksService.track(session, trackUrn, None))
 

@@ -55,7 +55,7 @@ class TrackRepresentationsService(trackRepository: TrackRepository,
           val isLikedF = Option(session.getUser).map(user =>
             lieblingClient.userLikeCounts(session, List(track.urn), user).map(_.liked_track_urns.contains(track.urn))).getOrElse(Future.False)
 
-          val waveformUrlsF = mediaUrlGenClient.waveformUrls(session, track.uid)
+          val waveformUrlsF = mediaUrlGenClient.waveformUrls(track.uid)
           val downloadsPerTrackF = userQuotaClient.downloadsPerTrack(session, Set(track.user_urn)).map(_.get(track.user_urn).getOrElse(None))
           val countsF = userForTrackF.flatMap {
             case Some(user) => stitchClient.countsForTrack(session, urn, user.urn).map(Some(_)).liftToTry.map(_.getOrElse(None))

@@ -88,7 +88,7 @@ class TrackRepositorySpec extends UnitSpecification {
 
     trackmetadataClient.tracks(session, trackUrns).returns(tracksResponse)
     richOkidokiClient.fetchTracksAudioMetadata(session, trackUrns).returns(fetchTracksAudioMetadataResponse)
-    mediaServiceUrlGenClient.waveformUrls(session, trackmetadataTracks.flatMap(_.uid)).returns(waveformUrlsResponse)
+    mediaServiceUrlGenClient.waveformUrls(trackmetadataTracks.flatMap(_.uid)).returns(waveformUrlsResponse)
 
     val userUrnsFromLabelIds = trackmetadataTracks.flatMap(_.label_id).map(id => new Urn("soundcloud", "users", id.toString)).toSet
     richOkidokiClient.fetchUsersMap(session, userUrnsFromLabelIds).returns(fetchUsersMapResponse)

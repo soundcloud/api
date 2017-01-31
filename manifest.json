@@ -1,9 +1,9 @@
 {
     "name": "public-api-strangler",
     "description": "An implementation of the Strangler Pattern for the mothership's Public API",
-    "contact_email": "core-services@soundcloud.com",
-    "contact_channel": "core-services",
-    "owner": "core-services",
+    "contact_email": "backend-engineering-productivity@soundcloud.com",
+    "contact_channel": "backend-productivity",
+    "owner": "backend-engineering-productivity",
     "type": "external_service",
     "runtime": "jdk-8",
     "status": "production",

@@ -77,7 +77,7 @@ class TrackRepository(trackmetadataClient: TrackmetadataClient,
   }
 
   private def allDependenciesOnTrackObjectList(session: UserSession, userUrn: Urn, tracks: List[Track]) = {
-    val waveformUrlsF = toResult(mediaUrlGenClient.waveformUrls(session, tracks.flatMap(_.uid)), "Could not load the tracks' waveforms")
+    val waveformUrlsF = toResult(mediaUrlGenClient.waveformUrls(tracks.flatMap(_.uid)), "Could not load the tracks' waveforms")
 
     val userUrnsFromLabelIds = tracks.flatMap(_.label_id).map(labelId => Urn("soundcloud", "users", labelId.toString))
     val labelsF = toResult(okidokiClient.fetchUsersMap(session, userUrnsFromLabelIds.toSet), Map.empty[Urn, User])

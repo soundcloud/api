@@ -22,7 +22,7 @@ case class RepostsUser(jsonValue: JsValue,
 
 object RepostsUser {
   implicit val writes = new Writes[RepostsUser] {
-    override def writes(u: RepostsUser): JsValue = {
+    override def writes(u: RepostsUser): JsValue =
       Json.obj(
         "avatar_url" -> u.avatar_url,
         "id" -> u.id,
@@ -53,6 +53,5 @@ object RepostsUser {
         "likes_count" -> u.likes_count,
         "playlist_count" -> u.playlist_count
       )
-    }
   }
 }

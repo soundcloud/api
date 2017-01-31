@@ -1,8 +1,8 @@
 package com.soundcloud.publicApiStrangler.client.mediaservice
 
-import com.soundcloud.scalakit.Path
-import com.soundcloud.scalakit.finagle.http.OkStatus
-import com.soundcloud.scalakit.finagle.jsonservice.{JsonClient, JsonResponse, Params}
+import com.soundcloud.jvmkit.ModuleConversions._
+import com.soundcloud.jvmkit.module.httpclient.{Headers, HttpClient, HttpResponse, OkHttpStatus, Params}
+import com.soundcloud.jvmkit.module.servicediscovery.Path
 import com.soundcloud.scalakit.test.UnitSpecification
 import com.twitter.util.{Await, Future}
 import play.api.libs.json.{JsObject, Json}
@@ -10,17 +10,16 @@ import play.api.libs.json.{JsObject, Json}
 class MediaServiceUrlGenClientSpec extends UnitSpecification {
 
   trait Context extends Scope {
-    val jsonClient = mock[JsonClient]
+    val jsonClient = mock[HttpClient]
     val client = new MediaServiceUrlGenClient(jsonClient)
 
     val path = Path() / "waveforms"
 
-    val session = anonymousSession
     val uid1 = "a1b2c3"
     val uid2 = "def456"
 
-    def stubbedResponse(uids: Seq[String]): Future[JsonResponse] = {
-      jsonClient.get(session, path, Params("uid" -> uids), Params.empty)
+    def stubbedResponse(uids: Seq[String]): Future[HttpResponse] = {
+      jsonClient.get(path, Params("uid" -> uids), Headers.empty)
     }
 
     def trackWaveformsObject(uid: String): JsObject = {
@@ -45,15 +44,15 @@ class MediaServiceUrlGenClientSpec extends UnitSpecification {
   "waveformUrls" >> {
     "returns an array of waveform URL objects for multiple tracks" in new Context {
       stubbedResponse(Seq(uid1, uid2)) returns Future.value(
-        JsonResponse(OkStatus, Json.obj(
+        HttpResponse(OkHttpStatus, Json.obj(
           "response" -> Json.arr(
             trackWaveformsObject(uid1),
             trackWaveformsObject(uid2)
           )
-        ))
+        ).toString())
       )
 
-      Await.result(client.waveformUrls(session, Seq(uid1, uid2))) must beLike {
+      Await.result(client.waveformUrls(Seq(uid1, uid2))) must beLike {
         case map => {
           map.get(uid1) must beLike {
             case Some(list) => {
@@ -92,14 +91,14 @@ class MediaServiceUrlGenClientSpec extends UnitSpecification {
 
     "returns an array of waveform URL objects for a single track" in new Context {
       stubbedResponse(Seq(uid1)) returns Future.value(
-        JsonResponse(OkStatus, Json.obj(
+        HttpResponse(OkHttpStatus, Json.obj(
           "response" -> Json.arr(
             trackWaveformsObject(uid1)
           )
-        ))
+        ).toString())
       )
 
-      Await.result(client.waveformUrls(session, Some(uid1))) must beLike {
+      Await.result(client.waveformUrls(Some(uid1))) must beLike {
         case list => {
           list must contain(
             WaveformUrl("stream",
@@ -117,12 +116,12 @@ class MediaServiceUrlGenClientSpec extends UnitSpecification {
     }
 
     "returns an empty array when the UID is absent" in new Context {
-      Await.result(client.waveformUrls(session, None)) must beLike { case list => list must beEmpty }
+      Await.result(client.waveformUrls(None)) must beLike { case list => list must beEmpty }
     }
 
     "returns None when failing" in new Context {
       stubbedResponse(Seq(uid1)) returns Future.exception(new RuntimeException("fail"))
-      Await.result(client.waveformUrls(session, Some(uid1))) ==== Seq.empty
+      Await.result(client.waveformUrls(Some(uid1))) ==== Seq.empty
     }
   }
 }

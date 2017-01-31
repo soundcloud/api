@@ -181,7 +181,7 @@ class RepostsClientSpec extends UnitSpecification with PactSpec with UnitSpecsSu
       request = buildRequest(
         path = s"/tracks/${track(1)}/reposts",
         method = "GET",
-        query = "page_size=200"
+        query = "page_size=10"
       ),
       response = getRepostersResponse(track(1), user)
     ),
@@ -191,7 +191,7 @@ class RepostsClientSpec extends UnitSpecification with PactSpec with UnitSpecsSu
       request = buildRequest(
         path = s"/tracks/${track(2)}/reposts",
         method = "GET",
-        query = "page_size=200"
+        query = "page_size=10"
       ),
       response = repostersEmptyResponse
     )
@@ -240,7 +240,7 @@ class RepostsClientSpec extends UnitSpecification with PactSpec with UnitSpecsSu
       request = buildRequest(
         path = s"/playlists/${playlist(1)}/reposts",
         method = "GET",
-        query = "page_size=200"
+        query = "page_size=10"
       ),
       response = getRepostersResponse(playlist(1), user)
     ),
@@ -250,7 +250,7 @@ class RepostsClientSpec extends UnitSpecification with PactSpec with UnitSpecsSu
       request = buildRequest(
         path = s"/playlists/${playlist(2)}/reposts",
         method = "GET",
-        query = "page_size=200"
+        query = "page_size=10"
       ),
       response = repostersEmptyResponse
     )
@@ -417,21 +417,21 @@ class RepostsClientSpec extends UnitSpecification with PactSpec with UnitSpecsSu
 
       "when data is available" >> {
         "it returns reposters for a track" in new RepostersContext {
-          Await.result(client.reposters(session, track(1))) ==== List(user)
+          Await.result(client.reposters(session, track(1), 10, None)) ==== Reposts(List(user), None)
         }
 
         "it returns reposters for a playlist" in new RepostersContext {
-          Await.result(client.reposters(session, playlist(1))) ==== List(user)
+          Await.result(client.reposters(session, playlist(1), 10, None)) ==== Reposts(List(user), None)
         }
       }
 
       "when there are no reposters" >> {
         "it returns an empty list of reposters for a track" in new RepostersContext {
-          Await.result(client.reposters(session, track(2))) ==== Nil
+          Await.result(client.reposters(session, track(2), 10, None)) ==== Reposts(Nil, None)
         }
 
         "it returns an empty list of reposters for a playlist" in new RepostersContext {
-          Await.result(client.reposters(session, playlist(2))) ==== Nil
+          Await.result(client.reposters(session, playlist(2), 10, None)) ==== Reposts(Nil, None)
         }
       }
     }
