@@ -49,12 +49,18 @@ class RepostersController(userAuthentication: UserAuthentication,
     s"$protocol://${request.host.get}"
   }
 
-  private def nextHref(request: Request, limit: Int, cursor: Option[String]) =
+  private def nextHref(request: Request, limit: Int, cursor: Option[String]): Option[String] =
     cursor.map { c =>
       val url = baseUrl(request)
       val path = request.path
-      s"""$url$path?linked_partitioning=1&limit=$limit&cursor=$c"""
+      val params = request.params ++ Map(
+        "linked_partitioning" -> "1",
+        "limit" -> limit,
+        "cursor" -> c
+      )
+      s"$url$path${params.toString()}"
     }
+
 
   private def hydrateUsers(session: UserSession, request: Request, limit: Int, reposts: Reposts): Future[RepostsResponse[RepostsUser]] = {
     val url = baseUrl(request)
