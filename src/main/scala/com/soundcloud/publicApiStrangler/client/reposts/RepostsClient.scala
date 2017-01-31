@@ -9,7 +9,7 @@ import com.soundcloud.service.client.FetchClient
 import com.twitter.util.{Future, NonFatal}
 import play.api.libs.json._
 
-case class Reposts(reposts: List[Urn], nextCursor: Option[String])
+case class Reposts(urns: List[Urn], nextCursor: Option[String])
 
 /**
   * https://github.com/soundcloud/voltron/tree/master/reposts

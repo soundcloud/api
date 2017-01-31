@@ -1,14 +1,14 @@
 package com.soundcloud.publicApiStrangler.controller
 
-import com.soundcloud.jvmkit.{Urn, UserSession}
-import com.soundcloud.publicApiStrangler.mapping.reposts.Reposters
-import com.soundcloud.publicApiStrangler.mapping.reposts.RepostsUser.writes
-import com.soundcloud.publicApiStrangler.client.reposts.{RepostsClient, Reposts}
-import com.soundcloud.publicApiStrangler.client.RichOkidokiClient
-import com.soundcloud.publicApiStrangler.client.liebling.{LieblingClient, UserTotalLikes}
-import com.soundcloud.publicApiStrangler.client.followcounts.{FollowCounts, FollowCountsClient}
 import com.soundcloud.bff.finagle.{Request, ResponseBuilder}
 import com.soundcloud.bff.web.{BffInjectionBasedController, UserAuthentication}
+import com.soundcloud.jvmkit.{Urn, UserSession}
+import com.soundcloud.publicApiStrangler.client.RichOkidokiClient
+import com.soundcloud.publicApiStrangler.client.followcounts.{FollowCounts, FollowCountsClient}
+import com.soundcloud.publicApiStrangler.client.liebling.{LieblingClient, UserTotalLikes}
+import com.soundcloud.publicApiStrangler.client.reposts.{Reposts, RepostsClient}
+import com.soundcloud.publicApiStrangler.mapping.reposts.RepostsUser.writes
+import com.soundcloud.publicApiStrangler.mapping.reposts.{RepostsResponse, RepostsUser}
 import com.twitter.util.Future
 
 class RepostersController(userAuthentication: UserAuthentication,
@@ -29,8 +29,7 @@ class RepostersController(userAuthentication: UserAuthentication,
   private def reposters(repostableType: String)(request: Request): Future[ResponseBuilder] =
     userAuthentication.withUserSession(request) { session =>
       val limit = request.params.get("limit").map(_.toInt).getOrElse(200)
-      val linkedPartitioningEnabled = request.params.get("linked_partitioning")
-        .filter(_ == "1").isDefined
+      val linkedPartitioningEnabled = request.params.get("linked_partitioning").contains("1")
       val cursor = request.params.get("cursor")
       val repostable = new Urn(s"""soundcloud:$repostableType:${request.routeParams("id")}""")
       if(limit <= 200)
@@ -40,7 +39,7 @@ class RepostersController(userAuthentication: UserAuthentication,
       else Future.value(render.badRequest)
     }
 
-  private def respond(linkedPartitioningEnabled: Boolean)(result: Reposters): ResponseBuilder =
+  private def respond(linkedPartitioningEnabled: Boolean)(result: RepostsResponse[RepostsUser]): ResponseBuilder =
     if(linkedPartitioningEnabled) render.json(result)
     else render.json(result.collection)
 
@@ -57,15 +56,15 @@ class RepostersController(userAuthentication: UserAuthentication,
       s"""$url$path?linked_partitioning=1&limit=$limit&cursor=$c"""
     }
 
-  private def hydrateUsers(session: UserSession, request: Request, limit: Int, reposts: Reposts): Future[Reposters] = {
+  private def hydrateUsers(session: UserSession, request: Request, limit: Int, reposts: Reposts): Future[RepostsResponse[RepostsUser]] = {
     val url = baseUrl(request)
     val repostCounts =
       shouldLoadCountsFromReposts().flatMap {
         case true =>
-          repostsClient.getRepostCountsByUrnWithFallback(session, reposts.reposts.toSet)
+          repostsClient.getRepostCountsByUrnWithFallback(session, reposts.urns.toSet)
         case false => Future.value(Map.empty[Urn, Long])
       }
-    val followCounts = followCountsClient.counts(session, reposts.reposts)
+    val followCounts = followCountsClient.counts(session, reposts.urns)
       .map {
       _.map { case value@FollowCounts(user, _, _) =>
         (user, value)
@@ -74,7 +73,7 @@ class RepostersController(userAuthentication: UserAuthentication,
     val likeCounts =
       shouldLoadCountsFromLiebling().flatMap {
         case true =>
-          lieblingClient.userTotalLikeCount(session, reposts.reposts)
+          lieblingClient.userTotalLikeCount(session, reposts.urns)
             .map {
             _.map { case value@UserTotalLikes(user, _, _) =>
               (user, value)
@@ -85,7 +84,7 @@ class RepostersController(userAuthentication: UserAuthentication,
 
     val hydratedUsers =
       okidokiClient.fetchRepostsUsersWithoutCounts(session,
-                                                   reposts.reposts.toSet,
+                                                   reposts.urns.toSet,
                                                    url, 50)
 
     for {
@@ -106,7 +105,7 @@ class RepostersController(userAuthentication: UserAuthentication,
                   maybeRepostsCount = repostsCount,
                   maybeLikesCount = likesCount)(user.context)
       }
-      Reposters(users, nextHref(request, limit, reposts.nextCursor))
+      RepostsResponse(users, nextHref(request, limit, reposts.nextCursor))
     }
   }
 }

@@ -5,6 +5,7 @@ import com.soundcloud.bff.web.{BffInjectionBasedController, UserAuthentication}
 import com.soundcloud.jvmkit.{Urn, UserSession}
 import com.soundcloud.publicApiStrangler.client.reposts.RepostsClient._
 import com.soundcloud.publicApiStrangler.client.reposts.{Reposts, RepostsClient}
+import com.soundcloud.publicApiStrangler.mapping.reposts.RepostsResponse
 import com.soundcloud.publicApiStrangler.support.DispatchToMothershipHandler
 import com.twitter.finagle.http.Status
 import com.twitter.util.Future
@@ -61,8 +62,11 @@ class RepostsController(userAuthentication: UserAuthentication,
 
   private def getUserRepostables(request: Request, callback: (UserSession, Urn, Int, Option[String]) => Future[Reposts]): Future[ResponseBuilder] = {
     userAuthentication.withLoggedInUser(request) { (session, userUrn) =>
-      getAllRepostables(session, userUrn, callback).map {
-        urns => render.json(urns.map(_.getIdentifier.toLong))
+      withPaginationParams(request) { (limit, cursor, linkedPartitioningEnabled) =>
+        getAllRepostables(session, userUrn, limit, cursor, callback).map { reposts =>
+          val ids = reposts.urns.map(_.getIdentifier.toLong)
+          respond(linkedPartitioningEnabled)(RepostsResponse(ids, nextHref(request, limit, reposts.nextCursor)))
+        }
       }
     }
   }
@@ -82,21 +86,59 @@ class RepostsController(userAuthentication: UserAuthentication,
     case Failed => render.internalServerError
   }
 
-  private def getAllRepostables(session: UserSession, user: Urn, callback: (UserSession, Urn, Int, Option[String]) => Future[Reposts]): Future[List[Urn]] = {
-    def nextBatch(acc: List[Urn], cursor: Option[String]): Future[List[Urn]] = {
-      callback(session, user, RepostsController.LIMIT, cursor).flatMap {
+  private def getAllRepostables(session: UserSession,
+                                user: Urn,
+                                limit: Int,
+                                cursor: Option[String],
+                                callback: (UserSession, Urn, Int, Option[String]) => Future[Reposts]): Future[Reposts] = {
+    def nextBatch(acc: Reposts): Future[Reposts] = {
+      callback(session, user, RepostsController.UpstreamLimit, acc.nextCursor).flatMap {
         case Reposts(urns, None) =>
-          Future.value(acc ++ urns)
+          Future.value(Reposts(acc.urns ++ urns, None))
 
         case Reposts(urns, nextCursor) =>
-          nextBatch(acc ++ urns, nextCursor)
+          val allUrns = acc.urns ++ urns
+          if (allUrns.length >= limit)
+            Future.value(Reposts(allUrns, nextCursor))
+          else
+            nextBatch(Reposts(allUrns, nextCursor))
       }
     }
 
-    nextBatch(List.empty, None)
+    nextBatch(Reposts(List.empty, cursor))
   }
+
+  private def withPaginationParams(request: Request)(action: (Int, Option[String], Boolean) => Future[ResponseBuilder]): Future[ResponseBuilder] = {
+    val limit = request.params.get("limit").map(_.toInt).getOrElse(200)
+
+    if (limit > 0 && limit <= RepostsController.DownstreamMaxLimit) {
+      val linkedPartitioningEnabled = request.params.get("linked_partitioning").contains("1")
+      val cursor = request.params.get("cursor")
+      action(limit, cursor, linkedPartitioningEnabled)
+    }
+    else {
+      Future.value(render.badRequest)
+    }
+  }
+
+  private def respond(linkedPartitioningEnabled: Boolean)(result: RepostsResponse[Long]): ResponseBuilder =
+    if (linkedPartitioningEnabled) render.json(result)
+    else render.json(result.collection)
+
+  private def nextHref(request: Request, limit: Int, cursor: Option[String]): Option[String] =
+    cursor.map { c =>
+      val url = baseUrl(request)
+      val path = request.path
+      val params = request.params ++ Map(
+        "linked_partitioning" -> "1",
+        "limit" -> limit,
+        "cursor" -> c
+      )
+      s"$url$path${params.toString()}"
+    }
 }
 
 object RepostsController {
-  val LIMIT = 200
+  val UpstreamLimit = 200
+  val DownstreamMaxLimit = 5000
 }
