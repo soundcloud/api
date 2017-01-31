@@ -7,7 +7,7 @@ import com.soundcloud.publicApiStrangler.client.reposts.RepostsClient._
 import com.soundcloud.publicApiStrangler.client.reposts.{Reposts, RepostsClient}
 import com.soundcloud.publicApiStrangler.mapping.reposts.RepostsResponse
 import com.soundcloud.publicApiStrangler.support.DispatchToMothershipHandler
-import com.twitter.finagle.http.Status
+import com.twitter.finagle.http.{ParamMap, Status}
 import com.twitter.util.Future
 
 class RepostsController(userAuthentication: UserAuthentication,
@@ -129,9 +129,9 @@ class RepostsController(userAuthentication: UserAuthentication,
     cursor.map { c =>
       val url = baseUrl(request)
       val path = request.path
-      val params = request.params ++ Map(
+      val params = request.params ++ ParamMap(
         "linked_partitioning" -> "1",
-        "limit" -> limit,
+        "limit" -> limit.toString,
         "cursor" -> c
       )
       s"$url$path${params.toString()}"

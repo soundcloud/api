@@ -9,6 +9,7 @@ import com.soundcloud.publicApiStrangler.client.liebling.{LieblingClient, UserTo
 import com.soundcloud.publicApiStrangler.client.reposts.{Reposts, RepostsClient}
 import com.soundcloud.publicApiStrangler.mapping.reposts.RepostsUser.writes
 import com.soundcloud.publicApiStrangler.mapping.reposts.{RepostsResponse, RepostsUser}
+import com.twitter.finagle.http.ParamMap
 import com.twitter.util.Future
 
 class RepostersController(userAuthentication: UserAuthentication,
@@ -53,9 +54,9 @@ class RepostersController(userAuthentication: UserAuthentication,
     cursor.map { c =>
       val url = baseUrl(request)
       val path = request.path
-      val params = request.params ++ Map(
+      val params = request.params ++ ParamMap(
         "linked_partitioning" -> "1",
-        "limit" -> limit,
+        "limit" -> limit.toString,
         "cursor" -> c
       )
       s"$url$path${params.toString()}"
