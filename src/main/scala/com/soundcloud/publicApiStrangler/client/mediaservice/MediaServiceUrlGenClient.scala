@@ -1,9 +1,8 @@
 package com.soundcloud.publicApiStrangler.client.mediaservice
 
-import com.soundcloud.jvmkit.UserSession
-import com.soundcloud.scalakit.Path
-import com.soundcloud.scalakit.finagle.http.OkStatus
-import com.soundcloud.scalakit.finagle.jsonservice.{JsonClient, JsonResponse, Params}
+import com.soundcloud.jvmkit.module.util.UserSession
+import com.soundcloud.jvmkit.module.httpclient.{Headers, HttpClient, HttpResponse, OkHttpStatus, Params}
+import com.soundcloud.jvmkit.module.servicediscovery.Path
 import com.twitter.util.{Future, NonFatal}
 import play.api.libs.json.{JsArray, JsString, JsValue, Json, Reads}
 
@@ -13,7 +12,7 @@ object WaveformUrl {
   implicit val reads: Reads[WaveformUrl] = Json.reads[WaveformUrl]
 }
 
-class MediaServiceUrlGenClient(jsonClient: JsonClient) {
+class MediaServiceUrlGenClient(jsonClient: HttpClient) {
   def waveformUrls(session: UserSession, maybeUid: Option[String]): Future[Option[Seq[WaveformUrl]]] = maybeUid match {
     case Some(uid) => waveformUrls(session, Seq(uid)).map(_.flatMap(_.get(uid)))
     case None => Future.value(Some(Seq.empty))
@@ -25,8 +24,8 @@ class MediaServiceUrlGenClient(jsonClient: JsonClient) {
   }
 
   private def getUrls(session: UserSession, uids: Seq[String]): Future[Option[Map[String, Seq[WaveformUrl]]]] = {
-    jsonClient.get(session, Path() / "waveforms", Params("uid" -> uids), Params.empty).map {
-      case JsonResponse(OkStatus, body, _, _) => Some(parseUrls(body))
+    jsonClient.get(Path() / "waveforms", Params("uid" -> uids), Headers.empty).map {
+      case HttpResponse(OkHttpStatus, body, _) => Some(parseUrls(Json.parse(body)))
       case _ => None
     }
   }
