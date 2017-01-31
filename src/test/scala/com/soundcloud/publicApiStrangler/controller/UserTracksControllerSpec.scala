@@ -30,27 +30,27 @@ class UserTracksControllerSpec extends InjectionBasedControllerSpecification {
     val tracksService = mock[TrackRepresentationsService]
     val telemetry = new Telemetry(new InMemoryConfig)
 
-    def compareResponse: Boolean
+    def useTrackMetadata: Boolean
 
-    val shouldCompareResponse = () => Future.value(compareResponse)
+    val shouldUseTrackMetadata = () => Future.value(useTrackMetadata)
     val controller = new UserTracksController(
       userAuthentication,
       mothershipDispatcher,
       tracksService,
       telemetry,
-      shouldCompareResponse,
+      shouldUseTrackMetadata,
       "https://api.soundcloud.com")
 
     val mothershipSuccess = Future.value(new ResponseBuilder().status(200))
   }
 
-  "compareResponse = false" >> {
-    trait ShouldNotCompareResponse extends Context {
-      override def compareResponse = false
+  "useTrackMetadata = false" >> {
+    trait ShouldNotCallTrackMetadataResponse extends Context {
+      override def useTrackMetadata = false
     }
 
     "GET /users/:id/tracks" >> {
-      "falls back to Mothership" in new ShouldNotCompareResponse {
+      "falls back to Mothership" in new ShouldNotCallTrackMetadataResponse {
         when(mothershipDispatcher.request(any[Request])).thenReturn(mothershipSuccess)
 
         List(
@@ -67,9 +67,9 @@ class UserTracksControllerSpec extends InjectionBasedControllerSpecification {
     }
   }
 
-  "compareResponse = true" >> {
-    trait ShouldCompareResponse extends Context {
-      override def compareResponse = true
+  "useTrackMetadata = true" >> {
+    trait ShouldCallTrackMetadataResponse extends Context {
+      override def useTrackMetadata = true
 
       val tracksServiceSuccess = lift(Good(TracksRepresentationResult(List.empty[TrackRepresentationLike], None)))
 
@@ -77,9 +77,7 @@ class UserTracksControllerSpec extends InjectionBasedControllerSpecification {
     }
 
     "GET /users/:id/tracks" >> {
-      "requests to both mothership and tracks service" in new ShouldCompareResponse {
-        when(mothershipDispatcher.request(any[Request])).thenReturn(mothershipSuccess)
-
+      "requests to both mothership and tracks service" in new ShouldCallTrackMetadataResponse {
         val queryString = "?limit=1&offset=2&linked_partitioning=yes-please&created_at[from]=2017-01-01%2010:00:00&created_at[to]=2017-01-15%2010:00:00"
 
         List(

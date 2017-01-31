@@ -14,7 +14,7 @@ object Build extends HttpServerAppBuild(
     scalaVersion = "2.11.8"
   ),
   libDependencies = Seq(
-    "com.soundcloud" %% "jvmkit-experimental" % "0.2-SNAPSHOT",
+    "com.soundcloud" %% "jvmkit-experimental" % "0.2",
     "com.soundcloud" %% "sc-services" % "48.0.0",
     "com.soundcloud" %% "timeline-client" % "0.1.2",
     "com.soundcloud" %% "ratelimitinglib" % BuildProperties.jvmkitVersion,

@@ -8,7 +8,6 @@ import com.soundcloud.jvmkit.Urn
 import com.soundcloud.jvmkit.module.util.{Bad, ErrorLike, Good}
 import com.soundcloud.jvmkit.telemetry.Telemetry
 import com.soundcloud.publicApiStrangler.service.TrackPagination
-import com.soundcloud.publicApiStrangler.support.migration.TrackCollectionResponseComparison
 import com.soundcloud.publicApiStrangler.{TrackRepresentationsService, TracksRepresentationResult}
 import com.twitter.finagle.http.{Response, Status}
 import com.twitter.util.{Future, NonFatal}
@@ -20,13 +19,11 @@ class UserTracksController(userAuthentication: UserAuthentication,
                            mothershipDispatcher: TrackMothershipDispatcherWithCounts,
                            tracksService: TrackRepresentationsService,
                            telemetry: Telemetry,
-                           shouldCompareResponse: () => Future[Boolean],
+                           shouldUseTrackMetadata: () => Future[Boolean],
                            baseUrl: String)
   extends BffInjectionBasedController {
 
   private val numericRegexp = """\d+""".r
-
-  private val responseComparison = new TrackCollectionResponseComparison(telemetry)
 
   get("/users/:userId/tracks")(handleRequest)
   get("/users/:userId/tracks/")(handleRequest)
@@ -34,17 +31,9 @@ class UserTracksController(userAuthentication: UserAuthentication,
   get("/users/:userId/tracks.json/")(handleRequest)
 
   private def handleRequest(req: Request): Future[ResponseBuilder] = {
-    shouldCompareResponse().flatMap {
-      case true  => compareResponse(req)
+    shouldUseTrackMetadata().flatMap {
+      case true  => buildResponse(req).map(toResponseBuilder)
       case false => mothershipDispatcher.request(req)
-    }
-  }
-
-  private def compareResponse(req: Request): Future[ResponseBuilder] = {
-    Future.join(mothershipDispatcher.request(req), buildResponse(req)).map {
-      case (mothership, migration) =>
-        responseComparison.report(req, mothership.build(req), migration)
-        mothership
     }
   }
 
@@ -78,6 +67,14 @@ class UserTracksController(userAuthentication: UserAuthentication,
         case _ => Future.value(generateNotFound(callback))
       }
     }
+  }
+
+  private def toResponseBuilder(response: Response): ResponseBuilder = {
+    val headerMap = response.headerMap.iterator.map { case (key, value) => (key, value) }.toMap
+    new ResponseBuilder()
+      .status(response.statusCode)
+      .body(response.getContentString())
+      .headers(headerMap)
   }
 
   private def getRepresentation(result: TracksRepresentationResult, pagination: TrackPagination) = {

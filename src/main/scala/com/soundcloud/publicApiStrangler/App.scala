@@ -280,14 +280,14 @@ object App
       mothershipDispatcher,
       stitchClient)
 
-    val shouldCompareResponse = BasicRolloutFeature("compare_response_with_trackmetadata")
+    val shouldUseTrackMetadata = BasicRolloutFeature("track_metadata_for_user_tracks")
 
     new UserTracksController(
       userAuthentication,
       trackMothershipDispatcherWithCounts,
       tracksService,
       telemetry,
-      () => rolloutClient.isActive(shouldCompareResponse),
+      () => rolloutClient.isActive(shouldUseTrackMetadata),
       baseUrl
     )
   }
