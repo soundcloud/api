@@ -1,29 +1,29 @@
 package com.soundcloud.publicApiStrangler.client
 
+import com.soundcloud.jvmkit.ModuleConversions._
 import com.soundcloud.jvmkit.{Urn, UserSession}
+import com.soundcloud.jvmkit.module.httpclient.{Headers, HttpClient, HttpResponse, OkHttpStatus, Params}
+import com.soundcloud.jvmkit.module.servicediscovery.Path
 import com.soundcloud.publicApiStrangler.client.gobbly.{Error, Result, ServerError, Success}
-import com.soundcloud.scalakit.Path
-import com.soundcloud.jvmkit.Urn.format
-import com.soundcloud.scalakit.finagle.http.OkStatus
-import com.soundcloud.scalakit.finagle.jsonservice.{JsonClient, JsonResponse, Params}
 import com.twitter.util.{Future, NonFatal}
+import play.api.libs.json._
 
 /**
  * Client for Gobbly
  * https://github.com/soundcloud/gobbly
  */
-class GobblyClient(jsonClient: JsonClient) {
+class GobblyClient(client: HttpClient) {
   def allTracksManagedByFeedsForWrite(session: UserSession, urns: List[Urn]): Future[Result[Boolean]] =
     tracksFromFeeds(session, urns).map(_.map(trackUrns => trackUrns.toSet == urns.toSet))
 
   private def tracksFromFeeds(session: UserSession, trackUrns: List[Urn]): Future[Result[List[Urn]]] = {
     val errorResponse = ServerError(Error("Error loading managed by feeds status from gobbly"))
 
-    jsonClient.get(session, Path() / "soundcloud-tracks", Params("urns" -> trackUrns), Params.empty).map {
-      case JsonResponse(OkStatus, body, _, _) => Success(body.as[List[Urn]])
-      case JsonResponse(status, _, _, _) => errorResponse
+    client.getWithSession(session, Path() / "soundcloud-tracks", Params("urns" -> trackUrns.map(toModuleUrn)), Headers.empty).map {
+      case HttpResponse(OkHttpStatus, body, _) => Success(Json.parse(body).as[List[Urn]])
+      case HttpResponse(_, _, _) => errorResponse
     } handle {
-      case NonFatal(e) => errorResponse
+      case NonFatal(_) => errorResponse
     }
   }
 }
