@@ -25,7 +25,6 @@ class UserFollowController(userAuthentication: UserAuthentication,
                            follows: FollowsClient,
                            followCountsClient: FollowCountsClient,
                            repostsClient: RepostsClient,
-                           enrichRepostsCounts: () => Future[Boolean],
                            baseUrl: String)
   extends BffInjectionBasedController {
 
@@ -336,10 +335,7 @@ class UserFollowController(userAuthentication: UserAuthentication,
         followCountsClient
           .counts(session, urns.toSeq)
           .map(_.map(followCounts => (followCounts.userUrn, followCounts)).toMap),
-        enrichRepostsCounts().flatMap {
-          case true => repostsClient.getRepostCountsByUrnWithFallback(session, urns)
-          case _ => Future.value(Map.empty[Urn,Long])
-        }
+        repostsClient.getRepostCountsByUrnWithFallback(session, urns)
       )
     } yield {
       users.map { user =>

@@ -38,9 +38,7 @@ class SearchControllerSpec extends InjectionBasedControllerSpecification {
       followCountsClientMock,
       lieblingClientMock,
       () => Future.value(true),
-      repostsClientMock,
-      () => Future.value(true)
-    )
+      repostsClientMock)
 
     val trackMothershipDispatcherWithCounts = mock[TrackMothershipDispatcherWithCounts]
 

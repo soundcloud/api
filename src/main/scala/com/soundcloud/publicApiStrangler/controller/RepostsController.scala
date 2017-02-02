@@ -12,8 +12,7 @@ import com.twitter.util.Future
 
 class RepostsController(userAuthentication: UserAuthentication,
                         repostsClient: RepostsClient,
-                        fallback: DispatchToMothershipHandler,
-                        writeToReposts: () => Future[Boolean])
+                        fallback: DispatchToMothershipHandler)
   extends BffInjectionBasedController {
 
   put("/e1/me/track_reposts/:id")(createRepost(_, "tracks"))
@@ -35,28 +34,16 @@ class RepostsController(userAuthentication: UserAuthentication,
   get("/e1/me/playlist_reposts/ids.json")(getUserRepostables(_, repostsClient.playlistReposts))
 
   private def createRepost(request: Request, targetType: String): Future[ResponseBuilder] = {
-    writeToReposts().flatMap {
-      case true =>
-        userAuthentication.withLoggedInUser(request) { (session, userUrn) =>
-          val target = new Urn(s"soundcloud:$targetType:" + request.routeParams("id"))
-          repostsClient.createRepost(session, target, baseUrl(request)).map(renderResult)
-        }
-
-      case false =>
-        fallback.dispatch(request)
-    }
+      userAuthentication.withLoggedInUser(request) { (session, userUrn) =>
+        val target = new Urn(s"soundcloud:$targetType:" + request.routeParams("id"))
+        repostsClient.createRepost(session, target, baseUrl(request)).map(renderResult)
+      }
   }
 
   private def deleteRepost(request: Request, targetType: String): Future[ResponseBuilder] = {
-    writeToReposts().flatMap {
-      case true =>
-        userAuthentication.withLoggedInUser(request) { (session, userUrn) =>
-          val target = new Urn(s"soundcloud:$targetType:" + request.routeParams("id"))
-          repostsClient.deleteRepost(session, target, baseUrl(request)).map(renderResult)
-        }
-
-      case false =>
-        fallback.dispatch(request)
+    userAuthentication.withLoggedInUser(request) { (session, userUrn) =>
+      val target = new Urn(s"soundcloud:$targetType:" + request.routeParams("id"))
+      repostsClient.deleteRepost(session, target, baseUrl(request)).map(renderResult)
     }
   }
 

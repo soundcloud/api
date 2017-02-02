@@ -40,8 +40,7 @@ class UserRelatedMothershipDispatcher(userAuthentication: UserAuthentication,
                                       followCountsClient: FollowCountsClient,
                                       lieblingClient: LieblingClient,
                                       shouldLoadCountsFromLiebling: () => Future[Boolean],
-                                      repostsClient: RepostsClient,
-                                      shouldLoadCountsFromReposts: () => Future[Boolean]) {
+                                      repostsClient: RepostsClient) {
 
   def dispatchToMothership(request: Request): Future[ResponseBuilder] = {
     userAuthentication.withUserSession(request) { session =>
@@ -98,13 +97,8 @@ class UserRelatedMothershipDispatcher(userAuthentication: UserAuthentication,
       }
 
   private def repostsSubstitutions(session: UserSession, userUrns: Set[Urn]): Future[SubstitutionsByUser] = {
-    shouldLoadCountsFromReposts().flatMap {
-      case true =>
-        repostsClient.getRepostCountsByUrnWithFallback(session, userUrns)
-          .map(_.map { case (urn, count) => (urn, List("reposts_count" -> Json.toJsFieldJsValueWrapper(count)) )}.toMap)
-      case false =>
-        Future.value(Map.empty)
-    }
+    repostsClient.getRepostCountsByUrnWithFallback(session, userUrns)
+      .map(_.map { case (urn, count) => (urn, List("reposts_count" -> Json.toJsFieldJsValueWrapper(count)) )}.toMap)
   }
 
   private def lieblingSubstitutions(session: UserSession, userUrns: Set[Urn]): Future[SubstitutionsByUser] =

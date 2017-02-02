@@ -36,7 +36,6 @@ class UserFollowControllerSpec extends InjectionBasedControllerSpecification wit
                                                    followsMock,
                                                    followCountsClientMock,
                                                    repostsClientMock,
-                                                   enrichRepostsCounts = () => Future.value(true),
                                                    "http://foo")
 
 

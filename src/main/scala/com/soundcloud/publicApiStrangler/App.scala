@@ -178,9 +178,6 @@ object App
 
   private val baseUrl = config.get("APP_BASE_URL", DataSensitivity.NON_SENSITIVE)
 
-  private val enrichRepostsCounts: () => Future[Boolean] =
-    () => rolloutClient.isActive(BasicRolloutFeature("load_user_repost_counts_from_reposts"))
-
   private val enrichLikesCounts: () => Future[Boolean] =
     () => rolloutClient.isActive(BasicRolloutFeature("load_user_like_counts_from_liebling"))
 
@@ -190,18 +187,16 @@ object App
     followCountsClient,
     lieblingClient,
     enrichLikesCounts,
-    repostsClient,
-    enrichRepostsCounts
+    repostsClient
   )
 
   private val timelineController = {
-    val entitySummaryMapper = new EntitySummaryMapper(okidokiClient, repostsClient, enrichRepostsCounts, baseUrl)
+    val entitySummaryMapper = new EntitySummaryMapper(okidokiClient, repostsClient, baseUrl)
     val entityMapper = new EntityMapper(
       okidokiClient,
       lieblingClient,
       followCountsClient,
       repostsClient,
-      enrichRepostsCounts,
       baseUrl,
       entitySummaryMapper
     )
@@ -294,7 +289,6 @@ object App
     followsClient,
     followCountsClient,
     repostsClient,
-    enrichRepostsCounts,
     baseUrl
   )
 
@@ -302,12 +296,11 @@ object App
     okidokiClient,
     followCountsClient,
     repostsClient,
-    enrichRepostsCounts,
     baseUrl,
     contentAuthorizationRules,
     new WaveformMapper(waveformUrlsRepo),
     new LikeCountMapper(lieblingClient),
-    new EntitySummaryMapper(okidokiClient, repostsClient, enrichRepostsCounts, baseUrl)
+    new EntitySummaryMapper(okidokiClient, repostsClient, baseUrl)
   )
 
   private val trackMothershipDispatcherWithCounts = new TrackMothershipDispatcherWithCounts(userAuthentication, mothershipDispatcher, stitchClient)
@@ -358,7 +351,6 @@ object App
                                                             richOkidokiClient,
                                                             followCountsClient,
                                                             lieblingClient,
-                                                            enrichRepostsCounts,
                                                             enrichLikesCounts)
 
   private val userController = new UsersController(userRelatedMothershipDispatcher)
@@ -381,10 +373,7 @@ object App
     mothershipDispatcher
   )
 
-  private val repostsController = {
-    val writeToReposts = BasicRolloutFeature("write_to_reposts_service")
-    new RepostsController(userAuthentication, repostsClient, mothershipDispatcher, () => rolloutClient.isActive(writeToReposts))
-  }
+  private val repostsController = new RepostsController(userAuthentication, repostsClient, mothershipDispatcher)
 
   private val officialSoundCloudApps = List(
     new Urn("soundcloud:applications:46941"), // SoundCloud.com (currently being abused) Internal

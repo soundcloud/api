@@ -67,7 +67,7 @@ class RepostersControllerSpec extends InjectionBasedControllerSpecification {
     val followCountsClient = mock[FollowCountsClient]
     val lieblingClient = mock[LieblingClient]
 
-    lazy val controller = new RepostersController(fakeUserAuthentication(session), repostsClient, okidokiClient, followCountsClient, lieblingClient, () => Future.False, () => Future.False)
+    lazy val controller = new RepostersController(fakeUserAuthentication(session), repostsClient, okidokiClient, followCountsClient, lieblingClient, () => Future.False)
   }
 
   "track reposters" >> {
@@ -91,6 +91,10 @@ class RepostersControllerSpec extends InjectionBasedControllerSpecification {
       repostsClient
         .reposters(session, noNextHrefTrack, 200, None)
         .returns(Future.value(noNextHrefTrackReposts))
+
+      repostsClient
+        .getRepostCountsByUrnWithFallback(session, Set(user))
+        .returns(Future.value(Map.empty[Urn, Long]))
 
       okidokiClient
         .fetchRepostsUsersWithoutCounts(session, Set(user), baseUrl, 50)
@@ -171,6 +175,10 @@ class RepostersControllerSpec extends InjectionBasedControllerSpecification {
         .reposters(session, noNextHrefPlaylist, 200, None)
         .returns(Future.value(noNextHrefPlaylistReposts))
 
+      repostsClient
+        .getRepostCountsByUrnWithFallback(session, Set(user))
+        .returns(Future.value(Map.empty[Urn, Long]))
+      
       okidokiClient
         .fetchRepostsUsersWithoutCounts(session, Set(user), baseUrl, 50)
         .returns(Future.value(List(okidokiUserResponse)))

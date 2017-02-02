@@ -22,13 +22,11 @@ class EntityMapperSpec extends UnitSpecification with Fixtures {
     val lieblingClient = mock[LieblingClient]
     val followCountsClient = mock[FollowCountsClient]
     val repostsClient = mock[RepostsClient]
-    val enrichRepostsCounts = () => Future.value(true)
     val entitySummaryMapper = mock[EntitySummaryMapper]
     lazy val entityMapper = new EntityMapper(okidokiClient,
                                              lieblingClient,
                                              followCountsClient,
                                              repostsClient,
-                                             enrichRepostsCounts,
                                              "https://foo.com",
                                              entitySummaryMapper)
     val session = mock[UserSession]

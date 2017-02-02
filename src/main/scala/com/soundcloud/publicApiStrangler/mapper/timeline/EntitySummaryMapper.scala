@@ -11,29 +11,23 @@ import play.api.libs.json.JsObject
 
 class EntitySummaryMapper(okidokiClient: OkidokiClient,
                           repostsClient: RepostsClient,
-                          enrichRepostsCounts: () => Future[Boolean],
                           baseUrl: String) extends Mapper[Urn, JsonMapping] {
 
   override def map(session: UserSession, inputs: Set[Urn])(implicit context: MappingContext): Future[Map[Urn, JsonMapping]] = {
+    val justPlaylistUrns = inputs.filter(_.getCollection == "playlists")
+
     Future.join(
       okidokiClient.fetch(session, inputs),
-      enrichRepostsCounts().flatMap {
-        case true =>
-          val justPlaylistUrns = inputs.filter(_.getCollection == "playlists")
-          repostsClient.getRepostCountsByUrnWithFallback(session, justPlaylistUrns)
-        case false =>
-          Future.value(Map.empty[Urn,Long])
-      }
+      repostsClient.getRepostCountsByUrnWithFallback(session, justPlaylistUrns)
     ).map { case (entities, playlistRepostCountsByUrn) =>
-      entities.map { entity => {
+      entities.map { entity =>
         val urn = new Urn((entity \ "self" \ "urn").as[String])
         urn -> entityFor(urn, entity, playlistRepostCountsByUrn)
-      }}
+      }
     }.map(_.toMap)
   }
 
-
-   private def entityFor(urn: Urn, entityData: JsObject, playlistRepostCountsByUrn: Map[Urn,Long])(implicit context: MappingContext) = {
+  private def entityFor(urn: Urn, entityData: JsObject, playlistRepostCountsByUrn: Map[Urn, Long])(implicit context: MappingContext) = {
     urn.getCollection match {
       case "users" => new UserSummary(entityData, baseUrl)
       case "tracks" => new TrackSummary(entityData, baseUrl, this)
@@ -41,5 +35,4 @@ class EntitySummaryMapper(okidokiClient: OkidokiClient,
       case "comments" => new CommentSummary(entityData, baseUrl, this)
     }
   }
-
 }
