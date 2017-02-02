@@ -45,21 +45,7 @@ object TrackAudioMetadata {
   implicit val reads = Json.reads[TrackAudioMetadata]
 }
 
-class RichOkidokiClient(service: JsonClient,
-  addToPlaylistResponseMapper: AddToPlaylistResponseMapper = new AddToPlaylistResponseMapper,
-  deleteFromPlaylistResponseMapper: DeleteFromPlaylistResponseMapper = new DeleteFromPlaylistResponseMapper,
-  createPlaylistResponseMapper: CreatePlaylistResponseMapper = new CreatePlaylistResponseMapper,
-  deletePlaylistResponseMapper: DeletePlaylistResponseMapper = new DeletePlaylistResponseMapper,
-  updatePlaylistResponseMapper: UpdatePlaylistResponseMapper = new UpdatePlaylistResponseMapper,
-  spotlightResponseMapper: SpotlightResponseMapper = new SpotlightResponseMapper)
-  extends OkidokiClient(
-    service,
-    addToPlaylistResponseMapper,
-    deleteFromPlaylistResponseMapper,
-    createPlaylistResponseMapper,
-    deletePlaylistResponseMapper,
-    updatePlaylistResponseMapper,
-    spotlightResponseMapper) {
+class RichOkidokiClient(service: JsonClient) extends OkidokiClient(service) {
   def fetchTrackDomainLockings(session: UserSession, trackUrn: Urn): Future[Seq[DomainLocking]] =
     fetch(service, session, Path() / "tracks" / trackUrn.getIdentifier / "domain_lockings") map {
       case JsonResponse(OkStatus, body, _, _) => body.as[List[DomainLocking]]
