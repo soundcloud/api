@@ -2,15 +2,18 @@ package com.soundcloud.publicApiStrangler.controller
 
 import com.soundcloud.bff.finagle.ResponseBuilder
 import com.soundcloud.bff.test.InjectionBasedControllerSpecification
+import com.soundcloud.jvmkit.ModuleConversions._
+import com.soundcloud.jvmkit.module.experimental.result.{Good, Result}
+import com.soundcloud.jvmkit.module.httpclient.{AcceptedHttpStatus, ForbiddenHttpStatus, HttpStatus, NotFoundHttpStatus, OkHttpStatus, UnauthorizedHttpStatus}
 import com.soundcloud.jvmkit.{Urn, UserSessionBuilder}
+import com.soundcloud.publicApiStrangler.client.playlists.PlaylistDeletionClient
 import com.soundcloud.publicApiStrangler.support.DispatchToMothershipHandler
 import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures
 import com.soundcloud.scalakit.Geo
-import com.soundcloud.service.client.OkidokiClient
-import com.soundcloud.service.response.representation.{DeletePlaylistResponse, ForbiddenDeletePlaylistResponse, InvalidUrnDeletePlaylistResponse, NotAuthorizedDeletePlaylistResponse, OkDeletePlaylistResponse}
 import com.twitter.finagle.http.{Request, Status}
 import com.twitter.util.Future
 import org.mockito.Mockito.when
+import play.api.libs.json.{JsString, Json}
 
 class PlaylistsControllerSpec extends InjectionBasedControllerSpecification with Fixtures {
 
@@ -22,10 +25,10 @@ class PlaylistsControllerSpec extends InjectionBasedControllerSpecification with
       .setGeo(geo)
       .build()
 
-    val okidoki = mock[OkidokiClient]
+    val playlistDeletionClient = mock[PlaylistDeletionClient]
     val mothershipHandler = mock[DispatchToMothershipHandler]
 
-    lazy val controller = new PlaylistsController(fakeUserAuthentication(session), okidoki, mothershipHandler)
+    lazy val controller = new PlaylistsController(fakeUserAuthentication(session), playlistDeletionClient, mothershipHandler)
 
     when(mothershipHandler.dispatch(any[Request])).thenReturn(Future.value(new ResponseBuilder().status(200)))
   }
@@ -49,9 +52,9 @@ class PlaylistsControllerSpec extends InjectionBasedControllerSpecification with
   "DELETE /playlists/:id" >> {
     trait DeletePlaylistContext extends Context {
       val playlistId = 123
-      lazy val deletePlaylistResponse: DeletePlaylistResponse = OkDeletePlaylistResponse
+      lazy val deletePlaylistResponse: Result[HttpStatus] = Good(OkHttpStatus)
 
-      when(okidoki.deletePlaylist(session, Urn(s"soundcloud:playlists:$playlistId")))
+      when(playlistDeletionClient.deletePlaylist(session, Urn(s"soundcloud:playlists:$playlistId")))
         .thenReturn(Future.value(deletePlaylistResponse))
 
       val response = delete(controller, s"/playlists/$playlistId")
@@ -64,27 +67,38 @@ class PlaylistsControllerSpec extends InjectionBasedControllerSpecification with
     }
 
     "returns ok" in new DeletePlaylistContext {
-      override lazy val deletePlaylistResponse = OkDeletePlaylistResponse
+      override lazy val deletePlaylistResponse = Good(OkHttpStatus)
 
       response.status ==== Status.Ok
+      Json.parse(response.body) \ "status" ==== JsString("200 - OK")
+    }
+
+    "returns accepted" in new DeletePlaylistContext {
+      override lazy val deletePlaylistResponse = Good(AcceptedHttpStatus)
+
+      response.status ==== Status.Accepted
+      Json.parse(response.body) \ "status" ==== JsString("202 - Accepted")
     }
 
     "returns unauthorized" in new DeletePlaylistContext {
-      override lazy val deletePlaylistResponse = NotAuthorizedDeletePlaylistResponse
+      override lazy val deletePlaylistResponse = Good(UnauthorizedHttpStatus)
 
       response.status ==== Status.Unauthorized
+      Json.parse(response.body) \ "status" ==== JsString("401 - Unauthorized")
     }
 
     "returns forbidden" in new DeletePlaylistContext {
-      override lazy val deletePlaylistResponse = ForbiddenDeletePlaylistResponse
+      override lazy val deletePlaylistResponse = Good(ForbiddenHttpStatus)
 
       response.status ==== Status.Forbidden
+      Json.parse(response.body) \ "status" ==== JsString("403 - Forbidden")
     }
 
     "returns not found" in new DeletePlaylistContext {
-      override lazy val deletePlaylistResponse = InvalidUrnDeletePlaylistResponse
+      override lazy val deletePlaylistResponse = Good(NotFoundHttpStatus)
 
       response.status ==== Status.NotFound
+      Json.parse(response.body) \ "status" ==== JsString("404 - Not Found")
     }
   }
 }
