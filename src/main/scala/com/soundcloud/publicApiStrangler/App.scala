@@ -113,11 +113,11 @@ object App
   )
 
   private val gobblyClient = new GobblyClient(
-    JsonClient(
-      ResourceName("gobbly"),
-      ServiceEntryPoint(config.get(ResourceName("GOBBLY"), ConfigConvention.SRV_RECORD)),
-      config,
-      telemetry)
+    ModuleJsonClient(
+      ModuleResourceName("gobbly"),
+      ModuleServiceEntryPoint(config.get(ResourceName("GOBBLY"), ConfigConvention.SRV_RECORD)),
+      moduleConfig,
+      moduleTelemetry)
   )
 
   private val playlistsClient = new PlaylistsClient(

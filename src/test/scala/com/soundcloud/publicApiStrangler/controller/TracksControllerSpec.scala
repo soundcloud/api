@@ -6,15 +6,16 @@ import com.soundcloud.jvmkit.{Geo, Urn, UserSessionBuilder}
 import com.soundcloud.publicApiStrangler.client.GobblyClient
 import com.soundcloud.publicApiStrangler.client.gobbly.{ClientError => GobblyClientError, Error => GobblyError, Result => GobblyResult, ServerError => GobblyServerError, Success => GobblySuccess}
 import com.soundcloud.publicApiStrangler.client.trackcoordinator.TrackCoordinatorClient
+import com.soundcloud.publicApiStrangler.client.trackcoordinator.datatypes.{ClientError, NotFound, ServerError, Success}
 import com.soundcloud.publicApiStrangler.support.DispatchToMothershipHandler
 import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures
-import com.soundcloud.publicApiStrangler.client.trackcoordinator.datatypes.{ClientError, NotFound, ServerError, Success}
 import com.soundcloud.service.client.OkidokiClient
 import com.soundcloud.service.response.representation.Track
+import com.soundcloud.jvmkit.ModuleConversions._
 import com.twitter.finagle.http.{Request, Status}
 import com.twitter.util.Future
-import play.api.libs.json.{Json => PlayJson, _}
 import org.mockito.Mockito.when
+import play.api.libs.json.{Json => PlayJson, _}
 
 class TracksControllerSpec extends InjectionBasedControllerSpecification with Fixtures {
 
