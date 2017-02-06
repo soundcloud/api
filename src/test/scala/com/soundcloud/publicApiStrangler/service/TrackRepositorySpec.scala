@@ -3,7 +3,7 @@ package com.soundcloud.publicApiStrangler.service
 import java.net.URL
 
 import com.soundcloud.jvmkit.Urn
-import com.soundcloud.jvmkit.module.util.{Bad, Error, Good, Result}
+import com.soundcloud.jvmkit.module.experimental.result.{Bad, Error, Good, Result}
 import com.soundcloud.publicApiStrangler.client.{DomainLocking, RichOkidokiClient, TrackAudioMetadata}
 import com.soundcloud.publicApiStrangler.client.liebling.LieblingClient
 import com.soundcloud.publicApiStrangler.client.mediaservice.{MediaServiceUrlGenClient, WaveformUrl}

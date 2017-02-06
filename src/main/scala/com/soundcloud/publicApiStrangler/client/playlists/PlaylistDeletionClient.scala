@@ -19,7 +19,3 @@ class PlaylistDeletionClient(jsonClient: HttpClient) {
     } handle { case NonFatal(e) => Bad(Error("Unhandled exception when deleting playlist.", e)) }
   }
 }
-
-object PlaylistDeletionClient {
-  case class HttpError(status: HttpStatus) extends ErrorLike
-}

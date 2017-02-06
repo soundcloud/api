@@ -1,8 +1,8 @@
 package com.soundcloud.publicApiStrangler.service
 
 import com.soundcloud.jvmkit.Urn
-import com.soundcloud.jvmkit.module.util.ResultF.lift
-import com.soundcloud.jvmkit.module.util.{Good, Result}
+import com.soundcloud.jvmkit.module.experimental.result.ResultF.lift
+import com.soundcloud.jvmkit.module.experimental.result.{Good, Result}
 import com.soundcloud.publicApiStrangler.client.liebling.LieblingClient
 import com.soundcloud.publicApiStrangler.client.mediaservice.{MediaServiceUrlGenClient, WaveformUrl}
 import com.soundcloud.publicApiStrangler.client.playlists.PlaylistsClient

@@ -5,7 +5,7 @@ import java.net.URL
 import com.soundcloud.bff.finagle.{Request, ResponseBuilder}
 import com.soundcloud.bff.web.{BffInjectionBasedController, UserAuthentication}
 import com.soundcloud.jvmkit.Urn
-import com.soundcloud.jvmkit.module.util.{Bad, ErrorLike, Good}
+import com.soundcloud.jvmkit.module.experimental.result.{Bad, ErrorLike, Good}
 import com.soundcloud.jvmkit.telemetry.Telemetry
 import com.soundcloud.publicApiStrangler.service.TrackPagination
 import com.soundcloud.publicApiStrangler.{TrackRepresentationsService, TracksRepresentationResult}
@@ -49,7 +49,7 @@ class UserTracksController(userAuthentication: UserAuthentication,
           .handle {
             case NonFatal(e) => {
               logger.error(e.getMessage)
-              Bad(HttpError(Status.InternalServerError, "An unexpected error occurred while fetching the tracks"))
+              Bad(HttpError(Status.InternalServerError, Some("An unexpected error occurred while fetching the tracks")))
             }
           }
       }
@@ -60,7 +60,7 @@ class UserTracksController(userAuthentication: UserAuthentication,
             case Good(tracksRepresentationResult) => {
               generateResponse(Status.Ok, getRepresentation(tracksRepresentationResult, pagination), callback)
             }
-            case Bad(error: HttpError) => generateResponse(error.status, Json.stringify(Json.obj("error" -> error.message)), callback)
+            case Bad(error: HttpError) => generateResponse(error.status, Json.stringify(Json.obj("error" -> error.description)), callback)
             case Bad(error) => generateResponse(Status.InternalServerError, Json.stringify(Json.obj("error" -> error.toString)), callback)
           }
         }
@@ -89,8 +89,6 @@ class UserTracksController(userAuthentication: UserAuthentication,
       Json.stringify(Json.toJson(result.tracks))
     }
   }
-
-  case class HttpError(status: Status, message: String) extends ErrorLike
 
   private def generateNotFound(callback: Option[String]): Response = {
     val content = jsonpWrapper(callback, notFoundErrorString)

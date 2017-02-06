@@ -6,8 +6,8 @@ import java.util.TimeZone
 import com.soundcloud.bff.finagle.{Request, ResponseBuilder}
 import com.soundcloud.bff.test.InjectionBasedControllerSpecification
 import com.soundcloud.jvmkit.Urn
-import com.soundcloud.jvmkit.module.util.Good
-import com.soundcloud.jvmkit.module.util.ResultF.lift
+import com.soundcloud.jvmkit.module.experimental.result.Good
+import com.soundcloud.jvmkit.module.experimental.result.ResultF.lift
 import com.soundcloud.jvmkit.telemetry.Telemetry
 import com.soundcloud.jvmkit.test.InMemoryConfig
 import com.soundcloud.publicApiStrangler.{TrackRepresentationsService, TracksRepresentationResult}
