@@ -96,7 +96,7 @@ publish-deploy:
 		--ingress http://public-api.int.s-cloud.net:http \
 		--ingress http://api.soundcloud.com:http \
 		--glimpse http.strangler.prod.public-api \
-		--slack-channel '#core-services' \
+		--slack-channel '#backend-productivity' \
 		--prometheus.port telemetry \
 		--strategy.rolling-update.max-surge.percent 10
 	artifact-manager deploy publish \
@@ -106,7 +106,7 @@ publish-deploy:
 		--public \
 		--ingress http://$(APP_NAME)-trackupload.$(CLUSTER).lb.s-cloud.net:http \
 		--glimpse http.strangler-trackupload.prod.public-api \
-		--slack-channel '#core-services' \
+		--slack-channel '#backend-productivity' \
 		--prometheus.port telemetry \
 		--strategy.rolling-update.max-surge.percent 10
 

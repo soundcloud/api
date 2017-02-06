@@ -3,7 +3,7 @@ import sbt.Keys._
 import sbt._
 
 object BuildProperties {
-  val jvmkitVersion = "51.2.1-SNAPSHOT-BEEP-1069"
+  val jvmkitVersion = "51.3.0"
 }
 
 object Build extends HttpServerAppBuild(
@@ -18,7 +18,8 @@ object Build extends HttpServerAppBuild(
     "com.soundcloud" %% "sc-services" % "48.0.0",
     "com.soundcloud" %% "timeline-client" % "0.1.2",
     "com.soundcloud" %% "ratelimitinglib" % BuildProperties.jvmkitVersion,
-    "com.soundcloud" %% "jvmkit-http-client" % "0.2",
+    "com.soundcloud" %% "jvmkit-http-client" % "0.4",
+    "com.soundcloud" %% "jvmkit-experimental" % "0.4",
     "com.fasterxml.uuid" % "java-uuid-generator" % "3.1.3",
     "commons-codec" % "commons-codec" % "1.9",
     "org.jsoup" % "jsoup" % "1.8.3",

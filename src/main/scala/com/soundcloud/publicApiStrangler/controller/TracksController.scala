@@ -61,8 +61,8 @@ class TracksController(userAuthentication: UserAuthentication,
       gobbly.allTracksManagedByFeedsForWrite(session, List(urn)).flatMap {
         case GobblySuccess(true) => Future.value(render.unauthorized.json(Json.obj("reason" -> "not allowed")))
         case GobblySuccess(false) => mothershipDispatcher.dispatch(request)
-        case GobblyServerError(errors) => Future.value(render.internalServerError)
-        case GobblyClientError(errors) => Future.value(render.internalServerError)
+        case GobblyServerError(_) => Future.value(render.internalServerError)
+        case GobblyClientError(_) => Future.value(render.internalServerError)
       }
     }
 

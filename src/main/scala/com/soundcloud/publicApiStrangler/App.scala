@@ -14,7 +14,7 @@ import com.soundcloud.publicApiStrangler.authorization._
 import com.soundcloud.publicApiStrangler.client._
 import com.soundcloud.publicApiStrangler.client.followcounts.FollowCountsClient
 import com.soundcloud.publicApiStrangler.client.mediaservice.MediaServiceUrlGenClient
-import com.soundcloud.publicApiStrangler.client.playlists.PlaylistsClient
+import com.soundcloud.publicApiStrangler.client.playlists.{PlaylistDeletionClient, PlaylistsClient}
 import com.soundcloud.publicApiStrangler.client.pubmese.PubmeseClient
 import com.soundcloud.publicApiStrangler.client.quota.UserQuotaClient
 import com.soundcloud.publicApiStrangler.client.stitch.StitchClient
@@ -38,7 +38,6 @@ import com.soundcloud.scalakit.finagle.dns.ServiceEntryPoint
 import com.soundcloud.scalakit.finagle.jsonservice.JsonClient
 import com.twitter.util.Future
 import org.eclipse.jetty.server.Handler
-
 import com.soundcloud.jvmkit.module.httpclient.{JsonClient => ModuleJsonClient}
 import com.soundcloud.jvmkit.module.servicediscovery.{ServiceEntryPoint => ModuleServiceEntryPoint}
 import com.soundcloud.jvmkit.module.telemetry.{Telemetry => ModuleTelemetry}
@@ -114,11 +113,11 @@ object App
   )
 
   private val gobblyClient = new GobblyClient(
-    JsonClient(
-      ResourceName("gobbly"),
-      ServiceEntryPoint(config.get(ResourceName("GOBBLY"), ConfigConvention.SRV_RECORD)),
-      config,
-      telemetry)
+    ModuleJsonClient(
+      ModuleResourceName("gobbly"),
+      ModuleServiceEntryPoint(config.get(ResourceName("GOBBLY"), ConfigConvention.SRV_RECORD)),
+      moduleConfig,
+      moduleTelemetry)
   )
 
   private val playlistsClient = new PlaylistsClient(
@@ -394,9 +393,19 @@ object App
 
   private val userController = new UsersController(userRelatedMothershipDispatcher)
 
+
+  val playlistDeletionClient =
+    new PlaylistDeletionClient(
+      ModuleJsonClient(
+        ModuleResourceName("okidoki"),
+        ModuleServiceEntryPoint(moduleConfig.get(ModuleResourceName("OKIDOKI"), ModuleConfigConvention.SRV_RECORD)),
+        moduleConfig,
+        moduleTelemetry
+      ))
+
   private val playlistsController = new PlaylistsController(
     userAuthentication,
-    okidokiClient,
+    playlistDeletionClient,
     mothershipDispatcher
   )
 

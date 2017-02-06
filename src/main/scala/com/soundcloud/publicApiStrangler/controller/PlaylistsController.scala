@@ -2,11 +2,12 @@ package com.soundcloud.publicApiStrangler.controller
 
 import com.soundcloud.bff.finagle.{Request, ResponseBuilder}
 import com.soundcloud.bff.web.{BffInjectionBasedController, UserAuthentication}
-import com.soundcloud.publicApiStrangler.support.DispatchToMothershipHandler
-import com.soundcloud
+import com.soundcloud.jvmkit.ModuleConversions._
 import com.soundcloud.jvmkit.Urn
-import com.soundcloud.service.client.OkidokiClient
-import com.soundcloud.service.response.representation.{ForbiddenDeletePlaylistResponse, InvalidUrnDeletePlaylistResponse, NotAuthorizedDeletePlaylistResponse, OkDeletePlaylistResponse}
+import com.soundcloud.jvmkit.module.experimental.result.{Bad, Good}
+import com.soundcloud.jvmkit.module.httpclient.HttpStatus
+import com.soundcloud.publicApiStrangler.client.playlists.PlaylistDeletionClient
+import com.soundcloud.publicApiStrangler.support.DispatchToMothershipHandler
 import com.twitter.util.Future
 import play.api.libs.json.Json
 
@@ -18,7 +19,7 @@ import play.api.libs.json.Json
   * playlists service in near future.
   */
 class PlaylistsController(userAuthentication: UserAuthentication,
-                          okidokiClient: OkidokiClient,
+                          playlistDeletionClient: PlaylistDeletionClient,
                           mothershipDispatcher: DispatchToMothershipHandler)
   extends BffInjectionBasedController {
 
@@ -33,12 +34,9 @@ class PlaylistsController(userAuthentication: UserAuthentication,
   def handleDelete: (Request) => Future[ResponseBuilder] = {
     request =>
       userAuthentication.withLoggedInUser(request) { (session, _) =>
-        okidokiClient.deletePlaylist(session, playlistUrn(request)).map {
-          case OkDeletePlaylistResponse => render.ok.json(Json.obj("status" -> "200 - OK"))
-          case NotAuthorizedDeletePlaylistResponse => render.unauthorized
-          case ForbiddenDeletePlaylistResponse => render.forbidden
-          case InvalidUrnDeletePlaylistResponse => render.notFound
-          case _ => render.internalServerError
+        playlistDeletionClient.deletePlaylist(session, playlistUrn(request)).map {
+          case Good(status) => render.status(status.code).json(Json.obj("status" -> statusDescription(status)))
+          case Bad(_) => render.internalServerError
         }
       }
   }
@@ -48,5 +46,9 @@ class PlaylistsController(userAuthentication: UserAuthentication,
     new Urn(request.routeParams("id") match {
       case IdParamPattern(id) => s"soundcloud:playlists:$id"
     })
+  }
+
+  private def statusDescription(status: HttpStatus): String = {
+    s"${status.code} - ${com.twitter.finagle.http.Status(status.code).reason}"
   }
 }
