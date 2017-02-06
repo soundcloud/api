@@ -1,6 +1,5 @@
 package com.soundcloud.publicApiStrangler.client.mediaservice
 
-import com.soundcloud.jvmkit.module.util.UserSession
 import com.soundcloud.jvmkit.module.httpclient.{Headers, HttpClient, HttpResponse, OkHttpStatus, Params}
 import com.soundcloud.jvmkit.module.servicediscovery.Path
 import com.twitter.util.{Future, NonFatal}
@@ -13,20 +12,22 @@ object WaveformUrl {
 }
 
 class MediaServiceUrlGenClient(jsonClient: HttpClient) {
-  def waveformUrls(session: UserSession, maybeUid: Option[String]): Future[Option[Seq[WaveformUrl]]] = maybeUid match {
-    case Some(uid) => waveformUrls(session, Seq(uid)).map(_.flatMap(_.get(uid)))
-    case None => Future.value(Some(Seq.empty))
+  def waveformUrls(maybeUid: Option[String]): Future[Seq[WaveformUrl]] = maybeUid match {
+    case Some(uid) => waveformUrls(Seq(uid)).map(_.get(uid).getOrElse(Seq.empty))
+    case None => Future.value(Seq.empty)
   }
 
-  def waveformUrls(session: UserSession, uids: Seq[String]): Future[Option[Map[String, Seq[WaveformUrl]]]] = uids match {
-    case Nil => Future.value(Some(Map.empty))
-    case uid => getUrls(session, uid) handle { case NonFatal(ex) => None }
+  def waveformUrls(uids: Seq[String]): Future[Map[String, Seq[WaveformUrl]]] = uids match {
+    case Nil => Future.value(Map.empty)
+    case uid => getUrls(uid)
   }
 
-  private def getUrls(session: UserSession, uids: Seq[String]): Future[Option[Map[String, Seq[WaveformUrl]]]] = {
+  private def getUrls(uids: Seq[String]): Future[Map[String, Seq[WaveformUrl]]] = {
     jsonClient.get(Path() / "waveforms", Params("uid" -> uids), Headers.empty).map {
-      case HttpResponse(OkHttpStatus, body, _) => Some(parseUrls(Json.parse(body)))
-      case _ => None
+      case HttpResponse(OkHttpStatus, body, _) => parseUrls(Json.parse(body))
+      case _ => Map.empty[String, Seq[WaveformUrl]]
+    }.handle {
+      case NonFatal(e) => Map.empty[String, Seq[WaveformUrl]]
     }
   }
 

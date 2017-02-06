@@ -25,7 +25,7 @@ trait TrackRepresentationLikeSpecContext {
     isrc: Option[Isrc] = defaultIsrc,
     counts: StitchCounts = defaultCounts,
     label: Option[User] = Some(defaultLabel),
-    geoblockings: Option[Geoblockings] = Some(defaultGeoblockings),
+    geoblockings: Geoblockings = defaultGeoblockings,
     domainlockings: Seq[DomainLocking] = defaultDomainLockings,
     audioMetadata: TrackAudioMetadata = defaultTrackAudioMetadata) =
     TrackRepresentation(track, user, isrc, counts, label, geoblockings, domainlockings, audioMetadata)

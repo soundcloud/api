@@ -19,6 +19,8 @@ class TrackMothershipDispatcherWithCounts(userAuthentication: UserAuthentication
                                           stitchClient: StitchClient) {
 
   def request(request:Request) : Future[ResponseBuilder] = {
+    stripConditionalRequestHeaders(request)
+
     userAuthentication.withUserSession(request) { session =>
       mothershipDispatcher.defaultHandling(new HandlerRequest(AlwaysMatchesPathMatcher, request)).flatMap(response => {
         lazy val defaultResponse = toResponseBuilder(response).toFuture
@@ -91,5 +93,13 @@ class TrackMothershipDispatcherWithCounts(userAuthentication: UserAuthentication
       .status(response.statusCode)
       .body(response.getContentString())
       .headers(headerMap)
+  }
+
+  /*
+  * If-None-Match header causes mothership to return 304
+  * We decided not to support this behavior
+  */
+  private def stripConditionalRequestHeaders(req: Request): Option[String] = {
+    req.headerMap.remove("If-None-Match")
   }
 }

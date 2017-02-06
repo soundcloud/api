@@ -3,7 +3,7 @@ APP_NAME := $(shell manifest name)
 API_ENTRYPOINT     := api
 APITRACKUPLOAD_ENTRYPOINT     := apitrackupload
 
-API_CONFIG := production_api.sh
+API_CONFIG := production_api.sh.enc
 APITRACKUPLOAD_CONFIG := production_apitrackupload.sh
 RUNTIME_STACK := jdk-8
 

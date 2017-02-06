@@ -29,6 +29,7 @@ import com.soundcloud.publicApiStrangler.mapper.timeline.publicApi.ActivitiesWit
 import com.soundcloud.publicApiStrangler.mapper.timeline.{EntityMapper, EntitySummaryMapper, FollowingsTracksMapper}
 import com.soundcloud.publicApiStrangler.mapper.trackstreams.{TrackStreamJsonResponseMapper, TrackStreamRedirectResponseMapper}
 import com.soundcloud.publicApiStrangler.mapper.waveform.WaveformMapper
+import com.soundcloud.publicApiStrangler.service.{TrackAccessibilityService, TrackRepository}
 import com.soundcloud.publicApiStrangler.support._
 import com.soundcloud.ratelimiting.facade._
 import com.soundcloud.scalakit.cache.MemcachedClient
@@ -248,23 +249,53 @@ object App
 
   val userQuotaClient = new UserQuotaClient(okidokiJsonClient)
 
-  private val singleTrackController = {
-    val tracksService = new TrackRepresentationsService(
-      trackmetadataClient,
-      richOkidokiClient,
-      pubmeseClient,
-      stitchClient,
-      lieblingClient,
-      mediaServiceUrlGenClient,
-      userQuotaClient,
-      playlistsClient
-    )
+  val trackAccessibilityService = new TrackAccessibilityService(playlistsClient)
 
-    new SingleTrackController(
+  val trackRepository = new TrackRepository(
+    trackmetadataClient,
+    richOkidokiClient,
+    pubmeseClient,
+    stitchClient,
+    lieblingClient,
+    mediaServiceUrlGenClient,
+    userQuotaClient,
+    trackAccessibilityService
+  )
+
+  val tracksService = new TrackRepresentationsService(
+    trackRepository,
+    trackmetadataClient,
+    richOkidokiClient,
+    pubmeseClient,
+    stitchClient,
+    lieblingClient,
+    mediaServiceUrlGenClient,
+    userQuotaClient,
+    trackAccessibilityService
+  )
+
+  private val singleTrackController = new SingleTrackController(
       userAuthentication,
       mothershipDispatcher,
       tracksService,
       telemetry
+    )
+
+  private val userTracksController = {
+    val trackMothershipDispatcherWithCounts = new TrackMothershipDispatcherWithCounts(
+      userAuthentication,
+      mothershipDispatcher,
+      stitchClient)
+
+    val shouldUseTrackMetadata = BasicRolloutFeature("track_metadata_for_user_tracks")
+
+    new UserTracksController(
+      userAuthentication,
+      trackMothershipDispatcherWithCounts,
+      tracksService,
+      telemetry,
+      () => rolloutClient.isActive(shouldUseTrackMetadata),
+      baseUrl
     )
   }
 
@@ -575,6 +606,7 @@ object App
     rateLimitingFacade.rateLimitStatusController,
     tracksController,
     singleTrackController,
+    userTracksController,
     likesController,
     friendsController,
     groupsController,

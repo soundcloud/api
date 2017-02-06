@@ -95,7 +95,7 @@ class SingleTrackControllerSpec extends InjectionBasedControllerSpecification {
     isrc = None,
     counts = new StitchCounts(1, 2, 3, 4, 5),
     label = None,
-    geoblockings = None,
+    geoblockings = List.empty,
     domainlockings = Seq(),
     audioMetadata = new TrackAudioMetadata("lol", Some("donkey"), Some(123)))
 

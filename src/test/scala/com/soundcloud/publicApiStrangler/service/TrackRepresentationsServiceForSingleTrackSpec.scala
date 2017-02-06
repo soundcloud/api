@@ -12,6 +12,7 @@ import com.soundcloud.publicApiStrangler.client.trackcoordinator.datatypes.{NotF
 import com.soundcloud.publicApiStrangler.client.trackmetadata.{Artwork, EmbeddingPermission, Track, TrackmetadataClient}
 import com.soundcloud.publicApiStrangler.client.{DomainLocking, RichOkidokiClient, TrackAudioMetadata}
 import com.soundcloud.publicApiStrangler.representation.{TrackRepresentation, TrackRepresentationLike}
+import com.soundcloud.publicApiStrangler.service.{TrackAccessibilityService, TrackRepository}
 import com.soundcloud.scalakit.json.Json
 import com.soundcloud.scalakit.test.UnitSpecification
 import com.soundcloud.service.response.representation.{Geoblockings, User}
@@ -20,7 +21,7 @@ import org.joda.time.LocalDateTime
 import org.mockito.Mockito._
 import play.api.libs.json._
 
-class TrackRepresentationsServiceSpec extends UnitSpecification {
+class TrackRepresentationsServiceForSingleTrackSpec extends UnitSpecification {
 
   trait Context extends Scope {
     implicit val trackRepresentationWrites = TrackRepresentation.writes
@@ -33,8 +34,10 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
     val mediaUrlGenClient = mock[MediaServiceUrlGenClient]
     val userQuotaClient = mock[UserQuotaClient]
     val playlistsClient = mock[PlaylistsClient]
+    val trackAccessibilityService = new TrackAccessibilityService(playlistsClient)
 
     val tracksService = new TrackRepresentationsService(
+      mock[TrackRepository],
       trackmetadataClient,
       okidokiClient,
       pubmeseClient,
@@ -42,7 +45,7 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
       lieblingClient,
       mediaUrlGenClient,
       userQuotaClient,
-      playlistsClient
+      trackAccessibilityService
     )
 
     val requestingUserUrn = new Urn("soundcloud:users:112")
@@ -201,7 +204,7 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
       when(okidokiClient.fetchTrackDomainLockings(session, trackUrn)).thenReturn(Future.value(domainLockings))
       when(okidokiClient.fetchTrackAudioMetadata(session, trackUrn)).thenReturn(Future.value(Some(trackAudioMetadata)))
       when(lieblingClient.userLikeCounts(session, List(trackUrn), session.getUser)).thenReturn(Future.value(userLikesCount))
-      when(mediaUrlGenClient.waveformUrls(session, track.uid)).thenReturn(Future.value(Some(waveformUrls)))
+      when(mediaUrlGenClient.waveformUrls(track.uid)).thenReturn(Future.value(waveformUrls))
       when(userQuotaClient.downloadsPerTrack(session, Set(track.user_urn))).thenReturn(Future.value(Map.empty[Urn, Option[Int]]))
 
       when(playlistsClient.getPlaylistContainingTrackOwnedByUser(track.urn, track.user_urn)).thenReturn(Future.value(playlists))
@@ -504,7 +507,7 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
     "it not present when urlgen returns no stream URLs" in new Context {
       val track = trackmetadataTrack()
       setUpMocksForExistingTrack(track, session)
-      when(mediaUrlGenClient.waveformUrls(session, track.uid)).thenReturn(Future.value(Some(Seq.empty)))
+      when(mediaUrlGenClient.waveformUrls(track.uid)).thenReturn(Future.value(Seq.empty))
 
       val trackRepLike = Await.result(tracksService.track(session, trackUrn, None))
 
@@ -512,15 +515,6 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
         case Success(rep) =>
           Json.toJsValue(rep).as[JsObject].keys.contains("waveform_url") ==== false
       }
-    }
-
-    "Returns NotFound when urlgen fails" in new Context {
-      val track = trackmetadataTrack()
-      setUpMocksForExistingTrack(track, session)
-      when(mediaUrlGenClient.waveformUrls(session, track.uid)).thenReturn(Future.value(None))
-
-      val trackRepLike = Await.result(tracksService.track(session, trackUrn, None))
-      trackRepLike ==== NotFound
     }
   }
 

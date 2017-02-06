@@ -36,8 +36,7 @@ class RichOkidokiClientSpec extends UnitSpecification {
       def mockResponseStatus: StatusCode = OkStatus
       def mockResponse = Future.value(JsonResponse(mockResponseStatus, mockResponseContents))
 
-      when(jsonClient.get(beTypedEqualTo(session), beTypedEqualTo(path), any, any))
-        .thenReturn(mockResponse)
+      when(jsonClient.get(session, path, Params.empty, Params.empty)).thenReturn(mockResponse)
     }
 
     "200 response" in new TrackAudioMetadataContext {
@@ -125,7 +124,7 @@ class RichOkidokiClientSpec extends UnitSpecification {
 
   "#fetchTrackGeoblockings" >> {
     trait GeoblockingsContext extends GenericContext {
-      val path = Path() / "tracks" / "geo_blockings"
+      val path = Path() / "tracks" / "geo_blockings" / ""
 
       val urns = Set(
         Urn("soundcloud:tracks:1"),
@@ -160,9 +159,9 @@ class RichOkidokiClientSpec extends UnitSpecification {
     }
 
     "200 response" in new GeoblockingsContext {
-      when(jsonClient.get(session, path, Map("urns" -> firstBatch.toList), Params.empty))
+      when(jsonClient.get(session, path, Map("urns" -> firstBatch.mkString(",")), Params.empty))
           .thenReturn(Future.value(JsonResponse(OkStatus, firstBatchJson)))
-      when(jsonClient.get(session, path, Map("urns" -> secondBatch.toList), Params.empty))
+      when(jsonClient.get(session, path, Map("urns" -> secondBatch.mkString(",")), Params.empty))
           .thenReturn(Future.value(JsonResponse(OkStatus, secondBatchJson)))
 
       val batchSize = 2
@@ -174,7 +173,7 @@ class RichOkidokiClientSpec extends UnitSpecification {
     }
 
     "500 response"  in new GeoblockingsContext {
-      when(jsonClient.get(session, path, Params("urns" -> urns.toList), Params.empty))
+      when(jsonClient.get(session, path, Params("urns" -> urns.mkString(",")), Params.empty))
         .thenReturn(Future.value(JsonResponse(InternalServerErrorStatus, JsNull)))
 
       Await.result(client.fetchTrackGeoblockings(session, urns)) ==== Map.empty
@@ -183,7 +182,7 @@ class RichOkidokiClientSpec extends UnitSpecification {
 
   "#fetchTracksAudioMetadata" >> {
     trait GeoblockingsContext extends GenericContext {
-      val path = Path() / "tracks" / "audio"
+      val path = Path() / "tracks" / "audio" / ""
 
       val urns = Set(
         Urn("soundcloud:tracks:1"),
@@ -224,9 +223,9 @@ class RichOkidokiClientSpec extends UnitSpecification {
     }
 
     "200 response" in new GeoblockingsContext {
-      when(jsonClient.get(session, path, Map("urns" -> firstBatch.toList), Params.empty))
+      when(jsonClient.get(session, path, Map("urns" -> firstBatch.mkString(",")), Params.empty))
           .thenReturn(Future.value(JsonResponse(OkStatus, firstBatchJson)))
-      when(jsonClient.get(session, path, Map("urns" -> secondBatch.toList), Params.empty))
+      when(jsonClient.get(session, path, Map("urns" -> secondBatch.mkString(",")), Params.empty))
           .thenReturn(Future.value(JsonResponse(OkStatus, secondBatchJson)))
 
       val batchSize = 2
@@ -238,7 +237,7 @@ class RichOkidokiClientSpec extends UnitSpecification {
     }
 
     "500 response"  in new GeoblockingsContext {
-      when(jsonClient.get(session, path, Params("urns" -> urns.toList), Params.empty))
+      when(jsonClient.get(session, path, Params("urns" -> urns.mkString(",")), Params.empty))
         .thenReturn(Future.value(JsonResponse(InternalServerErrorStatus, JsNull)))
 
       Await.result(client.fetchTracksAudioMetadata(session, urns)) ==== Map.empty
@@ -297,9 +296,9 @@ class RichOkidokiClientSpec extends UnitSpecification {
     }
 
     "200 response" in new GeoblockingsContext {
-      when(jsonClient.get(session, path, Map("track_ids" -> firstBatch.map(_.getIdentifier).toList), Params.empty))
+      when(jsonClient.get(session, path, Map("track_ids" -> firstBatch.map(_.getIdentifier).mkString(",")), Params.empty))
           .thenReturn(Future.value(JsonResponse(OkStatus, firstBatchJson)))
-      when(jsonClient.get(session, path, Map("track_ids" -> secondBatch.map(_.getIdentifier).toList), Params.empty))
+      when(jsonClient.get(session, path, Map("track_ids" -> secondBatch.map(_.getIdentifier).mkString(",")), Params.empty))
           .thenReturn(Future.value(JsonResponse(OkStatus, secondBatchJson)))
 
       val batchSize = 2
@@ -312,7 +311,7 @@ class RichOkidokiClientSpec extends UnitSpecification {
     }
 
     "500 response"  in new GeoblockingsContext {
-      when(jsonClient.get(session, path, Params("track_ids" -> urns.map(_.getIdentifier).toList), Params.empty))
+      when(jsonClient.get(session, path, Params("track_ids" -> urns.map(_.getIdentifier).mkString(",")), Params.empty))
         .thenReturn(Future.value(JsonResponse(InternalServerErrorStatus, JsNull)))
 
       Await.result(client.fetchTracksDomainLockings(session, urns)) ==== Map.empty
@@ -377,9 +376,9 @@ class RichOkidokiClientSpec extends UnitSpecification {
     }
 
     "200 response" in new FetchUsersContext {
-      when(jsonClient.get(session, path, Params("urns" -> firstBatch.toList), Params.empty))
+      when(jsonClient.get(session, path, Params("urns" -> firstBatch.mkString(",")), Params.empty))
           .thenReturn(Future.value(JsonResponse(OkStatus, firstBatchJson)))
-      when(jsonClient.get(session, path, Params("urns" -> secondBatch.toList), Params.empty))
+      when(jsonClient.get(session, path, Params("urns" -> secondBatch.mkString(",")), Params.empty))
           .thenReturn(Future.value(JsonResponse(OkStatus, secondBatchJson)))
 
       val batchSize = 2
@@ -391,7 +390,7 @@ class RichOkidokiClientSpec extends UnitSpecification {
     }
 
     "500 response"  in new FetchUsersContext {
-      when(jsonClient.get(session, path, Params("urns" -> urns.toList), Params.empty))
+      when(jsonClient.get(session, path, Params("urns" -> urns.mkString(",")), Params.empty))
         .thenReturn(Future.value(JsonResponse(InternalServerErrorStatus, JsNull)))
 
       Await.result(client.fetchUsersMap(session, urns)) ==== Map.empty

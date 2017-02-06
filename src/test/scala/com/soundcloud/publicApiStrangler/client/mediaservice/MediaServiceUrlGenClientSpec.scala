@@ -15,8 +15,6 @@ class MediaServiceUrlGenClientSpec extends UnitSpecification {
 
     val path = Path() / "waveforms"
 
-    val session = anonymousSession
-
     val uid1 = "a1b2c3"
     val uid2 = "def456"
 
@@ -54,8 +52,8 @@ class MediaServiceUrlGenClientSpec extends UnitSpecification {
         ).toString())
       )
 
-      Await.result(client.waveformUrls(session, Seq(uid1, uid2))) must beLike {
-        case Some(map) => {
+      Await.result(client.waveformUrls(Seq(uid1, uid2))) must beLike {
+        case map => {
           map.get(uid1) must beLike {
             case Some(list) => {
               list must contain(
@@ -100,8 +98,8 @@ class MediaServiceUrlGenClientSpec extends UnitSpecification {
         ).toString())
       )
 
-      Await.result(client.waveformUrls(session, Some(uid1))) must beLike {
-        case Some(list) => {
+      Await.result(client.waveformUrls(Some(uid1))) must beLike {
+        case list => {
           list must contain(
             WaveformUrl("stream",
               s"https://foo.sndcdn.com/stream/$uid1.json",
@@ -118,12 +116,12 @@ class MediaServiceUrlGenClientSpec extends UnitSpecification {
     }
 
     "returns an empty array when the UID is absent" in new Context {
-      Await.result(client.waveformUrls(session, None)) must beLike { case Some(list) => list must beEmpty }
+      Await.result(client.waveformUrls(None)) must beLike { case list => list must beEmpty }
     }
 
     "returns None when failing" in new Context {
       stubbedResponse(Seq(uid1)) returns Future.exception(new RuntimeException("fail"))
-      Await.result(client.waveformUrls(session, Some(uid1))) must beNone
+      Await.result(client.waveformUrls(Some(uid1))) ==== Seq.empty
     }
   }
 }
