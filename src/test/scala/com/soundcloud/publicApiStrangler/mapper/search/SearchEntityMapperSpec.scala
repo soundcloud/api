@@ -33,17 +33,15 @@ class SearchEntityMapperSpec extends UnitSpecification with Fixtures {
     val okidokiClient = mock[OkidokiClient]
     val followCountsClient = mock[FollowCountsClient]
     val repostsClient = mock[RepostsClient]
-    val enrichRepostsCounts = () => Future.value(true)
     val contentAuthorizationService = mock[ContentAuthorizationRules]
     val lieblingClient = mock[LieblingClient]
     val likeCountMapper = new LikeCountMapper(lieblingClient)
     val waveformUrlsRepository = mock[WaveformUrlsRepository]
-    val entitySummaryMapper = new EntitySummaryMapper(okidokiClient, repostsClient, enrichRepostsCounts, baseUrl)
+    val entitySummaryMapper = new EntitySummaryMapper(okidokiClient, repostsClient, baseUrl)
     val mapper = new SearchEntityMapper(
       okidokiClient,
       followCountsClient,
       repostsClient,
-      enrichRepostsCounts,
       baseUrl,
       contentAuthorizationService,
       new WaveformMapper(waveformUrlsRepository),

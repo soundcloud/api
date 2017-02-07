@@ -28,7 +28,6 @@ class UserRelatedMothershipDispatcherSpec extends UnitSpecification with Fixture
     val request = new Request(mock[FinagleRequest])
 
     def loadUserLikeCountsFromLiebling: Boolean = false
-    def loadUserRepostCountsFromReposts: Boolean = false
 
     val dispatcher = new UserRelatedMothershipDispatcher(
       userAuthenticationMock,
@@ -36,9 +35,7 @@ class UserRelatedMothershipDispatcherSpec extends UnitSpecification with Fixture
       followCountsClientMock,
       lieblingClientMock,
       () => Future.value(loadUserLikeCountsFromLiebling),
-      repostsClientMock,
-      () => Future.value(loadUserRepostCountsFromReposts)
-    )
+      repostsClientMock)
 
     val user1 = new Urn("soundcloud", "users", "183")
     val user2 = new Urn("soundcloud", "users", "1111")
@@ -316,90 +313,45 @@ class UserRelatedMothershipDispatcherSpec extends UnitSpecification with Fixture
       }
 
       "repost count enrichment" >> {
-        "with the rollout inactive" >> {
-          "is not done for a single object" in new Context {
-            override def responseBodyFromMothership = user
-            override def userUrns = Seq(user1)
+        "is done for a single object" in new Context {
+          override def responseBodyFromMothership = user
+          override def userUrns = Seq(user1)
+          override def userRepostsCounts = List(RepostsClient.Count(user1, 100))
 
-            (resultJson \ "reposts_count").as[Long] ==== 50
-          }
-          "is not done for users in the top level" in new Context {
-            override def responseBodyFromMothership = users
-            override def userUrns = Seq(user2, user3)
-
-            val values = resultJson.as[JsArray].value
-
-            values.size ==== 2
-            (values.head \ "reposts_count").as[Long] ==== 52
-            (values.last \ "reposts_count").as[Long] ==== 0
-          }
-          "is not done for users in a collection" in new Context {
-            override def responseBodyFromMothership = usersInCollection
-            override def userUrns = Seq(user2, user3)
-
-            val values = (resultJson \ "collection").as[JsArray].value
-
-            values.size ==== 2
-            (values.head \ "reposts_count").as[Long] ==== 52
-            (values.last \ "reposts_count").as[Long] ==== 0
-          }
-          "is not done for objects containing a user" in new Context {
-            override def responseBodyFromMothership = objectsWithUsers
-            override def userUrns = Seq(user2, user3)
-
-            val values = resultJson.as[JsArray].value
-
-            values.size ==== 2
-            (values.head \ "user" \ "reposts_count").as[Long] ==== 50
-            (values.last \ "user" \ "reposts_count").as[Long] ==== 50
-          }
+          (resultJson \ "reposts_count").as[Long] ==== 100
         }
-        "with the rollout active" >> {
-          trait EnrichRepostsCounts extends Context {
-            override def loadUserRepostCountsFromReposts = true
-          }
-          "and reposts returning counts" >> {
-            "is done for a single object" in new EnrichRepostsCounts {
-              override def responseBodyFromMothership = user
-              override def userUrns = Seq(user1)
-              override def userRepostsCounts = List(RepostsClient.Count(user1, 100))
+        "is done for users in the top level" in new Context {
+          override def responseBodyFromMothership = users
+          override def userUrns = Seq(user2, user3)
+          override def userRepostsCounts = List(RepostsClient.Count(user2, 200), RepostsClient.Count(user3, 300))
 
-              (resultJson \ "reposts_count").as[Long] ==== 100
-            }
-            "is done for users in the top level" in new EnrichRepostsCounts {
-              override def responseBodyFromMothership = users
-              override def userUrns = Seq(user2, user3)
-              override def userRepostsCounts = List(RepostsClient.Count(user2, 200), RepostsClient.Count(user3, 300))
+          val values = resultJson.as[JsArray].value
 
-              val values = resultJson.as[JsArray].value
+          values.size ==== 2
+          (values.head \ "reposts_count").as[Long] ==== 200
+          (values.last \ "reposts_count").as[Long] ==== 300
+        }
+        "is done for users in a collection" in new Context {
+          override def responseBodyFromMothership = usersInCollection
+          override def userUrns = Seq(user2, user3)
+          override def userRepostsCounts = List(RepostsClient.Count(user2, 200), RepostsClient.Count(user3, 300))
 
-              values.size ==== 2
-              (values.head \ "reposts_count").as[Long] ==== 200
-              (values.last \ "reposts_count").as[Long] ==== 300
-            }
-            "is done for users in a collection" in new EnrichRepostsCounts {
-              override def responseBodyFromMothership = usersInCollection
-              override def userUrns = Seq(user2, user3)
-              override def userRepostsCounts = List(RepostsClient.Count(user2, 200), RepostsClient.Count(user3, 300))
+          val values = (resultJson \ "collection").as[JsArray].value
 
-              val values = (resultJson \ "collection").as[JsArray].value
+          values.size ==== 2
+          (values.head \ "reposts_count").as[Long] ==== 200
+          (values.last \ "reposts_count").as[Long] ==== 300
+        }
+        "is done for objects containing a user" in new Context {
+          override def responseBodyFromMothership = objectsWithUsers
+          override def userUrns = Seq(user2, user3)
+          override def userRepostsCounts = List(RepostsClient.Count(user2, 200), RepostsClient.Count(user3, 300))
 
-              values.size ==== 2
-              (values.head \ "reposts_count").as[Long] ==== 200
-              (values.last \ "reposts_count").as[Long] ==== 300
-            }
-            "is done for objects containing a user" in new EnrichRepostsCounts {
-              override def responseBodyFromMothership = objectsWithUsers
-              override def userUrns = Seq(user2, user3)
-              override def userRepostsCounts = List(RepostsClient.Count(user2, 200), RepostsClient.Count(user3, 300))
+          val values = resultJson.as[JsArray].value
 
-              val values = resultJson.as[JsArray].value
-
-              values.size ==== 2
-              (values.head \ "user" \ "reposts_count").as[Long] ==== 200
-              (values.last \ "user" \ "reposts_count").as[Long] ==== 300
-            }
-          }
+          values.size ==== 2
+          (values.head \ "user" \ "reposts_count").as[Long] ==== 200
+          (values.last \ "user" \ "reposts_count").as[Long] ==== 300
         }
       }
 

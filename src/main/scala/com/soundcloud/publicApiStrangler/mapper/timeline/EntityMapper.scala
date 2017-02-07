@@ -15,7 +15,6 @@ class EntityMapper(okidokiClient: OkidokiClient,
                    lieblingClient: LieblingClient,
                    followCountsClient: FollowCountsClient,
                    repostsClient: RepostsClient,
-                   enrichRepostsCounts: () => Future[Boolean],
                    baseUrl: String,
                    entitySummaryMapper: EntitySummaryMapper)
   extends Mapper[Urn, JsonMapping] {
@@ -28,13 +27,10 @@ class EntityMapper(okidokiClient: OkidokiClient,
         followCountsClient
           .counts(session, filterByCollection(inputs.toList, List("users")))
           .map(_.map(followCounts => (followCounts.userUrn, followCounts)).toMap),
-        enrichRepostsCounts().flatMap {
-          case true => repostsClient.getRepostCountsByUrnWithFallback(session, inputs)
-          case false => Future.value(Map.empty[Urn,Long])
-        }
+        repostsClient.getRepostCountsByUrnWithFallback(session, inputs)
       )
     } yield {
-      val likesCounts = likes.map(like => (like.target_urn -> like.likes_count)).toMap
+      val likesCounts = likes.map(like => like.target_urn -> like.likes_count).toMap
       entities.map {
         entity =>
           val urn = new Urn((entity \ "self" \ "urn").as[String])

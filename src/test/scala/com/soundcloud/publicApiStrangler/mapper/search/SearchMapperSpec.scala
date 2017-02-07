@@ -91,8 +91,7 @@ class SearchMapperSpec extends UnitSpecification {
     val caMock = mock[ContentAuthorizationRules]
     val followCountsClient = mock[FollowCountsClient]
     val repostsClient = mock[RepostsClient]
-    val enrichRepostsCounts = () => Future.value(true)
-    val searchEntityMapper = new SearchEntityMapper(okidokiMock, followCountsClient, repostsClient, enrichRepostsCounts, baseUrl, caMock, null, null, null)
+    val searchEntityMapper = new SearchEntityMapper(okidokiMock, followCountsClient, repostsClient, baseUrl, caMock, null, null, null)
     val searchMapper = new SearchMapper(searchRepoMock, searchEntityMapper, baseUrl)
     private val request = pagedRequest(Map.empty)
 

@@ -17,7 +17,6 @@ class RepostersController(userAuthentication: UserAuthentication,
                           okidokiClient: RichOkidokiClient,
                           followCountsClient: FollowCountsClient,
                           lieblingClient: LieblingClient,
-                          shouldLoadCountsFromReposts: () => Future[Boolean],
                           shouldLoadCountsFromLiebling: () => Future[Boolean])
     extends BffInjectionBasedController {
 
@@ -65,12 +64,7 @@ class RepostersController(userAuthentication: UserAuthentication,
 
   private def hydrateUsers(session: UserSession, request: Request, limit: Int, reposts: Reposts): Future[RepostsResponse[RepostsUser]] = {
     val url = baseUrl(request)
-    val repostCounts =
-      shouldLoadCountsFromReposts().flatMap {
-        case true =>
-          repostsClient.getRepostCountsByUrnWithFallback(session, reposts.urns.toSet)
-        case false => Future.value(Map.empty[Urn, Long])
-      }
+    val repostCounts = repostsClient.getRepostCountsByUrnWithFallback(session, reposts.urns.toSet)
     val followCounts = followCountsClient.counts(session, reposts.urns)
       .map {
       _.map { case value@FollowCounts(user, _, _) =>

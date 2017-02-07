@@ -1,6 +1,5 @@
 package com.soundcloud.publicApiStrangler.controller
 
-import com.soundcloud.bff.finagle.{Request, ResponseBuilder}
 import com.soundcloud.bff.test.InjectionBasedControllerSpecification
 import com.soundcloud.jvmkit.{Urn, UserSessionBuilder}
 import com.soundcloud.publicApiStrangler.client.reposts.RepostsClient._
@@ -24,205 +23,161 @@ class RepostsControllerSpec extends InjectionBasedControllerSpecification {
     val repostsClient = mock[RepostsClient]
     val fallback = mock[DispatchToMothershipHandler]
 
-    def writeToReposts(): Boolean
-
-    lazy val controller = new RepostsController(fakeUserAuthentication(session), repostsClient, fallback, () => Future.value(writeToReposts()))
+    lazy val controller = new RepostsController(fakeUserAuthentication(session), repostsClient, fallback)
   }
 
-  "when write flag is turned off" >> {
-    trait WriteFlagOff extends Context {
-      override def writeToReposts(): Boolean = false
+  "PUT /e1/me/track_reposts/:id" >> {
+    trait CreateTrackContext extends Context {
+      def result: Result
 
-      fallback.dispatch(any[Request]).returns(Future.value(new ResponseBuilder().status(200)))
+      repostsClient
+        .createRepost(session, track, baseUrl)
+        .returns(Future.value(result))
+
+      lazy val response = put(controller, "/e1/me/track_reposts/100", Map(), requestHeaders)
     }
 
-    "PUT /e1/me/track_reposts/:id" >> {
-      "falls back to mothership" in new WriteFlagOff {
-        put(controller, "/e1/me/track_reposts/100").status ==== Status.Ok
-      }
+    "when creating succeeds" in new CreateTrackContext {
+      override def result = Created
+      response.status ==== Status.Created
+      response.body.length ==== 0
     }
 
-    "DELETE /e1/me/track_reposts/:id" >> {
-      "falls back to mothership" in new WriteFlagOff {
-        delete(controller, "/e1/me/track_reposts/100").status ==== Status.Ok
-      }
+    "when creating fails because the track does not exist" in new CreateTrackContext {
+      override def result = NotFound
+      response.status ==== Status.NotFound
+      response.body.length ==== 0
     }
 
-    "PUT /e1/me/playlist_reposts/:id" >> {
-      "falls back to mothership" in new WriteFlagOff {
-        put(controller, "/e1/me/playlist_reposts/100").status ==== Status.Ok
-      }
+    "when creating fails because the track was already reposted" in new CreateTrackContext {
+      override def result = AlreadyExists
+      response.status ==== Status.Ok
+      response.body.length ==== 0
     }
 
-    "DELETE /e1/me/playlist_reposts/:id" >> {
-      "falls back to mothership" in new WriteFlagOff {
-        delete(controller, "/e1/me/playlist_reposts/100").status ==== Status.Ok
-      }
+    "when creating fails because the user was blocked for spam" in new CreateTrackContext {
+      override def result = SpamBlocked(Seq(SpamWarning("foo", "bar", Some("baz"), Some("fuz"))))
+      response.status ==== Status.TooManyRequests
+      response.jsonBody.as[SpamBlocked] ==== result
+    }
+
+    "when creating fails because of an unknown reason" in new CreateTrackContext {
+      override def result = Failed
+      response.status ==== Status.InternalServerError
+      response.body.length ==== 0
     }
   }
 
-  "when write flag is turned on" >> {
-    trait WriteFlagOn extends Context {
-      override def writeToReposts(): Boolean = true
+  "DELETE /e1/me/track_reposts/:id" >> {
+    trait DeleteTrackContext extends Context {
+      def result: Result
+
+      repostsClient
+        .deleteRepost(session, track, baseUrl)
+        .returns(Future.value(result))
+
+      lazy val response = delete(controller, "/e1/me/track_reposts/100", Map(), requestHeaders)
     }
 
-    "PUT /e1/me/track_reposts/:id" >> {
-      trait CreateTrackContext extends WriteFlagOn {
-        def result: Result
-
-        repostsClient
-          .createRepost(session, track, baseUrl)
-          .returns(Future.value(result))
-
-        lazy val response = put(controller, "/e1/me/track_reposts/100", Map(), requestHeaders)
-      }
-
-      "when creating succeeds" in new CreateTrackContext {
-        override def result = Created
-        response.status ==== Status.Created
-        response.body.length ==== 0
-      }
-
-      "when creating fails because the track does not exist" in new CreateTrackContext {
-        override def result = NotFound
-        response.status ==== Status.NotFound
-        response.body.length ==== 0
-      }
-
-      "when creating fails because the track was already reposted" in new CreateTrackContext {
-        override def result = AlreadyExists
-        response.status ==== Status.Ok
-        response.body.length ==== 0
-      }
-
-      "when creating fails because the user was blocked for spam" in new CreateTrackContext {
-        override def result = SpamBlocked(Seq(SpamWarning("foo", "bar", Some("baz"), Some("fuz"))))
-        response.status ==== Status.TooManyRequests
-        response.jsonBody.as[SpamBlocked] ==== result
-      }
-
-      "when creating fails because of an unknown reason" in new CreateTrackContext {
-        override def result = Failed
-        response.status ==== Status.InternalServerError
-        response.body.length ==== 0
-      }
+    "when deleting succeeds" in new DeleteTrackContext {
+      override def result = Deleted
+      response.status ==== Status.Ok
+      response.body.length ==== 0
     }
 
-    "DELETE /e1/me/track_reposts/:id" >> {
-      trait DeleteTrackContext extends WriteFlagOn {
-        def result: Result
-
-        repostsClient
-          .deleteRepost(session, track, baseUrl)
-          .returns(Future.value(result))
-
-        lazy val response = delete(controller, "/e1/me/track_reposts/100", Map(), requestHeaders)
-      }
-
-      "when deleting succeeds" in new DeleteTrackContext {
-        override def result = Deleted
-        response.status ==== Status.Ok
-        response.body.length ==== 0
-      }
-
-      "when deleting fails because the track/repost does not exist" in new DeleteTrackContext {
-        override def result = NotFound
-        response.status ==== Status.NotFound
-        response.body.length ==== 0
-      }
-
-      "when deleting fails because of an unknown reason" in new DeleteTrackContext {
-        override def result = Failed
-        response.status ==== Status.InternalServerError
-        response.body.length ==== 0
-      }
+    "when deleting fails because the track/repost does not exist" in new DeleteTrackContext {
+      override def result = NotFound
+      response.status ==== Status.NotFound
+      response.body.length ==== 0
     }
 
-    "PUT /e1/me/playlist_reposts/:id" >> {
-      trait CreatePlaylistContext extends WriteFlagOn {
-        def result: Result
+    "when deleting fails because of an unknown reason" in new DeleteTrackContext {
+      override def result = Failed
+      response.status ==== Status.InternalServerError
+      response.body.length ==== 0
+    }
+  }
 
-        repostsClient
-          .createRepost(session, playlist, baseUrl)
-          .returns(Future.value(result))
+  "PUT /e1/me/playlist_reposts/:id" >> {
+    trait CreatePlaylistContext extends Context {
+      def result: Result
 
-        lazy val response = put(controller, "/e1/me/playlist_reposts/200", Map(), requestHeaders)
-      }
+      repostsClient
+        .createRepost(session, playlist, baseUrl)
+        .returns(Future.value(result))
 
-      "when creating succeeds" in new CreatePlaylistContext {
-        override def result = Created
-        response.status ==== Status.Created
-        response.body.length ==== 0
-      }
-
-      "when creating fails because the playlist does not exist" in new CreatePlaylistContext {
-        override def result = NotFound
-        response.status ==== Status.NotFound
-        response.body.length ==== 0
-      }
-
-      "when creating fails because the playlist was already reposted" in new CreatePlaylistContext {
-        override def result = AlreadyExists
-        response.status ==== Status.Ok
-        response.body.length ==== 0
-      }
-
-      "when creating fails because the user was blocked for spam" in new CreatePlaylistContext {
-        override def result = SpamBlocked(Seq(SpamWarning("foo", "bar", Some("baz"), Some("fuz"))))
-        response.status ==== Status.TooManyRequests
-        response.jsonBody.as[SpamBlocked] ==== result
-      }
-
-      "when creating fails because of an unknown reason" in new CreatePlaylistContext {
-        override def result = Failed
-        response.status ==== Status.InternalServerError
-        response.body.length ==== 0
-      }
+      lazy val response = put(controller, "/e1/me/playlist_reposts/200", Map(), requestHeaders)
     }
 
-    "DELETE /e1/me/playlist_reposts/:id" >> {
-      trait DeletePlaylistContext extends WriteFlagOn {
-        def result: Result
+    "when creating succeeds" in new CreatePlaylistContext {
+      override def result = Created
+      response.status ==== Status.Created
+      response.body.length ==== 0
+    }
 
-        repostsClient
-          .deleteRepost(session, playlist, baseUrl)
-          .returns(Future.value(result))
+    "when creating fails because the playlist does not exist" in new CreatePlaylistContext {
+      override def result = NotFound
+      response.status ==== Status.NotFound
+      response.body.length ==== 0
+    }
 
-        lazy val response = delete(controller, "/e1/me/playlist_reposts/200", Map(), requestHeaders)
-      }
+    "when creating fails because the playlist was already reposted" in new CreatePlaylistContext {
+      override def result = AlreadyExists
+      response.status ==== Status.Ok
+      response.body.length ==== 0
+    }
 
-      "when deleting succeeds" in new DeletePlaylistContext {
-        override def result = Deleted
-        response.status ==== Status.Ok
-        response.body.length ==== 0
-      }
+    "when creating fails because the user was blocked for spam" in new CreatePlaylistContext {
+      override def result = SpamBlocked(Seq(SpamWarning("foo", "bar", Some("baz"), Some("fuz"))))
+      response.status ==== Status.TooManyRequests
+      response.jsonBody.as[SpamBlocked] ==== result
+    }
 
-      "when deleting fails because the playlist/repost does not exist" in new DeletePlaylistContext {
-        override def result = NotFound
-        response.status ==== Status.NotFound
-        response.body.length ==== 0
-      }
+    "when creating fails because of an unknown reason" in new CreatePlaylistContext {
+      override def result = Failed
+      response.status ==== Status.InternalServerError
+      response.body.length ==== 0
+    }
+  }
 
-      "when deleting fails because of an unknown reason" in new DeletePlaylistContext {
-        override def result = Failed
-        response.status ==== Status.InternalServerError
-        response.body.length ==== 0
-      }
+  "DELETE /e1/me/playlist_reposts/:id" >> {
+    trait DeletePlaylistContext extends Context {
+      def result: Result
+
+      repostsClient
+        .deleteRepost(session, playlist, baseUrl)
+        .returns(Future.value(result))
+
+      lazy val response = delete(controller, "/e1/me/playlist_reposts/200", Map(), requestHeaders)
+    }
+
+    "when deleting succeeds" in new DeletePlaylistContext {
+      override def result = Deleted
+      response.status ==== Status.Ok
+      response.body.length ==== 0
+    }
+
+    "when deleting fails because the playlist/repost does not exist" in new DeletePlaylistContext {
+      override def result = NotFound
+      response.status ==== Status.NotFound
+      response.body.length ==== 0
+    }
+
+    "when deleting fails because of an unknown reason" in new DeletePlaylistContext {
+      override def result = Failed
+      response.status ==== Status.InternalServerError
+      response.body.length ==== 0
     }
   }
 
   "GET /e1/me/track_reposts/ids" >> {
     trait OnePageRepostedTracksContext extends Context {
-      override def writeToReposts(): Boolean = true
-
       repostsClient
         .trackReposts(session, user, RepostsController.UpstreamLimit, None)
         .returns(Future.value(Reposts(List(track), None)))
     }
 
     trait MultiPageRepostedTracksContext extends Context {
-      override def writeToReposts(): Boolean = true
-
       val track2 = Urn("soundcloud:tracks:101")
 
       repostsClient
@@ -322,8 +277,6 @@ class RepostsControllerSpec extends InjectionBasedControllerSpecification {
   "GET /e1/me/playlist_reposts/ids" >> {
     "when one page of playlist reposts is available" >> {
       trait OnePageRepostedPlaylistsContext extends Context {
-        override def writeToReposts(): Boolean = true
-
         repostsClient
           .playlistReposts(session, user, RepostsController.UpstreamLimit, None)
           .returns(Future.value(Reposts(List(playlist), None)))
@@ -340,8 +293,6 @@ class RepostsControllerSpec extends InjectionBasedControllerSpecification {
 
     "when two pages of playlist reposts are available" >> {
       trait MultiPageRepostedPlaylistsContext extends Context {
-        override def writeToReposts(): Boolean = true
-
         val playlist2 = Urn("soundcloud:playlists:201")
 
         repostsClient

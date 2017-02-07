@@ -19,7 +19,6 @@ import play.api.libs.json.JsObject
 class SearchEntityMapper(okidokiClient: OkidokiClient,
                          followCountsClient: FollowCountsClient,
                          repostsClient: RepostsClient,
-                         enrichRepostsCounts: () => Future[Boolean],
                          baseUrl: String,
                          contentAuthorization: ContentAuthorizationRules,
                          waveform: WaveformMapper,
@@ -39,10 +38,7 @@ class SearchEntityMapper(okidokiClient: OkidokiClient,
         followCountsClient
           .counts(session, userUrns.toList)
           .map(_.map(followCounts => (followCounts.userUrn, followCounts)).toMap),
-        enrichRepostsCounts().flatMap {
-          case true => repostsClient.getRepostCountsByUrnWithFallback(session, inputs)
-          case false => Future.value(Map.empty[Urn,Long])
-        }
+        repostsClient.getRepostCountsByUrnWithFallback(session, inputs)
       )
     } yield {
       entities.map {
