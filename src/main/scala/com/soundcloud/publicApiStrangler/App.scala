@@ -55,7 +55,8 @@ object App
     with RepostsComponent
     with GatekeeperComponent
     with SimilarSoundsComponent
-    with TrackCoordinatorComponent {
+    with TrackCoordinatorComponent
+    with SketchyComponent {
 
   private val bffApplication = BffApplication(new Urn("soundcloud", "systems", "public-api-strangler"), config.getApplicationResourceName)
 
@@ -415,6 +416,8 @@ object App
 
   private val repostsController = new RepostsController(userAuthentication, repostsClient, mothershipDispatcher)
 
+  private val spamWarningsController = new SpamWarningsController(userAuthentication, sketchyClient)
+
   private val officialSoundCloudApps = List(
     new Urn("soundcloud:applications:46941"), // SoundCloud.com (currently being abused) Internal
     new Urn("soundcloud:applications:124"), // SoundCloud iOS Internal
@@ -606,7 +609,8 @@ object App
     resolveController,
     announcementsController,
     oAuthController,
-    repostsController
+    repostsController,
+    spamWarningsController
   )
 
   override val customAdminHandlers: Seq[(AdminRoute, Handler)] = Seq(
