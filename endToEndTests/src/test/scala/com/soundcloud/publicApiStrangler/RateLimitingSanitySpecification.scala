@@ -37,41 +37,41 @@ class RateLimitingSanitySpecification extends Specification with SpinningUpAppSu
     setData(zkClient, "/ratelimiting/public-api-strangler/ratelimitgroups/default",
       """
         |{
-        |  "id":"default",
+        |  "id": "default",
         |  "rate_limits": [
         |    {
-        |      "name":"limit-foo",
-        |      "matching":"/foo",
+        |      "name": "limit-foo",
+        |      "matching": "/foo",
         |      "configurations": [
         |        {
-        |          "bucket":"by-client",
-        |          "time_window":"PT1M",
-        |          "max_nr_of_requests":1000
+        |          "bucket": "by-client",
+        |          "time_window": "PT1M",
+        |          "max_nr_of_requests": 1000
         |        }
         |      ],
-        |      "mode":"probing"
+        |      "mode": "probing"
         |    },
         |    {
-        |      "name":"search",
-        |      "matching":"",
+        |      "name": "search",
+        |      "matching": "",
         |      "configurations": [
         |        {
-        |          "bucket":"by-client",
-        |          "time_window":"PT1M",
-        |          "max_nr_of_requests":3
+        |          "bucket": "by-client",
+        |          "time_window": "PT1M",
+        |          "max_nr_of_requests": 3
         |        }
         |      ],
-        |      "mode":"enforcing"
+        |      "mode": "enforcing"
         |    },
         |    {
         |      "name": "plays",
         |      "matching": "",
         |      "configurations": [
-        |          {
-        |              "bucket": "by-client",
-        |              "time_window": "PT1M",
-        |              "max_nr_of_requests": 3
-        |          }
+        |        {
+        |          "bucket": "by-client",
+        |          "time_window": "PT1M",
+        |          "max_nr_of_requests": 3
+        |        }
         |      ],
         |      "mode": "enforcing"
         |    }
