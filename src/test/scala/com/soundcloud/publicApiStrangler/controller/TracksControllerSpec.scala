@@ -3,15 +3,14 @@ package com.soundcloud.publicApiStrangler.controller
 import com.soundcloud.bff.finagle.ResponseBuilder
 import com.soundcloud.bff.test.InjectionBasedControllerSpecification
 import com.soundcloud.jvmkit.{Geo, Urn, UserSessionBuilder}
-import com.soundcloud.publicApiStrangler.client.GobblyClient
-import com.soundcloud.publicApiStrangler.client.gobbly.{ClientError => GobblyClientError, Error => GobblyError, Result => GobblyResult, ServerError => GobblyServerError, Success => GobblySuccess}
 import com.soundcloud.publicApiStrangler.client.trackcoordinator.TrackCoordinatorClient
 import com.soundcloud.publicApiStrangler.client.trackcoordinator.datatypes.{ClientError, NotFound, ServerError, Success}
+import com.soundcloud.publicApiStrangler.client.trackmetadata.{TrackmetadataClient, Track => TMTrack}
 import com.soundcloud.publicApiStrangler.support.DispatchToMothershipHandler
 import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures
+import com.soundcloud.publicApiStrangler.test.util.TrackMetadataTrackBuilder
 import com.soundcloud.service.client.OkidokiClient
 import com.soundcloud.service.response.representation.Track
-import com.soundcloud.jvmkit.ModuleConversions._
 import com.twitter.finagle.http.{Request, Status}
 import com.twitter.util.Future
 import org.mockito.Mockito.when
@@ -23,26 +22,24 @@ class TracksControllerSpec extends InjectionBasedControllerSpecification with Fi
     val fallback = mock[DispatchToMothershipHandler]
     val trackCoordinator = mock[TrackCoordinatorClient]
     val okidoki = mock[OkidokiClient]
-    val gobblyClient = mock[GobblyClient]
+    val trackmetadataClient = mock[TrackmetadataClient]
     val trackUrn = new Urn("soundcloud:tracks:999")
     val userUrn = new Urn("soundcloud:users:102661606")
+    val loggedInUserUrn = Urn("soundcloud:users:2")
     val users = okidokiUsers.as[List[JsObject]]
     val user = users.head
     val track = mock[Track]
 
     lazy val geo = new Geo("US")
-    lazy val session = new UserSessionBuilder().setUser(new Urn("soundcloud:users:2")).setAgent(new Urn("soundcloud:applications:v2")).setGeo(geo).build()
-    lazy val controller = new TracksController(fakeUserAuthentication(session), trackCoordinator, okidoki, fallback, gobblyClient)
+    lazy val session = new UserSessionBuilder().setUser(loggedInUserUrn).setAgent(new Urn("soundcloud:applications:v2")).setGeo(geo).build()
+    lazy val controller = new TracksController(fakeUserAuthentication(session), trackCoordinator, okidoki, fallback, trackmetadataClient)
+
+    def trackmetadataResponse: Future[Option[TMTrack]] = Future.value(None)
 
     trackCoordinator.deleteTrack(session, trackUrn) returns Future(Success(()))
     okidoki.fetch(===(session), ===(Set(userUrn))) returns Future(List(user))
     when(fallback.dispatch(any[Request])).thenReturn(Future.value(new ResponseBuilder().status(200)))
-  }
-
-  trait ContextWithGobbly extends Context {
-    def gobblyResponse: GobblyResult[Boolean] = GobblySuccess(false) // “false” means not HT
-
-    gobblyClient.allTracksManagedByFeedsForWrite(any, ===(List(trackUrn))) returns Future(gobblyResponse)
+    when(trackmetadataClient.track(session, trackUrn)).thenReturn(trackmetadataResponse)
   }
 
   "GET /tracks/:id/comments" >> {
@@ -101,73 +98,73 @@ class TracksControllerSpec extends InjectionBasedControllerSpecification with Fi
     }
   }
 
-  "PUT /tracks/:id" >> {
-    "passes through requests" in new ContextWithGobbly {
-      when(fallback.dispatch(any[Request])).thenReturn(Future.value(new ResponseBuilder().status(201).body("Thank you for creating")))
+  List(
+    "/tracks/999",
+    "/tracks/999.json"
+  ).foreach { path => {
 
-      val response = put(controller, "/tracks/999", body = singleTrack)
-      response.status ==== Status.Created
-      response.body ==== "Thank you for creating"
+    trait PutContext extends Context {
+      def trackResponse(supplyChainStatus: Option[String]) =
+        Future.value(Some(TrackMetadataTrackBuilder(
+          supply_chain_status = supplyChainStatus).build))
     }
 
-    "refuses updating HT tracks" in new ContextWithGobbly {
-      override def gobblyResponse = GobblySuccess(true)
+    s"PUT $path" >> {
+      "passes through requests with supply_chain_status = manual_upload" in new PutContext {
+        override def trackmetadataResponse = trackResponse(Some("manual_upload"))
 
-      val response = put(controller, "/tracks/999", body = singleTrack)
-      response.status ==== Status.Unauthorized
-      response.jsonBody ==== PlayJson.obj("reason" -> "not allowed")
+        when(fallback.dispatch(any[Request])).thenReturn(Future.value(new ResponseBuilder().status(201).body("Thank you for creating")))
+
+        val response = put(controller, path, body = singleTrack)
+        response.status ==== Status.Created
+        response.body ==== "Thank you for creating"
+      }
+
+      "passes through requests with supply_chain_status = null" in new PutContext {
+        override def trackmetadataResponse = trackResponse(None)
+
+        when(fallback.dispatch(any[Request])).thenReturn(Future.value(new ResponseBuilder().status(201).body("Thank you for creating")))
+
+        val response = put(controller, path, body = singleTrack)
+        response.status ==== Status.Created
+        response.body ==== "Thank you for creating"
+      }
+
+      "refuses updating tracks with supply_chain_status = supply_chain" in new PutContext {
+        override def trackmetadataResponse = trackResponse(Some("supply_chain"))
+
+        val response = put(controller, path, body = singleTrack)
+        response.status ==== Status.Unauthorized
+        response.jsonBody ==== PlayJson.obj("reason" -> "not allowed")
+      }
+
+      "refuses updating tracks with supply_chain_status = banana" in new PutContext {
+        override def trackmetadataResponse = trackResponse(Some("banana"))
+
+        val response = put(controller, path, body = singleTrack)
+        response.status ==== Status.Unauthorized
+        response.jsonBody ==== PlayJson.obj("reason" -> "not allowed")
+      }
+
+      "returns not found when track is not returned" in new PutContext {
+        override def trackmetadataResponse = Future.value(None)
+
+        val response = put(controller, path, body = singleTrack)
+        response.status ==== Status.NotFound
+        response.body ==== ""
+      }
+
+      "errors if trackmetadata client throws up" in new PutContext {
+        override def trackmetadataResponse = Future.exception(new RuntimeException("nooo"))
+
+        val response = put(controller, path, body = singleTrack)
+        response.status ==== Status.InternalServerError
+        response.body ==== ""
+      }
     }
 
-    "errors if Gobbly server throws up" in new ContextWithGobbly {
-      override def gobblyResponse = GobblyServerError(GobblyError("blergh"))
+  } }
 
-      val response = put(controller, "/tracks/999", body = singleTrack)
-      response.status ==== Status.InternalServerError
-      response.body ==== ""
-    }
-
-    "errors if Gobbly client throws up" in new ContextWithGobbly {
-      override def gobblyResponse = GobblyClientError(GobblyError("blergh"))
-
-      val response = put(controller, "/tracks/999", body = singleTrack)
-      response.status ==== Status.InternalServerError
-      response.body ==== ""
-    }
-  }
-
-  "PUT /tracks/:id.json" >> {
-    "passes through requests" in new ContextWithGobbly {
-      when(fallback.dispatch(any[Request])).thenReturn(Future.value(new ResponseBuilder().status(201).body("Thank you for creating")))
-
-      val response = put(controller, "/tracks/999.json", body = singleTrack)
-      response.status ==== Status.Created
-      response.body ==== "Thank you for creating"
-    }
-
-    "refuses updating HT tracks" in new ContextWithGobbly {
-      override def gobblyResponse = GobblySuccess(true)
-
-      val response = put(controller, "/tracks/999.json", body = singleTrack)
-      response.status ==== Status.Unauthorized
-      response.jsonBody ==== PlayJson.obj("reason" -> "not allowed")
-    }
-
-    "errors if Gobbly server throws up" in new ContextWithGobbly {
-      override def gobblyResponse = GobblyServerError(GobblyError("blergh"))
-
-      val response = put(controller, "/tracks/999.json", body = singleTrack)
-      response.status ==== Status.InternalServerError
-      response.body ==== ""
-    }
-
-    "errors if Gobbly client throws up" in new ContextWithGobbly {
-      override def gobblyResponse = GobblyClientError(GobblyError("blergh"))
-
-      val response = put(controller, "/tracks/999.json", body = singleTrack)
-      response.status ==== Status.InternalServerError
-      response.body ==== ""
-    }
-  }
 
   "DELETE /tracks/:id" >> {
     "succeeds" in new Context {

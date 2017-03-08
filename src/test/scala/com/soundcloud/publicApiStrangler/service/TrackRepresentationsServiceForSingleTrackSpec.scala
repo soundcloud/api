@@ -170,7 +170,8 @@ class TrackRepresentationsServiceForSingleTrackSpec extends UnitSpecification {
         release = Some("DR012"),
         key_signature = Some("Emaj"),
         video_url = Some("http://example.com/video.mp4"),
-        label_id = label_id
+        label_id = label_id,
+        supply_chain_status = None
       )
 
     def isrc(wrapped: String = "US-S1Z-99-00001"): Option[Isrc] =

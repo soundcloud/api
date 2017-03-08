@@ -113,7 +113,8 @@ trait TrackRepresentationLikeSpecContext {
     release = Some("DR012"),
     key_signature = Some("Emaj"),
     video_url = Some("http://example.com/video.mp4"),
-    label_id = defaultLabelUrn.map(_.getIdentifier.toInt)
+    label_id = defaultLabelUrn.map(_.getIdentifier.toInt),
+    supply_chain_status = Some("manual_upload")
   )
 
   def defaultIsrc = Some(Isrc("US-S1Z-99-00001"))

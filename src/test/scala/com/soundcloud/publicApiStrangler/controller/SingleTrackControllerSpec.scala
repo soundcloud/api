@@ -71,7 +71,8 @@ class SingleTrackControllerSpec extends InjectionBasedControllerSpecification {
       release = Some("DR012"),
       key_signature = Some("Emaj"),
       video_url = Some("http://example.com/video.mp4"),
-      label_id = label_id
+      label_id = label_id,
+      supply_chain_status = None
     )
 
   val user =
