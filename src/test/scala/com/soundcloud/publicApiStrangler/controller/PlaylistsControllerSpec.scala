@@ -4,7 +4,7 @@ import com.soundcloud.bff.finagle.ResponseBuilder
 import com.soundcloud.bff.test.InjectionBasedControllerSpecification
 import com.soundcloud.jvmkit.ModuleConversions._
 import com.soundcloud.jvmkit.module.experimental.result.{Good, Result}
-import com.soundcloud.jvmkit.module.httpclient.{AcceptedHttpStatus, ForbiddenHttpStatus, HttpStatus, NotFoundHttpStatus, OkHttpStatus, UnauthorizedHttpStatus}
+import com.soundcloud.jvmkit.module.http.client.{AcceptedHttpStatus, ForbiddenHttpStatus, HttpStatus, NotFoundHttpStatus, OkHttpStatus, UnauthorizedHttpStatus}
 import com.soundcloud.jvmkit.{Urn, UserSessionBuilder}
 import com.soundcloud.publicApiStrangler.client.playlists.PlaylistDeletionClient
 import com.soundcloud.publicApiStrangler.support.DispatchToMothershipHandler

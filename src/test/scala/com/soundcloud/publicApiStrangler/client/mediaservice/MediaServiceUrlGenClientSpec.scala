@@ -1,8 +1,8 @@
 package com.soundcloud.publicApiStrangler.client.mediaservice
 
 import com.soundcloud.jvmkit.ModuleConversions._
-import com.soundcloud.jvmkit.module.httpclient.{Headers, HttpClient, HttpResponse, OkHttpStatus, Params}
-import com.soundcloud.jvmkit.module.servicediscovery.Path
+import com.soundcloud.jvmkit.module.http.client.{Headers, HttpClient, HttpResponse, OkHttpStatus, Params}
+import com.soundcloud.jvmkit.module.util.Path
 import com.soundcloud.scalakit.test.UnitSpecification
 import com.twitter.util.{Await, Future}
 import play.api.libs.json.{JsObject, Json}
