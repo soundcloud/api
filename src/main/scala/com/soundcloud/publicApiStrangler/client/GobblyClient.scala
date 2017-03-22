@@ -1,8 +1,9 @@
 package com.soundcloud.publicApiStrangler.client
 
 import com.soundcloud.jvmkit.ModuleConversions._
-import com.soundcloud.jvmkit.module.http.client.{Headers, HttpClient, HttpResponse, OkHttpStatus, Params}
+import com.soundcloud.jvmkit.module.http.client.{HttpClient, HttpResponse, OkHttpStatus, Params}
 import com.soundcloud.jvmkit.module.util.Path
+import com.soundcloud.jvmkit.module.util.http.Headers
 import com.soundcloud.jvmkit.{Urn, UserSession}
 import com.soundcloud.publicApiStrangler.client.gobbly.{Error, Result, ServerError, Success}
 import com.twitter.util.{Future, NonFatal}

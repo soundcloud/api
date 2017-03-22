@@ -1,8 +1,10 @@
 package com.soundcloud.publicApiStrangler.client.playlists
 
 import com.soundcloud.jvmkit.module.experimental.result._
-import com.soundcloud.jvmkit.module.http.client.{Headers, HttpClient, HttpResponse, HttpStatus, Params}
-import com.soundcloud.jvmkit.module.util.{Path, Urn, UserSession}
+import com.soundcloud.jvmkit.module.http.client.{HttpClient, HttpResponse, HttpStatus, Params}
+import com.soundcloud.jvmkit.module.util.http.Headers
+import com.soundcloud.jvmkit.module.util.session.UserSession
+import com.soundcloud.jvmkit.module.util.{Path, Urn}
 import com.twitter.util.{Future, NonFatal}
 
 class PlaylistDeletionClient(jsonClient: HttpClient) {

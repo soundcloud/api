@@ -1,8 +1,10 @@
 package com.soundcloud.publicApiStrangler.client.playlists
 
 import com.soundcloud.jvmkit.module.experimental.result.{Bad, Error, Good}
-import com.soundcloud.jvmkit.module.http.client.{Headers, HttpClient, HttpResponse, OkHttpStatus, Params}
-import com.soundcloud.jvmkit.module.util.{Path, Urn, UserSessionBuilder}
+import com.soundcloud.jvmkit.module.http.client.{HttpClient, HttpResponse, OkHttpStatus, Params}
+import com.soundcloud.jvmkit.module.util.http.Headers
+import com.soundcloud.jvmkit.module.util.session.UserSessionBuilder
+import com.soundcloud.jvmkit.module.util.{Path, Urn}
 import com.soundcloud.scalakit.test.UnitSpecification
 import com.twitter.util.{Await, Future}
 
