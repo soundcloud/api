@@ -7,6 +7,7 @@ import com.soundcloud.bff.media.{MediaUrlsRepository, WaveformUrlsRepository}
 import com.soundcloud.bff.services.{JsonService, ServiceConfig}
 import com.soundcloud.jvmkit.admin.{AdminRoute, RequestMethod}
 import com.soundcloud.jvmkit.config.{ConfigConvention, DataSensitivity}
+import com.soundcloud.jvmkit.module.http.client.config.HttpClientConfig
 import com.soundcloud.jvmkit.rollout.{BasicRolloutFeature, Rollout, RolloutBuilder}
 import com.soundcloud.jvmkit.zookeeper.CuratorFrameworkFactory
 import com.soundcloud.jvmkit.{ResourceName, Urn}
@@ -38,7 +39,7 @@ import com.soundcloud.scalakit.finagle.dns.ServiceEntryPoint
 import com.soundcloud.scalakit.finagle.jsonservice.JsonClient
 import com.twitter.util.Future
 import org.eclipse.jetty.server.Handler
-import com.soundcloud.jvmkit.module.httpclient.{JsonClient => ModuleJsonClient}
+import com.soundcloud.jvmkit.module.http.client.{JsonClient => ModuleJsonClient}
 import com.soundcloud.jvmkit.module.servicediscovery.{ServiceEntryPoint => ModuleServiceEntryPoint}
 import com.soundcloud.jvmkit.module.telemetry.{Telemetry => ModuleTelemetry}
 import com.soundcloud.jvmkit.module.util.config.{AppConfig => ModuleAppConfig, ConfigConvention => ModuleConfigConvention}
@@ -81,12 +82,12 @@ object App
   val stitchClient = new StitchClient(stitchJsonClient)
 
   val moduleConfig = new ModuleAppConfig()
-  val moduleTelemetry = new ModuleTelemetry(moduleConfig, metricsRegistry)
+  val moduleTelemetry = new ModuleTelemetry(config.getApplicationName, metricsRegistry)
+
   val mediaServiceUrlGenJsonClient =
     ModuleJsonClient(
-      ModuleResourceName("mediaservice_urlgen"),
       ModuleServiceEntryPoint(moduleConfig.get(ModuleResourceName("MEDIASERVICE"), ModuleConfigConvention.SRV_RECORD)),
-      moduleConfig,
+      HttpClientConfig.from(ModuleResourceName("mediaservice_urlgen"), moduleConfig),
       moduleTelemetry
     )
   val mediaServiceUrlGenClient = new MediaServiceUrlGenClient(mediaServiceUrlGenJsonClient)
@@ -115,9 +116,8 @@ object App
 
   private val gobblyClient = new GobblyClient(
     ModuleJsonClient(
-      ModuleResourceName("gobbly"),
       ModuleServiceEntryPoint(config.get(ResourceName("GOBBLY"), ConfigConvention.SRV_RECORD)),
-      moduleConfig,
+      HttpClientConfig.from(ModuleResourceName("gobbly"), moduleConfig),
       moduleTelemetry)
   )
 
@@ -390,9 +390,8 @@ object App
   val playlistDeletionClient =
     new PlaylistDeletionClient(
       ModuleJsonClient(
-        ModuleResourceName("okidoki"),
         ModuleServiceEntryPoint(moduleConfig.get(ModuleResourceName("OKIDOKI"), ModuleConfigConvention.SRV_RECORD)),
-        moduleConfig,
+        HttpClientConfig.from(ModuleResourceName("okidoki"), moduleConfig),
         moduleTelemetry
       ))
 

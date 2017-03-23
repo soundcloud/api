@@ -5,7 +5,7 @@ import com.soundcloud.bff.web.{BffInjectionBasedController, UserAuthentication}
 import com.soundcloud.jvmkit.ModuleConversions._
 import com.soundcloud.jvmkit.Urn
 import com.soundcloud.jvmkit.module.experimental.result.{Bad, Good}
-import com.soundcloud.jvmkit.module.httpclient.HttpStatus
+import com.soundcloud.jvmkit.module.http.client.HttpStatus
 import com.soundcloud.publicApiStrangler.client.playlists.PlaylistDeletionClient
 import com.soundcloud.publicApiStrangler.support.DispatchToMothershipHandler
 import com.twitter.util.Future
