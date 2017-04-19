@@ -12,6 +12,6 @@ case class EmbeddedItem[O <: Mapping](owner: Mapper[Any, O], param: Any) extends
 
   private[bff] var value: Option[Option[O]] = None
 
-  private[bff] def materialize(values: Map[Any, O]) =
+  def materialize(values: Map[Any, O]) =
     value = Some(values.get(param))
 }

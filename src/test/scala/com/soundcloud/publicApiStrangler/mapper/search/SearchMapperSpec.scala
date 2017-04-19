@@ -86,6 +86,9 @@ class SearchMapperSpec extends UnitSpecification {
     implicit val context = new MappingContext(sessionMock)
   }
 
+  // TODO
+  // there should probably be a test that does not filter out everything, but instead makes some search results known to
+  // okidoki while other aren't
   "filters search results that aren't known to okidoki" in new Context {
     val okidokiMock = mock[OkidokiClient]
     val caMock = mock[ContentAuthorizationRules]
@@ -166,9 +169,7 @@ class SearchMapperSpec extends UnitSpecification {
     "maps json to search response" in new LegacyContext {
       requests.foreach { request =>
         mapper.map(request, json) match {
-          case search: LegacySearch =>
-            val docs = (json \ "docs").as[JsArray]
-            search.json ==== json
+          case search: LegacySearch => search.json ==== json
           case x => failure("bad mapping, expected LegacySearch, got " + x)
         }
       }

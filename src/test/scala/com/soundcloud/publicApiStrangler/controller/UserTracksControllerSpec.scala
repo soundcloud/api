@@ -11,7 +11,7 @@ import com.soundcloud.jvmkit.module.experimental.result.ResultF.lift
 import com.soundcloud.jvmkit.telemetry.Telemetry
 import com.soundcloud.jvmkit.test.InMemoryConfig
 import com.soundcloud.publicApiStrangler.{TrackRepresentationsService, TracksRepresentationResult}
-import com.soundcloud.publicApiStrangler.representation.TrackRepresentationLike
+import com.soundcloud.publicApiStrangler.representation.TrackRepresentationLikeSpecContext
 import com.soundcloud.publicApiStrangler.service.TrackPagination
 import com.twitter.finagle.http.Status
 import com.twitter.util.Future
@@ -68,10 +68,12 @@ class UserTracksControllerSpec extends InjectionBasedControllerSpecification {
   }
 
   "useTrackMetadata = true" >> {
-    trait ShouldCallTrackMetadataResponse extends Context {
+    // with TrackRepresentationLikeSpecContext for easy creation of a default TrackRepresentation
+    trait ShouldCallTrackMetadataResponse extends Context  with TrackRepresentationLikeSpecContext {
       override def useTrackMetadata = true
 
-      val tracksServiceSuccess = lift(Good(TracksRepresentationResult(List.empty[TrackRepresentationLike], None)))
+      val tracksServiceSuccess = lift(Good(TracksRepresentationResult(List(createTrackRepresentation()), None)))
+      val expectedResponse = """{"collection":[{"kind":"track","id":1324,"created_at":"2015/02/15 16:47:27 +0000","user_id":3456,"duration":120,"commentable":false,"state":"finished","original_content_size":9001,"last_modified":"2016/08/08 13:28:53 +0000","sharing":"public","tag_list":"system:foo system:bar \"awesomeness:very high\" dubstep folk \"tag with spaces\"","permalink":"plsty-remix","streamable":true,"embeddable_by":"me","purchase_url":"http://example.com/buy/7890","purchase_title":"buy me pls","label_id":999,"genre":"future bass","title":"Baby Bash","description":"Follow @samstarling !","label_name":"Denis Owns","release":"DR012","track_type":"original","key_signature":"Emaj","isrc":"US-S1Z-99-00001","video_url":"http://example.com/video.mp4","bpm":120.7,"release_year":1991,"release_month":1,"release_day":2,"original_format":"vqf","license":"all-rights-reserved","uri":"https://api.soundcloud.com/tracks/1324","user":{"id":3456,"kind":"user","permalink":"giraffe","username":"Dr. G. Raffe","last_modified":"2016/10/10 11:21:36 +0000","uri":"https://api.soundcloud.com/users/3456","permalink_url":"https://soundcloud.com/denis","avatar_url":"https://example.com/giraffe.jpg"},"permalink_url":"http://soundcloud.com/nirvana/plsty-remix","artwork_url":"https://i1.sndcdn.com/artworks-FuwbhSJORvKH-0-large.jpg","stream_url":"https://api.soundcloud.com/tracks/1324/stream","download_url":"https://api.soundcloud.com/tracks/1324/download"}]}"""
 
       val user = Urn("soundcloud:users:7110")
     }
@@ -95,6 +97,7 @@ class UserTracksControllerSpec extends InjectionBasedControllerSpecification {
 
           val response = get(controller, path)
           response.status ==== Status.Ok
+          response.body ==== expectedResponse
         })
       }
     }

@@ -73,6 +73,7 @@ class SingleTrackControllerSpec extends InjectionBasedControllerSpecification {
       video_url = Some("http://example.com/video.mp4"),
       label_id = label_id
     )
+
   val user =
     User(
       urn = new Urn("soundcloud:users:3000"),
@@ -121,6 +122,60 @@ class SingleTrackControllerSpec extends InjectionBasedControllerSpecification {
   val nonNumericPaths = List("/tracks/__12", "/tracks/__12/", "/tracks/permalinktrack", "/tracks/permalinktrack/",
     "/tracks/permalinktrack.json", "/tracks/permalinktrack.json/")
 
+  val expectedJson = Json.fromString(
+    """
+      |{
+      |"kind": "track",
+      |"id": 987,
+      |"created_at": "2016/05/19 18:03:04 +0000",
+      |"user_id": 3000,
+      |"duration": 0,
+      |"commentable": false,
+      |"state": "lol",
+      |"original_content_size": 123,
+      |"last_modified": "2016/05/19 18:03:04 +0000",
+      |"sharing": "public",
+      |"tag_list": "",
+      |"permalink": null,
+      |"streamable": null,
+      |"embeddable_by": "none",
+      |"purchase_url": "http://example.com/buy/7890",
+      |"purchase_title": "buy me pls",
+      |"label_id": null,
+      |"genre": null,
+      |"title": null,
+      |"description": null,
+      |"label_name": null,
+      |"release": "DR012",
+      |"track_type": "original",
+      |"key_signature": "Emaj",
+      |"isrc": null,
+      |"video_url": "http://example.com/video.mp4",
+      |"bpm": 120.7,
+      |"release_year": null,
+      |"release_month": null,
+      |"release_day": null,
+      |"original_format": "donkey",
+      |"license": null,
+      |"uri": "https://api.soundcloud.com/tracks/987",
+      |"user": {
+      |  "id": 3000,
+      |  "kind": "user",
+      |  "permalink": "giraffe",
+      |  "username": "Dr. G. Raffe",
+      |  "last_modified": "2016/10/10 11:21:36 +0000",
+      |  "uri": "https://api.soundcloud.com/users/3000",
+      |  "permalink_url": "http://soundcloud.com/denis",
+      |  "avatar_url": "https://example.com/giraffe.jpg"
+      |},
+      |"permalink_url": null,
+      |"artwork_url": null,
+      |"stream_url": "https://api.soundcloud.com/tracks/987/stream",
+      |"download_url": "https://api.soundcloud.com/tracks/987/download"
+      |}
+    """.stripMargin)
+
+
   validPaths.foreach {
     path =>
       s"removes conditional request headers for path: $path" in new Context {
@@ -132,6 +187,7 @@ class SingleTrackControllerSpec extends InjectionBasedControllerSpecification {
 
         val response = get(controller(session), path, Map.empty, Map("If-None-Match" -> "a8d3ba6d09b68691b77dc75dfcd7a477"))
         response.status ==== Status.Ok
+        Json.fromString(response.body) ==== expectedJson
       }
   }
 
@@ -163,8 +219,10 @@ class SingleTrackControllerSpec extends InjectionBasedControllerSpecification {
 
         val response = get(controller(session), path, Map("secret_token" -> "s3cret"))
         response.status ==== Status.Ok
+        Json.fromString(response.body) ==== expectedJson
       }
   }
+
 
   validPaths.foreach {
     path =>
@@ -172,8 +230,11 @@ class SingleTrackControllerSpec extends InjectionBasedControllerSpecification {
         when(fallback.dispatchToMothership(any[Request])).thenReturn(Future.value(Response()))
         when(trackRepresentationsService.track(session, trackUrn, None)).thenReturn(Future.value(Success(trackRepresentation)))
 
+        val expectedPJson = """/**/js_callback_dn({"kind":"track","id":987,"created_at":"2016/05/19 18:03:04 +0000","user_id":3000,"duration":0,"commentable":false,"state":"lol","original_content_size":123,"last_modified":"2016/05/19 18:03:04 +0000","sharing":"public","tag_list":"","permalink":null,"streamable":null,"embeddable_by":"none","purchase_url":"http://example.com/buy/7890","purchase_title":"buy me pls","label_id":null,"genre":null,"title":null,"description":null,"label_name":null,"release":"DR012","track_type":"original","key_signature":"Emaj","isrc":null,"video_url":"http://example.com/video.mp4","bpm":120.7,"release_year":null,"release_month":null,"release_day":null,"original_format":"donkey","license":null,"uri":"https://api.soundcloud.com/tracks/987","user":{"id":3000,"kind":"user","permalink":"giraffe","username":"Dr. G. Raffe","last_modified":"2016/10/10 11:21:36 +0000","uri":"https://api.soundcloud.com/users/3000","permalink_url":"http://soundcloud.com/denis","avatar_url":"https://example.com/giraffe.jpg"},"permalink_url":null,"artwork_url":null,"stream_url":"https://api.soundcloud.com/tracks/987/stream","download_url":"https://api.soundcloud.com/tracks/987/download"});"""
+
         val response = get(controller(session), path, Map("callback" -> "js_callback_dn"))
         response.status ==== Status.Ok
+        response.body ==== expectedPJson
       }
   }
 
