@@ -5,9 +5,9 @@ import com.soundcloud.bff.web.{BffInjectionBasedController, UserAuthentication}
 import com.soundcloud.jvmkit.ModuleConversions._
 import com.soundcloud.jvmkit.Urn
 import com.soundcloud.jvmkit.module.experimental.result.{Bad, Good}
-import com.soundcloud.jvmkit.module.http.client.HttpStatus
 import com.soundcloud.publicApiStrangler.client.playlists.PlaylistDeletionClient
 import com.soundcloud.publicApiStrangler.support.DispatchToMothershipHandler
+import com.twitter.finagle.http.Status
 import com.twitter.util.Future
 import play.api.libs.json.Json
 
@@ -48,7 +48,7 @@ class PlaylistsController(userAuthentication: UserAuthentication,
     })
   }
 
-  private def statusDescription(status: HttpStatus): String = {
+  private def statusDescription(status: Status): String = {
     s"${status.code} - ${com.twitter.finagle.http.Status(status.code).reason}"
   }
 }

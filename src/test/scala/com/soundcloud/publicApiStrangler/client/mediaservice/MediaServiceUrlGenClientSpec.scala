@@ -1,10 +1,10 @@
 package com.soundcloud.publicApiStrangler.client.mediaservice
 
-import com.soundcloud.jvmkit.ModuleConversions._
-import com.soundcloud.jvmkit.module.http.client.{HttpClient, HttpResponse, OkHttpStatus, Params}
+import com.soundcloud.jvmkit.module.http.client.{HttpClient, Params}
 import com.soundcloud.jvmkit.module.util.Path
 import com.soundcloud.jvmkit.module.util.http.Headers
 import com.soundcloud.scalakit.test.UnitSpecification
+import com.twitter.finagle.http.{Response, Status}
 import com.twitter.util.{Await, Future}
 import play.api.libs.json.{JsObject, Json}
 
@@ -19,13 +19,13 @@ class MediaServiceUrlGenClientSpec extends UnitSpecification {
     val uid1 = "a1b2c3"
     val uid2 = "def456"
 
-    def stubbedResponse(uids: Seq[String]): Future[HttpResponse] = {
+    def stubbedResponse(uids: Seq[String]): Future[Response] = {
       jsonClient.get(path, Params("uid" -> uids), Headers.empty)
     }
 
     def trackWaveformsObject(uid: String): JsObject = {
       Json.obj(
-        "uid"  -> uid,
+        "uid" -> uid,
         "urls" -> Json.arr(
           waveformUrlObject("stream", uid),
           waveformUrlObject("preview", uid)
@@ -36,22 +36,25 @@ class MediaServiceUrlGenClientSpec extends UnitSpecification {
     def waveformUrlObject(label: String, uid: String): JsObject = {
       Json.obj(
         "label" -> label,
-        "json"  -> s"https://foo.sndcdn.com/$label/$uid.json",
-        "png"   -> s"https://bar.sndcdn.com/$label/$uid.png"
+        "json" -> s"https://foo.sndcdn.com/$label/$uid.json",
+        "png" -> s"https://bar.sndcdn.com/$label/$uid.png"
       )
     }
   }
 
   "waveformUrls" >> {
     "returns an array of waveform URL objects for multiple tracks" in new Context {
-      stubbedResponse(Seq(uid1, uid2)) returns Future.value(
-        HttpResponse(OkHttpStatus, Json.obj(
+      stubbedResponse(Seq(uid1, uid2)) returns Future.value {
+        val response = Response(Status.Ok)
+        response.setContentString(Json.obj(
           "response" -> Json.arr(
             trackWaveformsObject(uid1),
             trackWaveformsObject(uid2)
           )
         ).toString())
-      )
+        response
+      }
+
 
       Await.result(client.waveformUrls(Seq(uid1, uid2))) must beLike {
         case map => {
@@ -91,13 +94,14 @@ class MediaServiceUrlGenClientSpec extends UnitSpecification {
     }
 
     "returns an array of waveform URL objects for a single track" in new Context {
-      stubbedResponse(Seq(uid1)) returns Future.value(
-        HttpResponse(OkHttpStatus, Json.obj(
-          "response" -> Json.arr(
-            trackWaveformsObject(uid1)
-          )
+      stubbedResponse(Seq(uid1)) returns Future.value {
+        val response = Response(Status.Ok)
+        response.setContentString(Json.obj(
+          "response" -> Json.arr(trackWaveformsObject(uid1))
         ).toString())
-      )
+        response
+      }
+
 
       Await.result(client.waveformUrls(Some(uid1))) must beLike {
         case list => {

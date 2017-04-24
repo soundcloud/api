@@ -4,7 +4,6 @@ import com.soundcloud.bff.finagle.ResponseBuilder
 import com.soundcloud.bff.test.InjectionBasedControllerSpecification
 import com.soundcloud.jvmkit.ModuleConversions._
 import com.soundcloud.jvmkit.module.experimental.result.{Good, Result}
-import com.soundcloud.jvmkit.module.http.client.{AcceptedHttpStatus, ForbiddenHttpStatus, HttpStatus, NotFoundHttpStatus, OkHttpStatus, UnauthorizedHttpStatus}
 import com.soundcloud.jvmkit.{Urn, UserSessionBuilder}
 import com.soundcloud.publicApiStrangler.client.playlists.PlaylistDeletionClient
 import com.soundcloud.publicApiStrangler.support.DispatchToMothershipHandler
@@ -52,7 +51,7 @@ class PlaylistsControllerSpec extends InjectionBasedControllerSpecification with
   "DELETE /playlists/:id" >> {
     trait DeletePlaylistContext extends Context {
       val playlistId = 123
-      lazy val deletePlaylistResponse: Result[HttpStatus] = Good(OkHttpStatus)
+      lazy val deletePlaylistResponse: Result[Status] = Good(Status.Ok)
 
       when(playlistDeletionClient.deletePlaylist(session, Urn(s"soundcloud:playlists:$playlistId")))
         .thenReturn(Future.value(deletePlaylistResponse))
@@ -67,35 +66,35 @@ class PlaylistsControllerSpec extends InjectionBasedControllerSpecification with
     }
 
     "returns ok" in new DeletePlaylistContext {
-      override lazy val deletePlaylistResponse = Good(OkHttpStatus)
+      override lazy val deletePlaylistResponse = Good(Status.Ok)
 
       response.status ==== Status.Ok
       Json.parse(response.body) \ "status" ==== JsString("200 - OK")
     }
 
     "returns accepted" in new DeletePlaylistContext {
-      override lazy val deletePlaylistResponse = Good(AcceptedHttpStatus)
+      override lazy val deletePlaylistResponse = Good(Status.Accepted)
 
       response.status ==== Status.Accepted
       Json.parse(response.body) \ "status" ==== JsString("202 - Accepted")
     }
 
     "returns unauthorized" in new DeletePlaylistContext {
-      override lazy val deletePlaylistResponse = Good(UnauthorizedHttpStatus)
+      override lazy val deletePlaylistResponse = Good(Status.Unauthorized)
 
       response.status ==== Status.Unauthorized
       Json.parse(response.body) \ "status" ==== JsString("401 - Unauthorized")
     }
 
     "returns forbidden" in new DeletePlaylistContext {
-      override lazy val deletePlaylistResponse = Good(ForbiddenHttpStatus)
+      override lazy val deletePlaylistResponse = Good(Status.Forbidden)
 
       response.status ==== Status.Forbidden
       Json.parse(response.body) \ "status" ==== JsString("403 - Forbidden")
     }
 
     "returns not found" in new DeletePlaylistContext {
-      override lazy val deletePlaylistResponse = Good(NotFoundHttpStatus)
+      override lazy val deletePlaylistResponse = Good(Status.NotFound)
 
       response.status ==== Status.NotFound
       Json.parse(response.body) \ "status" ==== JsString("404 - Not Found")
