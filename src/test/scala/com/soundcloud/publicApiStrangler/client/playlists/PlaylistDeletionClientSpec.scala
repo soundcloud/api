@@ -1,11 +1,12 @@
 package com.soundcloud.publicApiStrangler.client.playlists
 
 import com.soundcloud.jvmkit.module.experimental.result.{Bad, Error, Good}
-import com.soundcloud.jvmkit.module.http.client.{HttpClient, HttpResponse, OkHttpStatus, Params}
+import com.soundcloud.jvmkit.module.http.client.{HttpClient, Params}
 import com.soundcloud.jvmkit.module.util.http.Headers
 import com.soundcloud.jvmkit.module.util.session.UserSessionBuilder
 import com.soundcloud.jvmkit.module.util.{Path, Urn}
 import com.soundcloud.scalakit.test.UnitSpecification
+import com.twitter.finagle.http.{Response, Status}
 import com.twitter.util.{Await, Future}
 
 class PlaylistDeletionClientSpec extends UnitSpecification {
@@ -24,10 +25,10 @@ class PlaylistDeletionClientSpec extends UnitSpecification {
   }
 
   "with response" in new Context {
-    val response = mock[HttpResponse].status returns OkHttpStatus
+    val response = mock[Response].status returns Status.Ok
     httpClient.deleteWithSession(session, path, Params.empty, Headers.empty, None) returns Future.value(response)
 
-    Await.result(client.deletePlaylist(session, urn)) ==== Good(OkHttpStatus)
+    Await.result(client.deletePlaylist(session, urn)) ==== Good(Status.Ok)
   }
 
   "with transport error" in new Context {

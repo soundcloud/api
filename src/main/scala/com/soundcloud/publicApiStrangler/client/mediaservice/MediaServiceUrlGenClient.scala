@@ -1,10 +1,12 @@
 package com.soundcloud.publicApiStrangler.client.mediaservice
 
-import com.soundcloud.jvmkit.module.http.client.{HttpClient, HttpResponse, OkHttpStatus, Params}
+import com.soundcloud.jvmkit.module.http.client.{HttpClient, Params}
 import com.soundcloud.jvmkit.module.util.Path
 import com.soundcloud.jvmkit.module.util.http.Headers
+import com.twitter.finagle.http.Status
+import com.twitter.finagle.http.Response
 import com.twitter.util.{Future, NonFatal}
-import play.api.libs.json.{JsArray, JsString, JsValue, Json, Reads}
+import play.api.libs.json._
 
 case class WaveformUrl(label: String, json: String, png: String)
 
@@ -24,9 +26,11 @@ class MediaServiceUrlGenClient(jsonClient: HttpClient) {
   }
 
   private def getUrls(uids: Seq[String]): Future[Map[String, Seq[WaveformUrl]]] = {
-    jsonClient.get(Path() / "waveforms", Params("uid" -> uids), Headers.empty).map {
-      case HttpResponse(OkHttpStatus, body, _) => parseUrls(Json.parse(body))
-      case _ => Map.empty[String, Seq[WaveformUrl]]
+    jsonClient.get(Path() / "waveforms", Params("uid" -> uids), Headers.empty).map { response =>
+      response.status match {
+        case Status.Ok => parseUrls(Json.parse(response.contentString))
+        case _ => Map.empty[String, Seq[WaveformUrl]]
+      }
     }.handle {
       case NonFatal(e) => Map.empty[String, Seq[WaveformUrl]]
     }
