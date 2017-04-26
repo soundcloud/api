@@ -1,15 +1,17 @@
 package com.soundcloud.publicApiStrangler.support
 
-import com.soundcloud.bff.finagle.{Request, ResponseBuilder}
 import com.soundcloud.bff.media.{MediaUrl, MediaUrlsRepository}
-import com.soundcloud.bff.test.UnitSpecification
-import com.soundcloud.jvmkit.policies.{Reason, ContentAuthorization, ContentPolicy}
-import com.soundcloud.jvmkit.{Urn, UserSession}
+import com.soundcloud.jvmkit.module.http.server.{HandlerRequest, ResponseBuilder}
+import com.soundcloud.jvmkit.module.util.Urn
+import com.soundcloud.jvmkit.module.util.session.UserSessionBuilder
+import com.soundcloud.jvmkit.policies.{ContentAuthorization => BigJvmKitContentAuthorization}
 import com.soundcloud.publicApiStrangler.authorization.ContentAuthorizationRules
+import com.soundcloud.publicApiStrangler.client.BigJvmKitConversions._
 import com.soundcloud.publicApiStrangler.mapper.trackstreams.TrackStreamResponseMapper
-import com.twitter.finagle.http.{Method, HeaderMap, Status}
+import com.soundcloud.publicApiStrangler.policies.{ContentAuthorization, ContentPolicy, MonetizationModel, Reason}
+import com.soundcloud.publicApiStrangler.test.UnitSpecification
+import com.twitter.finagle.http.{HeaderMap, Method, ParamMap, Status}
 import com.twitter.util.{Await, Future}
-import org.jboss.netty.handler.codec.http.HttpResponseStatus
 import play.api.libs.json.Json
 
 class TrackStreamHandlerSpec extends UnitSpecification {
@@ -20,33 +22,44 @@ class TrackStreamHandlerSpec extends UnitSpecification {
       val contentAuthRules = mock[ContentAuthorizationRules]
       val mediaUrlsRepository = mock[MediaUrlsRepository]
       val handler = new TrackStreamHandler(mothershipDispatcher, contentAuthRules, mediaUrlsRepository)
-      val request = mock[Request]
+      val request = mock[HandlerRequest]
 
       request.method returns Method.Get
 
-      val userSession = mock[UserSession]
       val mapper = mock[TrackStreamResponseMapper]
-      val contentAuth = mock[ContentAuthorization]
+      val contentAuthorizationSnip = new ContentAuthorization(Urn("soundcloud:tracks:123"), ContentPolicy.SNIP, Reason.DEFAULT, MonetizationModel.NOT_APPLICABLE)
+      val contentAuthorizationAllow = new ContentAuthorization(Urn("soundcloud:tracks:123"), ContentPolicy.ALLOW, Reason.DEFAULT, MonetizationModel.NOT_APPLICABLE)
+      val contentAuthorizationMonetize = new ContentAuthorization(Urn("soundcloud:tracks:123"), ContentPolicy.MONETIZE, Reason.DEFAULT, MonetizationModel.NOT_APPLICABLE)
+      val contentAuthorizationGeoBLock = new ContentAuthorization(Urn("soundcloud:tracks:123"), ContentPolicy.BLOCK, Reason.GEO, MonetizationModel.NOT_APPLICABLE)
 
-      def responseBuilder(statusCode: Int) =
-        Future.value(new ResponseBuilder().status(statusCode))
+      def responseBuilder(status: Status) =
+        Future.value(ResponseBuilder().status(status).build)
 
-      def responseBuilder(statusCode: Int, contentType: String, body: String) =
-        new ResponseBuilder().status(statusCode).contentType(contentType).body(body)
-
+      def responseBuilder(status: Status, contentType: String, body: String) =
+        ResponseBuilder().status(status).mediaType(contentType).body(body).build
     }
 
-    trait ValidUrnContext extends Context {
+
+    trait ValidUrnContextAnonymous extends Context {
+      val anonUserSession = new UserSessionBuilder().build
       val trackId = "334030"
-      val paramMap = Map("trackId" -> trackId)
+      val paramMap = ParamMap("trackId" -> trackId)
       request.routeParams returns paramMap
       val trackUrn = new Urn("soundcloud", "tracks", trackId)
-      contentAuthRules.fetchRules(userSession, Seq(trackUrn)) returns Future.value(Seq(contentAuth))
+    }
+
+    trait ValidUrnContextIdentified extends Context {
+      val identifiedUserSesssion = new UserSessionBuilder().setUser(Urn("soundcloud:users:123")).build
+      val trackId = "334030"
+      val paramMap = ParamMap("trackId" -> trackId)
+      request.routeParams returns paramMap
+      val trackUrn = new Urn("soundcloud", "tracks", trackId)
     }
 
     trait NonNumericUrnContext extends Context {
+      val anonUserSession = new UserSessionBuilder().build
       val trackId = "non-numeric"
-      val paramMap = Map("trackId" -> trackId)
+      val paramMap = ParamMap("trackId" -> trackId)
       request.routeParams returns paramMap
       val trackUrn = new Urn("soundcloud", "tracks", trackId)
     }
@@ -54,20 +67,21 @@ class TrackStreamHandlerSpec extends UnitSpecification {
     "when the URN contains invalid characters" >> {
 
       trait InvalidUrnContext extends Context {
+        val anonUserSession = new UserSessionBuilder().build
         val trackId = "non-numeric"
-        val paramMap = Map("trackId" -> "1298!!!!")
+        val paramMap = ParamMap("trackId" -> "1298!!!!")
         request.routeParams returns paramMap
         val trackUrn = new Urn("soundcloud", "tracks", trackId)
       }
 
       "a 404 is returned" in new InvalidUrnContext {
-        val response = Await.result(handler.handle(request, userSession, mapper)).build
+        val response = Await.result(handler.handle(request, anonUserSession, mapper))
         response.status ==== Status.NotFound
       }
     }
 
     "return Mothership 404 if id is not numeric" in new NonNumericUrnContext {
-      val response = Await.result(handler.handle(request, userSession, mapper)).build
+      val response = Await.result(handler.handle(request, anonUserSession, mapper))
 
       response.status ==== Status.NotFound
       // Mothership headers
@@ -80,160 +94,156 @@ class TrackStreamHandlerSpec extends UnitSpecification {
       there was noCallsTo(mediaUrlsRepository)
     }
 
-    "return pubapi response in case pubapi returns client error" in new ValidUrnContext {
-      val clientErrorResponse = responseBuilder(401)
+    "return pubapi response in case pubapi returns client error" in new ValidUrnContextAnonymous {
+      val clientErrorResponse = responseBuilder(Status.Unauthorized)
       mothershipDispatcher.dispatch(request) returns clientErrorResponse
-      contentAuth.getPolicy returns ContentPolicy.SNIP
+      contentAuthRules.fetchRules(anonUserSession, Seq(trackUrn)) returns Future.value(Seq(contentAuthorizationSnip))
 
-      val responseBuilder = Await.result(handler.handle(request, userSession, mapper))
+      val responseBuilder = Await.result(handler.handle(request, anonUserSession, mapper))
       Await.result(clientErrorResponse) ==== responseBuilder
-      there was one(contentAuthRules).fetchRules(userSession, Seq(trackUrn))
+      there was one(contentAuthRules).fetchRules(anonUserSession, Seq(trackUrn))
       there was noCallsTo(mediaUrlsRepository)
     }
 
-    "return pubapi response in case pubapi returns server error" in new ValidUrnContext {
-      val serverErrorResponse = responseBuilder(500)
+    "return pubapi response in case pubapi returns server error" in new ValidUrnContextAnonymous {
+      val serverErrorResponse = responseBuilder(Status.InternalServerError)
       mothershipDispatcher.dispatch(request) returns serverErrorResponse
-      contentAuth.getPolicy returns ContentPolicy.SNIP
+      contentAuthRules.fetchRules(anonUserSession, Seq(trackUrn)) returns Future.value(Seq(contentAuthorizationSnip))
 
-      val responseBuilder = Await.result(handler.handle(request, userSession, mapper))
+      val responseBuilder = Await.result(handler.handle(request, anonUserSession, mapper))
       Await.result(serverErrorResponse) ==== responseBuilder
-      there was one(contentAuthRules).fetchRules(userSession, Seq(trackUrn))
+      there was one(contentAuthRules).fetchRules(anonUserSession, Seq(trackUrn))
       there was noCallsTo(mediaUrlsRepository)
     }
 
-    "return pubapi response in case pubapi response is successful and ContentPolicy = ALLOW" in new ValidUrnContext {
-      val successResponse = responseBuilder(200)
+    "return pubapi response in case pubapi response is successful and ContentPolicy = ALLOW" in new ValidUrnContextAnonymous {
+      val successResponse = responseBuilder(Status.Ok)
       mothershipDispatcher.dispatch(request) returns successResponse
-      contentAuth.getPolicy returns ContentPolicy.ALLOW
+      contentAuthRules.fetchRules(anonUserSession, Seq(trackUrn)) returns Future.value(Seq(contentAuthorizationAllow))
 
-      val responseBuilder = Await.result(handler.handle(request, userSession, mapper))
+      val responseBuilder = Await.result(handler.handle(request, anonUserSession, mapper))
       Await.result(successResponse) ==== responseBuilder
       there was noCallsTo(mediaUrlsRepository)
-      there was one(contentAuthRules).fetchRules(userSession, Seq(trackUrn))
+      there was one(contentAuthRules).fetchRules(anonUserSession, Seq(trackUrn))
     }
 
-    "return pubapi response in case pubapi response is successful and ContentPolicy = MONETIZE" in new ValidUrnContext {
-      val successResponse = responseBuilder(200)
+    "return pubapi response in case pubapi response is successful and ContentPolicy = MONETIZE" in new ValidUrnContextAnonymous {
+      val successResponse = responseBuilder(Status.Ok)
       mothershipDispatcher.dispatch(request) returns successResponse
-      contentAuth.getPolicy returns ContentPolicy.MONETIZE
+      contentAuthRules.fetchRules(anonUserSession, Seq(trackUrn)) returns Future.value(Seq(contentAuthorizationMonetize))
 
-      val responseBuilder = Await.result(handler.handle(request, userSession, mapper))
+      val responseBuilder = Await.result(handler.handle(request, anonUserSession, mapper))
       Await.result(successResponse) ==== responseBuilder
       there was noCallsTo(mediaUrlsRepository)
-      there was one(contentAuthRules).fetchRules(userSession, Seq(trackUrn))
+      there was one(contentAuthRules).fetchRules(anonUserSession, Seq(trackUrn))
     }
 
-    "HEAD return MediaUrlsRepository response in case pubapi response is successful and content policy is SNIP" in new ValidUrnContext {
-      val successResponse = responseBuilder(200)
+    "HEAD return MediaUrlsRepository response in case pubapi response is successful and content policy is SNIP" in new ValidUrnContextAnonymous {
+      val successResponse = responseBuilder(Status.Ok)
       mothershipDispatcher.dispatch(request) returns successResponse
-      contentAuth.getPolicy returns ContentPolicy.SNIP
+      contentAuthRules.fetchRules(anonUserSession, Seq(trackUrn)) returns Future.value(Seq(contentAuthorizationSnip))
 
       val mediaUrl1 = mock[MediaUrl]
       val mediaUrls = Future.value(Set(mediaUrl1))
-      val mapperResponse = Future.value(new ResponseBuilder().status(200))
-      mediaUrlsRepository.byUrn(userSession, trackUrn, contentAuth) returns mediaUrls
+      val mapperResponse = Future.value(ResponseBuilder.ok())
+      mediaUrlsRepository.byUrn(anonUserSession, trackUrn, contentAuthorizationSnip) returns mediaUrls
       mapper.map(mediaUrls, true) returns mapperResponse
 
       request.headerMap returns HeaderMap(("x-forwarded-proto" -> "http"))
 
       request.method returns Method.Head
 
-      val response = Await.result(handler.handle(request, userSession, mapper))
+      val response = Await.result(handler.handle(request, anonUserSession, mapper))
       response ==== Await.result(mapperResponse)
     }
 
-    "GET return MediaUrlsRepository response in case pubapi response is successful and content policy is SNIP" in new ValidUrnContext {
-      val successResponse = responseBuilder(200)
+    "GET return MediaUrlsRepository response in case pubapi response is successful and content policy is SNIP" in new ValidUrnContextAnonymous {
+      val successResponse = responseBuilder(Status.Ok)
       mothershipDispatcher.dispatch(request) returns successResponse
-      contentAuth.getPolicy returns ContentPolicy.SNIP
+      contentAuthRules.fetchRules(anonUserSession, Seq(trackUrn)) returns Future.value(Seq(contentAuthorizationSnip))
 
       val mediaUrl1 = mock[MediaUrl]
       val mediaUrls = Future.value(Set(mediaUrl1))
-      val mapperResponse = Future.value(new ResponseBuilder().status(200).header("Content-Type", "application/json"))
-      mediaUrlsRepository.byUrn(userSession, trackUrn, contentAuth) returns mediaUrls
+      val mapperResponse = Future.value(ResponseBuilder().status(Status.Ok).header("Content-Type", "application/json").build)
+      mediaUrlsRepository.byUrn(anonUserSession, trackUrn, contentAuthorizationSnip) returns mediaUrls
       mapper.map(mediaUrls, false) returns mapperResponse
 
       request.headerMap returns HeaderMap(("x-forwarded-proto" -> "http"))
-      val responseBuilder = Await.result(handler.handle(request, userSession, mapper))
+      val responseBuilder = Await.result(handler.handle(request, anonUserSession, mapper))
       Await.result(mapperResponse) ==== responseBuilder
 
-      there was one(mediaUrlsRepository).byUrn(userSession, trackUrn, contentAuth)
-      there was one(contentAuthRules).fetchRules(userSession, Seq(trackUrn))
+      there was one(mediaUrlsRepository).byUrn(anonUserSession, trackUrn, contentAuthorizationSnip)
+      there was one(contentAuthRules).fetchRules(anonUserSession, Seq(trackUrn))
     }
 
-    "HEAD return https MediaUrlsRepository response in case pubapi response is successful and content policy is SNIP" in new ValidUrnContext {
+    "HEAD return https MediaUrlsRepository response in case pubapi response is successful and content policy is SNIP" in new ValidUrnContextAnonymous {
       request.headerMap returns HeaderMap(("x-forwarded-proto" -> "https"))
-      val successResponse = responseBuilder(200)
+      val successResponse = responseBuilder(Status.Ok)
       mothershipDispatcher.dispatch(request) returns successResponse
-      contentAuth.getPolicy returns ContentPolicy.SNIP
+      contentAuthRules.fetchRules(anonUserSession, Seq(trackUrn)) returns Future.value(Seq(contentAuthorizationSnip))
 
       val mediaUrl1 = mock[MediaUrl]
       val mediaUrls = Future.value(Set(mediaUrl1))
-      val mapperResponse = Future.value(new ResponseBuilder().status(200).header("Content-Type", "application/json"))
-      mediaUrlsRepository.byUrn(userSession, trackUrn, contentAuth, true) returns mediaUrls
+      val mapperResponse = Future.value(ResponseBuilder().status(Status.Ok).header("Content-Type", "application/json").build)
+      mediaUrlsRepository.byUrn(anonUserSession, trackUrn, contentAuthorizationSnip, true) returns mediaUrls
       mapper.map(mediaUrls, true) returns mapperResponse
 
       request.method returns Method.Head
 
-      val response = Await.result(handler.handle(request, userSession, mapper))
+      val response = Await.result(handler.handle(request, anonUserSession, mapper))
       response ==== Await.result(mapperResponse)
 
-      there was one(mediaUrlsRepository).byUrn(userSession, trackUrn, contentAuth, true)
-      there was one(contentAuthRules).fetchRules(userSession, Seq(trackUrn))
+      there was one(mediaUrlsRepository).byUrn(anonUserSession, trackUrn, contentAuthorizationSnip, true)
+      there was one(contentAuthRules).fetchRules(anonUserSession, Seq(trackUrn))
     }
 
-    "GET return https MediaUrlsRepository response in case pubapi response is successful and content policy is SNIP" in new ValidUrnContext {
+    "GET return https MediaUrlsRepository response in case pubapi response is successful and content policy is SNIP" in new ValidUrnContextAnonymous {
       request.headerMap returns HeaderMap(("x-forwarded-proto" -> "https"))
-      val successResponse = responseBuilder(200)
+      val successResponse = responseBuilder(Status.Ok)
       mothershipDispatcher.dispatch(request) returns successResponse
-      contentAuth.getPolicy returns ContentPolicy.SNIP
+      contentAuthRules.fetchRules(anonUserSession, Seq(trackUrn)) returns Future.value(Seq(contentAuthorizationSnip))
 
       val mediaUrl1 = mock[MediaUrl]
       val mediaUrls = Future.value(Set(mediaUrl1))
-      val mapperResponse = Future.value(new ResponseBuilder().status(200).header("Content-Type", "application/json"))
-      mediaUrlsRepository.byUrn(userSession, trackUrn, contentAuth, true) returns mediaUrls
+      val mapperResponse = Future.value(ResponseBuilder().status(Status.Ok).header("Content-Type", "application/json").build)
+      mediaUrlsRepository.byUrn(anonUserSession, trackUrn, contentAuthorizationSnip, true) returns mediaUrls
       mapper.map(mediaUrls, false) returns mapperResponse
 
-      val responseBuilder = Await.result(handler.handle(request, userSession, mapper))
+      val responseBuilder = Await.result(handler.handle(request, anonUserSession, mapper))
       Await.result(mapperResponse) ==== responseBuilder
 
-      there was one(mediaUrlsRepository).byUrn(userSession, trackUrn, contentAuth, true)
-      there was one(contentAuthRules).fetchRules(userSession, Seq(trackUrn))
+      there was one(mediaUrlsRepository).byUrn(anonUserSession, trackUrn, contentAuthorizationSnip, true)
+      there was one(contentAuthRules).fetchRules(anonUserSession, Seq(trackUrn))
     }
 
-    "HEAD return 401 - Unauthorized when content policy is BLOCK and anonymous user" in new ValidUrnContext {
-      val successResponse = responseBuilder(200)
+    "HEAD return 401 - Unauthorized when content policy is BLOCK and anonymous user" in new ValidUrnContextAnonymous {
+      val successResponse = responseBuilder(Status.Ok)
       mothershipDispatcher.dispatch(request) returns successResponse
-      contentAuth.getPolicy returns ContentPolicy.BLOCK
-      contentAuth.getReason returns Reason.GEO
-      userSession.isAnonymous returns true
+      contentAuthRules.fetchRules(anonUserSession, Seq(trackUrn)) returns Future.value(Seq(contentAuthorizationGeoBLock))
 
       request.method returns Method.Head
 
-      val response = Await.result(handler.handle(request, userSession, mapper)).build
+      val response = Await.result(handler.handle(request, anonUserSession, mapper))
       response.status ==== Status.Unauthorized
 
       response.headerMap.get("Status") ==== Some("401 Unauthorized")
       response.headerMap.get("Date") must not be None
 
       // Must have an empty response body.
-      response.headerMap.get("Content-Type") must beNone
+      response.headerMap.get("Content-Type") ==== Some("text/plain;charset=utf-8")
       response.headerMap.get("Content-Length") ==== Some("0")
       response.contentString ==== ""
 
       there was noCallsTo(mediaUrlsRepository)
-      there was one(contentAuthRules).fetchRules(userSession, Seq(trackUrn))
+      there was one(contentAuthRules).fetchRules(anonUserSession, Seq(trackUrn))
     }
 
-    "GET return 401 - Unauthorized when content policy is BLOCK and anonymous user" in new ValidUrnContext {
-      val successResponse = responseBuilder(200)
+    "GET return 401 - Unauthorized when content policy is BLOCK and anonymous user" in new ValidUrnContextAnonymous {
+      val successResponse = responseBuilder(Status.Ok)
       mothershipDispatcher.dispatch(request) returns successResponse
-      contentAuth.getPolicy returns ContentPolicy.BLOCK
-      contentAuth.getReason returns Reason.GEO
-      userSession.isAnonymous returns true
+      contentAuthRules.fetchRules(anonUserSession, Seq(trackUrn)) returns Future.value(Seq(contentAuthorizationGeoBLock))
 
-      val response = Await.result(handler.handle(request, userSession, mapper)).build
+      val response = Await.result(handler.handle(request, anonUserSession, mapper))
       response.status ==== Status.Unauthorized
 
       // Mothership headers
@@ -243,41 +253,37 @@ class TrackStreamHandlerSpec extends UnitSpecification {
       Json.parse(response.contentString) // Make sure we have valid json
       response.contentString ==== "{\"errors\":[{\"error_message\":\"401 - Unauthorized\"}]}"
       there was noCallsTo(mediaUrlsRepository)
-      there was one(contentAuthRules).fetchRules(userSession, Seq(trackUrn))
+      there was one(contentAuthRules).fetchRules(anonUserSession, Seq(trackUrn))
     }
 
-    "HEAD return 403 - Forbidden when content policy is BLOCK and logged in user" in new ValidUrnContext {
-      val successResponse = responseBuilder(200)
+    "HEAD return 403 - Forbidden when content policy is BLOCK and logged in user" in new ValidUrnContextIdentified {
+      val successResponse = responseBuilder(Status.Ok)
       mothershipDispatcher.dispatch(request) returns successResponse
-      contentAuth.getPolicy returns ContentPolicy.BLOCK
-      contentAuth.getReason returns Reason.UNKNOWN
-      userSession.isAnonymous returns false
+      contentAuthRules.fetchRules(identifiedUserSesssion, Seq(trackUrn)) returns Future.value(Seq(contentAuthorizationGeoBLock))
 
       request.method returns Method.Head
 
-      val response = Await.result(handler.handle(request, userSession, mapper)).build
+      val response = Await.result(handler.handle(request, identifiedUserSesssion, mapper))
       response.status ==== Status.Forbidden
 
       response.headerMap.get("Status") ==== Some("403 Forbidden")
       response.headerMap.get("Date") must not be None
 
       // Must have an empty response body.
-      response.headerMap.get("Content-Type") must beNone
+      response.headerMap.get("Content-Type") ==== Some("text/plain;charset=utf-8")
       response.headerMap.get("Content-Length") ==== Some("0")
       response.contentString ==== ""
 
       there was noCallsTo(mediaUrlsRepository)
-      there was one(contentAuthRules).fetchRules(userSession, Seq(trackUrn))
+      there was one(contentAuthRules).fetchRules(identifiedUserSesssion, Seq(trackUrn))
     }
 
-    "GET return 403 - Forbidden when content policy is BLOCK and logged in user" in new ValidUrnContext {
-      val successResponse = responseBuilder(200)
+    "GET return 403 - Forbidden when content policy is BLOCK and logged in user" in new ValidUrnContextIdentified {
+      val successResponse = responseBuilder(Status.Ok)
       mothershipDispatcher.dispatch(request) returns successResponse
-      contentAuth.getPolicy returns ContentPolicy.BLOCK
-      contentAuth.getReason returns Reason.UNKNOWN
-      userSession.isAnonymous returns false
+      contentAuthRules.fetchRules(identifiedUserSesssion, Seq(trackUrn)) returns Future.value(Seq(contentAuthorizationGeoBLock))
 
-      val response = Await.result(handler.handle(request, userSession, mapper)).build
+      val response = Await.result(handler.handle(request, identifiedUserSesssion, mapper))
       response.status ==== Status.Forbidden
 
       // Mothership headers
@@ -287,7 +293,7 @@ class TrackStreamHandlerSpec extends UnitSpecification {
       Json.parse(response.contentString) // Make sure we have valid json
       response.contentString ==== "{\"errors\":[{\"error_message\":\"403 - Forbidden\"}]}"
       there was noCallsTo(mediaUrlsRepository)
-      there was one(contentAuthRules).fetchRules(userSession, Seq(trackUrn))
+      there was one(contentAuthRules).fetchRules(identifiedUserSesssion, Seq(trackUrn))
     }
 
   }

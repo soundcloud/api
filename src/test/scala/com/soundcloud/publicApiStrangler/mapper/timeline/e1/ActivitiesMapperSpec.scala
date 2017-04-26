@@ -1,16 +1,18 @@
 package com.soundcloud.publicApiStrangler.mapper.timeline.e1
 
 import com.soundcloud.bff.nextbff.pagination.CursorBasedPage
-import com.soundcloud.bff.test.UnitSpecification
+import com.soundcloud.jvmkit.module.util.Urn
+import com.soundcloud.jvmkit.module.util.session.{UserSession, UserSessionBuilder}
+import com.soundcloud.publicApiStrangler.client.BigJvmKitConversions._
 import com.soundcloud.publicApiStrangler.mapper.timeline.{EntityMapper, EntitySummaryMapper}
 import com.soundcloud.publicApiStrangler.mapping.timeline.e1.{TimelineWithUuids, TrackTimelineItem}
+import com.soundcloud.publicApiStrangler.test.UnitSpecification
 import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures
-import com.soundcloud.jvmkit.{Urn, UserSession}
 import com.soundcloud.services.timeline.TimelineJsonClient
 import com.twitter.util.{Await, Future}
-import play.api.libs.json.JsObject
 import org.mockito.Mockito.when
 import org.specs2.mutable.Before
+import play.api.libs.json.JsObject
 
 class ActivitiesMapperSpec extends UnitSpecification with Fixtures {
 
@@ -19,7 +21,7 @@ class ActivitiesMapperSpec extends UnitSpecification with Fixtures {
     val entityMapper = mock[EntityMapper]
     val entitySummaryMapper = mock[EntitySummaryMapper]
     val mapper = new ActivitiesMapper(timelineClient, entityMapper, entitySummaryMapper)
-    val session = mock[UserSession]
+    val session = new UserSessionBuilder().build()
     val urn = new Urn("soundcloud:users:1")
     val uuid = "fe174380-5b7b-11e4-803d-37087c0f7e84"
     val futureUuid = "41d51624-6140-0000-6191-c98a01a7ddc9"

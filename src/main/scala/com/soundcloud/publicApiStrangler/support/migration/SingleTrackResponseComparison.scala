@@ -1,8 +1,8 @@
 package com.soundcloud.publicApiStrangler.support.migration
 
-import com.soundcloud.jvmkit.Country
-import com.soundcloud.jvmkit.logging.SoundCloudLoggerFactory
-import com.soundcloud.jvmkit.telemetry.Telemetry
+import com.soundcloud.jvmkit.module.telemetry.Telemetry
+import com.soundcloud.jvmkit.module.util.logging.SoundCloudLoggerFactory
+import com.soundcloud.publicApiStrangler.representation.Country
 import com.soundcloud.scalakit.json.Json
 import com.twitter.finagle.http.{HeaderMap, Request, Response, Status}
 import com.twitter.util.{NonFatal, Return, Try}
@@ -173,11 +173,11 @@ class SingleTrackResponseComparison(telemetry: Telemetry) {
             isTagListDifferent(legacyValue, migrationValue)
           case "available_country_codes" =>
             areAvailableCountryCodesDifferent(legacyValue, migrationValue)
-          case "description" | "genre"  | "purchase_title"  =>
+          case "description" | "genre" | "purchase_title" =>
             val legacyString = legacyValue.as[JsString].value
             val migrationString = migrationValue.as[JsString].value
             legacyString.replace(" target=\"_blank\"", "") != migrationString.replace(" target=\"_blank\"", "")
-          case "label_name" | "track_type"| "release" | "key_signature" =>
+          case "label_name" | "track_type" | "release" | "key_signature" =>
             legacyValue.as[JsString].value != migrationValue.as[JsString].value
           case _ =>
             legacyValue != migrationValue

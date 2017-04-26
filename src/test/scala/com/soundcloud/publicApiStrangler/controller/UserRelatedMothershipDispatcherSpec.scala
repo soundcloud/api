@@ -1,16 +1,17 @@
 package com.soundcloud.publicApiStrangler.controller
 
-import com.soundcloud.bff.finagle.{Request, ResponseBuilder}
-import com.soundcloud.bff.nextbff.test.FakeUserAuthentication
-import com.soundcloud.bff.test.UnitSpecification
-import com.soundcloud.jvmkit.{Urn, UserSession}
+import com.soundcloud.jvmkit.module.bff.testsupport.FakeUserAuthentication
+import com.soundcloud.jvmkit.module.http.server.{HandlerRequest, ResponseBuilder}
+import com.soundcloud.jvmkit.module.util.Urn
+import com.soundcloud.jvmkit.module.util.session.{UserSession, UserSessionBuilder}
+import com.soundcloud.publicApiStrangler.RoutingDefinitions
 import com.soundcloud.publicApiStrangler.client.followcounts.{FollowCounts, FollowCountsClient}
 import com.soundcloud.publicApiStrangler.client.liebling.{LieblingClient, UserTotalLikes}
 import com.soundcloud.publicApiStrangler.client.reposts.RepostsClient
 import com.soundcloud.publicApiStrangler.support.DispatchToMothershipHandler
+import com.soundcloud.publicApiStrangler.test.{HandlerSpecificationScope, UnitSpecification}
 import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures
-import com.soundcloud.scalakit.finagle.http.HandlerRequest
-import com.twitter.finagle.http.{Request => FinagleRequest}
+import com.twitter.finagle.http.{Request, Status}
 import com.twitter.util.{Await, Future}
 import org.mockito.Mockito.when
 import org.specs2.mutable.Before
@@ -18,14 +19,14 @@ import play.api.libs.json._
 
 class UserRelatedMothershipDispatcherSpec extends UnitSpecification with Fixtures {
 
-  trait Context extends Scope with Before {
-    val session = mock[UserSession]
+  trait Context extends HandlerSpecificationScope with Before {
+    val session = new UserSessionBuilder().build()
     val userAuthenticationMock = new FakeUserAuthentication(session)
     val followCountsClientMock = mock[FollowCountsClient]
     val lieblingClientMock = mock[LieblingClient]
     val repostsClientMock = mock[RepostsClient]
     val mothershipDispatcherMock = mock[DispatchToMothershipHandler]
-    val request = new Request(mock[FinagleRequest])
+    val request = HandlerRequest(mock[Request])
 
     def loadUserLikeCountsFromLiebling: Boolean = false
 
@@ -37,28 +38,34 @@ class UserRelatedMothershipDispatcherSpec extends UnitSpecification with Fixture
       () => Future.value(loadUserLikeCountsFromLiebling),
       repostsClientMock)
 
+    override def routingDefinitions = RoutingDefinitions.forUserRelatedMothershipDispatcher(dispatcher)
+
     val user1 = new Urn("soundcloud", "users", "183")
     val user2 = new Urn("soundcloud", "users", "1111")
     val user3 = new Urn("soundcloud", "users", "2222")
 
-    def responseStatusFromMothership: Int = 200
+    def responseStatusFromMothership: Status = Status.Ok
 
     def responseBodyFromMothership: JsValue
 
-    def responseBuilder = new ResponseBuilder()
+    def responseBuilder = ResponseBuilder()
       .status(responseStatusFromMothership)
       .body(responseBodyFromMothership.toString())
 
     def userUrns: Seq[Urn] = Seq.empty
+
     def followCountsSeq: Seq[FollowCounts] = Seq.empty
+
     def userTotalLikesList: List[UserTotalLikes] = List.empty
+
     def userRepostsCounts: Seq[RepostsClient.Count] = Seq.empty
 
-    def result = Await.result(dispatcher.dispatchToMothership(request)).build
+    def result = Await.result(dispatcher.dispatchToMothership(request))
+
     lazy val resultJson = Json.parse(result.getContentString())
 
     override def before: Any = {
-      when(mothershipDispatcherMock.defaultHandling(any[HandlerRequest])).thenReturn(Future.value(responseBuilder.build))
+      when(mothershipDispatcherMock.dispatchToMothership(any[Request])).thenReturn(Future.value(responseBuilder.build))
       when(followCountsClientMock.counts(session, userUrns)).thenReturn(Future.value(followCountsSeq))
       when(lieblingClientMock.userTotalLikeCount(session, userUrns)).thenReturn(Future.value(userTotalLikesList))
       when(repostsClientMock.getRepostCountsByUrnWithFallback(session, userUrns.toSet))
@@ -69,14 +76,16 @@ class UserRelatedMothershipDispatcherSpec extends UnitSpecification with Fixture
   "#dispatchToMothership" >> {
     "with a non-JSON response from mothership, it returns the same response body" in new Context {
       override def responseBodyFromMothership = JsNull
+
       override def responseBuilder = new ResponseBuilder()
         .status(responseStatusFromMothership)
         .body("Not a JSON response")
 
-      Await.result(dispatcher.dispatchToMothership(request)).build.getContentString() ==== "Not a JSON response"
+      Await.result(dispatcher.dispatchToMothership(request)).getContentString() ==== "Not a JSON response"
     }
     "with a non-OK status code from mothership, it returns the same status code" in new Context {
-      override def responseStatusFromMothership = 500
+      override def responseStatusFromMothership = Status.InternalServerError
+
       override def responseBodyFromMothership = user
 
       result.getStatusCode() ==== 500
@@ -84,7 +93,9 @@ class UserRelatedMothershipDispatcherSpec extends UnitSpecification with Fixture
     "with an OK status code from mothership" >> {
       "it returns an object that matches the one from Mothership" in new Context {
         override def responseBodyFromMothership = user
+
         override def userUrns = Seq(user1)
+
         override def followCountsSeq = Seq(FollowCounts(user1, 100, 101)) // same as Mothership, so enrich is a noop
 
         resultJson ==== responseBodyFromMothership
@@ -94,6 +105,7 @@ class UserRelatedMothershipDispatcherSpec extends UnitSpecification with Fixture
         "when follows does not return counts" >> {
           "defaults to zero for a single object" in new Context {
             override def responseBodyFromMothership = user
+
             override def userUrns = Seq(user1)
 
             (resultJson \ "followers_count").as[Long] ==== 0
@@ -101,6 +113,7 @@ class UserRelatedMothershipDispatcherSpec extends UnitSpecification with Fixture
           }
           "defaults to zero for users in the top level" in new Context {
             override def responseBodyFromMothership = users
+
             override def userUrns = Seq(user2, user3)
 
             val collection = resultJson.as[JsArray].value
@@ -111,6 +124,7 @@ class UserRelatedMothershipDispatcherSpec extends UnitSpecification with Fixture
           }
           "defaults to zero for users in a collection" in new Context {
             override def responseBodyFromMothership = usersInCollection
+
             override def userUrns = Seq(user2, user3)
 
             val collection = (resultJson \ "collection").as[JsArray].value
@@ -123,6 +137,7 @@ class UserRelatedMothershipDispatcherSpec extends UnitSpecification with Fixture
           }
           "defaults to zero for objects containing a user" in new Context {
             override def responseBodyFromMothership = objectsWithUsers
+
             override def userUrns = Seq(user2, user3)
 
             val collection = resultJson.as[JsArray].value
@@ -137,7 +152,9 @@ class UserRelatedMothershipDispatcherSpec extends UnitSpecification with Fixture
         "when follows returns counts" >> {
           "is done for a single object" in new Context {
             override def responseBodyFromMothership = user
+
             override def userUrns = Seq(user1)
+
             override def followCountsSeq = Seq(FollowCounts(user1, 100, 200))
 
             (resultJson \ "followers_count").as[Long] ==== 100
@@ -145,7 +162,9 @@ class UserRelatedMothershipDispatcherSpec extends UnitSpecification with Fixture
           }
           "is done for users in the top level" in new Context {
             override def responseBodyFromMothership = users
+
             override def userUrns = Seq(user2, user3)
+
             override def followCountsSeq = Seq(FollowCounts(user2, 100, 200), FollowCounts(user3, 300, 400))
 
             val collection = resultJson.as[JsArray].value
@@ -158,7 +177,9 @@ class UserRelatedMothershipDispatcherSpec extends UnitSpecification with Fixture
           }
           "is done for users in a collection" in new Context {
             override def responseBodyFromMothership = usersInCollection
+
             override def userUrns = Seq(user2, user3)
+
             override def followCountsSeq = Seq(FollowCounts(user2, 100, 200), FollowCounts(user3, 300, 400))
 
             val values = (resultJson \ "collection").as[JsArray].value
@@ -171,7 +192,9 @@ class UserRelatedMothershipDispatcherSpec extends UnitSpecification with Fixture
           }
           "is done for objects containing a user" in new Context {
             override def responseBodyFromMothership = objectsWithUsers
+
             override def userUrns = Seq(user2, user3)
+
             override def followCountsSeq = Seq(FollowCounts(user2, 100, 200), FollowCounts(user3, 300, 400))
 
             val values = resultJson.as[JsArray].value
@@ -189,12 +212,14 @@ class UserRelatedMothershipDispatcherSpec extends UnitSpecification with Fixture
         "with rollout inactive" >> {
           "is not done for a single object" in new Context {
             override def responseBodyFromMothership = user
+
             override def userUrns = Seq(user1)
 
             (resultJson \ "public_favorites_count").as[Long] ==== 123
           }
           "is not done for users in the top level" in new Context {
             override def responseBodyFromMothership = users
+
             override def userUrns = Seq(user2, user3)
 
             val values = resultJson.as[JsArray].value
@@ -205,6 +230,7 @@ class UserRelatedMothershipDispatcherSpec extends UnitSpecification with Fixture
           }
           "is not done for users in a collection" in new Context {
             override def responseBodyFromMothership = usersInCollection
+
             override def userUrns = Seq(user2, user3)
 
             val values = (resultJson \ "collection").as[JsArray].value
@@ -215,6 +241,7 @@ class UserRelatedMothershipDispatcherSpec extends UnitSpecification with Fixture
           }
           "is not done for objects containing a user" in new Context {
             override def responseBodyFromMothership = objectsWithUsers
+
             override def userUrns = Seq(user2, user3)
 
             val values = resultJson.as[JsArray].value
@@ -232,12 +259,14 @@ class UserRelatedMothershipDispatcherSpec extends UnitSpecification with Fixture
           "and liebling not returning counts" >> {
             "defaults to zero for a single object" in new EnrichLikeCounts {
               override def responseBodyFromMothership = user
+
               override def userUrns = Seq(user1)
 
               (resultJson \ "public_favorites_count").as[Long] ==== 0
             }
             "defaults to zero for users in the top level" in new EnrichLikeCounts {
               override def responseBodyFromMothership = users
+
               override def userUrns = Seq(user2, user3)
 
               val values = resultJson.as[JsArray].value
@@ -248,6 +277,7 @@ class UserRelatedMothershipDispatcherSpec extends UnitSpecification with Fixture
             }
             "defaults to zero for users in a collection" in new EnrichLikeCounts {
               override def responseBodyFromMothership = usersInCollection
+
               override def userUrns = Seq(user2, user3)
 
               val values = (resultJson \ "collection").as[JsArray].value
@@ -258,6 +288,7 @@ class UserRelatedMothershipDispatcherSpec extends UnitSpecification with Fixture
             }
             "defaults to zero for objects containing a user" in new EnrichLikeCounts {
               override def responseBodyFromMothership = objectsWithUsers
+
               override def userUrns = Seq(user2, user3)
 
               val values = resultJson.as[JsArray].value
@@ -270,14 +301,18 @@ class UserRelatedMothershipDispatcherSpec extends UnitSpecification with Fixture
           "and liebling returning counts" >> {
             "is done for a single object" in new EnrichLikeCounts {
               override def responseBodyFromMothership = user
+
               override def userUrns = Seq(user1)
+
               override def userTotalLikesList = List(UserTotalLikes(user1, 100, 200))
 
               (resultJson \ "public_favorites_count").as[Long] ==== 300
             }
             "is done for users in the top level" in new EnrichLikeCounts {
               override def responseBodyFromMothership = users
+
               override def userUrns = Seq(user2, user3)
+
               override def userTotalLikesList = List(UserTotalLikes(user2, 100, 200), UserTotalLikes(user3, 300, 400))
 
               val values = resultJson.as[JsArray].value
@@ -288,7 +323,9 @@ class UserRelatedMothershipDispatcherSpec extends UnitSpecification with Fixture
             }
             "is done for users in a collection" in new EnrichLikeCounts {
               override def responseBodyFromMothership = usersInCollection
+
               override def userUrns = Seq(user2, user3)
+
               override def userTotalLikesList = List(UserTotalLikes(user2, 100, 0), UserTotalLikes(user3, 300, 1))
 
               val values = (resultJson \ "collection").as[JsArray].value
@@ -299,7 +336,9 @@ class UserRelatedMothershipDispatcherSpec extends UnitSpecification with Fixture
             }
             "is done for objects containing a user" in new EnrichLikeCounts {
               override def responseBodyFromMothership = objectsWithUsers
+
               override def userUrns = Seq(user2, user3)
+
               override def userTotalLikesList = List(UserTotalLikes(user2, 100, 1), UserTotalLikes(user3, 300, 0))
 
               val values = resultJson.as[JsArray].value
@@ -315,14 +354,18 @@ class UserRelatedMothershipDispatcherSpec extends UnitSpecification with Fixture
       "repost count enrichment" >> {
         "is done for a single object" in new Context {
           override def responseBodyFromMothership = user
+
           override def userUrns = Seq(user1)
+
           override def userRepostsCounts = List(RepostsClient.Count(user1, 100))
 
           (resultJson \ "reposts_count").as[Long] ==== 100
         }
         "is done for users in the top level" in new Context {
           override def responseBodyFromMothership = users
+
           override def userUrns = Seq(user2, user3)
+
           override def userRepostsCounts = List(RepostsClient.Count(user2, 200), RepostsClient.Count(user3, 300))
 
           val values = resultJson.as[JsArray].value
@@ -333,7 +376,9 @@ class UserRelatedMothershipDispatcherSpec extends UnitSpecification with Fixture
         }
         "is done for users in a collection" in new Context {
           override def responseBodyFromMothership = usersInCollection
+
           override def userUrns = Seq(user2, user3)
+
           override def userRepostsCounts = List(RepostsClient.Count(user2, 200), RepostsClient.Count(user3, 300))
 
           val values = (resultJson \ "collection").as[JsArray].value
@@ -344,7 +389,9 @@ class UserRelatedMothershipDispatcherSpec extends UnitSpecification with Fixture
         }
         "is done for objects containing a user" in new Context {
           override def responseBodyFromMothership = objectsWithUsers
+
           override def userUrns = Seq(user2, user3)
+
           override def userRepostsCounts = List(RepostsClient.Count(user2, 200), RepostsClient.Count(user3, 300))
 
           val values = resultJson.as[JsArray].value

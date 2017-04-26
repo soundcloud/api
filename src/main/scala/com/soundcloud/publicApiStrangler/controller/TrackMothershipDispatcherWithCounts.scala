@@ -1,11 +1,11 @@
 package com.soundcloud.publicApiStrangler.controller
 
-import com.soundcloud.bff.finagle.{Request, ResponseBuilder}
-import com.soundcloud.bff.web.UserAuthentication
-import com.soundcloud.jvmkit.{Urn, UserSession}
+import com.soundcloud.jvmkit.module.bff.session.UserAuthentication
+import com.soundcloud.jvmkit.module.http.server.{AlwaysMatchesPathMatcher, HandlerRequest}
+import com.soundcloud.jvmkit.module.util.Urn
+import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.publicApiStrangler.client.stitch.{StitchClient, StitchCounts}
 import com.soundcloud.publicApiStrangler.support.DispatchToMothershipHandler
-import com.soundcloud.scalakit.finagle.http.{AlwaysMatchesPathMatcher, HandlerRequest}
 import com.twitter.finagle.http.Response
 import com.twitter.util.{Future, NonFatal, Try}
 import play.api.libs.json.{JsArray, JsObject, JsValue, Json}
@@ -18,25 +18,26 @@ class TrackMothershipDispatcherWithCounts(userAuthentication: UserAuthentication
                                           mothershipDispatcher: DispatchToMothershipHandler,
                                           stitchClient: StitchClient) {
 
-  def request(request:Request) : Future[ResponseBuilder] = {
+  def request(request: HandlerRequest): Future[Response] = {
     stripConditionalRequestHeaders(request)
 
     userAuthentication.withUserSession(request) { session =>
-      mothershipDispatcher.defaultHandling(new HandlerRequest(AlwaysMatchesPathMatcher, request)).flatMap(response => {
-        lazy val defaultResponse = toResponseBuilder(response).toFuture
+      mothershipDispatcher.dispatchToMothership(HandlerRequest(AlwaysMatchesPathMatcher, request)).flatMap(
+        response => {
+          lazy val defaultResponse = Future.value(response)
 
-        if (response.getStatusCode() < 300) {
-          (for {
-            responseJson <- Try(Json.parse(response.getContentString())).toOption
-            userToTrackUrns = extractUrns(responseJson)
-            if userToTrackUrns.nonEmpty
-          } yield {
-            enrichResponse(session, userToTrackUrns, responseJson, response).map(toResponseBuilder)
-          }).getOrElse(defaultResponse)
-        } else {
-          defaultResponse
-        }
-      })
+          if (response.getStatusCode() < 300) {
+            (for {
+              responseJson <- Try(Json.parse(response.getContentString())).toOption
+              userToTrackUrns = extractUrns(responseJson)
+              if userToTrackUrns.nonEmpty
+            } yield {
+              enrichResponse(session, userToTrackUrns, responseJson, response)
+            }).getOrElse(defaultResponse)
+          } else {
+            defaultResponse
+          }
+        })
     }
   }
 
@@ -56,7 +57,8 @@ class TrackMothershipDispatcherWithCounts(userAuthentication: UserAuthentication
           ))
         }).getOrElse(jsValue)
       })
-    } }.handle {
+    }
+    }.handle {
       case NonFatal(_) => responseJson.as[List[JsValue]]
     }.map(newContent => {
       response.setContentString(Json.stringify(new JsArray(newContent)))
@@ -85,21 +87,12 @@ class TrackMothershipDispatcherWithCounts(userAuthentication: UserAuthentication
     } yield (userId, trackId)
   }
 
-  private def toResponseBuilder(response: Response): ResponseBuilder = {
-    val headerMap = response.headerMap.iterator.map {
-      case (key, value) => (key, value)
-    }.toMap
-    new ResponseBuilder()
-      .status(response.statusCode)
-      .body(response.getContentString())
-      .headers(headerMap)
-  }
 
   /*
   * If-None-Match header causes mothership to return 304
   * We decided not to support this behavior
   */
-  private def stripConditionalRequestHeaders(req: Request): Option[String] = {
+  private def stripConditionalRequestHeaders(req: HandlerRequest): Option[String] = {
     req.headerMap.remove("If-None-Match")
   }
 }

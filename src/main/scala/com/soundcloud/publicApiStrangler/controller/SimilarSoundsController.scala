@@ -1,43 +1,49 @@
 package com.soundcloud.publicApiStrangler.controller
 
-import com.soundcloud.bff.finagle.{Request, ResponseBuilder}
 import com.soundcloud.bff.nextbff.pagination.PageBuilder
-import com.soundcloud.bff.web.{BffInjectionBasedController, UserAuthentication}
-import com.soundcloud.jvmkit.{Urn, UserSession}
+import com.soundcloud.jvmkit.module.bff.session.UserAuthentication
+import com.soundcloud.jvmkit.module.http.server.{HandlerRequest, ResponseBuilder}
+import com.soundcloud.jvmkit.module.util.Urn
+import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.publicApiStrangler.headers.DefaultResponseHeaders
 import com.soundcloud.publicApiStrangler.mapper.similarsounds.SimilarSoundsMapper
 import com.soundcloud.publicApiStrangler.mapping.similarsounds.SimilarSoundsMapping
 import com.soundcloud.scalakit.finagle.jsonservice.Params
+import com.soundcloud.scalakit.json.UntypedJson
+import com.twitter.finagle.http.Response
 import com.twitter.util.Future
 
 /**
- * Overrides the public api endpoint used to retrieve similar tracks.
- */
+  * Overrides the public api endpoint used to retrieve similar tracks.
+  */
 class SimilarSoundsController(
-                              userAuthentication: UserAuthentication,
-                              similarSoundsMapper: SimilarSoundsMapper,
-                              baseUrl: String
-                             )
-  extends BffInjectionBasedController {
+                               userAuthentication: UserAuthentication,
+                               similarSoundsMapper: SimilarSoundsMapper,
+                               baseUrl: String
+                             ) {
 
-  get("/tracks/:trackId/related")(handleSimilarSoundsRequest(_, similarSoundsMapper))
-  get("/tracks/:trackId/related.json")(handleSimilarSoundsRequest(_, similarSoundsMapper))
+  def handleSimilarSoundsRequest(request: HandlerRequest): Future[Response] = {
+    userAuthentication.withUserSession(request) {
+      (session: UserSession) =>
+        val trackUrn = new Urn("soundcloud", "tracks", request.routeParams("trackId"))
 
-  private def handleSimilarSoundsRequest(request: Request, mapper: SimilarSoundsMapper): Future[ResponseBuilder] = {
-      userAuthentication.withUserSession(request) {
-        (session: UserSession) =>
-          val trackUrn = new Urn("soundcloud", "tracks", request.routeParams("trackId"))
+        val page = PageBuilder(request, baseUrl)(trackUrn).
+          allowExtraParams(Set(SimilarSoundsMapping.LinkedPartitioning)).
+          defaultLimit(50).
+          buildOffsetBased(0)
 
-          val page = PageBuilder(request, baseUrl)(trackUrn).
-            allowExtraParams(Set(SimilarSoundsMapping.LinkedPartitioning)).
-            defaultLimit(50).
-            buildOffsetBased(0)
+        similarSoundsMapper.materialize(session, page).map {
+          case Some(info: SimilarSoundsMapping) => ResponseBuilder(body = UntypedJson.write(if (shouldPaginate(request.params)) info else info.collection)).build
+          case None => ResponseBuilder.notFound()
+        }.map(enrichWithDefaultHeaders)
+    }
+  }
 
-          mapper.materialize(session, page).map {
-            case Some(info: SimilarSoundsMapping) => render.anyJson(if (shouldPaginate(request.params)) info else info.collection)
-            case None => render.notFound
-          }.map(_.headers(DefaultResponseHeaders.defaultHeaders))
-      }
+  private def enrichWithDefaultHeaders(response: Response): Response = {
+    DefaultResponseHeaders.defaultHeaders.foreach {
+      case (key, value) => response.headerMap.set(key, value)
+    }
+    response
   }
 
   private def shouldPaginate(params: Params) = {

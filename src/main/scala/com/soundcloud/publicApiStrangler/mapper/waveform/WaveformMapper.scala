@@ -3,15 +3,16 @@ package com.soundcloud.publicApiStrangler.mapper.waveform
 import com.soundcloud.bff.media.WaveformUrlsRepository
 import com.soundcloud.bff.nextbff.mapper.Mapper
 import com.soundcloud.bff.nextbff.mapping.MappingContext
-import com.soundcloud.jvmkit.UserSession
-import com.soundcloud.jvmkit.policies.ContentPolicy
+import com.soundcloud.jvmkit.module.util.session.UserSession
+import com.soundcloud.publicApiStrangler.client.BigJvmKitConversions._
 import com.soundcloud.publicApiStrangler.mapping.Waveform
+import com.soundcloud.publicApiStrangler.policies.ContentPolicy
 import com.soundcloud.publicApiStrangler.support.mapping.{InputValidation, ObjectMapping}
 import com.twitter.util.Future
 
 class WaveformMapper(waveformUrlsRepo: WaveformUrlsRepository)
   extends Mapper[WaveformRequestParams, Waveform]
-  with InputValidation[WaveformRequestParams, Waveform] {
+    with InputValidation[WaveformRequestParams, Waveform] {
   self =>
 
   override def mapNonEmptyInputs(session: UserSession, inputs: Set[WaveformRequestParams])(implicit context: MappingContext)
@@ -19,7 +20,7 @@ class WaveformMapper(waveformUrlsRepo: WaveformUrlsRepository)
 
     val inputbyUid = inputs.map(i => i.uid -> i).toMap
 
-    waveformUrlsRepo.fetchWaveformUrlsToMap(session, inputs.map(w => w.uid -> w.contentPolicy).toMap).map {
+    waveformUrlsRepo.fetchWaveformUrlsToMap(session, inputs.map(w => w.uid -> toBigJvmKitContentPolicy(w.contentPolicy)).toMap).map {
       waveformByUid =>
         waveformByUid.map {
           case (uid, trackWaveformUrl) =>

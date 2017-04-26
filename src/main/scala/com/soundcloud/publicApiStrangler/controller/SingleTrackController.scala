@@ -1,32 +1,24 @@
 package com.soundcloud.publicApiStrangler.controller
 
-import com.soundcloud.bff.finagle.{Request, ResponseBuilder}
-import com.soundcloud.bff.web.{BffInjectionBasedController, UserAuthentication}
-import com.soundcloud.jvmkit.Urn
-import com.soundcloud.jvmkit.telemetry.Telemetry
-import com.soundcloud.publicApiStrangler.client.trackcoordinator.datatypes.{NotFound, ServerError, Success}
+import com.soundcloud.jvmkit.module.bff.session.UserAuthentication
+import com.soundcloud.jvmkit.module.http.server.{HandlerRequest, ResponseBuilder}
+import com.soundcloud.jvmkit.module.telemetry.Telemetry
+import com.soundcloud.jvmkit.module.util.Urn
+import com.soundcloud.jvmkit.module.util.logging.SoundCloudLoggerFactory
 import com.soundcloud.publicApiStrangler.TrackRepresentationsService
+import com.soundcloud.publicApiStrangler.client.trackcoordinator.datatypes.{NotFound, Success}
 import com.soundcloud.publicApiStrangler.support.DispatchToMothershipHandler
-import com.soundcloud.scalakit.json.Json
 import com.twitter.finagle.http.{Response, Status}
 import com.twitter.util.{Future, NonFatal, Return, Try}
+import play.api.libs.json.Json
 
-import scala.collection.JavaConversions._
 
-class SingleTrackController(userAuthentication: UserAuthentication,
-                            mothershipDispatcher: DispatchToMothershipHandler,
-                            tracksService: TrackRepresentationsService,
-                            telemetry: Telemetry)
-  extends BffInjectionBasedController {
+class SingleTrackController(userAuthentication: UserAuthentication, tracksService: TrackRepresentationsService, telemetry: Telemetry) {
+  val logger = SoundCloudLoggerFactory.getLogger(getClass)
 
   private val numericRegexp = """\d+""".r
 
-  get("/tracks/:trackId")(renderTrack)
-  get("/tracks/:trackId/")(renderTrack)
-  get("/tracks/:trackId.json")(renderTrack)
-  get("/tracks/:trackId.json/")(renderTrack)
-
-  private def renderTrack(req: Request): Future[ResponseBuilder] = {
+  def renderTrack(req: HandlerRequest): Future[Response] = {
     stripConditionalRequestHeaders(req)
 
     userAuthentication.withUserSession(req) { case session =>
@@ -37,16 +29,16 @@ class SingleTrackController(userAuthentication: UserAuthentication,
         case Return(urn@Urn(_, _, numericRegexp())) => {
           val secretToken = req.params.get("secret_token")
           tracksService.track(session, urn, secretToken).map {
-            case Success(trackRep) => toResponseBuilder(generateResponse(Status.Ok, Json.stringify(trackRep), callback))
+            case Success(trackRep) => generateResponse(Status.Ok, Json.stringify(Json.toJson(trackRep)), callback)
             case NotFound => generateNotFound(callback)
             case _ => {
               logger.error(s"Something went wrong while trying to fetch $urn")
-              toResponseBuilder(generateResponse(Status.InternalServerError, "Something went wrong while fetching a track", callback))
+              generateResponse(Status.InternalServerError, "Something went wrong while fetching a track", callback)
             }
           } handle {
             case NonFatal(e) => {
               logger.error(e.getMessage)
-              toResponseBuilder(generateResponse(Status.InternalServerError, "An unexpected error occured while fetching a track", callback))
+              generateResponse(Status.InternalServerError, "An unexpected error occured while fetching a track", callback)
             }
           }
         }
@@ -55,24 +47,12 @@ class SingleTrackController(userAuthentication: UserAuthentication,
     }
   }
 
-  private def generateNotFound(callback: Option[String]): ResponseBuilder= {
-    val content = jsonpWrapper(callback, notFoundErrorString)
-    val contentLength = content.getBytes("UTF-8").length
-    val res = Response(Status.NotFound)
-    res.setContentString(content)
-    res.contentType = "application/json; charset=utf-8"
-    res.contentLength = contentLength
-    toResponseBuilder(res)
+  private def generateNotFound(callback: Option[String]): Response = {
+    ResponseBuilder.notFound(jsonpWrapper(callback, notFoundErrorString))
   }
 
   private def generateResponse(status: Status, rawContent: String, callback: Option[String]): Response = {
-    val content = jsonpWrapper(callback, rawContent)
-    val contentLength = content.getBytes("UTF-8").length
-    val res = Response(status)
-    res.setContentString(content)
-    res.contentType = "application/json; charset=utf-8"
-    res.contentLength = contentLength
-    res
+    ResponseBuilder(status = status, body = jsonpWrapper(callback, rawContent)).build
   }
 
   /**
@@ -84,19 +64,11 @@ class SingleTrackController(userAuthentication: UserAuthentication,
 
   private val notFoundErrorString = """{"errors":[{"error_message":"404 - Not Found"}]}"""
 
-  private def toResponseBuilder(response: Response): ResponseBuilder = {
-    val headerMap = response.headerMap.entrySet().map(entry => (entry.getKey, entry.getValue)).toMap
-    new ResponseBuilder()
-      .status(response.status.code)
-      .body(response.getContentString())
-      .headers(headerMap)
-  }
-
   /*
   * If-None-Match header causes mothership to return 304
   * We decided not to support this behavior
   */
-  private def stripConditionalRequestHeaders(req: Request): Option[String] = {
+  private def stripConditionalRequestHeaders(req: HandlerRequest): Option[String] = {
     req.headerMap.remove("If-None-Match")
   }
 }

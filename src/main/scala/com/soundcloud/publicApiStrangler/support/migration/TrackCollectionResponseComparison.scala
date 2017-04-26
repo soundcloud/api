@@ -1,7 +1,7 @@
 package com.soundcloud.publicApiStrangler.support.migration
 
-import com.soundcloud.jvmkit.logging.SoundCloudLoggerFactory
-import com.soundcloud.jvmkit.telemetry.Telemetry
+import com.soundcloud.jvmkit.module.telemetry.Telemetry
+import com.soundcloud.jvmkit.module.util.logging.SoundCloudLoggerFactory
 import com.soundcloud.scalakit.notifier.AirbrakeNotifier
 import com.twitter.finagle.http.{HeaderMap, Request, Response}
 import com.twitter.util.{NonFatal, Return, Try}
@@ -117,7 +117,8 @@ class TrackCollectionResponseComparison(telemetry: Telemetry) {
 
 
   private def reportDifferentJson(message: String, legacyJson: JsValue, migrationJson: JsValue) = {
-    val fullMessage = s"""
+    val fullMessage =
+      s"""
          |${message}
          |Legacy response was:
          |  ${Json.prettyPrint(legacyJson)}

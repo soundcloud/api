@@ -2,11 +2,12 @@ package com.soundcloud.publicApiStrangler.controller
 
 import java.net.URL
 
-import com.soundcloud.bff.finagle.{Request, ResponseBuilder}
-import com.soundcloud.bff.web.{BffInjectionBasedController, UserAuthentication}
-import com.soundcloud.jvmkit.Urn
-import com.soundcloud.jvmkit.module.experimental.result.{Bad, ErrorLike, Good}
-import com.soundcloud.jvmkit.telemetry.Telemetry
+import com.soundcloud.jvmkit.module.bff.session.UserAuthentication
+import com.soundcloud.jvmkit.module.experimental.result.{Bad, Good}
+import com.soundcloud.jvmkit.module.http.server.HandlerRequest
+import com.soundcloud.jvmkit.module.telemetry.Telemetry
+import com.soundcloud.jvmkit.module.util.Urn
+import com.soundcloud.jvmkit.module.util.logging.SoundCloudLoggerFactory
 import com.soundcloud.publicApiStrangler.service.TrackPagination
 import com.soundcloud.publicApiStrangler.{TrackRepresentationsService, TracksRepresentationResult}
 import com.twitter.finagle.http.{Response, Status}
@@ -20,24 +21,19 @@ class UserTracksController(userAuthentication: UserAuthentication,
                            tracksService: TrackRepresentationsService,
                            telemetry: Telemetry,
                            shouldUseTrackMetadata: () => Future[Boolean],
-                           baseUrl: String)
-  extends BffInjectionBasedController {
+                           baseUrl: String) {
+  val logger = SoundCloudLoggerFactory.getLogger(getClass)
 
   private val numericRegexp = """\d+""".r
 
-  get("/users/:userId/tracks")(handleRequest)
-  get("/users/:userId/tracks/")(handleRequest)
-  get("/users/:userId/tracks.json")(handleRequest)
-  get("/users/:userId/tracks.json/")(handleRequest)
-
-  private def handleRequest(req: Request): Future[ResponseBuilder] = {
+  def handleRequest(req: HandlerRequest): Future[Response] = {
     shouldUseTrackMetadata().flatMap {
-      case true  => buildResponse(req).map(toResponseBuilder)
+      case true => buildResponse(req)
       case false => mothershipDispatcher.request(req)
     }
   }
 
-  private def buildResponse(req: Request): Future[Response] = {
+  private def buildResponse(req: HandlerRequest): Future[Response] = {
     userAuthentication.withUserSession(req) { case session =>
       val userId = req.routeParams("userId")
       val callback = req.params.get("callback")
@@ -67,14 +63,6 @@ class UserTracksController(userAuthentication: UserAuthentication,
         case _ => Future.value(generateNotFound(callback))
       }
     }
-  }
-
-  private def toResponseBuilder(response: Response): ResponseBuilder = {
-    val headerMap = response.headerMap.iterator.map { case (key, value) => (key, value) }.toMap
-    new ResponseBuilder()
-      .status(response.statusCode)
-      .body(response.getContentString())
-      .headers(headerMap)
   }
 
   private def getRepresentation(result: TracksRepresentationResult, pagination: TrackPagination) = {

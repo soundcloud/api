@@ -1,10 +1,11 @@
 package com.soundcloud.publicApiStrangler.client.pubmese
 
-import com.soundcloud.jvmkit.Urn
-import com.soundcloud.scalakit.Path
+import com.soundcloud.jvmkit.module.http.client.Params
+import com.soundcloud.jvmkit.module.util.{Path, Urn}
+import com.soundcloud.publicApiStrangler.client.BigJvmKitConversions._
+import com.soundcloud.publicApiStrangler.test.UnitSpecification
 import com.soundcloud.scalakit.finagle.http.{InternalServerErrorStatus, NotFoundStatus, OkStatus}
-import com.soundcloud.scalakit.finagle.jsonservice.{JsonClient, JsonResponse, Params}
-import com.soundcloud.scalakit.test.UnitSpecification
+import com.soundcloud.scalakit.finagle.jsonservice.{JsonClient, JsonResponse}
 import com.twitter.util.{Await, Future}
 import play.api.libs.json.{JsNull, Json}
 
@@ -26,14 +27,14 @@ class PubmeseClientSpec extends UnitSpecification {
     def stubbedRequestFor(urns: Set[Urn]) =
       jsonClient.post(session, path, Params.empty, Params.empty, requestBodyFor(urns))
 
-    private def requestBodyFor(urns: Set[Urn]) = Some(Json.obj("track_urns" -> urns).toString())
+    private def requestBodyFor(urns: Set[Urn]) = Some(Json.obj("track_urns" -> toBigJvmKitUrnSet(urns)).toString())
   }
 
   "single track" >> {
     "track exists and has an ISRC" in new Context {
       stubbedRequestFor(Set(urn1)) returns
         Future.value(JsonResponse(OkStatus,
-          Json.arr(Json.obj("track_urn" -> urn1, "isrc" -> "15RC"))
+          Json.arr(Json.obj("track_urn" -> toBigJvmKitUrn(urn1), "isrc" -> "15RC"))
         ))
 
       Await.result(client.isrcForTrack(session, urn1)) ==== Some(Isrc("15RC"))
@@ -42,7 +43,7 @@ class PubmeseClientSpec extends UnitSpecification {
     "track exists but has no ISRC" in new Context {
       stubbedRequestFor(Set(urn1)) returns
         Future.value(JsonResponse(OkStatus,
-          Json.arr(Json.obj("track_urn" -> urn1, "isrc" -> JsNull))
+          Json.arr(Json.obj("track_urn" -> toBigJvmKitUrn(urn1), "isrc" -> JsNull))
         ))
 
       Await.result(client.isrcForTrack(session, urn1)) ==== None
@@ -62,8 +63,8 @@ class PubmeseClientSpec extends UnitSpecification {
     "track exists and has an ISRC" in new Context {
       stubbedRequestFor(urns) returns
         Future.value(JsonResponse(OkStatus, Json.arr(
-          Json.obj("track_urn" -> urn1, "isrc" -> "15RC"),
-          Json.obj("track_urn" -> urn2, "isrc" -> "15RC2"))
+          Json.obj("track_urn" -> toBigJvmKitUrn(urn1), "isrc" -> "15RC"),
+          Json.obj("track_urn" -> toBigJvmKitUrn(urn2), "isrc" -> "15RC2"))
         ))
 
       val result = Await.result(client.isrcsForTracks(session, urns))
@@ -74,8 +75,8 @@ class PubmeseClientSpec extends UnitSpecification {
     "track exists but has no ISRC" in new Context {
       stubbedRequestFor(urns) returns
         Future.value(JsonResponse(OkStatus, Json.arr(
-          Json.obj("track_urn" -> urn1, "isrc" -> JsNull),
-          Json.obj("track_urn" -> urn2, "isrc" -> "15RC2"))
+          Json.obj("track_urn" -> toBigJvmKitUrn(urn1), "isrc" -> JsNull),
+          Json.obj("track_urn" -> toBigJvmKitUrn(urn2), "isrc" -> "15RC2"))
         ))
 
       Await.result(client.isrcsForTracks(session, urns)).get(urn1) ==== None
@@ -84,7 +85,7 @@ class PubmeseClientSpec extends UnitSpecification {
     "track does not exist" in new Context {
       stubbedRequestFor(urns) returns
         Future.value(JsonResponse(OkStatus, Json.arr(
-          Json.obj("track_urn" -> urn2, "isrc" -> "15RC2"))
+          Json.obj("track_urn" -> toBigJvmKitUrn(urn2), "isrc" -> "15RC2"))
         ))
 
       Await.result(client.isrcsForTracks(session, urns)).get(urn1) ==== None

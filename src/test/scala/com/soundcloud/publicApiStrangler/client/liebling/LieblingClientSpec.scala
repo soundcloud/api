@@ -1,21 +1,23 @@
 package com.soundcloud.publicApiStrangler.client.liebling
 
-import com.soundcloud.jvmkit.{UserSession, Urn}
-import com.soundcloud.scalakit.Path
+import com.soundcloud.jvmkit.module.http.client.Params
+import com.soundcloud.jvmkit.module.util.{Path, Urn}
+import com.soundcloud.jvmkit.module.util.session.{UserSession, UserSessionBuilder}
+import com.soundcloud.publicApiStrangler.client.BigJvmKitConversions._
 import com.soundcloud.scalakit.finagle.http.{OkStatus, StatusCode}
-import com.soundcloud.scalakit.finagle.jsonservice.{JsonClient, JsonResponse, Params}
-import com.soundcloud.scalakit.test.UnitSpecification
+import com.soundcloud.scalakit.finagle.jsonservice.{JsonClient, JsonResponse}
+import com.soundcloud.publicApiStrangler.test.UnitSpecification
 import com.twitter.finagle.IndividualRequestTimeoutException
 import com.twitter.util.{Await, Duration, Future}
 import org.jboss.netty.handler.codec.http.HttpMethod
-import play.api.libs.json.{JsNull, JsValue, Json}
 import org.mockito.Mockito.when
+import play.api.libs.json.{JsNull, JsValue, Json}
 
 class LieblingClientSpec extends UnitSpecification {
 
   trait Context extends Scope {
     implicit val service = mock[JsonClient]
-    implicit val session = mock[UserSession]
+    implicit val session = new UserSessionBuilder().build()
     val client = new LieblingClient(service)
 
     val userUrn = Urn("soundcloud:users:10419549")
@@ -29,21 +31,22 @@ class LieblingClientSpec extends UnitSpecification {
     val tracksUrns = List(trackUrn, Urn("soundcloud:tracks:101"))
     val notFoundTrackUrn = Urn("soundcloud:tracks:0")
 
-    val lieblingLikesCount = Json.parse("""{
-                                          |  "likes_counts": [
-                                          |    {
-                                          |      "likes_count": 18,
-                                          |      "target_urn": "soundcloud:playlists:48786981"
-                                          |    },
-                                          |    {
-                                          |      "likes_count": 0,
-                                          |      "target_urn": "soundcloud:tracks:48786981"
-                                          |    }
-                                          |  ],
-                                          |  "liked_track_urns": [
-                                          |    "soundcloud:tracks:48786981"
-                                          |  ]
-                                          |}""".stripMargin)
+    val lieblingLikesCount = Json.parse(
+      """{
+        |  "likes_counts": [
+        |    {
+        |      "likes_count": 18,
+        |      "target_urn": "soundcloud:playlists:48786981"
+        |    },
+        |    {
+        |      "likes_count": 0,
+        |      "target_urn": "soundcloud:tracks:48786981"
+        |    }
+        |  ],
+        |  "liked_track_urns": [
+        |    "soundcloud:tracks:48786981"
+        |  ]
+        |}""".stripMargin)
   }
 
   "#likeCounts" >> {
@@ -61,7 +64,7 @@ class LieblingClientSpec extends UnitSpecification {
       val targets = Seq(playlistUrn, trackUrn)
       service.get(session,
         Path() / "likes_info",
-        Map("for_urns" -> targets, "includes" -> "likes_counts"),
+        Params("for_urns" -> targets, "includes" -> "likes_counts"),
         Params.empty) returns Future.exception(new IndividualRequestTimeoutException(Duration.fromMilliseconds(1000L)))
 
       val actual = Await.result(client.likeCounts(session, targets))
@@ -86,11 +89,11 @@ class LieblingClientSpec extends UnitSpecification {
     "performs requests in batches if necessary" in new Context() {
       val targets = Seq(playlistUrn, trackUrn)
       val firstResponse = Json.obj(
-        "likes_counts" -> Json.arr((lieblingLikesCount \ "likes_counts")(0)),
+        "likes_counts" -> Json.arr((lieblingLikesCount \ "likes_counts") (0)),
         "liked_track_urns" -> Json.arr()
       )
       val secondResponse = Json.obj(
-        "likes_counts" -> Json.arr((lieblingLikesCount \ "likes_counts")(1)),
+        "likes_counts" -> Json.arr((lieblingLikesCount \ "likes_counts") (1)),
         "liked_track_urns" -> (lieblingLikesCount \ "liked_track_urns")
       )
 
@@ -112,16 +115,16 @@ class LieblingClientSpec extends UnitSpecification {
 
       val lieblingUserTotalLikeCount = Json.parse(
         s"""{
-            |  "users": [{
-            |    "user_urn": "${userUrn.toString}",
-            |    "track_likes_count": 194,
-            |    "playlist_likes_count": 19
-            |  }, {
-            |    "user_urn": "${userUrn2.toString}",
-            |    "track_likes_count": 100,
-            |    "playlist_likes_count": 200
-            |  }]
-            |}
+           |  "users": [{
+           |    "user_urn": "${userUrn.toString}",
+           |    "track_likes_count": 194,
+           |    "playlist_likes_count": 19
+           |  }, {
+           |    "user_urn": "${userUrn2.toString}",
+           |    "track_likes_count": 100,
+           |    "playlist_likes_count": 200
+           |  }]
+           |}
       """.stripMargin)
 
       val targetUrns = List(userUrn, userUrn2, userUrn3)
@@ -148,7 +151,7 @@ class LieblingClientSpec extends UnitSpecification {
       service.get(
         session,
         Path() / "users_counts",
-        Map("for_urns" -> targetUrns),
+        Params("for_urns" -> targetUrns),
         Params.empty) returns Future.exception(new RuntimeException("noooo"))
 
       result.size ==== 0
@@ -172,11 +175,11 @@ class LieblingClientSpec extends UnitSpecification {
   }
 
   private def expectOkResponse(path: Path, expected: JsValue, params: Params = Params.empty, headers: Params = Params.empty)
-                      (implicit service: JsonClient, session: UserSession) =
+                              (implicit service: JsonClient, session: UserSession) =
     expectResponse(path, params, HttpMethod.GET, headers, OkStatus, ExpectedBody(expected))
 
   private def expectResponse(path: Path, params: Params, method: HttpMethod, headers: Params, code: StatusCode, expectedBody: MockedBody = new ExpectedBody(JsNull, None))
-                    (implicit service: JsonClient, session: UserSession) = {
+                            (implicit service: JsonClient, session: UserSession) = {
     val bodyString = expectedBody.requestBodyString
 
     when(
@@ -197,6 +200,7 @@ class LieblingClientSpec extends UnitSpecification {
 
 trait MockedBody {
   val responseBody: JsValue
+
   def requestBodyString: Option[String]
 }
 

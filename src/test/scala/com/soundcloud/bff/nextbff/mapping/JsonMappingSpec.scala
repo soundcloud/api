@@ -1,6 +1,6 @@
 package com.soundcloud.bff.nextbff.mapping
 
-import com.soundcloud.bff.test.UnitSpecification
+import com.soundcloud.publicApiStrangler.test.UnitSpecification
 import com.soundcloud.scalakit.json.UntypedJson
 import play.api.libs.json.{JsNull, Json => PlayJson}
 

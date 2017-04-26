@@ -1,17 +1,18 @@
 package com.soundcloud.publicApiStrangler.client.trackmetadata
 
-import com.soundcloud.bff.test.UnitSpecification
-import com.soundcloud.jvmkit.Urn
+import com.soundcloud.jvmkit.module.http.client.Params
+import com.soundcloud.jvmkit.module.util.{Path, Urn}
+import com.soundcloud.publicApiStrangler.client.BigJvmKitConversions._
+import com.soundcloud.publicApiStrangler.test.UnitSpecification
 import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures
-import com.soundcloud.scalakit.Path
 import com.soundcloud.scalakit.finagle.http.{InternalServerErrorStatus, NotFoundStatus, OkStatus}
-import com.soundcloud.scalakit.finagle.jsonservice.{JsonClient, JsonResponse, Params}
+import com.soundcloud.scalakit.finagle.jsonservice.{JsonClient, JsonResponse}
 import com.twitter.util.{Await, Future}
 import org.joda.time.LocalDateTime
 import org.mockito.Mockito.{verify, when}
 import play.api.libs.json.{JsNull, Json}
 
-class TrackMetadataClientSpec extends UnitSpecification with Fixtures{
+class TrackMetadataClientSpec extends UnitSpecification with Fixtures {
 
   trait Context extends Scope {
     val service = mock[JsonClient]
@@ -147,8 +148,8 @@ class TrackMetadataClientSpec extends UnitSpecification with Fixtures{
     }
 
     "no tracks are found" >> {
-      trait NoneFoundContext extends TracksContext  {
-        when(service.get(anonymousSession, path, urns, Params.empty))
+      trait NoneFoundContext extends TracksContext {
+        when(service.get(anonymousSession, path, toBigJvmKitUrnSet(urns), Params.empty))
           .thenReturn(Future(JsonResponse(OkStatus, trackmetadataClientEmptyTracks)))
       }
 
@@ -156,13 +157,13 @@ class TrackMetadataClientSpec extends UnitSpecification with Fixtures{
         val tracks = Await.result(trackmetadataClient.tracks(anonymousSession, urns))
         tracks must beEmpty
 
-        verify(service).get(anonymousSession, path, urns, Params.empty)
+        verify(service).get(anonymousSession, path, toBigJvmKitUrnSet(urns), Params.empty)
       }
     }
 
     "all of the tracks are found" >> {
-      trait NoneFoundContext extends TracksContext  {
-        when(service.get(anonymousSession, path, urns, Params.empty))
+      trait NoneFoundContext extends TracksContext {
+        when(service.get(anonymousSession, path, toBigJvmKitUrnSet(urns), Params.empty))
           .thenReturn(Future(JsonResponse(OkStatus, trackmetadataClientMultipleTracks)))
       }
 
@@ -171,13 +172,13 @@ class TrackMetadataClientSpec extends UnitSpecification with Fixtures{
         tracks must haveSize(3)
         tracks.map(_.urn) must contain(urn1, urn2, urn3)
 
-        verify(service).get(anonymousSession, path, urns, Params.empty)
+        verify(service).get(anonymousSession, path, toBigJvmKitUrnSet(urns), Params.empty)
       }
     }
 
     "some tracks are found" >> {
-      trait SomeFoundContext extends TracksContext  {
-        when(service.get(anonymousSession, path, urns, Params.empty))
+      trait SomeFoundContext extends TracksContext {
+        when(service.get(anonymousSession, path, toBigJvmKitUrnSet(urns), Params.empty))
           .thenReturn(Future(JsonResponse(OkStatus, trackmetadataClientTracks_1_3)))
       }
 
@@ -186,16 +187,16 @@ class TrackMetadataClientSpec extends UnitSpecification with Fixtures{
         tracks must haveSize(2)
         tracks.map(_.urn) must contain(urn1, urn3)
 
-        verify(service).get(anonymousSession, path, urns, Params.empty)
+        verify(service).get(anonymousSession, path, toBigJvmKitUrnSet(urns), Params.empty)
       }
     }
 
     "Track urn count is more than batch limit" >> {
-      trait BatchContext extends TracksContext  {
-        when(service.get(anonymousSession, path, Set(urn1, urn2), Params.empty))
+      trait BatchContext extends TracksContext {
+        when(service.get(anonymousSession, path, toBigJvmKitUrnSet(Set(urn1, urn2)), Params.empty))
           .thenReturn(Future(JsonResponse(OkStatus, trackmetadataClientTracks_1_3)))
 
-        when(service.get(anonymousSession, path, Set(urn3), Params.empty))
+        when(service.get(anonymousSession, path, toBigJvmKitUrnSet(Set(urn3)), Params.empty))
           .thenReturn(Future(JsonResponse(OkStatus, trackmetadataClientTracks_1_3)))
       }
 
@@ -203,8 +204,8 @@ class TrackMetadataClientSpec extends UnitSpecification with Fixtures{
         val tracks = Await.result(trackmetadataClient.tracks(anonymousSession, Set(urn1, urn2, urn3), 2))
         tracks must haveSize(4)
 
-        verify(service).get(anonymousSession, path, Set(urn1, urn2), Params.empty)
-        verify(service).get(anonymousSession, path, Set(urn3), Params.empty)
+        verify(service).get(anonymousSession, path, toBigJvmKitUrnSet(Set(urn1, urn2)), Params.empty)
+        verify(service).get(anonymousSession, path, toBigJvmKitUrnSet(Set(urn3)), Params.empty)
       }
     }
   }

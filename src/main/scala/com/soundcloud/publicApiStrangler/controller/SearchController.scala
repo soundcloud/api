@@ -1,10 +1,10 @@
 package com.soundcloud.publicApiStrangler.controller
 
-import com.soundcloud.bff.finagle.{Request, ResponseBuilder}
 import com.soundcloud.bff.nextbff.pagination.PageBuilder
 import com.soundcloud.bff.nextbff.repository.RepositoryException
-import com.soundcloud.bff.web.{BffInjectionBasedController, UserAuthentication}
-import com.soundcloud.jvmkit.telemetry.Counter
+import com.soundcloud.jvmkit.module.bff.session.UserAuthentication
+import com.soundcloud.jvmkit.module.http.server.{Handler, HandlerRequest, ResponseBuilder}
+import com.soundcloud.jvmkit.module.telemetry.Counter
 import com.soundcloud.publicApiStrangler.client.followcounts.FollowCountsClient
 import com.soundcloud.publicApiStrangler.client.liebling.LieblingClient
 import com.soundcloud.publicApiStrangler.controller.SearchController._
@@ -12,8 +12,10 @@ import com.soundcloud.publicApiStrangler.mapper.search.SearchMapper
 import com.soundcloud.publicApiStrangler.mapping.search.SearchDispatcherRequest
 import com.soundcloud.publicApiStrangler.support.DispatchToMothershipHandler
 import com.soundcloud.scalakit.finagle.http.BadRequestStatus
-import com.twitter.finagle.http.ParamMap
+import com.soundcloud.scalakit.json.UntypedJson
+import com.twitter.finagle.http.{ParamMap, Response}
 import com.twitter.util.{Future, Return, Try}
+
 /**
   * Redirects search queries on to search-dispatcher and fetches meta data.
   */
@@ -25,43 +27,21 @@ class SearchController(userAuthentication: UserAuthentication,
                        baseUrl: String,
                        lieblingClient: LieblingClient,
                        userRelatedMothershipDispatcher: UserRelatedMothershipDispatcher,
-                       trackMothershipDispatcherWithCounts: TrackMothershipDispatcherWithCounts) extends BffInjectionBasedController {
+                       trackMothershipDispatcherWithCounts: TrackMothershipDispatcherWithCounts) {
 
-  get("/tracks")(dispatchTrackRequest)
-  get("/tracks/")(dispatchTrackRequest)
-  get("/tracks.json")(dispatchTrackRequest)
-  get("/tracks.json/")(dispatchTrackRequest) // yes, really.
-  get("/v1/tracks")(dispatchTrackRequest)
-  get("/v1/tracks.json")(dispatchTrackRequest)
-
-  get("/users")(dispatchUserRequest)
-  get("/users/")(dispatchUserRequest) // some clients use this URL pattern
-  get("/users.json")(dispatchUserRequest)
-
-  get("/playlists")(dispatchPlaylistRequest)
-  get("/playlists.json")(dispatchPlaylistRequest)
-
-  get("/search")(userRelatedMothershipDispatcher.dispatchToMothership _)
-  get("/search.json")(userRelatedMothershipDispatcher.dispatchToMothership _)
-
-  get("/search/universal")(userRelatedMothershipDispatcher.dispatchToMothership _)
-  get("/search/universal.json")(userRelatedMothershipDispatcher.dispatchToMothership _)
-
-  get("/search/people")(userRelatedMothershipDispatcher.dispatchToMothership _)
-  get("/search/people.json")(userRelatedMothershipDispatcher.dispatchToMothership _)
-
-  private def dispatchUserRequest = dispatchRequest(
+  def dispatchUserRequest = dispatchRequest(
     defaultParams,
     SearchDispatcherRequest.userSearch,
     userRelatedMothershipDispatcher.dispatchToMothership _
   )
 
-  private def dispatchPlaylistRequest = dispatchRequest(
+  def dispatchPlaylistRequest = dispatchRequest(
     playlistParams,
     SearchDispatcherRequest.playlistSearch
   )
 
-  private def dispatchTrackRequest = {
+
+  def dispatchTrackRequest = {
     dispatchRequest(
       trackParams,
       SearchDispatcherRequest.trackSearch,
@@ -74,8 +54,8 @@ class SearchController(userAuthentication: UserAuthentication,
     * and if we should forward the request to Mothership.
     */
   private def dispatchRequest(searchParams: Set[String],
-                              makeRequest: Request => SearchDispatcherRequest,
-                              mothershipDispatcherFn: Request => Future[ResponseBuilder] = mothershipDispatcher.dispatch): BffRequestHandler = { request =>
+                              makeRequest: HandlerRequest => SearchDispatcherRequest,
+                              mothershipDispatcherFn: Handler = mothershipDispatcher.dispatch): Handler = { request =>
     if (isSearchRequest(request.params, searchParams)) {
       search(request, makeRequest(request))
     } else {
@@ -88,15 +68,16 @@ class SearchController(userAuthentication: UserAuthentication,
     (searchParams intersect paramsWithContent).nonEmpty
   }
 
-  private def validateParam(request: Request, param: String, pred: Int => Boolean) = {
+  private def validateParam(request: HandlerRequest, param: String, pred: Int => Boolean) = {
     request.params.get(param) match {
       case Some(value) => Try(value.toInt).map(pred)
       case _ => Return(true)
     }
   }
 
-  private def search(request: Request,
-                     searchRequest: SearchDispatcherRequest): Future[ResponseBuilder] = {
+
+  private def search(request: HandlerRequest,
+                     searchRequest: SearchDispatcherRequest): Future[Response] = {
     userAuthentication.withUserSession(request) { session =>
       val validPagination = for {
         o <- validateParam(request, "offset", _ >= 0)
@@ -109,18 +90,24 @@ class SearchController(userAuthentication: UserAuthentication,
             .allowExtraParams(searchRequest.paginationParams + SearchMapper.LinkedPartitioning)
             .buildOffsetBased()
           searchMapper.materialize(session, page).map {
-            case Some(info) => render.anyJson(info)
-            case _ => render.notFound
+            case Some(info) => ResponseBuilder.ok(UntypedJson.write(info))
+            case _ => ResponseBuilder.notFound()
           } handle {
             case RepositoryException(BadRequestStatus, _) =>
-              render.badRequest
+              ResponseBuilder.badRequest()
           }
 
-        case _ => Future.value(render.badRequest)
+        case _ => Future.value(ResponseBuilder.badRequest())
       }
-    }.map(_.header("Cache-Control", s"public, max-age=$MaxCacheAge, must-revalidate"))
+    }.map(appendCacheHeaders(_))
+  }
+
+  private def appendCacheHeaders(response: Response) = {
+    response.headerMap.set("Cache-Control", s"public, max-age=$MaxCacheAge, must-revalidate")
+    response
   }
 }
+
 
 object SearchController {
   val MaxCacheAge = 60

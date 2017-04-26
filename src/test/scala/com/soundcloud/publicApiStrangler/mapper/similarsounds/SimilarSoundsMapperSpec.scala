@@ -2,17 +2,18 @@ package com.soundcloud.publicApiStrangler.mapper.similarsounds
 
 import com.soundcloud.bff.nextbff.mapping.MappingContext
 import com.soundcloud.bff.nextbff.pagination.OffsetBasedPage
-import com.soundcloud.bff.test.InjectionBasedControllerSpecification
-import com.soundcloud.jvmkit.{Urn, UserSession}
+import com.soundcloud.jvmkit.module.util.Urn
+import com.soundcloud.jvmkit.module.util.session.UserSession
+import com.soundcloud.publicApiStrangler.client.BigJvmKitConversions._
 import com.soundcloud.publicApiStrangler.mapper.search.SearchEntityMapper
+import com.soundcloud.publicApiStrangler.test.UnitSpecification
 import com.soundcloud.service.client.SimilarSoundsClient
 import com.soundcloud.service.response.representation.{SimilarSounds, SimilarSoundsMeta}
 import com.twitter.util.{Await, Future}
-import org.mockito.Mockito._
-import org.mockito.Mockito.{when, verify, times}
+import org.mockito.Mockito.{times, verify, when}
 
 class SimilarSoundsMapperSpec
-  extends InjectionBasedControllerSpecification {
+  extends UnitSpecification {
 
   trait Context extends Scope {
     val similarSoundsClientMock = mock[SimilarSoundsClient]

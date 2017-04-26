@@ -1,8 +1,9 @@
 package com.soundcloud.publicApiStrangler.service
 
-import com.soundcloud.jvmkit.Urn
 import com.soundcloud.jvmkit.module.experimental.result.ResultF.lift
 import com.soundcloud.jvmkit.module.experimental.result.{Good, Result}
+import com.soundcloud.jvmkit.module.util.Urn
+import com.soundcloud.publicApiStrangler.client.BigJvmKitConversions.toBigJvmKitUrn
 import com.soundcloud.publicApiStrangler.client.liebling.LieblingClient
 import com.soundcloud.publicApiStrangler.client.mediaservice.{MediaServiceUrlGenClient, WaveformUrl}
 import com.soundcloud.publicApiStrangler.client.playlists.PlaylistsClient
@@ -11,9 +12,9 @@ import com.soundcloud.publicApiStrangler.client.quota.UserQuotaClient
 import com.soundcloud.publicApiStrangler.client.stitch.{StitchClient, StitchCounts}
 import com.soundcloud.publicApiStrangler.client.trackmetadata.TrackmetadataClient
 import com.soundcloud.publicApiStrangler.client.{DomainLocking, RichOkidokiClient, TrackAudioMetadata}
+import com.soundcloud.publicApiStrangler.test.UnitSpecification
 import com.soundcloud.publicApiStrangler.test.util.TrackMetadataTrackBuilder
 import com.soundcloud.publicApiStrangler.{TrackRepresentationsService, TracksRepresentationResult}
-import com.soundcloud.scalakit.test.UnitSpecification
 import com.soundcloud.service.response.representation.User
 import com.twitter.util.Await
 

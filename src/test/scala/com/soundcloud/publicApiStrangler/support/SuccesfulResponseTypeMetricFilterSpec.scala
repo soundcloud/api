@@ -1,9 +1,9 @@
 package com.soundcloud.publicApiStrangler.support
 
-import com.soundcloud.jvmkit.telemetry.Telemetry
-import com.soundcloud.jvmkit.test.InMemoryConfig
-import com.soundcloud.scalakit.finagle.http.RouterResponse
-import com.soundcloud.scalakit.test.UnitSpecification
+import com.soundcloud.jvmkit.module.http.server.ResponseBuilder
+import com.soundcloud.jvmkit.module.telemetry.{MetricsRegistryImpl, Telemetry}
+import com.soundcloud.jvmkit.module.util.config.InMemoryConfig
+import com.soundcloud.publicApiStrangler.test.UnitSpecification
 import com.twitter.finagle.Service
 import com.twitter.finagle.http._
 import com.twitter.util.{Await, Future}
@@ -13,10 +13,10 @@ import org.mockito.Mockito.when
 class SuccesfulResponseTypeMetricFilterSpec extends UnitSpecification {
 
   trait Context extends Scope {
-    val next = mock[Service[Request, RouterResponse]]
+    val next = mock[Service[Request, Response]]
     val config = new InMemoryConfig
     val collectorRegistry = new CollectorRegistry
-    val telemetry = new Telemetry(config, collectorRegistry)
+    val telemetry = new Telemetry(config.getApplicationName, new MetricsRegistryImpl(collectorRegistry))
     val filter = new SuccesfulResponseTypeMetricFilter(telemetry)
 
     def xmlCount = collectorRegistry.getSampleValue(
@@ -42,7 +42,7 @@ class SuccesfulResponseTypeMetricFilterSpec extends UnitSpecification {
 
   "Doesn't produce any metrics for non 2XX responses" in new Context {
     val request = Request()
-    val responseFromNextService = RouterResponse(Response(Status.NotFound), "undefined")
+    val responseFromNextService = ResponseBuilder.notFound()
 
     when(next.apply(request)).thenReturn(Future.value(responseFromNextService))
     Await.result(filter(request, next)) mustEqual responseFromNextService
@@ -55,9 +55,8 @@ class SuccesfulResponseTypeMetricFilterSpec extends UnitSpecification {
 
   "Increases xml counter on xml responses" in new Context {
     val request = Request()
-    val response = Response()
-    response.setContentString("""<?xml version="1.0" encoding="UTF-8"?><track><kind>track</kind></track>""")
-    val responseFromNextService = RouterResponse(response, "undefined")
+    val content = """<?xml version="1.0" encoding="UTF-8"?><track><kind>track</kind></track>"""
+    val responseFromNextService = ResponseBuilder.ok(content)
 
     when(next.apply(request)).thenReturn(Future.value(responseFromNextService))
     Await.result(filter(request, next)) mustEqual responseFromNextService
@@ -70,9 +69,8 @@ class SuccesfulResponseTypeMetricFilterSpec extends UnitSpecification {
 
   "Increases json counter on json responses" in new Context {
     val request = Request()
-    val response = Response()
-    response.setContentString("""{"kind":"track","id":278030262,"user_id":165217281}""")
-    val responseFromNextService = RouterResponse(response, "undefined")
+    val content = """{"kind":"track","id":278030262,"user_id":165217281}"""
+    val responseFromNextService = ResponseBuilder.ok(content)
 
     when(next.apply(request)).thenReturn(Future.value(responseFromNextService))
     Await.result(filter(request, next)) mustEqual responseFromNextService
@@ -85,9 +83,8 @@ class SuccesfulResponseTypeMetricFilterSpec extends UnitSpecification {
 
   "Increases jsonp counter on jsonp responses" in new Context {
     val request = Request()
-    val response = Response()
-    response.setContentString("""/**/__jp6({"kind":"track","id":240934948});""")
-    val responseFromNextService = RouterResponse(response, "undefined")
+    val content = """/**/__jp6({"kind":"track","id":240934948});"""
+    val responseFromNextService = ResponseBuilder.ok(content)
 
     when(next.apply(request)).thenReturn(Future.value(responseFromNextService))
     Await.result(filter(request, next)) mustEqual responseFromNextService
@@ -100,9 +97,8 @@ class SuccesfulResponseTypeMetricFilterSpec extends UnitSpecification {
 
   "Increases undefined counter when response can not be identified" in new Context {
     val request = Request()
-    val response = Response()
-    response.setContentString("""neither""")
-    val responseFromNextService = RouterResponse(response, "undefined")
+    val content = """neither"""
+    val responseFromNextService = ResponseBuilder.ok(content)
 
     when(next.apply(request)).thenReturn(Future.value(responseFromNextService))
     Await.result(filter(request, next)) mustEqual responseFromNextService

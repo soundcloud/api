@@ -2,7 +2,7 @@ package com.soundcloud.bff.nextbff.repository
 
 import com.soundcloud.scalakit.finagle.http.NotFoundStatus
 import com.soundcloud.scalakit.finagle.jsonservice.JsonResponse
-import com.soundcloud.scalakit.test.UnitSpecification
+import com.soundcloud.publicApiStrangler.test.UnitSpecification
 import play.api.libs.json.JsString
 
 class RepositoryExceptionSpec extends UnitSpecification {

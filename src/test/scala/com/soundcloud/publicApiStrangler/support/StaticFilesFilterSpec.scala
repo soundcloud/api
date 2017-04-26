@@ -46,7 +46,7 @@ class StaticFilesFilterSpec extends UnitSpecification {
     resp.statusCode ==== Status.Ok.code
     resp.contentString ==== "User-agent: *\nDisallow: \n"
     resp.contentLength ==== Some(25L)
-    resp.contentType ==== Some("text/plain; charset=UTF-8")
+    resp.contentType ==== Some("text/plain;charset=utf-8")
 
     resp.headerMap.get("Access-Control-Allow-Headers") ==== Some("Accept, Authorization, Content-Type, Origin")
     resp.headerMap.get("Access-Control-Allow-Methods") ==== Some("GET, PUT, POST, DELETE")
@@ -62,7 +62,7 @@ class StaticFilesFilterSpec extends UnitSpecification {
     resp.statusCode ==== Status.Ok.code
     resp.contentString ==== filter.crossdomainContents
     resp.contentLength ==== Some(666)
-    resp.contentType ==== Some("text/xml")
+    resp.contentType ==== Some("application/xml;charset=utf-8")
 
     resp.headerMap.get("Access-Control-Allow-Headers") ==== Some("Accept, Authorization, Content-Type, Origin")
     resp.headerMap.get("Access-Control-Allow-Methods") ==== Some("GET, PUT, POST, DELETE")

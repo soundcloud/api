@@ -1,8 +1,9 @@
 package com.soundcloud.publicApiStrangler.authorization
 
-import com.soundcloud.jvmkit.Urn
+import com.soundcloud.jvmkit.module.util.Urn
+import play.api.libs.json.Json
+
 import scala.collection.mutable.ListBuffer
-import com.soundcloud.scalakit.json.Json
 
 object CollectTrackUrns {
 
@@ -13,7 +14,7 @@ object CollectTrackUrns {
 
   private def visitorFor(content: String) =
     if (hasTrack(content))
-      Some(new TracksVisitor(Json.fromString(content)))
+      Some(new TracksVisitor(Json.parse(content)))
     else
       None
 

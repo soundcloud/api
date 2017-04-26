@@ -1,6 +1,7 @@
 package com.soundcloud.publicApiStrangler.test.fixtures
 
-import com.soundcloud.bff.test.UnitSpecification
+import com.soundcloud.publicApiStrangler.test.UnitSpecification
+
 
 trait Fixtures {
   this: UnitSpecification =>

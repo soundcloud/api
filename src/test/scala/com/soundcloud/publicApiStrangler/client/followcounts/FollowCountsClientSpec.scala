@@ -3,16 +3,17 @@ package com.soundcloud.publicApiStrangler.client.followcounts
 import java.net.URLEncoder
 
 import com.soundcloud.bff.services.JsonService
-import com.soundcloud.bff.test.UnitSpecification
-import com.soundcloud.jvmkit.Urn
-import com.soundcloud.jvmkit.test.InMemoryConfig
-import com.soundcloud.scalakit.Path
+import com.soundcloud.jvmkit.module.http.client.Params
+import com.soundcloud.jvmkit.module.util.{Path, Urn}
+import com.soundcloud.jvmkit.module.util.config.InMemoryConfig
+import com.soundcloud.publicApiStrangler.client.BigJvmKitConversions._
+import com.soundcloud.publicApiStrangler.test.UnitSpecification
 import com.soundcloud.scalakit.finagle.http.{InternalServerErrorStatus, OkStatus}
-import com.soundcloud.scalakit.finagle.jsonservice.{JsonResponse, Params}
+import com.soundcloud.scalakit.finagle.jsonservice.JsonResponse
 import com.twitter.util.{Await, Future}
-import play.api.libs.json.JsNull
 import org.mockito.Mockito.when
 import org.specs2.mutable.Before
+import play.api.libs.json.JsNull
 
 class FollowCountsClientSpec extends UnitSpecification {
 

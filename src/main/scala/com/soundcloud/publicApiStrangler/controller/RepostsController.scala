@@ -1,53 +1,46 @@
 package com.soundcloud.publicApiStrangler.controller
 
-import com.soundcloud.bff.finagle.{Request, ResponseBuilder}
-import com.soundcloud.bff.web.{BffInjectionBasedController, UserAuthentication}
-import com.soundcloud.jvmkit.{Urn, UserSession}
+import com.soundcloud.jvmkit.module.bff.session.UserAuthentication
+import com.soundcloud.jvmkit.module.http.server.{HandlerRequest, ResponseBuilder}
+import com.soundcloud.jvmkit.module.util.Urn
+import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.publicApiStrangler.client.reposts.RepostsClient._
 import com.soundcloud.publicApiStrangler.client.reposts.{Reposts, RepostsClient}
 import com.soundcloud.publicApiStrangler.mapping.reposts.RepostsResponse
 import com.soundcloud.publicApiStrangler.support.DispatchToMothershipHandler
-import com.twitter.finagle.http.{ParamMap, Status}
+import com.twitter.finagle.http.{ParamMap, Response, Status}
 import com.twitter.util.Future
+import play.api.libs.json.Json
 
-class RepostsController(userAuthentication: UserAuthentication,
-                        repostsClient: RepostsClient,
-                        fallback: DispatchToMothershipHandler)
-  extends BffInjectionBasedController {
+class RepostsController(userAuthentication: UserAuthentication, repostsClient: RepostsClient) {
 
-  put("/e1/me/track_reposts/:id")(createRepost(_, "tracks"))
-  put("/e1/me/track_reposts/:id.json")(createRepost(_, "tracks"))
+  def createTracksRepost = createRepost(_: HandlerRequest, "tracks")
 
-  delete("/e1/me/track_reposts/:id")(deleteRepost(_, "tracks"))
-  delete("/e1/me/track_reposts/:id.json")(deleteRepost(_, "tracks"))
+  def deleteTracksRepost = deleteRepost(_: HandlerRequest, "tracks")
 
-  put("/e1/me/playlist_reposts/:id")(createRepost(_, "playlists"))
-  put("/e1/me/playlist_reposts/:id.json")(createRepost(_, "playlists"))
+  def getUserRepostableTracks = getUserRepostables(_: HandlerRequest, repostsClient.trackReposts)
 
-  delete("/e1/me/playlist_reposts/:id")(deleteRepost(_, "playlists"))
-  delete("/e1/me/playlist_reposts/:id.json")(deleteRepost(_, "playlists"))
+  def createPlaylistsRepost = createRepost(_: HandlerRequest, "playlists")
 
-  get("/e1/me/track_reposts/ids")(getUserRepostables(_, repostsClient.trackReposts))
-  get("/e1/me/track_reposts/ids.json")(getUserRepostables(_, repostsClient.trackReposts))
+  def deletePlaylistsRepost = deleteRepost(_: HandlerRequest, "playlists")
 
-  get("/e1/me/playlist_reposts/ids")(getUserRepostables(_, repostsClient.playlistReposts))
-  get("/e1/me/playlist_reposts/ids.json")(getUserRepostables(_, repostsClient.playlistReposts))
+  def getUserRepostablePlaylists = getUserRepostables(_: HandlerRequest, repostsClient.playlistReposts)
 
-  private def createRepost(request: Request, targetType: String): Future[ResponseBuilder] = {
-      userAuthentication.withLoggedInUser(request) { (session, userUrn) =>
-        val target = new Urn(s"soundcloud:$targetType:" + request.routeParams("id"))
-        repostsClient.createRepost(session, target, baseUrl(request)).map(renderResult)
-      }
+  private def createRepost(request: HandlerRequest, targetType: String): Future[Response] = {
+    userAuthentication.withLoggedInUser(request) { (session, userUrn) =>
+      val target = new Urn(s"soundcloud:$targetType:" + request.routeParams("id"))
+      repostsClient.createRepost(session, target, baseUrl(request)).map(renderResult)
+    }
   }
 
-  private def deleteRepost(request: Request, targetType: String): Future[ResponseBuilder] = {
+  private def deleteRepost(request: HandlerRequest, targetType: String): Future[Response] = {
     userAuthentication.withLoggedInUser(request) { (session, userUrn) =>
       val target = new Urn(s"soundcloud:$targetType:" + request.routeParams("id"))
       repostsClient.deleteRepost(session, target, baseUrl(request)).map(renderResult)
     }
   }
 
-  private def getUserRepostables(request: Request, callback: (UserSession, Urn, Int, Option[String]) => Future[Reposts]): Future[ResponseBuilder] = {
+  private def getUserRepostables(request: HandlerRequest, callback: (UserSession, Urn, Int, Option[String]) => Future[Reposts]): Future[Response] = {
     userAuthentication.withLoggedInUser(request) { (session, userUrn) =>
       withPaginationParams(request) { (limit, cursor, linkedPartitioningEnabled) =>
         getAllRepostables(session, userUrn, limit, cursor, callback).map { reposts =>
@@ -58,19 +51,19 @@ class RepostsController(userAuthentication: UserAuthentication,
     }
   }
 
-  private def baseUrl(request: Request): String = {
+  private def baseUrl(request: HandlerRequest): String = {
     // default means that request is coming from a dev environment
     val protocol = request.headerMap.getOrElse("X-Forwarded-Proto", "http")
     s"$protocol://${request.host.get}"
   }
 
-  private def renderResult(result: Result): ResponseBuilder = result match {
-    case Created => render.created
-    case Deleted => render.ok
-    case AlreadyExists => render.ok
-    case NotFound => render.notFound
-    case spamBlocked: SpamBlocked => render.status(Status.TooManyRequests.code).json(spamBlocked)
-    case Failed => render.internalServerError
+  private def renderResult(result: Result): Response = result match {
+    case Created => ResponseBuilder.created()
+    case Deleted => ResponseBuilder.ok()
+    case AlreadyExists => ResponseBuilder.ok()
+    case NotFound => ResponseBuilder.notFound()
+    case spamBlocked: SpamBlocked => ResponseBuilder(status = Status.TooManyRequests, body = Json.stringify(Json.toJson(spamBlocked))).build
+    case Failed => ResponseBuilder.internalServerError()
   }
 
   private def getAllRepostables(session: UserSession,
@@ -95,7 +88,7 @@ class RepostsController(userAuthentication: UserAuthentication,
     nextBatch(Reposts(List.empty, cursor))
   }
 
-  private def withPaginationParams(request: Request)(action: (Int, Option[String], Boolean) => Future[ResponseBuilder]): Future[ResponseBuilder] = {
+  private def withPaginationParams(request: HandlerRequest)(action: (Int, Option[String], Boolean) => Future[Response]): Future[Response] = {
     val limit = request.params.get("limit").map(_.toInt).getOrElse(200)
 
     if (limit > 0 && limit <= RepostsController.DownstreamMaxLimit) {
@@ -104,15 +97,15 @@ class RepostsController(userAuthentication: UserAuthentication,
       action(limit, cursor, linkedPartitioningEnabled)
     }
     else {
-      Future.value(render.badRequest)
+      Future.value(ResponseBuilder.badRequest())
     }
   }
 
-  private def respond(linkedPartitioningEnabled: Boolean)(result: RepostsResponse[Long]): ResponseBuilder =
-    if (linkedPartitioningEnabled) render.json(result)
-    else render.json(result.collection)
+  private def respond(linkedPartitioningEnabled: Boolean)(result: RepostsResponse[Long]): Response =
+    if (linkedPartitioningEnabled) ResponseBuilder.ok(Json.stringify(Json.toJson(result)))
+    else ResponseBuilder.ok(Json.stringify(Json.toJson(result.collection)))
 
-  private def nextHref(request: Request, limit: Int, cursor: Option[String]): Option[String] =
+  private def nextHref(request: HandlerRequest, limit: Int, cursor: Option[String]): Option[String] =
     cursor.map { c =>
       val url = baseUrl(request)
       val path = request.path

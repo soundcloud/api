@@ -1,8 +1,10 @@
 package com.soundcloud.publicApiStrangler.client.liebling
 
-import com.soundcloud.jvmkit.logging.SoundCloudLoggerFactory
-import com.soundcloud.jvmkit.{Urn, UserSession}
-import com.soundcloud.jvmkit.Urn.format
+import com.soundcloud.jvmkit.module.util.Urn
+import com.soundcloud.jvmkit.module.util.logging.SoundCloudLoggerFactory
+import com.soundcloud.jvmkit.module.util.session.UserSession
+import com.soundcloud.publicApiStrangler.client.BigJvmKitConversions._
+import com.soundcloud.publicApiStrangler.client.CommonJsonFormats.urnFormat
 import com.soundcloud.scalakit.Path
 import com.soundcloud.scalakit.finagle.jsonservice.{Params, _}
 import com.soundcloud.service.client.{FetchClient, ResponseHandlers}
@@ -10,8 +12,8 @@ import com.twitter.util.{Future, NonFatal}
 import play.api.libs.json.{JsObject, Json, Reads, Writes}
 
 /**
- * https://github.com/soundcloud/liebling/tree/master/doc
- */
+  * https://github.com/soundcloud/liebling/tree/master/doc
+  */
 class LieblingClient(jsonClient: JsonClient) extends FetchClient {
   val logger = SoundCloudLoggerFactory.getLogger(getClass)
 
@@ -29,7 +31,7 @@ class LieblingClient(jsonClient: JsonClient) extends FetchClient {
     }
 
   def userTotalLikeCount(session: UserSession, urns: Seq[Urn]): Future[List[UserTotalLikes]] = {
-    fetchLikes(session, Path() / "users_counts", Map("for_urns" -> urns))
+    fetchLikes(session, Path() / "users_counts", Map("for_urns" -> toBigJvmKitUrnSeq(urns)))
       .map(json => (json \ "users").as[List[UserTotalLikes]])
       .rescue {
         case NonFatal(ex) =>
@@ -42,7 +44,7 @@ class LieblingClient(jsonClient: JsonClient) extends FetchClient {
     val fetch: (Seq[Urn]) => Future[UserLikesCount] = batch => fetchLikes(
       session,
       Path() / "likes_info",
-      Map("for_urns" -> batch, "includes" -> "likes_counts,liked_track_urns", "user_urn" -> user)
+      Map("for_urns" -> toBigJvmKitUrnSeq(batch), "includes" -> "likes_counts,liked_track_urns", "user_urn" -> toBigJvmKitUrn(user))
     ).map(_.as[UserLikesCount])
     val combine: (UserLikesCount, UserLikesCount) => UserLikesCount = {
       case (ulc1, ulc2) =>

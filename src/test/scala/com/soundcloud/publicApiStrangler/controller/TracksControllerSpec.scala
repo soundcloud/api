@@ -1,24 +1,28 @@
 package com.soundcloud.publicApiStrangler.controller
 
-import com.soundcloud.bff.finagle.ResponseBuilder
-import com.soundcloud.bff.test.InjectionBasedControllerSpecification
-import com.soundcloud.jvmkit.{Geo, Urn, UserSessionBuilder}
+import com.soundcloud.jvmkit.module.bff.testsupport.FakeUserAuthentication
+import com.soundcloud.jvmkit.module.http.server.ResponseBuilder
+import com.soundcloud.jvmkit.module.util.session.UserSessionBuilder
+import com.soundcloud.jvmkit.module.util.{Geo, Urn}
+import com.soundcloud.publicApiStrangler.RoutingDefinitions
+import com.soundcloud.publicApiStrangler.client.BigJvmKitConversions.{toBigJvmKitUrn, toBigJvmKitUserSession}
 import com.soundcloud.publicApiStrangler.client.trackcoordinator.TrackCoordinatorClient
 import com.soundcloud.publicApiStrangler.client.trackcoordinator.datatypes.{ClientError, NotFound, ServerError, Success}
 import com.soundcloud.publicApiStrangler.client.trackmetadata.{TrackmetadataClient, Track => TMTrack}
 import com.soundcloud.publicApiStrangler.support.DispatchToMothershipHandler
 import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures
 import com.soundcloud.publicApiStrangler.test.util.TrackMetadataTrackBuilder
+import com.soundcloud.publicApiStrangler.test.{HandlerSpecificationScope, UnitSpecification}
 import com.soundcloud.service.client.OkidokiClient
 import com.soundcloud.service.response.representation.Track
 import com.twitter.finagle.http.{Request, Status}
 import com.twitter.util.Future
 import org.mockito.Mockito.when
-import play.api.libs.json.{Json => PlayJson, _}
+import play.api.libs.json.{JsObject, Json}
 
-class TracksControllerSpec extends InjectionBasedControllerSpecification with Fixtures {
+class TracksControllerSpec extends UnitSpecification with Fixtures {
 
-  trait Context extends Scope {
+  trait Context extends HandlerSpecificationScope {
     val fallback = mock[DispatchToMothershipHandler]
     val trackCoordinator = mock[TrackCoordinatorClient]
     val okidoki = mock[OkidokiClient]
@@ -32,70 +36,16 @@ class TracksControllerSpec extends InjectionBasedControllerSpecification with Fi
 
     lazy val geo = new Geo("US")
     lazy val session = new UserSessionBuilder().setUser(loggedInUserUrn).setAgent(new Urn("soundcloud:applications:v2")).setGeo(geo).build()
-    lazy val controller = new TracksController(fakeUserAuthentication(session), trackCoordinator, okidoki, fallback, trackmetadataClient)
+    lazy val controller = new TracksController(new FakeUserAuthentication(session), trackCoordinator, okidoki, fallback, trackmetadataClient)
 
     def trackmetadataResponse: Future[Option[TMTrack]] = Future.value(None)
 
+    override def routingDefinitions = RoutingDefinitions.forTracksController(controller)
+
     trackCoordinator.deleteTrack(session, trackUrn) returns Future(Success(()))
-    okidoki.fetch(===(session), ===(Set(userUrn))) returns Future(List(user))
-    when(fallback.dispatch(any[Request])).thenReturn(Future.value(new ResponseBuilder().status(200)))
+    okidoki.fetch(===(toBigJvmKitUserSession(session)), ===(Set(toBigJvmKitUrn(userUrn)))) returns Future(List(user))
+    when(fallback.dispatch(any[Request])).thenReturn(Future.value(ResponseBuilder.ok()))
     when(trackmetadataClient.track(session, trackUrn)).thenReturn(trackmetadataResponse)
-  }
-
-  "GET /tracks/:id/comments" >> {
-    "falls back to Mothership" in new Context {
-      val response = get(controller, "/tracks/999/comments")
-      response.status ==== Status.Ok
-    }
-
-    "falls back to Mothership with trailing slash" in new Context {
-      val response = get(controller, "/tracks/999/comments/")
-      response.status ==== Status.Ok
-    }
-
-    "falls back to Mothership with .json" in new Context {
-      val response = get(controller, "/tracks/999/comments.json")
-      response.status ==== Status.Ok
-    }
-
-    "falls back to Mothership with .json and trailing slash" in new Context {
-      val response = get(controller, "/tracks/999/comments.json/")
-      response.status ==== Status.Ok
-    }
-  }
-
-  "GET /tracks/:id/download" >> {
-    "falls back to Mothership" in new Context {
-      val response = get(controller, "/tracks/999/download")
-      response.status ==== Status.Ok
-    }
-
-    "falls back to Mothership with trailing slash" in new Context {
-      val response = get(controller, "/tracks/999/download/")
-      response.status ==== Status.Ok
-    }
-
-    "falls back to Mothership with .json" in new Context {
-      val response = get(controller, "/tracks/999/download.json")
-      response.status ==== Status.Ok
-    }
-
-    "falls back to Mothership with .json and trailing slash" in new Context {
-      val response = get(controller, "/tracks/999/download.json/")
-      response.status ==== Status.Ok
-    }
-  }
-
-  "POST /tracks/:id" >> {
-    "falls back to Mothership" in new Context {
-      val response = post(controller, "/tracks/999")
-      response.status ==== Status.Ok
-    }
-
-    "falls back to Mothership with .json" in new Context {
-      val response = post(controller, "/tracks/999.json")
-      response.status ==== Status.Ok
-    }
   }
 
   List(
@@ -113,83 +63,84 @@ class TracksControllerSpec extends InjectionBasedControllerSpecification with Fi
       "passes through requests with supply_chain_status = manual_upload" in new PutContext {
         override def trackmetadataResponse = trackResponse(Some("manual_upload"))
 
-        when(fallback.dispatch(any[Request])).thenReturn(Future.value(new ResponseBuilder().status(201).body("Thank you for creating")))
+        when(fallback.dispatch(any[Request])).thenReturn(Future.value(ResponseBuilder.created("Thank you for creating")))
 
-        val response = put(controller, path, body = singleTrack)
+        val response = put(controller.handlePut, path, body = Json.stringify(singleTrack))
         response.status ==== Status.Created
-        response.body ==== "Thank you for creating"
+        response.contentString ==== "Thank you for creating"
       }
 
       "passes through requests with supply_chain_status = null" in new PutContext {
         override def trackmetadataResponse = trackResponse(None)
 
-        when(fallback.dispatch(any[Request])).thenReturn(Future.value(new ResponseBuilder().status(201).body("Thank you for creating")))
+        when(fallback.dispatch(any[Request])).thenReturn(Future.value(ResponseBuilder.created("Thank you for creating")))
 
-        val response = put(controller, path, body = singleTrack)
+        val response = put(controller.handlePut, path, body = Json.stringify(singleTrack))
         response.status ==== Status.Created
-        response.body ==== "Thank you for creating"
+        response.contentString ==== "Thank you for creating"
       }
 
       "refuses updating tracks with supply_chain_status = supply_chain" in new PutContext {
         override def trackmetadataResponse = trackResponse(Some("supply_chain"))
 
-        val response = put(controller, path, body = singleTrack)
+        val response = put(controller.handlePut, path, body = Json.stringify(singleTrack))
         response.status ==== Status.Unauthorized
-        response.jsonBody ==== PlayJson.obj("reason" -> "not allowed")
+        Json.parse(response.contentString) ==== Json.obj("reason" -> "not allowed")
       }
 
       "refuses updating tracks with supply_chain_status = banana" in new PutContext {
         override def trackmetadataResponse = trackResponse(Some("banana"))
 
-        val response = put(controller, path, body = singleTrack)
+        val response = put(controller.handlePut, path, body = Json.stringify(singleTrack))
         response.status ==== Status.Unauthorized
-        response.jsonBody ==== PlayJson.obj("reason" -> "not allowed")
+        Json.parse(response.contentString) ==== Json.obj("reason" -> "not allowed")
       }
 
       "returns not found when track is not returned" in new PutContext {
         override def trackmetadataResponse = Future.value(None)
 
-        val response = put(controller, path, body = singleTrack)
+        val response = put(controller.handlePut, path, body = Json.stringify(singleTrack))
         response.status ==== Status.NotFound
-        response.body ==== ""
+        response.contentString ==== ""
       }
 
       "errors if trackmetadata client throws up" in new PutContext {
         override def trackmetadataResponse = Future.exception(new RuntimeException("nooo"))
 
-        val response = put(controller, path, body = singleTrack)
+        val response = put(controller.handlePut, path, body = Json.stringify(singleTrack))
         response.status ==== Status.InternalServerError
-        response.body ==== ""
+        response.contentString ==== ""
       }
     }
 
-  } }
+  }
+  }
 
 
   "DELETE /tracks/:id" >> {
     "succeeds" in new Context {
-      val response = delete(controller, "/tracks/999")
+      val response = delete(controller.handleDelete, "/tracks/999")
       response.status ==== Status.Ok
     }
 
     "not found" in new Context {
       trackCoordinator.deleteTrack(session, trackUrn) returns Future(NotFound)
 
-      val response = delete(controller, "/tracks/999")
+      val response = delete(controller.handleDelete, "/tracks/999")
       response.status ==== Status.NotFound
     }
 
     "handles server errors from Track Coordinator" in new Context {
       trackCoordinator.deleteTrack(session, trackUrn) returns Future(ServerError.empty)
 
-      val response = delete(controller, "/tracks/999")
+      val response = delete(controller.handleDelete, "/tracks/999")
       response.status ==== Status.InternalServerError
     }
 
     "handles client errors from Track Coordinator" in new Context {
       trackCoordinator.deleteTrack(session, trackUrn) returns Future(ClientError.empty)
 
-      val response = delete(controller, "/tracks/999")
+      val response = delete(controller.handleDelete, "/tracks/999")
       response.status ==== Status.InternalServerError
     }
   }

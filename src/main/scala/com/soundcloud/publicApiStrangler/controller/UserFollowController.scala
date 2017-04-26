@@ -1,9 +1,11 @@
 package com.soundcloud.publicApiStrangler.controller
 
-import com.soundcloud.bff.finagle.{Request, ResponseBuilder}
 import com.soundcloud.bff.nextbff.mapping.MappingContext
-import com.soundcloud.bff.web.{BffInjectionBasedController, UserAuthentication}
-import com.soundcloud.jvmkit.{LoggedInUserSession, Urn, UserSession}
+import com.soundcloud.jvmkit.module.bff.session.UserAuthentication
+import com.soundcloud.jvmkit.module.http.server.{HandlerRequest, ResponseBuilder}
+import com.soundcloud.jvmkit.module.util.Urn
+import com.soundcloud.jvmkit.module.util.session.{LoggedInUserSession, UserSession}
+import com.soundcloud.publicApiStrangler.client.BigJvmKitConversions._
 import com.soundcloud.publicApiStrangler.client.followcounts.FollowCountsClient
 import com.soundcloud.publicApiStrangler.client.follows._
 import com.soundcloud.publicApiStrangler.client.follows.representation._
@@ -13,124 +15,17 @@ import com.soundcloud.publicApiStrangler.client.reposts.RepostsClient
 import com.soundcloud.publicApiStrangler.mapping.timeline.User
 import com.soundcloud.publicApiStrangler.support.DispatchToMothershipHandler
 import com.soundcloud.service.client.OkidokiClient
-import com.twitter.finagle.http.Status
+import com.twitter.finagle.http.{Response, Status}
 import com.twitter.util.Future
 import org.joda.time.format.DateTimeFormat
 import org.joda.time.{LocalDate, Years}
 import play.api.libs.json._
 
-class UserFollowController(userAuthentication: UserAuthentication,
-                           fallback: DispatchToMothershipHandler,
-                           okidoki: OkidokiClient,
-                           follows: FollowsClient,
-                           followCountsClient: FollowCountsClient,
-                           repostsClient: RepostsClient,
-                           baseUrl: String)
-  extends BffInjectionBasedController {
+class UserFollowController(userAuthentication: UserAuthentication, okidoki: OkidokiClient, follows: FollowsClient, followCountsClient: FollowCountsClient, repostsClient: RepostsClient, baseUrl: String) {
 
   val formatter = DateTimeFormat.forPattern("yyyy/M/d")
 
-  // anonymous endpoints
-
-  get("/users/:id/followings")(fetchFollowingsWithoutAuth)
-  get("/users/:id/followings.json")(fetchFollowingsWithoutAuth)
-
-  get("/users/:id/followers")(fetchFollowersWithoutAuth)
-  get("/users/:id/followers.json")(fetchFollowersWithoutAuth)
-
-  get("/users/:id/followers/recent")(fetchFollowersWithoutAuth)
-  get("/users/:id/followers/recent.json")(fetchFollowersWithoutAuth)
-
-  get("/users/:id/followers/ids")(fetchFollowerIdsWithoutAuth)
-  get("/users/:id/followers/ids.json")(fetchFollowerIdsWithoutAuth)
-
-  get("/users/:id/followings/ids")(fetchFollowingIdsWithoutAuth)
-  get("/users/:id/followings/ids.json")(fetchFollowingIdsWithoutAuth)
-
-  get("/users/:id/followers/followed_by/:other_id")(fetchFollowersFollowed)
-  get("/users/:id/followers/followed_by/:other_id.json")(fetchFollowersFollowed)
-
-  get("/users/:id/followings/not_followed_by/:other_id")(fetchFollowingsNotFollowedBy)
-  get("/users/:id/followings/not_followed_by/:other_id.json")(fetchFollowingsNotFollowedBy)
-
-  get("/users/:id/followings/common_to/:other_id")(fetchMutualFollowings)
-  get("/users/:id/followings/common_to/:other_id.json")(fetchMutualFollowings)
-
-  get("/users/:id/followers/:other_id")(fetchPossibleFollowerWithoutAuth)
-  get("/users/:id/followers/:other_id.json")(fetchPossibleFollowerWithoutAuth)
-
-  get("/users/:id/followings/:other_id")(fetchPossibleFollowingWithoutAuth)
-  get("/users/:id/followings/:other_id.json")(fetchPossibleFollowingWithoutAuth)
-
-  // logged-in only endpoints
-
-  get("/me/followings")(fetchFollowings)
-  get("/me/followings.json")(fetchFollowings)
-
-  get("/me/followers")(fetchMyFollowers)
-  get("/me/followers.json")(fetchMyFollowers)
-
-  get("/me/followers/recent")(fetchMyFollowers)
-  get("/me/followers/recent.json")(fetchMyFollowers)
-
-  get("/me/followers/ids")(fetchMyFollowerIds)
-  get("/me/followers/ids.json")(fetchMyFollowerIds)
-
-  get("/me/followings/ids")(fetchMyFollowingIds)
-  get("/me/followings/ids.json")(fetchMyFollowingIds)
-
-  get("/me/followers/:other_id")(fetchPossibleFollower)
-  get("/me/followers/:other_id.json")(fetchPossibleFollower)
-
-  get("/me/followings/:other_id")(fetchPossibleFollowing)
-  get("/me/followings/:other_id.json")(fetchPossibleFollowing)
-
-  head("/me/followings/:other_id")(fallback.dispatch)
-  head("/me/followings/:other_id.json")(fallback.dispatch)
-
-  post("/me/followings/:other_id")(follow)
-  post("/me/followings/:other_id.json")(follow)
-  put("/me/followings/:other_id")(follow)
-  put("/me/followings/:other_id.json")(follow)
-
-  delete("/me/followings/:other_id")(unfollow)
-  delete("/me/followings/:other_id.json")(unfollow)
-
-  // Legacy logged-in endpoints
-
-  get("/v1/me/followings")(fetchFollowings)
-  get("/v1/me/followings.json")(fetchFollowings)
-
-  get("/v1/me/followers")(fetchMyFollowers)
-  get("/v1/me/followers.json")(fetchMyFollowers)
-
-  get("/v1/me/followers/recent")(fetchMyFollowers)
-  get("/v1/me/followers/recent.json")(fetchMyFollowers)
-
-  get("/v1/me/followers/ids")(fetchMyFollowerIds)
-  get("/v1/me/followers/ids.json")(fetchMyFollowerIds)
-
-  get("/v1/me/followings/ids")(fetchMyFollowingIds)
-  get("/v1/me/followings/ids.json")(fetchMyFollowingIds)
-
-  get("/v1/me/followers/:other_id")(fetchPossibleFollower)
-  get("/v1/me/followers/:other_id.json")(fetchPossibleFollower)
-
-  get("/v1/me/followings/:other_id")(fetchPossibleFollowing)
-  get("/v1/me/followings/:other_id.json")(fetchPossibleFollowing)
-
-  head("/v1/me/followings/:other_id")(fallback.dispatch)
-  head("/v1/me/followings/:other_id.json")(fallback.dispatch)
-
-  post("/v1/me/followings/:other_id")(follow)
-  post("/v1/me/followings/:other_id.json")(follow)
-  put("/v1/me/followings/:other_id")(follow)
-  put("/v1/me/followings/:other_id.json")(follow)
-
-  delete("/v1/me/followings/:other_id")(unfollow)
-  delete("/v1/me/followings/:other_id.json")(unfollow)
-
-  private def follow(request: Request): Future[ResponseBuilder] = {
+  def follow(request: HandlerRequest): Future[Response] = {
     userAuthentication.withLoggedInUser(request) { (session, userUrn) =>
       val user = new Urn("soundcloud:users:" + request.routeParams.get("other_id").get)
       follows.follow(session, user).flatMap {
@@ -141,7 +36,7 @@ class UserFollowController(userAuthentication: UserAuthentication,
         case MaxFollowingsReached => renderError(Status.UnprocessableEntity)
         case BlockedByTarget => renderError(Status.Forbidden)
         case UserAsTarget => renderError(Status.BadRequest)
-        case AgeRestrictedUser =>  findUserAge(session, userUrn).flatMap {
+        case AgeRestrictedUser => findUserAge(session, userUrn).flatMap {
           case Some(userAge) => denyAgeRestricted(userAge)
           case _ => denyAgeUnknown
         }
@@ -151,7 +46,7 @@ class UserFollowController(userAuthentication: UserAuthentication,
     }
   }
 
-  private def unfollow(request: Request): Future[ResponseBuilder] = {
+  def unfollow(request: HandlerRequest): Future[Response] = {
     userAuthentication.withLoggedInUser(request) { (session, userUrn) =>
       val user = new Urn("soundcloud:users:" + request.routeParams.get("other_id").get)
       follows.unfollow(session, user).flatMap {
@@ -163,23 +58,29 @@ class UserFollowController(userAuthentication: UserAuthentication,
     }
   }
 
-  private def renderFollow(session: LoggedInUserSession, target: Urn): Future[ResponseBuilder] = {
+  private def renderFollow(session: LoggedInUserSession, target: Urn): Future[Response] = {
     fetchUsers(session, Set(target)).map { users =>
-      render.json(users.headOption).status(Status.Created.code)
+      ResponseBuilder.created(Json.stringify(Json.toJson(users.headOption)))
     }
   }
 
-  private def renderStatus(status: Status) =
-    render.json(Json.obj("status" -> s"$status - ${status.reason}"))
-      .status(status.code)
-      .toFuture
+  private def renderStatus(status: Status): Future[Response] =
+    Future.value(
+      ResponseBuilder(
+        status,
+        body = Json.stringify(Json.obj("status" -> s"$status - ${status.reason}"))
+      ).build
+    )
 
-  private def renderError(status: Status) =
-    render.json(Json.obj("errors" -> Seq(Map("error_message" -> s"${status.code} - ${status.reason}"))))
-      .status(status.code)
-      .toFuture
+  private def renderError(status: Status): Future[Response] =
+    Future.value(
+      ResponseBuilder(
+        status,
+        body = Json.stringify(Json.obj("errors" -> Seq(Map("error_message" -> s"${status.code} - ${status.reason}"))))
+      ).build
+    )
 
-  private def fetchFollowingsNotFollowedBy(request: Request): Future[ResponseBuilder] = {
+  def fetchFollowingsNotFollowedBy(request: HandlerRequest): Future[Response] = {
     fetchUrns(
       request,
       follows.followingsNotFollowedBy(
@@ -190,7 +91,7 @@ class UserFollowController(userAuthentication: UserAuthentication,
     )
   }
 
-  private def fetchMutualFollowings(request: Request): Future[ResponseBuilder] = {
+  def fetchMutualFollowings(request: HandlerRequest): Future[Response] = {
     fetchUrns(
       request,
       follows.mutualFollowings(
@@ -201,7 +102,7 @@ class UserFollowController(userAuthentication: UserAuthentication,
     )
   }
 
-  private def fetchFollowersFollowed(request: Request): Future[ResponseBuilder] = {
+  def fetchFollowersFollowed(request: HandlerRequest): Future[Response] = {
     fetchUrns(
       request,
       follows.followersFollowedBy(
@@ -212,29 +113,29 @@ class UserFollowController(userAuthentication: UserAuthentication,
     )
   }
 
-  private def fetchFollowersWithoutAuth(request: Request): Future[ResponseBuilder] = fetchPage(request, follows.followers, mapUsersToUsers, fans, requireLogin = false)
+  def fetchFollowersWithoutAuth(request: HandlerRequest): Future[Response] = fetchPage(request, follows.followers, mapUsersToUsers, fans, requireLogin = false)
 
-  private def fetchFollowingsWithoutAuth(request: Request): Future[ResponseBuilder] = fetchPage(request, follows.followings, mapUsersToUsers, contacts, requireLogin = false)
+  def fetchFollowingsWithoutAuth(request: HandlerRequest): Future[Response] = fetchPage(request, follows.followings, mapUsersToUsers, contacts, requireLogin = false)
 
-  private def fetchMyFollowers(request: Request): Future[ResponseBuilder] = fetchPage(request, follows.followers, mapUsersToUsers, fans, requireLogin = true)
+  def fetchMyFollowers(request: HandlerRequest): Future[Response] = fetchPage(request, follows.followers, mapUsersToUsers, fans, requireLogin = true)
 
-  private def fetchFollowings(request: Request) = fetchPage(request, follows.followings, mapUsersToUsers, contacts, requireLogin = true)
+  def fetchFollowings(request: HandlerRequest) = fetchPage(request, follows.followings, mapUsersToUsers, contacts, requireLogin = true)
 
-  private def fetchFollowingIdsWithoutAuth(request: Request) = fetchPage(request, follows.followings, userIds, contacts, requireLogin = false)
+  def fetchFollowingIdsWithoutAuth(request: HandlerRequest) = fetchPage(request, follows.followings, userIds, contacts, requireLogin = false)
 
-  private def fetchFollowerIdsWithoutAuth(request: Request) = fetchPage(request, follows.followers, userIds, fans, requireLogin = false)
+  def fetchFollowerIdsWithoutAuth(request: HandlerRequest) = fetchPage(request, follows.followers, userIds, fans, requireLogin = false)
 
-  private def fetchMyFollowingIds(request: Request) = fetchPage(request, follows.followings, userIds, contacts, requireLogin = true)
+  def fetchMyFollowingIds(request: HandlerRequest) = fetchPage(request, follows.followings, userIds, contacts, requireLogin = true)
 
-  private def fetchMyFollowerIds(request: Request) = fetchPage(request, follows.followers, userIds, fans, requireLogin = true)
+  def fetchMyFollowerIds(request: HandlerRequest) = fetchPage(request, follows.followers, userIds, fans, requireLogin = true)
 
-  private def fetchPossibleFollowingWithoutAuth(request: Request) = fetchUser(request, follows.filterFollowings, requireLogin = false)
+  def fetchPossibleFollowingWithoutAuth(request: HandlerRequest) = fetchUser(request, follows.filterFollowings, requireLogin = false)
 
-  private def fetchPossibleFollowerWithoutAuth(request: Request) = fetchUser(request, follows.filterFollowers, requireLogin = false)
+  def fetchPossibleFollowerWithoutAuth(request: HandlerRequest) = fetchUser(request, follows.filterFollowers, requireLogin = false)
 
-  private def fetchPossibleFollowing(request: Request) = fetchUser(request, follows.filterFollowings, requireLogin = true)
+  def fetchPossibleFollowing(request: HandlerRequest) = fetchUser(request, follows.filterFollowings, requireLogin = true)
 
-  private def fetchPossibleFollower(request: Request) = fetchUser(request, follows.filterFollowers, requireLogin = true)
+  def fetchPossibleFollower(request: HandlerRequest) = fetchUser(request, follows.filterFollowers, requireLogin = true)
 
   private def mapUsersToUsers(users: List[User]): List[JsValue] = Json.toJson(users).as[List[JsValue]]
 
@@ -244,16 +145,16 @@ class UserFollowController(userAuthentication: UserAuthentication,
 
   private def contacts(affiliations: Seq[Following]): Seq[Urn] = affiliations.map(_.target)
 
-  private def pageSizeParam(request: Request) = {
+  private def pageSizeParam(request: HandlerRequest) = {
     request.params.get("limit")
       .orElse(request.params.get("page_size"))
       .map(_.toInt).getOrElse(50)
   }
 
-  private def cursorParam(request: Request) = request.params.get("cursor")
+  private def cursorParam(request: HandlerRequest) = request.params.get("cursor")
 
-  private def fetchUrns(request: Request,
-                        fetchFunction: (UserSession, Urn) => Future[Option[UserUrns]]): Future[ResponseBuilder] = {
+  private def fetchUrns(request: HandlerRequest,
+                        fetchFunction: (UserSession, Urn) => Future[Option[UserUrns]]): Future[Response] = {
     authenticateIfNeeded(request, requireLogin = false) { (session: UserSession, userToFetch: Urn) =>
       for {
         responseOption <- fetchFunction(session, userToFetch)
@@ -261,17 +162,17 @@ class UserFollowController(userAuthentication: UserAuthentication,
         users <- fetchUsers(session, urns)
       } yield {
         responseOption.map { _ =>
-          render.json(Json.obj("collection" -> mapUsersToUsers(users)))
-        }.getOrElse(render.serviceUnavailable)
+          ResponseBuilder.ok(Json.stringify(Json.obj("collection" -> mapUsersToUsers(users))))
+        }.getOrElse(ResponseBuilder.serviceUnavailable())
       }
     }
   }
 
-  private def fetchPage[T](request: Request,
+  private def fetchPage[T](request: HandlerRequest,
                            fetchFunction: (UserSession, Urn, Option[String], Int) => Future[Option[FollowingsPage]],
                            mapUsers: List[User] => List[JsValue] = mapUsersToUsers,
                            users: Seq[Following] => Seq[Urn],
-                           requireLogin: Boolean): Future[ResponseBuilder] = {
+                           requireLogin: Boolean): Future[Response] = {
     authenticateIfNeeded(request, requireLogin) { (session: UserSession, userToFetch: Urn) =>
       for {
         affiliationsOption <- fetchFunction(session, userToFetch, cursorParam(request), pageSizeParam(request))
@@ -279,17 +180,18 @@ class UserFollowController(userAuthentication: UserAuthentication,
         users <- fetchUsers(session, urns)
       } yield {
         affiliationsOption.map { affiliations =>
-          render.json(Json.obj(
+          ResponseBuilder.ok(Json.stringify(Json.obj(
             "collection" -> mapUsers(users),
-            "next_href" -> nextHref(baseUrl, request.request.path, affiliations.next, request.params)))
-        }.getOrElse(render.serviceUnavailable)
+            "next_href" -> nextHref(baseUrl, request.request.path, affiliations.next, request.params)
+          )))
+        }.getOrElse(ResponseBuilder.serviceUnavailable())
       }
     }
   }
 
-  private def fetchUser(request: Request,
+  private def fetchUser(request: HandlerRequest,
                         filteringFunction: (UserSession, Urn, Seq[Urn]) => Future[Option[FilteredUserUrns]],
-                        requireLogin: Boolean): Future[ResponseBuilder] =
+                        requireLogin: Boolean): Future[Response] =
     authenticateIfNeeded(request, requireLogin) { (session: UserSession, loggedInUser: Urn) =>
       val userId = request.routeParams.get("other_id").get
       val user = new Urn("soundcloud:users:" + userId)
@@ -301,18 +203,19 @@ class UserFollowController(userAuthentication: UserAuthentication,
       } yield {
         filteredOption.map { _ =>
           if (users.nonEmpty) {
-            render
-              .status(Status.SeeOther.code)
-              .header("Location", s"$baseUrl/users/$userId")
-              .json(users.head)
+            ResponseBuilder(
+              status = Status.SeeOther,
+              headers = Map("Location" -> s"$baseUrl/users/$userId"),
+              body = Json.stringify(Json.toJson(users.head))
+            ).build
           } else {
-            render.notFound
+            ResponseBuilder.notFound()
           }
-        }.getOrElse(render.serviceUnavailable)
+        }.getOrElse(ResponseBuilder.serviceUnavailable())
       }
     }
 
-  private def authenticateIfNeeded(request: Request, requireLogin: Boolean)(withSession: (UserSession, Urn) => Future[ResponseBuilder]) = {
+  private def authenticateIfNeeded(request: HandlerRequest, requireLogin: Boolean)(withSession: (UserSession, Urn) => Future[Response]) = {
     if (requireLogin) {
       userAuthentication.withLoggedInUser(request) { (loggedIn, _) => withSession(loggedIn, loggedIn.getUser) }
     } else {
@@ -358,22 +261,25 @@ class UserFollowController(userAuthentication: UserAuthentication,
     Years.yearsBetween(dob, new LocalDate()).getYears
   }
 
-  private def denyAgeRestricted(age: Long): Future[ResponseBuilder] = {
+  private def denyAgeRestricted(age: Long): Future[Response] = {
     val errors = JsArray(Seq(JsObject(Seq(
       "error_message" -> JsString("DENY_AGE_RESTRICTED"),
       "age" -> JsNumber(age)
     ))))
-    render.json(JsObject(Seq("errors" -> errors)))
-      .status(Status.Forbidden.code)
-      .toFuture
+    forbidden(errors)
   }
 
-  private def denyAgeUnknown: Future[ResponseBuilder] = {
+  private def denyAgeUnknown: Future[Response] = {
     val errors = JsArray(Seq(JsObject(Seq(
       "error_message" -> JsString("DENY_AGE_UNKNOWN")
     ))))
-    render.json(JsObject(Seq("errors" -> errors)))
-      .status(Status.Forbidden.code)
-      .toFuture
+    forbidden(errors)
+  }
+
+  private def forbidden(errors: JsArray): Future[Response] = {
+    Future.value(ResponseBuilder(
+      status = Status.Forbidden,
+      body = Json.stringify(JsObject(Seq("errors" -> errors)))
+    ).build)
   }
 }

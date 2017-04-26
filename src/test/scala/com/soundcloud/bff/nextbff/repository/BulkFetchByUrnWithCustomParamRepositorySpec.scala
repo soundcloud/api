@@ -1,10 +1,10 @@
 package com.soundcloud.bff.nextbff.repository
 
-import com.soundcloud.bff.test.UnitSpecification
-import com.soundcloud.jvmkit.{Urn, UserSession}
+import com.soundcloud.jvmkit.module.util.Urn
+import com.soundcloud.jvmkit.module.util.session.UserSession
+import com.soundcloud.publicApiStrangler.test.UnitSpecification
 import com.twitter.util.{Await, Future}
-import play.api.libs.json.JsObject
-import play.api.libs.json.Json
+import play.api.libs.json.{JsObject, Json}
 
 class BulkFetchByUrnWithCustomParamRepositorySpec extends UnitSpecification {
 

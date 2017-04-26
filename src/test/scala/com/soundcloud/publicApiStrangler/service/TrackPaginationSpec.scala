@@ -3,9 +3,10 @@ package com.soundcloud.publicApiStrangler.service
 import java.net.URL
 import java.util.TimeZone
 
-import com.soundcloud.jvmkit.Urn
+import com.soundcloud.jvmkit.module.util.Urn
+import com.soundcloud.publicApiStrangler.client.BigJvmKitConversions._
+import com.soundcloud.publicApiStrangler.test.UnitSpecification
 import com.soundcloud.publicApiStrangler.test.util.TrackMetadataTrackBuilder
-import com.soundcloud.scalakit.test.UnitSpecification
 import org.joda.time.{DateTimeZone, LocalDateTime}
 
 import scala.util.Random
@@ -17,6 +18,7 @@ class TrackPaginationSpec extends UnitSpecification {
   val baseUrl = new URL("https://api.soundcloud.com")
 
   def trackUrns(size: Int) = Random.shuffle((0 until size).map(n => Urn(s"soundcloud:tracks:${n}"))).toList
+
   def tracks(size: Int) = Random.shuffle((0 until size).map(n => TrackMetadataTrackBuilder(urn = Urn(s"soundcloud:tracks:${n}")).build)).toList
 
   "defaults" >> {
@@ -145,7 +147,8 @@ class TrackPaginationSpec extends UnitSpecification {
       (4, new LocalDateTime(2017, 1, 15, 9, 0, 0)),
       (5, new LocalDateTime(2017, 1, 15, 10, 0, 0)),
       (6, new LocalDateTime(2017, 1, 20, 10, 0, 0))).map { case (id, createdAt) =>
-        TrackMetadataTrackBuilder(urn = Urn(s"soundcloud:tracks:${id}"), created_at = createdAt).build }
+      TrackMetadataTrackBuilder(urn = Urn(s"soundcloud:tracks:${id}"), created_at = createdAt).build
+    }
 
     val pagination = new TrackPagination(None, None, false, Some(from), Some(to), baseUrl)
 
@@ -169,6 +172,7 @@ class TrackPaginationSpec extends UnitSpecification {
 
   "parses from a map" >> {
     val url = baseUrl
+
     def build(m: Map[String, String]) = TrackPagination.fromRequest(m, url)
 
     "limit" >> {

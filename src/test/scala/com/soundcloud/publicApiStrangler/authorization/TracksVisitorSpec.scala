@@ -1,12 +1,11 @@
 package com.soundcloud.publicApiStrangler.authorization
 
+import com.soundcloud.jvmkit.module.util.Urn
+import com.soundcloud.publicApiStrangler.test.UnitSpecification
 import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures
+import play.api.libs.json.{JsObject, JsValue}
 
 import scala.collection.mutable.ListBuffer
-import com.soundcloud.bff.test.UnitSpecification
-import com.soundcloud.jvmkit.Urn
-import play.api.libs.json.JsObject
-import play.api.libs.json.JsValue
 
 class TracksVisitorSpec extends UnitSpecification with Fixtures {
 
@@ -17,6 +16,7 @@ class TracksVisitorSpec extends UnitSpecification with Fixtures {
       visited += urn -> track.json
       Some(track.json)
     }
+
     def urnsAndTracks(tracks: List[JsValue]) =
       for (track <- tracks) yield {
         val id = (track \ "id").as[Int]

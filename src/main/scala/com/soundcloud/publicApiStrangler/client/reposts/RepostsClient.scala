@@ -1,6 +1,9 @@
 package com.soundcloud.publicApiStrangler.client.reposts
 
-import com.soundcloud.jvmkit.{Urn, UserSession}
+import com.soundcloud.jvmkit.module.util.Urn
+import com.soundcloud.jvmkit.module.util.session.UserSession
+import com.soundcloud.publicApiStrangler.client.BigJvmKitConversions.toBigJvmKitUserSession
+import com.soundcloud.publicApiStrangler.client.CommonJsonFormats._
 import com.soundcloud.publicApiStrangler.client.reposts.RepostsClient._
 import com.soundcloud.scalakit.Path
 import com.soundcloud.scalakit.finagle.http._
@@ -16,7 +19,7 @@ case class Reposts(urns: List[Urn], nextCursor: Option[String])
   */
 class RepostsClient(jsonClient: JsonClient) extends FetchClient {
 
-  def createRepost(session: UserSession, target: Urn, baseUrl: => String): Future[Result] =
+  def createRepost(session: UserSession, target: Urn, baseUrl: String): Future[Result] =
     jsonClient.post(
       session,
       Path() / target.getCollection / target.toString / "reposts",
@@ -25,7 +28,7 @@ class RepostsClient(jsonClient: JsonClient) extends FetchClient {
       None
     ).map(toResult(_, baseUrl))
 
-  def deleteRepost(session: UserSession, target: Urn, baseUrl: => String): Future[Result] =
+  def deleteRepost(session: UserSession, target: Urn, baseUrl: String): Future[Result] =
     jsonClient.delete(
       session,
       Path() / target.getCollection / target.toString / "reposts",
@@ -106,7 +109,8 @@ class RepostsClient(jsonClient: JsonClient) extends FetchClient {
         val params = Params("urns" -> batchUrns.map(_.toString).mkString(","))
         jsonClient.get(session, path, params, headers = Params.empty)
           .map { case JsonResponse(OkStatus, body, _, _) => (body \ "counts").as[Seq[Count]] }
-      }}.map(f => f.handle { case NonFatal(_) => Seq.empty }).toSeq
+      }
+      }.map(f => f.handle { case NonFatal(_) => Seq.empty }).toSeq
     ).map(_.flatten)
   }
 
@@ -120,22 +124,30 @@ class RepostsClient(jsonClient: JsonClient) extends FetchClient {
 
   private def getUserCountForKind(session: UserSession, user: Urn, kind: String): Future[Count] =
     jsonClient.get(session, Path() / "users" / user.toString / kind / "count", Params.empty, Params.empty)
-      .map { case JsonResponse(OkStatus, body, _, _) => (body \ "counts")(0).as[Count] }
+      .map { case JsonResponse(OkStatus, body, _, _) => (body \ "counts") (0).as[Count] }
 
 }
 
 object RepostsClient {
 
   sealed trait Result
+
   case object Created extends Result
+
   case object Deleted extends Result
+
   case object AlreadyExists extends Result
+
   case object NotFound extends Result
+
   case class SpamWarning(warning_level: String, reason_phrase: String, acknowledge_url: Option[String], release_at: Option[String])
+
   case class SpamBlocked(errors: Seq[SpamWarning]) extends Result
+
   case object Failed extends Result
 
   case class Count(urn: Urn, count: Long)
+
   implicit val countFormat: Format[Count] = Json.format[Count]
 
   def toResult(response: JsonResponse, baseUrl: => String): Result = response match {

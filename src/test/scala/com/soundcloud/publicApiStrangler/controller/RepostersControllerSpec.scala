@@ -1,27 +1,29 @@
 package com.soundcloud.publicApiStrangler.controller
 
 import com.soundcloud.bff.nextbff.mapping.MappingContext
-import com.soundcloud.bff.test.InjectionBasedControllerSpecification
-import com.soundcloud.jvmkit.{Urn, UserSessionBuilder}
+import com.soundcloud.jvmkit.module.bff.testsupport.FakeUserAuthentication
+import com.soundcloud.jvmkit.module.util.session.UserSessionBuilder
+import com.soundcloud.jvmkit.module.util.{Geo, Urn}
+import com.soundcloud.publicApiStrangler.RoutingDefinitions
 import com.soundcloud.publicApiStrangler.client.RichOkidokiClient
 import com.soundcloud.publicApiStrangler.client.followcounts.{FollowCounts, FollowCountsClient}
 import com.soundcloud.publicApiStrangler.client.liebling.LieblingClient
 import com.soundcloud.publicApiStrangler.client.reposts.{Reposts, RepostsClient}
 import com.soundcloud.publicApiStrangler.mapping.reposts.RepostsUser
-import com.soundcloud.scalakit.Geo
+import com.soundcloud.publicApiStrangler.test.{HandlerSpecificationScope, UnitSpecification}
 import com.twitter.finagle.http.Status
 import com.twitter.util.Future
 import play.api.libs.json._
 
-class RepostersControllerSpec extends InjectionBasedControllerSpecification {
+class RepostersControllerSpec extends UnitSpecification {
 
-  trait Context extends Scope {
+  trait Context extends HandlerSpecificationScope {
     val user = Urn("soundcloud:users:999")
     val track = Urn("soundcloud:tracks:100")
     val playlist = Urn("soundcloud:playlists:200")
     val noNextHrefTrack = Urn("soundcloud:tracks:101")
     val noNextHrefPlaylist = Urn("soundcloud:playlists:201")
-    val geo = Geo("US")
+    val geo = new Geo("US")
     val baseUrl = "http://api.example.com"
     val requestHeaders = Map("Host" -> "api.example.com")
     val session = new UserSessionBuilder().setUser(user).setAgent(Urn("soundcloud:applications:v2")).setGeo(geo).build()
@@ -67,7 +69,9 @@ class RepostersControllerSpec extends InjectionBasedControllerSpecification {
     val followCountsClient = mock[FollowCountsClient]
     val lieblingClient = mock[LieblingClient]
 
-    lazy val controller = new RepostersController(fakeUserAuthentication(session), repostsClient, okidokiClient, followCountsClient, lieblingClient, () => Future.False)
+    lazy val controller = new RepostersController(new FakeUserAuthentication(session), repostsClient, okidokiClient, followCountsClient, lieblingClient, () => Future.False)
+
+    override def routingDefinitions = RoutingDefinitions.forRepostersController(controller)
   }
 
   "track reposters" >> {
@@ -76,10 +80,10 @@ class RepostersControllerSpec extends InjectionBasedControllerSpecification {
       val noNextHrefTrackReposts = Reposts(List(user), None)
       val okidokiUsersJson = withContentsOf("okidoki", "users").as[JsArray]
       val okidokiUserResponse = RepostsUser(okidokiUsersJson(0),
-                                            baseUrl,
-                                            None,
-                                            None,
-                                            None)(new MappingContext(session))
+        baseUrl,
+        None,
+        None,
+        None)(new MappingContext(session))
       repostsClient
         .reposters(session, track, 200, None)
         .returns(Future.value(trackReposts))
@@ -106,50 +110,50 @@ class RepostersControllerSpec extends InjectionBasedControllerSpecification {
     }
 
     "returns result array if no linked_partitioning param" in new TrackReposters {
-      val response = get(controller, s"/e1/tracks/${track.getIdentifier}/reposters", Map.empty, requestHeaders)
-      val responseJson = get(controller, s"/e1/tracks/${track.getIdentifier}/reposters.json", Map.empty, requestHeaders)
+      val response = get(controller.trackReposters, s"/e1/tracks/${track.getIdentifier}/reposters", Map.empty, requestHeaders)
+      val responseJson = get(controller.trackReposters, s"/e1/tracks/${track.getIdentifier}/reposters.json", Map.empty, requestHeaders)
 
       response.status ==== responseJson.status
-      response.jsonBody ==== responseJson.jsonBody
+      Json.parse(response.contentString) ==== Json.parse(responseJson.contentString)
 
       response.status ==== Status.Ok
-      response.jsonBody ==== usersJson
+      Json.parse(response.contentString) ==== usersJson
     }
 
     "returns result object if linked_partitioning param is present" in new TrackReposters {
-      val response = get(controller, s"/e1/tracks/${track.getIdentifier}/reposters", Map("linked_partitioning" -> "1", "foo" -> "bar"), requestHeaders)
-      val responseJson = get(controller, s"/e1/tracks/${track.getIdentifier}/reposters.json", Map("linked_partitioning" -> "1", "foo" -> "bar"), requestHeaders)
+      val response = get(controller.trackReposters, s"/e1/tracks/${track.getIdentifier}/reposters", Map("linked_partitioning" -> "1", "foo" -> "bar"), requestHeaders)
+      val responseJson = get(controller.trackReposters, s"/e1/tracks/${track.getIdentifier}/reposters.json", Map("linked_partitioning" -> "1", "foo" -> "bar"), requestHeaders)
 
       response.status ==== responseJson.status
-      response.jsonBody \ "collection" ==== responseJson.jsonBody \ "collection"
+      Json.parse(response.contentString) \ "collection" ==== Json.parse(responseJson.contentString) \ "collection"
 
       responseJson.status ==== Status.Ok
-      (response.jsonBody \ "next_href").as[String] ==== "http://api.example.com/e1/tracks/100/reposters?limit=200&linked_partitioning=1&foo=bar&cursor=ohai"
-      (responseJson.jsonBody \ "next_href").as[String] ==== "http://api.example.com/e1/tracks/100/reposters.json?limit=200&linked_partitioning=1&foo=bar&cursor=ohai"
+      (Json.parse(response.contentString) \ "next_href").as[String] ==== "http://api.example.com/e1/tracks/100/reposters?limit=200&linked_partitioning=1&foo=bar&cursor=ohai"
+      (Json.parse(responseJson.contentString) \ "next_href").as[String] ==== "http://api.example.com/e1/tracks/100/reposters.json?limit=200&linked_partitioning=1&foo=bar&cursor=ohai"
     }
 
     "respects limit/cursor params" in new TrackReposters {
-      val response = get(controller, s"/e1/tracks/${track.getIdentifier}/reposters", Map("linked_partitioning" -> "1", "limit" -> "1", "cursor" -> "hallo", "foo" -> "bar"), requestHeaders)
-      val responseJson = get(controller, s"/e1/tracks/${track.getIdentifier}/reposters.json", Map("linked_partitioning" -> "1", "limit" -> "1", "cursor" -> "hallo", "foo" -> "bar"), requestHeaders)
+      val response = get(controller.trackReposters, s"/e1/tracks/${track.getIdentifier}/reposters", Map("linked_partitioning" -> "1", "limit" -> "1", "cursor" -> "hallo", "foo" -> "bar"), requestHeaders)
+      val responseJson = get(controller.trackReposters, s"/e1/tracks/${track.getIdentifier}/reposters.json", Map("linked_partitioning" -> "1", "limit" -> "1", "cursor" -> "hallo", "foo" -> "bar"), requestHeaders)
 
       response.status ==== responseJson.status
-      response.jsonBody \ "collection" ==== responseJson.jsonBody \ "collection"
+      Json.parse(response.contentString) \ "collection" ==== Json.parse(responseJson.contentString) \ "collection"
 
       responseJson.status ==== Status.Ok
-      (response.jsonBody \ "next_href").as[String] ==== "http://api.example.com/e1/tracks/100/reposters?limit=1&linked_partitioning=1&cursor=ohai&foo=bar"
-      (responseJson.jsonBody \ "next_href").as[String] ==== "http://api.example.com/e1/tracks/100/reposters.json?limit=1&linked_partitioning=1&cursor=ohai&foo=bar"
+      (Json.parse(response.contentString) \ "next_href").as[String] ==== "http://api.example.com/e1/tracks/100/reposters?limit=1&linked_partitioning=1&cursor=ohai&foo=bar"
+      (Json.parse(responseJson.contentString) \ "next_href").as[String] ==== "http://api.example.com/e1/tracks/100/reposters.json?limit=1&linked_partitioning=1&cursor=ohai&foo=bar"
     }
 
     "does not return empty next_href" in new TrackReposters {
-      val response = get(controller, s"/e1/tracks/${noNextHrefTrack.getIdentifier}/reposters", Map("linked_partitioning" -> "1", "foo" -> "bar"), requestHeaders)
-      val responseJson = get(controller, s"/e1/tracks/${noNextHrefTrack.getIdentifier}/reposters.json", Map("linked_partitioning" -> "1", "foo" -> "bar"), requestHeaders)
+      val response = get(controller.trackReposters, s"/e1/tracks/${noNextHrefTrack.getIdentifier}/reposters", Map("linked_partitioning" -> "1", "foo" -> "bar"), requestHeaders)
+      val responseJson = get(controller.trackReposters, s"/e1/tracks/${noNextHrefTrack.getIdentifier}/reposters.json", Map("linked_partitioning" -> "1", "foo" -> "bar"), requestHeaders)
 
       response.status ==== responseJson.status
-      response.jsonBody ==== responseJson.jsonBody
+      Json.parse(response.contentString) ==== Json.parse(responseJson.contentString)
 
       response.status ==== Status.Ok
-      response.jsonBody \ "collection" ==== usersJson
-      (responseJson.jsonBody \ "next_href").asOpt[String] should beEmpty
+      Json.parse(response.contentString) \ "collection" ==== usersJson
+      (Json.parse(responseJson.contentString) \ "next_href").asOpt[String] should beEmpty
     }
   }
 
@@ -159,10 +163,10 @@ class RepostersControllerSpec extends InjectionBasedControllerSpecification {
       val noNextHrefPlaylistReposts = Reposts(List(user), None)
       val okidokiUsersJson = withContentsOf("okidoki", "users").as[JsArray]
       val okidokiUserResponse = RepostsUser(okidokiUsersJson(0),
-                                            baseUrl,
-                                            None,
-                                            None,
-                                            None)(new MappingContext(session))
+        baseUrl,
+        None,
+        None,
+        None)(new MappingContext(session))
       repostsClient
         .reposters(session, playlist, 200, None)
         .returns(Future.value(playlistReposts))
@@ -178,7 +182,7 @@ class RepostersControllerSpec extends InjectionBasedControllerSpecification {
       repostsClient
         .getRepostCountsByUrnWithFallback(session, Set(user))
         .returns(Future.value(Map.empty[Urn, Long]))
-      
+
       okidokiClient
         .fetchRepostsUsersWithoutCounts(session, Set(user), baseUrl, 50)
         .returns(Future.value(List(okidokiUserResponse)))
@@ -189,50 +193,50 @@ class RepostersControllerSpec extends InjectionBasedControllerSpecification {
     }
 
     "returns result array if no linked_partitioning param" in new PlaylistReposters {
-      val response = get(controller, s"/e1/playlists/${playlist.getIdentifier}/reposters", Map.empty, requestHeaders)
-      val responseJson = get(controller, s"/e1/playlists/${playlist.getIdentifier}/reposters.json", Map.empty, requestHeaders)
+      val response = get(controller.playlistReposters, s"/e1/playlists/${playlist.getIdentifier}/reposters", Map.empty, requestHeaders)
+      val responseJson = get(controller.playlistReposters, s"/e1/playlists/${playlist.getIdentifier}/reposters.json", Map.empty, requestHeaders)
 
       response.status ==== responseJson.status
-      response.jsonBody ==== responseJson.jsonBody
+      Json.parse(response.contentString) ==== Json.parse(responseJson.contentString)
 
       response.status ==== Status.Ok
-      response.jsonBody ==== usersJson
+      Json.parse(response.contentString) ==== usersJson
     }
 
     "returns result object if linked_partitioning param is present" in new PlaylistReposters {
-      val response = get(controller, s"/e1/playlists/${playlist.getIdentifier}/reposters", Map("linked_partitioning" -> "1", "foo" -> "bar"), requestHeaders)
-      val responseJson = get(controller, s"/e1/playlists/${playlist.getIdentifier}/reposters.json", Map("linked_partitioning" -> "1", "foo" -> "bar"), requestHeaders)
+      val response = get(controller.playlistReposters, s"/e1/playlists/${playlist.getIdentifier}/reposters", Map("linked_partitioning" -> "1", "foo" -> "bar"), requestHeaders)
+      val responseJson = get(controller.playlistReposters, s"/e1/playlists/${playlist.getIdentifier}/reposters.json", Map("linked_partitioning" -> "1", "foo" -> "bar"), requestHeaders)
 
       response.status ==== responseJson.status
-      response.jsonBody \ "collection" ==== responseJson.jsonBody \ "collection"
+      Json.parse(response.contentString) \ "collection" ==== Json.parse(responseJson.contentString) \ "collection"
 
       responseJson.status ==== Status.Ok
-      (response.jsonBody \ "next_href").as[String] ==== "http://api.example.com/e1/playlists/200/reposters?limit=200&linked_partitioning=1&foo=bar&cursor=ohai"
-      (responseJson.jsonBody \ "next_href").as[String] ==== "http://api.example.com/e1/playlists/200/reposters.json?limit=200&linked_partitioning=1&foo=bar&cursor=ohai"
+      (Json.parse(response.contentString) \ "next_href").as[String] ==== "http://api.example.com/e1/playlists/200/reposters?limit=200&linked_partitioning=1&foo=bar&cursor=ohai"
+      (Json.parse(responseJson.contentString) \ "next_href").as[String] ==== "http://api.example.com/e1/playlists/200/reposters.json?limit=200&linked_partitioning=1&foo=bar&cursor=ohai"
     }
 
     "respects limit/cursor params" in new PlaylistReposters {
-      val responseJson = get(controller, s"/e1/playlists/${playlist.getIdentifier}/reposters.json", Map("linked_partitioning" -> "1", "limit" -> "1", "cursor" -> "hallo", "foo" -> "bar"), requestHeaders)
-      val response = get(controller, s"/e1/playlists/${playlist.getIdentifier}/reposters", Map("linked_partitioning" -> "1", "limit" -> "1", "cursor" -> "hallo", "foo" -> "bar"), requestHeaders)
+      val responseJson = get(controller.playlistReposters, s"/e1/playlists/${playlist.getIdentifier}/reposters.json", Map("linked_partitioning" -> "1", "limit" -> "1", "cursor" -> "hallo", "foo" -> "bar"), requestHeaders)
+      val response = get(controller.playlistReposters, s"/e1/playlists/${playlist.getIdentifier}/reposters", Map("linked_partitioning" -> "1", "limit" -> "1", "cursor" -> "hallo", "foo" -> "bar"), requestHeaders)
 
       response.status ==== responseJson.status
-      response.jsonBody \ "collection" ==== responseJson.jsonBody \ "collection"
+      Json.parse(response.contentString) \ "collection" ==== Json.parse(responseJson.contentString) \ "collection"
 
       responseJson.status ==== Status.Ok
-      (response.jsonBody \ "next_href").as[String] ==== "http://api.example.com/e1/playlists/200/reposters?limit=1&linked_partitioning=1&cursor=ohai&foo=bar"
-      (responseJson.jsonBody \ "next_href").as[String] ==== "http://api.example.com/e1/playlists/200/reposters.json?limit=1&linked_partitioning=1&cursor=ohai&foo=bar"
+      (Json.parse(response.contentString) \ "next_href").as[String] ==== "http://api.example.com/e1/playlists/200/reposters?limit=1&linked_partitioning=1&cursor=ohai&foo=bar"
+      (Json.parse(responseJson.contentString) \ "next_href").as[String] ==== "http://api.example.com/e1/playlists/200/reposters.json?limit=1&linked_partitioning=1&cursor=ohai&foo=bar"
     }
 
     "does not return empty next_href" in new PlaylistReposters {
-      val response = get(controller, s"/e1/playlists/${noNextHrefPlaylist.getIdentifier}/reposters", Map("linked_partitioning" -> "1", "foo" -> "bar"), requestHeaders)
-      val responseJson = get(controller, s"/e1/playlists/${noNextHrefPlaylist.getIdentifier}/reposters.json", Map("linked_partitioning" -> "1", "foo" -> "bar"), requestHeaders)
+      val response = get(controller.playlistReposters, s"/e1/playlists/${noNextHrefPlaylist.getIdentifier}/reposters", Map("linked_partitioning" -> "1", "foo" -> "bar"), requestHeaders)
+      val responseJson = get(controller.playlistReposters, s"/e1/playlists/${noNextHrefPlaylist.getIdentifier}/reposters.json", Map("linked_partitioning" -> "1", "foo" -> "bar"), requestHeaders)
 
       response.status ==== responseJson.status
-      response.jsonBody ==== responseJson.jsonBody
+      Json.parse(response.contentString) ==== Json.parse(responseJson.contentString)
 
       response.status ==== Status.Ok
-      response.jsonBody \ "collection" ==== usersJson
-      (responseJson.jsonBody \ "next_href").asOpt[String] should beEmpty
+      Json.parse(response.contentString) \ "collection" ==== usersJson
+      (Json.parse(responseJson.contentString) \ "next_href").asOpt[String] should beEmpty
     }
   }
 }

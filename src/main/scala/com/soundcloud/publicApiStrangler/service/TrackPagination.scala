@@ -2,7 +2,7 @@ package com.soundcloud.publicApiStrangler.service
 
 import java.net.URL
 
-import com.soundcloud.jvmkit.Urn
+import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.publicApiStrangler.client.trackmetadata.Track
 import org.joda.time.format.DateTimeFormat
 import org.joda.time.{DateTime, DateTimeZone, LocalDateTime}

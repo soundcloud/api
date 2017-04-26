@@ -3,22 +3,25 @@ package com.soundcloud.publicApiStrangler.mapper.search
 import com.soundcloud.bff.nextbff.mapping.MappingContext
 import com.soundcloud.bff.nextbff.pagination.OffsetBasedPage
 import com.soundcloud.bff.services.{JsonService => BffJsonService}
-import com.soundcloud.bff.test.UnitSpecification
-import com.soundcloud.jvmkit.{Urn, UserSession}
+import com.soundcloud.jvmkit.module.util.Urn
+import com.soundcloud.jvmkit.module.util.session.{UserSession, UserSessionBuilder}
 import com.soundcloud.publicApiStrangler.authorization.ContentAuthorizationRules
+import com.soundcloud.publicApiStrangler.client.BigJvmKitConversions._
+import com.soundcloud.publicApiStrangler.client.CommonJsonFormats.urnFormat
 import com.soundcloud.publicApiStrangler.client.followcounts.FollowCountsClient
-import com.soundcloud.publicApiStrangler.mapping.search.{LegacySearch, PaginatedSearch, SearchDispatcherRequest}
-import com.soundcloud.jvmkit.Urn.format
 import com.soundcloud.publicApiStrangler.client.reposts.RepostsClient
+import com.soundcloud.publicApiStrangler.mapping.search.{LegacySearch, PaginatedSearch, SearchDispatcherRequest}
+import com.soundcloud.publicApiStrangler.test.UnitSpecification
 import com.soundcloud.scalakit.finagle.http.OkStatus
 import com.soundcloud.scalakit.finagle.jsonservice._
 import com.soundcloud.scalakit.json.UntypedJson
 import com.soundcloud.service.client.OkidokiClient
 import com.twitter.util.{Await, Future}
-import play.api.libs.json.{JsArray, JsNull, JsObject, Json}
 import org.mockito.Mockito.when
+import play.api.libs.json.{JsArray, JsNull, JsObject, Json}
 
 class SearchRepositorySpec extends UnitSpecification {
+
   trait Context extends Scope {
     lazy val session = loggedInSession(new Urn("soundcloud:users:123"))
     lazy val mockService = mock[BffJsonService]
@@ -82,7 +85,7 @@ class SearchMapperSpec extends UnitSpecification {
     def pagedRequest(params: Map[String, Param]) =
       OffsetBasedPage(query, "http://api-v2.soundcloud.com", "http://api-v2.soundcloud.com/search/tracks", params, 0, 3)
 
-    val sessionMock = mock[UserSession]
+    val sessionMock = new UserSessionBuilder().build()
     implicit val context = new MappingContext(sessionMock)
   }
 
@@ -103,7 +106,7 @@ class SearchMapperSpec extends UnitSpecification {
       .thenReturn(Future.value(Map(request -> json)))
 
     // okidoki doesn't know about it and returns an empty result
-    when(okidokiMock.fetch(sessionMock, urns.toSet))
+    when(okidokiMock.fetch(sessionMock, urns.toSet.map(toBigJvmKitUrn)))
       .thenReturn(Future.value(List.empty))
 
     when(caMock.fetchRules(===(sessionMock), any[Seq[Urn]]))
@@ -113,12 +116,14 @@ class SearchMapperSpec extends UnitSpecification {
       .thenReturn(Future.value(Seq.empty))
 
     when(repostsClient.getRepostCountsByUrnWithFallback(sessionMock, urns.toSet))
-      .thenReturn(Future.value(Map.empty[Urn,Long]))
+      .thenReturn(Future.value(Map.empty[Urn, Long]))
 
     val mapped = Await.result(searchMapper.materialize(sessionMock, request)).get
     val result = Json.parse(UntypedJson.asString(mapped)).as[JsArray]
 
-    result.value.count { _ == JsNull } ==== 0
+    result.value.count {
+      _ == JsNull
+    } ==== 0
   }
 
   "paginated responses" >> {

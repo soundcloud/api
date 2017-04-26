@@ -1,19 +1,22 @@
 package com.soundcloud.publicApiStrangler.client.follows
 
-import com.soundcloud.jvmkit.{Urn, UserSessionBuilder}
+import com.soundcloud.jvmkit.module.http.client.Params
+import com.soundcloud.jvmkit.module.util.{Geo, Path, Urn}
+import com.soundcloud.jvmkit.module.util.session.UserSessionBuilder
 import com.soundcloud.publicApiStrangler.client.follows.representation._
 import com.soundcloud.publicApiStrangler.client.follows.representation.follow._
 import com.soundcloud.publicApiStrangler.client.follows.representation.unfollow.{UnfollowSuccessful, NotFollowing => UnfollowNotFollowing, UnknownError => UnfollowUnknownError, UserAsTarget => UnfollowUserAsTarget, UserNotFound => UnfollowUserNotFound}
 import com.soundcloud.scalakit.finagle.http.{ForbiddenStatus, UnprocessableEntityStatus, _}
-import com.soundcloud.scalakit.finagle.jsonservice.{JsonClient, JsonResponse, Params}
-import com.soundcloud.scalakit.test.UnitSpecification
-import com.soundcloud.scalakit.{Geo, Path}
+import com.soundcloud.scalakit.finagle.jsonservice.{JsonClient, JsonResponse}
 import com.twitter.util.{Await, Future}
 import org.joda.time.LocalDateTime
 import play.api.libs.json.{JsNull, JsString, JsValue, Json}
+import com.soundcloud.publicApiStrangler.client.BigJvmKitConversions._
+import com.soundcloud.publicApiStrangler.client.BigJvmKitConversions.toBigJvmKitParams
+import com.soundcloud.publicApiStrangler.test.UnitSpecification
 
 import scala.io.{Codec, Source}
-import org.mockito.Mockito.{when, verify}
+import org.mockito.Mockito.{verify, when}
 import org.specs2.mutable.After
 
 object Fixtures {
@@ -52,7 +55,7 @@ class FollowsClientSpec extends UnitSpecification {
     trait FollowContext extends Context with After {
       val path = Path() / "follow" / anotherUser
 
-      lazy val geo = Geo("US")
+      lazy val geo = new Geo("US")
       lazy val session = new UserSessionBuilder().setUser(user).setAgent(new Urn("soundcloud:applications:v2")).setGeo(geo).build()
 
       lazy val result = Await.result(client.follow(session, anotherUser))
@@ -140,7 +143,7 @@ class FollowsClientSpec extends UnitSpecification {
     trait FollowCotext extends Context with After {
       val path = Path() / "bulkfollow"
 
-      lazy val geo = Geo("US")
+      lazy val geo = new Geo("US")
       lazy val session = new UserSessionBuilder().setUser(user).setAgent(new Urn("soundcloud:applications:v2")).setGeo(geo).build()
 
       lazy val result = Await.result(client.bulkFollow(session, List(anotherUser)))
@@ -178,7 +181,7 @@ class FollowsClientSpec extends UnitSpecification {
     trait UnfollowCotext extends Context with After {
       val path = Path() / "unfollow" / anotherUser
 
-      lazy val geo = Geo("US")
+      lazy val geo = new Geo("US")
       lazy val session = new UserSessionBuilder().setUser(user).setAgent(new Urn("soundcloud:applications:v2")).setGeo(geo).build()
 
       lazy val result = Await.result(client.unfollow(session, anotherUser))

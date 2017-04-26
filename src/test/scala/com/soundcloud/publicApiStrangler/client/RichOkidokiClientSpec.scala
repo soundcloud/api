@@ -1,16 +1,18 @@
 package com.soundcloud.publicApiStrangler.client
 
-import com.soundcloud.jvmkit.Urn
-import com.soundcloud.scalakit.Path
+import com.soundcloud.jvmkit.module.http.client.Params
+import com.soundcloud.jvmkit.module.util.{Path, Urn}
+import com.soundcloud.publicApiStrangler.client.BigJvmKitConversions._
+import com.soundcloud.publicApiStrangler.test.UnitSpecification
 import com.soundcloud.scalakit.finagle.http.{InternalServerErrorStatus, OkStatus, StatusCode}
-import com.soundcloud.scalakit.finagle.jsonservice.{JsonClient, JsonResponse, Params}
-import com.soundcloud.scalakit.test.UnitSpecification
+import com.soundcloud.scalakit.finagle.jsonservice.{JsonClient, JsonResponse}
 import com.soundcloud.service.response.representation.User
 import com.twitter.util.{Await, Future}
 import org.mockito.Mockito._
 import play.api.libs.json.{JsArray, JsNull, JsValue, Json}
 
 class RichOkidokiClientSpec extends UnitSpecification {
+
   trait GenericContext extends Scope {
     val session = anonymousSession
 
@@ -21,7 +23,9 @@ class RichOkidokiClientSpec extends UnitSpecification {
   "track audio" >> {
     trait TrackAudioMetadataContext extends GenericContext {
       def resultF = client.fetchTrackAudioMetadata(session, urn)
+
       def resultT = Await.result(resultF.liftToTry)
+
       def result = Await.result(resultF)
 
 
@@ -29,11 +33,14 @@ class RichOkidokiClientSpec extends UnitSpecification {
       val urn = Urn("soundcloud:tracks:123")
 
       def mockTrackAudioMetadata: TrackAudioMetadata = TrackAudioMetadata("finished", Some("vqf"), Some(9001))
+
       def mockResponseContents = Json.obj(
         "state" -> mockTrackAudioMetadata.state,
         "original_content_size" -> mockTrackAudioMetadata.original_content_size,
         "original_format" -> mockTrackAudioMetadata.original_format)
+
       def mockResponseStatus: StatusCode = OkStatus
+
       def mockResponse = Future.value(JsonResponse(mockResponseStatus, mockResponseContents))
 
       when(jsonClient.get(session, path, Params.empty, Params.empty)).thenReturn(mockResponse)
@@ -73,7 +80,9 @@ class RichOkidokiClientSpec extends UnitSpecification {
   "track domain lockings" >> {
     trait TrackDomainLockingsContext extends GenericContext {
       def resultF = client.fetchTrackDomainLockings(session, urn)
+
       def resultT = Await.result(resultF.liftToTry)
+
       def result = Await.result(resultF)
 
       lazy val path = Path() / "tracks" / urn.getIdentifier / "domain_lockings"
@@ -84,6 +93,7 @@ class RichOkidokiClientSpec extends UnitSpecification {
           domain = "example.com",
           urn = Urn("soundcloud:domain-lockings:1"),
           trackUrn = Urn("soundcloud:tracks:2")))
+
       def mockResponseContents: JsValue = JsArray(
         Seq(
           Json.obj(
@@ -92,10 +102,12 @@ class RichOkidokiClientSpec extends UnitSpecification {
               "urn" -> "soundcloud:domain-lockings:112358"
             ),
             "track_urn" -> "soundcloud:tracks:12")))
+
       def mockResponseStatus: StatusCode = OkStatus
+
       def mockResponse = Future.value(JsonResponse(mockResponseStatus, mockResponseContents))
 
-      when(jsonClient.get(beTypedEqualTo(session), beTypedEqualTo(path), any, any))
+      when(jsonClient.get(beTypedEqualTo(toBigJvmKitUserSession(session)), beTypedEqualTo(toBigJvmKitPath(path)), any, any))
         .thenReturn(mockResponse)
     }
 
@@ -136,33 +148,33 @@ class RichOkidokiClientSpec extends UnitSpecification {
 
       val firstBatchJson = Json.parse(
         s"""
-          |{
-          |  "collection": [{
-          |    "track_urn": "${firstBatch.head}",
-          |    "geo_blockings": ["DE", "BR"]
-          |  }, {
-          |    "track_urn": "${firstBatch.last}",
-          |    "geo_blockings": []
-          |  }]
-          |}
+           |{
+           |  "collection": [{
+           |    "track_urn": "${firstBatch.head}",
+           |    "geo_blockings": ["DE", "BR"]
+           |  }, {
+           |    "track_urn": "${firstBatch.last}",
+           |    "geo_blockings": []
+           |  }]
+           |}
         """.stripMargin)
 
       val secondBatchJson = Json.parse(
         s"""
-          |{
-          |  "collection": [{
-          |    "track_urn": "${secondBatch.head}",
-          |    "geo_blockings": ["US", "UK"]
-          |  }]
-          |}
+           |{
+           |  "collection": [{
+           |    "track_urn": "${secondBatch.head}",
+           |    "geo_blockings": ["US", "UK"]
+           |  }]
+           |}
         """.stripMargin)
     }
 
     "200 response" in new GeoblockingsContext {
       when(jsonClient.get(session, path, Map("urns" -> firstBatch.mkString(",")), Params.empty))
-          .thenReturn(Future.value(JsonResponse(OkStatus, firstBatchJson)))
+        .thenReturn(Future.value(JsonResponse(OkStatus, firstBatchJson)))
       when(jsonClient.get(session, path, Map("urns" -> secondBatch.mkString(",")), Params.empty))
-          .thenReturn(Future.value(JsonResponse(OkStatus, secondBatchJson)))
+        .thenReturn(Future.value(JsonResponse(OkStatus, secondBatchJson)))
 
       val batchSize = 2
       Await.result(client.fetchTrackGeoblockings(session, urns, batchSize)) ==== Map(
@@ -172,7 +184,7 @@ class RichOkidokiClientSpec extends UnitSpecification {
       )
     }
 
-    "500 response"  in new GeoblockingsContext {
+    "500 response" in new GeoblockingsContext {
       when(jsonClient.get(session, path, Params("urns" -> urns.mkString(",")), Params.empty))
         .thenReturn(Future.value(JsonResponse(InternalServerErrorStatus, JsNull)))
 
@@ -194,39 +206,39 @@ class RichOkidokiClientSpec extends UnitSpecification {
 
       val firstBatchJson = Json.parse(
         s"""
-          |{
-          |  "collection": [{
-          |    "track_urn": "${firstBatch.head}",
-          |    "state": "finished",
-          |    "original_content_size": 4,
-          |    "original_format": "mp3"
-          |  }, {
-          |    "track_urn": "${firstBatch.last}",
-          |    "state": "failed",
-          |    "original_content_size": null,
-          |    "original_format": null
-          |  }]
-          |}
+           |{
+           |  "collection": [{
+           |    "track_urn": "${firstBatch.head}",
+           |    "state": "finished",
+           |    "original_content_size": 4,
+           |    "original_format": "mp3"
+           |  }, {
+           |    "track_urn": "${firstBatch.last}",
+           |    "state": "failed",
+           |    "original_content_size": null,
+           |    "original_format": null
+           |  }]
+           |}
         """.stripMargin)
 
       val secondBatchJson = Json.parse(
         s"""
-          |{
-          |  "collection": [{
-          |    "track_urn": "${secondBatch.head}",
-          |    "state": "finished",
-          |    "original_content_size": 5,
-          |    "original_format": "ogg"
-          |  }]
-          |}
+           |{
+           |  "collection": [{
+           |    "track_urn": "${secondBatch.head}",
+           |    "state": "finished",
+           |    "original_content_size": 5,
+           |    "original_format": "ogg"
+           |  }]
+           |}
         """.stripMargin)
     }
 
     "200 response" in new GeoblockingsContext {
       when(jsonClient.get(session, path, Map("urns" -> firstBatch.mkString(",")), Params.empty))
-          .thenReturn(Future.value(JsonResponse(OkStatus, firstBatchJson)))
+        .thenReturn(Future.value(JsonResponse(OkStatus, firstBatchJson)))
       when(jsonClient.get(session, path, Map("urns" -> secondBatch.mkString(",")), Params.empty))
-          .thenReturn(Future.value(JsonResponse(OkStatus, secondBatchJson)))
+        .thenReturn(Future.value(JsonResponse(OkStatus, secondBatchJson)))
 
       val batchSize = 2
       Await.result(client.fetchTracksAudioMetadata(session, urns, batchSize)) ==== Map(
@@ -236,7 +248,7 @@ class RichOkidokiClientSpec extends UnitSpecification {
       )
     }
 
-    "500 response"  in new GeoblockingsContext {
+    "500 response" in new GeoblockingsContext {
       when(jsonClient.get(session, path, Params("urns" -> urns.mkString(",")), Params.empty))
         .thenReturn(Future.value(JsonResponse(InternalServerErrorStatus, JsNull)))
 
@@ -258,27 +270,27 @@ class RichOkidokiClientSpec extends UnitSpecification {
 
       val firstBatchJson = Json.parse(
         s"""
-          |[
-          |  {
-          |    "domain": "domain1",
-          |    "track_urn": "${firstBatch.head}",
-          |    "self": {
-          |      "urn": "soundcloud:domain-lockings:1"
-          |    }
-          |  }, {
-          |    "domain": "domain2",
-          |    "track_urn": "${firstBatch.head}",
-          |    "self": {
-          |      "urn": "soundcloud:domain-lockings:2"
-          |    }
-          |  }, {
-          |    "domain": "domain3",
-          |    "track_urn": "${firstBatch.last}",
-          |    "self": {
-          |      "urn": "soundcloud:domain-lockings:3"
-          |    }
-          |  }
-          |]
+           |[
+           |  {
+           |    "domain": "domain1",
+           |    "track_urn": "${firstBatch.head}",
+           |    "self": {
+           |      "urn": "soundcloud:domain-lockings:1"
+           |    }
+           |  }, {
+           |    "domain": "domain2",
+           |    "track_urn": "${firstBatch.head}",
+           |    "self": {
+           |      "urn": "soundcloud:domain-lockings:2"
+           |    }
+           |  }, {
+           |    "domain": "domain3",
+           |    "track_urn": "${firstBatch.last}",
+           |    "self": {
+           |      "urn": "soundcloud:domain-lockings:3"
+           |    }
+           |  }
+           |]
         """.stripMargin)
 
       val secondBatchJson = Json.parse(
@@ -297,20 +309,20 @@ class RichOkidokiClientSpec extends UnitSpecification {
 
     "200 response" in new GeoblockingsContext {
       when(jsonClient.get(session, path, Map("track_ids" -> firstBatch.map(_.getIdentifier).mkString(",")), Params.empty))
-          .thenReturn(Future.value(JsonResponse(OkStatus, firstBatchJson)))
+        .thenReturn(Future.value(JsonResponse(OkStatus, firstBatchJson)))
       when(jsonClient.get(session, path, Map("track_ids" -> secondBatch.map(_.getIdentifier).mkString(",")), Params.empty))
-          .thenReturn(Future.value(JsonResponse(OkStatus, secondBatchJson)))
+        .thenReturn(Future.value(JsonResponse(OkStatus, secondBatchJson)))
 
       val batchSize = 2
       Await.result(client.fetchTracksDomainLockings(session, urns, batchSize)) ==== Map(
         Urn("soundcloud:tracks:1") -> List(DomainLocking("domain1", Urn("soundcloud:domain-lockings:1"), Urn("soundcloud:tracks:1")),
-                                           DomainLocking("domain2", Urn("soundcloud:domain-lockings:2"), Urn("soundcloud:tracks:1"))),
+          DomainLocking("domain2", Urn("soundcloud:domain-lockings:2"), Urn("soundcloud:tracks:1"))),
         Urn("soundcloud:tracks:2") -> List(DomainLocking("domain3", Urn("soundcloud:domain-lockings:3"), Urn("soundcloud:tracks:2"))),
         Urn("soundcloud:tracks:3") -> List(DomainLocking("domain4", Urn("soundcloud:domain-lockings:4"), Urn("soundcloud:tracks:3")))
       )
     }
 
-    "500 response"  in new GeoblockingsContext {
+    "500 response" in new GeoblockingsContext {
       when(jsonClient.get(session, path, Params("track_ids" -> urns.map(_.getIdentifier).mkString(",")), Params.empty))
         .thenReturn(Future.value(JsonResponse(InternalServerErrorStatus, JsNull)))
 
@@ -332,29 +344,29 @@ class RichOkidokiClientSpec extends UnitSpecification {
 
       val firstBatchJson = Json.parse(
         s"""
-          |[
-          |  {
-          |    "permalink": "permalink1",
-          |    "username": "username1",
-          |    "avatar_url": "avatar_url1",
-          |    "permalink_url": "permalink_url1",
-          |    "tracks_count": 1,
-          |    "verified": false,
-          |    "self": {
-          |      "urn": "soundcloud:users:1"
-          |    }
-          |  }, {
-          |    "permalink": "permalink2",
-          |    "username": "username2",
-          |    "avatar_url": "avatar_url2",
-          |    "permalink_url": "permalink_url2",
-          |    "tracks_count": 2,
-          |    "verified": true,
-          |    "self": {
-          |      "urn": "soundcloud:users:2"
-          |    }
-          |  }
-          |]
+           |[
+           |  {
+           |    "permalink": "permalink1",
+           |    "username": "username1",
+           |    "avatar_url": "avatar_url1",
+           |    "permalink_url": "permalink_url1",
+           |    "tracks_count": 1,
+           |    "verified": false,
+           |    "self": {
+           |      "urn": "soundcloud:users:1"
+           |    }
+           |  }, {
+           |    "permalink": "permalink2",
+           |    "username": "username2",
+           |    "avatar_url": "avatar_url2",
+           |    "permalink_url": "permalink_url2",
+           |    "tracks_count": 2,
+           |    "verified": true,
+           |    "self": {
+           |      "urn": "soundcloud:users:2"
+           |    }
+           |  }
+           |]
         """.stripMargin)
 
       val secondBatchJson = Json.parse(
@@ -377,9 +389,9 @@ class RichOkidokiClientSpec extends UnitSpecification {
 
     "200 response" in new FetchUsersContext {
       when(jsonClient.get(session, path, Params("urns" -> firstBatch.mkString(",")), Params.empty))
-          .thenReturn(Future.value(JsonResponse(OkStatus, firstBatchJson)))
+        .thenReturn(Future.value(JsonResponse(OkStatus, firstBatchJson)))
       when(jsonClient.get(session, path, Params("urns" -> secondBatch.mkString(",")), Params.empty))
-          .thenReturn(Future.value(JsonResponse(OkStatus, secondBatchJson)))
+        .thenReturn(Future.value(JsonResponse(OkStatus, secondBatchJson)))
 
       val batchSize = 2
       Await.result(client.fetchUsersMap(session, urns, batchSize)) ==== Map(
@@ -389,7 +401,7 @@ class RichOkidokiClientSpec extends UnitSpecification {
       )
     }
 
-    "500 response"  in new FetchUsersContext {
+    "500 response" in new FetchUsersContext {
       when(jsonClient.get(session, path, Params("urns" -> urns.mkString(",")), Params.empty))
         .thenReturn(Future.value(JsonResponse(InternalServerErrorStatus, JsNull)))
 

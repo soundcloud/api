@@ -3,13 +3,14 @@ package com.soundcloud.publicApiStrangler.mapper.similarsounds
 import com.soundcloud.bff.nextbff.mapper.Mapper
 import com.soundcloud.bff.nextbff.mapping.MappingContext
 import com.soundcloud.bff.nextbff.pagination.OffsetBasedPage
-import com.soundcloud.jvmkit.{Urn, UserSession}
+import com.soundcloud.jvmkit.module.util.Urn
+import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.publicApiStrangler.mapper.search.SearchEntityMapper
 import com.soundcloud.publicApiStrangler.mapping.similarsounds.SimilarSoundsMapping
 import com.soundcloud.publicApiStrangler.support.mapping.{InputValidation, ObjectMapping}
-import com.soundcloud.jvmkit.Urn
 import com.soundcloud.service.client.SimilarSoundsClient
 import com.soundcloud.service.response.representation.SimilarSounds
+import com.soundcloud.publicApiStrangler.client.BigJvmKitConversions._
 import com.twitter.util.Future
 
 class SimilarSoundsMapper(

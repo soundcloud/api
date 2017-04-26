@@ -1,6 +1,6 @@
 package com.soundcloud.publicApiStrangler.controller
 
-import com.soundcloud.jvmkit.Urn
+import com.soundcloud.jvmkit.module.util.Urn
 import play.api.libs.json.{JsNull, Json}
 
 trait TimeLineControllerTestData {
@@ -149,8 +149,8 @@ trait TimeLineControllerTestData {
   def tracksOnlyTimelineJsonString() =
     s"""[{"id":2,"kind":"track","created_at":null,"last_modified":null,"permalink":null,"permalink_url":null,"title":null,"duration":null,"sharing":null,"waveform_url":null,"stream_url":"www.soundcloud.com/tracks/2/stream","uri":"www.soundcloud.com/tracks/2","user_id":1,"user_uri":"www.soundcloud.com/users/1","artwork_url":"some/artwork","comment_count":5,"commentable":true,"description":"description","download_count":1,"downloadable":false,"embeddable_by":"embeddable_by","favoritings_count":42,"genre":"genre","isrc":"isrc","label_id":23,"label_name":"label_name","license":"license","original_content_size":123,"original_format":"original_format","playback_count":1,"purchase_title":"purchase_title","purchase_url":"purchase_url","release":"release","release_day":1,"release_month":1,"release_year":1970,"reposts_count":2345,"state":"state","streamable":true,"tag_list":"tag_list","track_type":"track_type","user":{"avatar_url":"avatar:url","id":1,"kind":"user","permalink_url":"some/permalink/url","uri":"www.soundcloud.com/users/1","username":"JohnD","permalink":"some/permalink","last_modified":"2017-04-01","first_name":"John","last_name":"Doe","full_name":"John Doe","city":"London","description":"Hottest guy in town","country":"UK","track_count":null,"public_favorites_count":12,"followers_count":42,"followings_count":23,"plan":"go+","myspace_name":null,"discogs_name":null,"website_title":null,"website":null,"reposts_count":33,"comments_count":5,"online":false,"likes_count":12,"playlist_count":null},"likes_count":1234,"attachments_uri":null,"bpm":null,"key_signature":null,"user_favorite":null,"user_playback_count":null,"video_url":null}]"""
 
-  def stripTrailingSlash(s: String): String =  s.charAt(s.size-1) match {
-    case '/' => s.substring(0, s.size-1)
+  def stripTrailingSlash(s: String): String = s.charAt(s.size - 1) match {
+    case '/' => s.substring(0, s.size - 1)
     case _ => s
   }
 

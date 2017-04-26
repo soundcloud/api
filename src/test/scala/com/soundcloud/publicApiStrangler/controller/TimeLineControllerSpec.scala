@@ -2,21 +2,26 @@ package com.soundcloud.publicApiStrangler.controller
 
 import com.soundcloud.bff.nextbff.mapper.{EmbeddedItem, Mapper}
 import com.soundcloud.bff.nextbff.mapping.{JsonMapping, MappingContext}
-import com.soundcloud.bff.test.InjectionBasedControllerSpecification
-import com.soundcloud.jvmkit.{Urn, UserSession}
+import com.soundcloud.jvmkit.{UserSession => BigJvmKitUserSession}
+import com.soundcloud.jvmkit.module.bff.testsupport.FakeUserAuthentication
+import com.soundcloud.jvmkit.module.util.Urn
+import com.soundcloud.jvmkit.module.util.session.UserSession
+import com.soundcloud.publicApiStrangler.RoutingDefinitions
+import com.soundcloud.publicApiStrangler.client.BigJvmKitConversions._
 import com.soundcloud.publicApiStrangler.client.followcounts.FollowCounts
 import com.soundcloud.publicApiStrangler.mapper.timeline.e1.{ActivitiesMapper, StreamMapper}
 import com.soundcloud.publicApiStrangler.mapper.timeline.publicApi.ActivitiesWithOriginMapper
 import com.soundcloud.publicApiStrangler.mapper.timeline.{EntityMapper, EntitySummaryMapper, FollowingsTracksMapper}
 import com.soundcloud.publicApiStrangler.mapping.timeline.{Playlist, Track, User}
 import com.soundcloud.publicApiStrangler.support.CursorPagination
+import com.soundcloud.publicApiStrangler.test.{HandlerSpecificationScope, UnitSpecification}
 import com.soundcloud.services.timeline.TimelineJsonClient
 import com.twitter.util.Future
 
-class TimeLineControllerSpec extends InjectionBasedControllerSpecification {
+class TimeLineControllerSpec extends UnitSpecification {
 
 
-  trait Context extends Scope with TimeLineControllerTestData {
+  trait Context extends HandlerSpecificationScope with TimeLineControllerTestData {
     val entityMapper = mock[EntityMapper]
     val entitySummaryMapper = mock[EntitySummaryMapper]
     val timelineClient = mock[TimelineJsonClient]
@@ -54,7 +59,7 @@ class TimeLineControllerSpec extends InjectionBasedControllerSpecification {
 
     // With the entity mappers returning json objects, let the TimeLineController fiddle them together and assert the results
     val controller = new TimelineController(
-      fakeUserAuthentication(session),
+      new FakeUserAuthentication(session),
       new StreamMapper(timelineClient, entityMapper, entitySummaryMapper),
       new ActivitiesMapper(timelineClient, entityMapper, entitySummaryMapper),
       new ActivitiesWithOriginMapper(timelineClient, entityMapper, entitySummaryMapper),
@@ -62,28 +67,30 @@ class TimeLineControllerSpec extends InjectionBasedControllerSpecification {
       new CursorPagination(baseUrl)
     )
 
-    timelineClient.activities(any[UserSession], any[Option[String]], any[Int], any[Boolean], any[Option[String]])
+    override def routingDefinitions = RoutingDefinitions.forTimelineController(controller)
+
+    timelineClient.activities(any[BigJvmKitUserSession], any[Option[String]], any[Int], any[Boolean], any[Option[String]])
       .returns(Future.value(timeline))
-    timelineClient.stream(any[UserSession], any[Option[String]], any[Int], any[Boolean], any[Option[String]])
+    timelineClient.stream(any[BigJvmKitUserSession], any[Option[String]], any[Int], any[Boolean], any[Option[String]])
       .returns(Future.value(timeline))
-    timelineClient.followingsTracks(any[UserSession], any[Option[String]], any[Int], any[Boolean], any[Option[String]])
-        .returns(Future.value(onlyTracksTimeline))
+    timelineClient.followingsTracks(any[BigJvmKitUserSession], any[Option[String]], any[Int], any[Boolean], any[Option[String]])
+      .returns(Future.value(onlyTracksTimeline))
   }
 
   // private activity endpoints
-    Seq(
-      "/e1/me/activities",
-      "/e1/me/activities.json"
-    ).foreach { endpoint =>
-      endpoint in new Context {
+  Seq(
+    "/e1/me/activities",
+    "/e1/me/activities.json"
+  ).foreach { endpoint =>
+    endpoint in new Context {
 
-        val response = get(controller, endpoint)
-        response.code ==== 200
-        response.body ==== timelineJsonString(endpoint)
+      val response = get(controller.renderAllActivities, endpoint)
+      response.statusCode ==== 200
+      response.contentString ==== timelineJsonString(endpoint)
 
-        there was one(timelineClient).activities(===(session), any[Option[String]], any[Int], any[Boolean], any[Option[String]])
-      }
+      there was one(timelineClient).activities(===(toBigJvmKitUserSession(session)), any[Option[String]], any[Int], any[Boolean], any[Option[String]])
     }
+  }
 
   // stream endpoints
   Seq(
@@ -92,11 +99,11 @@ class TimeLineControllerSpec extends InjectionBasedControllerSpecification {
   ).foreach { endpoint =>
     endpoint in new Context {
 
-      val response = get(controller, endpoint)
-      response.code ==== 200
-      response.body ==== streamTimelineJsonString(endpoint)
+      val response = get(controller.renderStreamActivities, endpoint)
+      response.statusCode ==== 200
+      response.contentString ==== streamTimelineJsonString(endpoint)
 
-      there was one(timelineClient).stream(===(session), any[Option[String]], any[Int], any[Boolean], any[Option[String]])
+      there was one(timelineClient).stream(===(toBigJvmKitUserSession(session)), any[Option[String]], any[Int], any[Boolean], any[Option[String]])
     }
   }
 
@@ -118,11 +125,11 @@ class TimeLineControllerSpec extends InjectionBasedControllerSpecification {
   ).foreach { endpoint =>
     endpoint in new Context {
 
-      val response = get(controller, endpoint)
-      response.code ==== 200
-      response.body ==== publicCompleteTimelineJsonString(endpoint)
+      val response = get(controller.renderPublicActivities, endpoint)
+      response.statusCode ==== 200
+      response.contentString ==== publicCompleteTimelineJsonString(endpoint)
 
-      there was one(timelineClient).stream(===(session), any[Option[String]], any[Int], any[Boolean], any[Option[String]])
+      there was one(timelineClient).stream(===(toBigJvmKitUserSession(session)), any[Option[String]], any[Int], any[Boolean], any[Option[String]])
     }
   }
 
@@ -133,11 +140,11 @@ class TimeLineControllerSpec extends InjectionBasedControllerSpecification {
   ).foreach { endpoint =>
     endpoint in new Context {
 
-      val response = get(controller, endpoint)
-      response.code ==== 200
-      response.body ==== tracksOnlyTimelineJsonString()
+      val response = get(controller.renderFollowingsTracks, endpoint)
+      response.statusCode ==== 200
+      response.contentString ==== tracksOnlyTimelineJsonString()
 
-      there was one(timelineClient).followingsTracks(===(session), any[Option[String]], any[Int], any[Boolean], any[Option[String]])
+      there was one(timelineClient).followingsTracks(===(toBigJvmKitUserSession(session)), any[Option[String]], any[Int], any[Boolean], any[Option[String]])
     }
   }
 

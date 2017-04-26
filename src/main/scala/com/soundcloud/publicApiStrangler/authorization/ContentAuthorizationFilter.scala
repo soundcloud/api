@@ -1,31 +1,25 @@
 package com.soundcloud.publicApiStrangler.authorization
 
-import com.soundcloud.bff.finagle.{Request => BffRequest}
-import com.soundcloud.scalakit.finagle.http.RouterResponse
-import com.twitter.finagle.http.Request
+import com.soundcloud.jvmkit.module.http.server.HandlerRequest
+import com.twitter.finagle.http.{Request, Response}
 import com.twitter.finagle.{Service, SimpleFilter}
+import com.twitter.util.Future
 
-import scala.collection.JavaConversions._
 
 class ContentAuthorizationFilter(authorizeContent: AuthorizeHttpResponse)
-  extends SimpleFilter[Request, RouterResponse] {
+  extends SimpleFilter[Request, Response] {
 
-  override def apply(request: Request, next: Service[Request, RouterResponse]) = {
-    val req = new BffRequest(request)
+  override def apply(request: Request, next: Service[Request, Response]) = {
+    val req = HandlerRequest(request)
     for {
       response <- next(req)
       modifiedResponse <- authorize(req, response)
-    } yield RouterResponse(modifiedResponse, "undefined")
+    } yield modifiedResponse
   }
 
-  private def authorize(request: BffRequest, response: RouterResponse) =
-    authorizeContent(request, response.statusCode, body(response)).map { render =>
-      render.headers(headersMap(response)).build
+  private def authorize(request: HandlerRequest, response: Response): Future[Response] =
+    authorizeContent(request, response.status, response.contentString).map { authorizationResponse =>
+      response.headerMap.foreach { case (key, value) => authorizationResponse.headerMap.set(key, value) }
+      authorizationResponse
     }
-
-  private def body(response: RouterResponse) =
-    response.contentString
-
-  private def headersMap(response: RouterResponse) =
-    response.headerMap.entrySet.map(e => e.getKey -> e.getValue).toMap
 }

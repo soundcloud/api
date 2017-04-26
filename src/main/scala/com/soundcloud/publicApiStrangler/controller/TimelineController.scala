@@ -1,59 +1,46 @@
 package com.soundcloud.publicApiStrangler.controller
 
-import com.soundcloud.bff.finagle.{Request => BffRequest}
-import com.soundcloud.bff.web.{BffInjectionBasedController, UserAuthentication}
-import com.soundcloud.jvmkit.{LoggedInUserSession, Urn}
+import com.soundcloud.jvmkit.module.bff.session.UserAuthentication
+import com.soundcloud.jvmkit.module.http.server.{HandlerRequest, ResponseBuilder}
+import com.soundcloud.jvmkit.module.util.Urn
+import com.soundcloud.jvmkit.module.util.session.LoggedInUserSession
 import com.soundcloud.publicApiStrangler.mapper.timeline._
 import com.soundcloud.publicApiStrangler.mapper.timeline.e1.{ActivitiesMapper, StreamMapper}
 import com.soundcloud.publicApiStrangler.mapper.timeline.publicApi.ActivitiesWithOriginMapper
+import com.soundcloud.publicApiStrangler.mapping.timeline.Timeline
 import com.soundcloud.publicApiStrangler.mapping.timeline.e1.TrackTimelineItem
 import com.soundcloud.publicApiStrangler.support._
+import com.soundcloud.scalakit.json.UntypedJson
+import com.twitter.finagle.http.Response
+import com.twitter.util.Future
 
 class TimelineController(userAuthentication: UserAuthentication,
                          streamMapper: StreamMapper,
                          activitiesMapper: ActivitiesMapper,
                          publicActivitiesMapper: ActivitiesWithOriginMapper,
                          followingsTracksMapper: FollowingsTracksMapper,
-                         pagination: CursorPagination) extends BffInjectionBasedController {
+                         pagination: CursorPagination) {
 
-  // Android & iPad specific
-  get("/e1/me/activities")(renderActivities(_, activitiesMapper))
-  get("/e1/me/activities.json")(renderActivities(_, activitiesMapper))
-  get("/e1/me/stream")(renderActivities(_, streamMapper))
-  get("/e1/me/stream.json")(renderActivities(_, streamMapper))
+  def renderAllActivities(request: HandlerRequest): Future[Response] = renderActivities(request, activitiesMapper)
 
-  get("/me/activities")(renderActivities(_, publicActivitiesMapper))
-  get("/me/activities.json")(renderActivities(_, publicActivitiesMapper))
+  def renderStreamActivities(request: HandlerRequest): Future[Response] = renderActivities(request, streamMapper)
 
-  // deprecated functionality, aliased to /me/activities
-  get("/me/activities/")(renderActivities(_, publicActivitiesMapper))
-  get("/me/activities/track")(renderActivities(_, publicActivitiesMapper))
-  get("/me/activities/tracks")(renderActivities(_, publicActivitiesMapper))
-  get("/me/activities/tracks/")(renderActivities(_, publicActivitiesMapper))
-  get("/me/activities/tracks.json")(renderActivities(_, publicActivitiesMapper))
-  get("/me/activities/tracks/:tag")(renderActivities(_, publicActivitiesMapper)) // /affiliated, /exclusive
-  get("/me/activities/tracks/:tag.json")(renderActivities(_, publicActivitiesMapper)) // /affiliated.xml, /exclusive.json
-  get("/me/activities/all")(renderActivities(_, publicActivitiesMapper))
-  get("/me/activities/all.json")(renderActivities(_, publicActivitiesMapper))
-  get("/me/activities/all/own")(renderActivities(_, publicActivitiesMapper))
-  get("/me/activities/all/own.json")(renderActivities(_, publicActivitiesMapper))
+  def renderPublicActivities(request: HandlerRequest): Future[Response] = renderActivities(request, publicActivitiesMapper)
 
-  // For the IFTTT integration
-  get("/me/followings/tracks")(renderFollowingsTracks(_, followingsTracksMapper))
-  get("/me/followings/tracks.json")(renderFollowingsTracks(_, followingsTracksMapper))
-
-  private def renderActivities(request: BffRequest, mapper: TimelineMapper) =
+  private def renderActivities(request: HandlerRequest, mapper: TimelineMapper): Future[Response] =
     userAuthentication.withLoggedInUser(request) {
       (session: LoggedInUserSession, userUrn: Urn) =>
         pagination.withPage(request, userUrn) { page =>
           mapper.materialize(session, page).map {
-            case Some(info) => render.anyJson(info)
-            case None => render.notFound
+            case Some(info) => ResponseBuilder.ok(UntypedJson.write(info.asInstanceOf[Timeline]))
+            case None => ResponseBuilder.notFound()
           }
         }
     }
 
-  private def renderFollowingsTracks(request: BffRequest, mapper: TimelineMapper) =
+  def renderFollowingsTracks(request: HandlerRequest): Future[Response] = renderFollowingsTracks(request, followingsTracksMapper)
+
+  private def renderFollowingsTracks(request: HandlerRequest, mapper: TimelineMapper): Future[Response] =
     userAuthentication.withLoggedInUser(request) {
       (session: LoggedInUserSession, userUrn: Urn) =>
         pagination.withPage(request, userUrn) { page =>
@@ -64,14 +51,14 @@ class TimelineController(userAuthentication: UserAuthentication,
               }
 
               if (request.getParam("linked_partitioning", "0") == "1")
-                render.anyJson(Map(
+                ResponseBuilder.ok(UntypedJson.write(Map(
                   "next_href" -> info.nextHref,
                   "collection" -> tracks
-                ))
+                )))
               else
-                render.anyJson(tracks)
+                ResponseBuilder.ok(UntypedJson.write(tracks))
 
-            case None => render.notFound
+            case None => ResponseBuilder.notFound()
           }
         }
     }

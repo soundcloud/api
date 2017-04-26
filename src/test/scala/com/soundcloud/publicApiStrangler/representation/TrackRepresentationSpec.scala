@@ -1,13 +1,13 @@
 package com.soundcloud.publicApiStrangler.representation
 
-import com.soundcloud.jvmkit.Urn
+import com.soundcloud.jvmkit.module.util.Urn
+import com.soundcloud.publicApiStrangler.client.BigJvmKitConversions._
 import com.soundcloud.publicApiStrangler.client.mediaservice.WaveformUrl
 import com.soundcloud.publicApiStrangler.client.pubmese.Isrc
 import com.soundcloud.publicApiStrangler.client.stitch.StitchCounts
 import com.soundcloud.publicApiStrangler.client.trackmetadata.{Artwork, EmbeddingPermission, Track}
 import com.soundcloud.publicApiStrangler.client.{DomainLocking, TrackAudioMetadata}
-import com.soundcloud.publicApiStrangler.representation._
-import com.soundcloud.scalakit.test.UnitSpecification
+import com.soundcloud.publicApiStrangler.test.UnitSpecification
 import com.soundcloud.service.response.representation.{Geoblockings, User}
 import org.joda.time.LocalDateTime
 import play.api.libs.json._
@@ -20,14 +20,14 @@ trait TrackRepresentationLikeSpecContext {
   val labelUrn = new Urn("soundcloud", "users", "999")
 
   def createTrackRepresentation(
-    track: Track = defaultTrack,
-    user: User = defaultUser,
-    isrc: Option[Isrc] = defaultIsrc,
-    counts: StitchCounts = defaultCounts,
-    label: Option[User] = Some(defaultLabel),
-    geoblockings: Geoblockings = defaultGeoblockings,
-    domainlockings: Seq[DomainLocking] = defaultDomainLockings,
-    audioMetadata: TrackAudioMetadata = defaultTrackAudioMetadata) =
+                                 track: Track = defaultTrack,
+                                 user: User = defaultUser,
+                                 isrc: Option[Isrc] = defaultIsrc,
+                                 counts: StitchCounts = defaultCounts,
+                                 label: Option[User] = Some(defaultLabel),
+                                 geoblockings: Geoblockings = defaultGeoblockings,
+                                 domainlockings: Seq[DomainLocking] = defaultDomainLockings,
+                                 audioMetadata: TrackAudioMetadata = defaultTrackAudioMetadata) =
     TrackRepresentation(track, user, isrc, counts, label, geoblockings, domainlockings, audioMetadata)
 
   def defaultLoggedInUserUrn = new Urn("soundcloud", "users", "79241")
@@ -131,6 +131,7 @@ trait TrackRepresentationLikeSpecContext {
 }
 
 class TrackRepresentationSecretTokenDecoratorSpec extends UnitSpecification {
+
   trait Context extends Scope with TrackRepresentationLikeSpecContext {
     implicit val writes = TrackRepresentationSecretTokenDecorator.writes
 
@@ -148,6 +149,7 @@ class TrackRepresentationSecretTokenDecoratorSpec extends UnitSpecification {
 }
 
 class TrackRepresentationGeoblockingsDecoratorSpec extends UnitSpecification {
+
   trait Context extends Scope with TrackRepresentationLikeSpecContext {
     implicit val writes = TrackRepresentationGeoblockingsDecorator.writes
 
@@ -163,8 +165,8 @@ class TrackRepresentationGeoblockingsDecoratorSpec extends UnitSpecification {
       "AD", "AE", "AF", "AG", "AI", "AL", "AM", "AO", "AQ", "AR", "AS", "AT", "AU", "AW", "AX", "AZ",
       "BA", "BB", "BD", "BE", "BF", "BG", "BH", "BI", "BJ", "BL", "BM", "BN", "BO", "BQ", "BR", "BS",
       "BT", "BV", "BW", "BY", "BZ", "CA", "CC", "CD", "CF", "CG", "CH", "CI", "CK", "CL", "CM", "CN",
-      "CO", "CR", "CU", "CV", "CW", "CX", "CY", "CZ",       "DJ", "DK", "DM", "DO", "DZ", "EC", "EE",
-      "EG", "EH", "ER", "ES", "ET", "FI", "FJ", "FK", "FM", "FO",       "GA", "GB", "GD", "GE", "GF",
+      "CO", "CR", "CU", "CV", "CW", "CX", "CY", "CZ", "DJ", "DK", "DM", "DO", "DZ", "EC", "EE",
+      "EG", "EH", "ER", "ES", "ET", "FI", "FJ", "FK", "FM", "FO", "GA", "GB", "GD", "GE", "GF",
       "GG", "GH", "GI", "GL", "GM", "GN", "GP", "GQ", "GR", "GS", "GT", "GU", "GW", "GY", "HK", "HM",
       "HN", "HR", "HT", "HU", "ID", "IE", "IL", "IM", "IN", "IO", "IQ", "IR", "IS", "IT", "JE", "JM",
       "JO", "JP", "KE", "KG", "KH", "KI", "KM", "KN", "KP", "KR", "KW", "KY", "KZ", "LA", "LB", "LC",
@@ -180,6 +182,7 @@ class TrackRepresentationGeoblockingsDecoratorSpec extends UnitSpecification {
 }
 
 class TrackRepresentationLabelDecoratorSpec extends UnitSpecification {
+
   trait Context extends Scope with TrackRepresentationLikeSpecContext {
     implicit val writes = TrackRepresentationLabelDecorator.writes
 
@@ -202,6 +205,7 @@ class TrackRepresentationLabelDecoratorSpec extends UnitSpecification {
 }
 
 class TrackRepresentationCountsDecoratorSpec extends UnitSpecification {
+
   trait Context extends Scope with TrackRepresentationLikeSpecContext {
     implicit val writes = TrackRepresentationCountsDecorator.writes
 
@@ -221,6 +225,7 @@ class TrackRepresentationCountsDecoratorSpec extends UnitSpecification {
 }
 
 class TrackRepresentationCommentCountDecoratorSpec extends UnitSpecification {
+
   trait Context extends Scope with TrackRepresentationLikeSpecContext {
     implicit val writes = TrackRepresentationCommentCountDecorator.writes
 
@@ -262,6 +267,7 @@ class TrackRepresentationUserFavoriteDecoratorSpec extends UnitSpecification {
 }
 
 class TrackRepresentationDomainLockingsDecoratorSpec extends UnitSpecification {
+
   trait Context extends Scope with TrackRepresentationLikeSpecContext {
     implicit val writes = TrackRepresentationDomainLockingsDecorator.writes
 
@@ -279,6 +285,7 @@ class TrackRepresentationDomainLockingsDecoratorSpec extends UnitSpecification {
 }
 
 class TrackRepresentationUserPlaybackCountDecoratorSpec extends UnitSpecification {
+
   trait Context extends Scope with TrackRepresentationLikeSpecContext {
     implicit val writes = TrackRepresentationUserPlaybackCountDecorator.writes
 
@@ -294,6 +301,7 @@ class TrackRepresentationUserPlaybackCountDecoratorSpec extends UnitSpecificatio
 }
 
 class TrackRepresentationWaveformUrlDecoratorSpec extends UnitSpecification {
+
   trait Context extends Scope with TrackRepresentationLikeSpecContext {
     implicit val writes = TrackRepresentationWaveformUrlDecorator.writes
     val wrapped: TrackRepresentationLike = createTrackRepresentation()
@@ -394,6 +402,7 @@ class TrackRepresentationSecretTokenUriParamDecoratorSpec extends UnitSpecificat
 }
 
 class TrackRepresentationQuotaDecoratorSpec extends UnitSpecification {
+
   trait Context extends Scope with TrackRepresentationLikeSpecContext {
     implicit val writes = TrackRepresentationQuotaDecorator.writes
 
@@ -500,6 +509,7 @@ class TrackRepresentationQuotaDecoratorSpec extends UnitSpecification {
 }
 
 class TrackRepresentationSpec extends UnitSpecification {
+
   trait Context extends Scope with TrackRepresentationLikeSpecContext
 
   "serialises to JSON correctly" in new Context {

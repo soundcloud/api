@@ -1,22 +1,21 @@
 package com.soundcloud.publicApiStrangler.support
 
-import com.soundcloud.bff.finagle.ResponseBuilder
-import com.soundcloud.scalakit.finagle.http.RouterResponse
-import com.soundcloud.scalakit.test.{UnitSpecification}
-import com.twitter.finagle.{Service, SimpleFilter}
+import com.soundcloud.jvmkit.module.http.server.ResponseBuilder
+import com.soundcloud.publicApiStrangler.test.UnitSpecification
 import com.twitter.finagle.http.{Method, Request, Response}
+import com.twitter.finagle.{Service, SimpleFilter}
 import com.twitter.util.{Await, Future}
-import play.api.libs.json.{JsObject, JsString, Json}
 
 class ExceptForTrackUploadsFilterSpec extends UnitSpecification {
-  class MyFilter extends SimpleFilter[Request, RouterResponse] {
-    override def apply(request: Request, next: Service[Request, RouterResponse]) =
-      next(request).map(resp => RouterResponse(new ResponseBuilder().body("filtered!").build, "/foo"))
+
+  class MyFilter extends SimpleFilter[Request, Response] {
+    override def apply(request: Request, next: Service[Request, Response]) =
+      next(request).map(resp => ResponseBuilder().body("filtered!").build)
   }
 
-  class StubService extends Service[Request, RouterResponse] {
-    override def apply(request: Request): Future[RouterResponse] =
-      Future.value(RouterResponse(new ResponseBuilder().body("original!").build, "/foo"))
+  class StubService extends Service[Request, Response] {
+    override def apply(request: Request): Future[Response] =
+      Future.value(ResponseBuilder().body("original!").build)
   }
 
   trait Context extends Scope {

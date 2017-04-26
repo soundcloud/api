@@ -1,7 +1,7 @@
 package com.soundcloud.bff.nextbff.test
 
 import com.soundcloud.bff.nextbff.repository.UrnsCache
-import com.soundcloud.jvmkit.Urn
+import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.scalakit.test.AlwaysMissCache
 import play.api.libs.json.JsObject
 import com.twitter.util.Future

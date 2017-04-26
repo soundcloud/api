@@ -1,8 +1,8 @@
 package com.soundcloud.publicApiStrangler.support.migration
 
-import com.soundcloud.jvmkit.telemetry.Telemetry
-import com.soundcloud.jvmkit.test.InMemoryConfig
-import com.soundcloud.scalakit.test.UnitSpecification
+import com.soundcloud.jvmkit.module.telemetry.{MetricsRegistryImpl, Telemetry}
+import com.soundcloud.jvmkit.module.util.config.InMemoryConfig
+import com.soundcloud.publicApiStrangler.test.UnitSpecification
 import com.twitter.finagle.http.{Request, Response, Status}
 import com.twitter.util.NonFatal
 import io.prometheus.client.CollectorRegistry
@@ -12,7 +12,7 @@ class TrackCollectionResponseComparisonSpec extends UnitSpecification {
   trait Context extends Scope {
     val config = new InMemoryConfig
     val collectorRegistry = new CollectorRegistry
-    val telemetry = new Telemetry(config, collectorRegistry)
+    val telemetry = new Telemetry(config.getApplicationName, new MetricsRegistryImpl(collectorRegistry))
     val responseComparison = new SingleTrackResponseComparison(telemetry)
 
     def generateResponse(contentString: String) = {

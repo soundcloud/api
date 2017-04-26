@@ -2,9 +2,9 @@ package com.soundcloud.publicApiStrangler.service
 
 import java.net.URL
 
-import com.soundcloud.jvmkit.Urn
 import com.soundcloud.jvmkit.module.experimental.result.{Bad, Error, Good, Result}
-import com.soundcloud.publicApiStrangler.client.{DomainLocking, RichOkidokiClient, TrackAudioMetadata}
+import com.soundcloud.jvmkit.module.util.Urn
+import com.soundcloud.publicApiStrangler.client.BigJvmKitConversions._
 import com.soundcloud.publicApiStrangler.client.liebling.LieblingClient
 import com.soundcloud.publicApiStrangler.client.mediaservice.{MediaServiceUrlGenClient, WaveformUrl}
 import com.soundcloud.publicApiStrangler.client.playlists.PlaylistsClient
@@ -12,12 +12,14 @@ import com.soundcloud.publicApiStrangler.client.pubmese.{Isrc, PubmeseClient}
 import com.soundcloud.publicApiStrangler.client.quota.UserQuotaClient
 import com.soundcloud.publicApiStrangler.client.stitch.{StitchClient, StitchCounts}
 import com.soundcloud.publicApiStrangler.client.trackmetadata.TrackmetadataClient
+import com.soundcloud.publicApiStrangler.client.{DomainLocking, RichOkidokiClient, TrackAudioMetadata}
+import com.soundcloud.publicApiStrangler.test.UnitSpecification
 import com.soundcloud.publicApiStrangler.test.util.TrackMetadataTrackBuilder
-import com.soundcloud.scalakit.test.UnitSpecification
 import com.soundcloud.service.response.representation.{Geoblockings, User}
 import com.twitter.util.{Await, Future}
 
 class TrackRepositorySpec extends UnitSpecification {
+
   trait Context extends Scope {
     val trackmetadataClient = mock[TrackmetadataClient]
     val richOkidokiClient = mock[RichOkidokiClient]
@@ -43,24 +45,38 @@ class TrackRepositorySpec extends UnitSpecification {
     lazy val session = loggedInSession(sessionUser)
 
     def userUrn = Urn("soundcloud:users:9218371")
+
     def paginationParams: TrackPagination
 
     def trackmetadataTrack(urn: Urn, ownerUrn: Urn, labelId: Option[Int]) =
       TrackMetadataTrackBuilder(urn = urn, user_urn = ownerUrn, label_id = labelId).build
 
     def fetchUserObjectsResponse = Future.value(List(tracksOwner))
+
     def urnsByUserResponse = Future.value(trackUrns.toList)
+
     def isrcsForTracksResponse = Future.value(Map.empty[Urn, Isrc])
+
     def fetchTrackGeoblockingsResponse = Future.value(Map.empty[Urn, Geoblockings])
+
     def fetchTracksDomainLockingsResponse = Future.value(Map.empty[Urn, List[DomainLocking]])
+
     def fetchTracksAudioMetadataResponse = Future.value(Map.empty[Urn, TrackAudioMetadata])
+
     def countsForTracksByUserResponse = Future.value(Map.empty[Urn, StitchCounts])
+
     def tracksResponse = Future.value(trackmetadataTracks)
+
     def userLikedTracksResponse = Future.value(Map.empty[Urn, Boolean])
+
     def Response = Future.value(Map.empty)
+
     def waveformUrlsResponse = Future.value(Map.empty[String, Seq[WaveformUrl]])
+
     def fetchUsersMapResponse = Future.value(Map.empty[Urn, User])
+
     def downloadsPerTrackResponse = Future.value(Map.empty[Urn, Option[Int]])
+
     def areTracksAccessibleResponse = Future.value(accessibilityChecks)
 
     def trackUrn(id: Int) = Urn(s"soundcloud:tracks:$id")
@@ -98,9 +114,11 @@ class TrackRepositorySpec extends UnitSpecification {
       track2 -> true,
       track3 -> true
     )
+
     trackAccessibilityService.areTracksAccessible(session, trackmetadataTracks).returns(areTracksAccessibleResponse)
 
     def exception = new RuntimeException("nooo")
+
     def badFuture = Future.exception(exception)
 
     lazy val result: Result[TracksResult] = Await.result(repository.tracksByUser(session, userUrn, paginationParams).value)
@@ -119,6 +137,7 @@ class TrackRepositorySpec extends UnitSpecification {
 
       "when loading the tracks' owner fails, it fails" in new NoPaginationParams {
         override def fetchUserObjectsResponse = badFuture
+
         result match {
           case Bad(Error(message, _)) => message ==== "Could not load the tracks' owner"
           case _ => failure
@@ -127,6 +146,7 @@ class TrackRepositorySpec extends UnitSpecification {
 
       "when loading the tracks' urns fails, it fails" in new NoPaginationParams {
         override def urnsByUserResponse = badFuture
+
         result match {
           case Bad(Error(message, _)) => message ==== "Could not load the tracks' urns"
           case _ => failure
@@ -135,6 +155,7 @@ class TrackRepositorySpec extends UnitSpecification {
 
       "when loading the tracks from trackmetadata fails, it fails" in new NoPaginationParams {
         override def tracksResponse = badFuture
+
         result match {
           case Bad(Error(message, _)) => message ==== "Could not load tracks from trackmetadata"
           case _ => failure
@@ -143,6 +164,7 @@ class TrackRepositorySpec extends UnitSpecification {
 
       "when loading the tracks' audios fails, it fails" in new NoPaginationParams {
         override def fetchTracksAudioMetadataResponse = badFuture
+
         result match {
           case Bad(Error(message, _)) => message ==== "Could not load the audio information"
           case _ => failure
@@ -151,6 +173,7 @@ class TrackRepositorySpec extends UnitSpecification {
 
       "when loading the tracks' waveforms fails, it fails" in new NoPaginationParams {
         override def waveformUrlsResponse = badFuture
+
         result match {
           case Bad(Error(message, _)) => message ==== "Could not load the tracks' waveforms"
           case _ => failure
@@ -164,36 +187,43 @@ class TrackRepositorySpec extends UnitSpecification {
 
         "when loading the isrcs fails" in new NoPaginationParams {
           override def isrcsForTracksResponse = badFuture
+
           result ==== goodTracksResult
         }
 
         "when loading the geoblockings fails" in new NoPaginationParams {
           override def isrcsForTracksResponse = badFuture
+
           result ==== goodTracksResult
         }
 
         "when loading the domainlockings fails" in new NoPaginationParams {
           override def isrcsForTracksResponse = badFuture
+
           result ==== goodTracksResult
         }
 
         "when loading the counts fails" in new NoPaginationParams {
           override def countsForTracksByUserResponse = badFuture
+
           result ==== goodTracksResult
         }
 
         "when loading the downloads per track fails" in new NoPaginationParams {
           override def downloadsPerTrackResponse = badFuture
+
           result ==== goodTracksResult
         }
 
         "when loading the user liked tracks fails" in new NoPaginationParams {
           override def userLikedTracksResponse = badFuture
+
           result ==== goodTracksResult
         }
 
         "when loading the user representations for the `label` field fails" in new NoPaginationParams {
           override def fetchUsersMapResponse = badFuture
+
           result ==== goodTracksResult
         }
       }
@@ -219,6 +249,7 @@ class TrackRepositorySpec extends UnitSpecification {
             // track2 -> missing
             track3 -> TrackAudioMetadata("not-finished", None, None)
           )
+
           override def fetchTracksAudioMetadataResponse = Future.value(audios)
 
           result ==== Good(TracksResult(
@@ -229,6 +260,7 @@ class TrackRepositorySpec extends UnitSpecification {
 
       "when loading the tracks availability fails it returns no tracks" in new NoPaginationParams {
         override def areTracksAccessibleResponse = badFuture
+
         result ==== Good(TracksResult(
           List.empty,
           tracksOwner, Map.empty, Map.empty, Map.empty, Map.empty, Map.empty, Map.empty, Map.empty, Map.empty, Map.empty, None))

@@ -1,18 +1,22 @@
 package com.soundcloud.publicApiStrangler.client.stitch
 
-import com.soundcloud.jvmkit.Urn
-import com.soundcloud.scalakit.Path
+import com.soundcloud.jvmkit.module.http.client.Params
+import com.soundcloud.jvmkit.module.util.{Path, Urn}
+import com.soundcloud.publicApiStrangler.client.BigJvmKitConversions._
+import com.soundcloud.publicApiStrangler.test.UnitSpecification
 import com.soundcloud.scalakit.finagle.http.{InternalServerErrorStatus, OkStatus, StatusCode}
-import com.soundcloud.scalakit.finagle.jsonservice.{JsonClient, JsonResponse, Params}
-import com.soundcloud.scalakit.test.UnitSpecification
+import com.soundcloud.scalakit.finagle.jsonservice.{JsonClient, JsonResponse}
 import com.twitter.util.{Await, Future}
 import org.mockito.Mockito._
-import play.api.libs.json.{JsNull, JsObject, Json}
+import play.api.libs.json.{JsObject, Json}
 
 class StitchClientSpec extends UnitSpecification {
+
   trait GenericContext[T] extends Scope {
     def resultF: Future[T]
+
     def result = Await.result(resultF)
+
     def resultT = Await.result(resultF.liftToTry)
   }
 
@@ -34,7 +38,9 @@ class StitchClientSpec extends UnitSpecification {
     val userUrn = Urn("soundcloud:users:8700")
 
     def stitchKey1 = s"${userUrn.getIdentifier}|${trackUrn1.getIdentifier}"
+
     def stitchKey2 = s"${userUrn.getIdentifier}|${trackUrn2.getIdentifier}"
+
     def stitchKey3 = s"${userUrn.getIdentifier}|${trackUrn3.getIdentifier}"
 
     def genMockResponseContentBit(cat: String, keys: List[(String, Int)]) = {
@@ -63,6 +69,7 @@ class StitchClientSpec extends UnitSpecification {
         genMockResponseContentBit("reposts", List((stitchKey3, 901)))
 
     def mockResponseStatus: StatusCode = OkStatus
+
     def mockResponseFirstBatch =
       Future.value(
         JsonResponse(
@@ -102,11 +109,13 @@ class StitchClientSpec extends UnitSpecification {
 
   "500 response" in new Context {
     override def mockResponseStatus = InternalServerErrorStatus
+
     resultT.isThrow === true
   }
 
   "exception response" in new Context {
     override def mockResponseFirstBatch = Future.exception(new RuntimeException("kaboom"))
+
     resultT.isThrow === true
   }
 }

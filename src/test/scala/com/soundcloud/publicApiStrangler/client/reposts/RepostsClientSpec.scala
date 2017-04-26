@@ -2,15 +2,18 @@ package com.soundcloud.publicApiStrangler.client.reposts
 
 import au.com.dius.pact.consumer.dsl.PactDslJsonBody
 import au.com.dius.pact.consumer.{PactSpec, UnitSpecsSupport}
-import com.soundcloud.bff.test.UnitSpecification
+import com.soundcloud.publicApiStrangler.test.UnitSpecification
+import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.telemetry.Telemetry
 import com.soundcloud.jvmkit.test.InMemoryConfig
-import com.soundcloud.jvmkit.{ResourceName, Urn, UserSession, UserSessionBuilder}
+import com.soundcloud.jvmkit.ResourceName
+import com.soundcloud.jvmkit.{UserSession => BigJvmKitUserSession}
+import com.soundcloud.jvmkit.module.util.session.UserSessionBuilder
 import com.soundcloud.publicApiStrangler.client.reposts.RepostsClient._
-import com.soundcloud.scalakit.Path
+import com.soundcloud.scalakit.{Path => BigJvmKitPath}
 import com.soundcloud.scalakit.finagle.dns.ServiceEntryPoint
 import com.soundcloud.scalakit.finagle.http.OkStatus
-import com.soundcloud.scalakit.finagle.jsonservice.{JsonClient, JsonResponse, Params}
+import com.soundcloud.scalakit.finagle.jsonservice.{JsonClient, JsonResponse, Params => BigJvmKitParams}
 import com.twitter.finagle.http.HeaderMap
 import com.twitter.util.{Await, Future}
 import org.mockito.Mockito.when
@@ -27,6 +30,7 @@ class RepostsClientSpec extends UnitSpecification with PactSpec with UnitSpecsSu
   val spamUser = Urn(s"soundcloud:users:2")
 
   def track(id: Int) = Urn(s"soundcloud:tracks:$id")
+
   def playlist(id: Int) = Urn(s"soundcloud:playlists:$id")
 
   val spamResponse = buildResponse(
@@ -60,9 +64,9 @@ class RepostsClientSpec extends UnitSpecification with PactSpec with UnitSpecsSu
       headers = commonHeaders,
       bodyAndMatchers = new PactDslJsonBody()
         .minArrayLike("counts", 1)
-          .stringMatcher("urn", "soundcloud:[a-z0-9-]+:[a-z0-9-]+", user.toString)
-          .integerType("count", countValue)
-          .closeObject()
+        .stringMatcher("urn", "soundcloud:[a-z0-9-]+:[a-z0-9-]+", user.toString)
+        .integerType("count", countValue)
+        .closeObject()
         .closeArray()
     )
 
@@ -71,7 +75,7 @@ class RepostsClientSpec extends UnitSpecification with PactSpec with UnitSpecsSu
       status = 200,
       headers = commonHeaders,
       maybeBody = Some(
-        Json.obj("counts" -> counts.map { case (urn, count) => Json.obj("urn" -> urn.toString, "count" -> count)}).toString
+        Json.obj("counts" -> counts.map { case (urn, count) => Json.obj("urn" -> urn.toString, "count" -> count) }).toString
       ),
       matchers = Map(
         "$.body.counts[*].count" -> Map("match" -> "integer"),
@@ -291,6 +295,7 @@ class RepostsClientSpec extends UnitSpecification with PactSpec with UnitSpecsSu
   pactFragment.description >> {
     trait Context extends Scope {
       def sessionUser: Urn
+
       lazy val session = new UserSessionBuilder().setUser(sessionUser).build()
       val baseUrl = "http://api.example.com"
 
@@ -418,8 +423,8 @@ class RepostsClientSpec extends UnitSpecification with PactSpec with UnitSpecsSu
 
       "when data is not available, but the calls were successful" >> {
         "it falls back to zero counts for unavailable URNs" in new CountsContext with MockedJsonClient {
-          when(jsonClientMock.get(any[UserSession], any[Path], any[Params], any[Params])) thenReturn
-            Future.value(JsonResponse(OkStatus, Json.obj("counts" -> Json.arr()), HeaderMap(commonHeaders.toSeq:_*)))
+          when(jsonClientMock.get(any[BigJvmKitUserSession], any[BigJvmKitPath], any[BigJvmKitParams], any[BigJvmKitParams])) thenReturn
+            Future.value(JsonResponse(OkStatus, Json.obj("counts" -> Json.arr()), HeaderMap(commonHeaders.toSeq: _*)))
 
           val f = clientWithMock.getRepostCountsByUrnWithFallback(session, Set(user, track(1), track(2), playlist(1), playlist(2)))
           Await.result(f) ==== Map(user -> 0L, track(1) -> 0L, track(2) -> 0L, playlist(1) -> 0L, playlist(2) -> 0L)
@@ -428,7 +433,7 @@ class RepostsClientSpec extends UnitSpecification with PactSpec with UnitSpecsSu
 
       "when an upstream request fails call fails" >> {
         "it falls back to zero counts for unavailable URNs" in new CountsContext with MockedJsonClient {
-          when(jsonClientMock.get(any[UserSession], any[Path], any[Params], any[Params])).thenReturn(Future.???)
+          when(jsonClientMock.get(any[BigJvmKitUserSession], any[BigJvmKitPath], any[BigJvmKitParams], any[BigJvmKitParams])).thenReturn(Future.???)
           val f = clientWithMock.getRepostCountsByUrnWithFallback(session, Set(user, track(1), track(2), playlist(1), playlist(2)))
 
           Await.result(f) ==== Map(user -> 0L, track(1) -> 0L, track(2) -> 0L, playlist(1) -> 0L, playlist(2) -> 0L)

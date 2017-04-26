@@ -2,23 +2,25 @@ package com.soundcloud.publicApiStrangler.mapping.search
 
 import com.fasterxml.jackson.annotation.JsonIgnore
 import com.soundcloud.bff.nextbff.mapping.MappingContext
-import com.soundcloud.jvmkit.{Urn, UserSession}
-import com.soundcloud.jvmkit.policies.ContentAuthorization
+import com.soundcloud.jvmkit.module.util.Urn
+import com.soundcloud.jvmkit.module.util.session.UserSession
+import com.soundcloud.publicApiStrangler.client.BigJvmKitConversions._
 import com.soundcloud.publicApiStrangler.mapper.liebling.LikeCountMapper
 import com.soundcloud.publicApiStrangler.mapper.timeline.EntitySummaryMapper
 import com.soundcloud.publicApiStrangler.mapper.waveform.{WaveformMapper, WaveformRequestParams}
 import com.soundcloud.publicApiStrangler.mapping.timeline.Track
+import com.soundcloud.publicApiStrangler.policies.ContentAuthorization
 import play.api.libs.json.JsValue
 
 /**
- * Representation of a track as returned by search on public API.
- *
- * Similar to the track representation on timeline, but with some differences.
- */
+  * Representation of a track as returned by search on public API.
+  *
+  * Similar to the track representation on timeline, but with some differences.
+  */
 class SearchTrack(session: UserSession,
                   jsonValue: JsValue,
                   likeCountMapper: LikeCountMapper,
-                  repostCountsByUrn: Map[Urn,Long],
+                  repostCountsByUrn: Map[Urn, Long],
                   baseUrl: String,
                   entitySummaryMapper: EntitySummaryMapper,
                   @JsonIgnore contentAuthorization: ContentAuthorization,

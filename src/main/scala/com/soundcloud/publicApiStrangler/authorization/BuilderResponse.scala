@@ -1,13 +1,15 @@
 package com.soundcloud.publicApiStrangler.authorization
 
-import play.api.libs.json.JsValue
-import com.soundcloud.bff.finagle.ResponseBuilder
+import com.soundcloud.jvmkit.module.http.server.ResponseBuilder
+import com.twitter.finagle.http.Response
 
 trait BuilderResponse {
   val content: String
+
   def render = withBody(content)
-  def withBody(body: String): ResponseBuilder
-  protected def builder = new ResponseBuilder
+
+  def withBody(body: String): Response
+
 }
 
 object BuilderResponse {
@@ -21,7 +23,7 @@ object BuilderResponse {
 }
 
 case class CallbackResponse(name: String, content: String) extends BuilderResponse {
-  def withBody(body: String) = builder.body(s"/**/$name($body);")
+  def withBody(body: String) = ResponseBuilder.ok(s"/**/$name($body);")
 }
 
 object CallbackResponse {
@@ -29,5 +31,5 @@ object CallbackResponse {
 }
 
 case class NormalResponse(content: String) extends BuilderResponse {
-  def withBody(body: String) = builder.body(body)
+  def withBody(body: String) = ResponseBuilder.ok(body)
 }

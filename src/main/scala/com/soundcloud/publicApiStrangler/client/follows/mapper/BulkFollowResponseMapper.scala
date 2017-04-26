@@ -1,6 +1,6 @@
 package com.soundcloud.publicApiStrangler.client.follows.mapper
 
-import com.soundcloud.jvmkit.Urn
+import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.publicApiStrangler.client.follows.representation.Following
 import com.soundcloud.publicApiStrangler.client.follows.representation.follow.{BulkFollowFailed, FollowResponse, FollowingCreated, UnknownError}
 import com.soundcloud.scalakit.finagle.http.{BadRequestStatus, CreatedStatus}

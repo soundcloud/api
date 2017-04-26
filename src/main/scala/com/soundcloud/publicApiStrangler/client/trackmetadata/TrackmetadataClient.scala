@@ -1,12 +1,16 @@
 package com.soundcloud.publicApiStrangler.client.trackmetadata
 
+import com.soundcloud.jvmkit.ResourceName
 import com.soundcloud.jvmkit.config.{Config, ConfigConvention}
+import com.soundcloud.jvmkit.module.http.client.Params
+import com.soundcloud.jvmkit.module.util.session.UserSession
+import com.soundcloud.jvmkit.module.util.{Path, Urn}
 import com.soundcloud.jvmkit.telemetry.Telemetry
-import com.soundcloud.jvmkit.{ResourceName, Urn, UserSession}
-import com.soundcloud.scalakit.Path
+import com.soundcloud.publicApiStrangler.client.BigJvmKitConversions._
+import com.soundcloud.publicApiStrangler.client.CommonJsonFormats._
 import com.soundcloud.scalakit.finagle.dns.ServiceEntryPoint
 import com.soundcloud.scalakit.finagle.http.OkStatus
-import com.soundcloud.scalakit.finagle.jsonservice.{JsonClient, JsonResponse, Params}
+import com.soundcloud.scalakit.finagle.jsonservice.{JsonClient, JsonResponse}
 import com.twitter.util.Future
 import play.api.libs.json._
 
@@ -25,7 +29,7 @@ class TrackmetadataClient(service: JsonClient) {
 
     val batchedCalls = urns.grouped(batchSize).map {
       urnsGroup =>
-        service.get(session, Path() / "tracks", urnsGroup, Params.empty).map {
+        service.get(session, Path() / "tracks", toBigJvmKitUrnSet(urnsGroup), Params.empty).map {
           case JsonResponse(OkStatus, json, _, _) => jsonToTracks(json)
           case _ => Nil
         }

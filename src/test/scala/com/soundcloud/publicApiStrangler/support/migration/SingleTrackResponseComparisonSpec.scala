@@ -1,17 +1,18 @@
 package com.soundcloud.publicApiStrangler.support.migration
 
-import com.soundcloud.jvmkit.telemetry.Telemetry
-import com.soundcloud.jvmkit.test.InMemoryConfig
-import com.soundcloud.scalakit.test.UnitSpecification
+import com.soundcloud.jvmkit.module.telemetry.{MetricsRegistryImpl, Telemetry}
+import com.soundcloud.jvmkit.module.util.config.InMemoryConfig
+import com.soundcloud.publicApiStrangler.test.UnitSpecification
 import com.twitter.finagle.http.{Request, Response, Status}
 import com.twitter.util.NonFatal
 import io.prometheus.client.CollectorRegistry
 
 class SingleTrackResponseComparisonSpec extends UnitSpecification {
+
   trait Context extends Scope {
     val config = new InMemoryConfig
     val collectorRegistry = new CollectorRegistry
-    val telemetry = new Telemetry(config, collectorRegistry)
+    val telemetry = new Telemetry(config.getApplicationName, new MetricsRegistryImpl(collectorRegistry))
     val responseComparison = new SingleTrackResponseComparison(telemetry)
 
     def generateResponse(contentString: String) = {
@@ -304,7 +305,7 @@ class SingleTrackResponseComparisonSpec extends UnitSpecification {
     }
 
     "does not record tag_list difference if tag list is the same (simple case)" in new Context {
-      val legacyRes    = generateResponse("""{"kind": "track", "id": 4, "tag_list": "abc"}""")
+      val legacyRes = generateResponse("""{"kind": "track", "id": 4, "tag_list": "abc"}""")
       val migrationRes = generateResponse("""{"kind": "track", "id": 4, "tag_list": "abc"}""")
 
       responseComparison.report(Request(), legacyRes, migrationRes)
@@ -321,7 +322,7 @@ class SingleTrackResponseComparisonSpec extends UnitSpecification {
     }
 
     "does not record tag_list difference if tag list is the same" in new Context {
-      val legacyRes    = generateResponse("""{"kind": "track", "id": 4, "tag_list": "m a y n o:oo=ooo b:bb=bbb z:zz=\"z z z\" p:pp=ppp"}""")
+      val legacyRes = generateResponse("""{"kind": "track", "id": 4, "tag_list": "m a y n o:oo=ooo b:bb=bbb z:zz=\"z z z\" p:pp=ppp"}""")
       val migrationRes = generateResponse("""{"kind": "track", "id": 4, "tag_list": "m a y n o:oo=ooo b:bb=bbb z:zz=\"z z z\" p:pp=ppp"}""")
 
       responseComparison.report(Request(), legacyRes, migrationRes)
@@ -338,7 +339,7 @@ class SingleTrackResponseComparisonSpec extends UnitSpecification {
     }
 
     "does not record tag_list difference if sorting is different" in new Context {
-      val legacyRes    = generateResponse("""{"kind": "track", "id": 4, "tag_list": "m a y n o:oo=ooo b:bb=bbb z:zz=\"z z z\" p:pp=ppp"}""")
+      val legacyRes = generateResponse("""{"kind": "track", "id": 4, "tag_list": "m a y n o:oo=ooo b:bb=bbb z:zz=\"z z z\" p:pp=ppp"}""")
       val migrationRes = generateResponse("""{"kind": "track", "id": 4, "tag_list": "a m n y o:oo=ooo b:bb=bbb z:zz=\"z z z\" p:pp=ppp"}""")
 
       responseComparison.report(Request(), legacyRes, migrationRes)
@@ -355,7 +356,7 @@ class SingleTrackResponseComparisonSpec extends UnitSpecification {
     }
 
     "does not record comment_count difference" in new Context {
-      val legacyRes    = generateResponse("""{"kind": "track", "id": 4, "comment_count": 123}""")
+      val legacyRes = generateResponse("""{"kind": "track", "id": 4, "comment_count": 123}""")
       val migrationRes = generateResponse("""{"kind": "track", "id": 4, "comment_count": 456}""")
 
       responseComparison.report(Request(), legacyRes, migrationRes)
@@ -372,7 +373,7 @@ class SingleTrackResponseComparisonSpec extends UnitSpecification {
     }
 
     "does not record favoritings_count difference" in new Context {
-      val legacyRes    = generateResponse("""{"kind": "track", "id": 4, "favoritings_count": 123}""")
+      val legacyRes = generateResponse("""{"kind": "track", "id": 4, "favoritings_count": 123}""")
       val migrationRes = generateResponse("""{"kind": "track", "id": 4, "favoritings_count": 456}""")
 
       responseComparison.report(Request(), legacyRes, migrationRes)
@@ -389,7 +390,7 @@ class SingleTrackResponseComparisonSpec extends UnitSpecification {
     }
 
     "does not record playback_count difference" in new Context {
-      val legacyRes    = generateResponse("""{"kind": "track", "id": 4, "playback_count": 123}""")
+      val legacyRes = generateResponse("""{"kind": "track", "id": 4, "playback_count": 123}""")
       val migrationRes = generateResponse("""{"kind": "track", "id": 4, "playback_count": 456}""")
 
       responseComparison.report(Request(), legacyRes, migrationRes)
@@ -406,7 +407,7 @@ class SingleTrackResponseComparisonSpec extends UnitSpecification {
     }
 
     "does not record download_count difference" in new Context {
-      val legacyRes    = generateResponse("""{"kind": "track", "id": 4, "download_count": 123}""")
+      val legacyRes = generateResponse("""{"kind": "track", "id": 4, "download_count": 123}""")
       val migrationRes = generateResponse("""{"kind": "track", "id": 4, "download_count": 456}""")
 
       responseComparison.report(Request(), legacyRes, migrationRes)

@@ -1,9 +1,10 @@
 package com.soundcloud.publicApiStrangler.authorization
 
 import com.soundcloud.bff.finagle.ResponseLike
-import com.soundcloud.jvmkit.{Urn, UserSession}
+import com.soundcloud.jvmkit.module.telemetry.Telemetry
+import com.soundcloud.jvmkit.module.util.Urn
+import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.twitter.util.Future
-import com.soundcloud.jvmkit.telemetry.Telemetry
 
 class PublicApiSiloing(checkRollout: () => Future[Boolean], blacklistOfAppIDs: Set[Urn], telemetry: Telemetry) {
   private lazy val apiSiloingCounter =
@@ -12,7 +13,7 @@ class PublicApiSiloing(checkRollout: () => Future[Boolean], blacklistOfAppIDs: S
   /**
     * siloes an endpoint by checking if a token was not issued for mobile app if it is the call is rejected
     */
-  def withSiloedSession[T: ResponseLike](userSession: UserSession)(action: => Future[T]): Future[T] =  {
+  def withSiloedSession[T: ResponseLike](userSession: UserSession)(action: => Future[T]): Future[T] = {
     checkRollout().flatMap { rolloutEnabled =>
 
       val isBlacklisted = blacklisted(userSession)

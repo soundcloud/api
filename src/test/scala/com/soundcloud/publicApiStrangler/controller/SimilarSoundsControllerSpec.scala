@@ -1,24 +1,26 @@
 package com.soundcloud.publicApiStrangler.controller
 
 import com.soundcloud.bff.nextbff.pagination.OffsetBasedPage
-import com.soundcloud.bff.test.InjectionBasedControllerSpecification
-import com.soundcloud.jvmkit.Urn
+import com.soundcloud.jvmkit.module.bff.testsupport.FakeUserAuthentication
+import com.soundcloud.jvmkit.module.util.Urn
+import com.soundcloud.publicApiStrangler.RoutingDefinitions
 import com.soundcloud.publicApiStrangler.mapper.similarsounds.SimilarSoundsMapper
 import com.soundcloud.publicApiStrangler.mapping.similarsounds.SimilarSoundsMapping
 import com.soundcloud.publicApiStrangler.support.mapping.ObjectMappingMock
+import com.soundcloud.publicApiStrangler.test.{HandlerSpecificationScope, UnitSpecification}
 import com.soundcloud.service.response.representation.SimilarSounds
 import com.twitter.util.Future
 import org.jboss.netty.handler.codec.http.HttpResponseStatus
-import org.mockito.Mockito.{when, verify}
+import org.mockito.Mockito.{verify, when}
 
-class SimilarSoundsControllerSpec
-  extends InjectionBasedControllerSpecification {
+class SimilarSoundsControllerSpec extends UnitSpecification {
 
-
-  trait Context extends Scope {
-    val session = fakeUserAuthentication(anonymousSession)
+  trait Context extends HandlerSpecificationScope {
+    val session = new FakeUserAuthentication(anonymousSession)
     val similarSoundsMapperMock = mock[SimilarSoundsMapper]
     val similarSoundsController = new SimilarSoundsController(session, similarSoundsMapperMock, "http://api.soundcloud.com")
+
+    override def routingDefinitions = RoutingDefinitions.forSimilarSoundsController(similarSoundsController)
 
     val forwardStatus = HttpResponseStatus.FOUND.getCode
     val forwardContent = "forwardContent"
@@ -33,8 +35,8 @@ class SimilarSoundsControllerSpec
       when(similarSoundsMapperMock.materialize(anonymousSession, page)).
         thenReturn(Future(Some(similarSoundsMock)))
 
-      val response = get(similarSoundsController, path)
-      response.code ==== 200
+      val response = get(similarSoundsController.handleSimilarSoundsRequest, path)
+      response.statusCode ==== 200
 
       verify(similarSoundsMapperMock).materialize(anonymousSession, page)
     }
@@ -55,8 +57,8 @@ class SimilarSoundsControllerSpec
     when(similarSoundsMapperMock.materialize(anonymousSession, page)).
       thenReturn(Future.value(None))
 
-    val response = get(similarSoundsController, "/tracks/123/related?limit=22&offset=3")
-    response.code ==== 404
+    val response = get(similarSoundsController.handleSimilarSoundsRequest, "/tracks/123/related?limit=22&offset=3")
+    response.statusCode ==== 404
 
     verify(similarSoundsMapperMock).materialize(anonymousSession, page)
   }

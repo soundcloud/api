@@ -1,18 +1,21 @@
 package com.soundcloud.publicApiStrangler
 
 import com.soundcloud.jvmkit.module.experimental.result.ResultF
-import com.soundcloud.jvmkit.{Urn, UserSession}
+import com.soundcloud.jvmkit.module.util.Urn
+import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.publicApiStrangler.client.liebling.LieblingClient
-import com.soundcloud.publicApiStrangler.client.mediaservice.{MediaServiceUrlGenClient, WaveformUrl}
-import com.soundcloud.publicApiStrangler.client.pubmese.{Isrc, PubmeseClient}
+import com.soundcloud.publicApiStrangler.client.mediaservice.MediaServiceUrlGenClient
+import com.soundcloud.publicApiStrangler.client.pubmese.PubmeseClient
 import com.soundcloud.publicApiStrangler.client.quota.UserQuotaClient
 import com.soundcloud.publicApiStrangler.client.stitch.{StitchClient, StitchCounts}
 import com.soundcloud.publicApiStrangler.service.{TrackAccessibilityService, TrackPagination, TrackRepository, TrackRepresentationBuilder}
 
 // FIXME: Do not use result types from Track Coordinator
+import com.soundcloud.jvmkit.ModuleConversions._
+import com.soundcloud.publicApiStrangler.client.BigJvmKitConversions._
+import com.soundcloud.publicApiStrangler.client.RichOkidokiClient
 import com.soundcloud.publicApiStrangler.client.trackcoordinator.datatypes.{Result, NotFound => TrackNotFound, Success => SuccessResult}
-import com.soundcloud.publicApiStrangler.client.trackmetadata.{Track, TrackmetadataClient}
-import com.soundcloud.publicApiStrangler.client.{DomainLocking, RichOkidokiClient, TrackAudioMetadata}
+import com.soundcloud.publicApiStrangler.client.trackmetadata.TrackmetadataClient
 import com.soundcloud.publicApiStrangler.representation._
 import com.soundcloud.service.response.representation._
 import com.twitter.util.{Future, NonFatal}
@@ -31,7 +34,7 @@ class TrackRepresentationsService(trackRepository: TrackRepository,
   def track(session: UserSession, urn: Urn, secretTokenInRequest: Option[String]): Future[Result[TrackRepresentationLike]] = {
 
     def fetchGeoblockings(session: UserSession, urn: Urn): Future[Geoblockings] =
-      // fetchTrackGeoblockings can return Some with zero geoblockings, which this method turns into None
+    // fetchTrackGeoblockings can return Some with zero geoblockings, which this method turns into None
       okidokiClient.fetchTrackGeoblockings(session, urn).map {
         case Some(geoblockings) => geoblockings
         case None => List.empty
@@ -90,7 +93,7 @@ class TrackRepresentationsService(trackRepository: TrackRepository,
 
   def tracks(session: UserSession, userUrn: Urn, paginationParams: TrackPagination): ResultF[TracksRepresentationResult] = {
     trackRepository.tracksByUser(session, userUrn, paginationParams).map { tracksResult => {
-      val tracks = tracksResult.tracks.map { track =>
+      val tracks = tracksResult.tracks.flatMap { track =>
         val urn = track.urn
         for {
           audio <- tracksResult.audios.get(urn)
@@ -113,10 +116,11 @@ class TrackRepresentationsService(trackRepository: TrackRepository,
             downloadsPerTrack = tracksResult.downloadsPerTrack.get(urn).flatten
           )
         }
-      }.flatten
+      }
 
       TracksRepresentationResult(tracks, tracksResult.nextHref)
-    }}
+    }
+    }
   }
 }
 

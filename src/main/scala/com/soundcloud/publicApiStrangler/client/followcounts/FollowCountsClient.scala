@@ -3,12 +3,15 @@ package com.soundcloud.publicApiStrangler.client.followcounts
 import java.net.URLEncoder
 
 import com.soundcloud.bff.services.JsonService
-import com.soundcloud.jvmkit.{Urn, UserSession}
-import com.soundcloud.jvmkit.config.{Config, DataSensitivity}
+import com.soundcloud.jvmkit.module.util.config.{Config, DataSensitivity}
+import com.soundcloud.jvmkit.module.http.client.Params
+import com.soundcloud.jvmkit.module.util.Urn
+import com.soundcloud.jvmkit.module.util.session.UserSession
+import com.soundcloud.publicApiStrangler.client.BigJvmKitConversions._
 import com.soundcloud.publicApiStrangler.support.BatchingUtilities._
 import com.soundcloud.scalakit.Path
 import com.soundcloud.scalakit.finagle.http.OkStatus
-import com.soundcloud.scalakit.finagle.jsonservice.{JsonResponse, Params}
+import com.soundcloud.scalakit.finagle.jsonservice.JsonResponse
 import com.twitter.util.{Future, NonFatal}
 import play.api.libs.json.JsObject
 
@@ -47,7 +50,7 @@ class FollowCountsClient(client: JsonService, config: Config) {
   private def uriEncodedQueryString(params: Params): String = {
     val flattenedParams = params.toSeq.flatMap { case (key, values) => values.value.map(key -> _) }
     val timeSeriesQuery = "/timeseries?" + flattenedParams.map(Function.tupled(_ + "=" + _)).reduceLeft(_ + "&" + _)
-      URLEncoder.encode(timeSeriesQuery, "UTF-8")
+    URLEncoder.encode(timeSeriesQuery, "UTF-8")
   }
 
   private def parseBulkResponse(response: JsonResponse): Map[String, Map[Urn, Long]] = {

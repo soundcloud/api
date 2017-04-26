@@ -1,10 +1,11 @@
 package com.soundcloud.publicApiStrangler.client.quota
 
-import com.soundcloud.bff.test.UnitSpecification
-import com.soundcloud.jvmkit.Urn
-import com.soundcloud.scalakit.Path
+import com.soundcloud.jvmkit.module.http.client.Params
+import com.soundcloud.jvmkit.module.util.{Path, Urn}
+import com.soundcloud.publicApiStrangler.client.BigJvmKitConversions._
+import com.soundcloud.publicApiStrangler.test.UnitSpecification
 import com.soundcloud.scalakit.finagle.http.{InternalServerErrorStatus, OkStatus}
-import com.soundcloud.scalakit.finagle.jsonservice.{JsonClient, JsonResponse, Params}
+import com.soundcloud.scalakit.finagle.jsonservice.{JsonClient, JsonResponse}
 import com.twitter.util.{Await, Future}
 import play.api.libs.json.JsNull
 
@@ -24,7 +25,7 @@ class UserQuotaClientSpec extends UnitSpecification {
   "downloadsPerTrack" >> {
 
     "returns empty response in case of exceptions" in new Context {
-      jsonClient.get(session, path, userUrns, Params.empty) returns
+      jsonClient.get(session, path, toBigJvmKitUrnSet(userUrns), Params.empty) returns
         Future.exception(new Exception("something wonky happened finagle returned exception"))
 
       val result = Await.result(userQuotaClient.downloadsPerTrack(session, userUrns))
@@ -32,7 +33,7 @@ class UserQuotaClientSpec extends UnitSpecification {
     }
 
     "returns empty response in case of non 200 responses" in new Context {
-      jsonClient.get(session, path, userUrns, Params.empty) returns
+      jsonClient.get(session, path, toBigJvmKitUrnSet(userUrns), Params.empty) returns
         Future.value(JsonResponse(InternalServerErrorStatus, JsNull))
 
       val result = Await.result(userQuotaClient.downloadsPerTrack(session, userUrns))
@@ -41,7 +42,7 @@ class UserQuotaClientSpec extends UnitSpecification {
 
     "parses the service response when response is 200" in new Context {
       val fixture = withContentsOf("quota", "user_quota_multiple")
-      jsonClient.get(session, path, userUrns, Params.empty) returns Future.value(JsonResponse(OkStatus, fixture))
+      jsonClient.get(session, path, toBigJvmKitUrnSet(userUrns), Params.empty) returns Future.value(JsonResponse(OkStatus, fixture))
 
       val result = Await.result(userQuotaClient.downloadsPerTrack(session, userUrns))
       result must haveSize(2)
@@ -53,7 +54,7 @@ class UserQuotaClientSpec extends UnitSpecification {
 
     "if user has unlimited, return None" in new Context {
       val fixture = withContentsOf("quota", "user_quota_multiple_missing_quota")
-      jsonClient.get(session, path, userUrns, Params.empty) returns Future.value(JsonResponse(OkStatus, fixture))
+      jsonClient.get(session, path, toBigJvmKitUrnSet(userUrns), Params.empty) returns Future.value(JsonResponse(OkStatus, fixture))
 
       val result = Await.result(userQuotaClient.downloadsPerTrack(session, userUrns))
       result must haveSize(2)

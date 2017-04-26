@@ -3,7 +3,8 @@ import sbt.Keys._
 import sbt._
 
 object BuildProperties {
-  val jvmkitVersion = "51.4.4"
+  val jvmkitVersion = "51.5.0"
+  val jvmkitModulesVersion = "0.20-SNAPSHOT"
 }
 
 object Build extends HttpServerAppBuild(
@@ -16,9 +17,12 @@ object Build extends HttpServerAppBuild(
   libDependencies = Seq(
     "com.soundcloud" %% "sc-services" % "48.0.0",
     "com.soundcloud" %% "timeline-client" % "0.1.2",
-    "com.soundcloud" %% "ratelimitinglib" % BuildProperties.jvmkitVersion,
-    "com.soundcloud" %% "jvmkit-http-client" % "0.17",
-    "com.soundcloud" %% "jvmkit-experimental" % "0.17",
+    "com.soundcloud" %% "jvmkit-http-client" % BuildProperties.jvmkitModulesVersion,
+    "com.soundcloud" %% "jvmkit-admin-server" % BuildProperties.jvmkitModulesVersion,
+    "com.soundcloud" %% "jvmkit-bff" % BuildProperties.jvmkitModulesVersion,
+    "com.soundcloud" %% "jvmkit-rollout" % BuildProperties.jvmkitModulesVersion,
+    "com.soundcloud" %% "jvmkit-memcached" % BuildProperties.jvmkitModulesVersion,
+    "com.soundcloud" %% "jvmkit-experimental" % BuildProperties.jvmkitModulesVersion,
     "com.fasterxml.uuid" % "java-uuid-generator" % "3.1.3",
     "commons-codec" % "commons-codec" % "1.9",
     "org.jsoup" % "jsoup" % "1.8.3",

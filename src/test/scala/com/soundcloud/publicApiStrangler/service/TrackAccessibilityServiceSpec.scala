@@ -1,9 +1,10 @@
 package com.soundcloud.publicApiStrangler.service
 
-import com.soundcloud.jvmkit.Urn
+import com.soundcloud.jvmkit.module.util.Urn
+import com.soundcloud.publicApiStrangler.client.BigJvmKitConversions._
 import com.soundcloud.publicApiStrangler.client.playlists.{Playlist, PlaylistsClient}
+import com.soundcloud.publicApiStrangler.test.UnitSpecification
 import com.soundcloud.publicApiStrangler.test.util.TrackMetadataTrackBuilder
-import com.soundcloud.scalakit.test.UnitSpecification
 import com.twitter.util.{Await, Future}
 import org.joda.time.LocalDateTime
 
@@ -83,8 +84,8 @@ class TrackAccessibilityServiceSpec extends UnitSpecification {
         * - when the track's public, it should be accessible.
         * - when the track's private, it should be accessible if the session user is the same as the track owner.
         */
-      TestData(Some(user1), user1, true,  None, None, None, None, shouldBeAllowed = true),
-      TestData(Some(user1), user2, true,  None, None, None, None, shouldBeAllowed = true),
+      TestData(Some(user1), user1, true, None, None, None, None, shouldBeAllowed = true),
+      TestData(Some(user1), user2, true, None, None, None, None, shouldBeAllowed = true),
       TestData(Some(user1), user1, false, None, None, None, None, shouldBeAllowed = true),
       TestData(Some(user1), user2, false, None, None, None, None, shouldBeAllowed = false),
 
@@ -94,8 +95,8 @@ class TrackAccessibilityServiceSpec extends UnitSpecification {
         * be accessible if the sent secret_token matches the track's secret_token
         */
       TestData(Some(user1), user2, false, None, secretToken1, secretToken1, None, shouldBeAllowed = true),
-      TestData(Some(user1), user2, false, None, None,         secretToken2, None, shouldBeAllowed = false),
-      TestData(Some(user1), user2, false, None, secretToken1, None,         None, shouldBeAllowed = false),
+      TestData(Some(user1), user2, false, None, None, secretToken2, None, shouldBeAllowed = false),
+      TestData(Some(user1), user2, false, None, secretToken1, None, None, shouldBeAllowed = false),
       TestData(Some(user1), user2, false, None, secretToken1, secretToken2, None, shouldBeAllowed = false),
 
       /**

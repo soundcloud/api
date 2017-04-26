@@ -1,41 +1,45 @@
 package com.soundcloud.publicApiStrangler.authorization
 
-import com.soundcloud.bff.finagle.{Request => BffRequest}
 import com.soundcloud.bff.media.{TrackWaveformUrl, WaveformUrlsRepository}
-import com.soundcloud.bff.nextbff.test.FakeUserAuthentication
-import com.soundcloud.bff.test.UnitSpecification
-import com.soundcloud.jvmkit.{Urn, UserSession}
-import com.soundcloud.jvmkit.policies.{ContentAuthorization, ContentPolicy, MonetizationModel, Reason}
+import com.soundcloud.jvmkit.module.bff.testsupport.FakeUserAuthentication
+import com.soundcloud.jvmkit.module.http.server.HandlerRequest
+import com.soundcloud.jvmkit.module.util.Urn
+import com.soundcloud.jvmkit.module.util.session.UserSessionBuilder
+import com.soundcloud.jvmkit.{Urn => BigJvmKitUrn}
+import com.soundcloud.publicApiStrangler.client.BigJvmKitConversions._
+import com.soundcloud.publicApiStrangler.policies._
+import com.soundcloud.publicApiStrangler.test.UnitSpecification
 import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures
-import com.soundcloud.scalakit.json.Json
 import com.soundcloud.scalakit.Url
+import com.soundcloud.scalakit.json.Json
+import com.twitter.finagle.http.Status
 import com.twitter.util.{Await, Future}
+import org.mockito.Mockito.{verifyZeroInteractions, when}
 import org.specs2.mutable.Before
 import play.api.libs.json.JsValue
-import org.mockito.Mockito.{when, verifyZeroInteractions}
 
 class AuthorizeHttpResponseSpec extends UnitSpecification with Fixtures {
 
   trait Context extends Scope {
-    val session = mock[UserSession]
+    val session = new UserSessionBuilder().build()
     val contentAuthorization = mock[ContentAuthorizationRules]
     val waveformUrlsRepo = mock[WaveformUrlsRepository]
-    val request = mock[BffRequest]
+    val request = mock[HandlerRequest]
     val userAuthentication = new FakeUserAuthentication(session)
 
     def content: String
 
-    def status: Int
+    def status: Status
 
     val authorizeContent = new AuthorizeHttpResponse(contentAuthorization, userAuthentication, waveformUrlsRepo, TrackPolicyApplicator(Set[Urn]()))
 
     lazy val authorize = authorizeContent.apply(request, status, content)
-    lazy val authorizedResponse = Await.result(authorize.map(_.build))
+    lazy val authorizedResponse = Await.result(authorize)
   }
 
   trait TrackContext extends Context with Before {
     val content = singleTrack.toString
-    val status = 200
+    val status = Status.Ok
     val urn = new Urn("soundcloud:tracks:153896632")
 
     def policies: ContentAuthorization
@@ -62,7 +66,7 @@ class AuthorizeHttpResponseSpec extends UnitSpecification with Fixtures {
 
   trait TrackArrayContext extends Context with Before {
     val content = tracksArray.toString
-    val status = 200
+    val status = Status.Ok
 
     def policies: Seq[ContentPolicy]
 
@@ -96,18 +100,17 @@ class AuthorizeHttpResponseSpec extends UnitSpecification with Fixtures {
   }
 
 
-
   "returns all the tracks when snip" in new TrackArrayContext {
 
     override def policies = Seq(ContentPolicy.SNIP, ContentPolicy.SNIP, ContentPolicy.SNIP)
 
     override def mockWaveFormUrlsRepoExpectations() = {
       val trackWaveformUrls = Map(
-        new Urn("soundcloud", "tracks", "49438146") -> TrackWaveformUrl("RhJ436DPf2Vx", new Url("http://bla"), new Url("http://bla2"), "stream", None),
-        new Urn("soundcloud", "tracks", "49437906") -> TrackWaveformUrl("DWpqP6aFqglm", new Url("http://bla3"), new Url("http://bla4"), "stream", None),
-        new Urn("soundcloud", "tracks", "48031525") -> TrackWaveformUrl("sDWnMpZaIQ9Z", new Url("http://bla5"), new Url("http://bla6"), "stream", None)
+        new BigJvmKitUrn("soundcloud", "tracks", "49438146") -> TrackWaveformUrl("RhJ436DPf2Vx", new Url("http://bla"), new Url("http://bla2"), "stream", None),
+        new BigJvmKitUrn("soundcloud", "tracks", "49437906") -> TrackWaveformUrl("DWpqP6aFqglm", new Url("http://bla3"), new Url("http://bla4"), "stream", None),
+        new BigJvmKitUrn("soundcloud", "tracks", "48031525") -> TrackWaveformUrl("sDWnMpZaIQ9Z", new Url("http://bla5"), new Url("http://bla6"), "stream", None)
       )
-      waveformUrlsRepo.fetchWaveformUrls(session, authorizations.toSet) returns Future.value(trackWaveformUrls)
+      waveformUrlsRepo.fetchWaveformUrls(session, authorizations.toSet.map(toBigJvmKitContentAuthorization)) returns Future.value(trackWaveformUrls)
     }
 
     authorizedResponse.statusCode mustEqual 200
@@ -119,11 +122,11 @@ class AuthorizeHttpResponseSpec extends UnitSpecification with Fixtures {
 
     override def mockWaveFormUrlsRepoExpectations() = {
       val trackWaveformUrls = Map(
-        new Urn("soundcloud", "tracks", "49438146") -> TrackWaveformUrl("RhJ436DPf2Vx", new Url("http://bla"), new Url("http://bla2"), "stream", None),
-        new Urn("soundcloud", "tracks", "48031525") -> TrackWaveformUrl("sDWnMpZaIQ9Z", new Url("http://bla5"), new Url("http://bla6"), "stream", None)
+        new BigJvmKitUrn("soundcloud", "tracks", "49438146") -> TrackWaveformUrl("RhJ436DPf2Vx", new Url("http://bla"), new Url("http://bla2"), "stream", None),
+        new BigJvmKitUrn("soundcloud", "tracks", "48031525") -> TrackWaveformUrl("sDWnMpZaIQ9Z", new Url("http://bla5"), new Url("http://bla6"), "stream", None)
       )
       val expectedContentAuth = Set(authorizations(0), authorizations(2))
-      waveformUrlsRepo.fetchWaveformUrls(session, expectedContentAuth) returns Future.value(trackWaveformUrls)
+      waveformUrlsRepo.fetchWaveformUrls(session, expectedContentAuth.map(toBigJvmKitContentAuthorization)) returns Future.value(trackWaveformUrls)
     }
 
     authorizedResponse.statusCode mustEqual 200
@@ -132,11 +135,11 @@ class AuthorizeHttpResponseSpec extends UnitSpecification with Fixtures {
 
   trait NoTracksContext extends Context {
     lazy val content = "no tracks"
-    lazy val status = 404
+    lazy val status = Status.NotFound
   }
 
   "doesn't authorize content if there aren't tracks to authorize" in new NoTracksContext {
-    authorizedResponse.statusCode mustEqual status
+    authorizedResponse.status mustEqual status
     authorizedResponse.getContentString mustEqual content
 
     verifyZeroInteractions(contentAuthorization)
@@ -144,7 +147,7 @@ class AuthorizeHttpResponseSpec extends UnitSpecification with Fixtures {
 
   trait PlaylistContext extends Context with Before {
     val content = playlist.toString
-    val status = 200
+    val status = Status.Ok
 
     def policies: Seq[ContentPolicy]
 
@@ -188,7 +191,7 @@ class AuthorizeHttpResponseSpec extends UnitSpecification with Fixtures {
 
   trait StreamContext extends Context with Before {
     val content = stream.toString
-    val status = 200
+    val status = Status.Ok
 
     def policies: Seq[ContentPolicy]
 
@@ -216,7 +219,7 @@ class AuthorizeHttpResponseSpec extends UnitSpecification with Fixtures {
 
   trait GenericContext extends Context with Before {
     val content = generic.toString
-    val status = 200
+    val status = Status.Ok
 
     val authorizations = Seq(
       new ContentAuthorization(new Urn("soundcloud:tracks:1"), ContentPolicy.BLOCK, Reason.GEO, MonetizationModel.NOT_APPLICABLE),
@@ -224,7 +227,7 @@ class AuthorizeHttpResponseSpec extends UnitSpecification with Fixtures {
       new ContentAuthorization(new Urn("soundcloud:tracks:3"), ContentPolicy.ALLOW, Reason.GEO, MonetizationModel.NOT_APPLICABLE)
     )
 
-      override def before: Any =
+    override def before: Any =
       when(contentAuthorization.fetchRules(===(session), any[Seq[Urn]]))
         .thenReturn(Future(authorizations))
   }

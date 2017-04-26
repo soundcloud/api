@@ -2,25 +2,28 @@ package com.soundcloud.publicApiStrangler.mapper.search
 
 import com.soundcloud.bff.media.{TrackWaveformUrlMapper, WaveformUrlsRepository}
 import com.soundcloud.bff.nextbff.mapping.{Mapping, MappingContext}
-import com.soundcloud.bff.test.UnitSpecification
-import com.soundcloud.jvmkit.Urn
-import com.soundcloud.jvmkit.policies.{ContentAuthorization, ContentPolicy, MonetizationModel, Reason}
+import com.soundcloud.jvmkit.module.util.Urn
+import com.soundcloud.jvmkit.{Urn => BigJvmKitUrn}
+import com.soundcloud.jvmkit.policies.{ContentPolicy => BigJvmKitContentPolicy}
 import com.soundcloud.publicApiStrangler.authorization.ContentAuthorizationRules
+import com.soundcloud.publicApiStrangler.client.BigJvmKitConversions._
 import com.soundcloud.publicApiStrangler.client.followcounts.{FollowCounts, FollowCountsClient}
 import com.soundcloud.publicApiStrangler.client.liebling.{LieblingClient, UserLikesCount}
 import com.soundcloud.publicApiStrangler.client.reposts.RepostsClient
 import com.soundcloud.publicApiStrangler.mapper.liebling.LikeCountMapper
 import com.soundcloud.publicApiStrangler.mapper.timeline.EntitySummaryMapper
 import com.soundcloud.publicApiStrangler.mapper.waveform.WaveformMapper
+import com.soundcloud.publicApiStrangler.policies.{ContentAuthorization, ContentPolicy, MonetizationModel, Reason}
+import com.soundcloud.publicApiStrangler.test.UnitSpecification
 import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures
 import com.soundcloud.scalakit.json.UntypedJson
 import com.soundcloud.service.client.OkidokiClient
 import com.soundcloud.service.response.representation.{TrackMeta, TracksWithPagination}
 import com.twitter.util.{Await, Future}
-import org.specs2.matcher.MatchResult
-import play.api.libs.json.{JsObject, Json}
 import org.mockito.Mockito.when
+import org.specs2.matcher.MatchResult
 import org.specs2.mutable.Before
+import play.api.libs.json.{JsObject, Json}
 
 class SearchEntityMapperSpec extends UnitSpecification with Fixtures {
 
@@ -77,16 +80,16 @@ class SearchEntityMapperSpec extends UnitSpecification with Fixtures {
 
     override def before: Any = {
       // the main metadata fetch
-      when(okidokiClient.fetch(session, searchResults.toSet)).thenReturn(
+      when(okidokiClient.fetch(session, toBigJvmKitUrnSet(searchResults.toSet))).thenReturn(
         Future(okidokiFetch)
       )
       // embedded entity summaries in tracks/playlists/groups metadata
-      when(okidokiClient.fetch(session, urns.toSet.filter(_.getCollection == "users"))).thenReturn(
+      when(okidokiClient.fetch(session, toBigJvmKitUrnSet(urns.toSet.filter(_.getCollection == "users")))).thenReturn(
         Future(okidokiFetch.filter(json => new Urn((json \ "self" \ "urn").as[String]).getCollection == "users"))
       )
       // track metadata for a playlist -- one call per playlist :(
       // should probably return some non-empty list
-      when(okidokiClient.playlistTracks(===(session), ===(new Urn("soundcloud:playlists:685235")), any[Option[Int]], any[Option[Int]])).thenReturn(
+      when(okidokiClient.playlistTracks(===(toBigJvmKitUserSession(session)), ===(new BigJvmKitUrn("soundcloud:playlists:685235")), any[Option[Int]], any[Option[Int]])).thenReturn(
         Future(TracksWithPagination(Nil, TrackMeta(None)))
       )
 
@@ -98,13 +101,13 @@ class SearchEntityMapperSpec extends UnitSpecification with Fixtures {
         .thenReturn(Future(lieblingLikesInfo))
 
       // reposts_count enrichment
-      when(repostsClient.getRepostCountsByUrnWithFallback(session, Set.empty)) thenReturn Future.value(Map.empty[Urn,Long])
+      when(repostsClient.getRepostCountsByUrnWithFallback(session, Set.empty)) thenReturn Future.value(Map.empty[Urn, Long])
       when(repostsClient.getRepostCountsByUrnWithFallback(session, searchResults.toSet)) thenReturn
         Future.value(Map(fetchedUserUrn -> 11L, trackUrn -> 22L, playlistUrn -> 33L))
 
       // waveform URLs
       when(contentAuthorizationService.fetchRules(===(session), any[Seq[Urn]])).thenReturn(Future.value(authorizations))
-      when(waveformUrlsRepository.fetchWaveformUrlsToMap(===(session), any[Map[String, ContentPolicy]])).thenReturn(
+      when(waveformUrlsRepository.fetchWaveformUrlsToMap(===(toBigJvmKitUserSession(session)), any[Map[String, BigJvmKitContentPolicy]])).thenReturn(
         Future(waveforms.map(w => w.trackUid -> w).toMap)
       )
       followCountsClient.counts(session, Seq(fetchedUserUrn)) returns Future.value(Seq(FollowCounts(fetchedUserUrn, 1111, 2222)))

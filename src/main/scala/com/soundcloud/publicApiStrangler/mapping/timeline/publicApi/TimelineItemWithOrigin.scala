@@ -3,7 +3,7 @@ package com.soundcloud.publicApiStrangler.mapping.timeline.publicApi
 import com.soundcloud.bff.nextbff.mapping.{JsonMapping, MappingContext}
 import com.soundcloud.publicApiStrangler.mapper.timeline.{EntityMapper, EntitySummaryMapper}
 import com.soundcloud.publicApiStrangler.mapping.timeline.TimelineItem
-import com.soundcloud.jvmkit.Urn
+import com.soundcloud.jvmkit.module.util.Urn
 import play.api.libs.json.JsValue
 
 class TimelineItemWithOrigin(jsonValue: JsValue,

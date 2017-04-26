@@ -1,8 +1,8 @@
 package com.soundcloud.publicApiStrangler.client.playlists
 
-import com.soundcloud.jvmkit.Urn
+import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.scalakit.json.Json
-import com.soundcloud.scalakit.test.UnitSpecification
+import com.soundcloud.publicApiStrangler.test.UnitSpecification
 
 class PlaylistSpec extends UnitSpecification {
   "reads from JSON" >> {

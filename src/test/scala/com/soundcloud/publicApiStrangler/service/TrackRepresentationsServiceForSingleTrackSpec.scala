@@ -1,7 +1,8 @@
 package com.soundcloud.publicApiStrangler
 
-import com.soundcloud.jvmkit.ModuleConversions._
-import com.soundcloud.jvmkit.{Urn, UserSession, UserSessionBuilder}
+import com.soundcloud.jvmkit.module.util.Urn
+import com.soundcloud.jvmkit.module.util.session.{UserSession, UserSessionBuilder}
+import com.soundcloud.publicApiStrangler.client.BigJvmKitConversions._
 import com.soundcloud.publicApiStrangler.client.liebling.{LieblingClient, UserLikesCount}
 import com.soundcloud.publicApiStrangler.client.mediaservice.{MediaServiceUrlGenClient, WaveformUrl}
 import com.soundcloud.publicApiStrangler.client.playlists.{Playlist, PlaylistsClient}
@@ -13,8 +14,8 @@ import com.soundcloud.publicApiStrangler.client.trackmetadata.{Artwork, Embeddin
 import com.soundcloud.publicApiStrangler.client.{DomainLocking, RichOkidokiClient, TrackAudioMetadata}
 import com.soundcloud.publicApiStrangler.representation.{TrackRepresentation, TrackRepresentationLike}
 import com.soundcloud.publicApiStrangler.service.{TrackAccessibilityService, TrackRepository}
+import com.soundcloud.publicApiStrangler.test.UnitSpecification
 import com.soundcloud.scalakit.json.Json
-import com.soundcloud.scalakit.test.UnitSpecification
 import com.soundcloud.service.response.representation.{Geoblockings, User}
 import com.twitter.util.{Await, Future}
 import org.joda.time.LocalDateTime

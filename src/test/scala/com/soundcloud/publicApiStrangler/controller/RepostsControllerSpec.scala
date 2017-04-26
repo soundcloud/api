@@ -1,29 +1,33 @@
 package com.soundcloud.publicApiStrangler.controller
 
-import com.soundcloud.bff.test.InjectionBasedControllerSpecification
-import com.soundcloud.jvmkit.{Urn, UserSessionBuilder}
+import com.soundcloud.jvmkit.module.bff.testsupport.FakeUserAuthentication
+import com.soundcloud.jvmkit.module.util.session.UserSessionBuilder
+import com.soundcloud.jvmkit.module.util.{Geo, Urn}
+import com.soundcloud.publicApiStrangler.RoutingDefinitions
 import com.soundcloud.publicApiStrangler.client.reposts.RepostsClient._
 import com.soundcloud.publicApiStrangler.client.reposts.{Reposts, RepostsClient}
 import com.soundcloud.publicApiStrangler.support.DispatchToMothershipHandler
-import com.soundcloud.scalakit.Geo
+import com.soundcloud.publicApiStrangler.test.{HandlerSpecificationScope, UnitSpecification}
 import com.twitter.finagle.http.Status
 import com.twitter.util.Future
+import play.api.libs.json.Json
 
-class RepostsControllerSpec extends InjectionBasedControllerSpecification {
+class RepostsControllerSpec extends UnitSpecification {
 
-  trait Context extends Scope {
+  trait Context extends HandlerSpecificationScope {
     val user = Urn("soundcloud:users:999")
     val track = Urn("soundcloud:tracks:100")
     val playlist = Urn("soundcloud:playlists:200")
-    val geo = Geo("US")
+    val geo = new Geo("US")
     val baseUrl = "http://api.example.com"
     val requestHeaders = Map("Host" -> "api.example.com")
     val session = new UserSessionBuilder().setUser(user).setAgent(Urn("soundcloud:applications:v2")).setGeo(geo).build()
 
     val repostsClient = mock[RepostsClient]
-    val fallback = mock[DispatchToMothershipHandler]
 
-    lazy val controller = new RepostsController(fakeUserAuthentication(session), repostsClient, fallback)
+    lazy val controller = new RepostsController(new FakeUserAuthentication(session), repostsClient)
+
+    override def routingDefinitions = RoutingDefinitions.forRepostsController(controller)
   }
 
   "PUT /e1/me/track_reposts/:id" >> {
@@ -34,37 +38,42 @@ class RepostsControllerSpec extends InjectionBasedControllerSpecification {
         .createRepost(session, track, baseUrl)
         .returns(Future.value(result))
 
-      lazy val response = put(controller, "/e1/me/track_reposts/100", Map(), requestHeaders)
+      lazy val response = put(controller.createTracksRepost, "/e1/me/track_reposts/100", Map(), requestHeaders)
     }
 
     "when creating succeeds" in new CreateTrackContext {
       override def result = Created
+
       response.status ==== Status.Created
-      response.body.length ==== 0
+      response.contentString.length ==== 0
     }
 
     "when creating fails because the track does not exist" in new CreateTrackContext {
       override def result = NotFound
+
       response.status ==== Status.NotFound
-      response.body.length ==== 0
+      response.contentString.length ==== 0
     }
 
     "when creating fails because the track was already reposted" in new CreateTrackContext {
       override def result = AlreadyExists
+
       response.status ==== Status.Ok
-      response.body.length ==== 0
+      response.contentString.length ==== 0
     }
 
     "when creating fails because the user was blocked for spam" in new CreateTrackContext {
       override def result = SpamBlocked(Seq(SpamWarning("foo", "bar", Some("baz"), Some("fuz"))))
+
       response.status ==== Status.TooManyRequests
-      response.jsonBody.as[SpamBlocked] ==== result
+      Json.parse(response.contentString).as[SpamBlocked] ==== result
     }
 
     "when creating fails because of an unknown reason" in new CreateTrackContext {
       override def result = Failed
+
       response.status ==== Status.InternalServerError
-      response.body.length ==== 0
+      response.contentString.length ==== 0
     }
   }
 
@@ -76,25 +85,28 @@ class RepostsControllerSpec extends InjectionBasedControllerSpecification {
         .deleteRepost(session, track, baseUrl)
         .returns(Future.value(result))
 
-      lazy val response = delete(controller, "/e1/me/track_reposts/100", Map(), requestHeaders)
+      lazy val response = delete(controller.deleteTracksRepost, "/e1/me/track_reposts/100", Map(), requestHeaders)
     }
 
     "when deleting succeeds" in new DeleteTrackContext {
       override def result = Deleted
+
       response.status ==== Status.Ok
-      response.body.length ==== 0
+      response.contentString.length ==== 0
     }
 
     "when deleting fails because the track/repost does not exist" in new DeleteTrackContext {
       override def result = NotFound
+
       response.status ==== Status.NotFound
-      response.body.length ==== 0
+      response.contentString.length ==== 0
     }
 
     "when deleting fails because of an unknown reason" in new DeleteTrackContext {
       override def result = Failed
+
       response.status ==== Status.InternalServerError
-      response.body.length ==== 0
+      response.contentString.length ==== 0
     }
   }
 
@@ -106,37 +118,42 @@ class RepostsControllerSpec extends InjectionBasedControllerSpecification {
         .createRepost(session, playlist, baseUrl)
         .returns(Future.value(result))
 
-      lazy val response = put(controller, "/e1/me/playlist_reposts/200", Map(), requestHeaders)
+      lazy val response = put(controller.createPlaylistsRepost, "/e1/me/playlist_reposts/200", Map(), requestHeaders)
     }
 
     "when creating succeeds" in new CreatePlaylistContext {
       override def result = Created
+
       response.status ==== Status.Created
-      response.body.length ==== 0
+      response.contentString.length ==== 0
     }
 
     "when creating fails because the playlist does not exist" in new CreatePlaylistContext {
       override def result = NotFound
+
       response.status ==== Status.NotFound
-      response.body.length ==== 0
+      response.contentString.length ==== 0
     }
 
     "when creating fails because the playlist was already reposted" in new CreatePlaylistContext {
       override def result = AlreadyExists
+
       response.status ==== Status.Ok
-      response.body.length ==== 0
+      response.contentString.length ==== 0
     }
 
     "when creating fails because the user was blocked for spam" in new CreatePlaylistContext {
       override def result = SpamBlocked(Seq(SpamWarning("foo", "bar", Some("baz"), Some("fuz"))))
+
       response.status ==== Status.TooManyRequests
-      response.jsonBody.as[SpamBlocked] ==== result
+      Json.parse(response.contentString).as[SpamBlocked] ==== result
     }
 
     "when creating fails because of an unknown reason" in new CreatePlaylistContext {
       override def result = Failed
+
       response.status ==== Status.InternalServerError
-      response.body.length ==== 0
+      response.contentString.length ==== 0
     }
   }
 
@@ -148,25 +165,28 @@ class RepostsControllerSpec extends InjectionBasedControllerSpecification {
         .deleteRepost(session, playlist, baseUrl)
         .returns(Future.value(result))
 
-      lazy val response = delete(controller, "/e1/me/playlist_reposts/200", Map(), requestHeaders)
+      lazy val response = delete(controller.deletePlaylistsRepost, "/e1/me/playlist_reposts/200", Map(), requestHeaders)
     }
 
     "when deleting succeeds" in new DeletePlaylistContext {
       override def result = Deleted
+
       response.status ==== Status.Ok
-      response.body.length ==== 0
+      response.contentString.length ==== 0
     }
 
     "when deleting fails because the playlist/repost does not exist" in new DeletePlaylistContext {
       override def result = NotFound
+
       response.status ==== Status.NotFound
-      response.body.length ==== 0
+      response.contentString.length ==== 0
     }
 
     "when deleting fails because of an unknown reason" in new DeletePlaylistContext {
       override def result = Failed
+
       response.status ==== Status.InternalServerError
-      response.body.length ==== 0
+      response.contentString.length ==== 0
     }
   }
 
@@ -192,27 +212,29 @@ class RepostsControllerSpec extends InjectionBasedControllerSpecification {
     "with linked_partitioning disabled" >> {
       "when one page of track reposts is available" >> {
         "it returns 200 OK" in new OnePageRepostedTracksContext {
-          get(controller, "/e1/me/track_reposts/ids", Map(), requestHeaders).status ==== Status.Ok
+          get(controller.getUserRepostableTracks, "/e1/me/track_reposts/ids", Map(), requestHeaders).status ==== Status.Ok
         }
 
         "it returns a list of track IDs" in new OnePageRepostedTracksContext {
-          get(controller, "/e1/me/track_reposts/ids", Map(), requestHeaders).jsonBody.as[List[Long]] ==== List(track.getIdentifier.toLong)
+          val response = get(controller.getUserRepostableTracks, "/e1/me/track_reposts/ids", Map(), requestHeaders)
+          Json.parse(response.contentString).as[List[Long]] ==== List(track.getIdentifier.toLong)
         }
       }
 
       "when two pages of track reposts are available" >> {
         "it returns 200 OK" in new MultiPageRepostedTracksContext {
-          get(controller, "/e1/me/track_reposts/ids", Map(), requestHeaders).status ==== Status.Ok
+          get(controller.getUserRepostableTracks, "/e1/me/track_reposts/ids", Map(), requestHeaders).status ==== Status.Ok
         }
 
         "it returns a list of track IDs" in new MultiPageRepostedTracksContext {
-          get(controller, "/e1/me/track_reposts/ids", Map(), requestHeaders).jsonBody.as[List[Long]] ==== List(track, track2).map(_.getIdentifier.toLong)
+          val response = get(controller.getUserRepostableTracks, "/e1/me/track_reposts/ids", Map(), requestHeaders)
+          Json.parse(response.contentString).as[List[Long]] ==== List(track, track2).map(_.getIdentifier.toLong)
         }
       }
 
       "when the limit is not in range" >> {
         "it returns 400 Bad Request" in new OnePageRepostedTracksContext {
-          get(controller, "/e1/me/track_reposts/ids", Map("limit" -> "10000"), requestHeaders).status ==== Status.BadRequest
+          get(controller.getUserRepostableTracks, "/e1/me/track_reposts/ids", Map("limit" -> "10000"), requestHeaders).status ==== Status.BadRequest
         }
       }
     }
@@ -221,7 +243,7 @@ class RepostsControllerSpec extends InjectionBasedControllerSpecification {
       "when a next page is available" >> {
         trait MultiPageLinkedPartitioningContext extends MultiPageRepostedTracksContext {
           val response = get(
-            controller,
+            controller.getUserRepostableTracks,
             "/e1/me/track_reposts/ids",
             Map(
               "linked_partitioning" -> "1",
@@ -237,18 +259,18 @@ class RepostsControllerSpec extends InjectionBasedControllerSpecification {
         }
 
         "it returns a collection with a list of track IDs" in new MultiPageLinkedPartitioningContext {
-          (response.jsonBody \ "collection").as[List[Long]] ==== List(track.getIdentifier.toLong)
+          (Json.parse(response.contentString) \ "collection").as[List[Long]] ==== List(track.getIdentifier.toLong)
         }
 
         "it returns a next_href and includes extra parameters" in new MultiPageLinkedPartitioningContext {
-          (response.jsonBody \ "next_href").as[String] ==== "http://api.example.com/e1/me/track_reposts/ids?limit=1&extraparam=bazbaz&linked_partitioning=1&cursor=foobar"
+          (Json.parse(response.contentString) \ "next_href").as[String] ==== "http://api.example.com/e1/me/track_reposts/ids?limit=1&extraparam=bazbaz&linked_partitioning=1&cursor=foobar"
         }
       }
 
       "when a next page is not available" >> {
         trait SinglePageLinkedPartitioningContext extends MultiPageRepostedTracksContext {
           val response = get(
-            controller,
+            controller.getUserRepostableTracks,
             "/e1/me/track_reposts/ids",
             Map(
               "linked_partitioning" -> "1",
@@ -264,11 +286,11 @@ class RepostsControllerSpec extends InjectionBasedControllerSpecification {
         }
 
         "it returns a collection with a list of track IDs" in new SinglePageLinkedPartitioningContext {
-          (response.jsonBody \ "collection").as[List[Long]] ==== List(track, track2).map(_.getIdentifier.toLong)
+          (Json.parse(response.contentString) \ "collection").as[List[Long]] ==== List(track, track2).map(_.getIdentifier.toLong)
         }
 
         "it doesn't return a next_href" in new SinglePageLinkedPartitioningContext {
-          (response.jsonBody \ "next_href").asOpt[String] should beEmpty
+          (Json.parse(response.contentString) \ "next_href").asOpt[String] should beEmpty
         }
       }
     }
@@ -283,11 +305,12 @@ class RepostsControllerSpec extends InjectionBasedControllerSpecification {
       }
 
       "it returns 200 OK" in new OnePageRepostedPlaylistsContext {
-        get(controller, "/e1/me/playlist_reposts/ids", Map(), requestHeaders).status ==== Status.Ok
+        get(controller.getUserRepostablePlaylists, "/e1/me/playlist_reposts/ids", Map(), requestHeaders).status ==== Status.Ok
       }
 
       "it returns a list of playlist IDs" in new OnePageRepostedPlaylistsContext {
-        get(controller, "/e1/me/playlist_reposts/ids", Map(), requestHeaders).jsonBody.as[List[Long]] ==== List(playlist.getIdentifier.toLong)
+        val response = get(controller.getUserRepostablePlaylists, "/e1/me/playlist_reposts/ids", Map(), requestHeaders)
+        Json.parse(response.contentString).as[List[Long]] ==== List(playlist.getIdentifier.toLong)
       }
     }
 
@@ -305,11 +328,12 @@ class RepostsControllerSpec extends InjectionBasedControllerSpecification {
       }
 
       "it returns 200 OK" in new MultiPageRepostedPlaylistsContext {
-        get(controller, "/e1/me/playlist_reposts/ids", Map(), requestHeaders).status ==== Status.Ok
+        get(controller.getUserRepostablePlaylists, "/e1/me/playlist_reposts/ids", Map(), requestHeaders).status ==== Status.Ok
       }
 
       "it returns a list of playlist IDs" in new MultiPageRepostedPlaylistsContext {
-        get(controller, "/e1/me/playlist_reposts/ids", Map(), requestHeaders).jsonBody.as[List[Long]] ==== List(playlist, playlist2).map(_.getIdentifier.toLong)
+        val response = get(controller.getUserRepostablePlaylists, "/e1/me/playlist_reposts/ids", Map(), requestHeaders)
+        Json.parse(response.contentString).as[List[Long]] ==== List(playlist, playlist2).map(_.getIdentifier.toLong)
       }
     }
   }

@@ -1,26 +1,28 @@
 package com.soundcloud.publicApiStrangler.controller
 
-import com.soundcloud.bff.test.InjectionBasedControllerSpecification
-import com.soundcloud.jvmkit.telemetry.Telemetry
-import com.soundcloud.jvmkit.test.InMemoryConfig
-import com.soundcloud.jvmkit.{Urn, UserSession, UserSessionBuilder}
-import com.soundcloud.publicApiStrangler.TrackRepresentationsService
+import com.soundcloud.jvmkit.module.bff.testsupport.FakeUserAuthentication
+import com.soundcloud.jvmkit.module.telemetry.{MetricsRegistryImpl, Telemetry}
+import com.soundcloud.jvmkit.module.util.Urn
+import com.soundcloud.jvmkit.module.util.config.InMemoryConfig
+import com.soundcloud.jvmkit.module.util.session.{UserSession, UserSessionBuilder}
+import com.soundcloud.publicApiStrangler.{RoutingDefinitions, TrackRepresentationsService}
+import com.soundcloud.publicApiStrangler.client.BigJvmKitConversions._
 import com.soundcloud.publicApiStrangler.client.TrackAudioMetadata
 import com.soundcloud.publicApiStrangler.client.stitch.StitchCounts
 import com.soundcloud.publicApiStrangler.client.trackcoordinator.datatypes.{NotFound, Result, Success}
 import com.soundcloud.publicApiStrangler.client.trackmetadata.{Artwork, EmbeddingPermission, Track}
 import com.soundcloud.publicApiStrangler.representation.{TrackRepresentation, TrackRepresentationLike}
 import com.soundcloud.publicApiStrangler.support.DispatchToMothershipHandler
+import com.soundcloud.publicApiStrangler.test.{HandlerSpecificationScope, UnitSpecification}
 import com.soundcloud.scalakit.json.Json
 import com.soundcloud.service.response.representation.User
 import com.twitter.finagle.http.{Request, Response, Status}
 import com.twitter.util.Future
-import io.prometheus.client.CollectorRegistry
 import org.joda.time.LocalDateTime
 import org.mockito.Mockito.when
 
 
-class SingleTrackControllerSpec extends InjectionBasedControllerSpecification {
+class SingleTrackControllerSpec extends UnitSpecification {
 
   def trackmetadataTrack(
                           disabledAt: Option[LocalDateTime] = None,
@@ -101,22 +103,20 @@ class SingleTrackControllerSpec extends InjectionBasedControllerSpecification {
     domainlockings = Seq(),
     audioMetadata = new TrackAudioMetadata("lol", Some("donkey"), Some(123)))
 
-  trait Context extends Scope {
+  trait Context extends HandlerSpecificationScope {
     val fallback = mock[DispatchToMothershipHandler]
     val trackRepresentationsService = mock[TrackRepresentationsService]
 
     val config = new InMemoryConfig
-    val collectorRegistry = new CollectorRegistry
-    val telemetry = new Telemetry(config, collectorRegistry)
+    val collectorRegistry = MetricsRegistryImpl.defaultRegistry
+    val telemetry = new Telemetry(config.getApplicationName, collectorRegistry)
 
     val session = new UserSessionBuilder().build()
     val trackUrn = new Urn("soundcloud:tracks:987")
 
-    def controller(session: UserSession) = new SingleTrackController(
-      fakeUserAuthentication(session),
-      fallback,
-      trackRepresentationsService,
-      telemetry)
+    val controller = new SingleTrackController(new FakeUserAuthentication(session), trackRepresentationsService, telemetry)
+
+    override def routingDefinitions = RoutingDefinitions.forSingleTrackController(controller)
   }
 
   val validPaths = List("/tracks/987", "/tracks/987/", "/tracks/987.json", "/tracks/987.json/")
@@ -186,29 +186,29 @@ class SingleTrackControllerSpec extends InjectionBasedControllerSpecification {
         })).thenReturn(Future.value(Response()))
         when(trackRepresentationsService.track(session, trackUrn, None)).thenReturn(Future.value(Success(trackRepresentation)))
 
-        val response = get(controller(session), path, Map.empty, Map("If-None-Match" -> "a8d3ba6d09b68691b77dc75dfcd7a477"))
+        val response = get(controller.renderTrack, path, Map.empty, Map("If-None-Match" -> "a8d3ba6d09b68691b77dc75dfcd7a477"))
         response.status ==== Status.Ok
-        Json.fromString(response.body) ==== expectedJson
+        Json.fromString(response.contentString) ==== expectedJson
       }
   }
 
   nonNumericPaths.foreach {
     path =>
       s"returns 404 for non-numeric track identifier for path: $path" in new Context {
-        val response = get(controller(session), path)
+        val response = get(controller.renderTrack, path)
         response.status ==== Status.NotFound
-        response.body ==== """{"errors":[{"error_message":"404 - Not Found"}]}"""
-        response.getHeaders.get("Content-Length") must beSome("48")
+        response.contentString ==== """{"errors":[{"error_message":"404 - Not Found"}]}"""
+        response.headerMap.get("Content-Length") must beSome("48")
       }
   }
 
   nonNumericPaths.foreach {
     path =>
       s"returns 404 wrapped in jsonp for non-numeric track identifier when callback param is provided for path: $path" in new Context {
-        val response = get(controller(session), path, Map("callback" -> "js_callback_fn"))
+        val response = get(controller.renderTrack, path, Map("callback" -> "js_callback_fn"))
         response.status ==== Status.NotFound
-        response.body ==== """/**/js_callback_fn({"errors":[{"error_message":"404 - Not Found"}]});"""
-        response.getHeaders.get("Content-Length") must beSome("69")
+        response.contentString ==== """/**/js_callback_fn({"errors":[{"error_message":"404 - Not Found"}]});"""
+        response.headerMap.get("Content-Length") must beSome("69")
       }
   }
 
@@ -218,9 +218,9 @@ class SingleTrackControllerSpec extends InjectionBasedControllerSpecification {
         when(fallback.dispatchToMothership(any[Request])).thenReturn(Future.value(Response()))
         when(trackRepresentationsService.track(session, trackUrn, Some("s3cret"))).thenReturn(Future.value(Success(trackRepresentation)))
 
-        val response = get(controller(session), path, Map("secret_token" -> "s3cret"))
+        val response = get(controller.renderTrack, path, Map("secret_token" -> "s3cret"))
         response.status ==== Status.Ok
-        Json.fromString(response.body) ==== expectedJson
+        Json.fromString(response.contentString) ==== expectedJson
       }
   }
 
@@ -233,9 +233,9 @@ class SingleTrackControllerSpec extends InjectionBasedControllerSpecification {
 
         val expectedPJson = """/**/js_callback_dn({"kind":"track","id":987,"created_at":"2016/05/19 18:03:04 +0000","user_id":3000,"duration":0,"commentable":false,"state":"lol","original_content_size":123,"last_modified":"2016/05/19 18:03:04 +0000","sharing":"public","tag_list":"","permalink":null,"streamable":null,"embeddable_by":"none","purchase_url":"http://example.com/buy/7890","purchase_title":"buy me pls","label_id":null,"genre":null,"title":null,"description":null,"label_name":null,"release":"DR012","track_type":"original","key_signature":"Emaj","isrc":null,"video_url":"http://example.com/video.mp4","bpm":120.7,"release_year":null,"release_month":null,"release_day":null,"original_format":"donkey","license":null,"uri":"https://api.soundcloud.com/tracks/987","user":{"id":3000,"kind":"user","permalink":"giraffe","username":"Dr. G. Raffe","last_modified":"2016/10/10 11:21:36 +0000","uri":"https://api.soundcloud.com/users/3000","permalink_url":"http://soundcloud.com/denis","avatar_url":"https://example.com/giraffe.jpg"},"permalink_url":null,"artwork_url":null,"stream_url":"https://api.soundcloud.com/tracks/987/stream","download_url":"https://api.soundcloud.com/tracks/987/download"});"""
 
-        val response = get(controller(session), path, Map("callback" -> "js_callback_dn"))
+        val response = get(controller.renderTrack, path, Map("callback" -> "js_callback_dn"))
         response.status ==== Status.Ok
-        response.body ==== expectedPJson
+        response.contentString ==== expectedPJson
       }
   }
 
@@ -243,39 +243,42 @@ class SingleTrackControllerSpec extends InjectionBasedControllerSpecification {
     s"When loading tracks from trackmetadata for: $path" >> {
       trait FromTrackMetadata extends Context {
         def trackRepresentationLike: Future[Result[TrackRepresentationLike]]
+
         when(trackRepresentationsService.track(session, trackUrn, None)).thenReturn(trackRepresentationLike)
       }
 
       "it returns 200 for Some()" in new FromTrackMetadata {
         override def trackRepresentationLike = Future.value(Success(trackRepresentation))
 
-        val response = get(controller(session), path)
+        val response = get(controller.renderTrack, path)
         response.status.code ==== 200
 
         import TrackRepresentation.writes
-        response.body ==== Json.stringify(trackRepresentation)
+
+        response.contentString ==== Json.stringify(trackRepresentation)
       }
 
       "it returns 404 for None" in new FromTrackMetadata {
         override def trackRepresentationLike = Future.value(NotFound)
 
-        val response = get(controller(session), path)
+        val response = get(controller.renderTrack, path)
         response.status.code ==== 404
-        response.body ==== """{"errors":[{"error_message":"404 - Not Found"}]}"""
+        response.contentString ==== """{"errors":[{"error_message":"404 - Not Found"}]}"""
       }
 
       "it returns 500 for failed futures" in new FromTrackMetadata {
         override def trackRepresentationLike = Future.exception(new RuntimeException("An unexpected error occured while fetching a track"))
 
-        val response = get(controller(session), path)
+        val response = get(controller.renderTrack, path)
         response.status.code ==== 500
-        response.body ==== "An unexpected error occured while fetching a track"
+        response.contentString ==== "An unexpected error occured while fetching a track"
       }
     }
   }
 
   trait JsonpSupportContext extends Context {
     def trackRepresentationLike: Future[Result[TrackRepresentationLike]]
+
     when(trackRepresentationsService.track(session, trackUrn, None)).thenReturn(trackRepresentationLike)
 
   }
@@ -284,21 +287,23 @@ class SingleTrackControllerSpec extends InjectionBasedControllerSpecification {
     s"returns a JSONP response for $path, when a callback parameter is provided" in new JsonpSupportContext {
       override def trackRepresentationLike = Future.value(Success(trackRepresentation))
 
-      val response = get(controller(session), path, Map("callback" -> "myFunctionName"))
+      val response = get(controller.renderTrack, path, Map("callback" -> "myFunctionName"))
+
       import TrackRepresentation.writes
+
       val expectedJson = Json.stringify(trackRepresentation)
       val expectedBody = s"/**/myFunctionName($expectedJson);"
-      response.code ==== 200
-      response.body ==== expectedBody
+      response.statusCode ==== 200
+      response.contentString ==== expectedBody
     }
 
     s"returns a JSONP response for 404s at $path, when a callback parameter is provided" in new JsonpSupportContext {
       override def trackRepresentationLike = Future.value(NotFound)
 
-      val response = get(controller(session), path, Map("callback" -> "myFunctionName"))
+      val response = get(controller.renderTrack, path, Map("callback" -> "myFunctionName"))
       val expectedBody = """/**/myFunctionName({"errors":[{"error_message":"404 - Not Found"}]});"""
-      response.code ==== 404
-      response.body ==== expectedBody
+      response.statusCode ==== 404
+      response.contentString ==== expectedBody
     }
   }
 }

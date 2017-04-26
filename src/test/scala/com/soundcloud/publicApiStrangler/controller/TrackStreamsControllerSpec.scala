@@ -1,16 +1,18 @@
 package com.soundcloud.publicApiStrangler.controller
 
-import com.soundcloud.bff.finagle.{Request, ResponseBuilder}
-import com.soundcloud.bff.test.InjectionBasedControllerSpecification
-import com.soundcloud.jvmkit.{Urn, UserSession}
+import com.soundcloud.jvmkit.module.bff.testsupport.FakeUserAuthentication
+import com.soundcloud.jvmkit.module.http.server.{HandlerRequest, ResponseBuilder}
+import com.soundcloud.jvmkit.module.util.Urn
+import com.soundcloud.jvmkit.module.util.session.UserSession
+import com.soundcloud.publicApiStrangler.RoutingDefinitions
 import com.soundcloud.publicApiStrangler.mapper.trackstreams.{TrackStreamJsonResponseMapper, TrackStreamRedirectResponseMapper}
 import com.soundcloud.publicApiStrangler.support.TrackStreamHandler
-import com.soundcloud.publicApiStrangler.test.FakePublicApiSiloing
+import com.soundcloud.publicApiStrangler.test.{FakePublicApiSiloing, HandlerSpecificationScope, UnitSpecification}
 import com.twitter.util.Future
 
-class TrackStreamsControllerSpec extends InjectionBasedControllerSpecification {
+class TrackStreamsControllerSpec extends UnitSpecification {
 
-  trait Context extends Scope {
+  trait Context extends HandlerSpecificationScope {
     val user = new Urn("soundcloud:users:1234")
     val session = loggedInSession(user)
 
@@ -19,59 +21,61 @@ class TrackStreamsControllerSpec extends InjectionBasedControllerSpecification {
     val trackStreamSnipHandlerMock = mock[TrackStreamHandler]
 
     val controller = new TrackStreamsController(
-      fakeUserAuthentication(session),
+      new FakeUserAuthentication(session),
       trackStreamUrlToJsonResponseMapperMock,
       trackStreamUrlToRedirectMapperMock,
       trackStreamSnipHandlerMock,
       new FakePublicApiSiloing
     )
 
-    def forwardWithJsonResponseMapper(controller: TrackStreamsController, path: String) = {
-      val expectedResponseBuilder = new ResponseBuilder().ok
+    override def routingDefinitions = RoutingDefinitions.forTrackStreamsController(controller)
 
-      trackStreamSnipHandlerMock.handle(any[Request], any[UserSession], org.mockito.Matchers.eq(trackStreamUrlToJsonResponseMapperMock))
+    def forwardWithJsonResponseMapper(controller: TrackStreamsController, path: String) = {
+      val expectedResponseBuilder = ResponseBuilder.ok()
+
+      trackStreamSnipHandlerMock.handle(any[HandlerRequest], any[UserSession], org.mockito.Matchers.eq(trackStreamUrlToJsonResponseMapperMock))
         .returns(Future.value(expectedResponseBuilder))
 
-      val response = get(controller, path)
+      val response = get(controller.handleStreamRequest, path)
 
-      response.code ==== 200
-      there was one(trackStreamSnipHandlerMock).handle(any[Request], any[UserSession], any[TrackStreamJsonResponseMapper])
+      response.statusCode ==== 200
+      there was one(trackStreamSnipHandlerMock).handle(any[HandlerRequest], any[UserSession], any[TrackStreamJsonResponseMapper])
     }
 
     def forwardHeadWithJsonResponseMapper(controller: TrackStreamsController, path: String) = {
-      val expectedResponseBuilder = new ResponseBuilder().ok
+      val expectedResponseBuilder = ResponseBuilder.ok()
 
-      trackStreamSnipHandlerMock.handle(any[Request], any[UserSession], org.mockito.Matchers.eq(trackStreamUrlToJsonResponseMapperMock))
+      trackStreamSnipHandlerMock.handle(any[HandlerRequest], any[UserSession], org.mockito.Matchers.eq(trackStreamUrlToJsonResponseMapperMock))
         .returns(Future.value(expectedResponseBuilder))
 
-      val response = head(controller, path)
+      val response = head(controller.handleStreamRequest, path)
 
-      response.code ==== 200
-      there was one(trackStreamSnipHandlerMock).handle(any[Request], any[UserSession], any[TrackStreamJsonResponseMapper])
+      response.statusCode ==== 200
+      there was one(trackStreamSnipHandlerMock).handle(any[HandlerRequest], any[UserSession], any[TrackStreamJsonResponseMapper])
     }
 
     def forwardWithRedirectResponseMapper(controller: TrackStreamsController, path: String) = {
-      val expectedResponseBuilder = new ResponseBuilder().ok
+      val expectedResponseBuilder = ResponseBuilder.ok()
 
-      trackStreamSnipHandlerMock.handle(any[Request], any[UserSession], org.mockito.Matchers.eq(trackStreamUrlToRedirectMapperMock))
+      trackStreamSnipHandlerMock.handle(any[HandlerRequest], any[UserSession], org.mockito.Matchers.eq(trackStreamUrlToRedirectMapperMock))
         .returns(Future.value(expectedResponseBuilder))
 
-      val response = get(controller, path)
+      val response = get(controller.redirectStreamRequest, path)
 
-      response.code ==== 200
-      there was one(trackStreamSnipHandlerMock).handle(any[Request], any[UserSession], any[TrackStreamRedirectResponseMapper])
+      response.statusCode ==== 200
+      there was one(trackStreamSnipHandlerMock).handle(any[HandlerRequest], any[UserSession], any[TrackStreamRedirectResponseMapper])
     }
 
     def forwardHeadWithRedirectResponseMapper(controller: TrackStreamsController, path: String) = {
-      val expectedResponseBuilder = new ResponseBuilder().ok
+      val expectedResponseBuilder = ResponseBuilder.ok()
 
-      trackStreamSnipHandlerMock.handle(any[Request], any[UserSession], org.mockito.Matchers.eq(trackStreamUrlToRedirectMapperMock))
+      trackStreamSnipHandlerMock.handle(any[HandlerRequest], any[UserSession], org.mockito.Matchers.eq(trackStreamUrlToRedirectMapperMock))
         .returns(Future.value(expectedResponseBuilder))
 
-      val response = head(controller, path)
+      val response = head(controller.redirectStreamRequest, path)
 
-      response.code ==== 200
-      there was one(trackStreamSnipHandlerMock).handle(any[Request], any[UserSession], any[TrackStreamRedirectResponseMapper])
+      response.statusCode ==== 200
+      there was one(trackStreamSnipHandlerMock).handle(any[HandlerRequest], any[UserSession], any[TrackStreamRedirectResponseMapper])
     }
   }
 
