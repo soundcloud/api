@@ -3,14 +3,12 @@ package com.soundcloud.publicApiStrangler.controller
 import com.soundcloud.bff.finagle.{Request, ResponseBuilder}
 import com.soundcloud.bff.web.{BffInjectionBasedController, UserAuthentication}
 import com.soundcloud.jvmkit.Urn
-import com.soundcloud.publicApiStrangler.TrackRepresentationsService
-import com.soundcloud.publicApiStrangler.client.GobblyClient
-import com.soundcloud.publicApiStrangler.client.gobbly.{ClientError => GobblyClientError, ServerError => GobblyServerError, Success => GobblySuccess}
 import com.soundcloud.publicApiStrangler.client.trackcoordinator.TrackCoordinatorClient
 import com.soundcloud.publicApiStrangler.client.trackcoordinator.datatypes._
+import com.soundcloud.publicApiStrangler.client.trackmetadata.TrackmetadataClient
 import com.soundcloud.publicApiStrangler.support.DispatchToMothershipHandler
 import com.soundcloud.service.client.OkidokiClient
-import com.twitter.util.Future
+import com.twitter.util.{Future, NonFatal}
 import play.api.libs.json.Json
 
 /**
@@ -22,7 +20,7 @@ class TracksController(userAuthentication: UserAuthentication,
                        trackCoordinator: TrackCoordinatorClient,
                        okidokiClient: OkidokiClient,
                        mothershipDispatcher: DispatchToMothershipHandler,
-                       gobbly: GobblyClient)
+                       trackmetadataClient: TrackmetadataClient)
     extends BffInjectionBasedController {
 
   get("/tracks/:trackId/comments")(mothershipDispatcher.dispatch)
@@ -58,11 +56,18 @@ class TracksController(userAuthentication: UserAuthentication,
   private def handlePut(request: Request): Future[ResponseBuilder] =
     userAuthentication.withLoggedInUser(request) { (session, _) =>
       val urn = trackUrn(request)
-      gobbly.allTracksManagedByFeedsForWrite(session, List(urn)).flatMap {
-        case GobblySuccess(true) => Future.value(render.unauthorized.json(Json.obj("reason" -> "not allowed")))
-        case GobblySuccess(false) => mothershipDispatcher.dispatch(request)
-        case GobblyServerError(_) => Future.value(render.internalServerError)
-        case GobblyClientError(_) => Future.value(render.internalServerError)
+      trackmetadataClient.track(session, urn).flatMap {
+        case Some(track) => {
+          track.supply_chain_status match {
+            // only allow updating manually uploaded tracks
+            case Some("manual_upload") => mothershipDispatcher.dispatch(request)
+            case Some(_) => Future.value(render.unauthorized.json(Json.obj("reason" -> "not allowed")))
+            case None => mothershipDispatcher.dispatch(request)
+          }
+        }
+        case None => Future.value(render.notFound)
+      }.handle {
+        case NonFatal(_) => render.internalServerError
       }
     }
 

@@ -114,13 +114,6 @@ object App
     ServiceConfig("stitch4follows", config.get(ResourceName("STITCH4FOLLOWS"), ConfigConvention.SRV_RECORD), config)
   )
 
-  private val gobblyClient = new GobblyClient(
-    ModuleJsonClient(
-      ModuleServiceEntryPoint(config.get(ResourceName("GOBBLY"), ConfigConvention.SRV_RECORD)),
-      HttpClientConfig.from(ModuleResourceName("gobbly"), moduleConfig),
-      moduleTelemetry)
-  )
-
   private val playlistsClient = new PlaylistsClient(
     JsonClient(
       ResourceName("playlist"),
@@ -236,7 +229,7 @@ object App
     trackCoordinatorClient,
     okidokiClient,
     mothershipDispatcher,
-    gobblyClient)
+    trackmetadataClient)
 
   lazy val rolloutClient = new RolloutBuilder(config, telemetry).build
   override lazy val rollout = Some(rolloutClient)

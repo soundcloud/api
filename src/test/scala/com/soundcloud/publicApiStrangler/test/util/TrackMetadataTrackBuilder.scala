@@ -43,7 +43,8 @@ case class TrackMetadataTrackBuilder(urn: Urn = Urn("soundcloud:tracks:1"),
                                      release: Option[String] = Some("release"),
                                      key_signature: Option[String] = Some("key_signature"),
                                      video_url: Option[String] = Some("video_url"),
-                                     label_id: Option[Int] = None) {
+                                     label_id: Option[Int] = None,
+                                     supply_chain_status: Option[String] = Some("manual_upload")) {
 
   def build: Track = {
     Track(
@@ -86,6 +87,7 @@ case class TrackMetadataTrackBuilder(urn: Urn = Urn("soundcloud:tracks:1"),
       release = release,
       key_signature = key_signature,
       video_url = video_url,
-      label_id = label_id)
+      label_id = label_id,
+      supply_chain_status = supply_chain_status)
   }
 }
