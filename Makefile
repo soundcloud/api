@@ -98,7 +98,7 @@ publish-deploy:
 		--glimpse http.strangler.prod.public-api \
 		--slack-channel '#backend-productivity' \
 		--prometheus.port telemetry \
-		--strategy.rolling-update.max-surge.percent 10
+		--strategy.rolling-update.max-surge.percent 20
 	artifact-manager deploy publish \
 		--cluster=$(CLUSTER) \
 		--component="$(APITRACKUPLOAD_ENTRYPOINT)" \
@@ -108,7 +108,7 @@ publish-deploy:
 		--glimpse http.strangler-trackupload.prod.public-api \
 		--slack-channel '#backend-productivity' \
 		--prometheus.port telemetry \
-		--strategy.rolling-update.max-surge.percent 10
+		--strategy.rolling-update.max-surge.percent 20
 
 promote-to-stable:
 	artifact-manager promote stable
