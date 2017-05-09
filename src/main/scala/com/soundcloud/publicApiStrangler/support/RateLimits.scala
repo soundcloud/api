@@ -3,7 +3,7 @@ package com.soundcloud.publicApiStrangler.support
 import com.soundcloud.jvmkit.module.bff.ratelimiting.internal.core.RateLimitClassifier
 import com.soundcloud.jvmkit.module.bff.ratelimiting.internal.utilities.RegexExtensions._
 import com.soundcloud.jvmkit.module.http.server.HandlerRequest
-import com.soundcloud.publicApiStrangler.controller.SearchController._
+import com.soundcloud.publicApiStrangler.handler.SearchHandler._
 
 
 object RateLimits {
