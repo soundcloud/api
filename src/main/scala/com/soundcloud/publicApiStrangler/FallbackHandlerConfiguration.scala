@@ -9,12 +9,6 @@ trait FallbackHandlerConfiguration {
 
   def moduleTelemetry: Telemetry
 
-  val fallbackHandler =
-    new SpecificStranglingHandler(mothershipDispatcher,
-      whatToStrangle,
-      officialSoundCloudApps,
-      fallthroughCounter)
-
   private val officialSoundCloudApps = List(
     Urn("soundcloud:applications:46941"), // SoundCloud.com (currently being abused) Internal
     Urn("soundcloud:applications:124"), // SoundCloud iOS Internal
@@ -147,5 +141,10 @@ trait FallbackHandlerConfiguration {
     "agent_urn"
   )
 
+  val fallbackHandler =
+    new SpecificStranglingHandler(mothershipDispatcher,
+      whatToStrangle,
+      officialSoundCloudApps,
+      fallthroughCounter)
 
 }

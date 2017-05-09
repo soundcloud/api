@@ -1,11 +1,11 @@
 package com.soundcloud.publicApiStrangler
 
 import com.soundcloud.jvmkit.config.AppConfig
-import com.soundcloud.jvmkit.module.admin.AdminServer
+import com.soundcloud.jvmkit.module.admin.{AdminServer, OkHandler}
 import com.soundcloud.jvmkit.module.bff.BffHttpServer
 import com.soundcloud.jvmkit.module.bff.filters.SessionCacheFilter
 import com.soundcloud.jvmkit.module.bff.ratelimiting.facade._
-import com.soundcloud.jvmkit.module.http.server.HandlerRouterBuilder
+import com.soundcloud.jvmkit.module.http.server.{HandlerRouterBuilder, ResponseBuilder}
 import com.soundcloud.jvmkit.module.http.server.config.HttpServerConfig
 import com.soundcloud.jvmkit.module.memcached.MemcachedClient
 import com.soundcloud.jvmkit.module.memcached.config.MemcachedClientConfig
@@ -82,24 +82,16 @@ object App extends Handlers with FallbackHandlerConfiguration {
 
     lazy val additionalFilters: List[SimpleFilter[Request, Response]] =
       List(
-        new SuccesfulResponseTypeMetricFilter(moduleTelemetry),
-        new ExceptForTrackUploadsFilter(new ContentAuthorizationFilter(authorizeContent)),
-        new ExceptForTrackUploadsFilter(rateLimitingFacade.filter),
-        new DefaultResponseHeadersFilter,
-        new SessionCacheFilter(userAuthentication),
-        new CookieHeaderRemovalFilter,
-        new OffsetLimitRequestFilter(limitOffsetPaths, limitOffset),
+        new StaticFilesFilter,
         new AcceptOnlyJsonRequestFilter(() => new StripXmlRollout(rolloutClient).stripXml),
-        new StaticFilesFilter
+        new OffsetLimitRequestFilter(limitOffsetPaths, limitOffset),
+        new CookieHeaderRemovalFilter,
+        new SessionCacheFilter(userAuthentication),
+        new DefaultResponseHeadersFilter,
+        new ExceptForTrackUploadsFilter(rateLimitingFacade.filter),
+        new ExceptForTrackUploadsFilter(new ContentAuthorizationFilter(authorizeContent)),
+        new SuccesfulResponseTypeMetricFilter(moduleTelemetry)
       )
-
-
-    //    val customAdminHandlers: Seq[(AdminRoute, Handler)] =
-    //      Seq(
-    //        new AdminRoute(RequestMethod.GET, "/-/rate-limiting-diagnostics") ->
-    //          rateLimitingFacade.rateLimitingDiagnosticsAdminHandler
-    //      )
-
 
     val router = HandlerRouterBuilder()
       .registerFallback(fallbackHandler)
@@ -119,6 +111,7 @@ object App extends Handlers with FallbackHandlerConfiguration {
         forSpamWarningsHandler(spamWarningsHandler),
         forTimelineHandler(timelineHandler),
         forTrackStreamsHandler(trackStreamsHandler)))
+      .register(Method.Get, "/-/health", (_) => Future.value(ResponseBuilder.ok()))
       .build
 
 
@@ -126,7 +119,7 @@ object App extends Handlers with FallbackHandlerConfiguration {
       config = moduleConfig,
       telemetry = moduleTelemetry,
       customHandlers = List(
-        (Method.Get, "/rate-limiting", rateLimitingFacade.rateLimitingDiagnosticsAdminHandler.handle _)
+        (Method.Get, rateLimitingFacade.diagnosticsEndpoint, rateLimitingFacade.rateLimitingDiagnosticsAdminHandler.handle _)
       ),
       rollout = rollout
     ).start()

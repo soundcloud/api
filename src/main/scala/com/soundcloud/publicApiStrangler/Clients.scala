@@ -199,13 +199,6 @@ trait Clients {
     ServiceConfig("stitch4follows", config.get(ResourceName("STITCH4FOLLOWS"), ConfigConvention.SRV_RECORD), config)
   )
 
-  val gobblyClient = new GobblyClient(
-    ModuleJsonClient(
-      ModuleServiceEntryPoint(config.get(ResourceName("GOBBLY"), ConfigConvention.SRV_RECORD)),
-      HttpClientConfig.from(ModuleResourceName("gobbly"), moduleConfig),
-      moduleTelemetry)
-  )
-
   val playlistsClient = new PlaylistsClient(
     JsonClient(
       ResourceName("playlist"),
