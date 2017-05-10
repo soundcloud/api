@@ -9,8 +9,10 @@ import com.soundcloud.scalakit.Path
 import com.soundcloud.scalakit.finagle.http._
 import com.soundcloud.scalakit.finagle.jsonservice.{JsonClient, JsonResponse, Params}
 import com.soundcloud.service.client.FetchClient
-import com.twitter.util.{Future, NonFatal}
+import com.twitter.util.Future
 import play.api.libs.json._
+
+import scala.util.control.NonFatal
 
 case class Reposts(urns: List[Urn], nextCursor: Option[String])
 

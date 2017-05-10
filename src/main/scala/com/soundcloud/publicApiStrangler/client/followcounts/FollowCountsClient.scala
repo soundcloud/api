@@ -12,8 +12,10 @@ import com.soundcloud.publicApiStrangler.support.BatchingUtilities._
 import com.soundcloud.scalakit.Path
 import com.soundcloud.scalakit.finagle.http.OkStatus
 import com.soundcloud.scalakit.finagle.jsonservice.JsonResponse
-import com.twitter.util.{Future, NonFatal}
+import com.twitter.util.Future
 import play.api.libs.json.JsObject
+
+import scala.util.control.NonFatal
 
 class FollowCountsClient(client: JsonService, config: Config) {
   private val batchSize = config.get("STITCH_BULK_FETCH_MAX_ENTRIES", DataSensitivity.NON_SENSITIVE).toInt

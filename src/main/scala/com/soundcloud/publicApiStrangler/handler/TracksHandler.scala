@@ -9,8 +9,10 @@ import com.soundcloud.publicApiStrangler.client.trackmetadata.TrackmetadataClien
 import com.soundcloud.publicApiStrangler.support.DispatchToMothershipHandler
 import com.soundcloud.service.client.OkidokiClient
 import com.twitter.finagle.http.Response
-import com.twitter.util.{Future, NonFatal}
+import com.twitter.util.Future
 import play.api.libs.json.Json
+
+import scala.util.control.NonFatal
 
 /**
   * Overrides the public api endpoints for editing tracks

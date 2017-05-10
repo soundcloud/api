@@ -47,7 +47,7 @@ class UserRelatedMothershipDispatcher(userAuthentication: UserAuthentication,
       mothershipDispatcher.dispatchToMothership(request.request).flatMap(response => {
         lazy val defaultResponse = Future.value(response)
 
-        if (response.getStatusCode() < 300) {
+        if (response.statusCode < 300) {
           (for {
             responseJson <- Try(Json.parse(response.getContentString())).toOption
             userUrns = extractUserUrns(responseJson)

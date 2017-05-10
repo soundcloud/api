@@ -7,8 +7,10 @@ import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.publicApiStrangler.client.stitch.{StitchClient, StitchCounts}
 import com.soundcloud.publicApiStrangler.support.DispatchToMothershipHandler
 import com.twitter.finagle.http.Response
-import com.twitter.util.{Future, NonFatal, Try}
+import com.twitter.util.{Future, Try}
 import play.api.libs.json.{JsArray, JsObject, JsValue, Json}
+
+import scala.util.control.NonFatal
 
 /**
   * This temporary abstraction receives the track json returned by the public api and injects
@@ -26,7 +28,7 @@ class TrackMothershipDispatcherWithCounts(userAuthentication: UserAuthentication
         response => {
           lazy val defaultResponse = Future.value(response)
 
-          if (response.getStatusCode() < 300) {
+          if (response.statusCode < 300) {
             (for {
               responseJson <- Try(Json.parse(response.getContentString())).toOption
               userToTrackUrns = extractUrns(responseJson)

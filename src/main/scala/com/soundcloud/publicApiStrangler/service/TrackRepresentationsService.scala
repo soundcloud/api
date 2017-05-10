@@ -10,6 +10,8 @@ import com.soundcloud.publicApiStrangler.client.quota.UserQuotaClient
 import com.soundcloud.publicApiStrangler.client.stitch.{StitchClient, StitchCounts}
 import com.soundcloud.publicApiStrangler.service.{TrackAccessibilityService, TrackPagination, TrackRepository, TrackRepresentationBuilder}
 
+import scala.util.control.NonFatal
+
 // FIXME: Do not use result types from Track Coordinator
 import com.soundcloud.jvmkit.ModuleConversions._
 import com.soundcloud.publicApiStrangler.client.BigJvmKitConversions._
@@ -18,7 +20,7 @@ import com.soundcloud.publicApiStrangler.client.trackcoordinator.datatypes.{Resu
 import com.soundcloud.publicApiStrangler.client.trackmetadata.TrackmetadataClient
 import com.soundcloud.publicApiStrangler.representation._
 import com.soundcloud.service.response.representation._
-import com.twitter.util.{Future, NonFatal}
+import com.twitter.util.Future
 
 class TrackRepresentationsService(trackRepository: TrackRepository,
                                   trackmetadataClient: TrackmetadataClient,

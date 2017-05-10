@@ -13,7 +13,9 @@ import com.soundcloud.publicApiStrangler.client.stitch.{StitchClient, StitchCoun
 import com.soundcloud.publicApiStrangler.client.trackmetadata.{Track, TrackmetadataClient}
 import com.soundcloud.publicApiStrangler.client.{DomainLocking, RichOkidokiClient, TrackAudioMetadata}
 import com.soundcloud.service.response.representation.{Geoblockings, User}
-import com.twitter.util.{Future, NonFatal}
+import com.twitter.util.Future
+
+import scala.util.control.NonFatal
 
 class TrackRepository(trackmetadataClient: TrackmetadataClient,
                       okidokiClient: RichOkidokiClient,

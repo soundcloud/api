@@ -5,11 +5,12 @@ import com.soundcloud.jvmkit.module.util.logging.SoundCloudLoggerFactory
 import com.soundcloud.publicApiStrangler.representation.Country
 import com.soundcloud.scalakit.json.Json
 import com.twitter.finagle.http.{HeaderMap, Request, Response, Status}
-import com.twitter.util.{NonFatal, Return, Try}
+import com.twitter.util.{Return, Try}
 import play.api.data.validation.ValidationError
 import play.api.libs.json._
 
 import scala.collection.Set
+import scala.util.control.NonFatal
 
 class SingleTrackResponseComparison(telemetry: Telemetry) {
   private val logger = SoundCloudLoggerFactory.getLogger(this.getClass.getName)

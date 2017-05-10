@@ -6,7 +6,9 @@ import com.soundcloud.jvmkit.module.util.http.Headers
 import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.jvmkit.module.util.{Path, Urn}
 import com.twitter.finagle.http.Status
-import com.twitter.util.{Future, NonFatal}
+import com.twitter.util.Future
+
+import scala.util.control.NonFatal
 
 class PlaylistDeletionClient(jsonClient: HttpClient) {
   def deletePlaylist(session: UserSession, urn: Urn): Future[Result[Status]] = {

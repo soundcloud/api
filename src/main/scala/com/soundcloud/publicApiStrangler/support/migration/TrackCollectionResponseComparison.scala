@@ -4,9 +4,11 @@ import com.soundcloud.jvmkit.module.telemetry.Telemetry
 import com.soundcloud.jvmkit.module.util.logging.SoundCloudLoggerFactory
 import com.soundcloud.scalakit.notifier.AirbrakeNotifier
 import com.twitter.finagle.http.{HeaderMap, Request, Response}
-import com.twitter.util.{NonFatal, Return, Try}
+import com.twitter.util.{Return, Try}
 import play.api.data.validation.ValidationError
 import play.api.libs.json._
+
+import scala.util.control.NonFatal
 
 class TrackCollectionResponseComparison(telemetry: Telemetry) {
   private val logger = SoundCloudLoggerFactory.getLogger(this.getClass.getName)

@@ -8,8 +8,10 @@ import com.soundcloud.publicApiStrangler.client.CommonJsonFormats.urnFormat
 import com.soundcloud.scalakit.Path
 import com.soundcloud.scalakit.finagle.jsonservice.{Params, _}
 import com.soundcloud.service.client.{FetchClient, ResponseHandlers}
-import com.twitter.util.{Future, NonFatal}
+import com.twitter.util.Future
 import play.api.libs.json.{JsObject, Json, Reads, Writes}
+
+import scala.util.control.NonFatal
 
 /**
   * https://github.com/soundcloud/liebling/tree/master/doc

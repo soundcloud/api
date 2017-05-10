@@ -8,8 +8,10 @@ import com.soundcloud.jvmkit.module.util.logging.SoundCloudLoggerFactory
 import com.soundcloud.publicApiStrangler.TrackRepresentationsService
 import com.soundcloud.publicApiStrangler.client.trackcoordinator.datatypes.{NotFound, Success}
 import com.twitter.finagle.http.{Response, Status}
-import com.twitter.util.{Future, NonFatal, Return, Try}
+import com.twitter.util.{Future, Return, Try}
 import play.api.libs.json.Json
+
+import scala.util.control.NonFatal
 
 
 class SingleTrackHandler(userAuthentication: UserAuthentication, tracksService: TrackRepresentationsService, telemetry: Telemetry) {

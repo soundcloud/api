@@ -11,9 +11,10 @@ import com.soundcloud.jvmkit.module.util.logging.SoundCloudLoggerFactory
 import com.soundcloud.publicApiStrangler.service.TrackPagination
 import com.soundcloud.publicApiStrangler.{TrackRepresentationsService, TracksRepresentationResult}
 import com.twitter.finagle.http.{Response, Status}
-import com.twitter.util.{Future, NonFatal}
+import com.twitter.util.Future
 import play.api.libs.json.Json
 
+import scala.util.control.NonFatal
 import scala.util.{Success, Try}
 
 class UserTracksHandler(userAuthentication: UserAuthentication,

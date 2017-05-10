@@ -3,12 +3,14 @@ package com.soundcloud.publicApiStrangler.client.quota
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.publicApiStrangler.client.BigJvmKitConversions._
-import com.soundcloud.publicApiStrangler.client.CommonJsonFormats._
+import com.soundcloud.publicApiStrangler.client.CommonJsonFormats.urnFormat
 import com.soundcloud.scalakit.Path
 import com.soundcloud.scalakit.finagle.http.OkStatus
 import com.soundcloud.scalakit.finagle.jsonservice.{JsonClient, JsonResponse, Params}
-import com.twitter.util.{Future, NonFatal}
+import com.twitter.util.Future
 import play.api.libs.json.{Json, Reads}
+
+import scala.util.control.NonFatal
 
 class UserQuotaClient(jsonClient: JsonClient) {
   def downloadsPerTrack(session: UserSession, userUrns: Set[Urn]): Future[Map[Urn, Option[Int]]] = {

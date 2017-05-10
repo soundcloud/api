@@ -29,7 +29,7 @@ class AuthorizeHttpResponse(
       case None =>
         Future({
           val response = originalResponse.render
-          response.setStatusCode(status.code)
+          response.status = status
           response
         })
     }
@@ -42,7 +42,7 @@ class AuthorizeHttpResponse(
             .map(Json.stringify)
             .map(originalResponse.withBody)
             .map(response => {
-              response.setStatusCode(status.code);
+              response.status = status
               response
             })
             .getOrElse(ResponseBuilder(status = Status.Forbidden).build)

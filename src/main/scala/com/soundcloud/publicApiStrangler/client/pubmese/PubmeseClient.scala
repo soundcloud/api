@@ -7,8 +7,10 @@ import com.soundcloud.publicApiStrangler.client.CommonJsonFormats._
 import com.soundcloud.scalakit.Path
 import com.soundcloud.scalakit.finagle.http.OkStatus
 import com.soundcloud.scalakit.finagle.jsonservice.{JsonClient, JsonResponse, Params}
-import com.twitter.util.{Future, NonFatal}
+import com.twitter.util.Future
 import play.api.libs.json.{Json, Reads}
+
+import scala.util.control.NonFatal
 
 class PubmeseClient(jsonClient: JsonClient) {
   def isrcForTrack(session: UserSession, trackUrn: Urn): Future[Option[Isrc]] = {

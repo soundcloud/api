@@ -6,7 +6,9 @@ import com.soundcloud.jvmkit.{AnonymousUserSession, UserSessionBuilder}
 import com.soundcloud.publicApiStrangler.client.BigJvmKitConversions._
 import com.soundcloud.scalakit.finagle.http.OkStatus
 import com.soundcloud.scalakit.finagle.jsonservice.{JsonClient, JsonResponse}
-import com.twitter.util.{Future, NonFatal}
+import com.twitter.util.Future
+
+import scala.util.control.NonFatal
 
 class PlaylistsClient(moshimoshiClient: JsonClient) {
   def getPlaylistContainingTrackOwnedByUser(track: Urn, owner: Urn): Future[List[Playlist]] = {

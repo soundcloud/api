@@ -4,9 +4,10 @@ import com.soundcloud.jvmkit.module.http.client.{HttpClient, Params}
 import com.soundcloud.jvmkit.module.util.Path
 import com.soundcloud.jvmkit.module.util.http.Headers
 import com.twitter.finagle.http.Status
-import com.twitter.finagle.http.Response
-import com.twitter.util.{Future, NonFatal}
+import com.twitter.util.Future
 import play.api.libs.json._
+
+import scala.util.control.NonFatal
 
 case class WaveformUrl(label: String, json: String, png: String)
 
