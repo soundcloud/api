@@ -1,7 +1,7 @@
 package com.soundcloud.publicApiStrangler.handler
 
 import com.soundcloud.jvmkit.module.bff.session.UserAuthentication
-import com.soundcloud.jvmkit.module.http.server.{HandlerRequest, ResponseBuilder}
+import com.soundcloud.jvmkit.module.http.server.{HandlerRequest, JsonResponseBuilder, ResponseBuilder}
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.publicApiStrangler.client.trackcoordinator.TrackCoordinatorClient
 import com.soundcloud.publicApiStrangler.client.trackcoordinator.datatypes._
@@ -41,7 +41,7 @@ class TracksHandler(userAuthentication: UserAuthentication,
           track.supply_chain_status match {
             // only allow updating manually uploaded tracks
             case Some("manual_upload") => mothershipDispatcher.dispatch(request)
-            case Some(_) => Future.value(ResponseBuilder.unauthorized(Json.stringify(Json.obj("reason" -> "not allowed"))))
+            case Some(_) => Future.value(JsonResponseBuilder.unauthorized(Json.stringify(Json.obj("reason" -> "not allowed"))))
             case None => mothershipDispatcher.dispatch(request)
           }
         }

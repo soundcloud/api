@@ -1,7 +1,7 @@
 package com.soundcloud.publicApiStrangler.handler
 
 import com.soundcloud.jvmkit.module.bff.session.UserAuthentication
-import com.soundcloud.jvmkit.module.http.server.{HandlerRequest, ResponseBuilder}
+import com.soundcloud.jvmkit.module.http.server.{HandlerRequest, JsonResponseBuilder, ResponseBuilder}
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.publicApiStrangler.client.RichOkidokiClient
@@ -39,8 +39,8 @@ class RepostersHandler(userAuthentication: UserAuthentication,
     }
 
   private def respond(linkedPartitioningEnabled: Boolean)(result: RepostsResponse[RepostsUser]): Response =
-    if (linkedPartitioningEnabled) ResponseBuilder.ok(Json.stringify(Json.toJson(result)))
-    else ResponseBuilder.ok(Json.stringify(Json.toJson(result.collection)))
+    if (linkedPartitioningEnabled) JsonResponseBuilder.ok(Json.stringify(Json.toJson(result)))
+    else JsonResponseBuilder.ok(Json.stringify(Json.toJson(result.collection)))
 
   private def baseUrl(request: HandlerRequest): String = {
     // default means that request is coming from a dev environment

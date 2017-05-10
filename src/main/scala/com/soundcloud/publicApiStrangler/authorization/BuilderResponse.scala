@@ -1,6 +1,6 @@
 package com.soundcloud.publicApiStrangler.authorization
 
-import com.soundcloud.jvmkit.module.http.server.ResponseBuilder
+import com.soundcloud.jvmkit.module.http.server.JsonResponseBuilder
 import com.twitter.finagle.http.Response
 
 trait BuilderResponse {
@@ -23,7 +23,7 @@ object BuilderResponse {
 }
 
 case class CallbackResponse(name: String, content: String) extends BuilderResponse {
-  def withBody(body: String) = ResponseBuilder.ok(s"/**/$name($body);")
+  def withBody(body: String) = JsonResponseBuilder.ok(s"/**/$name($body);")
 }
 
 object CallbackResponse {
@@ -31,5 +31,5 @@ object CallbackResponse {
 }
 
 case class NormalResponse(content: String) extends BuilderResponse {
-  def withBody(body: String) = ResponseBuilder.ok(body)
+  def withBody(body: String) = JsonResponseBuilder.ok(body)
 }

@@ -1,6 +1,6 @@
 package com.soundcloud.publicApiStrangler.support
 
-import com.soundcloud.jvmkit.module.http.server.ResponseBuilder
+import com.soundcloud.jvmkit.module.http.server.JsonResponseBuilder
 import com.twitter.finagle.http.{Request, Response, Status}
 import com.twitter.finagle.{Service, SimpleFilter}
 import com.twitter.util.Future
@@ -23,7 +23,7 @@ class OffsetLimitRequestFilter(paths: Seq[String], maxOffset: Int) extends Simpl
   }
 
   private lazy val mimicMotherShipBadRequestResponseBuilder = {
-    new ResponseBuilder()
+    new JsonResponseBuilder()
       .status(Status.Forbidden)
       .header("Status", "403 Forbidden")
       .header("Date", DateTime.now.toString(DateTimeFormat.forPattern("E, d MMM yyyy HH:mm:ss z")))

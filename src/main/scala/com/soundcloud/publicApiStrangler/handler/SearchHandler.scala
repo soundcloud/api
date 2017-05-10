@@ -3,7 +3,7 @@ package com.soundcloud.publicApiStrangler.handler
 import com.soundcloud.bff.nextbff.pagination.PageBuilder
 import com.soundcloud.bff.nextbff.repository.RepositoryException
 import com.soundcloud.jvmkit.module.bff.session.UserAuthentication
-import com.soundcloud.jvmkit.module.http.server.{Handler, HandlerRequest, ResponseBuilder}
+import com.soundcloud.jvmkit.module.http.server.{Handler, HandlerRequest, JsonResponseBuilder, ResponseBuilder}
 import com.soundcloud.jvmkit.module.telemetry.Counter
 import com.soundcloud.publicApiStrangler.client.followcounts.FollowCountsClient
 import com.soundcloud.publicApiStrangler.client.liebling.LieblingClient
@@ -90,7 +90,7 @@ class SearchHandler(userAuthentication: UserAuthentication,
             .allowExtraParams(searchRequest.paginationParams + SearchMapper.LinkedPartitioning)
             .buildOffsetBased()
           searchMapper.materialize(session, page).map {
-            case Some(info) => ResponseBuilder.ok(UntypedJson.write(info))
+            case Some(info) => JsonResponseBuilder.ok(UntypedJson.write(info))
             case _ => ResponseBuilder.notFound()
           } handle {
             case RepositoryException(BadRequestStatus, _) =>

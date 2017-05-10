@@ -2,8 +2,7 @@ package com.soundcloud.publicApiStrangler.handler
 
 import com.soundcloud.jvmkit.module.bff.session.UserAuthentication
 import com.soundcloud.jvmkit.module.http.server.{HandlerRequest, ResponseBuilder}
-import com.soundcloud.publicApiStrangler.client.sketchy.{AckOk, UnknownError, WarningNotFound}
-import com.soundcloud.publicApiStrangler.client.sketchy.SketchyClient
+import com.soundcloud.publicApiStrangler.client.sketchy.{AckOk, SketchyClient, UnknownError, WarningNotFound}
 import com.twitter.finagle.http.Response
 import com.twitter.util.Future
 

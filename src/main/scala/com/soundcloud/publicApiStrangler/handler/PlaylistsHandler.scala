@@ -2,7 +2,7 @@ package com.soundcloud.publicApiStrangler.handler
 
 import com.soundcloud.jvmkit.module.bff.session.UserAuthentication
 import com.soundcloud.jvmkit.module.experimental.result.{Bad, Good}
-import com.soundcloud.jvmkit.module.http.server.{HandlerRequest, ResponseBuilder}
+import com.soundcloud.jvmkit.module.http.server.{HandlerRequest, JsonResponseBuilder, ResponseBuilder}
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.publicApiStrangler.client.playlists.PlaylistDeletionClient
 import com.twitter.finagle.http.{Response, Status}
@@ -21,7 +21,7 @@ class PlaylistsHandler(userAuthentication: UserAuthentication, playlistDeletionC
   def handleDelete(request: HandlerRequest): Future[Response] = {
     userAuthentication.withLoggedInUser(request) { (session, _) =>
       playlistDeletionClient.deletePlaylist(session, playlistUrn(request)).map {
-        case Good(status) => ResponseBuilder(status = status, body = Json.stringify(Json.obj("status" -> statusDescription(status)))).build
+        case Good(status) => JsonResponseBuilder(status = status, body = Json.stringify(Json.obj("status" -> statusDescription(status)))).build
         case Bad(_) => ResponseBuilder.internalServerError()
       }
     }

@@ -4,7 +4,7 @@ import com.soundcloud.bff.nextbff.pagination.OffsetBasedPage
 import com.soundcloud.bff.nextbff.repository.RepositoryException
 import com.soundcloud.bff.nextbff.test.JsonMappingMock
 import com.soundcloud.jvmkit.module.bff.testsupport.FakeUserAuthentication
-import com.soundcloud.jvmkit.module.http.server.{HandlerRequest, ResponseBuilder}
+import com.soundcloud.jvmkit.module.http.server.{HandlerRequest, JsonResponseBuilder}
 import com.soundcloud.jvmkit.module.telemetry.{MetricsRegistryImpl, Telemetry}
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.config.InMemoryConfig
@@ -65,7 +65,7 @@ class SearchHandlerSpec extends UnitSpecification {
     val forwardContent = "forwardContent"
 
     def expectForwardedRequest = {
-      val response = ResponseBuilder().body(forwardContent).status(forwardStatus).build
+      val response = JsonResponseBuilder().body(forwardContent).status(forwardStatus).build
       fallbackMock.dispatchToMothership(any[HandlerRequest]) returns Future.value(response)
 
       fallbackMock.dispatch(any[HandlerRequest])

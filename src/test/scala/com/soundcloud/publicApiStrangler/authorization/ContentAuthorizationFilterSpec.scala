@@ -1,6 +1,8 @@
 package com.soundcloud.publicApiStrangler.authorization
 
-import com.soundcloud.jvmkit.module.http.server.{AlwaysMatchesPathMatcher, HandlerRequest, ResponseBuilder}
+import java.nio.charset.StandardCharsets
+
+import com.soundcloud.jvmkit.module.http.server.{AlwaysMatchesPathMatcher, HandlerRequest, JsonResponseBuilder}
 import com.soundcloud.publicApiStrangler.test.UnitSpecification
 import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures
 import com.twitter.finagle.Service
@@ -15,14 +17,14 @@ class ContentAuthorizationFilterSpec extends UnitSpecification with Fixtures {
 
     val service = mock[Service[Request, Response]]
     val authorizeContent = mock[AuthorizeHttpResponse]
-    val originalResponse = ResponseBuilder().build
+    val originalResponse = JsonResponseBuilder().body("some json body").build
     val contentAuthorizationFilter = new ContentAuthorizationFilter(authorizeContent)
   }
 
   "when the response doesnt contain tracks" >> {
 
     "returns the response unchanged" in new Context {
-      val expectedResponse = ResponseBuilder()
+      val expectedResponse = JsonResponseBuilder()
         .body(originalResponse.contentString)
         .status(originalResponse.status)
         .headers(originalResponse.headerMap.toMap)
@@ -42,7 +44,7 @@ class ContentAuthorizationFilterSpec extends UnitSpecification with Fixtures {
   "when the response contains tracks" >> {
     "returns original response with authorization info, if authorized" in new Context {
       val bodyWithAuthorizationInformation = originalResponse.contentString + "some stuff here about policies and stuff"
-      val expectedResponse = ResponseBuilder().body(bodyWithAuthorizationInformation).status(originalResponse.status).build
+      val expectedResponse = JsonResponseBuilder().body(bodyWithAuthorizationInformation).status(originalResponse.status).build
 
       service.apply(any[Request]) returns Future.value(originalResponse)
       authorizeContent.apply(any[HandlerRequest], ===(originalResponse.status), ===(originalResponse.contentString)) returns Future.value(expectedResponse)
@@ -51,7 +53,8 @@ class ContentAuthorizationFilterSpec extends UnitSpecification with Fixtures {
 
       authorizedResponse.status mustEqual expectedResponse.status
       authorizedResponse.contentString mustEqual expectedResponse.contentString
-      authorizedResponse.headerMap mustEqual expectedResponse.headerMap
+      val contentLength = expectedResponse.contentString.getBytes(StandardCharsets.UTF_8).length
+      authorizedResponse.headerMap.toMap mustEqual expectedResponse.headerMap.toMap ++ Map("Content-Length" -> contentLength.toString)
     }
   }
 }

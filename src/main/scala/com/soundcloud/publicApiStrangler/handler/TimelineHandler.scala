@@ -1,7 +1,7 @@
 package com.soundcloud.publicApiStrangler.handler
 
 import com.soundcloud.jvmkit.module.bff.session.UserAuthentication
-import com.soundcloud.jvmkit.module.http.server.{HandlerRequest, ResponseBuilder}
+import com.soundcloud.jvmkit.module.http.server.{HandlerRequest, JsonResponseBuilder, ResponseBuilder}
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.LoggedInUserSession
 import com.soundcloud.publicApiStrangler.mapper.timeline._
@@ -32,7 +32,7 @@ class TimelineHandler(userAuthentication: UserAuthentication,
       (session: LoggedInUserSession, userUrn: Urn) =>
         pagination.withPage(request, userUrn) { page =>
           mapper.materialize(session, page).map {
-            case Some(info) => ResponseBuilder.ok(UntypedJson.write(info.asInstanceOf[Timeline]))
+            case Some(info) => JsonResponseBuilder.ok(UntypedJson.write(info.asInstanceOf[Timeline]))
             case None => ResponseBuilder.notFound()
           }
         }
@@ -51,12 +51,12 @@ class TimelineHandler(userAuthentication: UserAuthentication,
               }
 
               if (request.getParam("linked_partitioning", "0") == "1")
-                ResponseBuilder.ok(UntypedJson.write(Map(
+                JsonResponseBuilder.ok(UntypedJson.write(Map(
                   "next_href" -> info.nextHref,
                   "collection" -> tracks
                 )))
               else
-                ResponseBuilder.ok(UntypedJson.write(tracks))
+                JsonResponseBuilder.ok(UntypedJson.write(tracks))
 
             case None => ResponseBuilder.notFound()
           }

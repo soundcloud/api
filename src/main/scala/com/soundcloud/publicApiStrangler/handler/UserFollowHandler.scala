@@ -2,7 +2,7 @@ package com.soundcloud.publicApiStrangler.handler
 
 import com.soundcloud.bff.nextbff.mapping.MappingContext
 import com.soundcloud.jvmkit.module.bff.session.UserAuthentication
-import com.soundcloud.jvmkit.module.http.server.{HandlerRequest, ResponseBuilder}
+import com.soundcloud.jvmkit.module.http.server.{HandlerRequest, JsonResponseBuilder, ResponseBuilder}
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.{LoggedInUserSession, UserSession}
 import com.soundcloud.publicApiStrangler.client.BigJvmKitConversions._
@@ -13,7 +13,6 @@ import com.soundcloud.publicApiStrangler.client.follows.representation.follow._
 import com.soundcloud.publicApiStrangler.client.follows.representation.unfollow.{NotFollowing, UnfollowSuccessful, UnknownError => UnfollowUnknownError, UserAsTarget => UnfollowUserAsTarget, UserNotFound => UnfollowUserNotFound}
 import com.soundcloud.publicApiStrangler.client.reposts.RepostsClient
 import com.soundcloud.publicApiStrangler.mapping.timeline.User
-import com.soundcloud.publicApiStrangler.support.DispatchToMothershipHandler
 import com.soundcloud.service.client.OkidokiClient
 import com.twitter.finagle.http.{Response, Status}
 import com.twitter.util.Future
@@ -60,13 +59,13 @@ class UserFollowHandler(userAuthentication: UserAuthentication, okidoki: Okidoki
 
   private def renderFollow(session: LoggedInUserSession, target: Urn): Future[Response] = {
     fetchUsers(session, Set(target)).map { users =>
-      ResponseBuilder.created(Json.stringify(Json.toJson(users.headOption)))
+      JsonResponseBuilder.created(Json.stringify(Json.toJson(users.headOption)))
     }
   }
 
   private def renderStatus(status: Status): Future[Response] =
     Future.value(
-      ResponseBuilder(
+      JsonResponseBuilder(
         status,
         body = Json.stringify(Json.obj("status" -> s"$status - ${status.reason}"))
       ).build
@@ -74,7 +73,7 @@ class UserFollowHandler(userAuthentication: UserAuthentication, okidoki: Okidoki
 
   private def renderError(status: Status): Future[Response] =
     Future.value(
-      ResponseBuilder(
+      JsonResponseBuilder(
         status,
         body = Json.stringify(Json.obj("errors" -> Seq(Map("error_message" -> s"${status.code} - ${status.reason}"))))
       ).build
@@ -162,7 +161,7 @@ class UserFollowHandler(userAuthentication: UserAuthentication, okidoki: Okidoki
         users <- fetchUsers(session, urns)
       } yield {
         responseOption.map { _ =>
-          ResponseBuilder.ok(Json.stringify(Json.obj("collection" -> mapUsersToUsers(users))))
+          JsonResponseBuilder.ok(Json.stringify(Json.obj("collection" -> mapUsersToUsers(users))))
         }.getOrElse(ResponseBuilder.serviceUnavailable())
       }
     }
@@ -180,7 +179,7 @@ class UserFollowHandler(userAuthentication: UserAuthentication, okidoki: Okidoki
         users <- fetchUsers(session, urns)
       } yield {
         affiliationsOption.map { affiliations =>
-          ResponseBuilder.ok(Json.stringify(Json.obj(
+          JsonResponseBuilder.ok(Json.stringify(Json.obj(
             "collection" -> mapUsers(users),
             "next_href" -> nextHref(baseUrl, request.request.path, affiliations.next, request.params)
           )))
@@ -203,7 +202,7 @@ class UserFollowHandler(userAuthentication: UserAuthentication, okidoki: Okidoki
       } yield {
         filteredOption.map { _ =>
           if (users.nonEmpty) {
-            ResponseBuilder(
+            JsonResponseBuilder(
               status = Status.SeeOther,
               headers = Map("Location" -> s"$baseUrl/users/$userId"),
               body = Json.stringify(Json.toJson(users.head))
@@ -277,7 +276,7 @@ class UserFollowHandler(userAuthentication: UserAuthentication, okidoki: Okidoki
   }
 
   private def forbidden(errors: JsArray): Future[Response] = {
-    Future.value(ResponseBuilder(
+    Future.value(JsonResponseBuilder(
       status = Status.Forbidden,
       body = Json.stringify(JsObject(Seq("errors" -> errors)))
     ).build)

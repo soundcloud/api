@@ -1,8 +1,9 @@
 package com.soundcloud.bff.nextbff.test
 
-import com.soundcloud.bff.finagle.{Request, ResponseBuilder}
-import com.soundcloud.publicApiStrangler.test.UnitSpecification
+import com.soundcloud.bff.finagle.Request
+import com.soundcloud.jvmkit.module.http.server.ResponseBuilder
 import com.soundcloud.jvmkit.{AnonymousUserSession, UserSessionBuilder}
+import com.soundcloud.publicApiStrangler.test.UnitSpecification
 import com.twitter.util.{Await, Future}
 
 class FakeUserAuthenticationSpec extends UnitSpecification {
@@ -14,7 +15,7 @@ class FakeUserAuthenticationSpec extends UnitSpecification {
 
     lazy val subject = new FakeUserAuthentication(anonymousSession)
       .withLoggedInUser(blankRequest) { (session, urn) =>
-        Future.value(new ResponseBuilder().ok.build)
+        Future.value(ResponseBuilder.ok())
       }
     lazy val result =
       Await.result(subject)

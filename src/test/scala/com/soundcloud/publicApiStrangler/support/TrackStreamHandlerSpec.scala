@@ -34,9 +34,6 @@ class TrackStreamHandlerSpec extends UnitSpecification {
 
       def responseBuilder(status: Status) =
         Future.value(ResponseBuilder().status(status).build)
-
-      def responseBuilder(status: Status, contentType: String, body: String) =
-        ResponseBuilder().status(status).mediaType(contentType).body(body).build
     }
 
 
@@ -87,7 +84,7 @@ class TrackStreamHandlerSpec extends UnitSpecification {
       // Mothership headers
       response.headerMap.get("Status") ==== Some("404 Not Found")
       response.headerMap.get("Date") must not be None
-      response.headerMap.get("Content-Type") ==== Some("application/json; charset=utf-8")
+      response.headerMap.get("Content-Type") ==== Some("application/json;charset=utf-8")
       Json.parse(response.contentString) // Make sure we have valid json
       response.contentString ==== "{\"errors\":[{\"error_message\":\"404 - Not Found\"}]}"
       there was noCallsTo(contentAuthRules)
@@ -164,7 +161,7 @@ class TrackStreamHandlerSpec extends UnitSpecification {
 
       val mediaUrl1 = mock[MediaUrl]
       val mediaUrls = Future.value(Set(mediaUrl1))
-      val mapperResponse = Future.value(ResponseBuilder().status(Status.Ok).header("Content-Type", "application/json").build)
+      val mapperResponse = Future.value(ResponseBuilder.ok())
       mediaUrlsRepository.byUrn(anonUserSession, trackUrn, contentAuthorizationSnip) returns mediaUrls
       mapper.map(mediaUrls, false) returns mapperResponse
 
@@ -184,7 +181,7 @@ class TrackStreamHandlerSpec extends UnitSpecification {
 
       val mediaUrl1 = mock[MediaUrl]
       val mediaUrls = Future.value(Set(mediaUrl1))
-      val mapperResponse = Future.value(ResponseBuilder().status(Status.Ok).header("Content-Type", "application/json").build)
+      val mapperResponse = Future.value(ResponseBuilder.ok())
       mediaUrlsRepository.byUrn(anonUserSession, trackUrn, contentAuthorizationSnip, true) returns mediaUrls
       mapper.map(mediaUrls, true) returns mapperResponse
 
@@ -205,7 +202,7 @@ class TrackStreamHandlerSpec extends UnitSpecification {
 
       val mediaUrl1 = mock[MediaUrl]
       val mediaUrls = Future.value(Set(mediaUrl1))
-      val mapperResponse = Future.value(ResponseBuilder().status(Status.Ok).header("Content-Type", "application/json").build)
+      val mapperResponse = Future.value(ResponseBuilder.ok())
       mediaUrlsRepository.byUrn(anonUserSession, trackUrn, contentAuthorizationSnip, true) returns mediaUrls
       mapper.map(mediaUrls, false) returns mapperResponse
 
@@ -249,7 +246,7 @@ class TrackStreamHandlerSpec extends UnitSpecification {
       // Mothership headers
       response.headerMap.get("Status") ==== Some("401 Unauthorized")
       response.headerMap.get("Date") must not be None
-      response.headerMap.get("Content-Type") ==== Some("application/json; charset=utf-8")
+      response.headerMap.get("Content-Type") ==== Some("application/json;charset=utf-8")
       Json.parse(response.contentString) // Make sure we have valid json
       response.contentString ==== "{\"errors\":[{\"error_message\":\"401 - Unauthorized\"}]}"
       there was noCallsTo(mediaUrlsRepository)
@@ -289,7 +286,7 @@ class TrackStreamHandlerSpec extends UnitSpecification {
       // Mothership headers
       response.headerMap.get("Status") ==== Some("403 Forbidden")
       response.headerMap.get("Date") must not be None
-      response.headerMap.get("Content-Type") ==== Some("application/json; charset=utf-8")
+      response.headerMap.get("Content-Type") ==== Some("application/json;charset=utf-8")
       Json.parse(response.contentString) // Make sure we have valid json
       response.contentString ==== "{\"errors\":[{\"error_message\":\"403 - Forbidden\"}]}"
       there was noCallsTo(mediaUrlsRepository)

@@ -1,13 +1,12 @@
 package com.soundcloud.publicApiStrangler.handler
 
 import com.soundcloud.jvmkit.module.bff.session.UserAuthentication
-import com.soundcloud.jvmkit.module.http.server.{HandlerRequest, ResponseBuilder}
+import com.soundcloud.jvmkit.module.http.server.{HandlerRequest, JsonResponseBuilder, ResponseBuilder}
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.publicApiStrangler.client.reposts.RepostsClient._
 import com.soundcloud.publicApiStrangler.client.reposts.{Reposts, RepostsClient}
 import com.soundcloud.publicApiStrangler.mapping.reposts.RepostsResponse
-import com.soundcloud.publicApiStrangler.support.DispatchToMothershipHandler
 import com.twitter.finagle.http.{ParamMap, Response, Status}
 import com.twitter.util.Future
 import play.api.libs.json.Json
@@ -62,7 +61,7 @@ class RepostsHandler(userAuthentication: UserAuthentication, repostsClient: Repo
     case Deleted => ResponseBuilder.ok()
     case AlreadyExists => ResponseBuilder.ok()
     case NotFound => ResponseBuilder.notFound()
-    case spamBlocked: SpamBlocked => ResponseBuilder(status = Status.TooManyRequests, body = Json.stringify(Json.toJson(spamBlocked))).build
+    case spamBlocked: SpamBlocked => JsonResponseBuilder(status = Status.TooManyRequests, body = Json.stringify(Json.toJson(spamBlocked))).build
     case Failed => ResponseBuilder.internalServerError()
   }
 
@@ -102,8 +101,8 @@ class RepostsHandler(userAuthentication: UserAuthentication, repostsClient: Repo
   }
 
   private def respond(linkedPartitioningEnabled: Boolean)(result: RepostsResponse[Long]): Response =
-    if (linkedPartitioningEnabled) ResponseBuilder.ok(Json.stringify(Json.toJson(result)))
-    else ResponseBuilder.ok(Json.stringify(Json.toJson(result.collection)))
+    if (linkedPartitioningEnabled) JsonResponseBuilder.ok(Json.stringify(Json.toJson(result)))
+    else JsonResponseBuilder.ok(Json.stringify(Json.toJson(result.collection)))
 
   private def nextHref(request: HandlerRequest, limit: Int, cursor: Option[String]): Option[String] =
     cursor.map { c =>

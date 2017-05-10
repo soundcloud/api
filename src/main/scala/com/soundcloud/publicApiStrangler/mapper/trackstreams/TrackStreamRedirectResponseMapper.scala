@@ -2,7 +2,7 @@ package com.soundcloud.publicApiStrangler.mapper.trackstreams
 
 import com.soundcloud.bff.media.MediaUrl
 import com.soundcloud.jvmkit.module.http.server.ResponseBuilder
-import com.twitter.finagle.http.{Response, Status}
+import com.twitter.finagle.http.{MediaType, Response, Status}
 import com.twitter.util.Future
 import play.api.libs.json.Json
 
@@ -30,7 +30,7 @@ class TrackStreamRedirectResponseMapper extends TrackStreamResponseMapper {
 
     if (!isHeadRequest) {
       val content = Json.obj("status" -> "302 - Found", "location" -> url.url.s)
-      builder.body(Json.stringify(content)).build
+      builder.mediaType(MediaType.Json).body(Json.stringify(content)).build
     } else {
       builder.build
     }

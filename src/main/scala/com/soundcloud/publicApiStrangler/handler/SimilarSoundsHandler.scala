@@ -2,7 +2,7 @@ package com.soundcloud.publicApiStrangler.handler
 
 import com.soundcloud.bff.nextbff.pagination.PageBuilder
 import com.soundcloud.jvmkit.module.bff.session.UserAuthentication
-import com.soundcloud.jvmkit.module.http.server.{HandlerRequest, ResponseBuilder}
+import com.soundcloud.jvmkit.module.http.server.{HandlerRequest, JsonResponseBuilder, ResponseBuilder}
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.publicApiStrangler.headers.DefaultResponseHeaders
@@ -33,7 +33,7 @@ class SimilarSoundsHandler(
           buildOffsetBased(0)
 
         similarSoundsMapper.materialize(session, page).map {
-          case Some(info: SimilarSoundsMapping) => ResponseBuilder(body = UntypedJson.write(if (shouldPaginate(request.params)) info else info.collection)).build
+          case Some(info: SimilarSoundsMapping) => JsonResponseBuilder(body = UntypedJson.write(if (shouldPaginate(request.params)) info else info.collection)).build
           case None => ResponseBuilder.notFound()
         }.map(enrichWithDefaultHeaders)
     }

@@ -43,7 +43,7 @@ class StaticFilesFilter extends SimpleFilter[Request, Response] {
   }
 
   private def renderRobots: Future[Response] = {
-    Future.value(new ResponseBuilder().
+    Future.value(ResponseBuilder().
       mediaType(MediaType.PlainText).
       body(robotsContents).
       headers(Map(
@@ -59,7 +59,7 @@ class StaticFilesFilter extends SimpleFilter[Request, Response] {
   }
 
   private def renderCrossdomain: Future[Response] = {
-    Future.value(new ResponseBuilder().
+    Future.value(ResponseBuilder().
       mediaType(MediaType.Xml).
       body(crossdomainContents).
       headers(Map(

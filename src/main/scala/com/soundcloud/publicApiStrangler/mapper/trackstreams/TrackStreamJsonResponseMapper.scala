@@ -1,14 +1,14 @@
 package com.soundcloud.publicApiStrangler.mapper.trackstreams
 
 import com.soundcloud.bff.media.MediaUrl
-import com.soundcloud.jvmkit.module.http.server.ResponseBuilder
+import com.soundcloud.jvmkit.module.http.server.{JsonResponseBuilder, ResponseBuilder}
 import com.twitter.finagle.http.Response
 import com.twitter.util.Future
 import play.api.libs.json.Json
 
 /**
- * Maps track stream media URLs to our expected JSON response.
- */
+  * Maps track stream media URLs to our expected JSON response.
+  */
 class TrackStreamJsonResponseMapper extends TrackStreamResponseMapper {
 
   def map(mediaUrls: Future[Set[MediaUrl]], isHeadRequest: Boolean): Future[Response] = {
@@ -22,10 +22,10 @@ class TrackStreamJsonResponseMapper extends TrackStreamResponseMapper {
   }
 
   private def mapResponse(mediaUrls: Set[MediaUrl], isHeadRequest: Boolean): Response = {
-    if(!isHeadRequest) {
+    if (!isHeadRequest) {
       val jsonObjects = mediaUrls.map(url => Json.obj(url.name -> url.url.s))
       val json = jsonObjects.reduceLeft(_ ++ _)
-      ResponseBuilder.ok(Json.stringify(json))
+      JsonResponseBuilder.ok(Json.stringify(json))
     } else {
       ResponseBuilder.ok()
     }

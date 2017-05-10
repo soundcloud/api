@@ -1,13 +1,12 @@
 package com.soundcloud.publicApiStrangler.handler
 
 import com.soundcloud.jvmkit.module.bff.session.UserAuthentication
-import com.soundcloud.jvmkit.module.http.server.{HandlerRequest, ResponseBuilder}
+import com.soundcloud.jvmkit.module.http.server.{HandlerRequest, JsonResponseBuilder}
 import com.soundcloud.jvmkit.module.telemetry.Telemetry
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.logging.SoundCloudLoggerFactory
 import com.soundcloud.publicApiStrangler.TrackRepresentationsService
 import com.soundcloud.publicApiStrangler.client.trackcoordinator.datatypes.{NotFound, Success}
-import com.soundcloud.publicApiStrangler.support.DispatchToMothershipHandler
 import com.twitter.finagle.http.{Response, Status}
 import com.twitter.util.{Future, NonFatal, Return, Try}
 import play.api.libs.json.Json
@@ -48,11 +47,11 @@ class SingleTrackHandler(userAuthentication: UserAuthentication, tracksService: 
   }
 
   private def generateNotFound(callback: Option[String]): Response = {
-    ResponseBuilder.notFound(jsonpWrapper(callback, notFoundErrorString))
+    JsonResponseBuilder.notFound(jsonpWrapper(callback, notFoundErrorString))
   }
 
   private def generateResponse(status: Status, rawContent: String, callback: Option[String]): Response = {
-    ResponseBuilder(status = status, body = jsonpWrapper(callback, rawContent)).build
+    JsonResponseBuilder(status = status, body = jsonpWrapper(callback, rawContent)).build
   }
 
   /**

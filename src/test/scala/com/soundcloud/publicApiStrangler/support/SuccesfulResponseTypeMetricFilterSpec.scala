@@ -1,6 +1,6 @@
 package com.soundcloud.publicApiStrangler.support
 
-import com.soundcloud.jvmkit.module.http.server.ResponseBuilder
+import com.soundcloud.jvmkit.module.http.server.{JsonResponseBuilder, ResponseBuilder}
 import com.soundcloud.jvmkit.module.telemetry.{MetricsRegistryImpl, Telemetry}
 import com.soundcloud.jvmkit.module.util.config.InMemoryConfig
 import com.soundcloud.publicApiStrangler.test.UnitSpecification
@@ -56,7 +56,7 @@ class SuccesfulResponseTypeMetricFilterSpec extends UnitSpecification {
   "Increases xml counter on xml responses" in new Context {
     val request = Request()
     val content = """<?xml version="1.0" encoding="UTF-8"?><track><kind>track</kind></track>"""
-    val responseFromNextService = ResponseBuilder.ok(content)
+    val responseFromNextService = JsonResponseBuilder.ok(content)
 
     when(next.apply(request)).thenReturn(Future.value(responseFromNextService))
     Await.result(filter(request, next)) mustEqual responseFromNextService
@@ -70,7 +70,7 @@ class SuccesfulResponseTypeMetricFilterSpec extends UnitSpecification {
   "Increases json counter on json responses" in new Context {
     val request = Request()
     val content = """{"kind":"track","id":278030262,"user_id":165217281}"""
-    val responseFromNextService = ResponseBuilder.ok(content)
+    val responseFromNextService = JsonResponseBuilder.ok(content)
 
     when(next.apply(request)).thenReturn(Future.value(responseFromNextService))
     Await.result(filter(request, next)) mustEqual responseFromNextService
@@ -84,7 +84,7 @@ class SuccesfulResponseTypeMetricFilterSpec extends UnitSpecification {
   "Increases jsonp counter on jsonp responses" in new Context {
     val request = Request()
     val content = """/**/__jp6({"kind":"track","id":240934948});"""
-    val responseFromNextService = ResponseBuilder.ok(content)
+    val responseFromNextService = JsonResponseBuilder.ok(content)
 
     when(next.apply(request)).thenReturn(Future.value(responseFromNextService))
     Await.result(filter(request, next)) mustEqual responseFromNextService
@@ -98,7 +98,7 @@ class SuccesfulResponseTypeMetricFilterSpec extends UnitSpecification {
   "Increases undefined counter when response can not be identified" in new Context {
     val request = Request()
     val content = """neither"""
-    val responseFromNextService = ResponseBuilder.ok(content)
+    val responseFromNextService = JsonResponseBuilder.ok(content)
 
     when(next.apply(request)).thenReturn(Future.value(responseFromNextService))
     Await.result(filter(request, next)) mustEqual responseFromNextService

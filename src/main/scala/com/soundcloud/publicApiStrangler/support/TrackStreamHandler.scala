@@ -2,17 +2,17 @@ package com.soundcloud.publicApiStrangler.support
 
 import com.soundcloud.bff.media.MediaUrlsRepository
 import com.soundcloud.jvmkit.module.http.server.{HandlerRequest, ResponseBuilder}
-import com.soundcloud.jvmkit.module.util.{MalformedUrnException, Urn}
 import com.soundcloud.jvmkit.module.util.session.UserSession
+import com.soundcloud.jvmkit.module.util.{MalformedUrnException, Urn}
 import com.soundcloud.publicApiStrangler.authorization.ContentAuthorizationRules
+import com.soundcloud.publicApiStrangler.client.BigJvmKitConversions._
 import com.soundcloud.publicApiStrangler.mapper.trackstreams.TrackStreamResponseMapper
-import com.twitter.finagle.http.{Method, Response, Status}
+import com.soundcloud.publicApiStrangler.policies.{ContentAuthorization, ContentPolicy}
+import com.twitter.finagle.http.{MediaType, Method, Response, Status}
 import com.twitter.util.{Future, Return, Throw, Try}
 import org.jboss.netty.handler.codec.http.HttpResponseStatus
 import org.joda.time.DateTime
 import org.joda.time.format.DateTimeFormat
-import com.soundcloud.publicApiStrangler.client.BigJvmKitConversions._
-import com.soundcloud.publicApiStrangler.policies.{ContentAuthorization, ContentPolicy}
 
 /**
   * Forwards stream requests to public api but intervene in case content policy for track is SNIP
@@ -70,14 +70,14 @@ class TrackStreamHandler(mothershipDispatcher: DispatchToMothershipHandler,
   private def urnWithNumericIdentifier(urn: Urn) = urn.getIdentifier.matches("\\d+")
 
   private def generateResponseFor(request: HandlerRequest, status: HttpResponseStatus) = {
-    val builder = new ResponseBuilder().
+    val builder = ResponseBuilder().
       status(Status(status.getCode)).
       header("Status", status.getCode + " " + status.getReasonPhrase).
       header("Date", DateTime.now.toString(DateTimeFormat.forPattern("E, d MMM yyyy HH:mm:ss z")))
 
     if (request.method != Method.Head) {
       builder.
-        header("Content-Type", "application/json; charset=utf-8").
+        mediaType(MediaType.Json).
         body("{\"errors\":[{\"error_message\":\"" + status.getCode + " - " + status.getReasonPhrase + "\"}]}").
         build
     } else {

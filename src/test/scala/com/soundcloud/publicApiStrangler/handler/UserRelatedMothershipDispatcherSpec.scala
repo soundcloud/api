@@ -1,16 +1,16 @@
 package com.soundcloud.publicApiStrangler.handler
 
 import com.soundcloud.jvmkit.module.bff.testsupport.FakeUserAuthentication
-import com.soundcloud.jvmkit.module.http.server.{HandlerRequest, ResponseBuilder}
+import com.soundcloud.jvmkit.module.http.server.{HandlerRequest, JsonResponseBuilder, ResponseBuilder}
 import com.soundcloud.jvmkit.module.util.Urn
-import com.soundcloud.jvmkit.module.util.session.{UserSession, UserSessionBuilder}
+import com.soundcloud.jvmkit.module.util.session.UserSessionBuilder
 import com.soundcloud.publicApiStrangler.Routing
 import com.soundcloud.publicApiStrangler.client.followcounts.{FollowCounts, FollowCountsClient}
 import com.soundcloud.publicApiStrangler.client.liebling.{LieblingClient, UserTotalLikes}
 import com.soundcloud.publicApiStrangler.client.reposts.RepostsClient
 import com.soundcloud.publicApiStrangler.support.DispatchToMothershipHandler
-import com.soundcloud.publicApiStrangler.test.{HandlerSpecificationScope, UnitSpecification}
 import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures
+import com.soundcloud.publicApiStrangler.test.{HandlerSpecificationScope, UnitSpecification}
 import com.twitter.finagle.http.{Request, Status}
 import com.twitter.util.{Await, Future}
 import org.mockito.Mockito.when
@@ -48,9 +48,10 @@ class UserRelatedMothershipDispatcherSpec extends UnitSpecification with Fixture
 
     def responseBodyFromMothership: JsValue
 
-    def responseBuilder = ResponseBuilder()
+    def response = JsonResponseBuilder()
       .status(responseStatusFromMothership)
       .body(responseBodyFromMothership.toString())
+      .build
 
     def userUrns: Seq[Urn] = Seq.empty
 
@@ -65,7 +66,7 @@ class UserRelatedMothershipDispatcherSpec extends UnitSpecification with Fixture
     lazy val resultJson = Json.parse(result.getContentString())
 
     override def before: Any = {
-      when(mothershipDispatcherMock.dispatchToMothership(any[Request])).thenReturn(Future.value(responseBuilder.build))
+      when(mothershipDispatcherMock.dispatchToMothership(any[Request])).thenReturn(Future.value(response))
       when(followCountsClientMock.counts(session, userUrns)).thenReturn(Future.value(followCountsSeq))
       when(lieblingClientMock.userTotalLikeCount(session, userUrns)).thenReturn(Future.value(userTotalLikesList))
       when(repostsClientMock.getRepostCountsByUrnWithFallback(session, userUrns.toSet))
@@ -77,9 +78,10 @@ class UserRelatedMothershipDispatcherSpec extends UnitSpecification with Fixture
     "with a non-JSON response from mothership, it returns the same response body" in new Context {
       override def responseBodyFromMothership = JsNull
 
-      override def responseBuilder = new ResponseBuilder()
+      override def response = ResponseBuilder()
         .status(responseStatusFromMothership)
         .body("Not a JSON response")
+        .build
 
       Await.result(dispatcher.dispatchToMothership(request)).getContentString() ==== "Not a JSON response"
     }

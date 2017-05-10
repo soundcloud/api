@@ -1,7 +1,7 @@
 package com.soundcloud.publicApiStrangler.handler
 
 import com.soundcloud.jvmkit.module.bff.testsupport.FakeUserAuthentication
-import com.soundcloud.jvmkit.module.http.server.{HandlerRequest, ResponseBuilder}
+import com.soundcloud.jvmkit.module.http.server.{HandlerRequest, JsonResponseBuilder}
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.publicApiStrangler.Routing
@@ -31,7 +31,7 @@ class TrackStreamsHandlerSpec extends UnitSpecification {
     override def routingDefinitions = Routing.forTrackStreamsHandler(handler)
 
     def forwardWithJsonResponseMapper(handler: TrackStreamsHandler, path: String) = {
-      val expectedResponseBuilder = ResponseBuilder.ok()
+      val expectedResponseBuilder = JsonResponseBuilder.ok()
 
       trackStreamSnipHandlerMock.handle(any[HandlerRequest], any[UserSession], org.mockito.Matchers.eq(trackStreamUrlToJsonResponseMapperMock))
         .returns(Future.value(expectedResponseBuilder))
@@ -43,7 +43,7 @@ class TrackStreamsHandlerSpec extends UnitSpecification {
     }
 
     def forwardHeadWithJsonResponseMapper(handler: TrackStreamsHandler, path: String) = {
-      val expectedResponseBuilder = ResponseBuilder.ok()
+      val expectedResponseBuilder = JsonResponseBuilder.ok()
 
       trackStreamSnipHandlerMock.handle(any[HandlerRequest], any[UserSession], org.mockito.Matchers.eq(trackStreamUrlToJsonResponseMapperMock))
         .returns(Future.value(expectedResponseBuilder))
@@ -55,7 +55,7 @@ class TrackStreamsHandlerSpec extends UnitSpecification {
     }
 
     def forwardWithRedirectResponseMapper(handler: TrackStreamsHandler, path: String) = {
-      val expectedResponseBuilder = ResponseBuilder.ok()
+      val expectedResponseBuilder = JsonResponseBuilder.ok()
 
       trackStreamSnipHandlerMock.handle(any[HandlerRequest], any[UserSession], org.mockito.Matchers.eq(trackStreamUrlToRedirectMapperMock))
         .returns(Future.value(expectedResponseBuilder))
@@ -67,7 +67,7 @@ class TrackStreamsHandlerSpec extends UnitSpecification {
     }
 
     def forwardHeadWithRedirectResponseMapper(handler: TrackStreamsHandler, path: String) = {
-      val expectedResponseBuilder = ResponseBuilder.ok()
+      val expectedResponseBuilder = JsonResponseBuilder.ok()
 
       trackStreamSnipHandlerMock.handle(any[HandlerRequest], any[UserSession], org.mockito.Matchers.eq(trackStreamUrlToRedirectMapperMock))
         .returns(Future.value(expectedResponseBuilder))
