@@ -15,7 +15,7 @@ class TrackUploadSpec extends Specification {
   "Public API Strangler" should {
     "properly stream large files" in new Scope {
       // Create stream
-      val streamLength = 500000000 // 500 MB
+      val streamLength = 500000 // 50 MB
       val inputStream: InputStream = new InputStream {
         var count = 0
         def read: Int = {
@@ -38,8 +38,10 @@ class TrackUploadSpec extends Specification {
       val httpclient = HttpClients.createDefault()
       val response = httpclient.execute(request)
 
-      // Verify (hash obtained using `cat /dev/zero | head -c 500000000 | sha1sum`)
-      EntityUtils.toString(response.getEntity) ==== "ok 500000000 7acb6fa3fe6504a77f8683bcbf19fe21579494e1"
+      println("hallo", EntityUtils.toString(response.getEntity))
+
+      // Verify (hash obtained using `cat /dev/zero | head -c 500000 | sha1sum`)
+      EntityUtils.toString(response.getEntity) ==== "ok 500000 018684b72a1cae5ba76a9d1a50c337ecb89acb51)"
     }
   }
 }
