@@ -39,7 +39,7 @@ class TrackUploadSpec extends Specification {
       val response = httpclient.execute(request)
 
       // Verify (hash obtained using `cat /dev/zero | head -c 500000 | sha1sum`)
-      EntityUtils.toString(response.getEntity) ==== "ok 500000 018684b72a1cae5ba76a9d1a50c337ecb89acb51)"
+      EntityUtils.toString(response.getEntity) ==== "ok 500000 018684b72a1cae5ba76a9d1a50c337ecb89acb51"
     }
   }
 }
