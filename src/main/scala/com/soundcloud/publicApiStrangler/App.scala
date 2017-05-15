@@ -5,6 +5,7 @@ import com.soundcloud.jvmkit.module.admin.AdminServer
 import com.soundcloud.jvmkit.module.bff.BffHttpServer
 import com.soundcloud.jvmkit.module.bff.filters.SessionCacheFilter
 import com.soundcloud.jvmkit.module.bff.ratelimiting.facade._
+import com.soundcloud.jvmkit.module.http.server.akira.ResponseDumpSessionRegistry
 import com.soundcloud.jvmkit.module.http.server.config.HttpServerConfig
 import com.soundcloud.jvmkit.module.http.server.{HandlerRouterBuilder, ResponseBuilder}
 import com.soundcloud.jvmkit.module.memcached.MemcachedClient
@@ -19,9 +20,9 @@ import com.soundcloud.publicApiStrangler.Routing._
 import com.soundcloud.publicApiStrangler.authorization._
 import com.soundcloud.publicApiStrangler.headers.DefaultResponseHeadersFilter
 import com.soundcloud.publicApiStrangler.support._
-import com.twitter.finagle.SimpleFilter
 import com.twitter.finagle.http.{Method, Request, Response}
-import com.twitter.util.Future
+import com.twitter.finagle.{Http, SimpleFilter}
+import com.twitter.util.{Await, Future}
 
 object App extends Handlers with FallbackHandlerConfiguration {
 
@@ -29,7 +30,7 @@ object App extends Handlers with FallbackHandlerConfiguration {
 
   def moduleConfig = new ModuleAppConfig()
 
-  def metricsRegistry = MetricsRegistryImpl.defaultRegistry
+  def metricsRegistry: MetricsRegistryImpl = MetricsRegistryImpl.defaultRegistry
 
   def telemetry = new Telemetry(config, metricsRegistry)
 
@@ -80,6 +81,8 @@ object App extends Handlers with FallbackHandlerConfiguration {
     )
     val limitOffset = 200
 
+    val responseDump = new ResponseDumpSessionRegistry
+
     lazy val additionalFilters: List[SimpleFilter[Request, Response]] =
       List(
         new StaticFilesFilter,
@@ -114,22 +117,24 @@ object App extends Handlers with FallbackHandlerConfiguration {
       .register(Method.Get, "/-/health", (_) => Future.value(ResponseBuilder.ok()))
       .build
 
-
     new AdminServer(
       config = moduleConfig,
       telemetry = moduleTelemetry,
+      responseDumpSessionRegistry = Some(responseDump),
       customHandlers = List(
-        (Method.Get, rateLimitingFacade.diagnosticsEndpoint, rateLimitingFacade.rateLimitingDiagnosticsAdminHandler.handle _)
+        (Method.Get, rateLimitingFacade.diagnosticsEndpoint, rateLimitingFacade.rateLimitingDiagnosticsAdminHandler.handle)
       ),
       rollout = rollout
     ).start()
+
 
     BffHttpServer(resourceName = moduleConfig.getApplicationResourceName,
       config = HttpServerConfig.from(moduleConfig),
       telemetry = moduleTelemetry,
       router = router,
-      customFilters = additionalFilters
-    ).start().join()
+      customFilters = additionalFilters,
+      responseDumpSessionRegistry = Some(responseDump)
+    ).start()
   }
 }
 
