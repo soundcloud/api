@@ -2,15 +2,17 @@ package com.soundcloud.publicApiStrangler.mapper.search
 
 import com.soundcloud.bff.nextbff.mapper.Mapper
 import com.soundcloud.bff.nextbff.mapping.{JsonMapping, MappingContext}
-import com.soundcloud.jvmkit.{Urn, UserSession}
-import com.soundcloud.jvmkit.policies.ContentAuthorization
+import com.soundcloud.jvmkit.module.util.Urn
+import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.publicApiStrangler.authorization.ContentAuthorizationRules
+import com.soundcloud.publicApiStrangler.client.BigJvmKitConversions._
 import com.soundcloud.publicApiStrangler.client.followcounts.{FollowCounts, FollowCountsClient}
 import com.soundcloud.publicApiStrangler.client.reposts.RepostsClient
 import com.soundcloud.publicApiStrangler.mapper.liebling.LikeCountMapper
 import com.soundcloud.publicApiStrangler.mapper.timeline.EntitySummaryMapper
 import com.soundcloud.publicApiStrangler.mapper.waveform.WaveformMapper
 import com.soundcloud.publicApiStrangler.mapping.search._
+import com.soundcloud.publicApiStrangler.policies.ContentAuthorization
 import com.soundcloud.publicApiStrangler.support.mapping.InputValidation
 import com.soundcloud.service.client.OkidokiClient
 import com.twitter.util.Future
@@ -25,7 +27,7 @@ class SearchEntityMapper(okidokiClient: OkidokiClient,
                          likeCountMapper: LikeCountMapper,
                          entitySummaryMapper: EntitySummaryMapper)
   extends Mapper[Urn, JsonMapping]
-  with InputValidation[Urn, JsonMapping] {
+    with InputValidation[Urn, JsonMapping] {
 
   override def mapNonEmptyInputs(session: UserSession, inputs: Set[Urn])(implicit context: MappingContext): Future[Map[Urn, JsonMapping]] = {
     val trackUrns = inputs.filter(_.getCollection == "tracks")
@@ -44,7 +46,9 @@ class SearchEntityMapper(okidokiClient: OkidokiClient,
       entities.map {
         entity =>
           val urn = new Urn((entity \ "self" \ "urn").as[String])
-          urn -> entityFor(session, urn, entity, authorizations, followCountsMap, repostsCountsByUrn)
+          urn -> entityFor(session, urn, entity, authorizations,
+            followCountsMap,
+            repostsCountsByUrn)
       }.toMap
     }
   }
@@ -64,5 +68,5 @@ class SearchEntityMapper(okidokiClient: OkidokiClient,
 
   private def authorizationsByUrn(rules: Seq[ContentAuthorization]): Map[Urn, ContentAuthorization] =
     rules.map(rule => rule.getUrn -> rule).toMap
-
 }
+

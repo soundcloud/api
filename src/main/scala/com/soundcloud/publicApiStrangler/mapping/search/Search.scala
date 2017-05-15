@@ -4,9 +4,9 @@ import com.fasterxml.jackson.annotation.{JsonIgnore, JsonValue}
 import com.soundcloud.bff.nextbff.mapper.EmbeddedItem
 import com.soundcloud.bff.nextbff.mapping.JsonMapping
 import com.soundcloud.bff.nextbff.pagination.OffsetBasedPage
-import com.soundcloud.jvmkit.Urn
+import com.soundcloud.jvmkit.module.util.Urn
+import com.soundcloud.publicApiStrangler.client.CommonJsonFormats._
 import com.soundcloud.publicApiStrangler.mapper.search.SearchEntityMapper
-import com.soundcloud.jvmkit.Urn.format
 import play.api.libs.json.{JsObject, JsValue}
 
 trait Pagination[T] {
@@ -34,6 +34,7 @@ trait Faceted {
     facetsJson.map(facet => new JsonMapping(facet) with SearchFacet)
   }
 }
+
 trait Search extends JsonMapping {
   def entityMapper: SearchEntityMapper
 

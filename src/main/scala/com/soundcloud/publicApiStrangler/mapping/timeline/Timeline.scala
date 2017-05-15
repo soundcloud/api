@@ -5,7 +5,7 @@ import java.util.UUID
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.soundcloud.bff.nextbff.mapping.{JsonMapping, MappingContext}
 import com.soundcloud.bff.nextbff.pagination.CursorBasedPage
-import com.soundcloud.jvmkit.Urn
+import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.scalakit.finagle.jsonservice.Params
 import play.api.libs.json.{JsObject, JsValue}
 

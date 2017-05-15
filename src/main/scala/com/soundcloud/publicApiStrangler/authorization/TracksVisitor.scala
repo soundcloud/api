@@ -1,6 +1,6 @@
 package com.soundcloud.publicApiStrangler.authorization
 
-import com.soundcloud.jvmkit.Urn
+import com.soundcloud.jvmkit.module.util.Urn
 import play.api.libs.json.JsValue
 import play.api.libs.json.JsObject
 import play.api.libs.json.JsArray

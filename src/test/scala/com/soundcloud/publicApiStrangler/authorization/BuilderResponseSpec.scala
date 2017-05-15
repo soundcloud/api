@@ -1,6 +1,6 @@
 package com.soundcloud.publicApiStrangler.authorization
 
-import com.soundcloud.bff.test.UnitSpecification
+import com.soundcloud.publicApiStrangler.test.UnitSpecification
 import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures
 
 class BuilderResponseSpec extends UnitSpecification with Fixtures {
@@ -12,7 +12,7 @@ class BuilderResponseSpec extends UnitSpecification with Fixtures {
       BuilderResponse(body).content mustEqual body
     }
     "builds the new response using the specified body" in {
-      val response = BuilderResponse(body).withBody("newbody").build
+      val response = BuilderResponse(body).withBody("newbody")
       response.getContentString mustEqual "newbody"
     }
   }
@@ -28,10 +28,10 @@ class BuilderResponseSpec extends UnitSpecification with Fixtures {
 
     "builds the new response using the specified body" in {
       val newBody = "newbody"
-      val response = BuilderResponse(callbackBody).withBody(newBody).build
+      val response = BuilderResponse(callbackBody).withBody(newBody)
       response.getContentString mustEqual s"""/**/$name($newBody);"""
     }
-    
+
     "supports response with parenthesis" in {
       val body = "this is a (response) with parenthesis"
       val callbackBody = s"""/**/jsonp1407857287982($body);"""

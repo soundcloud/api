@@ -2,8 +2,8 @@ package com.soundcloud.publicApiStrangler.support.mapping
 
 import com.soundcloud.bff.nextbff.mapper.Mapper
 import com.soundcloud.bff.nextbff.mapping.{Mapping, MappingContext}
-import com.soundcloud.bff.test.UnitSpecification
-import com.soundcloud.jvmkit.{Urn, UserSession}
+import com.soundcloud.publicApiStrangler.test.UnitSpecification
+import com.soundcloud.jvmkit.module.util.Urn; import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.twitter.util.{Await, Future}
 
 class IndividualFetchSpec extends UnitSpecification {

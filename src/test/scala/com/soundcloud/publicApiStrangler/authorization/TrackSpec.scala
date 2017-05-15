@@ -1,13 +1,13 @@
 package com.soundcloud.publicApiStrangler.authorization
 
-import com.soundcloud.jvmkit.Urn
-import com.soundcloud.jvmkit.policies.{ContentAuthorization, ContentPolicy, MonetizationModel, Reason}
-import com.soundcloud.scalakit.test.UnitSpecification
+import com.soundcloud.jvmkit.module.util.Urn
+import com.soundcloud.publicApiStrangler.policies._
+import com.soundcloud.publicApiStrangler.test.UnitSpecification
 import play.api.libs.json.{JsObject, Json}
 
 class TrackSpec extends UnitSpecification {
-  MonetizationModel.values().foreach(monetizationModel => {
-    ContentPolicy.values().foreach(contentPolicy => {
+  MonetizationModel.values.foreach(monetizationModel => {
+    ContentPolicy.values.foreach(contentPolicy => {
       s"it serializes with $monetizationModel and $contentPolicy" in new Scope {
         val contentAuthorization = new ContentAuthorization(
           Urn("soundcloud:irrelevant:1"),
@@ -20,11 +20,11 @@ class TrackSpec extends UnitSpecification {
 
         result ==== Json.parse(
           s"""
-            |{
-            |  "something": "else",
-            |  "policy": "${contentPolicy.toString}",
-            |  "monetization_model": "${monetizationModel.toString}"
-            |}""".stripMargin).as[JsObject]
+             |{
+             |  "something": "else",
+             |  "policy": "${contentPolicy.toString}",
+             |  "monetization_model": "${monetizationModel.toString}"
+             |}""".stripMargin).as[JsObject]
       }
     })
   })

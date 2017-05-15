@@ -1,14 +1,16 @@
 package com.soundcloud.publicApiStrangler.client.playlists
 
-import com.soundcloud.jvmkit.Urn
-import com.soundcloud.scalakit.Path
+import com.soundcloud.jvmkit.module.http.client.Params
+import com.soundcloud.jvmkit.module.util.{Path, Urn}
+import com.soundcloud.publicApiStrangler.client.BigJvmKitConversions._
+import com.soundcloud.publicApiStrangler.test.UnitSpecification
 import com.soundcloud.scalakit.finagle.http.{NotFoundStatus, OkStatus}
-import com.soundcloud.scalakit.finagle.jsonservice.{JsonClient, JsonResponse, Params}
-import com.soundcloud.scalakit.test.UnitSpecification
+import com.soundcloud.scalakit.finagle.jsonservice.{JsonClient, JsonResponse}
 import com.twitter.util.{Await, Future}
 import play.api.libs.json.Json
 
 class PlaylistsClientSpec extends UnitSpecification {
+
   trait Context extends Scope {
     val session = PlaylistsClient.session
 
@@ -25,7 +27,7 @@ class PlaylistsClientSpec extends UnitSpecification {
   trait WithServerResponse extends Context {
     val response = mock[JsonResponse]
 
-     moshimoshiClient.get(session, path, params, Params.empty) returns (Future.value(response))
+    moshimoshiClient.get(session, path, params, Params.empty) returns (Future.value(response))
   }
 
   "When all is fine" in new WithServerResponse {
@@ -53,7 +55,7 @@ class PlaylistsClientSpec extends UnitSpecification {
   }
 
   "transport error (or somesuch)" in new Context {
-     moshimoshiClient.get(session, path, params, Params.empty) returns Future.exception(new RuntimeException)
+    moshimoshiClient.get(session, path, params, Params.empty) returns Future.exception(new RuntimeException)
 
     Await.result(client.getPlaylistContainingTrackOwnedByUser(track, owner)) ==== List.empty
   }

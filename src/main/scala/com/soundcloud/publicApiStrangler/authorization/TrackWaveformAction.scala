@@ -1,7 +1,7 @@
 package com.soundcloud.publicApiStrangler.authorization
 
 import com.soundcloud.bff.media.TrackWaveformUrl
-import com.soundcloud.jvmkit.Urn
+import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.publicApiStrangler.authorization.TrackWaveformActionStatus.TrackWaveformActionStatus
 
 /**

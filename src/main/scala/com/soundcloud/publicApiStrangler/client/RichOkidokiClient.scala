@@ -1,22 +1,24 @@
 package com.soundcloud.publicApiStrangler.client
 
-import com.soundcloud.jvmkit.{Urn, UserSession}
-import com.soundcloud.scalakit.Path
+import com.soundcloud.bff.nextbff.mapping.MappingContext
+import com.soundcloud.jvmkit.ModuleConversions.toModuleUrn
+import com.soundcloud.jvmkit.module.util.{Path, Urn}
+import com.soundcloud.jvmkit.module.util.session.UserSession
+import com.soundcloud.publicApiStrangler.client.BigJvmKitConversions._
+import com.soundcloud.publicApiStrangler.client.CommonJsonFormats.urnFormat
+import com.soundcloud.publicApiStrangler.mapping.reposts.RepostsUser
 import com.soundcloud.scalakit.finagle.http._
 import com.soundcloud.scalakit.finagle.jsonservice.{JsonClient, JsonResponse, Params}
-import com.soundcloud.service.client.{OkidokiClient, ResponseHandlers}
+import com.soundcloud.service.client.OkidokiClient
 import com.soundcloud.service.response.mapper._
-import com.soundcloud.publicApiStrangler.mapping.reposts.RepostsUser
-import com.soundcloud.service.response.mapper.spotlight.SpotlightResponseMapper
 import com.soundcloud.service.response.representation._
-import com.soundcloud.bff.nextbff.mapping.MappingContext
 import com.twitter.util.Future
 import play.api.libs.json._
 
 case class DomainLocking(
-  domain: String,
-  urn: Urn,
-  trackUrn: Urn)
+                          domain: String,
+                          urn: Urn,
+                          trackUrn: Urn)
 
 object DomainLocking {
   implicit val reads: Reads[DomainLocking] = new Reads[DomainLocking] {
@@ -36,10 +38,10 @@ object DomainLocking {
 }
 
 case class TrackAudioMetadata(
-  state: String,
-  original_format: Option[String],
-  original_content_size: Option[Long]
-)
+                               state: String,
+                               original_format: Option[String],
+                               original_content_size: Option[Long]
+                             )
 
 object TrackAudioMetadata {
   val FinishedState = "finished"
@@ -60,7 +62,8 @@ class RichOkidokiClient(service: JsonClient) extends OkidokiClient(service) {
         case JsonResponse(SuccessfulStatusClass(_), body, _, _) => body.as[List[DomainLocking]]
         case _ => List.empty
       }
-    } }.map(_.groupBy(_.trackUrn))
+    }
+    }.map(_.groupBy(_.trackUrn))
   }
 
   def fetchTrackAudioMetadata(session: UserSession, trackUrn: Urn): Future[Option[TrackAudioMetadata]] =
@@ -73,7 +76,7 @@ class RichOkidokiClient(service: JsonClient) extends OkidokiClient(service) {
   def fetchTracksAudioMetadata(session: UserSession, trackUrns: Set[Urn], batchSize: Int = 50): Future[Map[Urn, TrackAudioMetadata]] = {
     def parseJson(body: JsValue): List[(Urn, TrackAudioMetadata)] = {
       (body \ "collection").as[List[JsValue]].map(json => {
-        ((json \ "track_urn").as[Urn] -> (json).as[TrackAudioMetadata])
+        ((json \ "track_urn").as[Urn](urnFormat) -> (json).as[TrackAudioMetadata])
       })
     }
 
@@ -83,13 +86,14 @@ class RichOkidokiClient(service: JsonClient) extends OkidokiClient(service) {
         case JsonResponse(SuccessfulStatusClass(_), body, _, _) => parseJson(body)
         case _ => List.empty
       }
-    } }.map(_.toMap)
+    }
+    }.map(_.toMap)
   }
 
   def fetchTrackGeoblockings(session: UserSession, trackUrns: Set[Urn], batchSize: Int = 50): Future[Map[Urn, Geoblockings]] = {
     def parseJson(body: JsValue): List[(Urn, Geoblockings)] = {
       (body \ "collection").as[List[JsValue]].map(json => {
-        ((json \ "track_urn").as[Urn] -> (json \ "geo_blockings").asOpt[List[String]].getOrElse(List.empty))
+        ((json \ "track_urn").as[Urn](urnFormat) -> (json \ "geo_blockings").asOpt[List[String]].getOrElse(List.empty))
       })
     }
 
@@ -100,7 +104,8 @@ class RichOkidokiClient(service: JsonClient) extends OkidokiClient(service) {
         case JsonResponse(_, body, _, _) => List.empty
         case _ => List.empty
       }
-    } }.map(_.toMap)
+    }
+    }.map(_.toMap)
   }
 
   def fetchUsersMap(session: UserSession, urns: Set[Urn], batchSize: Int = 50): Future[Map[Urn, User]] = {
@@ -109,13 +114,14 @@ class RichOkidokiClient(service: JsonClient) extends OkidokiClient(service) {
         case JsonResponse(SuccessfulStatusClass(_), body, _, _) => body.as[List[JsValue]].map(UserMapper(_))
         case _ => List.empty
       }
-    } }.map(_.map(user => (user.urn -> user)).toMap)
+    }
+    }.map(_.map(user => (toModuleUrn(user.urn) -> user)).toMap)
   }
 
   def fetchRepostsUsersWithoutCounts(session: UserSession, urns: Set[Urn], baseUrl: String, batchSize: Int = 50): Future[List[RepostsUser]] = {
     inBatches(urns.toList, batchSize) { urnBatch =>
       service.get(session, Path() / "users" / "fetch",
-                  Params("urns" -> urnBatch), Params.empty).map {
+        Params("urns" -> urnBatch), Params.empty).map {
         case JsonResponse(SuccessfulStatusClass(_), body, _, _) =>
           body.as[List[JsValue]].map { jsonUser =>
             RepostsUser(jsonUser, baseUrl, None, None, None)(new MappingContext(session))

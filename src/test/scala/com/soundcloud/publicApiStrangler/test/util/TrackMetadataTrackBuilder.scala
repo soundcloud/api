@@ -1,6 +1,6 @@
 package com.soundcloud.publicApiStrangler.test.util
 
-import com.soundcloud.jvmkit.Urn
+import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.publicApiStrangler.client.trackmetadata.{Artwork, EmbeddingPermission, Track}
 import org.joda.time.LocalDateTime
 

@@ -1,6 +1,5 @@
 package com.soundcloud.publicApiStrangler
 
-import com.soundcloud.jvmkit.config.AppConfig
 import com.soundcloud.jvmkit.zookeeper.{BasePath, ZkClient}
 import com.soundcloud.testutilities.{GratisMusikDiebstahl, SpinningUpAppSupport}
 import org.apache.curator.framework.CuratorFrameworkFactory
@@ -13,8 +12,6 @@ class RateLimitingSanitySpecification extends Specification with SpinningUpAppSu
   trait Context extends Scope {
     val server = TestServer("strangler", 5000)
     val adminServer = TestServer("strangler", 5001)
-
-    val config = new AppConfig
 
     val zkClient = {
       val zookeeperServers = "zookeeper:2181"

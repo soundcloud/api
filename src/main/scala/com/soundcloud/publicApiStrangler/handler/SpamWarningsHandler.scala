@@ -1,0 +1,20 @@
+package com.soundcloud.publicApiStrangler.handler
+
+import com.soundcloud.jvmkit.module.bff.session.UserAuthentication
+import com.soundcloud.jvmkit.module.http.server.{HandlerRequest, ResponseBuilder}
+import com.soundcloud.publicApiStrangler.client.sketchy.{AckOk, SketchyClient, UnknownError, WarningNotFound}
+import com.twitter.finagle.http.Response
+import com.twitter.util.Future
+
+class SpamWarningsHandler(userAuthenticator: UserAuthentication, sketchyClient: SketchyClient) {
+
+  def handle(request: HandlerRequest): Future[Response] = {
+    userAuthenticator.withLoggedInUser(request) { (session, _) =>
+      sketchyClient.ack(session, request.routeParams("warning_id").toInt).map {
+        case AckOk => ResponseBuilder.ok()
+        case WarningNotFound => ResponseBuilder.notFound()
+        case _: UnknownError => ResponseBuilder.internalServerError()
+      }
+    }
+  }
+}

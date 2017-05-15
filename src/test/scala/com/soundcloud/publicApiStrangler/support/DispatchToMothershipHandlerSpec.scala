@@ -1,7 +1,7 @@
 package com.soundcloud.publicApiStrangler.support
 
-import com.soundcloud.scalakit.finagle.http.{AlwaysMatchesPathMatcher, HandlerRequest}
-import com.soundcloud.scalakit.test.UnitSpecification
+import com.soundcloud.jvmkit.module.http.server.{AlwaysMatchesPathMatcher, HandlerRequest}
+import com.soundcloud.publicApiStrangler.test.UnitSpecification
 import com.twitter.finagle.Service
 import com.twitter.finagle.http._
 import com.twitter.util.{Await, Future}
@@ -18,7 +18,7 @@ class DispatchToMothershipHandlerSpec extends UnitSpecification {
       response.contentString = "body content"
 
       val request = Request(Version.Http11, Method.Connect, "/")
-      val handlerRequest = new HandlerRequest(AlwaysMatchesPathMatcher, request)
+      val handlerRequest = HandlerRequest(AlwaysMatchesPathMatcher, request)
     }
 
     "returns the response verbatim" >> {
@@ -29,11 +29,11 @@ class DispatchToMothershipHandlerSpec extends UnitSpecification {
 
       "for dispatch method" in new Context {
         mothershipClient(any[Request]) returns (Future.value(response))
-        val responseFromBuilder = Await.result(handler.dispatch(request)).build
-        responseFromBuilder.getStatusCode() ==== response.getStatusCode()
-        responseFromBuilder.headerMap.get("header1") ==== Some("valueHeader1")
-        responseFromBuilder.headerMap.get("header2") ==== Some("valueHeader2")
-        responseFromBuilder.getContentString() ==== "body content"
+        val responseFromHandler = Await.result(handler.dispatch(request))
+        responseFromHandler.getStatusCode() ==== response.getStatusCode()
+        responseFromHandler.headerMap.get("header1") ==== Some("valueHeader1")
+        responseFromHandler.headerMap.get("header2") ==== Some("valueHeader2")
+        responseFromHandler.getContentString() ==== "body content"
       }
 
     }
@@ -46,8 +46,8 @@ class DispatchToMothershipHandlerSpec extends UnitSpecification {
 
       "for dispatch method" in new Context {
         mothershipClient(any[Request]) returns (Future.exception(new IllegalStateException))
-        val responseFromBuilder = Await.result(handler.dispatch(request)).build
-        responseFromBuilder.getStatusCode() ==== 500
+        val responseFromHandler = Await.result(handler.dispatch(request))
+        responseFromHandler.getStatusCode() ==== 500
       }
     }
   }

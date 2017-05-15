@@ -1,7 +1,7 @@
 package com.soundcloud.bff.nextbff.pagination
 
-import com.soundcloud.bff.test.UnitSpecification
-import com.soundcloud.jvmkit.Urn
+import com.soundcloud.publicApiStrangler.test.UnitSpecification
+import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.scalakit.finagle.jsonservice.StringParam
 import com.twitter.finagle.http.Request
 

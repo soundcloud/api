@@ -1,12 +1,12 @@
 package com.soundcloud.publicApiStrangler.client.follows
 
-import com.soundcloud.jvmkit.{Urn, UserSession}
-import com.soundcloud.jvmkit.Urn.format
+import com.soundcloud.jvmkit.module.util.{Path, Urn}
+import com.soundcloud.jvmkit.module.util.session.UserSession
+import com.soundcloud.publicApiStrangler.client.BigJvmKitConversions._
 import com.soundcloud.publicApiStrangler.client.follows.mapper._
-import com.soundcloud.publicApiStrangler.client.follows.representation.{FilteredUserUrns, FollowingsPage, UserUrns}
 import com.soundcloud.publicApiStrangler.client.follows.representation.follow._
 import com.soundcloud.publicApiStrangler.client.follows.representation.unfollow._
-import com.soundcloud.scalakit.Path
+import com.soundcloud.publicApiStrangler.client.follows.representation.{FilteredUserUrns, FollowingsPage, UserUrns}
 import com.soundcloud.scalakit.finagle.jsonservice.{JsonClient, Params}
 import com.soundcloud.service.client.FetchClient
 import com.twitter.util.Future
@@ -82,7 +82,7 @@ class FollowsClient(jsonService: JsonClient) extends FetchClient {
     * Returns a list of mutual followings between two users.
     * Returns `None` in case of error.
     */
-  def mutualFollowings(userSession: UserSession, user: Urn, anotherUser: Urn): Future[Option[UserUrns]]  =
+  def mutualFollowings(userSession: UserSession, user: Urn, anotherUser: Urn): Future[Option[UserUrns]] =
     fetchUrns(
       userSession,
       Path() / "users" / user / "mutual_followings" / anotherUser
@@ -173,7 +173,7 @@ class FollowsClient(jsonService: JsonClient) extends FetchClient {
     jsonService.get(
       userSession,
       path,
-      Params("urns" -> candidateUsers),
+      Params("urns" -> toBigJvmKitUrnSeq(candidateUsers)),
       Params.empty
     ).map(SimpleMapper[FilteredUserUrns])
 }

@@ -1,7 +1,7 @@
 package com.soundcloud.bff.nextbff.mapper
 
 import com.soundcloud.bff.nextbff.mapping.{Mapping, MappingContext}
-import com.soundcloud.bff.test.UnitSpecification
+import com.soundcloud.publicApiStrangler.test.UnitSpecification
 
 class EmbeddedListSpec extends UnitSpecification {
 

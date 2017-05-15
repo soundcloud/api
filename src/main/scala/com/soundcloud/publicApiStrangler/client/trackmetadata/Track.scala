@@ -1,10 +1,9 @@
 package com.soundcloud.publicApiStrangler.client.trackmetadata
 
-import com.soundcloud.jvmkit.Urn
-import com.soundcloud.jvmkit.Urn.format
+import com.soundcloud.jvmkit.module.util.Urn
+import com.soundcloud.publicApiStrangler.client.CommonJsonFormats._
 import com.soundcloud.publicApiStrangler.support.HtmlSanitizer
 import org.joda.time.LocalDateTime
-import play.api.data.validation.ValidationError
 import play.api.libs.json._
 
 case class Track(urn: Urn,
@@ -56,12 +55,6 @@ object Artwork {
 }
 
 object Track {
-  implicit val jodaISODateReads: Reads[org.joda.time.LocalDateTime] = new Reads[org.joda.time.LocalDateTime] {
-    def reads(json: JsValue): JsResult[LocalDateTime] = json match {
-      case JsString(s) => JsSuccess(LocalDateTime.parse(s))
-      case _ => JsError(Seq(JsPath() -> Seq(ValidationError("Could not parse datetime value"))))
-    }
-  }
 
   implicit val trackReads: Reads[Track] = Reads { json =>
     try {

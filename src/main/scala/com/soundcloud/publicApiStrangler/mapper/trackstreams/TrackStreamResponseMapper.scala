@@ -1,7 +1,7 @@
 package com.soundcloud.publicApiStrangler.mapper.trackstreams
 
-import com.soundcloud.bff.finagle.ResponseBuilder
 import com.soundcloud.bff.media.MediaUrl
+import com.twitter.finagle.http.Response
 import com.twitter.util.Future
 
 /**
@@ -9,6 +9,6 @@ import com.twitter.util.Future
  */
 trait TrackStreamResponseMapper {
 
-  def map(mediaUrls: Future[Set[MediaUrl]], isHeadRequest: Boolean): Future[ResponseBuilder]
+  def map(mediaUrls: Future[Set[MediaUrl]], isHeadRequest: Boolean): Future[Response]
 
 }

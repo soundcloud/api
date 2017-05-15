@@ -2,7 +2,7 @@ package com.soundcloud.bff.nextbff.mapper
 
 import com.soundcloud.bff.nextbff.mapping.{Mapping, MappingContext}
 import com.soundcloud.bff.nextbff.repository.BulkFetchRepository
-import com.soundcloud.jvmkit.UserSession
+import com.soundcloud.jvmkit.module.util.session.UserSession
 import play.api.libs.json.JsValue
 
 /**

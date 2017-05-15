@@ -1,8 +1,8 @@
 package com.soundcloud.bff.nextbff.mapping
 
 import com.soundcloud.bff.nextbff.mapper.{EmbeddedList, Mapper}
-import com.soundcloud.bff.test.UnitSpecification
-import com.soundcloud.jvmkit.Urn
+import com.soundcloud.publicApiStrangler.test.UnitSpecification
+import com.soundcloud.jvmkit.module.util.Urn
 import language.reflectiveCalls
 
 class MappingSpec extends UnitSpecification {

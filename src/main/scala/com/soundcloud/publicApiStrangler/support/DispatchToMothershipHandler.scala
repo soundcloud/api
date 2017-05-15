@@ -1,25 +1,26 @@
 package com.soundcloud.publicApiStrangler.support
 
-import com.soundcloud.bff.finagle.ResponseBuilder
-import com.soundcloud.scalakit.finagle.http.{HandlerRequest, HttpHandler}
-import com.soundcloud.scalakit.finagle.jsonservice.{JsonRequest, JsonResponse}
+import com.soundcloud.jvmkit.module.http.server.{Handler, HandlerRequest => ModulesHandlerRequest}
+import com.soundcloud.jvmkit.module.util.logging.SoundCloudLoggerFactory
 import com.twitter.finagle.Service
 import com.twitter.finagle.http.{Request, Response, Status}
 import com.twitter.util.Future
 
-import scala.collection.JavaConversions._
+class DispatchToMothershipHandler(mothershipClient: Service[Request, Response]) extends Handler {
 
-class DispatchToMothershipHandler(mothershipClient: Service[Request, Response]) extends HttpHandler {
+  val logger = SoundCloudLoggerFactory.getLogger(getClass)
 
-  override def defaultHandling(handlerRequest: HandlerRequest): Future[Response] = {
+  override def apply(request: ModulesHandlerRequest): Future[Response] = dispatchToMothership(request)
+
+  def dispatchToMothership(handlerRequest: ModulesHandlerRequest): Future[Response] = {
     dispatchToMothership(handlerRequest.request)
   }
 
-  def dispatch(request:Request) : Future[ResponseBuilder] = {
-    dispatchToMothership(request).map(toResponseBuilder)
+  def dispatch(request: Request): Future[Response] = {
+    dispatchToMothership(request)
   }
 
-  def dispatchToMothership(request:Request) : Future[Response] = {
+  def dispatchToMothership(request: Request): Future[Response] = {
     request.host = "api.soundcloud.com"
     mothershipClient(ForwardedRequest(request)).handle {
       case exception: Exception =>
@@ -28,14 +29,6 @@ class DispatchToMothershipHandler(mothershipClient: Service[Request, Response]) 
         response.status = Status.InternalServerError
         response
     }
-  }
-
-  private def toResponseBuilder(response: Response) : ResponseBuilder = {
-    val headerMap = response.headerMap.entrySet().map(entry => (entry.getKey, entry.getValue)).toMap
-    new ResponseBuilder()
-      .status(response.status.code)
-        .body(response.getContentString())
-        .headers(headerMap)
   }
 
 }

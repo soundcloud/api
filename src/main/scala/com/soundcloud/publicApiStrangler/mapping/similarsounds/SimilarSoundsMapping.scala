@@ -3,6 +3,7 @@ package com.soundcloud.publicApiStrangler.mapping.similarsounds
 import com.soundcloud.bff.nextbff.mapper.EmbeddedList
 import com.soundcloud.bff.nextbff.mapping.JsonMapping
 import com.soundcloud.bff.nextbff.pagination.OffsetBasedPage
+import com.soundcloud.jvmkit.ModuleConversions.toModuleUrn
 import com.soundcloud.publicApiStrangler.mapper.search.SearchEntityMapper
 import com.soundcloud.publicApiStrangler.support.mapping.ObjectMapping
 import com.soundcloud.service.response.representation.SimilarSounds
@@ -13,7 +14,7 @@ trait SimilarSoundsMapping extends ObjectMapping[SimilarSounds] {
 
   def searchEntityMapper: SearchEntityMapper
 
-  val collection: EmbeddedList[JsonMapping] = searchEntityMapper.embed(resource.similarTracks.toList)
+  val collection: EmbeddedList[JsonMapping] = searchEntityMapper.embed(resource.similarTracks.toList.map(toModuleUrn))
 
   lazy val next_href = {
     val nextOffset = currentPage.offset + currentPage.limit

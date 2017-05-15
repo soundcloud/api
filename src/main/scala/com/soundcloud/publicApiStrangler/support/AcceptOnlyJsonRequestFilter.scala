@@ -1,20 +1,19 @@
 package com.soundcloud.publicApiStrangler.support
 
-import com.soundcloud.scalakit.finagle.http.RouterResponse
 import com.twitter.finagle.http._
 import com.twitter.finagle.{Service, SimpleFilter}
 import com.twitter.util.Future
 
-class AcceptOnlyJsonRequestFilter(stripXml: () => Future[Boolean]) extends SimpleFilter[Request, RouterResponse] {
+class AcceptOnlyJsonRequestFilter(stripXml: () => Future[Boolean]) extends SimpleFilter[Request, Response] {
 
-  override def apply(request: Request, next: Service[Request, RouterResponse]) = {
+  override def apply(request: Request, next: Service[Request, Response]) = {
     stripFormatParam(request).flatMap {
       case req =>
         if (isJsonRequest(req)) {
           req.accept = "application/json"
           next(req)
         } else
-          Future.value(RouterResponse(Response(Version.Http11, Status.NotAcceptable), "undefined"))
+          Future.value(Response(Version.Http11, Status.NotAcceptable))
     }
   }
 

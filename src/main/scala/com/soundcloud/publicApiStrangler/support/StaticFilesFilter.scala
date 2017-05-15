@@ -1,14 +1,13 @@
 package com.soundcloud.publicApiStrangler.support
 
-import com.soundcloud.bff.finagle.ResponseBuilder
-import com.soundcloud.scalakit.finagle.http.RouterResponse
-import com.twitter.finagle.http.{Method, Request}
+import com.soundcloud.jvmkit.module.http.server.ResponseBuilder
+import com.twitter.finagle.http.{MediaType, Method, Request, Response}
 import com.twitter.finagle.{Service, SimpleFilter}
 import com.twitter.util.Future
 import com.twitter.util.TimeConversions._
 import org.jboss.netty.util.CharsetUtil._
 
-class StaticFilesFilter extends SimpleFilter[Request, RouterResponse] {
+class StaticFilesFilter extends SimpleFilter[Request, Response] {
 
   val crossdomainContents =
     """<?xml version="1.0"?>
@@ -35,7 +34,7 @@ class StaticFilesFilter extends SimpleFilter[Request, RouterResponse] {
     content.getBytes(UTF_8).length.toString
   }
 
-  override def apply(request: Request, next: Service[Request, RouterResponse]) = {
+  override def apply(request: Request, next: Service[Request, Response]) = {
     (request.method, request.path) match {
       case (Method.Get, "/robots.txt") => renderRobots
       case (Method.Get, "/crossdomain.xml") => renderCrossdomain
@@ -43,46 +42,35 @@ class StaticFilesFilter extends SimpleFilter[Request, RouterResponse] {
     }
   }
 
-  private def renderRobots: Future[RouterResponse] = {
-    val responseBuilder = (new ResponseBuilder)
-      .contentType(s"text/plain; charset=UTF-8")
-      .body(robotsContents)
-
-    Map(
-      "Access-Control-Allow-Headers" -> "Accept, Authorization, Content-Type, Origin",
-      "Access-Control-Allow-Methods" -> "GET, PUT, POST, DELETE",
-      "Access-Control-Allow-Origin" -> "*",
-      "Access-Control-Expose-Headers" -> "Date",
-      "Cache-Control" -> s"public, max-age=$oneDayInSeconds",
-      "Content-Length" -> contentLength(robotsContents)).foreach {
-      case (headerName, headerValue) =>
-        responseBuilder.header(headerName, headerValue)
-    }
-
-    Future.value(
-      RouterResponse(responseBuilder.build, "/robots.txt")
+  private def renderRobots: Future[Response] = {
+    Future.value(ResponseBuilder().
+      mediaType(MediaType.PlainText).
+      body(robotsContents).
+      headers(Map(
+        "Access-Control-Allow-Headers" -> "Accept, Authorization, Content-Type, Origin",
+        "Access-Control-Allow-Methods" -> "GET, PUT, POST, DELETE",
+        "Access-Control-Allow-Origin" -> "*",
+        "Access-Control-Expose-Headers" -> "Date",
+        "Cache-Control" -> s"public, max-age=$oneDayInSeconds",
+        "Content-Length" -> contentLength(robotsContents)
+      )).
+      build
     )
   }
 
-  private def renderCrossdomain: Future[RouterResponse] = {
-    val responseBuilder = (new ResponseBuilder)
-      .contentType(s"text/xml")
-      .body(crossdomainContents)
-
-    Map(
-      "Access-Control-Allow-Headers" -> "Accept, Authorization, Content-Type, Origin",
-      "Access-Control-Allow-Methods" -> "GET, PUT, POST, DELETE",
-      "Access-Control-Allow-Origin" -> "*",
-      "Access-Control-Expose-Headers" -> "Date",
-      "Accept-Ranges" -> "bytes",
-      "Cache-Control" -> s"public, max-age=$oneDayInSeconds",
-      "Content-Length" -> contentLength(crossdomainContents)).foreach {
-      case (headerName, headerValue) =>
-        responseBuilder.header(headerName, headerValue)
-    }
-
-    Future.value(
-      RouterResponse(responseBuilder.build, "/crossdomain.xml")
-    )
+  private def renderCrossdomain: Future[Response] = {
+    Future.value(ResponseBuilder().
+      mediaType(MediaType.Xml).
+      body(crossdomainContents).
+      headers(Map(
+        "Access-Control-Allow-Headers" -> "Accept, Authorization, Content-Type, Origin",
+        "Access-Control-Allow-Methods" -> "GET, PUT, POST, DELETE",
+        "Access-Control-Allow-Origin" -> "*",
+        "Access-Control-Expose-Headers" -> "Date",
+        "Accept-Ranges" -> "bytes",
+        "Cache-Control" -> s"public, max-age=$oneDayInSeconds",
+        "Content-Length" -> contentLength(crossdomainContents)
+      ))
+      .build)
   }
 }

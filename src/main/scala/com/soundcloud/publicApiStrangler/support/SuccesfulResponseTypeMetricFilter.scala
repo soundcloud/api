@@ -1,28 +1,27 @@
 package com.soundcloud.publicApiStrangler.support
 
-import com.soundcloud.jvmkit.telemetry.Telemetry
-import com.soundcloud.scalakit.finagle.http.RouterResponse
-import com.soundcloud.scalakit.json.Json
+import com.soundcloud.jvmkit.module.telemetry.Telemetry
 import com.twitter.finagle.http._
 import com.twitter.finagle.{Service, SimpleFilter}
 import com.twitter.util.Try
+import play.api.libs.json.Json
 
-class SuccesfulResponseTypeMetricFilter(telemetry: Telemetry) extends SimpleFilter[Request, RouterResponse] {
+class SuccesfulResponseTypeMetricFilter(telemetry: Telemetry) extends SimpleFilter[Request, Response] {
 
   val successfulResponseTypeCounter = telemetry.counter(
     "successful_response_type_counter",
     "Counter for successful responses",
     "type")
 
-  override def apply(request: Request, next: Service[Request, RouterResponse]) = {
+  override def apply(request: Request, next: Service[Request, Response]) = {
     next(request).map {
-      case response@RouterResponse(underlying, _) =>
-        if (underlying.status == Status.Ok) {
-          if (isXmlResponse(underlying)) {
+      response =>
+        if (response.status == Status.Ok) {
+          if (isXmlResponse(response)) {
             successfulResponseTypeCounter.labels("xml").inc()
-          } else if (isJsonpResponse(underlying)) {
+          } else if (isJsonpResponse(response)) {
             successfulResponseTypeCounter.labels("jsonp").inc()
-          } else if (isJsonResponse(underlying)) {
+          } else if (isJsonResponse(response)) {
             successfulResponseTypeCounter.labels("json").inc()
           } else {
             successfulResponseTypeCounter.labels("undefined").inc()
@@ -41,6 +40,6 @@ class SuccesfulResponseTypeMetricFilter(telemetry: Telemetry) extends SimpleFilt
   }
 
   private def isJsonResponse(underlying: Response): Boolean = {
-    Try(Json.fromString(underlying.contentString)).toOption.isDefined
+    Try(Json.parse(underlying.contentString)).toOption.isDefined
   }
 }

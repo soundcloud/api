@@ -1,8 +1,9 @@
 package com.soundcloud.publicApiStrangler.authorization
 
 import com.soundcloud.bff.services.JsonService
-import com.soundcloud.jvmkit.UserSession
-import com.soundcloud.scalakit.Path
+import com.soundcloud.jvmkit.module.util.Path
+import com.soundcloud.jvmkit.module.util.session.UserSession
+import com.soundcloud.publicApiStrangler.client.BigJvmKitConversions._
 import com.soundcloud.scalakit.finagle.http.OkStatus
 import com.soundcloud.scalakit.finagle.jsonservice.Params
 import com.soundcloud.service.response.mapper.UnhandledResponseException

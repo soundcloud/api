@@ -1,6 +1,6 @@
 package com.soundcloud.publicApiStrangler.client.playlists
 
-import com.soundcloud.jvmkit.Urn
+import com.soundcloud.jvmkit.module.util.Urn
 import play.api.libs.json.{JsResult, JsSuccess, JsValue, Reads}
 
 case class Playlist(userUrn: Urn, secretToken: String)

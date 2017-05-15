@@ -1,6 +1,7 @@
 package com.soundcloud.bff.nextbff.repository
 
-import com.soundcloud.jvmkit.{Urn, UserSession}
+import com.soundcloud.jvmkit.module.util.Urn
+import com.soundcloud.jvmkit.module.util.session.UserSession
 import play.api.libs.json.JsObject
 
 object CachingByUrn {

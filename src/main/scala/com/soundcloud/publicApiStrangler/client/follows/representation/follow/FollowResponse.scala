@@ -1,6 +1,6 @@
 package com.soundcloud.publicApiStrangler.client.follows.representation.follow
 
-import com.soundcloud.jvmkit.Urn
+import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.publicApiStrangler.client.follows.representation.Following
 import play.api.libs.json.JsObject
 

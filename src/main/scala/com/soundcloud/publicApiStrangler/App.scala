@@ -1,614 +1,136 @@
 package com.soundcloud.publicApiStrangler
 
-import com.soundcloud.bff._
-import com.soundcloud.bff.authorization.ContentAuthorizationService
-import com.soundcloud.bff.filter.SessionCache
-import com.soundcloud.bff.media.{MediaUrlsRepository, WaveformUrlsRepository}
-import com.soundcloud.bff.services.{JsonService, ServiceConfig}
-import com.soundcloud.jvmkit.admin.{AdminRoute, RequestMethod}
-import com.soundcloud.jvmkit.config.{ConfigConvention, DataSensitivity}
-import com.soundcloud.jvmkit.module.http.client.config.HttpClientConfig
-import com.soundcloud.jvmkit.rollout.{BasicRolloutFeature, Rollout, RolloutBuilder}
-import com.soundcloud.jvmkit.zookeeper.CuratorFrameworkFactory
-import com.soundcloud.jvmkit.{ResourceName, Urn}
-import com.soundcloud.publicApiStrangler.authorization._
-import com.soundcloud.publicApiStrangler.client._
-import com.soundcloud.publicApiStrangler.client.followcounts.FollowCountsClient
-import com.soundcloud.publicApiStrangler.client.mediaservice.MediaServiceUrlGenClient
-import com.soundcloud.publicApiStrangler.client.playlists.{PlaylistDeletionClient, PlaylistsClient}
-import com.soundcloud.publicApiStrangler.client.pubmese.PubmeseClient
-import com.soundcloud.publicApiStrangler.client.quota.UserQuotaClient
-import com.soundcloud.publicApiStrangler.client.stitch.StitchClient
-import com.soundcloud.publicApiStrangler.client.trackmetadata.TrackmetadataClient
-import com.soundcloud.publicApiStrangler.controller._
-import com.soundcloud.publicApiStrangler.headers.DefaultResponseHeadersFilter
-import com.soundcloud.publicApiStrangler.mapper.liebling.LikeCountMapper
-import com.soundcloud.publicApiStrangler.mapper.search.{SearchEntityMapper, SearchMapper, SearchRepository}
-import com.soundcloud.publicApiStrangler.mapper.similarsounds.SimilarSoundsMapper
-import com.soundcloud.publicApiStrangler.mapper.timeline.e1.{ActivitiesMapper, StreamMapper}
-import com.soundcloud.publicApiStrangler.mapper.timeline.publicApi.ActivitiesWithOriginMapper
-import com.soundcloud.publicApiStrangler.mapper.timeline.{EntityMapper, EntitySummaryMapper, FollowingsTracksMapper}
-import com.soundcloud.publicApiStrangler.mapper.trackstreams.{TrackStreamJsonResponseMapper, TrackStreamRedirectResponseMapper}
-import com.soundcloud.publicApiStrangler.mapper.waveform.WaveformMapper
-import com.soundcloud.publicApiStrangler.service.{TrackAccessibilityService, TrackRepository}
-import com.soundcloud.publicApiStrangler.support._
-import com.soundcloud.ratelimiting.facade._
-import com.soundcloud.scalakit.cache.MemcachedClient
-import com.soundcloud.scalakit.finagle.config.MemcachedClientConfig
-import com.soundcloud.scalakit.finagle.dns.ServiceEntryPoint
-import com.soundcloud.scalakit.finagle.jsonservice.JsonClient
-import com.twitter.util.Future
-import org.eclipse.jetty.server.Handler
-import com.soundcloud.jvmkit.module.http.client.{JsonClient => ModuleJsonClient}
-import com.soundcloud.jvmkit.module.servicediscovery.{ServiceEntryPoint => ModuleServiceEntryPoint}
+import com.soundcloud.jvmkit.config.AppConfig
+import com.soundcloud.jvmkit.module.admin.AdminServer
+import com.soundcloud.jvmkit.module.bff.BffHttpServer
+import com.soundcloud.jvmkit.module.bff.filters.SessionCacheFilter
+import com.soundcloud.jvmkit.module.bff.ratelimiting.facade._
+import com.soundcloud.jvmkit.module.http.server.config.HttpServerConfig
+import com.soundcloud.jvmkit.module.http.server.{HandlerRouterBuilder, ResponseBuilder}
+import com.soundcloud.jvmkit.module.memcached.MemcachedClient
+import com.soundcloud.jvmkit.module.memcached.config.MemcachedClientConfig
+import com.soundcloud.jvmkit.module.rollout.{BasicRolloutFeature, Rollout}
 import com.soundcloud.jvmkit.module.telemetry.{Telemetry => ModuleTelemetry}
-import com.soundcloud.jvmkit.module.util.config.{AppConfig => ModuleAppConfig, ConfigConvention => ModuleConfigConvention}
-import com.soundcloud.jvmkit.module.util.{ResourceName => ModuleResourceName}
+import com.soundcloud.jvmkit.module.util.config.{AppConfig => ModuleAppConfig}
+import com.soundcloud.jvmkit.module.util.{ResourceName => ModuleResourceName, Urn => ModuleUrn}
+import com.soundcloud.jvmkit.module.zookeeper.CuratorFrameworkFactory
+import com.soundcloud.jvmkit.telemetry.{MetricsRegistryImpl, Telemetry}
+import com.soundcloud.publicApiStrangler.Routing._
+import com.soundcloud.publicApiStrangler.authorization._
+import com.soundcloud.publicApiStrangler.headers.DefaultResponseHeadersFilter
+import com.soundcloud.publicApiStrangler.support._
+import com.twitter.finagle.SimpleFilter
+import com.twitter.finagle.http.{Method, Request, Response}
+import com.twitter.util.Future
 
-object App
-  extends BffInjectionBasedApp
-    with AppConfigComponent
-    with OkidokiComponent
-    with TimelineComponent
-    with LieblingComponent
-    with PublicApiClientComponent
-    with FollowsComponent
-    with RepostsComponent
-    with GatekeeperComponent
-    with SimilarSoundsComponent
-    with TrackCoordinatorComponent
-    with SketchyComponent {
+object App extends Handlers with FallbackHandlerConfiguration {
 
-  private val bffApplication = BffApplication(new Urn("soundcloud", "systems", "public-api-strangler"), config.getApplicationResourceName)
+  def config = new AppConfig()
 
-  private val userAuthentication = createUserAuthentication
+  def moduleConfig = new ModuleAppConfig()
 
-  val pubmeseJsonClient =
-    JsonClient(
-      ResourceName("pubmese"),
-      ServiceEntryPoint(config.get(ResourceName("PUBMESE"), ConfigConvention.ADDRESS)),
-      config,
-      telemetry
-    )
-  val pubmeseClient = new PubmeseClient(pubmeseJsonClient)
+  def metricsRegistry = MetricsRegistryImpl.defaultRegistry
 
-  val stitchJsonClient =
-    JsonClient(
-      ResourceName("stitch"),
-      ServiceEntryPoint(config.get(ResourceName("STITCH"), ConfigConvention.ADDRESS)),
-      config,
-      telemetry
-    )
-  val stitchClient = new StitchClient(stitchJsonClient)
+  def telemetry = new Telemetry(config, metricsRegistry)
 
-  val moduleConfig = new ModuleAppConfig()
-  val moduleTelemetry = new ModuleTelemetry(config.getApplicationName, metricsRegistry)
+  def moduleTelemetry = new ModuleTelemetry(config.getApplicationName, metricsRegistry)
 
-  val mediaServiceUrlGenJsonClient =
-    ModuleJsonClient(
-      ModuleServiceEntryPoint(moduleConfig.get(ModuleResourceName("MEDIASERVICE"), ModuleConfigConvention.SRV_RECORD)),
-      HttpClientConfig.from(ModuleResourceName("mediaservice_urlgen"), moduleConfig),
-      moduleTelemetry
-    )
-  val mediaServiceUrlGenClient = new MediaServiceUrlGenClient(mediaServiceUrlGenJsonClient)
+  def main(args: Array[String]): Unit = {
 
-  private val okidokiService = JsonService(
-    ServiceConfig("okidoki", config.get(ResourceName("OKIDOKI"), ConfigConvention.SRV_RECORD), config)
-  )
-  private val mediaService = JsonService(
-    ServiceConfig("mediaservice", config.get(ResourceName("MEDIASERVICE"), ConfigConvention.SRV_RECORD), config)
-  )
-  private val authsyService = JsonService(
-    ServiceConfig("authsy", config.get(ResourceName("AUTHSY"), ConfigConvention.SRV_RECORD), config)
-  )
+    val bffApplication = BffApplication(new ModuleUrn("soundcloud", "systems", "public-api-strangler"), moduleConfig.getApplicationResourceName)
 
-  private val searchService = JsonService(
-    ServiceConfig("search", config.get(ResourceName("SEARCH"), ConfigConvention.SRV_RECORD), config)
-  )
-
-  private val subscriptionsService = JsonService(
-    ServiceConfig("user_subscriptions", config.get(ResourceName("USER_SUBSCRIPTIONS"), ConfigConvention.SRV_RECORD), config)
-  )
-
-  private val stitch4followsService = JsonService(
-    ServiceConfig("stitch4follows", config.get(ResourceName("STITCH4FOLLOWS"), ConfigConvention.SRV_RECORD), config)
-  )
-
-  private val playlistsClient = new PlaylistsClient(
-    JsonClient(
-      ResourceName("playlist"),
-      ServiceEntryPoint(config.get(ResourceName("PLAYLIST"), ConfigConvention.BASE_URL)),
-      config,
-      telemetry)
-  )
-
-  private val followCountsClient = new FollowCountsClient(stitch4followsService, config)
-
-  private val trackmetadataClient = TrackmetadataClient(config, telemetry)
-
-  private val contentAuthorizationRules = new ContentAuthorizationRules(
-    new ContentAuthorizationService(authsyService),
-    new SubscriptionsService(subscriptionsService))
-
-
-  private val waveformUrlsRepo = new WaveformUrlsRepository(okidokiService, mediaService)
-
-  // Whitelist source: http://redash.int.s-cloud.net/queries/632/source
-  private val whitelistedClients: Set[Urn] = Set(
-    "soundcloud:systems:soundcloud", // Agent returned by Authenticator for those with _soundcloud_session cookie
-    "soundcloud:applications:124", // SoundCloud iOS
-    "soundcloud:applications:3152", // SoundCloud Android
-    "soundcloud:applications:3273", // Mobile Soundcloud
-    "soundcloud:applications:3537", // SoundCloud Desktop
-    "soundcloud:applications:43164", // SoundCloud Player Widget
-    "soundcloud:applications:46941", // SoundCloud.com
-    "soundcloud:applications:60973", // SoundCloud Flash Widget
-    "soundcloud:applications:65097", // MobileWeb3
-    "soundcloud:applications:66151", // MobileWeb production
-    "soundcloud:applications:90575", // SoundCloud Visual Embed Player
-    "soundcloud:applications:99561", // SoundCloud Kik Messenger Card
-    "soundcloud:applications:120502", // Twitter Partner
-    "soundcloud:applications:135495", // Mobile Web App
-    "soundcloud:applications:167582", // HEOS by Denon (Production)
-
-    // other whitelisted apps
-    "soundcloud:applications:288860",
-    "soundcloud:applications:271862",
-    "soundcloud:applications:59007",
-    "soundcloud:applications:62023",
-    "soundcloud:applications:265616",
-    "soundcloud:applications:265183"
-  ).map(new Urn(_))
-
-  private val blacklistOfAppIdsForUserSiloing: Set[Urn] =
-    config.get("APP_SILOING_BLACKLIST_APPS", DataSensitivity.NON_SENSITIVE)
-      .split(",")
-      .map(appId => new Urn(appId.trim))
-      .toSet
-
-  private val authorizeContent = new AuthorizeHttpResponse(contentAuthorizationRules, userAuthentication, waveformUrlsRepo, TrackPolicyApplicator(whitelistedClients))
-
-  private val mothershipDispatcher = new DispatchToMothershipHandler(publicApiClient)
-
-  private val baseUrl = config.get("APP_BASE_URL", DataSensitivity.NON_SENSITIVE)
-
-  private val enrichLikesCounts: () => Future[Boolean] =
-    () => rolloutClient.isActive(BasicRolloutFeature("load_user_like_counts_from_liebling"))
-
-  private val userRelatedMothershipDispatcher = new UserRelatedMothershipDispatcher(
-    userAuthentication,
-    mothershipDispatcher,
-    followCountsClient,
-    lieblingClient,
-    enrichLikesCounts,
-    repostsClient
-  )
-
-  private val timelineController = {
-    val entitySummaryMapper = new EntitySummaryMapper(okidokiClient, repostsClient, baseUrl)
-    val entityMapper = new EntityMapper(
-      okidokiClient,
-      lieblingClient,
-      followCountsClient,
-      repostsClient,
-      baseUrl,
-      entitySummaryMapper
-    )
-    val streamMapper = new StreamMapper(timelineClient, entityMapper, entitySummaryMapper)
-    val activitiesMapper = new ActivitiesMapper(timelineClient, entityMapper, entitySummaryMapper)
-    val publicActivitiesMapper = new ActivitiesWithOriginMapper(timelineClient, entityMapper, entitySummaryMapper)
-    val followingsTracksMapper = new FollowingsTracksMapper(timelineClient, entityMapper, entitySummaryMapper)
-    val pagination = new CursorPagination(baseUrl)
-    new TimelineController(userAuthentication, streamMapper, activitiesMapper, publicActivitiesMapper, followingsTracksMapper, pagination)
-  }
-
-  private val curatorFramework = CuratorFrameworkFactory.create(config)
-
-  private val trackStreamsController = {
-    val trackStreamUrlToJsonResponseMapper = new TrackStreamJsonResponseMapper
-    val trackStreamUrlToRedirectMapper = new TrackStreamRedirectResponseMapper
-
-    val mediaUrlsRepository = new MediaUrlsRepository(mediaService)
-    val trackStreamSnipHandler = new TrackStreamHandler(mothershipDispatcher, contentAuthorizationRules, mediaUrlsRepository)
-    val rolloutCheckForSiloingFunc = {
-      val siloingEnabledFeature = BasicRolloutFeature("app-siloing-enabled")
-      () => rolloutClient.isActive(siloingEnabledFeature)
+    val memcachedResourceName = ModuleResourceName("MEMCACHED")
+    lazy val memcachedClient = {
+      MemcachedClient(
+        MemcachedClientConfig.from(memcachedResourceName, moduleConfig),
+        moduleTelemetry)
     }
-    val publicApiSiloing = new PublicApiSiloing(rolloutCheckForSiloingFunc, blacklistOfAppIdsForUserSiloing, telemetry)
 
-    new TrackStreamsController(
-      userAuthentication,
-      trackStreamUrlToJsonResponseMapper,
-      trackStreamUrlToRedirectMapper,
-      trackStreamSnipHandler,
-      publicApiSiloing
-    )
-  }
+    val curatorFramework = CuratorFrameworkFactory.create(moduleConfig, moduleTelemetry)
+    val rateLimitingFacade = {
+      new RateLimitingFacade(
+        bffApplication,
+        curatorFramework,
+        userAuthentication,
+        moduleConfig,
+        moduleTelemetry,
+        memcachedClient,
+        rolloutClient,
+        Some(Seq(RateLimits.playsRateLimiter, RateLimits.searchRateLimiter))
+      )
+    }
 
-  private val tracksController = new TracksController(userAuthentication,
-    trackCoordinatorClient,
-    okidokiClient,
-    mothershipDispatcher,
-    trackmetadataClient)
-
-  lazy val rolloutClient = new RolloutBuilder(config, telemetry).build
-  override lazy val rollout = Some(rolloutClient)
-
-  val richOkidokiClient = new RichOkidokiClient(okidokiJsonClient)
-
-  val userQuotaClient = new UserQuotaClient(okidokiJsonClient)
-
-  val trackAccessibilityService = new TrackAccessibilityService(playlistsClient)
-
-  val trackRepository = new TrackRepository(
-    trackmetadataClient,
-    richOkidokiClient,
-    pubmeseClient,
-    stitchClient,
-    lieblingClient,
-    mediaServiceUrlGenClient,
-    userQuotaClient,
-    trackAccessibilityService
-  )
-
-  val tracksService = new TrackRepresentationsService(
-    trackRepository,
-    trackmetadataClient,
-    richOkidokiClient,
-    pubmeseClient,
-    stitchClient,
-    lieblingClient,
-    mediaServiceUrlGenClient,
-    userQuotaClient,
-    trackAccessibilityService
-  )
-
-  private val singleTrackController = new SingleTrackController(
-      userAuthentication,
-      mothershipDispatcher,
-      tracksService,
-      telemetry
-    )
-
-  private val userTracksController = {
-    val trackMothershipDispatcherWithCounts = new TrackMothershipDispatcherWithCounts(
-      userAuthentication,
-      mothershipDispatcher,
-      stitchClient)
-
-    val shouldUseTrackMetadata = BasicRolloutFeature("track_metadata_for_user_tracks")
-
-    new UserTracksController(
-      userAuthentication,
-      trackMothershipDispatcherWithCounts,
-      tracksService,
-      telemetry,
-      () => rolloutClient.isActive(shouldUseTrackMetadata),
-      baseUrl
-    )
-  }
-
-  val memcachedResourceName = ResourceName("MEMCACHED")
-  lazy val memcachedClient = MemcachedClient(
-    memcachedResourceName,
-    new MemcachedClientConfig(memcachedResourceName, config),
-    config,
-    telemetry)
-
-  private val rateLimitingFacade = new RateLimitingFacade(
-    bffApplication,
-    curatorFramework,
-    userAuthentication,
-    config,
-    telemetry,
-    memcachedClient,
-    rolloutClient,
-    Some(Seq(RateLimits.playsRateLimiter, RateLimits.searchRateLimiter))
-  )
-
-  private val userFollowController = new UserFollowController(
-    userAuthentication,
-    mothershipDispatcher,
-    okidokiClient,
-    followsClient,
-    followCountsClient,
-    repostsClient,
-    baseUrl
-  )
-
-  private val searchEntityMapper = new SearchEntityMapper(
-    okidokiClient,
-    followCountsClient,
-    repostsClient,
-    baseUrl,
-    contentAuthorizationRules,
-    new WaveformMapper(waveformUrlsRepo),
-    new LikeCountMapper(lieblingClient),
-    new EntitySummaryMapper(okidokiClient, repostsClient, baseUrl)
-  )
-
-  private val trackMothershipDispatcherWithCounts = new TrackMothershipDispatcherWithCounts(userAuthentication, mothershipDispatcher, stitchClient)
-
-  private val searchController = {
-    val searchRepository = new SearchRepository(searchService)
-    val searchMapper = new SearchMapper(searchRepository, searchEntityMapper, baseUrl)
-    val mothershipCounter = telemetry.counter(
-      "search_mothership_fallback_total",
-      "Number of requests to search endpoints with missing/invalid query parameters that get propagated to Mothership",
-      "path"
-    )
-
-    new SearchController(
-      userAuthentication,
-      mothershipDispatcher,
-      mothershipCounter,
-      followCountsClient,
-      searchMapper,
-      baseUrl,
-      lieblingClient,
-      userRelatedMothershipDispatcher,
-      trackMothershipDispatcherWithCounts
-    )
-  }
-
-  private val similarSoundsController = {
-    val similarSoundsMapper = new SimilarSoundsMapper(similarSoundsClient, searchEntityMapper)
-    new SimilarSoundsController(
-      userAuthentication,
-      similarSoundsMapper,
-      baseUrl
-    )
-  }
-
-  private val likesController = new LikesController(userRelatedMothershipDispatcher)
-
-  private val friendsController = new FriendsController(userRelatedMothershipDispatcher)
-
-  private val groupsController = new GroupsController(
-    userAuthentication
-  )
-
-  private val suggestedUsersController = new SuggestedUsersController(userRelatedMothershipDispatcher)
-
-  private val repostersController = new RepostersController(userAuthentication,
-                                                            repostsClient,
-                                                            richOkidokiClient,
-                                                            followCountsClient,
-                                                            lieblingClient,
-                                                            enrichLikesCounts)
-
-  private val userController = new UsersController(userRelatedMothershipDispatcher)
-
-
-  val playlistDeletionClient =
-    new PlaylistDeletionClient(
-      ModuleJsonClient(
-        ModuleServiceEntryPoint(moduleConfig.get(ModuleResourceName("OKIDOKI"), ModuleConfigConvention.SRV_RECORD)),
-        HttpClientConfig.from(ModuleResourceName("okidoki"), moduleConfig),
-        moduleTelemetry
-      ))
-
-  private val playlistsController = new PlaylistsController(
-    userAuthentication,
-    playlistDeletionClient,
-    mothershipDispatcher
-  )
-
-  private val resolveController = new ResolveController(
-    mothershipDispatcher
-  )
-
-  private val announcementsController = new AnnouncementsController(
-    mothershipDispatcher
-  )
-
-  private val oAuthController = new OAuthController(
-    mothershipDispatcher
-  )
-
-  private val repostsController = new RepostsController(userAuthentication, repostsClient, mothershipDispatcher)
-
-  private val spamWarningsController = new SpamWarningsController(userAuthentication, sketchyClient)
-
-  private val officialSoundCloudApps = List(
-    new Urn("soundcloud:applications:46941"), // SoundCloud.com (currently being abused) Internal
-    new Urn("soundcloud:applications:124"), // SoundCloud iOS Internal
-    new Urn("soundcloud:applications:3152"), // SoundCloud Android Internal
-    new Urn("soundcloud:applications:3273"), // Mobile Soundcloud Internal
-    new Urn("soundcloud:applications:65097"), // Mobi (new mobile soundcloud) Internal
-    new Urn("soundcloud:applications:-1"), // Classic Internal
-    new Urn("soundcloud:applications:43164"), // SoundCloud Player Widget Internal
-    new Urn("soundcloud:applications:90575"), // SoundCloud Visual Embed Player Internal
-    new Urn("soundcloud:applications:60973"), // SoundCloud Flash Widget Internal
-    new Urn("soundcloud:applications:66151"), // Old mobi web Internal
-    new Urn("soundcloud:applications:3537"), // SoundCloud Desktop Internal
-    new Urn("soundcloud:applications:99561"), // SoundCloud Kik Messenger Card Internal
-    new Urn("soundcloud:applications:120502"), // Twitter Partner Internal
-    new Urn("soundcloud:applications:42975"), // SoundCloud Notifications Internal
-    new Urn("soundcloud:applications:147241"), // SoundCloud Jobs Page Internal
-    new Urn("soundcloud:applications:140141"), // SoundCloud Chromecast Receiver Internal
-    new Urn("soundcloud:applications:179522") // Facebook Partner Internal
-  )
-
-  private val whatToStrangle = {
-    // Endpoints we officially support: https://developers.soundcloud.com/docs/api/reference
-    val officiallySupported = List(
-      """/connect""",
-      """/oauth2/token""",
-      """/users/\d+""",
-      """/tracks/\d+""",
-      """/playlists/\d+""",
-      """/comments/\d+""",
-      """/me""",
-      """/me/connections""",
-      """/me/connections/\d+""",
-      """/apps""",
-      """/resolve""",
-      """/oembed"""
-    )
-
-    // Newly discovered endpoints:
-    val newlyDiscovered = List(
-      """/announcements""",
-      """/search/sounds""",
-      """/search/sets""",
-      """/e1/playlists/\d+/domain-lockings""",
-      """/e1/shorten""",
-      """/i1/comments/\d+/spam""",
-      """/transcodings/.*""",
-      """/me/track_likes/ids""",
-      """/me/playlist_likes/ids""",
-      """/me/shortcuts""",
-      """/me/favorites""",
-      """/me/tracks""",
-      """/me/track_reposts/ids""",
-      """/me/playlist_reposts/ids""",
-      """/me/stats""",
-      """/tracks/\d+/download""",
-      """/tracks/\d+/comments""",
-      """/tracks/\d+/stream""",
-      """/tracks/\d+/streams""",
-      """/tracks/\d+/related""",
-      """/tracks/\d+/groups""",
-      """/i1/tracks/\d+/streams""",
-      """/tracks/[a-zA-Z0-9\-\_]+""",
-      """/tracks/[a-zA-Z0-9\-\_]+/download""",
-      """/tracks/[a-zA-Z0-9\-\_]+/comments""",
-      """/tracks/[a-zA-Z0-9\-\_]+/stream""",
-      """/tracks/[a-zA-Z0-9\-\_]+/streams""",
-      """/tracks/[a-zA-Z0-9\-\_]+/related""",
-      """/i1/tracks/[a-zA-Z0-9\-\_]+/streams""",
-      """/playlists/\d+""",
-      """/playlists/\d+/tracks""",
-      """/playlists/[a-zA-Z0-9\-\_]+""",
-      """/upload/policy""",
-      """/users""",
-      """/users/\d+/groups""",
-      """/users/\d+/favorites""",
-      """/users/\d+/tracks""",
-      """/users/\d+/comments""",
-      """/users/\d+/playlists""",
-      """/users/\d+/web-profiles""",
-      """/users/[a-zA-Z0-9\_\-]+""",
-      """/users/[a-zA-Z0-9\_\-]+/groups""",
-      """/users/[a-zA-Z0-9\-\_]+/favorites""",
-      """/users/[a-zA-Z0-9\-\_]+/tracks""",
-      """/users/[a-zA-Z0-9\-\_]+/comments""",
-      """/users/[a-zA-Z0-9\-\_]+/playlists""",
-      """/users/[a-zA-Z0-9\-\_]+/playlists/\d+""",
-      """/users/[a-zA-Z0-9\-\_]+/web-profiles""",
-      """/users/\d+/followings/not_followed_by/""",
-      """/e1/users/\d+/sounds""",
-      """/e1/users/\d+/likes""",
-
-      // https://github.com/soundcloud/soundcloud/blob/master/config/routes.rb#L228-L238
+    val limitOffsetPaths = Seq(
       """/e1/me/likes""",
-      """/e1/me/sounds""",
-      """/e1/me/reposts""",
-      """/e1/me/track_likes""",
-      """/e1/me/track_reposts""",
       """/e1/me/playlist_likes""",
-      """/e1/me/playlist_reposts""",
-      """/e1/me/track_likes/ids""",
-      """/e1/me/track_reposts/ids""",
       """/e1/me/playlist_likes/ids""",
-      """/e1/me/playlist_reposts/ids""",
+      """/e1/me/track_likes""",
+      """/e1/me/track_likes/ids""",
 
-      // https://github.com/soundcloud/soundcloud/blob/master/config/routes.rb#L240-L246
-      """/i1/me/shortcuts"""
+      """/e1/users/\d+/likes""",
+      """/e1/users/\d+/playlist_likes""",
+      """/e1/users/\d+/playlist_likes/ids""",
+      """/e1/users/\d+/track_likes""",
+      """/e1/users/\d+/track_likes/ids""",
+      """/me/favorites""",
+      """/me/favorites/ids""",
+      """/tracks/\d+/favoriters""",
+      """/users/\d+/favorites""",
+      """/users/\d+/favorites/ids"""
     )
+    val limitOffset = 200
 
-    // Everything else, to be compatible with what we have right now
-    val unknown = List(".*".r)
+    lazy val additionalFilters: List[SimpleFilter[Request, Response]] =
+      List(
+        new StaticFilesFilter,
+        new AcceptOnlyJsonRequestFilter(() => new StripXmlRollout(rolloutClient).stripXml),
+        new OffsetLimitRequestFilter(limitOffsetPaths, limitOffset),
+        new CookieHeaderRemovalFilter,
+        new SessionCacheFilter(userAuthentication),
+        new DefaultResponseHeadersFilter,
+        new ExceptForTrackUploadsFilter(rateLimitingFacade.filter),
+        new ExceptForTrackUploadsFilter(new ContentAuthorizationFilter(authorizeContent)),
+        new SuccesfulResponseTypeMetricFilter(moduleTelemetry)
+      )
 
-    val everything = officiallySupported ++ newlyDiscovered
+    val router = HandlerRouterBuilder()
+      .registerFallback(fallbackHandler)
+      .register(Method.Get, rateLimitingFacade.statusEndpoint, rateLimitingFacade.rateLimitStatusHandler.handle)
+      .register(List.concat(
+        forUserFollowHandler(userFollowHandler),
+        forMothershipDispatcher(mothershipDispatcher),
+        forSingleTrackHandler(singleTrackHandler),
+        forPlaylistHandler(playlistsHandler),
+        forSimilarSoundsHandler(similarSoundsHandler),
+        forTracksHandler(tracksHandler),
+        forUserRelatedMothershipDispatcher(userRelatedMothershipDispatcher),
+        forSearchHandler(searchHandler),
+        forUserTracksHandler(userTracksHandler),
+        forRepostsHandler(repostsHandler),
+        forRepostersHandler(repostersHandler),
+        forSpamWarningsHandler(spamWarningsHandler),
+        forTimelineHandler(timelineHandler),
+        forTrackStreamsHandler(trackStreamsHandler)))
+      .register(Method.Get, "/-/health", (_) => Future.value(ResponseBuilder.ok()))
+      .build
 
-    everything.flatMap { endpoint =>
-      // Wrap regex with start and end anchors. May have .json at the end. May have trailing slash.
-      val patternWithOptionalJsonAndSlash = endpoint + "(\\.json)?/?"
-      val originalPattern = ("^" + patternWithOptionalJsonAndSlash + "$").r
-      val v1Pattern = ("^/v1" + patternWithOptionalJsonAndSlash + "$").r
 
-      // All endpoints may be prefixed with v1 - record these separately
-      List(originalPattern, v1Pattern)
-    } ++ unknown
+    new AdminServer(
+      config = moduleConfig,
+      telemetry = moduleTelemetry,
+      customHandlers = List(
+        (Method.Get, rateLimitingFacade.diagnosticsEndpoint, rateLimitingFacade.rateLimitingDiagnosticsAdminHandler.handle _)
+      ),
+      rollout = rollout
+    ).start()
+
+    BffHttpServer(resourceName = moduleConfig.getApplicationResourceName,
+      config = HttpServerConfig.from(moduleConfig),
+      telemetry = moduleTelemetry,
+      router = router,
+      customFilters = additionalFilters
+    ).start().join()
   }
-
-  private val fallthroughCounter = telemetry.counter(
-    "fallthrough_strangled_by",
-    "Fallthrough requests by the path pattern that strangles them",
-    "method",
-    "path_pattern",
-    "agent_urn"
-  )
-
-  override val fallbackHandler = Some(
-    new SpecificStranglingHandler(mothershipDispatcher,
-      whatToStrangle,
-      officialSoundCloudApps,
-      fallthroughCounter))
-
-  private val limitOffsetPaths = Seq(
-    """/e1/me/likes""",
-    """/e1/me/playlist_likes""",
-    """/e1/me/playlist_likes/ids""",
-    """/e1/me/track_likes""",
-    """/e1/me/track_likes/ids""",
-
-    """/e1/users/\d+/likes""",
-    """/e1/users/\d+/playlist_likes""",
-    """/e1/users/\d+/playlist_likes/ids""",
-    """/e1/users/\d+/track_likes""",
-    """/e1/users/\d+/track_likes/ids""",
-
-    """/me/favorites""",
-    """/me/favorites/ids""",
-    """/tracks/\d+/favoriters""",
-    """/users/\d+/favorites""",
-    """/users/\d+/favorites/ids"""
-  )
-  private val limitOffset = 200
-
-  override lazy val additionalFilters = List(
-    new SuccesfulResponseTypeMetricFilter(telemetry),
-    new ExceptForTrackUploadsFilter(new ContentAuthorizationFilter(authorizeContent)),
-    new ExceptForTrackUploadsFilter(rateLimitingFacade.filter),
-    new DefaultResponseHeadersFilter,
-    new SessionCache(userAuthentication),
-    new CookieHeaderRemovalFilter,
-    new OffsetLimitRequestFilter(limitOffsetPaths, limitOffset),
-    new AcceptOnlyJsonRequestFilter(() => new StripXmlRollout(rolloutClient).stripXml),
-    new StaticFilesFilter
-  )
-
-  override val controllers = Set(
-    timelineController,
-    trackStreamsController,
-    userFollowController,
-    searchController,
-    similarSoundsController,
-    rateLimitingFacade.rateLimitStatusController,
-    tracksController,
-    singleTrackController,
-    userTracksController,
-    likesController,
-    friendsController,
-    groupsController,
-    suggestedUsersController,
-    repostersController,
-    userController,
-    playlistsController,
-    resolveController,
-    announcementsController,
-    oAuthController,
-    repostsController,
-    spamWarningsController
-  )
-
-  override val customAdminHandlers: Seq[(AdminRoute, Handler)] = Seq(
-    new AdminRoute(RequestMethod.GET, "/-/rate-limiting-diagnostics") ->
-      rateLimitingFacade.rateLimitingDiagnosticsAdminHandler
-  )
 }
 
 class StripXmlRollout(rollout: Rollout) {

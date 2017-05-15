@@ -1,11 +1,14 @@
 package com.soundcloud.publicApiStrangler.client.sketchy
 
-import com.soundcloud.jvmkit.UserSession
+import com.soundcloud.jvmkit.module.util.session.UserSession
+import com.soundcloud.publicApiStrangler.client.BigJvmKitConversions._
 import com.soundcloud.scalakit.Path
 import com.soundcloud.scalakit.finagle.FinagleLoggerFactory
 import com.soundcloud.scalakit.finagle.http.{NotFoundStatus, OkStatus}
 import com.soundcloud.scalakit.finagle.jsonservice.{JsonClient, JsonResponse, Params}
-import com.twitter.util.{Future, NonFatal}
+import com.twitter.util.Future
+
+import scala.util.control.NonFatal
 
 class SketchyClient(client: JsonClient) {
 

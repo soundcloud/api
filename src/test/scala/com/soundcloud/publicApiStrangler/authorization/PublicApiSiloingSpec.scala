@@ -1,22 +1,24 @@
 package com.soundcloud.publicApiStrangler.authorization
 
-import com.soundcloud.bff.finagle.{Request, ResponseBuilder}
-import com.soundcloud.jvmkit.{Urn, UserSession, UserSessionBuilder}
-import com.soundcloud.jvmkit.rollout.{Rollout, RolloutFeature}
-import com.soundcloud.jvmkit.telemetry.Telemetry
-import com.soundcloud.jvmkit.test.InMemoryConfig
-import com.soundcloud.scalakit.test.UnitSpecification
-import com.twitter.finagle.http.Status
+import com.soundcloud.jvmkit.module.http.server.ResponseBuilder
+import com.soundcloud.jvmkit.module.rollout.Rollout
+import com.soundcloud.jvmkit.module.telemetry.{MetricsRegistryImpl, Telemetry}
+import com.soundcloud.jvmkit.module.util.Urn
+import com.soundcloud.jvmkit.module.util.config.InMemoryConfig
+import com.soundcloud.jvmkit.module.util.session.UserSessionBuilder
+import com.soundcloud.publicApiStrangler.test.UnitSpecification
+import com.twitter.finagle.http.{Request, Status}
 import com.twitter.util.{Await, Future}
 
 class PublicApiSiloingSpec extends UnitSpecification {
+
   trait Context extends Scope {
 
     protected val request = mock[Request]
     private val rollout = mock[Rollout]
 
     protected def getPublicApiSiloing(blacklist: Set[Urn] = defaultMobileBlacklist) = {
-      new PublicApiSiloing(()=> Future.value(true), blacklist, new Telemetry(new InMemoryConfig))
+      new PublicApiSiloing(() => Future.value(true), blacklist, new Telemetry((new InMemoryConfig).getApplicationName, MetricsRegistryImpl.defaultRegistry))
     }
 
     protected val soundCloudIOSApp = new Urn("soundcloud:applications:124")
@@ -25,7 +27,7 @@ class PublicApiSiloingSpec extends UnitSpecification {
 
     protected def getUserSessionFor(appId: Urn) = new UserSessionBuilder().setAgent(appId).build()
 
-    protected def action = Future.value(new ResponseBuilder().ok)
+    protected def action = Future.value(ResponseBuilder.ok())
   }
 
   "withSiloedUserSession" >> {
@@ -33,14 +35,14 @@ class PublicApiSiloingSpec extends UnitSpecification {
       val mobileSession = getUserSessionFor(soundCloudIOSApp)
       val response = Await.result(getPublicApiSiloing().withSiloedSession(mobileSession)(action))
 
-      response.build.getStatusCode() ==== Status.Unauthorized.code
+      response.getStatusCode() ==== Status.Unauthorized.code
     }
 
     "should successfully process a token issued for the public api" in new Context {
       val publicApiSession = getUserSessionFor(publicApp)
       val response = Await.result(getPublicApiSiloing().withSiloedSession(publicApiSession)(action))
 
-      response.build.getStatusCode() ==== Status.Ok.code
+      response.getStatusCode() ==== Status.Ok.code
     }
   }
 
@@ -52,19 +54,19 @@ class PublicApiSiloingSpec extends UnitSpecification {
 
       val blacklistedSession1 = getUserSessionFor(new Urn("soundcloud:applications:1"))
       val blacklistedResponse1 = Await.result(publicApiSiloing.withSiloedSession(blacklistedSession1)(action))
-      blacklistedResponse1.build.getStatusCode() ==== Status.Unauthorized.code
+      blacklistedResponse1.getStatusCode() ==== Status.Unauthorized.code
 
       val blacklistedSession2 = getUserSessionFor(new Urn("soundcloud:applications:2"))
       val blacklistedResponse2 = Await.result(publicApiSiloing.withSiloedSession(blacklistedSession2)(action))
-      blacklistedResponse2.build.getStatusCode() ==== Status.Unauthorized.code
+      blacklistedResponse2.getStatusCode() ==== Status.Unauthorized.code
 
       val blacklistedSession3 = getUserSessionFor(new Urn("soundcloud:applications:3"))
       val blacklistedResponse3 = Await.result(publicApiSiloing.withSiloedSession(blacklistedSession3)(action))
-      blacklistedResponse3.build.getStatusCode() ==== Status.Unauthorized.code
+      blacklistedResponse3.getStatusCode() ==== Status.Unauthorized.code
 
       val correctSession = getUserSessionFor(new Urn("soundcloud:applications:100"))
       val correctResponse = Await.result(publicApiSiloing.withSiloedSession(correctSession)(action))
-      correctResponse.build.getStatusCode() ==== Status.Ok.code
+      correctResponse.getStatusCode() ==== Status.Ok.code
     }
   }
 }

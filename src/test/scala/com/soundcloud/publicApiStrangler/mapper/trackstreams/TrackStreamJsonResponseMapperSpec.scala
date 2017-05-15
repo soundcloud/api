@@ -1,7 +1,7 @@
 package com.soundcloud.publicApiStrangler.mapper.trackstreams
 
 import com.soundcloud.bff.media.MediaUrl
-import com.soundcloud.bff.test.UnitSpecification
+import com.soundcloud.publicApiStrangler.test.UnitSpecification
 import com.soundcloud.scalakit.Url
 import com.twitter.util.{Await, Future}
 import org.joda.time.DateTime
@@ -27,24 +27,24 @@ class TrackStreamJsonResponseMapperSpec extends UnitSpecification {
 
       "and it is a GET request" >> {
         "return a 200" in new AllUrlsAvailableContext {
-          val response = Await.result(mapper.map(urls, false)).build
+          val response = Await.result(mapper.map(urls, false))
           response.getStatusCode() mustEqual 200
         }
 
         "return all URLs as JSON" in new AllUrlsAvailableContext {
-          val response = Await.result(mapper.map(urls, false)).build
+          val response = Await.result(mapper.map(urls, false))
           response.getContentString() mustEqual """{"http_mp3_128_url":"http://regular","rtmp_mp3_128_url":"http://rtmp","hls_mp3_128_url":"http://hls","preview_mp3_128_url":"http://preview"}"""
         }
       }
 
       "and it is a HEAD request" >> {
         "return a 200" in new AllUrlsAvailableContext {
-          val response = Await.result(mapper.map(urls, true)).build
+          val response = Await.result(mapper.map(urls, true))
           response.getStatusCode() mustEqual 200
         }
 
         "return no body" in new AllUrlsAvailableContext {
-          val response = Await.result(mapper.map(urls, true)).build
+          val response = Await.result(mapper.map(urls, true))
           response.getContentString() mustEqual ""
         }
       }
@@ -58,24 +58,24 @@ class TrackStreamJsonResponseMapperSpec extends UnitSpecification {
 
       "and it is a GET request" >> {
         "return a 404" in new NoUrlsAvailableContext {
-          val response = Await.result(mapper.map(urls, false)).build
+          val response = Await.result(mapper.map(urls, false))
           response.getStatusCode() mustEqual 404
         }
 
         "return an empty body" in new NoUrlsAvailableContext {
-          val response = Await.result(mapper.map(urls, false)).build
+          val response = Await.result(mapper.map(urls, false))
           response.getContentString() mustEqual ""
         }
       }
 
       "and it is a HEAD request" >> {
         "return a 404" in new NoUrlsAvailableContext {
-          val response = Await.result(mapper.map(urls, true)).build
+          val response = Await.result(mapper.map(urls, true))
           response.getStatusCode() mustEqual 404
         }
 
         "return no body" in new NoUrlsAvailableContext {
-          val response = Await.result(mapper.map(urls, true)).build
+          val response = Await.result(mapper.map(urls, true))
           response.getContentString() mustEqual ""
         }
       }

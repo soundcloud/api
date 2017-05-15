@@ -3,7 +3,7 @@ package com.soundcloud.publicApiStrangler.support
 import java.io.InputStream
 import java.net.InetSocketAddress
 
-import com.soundcloud.scalakit.test.UnitSpecification
+import com.soundcloud.publicApiStrangler.test.UnitSpecification
 import com.twitter.finagle.http.{Request, Response}
 import com.twitter.finagle.{Http, Service}
 import com.twitter.util.{Await, Duration, Future}

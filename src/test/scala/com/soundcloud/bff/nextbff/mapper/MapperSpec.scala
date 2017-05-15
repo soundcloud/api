@@ -1,11 +1,12 @@
 package com.soundcloud.bff.nextbff.mapper
 
 import com.soundcloud.bff.nextbff.mapping.{Mapping, MappingContext}
-import com.soundcloud.bff.test.UnitSpecification
-import com.soundcloud.jvmkit.{Urn, UserSession}
+import com.soundcloud.jvmkit.module.util.Urn
+import com.soundcloud.jvmkit.module.util.session.UserSession
+import com.soundcloud.publicApiStrangler.test.UnitSpecification
 import com.twitter.util.{Await, Future}
-import org.specs2.mutable.Before
 import org.mockito.Mockito.when
+import org.specs2.mutable.Before
 
 class MapperSpec extends UnitSpecification {
 
@@ -114,7 +115,9 @@ class MapperSpec extends UnitSpecification {
 
   "Mapper[...]#filter" >> {
     "should yield a mapper that filters out items as per the additional constraint specified" in new MaterializeItemContext {
+
       case class Welp(s: String) extends Mapping
+
       val originalMapper = new Mapper[Int, Welp] {
         override def map(session: UserSession, inputs: Set[Int])(implicit context: MappingContext): Future[Map[Int, Welp]] = Future.value {
           inputs.zip(Seq("ein", "zwei", "hundert").map(Welp)).toMap

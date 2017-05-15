@@ -1,16 +1,17 @@
 package com.soundcloud.publicApiStrangler.client.stitch
 
-import com.soundcloud.jvmkit.{Urn, UserSession}
-import com.soundcloud.jvmkit.Urn.format
+import com.soundcloud.jvmkit.module.util.Urn
+import com.soundcloud.jvmkit.module.util.session.UserSession
+import com.soundcloud.publicApiStrangler.client.BigJvmKitConversions.toBigJvmKitUserSession
+import com.soundcloud.scalakit.Path
 import com.soundcloud.scalakit.finagle.http.OkStatus
 import com.soundcloud.scalakit.finagle.jsonservice.{JsonClient, JsonResponse, Params}
-import com.soundcloud.scalakit.Path
 import com.twitter.util.Future
 import play.api.libs.json.JsValue
 
 class StitchClient(jsonClient: JsonClient) {
   def countsForTrack(session: UserSession, trackUrn: Urn, userUrn: Urn): Future[StitchCounts] = {
-    countsForTracksByUser(session, userUrn, Set(trackUrn)).map(_(trackUrn))
+    countsForTracksByUser(session, userUrn, Set(trackUrn)).map(_ (trackUrn))
   }
 
   def countsForTracksByUser(session: UserSession, userUrn: Urn, trackUrns: Set[Urn], batchSize: Int = 50): Future[Map[Urn, StitchCounts]] = {
@@ -19,7 +20,8 @@ class StitchClient(jsonClient: JsonClient) {
       val keyParam = keys.map(key => s"k=$key").mkString("&")
 
       get(session, params(keyParam), keys)
-    } }.map(_.flatten.toMap)
+    }
+    }.map(_.flatten.toMap)
   }
 
   def countsForTracks(session: UserSession, userToTrackUrns: Set[(Urn, Urn)], batchSize: Int = 50): Future[Map[Urn, StitchCounts]] = {
@@ -28,7 +30,8 @@ class StitchClient(jsonClient: JsonClient) {
       val keyParam = keys.map(key => s"k=$key").mkString("&")
 
       get(session, params(keyParam), keys)
-    } }.map(_.flatten.toMap)
+    }
+    }.map(_.flatten.toMap)
   }
 
   private def get(session: UserSession, params: Params, keys: Set[String]) = {
@@ -76,5 +79,5 @@ class StitchClient(jsonClient: JsonClient) {
   }
 
   private def parseCountFromCatBody(key: String)(catBody: JsValue): Int =
-    ((catBody \ key \ "series")(0) \ "count").asOpt[Int].getOrElse(0)
+    ((catBody \ key \ "series") (0) \ "count").asOpt[Int].getOrElse(0)
 }

@@ -6,12 +6,12 @@ import com.soundcloud.bff.nextbff.pagination.OffsetBasedPage
 import com.soundcloud.bff.nextbff.repository.{IndividualFetchRepository, SafeJsonHandler}
 import com.soundcloud.bff.repository.JsonServiceRepository
 import com.soundcloud.bff.services.JsonService
-import com.soundcloud.jvmkit.UserSession
+import com.soundcloud.jvmkit.module.util.session.UserSession
+import com.soundcloud.publicApiStrangler.client.BigJvmKitConversions._
 import com.soundcloud.publicApiStrangler.mapping.search.{LegacySearch, PaginatedSearch, Search, SearchDispatcherRequest}
 import com.soundcloud.scalakit._
 import com.soundcloud.scalakit.finagle.jsonservice.{Params, StringParam}
 import play.api.libs.json.JsValue
-
 
 class SearchRepository(searchService: JsonService)
   extends JsonServiceRepository(searchService) with SafeJsonHandler with IndividualFetchRepository[OffsetBasedPage[SearchDispatcherRequest]] {

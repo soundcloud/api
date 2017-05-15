@@ -1,6 +1,7 @@
 package com.soundcloud.publicApiStrangler.service
 
-import com.soundcloud.jvmkit.{Urn, UserSession}
+import com.soundcloud.jvmkit.module.util.Urn
+import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.publicApiStrangler.client.playlists.PlaylistsClient
 import com.soundcloud.publicApiStrangler.client.trackmetadata.Track
 import com.twitter.util.Future

@@ -1,9 +1,11 @@
 package com.soundcloud.publicApiStrangler.client.sketchy
 
-import com.soundcloud.jvmkit.UserSession
-import com.soundcloud.scalakit.Path
+import com.soundcloud.jvmkit.module.http.client.Params
+import com.soundcloud.jvmkit.module.util.Path
+import com.soundcloud.jvmkit.module.util.session.{UserSession, UserSessionBuilder}
+import com.soundcloud.publicApiStrangler.client.BigJvmKitConversions._
 import com.soundcloud.scalakit.finagle.http.{InternalServerErrorStatus, NotFoundStatus, OkStatus}
-import com.soundcloud.scalakit.finagle.jsonservice.{JsonClient, JsonResponse, Params}
+import com.soundcloud.scalakit.finagle.jsonservice.{JsonClient, JsonResponse}
 import com.twitter.util.{Await, Future}
 import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
@@ -14,10 +16,11 @@ class SketchyClientSpec extends Specification with Mockito {
 
   trait AckContext extends Scope {
     val jsonClient = mock[JsonClient]
-    val session = mock[UserSession]
+    val session = new UserSessionBuilder().build()
     val client = new SketchyClient(jsonClient)
 
     val warningId = 1
+
     def response: JsonResponse
 
     jsonClient
@@ -28,17 +31,21 @@ class SketchyClientSpec extends Specification with Mockito {
   "#ack" >> {
     "when ack is successful" in new AckContext {
       override def response = JsonResponse(OkStatus, JsNull)
+
       Await.result(client.ack(session, warningId)) ==== AckOk
     }
 
     "when warning is not found" in new AckContext {
       override def response = JsonResponse(NotFoundStatus, JsNull)
+
       Await.result(client.ack(session, warningId)) ==== WarningNotFound
     }
 
     "when an unknown error occurs" in new AckContext {
       lazy val errorBody = JsString("foobar")
+
       override def response = JsonResponse(InternalServerErrorStatus, errorBody)
+
       Await.result(client.ack(session, warningId)) ==== UnknownError(500, errorBody.toString)
     }
   }

@@ -2,8 +2,8 @@ package com.soundcloud.bff.nextbff.repository
 
 import java.util.concurrent.TimeUnit
 
-import com.soundcloud.bff.test.UnitSpecification
-import com.soundcloud.jvmkit.Urn
+import com.soundcloud.publicApiStrangler.test.UnitSpecification
+import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.scalakit.cache.Cache
 import com.soundcloud.scalakit.json.Json
 import com.twitter.util.{Await, Future}

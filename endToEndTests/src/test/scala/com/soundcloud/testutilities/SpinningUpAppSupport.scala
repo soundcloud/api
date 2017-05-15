@@ -1,19 +1,21 @@
 package com.soundcloud.testutilities
 
 import java.net.URL
-import com.soundcloud.scalakit.finagle.http.{SuccessfulStatusClass, StatusCode}
+import java.nio.charset.StandardCharsets
+
+import com.soundcloud.scalakit.finagle.http.{StatusCode, SuccessfulStatusClass}
 import com.soundcloud.scalakit.json.Json
 import com.twitter.finagle
+import com.twitter.finagle.Http
 import com.twitter.finagle.builder.ClientBuilder
 import com.twitter.finagle.http._
 import com.twitter.util.{Await, Duration}
 import org.specs2.mutable.Specification
 import org.specs2.specification.Scope
-import java.nio.charset.StandardCharsets
 
 
-
-trait SpinningUpAppSupport { this: Specification =>
+trait SpinningUpAppSupport {
+  this: Specification =>
 
   trait Context extends Scope {
     def server: TestServer
@@ -27,7 +29,7 @@ trait SpinningUpAppSupport { this: Specification =>
 
     private lazy val client: finagle.Service[Request, Response] = {
       ClientBuilder()
-        .codec(Http())
+        .stack(Http.client)
         .hosts(serverAddress)
         .hostConnectionLimit(25)
         .build()
@@ -85,5 +87,6 @@ trait SpinningUpAppSupport { this: Specification =>
       }
     }
   }
+
 }
 

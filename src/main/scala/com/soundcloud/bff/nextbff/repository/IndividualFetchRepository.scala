@@ -1,6 +1,6 @@
 package com.soundcloud.bff.nextbff.repository
 
-import com.soundcloud.jvmkit.UserSession
+import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.twitter.util.Future
 import play.api.libs.json.JsValue
 

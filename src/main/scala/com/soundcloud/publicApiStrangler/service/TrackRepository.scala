@@ -1,8 +1,10 @@
 package com.soundcloud.publicApiStrangler.service
 
 import com.soundcloud.jvmkit.module.experimental.result.ResultF.joinF
-import com.soundcloud.jvmkit.module.experimental.result.{Bad, Error, Good, Result, ResultF}
-import com.soundcloud.jvmkit.{Urn, UserSession}
+import com.soundcloud.jvmkit.module.experimental.result._
+import com.soundcloud.jvmkit.module.util.Urn
+import com.soundcloud.jvmkit.module.util.session.UserSession
+import com.soundcloud.publicApiStrangler.client.BigJvmKitConversions._
 import com.soundcloud.publicApiStrangler.client.liebling.LieblingClient
 import com.soundcloud.publicApiStrangler.client.mediaservice.{MediaServiceUrlGenClient, WaveformUrl}
 import com.soundcloud.publicApiStrangler.client.pubmese.{Isrc, PubmeseClient}
@@ -11,7 +13,9 @@ import com.soundcloud.publicApiStrangler.client.stitch.{StitchClient, StitchCoun
 import com.soundcloud.publicApiStrangler.client.trackmetadata.{Track, TrackmetadataClient}
 import com.soundcloud.publicApiStrangler.client.{DomainLocking, RichOkidokiClient, TrackAudioMetadata}
 import com.soundcloud.service.response.representation.{Geoblockings, User}
-import com.twitter.util.{Future, NonFatal}
+import com.twitter.util.Future
+
+import scala.util.control.NonFatal
 
 class TrackRepository(trackmetadataClient: TrackmetadataClient,
                       okidokiClient: RichOkidokiClient,
@@ -92,6 +96,7 @@ class TrackRepository(trackmetadataClient: TrackmetadataClient,
   private def toResult[T](future: Future[T], errorMessage: String): Future[Result[T]] = {
     future.map(Good(_)).handle { case NonFatal(e) => Bad(Error(errorMessage, e)) }
   }
+
   private def toResult[T](future: Future[T], default: T): Future[Result[T]] = {
     future
       .map(Good(_))
