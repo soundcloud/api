@@ -4,7 +4,6 @@ import com.soundcloud.jvmkit.module.experimental.result.ResultF.joinF
 import com.soundcloud.jvmkit.module.experimental.result._
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSession
-import com.soundcloud.publicApiStrangler.client.BigJvmKitConversions._
 import com.soundcloud.publicApiStrangler.client.liebling.LieblingClient
 import com.soundcloud.publicApiStrangler.client.mediaservice.{MediaServiceUrlGenClient, WaveformUrl}
 import com.soundcloud.publicApiStrangler.client.pubmese.{Isrc, PubmeseClient}
@@ -12,7 +11,7 @@ import com.soundcloud.publicApiStrangler.client.quota.UserQuotaClient
 import com.soundcloud.publicApiStrangler.client.stitch.{StitchClient, StitchCounts}
 import com.soundcloud.publicApiStrangler.client.trackmetadata.{Track, TrackmetadataClient}
 import com.soundcloud.publicApiStrangler.client.{DomainLocking, RichOkidokiClient, TrackAudioMetadata}
-import com.soundcloud.service.response.representation.{Geoblockings, User}
+import com.soundcloud.publicApiStrangler.representation.{Geoblockings, User}
 import com.twitter.util.Future
 
 import scala.util.control.NonFatal

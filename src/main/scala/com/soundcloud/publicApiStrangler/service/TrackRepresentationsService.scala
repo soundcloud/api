@@ -11,15 +11,11 @@ import com.soundcloud.publicApiStrangler.client.stitch.{StitchClient, StitchCoun
 import com.soundcloud.publicApiStrangler.service.{TrackAccessibilityService, TrackPagination, TrackRepository, TrackRepresentationBuilder}
 
 import scala.util.control.NonFatal
-
-// FIXME: Do not use result types from Track Coordinator
-import com.soundcloud.jvmkit.ModuleConversions._
-import com.soundcloud.publicApiStrangler.client.BigJvmKitConversions._
 import com.soundcloud.publicApiStrangler.client.RichOkidokiClient
 import com.soundcloud.publicApiStrangler.client.trackcoordinator.datatypes.{Result, NotFound => TrackNotFound, Success => SuccessResult}
 import com.soundcloud.publicApiStrangler.client.trackmetadata.TrackmetadataClient
 import com.soundcloud.publicApiStrangler.representation._
-import com.soundcloud.service.response.representation._
+import com.soundcloud.publicApiStrangler.representation.trackmetadata.TrackRepresentationLike
 import com.twitter.util.Future
 
 class TrackRepresentationsService(trackRepository: TrackRepository,

@@ -1,24 +1,24 @@
 package com.soundcloud.bff.nextbff.pagination
 
-import com.soundcloud.scalakit.finagle.jsonservice.Params
+import com.soundcloud.jvmkit.module.http.client.Params
 import com.twitter.finagle.http.Request
 
 /**
- * Allows to create pages specifying default values.
- */
-case class PageBuilder[T] private (
-  request: Request,
-  param: T,
-  baseUrl: String,
-  limit: Option[Int] = None,
-  extraParams: Params = Params.empty) {
+  * Allows to create pages specifying default values.
+  */
+case class PageBuilder[T] private(
+                                   request: Request,
+                                   param: T,
+                                   baseUrl: String,
+                                   limit: Option[Int] = None,
+                                   extraParams: Params = Params.empty) {
 
   private val defaultLimit = 10
 
   /**
-   * If the limit isn't specified during builder creation and the request
-   * doesn't have a limit param, this default limit is used
-   */
+    * If the limit isn't specified during builder creation and the request
+    * doesn't have a limit param, this default limit is used
+    */
   def defaultLimit(defaultLimit: Int) =
     limit match {
       case None => this.copy(limit = Some(defaultLimit))
@@ -26,15 +26,15 @@ case class PageBuilder[T] private (
     }
 
   /**
-   * Allow the specific params to be forwarded to the repository.
-   */
+    * Allow the specific params to be forwarded to the repository.
+    */
   def allowExtraParams(names: Set[String]) =
     this.copy(extraParams = request.params.filterKeys(names.contains))
 
   /**
-   * Builds an offset based page. It uses the standard offset
-   * if the request doesn't have the 'offset' param.
-   */
+    * Builds an offset based page. It uses the standard offset
+    * if the request doesn't have the 'offset' param.
+    */
   def buildOffsetBased(standardOffset: Int = 0) =
     OffsetBasedPage(
       param,
@@ -45,9 +45,9 @@ case class PageBuilder[T] private (
       limitWithFallbacks)
 
   /**
-   * Builds a cursor based page. It uses the standard cursor
-   * if the request doesn't have the 'cursor' param.
-   */
+    * Builds a cursor based page. It uses the standard cursor
+    * if the request doesn't have the 'cursor' param.
+    */
   def buildCursorBased(standardCursor: Option[String] = None) =
     CursorBasedPage(
       param,
@@ -70,8 +70,8 @@ case class PageBuilder[T] private (
 object PageBuilder {
 
   /**
-   * Creates the PageBuilder.
-   */
+    * Creates the PageBuilder.
+    */
   def apply[T](request: Request, baseUrl: String)(param: T): PageBuilder[T] =
     PageBuilder(request, param, baseUrl)
 }

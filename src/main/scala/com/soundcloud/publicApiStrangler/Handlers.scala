@@ -1,6 +1,5 @@
 package com.soundcloud.publicApiStrangler
 
-import com.soundcloud.bff.media.MediaUrlsRepository
 import com.soundcloud.jvmkit.module.rollout.BasicRolloutFeature
 import com.soundcloud.publicApiStrangler.authorization.PublicApiSiloing
 import com.soundcloud.publicApiStrangler.handler._
@@ -10,6 +9,7 @@ import com.soundcloud.publicApiStrangler.mapper.timeline.e1.{ActivitiesMapper, S
 import com.soundcloud.publicApiStrangler.mapper.timeline.publicApi.ActivitiesWithOriginMapper
 import com.soundcloud.publicApiStrangler.mapper.timeline.{EntityMapper, EntitySummaryMapper, FollowingsTracksMapper}
 import com.soundcloud.publicApiStrangler.mapper.trackstreams.{TrackStreamJsonResponseMapper, TrackStreamRedirectResponseMapper}
+import com.soundcloud.publicApiStrangler.media.MediaUrlsRepository
 import com.soundcloud.publicApiStrangler.support.{CursorPagination, DispatchToMothershipHandler, TrackStreamHandler}
 
 trait Handlers extends Clients {

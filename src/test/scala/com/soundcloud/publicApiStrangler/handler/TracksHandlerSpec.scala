@@ -5,22 +5,21 @@ import com.soundcloud.jvmkit.module.http.server.ResponseBuilder
 import com.soundcloud.jvmkit.module.util.session.UserSessionBuilder
 import com.soundcloud.jvmkit.module.util.{Geo, Urn}
 import com.soundcloud.publicApiStrangler.Routing
-import com.soundcloud.publicApiStrangler.client.BigJvmKitConversions.{toBigJvmKitUrn, toBigJvmKitUserSession}
+import com.soundcloud.publicApiStrangler.authorization.Track
+import com.soundcloud.publicApiStrangler.client.OkidokiClient
 import com.soundcloud.publicApiStrangler.client.trackcoordinator.TrackCoordinatorClient
 import com.soundcloud.publicApiStrangler.client.trackcoordinator.datatypes.{ClientError, NotFound, ServerError, Success}
 import com.soundcloud.publicApiStrangler.client.trackmetadata.{TrackmetadataClient, Track => TMTrack}
 import com.soundcloud.publicApiStrangler.support.DispatchToMothershipHandler
-import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures
+import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures._
 import com.soundcloud.publicApiStrangler.test.util.TrackMetadataTrackBuilder
 import com.soundcloud.publicApiStrangler.test.{HandlerSpecificationScope, UnitSpecification}
-import com.soundcloud.service.client.OkidokiClient
-import com.soundcloud.service.response.representation.Track
 import com.twitter.finagle.http.{Request, Status}
 import com.twitter.util.Future
 import org.mockito.Mockito.when
 import play.api.libs.json.{JsObject, Json}
 
-class TracksHandlerSpec extends UnitSpecification with Fixtures {
+class TracksHandlerSpec extends UnitSpecification {
 
   trait Context extends HandlerSpecificationScope {
     val fallback = mock[DispatchToMothershipHandler]
@@ -43,7 +42,7 @@ class TracksHandlerSpec extends UnitSpecification with Fixtures {
     override def routingDefinitions = Routing.forTracksHandler(handler)
 
     trackCoordinator.deleteTrack(session, trackUrn) returns Future(Success(()))
-    okidoki.fetch(===(toBigJvmKitUserSession(session)), ===(Set(toBigJvmKitUrn(userUrn)))) returns Future(List(user))
+    okidoki.fetch(===(session), ===(Set(userUrn))) returns Future(List(user))
     when(fallback.dispatch(any[Request])).thenReturn(Future.value(ResponseBuilder.ok()))
     when(trackmetadataClient.track(session, trackUrn)).thenReturn(trackmetadataResponse)
   }

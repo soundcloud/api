@@ -1,6 +1,6 @@
 package com.soundcloud.publicApiStrangler.mapping
 
-import com.soundcloud.bff.media.TrackWaveformUrl
+import com.soundcloud.publicApiStrangler.media.TrackWaveformUrl
 import com.soundcloud.publicApiStrangler.support.mapping.ObjectMapping
 
 trait Waveform extends ObjectMapping[TrackWaveformUrl] {

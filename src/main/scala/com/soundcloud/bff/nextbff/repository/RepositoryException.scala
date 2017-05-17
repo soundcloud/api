@@ -1,13 +1,12 @@
 package com.soundcloud.bff.nextbff.repository
 
-import com.soundcloud.scalakit.finagle.http.StatusCode
-import com.soundcloud.scalakit.finagle.jsonservice.JsonResponse
+import com.twitter.finagle.http.{Response, Status}
 
-case class RepositoryException(status: StatusCode, message: String) extends Exception(message)
+case class RepositoryException(status: Status, message: String) extends Exception(message)
 
 object RepositoryException {
-  def apply(jsonResponse: JsonResponse) =
+  def apply(response: Response) =
     new RepositoryException(
-      jsonResponse.status, s"invalid response received: [status=${jsonResponse.status.s}, json=${jsonResponse.body}]"
+      response.status, s"invalid response received: [status=${response.statusCode}, body=${response.contentString}]"
     )
 }

@@ -1,0 +1,9 @@
+package com.soundcloud.publicApiStrangler.representation
+
+sealed trait UpdatePlaylistResponse
+
+case class OkUpdatePlaylistResponse(playlist: Playlist) extends UpdatePlaylistResponse
+
+case object NotAuthorizedUpdatePlaylistResponse extends UpdatePlaylistResponse
+
+case object InvalidUrnUpdatePlaylistResponse extends UpdatePlaylistResponse

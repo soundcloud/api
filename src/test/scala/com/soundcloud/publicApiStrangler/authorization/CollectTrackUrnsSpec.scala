@@ -2,9 +2,9 @@ package com.soundcloud.publicApiStrangler.authorization
 
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.publicApiStrangler.test.UnitSpecification
-import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures
+import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures._
 
-class CollectTrackUrnsSpec extends UnitSpecification with Fixtures {
+class CollectTrackUrnsSpec extends UnitSpecification {
 
   "extract urns from json" >> {
     "single track" in {

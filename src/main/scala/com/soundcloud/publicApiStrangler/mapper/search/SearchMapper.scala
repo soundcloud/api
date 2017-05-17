@@ -1,27 +1,36 @@
 package com.soundcloud.publicApiStrangler.mapper.search
 
+import java.net.URLDecoder
+
 import com.soundcloud.bff.nextbff.mapper.FetchMapper
 import com.soundcloud.bff.nextbff.mapping.{JsonMapping, MappingContext}
 import com.soundcloud.bff.nextbff.pagination.OffsetBasedPage
 import com.soundcloud.bff.nextbff.repository.{IndividualFetchRepository, SafeJsonHandler}
-import com.soundcloud.bff.repository.JsonServiceRepository
-import com.soundcloud.bff.services.JsonService
+import com.soundcloud.jvmkit.module.http.client.{JsonClient, Param, Params, StringParam, UrnParam, UrnsParam}
+import com.soundcloud.jvmkit.module.util.Path
+import com.soundcloud.jvmkit.module.util.http.HeadersBuilder
 import com.soundcloud.jvmkit.module.util.session.UserSession
-import com.soundcloud.publicApiStrangler.client.BigJvmKitConversions._
 import com.soundcloud.publicApiStrangler.mapping.search.{LegacySearch, PaginatedSearch, Search, SearchDispatcherRequest}
-import com.soundcloud.scalakit._
-import com.soundcloud.scalakit.finagle.jsonservice.{Params, StringParam}
 import play.api.libs.json.JsValue
 
-class SearchRepository(searchService: JsonService)
-  extends JsonServiceRepository(searchService) with SafeJsonHandler with IndividualFetchRepository[OffsetBasedPage[SearchDispatcherRequest]] {
+class SearchRepository(searchService: JsonClient) extends SafeJsonHandler with IndividualFetchRepository[OffsetBasedPage[SearchDispatcherRequest]] {
 
-  override def fetch(session: UserSession, input: OffsetBasedPage[SearchDispatcherRequest]) =
-    fetch(session,
+  override def fetch(session: UserSession, input: OffsetBasedPage[SearchDispatcherRequest]) = {
+    val decodedParams = createParams(session, input).map {
+      case (k, urn@UrnParam(_)) => (k, urn: Param)
+      case (k, urns@UrnsParam(_)) => (k, urns: Param)
+      case (k, param) => (k, param.value.map(URLDecoder.decode(_, "utf-8")).head: Param)
+    }
+    val headers = input.param.searchHeaders.foldLeft(new HeadersBuilder) {
+      case (builder, (key, value)) => builder.set(key, value)
+    }.build
+
+    searchService.getWithSession(session,
       input.param.searchPath,
-      createParams(session, input),
-      input.param.searchHeaders)
+      decodedParams,
+      headers)
       .map(toJsonObject).map(Option(_))
+  }
 
   def createParams(session: UserSession, input: OffsetBasedPage[SearchDispatcherRequest]): Params = {
     val dispatcherRequest = input.param

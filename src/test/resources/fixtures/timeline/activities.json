@@ -1,98 +1,87 @@
 {
   "events": [
     {
-      "type": "track:repost",
-      "timestamp": "2014\/10\/16 11:58:25 +0000",
-      "urn": "soundcloud:tracks:128163998",
-      "actor": "soundcloud:users:69099281",
-      "target": "soundcloud:users:8478647",
-      "cursor": "41d51624-6140-0000-6191-c98a01a7ddc9",
-      "unique_id": "1"
-    },
-    {
-      "type": "track:comment",
-      "timestamp": "2014\/10\/16 11:58:23 +0000",
-      "urn": "soundcloud:comments:205752728",
-      "actor": "soundcloud:users:69099281",
-      "target": "soundcloud:users:8478647",
-      "cursor": "41d51622-7200-0000-638e-28d5b8b053b7",
-      "unique_id": "2"
-    },
-    {
-      "type": "playlist:repost",
-      "timestamp": "2014\/10\/16 11:57:36 +0000",
-      "urn": "soundcloud:playlists:44437439",
-      "actor": "soundcloud:users:69099281",
-      "target": "soundcloud:users:8478647",
-      "cursor": "41d51620-2d80-0000-63ea-8323e7ecda37",
-      "unique_id": "3"
-    },
-    {
-      "type": "playlist:like",
-      "timestamp": "2014\/10\/16 11:57:36 +0000",
-      "urn": "soundcloud:playlists:44437439",
-      "actor": "soundcloud:users:69099281",
-      "target": "soundcloud:users:8478647",
-      "cursor": "41d51615-dec0-0000-6398-f610d7c4c853",
-      "unique_id": "4"
+      "type": "user:follow",
+      "timestamp": "2014\/10\/16 11:15:36 +0000",
+      "urn": "soundcloud:affiliations:2910934039",
+      "actor": "soundcloud:users:51884110",
+      "target": "soundcloud:users:2",
+      "unique_id": "31fa1a4528d507f5e990e2aa16c27cdd206fb9c5"
     },
     {
       "type": "user:follow",
-      "timestamp": "2014\/10\/13 09:28:52 +0000",
-      "urn": "soundcloud:affiliations:2902555363",
-      "actor": "soundcloud:users:117609137",
-      "target": "soundcloud:users:8478647",
-      "cursor": "41d51610-b480-0000-61d5-9c2cde87c853",
-      "unique_id": "5"
+      "timestamp": "2014\/10\/16 10:41:17 +0000",
+      "urn": "soundcloud:affiliations:2910883112",
+      "actor": "soundcloud:users:9231696",
+      "target": "soundcloud:users:2",
+      "unique_id": "ae9270b6ba3a8ac561b0819f3401641d18e62210"
     },
     {
       "type": "user:follow",
-      "timestamp": "2014\/09\/16 14:34:41 +0000",
-      "urn": "soundcloud:affiliations:2831253281",
-      "actor": "soundcloud:users:113761656",
-      "target": "soundcloud:users:8478647",
-      "cursor": "41d51610-9900-0000-6198-f6109a86c853",
-      "unique_id": "6"
-    },
-    {
-      "type": "playlist:like",
-      "timestamp": "2014\/09\/04 22:50:15 +0000",
-      "urn": "soundcloud:playlists:41636896",
-      "actor": "soundcloud:users:8478647",
-      "target": "soundcloud:users:8478647",
-      "cursor": "41d5160f-c000-0000-61f6-9d3ff4f9c753",
-      "unique_id": "7"
-    },
-    {
-      "type": "playlist:like",
-      "timestamp": "2014\/09\/04 22:50:11 +0000",
-      "urn": "soundcloud:playlists:37770183",
-      "actor": "soundcloud:users:8478647",
-      "target": "soundcloud:users:8478647",
-      "cursor": "41d5160f-1bc0-0000-63ea-e65c80c3c652",
-      "unique_id": "8"
+      "timestamp": "2014\/10\/16 10:12:33 +0000",
+      "urn": "soundcloud:affiliations:2910840679",
+      "actor": "soundcloud:users:118173391",
+      "target": "soundcloud:users:2",
+      "unique_id": "e5944ab826e1f140fe1aaa5290c0623f77f1500f"
     },
     {
       "type": "user:follow",
-      "timestamp": "2014\/08\/08 15:54:08 +0000",
-      "urn": "soundcloud:affiliations:2725319448",
-      "actor": "soundcloud:users:1269856",
-      "target": "soundcloud:users:8478647",
-      "cursor": "41d5160d-05c0-0000-6187-f1ae05f3cec7",
-      "unique_id": "9"
+      "timestamp": "2014\/10\/16 09:12:10 +0000",
+      "urn": "soundcloud:affiliations:2910757499",
+      "actor": "soundcloud:users:84333538",
+      "target": "soundcloud:users:2",
+      "unique_id": "056c3510178d941477525a8162e88cd3c73c9dd9"
     },
     {
-      "type": "track:like",
-      "timestamp": "2014\/08\/04 09:59:46 +0000",
-      "urn": "soundcloud:tracks:128163998",
-      "actor": "soundcloud:users:69099281",
-      "target": "soundcloud:users:8478647",
-      "cursor": "41d5160c-5ac0-0000-61dc-d68a12e0c3c7",
-      "unique_id": "10"
+      "type": "user:follow",
+      "timestamp": "2014\/10\/16 08:22:25 +0000",
+      "urn": "soundcloud:affiliations:2910692327",
+      "actor": "soundcloud:users:12749331",
+      "target": "soundcloud:users:2",
+      "unique_id": "c71009d0f344fd6fef9e1bb4c903653595349b98"
+    },
+    {
+      "type": "user:follow",
+      "timestamp": "2014\/10\/16 08:12:10 +0000",
+      "urn": "soundcloud:affiliations:2910679591",
+      "actor": "soundcloud:users:104123583",
+      "target": "soundcloud:users:2",
+      "unique_id": "28170af43dfda7b5cfa2a08f082121c66580783f"
+    },
+    {
+      "type": "user:follow",
+      "timestamp": "2014\/10\/16 05:32:27 +0000",
+      "urn": "soundcloud:affiliations:2910457682",
+      "actor": "soundcloud:users:6924504",
+      "target": "soundcloud:users:2",
+      "unique_id": "a374c3a06cc2b68ea0aeddca3156c84ffee524d6"
+    },
+    {
+      "type": "user:follow",
+      "timestamp": "2014\/10\/16 05:26:12 +0000",
+      "urn": "soundcloud:affiliations:2910448877",
+      "actor": "soundcloud:users:118275680",
+      "target": "soundcloud:users:2",
+      "unique_id": "3c1b7af165c006a37acb2e98426fbc417051d6b3"
+    },
+    {
+      "type": "user:follow",
+      "timestamp": "2014\/10\/16 05:22:06 +0000",
+      "urn": "soundcloud:affiliations:2910442839",
+      "actor": "soundcloud:users:26749678",
+      "target": "soundcloud:users:2",
+      "unique_id": "7f2b40e0b2a5e9bfa6cfac605cf256ebcf7d2f17"
+    },
+    {
+      "type": "user:follow",
+      "timestamp": "2014\/10\/16 05:09:12 +0000",
+      "urn": "soundcloud:affiliations:2910423364",
+      "actor": "soundcloud:users:64555361",
+      "target": "soundcloud:users:2",
+      "unique_id": "25e32cf070dd26864ed7727df65e048e164f89b5"
     }
   ],
   "meta": {
-    "previous_page_cursor":"41d51624-6140-0000-6191-c98a01a7ddc9",
-    "next_page_cursor": "41d51546-b500-0000-61e0-02e5d7b15300"
+    "next_page_cursor": "4743715188899840000AaeGS5B7EkubrCgI="
   }
 }

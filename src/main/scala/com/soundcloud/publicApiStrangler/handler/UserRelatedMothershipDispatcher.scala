@@ -1,7 +1,7 @@
 package com.soundcloud.publicApiStrangler.handler
 
 import com.soundcloud.jvmkit.module.bff.session.UserAuthentication
-import com.soundcloud.jvmkit.module.http.server.{HandlerRequest => ModulesHandlerRequest}
+import com.soundcloud.jvmkit.module.http.server.HandlerRequest
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.publicApiStrangler.client.followcounts.{FollowCounts, FollowCountsClient}
@@ -12,7 +12,7 @@ import com.soundcloud.publicApiStrangler.support.DispatchToMothershipHandler
 import com.twitter.finagle.http.Response
 import com.twitter.util.{Future, Try}
 import play.api.libs.json.Json.JsValueWrapper
-import play.api.libs.json.{JsArray, JsObject, JsValue, Json}
+import play.api.libs.json._
 
 /**
   * This class is weird. It grew out of this abstraction:
@@ -42,7 +42,7 @@ class UserRelatedMothershipDispatcher(userAuthentication: UserAuthentication,
                                       shouldLoadCountsFromLiebling: () => Future[Boolean],
                                       repostsClient: RepostsClient) {
 
-  def dispatchToMothership(request: ModulesHandlerRequest): Future[Response] = {
+  def dispatchToMothership(request: HandlerRequest): Future[Response] = {
     userAuthentication.withUserSession(request) { session =>
       mothershipDispatcher.dispatchToMothership(request.request).flatMap(response => {
         lazy val defaultResponse = Future.value(response)
@@ -126,7 +126,7 @@ class UserRelatedMothershipDispatcher(userAuthentication: UserAuthentication,
 
   private def injectKeys(json: JsValue, fn: Int => Seq[(String, JsValueWrapper)]): JsValue = {
     json \ "collection" match {
-      case collection: JsArray =>
+      case JsDefined(collection: JsArray) =>
         json.as[JsObject] ++ Json.obj("collection" -> injectKeys(collection, fn))
 
       case _ => json match {
@@ -140,7 +140,7 @@ class UserRelatedMothershipDispatcher(userAuthentication: UserAuthentication,
 
   private def injectKeysIntoUser(jsValue: JsValue, fn: Int => Seq[(String, JsValueWrapper)]): JsValue = {
     jsValue \ "user" match {
-      case user: JsObject =>
+      case JsDefined(user: JsObject) =>
         jsValue.as[JsObject] ++ Json.obj("user" -> injectKeysIntoUser(user, fn))
 
       case _ =>
@@ -157,7 +157,7 @@ class UserRelatedMothershipDispatcher(userAuthentication: UserAuthentication,
 
   private def extractUserUrns(json: JsValue): Set[Urn] = {
     json \ "collection" match {
-      case collection: JsArray => extractUserUrns(collection)
+      case JsDefined(collection: JsArray) => extractUserUrns(collection)
 
       case _ => json match {
         case JsArray(values) => extractUserUrnsFromList(values)

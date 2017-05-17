@@ -1,0 +1,39 @@
+    {
+        "artwork_url": null,
+        "created_at": "2014/07/07 13:32:46 +0000",
+        "description": "",
+        "duration": 2206478654,
+        "embeddable_by": "all",
+        "genre": "",
+        "id": 42703821,
+        "label_id": null,
+        "label_name": "",
+        "license": "all-rights-reserved",
+        "likes_count": 0,
+        "original_artwork_url": null,
+        "permalink": "dub-dub-dub",
+        "permalink_url": "https://soundcloud.com/h_freeman/sets/dub-dub-dub",
+        "public": true,
+        "purchase_title": null,
+        "purchase_url": null,
+        "release": "",
+        "release_date": "",
+        "release_day": null,
+        "release_month": null,
+        "release_year": null,
+        "reposts_count": 0,
+        "secret_token": "s-TCEjG",
+        "self": {
+            "url": "outdated-url",
+            "urn": "soundcloud:sets:42703821"
+        },
+        "sharing": "public",
+        "streamable": true,
+        "tag_list": "",
+        "title": "dub dub dub dub",
+        "track_count": 1,
+        "user": {
+            "url": "http://moshimoshi.int.s-cloud.net/users/10419549",
+            "urn": "soundcloud:users:10419549"
+        }
+    }

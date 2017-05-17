@@ -1,12 +1,13 @@
 package com.soundcloud.publicApiStrangler.test
 
+import com.soundcloud.jvmkit.module.http.server.JsonResponseBuilder
 import com.soundcloud.jvmkit.module.util.session.{AnonymousUserSession, LoggedInUserSession, UserSessionBuilder}
 import com.soundcloud.jvmkit.module.util.{Geo, Urn}
-import com.soundcloud.publicApiStrangler.test.util.{GlobalJsonFiles, JsonFiles}
+import com.twitter.finagle.http.{HeaderMap, Status}
 import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
 import org.specs2.specification.BeforeAfterEach
-import play.api.libs.json.JsValue
+import play.api.libs.json.{JsValue, Json}
 
 import scala.collection.JavaConversions._
 import scala.reflect.ClassTag
@@ -36,12 +37,7 @@ trait UnitSpecification extends Specification with BeforeAfterEach with Mockito 
     .setScopes(someScopes)
     .build.asInstanceOf[AnonymousUserSession]
 
-
-  lazy val fixtureFiles: JsonFiles = GlobalJsonFiles
-
-  def withContentsOf(prefix: String, name: String): JsValue = fixtureFiles.load(s"$prefix/$name") match {
-    case Some(contents) => contents
-    case None => throw new IllegalStateException(s"File [$prefix/$name] not found")
-  }
+  def jsonResponse(status: Status, json: JsValue, headers: HeaderMap = HeaderMap()) =
+    JsonResponseBuilder().status(status).body(Json.stringify(json)).headers(headers.toMap).build
 
 }

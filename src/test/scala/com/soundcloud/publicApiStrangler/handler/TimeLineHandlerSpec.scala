@@ -2,12 +2,11 @@ package com.soundcloud.publicApiStrangler.handler
 
 import com.soundcloud.bff.nextbff.mapper.{EmbeddedItem, Mapper}
 import com.soundcloud.bff.nextbff.mapping.{JsonMapping, MappingContext}
-import com.soundcloud.jvmkit.{UserSession => BigJvmKitUserSession}
 import com.soundcloud.jvmkit.module.bff.testsupport.FakeUserAuthentication
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.publicApiStrangler.Routing
-import com.soundcloud.publicApiStrangler.client.BigJvmKitConversions._
+import com.soundcloud.publicApiStrangler.client.TimelineJsonClient
 import com.soundcloud.publicApiStrangler.client.followcounts.FollowCounts
 import com.soundcloud.publicApiStrangler.mapper.timeline.e1.{ActivitiesMapper, StreamMapper}
 import com.soundcloud.publicApiStrangler.mapper.timeline.publicApi.ActivitiesWithOriginMapper
@@ -15,7 +14,6 @@ import com.soundcloud.publicApiStrangler.mapper.timeline.{EntityMapper, EntitySu
 import com.soundcloud.publicApiStrangler.mapping.timeline.{Playlist, Track, User}
 import com.soundcloud.publicApiStrangler.support.CursorPagination
 import com.soundcloud.publicApiStrangler.test.{HandlerSpecificationScope, UnitSpecification}
-import com.soundcloud.services.timeline.TimelineJsonClient
 import com.twitter.util.Future
 
 class TimeLineHandlerSpec extends UnitSpecification {
@@ -69,11 +67,11 @@ class TimeLineHandlerSpec extends UnitSpecification {
 
     override def routingDefinitions = Routing.forTimelineHandler(handler)
 
-    timelineClient.activities(any[BigJvmKitUserSession], any[Option[String]], any[Int], any[Boolean], any[Option[String]])
+    timelineClient.activities(any[UserSession], any[Option[String]], any[Int], any[Boolean], any[Option[String]])
       .returns(Future.value(timeline))
-    timelineClient.stream(any[BigJvmKitUserSession], any[Option[String]], any[Int], any[Boolean], any[Option[String]])
+    timelineClient.stream(any[UserSession], any[Option[String]], any[Int], any[Boolean], any[Option[String]])
       .returns(Future.value(timeline))
-    timelineClient.followingsTracks(any[BigJvmKitUserSession], any[Option[String]], any[Int], any[Boolean], any[Option[String]])
+    timelineClient.followingsTracks(any[UserSession], any[Option[String]], any[Int], any[Boolean], any[Option[String]])
       .returns(Future.value(onlyTracksTimeline))
   }
 
@@ -88,7 +86,7 @@ class TimeLineHandlerSpec extends UnitSpecification {
       response.statusCode ==== 200
       response.contentString ==== timelineJsonString(endpoint)
 
-      there was one(timelineClient).activities(===(toBigJvmKitUserSession(session)), any[Option[String]], any[Int], any[Boolean], any[Option[String]])
+      there was one(timelineClient).activities(===(session), any[Option[String]], any[Int], any[Boolean], any[Option[String]])
     }
   }
 
@@ -103,7 +101,7 @@ class TimeLineHandlerSpec extends UnitSpecification {
       response.statusCode ==== 200
       response.contentString ==== streamTimelineJsonString(endpoint)
 
-      there was one(timelineClient).stream(===(toBigJvmKitUserSession(session)), any[Option[String]], any[Int], any[Boolean], any[Option[String]])
+      there was one(timelineClient).stream(===(session), any[Option[String]], any[Int], any[Boolean], any[Option[String]])
     }
   }
 
@@ -129,7 +127,7 @@ class TimeLineHandlerSpec extends UnitSpecification {
       response.statusCode ==== 200
       response.contentString ==== publicCompleteTimelineJsonString(endpoint)
 
-      there was one(timelineClient).stream(===(toBigJvmKitUserSession(session)), any[Option[String]], any[Int], any[Boolean], any[Option[String]])
+      there was one(timelineClient).stream(===(session), any[Option[String]], any[Int], any[Boolean], any[Option[String]])
     }
   }
 
@@ -144,7 +142,7 @@ class TimeLineHandlerSpec extends UnitSpecification {
       response.statusCode ==== 200
       response.contentString ==== tracksOnlyTimelineJsonString()
 
-      there was one(timelineClient).followingsTracks(===(toBigJvmKitUserSession(session)), any[Option[String]], any[Int], any[Boolean], any[Option[String]])
+      there was one(timelineClient).followingsTracks(===(session), any[Option[String]], any[Int], any[Boolean], any[Option[String]])
     }
   }
 

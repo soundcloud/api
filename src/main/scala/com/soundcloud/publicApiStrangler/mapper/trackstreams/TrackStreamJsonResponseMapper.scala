@@ -1,7 +1,7 @@
 package com.soundcloud.publicApiStrangler.mapper.trackstreams
 
-import com.soundcloud.bff.media.MediaUrl
 import com.soundcloud.jvmkit.module.http.server.{JsonResponseBuilder, ResponseBuilder}
+import com.soundcloud.publicApiStrangler.media.MediaUrl
 import com.twitter.finagle.http.Response
 import com.twitter.util.Future
 import play.api.libs.json.Json

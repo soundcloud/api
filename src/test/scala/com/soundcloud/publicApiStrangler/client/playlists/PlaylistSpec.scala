@@ -1,8 +1,8 @@
 package com.soundcloud.publicApiStrangler.client.playlists
 
 import com.soundcloud.jvmkit.module.util.Urn
-import com.soundcloud.scalakit.json.Json
 import com.soundcloud.publicApiStrangler.test.UnitSpecification
+import play.api.libs.json.Json
 
 class PlaylistSpec extends UnitSpecification {
   "reads from JSON" >> {
@@ -56,7 +56,7 @@ class PlaylistSpec extends UnitSpecification {
         |}
       """.stripMargin
 
-    val playlist = Json.fromString(json).as[Playlist]
+    val playlist = Json.parse(json).as[Playlist]
 
     playlist.userUrn ==== Urn("soundcloud:users:123")
     playlist.secretToken ==== "s-YZzGa"

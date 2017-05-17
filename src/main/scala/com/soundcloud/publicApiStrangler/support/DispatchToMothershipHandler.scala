@@ -1,6 +1,6 @@
 package com.soundcloud.publicApiStrangler.support
 
-import com.soundcloud.jvmkit.module.http.server.{Handler, HandlerRequest => ModulesHandlerRequest}
+import com.soundcloud.jvmkit.module.http.server.{Handler, HandlerRequest}
 import com.soundcloud.jvmkit.module.util.logging.SoundCloudLoggerFactory
 import com.twitter.finagle.Service
 import com.twitter.finagle.http.{Request, Response, Status}
@@ -10,9 +10,9 @@ class DispatchToMothershipHandler(mothershipClient: Service[Request, Response]) 
 
   val logger = SoundCloudLoggerFactory.getLogger(getClass)
 
-  override def apply(request: ModulesHandlerRequest): Future[Response] = dispatchToMothership(request)
+  override def apply(request: HandlerRequest): Future[Response] = dispatchToMothership(request)
 
-  def dispatchToMothership(handlerRequest: ModulesHandlerRequest): Future[Response] = {
+  def dispatchToMothership(handlerRequest: HandlerRequest): Future[Response] = {
     dispatchToMothership(handlerRequest.request)
   }
 

@@ -1,0 +1,107 @@
+{
+  "city": "Berlin",
+  "country_code": "DE",
+  "first_name": "Eric",
+  "permalink": "eric",
+  "tracks_count": 349,
+  "username": "Eric",
+  "country": "Germany",
+  "full_name": "Eric Wahlforss",
+  "created_at": "2007/07/20 16:07:00 +0000",
+  "activated_at": "2007/07/20 14:08:00 +0000",
+  "last_seen_at": "2013/08/22 23:35:08 +0000",
+  "followers_count": 22737,
+  "followings_count": 1430,
+  "public_favorites_count": 850,
+  "self": {
+    "urn":"soundcloud:users:10419549",
+    "url":"http://moshimoshi.int.s-cloud.net/users/10419549"
+  },
+  "primary_email": "eric@wahlforss.com",
+  "groups_count": 6,
+  "links": [
+    {
+      "created_at": "2012/04/13 16:52:02 +0000",
+      "id": 7749139,
+      "network": "personal",
+      "title": "My Blog",
+      "updated_at": "2012/04/13 16:52:02 +0000",
+      "url": "http://eric.wahlforss.com",
+      "user_id": 2,
+      "username": ""
+    },
+    {
+      "created_at": "2012/04/13 16:52:02 +0000",
+      "id": 7749140,
+      "network": "facebook",
+      "title": null,
+      "updated_at": "2012/04/13 16:52:02 +0000",
+      "url": "http://www.facebook.com/ericwahlforss",
+      "user_id": 2,
+      "username": "ericwahlforss"
+    },
+    {
+      "created_at": "2012/04/13 16:52:02 +0000",
+      "id": 7749141,
+      "network": "twitter",
+      "title": null,
+      "updated_at": "2012/04/13 16:52:02 +0000",
+      "url": "http://twitter.com/ericw",
+      "user_id": 2,
+      "username": "ericw"
+    },
+    {
+      "created_at": "2012/04/13 16:52:02 +0000",
+      "id": 7749142,
+      "network": "lastfm",
+      "title": null,
+      "updated_at": "2012/04/13 16:52:02 +0000",
+      "url": "http://www.last.fm/user/ericwahlforss",
+      "user_id": 2,
+      "username": "ericwahlforss"
+    },
+    {
+      "created_at": "2012/04/13 16:52:02 +0000",
+      "id": 7749143,
+      "network": "tumblr",
+      "title": null,
+      "updated_at": "2012/04/13 16:52:02 +0000",
+      "url": "http://wahlforss.tumblr.com/",
+      "user_id": 2,
+      "username": "wahlforss"
+    },
+    {
+      "created_at": "2012/04/13 16:52:02 +0000",
+      "id": 7749144,
+      "network": "youtube",
+      "title": null,
+      "updated_at": "2012/04/13 16:52:02 +0000",
+      "url": "http://www.youtube.com/ericw",
+      "user_id": 2,
+      "username": ""
+    }
+  ],
+  "plan": "Pro Unlimited",
+  "quota": {
+    "seconds_used": 31425.621
+  },
+  "avatar_url": "http://i1.sndcdn.com/avatars-000006111783-xqaxy3-large.jpg?16b9957",
+  "original_avatar_url": "http://i1.sndcdn.com/avatars-000006111783-xqaxy3-original.jpg?16b9957",
+  "permalink_url": "http://soundcloud.com/eric",
+  "description": "Founder/CTO SoundCloud.\r\nMusician under the alias http://soundcloud.com/forss",
+  "frozen": false,
+  "favoriting_note": "Digging this!",
+  "publishing_note": "New sounds!",
+  "subscriptions": [
+    {
+      "recurring": false,
+      "product": {
+        "name": "Pro Unlimited",
+        "urn": "soundcloud:products:creator-pro-unlimited"
+      }
+    }
+  ],
+  "updated_at":"2014/05/16 02:43:00 +0000",
+  "date_of_birth": "1979/10/16",
+  "verified": true
+}

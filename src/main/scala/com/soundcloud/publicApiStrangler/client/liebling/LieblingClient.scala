@@ -1,13 +1,12 @@
 package com.soundcloud.publicApiStrangler.client.liebling
 
-import com.soundcloud.jvmkit.module.util.Urn
+import com.soundcloud.jvmkit.module.http.client.{JsonClient, Params}
+import com.soundcloud.jvmkit.module.util.http.Headers
+import com.soundcloud.jvmkit.module.util.{Path, Urn}
 import com.soundcloud.jvmkit.module.util.logging.SoundCloudLoggerFactory
 import com.soundcloud.jvmkit.module.util.session.UserSession
-import com.soundcloud.publicApiStrangler.client.BigJvmKitConversions._
 import com.soundcloud.publicApiStrangler.client.CommonJsonFormats.urnFormat
-import com.soundcloud.scalakit.Path
-import com.soundcloud.scalakit.finagle.jsonservice.{Params, _}
-import com.soundcloud.service.client.{FetchClient, ResponseHandlers}
+import com.soundcloud.publicApiStrangler.client.{FetchClient, ResponseHandlers}
 import com.twitter.util.Future
 import play.api.libs.json.{JsObject, Json, Reads, Writes}
 
@@ -33,7 +32,7 @@ class LieblingClient(jsonClient: JsonClient) extends FetchClient {
     }
 
   def userTotalLikeCount(session: UserSession, urns: Seq[Urn]): Future[List[UserTotalLikes]] = {
-    fetchLikes(session, Path() / "users_counts", Map("for_urns" -> toBigJvmKitUrnSeq(urns)))
+    fetchLikes(session, Path() / "users_counts", Map("for_urns" -> urns))
       .map(json => (json \ "users").as[List[UserTotalLikes]])
       .rescue {
         case NonFatal(ex) =>
@@ -46,7 +45,7 @@ class LieblingClient(jsonClient: JsonClient) extends FetchClient {
     val fetch: (Seq[Urn]) => Future[UserLikesCount] = batch => fetchLikes(
       session,
       Path() / "likes_info",
-      Map("for_urns" -> toBigJvmKitUrnSeq(batch), "includes" -> "likes_counts,liked_track_urns", "user_urn" -> toBigJvmKitUrn(user))
+      Map("for_urns" -> batch, "includes" -> "likes_counts,liked_track_urns", "user_urn" -> user)
     ).map(_.as[UserLikesCount])
     val combine: (UserLikesCount, UserLikesCount) => UserLikesCount = {
       case (ulc1, ulc2) =>
@@ -69,7 +68,7 @@ class LieblingClient(jsonClient: JsonClient) extends FetchClient {
     }).map(defaultLikes ++ _)
   }
 
-  private def fetchLikes(session: UserSession, path: Path, params: Params, headers: Params = Params.empty): Future[JsObject] =
+  private def fetchLikes(session: UserSession, path: Path, params: Params, headers: Headers = Headers.empty): Future[JsObject] =
     fetch(
       jsonClient,
       session,

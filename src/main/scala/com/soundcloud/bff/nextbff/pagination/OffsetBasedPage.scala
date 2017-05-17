@@ -1,6 +1,6 @@
 package com.soundcloud.bff.nextbff.pagination
 
-import com.soundcloud.scalakit.finagle.jsonservice.Params
+import com.soundcloud.jvmkit.module.http.client.Params
 import com.twitter.finagle.http.Request
 
 /**

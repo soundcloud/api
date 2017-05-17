@@ -6,8 +6,8 @@ import com.soundcloud.publicApiStrangler.client.pubmese.Isrc
 import com.soundcloud.publicApiStrangler.client.stitch.StitchCounts
 import com.soundcloud.publicApiStrangler.client.trackmetadata.Track
 import com.soundcloud.publicApiStrangler.client.{DomainLocking, TrackAudioMetadata}
-import com.soundcloud.publicApiStrangler.representation.{TrackRepresentation, TrackRepresentationAttachmentsUriDecorator, TrackRepresentationCommentCountDecorator, TrackRepresentationCountsDecorator, TrackRepresentationDomainLockingsDecorator, TrackRepresentationGeoblockingsDecorator, TrackRepresentationLabelDecorator, TrackRepresentationLike, TrackRepresentationQuotaDecorator, TrackRepresentationSecretTokenDecorator, TrackRepresentationSecretTokenUriParamDecorator, TrackRepresentationUserFavoriteDecorator, TrackRepresentationUserPlaybackCountDecorator, TrackRepresentationWaveformUrlDecorator}
-import com.soundcloud.service.response.representation.{Geoblockings, User}
+import com.soundcloud.publicApiStrangler.representation.trackmetadata._
+import com.soundcloud.publicApiStrangler.representation._
 
 class TrackRepresentationBuilder {
   def build(sessionUser: Option[Urn],

@@ -6,9 +6,9 @@ import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.publicApiStrangler.Routing
 import com.soundcloud.publicApiStrangler.mapper.similarsounds.SimilarSoundsMapper
 import com.soundcloud.publicApiStrangler.mapping.similarsounds.SimilarSoundsMapping
+import com.soundcloud.publicApiStrangler.representation.SimilarSounds
 import com.soundcloud.publicApiStrangler.support.mapping.ObjectMappingMock
 import com.soundcloud.publicApiStrangler.test.{HandlerSpecificationScope, UnitSpecification}
-import com.soundcloud.service.response.representation.SimilarSounds
 import com.twitter.util.Future
 import org.jboss.netty.handler.codec.http.HttpResponseStatus
 import org.mockito.Mockito.{verify, when}

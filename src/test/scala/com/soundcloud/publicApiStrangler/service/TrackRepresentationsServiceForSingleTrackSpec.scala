@@ -2,7 +2,6 @@ package com.soundcloud.publicApiStrangler
 
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.{UserSession, UserSessionBuilder}
-import com.soundcloud.publicApiStrangler.client.BigJvmKitConversions._
 import com.soundcloud.publicApiStrangler.client.liebling.{LieblingClient, UserLikesCount}
 import com.soundcloud.publicApiStrangler.client.mediaservice.{MediaServiceUrlGenClient, WaveformUrl}
 import com.soundcloud.publicApiStrangler.client.playlists.{Playlist, PlaylistsClient}
@@ -12,11 +11,11 @@ import com.soundcloud.publicApiStrangler.client.stitch.{StitchClient, StitchCoun
 import com.soundcloud.publicApiStrangler.client.trackcoordinator.datatypes.{NotFound, Success}
 import com.soundcloud.publicApiStrangler.client.trackmetadata.{Artwork, EmbeddingPermission, Track, TrackmetadataClient}
 import com.soundcloud.publicApiStrangler.client.{DomainLocking, RichOkidokiClient, TrackAudioMetadata}
-import com.soundcloud.publicApiStrangler.representation.{TrackRepresentation, TrackRepresentationLike}
+import com.soundcloud.publicApiStrangler.representation.{Geoblockings, User}
+import com.soundcloud.publicApiStrangler.representation.trackmetadata.TrackRepresentationLike
+import com.soundcloud.publicApiStrangler.representation.trackmetadata.{TrackRepresentation, TrackRepresentationLike}
 import com.soundcloud.publicApiStrangler.service.{TrackAccessibilityService, TrackRepository}
 import com.soundcloud.publicApiStrangler.test.UnitSpecification
-import com.soundcloud.scalakit.json.Json
-import com.soundcloud.service.response.representation.{Geoblockings, User}
 import com.twitter.util.{Await, Future}
 import org.joda.time.LocalDateTime
 import org.mockito.Mockito._
@@ -349,7 +348,7 @@ class TrackRepresentationsServiceForSingleTrackSpec extends UnitSpecification {
     val trackRepLike = Await.result(tracksService.track(session, trackUrn, None))
     trackRepLike match {
       case Success(rep) =>
-        Json.toJsValue(rep) \ "isrc" ==== JsNull
+        Json.toJson(rep) \ "isrc" ==== JsDefined(JsNull)
     }
   }
 
@@ -361,7 +360,7 @@ class TrackRepresentationsServiceForSingleTrackSpec extends UnitSpecification {
     val trackRepLike = Await.result(tracksService.track(session, trackUrn, None))
     trackRepLike match {
       case Success(rep) =>
-        Json.toJsValue(rep).as[JsObject].keys.contains("available_country_codes") ==== false
+        Json.toJson(rep).as[JsObject].keys.contains("available_country_codes") ==== false
     }
   }
 
@@ -373,7 +372,7 @@ class TrackRepresentationsServiceForSingleTrackSpec extends UnitSpecification {
     val trackRepLike = Await.result(tracksService.track(session, trackUrn, None))
     trackRepLike match {
       case Success(rep) =>
-        Json.toJsValue(rep).as[JsObject].keys.contains("available_country_codes") ==== false
+        Json.toJson(rep).as[JsObject].keys.contains("available_country_codes") ==== false
     }
   }
 
@@ -385,7 +384,7 @@ class TrackRepresentationsServiceForSingleTrackSpec extends UnitSpecification {
     val trackRepLike = Await.result(tracksService.track(session, trackUrn, None))
     trackRepLike match {
       case Success(rep) =>
-        Json.toJsValue(rep).as[JsObject].keys.contains("domain_lockings") ==== false
+        Json.toJson(rep).as[JsObject].keys.contains("domain_lockings") ==== false
     }
   }
 
@@ -398,10 +397,10 @@ class TrackRepresentationsServiceForSingleTrackSpec extends UnitSpecification {
 
     trackRepLike match {
       case Success(rep) => {
-        val audioMetadata = Json.toJsValue(rep)
-        audioMetadata \ "state" ==== JsString("storing")
-        audioMetadata \ "original_content_size" ==== JsNull
-        audioMetadata \ "original_format" ==== JsNull
+        val audioMetadata = Json.toJson(rep)
+        audioMetadata \ "state" ==== JsDefined(JsString("storing"))
+        audioMetadata \ "original_content_size" ==== JsDefined(JsNull)
+        audioMetadata \ "original_format" ==== JsDefined(JsNull)
 
       }
     }
@@ -435,7 +434,7 @@ class TrackRepresentationsServiceForSingleTrackSpec extends UnitSpecification {
       val trackRepLike = Await.result(tracksService.track(session, trackUrn, None))
       trackRepLike match {
         case Success(rep) =>
-          Json.toJsValue(rep) \ "user_favorite" ==== JsBoolean(true)
+          Json.toJson(rep) \ "user_favorite" ==== JsDefined(JsBoolean(true))
       }
     }
 
@@ -449,7 +448,7 @@ class TrackRepresentationsServiceForSingleTrackSpec extends UnitSpecification {
       val trackRepLike = Await.result(tracksService.track(session, trackUrn, None))
       trackRepLike match {
         case Success(rep) =>
-          Json.toJsValue(rep) \ "user_favorite" ==== JsBoolean(false)
+          Json.toJson(rep) \ "user_favorite" ==== JsDefined(JsBoolean(false))
       }
     }
 
@@ -461,7 +460,7 @@ class TrackRepresentationsServiceForSingleTrackSpec extends UnitSpecification {
       val trackRepLike = Await.result(tracksService.track(session, trackUrn, None))
       trackRepLike match {
         case Success(rep) =>
-          Json.toJsValue(rep).as[JsObject].keys.contains("user_favorite") ==== false
+          Json.toJson(rep).as[JsObject].keys.contains("user_favorite") ==== false
       }
     }
   }
@@ -476,7 +475,7 @@ class TrackRepresentationsServiceForSingleTrackSpec extends UnitSpecification {
       val trackRepLike = Await.result(tracksService.track(session, trackUrn, None))
       trackRepLike match {
         case Success(rep) =>
-          Json.toJsValue(rep) \ "user_playback_count" ==== JsNumber(1)
+          Json.toJson(rep) \ "user_playback_count" ==== JsDefined(JsNumber(1))
       }
     }
 
@@ -489,7 +488,7 @@ class TrackRepresentationsServiceForSingleTrackSpec extends UnitSpecification {
       val trackRepLike = Await.result(tracksService.track(session, trackUrn, None))
       trackRepLike match {
         case Success(rep) =>
-          Json.toJsValue(rep).as[JsObject].keys.contains("user_playback_count") ==== false
+          Json.toJson(rep).as[JsObject].keys.contains("user_playback_count") ==== false
       }
     }
   }
@@ -502,7 +501,7 @@ class TrackRepresentationsServiceForSingleTrackSpec extends UnitSpecification {
       val trackRepLike = Await.result(tracksService.track(session, trackUrn, None))
       trackRepLike match {
         case Success(rep) =>
-          Json.toJsValue(rep).as[JsObject].keys.contains("waveform_url") ==== true
+          Json.toJson(rep).as[JsObject].keys.contains("waveform_url") ==== true
       }
     }
 
@@ -515,7 +514,7 @@ class TrackRepresentationsServiceForSingleTrackSpec extends UnitSpecification {
 
       trackRepLike match {
         case Success(rep) =>
-          Json.toJsValue(rep).as[JsObject].keys.contains("waveform_url") ==== false
+          Json.toJson(rep).as[JsObject].keys.contains("waveform_url") ==== false
       }
     }
   }
@@ -528,7 +527,7 @@ class TrackRepresentationsServiceForSingleTrackSpec extends UnitSpecification {
       val trackRepLike = Await.result(tracksService.track(session, trackUrn, None))
       trackRepLike match {
         case Success(rep) =>
-          Json.toJsValue(rep).as[JsObject].keys.contains("label") ==== true
+          Json.toJson(rep).as[JsObject].keys.contains("label") ==== true
       }
     }
 
@@ -539,7 +538,7 @@ class TrackRepresentationsServiceForSingleTrackSpec extends UnitSpecification {
       val trackRepLike = Await.result(tracksService.track(session, trackUrn, None))
       trackRepLike match {
         case Success(rep) =>
-          Json.toJsValue(rep).as[JsObject].keys.contains("label") ==== false
+          Json.toJson(rep).as[JsObject].keys.contains("label") ==== false
       }
     }
   }
@@ -552,11 +551,11 @@ class TrackRepresentationsServiceForSingleTrackSpec extends UnitSpecification {
       val trackRepLike = Await.result(tracksService.track(session, trackUrn, Some("s-4kT0a")))
       trackRepLike match {
         case Success(rep) =>
-          val json = Json.toJsValue(rep)
-          json \ "uri" ==== JsString("https://api.soundcloud.com/tracks/987?secret_token=s-4kT0a")
-          json \ "stream_url" ==== JsString("https://api.soundcloud.com/tracks/987/stream?secret_token=s-4kT0a")
-          json \ "download_url" ==== JsString("https://api.soundcloud.com/tracks/987/download?secret_token=s-4kT0a")
-          json \ "permalink_url" ==== JsString("http://soundcloud.com/foo/bar/s-4kT0a")
+          val json = Json.toJson(rep)
+          json \ "uri" ==== JsDefined(JsString("https://api.soundcloud.com/tracks/987?secret_token=s-4kT0a"))
+          json \ "stream_url" ==== JsDefined(JsString("https://api.soundcloud.com/tracks/987/stream?secret_token=s-4kT0a"))
+          json \ "download_url" ==== JsDefined(JsString("https://api.soundcloud.com/tracks/987/download?secret_token=s-4kT0a"))
+          json \ "permalink_url" ==== JsDefined(JsString("http://soundcloud.com/foo/bar/s-4kT0a"))
       }
     }
 
@@ -567,8 +566,8 @@ class TrackRepresentationsServiceForSingleTrackSpec extends UnitSpecification {
       val trackRepLike = Await.result(tracksService.track(session, trackUrn, Some("s-4kT0a")))
       trackRepLike match {
         case Success(rep) =>
-          val json = Json.toJsValue(rep)
-          json \ "permalink_url" ==== JsNull
+          val json = Json.toJson(rep)
+          json \ "permalink_url" ==== JsDefined(JsNull)
       }
     }
   }
@@ -583,8 +582,8 @@ class TrackRepresentationsServiceForSingleTrackSpec extends UnitSpecification {
       val trackRepLike = Await.result(tracksService.track(session, trackUrn, None))
       trackRepLike match {
         case Success(rep) =>
-          val json = Json.toJsValue(rep)
-          json \ "downloadable" ==== JsBoolean(true)
+          val json = Json.toJson(rep)
+          json \ "downloadable" ==== JsDefined(JsBoolean(true))
       }
     }
 
@@ -597,8 +596,8 @@ class TrackRepresentationsServiceForSingleTrackSpec extends UnitSpecification {
       val trackRepLike = Await.result(tracksService.track(session, trackUrn, None))
       trackRepLike match {
         case Success(rep) =>
-          val json = Json.toJsValue(rep)
-          json \ "downloadable" ==== JsBoolean(true)
+          val json = Json.toJson(rep)
+          json \ "downloadable" ==== JsDefined(JsBoolean(true))
       }
     }
 
@@ -611,8 +610,8 @@ class TrackRepresentationsServiceForSingleTrackSpec extends UnitSpecification {
       val trackRepLike = Await.result(tracksService.track(session, trackUrn, None))
       trackRepLike match {
         case Success(rep) =>
-          val json = Json.toJsValue(rep)
-          json \ "downloadable" ==== JsBoolean(false)
+          val json = Json.toJson(rep)
+          json \ "downloadable" ==== JsDefined(JsBoolean(false))
       }
     }
 
@@ -625,8 +624,8 @@ class TrackRepresentationsServiceForSingleTrackSpec extends UnitSpecification {
       val trackRepLike = Await.result(tracksService.track(session, trackUrn, None))
       trackRepLike match {
         case Success(rep) =>
-          val json = Json.toJsValue(rep)
-          json \ "downloadable" ==== JsBoolean(false)
+          val json = Json.toJson(rep)
+          json \ "downloadable" ==== JsDefined(JsBoolean(false))
       }
     }
   }
@@ -643,7 +642,7 @@ class TrackRepresentationsServiceForSingleTrackSpec extends UnitSpecification {
         val trackRepLike = Await.result(tracksService.track(session, trackUrn, None))
         trackRepLike match {
           case Success(rep) =>
-            Json.toJsValue(rep).as[JsObject].keys.contains("downloads_remaining") ==== false
+            Json.toJson(rep).as[JsObject].keys.contains("downloads_remaining") ==== false
         }
       }
     }
@@ -658,8 +657,8 @@ class TrackRepresentationsServiceForSingleTrackSpec extends UnitSpecification {
         val trackRepLike = Await.result(tracksService.track(session, trackUrn, None))
         trackRepLike match {
           case Success(rep) =>
-            val json = Json.toJsValue(rep)
-            json \ "downloads_remaining" ==== JsNumber(10)
+            val json = Json.toJson(rep)
+            json \ "downloads_remaining" ==== JsDefined(JsNumber(10))
         }
       }
 
@@ -672,7 +671,7 @@ class TrackRepresentationsServiceForSingleTrackSpec extends UnitSpecification {
         val trackRepLike = Await.result(tracksService.track(session, trackUrn, None))
         trackRepLike match {
           case Success(rep) =>
-            Json.toJsValue(rep).as[JsObject].keys.contains("downloads_remaining") ==== false
+            Json.toJson(rep).as[JsObject].keys.contains("downloads_remaining") ==== false
         }
       }
 
@@ -685,8 +684,8 @@ class TrackRepresentationsServiceForSingleTrackSpec extends UnitSpecification {
         val trackRepLike = Await.result(tracksService.track(session, trackUrn, None))
         trackRepLike match {
           case Success(rep) =>
-            val json = Json.toJsValue(rep)
-            json \ "downloads_remaining" ==== JsNumber(0)
+            val json = Json.toJson(rep)
+            json \ "downloads_remaining" ==== JsDefined(JsNumber(0))
         }
       }
 
@@ -699,8 +698,8 @@ class TrackRepresentationsServiceForSingleTrackSpec extends UnitSpecification {
         val trackRepLike = Await.result(tracksService.track(session, trackUrn, None))
         trackRepLike match {
           case Success(rep) =>
-            val json = Json.toJsValue(rep)
-            json \ "downloads_remaining" ==== JsNumber(10)
+            val json = Json.toJson(rep)
+            json \ "downloads_remaining" ==== JsDefined(JsNumber(10))
         }
       }
     }
@@ -718,11 +717,11 @@ class TrackRepresentationsServiceForSingleTrackSpec extends UnitSpecification {
 
         trackRepLike match {
           case Success(rep) =>
-            val json = Json.toJsValue(rep)
-            json \ "playback_count" ==== JsNumber(111)
-            json \ "download_count" ==== JsNumber(222)
-            json \ "favoritings_count" ==== JsNumber(333)
-            json \ "reposts_count" ==== JsNumber(555)
+            val json = Json.toJson(rep)
+            json \ "playback_count" ==== JsDefined(JsNumber(111))
+            json \ "download_count" ==== JsDefined(JsNumber(222))
+            json \ "favoritings_count" ==== JsDefined(JsNumber(333))
+            json \ "reposts_count" ==== JsDefined(JsNumber(555))
         }
       }
 
@@ -737,11 +736,11 @@ class TrackRepresentationsServiceForSingleTrackSpec extends UnitSpecification {
 
         trackRepLike match {
           case Success(rep) =>
-            val json = Json.toJsValue(rep)
-            json \ "playback_count" ==== JsNumber(0)
-            json \ "download_count" ==== JsNumber(0)
-            json \ "favoritings_count" ==== JsNumber(0)
-            json \ "comment_count" ==== JsNumber(0)
+            val json = Json.toJson(rep)
+            json \ "playback_count" ==== JsDefined(JsNumber(0))
+            json \ "download_count" ==== JsDefined(JsNumber(0))
+            json \ "favoritings_count" ==== JsDefined(JsNumber(0))
+            json \ "comment_count" ==== JsDefined(JsNumber(0))
         }
       }
 
@@ -755,8 +754,8 @@ class TrackRepresentationsServiceForSingleTrackSpec extends UnitSpecification {
 
         trackRepLike match {
           case Success(rep) =>
-            val json = Json.toJsValue(rep)
-            json \ "comment_count" ==== JsNumber(444)
+            val json = Json.toJson(rep)
+            json \ "comment_count" ==== JsDefined(JsNumber(444))
         }
       }
 
@@ -770,7 +769,7 @@ class TrackRepresentationsServiceForSingleTrackSpec extends UnitSpecification {
 
         trackRepLike match {
           case Success(rep) =>
-            val json = Json.toJsValue(rep)
+            val json = Json.toJson(rep)
             json.as[JsObject].keys.contains("comment_count") ==== false
         }
       }
@@ -786,7 +785,7 @@ class TrackRepresentationsServiceForSingleTrackSpec extends UnitSpecification {
 
           trackRepLike match {
             case Success(rep) =>
-              val json = Json.toJsValue(rep)
+              val json = Json.toJson(rep)
               json.as[JsObject].keys.contains("playback_count") ==== false
               json.as[JsObject].keys.contains("download_count") ==== false
               json.as[JsObject].keys.contains("favoritings_count") ==== false
@@ -804,12 +803,12 @@ class TrackRepresentationsServiceForSingleTrackSpec extends UnitSpecification {
 
           trackRepLike match {
             case Success(rep) =>
-              val json = Json.toJsValue(rep)
-              json \ "playback_count" ==== JsNumber(111)
-              json \ "download_count" ==== JsNumber(222)
-              json \ "favoritings_count" ==== JsNumber(333)
-              json \ "comment_count" ==== JsNumber(444)
-              json \ "reposts_count" ==== JsNumber(555)
+              val json = Json.toJson(rep)
+              json \ "playback_count" ==== JsDefined(JsNumber(111))
+              json \ "download_count" ==== JsDefined(JsNumber(222))
+              json \ "favoritings_count" ==== JsDefined(JsNumber(333))
+              json \ "comment_count" ==== JsDefined(JsNumber(444))
+              json \ "reposts_count" ==== JsDefined(JsNumber(555))
           }
         }
 
@@ -821,8 +820,8 @@ class TrackRepresentationsServiceForSingleTrackSpec extends UnitSpecification {
 
           trackRepLike match {
             case Success(rep) =>
-              val json = Json.toJsValue(rep)
-              json \ "comment_count" ==== JsNumber(444)
+              val json = Json.toJson(rep)
+              json \ "comment_count" ==== JsDefined(JsNumber(444))
           }
         }
 
@@ -834,7 +833,7 @@ class TrackRepresentationsServiceForSingleTrackSpec extends UnitSpecification {
 
           trackRepLike match {
             case Success(rep) =>
-              val json = Json.toJsValue(rep)
+              val json = Json.toJson(rep)
               json.as[JsObject].keys.contains("comment_count") ==== false
           }
         }
@@ -848,12 +847,12 @@ class TrackRepresentationsServiceForSingleTrackSpec extends UnitSpecification {
 
           trackRepLike match {
             case Success(rep) =>
-              val json = Json.toJsValue(rep)
-              json \ "playback_count" ==== JsNumber(0)
-              json \ "download_count" ==== JsNumber(0)
-              json \ "favoritings_count" ==== JsNumber(0)
-              json \ "comment_count" ==== JsNumber(0)
-              json \ "reposts_count" ==== JsNumber(0)
+              val json = Json.toJson(rep)
+              json \ "playback_count" ==== JsDefined(JsNumber(0))
+              json \ "download_count" ==== JsDefined(JsNumber(0))
+              json \ "favoritings_count" ==== JsDefined(JsNumber(0))
+              json \ "comment_count" ==== JsDefined(JsNumber(0))
+              json \ "reposts_count" ==== JsDefined(JsNumber(0))
           }
         }
       }

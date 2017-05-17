@@ -1,13 +1,10 @@
 package com.soundcloud.publicApiStrangler.authorization
 
-import com.soundcloud.bff.authorization.ContentAuthorizationService
 import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.jvmkit.module.util.{Urn, UserTier}
-import com.soundcloud.publicApiStrangler.client.BigJvmKitConversions._
 import com.soundcloud.publicApiStrangler.policies.{ContentAuthorization, ContentPolicy, MonetizationModel, Reason}
 import com.soundcloud.publicApiStrangler.test.UnitSpecification
 import com.twitter.util.{Await, Future}
-import org.mockito.Mockito._
 
 import scala.collection.JavaConversions._
 
@@ -33,18 +30,18 @@ class ContentAuthorizationRulesSpec extends UnitSpecification {
   "does not lookup consumer subs country for free-tier users" in new Context {
     val session = sessionWithTier(UserTier.FREE)
 
-    contentAuthMock.findRulesApplicableTo(session, urns, None) returns Future.value(authorizations.map(toBigJvmKitContentAuthorization))
+    contentAuthMock.findRulesApplicableTo(session, urns, None) returns Future.value(authorizations)
 
     Await.result(service.fetchRules(session, urns)) ==== authorizations
 
-    verifyZeroInteractions(subsServiceMock)
+    there were noCallsTo(subsServiceMock)
   }
 
   "looks up consumer subs country for high-tier subscriber" in new Context {
     val session = sessionWithTier(UserTier.HIGH)
 
     subsServiceMock.getActiveSubscriptionCountry(session) returns Future.value("US")
-    contentAuthMock.findRulesApplicableTo(session, urns, Option("US")) returns Future.value(authorizations.map(toBigJvmKitContentAuthorization))
+    contentAuthMock.findRulesApplicableTo(session, urns, Option("US")) returns Future.value(authorizations)
 
     Await.result(service.fetchRules(session, urns)) ==== authorizations
   }
@@ -53,7 +50,7 @@ class ContentAuthorizationRulesSpec extends UnitSpecification {
     val session = sessionWithTier(UserTier.MID)
 
     subsServiceMock.getActiveSubscriptionCountry(session) returns Future.value("US")
-    contentAuthMock.findRulesApplicableTo(session, urns, Option("US")) returns Future.value(authorizations.map(toBigJvmKitContentAuthorization))
+    contentAuthMock.findRulesApplicableTo(session, urns, Option("US")) returns Future.value(authorizations)
 
     Await.result(service.fetchRules(session, urns)) ==== authorizations
   }

@@ -4,7 +4,7 @@ import com.soundcloud.jvmkit.module.bff.testsupport.FakeUserAuthentication
 import com.soundcloud.jvmkit.module.util.session.UserSessionBuilder
 import com.soundcloud.jvmkit.module.util.{Geo, Urn}
 import com.soundcloud.publicApiStrangler.Routing
-import com.soundcloud.publicApiStrangler.client.BigJvmKitConversions._
+import com.soundcloud.publicApiStrangler.client.OkidokiClient
 import com.soundcloud.publicApiStrangler.client.followcounts.{FollowCounts, FollowCountsClient}
 import com.soundcloud.publicApiStrangler.client.follows.FollowsClient
 import com.soundcloud.publicApiStrangler.client.follows.representation._
@@ -13,15 +13,14 @@ import com.soundcloud.publicApiStrangler.client.follows.representation.unfollow.
 import com.soundcloud.publicApiStrangler.client.reposts.RepostsClient
 import com.soundcloud.publicApiStrangler.support.DispatchToMothershipHandler
 import com.soundcloud.publicApiStrangler.test.{HandlerSpecificationScope, UnitSpecification}
-import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures
-import com.soundcloud.service.client.OkidokiClient
+import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures._
 import com.twitter.finagle.http.Status
 import com.twitter.util.Future
 import org.joda.time.{DateTimeUtils, LocalDateTime}
 import org.specs2.mutable.BeforeAfter
 import play.api.libs.json._
 
-class UserFollowHandlerSpec extends UnitSpecification with Fixtures {
+class UserFollowHandlerSpec extends UnitSpecification {
   sequential
 
 
@@ -128,7 +127,7 @@ class UserFollowHandlerSpec extends UnitSpecification with Fixtures {
         val values = Seq(userUrn, Urn("soundcloud:users:100"))
         val pageInfo = Pagination("123-1234", 2)
         followsMock.followersFollowedBy(session, userUrn, Urn("soundcloud:users:2")) returns Future.value(Some(UserUrns(values)))
-        okidokiMock.fetch(session, values.toSet.map(toBigJvmKitUrn)) returns Future.value(okidokiUsers.as[List[JsObject]])
+        okidokiMock.fetch(session, values.toSet) returns Future.value(okidokiUsers.as[List[JsObject]])
         followCountsClientMock.counts(session, values) returns Future.value(Seq(FollowCounts(values.last, 1111, 2222)))
         repostsClientMock.getRepostCountsByUrnWithFallback(session, values.toSet) returns Future.value(Map.empty[Urn, Long])
       }
@@ -148,7 +147,7 @@ class UserFollowHandlerSpec extends UnitSpecification with Fixtures {
         )
         val pageInfo = Pagination("123-1234", 2)
         followsMock.followingsNotFollowedBy(session, Urn("soundcloud:users:999"), Urn("soundcloud:users:2")) returns Future.value(Some(UserUrns(values)))
-        okidokiMock.fetch(session, values.toSet.map(toBigJvmKitUrn)) returns Future.value(okidokiUsers.as[List[JsObject]])
+        okidokiMock.fetch(session, values.toSet) returns Future.value(okidokiUsers.as[List[JsObject]])
         followCountsClientMock.counts(session, values) returns Future.value(Seq(FollowCounts(values.last, 1111, 2222)))
         repostsClientMock.getRepostCountsByUrnWithFallback(session, values.toSet) returns Future.value(Map.empty[Urn, Long])
       }
@@ -169,7 +168,7 @@ class UserFollowHandlerSpec extends UnitSpecification with Fixtures {
         )
         val pageInfo = Pagination("123-1234", 2)
         followsMock.mutualFollowings(session, Urn("soundcloud:users:999"), Urn("soundcloud:users:2")) returns Future.value(Some(UserUrns(values)))
-        okidokiMock.fetch(session, values.toSet.map(toBigJvmKitUrn)) returns Future.value(okidokiUsers.as[List[JsObject]])
+        okidokiMock.fetch(session, values.toSet) returns Future.value(okidokiUsers.as[List[JsObject]])
         followCountsClientMock.counts(session, values) returns Future.value(Seq(FollowCounts(values.last, 1111, 2222)))
         repostsClientMock.getRepostCountsByUrnWithFallback(session, values.toSet) returns Future.value(Map.empty[Urn, Long])
       }
@@ -190,7 +189,7 @@ class UserFollowHandlerSpec extends UnitSpecification with Fixtures {
         )
         val pageInfo = Pagination("123-1234", 2)
         followsMock.followings(session, session.getUser, None, 10) returns Future.value(Some(FollowingsPage(values, Some(pageInfo))))
-        okidokiMock.fetch(session, values.map(_.target).toSet.map(toBigJvmKitUrn)) returns Future.value(okidokiUsers.as[List[JsObject]])
+        okidokiMock.fetch(session, values.map(_.target).toSet) returns Future.value(okidokiUsers.as[List[JsObject]])
         followCountsClientMock.counts(session, values.map(_.target)) returns Future.value(Seq(FollowCounts(values.map(_.target).last, 1111, 2222)))
         repostsClientMock.getRepostCountsByUrnWithFallback(session, values.map(_.target).toSet) returns Future.value(Map.empty[Urn, Long])
       }
@@ -214,7 +213,7 @@ class UserFollowHandlerSpec extends UnitSpecification with Fixtures {
         )
         val pageInfo = Pagination("123-1234", 2)
         followsMock.followers(session, session.getUser, None, 10) returns Future.value(Some(FollowingsPage(values, Some(pageInfo))))
-        okidokiMock.fetch(session, values.map(_.user).toSet.map(toBigJvmKitUrn)) returns Future.value(okidokiUsers.as[List[JsObject]])
+        okidokiMock.fetch(session, values.map(_.user).toSet) returns Future.value(okidokiUsers.as[List[JsObject]])
         followCountsClientMock.counts(session, values.map(_.user)) returns Future.value(Seq(FollowCounts(values.map(_.user).last, 1111, 2222)))
         repostsClientMock.getRepostCountsByUrnWithFallback(session, values.map(_.user).toSet) returns Future.value(Map.empty[Urn, Long])
       }
@@ -239,7 +238,7 @@ class UserFollowHandlerSpec extends UnitSpecification with Fixtures {
         super.before
         val pageInfo = Pagination("123-1234", 2)
         followsMock.followings(session, session.getUser, None, 10) returns Future.value(Some(FollowingsPage(followings, Some(pageInfo))))
-        okidokiMock.fetch(session, followings.map(_.target).toSet.map(toBigJvmKitUrn)) returns Future.value(okidokiUsers.as[List[JsObject]])
+        okidokiMock.fetch(session, followings.map(_.target).toSet) returns Future.value(okidokiUsers.as[List[JsObject]])
       }
     }
 
@@ -273,7 +272,7 @@ class UserFollowHandlerSpec extends UnitSpecification with Fixtures {
         )
         val pageInfo = Pagination("123-1234", 2)
         followsMock.followers(session, session.getUser, Some("foo"), 10) returns Future.value(Some(FollowingsPage(values, Some(pageInfo))))
-        okidokiMock.fetch(session, values.map(_.user).toSet.map(toBigJvmKitUrn)) returns Future.value(okidokiUsers.as[List[JsObject]])
+        okidokiMock.fetch(session, values.map(_.user).toSet) returns Future.value(okidokiUsers.as[List[JsObject]])
         followCountsClientMock.counts(session, values.map(_.user)) returns Future.value(Seq(FollowCounts(values.map(_.user).last, 1111, 2222)))
         repostsClientMock.getRepostCountsByUrnWithFallback(session, values.map(_.user).toSet) returns Future.value(Map.empty[Urn, Long])
       }
@@ -295,7 +294,7 @@ class UserFollowHandlerSpec extends UnitSpecification with Fixtures {
       val filteredUserUrns = FilteredUserUrns(included = Set(candidateUser), excluded = Set.empty)
 
       followsMock.filterFollowings(session, userUrn, Seq(candidateUser)) returns Future.value(Some(filteredUserUrns))
-      okidokiMock.fetch(session, Set(candidateUser).map(toBigJvmKitUrn)) returns Future.value(okidokiUsers.as[List[JsObject]])
+      okidokiMock.fetch(session, Set(candidateUser)) returns Future.value(okidokiUsers.as[List[JsObject]])
       followCountsClientMock.counts(session, Seq(candidateUser)) returns Future.value(Seq(FollowCounts(candidateUser, 1111, 2222)))
       repostsClientMock.getRepostCountsByUrnWithFallback(session, Set(candidateUser)) returns Future.value(Map.empty[Urn, Long])
     }

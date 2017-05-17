@@ -1,13 +1,11 @@
 package com.soundcloud.publicApiStrangler.authorization
 
-import com.soundcloud.bff.media.WaveformUrlsRepository
-import com.soundcloud.jvmkit.ModuleConversions._
 import com.soundcloud.jvmkit.module.bff.session.UserAuthentication
 import com.soundcloud.jvmkit.module.http.server.{HandlerRequest, ResponseBuilder}
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.publicApiStrangler.authorization.TrackWaveformActionStatus._
-import com.soundcloud.publicApiStrangler.client.BigJvmKitConversions._
+import com.soundcloud.publicApiStrangler.media.WaveformUrlsRepository
 import com.soundcloud.publicApiStrangler.policies
 import com.twitter.finagle.http.{Response, Status}
 import com.twitter.util.Future
@@ -62,7 +60,7 @@ class AuthorizeHttpResponse(
   }
 
   private def getWaveformActionsForSnip(session: UserSession, snipContentAuths: Set[policies.ContentAuthorization]): Future[Seq[TrackWaveformAction]] = {
-    val waveforms = waveformUrlsRepository.fetchWaveformUrls(session, snipContentAuths.map(toBigJvmKitContentAuthorization))
+    val waveforms = waveformUrlsRepository.fetchWaveformUrls(session, snipContentAuths)
     waveforms.map(waveformsMap => waveformsMap.keys.map(urn => TrackWaveformAction(urn, NeedsModification, Some(waveformsMap(urn)))).toList)
   }
 

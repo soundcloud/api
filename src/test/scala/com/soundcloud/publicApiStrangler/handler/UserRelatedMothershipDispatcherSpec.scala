@@ -9,7 +9,7 @@ import com.soundcloud.publicApiStrangler.client.followcounts.{FollowCounts, Foll
 import com.soundcloud.publicApiStrangler.client.liebling.{LieblingClient, UserTotalLikes}
 import com.soundcloud.publicApiStrangler.client.reposts.RepostsClient
 import com.soundcloud.publicApiStrangler.support.DispatchToMothershipHandler
-import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures
+import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures._
 import com.soundcloud.publicApiStrangler.test.{HandlerSpecificationScope, UnitSpecification}
 import com.twitter.finagle.http.{Request, Status}
 import com.twitter.util.{Await, Future}
@@ -17,7 +17,7 @@ import org.mockito.Mockito.when
 import org.specs2.mutable.Before
 import play.api.libs.json._
 
-class UserRelatedMothershipDispatcherSpec extends UnitSpecification with Fixtures {
+class UserRelatedMothershipDispatcherSpec extends UnitSpecification {
 
   trait Context extends HandlerSpecificationScope with Before {
     val session = new UserSessionBuilder().build()

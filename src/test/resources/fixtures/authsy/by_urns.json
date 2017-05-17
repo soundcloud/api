@@ -1,0 +1,49 @@
+[
+  {
+    "resource": "soundcloud:tracks:666",
+    "geo": {
+      "country_code": "DE",
+      "city": "Berlin"
+    },
+    "playback": {
+      "policy": "monetize"
+    },
+    "metadata": {
+      "policy": "monetize"
+    },
+    "monetization_model": "AD_SUPPORTED",
+    "reason": "GEO"
+  },
+  {
+    "resource": "soundcloud:tracks:123",
+    "geo": {
+      "country_code": "DE",
+      "city": "Berlin"
+    },
+    "playback": {
+      "policy": "monetize"
+    },
+    "metadata": {
+      "policy": "monetize"
+    },
+    "monetization_model": "AD_SUPPORTED",
+    "reason": "GEO"
+  },
+  {
+    "resource": "soundcloud:tracks:999",
+    "geo": {
+      "country_code": "DE",
+      "city": "Berlin"
+    },
+    "playback": {
+      "policy": "allowed"
+    },
+    "metadata": {
+      "policy": "allowed"
+    },
+    "restrictions": [
+      "NO_OFFLINE_SYNC"
+    ],
+    "monetization_model": null
+  }
+]

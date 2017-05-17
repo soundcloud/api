@@ -2,14 +2,14 @@ package com.soundcloud.publicApiStrangler.handler
 
 import com.soundcloud.bff.nextbff.pagination.PageBuilder
 import com.soundcloud.jvmkit.module.bff.session.UserAuthentication
+import com.soundcloud.jvmkit.module.http.client.Params
 import com.soundcloud.jvmkit.module.http.server.{HandlerRequest, JsonResponseBuilder, ResponseBuilder}
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.publicApiStrangler.headers.DefaultResponseHeaders
 import com.soundcloud.publicApiStrangler.mapper.similarsounds.SimilarSoundsMapper
 import com.soundcloud.publicApiStrangler.mapping.similarsounds.SimilarSoundsMapping
-import com.soundcloud.scalakit.finagle.jsonservice.Params
-import com.soundcloud.scalakit.json.UntypedJson
+import com.soundcloud.publicApiStrangler.support.UntypedJson
 import com.twitter.finagle.http.Response
 import com.twitter.util.Future
 

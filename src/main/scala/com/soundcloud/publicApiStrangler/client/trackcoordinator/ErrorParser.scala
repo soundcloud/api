@@ -4,6 +4,7 @@ import com.soundcloud.publicApiStrangler.client.trackcoordinator.datatypes.Error
 import play.api.libs.json.{JsObject, JsValue, Json}
 
 object ErrorParser {
+
   case class MoshiError(message: String, subject: Option[String], status: Option[Int]) {
     def toErrorMessage = {
       val sub = subject.map(_ + " ").getOrElse("")
@@ -11,9 +12,12 @@ object ErrorParser {
       s"$stat$sub$message"
     }
   }
+
   object MoshiError {
     implicit val reads = Json.reads[MoshiError]
   }
+
+  def parse(body: String): Set[Error] = parse(Json.parse(body))
 
   def parse(body: JsValue): Set[Error] = {
     val errorsJson = (body \ "errors")
@@ -34,7 +38,7 @@ object ErrorParser {
   def parseMoshiError(body: JsValue): Set[Error] = {
     val errors = body.\("errors").asOpt[JsObject]
     errors.map {
-      _.fields.map({ case (key, value) => Error(s"$key ${value.as[String]}")}).toSet
+      _.fields.map({ case (key, value) => Error(s"$key ${value.as[String]}") }).toSet
     }.getOrElse(Set.empty)
   }
 }

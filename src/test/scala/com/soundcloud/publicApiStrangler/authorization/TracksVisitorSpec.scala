@@ -2,12 +2,12 @@ package com.soundcloud.publicApiStrangler.authorization
 
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.publicApiStrangler.test.UnitSpecification
-import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures
+import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures._
 import play.api.libs.json.{JsObject, JsValue}
 
 import scala.collection.mutable.ListBuffer
 
-class TracksVisitorSpec extends UnitSpecification with Fixtures {
+class TracksVisitorSpec extends UnitSpecification {
 
   trait Context extends Scope {
     val visited = ListBuffer[(Urn, JsValue)]()

@@ -1,11 +1,10 @@
 package com.soundcloud.publicApiStrangler.client.stitch
 
-import com.soundcloud.jvmkit.module.http.client.Params
+import com.soundcloud.jvmkit.module.http.client.{JsonClient, Params}
+import com.soundcloud.jvmkit.module.util.http.Headers
 import com.soundcloud.jvmkit.module.util.{Path, Urn}
-import com.soundcloud.publicApiStrangler.client.BigJvmKitConversions._
 import com.soundcloud.publicApiStrangler.test.UnitSpecification
-import com.soundcloud.scalakit.finagle.http.{InternalServerErrorStatus, OkStatus, StatusCode}
-import com.soundcloud.scalakit.finagle.jsonservice.{JsonClient, JsonResponse}
+import com.twitter.finagle.http.Status
 import com.twitter.util.{Await, Future}
 import org.mockito.Mockito._
 import play.api.libs.json.{JsObject, Json}
@@ -68,17 +67,17 @@ class StitchClientSpec extends UnitSpecification {
         genMockResponseContentBit("comments", List((stitchKey3, 890))) ++
         genMockResponseContentBit("reposts", List((stitchKey3, 901)))
 
-    def mockResponseStatus: StatusCode = OkStatus
+    def mockResponseStatus: Status = Status.Ok
 
     def mockResponseFirstBatch =
       Future.value(
-        JsonResponse(
+        jsonResponse(
           mockResponseStatus,
           mockResponseContentsFirstBatch))
 
     def mockResponseSecondBatch =
       Future.value(
-        JsonResponse(
+        jsonResponse(
           mockResponseStatus,
           mockResponseContentsSecondBatch))
 
@@ -96,8 +95,8 @@ class StitchClientSpec extends UnitSpecification {
       "comments" -> s"/ts?category=c.o.t&minus-category=n.c.o.t&resolution=alltime&k=$stitchKey3",
       "reposts" -> s"/ts?category=r.o.t&minus-category=n.r.o.t&resolution=alltime&k=$stitchKey3")
 
-    when(jsonClient.get(session, Path() / "bulk", expectedParamsFirstBatch, Params.empty)).thenReturn(mockResponseFirstBatch)
-    when(jsonClient.get(session, Path() / "bulk", expectedParamsSecondBatch, Params.empty)).thenReturn(mockResponseSecondBatch)
+    when(jsonClient.getWithSession(session, Path() / "bulk", expectedParamsFirstBatch, Headers.empty)).thenReturn(mockResponseFirstBatch)
+    when(jsonClient.getWithSession(session, Path() / "bulk", expectedParamsSecondBatch, Headers.empty)).thenReturn(mockResponseSecondBatch)
   }
 
   "200 response" in new Context {
@@ -108,7 +107,7 @@ class StitchClientSpec extends UnitSpecification {
   }
 
   "500 response" in new Context {
-    override def mockResponseStatus = InternalServerErrorStatus
+    override def mockResponseStatus = Status.InternalServerError
 
     resultT.isThrow === true
   }

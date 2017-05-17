@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore
 import com.soundcloud.bff.nextbff.mapping.MappingContext
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSession
-import com.soundcloud.publicApiStrangler.client.BigJvmKitConversions._
 import com.soundcloud.publicApiStrangler.mapper.liebling.LikeCountMapper
 import com.soundcloud.publicApiStrangler.mapper.timeline.EntitySummaryMapper
 import com.soundcloud.publicApiStrangler.mapper.waveform.{WaveformMapper, WaveformRequestParams}

@@ -1,6 +1,5 @@
 package com.soundcloud.publicApiStrangler
 
-import com.soundcloud.jvmkit.config.AppConfig
 import com.soundcloud.jvmkit.module.admin.AdminServer
 import com.soundcloud.jvmkit.module.bff.BffHttpServer
 import com.soundcloud.jvmkit.module.bff.filters.SessionCacheFilter
@@ -8,46 +7,41 @@ import com.soundcloud.jvmkit.module.bff.ratelimiting.facade._
 import com.soundcloud.jvmkit.module.http.server.akira.ResponseDumpSessionRegistry
 import com.soundcloud.jvmkit.module.http.server.config.HttpServerConfig
 import com.soundcloud.jvmkit.module.http.server.{HandlerRouterBuilder, ResponseBuilder}
-import com.soundcloud.jvmkit.module.memcached.MemcachedClient
+import com.soundcloud.jvmkit.module.memcached.RichMemcachedClient
 import com.soundcloud.jvmkit.module.memcached.config.MemcachedClientConfig
 import com.soundcloud.jvmkit.module.rollout.{BasicRolloutFeature, Rollout}
-import com.soundcloud.jvmkit.module.telemetry.{Telemetry => ModuleTelemetry}
-import com.soundcloud.jvmkit.module.util.config.{AppConfig => ModuleAppConfig}
-import com.soundcloud.jvmkit.module.util.{ResourceName => ModuleResourceName, Urn => ModuleUrn}
-import com.soundcloud.jvmkit.module.zookeeper.CuratorFrameworkFactory
-import com.soundcloud.jvmkit.telemetry.{MetricsRegistryImpl, Telemetry}
+import com.soundcloud.jvmkit.module.telemetry.{MetricsRegistryImpl, Telemetry}
+import com.soundcloud.jvmkit.module.util.config.AppConfig
+import com.soundcloud.jvmkit.module.util.{ResourceName, Urn}
+import com.soundcloud.jvmkit.module.zookeeper.CuratorFramework
 import com.soundcloud.publicApiStrangler.Routing._
 import com.soundcloud.publicApiStrangler.authorization._
 import com.soundcloud.publicApiStrangler.headers.DefaultResponseHeadersFilter
 import com.soundcloud.publicApiStrangler.support._
+import com.twitter.finagle.SimpleFilter
 import com.twitter.finagle.http.{Method, Request, Response}
-import com.twitter.finagle.{Http, SimpleFilter}
-import com.twitter.util.{Await, Future}
+import com.twitter.util.Future
 
 object App extends Handlers with FallbackHandlerConfiguration {
 
-  def config = new AppConfig()
-
-  def moduleConfig = new ModuleAppConfig()
+  def moduleConfig = new AppConfig()
 
   def metricsRegistry: MetricsRegistryImpl = MetricsRegistryImpl.defaultRegistry
 
-  def telemetry = new Telemetry(config, metricsRegistry)
-
-  def moduleTelemetry = new ModuleTelemetry(config.getApplicationName, metricsRegistry)
+  def moduleTelemetry = new Telemetry(config.getApplicationName, metricsRegistry)
 
   def main(args: Array[String]): Unit = {
 
-    val bffApplication = BffApplication(new ModuleUrn("soundcloud", "systems", "public-api-strangler"), moduleConfig.getApplicationResourceName)
+    val bffApplication = BffApplication(new Urn("soundcloud", "systems", "public-api-strangler"), moduleConfig.getApplicationResourceName)
 
-    val memcachedResourceName = ModuleResourceName("MEMCACHED")
+    val memcachedResourceName = ResourceName("MEMCACHED")
     lazy val memcachedClient = {
-      MemcachedClient(
+      RichMemcachedClient(
         MemcachedClientConfig.from(memcachedResourceName, moduleConfig),
         moduleTelemetry)
     }
 
-    val curatorFramework = CuratorFrameworkFactory.create(moduleConfig, moduleTelemetry)
+    val curatorFramework = CuratorFramework(moduleConfig, moduleTelemetry)
     val rateLimitingFacade = {
       new RateLimitingFacade(
         bffApplication,

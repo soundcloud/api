@@ -1,23 +1,21 @@
 package com.soundcloud.publicApiStrangler.mapper
 
 import com.soundcloud.jvmkit.module.util.Urn
-import com.soundcloud.jvmkit.{Urn => BigJvmKitUrn}
-import com.soundcloud.jvmkit.module.util.session.{UserSession, UserSessionBuilder}
-import com.soundcloud.publicApiStrangler.client.BigJvmKitConversions._
+import com.soundcloud.jvmkit.module.util.session.UserSessionBuilder
+import com.soundcloud.publicApiStrangler.client.OkidokiClient
 import com.soundcloud.publicApiStrangler.client.followcounts.{FollowCounts, FollowCountsClient}
 import com.soundcloud.publicApiStrangler.client.liebling.{LieblingClient, LikesCount}
 import com.soundcloud.publicApiStrangler.client.reposts.RepostsClient
 import com.soundcloud.publicApiStrangler.mapper.timeline.{EntityMapper, EntitySummaryMapper}
 import com.soundcloud.publicApiStrangler.mapping.timeline.{Playlist, Track, User}
 import com.soundcloud.publicApiStrangler.test.UnitSpecification
-import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures
-import com.soundcloud.service.client.OkidokiClient
+import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures.{entityMapperOkidokiFetch, entityMapperLieblingLikesInfo}
 import com.twitter.util.{Await, Future}
 import org.mockito.Mockito.when
 import org.specs2.mutable.Before
 import play.api.libs.json.JsObject
 
-class EntityMapperSpec extends UnitSpecification with Fixtures {
+class EntityMapperSpec extends UnitSpecification {
 
   trait Context extends Scope with Before {
     val userUrn = new Urn("soundcloud", "users", "123")
@@ -40,11 +38,11 @@ class EntityMapperSpec extends UnitSpecification with Fixtures {
     val urns = likeUrns ++ List(userUrn, commentUrn)
 
     override def before: Any = {
-      when(okidokiClient.fetch(===(toBigJvmKitUserSession(session)), any[Set[BigJvmKitUrn]])) thenReturn
-        Future(okidokiFetch.as[List[JsObject]])
+      when(okidokiClient.fetch(===(session), any[Set[Urn]])) thenReturn
+        Future(entityMapperOkidokiFetch.as[List[JsObject]])
 
       when(lieblingClient.likeCounts(===(session), ===(likeUrns))) thenReturn
-        Future((lieblingLikesInfo \ "likes_counts").as[List[LikesCount]])
+        Future((entityMapperLieblingLikesInfo \ "likes_counts").as[List[LikesCount]])
 
       when(followCountsClient.counts(session, Seq(userUrn))) thenReturn
         Future.value(Seq(FollowCounts(userUrn, 1111, 2222)))

@@ -1,8 +1,8 @@
 package com.soundcloud.publicApiStrangler.mapper.trackstreams
 
-import com.soundcloud.bff.media.MediaUrl
+import com.soundcloud.jvmkit.module.util.Url
+import com.soundcloud.publicApiStrangler.media.MediaUrl
 import com.soundcloud.publicApiStrangler.test.UnitSpecification
-import com.soundcloud.scalakit.Url
 import com.twitter.util.{Await, Future}
 import org.joda.time.DateTime
 

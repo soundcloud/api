@@ -2,13 +2,12 @@ package com.soundcloud.bff.nextbff.repository
 
 import java.util.concurrent.TimeUnit
 
+import com.soundcloud.jvmkit.module.memcached.Cache
 import com.soundcloud.publicApiStrangler.test.UnitSpecification
 import com.soundcloud.jvmkit.module.util.Urn
-import com.soundcloud.scalakit.cache.Cache
-import com.soundcloud.scalakit.json.Json
 import com.twitter.util.{Await, Future}
 import org.mockito.Mockito.verify
-import play.api.libs.json.JsObject
+import play.api.libs.json.{JsObject, Json}
 import org.mockito.Mockito.when
 import org.specs2.mutable.Before
 
@@ -62,7 +61,7 @@ class UrnsCacheSpec extends UnitSpecification {
   "fetches the non-cached Urns" in new PartiallyCached {
     override def bulkFetch(urns: Set[Urn]) = {
       urns must be_==(List(urn2))
-      Future.value(Map(urn2 -> Json.fromString(jsonResult2).as[JsObject]))
+      Future.value(Map(urn2 -> Json.parse(jsonResult2).as[JsObject]))
     }
 
     result must be_==(Map(urn1 -> jsonResult1, urn2 -> jsonResult2))
@@ -79,7 +78,7 @@ class UrnsCacheSpec extends UnitSpecification {
     override def cacheAllowed(obj: JsObject) = true
 
     override def bulkFetch(urns: Set[Urn]) =
-      Future.value(Map(urn2 -> Json.fromString(jsonResult2).as[JsObject]))
+      Future.value(Map(urn2 -> Json.parse(jsonResult2).as[JsObject]))
   }
 
   "adds to cache allowed content" in new AddToCache {
@@ -107,8 +106,8 @@ class UrnsCacheSpec extends UnitSpecification {
     override def bulkFetch(urnsList: Set[Urn]) = {
       urnsList must be_==(urns)
       Future.value(Map(
-        urn1 -> Json.fromString(jsonResult1).as[JsObject],
-        urn2 -> Json.fromString(jsonResult2).as[JsObject]
+        urn1 -> Json.parse(jsonResult1).as[JsObject],
+        urn2 -> Json.parse(jsonResult2).as[JsObject]
       ))
     }
 

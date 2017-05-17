@@ -1,12 +1,11 @@
 package com.soundcloud.publicApiStrangler.client
 
-import com.soundcloud.jvmkit.module.http.client.Params
+import com.soundcloud.jvmkit.module.http.client.{JsonClient, Params}
+import com.soundcloud.jvmkit.module.util.http.Headers
 import com.soundcloud.jvmkit.module.util.{Path, Urn}
-import com.soundcloud.publicApiStrangler.client.BigJvmKitConversions._
+import com.soundcloud.publicApiStrangler.representation.User
 import com.soundcloud.publicApiStrangler.test.UnitSpecification
-import com.soundcloud.scalakit.finagle.http.{InternalServerErrorStatus, OkStatus, StatusCode}
-import com.soundcloud.scalakit.finagle.jsonservice.{JsonClient, JsonResponse}
-import com.soundcloud.service.response.representation.User
+import com.twitter.finagle.http.Status
 import com.twitter.util.{Await, Future}
 import org.mockito.Mockito._
 import play.api.libs.json.{JsArray, JsNull, JsValue, Json}
@@ -39,11 +38,11 @@ class RichOkidokiClientSpec extends UnitSpecification {
         "original_content_size" -> mockTrackAudioMetadata.original_content_size,
         "original_format" -> mockTrackAudioMetadata.original_format)
 
-      def mockResponseStatus: StatusCode = OkStatus
+      def mockResponseStatus: Status = Status.Ok
 
-      def mockResponse = Future.value(JsonResponse(mockResponseStatus, mockResponseContents))
+      def mockResponse = Future.value(jsonResponse(mockResponseStatus, mockResponseContents))
 
-      when(jsonClient.get(session, path, Params.empty, Params.empty)).thenReturn(mockResponse)
+      when(jsonClient.getWithSession(session, path, Params.empty, Headers.empty)).thenReturn(mockResponse)
     }
 
     "200 response" in new TrackAudioMetadataContext {
@@ -51,7 +50,7 @@ class RichOkidokiClientSpec extends UnitSpecification {
     }
 
     "200 response with null values for size and format" in new TrackAudioMetadataContext {
-      override def mockResponse = Future.value(JsonResponse(mockResponseStatus, Json.obj("state" -> "storing", "original_content_size" -> JsNull, "original_format" -> JsNull)))
+      override def mockResponse = Future.value(jsonResponse(mockResponseStatus, Json.obj("state" -> "storing", "original_content_size" -> JsNull, "original_format" -> JsNull)))
 
       result.get.state ==== "storing"
       result.get.original_format ==== None
@@ -59,13 +58,13 @@ class RichOkidokiClientSpec extends UnitSpecification {
     }
 
     "404 response" in new TrackAudioMetadataContext {
-      override def mockResponseStatus = InternalServerErrorStatus
+      override def mockResponseStatus = Status.InternalServerError
 
       resultT.isThrow === true
     }
 
     "500 response" in new TrackAudioMetadataContext {
-      override def mockResponseStatus = InternalServerErrorStatus
+      override def mockResponseStatus = Status.InternalServerError
 
       resultT.isThrow === true
     }
@@ -103,11 +102,11 @@ class RichOkidokiClientSpec extends UnitSpecification {
             ),
             "track_urn" -> "soundcloud:tracks:12")))
 
-      def mockResponseStatus: StatusCode = OkStatus
+      def mockResponseStatus: Status = Status.Ok
 
-      def mockResponse = Future.value(JsonResponse(mockResponseStatus, mockResponseContents))
+      def mockResponse = Future.value(jsonResponse(mockResponseStatus, mockResponseContents))
 
-      when(jsonClient.get(beTypedEqualTo(toBigJvmKitUserSession(session)), beTypedEqualTo(toBigJvmKitPath(path)), any, any))
+      when(jsonClient.getWithSession(beTypedEqualTo(session), beTypedEqualTo(path), any, any))
         .thenReturn(mockResponse)
     }
 
@@ -116,13 +115,13 @@ class RichOkidokiClientSpec extends UnitSpecification {
     }
 
     "404 response" in new TrackDomainLockingsContext {
-      override def mockResponseStatus = InternalServerErrorStatus
+      override def mockResponseStatus = Status.InternalServerError
 
       resultT.isThrow === true
     }
 
     "500 response" in new TrackDomainLockingsContext {
-      override def mockResponseStatus = InternalServerErrorStatus
+      override def mockResponseStatus = Status.InternalServerError
 
       resultT.isThrow === true
     }
@@ -171,10 +170,10 @@ class RichOkidokiClientSpec extends UnitSpecification {
     }
 
     "200 response" in new GeoblockingsContext {
-      when(jsonClient.get(session, path, Map("urns" -> firstBatch.mkString(",")), Params.empty))
-        .thenReturn(Future.value(JsonResponse(OkStatus, firstBatchJson)))
-      when(jsonClient.get(session, path, Map("urns" -> secondBatch.mkString(",")), Params.empty))
-        .thenReturn(Future.value(JsonResponse(OkStatus, secondBatchJson)))
+      when(jsonClient.getWithSession(session, path, Map("urns" -> firstBatch.mkString(",")), Headers.empty))
+        .thenReturn(Future.value(jsonResponse(Status.Ok, firstBatchJson)))
+      when(jsonClient.getWithSession(session, path, Map("urns" -> secondBatch.mkString(",")), Headers.empty))
+        .thenReturn(Future.value(jsonResponse(Status.Ok, secondBatchJson)))
 
       val batchSize = 2
       Await.result(client.fetchTrackGeoblockings(session, urns, batchSize)) ==== Map(
@@ -185,8 +184,8 @@ class RichOkidokiClientSpec extends UnitSpecification {
     }
 
     "500 response" in new GeoblockingsContext {
-      when(jsonClient.get(session, path, Params("urns" -> urns.mkString(",")), Params.empty))
-        .thenReturn(Future.value(JsonResponse(InternalServerErrorStatus, JsNull)))
+      when(jsonClient.getWithSession(session, path, Params("urns" -> urns.mkString(",")), Headers.empty))
+        .thenReturn(Future.value(jsonResponse(Status.InternalServerError, JsNull)))
 
       Await.result(client.fetchTrackGeoblockings(session, urns)) ==== Map.empty
     }
@@ -235,10 +234,10 @@ class RichOkidokiClientSpec extends UnitSpecification {
     }
 
     "200 response" in new GeoblockingsContext {
-      when(jsonClient.get(session, path, Map("urns" -> firstBatch.mkString(",")), Params.empty))
-        .thenReturn(Future.value(JsonResponse(OkStatus, firstBatchJson)))
-      when(jsonClient.get(session, path, Map("urns" -> secondBatch.mkString(",")), Params.empty))
-        .thenReturn(Future.value(JsonResponse(OkStatus, secondBatchJson)))
+      when(jsonClient.getWithSession(session, path, Map("urns" -> firstBatch.mkString(",")), Headers.empty))
+        .thenReturn(Future.value(jsonResponse(Status.Ok, firstBatchJson)))
+      when(jsonClient.getWithSession(session, path, Map("urns" -> secondBatch.mkString(",")), Headers.empty))
+        .thenReturn(Future.value(jsonResponse(Status.Ok, secondBatchJson)))
 
       val batchSize = 2
       Await.result(client.fetchTracksAudioMetadata(session, urns, batchSize)) ==== Map(
@@ -249,8 +248,8 @@ class RichOkidokiClientSpec extends UnitSpecification {
     }
 
     "500 response" in new GeoblockingsContext {
-      when(jsonClient.get(session, path, Params("urns" -> urns.mkString(",")), Params.empty))
-        .thenReturn(Future.value(JsonResponse(InternalServerErrorStatus, JsNull)))
+      when(jsonClient.getWithSession(session, path, Params("urns" -> urns.mkString(",")), Headers.empty))
+        .thenReturn(Future.value(jsonResponse(Status.InternalServerError, JsNull)))
 
       Await.result(client.fetchTracksAudioMetadata(session, urns)) ==== Map.empty
     }
@@ -308,10 +307,10 @@ class RichOkidokiClientSpec extends UnitSpecification {
     }
 
     "200 response" in new GeoblockingsContext {
-      when(jsonClient.get(session, path, Map("track_ids" -> firstBatch.map(_.getIdentifier).mkString(",")), Params.empty))
-        .thenReturn(Future.value(JsonResponse(OkStatus, firstBatchJson)))
-      when(jsonClient.get(session, path, Map("track_ids" -> secondBatch.map(_.getIdentifier).mkString(",")), Params.empty))
-        .thenReturn(Future.value(JsonResponse(OkStatus, secondBatchJson)))
+      when(jsonClient.getWithSession(session, path, Map("track_ids" -> firstBatch.map(_.getIdentifier).mkString(",")), Headers.empty))
+        .thenReturn(Future.value(jsonResponse(Status.Ok, firstBatchJson)))
+      when(jsonClient.getWithSession(session, path, Map("track_ids" -> secondBatch.map(_.getIdentifier).mkString(",")), Headers.empty))
+        .thenReturn(Future.value(jsonResponse(Status.Ok, secondBatchJson)))
 
       val batchSize = 2
       Await.result(client.fetchTracksDomainLockings(session, urns, batchSize)) ==== Map(
@@ -323,8 +322,8 @@ class RichOkidokiClientSpec extends UnitSpecification {
     }
 
     "500 response" in new GeoblockingsContext {
-      when(jsonClient.get(session, path, Params("track_ids" -> urns.map(_.getIdentifier).mkString(",")), Params.empty))
-        .thenReturn(Future.value(JsonResponse(InternalServerErrorStatus, JsNull)))
+      when(jsonClient.getWithSession(session, path, Params("track_ids" -> urns.map(_.getIdentifier).mkString(",")), Headers.empty))
+        .thenReturn(Future.value(jsonResponse(Status.InternalServerError, JsNull)))
 
       Await.result(client.fetchTracksDomainLockings(session, urns)) ==== Map.empty
     }
@@ -388,10 +387,10 @@ class RichOkidokiClientSpec extends UnitSpecification {
     }
 
     "200 response" in new FetchUsersContext {
-      when(jsonClient.get(session, path, Params("urns" -> firstBatch.mkString(",")), Params.empty))
-        .thenReturn(Future.value(JsonResponse(OkStatus, firstBatchJson)))
-      when(jsonClient.get(session, path, Params("urns" -> secondBatch.mkString(",")), Params.empty))
-        .thenReturn(Future.value(JsonResponse(OkStatus, secondBatchJson)))
+      when(jsonClient.getWithSession(session, path, Params("urns" -> firstBatch.mkString(",")), Headers.empty))
+        .thenReturn(Future.value(jsonResponse(Status.Ok, firstBatchJson)))
+      when(jsonClient.getWithSession(session, path, Params("urns" -> secondBatch.mkString(",")), Headers.empty))
+        .thenReturn(Future.value(jsonResponse(Status.Ok, secondBatchJson)))
 
       val batchSize = 2
       Await.result(client.fetchUsersMap(session, urns, batchSize)) ==== Map(
@@ -402,8 +401,8 @@ class RichOkidokiClientSpec extends UnitSpecification {
     }
 
     "500 response" in new FetchUsersContext {
-      when(jsonClient.get(session, path, Params("urns" -> urns.mkString(",")), Params.empty))
-        .thenReturn(Future.value(JsonResponse(InternalServerErrorStatus, JsNull)))
+      when(jsonClient.getWithSession(session, path, Params("urns" -> urns.mkString(",")), Headers.empty))
+        .thenReturn(Future.value(jsonResponse(Status.InternalServerError, JsNull)))
 
       Await.result(client.fetchUsersMap(session, urns)) ==== Map.empty
     }

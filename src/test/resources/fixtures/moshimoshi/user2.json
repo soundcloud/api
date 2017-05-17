@@ -1,0 +1,98 @@
+{
+  "city": "Los Angeles",
+  "country_code": "US",
+  "first_name": "kill ",
+  "permalink": "killthenoise",
+  "tracks_count": 35,
+  "username": "killthenoise",
+  "country": "United States",
+  "full_name": "kill  the noise",
+  "created_at": "2009/09/18 14:27:27 +0000",
+  "activated_at": "2009/09/18 14:27:27 +0000",
+  "last_seen_at": "2013/08/23 06:04:44 +0000",
+  "followers_count": 127027,
+  "followings_count": 17,
+  "public_favorites_count": 4,
+  "self": {
+    "urn":"soundcloud:users:123123123",
+    "url":"http://moshimoshi.int.s-cloud.net/users/123123123"
+  },
+  "primary_email": "info@killnoisekill.com",
+  "groups_count": 0,
+  "links": [
+    {
+      "created_at": "2011/08/04 16:13:53 +0000",
+      "id": 3432598,
+      "network": "personal",
+      "title": "killnoisekill.com",
+      "updated_at": "2011/08/04 16:13:53 +0000",
+      "url": "http://www.killnoisekill.com",
+      "user_id": 265325,
+      "username": ""
+    },
+    {
+      "created_at": "2011/08/04 16:13:53 +0000",
+      "id": 3432599,
+      "network": "facebook",
+      "title": null,
+      "updated_at": "2011/08/04 16:13:53 +0000",
+      "url": "http://facebook.com/killthenoise",
+      "user_id": 265325,
+      "username": "killthenoise"
+    },
+    {
+      "created_at": "2011/08/04 16:13:53 +0000",
+      "id": 3432600,
+      "network": "twitter",
+      "title": null,
+      "updated_at": "2011/08/04 16:13:53 +0000",
+      "url": "http://twitter.com/killthenoise",
+      "user_id": 265325,
+      "username": "killthenoise"
+    },
+    {
+      "created_at": "2011/08/04 16:13:53 +0000",
+      "id": 3432601,
+      "network": "myspace",
+      "title": null,
+      "updated_at": "2011/08/04 16:13:53 +0000",
+      "url": "http://myspace.com/killnoisekill",
+      "user_id": 265325,
+      "username": "killnoisekill"
+    },
+    {
+      "created_at": "2011/08/04 16:13:53 +0000",
+      "id": 3432602,
+      "network": "youtube",
+      "title": null,
+      "updated_at": "2011/08/04 16:13:53 +0000",
+      "url": "http://youtube.com/user/killnoisekill",
+      "user_id": 265325,
+      "username": "killnoisekill"
+    }
+  ],
+  "plan": "Solo",
+  "quota": {
+    "seconds_used": 10431.097,
+    "seconds_limit": 43200.0
+  },
+  "avatar_url": "http://i1.sndcdn.com/avatars-000000898559-cgxztk-large.jpg?16b9957",
+  "original_avatar_url": "http://i1.sndcdn.com/avatars-000000898559-cgxztk-original.jpg?16b9957",
+  "permalink_url": "http://soundcloud.com/killthenoise",
+  "description": "There's a new ghoul haunting parties worldwide - a diamond-eyed skull slapped to turntables. Grinning off sweat-drenched t-shirts and gleaming from 20-foot neon screens. It's the bony mascot of Kill The Noise, the buzzing young producer and DJ whose uniquely intense take on electronic dance music has kept him rocking around the globe; from packed nightclubs to sold-out festivals.\r\n\r\nIn a word, his sound is dynamic. His productions much like his performances fearlessly blend different genres, styles and tempos.\r\n\r\nHis music has been released on some of dance music's most prestigious record labels including Deadmau5's Mau5trap Recordings, and his own imprint, Slow Roast Records, founded with 5x DMC world-champion DJ Craze. The boutique label is distributed by indie powerhouse Fool's Gold.\r\n\r\nWith a busy upcoming touring schedule, and some big upcoming record releases Kill The Noise will no doubt be making a lot of noise this year!\r\n\r\n",
+  "frozen": false,
+  "favoriting_note": "A new favorite:",
+  "publishing_note": "My new sounds:",
+  "subscriptions": [
+    {
+      "recurring": false,
+      "product": {
+        "name": "Solo",
+        "urn": "soundcloud:products:solo"
+      }
+    }
+  ],
+  "updated_at":"2014/05/16 02:43:00 +0000",
+  "date_of_birth": null,
+  "verified": false
+}

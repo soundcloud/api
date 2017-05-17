@@ -1,21 +1,20 @@
 package com.soundcloud.publicApiStrangler.authorization
 
-import com.soundcloud.bff.services.JsonService
+import com.soundcloud.jvmkit.module.http.client.{JsonClient, Params}
+import com.soundcloud.jvmkit.module.util.http.Headers
 import com.soundcloud.jvmkit.module.util.{Path, Urn}
-import com.soundcloud.publicApiStrangler.client.BigJvmKitConversions._
+import com.soundcloud.publicApiStrangler.mapper.UnhandledResponseException
 import com.soundcloud.publicApiStrangler.test.UnitSpecification
-import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures
-import com.soundcloud.scalakit.finagle.http.{InternalServerErrorStatus, OkStatus}
-import com.soundcloud.scalakit.finagle.jsonservice.{JsonResponse, Params => BigJvmKitParams}
-import com.soundcloud.service.response.mapper.UnhandledResponseException
+import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures._
+import com.twitter.finagle.http.Status
 import com.twitter.util.{Await, Future}
 import play.api.libs.json.JsNull
 
-class SubscriptionsServiceSpec extends UnitSpecification with Fixtures {
+class SubscriptionsServiceSpec extends UnitSpecification {
 
   "#getActiveSubscriptionCountry" >> {
     trait Context extends Scope {
-      val client = mock[JsonService]
+      val client = mock[JsonClient]
       val service = new SubscriptionsService(client)
       val user = Urn("soundcloud:users:66")
       val session = loggedInSession(user)
@@ -23,15 +22,15 @@ class SubscriptionsServiceSpec extends UnitSpecification with Fixtures {
     }
 
     "returns country code when subscription exists" in new Context {
-      val response = JsonResponse(OkStatus, consumerSubscription)
-      client.get(===(toBigJvmKitUserSession(session)), ===(toBigJvmKitPath(activeConsumerSubPath)), any[BigJvmKitParams], any[BigJvmKitParams]) returns Future.value(response)
+      val response = jsonResponse(Status.Ok, consumerSubscription)
+      client.getWithSession(===(session), ===(activeConsumerSubPath), any[Params], any[Headers]) returns Future.value(response)
 
       Await.result(service.getActiveSubscriptionCountry(session)) ==== "US"
     }
 
     "throws exception when subscription cannot be retrieved" in new Context {
-      val response = JsonResponse(InternalServerErrorStatus, JsNull)
-      client.get(===(toBigJvmKitUserSession(session)), ===(toBigJvmKitPath(activeConsumerSubPath)), any[BigJvmKitParams], any[BigJvmKitParams]) returns Future.value(response)
+      val response = jsonResponse(Status.InternalServerError, JsNull)
+      client.getWithSession(===(session), ===(activeConsumerSubPath), any[Params], any[Headers]) returns Future.value(response)
 
       Await.result(service.getActiveSubscriptionCountry(session)) must throwAn[UnhandledResponseException]
     }

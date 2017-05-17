@@ -1,0 +1,36 @@
+{
+    "response": [
+        {
+            "uid": "019aJrjWRlng",
+            "urls": [
+                {
+                    "label": "stream",
+                    "json": "https://wis.sndcdn.com/019aJrjWRlng_m.json",
+                    "png": "https://w1.sndcdn.com/019aJrjWRlng_m.png"
+                },
+                {
+                    "label": "preview",
+                    "json": "https://wave.sndcdn.com/019aJrjWRlng_m_p30.json",
+                    "png": "https://wave.sndcdn.com/019aJrjWRlng_m_p30.png",
+                    "duration_ms" : 90000
+                }
+            ]
+        },
+        {
+            "uid": "ZhDz6S4VqGLr",
+            "urls": [
+                {
+                    "label": "stream",
+                    "json": "https://wis.sndcdn.com/ZhDz6S4VqGLr_m.json",
+                    "png": "https://w1.sndcdn.com/ZhDz6S4VqGLr_m.png"
+                },
+                {
+                    "label": "preview",
+                    "json": "https://wave.sndcdn.com/ZhDz6S4VqGLr_m_p30.json",
+                    "duration_ms" : 30000,
+                    "png": "https://wave.sndcdn.com/ZhDz6S4VqGLr_m_p30.png"
+                }
+            ]
+        }
+    ]
+}

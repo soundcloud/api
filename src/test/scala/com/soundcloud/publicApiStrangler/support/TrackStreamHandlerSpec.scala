@@ -1,13 +1,11 @@
 package com.soundcloud.publicApiStrangler.support
 
-import com.soundcloud.bff.media.{MediaUrl, MediaUrlsRepository}
 import com.soundcloud.jvmkit.module.http.server.{HandlerRequest, ResponseBuilder}
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSessionBuilder
-import com.soundcloud.jvmkit.policies.{ContentAuthorization => BigJvmKitContentAuthorization}
 import com.soundcloud.publicApiStrangler.authorization.ContentAuthorizationRules
-import com.soundcloud.publicApiStrangler.client.BigJvmKitConversions._
 import com.soundcloud.publicApiStrangler.mapper.trackstreams.TrackStreamResponseMapper
+import com.soundcloud.publicApiStrangler.media.{MediaUrl, MediaUrlsRepository}
 import com.soundcloud.publicApiStrangler.policies.{ContentAuthorization, ContentPolicy, MonetizationModel, Reason}
 import com.soundcloud.publicApiStrangler.test.UnitSpecification
 import com.twitter.finagle.http.{HeaderMap, Method, ParamMap, Status}

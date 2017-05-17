@@ -1,9 +1,9 @@
 package com.soundcloud.publicApiStrangler.authorization
 
 import com.soundcloud.publicApiStrangler.test.UnitSpecification
-import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures
+import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures.singleTrack
 
-class BuilderResponseSpec extends UnitSpecification with Fixtures {
+class BuilderResponseSpec extends UnitSpecification {
 
   val body = singleTrack.toString
 
