@@ -134,7 +134,7 @@ object App extends Handlers with FallbackHandlerConfiguration {
       router = router,
       customFilters = additionalFilters,
       responseDumpSessionRegistry = Some(responseDump)
-    ).start()
+    ).start().join()
   }
 }
 
