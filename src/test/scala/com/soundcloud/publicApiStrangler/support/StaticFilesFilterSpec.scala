@@ -1,7 +1,6 @@
 package com.soundcloud.publicApiStrangler.support
 
-import com.soundcloud.scalakit.finagle.http.RouterResponse
-import com.soundcloud.scalakit.test.{UnitSpecification}
+import com.soundcloud.publicApiStrangler.test.UnitSpecification
 import com.twitter.finagle.Service
 import com.twitter.finagle.http._
 import com.twitter.util.{Await, Future}
@@ -9,7 +8,7 @@ import com.twitter.util.{Await, Future}
 class StaticFilesFilterSpec extends UnitSpecification {
 
   trait Context extends Scope {
-    val next = mock[Service[Request, RouterResponse]]
+    val next = mock[Service[Request, Response]]
     val filter = new StaticFilesFilter
   }
 
@@ -27,9 +26,8 @@ class StaticFilesFilterSpec extends UnitSpecification {
   ) foreach {
     request =>
       s"Passes through all requests that are not static files, testing ${request.method} request to ${request.path} " in new Context {
-        val underlyingResp = Response(Version.Http11, Status.Ok)
-        underlyingResp.setContentString("dealwithit")
-        val expected = RouterResponse(underlyingResp, "/")
+        val expected = Response(Version.Http11, Status.Ok)
+        expected.setContentString("dealwithit")
 
         next.apply(request) returns (Future(expected))
 

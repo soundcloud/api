@@ -1,7 +1,7 @@
 package com.soundcloud.publicApiStrangler.client.trackcoordinator.datatypes
 
-import com.soundcloud.scalakit.finagle.http.{ForbiddenStatus, OkStatus, UnauthorizedStatus}
-import com.soundcloud.scalakit.finagle.jsonservice.JsonResponse
+import com.soundcloud.publicApiStrangler.client.JsonResponse
+import com.twitter.finagle.http.Status
 import com.twitter.util.Future
 import play.api.libs.json.JsValue
 
@@ -126,10 +126,10 @@ object Result {
     (a1 zip a2 zip a3 zip a4 zip a5 zip a6 zip a7 zip a8 zip a9 zip a10 zip a11).map { case ((((((((((a1, a2), a3), a4), a5), a6), a7), a8), a9), a10), a11) => (a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11) }
 
   def fromJsonResponse[A](from: JsonResponse, mapFn: JsValue => A): Result[A] = from match {
-    case JsonResponse(OkStatus, json, _, _) => Success(mapFn(json))
-    case JsonResponse(UnauthorizedStatus, json, _, _) => ClientError(Set(Error("Unauthorized")))
-    case JsonResponse(ForbiddenStatus, json, _, _) => ClientError(Set(Error("Forbidden")))
-    case otherwise => ServerError(Error("Unknown error"))
+    case JsonResponse(Status.Ok, Right(json), _) => Success(mapFn(json))
+    case JsonResponse(Status.Unauthorized, _, _) => ClientError(Set(Error("Unauthorized")))
+    case JsonResponse(Status.Forbidden, _ , _) => ClientError(Set(Error("Forbidden")))
+    case _ => ServerError(Error("Unknown error"))
   }
 }
 

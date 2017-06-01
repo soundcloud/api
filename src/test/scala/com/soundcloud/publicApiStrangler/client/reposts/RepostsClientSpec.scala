@@ -2,19 +2,17 @@ package com.soundcloud.publicApiStrangler.client.reposts
 
 import au.com.dius.pact.consumer.dsl.PactDslJsonBody
 import au.com.dius.pact.consumer.{PactSpec, UnitSpecsSupport}
+import com.soundcloud.jvmkit.module.http.client.{JsonClient, Params}
+import com.soundcloud.jvmkit.module.http.client.config.HttpClientConfig
+import com.soundcloud.jvmkit.module.servicediscovery.ServiceEntryPoint
+import com.soundcloud.jvmkit.module.telemetry.{MetricsRegistryImpl, Telemetry}
 import com.soundcloud.publicApiStrangler.test.UnitSpecification
-import com.soundcloud.jvmkit.module.util.Urn
-import com.soundcloud.jvmkit.telemetry.Telemetry
-import com.soundcloud.jvmkit.test.InMemoryConfig
-import com.soundcloud.jvmkit.ResourceName
-import com.soundcloud.jvmkit.{UserSession => BigJvmKitUserSession}
-import com.soundcloud.jvmkit.module.util.session.UserSessionBuilder
+import com.soundcloud.jvmkit.module.util.{Path, ResourceName, Urn}
+import com.soundcloud.jvmkit.module.util.config.InMemoryConfig
+import com.soundcloud.jvmkit.module.util.http.Headers
+import com.soundcloud.jvmkit.module.util.session.{UserSession, UserSessionBuilder}
 import com.soundcloud.publicApiStrangler.client.reposts.RepostsClient._
-import com.soundcloud.scalakit.{Path => BigJvmKitPath}
-import com.soundcloud.scalakit.finagle.dns.ServiceEntryPoint
-import com.soundcloud.scalakit.finagle.http.OkStatus
-import com.soundcloud.scalakit.finagle.jsonservice.{JsonClient, JsonResponse, Params => BigJvmKitParams}
-import com.twitter.finagle.http.HeaderMap
+import com.twitter.finagle.http.{HeaderMap, Status}
 import com.twitter.util.{Await, Future}
 import org.mockito.Mockito.when
 import play.api.libs.json.Json
@@ -305,10 +303,9 @@ class RepostsClientSpec extends UnitSpecification with PactSpec with UnitSpecsSu
         config.set(s"${provider.toUpperCase}_JSONCLIENT_REQUEST_TIMEOUT_MILLIS", "5000")
 
         val jsonClient = JsonClient(
-          ResourceName(provider),
           ServiceEntryPoint(providerConfig.url),
-          config,
-          new Telemetry(config)
+          HttpClientConfig.from(ResourceName(provider), config),
+          new Telemetry(config.getApplicationName, MetricsRegistryImpl.defaultRegistry)
         )
         new RepostsClient(jsonClient)
       }
@@ -423,8 +420,8 @@ class RepostsClientSpec extends UnitSpecification with PactSpec with UnitSpecsSu
 
       "when data is not available, but the calls were successful" >> {
         "it falls back to zero counts for unavailable URNs" in new CountsContext with MockedJsonClient {
-          when(jsonClientMock.get(any[BigJvmKitUserSession], any[BigJvmKitPath], any[BigJvmKitParams], any[BigJvmKitParams])) thenReturn
-            Future.value(JsonResponse(OkStatus, Json.obj("counts" -> Json.arr()), HeaderMap(commonHeaders.toSeq: _*)))
+          when(jsonClientMock.getWithSession(any[UserSession], any[Path], any[Params], any[Headers])) thenReturn
+            Future.value(jsonResponse(Status.Ok, Json.obj("counts" -> Json.arr()), HeaderMap(commonHeaders.toSeq: _*)))
 
           val f = clientWithMock.getRepostCountsByUrnWithFallback(session, Set(user, track(1), track(2), playlist(1), playlist(2)))
           Await.result(f) ==== Map(user -> 0L, track(1) -> 0L, track(2) -> 0L, playlist(1) -> 0L, playlist(2) -> 0L)
@@ -433,7 +430,7 @@ class RepostsClientSpec extends UnitSpecification with PactSpec with UnitSpecsSu
 
       "when an upstream request fails call fails" >> {
         "it falls back to zero counts for unavailable URNs" in new CountsContext with MockedJsonClient {
-          when(jsonClientMock.get(any[BigJvmKitUserSession], any[BigJvmKitPath], any[BigJvmKitParams], any[BigJvmKitParams])).thenReturn(Future.???)
+          when(jsonClientMock.getWithSession(any[UserSession], any[Path], any[Params], any[Headers])).thenReturn(Future.???)
           val f = clientWithMock.getRepostCountsByUrnWithFallback(session, Set(user, track(1), track(2), playlist(1), playlist(2)))
 
           Await.result(f) ==== Map(user -> 0L, track(1) -> 0L, track(2) -> 0L, playlist(1) -> 0L, playlist(2) -> 0L)

@@ -1,8 +1,8 @@
 package com.soundcloud.bff.nextbff.pagination
 
+import com.soundcloud.jvmkit.module.http.client.StringParam
 import com.soundcloud.publicApiStrangler.test.UnitSpecification
 import com.soundcloud.jvmkit.module.util.Urn
-import com.soundcloud.scalakit.finagle.jsonservice.StringParam
 import com.twitter.finagle.http.Request
 
 class CursorBasedPageSpec extends UnitSpecification {

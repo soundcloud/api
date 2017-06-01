@@ -5,8 +5,8 @@ import java.util.UUID
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.soundcloud.bff.nextbff.mapping.{JsonMapping, MappingContext}
 import com.soundcloud.bff.nextbff.pagination.CursorBasedPage
+import com.soundcloud.jvmkit.module.http.client.Params
 import com.soundcloud.jvmkit.module.util.Urn
-import com.soundcloud.scalakit.finagle.jsonservice.Params
 import play.api.libs.json.{JsObject, JsValue}
 
 abstract class Timeline(jsonValue: JsValue, page: CursorBasedPage[Urn])(implicit context: MappingContext)
@@ -33,7 +33,7 @@ abstract class Timeline(jsonValue: JsValue, page: CursorBasedPage[Urn])(implicit
   }
 
   protected def futurePage(events: Seq[JsObject]): String = {
-    val params = page.extraParams.toMap
+    val params = page.extraParams
     val updatedParams = futureUuid.map(u => params ++ Params("uuid[to]" -> u.toString)).getOrElse(params)
 
     cursorUrl(updatedParams, None)
@@ -44,12 +44,12 @@ abstract class Timeline(jsonValue: JsValue, page: CursorBasedPage[Urn])(implicit
   protected def mapChildren(events: Seq[JsObject]): Seq[TimelineItem]
 
   protected def cursorUrl(extraParams: Params, cursorUuid: Option[UUID]): String =
-      CursorBasedPage(
-        page.param,
-        page.baseUrl,
-        page.path,
-        extraParams,
-        cursorUuid.map(_.toString),
-        page.limit
-      ).href
+    CursorBasedPage(
+      page.param,
+      page.baseUrl,
+      page.path,
+      extraParams,
+      cursorUuid.map(_.toString),
+      page.limit
+    ).href
 }

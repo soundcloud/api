@@ -3,11 +3,11 @@ package com.soundcloud.publicApiStrangler.handler
 import com.soundcloud.jvmkit.module.bff.session.UserAuthentication
 import com.soundcloud.jvmkit.module.http.server.{HandlerRequest, JsonResponseBuilder, ResponseBuilder}
 import com.soundcloud.jvmkit.module.util.Urn
+import com.soundcloud.publicApiStrangler.client.OkidokiClient
 import com.soundcloud.publicApiStrangler.client.trackcoordinator.TrackCoordinatorClient
 import com.soundcloud.publicApiStrangler.client.trackcoordinator.datatypes._
 import com.soundcloud.publicApiStrangler.client.trackmetadata.TrackmetadataClient
 import com.soundcloud.publicApiStrangler.support.DispatchToMothershipHandler
-import com.soundcloud.service.client.OkidokiClient
 import com.twitter.finagle.http.Response
 import com.twitter.util.Future
 import play.api.libs.json.Json

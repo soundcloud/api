@@ -5,20 +5,19 @@ import com.soundcloud.jvmkit.module.telemetry.{MetricsRegistryImpl, Telemetry}
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.config.InMemoryConfig
 import com.soundcloud.jvmkit.module.util.session.UserSessionBuilder
-import com.soundcloud.publicApiStrangler.client.BigJvmKitConversions._
 import com.soundcloud.publicApiStrangler.client.TrackAudioMetadata
 import com.soundcloud.publicApiStrangler.client.stitch.StitchCounts
 import com.soundcloud.publicApiStrangler.client.trackcoordinator.datatypes.{NotFound, Result, Success}
 import com.soundcloud.publicApiStrangler.client.trackmetadata.{Artwork, EmbeddingPermission, Track}
-import com.soundcloud.publicApiStrangler.representation.{TrackRepresentation, TrackRepresentationLike}
+import com.soundcloud.publicApiStrangler.representation.User
+import com.soundcloud.publicApiStrangler.representation.trackmetadata.{TrackRepresentation, TrackRepresentationLike}
 import com.soundcloud.publicApiStrangler.test.{HandlerSpecificationScope, UnitSpecification}
 import com.soundcloud.publicApiStrangler.{Routing, TrackRepresentationsService}
-import com.soundcloud.scalakit.json.Json
-import com.soundcloud.service.response.representation.User
 import com.twitter.finagle.http.Status
 import com.twitter.util.Future
 import org.joda.time.LocalDateTime
 import org.mockito.Mockito.when
+import play.api.libs.json.Json
 
 
 class SingleTrackHandlerSpec extends UnitSpecification {
@@ -121,7 +120,7 @@ class SingleTrackHandlerSpec extends UnitSpecification {
   val nonNumericPaths = List("/tracks/__12", "/tracks/__12/", "/tracks/permalinktrack", "/tracks/permalinktrack/",
     "/tracks/permalinktrack.json", "/tracks/permalinktrack.json/")
 
-  val expectedJson = Json.fromString(
+  val expectedJson = Json.parse(
     """
       |{
       |"kind": "track",
@@ -182,7 +181,7 @@ class SingleTrackHandlerSpec extends UnitSpecification {
 
         val response = get(handler.renderTrack, path, Map.empty, Map("If-None-Match" -> "a8d3ba6d09b68691b77dc75dfcd7a477"))
         response.status ==== Status.Ok
-        Json.fromString(response.contentString) ==== expectedJson
+        Json.parse(response.contentString) ==== expectedJson
       }
   }
 
@@ -213,7 +212,7 @@ class SingleTrackHandlerSpec extends UnitSpecification {
 
         val response = get(handler.renderTrack, path, Map("secret_token" -> "s3cret"))
         response.status ==== Status.Ok
-        Json.fromString(response.contentString) ==== expectedJson
+        Json.parse(response.contentString) ==== expectedJson
       }
   }
 
@@ -247,7 +246,7 @@ class SingleTrackHandlerSpec extends UnitSpecification {
 
         import TrackRepresentation.writes
 
-        response.contentString ==== Json.stringify(trackRepresentation)
+        response.contentString ==== Json.stringify(Json.toJson(trackRepresentation))
       }
 
       "it returns 404 for None" in new FromTrackMetadata {
@@ -283,7 +282,7 @@ class SingleTrackHandlerSpec extends UnitSpecification {
 
       import TrackRepresentation.writes
 
-      val expectedJson = Json.stringify(trackRepresentation)
+      val expectedJson = Json.stringify(Json.toJson(trackRepresentation))
       val expectedBody = s"/**/myFunctionName($expectedJson);"
       response.statusCode ==== 200
       response.contentString ==== expectedBody

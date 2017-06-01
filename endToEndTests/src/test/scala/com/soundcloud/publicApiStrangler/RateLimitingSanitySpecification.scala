@@ -1,6 +1,6 @@
 package com.soundcloud.publicApiStrangler
 
-import com.soundcloud.jvmkit.zookeeper.{BasePath, ZkClient}
+import com.soundcloud.jvmkit.module.zookeeper.{BasePath, ZkClient}
 import com.soundcloud.testutilities.{GratisMusikDiebstahl, SpinningUpAppSupport}
 import org.apache.curator.framework.CuratorFrameworkFactory
 import org.apache.curator.retry.ExponentialBackoffRetry

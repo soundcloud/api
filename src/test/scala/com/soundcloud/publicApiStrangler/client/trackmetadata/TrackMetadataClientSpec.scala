@@ -1,18 +1,17 @@
 package com.soundcloud.publicApiStrangler.client.trackmetadata
 
-import com.soundcloud.jvmkit.module.http.client.Params
+import com.soundcloud.jvmkit.module.http.client.{JsonClient, Params}
+import com.soundcloud.jvmkit.module.util.http.Headers
 import com.soundcloud.jvmkit.module.util.{Path, Urn}
-import com.soundcloud.publicApiStrangler.client.BigJvmKitConversions._
 import com.soundcloud.publicApiStrangler.test.UnitSpecification
-import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures
-import com.soundcloud.scalakit.finagle.http.{InternalServerErrorStatus, NotFoundStatus, OkStatus}
-import com.soundcloud.scalakit.finagle.jsonservice.{JsonClient, JsonResponse}
+import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures._
+import com.twitter.finagle.http.Status
 import com.twitter.util.{Await, Future}
 import org.joda.time.LocalDateTime
 import org.mockito.Mockito.{verify, when}
 import play.api.libs.json.{JsNull, Json}
 
-class TrackMetadataClientSpec extends UnitSpecification with Fixtures {
+class TrackMetadataClientSpec extends UnitSpecification {
 
   trait Context extends Scope {
     val service = mock[JsonClient]
@@ -28,22 +27,22 @@ class TrackMetadataClientSpec extends UnitSpecification with Fixtures {
     "track is not found" >> {
 
       trait NotFoundContext extends TrackContext {
-        when(service.get(anonymousSession, path, Params.empty, Params.empty))
-          .thenReturn(Future(JsonResponse(NotFoundStatus, JsNull)))
+        when(service.getWithSession(anonymousSession, path, Params.empty, Headers.empty))
+          .thenReturn(Future(jsonResponse(Status.NotFound, JsNull)))
       }
 
       "returns None" in new NotFoundContext {
         val track = Await.result(trackmetadataClient.track(anonymousSession, urn))
         track must beNone
 
-        verify(service).get(anonymousSession, path, Params.empty, Params.empty)
+        verify(service).getWithSession(anonymousSession, path, Params.empty, Headers.empty)
       }
     }
 
     "track is found" >> {
       trait FoundContext extends TrackContext {
-        when(service.get(anonymousSession, path, Params.empty, Params.empty))
-          .thenReturn(Future(JsonResponse(OkStatus, trackmetadataClientTracks_2)))
+        when(service.getWithSession(anonymousSession, path, Params.empty, Headers.empty))
+          .thenReturn(Future(jsonResponse(Status.Ok, trackmetadataClientTracks_2)))
       }
 
       "returns the track for the given urn" in new FoundContext {
@@ -83,15 +82,15 @@ class TrackMetadataClientSpec extends UnitSpecification with Fixtures {
         track.artwork.filename ==== Some("artworks-000001073830-j0xbmn-original.jpg")
         track.published_at ==== Some(new LocalDateTime(1989, 12, 22, 0, 0))
 
-        verify(service).get(anonymousSession, path, Params.empty, Params.empty)
+        verify(service).getWithSession(anonymousSession, path, Params.empty, Headers.empty)
       }
     }
 
     "track with rogue attributes" >> {
 
       trait RogueTrack extends TrackContext {
-        when(service.get(anonymousSession, path, Params.empty, Params.empty))
-          .thenReturn(Future(JsonResponse(OkStatus, trackmetadataClientTracks_rogue)))
+        when(service.getWithSession(anonymousSession, path, Params.empty, Headers.empty))
+          .thenReturn(Future(jsonResponse(Status.Ok, trackmetadataClientTracks_rogue)))
       }
 
       "sanitize attributes" in new RogueTrack {
@@ -114,8 +113,8 @@ class TrackMetadataClientSpec extends UnitSpecification with Fixtures {
     "track where nullable boolean fields are null" >> {
 
       trait NulledBooleansTrack extends TrackContext {
-        when(service.get(anonymousSession, path, Params.empty, Params.empty))
-          .thenReturn(Future(JsonResponse(OkStatus, trackmetadataClientNullableBooleans)))
+        when(service.getWithSession(anonymousSession, path, Params.empty, Headers.empty))
+          .thenReturn(Future(jsonResponse(Status.Ok, trackmetadataClientNullableBooleans)))
         val response = Await.result(trackmetadataClient.track(anonymousSession, urn))
         response must beSome[Track]
         val track = response.get
@@ -131,7 +130,7 @@ class TrackMetadataClientSpec extends UnitSpecification with Fixtures {
 
       "parses downloadable correctly" in new NulledBooleansTrack {
         track.downloadable ==== None
-        verify(service).get(anonymousSession, path, Params.empty, Params.empty)
+        verify(service).getWithSession(anonymousSession, path, Params.empty, Headers.empty)
       }
     }
   }
@@ -149,22 +148,22 @@ class TrackMetadataClientSpec extends UnitSpecification with Fixtures {
 
     "no tracks are found" >> {
       trait NoneFoundContext extends TracksContext {
-        when(service.get(anonymousSession, path, toBigJvmKitUrnSet(urns), Params.empty))
-          .thenReturn(Future(JsonResponse(OkStatus, trackmetadataClientEmptyTracks)))
+        when(service.getWithSession(anonymousSession, path, urns, Headers.empty))
+          .thenReturn(Future(jsonResponse(Status.Ok, trackmetadataClientEmptyTracks)))
       }
 
       "returns empty list" in new NoneFoundContext {
         val tracks = Await.result(trackmetadataClient.tracks(anonymousSession, urns))
         tracks must beEmpty
 
-        verify(service).get(anonymousSession, path, toBigJvmKitUrnSet(urns), Params.empty)
+        verify(service).getWithSession(anonymousSession, path, urns, Headers.empty)
       }
     }
 
     "all of the tracks are found" >> {
       trait NoneFoundContext extends TracksContext {
-        when(service.get(anonymousSession, path, toBigJvmKitUrnSet(urns), Params.empty))
-          .thenReturn(Future(JsonResponse(OkStatus, trackmetadataClientMultipleTracks)))
+        when(service.getWithSession(anonymousSession, path, urns, Headers.empty))
+          .thenReturn(Future(jsonResponse(Status.Ok, trackmetadataClientMultipleTracks)))
       }
 
       "returns a list containing all of the tracks" in new NoneFoundContext {
@@ -172,14 +171,14 @@ class TrackMetadataClientSpec extends UnitSpecification with Fixtures {
         tracks must haveSize(3)
         tracks.map(_.urn) must contain(urn1, urn2, urn3)
 
-        verify(service).get(anonymousSession, path, toBigJvmKitUrnSet(urns), Params.empty)
+        verify(service).getWithSession(anonymousSession, path, urns, Headers.empty)
       }
     }
 
     "some tracks are found" >> {
       trait SomeFoundContext extends TracksContext {
-        when(service.get(anonymousSession, path, toBigJvmKitUrnSet(urns), Params.empty))
-          .thenReturn(Future(JsonResponse(OkStatus, trackmetadataClientTracks_1_3)))
+        when(service.getWithSession(anonymousSession, path, urns, Headers.empty))
+          .thenReturn(Future(jsonResponse(Status.Ok, trackmetadataClientTracks_1_3)))
       }
 
       "returns list of found tracks" in new SomeFoundContext {
@@ -187,25 +186,25 @@ class TrackMetadataClientSpec extends UnitSpecification with Fixtures {
         tracks must haveSize(2)
         tracks.map(_.urn) must contain(urn1, urn3)
 
-        verify(service).get(anonymousSession, path, toBigJvmKitUrnSet(urns), Params.empty)
+        verify(service).getWithSession(anonymousSession, path, urns, Headers.empty)
       }
     }
 
     "Track urn count is more than batch limit" >> {
       trait BatchContext extends TracksContext {
-        when(service.get(anonymousSession, path, toBigJvmKitUrnSet(Set(urn1, urn2)), Params.empty))
-          .thenReturn(Future(JsonResponse(OkStatus, trackmetadataClientTracks_1_3)))
+        when(service.getWithSession(anonymousSession, path, Set(urn1, urn2), Headers.empty))
+          .thenReturn(Future(jsonResponse(Status.Ok, trackmetadataClientTracks_1_3)))
 
-        when(service.get(anonymousSession, path, toBigJvmKitUrnSet(Set(urn3)), Params.empty))
-          .thenReturn(Future(JsonResponse(OkStatus, trackmetadataClientTracks_1_3)))
+        when(service.getWithSession(anonymousSession, path, Set(urn3), Headers.empty))
+          .thenReturn(Future(jsonResponse(Status.Ok, trackmetadataClientTracks_1_3)))
       }
 
       "returns list of found tracks" in new BatchContext {
         val tracks = Await.result(trackmetadataClient.tracks(anonymousSession, Set(urn1, urn2, urn3), 2))
         tracks must haveSize(4)
 
-        verify(service).get(anonymousSession, path, toBigJvmKitUrnSet(Set(urn1, urn2)), Params.empty)
-        verify(service).get(anonymousSession, path, toBigJvmKitUrnSet(Set(urn3)), Params.empty)
+        verify(service).getWithSession(anonymousSession, path, Set(urn1, urn2), Headers.empty)
+        verify(service).getWithSession(anonymousSession, path, Set(urn3), Headers.empty)
       }
     }
   }
@@ -227,15 +226,15 @@ class TrackMetadataClientSpec extends UnitSpecification with Fixtures {
     }
 
     "200 status" in new UrnsByUserContext {
-      when(service.get(anonymousSession, path, Params.empty, Params.empty))
-        .thenReturn(Future(JsonResponse(OkStatus, jsonBody)))
+      when(service.getWithSession(anonymousSession, path, Params.empty, Headers.empty))
+        .thenReturn(Future(jsonResponse(Status.Ok, jsonBody)))
 
       Await.result(trackmetadataClient.urnsByUser(anonymousSession, userUrn)) ==== List(urn1, urn2)
     }
 
     "500 status" in new UrnsByUserContext {
-      when(service.get(anonymousSession, path, Params.empty, Params.empty))
-        .thenReturn(Future(JsonResponse(InternalServerErrorStatus, JsNull)))
+      when(service.getWithSession(anonymousSession, path, Params.empty, Headers.empty))
+        .thenReturn(Future(jsonResponse(Status.InternalServerError, JsNull)))
 
       Await.result(trackmetadataClient.urnsByUser(anonymousSession, userUrn)) ==== List.empty
     }

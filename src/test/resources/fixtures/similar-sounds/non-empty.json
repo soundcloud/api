@@ -1,0 +1,22 @@
+{
+  "meta": {
+    "query_urn": "soundcloud:similarsounds:c90098b750d4470cafa834fb951fe657",
+    "source_version": "snap-source",
+    "next_href": "https://similar-sounds.int.s-cloud.net/similar-to/soundcloud:tracks:125050457?page=2&page_size=3&query_urn=soundcloud%3Asimilarsounds%3Ac90098b750d4470cafa834fb951fe657&variant=default",
+    "page_size": 3,
+    "page": 1,
+    "previous_href": "",
+    "variant": "default"
+  },
+  "tracks": [
+    {
+      "urn": "soundcloud:tracks:139565597"
+    },
+    {
+      "urn": "soundcloud:tracks:113100217"
+    },
+    {
+      "urn": "soundcloud:tracks:93685166"
+    }
+  ]
+}

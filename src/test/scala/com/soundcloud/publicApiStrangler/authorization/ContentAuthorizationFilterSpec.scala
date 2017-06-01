@@ -4,12 +4,11 @@ import java.nio.charset.StandardCharsets
 
 import com.soundcloud.jvmkit.module.http.server.{AlwaysMatchesPathMatcher, HandlerRequest, JsonResponseBuilder}
 import com.soundcloud.publicApiStrangler.test.UnitSpecification
-import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures
 import com.twitter.finagle.Service
 import com.twitter.finagle.http.{Request, Response}
 import com.twitter.util.{Await, Future}
 
-class ContentAuthorizationFilterSpec extends UnitSpecification with Fixtures {
+class ContentAuthorizationFilterSpec extends UnitSpecification {
 
   trait Context extends Scope {
     val someRequest = HandlerRequest(AlwaysMatchesPathMatcher, Request("/something")).request

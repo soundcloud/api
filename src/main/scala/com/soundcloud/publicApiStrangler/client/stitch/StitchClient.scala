@@ -1,13 +1,12 @@
 package com.soundcloud.publicApiStrangler.client.stitch
 
-import com.soundcloud.jvmkit.module.util.Urn
+import com.soundcloud.jvmkit.module.http.client.{JsonClient, Params}
+import com.soundcloud.jvmkit.module.util.{Path, Urn}
+import com.soundcloud.jvmkit.module.util.http.Headers
 import com.soundcloud.jvmkit.module.util.session.UserSession
-import com.soundcloud.publicApiStrangler.client.BigJvmKitConversions.toBigJvmKitUserSession
-import com.soundcloud.scalakit.Path
-import com.soundcloud.scalakit.finagle.http.OkStatus
-import com.soundcloud.scalakit.finagle.jsonservice.{JsonClient, JsonResponse, Params}
+import com.twitter.finagle.http.{Response, Status}
 import com.twitter.util.Future
-import play.api.libs.json.JsValue
+import play.api.libs.json.{JsLookupResult, JsValue, Json}
 
 class StitchClient(jsonClient: JsonClient) {
   def countsForTrack(session: UserSession, trackUrn: Urn, userUrn: Urn): Future[StitchCounts] = {
@@ -35,9 +34,11 @@ class StitchClient(jsonClient: JsonClient) {
   }
 
   private def get(session: UserSession, params: Params, keys: Set[String]) = {
-    jsonClient.get(session, Path() / "bulk", params, Params.empty).map {
-      case JsonResponse(OkStatus, body, _, _) => parseBody(body, keys)
-      case _ => throw new RuntimeException("Unexpected response status")
+    jsonClient.getWithSession(session, Path() / "bulk", params, Headers.empty()).map { response: Response =>
+      response.status match {
+        case Status.Ok => parseBody(response.contentString, keys)
+        case _ => throw new RuntimeException("Unexpected response status")
+      }
     }
   }
 
@@ -60,24 +61,25 @@ class StitchClient(jsonClient: JsonClient) {
     s"/ts?category=$cat.o.t$minusCategory&resolution=alltime&$keyParam"
   }
 
-  private def parseBody[T](body: JsValue, keys: Set[String]): Map[Urn, StitchCounts] = {
+  private def parseBody[T](body: String, keys: Set[String]): Map[Urn, StitchCounts] = {
     keys.map { key =>
+      val jsBody = Json.parse(body)
       val urnFromKey = Urn("soundcloud", "tracks", key.split("\\|").last)
 
       val parseFn = parseCountFromCatBody(key) _
 
       val count = StitchCounts(
-        playback_count = parseFn(body \ "plays"),
-        download_count = parseFn(body \ "downloads"),
-        favoritings_count = parseFn(body \ "likes"),
-        comment_count = parseFn(body \ "comments"),
-        reposts_count = parseFn(body \ "reposts")
+        playback_count = parseFn(jsBody \ "plays"),
+        download_count = parseFn(jsBody \ "downloads"),
+        favoritings_count = parseFn(jsBody \ "likes"),
+        comment_count = parseFn(jsBody \ "comments"),
+        reposts_count = parseFn(jsBody \ "reposts")
       )
 
       (urnFromKey, count)
     }.toMap
   }
 
-  private def parseCountFromCatBody(key: String)(catBody: JsValue): Int =
+  private def parseCountFromCatBody(key: String)(catBody: JsLookupResult): Int =
     ((catBody \ key \ "series") (0) \ "count").asOpt[Int].getOrElse(0)
 }

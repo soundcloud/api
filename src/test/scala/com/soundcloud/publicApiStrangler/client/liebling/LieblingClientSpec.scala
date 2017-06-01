@@ -1,17 +1,14 @@
 package com.soundcloud.publicApiStrangler.client.liebling
 
-import com.soundcloud.jvmkit.module.http.client.Params
+import com.soundcloud.jvmkit.module.http.client.{JsonClient, Params}
+import com.soundcloud.jvmkit.module.util.http.Headers
+import com.soundcloud.jvmkit.module.util.session.UserSessionBuilder
 import com.soundcloud.jvmkit.module.util.{Path, Urn}
-import com.soundcloud.jvmkit.module.util.session.{UserSession, UserSessionBuilder}
-import com.soundcloud.publicApiStrangler.client.BigJvmKitConversions._
-import com.soundcloud.scalakit.finagle.http.{OkStatus, StatusCode}
-import com.soundcloud.scalakit.finagle.jsonservice.{JsonClient, JsonResponse}
+import com.soundcloud.publicApiStrangler.test.Helpers._
 import com.soundcloud.publicApiStrangler.test.UnitSpecification
 import com.twitter.finagle.IndividualRequestTimeoutException
 import com.twitter.util.{Await, Duration, Future}
-import org.jboss.netty.handler.codec.http.HttpMethod
-import org.mockito.Mockito.when
-import play.api.libs.json.{JsNull, JsValue, Json}
+import play.api.libs.json.{JsArray, Json}
 
 class LieblingClientSpec extends UnitSpecification {
 
@@ -62,10 +59,10 @@ class LieblingClientSpec extends UnitSpecification {
 
     "unsucessful response" in new Context {
       val targets = Seq(playlistUrn, trackUrn)
-      service.get(session,
+      service.getWithSession(session,
         Path() / "likes_info",
         Params("for_urns" -> targets, "includes" -> "likes_counts"),
-        Params.empty) returns Future.exception(new IndividualRequestTimeoutException(Duration.fromMilliseconds(1000L)))
+        Headers.empty) returns Future.exception(new IndividualRequestTimeoutException(Duration.fromMilliseconds(1000L)))
 
       val actual = Await.result(client.likeCounts(session, targets))
 
@@ -89,12 +86,12 @@ class LieblingClientSpec extends UnitSpecification {
     "performs requests in batches if necessary" in new Context() {
       val targets = Seq(playlistUrn, trackUrn)
       val firstResponse = Json.obj(
-        "likes_counts" -> Json.arr((lieblingLikesCount \ "likes_counts") (0)),
+        "likes_counts" -> Json.arr((lieblingLikesCount \ "likes_counts" \ 0).get),
         "liked_track_urns" -> Json.arr()
       )
       val secondResponse = Json.obj(
-        "likes_counts" -> Json.arr((lieblingLikesCount \ "likes_counts") (1)),
-        "liked_track_urns" -> (lieblingLikesCount \ "liked_track_urns")
+        "likes_counts" -> Json.arr((lieblingLikesCount \ "likes_counts" \ 1).get),
+        "liked_track_urns" -> (lieblingLikesCount \ "liked_track_urns").get
       )
 
       expectOkResponse(Path() / "likes_info", firstResponse, Map("for_urns" -> Seq(playlistUrn), "includes" -> "likes_counts,liked_track_urns", "user_urn" -> userUrn))
@@ -148,11 +145,11 @@ class LieblingClientSpec extends UnitSpecification {
     }
 
     "unsuccessful response" in new UserTotalLikeCounts {
-      service.get(
+      service.getWithSession(
         session,
         Path() / "users_counts",
         Params("for_urns" -> targetUrns),
-        Params.empty) returns Future.exception(new RuntimeException("noooo"))
+        Headers.empty) returns Future.exception(new RuntimeException("noooo"))
 
       result.size ==== 0
     }
@@ -173,37 +170,5 @@ class LieblingClientSpec extends UnitSpecification {
       Await.result(client.userLikedTracks(session, trackUrns.toSet, userUrn)) ==== Map(track1 -> true, track2 -> false)
     }
   }
-
-  private def expectOkResponse(path: Path, expected: JsValue, params: Params = Params.empty, headers: Params = Params.empty)
-                              (implicit service: JsonClient, session: UserSession) =
-    expectResponse(path, params, HttpMethod.GET, headers, OkStatus, ExpectedBody(expected))
-
-  private def expectResponse(path: Path, params: Params, method: HttpMethod, headers: Params, code: StatusCode, expectedBody: MockedBody = new ExpectedBody(JsNull, None))
-                            (implicit service: JsonClient, session: UserSession) = {
-    val bodyString = expectedBody.requestBodyString
-
-    when(
-      method match {
-        case HttpMethod.GET => if (session != null) service.get(session, path, params, headers) else service.getWithoutSession(path, params, headers)
-        case HttpMethod.POST => service.post(session, path, params, headers, bodyString)
-        case HttpMethod.PATCH => service.patch(session, path, params, headers, bodyString)
-        case HttpMethod.DELETE => service.delete(session, path, params, headers, bodyString)
-        case HttpMethod.PUT => service.put(session, path, params, headers, bodyString)
-        case HttpMethod.OPTIONS => service.options(session, path, params, params, bodyString)
-        case HttpMethod.HEAD => service.head(session, path, params, params, bodyString)
-        case HttpMethod.TRACE => service.trace(session, path, params, params, bodyString)
-        case HttpMethod.CONNECT => service.connect(session, path, params, params, bodyString)
-      }
-    ).thenReturn(Future(JsonResponse(code, expectedBody.responseBody)))
-  }
 }
 
-trait MockedBody {
-  val responseBody: JsValue
-
-  def requestBodyString: Option[String]
-}
-
-case class ExpectedBody(responseBody: JsValue = JsNull, requestBody: Option[JsValue] = None) extends MockedBody {
-  override def requestBodyString = requestBody.map(Json.stringify)
-}

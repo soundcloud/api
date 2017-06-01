@@ -1,0 +1,47 @@
+{
+   "preview" : [
+      {
+         "protocol" : "http",
+         "codec" : "mp3",
+         "duration_ms" : 30000,
+         "expires_at" : "2014-08-05T14:09:38.112302473+02:00",
+         "bitrate_kbps" : 128,
+         "url" : "https://ec-preview-media-staging.sndcdn.com/preview/0/20/019aJrjWRlng.128.mp3"
+      },
+      {
+         "protocol" : "hls",
+         "codec" : "mp3",
+         "duration_ms" : 20775,
+         "expires_at" : "2014-08-05T14:09:28.887169799+02:00",
+         "bitrate_kbps" : 128,
+         "url" : "https://ec-hls-media.soundcloud.com/playlist/0/30/2bAA4VpdwqqY.128.mp3/playlist.m3u8"
+      }
+   ],
+   "available_streams" : [
+      {
+         "protocol" : "hls",
+         "codec" : "mp3",
+         "duration_ms" : 20775,
+         "expires_at" : "2014-08-05T14:09:28.887169799+02:00",
+         "bitrate_kbps" : 128,
+         "url" : "https://ec-hls-media.soundcloud.com/playlist/2bAA4VpdwqqY.128.mp3/playlist.m3u8"
+      },
+      {
+         "protocol" : "rtmp",
+         "codec" : "mp3",
+         "duration_ms" : 20775,
+         "expires_at" : "2014-08-05T14:09:08.112191418+02:00",
+         "bitrate_kbps" : 128,
+         "url" : "rtmp://ec-rtmp-media.soundcloud.com/mp3:2bAA4VpdwqqY.128"
+      },
+      {
+         "protocol" : "http",
+         "codec" : "mp3",
+         "duration_ms" : 20775,
+         "expires_at" : "2014-08-05T14:09:28.887275936+02:00",
+         "bitrate_kbps" : 128,
+         "url" : "https://ec-media.soundcloud.com/2bAA4VpdwqqY.128.mp3"
+      }
+   ]
+}
+

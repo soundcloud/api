@@ -1,14 +1,15 @@
 package com.soundcloud.publicApiStrangler.mapping.search
 
+import com.soundcloud.jvmkit.module.http.client.{Params, StringParam}
+import com.soundcloud.jvmkit.module.util.Path
 import com.twitter.finagle.http.Request
 import com.soundcloud.publicApiStrangler.mapper.search.SearchRepository
-import com.soundcloud.scalakit.Path
-import com.soundcloud.scalakit.finagle.jsonservice.{StringParam, Params}
 
 case class SearchDispatcherRequest(searchPath: Path, paginationParams: Set[String], searchHeaders: Map[String, String])
                                   (val mapParams: Params => Params)
-                                  // two param lists because we don't want to include the function
-                                  // in equality testing in tests
+
+// two param lists because we don't want to include the function
+// in equality testing in tests
 
 object SearchDispatcherRequest {
 
@@ -73,8 +74,8 @@ object SearchDispatcherRequest {
 
   def mapPlaylistParams(params: Params): Params = mapParams(params, CommonParamMappings ++ PlaylistParamMappings)
 
-  def mapParams(params: Params, paramMappings: Map[String,String]): Params = params.collect {
-    case (k,v) if paramMappings contains k => (paramMappings(k), v)
+  def mapParams(params: Params, paramMappings: Map[String, String]): Params = params.collect {
+    case (k, v) if paramMappings contains k => (paramMappings(k), v)
   }
 
   val trackSearch: Request => SearchDispatcherRequest = request =>

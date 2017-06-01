@@ -1,9 +1,8 @@
 package com.soundcloud.publicApiStrangler.support
 
-import com.soundcloud.scalakit.finagle.http.RouterResponse
-import com.soundcloud.scalakit.test.{UnitSpecification}
+import com.soundcloud.publicApiStrangler.test.UnitSpecification
 import com.twitter.finagle.Service
-import com.twitter.finagle.http.{MediaType, Method, Request}
+import com.twitter.finagle.http.{MediaType, Method, Request, Response}
 import com.twitter.util.{Await, Future}
 import org.mockito.Mockito._
 import org.mockito.Mockito.when
@@ -11,7 +10,7 @@ import org.mockito.Mockito.when
 class AcceptOnlyJsonRequestFilterSpec extends UnitSpecification {
 
   trait Context extends Scope {
-    val next = mock[Service[Request, RouterResponse]]
+    val next = mock[Service[Request, Response]]
     val expectedAcceptHeader = "application/json"
   }
 
@@ -19,7 +18,7 @@ class AcceptOnlyJsonRequestFilterSpec extends UnitSpecification {
     val filter = new AcceptOnlyJsonRequestFilter(() => Future.True)
     val request = Request("/test", "format" -> "json")
 
-    val responseFromNextService = mock[RouterResponse]
+    val responseFromNextService = mock[Response]
     when(next.apply(like[Request] {
       case req =>
         req.params.get("format") must beSome("json")
@@ -32,7 +31,7 @@ class AcceptOnlyJsonRequestFilterSpec extends UnitSpecification {
     val filter = new AcceptOnlyJsonRequestFilter(() => Future.True)
     val request = Request("/test", "format" -> "xml")
 
-    val responseFromNextService = mock[RouterResponse]
+    val responseFromNextService = mock[Response]
     when(next.apply(like[Request] {
       case req =>
         req.params.get("format") must beNone
@@ -45,7 +44,7 @@ class AcceptOnlyJsonRequestFilterSpec extends UnitSpecification {
     val filter = new AcceptOnlyJsonRequestFilter(() => Future.False)
     val request = Request("/test", "format" -> "xml")
 
-    val responseFromNextService = mock[RouterResponse]
+    val responseFromNextService = mock[Response]
     when(next.apply(request)).thenReturn(Future.value(responseFromNextService))
 
     Await.result(filter(request, next)) mustEqual responseFromNextService
@@ -58,7 +57,7 @@ class AcceptOnlyJsonRequestFilterSpec extends UnitSpecification {
     request.setContentString(contentString)
     request.method_=(Method.Put)
 
-    val responseFromNextService = mock[RouterResponse]
+    val responseFromNextService = mock[Response]
     when(next.apply(like[Request] {
       case req =>
         req ==== request
@@ -89,7 +88,7 @@ class AcceptOnlyJsonRequestFilterSpec extends UnitSpecification {
 
         val filter = new AcceptOnlyJsonRequestFilter(() => Future.False)
 
-        val responseFromNextService = mock[RouterResponse]
+        val responseFromNextService = mock[Response]
         when(next.apply(like[Request] {
           case req =>
             req.acceptMediaTypes ==== Seq(expectedAcceptHeader)
@@ -103,7 +102,7 @@ class AcceptOnlyJsonRequestFilterSpec extends UnitSpecification {
       val request = Request("/test.json")
       val filter = new AcceptOnlyJsonRequestFilter(() => Future.False)
 
-      val responseFromNextService = mock[RouterResponse]
+      val responseFromNextService = mock[Response]
       when(next.apply(like[Request] {
         case req =>
           req.acceptMediaTypes ==== Seq(expectedAcceptHeader)
@@ -115,7 +114,7 @@ class AcceptOnlyJsonRequestFilterSpec extends UnitSpecification {
     "without the header and extension" in new Context {
       val request = Request()
       val filter = new AcceptOnlyJsonRequestFilter(() => Future.False)
-      val responseFromNextService = mock[RouterResponse]
+      val responseFromNextService = mock[Response]
 
       when(next.apply(like[Request] {
         case req =>
@@ -131,7 +130,7 @@ class AcceptOnlyJsonRequestFilterSpec extends UnitSpecification {
     request.accept = "application/xml;q=0.8,*/*;q=0.5"
     val filter = new AcceptOnlyJsonRequestFilter(() => Future.False)
 
-    val responseFromNextService = mock[RouterResponse]
+    val responseFromNextService = mock[Response]
     when(next.apply(like[Request] {
       case req =>
         req.acceptMediaTypes ==== Seq(expectedAcceptHeader)

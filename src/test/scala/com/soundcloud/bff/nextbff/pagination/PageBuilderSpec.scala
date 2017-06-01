@@ -1,14 +1,15 @@
 package com.soundcloud.bff.nextbff.pagination
 
+import com.soundcloud.jvmkit.module.http.client.StringParam
 import com.soundcloud.publicApiStrangler.test.UnitSpecification
 import com.soundcloud.jvmkit.module.util.Urn
-import com.soundcloud.scalakit.finagle.jsonservice.StringParam
 import com.twitter.finagle.http.Request
 
 class PageBuilderSpec extends UnitSpecification {
 
   trait Context extends Scope {
     def request = Request("/stream-with-unicorns", "param" -> "var")
+
     val baseUrl = "http://api-v3"
     val urn = new Urn("soundcloud:users:2")
     val builder = PageBuilder(request, baseUrl)(urn)
@@ -48,6 +49,7 @@ class PageBuilderSpec extends UnitSpecification {
 
   "uses the request's limit" in new Context {
     override def request = Request("/stream-with-unicorns", "limit" -> "344")
+
     val page = builder.buildCursorBased()
     page.limit ==== 344
   }
@@ -65,6 +67,7 @@ class PageBuilderSpec extends UnitSpecification {
 
   "allows to define a default limit and still allows a limit parameter" in new Context {
     override def request = Request("/stream-with-unicorns", "limit" -> "344")
+
     val defaultLimit = 233
     val page = builder.defaultLimit(defaultLimit).buildOffsetBased()
     page.limit ==== 344

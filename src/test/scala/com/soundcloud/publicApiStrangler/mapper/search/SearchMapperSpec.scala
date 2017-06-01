@@ -2,20 +2,20 @@ package com.soundcloud.publicApiStrangler.mapper.search
 
 import com.soundcloud.bff.nextbff.mapping.MappingContext
 import com.soundcloud.bff.nextbff.pagination.OffsetBasedPage
-import com.soundcloud.bff.services.{JsonService => BffJsonService}
+import com.soundcloud.jvmkit.module.http.client.{JsonClient, Param, Params}
 import com.soundcloud.jvmkit.module.util.Urn
-import com.soundcloud.jvmkit.module.util.session.{UserSession, UserSessionBuilder}
+import com.soundcloud.jvmkit.module.util.http.Headers
+import com.soundcloud.jvmkit.module.util.session.UserSessionBuilder
 import com.soundcloud.publicApiStrangler.authorization.ContentAuthorizationRules
-import com.soundcloud.publicApiStrangler.client.BigJvmKitConversions._
 import com.soundcloud.publicApiStrangler.client.CommonJsonFormats.urnFormat
+import com.soundcloud.publicApiStrangler.client.OkidokiClient
 import com.soundcloud.publicApiStrangler.client.followcounts.FollowCountsClient
 import com.soundcloud.publicApiStrangler.client.reposts.RepostsClient
 import com.soundcloud.publicApiStrangler.mapping.search.{LegacySearch, PaginatedSearch, SearchDispatcherRequest}
+import com.soundcloud.publicApiStrangler.support.UntypedJson
 import com.soundcloud.publicApiStrangler.test.UnitSpecification
-import com.soundcloud.scalakit.finagle.http.OkStatus
-import com.soundcloud.scalakit.finagle.jsonservice._
-import com.soundcloud.scalakit.json.UntypedJson
-import com.soundcloud.service.client.OkidokiClient
+import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures.withContentsOf
+import com.twitter.finagle.http.Status
 import com.twitter.util.{Await, Future}
 import org.mockito.Mockito.when
 import play.api.libs.json.{JsArray, JsNull, JsObject, Json}
@@ -24,7 +24,7 @@ class SearchRepositorySpec extends UnitSpecification {
 
   trait Context extends Scope {
     lazy val session = loggedInSession(new Urn("soundcloud:users:123"))
-    lazy val mockService = mock[BffJsonService]
+    lazy val mockService = mock[JsonClient]
     lazy val repo = new SearchRepository(mockService)
   }
 
@@ -36,8 +36,8 @@ class SearchRepositorySpec extends UnitSpecification {
       )
 
       val response = withContentsOf("search", "tracks").as[JsObject]
-      doReturn(Future.value(JsonResponse(OkStatus, response))).when(mockService)
-        .get(session, SearchRepository.TracksPath, commonParams + ("q" -> "bar"), Params.empty)
+      doReturn(Future.value(jsonResponse(Status.Ok, response))).when(mockService)
+        .getWithSession(session, SearchRepository.TracksPath, commonParams + ("q" -> "bar"), Headers.empty)
       val request = OffsetBasedPage(
         SearchDispatcherRequest(SearchRepository.TracksPath, Set.empty, Map.empty)(x => x),
         "http://localhost", "/search/tracks", Params("q" -> "bar"), 0, 10
@@ -54,8 +54,8 @@ class SearchRepositorySpec extends UnitSpecification {
       )
 
       val response = withContentsOf("search", "tracks").as[JsObject]
-      doReturn(Future.value(JsonResponse(OkStatus, response))).when(mockService)
-        .get(session, SearchRepository.UniversalPath, commonParams + ("q" -> "bar"), Params.empty)
+      doReturn(Future.value(jsonResponse(Status.Ok, response))).when(mockService)
+        .getWithSession(session, SearchRepository.UniversalPath, commonParams + ("q" -> "bar"), Headers.empty)
       val request = OffsetBasedPage(
         SearchDispatcherRequest(SearchRepository.UniversalPath, Set.empty, Map.empty)(x => x),
         "http://localhost", "/search/universal", Params("q" -> "bar"), 0, 10
@@ -106,7 +106,7 @@ class SearchMapperSpec extends UnitSpecification {
       .thenReturn(Future.value(Map(request -> json)))
 
     // okidoki doesn't know about it and returns an empty result
-    when(okidokiMock.fetch(sessionMock, urns.toSet.map(toBigJvmKitUrn)))
+    when(okidokiMock.fetch(sessionMock, urns.toSet))
       .thenReturn(Future.value(List.empty))
 
     when(caMock.fetchRules(===(sessionMock), any[Seq[Urn]]))

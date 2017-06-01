@@ -10,11 +10,10 @@ import com.soundcloud.publicApiStrangler.client.liebling.LieblingClient
 import com.soundcloud.publicApiStrangler.handler.SearchHandler._
 import com.soundcloud.publicApiStrangler.mapper.search.SearchMapper
 import com.soundcloud.publicApiStrangler.mapping.search.SearchDispatcherRequest
-import com.soundcloud.publicApiStrangler.support.DispatchToMothershipHandler
-import com.soundcloud.scalakit.finagle.http.BadRequestStatus
-import com.soundcloud.scalakit.json.UntypedJson
-import com.twitter.finagle.http.{ParamMap, Response}
+import com.soundcloud.publicApiStrangler.support.{DispatchToMothershipHandler, UntypedJson}
+import com.twitter.finagle.http.{ParamMap, Response, Status}
 import com.twitter.util.{Future, Return, Try}
+import play.api.libs.json.Json
 
 /**
   * Redirects search queries on to search-dispatcher and fetches meta data.
@@ -93,7 +92,7 @@ class SearchHandler(userAuthentication: UserAuthentication,
             case Some(info) => JsonResponseBuilder.ok(UntypedJson.write(info))
             case _ => ResponseBuilder.notFound()
           } handle {
-            case RepositoryException(BadRequestStatus, _) =>
+            case RepositoryException(Status.BadRequest, _) =>
               ResponseBuilder.badRequest()
           }
 

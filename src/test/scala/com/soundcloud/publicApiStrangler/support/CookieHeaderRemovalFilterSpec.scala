@@ -1,8 +1,7 @@
 package com.soundcloud.publicApiStrangler.support
 
-import com.soundcloud.bff.finagle.ResponseBuilder
-import com.soundcloud.scalakit.finagle.http.RouterResponse
-import com.soundcloud.scalakit.test.{UnitSpecification}
+import com.soundcloud.jvmkit.module.http.server.JsonResponseBuilder
+import com.soundcloud.publicApiStrangler.test.UnitSpecification
 import com.twitter.finagle.Service
 import com.twitter.finagle.http.{Request, Response}
 import com.twitter.util.{Await, Future}
@@ -10,14 +9,14 @@ import play.api.libs.json.{JsObject, JsString, Json}
 
 class CookieHeaderRemovalFilterSpec extends UnitSpecification {
 
-  class CookieCheckingService extends Service[Request, RouterResponse] {
-    override def apply(request: Request): Future[RouterResponse] = {
+  class CookieCheckingService extends Service[Request, Response] {
+    override def apply(request: Request): Future[Response] = {
       val headers: Seq[(String, JsString)] =
         request.headerMap.toSeq.map {
           case (k: String, v: String) => (k, JsString(v))
         }
-      val response = new ResponseBuilder().json(JsObject(headers)).build
-      Future.value(RouterResponse(response, "/foo"))
+      val response = JsonResponseBuilder().body(Json.stringify(JsObject(headers))).build
+      Future.value(response)
     }
   }
 

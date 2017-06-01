@@ -1,16 +1,15 @@
 package com.soundcloud.publicApiStrangler.authorization
 
-import com.soundcloud.bff.media.TrackWaveformUrl
-import com.soundcloud.jvmkit.module.util.Urn
+import com.soundcloud.jvmkit.module.util.{Url, Urn}
 import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.publicApiStrangler.authorization.TrackWaveformActionStatus._
+import com.soundcloud.publicApiStrangler.media.TrackWaveformUrl
 import com.soundcloud.publicApiStrangler.policies._
 import com.soundcloud.publicApiStrangler.test.UnitSpecification
-import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures
-import com.soundcloud.scalakit.{Url => BigJvmKitUrl}
+import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures._
 import play.api.libs.json.{JsObject, JsValue}
 
-class TrackPolicyApplicatorSpec extends UnitSpecification with Fixtures {
+class TrackPolicyApplicatorSpec extends UnitSpecification {
 
   trait Context extends Scope {
     val session = mock[UserSession]
@@ -145,8 +144,8 @@ class TrackPolicyApplicatorSpec extends UnitSpecification with Fixtures {
             new ContentAuthorization(urn, ContentPolicy.ALLOW, Reason.GEO, MonetizationModel.NOT_APPLICABLE)
         }
 
-      val urlWithoutDuration = TrackWaveformUrl("uid1", BigJvmKitUrl("http://preview/jsonurl/noDuration"), BigJvmKitUrl("http://preview/pngnurl/noDuration"), "stream", None)
-      val urlWithDuration = TrackWaveformUrl("uid3", BigJvmKitUrl("http://preview/jsonurl/withDuration"), BigJvmKitUrl("http://preview/pngnurl/withDuration"), "stream", Some(90000))
+      val urlWithoutDuration = TrackWaveformUrl("uid1", Url("http://preview/jsonurl/noDuration"), Url("http://preview/pngnurl/noDuration"), "stream", None)
+      val urlWithDuration = TrackWaveformUrl("uid3", Url("http://preview/jsonurl/withDuration"), Url("http://preview/pngnurl/withDuration"), "stream", Some(90000))
 
       def waveformActions = List(TrackWaveformAction(urns(0), NeedsModification, Some(urlWithoutDuration)),
         TrackWaveformAction(urns(1), DoesNotNeedModification, None),

@@ -14,6 +14,7 @@ import com.soundcloud.publicApiStrangler.test.{HandlerSpecificationScope, UnitSp
 import com.twitter.finagle.http.Status
 import com.twitter.util.Future
 import play.api.libs.json._
+import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures.withContentsOf
 
 class RepostersHandlerSpec extends UnitSpecification {
 
@@ -79,7 +80,7 @@ class RepostersHandlerSpec extends UnitSpecification {
       val trackReposts = Reposts(List(user), Some("ohai"))
       val noNextHrefTrackReposts = Reposts(List(user), None)
       val okidokiUsersJson = withContentsOf("okidoki", "users").as[JsArray]
-      val okidokiUserResponse = RepostsUser(okidokiUsersJson(0),
+      val okidokiUserResponse = RepostsUser(okidokiUsersJson(0).get,
         baseUrl,
         None,
         None,
@@ -152,7 +153,7 @@ class RepostersHandlerSpec extends UnitSpecification {
       Json.parse(response.contentString) ==== Json.parse(responseJson.contentString)
 
       response.status ==== Status.Ok
-      Json.parse(response.contentString) \ "collection" ==== usersJson
+      Json.parse(response.contentString) \ "collection" ==== JsDefined(usersJson)
       (Json.parse(responseJson.contentString) \ "next_href").asOpt[String] should beEmpty
     }
   }
@@ -162,7 +163,7 @@ class RepostersHandlerSpec extends UnitSpecification {
       val playlistReposts = Reposts(List(user), Some("ohai"))
       val noNextHrefPlaylistReposts = Reposts(List(user), None)
       val okidokiUsersJson = withContentsOf("okidoki", "users").as[JsArray]
-      val okidokiUserResponse = RepostsUser(okidokiUsersJson(0),
+      val okidokiUserResponse = RepostsUser(okidokiUsersJson(0).get,
         baseUrl,
         None,
         None,
@@ -235,7 +236,7 @@ class RepostersHandlerSpec extends UnitSpecification {
       Json.parse(response.contentString) ==== Json.parse(responseJson.contentString)
 
       response.status ==== Status.Ok
-      Json.parse(response.contentString) \ "collection" ==== usersJson
+      Json.parse(response.contentString) \ "collection" ==== JsDefined(usersJson)
       (Json.parse(responseJson.contentString) \ "next_href").asOpt[String] should beEmpty
     }
   }

@@ -2,14 +2,13 @@ package com.soundcloud.publicApiStrangler.client.followcounts
 
 import java.net.URLEncoder
 
-import com.soundcloud.bff.services.JsonService
-import com.soundcloud.jvmkit.module.http.client.Params
-import com.soundcloud.jvmkit.module.util.{Path, Urn}
+import com.soundcloud.jvmkit.module.http.client.{JsonClient, Params}
 import com.soundcloud.jvmkit.module.util.config.InMemoryConfig
-import com.soundcloud.publicApiStrangler.client.BigJvmKitConversions._
+import com.soundcloud.jvmkit.module.util.http.Headers
+import com.soundcloud.jvmkit.module.util.{Path, Urn}
 import com.soundcloud.publicApiStrangler.test.UnitSpecification
-import com.soundcloud.scalakit.finagle.http.{InternalServerErrorStatus, OkStatus}
-import com.soundcloud.scalakit.finagle.jsonservice.JsonResponse
+import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures.withContentsOf
+import com.twitter.finagle.http.{Response, Status}
 import com.twitter.util.{Await, Future}
 import org.mockito.Mockito.when
 import org.specs2.mutable.Before
@@ -18,7 +17,7 @@ import play.api.libs.json.JsNull
 class FollowCountsClientSpec extends UnitSpecification {
 
   trait Context extends Scope with Before {
-    lazy val jsonService = mock[JsonService]
+    lazy val jsonService = mock[JsonClient]
     lazy val user = Urn("soundcloud", "users", "1")
 
     val config = new InMemoryConfig
@@ -28,7 +27,7 @@ class FollowCountsClientSpec extends UnitSpecification {
 
     lazy val result = Await.result(client.counts(anonymousSession, Seq(user)))
 
-    def response: Future[JsonResponse]
+    def response: Future[Response]
 
     override def before: Any = {
       val bulkParams = Params(
@@ -42,18 +41,18 @@ class FollowCountsClientSpec extends UnitSpecification {
         )
       )
 
-      when(jsonService.get(anonymousSession, Path() / "bulk", bulkParams, Params.empty)) thenReturn response
+      when(jsonService.getWithSession(anonymousSession, Path() / "bulk", bulkParams, Headers.empty)) thenReturn response
     }
   }
 
   "returns counts on successful response" in new Context {
-    override def response = Future.value(JsonResponse(OkStatus, withContentsOf("stitch4follows", "bulk_follow_counts_response")))
+    override def response = Future.value(jsonResponse(Status.Ok, withContentsOf("stitch4follows", "bulk_follow_counts_response")))
 
     result ==== Seq(FollowCounts(user, 10, 20))
   }
 
   "returns empty set when server responds with a non OK status" in new Context {
-    override def response = Future.value(JsonResponse(InternalServerErrorStatus, JsNull))
+    override def response = Future.value(jsonResponse(Status.InternalServerError, JsNull))
 
     result ==== Seq.empty
   }

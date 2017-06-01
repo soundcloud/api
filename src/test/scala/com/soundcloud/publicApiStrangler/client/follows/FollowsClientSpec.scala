@@ -1,19 +1,17 @@
 package com.soundcloud.publicApiStrangler.client.follows
 
-import com.soundcloud.jvmkit.module.http.client.Params
+import com.soundcloud.jvmkit.module.http.client.{JsonClient, Params}
+import com.soundcloud.jvmkit.module.util.http.Headers
 import com.soundcloud.jvmkit.module.util.{Geo, Path, Urn}
 import com.soundcloud.jvmkit.module.util.session.UserSessionBuilder
 import com.soundcloud.publicApiStrangler.client.follows.representation._
 import com.soundcloud.publicApiStrangler.client.follows.representation.follow._
 import com.soundcloud.publicApiStrangler.client.follows.representation.unfollow.{UnfollowSuccessful, NotFollowing => UnfollowNotFollowing, UnknownError => UnfollowUnknownError, UserAsTarget => UnfollowUserAsTarget, UserNotFound => UnfollowUserNotFound}
-import com.soundcloud.scalakit.finagle.http.{ForbiddenStatus, UnprocessableEntityStatus, _}
-import com.soundcloud.scalakit.finagle.jsonservice.{JsonClient, JsonResponse}
 import com.twitter.util.{Await, Future}
 import org.joda.time.LocalDateTime
 import play.api.libs.json.{JsNull, JsString, JsValue, Json}
-import com.soundcloud.publicApiStrangler.client.BigJvmKitConversions._
-import com.soundcloud.publicApiStrangler.client.BigJvmKitConversions.toBigJvmKitParams
 import com.soundcloud.publicApiStrangler.test.UnitSpecification
+import com.twitter.finagle.http.Status
 
 import scala.io.{Codec, Source}
 import org.mockito.Mockito.{verify, when}
@@ -60,29 +58,29 @@ class FollowsClientSpec extends UnitSpecification {
 
       lazy val result = Await.result(client.follow(session, anotherUser))
 
-      def mockWith(status: StatusCode, body: JsValue) =
-        when(serviceMock.post(session, path, Params.empty, Params.empty, None))
-          .thenReturn(Future(JsonResponse(status, body)))
+      def mockWith(status: Status, body: JsValue) =
+        when(serviceMock.postWithSession(session, path, Params.empty, Headers.empty, None))
+          .thenReturn(Future(jsonResponse(status, body)))
 
       override def after: Any = {
-        verify(serviceMock).post(session, path, Params.empty, Params.empty, None)
+        verify(serviceMock).postWithSession(session, path, Params.empty, Headers.empty, None)
       }
     }
 
     "returns the created following when a new following is created" in new FollowContext {
-      mockWith(CreatedStatus, Fixtures.followingCreated)
+      mockWith(Status.Created, Fixtures.followingCreated)
 
       result ==== FollowingCreated(Following("42", new LocalDateTime("2015-12-08T00:32:10.000"), anotherUser, user))
     }
 
     "indicates when the target user is already being followed" in new FollowContext {
-      mockWith(OkStatus, JsNull)
+      mockWith(Status.Ok, JsNull)
 
       result ==== AlreadyFollowing
     }
 
     "indicates when the target user doesn't exist" in new FollowContext {
-      mockWith(NotFoundStatus, JsNull)
+      mockWith(Status.NotFound, JsNull)
 
       result ==== UserNotFound
     }
@@ -90,49 +88,49 @@ class FollowsClientSpec extends UnitSpecification {
     "indicates when the user is blocked for spam" in new FollowContext {
       val warnings = List(Json.obj("foo" -> "bar"))
 
-      mockWith(TooManyRequestsStatus, Json.obj("spam_warnings" -> warnings))
+      mockWith(Status.TooManyRequests, Json.obj("spam_warnings" -> warnings))
 
       result ==== SpamBlocked(warnings)
     }
 
     "indicates when the user is blocked by the target user" in new FollowContext {
-      mockWith(ForbiddenStatus, JsNull)
+      mockWith(Status.Forbidden, JsNull)
 
       result ==== BlockedByTarget
     }
 
     "indicates when the user has reached the maximum possible followings" in new FollowContext {
-      mockWith(UnprocessableEntityStatus, Fixtures.maxFollowingsReachedError)
+      mockWith(Status.UnprocessableEntity, Fixtures.maxFollowingsReachedError)
 
       result ==== MaxFollowingsReached
     }
 
     "indicates when the user tries to follow themselves" in new FollowContext {
-      mockWith(UnprocessableEntityStatus, Fixtures.userAsTargetError)
+      mockWith(Status.UnprocessableEntity, Fixtures.userAsTargetError)
 
       result ==== UserAsTarget
     }
 
     "indicates when the user is underage and tries to follow an age restricted target user" in new FollowContext {
-      mockWith(UnprocessableEntityStatus, Fixtures.ageRestrictedUserError)
+      mockWith(Status.UnprocessableEntity, Fixtures.ageRestrictedUserError)
 
       result ==== AgeRestrictedUser
     }
 
     "indicates when the user age is unknown and tries to follow an age restricted target user" in new FollowContext {
-      mockWith(UnprocessableEntityStatus, Fixtures.ageUnknownUserError)
+      mockWith(Status.UnprocessableEntity, Fixtures.ageUnknownUserError)
 
       result ==== AgeUnknownUser
     }
 
     "treats underspecified errors as unknown errors" in new FollowContext {
-      mockWith(UnprocessableEntityStatus, JsString("Some weird message"))
+      mockWith(Status.UnprocessableEntity, JsString("Some weird message"))
 
       result ==== UnknownError("Unknown error: \"Some weird message\"", 422)
     }
 
     "handles unknown errors" in new FollowContext {
-      mockWith(InternalServerErrorStatus, JsNull)
+      mockWith(Status.InternalServerError, JsNull)
 
       result ==== UnknownError("Unknown error: null", 500)
     }
@@ -148,29 +146,29 @@ class FollowsClientSpec extends UnitSpecification {
 
       lazy val result = Await.result(client.bulkFollow(session, List(anotherUser)))
 
-      def mockWith(status: StatusCode, body: JsValue) =
-        when(serviceMock.post(session, path, Params("urns" -> List(anotherUser)), Params.empty, None))
-          .thenReturn(Future(JsonResponse(status, body)))
+      def mockWith(status: Status, body: JsValue) =
+        when(serviceMock.postWithSession(session, path, Params("urns" -> List(anotherUser)), Headers.empty, None))
+          .thenReturn(Future(jsonResponse(status, body)))
 
       override def after: Any = {
-        verify(serviceMock).post(session, path, Params("urns" -> List(anotherUser)), Params.empty, None)
+        verify(serviceMock).postWithSession(session, path, Params("urns" -> List(anotherUser)), Headers.empty, None)
       }
     }
 
     "returns the target when following is successful" in new FollowCotext {
-      mockWith(CreatedStatus, JsNull)
+      mockWith(Status.Created, JsNull)
 
       result.head.isInstanceOf[FollowingCreated]
     }
 
     "returns failure when following fails" in new FollowCotext {
-      mockWith(BadRequestStatus, JsString("error"))
+      mockWith(Status.BadRequest, JsString("error"))
 
       result ==== List(BulkFollowFailed(List(anotherUser)))
     }
 
     "forwards error code when following fails with unknown error" in new FollowCotext {
-      mockWith(UnprocessableEntityStatus, JsString("error"))
+      mockWith(Status.UnprocessableEntity, JsString("error"))
 
       result.asInstanceOf[List[UnknownError]].head.status ==== 422
     }
@@ -186,43 +184,43 @@ class FollowsClientSpec extends UnitSpecification {
 
       lazy val result = Await.result(client.unfollow(session, anotherUser))
 
-      def mockWith(status: StatusCode, body: JsValue) =
-        when(serviceMock.delete(session, path, Params.empty, Params.empty, None))
-          .thenReturn(Future(JsonResponse(status, body)))
+      def mockWith(status: Status, body: JsValue) =
+        when(serviceMock.deleteWithSession(session, path, Params.empty, Headers.empty, None))
+          .thenReturn(Future(jsonResponse(status, body)))
 
       override def after: Any = {
-        verify(serviceMock).delete(session, path, Params.empty, Params.empty, None)
+        verify(serviceMock).deleteWithSession(session, path, Params.empty, Headers.empty, None)
       }
     }
 
     "returns the success of an unfollowing" in new UnfollowCotext {
-      mockWith(OkStatus, JsNull)
+      mockWith(Status.Ok, JsNull)
 
       result ==== UnfollowSuccessful
     }
 
     "indicates when the target user to unfollow doesn't exist" in new UnfollowCotext {
-      mockWith(NotFoundStatus, JsNull)
+      mockWith(Status.NotFound, JsNull)
 
       result ==== UnfollowUserNotFound
     }
 
     "indicates when the user is the target" in new UnfollowCotext {
-      mockWith(UnprocessableEntityStatus, Fixtures.userAsTargetError)
+      mockWith(Status.UnprocessableEntity, Fixtures.userAsTargetError)
 
       result ==== UnfollowUserAsTarget
     }
 
 
     "indicates when the target user is not being followed" in new UnfollowCotext {
-      mockWith(UnprocessableEntityStatus, Fixtures.notFollowingError)
+      mockWith(Status.UnprocessableEntity, Fixtures.notFollowingError)
 
       result ==== UnfollowNotFollowing
     }
 
 
     "handles unknown errors" in new UnfollowCotext {
-      mockWith(InternalServerErrorStatus, JsNull)
+      mockWith(Status.InternalServerError, JsNull)
 
       result ==== UnfollowUnknownError("Unknown error: null", 500)
     }
@@ -236,29 +234,29 @@ class FollowsClientSpec extends UnitSpecification {
 
       lazy val result = Await.result(client.followings(anonymousSession, user, Some("12345"), 1))
 
-      def mockWith(status: StatusCode, body: JsValue) =
-        when(serviceMock.get(anonymousSession, path, params, Params.empty))
-          .thenReturn(Future(JsonResponse(status, body)))
+      def mockWith(status: Status, body: JsValue) =
+        when(serviceMock.getWithSession(anonymousSession, path, params, Headers.empty))
+          .thenReturn(Future(jsonResponse(status, body)))
 
       override def after: Any = {
-        verify(serviceMock).get(anonymousSession, path, params, Params.empty)
+        verify(serviceMock).getWithSession(anonymousSession, path, params, Headers.empty)
       }
     }
 
     "returns none when an error happens" in new FollowingsContext {
-      mockWith(InternalServerErrorStatus, JsNull)
+      mockWith(Status.InternalServerError, JsNull)
 
       result ==== None
     }
 
     "returns an empty page when no followings are found" in new FollowingsContext {
-      mockWith(OkStatus, Fixtures.emptyFollowingsPage)
+      mockWith(Status.Ok, Fixtures.emptyFollowingsPage)
 
       result ==== Some(FollowingsPage(Seq.empty, None))
     }
 
     "returns the followings when one page of results is found" in new FollowingsContext {
-      mockWith(OkStatus, Fixtures.oneFollowingPage)
+      mockWith(Status.Ok, Fixtures.oneFollowingPage)
 
       val followings = Seq(Following("42", new LocalDateTime("2015-12-08T00:32:10.000"), anotherUser, user))
       val pagination = None
@@ -267,7 +265,7 @@ class FollowsClientSpec extends UnitSpecification {
     }
 
     "returns the followings and the next page information when multiple pages are found" in new FollowingsContext {
-      mockWith(OkStatus, Fixtures.oneFollowingPageWithNext)
+      mockWith(Status.Ok, Fixtures.oneFollowingPageWithNext)
 
       val followings = Seq(Following("42", new LocalDateTime("2015-12-08T00:32:10.000"), anotherUser, user))
       val pagination = Some(Pagination("12345", 1))
@@ -284,29 +282,29 @@ class FollowsClientSpec extends UnitSpecification {
 
       lazy val result = Await.result(client.followers(anonymousSession, anotherUser, Some("12345"), 1))
 
-      def mockWith(status: StatusCode, body: JsValue) =
-        when(serviceMock.get(anonymousSession, path, params, Params.empty))
-          .thenReturn(Future(JsonResponse(status, body)))
+      def mockWith(status: Status, body: JsValue) =
+        when(serviceMock.getWithSession(anonymousSession, path, params, Headers.empty))
+          .thenReturn(Future(jsonResponse(status, body)))
 
       override def after: Any = {
-        verify(serviceMock).get(anonymousSession, path, params, Params.empty)
+        verify(serviceMock).getWithSession(anonymousSession, path, params, Headers.empty)
       }
     }
 
     "returns none when an error happens" in new FollowersContext {
-      mockWith(InternalServerErrorStatus, JsNull)
+      mockWith(Status.InternalServerError, JsNull)
 
       result ==== None
     }
 
     "returns an empty page when no followings are found" in new FollowersContext {
-      mockWith(OkStatus, Fixtures.emptyFollowingsPage)
+      mockWith(Status.Ok, Fixtures.emptyFollowingsPage)
 
       result ==== Some(FollowingsPage(Seq.empty, None))
     }
 
     "returns the followings when one page of results is found" in new FollowersContext {
-      mockWith(OkStatus, Fixtures.oneFollowingPage)
+      mockWith(Status.Ok, Fixtures.oneFollowingPage)
 
       val followings = Seq(Following("42", new LocalDateTime("2015-12-08T00:32:10.000"), anotherUser, user))
       val pagination = None
@@ -315,7 +313,7 @@ class FollowsClientSpec extends UnitSpecification {
     }
 
     "returns the followings and the next page information when multiple pages are found" in new FollowersContext {
-      mockWith(OkStatus, Fixtures.oneFollowingPageWithNext)
+      mockWith(Status.Ok, Fixtures.oneFollowingPageWithNext)
 
       val followings = Seq(Following("42", new LocalDateTime("2015-12-08T00:32:10.000"), anotherUser, user))
       val pagination = Some(Pagination("12345", 1))
@@ -334,23 +332,23 @@ class FollowsClientSpec extends UnitSpecification {
 
       lazy val result = Await.result(client.filterFollowings(anonymousSession, user, included ++ excluded))
 
-      def mockWith(status: StatusCode, body: JsValue) =
-        when(serviceMock.get(anonymousSession, path, params, Params.empty))
-          .thenReturn(Future(JsonResponse(status, body)))
+      def mockWith(status: Status, body: JsValue) =
+        when(serviceMock.getWithSession(anonymousSession, path, params, Headers.empty))
+          .thenReturn(Future(jsonResponse(status, body)))
 
       override def after: Any = {
-        verify(serviceMock).get(anonymousSession, path, params, Params.empty)
+        verify(serviceMock).getWithSession(anonymousSession, path, params, Headers.empty)
       }
     }
 
     "returns none when an error happens" in new FilterFollowingsContext {
-      mockWith(InternalServerErrorStatus, JsNull)
+      mockWith(Status.InternalServerError, JsNull)
 
       result ==== None
     }
 
     "returns the urns split in two" in new FilterFollowingsContext {
-      mockWith(OkStatus, Fixtures.filteredUserUrns)
+      mockWith(Status.Ok, Fixtures.filteredUserUrns)
 
       result ==== Some(FilteredUserUrns(included.toSet, excluded.toSet))
     }
@@ -366,23 +364,23 @@ class FollowsClientSpec extends UnitSpecification {
 
       lazy val result = Await.result(client.filterFollowers(anonymousSession, user, included ++ excluded))
 
-      def mockWith(status: StatusCode, body: JsValue) =
-        when(serviceMock.get(anonymousSession, path, params, Params.empty))
-          .thenReturn(Future(JsonResponse(status, body)))
+      def mockWith(status: Status, body: JsValue) =
+        when(serviceMock.getWithSession(anonymousSession, path, params, Headers.empty))
+          .thenReturn(Future(jsonResponse(status, body)))
 
       override def after: Any = {
-        verify(serviceMock).get(anonymousSession, path, params, Params.empty)
+        verify(serviceMock).getWithSession(anonymousSession, path, params, Headers.empty)
       }
     }
 
     "returns none when an error happens" in new FilterFollowersContext {
-      mockWith(InternalServerErrorStatus, JsNull)
+      mockWith(Status.InternalServerError, JsNull)
 
       result ==== None
     }
 
     "returns the urns split in two" in new FilterFollowersContext {
-      mockWith(OkStatus, Fixtures.filteredUserUrns)
+      mockWith(Status.Ok, Fixtures.filteredUserUrns)
 
       result ==== Some(FilteredUserUrns(included.toSet, excluded.toSet))
     }
@@ -395,29 +393,29 @@ class FollowsClientSpec extends UnitSpecification {
 
       lazy val result = Await.result(client.followersFollowedBy(anonymousSession, user, anotherUser))
 
-      def mockWith(status: StatusCode, body: JsValue) =
-        when(serviceMock.get(anonymousSession, path, Params.empty, Params.empty))
-          .thenReturn(Future(JsonResponse(status, body)))
+      def mockWith(status: Status, body: JsValue) =
+        when(serviceMock.getWithSession(anonymousSession, path, Params.empty, Headers.empty))
+          .thenReturn(Future(jsonResponse(status, body)))
 
       override def after: Any = {
-        verify(serviceMock).get(anonymousSession, path, Params.empty, Params.empty)
+        verify(serviceMock).getWithSession(anonymousSession, path, Params.empty, Headers.empty)
       }
     }
 
     "returns none when an error happens" in new FollowersFollowedByContext {
-      mockWith(InternalServerErrorStatus, JsNull)
+      mockWith(Status.InternalServerError, JsNull)
 
       result ==== None
     }
 
     "returns an empty list of urns when there are no results" in new FollowersFollowedByContext {
-      mockWith(OkStatus, Fixtures.emptyUserUrns)
+      mockWith(Status.Ok, Fixtures.emptyUserUrns)
 
       result ==== Some(UserUrns(Seq.empty))
     }
 
     "returns a list of urns when results are found" in new FollowersFollowedByContext {
-      mockWith(OkStatus, Fixtures.userUrns)
+      mockWith(Status.Ok, Fixtures.userUrns)
 
       result ==== Some(UserUrns(Seq(anotherUser, yetAnotherUser)))
     }
@@ -430,29 +428,29 @@ class FollowsClientSpec extends UnitSpecification {
 
       lazy val result = Await.result(client.followingsNotFollowedBy(anonymousSession, user, anotherUser))
 
-      def mockWith(status: StatusCode, body: JsValue) =
-        when(serviceMock.get(anonymousSession, path, Params.empty, Params.empty))
-          .thenReturn(Future(JsonResponse(status, body)))
+      def mockWith(status: Status, body: JsValue) =
+        when(serviceMock.getWithSession(anonymousSession, path, Params.empty, Headers.empty))
+          .thenReturn(Future(jsonResponse(status, body)))
 
       override def after: Any = {
-        verify(serviceMock).get(anonymousSession, path, Params.empty, Params.empty)
+        verify(serviceMock).getWithSession(anonymousSession, path, Params.empty, Headers.empty)
       }
     }
 
     "returns none when an error happens" in new FollowingsNotFollowedByContext {
-      mockWith(InternalServerErrorStatus, JsNull)
+      mockWith(Status.InternalServerError, JsNull)
 
       result ==== None
     }
 
     "returns an empty list of urns when there are no results" in new FollowingsNotFollowedByContext {
-      mockWith(OkStatus, Fixtures.emptyUserUrns)
+      mockWith(Status.Ok, Fixtures.emptyUserUrns)
 
       result ==== Some(UserUrns(Seq.empty))
     }
 
     "returns a list of urns when results are found" in new FollowingsNotFollowedByContext {
-      mockWith(OkStatus, Fixtures.userUrns)
+      mockWith(Status.Ok, Fixtures.userUrns)
 
       result ==== Some(UserUrns(Seq(anotherUser, yetAnotherUser)))
     }
@@ -465,29 +463,29 @@ class FollowsClientSpec extends UnitSpecification {
 
       lazy val result = Await.result(client.mutualFollowings(anonymousSession, user, anotherUser))
 
-      def mockWith(status: StatusCode, body: JsValue) =
-        when(serviceMock.get(anonymousSession, path, Params.empty, Params.empty))
-          .thenReturn(Future(JsonResponse(status, body)))
+      def mockWith(status: Status, body: JsValue) =
+        when(serviceMock.getWithSession(anonymousSession, path, Params.empty, Headers.empty))
+          .thenReturn(Future(jsonResponse(status, body)))
 
       override def after: Any = {
-        verify(serviceMock).get(anonymousSession, path, Params.empty, Params.empty)
+        verify(serviceMock).getWithSession(anonymousSession, path, Params.empty, Headers.empty)
       }
     }
 
     "returns none when an error happens" in new FollowingsNotFollowedByContext {
-      mockWith(InternalServerErrorStatus, JsNull)
+      mockWith(Status.InternalServerError, JsNull)
 
       result ==== None
     }
 
     "returns an empty list of urns when there are no results" in new FollowingsNotFollowedByContext {
-      mockWith(OkStatus, Fixtures.emptyUserUrns)
+      mockWith(Status.Ok, Fixtures.emptyUserUrns)
 
       result ==== Some(UserUrns(Seq.empty))
     }
 
     "returns a list of urns when results are found" in new FollowingsNotFollowedByContext {
-      mockWith(OkStatus, Fixtures.userUrns)
+      mockWith(Status.Ok, Fixtures.userUrns)
 
       result ==== Some(UserUrns(Seq(anotherUser, yetAnotherUser)))
     }

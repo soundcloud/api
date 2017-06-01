@@ -1,9 +1,8 @@
 package com.soundcloud.publicApiStrangler.support
 
-import com.soundcloud.scalakit.finagle.http.RouterResponse
-import com.soundcloud.scalakit.test.{UnitSpecification}
+import com.soundcloud.publicApiStrangler.test.UnitSpecification
 import com.twitter.finagle.Service
-import com.twitter.finagle.http.Request
+import com.twitter.finagle.http.{Request, Response}
 import com.twitter.util.{Await, Future}
 import org.mockito.Mockito._
 import org.mockito.Mockito.when
@@ -11,9 +10,9 @@ import org.mockito.Mockito.when
 class OffsetLimitRequestFilterSpec extends UnitSpecification {
 
   trait Context extends Scope {
-    val next = mock[Service[Request, RouterResponse]]
+    val next = mock[Service[Request, Response]]
 
-    val responseFromNextService = mock[RouterResponse]
+    val responseFromNextService = mock[Response]
     val request: Request
 
     val maxOffset = 200

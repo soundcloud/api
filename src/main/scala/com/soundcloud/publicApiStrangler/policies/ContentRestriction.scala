@@ -8,7 +8,7 @@ class InvalidRestrictionException(val invalidRestrictionName: String)
   extends RuntimeException(String.format(InvalidRestrictionException.MESSAGE,
     invalidRestrictionName,
     classOf[ContentRestriction].getSimpleName,
-    com.soundcloud.jvmkit.policies.ContentRestriction.allPossibleNames))
+    com.soundcloud.publicApiStrangler.policies.ContentRestriction.allPossibleNames))
 
 class ContentRestriction(val name: String) {
   /**

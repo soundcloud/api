@@ -1,22 +1,23 @@
 package com.soundcloud.publicApiStrangler.mapping.search
 
 import com.fasterxml.jackson.annotation.JsonIgnore
+import com.soundcloud.publicApiStrangler.representation.Track
 import com.soundcloud.publicApiStrangler.support.mapping.ObjectMapping
-import com.soundcloud.service.response.representation.Track
 
 
 trait PlaylistTracks extends ObjectMapping[List[Track]] {
   self =>
   def baseUrl: String
+
   val tracks = resource.map(t => new ObjectMapping(t) with PlaylistTrack {
     @JsonIgnore override def baseUrl: String = self.baseUrl
   })
 }
 
 /**
- * essentially copy-paste from TrackSummary, but
- * maps a Track instead of a JsValue
- */
+  * essentially copy-paste from TrackSummary, but
+  * maps a Track instead of a JsValue
+  */
 trait PlaylistTrack extends ObjectMapping[Track] {
   @JsonIgnore def baseUrl: String
 
@@ -29,7 +30,8 @@ trait PlaylistTrack extends ObjectMapping[Track] {
   val title = resource.title
   val sharing = resource.sharing
   val duration = resource.duration
-  val waveform_url = resource.waveform_url // use media-service?
+  val waveform_url = resource.waveform_url
+  // use media-service?
   val stream_url = resource.stream_url
   val uri = resource.uri
   val user_id = resource.user_urn.getIdentifier.toInt

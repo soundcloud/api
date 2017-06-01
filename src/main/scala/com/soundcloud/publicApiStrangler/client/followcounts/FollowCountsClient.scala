@@ -2,22 +2,19 @@ package com.soundcloud.publicApiStrangler.client.followcounts
 
 import java.net.URLEncoder
 
-import com.soundcloud.bff.services.JsonService
 import com.soundcloud.jvmkit.module.util.config.{Config, DataSensitivity}
-import com.soundcloud.jvmkit.module.http.client.Params
-import com.soundcloud.jvmkit.module.util.Urn
+import com.soundcloud.jvmkit.module.http.client.{JsonClient, Params}
+import com.soundcloud.jvmkit.module.util.http.Headers
+import com.soundcloud.jvmkit.module.util.{Path, Urn}
 import com.soundcloud.jvmkit.module.util.session.UserSession
-import com.soundcloud.publicApiStrangler.client.BigJvmKitConversions._
 import com.soundcloud.publicApiStrangler.support.BatchingUtilities._
-import com.soundcloud.scalakit.Path
-import com.soundcloud.scalakit.finagle.http.OkStatus
-import com.soundcloud.scalakit.finagle.jsonservice.JsonResponse
+import com.twitter.finagle.http.{Response, Status}
 import com.twitter.util.Future
-import play.api.libs.json.JsObject
+import play.api.libs.json.{JsObject, Json}
 
 import scala.util.control.NonFatal
 
-class FollowCountsClient(client: JsonService, config: Config) {
+class FollowCountsClient(client: JsonClient, config: Config) {
   private val batchSize = config.get("STITCH_BULK_FETCH_MAX_ENTRIES", DataSensitivity.NON_SENSITIVE).toInt
 
   def counts(session: UserSession, userUrns: Seq[Urn]): Future[Seq[FollowCounts]] = {
@@ -28,7 +25,7 @@ class FollowCountsClient(client: JsonService, config: Config) {
         "followerCounts" -> uriEncodedQueryString(params("f.b.u", userIds)),
         "followingCounts" -> uriEncodedQueryString(params("f.u", userIds))
       )
-      client.get(session, Path() / "bulk", bulkParams, Params.empty).map { response =>
+      client.getWithSession(session, Path() / "bulk", bulkParams, Headers.empty).map { response =>
         val topLevelMap = parseBulkResponse(response)
         val followerCounts = topLevelMap("followerCounts")
         val followingCounts = topLevelMap("followingCounts")
@@ -55,10 +52,10 @@ class FollowCountsClient(client: JsonService, config: Config) {
     URLEncoder.encode(timeSeriesQuery, "UTF-8")
   }
 
-  private def parseBulkResponse(response: JsonResponse): Map[String, Map[Urn, Long]] = {
-    response match {
-      case JsonResponse(OkStatus, body, _, _) =>
-        body.as[JsObject].value.toMap.mapValues { individualResponseJson =>
+  private def parseBulkResponse(response: Response): Map[String, Map[Urn, Long]] = {
+    response.status match {
+      case Status.Ok =>
+        Json.parse(response.contentString).as[JsObject].value.toMap.mapValues { individualResponseJson =>
           individualResponseJson.as[JsObject].value.toMap.flatMap { case (userId, jsonValue) =>
             val value = (individualResponseJson \ userId \ "series" \\ "count").headOption.map(_.as[Long])
             value.map(new Urn("soundcloud", "users", userId) -> _)

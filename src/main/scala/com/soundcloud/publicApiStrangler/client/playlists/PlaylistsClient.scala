@@ -1,12 +1,12 @@
 package com.soundcloud.publicApiStrangler.client.playlists
 
-import com.soundcloud.jvmkit.module.http.client.{Params, UrnParam}
+import com.soundcloud.jvmkit.module.http.client.{JsonClient, Params, UrnParam}
+import com.soundcloud.jvmkit.module.util.http.Headers
+import com.soundcloud.jvmkit.module.util.session.{AnonymousUserSession, UserSessionBuilder}
 import com.soundcloud.jvmkit.module.util.{Path, Urn}
-import com.soundcloud.jvmkit.{AnonymousUserSession, UserSessionBuilder}
-import com.soundcloud.publicApiStrangler.client.BigJvmKitConversions._
-import com.soundcloud.scalakit.finagle.http.OkStatus
-import com.soundcloud.scalakit.finagle.jsonservice.{JsonClient, JsonResponse}
+import com.twitter.finagle.http.{Response, Status}
 import com.twitter.util.Future
+import play.api.libs.json.Json
 
 import scala.util.control.NonFatal
 
@@ -16,9 +16,11 @@ class PlaylistsClient(moshimoshiClient: JsonClient) {
     val params = Params("user_urn" -> UrnParam(owner))
 
     // Passing explicit values for all parameters in order to allow stubbing using Mockito.
-    moshimoshiClient.get(PlaylistsClient.session, path, params, Params.empty).map {
-      case JsonResponse(OkStatus, body, _, _) => body.as[List[Playlist]]
-      case _ => List.empty[Playlist]
+    moshimoshiClient.getWithSession(PlaylistsClient.session, path, params, Headers.empty()).map { response: Response =>
+      response.status match {
+        case Status.Ok => Json.parse(response.contentString).as[List[Playlist]]
+        case _ => List.empty[Playlist]
+      }
     } handle { case NonFatal(_) => List.empty[Playlist] }
   }
 }

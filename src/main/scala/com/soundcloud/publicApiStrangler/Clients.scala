@@ -1,20 +1,13 @@
 package com.soundcloud.publicApiStrangler
 
-import com.soundcloud.bff.authorization.ContentAuthorizationService
-import com.soundcloud.bff.media.WaveformUrlsRepository
-import com.soundcloud.bff.services.{JsonService, ServiceConfig}
-import com.soundcloud.jvmkit.ResourceName
-import com.soundcloud.jvmkit.config.ConfigConvention.ADDRESS
-import com.soundcloud.jvmkit.config.{AppConfig, ConfigConvention, DataSensitivity}
 import com.soundcloud.jvmkit.module.bff.session.UserAuthentication
 import com.soundcloud.jvmkit.module.http.client.config.HttpClientConfig
-import com.soundcloud.jvmkit.module.http.client.{JsonClient => ModuleJsonClient}
+import com.soundcloud.jvmkit.module.http.client.{HttpClient, JsonClient}
 import com.soundcloud.jvmkit.module.rollout.{BasicRolloutFeature, Rollout}
-import com.soundcloud.jvmkit.module.servicediscovery.{ServiceEntryPoint => ModuleServiceEntryPoint}
-import com.soundcloud.jvmkit.module.telemetry.{MetricsRegistry, Telemetry => ModuleTelemetry}
-import com.soundcloud.jvmkit.module.util.config.{AppConfig => ModuleAppConfig, ConfigConvention => ModuleConfigConvention}
-import com.soundcloud.jvmkit.module.util.{ResourceName => ModuleResourceName, Urn => ModuleUrn}
-import com.soundcloud.jvmkit.telemetry.Telemetry
+import com.soundcloud.jvmkit.module.servicediscovery.ServiceEntryPoint
+import com.soundcloud.jvmkit.module.telemetry.{MetricsRegistry, Telemetry}
+import com.soundcloud.jvmkit.module.util.config.{AppConfig, ConfigConvention, DataSensitivity}
+import com.soundcloud.jvmkit.module.util.{ResourceName, Urn}
 import com.soundcloud.publicApiStrangler.authorization._
 import com.soundcloud.publicApiStrangler.client._
 import com.soundcloud.publicApiStrangler.client.followcounts.FollowCountsClient
@@ -33,12 +26,8 @@ import com.soundcloud.publicApiStrangler.mapper.liebling.LikeCountMapper
 import com.soundcloud.publicApiStrangler.mapper.search.SearchEntityMapper
 import com.soundcloud.publicApiStrangler.mapper.timeline.EntitySummaryMapper
 import com.soundcloud.publicApiStrangler.mapper.waveform.WaveformMapper
+import com.soundcloud.publicApiStrangler.media.WaveformUrlsRepository
 import com.soundcloud.publicApiStrangler.service.{TrackAccessibilityService, TrackRepository}
-import com.soundcloud.scalakit.finagle.dns.ServiceEntryPoint
-import com.soundcloud.scalakit.finagle.http.HttpClientBuilder
-import com.soundcloud.scalakit.finagle.jsonservice.JsonClient
-import com.soundcloud.service.client.{GatekeeperClient, OkidokiClient, SimilarSoundsClient}
-import com.soundcloud.services.timeline.TimelineJsonClient
 import com.twitter.finagle.Service
 import com.twitter.finagle.http.{Request, Response}
 import com.twitter.finagle.service.RetryPolicy.RetryableWriteException
@@ -46,166 +35,83 @@ import com.twitter.util.{Future, Throw, Try}
 
 trait Clients {
 
-  def config: AppConfig
+  def moduleConfig: AppConfig
 
-  def moduleConfig: ModuleAppConfig
+  def config = moduleConfig
 
-  def telemetry: Telemetry
+  def moduleTelemetry: Telemetry
 
-  def moduleTelemetry: ModuleTelemetry
+  def telemetry = moduleTelemetry
 
   def metricsRegistry: MetricsRegistry
 
-  private val okidokiJsonClient =
-    JsonClient(
-      ResourceName("okidoki"),
-      ServiceEntryPoint(config.get(ResourceName("OKIDOKI"), ConfigConvention.SRV_RECORD)),
-      config,
-      telemetry
-    )
+  private def jsonClient(resourceName: String, configConvention: ConfigConvention = ConfigConvention.SRV_RECORD) = JsonClient(
+    ServiceEntryPoint(config.get(ResourceName(resourceName), configConvention)),
+    HttpClientConfig.from(ResourceName(resourceName), config),
+    telemetry
+  )
+
+  private val okidokiJsonClient = jsonClient("okidoki")
   val okidokiClient = new OkidokiClient(okidokiJsonClient)
 
   private val timelineJsonClient =
     JsonClient(
-      ResourceName("timeline"),
       ServiceEntryPoint(config.get("TIMELINE_SRV_RECORD", DataSensitivity.NON_SENSITIVE)),
-      config,
+      HttpClientConfig.from(ResourceName("timeline"), config),
       telemetry
     )
   val timelineClient = new TimelineJsonClient(timelineJsonClient)
 
-  private val lieblingJsonClient =
-    JsonClient(
-      ResourceName("liebling"),
-      ServiceEntryPoint(config.get(ResourceName("LIEBLING"), ConfigConvention.SRV_RECORD)),
-      config,
-      telemetry
-    )
-  val lieblingClient = new LieblingClient(lieblingJsonClient)
+  val lieblingClient = new LieblingClient(jsonClient("liebling"))
 
   lazy val publicApiClient: Service[Request, Response] = {
-    val telemetry = new Telemetry(config)
 
     val writeExceptions: PartialFunction[(Request, Try[Response]), Boolean] = {
       case (_, Throw(RetryableWriteException(_))) => true
     }
 
-    new HttpClientBuilder(ResourceName("PUBLIC_API"),
-      ServiceEntryPoint(config.get(ResourceName("PUBLIC_API"), ADDRESS)),
-      config,
+    HttpClient(
+      ServiceEntryPoint(config.get(ResourceName("PUBLIC_API"), ConfigConvention.ADDRESS)),
+      HttpClientConfig.from(ResourceName("PUBLIC_API"), config),
       telemetry,
-      retry = Some(writeExceptions)).client
-
+      retryOn = Some(writeExceptions)
+    ).httpService
   }
 
-  private val followsService =
-    JsonClient(
-      ResourceName("follows"),
-      ServiceEntryPoint(config.get(ResourceName("FOLLOWS"), ConfigConvention.SRV_RECORD)),
-      config,
-      telemetry
-    )
-  lazy val followsClient = new FollowsClient(followsService)
+  lazy val followsClient = new FollowsClient(jsonClient("follows"))
 
-  private val repostsService =
-    JsonClient(
-      ResourceName("reposts"),
-      ServiceEntryPoint(config.get(ResourceName("REPOSTS"), ConfigConvention.SRV_RECORD)),
-      config,
-      telemetry
-    )
-  lazy val repostsClient = new RepostsClient(repostsService)
+  lazy val repostsClient = new RepostsClient(jsonClient("reposts"))
 
-  private val gatekeeperJsonClient =
-    JsonClient(ResourceName("gatekeeper"),
-      ServiceEntryPoint(config.get(ResourceName("GATEKEEPER"), ConfigConvention.SRV_RECORD)),
-      config,
-      telemetry)
-  val gatekeeperClient = new GatekeeperClient(gatekeeperJsonClient)
+  lazy val gatekeeperClient = new GatekeeperClient(jsonClient("gatekeeper"))
 
-  private val similarSoundsJsonClient =
-    JsonClient(
-      ResourceName("similar_sounds"),
-      ServiceEntryPoint(config.get(ResourceName("SIMILAR_SOUNDS"), ConfigConvention.SRV_RECORD)),
-      config,
-      telemetry
-    )
-  val similarSoundsClient = new SimilarSoundsClient(similarSoundsJsonClient)
+  lazy val similarSoundsClient = new SimilarSoundsClient(jsonClient("similar_sounds"))
 
-  private val trackCoordinatorResourceName = ResourceName("track_coordinator")
-  private val trackCoordinatorJsonClient =
-    JsonClient(
-      trackCoordinatorResourceName,
-      ServiceEntryPoint(config.get(trackCoordinatorResourceName, ConfigConvention.SRV_RECORD)),
-      config,
-      telemetry
-    )
-  val trackCoordinatorClient = new TrackCoordinatorClient(trackCoordinatorJsonClient)
+  lazy val trackCoordinatorClient = new TrackCoordinatorClient(jsonClient("track_coordinator"))
 
-  private val sketchyService = JsonClient(
-    ResourceName("sketchy"),
-    ServiceEntryPoint(config.get(ResourceName("SKETCHY"), ConfigConvention.SRV_RECORD)),
-    config,
+  lazy val sketchyClient = new SketchyClient(jsonClient("sketchy"))
+
+  lazy val pubmeseClient = new PubmeseClient(jsonClient("pubmese"))
+
+  lazy val stitchClient = new StitchClient(jsonClient("stitch", ConfigConvention.ADDRESS))
+
+
+  private val mediaServiceUrlGenJsonClient = JsonClient(
+    ServiceEntryPoint(moduleConfig.get(ResourceName("MEDIASERVICE"), ConfigConvention.SRV_RECORD)),
+    HttpClientConfig.from(ResourceName("mediaservice_urlgen"), moduleConfig),
     telemetry
   )
-  lazy val sketchyClient = new SketchyClient(sketchyService)
-
-  private val pubmeseJsonClient =
-    JsonClient(
-      ResourceName("pubmese"),
-      ServiceEntryPoint(config.get(ResourceName("PUBMESE"), ConfigConvention.ADDRESS)),
-      config,
-      telemetry
-    )
-  val pubmeseClient = new PubmeseClient(pubmeseJsonClient)
-
-  private val stitchJsonClient =
-    JsonClient(
-      ResourceName("stitch"),
-      ServiceEntryPoint(config.get(ResourceName("STITCH"), ConfigConvention.ADDRESS)),
-      config,
-      telemetry
-    )
-  val stitchClient = new StitchClient(stitchJsonClient)
-
-
-  private val mediaServiceUrlGenJsonClient =
-    ModuleJsonClient(
-      ModuleServiceEntryPoint(moduleConfig.get(ModuleResourceName("MEDIASERVICE"), ModuleConfigConvention.SRV_RECORD)),
-      HttpClientConfig.from(ModuleResourceName("mediaservice_urlgen"), moduleConfig),
-      moduleTelemetry
-    )
   val mediaServiceUrlGenClient = new MediaServiceUrlGenClient(mediaServiceUrlGenJsonClient)
 
-  private val okidokiService = JsonService(
-    ServiceConfig("okidoki", config.get(ResourceName("OKIDOKI"), ConfigConvention.SRV_RECORD), config)
-  )
-  val mediaService = JsonService(
-    ServiceConfig("mediaservice", config.get(ResourceName("MEDIASERVICE"), ConfigConvention.SRV_RECORD), config)
-  )
-  private val authsyService = JsonService(
-    ServiceConfig("authsy", config.get(ResourceName("AUTHSY"), ConfigConvention.SRV_RECORD), config)
-  )
+  val mediaService = jsonClient("mediaservice")
+  private val authsyService = jsonClient("authsy")
 
-  val searchService = JsonService(
-    ServiceConfig("search", config.get(ResourceName("SEARCH"), ConfigConvention.SRV_RECORD), config)
-  )
+  val searchService = jsonClient("search")
 
-  private val subscriptionsService = JsonService(
-    ServiceConfig("user_subscriptions", config.get(ResourceName("USER_SUBSCRIPTIONS"), ConfigConvention.SRV_RECORD), config)
-  )
+  private val subscriptionsService = jsonClient("user_subscriptions")
 
-  private val stitch4followsService = JsonService(
-    ServiceConfig("stitch4follows", config.get(ResourceName("STITCH4FOLLOWS"), ConfigConvention.SRV_RECORD), config)
-  )
+  private val stitch4followsService = jsonClient("stitch4follows")
 
-  val playlistsClient = new PlaylistsClient(
-    JsonClient(
-      ResourceName("playlist"),
-      ServiceEntryPoint(config.get(ResourceName("PLAYLIST"), ConfigConvention.BASE_URL)),
-      config,
-      telemetry)
-  )
+  val playlistsClient = new PlaylistsClient(jsonClient("playlist", ConfigConvention.HTTP_ENDPOINT))
 
   val followCountsClient = new FollowCountsClient(stitch4followsService, moduleConfig)
 
@@ -216,10 +122,10 @@ trait Clients {
     new SubscriptionsService(subscriptionsService))
 
 
-  private val waveformUrlsRepo = new WaveformUrlsRepository(okidokiService, mediaService)
+  private val waveformUrlsRepo = new WaveformUrlsRepository(okidokiJsonClient, mediaService)
 
   // Whitelist source: http://redash.int.s-cloud.net/queries/632/source
-  private val whitelistedClients: Set[ModuleUrn] = Set(
+  private val whitelistedClients: Set[Urn] = Set(
     "soundcloud:systems:soundcloud", // Agent returned by Authenticator for those with _soundcloud_session cookie
     "soundcloud:applications:124", // SoundCloud iOS
     "soundcloud:applications:3152", // SoundCloud Android
@@ -243,12 +149,12 @@ trait Clients {
     "soundcloud:applications:62023",
     "soundcloud:applications:265616",
     "soundcloud:applications:265183"
-  ).map(new ModuleUrn(_))
+  ).map(new Urn(_))
 
-  val blacklistOfAppIdsForUserSiloing: Set[ModuleUrn] =
+  val blacklistOfAppIdsForUserSiloing: Set[Urn] =
     config.get("APP_SILOING_BLACKLIST_APPS", DataSensitivity.NON_SENSITIVE)
       .split(",")
-      .map(appId => new ModuleUrn(appId.trim))
+      .map(appId => new Urn(appId.trim))
       .toSet
 
   val userAuthentication = UserAuthentication(moduleConfig, moduleTelemetry)
@@ -306,9 +212,9 @@ trait Clients {
 
   val playlistDeletionClient =
     new PlaylistDeletionClient(
-      ModuleJsonClient(
-        ModuleServiceEntryPoint(moduleConfig.get(ModuleResourceName("OKIDOKI"), ModuleConfigConvention.SRV_RECORD)),
-        HttpClientConfig.from(ModuleResourceName("okidoki"), moduleConfig),
+      JsonClient(
+        ServiceEntryPoint(moduleConfig.get(ResourceName("OKIDOKI"), ConfigConvention.SRV_RECORD)),
+        HttpClientConfig.from(ResourceName("okidoki"), moduleConfig),
         moduleTelemetry
       ))
 

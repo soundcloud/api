@@ -1,0 +1,55 @@
+{
+   "items":[
+      {
+         "type":"track:repost",
+         "timestamp":"2014/08/12 08:26:26 +0000",
+         "urn":"soundcloud:tracks:131352352",
+         "actor":"soundcloud:users:70167771",
+         "target":"soundcloud:users:6457573"
+      },
+      {
+         "type":"track",
+         "timestamp":"2014/08/12 06:09:34 +0000",
+         "urn":"soundcloud:tracks:162777787",
+         "actor":"soundcloud:users:18228",
+         "target":null
+      },
+      {
+         "unique_id" : "0000014c-c5aa-ac18-0000-000064df3a1a",
+         "type" : "eventGroup",
+         "cursor" : "0000014c-c5aa-ac18-0000-000064df3a1a",
+         "timestamp" : "2015/04/17 04:37:19 +0000",
+         "group_kind" : "playlist:repost",
+         "events" : [
+            {
+               "timestamp" : "2015/04/17 04:37:19 +0000",
+               "target" : "soundcloud:users:22259306",
+               "unique_id" : "0000014c-c5aa-ac18-0000-000042d0621c",
+               "urn" : "soundcloud:playlists:98793796",
+               "actor" : "soundcloud:users:82010205",
+               "cursor" : "0000014c-c5aa-ac18-0000-000042d0621c",
+               "type" : "playlist:repost"
+            },
+            {
+               "urn" : "soundcloud:playlists:98793796",
+               "unique_id" : "0000014c-c4f7-b3b0-0000-0000464c5363",
+               "cursor" : "0000014c-c4f7-b3b0-0000-0000464c5363",
+               "actor" : "soundcloud:users:5614319",
+               "type" : "playlist:repost",
+               "timestamp" : "2015/04/17 01:21:50 +0000",
+               "target" : "soundcloud:users:22259306"
+            }
+         ]
+      },
+      {
+         "type":"playlist",
+         "timestamp":"2014/08/12 01:16:44 +0000",
+         "urn":"soundcloud:playlists:162750218",
+         "actor":"soundcloud:users:5539303",
+         "target":null
+      }
+   ],
+   "meta":{
+      "next_page_cursor":"15"
+   }
+}

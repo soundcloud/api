@@ -6,4 +6,4 @@ resolvers += new MavenRepository("SoundCloud Internal - Releases", "http://maven
 
 addSbtPlugin("com.github.mpeltonen" % "sbt-idea" % "1.6.0")
 addSbtPlugin("com.typesafe.sbteclipse" % "sbteclipse-plugin" % "2.4.0")
-addSbtPlugin("com.soundcloud" % "sbt-jvmkit" % "0.0.60")
+addSbtPlugin("com.soundcloud" % "sbtkit" % "0.0.4")

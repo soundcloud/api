@@ -30,7 +30,7 @@ trait SearchFacet extends JsonMapping {
 trait Faceted {
   this: Search =>
 
-  val facets = (json \ "facets").as[Option[Seq[JsObject]]].map { facetsJson =>
+  val facets = (json \ "facets").asOpt[Seq[JsObject]].map { facetsJson =>
     facetsJson.map(facet => new JsonMapping(facet) with SearchFacet)
   }
 }

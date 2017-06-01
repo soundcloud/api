@@ -4,7 +4,6 @@ import java.net.URL
 import java.util.TimeZone
 
 import com.soundcloud.jvmkit.module.util.Urn
-import com.soundcloud.publicApiStrangler.client.BigJvmKitConversions._
 import com.soundcloud.publicApiStrangler.test.UnitSpecification
 import com.soundcloud.publicApiStrangler.test.util.TrackMetadataTrackBuilder
 import org.joda.time.{DateTimeZone, LocalDateTime}

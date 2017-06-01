@@ -1,18 +1,15 @@
 package com.soundcloud.publicApiStrangler.client.sketchy
 
-import com.soundcloud.jvmkit.module.http.client.Params
+import com.soundcloud.jvmkit.module.http.client.{JsonClient, Params}
 import com.soundcloud.jvmkit.module.util.Path
-import com.soundcloud.jvmkit.module.util.session.{UserSession, UserSessionBuilder}
-import com.soundcloud.publicApiStrangler.client.BigJvmKitConversions._
-import com.soundcloud.scalakit.finagle.http.{InternalServerErrorStatus, NotFoundStatus, OkStatus}
-import com.soundcloud.scalakit.finagle.jsonservice.{JsonClient, JsonResponse}
+import com.soundcloud.jvmkit.module.util.http.Headers
+import com.soundcloud.jvmkit.module.util.session.UserSessionBuilder
+import com.soundcloud.publicApiStrangler.test.UnitSpecification
+import com.twitter.finagle.http.{Response, Status}
 import com.twitter.util.{Await, Future}
-import org.specs2.mock.Mockito
-import org.specs2.mutable.Specification
-import org.specs2.specification.Scope
 import play.api.libs.json.{JsNull, JsString}
 
-class SketchyClientSpec extends Specification with Mockito {
+class SketchyClientSpec extends UnitSpecification {
 
   trait AckContext extends Scope {
     val jsonClient = mock[JsonClient]
@@ -21,22 +18,22 @@ class SketchyClientSpec extends Specification with Mockito {
 
     val warningId = 1
 
-    def response: JsonResponse
+    def response: Response
 
     jsonClient
-      .put(session, Path() / "spam_warnings" / warningId / "ack", Params.empty, Params.empty, None)
+      .putWithSession(session, Path() / "spam_warnings" / warningId / "ack", Params.empty, Headers.empty, None)
       .returns(Future.value(response))
   }
 
   "#ack" >> {
     "when ack is successful" in new AckContext {
-      override def response = JsonResponse(OkStatus, JsNull)
+      override def response = jsonResponse(Status.Ok, JsNull)
 
       Await.result(client.ack(session, warningId)) ==== AckOk
     }
 
     "when warning is not found" in new AckContext {
-      override def response = JsonResponse(NotFoundStatus, JsNull)
+      override def response = jsonResponse(Status.NotFound, JsNull)
 
       Await.result(client.ack(session, warningId)) ==== WarningNotFound
     }
@@ -44,7 +41,7 @@ class SketchyClientSpec extends Specification with Mockito {
     "when an unknown error occurs" in new AckContext {
       lazy val errorBody = JsString("foobar")
 
-      override def response = JsonResponse(InternalServerErrorStatus, errorBody)
+      override def response = jsonResponse(Status.InternalServerError, errorBody)
 
       Await.result(client.ack(session, warningId)) ==== UnknownError(500, errorBody.toString)
     }

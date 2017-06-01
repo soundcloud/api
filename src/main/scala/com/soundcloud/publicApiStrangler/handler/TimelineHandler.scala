@@ -10,10 +10,8 @@ import com.soundcloud.publicApiStrangler.mapper.timeline.publicApi.ActivitiesWit
 import com.soundcloud.publicApiStrangler.mapping.timeline.Timeline
 import com.soundcloud.publicApiStrangler.mapping.timeline.e1.TrackTimelineItem
 import com.soundcloud.publicApiStrangler.support._
-import com.soundcloud.scalakit.json.UntypedJson
 import com.twitter.finagle.http.Response
 import com.twitter.util.Future
-import play.api.libs.json.Json
 
 class TimelineHandler(userAuthentication: UserAuthentication,
                       streamMapper: StreamMapper,

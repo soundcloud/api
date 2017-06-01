@@ -1,16 +1,15 @@
 package com.soundcloud.publicApiStrangler.client.reposts
 
-import com.soundcloud.jvmkit.module.util.Urn
+import com.soundcloud.jvmkit.module.http.client.{JsonClient, Params}
+import com.soundcloud.jvmkit.module.util.{Path, Urn}
+import com.soundcloud.jvmkit.module.util.http.Headers
 import com.soundcloud.jvmkit.module.util.session.UserSession
-import com.soundcloud.publicApiStrangler.client.BigJvmKitConversions.toBigJvmKitUserSession
+import com.soundcloud.publicApiStrangler.client.FetchClient
 import com.soundcloud.publicApiStrangler.client.CommonJsonFormats._
 import com.soundcloud.publicApiStrangler.client.reposts.RepostsClient._
-import com.soundcloud.scalakit.Path
-import com.soundcloud.scalakit.finagle.http._
-import com.soundcloud.scalakit.finagle.jsonservice.{JsonClient, JsonResponse, Params}
-import com.soundcloud.service.client.FetchClient
+import com.twitter.finagle.http.{Response, Status}
 import com.twitter.util.Future
-import play.api.libs.json._
+import play.api.libs.json.{Format, JsArray, JsObject, Json}
 
 import scala.util.control.NonFatal
 
@@ -22,20 +21,20 @@ case class Reposts(urns: List[Urn], nextCursor: Option[String])
 class RepostsClient(jsonClient: JsonClient) extends FetchClient {
 
   def createRepost(session: UserSession, target: Urn, baseUrl: String): Future[Result] =
-    jsonClient.post(
+    jsonClient.postWithSession(
       session,
       Path() / target.getCollection / target.toString / "reposts",
       Params.empty,
-      Params.empty,
+      Headers.empty,
       None
     ).map(toResult(_, baseUrl))
 
   def deleteRepost(session: UserSession, target: Urn, baseUrl: String): Future[Result] =
-    jsonClient.delete(
+    jsonClient.deleteWithSession(
       session,
       Path() / target.getCollection / target.toString / "reposts",
       Params.empty,
-      Params.empty,
+      Headers.empty,
       None
     ).map(toResult(_, baseUrl))
 
@@ -75,17 +74,20 @@ class RepostsClient(jsonClient: JsonClient) extends FetchClient {
     }
 
   private def fetchAll(session: UserSession, path: Path, limit: Int, cursor: Option[String]): Future[(List[JsObject], Option[String])] = {
-    jsonClient.get(
+    jsonClient.getWithSession(
       session,
       path,
       Params("page_size" -> limit) ++ cursor.map(c => Params("cursor" -> c)).getOrElse(Params.empty),
-      Params.empty
-    ).map {
-      case JsonResponse(OkStatus, body, _, _) =>
-        val reposts = (body \ "reposts").as[List[JsObject]]
-        val maybeNewCursor = (body \ "next" \ "cursor").asOpt[String]
-        (reposts, maybeNewCursor)
-      case _ => (List.empty, None)
+      Headers.empty
+    ).map { response: Response =>
+      response.status match {
+        case Status.Ok =>
+          val body = Json.parse(response.contentString)
+          val reposts = (body \ "reposts").as[List[JsObject]]
+          val maybeNewCursor = (body \ "next" \ "cursor").asOpt[String]
+          (reposts, maybeNewCursor)
+        case _ => (List.empty, None)
+      }
     }
   }
 
@@ -109,8 +111,8 @@ class RepostsClient(jsonClient: JsonClient) extends FetchClient {
     Future.collect(
       filteredUrns.grouped(batchSize).map { batchUrns => {
         val params = Params("urns" -> batchUrns.map(_.toString).mkString(","))
-        jsonClient.get(session, path, params, headers = Params.empty)
-          .map { case JsonResponse(OkStatus, body, _, _) => (body \ "counts").as[Seq[Count]] }
+        jsonClient.getWithSession(session, path, params, headers = Headers.empty)
+          .map { case response if response.status == Status.Ok => (Json.parse(response.contentString) \ "counts").as[Seq[Count]] }
       }
       }.map(f => f.handle { case NonFatal(_) => Seq.empty }).toSeq
     ).map(_.flatten)
@@ -125,8 +127,8 @@ class RepostsClient(jsonClient: JsonClient) extends FetchClient {
     }
 
   private def getUserCountForKind(session: UserSession, user: Urn, kind: String): Future[Count] =
-    jsonClient.get(session, Path() / "users" / user.toString / kind / "count", Params.empty, Params.empty)
-      .map { case JsonResponse(OkStatus, body, _, _) => (body \ "counts") (0).as[Count] }
+    jsonClient.getWithSession(session, Path() / "users" / user.toString / kind / "count", Params.empty, Headers.empty)
+      .map { case response if response.status == Status.Ok => (Json.parse(response.contentString) \ "counts") (0).as[Count] }
 
 }
 
@@ -152,20 +154,20 @@ object RepostsClient {
 
   implicit val countFormat: Format[Count] = Json.format[Count]
 
-  def toResult(response: JsonResponse, baseUrl: => String): Result = response match {
-    case JsonResponse(CreatedStatus, _, _, _) => Created
-    case JsonResponse(AcceptedStatus, _, _, _) => Deleted
-    case JsonResponse(OkStatus, _, _, _) => AlreadyExists
-    case JsonResponse(NotFoundStatus, _, _, _) => NotFound
-    case JsonResponse(TooManyRequestsStatus, body, _, _) => SpamBlocked(toSpamWarnings(body, baseUrl))
+  def toResult(response: Response, baseUrl: => String): Result = response.status match {
+    case Status.Created => Created
+    case Status.Accepted => Deleted
+    case Status.Ok => AlreadyExists
+    case Status.NotFound => NotFound
+    case Status.TooManyRequests => SpamBlocked(toSpamWarnings(response.contentString, baseUrl))
     case _ => Failed
   }
 
   implicit val spamWarningFormat = Json.format[SpamWarning]
   implicit val spamBlockedFormat = Json.format[SpamBlocked]
 
-  private def toSpamWarnings(body: JsValue, baseUrl: => String): Seq[SpamWarning] =
-    (body \ "spam_warnings").as[JsArray].value.map { json =>
+  private def toSpamWarnings(body: String, baseUrl: => String): Seq[SpamWarning] =
+    (Json.parse(body) \ "spam_warnings").as[JsArray].value.map { json =>
       val level = (json \ "level").as[String]
       val acknowledgeable = (json \ "acknowledgeable").as[Boolean]
 

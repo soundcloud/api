@@ -2,19 +2,18 @@ package com.soundcloud.publicApiStrangler.mapper.timeline.e1
 
 import com.soundcloud.bff.nextbff.pagination.CursorBasedPage
 import com.soundcloud.jvmkit.module.util.Urn
-import com.soundcloud.jvmkit.module.util.session.{UserSession, UserSessionBuilder}
-import com.soundcloud.publicApiStrangler.client.BigJvmKitConversions._
+import com.soundcloud.jvmkit.module.util.session.UserSessionBuilder
+import com.soundcloud.publicApiStrangler.client.TimelineJsonClient
 import com.soundcloud.publicApiStrangler.mapper.timeline.{EntityMapper, EntitySummaryMapper}
 import com.soundcloud.publicApiStrangler.mapping.timeline.e1.{TimelineWithUuids, TrackTimelineItem}
 import com.soundcloud.publicApiStrangler.test.UnitSpecification
-import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures
-import com.soundcloud.services.timeline.TimelineJsonClient
+import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures._
 import com.twitter.util.{Await, Future}
 import org.mockito.Mockito.when
 import org.specs2.mutable.Before
 import play.api.libs.json.JsObject
 
-class StreamMapperSpec extends UnitSpecification with Fixtures {
+class StreamMapperSpec extends UnitSpecification {
 
   trait Context extends Scope with Before {
     val timelineClient = mock[TimelineJsonClient]
@@ -37,7 +36,7 @@ class StreamMapperSpec extends UnitSpecification with Fixtures {
       val page = CursorBasedPage(urn, "https://foo.com", "/something", Map(), None, 100)
 
       override def before: Any = {
-        when(timelineClient.stream(session, None, 100, false, Some("uuid"))).thenReturn(Future(timelineStream.as[JsObject]))
+        when(timelineClient.stream(session, None, 100, false, Some("uuid"))).thenReturn(Future(timelineMapperStream.as[JsObject]))
       }
     }
 
@@ -55,7 +54,7 @@ class StreamMapperSpec extends UnitSpecification with Fixtures {
       val page = CursorBasedPage(urn, "https://foo.com", "/something", Map(), Some(uuid), 100)
 
       override def before: Any = {
-        when(timelineClient.stream(session, Some(uuid), 100, false, Some("uuid"))).thenReturn(Future(timelineStream.as[JsObject]))
+        when(timelineClient.stream(session, Some(uuid), 100, false, Some("uuid"))).thenReturn(Future(timelineMapperStream.as[JsObject]))
       }
     }
 
@@ -78,7 +77,7 @@ class StreamMapperSpec extends UnitSpecification with Fixtures {
       val page = CursorBasedPage(urn, "https://foo.com", "/something", Map("uuid[to]" -> uuid.toString), None, 100)
 
       override def before: Any = {
-        when(timelineClient.stream(session, Some(uuid), 100, true, Some("uuid"))).thenReturn(Future(timelineStream.as[JsObject]))
+        when(timelineClient.stream(session, Some(uuid), 100, true, Some("uuid"))).thenReturn(Future(timelineMapperStream.as[JsObject]))
       }
     }
 

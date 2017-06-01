@@ -1,25 +1,25 @@
 package com.soundcloud.publicApiStrangler.client.follows.mapper
 
 import com.soundcloud.publicApiStrangler.client.follows.representation.unfollow._
-import com.soundcloud.scalakit.finagle.http.{NotFoundStatus, OkStatus, StatusCode, UnprocessableEntityStatus}
-import com.soundcloud.scalakit.finagle.jsonservice.JsonResponse
-import play.api.libs.json.JsValue
+import com.twitter.finagle.http.{Response, Status}
+import play.api.libs.json.{JsValue, Json}
 
 object UnfollowResponseMapper {
 
-  def apply(response: JsonResponse): UnfollowResponse =
-    response match {
-      case JsonResponse(OkStatus, _, _, _) => UnfollowSuccessful
-      case JsonResponse(NotFoundStatus, _, _, _) => UserNotFound
-      case JsonResponse(UnprocessableEntityStatus, data, _, _) =>
+  def apply(response: Response): UnfollowResponse =
+    response.status match {
+      case Status.Ok => UnfollowSuccessful
+      case Status.NotFound => UserNotFound
+      case Status.UnprocessableEntity =>
+        val data = Json.parse(response.contentString)
         (data \ "error" \ "name").asOpt[String] match {
           case Some("UserAsTarget") => UserAsTarget
           case Some("NotFollowing") => NotFollowing
-          case _ => unknownError(UnprocessableEntityStatus, data)
+          case _ => unknownError(Status.UnprocessableEntity, data)
         }
-      case JsonResponse(status, data, _, _) => unknownError(status, data)
+      case status => unknownError(status, Json.parse(response.contentString))
     }
 
-  private def unknownError(status: StatusCode, data: JsValue) =
-    UnknownError(s"Unknown error: $data", status.i)
+  private def unknownError(status: Status, data: JsValue) =
+    UnknownError(s"Unknown error: $data", status.code)
 }

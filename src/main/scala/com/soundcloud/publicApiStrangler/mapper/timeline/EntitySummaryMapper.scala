@@ -4,10 +4,9 @@ import com.soundcloud.bff.nextbff.mapper.Mapper
 import com.soundcloud.bff.nextbff.mapping.{JsonMapping, MappingContext}
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSession
-import com.soundcloud.publicApiStrangler.client.BigJvmKitConversions._
+import com.soundcloud.publicApiStrangler.client.OkidokiClient
 import com.soundcloud.publicApiStrangler.client.reposts.RepostsClient
 import com.soundcloud.publicApiStrangler.mapping.timeline.{CommentSummary, PlaylistSummary, TrackSummary, UserSummary}
-import com.soundcloud.service.client.OkidokiClient
 import com.twitter.util.Future
 import play.api.libs.json.JsObject
 

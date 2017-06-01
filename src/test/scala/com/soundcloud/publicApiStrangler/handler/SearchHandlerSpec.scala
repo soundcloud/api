@@ -17,7 +17,6 @@ import com.soundcloud.publicApiStrangler.mapper.search.SearchMapper
 import com.soundcloud.publicApiStrangler.mapping.search.{Search, SearchDispatcherRequest}
 import com.soundcloud.publicApiStrangler.support.DispatchToMothershipHandler
 import com.soundcloud.publicApiStrangler.test.{HandlerSpecificationScope, UnitSpecification}
-import com.soundcloud.scalakit.finagle.http.BadRequestStatus
 import com.twitter.finagle.http.{Response, Status}
 import com.twitter.util.Future
 import org.mockito.Mockito.{verify, when}
@@ -208,7 +207,7 @@ class SearchHandlerSpec extends UnitSpecification {
           val page = OffsetBasedPage(query, "http://api.soundcloud.com", apiEndPoint, extraParams, 0, 10)
 
           when(searchMapperMock.materialize(anonymousSession, page))
-            .thenReturn(Future.exception(RepositoryException(BadRequestStatus, "oh, behave!")))
+            .thenReturn(Future.exception(RepositoryException(Status.BadRequest, "oh, behave!")))
 
           val response = get(handler, apiEndPoint, extraParams, Map("Host" -> "api.soundcloud.com"))
           response.statusCode ==== 400

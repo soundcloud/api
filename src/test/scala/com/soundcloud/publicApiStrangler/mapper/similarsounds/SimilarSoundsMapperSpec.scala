@@ -4,11 +4,10 @@ import com.soundcloud.bff.nextbff.mapping.MappingContext
 import com.soundcloud.bff.nextbff.pagination.OffsetBasedPage
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSession
-import com.soundcloud.publicApiStrangler.client.BigJvmKitConversions._
+import com.soundcloud.publicApiStrangler.client.SimilarSoundsClient
 import com.soundcloud.publicApiStrangler.mapper.search.SearchEntityMapper
+import com.soundcloud.publicApiStrangler.representation.{SimilarSounds, SimilarSoundsMeta}
 import com.soundcloud.publicApiStrangler.test.UnitSpecification
-import com.soundcloud.service.client.SimilarSoundsClient
-import com.soundcloud.service.response.representation.{SimilarSounds, SimilarSoundsMeta}
 import com.twitter.util.{Await, Future}
 import org.mockito.Mockito.{times, verify, when}
 

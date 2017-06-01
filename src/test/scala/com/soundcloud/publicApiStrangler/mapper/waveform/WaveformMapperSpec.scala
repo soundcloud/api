@@ -1,17 +1,15 @@
 package com.soundcloud.publicApiStrangler.mapper.waveform
 
-import com.soundcloud.bff.media.{TrackWaveformUrl, WaveformUrlsRepository}
 import com.soundcloud.bff.nextbff.mapping.MappingContext
 import com.soundcloud.jvmkit.module.util.Url
 import com.soundcloud.jvmkit.module.util.session.{UserSession, UserSessionBuilder}
-import com.soundcloud.publicApiStrangler.client.BigJvmKitConversions._
+import com.soundcloud.publicApiStrangler.media.{TrackWaveformUrl, WaveformUrlsRepository}
 import com.soundcloud.publicApiStrangler.policies.ContentPolicy
 import com.soundcloud.publicApiStrangler.test.UnitSpecification
-import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures
 import com.twitter.util.{Await, Future}
 import org.mockito.Mockito.{verify, when}
 
-class WaveformMapperSpec extends UnitSpecification with Fixtures {
+class WaveformMapperSpec extends UnitSpecification {
 
   trait Context extends Scope {
     val waveformUrlsRepoMock = mock[WaveformUrlsRepository]
@@ -35,7 +33,7 @@ class WaveformMapperSpec extends UnitSpecification with Fixtures {
 
       val waveformRequest = WaveformRequestParams(uid, policy)
 
-      when(waveformUrlsRepoMock.fetchWaveformUrlsToMap(===(toBigJvmKitUserSession(session)), ===(Map(uid -> toBigJvmKitContentPolicy(policy)))))
+      when(waveformUrlsRepoMock.fetchWaveformUrlsToMap(===(session), ===(Map(uid -> policy))))
         .thenReturn(Future(Map(uid -> waveformUrl)))
     }
 

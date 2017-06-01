@@ -2,18 +2,17 @@ package com.soundcloud.publicApiStrangler.mapper.timeline
 
 import com.soundcloud.bff.nextbff.pagination.CursorBasedPage
 import com.soundcloud.jvmkit.module.util.Urn
-import com.soundcloud.jvmkit.module.util.session.{UserSession, UserSessionBuilder}
-import com.soundcloud.publicApiStrangler.client.BigJvmKitConversions._
+import com.soundcloud.jvmkit.module.util.session.UserSessionBuilder
+import com.soundcloud.publicApiStrangler.client.TimelineJsonClient
 import com.soundcloud.publicApiStrangler.mapping.timeline.e1.{TimelineWithUuids, TrackTimelineItem}
 import com.soundcloud.publicApiStrangler.test.UnitSpecification
-import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures
-import com.soundcloud.services.timeline.TimelineJsonClient
+import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures._
 import com.twitter.util.{Await, Future}
 import org.mockito.Mockito.when
 import org.specs2.mutable.Before
 import play.api.libs.json.JsObject
 
-class FollowingsTracksMapperSpec extends UnitSpecification with Fixtures {
+class FollowingsTracksMapperSpec extends UnitSpecification {
 
   trait Context extends Scope with Before {
     val timelineClient = mock[TimelineJsonClient]

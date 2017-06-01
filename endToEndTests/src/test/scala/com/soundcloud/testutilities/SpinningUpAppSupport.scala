@@ -3,8 +3,6 @@ package com.soundcloud.testutilities
 import java.net.URL
 import java.nio.charset.StandardCharsets
 
-import com.soundcloud.scalakit.finagle.http.{StatusCode, SuccessfulStatusClass}
-import com.soundcloud.scalakit.json.Json
 import com.twitter.finagle
 import com.twitter.finagle.Http
 import com.twitter.finagle.builder.ClientBuilder
@@ -12,6 +10,7 @@ import com.twitter.finagle.http._
 import com.twitter.util.{Await, Duration}
 import org.specs2.mutable.Specification
 import org.specs2.specification.Scope
+import play.api.libs.json.Json
 
 
 trait SpinningUpAppSupport {
@@ -75,10 +74,10 @@ trait SpinningUpAppSupport {
     lazy val headers = response.headerMap
     lazy val location = response.headerMap.get("Location").getOrElse(null)
     lazy val json = {
-      if (new StatusCode(response.status.code).statusClass == SuccessfulStatusClass) {
+      if (response.statusCode > 199 && response.statusCode < 300) {
         val contentType = response.headerMap.get("Content-Type").get
         if (contentType.startsWith(MediaType.Json)) {
-          Json.fromString(body)
+          Json.parse(body)
         } else {
           throw new ServerUnderTestException(s"Invalid content type in response: $contentType")
         }
