@@ -4,7 +4,7 @@ API_ENTRYPOINT     := api
 APITRACKUPLOAD_ENTRYPOINT     := apitrackupload
 
 API_CONFIG := production_api.sh.enc
-APITRACKUPLOAD_CONFIG := production_apitrackupload.sh
+APITRACKUPLOAD_CONFIG := production_apitrackupload.sh.enc
 RUNTIME_STACK := jdk-8
 
 DOCKER_IP ?= $(shell docker-ip)
