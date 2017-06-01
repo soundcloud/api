@@ -5,8 +5,8 @@ import com.soundcloud.jvmkit.module.util.http.Headers
 import com.soundcloud.jvmkit.module.util.{Path, Urn}
 import com.soundcloud.jvmkit.module.util.logging.SoundCloudLoggerFactory
 import com.soundcloud.jvmkit.module.util.session.UserSession
-import com.soundcloud.publicApiStrangler.client.CommonJsonFormats.urnFormat
-import com.soundcloud.publicApiStrangler.client.{FetchClient, ResponseHandlers}
+import com.soundcloud.publicApiStrangler.client.support.CommonJsonFormats.urnFormat
+import com.soundcloud.publicApiStrangler.client.support.{FetchClient, ResponseHandlers}
 import com.twitter.util.Future
 import play.api.libs.json.{JsObject, Json, Reads, Writes}
 

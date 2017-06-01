@@ -4,11 +4,11 @@ import com.soundcloud.jvmkit.module.http.client.{JsonClient, Params}
 import com.soundcloud.jvmkit.module.util.http.Headers
 import com.soundcloud.jvmkit.module.util.{Path, Urn}
 import com.soundcloud.jvmkit.module.util.session.UserSession
-import com.soundcloud.publicApiStrangler.client.FetchClient
 import com.soundcloud.publicApiStrangler.client.follows.mapper._
 import com.soundcloud.publicApiStrangler.client.follows.representation.follow._
 import com.soundcloud.publicApiStrangler.client.follows.representation.unfollow._
 import com.soundcloud.publicApiStrangler.client.follows.representation.{FilteredUserUrns, FollowingsPage, UserUrns}
+import com.soundcloud.publicApiStrangler.client.support.FetchClient
 import com.twitter.util.Future
 
 class FollowsClient(jsonService: JsonClient) extends FetchClient {

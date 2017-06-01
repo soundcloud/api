@@ -4,8 +4,8 @@ import com.soundcloud.bff.nextbff.pagination.CursorBasedPage
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSessionBuilder
 import com.soundcloud.publicApiStrangler.client.TimelineJsonClient
+import com.soundcloud.publicApiStrangler.mapper.timeline.representation.e1.{TimelineWithUuids, TrackTimelineItem}
 import com.soundcloud.publicApiStrangler.mapper.timeline.{EntityMapper, EntitySummaryMapper}
-import com.soundcloud.publicApiStrangler.mapping.timeline.e1.{TimelineWithUuids, TrackTimelineItem}
 import com.soundcloud.publicApiStrangler.test.UnitSpecification
 import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures._
 import com.twitter.util.{Await, Future}

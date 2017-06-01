@@ -1,7 +1,7 @@
 package com.soundcloud.publicApiStrangler.authorization
 
 import com.soundcloud.jvmkit.module.util.Urn
-import com.soundcloud.publicApiStrangler.policies._
+import com.soundcloud.publicApiStrangler.authorization.policies._
 import org.specs2.mutable.Specification
 import org.specs2.specification.Scope
 import play.api.libs.json.Json

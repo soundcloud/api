@@ -4,12 +4,12 @@ import com.soundcloud.jvmkit.module.bff.session.UserAuthentication
 import com.soundcloud.jvmkit.module.http.server.{HandlerRequest, JsonResponseBuilder, ResponseBuilder}
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSession
-import com.soundcloud.publicApiStrangler.client.RichOkidokiClient
 import com.soundcloud.publicApiStrangler.client.followcounts.{FollowCounts, FollowCountsClient}
 import com.soundcloud.publicApiStrangler.client.liebling.{LieblingClient, UserTotalLikes}
+import com.soundcloud.publicApiStrangler.client.mothership.RichOkidokiClient
 import com.soundcloud.publicApiStrangler.client.reposts.{Reposts, RepostsClient}
-import com.soundcloud.publicApiStrangler.mapping.reposts.RepostsUser.writes
-import com.soundcloud.publicApiStrangler.mapping.reposts.{RepostsResponse, RepostsUser}
+import com.soundcloud.publicApiStrangler.mapper.reposts.representation.{RepostsResponse, RepostsUser}
+import com.soundcloud.publicApiStrangler.mapper.reposts.representation.RepostsUser.writes
 import com.twitter.finagle.http.{ParamMap, Response}
 import com.twitter.util.Future
 import play.api.libs.json.Json

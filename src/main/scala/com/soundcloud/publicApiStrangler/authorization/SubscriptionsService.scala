@@ -3,7 +3,7 @@ package com.soundcloud.publicApiStrangler.authorization
 import com.soundcloud.jvmkit.module.http.client.{JsonClient, Params}
 import com.soundcloud.jvmkit.module.util.Path
 import com.soundcloud.jvmkit.module.util.session.UserSession
-import com.soundcloud.publicApiStrangler.mapper.UnhandledResponseException
+import com.soundcloud.publicApiStrangler.client.support.UnhandledResponseException
 import com.twitter.finagle.http.Status
 import com.twitter.util.Future
 import play.api.libs.json.Json

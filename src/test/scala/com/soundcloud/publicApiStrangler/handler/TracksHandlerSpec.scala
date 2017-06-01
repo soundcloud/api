@@ -6,11 +6,10 @@ import com.soundcloud.jvmkit.module.util.session.UserSessionBuilder
 import com.soundcloud.jvmkit.module.util.{Geo, Urn}
 import com.soundcloud.publicApiStrangler.Routing
 import com.soundcloud.publicApiStrangler.authorization.Track
-import com.soundcloud.publicApiStrangler.client.OkidokiClient
+import com.soundcloud.publicApiStrangler.client.mothership.OkidokiClient
 import com.soundcloud.publicApiStrangler.client.trackcoordinator.TrackCoordinatorClient
 import com.soundcloud.publicApiStrangler.client.trackcoordinator.datatypes.{ClientError, NotFound, ServerError, Success}
 import com.soundcloud.publicApiStrangler.client.trackmetadata.{TrackmetadataClient, Track => TMTrack}
-import com.soundcloud.publicApiStrangler.support.DispatchToMothershipHandler
 import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures._
 import com.soundcloud.publicApiStrangler.test.util.TrackMetadataTrackBuilder
 import com.soundcloud.publicApiStrangler.test.{HandlerSpecificationScope, UnitSpecification}

@@ -1,6 +1,6 @@
 package com.soundcloud.publicApiStrangler.mapper.trackstreams
 
-import com.soundcloud.publicApiStrangler.media.MediaUrl
+import com.soundcloud.publicApiStrangler.client.media.MediaUrl
 import com.twitter.finagle.http.Response
 import com.twitter.util.Future
 

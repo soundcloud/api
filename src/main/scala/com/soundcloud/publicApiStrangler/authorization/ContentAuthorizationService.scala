@@ -5,7 +5,7 @@ import com.soundcloud.jvmkit.module.util.http.Headers
 import com.soundcloud.jvmkit.module.util.logging.SoundCloudLoggerFactory
 import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.jvmkit.module.util.{Path, Urn}
-import com.soundcloud.publicApiStrangler.policies._
+import com.soundcloud.publicApiStrangler.authorization.policies._
 import com.twitter.finagle.http.Status
 import com.twitter.util.Future
 import play.api.libs.json.{JsValue, Json}

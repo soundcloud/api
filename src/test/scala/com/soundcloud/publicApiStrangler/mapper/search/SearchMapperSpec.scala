@@ -1,5 +1,6 @@
 package com.soundcloud.publicApiStrangler.mapper.search
 
+import com.soundcloud.bff.nextbff.UntypedJson
 import com.soundcloud.bff.nextbff.mapping.MappingContext
 import com.soundcloud.bff.nextbff.pagination.OffsetBasedPage
 import com.soundcloud.jvmkit.module.http.client.{JsonClient, Param, Params}
@@ -7,12 +8,10 @@ import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.http.Headers
 import com.soundcloud.jvmkit.module.util.session.UserSessionBuilder
 import com.soundcloud.publicApiStrangler.authorization.ContentAuthorizationRules
-import com.soundcloud.publicApiStrangler.client.CommonJsonFormats.urnFormat
-import com.soundcloud.publicApiStrangler.client.OkidokiClient
+import com.soundcloud.publicApiStrangler.client.support.CommonJsonFormats.urnFormat
 import com.soundcloud.publicApiStrangler.client.followcounts.FollowCountsClient
+import com.soundcloud.publicApiStrangler.client.mothership.OkidokiClient
 import com.soundcloud.publicApiStrangler.client.reposts.RepostsClient
-import com.soundcloud.publicApiStrangler.mapping.search.{LegacySearch, PaginatedSearch, SearchDispatcherRequest}
-import com.soundcloud.publicApiStrangler.support.UntypedJson
 import com.soundcloud.publicApiStrangler.test.UnitSpecification
 import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures.withContentsOf
 import com.twitter.finagle.http.Status

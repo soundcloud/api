@@ -5,7 +5,6 @@ import com.soundcloud.jvmkit.module.http.server.{AlwaysMatchesPathMatcher, Handl
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.publicApiStrangler.client.stitch.{StitchClient, StitchCounts}
-import com.soundcloud.publicApiStrangler.support.DispatchToMothershipHandler
 import com.twitter.finagle.http.Response
 import com.twitter.util.{Future, Try}
 import play.api.libs.json.{JsArray, JsObject, JsValue, Json}

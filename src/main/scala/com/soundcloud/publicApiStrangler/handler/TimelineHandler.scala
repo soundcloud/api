@@ -1,5 +1,6 @@
 package com.soundcloud.publicApiStrangler.handler
 
+import com.soundcloud.bff.nextbff.UntypedJson
 import com.soundcloud.jvmkit.module.bff.session.UserAuthentication
 import com.soundcloud.jvmkit.module.http.server.{HandlerRequest, JsonResponseBuilder, ResponseBuilder}
 import com.soundcloud.jvmkit.module.util.Urn
@@ -7,8 +8,8 @@ import com.soundcloud.jvmkit.module.util.session.LoggedInUserSession
 import com.soundcloud.publicApiStrangler.mapper.timeline._
 import com.soundcloud.publicApiStrangler.mapper.timeline.e1.{ActivitiesMapper, StreamMapper}
 import com.soundcloud.publicApiStrangler.mapper.timeline.publicApi.ActivitiesWithOriginMapper
-import com.soundcloud.publicApiStrangler.mapping.timeline.Timeline
-import com.soundcloud.publicApiStrangler.mapping.timeline.e1.TrackTimelineItem
+import com.soundcloud.publicApiStrangler.mapper.timeline.representation.Timeline
+import com.soundcloud.publicApiStrangler.mapper.timeline.representation.e1.TrackTimelineItem
 import com.soundcloud.publicApiStrangler.support._
 import com.twitter.finagle.http.Response
 import com.twitter.util.Future

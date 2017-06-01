@@ -4,9 +4,9 @@ import com.soundcloud.jvmkit.module.http.client.JsonClient
 import com.soundcloud.jvmkit.module.util.http.Headers
 import com.soundcloud.jvmkit.module.util.{Path, Urn}
 import com.soundcloud.jvmkit.module.util.session.UserSession
-import com.soundcloud.publicApiStrangler.client.ResponseHandlers.OptionalSingleItem
-import com.soundcloud.publicApiStrangler.mapper.SimilarSoundsMapper
-import com.soundcloud.publicApiStrangler.representation.SimilarSounds
+import com.soundcloud.publicApiStrangler.client.support.FetchClient
+import com.soundcloud.publicApiStrangler.client.support.ResponseHandlers.OptionalSingleItem
+import com.soundcloud.publicApiStrangler.mapper.similarsounds.{SimilarSounds, SimilarSoundsMapper}
 import com.twitter.util.Future
 import play.api.libs.json.JsObject
 

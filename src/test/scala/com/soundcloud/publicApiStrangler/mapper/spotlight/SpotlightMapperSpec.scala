@@ -1,6 +1,5 @@
 package com.soundcloud.publicApiStrangler.mapper.spotlight
 
-import com.soundcloud.publicApiStrangler.representation.spotlight.Spotlight
 import com.soundcloud.publicApiStrangler.test.UnitSpecification
 import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures
 import play.api.libs.json.JsValue

@@ -13,9 +13,7 @@ import com.soundcloud.publicApiStrangler.Routing
 import com.soundcloud.publicApiStrangler.client.followcounts.{FollowCounts, FollowCountsClient}
 import com.soundcloud.publicApiStrangler.client.liebling.LieblingClient
 import com.soundcloud.publicApiStrangler.client.reposts.RepostsClient
-import com.soundcloud.publicApiStrangler.mapper.search.SearchMapper
-import com.soundcloud.publicApiStrangler.mapping.search.{Search, SearchDispatcherRequest}
-import com.soundcloud.publicApiStrangler.support.DispatchToMothershipHandler
+import com.soundcloud.publicApiStrangler.mapper.search.{Search, SearchDispatcherRequest, SearchMapper}
 import com.soundcloud.publicApiStrangler.test.{HandlerSpecificationScope, UnitSpecification}
 import com.twitter.finagle.http.{Response, Status}
 import com.twitter.util.Future

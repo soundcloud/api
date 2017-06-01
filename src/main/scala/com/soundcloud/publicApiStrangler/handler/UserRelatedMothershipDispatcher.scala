@@ -8,7 +8,6 @@ import com.soundcloud.publicApiStrangler.client.followcounts.{FollowCounts, Foll
 import com.soundcloud.publicApiStrangler.client.liebling.{LieblingClient, UserTotalLikes}
 import com.soundcloud.publicApiStrangler.client.reposts.RepostsClient
 import com.soundcloud.publicApiStrangler.handler.UserRelatedMothershipDispatcher.SubstitutionsByUser
-import com.soundcloud.publicApiStrangler.support.DispatchToMothershipHandler
 import com.twitter.finagle.http.Response
 import com.twitter.util.{Future, Try}
 import play.api.libs.json.Json.JsValueWrapper

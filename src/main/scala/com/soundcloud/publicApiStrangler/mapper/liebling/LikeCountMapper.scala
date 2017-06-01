@@ -5,7 +5,6 @@ import com.soundcloud.bff.nextbff.mapping.MappingContext
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.publicApiStrangler.client.liebling.{LieblingClient, LikesCount, UserLikesCount}
-import com.soundcloud.publicApiStrangler.mapping.liebling.LikeInfo
 import com.soundcloud.publicApiStrangler.support.mapping.{InputValidation, ObjectMapping}
 import com.twitter.util.Future
 

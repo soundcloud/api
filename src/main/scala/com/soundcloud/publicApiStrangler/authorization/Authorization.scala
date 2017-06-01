@@ -1,8 +1,8 @@
 package com.soundcloud.publicApiStrangler.authorization
 
 import com.soundcloud.jvmkit.module.util.Urn
-import com.soundcloud.publicApiStrangler.policies.{ContentAuthorization, ContentPolicy, ContentRestriction, Reason}
-import com.soundcloud.publicApiStrangler.representation.HasUrn
+import com.soundcloud.publicApiStrangler.client.mothership.response.representation.HasUrn
+import com.soundcloud.publicApiStrangler.authorization.policies.{ContentAuthorization, ContentPolicy, ContentRestriction, Reason}
 import play.api.libs.json.JsValue
 
 /**

@@ -3,7 +3,7 @@ package com.soundcloud.publicApiStrangler
 import com.soundcloud.jvmkit.module.telemetry.Telemetry
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.publicApiStrangler.App.mothershipDispatcher
-import com.soundcloud.publicApiStrangler.support.SpecificStranglingHandler
+import com.soundcloud.publicApiStrangler.handler.SpecificStranglingHandler
 
 trait FallbackHandlerConfiguration {
 

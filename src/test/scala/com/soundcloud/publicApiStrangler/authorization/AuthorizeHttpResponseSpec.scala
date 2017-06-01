@@ -4,8 +4,8 @@ import com.soundcloud.jvmkit.module.bff.testsupport.FakeUserAuthentication
 import com.soundcloud.jvmkit.module.http.server.HandlerRequest
 import com.soundcloud.jvmkit.module.util.{Url, Urn}
 import com.soundcloud.jvmkit.module.util.session.UserSessionBuilder
-import com.soundcloud.publicApiStrangler.media.{TrackWaveformUrl, WaveformUrlsRepository}
-import com.soundcloud.publicApiStrangler.policies._
+import com.soundcloud.publicApiStrangler.client.media.{TrackWaveformUrl, WaveformUrlsRepository}
+import com.soundcloud.publicApiStrangler.authorization.policies._
 import com.soundcloud.publicApiStrangler.test.UnitSpecification
 import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures._
 import com.twitter.finagle.http.Status

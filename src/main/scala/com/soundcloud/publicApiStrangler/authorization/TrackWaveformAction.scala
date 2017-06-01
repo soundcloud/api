@@ -2,7 +2,7 @@ package com.soundcloud.publicApiStrangler.authorization
 
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.publicApiStrangler.authorization.TrackWaveformActionStatus.TrackWaveformActionStatus
-import com.soundcloud.publicApiStrangler.media.TrackWaveformUrl
+import com.soundcloud.publicApiStrangler.client.media.TrackWaveformUrl
 
 /**
   * Indicates if for a given track urn we have to take action for replacing the waveform url.

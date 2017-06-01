@@ -9,8 +9,8 @@ import com.soundcloud.publicApiStrangler.mapper.timeline.e1.{ActivitiesMapper, S
 import com.soundcloud.publicApiStrangler.mapper.timeline.publicApi.ActivitiesWithOriginMapper
 import com.soundcloud.publicApiStrangler.mapper.timeline.{EntityMapper, EntitySummaryMapper, FollowingsTracksMapper}
 import com.soundcloud.publicApiStrangler.mapper.trackstreams.{TrackStreamJsonResponseMapper, TrackStreamRedirectResponseMapper}
-import com.soundcloud.publicApiStrangler.media.MediaUrlsRepository
-import com.soundcloud.publicApiStrangler.support.{CursorPagination, DispatchToMothershipHandler, TrackStreamHandler}
+import com.soundcloud.publicApiStrangler.client.media.MediaUrlsRepository
+import com.soundcloud.publicApiStrangler.support.CursorPagination
 
 trait Handlers extends Clients {
 

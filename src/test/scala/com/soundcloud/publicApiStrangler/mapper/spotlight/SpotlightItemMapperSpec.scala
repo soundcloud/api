@@ -1,8 +1,7 @@
 package com.soundcloud.publicApiStrangler.mapper.spotlight
 
 import com.soundcloud.jvmkit.module.util.Urn
-import com.soundcloud.publicApiStrangler.representation.Self
-import com.soundcloud.publicApiStrangler.representation.spotlight.SpotlightItem
+import com.soundcloud.publicApiStrangler.client.mothership.response.representation.Self
 import com.soundcloud.publicApiStrangler.test.UnitSpecification
 import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures
 

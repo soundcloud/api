@@ -1,19 +1,19 @@
 package com.soundcloud.publicApiStrangler.mapper.search
 
+import com.soundcloud.bff.nextbff.UntypedJson
 import com.soundcloud.bff.nextbff.mapping.{Mapping, MappingContext}
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.publicApiStrangler.authorization.ContentAuthorizationRules
-import com.soundcloud.publicApiStrangler.client.OkidokiClient
 import com.soundcloud.publicApiStrangler.client.followcounts.{FollowCounts, FollowCountsClient}
 import com.soundcloud.publicApiStrangler.client.liebling.{LieblingClient, UserLikesCount}
+import com.soundcloud.publicApiStrangler.client.mothership.OkidokiClient
+import com.soundcloud.publicApiStrangler.client.mothership.response.representation.{TrackMeta, TracksWithPagination}
 import com.soundcloud.publicApiStrangler.client.reposts.RepostsClient
 import com.soundcloud.publicApiStrangler.mapper.liebling.LikeCountMapper
 import com.soundcloud.publicApiStrangler.mapper.timeline.EntitySummaryMapper
 import com.soundcloud.publicApiStrangler.mapper.waveform.WaveformMapper
-import com.soundcloud.publicApiStrangler.media.{TrackWaveformUrlMapper, WaveformUrlsRepository}
-import com.soundcloud.publicApiStrangler.policies.{ContentAuthorization, ContentPolicy, MonetizationModel, Reason}
-import com.soundcloud.publicApiStrangler.representation.{TrackMeta, TracksWithPagination}
-import com.soundcloud.publicApiStrangler.support.UntypedJson
+import com.soundcloud.publicApiStrangler.client.media.{TrackWaveformUrlMapper, WaveformUrlsRepository}
+import com.soundcloud.publicApiStrangler.authorization.policies.{ContentAuthorization, ContentPolicy, MonetizationModel, Reason}
 import com.soundcloud.publicApiStrangler.test.UnitSpecification
 import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures._
 import com.twitter.util.{Await, Future}
