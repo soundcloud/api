@@ -2,8 +2,8 @@ package com.soundcloud.publicApiStrangler.authorization
 
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.logging.SoundCloudLoggerFactory
-import com.soundcloud.publicApiStrangler.policies.{ContentAuthorization, ContentPolicy, MonetizationModel, Reason}
-import com.soundcloud.publicApiStrangler.representation.HasUrn
+import com.soundcloud.publicApiStrangler.client.mothership.response.representation.HasUrn
+import com.soundcloud.publicApiStrangler.authorization.policies.{ContentAuthorization, ContentPolicy, MonetizationModel, Reason}
 import com.twitter.util.Future
 import play.api.libs.json.JsValue
 

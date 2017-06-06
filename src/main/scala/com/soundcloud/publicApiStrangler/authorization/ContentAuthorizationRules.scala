@@ -3,7 +3,7 @@ package com.soundcloud.publicApiStrangler.authorization
 import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.jvmkit.module.util.{Urn, UserTier}
 import com.twitter.util.Future
-import com.soundcloud.publicApiStrangler.policies._
+import com.soundcloud.publicApiStrangler.authorization.policies._
 
 class ContentAuthorizationRules(contentAuth: ContentAuthorizationService, subscriptions: SubscriptionsService) {
 

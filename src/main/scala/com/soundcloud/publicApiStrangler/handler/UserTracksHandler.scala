@@ -8,8 +8,7 @@ import com.soundcloud.jvmkit.module.http.server.HandlerRequest
 import com.soundcloud.jvmkit.module.telemetry.Telemetry
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.logging.SoundCloudLoggerFactory
-import com.soundcloud.publicApiStrangler.service.TrackPagination
-import com.soundcloud.publicApiStrangler.{TrackRepresentationsService, TracksRepresentationResult}
+import com.soundcloud.publicApiStrangler.service.trackrepresentation.{TrackPagination, TrackRepresentationsService, TracksRepresentationResult}
 import com.twitter.finagle.http.{Response, Status}
 import com.twitter.util.Future
 import play.api.libs.json.Json

@@ -8,7 +8,7 @@ import com.soundcloud.jvmkit.module.util.config.{Config, ConfigConvention}
 import com.soundcloud.jvmkit.module.util.http.Headers
 import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.jvmkit.module.util.{Path, ResourceName, Urn}
-import com.soundcloud.publicApiStrangler.client.CommonJsonFormats._
+import com.soundcloud.publicApiStrangler.client.support.CommonJsonFormats._
 import com.twitter.finagle.http.{Response, Status}
 import com.twitter.util.Future
 import play.api.libs.json._

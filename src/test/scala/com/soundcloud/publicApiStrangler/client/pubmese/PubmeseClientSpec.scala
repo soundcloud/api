@@ -7,7 +7,7 @@ import com.soundcloud.publicApiStrangler.test.UnitSpecification
 import com.twitter.finagle.http.Status
 import com.twitter.util.{Await, Future}
 import play.api.libs.json.{JsNull, Json}
-import com.soundcloud.publicApiStrangler.client.CommonJsonFormats.{urnFormat, urnSetReads}
+import com.soundcloud.publicApiStrangler.client.support.CommonJsonFormats.{urnFormat, urnSetReads}
 
 class PubmeseClientSpec extends UnitSpecification {
 

@@ -3,8 +3,8 @@ package com.soundcloud.publicApiStrangler.mapper.waveform
 import com.soundcloud.bff.nextbff.mapping.MappingContext
 import com.soundcloud.jvmkit.module.util.Url
 import com.soundcloud.jvmkit.module.util.session.{UserSession, UserSessionBuilder}
-import com.soundcloud.publicApiStrangler.media.{TrackWaveformUrl, WaveformUrlsRepository}
-import com.soundcloud.publicApiStrangler.policies.ContentPolicy
+import com.soundcloud.publicApiStrangler.client.media.{TrackWaveformUrl, WaveformUrlsRepository}
+import com.soundcloud.publicApiStrangler.authorization.policies.ContentPolicy
 import com.soundcloud.publicApiStrangler.test.UnitSpecification
 import com.twitter.util.{Await, Future}
 import org.mockito.Mockito.{verify, when}

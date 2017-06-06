@@ -9,10 +9,9 @@ import com.soundcloud.jvmkit.module.experimental.result.ResultF.lift
 import com.soundcloud.jvmkit.module.telemetry.{MetricsRegistryImpl, Telemetry}
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.config.InMemoryConfig
-import com.soundcloud.publicApiStrangler.representation.trackmetadata.TrackRepresentationLikeSpecContext
-import com.soundcloud.publicApiStrangler.service.TrackPagination
+import com.soundcloud.publicApiStrangler.service.trackrepresentation.{TrackPagination, TrackRepresentationLikeSpecContext, TrackRepresentationsService, TracksRepresentationResult}
 import com.soundcloud.publicApiStrangler.test.{HandlerSpecificationScope, UnitSpecification}
-import com.soundcloud.publicApiStrangler.{Routing, TrackRepresentationsService, TracksRepresentationResult}
+import com.soundcloud.publicApiStrangler.Routing
 import com.twitter.finagle.http.Status
 import com.twitter.util.Future
 import org.joda.time.{DateTimeZone, LocalDateTime}

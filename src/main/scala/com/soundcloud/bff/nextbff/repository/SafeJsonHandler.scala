@@ -1,6 +1,6 @@
 package com.soundcloud.bff.nextbff.repository
 
-import com.soundcloud.publicApiStrangler.client.JsonResponse
+import com.soundcloud.publicApiStrangler.client.support.JsonResponse
 import com.twitter.finagle.http.Response
 import com.twitter.finagle.http.Status.Successful
 import play.api.libs.json.{JsArray, JsObject}

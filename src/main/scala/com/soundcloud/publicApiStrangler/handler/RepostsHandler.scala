@@ -6,7 +6,7 @@ import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.publicApiStrangler.client.reposts.RepostsClient._
 import com.soundcloud.publicApiStrangler.client.reposts.{Reposts, RepostsClient}
-import com.soundcloud.publicApiStrangler.mapping.reposts.RepostsResponse
+import com.soundcloud.publicApiStrangler.mapper.reposts.representation.RepostsResponse
 import com.twitter.finagle.http.{ParamMap, Response, Status}
 import com.twitter.util.Future
 import play.api.libs.json.Json

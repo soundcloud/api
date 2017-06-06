@@ -1,7 +1,7 @@
 package com.soundcloud.bff.nextbff.mapping
 
+import com.soundcloud.bff.nextbff.UntypedJson
 import com.soundcloud.jvmkit.module.util.Urn
-import com.soundcloud.publicApiStrangler.support.UntypedJson
 import com.soundcloud.publicApiStrangler.test.UnitSpecification
 import play.api.libs.json.{JsNull, Json}
 

@@ -1,6 +1,6 @@
 package com.soundcloud.publicApiStrangler.authorization
 
-import com.soundcloud.publicApiStrangler.policies
+import com.soundcloud.publicApiStrangler.authorization.policies
 import play.api.libs.json.{JsObject, JsValue, Json}
 
 class Track(val json: JsValue) {

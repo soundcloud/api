@@ -3,8 +3,8 @@ package com.soundcloud.publicApiStrangler.authorization
 import com.soundcloud.jvmkit.module.util.{Url, Urn}
 import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.publicApiStrangler.authorization.TrackWaveformActionStatus._
-import com.soundcloud.publicApiStrangler.media.TrackWaveformUrl
-import com.soundcloud.publicApiStrangler.policies._
+import com.soundcloud.publicApiStrangler.client.media.TrackWaveformUrl
+import com.soundcloud.publicApiStrangler.authorization.policies._
 import com.soundcloud.publicApiStrangler.test.UnitSpecification
 import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures._
 import play.api.libs.json.{JsObject, JsValue}

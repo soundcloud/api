@@ -4,7 +4,6 @@ import com.soundcloud.jvmkit.module.bff.session.UserAuthentication
 import com.soundcloud.jvmkit.module.http.server.HandlerRequest
 import com.soundcloud.publicApiStrangler.authorization.PublicApiSiloing
 import com.soundcloud.publicApiStrangler.mapper.trackstreams.{TrackStreamJsonResponseMapper, TrackStreamRedirectResponseMapper, TrackStreamResponseMapper}
-import com.soundcloud.publicApiStrangler.support.TrackStreamHandler
 import com.twitter.finagle.http.Response
 import com.twitter.util.Future
 

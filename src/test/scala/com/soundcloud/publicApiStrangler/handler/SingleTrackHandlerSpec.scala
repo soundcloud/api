@@ -5,14 +5,14 @@ import com.soundcloud.jvmkit.module.telemetry.{MetricsRegistryImpl, Telemetry}
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.config.InMemoryConfig
 import com.soundcloud.jvmkit.module.util.session.UserSessionBuilder
-import com.soundcloud.publicApiStrangler.client.TrackAudioMetadata
+import com.soundcloud.publicApiStrangler.client.mothership.TrackAudioMetadata
+import com.soundcloud.publicApiStrangler.client.mothership.response.representation.User
 import com.soundcloud.publicApiStrangler.client.stitch.StitchCounts
 import com.soundcloud.publicApiStrangler.client.trackcoordinator.datatypes.{NotFound, Result, Success}
 import com.soundcloud.publicApiStrangler.client.trackmetadata.{Artwork, EmbeddingPermission, Track}
-import com.soundcloud.publicApiStrangler.representation.User
-import com.soundcloud.publicApiStrangler.representation.trackmetadata.{TrackRepresentation, TrackRepresentationLike}
 import com.soundcloud.publicApiStrangler.test.{HandlerSpecificationScope, UnitSpecification}
-import com.soundcloud.publicApiStrangler.{Routing, TrackRepresentationsService}
+import com.soundcloud.publicApiStrangler.Routing
+import com.soundcloud.publicApiStrangler.service.trackrepresentation.{TrackRepresentation, TrackRepresentationLike, TrackRepresentationsService}
 import com.twitter.finagle.http.Status
 import com.twitter.util.Future
 import org.joda.time.LocalDateTime

@@ -10,7 +10,6 @@ import com.soundcloud.jvmkit.module.http.client.{JsonClient, Param, Params, Stri
 import com.soundcloud.jvmkit.module.util.Path
 import com.soundcloud.jvmkit.module.util.http.HeadersBuilder
 import com.soundcloud.jvmkit.module.util.session.UserSession
-import com.soundcloud.publicApiStrangler.mapping.search.{LegacySearch, PaginatedSearch, Search, SearchDispatcherRequest}
 import play.api.libs.json.JsValue
 
 class SearchRepository(searchService: JsonClient) extends SafeJsonHandler with IndividualFetchRepository[OffsetBasedPage[SearchDispatcherRequest]] {

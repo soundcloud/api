@@ -1,10 +1,10 @@
 package com.soundcloud.publicApiStrangler.client.follows.mapper
 
 import com.soundcloud.jvmkit.module.util.Urn
-import com.soundcloud.publicApiStrangler.client.JsonResponse
-import com.soundcloud.publicApiStrangler.client.JsonResponse.stringify
+import com.soundcloud.publicApiStrangler.client.support.JsonResponse.stringify
 import com.soundcloud.publicApiStrangler.client.follows.representation.Following
 import com.soundcloud.publicApiStrangler.client.follows.representation.follow.{BulkFollowFailed, FollowResponse, FollowingCreated, UnknownError}
+import com.soundcloud.publicApiStrangler.client.support.JsonResponse
 import com.twitter.finagle.http.{Response, Status}
 import play.api.libs.json.JsObject
 

@@ -16,7 +16,7 @@ import com.soundcloud.jvmkit.module.util.{ResourceName, Urn}
 import com.soundcloud.jvmkit.module.zookeeper.CuratorFramework
 import com.soundcloud.publicApiStrangler.Routing._
 import com.soundcloud.publicApiStrangler.authorization._
-import com.soundcloud.publicApiStrangler.headers.DefaultResponseHeadersFilter
+import com.soundcloud.publicApiStrangler.filter.{DefaultResponseHeadersFilter, _}
 import com.soundcloud.publicApiStrangler.support._
 import com.twitter.finagle.SimpleFilter
 import com.twitter.finagle.http.{Method, Request, Response}

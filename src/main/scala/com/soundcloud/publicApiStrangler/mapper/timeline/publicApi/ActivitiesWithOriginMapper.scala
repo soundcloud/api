@@ -6,7 +6,7 @@ import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.publicApiStrangler.client.TimelineJsonClient
 import com.soundcloud.publicApiStrangler.mapper.timeline.{EntityMapper, EntitySummaryMapper, TimelineMapper}
-import com.soundcloud.publicApiStrangler.mapping.timeline.publicApi.TimelineWithOrigin
+import com.soundcloud.publicApiStrangler.mapper.timeline.representation.publicApi.TimelineWithOrigin
 import com.twitter.util.Future
 
 

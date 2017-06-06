@@ -1,0 +1,11 @@
+package com.soundcloud.publicApiStrangler.client.mothership.response.representation
+
+sealed trait AddToPlaylistResponse
+
+case object OkAddToPlaylistResponse extends AddToPlaylistResponse
+
+case object NotAuthorizedAddToPlaylistResponse extends AddToPlaylistResponse
+
+case object InvalidUrnAddToPlaylistResponse extends AddToPlaylistResponse
+
+case object TrackAlreadyInPlaylistAddToPlaylistResponse extends AddToPlaylistResponse

@@ -1,7 +1,6 @@
 package com.soundcloud.publicApiStrangler.mapper.spotlight
 
-import com.soundcloud.publicApiStrangler.mapper.UnhandledResponseException
-import com.soundcloud.publicApiStrangler.representation.spotlight.Spotlight
+import com.soundcloud.publicApiStrangler.client.support.UnhandledResponseException
 import com.soundcloud.publicApiStrangler.test.UnitSpecification
 import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures
 import com.twitter.finagle.http.Status

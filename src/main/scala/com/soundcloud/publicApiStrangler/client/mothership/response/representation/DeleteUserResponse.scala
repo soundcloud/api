@@ -1,0 +1,9 @@
+package com.soundcloud.publicApiStrangler.client.mothership.response.representation
+
+sealed trait DeleteUserResponse
+
+case object OkDeleteUserResponse extends DeleteUserResponse
+
+case object InvalidParametersDeleteUserResponse extends DeleteUserResponse
+
+case object UserNotFoundDeleteUserResponse extends DeleteUserResponse

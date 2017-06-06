@@ -3,9 +3,8 @@ package com.soundcloud.publicApiStrangler.mapper.waveform
 import com.soundcloud.bff.nextbff.mapper.Mapper
 import com.soundcloud.bff.nextbff.mapping.MappingContext
 import com.soundcloud.jvmkit.module.util.session.UserSession
-import com.soundcloud.publicApiStrangler.mapping.Waveform
-import com.soundcloud.publicApiStrangler.media.WaveformUrlsRepository
-import com.soundcloud.publicApiStrangler.policies.ContentPolicy
+import com.soundcloud.publicApiStrangler.client.media.WaveformUrlsRepository
+import com.soundcloud.publicApiStrangler.authorization.policies.ContentPolicy
 import com.soundcloud.publicApiStrangler.support.mapping.{InputValidation, ObjectMapping}
 import com.twitter.util.Future
 

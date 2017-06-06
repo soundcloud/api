@@ -4,9 +4,9 @@ import com.soundcloud.jvmkit.module.http.client.{JsonClient, Params}
 import com.soundcloud.jvmkit.module.util.{Path, Urn}
 import com.soundcloud.jvmkit.module.util.http.Headers
 import com.soundcloud.jvmkit.module.util.session.UserSession
-import com.soundcloud.publicApiStrangler.client.FetchClient
-import com.soundcloud.publicApiStrangler.client.CommonJsonFormats._
+import com.soundcloud.publicApiStrangler.client.support.CommonJsonFormats._
 import com.soundcloud.publicApiStrangler.client.reposts.RepostsClient._
+import com.soundcloud.publicApiStrangler.client.support.FetchClient
 import com.twitter.finagle.http.{Response, Status}
 import com.twitter.util.Future
 import play.api.libs.json.{Format, JsArray, JsObject, Json}

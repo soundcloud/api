@@ -1,8 +1,7 @@
 package com.soundcloud.publicApiStrangler
 
 import com.soundcloud.jvmkit.module.http.server.Handler
-import com.soundcloud.publicApiStrangler.handler._
-import com.soundcloud.publicApiStrangler.support.DispatchToMothershipHandler
+import com.soundcloud.publicApiStrangler.handler.{DispatchToMothershipHandler, _}
 import com.twitter.finagle.http.Method
 
 object Routing {

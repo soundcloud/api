@@ -1,7 +1,7 @@
 package com.soundcloud.publicApiStrangler.client.follows.representation
 
 import com.soundcloud.jvmkit.module.util.Urn
-import com.soundcloud.publicApiStrangler.client.CommonJsonFormats._
+import com.soundcloud.publicApiStrangler.client.support.CommonJsonFormats._
 import org.joda.time.LocalDateTime
 import play.api.libs.json.{Json, Reads}
 

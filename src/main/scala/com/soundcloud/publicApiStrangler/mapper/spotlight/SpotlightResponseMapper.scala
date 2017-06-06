@@ -1,8 +1,6 @@
 package com.soundcloud.publicApiStrangler.mapper.spotlight
 
-import com.soundcloud.publicApiStrangler.client.JsonResponse
-import com.soundcloud.publicApiStrangler.mapper.{ResponseMapper, UnhandledResponseException}
-import com.soundcloud.publicApiStrangler.representation.spotlight.Spotlight
+import com.soundcloud.publicApiStrangler.client.support.{JsonResponse, ResponseMapper, UnhandledResponseException}
 import com.twitter.finagle.http.Response
 import com.twitter.finagle.http.Status.Successful
 import play.api.libs.json.JsArray

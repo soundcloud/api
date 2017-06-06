@@ -5,8 +5,8 @@ import com.soundcloud.jvmkit.module.http.server.{HandlerRequest, ResponseBuilder
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.publicApiStrangler.authorization.TrackWaveformActionStatus._
-import com.soundcloud.publicApiStrangler.media.WaveformUrlsRepository
-import com.soundcloud.publicApiStrangler.policies
+import com.soundcloud.publicApiStrangler.client.media.WaveformUrlsRepository
+import com.soundcloud.publicApiStrangler.authorization.policies
 import com.twitter.finagle.http.{Response, Status}
 import com.twitter.util.Future
 import play.api.libs.json.Json
