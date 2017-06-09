@@ -34,7 +34,7 @@ object App extends Handlers with FallbackHandlerConfiguration {
 
     val bffApplication = BffApplication(new Urn("soundcloud", "systems", "public-api-strangler"), moduleConfig.getApplicationResourceName)
 
-    val memcachedResourceName = ResourceName("MEMCACHED")
+    val memcachedResourceName = ResourceName("PUBLIC_API_STRANGLER_MEMCACHED")
     lazy val memcachedClient = {
       RichMemcachedClient(
         MemcachedClientConfig.from(memcachedResourceName, moduleConfig),
