@@ -85,6 +85,7 @@ object App extends Handlers with FallbackHandlerConfiguration {
         new CookieHeaderRemovalFilter,
         new SessionCacheFilter(userAuthentication),
         new DefaultResponseHeadersFilter,
+        new OptionsRequestCacheHeadersFilter,
         new ExceptForTrackUploadsFilter(rateLimitingFacade.filter),
         new ExceptForTrackUploadsFilter(new ContentAuthorizationFilter(authorizeContent)),
         new SuccesfulResponseTypeMetricFilter(moduleTelemetry)
