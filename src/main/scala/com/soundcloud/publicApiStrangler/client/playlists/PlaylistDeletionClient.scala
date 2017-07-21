@@ -1,7 +1,7 @@
 package com.soundcloud.publicApiStrangler.client.playlists
 
 import com.soundcloud.jvmkit.module.experimental.result._
-import com.soundcloud.jvmkit.module.http.client.{HttpClient, Params}
+import com.soundcloud.jvmkit.module.http.client.{JsonClient, Params}
 import com.soundcloud.jvmkit.module.util.http.Headers
 import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.jvmkit.module.util.{Path, Urn}
@@ -10,7 +10,7 @@ import com.twitter.util.Future
 
 import scala.util.control.NonFatal
 
-class PlaylistDeletionClient(jsonClient: HttpClient) {
+class PlaylistDeletionClient(jsonClient: JsonClient) {
   def deletePlaylist(session: UserSession, urn: Urn): Future[Result[Status]] = {
     jsonClient.deleteWithSession(
       session,

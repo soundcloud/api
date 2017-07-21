@@ -1,6 +1,6 @@
 package com.soundcloud.publicApiStrangler.client.mediaservice
 
-import com.soundcloud.jvmkit.module.http.client.{HttpClient, Params}
+import com.soundcloud.jvmkit.module.http.client.{JsonClient, Params}
 import com.soundcloud.jvmkit.module.util.Path
 import com.soundcloud.jvmkit.module.util.http.Headers
 import com.soundcloud.publicApiStrangler.test.UnitSpecification
@@ -11,7 +11,7 @@ import play.api.libs.json.{JsObject, Json}
 class MediaServiceUrlGenClientSpec extends UnitSpecification {
 
   trait Context extends Scope {
-    val jsonClient = mock[HttpClient]
+    val jsonClient = mock[JsonClient]
     val client = new MediaServiceUrlGenClient(jsonClient)
 
     val path = Path() / "waveforms"

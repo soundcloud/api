@@ -1,6 +1,6 @@
 package com.soundcloud.publicApiStrangler.client.mediaservice
 
-import com.soundcloud.jvmkit.module.http.client.{HttpClient, Params}
+import com.soundcloud.jvmkit.module.http.client.{JsonClient, Params}
 import com.soundcloud.jvmkit.module.util.Path
 import com.soundcloud.jvmkit.module.util.http.Headers
 import com.twitter.finagle.http.Status
@@ -15,7 +15,7 @@ object WaveformUrl {
   implicit val reads: Reads[WaveformUrl] = Json.reads[WaveformUrl]
 }
 
-class MediaServiceUrlGenClient(jsonClient: HttpClient) {
+class MediaServiceUrlGenClient(jsonClient: JsonClient) {
   def waveformUrls(maybeUid: Option[String]): Future[Seq[WaveformUrl]] = maybeUid match {
     case Some(uid) => waveformUrls(Seq(uid)).map(_.get(uid).getOrElse(Seq.empty))
     case None => Future.value(Seq.empty)
