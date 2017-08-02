@@ -61,7 +61,7 @@ class ForwardedRequestSpec extends UnitSpecification {
     recordedRequest.getHeader("Host") ==== "api.soundcloud.com"
     recordedRequest.getHeader("X-Forwarded-Proto") ==== "https"
     recordedRequest.getHeader("Transfer-Encoding") ==== null
-    recordedRequest.getHeader("Content-Length") ==== null
+    recordedRequest.getHeader("Content-Length") ==== "0"
     recordedRequest.getHeader("X-Favourite-Animal") ==== "zebra"
   }
 

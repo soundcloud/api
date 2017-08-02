@@ -2,7 +2,7 @@ import com.soundcloud.sbtkit.SbtKitPlugin
 import sbt.Keys._
 import sbt._
 
-val jvmkitVersion = "1.1.0"
+val jvmkitVersion = "2.0.0"
 val playJsonVersion = "2.5.14"
 
 lazy val publicApiStrangler = project.in(file("."))
@@ -20,7 +20,7 @@ lazy val publicApiStrangler = project.in(file("."))
       "com.fasterxml.uuid" % "java-uuid-generator" % "3.1.3",
       "commons-codec" % "commons-codec" % "1.9",
       "org.jsoup" % "jsoup" % "1.8.3",
-      "com.squareup.okhttp3" % "mockwebserver" % "3.2.0" % "test",
+      "com.squareup.okhttp3" % "mockwebserver" % "3.8.1" % "test",
       "org.apache.httpcomponents" % "httpclient" % "4.5.2" % "test",
       "org.apache.httpcomponents" % "httpmime" % "4.5.2" % "test",
       "org.specs2" %% "specs2-core" % "3.6.4" % "test",
