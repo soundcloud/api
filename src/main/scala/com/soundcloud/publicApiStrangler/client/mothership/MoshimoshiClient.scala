@@ -1,7 +1,7 @@
 package com.soundcloud.publicApiStrangler.client.mothership
 
 import com.soundcloud.bff.nextbff.UntypedJson
-import com.soundcloud.jvmkit.module.http.client.{JsonClient, Params, Headers => HeadersFromSeq}
+import com.soundcloud.jvmkit.module.http.client.{JsonClient, Params}
 import com.soundcloud.jvmkit.module.util.http.Headers
 import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.jvmkit.module.util.{Path, Urn}
@@ -89,7 +89,7 @@ class MoshimoshiClient(service: JsonClient,
       key <- headers.entrySet().map(_.getKey) if WHITELISTED_HEADERS.contains(key.toLowerCase)
       value <- headers.getAll(key)
     } yield (key, value)).toSeq
-    HeadersFromSeq(elems: _*)
+    Headers(elems: _*)
   }
 
   /**
