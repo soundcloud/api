@@ -20,6 +20,7 @@ lazy val publicApiStrangler = project.in(file("."))
       "com.fasterxml.uuid" % "java-uuid-generator" % "3.1.3",
       "commons-codec" % "commons-codec" % "1.9",
       "org.jsoup" % "jsoup" % "1.8.3",
+      "ch.qos.logback" % "logback-classic" % "1.2.3",
       "com.squareup.okhttp3" % "mockwebserver" % "3.8.1" % "test",
       "org.apache.httpcomponents" % "httpclient" % "4.5.2" % "test",
       "org.apache.httpcomponents" % "httpmime" % "4.5.2" % "test",
