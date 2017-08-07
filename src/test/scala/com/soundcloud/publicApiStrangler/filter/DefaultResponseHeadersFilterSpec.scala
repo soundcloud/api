@@ -15,7 +15,7 @@ class DefaultResponseHeadersFilterSpec extends UnitSpecification {
     val request = Request("/test.json")
 
     override def before: Any = {
-      val response = request.response
+      val response = Response(request)
       when(next.apply(request)).thenReturn(Future.value(response))
     }
   }
@@ -29,7 +29,7 @@ class DefaultResponseHeadersFilterSpec extends UnitSpecification {
 
   trait ExistingHeadersContext extends Context {
     override def before: Any = {
-      val response = request.response
+      val response = Response(request)
       response.headerMap.add("Access-Control-Allow-Origin", "Somewhere Else")
       when(next.apply(request)).thenReturn(Future.value(response))
     }

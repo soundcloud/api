@@ -3,6 +3,7 @@ package com.soundcloud.publicApiStrangler.mapper.trackstreams
 import com.soundcloud.jvmkit.module.util.Url
 import com.soundcloud.publicApiStrangler.client.media.MediaUrl
 import com.soundcloud.publicApiStrangler.test.UnitSpecification
+import com.twitter.finagle.http.Status
 import com.twitter.util.{Await, Future}
 import org.joda.time.DateTime
 
@@ -28,7 +29,7 @@ class TrackStreamJsonResponseMapperSpec extends UnitSpecification {
       "and it is a GET request" >> {
         "return a 200" in new AllUrlsAvailableContext {
           val response = Await.result(mapper.map(urls, false))
-          response.getStatusCode() mustEqual 200
+          response.status ==== Status.Ok
         }
 
         "return all URLs as JSON" in new AllUrlsAvailableContext {
@@ -40,7 +41,7 @@ class TrackStreamJsonResponseMapperSpec extends UnitSpecification {
       "and it is a HEAD request" >> {
         "return a 200" in new AllUrlsAvailableContext {
           val response = Await.result(mapper.map(urls, true))
-          response.getStatusCode() mustEqual 200
+          response.status ==== Status.Ok
         }
 
         "return no body" in new AllUrlsAvailableContext {
@@ -59,7 +60,7 @@ class TrackStreamJsonResponseMapperSpec extends UnitSpecification {
       "and it is a GET request" >> {
         "return a 404" in new NoUrlsAvailableContext {
           val response = Await.result(mapper.map(urls, false))
-          response.getStatusCode() mustEqual 404
+          response.status ==== Status.NotFound
         }
 
         "return an empty body" in new NoUrlsAvailableContext {
@@ -71,7 +72,7 @@ class TrackStreamJsonResponseMapperSpec extends UnitSpecification {
       "and it is a HEAD request" >> {
         "return a 404" in new NoUrlsAvailableContext {
           val response = Await.result(mapper.map(urls, true))
-          response.getStatusCode() mustEqual 404
+          response.status ==== Status.NotFound
         }
 
         "return no body" in new NoUrlsAvailableContext {

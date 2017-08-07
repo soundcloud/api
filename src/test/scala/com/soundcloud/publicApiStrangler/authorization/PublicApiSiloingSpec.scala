@@ -15,7 +15,6 @@ class PublicApiSiloingSpec extends UnitSpecification {
   trait Context extends Scope {
 
     protected val request = mock[Request]
-    private val rollout = mock[Rollout]
 
     protected def getPublicApiSiloing(blacklist: Set[Urn] = defaultMobileBlacklist) = {
       new PublicApiSiloing(() => Future.value(true), blacklist, new Telemetry((new InMemoryConfig).getApplicationName, MetricsRegistryImpl.defaultRegistry))
@@ -35,14 +34,14 @@ class PublicApiSiloingSpec extends UnitSpecification {
       val mobileSession = getUserSessionFor(soundCloudIOSApp)
       val response = Await.result(getPublicApiSiloing().withSiloedSession(mobileSession)(action))
 
-      response.getStatusCode() ==== Status.Unauthorized.code
+      response.status ==== Status.Unauthorized
     }
 
     "should successfully process a token issued for the public api" in new Context {
       val publicApiSession = getUserSessionFor(publicApp)
       val response = Await.result(getPublicApiSiloing().withSiloedSession(publicApiSession)(action))
 
-      response.getStatusCode() ==== Status.Ok.code
+      response.status ==== Status.Ok
     }
   }
 
@@ -54,19 +53,19 @@ class PublicApiSiloingSpec extends UnitSpecification {
 
       val blacklistedSession1 = getUserSessionFor(new Urn("soundcloud:applications:1"))
       val blacklistedResponse1 = Await.result(publicApiSiloing.withSiloedSession(blacklistedSession1)(action))
-      blacklistedResponse1.getStatusCode() ==== Status.Unauthorized.code
+      blacklistedResponse1.status ==== Status.Unauthorized
 
       val blacklistedSession2 = getUserSessionFor(new Urn("soundcloud:applications:2"))
       val blacklistedResponse2 = Await.result(publicApiSiloing.withSiloedSession(blacklistedSession2)(action))
-      blacklistedResponse2.getStatusCode() ==== Status.Unauthorized.code
+      blacklistedResponse2.status ==== Status.Unauthorized
 
       val blacklistedSession3 = getUserSessionFor(new Urn("soundcloud:applications:3"))
       val blacklistedResponse3 = Await.result(publicApiSiloing.withSiloedSession(blacklistedSession3)(action))
-      blacklistedResponse3.getStatusCode() ==== Status.Unauthorized.code
+      blacklistedResponse3.status ==== Status.Unauthorized
 
       val correctSession = getUserSessionFor(new Urn("soundcloud:applications:100"))
       val correctResponse = Await.result(publicApiSiloing.withSiloedSession(correctSession)(action))
-      correctResponse.getStatusCode() ==== Status.Ok.code
+      correctResponse.status ==== Status.Ok
     }
   }
 }

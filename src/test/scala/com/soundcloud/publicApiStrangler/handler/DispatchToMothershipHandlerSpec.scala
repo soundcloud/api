@@ -30,7 +30,7 @@ class DispatchToMothershipHandlerSpec extends UnitSpecification {
       "for dispatch method" in new Context {
         mothershipClient(any[Request]) returns (Future.value(response))
         val responseFromHandler = Await.result(handler.dispatch(request))
-        responseFromHandler.getStatusCode() ==== response.getStatusCode()
+        responseFromHandler.status ==== response.status
         responseFromHandler.headerMap.get("header1") ==== Some("valueHeader1")
         responseFromHandler.headerMap.get("header2") ==== Some("valueHeader2")
         responseFromHandler.getContentString() ==== "body content"
@@ -47,7 +47,7 @@ class DispatchToMothershipHandlerSpec extends UnitSpecification {
       "for dispatch method" in new Context {
         mothershipClient(any[Request]) returns (Future.exception(new IllegalStateException))
         val responseFromHandler = Await.result(handler.dispatch(request))
-        responseFromHandler.getStatusCode() ==== 500
+        responseFromHandler.status ==== Status.InternalServerError
       }
     }
   }

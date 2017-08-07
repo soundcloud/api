@@ -3,7 +3,7 @@ package com.soundcloud.publicApiStrangler.support
 import com.soundcloud.jvmkit.module.http.server.ResponseBuilder
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.publicApiStrangler.test.UnitSpecification
-import com.twitter.finagle.http.Request
+import com.twitter.finagle.http.{Request, Status}
 import com.twitter.util.{Await, Future}
 
 class CursorPaginationSpec extends UnitSpecification {
@@ -22,7 +22,7 @@ class CursorPaginationSpec extends UnitSpecification {
         page.param mustEqual urn
         Future.value(ResponseBuilder.ok())
       }
-    Await.result(response).getStatusCode mustEqual 200
+    Await.result(response).status ==== Status.Ok
   }
 
   "returns bad request for malformed pagination params" in new Context {
@@ -31,6 +31,6 @@ class CursorPaginationSpec extends UnitSpecification {
     val response = pagination.withPage(request, urn) { page =>
       Future.value(ResponseBuilder.ok())
     }
-    Await.result(response).getStatusCode mustEqual 400
+    Await.result(response).status ==== Status.BadRequest
   }
 }
