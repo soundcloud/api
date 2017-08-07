@@ -3,7 +3,7 @@ package com.soundcloud.publicApiStrangler.handler
 import java.net.URL
 
 import com.soundcloud.jvmkit.module.bff.session.UserAuthentication
-import com.soundcloud.jvmkit.module.experimental.result.{Bad, Good}
+import com.soundcloud.jvmkit.module.experimental.result.{Bad, Error, Good, StringError}
 import com.soundcloud.jvmkit.module.http.server.HandlerRequest
 import com.soundcloud.jvmkit.module.telemetry.Telemetry
 import com.soundcloud.jvmkit.module.util.Urn
@@ -45,7 +45,7 @@ class UserTracksHandler(userAuthentication: UserAuthentication,
           .handle {
             case NonFatal(e) => {
               logger.error(e.getMessage)
-              Bad(HttpError(Status.InternalServerError, Some("An unexpected error occurred while fetching the tracks")))
+              Bad(HttpError(Status.InternalServerError))
             }
           }
       }
@@ -56,8 +56,10 @@ class UserTracksHandler(userAuthentication: UserAuthentication,
             case Good(tracksRepresentationResult) => {
               generateResponse(Status.Ok, getRepresentation(tracksRepresentationResult, pagination), callback)
             }
-            case Bad(error: HttpError) => generateResponse(error.status, Json.stringify(Json.obj("error" -> error.description)), callback)
-            case Bad(error) => generateResponse(Status.InternalServerError, Json.stringify(Json.obj("error" -> error.toString)), callback)
+            case Bad(error: HttpError) => generateResponse(error.status, generateErrorBody(error.description), callback)
+            case Bad(error: StringError) => generateResponse(Status.InternalServerError, generateErrorBody(error.message), callback)
+            case Bad(error: Error) => generateResponse(Status.InternalServerError, generateErrorBody(error.message), callback)
+            case Bad(_) => generateResponse(Status.InternalServerError, generateErrorBody("an unexpected error occurred"), callback)
           }
         }
         case _ => Future.value(generateNotFound(callback))
@@ -97,6 +99,9 @@ class UserTracksHandler(userAuthentication: UserAuthentication,
     res.contentLength = contentLength
     res
   }
+
+  private def generateErrorBody(message: String): String =
+    Json.stringify(Json.obj("error" -> message))
 
   /**
     * This JsonpWrapper logic should go to filter,
