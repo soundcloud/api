@@ -3,6 +3,7 @@ package com.soundcloud.publicApiStrangler.mapper.trackstreams
 import com.soundcloud.jvmkit.module.util.Url
 import com.soundcloud.publicApiStrangler.client.media.MediaUrl
 import com.soundcloud.publicApiStrangler.test.UnitSpecification
+import com.twitter.finagle.http.Status
 import com.twitter.util.{Await, Future}
 import org.joda.time.DateTime
 
@@ -41,7 +42,7 @@ class TrackStreamRedirectResponseMapperSpec extends UnitSpecification {
 
       "and it is a GET request" >> {
         "return a 302" in new ExpectedUrlProvidedContext {
-          response.getStatusCode() mustEqual 302
+          response.status ==== Status.Found
         }
 
         "return a Location header" in new ExpectedUrlProvidedContext {
@@ -55,7 +56,7 @@ class TrackStreamRedirectResponseMapperSpec extends UnitSpecification {
 
       "and it is a HEAD request" >> {
         "return a 302" in new ExpectedUrlProvidedContext {
-          headResponse.getStatusCode() mustEqual 302
+          headResponse.status ==== Status.Found
         }
 
         "return a Location header" in new ExpectedUrlProvidedContext {
@@ -72,7 +73,7 @@ class TrackStreamRedirectResponseMapperSpec extends UnitSpecification {
 
       "and it is a GET request" >> {
         "return a 302" in new SeveralUrlsProvidedContext {
-          response.getStatusCode() mustEqual 302
+          response.status ==== Status.Found
         }
 
         "return a Location header" in new SeveralUrlsProvidedContext {
@@ -86,7 +87,7 @@ class TrackStreamRedirectResponseMapperSpec extends UnitSpecification {
 
       "and it is a HEAD request" >> {
         "return a 302" in new SeveralUrlsProvidedContext {
-          headResponse.getStatusCode() mustEqual 302
+          headResponse.status ==== Status.Found
         }
 
         "return a Location header" in new SeveralUrlsProvidedContext {
@@ -103,7 +104,7 @@ class TrackStreamRedirectResponseMapperSpec extends UnitSpecification {
 
       "and it is a GET request" >> {
         "return a 404" in new ExpectedUrlNotProvidedContext {
-          response.getStatusCode() mustEqual 404
+          response.status ==== Status.NotFound
         }
 
         "return no content" in new ExpectedUrlNotProvidedContext {
@@ -113,7 +114,7 @@ class TrackStreamRedirectResponseMapperSpec extends UnitSpecification {
 
       "and it is a HEAD request" >> {
         "return a 404" in new ExpectedUrlNotProvidedContext {
-          headResponse.getStatusCode() mustEqual 404
+          headResponse.status ==== Status.NotFound
         }
 
         "return no content" in new ExpectedUrlNotProvidedContext {

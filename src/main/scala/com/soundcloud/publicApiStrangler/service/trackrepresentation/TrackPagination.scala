@@ -48,9 +48,9 @@ case class TrackPagination(maybeLimit: Option[Int],
         None
       } else {
         val params = requestUrl.getQuery.split("&").toList.map(_.split("=").toList).flatMap {
-          case List(key, value) => Some(key, value)
-          case List(key) => Some(key, "")
-          case otherwise => Some(otherwise, "")
+          case List(key, value) => Some((key, value))
+          case List(key) => Some((key, ""))
+          case otherwise => Some((otherwise, ""))
         }.toMap
 
         val nextParams = params ++ Map("limit" -> limit.toString, "offset" -> nextOffset.toString)

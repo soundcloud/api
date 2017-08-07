@@ -17,28 +17,9 @@ public class JsonMapper {
             .configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)
             .configure(JsonGenerator.Feature.ESCAPE_NON_ASCII, true)
             .registerModule(new SimpleModule().addSerializer(Urn.class, new UrnSerializer()))
-            .setPropertyNamingStrategy(PropertyNamingStrategy.CAMEL_CASE_TO_LOWER_CASE_WITH_UNDERSCORES);
-
-    private ObjectWriter writer = getMapper().writer();
+            .setPropertyNamingStrategy(PropertyNamingStrategy.SNAKE_CASE);
 
     public ObjectMapper getMapper() {
         return mapper;
-    }
-
-    public String toJson(Object o) {
-        try {
-            return writer.writeValueAsString(o);
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException(String.format("Could not serialise [%s]", o), e);
-        }
-    }
-
-    @SuppressWarnings("unchecked")
-    public HashMap<String, Object> readMap(String json) {
-        try {
-            return getMapper().readValue(json, HashMap.class);
-        } catch (IOException e) {
-            throw new RuntimeException(String.format("Error parsing JSON:\n###%s\n###", json), e);
-        }
     }
 }

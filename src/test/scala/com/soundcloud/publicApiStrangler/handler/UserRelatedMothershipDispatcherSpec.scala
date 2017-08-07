@@ -89,7 +89,7 @@ class UserRelatedMothershipDispatcherSpec extends UnitSpecification {
 
       override def responseBodyFromMothership = user
 
-      result.getStatusCode() ==== 500
+      result.status ==== Status.InternalServerError
     }
     "with an OK status code from mothership" >> {
       "it returns an object that matches the one from Mothership" in new Context {
