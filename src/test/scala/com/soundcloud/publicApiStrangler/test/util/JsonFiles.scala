@@ -4,11 +4,10 @@ import java.io._
 
 import com.soundcloud.jvmkit.module.util.logging.SoundCloudLoggerFactory
 import play.api.libs.json.Json
-import com.twitter.util.NonFatal
 import play.api.libs.json.JsValue
 
 import scala.io.Source
-
+import scala.util.control.NonFatal
 
 class JsonFiles {
   lazy val logger = SoundCloudLoggerFactory.getLogger(this.getClass)
