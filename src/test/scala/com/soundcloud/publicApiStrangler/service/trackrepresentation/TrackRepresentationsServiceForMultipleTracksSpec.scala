@@ -1,7 +1,7 @@
 package com.soundcloud.publicApiStrangler.service.trackrepresentation
 
-import com.soundcloud.jvmkit.module.experimental.result.ResultF.lift
-import com.soundcloud.jvmkit.module.experimental.result.{Good, Result}
+import com.soundcloud.publicApiStrangler.support.ResultF.lift
+import com.soundcloud.publicApiStrangler.support.{Good, Result}
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.publicApiStrangler.client.liebling.LieblingClient
 import com.soundcloud.publicApiStrangler.client.mediaservice.{MediaServiceUrlGenClient, WaveformUrl}
@@ -13,6 +13,7 @@ import com.soundcloud.publicApiStrangler.client.quota.UserQuotaClient
 import com.soundcloud.publicApiStrangler.client.stitch.{StitchClient, StitchCounts}
 import com.soundcloud.publicApiStrangler.client.trackmetadata.TrackmetadataClient
 import com.soundcloud.publicApiStrangler.service.TrackAccessibilityService
+import com.soundcloud.publicApiStrangler.support
 import com.soundcloud.publicApiStrangler.test.UnitSpecification
 import com.soundcloud.publicApiStrangler.test.util.TrackMetadataTrackBuilder
 import com.twitter.util.Await
@@ -61,7 +62,7 @@ class TrackRepresentationsServiceForMultipleTracksSpec extends UnitSpecification
     val completeTrackResult = TracksResult(
       tracks, user, isLiked, isrcs, geoblockingsMap, domainLockingsMap, audios, counts, labels, waveformUrlsMap, downloadsPerTrack, None)
 
-    def tracksResult: Result[TracksResult]
+    def tracksResult: support.Result[TracksResult]
 
     def result = Await.result(service.tracks(session, userUrn, paginationParams).value)
 

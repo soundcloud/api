@@ -1,6 +1,6 @@
 package com.soundcloud.publicApiStrangler.handler
 
-import com.soundcloud.jvmkit.module.experimental.result.ErrorLike
+import com.soundcloud.publicApiStrangler.support.ErrorLike
 import com.twitter.finagle.http.Status
 
 case class HttpError(status: Status) extends ErrorLike {

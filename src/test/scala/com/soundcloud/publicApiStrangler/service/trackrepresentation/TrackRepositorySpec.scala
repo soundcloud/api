@@ -2,7 +2,7 @@ package com.soundcloud.publicApiStrangler.service.trackrepresentation
 
 import java.net.URL
 
-import com.soundcloud.jvmkit.module.experimental.result.{Bad, Error, Good, Result}
+import com.soundcloud.publicApiStrangler.support.{Bad, Error, Good, Result}
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.publicApiStrangler.client.liebling.LieblingClient
 import com.soundcloud.publicApiStrangler.client.mediaservice.{MediaServiceUrlGenClient, WaveformUrl}
@@ -14,6 +14,7 @@ import com.soundcloud.publicApiStrangler.client.quota.UserQuotaClient
 import com.soundcloud.publicApiStrangler.client.stitch.{StitchClient, StitchCounts}
 import com.soundcloud.publicApiStrangler.client.trackmetadata.TrackmetadataClient
 import com.soundcloud.publicApiStrangler.service.TrackAccessibilityService
+import com.soundcloud.publicApiStrangler.support
 import com.soundcloud.publicApiStrangler.test.UnitSpecification
 import com.soundcloud.publicApiStrangler.test.util.TrackMetadataTrackBuilder
 import com.twitter.util.{Await, Future}
@@ -121,7 +122,7 @@ class TrackRepositorySpec extends UnitSpecification {
 
     def badFuture = Future.exception(exception)
 
-    lazy val result: Result[TracksResult] = Await.result(repository.tracksByUser(session, userUrn, paginationParams).value)
+    lazy val result: support.Result[TracksResult] = Await.result(repository.tracksByUser(session, userUrn, paginationParams).value)
   }
 
 

@@ -1,7 +1,5 @@
 package com.soundcloud.publicApiStrangler.service.trackrepresentation
 
-import com.soundcloud.jvmkit.module.experimental.result.ResultF.joinF
-import com.soundcloud.jvmkit.module.experimental.result._
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.publicApiStrangler.client.liebling.LieblingClient
@@ -13,6 +11,8 @@ import com.soundcloud.publicApiStrangler.client.quota.UserQuotaClient
 import com.soundcloud.publicApiStrangler.client.stitch.{StitchClient, StitchCounts}
 import com.soundcloud.publicApiStrangler.client.trackmetadata.{Track, TrackmetadataClient}
 import com.soundcloud.publicApiStrangler.service.TrackAccessibilityService
+import com.soundcloud.publicApiStrangler.support.ResultF.joinF
+import com.soundcloud.publicApiStrangler.support.{Bad, Error, Good, Result, _}
 import com.twitter.util.Future
 
 import scala.util.control.NonFatal
