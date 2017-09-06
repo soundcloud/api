@@ -4,14 +4,14 @@ import java.net.URL
 import java.util.TimeZone
 
 import com.soundcloud.jvmkit.module.bff.testsupport.FakeUserAuthentication
-import com.soundcloud.jvmkit.module.experimental.result.{Bad, Error, Good}
-import com.soundcloud.jvmkit.module.experimental.result.ResultF.lift
 import com.soundcloud.jvmkit.module.telemetry.{MetricsRegistryImpl, Telemetry}
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.config.InMemoryConfig
-import com.soundcloud.publicApiStrangler.service.trackrepresentation.{TrackPagination, TrackRepresentationLikeSpecContext, TrackRepresentationsService, TracksRepresentationResult}
-import com.soundcloud.publicApiStrangler.test.{HandlerSpecificationScope, UnitSpecification}
 import com.soundcloud.publicApiStrangler.Routing
+import com.soundcloud.publicApiStrangler.service.trackrepresentation.{TrackPagination, TrackRepresentationLikeSpecContext, TrackRepresentationsService, TracksRepresentationResult}
+import com.soundcloud.publicApiStrangler.support.ResultF.lift
+import com.soundcloud.publicApiStrangler.support.{Bad, Good, StringError}
+import com.soundcloud.publicApiStrangler.test.{HandlerSpecificationScope, UnitSpecification}
 import com.twitter.finagle.http.Status
 import com.twitter.util.Future
 import org.joda.time.{DateTimeZone, LocalDateTime}
@@ -60,9 +60,10 @@ class UserTracksHandlerSpec extends UnitSpecification {
 
     trait ErrorResponse {
       val errorMessage = "foobar"
-      val tracksServiceResponse = lift(Bad(Error(errorMessage, new Exception("exception"))))
+      val tracksServiceResponse = lift(Bad(StringError(errorMessage)))
       // Note that exception text is _not_ included in expected response
-      val expectedResponse = s"""{"error":"$errorMessage"}"""
+      val expectedResponse =
+        s"""{"error":"$errorMessage"}"""
     }
 
     "with a successful response from tracks service" >> {

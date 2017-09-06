@@ -13,6 +13,7 @@ staging.json
 .install.jre
 .java-version
 .ivy2
+.coursier
 .sbt
 production.overrides
 .kube/

@@ -15,7 +15,6 @@ lazy val publicApiStrangler = project.in(file("."))
       "com.soundcloud" %% "jvmkit-bff" % jvmkitVersion,
       "com.soundcloud" %% "jvmkit-rollout" % jvmkitVersion,
       "com.soundcloud" %% "jvmkit-memcached" % jvmkitVersion,
-      "com.soundcloud" %% "jvmkit-experimental" % jvmkitVersion,
       "com.typesafe.play" %% "play-json" % playJsonVersion,
       "com.fasterxml.uuid" % "java-uuid-generator" % "3.1.3",
       "commons-codec" % "commons-codec" % "1.9",
