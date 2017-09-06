@@ -8,7 +8,7 @@ import com.soundcloud.jvmkit.module.telemetry.Telemetry
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.logging.SoundCloudLoggerFactory
 import com.soundcloud.publicApiStrangler.service.trackrepresentation.{TrackPagination, TrackRepresentationsService, TracksRepresentationResult}
-import com.soundcloud.publicApiStrangler.support.{Bad, Error, Good, StringError}
+import com.soundcloud.publicApiStrangler.support.{Bad, Good, StringError}
 import com.twitter.finagle.http.{Response, Status}
 import com.twitter.util.Future
 import play.api.libs.json.Json
@@ -58,7 +58,6 @@ class UserTracksHandler(userAuthentication: UserAuthentication,
             }
             case Bad(error: HttpError) => generateResponse(error.status, generateErrorBody(error.description), callback)
             case Bad(error: StringError) => generateResponse(Status.InternalServerError, generateErrorBody(error.message), callback)
-            case Bad(error: Error) => generateResponse(Status.InternalServerError, generateErrorBody(error.message), callback)
             case Bad(_) => generateResponse(Status.InternalServerError, generateErrorBody("an unexpected error occurred"), callback)
           }
         }

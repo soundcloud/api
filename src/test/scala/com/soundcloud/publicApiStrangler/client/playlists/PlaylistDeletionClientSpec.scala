@@ -4,7 +4,7 @@ import com.soundcloud.jvmkit.module.http.client.{JsonClient, Params}
 import com.soundcloud.jvmkit.module.util.http.Headers
 import com.soundcloud.jvmkit.module.util.session.UserSessionBuilder
 import com.soundcloud.jvmkit.module.util.{Path, Urn}
-import com.soundcloud.publicApiStrangler.support.{Bad, Error, Good}
+import com.soundcloud.publicApiStrangler.support.{Bad, StringError, Good}
 import com.soundcloud.publicApiStrangler.test.UnitSpecification
 import com.twitter.finagle.http.{Response, Status}
 import com.twitter.util.{Await, Future}
@@ -33,9 +33,8 @@ class PlaylistDeletionClientSpec extends UnitSpecification {
   }
 
   "with transport error" in new Context {
-    val exception = new RuntimeException
-    jsonClient.deleteWithSession(session, path, Params.empty, Headers.empty, None) returns Future.exception(exception)
+    jsonClient.deleteWithSession(session, path, Params.empty, Headers.empty, None) returns Future.exception(new RuntimeException)
 
-    Await.result(client.deletePlaylist(session, urn)) ==== Bad(Error("Unhandled exception when deleting playlist.", exception))
+    Await.result(client.deletePlaylist(session, urn)) ==== Bad(StringError("Unhandled exception when deleting playlist."))
   }
 }

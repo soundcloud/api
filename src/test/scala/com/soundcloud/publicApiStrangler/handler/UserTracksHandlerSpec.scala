@@ -9,8 +9,8 @@ import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.config.InMemoryConfig
 import com.soundcloud.publicApiStrangler.Routing
 import com.soundcloud.publicApiStrangler.service.trackrepresentation.{TrackPagination, TrackRepresentationLikeSpecContext, TrackRepresentationsService, TracksRepresentationResult}
-import com.soundcloud.publicApiStrangler.support.{Bad, Error, Good}
 import com.soundcloud.publicApiStrangler.support.ResultF.lift
+import com.soundcloud.publicApiStrangler.support.{Bad, Good, StringError}
 import com.soundcloud.publicApiStrangler.test.{HandlerSpecificationScope, UnitSpecification}
 import com.twitter.finagle.http.Status
 import com.twitter.util.Future
@@ -60,9 +60,10 @@ class UserTracksHandlerSpec extends UnitSpecification {
 
     trait ErrorResponse {
       val errorMessage = "foobar"
-      val tracksServiceResponse = lift(Bad(Error(errorMessage, new Exception("exception"))))
+      val tracksServiceResponse = lift(Bad(StringError(errorMessage)))
       // Note that exception text is _not_ included in expected response
-      val expectedResponse = s"""{"error":"$errorMessage"}"""
+      val expectedResponse =
+        s"""{"error":"$errorMessage"}"""
     }
 
     "with a successful response from tracks service" >> {

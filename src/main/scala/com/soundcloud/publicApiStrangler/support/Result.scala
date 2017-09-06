@@ -73,7 +73,7 @@ object Result {
   implicit class TryToResult[T](t: Try[T]) {
     def toResult: Result[T] = t match {
       case Success(v) => Good(v)
-      case Failure(e) => Bad(Error("Unexpected exception", e))
+      case Failure(e) => Bad(StringError("Unexpected exception"))
     }
   }
 
@@ -102,7 +102,7 @@ sealed case class ResultF[+A](value: Future[Result[A]]) {
 
   def withFilter(f: A => Boolean): ResultF[A] = ResultF(value.map {
     case good@Good(a) if f(a) => good
-    case Good(_) => Bad(StringError(s"Match failed for $this"))
+    case Good(_) => Bad(StringError(s"Match failed"))
     case otherwise => otherwise
   })
 
@@ -162,5 +162,3 @@ object ResultF {
 trait ErrorLike
 
 case class StringError(message: String) extends ErrorLike
-
-case class Error(message: String, throwable: Throwable) extends ErrorLike

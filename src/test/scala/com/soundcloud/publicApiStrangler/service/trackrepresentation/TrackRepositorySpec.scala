@@ -2,7 +2,6 @@ package com.soundcloud.publicApiStrangler.service.trackrepresentation
 
 import java.net.URL
 
-import com.soundcloud.publicApiStrangler.support.{Bad, Error, Good, Result}
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.publicApiStrangler.client.liebling.LieblingClient
 import com.soundcloud.publicApiStrangler.client.mediaservice.{MediaServiceUrlGenClient, WaveformUrl}
@@ -15,6 +14,7 @@ import com.soundcloud.publicApiStrangler.client.stitch.{StitchClient, StitchCoun
 import com.soundcloud.publicApiStrangler.client.trackmetadata.TrackmetadataClient
 import com.soundcloud.publicApiStrangler.service.TrackAccessibilityService
 import com.soundcloud.publicApiStrangler.support
+import com.soundcloud.publicApiStrangler.support.{Bad, Good, StringError}
 import com.soundcloud.publicApiStrangler.test.UnitSpecification
 import com.soundcloud.publicApiStrangler.test.util.TrackMetadataTrackBuilder
 import com.twitter.util.{Await, Future}
@@ -140,7 +140,7 @@ class TrackRepositorySpec extends UnitSpecification {
         override def fetchUserObjectsResponse = badFuture
 
         result match {
-          case Bad(Error(message, _)) => message ==== "Could not load the tracks' owner"
+          case Bad(StringError(message)) => message ==== "Could not load the tracks' owner"
           case _ => failure
         }
       }
@@ -149,7 +149,7 @@ class TrackRepositorySpec extends UnitSpecification {
         override def urnsByUserResponse = badFuture
 
         result match {
-          case Bad(Error(message, _)) => message ==== "Could not load the tracks' urns"
+          case Bad(StringError(message)) => message ==== "Could not load the tracks' urns"
           case _ => failure
         }
       }
@@ -158,7 +158,7 @@ class TrackRepositorySpec extends UnitSpecification {
         override def tracksResponse = badFuture
 
         result match {
-          case Bad(Error(message, _)) => message ==== "Could not load tracks from trackmetadata"
+          case Bad(StringError(message)) => message ==== "Could not load tracks from trackmetadata"
           case _ => failure
         }
       }
@@ -167,7 +167,7 @@ class TrackRepositorySpec extends UnitSpecification {
         override def fetchTracksAudioMetadataResponse = badFuture
 
         result match {
-          case Bad(Error(message, _)) => message ==== "Could not load the audio information"
+          case Bad(StringError(message)) => message ==== "Could not load the audio information"
           case _ => failure
         }
       }
@@ -176,7 +176,7 @@ class TrackRepositorySpec extends UnitSpecification {
         override def waveformUrlsResponse = badFuture
 
         result match {
-          case Bad(Error(message, _)) => message ==== "Could not load the tracks' waveforms"
+          case Bad(StringError(message)) => message ==== "Could not load the tracks' waveforms"
           case _ => failure
         }
       }

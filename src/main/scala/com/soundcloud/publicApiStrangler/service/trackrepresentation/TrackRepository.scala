@@ -12,7 +12,7 @@ import com.soundcloud.publicApiStrangler.client.stitch.{StitchClient, StitchCoun
 import com.soundcloud.publicApiStrangler.client.trackmetadata.{Track, TrackmetadataClient}
 import com.soundcloud.publicApiStrangler.service.TrackAccessibilityService
 import com.soundcloud.publicApiStrangler.support.ResultF.joinF
-import com.soundcloud.publicApiStrangler.support.{Bad, Error, Good, Result, _}
+import com.soundcloud.publicApiStrangler.support.{Bad, StringError, Good, Result, _}
 import com.twitter.util.Future
 
 import scala.util.control.NonFatal
@@ -94,7 +94,7 @@ class TrackRepository(trackmetadataClient: TrackmetadataClient,
   }
 
   private def toResult[T](future: Future[T], errorMessage: String): Future[Result[T]] = {
-    future.map(Good(_)).handle { case NonFatal(e) => Bad(Error(errorMessage, e)) }
+    future.map(Good(_)).handle { case NonFatal(_) => Bad(StringError(errorMessage)) }
   }
 
   private def toResult[T](future: Future[T], default: T): Future[Result[T]] = {
