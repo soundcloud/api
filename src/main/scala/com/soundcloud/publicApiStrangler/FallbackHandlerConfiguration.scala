@@ -49,8 +49,6 @@ trait FallbackHandlerConfiguration {
     // Newly discovered endpoints:
     val newlyDiscovered = List(
       """/announcements""",
-      """/search/sounds""",
-      """/search/sets""",
       """/e1/playlists/\d+/domain-lockings""",
       """/e1/shorten""",
       """/i1/comments/\d+/spam""",
