@@ -44,25 +44,6 @@ class SearchRepositorySpec extends UnitSpecification {
       Await.result(repo.fetch(session, request)) ==== Some(response)
     }
   }
-
-  "universal search" >> {
-    "adds filter.content_type=FREE and filter.content_country=<countryCode>" in new Context {
-      val commonParams = Params(
-        "filter.content_tier" -> "FREE",
-        "filter.content_country" -> "US"
-      )
-
-      val response = withContentsOf("search", "tracks").as[JsObject]
-      doReturn(Future.value(jsonResponse(Status.Ok, response))).when(mockService)
-        .getWithSession(session, SearchRepository.UniversalPath, commonParams + ("q" -> "bar"), Headers.empty)
-      val request = OffsetBasedPage(
-        SearchDispatcherRequest(SearchRepository.UniversalPath, Set.empty, Map.empty)(x => x),
-        "http://localhost", "/search/universal", Params("q" -> "bar"), 0, 10
-      )
-      Await.result(repo.fetch(session, request)) ==== Some(response)
-    }
-  }
-
 }
 
 class SearchMapperSpec extends UnitSpecification {
