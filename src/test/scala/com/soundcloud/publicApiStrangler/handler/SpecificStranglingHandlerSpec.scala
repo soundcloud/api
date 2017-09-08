@@ -54,8 +54,20 @@ class SpecificStranglingHandlerSpec extends UnitSpecification {
 
   "path pattern handling" >> {
 
+    trait KnownUrlContext extends Context {
+      innerRequest.path returns "/announcements"
+    }
+
     trait UnknownUrlContext extends Context {
       innerRequest.path returns "/unknown/endpoint"
+    }
+
+    "it increments the counter with the path pattern, if it is recognised" in new KnownUrlContext {
+      Await.result(handler.apply(request))
+      val count = collectorRegistry.getSampleValue("fallthrough_strangled_by",
+        Array("method", "path_pattern", "agent_urn", "system"),
+        Array("GET", "/announcements", "soundcloud:applications:124", "TEST-APP"))
+      count ==== 1.0
     }
 
     "it increments the counter with 'UNKNOWN' if it is not recognised" in new UnknownUrlContext {
@@ -63,6 +75,35 @@ class SpecificStranglingHandlerSpec extends UnitSpecification {
       val count = collectorRegistry.getSampleValue("fallthrough_strangled_by",
         Array("method", "path_pattern", "agent_urn", "system"),
         Array("GET", "UNKNOWN", "soundcloud:applications:124", "TEST-APP"))
+      count ==== 1.0
+    }
+  }
+
+  "agent URN handling" >> {
+
+    trait KnownAgentContext extends Context {
+      innerRequest.path returns "/announcements"
+    }
+
+    trait UnknownAgentContext extends Context {
+      request.headerMap returns HeaderMap(ScHeaders.AGENT.header -> "soundcloud:applications:99999")
+      innerRequest.path returns "/announcements"
+    }
+
+    "it increments the counter with the agent URN, if it is recognised" in new KnownAgentContext {
+      Await.result(handler.apply(request))
+
+      val count = collectorRegistry.getSampleValue("fallthrough_strangled_by",
+        Array("method", "path_pattern", "agent_urn", "system"),
+        Array("GET", "/announcements", "soundcloud:applications:124", "TEST-APP"))
+      count ==== 1.0
+    }
+
+    "it increments the counter with 'soundcloud:applications:external, if it is not recognised" in new UnknownAgentContext {
+      Await.result(handler.apply(request))
+      val count = collectorRegistry.getSampleValue("fallthrough_strangled_by",
+        Array("method", "path_pattern", "agent_urn", "system"),
+        Array("GET", "/announcements", "soundcloud:applications:external", "TEST-APP"))
       count ==== 1.0
     }
   }
