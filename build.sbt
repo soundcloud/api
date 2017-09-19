@@ -20,12 +20,14 @@ lazy val publicApiStrangler = project.in(file("."))
       "commons-codec" % "commons-codec" % "1.9",
       "org.jsoup" % "jsoup" % "1.8.3",
       "ch.qos.logback" % "logback-classic" % "1.2.3",
+
       "com.squareup.okhttp3" % "mockwebserver" % "3.8.1" % "test",
       "org.apache.httpcomponents" % "httpclient" % "4.5.2" % "test",
       "org.apache.httpcomponents" % "httpmime" % "4.5.2" % "test",
       "org.specs2" %% "specs2-core" % "3.6.4" % "test",
       "org.specs2" %% "specs2-mock" % "3.6.4" % "test",
-      ("au.com.dius" %% "pact-jvm-consumer-specs2" % "3.3.4")
+
+      ("au.com.dius" %% "pact-jvm-consumer-specs2" % "3.3.4" % "test")
         .excludeAll(ExclusionRule(organization = "com.fasterxml.jackson.core"))
     ),
     mainClass in Compile := Some("com.soundcloud.publicApiStrangler.App")
