@@ -28,8 +28,8 @@ class SpecificStranglingHandlerSpec extends UnitSpecification {
 
     val request = mock[HandlerRequest]
     val innerRequest = mock[Request]
-    request.method returns Method("GET")
     request.request returns innerRequest
+    innerRequest.method returns Method("GET")
     request.headerMap returns HeaderMap(ScHeaders.AGENT.header -> agentUrn.toString())
 
     // we can't mock the handler function directly.
