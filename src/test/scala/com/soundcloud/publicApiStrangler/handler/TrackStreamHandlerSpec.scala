@@ -8,7 +8,7 @@ import com.soundcloud.publicApiStrangler.authorization.policies.{ContentAuthoriz
 import com.soundcloud.publicApiStrangler.client.media.{MediaUrl, MediaUrlsRepository}
 import com.soundcloud.publicApiStrangler.mapper.trackstreams.TrackStreamResponseMapper
 import com.soundcloud.publicApiStrangler.test.UnitSpecification
-import com.twitter.finagle.http.{HeaderMap, Method, ParamMap, Status}
+import com.twitter.finagle.http._
 import com.twitter.util.{Await, Future}
 import play.api.libs.json.Json
 
@@ -21,8 +21,10 @@ class TrackStreamHandlerSpec extends UnitSpecification {
       val mediaUrlsRepository = mock[MediaUrlsRepository]
       val handler = new TrackStreamHandler(mothershipDispatcher, contentAuthRules, mediaUrlsRepository)
       val request = mock[HandlerRequest]
+      val innerRequest = mock[Request]
 
-      request.method returns Method.Get
+      request.request returns innerRequest
+      innerRequest.method returns Method.Get
 
       val mapper = mock[TrackStreamResponseMapper]
       val contentAuthorizationSnip = new ContentAuthorization(Urn("soundcloud:tracks:123"), ContentPolicy.SNIP, Reason.DEFAULT, MonetizationModel.NOT_APPLICABLE)
