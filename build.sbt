@@ -2,11 +2,12 @@ import com.soundcloud.sbtkit.SbtKitPlugin
 import sbt.Keys._
 import sbt._
 
-val jvmkitVersion = "2.2.0"
+val jvmkitVersion = "3.1.2"
 val playJsonVersion = "2.5.14"
 
 lazy val publicApiStrangler = project.in(file("."))
   .settings(
+    scalaVersion := "2.11.11",
     name := "public-api-strangler",
     libraryDependencies ++= Seq(
       "com.netaporter" %% "scala-uri" % "0.4.4",
@@ -38,6 +39,7 @@ lazy val publicApiStrangler = project.in(file("."))
 lazy val endToEnd = project.in(file("endToEndTests"))
   .settings(
     name := "endToEnd",
+    scalaVersion := "2.11.11",
     libraryDependencies ++= Seq(
       "org.specs2" %% "specs2-core" % "3.6.4",
       "org.specs2" %% "specs2-mock" % "3.6.4",
