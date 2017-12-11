@@ -66,19 +66,21 @@ trait Clients {
 
   val lieblingClient = new LieblingClient(jsonClient("liebling"))
 
-  lazy val publicApiClient: Service[Request, Response] = {
-
+  private def createPublicApiClient(resourceName: String): Service[Request, Response] = {
     val writeExceptions: PartialFunction[(Request, Try[Response]), Boolean] = {
       case (_, Throw(RetryableWriteException(_))) => true
     }
 
     HttpClient(
-      ServiceEntryPoint(config.get(ResourceName("PUBLIC_API"), ConfigConvention.ADDRESS)),
-      HttpClientConfig.from(ResourceName("PUBLIC_API"), config),
+      ServiceEntryPoint(config.get(ResourceName(resourceName), ConfigConvention.ADDRESS)),
+      HttpClientConfig.from(ResourceName(resourceName), config),
       telemetry,
       retryOn = Some(writeExceptions)
     ).httpService
   }
+
+  lazy val publicApiClient = createPublicApiClient("PUBLIC_API")
+  lazy val newPublicApiClient = createPublicApiClient("NEW_PUBLIC_API")
 
   lazy val followsClient = new FollowsClient(jsonClient("follows"))
 
@@ -95,7 +97,6 @@ trait Clients {
   lazy val pubmeseClient = new PubmeseClient(jsonClient("pubmese"))
 
   lazy val stitchClient = new StitchClient(jsonClient("stitch", ConfigConvention.ADDRESS))
-
 
   private val mediaServiceUrlGenJsonClient = JsonClient(
     ServiceEntryPoint(moduleConfig.get(ResourceName("MEDIASERVICE"), ConfigConvention.SRV_RECORD)),

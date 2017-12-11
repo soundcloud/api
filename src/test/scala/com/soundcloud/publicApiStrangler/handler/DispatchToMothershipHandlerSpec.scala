@@ -5,13 +5,14 @@ import com.soundcloud.publicApiStrangler.test.UnitSpecification
 import com.twitter.finagle.Service
 import com.twitter.finagle.http._
 import com.twitter.util.{Await, Future}
+import org.mockito.Mockito.{verify, verifyZeroInteractions}
 
 class DispatchToMothershipHandlerSpec extends UnitSpecification {
   "dispatches requests to the mothership" >> {
 
     trait Context extends Scope {
       val mothershipClient = mock[Service[Request, Response]]
-      val handler = new DispatchToMothershipHandler(mothershipClient)
+      val newMothershipClient = mock[Service[Request, Response]]
 
       val response = Response(Status.Ok)
       response.headerMap.add("header1", "valueHeader1").add("header2", "valueHeader2")
@@ -21,33 +22,52 @@ class DispatchToMothershipHandlerSpec extends UnitSpecification {
       val handlerRequest = HandlerRequest(AlwaysMatchesPathMatcher, request)
     }
 
-    "returns the response verbatim" >> {
-      "for defaultHandling" in new Context {
-        mothershipClient(any[Request]) returns (Future.value(response))
-        Await.result(handler(handlerRequest)) must be_==(response)
+    "when the rollout flag is false" >> {
+      trait OldClientContext extends Context {
+        val handler = new DispatchToMothershipHandler(mothershipClient, newMothershipClient, () => Future.value(false))
       }
 
-      "for dispatch method" in new Context {
-        mothershipClient(any[Request]) returns (Future.value(response))
-        val responseFromHandler = Await.result(handler.dispatch(request))
-        responseFromHandler.status ==== response.status
-        responseFromHandler.headerMap.get("header1") ==== Some("valueHeader1")
-        responseFromHandler.headerMap.get("header2") ==== Some("valueHeader2")
-        responseFromHandler.getContentString() ==== "body content"
+      "returns the response verbatim" >> {
+        "for defaultHandling" in new OldClientContext {
+          mothershipClient(any[Request]) returns (Future.value(response))
+          Await.result(handler(handlerRequest)) must be_==(response)
+        }
+
+        "for dispatch method" in new OldClientContext {
+          mothershipClient(any[Request]) returns (Future.value(response))
+          val responseFromHandler = Await.result(handler.dispatch(request))
+          responseFromHandler.status ==== response.status
+          responseFromHandler.headerMap.get("header1") ==== Some("valueHeader1")
+          responseFromHandler.headerMap.get("header2") ==== Some("valueHeader2")
+          responseFromHandler.getContentString() ==== "body content"
+        }
+
       }
 
+      "returns 500 for failed requests" >> {
+        "for defaultHandling" in new OldClientContext {
+          mothershipClient(any[Request]) returns (Future.exception(new IllegalStateException))
+          Await.result(handler(handlerRequest)).statusCode mustEqual 500
+        }
+
+        "for dispatch method" in new OldClientContext {
+          mothershipClient(any[Request]) returns (Future.exception(new IllegalStateException))
+          val responseFromHandler = Await.result(handler.dispatch(request))
+          responseFromHandler.status ==== Status.InternalServerError
+        }
+      }
     }
 
-    "returns 500 for failed requests" >> {
-      "for defaultHandling" in new Context {
-        mothershipClient(any[Request]) returns (Future.exception(new IllegalStateException))
-        Await.result(handler(handlerRequest)).statusCode mustEqual 500
+    "when using the rollout flag is true" >> {
+      trait NewClientContext extends Context {
+        val handler = new DispatchToMothershipHandler(mothershipClient, newMothershipClient, () => Future.value(true))
       }
 
-      "for dispatch method" in new Context {
-        mothershipClient(any[Request]) returns (Future.exception(new IllegalStateException))
-        val responseFromHandler = Await.result(handler.dispatch(request))
-        responseFromHandler.status ==== Status.InternalServerError
+      "routes the request to the new client" in new NewClientContext {
+        newMothershipClient(any[Request]) returns (Future.value(response))
+        Await.result(handler(handlerRequest)) must be_==(response)
+        verify(newMothershipClient).apply(any[Request])
+        verifyZeroInteractions(mothershipClient)
       }
     }
   }
