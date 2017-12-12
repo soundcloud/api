@@ -29,8 +29,8 @@ class ContentAuthorizationService(authsy: JsonClient, batchSize: Int = ContentAu
     * Returns a list of authorization rules applied to the URNs.
     *
     * @param session             The [[UserSession]] for which authorization rules should be checked.
-    * @param resources           The [[Urn]]s of the resources we want to check
-    * @param subscriptionCountry the subscription country of a high/mid-tier subscriber
+    * @param resources           The [[Urn]]s of the resources we want to check.
+    * @param subscriptionCountry the subscription country of a high/mid-tier subscriber, or geo-country of a free-tier subscriber.
     * @return A list containing all [[ContentAuthorization]] applicable to the content.
     */
   def findRulesApplicableTo(session: UserSession, resources: Seq[Urn],

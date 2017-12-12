@@ -27,10 +27,10 @@ class ContentAuthorizationRulesSpec extends UnitSpecification {
     }
   }
 
-  "does not lookup consumer subs country for free-tier users" in new Context {
+  "looks up geo country for free-tier users" in new Context {
     val session = sessionWithTier(UserTier.FREE)
 
-    contentAuthMock.findRulesApplicableTo(session, urns, None) returns Future.value(authorizations)
+    contentAuthMock.findRulesApplicableTo(session, urns, Some("US")) returns Future.value(authorizations)
 
     Await.result(service.fetchRules(session, urns)) ==== authorizations
 
@@ -40,8 +40,8 @@ class ContentAuthorizationRulesSpec extends UnitSpecification {
   "looks up consumer subs country for high-tier subscriber" in new Context {
     val session = sessionWithTier(UserTier.HIGH)
 
-    subsServiceMock.getActiveSubscriptionCountry(session) returns Future.value(Option("US"))
-    contentAuthMock.findRulesApplicableTo(session, urns, Option("US")) returns Future.value(authorizations)
+    subsServiceMock.getActiveSubscriptionCountry(session) returns Future.value(Option("FR"))
+    contentAuthMock.findRulesApplicableTo(session, urns, Option("FR")) returns Future.value(authorizations)
 
     Await.result(service.fetchRules(session, urns)) ==== authorizations
   }
@@ -49,7 +49,16 @@ class ContentAuthorizationRulesSpec extends UnitSpecification {
   "looks up consumer subs country for mid-tier subscriber" in new Context {
     val session = sessionWithTier(UserTier.MID)
 
-    subsServiceMock.getActiveSubscriptionCountry(session) returns Future.value(Option("US"))
+    subsServiceMock.getActiveSubscriptionCountry(session) returns Future.value(Option("FR"))
+    contentAuthMock.findRulesApplicableTo(session, urns, Option("FR")) returns Future.value(authorizations)
+
+    Await.result(service.fetchRules(session, urns)) ==== authorizations
+  }
+
+  "looks up geo country when subscription country is unavailable" in new Context {
+    val session = sessionWithTier(UserTier.MID)
+
+    subsServiceMock.getActiveSubscriptionCountry(session) returns Future.value(None)
     contentAuthMock.findRulesApplicableTo(session, urns, Option("US")) returns Future.value(authorizations)
 
     Await.result(service.fetchRules(session, urns)) ==== authorizations
