@@ -12,10 +12,8 @@ class ContentAuthorizationRules(contentAuth: ContentAuthorizationService, subscr
 
   private def consumerSubsCountry(session: UserSession): Future[Option[String]] =
     if (session.getTier != UserTier.FREE) {
-      subscriptions.getActiveSubscriptionCountry(session).map(Option(_))
+      subscriptions.getActiveSubscriptionCountry(session)
     } else {
       Future.None
     }
-
-
 }

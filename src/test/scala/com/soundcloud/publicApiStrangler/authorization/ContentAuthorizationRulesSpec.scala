@@ -40,7 +40,7 @@ class ContentAuthorizationRulesSpec extends UnitSpecification {
   "looks up consumer subs country for high-tier subscriber" in new Context {
     val session = sessionWithTier(UserTier.HIGH)
 
-    subsServiceMock.getActiveSubscriptionCountry(session) returns Future.value("US")
+    subsServiceMock.getActiveSubscriptionCountry(session) returns Future.value(Option("US"))
     contentAuthMock.findRulesApplicableTo(session, urns, Option("US")) returns Future.value(authorizations)
 
     Await.result(service.fetchRules(session, urns)) ==== authorizations
@@ -49,7 +49,7 @@ class ContentAuthorizationRulesSpec extends UnitSpecification {
   "looks up consumer subs country for mid-tier subscriber" in new Context {
     val session = sessionWithTier(UserTier.MID)
 
-    subsServiceMock.getActiveSubscriptionCountry(session) returns Future.value("US")
+    subsServiceMock.getActiveSubscriptionCountry(session) returns Future.value(Option("US"))
     contentAuthMock.findRulesApplicableTo(session, urns, Option("US")) returns Future.value(authorizations)
 
     Await.result(service.fetchRules(session, urns)) ==== authorizations

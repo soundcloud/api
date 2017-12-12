@@ -25,7 +25,14 @@ class SubscriptionsServiceSpec extends UnitSpecification {
       val response = jsonResponse(Status.Ok, consumerSubscription)
       client.getWithSession(===(session), ===(activeConsumerSubPath), any[Params], any[Headers]) returns Future.value(response)
 
-      Await.result(service.getActiveSubscriptionCountry(session)) ==== "US"
+      Await.result(service.getActiveSubscriptionCountry(session)) ==== Some("US")
+    }
+
+    "returns nothing when subscription does not exist" in new Context {
+      val response = jsonResponse(Status.NotFound, consumerSubscription)
+      client.getWithSession(===(session), ===(activeConsumerSubPath), any[Params], any[Headers]) returns Future.value(response)
+
+      Await.result(service.getActiveSubscriptionCountry(session)) ==== None
     }
 
     "throws exception when subscription cannot be retrieved" in new Context {
