@@ -8,14 +8,13 @@ import com.soundcloud.publicApiStrangler.authorization.policies._
 class ContentAuthorizationRules(contentAuth: ContentAuthorizationService, subscriptions: SubscriptionsService) {
 
   def fetchRules(session: UserSession, urns: Seq[Urn]): Future[Seq[ContentAuthorization]] =
-    consumerSubsCountry(session).flatMap(country => contentAuth.findRulesApplicableTo(session, urns, country))
+    userCountry(session).flatMap(country => contentAuth.findRulesApplicableTo(session, urns, country))
 
-  private def consumerSubsCountry(session: UserSession): Future[Option[String]] =
+  private def userCountry(session: UserSession): Future[Option[String]] =
     if (session.getTier != UserTier.FREE) {
-      subscriptions.getActiveSubscriptionCountry(session).map(Option(_))
+      subscriptions.getActiveSubscriptionCountry(session)
+        .map(_.orElse(Option(session.getGeo.getCountryCode)))
     } else {
-      Future.None
+      Future.value(Option(session.getGeo.getCountryCode))
     }
-
-
 }
