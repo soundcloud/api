@@ -1,6 +1,6 @@
 ---
 memcached:
-  image: memcached
+  image: docker.dev.s-cloud.net/sc-memcached:release
   container_name: strangler_memcached
   ports:
     - "11211:11211"
