@@ -1,10 +1,11 @@
 APP_NAME := $(shell sc manifest name)
 
-API_ENTRYPOINT     := api
-APITRACKUPLOAD_ENTRYPOINT     := apitrackupload
+API_COMPONENT := api
+API_CONFIG    := production_api.sh.enc
 
-API_CONFIG := production_api.sh.enc
-APITRACKUPLOAD_CONFIG := production_apitrackupload.sh.enc
+APITRACKUPLOAD_COMPONENT := apitrackupload
+APITRACKUPLOAD_CONFIG    := production_apitrackupload.sh.enc
+
 RUNTIME_STACK := jdk-8
 
 DOCKER_IP ?= $(shell sc docker-ip)
@@ -64,8 +65,7 @@ package: prepare-package-layout
 
 prepare-package-layout: patched-jdk
 	sc crun sbt -- sbt scDebianLayout:packageBin
-	sc gen-wrapper-script --target="bin/$(APP_NAME)" --wrapper=$(API_ENTRYPOINT)
-	sc gen-wrapper-script --target="bin/$(APP_NAME)" --wrapper=$(APITRACKUPLOAD_ENTRYPOINT)
+	sc gen-wrapper-script --target="bin/$(APP_NAME)" --wrapper=api
 	sc gen-postinst-script
 	sc add-config config/development
 	sc add-config config/e2e
@@ -88,8 +88,8 @@ publish:
 publish-deploy:
 	sc artifact-manager deploy publish \
 		--cluster=$(CLUSTER) \
-		--component="$(API_ENTRYPOINT)" \
-		--command "./$(API_ENTRYPOINT) --config=$(API_CONFIG)" \
+		--component="$(API_COMPONENT)" \
+		--command "./api --config=$(API_CONFIG)" \
 		--public \
 		--ingress http://$(APP_NAME).$(CLUSTER).lb.s-cloud.net:http \
 		--ingress http://$(APP_NAME).int.s-cloud.net:http \
@@ -101,8 +101,8 @@ publish-deploy:
 		--strategy.rolling-update.max-surge.percent 20
 	sc artifact-manager deploy publish \
 		--cluster=$(CLUSTER) \
-		--component="$(APITRACKUPLOAD_ENTRYPOINT)" \
-		--command "./$(APITRACKUPLOAD_ENTRYPOINT) --config=$(APITRACKUPLOAD_CONFIG)" \
+		--component="$(APITRACKUPLOAD_COMPONENT)" \
+		--command "./api --config=$(APITRACKUPLOAD_CONFIG)" \
 		--public \
 		--ingress http://$(APP_NAME)-trackupload.$(CLUSTER).lb.s-cloud.net:http \
 		--glimpse http.strangler-trackupload.prod.public-api \
@@ -118,8 +118,8 @@ promote-to-release:
 
 .PHONY: deploy-k8s-api
 deploy-k8s-api:
-	sc artifact-manager deploy run --cluster="$(CLUSTER)" --component="$(API_ENTRYPOINT)"
+	sc artifact-manager deploy run --cluster="$(CLUSTER)" --component="$(API_COMPONENT)"
 
 .PHONY: deploy-k8s-apitrackupload
 deploy-k8s-apitrackupload:
-	sc artifact-manager deploy run --cluster="$(CLUSTER)" --component="$(APITRACKUPLOAD_ENTRYPOINT)"
+	sc artifact-manager deploy run --cluster="$(CLUSTER)" --component="$(APITRACKUPLOAD_COMPONENT)"
