@@ -1,6 +1,8 @@
 package com.soundcloud.publicApiStrangler.handler
 
+import com.soundcloud.jvmkit.module.bff.testsupport.FakeUserAuthentication
 import com.soundcloud.jvmkit.module.http.server.{AlwaysMatchesPathMatcher, HandlerRequest}
+import com.soundcloud.jvmkit.module.util.session.UserSessionBuilder
 import com.soundcloud.publicApiStrangler.test.UnitSpecification
 import com.twitter.finagle.Service
 import com.twitter.finagle.http._
@@ -14,6 +16,9 @@ class DispatchToMothershipHandlerSpec extends UnitSpecification {
       val mothershipClient = mock[Service[Request, Response]]
       val newMothershipClient = mock[Service[Request, Response]]
 
+      val session = new UserSessionBuilder().build()
+      val userAuthenticationMock = new FakeUserAuthentication(session)
+
       val response = Response(Status.Ok)
       response.headerMap.add("header1", "valueHeader1").add("header2", "valueHeader2")
       response.contentString = "body content"
@@ -24,7 +29,7 @@ class DispatchToMothershipHandlerSpec extends UnitSpecification {
 
     "when the rollout flag is false" >> {
       trait OldClientContext extends Context {
-        val handler = new DispatchToMothershipHandler(mothershipClient, newMothershipClient, () => Future.value(false))
+        val handler = new DispatchToMothershipHandler(userAuthenticationMock, mothershipClient, newMothershipClient, () => Future.value(false))
       }
 
       "returns the response verbatim" >> {
@@ -60,7 +65,7 @@ class DispatchToMothershipHandlerSpec extends UnitSpecification {
 
     "when using the rollout flag is true" >> {
       trait NewClientContext extends Context {
-        val handler = new DispatchToMothershipHandler(mothershipClient, newMothershipClient, () => Future.value(true))
+        val handler = new DispatchToMothershipHandler(userAuthenticationMock, mothershipClient, newMothershipClient, () => Future.value(true))
       }
 
       "routes the request to the new client" in new NewClientContext {

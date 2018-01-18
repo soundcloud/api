@@ -3,11 +3,13 @@ package com.soundcloud.publicApiStrangler.handler
 import java.io.InputStream
 import java.net.InetSocketAddress
 
+import com.soundcloud.jvmkit.module.util.session.UserSessionBuilder
+import com.soundcloud.jvmkit.module.util.{Geo, Urn}
 import com.soundcloud.publicApiStrangler.test.UnitSpecification
 import com.twitter.finagle.http.{Request, Response}
 import com.twitter.finagle.{Http, Service}
 import com.twitter.util.{Await, Duration, Future}
-import okhttp3.mockwebserver.{MockResponse, MockWebServer}
+import okhttp3.mockwebserver.{MockResponse, MockWebServer, RecordedRequest}
 import org.apache.http.client.methods.{HttpGet, HttpPost, HttpPut}
 import org.apache.http.entity.mime.MultipartEntityBuilder
 import org.apache.http.entity.{ContentType, StringEntity}
@@ -15,16 +17,25 @@ import org.apache.http.impl.client.HttpClients
 import org.apache.http.util.EntityUtils
 import org.specs2.mutable.BeforeAfter
 
+import collection.JavaConverters._
+
 class ForwardedRequestSpec extends UnitSpecification {
 
   trait Context extends BeforeAfter {
     val server = new MockWebServer()
     val client = Http.client.withStreaming(enabled = false).newService(s"localhost:${server.getPort}")
 
+    val session = new UserSessionBuilder()
+        .setGeo(new Geo("DE", "Berlin", "16"))
+        .setFeatures(Set("new-home").asJava)
+        .setAgent(Urn("soundcloud", "applications", "46941"))
+        .setScopes(Set("creator-subs", "monetizable", "umg-allowed", "wmg-allowed").asJava)
+        .build()
+
     def stranglerService: Service[Request, Response] =
       new Service[Request, Response] {
         def apply(request: Request): Future[Response] = {
-          client.apply(ForwardedRequest(request))
+          client.apply(ForwardedRequest(request, session))
         }
       }
 
@@ -63,6 +74,13 @@ class ForwardedRequestSpec extends UnitSpecification {
     recordedRequest.getHeader("Transfer-Encoding") ==== null
     recordedRequest.getHeader("Content-Length") ==== "0"
     recordedRequest.getHeader("X-Favourite-Animal") ==== "zebra"
+
+    recordedRequest.getHeader("Sc-Geo-Country-Code") ==== "DE"
+    recordedRequest.getHeader("Sc-Geo-City") ==== "Berlin"
+    recordedRequest.getHeader("Sc-Geo-Region") ==== "16"
+    recordedRequest.getHeader("Sc-User-Features") ==== "new-home"
+    recordedRequest.getHeader("Sc-Agent") ==== "soundcloud:applications:46941"
+    recordedRequest.getHeader("Sc-Oauth-Scopes") ==== "creator-subs,monetizable,umg-allowed,wmg-allowed"
   }
 
   "properly forwards POST request" in new Context {
@@ -85,6 +103,13 @@ class ForwardedRequestSpec extends UnitSpecification {
     recordedRequest.getHeader("Transfer-Encoding") ==== null
     recordedRequest.getHeader("Content-Length") ==== "7"
     recordedRequest.getHeader("X-Favourite-Animal") ==== "zebra"
+
+    recordedRequest.getHeader("Sc-Geo-Country-Code") ==== "DE"
+    recordedRequest.getHeader("Sc-Geo-City") ==== "Berlin"
+    recordedRequest.getHeader("Sc-Geo-Region") ==== "16"
+    recordedRequest.getHeader("Sc-User-Features") ==== "new-home"
+    recordedRequest.getHeader("Sc-Agent") ==== "soundcloud:applications:46941"
+    recordedRequest.getHeader("Sc-Oauth-Scopes") ==== "creator-subs,monetizable,umg-allowed,wmg-allowed"
   }
 
   "properly forwards PUT request" in new Context {
@@ -107,6 +132,13 @@ class ForwardedRequestSpec extends UnitSpecification {
     recordedRequest.getHeader("Transfer-Encoding") ==== null
     recordedRequest.getHeader("Content-Length") ==== "7"
     recordedRequest.getHeader("X-Favourite-Animal") ==== "zebra"
+
+    recordedRequest.getHeader("Sc-Geo-Country-Code") ==== "DE"
+    recordedRequest.getHeader("Sc-Geo-City") ==== "Berlin"
+    recordedRequest.getHeader("Sc-Geo-Region") ==== "16"
+    recordedRequest.getHeader("Sc-User-Features") ==== "new-home"
+    recordedRequest.getHeader("Sc-Agent") ==== "soundcloud:applications:46941"
+    recordedRequest.getHeader("Sc-Oauth-Scopes") ==== "creator-subs,monetizable,umg-allowed,wmg-allowed"
   }
 
   "properly forwards POST request with Connection: close" in new Context {
@@ -132,6 +164,13 @@ class ForwardedRequestSpec extends UnitSpecification {
     recordedRequest.getHeader("Content-Length") ==== "7"
     recordedRequest.getHeader("X-Favourite-Animal") ==== "zebra"
     recordedRequest.getHeader("Connection") ==== "close"
+
+    recordedRequest.getHeader("Sc-Geo-Country-Code") ==== "DE"
+    recordedRequest.getHeader("Sc-Geo-City") ==== "Berlin"
+    recordedRequest.getHeader("Sc-Geo-Region") ==== "16"
+    recordedRequest.getHeader("Sc-User-Features") ==== "new-home"
+    recordedRequest.getHeader("Sc-Agent") ==== "soundcloud:applications:46941"
+    recordedRequest.getHeader("Sc-Oauth-Scopes") ==== "creator-subs,monetizable,umg-allowed,wmg-allowed"
   }
 
 
@@ -171,6 +210,14 @@ class ForwardedRequestSpec extends UnitSpecification {
     recordedRequest.getHeader("Content-Length") ==== null
     recordedRequest.getHeader("Host") ==== "api.soundcloud.com"
     recordedRequest.getHeader("X-Forwarded-Proto") ==== "https"
+
+    recordedRequest.getHeader("Sc-Geo-Country-Code") ==== "DE"
+    recordedRequest.getHeader("Sc-Geo-City") ==== "Berlin"
+    recordedRequest.getHeader("Sc-Geo-Region") ==== "16"
+    recordedRequest.getHeader("Sc-User-Features") ==== "new-home"
+    recordedRequest.getHeader("Sc-Agent") ==== "soundcloud:applications:46941"
+    recordedRequest.getHeader("Sc-Oauth-Scopes") ==== "creator-subs,monetizable,umg-allowed,wmg-allowed"
+
     val requestBody = recordedRequest.getBody.readUtf8()
     requestBody.contains("\r\nContent-Disposition: form-data; name=\"track[asset_data]\"; filename=\"donkey_song.mp3\"\r\n") ==== true
     requestBody.contains("\r\nContent-Type: application/octet-stream\r\n") ==== true
