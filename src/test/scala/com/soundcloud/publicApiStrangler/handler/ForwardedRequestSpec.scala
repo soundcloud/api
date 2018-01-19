@@ -30,6 +30,7 @@ class ForwardedRequestSpec extends UnitSpecification {
         .setFeatures(Set("new-home").asJava)
         .setAgent(Urn("soundcloud", "applications", "46941"))
         .setScopes(Set("creator-subs", "monetizable", "umg-allowed", "wmg-allowed").asJava)
+        .setUser(Urn("soundcloud", "users", "42"))
         .build()
 
     def stranglerService: Service[Request, Response] =
@@ -81,6 +82,7 @@ class ForwardedRequestSpec extends UnitSpecification {
     recordedRequest.getHeader("Sc-User-Features") ==== "new-home"
     recordedRequest.getHeader("Sc-Agent") ==== "soundcloud:applications:46941"
     recordedRequest.getHeader("Sc-Oauth-Scopes") ==== "creator-subs,monetizable,umg-allowed,wmg-allowed"
+    recordedRequest.getHeader("Sc-User") ==== "soundcloud:users:42"
   }
 
   "properly forwards POST request" in new Context {
@@ -110,6 +112,7 @@ class ForwardedRequestSpec extends UnitSpecification {
     recordedRequest.getHeader("Sc-User-Features") ==== "new-home"
     recordedRequest.getHeader("Sc-Agent") ==== "soundcloud:applications:46941"
     recordedRequest.getHeader("Sc-Oauth-Scopes") ==== "creator-subs,monetizable,umg-allowed,wmg-allowed"
+    recordedRequest.getHeader("Sc-User") ==== "soundcloud:users:42"
   }
 
   "properly forwards PUT request" in new Context {
@@ -139,6 +142,7 @@ class ForwardedRequestSpec extends UnitSpecification {
     recordedRequest.getHeader("Sc-User-Features") ==== "new-home"
     recordedRequest.getHeader("Sc-Agent") ==== "soundcloud:applications:46941"
     recordedRequest.getHeader("Sc-Oauth-Scopes") ==== "creator-subs,monetizable,umg-allowed,wmg-allowed"
+    recordedRequest.getHeader("Sc-User") ==== "soundcloud:users:42"
   }
 
   "properly forwards POST request with Connection: close" in new Context {
@@ -171,6 +175,7 @@ class ForwardedRequestSpec extends UnitSpecification {
     recordedRequest.getHeader("Sc-User-Features") ==== "new-home"
     recordedRequest.getHeader("Sc-Agent") ==== "soundcloud:applications:46941"
     recordedRequest.getHeader("Sc-Oauth-Scopes") ==== "creator-subs,monetizable,umg-allowed,wmg-allowed"
+    recordedRequest.getHeader("Sc-User") ==== "soundcloud:users:42"
   }
 
 
@@ -217,6 +222,7 @@ class ForwardedRequestSpec extends UnitSpecification {
     recordedRequest.getHeader("Sc-User-Features") ==== "new-home"
     recordedRequest.getHeader("Sc-Agent") ==== "soundcloud:applications:46941"
     recordedRequest.getHeader("Sc-Oauth-Scopes") ==== "creator-subs,monetizable,umg-allowed,wmg-allowed"
+    recordedRequest.getHeader("Sc-User") ==== "soundcloud:users:42"
 
     val requestBody = recordedRequest.getBody.readUtf8()
     requestBody.contains("\r\nContent-Disposition: form-data; name=\"track[asset_data]\"; filename=\"donkey_song.mp3\"\r\n") ==== true
