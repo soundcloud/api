@@ -31,7 +31,7 @@ class DispatchToMothershipHandler(userAuthentication: UserAuthentication,
         mothershipClient
       }
 
-      userAuthentication.withUserSession(HandlerRequest(request)) { (userSession) =>
+      userAuthentication.withUserSession(request) { (userSession) =>
         client(ForwardedRequest(request.request, userSession)).handle {
           case exception: Exception =>
             logger.debug("Bad response from mothership", exception)
