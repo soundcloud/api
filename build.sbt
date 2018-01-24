@@ -2,7 +2,7 @@ import com.soundcloud.sbtkit.SbtKitPlugin
 import sbt.Keys._
 import sbt._
 
-val jvmkitVersion = "3.1.2"
+val jvmkitVersion = "4.2.0"
 val playJsonVersion = "2.5.14"
 
 lazy val publicApiStrangler = project.in(file("."))
