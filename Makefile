@@ -90,11 +90,10 @@ publish-deploy:
 		--cluster=$(CLUSTER) \
 		--component="$(API_COMPONENT)" \
 		--command "./api --config=$(API_CONFIG)" \
-		--public \
 		--ingress http://$(APP_NAME).$(CLUSTER).lb.s-cloud.net:http \
 		--ingress http://$(APP_NAME).int.s-cloud.net:http \
 		--ingress http://public-api.int.s-cloud.net:http \
-		--ingress http://api.soundcloud.com:http \
+		--public-ingress http://api.soundcloud.com:http \
 		--glimpse http.strangler.prod.public-api \
 		--slack-channel '#backend-productivity' \
 		--prometheus.port telemetry \
@@ -103,8 +102,8 @@ publish-deploy:
 		--cluster=$(CLUSTER) \
 		--component="$(APITRACKUPLOAD_COMPONENT)" \
 		--command "./api --config=$(APITRACKUPLOAD_CONFIG)" \
-		--public \
 		--ingress http://$(APP_NAME)-trackupload.$(CLUSTER).lb.s-cloud.net:http \
+		--public-ingress http://api.soundcloud.com:http \
 		--glimpse http.strangler-trackupload.prod.public-api \
 		--slack-channel '#backend-productivity' \
 		--prometheus.port telemetry \
