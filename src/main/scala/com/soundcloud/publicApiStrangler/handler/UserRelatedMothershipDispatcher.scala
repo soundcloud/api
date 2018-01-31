@@ -43,7 +43,7 @@ class UserRelatedMothershipDispatcher(userAuthentication: UserAuthentication,
 
   def dispatchToMothership(request: HandlerRequest): Future[Response] = {
     userAuthentication.withUserSession(request) { session =>
-      mothershipDispatcher.dispatchToMothership(request.request).flatMap(response => {
+      mothershipDispatcher.dispatchToMothership(request).flatMap(response => {
         lazy val defaultResponse = Future.value(response)
 
         if (response.statusCode < 300) {

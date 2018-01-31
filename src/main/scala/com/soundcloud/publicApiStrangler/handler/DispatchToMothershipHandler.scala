@@ -1,12 +1,15 @@
 package com.soundcloud.publicApiStrangler.handler
 
+import com.soundcloud.jvmkit.module.bff.session.UserAuthentication
 import com.soundcloud.jvmkit.module.http.server.{Handler, HandlerRequest}
 import com.soundcloud.jvmkit.module.util.logging.SoundCloudLoggerFactory
+import com.soundcloud.jvmkit.module.util.session.{UserSession, UserSessionHeadersConverter}
 import com.twitter.finagle.Service
 import com.twitter.finagle.http.{Request, Response, Status}
 import com.twitter.util.Future
 
-class DispatchToMothershipHandler(mothershipClient: Service[Request, Response],
+class DispatchToMothershipHandler(userAuthentication: UserAuthentication,
+                                  mothershipClient: Service[Request, Response],
                                   newMothershipClient: Service[Request, Response],
                                   checkRollout: () => Future[Boolean]) extends Handler {
 
@@ -14,15 +17,11 @@ class DispatchToMothershipHandler(mothershipClient: Service[Request, Response],
 
   override def apply(request: HandlerRequest): Future[Response] = dispatchToMothership(request)
 
-  def dispatchToMothership(handlerRequest: HandlerRequest): Future[Response] = {
-    dispatchToMothership(handlerRequest.request)
-  }
-
   def dispatch(request: Request): Future[Response] = {
-    dispatchToMothership(request)
+    dispatchToMothership(HandlerRequest(request))
   }
 
-  def dispatchToMothership(request: Request): Future[Response] = {
+  def dispatchToMothership(request: HandlerRequest): Future[Response] = {
     request.host = "api.soundcloud.com"
 
     checkRollout().flatMap { useNewClient =>
@@ -32,30 +31,33 @@ class DispatchToMothershipHandler(mothershipClient: Service[Request, Response],
         mothershipClient
       }
 
-      client(ForwardedRequest(request)).handle {
-        case exception: Exception =>
-          logger.debug("Bad response from mothership", exception)
-          val response = Response()
-          response.status = Status.InternalServerError
-          response
+      userAuthentication.withUserSession(request) { (userSession) =>
+        client(ForwardedRequest(request.request, userSession)).handle {
+          case exception: Exception =>
+            logger.debug("Bad response from mothership", exception)
+            val response = Response()
+            response.status = Status.InternalServerError
+            response
+        }
       }
     }
   }
-
 }
 
 object ForwardedRequest {
-  val mandatoryHeaders = Map("X-Forwarded-Proto" -> "https", "Host" -> "api.soundcloud.com")
+  import collection.JavaConverters._
 
-  def apply(originalRequest: Request) = {
-    addMandatoryHeaders(originalRequest)
+  protected val mandatoryHeaders = Map("X-Forwarded-Proto" -> "https", "Host" -> "api.soundcloud.com")
+
+  def apply(originalRequest: Request, session: UserSession): Request = {
+    val sessionHeaders = UserSessionHeadersConverter.fromSession(session).headers.asScala
+
+    mandatoryHeaders.foreach { case (k, v) => originalRequest.headerMap.put(k, v) }
+
+    sessionHeaders.foreach { case (key, values) =>
+      values.asScala.foreach(value => originalRequest.headerMap.add(key, value))
+    }
+
     originalRequest
   }
-
-  private def addMandatoryHeaders(newRequest: Request) = {
-    mandatoryHeaders.foreach {
-      case (k, v) => newRequest.headerMap.put(k, v)
-    }
-  }
-
 }
