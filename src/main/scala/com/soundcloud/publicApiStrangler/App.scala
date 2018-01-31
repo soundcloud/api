@@ -2,7 +2,6 @@ package com.soundcloud.publicApiStrangler
 
 import com.soundcloud.jvmkit.module.admin.AdminServer
 import com.soundcloud.jvmkit.module.bff.BffHttpServer
-import com.soundcloud.jvmkit.module.bff.filters.SessionCacheFilter
 import com.soundcloud.jvmkit.module.bff.ratelimiting.facade._
 import com.soundcloud.jvmkit.module.http.server.akira.ResponseDumpSessionRegistry
 import com.soundcloud.jvmkit.module.http.server.config.HttpServerConfig
@@ -24,7 +23,7 @@ import com.twitter.util.Future
 
 object App extends Handlers with FallbackHandlerConfiguration {
 
-  def moduleConfig = new AppConfig()
+  lazy val moduleConfig = new AppConfig()
 
   def metricsRegistry: MetricsRegistryImpl = MetricsRegistryImpl.defaultRegistry
 
@@ -83,7 +82,6 @@ object App extends Handlers with FallbackHandlerConfiguration {
         new AcceptOnlyJsonRequestFilter(() => new StripXmlRollout(rolloutClient).stripXml),
         new OffsetLimitRequestFilter(limitOffsetPaths, limitOffset),
         new CookieHeaderRemovalFilter,
-        new SessionCacheFilter(userAuthentication),
         new DefaultResponseHeadersFilter,
         new OptionsRequestCacheHeadersFilter,
         new ExceptForTrackUploadsFilter(rateLimitingFacade.filter),

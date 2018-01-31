@@ -92,3 +92,4 @@ SKETCHY_SRV_RECORD=dnssrv!http.api.prod.sketchy.dd.srv.int.s-cloud.net
 
 IS_DEVELOPMENT_MODE=true
 IS_DNS_HACK_ON=true
+DNSSRV_FORCE_TCP=true
