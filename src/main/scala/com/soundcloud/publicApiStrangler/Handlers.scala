@@ -19,7 +19,7 @@ trait Handlers extends Clients {
       val newMothershipClientFeature = BasicRolloutFeature("new-mothership-client")
       () => rolloutClient.isActive(newMothershipClientFeature)
     }
-    new DispatchToMothershipHandler(userAuthentication, publicApiClient, newPublicApiClient, rolloutCheckForNewMothershipClient)
+    new DispatchToMothershipHandler(publicApiClient, newPublicApiClient, rolloutCheckForNewMothershipClient)
   }
 
   val timelineHandler = {

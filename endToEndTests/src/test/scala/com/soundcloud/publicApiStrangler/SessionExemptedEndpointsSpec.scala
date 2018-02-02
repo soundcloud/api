@@ -23,5 +23,11 @@ class SessionExemptedEndpointsSpec extends Specification with SpinningUpAppSuppo
       server.get("/crossdomain.xml").status ==== Status.Ok.code
       server.get("/robots.txt").status ==== Status.Ok.code
     }
+
+    "return success for multipart request with oauth2 token" in new Context {
+      private val multipartHeaders = HeaderMap(("Content-Type", "multipart/form-data;"))
+
+      server.post("/oauth2/token", "", multipartHeaders).status ==== Status.Ok.code
+    }
   }
 }

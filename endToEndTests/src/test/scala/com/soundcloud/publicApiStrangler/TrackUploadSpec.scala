@@ -28,7 +28,7 @@ class TrackUploadSpec extends Specification {
       }
 
       // Build request
-      val request = new HttpPost(s"http://strangler:5000/tracks?client_id=bcdd94de263f5ce5a929f7a53ee19be7")
+      val request = new HttpPost(s"http://strangler:5000/tracks")
       val reqEntity = MultipartEntityBuilder.create()
         .addBinaryBody("track[asset_data]", inputStream, ContentType.APPLICATION_OCTET_STREAM, "donkey_song.mp3")
         .build()

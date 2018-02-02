@@ -65,7 +65,7 @@ class UserRelatedMothershipDispatcherSpec extends UnitSpecification {
     lazy val resultJson = Json.parse(result.getContentString())
 
     override def before: Any = {
-      when(mothershipDispatcherMock.dispatchToMothership(any[HandlerRequest])).thenReturn(Future.value(response))
+      when(mothershipDispatcherMock.dispatchToMothership(any[Request])).thenReturn(Future.value(response))
       when(followCountsClientMock.counts(session, userUrns)).thenReturn(Future.value(followCountsSeq))
       when(lieblingClientMock.userTotalLikeCount(session, userUrns)).thenReturn(Future.value(userTotalLikesList))
       when(repostsClientMock.getRepostCountsByUrnWithFallback(session, userUrns.toSet))
