@@ -1,3 +1,5 @@
+JAVA_OPTS="-Djdk.nio.maxCachedBufferSize=262144"
+
 APP_NAME=public-api-strangler
 APP_BASE_URL=https://api.soundcloud.com
 
