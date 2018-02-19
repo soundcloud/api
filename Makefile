@@ -58,12 +58,11 @@ clean:
 	rm -rf target
 	rm -rf project/project
 	rm -rf project/target
-	rm -rf jdk/target
 
 package: prepare-package-layout
 	sc artifact-manager package --runtime=$(RUNTIME_STACK)
 
-prepare-package-layout: patched-jdk
+prepare-package-layout:
 	sc crun sbt -- sbt scDebianLayout:packageBin
 	sc gen-wrapper-script --target="bin/$(APP_NAME)" --wrapper=api
 	sc gen-postinst-script
@@ -71,16 +70,6 @@ prepare-package-layout: patched-jdk
 	sc add-config config/e2e
 	sc add-config config/$(API_CONFIG)
 	sc add-config config/$(APITRACKUPLOAD_CONFIG)
-	rm -rf target/deb/srv/public-api-strangler/jdk/target
-	mkdir -p target/deb/srv/public-api-strangler/jdk/target
-	cp -r jdk/target target/deb/srv/public-api-strangler/jdk
-
-.PHONY: patched-jdk
-patched-jdk: jdk/target/sun/nio/ch/Util.class
-
-jdk/target/sun/nio/ch/Util.class: jdk/src/share/classes/sun/nio/ch/Util.java
-	mkdir -p jdk/target
-	sc crun jdk-8 -- javac -d jdk/target $<
 
 publish:
 	sc artifact-manager publish
