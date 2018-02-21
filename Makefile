@@ -87,6 +87,8 @@ publish-deploy:
 		--slack-channel '#backend-productivity' \
 		--prometheus.port telemetry \
 		--strategy.rolling-update.max-surge.percent 20
+		--set MEMORY_REQUEST=3072Mi
+		--set MEMORY_LIMIT=4096Mi
 	sc artifact-manager deploy publish \
 		--cluster=$(CLUSTER) \
 		--component="$(APITRACKUPLOAD_COMPONENT)" \
@@ -97,6 +99,8 @@ publish-deploy:
 		--slack-channel '#backend-productivity' \
 		--prometheus.port telemetry \
 		--strategy.rolling-update.max-surge.percent 20
+		--set MEMORY_REQUEST=4096Mi
+		--set MEMORY_LIMIT=4096Mi
 
 promote-to-stable:
 	sc artifact-manager promote stable
