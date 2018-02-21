@@ -88,7 +88,7 @@ publish-deploy:
 		--prometheus.port telemetry \
 		--strategy.rolling-update.max-surge.percent 20
 		--set MEMORY_REQUEST=3072Mi
-		--set MEMORY_LIMIT=4096Mi
+		--set MEMORY_LIMIT=3072Mi
 	sc artifact-manager deploy publish \
 		--cluster=$(CLUSTER) \
 		--component="$(APITRACKUPLOAD_COMPONENT)" \
