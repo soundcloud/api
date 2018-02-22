@@ -86,8 +86,8 @@ publish-deploy:
 		--glimpse http.strangler.prod.public-api \
 		--slack-channel '#backend-productivity' \
 		--prometheus.port telemetry \
-		--strategy.rolling-update.max-surge.percent 20
-		--set MEMORY_REQUEST=3172Mi
+		--strategy.rolling-update.max-surge.percent 20 \
+		--set MEMORY_REQUEST=3172Mi \
 		--set MEMORY_LIMIT=3172Mi
 	sc artifact-manager deploy publish \
 		--cluster=$(CLUSTER) \
@@ -98,8 +98,8 @@ publish-deploy:
 		--glimpse http.strangler-trackupload.prod.public-api \
 		--slack-channel '#backend-productivity' \
 		--prometheus.port telemetry \
-		--strategy.rolling-update.max-surge.percent 20
-		--set MEMORY_REQUEST=4196Mi
+		--strategy.rolling-update.max-surge.percent 20 \
+		--set MEMORY_REQUEST=4196Mi \
 		--set MEMORY_LIMIT=4196Mi
 
 promote-to-stable:
