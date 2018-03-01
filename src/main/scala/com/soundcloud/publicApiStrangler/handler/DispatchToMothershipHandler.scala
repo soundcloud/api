@@ -6,9 +6,7 @@ import com.twitter.finagle.Service
 import com.twitter.finagle.http.{Request, Response, Status}
 import com.twitter.util.Future
 
-class DispatchToMothershipHandler(mothershipClient: Service[Request, Response],
-                                  newMothershipClient: Service[Request, Response],
-                                  checkRollout: () => Future[Boolean]) extends Handler {
+class DispatchToMothershipHandler(mothershipClient: Service[Request, Response]) extends Handler {
 
   val logger = SoundCloudLoggerFactory.getLogger(getClass)
 
@@ -25,20 +23,12 @@ class DispatchToMothershipHandler(mothershipClient: Service[Request, Response],
   def dispatchToMothership(request: Request): Future[Response] = {
     request.host = "api.soundcloud.com"
 
-    checkRollout().flatMap { useNewClient =>
-      val client = if (useNewClient) {
-        newMothershipClient
-      } else {
-        mothershipClient
-      }
-
-      client(ForwardedRequest(request)).handle {
-        case exception: Exception =>
-          logger.debug("Bad response from mothership", exception)
-          val response = Response()
-          response.status = Status.InternalServerError
-          response
-      }
+    mothershipClient(ForwardedRequest(request)).handle {
+      case exception: Exception =>
+        logger.debug("Bad response from mothership", exception)
+        val response = Response()
+        response.status = Status.InternalServerError
+        response
     }
   }
 

@@ -14,13 +14,7 @@ import com.soundcloud.publicApiStrangler.support.CursorPagination
 
 trait Handlers extends Clients {
 
-  val mothershipDispatcher = {
-    val rolloutCheckForNewMothershipClient = {
-      val newMothershipClientFeature = BasicRolloutFeature("new-mothership-client")
-      () => rolloutClient.isActive(newMothershipClientFeature)
-    }
-    new DispatchToMothershipHandler(publicApiClient, newPublicApiClient, rolloutCheckForNewMothershipClient)
-  }
+  val mothershipDispatcher = new DispatchToMothershipHandler(publicApiClient)
 
   val timelineHandler = {
     val entitySummaryMapper = new EntitySummaryMapper(okidokiClient, repostsClient, baseUrl)
