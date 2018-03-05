@@ -80,7 +80,6 @@ trait Clients {
   }
 
   lazy val publicApiClient = createPublicApiClient("PUBLIC_API")
-  lazy val newPublicApiClient = createPublicApiClient("NEW_PUBLIC_API")
 
   lazy val followsClient = new FollowsClient(jsonClient("follows"))
 
