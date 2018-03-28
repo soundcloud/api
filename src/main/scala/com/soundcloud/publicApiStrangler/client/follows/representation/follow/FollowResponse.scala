@@ -12,7 +12,7 @@ case object AlreadyFollowing extends FollowResponse
 sealed trait FollowingNotPossible extends FollowResponse
 
 case object UserNotFound extends FollowingNotPossible
-case class SpamBlocked(spamWarning: List[JsObject]) extends FollowingNotPossible
+case object SpamBlocked extends FollowingNotPossible
 case object MaxFollowingsReached extends FollowingNotPossible
 case object UserAsTarget extends FollowingNotPossible
 case object BlockedByTarget extends FollowingNotPossible

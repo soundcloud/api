@@ -12,7 +12,7 @@ object FollowResponseMapper {
       case Status.Created => FollowingCreated(Json.parse(response.contentString).as[Following])
       case Status.Ok => AlreadyFollowing
       case Status.NotFound => UserNotFound
-      case Status.TooManyRequests => SpamBlocked((Json.parse(response.contentString) \ "spam_warnings").as[List[JsObject]])
+      case Status.TooManyRequests => SpamBlocked
       case Status.Forbidden => BlockedByTarget
       case Status.UnprocessableEntity =>
         val data = Json.parse(response.contentString)

@@ -62,10 +62,9 @@ class RepostsHandlerSpec extends UnitSpecification {
     }
 
     "when creating fails because the user was blocked for spam" in new CreateTrackContext {
-      override def result = SpamBlocked(Seq(SpamWarning("foo", "bar", Some("baz"), Some("fuz"))))
+      override def result = SpamBlocked
 
       response.status ==== Status.TooManyRequests
-      Json.parse(response.contentString).as[SpamBlocked] ==== result
     }
 
     "when creating fails because of an unknown reason" in new CreateTrackContext {
@@ -142,10 +141,9 @@ class RepostsHandlerSpec extends UnitSpecification {
     }
 
     "when creating fails because the user was blocked for spam" in new CreatePlaylistContext {
-      override def result = SpamBlocked(Seq(SpamWarning("foo", "bar", Some("baz"), Some("fuz"))))
+      override def result = SpamBlocked
 
       response.status ==== Status.TooManyRequests
-      Json.parse(response.contentString).as[SpamBlocked] ==== result
     }
 
     "when creating fails because of an unknown reason" in new CreatePlaylistContext {

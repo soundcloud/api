@@ -86,11 +86,9 @@ class FollowsClientSpec extends UnitSpecification {
     }
 
     "indicates when the user is blocked for spam" in new FollowContext {
-      val warnings = List(Json.obj("foo" -> "bar"))
+      mockWith(Status.TooManyRequests, JsNull)
 
-      mockWith(Status.TooManyRequests, Json.obj("spam_warnings" -> warnings))
-
-      result ==== SpamBlocked(warnings)
+      result ==== SpamBlocked
     }
 
     "indicates when the user is blocked by the target user" in new FollowContext {

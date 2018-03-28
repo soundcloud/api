@@ -30,7 +30,7 @@ class UserFollowHandler(userAuthentication: UserAuthentication, okidoki: Okidoki
         case _: FollowingCreated => renderFollow(session, user)
         case AlreadyFollowing => renderStatus(Status.Ok)
         case UserNotFound => renderError(Status.NotFound)
-        case _: SpamBlocked => renderError(Status.TooManyRequests)
+        case SpamBlocked => renderError(Status.TooManyRequests)
         case MaxFollowingsReached => renderError(Status.UnprocessableEntity)
         case BlockedByTarget => renderError(Status.Forbidden)
         case UserAsTarget => renderError(Status.BadRequest)

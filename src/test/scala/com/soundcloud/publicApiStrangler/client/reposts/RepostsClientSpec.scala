@@ -31,17 +31,6 @@ class RepostsClientSpec extends UnitSpecification with PactSpec with UnitSpecsSu
 
   def playlist(id: Int) = Urn(s"soundcloud:playlists:$id")
 
-  val spamResponse = buildResponse(
-    status = 429,
-    headers = commonHeaders,
-    bodyAndMatchers = new PactDslJsonBody()
-      .minArrayLike("spam_warnings", 1, 1)
-      .stringType("level")
-      .booleanType("acknowledgeable", false)
-      .closeObject()
-      .closeArray()
-  )
-
   def createRequest(urn: Urn, user: Urn) =
     buildRequest(
       path = s"/${urn.getCollection}/${urn.toString}/reposts",
@@ -175,7 +164,7 @@ class RepostsClientSpec extends UnitSpecification with PactSpec with UnitSpecsSu
       description = "Creating a track repost",
       maybeState = Some("soundcloud:users:2 is blocked for spam"),
       request = createRequest(Urn("soundcloud:tracks:4"), spamUser),
-      response = spamResponse
+      response = buildResponse(status = 429)
     ),
     buildInteraction(
       description = "Getting reposters of a track",
@@ -234,7 +223,7 @@ class RepostsClientSpec extends UnitSpecification with PactSpec with UnitSpecsSu
       description = "Creating a playlist repost",
       maybeState = Some("soundcloud:users:2 is blocked for spam"),
       request = createRequest(Urn("soundcloud:playlists:4"), spamUser),
-      response = spamResponse
+      response = buildResponse(status = 429)
     ),
     buildInteraction(
       description = "Getting reposters of a playlist",
@@ -383,7 +372,7 @@ class RepostsClientSpec extends UnitSpecification with PactSpec with UnitSpecsSu
       "Creating a track repost" in new SpamContext {
         val result = Await.result(client.createRepost(session, track(4), baseUrl))
         result match {
-          case SpamBlocked(errors) => errors should not be empty
+          case SpamBlocked => ()
           case other => failure(s"Expected SpamBlocked, instead got $other")
         }
       }
@@ -391,7 +380,7 @@ class RepostsClientSpec extends UnitSpecification with PactSpec with UnitSpecsSu
       "Creating a playlist repost" in new SpamContext {
         val result = Await.result(client.createRepost(session, playlist(4), baseUrl))
         result match {
-          case SpamBlocked(errors) => errors should not be empty
+          case SpamBlocked => ()
           case other => failure(s"Expected SpamBlocked, instead got $other")
         }
       }

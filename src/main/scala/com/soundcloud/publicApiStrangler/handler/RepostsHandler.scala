@@ -61,7 +61,7 @@ class RepostsHandler(userAuthentication: UserAuthentication, repostsClient: Repo
     case Deleted => ResponseBuilder.ok()
     case AlreadyExists => ResponseBuilder.ok()
     case NotFound => ResponseBuilder.notFound()
-    case spamBlocked: SpamBlocked => JsonResponseBuilder(status = Status.TooManyRequests, body = Json.stringify(Json.toJson(spamBlocked))).build
+    case SpamBlocked => JsonResponseBuilder(status = Status.TooManyRequests).build
     case Failed => ResponseBuilder.internalServerError()
   }
 

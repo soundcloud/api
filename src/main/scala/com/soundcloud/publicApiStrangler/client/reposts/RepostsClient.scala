@@ -144,9 +144,7 @@ object RepostsClient {
 
   case object NotFound extends Result
 
-  case class SpamWarning(warning_level: String, reason_phrase: String, acknowledge_url: Option[String], release_at: Option[String])
-
-  case class SpamBlocked(errors: Seq[SpamWarning]) extends Result
+  case object SpamBlocked extends Result
 
   case object Failed extends Result
 
@@ -159,26 +157,7 @@ object RepostsClient {
     case Status.Accepted => Deleted
     case Status.Ok => AlreadyExists
     case Status.NotFound => NotFound
-    case Status.TooManyRequests => SpamBlocked(toSpamWarnings(response.contentString, baseUrl))
+    case Status.TooManyRequests => SpamBlocked
     case _ => Failed
   }
-
-  implicit val spamWarningFormat = Json.format[SpamWarning]
-  implicit val spamBlockedFormat = Json.format[SpamBlocked]
-
-  private def toSpamWarnings(body: String, baseUrl: => String): Seq[SpamWarning] =
-    (Json.parse(body) \ "spam_warnings").as[JsArray].value.map { json =>
-      val level = (json \ "level").as[String]
-      val acknowledgeable = (json \ "acknowledgeable").as[Boolean]
-
-      SpamWarning(
-        warning_level = level,
-        reason_phrase = s"$level: too many reposts",
-        acknowledge_url = acknowledgeable match {
-          case false => None
-          case true => Some(s"$baseUrl/me/spam_warnings/${(json \ "id").as[Int]}/ack")
-        },
-        release_at = if (acknowledgeable) None else (json \ "release_at").asOpt[String]
-      )
-    }
 }
