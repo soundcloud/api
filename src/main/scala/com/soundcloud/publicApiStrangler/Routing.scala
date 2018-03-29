@@ -214,13 +214,6 @@ object Routing {
     )
   }
 
-  def forSpamWarningsHandler(spamWarningsHandler: SpamWarningsHandler): List[(Method, String, Handler)] = {
-    List(
-      (Method.Put, "/me/spam_warnings/:warning_id/ack", spamWarningsHandler.handle)
-    )
-  }
-
-
   def forTimelineHandler(timelineHandler: TimelineHandler): List[(Method, String, Handler)] = {
     List(
       (Method.Get, "/e1/me/activities", timelineHandler.renderAllActivities),

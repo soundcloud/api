@@ -104,7 +104,6 @@ object App extends Handlers with FallbackHandlerConfiguration {
         forUserTracksHandler(userTracksHandler),
         forRepostsHandler(repostsHandler),
         forRepostersHandler(repostersHandler),
-        forSpamWarningsHandler(spamWarningsHandler),
         forTimelineHandler(timelineHandler),
         forTrackStreamsHandler(trackStreamsHandler)))
       .register(Method.Get, "/-/health", (_) => Future.value(ResponseBuilder.ok()))

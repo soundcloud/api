@@ -135,6 +135,4 @@ trait Handlers extends Clients {
   val playlistsHandler = new PlaylistsHandler(userAuthentication, playlistDeletionClient)
 
   val repostsHandler = new RepostsHandler(userAuthentication, repostsClient)
-
-  val spamWarningsHandler = new SpamWarningsHandler(userAuthentication, sketchyClient)
 }

@@ -19,7 +19,6 @@ import com.soundcloud.publicApiStrangler.client.playlists.{PlaylistDeletionClien
 import com.soundcloud.publicApiStrangler.client.pubmese.PubmeseClient
 import com.soundcloud.publicApiStrangler.client.quota.UserQuotaClient
 import com.soundcloud.publicApiStrangler.client.reposts.RepostsClient
-import com.soundcloud.publicApiStrangler.client.sketchy.SketchyClient
 import com.soundcloud.publicApiStrangler.client.stitch.StitchClient
 import com.soundcloud.publicApiStrangler.client.trackcoordinator.TrackCoordinatorClient
 import com.soundcloud.publicApiStrangler.client.trackmetadata.TrackmetadataClient
@@ -90,8 +89,6 @@ trait Clients {
   lazy val similarSoundsClient = new SimilarSoundsClient(jsonClient("similar_sounds"))
 
   lazy val trackCoordinatorClient = new TrackCoordinatorClient(jsonClient("track_coordinator"))
-
-  lazy val sketchyClient = new SketchyClient(jsonClient("sketchy"))
 
   lazy val pubmeseClient = new PubmeseClient(jsonClient("pubmese"))
 
