@@ -46,10 +46,8 @@ REPOSTS_CLIENT_REQUEST_TIMEOUT_MILLIS=5000
 
 RATE_LIMIT_MEMCACHED_SERVERS=memcached
 
-MOSHIMOSHI_BASE_URL=http://moshimoshi.int.s-cloud.net
-
 # Playlists and listings are being extracted out of Mothership, this configuration value is in anticipation of that.
-PLAYLIST_HTTP_ENDPOINT=http://moshimoshi.int.s-cloud.net
+PLAYLIST_ADDRESS="dnssrv!http.moshimoshi.prod.mothership.db.srv.int.s-cloud.net"
 
 PUBLIC_API_ADDRESS=api.soundcloud.com:80
 PUBLIC_API_CLIENT_REQUEST_TIMEOUT_MILLIS=300000

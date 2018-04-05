@@ -110,7 +110,7 @@ trait Clients {
 
   private val stitch4followsService = jsonClient("stitch4follows")
 
-  val playlistsClient = new PlaylistsClient(jsonClient("playlist", ConfigConvention.HTTP_ENDPOINT))
+  val playlistsClient = new PlaylistsClient(jsonClient("playlist", ConfigConvention.ADDRESS))
 
   val followCountsClient = new FollowCountsClient(stitch4followsService, moduleConfig)
 
