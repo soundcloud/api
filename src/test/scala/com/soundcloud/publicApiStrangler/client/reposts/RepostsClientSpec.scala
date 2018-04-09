@@ -289,7 +289,7 @@ class RepostsClientSpec extends UnitSpecification with PactSpec with UnitSpecsSu
       val client: RepostsClient = {
         val config = new InMemoryConfig
         config.set("APP_NAME", consumer)
-        config.set(s"${provider.toUpperCase}_JSONCLIENT_REQUEST_TIMEOUT_MILLIS", "5000")
+        config.set(s"${provider.toUpperCase}_CLIENT_REQUEST_TIMEOUT_MILLIS", "5000")
 
         val jsonClient = JsonClient(
           ServiceEntryPoint(providerConfig.url),
