@@ -6,6 +6,7 @@ import com.soundcloud.publicApiStrangler.test.Helpers._
 import com.soundcloud.publicApiStrangler.test.UnitSpecification
 import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures._
 import com.twitter.util.Await
+import play.api.libs.json.Json
 
 class TimelineJsonClientSpec extends UnitSpecification {
 
@@ -200,24 +201,124 @@ class TimelineJsonClientSpec extends UnitSpecification {
   }
 
   "#followingsTracks" >> {
-    "with cursor" in new Context {
-      expectOkResponse(Path() / "followings_tracks", timelineStream, Map("page_size" -> "10", "cursor" -> "deadbeef", "direction" -> "after"))
-      timelineStream ==== Await.result(client.followingsTracks(session, Some("deadbeef"), 10))
+
+    trait TimelineWithMixedItemsScenario extends Context {
+      val actualTimeline = Json.parse(
+        """
+             {
+                 "events":[
+                    {
+                       "type":"track:repost",
+                       "timestamp":"2014/08/12 08:26:26 +0000",
+                       "urn":"soundcloud:tracks:131352352",
+                       "actor":"soundcloud:users:70167771",
+                       "target":"soundcloud:users:6457573"
+                    },
+                    {
+                       "type":"track",
+                       "timestamp":"2014/08/12 06:09:34 +0000",
+                       "urn":"soundcloud:tracks:162777787",
+                       "actor":"soundcloud:users:18228",
+                       "target":null
+                    },
+                    {
+                       "type":"playlist:repost",
+                       "timestamp":"2014/08/12 02:28:18 +0000",
+                       "urn":"soundcloud:playlists:162755085",
+                       "actor":"soundcloud:users:23545583",
+                       "target":"soundcloud:users:41447243"
+                    },
+                    {
+                       "type":"playlist",
+                       "timestamp":"2014/08/12 01:16:44 +0000",
+                       "urn":"soundcloud:playlists:162750218",
+                       "actor":"soundcloud:users:5539303",
+                       "target":null
+                    }
+                 ],
+                 "meta":{
+                    "next_page_cursor":"15"
+                 }
+              }""")
+
+      val expectedAnswer = Json.parse(
+        """
+             {
+                 "events":[
+                    {
+                       "type":"track",
+                       "timestamp":"2014/08/12 06:09:34 +0000",
+                       "urn":"soundcloud:tracks:162777787",
+                       "actor":"soundcloud:users:18228",
+                       "target":null
+                    }
+                 ],
+                 "meta":{}
+              }""")
     }
 
-    "with reverse cursor" in new Context {
-      expectOkResponse(Path() / "followings_tracks", timelineStream, Map("page_size" -> "10", "cursor" -> "deadbeef", "direction" -> "before"))
-      timelineStream ==== Await.result(client.followingsTracks(session, Some("deadbeef"), 10, true))
+    trait TimelineWithTracksOnlyScenario extends Context {
+      val actualTimeline = Json.parse(
+        """
+             {
+                 "events":[
+                    {
+                       "type":"track",
+                       "timestamp":"2014/08/12 06:09:34 +0000",
+                       "urn":"soundcloud:tracks:162777787",
+                       "actor":"soundcloud:users:18228",
+                       "target":null
+                    }
+                 ],
+                 "meta":{
+                    "next_page_cursor":"15"
+                 }
+              }""")
+
+      val expectedAnswer = Json.parse(
+        """
+             {
+                 "events":[
+                    {
+                       "type":"track",
+                       "timestamp":"2014/08/12 06:09:34 +0000",
+                       "urn":"soundcloud:tracks:162777787",
+                       "actor":"soundcloud:users:18228",
+                       "target":null
+                    }
+                 ],
+                 "meta":{}
+              }""")
     }
 
-    "without cursor" in new Context {
-      expectOkResponse(Path() / "followings_tracks", timelineStream, Map("page_size" -> "50"))
-      timelineStream ==== Await.result(client.followingsTracks(session, None))
+    "with cursor" in new TimelineWithTracksOnlyScenario {
+      expectOkResponse(Path() / "stream", actualTimeline, Map("page_size" -> "10", "cursor" -> "deadbeef", "direction" -> "after"))
+
+      expectedAnswer ==== Await.result(client.followingsTracks(session, Some("deadbeef"), 10))
     }
 
-    "with cursor encoding and direction" in new Context {
-      expectOkResponse(Path() / "followings_tracks", timelineStream, Map("page_size" -> "10", "cursor" -> "deadbeef", "direction" -> "before", "cursor_encoding" -> "uuid"))
-      timelineStream ==== Await.result(client.followingsTracks(session, Some("deadbeef"), 10, true, Some("uuid")))
+    "with reverse cursor" in new TimelineWithTracksOnlyScenario {
+      expectOkResponse(Path() / "stream", actualTimeline, Map("page_size" -> "10", "cursor" -> "deadbeef", "direction" -> "before"))
+
+      expectedAnswer ==== Await.result(client.followingsTracks(session, Some("deadbeef"), 10, true))
+    }
+
+    "without cursor" in new TimelineWithTracksOnlyScenario {
+      expectOkResponse(Path() / "stream", actualTimeline, Map("page_size" -> "50"))
+
+      expectedAnswer ==== Await.result(client.followingsTracks(session, None))
+    }
+
+    "with cursor encoding and direction" in new TimelineWithTracksOnlyScenario {
+      expectOkResponse(Path() / "stream", actualTimeline, Map("page_size" -> "10", "cursor" -> "deadbeef", "direction" -> "before", "cursor_encoding" -> "uuid"))
+
+      expectedAnswer ==== Await.result(client.followingsTracks(session, Some("deadbeef"), 10, true, Some("uuid")))
+    }
+
+    "should return tracks only" in new TimelineWithMixedItemsScenario {
+      expectOkResponse(Path() / "stream", actualTimeline, Map("page_size" -> "10", "cursor" -> "deadbeef", "direction" -> "after"))
+
+      expectedAnswer ==== Await.result(client.followingsTracks(session, Some("deadbeef"), 10))
     }
   }
 

@@ -1,14 +1,14 @@
 package com.soundcloud.publicApiStrangler.client
 
 import com.soundcloud.jvmkit.module.http.client.{JsonClient, Params}
-import com.soundcloud.jvmkit.module.util.{Path, Urn}
 import com.soundcloud.jvmkit.module.util.http.Headers
 import com.soundcloud.jvmkit.module.util.session.UserSession
+import com.soundcloud.jvmkit.module.util.{Path, Urn}
 import com.soundcloud.publicApiStrangler.client.support.{FetchClient, JsonResponse}
 import com.twitter.finagle.http.Status.Successful
 import com.twitter.finagle.http.{Response, Status}
 import com.twitter.util.Future
-import play.api.libs.json.{JsNull, JsObject, Json}
+import play.api.libs.json._
 
 class TimelineJsonClient(service: JsonClient) extends FetchClient {
 
@@ -113,14 +113,22 @@ class TimelineJsonClient(service: JsonClient) extends FetchClient {
    *
    * The reverseCursor parameter allows fetching items *before* a given cursor, if set to true
    */
-  def followingsTracks(session: UserSession, cursor: Option[String], pageSize: Int = 50, reverseCursor: Boolean = false, cursorEncoding: Option[String] = None): Future[JsObject] =
-    fetch(
-      service,
-      session,
-      Path() / "followings_tracks",
-      paramsFor(cursor, pageSize, reverseCursor, cursorEncoding),
-      Headers.empty
-    ).map(SingleItem(_))
+  def followingsTracks(session: UserSession, cursor: Option[String], pageSize: Int = 50, reverseCursor: Boolean = false, cursorEncoding: Option[String] = None): Future[JsObject] = {
+    val noPaging = JsObject(Seq())
+
+    def tracksOnly(stream: JsObject) = {
+      val allEvents = (stream \ "events").as[JsArray].value
+      val trackEvents = allEvents.filter(event => (event \ "type").toOption.contains(JsString("track")))
+      trackEvents
+    }
+
+    stream(session, cursor, pageSize, reverseCursor, cursorEncoding).map { stream =>
+      Json.obj(
+        "events" -> tracksOnly(stream),
+        "meta" -> noPaging
+      )
+    }
+  }
 
   private def paramsFor(cursor: Option[String], pageSize: Int, reverseCursor: Boolean, cursorEncoding: Option[String]): Params = {
     val params = Map("page_size" -> pageSize.toString) ++ cursorEncoding.map("cursor_encoding" -> _)
