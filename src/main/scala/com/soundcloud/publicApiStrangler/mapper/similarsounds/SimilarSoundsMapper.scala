@@ -5,13 +5,14 @@ import com.soundcloud.bff.nextbff.mapping.MappingContext
 import com.soundcloud.bff.nextbff.pagination.OffsetBasedPage
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSession
-import com.soundcloud.publicApiStrangler.client.SimilarSoundsClient
+import com.soundcloud.publicApiStrangler.client.SystemPlaylistsClient
+import com.soundcloud.publicApiStrangler.client.support.CommonJsonFormats.urnFormat
 import com.soundcloud.publicApiStrangler.mapper.search.SearchEntityMapper
 import com.soundcloud.publicApiStrangler.support.mapping.{InputValidation, ObjectMapping}
 import com.twitter.util.Future
 import play.api.libs.json.{JsLookupResult, JsObject, JsValue}
 
-class SimilarSoundsMapper(similarSoundsClient: SimilarSoundsClient,
+class SimilarSoundsMapper(systemPlaylistsClient: SystemPlaylistsClient,
                           searchEntityMapperxx: SearchEntityMapper)
   extends Mapper[OffsetBasedPage[Urn], SimilarSoundsMapping]
     with InputValidation[OffsetBasedPage[Urn], SimilarSoundsMapping] {
@@ -36,8 +37,7 @@ class SimilarSoundsMapper(similarSoundsClient: SimilarSoundsClient,
   def mapSingleInput(session: UserSession,
                      seedTrack: OffsetBasedPage[Urn])
                     (implicit context: MappingContext): Future[Option[SimilarSoundsMapping]] = {
-    val (page, pageSize) = offsetBasedToPageBased(seedTrack.offset, seedTrack.limit)
-    similarSoundsClient.fetchSimilar(session, seedTrack.param, page, pageSize, "", None).map { opt =>
+    systemPlaylistsClient.fetchSimilar(session, seedTrack.param).map { opt =>
       opt.map(similarSounds =>
         new ObjectMapping[SimilarSounds](similarSounds) with SimilarSoundsMapping {
           override def currentPage: OffsetBasedPage[_] = seedTrack
@@ -46,18 +46,6 @@ class SimilarSoundsMapper(similarSoundsClient: SimilarSoundsClient,
         }
       )
     }
-  }
-
-  /**
-    * Naively converts offset based pagination to page based pagination.
-    * Note that this is not correct and used as a quick fix to be api compliant to former versions.
-    *
-    */
-  def offsetBasedToPageBased(offset: Int, limit: Int): (Int, Int) = {
-    if (limit > 0)
-      ((offset / limit) + 1, limit)
-    else
-      (0, 0)
   }
 
 }
@@ -73,19 +61,16 @@ object SimilarSoundsMapper {
   private def mapTracks(json: JsLookupResult): Iterable[Urn] = {
     json.as[List[JsObject]].map {
       trackUrn =>
-        new Urn((trackUrn \ "urn").as[String])
+        (trackUrn \ "urn").as[Urn]
     }
   }
 
   private def mapMeta(json: JsLookupResult): SimilarSoundsMeta = {
     SimilarSoundsMeta(
-      (json \ "page").as[Int],
       (json \ "page_size").as[Int],
       (json \ "variant").as[String],
       (json \ "source_version").as[String],
-      new Urn((json \ "query_urn").as[String]),
-      (json \ "previous_href").as[String],
-      (json \ "next_href").as[String]
+      (json \ "query_urn").as[Urn]
     )
   }
 }

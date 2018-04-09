@@ -117,7 +117,7 @@ trait Handlers extends Clients {
   }
 
   val similarSoundsHandler = {
-    val similarSoundsMapper = new SimilarSoundsMapper(similarSoundsClient, searchEntityMapper)
+    val similarSoundsMapper = new SimilarSoundsMapper(systemPlaylistsClient, searchEntityMapper)
     new SimilarSoundsHandler(
       userAuthentication,
       similarSoundsMapper,

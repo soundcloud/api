@@ -86,7 +86,7 @@ trait Clients {
 
   lazy val gatekeeperClient = new GatekeeperClient(jsonClient("gatekeeper"))
 
-  lazy val similarSoundsClient = new SimilarSoundsClient(jsonClient("similar_sounds"))
+  lazy val systemPlaylistsClient = new SystemPlaylistsClient(jsonClient("system_playlists"))
 
   lazy val trackCoordinatorClient = new TrackCoordinatorClient(jsonClient("track_coordinator"))
 

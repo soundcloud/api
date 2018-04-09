@@ -4,7 +4,7 @@ import com.soundcloud.bff.nextbff.mapping.MappingContext
 import com.soundcloud.bff.nextbff.pagination.OffsetBasedPage
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSession
-import com.soundcloud.publicApiStrangler.client.SimilarSoundsClient
+import com.soundcloud.publicApiStrangler.client.SystemPlaylistsClient
 import com.soundcloud.publicApiStrangler.mapper.search.SearchEntityMapper
 import com.soundcloud.publicApiStrangler.test.UnitSpecification
 import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures.similarSoundsNonEmpty
@@ -15,7 +15,7 @@ class SimilarSoundsMapperSpec
   extends UnitSpecification {
 
   trait Context extends Scope {
-    val similarSoundsClientMock = mock[SimilarSoundsClient]
+    val similarSoundsClientMock = mock[SystemPlaylistsClient]
     val entityMapperMock = mock[SearchEntityMapper]
     val similarSoundsMapper = new SimilarSoundsMapper(similarSoundsClientMock, entityMapperMock)
     val param = new Urn("soundcloud", "tracks", "123")
@@ -27,11 +27,11 @@ class SimilarSoundsMapperSpec
   "maps similar sounds to json" in new Context {
     val returnedSimilarSounds = SimilarSounds(
       Seq(new Urn("soundcloud:tracks:1")),
-      SimilarSoundsMeta(0, 10, "variant", "source", new Urn("soundcloud:systems:123"), "", "")
+      SimilarSoundsMeta(50, "variant", "source", new Urn("soundcloud:systems:123"))
     )
 
     // mock client returns fake result
-    when(similarSoundsClientMock.fetchSimilar(anonymousSession, param, 1, 10, "", None)).
+    when(similarSoundsClientMock.fetchSimilar(anonymousSession, param)).
       thenReturn(Future.value(Some(returnedSimilarSounds)))
 
     // verify that entityMapper is called with fake results from mock client
@@ -41,13 +41,13 @@ class SimilarSoundsMapperSpec
     val similarSounds = similarSoundsMapper.mapSingleInput(anonymousSession, page)
     Await.result(similarSounds)
 
-    verify(similarSoundsClientMock).fetchSimilar(anonymousSession, param, 1, 10, "", None)
-    verify(similarSoundsClientMock).fetchSimilar(anonymousSession, param, 1, 10, "", None)
+    verify(similarSoundsClientMock).fetchSimilar(anonymousSession, param)
+    verify(similarSoundsClientMock).fetchSimilar(anonymousSession, param)
   }
 
   "returns empty map if client responds with none" in new Context {
     // return 404 to simulate non existing track
-    when(similarSoundsClientMock.fetchSimilar(anonymousSession, param, 1, 10, "", None)).
+    when(similarSoundsClientMock.fetchSimilar(anonymousSession, param)).
       thenReturn(Future.value(None))
 
     val similarSounds = similarSoundsMapper.mapSingleInput(anonymousSession, page)
@@ -56,15 +56,7 @@ class SimilarSoundsMapperSpec
     val emptyMap = similarSoundsMapper.mapNonEmptyInputs(anonymousSession, Set(page))
     Await.result(emptyMap) ==== Map.empty
 
-    verify(similarSoundsClientMock, times(2)).fetchSimilar(anonymousSession, param, 1, 10, "", None)
-  }
-
-  "transforms offset based pagination to page based" in new Context {
-    similarSoundsMapper.offsetBasedToPageBased(0, 10) ==== Tuple2(1, 10)
-    similarSoundsMapper.offsetBasedToPageBased(0, 0) ==== Tuple2(0, 0)
-    similarSoundsMapper.offsetBasedToPageBased(0, 10) ==== Tuple2(1, 10)
-    similarSoundsMapper.offsetBasedToPageBased(10, 10) ==== Tuple2(2, 10)
-    similarSoundsMapper.offsetBasedToPageBased(20, 10) ==== Tuple2(3, 10)
+    verify(similarSoundsClientMock, times(2)).fetchSimilar(anonymousSession, param)
   }
 
   "maps similar sounds response to objects" in {
@@ -75,13 +67,10 @@ class SimilarSoundsMapperSpec
     )
 
     val expectedMeta = SimilarSoundsMeta(
-      page = 1,
-      pageSize = 3,
+      pageSize = 50,
       variant = "default",
       sourceVersion = "snap-source",
-      queryUrn = Urn("soundcloud:similarsounds:c90098b750d4470cafa834fb951fe657"),
-      previousHref = "",
-      nextHref = "https://similar-sounds.int.s-cloud.net/similar-to/soundcloud:tracks:125050457?page=2&page_size=3&query_urn=soundcloud%3Asimilarsounds%3Ac90098b750d4470cafa834fb951fe657&variant=default"
+      queryUrn = Urn("soundcloud:similarsounds:c90098b750d4470cafa834fb951fe657")
     )
     SimilarSoundsMapper(similarSoundsNonEmpty) ==== SimilarSounds(expectedTracks, expectedMeta)
   }
