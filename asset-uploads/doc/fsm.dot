@@ -1,0 +1,30 @@
+// auto generated -- don't modify directly
+digraph states {
+node [shape=record colorscheme=set37 style="rounded,filled" fontname=sans fontsize=10];
+edge [fontname="sans" fontsize=8];
+rankdir=LR;
+newrank=true;
+fontname="sans";
+color="grey";
+labeljust="l";
+stateProcessHeaders -> nil[label="Unable to partse Content-Type."]
+stateProcessHeaders -> nil[label="Not a multipart form upload."]
+stateProcessHeaders -> nil[label="Unable to determine the multipart boundary."]
+stateProcessHeaders -> stateProcessBody[label="Processing the request body."]
+stateProcessBody -> stateNextPart
+stateNextPart -> stateReplaceBody
+stateNextPart -> nil
+stateNextPart -> stateProcessPart
+stateNextPart -> stateProcessTrackAssetPart
+stateNextPart -> nil[label="Unsupported type of file part."]
+stateNextPart -> stateProcessAuthTokenPart
+stateNextPart -> stateProcessPart
+stateProcessPart -> nil
+stateProcessPart -> nil
+stateProcessPart -> stateNextPart
+stateProcessTrackAssetPart -> nil
+stateProcessTrackAssetPart -> stateNextPart
+stateProcessAuthTokenPart -> nil
+stateProcessAuthTokenPart -> stateNextPart
+stateReplaceBody -> nil
+}
