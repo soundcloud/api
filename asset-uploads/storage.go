@@ -1,33 +1,81 @@
 package main
 
 import (
-	"fmt"
 	"io"
-	"os"
+	"io/ioutil"
+
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/credentials"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 )
 
-type storageWriter interface {
-	Store(string, io.Reader) error
+type storage interface {
+	store(io.Reader) (string, error)
 }
 
-type fileSystemWriter struct {
-	baseDir string
+type diskStorage struct {
+	baseDir, filePrefix string
 }
 
-func (fs *fileSystemWriter) Store(key string, val io.Reader) error {
-	path := fmt.Sprintf("/%s/%s", fs.baseDir, key)
-
-	f, err := os.Create(path)
+func (d *diskStorage) store(r io.Reader) (string, error) {
+	f, err := ioutil.TempFile(d.baseDir, d.filePrefix)
 	if err != nil {
-		return err
+		return "", nil
+	}
+	defer f.Close()
+
+	_, err = io.Copy(f, r)
+	if err != nil {
+		return "", err
 	}
 
-	_, err = io.Copy(f, val)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return f.Name(), nil
 }
 
-type s3Writer struct{}
+type s3Storage struct {
+	moshi    *moshimoshiClient
+	uploader *s3manager.Uploader
+
+	bucket string
+}
+
+func newS3Storage(key, secret, region, bucket string, moshi *moshimoshiClient) (*s3Storage, error) {
+	const (
+		// The session token is optional.
+		emptySessionToken = ""
+	)
+
+	creds := credentials.NewStaticCredentials(key, secret, emptySessionToken)
+
+	conf := aws.NewConfig().WithCredentials(creds).WithRegion(region)
+	sess := session.Must(session.NewSession(conf))
+
+	storage := &s3Storage{
+		bucket:   bucket,
+		moshi:    moshi,
+		uploader: s3manager.NewUploader(sess),
+	}
+
+	return storage, nil
+}
+
+func (s3 *s3Storage) store(r io.Reader) (string, error) {
+	uid, err := s3.moshi.createTrackUID()
+	if err != nil {
+		return "", err
+	}
+
+	input := &s3manager.UploadInput{
+		Bucket: aws.String(s3.bucket),
+		Key:    aws.String(uid),
+		Body:   r,
+	}
+
+	_, err = s3.uploader.Upload(input)
+	if err != nil {
+		return "", err
+	}
+
+	return uid, nil
+}

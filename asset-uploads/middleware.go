@@ -48,13 +48,15 @@ func limitRequestSizeMiddleware(next http.Handler) http.Handler {
 }
 
 // rewriteRequestMiddleware TODO
-func rewriteRequestMiddleware(sw storageWriter) middleware {
+func rewriteRequestMiddleware(s storage) middleware {
+	rw := &requestRewriter{storage: s}
+
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			rw := &requestRewriter{}
+			if err := rw.run(r); err != nil {
+				log.Println(err)
 
-			if err := rw.run(r, sw); err != nil {
-				// TODO? Switch on kind of error
+				// TODO? Switch on kind of error (server v client)
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			}

@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -12,24 +13,30 @@ import (
 	"strings"
 )
 
-type requestRewriter struct{}
+type requestRewriter struct {
+	storage storage
+}
 
-func (rw *requestRewriter) run(r *http.Request, w storageWriter) error {
-	s := &rewriterState{request: r, storage: w}
+func (rw *requestRewriter) run(r *http.Request) error {
+	s := &rewriterState{
+		request: r,
+		storage: rw.storage,
+	}
 
 	f := stateProcessHeaders
 	for f != nil {
 		log.Printf("%v\n", s)
+
 		f = f(s)
 	}
 
-	return nil
+	return s.err
 }
 
 type rewriterState struct {
 	request *http.Request
 
-	storage storageWriter
+	storage storage
 
 	boundary string
 	reader   *multipart.Reader
@@ -37,6 +44,8 @@ type rewriterState struct {
 
 	buffer *bytes.Buffer
 	writer *multipart.Writer
+
+	err error
 }
 
 type rewriterStateFunc func(*rewriterState) rewriterStateFunc
@@ -49,26 +58,30 @@ const (
 
 // stateProcessHeaders TODO
 func stateProcessHeaders(s *rewriterState) rewriterStateFunc {
+	var (
+		errUnknownContentType  = errors.New("Unknown Content-Type")
+		errNotMultiPart        = errors.New("Not a multipart form upload")
+		errNoMultipartBoundary = errors.New("No multipart boundary")
+	)
+
 	mt, params, err := mime.ParseMediaType(s.request.Header.Get("Content-Type"))
 	if err != nil {
-		// Unable to partse Content-Type.
+		s.err = errUnknownContentType
 		return nil
 	}
 
 	if !strings.HasPrefix(mt, "multipart/form-data") {
-		// Not a multipart form upload.
+		s.err = errNotMultiPart
 		return nil
 	}
 
 	b, ok := params["boundary"]
 	if !ok || b == "" {
-		// Unable to determine the multipart boundary.
+		s.err = errNoMultipartBoundary
 		return nil
 	}
-
 	s.boundary = b
 
-	// Processing the request body.
 	return stateProcessBody
 }
 
@@ -100,10 +113,9 @@ func stateNextPart(s *rewriterState) rewriterStateFunc {
 
 			return stateReplaceBody
 		}
-
+		s.err = fmt.Errorf("Failed to read next part: %s", err)
 		return nil
 	}
-
 	s.part = part
 
 	// File parts need to be handled specially.
@@ -114,7 +126,7 @@ func stateNextPart(s *rewriterState) rewriterStateFunc {
 		case "track[asset_data]":
 			return stateProcessTrackAssetPart
 		default:
-			// Unsupported type of file part.
+			s.err = fmt.Errorf("Unsupported file part: %s", part.FormName())
 			return nil
 		}
 	}
@@ -131,10 +143,12 @@ func stateNextPart(s *rewriterState) rewriterStateFunc {
 func stateProcessPart(s *rewriterState) rewriterStateFunc {
 	w, err := s.writer.CreatePart(s.part.Header)
 	if err != nil {
+		s.err = fmt.Errorf("Failed to create form part: %s", err)
 		return nil
 	}
 
 	if _, err := io.Copy(w, s.part); err != nil {
+		s.err = fmt.Errorf("Failed to copy part: %s", err)
 		return nil
 	}
 
@@ -142,9 +156,35 @@ func stateProcessPart(s *rewriterState) rewriterStateFunc {
 }
 
 // stateProcessTrackAssetPart TODO
+// https://github.com/soundcloud/soundcloud/blob/c447c7da50505835bee166e5a19f2a292ba0d212/app/services/tracks_service.rb#L203
 func stateProcessTrackAssetPart(s *rewriterState) rewriterStateFunc {
-	// TODO: Figure out how to obtain a key
-	if err := s.storage.Store("process-track-foo", s.part); err != nil {
+	uid, err := s.storage.store(s.part)
+	if err != nil {
+		s.err = fmt.Errorf("Failed to store part: %s", err)
+		return nil
+	}
+
+	// Add the track[original_filename] form field.
+	w, err := s.writer.CreateFormField("track[original_filename]")
+	if err != nil {
+		s.err = fmt.Errorf("Failed to create track[original_filename]: %s", err)
+		return nil
+	}
+
+	if _, err := w.Write([]byte(s.part.FileName())); err != nil {
+		s.err = fmt.Errorf("Failed to write track[original_filename]: %s", err)
+		return nil
+	}
+
+	// Add the track[uid] form field.
+	w, err = s.writer.CreateFormField("track[uid]")
+	if err != nil {
+		s.err = fmt.Errorf("Failed to create track[uid]: %s", err)
+		return nil
+	}
+
+	if _, err := w.Write([]byte(uid)); err != nil {
+		s.err = fmt.Errorf("Failed to write track[uid]: %s", err)
 		return nil
 	}
 
@@ -159,12 +199,12 @@ func stateProcessAuthTokenPart(s *rewriterState) rewriterStateFunc {
 	// TODO: Do we need to check sanity differently?
 	lr := &io.LimitedReader{R: s.part, N: authorizationTokenMaxBytes}
 	if _, err := buf.ReadFrom(lr); err != nil {
+		s.err = fmt.Errorf("Failed to read auth token part: %s", err)
 		return nil
 	}
 
 	// Add authorization header with the obtained token.
-	s.request.Header.Set(authorizationHeader,
-		fmt.Sprintf(authorizationHeaderFormat, buf.Bytes()))
+	s.request.Header.Set(authorizationHeader, fmt.Sprintf(authorizationHeaderFormat, buf.Bytes()))
 
 	return stateNextPart
 }

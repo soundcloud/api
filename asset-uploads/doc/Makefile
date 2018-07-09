@@ -4,7 +4,7 @@ GO  ?= $(shell which go)
 FORMAT ?= svg
 
 FSM_PARSER := fsm.go
-FSM_SOURCE := $(PWD)/../request_rewriter.go
+FSM_SOURCE := $(PWD)/../request.go
 
 default: clean fsm.$(FORMAT)
 
