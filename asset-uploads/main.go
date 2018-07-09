@@ -33,6 +33,8 @@ func main() {
 		awsSecret = flag.String("aws-secret", os.Getenv(envAWSSecretKey), "AWS secret access key")
 		s3Bucket  = flag.String("s3-bucket", os.Getenv(envS3Bucket), "AWS S3 bucket")
 		s3Region  = flag.String("s3-region", os.Getenv(envS3Region), "AWS S3 region")
+
+		maxRequestBytes = flag.Int64("max-request-bytes", 500<<(10*2), "Max request size in bytes")
 	)
 	flag.Parse()
 
@@ -56,7 +58,7 @@ func main() {
 	mw := []middleware{}
 	mw = append(mw, logRequestMiddleware)
 	mw = append(mw, filterRequestMiddleware)
-	mw = append(mw, limitRequestSizeMiddleware)
+	mw = append(mw, limitRequestSizeMiddleware(*maxRequestBytes))
 	mw = append(mw, rewriteRequestMiddleware(s3))
 
 	// Proxy all requests that make it through filters/transforms.

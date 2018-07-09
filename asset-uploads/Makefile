@@ -8,7 +8,14 @@ build:
 	$(GO) build
 
 .PHONY: test
-test: build config/test test_upload_1.dat
+test: test-unit test-integration
+
+.PHONY: test-unit
+test-unit:
+	$(GO) test
+
+.PHONY: test-integration
+test-integration: build config/test test_upload_1.dat
 	docker-compose up -d
 	./scripts/test.sh \
 		--config=config/test \
@@ -23,4 +30,4 @@ test_upload_%.dat:
 .PHONY: clean
 clean:
 	$(GO) clean
-	rm -vf test_upload_*.dat
+	rm -vf config/test test_upload_*.dat

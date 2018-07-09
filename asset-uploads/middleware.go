@@ -40,11 +40,14 @@ func filterRequestMiddleware(next http.Handler) http.Handler {
 }
 
 // limitRequestSizeMiddleware TODO
-func limitRequestSizeMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// TODO: http.MaxBytesReader?
-		next.ServeHTTP(w, r)
-	})
+func limitRequestSizeMiddleware(maxBytes int64) middleware {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			r.Body = http.MaxBytesReader(w, r.Body, maxBytes)
+
+			next.ServeHTTP(w, r)
+		})
+	}
 }
 
 // rewriteRequestMiddleware TODO
