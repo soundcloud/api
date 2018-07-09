@@ -10,6 +10,8 @@ import (
 	"os"
 
 	_ "net/http/pprof"
+
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 func main() {
@@ -64,6 +66,8 @@ func main() {
 	mux.Handle("/", middlewareHandler(mw, proxy))
 
 	go func(a string) {
+		http.Handle("/metrics", promhttp.Handler())
+
 		log.Println(fmt.Sprintf("Listening on %s", a))
 		log.Fatal(http.ListenAndServe(a, nil))
 	}(*adminAddr)
