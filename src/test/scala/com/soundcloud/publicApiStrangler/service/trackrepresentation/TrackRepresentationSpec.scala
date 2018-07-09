@@ -160,7 +160,7 @@ class TrackRepresentationGeoblockingsDecoratorSpec extends UnitSpecification {
   "adds geoblocking info" in new Context {
     val json = Json.toJson(decorator)
 
-    (json \ "available_country_codes").as[JsArray].value.sortBy(_.as[JsString].value) ==== Seq(
+    (json \ "available_country_codes").as[Vector[String]].sorted ==== Vector(
       "AD", "AE", "AF", "AG", "AI", "AL", "AM", "AO", "AQ", "AR", "AS", "AT", "AU", "AW", "AX", "AZ",
       "BA", "BB", "BD", "BE", "BF", "BG", "BH", "BI", "BJ", "BL", "BM", "BN", "BO", "BQ", "BR", "BS",
       "BT", "BV", "BW", "BY", "BZ", "CA", "CC", "CD", "CF", "CG", "CH", "CI", "CK", "CL", "CM", "CN",
@@ -176,7 +176,7 @@ class TrackRepresentationGeoblockingsDecoratorSpec extends UnitSpecification {
       "SA", "SB", "SC", "SD", "SE", "SG", "SH", "SI", "SJ", "SK", "SL", "SM", "SN", "SO", "SR", "SS",
       "ST", "SV", "SX", "SY", "SZ", "TC", "TD", "TF", "TG", "TH", "TJ", "TK", "TL", "TM", "TN", "TO",
       "TR", "TT", "TV", "TW", "TZ", "UA", "UG", "UM", "US", "UY", "UZ", "VA", "VC", "VE", "VG", "VI",
-      "VN", "VU", "WF", "WS", "YE", "YT", "ZA", "ZM", "ZW").map(JsString(_))
+      "VN", "VU", "WF", "WS", "YE", "YT", "ZA", "ZM", "ZW")
   }
 }
 
