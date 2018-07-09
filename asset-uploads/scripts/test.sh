@@ -63,6 +63,9 @@ run() {
   # req_length_loop "$asset_data"
 }
 
+config=""
+asset_data=""
+
 for arg in "$@" ; do
   case $arg in
     --config=*)
@@ -93,5 +96,8 @@ cleanup() {
 }
 
 trap cleanup EXIT
+
+# TODO: Figure out a health check to `sc wait http` for.
+sleep 1
 
 run "$asset_data" 128

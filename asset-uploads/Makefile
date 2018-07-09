@@ -9,7 +9,10 @@ build:
 
 .PHONY: test
 test: build config/test test_upload_1.dat
-	./scripts/test.sh --config=config/test --asset_data=test_upload_1.dat
+	docker-compose up -d
+	./scripts/test.sh \
+		--config=config/test \
+		--asset_data=test_upload_1.dat
 
 config/test: config/test.enc
 	curl -sf -o $@ -T $< http://shibboleth.int.s-cloud.net/decrypt
