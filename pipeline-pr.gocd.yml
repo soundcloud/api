@@ -1,0 +1,32 @@
+---
+format_version: 2
+pipelines:
+  public-api-strangler-pr:
+    group: core-services-pr
+    label_template: "${COUNT}-${git[:7]}"
+    materials:
+      git:
+        scm: public-api-strangler-pr
+    stages:
+    - test:
+        jobs:
+          unit-tests:
+            tasks:
+            - exec:
+                command: remove-containers
+            - exec:
+                command: make
+                arguments:
+                - unit-test
+                - package
+                - publish
+    - end-to-end-tests:
+        jobs:
+          end-to-end-tests:
+            tasks:
+            - exec:
+                command: remove-containers
+            - exec:
+                command: make
+                arguments:
+                - end-to-end-test
