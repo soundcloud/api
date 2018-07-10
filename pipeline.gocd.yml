@@ -53,7 +53,7 @@ pipelines:
                 - promote-to-stable
     - deploy-canary:
         jobs:
-          deply-api-canary:
+          deploy-api-canary:
             tasks:
             - exec:
                 command: remove-containers
@@ -61,7 +61,16 @@ pipelines:
                 command: make
                 arguments:
                 - deploy-k8s-api-canary
-          deply-apitrackupload-canary:
+            - exec:
+                command: make
+                arguments:
+                - scale-down-api-canary
+            - exec:
+                run_if: failed
+                command: make
+                arguments:
+                - scale-down-api-canary
+          deploy-apitrackupload-canary:
             tasks:
             - exec:
                 command: remove-containers
@@ -69,6 +78,15 @@ pipelines:
                 command: make
                 arguments:
                 - deploy-k8s-apitrackupload-canary
+            - exec:
+                command: make
+                arguments:
+                - scale-down-apitrackupload-canary
+            - exec:
+                run_if: failed
+                command: make
+                arguments:
+                - scale-down-apitrackupload-canary
     - deploy-to-production:
         # TODO: remove once we're confident that canaries work
         approval: manual
