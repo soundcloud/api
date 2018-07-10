@@ -50,6 +50,35 @@ func TestMiddlewareHandler(t *testing.T) {
 	}
 }
 
+func TestFilterRequestMiddleware(t *testing.T) {
+	server := httptest.NewServer(
+		middlewareHandler(
+			[]middleware{filterRequestMiddleware},
+			http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				w.WriteHeader(http.StatusOK)
+			}),
+		),
+	)
+	defer server.Close()
+
+	type mp struct{ method, path string }
+
+	examples := map[mp]int{
+		mp{"DELETE", "/"}: http.StatusNotFound,
+		mp{"GET", "/"}:    http.StatusNotFound,
+		mp{"POST", "/"}:   http.StatusOK,
+		mp{"PUT", "/"}:    http.StatusOK,
+	}
+
+	for p, want := range examples {
+		req, _ := http.NewRequest(p.method, server.URL+p.path, nil)
+		res, _ := http.DefaultClient.Do(req)
+		if have := res.StatusCode; have != want {
+			t.Errorf("Expected %d got %d", want, have)
+		}
+	}
+}
+
 func TestLimitRequestSizeMiddleware(t *testing.T) {
 	const maxBytes = 4
 

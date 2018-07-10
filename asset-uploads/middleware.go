@@ -32,8 +32,17 @@ func logRequestMiddleware(next http.Handler) http.Handler {
 
 // filterRequestMiddleware TODO
 func filterRequestMiddleware(next http.Handler) http.Handler {
+	const (
+		// TODO: Not sure if we need to give reasons.
+		notFoundMessage = ""
+	)
+
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// TODO: Limit request method -> PUT/POST
+		if r.Method != "POST" && r.Method != "PUT" {
+			http.Error(w, notFoundMessage, http.StatusNotFound)
+			return
+		}
+
 		// TODO: Limit path/resource -> /tracks? Verify
 		next.ServeHTTP(w, r)
 	})
