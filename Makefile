@@ -108,10 +108,31 @@ promote-to-stable:
 promote-to-release:
 	sc artifact-manager promote release
 
+.PHONY: deploy-k8s-api-canary
+deploy-k8s-api-canary:
+	sc artifact-manager deploy run --cluster="$(CLUSTER)" --component="$(API_COMPONENT)" --track=canary
+	sc k8s scale --cluster="$(CLUSTER)" --component="$(API_COMPONENT)" --track=canary --replicas=2 --force
+	sc check-alerts -p http://prometheus-public-api-strangler.db.s-cloud.net/ \
+		system=public-api-strangler \
+		component=$(API_COMPONENT) \
+		env=production \
+		track=canary
+
 .PHONY: deploy-k8s-api
 deploy-k8s-api:
 	sc artifact-manager deploy run --cluster="$(CLUSTER)" --component="$(API_COMPONENT)"
 
+.PHONY: deploy-k8s-apitrackupload-canary
+deploy-k8s-apitrackupload-canary:
+	sc artifact-manager deploy run --cluster="$(CLUSTER)" --component="$(APITRACKUPLOAD_COMPONENT)" --track=canary
+	sc k8s scale--cluster="$(CLUSTER)" --component="$(APITRACKUPLOAD_COMPONENT)" --track=canary --replicas=2 --force
+	sc check-alerts -p http://prometheus-public-api-strangler.db.s-cloud.net/ \
+		system=public-api-strangler \
+		component=$(APITRACKUPLOAD_COMPONENT) \
+		env=production \
+		track=canary
+
 .PHONY: deploy-k8s-apitrackupload
 deploy-k8s-apitrackupload:
 	sc artifact-manager deploy run --cluster="$(CLUSTER)" --component="$(APITRACKUPLOAD_COMPONENT)"
+

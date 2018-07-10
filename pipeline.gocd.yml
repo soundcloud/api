@@ -1,0 +1,101 @@
+---
+format_version: 2
+pipelines:
+  public-api-strangler:
+    group: core-services
+    label_template: "${COUNT}-${git[:7]}"
+    materials:
+      git:
+        git: git@github.com:soundcloud/public-api-strangler.git
+    stages:
+    - test:
+        jobs:
+          unit-tests-and-publish:
+            tasks:
+            - exec:
+                command: remove-containers
+            - exec:
+                command: make
+                arguments:
+                - unit-test
+            - exec:
+                command: make
+                arguments:
+                - package
+            - exec:
+                command: make
+                arguments:
+                - publish
+                - publish-deploy
+            - exec:
+                command: make
+                arguments:
+                - contract-upload
+    - end-to-end-tests:
+        jobs:
+          end-to-end-tests:
+            tasks:
+            - exec:
+                command: remove-containers
+            - exec:
+                command: make
+                arguments:
+                - end-to-end-test
+    - promote-to-stable:
+        jobs:
+          promote-to-stable:
+            tasks:
+            - exec:
+                command: remove-containers
+            - exec:
+                command: make
+                arguments:
+                - promote-to-stable
+    - deploy-canary:
+        jobs:
+          deply-api-canary:
+            tasks:
+            - exec:
+                command: remove-containers
+            - exec:
+                command: make
+                arguments:
+                - deploy-k8s-api-canary
+          deply-apitrackupload-canary:
+            tasks:
+            - exec:
+                command: remove-containers
+            - exec:
+                command: make
+                arguments:
+                - deploy-k8s-apitrackupload-canary
+    - deploy-to-production:
+        # TODO: remove once we're confident that canaries work
+        approval: manual
+        jobs:
+          promote-to-release-then-deploy:
+            tasks:
+            - exec:
+                command: remove-containers
+            - exec:
+                command: make
+                arguments:
+                - promote-to-release
+            - exec:
+                command: make
+                arguments:
+                - deploy-k8s-api
+            - exec:
+                command: make
+                arguments:
+                - deploy-k8s-apitrackupload
+    - promote-contract-tests:
+        jobs:
+          promote-tests:
+            tasks:
+            - exec:
+                command: remove-containers
+            - exec:
+                command: make
+                arguments:
+                - contract-promote
