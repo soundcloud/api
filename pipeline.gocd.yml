@@ -88,8 +88,6 @@ pipelines:
                 arguments:
                 - scale-down-apitrackupload-canary
     - deploy-to-production:
-        # TODO: remove once we're confident that canaries work
-        approval: manual
         jobs:
           promote-to-release-then-deploy:
             tasks:
