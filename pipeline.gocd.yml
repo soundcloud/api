@@ -13,8 +13,6 @@ pipelines:
           unit-tests-and-publish:
             tasks:
             - exec:
-                command: remove-containers
-            - exec:
                 command: make
                 arguments:
                 - unit-test
@@ -36,8 +34,6 @@ pipelines:
           end-to-end-tests:
             tasks:
             - exec:
-                command: remove-containers
-            - exec:
                 command: make
                 arguments:
                 - end-to-end-test
@@ -46,8 +42,6 @@ pipelines:
           promote-to-stable:
             tasks:
             - exec:
-                command: remove-containers
-            - exec:
                 command: make
                 arguments:
                 - promote-to-stable
@@ -55,8 +49,6 @@ pipelines:
         jobs:
           deploy-api-canary:
             tasks:
-            - exec:
-                command: remove-containers
             - exec:
                 command: make
                 arguments:
@@ -72,8 +64,6 @@ pipelines:
                 - scale-down-api-canary
           deploy-apitrackupload-canary:
             tasks:
-            - exec:
-                command: remove-containers
             - exec:
                 command: make
                 arguments:
@@ -92,8 +82,6 @@ pipelines:
           promote-to-release-then-deploy:
             tasks:
             - exec:
-                command: remove-containers
-            - exec:
                 command: make
                 arguments:
                 - promote-to-release
@@ -109,8 +97,6 @@ pipelines:
         jobs:
           promote-tests:
             tasks:
-            - exec:
-                command: remove-containers
             - exec:
                 command: make
                 arguments:

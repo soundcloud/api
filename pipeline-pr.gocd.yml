@@ -13,8 +13,6 @@ pipelines:
           unit-tests:
             tasks:
             - exec:
-                command: remove-containers
-            - exec:
                 command: make
                 arguments:
                 - unit-test
@@ -24,8 +22,6 @@ pipelines:
         jobs:
           end-to-end-tests:
             tasks:
-            - exec:
-                command: remove-containers
             - exec:
                 command: make
                 arguments:
