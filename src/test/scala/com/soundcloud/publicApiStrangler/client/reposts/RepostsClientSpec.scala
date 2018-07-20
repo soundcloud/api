@@ -1,21 +1,17 @@
 package com.soundcloud.publicApiStrangler.client.reposts
 
-import java.util
-
 import au.com.dius.pact.consumer.dsl.PactDslJsonBody
 import au.com.dius.pact.consumer.{PactSpec, UnitSpecsSupport}
-import au.com.dius.pact.model.ProviderState
-import au.com.dius.pact.model.matchingrules.MatchingRulesImpl
-import com.soundcloud.jvmkit.module.http.client.config.HttpClientConfig
 import com.soundcloud.jvmkit.module.http.client.{JsonClient, Params}
+import com.soundcloud.jvmkit.module.http.client.config.HttpClientConfig
 import com.soundcloud.jvmkit.module.servicediscovery.ServiceEntryPoint
 import com.soundcloud.jvmkit.module.telemetry.{MetricsRegistryImpl, Telemetry}
+import com.soundcloud.publicApiStrangler.test.UnitSpecification
+import com.soundcloud.jvmkit.module.util.{Path, ResourceName, Urn}
 import com.soundcloud.jvmkit.module.util.config.InMemoryConfig
 import com.soundcloud.jvmkit.module.util.http.Headers
 import com.soundcloud.jvmkit.module.util.session.{UserSession, UserSessionBuilder}
-import com.soundcloud.jvmkit.module.util.{Path, ResourceName, Urn}
 import com.soundcloud.publicApiStrangler.client.reposts.RepostsClient._
-import com.soundcloud.publicApiStrangler.test.UnitSpecification
 import com.twitter.finagle.http.{HeaderMap, Status}
 import com.twitter.util.{Await, Future}
 import org.mockito.Mockito.when
@@ -60,7 +56,7 @@ class RepostsClientSpec extends UnitSpecification with PactSpec with UnitSpecsSu
         .closeObject()
         .closeArray()
     )
-  import scala.collection.JavaConverters._
+
   def repostableCountsResponse(counts: Seq[(Urn, Long)]) =
     buildResponse(
       status = 200,
@@ -68,14 +64,14 @@ class RepostsClientSpec extends UnitSpecification with PactSpec with UnitSpecsSu
       maybeBody = Some(
         Json.obj("counts" -> counts.map { case (urn, count) => Json.obj("urn" -> urn.toString, "count" -> count) }).toString
       ),
-      matchers = MatchingRulesImpl.fromMap(Map(
-        "$.body.counts[*].count" -> Map("match" -> "integer").asJava,
-        "$.body.counts[*].urn" -> Map("regex" -> "soundcloud:[a-z0-9-]+:[a-z0-9-]+").asJava,
+      matchers = Map(
+        "$.body.counts[*].count" -> Map("match" -> "integer"),
+        "$.body.counts[*].urn" -> Map("regex" -> "soundcloud:[a-z0-9-]+:[a-z0-9-]+"),
         "$.body.counts" -> Map(
           "min" -> counts.length.toString,
           "match" -> "type"
-        ).asJava
-      ).asJava)
+        )
+      )
     )
 
   def getRepostsResponse(repostable: Urn, user: Urn) =
@@ -95,25 +91,25 @@ class RepostsClientSpec extends UnitSpecification with PactSpec with UnitSpecsSu
       status = 200,
       headers = commonHeaders,
       maybeBody = Some("""{"reposts":[]}"""),
-      matchers = new MatchingRulesImpl()
+      matchers = Map.empty
     )
 
   val countsInteractions = List(
     buildInteraction(
       description = "Get count of user's track reposts",
-      states = List.empty,
+      maybeState = None,
       request = buildRequest(path = s"/users/$user/track_reposts/count", method = "GET"),
       response = userCountsResponse(12L)
     ),
     buildInteraction(
       description = "Get count of user's playlist reposts",
-      states = List.empty,
+      maybeState = None,
       request = buildRequest(path = s"/users/$user/playlist_reposts/count", method = "GET"),
       response = userCountsResponse(13L)
     ),
     buildInteraction(
       description = "Get counts of reposts for tracks",
-      states = List.empty,
+      maybeState = None,
       request = buildRequest(
         path = s"/tracks/reposts/count",
         method = "GET",
@@ -123,7 +119,7 @@ class RepostsClientSpec extends UnitSpecification with PactSpec with UnitSpecsSu
     ),
     buildInteraction(
       description = "Get counts of reposts for playlists",
-      states = List.empty,
+      maybeState = None,
       request = buildRequest(
         path = s"/playlists/reposts/count",
         method = "GET",
@@ -136,43 +132,43 @@ class RepostsClientSpec extends UnitSpecification with PactSpec with UnitSpecsSu
   val trackRepostInteractions = List(
     buildInteraction(
       description = "Creating a track repost",
-      states = states("soundcloud:tracks:1 was not reposted by soundcloud:users:1"),
+      maybeState = Some("soundcloud:tracks:1 was not reposted by soundcloud:users:1"),
       request = createRequest(Urn("soundcloud:tracks:1"), user),
       response = buildResponse(status = 201)
     ),
     buildInteraction(
       description = "Deleting a track repost",
-      states = states("soundcloud:tracks:1 was reposted by soundcloud:users:1"),
+      maybeState = Some("soundcloud:tracks:1 was reposted by soundcloud:users:1"),
       request = deleteRequest(Urn("soundcloud:tracks:1"), user),
       response = buildResponse(status = 202)
     ),
     buildInteraction(
       description = "Creating a track repost",
-      states = states("soundcloud:tracks:2 does not exist"),
+      maybeState = Some("soundcloud:tracks:2 does not exist"),
       request = createRequest(Urn("soundcloud:tracks:2"), user),
       response = buildResponse(status = 404)
     ),
     buildInteraction(
       description = "Creating a track repost",
-      states = states("soundcloud:tracks:3 was reposted by soundcloud:users:1"),
+      maybeState = Some("soundcloud:tracks:3 was reposted by soundcloud:users:1"),
       request = createRequest(Urn("soundcloud:tracks:3"), user),
       response = buildResponse(status = 200)
     ),
     buildInteraction(
       description = "Deleting a track repost",
-      states = states("soundcloud:tracks:3 was not reposted by soundcloud:users:1"),
+      maybeState = Some("soundcloud:tracks:3 was not reposted by soundcloud:users:1"),
       request = deleteRequest(Urn("soundcloud:tracks:3"), user),
       response = buildResponse(status = 404)
     ),
     buildInteraction(
       description = "Creating a track repost",
-      states = states("soundcloud:users:2 is blocked for spam"),
+      maybeState = Some("soundcloud:users:2 is blocked for spam"),
       request = createRequest(Urn("soundcloud:tracks:4"), spamUser),
       response = buildResponse(status = 429)
     ),
     buildInteraction(
       description = "Getting reposters of a track",
-      states = states("soundcloud:tracks:1 has at least one repost"),
+      maybeState = Some("soundcloud:tracks:1 has at least one repost"),
       request = buildRequest(
         path = s"/tracks/${track(1)}/reposts",
         method = "GET",
@@ -182,7 +178,7 @@ class RepostsClientSpec extends UnitSpecification with PactSpec with UnitSpecsSu
     ),
     buildInteraction(
       description = "Getting reposters of a track",
-      states = states("soundcloud:tracks:2 has no reposts"),
+      maybeState = Some("soundcloud:tracks:2 has no reposts"),
       request = buildRequest(
         path = s"/tracks/${track(2)}/reposts",
         method = "GET",
@@ -192,50 +188,46 @@ class RepostsClientSpec extends UnitSpecification with PactSpec with UnitSpecsSu
     )
   )
 
-  private def states(name: String) = {
-    List(new ProviderState(name, new util.HashMap[String, Any]()))
-  }
-
   val playlistRepostersInteractions = List(
     buildInteraction(
       description = "Creating a playlist repost",
-      states = states("soundcloud:playlists:1 was not reposted by soundcloud:users:1"),
+      maybeState = Some("soundcloud:playlists:1 was not reposted by soundcloud:users:1"),
       request = createRequest(Urn("soundcloud:playlists:1"), user),
       response = buildResponse(status = 201)
     ),
     buildInteraction(
       description = "Deleting a playlist repost",
-      states = states("soundcloud:playlists:1 was reposted by soundcloud:users:1"),
+      maybeState = Some("soundcloud:playlists:1 was reposted by soundcloud:users:1"),
       request = deleteRequest(Urn("soundcloud:playlists:1"), user),
       response = buildResponse(status = 202)
     ),
     buildInteraction(
       description = "Creating a playlist repost",
-      states = states("soundcloud:playlists:2 does not exist"),
+      maybeState = Some("soundcloud:playlists:2 does not exist"),
       request = createRequest(Urn("soundcloud:playlists:2"), user),
       response = buildResponse(status = 404)
     ),
     buildInteraction(
       description = "Creating a playlist repost",
-      states = states("soundcloud:playlists:3 was reposted by soundcloud:users:1"),
+      maybeState = Some("soundcloud:playlists:3 was reposted by soundcloud:users:1"),
       request = createRequest(Urn("soundcloud:playlists:3"), user),
       response = buildResponse(status = 200)
     ),
     buildInteraction(
       description = "Deleting a playlist repost",
-      states = states("soundcloud:playlists:3 was not reposted by soundcloud:users:1"),
+      maybeState = Some("soundcloud:playlists:3 was not reposted by soundcloud:users:1"),
       request = deleteRequest(Urn("soundcloud:playlists:3"), user),
       response = buildResponse(status = 404)
     ),
     buildInteraction(
       description = "Creating a playlist repost",
-      states = states("soundcloud:users:2 is blocked for spam"),
+      maybeState = Some("soundcloud:users:2 is blocked for spam"),
       request = createRequest(Urn("soundcloud:playlists:4"), spamUser),
       response = buildResponse(status = 429)
     ),
     buildInteraction(
       description = "Getting reposters of a playlist",
-      states = states("soundcloud:playlists:1 has at least one repost"),
+      maybeState = Some("soundcloud:playlists:1 has at least one repost"),
       request = buildRequest(
         path = s"/playlists/${playlist(1)}/reposts",
         method = "GET",
@@ -245,7 +237,7 @@ class RepostsClientSpec extends UnitSpecification with PactSpec with UnitSpecsSu
     ),
     buildInteraction(
       description = "Getting reposters of a playlist",
-      states = states("soundcloud:playlists:2 has no reposts"),
+      maybeState = Some("soundcloud:playlists:2 has no reposts"),
       request = buildRequest(
         path = s"/playlists/${playlist(2)}/reposts",
         method = "GET",
@@ -258,7 +250,7 @@ class RepostsClientSpec extends UnitSpecification with PactSpec with UnitSpecsSu
   val userRepostsInteractions = List(
     buildInteraction(
       description = "Getting tracks reposted by a user",
-      states = states("soundcloud:tracks:1 was reposted by soundcloud:users:1"),
+      maybeState = Some("soundcloud:tracks:1 was reposted by soundcloud:users:1"),
       request = buildRequest(
         path = s"/users/${user.toString}/track_reposts",
         method = "GET",
@@ -268,7 +260,7 @@ class RepostsClientSpec extends UnitSpecification with PactSpec with UnitSpecsSu
     ),
     buildInteraction(
       description = "Getting playlists reposted by a user",
-      states = states("soundcloud:playlists:1 was reposted by soundcloud:users:1"),
+      maybeState = Some("soundcloud:playlists:1 was reposted by soundcloud:users:1"),
       request = buildRequest(
         path = s"/users/${user.toString}/playlist_reposts",
         method = "GET",
