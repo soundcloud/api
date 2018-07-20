@@ -44,7 +44,7 @@ class TrackMothershipDispatcherWithCounts(userAuthentication: UserAuthentication
 
   private def enrichResponse(session: UserSession, userToTrackUrn: Set[(Urn, Urn)], responseJson: JsValue, response: Response): Future[Response] = {
     stitchClient.countsForTracks(session, userToTrackUrn).map { counts: Map[Urn, StitchCounts] => {
-      responseJson.as[Vector[JsValue]].map(jsValue => {
+      responseJson.as[List[JsValue]].map(jsValue => {
         (for {
           (_, trackId) <- getIds(jsValue)
           trackCounts <- counts.get(new Urn("soundcloud", "tracks", trackId.toString))
@@ -60,7 +60,7 @@ class TrackMothershipDispatcherWithCounts(userAuthentication: UserAuthentication
       })
     }
     }.handle {
-      case NonFatal(_) => responseJson.as[Vector[JsValue]]
+      case NonFatal(_) => responseJson.as[List[JsValue]]
     }.map(newContent => {
       response.setContentString(Json.stringify(new JsArray(newContent)))
       response

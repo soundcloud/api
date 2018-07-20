@@ -80,7 +80,7 @@ class RepostersHandlerSpec extends UnitSpecification {
       val trackReposts = Reposts(List(user), Some("ohai"))
       val noNextHrefTrackReposts = Reposts(List(user), None)
       val okidokiUsersJson = withContentsOf("okidoki", "users").as[JsArray]
-      val okidokiUserResponse = RepostsUser(okidokiUsersJson.as[List[JsValue]].head,
+      val okidokiUserResponse = RepostsUser(okidokiUsersJson(0).get,
         baseUrl,
         None,
         None,
@@ -163,7 +163,7 @@ class RepostersHandlerSpec extends UnitSpecification {
       val playlistReposts = Reposts(List(user), Some("ohai"))
       val noNextHrefPlaylistReposts = Reposts(List(user), None)
       val okidokiUsersJson = withContentsOf("okidoki", "users").as[JsArray]
-      val okidokiUserResponse = RepostsUser(okidokiUsersJson.as[List[JsValue]].head,
+      val okidokiUserResponse = RepostsUser(okidokiUsersJson(0).get,
         baseUrl,
         None,
         None,

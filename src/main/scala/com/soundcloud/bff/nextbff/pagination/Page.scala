@@ -1,6 +1,5 @@
 package com.soundcloud.bff.nextbff.pagination
 
-import com.netaporter.uri.Parameters.ParamSeq
 import com.netaporter.uri.config.UriConfig
 import com.netaporter.uri.encoding.percentEncode
 import com.netaporter.uri.{QueryString, StringPathPart, Uri}
@@ -31,8 +30,8 @@ trait Page[T] {
     pathParts = path.split('/').filterNot(_.isEmpty).toSeq.map(StringPathPart.apply),
     query = QueryString(allQueryParams)).toString(UriConfig(percentEncode))
 
-  private[this] lazy val allQueryParams: ParamSeq =
-    (extraParams ++ params).mapValues(_.value.headOption).toSeq
+  private[this] lazy val allQueryParams =
+    (extraParams ++ params).mapValues(_.value.head).toSeq
 }
 
 object Page {

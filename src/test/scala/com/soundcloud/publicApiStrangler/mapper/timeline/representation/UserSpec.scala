@@ -3,12 +3,12 @@ package com.soundcloud.publicApiStrangler.mapper.timeline.representation
 import com.soundcloud.bff.nextbff.mapping.MappingContext
 import com.soundcloud.publicApiStrangler.test.UnitSpecification
 import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures.withContentsOf
-import play.api.libs.json.{JsArray, Json}
+import play.api.libs.json.Json
 
 class UserSpec extends UnitSpecification {
   implicit val context = mock[MappingContext]
 
-  val json = withContentsOf("okidoki", "users_with_deprecated_counts").as[JsArray].apply(0)
+  val json = withContentsOf("okidoki", "users_with_deprecated_counts")(0).get
   val baseUrl = ""
   val maybeFollowCounts = None
 
