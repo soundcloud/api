@@ -1,0 +1,24 @@
+---
+format_version: 2
+pipelines:
+  public-api-strangler-memcached:
+    group: core-services
+    label_template: "${COUNT}-${git[:7]}"
+    materials:
+      git:
+        git: git@github.com:soundcloud/sc-k8s-memcached.git
+    stages:
+    - deploy:
+       approval: manual
+        jobs:
+          deploy:
+            tasks:
+            - exec:
+                command: make
+                arguments:
+                - deploy
+                - scale
+                - CLUSTER=k2
+                - SYSTEM=public-api-strangler
+                - STORAGE=512
+                - REPLICAS=10
