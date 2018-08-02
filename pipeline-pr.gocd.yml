@@ -1,7 +1,7 @@
 ---
 format_version: 2
 pipelines:
-  public-api-strangler--pr:
+  public-api-strangler-pr:
     group: core-services-pr
     label_template: "${COUNT}-${git[:7]}"
     materials:
