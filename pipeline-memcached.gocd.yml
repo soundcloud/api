@@ -9,7 +9,7 @@ pipelines:
         git: git@github.com:soundcloud/sc-k8s-memcached.git
     stages:
     - deploy:
-       approval: manual
+        approval: manual
         jobs:
           deploy:
             tasks:
