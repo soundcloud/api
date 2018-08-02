@@ -3,14 +3,15 @@ import sbt.Keys._
 import sbt._
 
 val jvmkitVersion = "4.2.0"
-val playJsonVersion = "2.5.14"
+val playJsonVersion = "2.6.9"
+val specs2Version = "3.8.6"
 
 lazy val publicApiStrangler = project.in(file("."))
   .settings(
-    scalaVersion := "2.11.12",
+    scalaVersion := "2.12.6",
     name := "public-api-strangler",
     libraryDependencies ++= Seq(
-      "com.netaporter" %% "scala-uri" % "0.4.4",
+      "com.netaporter" %% "scala-uri" % "0.4.16",
       "com.soundcloud" %% "jvmkit-http-client" % jvmkitVersion,
       "com.soundcloud" %% "jvmkit-admin-server" % jvmkitVersion,
       "com.soundcloud" %% "jvmkit-bff" % jvmkitVersion,
@@ -25,8 +26,9 @@ lazy val publicApiStrangler = project.in(file("."))
       "com.squareup.okhttp3" % "mockwebserver" % "3.8.1" % "test",
       "org.apache.httpcomponents" % "httpclient" % "4.5.2" % "test",
       "org.apache.httpcomponents" % "httpmime" % "4.5.2" % "test",
-      "org.specs2" %% "specs2-core" % "3.6.4" % "test",
-      "org.specs2" %% "specs2-mock" % "3.6.4" % "test"
+
+      "org.specs2" %% "specs2-core" % specs2Version % "test",
+      "org.specs2" %% "specs2-mock" % specs2Version % "test"
     ),
     mainClass in Compile := Some("com.soundcloud.publicApiStrangler.App")
   )
@@ -36,10 +38,10 @@ lazy val publicApiStrangler = project.in(file("."))
 lazy val endToEnd = project.in(file("endToEndTests"))
   .settings(
     name := "endToEnd",
-    scalaVersion := "2.11.12",
+    scalaVersion := "2.12.6",
     libraryDependencies ++= Seq(
-      "org.specs2" %% "specs2-core" % "3.6.4",
-      "org.specs2" %% "specs2-mock" % "3.6.4",
+      "org.specs2" %% "specs2-core" % specs2Version,
+      "org.specs2" %% "specs2-mock" % specs2Version,
       "org.apache.httpcomponents" % "httpclient" % "4.5.2",
       "org.apache.httpcomponents" % "httpmime" % "4.5.2",
       "com.typesafe.play" %% "play-json" % playJsonVersion,
