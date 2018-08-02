@@ -20,5 +20,6 @@ pipelines:
                 - scale
                 - CLUSTER=k2
                 - SYSTEM=public-api-strangler
+                - CPU=0.2
                 - STORAGE=512
                 - REPLICAS=10
