@@ -21,9 +21,6 @@ test-integration: build config/test test_upload_1.dat
 		--config=config/test \
 		--asset_data=test_upload_1.dat
 
-config/test: config/test.enc
-	curl -sf -o $@ -T $< http://shibboleth.int.s-cloud.net/decrypt
-
 test_upload_%.dat:
 	dd if=/dev/urandom of=$@ bs=1MB count=$(@:test_upload_%.dat=%)
 
@@ -31,3 +28,7 @@ test_upload_%.dat:
 clean:
 	$(GO) clean
 	rm -vf config/test test_upload_*.dat
+
+# Generic target for decrypting files with shibboleth
+%: %.enc
+	curl --silent --fail --output $@ --upload-file $< https://shibboleth.int.s-cloud.net/decrypt
