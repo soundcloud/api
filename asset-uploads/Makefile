@@ -15,8 +15,7 @@ test-unit:
 	$(GO) test
 
 .PHONY: test-integration
-test-integration: build config/test test_upload_1.dat
-	docker-compose up -d
+test-integration: build config/test test_upload_1.dat dependencies
 	./scripts/test.sh \
 		--config=config/test \
 		--asset_data=test_upload_1.dat
@@ -28,6 +27,11 @@ test_upload_%.dat:
 clean:
 	$(GO) clean
 	rm -vf config/test test_upload_*.dat
+
+.PHONY: dependencies
+dependencies:
+	docker-compose down
+	docker-compose up -d
 
 # Generic target for decrypting files with shibboleth
 %: %.enc
