@@ -54,12 +54,17 @@ func main() {
 		log.Fatalf("Failed to initialize S3 storage: %v", err)
 	}
 
+	transcoder, err := newTranscoder(moshi)
+	if err != nil {
+		log.Fatal("Failed to initialize transcoder.")
+	}
+
 	// Filter/transform the incoming request through a middleware stack.
 	mw := []middleware{}
 	mw = append(mw, logRequestMiddleware)
 	mw = append(mw, filterRequestMiddleware)
 	mw = append(mw, limitRequestSizeMiddleware(*maxRequestBytes))
-	mw = append(mw, rewriteRequestMiddleware(s3))
+	mw = append(mw, rewriteRequestMiddleware(s3, transcoder))
 
 	// Proxy all requests that make it through filters/transforms.
 	proxy := httputil.NewSingleHostReverseProxy(targetURL)

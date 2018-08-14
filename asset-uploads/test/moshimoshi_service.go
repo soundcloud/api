@@ -44,5 +44,17 @@ func main() {
 		w.Write([]byte(fmt.Sprintf(responseFormat, uid[0:uidBytes])))
 	}))
 
+	http.HandleFunc("/transcodings", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		log.Println(r)
+
+		if r.Method != "POST" {
+			http.Error(w, fmt.Sprintf("Unsupported HTTP method: %s", r.Method), http.StatusBadRequest)
+			return
+		}
+
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte("{\"status\": \"queued\"}"))
+	}))
+
 	http.ListenAndServe(*listenAddr, nil)
 }

@@ -60,8 +60,8 @@ func limitRequestSizeMiddleware(maxBytes int64) middleware {
 }
 
 // rewriteRequestMiddleware TODO
-func rewriteRequestMiddleware(s storage) middleware {
-	rw := &requestRewriter{storage: s}
+func rewriteRequestMiddleware(s storage, t transcoder) middleware {
+	rw := &requestRewriter{storage: s, transcoder: t}
 
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

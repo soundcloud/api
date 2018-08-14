@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 )
 
 type moshimoshiClient struct {
@@ -38,4 +39,25 @@ func (u *moshimoshiClient) createTrackUID() (string, error) {
 	}
 
 	return res.UID, nil
+}
+
+func (u *moshimoshiClient) createTranscoding(uid string) (bool, error) {
+	const (
+		accessToken       = "public-api-strangler-assets"
+		jsonContentType   = "application/json"
+		trackUIDsEndpoint = "http://%s/transcodings?access_token=%s"
+	)
+
+	url := fmt.Sprintf(trackUIDsEndpoint, u.host, accessToken)
+
+	req, err := u.httpClient.Post(url, jsonContentType, strings.NewReader(fmt.Sprintf("{\"transcoding\": {\"uid\": \"%s\"}}", uid)))
+	if err != nil {
+		return false, err
+	}
+
+	if req.StatusCode != http.StatusOK {
+		return false, fmt.Errorf("Failed to trigger transcoding UID: %d", req.StatusCode)
+	}
+
+	return true, nil
 }

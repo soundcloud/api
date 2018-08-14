@@ -13,19 +13,44 @@ import (
 	"strings"
 )
 
+type transcoder interface {
+	transcode(string) (bool, error)
+}
+
+type moshimoshiTranscoder struct {
+	moshimoshiClient *moshimoshiClient
+}
+
+func newTranscoder(moshi *moshimoshiClient) (*moshimoshiTranscoder, error) {
+	transcoder := &moshimoshiTranscoder{
+		moshimoshiClient: moshi,
+	}
+
+	return transcoder, nil
+}
+
+func (mmC *moshimoshiTranscoder) transcode(uid string) (bool, error) {
+
+	log.Printf("*** Transcode uid: %s", uid)
+
+	return mmC.moshimoshiClient.createTranscoding(uid)
+}
+
 type requestRewriter struct {
-	storage storage
+	storage    storage
+	transcoder transcoder
 }
 
 func (rw *requestRewriter) run(r *http.Request) error {
 	s := &rewriterState{
-		request: r,
-		storage: rw.storage,
+		request:    r,
+		storage:    rw.storage,
+		transcoder: rw.transcoder,
 	}
 
 	f := stateProcessHeaders
 	for f != nil {
-		log.Printf("%v\n", s)
+		//		log.Printf("%v\n", s)
 
 		f = f(s)
 	}
@@ -36,7 +61,8 @@ func (rw *requestRewriter) run(r *http.Request) error {
 type rewriterState struct {
 	request *http.Request
 
-	storage storage
+	storage    storage
+	transcoder transcoder
 
 	boundary string
 	reader   *multipart.Reader
@@ -159,6 +185,7 @@ func stateProcessPart(s *rewriterState) rewriterStateFunc {
 // https://github.com/soundcloud/soundcloud/blob/c447c7da50505835bee166e5a19f2a292ba0d212/app/services/tracks_service.rb#L203
 func stateProcessTrackAssetPart(s *rewriterState) rewriterStateFunc {
 	uid, err := s.storage.store(s.part)
+
 	if err != nil {
 		s.err = fmt.Errorf("Failed to store part: %s", err)
 		return nil
@@ -171,10 +198,13 @@ func stateProcessTrackAssetPart(s *rewriterState) rewriterStateFunc {
 		return nil
 	}
 
-	if _, err := w.Write([]byte(s.part.FileName())); err != nil {
+	filename := s.part.FileName()
+	if _, err := w.Write([]byte(filename)); err != nil {
 		s.err = fmt.Errorf("Failed to write track[original_filename]: %s", err)
 		return nil
 	}
+
+	log.Printf("Stored %s as %s", filename, uid)
 
 	// Add the track[uid] form field.
 	w, err = s.writer.CreateFormField("track[uid]")
@@ -187,6 +217,17 @@ func stateProcessTrackAssetPart(s *rewriterState) rewriterStateFunc {
 		s.err = fmt.Errorf("Failed to write track[uid]: %s", err)
 		return nil
 	}
+
+	log.Printf("Wrote uid=%s, filename=%s to request.", uid, filename)
+
+	success, err := s.transcoder.transcode(uid)
+
+	if err != nil {
+		s.err = fmt.Errorf("Failed to trigger transcoding for Track<uid = \"%s\">", uid)
+		return nil
+	}
+
+	log.Printf("Transcoding success: %t", success)
 
 	return stateNextPart
 }
