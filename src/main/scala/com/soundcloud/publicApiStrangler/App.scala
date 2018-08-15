@@ -5,6 +5,7 @@ import com.soundcloud.jvmkit.module.bff.BffHttpServer
 import com.soundcloud.jvmkit.module.bff.ratelimiting.facade._
 import com.soundcloud.jvmkit.module.http.server.akira.ResponseDumpSessionRegistry
 import com.soundcloud.jvmkit.module.http.server.config.HttpServerConfig
+import com.soundcloud.jvmkit.module.http.server.notifiers.{AirbrakeConfig, AirbrakeNotifier}
 import com.soundcloud.jvmkit.module.http.server.{HandlerRouterBuilder, ResponseBuilder}
 import com.soundcloud.jvmkit.module.memcached.RichMemcachedClient
 import com.soundcloud.jvmkit.module.memcached.config.MemcachedClientConfig
@@ -125,7 +126,8 @@ object App extends Handlers with FallbackHandlerConfiguration {
       telemetry = moduleTelemetry,
       router = router,
       customFilters = additionalFilters,
-      responseDumpSessionRegistry = Some(responseDump)
+      responseDumpSessionRegistry = Some(responseDump),
+      notifier = new AirbrakeNotifier(AirbrakeConfig.from(config))
     ).start().join()
   }
 }

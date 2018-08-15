@@ -1,14 +1,11 @@
-import com.soundcloud.sbtkit.SbtKitPlugin
-import sbt.Keys._
-import sbt._
-
-val jvmkitVersion = "4.2.0"
+val jvmkitVersion = "6.0.3"
 val playJsonVersion = "2.6.9"
-val specs2Version = "3.8.6"
+val specs2Version = "3.8.9" // FIXME: upgrade, 4.3.3 fails randomly on different specs
+val httpComponentsVersion = "4.5.6"
 
 lazy val publicApiStrangler = project.in(file("."))
+  .enablePlugins(SbtKitPlugin)
   .settings(
-    scalaVersion := "2.12.6",
     name := "public-api-strangler",
     libraryDependencies ++= Seq(
       "com.netaporter" %% "scala-uri" % "0.4.16",
@@ -18,37 +15,30 @@ lazy val publicApiStrangler = project.in(file("."))
       "com.soundcloud" %% "jvmkit-rollout" % jvmkitVersion,
       "com.soundcloud" %% "jvmkit-memcached" % jvmkitVersion,
       "com.typesafe.play" %% "play-json" % playJsonVersion,
-      "com.fasterxml.uuid" % "java-uuid-generator" % "3.1.3",
-      "commons-codec" % "commons-codec" % "1.9",
-      "org.jsoup" % "jsoup" % "1.8.3",
+      "org.jsoup" % "jsoup" % "1.11.3",
       "ch.qos.logback" % "logback-classic" % "1.2.3",
 
-      "com.squareup.okhttp3" % "mockwebserver" % "3.8.1" % "test",
-      "org.apache.httpcomponents" % "httpclient" % "4.5.2" % "test",
-      "org.apache.httpcomponents" % "httpmime" % "4.5.2" % "test",
+      "com.squareup.okhttp3" % "mockwebserver" % "3.11.0" % "test",
+      "org.apache.httpcomponents" % "httpclient" % httpComponentsVersion % "test",
+      "org.apache.httpcomponents" % "httpmime" % httpComponentsVersion % "test",
 
       "org.specs2" %% "specs2-core" % specs2Version % "test",
       "org.specs2" %% "specs2-mock" % specs2Version % "test"
     ),
     mainClass in Compile := Some("com.soundcloud.publicApiStrangler.App")
   )
-  .enablePlugins(SbtKitPlugin)
-
 
 lazy val endToEnd = project.in(file("endToEndTests"))
+  .enablePlugins(SbtKitPlugin)
   .settings(
     name := "endToEnd",
-    scalaVersion := "2.12.6",
     libraryDependencies ++= Seq(
       "org.specs2" %% "specs2-core" % specs2Version,
       "org.specs2" %% "specs2-mock" % specs2Version,
-      "org.apache.httpcomponents" % "httpclient" % "4.5.2",
-      "org.apache.httpcomponents" % "httpmime" % "4.5.2",
+      "org.apache.httpcomponents" % "httpclient" % httpComponentsVersion,
+      "org.apache.httpcomponents" % "httpmime" % httpComponentsVersion,
       "com.typesafe.play" %% "play-json" % playJsonVersion,
       "com.soundcloud" %% "jvmkit-bff" % jvmkitVersion,
       "com.soundcloud" %% "jvmkit-http-client" % jvmkitVersion
     )
   )
-  .enablePlugins(SbtKitPlugin)
-
-

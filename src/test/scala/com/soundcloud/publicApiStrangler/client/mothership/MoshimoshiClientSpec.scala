@@ -12,7 +12,6 @@ import com.soundcloud.publicApiStrangler.test.UnitSpecification
 import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures._
 import com.twitter.finagle.http.{Method, Response, Status}
 import com.twitter.util.{Await, Future}
-import org.mockito.Matchers.{eq => matchEq}
 import org.mockito.Mockito.{verify, when}
 import play.api.libs.json.{JsObject, Json, _}
 
@@ -624,7 +623,7 @@ class MoshimoshiClientSpec extends UnitSpecification {
 
       createTrackResult ==== UnprocessableEntity(Seq(Error(message = "has already been taken", subject = Some("permalink"))))
 
-      verify(service).postWithSession(any[UserSession], any[Path], any[Params], matchEq(buildHeaders("X-Forwarded-For" -> "8.8.8.8", "X-Real-IP" -> "8.8.8.8")), any[Option[String]])
+      verify(service).postWithSession(any[UserSession], any[Path], any[Params], ===(buildHeaders("X-Forwarded-For" -> "8.8.8.8", "X-Real-IP" -> "8.8.8.8")), any[Option[String]])
     }
 
     trait TrackCreateWithoutPermalink extends Context {
@@ -864,7 +863,7 @@ class MoshimoshiClientSpec extends UnitSpecification {
       expectResponse(path, Params.empty, Method.Put, filteredHeaders, Status(404), bodies)
       updateTrackResult ==== NotFound(Nil)
 
-      verify(service).putWithSession(any[UserSession], any[Path], any[Params], matchEq(buildHeaders("X-Forwarded-For" -> "8.8.8.8", "X-Real-IP" -> "8.8.8.8")), any[Option[String]])
+      verify(service).putWithSession(any[UserSession], any[Path], any[Params], ===(buildHeaders("X-Forwarded-For" -> "8.8.8.8", "X-Real-IP" -> "8.8.8.8")), any[Option[String]])
     }
 
     trait TrackUpdateWithPublishedAtContext extends Context {

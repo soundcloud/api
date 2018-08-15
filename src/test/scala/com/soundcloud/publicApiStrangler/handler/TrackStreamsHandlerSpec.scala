@@ -32,7 +32,7 @@ class TrackStreamsHandlerSpec extends UnitSpecification {
     def forwardWithJsonResponseMapper(handler: TrackStreamsHandler, path: String) = {
       val expectedResponseBuilder = JsonResponseBuilder.ok()
 
-      trackStreamSnipHandlerMock.handle(any[HandlerRequest], any[UserSession], org.mockito.Matchers.eq(trackStreamUrlToJsonResponseMapperMock))
+      trackStreamSnipHandlerMock.handle(any[HandlerRequest], any[UserSession], ===(trackStreamUrlToJsonResponseMapperMock))
         .returns(Future.value(expectedResponseBuilder))
 
       val response = get(handler.handleStreamRequest, path)
@@ -44,7 +44,7 @@ class TrackStreamsHandlerSpec extends UnitSpecification {
     def forwardHeadWithJsonResponseMapper(handler: TrackStreamsHandler, path: String) = {
       val expectedResponseBuilder = JsonResponseBuilder.ok()
 
-      trackStreamSnipHandlerMock.handle(any[HandlerRequest], any[UserSession], org.mockito.Matchers.eq(trackStreamUrlToJsonResponseMapperMock))
+      trackStreamSnipHandlerMock.handle(any[HandlerRequest], any[UserSession], ===(trackStreamUrlToJsonResponseMapperMock))
         .returns(Future.value(expectedResponseBuilder))
 
       val response = head(handler.handleStreamRequest, path)
@@ -56,7 +56,7 @@ class TrackStreamsHandlerSpec extends UnitSpecification {
     def forwardWithRedirectResponseMapper(handler: TrackStreamsHandler, path: String) = {
       val expectedResponseBuilder = JsonResponseBuilder.ok()
 
-      trackStreamSnipHandlerMock.handle(any[HandlerRequest], any[UserSession], org.mockito.Matchers.eq(trackStreamUrlToRedirectMapperMock))
+      trackStreamSnipHandlerMock.handle(any[HandlerRequest], any[UserSession], ===(trackStreamUrlToRedirectMapperMock))
         .returns(Future.value(expectedResponseBuilder))
 
       val response = get(handler.redirectStreamRequest, path)
@@ -68,7 +68,7 @@ class TrackStreamsHandlerSpec extends UnitSpecification {
     def forwardHeadWithRedirectResponseMapper(handler: TrackStreamsHandler, path: String) = {
       val expectedResponseBuilder = JsonResponseBuilder.ok()
 
-      trackStreamSnipHandlerMock.handle(any[HandlerRequest], any[UserSession], org.mockito.Matchers.eq(trackStreamUrlToRedirectMapperMock))
+      trackStreamSnipHandlerMock.handle(any[HandlerRequest], any[UserSession], ===(trackStreamUrlToRedirectMapperMock))
         .returns(Future.value(expectedResponseBuilder))
 
       val response = head(handler.redirectStreamRequest, path)
