@@ -65,16 +65,16 @@ class SpecificStranglingHandlerSpec extends UnitSpecification {
     "it increments the counter with the path pattern, if it is recognised" in new KnownUrlContext {
       Await.result(handler.apply(request))
       val count = collectorRegistry.getSampleValue("fallthrough_strangled_by",
-        Array("method", "path_pattern", "agent_urn", "system"),
-        Array("GET", "/announcements", "soundcloud:applications:124", "TEST-APP"))
+        Array("method", "path_pattern", "agent_urn"),
+        Array("GET", "/announcements", "soundcloud:applications:124"))
       count ==== 1.0
     }
 
     "it increments the counter with 'UNKNOWN' if it is not recognised" in new UnknownUrlContext {
       Await.result(handler.apply(request))
       val count = collectorRegistry.getSampleValue("fallthrough_strangled_by",
-        Array("method", "path_pattern", "agent_urn", "system"),
-        Array("GET", "UNKNOWN", "soundcloud:applications:124", "TEST-APP"))
+        Array("method", "path_pattern", "agent_urn"),
+        Array("GET", "UNKNOWN", "soundcloud:applications:124"))
       count ==== 1.0
     }
   }
@@ -94,16 +94,16 @@ class SpecificStranglingHandlerSpec extends UnitSpecification {
       Await.result(handler.apply(request))
 
       val count = collectorRegistry.getSampleValue("fallthrough_strangled_by",
-        Array("method", "path_pattern", "agent_urn", "system"),
-        Array("GET", "/announcements", "soundcloud:applications:124", "TEST-APP"))
+        Array("method", "path_pattern", "agent_urn"),
+        Array("GET", "/announcements", "soundcloud:applications:124"))
       count ==== 1.0
     }
 
     "it increments the counter with 'soundcloud:applications:external, if it is not recognised" in new UnknownAgentContext {
       Await.result(handler.apply(request))
       val count = collectorRegistry.getSampleValue("fallthrough_strangled_by",
-        Array("method", "path_pattern", "agent_urn", "system"),
-        Array("GET", "/announcements", "soundcloud:applications:external", "TEST-APP"))
+        Array("method", "path_pattern", "agent_urn"),
+        Array("GET", "/announcements", "soundcloud:applications:external"))
       count ==== 1.0
     }
   }

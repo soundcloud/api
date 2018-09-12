@@ -21,23 +21,23 @@ class SuccesfulResponseTypeMetricFilterSpec extends UnitSpecification {
 
     def xmlCount = collectorRegistry.getSampleValue(
       "successful_response_type_counter",
-      Array("type", "system"),
-      Array("xml", "TEST-APP"))
+      Array("type"),
+      Array("xml"))
 
     def jsonCount = collectorRegistry.getSampleValue(
       "successful_response_type_counter",
-      Array("type", "system"),
-      Array("json", "TEST-APP"))
+      Array("type"),
+      Array("json"))
 
     def jsonpCount = collectorRegistry.getSampleValue(
       "successful_response_type_counter",
-      Array("type", "system"),
-      Array("jsonp", "TEST-APP"))
+      Array("type"),
+      Array("jsonp"))
 
     def undefinedCount = collectorRegistry.getSampleValue(
       "successful_response_type_counter",
-      Array("type", "system"),
-      Array("undefined", "TEST-APP"))
+      Array("type"),
+      Array("undefined"))
   }
 
   "Doesn't produce any metrics for non 2XX responses" in new Context {
