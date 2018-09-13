@@ -5,12 +5,12 @@ import com.soundcloud.jvmkit.module.bff.BffHttpServer
 import com.soundcloud.jvmkit.module.bff.ratelimiting.facade._
 import com.soundcloud.jvmkit.module.http.server.akira.ResponseDumpSessionRegistry
 import com.soundcloud.jvmkit.module.http.server.config.HttpServerConfig
-import com.soundcloud.jvmkit.module.http.server.notifiers.{AirbrakeConfig, AirbrakeNotifier}
 import com.soundcloud.jvmkit.module.http.server.{HandlerRouterBuilder, ResponseBuilder}
 import com.soundcloud.jvmkit.module.memcached.RichMemcachedClient
 import com.soundcloud.jvmkit.module.memcached.config.MemcachedClientConfig
 import com.soundcloud.jvmkit.module.rollout.{BasicRolloutFeature, Rollout}
-import com.soundcloud.jvmkit.module.telemetry.{MetricsRegistryImpl, Telemetry}
+import com.soundcloud.jvmkit.module.telemetry.exceptions.{AirbrakeClient, AirbrakeConfig, ExceptionCollector}
+import com.soundcloud.jvmkit.module.telemetry.{MetricsRegistry, MetricsRegistryImpl, Telemetry}
 import com.soundcloud.jvmkit.module.util.config.AppConfig
 import com.soundcloud.jvmkit.module.util.{ResourceName, Urn}
 import com.soundcloud.jvmkit.module.zookeeper.CuratorFramework
@@ -26,12 +26,16 @@ object App extends Handlers with FallbackHandlerConfiguration {
 
   lazy val moduleConfig = new AppConfig()
 
-  def metricsRegistry: MetricsRegistryImpl = MetricsRegistryImpl.defaultRegistry
+  lazy val metricsRegistry: MetricsRegistry = MetricsRegistryImpl.defaultRegistry
 
-  def moduleTelemetry = new Telemetry(config.getApplicationName, metricsRegistry)
+  lazy val moduleTelemetry = new Telemetry(metricsRegistry)
+
+  lazy val exceptionCollector = new ExceptionCollector(
+    moduleTelemetry,
+    airbrakeClient = Some(new AirbrakeClient(AirbrakeConfig.from(moduleConfig)))
+  )
 
   def main(args: Array[String]): Unit = {
-
     val bffApplication = BffApplication(new Urn("soundcloud", "systems", "public-api-strangler"), moduleConfig.getApplicationResourceName)
 
     val memcachedResourceName = ResourceName("PUBLIC_API_STRANGLER_MEMCACHED")
@@ -117,7 +121,8 @@ object App extends Handlers with FallbackHandlerConfiguration {
       customHandlers = List(
         (Method.Get, rateLimitingFacade.diagnosticsEndpoint, rateLimitingFacade.rateLimitingDiagnosticsAdminHandler.handle)
       ),
-      rollout = rollout
+      rollout = rollout,
+      exceptionCollector = exceptionCollector
     ).start()
 
 
@@ -127,7 +132,7 @@ object App extends Handlers with FallbackHandlerConfiguration {
       router = router,
       customFilters = additionalFilters,
       responseDumpSessionRegistry = Some(responseDump),
-      notifier = new AirbrakeNotifier(AirbrakeConfig.from(config))
+      exceptionCollector = exceptionCollector
     ).start().join()
   }
 }
