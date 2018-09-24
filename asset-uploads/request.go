@@ -13,29 +13,6 @@ import (
 	"strings"
 )
 
-type transcoder interface {
-	transcode(string) (bool, error)
-}
-
-type moshimoshiTranscoder struct {
-	moshimoshiClient *moshimoshiClient
-}
-
-func newTranscoder(moshi *moshimoshiClient) (*moshimoshiTranscoder, error) {
-	transcoder := &moshimoshiTranscoder{
-		moshimoshiClient: moshi,
-	}
-
-	return transcoder, nil
-}
-
-func (mmC *moshimoshiTranscoder) transcode(uid string) (bool, error) {
-
-	log.Printf("*** Transcode uid: %s", uid)
-
-	return mmC.moshimoshiClient.createTranscoding(uid)
-}
-
 type requestRewriter struct {
 	storage    storage
 	transcoder transcoder

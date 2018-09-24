@@ -44,19 +44,11 @@ func main() {
 		log.Fatalf("Failed to parse target URL: %s", *rawTargetURL)
 	}
 
-	moshi := &moshimoshiClient{
-		host:       *moshimoshiAddr,
-		httpClient: http.DefaultClient,
-	}
+	moshimoshi := newMoshimoshiClient(*moshimoshiAddr)
 
-	s3, err := newS3Storage(*awsKey, *awsSecret, *s3Region, *s3Bucket, moshi)
+	s3, err := newS3Storage(*awsKey, *awsSecret, *s3Region, *s3Bucket, moshimoshi)
 	if err != nil {
 		log.Fatalf("Failed to initialize S3 storage: %v", err)
-	}
-
-	transcoder, err := newTranscoder(moshi)
-	if err != nil {
-		log.Fatal("Failed to initialize transcoder.")
 	}
 
 	// Filter/transform the incoming request through a middleware stack.
@@ -64,7 +56,7 @@ func main() {
 	mw = append(mw, logRequestMiddleware)
 	mw = append(mw, filterRequestMiddleware)
 	mw = append(mw, limitRequestSizeMiddleware(*maxRequestBytes))
-	mw = append(mw, rewriteRequestMiddleware(s3, transcoder))
+	mw = append(mw, rewriteRequestMiddleware(s3, newMoshimoshiTranscoder(moshimoshi)))
 
 	// Proxy all requests that make it through filters/transforms.
 	proxy := httputil.NewSingleHostReverseProxy(targetURL)

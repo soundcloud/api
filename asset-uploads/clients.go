@@ -1,10 +1,15 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"strings"
+)
+
+const (
+	jsonContentType       = "application/json"
+	moshimoshiAccessToken = "public-api-strangler-assets"
 )
 
 type moshimoshiClient struct {
@@ -12,14 +17,15 @@ type moshimoshiClient struct {
 	httpClient *http.Client
 }
 
-func (u *moshimoshiClient) createTrackUID() (string, error) {
-	const (
-		accessToken       = "public-api-strangler-assets"
-		jsonContentType   = "application/json"
-		trackUIDsEndpoint = "http://%s/track_uids?access_token=%s"
-	)
+func newMoshimoshiClient(host string) *moshimoshiClient {
+	return &moshimoshiClient{
+		host:       host,
+		httpClient: http.DefaultClient,
+	}
+}
 
-	url := fmt.Sprintf(trackUIDsEndpoint, u.host, accessToken)
+func (u *moshimoshiClient) createTrackUID() (string, error) {
+	url := fmt.Sprintf("http://%s/track_uids?access_token=%s", u.host, moshimoshiAccessToken)
 
 	req, err := u.httpClient.Post(url, jsonContentType, nil)
 	if err != nil {
@@ -42,15 +48,22 @@ func (u *moshimoshiClient) createTrackUID() (string, error) {
 }
 
 func (u *moshimoshiClient) createTranscoding(uid string) (bool, error) {
-	const (
-		accessToken       = "public-api-strangler-assets"
-		jsonContentType   = "application/json"
-		trackUIDsEndpoint = "http://%s/transcodings?access_token=%s"
-	)
+	url := fmt.Sprintf("http://%s/transcodings?access_token=%s", u.host, moshimoshiAccessToken)
 
-	url := fmt.Sprintf(trackUIDsEndpoint, u.host, accessToken)
+	bs, err := json.Marshal(struct {
+		Transcoding struct {
+			UID string `json:"uid"`
+		} `json:"transcoding"`
+	}{
+		struct {
+			UID string `json:"uid"`
+		}{uid},
+	})
+	if err != nil {
+		return false, err
+	}
 
-	req, err := u.httpClient.Post(url, jsonContentType, strings.NewReader(fmt.Sprintf("{\"transcoding\": {\"uid\": \"%s\"}}", uid)))
+	req, err := u.httpClient.Post(url, jsonContentType, bytes.NewBuffer(bs))
 	if err != nil {
 		return false, err
 	}
