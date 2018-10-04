@@ -16,7 +16,6 @@ lazy val publicApiStrangler = project.in(file("."))
       "com.soundcloud" %% "jvmkit-memcached" % jvmkitVersion,
       "com.typesafe.play" %% "play-json" % playJsonVersion,
       "org.jsoup" % "jsoup" % "1.11.3",
-      "ch.qos.logback" % "logback-classic" % "1.2.3",
 
       "com.squareup.okhttp3" % "mockwebserver" % "3.11.0" % "test",
       "org.apache.httpcomponents" % "httpclient" % httpComponentsVersion % "test",
