@@ -1,4 +1,4 @@
-JAVA_OPTS="-Djdk.nio.maxCachedBufferSize=262144"
+JAVA_OPTS=-Djdk.nio.maxCachedBufferSize=262144
 
 APP_NAME=public-api-strangler
 APP_BASE_URL=https://api.soundcloud.com
@@ -47,7 +47,7 @@ REPOSTS_CLIENT_REQUEST_TIMEOUT_MILLIS=5000
 RATE_LIMIT_MEMCACHED_SERVERS=memcached
 
 # Playlists and listings are being extracted out of Mothership, this configuration value is in anticipation of that.
-PLAYLIST_ADDRESS="dnssrv!http.moshimoshi.prod.mothership.db.srv.int.s-cloud.net"
+PLAYLIST_ADDRESS=dnssrv!http.moshimoshi.prod.mothership.db.srv.int.s-cloud.net
 
 PUBLIC_API_ADDRESS=api.soundcloud.com:80
 PUBLIC_API_CLIENT_REQUEST_TIMEOUT_MILLIS=300000
