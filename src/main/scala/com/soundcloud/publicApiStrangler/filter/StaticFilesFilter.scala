@@ -1,10 +1,10 @@
 package com.soundcloud.publicApiStrangler.filter
 
 import com.soundcloud.jvmkit.module.http.server.ResponseBuilder
+import com.twitter.conversions.time._
 import com.twitter.finagle.http.{MediaType, Method, Request, Response}
 import com.twitter.finagle.{Service, SimpleFilter}
 import com.twitter.util.Future
-import com.twitter.util.TimeConversions._
 import org.jboss.netty.util.CharsetUtil._
 
 class StaticFilesFilter extends SimpleFilter[Request, Response] {
