@@ -2,13 +2,9 @@ package com.soundcloud.publicApiStrangler
 
 import com.soundcloud.jvmkit.module.telemetry.Telemetry
 import com.soundcloud.jvmkit.module.util.Urn
-import com.soundcloud.publicApiStrangler.App.mothershipDispatcher
-import com.soundcloud.publicApiStrangler.handler.SpecificStranglingHandler
+import com.soundcloud.publicApiStrangler.handler.{DispatchToMothershipHandler, SpecificStranglingHandler}
 
-trait FallbackHandlerConfiguration {
-
-  def moduleTelemetry: Telemetry
-
+class FallbackHandlerConfiguration(telemetry: Telemetry, mothershipDispatcher: DispatchToMothershipHandler) {
   private val officialSoundCloudApps = List(
     Urn("soundcloud:applications:46941"), // SoundCloud.com (currently being abused) Internal
     Urn("soundcloud:applications:124"), // SoundCloud iOS Internal
@@ -131,7 +127,7 @@ trait FallbackHandlerConfiguration {
     } ++ unknown
   }
 
-  private val fallthroughCounter = moduleTelemetry.counter(
+  private val fallthroughCounter = telemetry.counter(
     "fallthrough_strangled_by",
     "Fallthrough requests by the path pattern that strangles them",
     "method",

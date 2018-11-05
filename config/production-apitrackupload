@@ -1,0 +1,9 @@
+source production
+
+JAVA_OPTS="-XX:+UseCompressedOops -XX:MaxDirectMemorySize=2G -XX:+UseConcMarkSweepGC -XX:NewRatio=1 -Xmx2G -Xms1G -XX:ParallelGCThreads=2 -Dcom.twitter.jvm.numProcs=5 -Djdk.nio.maxCachedBufferSize=262144"
+
+SERVICE_REQUEST_TIMEOUT_MILLIS="3600000"
+SERVICE_STREAMING="true"
+
+PUBLIC_API_CLIENT_STREAMING="true"
+PUBLIC_API_CLIENT_REQUEST_TIMEOUT_MILLIS="3600000"

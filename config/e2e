@@ -6,12 +6,9 @@ ADMIN_APP_TIMEOUT_MILLIS=30000
 ENV=development
 
 JAVA_OPTS="-Xmx1G -Xms1G"
-PORT=5000
 
+PORT=5000
 TELE_PORT=5001
-ZIPKIN_HOST=zipkin.dev.s-cloud.net
-ZIPKIN_PORT=9410
-ZIPKIN_SAMPLE_RATE=0.001
 
 SERVICE_MAX_CONNS=60
 SERVICE_MAX_REQUEST_SIZE_MB=500
@@ -27,36 +24,34 @@ DEFAULT_REQUEST_LATENCY_BUCKETS=0.001,0.005,0.010,0.020,0.050,0.100,0.200,0.300,
 
 ZOOKEEPER_ADDRESS=strangler_zk:2181
 
-AUTHENTICATOR_SRV_RECORD=dnssrv!http.api.prod.authenticator.dd.srv.int.s-cloud.net
+AUTHENTICATOR_SRV_RECORD=dnssrv!http.api.prod.authenticator.srv.db.s-cloud.net
 AUTHENTICATOR_CLIENT_REQUEST_TIMEOUT_MILLIS=10000
-AUTHSY_SRV_RECORD=dnssrv!http.api.prod.authsy.dd.srv.int.s-cloud.net
-FOLLOWS_SRV_RECORD=dnssrv!http.api.prod.follows.dd.srv.int.s-cloud.net
-GOBBLY_SRV_RECORD=dnssrv!http.api.prod.gobbly.dd.srv.int.s-cloud.net
-GATEKEEPER_SRV_RECORD=dnssrv!http.api.prod.gatekeeper.dd.srv.int.s-cloud.net
-PUBMESE_SRV_RECORD=dnssrv!http.web.prod.pubmese.dd.srv.int.s-cloud.net
-GEOIP_SRV_RECORD=dnssrv!http.geoip2http.prod.geoip.dd.srv.int.s-cloud.net
-MEDIASERVICE_SRV_RECORD=dnssrv!http.urlgen.prod.media-service.dd.srv.int.s-cloud.net
-STITCH_ADDRESS=dnssrv!http.web.prod.stitch4counts.dd.srv.int.s-cloud.net
-REPOSTS_SRV_RECORD="dnssrv!http.api.prod.reposts.dd.srv.int.s-cloud.net"
+AUTHSY_SRV_RECORD=dnssrv!http.api.prod.authsy.srv.db.s-cloud.net
+FOLLOWS_SRV_RECORD=dnssrv!http.api.prod.follows.srv.db.s-cloud.net
+GOBBLY_SRV_RECORD=dnssrv!http.api.prod.gobbly.srv.db.s-cloud.net
+GATEKEEPER_SRV_RECORD=dnssrv!http.api.prod.gatekeeper.srv.db.s-cloud.net
+PUBMESE_SRV_RECORD=dnssrv!http.web.prod.pubmese.srv.db.s-cloud.net
+GEOIP_SRV_RECORD=dnssrv!http.geoip2http.prod.geoip.srv.db.s-cloud.net
+MEDIASERVICE_SRV_RECORD=dnssrv!http.urlgen.prod.media-service.srv.db.s-cloud.net
+STITCH_SRV_RECORD=dnssrv!http.web.prod.stitch4counts.srv.db.s-cloud.net
+REPOSTS_SRV_RECORD="dnssrv!http.api.prod.reposts.srv.db.s-cloud.net"
 REPOSTS_CLIENT_REQUEST_TIMEOUT_MILLIS="5000"
 
-RATE_LIMIT_MEMCACHED_SERVERS=memcached
-
 # Playlists and listings are being extracted out of Mothership, this configuration value is in anticipation of that.
-PLAYLIST_ADDRESS="dnssrv!http.moshimoshi.prod.mothership.db.srv.int.s-cloud.net"
+PLAYLIST_SRV_RECORD="dnssrv!http.moshimoshi.prod.mothership.srv.db.s-cloud.net"
 
 PUBLIC_API_ADDRESS=publicapistub:4567
 PUBLIC_API_CLIENT_REQUEST_TIMEOUT_MILLIS=300000
 PUBLIC_API_CLIENT_FOLLOW_REDIRECTS=false
 
-OKIDOKI_SRV_RECORD=dnssrv!http.okidoki.prod.moshimoshi.dd.srv.int.s-cloud.net
+OKIDOKI_SRV_RECORD=dnssrv!http.okidoki.prod.moshimoshi.srv.db.s-cloud.net
 
 RATELIMITING_CIRCUITBREAKER_MAX_CONSECUTIVE_FAILURES=5
 RATELIMITING_CIRCUITBREAKER_RESET_TIMEOUT_IN_MILLIS=1000
 RATELIMITING_CLIENT_REQUEST_TIMEOUT_MILLIS=2000
 RATELIMITING_CLIENT_RETRIES=1
 RATELIMITING_MAX_PROMETHEUS_COUNTER_LABELS=100
-RATELIMITING_SRV_RECORD=dnssrv!http.api.prod.ratelimiting.dd.srv.int.s-cloud.net
+RATELIMITING_SRV_RECORD=dnssrv!http.api.prod.ratelimiting.srv.db.s-cloud.net
 
 SLO_ERROR_RATE_THRESHOLD=0.0001
 SLO_LATENCY_P99_THRESHOLD_SECONDS=0.500
@@ -64,21 +59,21 @@ SLO_AVAILABILITY_TARGET=0.99999
 
 TIMELINE_CLIENT_REQUEST_TIMEOUT_MILLIS=2000
 
-SEARCH_SRV_RECORD=dnssrv!http.publicapi.prod.search.dd.srv.int.s-cloud.net
-TIMELINE_SRV_RECORD=dnssrv!http.api.prod.timeline.dd.srv.int.s-cloud.net
+SEARCH_SRV_RECORD=dnssrv!http.publicapi.prod.search.srv.db.s-cloud.net
+TIMELINE_SRV_RECORD=dnssrv!http.api.prod.timeline.srv.db.s-cloud.net
 
-TRACK_COORDINATOR_SRV_RECORD=dnssrv!http.coordinator.prod.tracks.dd.srv.int.s-cloud.net
+TRACK_COORDINATOR_SRV_RECORD=dnssrv!http.coordinator.prod.tracks.srv.db.s-cloud.net
 
-LIEBLING_SRV_RECORD=dnssrv!http.web.prod.liebling.dd.srv.int.s-cloud.net
-SYSTEM_PLAYLISTS_SRV_RECORD=dnssrv!http.api.prod.system-playlists.dd.srv.int.s-cloud.net
+LIEBLING_SRV_RECORD=dnssrv!http.web.prod.liebling.srv.db.s-cloud.net
+SYSTEM_PLAYLISTS_SRV_RECORD=dnssrv!http.api.prod.system-playlists.srv.db.s-cloud.net
 
 
-USER_SUBSCRIPTIONS_SRV_RECORD=dnssrv!http.server.sandbox.subscriptions.dd.srv.int.s-cloud.net
+USER_SUBSCRIPTIONS_SRV_RECORD=dnssrv!http.server.sandbox.subscriptions.srv.db.s-cloud.net
 
-STITCH4FOLLOWS_SRV_RECORD=dnssrv!http.web-follows.prod.stitch4counts.dd.srv.int.s-cloud.net
+STITCH4FOLLOWS_SRV_RECORD=dnssrv!http.web-follows.prod.stitch4counts.srv.db.s-cloud.net
 STITCH_BULK_FETCH_MAX_ENTRIES=7
 
-TRACKMETADATA_SRV_RECORD=dnssrv!http.api.prod.trackmetadata.dd.srv.int.s-cloud.net
+TRACKMETADATA_SRV_RECORD=dnssrv!http.api.prod.trackmetadata.srv.db.s-cloud.net
 
 APP_SILOING_BLACKLIST_APPS=soundcloud:applications:124,soundcloud:applications:3152,soundcloud:applications:65097
 

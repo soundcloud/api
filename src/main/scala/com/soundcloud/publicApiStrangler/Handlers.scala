@@ -1,6 +1,7 @@
 package com.soundcloud.publicApiStrangler
 
 import com.soundcloud.jvmkit.module.rollout.BasicRolloutFeature
+import com.soundcloud.jvmkit.module.telemetry.Telemetry
 import com.soundcloud.publicApiStrangler.authorization.PublicApiSiloing
 import com.soundcloud.publicApiStrangler.handler._
 import com.soundcloud.publicApiStrangler.mapper.search.{SearchMapper, SearchRepository}
@@ -12,11 +13,12 @@ import com.soundcloud.publicApiStrangler.mapper.trackstreams.{TrackStreamJsonRes
 import com.soundcloud.publicApiStrangler.client.media.MediaUrlsRepository
 import com.soundcloud.publicApiStrangler.support.CursorPagination
 
-trait Handlers extends Clients {
+class Handlers(telemetry: Telemetry, clients: Clients) {
+  import clients._
 
   val mothershipDispatcher = new DispatchToMothershipHandler(publicApiClient)
 
-  val timelineHandler = {
+  val timelineHandler: TimelineHandler = {
     val entitySummaryMapper = new EntitySummaryMapper(okidokiClient, repostsClient, baseUrl)
     val entityMapper = new EntityMapper(
       okidokiClient,
@@ -34,7 +36,7 @@ trait Handlers extends Clients {
     new TimelineHandler(userAuthentication, streamMapper, activitiesMapper, publicActivitiesMapper, followingsTracksMapper, pagination)
   }
 
-  val trackStreamsHandler = {
+  val trackStreamsHandler: TrackStreamsHandler = {
     val trackStreamUrlToJsonResponseMapper = new TrackStreamJsonResponseMapper
     val trackStreamUrlToRedirectMapper = new TrackStreamRedirectResponseMapper
 
@@ -44,7 +46,7 @@ trait Handlers extends Clients {
       val siloingEnabledFeature = BasicRolloutFeature("app-siloing-enabled")
       () => rolloutClient.isActive(siloingEnabledFeature)
     }
-    val publicApiSiloing = new PublicApiSiloing(rolloutCheckForSiloingFunc, blacklistOfAppIdsForUserSiloing, moduleTelemetry)
+    val publicApiSiloing = new PublicApiSiloing(rolloutCheckForSiloingFunc, blacklistOfAppIdsForUserSiloing, telemetry)
 
     new TrackStreamsHandler(
       userAuthentication,
@@ -61,7 +63,7 @@ trait Handlers extends Clients {
     mothershipDispatcher,
     trackmetadataClient)
 
-  val singleTrackHandler = new SingleTrackHandler(userAuthentication, tracksService, moduleTelemetry)
+  val singleTrackHandler = new SingleTrackHandler(userAuthentication, tracksService, telemetry)
 
   val trackMothershipDispatcherWithCounts = new TrackMothershipDispatcherWithCounts(userAuthentication, mothershipDispatcher, stitchClient)
 
@@ -74,7 +76,7 @@ trait Handlers extends Clients {
     repostsClient
   )
 
-  val userTracksHandler = {
+  val userTracksHandler: UserTracksHandler = {
     val trackMothershipDispatcherWithCounts = new TrackMothershipDispatcherWithCounts(
       userAuthentication,
       mothershipDispatcher,
@@ -86,7 +88,7 @@ trait Handlers extends Clients {
       userAuthentication,
       trackMothershipDispatcherWithCounts,
       tracksService,
-      moduleTelemetry,
+      telemetry,
       () => rolloutClient.isActive(shouldUseTrackMetadata),
       baseUrl
     )
@@ -94,10 +96,10 @@ trait Handlers extends Clients {
 
   val userFollowHandler = new UserFollowHandler(userAuthentication, okidokiClient, followsClient, followCountsClient, repostsClient, baseUrl)
 
-  val searchHandler = {
+  val searchHandler: SearchHandler = {
     val searchRepository = new SearchRepository(searchService)
     val searchMapper = new SearchMapper(searchRepository, searchEntityMapper, baseUrl)
-    val mothershipCounter = moduleTelemetry.counter(
+    val mothershipCounter = telemetry.counter(
       "search_mothership_fallback_total",
       "Number of requests to search endpoints with missing/invalid query parameters that get propagated to Mothership",
       "path"
@@ -116,7 +118,7 @@ trait Handlers extends Clients {
     )
   }
 
-  val similarSoundsHandler = {
+  val similarSoundsHandler: SimilarSoundsHandler = {
     val similarSoundsMapper = new SimilarSoundsMapper(systemPlaylistsClient, searchEntityMapper)
     new SimilarSoundsHandler(
       userAuthentication,

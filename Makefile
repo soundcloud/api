@@ -1,10 +1,10 @@
 APP_NAME := $(shell sc manifest name)
 
 API_COMPONENT := api
-API_CONFIG    := production_api.sh.enc
+API_CONFIG    := production
 
 APITRACKUPLOAD_COMPONENT := apitrackupload
-APITRACKUPLOAD_CONFIG    := production_apitrackupload.sh.enc
+APITRACKUPLOAD_CONFIG    := production-apitrackupload
 
 RUNTIME_STACK := jdk-8
 
@@ -27,7 +27,7 @@ run:
 	sc crun sbt -i --docker-options="-p 5000:5000 --link=strangler_zk --link=strangler_memcached --env-file=config/development" -- sbt run
 
 run-no-docker:
-	set -o allexport; source config/production_api.sh; set +o allexport; sbt run
+	set -o allexport; source config/development; set +o allexport; sbt run
 
 precheckin:
 	make unit-test
@@ -70,6 +70,7 @@ prepare-package-layout:
 	sc add-config config/e2e
 	sc add-config config/$(API_CONFIG)
 	sc add-config config/$(APITRACKUPLOAD_CONFIG)
+	sc add-config config/production-secrets.enc
 
 publish:
 	sc artifact-manager publish

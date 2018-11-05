@@ -34,20 +34,9 @@ import com.twitter.finagle.http.{Request, Response}
 import com.twitter.finagle.service.RetryPolicy.RetryableWriteException
 import com.twitter.util.{Future, Throw, Try}
 
-trait Clients {
-
-  def moduleConfig: AppConfig
-
-  def config = moduleConfig
-
-  def moduleTelemetry: Telemetry
-
-  def telemetry = moduleTelemetry
-
-  def metricsRegistry: MetricsRegistry
-
-  private def jsonClient(resourceName: String, configConvention: ConfigConvention = ConfigConvention.SRV_RECORD) = JsonClient(
-    ServiceEntryPoint(config.get(ResourceName(resourceName), configConvention)),
+class Clients(config: AppConfig, telemetry: Telemetry) {
+  private def jsonClient(resourceName: String) = JsonClient(
+    ServiceEntryPoint(config.get(ResourceName(resourceName), ConfigConvention.SRV_RECORD)),
     HttpClientConfig.from(ResourceName(resourceName), config),
     telemetry
   )
@@ -65,59 +54,53 @@ trait Clients {
 
   val lieblingClient = new LieblingClient(jsonClient("liebling"))
 
-  private def createPublicApiClient(resourceName: String): Service[Request, Response] = {
+  val publicApiClient: Service[Request, Response] = {
+    val name = ResourceName("PUBLIC_API")
+
     val writeExceptions: PartialFunction[(Request, Try[Response]), Boolean] = {
       case (_, Throw(RetryableWriteException(_))) => true
     }
 
     HttpClient(
-      ServiceEntryPoint(config.get(ResourceName(resourceName), ConfigConvention.ADDRESS)),
-      HttpClientConfig.from(ResourceName(resourceName), config),
+      ServiceEntryPoint(config.get(name, ConfigConvention.ADDRESS)),
+      HttpClientConfig.from(name, config),
       telemetry,
       retryOn = Some(writeExceptions)
     ).httpService
   }
 
-  lazy val publicApiClient = createPublicApiClient("PUBLIC_API")
+  val followsClient = new FollowsClient(jsonClient("follows"))
 
-  lazy val followsClient = new FollowsClient(jsonClient("follows"))
+  val repostsClient = new RepostsClient(jsonClient("reposts"))
 
-  lazy val repostsClient = new RepostsClient(jsonClient("reposts"))
+  val gatekeeperClient = new GatekeeperClient(jsonClient("gatekeeper"))
 
-  lazy val gatekeeperClient = new GatekeeperClient(jsonClient("gatekeeper"))
+  val systemPlaylistsClient = new SystemPlaylistsClient(jsonClient("system_playlists"))
 
-  lazy val systemPlaylistsClient = new SystemPlaylistsClient(jsonClient("system_playlists"))
+  val trackCoordinatorClient = new TrackCoordinatorClient(jsonClient("track_coordinator"))
 
-  lazy val trackCoordinatorClient = new TrackCoordinatorClient(jsonClient("track_coordinator"))
+  val pubmeseClient = new PubmeseClient(jsonClient("pubmese"))
 
-  lazy val pubmeseClient = new PubmeseClient(jsonClient("pubmese"))
+  val stitchClient = new StitchClient(jsonClient("stitch"))
 
-  lazy val stitchClient = new StitchClient(jsonClient("stitch", ConfigConvention.ADDRESS))
+  val mediaService: JsonClient = jsonClient("mediaservice")
 
-  private val mediaServiceUrlGenJsonClient = JsonClient(
-    ServiceEntryPoint(moduleConfig.get(ResourceName("MEDIASERVICE"), ConfigConvention.SRV_RECORD)),
-    HttpClientConfig.from(ResourceName("mediaservice_urlgen"), moduleConfig),
-    telemetry
-  )
-  val mediaServiceUrlGenClient = new MediaServiceUrlGenClient(mediaServiceUrlGenJsonClient)
+  val mediaServiceUrlGenClient = new MediaServiceUrlGenClient(mediaService)
 
-  val mediaService = jsonClient("mediaservice")
-  private val authsyService = jsonClient("authsy")
-
-  val searchService = jsonClient("search")
+  val searchService: JsonClient = jsonClient("search")
 
   private val subscriptionsService = jsonClient("user_subscriptions")
 
   private val stitch4followsService = jsonClient("stitch4follows")
 
-  val playlistsClient = new PlaylistsClient(jsonClient("playlist", ConfigConvention.ADDRESS))
+  val playlistsClient = new PlaylistsClient(jsonClient("playlist"))
 
-  val followCountsClient = new FollowCountsClient(stitch4followsService, moduleConfig)
+  val followCountsClient = new FollowCountsClient(stitch4followsService, config)
 
   val trackmetadataClient = TrackmetadataClient(config, telemetry)
 
   val contentAuthorizationRules = new ContentAuthorizationRules(
-    new ContentAuthorizationService(authsyService),
+    new ContentAuthorizationService(jsonClient("authsy")),
     new SubscriptionsService(subscriptionsService))
 
 
@@ -156,12 +139,12 @@ trait Clients {
       .map(appId => new Urn(appId.trim))
       .toSet
 
-  val userAuthentication = UserAuthentication(moduleConfig, moduleTelemetry)
+  val userAuthentication = UserAuthentication(config, telemetry)
   val authorizeContent = new AuthorizeHttpResponse(contentAuthorizationRules, userAuthentication, waveformUrlsRepo, TrackPolicyApplicator(whitelistedClients))
 
-  val baseUrl = config.get("APP_BASE_URL", DataSensitivity.NON_SENSITIVE)
+  val baseUrl: String = config.get("APP_BASE_URL", DataSensitivity.NON_SENSITIVE)
 
-  val rolloutClient = Rollout(moduleConfig, moduleTelemetry)
+  val rolloutClient = Rollout(config, telemetry)
   val rollout = Some(rolloutClient)
 
   val enrichLikesCounts: () => Future[Boolean] =
@@ -209,12 +192,6 @@ trait Clients {
     new EntitySummaryMapper(okidokiClient, repostsClient, baseUrl)
   )
 
-  val playlistDeletionClient =
-    new PlaylistDeletionClient(
-      JsonClient(
-        ServiceEntryPoint(moduleConfig.get(ResourceName("OKIDOKI"), ConfigConvention.SRV_RECORD)),
-        HttpClientConfig.from(ResourceName("okidoki"), moduleConfig),
-        moduleTelemetry
-      ))
+  val playlistDeletionClient = new PlaylistDeletionClient(okidokiJsonClient)
 
 }
