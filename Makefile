@@ -85,7 +85,6 @@ publish-deploy:
 		--ingress http://public-api.int.s-cloud.net:http \
 		--public-ingress http://api.soundcloud.com:http \
 		--glimpse http.strangler.prod.public-api \
-		--slack-channel '#backend-productivity' \
 		--prometheus.port telemetry \
 		--strategy.rolling-update.max-surge 20% \
 		--set MEMORY_REQUEST=3172Mi \
@@ -97,7 +96,6 @@ publish-deploy:
 		--ingress http://$(APP_NAME)-trackupload.$(CLUSTER).lb.s-cloud.net:http \
 		--public-ingress http://api.soundcloud.com:http \
 		--glimpse http.strangler-trackupload.prod.public-api \
-		--slack-channel '#backend-productivity' \
 		--prometheus.port telemetry \
 		--strategy.rolling-update.max-surge 20% \
 		--set MEMORY_REQUEST=4196Mi \
