@@ -507,7 +507,7 @@ class UserFollowHandlerSpec extends UnitSpecification {
       response.status ==== Status.Forbidden
       val errors = (Json.parse(response.contentString) \ "errors").as[Seq[JsObject]].head
       (errors \ "error_message").asOpt[String] ==== Option("DENY_AGE_RESTRICTED")
-      (errors \ "age").asOpt[Long] ==== Option(33)
+      (errors \ "age").asOpt[Long] ==== Option(34)
     }
 
     "render the age-unknown errors" in new Context {
