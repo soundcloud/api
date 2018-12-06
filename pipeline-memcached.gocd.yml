@@ -12,6 +12,7 @@ pipelines:
         approval: manual
         jobs:
           deploy:
+            job_type: deploy
             tasks:
             - exec:
                 command: make
