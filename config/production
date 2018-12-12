@@ -57,7 +57,7 @@ SYSTEM_PLAYLISTS_SRV_RECORD="dnssrv!http.api.prod.system-playlists.srv.db.s-clou
 
 TRACK_COORDINATOR_SRV_RECORD="dnssrv!http.coordinator.prod.tracks.srv.db.s-cloud.net"
 
-USER_SUBSCRIPTIONS_SRV_RECORD="dnssrv!http.server.production.subscriptions.srv.db.s-cloud.net"
+USER_SUBSCRIPTIONS_SRV_RECORD="dnssrv!http.server.production.subscriptions.srv"
 
 RATELIMIT_MAX_CONN="999999"
 
