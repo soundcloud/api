@@ -10,7 +10,7 @@ RUNTIME_STACK := jdk-8
 
 DOCKER_IP ?= $(shell sc docker-ip)
 
-CLUSTER ?= k2
+ZONE ?= db
 
 ifeq ($(USE_CRUN),false)
 	SBT = sbt
@@ -77,10 +77,11 @@ publish:
 
 publish-deploy:
 	sc artifact-manager deploy publish \
-		--cluster=$(CLUSTER) \
+		--zone=$(ZONE) \
 		--component="$(API_COMPONENT)" \
 		--command "./api --config=$(API_CONFIG)" \
-		--ingress http://$(APP_NAME).$(CLUSTER).lb.s-cloud.net:http \
+		--ingress http://$(APP_NAME).k2.lb.s-cloud.net:http \
+		--ingress http://$(APP_NAME).$(ZONE).lb.s-cloud.net:http \
 		--ingress http://$(APP_NAME).int.s-cloud.net:http \
 		--ingress http://public-api.int.s-cloud.net:http \
 		--public-ingress http://api.soundcloud.com:http \
@@ -90,10 +91,11 @@ publish-deploy:
 		--set MEMORY_REQUEST=3172Mi \
 		--set MEMORY_LIMIT=3172Mi
 	sc artifact-manager deploy publish \
-		--cluster=$(CLUSTER) \
+		--zone=$(ZONE) \
 		--component="$(APITRACKUPLOAD_COMPONENT)" \
 		--command "./api --config=$(APITRACKUPLOAD_CONFIG)" \
-		--ingress http://$(APP_NAME)-trackupload.$(CLUSTER).lb.s-cloud.net:http \
+		--ingress http://$(APP_NAME)-trackupload.k2.lb.s-cloud.net:http \
+		--ingress http://$(APP_NAME)-trackupload.$(ZONE).lb.s-cloud.net:http \
 		--public-ingress http://api.soundcloud.com:http \
 		--glimpse http.strangler-trackupload.prod.public-api \
 		--prometheus.port telemetry \
@@ -109,8 +111,8 @@ promote-to-release:
 
 .PHONY: deploy-k8s-api-canary
 deploy-k8s-api-canary:
-	sc artifact-manager deploy run --cluster="$(CLUSTER)" --component="$(API_COMPONENT)" --track=canary
-	sc k8s scale --cluster="$(CLUSTER)" --component="$(API_COMPONENT)" --track=canary --replicas=2 --force
+	sc artifact-manager deploy run --zone="$(ZONE)" --component="$(API_COMPONENT)" --track=canary
+	sc k8s scale --zone="$(ZONE)" --component="$(API_COMPONENT)" --track=canary --replicas=2 --force
 	sc check-alerts -p http://prometheus-public-api-strangler.db.s-cloud.net/ \
 		system=public-api-strangler \
 		component=$(API_COMPONENT) \
@@ -119,17 +121,17 @@ deploy-k8s-api-canary:
 
 .PHONY: scale-down-api-canary
 scale-down-api-canary:
-	sc k8s scale --cluster="$(CLUSTER)" --component="$(API_COMPONENT)" --track=canary --replicas=0 --force
+	sc k8s scale --zone="$(ZONE)" --component="$(API_COMPONENT)" --track=canary --replicas=0 --force
 
 .PHONY: deploy-k8s-api
 deploy-k8s-api:
-	sc artifact-manager deploy run --cluster="$(CLUSTER)" --component="$(API_COMPONENT)"
+	sc artifact-manager deploy run --zone="$(ZONE)" --component="$(API_COMPONENT)"
 
 
 .PHONY: deploy-k8s-apitrackupload-canary
 deploy-k8s-apitrackupload-canary:
-	sc artifact-manager deploy run --cluster="$(CLUSTER)" --component="$(APITRACKUPLOAD_COMPONENT)" --track=canary
-	sc k8s scale --cluster="$(CLUSTER)" --component="$(APITRACKUPLOAD_COMPONENT)" --track=canary --replicas=2 --force
+	sc artifact-manager deploy run --zone="$(ZONE)" --component="$(APITRACKUPLOAD_COMPONENT)" --track=canary
+	sc k8s scale --zone="$(ZONE)" --component="$(APITRACKUPLOAD_COMPONENT)" --track=canary --replicas=2 --force
 	sc check-alerts -p http://prometheus-public-api-strangler.db.s-cloud.net/ \
 		system=public-api-strangler \
 		component=$(APITRACKUPLOAD_COMPONENT) \
@@ -138,9 +140,9 @@ deploy-k8s-apitrackupload-canary:
 
 .PHONY: scale-down-apitrackupload-canary
 scale-down-apitrackupload-canary:
-	sc k8s scale --cluster="$(CLUSTER)" --component="$(APITRACKUPLOAD_COMPONENT)" --track=canary --replicas=0 --force
+	sc k8s scale --zone="$(ZONE)" --component="$(APITRACKUPLOAD_COMPONENT)" --track=canary --replicas=0 --force
 
 .PHONY: deploy-k8s-apitrackupload
 deploy-k8s-apitrackupload:
-	sc artifact-manager deploy run --cluster="$(CLUSTER)" --component="$(APITRACKUPLOAD_COMPONENT)"
+	sc artifact-manager deploy run --zone="$(ZONE)" --component="$(APITRACKUPLOAD_COMPONENT)"
 
