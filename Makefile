@@ -109,40 +109,29 @@ promote-to-stable:
 promote-to-release:
 	sc artifact-manager promote release
 
-.PHONY: deploy-k8s-api-canary
-deploy-k8s-api-canary:
-	sc artifact-manager deploy run --zone="$(ZONE)" --component="$(API_COMPONENT)" --track=canary
-	sc k8s scale --zone="$(ZONE)" --component="$(API_COMPONENT)" --track=canary --replicas=2 --force
-	sc check-alerts -p http://prometheus-public-api-strangler.db.s-cloud.net/ \
-		system=public-api-strangler \
-		component=$(API_COMPONENT) \
-		env=production \
-		track=canary
+canary-api:
+	sc k8s canary \
+		--zone=$(ZONE) \
+		--system=public-api-strangler \
+		--env=production \
+		--component="$(API_COMPONENT)" \
+		--replicas=2 \
+		-p=http://prometheus-public-api-strangler.$(ZONE).s-cloud.net/ system=public-api-strangler env=production component=$(API_COMPONENT)
 
-.PHONY: scale-down-api-canary
-scale-down-api-canary:
-	sc k8s scale --zone="$(ZONE)" --component="$(API_COMPONENT)" --track=canary --replicas=0 --force
+canary-apitrackupload:
+	sc k8s canary \
+		--zone=$(ZONE) \
+		--system=public-api-strangler \
+		--env=production \
+		--component="$(APITRACKUPLOAD_COMPONENT)" \
+		--replicas=2 \
+		-p=http://prometheus-public-api-strangler.$(ZONE).s-cloud.net/ system=public-api-strangler env=production component=$(APITRACKUPLOAD_COMPONENT)
 
-.PHONY: deploy-k8s-api
-deploy-k8s-api:
+.PHONY: deploy-api
+deploy-api:
 	sc artifact-manager deploy run --zone="$(ZONE)" --component="$(API_COMPONENT)"
 
-
-.PHONY: deploy-k8s-apitrackupload-canary
-deploy-k8s-apitrackupload-canary:
-	sc artifact-manager deploy run --zone="$(ZONE)" --component="$(APITRACKUPLOAD_COMPONENT)" --track=canary
-	sc k8s scale --zone="$(ZONE)" --component="$(APITRACKUPLOAD_COMPONENT)" --track=canary --replicas=2 --force
-	sc check-alerts -p http://prometheus-public-api-strangler.db.s-cloud.net/ \
-		system=public-api-strangler \
-		component=$(APITRACKUPLOAD_COMPONENT) \
-		env=production \
-		track=canary
-
-.PHONY: scale-down-apitrackupload-canary
-scale-down-apitrackupload-canary:
-	sc k8s scale --zone="$(ZONE)" --component="$(APITRACKUPLOAD_COMPONENT)" --track=canary --replicas=0 --force
-
-.PHONY: deploy-k8s-apitrackupload
-deploy-k8s-apitrackupload:
+.PHONY: deploy-apitrackupload
+deploy-apitrackupload:
 	sc artifact-manager deploy run --zone="$(ZONE)" --component="$(APITRACKUPLOAD_COMPONENT)"
 

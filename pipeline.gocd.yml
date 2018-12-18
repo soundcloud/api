@@ -45,40 +45,22 @@ pipelines:
                 command: make
                 arguments:
                 - promote-to-stable
-    - deploy-canary:
+    - canary:
         jobs:
-          deploy-api-canary:
+          canary-api:
             job_type: deploy
             tasks:
             - exec:
                 command: make
                 arguments:
-                - deploy-k8s-api-canary
-            - exec:
-                command: make
-                arguments:
-                - scale-down-api-canary
-            - exec:
-                run_if: failed
-                command: make
-                arguments:
-                - scale-down-api-canary
-          deploy-apitrackupload-canary:
+                - canary-api
+          canary-apitrackupload:
             job_type: deploy
             tasks:
             - exec:
                 command: make
                 arguments:
-                - deploy-k8s-apitrackupload-canary
-            - exec:
-                command: make
-                arguments:
-                - scale-down-apitrackupload-canary
-            - exec:
-                run_if: failed
-                command: make
-                arguments:
-                - scale-down-apitrackupload-canary
+                - canary-apitrackupload
     - deploy-to-production:
         jobs:
           promote-to-release-then-deploy:
@@ -91,11 +73,11 @@ pipelines:
             - exec:
                 command: make
                 arguments:
-                - deploy-k8s-api
+                - deploy-api
             - exec:
                 command: make
                 arguments:
-                - deploy-k8s-apitrackupload
+                - deploy-apitrackupload
     - promote-contract-tests:
         jobs:
           promote-tests:
