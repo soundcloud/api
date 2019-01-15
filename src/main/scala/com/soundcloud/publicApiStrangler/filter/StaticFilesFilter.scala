@@ -1,7 +1,7 @@
 package com.soundcloud.publicApiStrangler.filter
 
 import com.soundcloud.jvmkit.module.http.server.ResponseBuilder
-import com.twitter.conversions.time._
+import com.twitter.conversions.DurationOps._
 import com.twitter.finagle.http.{MediaType, Method, Request, Response}
 import com.twitter.finagle.{Service, SimpleFilter}
 import com.twitter.util.Future
