@@ -42,10 +42,10 @@ class TrackRepositorySpec extends UnitSpecification {
       userQuotaClient,
       trackAccessibilityService)
 
-    val sessionUser = Urn("soundcloud:users:2398471")
+    val sessionUser = Urn("soundcloud", "users", "2398471")
     lazy val session = loggedInSession(sessionUser)
 
-    def userUrn = Urn("soundcloud:users:9218371")
+    def userUrn = Urn("soundcloud", "users", "9218371")
 
     def paginationParams: TrackPagination
 
@@ -107,7 +107,7 @@ class TrackRepositorySpec extends UnitSpecification {
     richOkidokiClient.fetchTracksAudioMetadata(session, trackUrns).returns(fetchTracksAudioMetadataResponse)
     mediaServiceUrlGenClient.waveformUrls(trackmetadataTracks.flatMap(_.uid)).returns(waveformUrlsResponse)
 
-    val userUrnsFromLabelIds = trackmetadataTracks.flatMap(_.label_id).map(id => new Urn("soundcloud", "users", id.toString)).toSet
+    val userUrnsFromLabelIds = trackmetadataTracks.flatMap(_.label_id).map(id => Urn("soundcloud", "users", id.toString)).toSet
     richOkidokiClient.fetchUsersMap(session, userUrnsFromLabelIds).returns(fetchUsersMapResponse)
 
     def accessibilityChecks = Map(

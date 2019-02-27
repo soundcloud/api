@@ -33,12 +33,12 @@ object TrackRepresentationLike {
 
   implicit val userWrites = Writes[User] { user =>
     Json.obj(
-      "id" -> user.urn.getIdentifier.toLong,
+      "id" -> user.urn.identifier.toLong,
       "kind" -> "user",
       "permalink" -> user.permalink,
       "username" -> user.username,
       "last_modified" -> user.updated_at,
-      "uri" -> s"https://api.soundcloud.com/users/${user.urn.getIdentifier}",
+      "uri" -> s"https://api.soundcloud.com/users/${user.urn.identifier}",
       "permalink_url" -> user.permalink_url,
       "avatar_url" -> user.avatar_url.replaceAll("\\?[0-9]+$", "").replaceAll("^http:", "https:")
     )
@@ -110,7 +110,7 @@ object TrackRepresentationSecretTokenDecorator {
   implicit val writes = Writes[TrackRepresentationSecretTokenDecorator] { dec =>
     Json.toJson(dec.wrapped).as[JsObject] ++ Json.obj(
       "secret_token" -> dec.track.secret_token,
-      "secret_uri" -> s"https://api.soundcloud.com/tracks/${dec.track.urn.getIdentifier}?secret_token=${dec.track.secret_token}"
+      "secret_uri" -> s"https://api.soundcloud.com/tracks/${dec.track.urn.identifier}?secret_token=${dec.track.secret_token}"
     )
   }
 }
@@ -179,7 +179,7 @@ case class TrackRepresentationAttachmentsUriDecorator(
 
 object TrackRepresentationAttachmentsUriDecorator {
   implicit val writes = Writes[TrackRepresentationAttachmentsUriDecorator] { dec =>
-    val id = dec.trackUrn.getIdentifier
+    val id = dec.trackUrn.identifier
     Json.toJson(dec.wrapped).as[JsObject] ++ Json.obj(
       "attachments_uri" -> s"https://api.soundcloud.com/tracks/${id}/attachments"
     )
@@ -255,7 +255,7 @@ case class TrackRepresentation(
                                 geoblockings: Geoblockings,
                                 domainlockings: Seq[DomainLocking],
                                 audioMetadata: TrackAudioMetadata) extends TrackRepresentationLike {
-  def id = track.urn.getIdentifier.toLong
+  def id = track.urn.identifier.toLong
 }
 
 object TrackRepresentation {
@@ -271,7 +271,7 @@ object TrackRepresentation {
         "kind" -> "track",
         "id" -> rep.id,
         "created_at" -> rep.track.created_at.toString(dateTimeFormat),
-        "user_id" -> rep.user.urn.getIdentifier.toLong,
+        "user_id" -> rep.user.urn.identifier.toLong,
         "duration" -> rep.track.duration,
         "commentable" -> rep.track.commentable,
         "state" -> rep.audioMetadata.state,

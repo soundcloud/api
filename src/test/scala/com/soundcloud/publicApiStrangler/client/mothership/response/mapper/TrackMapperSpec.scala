@@ -10,8 +10,8 @@ class TrackMapperSpec extends UnitSpecification {
     "All fields" in {
       val presented = TrackMapper(moshiTrackFull)
 
-      (presented.urn) must be_==(Urn("soundcloud:sounds:174088262"))
-      (presented.user_urn) must be_==(Urn("soundcloud:users:102661606"))
+      (presented.urn) must be_==(Urn("soundcloud", "tracks", "174088262"))
+      (presented.user_urn) must be_==(Urn("soundcloud", "users", "102661606"))
 
       (presented.api_streamable) must be_==(Some(true))
       (presented.artwork_url) must be_==(Some("https://i1.sndcdn.com/artworks-000095281756-51d163-large.jpg"))
@@ -79,6 +79,6 @@ class TrackMapperSpec extends UnitSpecification {
 
   "Minimal fields" in {
     val presented = TrackMapper(moshiTrackMinimal)
-    (presented.urn) must be_==(Urn("soundcloud:sounds:174090825"))
+    (presented.urn) must be_==(Urn("soundcloud", "tracks", "174090825"))
   }
 }

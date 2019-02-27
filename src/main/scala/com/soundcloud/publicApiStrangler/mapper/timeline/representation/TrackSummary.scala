@@ -11,7 +11,7 @@ class TrackSummary(jsonValue: JsValue,
                    entitySummaryMapper: EntitySummaryMapper)(implicit context: MappingContext)
   extends JsonMapping(jsonValue) with UrnSupport {
 
-  val id = urn.getIdentifier.toInt
+  val id = urn.identifier.toInt
   val kind = "track"
   val created_at = (json \ "created_at").asOpt[String]
   val last_modified = (json \ "last_modified").asOpt[String]

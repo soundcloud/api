@@ -10,8 +10,8 @@ class PlaylistMapperSpec extends UnitSpecification {
   "maps attributes to object" in {
     val playlist = PlaylistMapper(moshiPlaylist.as[JsObject])
 
-    playlist.urn ==== new Urn("soundcloud:sets:42703821")
-    playlist.user_urn ==== new Urn("soundcloud:users:10419549")
+    playlist.urn ==== Urn("soundcloud", "playlists", "42703821")
+    playlist.user_urn ==== Urn("soundcloud", "users", "10419549")
     playlist.title ==== "dub dub dub dub"
     playlist.created_at ==== "2014/07/07 13:32:46 +0000"
     playlist.duration ==== 308351

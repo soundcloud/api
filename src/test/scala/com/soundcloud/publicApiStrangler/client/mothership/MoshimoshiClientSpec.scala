@@ -27,7 +27,7 @@ class MoshimoshiClientSpec extends UnitSpecification {
     val updateUserResponseMapper = mock[UpdateUserResponseMapper]
     val resetUserPasswordResponseMapper = mock[ResetUserPasswordResponseMapper]
     val deleteUserResponseMapper = mock[DeleteUserResponseMapper]
-    implicit val session = loggedInSession(Urn("soundcloud:users:1"))
+    implicit val session = loggedInSession(Urn("soundcloud", "users", "1"))
     val client = new MoshimoshiClient(service,
       addToPlaylistResponseMapper,
       deleteFromPlaylistResponseMapper,
@@ -44,7 +44,7 @@ class MoshimoshiClientSpec extends UnitSpecification {
 
   "#trackPurchaseLinks" >> {
     trait TestContext extends Context {
-      val urns = Set(Urn("soundcloud:tracks:1"), Urn("soundcloud:tracks:2"), Urn("soundcloud:tracks:3"))
+      val urns = Set(Urn("soundcloud", "tracks", "1"), Urn("soundcloud", "tracks", "2"), Urn("soundcloud", "tracks", "3"))
 
       def path = Path() / "tracks" / "purchase_links"
 
@@ -74,8 +74,8 @@ class MoshimoshiClientSpec extends UnitSpecification {
 
   "#addTrackToPlaylist" >> {
     trait PlaylistContext extends Context {
-      val playlistUrn = Urn("soundcloud:playlists:1")
-      val trackUrn = Urn("soundcloud:tracks:1")
+      val playlistUrn = Urn("soundcloud", "playlists", "1")
+      val trackUrn = Urn("soundcloud", "tracks", "1")
       val path = Path() / "playlists" / playlistUrn / "tracks" / trackUrn / "add_track"
       val response = mock[Response]
       val addToPlaylistResponse = OkAddToPlaylistResponse
@@ -97,8 +97,8 @@ class MoshimoshiClientSpec extends UnitSpecification {
 
   "#deleteTrackFromPlaylist" >> {
     trait PlaylistContext extends Context {
-      val playlistUrn = Urn("soundcloud:playlists:1")
-      val trackUrn = Urn("soundcloud:tracks:1")
+      val playlistUrn = Urn("soundcloud", "playlists", "1")
+      val trackUrn = Urn("soundcloud", "tracks", "1")
       val path = Path() / "playlists" / playlistUrn / "tracks" / trackUrn / "remove_track"
       val response = mock[Response]
       val deleteFromPlaylistResponse = OkDeleteFromPlaylistResponse
@@ -142,7 +142,7 @@ class MoshimoshiClientSpec extends UnitSpecification {
 
   "#updatePlaylist" >> {
     trait PlaylistContext extends Context {
-      val playlistUrn = Urn("soundcloud:playlists:1")
+      val playlistUrn = Urn("soundcloud", "playlists", "1")
       val path = Path() / "playlists" / playlistUrn
       val playlistUpdate = PlaylistUpdate(Value("Updated Title Mix"), Value(true))
       val response = mock[Response]
@@ -166,7 +166,7 @@ class MoshimoshiClientSpec extends UnitSpecification {
 
   "#deletePlaylist" >> {
     trait PlaylistContext extends Context {
-      val playlistUrn = Urn("soundcloud:playlists:1")
+      val playlistUrn = Urn("soundcloud", "playlists", "1")
       val path = Path() / "playlists" / playlistUrn
       val response = mock[Response]
       val deletePlaylistResponse = InvalidUrnDeletePlaylistResponse
@@ -189,7 +189,7 @@ class MoshimoshiClientSpec extends UnitSpecification {
 
   "#fetchUsers" >> {
     trait UsersContext extends Context {
-      val urns = Set(Urn("soundcloud:users:10419549"), Urn("soundcloud:users:123123123"))
+      val urns = Set(Urn("soundcloud", "users", "10419549"), Urn("soundcloud", "users", "123123123"))
 
       def path = Path() / "users" / "fetch"
 
@@ -219,7 +219,7 @@ class MoshimoshiClientSpec extends UnitSpecification {
 
   "#fetchUserObjects" >> {
     trait UsersContext extends Context {
-      val urns = Set(Urn("soundcloud:users:10419549"), Urn("soundcloud:users:123123123"))
+      val urns = Set(Urn("soundcloud", "users", "10419549"), Urn("soundcloud", "users", "123123123"))
 
       def path = Path() / "users" / "fetch"
 
@@ -249,7 +249,7 @@ class MoshimoshiClientSpec extends UnitSpecification {
 
   "#fetchPlaylistObjects" >> {
     trait PlaylistsContext extends Context {
-      val urns = Set(Urn("soundcloud:playlists:10419549"), Urn("soundcloud:playlists:123123123"))
+      val urns = Set(Urn("soundcloud", "playlists", "10419549"), Urn("soundcloud", "playlists", "123123123"))
 
       def path = Path() / "playlists" / "fetch"
 
@@ -279,7 +279,7 @@ class MoshimoshiClientSpec extends UnitSpecification {
 
   "#fetchTracks" >> {
     trait TracksContext extends Context {
-      val urns = Set(Urn("soundcloud:tracks:32322284"), Urn("soundcloud:tracks:22322286"))
+      val urns = Set(Urn("soundcloud", "tracks", "32322284"), Urn("soundcloud", "tracks", "22322286"))
 
       def path = Path() / "tracks" / "fetch"
 
@@ -316,7 +316,7 @@ class MoshimoshiClientSpec extends UnitSpecification {
 
   "fetch individual track" >> {
     trait FetchTrackContext extends Context {
-      val urn = Urn("soundcloud:tracks:174090825")
+      val urn = Urn("soundcloud", "tracks", "174090825")
 
       def path = Path() / "tracks" / urn
 
@@ -329,7 +329,7 @@ class MoshimoshiClientSpec extends UnitSpecification {
     }
 
     trait NotFoundTrackContext extends Context {
-      val urn = Urn("soundcloud:tracks:32322")
+      val urn = Urn("soundcloud", "tracks", "32322")
 
       def path = Path() / "tracks" / urn
 
@@ -344,7 +344,7 @@ class MoshimoshiClientSpec extends UnitSpecification {
 
   "fetch playlists" >> {
     trait PlaylistsContext extends Context {
-      val urns = Set(Urn("soundcloud:playlists:10419549"), Urn("soundcloud:playlists:123123123"))
+      val urns = Set(Urn("soundcloud", "playlists", "10419549"), Urn("soundcloud", "playlists", "123123123"))
 
       def path = Path() / "playlists" / "fetch"
 
@@ -374,7 +374,7 @@ class MoshimoshiClientSpec extends UnitSpecification {
 
   "#fetchPlaylistTracks" >> {
     trait PlaylistTracksContext extends Context {
-      val urn = Urn("soundcloud:playlists:10419549")
+      val urn = Urn("soundcloud", "playlists", "10419549")
 
       def path = Path() / "playlists" / urn / "tracks"
     }
@@ -408,7 +408,7 @@ class MoshimoshiClientSpec extends UnitSpecification {
 
   "#fetchPlaylistTrackUrns" >> {
     trait PlaylistTrackUrnsContext extends Context {
-      val playlistUrn = Urn("soundcloud:playlists:10419549")
+      val playlistUrn = Urn("soundcloud", "playlists", "10419549")
 
       def path = Path() / "playlists" / playlistUrn / "tracks_with_pagination"
 
@@ -427,14 +427,14 @@ class MoshimoshiClientSpec extends UnitSpecification {
       "returns the tracks of the given playlist" in new PlaylistTrackUrnsContext {
         expectOkResponse(path, moshiPlaylistTrackUrns, params)
 
-        Await.result(client.fetchPlaylistTrackUrns(session, playlistUrn)) ==== List(Urn("soundcloud:tracks:123"), Urn("soundcloud:tracks:456"))
+        Await.result(client.fetchPlaylistTrackUrns(session, playlistUrn)) ==== List(Urn("soundcloud", "tracks", "123"), Urn("soundcloud", "tracks", "456"))
       }
     }
   }
 
   "#fetchWebProfiles" >> {
     trait WebProfilesContext extends Context {
-      val userUrn = Urn("soundcloud:users:1")
+      val userUrn = Urn("soundcloud", "users", "1")
 
       def path = Path() / "users" / 1 / "web_profiles"
     }
@@ -490,7 +490,7 @@ class MoshimoshiClientSpec extends UnitSpecification {
         ))
       )
 
-      val urn = Urn("soundcloud:sounds:174090825")
+      val urn = Urn("soundcloud", "tracks", "174090825")
       val path = Path() / "tracks"
       val expectedTrackJson = moshiTrackMinimal
 
@@ -552,7 +552,7 @@ class MoshimoshiClientSpec extends UnitSpecification {
         artwork_from_s3 = MissingValue
       )
 
-      val urn = Urn("soundcloud:sounds:174090825")
+      val urn = Urn("soundcloud", "tracks", "174090825")
       val path = Path() / "tracks"
       val expectedTrackJson = moshiTrackMinimal
       val headers = buildHeaders("X-Forwarded-For" -> "8.8.8.8", "X-Real-IP" -> "8.8.8.8", "Content-Length" -> "546")
@@ -652,7 +652,7 @@ class MoshimoshiClientSpec extends UnitSpecification {
         artwork_from_s3 = MissingValue
       )
 
-      val urn = Urn("soundcloud:sounds:174090825")
+      val urn = Urn("soundcloud", "tracks", "174090825")
       val path = Path() / "tracks"
       val expectedTrackJson = moshiTrackMinimal
       val headers = buildHeaders("X-Forwarded-For" -> "8.8.8.8", "X-Real-IP" -> "8.8.8.8", "Content-Length" -> "546")
@@ -712,7 +712,7 @@ class MoshimoshiClientSpec extends UnitSpecification {
         artwork_from_s3 = MissingValue
       )
 
-      val urn = Urn("soundcloud:sounds:174090825")
+      val urn = Urn("soundcloud", "tracks", "174090825")
       val path = Path() / "tracks" / urn
       val headers = buildHeaders("X-Forwarded-For" -> "8.8.8.8", "X-Real-IP" -> "8.8.8.8", "Content-Length" -> "546")
       val filteredHeaders = buildHeaders("X-Forwarded-For" -> "8.8.8.8", "X-Real-IP" -> "8.8.8.8")
@@ -803,7 +803,7 @@ class MoshimoshiClientSpec extends UnitSpecification {
         ))
       )
 
-      val urn = Urn("soundcloud:sounds:174090825")
+      val urn = Urn("soundcloud", "tracks", "174090825")
       val path = Path() / "tracks" / urn
       val headers = buildHeaders("X-Forwarded-For" -> "8.8.8.8", "X-Real-IP" -> "8.8.8.8", "Content-Length" -> "546")
       val filteredHeaders = buildHeaders("X-Forwarded-For" -> "8.8.8.8", "X-Real-IP" -> "8.8.8.8")
@@ -893,7 +893,7 @@ class MoshimoshiClientSpec extends UnitSpecification {
         artwork_from_s3 = MissingValue
       )
 
-      val urn = Urn("soundcloud:sounds:174090825")
+      val urn = Urn("soundcloud", "tracks", "174090825")
       val path = Path() / "tracks" / urn
       val headers = buildHeaders("X-Forwarded-For" -> "8.8.8.8", "X-Real-IP" -> "8.8.8.8", "Content-Length" -> "546")
       val filteredHeaders = buildHeaders("X-Forwarded-For" -> "8.8.8.8", "X-Real-IP" -> "8.8.8.8")
@@ -942,7 +942,7 @@ class MoshimoshiClientSpec extends UnitSpecification {
         artwork_from_s3 = MissingValue
       )
 
-      val urn = Urn("soundcloud:sounds:174090825")
+      val urn = Urn("soundcloud", "tracks", "174090825")
       val path = Path() / "tracks" / urn
       val headers = buildHeaders("X-Forwarded-For" -> "8.8.8.8", "X-Real-IP" -> "8.8.8.8", "Content-Length" -> "546")
       val filteredHeaders = buildHeaders("X-Forwarded-For" -> "8.8.8.8", "X-Real-IP" -> "8.8.8.8")
@@ -967,7 +967,7 @@ class MoshimoshiClientSpec extends UnitSpecification {
 
   "#fetchTrackGeoblockings" >> {
     trait GeoblockingsContext extends Context {
-      val trackUrn = Urn("soundcloud:tracks:1")
+      val trackUrn = Urn("soundcloud", "tracks", "1")
 
       def path = Path() / "tracks" / trackUrn / "geo_blockings"
 
@@ -1001,7 +1001,7 @@ class MoshimoshiClientSpec extends UnitSpecification {
 
   "#fetchFeatureStatus" >> {
     trait FeaturesContext extends Context {
-      val userUrn = Urn("soundcloud:users:1")
+      val userUrn = Urn("soundcloud", "users", "1")
       val name = "scheduled_publishings"
 
       def path = Path() / "users" / userUrn / "features" / name / "status"
@@ -1031,7 +1031,7 @@ class MoshimoshiClientSpec extends UnitSpecification {
 
   "#updateTrackGeoblockings" >> {
     trait GeoblockingsContext extends Context {
-      val trackUrn = Urn("soundcloud:tracks:1")
+      val trackUrn = Urn("soundcloud", "tracks", "1")
       val geoblockingsUpdate = List("DE", "US")
 
       def path = Path() / "tracks" / trackUrn / "geo_blockings"
@@ -1087,11 +1087,11 @@ class MoshimoshiClientSpec extends UnitSpecification {
         is_explicit = true,
         language = Some("en"),
         redirect_url = None,
-        feed_category = Some(FeedCategory(Urn("soundcloud:feed-categories:3"), Some("Science"))),
-        email = Some(FeedEmail(Urn("soundcloud:emails:123"), Some("filipe@example.com")))
+        feed_category = Some(FeedCategory(Urn("soundcloud", "feed-categories", "3"), Some("Science"))),
+        email = Some(FeedEmail(Urn("soundcloud", "emails", "123"), Some("filipe@example.com")))
       )
 
-      val urn = Urn("soundcloud:users:1")
+      val urn = Urn("soundcloud", "users", "1")
       val path = Path() / "users" / urn / "feeds_settings"
 
       def result = Await.result(client.updateUserFeedsSettings(session, urn, userFeedsSettingsUpdate))
@@ -1132,11 +1132,11 @@ class MoshimoshiClientSpec extends UnitSpecification {
         is_explicit = true,
         language = Some("en"),
         redirect_url = None,
-        feed_category = Some(FeedCategory(Urn("soundcloud:feed-categories:3"), Some("Science"))),
-        email = Some(FeedEmail(Urn("soundcloud:emails:123"), Some("filipe@example.com")))
+        feed_category = Some(FeedCategory(Urn("soundcloud", "feed-categories", "3"), Some("Science"))),
+        email = Some(FeedEmail(Urn("soundcloud", "emails", "123"), Some("filipe@example.com")))
       )
 
-      val urn = Urn("soundcloud:users:1")
+      val urn = Urn("soundcloud", "users", "1")
       val path = Path() / "users" / urn / "feeds_settings"
 
       def result = Await.result(client.fetchUserFeedsSettings(session, urn))
@@ -1169,7 +1169,7 @@ class MoshimoshiClientSpec extends UnitSpecification {
 
   "#updateUser" >> {
     trait UpdateUserContext extends Context {
-      val userUrn = Urn("soundcloud:users:1")
+      val userUrn = Urn("soundcloud", "users", "1")
       val response = mock[Response]
       val updateUserResponse = OkUpdateUserResponse
       val userUpdate = UserUpdate(city = Value("some city"))
@@ -1209,13 +1209,13 @@ class MoshimoshiClientSpec extends UnitSpecification {
 
   "#resetUserPassword (with user id)" >> {
     trait ResetUserPasswordContext extends Context {
-      val userUrn = Urn("soundcloud:users:1")
+      val userUrn = Urn("soundcloud", "users", "1")
       val response = mock[Response]
       val resetUserPasswordResponse = OkResetUserPasswordResponse
 
       def performCall() = Await.result(client.resetUserPassword(session, userUrn))
 
-      when(service.postWithSession(session, Path() / "users" / "password_reset", Params("user_id" -> userUrn.getIdentifier), Headers.empty, None))
+      when(service.postWithSession(session, Path() / "users" / "password_reset", Params("user_id" -> userUrn.identifier), Headers.empty, None))
         .thenReturn(Future.value(response))
       when(resetUserPasswordResponseMapper.apply(response))
         .thenReturn(resetUserPasswordResponse)
@@ -1223,7 +1223,7 @@ class MoshimoshiClientSpec extends UnitSpecification {
 
     "service returns mapped response" in new ResetUserPasswordContext {
       performCall() ==== resetUserPasswordResponse
-      there was one(service).postWithSession(session, Path() / "users" / "password_reset", Params("user_id" -> userUrn.getIdentifier), Headers.empty, None)
+      there was one(service).postWithSession(session, Path() / "users" / "password_reset", Params("user_id" -> userUrn.identifier), Headers.empty, None)
       there was one(resetUserPasswordResponseMapper).apply(response)
     }
   }
@@ -1231,7 +1231,7 @@ class MoshimoshiClientSpec extends UnitSpecification {
   "#deleteUser" >> {
     trait DeleteUserContext extends Context {
       val response = mock[Response]
-      val userUrn = Urn("soundcloud:users:2")
+      val userUrn = Urn("soundcloud", "users", "2")
       val reason = "because"
       val deleteUserResponse = OkDeleteUserResponse
 
@@ -1250,8 +1250,8 @@ class MoshimoshiClientSpec extends UnitSpecification {
 
   "resends email confirmations" >> {
     trait ResendEmailConfirmationContext extends Context {
-      val userUrn = Urn("soundcloud:users:1")
-      val emailUrn = Urn("soundcloud:emails:2")
+      val userUrn = Urn("soundcloud", "users", "1")
+      val emailUrn = Urn("soundcloud", "emails", "2")
 
       def expectStatusForPath(path: Path, status: Status) = {
         expectResponse(

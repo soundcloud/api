@@ -14,11 +14,11 @@ class ContentAuthorizationRulesSpec extends UnitSpecification {
     val contentAuthMock = mock[ContentAuthorizationService]
     val subsServiceMock = mock[SubscriptionsService]
     val service = new ContentAuthorizationRules(contentAuthMock, subsServiceMock)
-    val urns = Seq(Urn("soundcloud:tracks:123"), Urn("soundcloud:tracks:456"))
+    val urns = Seq(Urn("soundcloud", "tracks", "123"), Urn("soundcloud", "tracks", "456"))
     val authorizations = urns.map(urn => new ContentAuthorization(urn, ContentPolicy.ALLOW, Reason.UNKNOWN, MonetizationModel.NOT_APPLICABLE))
 
     def sessionWithTier(tier: UserTier): UserSession = {
-      val session = loggedInSession(Urn("soundcloud:users:667"))
+      val session = loggedInSession(Urn("soundcloud", "users", "667"))
       tier match {
         case UserTier.HIGH => session.copyWithFeatures(Set("content_high_tier"))
         case UserTier.MID => session.copyWithFeatures(Set("content_mid_tier"))

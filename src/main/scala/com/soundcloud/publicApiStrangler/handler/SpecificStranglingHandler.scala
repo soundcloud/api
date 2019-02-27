@@ -57,5 +57,5 @@ class SpecificStranglingHandler(whereToDispatch: Handler, pathsPatternsToDispatc
 }
 
 object SpecificStranglingHandler {
-  private final val externalAppUrn = new Urn("soundcloud:applications:external")
+  private final val externalAppUrn = Urn("soundcloud", "applications", "external")
 }

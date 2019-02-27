@@ -17,8 +17,8 @@ class IndividualFetchRepositorySpec extends UnitSpecification {
   trait Context extends Scope with Before {
 
     val session = mock[UserSession]
-    val urn1 = new Urn("soundcloud:users:3232")
-    val urn2 = new Urn("soundcloud:users:323")
+    val urn1 = Urn("soundcloud", "users", "3232")
+    val urn2 = Urn("soundcloud", "users", "323")
     val urns = Set(urn1, urn2)
 
     val json1 = mock[JsValue]

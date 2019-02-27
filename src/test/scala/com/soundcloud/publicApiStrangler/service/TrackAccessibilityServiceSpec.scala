@@ -36,8 +36,8 @@ class TrackAccessibilityServiceSpec extends UnitSpecification {
 
   "#isTrackAccessible" in new Context {
     val now = Some(LocalDateTime.now)
-    val user1 = Urn("soundcloud:users:1")
-    val user2 = Urn("soundcloud:users:2")
+    val user1 = Urn("soundcloud", "users", "1")
+    val user2 = Urn("soundcloud", "users", "2")
 
     val secretToken1 = Some("secret1")
     val secretToken2 = Some("secret2")

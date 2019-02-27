@@ -18,8 +18,8 @@ class TrackPolicyApplicatorSpec extends UnitSpecification {
         .map(track => (track \ "id").as[Int])
         .map(id => new Urn(s"soundcloud:tracks:$id"))
 
-    val whitelistedClientUrn = new Urn("soundcloud:applications:1000")
-    val nonWhitelistedClientUrn = new Urn("soundcloud:applications:2000")
+    val whitelistedClientUrn = Urn("soundcloud", "applications", "1000")
+    val nonWhitelistedClientUrn = Urn("soundcloud", "applications", "2000")
     val clientWhitelist = Set(whitelistedClientUrn)
 
     def rules: List[ContentAuthorization]
@@ -72,9 +72,9 @@ class TrackPolicyApplicatorSpec extends UnitSpecification {
     }
 
     trait PartiallyAuthorized extends Context {
-      val allowedTrackUrn = new Urn("soundcloud:tracks:49438146")
-      val monetizedTrackUrn = new Urn("soundcloud:tracks:49437906")
-      val blockedTrackUrn = new Urn("soundcloud:tracks:48031525")
+      val allowedTrackUrn = Urn("soundcloud", "tracks", "49438146")
+      val monetizedTrackUrn = Urn("soundcloud", "tracks", "49437906")
+      val blockedTrackUrn = Urn("soundcloud", "tracks", "48031525")
 
       def rules = List(
         new ContentAuthorization(allowedTrackUrn, ContentPolicy.ALLOW, Reason.GEO, MonetizationModel.NOT_APPLICABLE),
@@ -105,9 +105,9 @@ class TrackPolicyApplicatorSpec extends UnitSpecification {
     }
 
     trait AdSupported extends Context {
-      val allowedTrackUrn = new Urn("soundcloud:tracks:49438146")
-      val monetizedHighTierTrackUrn = new Urn("soundcloud:tracks:49437906")
-      val monetizedAdSupportedTrackUrn = new Urn("soundcloud:tracks:48031525")
+      val allowedTrackUrn = Urn("soundcloud", "tracks", "49438146")
+      val monetizedHighTierTrackUrn = Urn("soundcloud", "tracks", "49437906")
+      val monetizedAdSupportedTrackUrn = Urn("soundcloud", "tracks", "48031525")
 
       def rules = List(
         new ContentAuthorization(allowedTrackUrn, ContentPolicy.ALLOW, Reason.GEO, MonetizationModel.NOT_APPLICABLE),

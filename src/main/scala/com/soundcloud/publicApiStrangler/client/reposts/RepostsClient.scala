@@ -48,7 +48,7 @@ class RepostsClient(jsonClient: JsonClient) extends FetchClient {
   def reposters(session: UserSession, repostableUrn: Urn, limit: Int, maybeCursor: Option[String]): Future[Reposts] =
     fetchAll(
       session,
-      Path() / repostableUrn.getCollection / repostableUrn / "reposts",
+      Path() / repostableUrn.collection / repostableUrn / "reposts",
       limit,
       maybeCursor
     ).map { case (repostsJson, cursor) =>

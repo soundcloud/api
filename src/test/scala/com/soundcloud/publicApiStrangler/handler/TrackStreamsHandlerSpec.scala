@@ -12,7 +12,7 @@ import com.twitter.util.Future
 class TrackStreamsHandlerSpec extends UnitSpecification {
 
   trait Context extends HandlerSpecificationScope {
-    val user = new Urn("soundcloud:users:1234")
+    val user = Urn("soundcloud", "users", "1234")
     val session = loggedInSession(user)
 
     val trackStreamUrlToJsonResponseMapperMock = mock[TrackStreamJsonResponseMapper]

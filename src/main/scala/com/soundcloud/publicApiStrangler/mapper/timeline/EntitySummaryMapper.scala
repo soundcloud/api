@@ -29,7 +29,7 @@ class EntitySummaryMapper(okidokiClient: OkidokiClient,
   }
 
   private def entityFor(urn: Urn, entityData: JsObject, playlistRepostCountsByUrn: Map[Urn, Long])(implicit context: MappingContext) = {
-    urn.getCollection match {
+    urn.collection match {
       case "users" => new UserSummary(entityData, baseUrl)
       case "tracks" => new TrackSummary(entityData, baseUrl, this)
       case "playlists" => new PlaylistSummary(entityData, playlistRepostCountsByUrn, baseUrl, this)

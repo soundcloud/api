@@ -16,8 +16,8 @@ class PlaylistsClientSpec extends UnitSpecification {
     val moshimoshiClient = mock[JsonClient]
     val client = new PlaylistsClient(moshimoshiClient)
 
-    val track = Urn("soundcloud:tracks:123")
-    val owner = Urn("soundcloud:users:123")
+    val track = Urn("soundcloud", "tracks", "123")
+    val owner = Urn("soundcloud", "users", "123")
 
     val path = Path() / "tracks" / track / "playlists"
     val params = Params("user_urn" -> owner)
@@ -35,7 +35,7 @@ class PlaylistsClientSpec extends UnitSpecification {
     response.status returns Status.Ok
     response.contentString returns Json.stringify(Json.arr(validPlaylistJson))
 
-    Await.result(client.getPlaylistContainingTrackOwnedByUser(track, owner)) ==== List(Playlist(Urn("soundcloud:users:123"), "s-whatever"))
+    Await.result(client.getPlaylistContainingTrackOwnedByUser(track, owner)) ==== List(Playlist(Urn("soundcloud", "users", "123"), "s-whatever"))
   }
 
   "OK Bad JSON response" in new WithServerResponse {

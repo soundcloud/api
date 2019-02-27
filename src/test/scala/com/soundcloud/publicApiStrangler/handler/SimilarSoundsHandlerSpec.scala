@@ -24,7 +24,7 @@ class SimilarSoundsHandlerSpec extends UnitSpecification {
     val forwardContent = "forwardContent"
 
     def fetchSimilarSounds(path: String, endpoint: String) = {
-      val param = new Urn("soundcloud:tracks:123")
+      val param = Urn("soundcloud", "tracks", "123")
       val page = OffsetBasedPage(param, "http://api.soundcloud.com", endpoint, Map.empty[String, String], 3, 22)
 
       abstract class SimilarSoundsMock extends ObjectMappingMock[SimilarSounds] with SimilarSoundsMapping
@@ -49,7 +49,7 @@ class SimilarSoundsHandlerSpec extends UnitSpecification {
   }
 
   "returns 404 if mapper returns none" in new Context {
-    val param = new Urn("soundcloud:tracks:123")
+    val param = Urn("soundcloud", "tracks", "123")
     val page = OffsetBasedPage(param, "http://api.soundcloud.com", "/tracks/123/related", Map.empty[String, String], 3, 22)
 
     when(similarSoundsMapperMock.materialize(anonymousSession, page)).

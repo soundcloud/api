@@ -25,15 +25,15 @@ class TracksHandlerSpec extends UnitSpecification {
     val trackCoordinator = mock[TrackCoordinatorClient]
     val okidoki = mock[OkidokiClient]
     val trackmetadataClient = mock[TrackmetadataClient]
-    val trackUrn = new Urn("soundcloud:tracks:999")
-    val userUrn = new Urn("soundcloud:users:102661606")
-    val loggedInUserUrn = Urn("soundcloud:users:2")
+    val trackUrn = Urn("soundcloud", "tracks", "999")
+    val userUrn = Urn("soundcloud", "users", "102661606")
+    val loggedInUserUrn = Urn("soundcloud", "users", "2")
     val users = okidokiUsers.as[List[JsObject]]
     val user = users.head
     val track = mock[Track]
 
     lazy val geo = new Geo("US")
-    lazy val session = new UserSessionBuilder().setUser(loggedInUserUrn).setAgent(new Urn("soundcloud:applications:v2")).setGeo(geo).build()
+    lazy val session = new UserSessionBuilder().setUser(loggedInUserUrn).setAgent(Urn("soundcloud", "applications", "v2")).setGeo(geo).build()
     lazy val handler = new TracksHandler(new FakeUserAuthentication(session), trackCoordinator, okidoki, fallback, trackmetadataClient)
 
     def trackmetadataResponse: Future[Option[TMTrack]] = Future.value(None)

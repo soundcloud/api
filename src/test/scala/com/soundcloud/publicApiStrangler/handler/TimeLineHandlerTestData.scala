@@ -5,13 +5,13 @@ import play.api.libs.json.{JsNull, Json}
 
 trait TimeLineHandlerTestData {
 
-  val usrUrn = Urn("soundcloud:users:1")
-  val trackUrn = Urn("soundcloud:tracks:2")
-  val playlistUrn = Urn("soundcloud:playlists:3")
+  val usrUrn = Urn("soundcloud", "users", "1")
+  val trackUrn = Urn("soundcloud", "tracks", "2")
+  val playlistUrn = Urn("soundcloud", "playlists", "3")
   val baseUrl = "www.soundcloud.com"
 
   val userJson = Json.obj(
-    "urn" -> usrUrn.toString(),
+    "urn" -> usrUrn.toString,
     "self" -> Json.obj("urn" -> "soundcloud:users:1"),
     "links" -> Json.arr(Json.obj("network" -> "facebook")),
     "avatar_url" -> "avatar:url",
@@ -44,8 +44,8 @@ trait TimeLineHandlerTestData {
     "playlist_count" -> 2)
 
   val testTrackJson = Json.obj(
-    "urn" -> trackUrn.toString(),
-    "self" -> Json.obj("urn" -> trackUrn.toString()),
+    "urn" -> trackUrn.toString,
+    "self" -> Json.obj("urn" -> trackUrn.toString),
     "timestamp" -> "2017-01-01",
     "artwork_url" -> "some/artwork",
     "comments_count" -> 5,
@@ -80,8 +80,8 @@ trait TimeLineHandlerTestData {
 
 
   val playlistJson = Json.obj(
-    "urn" -> playlistUrn.toString(),
-    "self" -> Json.obj("urn" -> playlistUrn.toString()),
+    "urn" -> playlistUrn.toString,
+    "self" -> Json.obj("urn" -> playlistUrn.toString),
     "created_at" -> "created_at",
     "duration" -> "duration",
     "last_modified" -> "last_modified",
@@ -110,16 +110,16 @@ trait TimeLineHandlerTestData {
     Json.obj(
       "type" -> "track",
       "timestamp" -> "2014/08/12 06:09:34 +0000",
-      "urn" -> trackUrn.toString(),
-      "actor" -> usrUrn.toString(),
+      "urn" -> trackUrn.toString,
+      "actor" -> usrUrn.toString,
       "target" -> JsNull
     )
     ,
     Json.obj(
       "type" -> "playlist",
       "timestamp" -> "2014/08/12 01:16:44 +0000",
-      "urn" -> playlistUrn.toString(),
-      "actor" -> usrUrn.toString(),
+      "urn" -> playlistUrn.toString,
+      "actor" -> usrUrn.toString,
       "target" -> JsNull
     )
   ))
@@ -128,8 +128,8 @@ trait TimeLineHandlerTestData {
     Json.obj(
       "type" -> "track",
       "timestamp" -> "2014/08/12 06:09:34 +0000",
-      "urn" -> trackUrn.toString(),
-      "actor" -> usrUrn.toString(),
+      "urn" -> trackUrn.toString,
+      "actor" -> usrUrn.toString,
       "target" -> JsNull
     )
   ))

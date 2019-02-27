@@ -26,7 +26,7 @@ class PlaylistsClient(moshimoshiClient: JsonClient) {
 }
 
 object PlaylistsClient {
-  val agent = Urn("soundcloud:system:public-api-strangler-playlists")
+  val agent = Urn("soundcloud", "system", "public-api-strangler-playlists")
 
   val session: AnonymousUserSession = (new UserSessionBuilder).setAgent(agent).build.asInstanceOf[AnonymousUserSession]
 }

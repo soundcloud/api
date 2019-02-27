@@ -14,9 +14,9 @@ import play.api.libs.json._
 trait TrackRepresentationLikeSpecContext {
   implicit val trackRepresentationWrites = TrackRepresentation.writes
 
-  val trackUrn = new Urn("soundcloud", "tracks", "1324")
-  val userUrn = new Urn("soundcloud", "users", "3456")
-  val labelUrn = new Urn("soundcloud", "users", "999")
+  val trackUrn = Urn("soundcloud", "tracks", "1324")
+  val userUrn = Urn("soundcloud", "users", "3456")
+  val labelUrn = Urn("soundcloud", "users", "999")
 
   def createTrackRepresentation(
                                  track: Track = defaultTrack,
@@ -29,7 +29,7 @@ trait TrackRepresentationLikeSpecContext {
                                  audioMetadata: TrackAudioMetadata = defaultTrackAudioMetadata) =
     TrackRepresentation(track, user, isrc, counts, label, geoblockings, domainlockings, audioMetadata)
 
-  def defaultLoggedInUserUrn = new Urn("soundcloud", "users", "79241")
+  def defaultLoggedInUserUrn = Urn("soundcloud", "users", "79241")
 
   def defaultTrackAudioMetadata =
     TrackAudioMetadata(
@@ -126,7 +126,7 @@ trait TrackRepresentationLikeSpecContext {
     DomainLocking(
       domain = "example.com",
       trackUrn = trackUrn,
-      urn = new Urn("soundcloud:domain-lockings:97802143")))
+      urn = Urn("soundcloud", "domain-lockings", "97802143")))
 }
 
 class TrackRepresentationSecretTokenDecoratorSpec extends UnitSpecification {

@@ -40,9 +40,9 @@ object Fixtures {
 class FollowsClientSpec extends UnitSpecification {
 
   trait Context extends Scope {
-    val user = new Urn("soundcloud:users:1")
-    val anotherUser = new Urn("soundcloud:users:2")
-    val yetAnotherUser = new Urn("soundcloud:users:3")
+    val user = Urn("soundcloud", "users", "1")
+    val anotherUser = Urn("soundcloud", "users", "2")
+    val yetAnotherUser = Urn("soundcloud", "users", "3")
 
     val serviceMock = mock[JsonClient]
     val client = new FollowsClient(serviceMock)
@@ -54,7 +54,7 @@ class FollowsClientSpec extends UnitSpecification {
       val path = Path() / "follow" / anotherUser
 
       lazy val geo = new Geo("US")
-      lazy val session = new UserSessionBuilder().setUser(user).setAgent(new Urn("soundcloud:applications:v2")).setGeo(geo).build()
+      lazy val session = new UserSessionBuilder().setUser(user).setAgent(Urn("soundcloud", "applications", "v2")).setGeo(geo).build()
 
       lazy val result = Await.result(client.follow(session, anotherUser))
 
@@ -140,7 +140,7 @@ class FollowsClientSpec extends UnitSpecification {
       val path = Path() / "bulkfollow"
 
       lazy val geo = new Geo("US")
-      lazy val session = new UserSessionBuilder().setUser(user).setAgent(new Urn("soundcloud:applications:v2")).setGeo(geo).build()
+      lazy val session = new UserSessionBuilder().setUser(user).setAgent(Urn("soundcloud", "applications", "v2")).setGeo(geo).build()
 
       lazy val result = Await.result(client.bulkFollow(session, List(anotherUser)))
 
@@ -178,7 +178,7 @@ class FollowsClientSpec extends UnitSpecification {
       val path = Path() / "unfollow" / anotherUser
 
       lazy val geo = new Geo("US")
-      lazy val session = new UserSessionBuilder().setUser(user).setAgent(new Urn("soundcloud:applications:v2")).setGeo(geo).build()
+      lazy val session = new UserSessionBuilder().setUser(user).setAgent(Urn("soundcloud", "applications", "v2")).setGeo(geo).build()
 
       lazy val result = Await.result(client.unfollow(session, anotherUser))
 

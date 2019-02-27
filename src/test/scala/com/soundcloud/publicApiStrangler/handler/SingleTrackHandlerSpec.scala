@@ -27,12 +27,12 @@ class SingleTrackHandlerSpec extends UnitSpecification {
                           isPublic: Boolean = true,
                           secretToken: String = "secr3t-Token",
                           isDownloadable: Option[Boolean] = Some(false),
-                          user: Urn = new Urn("soundcloud:users:3000"),
+                          user: Urn = Urn("soundcloud", "users", "3000"),
                           label_id: Option[Int] = None,
                           reveal_stats: Boolean = false,
                           reveal_comments: Boolean = true) =
     Track(
-      urn = new Urn("soundcloud:tracks:987"),
+      urn = Urn("soundcloud", "tracks", "987"),
       user_urn = user,
       commentable = false,
       description = None,
@@ -77,7 +77,7 @@ class SingleTrackHandlerSpec extends UnitSpecification {
 
   val user =
     User(
-      urn = new Urn("soundcloud:users:3000"),
+      urn = Urn("soundcloud", "users", "3000"),
       permalink = "giraffe",
       username = "Dr. G. Raffe",
       avatar_url = "http://example.com/giraffe.jpg",
@@ -109,7 +109,7 @@ class SingleTrackHandlerSpec extends UnitSpecification {
     val telemetry = new Telemetry(config.getApplicationName, collectorRegistry)
 
     val session = new UserSessionBuilder().build()
-    val trackUrn = new Urn("soundcloud:tracks:987")
+    val trackUrn = Urn("soundcloud", "tracks", "987")
 
     val handler = new SingleTrackHandler(new FakeUserAuthentication(session), trackRepresentationsService, telemetry)
 

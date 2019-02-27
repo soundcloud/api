@@ -14,7 +14,7 @@ class CursorPaginationSpec extends UnitSpecification {
 
   "returns the function's result for well-formed pagination params" in new Context {
     val request = Request("/test?limit=11&cursor=test")
-    val urn = new Urn("soundcloud:users:2")
+    val urn = Urn("soundcloud", "users", "2")
     val response =
       pagination.withPage(request, urn) { page =>
         page.cursor mustEqual Some("test")
@@ -27,7 +27,7 @@ class CursorPaginationSpec extends UnitSpecification {
 
   "returns bad request for malformed pagination params" in new Context {
     val request = Request("/test?limit=banana&cursor=test")
-    val urn = new Urn("soundcloud:users:2")
+    val urn = Urn("soundcloud", "users", "2")
     val response = pagination.withPage(request, urn) { page =>
       Future.value(ResponseBuilder.ok())
     }

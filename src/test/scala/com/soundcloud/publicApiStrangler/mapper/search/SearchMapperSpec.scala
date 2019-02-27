@@ -22,7 +22,7 @@ import play.api.libs.json.{JsArray, JsNull, JsObject, Json}
 class SearchRepositorySpec extends UnitSpecification {
 
   trait Context extends Scope {
-    lazy val session = loggedInSession(new Urn("soundcloud:users:123"))
+    lazy val session = loggedInSession(Urn("soundcloud", "users", "123"))
     lazy val mockService = mock[JsonClient]
     lazy val repo = new SearchRepository(mockService)
   }

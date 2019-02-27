@@ -46,9 +46,9 @@ class TrackRepresentationsServiceForSingleTrackSpec extends UnitSpecification {
       trackAccessibilityService
     )
 
-    val requestingUserUrn = new Urn("soundcloud:users:112")
-    val labelUrn = new Urn("soundcloud:users:678")
-    val trackOwnerUrn = new Urn("soundcloud:users:3000")
+    val requestingUserUrn = Urn("soundcloud", "users", "112")
+    val labelUrn = Urn("soundcloud", "users", "678")
+    val trackOwnerUrn = Urn("soundcloud", "users", "3000")
 
     def trackOwner =
       User(
@@ -98,7 +98,7 @@ class TrackRepresentationsServiceForSingleTrackSpec extends UnitSpecification {
         description = Some("Psychonaut Music Inc."),
         updated_at = Some("2016/10/10 11:21:36 +0000"))
 
-    val trackUrn = Urn("soundcloud:tracks:987")
+    val trackUrn = Urn("soundcloud", "tracks", "987")
     val createdAt = new LocalDateTime(2016, 5, 19, 18, 3, 4)
     val lastModified = new LocalDateTime(2016, 5, 20, 18, 3, 4)
 
@@ -107,8 +107,8 @@ class TrackRepresentationsServiceForSingleTrackSpec extends UnitSpecification {
     def domainLockings: Seq[DomainLocking] = Seq(
       DomainLocking(
         domain = "example.com",
-        urn = Urn("soundcloud:domain-lockings:1"),
-        trackUrn = Urn("soundcloud:tracks:123")
+        urn = Urn("soundcloud", "domain-lockings", "1"),
+        trackUrn = Urn("soundcloud", "tracks", "123")
       )
     )
 
@@ -125,7 +125,7 @@ class TrackRepresentationsServiceForSingleTrackSpec extends UnitSpecification {
                             secretToken: String = "secr3t-Token",
                             isDownloadable: Boolean = false,
                             user: Urn = trackOwnerUrn,
-                            label_id: Option[Int] = Some(labelUrn.getIdentifier.toInt),
+                            label_id: Option[Int] = Some(labelUrn.identifier.toInt),
                             reveal_stats: Boolean = false,
                             reveal_comments: Boolean = true) =
       Track(
@@ -320,7 +320,7 @@ class TrackRepresentationsServiceForSingleTrackSpec extends UnitSpecification {
 
   "Returns None for private tracks if there is an correct secret token for a playlist containing the track belonging to another user" in new Context {
     val correctSecretTokenForPlaylistContainingTheTrack = "playlist-secret"
-    val anotherUser = Urn("soundcloud:users:909")
+    val anotherUser = Urn("soundcloud", "users", "909")
     val track = trackmetadataTrack(isPublic = false)
     val playlists = List(Playlist(userUrn = anotherUser, secretToken = correctSecretTokenForPlaylistContainingTheTrack))
     setUpMocksForExistingTrack(track, session, playlists)

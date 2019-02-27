@@ -16,7 +16,7 @@ class SubscriptionsServiceSpec extends UnitSpecification {
     trait Context extends Scope {
       val client = mock[JsonClient]
       val service = new SubscriptionsService(client)
-      val user = Urn("soundcloud:users:66")
+      val user = Urn("soundcloud", "users", "66")
       val session = loggedInSession(user)
       val activeConsumerSubPath = Path("/api") / "users" / user / "consumer_subscriptions" / "active"
     }

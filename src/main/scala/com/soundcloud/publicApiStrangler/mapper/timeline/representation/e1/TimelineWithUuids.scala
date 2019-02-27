@@ -36,7 +36,7 @@ class TimelineWithUuids(jsonValue: JsValue,
     events.map {
       event =>
         val urn = new Urn((event \ "urn").as[String])
-        urn.getCollection match {
+        urn.collection match {
           case "tracks" => new TrackTimelineItem(event, entityMapper, entitySummaryMapper)
           case "playlists" => new PlaylistTimelineItem(event, entityMapper, entitySummaryMapper)
           case "comments" => new CommentTimelineItem(event, entityMapper, entitySummaryMapper)

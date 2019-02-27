@@ -14,7 +14,7 @@ class MappingContextSpec extends UnitSpecification {
     val session = mock[UserSession]
     implicit val context = new MappingContext(session)
     val mapper = mock[Mapper[Any, Mapping]]
-    val urn = new Urn("soundcloud:tracks:22")
+    val urn = Urn("soundcloud", "tracks", "22")
     val embedded = EmbeddedItem(mapper, urn)
   }
 

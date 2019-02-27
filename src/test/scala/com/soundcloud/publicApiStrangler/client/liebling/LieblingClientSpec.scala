@@ -17,16 +17,16 @@ class LieblingClientSpec extends UnitSpecification {
     implicit val session = new UserSessionBuilder().build()
     val client = new LieblingClient(service)
 
-    val userUrn = Urn("soundcloud:users:10419549")
-    val notFoundUserUrn = Urn("soundcloud:users:0")
+    val userUrn = Urn("soundcloud", "users", "10419549")
+    val notFoundUserUrn = Urn("soundcloud", "users", "0")
 
-    val playlistUrn = Urn("soundcloud:playlists:48786981")
-    val playlistsUrns = List(playlistUrn, Urn("soundcloud:playlists:5"))
-    val notFoundPlaylistUrn = Urn("soundcloud:playlists:0")
+    val playlistUrn = Urn("soundcloud", "playlists", "48786981")
+    val playlistsUrns = List(playlistUrn, Urn("soundcloud", "playlists", "5"))
+    val notFoundPlaylistUrn = Urn("soundcloud", "playlists", "0")
 
-    val trackUrn = Urn("soundcloud:tracks:48786981")
-    val tracksUrns = List(trackUrn, Urn("soundcloud:tracks:101"))
-    val notFoundTrackUrn = Urn("soundcloud:tracks:0")
+    val trackUrn = Urn("soundcloud", "tracks", "48786981")
+    val tracksUrns = List(trackUrn, Urn("soundcloud", "tracks", "101"))
+    val notFoundTrackUrn = Urn("soundcloud", "tracks", "0")
 
     val lieblingLikesCount = Json.parse(
       """{
@@ -107,8 +107,8 @@ class LieblingClientSpec extends UnitSpecification {
 
   "#userTotalLikeCounts" >> {
     trait UserTotalLikeCounts extends Context {
-      val userUrn2 = Urn("soundcloud:users:1293871")
-      val userUrn3 = Urn("soundcloud:users:29874198372")
+      val userUrn2 = Urn("soundcloud", "users", "1293871")
+      val userUrn3 = Urn("soundcloud", "users", "29874198372")
 
       val lieblingUserTotalLikeCount = Json.parse(
         s"""{
@@ -157,8 +157,8 @@ class LieblingClientSpec extends UnitSpecification {
 
   "#userLikedTracks" >> {
     trait UserLikedTracksContext extends Context {
-      val track1 = Urn("soundcloud:tracks:48786981")
-      val track2 = Urn("soundcloud:tracks:2")
+      val track1 = Urn("soundcloud", "tracks", "48786981")
+      val track2 = Urn("soundcloud", "tracks", "2")
       val trackUrns = Seq(track1, track2)
 
     }

@@ -21,7 +21,7 @@ class GatekeeperClientSpec extends UnitSpecification {
   }
 
   trait LoggedInUserContext extends Context {
-    session.getUser returns Urn(s"soundcloud:users:$userId")
+    session.getUser returns Urn("soundcloud", "users", userId.toString)
     session.isAnonymous returns false
   }
 

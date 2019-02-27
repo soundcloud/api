@@ -17,7 +17,7 @@ class MediaUrlsRepositorySpec extends UnitSpecification {
       val userSession = (new UserSessionBuilder).build()
       val mediaServiceClient = mock[MediaServiceClient]
       val mediaUrlsRepository = new MediaUrlsRepository(mediaServiceClient)
-      val desiredTrack = new Urn("soundcloud:tracks:11112")
+      val desiredTrack = Urn("soundcloud", "tracks", "11112")
       val mediaServiceParamsSsl = Params("ssl" -> "true")
       val expiresAt = DateTime.now()
 

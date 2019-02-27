@@ -21,7 +21,7 @@ class ActivitiesMapperSpec extends UnitSpecification {
     val entitySummaryMapper = mock[EntitySummaryMapper]
     val mapper = new ActivitiesMapper(timelineClient, entityMapper, entitySummaryMapper)
     val session = new UserSessionBuilder().build()
-    val urn = new Urn("soundcloud:users:1")
+    val urn = Urn("soundcloud", "users", "1")
     val uuid = "fe174380-5b7b-11e4-803d-37087c0f7e84"
     val futureUuid = "41d51624-6140-0000-6191-c98a01a7ddc9"
     val nextUuid = "41d51546-b500-0000-61e0-02e5d7b15300"

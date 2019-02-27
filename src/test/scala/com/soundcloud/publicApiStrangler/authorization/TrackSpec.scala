@@ -10,7 +10,7 @@ class TrackSpec extends UnitSpecification {
     ContentPolicy.values.foreach(contentPolicy => {
       s"it serializes with $monetizationModel and $contentPolicy" in new Scope {
         val contentAuthorization = new ContentAuthorization(
-          Urn("soundcloud:irrelevant:1"),
+          Urn("soundcloud", "irrelevant", "1"),
           contentPolicy,
           Reason.CLIENT_APPLICATION,
           monetizationModel)

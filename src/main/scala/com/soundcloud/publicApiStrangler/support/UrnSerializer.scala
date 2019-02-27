@@ -7,6 +7,6 @@ import com.soundcloud.jvmkit.module.util.Urn
 class UrnSerializer extends JsonSerializer[Urn] {
 
   override def serialize(value: Urn, gen: JsonGenerator, serializers: SerializerProvider): Unit = {
-    gen.writeString(value.toString())
+    gen.writeString(value.toString)
   }
 }

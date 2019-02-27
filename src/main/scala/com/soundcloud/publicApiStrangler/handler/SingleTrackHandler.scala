@@ -26,7 +26,7 @@ class SingleTrackHandler(userAuthentication: UserAuthentication, tracksService: 
       val trackId = req.routeParams("trackId")
       val callback = req.params.get("callback")
 
-      Try(new Urn("soundcloud", "tracks", trackId)) match {
+      Try(Urn("soundcloud", "tracks", trackId)) match {
         case Return(urn@Urn(_, _, numericRegexp())) => {
           val secretToken = req.params.get("secret_token")
           tracksService.track(session, urn, secretToken).map {

@@ -27,10 +27,10 @@ class TrackStreamHandlerSpec extends UnitSpecification {
       innerRequest.method returns Method.Get
 
       val mapper = mock[TrackStreamResponseMapper]
-      val contentAuthorizationSnip = new ContentAuthorization(Urn("soundcloud:tracks:123"), ContentPolicy.SNIP, Reason.DEFAULT, MonetizationModel.NOT_APPLICABLE)
-      val contentAuthorizationAllow = new ContentAuthorization(Urn("soundcloud:tracks:123"), ContentPolicy.ALLOW, Reason.DEFAULT, MonetizationModel.NOT_APPLICABLE)
-      val contentAuthorizationMonetize = new ContentAuthorization(Urn("soundcloud:tracks:123"), ContentPolicy.MONETIZE, Reason.DEFAULT, MonetizationModel.NOT_APPLICABLE)
-      val contentAuthorizationGeoBLock = new ContentAuthorization(Urn("soundcloud:tracks:123"), ContentPolicy.BLOCK, Reason.GEO, MonetizationModel.NOT_APPLICABLE)
+      val contentAuthorizationSnip = new ContentAuthorization(Urn("soundcloud", "tracks", "123"), ContentPolicy.SNIP, Reason.DEFAULT, MonetizationModel.NOT_APPLICABLE)
+      val contentAuthorizationAllow = new ContentAuthorization(Urn("soundcloud", "tracks", "123"), ContentPolicy.ALLOW, Reason.DEFAULT, MonetizationModel.NOT_APPLICABLE)
+      val contentAuthorizationMonetize = new ContentAuthorization(Urn("soundcloud", "tracks", "123"), ContentPolicy.MONETIZE, Reason.DEFAULT, MonetizationModel.NOT_APPLICABLE)
+      val contentAuthorizationGeoBLock = new ContentAuthorization(Urn("soundcloud", "tracks", "123"), ContentPolicy.BLOCK, Reason.GEO, MonetizationModel.NOT_APPLICABLE)
 
       def responseBuilder(status: Status) =
         Future.value(ResponseBuilder().status(status).build)
@@ -42,15 +42,15 @@ class TrackStreamHandlerSpec extends UnitSpecification {
       val trackId = "334030"
       val paramMap = ParamMap("trackId" -> trackId)
       request.routeParams returns paramMap
-      val trackUrn = new Urn("soundcloud", "tracks", trackId)
+      val trackUrn = Urn("soundcloud", "tracks", trackId)
     }
 
     trait ValidUrnContextIdentified extends Context {
-      val identifiedUserSesssion = new UserSessionBuilder().setUser(Urn("soundcloud:users:123")).build
+      val identifiedUserSesssion = new UserSessionBuilder().setUser(Urn("soundcloud", "users", "123")).build
       val trackId = "334030"
       val paramMap = ParamMap("trackId" -> trackId)
       request.routeParams returns paramMap
-      val trackUrn = new Urn("soundcloud", "tracks", trackId)
+      val trackUrn = Urn("soundcloud", "tracks", trackId)
     }
 
     trait NonNumericUrnContext extends Context {
@@ -58,7 +58,7 @@ class TrackStreamHandlerSpec extends UnitSpecification {
       val trackId = "non-numeric"
       val paramMap = ParamMap("trackId" -> trackId)
       request.routeParams returns paramMap
-      val trackUrn = new Urn("soundcloud", "tracks", trackId)
+      val trackUrn = Urn("soundcloud", "tracks", trackId)
     }
 
     "when the URN contains invalid characters" >> {
@@ -68,7 +68,7 @@ class TrackStreamHandlerSpec extends UnitSpecification {
         val trackId = "non-numeric"
         val paramMap = ParamMap("trackId" -> "1298!!!!")
         request.routeParams returns paramMap
-        val trackUrn = new Urn("soundcloud", "tracks", trackId)
+        val trackUrn = Urn("soundcloud", "tracks", trackId)
       }
 
       "a 404 is returned" in new InvalidUrnContext {

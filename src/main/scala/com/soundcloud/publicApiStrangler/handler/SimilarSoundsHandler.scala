@@ -24,7 +24,7 @@ class SimilarSoundsHandler(
   def handleSimilarSoundsRequest(request: HandlerRequest): Future[Response] = {
     userAuthentication.withUserSession(request) {
       (session: UserSession) =>
-        val trackUrn = new Urn("soundcloud", "tracks", request.routeParams("trackId"))
+        val trackUrn = Urn("soundcloud", "tracks", request.routeParams("trackId"))
 
         val page = PageBuilder(request, baseUrl)(trackUrn).
           allowExtraParams(Set(SimilarSoundsMapping.LinkedPartitioning)).

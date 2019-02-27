@@ -17,8 +17,8 @@ class PlaylistsHandlerSpec extends UnitSpecification {
   trait Context extends HandlerSpecificationScope {
     lazy val geo = new Geo("US")
     lazy val session = new UserSessionBuilder()
-      .setUser(Urn("soundcloud:users:2"))
-      .setAgent(Urn("soundcloud:applications:v2"))
+      .setUser(Urn("soundcloud", "users", "2"))
+      .setAgent(Urn("soundcloud", "applications", "v2"))
       .setGeo(geo)
       .build()
 
@@ -34,7 +34,7 @@ class PlaylistsHandlerSpec extends UnitSpecification {
       val playlistId = 123
       lazy val deletePlaylistResponse: Result[Status] = Good(Status.Ok)
 
-      when(playlistDeletionClient.deletePlaylist(session, Urn(s"soundcloud:playlists:$playlistId")))
+      when(playlistDeletionClient.deletePlaylist(session, Urn("soundcloud", "playlists", playlistId.toString)))
         .thenReturn(Future.value(deletePlaylistResponse))
 
       val response = delete(handler.handleDelete _, s"/playlists/$playlistId")

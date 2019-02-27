@@ -57,7 +57,7 @@ class SearchEntityMapper(okidokiClient: OkidokiClient,
                         followCountsMap: Map[Urn, FollowCounts],
                         repostCountsByUrn: Map[Urn, Long])
                        (implicit context: MappingContext) = {
-    urn.getCollection match {
+    urn.collection match {
       case "users" => new SearchUser(entityData, baseUrl, followCountsMap.get(urn), repostCountsByUrn.get(urn))
       case "tracks" => new SearchTrack(session, entityData, likeCountMapper, repostCountsByUrn, baseUrl, entitySummaryMapper, contentAuthorization(urn), waveform)
       case "playlists" => new SearchPlaylist(entityData, likeCountMapper, repostCountsByUrn, baseUrl, entitySummaryMapper)

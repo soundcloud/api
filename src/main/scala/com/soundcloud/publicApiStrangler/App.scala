@@ -35,7 +35,7 @@ object App {
     val handlers = new Handlers(telemetry, clients)
     val fallbackHandlerConfig = new FallbackHandlerConfiguration(telemetry, handlers.mothershipDispatcher)
 
-    val bffApplication = BffApplication(new Urn("soundcloud", "systems", "public-api-strangler"), config.getApplicationResourceName)
+    val bffApplication = BffApplication(Urn("soundcloud", "systems", "public-api-strangler"), config.getApplicationResourceName)
 
     val memcachedResourceName = ResourceName("PUBLIC_API_STRANGLER_MEMCACHED")
     val memcachedClient = RichMemcachedClient(

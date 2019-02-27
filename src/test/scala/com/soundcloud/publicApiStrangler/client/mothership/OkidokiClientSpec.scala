@@ -29,7 +29,7 @@ class OkidokiClientSpec extends UnitSpecification {
     val client = new OkidokiClient(service, addToPlaylistResponseMapper, deleteFromPlaylistResponseMapper, createPlaylistResponseMapper)
 
     val emailFixture = Email(
-      self = Self(Urn("soundcloud:emails:111"), "http://moshimoshi.int.s-cloud.net/users/soundcloud:users:49416/emails/soundcloud:emails:111"),
+      self = Self(Urn("soundcloud", "emails", "111"), "http://moshimoshi.int.s-cloud.net/users/soundcloud:users:49416/emails/soundcloud:emails:111"),
       address = Some("filipe@soundcloud.com"),
       bounced = Some(false),
       confirmed = Some(false),
@@ -38,7 +38,7 @@ class OkidokiClientSpec extends UnitSpecification {
       primary = Some(true)
     )
     val emailFixture2 = Email(
-      self = Self(Urn("soundcloud:emails:222"), "http://moshimoshi.int.s-cloud.net/users/soundcloud:users:49416/emails/soundcloud:emails:222"),
+      self = Self(Urn("soundcloud", "emails", "222"), "http://moshimoshi.int.s-cloud.net/users/soundcloud:users:49416/emails/soundcloud:emails:222"),
       address = Some("marci@soundcloud.com"),
       bounced = Some(true),
       confirmed = Some(true),
@@ -69,7 +69,7 @@ class OkidokiClientSpec extends UnitSpecification {
   "#fetch" >> {
 
     trait UsersContext extends Context {
-      val urns = Set(Urn("soundcloud:users:1"), Urn("soundcloud:tracks:1"), Urn("soundcloud:playlists:3"))
+      val urns = Set(Urn("soundcloud", "users", "1"), Urn("soundcloud", "tracks", "1"), Urn("soundcloud", "playlists", "3"))
 
       def batchSize = 10
 
@@ -109,7 +109,7 @@ class OkidokiClientSpec extends UnitSpecification {
   "#playlistTracks" >> {
 
     trait TestContext extends Context {
-      val urn = Urn("soundcloud:playlists:1")
+      val urn = Urn("soundcloud", "playlists", "1")
       val path = Path() / "playlists" / urn / "tracks_with_pagination"
 
       def expectPlaylistTracksResponse = expectResponseForEndpoint(path, Method.Get)(_: Params, JsNull)(_: Status, _: JsValue)
@@ -165,7 +165,7 @@ class OkidokiClientSpec extends UnitSpecification {
   "fetches user emails" >> {
 
     trait EmailsContext extends Context {
-      val urn = Urn("soundcloud:users:49416")
+      val urn = Urn("soundcloud", "users", "49416")
       val path = Path() / "users" / urn / "emails"
 
       def expectUserEmailsResponse = expectResponseForEndpoint(path, Method.Get)(Params.empty, JsNull)(_, _)
@@ -185,7 +185,7 @@ class OkidokiClientSpec extends UnitSpecification {
   "creates user emails" >> {
 
     trait CreateEmailContext extends Context {
-      val userUrn = Urn("soundcloud:users:1")
+      val userUrn = Urn("soundcloud", "users", "1")
       val requestBody = Json.obj("address" -> "user@example.com")
       val path = Path() / "users" / userUrn / "emails"
 
@@ -221,8 +221,8 @@ class OkidokiClientSpec extends UnitSpecification {
   "updates user emails" >> {
 
     trait UpdateEmailContext extends Context {
-      val userUrn = Urn("soundcloud:users:1")
-      val emailUrn = Urn("soundcloud:emails:2")
+      val userUrn = Urn("soundcloud", "users", "1")
+      val emailUrn = Urn("soundcloud", "emails", "2")
 
       val path = Path() / "users" / userUrn / "emails" / emailUrn
       val requestBody = Json.obj("primary" -> true)
@@ -244,8 +244,8 @@ class OkidokiClientSpec extends UnitSpecification {
   "deletes user emails" >> {
 
     trait DeleteEmailContext extends Context {
-      val userUrn = Urn("soundcloud:users:1")
-      val emailUrn = Urn("soundcloud:emails:2")
+      val userUrn = Urn("soundcloud", "users", "1")
+      val emailUrn = Urn("soundcloud", "emails", "2")
       val path = Path() / "users" / userUrn / "emails" / emailUrn
 
       def expectDeleteEmailResponse = expectResponseForEndpoint(path, Method.Delete)(Params.empty, JsNull)(_, _)
@@ -265,8 +265,8 @@ class OkidokiClientSpec extends UnitSpecification {
   "fetches users restrictions" >> {
 
     trait RestrictionsContext extends Context {
-      val possibleBlocker = Urn("soundcloud:users:15")
-      val possiblyBlockedUser = Urn("soundcloud:users:10")
+      val possibleBlocker = Urn("soundcloud", "users", "15")
+      val possiblyBlockedUser = Urn("soundcloud", "users", "10")
       val path = Path() / "users" / possiblyBlockedUser.toString / "resource_restrictions" / possibleBlocker.toString
     }
 
@@ -314,7 +314,7 @@ class OkidokiClientSpec extends UnitSpecification {
   "#spotlight" >> {
 
     trait SpotlightContext extends Context {
-      val user = Urn("soundcloud:users:1")
+      val user = Urn("soundcloud", "users", "1")
       val path = Path() / "users" / user.getIdentifier / "spotlight"
     }
 

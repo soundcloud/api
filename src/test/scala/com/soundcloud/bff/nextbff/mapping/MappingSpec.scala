@@ -9,7 +9,7 @@ class MappingSpec extends UnitSpecification {
 
   trait Context extends Scope {
     implicit val mappingContext = mock[MappingContext]
-    val urn = new Urn("soundcloud:tracks:232")
+    val urn = Urn("soundcloud", "tracks", "232")
     val mapper = mock[Mapper[Any, Mapping]]
     val embeddedList = EmbeddedList(mapper, List(urn))
   }

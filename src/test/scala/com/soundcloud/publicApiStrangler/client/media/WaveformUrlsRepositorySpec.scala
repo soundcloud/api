@@ -19,9 +19,9 @@ class WaveformUrlsRepositorySpec extends UnitSpecification {
       val moshimoshi = mock[JsonClient]
       val waveformUrlsRepository = new WaveformUrlsRepository(moshimoshi, mediaServiceClient)
       val desiredTrack1Uid = "2bAA4VpdwqqY"
-      val desiredTrack1Urn = Urn("soundcloud:tracks:11112")
+      val desiredTrack1Urn = Urn("soundcloud", "tracks", "11112")
       val desiredTrack2Uid = "3bAA4VpdwqqY"
-      val desiredTrack2Urn = Urn("soundcloud:tracks:11113")
+      val desiredTrack2Urn = Urn("soundcloud", "tracks", "11113")
       val track1url1 = TrackWaveformUrl(desiredTrack1Uid, Url("http://track1/json"), Url("http://track1/png"), "stream")
       val track1url2 = TrackWaveformUrl(desiredTrack1Uid, Url("http://track1/preview/json"), Url("http://track1/preview/png"), "preview", Some(90000))
       val track2url1 = TrackWaveformUrl(desiredTrack2Uid, Url("http://track2/json"), Url("http://track2/png"), "stream")

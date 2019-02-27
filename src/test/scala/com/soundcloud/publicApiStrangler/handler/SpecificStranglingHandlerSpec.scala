@@ -23,14 +23,14 @@ class SpecificStranglingHandlerSpec extends UnitSpecification {
       """/announcements""".r,
       """/e1/playlists/\d+/domain-lockings""".r
     )
-    val officialApps = List(Urn("soundcloud:applications:124"))
-    val agentUrn = Urn("soundcloud:applications:124")
+    val officialApps = List(Urn("soundcloud", "applications", "124"))
+    val agentUrn = Urn("soundcloud", "applications", "124")
 
     val request = mock[HandlerRequest]
     val innerRequest = mock[Request]
     request.request returns innerRequest
     innerRequest.method returns Method("GET")
-    request.headerMap returns HeaderMap(ScHeaders.AGENT.header -> agentUrn.toString())
+    request.headerMap returns HeaderMap(ScHeaders.AGENT.header -> agentUrn.toString)
 
     // we can't mock the handler function directly.
     // Thus we define a mock handler object and hand it's handle function to the object under test

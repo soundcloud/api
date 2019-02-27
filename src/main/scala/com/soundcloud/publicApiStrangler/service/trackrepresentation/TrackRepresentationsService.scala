@@ -51,7 +51,7 @@ class TrackRepresentationsService(trackRepository: TrackRepository,
         case true => {
           val userForTrackF = fetchUser(track.user_urn, session)
           val labelF = track.label_id.map(labelId =>
-            fetchUser(new Urn("soundcloud", "users", labelId.toString), session)).getOrElse(Future.value(None))
+            fetchUser(Urn("soundcloud", "users", labelId.toString), session)).getOrElse(Future.value(None))
           val isLikedF = Option(session.getUser).map(user =>
             lieblingClient.userLikeCounts(session, List(track.urn), user).map(_.liked_track_urns.contains(track.urn))).getOrElse(Future.False)
 

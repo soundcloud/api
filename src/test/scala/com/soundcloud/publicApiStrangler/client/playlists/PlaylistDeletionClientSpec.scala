@@ -13,11 +13,11 @@ class PlaylistDeletionClientSpec extends UnitSpecification {
 
   trait Context extends Scope {
     val session = new UserSessionBuilder()
-      .setUser(Urn("soundcloud:users:2"))
-      .setAgent(Urn("soundcloud:applications:v2"))
+      .setUser(Urn("soundcloud", "users", "2"))
+      .setAgent(Urn("soundcloud", "applications", "v2"))
       .build()
 
-    val urn = Urn("soundcloud:playlists:123")
+    val urn = Urn("soundcloud", "playlists", "123")
 
     val path = Path() / "playlists" / urn
 

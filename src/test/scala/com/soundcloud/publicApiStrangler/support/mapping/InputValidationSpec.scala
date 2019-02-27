@@ -33,7 +33,7 @@ class InputValidationSpec extends UnitSpecification {
 
       trait TestContext extends Context {
 
-        val urn = new Urn("soundcloud:tracks:1")
+        val urn = Urn("soundcloud", "tracks", "1")
         val expectedInputs = Set(urn)
         val expectedResult = Future.value(Map(urn -> new Mapping {}))
 

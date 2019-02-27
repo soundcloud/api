@@ -22,7 +22,7 @@ trait UnitSpecification extends Specification with BeforeAfterEach with Mockito 
 
   override def mock[T: ClassTag]: T = smartMock[T]
 
-  private val someApp = new Urn("soundcloud:systems:1")
+  private val someApp = Urn("soundcloud", "systems", "1")
   private val someScopes = Set("a", "b")
 
   def loggedInSession(urn: Urn) = (new UserSessionBuilder)

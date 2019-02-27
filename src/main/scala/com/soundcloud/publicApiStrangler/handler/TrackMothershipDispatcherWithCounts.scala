@@ -47,7 +47,7 @@ class TrackMothershipDispatcherWithCounts(userAuthentication: UserAuthentication
       responseJson.as[Vector[JsValue]].map(jsValue => {
         (for {
           (_, trackId) <- getIds(jsValue)
-          trackCounts <- counts.get(new Urn("soundcloud", "tracks", trackId.toString))
+          trackCounts <- counts.get(Urn("soundcloud", "tracks", trackId.toString))
         } yield {
           jsValue.as[JsObject].deepMerge(Json.obj(
             "playback_count" -> trackCounts.playback_count,
@@ -78,7 +78,7 @@ class TrackMothershipDispatcherWithCounts(userAuthentication: UserAuthentication
     values
       .flatMap(getIds)
       .map {
-        case (userId, trackId) => (new Urn("soundcloud", "users", userId.toString), new Urn("soundcloud", "tracks", trackId.toString))
+        case (userId, trackId) => (Urn("soundcloud", "users", userId.toString), Urn("soundcloud", "tracks", trackId.toString))
       }.toSet
 
   private def getIds(jsValue: JsValue): Option[(Int, Int)] = {

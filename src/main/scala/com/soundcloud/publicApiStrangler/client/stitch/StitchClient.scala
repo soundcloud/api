@@ -15,7 +15,7 @@ class StitchClient(jsonClient: JsonClient) {
 
   def countsForTracksByUser(session: UserSession, userUrn: Urn, trackUrns: Set[Urn], batchSize: Int = 50): Future[Map[Urn, StitchCounts]] = {
     inBatches(trackUrns, batchSize) { trackUrnBatch => {
-      val keys = trackUrnBatch.map(urn => s"${userUrn.getIdentifier}|${urn.getIdentifier}")
+      val keys = trackUrnBatch.map(urn => s"${userUrn.identifier}|${urn.identifier}")
       val keyParam = keys.map(key => s"k=$key").mkString("&")
 
       get(session, params(keyParam), keys)

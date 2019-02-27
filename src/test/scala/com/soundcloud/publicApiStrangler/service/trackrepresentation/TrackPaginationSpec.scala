@@ -36,18 +36,18 @@ class TrackPaginationSpec extends UnitSpecification {
     "#calculateTrackUrnPage" >> {
       "returns the urns" >> {
         pagination.calculateTrackUrnPage(trackUrns(3)) should containAllOf(List(
-          Urn("soundcloud:tracks:2"),
-          Urn("soundcloud:tracks:0"),
-          Urn("soundcloud:tracks:1")))
+          Urn("soundcloud", "tracks", "2"),
+          Urn("soundcloud", "tracks", "0"),
+          Urn("soundcloud", "tracks", "1")))
       }
     }
 
     "#calculateFinalPage" >> {
       "returns the sorted tracks" >> {
         pagination.calculateFinalPage(tracks(3)).map(_.urn) ==== List(
-          Urn("soundcloud:tracks:2"),
-          Urn("soundcloud:tracks:1"),
-          Urn("soundcloud:tracks:0"))
+          Urn("soundcloud", "tracks", "2"),
+          Urn("soundcloud", "tracks", "1"),
+          Urn("soundcloud", "tracks", "0"))
       }
     }
   }
@@ -60,18 +60,18 @@ class TrackPaginationSpec extends UnitSpecification {
         // urns go from 4 to 0
         // with limit 2 then doubled = 4 to 1
         pagination.calculateTrackUrnPage(trackUrns(5)) should containAllOf(List(
-          Urn("soundcloud:tracks:4"),
-          Urn("soundcloud:tracks:3"),
-          Urn("soundcloud:tracks:2"),
-          Urn("soundcloud:tracks:1")))
+          Urn("soundcloud", "tracks", "4"),
+          Urn("soundcloud", "tracks", "3"),
+          Urn("soundcloud", "tracks", "2"),
+          Urn("soundcloud", "tracks", "1")))
       }
     }
 
     "#calculateFinalPage" >> {
       "returns the sorted tracks" >> {
         pagination.calculateFinalPage(tracks(2)).map(_.urn) ==== List(
-          Urn("soundcloud:tracks:1"),
-          Urn("soundcloud:tracks:0"))
+          Urn("soundcloud", "tracks", "1"),
+          Urn("soundcloud", "tracks", "0"))
       }
     }
 
@@ -119,18 +119,18 @@ class TrackPaginationSpec extends UnitSpecification {
         // with 2 offset = 5 to 0
         // with limit 2 then doubled = 5 to 2
         pagination.calculateTrackUrnPage(trackUrns(8)) ==== Set(
-          Urn("soundcloud:tracks:5"),
-          Urn("soundcloud:tracks:4"),
-          Urn("soundcloud:tracks:3"),
-          Urn("soundcloud:tracks:2"))
+          Urn("soundcloud", "tracks", "5"),
+          Urn("soundcloud", "tracks", "4"),
+          Urn("soundcloud", "tracks", "3"),
+          Urn("soundcloud", "tracks", "2"))
       }
     }
 
     "#calculateFinalPage" >> {
       "returns the sorted tracks" >> {
         pagination.calculateFinalPage(tracks(4)).map(_.urn) ==== List(
-          Urn("soundcloud:tracks:3"),
-          Urn("soundcloud:tracks:2"))
+          Urn("soundcloud", "tracks", "3"),
+          Urn("soundcloud", "tracks", "2"))
       }
     }
   }
@@ -161,9 +161,9 @@ class TrackPaginationSpec extends UnitSpecification {
     "#calculateFinalPage" >> {
       "returns the sorted tracks" >> {
         pagination.calculateFinalPage(tracksWithCreatedAt).map(_.urn) ==== List(
-          Urn("soundcloud:tracks:4"),
-          Urn("soundcloud:tracks:3"),
-          Urn("soundcloud:tracks:2"))
+          Urn("soundcloud", "tracks", "4"),
+          Urn("soundcloud", "tracks", "3"),
+          Urn("soundcloud", "tracks", "2"))
       }
     }
   }

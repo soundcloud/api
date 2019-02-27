@@ -11,7 +11,7 @@ class TrackPurchaseLinkMapperSpec extends UnitSpecification {
     "All fields" in {
       val presented = okidokiTrackPurchaseLinks.as[List[TrackPurchaseLink]].last
 
-      presented.track_urn ==== Urn("soundcloud:tracks:2")
+      presented.track_urn ==== Urn("soundcloud", "tracks", "2")
       presented.title ==== Some("ultratv")
       presented.url ==== "http://bit.ly/14XeNOe"
     }

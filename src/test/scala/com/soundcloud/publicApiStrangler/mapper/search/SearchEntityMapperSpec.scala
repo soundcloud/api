@@ -27,7 +27,7 @@ class SearchEntityMapperSpec extends UnitSpecification {
   trait Context extends Scope with Before {
     implicit val context = mock[MappingContext]
     val baseUrl = "https://api.soundcloud.com.com"
-    val userUrn = new Urn("soundcloud:users:1")
+    val userUrn = Urn("soundcloud", "users", "1")
     val session = loggedInSession(userUrn)
 
     val okidokiClient = mock[OkidokiClient]
@@ -56,16 +56,16 @@ class SearchEntityMapperSpec extends UnitSpecification {
       "soundcloud:groups:30910"
     ).map(new Urn(_))
 
-    val searchResults = new Urn("soundcloud:tracks:-1") :: urns // doesn't exist in okidoki response
+    val searchResults = Urn("soundcloud", "tracks", "-1") :: urns // doesn't exist in okidoki response
 
-    val fetchedUserUrn = new Urn("soundcloud:users:2097360")
+    val fetchedUserUrn = Urn("soundcloud", "users", "2097360")
 
-    val trackUrn = Urn("soundcloud:tracks:15273221")
-    val playlistUrn = Urn("soundcloud:playlists:685235")
+    val trackUrn = Urn("soundcloud", "tracks", "15273221")
+    val playlistUrn = Urn("soundcloud", "playlists", "685235")
     val likableUrns = Set(trackUrn, playlistUrn)
 
     val authorizations = Seq(
-      new ContentAuthorization(new Urn("soundcloud:tracks:15273221"), ContentPolicy.ALLOW, Reason.UNKNOWN, MonetizationModel.NOT_APPLICABLE)
+      new ContentAuthorization(Urn("soundcloud", "tracks", "15273221"), ContentPolicy.ALLOW, Reason.UNKNOWN, MonetizationModel.NOT_APPLICABLE)
     )
     val okidokiFetch = contentsOf("okidoki", "search_fetch")
       .as[List[JsObject]]
@@ -86,7 +86,7 @@ class SearchEntityMapperSpec extends UnitSpecification {
       )
       // track metadata for a playlist -- one call per playlist :(
       // should probably return some non-empty list
-      when(okidokiClient.playlistTracks(===(session), ===(new Urn("soundcloud:playlists:685235")), any[Option[Int]], any[Option[Int]])).thenReturn(
+      when(okidokiClient.playlistTracks(===(session), ===(Urn("soundcloud", "playlists", "685235")), any[Option[Int]], any[Option[Int]])).thenReturn(
         Future(TracksWithPagination(Nil, TrackMeta(None)))
       )
 
@@ -154,7 +154,7 @@ class SearchEntityMapperSpec extends UnitSpecification {
       val List(userJson, trackJson, playlistJson) = result.map(mappingToJsObject _)
 
       (userJson \ "kind").as[String] ==== "user"
-      (userJson \ "id").as[Int].toString ==== fetchedUserUrn.getIdentifier
+      (userJson \ "id").as[Int].toString ==== fetchedUserUrn.identifier
       (userJson \ "reposts_count").asOpt[Long] ==== Some(11L)
 
       (trackJson \ "kind").as[String] ==== "track"

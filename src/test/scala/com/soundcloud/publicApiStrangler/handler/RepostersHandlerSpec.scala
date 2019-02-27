@@ -19,15 +19,15 @@ import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures.withContentsOf
 class RepostersHandlerSpec extends UnitSpecification {
 
   trait Context extends HandlerSpecificationScope {
-    val user = Urn("soundcloud:users:999")
-    val track = Urn("soundcloud:tracks:100")
-    val playlist = Urn("soundcloud:playlists:200")
-    val noNextHrefTrack = Urn("soundcloud:tracks:101")
-    val noNextHrefPlaylist = Urn("soundcloud:playlists:201")
+    val user = Urn("soundcloud", "users", "999")
+    val track = Urn("soundcloud", "tracks", "100")
+    val playlist = Urn("soundcloud", "playlists", "200")
+    val noNextHrefTrack = Urn("soundcloud", "tracks", "101")
+    val noNextHrefPlaylist = Urn("soundcloud", "playlists", "201")
     val geo = new Geo("US")
     val baseUrl = "http://api.example.com"
     val requestHeaders = Map("Host" -> "api.example.com")
-    val session = new UserSessionBuilder().setUser(user).setAgent(Urn("soundcloud:applications:v2")).setGeo(geo).build()
+    val session = new UserSessionBuilder().setUser(user).setAgent(Urn("soundcloud", "applications", "v2")).setGeo(geo).build()
 
     val usersJson = Json.parse(
       """

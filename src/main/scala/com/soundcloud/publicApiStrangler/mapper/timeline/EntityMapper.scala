@@ -41,7 +41,7 @@ class EntityMapper(okidokiClient: OkidokiClient,
   }
 
   private def filterByCollection(inputs: List[Urn], collections: List[String]): List[Urn] =
-    inputs.filter(urn => collections.contains(urn.getCollection))
+    inputs.filter(urn => collections.contains(urn.collection))
 
   private def entityFor(urn: Urn,
                         entityData: JsObject,
@@ -50,7 +50,7 @@ class EntityMapper(okidokiClient: OkidokiClient,
                         repostCountsByUrn: Map[Urn, Long])
                        (implicit context: MappingContext) = {
 
-    urn.getCollection match {
+    urn.collection match {
       case "users" => new User(entityData, baseUrl, followCountsMap.get(urn), repostCountsByUrn.get(urn))
       case "tracks" => new Track(entityData, likesCounts, repostCountsByUrn, baseUrl, entitySummaryMapper)
       case "playlists" => new Playlist(entityData, likesCounts, repostCountsByUrn, baseUrl, entitySummaryMapper)

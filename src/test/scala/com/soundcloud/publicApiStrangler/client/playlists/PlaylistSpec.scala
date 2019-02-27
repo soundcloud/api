@@ -58,7 +58,7 @@ class PlaylistSpec extends UnitSpecification {
 
     val playlist = Json.parse(json).as[Playlist]
 
-    playlist.userUrn ==== Urn("soundcloud:users:123")
+    playlist.userUrn ==== Urn("soundcloud", "users", "123")
     playlist.secretToken ==== "s-YZzGa"
   }
 }

@@ -58,7 +58,7 @@ class FollowCountsClient(client: JsonClient, config: Config) {
         Json.parse(response.contentString).as[JsObject].value.toMap.mapValues { individualResponseJson =>
           individualResponseJson.as[JsObject].value.toMap.flatMap { case (userId, jsonValue) =>
             val value = (individualResponseJson \ userId \ "series" \\ "count").headOption.map(_.as[Long])
-            value.map(new Urn("soundcloud", "users", userId) -> _)
+            value.map(Urn("soundcloud", "users", userId) -> _)
           }
         }
       case _ =>

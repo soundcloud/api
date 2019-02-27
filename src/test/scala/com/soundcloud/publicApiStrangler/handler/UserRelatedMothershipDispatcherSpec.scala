@@ -39,9 +39,9 @@ class UserRelatedMothershipDispatcherSpec extends UnitSpecification {
 
     override def routingDefinitions = Routing.forUserRelatedMothershipDispatcher(dispatcher)
 
-    val user1 = new Urn("soundcloud", "users", "183")
-    val user2 = new Urn("soundcloud", "users", "1111")
-    val user3 = new Urn("soundcloud", "users", "2222")
+    val user1 = Urn("soundcloud", "users", "183")
+    val user2 = Urn("soundcloud", "users", "1111")
+    val user3 = Urn("soundcloud", "users", "2222")
 
     def responseStatusFromMothership: Status = Status.Ok
 

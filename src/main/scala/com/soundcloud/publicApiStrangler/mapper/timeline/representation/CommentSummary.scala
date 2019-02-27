@@ -11,11 +11,11 @@ class CommentSummary(jsonValue: JsValue,
   extends JsonMapping(jsonValue) with UrnSupport {
 
   val kind = "comment"
-  val id = urn.getIdentifier.toInt
+  val id = urn.identifier.toInt
   val created_at = (json \ "created_at").asOpt[String]
-  val user_id = userUrn.getIdentifier.toInt
+  val user_id = userUrn.identifier.toInt
   val uri = s"$baseUrl/comments/$id"
-  val track_id = trackUrn.getIdentifier.toInt
+  val track_id = trackUrn.identifier.toInt
   val timestamp = (json \ "timestamp").asOpt[Int]
   val body = (json \ "body").asOpt[String]
 

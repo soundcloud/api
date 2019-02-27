@@ -13,7 +13,7 @@ class UserMapperSpec extends UnitSpecification {
   }
 
   "maps the urn" in new Context {
-    user.urn ==== Urn("soundcloud:users:10419549")
+    user.urn ==== Urn("soundcloud", "users", "10419549")
   }
 
   "maps the permalink" in new Context {

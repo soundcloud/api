@@ -50,7 +50,7 @@ object TrackAudioMetadata {
 
 class RichOkidokiClient(service: JsonClient) extends OkidokiClient(service) {
   def fetchTrackDomainLockings(session: UserSession, trackUrn: Urn): Future[Seq[DomainLocking]] =
-    fetch(service, session, Path() / "tracks" / trackUrn.getIdentifier / "domain_lockings") map { response: Response =>
+    fetch(service, session, Path() / "tracks" / trackUrn.identifier / "domain_lockings") map { response: Response =>
       response.status match {
         case Status.Ok => Json.parse(response.contentString).as[List[DomainLocking]]
         case _ => throw new RuntimeException("Unexpected response status")

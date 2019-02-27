@@ -16,9 +16,9 @@ class UserQuotaClientSpec extends UnitSpecification {
     val jsonClient = mock[JsonClient]
     val userQuotaClient = new UserQuotaClient(jsonClient)
     val path = Path() / "users" / "quotas"
-    val userUrn1 = Urn("soundcloud:users:1")
-    val userUrn2 = Urn("soundcloud:users:2")
-    val userUrn3 = Urn("soundcloud:users:3")
+    val userUrn1 = Urn("soundcloud", "users", "1")
+    val userUrn2 = Urn("soundcloud", "users", "2")
+    val userUrn3 = Urn("soundcloud", "users", "3")
     val userUrns = Set(userUrn1, userUrn2, userUrn3)
   }
 

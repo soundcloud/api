@@ -17,7 +17,7 @@ import play.api.libs.json.JsObject
 class EntityMapperSpec extends UnitSpecification {
 
   trait Context extends Scope with Before {
-    val userUrn = new Urn("soundcloud", "users", "123")
+    val userUrn = Urn("soundcloud", "users", "123")
     val okidokiClient = mock[OkidokiClient]
     val lieblingClient = mock[LieblingClient]
     val followCountsClient = mock[FollowCountsClient]
@@ -30,9 +30,9 @@ class EntityMapperSpec extends UnitSpecification {
       "https://foo.com",
       entitySummaryMapper)
     val session = new UserSessionBuilder().build()
-    val trackUrn = Urn("soundcloud:tracks:131352352")
-    val playlistUrn = Urn("soundcloud:playlists:123")
-    val commentUrn = Urn("soundcloud:comments:205752728")
+    val trackUrn = Urn("soundcloud", "tracks", "131352352")
+    val playlistUrn = Urn("soundcloud", "playlists", "123")
+    val commentUrn = Urn("soundcloud", "comments", "205752728")
     val likeUrns = List(trackUrn, playlistUrn)
     val urns = likeUrns ++ List(userUrn, commentUrn)
 

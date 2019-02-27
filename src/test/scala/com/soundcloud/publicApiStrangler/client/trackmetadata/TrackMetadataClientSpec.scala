@@ -20,7 +20,7 @@ class TrackMetadataClientSpec extends UnitSpecification {
 
   "#track" >> {
     trait TrackContext extends Context {
-      val urn = Urn("soundcloud:tracks:2")
+      val urn = Urn("soundcloud", "tracks", "2")
       val path = Path() / "tracks" / urn
     }
 
@@ -65,8 +65,8 @@ class TrackMetadataClientSpec extends UnitSpecification {
         track.user_tags ==== List("music", "spoken words")
         track.machine_tags ==== List("ns:machine_tag=value", "ns:machine_tag=value2")
         track.uid ==== Some("SZFrxdDlaSmh")
-        track.urn ==== Urn("soundcloud:tracks:2")
-        track.user_urn ==== Urn("soundcloud:users:435")
+        track.urn ==== Urn("soundcloud", "tracks", "2")
+        track.user_urn ==== Urn("soundcloud", "users", "435")
         track.api_streamable ==== Some(true)
         track.streamable ==== Some(true)
         track.reveal_comments ==== true
@@ -138,9 +138,9 @@ class TrackMetadataClientSpec extends UnitSpecification {
   "#tracks" >> {
 
     trait TracksContext extends Context {
-      val urn1 = Urn("soundcloud:tracks:1")
-      val urn2 = Urn("soundcloud:tracks:2")
-      val urn3 = Urn("soundcloud:tracks:3")
+      val urn1 = Urn("soundcloud", "tracks", "1")
+      val urn2 = Urn("soundcloud", "tracks", "2")
+      val urn3 = Urn("soundcloud", "tracks", "3")
       val urns = Set(urn1, urn2, urn3)
 
       val path = Path() / "tracks"
@@ -211,9 +211,9 @@ class TrackMetadataClientSpec extends UnitSpecification {
 
   "#urnsByUser" >> {
     trait UrnsByUserContext extends Context {
-      val userUrn = Urn("soundcloud:users:1")
-      val urn1 = Urn("soundcloud:tracks:1")
-      val urn2 = Urn("soundcloud:tracks:2")
+      val userUrn = Urn("soundcloud", "users", "1")
+      val urn1 = Urn("soundcloud", "tracks", "1")
+      val urn2 = Urn("soundcloud", "tracks", "2")
 
       val path = Path("/users") / userUrn / "tracks" / "urns"
 

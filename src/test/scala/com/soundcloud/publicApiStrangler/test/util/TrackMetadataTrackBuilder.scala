@@ -4,8 +4,8 @@ import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.publicApiStrangler.client.trackmetadata.{Artwork, EmbeddingPermission, Track}
 import org.joda.time.LocalDateTime
 
-case class TrackMetadataTrackBuilder(urn: Urn = Urn("soundcloud:tracks:1"),
-                                     user_urn: Urn = Urn("soundcloud:users:1"),
+case class TrackMetadataTrackBuilder(urn: Urn = Urn("soundcloud", "tracks", "1"),
+                                     user_urn: Urn = Urn("soundcloud", "users", "1"),
                                      commentable: Boolean = false,
                                      description: Option[String] = Some("description"),
                                      created_at: LocalDateTime = LocalDateTime.now(),

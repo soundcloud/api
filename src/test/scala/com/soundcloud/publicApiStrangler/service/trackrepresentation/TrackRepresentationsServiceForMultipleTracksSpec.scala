@@ -36,7 +36,7 @@ class TrackRepresentationsServiceForMultipleTracksSpec extends UnitSpecification
       mock[TrackAccessibilityService])
 
     val session = anonymousSession
-    val userUrn: Urn = Urn("soundcloud:users:1")
+    val userUrn: Urn = Urn("soundcloud", "users", "1")
     val paginationParams = mock[TrackPagination]
 
     val track = TrackMetadataTrackBuilder().build
@@ -47,7 +47,7 @@ class TrackRepresentationsServiceForMultipleTracksSpec extends UnitSpecification
     val isrcs = Map(track.urn -> isrc)
     val geoblockings = List("DE", "BR")
     val geoblockingsMap = Map(track.urn -> geoblockings)
-    val domainLockings = List(DomainLocking("domain1", Urn("soundcloud:domain-lockings:1"), track.urn))
+    val domainLockings = List(DomainLocking("domain1", Urn("soundcloud", "domain-lockings", "1"), track.urn))
     val domainLockingsMap = Map(track.urn -> domainLockings)
     val audioMetadata = TrackAudioMetadata("state1", Some("original_format"), Some(1))
     val audios = Map(track.urn -> audioMetadata)

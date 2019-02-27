@@ -16,8 +16,8 @@ class FetchMapperSpec extends UnitSpecification {
     implicit val context = mock[MappingContext]
     val session = mock[UserSession]
     val repositoryMock = mock[BulkFetchRepository[Urn]]
-    val urn1 = new Urn("soundcloud:users:3333")
-    val urn2 = new Urn("soundcloud:users:3334")
+    val urn1 = Urn("soundcloud", "users", "3333")
+    val urn2 = Urn("soundcloud", "users", "3334")
     val urns = Set(urn2, urn1)
     val jsonMap = Map(urn1 -> mock[JsValue], urn2 -> mock[JsValue])
 

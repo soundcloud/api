@@ -9,7 +9,7 @@ import play.api.libs.json.Json
 class AuthorizationSpec extends Specification {
 
   trait Context extends Scope {
-    val urn = new Urn("soundcloud:tracks:12412")
+    val urn = Urn("soundcloud", "tracks", "12412")
     val content = Json.obj("urn" -> urn.toString, "something" -> "else")
     val authorization = new ContentAuthorization(urn, ContentPolicy.MONETIZE, Reason.NOT_SUPPORTED,
       ContentRestriction.ENCRYPTED_STREAM_ONLY, MonetizationModel.AD_SUPPORTED)

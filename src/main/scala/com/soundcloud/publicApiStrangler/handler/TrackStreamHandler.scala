@@ -2,7 +2,7 @@ package com.soundcloud.publicApiStrangler.handler
 
 import com.soundcloud.jvmkit.module.http.server.{HandlerRequest, ResponseBuilder}
 import com.soundcloud.jvmkit.module.util.session.UserSession
-import com.soundcloud.jvmkit.module.util.{MalformedUrnException, Urn}
+import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.publicApiStrangler.authorization.ContentAuthorizationRules
 import com.soundcloud.publicApiStrangler.authorization.policies.{ContentAuthorization, ContentPolicy}
 import com.soundcloud.publicApiStrangler.client.media.MediaUrlsRepository
@@ -25,7 +25,7 @@ class TrackStreamHandler(mothershipDispatcher: DispatchToMothershipHandler,
                          mediaUrlsRepository: MediaUrlsRepository) {
 
   def handle(request: HandlerRequest, userSession: UserSession, mapper: TrackStreamResponseMapper): Future[Response] =
-    Try(new Urn("soundcloud", "tracks", request.routeParams("trackId"))) match {
+    Try(Urn("soundcloud", "tracks", request.routeParams("trackId"))) match {
       case Return(trackUrn) =>
         if (urnWithNumericIdentifier(trackUrn)) {
           val responses = Future.join(mothershipDispatcher.dispatch(request), contentAuthFor(userSession, trackUrn))
@@ -46,7 +46,7 @@ class TrackStreamHandler(mothershipDispatcher: DispatchToMothershipHandler,
           Future.value(generateResponseFor(request, HttpResponseStatus.NOT_FOUND))
         }
       case Throw(exception) => exception match {
-        case ex: MalformedUrnException => Future.value(generateResponseFor(request, HttpResponseStatus.NOT_FOUND))
+        case _: IllegalArgumentException => Future.value(generateResponseFor(request, HttpResponseStatus.NOT_FOUND))
         case _ => Future.value(generateResponseFor(request, HttpResponseStatus.INTERNAL_SERVER_ERROR))
       }
     }
@@ -66,7 +66,7 @@ class TrackStreamHandler(mothershipDispatcher: DispatchToMothershipHandler,
     mapper.map(mediaUrls, isHeadRequest)
   }
 
-  private def urnWithNumericIdentifier(urn: Urn) = urn.getIdentifier.matches("\\d+")
+  private def urnWithNumericIdentifier(urn: Urn) = urn.identifier.matches("\\d+")
 
   private def generateResponseFor(request: HandlerRequest, status: HttpResponseStatus) = {
     val builder = ResponseBuilder().

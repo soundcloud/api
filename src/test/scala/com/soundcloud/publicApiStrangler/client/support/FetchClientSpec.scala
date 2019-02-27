@@ -65,7 +65,7 @@ class FetchClientSpec extends UnitSpecification {
 
     "given urns are less than limit" >> {
       trait TestContext extends Context {
-        val urns = Set(Urn("soundcloud:users:1"), Urn("soundcloud:users:2"))
+        val urns = Set(Urn("soundcloud", "users", "1"), Urn("soundcloud", "users", "2"))
         val responseJson = List(JsObject(Seq.empty), JsObject(Seq.empty))
         val response = jsonResponse(Status.Ok, JsArray(responseJson))
 
@@ -82,7 +82,7 @@ class FetchClientSpec extends UnitSpecification {
     "given urns are more than limit" >> {
       "all calls succeed" >> {
         trait TestContext extends Context {
-          val urns = Set(Urn("soundcloud:users:1"), Urn("soundcloud:users:2"))
+          val urns = Set(Urn("soundcloud", "users", "1"), Urn("soundcloud", "users", "2"))
           val response1Json = List(JsObject(Seq("1" -> JsNull)))
           val response2Json = List(JsObject(Seq("2" -> JsNull)))
 
@@ -102,7 +102,7 @@ class FetchClientSpec extends UnitSpecification {
 
       "one call fails" >> {
         trait TestContext extends Context {
-          val urns = Set(Urn("soundcloud:users:1"), Urn("soundcloud:users:2"))
+          val urns = Set(Urn("soundcloud", "users", "1"), Urn("soundcloud", "users", "2"))
           val response2Json = List(JsObject(Seq("2" -> JsNull)))
 
           when(serviceMock.getWithSession(anonymousSession, path, urns.init.toList, Headers.empty))
@@ -123,7 +123,7 @@ class FetchClientSpec extends UnitSpecification {
 
   "#fetchByUrnsWithoutSession" >> {
     trait TestContext extends Context {
-      val urns = Set(Urn("soundcloud:users:1"), Urn("soundcloud:users:2"))
+      val urns = Set(Urn("soundcloud", "users", "1"), Urn("soundcloud", "users", "2"))
       val responseJson = List(JsObject(Seq.empty), JsObject(Seq.empty))
       val response = jsonResponse(Status.Ok, JsArray(responseJson))
 

@@ -15,8 +15,8 @@ class TimelineJsonClientSpec extends UnitSpecification {
     implicit val session = anonymousSession
     val client = new TimelineJsonClient(service)
 
-    val urn = Urn("soundcloud:users:10419549")
-    val notFoundUrn = Urn("soundcloud:users:0")
+    val urn = Urn("soundcloud", "users", "10419549")
+    val notFoundUrn = Urn("soundcloud", "users", "0")
   }
 
   "#itemStream" >> {

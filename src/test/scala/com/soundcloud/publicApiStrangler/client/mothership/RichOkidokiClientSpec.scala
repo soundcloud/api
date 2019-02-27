@@ -29,7 +29,7 @@ class RichOkidokiClientSpec extends UnitSpecification {
 
 
       lazy val path = Path() / "tracks" / urn / "audio"
-      val urn = Urn("soundcloud:tracks:123")
+      val urn = Urn("soundcloud", "tracks", "123")
 
       def mockTrackAudioMetadata: TrackAudioMetadata = TrackAudioMetadata("finished", Some("vqf"), Some(9001))
 
@@ -84,14 +84,14 @@ class RichOkidokiClientSpec extends UnitSpecification {
 
       def result = Await.result(resultF)
 
-      lazy val path = Path() / "tracks" / urn.getIdentifier / "domain_lockings"
-      val urn = Urn("soundcloud:tracks:123")
+      lazy val path = Path() / "tracks" / urn.identifier / "domain_lockings"
+      val urn = Urn("soundcloud", "tracks", "123")
 
       def mockTrackDomainLockings: Seq[DomainLocking] = Seq(
         DomainLocking(
           domain = "example.com",
-          urn = Urn("soundcloud:domain-lockings:1"),
-          trackUrn = Urn("soundcloud:tracks:2")))
+          urn = Urn("soundcloud", "domain-lockings", "1"),
+          trackUrn = Urn("soundcloud", "tracks", "2")))
 
       def mockResponseContents: JsValue = JsArray(
         Seq(
@@ -111,7 +111,7 @@ class RichOkidokiClientSpec extends UnitSpecification {
     }
 
     "200 response" in new TrackDomainLockingsContext {
-      result ==== Seq(DomainLocking(domain = "example.com", urn = Urn("soundcloud:domain-lockings:112358"), trackUrn = Urn("soundcloud:tracks:12")))
+      result ==== Seq(DomainLocking(domain = "example.com", urn = Urn("soundcloud", "domain-lockings", "112358"), trackUrn = Urn("soundcloud", "tracks", "12")))
     }
 
     "404 response" in new TrackDomainLockingsContext {
@@ -138,10 +138,10 @@ class RichOkidokiClientSpec extends UnitSpecification {
       val path = Path() / "tracks" / "geo_blockings" / ""
 
       val urns = Set(
-        Urn("soundcloud:tracks:1"),
-        Urn("soundcloud:tracks:2"),
-        Urn("soundcloud:tracks:3"),
-        Urn("soundcloud:tracks:4"))
+        Urn("soundcloud", "tracks", "1"),
+        Urn("soundcloud", "tracks", "2"),
+        Urn("soundcloud", "tracks", "3"),
+        Urn("soundcloud", "tracks", "4"))
 
       val (firstBatch, secondBatch) = urns.splitAt(2)
 
@@ -177,9 +177,9 @@ class RichOkidokiClientSpec extends UnitSpecification {
 
       val batchSize = 2
       Await.result(client.fetchTrackGeoblockings(session, urns, batchSize)) ==== Map(
-        Urn("soundcloud:tracks:1") -> List("DE", "BR"),
-        Urn("soundcloud:tracks:2") -> List.empty,
-        Urn("soundcloud:tracks:3") -> List("US", "UK")
+        Urn("soundcloud", "tracks", "1") -> List("DE", "BR"),
+        Urn("soundcloud", "tracks", "2") -> List.empty,
+        Urn("soundcloud", "tracks", "3") -> List("US", "UK")
       )
     }
 
@@ -196,10 +196,10 @@ class RichOkidokiClientSpec extends UnitSpecification {
       val path = Path() / "tracks" / "audio" / ""
 
       val urns = Set(
-        Urn("soundcloud:tracks:1"),
-        Urn("soundcloud:tracks:2"),
-        Urn("soundcloud:tracks:3"),
-        Urn("soundcloud:tracks:4"))
+        Urn("soundcloud", "tracks", "1"),
+        Urn("soundcloud", "tracks", "2"),
+        Urn("soundcloud", "tracks", "3"),
+        Urn("soundcloud", "tracks", "4"))
 
       val (firstBatch, secondBatch) = urns.splitAt(2)
 
@@ -241,9 +241,9 @@ class RichOkidokiClientSpec extends UnitSpecification {
 
       val batchSize = 2
       Await.result(client.fetchTracksAudioMetadata(session, urns, batchSize)) ==== Map(
-        Urn("soundcloud:tracks:1") -> TrackAudioMetadata("finished", Some("mp3"), Some(4)),
-        Urn("soundcloud:tracks:2") -> TrackAudioMetadata("failed", None, None),
-        Urn("soundcloud:tracks:3") -> TrackAudioMetadata("finished", Some("ogg"), Some(5))
+        Urn("soundcloud", "tracks", "1") -> TrackAudioMetadata("finished", Some("mp3"), Some(4)),
+        Urn("soundcloud", "tracks", "2") -> TrackAudioMetadata("failed", None, None),
+        Urn("soundcloud", "tracks", "3") -> TrackAudioMetadata("finished", Some("ogg"), Some(5))
       )
     }
 
@@ -260,10 +260,10 @@ class RichOkidokiClientSpec extends UnitSpecification {
       val path = Path() / "domain_lockings"
 
       val urns = Set(
-        Urn("soundcloud:tracks:1"),
-        Urn("soundcloud:tracks:2"),
-        Urn("soundcloud:tracks:3"),
-        Urn("soundcloud:tracks:4"))
+        Urn("soundcloud", "tracks", "1"),
+        Urn("soundcloud", "tracks", "2"),
+        Urn("soundcloud", "tracks", "3"),
+        Urn("soundcloud", "tracks", "4"))
 
       val (firstBatch, secondBatch) = urns.splitAt(2)
 
@@ -314,10 +314,10 @@ class RichOkidokiClientSpec extends UnitSpecification {
 
       val batchSize = 2
       Await.result(client.fetchTracksDomainLockings(session, urns, batchSize)) ==== Map(
-        Urn("soundcloud:tracks:1") -> List(DomainLocking("domain1", Urn("soundcloud:domain-lockings:1"), Urn("soundcloud:tracks:1")),
-          DomainLocking("domain2", Urn("soundcloud:domain-lockings:2"), Urn("soundcloud:tracks:1"))),
-        Urn("soundcloud:tracks:2") -> List(DomainLocking("domain3", Urn("soundcloud:domain-lockings:3"), Urn("soundcloud:tracks:2"))),
-        Urn("soundcloud:tracks:3") -> List(DomainLocking("domain4", Urn("soundcloud:domain-lockings:4"), Urn("soundcloud:tracks:3")))
+        Urn("soundcloud", "tracks", "1") -> List(DomainLocking("domain1", Urn("soundcloud", "domain-lockings", "1"), Urn("soundcloud", "tracks", "1")),
+          DomainLocking("domain2", Urn("soundcloud", "domain-lockings", "2"), Urn("soundcloud", "tracks", "1"))),
+        Urn("soundcloud", "tracks", "2") -> List(DomainLocking("domain3", Urn("soundcloud", "domain-lockings", "3"), Urn("soundcloud", "tracks", "2"))),
+        Urn("soundcloud", "tracks", "3") -> List(DomainLocking("domain4", Urn("soundcloud", "domain-lockings", "4"), Urn("soundcloud", "tracks", "3")))
       )
     }
 
@@ -334,10 +334,10 @@ class RichOkidokiClientSpec extends UnitSpecification {
       val path = Path() / "users" / "fetch"
 
       val urns = Set(
-        Urn("soundcloud:users:1"),
-        Urn("soundcloud:users:2"),
-        Urn("soundcloud:users:3"),
-        Urn("soundcloud:users:4"))
+        Urn("soundcloud", "users", "1"),
+        Urn("soundcloud", "users", "2"),
+        Urn("soundcloud", "users", "3"),
+        Urn("soundcloud", "users", "4"))
 
       val (firstBatch, secondBatch) = urns.splitAt(2)
 
@@ -394,9 +394,9 @@ class RichOkidokiClientSpec extends UnitSpecification {
 
       val batchSize = 2
       Await.result(client.fetchUsersMap(session, urns, batchSize)) ==== Map(
-        Urn("soundcloud:users:1") -> User(firstBatch.head, "permalink1", "username1", "avatar_url1", "permalink_url1", None, None, 1, None, None, false, None, None),
-        Urn("soundcloud:users:2") -> User(firstBatch.last, "permalink2", "username2", "avatar_url2", "permalink_url2", None, None, 2, None, None, true, None, None),
-        Urn("soundcloud:users:3") -> User(secondBatch.head, "permalink3", "username3", "avatar_url3", "permalink_url3", None, None, 3, None, None, false, None, None)
+        Urn("soundcloud", "users", "1") -> User(firstBatch.head, "permalink1", "username1", "avatar_url1", "permalink_url1", None, None, 1, None, None, false, None, None),
+        Urn("soundcloud", "users", "2") -> User(firstBatch.last, "permalink2", "username2", "avatar_url2", "permalink_url2", None, None, 2, None, None, true, None, None),
+        Urn("soundcloud", "users", "3") -> User(secondBatch.head, "permalink3", "username3", "avatar_url3", "permalink_url3", None, None, 3, None, None, false, None, None)
       )
     }
 

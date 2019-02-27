@@ -29,18 +29,18 @@ class StitchClientSpec extends UnitSpecification {
     lazy val path = Path() / "bulk"
     val session = anonymousSession
 
-    val trackUrn1 = Urn("soundcloud:tracks:123")
-    val trackUrn2 = Urn("soundcloud:tracks:234987")
-    val trackUrn3 = Urn("soundcloud:tracks:129389")
+    val trackUrn1 = Urn("soundcloud", "tracks", "123")
+    val trackUrn2 = Urn("soundcloud", "tracks", "234987")
+    val trackUrn3 = Urn("soundcloud", "tracks", "129389")
 
     val trackUrns = Set(trackUrn1, trackUrn2, trackUrn3)
-    val userUrn = Urn("soundcloud:users:8700")
+    val userUrn = Urn("soundcloud", "users", "8700")
 
-    def stitchKey1 = s"${userUrn.getIdentifier}|${trackUrn1.getIdentifier}"
+    def stitchKey1 = s"${userUrn.identifier}|${trackUrn1.getIdentifier}"
 
-    def stitchKey2 = s"${userUrn.getIdentifier}|${trackUrn2.getIdentifier}"
+    def stitchKey2 = s"${userUrn.identifier}|${trackUrn2.getIdentifier}"
 
-    def stitchKey3 = s"${userUrn.getIdentifier}|${trackUrn3.getIdentifier}"
+    def stitchKey3 = s"${userUrn.identifier}|${trackUrn3.getIdentifier}"
 
     def genMockResponseContentBit(cat: String, keys: List[(String, Int)]) = {
       val seriesPerKey = keys.map { case (key, count) =>

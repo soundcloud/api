@@ -14,13 +14,13 @@ import play.api.libs.json.Json
 class RepostsHandlerSpec extends UnitSpecification {
 
   trait Context extends HandlerSpecificationScope {
-    val user = Urn("soundcloud:users:999")
-    val track = Urn("soundcloud:tracks:100")
-    val playlist = Urn("soundcloud:playlists:200")
+    val user = Urn("soundcloud", "users", "999")
+    val track = Urn("soundcloud", "tracks", "100")
+    val playlist = Urn("soundcloud", "playlists", "200")
     val geo = new Geo("US")
     val baseUrl = "http://api.example.com"
     val requestHeaders = Map("Host" -> "api.example.com")
-    val session = new UserSessionBuilder().setUser(user).setAgent(Urn("soundcloud:applications:v2")).setGeo(geo).build()
+    val session = new UserSessionBuilder().setUser(user).setAgent(Urn("soundcloud", "applications", "v2")).setGeo(geo).build()
 
     val repostsClient = mock[RepostsClient]
 
@@ -195,7 +195,7 @@ class RepostsHandlerSpec extends UnitSpecification {
     }
 
     trait MultiPageRepostedTracksContext extends Context {
-      val track2 = Urn("soundcloud:tracks:101")
+      val track2 = Urn("soundcloud", "tracks", "101")
 
       repostsClient
         .trackReposts(session, user, RepostsHandler.UpstreamLimit, None)
@@ -313,7 +313,7 @@ class RepostsHandlerSpec extends UnitSpecification {
 
     "when two pages of playlist reposts are available" >> {
       trait MultiPageRepostedPlaylistsContext extends Context {
-        val playlist2 = Urn("soundcloud:playlists:201")
+        val playlist2 = Urn("soundcloud", "playlists", "201")
 
         repostsClient
           .playlistReposts(session, user, RepostsHandler.UpstreamLimit, None)

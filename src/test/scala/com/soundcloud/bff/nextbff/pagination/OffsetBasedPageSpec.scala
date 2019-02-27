@@ -8,7 +8,7 @@ import com.twitter.finagle.http.Request
 class OffsetBasedPageSpec extends UnitSpecification {
 
   trait Context extends Scope {
-    val param = new Urn("soundcloud:tracks:2")
+    val param = Urn("soundcloud", "tracks", "2")
     val baseUrl = "http://www.foo.bar"
     val path = "/some/path:123:456"
     val offset = 2

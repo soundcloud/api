@@ -10,16 +10,16 @@ import scala.util.Random
 class RulesFilterSpec extends UnitSpecification {
 
   trait Context extends Scope {
-    val allowed = (1 to 2).map(id => new Urn(s"soundcloud:a:$id")).toSeq
+    val allowed = (1 to 2).map(id => new Urn(s"soundcloud:aa:$id")).toSeq
     val allowedRules = allowed.map(new ContentAuthorization(_, ContentPolicy.from("allowed"), Reason.UNKNOWN, MonetizationModel.NOT_APPLICABLE))
 
-    val snippet = (1 to 1).map(id => new Urn(s"soundcloud:s:$id")).toSeq
+    val snippet = (1 to 1).map(id => new Urn(s"soundcloud:ss:$id")).toSeq
     val snippetRules = snippet.map(new ContentAuthorization(_, ContentPolicy.from("snippet"), Reason.UNKNOWN, MonetizationModel.NOT_APPLICABLE))
 
-    val blocked = (1 to 2).map(id => new Urn(s"soundcloud:b:$id")).toSeq
+    val blocked = (1 to 2).map(id => new Urn(s"soundcloud:bb:$id")).toSeq
     val blockedRules = blocked.map(new ContentAuthorization(_, ContentPolicy.from("blocked"), Reason.UNKNOWN, MonetizationModel.NOT_APPLICABLE))
 
-    val monetize = (1 to 2).map(id => new Urn(s"soundcloud:m:$id")).toSeq
+    val monetize = (1 to 2).map(id => new Urn(s"soundcloud:mm:$id")).toSeq
     val monetizeRules = monetize.map(new ContentAuthorization(_, ContentPolicy.from("monetize"), Reason.UNKNOWN, MonetizationModel.AD_SUPPORTED))
 
     def toJson(urns: Seq[Urn]) = urns.map {
@@ -48,8 +48,8 @@ class RulesFilterSpec extends UnitSpecification {
 
       val rulesFilterResult = new RulesFilter(ContentPolicy.from("allowed"), ContentPolicy.from("monetize")).filterAndGetDetailedResult(allRules, allJson)
       rulesFilterResult.allowedContent.map(_._1).sortBy(_.toString()) ==== toJson(allowed ++ monetize).sortBy(_.toString())
-      rulesFilterResult.allowedUrns.sortBy(_.toString) ==== Seq(new Urn("soundcloud:a:1"), new Urn("soundcloud:a:2"), new Urn("soundcloud:m:1"), new Urn("soundcloud:m:2"))
-      rulesFilterResult.filteredUrns.sortBy(_.toString) ==== Seq(new Urn("soundcloud:b:1"), new Urn("soundcloud:b:2"), new Urn("soundcloud:s:1"))
+      rulesFilterResult.allowedUrns.sortBy(_.toString) ==== Seq(Urn("soundcloud", "aa", "1"), Urn("soundcloud", "aa", "2"), Urn("soundcloud", "mm", "1"), Urn("soundcloud", "mm", "2"))
+      rulesFilterResult.filteredUrns.sortBy(_.toString) ==== Seq(Urn("soundcloud", "bb", "1"), Urn("soundcloud", "bb", "2"), Urn("soundcloud", "ss", "1"))
     }
 
     "returns empty if nothing matches policy" in new Context {
@@ -58,7 +58,7 @@ class RulesFilterSpec extends UnitSpecification {
       val rulesFilterResult = new RulesFilter(ContentPolicy.from("allowed")).filterAndGetDetailedResult(allRules, toJson(monetize))
       rulesFilterResult.allowedContent must beEmpty
       rulesFilterResult.allowedUrns must beEmpty
-      rulesFilterResult.filteredUrns.sortBy(_.toString) ==== Seq(new Urn("soundcloud:m:1"), new Urn("soundcloud:m:2"))
+      rulesFilterResult.filteredUrns.sortBy(_.toString) ==== Seq(Urn("soundcloud", "mm", "1"), Urn("soundcloud", "mm", "2"))
 
     }
 
@@ -68,13 +68,13 @@ class RulesFilterSpec extends UnitSpecification {
       val rulesFilterResult = new RulesFilter(ContentPolicy.from("allowed")).filterAndGetDetailedResult(Seq.empty, allJson)
       rulesFilterResult.allowedContent.map(_._1).sortBy(_.toString()) ==== allJson.sortBy(_.toString())
       rulesFilterResult.allowedUrns.sortBy(_.toString) ==== Seq(
-        new Urn("soundcloud:a:1"),
-        new Urn("soundcloud:a:2"),
-        new Urn("soundcloud:b:1"),
-        new Urn("soundcloud:b:2"),
-        new Urn("soundcloud:m:1"),
-        new Urn("soundcloud:m:2"),
-        new Urn("soundcloud:s:1")
+        Urn("soundcloud", "aa", "1"),
+        Urn("soundcloud", "aa", "2"),
+        Urn("soundcloud", "bb", "1"),
+        Urn("soundcloud", "bb", "2"),
+        Urn("soundcloud", "mm", "1"),
+        Urn("soundcloud", "mm", "2"),
+        Urn("soundcloud", "ss", "1")
       )
       rulesFilterResult.filteredUrns must beEmpty
     }

@@ -169,7 +169,7 @@ class UserRelatedMothershipDispatcher(userAuthentication: UserAuthentication,
   private def extractUserUrnsFromList(values: Seq[JsValue]): Set[Urn] =
     values
       .flatMap(getUserId)
-      .map(id => new Urn("soundcloud", "users", id.toString))
+      .map(id => Urn("soundcloud", "users", id.toString))
       .toSet
 
   private def getUserId(jsValue: JsValue): Option[Int] =

@@ -11,7 +11,7 @@ class PageBuilderSpec extends UnitSpecification {
     def request = Request("/stream-with-unicorns", "param" -> "var")
 
     val baseUrl = "http://api-v3"
-    val urn = new Urn("soundcloud:users:2")
+    val urn = Urn("soundcloud", "users", "2")
     val builder = PageBuilder(request, baseUrl)(urn)
   }
 

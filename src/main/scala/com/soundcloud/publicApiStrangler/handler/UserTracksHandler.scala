@@ -50,7 +50,7 @@ class UserTracksHandler(userAuthentication: UserAuthentication,
           }
       }
 
-      Try(Urn(s"soundcloud:users:$userId")) match {
+      Try(Urn("soundcloud", "users", userId)) match {
         case Success(urn@Urn(_, _, numericRegexp())) => {
           getResult(urn).map {
             case Good(tracksRepresentationResult) => {

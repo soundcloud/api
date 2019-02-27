@@ -36,7 +36,7 @@ class AuthorizeHttpResponseSpec extends UnitSpecification {
   trait TrackContext extends Context with Before {
     val content = singleTrack.toString
     val status = Status.Ok
-    val urn = new Urn("soundcloud:tracks:153896632")
+    val urn = Urn("soundcloud", "tracks", "153896632")
 
     def policies: ContentAuthorization
 
@@ -102,9 +102,9 @@ class AuthorizeHttpResponseSpec extends UnitSpecification {
 
     override def mockWaveFormUrlsRepoExpectations() = {
       val trackWaveformUrls = Map(
-        new Urn("soundcloud", "tracks", "49438146") -> TrackWaveformUrl("RhJ436DPf2Vx", new Url("http://bla"), new Url("http://bla2"), "stream", None),
-        new Urn("soundcloud", "tracks", "49437906") -> TrackWaveformUrl("DWpqP6aFqglm", new Url("http://bla3"), new Url("http://bla4"), "stream", None),
-        new Urn("soundcloud", "tracks", "48031525") -> TrackWaveformUrl("sDWnMpZaIQ9Z", new Url("http://bla5"), new Url("http://bla6"), "stream", None)
+        Urn("soundcloud", "tracks", "49438146") -> TrackWaveformUrl("RhJ436DPf2Vx", new Url("http://bla"), new Url("http://bla2"), "stream", None),
+        Urn("soundcloud", "tracks", "49437906") -> TrackWaveformUrl("DWpqP6aFqglm", new Url("http://bla3"), new Url("http://bla4"), "stream", None),
+        Urn("soundcloud", "tracks", "48031525") -> TrackWaveformUrl("sDWnMpZaIQ9Z", new Url("http://bla5"), new Url("http://bla6"), "stream", None)
       )
       waveformUrlsRepo.fetchWaveformUrls(session, authorizations.toSet) returns Future.value(trackWaveformUrls)
     }
@@ -118,8 +118,8 @@ class AuthorizeHttpResponseSpec extends UnitSpecification {
 
     override def mockWaveFormUrlsRepoExpectations() = {
       val trackWaveformUrls = Map(
-        new Urn("soundcloud", "tracks", "49438146") -> TrackWaveformUrl("RhJ436DPf2Vx", new Url("http://bla"), new Url("http://bla2"), "stream", None),
-        new Urn("soundcloud", "tracks", "48031525") -> TrackWaveformUrl("sDWnMpZaIQ9Z", new Url("http://bla5"), new Url("http://bla6"), "stream", None)
+        Urn("soundcloud", "tracks", "49438146") -> TrackWaveformUrl("RhJ436DPf2Vx", new Url("http://bla"), new Url("http://bla2"), "stream", None),
+        Urn("soundcloud", "tracks", "48031525") -> TrackWaveformUrl("sDWnMpZaIQ9Z", new Url("http://bla5"), new Url("http://bla6"), "stream", None)
       )
       val expectedContentAuth = Set(authorizations(0), authorizations(2))
       waveformUrlsRepo.fetchWaveformUrls(session, expectedContentAuth) returns Future.value(trackWaveformUrls)
@@ -218,9 +218,9 @@ class AuthorizeHttpResponseSpec extends UnitSpecification {
     val status = Status.Ok
 
     val authorizations = Seq(
-      new ContentAuthorization(new Urn("soundcloud:tracks:1"), ContentPolicy.BLOCK, Reason.GEO, MonetizationModel.NOT_APPLICABLE),
-      new ContentAuthorization(new Urn("soundcloud:tracks:2"), ContentPolicy.ALLOW, Reason.GEO, MonetizationModel.NOT_APPLICABLE),
-      new ContentAuthorization(new Urn("soundcloud:tracks:3"), ContentPolicy.ALLOW, Reason.GEO, MonetizationModel.NOT_APPLICABLE)
+      new ContentAuthorization(Urn("soundcloud", "tracks", "1"), ContentPolicy.BLOCK, Reason.GEO, MonetizationModel.NOT_APPLICABLE),
+      new ContentAuthorization(Urn("soundcloud", "tracks", "2"), ContentPolicy.ALLOW, Reason.GEO, MonetizationModel.NOT_APPLICABLE),
+      new ContentAuthorization(Urn("soundcloud", "tracks", "3"), ContentPolicy.ALLOW, Reason.GEO, MonetizationModel.NOT_APPLICABLE)
     )
 
     override def before: Any =

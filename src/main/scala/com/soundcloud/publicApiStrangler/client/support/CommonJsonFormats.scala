@@ -1,19 +1,15 @@
 package com.soundcloud.publicApiStrangler.client.support
 
-import com.soundcloud.jvmkit.module.util.{MalformedUrnException, Urn}
+import com.soundcloud.jvmkit.module.util.Urn
 import org.joda.time.{DateTime, DateTimeZone, LocalDateTime}
 import play.api.libs.json._
 
 object CommonJsonFormats {
 
   implicit val urnFormat: Format[Urn] = new Format[Urn] {
-    def reads(json: JsValue) = json.validate[String].flatMap {
-      str =>
-        try {
-          JsSuccess(new Urn(str))
-        } catch {
-          case _: IllegalStateException | _: MalformedUrnException => JsError(s"""Error parsing urn "$str".""")
-        }
+    def reads(json: JsValue): JsResult[Urn] = json.validate[String].flatMap { str =>
+      Urn.parse(str).map(JsSuccess(_))
+        .getOrElse(JsError(s"""Error parsing urn "$str"."""))
     }
 
     def writes(urn: Urn): JsValue = JsString(urn.toString)

@@ -29,6 +29,6 @@ class TracksWithPaginationMapperSpec extends UnitSpecification {
   "Minimal fields" in {
     val presented = TrackMapper(moshiTrackMinimal)
 
-    (presented.urn) must be_==(Urn("soundcloud:sounds:174090825"))
+    (presented.urn) must be_==(Urn("soundcloud", "tracks", "174090825"))
   }
 }

@@ -22,7 +22,7 @@ class UserTracksHandlerSpec extends UnitSpecification {
   DateTimeZone.setDefault(DateTimeZone.UTC)
 
   trait Context extends HandlerSpecificationScope {
-    val session = loggedInSession(Urn("soundcloud:users:1"))
+    val session = loggedInSession(Urn("soundcloud", "users", "1"))
     val userAuthentication = new FakeUserAuthentication(session)
 
     val mothershipDispatcher = mock[TrackMothershipDispatcherWithCounts]
@@ -43,7 +43,7 @@ class UserTracksHandlerSpec extends UnitSpecification {
 
   "GET /users/:id/tracks" >> {
     trait TracksForUserContext extends Context {
-      val user = Urn("soundcloud:users:7110")
+      val user = Urn("soundcloud", "users", "7110")
       val queryString = "?limit=1&offset=2&linked_partitioning=yes-please&created_at[from]=2017-01-01%2010:00:00&created_at[to]=2017-01-15%2010:00:00"
 
       def paginationParams(path: String) = TrackPagination(Some(1), Some(2), true,

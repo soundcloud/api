@@ -60,7 +60,7 @@ class MoshimoshiClient(service: JsonClient,
     fetchByUrns(service, session, Path() / "playlists" / "fetch", urns).map(_.map(PlaylistMapper(_)))
 
   def fetchWebProfiles(session: UserSession, userUrn: Urn): Future[List[WebProfile]] = {
-    fetch(service, session, Path() / "users" / userUrn.getIdentifier / "web_profiles")
+    fetch(service, session, Path() / "users" / userUrn.identifier / "web_profiles")
       .map(ListResponse(_)).map(WebProfileMapper(_))
   }
 
@@ -215,7 +215,7 @@ class MoshimoshiClient(service: JsonClient,
     service.postWithSession(
       session,
       Path() / "users" / "password_reset",
-      Params("user_id" -> userUrn.getIdentifier),
+      Params("user_id" -> userUrn.identifier),
       Headers.empty,
       None
     ).map(resetUserPasswordResponseMapper(_))

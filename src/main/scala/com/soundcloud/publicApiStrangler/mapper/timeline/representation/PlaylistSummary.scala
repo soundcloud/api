@@ -12,7 +12,7 @@ class PlaylistSummary(jsonValue: JsValue,
   extends JsonMapping(jsonValue) with UrnSupport {
 
   val kind = "playlist"
-  val id = urn.getIdentifier.toInt
+  val id = urn.identifier.toInt
   val created_at = (json \ "created_at").asOpt[String]
   val duration = (json \ "duration").asOpt[Int]
   val last_modified = (json \ "last_modified").asOpt[String]

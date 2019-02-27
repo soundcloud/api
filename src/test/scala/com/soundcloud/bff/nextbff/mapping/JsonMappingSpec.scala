@@ -18,7 +18,7 @@ class JsonMappingSpec extends UnitSpecification {
   }
 
   "doesn't render URN in pieces" in new Context {
-    UntypedJson.write(Urn("soundcloud:tracks:123")) ==== "\"soundcloud:tracks:123\""
+    UntypedJson.write(Urn("soundcloud", "tracks", "123")) ==== "\"soundcloud:tracks:123\""
   }
 
 }

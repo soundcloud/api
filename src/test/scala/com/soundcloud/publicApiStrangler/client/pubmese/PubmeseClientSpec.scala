@@ -19,8 +19,8 @@ class PubmeseClientSpec extends UnitSpecification {
     val path = Path() / "tracks"
 
     val session = anonymousSession
-    val urn1 = Urn("soundcloud:tracks:123")
-    val urn2 = Urn("soundcloud:tracks:456")
+    val urn1 = Urn("soundcloud", "tracks", "123")
+    val urn2 = Urn("soundcloud", "tracks", "456")
 
     val urns = Set(urn1, urn2)
 

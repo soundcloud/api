@@ -18,7 +18,7 @@ class SystemPlaylistsClientSpec extends UnitSpecification {
     val client = new SystemPlaylistsClient(service)
 
     val path = Path() / "similar-sounds" / "get"
-    val seed = Urn("soundcloud:sounds:1")
+    val seed = Urn("soundcloud", "tracks", "1")
     val params = Params("track_urn" -> seed.toString)
   }
 
