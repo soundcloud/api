@@ -24,7 +24,6 @@ pipelines:
                 command: make
                 arguments:
                 - publish
-                - publish-deploy
             - exec:
                 command: make
                 arguments:
@@ -37,6 +36,26 @@ pipelines:
                 command: make
                 arguments:
                 - end-to-end-test
+    - publish-deploy:
+        jobs:
+          publish-deploy-db:
+            job_type: deploy
+            environment_variables:
+              ZONE: db
+            tasks:
+            - exec:
+                command: make
+                arguments:
+                - publish-deploy
+          publish-deploy-et:
+            job_type: deploy
+            environment_variables:
+              ZONE: et
+            tasks:
+            - exec:
+                command: make
+                arguments:
+                - publish-deploy
     - promote-to-stable:
         jobs:
           promote-to-stable:
@@ -45,10 +64,13 @@ pipelines:
                 command: make
                 arguments:
                 - promote-to-stable
+                - promote-to-release
     - canary:
         jobs:
           canary-api:
             job_type: deploy
+            environment_variables:
+              ZONE: db
             tasks:
             - exec:
                 command: make
@@ -56,6 +78,8 @@ pipelines:
                 - canary-api
           canary-apitrackupload:
             job_type: deploy
+            environment_variables:
+              ZONE: db
             tasks:
             - exec:
                 command: make
@@ -63,13 +87,24 @@ pipelines:
                 - canary-apitrackupload
     - deploy-to-production:
         jobs:
-          promote-to-release-then-deploy:
+          deploy-db:
             job_type: deploy
+            environment_variables:
+              ZONE: db
             tasks:
             - exec:
                 command: make
                 arguments:
-                - promote-to-release
+                - deploy-api
+            - exec:
+                command: make
+                arguments:
+                - deploy-apitrackupload
+          deploy-et:
+            job_type: deploy
+            environment_variables:
+              ZONE: et
+            tasks:
             - exec:
                 command: make
                 arguments:

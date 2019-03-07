@@ -10,7 +10,7 @@ RUNTIME_STACK := jdk-8
 
 DOCKER_IP ?= $(shell sc docker-ip)
 
-ZONE ?= db
+ZONE ?= $(error please specify the ZONE environment variable)
 
 ifeq ($(USE_CRUN),false)
 	SBT = sbt
