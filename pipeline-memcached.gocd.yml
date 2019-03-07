@@ -11,7 +11,7 @@ pipelines:
     - deploy:
         approval: manual
         jobs:
-          deploy:
+          deploy-db:
             job_type: deploy
             tasks:
             - exec:
@@ -19,7 +19,20 @@ pipelines:
                 arguments:
                 - deploy
                 - scale
-                - CLUSTER=k2
+                - ZONE=db
+                - SYSTEM=public-api-strangler
+                - CPU=0.2
+                - STORAGE=512
+                - REPLICAS=10
+          deploy-et:
+            job_type: deploy
+            tasks:
+            - exec:
+                command: make
+                arguments:
+                - deploy
+                - scale
+                - ZONE=et
                 - SYSTEM=public-api-strangler
                 - CPU=0.2
                 - STORAGE=512
