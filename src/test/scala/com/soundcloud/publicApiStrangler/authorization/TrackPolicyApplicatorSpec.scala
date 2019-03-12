@@ -1,9 +1,8 @@
 package com.soundcloud.publicApiStrangler.authorization
 
-import com.soundcloud.jvmkit.module.util.{Url, Urn}
+import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSession
-import com.soundcloud.publicApiStrangler.authorization.TrackWaveformActionStatus._
-import com.soundcloud.publicApiStrangler.client.media.TrackWaveformUrl
+import com.soundcloud.publicApiStrangler.authorization.TrackDurationActionStatus._
 import com.soundcloud.publicApiStrangler.authorization.policies._
 import com.soundcloud.publicApiStrangler.test.UnitSpecification
 import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures._
@@ -16,7 +15,7 @@ class TrackPolicyApplicatorSpec extends UnitSpecification {
     val urns =
       tracksArray.as[List[JsObject]]
         .map(track => (track \ "id").as[Int])
-        .map(id => new Urn(s"soundcloud:tracks:$id"))
+        .map(id => Urn("soundcloud", "tracks", id.toString))
 
     val whitelistedClientUrn = Urn("soundcloud", "applications", "1000")
     val nonWhitelistedClientUrn = Urn("soundcloud", "applications", "2000")
@@ -24,20 +23,20 @@ class TrackPolicyApplicatorSpec extends UnitSpecification {
 
     def rules: List[ContentAuthorization]
 
-    def waveformActions: List[TrackWaveformAction]
+    def durationActions: List[TrackDurationAction]
 
     lazy val trackPolicy = TrackPolicyApplicator(clientWhitelist)
-    lazy val tracksWithPoliciesApplied = trackPolicy(session, new TracksVisitor(tracksArray), rules, waveformActions).get
+    lazy val tracksWithPoliciesApplied = trackPolicy(session, new TracksVisitor(tracksArray), rules, durationActions).get
 
     lazy val authorizedTrackIds = extractIds(tracksWithPoliciesApplied)
 
-    lazy val waveformsAndDurations = extractWaveformAndDuration(tracksWithPoliciesApplied)
+    lazy val durations = extractDuration(tracksWithPoliciesApplied)
 
     def extractIds(json: JsValue) =
       json.as[List[JsObject]].map(e => (e \ "id").as[Int])
 
-    def extractWaveformAndDuration(json: JsValue) =
-      json.as[List[JsObject]].map(e => ((e \ "waveform_url").as[String], (e \ "duration").as[Int]))
+    def extractDuration(json: JsValue) =
+      json.as[List[JsObject]].map(e => (e \ "duration").as[Int])
   }
 
   "applies the policies to all track objects" >> {
@@ -47,16 +46,15 @@ class TrackPolicyApplicatorSpec extends UnitSpecification {
           new ContentAuthorization(urn, ContentPolicy.ALLOW, Reason.GEO, MonetizationModel.NOT_APPLICABLE)
         }
 
-      def waveformActions =
+      def durationActions =
         for (urn <- urns) yield {
-          TrackWaveformAction(urn, DoesNotNeedModification, None)
+          TrackDurationAction(urn, DoesNotNeedModification, None)
         }
     }
 
     "all tracks authorized" in new EverythingAuthorized {
       authorizedTrackIds mustEqual extractIds(tracksArray)
-      waveformsAndDurations ==== List(("https://w1.sndcdn.com/RhJ436DPf2Vx_m.png", 370348),
-        ("https://w1.sndcdn.com/DWpqP6aFqglm_m.png", 68127), ("https://w1.sndcdn.com/sDWnMpZaIQ9Z_m.png", 326183))
+      durations ==== List(370348, 2000, 326183)
     }
 
     "all tracks has 'policy' and 'monetization_model' for whitelisted user agent" in new EverythingAuthorized {
@@ -82,9 +80,9 @@ class TrackPolicyApplicatorSpec extends UnitSpecification {
         new ContentAuthorization(blockedTrackUrn, ContentPolicy.BLOCK, Reason.GEO, MonetizationModel.NOT_APPLICABLE)
       )
 
-      def waveformActions =
+      def durationActions =
         for (urn <- urns) yield {
-          TrackWaveformAction(urn, DoesNotNeedModification, None)
+          TrackDurationAction(urn, DoesNotNeedModification, None)
         }
     }
 
@@ -92,16 +90,14 @@ class TrackPolicyApplicatorSpec extends UnitSpecification {
       session.getAgent returns whitelistedClientUrn
 
       authorizedTrackIds mustEqual List(allowedTrackUrn, monetizedTrackUrn).map(_.getIdentifier.toInt)
-      waveformsAndDurations ==== List(
-        ("https://w1.sndcdn.com/RhJ436DPf2Vx_m.png", 370348),
-        ("https://w1.sndcdn.com/DWpqP6aFqglm_m.png", 68127))
+      durations ==== List(370348, 2000)
     }
 
     "returns only allowed tracks for non-whitelisted clients" in new PartiallyAuthorized {
       session.getAgent returns nonWhitelistedClientUrn
 
       authorizedTrackIds mustEqual List(allowedTrackUrn).map(_.getIdentifier.toInt)
-      waveformsAndDurations ==== List(("https://w1.sndcdn.com/RhJ436DPf2Vx_m.png", 370348))
+      durations ==== List(370348)
     }
 
     trait AdSupported extends Context {
@@ -115,9 +111,9 @@ class TrackPolicyApplicatorSpec extends UnitSpecification {
         new ContentAuthorization(monetizedAdSupportedTrackUrn, ContentPolicy.MONETIZE, Reason.GEO, MonetizationModel.AD_SUPPORTED)
       )
 
-      def waveformActions =
+      def durationActions =
         for (urn <- urns) yield {
-          TrackWaveformAction(urn, DoesNotNeedModification, None)
+          TrackDurationAction(urn, DoesNotNeedModification, None)
         }
     }
 
@@ -144,21 +140,15 @@ class TrackPolicyApplicatorSpec extends UnitSpecification {
             new ContentAuthorization(urn, ContentPolicy.ALLOW, Reason.GEO, MonetizationModel.NOT_APPLICABLE)
         }
 
-      val urlWithoutDuration = TrackWaveformUrl("uid1", Url("http://preview/jsonurl/noDuration"), Url("http://preview/pngnurl/noDuration"), "stream", None)
-      val urlWithDuration = TrackWaveformUrl("uid3", Url("http://preview/jsonurl/withDuration"), Url("http://preview/pngnurl/withDuration"), "stream", Some(90000))
-
-      def waveformActions = List(TrackWaveformAction(urns(0), NeedsModification, Some(urlWithoutDuration)),
-        TrackWaveformAction(urns(1), DoesNotNeedModification, None),
-        TrackWaveformAction(urns(2), NeedsModification, Some(urlWithDuration))
+      def durationActions = List(TrackDurationAction(urns(0), NeedsModification, None),
+        TrackDurationAction(urns(1), DoesNotNeedModification, None),
+        TrackDurationAction(urns(2), NeedsModification, Some(90000))
       )
     }
 
     "some tracks have content policy SNIP" in new SomeAreSnip {
       authorizedTrackIds ==== extractIds(tracksArray)
-      waveformsAndDurations ==== List(
-        ("http://preview/pngnurl/noDuration", 370348),
-        ("https://w1.sndcdn.com/DWpqP6aFqglm_m.png", 68127),
-        ("http://preview/pngnurl/withDuration", 90000))
+      durations ==== List(370348, 2000, 90000)
     }
   }
 
@@ -168,7 +158,7 @@ class TrackPolicyApplicatorSpec extends UnitSpecification {
 
       override lazy val authorizedTrackIds =
         extractIds(
-          TrackPolicyApplicator(clientWhitelist)(session, new TracksVisitor(stream), rules, waveformActions).get
+          TrackPolicyApplicator(clientWhitelist)(session, new TracksVisitor(stream), rules, durationActions).get
         )
 
       override def extractIds(json: JsValue) =
@@ -186,9 +176,9 @@ class TrackPolicyApplicatorSpec extends UnitSpecification {
             new ContentAuthorization(urn, ContentPolicy.BLOCK, Reason.GEO, MonetizationModel.NOT_APPLICABLE)
         }
 
-      def waveformActions =
+      def durationActions =
         for (urn <- urns) yield {
-          TrackWaveformAction(urn, DoesNotNeedModification, None)
+          TrackDurationAction(urn, DoesNotNeedModification, None)
         }
     }
 

@@ -2,9 +2,9 @@ package com.soundcloud.publicApiStrangler.service.trackrepresentation
 
 import java.net.URL
 
-import com.soundcloud.jvmkit.module.util.Urn
+import com.soundcloud.jvmkit.module.util.{Url, Urn}
 import com.soundcloud.publicApiStrangler.client.liebling.LieblingClient
-import com.soundcloud.publicApiStrangler.client.mediaservice.{MediaServiceUrlGenClient, WaveformUrl}
+import com.soundcloud.publicApiStrangler.client.media.{TrackWaveformUrl, WaveformUrlsGenerator}
 import com.soundcloud.publicApiStrangler.client.mothership.response.representation.{Geoblockings, User}
 import com.soundcloud.publicApiStrangler.client.mothership.{DomainLocking, RichOkidokiClient, TrackAudioMetadata}
 import com.soundcloud.publicApiStrangler.client.playlists.PlaylistsClient
@@ -27,7 +27,7 @@ class TrackRepositorySpec extends UnitSpecification {
     val pubmeseClient = mock[PubmeseClient]
     val stitchClient = mock[StitchClient]
     val lieblingClient = mock[LieblingClient]
-    val mediaServiceUrlGenClient = mock[MediaServiceUrlGenClient]
+    val waveformUrlsGenerator = mock[WaveformUrlsGenerator]
     val userQuotaClient = mock[UserQuotaClient]
     val playlistsClient = mock[PlaylistsClient]
     val trackAccessibilityService = mock[TrackAccessibilityService]
@@ -38,7 +38,7 @@ class TrackRepositorySpec extends UnitSpecification {
       pubmeseClient,
       stitchClient,
       lieblingClient,
-      mediaServiceUrlGenClient,
+      waveformUrlsGenerator,
       userQuotaClient,
       trackAccessibilityService)
 
@@ -50,7 +50,7 @@ class TrackRepositorySpec extends UnitSpecification {
     def paginationParams: TrackPagination
 
     def trackmetadataTrack(urn: Urn, ownerUrn: Urn, labelId: Option[Int]) =
-      TrackMetadataTrackBuilder(urn = urn, user_urn = ownerUrn, label_id = labelId).build
+      TrackMetadataTrackBuilder(urn = urn, user_urn = ownerUrn, label_id = labelId, uid = None).build
 
     def fetchUserObjectsResponse = Future.value(List(tracksOwner))
 
@@ -71,8 +71,6 @@ class TrackRepositorySpec extends UnitSpecification {
     def userLikedTracksResponse = Future.value(Map.empty[Urn, Boolean])
 
     def Response = Future.value(Map.empty)
-
-    def waveformUrlsResponse = Future.value(Map.empty[String, Seq[WaveformUrl]])
 
     def fetchUsersMapResponse = Future.value(Map.empty[Urn, User])
 
@@ -105,7 +103,6 @@ class TrackRepositorySpec extends UnitSpecification {
 
     trackmetadataClient.tracks(session, trackUrns).returns(tracksResponse)
     richOkidokiClient.fetchTracksAudioMetadata(session, trackUrns).returns(fetchTracksAudioMetadataResponse)
-    mediaServiceUrlGenClient.waveformUrls(trackmetadataTracks.flatMap(_.uid)).returns(waveformUrlsResponse)
 
     val userUrnsFromLabelIds = trackmetadataTracks.flatMap(_.label_id).map(id => Urn("soundcloud", "users", id.toString)).toSet
     richOkidokiClient.fetchUsersMap(session, userUrnsFromLabelIds).returns(fetchUsersMapResponse)
@@ -168,15 +165,6 @@ class TrackRepositorySpec extends UnitSpecification {
 
         result match {
           case Bad(StringError(message)) => message ==== "Could not load the audio information"
-          case _ => failure
-        }
-      }
-
-      "when loading the tracks' waveforms fails, it fails" in new NoPaginationParams {
-        override def waveformUrlsResponse = badFuture
-
-        result match {
-          case Bad(StringError(message)) => message ==== "Could not load the tracks' waveforms"
           case _ => failure
         }
       }

@@ -3,7 +3,7 @@ package com.soundcloud.publicApiStrangler.service.trackrepresentation
 import java.net.URLEncoder
 
 import com.soundcloud.jvmkit.module.util.Urn
-import com.soundcloud.publicApiStrangler.client.mediaservice.WaveformUrl
+import com.soundcloud.publicApiStrangler.client.media.TrackWaveformUrl
 import com.soundcloud.publicApiStrangler.client.mothership.response.representation.{Geoblockings, User}
 import com.soundcloud.publicApiStrangler.client.mothership.{DomainLocking, TrackAudioMetadata}
 import com.soundcloud.publicApiStrangler.client.pubmese.Isrc
@@ -158,16 +158,13 @@ object TrackRepresentationDomainLockingsDecorator {
 }
 
 case class TrackRepresentationWaveformUrlDecorator(
-                                                    waveformUrls: Seq[WaveformUrl],
+                                                    waveformUrl: TrackWaveformUrl,
                                                     wrapped: TrackRepresentationLike
                                                   ) extends TrackRepresentationLike
 
 object TrackRepresentationWaveformUrlDecorator {
   implicit val writes = Writes[TrackRepresentationWaveformUrlDecorator] { dec =>
-    val attribute = dec.waveformUrls.find(_.label == "stream") match {
-      case Some(url) => Json.obj("waveform_url" -> url.png)
-      case _ => Json.obj()
-    }
+    val attribute = Json.obj("waveform_url" -> dec.waveformUrl.pngUrl.s)
     Json.toJson(dec.wrapped).as[JsObject] ++ attribute
   }
 }

@@ -1,9 +1,9 @@
 package com.soundcloud.publicApiStrangler.service.trackrepresentation
 
-import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.{UserSession, UserSessionBuilder}
+import com.soundcloud.jvmkit.module.util.{Url, Urn}
 import com.soundcloud.publicApiStrangler.client.liebling.{LieblingClient, UserLikesCount}
-import com.soundcloud.publicApiStrangler.client.mediaservice.{MediaServiceUrlGenClient, WaveformUrl}
+import com.soundcloud.publicApiStrangler.client.media.{TrackWaveformUrl, WaveformUrlsGenerator}
 import com.soundcloud.publicApiStrangler.client.mothership.response.representation.{Geoblockings, User}
 import com.soundcloud.publicApiStrangler.client.mothership.{DomainLocking, RichOkidokiClient, TrackAudioMetadata}
 import com.soundcloud.publicApiStrangler.client.playlists.{Playlist, PlaylistsClient}
@@ -29,7 +29,7 @@ class TrackRepresentationsServiceForSingleTrackSpec extends UnitSpecification {
     val pubmeseClient = mock[PubmeseClient]
     val stitchClient = mock[StitchClient]
     val lieblingClient = mock[LieblingClient]
-    val mediaUrlGenClient = mock[MediaServiceUrlGenClient]
+    val waveformUrlsGenerator = mock[WaveformUrlsGenerator]
     val userQuotaClient = mock[UserQuotaClient]
     val playlistsClient = mock[PlaylistsClient]
     val trackAccessibilityService = new TrackAccessibilityService(playlistsClient)
@@ -41,7 +41,7 @@ class TrackRepresentationsServiceForSingleTrackSpec extends UnitSpecification {
       pubmeseClient,
       stitchClient,
       lieblingClient,
-      mediaUrlGenClient,
+      waveformUrlsGenerator,
       userQuotaClient,
       trackAccessibilityService
     )
@@ -181,14 +181,8 @@ class TrackRepresentationsServiceForSingleTrackSpec extends UnitSpecification {
     def userLikesCount: UserLikesCount =
       UserLikesCount(Set.empty, List.empty)
 
-    def waveformUrls: Seq[WaveformUrl] =
-      Seq(
-        WaveformUrl("stream",
-          "https://foo.sndcdn.com/stream/a1b2c3.json",
-          "https://bar.sndcdn.com/stream/a1b2c3.png"),
-        WaveformUrl("preview",
-          "https://foo.sndcdn.com/preview/a1b2c3.json",
-          "https://bar.sndcdn.com/preview/a1b2c3.png"))
+    def waveformUrl(uid: String) =
+      TrackWaveformUrl(uid, Url("https://bar.sndcdn.com/stream/a1b2c3.png"))
 
     val session: UserSession = new UserSessionBuilder().setUser(requestingUserUrn).build()
 
@@ -203,7 +197,7 @@ class TrackRepresentationsServiceForSingleTrackSpec extends UnitSpecification {
       when(okidokiClient.fetchTrackDomainLockings(session, trackUrn)).thenReturn(Future.value(domainLockings))
       when(okidokiClient.fetchTrackAudioMetadata(session, trackUrn)).thenReturn(Future.value(Some(trackAudioMetadata)))
       when(lieblingClient.userLikeCounts(session, List(trackUrn), session.getUser)).thenReturn(Future.value(userLikesCount))
-      when(mediaUrlGenClient.waveformUrls(track.uid)).thenReturn(Future.value(waveformUrls))
+      when(waveformUrlsGenerator.fromUid(track.uid.get)).thenReturn(waveformUrl(track.uid.get))
       when(userQuotaClient.downloadsPerTrack(session, Set(track.user_urn))).thenReturn(Future.value(Map.empty[Urn, Option[Int]]))
 
       when(playlistsClient.getPlaylistContainingTrackOwnedByUser(track.urn, track.user_urn)).thenReturn(Future.value(playlists))
@@ -500,19 +494,6 @@ class TrackRepresentationsServiceForSingleTrackSpec extends UnitSpecification {
       trackRepLike match {
         case Success(rep) =>
           Json.toJson(rep).as[JsObject].keys.contains("waveform_url") ==== true
-      }
-    }
-
-    "it not present when urlgen returns no stream URLs" in new Context {
-      val track = trackmetadataTrack()
-      setUpMocksForExistingTrack(track, session)
-      when(mediaUrlGenClient.waveformUrls(track.uid)).thenReturn(Future.value(Seq.empty))
-
-      val trackRepLike = Await.result(tracksService.track(session, trackUrn, None))
-
-      trackRepLike match {
-        case Success(rep) =>
-          Json.toJson(rep).as[JsObject].keys.contains("waveform_url") ==== false
       }
     }
   }

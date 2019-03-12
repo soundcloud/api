@@ -1,7 +1,7 @@
 package com.soundcloud.publicApiStrangler.service.trackrepresentation
 
-import com.soundcloud.jvmkit.module.util.Urn
-import com.soundcloud.publicApiStrangler.client.mediaservice.WaveformUrl
+import com.soundcloud.jvmkit.module.util.{Url, Urn}
+import com.soundcloud.publicApiStrangler.client.media.TrackWaveformUrl
 import com.soundcloud.publicApiStrangler.client.mothership.response.representation.{Geoblockings, User}
 import com.soundcloud.publicApiStrangler.client.mothership.{DomainLocking, TrackAudioMetadata}
 import com.soundcloud.publicApiStrangler.client.pubmese.Isrc
@@ -307,33 +307,11 @@ class TrackRepresentationWaveformUrlDecoratorSpec extends UnitSpecification {
   }
 
   "adds the PNG URL of the track's 'stream' waveform" in new Context {
-    val decorator = TrackRepresentationWaveformUrlDecorator(Seq(
-      WaveformUrl("stream",
-        "https://foo.sndcdn.com/stream/a1b2c3.json",
-        "https://bar.sndcdn.com/stream/a1b2c3.png"),
-      WaveformUrl("preview",
-        "https://foo.sndcdn.com/preview/a1b2c3.json",
-        "https://bar.sndcdn.com/preview/a1b2c3.png")), wrapped)
+    val decorator = TrackRepresentationWaveformUrlDecorator(
+      TrackWaveformUrl("some_uid", Url("https://bar.sndcdn.com/stream/a1b2c3.png")), wrapped)
     val json = Json.toJson(decorator)
 
     (json \ "waveform_url").as[String] ==== "https://bar.sndcdn.com/stream/a1b2c3.png"
-  }
-
-  "does not add a waveform_url if there is no 'stream'-type waveform URL" in new Context {
-    val decorator = TrackRepresentationWaveformUrlDecorator(Seq(
-      WaveformUrl("honeybadger",
-        "https://foo.sndcdn.com/stream/a1b2c3.json",
-        "https://bar.sndcdn.com/stream/a1b2c3.png")), wrapped)
-    val json = Json.toJson(decorator)
-
-    json.as[JsObject].keys.contains("waveform_url") ==== false
-  }
-
-  "does not add a waveform_url if no waveforms are provided" in new Context {
-    val decorator = TrackRepresentationWaveformUrlDecorator(Seq.empty, wrapped)
-    val json = Json.toJson(decorator)
-
-    json.as[JsObject].keys.contains("waveform_url") ==== false
   }
 }
 

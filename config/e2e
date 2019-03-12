@@ -77,5 +77,7 @@ TRACKMETADATA_SRV_RECORD=dnssrv!http.api.prod.trackmetadata.srv.db.s-cloud.net
 
 APP_SILOING_BLACKLIST_APPS=soundcloud:applications:124,soundcloud:applications:3152,soundcloud:applications:65097
 
+CDN_WAVE_HTTPS_ENDPOINT=https://wave.sndcdn.com
+
 IS_DEVELOPENT_MODE=true
 IS_DNS_HACK_ON=true

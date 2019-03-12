@@ -1,10 +1,8 @@
 package com.soundcloud.publicApiStrangler.service.trackrepresentation
 
-import com.soundcloud.publicApiStrangler.support.ResultF.lift
-import com.soundcloud.publicApiStrangler.support.{Good, Result}
-import com.soundcloud.jvmkit.module.util.Urn
+import com.soundcloud.jvmkit.module.util.{Url, Urn}
 import com.soundcloud.publicApiStrangler.client.liebling.LieblingClient
-import com.soundcloud.publicApiStrangler.client.mediaservice.{MediaServiceUrlGenClient, WaveformUrl}
+import com.soundcloud.publicApiStrangler.client.media.{TrackWaveformUrl, WaveformUrlsGenerator}
 import com.soundcloud.publicApiStrangler.client.mothership.response.representation.User
 import com.soundcloud.publicApiStrangler.client.mothership.{DomainLocking, RichOkidokiClient, TrackAudioMetadata}
 import com.soundcloud.publicApiStrangler.client.playlists.PlaylistsClient
@@ -14,6 +12,8 @@ import com.soundcloud.publicApiStrangler.client.stitch.{StitchClient, StitchCoun
 import com.soundcloud.publicApiStrangler.client.trackmetadata.TrackmetadataClient
 import com.soundcloud.publicApiStrangler.service.TrackAccessibilityService
 import com.soundcloud.publicApiStrangler.support
+import com.soundcloud.publicApiStrangler.support.Good
+import com.soundcloud.publicApiStrangler.support.ResultF.lift
 import com.soundcloud.publicApiStrangler.test.UnitSpecification
 import com.soundcloud.publicApiStrangler.test.util.TrackMetadataTrackBuilder
 import com.twitter.util.Await
@@ -31,7 +31,7 @@ class TrackRepresentationsServiceForMultipleTracksSpec extends UnitSpecification
       mock[PubmeseClient],
       mock[StitchClient],
       mock[LieblingClient],
-      mock[MediaServiceUrlGenClient],
+      mock[WaveformUrlsGenerator],
       mock[UserQuotaClient],
       mock[TrackAccessibilityService])
 
@@ -55,8 +55,8 @@ class TrackRepresentationsServiceForMultipleTracksSpec extends UnitSpecification
     val counts = Map(track.urn -> count)
     val labelUser = user
     val labels = Map(track.urn -> labelUser)
-    val waveformUrls = Seq(WaveformUrl("label1_1", "json1_1", "png1_1"), WaveformUrl("label1_2", "json1_2", "png1_2"))
-    val waveformUrlsMap = Map(track.uid.get -> waveformUrls)
+    val waveformUrl = TrackWaveformUrl("uid_1", Url("http://foo.bar/a.png"))
+    val waveformUrlsMap = Map(track.uid.get -> waveformUrl)
     val downloadsPerTrack = Map(track.urn -> Some(10))
 
     val completeTrackResult = TracksResult(
@@ -78,7 +78,7 @@ class TrackRepresentationsServiceForMultipleTracksSpec extends UnitSpecification
       "it maps the tracks" in new AllData {
         result ==== Good(TracksRepresentationResult(List(new TrackRepresentationBuilder().build(
           Option(session.getUser), track, user, Some(isrc), count, Some(labelUser), geoblockings, domainLockings,
-          audioMetadata, true, waveformUrls, None, Some(10))), None))
+          audioMetadata, true, waveformUrl, None, Some(10))), None))
       }
     }
 
@@ -112,7 +112,7 @@ class TrackRepresentationsServiceForMultipleTracksSpec extends UnitSpecification
       result ==== Good(TracksRepresentationResult(List(new TrackRepresentationBuilder().build(
         Option(session.getUser), track, user, Some(isrc),
         StitchCounts(0, 0, 0, 0, 0), // relevant bit
-        Some(labelUser), geoblockings, domainLockings, audioMetadata, true, waveformUrls, None, Some(10))), None))
+        Some(labelUser), geoblockings, domainLockings, audioMetadata, true, waveformUrl, None, Some(10))), None))
     }
 
     "when the track's domain lockings are not available it maps empty" in new Context {
@@ -121,7 +121,7 @@ class TrackRepresentationsServiceForMultipleTracksSpec extends UnitSpecification
       result ==== Good(TracksRepresentationResult(List(new TrackRepresentationBuilder().build(
         Option(session.getUser), track, user, Some(isrc), count, Some(labelUser), geoblockings,
         List.empty, // relevant bit
-        audioMetadata, true, waveformUrls, None, Some(10))), None))
+        audioMetadata, true, waveformUrl, None, Some(10))), None))
     }
 
     "when the track's liked status is not available it maps to false" in new Context {
@@ -130,14 +130,14 @@ class TrackRepresentationsServiceForMultipleTracksSpec extends UnitSpecification
       result ==== Good(TracksRepresentationResult(List(new TrackRepresentationBuilder().build(
         Option(session.getUser), track, user, Some(isrc), count, Some(labelUser), geoblockings, domainLockings, audioMetadata,
         false, // relevant bit
-        waveformUrls, None, Some(10))), None))
+        waveformUrl, None, Some(10))), None))
     }
 
     "when the track's downloads is not available it maps to None" in new Context {
       override def tracksResult = Good(completeTrackResult.copy(downloadsPerTrack = Map.empty))
 
       result ==== Good(TracksRepresentationResult(List(new TrackRepresentationBuilder().build(
-        Option(session.getUser), track, user, Some(isrc), count, Some(labelUser), geoblockings, domainLockings, audioMetadata, true, waveformUrls,
+        Option(session.getUser), track, user, Some(isrc), count, Some(labelUser), geoblockings, domainLockings, audioMetadata, true, waveformUrl,
         None, // relevant bit
         None)), None))
     }

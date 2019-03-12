@@ -14,9 +14,8 @@ import play.api.libs.json.Json
   *
   * @param mediaService        Json client.
   * @param trackStreamMapper   TrackStreamMapper
-  * @param trackWaveformMapper TrackWaveformMapper
   */
-private[media] class MediaServiceClient(mediaService: JsonClient, trackStreamMapper: TrackStreamUrlMapper, trackWaveformMapper: TrackWaveformUrlMapper) {
+private[media] class MediaServiceClient(mediaService: JsonClient, trackStreamMapper: TrackStreamUrlMapper) {
 
   /**
     * Client for MediaService.
@@ -24,7 +23,7 @@ private[media] class MediaServiceClient(mediaService: JsonClient, trackStreamMap
     * @param mediaService Json client.
     */
   def this(mediaService: JsonClient) {
-    this(mediaService, new TrackStreamUrlMapper, new TrackWaveformUrlMapper)
+    this(mediaService, new TrackStreamUrlMapper)
   }
 
   /**
@@ -57,38 +56,5 @@ private[media] class MediaServiceClient(mediaService: JsonClient, trackStreamMap
           }
       }
     }
-  }
-
-  /**
-    * Gets available track waveform urls for given track uids.
-    *
-    * @param trackUids Track uids. If more than 50 are supplied requests will be executed in batches of 50.
-    * @return Eventual result containing sequence of urls.
-    */
-  def trackWaveformUrlsFor(session: UserSession, trackUids: List[String]): Future[Set[TrackWaveformUrl]] =
-    fetchByUids(session, mediaService, trackUids)
-
-  private val defaultBatchSize = 50
-
-  private def fetchByUids(session: UserSession, service: JsonClient, trackUids: List[String],
-                          batchSize: Int = defaultBatchSize): Future[Set[TrackWaveformUrl]] = {
-    inBatches(trackUids, batchSize) {
-      uidBatch =>
-        val params = Params("uid" -> ListParam(uidBatch))
-        mediaService.getWithSession(session, Path("/waveforms"), params, Headers.empty).map {
-          response: Response =>
-            response.status match {
-              case Status.Ok => trackWaveformMapper.map(Json.parse(response.contentString))
-              case Status.NotFound => Set()
-            }
-        }
-    }
-  }
-
-  private def inBatches[T](trackUids: List[String], batchSize: Int)
-                          (f: (List[String] => Future[Set[TrackWaveformUrl]])): Future[Set[TrackWaveformUrl]] = {
-    Future.collect {
-      trackUids.grouped(batchSize).toList.map(f)
-    }.map(_.flatten.toSet)
   }
 }

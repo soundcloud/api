@@ -1,7 +1,7 @@
 package com.soundcloud.publicApiStrangler.service.trackrepresentation
 
 import com.soundcloud.jvmkit.module.util.Urn
-import com.soundcloud.publicApiStrangler.client.mediaservice.WaveformUrl
+import com.soundcloud.publicApiStrangler.client.media.TrackWaveformUrl
 import com.soundcloud.publicApiStrangler.client.mothership.response.representation.{Geoblockings, User}
 import com.soundcloud.publicApiStrangler.client.mothership.{DomainLocking, TrackAudioMetadata}
 import com.soundcloud.publicApiStrangler.client.pubmese.Isrc
@@ -19,7 +19,7 @@ class TrackRepresentationBuilder {
             domainLockings: Seq[DomainLocking],
             trackAudioMetadata: TrackAudioMetadata,
             isLiked: Boolean,
-            waveformUrls: Seq[WaveformUrl],
+            waveformUrl: TrackWaveformUrl,
             secretTokenParameter: Option[String],
             downloadsPerTrack: Option[Int]): TrackRepresentationLike = {
     val basicTrackRep = TrackRepresentation(
@@ -59,7 +59,7 @@ class TrackRepresentationBuilder {
       rep = TrackRepresentationLabelDecorator(label, rep)
     }
     rep = TrackRepresentationQuotaDecorator(track.downloadable, downloadsPerTrack, counts.download_count, userIsOwner, rep)
-    rep = TrackRepresentationWaveformUrlDecorator(waveformUrls, rep)
+    rep = TrackRepresentationWaveformUrlDecorator(waveformUrl, rep)
     rep = TrackRepresentationAttachmentsUriDecorator(track.urn, rep) // TODO: make conditional on representation type
     rep
   }

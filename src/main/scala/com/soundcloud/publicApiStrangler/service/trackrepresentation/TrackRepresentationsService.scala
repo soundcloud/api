@@ -3,7 +3,7 @@ package com.soundcloud.publicApiStrangler.service.trackrepresentation
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.publicApiStrangler.client.liebling.LieblingClient
-import com.soundcloud.publicApiStrangler.client.mediaservice.MediaServiceUrlGenClient
+import com.soundcloud.publicApiStrangler.client.media.WaveformUrlsGenerator
 import com.soundcloud.publicApiStrangler.client.mothership.RichOkidokiClient
 import com.soundcloud.publicApiStrangler.client.mothership.response.representation.{Geoblockings, User}
 import com.soundcloud.publicApiStrangler.client.pubmese.PubmeseClient
@@ -23,7 +23,7 @@ class TrackRepresentationsService(trackRepository: TrackRepository,
                                   pubmeseClient: PubmeseClient,
                                   stitchClient: StitchClient,
                                   lieblingClient: LieblingClient,
-                                  mediaUrlGenClient: MediaServiceUrlGenClient,
+                                  waveformUrlsGenerator: WaveformUrlsGenerator,
                                   userQuotaClient: UserQuotaClient,
                                   trackAccessibilityService: TrackAccessibilityService,
                                   trackRepresentationBuilder: TrackRepresentationBuilder = new TrackRepresentationBuilder) {
@@ -55,30 +55,34 @@ class TrackRepresentationsService(trackRepository: TrackRepository,
           val isLikedF = Option(session.getUser).map(user =>
             lieblingClient.userLikeCounts(session, List(track.urn), user).map(_.liked_track_urns.contains(track.urn))).getOrElse(Future.False)
 
-          val waveformUrlsF = mediaUrlGenClient.waveformUrls(track.uid)
           val downloadsPerTrackF = userQuotaClient.downloadsPerTrack(session, Set(track.user_urn)).map(_.get(track.user_urn).getOrElse(None))
           val countsF = userForTrackF.flatMap {
             case Some(user) => stitchClient.countsForTrack(session, urn, user.urn).map(Some(_)).liftToTry.map(_.getOrElse(None))
             case None => Future.value(None)
           }
 
-          Future.join(userForTrackF, audioF, waveformUrlsF, isrcF, countsF, labelF, geoblockingsF, domainLockingsF, isLikedF, downloadsPerTrackF).map {
-            case (Some(user), Some(audio), waveformUrls, isrc, counts, label, geoblockings, domainLockings, isLiked, downloadsPerTrack) =>
-              SuccessResult(trackRepresentationBuilder.build(
-                sessionUser = Option(session.getUser),
-                track = track,
-                user = user,
-                isrc = isrc,
-                counts = counts.getOrElse(StitchCounts(0, 0, 0, 0, 0)),
-                label = label,
-                geoblockings = geoblockings,
-                domainLockings = domainLockings,
-                trackAudioMetadata = audio,
-                isLiked = isLiked,
-                waveformUrls = waveformUrls,
-                secretTokenParameter = secretTokenInRequest,
-                downloadsPerTrack = downloadsPerTrack
-              ))
+          Future.join(userForTrackF, audioF, isrcF, countsF, labelF, geoblockingsF, domainLockingsF, isLikedF, downloadsPerTrackF).map {
+            case (Some(user), Some(audio), isrc, counts, label, geoblockings, domainLockings, isLiked, downloadsPerTrack) =>
+              track.uid match {
+                case Some(uid) =>
+                  SuccessResult(trackRepresentationBuilder.build(
+                    sessionUser = Option(session.getUser),
+                    track = track,
+                    user = user,
+                    isrc = isrc,
+                    counts = counts.getOrElse(StitchCounts(0, 0, 0, 0, 0)),
+                    label = label,
+                    geoblockings = geoblockings,
+                    domainLockings = domainLockings,
+                    trackAudioMetadata = audio,
+                    isLiked = isLiked,
+                    waveformUrl = waveformUrlsGenerator.fromUid(uid),
+                    secretTokenParameter = secretTokenInRequest,
+                    downloadsPerTrack = downloadsPerTrack
+                  ))
+                case None => TrackNotFound
+              }
+
             case _ => TrackNotFound
           }
         }
@@ -108,7 +112,7 @@ class TrackRepresentationsService(trackRepository: TrackRepository,
             domainLockings = tracksResult.domainLockings.get(urn).getOrElse(List.empty),
             trackAudioMetadata = audio,
             isLiked = tracksResult.isLiked.get(urn).getOrElse(false),
-            waveformUrls = waveformUrl,
+            waveformUrl = waveformUrl,
             secretTokenParameter = None,
             downloadsPerTrack = tracksResult.downloadsPerTrack.get(urn).flatten
           )

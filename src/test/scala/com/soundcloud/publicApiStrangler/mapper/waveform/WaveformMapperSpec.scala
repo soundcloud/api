@@ -3,17 +3,17 @@ package com.soundcloud.publicApiStrangler.mapper.waveform
 import com.soundcloud.bff.nextbff.mapping.MappingContext
 import com.soundcloud.jvmkit.module.util.Url
 import com.soundcloud.jvmkit.module.util.session.{UserSession, UserSessionBuilder}
-import com.soundcloud.publicApiStrangler.client.media.{TrackWaveformUrl, WaveformUrlsRepository}
 import com.soundcloud.publicApiStrangler.authorization.policies.ContentPolicy
+import com.soundcloud.publicApiStrangler.client.media.{TrackWaveformUrl, WaveformUrlsGenerator}
 import com.soundcloud.publicApiStrangler.test.UnitSpecification
-import com.twitter.util.{Await, Future}
+import com.twitter.util.Await
 import org.mockito.Mockito.{verify, when}
 
 class WaveformMapperSpec extends UnitSpecification {
 
   trait Context extends Scope {
-    val waveformUrlsRepoMock = mock[WaveformUrlsRepository]
-    val mapper = new WaveformMapper(waveformUrlsRepoMock)
+    val waveformUrlsGenMock = mock[WaveformUrlsGenerator]
+    val mapper = new WaveformMapper(waveformUrlsGenMock)
     val session = new UserSessionBuilder().build()
     implicit val context = new MappingContext(mock[UserSession])
   }
@@ -29,14 +29,13 @@ class WaveformMapperSpec extends UnitSpecification {
     trait OneContext extends Context {
       val uid = "8779as"
       val policy = ContentPolicy.ALLOW
-      val waveformUrl = TrackWaveformUrl(uid, Url("jsonUrl"), Url("pngUrl"), "preview")
+      val waveformUrl = TrackWaveformUrl(uid, Url("pngUrl"))
 
       val waveformRequest = WaveformRequestParams(uid, policy)
 
-      when(waveformUrlsRepoMock.fetchWaveformUrlsToMap(===(session), ===(Map(uid -> policy))))
-        .thenReturn(Future(Map(uid -> waveformUrl)))
+      when(waveformUrlsGenMock.fromUid(===(uid)))
+        .thenReturn(waveformUrl)
     }
-
 
     "returns the mapping of given UID" in new OneContext {
       val actual = Await.result(mapper.map(session, Set(waveformRequest)))
@@ -44,7 +43,7 @@ class WaveformMapperSpec extends UnitSpecification {
       actual.keys must contain(waveformRequest)
       actual(waveformRequest).resource ==== waveformUrl
 
-      verify(waveformUrlsRepoMock).fetchWaveformUrlsToMap(session, Map(uid -> policy))
+      verify(waveformUrlsGenMock).fromUid(uid)
     }
   }
 
@@ -53,16 +52,16 @@ class WaveformMapperSpec extends UnitSpecification {
     trait OneContext extends Context {
       val uid = "8779as"
       val policy = ContentPolicy.ALLOW
-      val waveformUrl = TrackWaveformUrl(uid, Url("jsonUrl"), Url("pngUrl"), "preview")
+      val waveformUrl = TrackWaveformUrl(uid, Url("pngUrl"))
       val waveformRequest = WaveformRequestParams(uid, policy)
 
       val uid2 = "2222asdasd"
       val policy2 = ContentPolicy.ALLOW
-      val waveformUrl2 = TrackWaveformUrl(uid2, Url("jsonUrl2"), Url("pngUrl2"), "preview")
+      val waveformUrl2 = TrackWaveformUrl(uid2, Url("pngUrl2"))
       val waveformRequest2 = WaveformRequestParams(uid2, policy2)
 
-      when(waveformUrlsRepoMock.fetchWaveformUrlsToMap(session, Map(uid -> policy, uid2 -> policy2)))
-        .thenReturn(Future(Map(uid -> waveformUrl, uid2 -> waveformUrl2)))
+      when(waveformUrlsGenMock.fromUid(uid)).thenReturn(waveformUrl)
+      when(waveformUrlsGenMock.fromUid(uid2)).thenReturn(waveformUrl2)
     }
 
 
@@ -74,7 +73,8 @@ class WaveformMapperSpec extends UnitSpecification {
       actual(waveformRequest).resource ==== waveformUrl
       actual(waveformRequest2).resource ==== waveformUrl2
 
-      verify(waveformUrlsRepoMock).fetchWaveformUrlsToMap(session, Map(uid -> policy, uid2 -> policy2))
+      verify(waveformUrlsGenMock).fromUid(uid)
+      verify(waveformUrlsGenMock).fromUid(uid2)
     }
   }
 }

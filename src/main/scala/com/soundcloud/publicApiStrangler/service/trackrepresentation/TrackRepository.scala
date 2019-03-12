@@ -3,7 +3,7 @@ package com.soundcloud.publicApiStrangler.service.trackrepresentation
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.publicApiStrangler.client.liebling.LieblingClient
-import com.soundcloud.publicApiStrangler.client.mediaservice.{MediaServiceUrlGenClient, WaveformUrl}
+import com.soundcloud.publicApiStrangler.client.media.{TrackWaveformUrl, WaveformUrlsGenerator}
 import com.soundcloud.publicApiStrangler.client.mothership.response.representation.{Geoblockings, User}
 import com.soundcloud.publicApiStrangler.client.mothership.{DomainLocking, RichOkidokiClient, TrackAudioMetadata}
 import com.soundcloud.publicApiStrangler.client.pubmese.{Isrc, PubmeseClient}
@@ -12,7 +12,7 @@ import com.soundcloud.publicApiStrangler.client.stitch.{StitchClient, StitchCoun
 import com.soundcloud.publicApiStrangler.client.trackmetadata.{Track, TrackmetadataClient}
 import com.soundcloud.publicApiStrangler.service.TrackAccessibilityService
 import com.soundcloud.publicApiStrangler.support.ResultF.joinF
-import com.soundcloud.publicApiStrangler.support.{Bad, StringError, Good, Result, _}
+import com.soundcloud.publicApiStrangler.support.{Bad, Good, Result, StringError, _}
 import com.twitter.util.Future
 
 import scala.util.control.NonFatal
@@ -22,7 +22,7 @@ class TrackRepository(trackmetadataClient: TrackmetadataClient,
                       pubmeseClient: PubmeseClient,
                       stitchClient: StitchClient,
                       lieblingClient: LieblingClient,
-                      mediaUrlGenClient: MediaServiceUrlGenClient,
+                      waveformUrlsGenerator: WaveformUrlsGenerator,
                       userQuotaClient: UserQuotaClient,
                       trackAccessibilityService: TrackAccessibilityService) {
 
@@ -38,7 +38,7 @@ class TrackRepository(trackmetadataClient: TrackmetadataClient,
       (List(user), trackUrns) <- userAndAllTrackUrnsF
       trackUrnsPage = trackPagination.calculateTrackUrnPage(trackUrns)
       (tracks, isLiked, isrcs, geoblockings, domainLockings, audios, counts) <- allDependenciesOnlyOnTrackUrn(session, userUrn, trackUrnsPage)
-      (labels, waveformUrls, downloadsPerTrack, accessibilityCheck) <- allDependenciesOnTrackObjectList(session, userUrn, tracks)
+      (labels, downloadsPerTrack, accessibilityCheck) <- allDependenciesOnTrackObjectList(session, userUrn, tracks)
     } yield {
       val accessibleTracks = tracks
         .filter(track => accessibilityCheck.get(track.urn).get)
@@ -48,7 +48,9 @@ class TrackRepository(trackmetadataClient: TrackmetadataClient,
 
       val nextHref = trackPagination.nextHref(trackUrns.size)
 
-      TracksResult(
+      val waveformUrls = tracks.flatMap(_.uid).map(uid => uid -> waveformUrlsGenerator.fromUid(uid)).toMap
+
+        TracksResult(
         sortedAccessibleTracks,
         user,
         isLiked,
@@ -81,8 +83,6 @@ class TrackRepository(trackmetadataClient: TrackmetadataClient,
   }
 
   private def allDependenciesOnTrackObjectList(session: UserSession, userUrn: Urn, tracks: List[Track]) = {
-    val waveformUrlsF = toResult(mediaUrlGenClient.waveformUrls(tracks.flatMap(_.uid)), "Could not load the tracks' waveforms")
-
     val userUrnsFromLabelIds = tracks.flatMap(_.label_id).map(labelId => Urn("soundcloud", "users", labelId.toString))
     val labelsF = toResult(okidokiClient.fetchUsersMap(session, userUrnsFromLabelIds.toSet), Map.empty[Urn, User])
     val downloadsPerTrackF = toResult(userQuotaClient.downloadsPerTrack(session, Set(userUrn)), Map.empty[Urn, Option[Int]])
@@ -90,7 +90,7 @@ class TrackRepository(trackmetadataClient: TrackmetadataClient,
       trackAccessibilityService.areTracksAccessible(session, tracks),
       tracks.map(t => (t.urn, false)).toMap) // defaults to not accessible if something goes wrong
 
-    joinF(labelsF, waveformUrlsF, downloadsPerTrackF, accessibilityChecksF)
+    joinF(labelsF, downloadsPerTrackF, accessibilityChecksF)
   }
 
   private def toResult[T](future: Future[T], errorMessage: String): Future[Result[T]] = {
@@ -113,6 +113,6 @@ case class TracksResult(tracks: List[Track],
                         audios: Map[Urn, TrackAudioMetadata],
                         counts: Map[Urn, StitchCounts],
                         labels: Map[Urn, User],
-                        waveformUrls: Map[String, Seq[WaveformUrl]],
+                        waveformUrls: Map[String, TrackWaveformUrl],
                         downloadsPerTrack: Map[Urn, Option[Int]],
                         nextHref: Option[String])

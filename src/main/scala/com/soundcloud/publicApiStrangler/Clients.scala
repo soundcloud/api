@@ -5,7 +5,7 @@ import com.soundcloud.jvmkit.module.http.client.config.HttpClientConfig
 import com.soundcloud.jvmkit.module.http.client.{HttpClient, JsonClient}
 import com.soundcloud.jvmkit.module.rollout.{BasicRolloutFeature, Rollout}
 import com.soundcloud.jvmkit.module.servicediscovery.ServiceEntryPoint
-import com.soundcloud.jvmkit.module.telemetry.{MetricsRegistry, Telemetry}
+import com.soundcloud.jvmkit.module.telemetry.Telemetry
 import com.soundcloud.jvmkit.module.util.config.{AppConfig, ConfigConvention, DataSensitivity}
 import com.soundcloud.jvmkit.module.util.{ResourceName, Urn}
 import com.soundcloud.publicApiStrangler.authorization._
@@ -13,7 +13,7 @@ import com.soundcloud.publicApiStrangler.client._
 import com.soundcloud.publicApiStrangler.client.followcounts.FollowCountsClient
 import com.soundcloud.publicApiStrangler.client.follows.FollowsClient
 import com.soundcloud.publicApiStrangler.client.liebling.LieblingClient
-import com.soundcloud.publicApiStrangler.client.mediaservice.MediaServiceUrlGenClient
+import com.soundcloud.publicApiStrangler.client.media.WaveformUrlsGenerator
 import com.soundcloud.publicApiStrangler.client.mothership.{OkidokiClient, RichOkidokiClient}
 import com.soundcloud.publicApiStrangler.client.playlists.{PlaylistDeletionClient, PlaylistsClient}
 import com.soundcloud.publicApiStrangler.client.pubmese.PubmeseClient
@@ -26,7 +26,6 @@ import com.soundcloud.publicApiStrangler.mapper.liebling.LikeCountMapper
 import com.soundcloud.publicApiStrangler.mapper.search.SearchEntityMapper
 import com.soundcloud.publicApiStrangler.mapper.timeline.EntitySummaryMapper
 import com.soundcloud.publicApiStrangler.mapper.waveform.WaveformMapper
-import com.soundcloud.publicApiStrangler.client.media.WaveformUrlsRepository
 import com.soundcloud.publicApiStrangler.service.TrackAccessibilityService
 import com.soundcloud.publicApiStrangler.service.trackrepresentation.{TrackRepository, TrackRepresentationsService}
 import com.twitter.finagle.Service
@@ -85,8 +84,6 @@ class Clients(config: AppConfig, telemetry: Telemetry) {
 
   val mediaService: JsonClient = jsonClient("mediaservice")
 
-  val mediaServiceUrlGenClient = new MediaServiceUrlGenClient(mediaService)
-
   val searchService: JsonClient = jsonClient("search")
 
   private val subscriptionsService = jsonClient("user_subscriptions")
@@ -103,8 +100,7 @@ class Clients(config: AppConfig, telemetry: Telemetry) {
     new ContentAuthorizationService(jsonClient("authsy")),
     new SubscriptionsService(subscriptionsService))
 
-
-  private val waveformUrlsRepo = new WaveformUrlsRepository(okidokiJsonClient, mediaService)
+  private val waveformUrlsGenerator = new WaveformUrlsGenerator(config.get(ResourceName("CDN_WAVE"), ConfigConvention.HTTPS_ENDPOINT))
 
   // Whitelist source: http://redash.int.s-cloud.net/queries/632/source
   private val whitelistedClients: Set[Urn] = Set(
@@ -140,7 +136,7 @@ class Clients(config: AppConfig, telemetry: Telemetry) {
       .toSet
 
   val userAuthentication = UserAuthentication(config, telemetry)
-  val authorizeContent = new AuthorizeHttpResponse(contentAuthorizationRules, userAuthentication, waveformUrlsRepo, TrackPolicyApplicator(whitelistedClients))
+  val authorizeContent = new AuthorizeHttpResponse(contentAuthorizationRules, userAuthentication, TrackPolicyApplicator(whitelistedClients))
 
   val baseUrl: String = config.get("APP_BASE_URL", DataSensitivity.NON_SENSITIVE)
 
@@ -163,7 +159,7 @@ class Clients(config: AppConfig, telemetry: Telemetry) {
     pubmeseClient,
     stitchClient,
     lieblingClient,
-    mediaServiceUrlGenClient,
+    waveformUrlsGenerator,
     userQuotaClient,
     trackAccessibilityService
   )
@@ -175,7 +171,7 @@ class Clients(config: AppConfig, telemetry: Telemetry) {
     pubmeseClient,
     stitchClient,
     lieblingClient,
-    mediaServiceUrlGenClient,
+    waveformUrlsGenerator,
     userQuotaClient,
     trackAccessibilityService
   )
@@ -187,7 +183,7 @@ class Clients(config: AppConfig, telemetry: Telemetry) {
     repostsClient,
     baseUrl,
     contentAuthorizationRules,
-    new WaveformMapper(waveformUrlsRepo),
+    new WaveformMapper(waveformUrlsGenerator),
     new LikeCountMapper(lieblingClient),
     new EntitySummaryMapper(okidokiClient, repostsClient, baseUrl)
   )

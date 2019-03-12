@@ -1,7 +1,6 @@
 package com.soundcloud.publicApiStrangler.authorization
 
-object TrackWaveformActionStatus extends Enumeration {
-  type TrackWaveformActionStatus = Value
+object TrackDurationActionStatus extends Enumeration {
+  type TrackDurationActionStatus = Value
   val NeedsModification, DoesNotNeedModification = Value
 }
-
