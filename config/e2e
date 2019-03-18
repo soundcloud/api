@@ -80,4 +80,3 @@ APP_SILOING_BLACKLIST_APPS=soundcloud:applications:124,soundcloud:applications:3
 CDN_WAVE_HTTPS_ENDPOINT=https://wave.sndcdn.com
 
 IS_DEVELOPENT_MODE=true
-IS_DNS_HACK_ON=true
