@@ -1,65 +1,86 @@
 package com.soundcloud.publicApiStrangler.client.media
 
-import com.soundcloud.jvmkit.module.http.client.{JsonClient, ListParam, Params}
+import com.soundcloud.jvmkit.module.http.client.{JsonClient, Params}
+import com.soundcloud.jvmkit.module.util.Path
 import com.soundcloud.jvmkit.module.util.http.Headers
 import com.soundcloud.jvmkit.module.util.session.UserSession
-import com.soundcloud.jvmkit.module.util.{Path, Urn}
-import com.soundcloud.publicApiStrangler.authorization.policies.{ContentAuthorization, ContentPolicy}
+import com.soundcloud.publicApiStrangler.client.support.UnhandledResponseException
 import com.soundcloud.publicApiStrangler.test.UnitSpecification
+import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures
 import com.twitter.finagle.http.Status
-import com.twitter.util.{Await, Future}
-import play.api.libs.json.Json
+import com.twitter.util.{Await, Future, Try}
+import play.api.libs.json.{JsNull, Json}
 
 class MediaServiceClientSpec extends UnitSpecification {
 
-  "MediaServiceClient" should {
+  trait Context extends Scope {
+    val jsonClient = mock[JsonClient]
+    val userSession = mock[UserSession]
+    val client = new MediaServiceClient(jsonClient)
 
-    "Stream urls" >> {
+    val trackUid = "RV7fg1Q3h1lF"
+  }
 
-      trait Context extends Scope {
-        val jsonService = mock[JsonClient]
-        val userSession = mock[UserSession]
-        val urn = Urn("soundcloud", "tracks", "133")
-        val json = Json.obj()
-        val requestParams = Params(
-          "uid" -> "uiduid",
-          "user_id" -> "3157",
-          "duration" -> "1547",
-          "ssl" -> "false",
-          "content_policy" -> "ALLOW",
-          "content_restrictions" -> ListParam(List[String]())
-        )
-        val allExpectedRequestParams = requestParams ++ Params("method" -> "GET", "legacy" -> "false")
-        val trackStreamUrlMapper = mock[TrackStreamUrlMapper]
-        val mediaServiceClient = new MediaServiceClient(jsonService, trackStreamUrlMapper)
-        val mediaUrl1 = mock[MediaUrl]
-        val mediaUrl2 = mock[MediaUrl]
-        val contentAuthorization = mock[ContentAuthorization]
-        contentAuthorization.getPolicy returns ContentPolicy.ALLOW
-        contentAuthorization.getContentRestrictions returns Set()
-      }
+  trait StreamContext extends Context {
+    val transcodingUuid = "some-uuid"
+    val protocol = "progressive"
+    val url = "http://some-url"
+  }
 
-      "return MediaUrls for valid input and http response" in new Context {
-        jsonService.getWithSession(userSession, Path("/media") / urn / "streams", allExpectedRequestParams, Headers.empty) returns Future.value(jsonResponse(Status.Ok, json))
-        trackStreamUrlMapper.map(json) returns Set(mediaUrl1, mediaUrl2)
-        val trackStreams = Await.result(mediaServiceClient.trackStreamUrlsFor(userSession, urn, requestParams, contentAuthorization))
-        trackStreams ==== Set(mediaUrl1, mediaUrl2)
-      }
+  "fetchTranscodings" >> {
+    "returns some transcodings" in new Context {
+      jsonClient.getWithSession(userSession, Path() / "transcodings", Params("upload_ids" -> trackUid), Headers.empty) returns
+        Future.value(jsonResponse(Status.Ok, Fixtures.withContentsOf("media-service", "transcodings")))
 
-      "return empty seq in case media service response is 'Not Found'" in new Context {
-        jsonService.getWithSession(userSession, Path("/media") / urn / "streams", allExpectedRequestParams, Headers.empty) returns Future.value(jsonResponse(Status.NotFound, json))
-        val trackStreamUrls = Await.result(mediaServiceClient.trackStreamUrlsFor(userSession, urn, requestParams, contentAuthorization))
-        trackStreamUrls ==== Set()
-        there was no(trackStreamUrlMapper).map(json)
-      }
+      Await.result(client.fetchTranscodings(userSession, trackUid)) ==== List(
+        Transcoding("cfc36f60-226a-4c16-9a5c-533b306f05f9", "audio/mp4; codecs=\"mp4a.40.2\"")
+      )
+    }
 
-      "return empty seq in case policy = BLOCK, do not make a request to the downstream" in new Context {
-        contentAuthorization.getPolicy returns ContentPolicy.BLOCK
+    "returns no transcodings" in new Context {
+      jsonClient.getWithSession(userSession, Path() / "transcodings", Params("upload_ids" -> trackUid), Headers.empty) returns
+        Future.value(jsonResponse(Status.Ok, Json.obj("transcodings" -> Json.obj())))
 
-        val trackStreamUrls = Await.result(mediaServiceClient.trackStreamUrlsFor(userSession, urn, requestParams, contentAuthorization))
-        trackStreamUrls ==== Set()
-        there was no(jsonService).getWithSession(userSession, Path("/media") / urn / "streams", allExpectedRequestParams, Headers.empty)
-      }
+      Await.result(client.fetchTranscodings(userSession, trackUid)) ==== List()
+    }
+
+    "returns a 500" in new Context {
+      jsonClient.getWithSession(userSession, Path() / "transcodings", Params("upload_ids" -> trackUid), Headers.empty) returns
+        Future.value(jsonResponse(Status.InternalServerError, JsNull))
+
+      Await.result(client.fetchTranscodings(userSession, trackUid)) should throwAn[UnhandledResponseException]
+    }
+  }
+
+  "fetchStreamUrl" >> {
+    "returns a stream url" in new StreamContext {
+      jsonClient.getWithSession(userSession, Path() / "stream" / transcodingUuid / protocol, Params.empty, Headers.empty) returns
+        Future.value(jsonResponse(Status.Ok, Json.obj("url" -> url)))
+
+      Await.result(client.fetchStreamUrl(userSession, transcodingUuid, protocol)) ==== Some(url)
+    }
+
+    "returns a 500" in new StreamContext {
+      jsonClient.getWithSession(userSession, Path() / "stream" / transcodingUuid / protocol, Params.empty, Headers.empty) returns
+        Future.value(jsonResponse(Status.InternalServerError, JsNull))
+
+      Try(Await.result(client.fetchStreamUrl(userSession, transcodingUuid, protocol))).throwable should beAnInstanceOf[UnhandledResponseException]
+    }
+  }
+
+  "fetchPreviewUrl" >> {
+    "returns a stream url" in new StreamContext {
+      jsonClient.getWithSession(userSession, Path() / "preview" / transcodingUuid / protocol, Params.empty, Headers.empty) returns
+        Future.value(jsonResponse(Status.Ok, Json.obj("url" -> url)))
+
+      Await.result(client.fetchPreviewUrl(userSession, transcodingUuid, protocol)) ==== Some(url)
+    }
+
+    "returns a 500" in new StreamContext {
+      jsonClient.getWithSession(userSession, Path() / "preview" / transcodingUuid / protocol, Params.empty, Headers.empty) returns
+        Future.value(jsonResponse(Status.InternalServerError, JsNull))
+
+      Try(Await.result(client.fetchPreviewUrl(userSession, transcodingUuid, protocol))).throwable should beAnInstanceOf[UnhandledResponseException]
     }
   }
 }

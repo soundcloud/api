@@ -76,6 +76,10 @@ STITCH_BULK_FETCH_MAX_ENTRIES=7
 
 TRACKMETADATA_SRV_RECORD=dnssrv!http.api.prod.trackmetadata.srv.db.s-cloud.net
 
+TRACKS_SRV_RECORD=dnssrv!http.api.prod.tracks.srv.db.s-cloud.net
+
+MEDIA_SERVICE_SRV_RECORD=dnssrv!http.api.prod.media-service.srv.db.s-cloud.net
+
 APP_SILOING_BLACKLIST_APPS=soundcloud:applications:124,soundcloud:applications:3152,soundcloud:applications:65097
 
 CDN_WAVE_HTTPS_ENDPOINT=https://wave.sndcdn.com

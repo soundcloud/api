@@ -15,7 +15,7 @@ class MediaUrlsRepositorySpec extends UnitSpecification {
 
     trait StreamContext extends Scope {
       val userSession = (new UserSessionBuilder).build()
-      val mediaServiceClient = mock[MediaServiceClient]
+      val mediaServiceClient = mock[MediaUrlgenClient]
       val mediaUrlsRepository = new MediaUrlsRepository(mediaServiceClient)
       val desiredTrack = Urn("soundcloud", "tracks", "11112")
       val mediaServiceParamsSsl = Params("ssl" -> "true")

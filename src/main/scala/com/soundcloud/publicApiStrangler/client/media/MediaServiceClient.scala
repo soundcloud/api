@@ -1,59 +1,45 @@
 package com.soundcloud.publicApiStrangler.client.media
 
-import com.soundcloud.jvmkit.module.http.client.{JsonClient, ListParam, Params}
+import com.soundcloud.jvmkit.module.http.client.{JsonClient, Params}
+import com.soundcloud.jvmkit.module.util.Path
 import com.soundcloud.jvmkit.module.util.http.Headers
-import com.soundcloud.jvmkit.module.util.{Path, Urn}
 import com.soundcloud.jvmkit.module.util.session.UserSession
-import com.soundcloud.publicApiStrangler.authorization.policies.{ContentAuthorization, ContentPolicy}
-import com.twitter.finagle.http.{Response, Status}
+import com.soundcloud.publicApiStrangler.client.support.UnhandledResponseException
+import com.twitter.finagle.http.Status
 import com.twitter.util.Future
-import play.api.libs.json.Json
+import play.api.libs.json._
 
-/**
-  * Client for MediaService.
-  *
-  * @param mediaService        Json client.
-  * @param trackStreamMapper   TrackStreamMapper
-  */
-private[media] class MediaServiceClient(mediaService: JsonClient, trackStreamMapper: TrackStreamUrlMapper) {
+case class Transcoding(uuid: String, mime_type: String)
 
-  /**
-    * Client for MediaService.
-    *
-    * @param mediaService Json client.
-    */
-  def this(mediaService: JsonClient) {
-    this(mediaService, new TrackStreamUrlMapper)
+object Transcoding {
+  implicit val reads: Reads[Transcoding] = Json.reads[Transcoding]
+}
+
+class MediaServiceClient(jsonClient: JsonClient) {
+
+  def fetchTranscodings(session: UserSession, uid: String): Future[List[Transcoding]] = {
+    jsonClient.getWithSession(session, Path() / "transcodings", Params("upload_ids" -> uid), Headers.empty).map { response =>
+      response.status match {
+        case Status.Ok => (Json.parse(response.contentString) \ "transcodings").as[Map[String, List[Transcoding]]].getOrElse(uid, List.empty)
+        case _ => throw UnhandledResponseException(response)
+      }
+    }
   }
 
-  /**
-    * Gets available track stream urls for given user session and track.
-    *
-    * @param session              User session.
-    * @param trackUrn             Track Urn.
-    * @param requestProperties    User supplied request properties. Should contains 'ssl' -> true/false all as String values
-    * @param contentAuthorization Describes the authorization for a track
-    * @return Eventual result containing a Set of MediaUrl objects.
-    */
-  def trackStreamUrlsFor(session: UserSession, trackUrn: Urn, requestProperties: Params, contentAuthorization: ContentAuthorization): Future[Set[MediaUrl]] = {
-    val restrictions = contentAuthorization.getContentRestrictions.toArray.map(r => r.toString())
+  def fetchStreamUrl(session: UserSession, transcodingUUID: String, protocol: String): Future[Option[String]] =
+    fetchMediaUrl(session, transcodingUUID, "stream", protocol)
 
-    val params = requestProperties ++ Params(
-      "method" -> "GET",
-      "legacy" -> "false",
-      "content_policy" -> contentAuthorization.getPolicy.toString(),
-      "content_restrictions" -> ListParam(restrictions.toList)
-    )
+  def fetchPreviewUrl(session: UserSession, transcodingUUID: String, protocol: String): Future[Option[String]] =
+    fetchMediaUrl(session, transcodingUUID, "preview", protocol)
 
-    if (contentAuthorization.getPolicy == ContentPolicy.BLOCK) {
-      Future(Set())
-    } else {
-      mediaService.getWithSession(session, Path("/media") / trackUrn / "streams", params, Headers.empty).map {
-        response: Response =>
-          response.status match {
-            case Status.Ok => trackStreamMapper.map(Json.parse(response.contentString))
-            case Status.NotFound => Set()
-          }
+  private def fetchMediaUrl(session: UserSession, transcodingUUID: String, routeType: String, protocol: String): Future[Option[String]] = {
+    jsonClient.getWithSession(session, Path() / routeType / transcodingUUID / protocol, Params.empty, Headers.empty).map { response =>
+      response.status match {
+        case Status.Ok =>
+          val json = Json.parse(response.contentString)
+          Some((json \ "url").as[String])
+        case Status.NotFound => None
+        case _ => throw UnhandledResponseException(response)
       }
     }
   }

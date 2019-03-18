@@ -15,7 +15,7 @@ import com.twitter.util.Future
   *
   * @param mediaServiceClient Media Service client.
   */
-class MediaUrlsRepository(mediaServiceClient: MediaServiceClient) {
+class MediaUrlsRepository(mediaServiceClient: MediaUrlgenClient) {
   val logger = SoundCloudLoggerFactory.getLogger(this.getClass)
 
   /**
@@ -24,7 +24,7 @@ class MediaUrlsRepository(mediaServiceClient: MediaServiceClient) {
     * @param mediaService Media service.
     */
   def this(mediaService: JsonClient) {
-    this(new MediaServiceClient(mediaService))
+    this(new MediaUrlgenClient(mediaService))
   }
 
   /**

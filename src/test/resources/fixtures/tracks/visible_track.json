@@ -1,0 +1,14 @@
+{
+  "data": [
+    {
+      "urn": "soundcloud:tracks:2",
+      "uid": "NnPYWvWwB6ln",
+      "apiStreamable": true,
+      "authorization": {
+        "policy": "ALLOW",
+        "reason": "DEFAULT",
+        "monetizationModel": "NOT_APPLICABLE"
+      }
+    }
+  ]
+}

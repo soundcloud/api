@@ -13,7 +13,7 @@ import com.soundcloud.publicApiStrangler.client._
 import com.soundcloud.publicApiStrangler.client.followcounts.FollowCountsClient
 import com.soundcloud.publicApiStrangler.client.follows.FollowsClient
 import com.soundcloud.publicApiStrangler.client.liebling.LieblingClient
-import com.soundcloud.publicApiStrangler.client.media.WaveformUrlsGenerator
+import com.soundcloud.publicApiStrangler.client.media.{MediaServiceClient, WaveformUrlsGenerator}
 import com.soundcloud.publicApiStrangler.client.mothership.{OkidokiClient, RichOkidokiClient}
 import com.soundcloud.publicApiStrangler.client.playlists.{PlaylistDeletionClient, PlaylistsClient}
 import com.soundcloud.publicApiStrangler.client.pubmese.PubmeseClient
@@ -22,6 +22,7 @@ import com.soundcloud.publicApiStrangler.client.reposts.RepostsClient
 import com.soundcloud.publicApiStrangler.client.stitch.StitchClient
 import com.soundcloud.publicApiStrangler.client.trackcoordinator.TrackCoordinatorClient
 import com.soundcloud.publicApiStrangler.client.trackmetadata.TrackmetadataClient
+import com.soundcloud.publicApiStrangler.client.tracks.TracksClient
 import com.soundcloud.publicApiStrangler.mapper.liebling.LikeCountMapper
 import com.soundcloud.publicApiStrangler.mapper.search.SearchEntityMapper
 import com.soundcloud.publicApiStrangler.mapper.timeline.EntitySummaryMapper
@@ -101,6 +102,10 @@ class Clients(config: AppConfig, telemetry: Telemetry) {
     new SubscriptionsService(subscriptionsService))
 
   private val waveformUrlsGenerator = new WaveformUrlsGenerator(config.get(ResourceName("CDN_WAVE"), ConfigConvention.HTTPS_ENDPOINT))
+
+  val tracksClient = new TracksClient(jsonClient("tracks"))
+
+  val mediaServiceClient = new MediaServiceClient(jsonClient("media_service"))
 
   // Whitelist source: http://redash.int.s-cloud.net/queries/632/source
   private val whitelistedClients: Set[Urn] = Set(

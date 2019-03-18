@@ -11,6 +11,7 @@ import com.soundcloud.publicApiStrangler.mapper.timeline.publicApi.ActivitiesWit
 import com.soundcloud.publicApiStrangler.mapper.timeline.{EntityMapper, EntitySummaryMapper, FollowingsTracksMapper}
 import com.soundcloud.publicApiStrangler.mapper.trackstreams.{TrackStreamJsonResponseMapper, TrackStreamRedirectResponseMapper}
 import com.soundcloud.publicApiStrangler.client.media.MediaUrlsRepository
+import com.soundcloud.publicApiStrangler.service.media.StreamService
 import com.soundcloud.publicApiStrangler.support.CursorPagination
 
 class Handlers(telemetry: Telemetry, clients: Clients) {
@@ -48,11 +49,15 @@ class Handlers(telemetry: Telemetry, clients: Clients) {
     }
     val publicApiSiloing = new PublicApiSiloing(rolloutCheckForSiloingFunc, blacklistOfAppIdsForUserSiloing, telemetry)
 
+    val streamService = new StreamService(tracksClient, mediaServiceClient)
+
     new TrackStreamsHandler(
       userAuthentication,
       trackStreamUrlToJsonResponseMapper,
       trackStreamUrlToRedirectMapper,
       trackStreamSnipHandler,
+      streamService,
+      () => rolloutClient.isActive(BasicRolloutFeature("media-service-streams")),
       publicApiSiloing
     )
   }
