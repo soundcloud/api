@@ -36,23 +36,28 @@ class TrackStreamsHandler(
     mediaServiceEnabled().flatMap{ enabled =>
       userAuthentication.withUserSession(request) { session =>
         publicApiSiloing.withSiloedSession(session) {
-          if (enabled) handleWithStreamService(session, request, singleStream)
-          else trackStreamHandler.handle(request, session, mapper)
+          if (enabled) {
+            handleWithStreamService(session, request, singleStream).flatMap {
+              case StreamNotFoundError => trackStreamHandler.handle(request, session, mapper)
+              case response => Future.value(renderStreamResponse(request, response))
+            }
+          } else {
+            trackStreamHandler.handle(request, session, mapper)
+          }
         }
       }
     }
   }
 
-  private def handleWithStreamService(session: UserSession, request: HandlerRequest, singleStream: Boolean): Future[Response] = {
+  private def handleWithStreamService(session: UserSession, request: HandlerRequest, singleStream: Boolean): Future[StreamResponse] = {
     extractParams(request) match {
       case Some(params) =>
-        if (singleStream) streamService.fetchSingle(session, params.trackUrn, params.secretToken).map(renderStreamResponse(request))
-        else streamService.fetchMultiple(session, params.trackUrn, params.secretToken).map(renderStreamResponse(request))
-      case None => Future.value(ResponseBuilder(Status.BadRequest).build)
+        if (singleStream) streamService.fetchSingle(session, params.trackUrn, params.secretToken)
+        else streamService.fetchMultiple(session, params.trackUrn, params.secretToken)
     }
   }
 
-  private def renderStreamResponse(request: HandlerRequest)(streamResponse: StreamResponse): Response = {
+  private def renderStreamResponse(request: HandlerRequest, streamResponse: StreamResponse): Response = {
     val builder = streamResponse match {
       case StreamUrl(url) =>
         ResponseBuilder().header("Location", url).status(Status.Found)

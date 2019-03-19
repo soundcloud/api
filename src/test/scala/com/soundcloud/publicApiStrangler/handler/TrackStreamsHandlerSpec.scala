@@ -1,14 +1,14 @@
 package com.soundcloud.publicApiStrangler.handler
 
 import com.soundcloud.jvmkit.module.bff.testsupport.FakeUserAuthentication
-import com.soundcloud.jvmkit.module.http.server.{Handler, HandlerRequest, JsonResponseBuilder}
+import com.soundcloud.jvmkit.module.http.server.{Handler, HandlerRequest, JsonResponseBuilder, ResponseBuilder}
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.publicApiStrangler.Routing
 import com.soundcloud.publicApiStrangler.mapper.trackstreams.{TrackStreamJsonResponseMapper, TrackStreamRedirectResponseMapper}
-import com.soundcloud.publicApiStrangler.service.media.{StreamService, StreamUrl, StreamUrls}
+import com.soundcloud.publicApiStrangler.service.media.{StreamNotFoundError, StreamService, StreamUrl, StreamUrls}
 import com.soundcloud.publicApiStrangler.test.{FakePublicApiSiloing, HandlerSpecificationScope, UnitSpecification}
-import com.twitter.finagle.http.Method
+import com.twitter.finagle.http.{Method, Status}
 import com.twitter.util.Future
 import org.specs2.specification.core.Fragments
 import play.api.libs.json.Json
@@ -120,12 +120,13 @@ class TrackStreamsHandlerSpec extends UnitSpecification {
     val session = loggedInSession(user)
 
     val streamService = mock[StreamService]
+    val trackStreamHandler = mock[TrackStreamHandler]
 
     val handler = new TrackStreamsHandler(
       new FakeUserAuthentication(session),
       mock[TrackStreamJsonResponseMapper],
       mock[TrackStreamRedirectResponseMapper],
-      mock[TrackStreamHandler],
+      trackStreamHandler,
       streamService,
       () => Future.True,
       new FakePublicApiSiloing
@@ -216,6 +217,17 @@ class TrackStreamsHandlerSpec extends UnitSpecification {
         }
       }
     }
+  }
+
+  "media-service to media-urlgen fallback" in new MediaServiceContext {
+    streamService.fetchSingle(session, trackUrn, None) returns Future.value(StreamNotFoundError)
+
+    val urlgenResponse = ResponseBuilder().header("Location", "http://stream").status(Status.Found).build
+    trackStreamHandler.handle(any[HandlerRequest], any[UserSession], any[TrackStreamRedirectResponseMapper]) returns Future.value(urlgenResponse)
+
+    val resp = get(handler.redirectStreamRequest, "/tracks/5/stream")
+    resp.status ==== Status.Found
+    resp.headerMap("Location") ==== "http://stream"
   }
 
 }
