@@ -2,7 +2,6 @@ package main
 
 import (
 	"io"
-	"io/ioutil"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
@@ -12,25 +11,6 @@ import (
 
 type storage interface {
 	store(io.Reader) (string, error)
-}
-
-type diskStorage struct {
-	baseDir, filePrefix string
-}
-
-func (d *diskStorage) store(r io.Reader) (string, error) {
-	f, err := ioutil.TempFile(d.baseDir, d.filePrefix)
-	if err != nil {
-		return "", nil
-	}
-	defer f.Close()
-
-	_, err = io.Copy(f, r)
-	if err != nil {
-		return "", err
-	}
-
-	return f.Name(), nil
 }
 
 type s3Storage struct {
