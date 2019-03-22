@@ -22,6 +22,11 @@ func main() {
 	)
 	flag.Parse()
 
+	http.HandleFunc("/-/health", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte("OK"))
+	}))
+
 	http.HandleFunc("/track_uids", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		log.Println(r)
 

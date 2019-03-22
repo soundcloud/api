@@ -11,11 +11,17 @@ import (
 
 	_ "net/http/pprof"
 
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/credentials"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 func main() {
 	const (
+		awsSessionToken   = "" // The session token is optional
 		envAWSAccessKeyID = "AWS_ACCESS_KEY_ID"
 		envAWSSecretKey   = "AWS_SECRET_ACCESS_KEY"
 		envS3Bucket       = "AWS_S3_BUCKET"
@@ -44,25 +50,32 @@ func main() {
 		log.Fatalf("Failed to parse target URL: %s", *rawTargetURL)
 	}
 
-	moshimoshi := newMoshimoshiClient(*moshimoshiAddr)
+	s3 := s3.New(
+		session.Must(
+			session.NewSession(&aws.Config{
+				Credentials: credentials.NewStaticCredentials(*awsKey, *awsSecret, awsSessionToken),
+				HTTPClient:  http.DefaultClient,
+				Region:      aws.String(*s3Region),
+			}),
+		),
+	)
 
-	s3, err := newS3Storage(*awsKey, *awsSecret, *s3Region, *s3Bucket, moshimoshi)
-	if err != nil {
-		log.Fatalf("Failed to initialize S3 storage: %v", err)
+	service := &service{
+		upload: &uploader{
+			moshimoshi: &moshimoshiClient{
+				host:   *moshimoshiAddr,
+				client: http.DefaultClient,
+			},
+			s3Uploader: s3manager.NewUploaderWithClient(s3),
+			s3Bucket:   *s3Bucket,
+		},
 	}
 
-	// Filter/transform the incoming request through a middleware stack.
-	mw := []middleware{}
-	mw = append(mw, logRequestMiddleware)
-	mw = append(mw, filterRequestMiddleware)
-	mw = append(mw, limitRequestSizeMiddleware(*maxRequestBytes))
-	mw = append(mw, rewriteRequestMiddleware(s3, newMoshimoshiTranscoder(moshimoshi)))
-
-	// Proxy all requests that make it through filters/transforms.
-	proxy := httputil.NewSingleHostReverseProxy(targetURL)
-
-	mux := http.NewServeMux()
-	mux.Handle("/", middlewareHandler(mw, proxy))
+	controller := &controller{
+		maxRequestBytes: *maxRequestBytes,
+		proxy:           httputil.NewSingleHostReverseProxy(targetURL),
+		service:         service,
+	}
 
 	go func(a string) {
 		http.Handle("/metrics", promhttp.Handler())
@@ -70,6 +83,13 @@ func main() {
 		log.Println(fmt.Sprintf("Listening on %s", a))
 		log.Fatal(http.ListenAndServe(a, nil))
 	}(*adminAddr)
+
+	mux := http.NewServeMux()
+	mux.HandleFunc("/-/health", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte("OK"))
+	})
+	mux.HandleFunc("/tracks", controller.tracks)
 
 	log.Println(fmt.Sprintf("Listening on %s", *addr))
 	log.Fatal(http.ListenAndServe(*addr, mux))

@@ -1,6 +1,12 @@
 #!/bin/bash
 set -euf -o pipefail
 
+req_health() {
+  sc wait http --verbose localhost:8080/-/health
+  sc wait http --verbose localhost:9090/-/health
+  sc wait http --verbose localhost:9091/-/health
+}
+
 req_chunk() {
   local asset_data=$1
 
@@ -9,7 +15,7 @@ req_chunk() {
     -F "track[asset_data]=@${asset_data}" \
     -F "track[title]=123" \
     -F "oauth_token=s3cr3t" \
-    localhost:8080
+    localhost:8080/tracks
 }
 
 req_length() {
@@ -19,22 +25,10 @@ req_length() {
     -F "track[asset_data]=@${asset_data}" \
     -F "track[title]=123" \
     -F "oauth_token=s3cr3t" \
-    localhost:8080
+    localhost:8080/tracks
 }
 
-req_length_loop() {
-  local asset_data=$1
-
-  for i in {1..10} ; do
-    if [ $((i % 2)) == 1 ] ; then
-      req_length "$asset_data"
-    else
-      req_chunk "$asset_data"
-    fi
-  done
-}
-
-req_token_too_large() {
+req_large_token() {
   local asset_data=$1
   local token_bytes=$2
 
@@ -48,19 +42,23 @@ req_token_too_large() {
     -F "track[asset_data]=@${asset_data}" \
     -F "track[title]=123" \
     -F "oauth_token=$large_token" \
-    localhost:8080
+    localhost:8080/tracks
+}
+
+req_admin_metrics() {
+  curl -vf localhost:8081/metrics
 }
 
 run() {
   local asset_data=$1
   local token_bytes=256
 
+  req_health
+  req_admin_metrics
+
   req_chunk "$asset_data"
   req_length "$asset_data"
-  req_token_too_large "$asset_data" "$token_bytes"
-
-  # TODO: THis is too slow against S3.
-  # req_length_loop "$asset_data"
+  req_large_token "$asset_data" "$token_bytes"
 }
 
 config=""
@@ -96,8 +94,5 @@ cleanup() {
 }
 
 trap cleanup EXIT
-
-# TODO: Figure out a health check to `sc wait http` for.
-sleep 1
 
 run "$asset_data" 128

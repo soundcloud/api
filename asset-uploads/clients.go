@@ -13,21 +13,14 @@ const (
 )
 
 type moshimoshiClient struct {
-	host       string
-	httpClient *http.Client
-}
-
-func newMoshimoshiClient(host string) *moshimoshiClient {
-	return &moshimoshiClient{
-		host:       host,
-		httpClient: http.DefaultClient,
-	}
+	host   string
+	client *http.Client
 }
 
 func (u *moshimoshiClient) createTrackUID() (string, error) {
 	url := fmt.Sprintf("http://%s/track_uids?access_token=%s", u.host, moshimoshiAccessToken)
 
-	req, err := u.httpClient.Post(url, jsonContentType, nil)
+	req, err := u.client.Post(url, jsonContentType, nil)
 	if err != nil {
 		return "", err
 	}
@@ -47,7 +40,7 @@ func (u *moshimoshiClient) createTrackUID() (string, error) {
 	return res.UID, nil
 }
 
-func (u *moshimoshiClient) createTranscoding(uid string) (bool, error) {
+func (u *moshimoshiClient) createTranscoding(uid string) error {
 	url := fmt.Sprintf("http://%s/transcodings?access_token=%s", u.host, moshimoshiAccessToken)
 
 	bs, err := json.Marshal(struct {
@@ -60,17 +53,17 @@ func (u *moshimoshiClient) createTranscoding(uid string) (bool, error) {
 		}{uid},
 	})
 	if err != nil {
-		return false, err
+		return err
 	}
 
-	req, err := u.httpClient.Post(url, jsonContentType, bytes.NewBuffer(bs))
+	req, err := u.client.Post(url, jsonContentType, bytes.NewBuffer(bs))
 	if err != nil {
-		return false, err
+		return err
 	}
 
 	if req.StatusCode != http.StatusOK {
-		return false, fmt.Errorf("Failed to trigger transcoding UID: %d", req.StatusCode)
+		return fmt.Errorf("Failed to trigger transcoding UID: %d", req.StatusCode)
 	}
 
-	return true, nil
+	return nil
 }

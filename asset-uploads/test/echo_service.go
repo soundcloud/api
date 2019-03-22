@@ -17,6 +17,11 @@ func main() {
 	flag.Parse()
 
 	http.HandleFunc("/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodGet && r.URL.Path == "/-/health" {
+			w.WriteHeader(http.StatusOK)
+			w.Write([]byte("OK"))
+		}
+
 		log.Println(r)
 
 		dump, err := httputil.DumpRequest(r, true)

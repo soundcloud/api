@@ -26,13 +26,9 @@ test_upload_%.dat:
 .PHONY: clean
 clean:
 	$(GO) clean
-	rm -vf config/test test_upload_*.dat
+	rm -vf test_upload_*.dat
 
 .PHONY: dependencies
 dependencies:
-	docker-compose down
-	docker-compose up -d
-
-# Generic target for decrypting files with shibboleth
-%: %.enc
-	curl --silent --fail --output $@ --upload-file $< https://shibboleth.int.s-cloud.net/decrypt
+	docker-compose -f test/docker-compose.yml down
+	docker-compose -f test/docker-compose.yml up -d
