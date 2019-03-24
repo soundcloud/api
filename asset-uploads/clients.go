@@ -18,8 +18,8 @@ type moshimoshiClientAPI interface {
 }
 
 type moshimoshiClient struct {
-	host   string
 	client *http.Client
+	host   string
 }
 
 func (u *moshimoshiClient) createTrackUID() (string, error) {

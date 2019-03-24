@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"net/http/httputil"
 	"net/url"
 	"os"
 
@@ -21,7 +20,6 @@ import (
 
 func main() {
 	const (
-		awsSessionToken   = "" // The session token is optional
 		envAWSAccessKeyID = "AWS_ACCESS_KEY_ID"
 		envAWSSecretKey   = "AWS_SECRET_ACCESS_KEY"
 		envS3Bucket       = "AWS_S3_BUCKET"
@@ -32,8 +30,8 @@ func main() {
 		addr      = flag.String("addr", ":8080", "Listen address")
 		adminAddr = flag.String("admin-addr", ":8081", "Listen address admin server")
 
-		moshimoshiAddr = flag.String("moshimoshiAddr", "localhost:9091", "MoshiMoshi service address")
-		rawTargetURL   = flag.String("targetURL", "http://localhost:9000/", "Target URL")
+		moshiAddr    = flag.String("moshimoshiAddr", "localhost:9091", "MoshiMoshi service address")
+		rawTargetURL = flag.String("targetURL", "http://localhost:9000/", "Target URL")
 
 		awsKey    = flag.String("aws-key", os.Getenv(envAWSAccessKeyID), "AWS access key ID")
 		awsSecret = flag.String("aws-secret", os.Getenv(envAWSSecretKey), "AWS secret access key")
@@ -50,30 +48,39 @@ func main() {
 		log.Fatalf("Failed to parse target URL: %s", *rawTargetURL)
 	}
 
+	s3cli := httpClient("S3")
 	s3 := s3.New(
 		session.Must(
 			session.NewSession(&aws.Config{
-				Credentials: credentials.NewStaticCredentials(*awsKey, *awsSecret, awsSessionToken),
-				HTTPClient:  http.DefaultClient,
-				Region:      aws.String(*s3Region),
+				Credentials: credentials.NewStaticCredentials(
+					*awsKey,
+					*awsSecret,
+					"", // The session token is optional.
+				),
+				HTTPClient: s3cli,
+				Region:     aws.String(*s3Region),
 			}),
 		),
 	)
 
+	moshicli := httpClient("MOSHIMOSHI")
+	moshi := &moshimoshiClient{
+		client: moshicli,
+		host:   *moshiAddr,
+	}
+
 	service := &service{
 		upload: &uploader{
-			moshimoshi: &moshimoshiClient{
-				host:   *moshimoshiAddr,
-				client: http.DefaultClient,
-			},
+			moshimoshi: moshi,
 			s3Uploader: s3manager.NewUploaderWithClient(s3),
 			s3Bucket:   *s3Bucket,
 		},
 	}
 
+	proxy := httpProxy("PUBLIC_API_STRANGLER", targetURL)
 	controller := &controller{
 		maxRequestBytes: *maxRequestBytes,
-		proxy:           httputil.NewSingleHostReverseProxy(targetURL),
+		proxy:           proxy,
 		service:         service,
 	}
 
@@ -89,7 +96,7 @@ func main() {
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("OK"))
 	})
-	mux.HandleFunc("/tracks", controller.tracks)
+	mux.HandleFunc("/tracks", httpHandler("/tracks", controller.tracks))
 
 	log.Println(fmt.Sprintf("Listening on %s", *addr))
 	log.Fatal(http.ListenAndServe(*addr, mux))
