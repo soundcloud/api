@@ -5,7 +5,7 @@ services:
     ports:
       - 9090:9090
     volumes:
-      - ../test:/srv/test:ro
+      - ../testdata:/srv/test:ro
     working_dir: /srv/test
     command: go run echo_service.go -listenAddr=:9090
   moshimoshi_service:
@@ -13,6 +13,6 @@ services:
     ports:
       - 9091:9091
     volumes:
-      - ../test:/srv/test:ro
+      - ../testdata:/srv/test:ro
     working_dir: /srv/test
     command: go run moshimoshi_service.go -listenAddr=:9091
