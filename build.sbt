@@ -7,6 +7,7 @@ lazy val publicApiStrangler = project.in(file("."))
   .enablePlugins(SbtKitPlugin)
   .settings(
     name := "public-api-strangler",
+    fatalWarnings := false,
     libraryDependencies ++= Seq(
       "com.netaporter" %% "scala-uri" % "0.4.16",
       "com.soundcloud" %% "jvmkit-http-client" % jvmkitVersion,
@@ -31,6 +32,7 @@ lazy val endToEnd = project.in(file("endToEndTests"))
   .enablePlugins(SbtKitPlugin)
   .settings(
     name := "endToEnd",
+    fatalWarnings := false,
     libraryDependencies ++= Seq(
       "org.specs2" %% "specs2-core" % specs2Version,
       "org.specs2" %% "specs2-mock" % specs2Version,
