@@ -1,4 +1,4 @@
-# Public API Strangler
+# Public API Strangler (PAS)
 
 **Service discovery name:** `http.strangler.prod.public-api.srv.db.s-cloud.net`
 
