@@ -3,7 +3,9 @@ package main
 import (
 	"bytes"
 	"io"
+	"io/ioutil"
 	"mime/multipart"
+	"net/http"
 )
 
 type serviceAPI interface {
@@ -15,30 +17,44 @@ type service struct {
 }
 
 type createTrackRequest struct {
-	body     io.Reader
 	boundary string
+	request  *http.Request
 }
 
 type createTrackResponse struct {
-	auth *bytes.Buffer
-	body *bytes.Buffer
+	request *http.Request
 }
 
-func (s service) createTrack(req *createTrackRequest) (*createTrackResponse, error) {
-	auth := &bytes.Buffer{}
+func (s service) createTrack(r *createTrackRequest) (*createTrackResponse, error) {
+	reader := multipart.NewReader(r.request.Body, r.boundary)
+
 	body := &bytes.Buffer{}
-
-	reader := multipart.NewReader(req.body, req.boundary)
-
 	writer := multipart.NewWriter(body)
-	writer.SetBoundary(req.boundary)
-	defer writer.Close()
+	if err := writer.SetBoundary(r.boundary); err != nil {
+		return nil, err
+	}
+
+	auth, err := s.rewrite(reader, writer)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := writer.Close(); err != nil {
+		return nil, err
+	}
+
+	req := s.modifyRequest(r.request, auth, body)
+	return &createTrackResponse{request: req}, nil
+}
+
+func (s service) rewrite(src *multipart.Reader, dst *multipart.Writer) (*bytes.Buffer, error) {
+	auth := &bytes.Buffer{}
 
 	for {
-		part, err := reader.NextPart()
+		part, err := src.NextPart()
 		if err != nil {
 			if err == io.EOF {
-				return &createTrackResponse{auth, body}, nil
+				return auth, nil
 			}
 
 			return nil, err
@@ -46,22 +62,35 @@ func (s service) createTrack(req *createTrackRequest) (*createTrackResponse, err
 
 		switch part.FormName() {
 		case "oauth_token":
-			if err := extractAuthToken(part, auth); err != nil {
+			if err := s.extractAuthToken(part, auth); err != nil {
 				return nil, err
 			}
 		case "track[asset_data]":
-			if err := storeTrackAssetData(part, s.upload, writer); err != nil {
+			if err := s.storeTrackAssetData(part, s.upload, dst); err != nil {
 				return nil, err
 			}
 		default:
-			if err := copyPart(part, writer); err != nil {
+			if err := s.copyPart(part, dst); err != nil {
 				return nil, err
 			}
 		}
 	}
 }
 
-func extractAuthToken(src *multipart.Part, dst *bytes.Buffer) error {
+func (s service) modifyRequest(r *http.Request, auth *bytes.Buffer, body *bytes.Buffer) *http.Request {
+	// If the request contained auth information, propagate it by setting
+	// the `Authorization` header. This overwrites any existing value.
+	if auth.Len() > 0 {
+		r.Header.Set("Authorization", "OAuth "+auth.String())
+	}
+
+	r.ContentLength = int64(body.Len())
+	r.Body = ioutil.NopCloser(body)
+
+	return r
+}
+
+func (s service) extractAuthToken(src *multipart.Part, dst *bytes.Buffer) error {
 	const (
 		maxTokenBytes = 64
 	)
@@ -79,7 +108,7 @@ func extractAuthToken(src *multipart.Part, dst *bytes.Buffer) error {
 	return nil
 }
 
-func storeTrackAssetData(src *multipart.Part, uploader uploaderAPI, w *multipart.Writer) error {
+func (s service) storeTrackAssetData(src *multipart.Part, uploader uploaderAPI, w *multipart.Writer) error {
 	o, err := w.CreateFormField("track[original_filename]")
 	if err != nil {
 		return err
@@ -107,7 +136,7 @@ func storeTrackAssetData(src *multipart.Part, uploader uploaderAPI, w *multipart
 	return nil
 }
 
-func copyPart(src *multipart.Part, w *multipart.Writer) error {
+func (s service) copyPart(src *multipart.Part, w *multipart.Writer) error {
 	dst, err := w.CreatePart(src.Header)
 	if err != nil {
 		return err
@@ -119,3 +148,6 @@ func copyPart(src *multipart.Part, w *multipart.Writer) error {
 
 	return nil
 }
+
+// Ensure that service implements serviceAPI.
+var _ serviceAPI = (*service)(nil)

@@ -1,8 +1,6 @@
 package main
 
 import (
-	"fmt"
-	"io/ioutil"
 	"mime"
 	"net/http"
 	"net/http/httputil"
@@ -17,8 +15,7 @@ type controller struct {
 
 func (c controller) tracks(w http.ResponseWriter, r *http.Request) {
 	const (
-		authHeaderFormat = "OAuth %s"
-		emptyResponse    = ""
+		emptyResponse = ""
 	)
 
 	method := r.Method
@@ -44,9 +41,11 @@ func (c controller) tracks(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	r.Body = http.MaxBytesReader(w, r.Body, c.maxRequestBytes)
+
 	res, err := c.service.createTrack(&createTrackRequest{
-		body:     http.MaxBytesReader(w, r.Body, c.maxRequestBytes),
 		boundary: boundary,
+		request:  r,
 	})
 	if err != nil {
 		// There's currently no nice way of differentiating `request too large`
@@ -62,18 +61,9 @@ func (c controller) tracks(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// Assume that all other errors are client-retryable.
-		http.Error(w, emptyResponse, http.StatusServiceUnavailable)
+		http.Error(w, err.Error(), http.StatusServiceUnavailable)
 		return
 	}
 
-	// If the request contained auth information, propagate it by setting
-	// the `Authorization` header. This overwrites any existing value.
-	if res.auth.Len() > 0 {
-		r.Header.Set("Authorization", fmt.Sprintf(authHeaderFormat, res.auth.String()))
-	}
-
-	r.ContentLength = int64(res.body.Len())
-	r.Body = ioutil.NopCloser(res.body)
-
-	c.proxy.ServeHTTP(w, r)
+	c.proxy.ServeHTTP(w, res.request)
 }

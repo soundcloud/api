@@ -5,6 +5,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
+	"github.com/aws/aws-sdk-go/service/s3/s3manager/s3manageriface"
 )
 
 type uploaderAPI interface {
@@ -12,9 +13,9 @@ type uploaderAPI interface {
 }
 
 type uploader struct {
-	moshimoshi *moshimoshiClient
+	moshimoshi moshimoshiClientAPI
 	s3Bucket   string
-	s3Uploader *s3manager.Uploader
+	s3Uploader s3manageriface.UploaderAPI
 }
 
 type uploadTrackRequest struct {
@@ -46,3 +47,6 @@ func (u uploader) uploadTrack(req *uploadTrackRequest) (*uploadTrackResponse, er
 
 	return &uploadTrackResponse{uid: uid}, nil
 }
+
+// Ensure that uploader implements uploaderAPI.
+var _ uploaderAPI = (*uploader)(nil)

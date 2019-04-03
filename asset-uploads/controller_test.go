@@ -81,7 +81,7 @@ func TestTracksLimitsRequestSize(t *testing.T) {
 		service: &fakeService{
 			fn: func(r *createTrackRequest) (*createTrackResponse, error) {
 				// Read the entire request, exceeding the limit.
-				if _, err := io.Copy(ioutil.Discard, r.body); err != nil {
+				if _, err := io.Copy(ioutil.Discard, r.request.Body); err != nil {
 					return nil, err
 				}
 
@@ -123,7 +123,6 @@ func TestPassesMultipartBoundary(t *testing.T) {
 
 func TestFailingServiceCall(t *testing.T) {
 	controller := &controller{
-		maxRequestBytes: 1,
 		service: &fakeService{
 			fn: func(r *createTrackRequest) (*createTrackResponse, error) {
 				return nil, errors.New("This failed")
@@ -142,89 +141,45 @@ func TestFailingServiceCall(t *testing.T) {
 	}
 }
 
-func TestSuccessfullServiceCall(t *testing.T) {
-	var (
-		empty = []byte{}
-		test1 = []byte("Test 1")
-		test2 = []byte("Test 2")
-	)
-
-	tests := [...]struct {
-		expectedAuth []byte
-		expectedBody []byte
-		fn           func(*createTrackRequest) (*createTrackResponse, error)
-	}{
-		0: {
-			empty,
-			test1,
-			func(r *createTrackRequest) (*createTrackResponse, error) {
-				return &createTrackResponse{
-					auth: bytes.NewBuffer(empty),
-					body: bytes.NewBuffer(test1),
-				}, nil
-			},
-		},
-		1: {
-			test2,
-			test1,
-			func(r *createTrackRequest) (*createTrackResponse, error) {
-				return &createTrackResponse{
-					auth: bytes.NewBuffer(test2),
-					body: bytes.NewBuffer(test1),
-				}, nil
-			},
-		},
-	}
-
+func TestSuccessfulServiceCall(t *testing.T) {
 	server := httptest.NewServer(
 		http.HandlerFunc(
 			func(w http.ResponseWriter, r *http.Request) {
-				// Echo the Authorization header in the response if set.
-				if a := r.Header.Get("Authorization"); a != "" {
-					w.Header().Set("Authorization", a)
-				}
-
 				w.WriteHeader(http.StatusCreated)
-
-				// Echo the request body in the response.
-				if _, err := io.Copy(w, r.Body); err != nil {
-					panic("Failed to echo the request")
-				}
+				_, _ = io.Copy(w, r.Body)
 			},
 		),
 	)
+	defer server.Close()
 
 	url, _ := url.Parse(server.URL)
 	serverProxy := httputil.NewSingleHostReverseProxy(url)
 
-	for _, tt := range tests {
-		controller := &controller{
-			maxRequestBytes: 0,
-			service:         &fakeService{fn: tt.fn},
-			proxy:           serverProxy,
-		}
+	body := []byte("test123")
 
-		res := httptest.NewRecorder()
-		req := httptest.NewRequest("POST", "/", nil)
-		req.Header.Set("Content-Type", "multipart/form-data; boundary=some-boundary")
+	controller := &controller{
+		maxRequestBytes: int64(len(body)),
+		service: &fakeService{
+			fn: func(r *createTrackRequest) (*createTrackResponse, error) {
+				return &createTrackResponse{request: r.request}, nil
+			},
+		},
+		proxy: serverProxy,
+	}
 
-		controller.tracks(res, req)
+	res := httptest.NewRecorder()
+	req := httptest.NewRequest("POST", "/", bytes.NewReader(body))
+	req.Header.Set("Content-Type", "multipart/form-data; boundary=some-boundary")
 
-		result := res.Result()
-		if want, got := http.StatusCreated, result.StatusCode; want != got {
-			t.Errorf("Expected status to be %v, got %v", want, got)
-		}
+	controller.tracks(res, req)
 
-		b, _ := ioutil.ReadAll(result.Body)
-		if !bytes.Equal(b, tt.expectedBody) {
-			t.Errorf("Expected response to be %v, got %v", string(b), string(tt.expectedBody))
-		}
+	result := res.Result()
+	if want, got := http.StatusCreated, result.StatusCode; want != got {
+		t.Errorf("Expected status to be %v, got %v", want, got)
+	}
 
-		if len(tt.expectedAuth) > 0 {
-			want := "OAuth " + string(tt.expectedAuth)
-			if got := result.Header.Get("Authorization"); want != got {
-				t.Errorf("Expected auth header to be %v, got %v", want, got)
-			}
-		}
+	b, _ := ioutil.ReadAll(result.Body)
+	if want, got := body, b; !bytes.Equal(want, got) {
+		t.Errorf("Expected response to be %s, got %s", want, got)
 	}
 }

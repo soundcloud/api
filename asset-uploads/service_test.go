@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"errors"
 	"io/ioutil"
+	"net/http"
+	"net/http/httptest"
 	"testing"
 )
 
@@ -33,29 +35,54 @@ func TestValidMultipart(t *testing.T) {
 
 	service := &service{}
 
-	res, err := service.createTrack(&createTrackRequest{
-		body:     bytes.NewReader(body),
+	req := &createTrackRequest{
 		boundary: "------------------------7570ceb7c872df7a",
-	})
+		request:  httptest.NewRequest(http.MethodPost, "/", bytes.NewReader(body)),
+	}
+
+	res, err := service.createTrack(req)
 	if err != nil {
 		t.Fatalf("Expected no error, got %v", err)
 	}
 
-	if !bytes.Equal(body, res.body.Bytes()) {
-		t.Error("Expected request to be unmodified")
+	bs, _ := ioutil.ReadAll(res.request.Body)
+	if !bytes.Equal(body, bs) {
+		t.Errorf("Expected request to be unmodified %s, %s", body, bs)
 	}
 }
 
 func TestInvalidMultipart(t *testing.T) {
-	service := &service{}
+	tests := [...]struct {
+		body     []byte
+		boundary string
+	}{
+		0: {
+			[]byte("invalid multipart data"),
+			"valid-boundary",
+		},
+		1: {
+			[]byte(
+				"--------------------------7570ceb7c872df7a" +
+					crlf + "Content-Disposition: form-data; name=\"track[title]\"" +
+					crlf + "" +
+					crlf + "My Track" +
+					crlf + "--------------------------7570ceb7c872df7a--" +
+					crlf),
+			"", // invalid empty boundary
+		},
+	}
 
-	_, err := service.createTrack(&createTrackRequest{
-		body:     bytes.NewReader([]byte("Not mime multipart data")),
-		boundary: "some-boundary",
-	})
+	for _, tt := range tests {
+		service := &service{}
 
-	if err == nil {
-		t.Error("Expected to fail parsing malformed multipart data")
+		_, err := service.createTrack(&createTrackRequest{
+			boundary: tt.boundary,
+			request:  httptest.NewRequest(http.MethodPost, "/", bytes.NewReader(tt.body)),
+		})
+
+		if err == nil {
+			t.Error("Expected to fail parsing malformed multipart data")
+		}
 	}
 }
 
@@ -67,11 +94,11 @@ func TestExtractAuthToken(t *testing.T) {
 	)
 
 	tests := [...]struct {
-		auth []byte
+		auth string
 		body []byte
 	}{
 		0: {
-			auth: []byte{},
+			auth: "",
 			body: []byte(
 				"--------------------------becf7c3b48144d16" +
 					crlf + "Content-Disposition: form-data; name=\"track[title]\"" +
@@ -81,7 +108,7 @@ func TestExtractAuthToken(t *testing.T) {
 					crlf),
 		},
 		1: {
-			auth: []byte("some-token"),
+			auth: "OAuth some-token",
 			body: []byte(
 				"--------------------------becf7c3b48144d16" +
 					crlf + "Content-Disposition: form-data; name=\"oauth_token\"" +
@@ -95,7 +122,7 @@ func TestExtractAuthToken(t *testing.T) {
 					crlf),
 		},
 		2: {
-			auth: []byte(largeToken[:64]),
+			auth: "OAuth " + largeToken[:64],
 			body: []byte(
 				"--------------------------becf7c3b48144d16" +
 					crlf + "Content-Disposition: form-data; name=\"oauth_token\"" +
@@ -113,16 +140,16 @@ func TestExtractAuthToken(t *testing.T) {
 	for _, tt := range tests {
 		service := &service{}
 
-		got, err := service.createTrack(&createTrackRequest{
-			body:     bytes.NewReader(tt.body),
+		res, err := service.createTrack(&createTrackRequest{
 			boundary: "------------------------becf7c3b48144d16",
+			request:  httptest.NewRequest(http.MethodPost, "/", bytes.NewReader(tt.body)),
 		})
 		if err != nil {
 			t.Fatalf("Expected no error, got: %v", err)
 		}
 
 		want := struct {
-			auth []byte
+			auth string
 			body []byte
 		}{
 			auth: tt.auth,
@@ -135,12 +162,12 @@ func TestExtractAuthToken(t *testing.T) {
 					crlf),
 		}
 
-		if !bytes.Equal(want.auth, got.auth.Bytes()) {
-			t.Errorf("Expected auth to be %v, got %v", string(want.auth), got.auth.String())
+		if got := res.request.Header.Get("Authorization"); want.auth != got {
+			t.Errorf("Expected Authorization header to be %s, got %s", want.auth, got)
 		}
 
-		if !bytes.Equal(want.body, got.body.Bytes()) {
-			t.Errorf("Expected body to be %v, got %v", string(want.body), got.body.String())
+		if got, _ := ioutil.ReadAll(res.request.Body); !bytes.Equal(want.body, got) {
+			t.Errorf("Expected body to be %s, got %s", want.body, got)
 		}
 	}
 }
@@ -183,7 +210,10 @@ func TestStoreTrackAssetData(t *testing.T) {
 			fn: func(r *uploadTrackRequest) (*uploadTrackResponse, error) {
 				// Echo the track data (without whitespace) as the track uid
 				data, _ := ioutil.ReadAll(r.data)
-				return &uploadTrackResponse{uid: string(bytes.TrimSpace(data))}, nil
+
+				return &uploadTrackResponse{
+					uid: string(bytes.TrimSpace(data)),
+				}, nil
 			},
 		},
 		1: {
@@ -199,17 +229,21 @@ func TestStoreTrackAssetData(t *testing.T) {
 			upload: &fakeUploader{fn: want.fn},
 		}
 
-		got, err := service.createTrack(&createTrackRequest{
-			body:     bytes.NewReader(body),
+		res, err := service.createTrack(&createTrackRequest{
 			boundary: "------------------------6808b4f61ea0e5a2",
+			request:  httptest.NewRequest(http.MethodPost, "/", bytes.NewReader(body)),
 		})
 
-		if len(want.body) != 0 && !bytes.Equal(want.body, got.body.Bytes()) {
-			t.Errorf("Expected body to be %v, got %v", string(want.body), got.body.String())
+		if len(want.body) == 0 {
+			// The test didn't expect a body, the request should fail.
+			if err == nil {
+				t.Error("Expected failed upload error")
+			}
+			continue
 		}
 
-		if len(want.body) == 0 && err == nil {
-			t.Error("Expected failed upload error")
+		if got, _ := ioutil.ReadAll(res.request.Body); !bytes.Equal(want.body, got) {
+			t.Errorf("Expected body to be %s, got %s", want.body, got)
 		}
 	}
 }

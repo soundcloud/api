@@ -12,6 +12,11 @@ const (
 	moshimoshiAccessToken = "public-api-strangler-assets"
 )
 
+type moshimoshiClientAPI interface {
+	createTrackUID() (string, error)
+	createTranscoding(string) error
+}
+
 type moshimoshiClient struct {
 	host   string
 	client *http.Client
@@ -67,3 +72,6 @@ func (u *moshimoshiClient) createTranscoding(uid string) error {
 
 	return nil
 }
+
+// Ensure that moshimoshiClient implements moshimoshiClientAPI.
+var _ moshimoshiClientAPI = (*moshimoshiClient)(nil)
