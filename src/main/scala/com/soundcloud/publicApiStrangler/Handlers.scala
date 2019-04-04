@@ -3,6 +3,7 @@ package com.soundcloud.publicApiStrangler
 import com.soundcloud.jvmkit.module.rollout.BasicRolloutFeature
 import com.soundcloud.jvmkit.module.telemetry.Telemetry
 import com.soundcloud.publicApiStrangler.authorization.PublicApiSiloing
+import com.soundcloud.publicApiStrangler.client.media.MediaUrlsRepository
 import com.soundcloud.publicApiStrangler.handler._
 import com.soundcloud.publicApiStrangler.mapper.search.{SearchMapper, SearchRepository}
 import com.soundcloud.publicApiStrangler.mapper.similarsounds.SimilarSoundsMapper
@@ -10,8 +11,7 @@ import com.soundcloud.publicApiStrangler.mapper.timeline.e1.{ActivitiesMapper, S
 import com.soundcloud.publicApiStrangler.mapper.timeline.publicApi.ActivitiesWithOriginMapper
 import com.soundcloud.publicApiStrangler.mapper.timeline.{EntityMapper, EntitySummaryMapper, FollowingsTracksMapper}
 import com.soundcloud.publicApiStrangler.mapper.trackstreams.{TrackStreamJsonResponseMapper, TrackStreamRedirectResponseMapper}
-import com.soundcloud.publicApiStrangler.client.media.MediaUrlsRepository
-import com.soundcloud.publicApiStrangler.service.media.StreamService
+import com.soundcloud.publicApiStrangler.service.media.{StreamService, TrackAccessRecorderService}
 import com.soundcloud.publicApiStrangler.support.CursorPagination
 
 class Handlers(telemetry: Telemetry, clients: Clients) {
@@ -41,7 +41,7 @@ class Handlers(telemetry: Telemetry, clients: Clients) {
     val trackStreamUrlToJsonResponseMapper = new TrackStreamJsonResponseMapper
     val trackStreamUrlToRedirectMapper = new TrackStreamRedirectResponseMapper
 
-    val mediaUrlsRepository = new MediaUrlsRepository(mediaService)
+    val mediaUrlsRepository = new MediaUrlsRepository(mediaUrlgenJsonClient)
     val trackStreamSnipHandler = new TrackStreamHandler(mothershipDispatcher, contentAuthorizationRules, mediaUrlsRepository)
     val rolloutCheckForSiloingFunc = {
       val siloingEnabledFeature = BasicRolloutFeature("app-siloing-enabled")
@@ -51,12 +51,15 @@ class Handlers(telemetry: Telemetry, clients: Clients) {
 
     val streamService = new StreamService(tracksClient, mediaServiceClient)
 
+    val trackAccessRecorderService = new TrackAccessRecorderService(trackAccessRecorderClient)
+
     new TrackStreamsHandler(
       userAuthentication,
       trackStreamUrlToJsonResponseMapper,
       trackStreamUrlToRedirectMapper,
       trackStreamSnipHandler,
       streamService,
+      trackAccessRecorderService,
       () => rolloutClient.isActive(BasicRolloutFeature("media-service-streams")),
       publicApiSiloing
     )

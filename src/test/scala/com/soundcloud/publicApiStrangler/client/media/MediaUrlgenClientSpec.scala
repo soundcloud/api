@@ -31,7 +31,7 @@ class MediaUrlgenClientSpec extends UnitSpecification {
         )
         val allExpectedRequestParams = requestParams ++ Params("method" -> "GET", "legacy" -> "false")
         val trackStreamUrlMapper = mock[TrackStreamUrlMapper]
-        val mediaServiceClient = new MediaUrlgenClient(jsonService, trackStreamUrlMapper)
+        val mediaUrlgenClient = new MediaUrlgenClient(jsonService, trackStreamUrlMapper)
         val mediaUrl1 = mock[MediaUrl]
         val mediaUrl2 = mock[MediaUrl]
         val contentAuthorization = mock[ContentAuthorization]
@@ -42,13 +42,13 @@ class MediaUrlgenClientSpec extends UnitSpecification {
       "return MediaUrls for valid input and http response" in new Context {
         jsonService.getWithSession(userSession, Path("/media") / urn / "streams", allExpectedRequestParams, Headers.empty) returns Future.value(jsonResponse(Status.Ok, json))
         trackStreamUrlMapper.map(json) returns Set(mediaUrl1, mediaUrl2)
-        val trackStreams = Await.result(mediaServiceClient.trackStreamUrlsFor(userSession, urn, requestParams, contentAuthorization))
+        val trackStreams = Await.result(mediaUrlgenClient.trackStreamUrlsFor(userSession, urn, requestParams, contentAuthorization))
         trackStreams ==== Set(mediaUrl1, mediaUrl2)
       }
 
       "return empty seq in case media service response is 'Not Found'" in new Context {
         jsonService.getWithSession(userSession, Path("/media") / urn / "streams", allExpectedRequestParams, Headers.empty) returns Future.value(jsonResponse(Status.NotFound, json))
-        val trackStreamUrls = Await.result(mediaServiceClient.trackStreamUrlsFor(userSession, urn, requestParams, contentAuthorization))
+        val trackStreamUrls = Await.result(mediaUrlgenClient.trackStreamUrlsFor(userSession, urn, requestParams, contentAuthorization))
         trackStreamUrls ==== Set()
         there was no(trackStreamUrlMapper).map(json)
       }
@@ -56,7 +56,7 @@ class MediaUrlgenClientSpec extends UnitSpecification {
       "return empty seq in case policy = BLOCK, do not make a request to the downstream" in new Context {
         contentAuthorization.getPolicy returns ContentPolicy.BLOCK
 
-        val trackStreamUrls = Await.result(mediaServiceClient.trackStreamUrlsFor(userSession, urn, requestParams, contentAuthorization))
+        val trackStreamUrls = Await.result(mediaUrlgenClient.trackStreamUrlsFor(userSession, urn, requestParams, contentAuthorization))
         trackStreamUrls ==== Set()
         there was no(jsonService).getWithSession(userSession, Path("/media") / urn / "streams", allExpectedRequestParams, Headers.empty)
       }

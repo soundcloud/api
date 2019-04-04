@@ -13,7 +13,7 @@ import com.soundcloud.publicApiStrangler.client._
 import com.soundcloud.publicApiStrangler.client.followcounts.FollowCountsClient
 import com.soundcloud.publicApiStrangler.client.follows.FollowsClient
 import com.soundcloud.publicApiStrangler.client.liebling.LieblingClient
-import com.soundcloud.publicApiStrangler.client.media.{MediaServiceClient, WaveformUrlsGenerator}
+import com.soundcloud.publicApiStrangler.client.media.{MediaServiceClient, TrackAccessRecorderClient, WaveformUrlsGenerator}
 import com.soundcloud.publicApiStrangler.client.mothership.{OkidokiClient, RichOkidokiClient}
 import com.soundcloud.publicApiStrangler.client.playlists.{PlaylistDeletionClient, PlaylistsClient}
 import com.soundcloud.publicApiStrangler.client.pubmese.PubmeseClient
@@ -83,7 +83,7 @@ class Clients(config: AppConfig, telemetry: Telemetry) {
 
   val stitchClient = new StitchClient(jsonClient("stitch"))
 
-  val mediaService: JsonClient = jsonClient("mediaservice")
+  val mediaUrlgenJsonClient: JsonClient = jsonClient("media_urlgen")
 
   val searchService: JsonClient = jsonClient("search")
 
@@ -106,6 +106,8 @@ class Clients(config: AppConfig, telemetry: Telemetry) {
   val tracksClient = new TracksClient(jsonClient("tracks"))
 
   val mediaServiceClient = new MediaServiceClient(jsonClient("media_service"))
+
+  val trackAccessRecorderClient = new TrackAccessRecorderClient(jsonClient("track_access_recorder"))
 
   // Whitelist source: http://redash.int.s-cloud.net/queries/632/source
   private val whitelistedClients: Set[Urn] = Set(

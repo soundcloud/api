@@ -32,7 +32,7 @@ GOBBLY_SRV_RECORD=dnssrv!http.api.prod.gobbly.srv.db.s-cloud.net
 GATEKEEPER_SRV_RECORD=dnssrv!http.api.prod.gatekeeper.srv.db.s-cloud.net
 PUBMESE_SRV_RECORD=dnssrv!http.web.prod.pubmese.srv.db.s-cloud.net
 GEOIP_SRV_RECORD=dnssrv!http.geoip2http.prod.geoip.srv.db.s-cloud.net
-MEDIASERVICE_SRV_RECORD=dnssrv!http.urlgen.prod.media-service.srv.db.s-cloud.net
+MEDIA_URLGEN_SRV_RECORD=dnssrv!http.urlgen.prod.media-service.srv.db.s-cloud.net
 STITCH_SRV_RECORD=dnssrv!http.web.prod.stitch4counts.srv.db.s-cloud.net
 REPOSTS_SRV_RECORD="dnssrv!http.api.prod.reposts.srv.db.s-cloud.net"
 REPOSTS_CLIENT_REQUEST_TIMEOUT_MILLIS="5000"
@@ -78,6 +78,8 @@ TRACKMETADATA_SRV_RECORD=dnssrv!http.api.prod.trackmetadata.srv.db.s-cloud.net
 TRACKS_SRV_RECORD=dnssrv!http.api.prod.tracks.srv.db.s-cloud.net
 
 MEDIA_SERVICE_SRV_RECORD=dnssrv!http.api.prod.media-service.srv.db.s-cloud.net
+
+TRACK_ACCESS_RECORDER_SRV_RECORD=dnssrv!http.moshimoshi.prod.mothership.srv.db.s-cloud.net
 
 APP_SILOING_BLACKLIST_APPS=soundcloud:applications:124,soundcloud:applications:3152,soundcloud:applications:65097
 

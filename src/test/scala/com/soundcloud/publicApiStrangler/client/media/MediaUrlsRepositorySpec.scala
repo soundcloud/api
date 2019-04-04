@@ -15,10 +15,10 @@ class MediaUrlsRepositorySpec extends UnitSpecification {
 
     trait StreamContext extends Scope {
       val userSession = (new UserSessionBuilder).build()
-      val mediaServiceClient = mock[MediaUrlgenClient]
-      val mediaUrlsRepository = new MediaUrlsRepository(mediaServiceClient)
+      val mediaUrlgenClient = mock[MediaUrlgenClient]
+      val mediaUrlsRepository = new MediaUrlsRepository(mediaUrlgenClient)
       val desiredTrack = Urn("soundcloud", "tracks", "11112")
-      val mediaServiceParamsSsl = Params("ssl" -> "true")
+      val mediaUrlgenParamsSsl = Params("ssl" -> "true")
       val expiresAt = DateTime.now()
 
       val httpUrl = Url("http://track.mp3")
@@ -32,7 +32,7 @@ class MediaUrlsRepositorySpec extends UnitSpecification {
       val regularTrackStreams = Set(httpMediaUrl, hlsMediaUrl, rtmpMediaUrl)
 
       val contentAuthorization = mock[ContentAuthorization]
-      mediaServiceClient.trackStreamUrlsFor(userSession, desiredTrack, mediaServiceParamsSsl, contentAuthorization) returns Future.value(regularTrackStreams)
+      mediaUrlgenClient.trackStreamUrlsFor(userSession, desiredTrack, mediaUrlgenParamsSsl, contentAuthorization) returns Future.value(regularTrackStreams)
     }
 
     "return regular streams when policy = allow" in new StreamContext {

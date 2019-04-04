@@ -10,7 +10,7 @@ import com.twitter.util.Future
 import play.api.libs.json.Json
 
 /**
-  * Client for MediaService.
+  * Client for MediaUrlgen.
   *
   * @param jsonClient        Json client.
   * @param trackStreamMapper   TrackStreamMapper
@@ -18,12 +18,12 @@ import play.api.libs.json.Json
 private[media] class MediaUrlgenClient(jsonClient: JsonClient, trackStreamMapper: TrackStreamUrlMapper) {
 
   /**
-    * Client for MediaService.
+    * Client for MediaUrlgen.
     *
-    * @param mediaService Json client.
+    * @param jsonClient Json client.
     */
-  def this(mediaService: JsonClient) {
-    this(mediaService, new TrackStreamUrlMapper)
+  def this(jsonClient: JsonClient) {
+    this(jsonClient, new TrackStreamUrlMapper)
   }
 
   /**

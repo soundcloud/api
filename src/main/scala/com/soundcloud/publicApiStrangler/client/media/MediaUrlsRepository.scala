@@ -13,18 +13,18 @@ import com.twitter.util.Future
   * Eventually the task of detecting which media files are available to a track will move to [[https://github.com/soundcloud/media-service media-service]].
   * For now this class performs the checks based on the [[ContentAuthorization]].
   *
-  * @param mediaServiceClient Media Service client.
+  * @param mediaUrlgenClient Media URL Generator client.
   */
-class MediaUrlsRepository(mediaServiceClient: MediaUrlgenClient) {
+class MediaUrlsRepository(mediaUrlgenClient: MediaUrlgenClient) {
   val logger = SoundCloudLoggerFactory.getLogger(this.getClass)
 
   /**
     * This constructor is added for backwards compatibility.
     *
-    * @param mediaService Media service.
+    * @param mediaUrlgenJsonClient Media URL Generator client.
     */
-  def this(mediaService: JsonClient) {
-    this(new MediaUrlgenClient(mediaService))
+  def this(mediaUrlgenJsonClient: JsonClient) {
+    this(new MediaUrlgenClient(mediaUrlgenJsonClient))
   }
 
   /**
@@ -54,5 +54,5 @@ class MediaUrlsRepository(mediaServiceClient: MediaUrlgenClient) {
     * @return Future set of Media Urls.
     */
   def fetchMediaUrls(session: UserSession, trackUrn: Urn, params: Params, contentAuthorization: ContentAuthorization): Future[Set[MediaUrl]] =
-    mediaServiceClient.trackStreamUrlsFor(session, trackUrn, params, contentAuthorization)
+    mediaUrlgenClient.trackStreamUrlsFor(session, trackUrn, params, contentAuthorization)
 }

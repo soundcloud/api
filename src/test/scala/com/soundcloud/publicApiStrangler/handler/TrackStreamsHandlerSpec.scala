@@ -6,14 +6,19 @@ import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.publicApiStrangler.Routing
 import com.soundcloud.publicApiStrangler.mapper.trackstreams.{TrackStreamJsonResponseMapper, TrackStreamRedirectResponseMapper}
-import com.soundcloud.publicApiStrangler.service.media.{StreamNotFoundError, StreamService, StreamUrl, StreamUrls}
+import com.soundcloud.publicApiStrangler.service.media._
 import com.soundcloud.publicApiStrangler.test.{FakePublicApiSiloing, HandlerSpecificationScope, UnitSpecification}
-import com.twitter.finagle.http.{Method, Status}
+import com.twitter.finagle.http.{Method, Response, Status}
 import com.twitter.util.Future
 import org.specs2.specification.core.Fragments
 import play.api.libs.json.Json
 
 class TrackStreamsHandlerSpec extends UnitSpecification {
+
+  class FakeTrackAccessRecorderService extends TrackAccessRecorderService(null) {
+    override def recordStreamAccess(session: UserSession, request: HandlerRequest, trackUrn: Urn)(action: => Response): Future[Response] =
+      Future.value(action)
+  }
 
   trait UrlgenContext extends HandlerSpecificationScope {
     val user = Urn("soundcloud", "users", "1234")
@@ -30,6 +35,7 @@ class TrackStreamsHandlerSpec extends UnitSpecification {
       trackStreamUrlToRedirectMapperMock,
       trackStreamSnipHandlerMock,
       streamService,
+      new FakeTrackAccessRecorderService,
       () => Future.False,
       new FakePublicApiSiloing
     )
@@ -128,6 +134,7 @@ class TrackStreamsHandlerSpec extends UnitSpecification {
       mock[TrackStreamRedirectResponseMapper],
       trackStreamHandler,
       streamService,
+      new FakeTrackAccessRecorderService,
       () => Future.True,
       new FakePublicApiSiloing
     )
@@ -140,6 +147,8 @@ class TrackStreamsHandlerSpec extends UnitSpecification {
     val hlsMp3 = "http://mp3-hls"
     val hlsOpus = "http://opus-hls"
     val httpPreviewMp3 = "http://mp3-progressive-preview"
+
+
 
     def call(method: Method, handler: Handler, path: String) = method match {
       case Method.Head => head(handler, path)
