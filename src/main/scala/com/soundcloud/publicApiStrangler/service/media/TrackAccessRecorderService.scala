@@ -17,7 +17,7 @@ class TrackAccessRecorderService(trackAccessRecorderClient: TrackAccessRecorderC
     recordAccess(session, request, trackUrn, "download", action)
 
   private def recordAccess(session: UserSession, request: HandlerRequest, trackUrn: Urn, accessFor: String, action: => Future[Response]): Future[Response] =
-    trackAccessRecorderClient.recordStreamAccess(session, trackUrn, shouldLog(request)).flatMap { response =>
+    trackAccessRecorderClient.recordAccess(session, trackUrn, accessFor, shouldLog(request)).flatMap { response =>
       response.status match {
         case Status.Ok => action
         case _ => Future.value(response)

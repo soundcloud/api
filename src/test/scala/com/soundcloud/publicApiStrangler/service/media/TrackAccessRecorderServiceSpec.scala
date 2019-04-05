@@ -26,87 +26,98 @@ class TrackAccessRecorderServiceSpec extends UnitSpecification {
     }
 
     val action = ResponseBuilder().status(Status.Ok).body("foobar").build
-    lazy val result = Await.result(service.recordStreamAccess(session, request, trackUrn)(Future.value(action)))
+
+    lazy val resultStream = Await.result(service.recordStreamAccess(session, request, trackUrn)(Future.value(action)))
+    lazy val resultDownload = Await.result(service.recordDownloadAccess(session, request, trackUrn)(Future.value(action)))
   }
 
-  "#recordStreamAccess" >> {
-    "when client returns a 200 response" >> {
-      trait OkContext extends Context {
-        trackAccessRecorderClient.recordStreamAccess(session, trackUrn, true) returns
-          Future.value(ResponseBuilder().status(Status.Ok).build)
-      }
-
-      "action is executed and returned" in new OkContext {
-        result.status ==== Status.Ok
-        result.contentString ==== "foobar"
+  Seq("stream", "download").foreach { accessType =>
+    trait AccessTypeContext extends Context {
+      lazy val result = accessType match {
+        case "stream" => resultStream
+        case "download" => resultDownload
       }
     }
 
-    "when client returns a non-200 response" >> {
-      trait BadContext extends Context {
-        trackAccessRecorderClient.recordStreamAccess(session, trackUrn, true) returns
-          Future.value(ResponseBuilder().status(Status.BadRequest).build)
+    s"#record${accessType.capitalize}Access" >> {
+      "when client returns a 200 response" >> {
+        trait OkContext extends AccessTypeContext {
+          trackAccessRecorderClient.recordAccess(session, trackUrn, accessType, true) returns
+            Future.value(ResponseBuilder().status(Status.Ok).build)
+        }
+
+        "action is executed and returned" in new OkContext {
+          result.status ==== Status.Ok
+          result.contentString ==== "foobar"
+        }
       }
 
-      "action is executed and returned" in new BadContext {
-        result.status ==== Status.BadRequest
-        result.contentString ==== ""
-      }
-    }
+      "when client returns a non-200 response" >> {
+        trait BadContext extends AccessTypeContext {
+          trackAccessRecorderClient.recordAccess(session, trackUrn, accessType, true) returns
+            Future.value(ResponseBuilder().status(Status.BadRequest).build)
+        }
 
-    "when request method is not GET" >> {
-      trait MethodNotGetContext extends Context {
-        override val reqMethod = Method.Head
-
-        trackAccessRecorderClient.recordStreamAccess(session, trackUrn, false) returns
-          Future.value(ResponseBuilder().status(Status.Ok).build)
+        "action is executed and returned" in new BadContext {
+          result.status ==== Status.BadRequest
+          result.contentString ==== ""
+        }
       }
 
-      "action is executed and play is not logged" in new MethodNotGetContext {
-        result.status ==== Status.Ok
-        result.contentString ==== "foobar"
-      }
-    }
+      "when request method is not GET" >> {
+        trait MethodNotGetContext extends AccessTypeContext {
+          override val reqMethod = Method.Head
 
-    "when Range header is not set" >> {
-      trait NoRangeHeaderContext extends Context {
-        override val range = None
+          trackAccessRecorderClient.recordAccess(session, trackUrn, accessType, false) returns
+            Future.value(ResponseBuilder().status(Status.Ok).build)
+        }
 
-        trackAccessRecorderClient.recordStreamAccess(session, trackUrn, true) returns
-          Future.value(ResponseBuilder().status(Status.Ok).build)
-      }
-
-      "action is executed and play is logged" in new NoRangeHeaderContext {
-        result.status ==== Status.Ok
-        result.contentString ==== "foobar"
-      }
-    }
-
-    "when Range header is set to first byte" >> {
-      trait FirstByteRangeContext extends Context {
-        override val range = Some("bytes=0-100")
-
-        trackAccessRecorderClient.recordStreamAccess(session, trackUrn, true) returns
-          Future.value(ResponseBuilder().status(Status.Ok).build)
+        "action is executed and play is not logged" in new MethodNotGetContext {
+          result.status ==== Status.Ok
+          result.contentString ==== "foobar"
+        }
       }
 
-      "action is executed and play is logged" in new FirstByteRangeContext {
-        result.status ==== Status.Ok
-        result.contentString ==== "foobar"
+      "when Range header is not set" >> {
+        trait NoRangeHeaderContext extends AccessTypeContext {
+          override val range = None
+
+          trackAccessRecorderClient.recordAccess(session, trackUrn, accessType, true) returns
+            Future.value(ResponseBuilder().status(Status.Ok).build)
+        }
+
+        "action is executed and play is logged" in new NoRangeHeaderContext {
+          result.status ==== Status.Ok
+          result.contentString ==== "foobar"
+        }
       }
-    }
 
-    "when Range header is set to none-zero byte" >> {
-      trait NoneZeroByteRangeContext extends Context {
-        override val range = Some("bytes=200-400")
+      "when Range header is set to first byte" >> {
+        trait FirstByteRangeContext extends AccessTypeContext {
+          override val range = Some("bytes=0-100")
 
-        trackAccessRecorderClient.recordStreamAccess(session, trackUrn, false) returns
-          Future.value(ResponseBuilder().status(Status.Ok).build)
+          trackAccessRecorderClient.recordAccess(session, trackUrn, accessType, true) returns
+            Future.value(ResponseBuilder().status(Status.Ok).build)
+        }
+
+        "action is executed and play is logged" in new FirstByteRangeContext {
+          result.status ==== Status.Ok
+          result.contentString ==== "foobar"
+        }
       }
 
-      "action is executed and play is not logged" in new NoneZeroByteRangeContext {
-        result.status ==== Status.Ok
-        result.contentString ==== "foobar"
+      "when Range header is set to none-zero byte" >> {
+        trait NoneZeroByteRangeContext extends AccessTypeContext {
+          override val range = Some("bytes=200-400")
+
+          trackAccessRecorderClient.recordAccess(session, trackUrn, accessType, false) returns
+            Future.value(ResponseBuilder().status(Status.Ok).build)
+        }
+
+        "action is executed and play is not logged" in new NoneZeroByteRangeContext {
+          result.status ==== Status.Ok
+          result.contentString ==== "foobar"
+        }
       }
     }
   }

@@ -18,10 +18,10 @@ class TrackAccessRecorderClientSpec extends UnitSpecification {
     val trackUrn = Urn("soundcloud", "tracks", "1234")
     val shouldLog = true
 
-    lazy val result = Await.result(client.recordStreamAccess(session, trackUrn, shouldLog))
+    lazy val result = Await.result(client.recordAccess(session, trackUrn, "stream", shouldLog))
   }
 
-  "#recordStreamAccess" >> {
+  "#recordAccess" >> {
     "when Moshimoshi returns a 200 response" >> {
       trait OkContext extends Context {
         moshimoshiClient.getWithSession(session, Path() / "tracks" / trackUrn / "access" / "stream", Params.empty, Headers.empty) returns

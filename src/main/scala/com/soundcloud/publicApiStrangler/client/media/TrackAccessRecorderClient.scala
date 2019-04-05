@@ -9,10 +9,7 @@ import com.twitter.util.Future
 
 class TrackAccessRecorderClient(moshimoshiClient: JsonClient) {
 
-  def recordStreamAccess(session: UserSession, trackUrn: Urn, shouldLog: Boolean): Future[Response] =
-    recordAccess(session, trackUrn, "stream", shouldLog)
-
-  private def recordAccess(session: UserSession, trackUrn: Urn, accessFor: String, shouldLog: Boolean): Future[Response] = {
+  def recordAccess(session: UserSession, trackUrn: Urn, accessFor: String, shouldLog: Boolean): Future[Response] = {
     val params = if (shouldLog) Params.empty else Params("skip_logging" -> "1")
     moshimoshiClient.getWithSession(session, Path() / "tracks" / trackUrn / "access" / accessFor, params, Headers.empty)
   }
