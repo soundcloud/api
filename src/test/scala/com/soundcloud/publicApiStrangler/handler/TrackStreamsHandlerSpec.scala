@@ -16,8 +16,8 @@ import play.api.libs.json.Json
 class TrackStreamsHandlerSpec extends UnitSpecification {
 
   class FakeTrackAccessRecorderService extends TrackAccessRecorderService(null) {
-    override def recordStreamAccess(session: UserSession, request: HandlerRequest, trackUrn: Urn)(action: => Response): Future[Response] =
-      Future.value(action)
+    override def recordStreamAccess(session: UserSession, request: HandlerRequest, trackUrn: Urn)(action: => Future[Response]): Future[Response] =
+      action
   }
 
   trait UrlgenContext extends HandlerSpecificationScope {

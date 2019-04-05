@@ -95,10 +95,6 @@ object Routing {
       (Method.Get, "/tracks/:trackId/comments.json", mothershipDispatcher.dispatch),
       (Method.Get, "/tracks/:trackId/comments.json/", mothershipDispatcher.dispatch),
       (Method.Get, "/tracks/:trackId/comments/", mothershipDispatcher.dispatch),
-      (Method.Get, "/tracks/:trackId/download", mothershipDispatcher.dispatch),
-      (Method.Get, "/tracks/:trackId/download.json", mothershipDispatcher.dispatch),
-      (Method.Get, "/tracks/:trackId/download.json/", mothershipDispatcher.dispatch),
-      (Method.Get, "/tracks/:trackId/download/", mothershipDispatcher.dispatch),
       (Method.Post, "/users/:userId/tracks", mothershipDispatcher.dispatch),
       (Method.Head, "/v1/me/followings/:other_id", mothershipDispatcher.dispatch),
       (Method.Head, "/v1/me/followings/:other_id.json", mothershipDispatcher.dispatch)
@@ -273,4 +269,12 @@ object Routing {
     )
   }
 
+  def forTrackDownloadHandler(trackDownloadHandler: TrackDownloadHandler): List[(Method, String, Handler)] = {
+    List(
+      (Method.Get, "/tracks/:trackId/download", trackDownloadHandler.handle),
+      (Method.Get, "/tracks/:trackId/download/", trackDownloadHandler.handle),
+      (Method.Get, "/tracks/:trackId/download.json", trackDownloadHandler.handle),
+      (Method.Get, "/tracks/:trackId/download.json/", trackDownloadHandler.handle)
+    )
+  }
 }

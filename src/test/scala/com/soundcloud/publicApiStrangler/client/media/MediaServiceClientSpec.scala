@@ -1,13 +1,14 @@
 package com.soundcloud.publicApiStrangler.client.media
 
 import com.soundcloud.jvmkit.module.http.client.{JsonClient, Params}
+import com.soundcloud.jvmkit.module.http.server.ResponseBuilder
 import com.soundcloud.jvmkit.module.util.Path
 import com.soundcloud.jvmkit.module.util.http.Headers
 import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.publicApiStrangler.client.support.UnhandledResponseException
 import com.soundcloud.publicApiStrangler.test.UnitSpecification
 import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures
-import com.twitter.finagle.http.Status
+import com.twitter.finagle.http.{Response, Status}
 import com.twitter.util.{Await, Future, Try}
 import play.api.libs.json.{JsNull, Json}
 
@@ -27,7 +28,7 @@ class MediaServiceClientSpec extends UnitSpecification {
     val url = "http://some-url"
   }
 
-  "fetchTranscodings" >> {
+  "#fetchTranscodings" >> {
     "returns some transcodings" in new Context {
       jsonClient.getWithSession(userSession, Path() / "transcodings", Params("upload_ids" -> trackUid), Headers.empty) returns
         Future.value(jsonResponse(Status.Ok, Fixtures.withContentsOf("media-service", "transcodings")))
@@ -52,7 +53,7 @@ class MediaServiceClientSpec extends UnitSpecification {
     }
   }
 
-  "fetchStreamUrl" >> {
+  "#fetchStreamUrl" >> {
     "returns a stream url" in new StreamContext {
       jsonClient.getWithSession(userSession, Path() / "stream" / transcodingUuid / protocol, Params.empty, Headers.empty) returns
         Future.value(jsonResponse(Status.Ok, Json.obj("url" -> url)))
@@ -68,7 +69,7 @@ class MediaServiceClientSpec extends UnitSpecification {
     }
   }
 
-  "fetchPreviewUrl" >> {
+  "#fetchPreviewUrl" >> {
     "returns a stream url" in new StreamContext {
       jsonClient.getWithSession(userSession, Path() / "preview" / transcodingUuid / protocol, Params.empty, Headers.empty) returns
         Future.value(jsonResponse(Status.Ok, Json.obj("url" -> url)))
@@ -81,6 +82,75 @@ class MediaServiceClientSpec extends UnitSpecification {
         Future.value(jsonResponse(Status.InternalServerError, JsNull))
 
       Try(Await.result(client.fetchPreviewUrl(userSession, transcodingUuid, protocol))).throwable should beAnInstanceOf[UnhandledResponseException]
+    }
+  }
+
+  "#fetchDownloadOriginalUrl" >> {
+    trait DownloadContext extends Context {
+      val response: Future[Response]
+      jsonClient.getWithSession(userSession, Path() / "download-original" / trackUid, Params.empty, Headers.empty) returns response
+
+      lazy val result = Await.result(client.fetchDownloadOriginalUrl(userSession, trackUid))
+    }
+
+    "when URL is available for download" >> {
+      trait AvailableDownloadContext extends DownloadContext {
+        override lazy val response = Future.value(jsonResponse(Status.Ok, Json.obj("url" -> "http://download-url")))
+      }
+
+      "URL is returned" in new AvailableDownloadContext {
+        result ==== Some("http://download-url")
+      }
+    }
+    
+    "when URL is missing" >> {
+      trait MissingDownloadContext extends DownloadContext {
+        override lazy val response = Future.value(ResponseBuilder.notFound())
+      }
+
+      "Nothing is returned" in new MissingDownloadContext {
+        result ==== None
+      }
+    }
+    
+    "when response is missing a URL" >> {
+      trait MissingUrlContext extends DownloadContext {
+        override lazy val response = Future.value(jsonResponse(Status.Ok, Json.obj()))
+      }
+
+      "Nothing is returned" in new MissingUrlContext {
+        result ==== None
+      }
+    }
+    
+    "when response is not in JSON format" >> {
+      trait MalformedResponseContext extends DownloadContext {
+        override lazy val response = Future.value(ResponseBuilder.ok("not json"))
+      }
+
+      "An exception is thrown" in new MalformedResponseContext {
+        result should throwAn[Exception]
+      }
+    }
+
+    "when response status is not expected" >> {
+      trait MalformedResponseContext extends DownloadContext {
+        override lazy val response = Future.value(ResponseBuilder.badRequest())
+      }
+
+      "An exception is thrown" in new MalformedResponseContext {
+        result should throwAn[Exception]
+      }
+    }
+
+    "when upstream request fails" >> {
+      trait MalformedResponseContext extends DownloadContext {
+        override lazy val response = Future.exception(new Exception)
+      }
+
+      "An exception is thrown" in new MalformedResponseContext {
+        result should throwAn[Exception]
+      }
     }
   }
 }

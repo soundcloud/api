@@ -26,7 +26,7 @@ class TrackAccessRecorderServiceSpec extends UnitSpecification {
     }
 
     val action = ResponseBuilder().status(Status.Ok).body("foobar").build
-    lazy val result = Await.result(service.recordStreamAccess(session, request, trackUrn)(action))
+    lazy val result = Await.result(service.recordStreamAccess(session, request, trackUrn)(Future.value(action)))
   }
 
   "#recordStreamAccess" >> {

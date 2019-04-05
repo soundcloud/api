@@ -28,6 +28,7 @@ import com.soundcloud.publicApiStrangler.mapper.search.SearchEntityMapper
 import com.soundcloud.publicApiStrangler.mapper.timeline.EntitySummaryMapper
 import com.soundcloud.publicApiStrangler.mapper.waveform.WaveformMapper
 import com.soundcloud.publicApiStrangler.service.TrackAccessibilityService
+import com.soundcloud.publicApiStrangler.service.media.TrackAccessRecorderService
 import com.soundcloud.publicApiStrangler.service.trackrepresentation.{TrackRepository, TrackRepresentationsService}
 import com.twitter.finagle.Service
 import com.twitter.finagle.http.{Request, Response}
@@ -107,7 +108,8 @@ class Clients(config: AppConfig, telemetry: Telemetry) {
 
   val mediaServiceClient = new MediaServiceClient(jsonClient("media_service"))
 
-  val trackAccessRecorderClient = new TrackAccessRecorderClient(jsonClient("track_access_recorder"))
+  val trackAccessRecorderService = new TrackAccessRecorderService(
+    new TrackAccessRecorderClient(jsonClient("track_access_recorder")))
 
   // Whitelist source: http://redash.int.s-cloud.net/queries/632/source
   private val whitelistedClients: Set[Urn] = Set(

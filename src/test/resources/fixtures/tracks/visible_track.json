@@ -4,6 +4,7 @@
       "urn": "soundcloud:tracks:2",
       "uid": "NnPYWvWwB6ln",
       "apiStreamable": true,
+      "downloadable": true,
       "authorization": {
         "policy": "ALLOW",
         "reason": "DEFAULT",

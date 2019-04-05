@@ -24,10 +24,6 @@ class DispatchingToMotherShipSpec extends UnitSpecification {
     (Get, "/tracks/999/comments/"),
     (Get, "/tracks/999/comments.json"),
     (Get, "/tracks/999/comments.json/"),
-    (Get, "/tracks/999/download"),
-    (Get, "/tracks/999/download/"),
-    (Get, "/tracks/999/download.json"),
-    (Get, "/tracks/999/download.json/"),
     (Post, "/tracks/999"),
     (Post, "/tracks/999.json"),
     (Post, "/users/7110/tracks")

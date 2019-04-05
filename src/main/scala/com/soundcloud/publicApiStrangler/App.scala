@@ -108,7 +108,8 @@ object App {
         forRepostsHandler(handlers.repostsHandler),
         forRepostersHandler(handlers.repostersHandler),
         forTimelineHandler(handlers.timelineHandler),
-        forTrackStreamsHandler(handlers.trackStreamsHandler)))
+        forTrackStreamsHandler(handlers.trackStreamsHandler),
+        forTrackDownloadHandler(handlers.trackDownloadHandler)))
       .register(Method.Get, "/-/health", _ => Future.value(ResponseBuilder.ok()))
       .build
 

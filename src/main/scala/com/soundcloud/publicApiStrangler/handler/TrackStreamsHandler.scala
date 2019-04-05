@@ -42,7 +42,7 @@ class TrackStreamsHandler(
               case Some(streamParams) =>
                 handleWithStreamService(session, streamParams, singleStream).flatMap {
                   case StreamNotFoundError => trackStreamHandler.handle(request, session, mapper)
-                  case streamResponse if singleStream => trackAccessRecorderService.recordStreamAccess(session, request, streamParams.trackUrn)(renderStreamResponse(request, streamResponse))
+                  case streamResponse if singleStream => trackAccessRecorderService.recordStreamAccess(session, request, streamParams.trackUrn)(Future.value(renderStreamResponse(request, streamResponse)))
                   case streamResponse => Future.value(renderStreamResponse(request, streamResponse))
                 }
               case None => Future.value(ResponseBuilder().status(Status.BadRequest).build)

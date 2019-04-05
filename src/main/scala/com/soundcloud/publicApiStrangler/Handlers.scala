@@ -11,7 +11,7 @@ import com.soundcloud.publicApiStrangler.mapper.timeline.e1.{ActivitiesMapper, S
 import com.soundcloud.publicApiStrangler.mapper.timeline.publicApi.ActivitiesWithOriginMapper
 import com.soundcloud.publicApiStrangler.mapper.timeline.{EntityMapper, EntitySummaryMapper, FollowingsTracksMapper}
 import com.soundcloud.publicApiStrangler.mapper.trackstreams.{TrackStreamJsonResponseMapper, TrackStreamRedirectResponseMapper}
-import com.soundcloud.publicApiStrangler.service.media.{StreamService, TrackAccessRecorderService}
+import com.soundcloud.publicApiStrangler.service.media.{DownloadService, StreamService}
 import com.soundcloud.publicApiStrangler.support.CursorPagination
 
 class Handlers(telemetry: Telemetry, clients: Clients) {
@@ -51,8 +51,6 @@ class Handlers(telemetry: Telemetry, clients: Clients) {
 
     val streamService = new StreamService(tracksClient, mediaServiceClient)
 
-    val trackAccessRecorderService = new TrackAccessRecorderService(trackAccessRecorderClient)
-
     new TrackStreamsHandler(
       userAuthentication,
       trackStreamUrlToJsonResponseMapper,
@@ -64,6 +62,13 @@ class Handlers(telemetry: Telemetry, clients: Clients) {
       publicApiSiloing
     )
   }
+
+  val trackDownloadHandler: TrackDownloadHandler = new TrackDownloadHandler(
+    userAuthentication,
+    mothershipDispatcher,
+    trackAccessRecorderService,
+    new DownloadService(tracksClient, mediaServiceClient),
+    () => rolloutClient.isActive(BasicRolloutFeature("media-service-download")))
 
   val tracksHandler = new TracksHandler(userAuthentication,
     trackCoordinatorClient,

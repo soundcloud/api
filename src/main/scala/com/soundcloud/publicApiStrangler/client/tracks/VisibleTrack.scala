@@ -8,6 +8,7 @@ import com.soundcloud.publicApiStrangler.client.support.CommonJsonFormats.urnFor
 case class VisibleTrack(urn : Urn,
                         uid: Option[String],
                         apiStreamable: Option[Boolean],
+                        downloadable: Boolean,
                         authorization: ContentAuthorization)
 
 object VisibleTrack {
@@ -18,6 +19,7 @@ object VisibleTrack {
           (json \ "urn").as[Urn],
           (json \ "uid").asOpt[String],
           (json \ "apiStreamable").asOpt[Boolean],
+          (json \ "downloadable").as[Boolean],
           new ContentAuthorization(
             (json \ "urn").as[Urn],
             ContentPolicy.from((json \ "authorization" \ "policy").as[String]),
