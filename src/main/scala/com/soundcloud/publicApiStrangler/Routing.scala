@@ -272,9 +272,13 @@ object Routing {
   def forTrackDownloadHandler(trackDownloadHandler: TrackDownloadHandler): List[(Method, String, Handler)] = {
     List(
       (Method.Get, "/tracks/:trackId/download", trackDownloadHandler.handle),
+      (Method.Head, "/tracks/:trackId/download", trackDownloadHandler.handle),
       (Method.Get, "/tracks/:trackId/download/", trackDownloadHandler.handle),
+      (Method.Head, "/tracks/:trackId/download/", trackDownloadHandler.handle),
       (Method.Get, "/tracks/:trackId/download.json", trackDownloadHandler.handle),
-      (Method.Get, "/tracks/:trackId/download.json/", trackDownloadHandler.handle)
+      (Method.Head, "/tracks/:trackId/download.json", trackDownloadHandler.handle),
+      (Method.Get, "/tracks/:trackId/download.json/", trackDownloadHandler.handle),
+      (Method.Head, "/tracks/:trackId/download.json/", trackDownloadHandler.handle)
     )
   }
 }
