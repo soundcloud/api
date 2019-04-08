@@ -41,6 +41,11 @@ func (c controller) tracks(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if r.ContentLength > c.maxRequestBytes {
+		http.Error(w, emptyResponse, http.StatusRequestEntityTooLarge)
+		return
+	}
+
 	r.Body = http.MaxBytesReader(w, r.Body, c.maxRequestBytes)
 
 	res, err := c.service.createTrack(&createTrackRequest{
@@ -55,7 +60,8 @@ func (c controller) tracks(w http.ResponseWriter, r *http.Request) {
 			maxBytesReaderError = "http: request body too large"
 		)
 
-		if err.Error() == maxBytesReaderError {
+		// Doing a substring match here because the service may batch errors.
+		if strings.Contains(err.Error(), maxBytesReaderError) {
 			http.Error(w, emptyResponse, http.StatusRequestEntityTooLarge)
 			return
 		}

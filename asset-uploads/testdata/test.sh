@@ -10,7 +10,7 @@ req_health() {
 req_chunk() {
   local asset_data=$1
 
-  curl -vf \
+  curl --fail --verbose \
     -H "Transfer-Encoding: chunked" \
     -F "track[asset_data]=@${asset_data}" \
     -F "track[title]=123" \
@@ -18,14 +18,33 @@ req_chunk() {
     localhost:8080/tracks
 }
 
+req_large_chunk() {
+  dd if=/dev/urandom bs=1M count=50 2>/dev/null |
+    curl --verbose \
+      -H "Transfer-Encoding: chunked" \
+      -F "track[asset_data]=@-;filename=req_large_chunk.wav" \
+      -F "track[title]=123" \
+      -F "oauth_token=s3cr3t" \
+      localhost:8080/tracks
+}
+
 req_length() {
   local asset_data=$1
 
-  curl -vf \
+  curl --fail --verbose \
     -F "track[asset_data]=@${asset_data}" \
     -F "track[title]=123" \
     -F "oauth_token=s3cr3t" \
     localhost:8080/tracks
+}
+
+req_large_length() {
+  dd if=/dev/urandom bs=1M count=50 2>/dev/null |
+    curl --verbose \
+      -F "track[asset_data]=@-;filename=req_large_chunk.wav" \
+      -F "track[title]=123" \
+      -F "oauth_token=s3cr3t" \
+      localhost:8080/tracks
 }
 
 req_large_token() {
@@ -46,7 +65,7 @@ req_large_token() {
 }
 
 req_admin_metrics() {
-  curl -vf localhost:8081/metrics
+  curl --fail --verbose localhost:8081/metrics
 }
 
 run() {
@@ -59,6 +78,20 @@ run() {
   req_chunk "$asset_data"
   req_length "$asset_data"
   req_large_token "$asset_data" "$token_bytes"
+
+  req_large_chunk
+  req_large_length
+
+  return
+
+  for i in "S3" "PUBLIC_API_STRANGLER" "MOSHIMOSHI" ; do
+    req_admin_metrics \
+      | grep 'outgoing_http_request'  \
+      | grep -c $i
+  done
+
+  req_admin_metrics \
+    | grep 'incoming_http_request'
 }
 
 config=""
@@ -85,6 +118,7 @@ env $(grep -E '^[A-Z]' "$config" | tr '\n' ' ') \
     -addr=:8080 \
     -admin-addr=:8081 \
     -moshimoshiAddr=localhost:9091 \
+    -max-request-bytes=20971520 \
     -targetURL=http://localhost:9090/ &
 
 pid=$!

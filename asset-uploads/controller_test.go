@@ -73,6 +73,21 @@ func TestTracksRequiresContentType(t *testing.T) {
 	}
 }
 
+func TestExceedsMaxContentLength(t *testing.T) {
+	randomBody := []byte{97, 97, 98, 101, 105, 110, 115, 115, 116}
+
+	controller := &controller{maxRequestBytes: int64(len(randomBody)) - 1}
+
+	res := httptest.NewRecorder()
+	req := httptest.NewRequest(http.MethodPost, "/", bytes.NewReader(randomBody))
+	req.Header.Set("Content-Type", "multipart/form-data; boundary=some-boundary")
+	controller.tracks(res, req)
+
+	if want, got := http.StatusRequestEntityTooLarge, res.Result().StatusCode; want != got {
+		t.Errorf("Expected request to return %v, was: %v", want, got)
+	}
+}
+
 func TestTracksLimitsRequestSize(t *testing.T) {
 	randomBody := []byte{97, 97, 98, 101, 105, 110, 115, 115, 116}
 
@@ -80,8 +95,7 @@ func TestTracksLimitsRequestSize(t *testing.T) {
 		maxRequestBytes: int64(len(randomBody) - 1),
 		service: &fakeService{
 			fn: func(r *createTrackRequest) (*createTrackResponse, error) {
-				// Read the entire request, exceeding the limit.
-				if _, err := io.Copy(ioutil.Discard, r.request.Body); err != nil {
+				if _, err := ioutil.ReadAll(r.request.Body); err != nil {
 					return nil, err
 				}
 
@@ -93,10 +107,12 @@ func TestTracksLimitsRequestSize(t *testing.T) {
 	res := httptest.NewRecorder()
 	req := httptest.NewRequest("POST", "/", bytes.NewReader(randomBody))
 	req.Header.Set("Content-Type", "multipart/form-data; boundary=some-boundary")
+	req.ContentLength = -1 // Create a request that won't get filtered on Content-Length.
 
 	controller.tracks(res, req)
 
-	if want, got := http.StatusRequestEntityTooLarge, res.Result().StatusCode; want != got {
+	result := res.Result()
+	if want, got := http.StatusRequestEntityTooLarge, result.StatusCode; want != got {
 		t.Errorf("Expected request to return %v, got %v", want, got)
 	}
 }
