@@ -148,8 +148,6 @@ class TrackStreamsHandlerSpec extends UnitSpecification {
     val hlsOpus = "http://opus-hls"
     val httpPreviewMp3 = "http://mp3-progressive-preview"
 
-
-
     def call(method: Method, handler: Handler, path: String) = method match {
       case Method.Head => head(handler, path)
       case Method.Get => get(handler, path)
@@ -239,4 +237,15 @@ class TrackStreamsHandlerSpec extends UnitSpecification {
     resp.headerMap("Location") ==== "http://stream"
   }
 
+  "with a secret token" >> {
+    trait WithSecretTokenContext extends MediaServiceContext {
+      streamService.fetchSingle(session, trackUrn, Some("itsasecret")) returns Future.value(StreamUrl(httpMp3))
+    }
+
+    s"should return 302" in new WithSecretTokenContext {
+      val resp = get(handler.redirectStreamRequest, "/tracks/5/stream?secret_token=itsasecret")
+      resp.status ==== Status.Found
+      resp.headerMap("Location") ==== "http://mp3-progressive"
+    }
+  }
 }

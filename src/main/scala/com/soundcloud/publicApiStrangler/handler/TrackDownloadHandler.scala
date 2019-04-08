@@ -24,7 +24,7 @@ class TrackDownloadHandler(userAuthentication: UserAuthentication,
     request.routeParams.get("trackId").map { trackId =>
       userAuthentication.withUserSession(request) { session =>
         val trackUrn = Urn("soundcloud", "tracks", trackId)
-        val secretToken = request.params.get("secretToken")
+        val secretToken = request.params.get("secret_token")
         trackAccessRecorderService.recordDownloadAccess(session, request, trackUrn) {
           downloadService.download(session, trackUrn, secretToken).map {
             case DownloadOk(url) => ResponseBuilder().header("Location", url).status(Status.Found).build
