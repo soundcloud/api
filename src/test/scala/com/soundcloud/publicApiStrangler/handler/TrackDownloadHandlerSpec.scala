@@ -90,4 +90,17 @@ class TrackDownloadHandlerSpec extends UnitSpecification {
       }
     }
   }
+
+  "with a secret token" >> {
+    trait MediaServiceWithSecretTokenContext extends Context {
+      override lazy val mediaServiceEnabled = true
+      downloadService.download(session, Urn("soundcloud", "tracks", "999"), Some("itsasecret")) returns Future.value(DownloadOk("https://download-url"))
+    }
+
+    s"should return 302" in new MediaServiceWithSecretTokenContext {
+      val response = get(handler.handle, "/tracks/999/download?secret_token=itsasecret")
+      response.status ==== Status.Found
+      response.headerMap("Location") ==== "https://download-url"
+    }
+  }
 }

@@ -76,7 +76,7 @@ class TrackStreamsHandler(
 
   private def extractParams(request: HandlerRequest): Option[StreamParams] = {
     request.routeParams.get("trackId").map { trackId =>
-      StreamParams(Urn("soundcloud", "tracks", trackId), request.params.get("secretToken"))
+      StreamParams(Urn("soundcloud", "tracks", trackId), request.params.get("secret_token"))
     }
   }
 }
