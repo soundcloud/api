@@ -32,5 +32,6 @@ class DownloadService(tracksClient: TracksClient,
   }
 
   private def downloadingAllowed(track: VisibleTrack): Boolean =
-    track.downloadable && track.authorization.policy == ContentPolicy.ALLOW
+    track.downloadable &&
+      (track.authorization.policy == ContentPolicy.ALLOW || track.authorization.policy == ContentPolicy.MONETIZE)
 }
