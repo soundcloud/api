@@ -118,6 +118,18 @@ class DownloadServiceSpec extends UnitSpecification {
             }
           }
         }
+
+        "when policy is MONETIZE" >> {
+          trait MonetizePolicyContext extends AvailableTrackContext {
+            override lazy val policy = ContentPolicy.MONETIZE
+            override lazy val downloadable = true
+            override lazy val maybeUrl = Some("https://download-url")
+          }
+
+          "download should be found" in new MonetizePolicyContext {
+            result ==== DownloadOk("https://download-url")
+          }
+        }
       }
 
       "when uid does not exist" >> {
