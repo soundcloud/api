@@ -25,6 +25,12 @@ type createTrackResponse struct {
 	request *http.Request
 }
 
+type createTrackState struct {
+	auth     *bytes.Buffer
+	location string
+	md5      string
+}
+
 func (s service) createTrack(r *createTrackRequest) (*createTrackResponse, error) {
 	reader := multipart.NewReader(r.request.Body, r.boundary)
 
@@ -34,7 +40,7 @@ func (s service) createTrack(r *createTrackRequest) (*createTrackResponse, error
 		return nil, err
 	}
 
-	auth, err := s.rewrite(reader, writer)
+	state, err := s.rewrite(reader, writer)
 	if err != nil {
 		return nil, err
 	}
@@ -43,30 +49,48 @@ func (s service) createTrack(r *createTrackRequest) (*createTrackResponse, error
 		return nil, err
 	}
 
-	req := s.modifyRequest(r.request, auth, body)
+	req := s.modifyRequest(r.request, state, body)
 	return &createTrackResponse{request: req}, nil
 }
 
-func (s service) rewrite(src *multipart.Reader, dst *multipart.Writer) (*bytes.Buffer, error) {
-	auth := &bytes.Buffer{}
+func (s service) rewrite(src *multipart.Reader, dst *multipart.Writer) (*createTrackState, error) {
+	state := &createTrackState{
+		auth:     &bytes.Buffer{},
+		location: "",
+		md5:      "",
+	}
 
 	for {
 		part, err := src.NextPart()
 		if err != nil {
 			if err == io.EOF {
-				return auth, nil
+				return state, nil
 			}
 
 			return nil, err
 		}
 
+		if part.FileName() != "" {
+			switch part.FormName() {
+			case "track[asset_data]":
+				location, md5, err := s.uploadTrackAssetData(part, s.upload, dst)
+				if err != nil {
+					return nil, err
+				}
+				state.location = location
+				state.md5 = md5
+			default:
+				if err := s.copyPart(part, dst); err != nil {
+					return nil, err
+				}
+			}
+
+			continue
+		}
+
 		switch part.FormName() {
 		case "oauth_token":
-			if err := s.extractAuthToken(part, auth); err != nil {
-				return nil, err
-			}
-		case "track[asset_data]":
-			if err := s.storeTrackAssetData(part, s.upload, dst); err != nil {
+			if err := s.extractAuthToken(part, state.auth); err != nil {
 				return nil, err
 			}
 		default:
@@ -77,11 +101,19 @@ func (s service) rewrite(src *multipart.Reader, dst *multipart.Writer) (*bytes.B
 	}
 }
 
-func (s service) modifyRequest(r *http.Request, auth *bytes.Buffer, body *bytes.Buffer) *http.Request {
+func (s service) modifyRequest(r *http.Request, state *createTrackState, body *bytes.Buffer) *http.Request {
 	// If the request contained auth information, propagate it by setting
 	// the `Authorization` header. This overwrites any existing value.
-	if auth.Len() > 0 {
-		r.Header.Set("Authorization", "OAuth "+auth.String())
+	if state.auth.Len() > 0 {
+		r.Header.Set("Authorization", "OAuth "+state.auth.String())
+	}
+
+	if state.location != "" {
+		r.Header.Set("X-Track-Asset-Location", state.location)
+	}
+
+	if state.md5 != "" {
+		r.Header.Set("X-Track-Asset-Md5", state.md5)
 	}
 
 	r.ContentLength = int64(body.Len())
@@ -108,32 +140,32 @@ func (s service) extractAuthToken(src *multipart.Part, dst *bytes.Buffer) error 
 	return nil
 }
 
-func (s service) storeTrackAssetData(src *multipart.Part, uploader uploaderAPI, w *multipart.Writer) error {
+func (s service) uploadTrackAssetData(src *multipart.Part, uploader uploaderAPI, w *multipart.Writer) (string, string, error) {
 	o, err := w.CreateFormField("track[original_filename]")
 	if err != nil {
-		return err
+		return "", "", err
 	}
 
 	filename := src.FileName()
 	if _, err := o.Write([]byte(filename)); err != nil {
-		return err
+		return "", "", err
 	}
 
-	res, err := uploader.uploadTrack(&uploadTrackRequest{data: src})
+	upload, err := uploader.uploadTrack(&uploadTrackRequest{data: src})
 	if err != nil {
-		return err
+		return "", "", err
 	}
 
 	u, err := w.CreateFormField("track[uid]")
 	if err != nil {
-		return err
+		return "", "", err
 	}
 
-	if _, err := u.Write([]byte(res.uid)); err != nil {
-		return err
+	if _, err := u.Write([]byte(upload.uid)); err != nil {
+		return "", "", err
 	}
 
-	return nil
+	return upload.location, upload.md5, nil
 }
 
 func (s service) copyPart(src *multipart.Part, w *multipart.Writer) error {

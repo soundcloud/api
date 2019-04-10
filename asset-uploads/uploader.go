@@ -1,6 +1,8 @@
 package main
 
 import (
+	"crypto/md5"
+	"fmt"
 	"io"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -23,7 +25,9 @@ type uploadTrackRequest struct {
 }
 
 type uploadTrackResponse struct {
-	uid string
+	location string
+	md5      string
+	uid      string
 }
 
 func (u uploader) uploadTrack(req *uploadTrackRequest) (*uploadTrackResponse, error) {
@@ -32,12 +36,14 @@ func (u uploader) uploadTrack(req *uploadTrackRequest) (*uploadTrackResponse, er
 		return nil, err
 	}
 
-	input := &s3manager.UploadInput{
+	md5 := md5.New()
+	tee := io.TeeReader(req.data, md5)
+	out, err := u.s3Uploader.Upload(&s3manager.UploadInput{
 		Bucket: aws.String(u.s3Bucket),
 		Key:    aws.String(uid),
-		Body:   req.data,
-	}
-	if _, err := u.s3Uploader.Upload(input); err != nil {
+		Body:   tee,
+	})
+	if err != nil {
 		return nil, err
 	}
 
@@ -45,7 +51,11 @@ func (u uploader) uploadTrack(req *uploadTrackRequest) (*uploadTrackResponse, er
 		return nil, err
 	}
 
-	return &uploadTrackResponse{uid: uid}, nil
+	return &uploadTrackResponse{
+		location: out.Location,
+		md5:      fmt.Sprintf("%x", md5.Sum(nil)),
+		uid:      uid,
+	}, nil
 }
 
 // Ensure that uploader implements uploaderAPI.

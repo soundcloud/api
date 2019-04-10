@@ -1,18 +1,36 @@
 version: '3'
+
 services:
-  echo_service:
-    image: docker.dev.s-cloud.net/go-1:latest
+  service:
+    image: docker.dev.s-cloud.net/something:$TAG
+    depends_on:
+      - moshimoshi
+      - public_api_strangler
     ports:
-      - 9090:9090
+      - 8080:8080
+      - 8081:8081
+    command: ./api --config=test
+
+  moshimoshi:
+    image: docker.dev.s-cloud.net/go-1:latest
     volumes:
       - ../testdata:/srv/test:ro
     working_dir: /srv/test
-    command: go run echo_service.go -listenAddr=:9090
-  moshimoshi_service:
+    command: go run moshimoshi_service.go -listenAddr=:80
+    healthcheck:
+      test: curl -f http://localhost:9090/-/health || exit 1
+      interval: 1s
+      timeout: 1s
+      retries: 5
+
+  public_api_strangler:
     image: docker.dev.s-cloud.net/go-1:latest
-    ports:
-      - 9091:9091
     volumes:
       - ../testdata:/srv/test:ro
     working_dir: /srv/test
-    command: go run moshimoshi_service.go -listenAddr=:9091
+    command: go run echo_service.go -listenAddr=:80
+    healthcheck:
+      test: curl -f http://localhost:9091/-/health || exit 1
+      interval: 1s
+      timeout: 1s
+      retries: 5

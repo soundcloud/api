@@ -181,6 +181,12 @@ func TestStoreTrackAssetData(t *testing.T) {
 			crlf + "12345" +
 			crlf + "" +
 			crlf + "--------------------------6808b4f61ea0e5a2" +
+			crlf + "Content-Disposition: form-data; name=\"track[artwork_data]\"; filename=\"my_track.jpg\"" +
+			crlf + "Content-Type: application/octet-stream" +
+			crlf + "" +
+			crlf + "<JPEG data; won't be modified>" +
+			crlf + "" +
+			crlf + "--------------------------6808b4f61ea0e5a2" +
 			crlf + "Content-Disposition: form-data; name=\"track[title]\"" +
 			crlf + "" +
 			crlf + "My Track" +
@@ -201,6 +207,12 @@ func TestStoreTrackAssetData(t *testing.T) {
 					crlf + "Content-Disposition: form-data; name=\"track[uid]\"" +
 					crlf + "" +
 					crlf + "12345" +
+					crlf + "--------------------------6808b4f61ea0e5a2" +
+					crlf + "Content-Disposition: form-data; name=\"track[artwork_data]\"; filename=\"my_track.jpg\"" +
+					crlf + "Content-Type: application/octet-stream" +
+					crlf + "" +
+					crlf + "<JPEG data; won't be modified>" +
+					crlf + "" +
 					crlf + "--------------------------6808b4f61ea0e5a2" +
 					crlf + "Content-Disposition: form-data; name=\"track[title]\"" +
 					crlf + "" +

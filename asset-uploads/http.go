@@ -3,8 +3,6 @@ package main
 import (
 	"log"
 	"net/http"
-	"net/http/httputil"
-	"net/url"
 	"strconv"
 	"time"
 
@@ -93,25 +91,6 @@ func httpHandler(path string, handler http.HandlerFunc) http.HandlerFunc {
 	}
 }
 
-func httpProxy(name string, url *url.URL) *httputil.ReverseProxy {
-	proxy := httputil.NewSingleHostReverseProxy(url)
-	proxy.Transport = serviceTransport{
-		name:      name,
-		transport: http.DefaultTransport,
-	}
-
-	return proxy
-}
-
-func httpClient(name string) *http.Client {
-	return &http.Client{
-		Transport: serviceTransport{
-			name:      name,
-			transport: http.DefaultTransport,
-		},
-	}
-}
-
 // Source: https://github.com/soundcloud/hocuspocus/blob/7cf839237ff35d0b81cf797d4833a37eecaf40b5/cmd/api/http.go#L211
 type serviceTransport struct {
 	name      string
@@ -121,24 +100,26 @@ type serviceTransport struct {
 func (t serviceTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 	var (
 		start    = time.Now()
+		method   = req.Method
+		uri      = req.URL.String()
 		res, err = t.transport.RoundTrip(req)
 		duration = time.Since(start)
 	)
 
-	defer func() {
-		var (
-			// In JVMKit - this is when a client closes the connection before a complete response
-			status      = "499"
-			statusClass = "4xx"
-		)
-		if err == nil {
-			status = labelStatusCode(res.StatusCode)
-			statusClass = labelStatusClass(res.StatusCode)
-		}
+	var (
+		// In JVMKit - this is when a client closes the connection before a complete response
+		status      = "499"
+		statusClass = "4xx"
+	)
+	if err == nil {
+		status = labelStatusCode(res.StatusCode)
+		statusClass = labelStatusClass(res.StatusCode)
+	}
 
-		outgoingLatency.WithLabelValues(t.name, req.Method).Observe(duration.Seconds())
-		outgoingRequests.WithLabelValues(t.name, req.Method, status, statusClass).Inc()
-	}()
+	outgoingLatency.WithLabelValues(t.name, req.Method).Observe(duration.Seconds())
+	outgoingRequests.WithLabelValues(t.name, req.Method, status, statusClass).Inc()
+
+	log.Printf("[%d ms] %s %s -> %s (%s)", duration/time.Millisecond, method, uri, status, t.name)
 
 	return res, err
 }

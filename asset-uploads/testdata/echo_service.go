@@ -1,5 +1,3 @@
-// +build main1
-
 package main
 
 import (
@@ -20,6 +18,7 @@ func main() {
 		if r.Method == http.MethodGet && r.URL.Path == "/-/health" {
 			w.WriteHeader(http.StatusOK)
 			w.Write([]byte("OK"))
+			return
 		}
 
 		log.Println(r)

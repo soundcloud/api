@@ -2,11 +2,12 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"log"
 	"net/http"
+	"net/http/httputil"
 	"net/url"
 	"os"
+	"time"
 
 	_ "net/http/pprof"
 
@@ -16,39 +17,33 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/soundcloud/gokit/dnssrv"
+	"github.com/soundcloud/gokit/httpserver"
 )
 
 func main() {
-	const (
-		envAWSAccessKeyID = "AWS_ACCESS_KEY_ID"
-		envAWSSecretKey   = "AWS_SECRET_ACCESS_KEY"
-		envS3Bucket       = "AWS_S3_BUCKET"
-		envS3Region       = "AWS_S3_REGION"
-	)
-
 	var (
 		addr      = flag.String("addr", ":8080", "Listen address")
 		adminAddr = flag.String("admin-addr", ":8081", "Listen address admin server")
 
-		moshiAddr    = flag.String("moshimoshiAddr", "localhost:9091", "MoshiMoshi service address")
-		rawTargetURL = flag.String("targetURL", "http://localhost:9000/", "Target URL")
+		moshiAddr     = flag.String("moshimoshi-addr", os.Getenv("MOSHIMOSHI_ADDRESS"), "MoshiMoshi service address")
+		stranglerAddr = flag.String("strangler-addr", os.Getenv("PUBLIC_API_STRANGLER_ADDRESS"), "Public API strangler service address")
 
-		awsKey    = flag.String("aws-key", os.Getenv(envAWSAccessKeyID), "AWS access key ID")
-		awsSecret = flag.String("aws-secret", os.Getenv(envAWSSecretKey), "AWS secret access key")
-		s3Bucket  = flag.String("s3-bucket", os.Getenv(envS3Bucket), "AWS S3 bucket")
-		s3Region  = flag.String("s3-region", os.Getenv(envS3Region), "AWS S3 region")
+		awsKey    = flag.String("aws-key", os.Getenv("AWS_ACCESS_KEY_ID"), "AWS access key ID")
+		awsSecret = flag.String("aws-secret", os.Getenv("AWS_SECRET_ACCESS_KEY"), "AWS secret access key")
+		s3Bucket  = flag.String("s3-bucket", os.Getenv("AWS_S3_BUCKET"), "AWS S3 bucket")
+		s3Region  = flag.String("s3-region", os.Getenv("AWS_S3_REGION"), "AWS S3 region")
 
-		maxRequestBytes = flag.Int64("max-request-bytes", 500<<(10*2), "Max request size in bytes")
+		maxRequestBytes = flag.Int64("max-request-bytes", 5<<(10*2), "Max request size in bytes")
 	)
 	flag.Parse()
 
-	// TODO: Use service discovery and add a custom roundtripper.
-	targetURL, err := url.Parse(*rawTargetURL)
-	if err != nil {
-		log.Fatalf("Failed to parse target URL: %s", *rawTargetURL)
+	s3cli := &http.Client{
+		Transport: serviceTransport{
+			name:      "S3",
+			transport: http.DefaultTransport,
+		},
 	}
-
-	s3cli := httpClient("S3")
 	s3 := s3.New(
 		session.Must(
 			session.NewSession(&aws.Config{
@@ -63,7 +58,12 @@ func main() {
 		),
 	)
 
-	moshicli := httpClient("MOSHIMOSHI")
+	moshicli := &http.Client{
+		Transport: serviceTransport{
+			name:      "MOSHIMOSHI",
+			transport: dnssrv.DefaultTransport,
+		},
+	}
 	moshi := &moshimoshiClient{
 		client: moshicli,
 		host:   *moshiAddr,
@@ -77,18 +77,29 @@ func main() {
 		},
 	}
 
-	proxy := httpProxy("PUBLIC_API_STRANGLER", targetURL)
+	stranglerURL, err := url.Parse("http://" + *stranglerAddr)
+	if err != nil {
+		log.Fatal(err)
+	}
+	strangler := httputil.NewSingleHostReverseProxy(stranglerURL)
+	strangler.Transport = serviceTransport{
+		name:      "PUBLIC_API_STRANGLER",
+		transport: dnssrv.DefaultTransport,
+	}
+
 	controller := &controller{
 		maxRequestBytes: *maxRequestBytes,
-		proxy:           proxy,
+		proxy:           strangler,
 		service:         service,
 	}
 
 	go func(a string) {
 		http.Handle("/metrics", promhttp.Handler())
 
-		log.Println(fmt.Sprintf("Listening on %s", a))
-		log.Fatal(http.ListenAndServe(a, nil))
+		log.Println("Listening on: ", a)
+		if err := http.ListenAndServe(a, nil); err != nil {
+			log.Fatal(err)
+		}
 	}(*adminAddr)
 
 	mux := http.NewServeMux()
@@ -98,6 +109,17 @@ func main() {
 	})
 	mux.HandleFunc("/tracks", httpHandler("/tracks", controller.tracks))
 
-	log.Println(fmt.Sprintf("Listening on %s", *addr))
-	log.Fatal(http.ListenAndServe(*addr, mux))
+	server := httpserver.Graceful{
+		Config: http.Server{
+			Addr:    *addr,
+			Handler: mux,
+		},
+		CloseTimeout: 60 * time.Second,
+		DrainTimeout: 30 * time.Second,
+	}
+
+	log.Println("Listening on: ", *addr)
+	if err := server.ListenAndServe(); err != nil {
+		log.Fatal(err)
+	}
 }
