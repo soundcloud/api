@@ -31,7 +31,7 @@ class User(jsonValue: JsValue,
     (json \ "links").as[Seq[JsObject]].filter(
       data => (data \ "network").as[String] == networkName
     ) match {
-      case networkData :: _ => (networkData \ fieldName).asOpt[String]
+      case networkData +: _ => (networkData \ fieldName).asOpt[String]
       case _ => None
     }
   }

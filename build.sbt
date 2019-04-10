@@ -1,5 +1,5 @@
 val jvmkitVersion = "10.7.0"
-val playJsonVersion = "2.6.9"
+val playJsonVersion = "2.7.2"
 val specs2Version = "3.8.9" // FIXME: upgrade, 4.3.3 fails randomly on different specs
 val httpComponentsVersion = "4.5.6"
 

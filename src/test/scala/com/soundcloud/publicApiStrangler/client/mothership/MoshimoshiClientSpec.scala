@@ -42,6 +42,15 @@ class MoshimoshiClientSpec extends UnitSpecification {
   def buildHeaders(entries: (String, String)*): Headers =
     entries.foldLeft(new HeadersBuilder()) { case (builder, (key, value)) => builder.set(key, value) }.build()
 
+  // A recent play-json upgrade has introduced a change that does not preserve Map key ordering, thus breaking some
+  // specs that rely on comparing JSON as as strings. Since this is limited to only a few specs in this class only,
+  // we just re-parse the json and create a fresh object to ensure we have the correct ordering. Sorry.
+  // See https://github.com/playframework/play-json/issues/236
+  def fixTrackFixture(v: JsValue): JsValue = {
+    val track = (v \ "track").as[JsObject]
+    Json.obj("track" -> (track ++ Json.obj()))
+  }
+
   "#trackPurchaseLinks" >> {
     trait TestContext extends Context {
       val urns = Set(Urn("soundcloud", "tracks", "1"), Urn("soundcloud", "tracks", "2"), Urn("soundcloud", "tracks", "3"))
@@ -501,7 +510,7 @@ class MoshimoshiClientSpec extends UnitSpecification {
 
       val bodies = ExpectedBody(
         responseBody = moshiTrackMinimal,
-        requestBody = Some(moshiTrackCreateWithArtwork)
+        requestBody = Some(fixTrackFixture(moshiTrackCreateWithArtwork))
       )
     }
 
@@ -562,7 +571,7 @@ class MoshimoshiClientSpec extends UnitSpecification {
 
       val bodies = ExpectedBody(
         responseBody = moshiTrackMinimal,
-        requestBody = Some(moshiTrackCreate)
+        requestBody = Some(fixTrackFixture(moshiTrackCreate))
       )
     }
 
@@ -662,7 +671,7 @@ class MoshimoshiClientSpec extends UnitSpecification {
 
       val bodies = ExpectedBody(
         responseBody = moshiTrackMinimal,
-        requestBody = Some(moshiTrackCreateWithoutPermalink)
+        requestBody = Some(fixTrackFixture(moshiTrackCreateWithoutPermalink))
       )
     }
 
@@ -721,7 +730,7 @@ class MoshimoshiClientSpec extends UnitSpecification {
 
       val bodies = ExpectedBody(
         responseBody = moshiTrackMinimal,
-        requestBody = Some(moshiTrackUpdate)
+        requestBody = Some(fixTrackFixture(moshiTrackUpdate))
       )
     }
 
@@ -812,7 +821,7 @@ class MoshimoshiClientSpec extends UnitSpecification {
 
       val bodies = ExpectedBody(
         responseBody = moshiTrackMinimal,
-        requestBody = Some(moshiTrackUpdateWithArtwork)
+        requestBody = Some(fixTrackFixture(moshiTrackUpdateWithArtwork))
       )
     }
 
@@ -902,7 +911,7 @@ class MoshimoshiClientSpec extends UnitSpecification {
 
       val bodies = ExpectedBody(
         responseBody = moshiTrackMinimal,
-        requestBody = Some(moshiTrackUpdateWithPublishedAt)
+        requestBody = Some(fixTrackFixture(moshiTrackUpdateWithPublishedAt))
       )
     }
 
@@ -951,7 +960,7 @@ class MoshimoshiClientSpec extends UnitSpecification {
 
       val bodies = ExpectedBody(
         responseBody = moshiTrackMinimal,
-        requestBody = Some(moshiTrackUpdateWithNullPublishedAt)
+        requestBody = Some(fixTrackFixture(moshiTrackUpdateWithNullPublishedAt))
       )
     }
 
