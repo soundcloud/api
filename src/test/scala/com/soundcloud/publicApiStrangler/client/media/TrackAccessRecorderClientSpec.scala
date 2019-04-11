@@ -17,8 +17,9 @@ class TrackAccessRecorderClientSpec extends UnitSpecification {
     val session = mock[UserSession]
     val trackUrn = Urn("soundcloud", "tracks", "1234")
     val shouldLog = true
+    val secretToken: Option[String] = None
 
-    lazy val result = Await.result(client.recordAccess(session, trackUrn, "stream", shouldLog))
+    lazy val result = Await.result(client.recordAccess(session, trackUrn, "stream", shouldLog, secretToken))
   }
 
   "#recordAccess" >> {
@@ -52,6 +53,18 @@ class TrackAccessRecorderClientSpec extends UnitSpecification {
       }
 
       "calls Moshimoshi with 'skip_logging' param" in new DontLogContext {
+        result.status ==== Status.Ok
+      }
+    }
+
+    "when a secret token is passed" >> {
+      trait WithSecretToken extends Context {
+        override val secretToken = Some("only4me")
+        moshimoshiClient.getWithSession(session, Path() / "tracks" / trackUrn / "access" / "stream", Params("secret_token" -> "only4me"), Headers.empty) returns
+          Future.value(ResponseBuilder().status(Status.Ok).build)
+      }
+
+      "calls Moshimoshi with 'secret_token' param" in new WithSecretToken {
         result.status ==== Status.Ok
       }
     }
