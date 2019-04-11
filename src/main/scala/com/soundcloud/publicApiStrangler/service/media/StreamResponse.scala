@@ -1,6 +1,6 @@
 package com.soundcloud.publicApiStrangler.service.media
 
-import play.api.libs.json.{JsNull, JsValue, Json, Writes}
+import play.api.libs.json.{JsValue, Json, Writes}
 
 sealed trait StreamResponse
 case class StreamUrls(httpMp3: String, hlsMp3: String, hlsOpus: Option[String], httpPreviewMp3: String) extends StreamResponse

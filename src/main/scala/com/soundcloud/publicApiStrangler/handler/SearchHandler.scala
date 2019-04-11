@@ -12,7 +12,6 @@ import com.soundcloud.publicApiStrangler.handler.SearchHandler._
 import com.soundcloud.publicApiStrangler.mapper.search.{SearchDispatcherRequest, SearchMapper}
 import com.twitter.finagle.http.{ParamMap, Response, Status}
 import com.twitter.util.{Future, Return, Try}
-import play.api.libs.json.Json
 
 /**
   * Redirects search queries on to search-dispatcher and fetches meta data.

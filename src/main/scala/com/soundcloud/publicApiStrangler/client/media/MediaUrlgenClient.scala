@@ -53,6 +53,7 @@ private[media] class MediaUrlgenClient(jsonClient: JsonClient, trackStreamMapper
           response.status match {
             case Status.Ok => trackStreamMapper.map(Json.parse(response.contentString))
             case Status.NotFound => Set()
+            case _ => throw new RuntimeException(s"media-urlgen http ${response.statusCode}")
           }
       }
     }

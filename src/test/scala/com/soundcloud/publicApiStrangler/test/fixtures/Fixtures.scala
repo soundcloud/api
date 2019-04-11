@@ -100,7 +100,6 @@ object Fixtures {
   lazy val moshiTrackUpdateWithArtwork = fileJson("moshimoshi", "track_update_with_s3_artwork")
   lazy val moshiTrackUpdateWithNullArtwork = contentsOf("moshimoshi", "track_update_with_null_s3_artwork")
   lazy val moshiTrackUpdateWithPublishedAt = contentsOf("moshimoshi", "track_update_with_published_at")
-  lazy val moshiTrackUpdateWithNullPublishedAt = contentsOf("moshimoshi", "track_update_with_null_published_at")
 
   lazy val moshiUser = contentsOf("moshimoshi", "user")
   lazy val moshiUsers = contentsOf("moshimoshi", "users")

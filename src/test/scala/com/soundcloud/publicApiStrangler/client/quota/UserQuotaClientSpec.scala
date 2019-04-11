@@ -1,6 +1,6 @@
 package com.soundcloud.publicApiStrangler.client.quota
 
-import com.soundcloud.jvmkit.module.http.client.{JsonClient, Params}
+import com.soundcloud.jvmkit.module.http.client.JsonClient
 import com.soundcloud.jvmkit.module.util.http.Headers
 import com.soundcloud.jvmkit.module.util.{Path, Urn}
 import com.soundcloud.publicApiStrangler.test.UnitSpecification

@@ -32,11 +32,11 @@ class FollowCountsClientSpec extends UnitSpecification {
     override def before: Any = {
       val bulkParams = Params(
         "followingCounts" -> URLEncoder.encode(
-          s"/timeseries?resolution=alltime&category=f.u&minus-category=n.f.u&keys=${user.getIdentifier}",
+          s"/timeseries?resolution=alltime&category=f.u&minus-category=n.f.u&keys=${user.identifier}",
           "UTF-8"
         ),
         "followerCounts" -> URLEncoder.encode(
-          s"/timeseries?resolution=alltime&category=f.b.u&minus-category=n.f.b.u&keys=${user.getIdentifier}",
+          s"/timeseries?resolution=alltime&category=f.b.u&minus-category=n.f.b.u&keys=${user.identifier}",
           "UTF-8"
         )
       )

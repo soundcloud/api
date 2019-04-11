@@ -15,7 +15,7 @@ import com.twitter.finagle.http.Status
 import com.twitter.util.Future
 import play.api.libs.json.{JsObject, Json}
 
-import scala.collection.JavaConversions._
+import scala.collection.JavaConverters._
 
 case class CreatePlaylistParams(title: String, public: Boolean = true)
 
@@ -86,8 +86,8 @@ class MoshimoshiClient(service: JsonClient,
 
   private def filterHeaders(headers: Headers): Headers = {
     val elems = (for {
-      key <- headers.entrySet().map(_.getKey) if WHITELISTED_HEADERS.contains(key.toLowerCase)
-      value <- headers.getAll(key)
+      key <- headers.entrySet.asScala.map(_.getKey) if WHITELISTED_HEADERS.contains(key.toLowerCase)
+      value <- headers.getAll(key).asScala
     } yield (key, value)).toSeq
     Headers(elems: _*)
   }
@@ -249,7 +249,7 @@ class MoshimoshiClient(service: JsonClient,
   private def resendEmailConfirmationsWithRawPath(session: UserSession, path: Path): Future[Unit] = {
     service.postWithSession(session, path, Params.empty, Headers.empty, None)
       .map {
-        case response if response.status == Status.ResetContent => Future.value(())
+        case response if response.status == Status.ResetContent => ()
         case r => ResponseHandlers.invalidResponse(r)
       }
   }

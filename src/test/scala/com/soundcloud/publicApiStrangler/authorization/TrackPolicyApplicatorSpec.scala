@@ -89,14 +89,14 @@ class TrackPolicyApplicatorSpec extends UnitSpecification {
     "returns allowed and monetized tracks for whitelisted clients" in new PartiallyAuthorized {
       session.getAgent returns whitelistedClientUrn
 
-      authorizedTrackIds mustEqual List(allowedTrackUrn, monetizedTrackUrn).map(_.getIdentifier.toInt)
+      authorizedTrackIds mustEqual List(allowedTrackUrn, monetizedTrackUrn).map(_.identifier.toInt)
       durations ==== List(370348, 2000)
     }
 
     "returns only allowed tracks for non-whitelisted clients" in new PartiallyAuthorized {
       session.getAgent returns nonWhitelistedClientUrn
 
-      authorizedTrackIds mustEqual List(allowedTrackUrn).map(_.getIdentifier.toInt)
+      authorizedTrackIds mustEqual List(allowedTrackUrn).map(_.identifier.toInt)
       durations ==== List(370348)
     }
 
@@ -120,13 +120,13 @@ class TrackPolicyApplicatorSpec extends UnitSpecification {
     "returns allowed, tiered and ad-supported tracks for whitelisted clients" in new AdSupported {
       session.getAgent returns whitelistedClientUrn
 
-      authorizedTrackIds mustEqual List(allowedTrackUrn, monetizedHighTierTrackUrn, monetizedAdSupportedTrackUrn).map(_.getIdentifier.toInt)
+      authorizedTrackIds mustEqual List(allowedTrackUrn, monetizedHighTierTrackUrn, monetizedAdSupportedTrackUrn).map(_.identifier.toInt)
     }
 
     "returns only allowed and ad-supported tracks for non-whitelisted clients" in new AdSupported {
       session.getAgent returns nonWhitelistedClientUrn
 
-      authorizedTrackIds mustEqual List(allowedTrackUrn, monetizedAdSupportedTrackUrn).map(_.getIdentifier.toInt)
+      authorizedTrackIds mustEqual List(allowedTrackUrn, monetizedAdSupportedTrackUrn).map(_.identifier.toInt)
     }
 
     trait SomeAreSnip extends Context {
@@ -154,7 +154,7 @@ class TrackPolicyApplicatorSpec extends UnitSpecification {
 
   "stream tests" >> {
     trait StreamContext extends Context {
-      override val urns = List(165855069, 168419205).map(id => new Urn(s"soundcloud:tracks:$id"))
+      override val urns = List(165855069, 168419205).map(id => Urn("soundcloud", "tracks", id.toString))
 
       override lazy val authorizedTrackIds =
         extractIds(

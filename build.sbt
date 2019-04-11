@@ -1,5 +1,4 @@
-val jvmkitVersion = "10.7.0"
-val playJsonVersion = "2.7.2"
+val jvmkitVersion = "10.7.1-SNAPSHOT" // TODO: use release version
 val specs2Version = "3.8.9" // FIXME: upgrade, 4.3.3 fails randomly on different specs
 val httpComponentsVersion = "4.5.6"
 
@@ -7,15 +6,15 @@ lazy val publicApiStrangler = project.in(file("."))
   .enablePlugins(SbtKitPlugin)
   .settings(
     name := "public-api-strangler",
-    fatalWarnings := false,
+    sources in (Compile, doc) := Seq.empty, // TODO move this to sbtkit
     libraryDependencies ++= Seq(
-      "com.netaporter" %% "scala-uri" % "0.4.16",
       "com.soundcloud" %% "jvmkit-http-client" % jvmkitVersion,
       "com.soundcloud" %% "jvmkit-admin-server" % jvmkitVersion,
       "com.soundcloud" %% "jvmkit-bff" % jvmkitVersion,
       "com.soundcloud" %% "jvmkit-rollout" % jvmkitVersion,
       "com.soundcloud" %% "jvmkit-memcached" % jvmkitVersion,
-      "com.typesafe.play" %% "play-json" % playJsonVersion,
+      "com.soundcloud" %% "jvmkit-json" % jvmkitVersion,
+      "com.netaporter" %% "scala-uri" % "0.4.16",
       "org.jsoup" % "jsoup" % "1.11.3",
 
       "com.squareup.okhttp3" % "mockwebserver" % "3.11.0" % "test",
@@ -32,14 +31,13 @@ lazy val endToEnd = project.in(file("endToEndTests"))
   .enablePlugins(SbtKitPlugin)
   .settings(
     name := "endToEnd",
-    fatalWarnings := false,
     libraryDependencies ++= Seq(
       "org.specs2" %% "specs2-core" % specs2Version,
       "org.specs2" %% "specs2-mock" % specs2Version,
       "org.apache.httpcomponents" % "httpclient" % httpComponentsVersion,
       "org.apache.httpcomponents" % "httpmime" % httpComponentsVersion,
-      "com.typesafe.play" %% "play-json" % playJsonVersion,
       "com.soundcloud" %% "jvmkit-bff" % jvmkitVersion,
-      "com.soundcloud" %% "jvmkit-http-client" % jvmkitVersion
+      "com.soundcloud" %% "jvmkit-http-client" % jvmkitVersion,
+      "com.soundcloud" %% "jvmkit-json" % jvmkitVersion
     )
   )

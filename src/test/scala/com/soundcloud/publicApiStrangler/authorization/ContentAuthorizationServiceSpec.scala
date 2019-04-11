@@ -10,7 +10,7 @@ import com.twitter.finagle.http.Status
 import com.twitter.util.{Await, Future}
 import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures.withContentsOf
 import org.mockito.Mockito.{times, verify, verifyZeroInteractions}
-import org.mockito.{ArgumentCaptor, Mockito}
+import org.mockito.ArgumentCaptor
 
 class ContentAuthorizationServiceSpec extends UnitSpecification {
 

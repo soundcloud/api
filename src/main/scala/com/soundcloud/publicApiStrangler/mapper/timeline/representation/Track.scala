@@ -1,6 +1,7 @@
 package com.soundcloud.publicApiStrangler.mapper.timeline.representation
 
 import com.soundcloud.bff.nextbff.mapping.MappingContext
+import com.soundcloud.jvmkit.module.json.UrnFormat._
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.publicApiStrangler.mapper.timeline.EntitySummaryMapper
 import play.api.libs.json.JsValue
@@ -45,7 +46,7 @@ class Track(jsonValue: JsValue,
   val streamable = (json \ "streamable").asOpt[Boolean]
   val tag_list = (json \ "tag_list").asOpt[String]
   val track_type = (json \ "track_type").asOpt[String]
-  val user = entitySummaryMapper.embed(new Urn((json \ "user" \ "urn").as[String]))
+  val user = entitySummaryMapper.embed((json \ "user" \ "urn").as[Urn])
   // Option[Any] so we can override with an embedded attribute when calling Liebling
   val likes_count: Option[Any] = likesByUrn.get(urn)
 

@@ -7,7 +7,6 @@ import com.soundcloud.jvmkit.module.bff.testsupport.FakeUserAuthentication
 import com.soundcloud.jvmkit.module.http.server.{HandlerRequest, JsonResponseBuilder}
 import com.soundcloud.jvmkit.module.telemetry.{MetricsRegistryImpl, Telemetry}
 import com.soundcloud.jvmkit.module.util.Urn
-import com.soundcloud.jvmkit.module.util.config.InMemoryConfig
 import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.publicApiStrangler.Routing
 import com.soundcloud.publicApiStrangler.client.followcounts.{FollowCounts, FollowCountsClient}
@@ -26,7 +25,7 @@ class SearchHandlerSpec extends UnitSpecification {
     def followCountsSeq: Seq[FollowCounts] = Seq.empty
 
     val fallbackMock = mock[DispatchToMothershipHandler]
-    val fallbackCounter = new Telemetry((new InMemoryConfig).getApplicationName, MetricsRegistryImpl.defaultRegistry).counter("foo", "bar", "path")
+    val fallbackCounter = new Telemetry(MetricsRegistryImpl.defaultRegistry).counter("foo", "bar", "path")
     val searchMapperMock = mock[SearchMapper]
     val followCountsClientMock = mock[FollowCountsClient]
     val lieblingClientMock = mock[LieblingClient]

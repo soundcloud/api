@@ -2,6 +2,7 @@ package com.soundcloud.publicApiStrangler.mapper.search
 
 import com.soundcloud.bff.nextbff.UntypedJson
 import com.soundcloud.bff.nextbff.mapping.{Mapping, MappingContext}
+import com.soundcloud.jvmkit.module.json.UrnFormat._
 import com.soundcloud.jvmkit.module.util.{Url, Urn}
 import com.soundcloud.publicApiStrangler.authorization.ContentAuthorizationRules
 import com.soundcloud.publicApiStrangler.authorization.policies.{ContentAuthorization, ContentPolicy, MonetizationModel, Reason}
@@ -50,11 +51,11 @@ class SearchEntityMapperSpec extends UnitSpecification {
     )
 
     val urns = List(
-      "soundcloud:users:2097360",
-      "soundcloud:tracks:15273221",
-      "soundcloud:playlists:685235",
-      "soundcloud:groups:30910"
-    ).map(new Urn(_))
+      Urn("soundcloud", "users", "2097360"),
+      Urn("soundcloud", "tracks", "15273221"),
+      Urn("soundcloud", "playlists", "685235"),
+      Urn("soundcloud", "groups", "30910")
+    )
 
     val searchResults = Urn("soundcloud", "tracks", "-1") :: urns // doesn't exist in okidoki response
 
@@ -78,8 +79,8 @@ class SearchEntityMapperSpec extends UnitSpecification {
         Future(okidokiFetch)
       )
       // embedded entity summaries in tracks/playlists/groups metadata
-      when(okidokiClient.fetch(session, urns.toSet.filter(_.getCollection == "users"))).thenReturn(
-        Future(okidokiFetch.filter(json => new Urn((json \ "self" \ "urn").as[String]).getCollection == "users"))
+      when(okidokiClient.fetch(session, urns.toSet.filter(_.collection == "users"))).thenReturn(
+        Future(okidokiFetch.filter(json => (json \ "self" \ "urn").as[Urn].collection == "users"))
       )
       // track metadata for a playlist -- one call per playlist :(
       // should probably return some non-empty list
@@ -107,7 +108,7 @@ class SearchEntityMapperSpec extends UnitSpecification {
 
     def result = Await.result(mapper.materialize(session, searchResults))
 
-    def mappingToJsObject(m: Mapping): JsObject = Json.parse(UntypedJson.asString(m)).as[JsObject]
+    def mappingToJsObject(m: Mapping): JsObject = Json.parse(UntypedJson.write(m)).as[JsObject]
   }
 
   "builds the proper mappings" >> {

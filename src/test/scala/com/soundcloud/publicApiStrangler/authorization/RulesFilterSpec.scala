@@ -10,16 +10,16 @@ import scala.util.Random
 class RulesFilterSpec extends UnitSpecification {
 
   trait Context extends Scope {
-    val allowed = (1 to 2).map(id => new Urn(s"soundcloud:aa:$id")).toSeq
+    val allowed = (1 to 2).map(id => Urn("soundcloud", "aa", id.toString))
     val allowedRules = allowed.map(new ContentAuthorization(_, ContentPolicy.from("allowed"), Reason.UNKNOWN, MonetizationModel.NOT_APPLICABLE))
 
-    val snippet = (1 to 1).map(id => new Urn(s"soundcloud:ss:$id")).toSeq
+    val snippet = (1 to 1).map(id => Urn("soundcloud", "ss", id.toString))
     val snippetRules = snippet.map(new ContentAuthorization(_, ContentPolicy.from("snippet"), Reason.UNKNOWN, MonetizationModel.NOT_APPLICABLE))
 
-    val blocked = (1 to 2).map(id => new Urn(s"soundcloud:bb:$id")).toSeq
+    val blocked = (1 to 2).map(id => Urn("soundcloud", "bb", id.toString))
     val blockedRules = blocked.map(new ContentAuthorization(_, ContentPolicy.from("blocked"), Reason.UNKNOWN, MonetizationModel.NOT_APPLICABLE))
 
-    val monetize = (1 to 2).map(id => new Urn(s"soundcloud:mm:$id")).toSeq
+    val monetize = (1 to 2).map(id => Urn("soundcloud", "mm", id.toString))
     val monetizeRules = monetize.map(new ContentAuthorization(_, ContentPolicy.from("monetize"), Reason.UNKNOWN, MonetizationModel.AD_SUPPORTED))
 
     def toJson(urns: Seq[Urn]) = urns.map {
@@ -36,7 +36,7 @@ class RulesFilterSpec extends UnitSpecification {
       val jsonContent = (1 to 4).map {
         id => Json.obj("id" -> JsNumber(id))
       }.toSeq
-      val rules = (1 to 4).map(i => new ContentAuthorization(new Urn(s"soundcloud:things:$i"), ContentPolicy.from("blocked"), Reason.NOT_SUPPORTED, MonetizationModel.NOT_APPLICABLE)).toSeq
+      val rules = (1 to 4).map(i => new ContentAuthorization(Urn("soundcloud", "things", i.toString), ContentPolicy.from("blocked"), Reason.NOT_SUPPORTED, MonetizationModel.NOT_APPLICABLE)).toSeq
       new RulesFilter(ContentPolicy.from("allowed")).filter(rules, jsonContent) must beEmpty
       new RulesFilter(ContentPolicy.from("allowed")).filterAndGetDetailedResult(rules, jsonContent) ==== RulesFilterResult(Seq.empty, Seq.empty, Seq.empty)
     }

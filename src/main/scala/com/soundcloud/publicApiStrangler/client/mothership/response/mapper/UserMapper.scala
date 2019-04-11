@@ -1,5 +1,6 @@
 package com.soundcloud.publicApiStrangler.client.mothership.response.mapper
 
+import com.soundcloud.jvmkit.module.json.UrnFormat._
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.publicApiStrangler.client.mothership.response.representation.User
 import play.api.libs.json.JsValue
@@ -7,7 +8,7 @@ import play.api.libs.json.JsValue
 object UserMapper {
   def apply(json: JsValue): User = {
     new User(
-      Urn((json \ "self" \ "urn").as[String]),
+      (json \ "self" \ "urn").as[Urn],
       (json \ "permalink").as[String],
       (json \ "username").as[String],
       (json \ "avatar_url").as[String],

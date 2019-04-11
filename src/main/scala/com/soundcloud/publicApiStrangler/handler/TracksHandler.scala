@@ -54,9 +54,9 @@ class TracksHandler(userAuthentication: UserAuthentication,
 
   private def trackUrn(request: HandlerRequest): Urn = {
     val IdParamPattern = "(\\d+)".r
-    new Urn(request.routeParams("trackId") match {
-      case IdParamPattern(id) => s"soundcloud:tracks:$id"
-    })
+    request.routeParams("trackId") match {
+      case IdParamPattern(id) => Urn("soundcloud", "tracks", id)
+    }
   }
 }
 

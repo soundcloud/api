@@ -15,7 +15,7 @@ import com.soundcloud.publicApiStrangler.client.trackmetadata.{Artwork, Embeddin
 import com.soundcloud.publicApiStrangler.service.TrackAccessibilityService
 import com.soundcloud.publicApiStrangler.test.UnitSpecification
 import com.twitter.util.{Await, Future}
-import org.joda.time.LocalDateTime
+import org.joda.time.DateTime
 import org.mockito.Mockito._
 import play.api.libs.json._
 
@@ -99,8 +99,8 @@ class TrackRepresentationsServiceForSingleTrackSpec extends UnitSpecification {
         updated_at = Some("2016/10/10 11:21:36 +0000"))
 
     val trackUrn = Urn("soundcloud", "tracks", "987")
-    val createdAt = new LocalDateTime(2016, 5, 19, 18, 3, 4)
-    val lastModified = new LocalDateTime(2016, 5, 20, 18, 3, 4)
+    val createdAt = new DateTime(2016, 5, 19, 18, 3, 4)
+    val lastModified = new DateTime(2016, 5, 20, 18, 3, 4)
 
     def geoblockings: Option[Geoblockings] = Some(List("DE", "FR"))
 
@@ -120,7 +120,7 @@ class TrackRepresentationsServiceForSingleTrackSpec extends UnitSpecification {
       )
 
     def trackmetadataTrack(
-                            disabledAt: Option[LocalDateTime] = None,
+                            disabledAt: Option[DateTime] = None,
                             isPublic: Boolean = true,
                             secretToken: String = "secr3t-Token",
                             isDownloadable: Boolean = false,
@@ -232,7 +232,7 @@ class TrackRepresentationsServiceForSingleTrackSpec extends UnitSpecification {
   }
 
   "Returns NotFound if track is disabled" in new Context {
-    val disabledAt = Some(LocalDateTime.now())
+    val disabledAt = Some(DateTime.now())
     val track = trackmetadataTrack(disabledAt)
     setUpMocksForExistingTrack(track, session)
 

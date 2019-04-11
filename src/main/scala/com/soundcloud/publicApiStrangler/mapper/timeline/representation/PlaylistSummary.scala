@@ -1,6 +1,7 @@
 package com.soundcloud.publicApiStrangler.mapper.timeline.representation
 
 import com.soundcloud.bff.nextbff.mapping.{JsonMapping, MappingContext}
+import com.soundcloud.jvmkit.module.json.UrnFormat._
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.publicApiStrangler.mapper.timeline.EntitySummaryMapper
 import play.api.libs.json.JsValue
@@ -34,7 +35,7 @@ class PlaylistSummary(jsonValue: JsValue,
   val permalink_url = (json \ "permalink_url").asOpt[String]
   val artwork_url = (json \ "artwork_url").asOpt[String]
   val license = (json \ "license").asOpt[String]
-  val user_id = if (userUrn.isDefined) userUrn.get.getIdentifier.toInt else None
+  val user_id = if (userUrn.isDefined) userUrn.get.identifier.toInt else None
   val user = if (userUrn.isDefined) entitySummaryMapper.embed(userUrn.get) else None
   val secret_token = (json \ "secret_token").as[String]
   val reposts_count = repostCountsByUrn.get(urn).orElse((json \ "reposts_count").asOpt[Long])
@@ -42,9 +43,6 @@ class PlaylistSummary(jsonValue: JsValue,
   val secret_uri = s"$baseUrl/playlists/$id?secret_token=$secret_token"
 
 
-  private def userUrn: Option[Urn] = (json \ "user" \ "urn").asOpt[String] match {
-    case None => None
-    case Some(urn) => Some(new Urn(urn))
-  }
+  private def userUrn: Option[Urn] = (json \ "user" \ "urn").asOpt[Urn]
 
 }

@@ -27,14 +27,14 @@ class RepostsHandler(userAuthentication: UserAuthentication, repostsClient: Repo
 
   private def createRepost(request: HandlerRequest, targetType: String): Future[Response] = {
     userAuthentication.withLoggedInUser(request) { (session, userUrn) =>
-      val target = new Urn(s"soundcloud:$targetType:" + request.routeParams("id"))
+      val target = Urn("soundcloud", targetType, request.routeParams("id"))
       repostsClient.createRepost(session, target, baseUrl(request)).map(renderResult)
     }
   }
 
   private def deleteRepost(request: HandlerRequest, targetType: String): Future[Response] = {
     userAuthentication.withLoggedInUser(request) { (session, userUrn) =>
-      val target = new Urn(s"soundcloud:$targetType:" + request.routeParams("id"))
+      val target = Urn("soundcloud", targetType, request.routeParams("id"))
       repostsClient.deleteRepost(session, target, baseUrl(request)).map(renderResult)
     }
   }
@@ -43,7 +43,7 @@ class RepostsHandler(userAuthentication: UserAuthentication, repostsClient: Repo
     userAuthentication.withLoggedInUser(request) { (session, userUrn) =>
       withPaginationParams(request) { (limit, cursor, linkedPartitioningEnabled) =>
         getAllRepostables(session, userUrn, limit, cursor, callback).map { reposts =>
-          val ids = reposts.urns.map(_.getIdentifier.toLong)
+          val ids = reposts.urns.map(_.identifier.toLong)
           respond(linkedPartitioningEnabled)(RepostsResponse(ids, nextHref(request, limit, reposts.nextCursor)))
         }
       }

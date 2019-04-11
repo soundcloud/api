@@ -1,21 +1,22 @@
 package com.soundcloud.publicApiStrangler.client.trackmetadata
 
 import com.soundcloud.jvmkit.module.util.Urn
-import com.soundcloud.publicApiStrangler.client.support.CommonJsonFormats._
+import com.soundcloud.jvmkit.module.json.UrnFormat._
 import com.soundcloud.publicApiStrangler.support.HtmlSanitizer
-import org.joda.time.LocalDateTime
+import org.joda.time.DateTime
 import play.api.libs.json._
+import play.api.libs.json.JodaReads._
 
 case class Track(urn: Urn,
                  user_urn: Urn,
                  commentable: Boolean,
                  description: Option[String],
-                 created_at: LocalDateTime,
-                 disabled_at: Option[LocalDateTime],
+                 created_at: DateTime,
+                 disabled_at: Option[DateTime],
                  downloadable: Option[Boolean],
                  duration: Int,
                  genre: Option[String],
-                 last_modified: LocalDateTime,
+                 last_modified: DateTime,
                  permalink: String,
                  permalink_url: Option[String],
                  public: Boolean,
@@ -35,9 +36,9 @@ case class Track(urn: Urn,
                  release_month: Option[Int],
                  release_day: Option[Int],
                  embeddableBy: EmbeddingPermission,
-                 releaseDate: Option[LocalDateTime],
+                 releaseDate: Option[DateTime],
                  artwork: Artwork,
-                 published_at: Option[LocalDateTime],
+                 published_at: Option[DateTime],
                  purchase_url: Option[String],
                  purchase_title: Option[String],
                  bpm: Option[Double],
@@ -64,12 +65,12 @@ object Track {
           user_urn = (json \ "user_urn").as[Urn],
           commentable = (json \ "commentable").as[Boolean],
           description = (json \ "description").asOpt[String].map(HtmlSanitizer.sanitize(_)),
-          created_at = (json \ "created_at").as[LocalDateTime],
-          disabled_at = (json \ "disabled_at").asOpt[LocalDateTime],
+          created_at = (json \ "created_at").as[DateTime],
+          disabled_at = (json \ "disabled_at").asOpt[DateTime],
           downloadable = (json \ "downloadable").asOpt[Boolean],
           duration = (json \ "duration").as[Int],
           genre = (json \ "genre").asOpt[String].map(HtmlSanitizer.sanitize(_)),
-          last_modified = (json \ "last_modified").as[LocalDateTime],
+          last_modified = (json \ "last_modified").as[DateTime],
           permalink = (json \ "permalink").as[String],
           permalink_url = (json \ "permalink_url").asOpt[String],
           public = (json \ "public").as[Boolean],
@@ -89,9 +90,9 @@ object Track {
           release_month = (json \ "release_month").asOpt[Int],
           release_day = (json \ "release_day").asOpt[Int],
           embeddableBy = (json \ "embeddable_by").as[EmbeddingPermission],
-          releaseDate = (json \ "release_date").asOpt[LocalDateTime],
+          releaseDate = (json \ "release_date").asOpt[DateTime],
           artwork = (json \ "artwork").as[Artwork],
-          published_at = (json \ "published_at").asOpt[LocalDateTime],
+          published_at = (json \ "published_at").asOpt[DateTime],
           purchase_url = (json \ "purchase_url").asOpt[String],
           purchase_title = (json \ "purchase_title").asOpt[String].map(HtmlSanitizer.sanitize(_)),
           bpm = (json \ "bpm").asOpt[Double],

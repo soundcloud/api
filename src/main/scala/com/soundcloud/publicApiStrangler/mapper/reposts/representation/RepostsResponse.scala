@@ -1,6 +1,5 @@
 package com.soundcloud.publicApiStrangler.mapper.reposts.representation
 
-import com.soundcloud.publicApiStrangler.mapper.reposts.representation.RepostsUser.{writes => repostsUserWrites}
 import play.api.libs.json._
 
 case class RepostsResponse[T](collection: List[T], nextHref: Option[String])

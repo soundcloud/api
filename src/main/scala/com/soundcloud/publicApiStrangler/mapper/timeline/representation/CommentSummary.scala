@@ -1,6 +1,7 @@
 package com.soundcloud.publicApiStrangler.mapper.timeline.representation
 
 import com.soundcloud.bff.nextbff.mapping.{JsonMapping, MappingContext}
+import com.soundcloud.jvmkit.module.json.UrnFormat._
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.publicApiStrangler.mapper.timeline.EntitySummaryMapper
 import play.api.libs.json.JsValue
@@ -19,8 +20,8 @@ class CommentSummary(jsonValue: JsValue,
   val timestamp = (json \ "timestamp").asOpt[Int]
   val body = (json \ "body").asOpt[String]
 
-  def trackUrn = new Urn((json \ "track").as[String])
+  def trackUrn = (json \ "track").as[Urn]
 
-  def userUrn = new Urn((json \ "user" \ "self" \ "urn").as[String])
+  def userUrn = (json \ "user" \ "self" \ "urn").as[Urn]
 
 }

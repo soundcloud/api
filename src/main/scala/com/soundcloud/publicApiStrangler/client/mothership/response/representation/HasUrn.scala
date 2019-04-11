@@ -11,5 +11,6 @@ import play.api.libs.json.JsValue
 case object HasUrn {
   def apply(json: JsValue) = unapply(json)
 
-  def unapply(json: JsValue): Option[Urn] = (json \ "urn").asOpt[String].orElse((json \ "self" \ "urn").asOpt[String]).map(new Urn(_))
+  def unapply(json: JsValue): Option[Urn] = (json \ "urn").asOpt[String].orElse((json \ "self" \ "urn").asOpt[String])
+    .flatMap(Urn.parse(_).toOption)
 }

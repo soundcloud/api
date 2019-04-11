@@ -2,6 +2,7 @@ package com.soundcloud.publicApiStrangler.mapper.timeline
 
 import com.soundcloud.bff.nextbff.mapper.Mapper
 import com.soundcloud.bff.nextbff.mapping.{JsonMapping, MappingContext}
+import com.soundcloud.jvmkit.module.json.UrnFormat._
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.publicApiStrangler.client.followcounts.{FollowCounts, FollowCountsClient}
@@ -34,7 +35,7 @@ class EntityMapper(okidokiClient: OkidokiClient,
       val likesCounts = likes.map(like => like.target_urn -> like.likes_count).toMap
       entities.map {
         entity =>
-          val urn = new Urn((entity \ "self" \ "urn").as[String])
+          val urn = (entity \ "self" \ "urn").as[Urn]
           urn -> entityFor(urn, entity, likesCounts, followCountsMap, repostCountsByUrn)
       }.toMap
     }

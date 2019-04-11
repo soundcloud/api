@@ -1,13 +1,13 @@
 package com.soundcloud.publicApiStrangler.client.pubmese
 
 import com.soundcloud.jvmkit.module.http.client.{JsonClient, Params}
+import com.soundcloud.jvmkit.module.json.UrnFormat._
 import com.soundcloud.jvmkit.module.util.http.Headers
 import com.soundcloud.jvmkit.module.util.{Path, Urn}
 import com.soundcloud.publicApiStrangler.test.UnitSpecification
 import com.twitter.finagle.http.Status
 import com.twitter.util.{Await, Future}
 import play.api.libs.json.{JsNull, Json}
-import com.soundcloud.publicApiStrangler.client.support.CommonJsonFormats.{urnFormat, urnSetReads}
 
 class PubmeseClientSpec extends UnitSpecification {
 

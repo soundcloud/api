@@ -1,5 +1,6 @@
 package com.soundcloud.publicApiStrangler.client.mothership.response.mapper
 
+import com.soundcloud.jvmkit.module.json.UrnFormat._
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.publicApiStrangler.client.mothership.response.representation.Playlist
 import play.api.libs.json.JsValue
@@ -7,8 +8,8 @@ import play.api.libs.json.JsValue
 object PlaylistMapper {
   def apply(json: JsValue): Playlist = {
     Playlist(
-      urn = new Urn((json \ "self" \ "urn").as[String]),
-      user_urn = new Urn((json \ "user" \ "urn").as[String]),
+      urn = (json \ "self" \ "urn").as[Urn],
+      user_urn = (json \ "user" \ "urn").as[Urn],
       title = (json \ "title").as[String],
       permalink = (json \ "permalink").as[String],
       description = (json \ "description").asOpt[String],

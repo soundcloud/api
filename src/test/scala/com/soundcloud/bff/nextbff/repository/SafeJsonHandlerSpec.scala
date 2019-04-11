@@ -1,9 +1,8 @@
 package com.soundcloud.bff.nextbff.repository
 
-import com.soundcloud.jvmkit.module.http.server.JsonResponseBuilder
 import com.soundcloud.publicApiStrangler.test.UnitSpecification
 import com.twitter.finagle.http.{Response, Status}
-import play.api.libs.json.{JsNull, JsValue, Json}
+import play.api.libs.json.{JsNull, Json}
 
 import scala.language.reflectiveCalls
 

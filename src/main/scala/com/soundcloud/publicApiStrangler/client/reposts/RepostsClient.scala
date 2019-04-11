@@ -4,12 +4,12 @@ import com.soundcloud.jvmkit.module.http.client.{JsonClient, Params}
 import com.soundcloud.jvmkit.module.util.{Path, Urn}
 import com.soundcloud.jvmkit.module.util.http.Headers
 import com.soundcloud.jvmkit.module.util.session.UserSession
-import com.soundcloud.publicApiStrangler.client.support.CommonJsonFormats._
+import com.soundcloud.jvmkit.module.json.UrnFormat._
 import com.soundcloud.publicApiStrangler.client.reposts.RepostsClient._
 import com.soundcloud.publicApiStrangler.client.support.FetchClient
 import com.twitter.finagle.http.{Response, Status}
 import com.twitter.util.Future
-import play.api.libs.json.{Format, JsArray, JsObject, Json}
+import play.api.libs.json.{Format, JsObject, Json}
 
 import scala.util.control.NonFatal
 
@@ -23,7 +23,7 @@ class RepostsClient(jsonClient: JsonClient) extends FetchClient {
   def createRepost(session: UserSession, target: Urn, baseUrl: String): Future[Result] =
     jsonClient.postWithSession(
       session,
-      Path() / target.getCollection / target.toString / "reposts",
+      Path() / target.collection / target.toString / "reposts",
       Params.empty,
       Headers.empty,
       None
@@ -32,7 +32,7 @@ class RepostsClient(jsonClient: JsonClient) extends FetchClient {
   def deleteRepost(session: UserSession, target: Urn, baseUrl: String): Future[Result] =
     jsonClient.deleteWithSession(
       session,
-      Path() / target.getCollection / target.toString / "reposts",
+      Path() / target.collection / target.toString / "reposts",
       Params.empty,
       Headers.empty,
       None
@@ -93,7 +93,7 @@ class RepostsClient(jsonClient: JsonClient) extends FetchClient {
 
   private def repostCountsForUrns(session: UserSession, urns: Set[Urn]): Future[Set[Count]] =
     Future.collect(
-      (urns.filter(_.getCollection == "users").map { userUrn =>
+      (urns.filter(_.collection == "users").map { userUrn =>
         getUserTotalCount(session, userUrn).map(Seq(_))
       } ++ Set(
         filterAndGetBulkCounts(session, "tracks", urns),
@@ -105,7 +105,7 @@ class RepostsClient(jsonClient: JsonClient) extends FetchClient {
                                      collection: String,
                                      urns: Set[Urn],
                                      batchSize: Int = 100): Future[Seq[Count]] = {
-    val filteredUrns = urns.filter(_.getCollection == collection)
+    val filteredUrns = urns.filter(_.collection == collection)
     val path = Path() / collection / "reposts" / "count"
 
     Future.collect(

@@ -8,7 +8,7 @@ import com.soundcloud.publicApiStrangler.client.pubmese.Isrc
 import com.soundcloud.publicApiStrangler.client.stitch.StitchCounts
 import com.soundcloud.publicApiStrangler.client.trackmetadata.{Artwork, EmbeddingPermission, Track}
 import com.soundcloud.publicApiStrangler.test.UnitSpecification
-import org.joda.time.LocalDateTime
+import org.joda.time.DateTime
 import play.api.libs.json._
 
 trait TrackRepresentationLikeSpecContext {
@@ -77,12 +77,12 @@ trait TrackRepresentationLikeSpecContext {
     user_urn = userUrn,
     commentable = false,
     description = Some("Follow @samstarling !"),
-    created_at = new LocalDateTime(2015, 2, 15, 16, 47, 27),
+    created_at = new DateTime(2015, 2, 15, 16, 47, 27),
     disabled_at = None,
     downloadable = Some(false),
     duration = 120,
     genre = Some("future bass"),
-    last_modified = new LocalDateTime(2016, 8, 8, 13, 28, 53),
+    last_modified = new DateTime(2016, 8, 8, 13, 28, 53),
     permalink = "plsty-remix",
     permalink_url = Some("http://soundcloud.com/nirvana/plsty-remix"),
     public = true,
@@ -112,7 +112,7 @@ trait TrackRepresentationLikeSpecContext {
     release = Some("DR012"),
     key_signature = Some("Emaj"),
     video_url = Some("http://example.com/video.mp4"),
-    label_id = defaultLabelUrn.map(_.getIdentifier.toInt),
+    label_id = defaultLabelUrn.map(_.identifier.toInt),
     supply_chain_status = Some("manual_upload")
   )
 

@@ -20,7 +20,7 @@ class TracksVisitorSpec extends UnitSpecification {
     def urnsAndTracks(tracks: List[JsValue]) =
       for (track <- tracks) yield {
         val id = (track \ "id").as[Int]
-        val urn = new Urn(s"soundcloud:tracks:$id")
+        val urn = Urn("soundcloud", "tracks", id.toString)
         urn -> track
       }
   }

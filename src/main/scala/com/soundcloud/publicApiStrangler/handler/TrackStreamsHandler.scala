@@ -7,7 +7,6 @@ import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.publicApiStrangler.authorization.PublicApiSiloing
 import com.soundcloud.publicApiStrangler.mapper.trackstreams.{TrackStreamJsonResponseMapper, TrackStreamRedirectResponseMapper, TrackStreamResponseMapper}
 import com.soundcloud.publicApiStrangler.service.media._
-import com.soundcloud.publicApiStrangler.support.RangeHelper
 import com.twitter.finagle.http.{MediaType, Method, Response, Status}
 import com.twitter.util.Future
 import play.api.libs.json.Json

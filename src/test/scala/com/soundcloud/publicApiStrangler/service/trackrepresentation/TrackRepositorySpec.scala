@@ -2,9 +2,9 @@ package com.soundcloud.publicApiStrangler.service.trackrepresentation
 
 import java.net.URL
 
-import com.soundcloud.jvmkit.module.util.{Url, Urn}
+import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.publicApiStrangler.client.liebling.LieblingClient
-import com.soundcloud.publicApiStrangler.client.media.{TrackWaveformUrl, WaveformUrlsGenerator}
+import com.soundcloud.publicApiStrangler.client.media.WaveformUrlsGenerator
 import com.soundcloud.publicApiStrangler.client.mothership.response.representation.{Geoblockings, User}
 import com.soundcloud.publicApiStrangler.client.mothership.{DomainLocking, RichOkidokiClient, TrackAudioMetadata}
 import com.soundcloud.publicApiStrangler.client.playlists.PlaylistsClient
@@ -78,7 +78,7 @@ class TrackRepositorySpec extends UnitSpecification {
 
     def areTracksAccessibleResponse = Future.value(accessibilityChecks)
 
-    def trackUrn(id: Int) = Urn(s"soundcloud:tracks:$id")
+    def trackUrn(id: Int) = Urn("soundcloud", "tracks", id.toString)
 
     val track1 = trackUrn(1)
     val track2 = trackUrn(2)

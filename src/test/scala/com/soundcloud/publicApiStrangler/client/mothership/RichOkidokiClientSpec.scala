@@ -307,9 +307,9 @@ class RichOkidokiClientSpec extends UnitSpecification {
     }
 
     "200 response" in new GeoblockingsContext {
-      when(jsonClient.getWithSession(session, path, Map("track_ids" -> firstBatch.map(_.getIdentifier).mkString(",")), Headers.empty))
+      when(jsonClient.getWithSession(session, path, Map("track_ids" -> firstBatch.map(_.identifier).mkString(",")), Headers.empty))
         .thenReturn(Future.value(jsonResponse(Status.Ok, firstBatchJson)))
-      when(jsonClient.getWithSession(session, path, Map("track_ids" -> secondBatch.map(_.getIdentifier).mkString(",")), Headers.empty))
+      when(jsonClient.getWithSession(session, path, Map("track_ids" -> secondBatch.map(_.identifier).mkString(",")), Headers.empty))
         .thenReturn(Future.value(jsonResponse(Status.Ok, secondBatchJson)))
 
       val batchSize = 2
@@ -322,7 +322,7 @@ class RichOkidokiClientSpec extends UnitSpecification {
     }
 
     "500 response" in new GeoblockingsContext {
-      when(jsonClient.getWithSession(session, path, Params("track_ids" -> urns.map(_.getIdentifier).mkString(",")), Headers.empty))
+      when(jsonClient.getWithSession(session, path, Params("track_ids" -> urns.map(_.identifier).mkString(",")), Headers.empty))
         .thenReturn(Future.value(jsonResponse(Status.InternalServerError, JsNull)))
 
       Await.result(client.fetchTracksDomainLockings(session, urns)) ==== Map.empty

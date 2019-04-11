@@ -2,18 +2,18 @@ package com.soundcloud.publicApiStrangler.test.util
 
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.publicApiStrangler.client.trackmetadata.{Artwork, EmbeddingPermission, Track}
-import org.joda.time.LocalDateTime
+import org.joda.time.DateTime
 
 case class TrackMetadataTrackBuilder(urn: Urn = Urn("soundcloud", "tracks", "1"),
                                      user_urn: Urn = Urn("soundcloud", "users", "1"),
                                      commentable: Boolean = false,
                                      description: Option[String] = Some("description"),
-                                     created_at: LocalDateTime = LocalDateTime.now(),
-                                     disabled_at: Option[LocalDateTime] = None,
+                                     created_at: DateTime = DateTime.now(),
+                                     disabled_at: Option[DateTime] = None,
                                      downloadable: Option[Boolean] = None,
                                      duration: Int = 0,
                                      genre: Option[String] = None,
-                                     last_modified: LocalDateTime = LocalDateTime.now(),
+                                     last_modified: DateTime = DateTime.now(),
                                      permalink: String = "permalink",
                                      permalink_url: Option[String] = Some("permalink_url"),
                                      public: Boolean = true,
@@ -33,9 +33,9 @@ case class TrackMetadataTrackBuilder(urn: Urn = Urn("soundcloud", "tracks", "1")
                                      release_month: Option[Int] = None,
                                      release_day: Option[Int] = None,
                                      embeddableBy: EmbeddingPermission = EmbeddingPermission.None,
-                                     releaseDate: Option[LocalDateTime] = None,
+                                     releaseDate: Option[DateTime] = None,
                                      artwork: Artwork = Artwork(Some("artwork")),
-                                     published_at: Option[LocalDateTime] = None,
+                                     published_at: Option[DateTime] = None,
                                      purchase_url: Option[String] = Some("purchase_url"),
                                      purchase_title: Option[String] = Some("purchase_title"),
                                      bpm: Option[Double] = None,

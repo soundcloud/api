@@ -3,7 +3,7 @@ package com.soundcloud.publicApiStrangler.client.tracks
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.publicApiStrangler.authorization.policies._
 import play.api.libs.json._
-import com.soundcloud.publicApiStrangler.client.support.CommonJsonFormats.urnFormat
+import com.soundcloud.jvmkit.module.json.UrnFormat._
 
 case class VisibleTrack(urn : Urn,
                         uid: Option[String],

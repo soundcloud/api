@@ -2,6 +2,7 @@ package com.soundcloud.publicApiStrangler.mapper.search
 
 import com.soundcloud.bff.nextbff.mapper.Mapper
 import com.soundcloud.bff.nextbff.mapping.{JsonMapping, MappingContext}
+import com.soundcloud.jvmkit.module.json.UrnFormat._
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.publicApiStrangler.authorization.ContentAuthorizationRules
@@ -28,8 +29,8 @@ class SearchEntityMapper(okidokiClient: OkidokiClient,
     with InputValidation[Urn, JsonMapping] {
 
   override def mapNonEmptyInputs(session: UserSession, inputs: Set[Urn])(implicit context: MappingContext): Future[Map[Urn, JsonMapping]] = {
-    val trackUrns = inputs.filter(_.getCollection == "tracks")
-    val userUrns = inputs.filter(_.getCollection == "users")
+    val trackUrns = inputs.filter(_.collection == "tracks")
+    val userUrns = inputs.filter(_.collection == "users")
 
     for {
       (entities, authorizations, followCountsMap, repostsCountsByUrn) <- Future.join(
@@ -43,7 +44,7 @@ class SearchEntityMapper(okidokiClient: OkidokiClient,
     } yield {
       entities.map {
         entity =>
-          val urn = new Urn((entity \ "self" \ "urn").as[String])
+          val urn = (entity \ "self" \ "urn").as[Urn]
           urn -> entityFor(session, urn, entity, authorizations,
             followCountsMap,
             repostsCountsByUrn)

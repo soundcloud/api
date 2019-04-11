@@ -6,7 +6,7 @@ import java.util.TimeZone
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.publicApiStrangler.test.UnitSpecification
 import com.soundcloud.publicApiStrangler.test.util.TrackMetadataTrackBuilder
-import org.joda.time.{DateTimeZone, LocalDateTime}
+import org.joda.time.{DateTimeZone, DateTime}
 
 import scala.util.Random
 
@@ -16,9 +16,9 @@ class TrackPaginationSpec extends UnitSpecification {
 
   val baseUrl = new URL("https://api.soundcloud.com")
 
-  def trackUrns(size: Int) = Random.shuffle((0 until size).map(n => Urn(s"soundcloud:tracks:${n}"))).toList
+  def trackUrns(size: Int) = Random.shuffle((0 until size).map(n => Urn("soundcloud", "tracks", n.toString))).toList
 
-  def tracks(size: Int) = Random.shuffle((0 until size).map(n => TrackMetadataTrackBuilder(urn = Urn(s"soundcloud:tracks:${n}")).build)).toList
+  def tracks(size: Int) = Random.shuffle((0 until size).map(n => TrackMetadataTrackBuilder(urn = Urn("soundcloud", "tracks", n.toString)).build)).toList
 
   "defaults" >> {
     "defaults limit to 50 if not provided" >> {
@@ -136,17 +136,17 @@ class TrackPaginationSpec extends UnitSpecification {
   }
 
   "pagination with createdAtFrom and To" >> {
-    val from = new LocalDateTime(2017, 1, 1, 10, 0, 0)
-    val to = new LocalDateTime(2017, 1, 15, 10, 0, 0)
+    val from = new DateTime(2017, 1, 1, 10, 0, 0)
+    val to = new DateTime(2017, 1, 15, 10, 0, 0)
 
     val tracksWithCreatedAt = List(
-      (1, new LocalDateTime(2017, 1, 1, 9, 0, 0)),
-      (2, new LocalDateTime(2017, 1, 1, 11, 0, 0)),
-      (3, new LocalDateTime(2017, 1, 10, 9, 0, 0)),
-      (4, new LocalDateTime(2017, 1, 15, 9, 0, 0)),
-      (5, new LocalDateTime(2017, 1, 15, 10, 0, 0)),
-      (6, new LocalDateTime(2017, 1, 20, 10, 0, 0))).map { case (id, createdAt) =>
-      TrackMetadataTrackBuilder(urn = Urn(s"soundcloud:tracks:${id}"), created_at = createdAt).build
+      (1, new DateTime(2017, 1, 1, 9, 0, 0)),
+      (2, new DateTime(2017, 1, 1, 11, 0, 0)),
+      (3, new DateTime(2017, 1, 10, 9, 0, 0)),
+      (4, new DateTime(2017, 1, 15, 9, 0, 0)),
+      (5, new DateTime(2017, 1, 15, 10, 0, 0)),
+      (6, new DateTime(2017, 1, 20, 10, 0, 0))).map { case (id, createdAt) =>
+      TrackMetadataTrackBuilder(urn = Urn("soundcloud", "tracks", id.toString), created_at = createdAt).build
     }
 
     val pagination = new TrackPagination(None, None, false, Some(from), Some(to), baseUrl)
@@ -194,27 +194,27 @@ class TrackPaginationSpec extends UnitSpecification {
     }
 
     "created_at[from]" >> {
-      def withCreatedAtFrom(d: Option[LocalDateTime]) = TrackPagination(None, None, false, d, None, url)
+      def withCreatedAtFrom(d: Option[DateTime]) = TrackPagination(None, None, false, d, None, url)
 
       build(Map("created_at[from]" -> "")) ==== withCreatedAtFrom(None)
       build(Map("created_at[from]" -> "aaa")) ==== withCreatedAtFrom(None)
-      build(Map("created_at[from]" -> "2017-01-16 07:30:16")) ==== withCreatedAtFrom(Some(new LocalDateTime(2017, 1, 16, 7, 30, 16)))
-      build(Map("created_at[from]" -> "2017-01-16 07:30:16 +0010")) ==== withCreatedAtFrom(Some(new LocalDateTime(2017, 1, 16, 7, 20, 16)))
-      build(Map("created_at[from]" -> "2017/01/16 07:30:16 +0010")) ==== withCreatedAtFrom(Some(new LocalDateTime(2017, 1, 16, 7, 20, 16)))
-      build(Map("created_at[from]" -> "2017-01-16T07:30:16Z")) ==== withCreatedAtFrom(Some(new LocalDateTime(2017, 1, 16, 7, 30, 16)))
-      build(Map("created_at[from]" -> "2017-01-16T07:30:16")) ==== withCreatedAtFrom(Some(new LocalDateTime(2017, 1, 16, 7, 30, 16)))
+      build(Map("created_at[from]" -> "2017-01-16 07:30:16")) ==== withCreatedAtFrom(Some(new DateTime(2017, 1, 16, 7, 30, 16)))
+      build(Map("created_at[from]" -> "2017-01-16 07:30:16 +0010")) ==== withCreatedAtFrom(Some(new DateTime(2017, 1, 16, 7, 20, 16)))
+      build(Map("created_at[from]" -> "2017/01/16 07:30:16 +0010")) ==== withCreatedAtFrom(Some(new DateTime(2017, 1, 16, 7, 20, 16)))
+      build(Map("created_at[from]" -> "2017-01-16T07:30:16Z")) ==== withCreatedAtFrom(Some(new DateTime(2017, 1, 16, 7, 30, 16)))
+      build(Map("created_at[from]" -> "2017-01-16T07:30:16")) ==== withCreatedAtFrom(Some(new DateTime(2017, 1, 16, 7, 30, 16)))
     }
 
     "created_at[to]" >> {
-      def withCreatedAtTo(d: Option[LocalDateTime]) = TrackPagination(None, None, false, None, d, url)
+      def withCreatedAtTo(d: Option[DateTime]) = TrackPagination(None, None, false, None, d, url)
 
       build(Map("created_at[to]" -> "")) ==== withCreatedAtTo(None)
       build(Map("created_at[to]" -> "aaa")) ==== withCreatedAtTo(None)
-      build(Map("created_at[to]" -> "2017-01-16 07:30:16")) ==== withCreatedAtTo(Some(new LocalDateTime(2017, 1, 16, 7, 30, 16)))
-      build(Map("created_at[to]" -> "2017-01-16 07:30:16 +0010")) ==== withCreatedAtTo(Some(new LocalDateTime(2017, 1, 16, 7, 20, 16)))
-      build(Map("created_at[to]" -> "2017/01/16 07:30:16 +0010")) ==== withCreatedAtTo(Some(new LocalDateTime(2017, 1, 16, 7, 20, 16)))
-      build(Map("created_at[to]" -> "2017-01-16T07:30:16Z")) ==== withCreatedAtTo(Some(new LocalDateTime(2017, 1, 16, 7, 30, 16)))
-      build(Map("created_at[to]" -> "2017-01-16T07:30:16")) ==== withCreatedAtTo(Some(new LocalDateTime(2017, 1, 16, 7, 30, 16)))
+      build(Map("created_at[to]" -> "2017-01-16 07:30:16")) ==== withCreatedAtTo(Some(new DateTime(2017, 1, 16, 7, 30, 16)))
+      build(Map("created_at[to]" -> "2017-01-16 07:30:16 +0010")) ==== withCreatedAtTo(Some(new DateTime(2017, 1, 16, 7, 20, 16)))
+      build(Map("created_at[to]" -> "2017/01/16 07:30:16 +0010")) ==== withCreatedAtTo(Some(new DateTime(2017, 1, 16, 7, 20, 16)))
+      build(Map("created_at[to]" -> "2017-01-16T07:30:16Z")) ==== withCreatedAtTo(Some(new DateTime(2017, 1, 16, 7, 30, 16)))
+      build(Map("created_at[to]" -> "2017-01-16T07:30:16")) ==== withCreatedAtTo(Some(new DateTime(2017, 1, 16, 7, 30, 16)))
     }
   }
 }

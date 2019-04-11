@@ -258,7 +258,7 @@ class OkidokiClientSpec extends UnitSpecification {
 
     "success response" in new DeleteEmailContext {
       expectDeleteEmailResponse(Status.Ok, JsNull)
-      Await.result(client.deleteEmail(session, userUrn, emailUrn)) ==== ()
+      Await.result(client.deleteEmail(session, userUrn, emailUrn))
     }
   }
 
@@ -315,7 +315,7 @@ class OkidokiClientSpec extends UnitSpecification {
 
     trait SpotlightContext extends Context {
       val user = Urn("soundcloud", "users", "1")
-      val path = Path() / "users" / user.getIdentifier / "spotlight"
+      val path = Path() / "users" / user.identifier / "spotlight"
     }
 
     "when response is Ok" in new SpotlightContext {

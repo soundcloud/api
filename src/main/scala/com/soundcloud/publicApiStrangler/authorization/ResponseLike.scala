@@ -47,7 +47,10 @@ object ResponseLike {
         case Some(cookie) =>
       }
 
-    def setHeader(r: Response, key: String, value: String): Unit = r.headerMap.add(key, value)
+    def setHeader(r: Response, key: String, value: String): Unit = {
+      r.headerMap.add(key, value)
+      ()
+    }
 
     def setHeaderIfNotExists(r: Response, key: String, value: String): Unit = {
       if (!r.headerMap.contains(key)) setHeader(r, key, value)

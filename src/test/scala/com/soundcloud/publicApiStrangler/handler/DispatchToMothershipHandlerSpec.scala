@@ -5,7 +5,6 @@ import com.soundcloud.publicApiStrangler.test.UnitSpecification
 import com.twitter.finagle.Service
 import com.twitter.finagle.http._
 import com.twitter.util.{Await, Future}
-import org.mockito.Mockito.{verify, verifyZeroInteractions}
 
 class DispatchToMothershipHandlerSpec extends UnitSpecification {
   "dispatches requests to the mothership" >> {

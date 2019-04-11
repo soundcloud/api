@@ -9,7 +9,7 @@ import org.specs2.mutable.Specification
 import org.specs2.specification.BeforeAfterEach
 import play.api.libs.json.{JsValue, Json}
 
-import scala.collection.JavaConversions._
+import scala.collection.JavaConverters._
 import scala.reflect.ClassTag
 
 trait UnitSpecification extends Specification with BeforeAfterEach with Mockito {
@@ -29,12 +29,12 @@ trait UnitSpecification extends Specification with BeforeAfterEach with Mockito 
     .setUser(urn)
     .setAgent(someApp)
     .setGeo(new Geo("US", "Mountain View", "CA"))
-    .setScopes(someScopes)
+    .setScopes(someScopes.asJava)
     .build.asInstanceOf[LoggedInUserSession]
 
   def anonymousSession = (new UserSessionBuilder)
     .setAgent(someApp)
-    .setScopes(someScopes)
+    .setScopes(someScopes.asJava)
     .build.asInstanceOf[AnonymousUserSession]
 
   def jsonResponse(status: Status, json: JsValue, headers: HeaderMap = HeaderMap()) =

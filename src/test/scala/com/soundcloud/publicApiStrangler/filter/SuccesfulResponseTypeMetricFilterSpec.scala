@@ -2,7 +2,6 @@ package com.soundcloud.publicApiStrangler.filter
 
 import com.soundcloud.jvmkit.module.http.server.{JsonResponseBuilder, ResponseBuilder}
 import com.soundcloud.jvmkit.module.telemetry.{MetricsRegistryImpl, Telemetry}
-import com.soundcloud.jvmkit.module.util.config.InMemoryConfig
 import com.soundcloud.publicApiStrangler.test.UnitSpecification
 import com.twitter.finagle.Service
 import com.twitter.finagle.http._
@@ -14,9 +13,8 @@ class SuccesfulResponseTypeMetricFilterSpec extends UnitSpecification {
 
   trait Context extends Scope {
     val next = mock[Service[Request, Response]]
-    val config = new InMemoryConfig
     val collectorRegistry = new CollectorRegistry
-    val telemetry = new Telemetry(config.getApplicationName, new MetricsRegistryImpl(collectorRegistry))
+    val telemetry = new Telemetry(new MetricsRegistryImpl(collectorRegistry))
     val filter = new SuccesfulResponseTypeMetricFilter(telemetry)
 
     def xmlCount = collectorRegistry.getSampleValue(

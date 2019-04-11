@@ -5,7 +5,7 @@ import com.soundcloud.publicApiStrangler.client.playlists.{Playlist, PlaylistsCl
 import com.soundcloud.publicApiStrangler.test.UnitSpecification
 import com.soundcloud.publicApiStrangler.test.util.TrackMetadataTrackBuilder
 import com.twitter.util.{Await, Future}
-import org.joda.time.LocalDateTime
+import org.joda.time.DateTime
 
 class TrackAccessibilityServiceSpec extends UnitSpecification {
 
@@ -35,7 +35,7 @@ class TrackAccessibilityServiceSpec extends UnitSpecification {
   }
 
   "#isTrackAccessible" in new Context {
-    val now = Some(LocalDateTime.now)
+    val now = Some(DateTime.now)
     val user1 = Urn("soundcloud", "users", "1")
     val user2 = Urn("soundcloud", "users", "2")
 
@@ -48,7 +48,7 @@ class TrackAccessibilityServiceSpec extends UnitSpecification {
     case class TestData(sessionUser: Option[Urn],
                         trackOwner: Urn,
                         public: Boolean,
-                        disabledAt: Option[LocalDateTime],
+                        disabledAt: Option[DateTime],
                         trackSecretToken: Option[String],
                         secretTokenInRequest: Option[String],
                         playlist: Option[Playlist],

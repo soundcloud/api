@@ -5,7 +5,7 @@ import java.net.URL
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.publicApiStrangler.client.trackmetadata.Track
 import org.joda.time.format.DateTimeFormat
-import org.joda.time.{DateTime, DateTimeZone, LocalDateTime}
+import org.joda.time.{DateTime, DateTimeZone}
 
 import scala.util.Try
 
@@ -13,8 +13,8 @@ import scala.util.Try
 case class TrackPagination(maybeLimit: Option[Int],
                            maybeOffset: Option[Int],
                            linkedPartitioning: Boolean,
-                           createdAtFrom: Option[LocalDateTime],
-                           createdAtTo: Option[LocalDateTime],
+                           createdAtFrom: Option[DateTime],
+                           createdAtTo: Option[DateTime],
                            requestUrl: URL) {
 
   val offset = maybeOffset.getOrElse(0)
@@ -27,7 +27,7 @@ case class TrackPagination(maybeLimit: Option[Int],
     val start = offset
     val end = start + limit + limit // over-fetch to compensate for client filtering
     // sort by id desc
-    trackUrns.sortBy(-_.getIdentifier.toInt).slice(start, end).toSet
+    trackUrns.sortBy(-_.identifier.toInt).slice(start, end).toSet
   }
 
   def calculateFinalPage(tracks: List[Track]): List[Track] = {
@@ -86,10 +86,10 @@ object TrackPagination {
         (value: String) => new DateTime(value, DateTimeZone.UTC)
       )
 
-  private def tryParseDate(value: String): Option[LocalDateTime] = {
+  private def tryParseDate(value: String): Option[DateTime] = {
     attempts.flatMap(parseFn => Try(parseFn(value)).toOption).headOption.map(normalizeToUTC)
   }
 
-  private def normalizeToUTC(dateTime: DateTime): LocalDateTime =
-    dateTime.toDateTime(DateTimeZone.UTC).toLocalDateTime
+  private def normalizeToUTC(dateTime: DateTime): DateTime =
+    dateTime.toDateTime(DateTimeZone.UTC).toDateTime
 }

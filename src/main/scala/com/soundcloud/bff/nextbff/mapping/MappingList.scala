@@ -10,7 +10,7 @@ case class MappingList[M <: Mapping] private[bff](embedded: EmbeddedList[M], fil
   def filterIfDefined(f: M => Embedded[_, _]) =
     copy(filterIfDefined = Some(f))
 
-  @JsonValue private def value =
+  @JsonValue def value =
     filterIfDefined.map {
       filter =>
         embedded.get.filter(filter(_).isValid)

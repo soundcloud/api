@@ -924,54 +924,6 @@ class MoshimoshiClientSpec extends UnitSpecification {
       }
     }
 
-    trait TrackUpdateWithNullPublishedAtContext extends Context {
-
-      val trackUpdateWithNullPublishedAt = TrackUpdate(
-        api_streamable = None,
-        commentable = None,
-        description = None,
-        downloadable = None,
-        embeddable = None,
-        feedable = None,
-        genre = None,
-        label_name = None,
-        license = None,
-        published_at = NullValue,
-        permalink = "Test Permalink",
-        purchase_title = None,
-        purchase_url = None,
-        release_date = None,
-        reveal_comments = None,
-        reveal_stats = None,
-        sharing = None,
-        tag_list = None,
-        title = "Test Title",
-        replacing_uid = None,
-        replacing_original_filename = None,
-        artwork_from_s3 = MissingValue
-      )
-
-      val urn = Urn("soundcloud", "tracks", "174090825")
-      val path = Path() / "tracks" / urn
-      val headers = buildHeaders("X-Forwarded-For" -> "8.8.8.8", "X-Real-IP" -> "8.8.8.8", "Content-Length" -> "546")
-      val filteredHeaders = buildHeaders("X-Forwarded-For" -> "8.8.8.8", "X-Real-IP" -> "8.8.8.8")
-
-      lazy val updateTrackResult = Await.result(client.updateTrack(session, urn, trackUpdateWithNullPublishedAt, headers))
-
-      val bodies = ExpectedBody(
-        responseBody = moshiTrackMinimal,
-        requestBody = Some(fixTrackFixture(moshiTrackUpdateWithNullPublishedAt))
-      )
-    }
-
-    "properly serializes null published_at field" in new TrackUpdateWithPublishedAtContext {
-      expectResponse(path, Params.empty, Method.Put, filteredHeaders, Status(200), bodies)
-
-      updateTrackResult match {
-        case Success(track, status) => track.urn ==== urn && status ==== Status.Ok
-        case _ => failure("did not return Success")
-      }
-    }
   }
 
   "#fetchTrackGeoblockings" >> {

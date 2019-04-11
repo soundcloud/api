@@ -36,11 +36,11 @@ class StitchClientSpec extends UnitSpecification {
     val trackUrns = Set(trackUrn1, trackUrn2, trackUrn3)
     val userUrn = Urn("soundcloud", "users", "8700")
 
-    def stitchKey1 = s"${userUrn.identifier}|${trackUrn1.getIdentifier}"
+    def stitchKey1 = s"${userUrn.identifier}|${trackUrn1.identifier}"
 
-    def stitchKey2 = s"${userUrn.identifier}|${trackUrn2.getIdentifier}"
+    def stitchKey2 = s"${userUrn.identifier}|${trackUrn2.identifier}"
 
-    def stitchKey3 = s"${userUrn.identifier}|${trackUrn3.getIdentifier}"
+    def stitchKey3 = s"${userUrn.identifier}|${trackUrn3.identifier}"
 
     def genMockResponseContentBit(cat: String, keys: List[(String, Int)]) = {
       val seriesPerKey = keys.map { case (key, count) =>

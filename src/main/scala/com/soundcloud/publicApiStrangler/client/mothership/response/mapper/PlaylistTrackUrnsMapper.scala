@@ -1,7 +1,7 @@
 package com.soundcloud.publicApiStrangler.client.mothership.response.mapper
 
 import com.soundcloud.jvmkit.module.util.Urn
-import com.soundcloud.publicApiStrangler.client.support.CommonJsonFormats.urnFormat
+import com.soundcloud.jvmkit.module.json.UrnFormat._
 import play.api.libs.json.{JsObject, JsValue}
 
 object PlaylistTrackUrnsMapper {

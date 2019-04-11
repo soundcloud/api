@@ -6,7 +6,6 @@ import java.util.TimeZone
 import com.soundcloud.jvmkit.module.bff.testsupport.FakeUserAuthentication
 import com.soundcloud.jvmkit.module.telemetry.{MetricsRegistryImpl, Telemetry}
 import com.soundcloud.jvmkit.module.util.Urn
-import com.soundcloud.jvmkit.module.util.config.InMemoryConfig
 import com.soundcloud.publicApiStrangler.Routing
 import com.soundcloud.publicApiStrangler.service.trackrepresentation.{TrackPagination, TrackRepresentationLikeSpecContext, TrackRepresentationsService, TracksRepresentationResult}
 import com.soundcloud.publicApiStrangler.support.ResultF.lift
@@ -14,7 +13,7 @@ import com.soundcloud.publicApiStrangler.support.{Bad, Good, StringError}
 import com.soundcloud.publicApiStrangler.test.{HandlerSpecificationScope, UnitSpecification}
 import com.twitter.finagle.http.Status
 import com.twitter.util.Future
-import org.joda.time.{DateTimeZone, LocalDateTime}
+import org.joda.time.{DateTimeZone, DateTime}
 import org.mockito.Mockito.when
 
 class UserTracksHandlerSpec extends UnitSpecification {
@@ -27,7 +26,7 @@ class UserTracksHandlerSpec extends UnitSpecification {
 
     val mothershipDispatcher = mock[TrackMothershipDispatcherWithCounts]
     val tracksService = mock[TrackRepresentationsService]
-    val telemetry = new Telemetry((new InMemoryConfig).getApplicationName, MetricsRegistryImpl.defaultRegistry)
+    val telemetry = new Telemetry(MetricsRegistryImpl.defaultRegistry)
 
     val shouldUseTrackMetadata = () => Future.value(true)
     val handler = new UserTracksHandler(
@@ -47,8 +46,8 @@ class UserTracksHandlerSpec extends UnitSpecification {
       val queryString = "?limit=1&offset=2&linked_partitioning=yes-please&created_at[from]=2017-01-01%2010:00:00&created_at[to]=2017-01-15%2010:00:00"
 
       def paginationParams(path: String) = TrackPagination(Some(1), Some(2), true,
-        Some(new LocalDateTime(2017, 1, 1, 10, 0, 0)),
-        Some(new LocalDateTime(2017, 1, 15, 10, 0, 0)),
+        Some(new DateTime(2017, 1, 1, 10, 0, 0)),
+        Some(new DateTime(2017, 1, 15, 10, 0, 0)),
         new URL("https://api.soundcloud.com" + path))
     }
 

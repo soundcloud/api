@@ -6,7 +6,7 @@ import com.soundcloud.jvmkit.module.util.http.Headers
 import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.twitter.finagle.http.{Response, Status}
 import com.twitter.util.Future
-import play.api.libs.json.{JsLookupResult, JsValue, Json}
+import play.api.libs.json.{JsLookupResult, Json}
 
 class StitchClient(jsonClient: JsonClient) {
   def countsForTrack(session: UserSession, trackUrn: Urn, userUrn: Urn): Future[StitchCounts] = {
@@ -25,7 +25,7 @@ class StitchClient(jsonClient: JsonClient) {
 
   def countsForTracks(session: UserSession, userToTrackUrns: Set[(Urn, Urn)], batchSize: Int = 50): Future[Map[Urn, StitchCounts]] = {
     inBatches(userToTrackUrns, batchSize) { userToTrackUrnBatch => {
-      val keys = userToTrackUrnBatch.map(key => s"${key._1.getIdentifier}|${key._2.getIdentifier}")
+      val keys = userToTrackUrnBatch.map(key => s"${key._1.identifier}|${key._2.identifier}")
       val keyParam = keys.map(key => s"k=$key").mkString("&")
 
       get(session, params(keyParam), keys)

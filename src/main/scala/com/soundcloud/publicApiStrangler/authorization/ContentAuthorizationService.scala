@@ -1,6 +1,7 @@
 package com.soundcloud.publicApiStrangler.authorization
 
 import com.soundcloud.jvmkit.module.http.client.{JsonClient, Params}
+import com.soundcloud.jvmkit.module.json.UrnFormat._
 import com.soundcloud.jvmkit.module.util.http.Headers
 import com.soundcloud.jvmkit.module.util.logging.SoundCloudLoggerFactory
 import com.soundcloud.jvmkit.module.util.session.UserSession
@@ -50,7 +51,7 @@ class ContentAuthorizationService(authsy: JsonClient, batchSize: Int = ContentAu
   }
 
   private def jsonToRules(value: JsValue): ContentAuthorization = {
-    val resource = new Urn((value \ "resource").as[String])
+    val resource = (value \ "resource").as[Urn]
     val playback = ContentPolicy.from((value \ "playback" \ "policy").as[String])
     val metadata = ContentPolicy.from((value \ "metadata" \ "policy").as[String])
 

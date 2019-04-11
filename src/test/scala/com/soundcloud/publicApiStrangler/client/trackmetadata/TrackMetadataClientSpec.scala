@@ -7,7 +7,7 @@ import com.soundcloud.publicApiStrangler.test.UnitSpecification
 import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures._
 import com.twitter.finagle.http.Status
 import com.twitter.util.{Await, Future}
-import org.joda.time.LocalDateTime
+import org.joda.time.DateTime
 import org.mockito.Mockito.{verify, when}
 import play.api.libs.json.{JsNull, Json}
 
@@ -51,13 +51,13 @@ class TrackMetadataClientSpec extends UnitSpecification {
         val track = actual.get
 
         track.commentable ==== true
-        track.created_at ==== LocalDateTime.parse("2007-10-18T11:27:04.000")
+        track.created_at ==== DateTime.parse("2007-10-18T11:27:04.000")
         track.description ==== Some("alltime classic")
-        track.disabled_at ==== Some(LocalDateTime.parse("2011-01-27T09:00:51.000"))
+        track.disabled_at ==== Some(DateTime.parse("2011-01-27T09:00:51.000"))
         track.downloadable ==== Some(false)
         track.duration ==== 85800
         track.genre ==== Some("Dance")
-        track.last_modified ==== LocalDateTime.parse("2011-01-27T09:00:51.000")
+        track.last_modified ==== DateTime.parse("2011-01-27T09:00:51.000")
         track.permalink ==== "jsb"
         track.permalink_url ==== Some("https://soundcloud.com/yvg/jsb")
         track.public ==== false
@@ -78,9 +78,9 @@ class TrackMetadataClientSpec extends UnitSpecification {
         track.release_month ==== Some(12)
         track.release_day ==== Some(22)
         track.embeddableBy ==== EmbeddingPermission.All
-        track.releaseDate ==== Some(new LocalDateTime(1989, 12, 22, 0, 0))
+        track.releaseDate ==== Some(new DateTime(1989, 12, 22, 0, 0))
         track.artwork.filename ==== Some("artworks-000001073830-j0xbmn-original.jpg")
-        track.published_at ==== Some(new LocalDateTime(1989, 12, 22, 0, 0))
+        track.published_at ==== Some(new DateTime(1989, 12, 22, 0, 0))
 
         verify(service).getWithSession(anonymousSession, path, Params.empty, Headers.empty)
       }

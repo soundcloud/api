@@ -5,6 +5,7 @@ import java.util.UUID
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.soundcloud.bff.nextbff.mapping.MappingContext
 import com.soundcloud.bff.nextbff.pagination.CursorBasedPage
+import com.soundcloud.jvmkit.module.json.UrnFormat._
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.publicApiStrangler.mapper.timeline.representation.Timeline
 import com.soundcloud.publicApiStrangler.mapper.timeline.{EntityMapper, EntitySummaryMapper}
@@ -35,7 +36,7 @@ class TimelineWithUuids(jsonValue: JsValue,
   override protected def mapChildren(events: Seq[JsObject]) = {
     events.map {
       event =>
-        val urn = new Urn((event \ "urn").as[String])
+        val urn = (event \ "urn").as[Urn]
         urn.collection match {
           case "tracks" => new TrackTimelineItem(event, entityMapper, entitySummaryMapper)
           case "playlists" => new PlaylistTimelineItem(event, entityMapper, entitySummaryMapper)

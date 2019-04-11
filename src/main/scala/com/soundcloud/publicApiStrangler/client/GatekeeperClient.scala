@@ -26,6 +26,6 @@ class GatekeeperClient(service: JsonClient) {
     ).map(BooleanByStatusResponse(_))
 
   private def userIdOrAnonymous(session: UserSession): String = {
-    if (session.isAnonymous) "anonymous" else session.getUser.getIdentifier
+    if (session.isAnonymous) "anonymous" else session.getUser.identifier
   }
 }

@@ -8,7 +8,7 @@ import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.http.Headers
 import com.soundcloud.jvmkit.module.util.session.UserSessionBuilder
 import com.soundcloud.publicApiStrangler.authorization.ContentAuthorizationRules
-import com.soundcloud.publicApiStrangler.client.support.CommonJsonFormats.urnFormat
+import com.soundcloud.jvmkit.module.json.UrnFormat._
 import com.soundcloud.publicApiStrangler.client.followcounts.FollowCountsClient
 import com.soundcloud.publicApiStrangler.client.mothership.OkidokiClient
 import com.soundcloud.publicApiStrangler.client.reposts.RepostsClient
@@ -99,7 +99,7 @@ class SearchMapperSpec extends UnitSpecification {
       .thenReturn(Future.value(Map.empty[Urn, Long]))
 
     val mapped = Await.result(searchMapper.materialize(sessionMock, request)).get
-    val result = Json.parse(UntypedJson.asString(mapped)).as[JsArray]
+    val result = Json.parse(UntypedJson.write(mapped)).as[JsArray]
 
     result.value.count {
       _ == JsNull

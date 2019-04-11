@@ -73,5 +73,5 @@ object PageBuilder {
     * Creates the PageBuilder.
     */
   def apply[T](request: Request, baseUrl: String)(param: T): PageBuilder[T] =
-    PageBuilder(request, param, baseUrl)
+    new PageBuilder(request, param, baseUrl)
 }

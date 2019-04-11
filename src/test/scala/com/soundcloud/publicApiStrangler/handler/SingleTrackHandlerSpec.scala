@@ -3,7 +3,6 @@ package com.soundcloud.publicApiStrangler.handler
 import com.soundcloud.jvmkit.module.bff.testsupport.FakeUserAuthentication
 import com.soundcloud.jvmkit.module.telemetry.{MetricsRegistryImpl, Telemetry}
 import com.soundcloud.jvmkit.module.util.Urn
-import com.soundcloud.jvmkit.module.util.config.InMemoryConfig
 import com.soundcloud.jvmkit.module.util.session.UserSessionBuilder
 import com.soundcloud.publicApiStrangler.client.mothership.TrackAudioMetadata
 import com.soundcloud.publicApiStrangler.client.mothership.response.representation.User
@@ -15,7 +14,7 @@ import com.soundcloud.publicApiStrangler.Routing
 import com.soundcloud.publicApiStrangler.service.trackrepresentation.{TrackRepresentation, TrackRepresentationLike, TrackRepresentationsService}
 import com.twitter.finagle.http.Status
 import com.twitter.util.Future
-import org.joda.time.LocalDateTime
+import org.joda.time.DateTime
 import org.mockito.Mockito.when
 import play.api.libs.json.Json
 
@@ -23,7 +22,7 @@ import play.api.libs.json.Json
 class SingleTrackHandlerSpec extends UnitSpecification {
 
   def trackmetadataTrack(
-                          disabledAt: Option[LocalDateTime] = None,
+                          disabledAt: Option[DateTime] = None,
                           isPublic: Boolean = true,
                           secretToken: String = "secr3t-Token",
                           isDownloadable: Option[Boolean] = Some(false),
@@ -36,12 +35,12 @@ class SingleTrackHandlerSpec extends UnitSpecification {
       user_urn = user,
       commentable = false,
       description = None,
-      created_at = new LocalDateTime(2016, 5, 19, 18, 3, 4),
+      created_at = new DateTime(2016, 5, 19, 18, 3, 4),
       disabled_at = disabledAt,
       downloadable = isDownloadable,
       duration = 0,
       genre = None,
-      last_modified = new LocalDateTime(2016, 5, 19, 18, 3, 4),
+      last_modified = new DateTime(2016, 5, 19, 18, 3, 4),
       permalink = null,
       permalink_url = None,
       public = isPublic,
@@ -104,9 +103,8 @@ class SingleTrackHandlerSpec extends UnitSpecification {
   trait Context extends HandlerSpecificationScope {
     val trackRepresentationsService = mock[TrackRepresentationsService]
 
-    val config = new InMemoryConfig
     val collectorRegistry = MetricsRegistryImpl.defaultRegistry
-    val telemetry = new Telemetry(config.getApplicationName, collectorRegistry)
+    val telemetry = new Telemetry(collectorRegistry)
 
     val session = new UserSessionBuilder().build()
     val trackUrn = Urn("soundcloud", "tracks", "987")

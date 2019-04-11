@@ -1,5 +1,6 @@
 package com.soundcloud.publicApiStrangler.client.playlists
 
+import com.soundcloud.jvmkit.module.json.UrnFormat._
 import com.soundcloud.jvmkit.module.util.Urn
 import play.api.libs.json.{JsResult, JsSuccess, JsValue, Reads}
 
@@ -11,7 +12,7 @@ object Playlist {
       JsSuccess(
         Playlist(
           secretToken = (json \ "secret_token").as[String],
-          userUrn = Urn((json \ "user" \ "urn").as[String])
+          userUrn = (json \ "user" \ "urn").as[Urn]
         )
       )
   }

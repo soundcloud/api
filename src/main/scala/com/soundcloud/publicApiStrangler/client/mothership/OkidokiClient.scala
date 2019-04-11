@@ -90,11 +90,12 @@ class OkidokiClient(service: JsonClient,
         response.status match {
           case Status.Ok => Success(Json.parse(response.contentString).as[TranscodingResponse])
           case Status.BadRequest => BadRequest(Nil) //TODO: parse any errors from response body
+          case _ => throw new RuntimeException(s"okidoki http ${response.statusCode}")
         }
     }
   }
 
   def spotlight(session: UserSession, user: Urn): Future[Spotlight] =
-    service.getWithSession(session, Path() / "users" / user.getIdentifier / "spotlight", Params.empty, Headers.empty).map(spotlightResponseMapper(_))
+    service.getWithSession(session, Path() / "users" / user.identifier / "spotlight", Params.empty, Headers.empty).map(spotlightResponseMapper(_))
 
 }

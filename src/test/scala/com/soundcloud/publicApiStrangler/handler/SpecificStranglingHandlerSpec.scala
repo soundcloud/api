@@ -3,7 +3,6 @@ package com.soundcloud.publicApiStrangler.handler
 import com.soundcloud.jvmkit.module.http.server.HandlerRequest
 import com.soundcloud.jvmkit.module.telemetry.{MetricsRegistryImpl, Telemetry}
 import com.soundcloud.jvmkit.module.util.Urn
-import com.soundcloud.jvmkit.module.util.config.InMemoryConfig
 import com.soundcloud.jvmkit.module.util.session.AuthorizationHeaders.ScHeaders
 import com.soundcloud.publicApiStrangler.test.UnitSpecification
 import com.twitter.finagle.http.{HeaderMap, Method, Request, Response}
@@ -37,9 +36,8 @@ class SpecificStranglingHandlerSpec extends UnitSpecification {
     val testHandler = mock[TestHandler]
     testHandler.handle(request) returns Future(mock[Response])
 
-    val config = new InMemoryConfig
     val collectorRegistry = new CollectorRegistry
-    val telemetry = new Telemetry(config.getApplicationName, new MetricsRegistryImpl(collectorRegistry))
+    val telemetry = new Telemetry(new MetricsRegistryImpl(collectorRegistry))
     val counter = telemetry.counter("fallthrough_strangled_by", "testing counter", "method", "path_pattern", "agent_urn")
 
     val handler = new SpecificStranglingHandler(testHandler.handle, pathPatternsToDispatch, officialApps, counter)

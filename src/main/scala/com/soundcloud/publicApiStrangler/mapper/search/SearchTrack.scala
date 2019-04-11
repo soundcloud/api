@@ -2,6 +2,7 @@ package com.soundcloud.publicApiStrangler.mapper.search
 
 import com.fasterxml.jackson.annotation.JsonIgnore
 import com.soundcloud.bff.nextbff.mapping.MappingContext
+import com.soundcloud.jvmkit.module.json.UrnFormat._
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.publicApiStrangler.mapper.liebling.LikeCountMapper
@@ -35,7 +36,7 @@ class SearchTrack(session: UserSession,
 
   private def hasDownloadLink =
     downloadable.getOrElse(false) ||
-      new Urn((json \ "user" \ "urn").as[String]) == session.getUser
+      (json \ "user" \ "urn").as[Urn] == session.getUser
 
   // public API returns empty strings instead of nulls
   override val key_signature = Some("")

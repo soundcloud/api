@@ -1,6 +1,7 @@
 package com.soundcloud.publicApiStrangler.client.liebling
 
 import com.soundcloud.jvmkit.module.http.client.{JsonClient, Params}
+import com.soundcloud.jvmkit.module.json.UrnFormat._
 import com.soundcloud.jvmkit.module.util.http.Headers
 import com.soundcloud.jvmkit.module.util.session.UserSessionBuilder
 import com.soundcloud.jvmkit.module.util.{Path, Urn}
@@ -8,7 +9,7 @@ import com.soundcloud.publicApiStrangler.test.Helpers._
 import com.soundcloud.publicApiStrangler.test.UnitSpecification
 import com.twitter.finagle.IndividualRequestTimeoutException
 import com.twitter.util.{Await, Duration, Future}
-import play.api.libs.json.{JsArray, Json}
+import play.api.libs.json.Json
 
 class LieblingClientSpec extends UnitSpecification {
 
@@ -80,7 +81,7 @@ class LieblingClientSpec extends UnitSpecification {
       actual.likes_counts must haveSize(2)
       actual.likes_counts ==== (lieblingLikesCount \ "likes_counts").as[List[LikesCount]]
       actual.liked_track_urns must haveSize(1)
-      actual.liked_track_urns ==== (lieblingLikesCount \ "liked_track_urns").as[Set[String]].map(Urn(_))
+      actual.liked_track_urns ==== (lieblingLikesCount \ "liked_track_urns").as[Set[Urn]]
     }
 
     "performs requests in batches if necessary" in new Context() {
@@ -101,7 +102,7 @@ class LieblingClientSpec extends UnitSpecification {
       actual.likes_counts must haveSize(2)
       actual.likes_counts ==== (lieblingLikesCount \ "likes_counts").as[List[LikesCount]]
       actual.liked_track_urns must haveSize(1)
-      actual.liked_track_urns ==== (lieblingLikesCount \ "liked_track_urns").as[Set[String]].map(Urn(_))
+      actual.liked_track_urns ==== (lieblingLikesCount \ "liked_track_urns").as[Set[Urn]]
     }
   }
 

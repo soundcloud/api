@@ -1,5 +1,6 @@
 package com.soundcloud.publicApiStrangler.client.mothership.response.mapper
 
+import com.soundcloud.jvmkit.module.json.UrnFormat._
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.publicApiStrangler.client.mothership.response.representation.Track
 import play.api.libs.json.JsValue
@@ -7,8 +8,8 @@ import play.api.libs.json.JsValue
 object TrackMapper {
   def apply(json: JsValue): Track = {
     new Track(
-      urn = Urn((json \ "self" \ "urn").as[String]),
-      user_urn = Urn((json \ "user" \ "urn").as[String]),
+      urn = (json \ "self" \ "urn").as[Urn],
+      user_urn = (json \ "user" \ "urn").as[Urn],
       api_streamable = (json \ "api_streamable").asOpt[Boolean],
       artwork_url = (json \ "artwork_url").asOpt[String],
       bucket = (json \ "bucket").asOpt[String],

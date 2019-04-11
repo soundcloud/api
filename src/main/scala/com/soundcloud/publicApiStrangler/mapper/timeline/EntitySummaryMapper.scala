@@ -2,6 +2,7 @@ package com.soundcloud.publicApiStrangler.mapper.timeline
 
 import com.soundcloud.bff.nextbff.mapper.Mapper
 import com.soundcloud.bff.nextbff.mapping.{JsonMapping, MappingContext}
+import com.soundcloud.jvmkit.module.json.UrnFormat._
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.publicApiStrangler.client.mothership.OkidokiClient
@@ -15,14 +16,14 @@ class EntitySummaryMapper(okidokiClient: OkidokiClient,
                           baseUrl: String) extends Mapper[Urn, JsonMapping] {
 
   override def map(session: UserSession, inputs: Set[Urn])(implicit context: MappingContext): Future[Map[Urn, JsonMapping]] = {
-    val justPlaylistUrns = inputs.filter(_.getCollection == "playlists")
+    val justPlaylistUrns = inputs.filter(_.collection == "playlists")
 
     Future.join(
       okidokiClient.fetch(session, inputs),
       repostsClient.getRepostCountsByUrnWithFallback(session, justPlaylistUrns)
     ).map { case (entities, playlistRepostCountsByUrn) =>
       entities.map { entity =>
-        val urn = new Urn((entity \ "self" \ "urn").as[String])
+        val urn = (entity \ "self" \ "urn").as[Urn]
         urn -> entityFor(urn, entity, playlistRepostCountsByUrn)
       }
     }.map(_.toMap)

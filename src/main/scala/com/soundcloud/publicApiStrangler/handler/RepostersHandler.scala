@@ -30,7 +30,7 @@ class RepostersHandler(userAuthentication: UserAuthentication,
       val limit = request.params.get("limit").map(_.toInt).getOrElse(200)
       val linkedPartitioningEnabled = request.params.get("linked_partitioning").contains("1")
       val cursor = request.params.get("cursor")
-      val repostable = new Urn(s"""soundcloud:$repostableType:${request.routeParams("id")}""")
+      val repostable = Urn("soundcloud", repostableType, request.routeParams("id"))
       if (limit <= 200)
         repostsClient.reposters(session, repostable, limit, cursor)
           .flatMap(hydrateUsers(session, request, limit, _))

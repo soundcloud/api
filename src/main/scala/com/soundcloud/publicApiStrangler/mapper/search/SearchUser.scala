@@ -1,6 +1,7 @@
 package com.soundcloud.publicApiStrangler.mapper.search
 
 import com.soundcloud.bff.nextbff.mapping.MappingContext
+import com.soundcloud.jvmkit.module.json.UrnFormat._
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.publicApiStrangler.client.followcounts.FollowCounts
 import com.soundcloud.publicApiStrangler.mapper.timeline.representation.User
@@ -25,7 +26,7 @@ class SearchUser(jsonValue: JsValue,
   override val track_count = (json \ "public_tracks_count").asOpt[Int]
 
   val subscriptions = (json \ "subscriptions").as[Seq[JsObject]].map { sub =>
-    val id = Urn((sub \ "product" \ "urn").as[String]).getIdentifier
+    val id = (sub \ "product" \ "urn").as[Urn].identifier
     val name = (sub \ "product" \ "name").as[String]
     Subscription(Product(id, name))
   }

@@ -8,7 +8,7 @@ import com.soundcloud.publicApiStrangler.client.follows.representation._
 import com.soundcloud.publicApiStrangler.client.follows.representation.follow._
 import com.soundcloud.publicApiStrangler.client.follows.representation.unfollow.{UnfollowSuccessful, NotFollowing => UnfollowNotFollowing, UnknownError => UnfollowUnknownError, UserAsTarget => UnfollowUserAsTarget, UserNotFound => UnfollowUserNotFound}
 import com.twitter.util.{Await, Future}
-import org.joda.time.LocalDateTime
+import org.joda.time.DateTime
 import play.api.libs.json.{JsNull, JsString, JsValue, Json}
 import com.soundcloud.publicApiStrangler.test.UnitSpecification
 import com.twitter.finagle.http.Status
@@ -70,7 +70,7 @@ class FollowsClientSpec extends UnitSpecification {
     "returns the created following when a new following is created" in new FollowContext {
       mockWith(Status.Created, Fixtures.followingCreated)
 
-      result ==== FollowingCreated(Following("42", new LocalDateTime("2015-12-08T00:32:10.000"), anotherUser, user))
+      result ==== FollowingCreated(Following("42", new DateTime("2015-12-08T00:32:10.000"), anotherUser, user))
     }
 
     "indicates when the target user is already being followed" in new FollowContext {
@@ -256,7 +256,7 @@ class FollowsClientSpec extends UnitSpecification {
     "returns the followings when one page of results is found" in new FollowingsContext {
       mockWith(Status.Ok, Fixtures.oneFollowingPage)
 
-      val followings = Seq(Following("42", new LocalDateTime("2015-12-08T00:32:10.000"), anotherUser, user))
+      val followings = Seq(Following("42", new DateTime("2015-12-08T00:32:10.000"), anotherUser, user))
       val pagination = None
 
       result ==== Some(FollowingsPage(followings, pagination))
@@ -265,7 +265,7 @@ class FollowsClientSpec extends UnitSpecification {
     "returns the followings and the next page information when multiple pages are found" in new FollowingsContext {
       mockWith(Status.Ok, Fixtures.oneFollowingPageWithNext)
 
-      val followings = Seq(Following("42", new LocalDateTime("2015-12-08T00:32:10.000"), anotherUser, user))
+      val followings = Seq(Following("42", new DateTime("2015-12-08T00:32:10.000"), anotherUser, user))
       val pagination = Some(Pagination("12345", 1))
 
       result ==== Some(FollowingsPage(followings, pagination))
@@ -304,7 +304,7 @@ class FollowsClientSpec extends UnitSpecification {
     "returns the followings when one page of results is found" in new FollowersContext {
       mockWith(Status.Ok, Fixtures.oneFollowingPage)
 
-      val followings = Seq(Following("42", new LocalDateTime("2015-12-08T00:32:10.000"), anotherUser, user))
+      val followings = Seq(Following("42", new DateTime("2015-12-08T00:32:10.000"), anotherUser, user))
       val pagination = None
 
       result ==== Some(FollowingsPage(followings, pagination))
@@ -313,7 +313,7 @@ class FollowsClientSpec extends UnitSpecification {
     "returns the followings and the next page information when multiple pages are found" in new FollowersContext {
       mockWith(Status.Ok, Fixtures.oneFollowingPageWithNext)
 
-      val followings = Seq(Following("42", new LocalDateTime("2015-12-08T00:32:10.000"), anotherUser, user))
+      val followings = Seq(Following("42", new DateTime("2015-12-08T00:32:10.000"), anotherUser, user))
       val pagination = Some(Pagination("12345", 1))
 
       result ==== Some(FollowingsPage(followings, pagination))

@@ -1,6 +1,7 @@
 package com.soundcloud.publicApiStrangler.mapper.timeline.representation
 
 import com.soundcloud.bff.nextbff.mapping.{JsonMapping, MappingContext}
+import com.soundcloud.jvmkit.module.json.UrnFormat._
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.publicApiStrangler.mapper.timeline.EntitySummaryMapper
 import play.api.libs.json.JsValue
@@ -28,9 +29,7 @@ class TrackSummary(jsonValue: JsValue,
   val user_uri = s"$baseUrl/users/$userId"
 
 
-  private def userId = (json \ "user" \ "urn").asOpt[String] match {
-    case None => None
-    case Some(urn) => Urn(urn).getIdentifier.toInt
-  }
-
+  private def userId: Integer = (json \ "user" \ "urn").asOpt[Urn]
+    .map(_.identifier.toInt: Integer)
+    .orNull
 }

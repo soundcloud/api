@@ -60,7 +60,7 @@ class TrackStreamHandler(mothershipDispatcher: DispatchToMothershipHandler,
   private def contentAuthFor(session: UserSession, trackUrn: Urn): Future[ContentAuthorization] =
     contentAuthRules.fetchRules(session, Seq(trackUrn)).map(ca => ca.head)
 
-  private def replaceStream(request: HandlerRequest, session: UserSession, trackUrn: Urn, contentAuth: ContentAuthorization, mapper: TrackStreamResponseMapper, useHttps: Boolean = false): Future[Response] = {
+  private def replaceStream(request: HandlerRequest, session: UserSession, trackUrn: Urn, contentAuth: ContentAuthorization, mapper: TrackStreamResponseMapper, useHttps: Boolean): Future[Response] = {
     val mediaUrls = mediaUrlsRepository.byUrn(session, trackUrn, contentAuth, useHttps)
     val isHeadRequest = request.method == Method.Head
     mapper.map(mediaUrls, isHeadRequest)

@@ -3,6 +3,7 @@ package com.soundcloud.publicApiStrangler.handler
 import com.soundcloud.bff.nextbff.mapping.MappingContext
 import com.soundcloud.jvmkit.module.bff.session.UserAuthentication
 import com.soundcloud.jvmkit.module.http.server.{HandlerRequest, JsonResponseBuilder, ResponseBuilder}
+import com.soundcloud.jvmkit.module.json.UrnFormat._
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.{LoggedInUserSession, UserSession}
 import com.soundcloud.publicApiStrangler.client.followcounts.FollowCountsClient
@@ -25,7 +26,7 @@ class UserFollowHandler(userAuthentication: UserAuthentication, okidoki: Okidoki
 
   def follow(request: HandlerRequest): Future[Response] = {
     userAuthentication.withLoggedInUser(request) { (session, userUrn) =>
-      val user = new Urn("soundcloud:users:" + request.routeParams.get("other_id").get)
+      val user = Urn("soundcloud", "users", request.routeParams.get("other_id").get)
       follows.follow(session, user).flatMap {
         case _: FollowingCreated => renderFollow(session, user)
         case AlreadyFollowing => renderStatus(Status.Ok)
@@ -46,7 +47,7 @@ class UserFollowHandler(userAuthentication: UserAuthentication, okidoki: Okidoki
 
   def unfollow(request: HandlerRequest): Future[Response] = {
     userAuthentication.withLoggedInUser(request) { (session, userUrn) =>
-      val user = new Urn("soundcloud:users:" + request.routeParams.get("other_id").get)
+      val user = Urn("soundcloud", "users", request.routeParams.get("other_id").get)
       follows.unfollow(session, user).flatMap {
         case UnfollowSuccessful => renderStatus(Status.Ok)
         case UnfollowUserNotFound => renderError(Status.NotFound)
@@ -84,7 +85,7 @@ class UserFollowHandler(userAuthentication: UserAuthentication, okidoki: Okidoki
       follows.followingsNotFollowedBy(
         _,
         _,
-        new Urn(s"soundcloud:users:${request.routeParams("other_id")}")
+        Urn("soundcloud", "users", request.routeParams("other_id"))
       )
     )
   }
@@ -95,7 +96,7 @@ class UserFollowHandler(userAuthentication: UserAuthentication, okidoki: Okidoki
       follows.mutualFollowings(
         _,
         _,
-        new Urn(s"soundcloud:users:${request.routeParams("other_id")}")
+        Urn("soundcloud", "users", request.routeParams("other_id"))
       )
     )
   }
@@ -106,7 +107,7 @@ class UserFollowHandler(userAuthentication: UserAuthentication, okidoki: Okidoki
       follows.followersFollowedBy(
         _,
         _,
-        new Urn(s"soundcloud:users:${request.routeParams("other_id")}")
+        Urn("soundcloud", "users", request.routeParams("other_id"))
       )
     )
   }
@@ -168,7 +169,7 @@ class UserFollowHandler(userAuthentication: UserAuthentication, okidoki: Okidoki
 
   private def fetchPage[T](request: HandlerRequest,
                            fetchFunction: (UserSession, Urn, Option[String], Int) => Future[Option[FollowingsPage]],
-                           mapUsers: List[User] => List[JsValue] = mapUsersToUsers,
+                           mapUsers: List[User] => List[JsValue],
                            users: Seq[Following] => Seq[Urn],
                            requireLogin: Boolean): Future[Response] = {
     authenticateIfNeeded(request, requireLogin) { (session: UserSession, userToFetch: Urn) =>
@@ -192,7 +193,7 @@ class UserFollowHandler(userAuthentication: UserAuthentication, okidoki: Okidoki
                         requireLogin: Boolean): Future[Response] =
     authenticateIfNeeded(request, requireLogin) { (session: UserSession, loggedInUser: Urn) =>
       val userId = request.routeParams.get("other_id").get
-      val user = new Urn("soundcloud:users:" + userId)
+      val user = Urn("soundcloud", "users", userId)
 
       for {
         filteredOption <- filteringFunction(session, loggedInUser, Seq(user))
@@ -217,7 +218,7 @@ class UserFollowHandler(userAuthentication: UserAuthentication, okidoki: Okidoki
     if (requireLogin) {
       userAuthentication.withLoggedInUser(request) { (loggedIn, _) => withSession(loggedIn, loggedIn.getUser) }
     } else {
-      userAuthentication.withUserSession(request) { s => withSession(s, new Urn(s"soundcloud:users:${request.routeParams("id")}")) }
+      userAuthentication.withUserSession(request) { s => withSession(s, Urn("soundcloud", "users", request.routeParams("id"))) }
     }
   }
 
@@ -240,7 +241,7 @@ class UserFollowHandler(userAuthentication: UserAuthentication, okidoki: Okidoki
       )
     } yield {
       users.map { user =>
-        val userUrn = new Urn((user \ "self" \ "urn").as[String])
+        val userUrn = (user \ "self" \ "urn").as[Urn]
         val followCounts = followCountsMap.get(userUrn)
         new User(user, baseUrl, followCounts, repostCountsByUrn.get(userUrn))(context)
       }

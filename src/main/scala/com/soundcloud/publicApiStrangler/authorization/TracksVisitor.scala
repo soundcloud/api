@@ -32,7 +32,7 @@ class TracksVisitor(val wrapped: JsValue) {
 
   private def visitTrack(json: JsObject, visit: VisitTrack) = {
     val id = (json \ "id").as[Int]
-    val urn = new Urn(s"soundcloud:tracks:$id")
+    val urn = Urn("soundcloud", "tracks", id.toString)
     visit(urn, new Track(json))
   }
 

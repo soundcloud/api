@@ -29,9 +29,9 @@ class PlaylistsHandler(userAuthentication: UserAuthentication, playlistDeletionC
 
   private def playlistUrn(request: HandlerRequest): Urn = {
     val IdParamPattern = "(\\d+)".r
-    new Urn(request.routeParams("id") match {
-      case IdParamPattern(id) => s"soundcloud:playlists:$id"
-    })
+    request.routeParams("id") match {
+      case IdParamPattern(id) => Urn("soundcloud", "playlists", id)
+    }
   }
 
   private def statusDescription(status: Status): String = {

@@ -6,7 +6,7 @@ import com.soundcloud.publicApiStrangler.authorization.policies.{ContentAuthoriz
 import com.soundcloud.publicApiStrangler.test.UnitSpecification
 import com.twitter.util.{Await, Future}
 
-import scala.collection.JavaConversions._
+import scala.collection.JavaConverters._
 
 class ContentAuthorizationRulesSpec extends UnitSpecification {
 
@@ -20,8 +20,8 @@ class ContentAuthorizationRulesSpec extends UnitSpecification {
     def sessionWithTier(tier: UserTier): UserSession = {
       val session = loggedInSession(Urn("soundcloud", "users", "667"))
       tier match {
-        case UserTier.HIGH => session.copyWithFeatures(Set("content_high_tier"))
-        case UserTier.MID => session.copyWithFeatures(Set("content_mid_tier"))
+        case UserTier.HIGH => session.copyWithFeatures(Set("content_high_tier").asJava)
+        case UserTier.MID => session.copyWithFeatures(Set("content_mid_tier").asJava)
         case _ => session
       }
     }

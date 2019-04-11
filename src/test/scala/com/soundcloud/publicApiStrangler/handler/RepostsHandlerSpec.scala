@@ -214,7 +214,7 @@ class RepostsHandlerSpec extends UnitSpecification {
 
         "it returns a list of track IDs" in new OnePageRepostedTracksContext {
           val response = get(handler.getUserRepostableTracks, "/e1/me/track_reposts/ids", Map(), requestHeaders)
-          Json.parse(response.contentString).as[List[Long]] ==== List(track.getIdentifier.toLong)
+          Json.parse(response.contentString).as[List[Long]] ==== List(track.identifier.toLong)
         }
       }
 
@@ -225,7 +225,7 @@ class RepostsHandlerSpec extends UnitSpecification {
 
         "it returns a list of track IDs" in new MultiPageRepostedTracksContext {
           val response = get(handler.getUserRepostableTracks, "/e1/me/track_reposts/ids", Map(), requestHeaders)
-          Json.parse(response.contentString).as[List[Long]] ==== List(track, track2).map(_.getIdentifier.toLong)
+          Json.parse(response.contentString).as[List[Long]] ==== List(track, track2).map(_.identifier.toLong)
         }
       }
 
@@ -256,7 +256,7 @@ class RepostsHandlerSpec extends UnitSpecification {
         }
 
         "it returns a collection with a list of track IDs" in new MultiPageLinkedPartitioningContext {
-          (Json.parse(response.contentString) \ "collection").as[List[Long]] ==== List(track.getIdentifier.toLong)
+          (Json.parse(response.contentString) \ "collection").as[List[Long]] ==== List(track.identifier.toLong)
         }
 
         "it returns a next_href and includes extra parameters" in new MultiPageLinkedPartitioningContext {
@@ -283,7 +283,7 @@ class RepostsHandlerSpec extends UnitSpecification {
         }
 
         "it returns a collection with a list of track IDs" in new SinglePageLinkedPartitioningContext {
-          (Json.parse(response.contentString) \ "collection").as[List[Long]] ==== List(track, track2).map(_.getIdentifier.toLong)
+          (Json.parse(response.contentString) \ "collection").as[List[Long]] ==== List(track, track2).map(_.identifier.toLong)
         }
 
         "it doesn't return a next_href" in new SinglePageLinkedPartitioningContext {
@@ -307,7 +307,7 @@ class RepostsHandlerSpec extends UnitSpecification {
 
       "it returns a list of playlist IDs" in new OnePageRepostedPlaylistsContext {
         val response = get(handler.getUserRepostablePlaylists, "/e1/me/playlist_reposts/ids", Map(), requestHeaders)
-        Json.parse(response.contentString).as[List[Long]] ==== List(playlist.getIdentifier.toLong)
+        Json.parse(response.contentString).as[List[Long]] ==== List(playlist.identifier.toLong)
       }
     }
 
@@ -330,7 +330,7 @@ class RepostsHandlerSpec extends UnitSpecification {
 
       "it returns a list of playlist IDs" in new MultiPageRepostedPlaylistsContext {
         val response = get(handler.getUserRepostablePlaylists, "/e1/me/playlist_reposts/ids", Map(), requestHeaders)
-        Json.parse(response.contentString).as[List[Long]] ==== List(playlist, playlist2).map(_.getIdentifier.toLong)
+        Json.parse(response.contentString).as[List[Long]] ==== List(playlist, playlist2).map(_.identifier.toLong)
       }
     }
   }
