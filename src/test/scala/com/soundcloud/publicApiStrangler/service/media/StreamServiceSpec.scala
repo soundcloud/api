@@ -17,13 +17,14 @@ class StreamServiceSpec extends UnitSpecification {
     val service = new StreamService(tracksClient, mediaServiceClient)
 
     val trackUrn = Urn("soundcloud", "tracks", "2")
+    val userUrn = Urn("soundcloud", "users", "42")
     val trackUid = "some-uid"
     val secretToken = Some("secret")
 
     lazy val maybeStreamable = Some(true)
     lazy val policy: ContentPolicy = ContentPolicy.ALLOW
     val auth = new ContentAuthorization(trackUrn, policy, Reason.DEFAULT, MonetizationModel.NOT_APPLICABLE)
-    val maybeTrack: Option[VisibleTrack] = Some(VisibleTrack(trackUrn, Some(trackUid), maybeStreamable, false, auth))
+    val maybeTrack: Option[VisibleTrack] = Some(VisibleTrack(trackUrn, userUrn, Some(trackUid), maybeStreamable, false, auth))
     lazy val transcodings = List(
       Transcoding("mp3-uuid", "audio/mpeg"),
       Transcoding("opus-uuid", """audio/ogg; codecs="opus"""")
@@ -40,7 +41,7 @@ class StreamServiceSpec extends UnitSpecification {
   }
 
   "error when no track has no uid" in new Context {
-    override val maybeTrack = Some(VisibleTrack(trackUrn, None, maybeStreamable, false, auth))
+    override val maybeTrack = Some(VisibleTrack(trackUrn, userUrn, None, maybeStreamable, false, auth))
     Await.result(service.fetchSingle(session, trackUrn, secretToken)) ==== StreamNotFoundError
     Await.result(service.fetchMultiple(session, trackUrn, secretToken)) ==== StreamNotFoundError
   }

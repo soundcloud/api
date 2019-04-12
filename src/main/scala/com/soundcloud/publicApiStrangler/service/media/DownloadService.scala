@@ -8,7 +8,9 @@ import com.soundcloud.publicApiStrangler.client.tracks.{TracksClient, VisibleTra
 import com.twitter.util.Future
 
 trait DownloadResponse
+
 case class DownloadOk(url: String) extends DownloadResponse
+
 case object DownloadNotFound extends DownloadResponse
 
 class DownloadService(tracksClient: TracksClient,
@@ -20,7 +22,7 @@ class DownloadService(tracksClient: TracksClient,
         track <- maybeTrack
         uid <- track.uid
       } yield {
-        if (downloadingAllowed(track)) {
+        if (downloadingAllowed(track, session.getUser)) {
           mediaServiceClient.fetchDownloadOriginalUrl(session, uid).map {
             case Some(url) => DownloadOk(url)
             case _ => DownloadNotFound
@@ -31,7 +33,8 @@ class DownloadService(tracksClient: TracksClient,
     }
   }
 
-  private def downloadingAllowed(track: VisibleTrack): Boolean =
-    track.downloadable &&
-      (track.authorization.policy == ContentPolicy.ALLOW || track.authorization.policy == ContentPolicy.MONETIZE)
+  private def downloadingAllowed(track: VisibleTrack, userUrn: Urn): Boolean =
+    track.userUrn == userUrn ||
+      (track.downloadable && (
+        track.authorization.policy == ContentPolicy.ALLOW || track.authorization.policy == ContentPolicy.MONETIZE))
 }

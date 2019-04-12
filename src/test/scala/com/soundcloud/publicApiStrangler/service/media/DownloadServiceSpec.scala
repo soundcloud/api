@@ -17,6 +17,8 @@ class DownloadServiceSpec extends UnitSpecification {
     val service = new DownloadService(tracksClient, mediaServiceClient)
 
     val trackUrn = Urn("soundcloud", "tracks", "1701")
+    val trackOwnerUrn = Urn("soundcloud", "users", "1031")
+    val downloaderUrn = Urn("soundcloud", "users", "1764")
     val secretToken = Some("shhhhhhh")
     val trackUid = "the-uid"
 
@@ -25,6 +27,8 @@ class DownloadServiceSpec extends UnitSpecification {
 
     tracksClient.visibleTrack(session, trackUrn, secretToken) returns Future.value(maybeTrack)
     mediaServiceClient.fetchDownloadOriginalUrl(session, trackUid) returns Future.value(maybeUrl)
+
+    def stubSessionUser(userUrn: Urn) = session.getUser returns userUrn
 
     lazy val result = Await.result(service.download(session, trackUrn, secretToken))
   }
@@ -48,6 +52,7 @@ class DownloadServiceSpec extends UnitSpecification {
 
         lazy val track = VisibleTrack(
           trackUrn,
+          trackOwnerUrn,
           maybeUid,
           None,
           downloadable,
@@ -60,6 +65,7 @@ class DownloadServiceSpec extends UnitSpecification {
         "when policy is BLOCK" >> {
           trait BlockPolicyContext extends AvailableTrackContext {
             override lazy val policy = ContentPolicy.BLOCK
+            stubSessionUser(downloaderUrn)
           }
 
           "download should be not found" in new BlockPolicyContext {
@@ -70,6 +76,7 @@ class DownloadServiceSpec extends UnitSpecification {
         "when policy is SNIP" >> {
           trait SnipPolicyContext extends AvailableTrackContext {
             override lazy val policy = ContentPolicy.SNIP
+            stubSessionUser(downloaderUrn)
           }
 
           "download should be not found" in new SnipPolicyContext {
@@ -80,11 +87,13 @@ class DownloadServiceSpec extends UnitSpecification {
         "when policy is ALLOW" >> {
           trait AllowPolicyContext extends AvailableTrackContext {
             override lazy val policy = ContentPolicy.ALLOW
+            stubSessionUser(downloaderUrn)
           }
 
           "when track is not downloadable" >> {
             trait NotDownloadableContext extends AllowPolicyContext {
               override lazy val downloadable = false
+              stubSessionUser(downloaderUrn)
             }
 
             "download should be not found" in new NotDownloadableContext {
@@ -95,6 +104,7 @@ class DownloadServiceSpec extends UnitSpecification {
           "when track is downloadable" >> {
             trait DownloadableContext extends AllowPolicyContext {
               override lazy val downloadable = true
+              stubSessionUser(downloaderUrn)
             }
 
             "when media-service returns a url" >> {
@@ -117,6 +127,18 @@ class DownloadServiceSpec extends UnitSpecification {
               }
             }
           }
+
+          "when the track is not downloadable but the downloader is the track's owner" >> {
+            trait TrackOwnerContext extends AllowPolicyContext {
+              override lazy val downloadable = false
+              override lazy val maybeUrl = Some("https://download-url")
+              stubSessionUser(trackOwnerUrn)
+            }
+
+            "download should be found" in new TrackOwnerContext {
+              result ==== DownloadOk("https://download-url")
+            }
+          }
         }
 
         "when policy is MONETIZE" >> {
@@ -124,6 +146,7 @@ class DownloadServiceSpec extends UnitSpecification {
             override lazy val policy = ContentPolicy.MONETIZE
             override lazy val downloadable = true
             override lazy val maybeUrl = Some("https://download-url")
+            stubSessionUser(downloaderUrn)
           }
 
           "download should be found" in new MonetizePolicyContext {
@@ -135,6 +158,7 @@ class DownloadServiceSpec extends UnitSpecification {
       "when uid does not exist" >> {
         trait NoUidContext extends AvailableTrackContext {
           override lazy val maybeUid = None
+          stubSessionUser(downloaderUrn)
         }
 
         "download should be not found" in new NoUidContext {
@@ -146,6 +170,7 @@ class DownloadServiceSpec extends UnitSpecification {
     "when track is not available" >> {
       trait UnavailableTrackContext extends Context {
         override lazy val maybeTrack = None
+        stubSessionUser(downloaderUrn)
       }
 
       "download should be not found" in new UnavailableTrackContext {
