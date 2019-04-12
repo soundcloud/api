@@ -6,6 +6,7 @@ import play.api.libs.json._
 import com.soundcloud.jvmkit.module.json.UrnFormat._
 
 case class VisibleTrack(urn : Urn,
+                        userUrn: Urn,
                         uid: Option[String],
                         apiStreamable: Option[Boolean],
                         downloadable: Boolean,
@@ -17,6 +18,7 @@ object VisibleTrack {
       JsSuccess(
         VisibleTrack(
           (json \ "urn").as[Urn],
+          (json \ "userUrn").as[Urn],
           (json \ "uid").asOpt[String],
           (json \ "apiStreamable").asOpt[Boolean],
           (json \ "downloadable").as[Boolean],
