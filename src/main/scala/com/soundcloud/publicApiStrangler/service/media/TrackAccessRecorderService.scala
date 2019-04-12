@@ -17,7 +17,7 @@ class TrackAccessRecorderService(trackAccessRecorderClient: TrackAccessRecorderC
     recordAccess(session, request, trackUrn, "download", action)
 
   private def recordAccess(session: UserSession, request: HandlerRequest, trackUrn: Urn, accessFor: String, action: => Future[Response]): Future[Response] =
-    trackAccessRecorderClient.recordAccess(session, trackUrn, accessFor, shouldLog(request)).flatMap { response =>
+    trackAccessRecorderClient.recordAccess(session, trackUrn, accessFor, shouldLog(request), secretToken(request)).flatMap { response =>
       response.status match {
         case Status.Ok => action
         case _ => Future.value(response)
@@ -27,4 +27,7 @@ class TrackAccessRecorderService(trackAccessRecorderClient: TrackAccessRecorderC
   private def shouldLog(request: HandlerRequest): Boolean =
     request.method == Method.Get &&
       request.headerMap.get("Range").forall(RangeHelper.isRequestingFirstByte)
+
+  private def secretToken(request: HandlerRequest): Option[String] =
+    Option(request.getParam("secret_token"))
 }

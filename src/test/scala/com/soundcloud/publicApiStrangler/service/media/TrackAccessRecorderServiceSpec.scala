@@ -18,9 +18,10 @@ class TrackAccessRecorderServiceSpec extends UnitSpecification {
 
     val reqMethod: Method = Method.Get
     val range: Option[String] = None
+    val secretToken: Option[String] = None
 
     lazy val request = {
-      val req = Request(reqMethod, "http://local/")
+      val req = Request(reqMethod, "http://local/" + secretToken.map(token => s"?secret_token=$token").getOrElse(""))
       range.foreach(v => req.headerMap.add("Range", v))
       HandlerRequest(req)
     }
@@ -42,7 +43,7 @@ class TrackAccessRecorderServiceSpec extends UnitSpecification {
     s"#record${accessType.capitalize}Access" >> {
       "when client returns a 200 response" >> {
         trait OkContext extends AccessTypeContext {
-          trackAccessRecorderClient.recordAccess(session, trackUrn, accessType, true) returns
+          trackAccessRecorderClient.recordAccess(session, trackUrn, accessType, true, secretToken) returns
             Future.value(ResponseBuilder().status(Status.Ok).build)
         }
 
@@ -50,11 +51,25 @@ class TrackAccessRecorderServiceSpec extends UnitSpecification {
           result.status ==== Status.Ok
           result.contentString ==== "foobar"
         }
+
+        "with a secret token" >> {
+          trait WithSecretTokenContext extends AccessTypeContext {
+            override val secretToken = Some("only4me")
+
+            trackAccessRecorderClient.recordAccess(session, trackUrn, accessType, true, secretToken) returns
+              Future.value(ResponseBuilder().status(Status.Ok).build)
+          }
+
+          "action is executed and returned" in new WithSecretTokenContext {
+            result.status ==== Status.Ok
+            result.contentString ==== "foobar"
+          }
+        }
       }
 
       "when client returns a non-200 response" >> {
         trait BadContext extends AccessTypeContext {
-          trackAccessRecorderClient.recordAccess(session, trackUrn, accessType, true) returns
+          trackAccessRecorderClient.recordAccess(session, trackUrn, accessType, true, secretToken) returns
             Future.value(ResponseBuilder().status(Status.BadRequest).build)
         }
 
@@ -68,7 +83,7 @@ class TrackAccessRecorderServiceSpec extends UnitSpecification {
         trait MethodNotGetContext extends AccessTypeContext {
           override val reqMethod = Method.Head
 
-          trackAccessRecorderClient.recordAccess(session, trackUrn, accessType, false) returns
+          trackAccessRecorderClient.recordAccess(session, trackUrn, accessType, false, secretToken) returns
             Future.value(ResponseBuilder().status(Status.Ok).build)
         }
 
@@ -82,7 +97,7 @@ class TrackAccessRecorderServiceSpec extends UnitSpecification {
         trait NoRangeHeaderContext extends AccessTypeContext {
           override val range = None
 
-          trackAccessRecorderClient.recordAccess(session, trackUrn, accessType, true) returns
+          trackAccessRecorderClient.recordAccess(session, trackUrn, accessType, true, secretToken) returns
             Future.value(ResponseBuilder().status(Status.Ok).build)
         }
 
@@ -96,7 +111,7 @@ class TrackAccessRecorderServiceSpec extends UnitSpecification {
         trait FirstByteRangeContext extends AccessTypeContext {
           override val range = Some("bytes=0-100")
 
-          trackAccessRecorderClient.recordAccess(session, trackUrn, accessType, true) returns
+          trackAccessRecorderClient.recordAccess(session, trackUrn, accessType, true, secretToken) returns
             Future.value(ResponseBuilder().status(Status.Ok).build)
         }
 
@@ -110,7 +125,7 @@ class TrackAccessRecorderServiceSpec extends UnitSpecification {
         trait NoneZeroByteRangeContext extends AccessTypeContext {
           override val range = Some("bytes=200-400")
 
-          trackAccessRecorderClient.recordAccess(session, trackUrn, accessType, false) returns
+          trackAccessRecorderClient.recordAccess(session, trackUrn, accessType, false, secretToken) returns
             Future.value(ResponseBuilder().status(Status.Ok).build)
         }
 

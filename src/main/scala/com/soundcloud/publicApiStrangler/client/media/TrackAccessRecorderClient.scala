@@ -1,6 +1,6 @@
 package com.soundcloud.publicApiStrangler.client.media
 
-import com.soundcloud.jvmkit.module.http.client.{JsonClient, Params}
+import com.soundcloud.jvmkit.module.http.client.{JsonClient, Params, StringParam}
 import com.soundcloud.jvmkit.module.util.http.Headers
 import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.jvmkit.module.util.{Path, Urn}
@@ -9,8 +9,12 @@ import com.twitter.util.Future
 
 class TrackAccessRecorderClient(moshimoshiClient: JsonClient) {
 
-  def recordAccess(session: UserSession, trackUrn: Urn, accessFor: String, shouldLog: Boolean): Future[Response] = {
-    val params = if (shouldLog) Params.empty else Params("skip_logging" -> "1")
-    moshimoshiClient.getWithSession(session, Path() / "tracks" / trackUrn / "access" / accessFor, params, Headers.empty)
+  def recordAccess(session: UserSession, trackUrn: Urn, accessFor: String, shouldLog: Boolean, maybeSecretToken: Option[String]): Future[Response] = {
+    val params = Seq(
+      maybeSecretToken.map(secretToken => "secret_token" -> StringParam(secretToken)),
+      if (shouldLog) None else Some("skip_logging" -> StringParam("1"))
+    ).flatten
+
+    moshimoshiClient.getWithSession(session, Path() / "tracks" / trackUrn / "access" / accessFor, Params(params:_*), Headers.empty)
   }
 }
