@@ -6,6 +6,7 @@ sealed trait StreamResponse
 case class StreamUrls(httpMp3: String, hlsMp3: String, hlsOpus: Option[String], httpPreviewMp3: String) extends StreamResponse
 case class StreamUrl(httpMp3: String) extends StreamResponse
 case class PreviewUrls(httpMp3: String, hlsMp3: String) extends StreamResponse
+case object StreamNotAllowed extends StreamResponse
 case object StreamNotFoundError extends StreamResponse
 
 object StreamResponse {
@@ -26,7 +27,7 @@ object StreamResponse {
           "http_mp3_128_url" -> p.httpMp3,
           "hls_mp3_128_url" -> p.hlsMp3,
         )
-      case StreamNotFoundError => Json.obj()
+      case StreamNotFoundError | StreamNotAllowed => Json.obj()
     }
   }
 }

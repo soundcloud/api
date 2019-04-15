@@ -41,8 +41,9 @@ class TrackStreamsHandler(
               case Some(streamParams) =>
                 handleWithStreamService(session, streamParams, singleStream).flatMap {
                   case StreamNotFoundError => trackStreamHandler.handle(request, session, mapper)
-                  case streamResponse if singleStream => trackAccessRecorderService.recordStreamAccess(session, request, streamParams.trackUrn)(Future.value(renderStreamResponse(request, streamResponse)))
-                  case streamResponse => Future.value(renderStreamResponse(request, streamResponse))
+                  case StreamNotAllowed => Future.value(renderStreamResponse(request, session, StreamNotAllowed))
+                  case streamResponse if singleStream => trackAccessRecorderService.recordStreamAccess(session, request, streamParams.trackUrn)(Future.value(renderStreamResponse(request, session, streamResponse)))
+                  case streamResponse => Future.value(renderStreamResponse(request, session, streamResponse))
                 }
               case None => Future.value(ResponseBuilder().status(Status.BadRequest).build)
             }
@@ -59,12 +60,15 @@ class TrackStreamsHandler(
     else streamService.fetchMultiple(session, streamParams.trackUrn, streamParams.secretToken)
   }
 
-  private def renderStreamResponse(request: HandlerRequest, streamResponse: StreamResponse): Response = {
+  private def renderStreamResponse(request: HandlerRequest, session: UserSession, streamResponse: StreamResponse): Response = {
     val builder = streamResponse match {
       case StreamUrl(url) =>
         ResponseBuilder().header("Location", url).status(Status.Found)
       case StreamNotFoundError =>
         ResponseBuilder().status(Status.NotFound)
+      case StreamNotAllowed =>
+        if (session.isAnonymous) ResponseBuilder().status(Status.Unauthorized)
+        else ResponseBuilder().status(Status.Forbidden)
       case _ => ResponseBuilder().status(Status.Ok)
     }
     if (request.method != Method.Head)
