@@ -6,7 +6,6 @@ lazy val publicApiStrangler = project.in(file("."))
   .enablePlugins(SbtKitPlugin)
   .settings(
     name := "public-api-strangler",
-    sources in (Compile, doc) := Seq.empty, // TODO move this to sbtkit
     libraryDependencies ++= Seq(
       "com.soundcloud" %% "jvmkit-http-client" % jvmkitVersion,
       "com.soundcloud" %% "jvmkit-admin-server" % jvmkitVersion,
