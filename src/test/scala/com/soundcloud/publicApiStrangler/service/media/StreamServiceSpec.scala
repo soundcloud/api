@@ -48,17 +48,19 @@ class StreamServiceSpec extends UnitSpecification {
 
   "error when track is not streamable" in new Context {
     override lazy val maybeStreamable = Some(false)
+    session.getUser returns Urn("soundcloud", "users", "1000")
     Await.result(service.fetchSingle(session, trackUrn, secretToken)) ==== StreamNotFoundError
     Await.result(service.fetchMultiple(session, trackUrn, secretToken)) ==== StreamNotFoundError
   }
 
   "error when content policy is BLOCK" in new Context {
     override lazy val policy = ContentPolicy.BLOCK
+    session.getUser returns Urn("soundcloud", "users", "1000")
     Await.result(service.fetchSingle(session, trackUrn, secretToken)) ==== StreamNotFoundError
     Await.result(service.fetchMultiple(session, trackUrn, secretToken)) ==== StreamNotFoundError
   }
 
-  "error when no transodings are returned" in new Context {
+  "error when no transcodings are returned" in new Context {
     override lazy val transcodings = List.empty[Transcoding]
     Await.result(service.fetchSingle(session, trackUrn, secretToken)) ==== StreamNotFoundError
     Await.result(service.fetchMultiple(session, trackUrn, secretToken)) ==== StreamNotFoundError
@@ -89,19 +91,31 @@ class StreamServiceSpec extends UnitSpecification {
   }
 
   "#fetchSingle" >> {
-    "returns an MP3 stream url" in new Context {
-      mediaServiceClient.fetchStreamUrl(session, "mp3-uuid", "progressive") returns Future.value(Some("http://stream"))
-      val result = Await.result(service.fetchSingle(session, trackUrn, secretToken))
-      result ==== StreamUrl("http://stream")
+    "when track is streamable and policy is not BLOCK" >> {
+      "returns an MP3 stream url" in new Context {
+        mediaServiceClient.fetchStreamUrl(session, "mp3-uuid", "progressive") returns Future.value(Some("http://stream"))
+        val result = Await.result(service.fetchSingle(session, trackUrn, secretToken))
+        result ==== StreamUrl("http://stream")
+      }
+
+      "returns an MP3 snippet url if policy is SNIP" in new Context {
+        override lazy val policy = ContentPolicy.SNIP
+        mediaServiceClient.fetchPreviewUrl(session, "mp3-uuid", "progressive") returns Future.value(Some("http://snippet"))
+        val result = Await.result(service.fetchSingle(session, trackUrn, secretToken))
+        result ==== StreamUrl("http://snippet")
+      }
     }
 
-    "returns an MP3 snippet url if policy is SNIP" in new Context {
-      override lazy val policy = ContentPolicy.SNIP
-      mediaServiceClient.fetchPreviewUrl(session, "mp3-uuid", "progressive") returns Future.value(Some("http://snippet"))
-      val result = Await.result(service.fetchSingle(session, trackUrn, secretToken))
-      result ==== StreamUrl("http://snippet")
+    "when track is not streamable and policy is BLOCK, but the streamer is the track's owner" >> {
+      "returns an MP3 stream url" in new Context {
+        override lazy val maybeStreamable = Some(false)
+        override lazy val policy = ContentPolicy.BLOCK
+        session.getUser returns userUrn
+        mediaServiceClient.fetchStreamUrl(session, "mp3-uuid", "progressive") returns Future.value(Some("http://stream"))
+        val result = Await.result(service.fetchSingle(session, trackUrn, secretToken))
+        result ==== StreamUrl("http://stream")
+      }
     }
-
   }
 
   "#fetchMultiple" >> {

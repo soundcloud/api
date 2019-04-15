@@ -27,7 +27,7 @@ class StreamService(tracksClient: TracksClient,
 
   private def fetch(session: UserSession, trackUrn: Urn, secretToken: Option[String], fetcher: Fetch): Future[StreamResponse] = {
     tracksClient.visibleTrack(session, trackUrn, secretToken).flatMap {
-      case Some(track) if streamingAllowed(track) =>
+      case Some(track) if streamingAllowed(track, session.getUser) =>
         track.uid match {
           case Some(uid) => fetchTranscodings(session, uid).flatMap { transcodings => fetcher(session, transcodings, track.authorization.policy) }
           case None => Future.value(StreamNotFoundError)
@@ -36,9 +36,9 @@ class StreamService(tracksClient: TracksClient,
     }
   }
 
-  private def streamingAllowed(track: VisibleTrack): Boolean = {
-    track.apiStreamable.getOrElse(false) &&
-      track.authorization.policy != ContentPolicy.BLOCK
+  private def streamingAllowed(track: VisibleTrack, userUrn: Urn): Boolean = {
+    (track.apiStreamable.getOrElse(false) && track.authorization.policy != ContentPolicy.BLOCK) ||
+      track.userUrn == userUrn
   }
 
   private def fetchTranscodings(session: UserSession, trackUid: String): Future[Map[String, Transcoding]] = {
