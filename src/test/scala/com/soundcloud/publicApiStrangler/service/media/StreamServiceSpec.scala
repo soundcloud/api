@@ -49,15 +49,15 @@ class StreamServiceSpec extends UnitSpecification {
   "error when track is not streamable" in new Context {
     override lazy val maybeStreamable = Some(false)
     session.getUser returns Urn("soundcloud", "users", "1000")
-    Await.result(service.fetchSingle(session, trackUrn, secretToken)) ==== StreamNotFoundError
-    Await.result(service.fetchMultiple(session, trackUrn, secretToken)) ==== StreamNotFoundError
+    Await.result(service.fetchSingle(session, trackUrn, secretToken)) ==== StreamNotAllowed
+    Await.result(service.fetchMultiple(session, trackUrn, secretToken)) ==== StreamNotAllowed
   }
 
   "error when content policy is BLOCK" in new Context {
     override lazy val policy = ContentPolicy.BLOCK
     session.getUser returns Urn("soundcloud", "users", "1000")
-    Await.result(service.fetchSingle(session, trackUrn, secretToken)) ==== StreamNotFoundError
-    Await.result(service.fetchMultiple(session, trackUrn, secretToken)) ==== StreamNotFoundError
+    Await.result(service.fetchSingle(session, trackUrn, secretToken)) ==== StreamNotAllowed
+    Await.result(service.fetchMultiple(session, trackUrn, secretToken)) ==== StreamNotAllowed
   }
 
   "error when no transcodings are returned" in new Context {

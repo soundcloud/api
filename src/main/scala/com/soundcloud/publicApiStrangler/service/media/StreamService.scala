@@ -32,6 +32,7 @@ class StreamService(tracksClient: TracksClient,
           case Some(uid) => fetchTranscodings(session, uid).flatMap { transcodings => fetcher(session, transcodings, track.authorization.policy) }
           case None => Future.value(StreamNotFoundError)
         }
+      case Some(_) => Future.value(StreamNotAllowed)
       case _ => Future.value(StreamNotFoundError)
     }
   }
