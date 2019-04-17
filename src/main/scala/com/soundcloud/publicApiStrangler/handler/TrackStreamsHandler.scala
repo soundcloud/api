@@ -21,10 +21,8 @@ class TrackStreamsHandler(
                            userAuthentication: UserAuthentication,
                            trackStreamUrlToJsonResponseMapper: TrackStreamJsonResponseMapper,
                            trackStreamUrlToRedirectMapper: TrackStreamRedirectResponseMapper,
-                           trackStreamHandler: TrackStreamHandler,
                            streamService: StreamService,
                            trackAccessRecorderService: TrackAccessRecorderService,
-                           mediaServiceEnabled: () => Future[Boolean],
                            publicApiSiloing: PublicApiSiloing
                          ) {
 
@@ -33,23 +31,17 @@ class TrackStreamsHandler(
   def redirectStreamRequest(request: HandlerRequest): Future[Response] = handleStreamRequest(request, trackStreamUrlToRedirectMapper, singleStream = true)
 
   private def handleStreamRequest(request: HandlerRequest, mapper: TrackStreamResponseMapper, singleStream: Boolean): Future[Response] = {
-    mediaServiceEnabled().flatMap { enabled =>
-      userAuthentication.withUserSession(request) { session =>
-        publicApiSiloing.withSiloedSession(session) {
-          if (enabled) {
-            extractParams(request) match {
-              case Some(streamParams) =>
-                handleWithStreamService(session, streamParams, singleStream).flatMap {
-                  case StreamNotFoundError => trackStreamHandler.handle(request, session, mapper)
-                  case StreamNotAllowed => Future.value(renderStreamResponse(request, session, StreamNotAllowed))
-                  case streamResponse if singleStream => trackAccessRecorderService.recordStreamAccess(session, request, streamParams.trackUrn)(Future.value(renderStreamResponse(request, session, streamResponse)))
-                  case streamResponse => Future.value(renderStreamResponse(request, session, streamResponse))
-                }
-              case None => Future.value(ResponseBuilder().status(Status.BadRequest).build)
+    userAuthentication.withUserSession(request) { session =>
+      publicApiSiloing.withSiloedSession(session) {
+        extractParams(request) match {
+          case Some(streamParams) =>
+            handleWithStreamService(session, streamParams, singleStream).flatMap {
+              case StreamNotFoundError => Future.value(renderStreamResponse(request, session, StreamNotFoundError))
+              case StreamNotAllowed => Future.value(renderStreamResponse(request, session, StreamNotAllowed))
+              case streamResponse if singleStream => trackAccessRecorderService.recordStreamAccess(session, request, streamParams.trackUrn)(Future.value(renderStreamResponse(request, session, streamResponse)))
+              case streamResponse => Future.value(renderStreamResponse(request, session, streamResponse))
             }
-          } else {
-            trackStreamHandler.handle(request, session, mapper)
-          }
+          case None => Future.value(ResponseBuilder().status(Status.BadRequest).build)
         }
       }
     }
