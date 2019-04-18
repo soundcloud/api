@@ -10,7 +10,14 @@ class PublicApiSiloing(checkRollout: () => Future[Boolean], blacklistOfAppIDs: S
     telemetry.counter("app_siloed_requests", "Requests going through app siloing", "result")
 
   /**
-    * siloes an endpoint by checking if a token was not issued for mobile app if it is the call is rejected
+    * SoundCloud-internal applications such as the web client ("v2") and the mobile clients
+    * no longer use public api endpoints to do work, at least for most purposes.
+    *
+    * The siloing logic below ensures that api keys illegitimately extracted by
+    * third parties from SoundCloud-internal applications are not being used to call
+    * into the public api (to, for example, download tracks en masse).
+    * "Silo" means: "SoundCloud-internal apps should use
+    * the other BFFs, and should not be hitting the public api, for most purposes".
     */
   def withSiloedSession[T: ResponseLike](userSession: UserSession)(action: => Future[T]): Future[T] = {
     checkRollout().flatMap { rolloutEnabled =>
