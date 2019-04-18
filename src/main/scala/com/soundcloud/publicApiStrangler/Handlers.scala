@@ -60,10 +60,8 @@ class Handlers(telemetry: Telemetry, clients: Clients) {
 
   val trackDownloadHandler: TrackDownloadHandler = new TrackDownloadHandler(
     userAuthentication,
-    mothershipDispatcher,
     trackAccessRecorderService,
-    new DownloadService(tracksClient, mediaServiceClient),
-    () => rolloutClient.isActive(BasicRolloutFeature("media-service-download")))
+    new DownloadService(tracksClient, mediaServiceClient))
 
   val tracksHandler = new TracksHandler(userAuthentication,
     trackCoordinatorClient,

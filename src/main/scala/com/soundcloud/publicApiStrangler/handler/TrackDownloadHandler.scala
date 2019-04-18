@@ -8,19 +8,10 @@ import com.twitter.finagle.http.{Response, Status}
 import com.twitter.util.Future
 
 class TrackDownloadHandler(userAuthentication: UserAuthentication,
-                           mothershipDispatcher: DispatchToMothershipHandler,
                            trackAccessRecorderService: TrackAccessRecorderService,
-                           downloadService: DownloadService,
-                           mediaServiceEnabled: () => Future[Boolean]) {
+                           downloadService: DownloadService) {
 
   def handle(request: HandlerRequest): Future[Response] = {
-    mediaServiceEnabled().flatMap {
-      case false => mothershipDispatcher.dispatch(request)
-      case true => handleWithMediaService(request)
-    }
-  }
-
-  private def handleWithMediaService(request: HandlerRequest): Future[Response] = {
     request.routeParams.get("trackId").map { trackId =>
       userAuthentication.withUserSession(request) { session =>
         val trackUrn = Urn("soundcloud", "tracks", trackId)
