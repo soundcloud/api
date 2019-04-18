@@ -1,7 +1,7 @@
 package com.soundcloud.publicApiStrangler.handler
 
 import com.soundcloud.jvmkit.module.bff.testsupport.FakeUserAuthentication
-import com.soundcloud.jvmkit.module.http.server.{HandlerRequest, ResponseBuilder}
+import com.soundcloud.jvmkit.module.http.server.{HandlerRequest}
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.publicApiStrangler.Routing
@@ -20,16 +20,12 @@ class TrackDownloadHandlerSpec extends UnitSpecification {
   trait Context extends HandlerSpecificationScope {
     val session = mock[UserSession]
     val userAuth = new FakeUserAuthentication(session)
-    val mothershipDispatcher = mock[DispatchToMothershipHandler]
     val downloadService = mock[DownloadService]
-    lazy val mediaServiceEnabled: Boolean = false
 
     lazy val handler = new TrackDownloadHandler(
       userAuth,
-      mothershipDispatcher,
       new FakeTrackAccessRecorderService,
-      downloadService,
-      () => Future.value(mediaServiceEnabled))
+      downloadService)
 
     override def routingDefinitions = Routing.forTrackDownloadHandler(handler)
   }
@@ -40,28 +36,8 @@ class TrackDownloadHandlerSpec extends UnitSpecification {
     "/tracks/999/download.json",
     "/tracks/999/download.json/"
   ).foreach { path =>
-    "with mothership dispatcher" >> {
-      trait MothershipContext extends Context {
-        override lazy val mediaServiceEnabled = false
-        val expectedResponse = ResponseBuilder.ok("foobar")
-        mothershipDispatcher.dispatch(any[HandlerRequest]) returns Future.value(expectedResponse)
-      }
-
-      s"GET $path" in new MothershipContext {
-        get(handler.handle, path) ==== expectedResponse
-      }
-    }
-  }
-
-  List(
-    "/tracks/999/download",
-    "/tracks/999/download/",
-    "/tracks/999/download.json",
-    "/tracks/999/download.json/"
-  ).foreach { path =>
     "with media-service" >> {
       trait MediaServiceContext extends Context {
-        override lazy val mediaServiceEnabled = true
         val downloadResponse: DownloadResponse
         downloadService.download(session, Urn("soundcloud", "tracks", "999"), None) returns Future.value(downloadResponse)
       }
@@ -93,7 +69,6 @@ class TrackDownloadHandlerSpec extends UnitSpecification {
 
   "with a secret token" >> {
     trait MediaServiceWithSecretTokenContext extends Context {
-      override lazy val mediaServiceEnabled = true
       downloadService.download(session, Urn("soundcloud", "tracks", "999"), Some("itsasecret")) returns Future.value(DownloadOk("https://download-url"))
     }
 
