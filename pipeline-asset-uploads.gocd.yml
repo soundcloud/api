@@ -1,0 +1,28 @@
+---
+format_version: 2
+pipelines:
+  public-api-strangler-asset-uploads:
+    group: backend-engineering-productivity
+    label_template: "${COUNT}-${git[:7]}"
+    materials:
+      git:
+        git: git@github.com:soundcloud/public-api-strangler.git
+        whitelist:
+          - asset-uploads/**/*
+    stages:
+    - test:
+        jobs:
+          run-tests-and-publish:
+            tasks:
+            - exec:
+                command: make
+                arguments:
+                - -C
+                - asset-uploads
+                - test
+            - exec:
+                command: make
+                arguments:
+                - -C
+                - asset-uploads
+                - publish

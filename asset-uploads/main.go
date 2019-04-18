@@ -23,8 +23,8 @@ import (
 
 func main() {
 	var (
-		addr      = flag.String("addr", ":8080", "Listen address")
-		adminAddr = flag.String("admin-addr", ":8081", "Listen address admin server")
+		addr      = flag.String("addr", ":80", "Listen address")
+		adminAddr = flag.String("admin-addr", ":5000", "Listen address admin server")
 
 		moshiAddr     = flag.String("moshimoshi-addr", os.Getenv("MOSHIMOSHI_ADDRESS"), "MoshiMoshi service address")
 		stranglerAddr = flag.String("strangler-addr", os.Getenv("PUBLIC_API_STRANGLER_ADDRESS"), "Public API strangler service address")

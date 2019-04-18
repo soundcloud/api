@@ -1,4 +1,4 @@
 {
-  "name": "something",
-  "description": "TBD"
+  "name": "public-api-strangler-asset-uploads",
+  "description": "Preprocessor for multipart requests (track uploads)"
 }

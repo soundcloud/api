@@ -1,0 +1,4 @@
+source api-test-secrets
+
+MOSHIMOSHI_ADDRESS=moshimoshi
+PUBLIC_API_STRANGLER_ADDRESS=public_api_strangler

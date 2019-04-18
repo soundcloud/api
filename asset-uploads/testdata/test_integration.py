@@ -38,7 +38,7 @@ class TestIntegration(unittest.TestCase, assertions.Assertions):
                 -F "track[asset_data]=@{};filename=test_chunk.wav" \
                 -F "track[title]=123" \
                 -F "oauth_token=s3cr3t_1" \
-                localhost:8080/tracks
+                asset_uploads/tracks
         '''.format(asset.name)
         res = check_output(cmd, shell=True).decode('ascii')
         self.assertAuthorization(res, 's3cr3t_1')
@@ -56,7 +56,7 @@ class TestIntegration(unittest.TestCase, assertions.Assertions):
                 -F "track[asset_data]=@{};filename=test_chunk_large.wav" \
                 -F "track[title]=123" \
                 -F "oauth_token=s3cr3t_2" \
-                localhost:8080/tracks
+                asset_uploads/tracks
             '''.format(asset.name)
         res = check_output(cmd, shell=True, stderr=STDOUT).decode('ascii')
         self.assertRequestEntityTooLarge(res)
@@ -68,7 +68,7 @@ class TestIntegration(unittest.TestCase, assertions.Assertions):
                 -F "track[asset_data]=@{};filename=test_length.wav" \
                 -F "track[title]=123" \
                 -F "oauth_token=s3cr3t_3" \
-                localhost:8080/tracks
+                asset_uploads/tracks
             '''.format(asset.name)
         res = check_output(cmd, shell=True).decode('ascii')
         self.assertAuthorization(res, 's3cr3t_3')
@@ -85,7 +85,7 @@ class TestIntegration(unittest.TestCase, assertions.Assertions):
                 -F "track[asset_data]=@{};filename=test_length_large.wav" \
                 -F "track[title]=123" \
                 -F "oauth_token=s3cr3t_4" \
-                localhost:8080/tracks
+                asset_uploads/tracks
             '''.format(asset.name)
         res = check_output(cmd, shell=True, stderr=STDOUT).decode('ascii')
         self.assertRequestEntityTooLarge(res)
@@ -98,7 +98,7 @@ class TestIntegration(unittest.TestCase, assertions.Assertions):
         cmd = '''
             curl --fail --verbose \
                 -F "oauth_token={}" \
-                localhost:8080/tracks
+                asset_uploads/tracks
             '''.format(token)
         res = check_output(cmd, shell=True).decode('ascii')
         self.assertRequest(res, 'POST', '/tracks')
