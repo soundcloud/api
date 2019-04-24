@@ -2,19 +2,22 @@ package com.soundcloud.publicApiStrangler.service.media
 
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSession
+import com.soundcloud.publicApiStrangler.authorization.ContentAuthorizationRules
 import com.soundcloud.publicApiStrangler.authorization.policies.{ContentAuthorization, ContentPolicy, MonetizationModel, Reason}
 import com.soundcloud.publicApiStrangler.client.media.{MediaServiceClient, Transcoding}
-import com.soundcloud.publicApiStrangler.client.tracks.{TracksClient, VisibleTrack}
+import com.soundcloud.publicApiStrangler.client.trackmetadata.{Track, TrackmetadataClient}
 import com.soundcloud.publicApiStrangler.test.UnitSpecification
 import com.twitter.util.{Await, Future}
 
 class StreamServiceSpec extends UnitSpecification {
 
   trait Context extends Scope {
-    val tracksClient = mock[TracksClient]
+    val trackmetadataClient = mock[TrackmetadataClient]
     val mediaServiceClient = mock[MediaServiceClient]
+    val contentAuthorizationRules = mock[ContentAuthorizationRules]
+
     val session = mock[UserSession]
-    val service = new StreamService(tracksClient, mediaServiceClient)
+    val service = new StreamService(trackmetadataClient, contentAuthorizationRules, mediaServiceClient)
 
     val trackUrn = Urn("soundcloud", "tracks", "2")
     val userUrn = Urn("soundcloud", "users", "42")
@@ -23,14 +26,22 @@ class StreamServiceSpec extends UnitSpecification {
 
     lazy val maybeStreamable = Some(true)
     lazy val policy: ContentPolicy = ContentPolicy.ALLOW
-    val auth = new ContentAuthorization(trackUrn, policy, Reason.DEFAULT, MonetizationModel.NOT_APPLICABLE)
-    val maybeTrack: Option[VisibleTrack] = Some(VisibleTrack(trackUrn, userUrn, Some(trackUid), maybeStreamable, false, auth))
+    lazy val contentAuthorizations = Seq(new ContentAuthorization(trackUrn, policy, Reason.DEFAULT, MonetizationModel.NOT_APPLICABLE))
+    val track = mock[Track]
+    val maybeTrack: Option[Track] = Some(track)
+    lazy val uid: Option[String] = Some(trackUid)
+
     lazy val transcodings = List(
       Transcoding("mp3-uuid", "audio/mpeg"),
       Transcoding("opus-uuid", """audio/ogg; codecs="opus"""")
     )
 
-    tracksClient.visibleTrack(session, trackUrn, secretToken) returns Future.value(maybeTrack)
+    track.uid returns uid
+    track.api_streamable returns maybeStreamable
+    track.user_urn returns userUrn
+
+    contentAuthorizationRules.fetchRules(session, Seq(trackUrn)) returns Future.value(contentAuthorizations)
+    trackmetadataClient.track(session, trackUrn) returns Future.value(maybeTrack)
     mediaServiceClient.fetchTranscodings(session, trackUid) returns Future.value(transcodings)
   }
 
@@ -40,8 +51,14 @@ class StreamServiceSpec extends UnitSpecification {
     Await.result(service.fetchMultiple(session, trackUrn, secretToken)) ==== StreamNotFoundError
   }
 
-  "error when no track has no uid" in new Context {
-    override val maybeTrack = Some(VisibleTrack(trackUrn, userUrn, None, maybeStreamable, false, auth))
+  "error when no content policy is found" in new Context {
+    override lazy val contentAuthorizations = Seq.empty
+    Await.result(service.fetchSingle(session, trackUrn, secretToken)) ==== StreamNotFoundError
+    Await.result(service.fetchMultiple(session, trackUrn, secretToken)) ==== StreamNotFoundError
+  }
+
+  "error when track has no uid" in new Context {
+    override lazy val uid = None
     Await.result(service.fetchSingle(session, trackUrn, secretToken)) ==== StreamNotFoundError
     Await.result(service.fetchMultiple(session, trackUrn, secretToken)) ==== StreamNotFoundError
   }

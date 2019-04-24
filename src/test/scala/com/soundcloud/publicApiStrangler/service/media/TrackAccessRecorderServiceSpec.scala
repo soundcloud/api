@@ -19,6 +19,7 @@ class TrackAccessRecorderServiceSpec extends UnitSpecification {
     val reqMethod: Method = Method.Get
     val range: Option[String] = None
     val secretToken: Option[String] = None
+    val loggingEnabled: Boolean = true
 
     lazy val request = {
       val req = Request(reqMethod, "http://local/" + secretToken.map(token => s"?secret_token=$token").getOrElse(""))
@@ -28,7 +29,7 @@ class TrackAccessRecorderServiceSpec extends UnitSpecification {
 
     val action = ResponseBuilder().status(Status.Ok).body("foobar").build
 
-    lazy val resultStream = Await.result(service.recordStreamAccess(session, request, trackUrn)(Future.value(action)))
+    lazy val resultStream = Await.result(service.recordStreamAccess(session, request, trackUrn, loggingEnabled)(Future.value(action)))
     lazy val resultDownload = Await.result(service.recordDownloadAccess(session, request, trackUrn)(Future.value(action)))
   }
 
@@ -73,7 +74,7 @@ class TrackAccessRecorderServiceSpec extends UnitSpecification {
             Future.value(ResponseBuilder().status(Status.BadRequest).build)
         }
 
-        "action is executed and returned" in new BadContext {
+        "action is not executed and returned" in new BadContext {
           result.status ==== Status.BadRequest
           result.contentString ==== ""
         }
@@ -135,5 +136,21 @@ class TrackAccessRecorderServiceSpec extends UnitSpecification {
         }
       }
     }
+
+    "when loggingEnabled is set to false" >> {
+      trait LoggingDisabledContext extends Context {
+        override val loggingEnabled = false
+
+        trackAccessRecorderClient.recordAccess(session, trackUrn, "stream", false, secretToken) returns
+          Future.value(ResponseBuilder().status(Status.Ok).build)
+      }
+
+      "action is executed and play is not logged" in new LoggingDisabledContext {
+        val result = resultStream
+        result.status ==== Status.Ok
+        result.contentString ==== "foobar"
+      }
+    }
+
   }
 }

@@ -2,13 +2,15 @@ package com.soundcloud.publicApiStrangler.service.media
 
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSession
-import com.soundcloud.publicApiStrangler.authorization.policies.ContentPolicy
+import com.soundcloud.publicApiStrangler.authorization.ContentAuthorizationRules
+import com.soundcloud.publicApiStrangler.authorization.policies.{ContentAuthorization, ContentPolicy}
 import com.soundcloud.publicApiStrangler.client.media.{MediaServiceClient, Transcoding}
-import com.soundcloud.publicApiStrangler.client.tracks.{TracksClient, VisibleTrack}
+import com.soundcloud.publicApiStrangler.client.trackmetadata.{Track, TrackmetadataClient}
 import com.twitter.util.Future
 
 
-class StreamService(tracksClient: TracksClient,
+class StreamService(trackmetadataClient: TrackmetadataClient,
+                    contentAuthorizationRules: ContentAuthorizationRules,
                     mediaServiceClient: MediaServiceClient) {
 
   private val mp3MimeType = "audio/mpeg"
@@ -26,20 +28,27 @@ class StreamService(tracksClient: TracksClient,
   private type Fetch = (UserSession, Map[String, Transcoding], ContentPolicy) => Future[StreamResponse]
 
   private def fetch(session: UserSession, trackUrn: Urn, secretToken: Option[String], fetcher: Fetch): Future[StreamResponse] = {
-    tracksClient.visibleTrack(session, trackUrn, secretToken).flatMap {
-      case Some(track) if streamingAllowed(track, session.getUser) =>
+    Future.join(
+      trackmetadataClient.track(session, trackUrn),
+      fetchContentAuth(session, trackUrn),
+    ).flatMap {
+      case (Some(track), Some(contentAuth)) if streamingAllowed(track, session.getUser, contentAuth) =>
         track.uid match {
-          case Some(uid) => fetchTranscodings(session, uid).flatMap { transcodings => fetcher(session, transcodings, track.authorization.policy) }
+          case Some(uid) =>
+            fetchTranscodings(session, uid).flatMap { transcodings => fetcher(session, transcodings, contentAuth.policy) }
           case None => Future.value(StreamNotFoundError)
         }
-      case Some(_) => Future.value(StreamNotAllowed)
+      case (Some(_), Some(_)) => Future.value(StreamNotAllowed)
       case _ => Future.value(StreamNotFoundError)
     }
   }
 
-  private def streamingAllowed(track: VisibleTrack, userUrn: Urn): Boolean = {
-    (track.apiStreamable.getOrElse(false) && track.authorization.policy != ContentPolicy.BLOCK) ||
-      track.userUrn == userUrn
+  private def fetchContentAuth(session: UserSession, trackUrn: Urn): Future[Option[ContentAuthorization]] = {
+    contentAuthorizationRules.fetchRules(session, Seq(trackUrn)).map(_.headOption)
+  }
+
+  private def streamingAllowed(track: Track, userUrn: Urn, authorization: ContentAuthorization): Boolean = {
+    (track.api_streamable.getOrElse(false) && authorization.policy != ContentPolicy.BLOCK) || track.user_urn == userUrn
   }
 
   private def fetchTranscodings(session: UserSession, trackUid: String): Future[Map[String, Transcoding]] = {

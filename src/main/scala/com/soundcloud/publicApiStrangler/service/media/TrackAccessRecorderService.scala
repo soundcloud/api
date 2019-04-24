@@ -10,14 +10,14 @@ import com.twitter.util.Future
 
 class TrackAccessRecorderService(trackAccessRecorderClient: TrackAccessRecorderClient) {
 
-  def recordStreamAccess(session: UserSession, request: HandlerRequest, trackUrn: Urn)(action: => Future[Response]): Future[Response] =
-    recordAccess(session, request, trackUrn, "stream", action)
+  def recordStreamAccess(session: UserSession, request: HandlerRequest, trackUrn: Urn, loggingEnabled: Boolean = true)(action: => Future[Response]): Future[Response] =
+    recordAccess(session, request, trackUrn, "stream",loggingEnabled, action)
 
   def recordDownloadAccess(session: UserSession, request: HandlerRequest, trackUrn: Urn)(action: => Future[Response]): Future[Response] =
-    recordAccess(session, request, trackUrn, "download", action)
+    recordAccess(session, request, trackUrn, "download", true, action)
 
-  private def recordAccess(session: UserSession, request: HandlerRequest, trackUrn: Urn, accessFor: String, action: => Future[Response]): Future[Response] =
-    trackAccessRecorderClient.recordAccess(session, trackUrn, accessFor, shouldLog(request), secretToken(request)).flatMap { response =>
+  private def recordAccess(session: UserSession, request: HandlerRequest, trackUrn: Urn, accessFor: String, loggingEnabled: Boolean, action: => Future[Response]): Future[Response] =
+    trackAccessRecorderClient.recordAccess(session, trackUrn, accessFor, loggingEnabled && shouldLog(request), secretToken(request)).flatMap { response =>
       response.status match {
         case Status.Ok => action
         case _ => Future.value(response)
