@@ -39,7 +39,7 @@ class TrackStreamsHandler(
               case StreamNotFoundError => Future.value(renderStreamResponse(request, session, StreamNotFoundError))
               case StreamNotAllowed => Future.value(renderStreamResponse(request, session, StreamNotAllowed))
               case streamResponse if singleStream => trackAccessRecorderService.recordStreamAccess(session, request, streamParams.trackUrn)(Future.value(renderStreamResponse(request, session, streamResponse)))
-              case streamResponse => Future.value(renderStreamResponse(request, session, streamResponse))
+              case streamResponse => trackAccessRecorderService.recordStreamAccess(session, request, streamParams.trackUrn, loggingEnabled = false)(Future.value(renderStreamResponse(request, session, streamResponse)))
             }
           case None => Future.value(ResponseBuilder().status(Status.BadRequest).build)
         }

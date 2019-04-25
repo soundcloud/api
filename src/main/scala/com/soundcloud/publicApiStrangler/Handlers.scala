@@ -46,7 +46,7 @@ class Handlers(telemetry: Telemetry, clients: Clients) {
     }
     val publicApiSiloing = new PublicApiSiloing(rolloutCheckForSiloingFunc, blacklistOfAppIdsForUserSiloing, telemetry)
 
-    val streamService = new StreamService(tracksClient, mediaServiceClient)
+    val streamService = new StreamService(trackmetadataClient, contentAuthorizationRules, mediaServiceClient)
 
     new TrackStreamsHandler(
       userAuthentication,
