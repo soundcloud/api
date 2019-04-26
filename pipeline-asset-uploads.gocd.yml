@@ -8,7 +8,7 @@ pipelines:
       git:
         git: git@github.com:soundcloud/public-api-strangler.git
         whitelist:
-          - asset-uploads/**/*
+        - asset-uploads/**/*
     stages:
     - test:
         jobs:
@@ -26,3 +26,43 @@ pipelines:
                 - -C
                 - asset-uploads
                 - publish
+    - publish-deploy:
+      jobs:
+        publish-deploy-db:
+          job_type: deploy
+          environment_variables:
+            ENV: production
+            ZONE: db
+          tasks:
+          - exec:
+            command: make
+            arguments:
+            - -C
+            - asset-uploads
+            - publish-deploy
+    - promote:
+      jobs:
+        promote:
+          job_type: deploy
+          tasks:
+          - exec:
+            command: make
+            arguments:
+            - -C
+            - asset-uploads
+            - promote-to-stable
+            - promote-to-release
+    - deploy:
+      jobs:
+        deploy-db:
+          job_type: deploy
+          environment_variables:
+            ENV: production
+            ZONE: db
+          tasks:
+          - exec:
+            command: make
+            arguments:
+            - -C
+            - asset-uploads
+            - deploy

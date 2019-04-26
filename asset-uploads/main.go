@@ -96,7 +96,7 @@ func main() {
 	go func(a string) {
 		http.Handle("/metrics", promhttp.Handler())
 
-		log.Println("Listening on: ", a)
+		log.Println("Server listening on:", a)
 		if err := http.ListenAndServe(a, nil); err != nil {
 			log.Fatal(err)
 		}
@@ -118,7 +118,7 @@ func main() {
 		DrainTimeout: 30 * time.Second,
 	}
 
-	log.Println("Listening on: ", *addr)
+	log.Println("Admin server listening on:", *addr)
 	if err := server.ListenAndServe(); err != nil {
 		log.Fatal(err)
 	}
