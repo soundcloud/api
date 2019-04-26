@@ -35,23 +35,23 @@ pipelines:
               ZONE: db
             tasks:
             - exec:
-              command: make
-              arguments:
-              - -C
-              - asset-uploads
-              - publish-deploy
+                command: make
+                arguments:
+                - -C
+                - asset-uploads
+                - publish-deploy
     - promote:
         jobs:
           promote:
             job_type: deploy
             tasks:
             - exec:
-              command: make
-              arguments:
-              - -C
-              - asset-uploads
-              - promote-to-stable
-              - promote-to-release
+                command: make
+                arguments:
+                - -C
+                - asset-uploads
+                - promote-to-stable
+                - promote-to-release
     - deploy:
         jobs:
           deploy-db:
@@ -61,8 +61,8 @@ pipelines:
               ZONE: db
             tasks:
             - exec:
-              command: make
-              arguments:
-              - -C
-              - asset-uploads
-              - deploy
+                command: make
+                arguments:
+                - -C
+                - asset-uploads
+                - deploy
