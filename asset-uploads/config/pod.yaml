@@ -1,0 +1,36 @@
+containers:
+- name: "{{ component }}"
+  image: "{{ image }}"
+  command: {{ cmd }}
+  env:
+  - name: PORT
+    value: "80"
+  - name: TELE_PORT
+    value: "8080"
+  ports:
+  - name: http
+    containerPort: 80
+  - name: telemetry
+    containerPort: 8080
+  resources:
+    requests:
+      memory: 2048Mi
+      cpu: 1.0
+    limits:
+      memory: 4086Mi
+      cpu: 2.0
+  readinessProbe:
+    httpGet:
+      path: /-/health
+      port: 80
+    initialDelaySeconds: 1
+    timeoutSeconds: 1
+  # When this fails, the container is killed and restarted.
+  livenessProbe:
+    httpGet:
+      path: /-/health
+      port: 80
+    # Don't even run this for the first 2 minutes to avoid getting killed to quickly.
+    initialDelaySeconds: 300
+    # Allow the response to be a bit slower.
+    timeoutSeconds: 10

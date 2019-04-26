@@ -1,4 +1,7 @@
 source api-test-secrets
 
+PORT=80
+TELE_PORT=8080
+
 MOSHIMOSHI_ADDRESS=moshimoshi
 PUBLIC_API_STRANGLER_ADDRESS=public_api_strangler
