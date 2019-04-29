@@ -55,7 +55,7 @@ SEARCH_SRV_RECORD="dnssrv!http.publicapi.prod.search.srv.db.s-cloud.net"
 SEARCH_CIRCUITBREAKER_RESET_TIMEOUT_IN_MILLIS="500"
 TIMELINE_SRV_RECORD="dnssrv!http.api.prod.timeline.srv.db.s-cloud.net"
 
-LIEBLING_SRV_RECORD="dnssrv!http.web.prod.liebling.srv.db.s-cloud.net"
+LIEBLING_SRV_RECORD="dnssrv!http.web.prod.liebling.srv"
 SYSTEM_PLAYLISTS_SRV_RECORD="dnssrv!http.api.prod.system-playlists.srv"
 
 TRACK_COORDINATOR_SRV_RECORD="dnssrv!http.coordinator.prod.tracks.srv.db.s-cloud.net"
