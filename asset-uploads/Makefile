@@ -67,7 +67,7 @@ publish-deploy:
 	sc artifact-manager deploy $(DEPLOY_FLAGS) publish \
 		--command="./api --config=api-$(ENV)" \
 		--glimpse=http.$(COMPONENT).$(GLIMPSE_ENV).$(GLIMPSE_PRODUCT) \
-		--pod=pod.yaml \
+		--pod=config/pod.yaml \
 		--prometheus.port=telemetry
 
 .PHONY: promote-to-stable
