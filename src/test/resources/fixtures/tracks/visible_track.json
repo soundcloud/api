@@ -6,6 +6,7 @@
       "uid": "NnPYWvWwB6ln",
       "apiStreamable": true,
       "downloadable": true,
+      "disabledAt": null,
       "authorization": {
         "policy": "ALLOW",
         "reason": "DEFAULT",

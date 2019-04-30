@@ -34,7 +34,6 @@ class DownloadService(tracksClient: TracksClient,
   }
 
   private def downloadingAllowed(track: VisibleTrack, userUrn: Urn): Boolean =
-    track.userUrn == userUrn ||
-      (track.downloadable && (
-        track.authorization.policy == ContentPolicy.ALLOW || track.authorization.policy == ContentPolicy.MONETIZE))
+    track.disabledAt.isEmpty &&
+      (track.userUrn == userUrn || (track.downloadable && (track.authorization.policy == ContentPolicy.ALLOW || track.authorization.policy == ContentPolicy.MONETIZE)))
 }

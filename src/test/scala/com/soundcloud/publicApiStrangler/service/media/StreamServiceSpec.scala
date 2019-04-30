@@ -8,6 +8,7 @@ import com.soundcloud.publicApiStrangler.client.media.{MediaServiceClient, Trans
 import com.soundcloud.publicApiStrangler.client.trackmetadata.{Track, TrackmetadataClient}
 import com.soundcloud.publicApiStrangler.test.UnitSpecification
 import com.twitter.util.{Await, Future}
+import org.joda.time.DateTime
 
 class StreamServiceSpec extends UnitSpecification {
 
@@ -30,6 +31,7 @@ class StreamServiceSpec extends UnitSpecification {
     val track = mock[Track]
     val maybeTrack: Option[Track] = Some(track)
     lazy val uid: Option[String] = Some(trackUid)
+    lazy val disabledAt: Option[DateTime] = None
 
     lazy val transcodings = List(
       Transcoding("mp3-uuid", "audio/mpeg"),
@@ -39,6 +41,7 @@ class StreamServiceSpec extends UnitSpecification {
     track.uid returns uid
     track.api_streamable returns maybeStreamable
     track.user_urn returns userUrn
+    track.disabled_at returns disabledAt
 
     contentAuthorizationRules.fetchRules(session, Seq(trackUrn)) returns Future.value(contentAuthorizations)
     trackmetadataClient.track(session, trackUrn) returns Future.value(maybeTrack)
@@ -61,6 +64,12 @@ class StreamServiceSpec extends UnitSpecification {
     override lazy val uid = None
     Await.result(service.fetchSingle(session, trackUrn, secretToken)) ==== StreamNotFoundError
     Await.result(service.fetchMultiple(session, trackUrn, secretToken)) ==== StreamNotFoundError
+  }
+
+  "error when track is disabled" in new Context {
+    override lazy val disabledAt = Some(DateTime.now())
+    Await.result(service.fetchSingle(session, trackUrn, secretToken)) ==== StreamNotAllowed
+    Await.result(service.fetchMultiple(session, trackUrn, secretToken)) ==== StreamNotAllowed
   }
 
   "error when track is not streamable" in new Context {
