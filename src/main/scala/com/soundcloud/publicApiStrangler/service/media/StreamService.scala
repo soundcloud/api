@@ -48,7 +48,8 @@ class StreamService(trackmetadataClient: TrackmetadataClient,
   }
 
   private def streamingAllowed(track: Track, userUrn: Urn, authorization: ContentAuthorization): Boolean = {
-    (track.api_streamable.getOrElse(false) && authorization.policy != ContentPolicy.BLOCK) || track.user_urn == userUrn
+    track.disabled_at.isEmpty &&
+      ((track.api_streamable.getOrElse(false) && authorization.policy != ContentPolicy.BLOCK) || track.user_urn == userUrn)
   }
 
   private def fetchTranscodings(session: UserSession, trackUid: String): Future[Map[String, Transcoding]] = {

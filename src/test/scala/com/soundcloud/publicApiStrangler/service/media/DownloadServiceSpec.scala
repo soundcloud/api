@@ -7,6 +7,7 @@ import com.soundcloud.publicApiStrangler.client.media.MediaServiceClient
 import com.soundcloud.publicApiStrangler.client.tracks.{TracksClient, VisibleTrack}
 import com.soundcloud.publicApiStrangler.test.UnitSpecification
 import com.twitter.util.{Await, Future}
+import org.joda.time.DateTime
 
 class DownloadServiceSpec extends UnitSpecification {
 
@@ -21,6 +22,7 @@ class DownloadServiceSpec extends UnitSpecification {
     val downloaderUrn = Urn("soundcloud", "users", "1764")
     val secretToken = Some("shhhhhhh")
     val trackUid = "the-uid"
+    lazy val disabledAt: Option[DateTime] = None
 
     lazy val maybeTrack: Option[VisibleTrack] = None
     lazy val maybeUrl: Option[String] = None
@@ -44,6 +46,27 @@ class DownloadServiceSpec extends UnitSpecification {
       }
     }
 
+    "when track is disabled" >> {
+      trait DisabledTrackContext extends Context {
+        override lazy val disabledAt = Some(DateTime.now())
+
+        lazy val track = VisibleTrack(
+          trackUrn,
+          trackOwnerUrn,
+          None,
+          None,
+          true,
+          disabledAt,
+          new ContentAuthorization(trackUrn, ContentPolicy.ALLOW, Reason.DEFAULT, Set.empty[ContentRestriction], MonetizationModel.NOT_APPLICABLE))
+
+        override lazy val maybeTrack = Some(track)
+      }
+
+      "download should be not found" in new DisabledTrackContext {
+        result ==== DownloadNotFound
+      }
+    }
+
     "when track is available" >> {
       trait AvailableTrackContext extends Context {
         lazy val downloadable: Boolean = true
@@ -56,6 +79,7 @@ class DownloadServiceSpec extends UnitSpecification {
           maybeUid,
           None,
           downloadable,
+          disabledAt,
           new ContentAuthorization(trackUrn, policy, Reason.DEFAULT, Set.empty[ContentRestriction], MonetizationModel.NOT_APPLICABLE))
 
         override lazy val maybeTrack = Some(track)

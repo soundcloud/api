@@ -24,6 +24,7 @@ class TracksClientSpec extends UnitSpecification {
     val trackUid = Some("NnPYWvWwB6ln")
     val apiStreamable = Some(true)
     val downloadable = true
+    val disabledAt = None
     val contentAuth = new ContentAuthorization(trackUrn, ContentPolicy.ALLOW, Reason.DEFAULT, MonetizationModel.NOT_APPLICABLE)
   }
 
@@ -36,7 +37,7 @@ class TracksClientSpec extends UnitSpecification {
       )
       jsonClient.postWithSession(userSession, Path() / "tracks", Params.empty, Headers.empty, Some(Json.stringify(jsonBody))) returns
         Future.value(jsonResponse(Status.Ok, withContentsOf("tracks", "visible_track")))
-      Await.result(client.visibleTrack(userSession, trackUrn, None)) ==== Some(VisibleTrack(trackUrn, userUrn, trackUid, apiStreamable, downloadable, contentAuth))
+      Await.result(client.visibleTrack(userSession, trackUrn, None)) ==== Some(VisibleTrack(trackUrn, userUrn, trackUid, apiStreamable, downloadable, disabledAt, contentAuth))
     }
 
     "track service returns no track" in new Context {
