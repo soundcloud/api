@@ -36,6 +36,7 @@ class TestIntegration(unittest.TestCase, assertions.Assertions):
             curl --fail --verbose \
                 -H "Host: api.sc.local" \
                 -H "Transfer-Encoding: chunked" \
+                -H "X-Track-Asset-Uploads: true" \
                 -F "track[asset_data]=@{};filename=test_chunk.wav" \
                 -F "track[title]=123" \
                 -F "oauth_token=s3cr3t_1" \
@@ -55,6 +56,7 @@ class TestIntegration(unittest.TestCase, assertions.Assertions):
             curl --verbose \
                 -H "Host: api.sc.local" \
                 -H "Transfer-Encoding: chunked" \
+                -H "X-Track-Asset-Uploads: true" \
                 -F "track[asset_data]=@{};filename=test_chunk_large.wav" \
                 -F "track[title]=123" \
                 -F "oauth_token=s3cr3t_2" \
@@ -68,6 +70,7 @@ class TestIntegration(unittest.TestCase, assertions.Assertions):
         cmd = '''
             curl --fail --verbose \
                 -H "Host: api.sc.local" \
+                -H "X-Track-Asset-Uploads: true" \
                 -F "track[asset_data]=@{};filename=test_length.wav" \
                 -F "track[title]=123" \
                 -F "oauth_token=s3cr3t_3" \
@@ -86,6 +89,7 @@ class TestIntegration(unittest.TestCase, assertions.Assertions):
         cmd = '''
             curl --verbose \
                 -H "Host: api.sc.local" \
+                -H "X-Track-Asset-Uploads: true" \
                 -F "track[asset_data]=@{};filename=test_length_large.wav" \
                 -F "track[title]=123" \
                 -F "oauth_token=s3cr3t_4" \
@@ -102,6 +106,7 @@ class TestIntegration(unittest.TestCase, assertions.Assertions):
         cmd = '''
             curl --fail --verbose \
                 -H "Host: api.sc.local" \
+                -H "X-Track-Asset-Uploads: true" \
                 -F "oauth_token={}" \
                 asset_uploads/tracks
             '''.format(token)

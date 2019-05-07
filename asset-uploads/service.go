@@ -32,6 +32,10 @@ type createTrackState struct {
 }
 
 func (s service) createTrack(r *createTrackRequest) (*createTrackResponse, error) {
+	if feature := r.request.Header.Get("X-Track-Asset-Uploads"); feature == "yes" {
+		return &createTrackResponse{request: r.request}, nil
+	}
+
 	reader := multipart.NewReader(r.request.Body, r.boundary)
 
 	body := &bytes.Buffer{}
