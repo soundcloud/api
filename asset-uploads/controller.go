@@ -9,6 +9,7 @@ import (
 
 type controller struct {
 	maxRequestBytes int64
+	publicHostname  string
 	proxy           *httputil.ReverseProxy
 	service         serviceAPI
 }
@@ -20,6 +21,11 @@ func (c controller) tracks(w http.ResponseWriter, r *http.Request) {
 
 	method := r.Method
 	if method != http.MethodPost && method != http.MethodPut {
+		http.Error(w, emptyResponse, http.StatusNotFound)
+		return
+	}
+
+	if host := r.Host; host == "" || host != c.publicHostname {
 		http.Error(w, emptyResponse, http.StatusNotFound)
 		return
 	}

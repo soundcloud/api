@@ -47,6 +47,35 @@ func TestTracksAllowedMethods(t *testing.T) {
 	}
 }
 
+func TestTracksRequiresHostname(t *testing.T) {
+	tests := [...]struct {
+		method   string
+		hostname string
+		status   int
+	}{
+		0: {http.MethodPost, "", http.StatusNotFound},
+		1: {http.MethodPut, "something", http.StatusNotFound},
+	}
+
+	for _, tt := range tests {
+		controller := &controller{
+			publicHostname: "api.sc.local",
+		}
+
+		res := httptest.NewRecorder()
+		req := httptest.NewRequest(tt.method, "/", nil)
+		if tt.hostname != "" {
+			req.Host = tt.hostname
+		}
+
+		controller.tracks(res, req)
+
+		if want, got := tt.status, res.Result().StatusCode; want != got {
+			t.Errorf("Expected %v with 'Host: %v' to return %v, was %v", tt.method, tt.hostname, want, got)
+		}
+	}
+}
+
 func TestTracksRequiresContentType(t *testing.T) {
 	tests := [...]struct {
 		method      string
@@ -59,10 +88,13 @@ func TestTracksRequiresContentType(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		controller := &controller{}
+		controller := &controller{
+			publicHostname: "api.sc.local",
+		}
 
 		res := httptest.NewRecorder()
 		req := httptest.NewRequest(tt.method, "/", nil)
+		req.Host = "api.sc.local"
 		req.Header.Set("Content-Type", tt.contentType)
 
 		controller.tracks(res, req)
@@ -76,11 +108,16 @@ func TestTracksRequiresContentType(t *testing.T) {
 func TestExceedsMaxContentLength(t *testing.T) {
 	randomBody := []byte{97, 97, 98, 101, 105, 110, 115, 115, 116}
 
-	controller := &controller{maxRequestBytes: int64(len(randomBody)) - 1}
+	controller := &controller{
+		publicHostname:  "api.sc.local",
+		maxRequestBytes: int64(len(randomBody)) - 1,
+	}
 
 	res := httptest.NewRecorder()
 	req := httptest.NewRequest(http.MethodPost, "/", bytes.NewReader(randomBody))
+	req.Host = "api.sc.local"
 	req.Header.Set("Content-Type", "multipart/form-data; boundary=some-boundary")
+
 	controller.tracks(res, req)
 
 	if want, got := http.StatusRequestEntityTooLarge, res.Result().StatusCode; want != got {
@@ -92,6 +129,7 @@ func TestTracksLimitsRequestSize(t *testing.T) {
 	randomBody := []byte{97, 97, 98, 101, 105, 110, 115, 115, 116}
 
 	controller := &controller{
+		publicHostname:  "api.sc.local",
 		maxRequestBytes: int64(len(randomBody) - 1),
 		service: &fakeService{
 			fn: func(r *createTrackRequest) (*createTrackResponse, error) {
@@ -106,6 +144,7 @@ func TestTracksLimitsRequestSize(t *testing.T) {
 
 	res := httptest.NewRecorder()
 	req := httptest.NewRequest("POST", "/", bytes.NewReader(randomBody))
+	req.Host = "api.sc.local"
 	req.Header.Set("Content-Type", "multipart/form-data; boundary=some-boundary")
 	req.ContentLength = -1 // Create a request that won't get filtered on Content-Length.
 
@@ -119,6 +158,7 @@ func TestTracksLimitsRequestSize(t *testing.T) {
 
 func TestPassesMultipartBoundary(t *testing.T) {
 	controller := &controller{
+		publicHostname: "api.sc.local",
 		service: &fakeService{
 			fn: func(r *createTrackRequest) (*createTrackResponse, error) {
 				if want, got := "the-boundary", r.boundary; want != got {
@@ -132,6 +172,7 @@ func TestPassesMultipartBoundary(t *testing.T) {
 
 	res := httptest.NewRecorder()
 	req := httptest.NewRequest("POST", "/", nil)
+	req.Host = "api.sc.local"
 	req.Header.Set("Content-Type", "multipart/form-data; boundary=the-boundary")
 
 	controller.tracks(res, req)
@@ -139,6 +180,7 @@ func TestPassesMultipartBoundary(t *testing.T) {
 
 func TestFailingServiceCall(t *testing.T) {
 	controller := &controller{
+		publicHostname: "api.sc.local",
 		service: &fakeService{
 			fn: func(r *createTrackRequest) (*createTrackResponse, error) {
 				return nil, errors.New("This failed")
@@ -148,6 +190,7 @@ func TestFailingServiceCall(t *testing.T) {
 
 	res := httptest.NewRecorder()
 	req := httptest.NewRequest("POST", "/", nil)
+	req.Host = "api.sc.local"
 	req.Header.Set("Content-Type", "multipart/form-data; boundary=some-boundary")
 
 	controller.tracks(res, req)
@@ -174,6 +217,7 @@ func TestSuccessfulServiceCall(t *testing.T) {
 	body := []byte("test123")
 
 	controller := &controller{
+		publicHostname:  "api.sc.local",
 		maxRequestBytes: int64(len(body)),
 		service: &fakeService{
 			fn: func(r *createTrackRequest) (*createTrackResponse, error) {
@@ -185,6 +229,7 @@ func TestSuccessfulServiceCall(t *testing.T) {
 
 	res := httptest.NewRecorder()
 	req := httptest.NewRequest("POST", "/", bytes.NewReader(body))
+	req.Host = "api.sc.local"
 	req.Header.Set("Content-Type", "multipart/form-data; boundary=some-boundary")
 
 	controller.tracks(res, req)

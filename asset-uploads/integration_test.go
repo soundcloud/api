@@ -54,6 +54,7 @@ func TestControllerServiceS3Integration(t *testing.T) {
 	proxy := httputil.NewSingleHostReverseProxy(url)
 
 	controller := &controller{
+		publicHostname:  "api.sc.local",
 		maxRequestBytes: 1024,
 		service:         service,
 		proxy:           proxy,
@@ -75,6 +76,7 @@ func TestControllerServiceS3Integration(t *testing.T) {
 
 	res := httptest.NewRecorder()
 	req := httptest.NewRequest("POST", "/tracks", bytes.NewReader(body))
+	req.Host = "api.sc.local"
 	req.Header.Set("Content-Type", "multipart/form-data; boundary=------------------------6808b4f61ea0e5a2")
 
 	controller.tracks(res, req)

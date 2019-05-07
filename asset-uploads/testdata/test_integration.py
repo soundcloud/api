@@ -34,6 +34,7 @@ class TestIntegration(unittest.TestCase, assertions.Assertions):
         asset = self.assets['1mb']
         cmd = '''
             curl --fail --verbose \
+                -H "Host: api.sc.local" \
                 -H "Transfer-Encoding: chunked" \
                 -F "track[asset_data]=@{};filename=test_chunk.wav" \
                 -F "track[title]=123" \
@@ -52,6 +53,7 @@ class TestIntegration(unittest.TestCase, assertions.Assertions):
         asset = self.assets['10mb']
         cmd = '''
             curl --verbose \
+                -H "Host: api.sc.local" \
                 -H "Transfer-Encoding: chunked" \
                 -F "track[asset_data]=@{};filename=test_chunk_large.wav" \
                 -F "track[title]=123" \
@@ -65,6 +67,7 @@ class TestIntegration(unittest.TestCase, assertions.Assertions):
         asset = self.assets['1mb']
         cmd = '''
             curl --fail --verbose \
+                -H "Host: api.sc.local" \
                 -F "track[asset_data]=@{};filename=test_length.wav" \
                 -F "track[title]=123" \
                 -F "oauth_token=s3cr3t_3" \
@@ -82,6 +85,7 @@ class TestIntegration(unittest.TestCase, assertions.Assertions):
         asset = self.assets['10mb']
         cmd = '''
             curl --verbose \
+                -H "Host: api.sc.local" \
                 -F "track[asset_data]=@{};filename=test_length_large.wav" \
                 -F "track[title]=123" \
                 -F "oauth_token=s3cr3t_4" \
@@ -97,6 +101,7 @@ class TestIntegration(unittest.TestCase, assertions.Assertions):
                 string.ascii_uppercase + string.digits, k=token_bytes))
         cmd = '''
             curl --fail --verbose \
+                -H "Host: api.sc.local" \
                 -F "oauth_token={}" \
                 asset_uploads/tracks
             '''.format(token)
