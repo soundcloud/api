@@ -30,9 +30,9 @@ REPOSTS_SRV_RECORD="dnssrv!http.api.prod.reposts.srv"
 REPOSTS_CLIENT_REQUEST_TIMEOUT_MILLIS="5000"
 
 # Playlists and listings are being extracted out of Mothership, this configuration value is in anticipation of that.
-PLAYLIST_SRV_RECORD="dnssrv!http.moshimoshi.prod.mothership.srv"
+PLAYLIST_SRV_RECORD="dnssrv!http.moshimoshi.prod.mothership.srv.db.s-cloud.net"
 
-PUBLIC_API_ADDRESS="dnssrv!http.public-api.prod.mothership.srv"
+PUBLIC_API_ADDRESS="dnssrv!http.public-api.prod.mothership.srv.db.s-cloud.net"
 PUBLIC_API_CLIENT_REQUEST_TIMEOUT_MILLIS="30000"
 PUBLIC_API_CLIENT_FOLLOW_REDIRECTS=false
 
@@ -43,7 +43,7 @@ RATELIMITING_CIRCUITBREAKER_RESET_TIMEOUT_IN_MILLIS="1000"
 RATELIMITING_CLIENT_REQUEST_TIMEOUT_MILLIS="2000"
 RATELIMITING_CLIENT_RETRIES="1"
 RATELIMITING_MAX_PROMETHEUS_COUNTER_LABELS="100"
-RATELIMITING_SRV_RECORD="dnssrv!http.api.prod.ratelimiting.srv"
+RATELIMITING_SRV_RECORD="dnssrv!http.api.prod.ratelimiting.srv.db.s-cloud.net"
 
 SLO_ERROR_RATE_THRESHOLD=0.0001
 SLO_LATENCY_P99_THRESHOLD_SECONDS=0.500
@@ -84,7 +84,7 @@ TRACKS_SRV_RECORD=dnssrv!http.api.prod.tracks.srv
 
 MEDIA_SERVICE_SRV_RECORD=dnssrv!http.api.prod.media-service.srv
 
-TRACK_ACCESS_RECORDER_SRV_RECORD=dnssrv!http.moshimoshi.prod.mothership.srv
+TRACK_ACCESS_RECORDER_SRV_RECORD=dnssrv!http.moshimoshi.prod.mothership.srv.db.s-cloud.net
 
 APP_SILOING_BLACKLIST_APPS="soundcloud:applications:124,soundcloud:applications:3152,soundcloud:applications:65097"
 
