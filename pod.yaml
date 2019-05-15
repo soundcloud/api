@@ -15,7 +15,7 @@ containers:
   resources:
     requests:
       memory: {{ get "MEMORY_REQUEST" }}
-      cpu: 0.6
+      cpu: 1
     limits:
       memory: {{ get "MEMORY_LIMIT" }}
   readinessProbe:
