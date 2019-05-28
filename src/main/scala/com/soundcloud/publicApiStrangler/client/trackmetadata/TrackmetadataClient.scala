@@ -1,13 +1,9 @@
 package com.soundcloud.publicApiStrangler.client.trackmetadata
 
-import com.soundcloud.jvmkit.module.http.client.config.HttpClientConfig
 import com.soundcloud.jvmkit.module.http.client.{JsonClient, Params}
-import com.soundcloud.jvmkit.module.servicediscovery.ServiceEntryPoint
-import com.soundcloud.jvmkit.module.telemetry.Telemetry
-import com.soundcloud.jvmkit.module.util.config.{Config, ConfigConvention}
 import com.soundcloud.jvmkit.module.util.http.Headers
 import com.soundcloud.jvmkit.module.util.session.UserSession
-import com.soundcloud.jvmkit.module.util.{Path, ResourceName, Urn}
+import com.soundcloud.jvmkit.module.util.{Path, Urn}
 import com.soundcloud.jvmkit.module.json.UrnFormat._
 import com.twitter.finagle.http.{Response, Status}
 import com.twitter.util.Future
@@ -51,14 +47,4 @@ class TrackmetadataClient(service: JsonClient) {
   }
 
   private def jsonToTracks(json: JsValue): List[Track] = (json \ "data").as[List[Track]]
-}
-
-object TrackmetadataClient {
-  def apply(config: Config, telemetry: Telemetry, customEntryPoint: Option[ServiceEntryPoint] = None) = {
-    val resourceName = ResourceName("trackmetadata")
-    val entryPoint = customEntryPoint.getOrElse(ServiceEntryPoint(config.get(resourceName, ConfigConvention.SRV_RECORD)))
-    val jsonClient = JsonClient(entryPoint, HttpClientConfig.from(resourceName, config), telemetry)
-
-    new TrackmetadataClient(jsonClient)
-  }
 }

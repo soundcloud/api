@@ -4,7 +4,6 @@ import com.soundcloud.jvmkit.module.bff.session.UserAuthentication
 import com.soundcloud.jvmkit.module.http.client.config.HttpClientConfig
 import com.soundcloud.jvmkit.module.http.client.{HttpClient, JsonClient}
 import com.soundcloud.jvmkit.module.rollout.{BasicRolloutFeature, Rollout}
-import com.soundcloud.jvmkit.module.servicediscovery.ServiceEntryPoint
 import com.soundcloud.jvmkit.module.telemetry.Telemetry
 import com.soundcloud.jvmkit.module.util.config.{AppConfig, ConfigConvention, DataSensitivity}
 import com.soundcloud.jvmkit.module.util.{ResourceName, Urn}
@@ -37,7 +36,6 @@ import com.twitter.util.{Future, Throw, Try}
 
 class Clients(config: AppConfig, telemetry: Telemetry) {
   private def jsonClient(resourceName: String) = JsonClient(
-    ServiceEntryPoint(config.get(ResourceName(resourceName), ConfigConvention.SRV_RECORD)),
     HttpClientConfig.from(ResourceName(resourceName), config),
     telemetry
   )
@@ -45,13 +43,7 @@ class Clients(config: AppConfig, telemetry: Telemetry) {
   private val okidokiJsonClient = jsonClient("okidoki")
   val okidokiClient = new OkidokiClient(okidokiJsonClient)
 
-  private val timelineJsonClient =
-    JsonClient(
-      ServiceEntryPoint(config.get("TIMELINE_SRV_RECORD", DataSensitivity.NON_SENSITIVE)),
-      HttpClientConfig.from(ResourceName("timeline"), config),
-      telemetry
-    )
-  val timelineClient = new TimelineJsonClient(timelineJsonClient)
+  val timelineClient = new TimelineJsonClient(jsonClient("timeline"))
 
   val lieblingClient = new LieblingClient(jsonClient("liebling"))
 
@@ -63,7 +55,6 @@ class Clients(config: AppConfig, telemetry: Telemetry) {
     }
 
     HttpClient(
-      ServiceEntryPoint(config.get(name, ConfigConvention.ADDRESS)),
       HttpClientConfig.from(name, config),
       telemetry,
       retryOn = Some(writeExceptions)
@@ -96,7 +87,7 @@ class Clients(config: AppConfig, telemetry: Telemetry) {
 
   val followCountsClient = new FollowCountsClient(stitch4followsService, config)
 
-  val trackmetadataClient = TrackmetadataClient(config, telemetry)
+  val trackmetadataClient = new TrackmetadataClient(jsonClient("trackmetadata"))
 
   val contentAuthorizationRules = new ContentAuthorizationRules(
     new ContentAuthorizationService(jsonClient("authsy")),
