@@ -32,7 +32,7 @@ type createTrackState struct {
 }
 
 func (s service) createTrack(r *createTrackRequest) (*createTrackResponse, error) {
-	if feature := r.request.Header.Get("X-Track-Asset-Uploads"); feature == "yes" {
+	if feature := r.request.Header.Get("X-Track-Asset-Uploads"); feature != "true" {
 		return &createTrackResponse{request: r.request}, nil
 	}
 
