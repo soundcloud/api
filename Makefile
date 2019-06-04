@@ -114,8 +114,7 @@ canary-api:
 		--system=public-api-strangler \
 		--env=production \
 		--component="$(API_COMPONENT)" \
-		--replicas=2 \
-		-p=http://prometheus-public-api-strangler.$(ZONE).s-cloud.net/ system=public-api-strangler env=production component=$(API_COMPONENT)
+		--replicas=2
 
 canary-apitrackupload:
 	sc k8s canary \
@@ -123,8 +122,7 @@ canary-apitrackupload:
 		--system=public-api-strangler \
 		--env=production \
 		--component="$(APITRACKUPLOAD_COMPONENT)" \
-		--replicas=2 \
-		-p=http://prometheus-public-api-strangler.$(ZONE).s-cloud.net/ system=public-api-strangler env=production component=$(APITRACKUPLOAD_COMPONENT)
+		--replicas=2
 
 .PHONY: deploy-api
 deploy-api:
