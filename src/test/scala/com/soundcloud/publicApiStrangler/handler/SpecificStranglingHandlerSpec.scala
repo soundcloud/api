@@ -1,13 +1,12 @@
 package com.soundcloud.publicApiStrangler.handler
 
 import com.soundcloud.jvmkit.module.http.server.HandlerRequest
-import com.soundcloud.jvmkit.module.telemetry.{MetricsRegistryImpl, Telemetry}
+import com.soundcloud.jvmkit.module.telemetry.Telemetry
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.AuthorizationHeaders.ScHeaders
 import com.soundcloud.publicApiStrangler.test.UnitSpecification
 import com.twitter.finagle.http.{HeaderMap, Method, Request, Response}
 import com.twitter.util.{Await, Future}
-import io.prometheus.client.CollectorRegistry
 import org.mockito.Mockito.verify
 
 class SpecificStranglingHandlerSpec extends UnitSpecification {
@@ -36,8 +35,7 @@ class SpecificStranglingHandlerSpec extends UnitSpecification {
     val testHandler = mock[TestHandler]
     testHandler.handle(request) returns Future(mock[Response])
 
-    val collectorRegistry = new CollectorRegistry
-    val telemetry = new Telemetry(new MetricsRegistryImpl(collectorRegistry))
+    val telemetry = Telemetry.createIsolatedInstance
     val counter = telemetry.counter("fallthrough_strangled_by", "testing counter", "method", "path_pattern", "agent_urn")
 
     val handler = new SpecificStranglingHandler(testHandler.handle, pathPatternsToDispatch, officialApps, counter)
@@ -62,18 +60,18 @@ class SpecificStranglingHandlerSpec extends UnitSpecification {
 
     "it increments the counter with the path pattern, if it is recognised" in new KnownUrlContext {
       Await.result(handler.apply(request))
-      val count = collectorRegistry.getSampleValue("fallthrough_strangled_by",
+      val count = telemetry.getSampleValue("fallthrough_strangled_by",
         Array("method", "path_pattern", "agent_urn"),
         Array("GET", "/announcements", "soundcloud:applications:124"))
-      count ==== 1.0
+      count ==== Some(1.0)
     }
 
     "it increments the counter with 'UNKNOWN' if it is not recognised" in new UnknownUrlContext {
       Await.result(handler.apply(request))
-      val count = collectorRegistry.getSampleValue("fallthrough_strangled_by",
+      val count = telemetry.getSampleValue("fallthrough_strangled_by",
         Array("method", "path_pattern", "agent_urn"),
         Array("GET", "UNKNOWN", "soundcloud:applications:124"))
-      count ==== 1.0
+      count ==== Some(1.0)
     }
   }
 
@@ -91,18 +89,18 @@ class SpecificStranglingHandlerSpec extends UnitSpecification {
     "it increments the counter with the agent URN, if it is recognised" in new KnownAgentContext {
       Await.result(handler.apply(request))
 
-      val count = collectorRegistry.getSampleValue("fallthrough_strangled_by",
+      val count = telemetry.getSampleValue("fallthrough_strangled_by",
         Array("method", "path_pattern", "agent_urn"),
         Array("GET", "/announcements", "soundcloud:applications:124"))
-      count ==== 1.0
+      count ==== Some(1.0)
     }
 
     "it increments the counter with 'soundcloud:applications:external, if it is not recognised" in new UnknownAgentContext {
       Await.result(handler.apply(request))
-      val count = collectorRegistry.getSampleValue("fallthrough_strangled_by",
+      val count = telemetry.getSampleValue("fallthrough_strangled_by",
         Array("method", "path_pattern", "agent_urn"),
         Array("GET", "/announcements", "soundcloud:applications:external"))
-      count ==== 1.0
+      count ==== Some(1.0)
     }
   }
 }

@@ -4,7 +4,7 @@ import java.net.URL
 import java.util.TimeZone
 
 import com.soundcloud.jvmkit.module.bff.testsupport.FakeUserAuthentication
-import com.soundcloud.jvmkit.module.telemetry.{MetricsRegistryImpl, Telemetry}
+import com.soundcloud.jvmkit.module.telemetry.Telemetry
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.publicApiStrangler.Routing
 import com.soundcloud.publicApiStrangler.service.trackrepresentation.{TrackPagination, TrackRepresentationLikeSpecContext, TrackRepresentationsService, TracksRepresentationResult}
@@ -26,7 +26,7 @@ class UserTracksHandlerSpec extends UnitSpecification {
 
     val mothershipDispatcher = mock[TrackMothershipDispatcherWithCounts]
     val tracksService = mock[TrackRepresentationsService]
-    val telemetry = new Telemetry(MetricsRegistryImpl.defaultRegistry)
+    val telemetry = Telemetry.createIsolatedInstance
 
     val shouldUseTrackMetadata = () => Future.value(true)
     val handler = new UserTracksHandler(

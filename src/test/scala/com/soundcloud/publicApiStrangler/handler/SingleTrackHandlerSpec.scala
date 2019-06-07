@@ -1,7 +1,7 @@
 package com.soundcloud.publicApiStrangler.handler
 
 import com.soundcloud.jvmkit.module.bff.testsupport.FakeUserAuthentication
-import com.soundcloud.jvmkit.module.telemetry.{MetricsRegistryImpl, Telemetry}
+import com.soundcloud.jvmkit.module.telemetry.Telemetry
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSessionBuilder
 import com.soundcloud.publicApiStrangler.client.mothership.TrackAudioMetadata
@@ -103,8 +103,7 @@ class SingleTrackHandlerSpec extends UnitSpecification {
   trait Context extends HandlerSpecificationScope {
     val trackRepresentationsService = mock[TrackRepresentationsService]
 
-    val collectorRegistry = MetricsRegistryImpl.defaultRegistry
-    val telemetry = new Telemetry(collectorRegistry)
+    val telemetry = Telemetry.createIsolatedInstance
 
     val session = new UserSessionBuilder().build()
     val trackUrn = Urn("soundcloud", "tracks", "987")

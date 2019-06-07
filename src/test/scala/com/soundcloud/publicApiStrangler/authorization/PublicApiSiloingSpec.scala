@@ -1,7 +1,7 @@
 package com.soundcloud.publicApiStrangler.authorization
 
 import com.soundcloud.jvmkit.module.http.server.ResponseBuilder
-import com.soundcloud.jvmkit.module.telemetry.{MetricsRegistryImpl, Telemetry}
+import com.soundcloud.jvmkit.module.telemetry.Telemetry
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSessionBuilder
 import com.soundcloud.publicApiStrangler.test.UnitSpecification
@@ -15,7 +15,7 @@ class PublicApiSiloingSpec extends UnitSpecification {
     protected val request = mock[Request]
 
     protected def getPublicApiSiloing(blacklist: Set[Urn] = defaultMobileBlacklist) = {
-      new PublicApiSiloing(() => Future.value(true), blacklist, new Telemetry(MetricsRegistryImpl.defaultRegistry))
+      new PublicApiSiloing(() => Future.value(true), blacklist, Telemetry.createIsolatedInstance)
     }
 
     protected val soundCloudIOSApp = Urn("soundcloud", "applications", "124")
