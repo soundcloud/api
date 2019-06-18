@@ -25,99 +25,102 @@ type createTrackResponse struct {
 	request *http.Request
 }
 
-type createTrackState struct {
-	auth     *bytes.Buffer
-	location string
-	md5      string
-}
+type rewritePartFn func(*multipart.Part, *multipart.Writer, http.Header) error
 
 func (s service) createTrack(r *createTrackRequest) (*createTrackResponse, error) {
-	if feature := r.request.Header.Get("X-Track-Asset-Uploads"); feature != "true" {
-		return &createTrackResponse{request: r.request}, nil
-	}
-
-	reader := multipart.NewReader(r.request.Body, r.boundary)
-
-	body := &bytes.Buffer{}
-	writer := multipart.NewWriter(body)
-	if err := writer.SetBoundary(r.boundary); err != nil {
-		return nil, err
-	}
-
-	state, err := s.rewrite(reader, writer)
+	req, err := s.rewriteMultipartRequest(r.request, r.boundary, s.rewriteTrackPart)
 	if err != nil {
 		return nil, err
+	}
+
+	return &createTrackResponse{request: req}, nil
+}
+
+func (s service) rewriteMultipartRequest(r *http.Request, boundary string, fn rewritePartFn) (*http.Request, error) {
+	// Unless the feature flag header is set, return the original request.
+	if feature := r.Header.Get("X-Track-Asset-Uploads"); feature != "true" {
+		return r, nil
+	}
+
+	header := http.Header{}
+	body := &bytes.Buffer{}
+
+	reader := multipart.NewReader(r.Body, boundary)
+	writer := multipart.NewWriter(body)
+
+	if err := writer.SetBoundary(boundary); err != nil {
+		return nil, err
+	}
+
+	for {
+		p, err := reader.NextPart()
+		if err != nil {
+			if err == io.EOF {
+				// Processed all parts.
+				break
+			}
+			_ = writer.Close()
+			return nil, err
+		}
+
+		if err := fn(p, writer, header); err != nil {
+			_ = writer.Close()
+			return nil, err
+		}
 	}
 
 	if err := writer.Close(); err != nil {
 		return nil, err
 	}
 
-	req := s.modifyRequest(r.request, state, body)
-	return &createTrackResponse{request: req}, nil
+	return s.modifyRequest(r, header, body), nil
 }
 
-func (s service) rewrite(src *multipart.Reader, dst *multipart.Writer) (*createTrackState, error) {
-	state := &createTrackState{
-		auth:     &bytes.Buffer{},
-		location: "",
-		md5:      "",
-	}
-
-	for {
-		part, err := src.NextPart()
-		if err != nil {
-			if err == io.EOF {
-				return state, nil
+func (s service) rewriteTrackPart(p *multipart.Part, w *multipart.Writer, header http.Header) error {
+	if p.FileName() != "" {
+		switch p.FormName() {
+		case "track[asset_data]":
+			upload, err := s.uploadTrackAssetData(p, w)
+			if err != nil {
+				return err
 			}
+			header.Add("X-Track-Asset-Location", upload.location)
+			header.Add("X-Track-Asset-Md5", upload.md5)
 
-			return nil, err
-		}
-
-		if part.FileName() != "" {
-			switch part.FormName() {
-			case "track[asset_data]":
-				location, md5, err := s.uploadTrackAssetData(part, s.upload, dst)
-				if err != nil {
-					return nil, err
-				}
-				state.location = location
-				state.md5 = md5
-			default:
-				if err := s.copyPart(part, dst); err != nil {
-					return nil, err
-				}
-			}
-
-			continue
-		}
-
-		switch part.FormName() {
-		case "oauth_token":
-			if err := s.extractAuthToken(part, state.auth); err != nil {
-				return nil, err
-			}
 		default:
-			if err := s.copyPart(part, dst); err != nil {
-				return nil, err
+			if err := s.copyPart(p, w); err != nil {
+				return err
 			}
 		}
+
+		return nil
 	}
+
+	switch p.FormName() {
+	case "oauth_token":
+		token, err := s.extractAuthToken(p)
+		if err != nil {
+			return err
+		}
+
+		if token.Len() > 0 {
+			header.Add("Authorization", "OAuth "+token.String())
+		}
+
+	default:
+		if err := s.copyPart(p, w); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
-func (s service) modifyRequest(r *http.Request, state *createTrackState, body *bytes.Buffer) *http.Request {
-	// If the request contained auth information, propagate it by setting
-	// the `Authorization` header. This overwrites any existing value.
-	if state.auth.Len() > 0 {
-		r.Header.Set("Authorization", "OAuth "+state.auth.String())
-	}
-
-	if state.location != "" {
-		r.Header.Set("X-Track-Asset-Location", state.location)
-	}
-
-	if state.md5 != "" {
-		r.Header.Set("X-Track-Asset-Md5", state.md5)
+func (s service) modifyRequest(r *http.Request, header http.Header, body *bytes.Buffer) *http.Request {
+	// Apply any additional headers to the original request.
+	// This overwrites any potentially existing headers.
+	for h := range header {
+		r.Header.Set(h, header.Get(h))
 	}
 
 	r.ContentLength = int64(body.Len())
@@ -126,59 +129,60 @@ func (s service) modifyRequest(r *http.Request, state *createTrackState, body *b
 	return r
 }
 
-func (s service) extractAuthToken(src *multipart.Part, dst *bytes.Buffer) error {
+func (s service) extractAuthToken(p *multipart.Part) (*bytes.Buffer, error) {
 	const (
 		maxTokenBytes = 64
 	)
 
 	// Because the token is extracted to be propagated outside of the request
 	// body, we're restricting its maximum length.
-	lr := io.LimitReader(src, maxTokenBytes)
+	lr := io.LimitReader(p, maxTokenBytes)
 
 	// Exceeding maxTokenBytes is currently not an error condition.
 	// We'll use what fits into maxTokenBytes.
-	if _, err := dst.ReadFrom(lr); err != nil {
-		return err
+	buffer := &bytes.Buffer{}
+	if _, err := buffer.ReadFrom(lr); err != nil {
+		return nil, err
 	}
 
-	return nil
+	return buffer, nil
 }
 
-func (s service) uploadTrackAssetData(src *multipart.Part, uploader uploaderAPI, w *multipart.Writer) (string, string, error) {
+func (s service) uploadTrackAssetData(p *multipart.Part, w *multipart.Writer) (*uploadTrackResponse, error) {
 	o, err := w.CreateFormField("track[original_filename]")
 	if err != nil {
-		return "", "", err
+		return nil, err
 	}
 
-	filename := src.FileName()
+	filename := p.FileName()
 	if _, err := o.Write([]byte(filename)); err != nil {
-		return "", "", err
+		return nil, err
 	}
 
-	upload, err := uploader.uploadTrack(&uploadTrackRequest{data: src})
+	res, err := s.upload.uploadTrack(&uploadTrackRequest{data: p})
 	if err != nil {
-		return "", "", err
+		return nil, err
 	}
 
 	u, err := w.CreateFormField("track[uid]")
 	if err != nil {
-		return "", "", err
+		return nil, err
 	}
 
-	if _, err := u.Write([]byte(upload.uid)); err != nil {
-		return "", "", err
+	if _, err := u.Write([]byte(res.uid)); err != nil {
+		return nil, err
 	}
 
-	return upload.location, upload.md5, nil
+	return res, nil
 }
 
-func (s service) copyPart(src *multipart.Part, w *multipart.Writer) error {
-	dst, err := w.CreatePart(src.Header)
+func (s service) copyPart(p *multipart.Part, w *multipart.Writer) error {
+	dst, err := w.CreatePart(p.Header)
 	if err != nil {
 		return err
 	}
 
-	if _, err := io.Copy(dst, src); err != nil {
+	if _, err := io.Copy(dst, p); err != nil {
 		return err
 	}
 
