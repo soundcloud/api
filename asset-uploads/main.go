@@ -98,7 +98,7 @@ func main() {
 	go func(a string) {
 		http.Handle("/metrics", promhttp.Handler())
 
-		log.Println("Server listening on:", a)
+		log.Println("Admin server listening on:", a)
 		if err := http.ListenAndServe(a, nil); err != nil {
 			log.Fatal(err)
 		}
@@ -110,6 +110,7 @@ func main() {
 		w.Write([]byte("OK"))
 	})
 	mux.HandleFunc("/tracks", httpHandler("/tracks", controller.tracks))
+	mux.HandleFunc("/", httpHandler("generic", controller.generic))
 
 	server := httpserver.Graceful{
 		Config: http.Server{
@@ -120,7 +121,7 @@ func main() {
 		DrainTimeout: 30 * time.Second,
 	}
 
-	log.Println("Admin server listening on:", *addr)
+	log.Println("Server listening on:", *addr)
 	if err := server.ListenAndServe(); err != nil {
 		log.Fatal(err)
 	}
