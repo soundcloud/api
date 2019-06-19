@@ -10,6 +10,7 @@ import (
 
 type serviceAPI interface {
 	createTrack(*createTrackRequest) (*createTrackResponse, error)
+	generic(*genericRequest) (*genericResponse, error)
 }
 
 type service struct {
@@ -25,6 +26,15 @@ type createTrackResponse struct {
 	request *http.Request
 }
 
+type genericRequest struct {
+	boundary string
+	request  *http.Request
+}
+
+type genericResponse struct {
+	request *http.Request
+}
+
 type rewritePartFn func(*multipart.Part, *multipart.Writer, http.Header) error
 
 func (s service) createTrack(r *createTrackRequest) (*createTrackResponse, error) {
@@ -34,6 +44,15 @@ func (s service) createTrack(r *createTrackRequest) (*createTrackResponse, error
 	}
 
 	return &createTrackResponse{request: req}, nil
+}
+
+func (s service) generic(r *genericRequest) (*genericResponse, error) {
+	req, err := s.rewriteMultipartRequest(r.request, r.boundary, s.rewriteGenericPart)
+	if err != nil {
+		return nil, err
+	}
+
+	return &genericResponse{request: req}, nil
 }
 
 func (s service) rewriteMultipartRequest(r *http.Request, boundary string, fn rewritePartFn) (*http.Request, error) {
@@ -96,6 +115,10 @@ func (s service) rewriteTrackPart(p *multipart.Part, w *multipart.Writer, header
 		return nil
 	}
 
+	return s.rewriteGenericPart(p, w, header)
+}
+
+func (s service) rewriteGenericPart(p *multipart.Part, w *multipart.Writer, header http.Header) error {
 	switch p.FormName() {
 	case "oauth_token":
 		token, err := s.extractAuthToken(p)
