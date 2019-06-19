@@ -114,6 +114,19 @@ class TestIntegration(unittest.TestCase, assertions.Assertions):
         self.assertRequest(res, 'POST', '/tracks')
         self.assertAuthorization(res, token[0:64])
 
+    def test_generic(self):
+        token = '04u7h-t0k3n'
+        cmd = '''
+            curl --fail --verbose \
+                -H "Host: api.sc.local" \
+                -H "X-Track-Asset-Uploads: true" \
+                -F "oauth_token={}" \
+                asset_uploads/
+            '''.format(token)
+        res = check_output(cmd, shell=True).decode('ascii')
+        self.assertRequest(res, 'POST', '/')
+        self.assertAuthorization(res, token)
+
 
 if __name__ == '__main__':
     unittest.main()
