@@ -14,7 +14,25 @@ type controller struct {
 	service         serviceAPI
 }
 
+type svcDispatch func(string, *http.Request) (*http.Request, error)
+
 func (c controller) tracks(w http.ResponseWriter, r *http.Request) {
+	c.dispatch(w, r, c.svcCreateTrack)
+}
+
+func (c controller) svcCreateTrack(b string, r *http.Request) (*http.Request, error) {
+	res, err := c.service.createTrack(&createTrackRequest{
+		boundary: b,
+		request:  r,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return res.request, nil
+}
+
+func (c controller) dispatch(w http.ResponseWriter, r *http.Request, svc svcDispatch) {
 	const (
 		emptyResponse = ""
 	)
@@ -54,10 +72,7 @@ func (c controller) tracks(w http.ResponseWriter, r *http.Request) {
 
 	r.Body = http.MaxBytesReader(w, r.Body, c.maxRequestBytes)
 
-	res, err := c.service.createTrack(&createTrackRequest{
-		boundary: boundary,
-		request:  r,
-	})
+	rr, err := svc(boundary, r)
 	if err != nil {
 		// There's currently no nice way of differentiating `request too large`
 		// as enforced by the http.MaxBytesReader from other errors.
@@ -77,5 +92,5 @@ func (c controller) tracks(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	c.proxy.ServeHTTP(w, res.request)
+	c.proxy.ServeHTTP(w, rr)
 }
