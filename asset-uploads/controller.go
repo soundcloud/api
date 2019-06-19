@@ -16,11 +16,27 @@ type controller struct {
 
 type svcDispatch func(string, *http.Request) (*http.Request, error)
 
-func (c controller) tracks(w http.ResponseWriter, r *http.Request) {
-	c.dispatch(w, r, c.svcCreateTrack)
+func (c controller) generic(w http.ResponseWriter, r *http.Request) {
+	c.dispatch(w, r, c.svcGeneric)
 }
 
-func (c controller) svcCreateTrack(b string, r *http.Request) (*http.Request, error) {
+func (c controller) tracks(w http.ResponseWriter, r *http.Request) {
+	c.dispatch(w, r, c.svcTracks)
+}
+
+func (c controller) svcGeneric(b string, r *http.Request) (*http.Request, error) {
+	res, err := c.service.generic(&genericRequest{
+		boundary: b,
+		request:  r,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return res.request, nil
+}
+
+func (c controller) svcTracks(b string, r *http.Request) (*http.Request, error) {
 	res, err := c.service.createTrack(&createTrackRequest{
 		boundary: b,
 		request:  r,
@@ -88,7 +104,7 @@ func (c controller) dispatch(w http.ResponseWriter, r *http.Request, svc svcDisp
 		}
 
 		// Assume that all other errors are client-retryable.
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
+		http.Error(w, emptyResponse, http.StatusServiceUnavailable)
 		return
 	}
 
