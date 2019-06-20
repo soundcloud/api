@@ -3,3 +3,5 @@ source api-production-secrets
 MOSHIMOSHI_ADDRESS=dnssrv!http.moshimoshi.prod.mothership.srv
 PUBLIC_API_STRANGLER_ADDRESS=dnssrv!http.strangler-trackupload.prod.public-api.srv
 PUBLIC_HOSTNAME=api.soundcloud.com
+
+MAX_REQUEST_BYTES=524288000

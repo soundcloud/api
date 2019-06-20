@@ -28,7 +28,7 @@ assemble: target/api
 	sc add-config config/api-test-secrets.enc
 	sc add-files --strip-components=1 target/api
 	sc gen-wrapper-script \
-		--target='api -addr=$$HOSTNAME:$$PORT -admin-addr=$$HOSTNAME:$$TELE_PORT' \
+		--target='api -addr=$$HOSTNAME:$$PORT -admin-addr=$$HOSTNAME:$$TELE_PORT -max-request-bytes=$$MAX_REQUEST_BYTES' \
 		--wrapper=api
 
 .PHONY: package
