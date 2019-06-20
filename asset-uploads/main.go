@@ -35,7 +35,7 @@ func main() {
 		s3Region  = flag.String("s3-region", os.Getenv("AWS_S3_REGION"), "AWS S3 region")
 
 		publicHostname  = flag.String("public-hostname", os.Getenv("PUBLIC_HOSTNAME"), "Public hostname (e.g. api.soundlcoud.com)")
-		maxRequestBytes = flag.Int64("max-request-bytes", 5<<(10*2), "Max request size in bytes")
+		maxRequestBytes = flag.Int64("max-request-bytes", 500<<(10*2), "Max request size in bytes")
 	)
 	flag.Parse()
 
