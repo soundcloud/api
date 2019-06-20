@@ -1,5 +1,5 @@
 source api-production-secrets
 
-MOSHIMOSHI_ADDRESS=dnssrv!http.moshimoshi.prod.mothership.srv.db.s-cloud.net
-PUBLIC_API_STRANGLER_ADDRESS=dnssrv!http.strangler.prod.public-api.srv.db.s-cloud.net
+MOSHIMOSHI_ADDRESS=dnssrv!http.moshimoshi.prod.mothership
+PUBLIC_API_STRANGLER_ADDRESS=dnssrv!http.strangler-trackupload.prod.public-api
 PUBLIC_HOSTNAME=api.soundcloud.com
