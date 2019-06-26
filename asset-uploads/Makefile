@@ -49,13 +49,13 @@ publish:
 COMPONENT ?= asset-uploads-api
 ENV       ?= $(error need to set ENV)
 SYSTEM    ?= public-api-strangler
-ZONE      ?= $(error need to set ZONE)
+ZONES     ?= $(error need to set ZONES)
 
 define DEPLOY_FLAGS
 	--component=$(COMPONENT) \
 	--env=$(ENV) \
 	--system=$(SYSTEM) \
-	--zone=$(ZONE)
+	--zones=$(ZONES)
 endef
 
 # Glimpse naming conventions require mapping "production" to "prod".
@@ -67,9 +67,9 @@ publish-deploy:
 	sc artifact-manager deploy $(DEPLOY_FLAGS) publish \
 		--command="./api --config=api-$(ENV)" \
 		--glimpse=http.$(COMPONENT).$(GLIMPSE_ENV).$(GLIMPSE_PRODUCT) \
-		--public-ingress http://api.soundcloud.com:http \
 		--pod=config/pod.yaml \
-		--prometheus.port=telemetry
+		--prometheus.port=telemetry \
+		--public-ingress=http://api.soundcloud.com:http
 
 .PHONY: promote-to-stable
 promote-to-stable:
