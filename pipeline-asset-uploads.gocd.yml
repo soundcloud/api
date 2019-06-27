@@ -32,7 +32,7 @@ pipelines:
             job_type: deploy
             environment_variables:
               ENV: production
-              ZONE: db
+              ZONES: primary,replicas
             tasks:
             - exec:
                 command: make
@@ -58,7 +58,7 @@ pipelines:
             job_type: deploy
             environment_variables:
               ENV: production
-              ZONE: db
+              ZONES: primary,replicas
             tasks:
             - exec:
                 command: make
