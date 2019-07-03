@@ -85,6 +85,7 @@ TRACKS_SRV_RECORD=dnssrv!http.api.prod.tracks.srv
 MEDIA_SERVICE_SRV_RECORD=dnssrv!http.api.prod.media-service.srv
 
 TRACK_ACCESS_RECORDER_SRV_RECORD=dnssrv!http.moshimoshi.prod.mothership.srv
+TRACK_ACCESS_RECORDER_CLIENT_REQUEST_TIMEOUT_MILLIS="3000"
 
 APP_SILOING_BLACKLIST_APPS="soundcloud:applications:124,soundcloud:applications:3152,soundcloud:applications:65097"
 
