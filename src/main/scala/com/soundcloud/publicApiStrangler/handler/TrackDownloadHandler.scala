@@ -2,27 +2,27 @@ package com.soundcloud.publicApiStrangler.handler
 
 import com.soundcloud.jvmkit.module.bff.session.UserAuthentication
 import com.soundcloud.jvmkit.module.http.server.{HandlerRequest, ResponseBuilder}
-import com.soundcloud.jvmkit.module.util.Urn
+import com.soundcloud.publicApiStrangler.TrackUrnUtil.trackUrn
 import com.soundcloud.publicApiStrangler.service.media.{DownloadNotFound, DownloadOk, DownloadService, TrackAccessRecorderService}
 import com.twitter.finagle.http.{Response, Status}
-import com.twitter.util.Future
+import com.twitter.util.{Future, Return, Try}
 
 class TrackDownloadHandler(userAuthentication: UserAuthentication,
                            trackAccessRecorderService: TrackAccessRecorderService,
                            downloadService: DownloadService) {
 
   def handle(request: HandlerRequest): Future[Response] = {
-    request.routeParams.get("trackId").map { trackId =>
-      userAuthentication.withUserSession(request) { session =>
-        val trackUrn = Urn("soundcloud", "tracks", trackId)
+    Try(trackUrn(request)) match {
+      case Return(urn) => userAuthentication.withUserSession(request) { session =>
         val secretToken = request.params.get("secret_token")
-        trackAccessRecorderService.recordDownloadAccess(session, request, trackUrn) {
-          downloadService.download(session, trackUrn, secretToken).map {
+        trackAccessRecorderService.recordDownloadAccess(session, request, urn) {
+          downloadService.download(session, urn, secretToken).map {
             case DownloadOk(url) => ResponseBuilder().header("Location", url).status(Status.Found).build
             case DownloadNotFound => ResponseBuilder.notFound()
           }
         }
       }
-    }.getOrElse(Future.value(ResponseBuilder.badRequest()))
+      case _ => Future.value(ResponseBuilder.badRequest())
+    }
   }
 }

@@ -3,8 +3,8 @@ package com.soundcloud.publicApiStrangler.handler
 import com.soundcloud.jvmkit.module.bff.session.UserAuthentication
 import com.soundcloud.jvmkit.module.http.server.{HandlerRequest, JsonResponseBuilder}
 import com.soundcloud.jvmkit.module.telemetry.Telemetry
-import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.logging.SoundCloudLoggerFactory
+import com.soundcloud.publicApiStrangler.TrackUrnUtil.trackUrn
 import com.soundcloud.publicApiStrangler.client.trackcoordinator.datatypes.{NotFound, Success}
 import com.soundcloud.publicApiStrangler.service.trackrepresentation.TrackRepresentationsService
 import com.twitter.finagle.http.{Response, Status}
@@ -17,17 +17,14 @@ import scala.util.control.NonFatal
 class SingleTrackHandler(userAuthentication: UserAuthentication, tracksService: TrackRepresentationsService, telemetry: Telemetry) {
   val logger = SoundCloudLoggerFactory.getLogger(getClass)
 
-  private val numericRegexp = """\d+""".r
-
   def renderTrack(req: HandlerRequest): Future[Response] = {
     stripConditionalRequestHeaders(req)
 
     userAuthentication.withUserSession(req) { case session =>
-      val trackId = req.routeParams("trackId")
       val callback = req.params.get("callback")
 
-      Try(Urn("soundcloud", "tracks", trackId)) match {
-        case Return(urn@Urn(_, _, numericRegexp())) => {
+      Try(trackUrn(req)) match {
+        case Return(urn) => {
           val secretToken = req.params.get("secret_token")
           tracksService.track(session, urn, secretToken).map {
             case Success(trackRep) => generateResponse(Status.Ok, Json.stringify(Json.toJson(trackRep)), callback)

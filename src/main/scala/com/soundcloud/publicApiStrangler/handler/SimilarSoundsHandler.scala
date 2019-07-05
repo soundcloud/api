@@ -5,8 +5,8 @@ import com.soundcloud.bff.nextbff.pagination.PageBuilder
 import com.soundcloud.jvmkit.module.bff.session.UserAuthentication
 import com.soundcloud.jvmkit.module.http.client.Params
 import com.soundcloud.jvmkit.module.http.server.{HandlerRequest, JsonResponseBuilder, ResponseBuilder}
-import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSession
+import com.soundcloud.publicApiStrangler.TrackUrnUtil.trackUrn
 import com.soundcloud.publicApiStrangler.filter.DefaultResponseHeaders
 import com.soundcloud.publicApiStrangler.mapper.similarsounds.{SimilarSoundsMapper, SimilarSoundsMapping}
 import com.twitter.finagle.http.Response
@@ -24,9 +24,9 @@ class SimilarSoundsHandler(
   def handleSimilarSoundsRequest(request: HandlerRequest): Future[Response] = {
     userAuthentication.withUserSession(request) {
       (session: UserSession) =>
-        val trackUrn = Urn("soundcloud", "tracks", request.routeParams("trackId"))
+        val urn = trackUrn(request)
 
-        val page = PageBuilder(request, baseUrl)(trackUrn).
+        val page = PageBuilder(request, baseUrl)(urn).
           allowExtraParams(Set(SimilarSoundsMapping.LinkedPartitioning)).
           defaultLimit(50).
           buildOffsetBased(0)

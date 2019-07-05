@@ -2,7 +2,7 @@ package com.soundcloud.publicApiStrangler.handler
 
 import com.soundcloud.jvmkit.module.bff.session.UserAuthentication
 import com.soundcloud.jvmkit.module.http.server.{HandlerRequest, JsonResponseBuilder, ResponseBuilder}
-import com.soundcloud.jvmkit.module.util.Urn
+import com.soundcloud.publicApiStrangler.TrackUrnUtil.trackUrn
 import com.soundcloud.publicApiStrangler.client.mothership.OkidokiClient
 import com.soundcloud.publicApiStrangler.client.trackcoordinator.TrackCoordinatorClient
 import com.soundcloud.publicApiStrangler.client.trackcoordinator.datatypes._
@@ -51,12 +51,5 @@ class TracksHandler(userAuthentication: UserAuthentication,
         case NonFatal(_) => ResponseBuilder.internalServerError()
       }
     }
-
-  private def trackUrn(request: HandlerRequest): Urn = {
-    val IdParamPattern = "(\\d+)".r
-    request.routeParams("trackId") match {
-      case IdParamPattern(id) => Urn("soundcloud", "tracks", id)
-    }
-  }
 }
 

@@ -4,11 +4,12 @@ import com.soundcloud.jvmkit.module.bff.session.UserAuthentication
 import com.soundcloud.jvmkit.module.http.server.{HandlerRequest, ResponseBuilder}
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSession
+import com.soundcloud.publicApiStrangler.TrackUrnUtil.trackUrn
 import com.soundcloud.publicApiStrangler.authorization.PublicApiSiloing
 import com.soundcloud.publicApiStrangler.mapper.trackstreams.{TrackStreamJsonResponseMapper, TrackStreamRedirectResponseMapper, TrackStreamResponseMapper}
 import com.soundcloud.publicApiStrangler.service.media._
 import com.twitter.finagle.http.{MediaType, Method, Response, Status}
-import com.twitter.util.Future
+import com.twitter.util.{Future, Return, Try}
 import play.api.libs.json.Json
 
 case class StreamParams(trackUrn: Urn, secretToken: Option[String])
@@ -70,8 +71,9 @@ class TrackStreamsHandler(
   }
 
   private def extractParams(request: HandlerRequest): Option[StreamParams] = {
-    request.routeParams.get("trackId").map { trackId =>
-      StreamParams(Urn("soundcloud", "tracks", trackId), request.params.get("secret_token"))
+    Try(trackUrn(request)) match {
+      case Return(urn) => Some(StreamParams(urn, request.params.get("secret_token")))
+      case _ => None
     }
   }
 }
