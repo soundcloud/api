@@ -80,20 +80,6 @@ class TrackAccessRecorderServiceSpec extends UnitSpecification {
         }
       }
 
-      "when request method is not GET" >> {
-        trait MethodNotGetContext extends AccessTypeContext {
-          override val reqMethod = Method.Head
-
-          trackAccessRecorderClient.recordAccess(session, trackUrn, accessType, false, secretToken) returns
-            Future.value(ResponseBuilder().status(Status.Ok).build)
-        }
-
-        "action is executed and play is not logged" in new MethodNotGetContext {
-          result.status ==== Status.Ok
-          result.contentString ==== "foobar"
-        }
-      }
-
       "when Range header is not set" >> {
         trait NoRangeHeaderContext extends AccessTypeContext {
           override val range = None
@@ -135,22 +121,85 @@ class TrackAccessRecorderServiceSpec extends UnitSpecification {
           result.contentString ==== "foobar"
         }
       }
+
+      "when loggingEnabled is set to false" >> {
+        trait LoggingDisabledContext extends Context {
+          override val loggingEnabled = false
+
+          trackAccessRecorderClient.recordAccess(session, trackUrn, "stream", false, secretToken) returns
+            Future.value(ResponseBuilder().status(Status.Ok).build)
+        }
+
+        "action is executed and play is not logged" in new LoggingDisabledContext {
+          val result = resultStream
+          result.status ==== Status.Ok
+          result.contentString ==== "foobar"
+        }
+      }
+    }
+  }
+
+  "when recording access for download" >> {
+    trait DownloadContext extends Context {
+      trackAccessRecorderClient.recordAccess(session, trackUrn, accessFor = "download", shouldLog = true, secretToken) returns
+        Future.value(ResponseBuilder().status(Status.Ok).build)
+
+      def accessWasRecorded =
+        (there was one(trackAccessRecorderClient).recordAccess(session, trackUrn, accessFor = "download", shouldLog = true, secretToken)).isSuccess
     }
 
-    "when loggingEnabled is set to false" >> {
-      trait LoggingDisabledContext extends Context {
-        override val loggingEnabled = false
+    "when request method is GET" >> {
+      "download is logged" in new DownloadContext {
+        override val reqMethod: Method = Method.Get
 
-        trackAccessRecorderClient.recordAccess(session, trackUrn, "stream", false, secretToken) returns
-          Future.value(ResponseBuilder().status(Status.Ok).build)
-      }
-
-      "action is executed and play is not logged" in new LoggingDisabledContext {
-        val result = resultStream
-        result.status ==== Status.Ok
-        result.contentString ==== "foobar"
+        resultDownload.status ==== Status.Ok
+        accessWasRecorded ==== true
       }
     }
 
+    "when request method is HEAD" >> {
+      "download is logged" in new DownloadContext {
+        override val reqMethod: Method = Method.Head
+
+        resultDownload.status ==== Status.Ok
+        accessWasRecorded ==== true
+      }
+    }
+  }
+
+
+  "when recording access for stream" >> {
+    trait StreamContext extends Context {
+      val shouldLog: Boolean
+
+      trackAccessRecorderClient.recordAccess(===(session), ===(trackUrn), ===("stream"), any[Boolean], ===(secretToken)) returns
+        Future.value(ResponseBuilder().status(Status.Ok).build)
+
+      def accessWasRecorded =
+        (there was one(trackAccessRecorderClient).recordAccess(session, trackUrn, accessFor = "stream", shouldLog, secretToken)).isSuccess
+    }
+
+    "when request method is GET" >> {
+      "play is logged" in new StreamContext {
+        override val reqMethod: Method = Method.Get
+        override val shouldLog = true
+
+        resultStream.status ==== Status.Ok
+        accessWasRecorded ==== true
+
+      }
+    }
+
+    "when request method is HEAD" >> {
+      "play is not logged" in new StreamContext {
+        override val reqMethod: Method = Method.Head
+        override val shouldLog = false
+
+        resultStream.status ==== Status.Ok
+        accessWasRecorded ==== true
+
+      }
+
+    }
   }
 }

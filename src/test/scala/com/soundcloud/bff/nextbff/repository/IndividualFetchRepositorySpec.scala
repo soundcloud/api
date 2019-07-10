@@ -31,7 +31,7 @@ class IndividualFetchRepositorySpec extends UnitSpecification {
     }
 
     override def before: Any =
-      when(serviceMock.fetch(any, any))
+      when(serviceMock.fetch(any[UserSession], any[Urn]))
         .thenReturn(Future(json1))
         .thenReturn(Future(json2))
   }

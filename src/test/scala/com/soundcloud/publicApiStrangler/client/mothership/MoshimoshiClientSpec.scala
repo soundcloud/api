@@ -1235,13 +1235,13 @@ class MoshimoshiClientSpec extends UnitSpecification {
     "success response" in new ResendEmailConfirmationContext {
       val path = Path() / "users" / userUrn / "emails" / emailUrn / "confirmation"
       expectStatusForPath(path, Status.ResetContent)
-      Await.result(client.resendEmailConfirmation(session, userUrn, emailUrn)) ==== Unit
+      Await.result(client.resendEmailConfirmation(session, userUrn, emailUrn))
     }
 
     "for all unconfirmed email addresses" in new ResendEmailConfirmationContext {
       val path = Path() / "users" / userUrn / "emails" / "unconfirmed" / "confirmation"
       expectStatusForPath(path, Status.ResetContent)
-      Await.result(client.resendEmailConfirmationForAllUnconfirmedEmails(session, userUrn)) ==== Unit
+      Await.result(client.resendEmailConfirmationForAllUnconfirmedEmails(session, userUrn))
     }
   }
 

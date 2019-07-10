@@ -106,7 +106,7 @@ class RichOkidokiClientSpec extends UnitSpecification {
 
       def mockResponse = Future.value(jsonResponse(mockResponseStatus, mockResponseContents))
 
-      when(jsonClient.getWithSession(beTypedEqualTo(session), beTypedEqualTo(path), any, any))
+      when(jsonClient.getWithSession(beTypedEqualTo(session), beTypedEqualTo(path), any[Params], any[Headers]))
         .thenReturn(mockResponse)
     }
 

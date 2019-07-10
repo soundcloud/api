@@ -11,10 +11,10 @@ import com.twitter.util.Future
 class TrackAccessRecorderService(trackAccessRecorderClient: TrackAccessRecorderClient) {
 
   def recordStreamAccess(session: UserSession, request: HandlerRequest, trackUrn: Urn, loggingEnabled: Boolean = true)(action: => Future[Response]): Future[Response] =
-    recordAccess(session, request, trackUrn, "stream",loggingEnabled, action)
+    recordAccess(session, request, trackUrn, "stream", loggingEnabled && request.method == Method.Get, action)
 
   def recordDownloadAccess(session: UserSession, request: HandlerRequest, trackUrn: Urn)(action: => Future[Response]): Future[Response] =
-    recordAccess(session, request, trackUrn, "download", true, action)
+    recordAccess(session, request, trackUrn, "download", loggingEnabled = true, action)
 
   private def recordAccess(session: UserSession, request: HandlerRequest, trackUrn: Urn, accessFor: String, loggingEnabled: Boolean, action: => Future[Response]): Future[Response] =
     trackAccessRecorderClient.recordAccess(session, trackUrn, accessFor, loggingEnabled && shouldLog(request), secretToken(request)).flatMap { response =>
@@ -25,7 +25,6 @@ class TrackAccessRecorderService(trackAccessRecorderClient: TrackAccessRecorderC
     }
 
   private def shouldLog(request: HandlerRequest): Boolean =
-    request.method == Method.Get &&
       request.headerMap.get("Range").forall(RangeHelper.isRequestingFirstByte)
 
   private def secretToken(request: HandlerRequest): Option[String] =
