@@ -5,7 +5,7 @@ import com.soundcloud.jvmkit.module.bff.BffHttpServer
 import com.soundcloud.jvmkit.module.bff.ratelimiting.facade._
 import com.soundcloud.jvmkit.module.http.server.akira.ResponseDumpSessionRegistry
 import com.soundcloud.jvmkit.module.http.server.config.HttpServerConfig
-import com.soundcloud.jvmkit.module.http.server.{HandlerRouterBuilder, ResponseBuilder}
+import com.soundcloud.jvmkit.module.http.server.HandlerRouterBuilder
 import com.soundcloud.jvmkit.module.memcached.RichMemcachedClient
 import com.soundcloud.jvmkit.module.memcached.config.MemcachedClientConfig
 import com.soundcloud.jvmkit.module.rollout.BasicRolloutFeature
@@ -20,7 +20,6 @@ import com.soundcloud.publicApiStrangler.filter._
 import com.soundcloud.publicApiStrangler.support._
 import com.twitter.finagle.SimpleFilter
 import com.twitter.finagle.http.{Method, Request, Response}
-import com.twitter.util.Future
 
 object App {
   def main(args: Array[String]): Unit = {
@@ -110,7 +109,6 @@ object App {
         forTimelineHandler(handlers.timelineHandler),
         forTrackStreamsHandler(handlers.trackStreamsHandler),
         forTrackDownloadHandler(handlers.trackDownloadHandler)))
-      .register(Method.Get, "/-/health", _ => Future.value(ResponseBuilder.ok()))
       .build
 
     new AdminServer(

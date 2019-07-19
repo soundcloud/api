@@ -13,11 +13,6 @@ class SessionExemptedEndpointsSpec extends Specification with SpinningUpAppSuppo
       val server = TestServer("strangler", 5000)
     }
 
-    "return success when probing health check endpoint" in new Context {
-
-      server.get("/-/health").status ==== Status.Ok.code
-    }
-
     "return success when probing crossdomain filters endpoint" in new Context {
 
       server.get("/crossdomain.xml").status ==== Status.Ok.code

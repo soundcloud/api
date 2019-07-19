@@ -1,6 +1,5 @@
 package com.soundcloud.testutilities
 
-import java.net.URL
 import java.nio.charset.StandardCharsets
 
 import com.twitter.finagle
@@ -24,7 +23,6 @@ trait SpinningUpAppSupport {
     val timeout = Duration.fromSeconds(15)
     val serverAddress = s"$host:$port"
     val serverUrl = s"http://$serverAddress"
-    val healthEndpointUrl = new URL(serverUrl + "/-/health")
 
     private lazy val client: finagle.Service[Request, Response] = {
       ClientBuilder()
