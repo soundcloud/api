@@ -78,19 +78,6 @@ object App {
 
     val responseDump = new ResponseDumpSessionRegistry
 
-    val additionalFilters: List[SimpleFilter[Request, Response]] =
-      List(
-        new StaticFilesFilter,
-        new AcceptOnlyJsonRequestFilter(() => clients.rolloutClient.isActive(BasicRolloutFeature("strip_format_xml_param"))),
-        new OffsetLimitRequestFilter(limitOffsetPaths, limitOffset),
-        new CookieHeaderRemovalFilter,
-        new DefaultResponseHeadersFilter,
-        new OptionsRequestCacheHeadersFilter,
-        new ExceptForTrackUploadsFilter(rateLimitingFacade.filter),
-        new ExceptForTrackUploadsFilter(new ContentAuthorizationFilter(clients.authorizeContent)),
-        new SuccesfulResponseTypeMetricFilter(telemetry)
-      )
-
     val router = HandlerRouterBuilder()
       .registerFallback(fallbackHandlerConfig.fallbackHandler)
       .register(Method.Get, rateLimitingFacade.statusEndpoint, rateLimitingFacade.rateLimitStatusHandler.handle)
@@ -110,6 +97,20 @@ object App {
         forTrackStreamsHandler(handlers.trackStreamsHandler),
         forTrackDownloadHandler(handlers.trackDownloadHandler)))
       .build
+
+    val additionalFilters: List[SimpleFilter[Request, Response]] =
+      List(
+        new CorsTelemetryFilter(telemetry, router),
+        new StaticFilesFilter,
+        new AcceptOnlyJsonRequestFilter(() => clients.rolloutClient.isActive(BasicRolloutFeature("strip_format_xml_param"))),
+        new OffsetLimitRequestFilter(limitOffsetPaths, limitOffset),
+        new CookieHeaderRemovalFilter,
+        new DefaultResponseHeadersFilter,
+        new OptionsRequestCacheHeadersFilter,
+        new ExceptForTrackUploadsFilter(rateLimitingFacade.filter),
+        new ExceptForTrackUploadsFilter(new ContentAuthorizationFilter(clients.authorizeContent)),
+        new SuccesfulResponseTypeMetricFilter(telemetry)
+      )
 
     new AdminServer(
       config = config,
