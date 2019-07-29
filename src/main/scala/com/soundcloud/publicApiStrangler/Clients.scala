@@ -75,8 +75,6 @@ class Clients(config: AppConfig, telemetry: Telemetry) {
 
   val stitchClient = new StitchClient(jsonClient("stitch"))
 
-  val mediaUrlgenJsonClient: JsonClient = jsonClient("media_urlgen")
-
   val searchService: JsonClient = jsonClient("search")
 
   private val subscriptionsService = jsonClient("user_subscriptions")
