@@ -7,7 +7,6 @@ import com.soundcloud.jvmkit.module.http.client.Params
 import com.soundcloud.jvmkit.module.http.server.{HandlerRequest, JsonResponseBuilder, ResponseBuilder}
 import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.publicApiStrangler.TrackUrnUtil.trackUrn
-import com.soundcloud.publicApiStrangler.filter.DefaultResponseHeaders
 import com.soundcloud.publicApiStrangler.mapper.similarsounds.{SimilarSoundsMapper, SimilarSoundsMapping}
 import com.twitter.finagle.http.Response
 import com.twitter.util.Future
@@ -34,15 +33,8 @@ class SimilarSoundsHandler(
         similarSoundsMapper.materialize(session, page).map {
           case Some(info: SimilarSoundsMapping) => JsonResponseBuilder(body = UntypedJson.write(if (shouldPaginate(request.params)) info else info.collection)).build
           case None => ResponseBuilder.notFound()
-        }.map(enrichWithDefaultHeaders)
+        }
     }
-  }
-
-  private def enrichWithDefaultHeaders(response: Response): Response = {
-    DefaultResponseHeaders.defaultHeaders.foreach {
-      case (key, value) => response.headerMap.set(key, value)
-    }
-    response
   }
 
   private def shouldPaginate(params: Params) = {

@@ -46,10 +46,6 @@ class StaticFilesFilterSpec extends UnitSpecification {
     resp.contentLength ==== Some(25L)
     resp.contentType ==== Some("text/plain;charset=utf-8")
 
-    resp.headerMap.get("Access-Control-Allow-Headers") ==== Some("Accept, Authorization, Content-Type, Origin")
-    resp.headerMap.get("Access-Control-Allow-Methods") ==== Some("GET, PUT, POST, DELETE")
-    resp.headerMap.get("Access-Control-Allow-Origin") ==== Some("*")
-    resp.headerMap.get("Access-Control-Expose-Headers") ==== Some("Date")
     resp.headerMap.get("Cache-Control") ==== Some("public, max-age=86400")
   }
 
@@ -62,10 +58,6 @@ class StaticFilesFilterSpec extends UnitSpecification {
     resp.contentLength ==== Some(666)
     resp.contentType ==== Some("application/xml;charset=utf-8")
 
-    resp.headerMap.get("Access-Control-Allow-Headers") ==== Some("Accept, Authorization, Content-Type, Origin")
-    resp.headerMap.get("Access-Control-Allow-Methods") ==== Some("GET, PUT, POST, DELETE")
-    resp.headerMap.get("Access-Control-Allow-Origin") ==== Some("*")
-    resp.headerMap.get("Access-Control-Expose-Headers") ==== Some("Date")
     resp.headerMap.get("Cache-Control") ==== Some("public, max-age=86400")
 
     resp.headerMap.get("Accept-Ranges") ==== Some("bytes")

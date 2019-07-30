@@ -47,10 +47,6 @@ class StaticFilesFilter extends SimpleFilter[Request, Response] {
       mediaType(MediaType.PlainText).
       body(robotsContents).
       headers(Map(
-        "Access-Control-Allow-Headers" -> "Accept, Authorization, Content-Type, Origin",
-        "Access-Control-Allow-Methods" -> "GET, PUT, POST, DELETE",
-        "Access-Control-Allow-Origin" -> "*",
-        "Access-Control-Expose-Headers" -> "Date",
         "Cache-Control" -> s"public, max-age=$oneDayInSeconds",
         "Content-Length" -> contentLength(robotsContents)
       )).
@@ -63,10 +59,6 @@ class StaticFilesFilter extends SimpleFilter[Request, Response] {
       mediaType(MediaType.Xml).
       body(crossdomainContents).
       headers(Map(
-        "Access-Control-Allow-Headers" -> "Accept, Authorization, Content-Type, Origin",
-        "Access-Control-Allow-Methods" -> "GET, PUT, POST, DELETE",
-        "Access-Control-Allow-Origin" -> "*",
-        "Access-Control-Expose-Headers" -> "Date",
         "Accept-Ranges" -> "bytes",
         "Cache-Control" -> s"public, max-age=$oneDayInSeconds",
         "Content-Length" -> contentLength(crossdomainContents)

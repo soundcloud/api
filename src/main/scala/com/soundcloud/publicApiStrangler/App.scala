@@ -2,6 +2,7 @@ package com.soundcloud.publicApiStrangler
 
 import com.soundcloud.jvmkit.module.admin.AdminServer
 import com.soundcloud.jvmkit.module.bff.BffHttpServer
+import com.soundcloud.jvmkit.module.bff.filters.CorsFilter
 import com.soundcloud.jvmkit.module.bff.ratelimiting.facade._
 import com.soundcloud.jvmkit.module.http.server.akira.ResponseDumpSessionRegistry
 import com.soundcloud.jvmkit.module.http.server.config.HttpServerConfig
@@ -18,7 +19,7 @@ import com.soundcloud.publicApiStrangler.Routing._
 import com.soundcloud.publicApiStrangler.authorization._
 import com.soundcloud.publicApiStrangler.filter._
 import com.soundcloud.publicApiStrangler.support._
-import com.twitter.finagle.SimpleFilter
+import com.twitter.finagle.Filter
 import com.twitter.finagle.http.{Method, Request, Response}
 
 object App {
@@ -98,15 +99,14 @@ object App {
         forTrackDownloadHandler(handlers.trackDownloadHandler)))
       .build
 
-    val additionalFilters: List[SimpleFilter[Request, Response]] =
+    val additionalFilters: List[Filter[Request, Response, Request, Response]] =
       List(
+        CorsFilter((_, _) => true), // allow all CORS origins (for now)
         new CorsTelemetryFilter(telemetry, router),
         new StaticFilesFilter,
         new AcceptOnlyJsonRequestFilter(() => clients.rolloutClient.isActive(BasicRolloutFeature("strip_format_xml_param"))),
         new OffsetLimitRequestFilter(limitOffsetPaths, limitOffset),
         new CookieHeaderRemovalFilter,
-        new DefaultResponseHeadersFilter,
-        new OptionsRequestCacheHeadersFilter,
         new ExceptForTrackUploadsFilter(rateLimitingFacade.filter),
         new ExceptForTrackUploadsFilter(new ContentAuthorizationFilter(clients.authorizeContent)),
         new SuccesfulResponseTypeMetricFilter(telemetry)
