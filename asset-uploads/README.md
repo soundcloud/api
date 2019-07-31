@@ -26,3 +26,8 @@ curl -vi -XPOST \
 -H "X-Track-Asset-Uploads: true" \
 http.asset-uploads-api.prod.public-api.srv.db.s-cloud.net/tracks
 ```
+
+To use chunked transfer mode (where we don't tell the server how big the file is going to be upfront), add `-H "Transfer-Encoding: chunked"`.
+
+By default, the tracks are not uploaded to S3 directly but passed through to Mothership.
+To enable direct-to-S3 uploads, add `-H "X-Track-Asset-Uploads: true"'.
