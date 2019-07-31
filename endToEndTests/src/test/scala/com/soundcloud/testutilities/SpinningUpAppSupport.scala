@@ -49,12 +49,14 @@ trait SpinningUpAppSupport {
 
     protected def executeRequest(method: Method, path: String, body: String, headers: HeaderMap) = {
       val request = Request(Version.Http11, method, path)
+
+      request.headerMap.set("Content-Type", "application/json")
       headers.foreach {
         case (key, value) =>
-          request.headerMap.add(key, value)
+          request.headerMap.set(key, value)
       }
-      request.headerMap.add("Content-Type", "application/json")
-      request.headerMap.add("Content-Length", String.valueOf(body.getBytes(StandardCharsets.UTF_8).length))
+
+      request.headerMap.set("Content-Length", String.valueOf(body.getBytes(StandardCharsets.UTF_8).length))
       request.contentString = body
 
       val response = Await.result(client(request), timeout)

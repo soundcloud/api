@@ -13,7 +13,7 @@ class DispatchToMothershipHandlerSpec extends UnitSpecification {
       val handler = new DispatchToMothershipHandler(mothershipClient)
 
       val response = Response(Status.Ok)
-      response.headerMap.add("header1", "valueHeader1").add("header2", "valueHeader2")
+      response.headerMap.set("header1", "valueHeader1").set("header2", "valueHeader2")
       response.contentString = "body content"
 
       val request = Request(Version.Http11, Method.Connect, "/")

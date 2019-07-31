@@ -48,7 +48,7 @@ object ResponseLike {
       }
 
     def setHeader(r: Response, key: String, value: String): Unit = {
-      r.headerMap.add(key, value)
+      r.headerMap.set(key, value)
       ()
     }
 

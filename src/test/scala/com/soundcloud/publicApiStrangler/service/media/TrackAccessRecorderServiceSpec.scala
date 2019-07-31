@@ -23,7 +23,7 @@ class TrackAccessRecorderServiceSpec extends UnitSpecification {
 
     lazy val request = {
       val req = Request(reqMethod, "http://local/" + secretToken.map(token => s"?secret_token=$token").getOrElse(""))
-      range.foreach(v => req.headerMap.add("Range", v))
+      range.foreach(v => req.headerMap.set("Range", v))
       HandlerRequest(req)
     }
 

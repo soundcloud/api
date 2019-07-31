@@ -39,7 +39,7 @@ class AcceptOnlyJsonRequestFilter(stripXml: () => Future[Boolean]) extends Simpl
           req.method_=(request.method)
           request.headerMap.foreach {
             case (k, v) =>
-              req.headerMap.add(k, v)
+              req.headerMap.set(k, v)
           }
           req
         case false =>
