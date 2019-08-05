@@ -18,6 +18,14 @@ pipelines:
                 - unit-test
                 - package
                 - publish
+          asset-uploader-unit-tests:
+            tasks:
+            - exec:
+                command: make
+                arguments:
+                - -C
+                - asset-uploads
+                - test-unit
     - end-to-end-tests:
         jobs:
           end-to-end-tests:
@@ -26,3 +34,11 @@ pipelines:
                 command: make
                 arguments:
                 - end-to-end-test
+          asset-uploader-integration-tests:
+            tasks:
+            - exec:
+                command: make
+                arguments:
+                - -C
+                - asset-uploads
+                - test-integration
