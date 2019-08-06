@@ -90,21 +90,7 @@ func (c controller) dispatch(w http.ResponseWriter, r *http.Request, svc svcDisp
 
 	rr, err := svc(boundary, r)
 	if err != nil {
-		// There's currently no nice way of differentiating `request too large`
-		// as enforced by the http.MaxBytesReader from other errors.
-		// https://github.com/golang/go/issues/30715
-		const (
-			maxBytesReaderError = "http: request body too large"
-		)
-
-		// Doing a substring match here because the service may batch errors.
-		if strings.Contains(err.Error(), maxBytesReaderError) {
-			http.Error(w, emptyResponse, http.StatusRequestEntityTooLarge)
-			return
-		}
-
-		// Assume that all other errors are client-retryable.
-		http.Error(w, emptyResponse, http.StatusServiceUnavailable)
+		handleProxyError(w, rr, err)
 		return
 	}
 

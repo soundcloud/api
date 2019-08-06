@@ -88,6 +88,8 @@ func main() {
 		transport: dnssrv.DefaultTransport,
 	}
 
+	strangler.ErrorHandler = handleProxyError
+
 	controller := &controller{
 		maxRequestBytes: *maxRequestBytes,
 		publicHostname:  *publicHostname,

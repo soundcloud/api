@@ -4,6 +4,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -149,4 +150,30 @@ func labelStatusClass(status int) string {
 
 func labelStatusCode(status int) string {
 	return strconv.Itoa(status)
+}
+
+// Handle errors during proxying. We want to treat errors caused by too-large
+// request bodies specially and return the appropriate response code.
+func handleProxyError(w http.ResponseWriter, r *http.Request, err error) {
+	if err == nil {
+		panic("trying to handle nil error")
+	}
+	// There's currently no nice way of differentiating `request too large`
+	// as enforced by the http.MaxBytesReader from other errors.
+	// https://github.com/golang/go/issues/30715
+	const (
+		maxBytesReaderError = "http: request body too large"
+		emptyResponse       = ""
+	)
+
+	// Doing a substring match here because the service may batch errors.
+	if strings.Contains(err.Error(), maxBytesReaderError) {
+		http.Error(w, emptyResponse, http.StatusRequestEntityTooLarge)
+		return
+	}
+
+	log.Printf("http: proxy error (overriden): %v", err)
+	// Assume that all other errors are client-retryable.
+	http.Error(w, emptyResponse, http.StatusServiceUnavailable)
+	return
 }
