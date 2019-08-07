@@ -11,7 +11,7 @@ test-unit:
 
 .PHONY: test-integration
 test-integration: package
-	cd testdata && ./test_integration.sh --tag=$(VERSION)
+	cd testdata && ./test_integration.sh --tag=$(VERSION) $(TESTS:%=--test=%)
 
 target/api: $(wildcard *.go)
 	$(GO) build -o $@

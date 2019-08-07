@@ -1,12 +1,17 @@
-#!/bin/bash
+#!/usr/bin/env bash
 set -euf
 
 tag=""
+tests=()
 
 for arg in "$@"; do
   case $arg in
   --tag=*)
     tag="${arg#*=}"
+    shift
+    ;;
+  --test=*)
+    tests+=("${arg#*=}")
     shift
     ;;
   esac
@@ -31,4 +36,4 @@ sc crun -l base-dev:latest -- \
   sc wait http asset_uploads/-/health
 
 sc crun -l python-3.7:latest -- \
-  python3 test_integration.py
+  python3 -m unittest -v "${tests[@]+"${tests[@]}"}"
