@@ -24,13 +24,13 @@ func TestTracksAllowedMethods(t *testing.T) {
 		method string
 		status int
 	}{
-		0: {http.MethodGet, http.StatusNotFound},
-		1: {http.MethodHead, http.StatusNotFound},
-		2: {http.MethodPatch, http.StatusNotFound},
-		3: {http.MethodDelete, http.StatusNotFound},
-		4: {http.MethodConnect, http.StatusNotFound},
-		5: {http.MethodOptions, http.StatusNotFound},
-		6: {http.MethodTrace, http.StatusNotFound},
+		0: {http.MethodGet, http.StatusMisdirectedRequest},
+		1: {http.MethodHead, http.StatusMisdirectedRequest},
+		2: {http.MethodPatch, http.StatusMisdirectedRequest},
+		3: {http.MethodDelete, http.StatusMisdirectedRequest},
+		4: {http.MethodConnect, http.StatusMisdirectedRequest},
+		5: {http.MethodOptions, http.StatusMisdirectedRequest},
+		6: {http.MethodTrace, http.StatusMisdirectedRequest},
 	}
 
 	for _, tt := range tests {
@@ -44,6 +44,10 @@ func TestTracksAllowedMethods(t *testing.T) {
 		if want, got := tt.status, res.Result().StatusCode; want != got {
 			t.Errorf("Expected %v to return %v, was: %v", tt.method, want, got)
 		}
+
+		if want, got := "no-store", res.Result().Header.Get("Cache-Control"); want != got {
+			t.Errorf("Expected %v to set Cache-Control: %v, was %v", tt.method, want, got)
+		}
 	}
 }
 
@@ -53,8 +57,8 @@ func TestTracksRequiresHostname(t *testing.T) {
 		hostname string
 		status   int
 	}{
-		0: {http.MethodPost, "", http.StatusNotFound},
-		1: {http.MethodPut, "something", http.StatusNotFound},
+		0: {http.MethodPost, "", http.StatusMisdirectedRequest},
+		1: {http.MethodPut, "something", http.StatusMisdirectedRequest},
 	}
 
 	for _, tt := range tests {
@@ -82,9 +86,9 @@ func TestTracksRequiresContentType(t *testing.T) {
 		contentType string
 		status      int
 	}{
-		0: {http.MethodPost, "application/json", http.StatusBadRequest},
+		0: {http.MethodPost, "application/json", http.StatusMisdirectedRequest},
 		1: {http.MethodPut, "multipart/form-data", http.StatusBadRequest},
-		2: {http.MethodPost, "", http.StatusBadRequest},
+		2: {http.MethodPost, "", http.StatusMisdirectedRequest},
 	}
 
 	for _, tt := range tests {
