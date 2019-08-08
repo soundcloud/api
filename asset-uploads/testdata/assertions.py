@@ -25,6 +25,16 @@ class Assertions:
             raise AssertionError('Expected request to be too large: ' +
                                  request_dump)
 
+    def assertMisdirected(self, request_dump):
+        if not search(r'HTTP/1.1 421 Misdirected Request', request_dump):
+            raise AssertionError('Expected response to be "Misdirected Request": ' +
+                                 request_dump)
+
+    def assertNoStore(self, request_dump):
+        if not search(r'Cache-Control: no-store',
+                      request_dump):
+            raise AssertionError('Expected "Cache-Control: no-store" header: ' + request_dump)
+
     def assertNoTrackAssetData(self, request_dump):
         if search(r'Content-Disposition: form-data; name="track\[asset_data\]"',
                   request_dump):
