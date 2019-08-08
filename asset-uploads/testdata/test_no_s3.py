@@ -1,4 +1,4 @@
-from subprocess import check_output, STDOUT
+from subprocess import run, PIPE
 from collections import namedtuple
 from hashlib import md5
 import unittest
@@ -43,7 +43,7 @@ class TestIntegrationNoS3(unittest.TestCase, assertions.Assertions):
                 -F "oauth_token=s3cr3t_2" \
                 asset_uploads/tracks
             '''.format(asset.name)
-        res = check_output(cmd, shell=True, stderr=STDOUT).decode('ascii', 'ignore')
+        res = run(cmd, shell=True, stderr=PIPE, stdout=PIPE).stderr.decode('ascii', 'ignore')
         self.assertRequestEntityTooLarge(res)
 
 if __name__ == '__main__':
