@@ -7,6 +7,9 @@ pipelines:
     materials:
       git:
         git: git@github.com:soundcloud/public-api-strangler.git
+        # There is a separate pipeline for the asset-uploads-api component.
+        blacklist:
+        - asset-uploads/**/*
     stages:
     - test:
         jobs:
