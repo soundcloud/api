@@ -45,10 +45,8 @@ func (u *moshimoshiClient) createTrackUID() (string, error) {
 	return res.UID, nil
 }
 
-func (u *moshimoshiClient) createTranscoding(uid string) error {
-	url := fmt.Sprintf("http://%s/transcodings?access_token=%s", u.host, moshimoshiAccessToken)
-
-	bs, err := json.Marshal(struct {
+func transcodingRequestPayload(uid string) ([]byte, error) {
+	return json.Marshal(struct {
 		Transcoding struct {
 			UID string `json:"uid"`
 		} `json:"transcoding"`
@@ -57,6 +55,12 @@ func (u *moshimoshiClient) createTranscoding(uid string) error {
 			UID string `json:"uid"`
 		}{uid},
 	})
+}
+
+func (u *moshimoshiClient) createTranscoding(uid string) error {
+	url := fmt.Sprintf("http://%s/transcodings?access_token=%s", u.host, moshimoshiAccessToken)
+
+	bs, err := transcodingRequestPayload(uid)
 	if err != nil {
 		return err
 	}
