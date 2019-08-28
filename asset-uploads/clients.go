@@ -46,7 +46,8 @@ func (u *moshimoshiClient) createTrackUID() (string, error) {
 }
 
 type transcodingRequestSettings struct {
-	UID string `json:"uid"`
+	UID      string `json:"uid"`
+	Priority string `json:"priority"`
 }
 
 type transcodingRequest struct {
@@ -56,7 +57,8 @@ type transcodingRequest struct {
 func transcodingRequestPayload(uid string) ([]byte, error) {
 	payload := transcodingRequest{
 		transcodingRequestSettings{
-			UID: uid,
+			UID:      uid,
+			Priority: "realtime",
 		},
 	}
 	return json.Marshal(payload)
