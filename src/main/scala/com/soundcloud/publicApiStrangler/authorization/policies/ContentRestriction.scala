@@ -37,6 +37,11 @@ object ContentRestriction {
   case object NO_OFFLINE_SYNC extends ContentRestriction("NO_OFFLINE_SYNC")
 
   /**
+    * The content owner has chosen to not make progressive download streaming available.
+    */
+  case object NO_PROGRESSIVE_DOWNLOAD extends ContentRestriction("NO_PROGRESSIVE_DOWNLOAD")
+
+  /**
     * Converts List of Strings into List of {@link ContentRestriction} instances.
     */
   def from(stringRestrictions: List[String]): List[ContentRestriction] =
@@ -49,7 +54,7 @@ object ContentRestriction {
     values.find(_.name == n).getOrElse(throw new IllegalArgumentException(s"No value for name $n"))
   }
 
-  def values = List(ENCRYPTED_STREAM_ONLY, NO_OFFLINE_SYNC)
+  def values = List(ENCRYPTED_STREAM_ONLY, NO_OFFLINE_SYNC, NO_PROGRESSIVE_DOWNLOAD)
 
   /**
     * Returns string set of all possible string-representations of the enum
