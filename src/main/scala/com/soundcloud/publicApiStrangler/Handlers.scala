@@ -46,7 +46,11 @@ class Handlers(telemetry: Telemetry, clients: Clients) {
     }
     val publicApiSiloing = new PublicApiSiloing(rolloutCheckForSiloingFunc, blacklistOfAppIdsForUserSiloing, telemetry)
 
-    val streamService = new StreamService(trackmetadataClient, contentAuthorizationRules, mediaServiceClient)
+    val rolloutNoProgressiveDownloadRolloutEnabledFunc = {
+      val noProgressiveDownloadRolloutFeature = BasicRolloutFeature("streams-no-progressive-download")
+      () => rolloutClient.isActive(noProgressiveDownloadRolloutFeature)
+    }
+    val streamService = new StreamService(trackmetadataClient, contentAuthorizationRules, mediaServiceClient, rolloutNoProgressiveDownloadRolloutEnabledFunc)
 
     new TrackStreamsHandler(
       userAuthentication,
