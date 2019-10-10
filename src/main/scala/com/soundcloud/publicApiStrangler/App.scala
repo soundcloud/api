@@ -120,7 +120,8 @@ object App {
         (Method.Get, rateLimitingFacade.diagnosticsEndpoint, rateLimitingFacade.rateLimitingDiagnosticsAdminHandler.handle)
       ),
       rollout = clients.rollout,
-      exceptionCollector = exceptionCollector
+      exceptionCollector = exceptionCollector,
+      applicationRouter = Some(router)
     ).start()
 
 
