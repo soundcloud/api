@@ -3,7 +3,7 @@ package com.soundcloud.publicApiStrangler.service.media
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.publicApiStrangler.authorization.ContentAuthorizationRules
-import com.soundcloud.publicApiStrangler.authorization.policies.{ContentAuthorization, ContentPolicy, MonetizationModel, Reason}
+import com.soundcloud.publicApiStrangler.authorization.policies.{ContentAuthorization, ContentPolicy, ContentRestriction, MonetizationModel, Reason}
 import com.soundcloud.publicApiStrangler.client.media.{MediaServiceClient, Transcoding}
 import com.soundcloud.publicApiStrangler.client.trackmetadata.{Track, TrackmetadataClient}
 import com.soundcloud.publicApiStrangler.test.UnitSpecification
@@ -16,9 +16,10 @@ class StreamServiceSpec extends UnitSpecification {
     val trackmetadataClient = mock[TrackmetadataClient]
     val mediaServiceClient = mock[MediaServiceClient]
     val contentAuthorizationRules = mock[ContentAuthorizationRules]
+    val noProgressiveDownloadRolloutEnabled = false
 
     val session = mock[UserSession]
-    val service = new StreamService(trackmetadataClient, contentAuthorizationRules, mediaServiceClient)
+    val service = new StreamService(trackmetadataClient, contentAuthorizationRules, mediaServiceClient, () => Future.value(noProgressiveDownloadRolloutEnabled))
 
     val trackUrn = Urn("soundcloud", "tracks", "2")
     val userUrn = Urn("soundcloud", "users", "42")
@@ -130,6 +131,24 @@ class StreamServiceSpec extends UnitSpecification {
         val result = Await.result(service.fetchSingle(session, trackUrn, secretToken))
         result ==== StreamUrl("http://snippet")
       }
+
+      "returns an MP3 stream url if track has a NO_PROGRESSIVE_DOWNLOAD restriction, but streams-no-progressive-download feature is disabled" in new Context {
+        override lazy val contentAuthorizations = Seq(new ContentAuthorization(trackUrn, policy, Reason.DEFAULT, ContentRestriction.NO_PROGRESSIVE_DOWNLOAD, MonetizationModel.NOT_APPLICABLE))
+        override val noProgressiveDownloadRolloutEnabled: Boolean = false
+
+        mediaServiceClient.fetchStreamUrl(session, "mp3-uuid", "progressive") returns Future.value(Some("http://stream"))
+        val result = Await.result(service.fetchSingle(session, trackUrn, secretToken))
+        result ==== StreamUrl("http://stream")
+      }
+
+      "returns an MP3 snippet url if track has a NO_PROGRESSIVE_DOWNLOAD restriction, and streams-no-progressive-download feature is enabled" in new Context {
+        override lazy val contentAuthorizations = Seq(new ContentAuthorization(trackUrn, policy, Reason.DEFAULT, ContentRestriction.NO_PROGRESSIVE_DOWNLOAD, MonetizationModel.NOT_APPLICABLE))
+        override val noProgressiveDownloadRolloutEnabled: Boolean = true
+
+        mediaServiceClient.fetchPreviewUrl(session, "mp3-uuid", "progressive") returns Future.value(Some("http://snippet"))
+        val result = Await.result(service.fetchSingle(session, trackUrn, secretToken))
+        result ==== StreamUrl("http://snippet")
+      }
     }
 
     "when track is not streamable and policy is BLOCK, but the streamer is the track's owner" >> {
@@ -159,8 +178,37 @@ class StreamServiceSpec extends UnitSpecification {
       result ==== StreamUrls(a, b, Some(c), d)
     }
 
+    "returns multiple stream urls and one snippet url, if track has a NO_PROGRESSIVE_DOWNLOAD restriction, but streams-no-progressive-download feature is disabled" in new Context {
+      override lazy val contentAuthorizations = Seq(new ContentAuthorization(trackUrn, policy, Reason.DEFAULT, ContentRestriction.NO_PROGRESSIVE_DOWNLOAD, MonetizationModel.NOT_APPLICABLE))
+      override val noProgressiveDownloadRolloutEnabled: Boolean = false
+
+      val a = "http://stream/mp3/progressive"
+      val b = "http://stream/mp3/hls"
+      val c = "http://stream/opus/hls"
+      val d = "http://snippet"
+      mediaServiceClient.fetchStreamUrl(session, "mp3-uuid", "progressive") returns Future.value(Some(a))
+      mediaServiceClient.fetchStreamUrl(session, "mp3-uuid", "hls") returns Future.value(Some(b))
+      mediaServiceClient.fetchStreamUrl(session, "opus-uuid", "hls") returns Future.value(Some(c))
+      mediaServiceClient.fetchPreviewUrl(session, "mp3-uuid", "progressive") returns Future.value(Some(d))
+
+      val result = Await.result(service.fetchMultiple(session, trackUrn, secretToken))
+      result ==== StreamUrls(a, b, Some(c), d)
+    }
+
     "returns multiple snippet urls if policy is SNIP" in new Context {
       override lazy val policy = ContentPolicy.SNIP
+      val a = "http://stream/mp3/progressive"
+      val b = "http://stream/mp3/hls"
+      mediaServiceClient.fetchPreviewUrl(session, "mp3-uuid", "progressive") returns Future.value(Some(a))
+      mediaServiceClient.fetchPreviewUrl(session, "mp3-uuid", "hls") returns Future.value(Some(b))
+
+      val result = Await.result(service.fetchMultiple(session, trackUrn, secretToken))
+      result ==== PreviewUrls(a, b)
+    }
+
+    "returns multiple snippet urls if track has a NO_PROGRESSIVE_DOWNLOAD restriction, and streams-no-progressive-download feature is enabled" in new Context {
+      override lazy val contentAuthorizations = Seq(new ContentAuthorization(trackUrn, policy, Reason.DEFAULT, ContentRestriction.NO_PROGRESSIVE_DOWNLOAD, MonetizationModel.NOT_APPLICABLE))
+      override val noProgressiveDownloadRolloutEnabled: Boolean = true
       val a = "http://stream/mp3/progressive"
       val b = "http://stream/mp3/hls"
       mediaServiceClient.fetchPreviewUrl(session, "mp3-uuid", "progressive") returns Future.value(Some(a))
