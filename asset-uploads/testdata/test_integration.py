@@ -50,6 +50,86 @@ class TestIntegration(unittest.TestCase, assertions.Assertions):
         self.assertTrackOriginalFilename(res, 'test_chunk.wav')
         self.assertTrackUID(res)
 
+    def test_alternate_route_v1_tracks(self):
+        asset = self.assets['1mb']
+        cmd = '''
+            curl --fail --verbose \
+                -H "Host: api.sc.local" \
+                -H "Transfer-Encoding: chunked" \
+                -H "X-Track-Asset-Uploads: true" \
+                -F "track[asset_data]=@{};filename=test_chunk.wav" \
+                -F "track[title]=123" \
+                -F "oauth_token=s3cr3t_1" \
+                asset_uploads/v1/tracks/
+        '''.format(asset.name)
+        res = check_output(cmd, shell=True).decode('ascii')
+        self.assertAuthorization(res, 's3cr3t_1')
+        self.assertChecksum(res, asset.md5)
+        self.assertNoTrackAssetData(res)
+        self.assertRequest(res, 'POST', '/v1/tracks/')
+        self.assertTrackOriginalFilename(res, 'test_chunk.wav')
+        self.assertTrackUID(res)
+
+    def test_alternate_route_tracks_slash(self):
+        asset = self.assets['1mb']
+        cmd = '''
+            curl --fail --verbose \
+                -H "Host: api.sc.local" \
+                -H "Transfer-Encoding: chunked" \
+                -H "X-Track-Asset-Uploads: true" \
+                -F "track[asset_data]=@{};filename=test_chunk.wav" \
+                -F "track[title]=123" \
+                -F "oauth_token=s3cr3t_1" \
+                asset_uploads/tracks/
+        '''.format(asset.name)
+        res = check_output(cmd, shell=True).decode('ascii')
+        self.assertAuthorization(res, 's3cr3t_1')
+        self.assertChecksum(res, asset.md5)
+        self.assertNoTrackAssetData(res)
+        self.assertRequest(res, 'POST', '/tracks/')
+        self.assertTrackOriginalFilename(res, 'test_chunk.wav')
+        self.assertTrackUID(res)
+
+    def test_alternate_route_tracks_json(self):
+        asset = self.assets['1mb']
+        cmd = '''
+            curl --fail --verbose \
+                -H "Host: api.sc.local" \
+                -H "Transfer-Encoding: chunked" \
+                -H "X-Track-Asset-Uploads: true" \
+                -F "track[asset_data]=@{};filename=test_chunk.wav" \
+                -F "track[title]=123" \
+                -F "oauth_token=s3cr3t_1" \
+                asset_uploads/tracks.json
+        '''.format(asset.name)
+        res = check_output(cmd, shell=True).decode('ascii')
+        self.assertAuthorization(res, 's3cr3t_1')
+        self.assertChecksum(res, asset.md5)
+        self.assertNoTrackAssetData(res)
+        self.assertRequest(res, 'POST', '/tracks.json')
+        self.assertTrackOriginalFilename(res, 'test_chunk.wav')
+        self.assertTrackUID(res)
+
+    def test_alternate_route_tracks_json_slash(self):
+        asset = self.assets['1mb']
+        cmd = '''
+            curl --fail --verbose \
+                -H "Host: api.sc.local" \
+                -H "Transfer-Encoding: chunked" \
+                -H "X-Track-Asset-Uploads: true" \
+                -F "track[asset_data]=@{};filename=test_chunk.wav" \
+                -F "track[title]=123" \
+                -F "oauth_token=s3cr3t_1" \
+                asset_uploads/tracks.json/
+        '''.format(asset.name)
+        res = check_output(cmd, shell=True).decode('ascii')
+        self.assertAuthorization(res, 's3cr3t_1')
+        self.assertChecksum(res, asset.md5)
+        self.assertNoTrackAssetData(res)
+        self.assertRequest(res, 'POST', '/tracks.json/')
+        self.assertTrackOriginalFilename(res, 'test_chunk.wav')
+        self.assertTrackUID(res)
+
     def test_chunk_large(self):
         asset = self.assets['10mb']
         cmd = '''

@@ -21,6 +21,24 @@ import (
 	"github.com/soundcloud/gokit/httpserver"
 )
 
+func trackRoutes() []string {
+	prefixes := []string{"/", "/v1/"}
+	filetypes := []string{"", ".json"}
+	slashes := []string{"", "/"}
+
+	routes := []string{}
+	for _, prefix := range prefixes {
+		for _, filetype := range filetypes {
+			for _, slash := range slashes {
+				route := prefix + "tracks" + filetype + slash
+				routes = append(routes, route)
+			}
+		}
+	}
+
+	return routes
+}
+
 func main() {
 	var (
 		addr      = flag.String("addr", ":80", "Listen address")
@@ -111,7 +129,9 @@ func main() {
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("OK"))
 	})
-	mux.HandleFunc("/tracks", httpHandler("/tracks", controller.tracks))
+	for _, route := range trackRoutes() {
+		mux.HandleFunc(route, httpHandler(route, controller.tracks))
+	}
 	mux.HandleFunc("/", httpHandler("generic", controller.generic))
 
 	server := httpserver.Graceful{
