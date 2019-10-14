@@ -25,7 +25,7 @@ publicapistrangler:
     - publicapistub:publicapistub
 
 publicapistub:
-  image: docker.dev.s-cloud.net/ruby-2.3
+  image: docker.dev.s-cloud.net/ruby-2.6
   command: bash -ex -c "gem install sinatra --no-document ; ruby /tmp/pas/tools/public-api-stub.rb"
   volumes:
     - .:/tmp/pas
