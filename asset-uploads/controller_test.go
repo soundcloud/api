@@ -199,7 +199,7 @@ func TestFailingServiceCall(t *testing.T) {
 
 	controller.tracks(res, req)
 
-	if want, got := http.StatusServiceUnavailable, res.Result().StatusCode; want != got {
+	if want, got := http.StatusInternalServerError, res.Result().StatusCode; want != got {
 		t.Errorf("Expected request to return %v, got %v", want, got)
 	}
 }

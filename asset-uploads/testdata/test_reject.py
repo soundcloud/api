@@ -29,3 +29,15 @@ class TestIntegration(unittest.TestCase, assertions.Assertions):
         res = check_output(cmd, shell=True, stderr=STDOUT).decode('ascii')
         self.assertRequest(res, 'POST', '/tracks')
         self.assertMisdirected(res)
+
+    def test_bad_request(self):
+        cmd = '''
+            curl --verbose \
+                -d "some post data" \
+                -H "Host: api.sc.local" \
+                -H "Content-Type: multipart/form-data; boundary=------------------------2bd6642950bb9c00" \
+                -H "X-Track-Asset-Uploads: true" \
+                asset_uploads/tracks/2/comments
+        '''
+        res = check_output(cmd, shell=True, stderr=STDOUT).decode('ascii')
+        self.assertBadRequest(res)

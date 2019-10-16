@@ -91,6 +91,9 @@ func TestInvalidMultipart(t *testing.T) {
 		if err == nil {
 			t.Error("Expected to fail parsing malformed multipart data")
 		}
+		if _, ok := err.(clientError); !ok {
+			t.Errorf("Expected clientError, got: %s", err)
+		}
 	}
 }
 
