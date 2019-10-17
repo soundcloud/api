@@ -85,7 +85,7 @@ func (s service) generic(r *genericRequest) (*genericResponse, error) {
 
 func (s service) rewriteMultipartRequest(r *http.Request, boundary string, fn rewritePartFn) (*http.Request, error) {
 	// Unless the feature flag header is set, return the original request.
-	if feature := r.Header.Get("X-Track-Asset-Uploads"); feature != "true" {
+	if feature := r.Header.Get("X-Track-Asset-Uploads"); feature == "false" {
 		requestUploadMethod.WithLabelValues("passthrough").Inc()
 		return r, nil
 	}
