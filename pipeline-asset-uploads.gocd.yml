@@ -8,6 +8,7 @@ pipelines:
       git:
         type: configrepo
         whitelist:
+        - pipeline-asset-uploads.gocd.yml
         - asset-uploads/**/*
     stages:
     - test:
