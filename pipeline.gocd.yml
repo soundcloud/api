@@ -6,7 +6,7 @@ pipelines:
     label_template: "${COUNT}-${git[:7]}"
     materials:
       git:
-        git: git@github.com:soundcloud/public-api-strangler.git
+        type: configrepo
         # There is a separate pipeline for the asset-uploads-api component.
         blacklist:
         - asset-uploads/**/*
