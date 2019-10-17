@@ -30,6 +30,10 @@ class Assertions:
             raise AssertionError('Expected response to be "Misdirected Request": ' +
                                  request_dump)
 
+    def assertBadRequest(self, request_dump):
+        if not search(r'HTTP/1.1 400 Bad Request', request_dump):
+            raise AssertionError('Expected response to be "Bad Request": ' + request_dump)
+
     def assertNoStore(self, request_dump):
         if not search(r'Cache-Control: no-store',
                       request_dump):

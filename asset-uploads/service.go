@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"mime/multipart"
@@ -56,6 +57,14 @@ type genericResponse struct {
 
 type rewritePartFn func(*multipart.Part, *multipart.Writer, http.Header) error
 
+type clientError struct {
+	cause error
+}
+
+func (e clientError) Error() string {
+	return fmt.Sprintf("client error: %s", e.cause)
+}
+
 func (s service) createTrack(r *createTrackRequest) (*createTrackResponse, error) {
 	req, err := s.rewriteMultipartRequest(r.request, r.boundary, s.rewriteTrackPart)
 	if err != nil {
@@ -89,7 +98,7 @@ func (s service) rewriteMultipartRequest(r *http.Request, boundary string, fn re
 	writer := multipart.NewWriter(body)
 
 	if err := writer.SetBoundary(boundary); err != nil {
-		return nil, err
+		return nil, clientError{cause: err}
 	}
 
 	for {
@@ -100,7 +109,7 @@ func (s service) rewriteMultipartRequest(r *http.Request, boundary string, fn re
 				break
 			}
 			_ = writer.Close()
-			return nil, err
+			return nil, clientError{cause: err}
 		}
 
 		if err := fn(p, writer, header); err != nil {

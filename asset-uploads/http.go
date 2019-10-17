@@ -173,7 +173,14 @@ func handleProxyError(w http.ResponseWriter, r *http.Request, err error) {
 	}
 
 	log.Printf("http: proxy error (overriden): %v", err)
-	// Assume that all other errors are client-retryable.
-	http.Error(w, emptyResponse, http.StatusServiceUnavailable)
-	return
+
+	// Assume we did something wrong and default to 500.
+	status := http.StatusInternalServerError
+
+	// Unless we have a clientError, then respond with 400.
+	if _, ok := err.(clientError); ok {
+		status = http.StatusBadRequest
+	}
+
+	http.Error(w, emptyResponse, status)
 }
