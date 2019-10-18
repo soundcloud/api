@@ -132,6 +132,7 @@ func main() {
 	for _, route := range trackRoutes() {
 		mux.HandleFunc(route, httpHandler(route, controller.tracks))
 	}
+	mux.HandleFunc("/users/", httpHandler("tracks", controller.tracks))
 	mux.HandleFunc("/", httpHandler("generic", controller.generic))
 
 	server := httpserver.Graceful{
