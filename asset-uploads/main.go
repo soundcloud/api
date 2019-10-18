@@ -16,28 +16,11 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
+	"github.com/gorilla/mux"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/soundcloud/gokit/dnssrv"
 	"github.com/soundcloud/gokit/httpserver"
 )
-
-func trackRoutes() []string {
-	prefixes := []string{"/", "/v1/"}
-	filetypes := []string{"", ".json"}
-	slashes := []string{"", "/"}
-
-	routes := []string{}
-	for _, prefix := range prefixes {
-		for _, filetype := range filetypes {
-			for _, slash := range slashes {
-				route := prefix + "tracks" + filetype + slash
-				routes = append(routes, route)
-			}
-		}
-	}
-
-	return routes
-}
 
 func main() {
 	var (
@@ -124,21 +107,35 @@ func main() {
 		}
 	}(*adminAddr)
 
-	mux := http.NewServeMux()
-	mux.HandleFunc("/-/health", func(w http.ResponseWriter, r *http.Request) {
+	router := mux.NewRouter()
+	router.HandleFunc("/-/health", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("OK"))
 	})
-	for _, route := range trackRoutes() {
-		mux.HandleFunc(route, httpHandler(route, controller.tracks))
-	}
-	mux.HandleFunc("/users/", httpHandler("tracks", controller.tracks))
-	mux.HandleFunc("/", httpHandler("generic", controller.generic))
+
+	tracks := httpHandler("tracks", controller.tracks)
+
+	router.HandleFunc("/tracks/{id:[0-9]+}", tracks)
+	router.HandleFunc("/tracks/{id:[0-9]+}.json", tracks)
+	router.HandleFunc("/tracks.json", tracks)
+	router.HandleFunc("/tracks.json/", tracks)
+	router.HandleFunc("/tracks", tracks)
+	router.HandleFunc("/tracks/", tracks)
+
+	router.HandleFunc("/v1/tracks", tracks)
+	router.HandleFunc("/v1/tracks/", tracks)
+	router.HandleFunc("/v1/tracks.json", tracks)
+	router.HandleFunc("/v1/tracks.json/", tracks)
+
+	router.HandleFunc("/users/{userId:[0-9]+}/tracks", tracks)
+	router.HandleFunc("/users/{userId:[0-9]+}/tracks/", tracks)
+
+	router.HandleFunc("/", httpHandler("generic", controller.generic))
 
 	server := httpserver.Graceful{
 		Config: http.Server{
 			Addr:    *addr,
-			Handler: mux,
+			Handler: router,
 		},
 		CloseTimeout: 60 * time.Second,
 		DrainTimeout: 30 * time.Second,
