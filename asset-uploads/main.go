@@ -113,22 +113,20 @@ func main() {
 		w.Write([]byte("OK"))
 	})
 
-	tracks := httpHandler("tracks", controller.tracks)
+	router.HandleFunc("/tracks/{id:[0-9]+}", httpHandler("/tracks/:id", controller.tracks))
+	router.HandleFunc("/tracks/{id:[0-9]+}.json", httpHandler("/tracks/:id.json", controller.tracks))
+	router.HandleFunc("/tracks.json", httpHandler("/tracks.json", controller.tracks))
+	router.HandleFunc("/tracks.json/", httpHandler("/tracks.json/", controller.tracks))
+	router.HandleFunc("/tracks", httpHandler("/tracks", controller.tracks))
+	router.HandleFunc("/tracks/", httpHandler("/tracks/", controller.tracks))
 
-	router.HandleFunc("/tracks/{id:[0-9]+}", tracks)
-	router.HandleFunc("/tracks/{id:[0-9]+}.json", tracks)
-	router.HandleFunc("/tracks.json", tracks)
-	router.HandleFunc("/tracks.json/", tracks)
-	router.HandleFunc("/tracks", tracks)
-	router.HandleFunc("/tracks/", tracks)
+	router.HandleFunc("/v1/tracks", httpHandler("/v1/tracks", controller.tracks))
+	router.HandleFunc("/v1/tracks/", httpHandler("/v1/tracks/", controller.tracks))
+	router.HandleFunc("/v1/tracks.json", httpHandler("/v1/tracks.json", controller.tracks))
+	router.HandleFunc("/v1/tracks.json/", httpHandler("/v1/tracks.json/", controller.tracks))
 
-	router.HandleFunc("/v1/tracks", tracks)
-	router.HandleFunc("/v1/tracks/", tracks)
-	router.HandleFunc("/v1/tracks.json", tracks)
-	router.HandleFunc("/v1/tracks.json/", tracks)
-
-	router.HandleFunc("/users/{userId:[0-9]+}/tracks", tracks)
-	router.HandleFunc("/users/{userId:[0-9]+}/tracks/", tracks)
+	router.HandleFunc("/users/{userId:[0-9]+}/tracks", httpHandler("/users/:userid/tracks", controller.tracks))
+	router.HandleFunc("/users/{userId:[0-9]+}/tracks/", httpHandler("/users/:userid/tracks/", controller.tracks))
 
 	router.HandleFunc("/", httpHandler("generic", controller.generic))
 
