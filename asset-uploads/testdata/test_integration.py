@@ -52,7 +52,8 @@ class TestIntegration(unittest.TestCase, assertions.Assertions):
 
     def test_alternate_routes(self):
         paths = ["/v1/tracks/", "/tracks", "/tracks.json",
-                "/tracks.json/", "/users/123/tracks"]
+                "/tracks.json/", "/users/123/tracks", "/tracks/2",
+                "/tracks/2.json"]
         for path in paths:
             asset = self.assets['1mb']
             cmd = '''
