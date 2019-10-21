@@ -52,7 +52,8 @@ class TestIntegration(unittest.TestCase, assertions.Assertions):
 
     def test_alternate_routes(self):
         paths = ["/v1/tracks/", "/tracks", "/tracks.json",
-                "/tracks.json/", "/users/123/tracks"]
+                "/tracks.json/", "/users/123/tracks", "/tracks/2",
+                "/tracks/2.json"]
         for path in paths:
             asset = self.assets['1mb']
             cmd = '''
@@ -144,10 +145,10 @@ class TestIntegration(unittest.TestCase, assertions.Assertions):
                 -H "Host: api.sc.local" \
                 -H "X-Track-Asset-Uploads: true" \
                 -F "oauth_token={}" \
-                asset_uploads/
+                asset_uploads/some-endpoint
             '''.format(token)
         res = check_output(cmd, shell=True).decode('ascii')
-        self.assertRequest(res, 'POST', '/')
+        self.assertRequest(res, 'POST', '/some-endpoint')
         self.assertAuthorization(res, token)
 
 
