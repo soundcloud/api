@@ -85,7 +85,7 @@ func httpHandler(path string, handler http.HandlerFunc) http.HandlerFunc {
 			incomingLatency.WithLabelValues(method, path, client).Observe(duration.Seconds())
 			incomingRequests.WithLabelValues(method, path, status, statusClass, client).Inc()
 
-			log.Printf("[%d ms] %s %s -> %s (%s)", duration/time.Millisecond, method, uri, status, client)
+			log.Printf("[%d ms] %s %s -> %s (%s) (path=%s)", duration/time.Millisecond, method, uri, status, client, path)
 		}()
 
 		handler(er, r)
