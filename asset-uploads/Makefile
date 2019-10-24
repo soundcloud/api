@@ -69,7 +69,6 @@ publish-deploy:
 		--glimpse=http.$(COMPONENT).$(GLIMPSE_ENV).$(GLIMPSE_PRODUCT) \
 		--pod=config/pod.yaml \
 		--prometheus.port=telemetry \
-		--ingress=http://$(SYSTEM)-$(COMPONENT).lb.$(ZONE).s-cloud.net:http \
 		--public-ingress=http://api.soundcloud.com:http
 
 .PHONY: promote-to-stable
