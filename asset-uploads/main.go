@@ -128,6 +128,9 @@ func main() {
 	router.HandleFunc("/users/{userId:[0-9]+}/tracks", httpHandler("/users/:userid/tracks", controller.tracks))
 	router.HandleFunc("/users/{userId:[0-9]+}/tracks/", httpHandler("/users/:userid/tracks/", controller.tracks))
 
+	router.HandleFunc("/me/tracks", httpHandler("/me/tracks", controller.tracks))
+	router.HandleFunc("/me/tracks.json", httpHandler("/me/tracks.json", controller.tracks))
+
 	router.PathPrefix("/").Handler(httpHandler("generic", controller.generic))
 
 	server := httpserver.Graceful{
