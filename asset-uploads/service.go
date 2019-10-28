@@ -126,21 +126,13 @@ func (s service) rewriteMultipartRequest(r *http.Request, boundary string, fn re
 }
 
 func (s service) rewriteTrackPart(p *multipart.Part, w *multipart.Writer, header http.Header) error {
-	if p.FileName() != "" {
-		switch p.FormName() {
-		case "track[asset_data]":
-			upload, err := s.uploadTrackAssetData(p, w)
-			if err != nil {
-				return err
-			}
-			header.Add("X-Track-Asset-Location", upload.location)
-			header.Add("X-Track-Asset-Md5", upload.md5)
-
-		default:
-			if err := s.copyPart(p, w); err != nil {
-				return err
-			}
+	if p.FormName() == "track[asset_data]" {
+		upload, err := s.uploadTrackAssetData(p, w)
+		if err != nil {
+			return err
 		}
+		header.Add("X-Track-Asset-Location", upload.location)
+		header.Add("X-Track-Asset-Md5", upload.md5)
 
 		return nil
 	}

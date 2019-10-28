@@ -138,6 +138,25 @@ class TestIntegration(unittest.TestCase, assertions.Assertions):
         self.assertRequest(res, 'POST', '/tracks')
         self.assertAuthorization(res, token[0:64])
 
+    def test_empty_filename(self):
+        asset = self.assets['1mb']
+        cmd = '''
+            curl --fail --verbose \
+                -H "Host: api.sc.local" \
+                -H "X-Track-Asset-Uploads: true" \
+                -F "track[asset_data]=@{};filename=" \
+                -F "track[title]=123" \
+                -F "oauth_token=s3cr3t_5" \
+                asset_uploads/tracks
+            '''.format(asset.name)
+        res = check_output(cmd, shell=True).decode('ascii')
+        self.assertAuthorization(res, 's3cr3t_5')
+        self.assertChecksum(res, asset.md5)
+        self.assertNoTrackAssetData(res)
+        self.assertRequest(res, 'POST', '/tracks')
+        self.assertTrackOriginalFilename(res, '')
+        self.assertTrackUID(res)
+
     def test_generic(self):
         token = '04u7h-t0k3n'
         cmd = '''
