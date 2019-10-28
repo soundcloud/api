@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"log"
 	"mime/multipart"
 	"net/http"
 
@@ -101,6 +102,8 @@ func (s service) rewriteMultipartRequest(r *http.Request, boundary string, fn re
 		return nil, clientError{cause: err}
 	}
 
+	var formHeaders []string
+
 	for {
 		p, err := reader.NextPart()
 		if err != nil {
@@ -112,11 +115,15 @@ func (s service) rewriteMultipartRequest(r *http.Request, boundary string, fn re
 			return nil, clientError{cause: err}
 		}
 
+		formHeaders = append(formHeaders, p.FormName())
 		if err := fn(p, writer, header); err != nil {
 			_ = writer.Close()
 			return nil, err
 		}
 	}
+
+	requestId := r.Header.Get("X-Request-Id")
+	log.Printf("RequestID: %s ; form headers: %v", requestId, formHeaders)
 
 	if err := writer.Close(); err != nil {
 		return nil, err
