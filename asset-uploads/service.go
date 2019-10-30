@@ -226,8 +226,6 @@ func (s service) uploadTrackAssetData(p *multipart.Part, w *multipart.Writer) (*
 		return nil, err
 	}
 
-	// TODO: do we need to handle empty filenames here in case the header was
-	// invalid?
 	filename := p.FileName()
 	if _, err := o.Write([]byte(filename)); err != nil {
 		return nil, err
