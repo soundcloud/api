@@ -55,6 +55,52 @@ func TestValidMultipart(t *testing.T) {
 	}
 }
 
+func TestUnescapedFilename(t *testing.T) {
+	body := []byte(
+		"--------------------------6808b4f61ea0e5a2" +
+			crlf + `Content-Disposition: form-data; name="track[asset_data]"; filename="my "track.wav""` +
+			crlf + "Content-Type: application/octet-stream" +
+			crlf + "" +
+			crlf + "12345" +
+			crlf + "" +
+			crlf + "--------------------------6808b4f61ea0e5a2" +
+			crlf + "Content-Disposition: form-data; name=\"track[title]\"" +
+			crlf + "" +
+			crlf + "My Track" +
+			crlf + "--------------------------6808b4f61ea0e5a2--" +
+			crlf)
+
+	var uploaded bool
+	service := &service{
+		upload: &fakeUploader{fn: func(*uploadTrackRequest) (*uploadTrackResponse, error) {
+			uploaded = true
+			return &uploadTrackResponse{}, nil
+		}},
+	}
+
+	req := &createTrackRequest{
+		boundary: "------------------------6808b4f61ea0e5a2",
+		request: func() *http.Request {
+			r := httptest.NewRequest(http.MethodPost, "/", bytes.NewReader(body))
+			return r
+		}(),
+	}
+
+	res, err := service.createTrack(req)
+	if err != nil {
+		t.Fatalf("Expected no error, got %v", err)
+	}
+
+	if !uploaded {
+		t.Errorf("Expected an upload, got none")
+	}
+
+	bs, _ := ioutil.ReadAll(res.request.Body)
+	if bytes.Contains(bs, []byte("track[asset_data]")) {
+		t.Errorf("Expected request request to be modified %s", bs)
+	}
+}
+
 func TestInvalidMultipart(t *testing.T) {
 	tests := [...]struct {
 		body     []byte
