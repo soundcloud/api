@@ -50,6 +50,25 @@ class TestIntegration(unittest.TestCase, assertions.Assertions):
         self.assertTrackOriginalFilename(res, 'test_chunk.wav')
         self.assertTrackUID(res)
 
+    def test_unescaped_filename_quotes(self):
+        asset = self.assets['1mb']
+        cmd = '''
+            curl --fail --verbose \
+                -H "Host: api.sc.local" \
+                -H "Transfer-Encoding: chunked" \
+                -H "X-Track-Asset-Uploads: true" \
+                -F 'track[asset_data]=@{};filename="a file "with quotes""' \
+                -F "track[title]=123" \
+                -F "oauth_token=s3cr3t_1" \
+                asset_uploads/tracks
+        '''.format(asset.name)
+        res = check_output(cmd, shell=True).decode('ascii')
+        self.assertAuthorization(res, 's3cr3t_1')
+        self.assertChecksum(res, asset.md5)
+        self.assertNoTrackAssetData(res)
+        self.assertRequest(res, 'POST', '/tracks')
+        self.assertTrackUID(res)
+
     def test_alternate_routes(self):
         paths = ["/v1/tracks/", "/tracks", "/tracks.json",
                 "/tracks.json/", "/users/123/tracks", "/tracks/2",

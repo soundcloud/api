@@ -8,6 +8,7 @@ import (
 	"log"
 	"mime/multipart"
 	"net/http"
+	"strings"
 
 	"github.com/prometheus/client_golang/prometheus"
 )
@@ -133,7 +134,7 @@ func (s service) rewriteMultipartRequest(r *http.Request, boundary string, fn re
 }
 
 func (s service) rewriteTrackPart(p *multipart.Part, w *multipart.Writer, header http.Header) error {
-	if p.FormName() == "track[asset_data]" {
+	if isTrackUpload(p) {
 		upload, err := s.uploadTrackAssetData(p, w)
 		if err != nil {
 			return err
@@ -145,6 +146,25 @@ func (s service) rewriteTrackPart(p *multipart.Part, w *multipart.Writer, header
 	}
 
 	return s.rewriteGenericPart(p, w, header)
+}
+
+func isTrackUpload(p *multipart.Part) bool {
+	if p.FormName() == "track[asset_data]" {
+		return true
+	}
+
+	// SoundCloud's Desktop Sharing Kit doesn't escape filenames correctly,
+	// which can result in an empty FormName here. Check the raw header value
+	// to see if this part contains track asset data.
+	if p.FormName() == "" {
+		header := p.Header["Content-Disposition"]
+		for _, val := range header {
+			if strings.Contains(val, `name="track[asset_data]"`) {
+				return true
+			}
+		}
+	}
+	return false
 }
 
 func (s service) rewriteGenericPart(p *multipart.Part, w *multipart.Writer, header http.Header) error {
@@ -206,6 +226,8 @@ func (s service) uploadTrackAssetData(p *multipart.Part, w *multipart.Writer) (*
 		return nil, err
 	}
 
+	// TODO: do we need to handle empty filenames here in case the header was
+	// invalid?
 	filename := p.FileName()
 	if _, err := o.Write([]byte(filename)); err != nil {
 		return nil, err
