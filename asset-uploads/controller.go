@@ -12,7 +12,6 @@ import (
 
 type controller struct {
 	maxRequestBytes int64
-	publicHostname  string
 	proxy           *httputil.ReverseProxy
 	service         serviceAPI
 }
@@ -83,13 +82,6 @@ func (c controller) dispatch(w http.ResponseWriter, r *http.Request, svc svcDisp
 	}
 
 	client := labelClient(r.Header.Get(http.CanonicalHeaderKey("Sc-System")))
-
-	if host := r.Host; host == "" || host != c.publicHostname {
-		log.Printf("rejected misdirected request due to unexpected hostname: %s %s (%s)", method, r.RequestURI, client)
-		requestsMisdirected.WithLabelValues(method, client, "unexpected hostname").Inc()
-		http.Error(w, emptyResponse, http.StatusMisdirectedRequest)
-		return
-	}
 
 	mt, params, err := mime.ParseMediaType(r.Header.Get("Content-Type"))
 	if err != nil {
