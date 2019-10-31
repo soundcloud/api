@@ -14,10 +14,10 @@ containers:
     containerPort: 8080
   resources:
     requests:
-      memory: {{ get "MEMORY_REQUEST" }}
+      memory: 3Gi
       cpu: 1
     limits:
-      memory: {{ get "MEMORY_LIMIT" }}
+      memory: 3Gi
   readinessProbe:
     httpGet:
       path: /-/health

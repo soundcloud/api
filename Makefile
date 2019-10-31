@@ -85,10 +85,7 @@ publish-deploy:
 		--ingress http://public-api.int.s-cloud.net:http \
 		--public-ingress http://api.soundcloud.com:http \
 		--glimpse http.strangler.prod.public-api \
-		--prometheus.port telemetry \
-		--strategy.rolling-update.max-surge 20% \
-		--set MEMORY_REQUEST=3172Mi \
-		--set MEMORY_LIMIT=3172Mi
+		--prometheus.port telemetry
 	sc artifact-manager deploy publish \
 		--zone=$(ZONE) \
 		--component="$(APITRACKUPLOAD_COMPONENT)" \
@@ -97,10 +94,7 @@ publish-deploy:
 		--ingress http://$(APP_NAME)-trackupload.$(ZONE).lb.s-cloud.net:http \
 		--public-ingress http://api.soundcloud.com:http \
 		--glimpse http.strangler-trackupload.prod.public-api \
-		--prometheus.port telemetry \
-		--strategy.rolling-update.max-surge 20% \
-		--set MEMORY_REQUEST=4196Mi \
-		--set MEMORY_LIMIT=4196Mi
+		--prometheus.port telemetry
 
 promote-to-stable:
 	sc artifact-manager promote stable
