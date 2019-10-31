@@ -54,7 +54,6 @@ func TestControllerServiceS3Integration(t *testing.T) {
 	proxy := httputil.NewSingleHostReverseProxy(url)
 
 	controller := &controller{
-		publicHostname:  "api.sc.local",
 		maxRequestBytes: 1024,
 		service:         service,
 		proxy:           proxy,

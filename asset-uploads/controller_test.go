@@ -62,9 +62,7 @@ func TestTracksRequiresHostname(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		controller := &controller{
-			publicHostname: "api.sc.local",
-		}
+		controller := &controller{}
 
 		res := httptest.NewRecorder()
 		req := httptest.NewRequest(tt.method, "/", nil)
@@ -92,9 +90,7 @@ func TestTracksRequiresContentType(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		controller := &controller{
-			publicHostname: "api.sc.local",
-		}
+		controller := &controller{}
 
 		res := httptest.NewRecorder()
 		req := httptest.NewRequest(tt.method, "/", nil)
@@ -113,7 +109,6 @@ func TestExceedsMaxContentLength(t *testing.T) {
 	randomBody := []byte{97, 97, 98, 101, 105, 110, 115, 115, 116}
 
 	controller := &controller{
-		publicHostname:  "api.sc.local",
 		maxRequestBytes: int64(len(randomBody)) - 1,
 	}
 
@@ -133,7 +128,6 @@ func TestTracksLimitsRequestSize(t *testing.T) {
 	randomBody := []byte{97, 97, 98, 101, 105, 110, 115, 115, 116}
 
 	controller := &controller{
-		publicHostname:  "api.sc.local",
 		maxRequestBytes: int64(len(randomBody) - 1),
 		service: &fakeService{
 			fn: func(r *createTrackRequest) (*createTrackResponse, error) {
@@ -162,7 +156,6 @@ func TestTracksLimitsRequestSize(t *testing.T) {
 
 func TestPassesMultipartBoundary(t *testing.T) {
 	controller := &controller{
-		publicHostname: "api.sc.local",
 		service: &fakeService{
 			fn: func(r *createTrackRequest) (*createTrackResponse, error) {
 				if want, got := "the-boundary", r.boundary; want != got {
@@ -184,7 +177,6 @@ func TestPassesMultipartBoundary(t *testing.T) {
 
 func TestFailingServiceCall(t *testing.T) {
 	controller := &controller{
-		publicHostname: "api.sc.local",
 		service: &fakeService{
 			fn: func(r *createTrackRequest) (*createTrackResponse, error) {
 				return nil, errors.New("This failed")
@@ -221,7 +213,6 @@ func TestSuccessfulServiceCall(t *testing.T) {
 	body := []byte("test123")
 
 	controller := &controller{
-		publicHostname:  "api.sc.local",
 		maxRequestBytes: int64(len(body)),
 		service: &fakeService{
 			fn: func(r *createTrackRequest) (*createTrackResponse, error) {
