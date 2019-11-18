@@ -51,7 +51,6 @@ class Track(jsonValue: JsValue,
   val likes_count: Option[Any] = likesByUrn.get(urn)
 
   // deprecated fields, kept for structure only
-  val attachments_uri: Option[String] = None
   val bpm = None
   val key_signature: Option[String] = None
   // Option[Any] so we can override with an embedded attribute when calling Liebling

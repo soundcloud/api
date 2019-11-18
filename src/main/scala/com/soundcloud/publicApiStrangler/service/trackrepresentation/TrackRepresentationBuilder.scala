@@ -60,7 +60,6 @@ class TrackRepresentationBuilder {
     }
     rep = TrackRepresentationQuotaDecorator(track.downloadable, downloadsPerTrack, counts.download_count, userIsOwner, rep)
     rep = TrackRepresentationWaveformUrlDecorator(waveformUrl, rep)
-    rep = TrackRepresentationAttachmentsUriDecorator(track.urn, rep) // TODO: make conditional on representation type
     rep
   }
 }
