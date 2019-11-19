@@ -119,7 +119,6 @@ object App {
       customHandlers = List(
         (Method.Get, rateLimitingFacade.diagnosticsEndpoint, rateLimitingFacade.rateLimitingDiagnosticsAdminHandler.handle)
       ),
-      rollout = clients.rollout,
       exceptionCollector = exceptionCollector,
       applicationRouter = Some(router)
     ).start()
