@@ -2,7 +2,6 @@ package com.soundcloud.publicApiStrangler.service.trackrepresentation
 
 import java.net.URLEncoder
 
-import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.publicApiStrangler.client.media.TrackWaveformUrl
 import com.soundcloud.publicApiStrangler.client.mothership.response.representation.{Geoblockings, User}
 import com.soundcloud.publicApiStrangler.client.mothership.{DomainLocking, TrackAudioMetadata}
@@ -23,7 +22,6 @@ object TrackRepresentationLike {
     case t: TrackRepresentationUserFavoriteDecorator => TrackRepresentationUserFavoriteDecorator.writes.writes(t)
     case t: TrackRepresentationUserPlaybackCountDecorator => TrackRepresentationUserPlaybackCountDecorator.writes.writes(t)
     case t: TrackRepresentationWaveformUrlDecorator => TrackRepresentationWaveformUrlDecorator.writes.writes(t)
-    case t: TrackRepresentationAttachmentsUriDecorator => TrackRepresentationAttachmentsUriDecorator.writes.writes(t)
     case t: TrackRepresentationSecretTokenUriParamDecorator => TrackRepresentationSecretTokenUriParamDecorator.writes.writes(t)
     case t: TrackRepresentationQuotaDecorator => TrackRepresentationQuotaDecorator.writes.writes(t)
     case t: TrackRepresentationCountsDecorator => TrackRepresentationCountsDecorator.writes.writes(t)
@@ -166,20 +164,6 @@ object TrackRepresentationWaveformUrlDecorator {
   implicit val writes = Writes[TrackRepresentationWaveformUrlDecorator] { dec =>
     val attribute = Json.obj("waveform_url" -> dec.waveformUrl.pngUrl.s)
     Json.toJson(dec.wrapped).as[JsObject] ++ attribute
-  }
-}
-
-case class TrackRepresentationAttachmentsUriDecorator(
-                                                       trackUrn: Urn,
-                                                       wrapped: TrackRepresentationLike
-                                                     ) extends TrackRepresentationLike
-
-object TrackRepresentationAttachmentsUriDecorator {
-  implicit val writes = Writes[TrackRepresentationAttachmentsUriDecorator] { dec =>
-    val id = dec.trackUrn.identifier
-    Json.toJson(dec.wrapped).as[JsObject] ++ Json.obj(
-      "attachments_uri" -> s"https://api.soundcloud.com/tracks/${id}/attachments"
-    )
   }
 }
 

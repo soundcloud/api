@@ -315,21 +315,6 @@ class TrackRepresentationWaveformUrlDecoratorSpec extends UnitSpecification {
   }
 }
 
-class TrackRepresentationAttachmentsUriDecoratorSpec extends UnitSpecification {
-
-  trait Context extends Scope with TrackRepresentationLikeSpecContext {
-    implicit val writes = TrackRepresentationAttachmentsUriDecorator.writes
-    val wrapped: TrackRepresentationLike = createTrackRepresentation()
-  }
-
-  "adds the attachments URI" in new Context {
-    val decorator = TrackRepresentationAttachmentsUriDecorator(trackUrn, wrapped)
-    val json = Json.toJson(decorator)
-
-    (json \ "attachments_uri").as[String] ==== "https://api.soundcloud.com/tracks/1324/attachments"
-  }
-}
-
 class TrackRepresentationSecretTokenUriParamDecoratorSpec extends UnitSpecification {
   "when all URL fields are present" >> {
     trait UrlsPresentContext extends Scope with TrackRepresentationLikeSpecContext {

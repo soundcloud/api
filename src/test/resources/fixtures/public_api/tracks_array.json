@@ -1,7 +1,6 @@
 [
     {
         "artwork_url": "https://i1.sndcdn.com/artworks-000024916496-q9opo6-large.jpg?e76cf77",
-        "attachments_uri": "https://api.soundcloud.com/tracks/49438146/attachments",
         "bpm": 121.0,
         "comment_count": 329,
         "commentable": true,
@@ -62,7 +61,6 @@
     },
     {
         "artwork_url": "https://i1.sndcdn.com/artworks-000024916399-ov6bex-large.jpg?e76cf77",
-        "attachments_uri": "https://api.soundcloud.com/tracks/49437906/attachments",
         "bpm": null,
         "comment_count": 73,
         "commentable": true,
@@ -123,7 +121,6 @@
     },
     {
         "artwork_url": "https://i1.sndcdn.com/artworks-000024190525-pv7oaf-large.jpg?e76cf77",
-        "attachments_uri": "https://api.soundcloud.com/tracks/48031525/attachments",
         "bpm": null,
         "comment_count": 103,
         "commentable": true,

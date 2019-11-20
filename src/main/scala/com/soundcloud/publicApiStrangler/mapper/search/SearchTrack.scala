@@ -47,7 +47,6 @@ class SearchTrack(session: UserSession,
   @JsonIgnore
   override val user_uri = ""
   override val release = (json \ "release").asOpt[String].orElse(Some(""))
-  override val attachments_uri = Some(uri + "/attachments")
   override val waveform_url = fetchWaveformUrl.orElse((json \ "waveform_url").asOpt[String])
   override val video_url = (json \ "video_url").asOpt[String]
   override val streamable = (json \ "api_streamable").asOpt[Boolean]
