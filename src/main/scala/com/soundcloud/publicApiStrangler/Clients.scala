@@ -98,7 +98,7 @@ class Clients(config: AppConfig, telemetry: Telemetry) {
   val mediaServiceClient = new MediaServiceClient(jsonClient("media_service"))
 
   val trackAccessRecorderService = new TrackAccessRecorderService(
-    new TrackAccessRecorderClient(jsonClient("track_access_recorder")))
+    new TrackAccessRecorderClient(jsonClient("track_access_recorder")), telemetry)
 
   // Whitelist source: http://redash.int.s-cloud.net/queries/632/source
   private val whitelistedClients: Set[Urn] = Set(
