@@ -12,7 +12,6 @@ import com.soundcloud.publicApiStrangler.mapper.timeline.representation.Timeline
 import com.twitter.util.Future
 
 trait TimelineMapper extends Mapper[CursorBasedPage[Urn], Timeline] {
-
   def fetch(session: UserSession, page: CursorBasedPage[Urn])(implicit context: MappingContext): Future[Timeline]
 
   protected def clientCursorParam(page: CursorBasedPage[Urn]): (Option[UUID], Boolean) = {
@@ -24,15 +23,17 @@ trait TimelineMapper extends Mapper[CursorBasedPage[Urn], Timeline] {
     }
   }
 
-  override def map(session: UserSession,
-                   inputs: Set[CursorBasedPage[Urn]])(implicit context: MappingContext): Future[Map[CursorBasedPage[Urn], Timeline]] = {
-    Future.collect(
-      inputs.toSeq.map { i =>
-        fetch(session, i).map { o =>
-          i -> o
+  override def map(session: UserSession, inputs: Set[CursorBasedPage[Urn]])(
+      implicit context: MappingContext
+  ): Future[Map[CursorBasedPage[Urn], Timeline]] = {
+    Future
+      .collect(
+        inputs.toSeq.map { i =>
+          fetch(session, i).map { o =>
+            i -> o
+          }
         }
-      }
-    ).map(_.toMap)
+      )
+      .map(_.toMap)
   }
-
 }

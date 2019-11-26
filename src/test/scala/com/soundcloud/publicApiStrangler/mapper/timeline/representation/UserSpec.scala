@@ -22,8 +22,7 @@ class UserSpec extends UnitSpecification {
   }
 
   "it serializes" in new Scope {
-    Json.toJson(user) ==== Json.parse(
-      """
+    Json.toJson(user) ==== Json.parse("""
         |{
         |  "avatar_url": "https://i1.sndcdn.com/avatars-000186314139-46cthb-large.jpg",
         |  "id": 123,

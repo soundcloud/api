@@ -7,16 +7,14 @@ import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.publicApiStrangler.mapper.timeline.representation.TimelineItem
 import play.api.libs.json.JsValue
 
-class TimelineItemWithOrigin(jsonValue: JsValue,
-                             entityMapper: EntityMapper,
-                             entitySummaryMapper: EntitySummaryMapper)(implicit context: MappingContext)
-  extends JsonMapping(jsonValue) with TimelineItem {
-
+class TimelineItemWithOrigin(jsonValue: JsValue, entityMapper: EntityMapper, entitySummaryMapper: EntitySummaryMapper)(
+    implicit context: MappingContext
+) extends JsonMapping(jsonValue)
+    with TimelineItem {
   val origin = entityMapper.embed(originUrn)
 
   // deprecated fields, kept for structure only
   val tags = None
-
 
   private def originUrn = {
     (json \ "urn").as[Urn] match {

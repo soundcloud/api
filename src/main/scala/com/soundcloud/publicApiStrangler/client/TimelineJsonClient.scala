@@ -11,13 +11,18 @@ import com.twitter.util.Future
 import play.api.libs.json._
 
 class TimelineJsonClient(service: JsonClient) extends FetchClient {
-
   /*
    * Fetches the stream as items
    *
    * The reverseCursor parameter allows fetching items *before* a given cursor, if set to true
    */
-  def itemStream(session: UserSession, cursor: Option[String], pageSize: Int = 50, reverseCursor: Boolean = false, cursorEncoding: Option[String] = None): Future[JsObject] =
+  def itemStream(
+      session: UserSession,
+      cursor: Option[String],
+      pageSize: Int = 50,
+      reverseCursor: Boolean = false,
+      cursorEncoding: Option[String] = None
+  ): Future[JsObject] =
     fetch(
       service,
       session,
@@ -31,7 +36,13 @@ class TimelineJsonClient(service: JsonClient) extends FetchClient {
    *
    * The reverseCursor parameter allows fetching items *before* a given cursor, if set to true
    */
-  def stream(session: UserSession, cursor: Option[String], pageSize: Int = 50, reverseCursor: Boolean = false, cursorEncoding: Option[String] = None): Future[JsObject] =
+  def stream(
+      session: UserSession,
+      cursor: Option[String],
+      pageSize: Int = 50,
+      reverseCursor: Boolean = false,
+      cursorEncoding: Option[String] = None
+  ): Future[JsObject] =
     fetch(
       service,
       session,
@@ -45,7 +56,13 @@ class TimelineJsonClient(service: JsonClient) extends FetchClient {
    *
    * The reverseCursor parameter allows fetching items *before* a given cursor, if set to true
    */
-  def activities(session: UserSession, cursor: Option[String], pageSize: Int = 50, reverseCursor: Boolean = false, cursorEncoding: Option[String] = None): Future[JsObject] =
+  def activities(
+      session: UserSession,
+      cursor: Option[String],
+      pageSize: Int = 50,
+      reverseCursor: Boolean = false,
+      cursorEncoding: Option[String] = None
+  ): Future[JsObject] =
     fetch(
       service,
       session,
@@ -54,7 +71,14 @@ class TimelineJsonClient(service: JsonClient) extends FetchClient {
       Headers.empty
     ).map(SingleItem(_))
 
-  def profile(session: UserSession, user: Urn, cursor: Option[String], pageSize: Int = 50, reverseCursor: Boolean = false, cursorEncoding: Option[String] = None): Future[JsObject] =
+  def profile(
+      session: UserSession,
+      user: Urn,
+      cursor: Option[String],
+      pageSize: Int = 50,
+      reverseCursor: Boolean = false,
+      cursorEncoding: Option[String] = None
+  ): Future[JsObject] =
     fetch(
       service,
       session,
@@ -63,7 +87,14 @@ class TimelineJsonClient(service: JsonClient) extends FetchClient {
       Headers.empty
     ).map(SingleItem(_))
 
-  def postedAndRepostedTracks(session: UserSession, user: Urn, cursor: Option[String], pageSize: Int = 50, reverseCursor: Boolean = false, cursorEncoding: Option[String] = None): Future[JsObject] =
+  def postedAndRepostedTracks(
+      session: UserSession,
+      user: Urn,
+      cursor: Option[String],
+      pageSize: Int = 50,
+      reverseCursor: Boolean = false,
+      cursorEncoding: Option[String] = None
+  ): Future[JsObject] =
     fetch(
       service,
       session,
@@ -72,7 +103,14 @@ class TimelineJsonClient(service: JsonClient) extends FetchClient {
       Headers.empty
     ).map(SingleItem(_))
 
-  def postedAndRepostedPlaylists(session: UserSession, user: Urn, cursor: Option[String], pageSize: Int = 50, reverseCursor: Boolean = false, cursorEncoding: Option[String] = None): Future[JsObject] =
+  def postedAndRepostedPlaylists(
+      session: UserSession,
+      user: Urn,
+      cursor: Option[String],
+      pageSize: Int = 50,
+      reverseCursor: Boolean = false,
+      cursorEncoding: Option[String] = None
+  ): Future[JsObject] =
     fetch(
       service,
       session,
@@ -81,7 +119,14 @@ class TimelineJsonClient(service: JsonClient) extends FetchClient {
       Headers.empty
     ).map(SingleItem(_))
 
-  def postedAndLikedPlaylists(session: UserSession, user: Urn, cursor: Option[String], pageSize: Int = 50, reverseCursor: Boolean = false, cursorEncoding: Option[String] = None): Future[JsObject] =
+  def postedAndLikedPlaylists(
+      session: UserSession,
+      user: Urn,
+      cursor: Option[String],
+      pageSize: Int = 50,
+      reverseCursor: Boolean = false,
+      cursorEncoding: Option[String] = None
+  ): Future[JsObject] =
     fetch(
       service,
       session,
@@ -90,7 +135,14 @@ class TimelineJsonClient(service: JsonClient) extends FetchClient {
       Headers.empty
     ).map(SingleItem(_))
 
-  def reposts(session: UserSession, user: Urn, cursor: Option[String], pageSize: Int = 50, reverseCursor: Boolean = false, cursorEncoding: Option[String] = None): Future[JsObject] =
+  def reposts(
+      session: UserSession,
+      user: Urn,
+      cursor: Option[String],
+      pageSize: Int = 50,
+      reverseCursor: Boolean = false,
+      cursorEncoding: Option[String] = None
+  ): Future[JsObject] =
     fetch(
       service,
       session,
@@ -99,7 +151,14 @@ class TimelineJsonClient(service: JsonClient) extends FetchClient {
       Headers.empty
     ).map(SingleItem(_))
 
-  def likes(session: UserSession, user: Urn, cursor: Option[String], pageSize: Int = 50, reverseCursor: Boolean = false, cursorEncoding: Option[String] = None): Future[JsObject] =
+  def likes(
+      session: UserSession,
+      user: Urn,
+      cursor: Option[String],
+      pageSize: Int = 50,
+      reverseCursor: Boolean = false,
+      cursorEncoding: Option[String] = None
+  ): Future[JsObject] =
     fetch(
       service,
       session,
@@ -113,7 +172,13 @@ class TimelineJsonClient(service: JsonClient) extends FetchClient {
    *
    * The reverseCursor parameter allows fetching items *before* a given cursor, if set to true
    */
-  def followingsTracks(session: UserSession, cursor: Option[String], pageSize: Int = 50, reverseCursor: Boolean = false, cursorEncoding: Option[String] = None): Future[JsObject] = {
+  def followingsTracks(
+      session: UserSession,
+      cursor: Option[String],
+      pageSize: Int = 50,
+      reverseCursor: Boolean = false,
+      cursorEncoding: Option[String] = None
+  ): Future[JsObject] = {
     val noPaging = JsObject(Seq())
 
     def tracksOnly(stream: JsObject) = {
@@ -130,7 +195,12 @@ class TimelineJsonClient(service: JsonClient) extends FetchClient {
     }
   }
 
-  private def paramsFor(cursor: Option[String], pageSize: Int, reverseCursor: Boolean, cursorEncoding: Option[String]): Params = {
+  private def paramsFor(
+      cursor: Option[String],
+      pageSize: Int,
+      reverseCursor: Boolean,
+      cursorEncoding: Option[String]
+  ): Params = {
     val params = Map("page_size" -> pageSize.toString) ++ cursorEncoding.map("cursor_encoding" -> _)
     cursor match {
       case Some(cursor: String) =>
@@ -144,7 +214,9 @@ class TimelineJsonClient(service: JsonClient) extends FetchClient {
   }
 
   private def invalidResponse(response: Response): Nothing = {
-    throw new IllegalStateException(s"Invalid response: status=${response.statusCode},body=${response.contentString},headers=${response.headerMap}")
+    throw new IllegalStateException(
+      s"Invalid response: status=${response.statusCode},body=${response.contentString},headers=${response.headerMap}"
+    )
   }
 
   object OptionalSingleItem {
@@ -160,5 +232,4 @@ class TimelineJsonClient(service: JsonClient) extends FetchClient {
   object SingleItem {
     def apply(response: Response): JsObject = OptionalSingleItem(response).getOrElse(invalidResponse(response))
   }
-
 }

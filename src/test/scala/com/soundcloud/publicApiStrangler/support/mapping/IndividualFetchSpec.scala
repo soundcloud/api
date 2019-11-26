@@ -7,21 +7,20 @@ import com.soundcloud.jvmkit.module.util.Urn; import com.soundcloud.jvmkit.modul
 import com.twitter.util.{Await, Future}
 
 class IndividualFetchSpec extends UnitSpecification {
-
   "#map" >> {
-
     trait Context extends Scope {
       implicit val mappingContext = mock[MappingContext]
     }
 
     "there is only one input" >> {
       trait TestContext extends Context {
-
         val urn = Urn("soundcloud", "tracks", "1")
         val expectedResult = new Mapping {}
 
         val mapper = new Mapper[Urn, Mapping] with InputValidation[Urn, Mapping] with IndividualFetch[Urn, Mapping] {
-          override def mapSingleInput(session: UserSession, input: Urn)(implicit context: MappingContext): Future[Mapping] = {
+          override def mapSingleInput(session: UserSession, input: Urn)(
+              implicit context: MappingContext
+          ): Future[Mapping] = {
             input ==== urn
             Future.value(expectedResult)
           }
@@ -35,14 +34,15 @@ class IndividualFetchSpec extends UnitSpecification {
 
     "there are multiple inputs" >> {
       trait TestContext extends Context {
-
         val urn1 = Urn("soundcloud", "tracks", "1")
         val urn2 = Urn("soundcloud", "tracks", "2")
         val urn3 = Urn("soundcloud", "tracks", "3")
         val expectedResult = new Mapping {}
 
         val mapper = new Mapper[Urn, Mapping] with InputValidation[Urn, Mapping] with IndividualFetch[Urn, Mapping] {
-          override def mapSingleInput(session: UserSession, input: Urn)(implicit context: MappingContext): Future[Mapping] = {
+          override def mapSingleInput(session: UserSession, input: Urn)(
+              implicit context: MappingContext
+          ): Future[Mapping] = {
             Future.value(expectedResult)
           }
         }

@@ -17,9 +17,7 @@ class Reason(val name: String) {
   override def toString: String = name
 }
 
-
 object Reason {
-
   /**
     * It is not known why the policies and restrictions exist.
     */
@@ -69,5 +67,3 @@ object Reason {
 
   def values = List(UNKNOWN, GEO, RIGHTSHOLDER_RESTRICTED, DEFAULT, USER, CLIENT_APPLICATION, NOT_SUPPORTED)
 }
-
-

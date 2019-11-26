@@ -5,13 +5,14 @@ import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.publicApiStrangler.mapper.timeline.EntitySummaryMapper
 import play.api.libs.json.JsValue
 
-class Playlist(jsonValue: JsValue,
-               likesByUrn: Map[Urn, Long],
-               repostCountsByUrn: Map[Urn, Long],
-               baseUrl: String,
-               entitySummaryMapper: EntitySummaryMapper)(implicit context: MappingContext)
-  extends PlaylistSummary(jsonValue, repostCountsByUrn, baseUrl, entitySummaryMapper) {
-
+class Playlist(
+    jsonValue: JsValue,
+    likesByUrn: Map[Urn, Long],
+    repostCountsByUrn: Map[Urn, Long],
+    baseUrl: String,
+    entitySummaryMapper: EntitySummaryMapper
+)(implicit context: MappingContext)
+    extends PlaylistSummary(jsonValue, repostCountsByUrn, baseUrl, entitySummaryMapper) {
   val likes_count: Option[Any] = likesByUrn.get(urn)
 
   // deprecated fields, kept for structure only
@@ -22,5 +23,4 @@ class Playlist(jsonValue: JsValue,
   val ean = None
   val purchase_title = None
   val created_with = None
-
 }

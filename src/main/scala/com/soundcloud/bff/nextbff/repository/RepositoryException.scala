@@ -7,6 +7,7 @@ case class RepositoryException(status: Status, message: String) extends Exceptio
 object RepositoryException {
   def apply(response: Response) =
     new RepositoryException(
-      response.status, s"invalid response received: [status=${response.statusCode}, body=${response.contentString}]"
+      response.status,
+      s"invalid response received: [status=${response.statusCode}, body=${response.contentString}]"
     )
 }

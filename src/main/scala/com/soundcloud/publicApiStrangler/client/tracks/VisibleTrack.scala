@@ -7,13 +7,15 @@ import org.joda.time.DateTime
 import play.api.libs.json.JodaReads._
 import play.api.libs.json._
 
-case class VisibleTrack(urn : Urn,
-                        userUrn: Urn,
-                        uid: Option[String],
-                        apiStreamable: Option[Boolean],
-                        downloadable: Boolean,
-                        disabledAt: Option[DateTime],
-                        authorization: ContentAuthorization)
+case class VisibleTrack(
+    urn: Urn,
+    userUrn: Urn,
+    uid: Option[String],
+    apiStreamable: Option[Boolean],
+    downloadable: Boolean,
+    disabledAt: Option[DateTime],
+    authorization: ContentAuthorization
+)
 
 object VisibleTrack {
   implicit val reads: Reads[VisibleTrack] = Reads { json =>
@@ -30,7 +32,7 @@ object VisibleTrack {
             (json \ "urn").as[Urn],
             ContentPolicy.from((json \ "authorization" \ "policy").as[String]),
             Reason.from((json \ "authorization" \ "reason").as[String]),
-            MonetizationModel.from((json \ "authorization" \ "monetizationModel").as[String]),
+            MonetizationModel.from((json \ "authorization" \ "monetizationModel").as[String])
           )
         )
       )

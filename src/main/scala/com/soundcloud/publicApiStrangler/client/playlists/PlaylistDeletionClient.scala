@@ -12,14 +12,16 @@ import scala.util.control.NonFatal
 
 class PlaylistDeletionClient(jsonClient: JsonClient) {
   def deletePlaylist(session: UserSession, urn: Urn): Future[Result[Status]] = {
-    jsonClient.deleteWithSession(
-      session,
-      Path() / "playlists" / urn,
-      Params.empty,
-      Headers.empty,
-      None
-    ).map {
-      response => Good(response.status)
-    } handle { case NonFatal(_) => Bad(StringError("Unhandled exception when deleting playlist.")) }
+    jsonClient
+      .deleteWithSession(
+        session,
+        Path() / "playlists" / urn,
+        Params.empty,
+        Headers.empty,
+        None
+      )
+      .map { response =>
+        Good(response.status)
+      } handle { case NonFatal(_) => Bad(StringError("Unhandled exception when deleting playlist.")) }
   }
 }

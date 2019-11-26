@@ -3,7 +3,6 @@ package com.soundcloud.publicApiStrangler.support
 import com.soundcloud.publicApiStrangler.test.UnitSpecification
 
 class RangeHelperSpec extends UnitSpecification {
-
   "#isRequestingFirstByte" >> {
     "it returns false when the range does not start with 0" in new Scope {
       RangeHelper.isRequestingFirstByte("bytes=200-399") ==== false

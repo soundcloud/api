@@ -1,7 +1,6 @@
 package com.soundcloud.publicApiStrangler.client.trackmetadata
 
-sealed abstract class EmbeddingPermission(stringValue: String)
-  extends EnumValue[EmbeddingPermission](stringValue)
+sealed abstract class EmbeddingPermission(stringValue: String) extends EnumValue[EmbeddingPermission](stringValue)
 
 object EmbeddingPermission extends Enum[EmbeddingPermission] {
   case object All extends EmbeddingPermission("all")

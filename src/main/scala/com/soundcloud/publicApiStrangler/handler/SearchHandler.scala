@@ -16,16 +16,17 @@ import com.twitter.util.{Future, Return, Try}
 /**
   * Redirects search queries on to search-dispatcher and fetches meta data.
   */
-class SearchHandler(userAuthentication: UserAuthentication,
-                    mothershipDispatcher: DispatchToMothershipHandler,
-                    mothershipCounter: Counter,
-                    followCountsClient: FollowCountsClient,
-                    searchMapper: SearchMapper,
-                    baseUrl: String,
-                    lieblingClient: LieblingClient,
-                    userRelatedMothershipDispatcher: UserRelatedMothershipDispatcher,
-                    trackMothershipDispatcherWithCounts: TrackMothershipDispatcherWithCounts) {
-
+class SearchHandler(
+    userAuthentication: UserAuthentication,
+    mothershipDispatcher: DispatchToMothershipHandler,
+    mothershipCounter: Counter,
+    followCountsClient: FollowCountsClient,
+    searchMapper: SearchMapper,
+    baseUrl: String,
+    lieblingClient: LieblingClient,
+    userRelatedMothershipDispatcher: UserRelatedMothershipDispatcher,
+    trackMothershipDispatcherWithCounts: TrackMothershipDispatcherWithCounts
+) {
   def dispatchUserRequest = dispatchRequest(
     defaultParams,
     SearchDispatcherRequest.userSearch,
@@ -36,7 +37,6 @@ class SearchHandler(userAuthentication: UserAuthentication,
     playlistParams,
     SearchDispatcherRequest.playlistSearch
   )
-
 
   def dispatchTrackRequest = {
     dispatchRequest(
@@ -50,9 +50,11 @@ class SearchHandler(userAuthentication: UserAuthentication,
     * Perform a search for tracks. Logic to determine whether this is a search
     * and if we should forward the request to Mothership.
     */
-  private def dispatchRequest(searchParams: Set[String],
-                              makeRequest: HandlerRequest => SearchDispatcherRequest,
-                              mothershipDispatcherFn: Handler = mothershipDispatcher.dispatch): Handler = { request =>
+  private def dispatchRequest(
+      searchParams: Set[String],
+      makeRequest: HandlerRequest => SearchDispatcherRequest,
+      mothershipDispatcherFn: Handler = mothershipDispatcher.dispatch
+  ): Handler = { request =>
     if (isSearchRequest(request.params, searchParams)) {
       search(request, makeRequest(request))
     } else {
@@ -72,31 +74,31 @@ class SearchHandler(userAuthentication: UserAuthentication,
     }
   }
 
+  private def search(request: HandlerRequest, searchRequest: SearchDispatcherRequest): Future[Response] = {
+    userAuthentication
+      .withUserSession(request) { session =>
+        val validPagination = for {
+          o <- validateParam(request, "offset", _ >= 0)
+          l <- validateParam(request, "limit", _ > 0)
+        } yield o && l
 
-  private def search(request: HandlerRequest,
-                     searchRequest: SearchDispatcherRequest): Future[Response] = {
-    userAuthentication.withUserSession(request) { session =>
-      val validPagination = for {
-        o <- validateParam(request, "offset", _ >= 0)
-        l <- validateParam(request, "limit", _ > 0)
-      } yield o && l
+        validPagination match {
+          case Return(true) =>
+            val page = PageBuilder(request, baseUrl)(searchRequest)
+              .allowExtraParams(searchRequest.paginationParams + SearchMapper.LinkedPartitioning)
+              .buildOffsetBased()
+            searchMapper.materialize(session, page).map {
+              case Some(info) => JsonResponseBuilder.ok(UntypedJson.write(info))
+              case _ => ResponseBuilder.notFound()
+            } handle {
+              case RepositoryException(Status.BadRequest, _) =>
+                ResponseBuilder.badRequest()
+            }
 
-      validPagination match {
-        case Return(true) =>
-          val page = PageBuilder(request, baseUrl)(searchRequest)
-            .allowExtraParams(searchRequest.paginationParams + SearchMapper.LinkedPartitioning)
-            .buildOffsetBased()
-          searchMapper.materialize(session, page).map {
-            case Some(info) => JsonResponseBuilder.ok(UntypedJson.write(info))
-            case _ => ResponseBuilder.notFound()
-          } handle {
-            case RepositoryException(Status.BadRequest, _) =>
-              ResponseBuilder.badRequest()
-          }
-
-        case _ => Future.value(ResponseBuilder.badRequest())
+          case _ => Future.value(ResponseBuilder.badRequest())
+        }
       }
-    }.map(appendCacheHeaders(_))
+      .map(appendCacheHeaders(_))
   }
 
   private def appendCacheHeaders(response: Response) = {
@@ -105,11 +107,9 @@ class SearchHandler(userAuthentication: UserAuthentication,
   }
 }
 
-
 object SearchHandler {
   val MaxCacheAge = 60
   val defaultParams = Set("q")
   val playlistParams = Set("q", "license")
   val trackParams = Set("q", "genres", "tags", "license")
 }
-

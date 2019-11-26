@@ -9,7 +9,6 @@ import org.mockito.Mockito.when
 import org.specs2.mutable.Before
 
 class MappingContextSpec extends UnitSpecification {
-
   trait AttachContext extends Scope {
     val session = mock[UserSession]
     implicit val context = new MappingContext(session)

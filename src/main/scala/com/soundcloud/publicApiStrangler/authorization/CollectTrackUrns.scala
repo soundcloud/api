@@ -6,10 +6,9 @@ import play.api.libs.json.Json
 import scala.collection.mutable.ListBuffer
 
 object CollectTrackUrns {
-
   def apply(content: String): Option[(TracksVisitor, List[Urn])] =
-    visitorFor(content).map {
-      visitor => (visitor, extractUrns(visitor))
+    visitorFor(content).map { visitor =>
+      (visitor, extractUrns(visitor))
     }
 
   private def visitorFor(content: String) =

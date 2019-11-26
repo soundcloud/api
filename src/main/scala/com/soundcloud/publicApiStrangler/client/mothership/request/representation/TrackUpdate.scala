@@ -2,28 +2,30 @@ package com.soundcloud.publicApiStrangler.client.mothership.request.representati
 
 import play.api.libs.json._
 
-case class TrackUpdate(api_streamable: Option[Boolean],
-                       commentable: Option[Boolean],
-                       description: Option[String],
-                       downloadable: Option[Boolean],
-                       embeddable: Option[Boolean],
-                       feedable: Option[Boolean],
-                       genre: Option[String],
-                       label_name: Option[String],
-                       license: Option[String],
-                       published_at: NullableValue[String],
-                       permalink: String,
-                       purchase_title: Option[String],
-                       purchase_url: Option[String],
-                       release_date: Option[String],
-                       reveal_comments: Option[Boolean],
-                       reveal_stats: Option[Boolean],
-                       sharing: Option[String],
-                       tag_list: Option[String],
-                       title: String,
-                       replacing_uid: Option[String],
-                       replacing_original_filename: Option[String],
-                       artwork_from_s3: NullableValue[S3Artwork])
+case class TrackUpdate(
+    api_streamable: Option[Boolean],
+    commentable: Option[Boolean],
+    description: Option[String],
+    downloadable: Option[Boolean],
+    embeddable: Option[Boolean],
+    feedable: Option[Boolean],
+    genre: Option[String],
+    label_name: Option[String],
+    license: Option[String],
+    published_at: NullableValue[String],
+    permalink: String,
+    purchase_title: Option[String],
+    purchase_url: Option[String],
+    release_date: Option[String],
+    reveal_comments: Option[Boolean],
+    reveal_stats: Option[Boolean],
+    sharing: Option[String],
+    tag_list: Option[String],
+    title: String,
+    replacing_uid: Option[String],
+    replacing_original_filename: Option[String],
+    artwork_from_s3: NullableValue[S3Artwork]
+)
 
 object TrackUpdate {
   implicit val format = new Format[TrackUpdate] {
@@ -48,7 +50,8 @@ object TrackUpdate {
         "tag_list" -> Json.toJson(o.tag_list),
         "title" -> Json.toJson(o.title),
         "replacing_uid" -> Json.toJson(o.replacing_uid),
-        "replacing_original_filename" -> Json.toJson(o.replacing_original_filename))
+        "replacing_original_filename" -> Json.toJson(o.replacing_original_filename)
+      )
 
       val artwork = o.artwork_from_s3.toOptionalJsValue.fold(Json.obj())(jsVal => Json.obj("artwork_from_s3" -> jsVal))
       val publishedAt = o.published_at.toOptionalJsValue.fold(Json.obj())(jsVal => Json.obj("published_at" -> jsVal))

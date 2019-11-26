@@ -41,12 +41,18 @@ class LieblingClient(jsonClient: JsonClient) extends FetchClient {
       }
   }
 
-  def userLikeCounts(session: UserSession, targetUrns: Seq[Urn], user: Urn, batchSize: Int = 25): Future[UserLikesCount] = {
-    val fetch: (Seq[Urn]) => Future[UserLikesCount] = batch => fetchLikes(
-      session,
-      Path() / "likes_info",
-      Map("for_urns" -> batch, "includes" -> "likes_counts,liked_track_urns", "user_urn" -> user)
-    ).map(_.as[UserLikesCount])
+  def userLikeCounts(
+      session: UserSession,
+      targetUrns: Seq[Urn],
+      user: Urn,
+      batchSize: Int = 25
+  ): Future[UserLikesCount] = {
+    val fetch: (Seq[Urn]) => Future[UserLikesCount] = batch =>
+      fetchLikes(
+        session,
+        Path() / "likes_info",
+        Map("for_urns" -> batch, "includes" -> "likes_counts,liked_track_urns", "user_urn" -> user)
+      ).map(_.as[UserLikesCount])
     val combine: (UserLikesCount, UserLikesCount) => UserLikesCount = {
       case (ulc1, ulc2) =>
         UserLikesCount(
@@ -60,15 +66,27 @@ class LieblingClient(jsonClient: JsonClient) extends FetchClient {
   /**
     * Returns a map of track urn to boolean indicating if the provided user has liked that track or not.
     */
-  def userLikedTracks(session: UserSession, trackUrns: Set[Urn], user: Urn, batchSize: Int = 25): Future[Map[Urn, Boolean]] = {
+  def userLikedTracks(
+      session: UserSession,
+      trackUrns: Set[Urn],
+      user: Urn,
+      batchSize: Int = 25
+  ): Future[Map[Urn, Boolean]] = {
     // initialize all track urns as not liked
     val defaultLikes = trackUrns.map((_ -> false)).toMap
-    userLikeCounts(session, trackUrns.toSeq, user, batchSize).map(userLikeCounts => {
-      userLikeCounts.liked_track_urns.map((_ -> true)).toMap
-    }).map(defaultLikes ++ _)
+    userLikeCounts(session, trackUrns.toSeq, user, batchSize)
+      .map(userLikeCounts => {
+        userLikeCounts.liked_track_urns.map((_ -> true)).toMap
+      })
+      .map(defaultLikes ++ _)
   }
 
-  private def fetchLikes(session: UserSession, path: Path, params: Params, headers: Headers = Headers.empty): Future[JsObject] =
+  private def fetchLikes(
+      session: UserSession,
+      path: Path,
+      params: Params,
+      headers: Headers = Headers.empty
+  ): Future[JsObject] =
     fetch(
       jsonClient,
       session,
@@ -77,12 +95,14 @@ class LieblingClient(jsonClient: JsonClient) extends FetchClient {
       headers
     ).map(ResponseHandlers.SingleItem(_))
 
-  private def batched[I, O](inputs: Seq[I], batchSize: Int)
-                           (fetch: (Seq[I]) => Future[O])
-                           (combine: (O, O) => O): Future[O] =
-    Future.collect {
-      inputs.grouped(batchSize).map(fetch).toSeq
-    }.map(_.reduce(combine))
+  private def batched[I, O](inputs: Seq[I], batchSize: Int)(
+      fetch: (Seq[I]) => Future[O]
+  )(combine: (O, O) => O): Future[O] =
+    Future
+      .collect {
+        inputs.grouped(batchSize).map(fetch).toSeq
+      }
+      .map(_.reduce(combine))
 }
 
 case class LikesCount(target_urn: Urn, likes_count: Long)
@@ -98,7 +118,6 @@ object UserLikesCount {
   implicit val writes: Writes[UserLikesCount] = Json.writes[UserLikesCount]
   implicit val reads: Reads[UserLikesCount] = Json.reads[UserLikesCount]
 }
-
 
 case class UserTotalLikes(user_urn: Urn, track_likes_count: Long, playlist_likes_count: Long) {
   def totalLikeCount = track_likes_count + playlist_likes_count

@@ -7,7 +7,6 @@ import com.twitter.util.{Await, Future}
 import org.mockito.Mockito.{when, _}
 
 class OffsetLimitRequestFilterSpec extends UnitSpecification {
-
   trait Context extends Scope {
     val next = mock[Service[Request, Response]]
 
@@ -20,7 +19,7 @@ class OffsetLimitRequestFilterSpec extends UnitSpecification {
 
     def offsetAtLimitRequest(path: String) = Request(path, "offset" -> maxOffset.toString)
 
-    val paths = Seq( """/users/\d+/favorites""", """/users/\d+/likes""")
+    val paths = Seq("""/users/\d+/favorites""", """/users/\d+/likes""")
 
     lazy val filter = new OffsetLimitRequestFilter(paths, maxOffset)
 
@@ -32,14 +31,12 @@ class OffsetLimitRequestFilterSpec extends UnitSpecification {
     }
   }
 
-  for (
-    path <- Seq(
+  for (path <- Seq(
       "/users/2/favorites",
       "/users/12/favorites",
       "/users/123/likes",
       "/users/1234/likes"
-    )
-  ) yield {
+    )) yield {
     s"for matched path $path" >> {
       "when enabled" >> {
         "handles offset over limit" in new Context {
@@ -77,11 +74,9 @@ class OffsetLimitRequestFilterSpec extends UnitSpecification {
     }
   }
 
-  for (
-    path <- Seq(
+  for (path <- Seq(
       "/users/2/tracks"
-    )
-  ) yield {
+    )) yield {
     s"for unmatched path $path" >> {
       "passes through offset over limit" in new Context {
         val request = offsetOverLimitRequest(path)

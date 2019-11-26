@@ -15,16 +15,18 @@ import scala.util.control.NonFatal
   * This temporary abstraction receives the track json returned by the public api and injects
   * in it the counts that come from Stitch4Counts.
   */
-class TrackMothershipDispatcherWithCounts(userAuthentication: UserAuthentication,
-                                          mothershipDispatcher: DispatchToMothershipHandler,
-                                          stitchClient: StitchClient) {
-
+class TrackMothershipDispatcherWithCounts(
+    userAuthentication: UserAuthentication,
+    mothershipDispatcher: DispatchToMothershipHandler,
+    stitchClient: StitchClient
+) {
   def request(request: HandlerRequest): Future[Response] = {
     stripConditionalRequestHeaders(request)
 
     userAuthentication.withUserSession(request) { session =>
-      mothershipDispatcher.dispatchToMothership(HandlerRequest(AlwaysMatchesPathMatcher, request)).flatMap(
-        response => {
+      mothershipDispatcher
+        .dispatchToMothership(HandlerRequest(AlwaysMatchesPathMatcher, request))
+        .flatMap(response => {
           lazy val defaultResponse = Future.value(response)
 
           if (response.statusCode < 300) {
@@ -42,29 +44,45 @@ class TrackMothershipDispatcherWithCounts(userAuthentication: UserAuthentication
     }
   }
 
-  private def enrichResponse(session: UserSession, userToTrackUrn: Set[(Urn, Urn)], responseJson: JsValue, response: Response): Future[Response] = {
-    stitchClient.countsForTracks(session, userToTrackUrn).map { counts: Map[Urn, StitchCounts] => {
-      responseJson.as[Vector[JsValue]].map(jsValue => {
-        (for {
-          (_, trackId) <- getIds(jsValue)
-          trackCounts <- counts.get(Urn("soundcloud", "tracks", trackId.toString))
-        } yield {
-          jsValue.as[JsObject].deepMerge(Json.obj(
-            "playback_count" -> trackCounts.playback_count,
-            "comment_count" -> trackCounts.comment_count,
-            "download_count" -> trackCounts.download_count,
-            "favoritings_count" -> trackCounts.favoritings_count,
-            "reposts_count" -> trackCounts.reposts_count
-          ))
-        }).getOrElse(jsValue)
+  private def enrichResponse(
+      session: UserSession,
+      userToTrackUrn: Set[(Urn, Urn)],
+      responseJson: JsValue,
+      response: Response
+  ): Future[Response] = {
+    stitchClient
+      .countsForTracks(session, userToTrackUrn)
+      .map { counts: Map[Urn, StitchCounts] =>
+        {
+          responseJson
+            .as[Vector[JsValue]]
+            .map(jsValue => {
+              (for {
+                (_, trackId) <- getIds(jsValue)
+                trackCounts <- counts.get(Urn("soundcloud", "tracks", trackId.toString))
+              } yield {
+                jsValue
+                  .as[JsObject]
+                  .deepMerge(
+                    Json.obj(
+                      "playback_count" -> trackCounts.playback_count,
+                      "comment_count" -> trackCounts.comment_count,
+                      "download_count" -> trackCounts.download_count,
+                      "favoritings_count" -> trackCounts.favoritings_count,
+                      "reposts_count" -> trackCounts.reposts_count
+                    )
+                  )
+              }).getOrElse(jsValue)
+            })
+        }
+      }
+      .handle {
+        case NonFatal(_) => responseJson.as[Vector[JsValue]]
+      }
+      .map(newContent => {
+        response.setContentString(Json.stringify(new JsArray(newContent)))
+        response
       })
-    }
-    }.handle {
-      case NonFatal(_) => responseJson.as[Vector[JsValue]]
-    }.map(newContent => {
-      response.setContentString(Json.stringify(new JsArray(newContent)))
-      response
-    })
   }
 
   private def extractUrns(json: JsValue): Set[(Urn, Urn)] = {
@@ -78,8 +96,10 @@ class TrackMothershipDispatcherWithCounts(userAuthentication: UserAuthentication
     values
       .flatMap(getIds)
       .map {
-        case (userId, trackId) => (Urn("soundcloud", "users", userId.toString), Urn("soundcloud", "tracks", trackId.toString))
-      }.toSet
+        case (userId, trackId) =>
+          (Urn("soundcloud", "users", userId.toString), Urn("soundcloud", "tracks", trackId.toString))
+      }
+      .toSet
 
   private def getIds(jsValue: JsValue): Option[(Int, Int)] = {
     for {
@@ -88,11 +108,10 @@ class TrackMothershipDispatcherWithCounts(userAuthentication: UserAuthentication
     } yield (userId, trackId)
   }
 
-
   /*
-  * If-None-Match header causes mothership to return 304
-  * We decided not to support this behavior
-  */
+   * If-None-Match header causes mothership to return 304
+   * We decided not to support this behavior
+   */
   private def stripConditionalRequestHeaders(req: HandlerRequest): Option[String] = {
     req.headerMap.remove("If-None-Match")
   }

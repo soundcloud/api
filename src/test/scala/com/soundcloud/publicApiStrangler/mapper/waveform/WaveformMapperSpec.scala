@@ -10,7 +10,6 @@ import com.twitter.util.Await
 import org.mockito.Mockito.{verify, when}
 
 class WaveformMapperSpec extends UnitSpecification {
-
   trait Context extends Scope {
     val waveformUrlsGenMock = mock[WaveformUrlsGenerator]
     val mapper = new WaveformMapper(waveformUrlsGenMock)
@@ -25,7 +24,6 @@ class WaveformMapperSpec extends UnitSpecification {
   }
 
   "only one input" >> {
-
     trait OneContext extends Context {
       val uid = "8779as"
       val policy = ContentPolicy.ALLOW
@@ -48,7 +46,6 @@ class WaveformMapperSpec extends UnitSpecification {
   }
 
   "multiple inputs" >> {
-
     trait OneContext extends Context {
       val uid = "8779as"
       val policy = ContentPolicy.ALLOW
@@ -63,7 +60,6 @@ class WaveformMapperSpec extends UnitSpecification {
       when(waveformUrlsGenMock.fromUid(uid)).thenReturn(waveformUrl)
       when(waveformUrlsGenMock.fromUid(uid2)).thenReturn(waveformUrl2)
     }
-
 
     "returns the mapping of given UID" in new OneContext {
       val actual = Await.result(mapper.map(session, Set(waveformRequest, waveformRequest2)))

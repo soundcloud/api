@@ -9,19 +9,18 @@ import org.joda.time.{DateTime, DateTimeZone}
 
 import scala.util.Try
 
-
-case class TrackPagination(maybeLimit: Option[Int],
-                           maybeOffset: Option[Int],
-                           linkedPartitioning: Boolean,
-                           createdAtFrom: Option[DateTime],
-                           createdAtTo: Option[DateTime],
-                           requestUrl: URL) {
-
+case class TrackPagination(
+    maybeLimit: Option[Int],
+    maybeOffset: Option[Int],
+    linkedPartitioning: Boolean,
+    createdAtFrom: Option[DateTime],
+    createdAtTo: Option[DateTime],
+    requestUrl: URL
+) {
   val offset = maybeOffset.getOrElse(0)
 
   // defaults to 50 if not provided, max at 200 to mimic mothership's behaviour
   val limit = Math.min(maybeLimit.getOrElse(50), 200)
-
 
   def calculateTrackUrnPage(trackUrns: List[Urn]): Set[Urn] = {
     val start = offset
@@ -32,8 +31,11 @@ case class TrackPagination(maybeLimit: Option[Int],
 
   def calculateFinalPage(tracks: List[Track]): List[Track] = {
     tracks
-      .filter(t => createdAtFrom.map(t.created_at.isAfter(_)).getOrElse(true) &&
-        createdAtTo.map(t.created_at.isBefore(_)).getOrElse(true))
+      .filter(
+        t =>
+          createdAtFrom.map(t.created_at.isAfter(_)).getOrElse(true) &&
+            createdAtTo.map(t.created_at.isBefore(_)).getOrElse(true)
+      )
       .sortBy(-_.urn.identifier.toInt)
       .slice(0, limit)
   }
@@ -47,20 +49,26 @@ case class TrackPagination(maybeLimit: Option[Int],
       if (totalTracks < nextOffset) {
         None
       } else {
-        val params = requestUrl.getQuery.split("&").toList.map(_.split("=").toList).flatMap {
-          case List(key, value) => Some((key, value))
-          case List(key) => Some((key, ""))
-          case otherwise => Some((otherwise, ""))
-        }.toMap
+        val params = requestUrl.getQuery
+          .split("&")
+          .toList
+          .map(_.split("=").toList)
+          .flatMap {
+            case List(key, value) => Some((key, value))
+            case List(key) => Some((key, ""))
+            case otherwise => Some((otherwise, ""))
+          }
+          .toMap
 
         val nextParams = params ++ Map("limit" -> limit.toString, "offset" -> nextOffset.toString)
 
-        val nextHref = List(requestUrl.toString.split("\\?").head, nextParams.map { case (k, v) => s"$k=$v" }.mkString("&")).mkString("?")
+        val nextHref =
+          List(requestUrl.toString.split("\\?").head, nextParams.map { case (k, v) => s"$k=$v" }.mkString("&"))
+            .mkString("?")
         Some(nextHref)
       }
     }
   }
-
 }
 
 object TrackPagination {
@@ -71,13 +79,15 @@ object TrackPagination {
       params.get("linked_partitioning").isDefined,
       params.get("created_at[from]").flatMap(tryParseDate),
       params.get("created_at[to]").flatMap(tryParseDate),
-      requestUrl)
+      requestUrl
+    )
   }
 
   val oddPatterns = List(
     DateTimeFormat.forPattern("yyyy/MM/dd HH:mm:ss Z"),
     DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss"),
-    DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss Z"))
+    DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss Z")
+  )
 
   val attempts =
     oddPatterns.map(pattern => (value: String) => DateTime.parse(value, pattern)) ++

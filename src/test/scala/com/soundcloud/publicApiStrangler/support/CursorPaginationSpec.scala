@@ -7,7 +7,6 @@ import com.twitter.finagle.http.{Request, Status}
 import com.twitter.util.{Await, Future}
 
 class CursorPaginationSpec extends UnitSpecification {
-
   trait Context extends Scope {
     val pagination = new CursorPagination("http://test")
   }

@@ -10,17 +10,18 @@ import com.soundcloud.publicApiStrangler.support.mapping.{InputValidation, Objec
 import com.twitter.util.Future
 
 class WaveformMapper(waveformUrlsGenerator: WaveformUrlsGenerator)
-  extends Mapper[WaveformRequestParams, Waveform]
+    extends Mapper[WaveformRequestParams, Waveform]
     with InputValidation[WaveformRequestParams, Waveform] {
   self =>
 
-  override def mapNonEmptyInputs(session: UserSession, inputs: Set[WaveformRequestParams])(implicit context: MappingContext)
-  : Future[Map[WaveformRequestParams, Waveform]] = {
-
+  override def mapNonEmptyInputs(session: UserSession, inputs: Set[WaveformRequestParams])(
+      implicit context: MappingContext
+  ): Future[Map[WaveformRequestParams, Waveform]] = {
     Future.value(
       inputs
-        .filter { case WaveformRequestParams(_, contentPolicy) =>
-          contentPolicy != BLOCK
+        .filter {
+          case WaveformRequestParams(_, contentPolicy) =>
+            contentPolicy != BLOCK
         }
         .map { waveformReqParams =>
           waveformReqParams -> new ObjectMapping(waveformUrlsGenerator.fromUid(waveformReqParams.uid)) with Waveform

@@ -10,7 +10,6 @@ import org.mockito.Mockito.when
 import play.api.libs.json.{JsArray, JsNull, JsObject, JsString}
 
 class FetchClientSpec extends UnitSpecification {
-
   trait Context extends Scope {
     val serviceMock = mock[JsonClient]
     val serviceClient = new FetchClient {}
@@ -19,7 +18,6 @@ class FetchClientSpec extends UnitSpecification {
 
   "#fetch" >> {
     "params needs decoding" >> {
-
       trait ServiceContext extends Context {
         val params = Params("test" -> "%2C")
         val response = jsonResponse(Status.Ok, JsString("test"))
@@ -29,7 +27,8 @@ class FetchClientSpec extends UnitSpecification {
       }
 
       "it decodes the params" in new ServiceContext {
-        val json = Await.result(serviceClient.fetch(serviceMock, anonymousSession, path, params, Headers.empty)).contentString
+        val json =
+          Await.result(serviceClient.fetch(serviceMock, anonymousSession, path, params, Headers.empty)).contentString
         json ==== JsString("test").toString
         there was one(serviceMock).getWithSession(anonymousSession, path, Params("test" -> ","), Headers.empty)
       }
@@ -38,7 +37,6 @@ class FetchClientSpec extends UnitSpecification {
 
   "#fetchWithoutSession" >> {
     "params needs decoding" >> {
-
       trait ServiceContext extends Context {
         val params = Params("test" -> "%2C")
         val response = jsonResponse(Status.Ok, JsString("test"))
@@ -48,7 +46,8 @@ class FetchClientSpec extends UnitSpecification {
       }
 
       "it decodes the params" in new ServiceContext {
-        val json = Await.result(serviceClient.fetchWithoutSession(serviceMock, path, params, Headers.empty)).contentString
+        val json =
+          Await.result(serviceClient.fetchWithoutSession(serviceMock, path, params, Headers.empty)).contentString
         json ==== JsString("test").toString
         there was one(serviceMock).get(path, Params("test" -> ","), Headers.empty)
       }
@@ -69,7 +68,8 @@ class FetchClientSpec extends UnitSpecification {
         val responseJson = List(JsObject(Seq.empty), JsObject(Seq.empty))
         val response = jsonResponse(Status.Ok, JsArray(responseJson))
 
-        when(serviceMock.getWithSession(anonymousSession, path, urns.toList, Headers.empty)).thenReturn(Future.value(response))
+        when(serviceMock.getWithSession(anonymousSession, path, urns.toList, Headers.empty))
+          .thenReturn(Future.value(response))
       }
 
       "makes one call to service" in new TestContext {
@@ -88,8 +88,10 @@ class FetchClientSpec extends UnitSpecification {
 
           def response(json: List[JsObject]) = jsonResponse(Status.Ok, JsArray(json))
 
-          when(serviceMock.getWithSession(anonymousSession, path, urns.init.toList, Headers.empty)).thenReturn(Future.value(response(response1Json)))
-          when(serviceMock.getWithSession(anonymousSession, path, urns.tail.toList, Headers.empty)).thenReturn(Future.value(response(response2Json)))
+          when(serviceMock.getWithSession(anonymousSession, path, urns.init.toList, Headers.empty))
+            .thenReturn(Future.value(response(response1Json)))
+          when(serviceMock.getWithSession(anonymousSession, path, urns.tail.toList, Headers.empty))
+            .thenReturn(Future.value(response(response2Json)))
         }
 
         "makes multiple calls to service" in new TestContext {
@@ -112,7 +114,9 @@ class FetchClientSpec extends UnitSpecification {
         }
 
         "bails whole transaction" in new TestContext {
-          Await.result(serviceClient.fetchByUrns(serviceMock, anonymousSession, path, urns, 1)) must throwA[IllegalStateException]
+          Await.result(serviceClient.fetchByUrns(serviceMock, anonymousSession, path, urns, 1)) must throwA[
+            IllegalStateException
+          ]
 
           there was one(serviceMock).getWithSession(anonymousSession, path, urns.init.toList, Headers.empty)
           there was one(serviceMock).getWithSession(anonymousSession, path, urns.tail.toList, Headers.empty)

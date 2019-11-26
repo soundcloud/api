@@ -5,7 +5,6 @@ import com.twitter.finagle.{Service, SimpleFilter}
 import com.twitter.util.Future
 
 class AcceptOnlyJsonRequestFilter(stripXml: () => Future[Boolean]) extends SimpleFilter[Request, Response] {
-
   override def apply(request: Request, next: Service[Request, Response]) = {
     stripFormatParam(request).flatMap {
       case req =>

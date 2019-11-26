@@ -2,7 +2,13 @@ package com.soundcloud.publicApiStrangler.service.media
 
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSession
-import com.soundcloud.publicApiStrangler.authorization.policies.{ContentAuthorization, ContentPolicy, ContentRestriction, MonetizationModel, Reason}
+import com.soundcloud.publicApiStrangler.authorization.policies.{
+  ContentAuthorization,
+  ContentPolicy,
+  ContentRestriction,
+  MonetizationModel,
+  Reason
+}
 import com.soundcloud.publicApiStrangler.client.media.MediaServiceClient
 import com.soundcloud.publicApiStrangler.client.tracks.{TracksClient, VisibleTrack}
 import com.soundcloud.publicApiStrangler.test.UnitSpecification
@@ -10,7 +16,6 @@ import com.twitter.util.{Await, Future}
 import org.joda.time.DateTime
 
 class DownloadServiceSpec extends UnitSpecification {
-
   trait Context extends Scope {
     val tracksClient = mock[TracksClient]
     val mediaServiceClient = mock[MediaServiceClient]
@@ -57,7 +62,14 @@ class DownloadServiceSpec extends UnitSpecification {
           None,
           true,
           disabledAt,
-          new ContentAuthorization(trackUrn, ContentPolicy.ALLOW, Reason.DEFAULT, Set.empty[ContentRestriction], MonetizationModel.NOT_APPLICABLE))
+          new ContentAuthorization(
+            trackUrn,
+            ContentPolicy.ALLOW,
+            Reason.DEFAULT,
+            Set.empty[ContentRestriction],
+            MonetizationModel.NOT_APPLICABLE
+          )
+        )
 
         override lazy val maybeTrack = Some(track)
       }
@@ -80,7 +92,14 @@ class DownloadServiceSpec extends UnitSpecification {
           None,
           downloadable,
           disabledAt,
-          new ContentAuthorization(trackUrn, policy, Reason.DEFAULT, Set.empty[ContentRestriction], MonetizationModel.NOT_APPLICABLE))
+          new ContentAuthorization(
+            trackUrn,
+            policy,
+            Reason.DEFAULT,
+            Set.empty[ContentRestriction],
+            MonetizationModel.NOT_APPLICABLE
+          )
+        )
 
         override lazy val maybeTrack = Some(track)
       }

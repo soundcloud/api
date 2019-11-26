@@ -17,7 +17,6 @@ import org.specs2.mutable.Before
 import play.api.libs.json._
 
 class UserRelatedMothershipDispatcherSpec extends UnitSpecification {
-
   trait Context extends HandlerSpecificationScope with Before {
     val session = new UserSessionBuilder().build()
     val userAuthenticationMock = new FakeUserAuthentication(session)
@@ -35,7 +34,8 @@ class UserRelatedMothershipDispatcherSpec extends UnitSpecification {
       followCountsClientMock,
       lieblingClientMock,
       () => Future.value(loadUserLikeCountsFromLiebling),
-      repostsClientMock)
+      repostsClientMock
+    )
 
     override def routingDefinitions = Routing.forUserRelatedMothershipDispatcher(dispatcher)
 
@@ -47,10 +47,11 @@ class UserRelatedMothershipDispatcherSpec extends UnitSpecification {
 
     def responseBodyFromMothership: JsValue
 
-    def response = JsonResponseBuilder()
-      .status(responseStatusFromMothership)
-      .body(responseBodyFromMothership.toString())
-      .build
+    def response =
+      JsonResponseBuilder()
+        .status(responseStatusFromMothership)
+        .body(responseBodyFromMothership.toString())
+        .build
 
     def userUrns: Seq[Urn] = Seq.empty
 
@@ -77,10 +78,11 @@ class UserRelatedMothershipDispatcherSpec extends UnitSpecification {
     "with a non-JSON response from mothership, it returns the same response body" in new Context {
       override def responseBodyFromMothership = JsNull
 
-      override def response = ResponseBuilder()
-        .status(responseStatusFromMothership)
-        .body("Not a JSON response")
-        .build
+      override def response =
+        ResponseBuilder()
+          .status(responseStatusFromMothership)
+          .body("Not a JSON response")
+          .build
 
       Await.result(dispatcher.dispatchToMothership(request)).getContentString() ==== "Not a JSON response"
     }
@@ -402,7 +404,6 @@ class UserRelatedMothershipDispatcherSpec extends UnitSpecification {
           (values.last \ "user" \ "reposts_count").as[Long] ==== 300
         }
       }
-
     }
   }
 }

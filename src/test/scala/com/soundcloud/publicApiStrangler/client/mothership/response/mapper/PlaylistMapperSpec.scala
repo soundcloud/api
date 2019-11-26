@@ -6,7 +6,6 @@ import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures._
 import play.api.libs.json.JsObject
 
 class PlaylistMapperSpec extends UnitSpecification {
-
   "maps attributes to object" in {
     val playlist = PlaylistMapper(moshiPlaylist.as[JsObject])
 

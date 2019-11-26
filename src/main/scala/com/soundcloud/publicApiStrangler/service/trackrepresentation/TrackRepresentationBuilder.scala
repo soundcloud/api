@@ -9,19 +9,21 @@ import com.soundcloud.publicApiStrangler.client.stitch.StitchCounts
 import com.soundcloud.publicApiStrangler.client.trackmetadata.Track
 
 class TrackRepresentationBuilder {
-  def build(sessionUser: Option[Urn],
-            track: Track,
-            user: User,
-            isrc: Option[Isrc],
-            counts: StitchCounts,
-            label: Option[User],
-            geoblockings: Geoblockings,
-            domainLockings: Seq[DomainLocking],
-            trackAudioMetadata: TrackAudioMetadata,
-            isLiked: Boolean,
-            waveformUrl: TrackWaveformUrl,
-            secretTokenParameter: Option[String],
-            downloadsPerTrack: Option[Int]): TrackRepresentationLike = {
+  def build(
+      sessionUser: Option[Urn],
+      track: Track,
+      user: User,
+      isrc: Option[Isrc],
+      counts: StitchCounts,
+      label: Option[User],
+      geoblockings: Geoblockings,
+      domainLockings: Seq[DomainLocking],
+      trackAudioMetadata: TrackAudioMetadata,
+      isLiked: Boolean,
+      waveformUrl: TrackWaveformUrl,
+      secretTokenParameter: Option[String],
+      downloadsPerTrack: Option[Int]
+  ): TrackRepresentationLike = {
     val basicTrackRep = TrackRepresentation(
       track = track,
       user = user,
@@ -58,7 +60,8 @@ class TrackRepresentationBuilder {
     label.map { label =>
       rep = TrackRepresentationLabelDecorator(label, rep)
     }
-    rep = TrackRepresentationQuotaDecorator(track.downloadable, downloadsPerTrack, counts.download_count, userIsOwner, rep)
+    rep =
+      TrackRepresentationQuotaDecorator(track.downloadable, downloadsPerTrack, counts.download_count, userIsOwner, rep)
     rep = TrackRepresentationWaveformUrlDecorator(waveformUrl, rep)
     rep
   }

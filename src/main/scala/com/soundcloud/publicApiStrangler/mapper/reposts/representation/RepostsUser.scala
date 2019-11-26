@@ -6,14 +6,16 @@ import com.soundcloud.publicApiStrangler.client.liebling.UserTotalLikes
 import com.soundcloud.publicApiStrangler.mapper.timeline.representation.{User => TimelineUser}
 import play.api.libs.json.{JsValue, Json, Writes}
 
-case class RepostsUser(jsonValue: JsValue,
-                       baseUrl: String,
-                       maybeFollowCounts: Option[FollowCounts],
-                       maybeRepostsCount: Option[Long],
-                       maybeLikesCount: Option[UserTotalLikes])(implicit context: MappingContext)
-  extends TimelineUser(jsonValue, baseUrl, maybeFollowCounts, maybeRepostsCount) {
-
-  override val public_favorites_count = maybeLikesCount.map(likesCountFor).orElse((json \ "public_favorites_count").asOpt[Long])
+case class RepostsUser(
+    jsonValue: JsValue,
+    baseUrl: String,
+    maybeFollowCounts: Option[FollowCounts],
+    maybeRepostsCount: Option[Long],
+    maybeLikesCount: Option[UserTotalLikes]
+)(implicit context: MappingContext)
+    extends TimelineUser(jsonValue, baseUrl, maybeFollowCounts, maybeRepostsCount) {
+  override val public_favorites_count =
+    maybeLikesCount.map(likesCountFor).orElse((json \ "public_favorites_count").asOpt[Long])
   override val likes_count = maybeLikesCount.map(likesCountFor).orElse((json \ "public_favorites_count").asOpt[Long])
 
   private def likesCountFor(likes: UserTotalLikes): Long =

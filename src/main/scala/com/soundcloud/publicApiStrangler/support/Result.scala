@@ -16,7 +16,7 @@ sealed abstract class Result[+A] {
   }
 
   def withFilter(f: A => Boolean): Result[A] = this match {
-    case good@Good(a) if (f(a)) => good
+    case good @ Good(a) if (f(a)) => good
     case Good(_) => Bad(StringError("match failed"))
     case otherwise => otherwise
   }
@@ -31,15 +31,15 @@ sealed abstract class Result[+A] {
 
 object Result {
   def collect(results: Seq[Result[_]]): Result[Seq[_]] =
-    results.collect { case bad@Bad(_) => bad } match {
+    results.collect { case bad @ Bad(_) => bad } match {
       case Seq(firstLeft, _*) => firstLeft
       case Nil => Good(results.collect { case Good(value) => value })
     }
 
   def collectAll(results: Seq[Result[_]]): (Seq[Good[_]], Seq[Bad]) = {
     (
-      results.collect { case good@Good(_) => good },
-      results.collect { case bad@Bad(_) => bad }
+      results.collect { case good @ Good(_) => good },
+      results.collect { case bad @ Bad(_) => bad }
     )
   }
 
@@ -55,14 +55,39 @@ object Result {
   def join[A1, A2, A3, A4](a1: Result[A1], a2: Result[A2], a3: Result[A3], a4: Result[A4]): Result[(A1, A2, A3, A4)] =
     join(join(join(a1, a2), a3), a4).map { case (((a1, a2), a3), a4) => (a1, a2, a3, a4) }
 
-  def join[A1, A2, A3, A4, A5](a1: Result[A1], a2: Result[A2], a3: Result[A3], a4: Result[A4], a5: Result[A5]): Result[(A1, A2, A3, A4, A5)] =
+  def join[A1, A2, A3, A4, A5](
+      a1: Result[A1],
+      a2: Result[A2],
+      a3: Result[A3],
+      a4: Result[A4],
+      a5: Result[A5]
+  ): Result[(A1, A2, A3, A4, A5)] =
     join(join(join(join(a1, a2), a3), a4), a5).map { case ((((a1, a2), a3), a4), a5) => (a1, a2, a3, a4, a5) }
 
-  def join[A1, A2, A3, A4, A5, A6](a1: Result[A1], a2: Result[A2], a3: Result[A3], a4: Result[A4], a5: Result[A5], a6: Result[A6]): Result[(A1, A2, A3, A4, A5, A6)] =
-    join(join(join(join(join(a1, a2), a3), a4), a5), a6).map { case (((((a1, a2), a3), a4), a5), a6) => (a1, a2, a3, a4, a5, a6) }
+  def join[A1, A2, A3, A4, A5, A6](
+      a1: Result[A1],
+      a2: Result[A2],
+      a3: Result[A3],
+      a4: Result[A4],
+      a5: Result[A5],
+      a6: Result[A6]
+  ): Result[(A1, A2, A3, A4, A5, A6)] =
+    join(join(join(join(join(a1, a2), a3), a4), a5), a6).map {
+      case (((((a1, a2), a3), a4), a5), a6) => (a1, a2, a3, a4, a5, a6)
+    }
 
-  def join[A1, A2, A3, A4, A5, A6, A7](a1: Result[A1], a2: Result[A2], a3: Result[A3], a4: Result[A4], a5: Result[A5], a6: Result[A6], a7: Result[A7]): Result[(A1, A2, A3, A4, A5, A6, A7)] =
-    join(join(join(join(join(join(a1, a2), a3), a4), a5), a6), a7).map { case ((((((a1, a2), a3), a4), a5), a6), a7) => (a1, a2, a3, a4, a5, a6, a7) }
+  def join[A1, A2, A3, A4, A5, A6, A7](
+      a1: Result[A1],
+      a2: Result[A2],
+      a3: Result[A3],
+      a4: Result[A4],
+      a5: Result[A5],
+      a6: Result[A6],
+      a7: Result[A7]
+  ): Result[(A1, A2, A3, A4, A5, A6, A7)] =
+    join(join(join(join(join(join(a1, a2), a3), a4), a5), a6), a7).map {
+      case ((((((a1, a2), a3), a4), a5), a6), a7) => (a1, a2, a3, a4, a5, a6, a7)
+    }
 
   implicit class OptionToResult[T](o: Option[T]) {
     def toResult(ifNone: => ErrorLike): Result[T] = {
@@ -76,7 +101,6 @@ object Result {
       case Failure(e) => Bad(StringError("Unexpected exception"))
     }
   }
-
 }
 
 case class Good[+A](a: A) extends Result[A]
@@ -84,7 +108,6 @@ case class Good[+A](a: A) extends Result[A]
 case class Bad(error: ErrorLike) extends Result[Nothing]
 
 sealed case class ResultF[+A](value: Future[Result[A]]) {
-
   def map[B](f: A => B): ResultF[B] =
     ResultF(value.map {
       case Good(a) => Good(f(a))
@@ -100,17 +123,18 @@ sealed case class ResultF[+A](value: Future[Result[A]]) {
   def join[B](other: ResultF[B]): ResultF[(A, B)] =
     ResultF.joinF(this, other)
 
-  def withFilter(f: A => Boolean): ResultF[A] = ResultF(value.map {
-    case good@Good(a) if f(a) => good
-    case Good(_) => Bad(StringError(s"Match failed"))
-    case otherwise => otherwise
-  })
+  def withFilter(f: A => Boolean): ResultF[A] =
+    ResultF(value.map {
+      case good @ Good(a) if f(a) => good
+      case Good(_) => Bad(StringError(s"Match failed"))
+      case otherwise => otherwise
+    })
 
-  def handle[B >: Result[A]](rescueException: PartialFunction[Throwable, B]): Future[B] = value.handle[B](rescueException)
+  def handle[B >: Result[A]](rescueException: PartialFunction[Throwable, B]): Future[B] =
+    value.handle[B](rescueException)
 }
 
 object ResultF {
-
   def collectF(results: Seq[ResultF[_]]): ResultF[Seq[_]] = {
     val collected = Future.collect(results.map(_.value))
     ResultF(collected.map(Result.collect))
@@ -134,10 +158,21 @@ object ResultF {
   def joinF[A1, A2, A3](a1: ResultF[A1], a2: ResultF[A2], a3: ResultF[A3]): ResultF[(A1, A2, A3)] =
     joinF(joinF(a1, a2), a3).map { case ((a1, a2), a3) => (a1, a2, a3) }
 
-  def joinF[A1, A2, A3, A4](a1: ResultF[A1], a2: ResultF[A2], a3: ResultF[A3], a4: ResultF[A4]): ResultF[(A1, A2, A3, A4)] =
+  def joinF[A1, A2, A3, A4](
+      a1: ResultF[A1],
+      a2: ResultF[A2],
+      a3: ResultF[A3],
+      a4: ResultF[A4]
+  ): ResultF[(A1, A2, A3, A4)] =
     joinF(joinF(joinF(a1, a2), a3), a4).map { case (((a1, a2), a3), a4) => (a1, a2, a3, a4) }
 
-  def joinF[A1, A2, A3, A4, A5](a1: ResultF[A1], a2: ResultF[A2], a3: ResultF[A3], a4: ResultF[A4], a5: ResultF[A5]): ResultF[(A1, A2, A3, A4, A5)] =
+  def joinF[A1, A2, A3, A4, A5](
+      a1: ResultF[A1],
+      a2: ResultF[A2],
+      a3: ResultF[A3],
+      a4: ResultF[A4],
+      a5: ResultF[A5]
+  ): ResultF[(A1, A2, A3, A4, A5)] =
     joinF(joinF(joinF(joinF(a1, a2), a3), a4), a5).map { case ((((a1, a2), a3), a4), a5) => (a1, a2, a3, a4, a5) }
 
   def joinF[A1, A2](a1: Future[Result[A1]], a2: Future[Result[A2]]): ResultF[(A1, A2)] =
@@ -146,17 +181,47 @@ object ResultF {
   def joinF[A1, A2, A3](a1: Future[Result[A1]], a2: Future[Result[A2]], a3: Future[Result[A3]]): ResultF[(A1, A2, A3)] =
     ResultF(Future.join(a1, a2, a3).map { case (a1, a2, a3) => Result.join(a1, a2, a3) })
 
-  def joinF[A1, A2, A3, A4](a1: Future[Result[A1]], a2: Future[Result[A2]], a3: Future[Result[A3]], a4: Future[Result[A4]]): ResultF[(A1, A2, A3, A4)] =
+  def joinF[A1, A2, A3, A4](
+      a1: Future[Result[A1]],
+      a2: Future[Result[A2]],
+      a3: Future[Result[A3]],
+      a4: Future[Result[A4]]
+  ): ResultF[(A1, A2, A3, A4)] =
     ResultF(Future.join(a1, a2, a3, a4).map { case (a1, a2, a3, a4) => Result.join(a1, a2, a3, a4) })
 
-  def joinF[A1, A2, A3, A4, A5](a1: Future[Result[A1]], a2: Future[Result[A2]], a3: Future[Result[A3]], a4: Future[Result[A4]], a5: Future[Result[A5]]): ResultF[(A1, A2, A3, A4, A5)] =
+  def joinF[A1, A2, A3, A4, A5](
+      a1: Future[Result[A1]],
+      a2: Future[Result[A2]],
+      a3: Future[Result[A3]],
+      a4: Future[Result[A4]],
+      a5: Future[Result[A5]]
+  ): ResultF[(A1, A2, A3, A4, A5)] =
     ResultF(Future.join(a1, a2, a3, a4, a5).map { case (a1, a2, a3, a4, a5) => Result.join(a1, a2, a3, a4, a5) })
 
-  def joinF[A1, A2, A3, A4, A5, A6](a1: Future[Result[A1]], a2: Future[Result[A2]], a3: Future[Result[A3]], a4: Future[Result[A4]], a5: Future[Result[A5]], a6: Future[Result[A6]]): ResultF[(A1, A2, A3, A4, A5, A6)] =
-    ResultF(Future.join(a1, a2, a3, a4, a5, a6).map { case (a1, a2, a3, a4, a5, a6) => Result.join(a1, a2, a3, a4, a5, a6) })
+  def joinF[A1, A2, A3, A4, A5, A6](
+      a1: Future[Result[A1]],
+      a2: Future[Result[A2]],
+      a3: Future[Result[A3]],
+      a4: Future[Result[A4]],
+      a5: Future[Result[A5]],
+      a6: Future[Result[A6]]
+  ): ResultF[(A1, A2, A3, A4, A5, A6)] =
+    ResultF(
+      Future.join(a1, a2, a3, a4, a5, a6).map { case (a1, a2, a3, a4, a5, a6) => Result.join(a1, a2, a3, a4, a5, a6) }
+    )
 
-  def joinF[A1, A2, A3, A4, A5, A6, A7](a1: Future[Result[A1]], a2: Future[Result[A2]], a3: Future[Result[A3]], a4: Future[Result[A4]], a5: Future[Result[A5]], a6: Future[Result[A6]], a7: Future[Result[A7]]): ResultF[(A1, A2, A3, A4, A5, A6, A7)] =
-    ResultF(Future.join(a1, a2, a3, a4, a5, a6, a7).map { case (a1, a2, a3, a4, a5, a6, a7) => Result.join(a1, a2, a3, a4, a5, a6, a7) })
+  def joinF[A1, A2, A3, A4, A5, A6, A7](
+      a1: Future[Result[A1]],
+      a2: Future[Result[A2]],
+      a3: Future[Result[A3]],
+      a4: Future[Result[A4]],
+      a5: Future[Result[A5]],
+      a6: Future[Result[A6]],
+      a7: Future[Result[A7]]
+  ): ResultF[(A1, A2, A3, A4, A5, A6, A7)] =
+    ResultF(Future.join(a1, a2, a3, a4, a5, a6, a7).map {
+      case (a1, a2, a3, a4, a5, a6, a7) => Result.join(a1, a2, a3, a4, a5, a6, a7)
+    })
 }
 
 trait ErrorLike

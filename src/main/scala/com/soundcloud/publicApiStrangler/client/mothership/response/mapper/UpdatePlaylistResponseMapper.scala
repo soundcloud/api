@@ -1,6 +1,11 @@
 package com.soundcloud.publicApiStrangler.client.mothership.response.mapper
 
-import com.soundcloud.publicApiStrangler.client.mothership.response.representation.{InvalidUrnUpdatePlaylistResponse, NotAuthorizedUpdatePlaylistResponse, OkUpdatePlaylistResponse, UpdatePlaylistResponse}
+import com.soundcloud.publicApiStrangler.client.mothership.response.representation.{
+  InvalidUrnUpdatePlaylistResponse,
+  NotAuthorizedUpdatePlaylistResponse,
+  OkUpdatePlaylistResponse,
+  UpdatePlaylistResponse
+}
 import com.soundcloud.publicApiStrangler.client.support.{JsonResponse, ResponseMapper, UnhandledResponseException}
 import com.twitter.finagle.http.{Response, Status}
 import play.api.libs.json.JsObject

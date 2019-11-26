@@ -11,15 +11,14 @@ import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures.similarSoundsNon
 import com.twitter.util.{Await, Future}
 import org.mockito.Mockito.{times, verify, when}
 
-class SimilarSoundsMapperSpec
-  extends UnitSpecification {
-
+class SimilarSoundsMapperSpec extends UnitSpecification {
   trait Context extends Scope {
     val similarSoundsClientMock = mock[SystemPlaylistsClient]
     val entityMapperMock = mock[SearchEntityMapper]
     val similarSoundsMapper = new SimilarSoundsMapper(similarSoundsClientMock, entityMapperMock)
     val param = Urn("soundcloud", "tracks", "123")
-    val page = OffsetBasedPage(param, "http://api.soundcloud.com", "tracks/123/relates.json", Map.empty[String, String], 0, 10)
+    val page =
+      OffsetBasedPage(param, "http://api.soundcloud.com", "tracks/123/relates.json", Map.empty[String, String], 0, 10)
 
     implicit val context = new MappingContext(mock[UserSession])
   }
@@ -31,12 +30,11 @@ class SimilarSoundsMapperSpec
     )
 
     // mock client returns fake result
-    when(similarSoundsClientMock.fetchSimilar(anonymousSession, param)).
-      thenReturn(Future.value(Some(returnedSimilarSounds)))
+    when(similarSoundsClientMock.fetchSimilar(anonymousSession, param))
+      .thenReturn(Future.value(Some(returnedSimilarSounds)))
 
     // verify that entityMapper is called with fake results from mock client
-    when(entityMapperMock.embed(List(Urn("soundcloud", "tracks", "1")))).
-      thenReturn(null)
+    when(entityMapperMock.embed(List(Urn("soundcloud", "tracks", "1")))).thenReturn(null)
 
     val similarSounds = similarSoundsMapper.mapSingleInput(anonymousSession, page)
     Await.result(similarSounds)
@@ -47,8 +45,7 @@ class SimilarSoundsMapperSpec
 
   "returns empty map if client responds with none" in new Context {
     // return 404 to simulate non existing track
-    when(similarSoundsClientMock.fetchSimilar(anonymousSession, param)).
-      thenReturn(Future.value(None))
+    when(similarSoundsClientMock.fetchSimilar(anonymousSession, param)).thenReturn(Future.value(None))
 
     val similarSounds = similarSoundsMapper.mapSingleInput(anonymousSession, page)
     Await.result(similarSounds) ==== None

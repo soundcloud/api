@@ -18,7 +18,10 @@ class TrackPaginationSpec extends UnitSpecification {
 
   def trackUrns(size: Int) = Random.shuffle((0 until size).map(n => Urn("soundcloud", "tracks", n.toString))).toList
 
-  def tracks(size: Int) = Random.shuffle((0 until size).map(n => TrackMetadataTrackBuilder(urn = Urn("soundcloud", "tracks", n.toString)).build)).toList
+  def tracks(size: Int) =
+    Random
+      .shuffle((0 until size).map(n => TrackMetadataTrackBuilder(urn = Urn("soundcloud", "tracks", n.toString)).build))
+      .toList
 
   "defaults" >> {
     "defaults limit to 50 if not provided" >> {
@@ -35,10 +38,9 @@ class TrackPaginationSpec extends UnitSpecification {
 
     "#calculateTrackUrnPage" >> {
       "returns the urns" >> {
-        pagination.calculateTrackUrnPage(trackUrns(3)) should containAllOf(List(
-          Urn("soundcloud", "tracks", "2"),
-          Urn("soundcloud", "tracks", "0"),
-          Urn("soundcloud", "tracks", "1")))
+        pagination.calculateTrackUrnPage(trackUrns(3)) should containAllOf(
+          List(Urn("soundcloud", "tracks", "2"), Urn("soundcloud", "tracks", "0"), Urn("soundcloud", "tracks", "1"))
+        )
       }
     }
 
@@ -47,7 +49,8 @@ class TrackPaginationSpec extends UnitSpecification {
         pagination.calculateFinalPage(tracks(3)).map(_.urn) ==== List(
           Urn("soundcloud", "tracks", "2"),
           Urn("soundcloud", "tracks", "1"),
-          Urn("soundcloud", "tracks", "0"))
+          Urn("soundcloud", "tracks", "0")
+        )
       }
     }
   }
@@ -59,11 +62,14 @@ class TrackPaginationSpec extends UnitSpecification {
       "returns double the limit of the most recent urns" >> {
         // urns go from 4 to 0
         // with limit 2 then doubled = 4 to 1
-        pagination.calculateTrackUrnPage(trackUrns(5)) should containAllOf(List(
-          Urn("soundcloud", "tracks", "4"),
-          Urn("soundcloud", "tracks", "3"),
-          Urn("soundcloud", "tracks", "2"),
-          Urn("soundcloud", "tracks", "1")))
+        pagination.calculateTrackUrnPage(trackUrns(5)) should containAllOf(
+          List(
+            Urn("soundcloud", "tracks", "4"),
+            Urn("soundcloud", "tracks", "3"),
+            Urn("soundcloud", "tracks", "2"),
+            Urn("soundcloud", "tracks", "1")
+          )
+        )
       }
     }
 
@@ -71,43 +77,56 @@ class TrackPaginationSpec extends UnitSpecification {
       "returns the sorted tracks" >> {
         pagination.calculateFinalPage(tracks(2)).map(_.urn) ==== List(
           Urn("soundcloud", "tracks", "1"),
-          Urn("soundcloud", "tracks", "0"))
+          Urn("soundcloud", "tracks", "0")
+        )
       }
     }
-
   }
 
   "#nextHref" >> {
-
     val base = "https://api.soundcloud.com/tracks?"
 
     "when linked_partitioning=true" >> {
       "when the number of track urns is greater than the limit + offset" >> {
         "with limit" >> {
-          val pagination = new TrackPagination(Some(2), None, true, None, None, new URL(s"${base}limit=2&another=value&just-key=&bad"))
+          val pagination =
+            new TrackPagination(Some(2), None, true, None, None, new URL(s"${base}limit=2&another=value&just-key=&bad"))
           pagination.nextHref(100) ==== Some(s"${base}another=value&just-key=&bad=&offset=2&limit=2")
         }
 
         "with limit and offset" >> {
-          val pagination = new TrackPagination(Some(2), Some(4), true, None, None, new URL(s"${base}limit=2&another=value&just-key=&bad"))
+          val pagination = new TrackPagination(
+            Some(2),
+            Some(4),
+            true,
+            None,
+            None,
+            new URL(s"${base}limit=2&another=value&just-key=&bad")
+          )
           pagination.nextHref(100) ==== Some(s"${base}another=value&just-key=&bad=&offset=6&limit=2")
         }
       }
 
       "when the number of track urns is smaller than the limit + offset" >> {
-        val pagination = new TrackPagination(Some(20), Some(10), true, None, None, new URL(s"${base}limit=2&another=value&just-key=&bad"))
+        val pagination = new TrackPagination(
+          Some(20),
+          Some(10),
+          true,
+          None,
+          None,
+          new URL(s"${base}limit=2&another=value&just-key=&bad")
+        )
         pagination.nextHref(29) ==== None
       }
     }
 
     "when linked_partitioning=false returns none" >> {
       "when the number of track urns is smaller than the limit + offset" >> {
-        val pagination = new TrackPagination(Some(2), None, false, None, None, new URL(s"${base}limit=2&another=value&just-key=&bad"))
+        val pagination =
+          new TrackPagination(Some(2), None, false, None, None, new URL(s"${base}limit=2&another=value&just-key=&bad"))
         pagination.nextHref(100) ==== None
       }
     }
-
-
   }
 
   "pagination with offset" >> {
@@ -122,7 +141,8 @@ class TrackPaginationSpec extends UnitSpecification {
           Urn("soundcloud", "tracks", "5"),
           Urn("soundcloud", "tracks", "4"),
           Urn("soundcloud", "tracks", "3"),
-          Urn("soundcloud", "tracks", "2"))
+          Urn("soundcloud", "tracks", "2")
+        )
       }
     }
 
@@ -130,7 +150,8 @@ class TrackPaginationSpec extends UnitSpecification {
       "returns the sorted tracks" >> {
         pagination.calculateFinalPage(tracks(4)).map(_.urn) ==== List(
           Urn("soundcloud", "tracks", "3"),
-          Urn("soundcloud", "tracks", "2"))
+          Urn("soundcloud", "tracks", "2")
+        )
       }
     }
   }
@@ -145,8 +166,10 @@ class TrackPaginationSpec extends UnitSpecification {
       (3, new DateTime(2017, 1, 10, 9, 0, 0)),
       (4, new DateTime(2017, 1, 15, 9, 0, 0)),
       (5, new DateTime(2017, 1, 15, 10, 0, 0)),
-      (6, new DateTime(2017, 1, 20, 10, 0, 0))).map { case (id, createdAt) =>
-      TrackMetadataTrackBuilder(urn = Urn("soundcloud", "tracks", id.toString), created_at = createdAt).build
+      (6, new DateTime(2017, 1, 20, 10, 0, 0))
+    ).map {
+      case (id, createdAt) =>
+        TrackMetadataTrackBuilder(urn = Urn("soundcloud", "tracks", id.toString), created_at = createdAt).build
     }
 
     val pagination = new TrackPagination(None, None, false, Some(from), Some(to), baseUrl)
@@ -163,11 +186,11 @@ class TrackPaginationSpec extends UnitSpecification {
         pagination.calculateFinalPage(tracksWithCreatedAt).map(_.urn) ==== List(
           Urn("soundcloud", "tracks", "4"),
           Urn("soundcloud", "tracks", "3"),
-          Urn("soundcloud", "tracks", "2"))
+          Urn("soundcloud", "tracks", "2")
+        )
       }
     }
   }
-
 
   "parses from a map" >> {
     val url = baseUrl
@@ -198,11 +221,21 @@ class TrackPaginationSpec extends UnitSpecification {
 
       build(Map("created_at[from]" -> "")) ==== withCreatedAtFrom(None)
       build(Map("created_at[from]" -> "aaa")) ==== withCreatedAtFrom(None)
-      build(Map("created_at[from]" -> "2017-01-16 07:30:16")) ==== withCreatedAtFrom(Some(new DateTime(2017, 1, 16, 7, 30, 16)))
-      build(Map("created_at[from]" -> "2017-01-16 07:30:16 +0010")) ==== withCreatedAtFrom(Some(new DateTime(2017, 1, 16, 7, 20, 16)))
-      build(Map("created_at[from]" -> "2017/01/16 07:30:16 +0010")) ==== withCreatedAtFrom(Some(new DateTime(2017, 1, 16, 7, 20, 16)))
-      build(Map("created_at[from]" -> "2017-01-16T07:30:16Z")) ==== withCreatedAtFrom(Some(new DateTime(2017, 1, 16, 7, 30, 16)))
-      build(Map("created_at[from]" -> "2017-01-16T07:30:16")) ==== withCreatedAtFrom(Some(new DateTime(2017, 1, 16, 7, 30, 16)))
+      build(Map("created_at[from]" -> "2017-01-16 07:30:16")) ==== withCreatedAtFrom(
+        Some(new DateTime(2017, 1, 16, 7, 30, 16))
+      )
+      build(Map("created_at[from]" -> "2017-01-16 07:30:16 +0010")) ==== withCreatedAtFrom(
+        Some(new DateTime(2017, 1, 16, 7, 20, 16))
+      )
+      build(Map("created_at[from]" -> "2017/01/16 07:30:16 +0010")) ==== withCreatedAtFrom(
+        Some(new DateTime(2017, 1, 16, 7, 20, 16))
+      )
+      build(Map("created_at[from]" -> "2017-01-16T07:30:16Z")) ==== withCreatedAtFrom(
+        Some(new DateTime(2017, 1, 16, 7, 30, 16))
+      )
+      build(Map("created_at[from]" -> "2017-01-16T07:30:16")) ==== withCreatedAtFrom(
+        Some(new DateTime(2017, 1, 16, 7, 30, 16))
+      )
     }
 
     "created_at[to]" >> {
@@ -210,11 +243,21 @@ class TrackPaginationSpec extends UnitSpecification {
 
       build(Map("created_at[to]" -> "")) ==== withCreatedAtTo(None)
       build(Map("created_at[to]" -> "aaa")) ==== withCreatedAtTo(None)
-      build(Map("created_at[to]" -> "2017-01-16 07:30:16")) ==== withCreatedAtTo(Some(new DateTime(2017, 1, 16, 7, 30, 16)))
-      build(Map("created_at[to]" -> "2017-01-16 07:30:16 +0010")) ==== withCreatedAtTo(Some(new DateTime(2017, 1, 16, 7, 20, 16)))
-      build(Map("created_at[to]" -> "2017/01/16 07:30:16 +0010")) ==== withCreatedAtTo(Some(new DateTime(2017, 1, 16, 7, 20, 16)))
-      build(Map("created_at[to]" -> "2017-01-16T07:30:16Z")) ==== withCreatedAtTo(Some(new DateTime(2017, 1, 16, 7, 30, 16)))
-      build(Map("created_at[to]" -> "2017-01-16T07:30:16")) ==== withCreatedAtTo(Some(new DateTime(2017, 1, 16, 7, 30, 16)))
+      build(Map("created_at[to]" -> "2017-01-16 07:30:16")) ==== withCreatedAtTo(
+        Some(new DateTime(2017, 1, 16, 7, 30, 16))
+      )
+      build(Map("created_at[to]" -> "2017-01-16 07:30:16 +0010")) ==== withCreatedAtTo(
+        Some(new DateTime(2017, 1, 16, 7, 20, 16))
+      )
+      build(Map("created_at[to]" -> "2017/01/16 07:30:16 +0010")) ==== withCreatedAtTo(
+        Some(new DateTime(2017, 1, 16, 7, 20, 16))
+      )
+      build(Map("created_at[to]" -> "2017-01-16T07:30:16Z")) ==== withCreatedAtTo(
+        Some(new DateTime(2017, 1, 16, 7, 30, 16))
+      )
+      build(Map("created_at[to]" -> "2017-01-16T07:30:16")) ==== withCreatedAtTo(
+        Some(new DateTime(2017, 1, 16, 7, 30, 16))
+      )
     }
   }
 }

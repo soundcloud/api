@@ -1,6 +1,11 @@
 package com.soundcloud.publicApiStrangler.client.mothership.response.mapper
 
-import com.soundcloud.publicApiStrangler.client.mothership.response.representation.{Result, Success, Track, UnprocessableEntity}
+import com.soundcloud.publicApiStrangler.client.mothership.response.representation.{
+  Result,
+  Success,
+  Track,
+  UnprocessableEntity
+}
 import com.twitter.finagle.http.{Response, Status}
 import play.api.libs.json.Json
 

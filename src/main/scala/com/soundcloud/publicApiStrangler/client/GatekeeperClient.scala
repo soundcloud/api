@@ -9,21 +9,25 @@ import com.twitter.util.Future
 
 class GatekeeperClient(service: JsonClient) {
   def featuresFor(session: UserSession): Future[Set[String]] =
-    service.getWithSession(
-      session,
-      Path() / "users" / userIdOrAnonymous(session) / "features",
-      Params.empty,
-      Headers.empty
-    ).map(StringSetResponse(_))
+    service
+      .getWithSession(
+        session,
+        Path() / "users" / userIdOrAnonymous(session) / "features",
+        Params.empty,
+        Headers.empty
+      )
+      .map(StringSetResponse(_))
 
   def isFeatureAccessible(session: UserSession, featureName: String): Future[Boolean] =
-    service.head(
-      session,
-      Path() / "users" / userIdOrAnonymous(session) / "features" / featureName,
-      Params.empty,
-      Headers.empty,
-      None
-    ).map(BooleanByStatusResponse(_))
+    service
+      .head(
+        session,
+        Path() / "users" / userIdOrAnonymous(session) / "features" / featureName,
+        Params.empty,
+        Headers.empty,
+        None
+      )
+      .map(BooleanByStatusResponse(_))
 
   private def userIdOrAnonymous(session: UserSession): String = {
     if (session.isAnonymous) "anonymous" else session.getUser.identifier

@@ -18,12 +18,13 @@ import scala.util.control.NonFatal
   * Reason for overriding is to re-route updating and deleting tracks through
   * track-coordinator, which implements the correct restrictions.
   */
-class TracksHandler(userAuthentication: UserAuthentication,
-                    trackCoordinator: TrackCoordinatorClient,
-                    okidokiClient: OkidokiClient,
-                    mothershipDispatcher: DispatchToMothershipHandler,
-                    trackmetadataClient: TrackmetadataClient) {
-
+class TracksHandler(
+    userAuthentication: UserAuthentication,
+    trackCoordinator: TrackCoordinatorClient,
+    okidokiClient: OkidokiClient,
+    mothershipDispatcher: DispatchToMothershipHandler,
+    trackmetadataClient: TrackmetadataClient
+) {
   def handleDelete(request: HandlerRequest): Future[Response] = {
     userAuthentication.withLoggedInUser(request) { (session, _) =>
       trackCoordinator.deleteTrack(session, trackUrn(request)).map {
@@ -37,19 +38,22 @@ class TracksHandler(userAuthentication: UserAuthentication,
   def handlePut(request: HandlerRequest): Future[Response] =
     userAuthentication.withLoggedInUser(request) { (session, _) =>
       val urn = trackUrn(request)
-      trackmetadataClient.track(session, urn).flatMap {
-        case Some(track) => {
-          track.supply_chain_status match {
-            // only allow updating manually uploaded tracks
-            case Some("manual_upload") => mothershipDispatcher.dispatch(request)
-            case Some(_) => Future.value(JsonResponseBuilder.unauthorized(Json.stringify(Json.obj("reason" -> "not allowed"))))
-            case None => mothershipDispatcher.dispatch(request)
+      trackmetadataClient
+        .track(session, urn)
+        .flatMap {
+          case Some(track) => {
+            track.supply_chain_status match {
+              // only allow updating manually uploaded tracks
+              case Some("manual_upload") => mothershipDispatcher.dispatch(request)
+              case Some(_) =>
+                Future.value(JsonResponseBuilder.unauthorized(Json.stringify(Json.obj("reason" -> "not allowed"))))
+              case None => mothershipDispatcher.dispatch(request)
+            }
           }
+          case None => Future.value(ResponseBuilder.notFound())
         }
-        case None => Future.value(ResponseBuilder.notFound())
-      }.handle {
-        case NonFatal(_) => ResponseBuilder.internalServerError()
-      }
+        .handle {
+          case NonFatal(_) => ResponseBuilder.internalServerError()
+        }
     }
 }
-

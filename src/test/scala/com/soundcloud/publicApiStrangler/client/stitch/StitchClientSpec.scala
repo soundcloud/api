@@ -10,7 +10,6 @@ import org.mockito.Mockito._
 import play.api.libs.json.{JsObject, Json}
 
 class StitchClientSpec extends UnitSpecification {
-
   trait GenericContext[T] extends Scope {
     def resultF: Future[T]
 
@@ -43,11 +42,9 @@ class StitchClientSpec extends UnitSpecification {
     def stitchKey3 = s"${userUrn.identifier}|${trackUrn3.identifier}"
 
     def genMockResponseContentBit(cat: String, keys: List[(String, Int)]) = {
-      val seriesPerKey = keys.map { case (key, count) =>
-        key -> Json.obj(
-          "series" -> Seq(Json.obj(
-            "time" -> 0,
-            "count" -> count)))
+      val seriesPerKey = keys.map {
+        case (key, count) =>
+          key -> Json.obj("series" -> Seq(Json.obj("time" -> 0, "count" -> count)))
       }
 
       Json.obj(cat -> JsObject(seriesPerKey))
@@ -70,40 +67,39 @@ class StitchClientSpec extends UnitSpecification {
     def mockResponseStatus: Status = Status.Ok
 
     def mockResponseFirstBatch =
-      Future.value(
-        jsonResponse(
-          mockResponseStatus,
-          mockResponseContentsFirstBatch))
+      Future.value(jsonResponse(mockResponseStatus, mockResponseContentsFirstBatch))
 
     def mockResponseSecondBatch =
-      Future.value(
-        jsonResponse(
-          mockResponseStatus,
-          mockResponseContentsSecondBatch))
+      Future.value(jsonResponse(mockResponseStatus, mockResponseContentsSecondBatch))
 
     val expectedParamsFirstBatch = Params(
       "plays" -> s"/ts?category=p.o.t&resolution=alltime&k=$stitchKey1&k=$stitchKey2",
       "downloads" -> s"/ts?category=d.o.t&resolution=alltime&k=$stitchKey1&k=$stitchKey2",
       "likes" -> s"/ts?category=l.o.t&minus-category=n.l.o.t&resolution=alltime&k=$stitchKey1&k=$stitchKey2",
       "comments" -> s"/ts?category=c.o.t&minus-category=n.c.o.t&resolution=alltime&k=$stitchKey1&k=$stitchKey2",
-      "reposts" -> s"/ts?category=r.o.t&minus-category=n.r.o.t&resolution=alltime&k=$stitchKey1&k=$stitchKey2")
+      "reposts" -> s"/ts?category=r.o.t&minus-category=n.r.o.t&resolution=alltime&k=$stitchKey1&k=$stitchKey2"
+    )
 
     val expectedParamsSecondBatch = Params(
       "plays" -> s"/ts?category=p.o.t&resolution=alltime&k=$stitchKey3",
       "downloads" -> s"/ts?category=d.o.t&resolution=alltime&k=$stitchKey3",
       "likes" -> s"/ts?category=l.o.t&minus-category=n.l.o.t&resolution=alltime&k=$stitchKey3",
       "comments" -> s"/ts?category=c.o.t&minus-category=n.c.o.t&resolution=alltime&k=$stitchKey3",
-      "reposts" -> s"/ts?category=r.o.t&minus-category=n.r.o.t&resolution=alltime&k=$stitchKey3")
+      "reposts" -> s"/ts?category=r.o.t&minus-category=n.r.o.t&resolution=alltime&k=$stitchKey3"
+    )
 
-    when(jsonClient.getWithSession(session, Path() / "bulk", expectedParamsFirstBatch, Headers.empty)).thenReturn(mockResponseFirstBatch)
-    when(jsonClient.getWithSession(session, Path() / "bulk", expectedParamsSecondBatch, Headers.empty)).thenReturn(mockResponseSecondBatch)
+    when(jsonClient.getWithSession(session, Path() / "bulk", expectedParamsFirstBatch, Headers.empty))
+      .thenReturn(mockResponseFirstBatch)
+    when(jsonClient.getWithSession(session, Path() / "bulk", expectedParamsSecondBatch, Headers.empty))
+      .thenReturn(mockResponseSecondBatch)
   }
 
   "200 response" in new Context {
     result ==== Map(
       trackUrn1 -> StitchCounts(111, 333, 555, 777, 999),
       trackUrn2 -> StitchCounts(222, 444, 666, 888, 123),
-      trackUrn3 -> StitchCounts(567, 678, 789, 890, 901))
+      trackUrn3 -> StitchCounts(567, 678, 789, 890, 901)
+    )
   }
 
   "500 response" in new Context {

@@ -9,7 +9,6 @@ import com.twitter.util.Future
 import play.api.libs.json.Json
 
 class SubscriptionsService(subscriptions: JsonClient) {
-
   def getActiveSubscriptionCountry(session: UserSession): Future[Option[String]] = {
     val path = Path() / "api" / "users" / session.getUser / "consumer_subscriptions" / "active"
     subscriptions.getWithSession(session, path, Params.empty).map { response =>

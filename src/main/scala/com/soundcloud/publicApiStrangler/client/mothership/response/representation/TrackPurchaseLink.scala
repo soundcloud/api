@@ -5,10 +5,10 @@ import play.api.libs.json.Json
 import com.soundcloud.jvmkit.module.json.UrnFormat._
 
 case class TrackPurchaseLink(
-                              track_urn: Urn,
-                              title: Option[String],
-                              url: String
-                            )
+    track_urn: Urn,
+    title: Option[String],
+    url: String
+)
 
 object TrackPurchaseLink {
   implicit val format = Json.format[TrackPurchaseLink]

@@ -8,13 +8,23 @@ import com.twitter.finagle.http.Response
 import com.twitter.util.Future
 
 class TrackAccessRecorderClient(moshimoshiClient: JsonClient) {
-
-  def recordAccess(session: UserSession, trackUrn: Urn, accessFor: String, shouldLog: Boolean, maybeSecretToken: Option[String]): Future[Response] = {
+  def recordAccess(
+      session: UserSession,
+      trackUrn: Urn,
+      accessFor: String,
+      shouldLog: Boolean,
+      maybeSecretToken: Option[String]
+  ): Future[Response] = {
     val params = Seq(
       maybeSecretToken.map(secretToken => "secret_token" -> StringParam(secretToken)),
       if (shouldLog) None else Some("skip_logging" -> StringParam("1"))
     ).flatten
 
-    moshimoshiClient.getWithSession(session, Path() / "tracks" / trackUrn / "access" / accessFor, Params(params:_*), Headers.empty)
+    moshimoshiClient.getWithSession(
+      session,
+      Path() / "tracks" / trackUrn / "access" / accessFor,
+      Params(params: _*),
+      Headers.empty
+    )
   }
 }

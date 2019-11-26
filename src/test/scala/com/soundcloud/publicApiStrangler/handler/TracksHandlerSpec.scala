@@ -19,7 +19,6 @@ import org.mockito.Mockito.when
 import play.api.libs.json.{JsObject, Json}
 
 class TracksHandlerSpec extends UnitSpecification {
-
   trait Context extends HandlerSpecificationScope {
     val fallback = mock[DispatchToMothershipHandler]
     val trackCoordinator = mock[TrackCoordinatorClient]
@@ -33,8 +32,13 @@ class TracksHandlerSpec extends UnitSpecification {
     val track = mock[Track]
 
     lazy val geo = new Geo("US")
-    lazy val session = new UserSessionBuilder().setUser(loggedInUserUrn).setAgent(Urn("soundcloud", "applications", "v2")).setGeo(geo).build()
-    lazy val handler = new TracksHandler(new FakeUserAuthentication(session), trackCoordinator, okidoki, fallback, trackmetadataClient)
+    lazy val session = new UserSessionBuilder()
+      .setUser(loggedInUserUrn)
+      .setAgent(Urn("soundcloud", "applications", "v2"))
+      .setGeo(geo)
+      .build()
+    lazy val handler =
+      new TracksHandler(new FakeUserAuthentication(session), trackCoordinator, okidoki, fallback, trackmetadataClient)
 
     def trackmetadataResponse: Future[Option[TMTrack]] = Future.value(None)
 
@@ -49,71 +53,70 @@ class TracksHandlerSpec extends UnitSpecification {
   List(
     "/tracks/999",
     "/tracks/999.json"
-  ).foreach { path => {
+  ).foreach { path =>
+    {
+      trait PutContext extends Context {
+        def trackResponse(supplyChainStatus: Option[String]) =
+          Future.value(Some(TrackMetadataTrackBuilder(supply_chain_status = supplyChainStatus).build))
+      }
 
-    trait PutContext extends Context {
-      def trackResponse(supplyChainStatus: Option[String]) =
-        Future.value(Some(TrackMetadataTrackBuilder(
-          supply_chain_status = supplyChainStatus).build))
+      s"PUT $path" >> {
+        "passes through requests with supply_chain_status = manual_upload" in new PutContext {
+          override def trackmetadataResponse = trackResponse(Some("manual_upload"))
+
+          when(fallback.dispatch(any[Request]))
+            .thenReturn(Future.value(ResponseBuilder.created("Thank you for creating")))
+
+          val response = put(handler.handlePut, path, body = Json.stringify(singleTrack))
+          response.status ==== Status.Created
+          response.contentString ==== "Thank you for creating"
+        }
+
+        "passes through requests with supply_chain_status = null" in new PutContext {
+          override def trackmetadataResponse = trackResponse(None)
+
+          when(fallback.dispatch(any[Request]))
+            .thenReturn(Future.value(ResponseBuilder.created("Thank you for creating")))
+
+          val response = put(handler.handlePut, path, body = Json.stringify(singleTrack))
+          response.status ==== Status.Created
+          response.contentString ==== "Thank you for creating"
+        }
+
+        "refuses updating tracks with supply_chain_status = supply_chain" in new PutContext {
+          override def trackmetadataResponse = trackResponse(Some("supply_chain"))
+
+          val response = put(handler.handlePut, path, body = Json.stringify(singleTrack))
+          response.status ==== Status.Unauthorized
+          Json.parse(response.contentString) ==== Json.obj("reason" -> "not allowed")
+        }
+
+        "refuses updating tracks with supply_chain_status = banana" in new PutContext {
+          override def trackmetadataResponse = trackResponse(Some("banana"))
+
+          val response = put(handler.handlePut, path, body = Json.stringify(singleTrack))
+          response.status ==== Status.Unauthorized
+          Json.parse(response.contentString) ==== Json.obj("reason" -> "not allowed")
+        }
+
+        "returns not found when track is not returned" in new PutContext {
+          override def trackmetadataResponse = Future.value(None)
+
+          val response = put(handler.handlePut, path, body = Json.stringify(singleTrack))
+          response.status ==== Status.NotFound
+          response.contentString ==== ""
+        }
+
+        "errors if trackmetadata client throws up" in new PutContext {
+          override def trackmetadataResponse = Future.exception(new RuntimeException("nooo"))
+
+          val response = put(handler.handlePut, path, body = Json.stringify(singleTrack))
+          response.status ==== Status.InternalServerError
+          response.contentString ==== ""
+        }
+      }
     }
-
-    s"PUT $path" >> {
-      "passes through requests with supply_chain_status = manual_upload" in new PutContext {
-        override def trackmetadataResponse = trackResponse(Some("manual_upload"))
-
-        when(fallback.dispatch(any[Request])).thenReturn(Future.value(ResponseBuilder.created("Thank you for creating")))
-
-        val response = put(handler.handlePut, path, body = Json.stringify(singleTrack))
-        response.status ==== Status.Created
-        response.contentString ==== "Thank you for creating"
-      }
-
-      "passes through requests with supply_chain_status = null" in new PutContext {
-        override def trackmetadataResponse = trackResponse(None)
-
-        when(fallback.dispatch(any[Request])).thenReturn(Future.value(ResponseBuilder.created("Thank you for creating")))
-
-        val response = put(handler.handlePut, path, body = Json.stringify(singleTrack))
-        response.status ==== Status.Created
-        response.contentString ==== "Thank you for creating"
-      }
-
-      "refuses updating tracks with supply_chain_status = supply_chain" in new PutContext {
-        override def trackmetadataResponse = trackResponse(Some("supply_chain"))
-
-        val response = put(handler.handlePut, path, body = Json.stringify(singleTrack))
-        response.status ==== Status.Unauthorized
-        Json.parse(response.contentString) ==== Json.obj("reason" -> "not allowed")
-      }
-
-      "refuses updating tracks with supply_chain_status = banana" in new PutContext {
-        override def trackmetadataResponse = trackResponse(Some("banana"))
-
-        val response = put(handler.handlePut, path, body = Json.stringify(singleTrack))
-        response.status ==== Status.Unauthorized
-        Json.parse(response.contentString) ==== Json.obj("reason" -> "not allowed")
-      }
-
-      "returns not found when track is not returned" in new PutContext {
-        override def trackmetadataResponse = Future.value(None)
-
-        val response = put(handler.handlePut, path, body = Json.stringify(singleTrack))
-        response.status ==== Status.NotFound
-        response.contentString ==== ""
-      }
-
-      "errors if trackmetadata client throws up" in new PutContext {
-        override def trackmetadataResponse = Future.exception(new RuntimeException("nooo"))
-
-        val response = put(handler.handlePut, path, body = Json.stringify(singleTrack))
-        response.status ==== Status.InternalServerError
-        response.contentString ==== ""
-      }
-    }
-
   }
-  }
-
 
   "DELETE /tracks/:id" >> {
     "succeeds" in new Context {

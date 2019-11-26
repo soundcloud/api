@@ -17,17 +17,13 @@ import com.soundcloud.publicApiStrangler.test.{HandlerSpecificationScope, UnitSp
 import com.twitter.util.Future
 
 class TimeLineHandlerSpec extends UnitSpecification {
-
-
   trait Context extends HandlerSpecificationScope with TimeLineHandlerTestData {
     val entityMapper = mock[EntityMapper]
     val entitySummaryMapper = mock[EntitySummaryMapper]
     val timelineClient = mock[TimelineJsonClient]
 
-
     val session = loggedInSession(usrUrn)
     val context = new MappingContext(session)
-
 
     // Mocking out the EntityMapper and EntitySummaryMapper is necessary because of the calls to external services
     // Howver the mocking is very hard due to the next-bff stuff that lacks proper types and has mutable state
@@ -37,14 +33,18 @@ class TimeLineHandlerSpec extends UnitSpecification {
 
     entitySummaryMapper.embed(===(usrUrn))(any[MappingContext]) returns userItem
 
-    val track = new Track(testTrackJson, Map(trackUrn -> 1234), Map(trackUrn -> 2345), baseUrl, entitySummaryMapper)(context)
-    val playlist = new Playlist(playlistJson, Map(playlistUrn -> 34), Map(playlistUrn -> 84), baseUrl, entitySummaryMapper)(context)
+    val track =
+      new Track(testTrackJson, Map(trackUrn -> 1234), Map(trackUrn -> 2345), baseUrl, entitySummaryMapper)(context)
+    val playlist =
+      new Playlist(playlistJson, Map(playlistUrn -> 34), Map(playlistUrn -> 84), baseUrl, entitySummaryMapper)(context)
 
-    entityMapper.map(any[UserSession], any[Set[Urn]])(any[MappingContext]) returns Future.value(Map(
-      usrUrn -> user,
-      trackUrn -> track,
-      playlistUrn -> playlist
-    ))
+    entityMapper.map(any[UserSession], any[Set[Urn]])(any[MappingContext]) returns Future.value(
+      Map(
+        usrUrn -> user,
+        trackUrn -> track,
+        playlistUrn -> playlist
+      )
+    )
 
     val trackItem = EmbeddedItem(entityMapper.asInstanceOf[Mapper[Any, JsonMapping]], trackUrn)
     trackItem.materialize(Map(trackUrn -> track))
@@ -53,7 +53,6 @@ class TimeLineHandlerSpec extends UnitSpecification {
 
     entityMapper.embed(===(trackUrn))(any[MappingContext]) returns trackItem
     entityMapper.embed(===(playlistUrn))(any[MappingContext]) returns playlistItem
-
 
     // With the entity mappers returning json objects, let the TimeLineHandler fiddle them together and assert the results
     val handler = new TimelineHandler(
@@ -67,11 +66,14 @@ class TimeLineHandlerSpec extends UnitSpecification {
 
     override def routingDefinitions = Routing.forTimelineHandler(handler)
 
-    timelineClient.activities(any[UserSession], any[Option[String]], any[Int], any[Boolean], any[Option[String]])
+    timelineClient
+      .activities(any[UserSession], any[Option[String]], any[Int], any[Boolean], any[Option[String]])
       .returns(Future.value(timeline))
-    timelineClient.stream(any[UserSession], any[Option[String]], any[Int], any[Boolean], any[Option[String]])
+    timelineClient
+      .stream(any[UserSession], any[Option[String]], any[Int], any[Boolean], any[Option[String]])
       .returns(Future.value(timeline))
-    timelineClient.followingsTracks(any[UserSession], any[Option[String]], any[Int], any[Boolean], any[Option[String]])
+    timelineClient
+      .followingsTracks(any[UserSession], any[Option[String]], any[Int], any[Boolean], any[Option[String]])
       .returns(Future.value(onlyTracksTimeline))
   }
 
@@ -81,12 +83,17 @@ class TimeLineHandlerSpec extends UnitSpecification {
     "/e1/me/activities.json"
   ).foreach { endpoint =>
     endpoint in new Context {
-
       val response = get(handler.renderAllActivities, endpoint)
       response.statusCode ==== 200
       response.contentString ==== timelineJsonString(endpoint)
 
-      there was one(timelineClient).activities(===(session), any[Option[String]], any[Int], any[Boolean], any[Option[String]])
+      there was one(timelineClient).activities(
+        ===(session),
+        any[Option[String]],
+        any[Int],
+        any[Boolean],
+        any[Option[String]]
+      )
     }
   }
 
@@ -96,12 +103,17 @@ class TimeLineHandlerSpec extends UnitSpecification {
     "/e1/me/stream.json"
   ).foreach { endpoint =>
     endpoint in new Context {
-
       val response = get(handler.renderStreamActivities, endpoint)
       response.statusCode ==== 200
       response.contentString ==== streamTimelineJsonString(endpoint)
 
-      there was one(timelineClient).stream(===(session), any[Option[String]], any[Int], any[Boolean], any[Option[String]])
+      there was one(timelineClient).stream(
+        ===(session),
+        any[Option[String]],
+        any[Int],
+        any[Boolean],
+        any[Option[String]]
+      )
     }
   }
 
@@ -122,12 +134,17 @@ class TimeLineHandlerSpec extends UnitSpecification {
     "/me/activities/all/own.json"
   ).foreach { endpoint =>
     endpoint in new Context {
-
       val response = get(handler.renderPublicActivities, endpoint)
       response.statusCode ==== 200
       response.contentString ==== publicCompleteTimelineJsonString(endpoint)
 
-      there was one(timelineClient).stream(===(session), any[Option[String]], any[Int], any[Boolean], any[Option[String]])
+      there was one(timelineClient).stream(
+        ===(session),
+        any[Option[String]],
+        any[Int],
+        any[Boolean],
+        any[Option[String]]
+      )
     }
   }
 
@@ -137,13 +154,17 @@ class TimeLineHandlerSpec extends UnitSpecification {
     "/me/followings/tracks.json"
   ).foreach { endpoint =>
     endpoint in new Context {
-
       val response = get(handler.renderFollowingsTracks, endpoint)
       response.statusCode ==== 200
       response.contentString ==== tracksOnlyTimelineJsonString()
 
-      there was one(timelineClient).followingsTracks(===(session), any[Option[String]], any[Int], any[Boolean], any[Option[String]])
+      there was one(timelineClient).followingsTracks(
+        ===(session),
+        any[Option[String]],
+        any[Int],
+        any[Boolean],
+        any[Option[String]]
+      )
     }
   }
-
 }

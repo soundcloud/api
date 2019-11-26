@@ -17,22 +17,24 @@ import play.api.libs.json.JsValue
   *
   * Similar to the track representation on timeline, but with some differences.
   */
-class SearchTrack(session: UserSession,
-                  jsonValue: JsValue,
-                  likeCountMapper: LikeCountMapper,
-                  repostCountsByUrn: Map[Urn, Long],
-                  baseUrl: String,
-                  entitySummaryMapper: EntitySummaryMapper,
-                  @JsonIgnore contentAuthorization: ContentAuthorization,
-                  waveform: WaveformMapper)
-                 // Yep, that was my reaction, too.
-                 (implicit if_this_is_named_context_then_serialization_fails: MappingContext)
-  extends Track(jsonValue, Map.empty, repostCountsByUrn, baseUrl, entitySummaryMapper) {
-
-  val download_url = if (hasDownloadLink)
-    (json \ "download_url").asOpt[String]
-  else
-    None
+class SearchTrack(
+    session: UserSession,
+    jsonValue: JsValue,
+    likeCountMapper: LikeCountMapper,
+    repostCountsByUrn: Map[Urn, Long],
+    baseUrl: String,
+    entitySummaryMapper: EntitySummaryMapper,
+    @JsonIgnore contentAuthorization: ContentAuthorization,
+    waveform: WaveformMapper
+)
+// Yep, that was my reaction, too.
+(implicit if_this_is_named_context_then_serialization_fails: MappingContext)
+    extends Track(jsonValue, Map.empty, repostCountsByUrn, baseUrl, entitySummaryMapper) {
+  val download_url =
+    if (hasDownloadLink)
+      (json \ "download_url").asOpt[String]
+    else
+      None
 
   private def hasDownloadLink =
     downloadable.getOrElse(false) ||
@@ -55,5 +57,4 @@ class SearchTrack(session: UserSession,
     (json \ "uid").asOpt[String] map { uid =>
       waveform.embedAttr(WaveformRequestParams(uid, contentAuthorization.getPolicy), _.pngUrl)
     }
-
 }

@@ -6,14 +6,14 @@ import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.publicApiStrangler.mapper.timeline.EntitySummaryMapper
 import play.api.libs.json.JsValue
 
-
-class Track(jsonValue: JsValue,
-            likesByUrn: Map[Urn, Long],
-            repostCountsByUrn: Map[Urn, Long],
-            baseUrl: String,
-            entitySummaryMapper: EntitySummaryMapper)(implicit context: MappingContext)
-  extends TrackSummary(jsonValue, baseUrl, entitySummaryMapper) {
-
+class Track(
+    jsonValue: JsValue,
+    likesByUrn: Map[Urn, Long],
+    repostCountsByUrn: Map[Urn, Long],
+    baseUrl: String,
+    entitySummaryMapper: EntitySummaryMapper
+)(implicit context: MappingContext)
+    extends TrackSummary(jsonValue, baseUrl, entitySummaryMapper) {
   val artwork_url = (json \ "artwork_url").asOpt[String]
   val comment_count = (json \ "comments_count").asOpt[Int]
   val commentable = (json \ "commentable").asOpt[Boolean]
@@ -57,5 +57,4 @@ class Track(jsonValue: JsValue,
   val user_favorite: Option[Any] = None
   val user_playback_count: Option[Int] = None
   val video_url: Option[String] = None
-
 }

@@ -9,7 +9,6 @@ import com.twitter.util.Await
 import play.api.libs.json.Json
 
 class TimelineJsonClientSpec extends UnitSpecification {
-
   trait Context extends Scope {
     implicit val service = mock[JsonClient]
     implicit val session = anonymousSession
@@ -21,12 +20,20 @@ class TimelineJsonClientSpec extends UnitSpecification {
 
   "#itemStream" >> {
     "with cursor" in new Context {
-      expectOkResponse(Path() / "item_stream", timelineItemStream, Map("page_size" -> "10", "cursor" -> "deadbeef", "direction" -> "after"))
+      expectOkResponse(
+        Path() / "item_stream",
+        timelineItemStream,
+        Map("page_size" -> "10", "cursor" -> "deadbeef", "direction" -> "after")
+      )
       timelineItemStream ==== Await.result(client.itemStream(session, Some("deadbeef"), 10))
     }
 
     "with reverse cursor" in new Context {
-      expectOkResponse(Path() / "item_stream", timelineItemStream, Map("page_size" -> "10", "cursor" -> "deadbeef", "direction" -> "before"))
+      expectOkResponse(
+        Path() / "item_stream",
+        timelineItemStream,
+        Map("page_size" -> "10", "cursor" -> "deadbeef", "direction" -> "before")
+      )
       timelineItemStream ==== Await.result(client.itemStream(session, Some("deadbeef"), 10, true))
     }
 
@@ -36,19 +43,31 @@ class TimelineJsonClientSpec extends UnitSpecification {
     }
 
     "with cursor encoding and direction" in new Context {
-      expectOkResponse(Path() / "item_stream", timelineItemStream, Map("page_size" -> "10", "cursor" -> "deadbeef", "direction" -> "before", "cursor_encoding" -> "uuid"))
+      expectOkResponse(
+        Path() / "item_stream",
+        timelineItemStream,
+        Map("page_size" -> "10", "cursor" -> "deadbeef", "direction" -> "before", "cursor_encoding" -> "uuid")
+      )
       timelineItemStream ==== Await.result(client.itemStream(session, Some("deadbeef"), 10, true, Some("uuid")))
     }
   }
 
   "#stream" >> {
     "with cursor" in new Context {
-      expectOkResponse(Path() / "stream", timelineStream, Map("page_size" -> "10", "cursor" -> "deadbeef", "direction" -> "after"))
+      expectOkResponse(
+        Path() / "stream",
+        timelineStream,
+        Map("page_size" -> "10", "cursor" -> "deadbeef", "direction" -> "after")
+      )
       timelineStream ==== Await.result(client.stream(session, Some("deadbeef"), 10))
     }
 
     "with reverse cursor" in new Context {
-      expectOkResponse(Path() / "stream", timelineStream, Map("page_size" -> "10", "cursor" -> "deadbeef", "direction" -> "before"))
+      expectOkResponse(
+        Path() / "stream",
+        timelineStream,
+        Map("page_size" -> "10", "cursor" -> "deadbeef", "direction" -> "before")
+      )
       timelineStream ==== Await.result(client.stream(session, Some("deadbeef"), 10, true))
     }
 
@@ -58,19 +77,31 @@ class TimelineJsonClientSpec extends UnitSpecification {
     }
 
     "with cursor encoding and direction" in new Context {
-      expectOkResponse(Path() / "stream", timelineStream, Map("page_size" -> "10", "cursor" -> "deadbeef", "direction" -> "before", "cursor_encoding" -> "uuid"))
+      expectOkResponse(
+        Path() / "stream",
+        timelineStream,
+        Map("page_size" -> "10", "cursor" -> "deadbeef", "direction" -> "before", "cursor_encoding" -> "uuid")
+      )
       timelineStream ==== Await.result(client.stream(session, Some("deadbeef"), 10, true, Some("uuid")))
     }
   }
 
   "#activities" >> {
     "with cursor" in new Context {
-      expectOkResponse(Path() / "activities", timelineActivities, Map("page_size" -> "10", "cursor" -> "deadbeef", "direction" -> "after"))
+      expectOkResponse(
+        Path() / "activities",
+        timelineActivities,
+        Map("page_size" -> "10", "cursor" -> "deadbeef", "direction" -> "after")
+      )
       timelineActivities ==== Await.result(client.activities(session, Some("deadbeef"), 10))
     }
 
     "with reverse cursor" in new Context {
-      expectOkResponse(Path() / "activities", timelineActivities, Map("page_size" -> "10", "cursor" -> "deadbeef", "direction" -> "before"))
+      expectOkResponse(
+        Path() / "activities",
+        timelineActivities,
+        Map("page_size" -> "10", "cursor" -> "deadbeef", "direction" -> "before")
+      )
       timelineActivities ==== Await.result(client.activities(session, Some("deadbeef"), 10, true))
     }
 
@@ -82,129 +113,181 @@ class TimelineJsonClientSpec extends UnitSpecification {
 
   "#profile" >> {
     "with cursor" in new Context {
-      expectOkResponse(Path() / "profiles" / urn.toString,
-        timelineProfile, Map("page_size" -> "10", "cursor" -> "deadbeef", "direction" -> "after"))
+      expectOkResponse(
+        Path() / "profiles" / urn.toString,
+        timelineProfile,
+        Map("page_size" -> "10", "cursor" -> "deadbeef", "direction" -> "after")
+      )
       timelineProfile ==== Await.result(client.profile(session, urn, Some("deadbeef"), 10))
     }
 
     "with reverse cursor" in new Context {
-      expectOkResponse(Path() / "profiles" / urn.toString,
-        timelineProfile, Map("page_size" -> "10", "cursor" -> "deadbeef", "direction" -> "before"))
+      expectOkResponse(
+        Path() / "profiles" / urn.toString,
+        timelineProfile,
+        Map("page_size" -> "10", "cursor" -> "deadbeef", "direction" -> "before")
+      )
       timelineProfile ==== Await.result(client.profile(session, urn, Some("deadbeef"), 10, reverseCursor = true))
     }
 
     "without cursor" in new Context {
-      expectOkResponse(Path() / "profiles" / urn.toString,
-        timelineProfile, Map("page_size" -> "50"))
+      expectOkResponse(Path() / "profiles" / urn.toString, timelineProfile, Map("page_size" -> "50"))
       timelineProfile ==== Await.result(client.profile(session, urn, None))
     }
   }
 
   "#postedAndRepostedTracks" >> {
     "with cursor" in new Context {
-      expectOkResponse(Path() / "profiles" / urn.toString / "tracks" / "posted_and_reposted",
-        timelinePostedAndRepostedTracks, Map("page_size" -> "10", "cursor" -> "deadbeef", "direction" -> "after"))
-      timelinePostedAndRepostedTracks ==== Await.result(client.postedAndRepostedTracks(session, urn, Some("deadbeef"), 10))
+      expectOkResponse(
+        Path() / "profiles" / urn.toString / "tracks" / "posted_and_reposted",
+        timelinePostedAndRepostedTracks,
+        Map("page_size" -> "10", "cursor" -> "deadbeef", "direction" -> "after")
+      )
+      timelinePostedAndRepostedTracks ==== Await.result(
+        client.postedAndRepostedTracks(session, urn, Some("deadbeef"), 10)
+      )
     }
 
     "with reverse cursor" in new Context {
-      expectOkResponse(Path() / "profiles" / urn.toString / "tracks" / "posted_and_reposted",
-        timelinePostedAndRepostedTracks, Map("page_size" -> "10", "cursor" -> "deadbeef", "direction" -> "before"))
-      timelinePostedAndRepostedTracks ==== Await.result(client.postedAndRepostedTracks(session, urn, Some("deadbeef"), 10, reverseCursor = true))
+      expectOkResponse(
+        Path() / "profiles" / urn.toString / "tracks" / "posted_and_reposted",
+        timelinePostedAndRepostedTracks,
+        Map("page_size" -> "10", "cursor" -> "deadbeef", "direction" -> "before")
+      )
+      timelinePostedAndRepostedTracks ==== Await.result(
+        client.postedAndRepostedTracks(session, urn, Some("deadbeef"), 10, reverseCursor = true)
+      )
     }
 
     "without cursor" in new Context {
-      expectOkResponse(Path() / "profiles" / urn.toString / "tracks" / "posted_and_reposted",
-        timelinePostedAndRepostedTracks, Map("page_size" -> "50"))
+      expectOkResponse(
+        Path() / "profiles" / urn.toString / "tracks" / "posted_and_reposted",
+        timelinePostedAndRepostedTracks,
+        Map("page_size" -> "50")
+      )
       timelinePostedAndRepostedTracks ==== Await.result(client.postedAndRepostedTracks(session, urn, None))
     }
   }
 
   "#postedAndRepostedPlaylists" >> {
     "with cursor" in new Context {
-      expectOkResponse(Path() / "profiles" / urn.toString / "playlists" / "posted_and_reposted",
-        timelinePostedAndRepostedPlaylists, Map("page_size" -> "10", "cursor" -> "deadbeef", "direction" -> "after"))
-      timelinePostedAndRepostedPlaylists ==== Await.result(client.postedAndRepostedPlaylists(session, urn, Some("deadbeef"), 10))
+      expectOkResponse(
+        Path() / "profiles" / urn.toString / "playlists" / "posted_and_reposted",
+        timelinePostedAndRepostedPlaylists,
+        Map("page_size" -> "10", "cursor" -> "deadbeef", "direction" -> "after")
+      )
+      timelinePostedAndRepostedPlaylists ==== Await.result(
+        client.postedAndRepostedPlaylists(session, urn, Some("deadbeef"), 10)
+      )
     }
 
     "with reverse cursor" in new Context {
-      expectOkResponse(Path() / "profiles" / urn.toString / "playlists" / "posted_and_reposted",
-        timelinePostedAndRepostedPlaylists, Map("page_size" -> "10", "cursor" -> "deadbeef", "direction" -> "before"))
-      timelinePostedAndRepostedPlaylists ==== Await.result(client.postedAndRepostedPlaylists(session, urn, Some("deadbeef"), 10, reverseCursor = true))
+      expectOkResponse(
+        Path() / "profiles" / urn.toString / "playlists" / "posted_and_reposted",
+        timelinePostedAndRepostedPlaylists,
+        Map("page_size" -> "10", "cursor" -> "deadbeef", "direction" -> "before")
+      )
+      timelinePostedAndRepostedPlaylists ==== Await.result(
+        client.postedAndRepostedPlaylists(session, urn, Some("deadbeef"), 10, reverseCursor = true)
+      )
     }
 
     "without cursor" in new Context {
-      expectOkResponse(Path() / "profiles" / urn.toString / "playlists" / "posted_and_reposted",
-        timelinePostedAndRepostedPlaylists, Map("page_size" -> "50"))
+      expectOkResponse(
+        Path() / "profiles" / urn.toString / "playlists" / "posted_and_reposted",
+        timelinePostedAndRepostedPlaylists,
+        Map("page_size" -> "50")
+      )
       timelinePostedAndRepostedPlaylists ==== Await.result(client.postedAndRepostedPlaylists(session, urn, None))
     }
   }
 
   "#postedAndLikedPlaylists" >> {
     "with cursor" in new Context {
-      expectOkResponse(Path() / "profiles" / urn.toString / "playlists" / "posted_and_liked",
-        timelinePostedAndLikedPlaylists, Map("page_size" -> "10", "cursor" -> "deadbeef", "direction" -> "after"))
-      timelinePostedAndLikedPlaylists ==== Await.result(client.postedAndLikedPlaylists(session, urn, Some("deadbeef"), 10))
+      expectOkResponse(
+        Path() / "profiles" / urn.toString / "playlists" / "posted_and_liked",
+        timelinePostedAndLikedPlaylists,
+        Map("page_size" -> "10", "cursor" -> "deadbeef", "direction" -> "after")
+      )
+      timelinePostedAndLikedPlaylists ==== Await.result(
+        client.postedAndLikedPlaylists(session, urn, Some("deadbeef"), 10)
+      )
     }
 
     "with reverse cursor" in new Context {
-      expectOkResponse(Path() / "profiles" / urn.toString / "playlists" / "posted_and_liked",
-        timelinePostedAndLikedPlaylists, Map("page_size" -> "10", "cursor" -> "deadbeef", "direction" -> "before"))
-      timelinePostedAndLikedPlaylists ==== Await.result(client.postedAndLikedPlaylists(session, urn, Some("deadbeef"), 10, reverseCursor = true))
+      expectOkResponse(
+        Path() / "profiles" / urn.toString / "playlists" / "posted_and_liked",
+        timelinePostedAndLikedPlaylists,
+        Map("page_size" -> "10", "cursor" -> "deadbeef", "direction" -> "before")
+      )
+      timelinePostedAndLikedPlaylists ==== Await.result(
+        client.postedAndLikedPlaylists(session, urn, Some("deadbeef"), 10, reverseCursor = true)
+      )
     }
 
     "without cursor" in new Context {
-      expectOkResponse(Path() / "profiles" / urn.toString / "playlists" / "posted_and_liked",
-        timelinePostedAndLikedPlaylists, Map("page_size" -> "50"))
+      expectOkResponse(
+        Path() / "profiles" / urn.toString / "playlists" / "posted_and_liked",
+        timelinePostedAndLikedPlaylists,
+        Map("page_size" -> "50")
+      )
       timelinePostedAndLikedPlaylists ==== Await.result(client.postedAndLikedPlaylists(session, urn, None))
     }
   }
 
   "#reposts" >> {
     "with cursor" in new Context {
-      expectOkResponse(Path() / "profiles" / urn.toString / "reposts",
-        timelineReposts, Map("page_size" -> "10", "cursor" -> "deadbeef", "direction" -> "after"))
+      expectOkResponse(
+        Path() / "profiles" / urn.toString / "reposts",
+        timelineReposts,
+        Map("page_size" -> "10", "cursor" -> "deadbeef", "direction" -> "after")
+      )
       timelineReposts ==== Await.result(client.reposts(session, urn, Some("deadbeef"), 10))
     }
 
     "with reverse cursor" in new Context {
-      expectOkResponse(Path() / "profiles" / urn.toString / "reposts",
-        timelineReposts, Map("page_size" -> "10", "cursor" -> "deadbeef", "direction" -> "before"))
+      expectOkResponse(
+        Path() / "profiles" / urn.toString / "reposts",
+        timelineReposts,
+        Map("page_size" -> "10", "cursor" -> "deadbeef", "direction" -> "before")
+      )
       timelineReposts ==== Await.result(client.reposts(session, urn, Some("deadbeef"), 10, reverseCursor = true))
     }
 
     "without cursor" in new Context {
-      expectOkResponse(Path() / "profiles" / urn.toString / "reposts",
-        timelineReposts, Map("page_size" -> "50"))
+      expectOkResponse(Path() / "profiles" / urn.toString / "reposts", timelineReposts, Map("page_size" -> "50"))
       timelineReposts ==== Await.result(client.reposts(session, urn, None))
     }
   }
 
   "#likes" >> {
     "with cursor" in new Context {
-      expectOkResponse(Path() / "profiles" / urn.toString / "likes",
-        timelineLikes, Map("page_size" -> "10", "cursor" -> "deadbeef", "direction" -> "after"))
+      expectOkResponse(
+        Path() / "profiles" / urn.toString / "likes",
+        timelineLikes,
+        Map("page_size" -> "10", "cursor" -> "deadbeef", "direction" -> "after")
+      )
       timelineLikes ==== Await.result(client.likes(session, urn, Some("deadbeef"), 10))
     }
 
     "with reverse cursor" in new Context {
-      expectOkResponse(Path() / "profiles" / urn.toString / "likes",
-        timelineLikes, Map("page_size" -> "10", "cursor" -> "deadbeef", "direction" -> "before"))
+      expectOkResponse(
+        Path() / "profiles" / urn.toString / "likes",
+        timelineLikes,
+        Map("page_size" -> "10", "cursor" -> "deadbeef", "direction" -> "before")
+      )
       timelineLikes ==== Await.result(client.likes(session, urn, Some("deadbeef"), 10, reverseCursor = true))
     }
 
     "without cursor" in new Context {
-      expectOkResponse(Path() / "profiles" / urn.toString / "likes",
-        timelineLikes, Map("page_size" -> "50"))
+      expectOkResponse(Path() / "profiles" / urn.toString / "likes", timelineLikes, Map("page_size" -> "50"))
       timelineLikes ==== Await.result(client.likes(session, urn, None))
     }
   }
 
   "#followingsTracks" >> {
-
     trait TimelineWithMixedItemsScenario extends Context {
-      val actualTimeline = Json.parse(
-        """
+      val actualTimeline = Json.parse("""
              {
                  "events":[
                     {
@@ -241,8 +324,7 @@ class TimelineJsonClientSpec extends UnitSpecification {
                  }
               }""")
 
-      val expectedAnswer = Json.parse(
-        """
+      val expectedAnswer = Json.parse("""
              {
                  "events":[
                     {
@@ -258,8 +340,7 @@ class TimelineJsonClientSpec extends UnitSpecification {
     }
 
     trait TimelineWithTracksOnlyScenario extends Context {
-      val actualTimeline = Json.parse(
-        """
+      val actualTimeline = Json.parse("""
              {
                  "events":[
                     {
@@ -275,8 +356,7 @@ class TimelineJsonClientSpec extends UnitSpecification {
                  }
               }""")
 
-      val expectedAnswer = Json.parse(
-        """
+      val expectedAnswer = Json.parse("""
              {
                  "events":[
                     {
@@ -292,13 +372,21 @@ class TimelineJsonClientSpec extends UnitSpecification {
     }
 
     "with cursor" in new TimelineWithTracksOnlyScenario {
-      expectOkResponse(Path() / "stream", actualTimeline, Map("page_size" -> "10", "cursor" -> "deadbeef", "direction" -> "after"))
+      expectOkResponse(
+        Path() / "stream",
+        actualTimeline,
+        Map("page_size" -> "10", "cursor" -> "deadbeef", "direction" -> "after")
+      )
 
       expectedAnswer ==== Await.result(client.followingsTracks(session, Some("deadbeef"), 10))
     }
 
     "with reverse cursor" in new TimelineWithTracksOnlyScenario {
-      expectOkResponse(Path() / "stream", actualTimeline, Map("page_size" -> "10", "cursor" -> "deadbeef", "direction" -> "before"))
+      expectOkResponse(
+        Path() / "stream",
+        actualTimeline,
+        Map("page_size" -> "10", "cursor" -> "deadbeef", "direction" -> "before")
+      )
 
       expectedAnswer ==== Await.result(client.followingsTracks(session, Some("deadbeef"), 10, true))
     }
@@ -310,16 +398,23 @@ class TimelineJsonClientSpec extends UnitSpecification {
     }
 
     "with cursor encoding and direction" in new TimelineWithTracksOnlyScenario {
-      expectOkResponse(Path() / "stream", actualTimeline, Map("page_size" -> "10", "cursor" -> "deadbeef", "direction" -> "before", "cursor_encoding" -> "uuid"))
+      expectOkResponse(
+        Path() / "stream",
+        actualTimeline,
+        Map("page_size" -> "10", "cursor" -> "deadbeef", "direction" -> "before", "cursor_encoding" -> "uuid")
+      )
 
       expectedAnswer ==== Await.result(client.followingsTracks(session, Some("deadbeef"), 10, true, Some("uuid")))
     }
 
     "should return tracks only" in new TimelineWithMixedItemsScenario {
-      expectOkResponse(Path() / "stream", actualTimeline, Map("page_size" -> "10", "cursor" -> "deadbeef", "direction" -> "after"))
+      expectOkResponse(
+        Path() / "stream",
+        actualTimeline,
+        Map("page_size" -> "10", "cursor" -> "deadbeef", "direction" -> "after")
+      )
 
       expectedAnswer ==== Await.result(client.followingsTracks(session, Some("deadbeef"), 10))
     }
   }
-
 }

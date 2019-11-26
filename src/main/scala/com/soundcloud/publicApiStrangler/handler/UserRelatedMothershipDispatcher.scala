@@ -34,60 +34,75 @@ import play.api.libs.json._
   * `followings_count`, `public_favorites_count` and other keys, with the counts themselves coming from the
   * upstream services that are responsible for them.
   */
-class UserRelatedMothershipDispatcher(userAuthentication: UserAuthentication,
-                                      mothershipDispatcher: DispatchToMothershipHandler,
-                                      followCountsClient: FollowCountsClient,
-                                      lieblingClient: LieblingClient,
-                                      shouldLoadCountsFromLiebling: () => Future[Boolean],
-                                      repostsClient: RepostsClient) {
-
+class UserRelatedMothershipDispatcher(
+    userAuthentication: UserAuthentication,
+    mothershipDispatcher: DispatchToMothershipHandler,
+    followCountsClient: FollowCountsClient,
+    lieblingClient: LieblingClient,
+    shouldLoadCountsFromLiebling: () => Future[Boolean],
+    repostsClient: RepostsClient
+) {
   def dispatchToMothership(request: HandlerRequest): Future[Response] = {
     userAuthentication.withUserSession(request) { session =>
-      mothershipDispatcher.dispatchToMothership(request.request).flatMap(response => {
-        lazy val defaultResponse = Future.value(response)
+      mothershipDispatcher
+        .dispatchToMothership(request.request)
+        .flatMap(response => {
+          lazy val defaultResponse = Future.value(response)
 
-        if (response.statusCode < 300) {
-          (for {
-            responseJson <- Try(Json.parse(response.getContentString())).toOption
-            userUrns = extractUserUrns(responseJson)
-            if userUrns.nonEmpty
-          } yield {
-            enrichResponse(session, userUrns, responseJson, response)
-          }).getOrElse(defaultResponse)
-        } else {
-          defaultResponse
-        }
-      })
+          if (response.statusCode < 300) {
+            (for {
+              responseJson <- Try(Json.parse(response.getContentString())).toOption
+              userUrns = extractUserUrns(responseJson)
+              if userUrns.nonEmpty
+            } yield {
+              enrichResponse(session, userUrns, responseJson, response)
+            }).getOrElse(defaultResponse)
+          } else {
+            defaultResponse
+          }
+        })
     }
   }
 
-  private def enrichResponse(session: UserSession, userUrns: Set[Urn], responseJson: JsValue, response: Response): Future[Response] =
-    Future.join(
-      followsSubstitutions(session, userUrns),
-      lieblingSubstitutions(session, userUrns),
-      repostsSubstitutions(session, userUrns)
-    ).map { case (followsSubs, likesSubs, repostsSubs) =>
-      userUrns.map { urn =>
-        (
-          urn,
-          followsSubs.getOrElse(urn, List.empty)
-            ++ likesSubs.getOrElse(urn, List.empty)
-            ++ repostsSubs.getOrElse(urn, List.empty)
-        )
-      }.toMap
-    }.map { allSubs: SubstitutionsByUser =>
-      response.setContentString(
-        injectKeys(responseJson, id => allSubs.getOrElse(Urn("soundcloud", "users", id.toString), List.empty)).toString
+  private def enrichResponse(
+      session: UserSession,
+      userUrns: Set[Urn],
+      responseJson: JsValue,
+      response: Response
+  ): Future[Response] =
+    Future
+      .join(
+        followsSubstitutions(session, userUrns),
+        lieblingSubstitutions(session, userUrns),
+        repostsSubstitutions(session, userUrns)
       )
-      response
-    }
+      .map {
+        case (followsSubs, likesSubs, repostsSubs) =>
+          userUrns.map { urn =>
+            (
+              urn,
+              followsSubs.getOrElse(urn, List.empty)
+                ++ likesSubs.getOrElse(urn, List.empty)
+                ++ repostsSubs.getOrElse(urn, List.empty)
+            )
+          }.toMap
+      }
+      .map { allSubs: SubstitutionsByUser =>
+        response.setContentString(
+          injectKeys(responseJson, id => allSubs.getOrElse(Urn("soundcloud", "users", id.toString), List.empty)).toString
+        )
+        response
+      }
 
   private def followsSubstitutions(session: UserSession, userUrns: Set[Urn]): Future[SubstitutionsByUser] =
-    followCountsClient.counts(session, userUrns.toSeq)
+    followCountsClient
+      .counts(session, userUrns.toSeq)
       .map(_.map(count => (count.userUrn, count)).toMap)
       .map { fetchedData: Map[Urn, FollowCounts] =>
         userUrns
-          .map { urn: Urn => fetchedData.getOrElse(urn, FollowCounts(urn, 0, 0)) }
+          .map { urn: Urn =>
+            fetchedData.getOrElse(urn, FollowCounts(urn, 0, 0))
+          }
           .map { followCounts =>
             (
               followCounts.userUrn,
@@ -96,28 +111,34 @@ class UserRelatedMothershipDispatcher(userAuthentication: UserAuthentication,
                 "followings_count" -> Json.toJsFieldJsValueWrapper(followCounts.followings)
               )
             )
-          }.toMap
+          }
+          .toMap
       }
 
   private def repostsSubstitutions(session: UserSession, userUrns: Set[Urn]): Future[SubstitutionsByUser] = {
-    repostsClient.getRepostCountsByUrnWithFallback(session, userUrns)
+    repostsClient
+      .getRepostCountsByUrnWithFallback(session, userUrns)
       .map(_.map { case (urn, count) => (urn, List("reposts_count" -> Json.toJsFieldJsValueWrapper(count))) }.toMap)
   }
 
   private def lieblingSubstitutions(session: UserSession, userUrns: Set[Urn]): Future[SubstitutionsByUser] =
     shouldLoadCountsFromLiebling().flatMap {
       case true =>
-        lieblingClient.userTotalLikeCount(session, userUrns.toSeq)
+        lieblingClient
+          .userTotalLikeCount(session, userUrns.toSeq)
           .map(_.map(count => (count.user_urn, count)).toMap)
           .map { fetchedData: Map[Urn, UserTotalLikes] =>
             userUrns
-              .map { urn: Urn => fetchedData.getOrElse(urn, UserTotalLikes(urn, 0, 0)) }
+              .map { urn: Urn =>
+                fetchedData.getOrElse(urn, UserTotalLikes(urn, 0, 0))
+              }
               .map { likeCounts =>
                 (
                   likeCounts.user_urn,
                   List("public_favorites_count" -> Json.toJsFieldJsValueWrapper(likeCounts.totalLikeCount))
                 )
-              }.toMap
+              }
+              .toMap
           }
       case false =>
         Future.value(Map.empty)
@@ -128,13 +149,13 @@ class UserRelatedMothershipDispatcher(userAuthentication: UserAuthentication,
       case JsDefined(collection: JsArray) =>
         json.as[JsObject] ++ Json.obj("collection" -> injectKeys(collection, fn))
 
-      case _ => json match {
-        case JsArray(values) => JsArray(values.map(injectKeysIntoUser(_, fn)))
-        case single: JsObject => injectKeysIntoUser(single, fn)
-        case _ => json
-      }
+      case _ =>
+        json match {
+          case JsArray(values) => JsArray(values.map(injectKeysIntoUser(_, fn)))
+          case single: JsObject => injectKeysIntoUser(single, fn)
+          case _ => json
+        }
     }
-
   }
 
   private def injectKeysIntoUser(jsValue: JsValue, fn: Int => Seq[(String, JsValueWrapper)]): JsValue = {
@@ -143,14 +164,17 @@ class UserRelatedMothershipDispatcher(userAuthentication: UserAuthentication,
         jsValue.as[JsObject] ++ Json.obj("user" -> injectKeysIntoUser(user, fn))
 
       case _ =>
-        (jsValue \ "kind").asOpt[String].flatMap {
-          case "user" =>
-            (jsValue \ "id").asOpt[Int].map { id =>
-              val newValues = fn(id)
-              jsValue.as[JsObject] ++ Json.obj(newValues: _*)
-            }
-          case _ => None
-        }.getOrElse(jsValue)
+        (jsValue \ "kind")
+          .asOpt[String]
+          .flatMap {
+            case "user" =>
+              (jsValue \ "id").asOpt[Int].map { id =>
+                val newValues = fn(id)
+                jsValue.as[JsObject] ++ Json.obj(newValues: _*)
+              }
+            case _ => None
+          }
+          .getOrElse(jsValue)
     }
   }
 
@@ -158,11 +182,12 @@ class UserRelatedMothershipDispatcher(userAuthentication: UserAuthentication,
     json \ "collection" match {
       case JsDefined(collection: JsArray) => extractUserUrns(collection)
 
-      case _ => json match {
-        case JsArray(values) => extractUserUrnsFromList(values)
-        case single: JsObject => extractUserUrnsFromList(Seq(single))
-        case _ => Set.empty
-      }
+      case _ =>
+        json match {
+          case JsArray(values) => extractUserUrnsFromList(values)
+          case single: JsObject => extractUserUrnsFromList(Seq(single))
+          case _ => Set.empty
+        }
     }
   }
 
@@ -179,7 +204,6 @@ class UserRelatedMothershipDispatcher(userAuthentication: UserAuthentication,
         case _ => None
       }
     }
-
 }
 
 object UserRelatedMothershipDispatcher {

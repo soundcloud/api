@@ -1,7 +1,12 @@
 package com.soundcloud.publicApiStrangler.client.mothership.response.mapper
 
 import com.soundcloud.jvmkit.module.http.server.JsonResponseBuilder
-import com.soundcloud.publicApiStrangler.client.mothership.response.representation.{InvalidUrnAddToPlaylistResponse, NotAuthorizedAddToPlaylistResponse, OkAddToPlaylistResponse, TrackAlreadyInPlaylistAddToPlaylistResponse}
+import com.soundcloud.publicApiStrangler.client.mothership.response.representation.{
+  InvalidUrnAddToPlaylistResponse,
+  NotAuthorizedAddToPlaylistResponse,
+  OkAddToPlaylistResponse,
+  TrackAlreadyInPlaylistAddToPlaylistResponse
+}
 import com.soundcloud.publicApiStrangler.client.support.UnhandledResponseException
 import com.soundcloud.publicApiStrangler.test.UnitSpecification
 import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures._
@@ -9,7 +14,6 @@ import com.twitter.finagle.http.Status
 import play.api.libs.json.{JsObject, Json}
 
 class AddToPlaylistResponseMapperSpec extends UnitSpecification {
-
   trait Context extends Scope {
     val addToPlaylistResponseMapper = new AddToPlaylistResponseMapper
     val status: Status

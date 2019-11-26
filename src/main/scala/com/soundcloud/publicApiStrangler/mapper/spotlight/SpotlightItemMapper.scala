@@ -6,7 +6,6 @@ import com.soundcloud.publicApiStrangler.client.mothership.response.representati
 import play.api.libs.json.JsValue
 
 object SpotlightItemMapper {
-
   def apply(json: JsValue): SpotlightItem =
     SpotlightItem(
       Self((json \ "self" \ "urn").as[Urn], (json \ "self" \ "url").as[String]),
@@ -15,5 +14,4 @@ object SpotlightItemMapper {
       (json \ "title").as[String],
       (json \ "last_modified").as[String]
     )
-
 }

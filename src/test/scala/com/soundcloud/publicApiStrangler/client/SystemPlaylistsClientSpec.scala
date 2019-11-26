@@ -10,7 +10,6 @@ import com.twitter.util.Await
 import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures._
 
 class SystemPlaylistsClientSpec extends UnitSpecification {
-
   trait Context extends Scope {
     implicit val service = mock[JsonClient]
     implicit val session = mock[UserSession]
@@ -23,7 +22,6 @@ class SystemPlaylistsClientSpec extends UnitSpecification {
   }
 
   "#fetchSimilar" >> {
-
     "responds with similar tracks" in new Context {
       expectOkResponse(path, similarSoundsNonEmpty, params)
       Await.result(client.fetchSimilar(session, seed)) ==== Some(SimilarSoundsMapper(similarSoundsNonEmpty))
@@ -48,6 +46,5 @@ class SystemPlaylistsClientSpec extends UnitSpecification {
       expectInternalErrorResponse(path, params)
       Await.result(client.fetchSimilar(session, seed)) must throwA[IllegalStateException]
     }
-
   }
 }

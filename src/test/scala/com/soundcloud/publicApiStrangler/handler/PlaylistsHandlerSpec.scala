@@ -13,7 +13,6 @@ import org.mockito.Mockito.when
 import play.api.libs.json.{JsDefined, JsString, Json}
 
 class PlaylistsHandlerSpec extends UnitSpecification {
-
   trait Context extends HandlerSpecificationScope {
     lazy val geo = new Geo("US")
     lazy val session = new UserSessionBuilder()

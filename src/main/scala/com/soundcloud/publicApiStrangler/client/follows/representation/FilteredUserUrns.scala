@@ -7,6 +7,5 @@ import play.api.libs.json.{Json, Reads}
 case class FilteredUserUrns(included: Set[Urn], excluded: Set[Urn])
 
 object FilteredUserUrns {
-
   implicit val reads: Reads[FilteredUserUrns] = Json.reads[FilteredUserUrns]
 }

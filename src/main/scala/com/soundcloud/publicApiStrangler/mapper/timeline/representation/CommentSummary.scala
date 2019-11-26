@@ -6,11 +6,10 @@ import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.publicApiStrangler.mapper.timeline.EntitySummaryMapper
 import play.api.libs.json.JsValue
 
-class CommentSummary(jsonValue: JsValue,
-                     baseUrl: String,
-                     entitySummaryMapper: EntitySummaryMapper)(implicit context: MappingContext)
-  extends JsonMapping(jsonValue) with UrnSupport {
-
+class CommentSummary(jsonValue: JsValue, baseUrl: String, entitySummaryMapper: EntitySummaryMapper)(
+    implicit context: MappingContext
+) extends JsonMapping(jsonValue)
+    with UrnSupport {
   val kind = "comment"
   val id = urn.identifier.toInt
   val created_at = (json \ "created_at").asOpt[String]
@@ -23,5 +22,4 @@ class CommentSummary(jsonValue: JsValue,
   def trackUrn = (json \ "track").as[Urn]
 
   def userUrn = (json \ "user" \ "self" \ "urn").as[Urn]
-
 }

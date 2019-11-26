@@ -18,6 +18,10 @@ pipelines:
             - exec:
                 command: make
                 arguments:
+                - lint
+            - exec:
+                command: make
+                arguments:
                 - unit-test
             - exec:
                 command: make

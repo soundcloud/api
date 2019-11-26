@@ -6,7 +6,6 @@ import com.twitter.finagle.http.Status.Successful
 import play.api.libs.json.{JsArray, JsObject}
 
 trait SafeJsonHandler {
-
   protected def toJsonObject(response: Response) =
     JsonResponse.from(response) match {
       case JsonResponse(Successful(_), Right(json: JsObject), _) => json

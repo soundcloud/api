@@ -19,15 +19,14 @@ object TrackRequests {
 }
 
 class TracksClient(jsonClient: JsonClient) {
-
   def visibleTrack(session: UserSession, urn: Urn, secretToken: Option[String]): Future[Option[VisibleTrack]] = {
     val body = Json.stringify(Json.toJson(TrackRequests(List(TrackRequest(urn, secretToken)))))
-    jsonClient.postWithSession(session, Path() / "tracks", Params.empty, Headers.empty, Some(body)).map { response: Response =>
-      response.status match {
-        case Status.Ok => (Json.parse(response.contentString) \ "data").as[List[VisibleTrack]].headOption
-        case _ => throw new UnhandledResponseException(response)
-      }
+    jsonClient.postWithSession(session, Path() / "tracks", Params.empty, Headers.empty, Some(body)).map {
+      response: Response =>
+        response.status match {
+          case Status.Ok => (Json.parse(response.contentString) \ "data").as[List[VisibleTrack]].headOption
+          case _ => throw new UnhandledResponseException(response)
+        }
     }
   }
-
 }

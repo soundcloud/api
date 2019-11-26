@@ -9,10 +9,8 @@ import com.twitter.finagle.http.{Request, Response}
 import com.twitter.util.{Await, Future}
 
 class ContentAuthorizationFilterSpec extends UnitSpecification {
-
   trait Context extends Scope {
     val someRequest = HandlerRequest(AlwaysMatchesPathMatcher, Request("/something")).request
-
 
     val service = mock[Service[Request, Response]]
     val authorizeContent = mock[AuthorizeHttpResponse]
@@ -21,7 +19,6 @@ class ContentAuthorizationFilterSpec extends UnitSpecification {
   }
 
   "when the response doesnt contain tracks" >> {
-
     "returns the response unchanged" in new Context {
       val expectedResponse = JsonResponseBuilder()
         .body(originalResponse.contentString)
@@ -30,7 +27,8 @@ class ContentAuthorizationFilterSpec extends UnitSpecification {
         .build
 
       service.apply(any[Request]) returns Future.value(originalResponse)
-      authorizeContent.apply(any[HandlerRequest], ===(originalResponse.status), ===(originalResponse.contentString)) returns Future.value(expectedResponse)
+      authorizeContent.apply(any[HandlerRequest], ===(originalResponse.status), ===(originalResponse.contentString)) returns Future
+        .value(expectedResponse)
 
       val authorizedResponse = Await.result(contentAuthorizationFilter.apply(someRequest, service))
 
@@ -43,17 +41,21 @@ class ContentAuthorizationFilterSpec extends UnitSpecification {
   "when the response contains tracks" >> {
     "returns original response with authorization info, if authorized" in new Context {
       val bodyWithAuthorizationInformation = originalResponse.contentString + "some stuff here about policies and stuff"
-      val expectedResponse = JsonResponseBuilder().body(bodyWithAuthorizationInformation).status(originalResponse.status).build
+      val expectedResponse =
+        JsonResponseBuilder().body(bodyWithAuthorizationInformation).status(originalResponse.status).build
 
       service.apply(any[Request]) returns Future.value(originalResponse)
-      authorizeContent.apply(any[HandlerRequest], ===(originalResponse.status), ===(originalResponse.contentString)) returns Future.value(expectedResponse)
+      authorizeContent.apply(any[HandlerRequest], ===(originalResponse.status), ===(originalResponse.contentString)) returns Future
+        .value(expectedResponse)
 
       val authorizedResponse = Await.result(contentAuthorizationFilter.apply(someRequest, service))
 
       authorizedResponse.status mustEqual expectedResponse.status
       authorizedResponse.contentString mustEqual expectedResponse.contentString
       val contentLength = expectedResponse.contentString.getBytes(StandardCharsets.UTF_8).length
-      authorizedResponse.headerMap.toMap mustEqual expectedResponse.headerMap.toMap ++ Map("Content-Length" -> contentLength.toString)
+      authorizedResponse.headerMap.toMap mustEqual expectedResponse.headerMap.toMap ++ Map(
+        "Content-Length" -> contentLength.toString
+      )
     }
   }
 }

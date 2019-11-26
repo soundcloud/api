@@ -8,7 +8,6 @@ import com.twitter.util.{Await, Future}
 import play.api.libs.json.{JsObject, JsString, Json}
 
 class CookieHeaderRemovalFilterSpec extends UnitSpecification {
-
   class CookieCheckingService extends Service[Request, Response] {
     override def apply(request: Request): Future[Response] = {
       val headers: Seq[(String, JsString)] =

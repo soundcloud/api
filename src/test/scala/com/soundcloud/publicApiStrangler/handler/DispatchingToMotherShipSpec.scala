@@ -8,7 +8,6 @@ import com.twitter.finagle.http.{Method, Request, Status}
 import com.twitter.util.Future
 
 class DispatchingToMotherShipSpec extends UnitSpecification {
-
   val expectedMotherShipEndpoints = Set(
     (Get, "/announcements"),
     (Get, "/announcements.json"),
@@ -73,28 +72,28 @@ class DispatchingToMotherShipSpec extends UnitSpecification {
     override def routingDefinitions() = Routing.forUserRelatedMothershipDispatcher(dispatcher)
   }
 
-
-  expectedMotherShipEndpoints foreach { case (method, endpoint) =>
-    s"Mothership dispatcher should handle $method at $endpoint" in new MothershipContext {
-      method match {
-        case Method.Get => get(dispatcher.dispatchToMothership, endpoint).status = Status.Ok
-        case Method.Post => post(dispatcher.dispatchToMothership, endpoint).status = Status.Ok
-        case Method.Put => put(dispatcher.dispatchToMothership, endpoint).status = Status.Ok
-        case m => throw new UnsupportedOperationException(s"Test for method $m not implemented")
+  expectedMotherShipEndpoints foreach {
+    case (method, endpoint) =>
+      s"Mothership dispatcher should handle $method at $endpoint" in new MothershipContext {
+        method match {
+          case Method.Get => get(dispatcher.dispatchToMothership, endpoint).status = Status.Ok
+          case Method.Post => post(dispatcher.dispatchToMothership, endpoint).status = Status.Ok
+          case Method.Put => put(dispatcher.dispatchToMothership, endpoint).status = Status.Ok
+          case m => throw new UnsupportedOperationException(s"Test for method $m not implemented")
+        }
       }
-    }
   }
 
-  expectedUserRelatedMothershipEndpoint foreach { case (method, endpoint) =>
-    s"User-related mothership dispatcher should handle $method at $endpoint" in new UserRelatedMothershipContext {
-      method match {
-        case Get => get(dispatcher.dispatchToMothership, endpoint).status ==== Status.Ok
-        case Post => post(dispatcher.dispatchToMothership, endpoint).status ==== Status.Ok
-        case Put => put(dispatcher.dispatchToMothership, endpoint).status ==== Status.Ok
-        case Head => head(dispatcher.dispatchToMothership, endpoint).status ==== Status.Ok
-        case m => throw new UnsupportedOperationException(s"Test for method $m not implemented")
+  expectedUserRelatedMothershipEndpoint foreach {
+    case (method, endpoint) =>
+      s"User-related mothership dispatcher should handle $method at $endpoint" in new UserRelatedMothershipContext {
+        method match {
+          case Get => get(dispatcher.dispatchToMothership, endpoint).status ==== Status.Ok
+          case Post => post(dispatcher.dispatchToMothership, endpoint).status ==== Status.Ok
+          case Put => put(dispatcher.dispatchToMothership, endpoint).status ==== Status.Ok
+          case Head => head(dispatcher.dispatchToMothership, endpoint).status ==== Status.Ok
+          case m => throw new UnsupportedOperationException(s"Test for method $m not implemented")
+        }
       }
-    }
   }
-
 }

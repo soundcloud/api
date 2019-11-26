@@ -3,7 +3,6 @@ package com.soundcloud.publicApiStrangler.authorization
 import com.twitter.finagle.http._
 
 trait ResponseLike[R] {
-
   def setCookie(r: R, key: String, value: String): Unit
 
   /**
@@ -38,7 +37,6 @@ object ResponseLike {
   def apply[R](implicit evidence: ResponseLike[R]) = evidence
 
   implicit val responseIsResponseLike = new ResponseLike[Response] {
-
     def setCookie(r: Response, key: String, value: String): Unit = r.cookies.add(key, new Cookie(key, value))
 
     def setCookieIfNotExists(r: Response, key: String, value: String): Unit =
@@ -63,6 +61,5 @@ object ResponseLike {
     def internalServerError = Response(Status.InternalServerError)
 
     def badRequest = Response(Status.BadRequest)
-
   }
 }

@@ -16,13 +16,24 @@ import org.apache.commons.lang.builder.{EqualsBuilder, HashCodeBuilder, ToString
   * <p/>
   * <a href=https://github.com/soundcloud/bff>BFF applications</a> <i>MUST</i> follow the policies and restrictions.
   */
-class ContentAuthorization(val urn: Urn, val policy: ContentPolicy, val reason: Reason, val contentRestrictions: Set[ContentRestriction], val monetizationModel: MonetizationModel) {
-
+class ContentAuthorization(
+    val urn: Urn,
+    val policy: ContentPolicy,
+    val reason: Reason,
+    val contentRestrictions: Set[ContentRestriction],
+    val monetizationModel: MonetizationModel
+) {
   def this(urn: Urn, policy: ContentPolicy, reason: Reason, monetizationModel: MonetizationModel) {
     this(urn, policy, reason, Set[ContentRestriction](), monetizationModel)
   }
 
-  def this(urn: Urn, policy: ContentPolicy, reason: Reason, contentRestriction: ContentRestriction, monetizationModel: MonetizationModel) {
+  def this(
+      urn: Urn,
+      policy: ContentPolicy,
+      reason: Reason,
+      contentRestriction: ContentRestriction,
+      monetizationModel: MonetizationModel
+  ) {
     this(urn, policy, reason, Set(contentRestriction), monetizationModel)
   }
 
@@ -55,15 +66,35 @@ class ContentAuthorization(val urn: Urn, val policy: ContentPolicy, val reason: 
     */
   def getMonetizationModel: MonetizationModel = monetizationModel
 
-  override def toString: String = new ToStringBuilder(this, ToStringStyle.SHORT_PREFIX_STYLE).append("urn", urn).append("policy", policy).append("monetizationModel", monetizationModel).append("contentRestrictions", contentRestrictions).append("reason", reason).toString
+  override def toString: String =
+    new ToStringBuilder(this, ToStringStyle.SHORT_PREFIX_STYLE)
+      .append("urn", urn)
+      .append("policy", policy)
+      .append("monetizationModel", monetizationModel)
+      .append("contentRestrictions", contentRestrictions)
+      .append("reason", reason)
+      .toString
 
   override def equals(o: Any): Boolean = {
     if (o.isInstanceOf[ContentAuthorization]) {
       val that = o.asInstanceOf[ContentAuthorization]
-      return new EqualsBuilder().append(urn, that.urn).append(policy, that.policy).append(monetizationModel, that.monetizationModel).append(contentRestrictions, that.contentRestrictions).append(reason, that.reason).isEquals
+      return new EqualsBuilder()
+        .append(urn, that.urn)
+        .append(policy, that.policy)
+        .append(monetizationModel, that.monetizationModel)
+        .append(contentRestrictions, that.contentRestrictions)
+        .append(reason, that.reason)
+        .isEquals
     }
     false
   }
 
-  override def hashCode: Int = new HashCodeBuilder().append(urn).append(policy).append(monetizationModel).append(contentRestrictions).append(reason).toHashCode
+  override def hashCode: Int =
+    new HashCodeBuilder()
+      .append(urn)
+      .append(policy)
+      .append(monetizationModel)
+      .append(contentRestrictions)
+      .append(reason)
+      .toHashCode
 }

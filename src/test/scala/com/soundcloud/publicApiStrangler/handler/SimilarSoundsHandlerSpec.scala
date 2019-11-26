@@ -12,7 +12,6 @@ import org.jboss.netty.handler.codec.http.HttpResponseStatus
 import org.mockito.Mockito.{verify, when}
 
 class SimilarSoundsHandlerSpec extends UnitSpecification {
-
   trait Context extends HandlerSpecificationScope {
     val session = new FakeUserAuthentication(anonymousSession)
     val similarSoundsMapperMock = mock[SimilarSoundsMapper]
@@ -30,8 +29,7 @@ class SimilarSoundsHandlerSpec extends UnitSpecification {
       abstract class SimilarSoundsMock extends ObjectMappingMock[SimilarSounds] with SimilarSoundsMapping
       val similarSoundsMock = ObjectMappingMock.prepare[SimilarSoundsMock]
 
-      when(similarSoundsMapperMock.materialize(anonymousSession, page)).
-        thenReturn(Future(Some(similarSoundsMock)))
+      when(similarSoundsMapperMock.materialize(anonymousSession, page)).thenReturn(Future(Some(similarSoundsMock)))
 
       val response = get(similarSoundsHandler.handleSimilarSoundsRequest, path)
       response.statusCode ==== 200
@@ -50,10 +48,10 @@ class SimilarSoundsHandlerSpec extends UnitSpecification {
 
   "returns 404 if mapper returns none" in new Context {
     val param = Urn("soundcloud", "tracks", "123")
-    val page = OffsetBasedPage(param, "http://api.soundcloud.com", "/tracks/123/related", Map.empty[String, String], 3, 22)
+    val page =
+      OffsetBasedPage(param, "http://api.soundcloud.com", "/tracks/123/related", Map.empty[String, String], 3, 22)
 
-    when(similarSoundsMapperMock.materialize(anonymousSession, page)).
-      thenReturn(Future.value(None))
+    when(similarSoundsMapperMock.materialize(anonymousSession, page)).thenReturn(Future.value(None))
 
     val response = get(similarSoundsHandler.handleSimilarSoundsRequest, "/tracks/123/related?limit=22&offset=3")
     response.statusCode ==== 404

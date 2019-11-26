@@ -19,14 +19,15 @@ trait TrackRepresentationLikeSpecContext {
   val labelUrn = Urn("soundcloud", "users", "999")
 
   def createTrackRepresentation(
-                                 track: Track = defaultTrack,
-                                 user: User = defaultUser,
-                                 isrc: Option[Isrc] = defaultIsrc,
-                                 counts: StitchCounts = defaultCounts,
-                                 label: Option[User] = Some(defaultLabel),
-                                 geoblockings: Geoblockings = defaultGeoblockings,
-                                 domainlockings: Seq[DomainLocking] = defaultDomainLockings,
-                                 audioMetadata: TrackAudioMetadata = defaultTrackAudioMetadata) =
+      track: Track = defaultTrack,
+      user: User = defaultUser,
+      isrc: Option[Isrc] = defaultIsrc,
+      counts: StitchCounts = defaultCounts,
+      label: Option[User] = Some(defaultLabel),
+      geoblockings: Geoblockings = defaultGeoblockings,
+      domainlockings: Seq[DomainLocking] = defaultDomainLockings,
+      audioMetadata: TrackAudioMetadata = defaultTrackAudioMetadata
+  ) =
     TrackRepresentation(track, user, isrc, counts, label, geoblockings, domainlockings, audioMetadata)
 
   def defaultLoggedInUserUrn = Urn("soundcloud", "users", "79241")
@@ -52,7 +53,8 @@ trait TrackRepresentationLikeSpecContext {
       followings_count = Some(20),
       verified = false,
       description = Some("I am a nice person"),
-      updated_at = Some("2016/10/10 11:21:36 +0000"))
+      updated_at = Some("2016/10/10 11:21:36 +0000")
+    )
 
   def defaultLabelUrn = Some(labelUrn)
 
@@ -70,7 +72,8 @@ trait TrackRepresentationLikeSpecContext {
       followings_count = Some(10),
       verified = true,
       description = Some("Psychonaut Music Inc."),
-      updated_at = Some("2016/10/10 11:21:36 +0000"))
+      updated_at = Some("2016/10/10 11:21:36 +0000")
+    )
 
   def defaultTrack = Track(
     urn = trackUrn,
@@ -122,15 +125,13 @@ trait TrackRepresentationLikeSpecContext {
 
   def defaultGeoblockings: Geoblockings = List("DE", "FR")
 
-  def defaultDomainLockings: Seq[DomainLocking] = Seq(
-    DomainLocking(
-      domain = "example.com",
-      trackUrn = trackUrn,
-      urn = Urn("soundcloud", "domain-lockings", "97802143")))
+  def defaultDomainLockings: Seq[DomainLocking] =
+    Seq(
+      DomainLocking(domain = "example.com", trackUrn = trackUrn, urn = Urn("soundcloud", "domain-lockings", "97802143"))
+    )
 }
 
 class TrackRepresentationSecretTokenDecoratorSpec extends UnitSpecification {
-
   trait Context extends Scope with TrackRepresentationLikeSpecContext {
     implicit val writes = TrackRepresentationSecretTokenDecorator.writes
 
@@ -148,7 +149,6 @@ class TrackRepresentationSecretTokenDecoratorSpec extends UnitSpecification {
 }
 
 class TrackRepresentationGeoblockingsDecoratorSpec extends UnitSpecification {
-
   trait Context extends Scope with TrackRepresentationLikeSpecContext {
     implicit val writes = TrackRepresentationGeoblockingsDecorator.writes
 
@@ -161,27 +161,258 @@ class TrackRepresentationGeoblockingsDecoratorSpec extends UnitSpecification {
     val json = Json.toJson(decorator)
 
     (json \ "available_country_codes").as[Vector[String]].sorted ==== Vector(
-      "AD", "AE", "AF", "AG", "AI", "AL", "AM", "AO", "AQ", "AR", "AS", "AT", "AU", "AW", "AX", "AZ",
-      "BA", "BB", "BD", "BE", "BF", "BG", "BH", "BI", "BJ", "BL", "BM", "BN", "BO", "BQ", "BR", "BS",
-      "BT", "BV", "BW", "BY", "BZ", "CA", "CC", "CD", "CF", "CG", "CH", "CI", "CK", "CL", "CM", "CN",
-      "CO", "CR", "CU", "CV", "CW", "CX", "CY", "CZ", "DJ", "DK", "DM", "DO", "DZ", "EC", "EE",
-      "EG", "EH", "ER", "ES", "ET", "FI", "FJ", "FK", "FM", "FO", "GA", "GB", "GD", "GE", "GF",
-      "GG", "GH", "GI", "GL", "GM", "GN", "GP", "GQ", "GR", "GS", "GT", "GU", "GW", "GY", "HK", "HM",
-      "HN", "HR", "HT", "HU", "ID", "IE", "IL", "IM", "IN", "IO", "IQ", "IR", "IS", "IT", "JE", "JM",
-      "JO", "JP", "KE", "KG", "KH", "KI", "KM", "KN", "KP", "KR", "KW", "KY", "KZ", "LA", "LB", "LC",
-      "LI", "LK", "LR", "LS", "LT", "LU", "LV", "LY", "MA", "MC", "MD", "ME", "MF", "MG", "MH", "MK",
-      "ML", "MM", "MN", "MO", "MP", "MQ", "MR", "MS", "MT", "MU", "MV", "MW", "MX", "MY", "MZ", "NA",
-      "NC", "NE", "NF", "NG", "NI", "NL", "NO", "NP", "NR", "NU", "NZ", "OM", "PA", "PE", "PF", "PG",
-      "PH", "PK", "PL", "PM", "PN", "PR", "PS", "PT", "PW", "PY", "QA", "RE", "RO", "RS", "RU", "RW",
-      "SA", "SB", "SC", "SD", "SE", "SG", "SH", "SI", "SJ", "SK", "SL", "SM", "SN", "SO", "SR", "SS",
-      "ST", "SV", "SX", "SY", "SZ", "TC", "TD", "TF", "TG", "TH", "TJ", "TK", "TL", "TM", "TN", "TO",
-      "TR", "TT", "TV", "TW", "TZ", "UA", "UG", "UM", "US", "UY", "UZ", "VA", "VC", "VE", "VG", "VI",
-      "VN", "VU", "WF", "WS", "YE", "YT", "ZA", "ZM", "ZW")
+      "AD",
+      "AE",
+      "AF",
+      "AG",
+      "AI",
+      "AL",
+      "AM",
+      "AO",
+      "AQ",
+      "AR",
+      "AS",
+      "AT",
+      "AU",
+      "AW",
+      "AX",
+      "AZ",
+      "BA",
+      "BB",
+      "BD",
+      "BE",
+      "BF",
+      "BG",
+      "BH",
+      "BI",
+      "BJ",
+      "BL",
+      "BM",
+      "BN",
+      "BO",
+      "BQ",
+      "BR",
+      "BS",
+      "BT",
+      "BV",
+      "BW",
+      "BY",
+      "BZ",
+      "CA",
+      "CC",
+      "CD",
+      "CF",
+      "CG",
+      "CH",
+      "CI",
+      "CK",
+      "CL",
+      "CM",
+      "CN",
+      "CO",
+      "CR",
+      "CU",
+      "CV",
+      "CW",
+      "CX",
+      "CY",
+      "CZ",
+      "DJ",
+      "DK",
+      "DM",
+      "DO",
+      "DZ",
+      "EC",
+      "EE",
+      "EG",
+      "EH",
+      "ER",
+      "ES",
+      "ET",
+      "FI",
+      "FJ",
+      "FK",
+      "FM",
+      "FO",
+      "GA",
+      "GB",
+      "GD",
+      "GE",
+      "GF",
+      "GG",
+      "GH",
+      "GI",
+      "GL",
+      "GM",
+      "GN",
+      "GP",
+      "GQ",
+      "GR",
+      "GS",
+      "GT",
+      "GU",
+      "GW",
+      "GY",
+      "HK",
+      "HM",
+      "HN",
+      "HR",
+      "HT",
+      "HU",
+      "ID",
+      "IE",
+      "IL",
+      "IM",
+      "IN",
+      "IO",
+      "IQ",
+      "IR",
+      "IS",
+      "IT",
+      "JE",
+      "JM",
+      "JO",
+      "JP",
+      "KE",
+      "KG",
+      "KH",
+      "KI",
+      "KM",
+      "KN",
+      "KP",
+      "KR",
+      "KW",
+      "KY",
+      "KZ",
+      "LA",
+      "LB",
+      "LC",
+      "LI",
+      "LK",
+      "LR",
+      "LS",
+      "LT",
+      "LU",
+      "LV",
+      "LY",
+      "MA",
+      "MC",
+      "MD",
+      "ME",
+      "MF",
+      "MG",
+      "MH",
+      "MK",
+      "ML",
+      "MM",
+      "MN",
+      "MO",
+      "MP",
+      "MQ",
+      "MR",
+      "MS",
+      "MT",
+      "MU",
+      "MV",
+      "MW",
+      "MX",
+      "MY",
+      "MZ",
+      "NA",
+      "NC",
+      "NE",
+      "NF",
+      "NG",
+      "NI",
+      "NL",
+      "NO",
+      "NP",
+      "NR",
+      "NU",
+      "NZ",
+      "OM",
+      "PA",
+      "PE",
+      "PF",
+      "PG",
+      "PH",
+      "PK",
+      "PL",
+      "PM",
+      "PN",
+      "PR",
+      "PS",
+      "PT",
+      "PW",
+      "PY",
+      "QA",
+      "RE",
+      "RO",
+      "RS",
+      "RU",
+      "RW",
+      "SA",
+      "SB",
+      "SC",
+      "SD",
+      "SE",
+      "SG",
+      "SH",
+      "SI",
+      "SJ",
+      "SK",
+      "SL",
+      "SM",
+      "SN",
+      "SO",
+      "SR",
+      "SS",
+      "ST",
+      "SV",
+      "SX",
+      "SY",
+      "SZ",
+      "TC",
+      "TD",
+      "TF",
+      "TG",
+      "TH",
+      "TJ",
+      "TK",
+      "TL",
+      "TM",
+      "TN",
+      "TO",
+      "TR",
+      "TT",
+      "TV",
+      "TW",
+      "TZ",
+      "UA",
+      "UG",
+      "UM",
+      "US",
+      "UY",
+      "UZ",
+      "VA",
+      "VC",
+      "VE",
+      "VG",
+      "VI",
+      "VN",
+      "VU",
+      "WF",
+      "WS",
+      "YE",
+      "YT",
+      "ZA",
+      "ZM",
+      "ZW"
+    )
   }
 }
 
 class TrackRepresentationLabelDecoratorSpec extends UnitSpecification {
-
   trait Context extends Scope with TrackRepresentationLikeSpecContext {
     implicit val writes = TrackRepresentationLabelDecorator.writes
 
@@ -204,7 +435,6 @@ class TrackRepresentationLabelDecoratorSpec extends UnitSpecification {
 }
 
 class TrackRepresentationCountsDecoratorSpec extends UnitSpecification {
-
   trait Context extends Scope with TrackRepresentationLikeSpecContext {
     implicit val writes = TrackRepresentationCountsDecorator.writes
 
@@ -224,7 +454,6 @@ class TrackRepresentationCountsDecoratorSpec extends UnitSpecification {
 }
 
 class TrackRepresentationCommentCountDecoratorSpec extends UnitSpecification {
-
   trait Context extends Scope with TrackRepresentationLikeSpecContext {
     implicit val writes = TrackRepresentationCommentCountDecorator.writes
 
@@ -241,7 +470,6 @@ class TrackRepresentationCommentCountDecoratorSpec extends UnitSpecification {
 }
 
 class TrackRepresentationUserFavoriteDecoratorSpec extends UnitSpecification {
-
   trait Context extends Scope with TrackRepresentationLikeSpecContext {
     implicit val writes = TrackRepresentationUserFavoriteDecorator.writes
 
@@ -266,7 +494,6 @@ class TrackRepresentationUserFavoriteDecoratorSpec extends UnitSpecification {
 }
 
 class TrackRepresentationDomainLockingsDecoratorSpec extends UnitSpecification {
-
   trait Context extends Scope with TrackRepresentationLikeSpecContext {
     implicit val writes = TrackRepresentationDomainLockingsDecorator.writes
 
@@ -284,7 +511,6 @@ class TrackRepresentationDomainLockingsDecoratorSpec extends UnitSpecification {
 }
 
 class TrackRepresentationUserPlaybackCountDecoratorSpec extends UnitSpecification {
-
   trait Context extends Scope with TrackRepresentationLikeSpecContext {
     implicit val writes = TrackRepresentationUserPlaybackCountDecorator.writes
 
@@ -300,7 +526,6 @@ class TrackRepresentationUserPlaybackCountDecoratorSpec extends UnitSpecificatio
 }
 
 class TrackRepresentationWaveformUrlDecoratorSpec extends UnitSpecification {
-
   trait Context extends Scope with TrackRepresentationLikeSpecContext {
     implicit val writes = TrackRepresentationWaveformUrlDecorator.writes
     val wrapped: TrackRepresentationLike = createTrackRepresentation()
@@ -308,7 +533,9 @@ class TrackRepresentationWaveformUrlDecoratorSpec extends UnitSpecification {
 
   "adds the PNG URL of the track's 'stream' waveform" in new Context {
     val decorator = TrackRepresentationWaveformUrlDecorator(
-      TrackWaveformUrl("some_uid", Url("https://bar.sndcdn.com/stream/a1b2c3.png")), wrapped)
+      TrackWaveformUrl("some_uid", Url("https://bar.sndcdn.com/stream/a1b2c3.png")),
+      wrapped
+    )
     val json = Json.toJson(decorator)
 
     (json \ "waveform_url").as[String] ==== "https://bar.sndcdn.com/stream/a1b2c3.png"
@@ -330,11 +557,15 @@ class TrackRepresentationSecretTokenUriParamDecoratorSpec extends UnitSpecificat
     }
 
     "adds the secret token to the stream_url" in new UrlsPresentContext {
-      json \ "stream_url" ==== JsDefined(JsString("https://api.soundcloud.com/tracks/1324/stream?secret_token=bl3rkbi3"))
+      json \ "stream_url" ==== JsDefined(
+        JsString("https://api.soundcloud.com/tracks/1324/stream?secret_token=bl3rkbi3")
+      )
     }
 
     "adds the secret token to the download_url" in new UrlsPresentContext {
-      json \ "download_url" ==== JsDefined(JsString("https://api.soundcloud.com/tracks/1324/download?secret_token=bl3rkbi3"))
+      json \ "download_url" ==== JsDefined(
+        JsString("https://api.soundcloud.com/tracks/1324/download?secret_token=bl3rkbi3")
+      )
     }
 
     "adds the secret token to the permalink_url" in new UrlsPresentContext {
@@ -354,17 +585,20 @@ class TrackRepresentationSecretTokenUriParamDecoratorSpec extends UnitSpecificat
     }
 
     "correctly encodes it into the URI" in new BadlyFormedSecretTokenContext {
-      json \ "uri" ==== JsDefined(JsString("https://api.soundcloud.com/tracks/1324?secret_token=badgers%3Fformat%3Djson"))
+      json \ "uri" ==== JsDefined(
+        JsString("https://api.soundcloud.com/tracks/1324?secret_token=badgers%3Fformat%3Djson")
+      )
     }
 
     "correctly encodes it into the permalink_url" in new BadlyFormedSecretTokenContext {
-      json \ "permalink_url" ==== JsDefined(JsString("http://soundcloud.com/nirvana/plsty-remix/badgers%3Fformat%3Djson"))
+      json \ "permalink_url" ==== JsDefined(
+        JsString("http://soundcloud.com/nirvana/plsty-remix/badgers%3Fformat%3Djson")
+      )
     }
   }
 }
 
 class TrackRepresentationQuotaDecoratorSpec extends UnitSpecification {
-
   trait Context extends Scope with TrackRepresentationLikeSpecContext {
     implicit val writes = TrackRepresentationQuotaDecorator.writes
 
@@ -471,7 +705,6 @@ class TrackRepresentationQuotaDecoratorSpec extends UnitSpecification {
 }
 
 class TrackRepresentationSpec extends UnitSpecification {
-
   trait Context extends Scope with TrackRepresentationLikeSpecContext
 
   "serialises to JSON correctly" in new Context {
@@ -484,7 +717,9 @@ class TrackRepresentationSpec extends UnitSpecification {
     trackJson \ "duration" ==== JsDefined(JsNumber(120))
     trackJson \ "commentable" ==== JsDefined(JsBoolean(false))
     trackJson \ "last_modified" ==== JsDefined(JsString("2016/08/08 13:28:53 +0000"))
-    trackJson \ "tag_list" ==== JsDefined(JsString("system:foo system:bar \"awesomeness:very high\" dubstep folk \"tag with spaces\""))
+    trackJson \ "tag_list" ==== JsDefined(
+      JsString("system:foo system:bar \"awesomeness:very high\" dubstep folk \"tag with spaces\"")
+    )
     trackJson \ "permalink" ==== JsDefined(JsString("plsty-remix"))
     trackJson \ "embeddable_by" ==== JsDefined(JsString("me"))
     trackJson \ "genre" ==== JsDefined(JsString("future bass"))

@@ -4,7 +4,6 @@ import com.soundcloud.bff.nextbff.mapping.Mapping
 import com.soundcloud.publicApiStrangler.test.UnitSpecification
 
 class EmbeddedSpec extends UnitSpecification {
-
   class TestEmbedded extends Embedded[Mapping, String] {
     val owner = mock[Mapper[Any, Mapping]]
 

@@ -16,7 +16,6 @@ import org.mockito.Mockito.{verify, when}
 import play.api.libs.json.{JsObject, Json, _}
 
 class MoshimoshiClientSpec extends UnitSpecification {
-
   trait Context extends Scope {
     implicit val service = mock[JsonClient]
     val addToPlaylistResponseMapper = mock[AddToPlaylistResponseMapper]
@@ -28,7 +27,8 @@ class MoshimoshiClientSpec extends UnitSpecification {
     val resetUserPasswordResponseMapper = mock[ResetUserPasswordResponseMapper]
     val deleteUserResponseMapper = mock[DeleteUserResponseMapper]
     implicit val session = loggedInSession(Urn("soundcloud", "users", "1"))
-    val client = new MoshimoshiClient(service,
+    val client = new MoshimoshiClient(
+      service,
       addToPlaylistResponseMapper,
       deleteFromPlaylistResponseMapper,
       createPlaylistResponseMapper,
@@ -36,7 +36,8 @@ class MoshimoshiClientSpec extends UnitSpecification {
       updatePlaylistResponseMapper,
       updateUserResponseMapper,
       resetUserPasswordResponseMapper,
-      deleteUserResponseMapper)
+      deleteUserResponseMapper
+    )
   }
 
   def buildHeaders(entries: (String, String)*): Headers =
@@ -53,7 +54,8 @@ class MoshimoshiClientSpec extends UnitSpecification {
 
   "#trackPurchaseLinks" >> {
     trait TestContext extends Context {
-      val urns = Set(Urn("soundcloud", "tracks", "1"), Urn("soundcloud", "tracks", "2"), Urn("soundcloud", "tracks", "3"))
+      val urns =
+        Set(Urn("soundcloud", "tracks", "1"), Urn("soundcloud", "tracks", "2"), Urn("soundcloud", "tracks", "3"))
 
       def path = Path() / "tracks" / "purchase_links"
 
@@ -136,15 +138,23 @@ class MoshimoshiClientSpec extends UnitSpecification {
 
       def createPlaylistResult = Await.result(client.createPlaylist(session, playlistParams))
 
-      when(service.postWithSession(session, path, Params("title" -> "Awesome mix1", "public" -> "true"), Headers.empty, None))
-        .thenReturn(Future.value(jsonResponse))
+      when(
+        service
+          .postWithSession(session, path, Params("title" -> "Awesome mix1", "public" -> "true"), Headers.empty, None)
+      ).thenReturn(Future.value(jsonResponse))
       when(createPlaylistResponseMapper.apply(jsonResponse))
         .thenReturn(playlist)
     }
 
     "returns expected playlist" in new PlaylistContext {
       createPlaylistResult ==== playlist
-      there was one(service).postWithSession(session, path, Params("title" -> "Awesome mix1", "public" -> "true"), Headers.empty, None)
+      there was one(service).postWithSession(
+        session,
+        path,
+        Params("title" -> "Awesome mix1", "public" -> "true"),
+        Headers.empty,
+        None
+      )
       there was one(createPlaylistResponseMapper).apply(jsonResponse)
     }
   }
@@ -194,7 +204,6 @@ class MoshimoshiClientSpec extends UnitSpecification {
       there was one(deletePlaylistResponseMapper).apply(response)
     }
   }
-
 
   "#fetchUsers" >> {
     trait UsersContext extends Context {
@@ -436,7 +445,10 @@ class MoshimoshiClientSpec extends UnitSpecification {
       "returns the tracks of the given playlist" in new PlaylistTrackUrnsContext {
         expectOkResponse(path, moshiPlaylistTrackUrns, params)
 
-        Await.result(client.fetchPlaylistTrackUrns(session, playlistUrn)) ==== List(Urn("soundcloud", "tracks", "123"), Urn("soundcloud", "tracks", "456"))
+        Await.result(client.fetchPlaylistTrackUrns(session, playlistUrn)) ==== List(
+          Urn("soundcloud", "tracks", "123"),
+          Urn("soundcloud", "tracks", "456")
+        )
       }
     }
   }
@@ -468,9 +480,7 @@ class MoshimoshiClientSpec extends UnitSpecification {
   }
 
   "#createTrack" >> {
-
     trait TrackCreateWithS3ArtworkContext extends Context {
-
       val trackCreate = TrackCreate(
         api_streamable = None,
         commentable = None,
@@ -493,10 +503,12 @@ class MoshimoshiClientSpec extends UnitSpecification {
         tag_list = None,
         title = "Test Title",
         uid = None,
-        artwork_from_s3 = Value(S3Artwork(
-          bucket = Some("soundcloud-images"),
-          filename = Some("231231234-original.jpg")
-        ))
+        artwork_from_s3 = Value(
+          S3Artwork(
+            bucket = Some("soundcloud-images"),
+            filename = Some("231231234-original.jpg")
+          )
+        )
       )
 
       val urn = Urn("soundcloud", "tracks", "174090825")
@@ -535,7 +547,6 @@ class MoshimoshiClientSpec extends UnitSpecification {
     }
 
     trait TrackCreateWithoutS3ArtworkContext extends Context {
-
       val trackCreate = TrackCreate(
         api_streamable = None,
         commentable = None,
@@ -614,7 +625,9 @@ class MoshimoshiClientSpec extends UnitSpecification {
         when(service.postWithSession(any[UserSession], any[Path], any[Params], any[Headers], any[Option[String]]))
           .thenReturn(Future(jsonResponse(Status(422), moshiErrors)))
 
-        createTrackResult ==== UnprocessableEntity(Seq(Error(message = "has already been taken", subject = Some("permalink"))))
+        createTrackResult ==== UnprocessableEntity(
+          Seq(Error(message = "has already been taken", subject = Some("permalink")))
+        )
       }
     }
 
@@ -630,9 +643,17 @@ class MoshimoshiClientSpec extends UnitSpecification {
       when(service.postWithSession(any[UserSession], any[Path], any[Params], any[Headers], any[Option[String]]))
         .thenReturn(Future(jsonResponse(Status(422), moshiErrors)))
 
-      createTrackResult ==== UnprocessableEntity(Seq(Error(message = "has already been taken", subject = Some("permalink"))))
+      createTrackResult ==== UnprocessableEntity(
+        Seq(Error(message = "has already been taken", subject = Some("permalink")))
+      )
 
-      verify(service).postWithSession(any[UserSession], any[Path], any[Params], ===(buildHeaders("X-Forwarded-For" -> "8.8.8.8", "X-Real-IP" -> "8.8.8.8")), any[Option[String]])
+      verify(service).postWithSession(
+        any[UserSession],
+        any[Path],
+        any[Params],
+        ===(buildHeaders("X-Forwarded-For" -> "8.8.8.8", "X-Real-IP" -> "8.8.8.8")),
+        any[Option[String]]
+      )
     }
 
     trait TrackCreateWithoutPermalink extends Context {
@@ -693,9 +714,7 @@ class MoshimoshiClientSpec extends UnitSpecification {
   }
 
   "#updateTrack" >> {
-
     trait TrackUpdateWithoutS3ArtworkContext extends Context {
-
       val trackUpdate = TrackUpdate(
         api_streamable = None,
         commentable = None,
@@ -769,7 +788,6 @@ class MoshimoshiClientSpec extends UnitSpecification {
           case expected: JsUndefined => ok
           case _ => failure("Got a bucket")
         }
-
       }
     }
 
@@ -778,12 +796,13 @@ class MoshimoshiClientSpec extends UnitSpecification {
         when(service.putWithSession(any[UserSession], any[Path], any[Params], any[Headers], any[Option[String]]))
           .thenReturn(Future(jsonResponse(Status(422), moshiErrors)))
 
-        updateTrackResult ==== UnprocessableEntity(Seq(Error(message = "has already been taken", subject = Some("permalink"))))
+        updateTrackResult ==== UnprocessableEntity(
+          Seq(Error(message = "has already been taken", subject = Some("permalink")))
+        )
       }
     }
 
     trait TrackUpdateWithS3ArtworkContext extends Context {
-
       val trackUpdate = TrackUpdate(
         api_streamable = None,
         commentable = None,
@@ -806,10 +825,12 @@ class MoshimoshiClientSpec extends UnitSpecification {
         title = "Test Title",
         replacing_uid = None,
         replacing_original_filename = None,
-        artwork_from_s3 = Value(S3Artwork(
-          bucket = Some("soundcloud-images"),
-          filename = Some("231231234-original.jpg")
-        ))
+        artwork_from_s3 = Value(
+          S3Artwork(
+            bucket = Some("soundcloud-images"),
+            filename = Some("231231234-original.jpg")
+          )
+        )
       )
 
       val urn = Urn("soundcloud", "tracks", "174090825")
@@ -856,7 +877,9 @@ class MoshimoshiClientSpec extends UnitSpecification {
         when(service.putWithSession(any[UserSession], any[Path], any[Params], any[Headers], any[Option[String]]))
           .thenReturn(Future(jsonResponse(Status(422), moshiErrors)))
 
-        updateTrackResult ==== UnprocessableEntity(Seq(Error(message = "has already been taken", subject = Some("permalink"))))
+        updateTrackResult ==== UnprocessableEntity(
+          Seq(Error(message = "has already been taken", subject = Some("permalink")))
+        )
       }
     }
 
@@ -872,11 +895,16 @@ class MoshimoshiClientSpec extends UnitSpecification {
       expectResponse(path, Params.empty, Method.Put, filteredHeaders, Status(404), bodies)
       updateTrackResult ==== NotFound(Nil)
 
-      verify(service).putWithSession(any[UserSession], any[Path], any[Params], ===(buildHeaders("X-Forwarded-For" -> "8.8.8.8", "X-Real-IP" -> "8.8.8.8")), any[Option[String]])
+      verify(service).putWithSession(
+        any[UserSession],
+        any[Path],
+        any[Params],
+        ===(buildHeaders("X-Forwarded-For" -> "8.8.8.8", "X-Real-IP" -> "8.8.8.8")),
+        any[Option[String]]
+      )
     }
 
     trait TrackUpdateWithPublishedAtContext extends Context {
-
       val trackUpdateWithPublishedAt = TrackUpdate(
         api_streamable = None,
         commentable = None,
@@ -923,7 +951,6 @@ class MoshimoshiClientSpec extends UnitSpecification {
         case _ => failure("did not return Success")
       }
     }
-
   }
 
   "#fetchTrackGeoblockings" >> {
@@ -987,7 +1014,6 @@ class MoshimoshiClientSpec extends UnitSpecification {
 
       fetch must throwA[IllegalStateException]
     }
-
   }
 
   "#updateTrackGeoblockings" >> {
@@ -1136,15 +1162,23 @@ class MoshimoshiClientSpec extends UnitSpecification {
       val userUpdate = UserUpdate(city = Value("some city"))
       val path = Path() / "users" / userUrn
 
-      when(service.putWithSession(session, path, Params.empty, Headers.empty, Some(Json.stringify(Json.toJson(userUpdate)))))
-        .thenReturn(Future.value(response))
+      when(
+        service
+          .putWithSession(session, path, Params.empty, Headers.empty, Some(Json.stringify(Json.toJson(userUpdate))))
+      ).thenReturn(Future.value(response))
       when(updateUserResponseMapper.apply(response))
         .thenReturn(updateUserResponse)
     }
 
     "service is called" in new UpdateUserContext {
       Await.result(client.updateUser(session, userUrn, userUpdate)) ==== updateUserResponse
-      there was one(service).putWithSession(session, path, Params.empty, Headers.empty, Some(Json.stringify(Json.toJson(userUpdate))))
+      there was one(service).putWithSession(
+        session,
+        path,
+        Params.empty,
+        Headers.empty,
+        Some(Json.stringify(Json.toJson(userUpdate)))
+      )
       there was one(updateUserResponseMapper).apply(response)
     }
   }
@@ -1155,15 +1189,23 @@ class MoshimoshiClientSpec extends UnitSpecification {
       val response = mock[Response]
       val resetUserPasswordResponse = OkResetUserPasswordResponse
 
-      when(service.postWithSession(session, Path() / "users" / "password_reset", Params("email" -> email), Headers.empty, None))
-        .thenReturn(Future.value(response))
+      when(
+        service
+          .postWithSession(session, Path() / "users" / "password_reset", Params("email" -> email), Headers.empty, None)
+      ).thenReturn(Future.value(response))
       when(resetUserPasswordResponseMapper.apply(response))
         .thenReturn(resetUserPasswordResponse)
     }
 
     "service returns mapped response" in new ResetUserPasswordContext {
       Await.result(client.resetUserPassword(session, email)) ==== resetUserPasswordResponse
-      there was one(service).postWithSession(session, Path() / "users" / "password_reset", Params("email" -> email), Headers.empty, None)
+      there was one(service).postWithSession(
+        session,
+        Path() / "users" / "password_reset",
+        Params("email" -> email),
+        Headers.empty,
+        None
+      )
       there was one(resetUserPasswordResponseMapper).apply(response)
     }
   }
@@ -1176,15 +1218,28 @@ class MoshimoshiClientSpec extends UnitSpecification {
 
       def performCall() = Await.result(client.resetUserPassword(session, userUrn))
 
-      when(service.postWithSession(session, Path() / "users" / "password_reset", Params("user_id" -> userUrn.identifier), Headers.empty, None))
-        .thenReturn(Future.value(response))
+      when(
+        service.postWithSession(
+          session,
+          Path() / "users" / "password_reset",
+          Params("user_id" -> userUrn.identifier),
+          Headers.empty,
+          None
+        )
+      ).thenReturn(Future.value(response))
       when(resetUserPasswordResponseMapper.apply(response))
         .thenReturn(resetUserPasswordResponse)
     }
 
     "service returns mapped response" in new ResetUserPasswordContext {
       performCall() ==== resetUserPasswordResponse
-      there was one(service).postWithSession(session, Path() / "users" / "password_reset", Params("user_id" -> userUrn.identifier), Headers.empty, None)
+      there was one(service).postWithSession(
+        session,
+        Path() / "users" / "password_reset",
+        Params("user_id" -> userUrn.identifier),
+        Headers.empty,
+        None
+      )
       there was one(resetUserPasswordResponseMapper).apply(response)
     }
   }
@@ -1196,15 +1251,28 @@ class MoshimoshiClientSpec extends UnitSpecification {
       val reason = "because"
       val deleteUserResponse = OkDeleteUserResponse
 
-      when(service.postWithSession(session, Path() / "purgatory", Params("urn" -> userUrn, "actor_urn" -> session.getUser, "reason" -> reason), Headers.empty, None))
-        .thenReturn(Future.value(response))
+      when(
+        service.postWithSession(
+          session,
+          Path() / "purgatory",
+          Params("urn" -> userUrn, "actor_urn" -> session.getUser, "reason" -> reason),
+          Headers.empty,
+          None
+        )
+      ).thenReturn(Future.value(response))
       when(deleteUserResponseMapper.apply(response))
         .thenReturn(deleteUserResponse)
     }
 
     "service returns mapped response" in new DeleteUserContext {
       Await.result(client.deleteUser(session, userUrn, Some(reason))) ==== deleteUserResponse
-      there was one(service).postWithSession(session, Path() / "purgatory", Params("urn" -> userUrn, "actor_urn" -> session.getUser, "reason" -> reason), Headers.empty, None)
+      there was one(service).postWithSession(
+        session,
+        Path() / "purgatory",
+        Params("urn" -> userUrn, "actor_urn" -> session.getUser, "reason" -> reason),
+        Headers.empty,
+        None
+      )
       there was one(deleteUserResponseMapper).apply(response)
     }
   }
@@ -1244,5 +1312,4 @@ class MoshimoshiClientSpec extends UnitSpecification {
       Await.result(client.resendEmailConfirmationForAllUnconfirmedEmails(session, userUrn))
     }
   }
-
 }

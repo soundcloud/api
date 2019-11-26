@@ -7,7 +7,6 @@ import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures._
 
 class TrackPurchaseLinkMapperSpec extends UnitSpecification {
   "Maps a track" >> {
-
     "All fields" in {
       val presented = okidokiTrackPurchaseLinks.as[List[TrackPurchaseLink]].last
 

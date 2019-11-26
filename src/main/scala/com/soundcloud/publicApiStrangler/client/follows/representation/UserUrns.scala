@@ -7,6 +7,5 @@ import play.api.libs.json.{Json, Reads}
 case class UserUrns(urns: Seq[Urn])
 
 object UserUrns {
-
   implicit val reads: Reads[UserUrns] = Json.reads[UserUrns]
 }

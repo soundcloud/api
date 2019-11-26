@@ -7,10 +7,8 @@ import com.soundcloud.publicApiStrangler.test.UnitSpecification
 import com.twitter.util.{Await, Future}
 
 class FakeUserAuthenticationSpec extends UnitSpecification {
-
   trait AnonymousUserContext extends Scope {
-    val anonymousSession = (new UserSessionBuilder)
-      .build.asInstanceOf[AnonymousUserSession]
+    val anonymousSession = (new UserSessionBuilder).build.asInstanceOf[AnonymousUserSession]
     val blankRequest = mock[HandlerRequest]
 
     lazy val subject = new FakeUserAuthentication(anonymousSession)
@@ -24,5 +22,4 @@ class FakeUserAuthenticationSpec extends UnitSpecification {
   "returns a 401 for an AnonymousUser" in new AnonymousUserContext {
     result.statusCode must be_==(401)
   }
-
 }

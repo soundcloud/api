@@ -30,9 +30,13 @@ run-no-docker:
 	set -o allexport; source config/development; set +o allexport; sbt run
 
 precheckin:
+	make lint
 	make unit-test
 	make package
 	make end-to-end-test
+
+lint:
+	$(SBT) scalafmtCheckAll
 
 end-to-end-test:
 	echo "This assumes you've run make package before"

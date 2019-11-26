@@ -12,5 +12,4 @@ trait TimelineItemWithUuid extends TimelineItem {
 
   // deprecated fields, kept for structure only
   val tags = None
-
 }

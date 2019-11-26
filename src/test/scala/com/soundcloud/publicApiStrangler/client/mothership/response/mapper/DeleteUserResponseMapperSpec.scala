@@ -1,14 +1,17 @@
 package com.soundcloud.publicApiStrangler.client.mothership.response.mapper
 
 import com.soundcloud.jvmkit.module.http.server.JsonResponseBuilder
-import com.soundcloud.publicApiStrangler.client.mothership.response.representation.{InvalidParametersDeleteUserResponse, OkDeleteUserResponse, UserNotFoundDeleteUserResponse}
+import com.soundcloud.publicApiStrangler.client.mothership.response.representation.{
+  InvalidParametersDeleteUserResponse,
+  OkDeleteUserResponse,
+  UserNotFoundDeleteUserResponse
+}
 import com.soundcloud.publicApiStrangler.client.support.UnhandledResponseException
 import com.soundcloud.publicApiStrangler.test.UnitSpecification
 import com.twitter.finagle.http.Status
 import play.api.libs.json.{JsNull, Json}
 
 class DeleteUserResponseMapperSpec extends UnitSpecification {
-
   trait Context extends Scope {
     val deleteUserResponseMapper = new DeleteUserResponseMapper
     val responseStatus: Status

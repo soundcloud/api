@@ -20,7 +20,6 @@ import com.soundcloud.publicApiStrangler.test.util.TrackMetadataTrackBuilder
 import com.twitter.util.{Await, Future}
 
 class TrackRepositorySpec extends UnitSpecification {
-
   trait Context extends Scope {
     val trackmetadataClient = mock[TrackmetadataClient]
     val richOkidokiClient = mock[RichOkidokiClient]
@@ -40,7 +39,8 @@ class TrackRepositorySpec extends UnitSpecification {
       lieblingClient,
       waveformUrlsGenerator,
       userQuotaClient,
-      trackAccessibilityService)
+      trackAccessibilityService
+    )
 
     val sessionUser = Urn("soundcloud", "users", "2398471")
     lazy val session = loggedInSession(sessionUser)
@@ -88,9 +88,24 @@ class TrackRepositorySpec extends UnitSpecification {
     val trackmetadataTracks = List(
       trackmetadataTrack(track3, userUrn, None),
       trackmetadataTrack(track2, userUrn, Some(2)),
-      trackmetadataTrack(track1, userUrn, Some(1)))
+      trackmetadataTrack(track1, userUrn, Some(1))
+    )
 
-    val tracksOwner = User(userUrn, "permalink", "username", "avatar_url", "permalink_url", None, None, 0, None, None, false, None, None)
+    val tracksOwner = User(
+      userUrn,
+      "permalink",
+      "username",
+      "avatar_url",
+      "permalink_url",
+      None,
+      None,
+      0,
+      None,
+      None,
+      false,
+      None,
+      None
+    )
     richOkidokiClient.fetchUserObjects(session, Set(userUrn)).returns(fetchUserObjectsResponse)
     trackmetadataClient.urnsByUser(session, userUrn).returns(urnsByUserResponse)
 
@@ -104,7 +119,8 @@ class TrackRepositorySpec extends UnitSpecification {
     trackmetadataClient.tracks(session, trackUrns).returns(tracksResponse)
     richOkidokiClient.fetchTracksAudioMetadata(session, trackUrns).returns(fetchTracksAudioMetadataResponse)
 
-    val userUrnsFromLabelIds = trackmetadataTracks.flatMap(_.label_id).map(id => Urn("soundcloud", "users", id.toString)).toSet
+    val userUrnsFromLabelIds =
+      trackmetadataTracks.flatMap(_.label_id).map(id => Urn("soundcloud", "users", id.toString)).toSet
     richOkidokiClient.fetchUsersMap(session, userUrnsFromLabelIds).returns(fetchUsersMapResponse)
 
     def accessibilityChecks = Map(
@@ -119,18 +135,32 @@ class TrackRepositorySpec extends UnitSpecification {
 
     def badFuture = Future.exception(exception)
 
-    lazy val result: support.Result[TracksResult] = Await.result(repository.tracksByUser(session, userUrn, paginationParams).value)
+    lazy val result: support.Result[TracksResult] =
+      Await.result(repository.tracksByUser(session, userUrn, paginationParams).value)
   }
-
 
   "#tracksByUser" >> {
     "with no pagination params" >> {
       trait NoPaginationParams extends Context {
-        override def paginationParams = new TrackPagination(None, None, false, None, None, new URL("https://api.soundcloud.com"))
+        override def paginationParams =
+          new TrackPagination(None, None, false, None, None, new URL("https://api.soundcloud.com"))
 
-        val goodTracksResult = Good(TracksResult(
-          trackmetadataTracks,
-          tracksOwner, Map.empty, Map.empty, Map.empty, Map.empty, Map.empty, Map.empty, Map.empty, Map.empty, Map.empty, None))
+        val goodTracksResult = Good(
+          TracksResult(
+            trackmetadataTracks,
+            tracksOwner,
+            Map.empty,
+            Map.empty,
+            Map.empty,
+            Map.empty,
+            Map.empty,
+            Map.empty,
+            Map.empty,
+            Map.empty,
+            Map.empty,
+            None
+          )
+        )
       }
 
       "when loading the tracks' owner fails, it fails" in new NoPaginationParams {
@@ -225,9 +255,22 @@ class TrackRepositorySpec extends UnitSpecification {
             track3 -> false
           )
 
-          result ==== Good(TracksResult(
-            trackmetadataTracks.tail, // remove track3 for not being accessible
-            tracksOwner, Map.empty, Map.empty, Map.empty, Map.empty, Map.empty, Map.empty, Map.empty, Map.empty, Map.empty, None))
+          result ==== Good(
+            TracksResult(
+              trackmetadataTracks.tail, // remove track3 for not being accessible
+              tracksOwner,
+              Map.empty,
+              Map.empty,
+              Map.empty,
+              Map.empty,
+              Map.empty,
+              Map.empty,
+              Map.empty,
+              Map.empty,
+              Map.empty,
+              None
+            )
+          )
         }
       }
 
@@ -241,18 +284,44 @@ class TrackRepositorySpec extends UnitSpecification {
 
           override def fetchTracksAudioMetadataResponse = Future.value(audios)
 
-          result ==== Good(TracksResult(
-            trackmetadataTracks.tail, // remove track3 for not being finished
-            tracksOwner, Map.empty, Map.empty, Map.empty, Map.empty, audios, Map.empty, Map.empty, Map.empty, Map.empty, None))
+          result ==== Good(
+            TracksResult(
+              trackmetadataTracks.tail, // remove track3 for not being finished
+              tracksOwner,
+              Map.empty,
+              Map.empty,
+              Map.empty,
+              Map.empty,
+              audios,
+              Map.empty,
+              Map.empty,
+              Map.empty,
+              Map.empty,
+              None
+            )
+          )
         }
       }
 
       "when loading the tracks availability fails it returns no tracks" in new NoPaginationParams {
         override def areTracksAccessibleResponse = badFuture
 
-        result ==== Good(TracksResult(
-          List.empty,
-          tracksOwner, Map.empty, Map.empty, Map.empty, Map.empty, Map.empty, Map.empty, Map.empty, Map.empty, Map.empty, None))
+        result ==== Good(
+          TracksResult(
+            List.empty,
+            tracksOwner,
+            Map.empty,
+            Map.empty,
+            Map.empty,
+            Map.empty,
+            Map.empty,
+            Map.empty,
+            Map.empty,
+            Map.empty,
+            Map.empty,
+            None
+          )
+        )
       }
     }
   }

@@ -1,6 +1,11 @@
 package com.soundcloud.publicApiStrangler.client.mothership.response.mapper
 
-import com.soundcloud.publicApiStrangler.client.mothership.response.representation.{DeleteFromPlaylistResponse, InvalidUrnDeleteFromPlaylistResponse, NotAuthorizedDeleteFromPlaylistResponse, OkDeleteFromPlaylistResponse}
+import com.soundcloud.publicApiStrangler.client.mothership.response.representation.{
+  DeleteFromPlaylistResponse,
+  InvalidUrnDeleteFromPlaylistResponse,
+  NotAuthorizedDeleteFromPlaylistResponse,
+  OkDeleteFromPlaylistResponse
+}
 import com.soundcloud.publicApiStrangler.client.support.{ResponseMapper, UnhandledResponseException}
 import com.twitter.finagle.http.{Response, Status}
 

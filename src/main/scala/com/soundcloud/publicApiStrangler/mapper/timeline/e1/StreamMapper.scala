@@ -9,17 +9,18 @@ import com.soundcloud.publicApiStrangler.mapper.timeline.representation.e1.Timel
 import com.soundcloud.publicApiStrangler.mapper.timeline.{EntityMapper, EntitySummaryMapper, TimelineMapper}
 import com.twitter.util.Future
 
-class StreamMapper(timelineClient: TimelineJsonClient,
-                   entityMapper: EntityMapper,
-                   entitySummaryMapper: EntitySummaryMapper)
-  extends TimelineMapper {
-
-  override def fetch(session: UserSession, page: CursorBasedPage[Urn])(implicit context: MappingContext): Future[TimelineWithUuids] = {
+class StreamMapper(
+    timelineClient: TimelineJsonClient,
+    entityMapper: EntityMapper,
+    entitySummaryMapper: EntitySummaryMapper
+) extends TimelineMapper {
+  override def fetch(session: UserSession, page: CursorBasedPage[Urn])(
+      implicit context: MappingContext
+  ): Future[TimelineWithUuids] = {
     val (uuid, reverse) = clientCursorParam(page)
 
-    timelineClient.stream(session, uuid.map(_.toString), page.limit, reverse, Some("uuid")).map {
-      json =>
-        new TimelineWithUuids(json, page, entityMapper, entitySummaryMapper)
+    timelineClient.stream(session, uuid.map(_.toString), page.limit, reverse, Some("uuid")).map { json =>
+      new TimelineWithUuids(json, page, entityMapper, entitySummaryMapper)
     }
   }
 }

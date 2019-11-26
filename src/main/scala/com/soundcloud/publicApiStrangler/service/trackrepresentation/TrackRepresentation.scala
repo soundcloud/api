@@ -20,9 +20,11 @@ object TrackRepresentationLike {
     case t: TrackRepresentationGeoblockingsDecorator => TrackRepresentationGeoblockingsDecorator.writes.writes(t)
     case t: TrackRepresentationDomainLockingsDecorator => TrackRepresentationDomainLockingsDecorator.writes.writes(t)
     case t: TrackRepresentationUserFavoriteDecorator => TrackRepresentationUserFavoriteDecorator.writes.writes(t)
-    case t: TrackRepresentationUserPlaybackCountDecorator => TrackRepresentationUserPlaybackCountDecorator.writes.writes(t)
+    case t: TrackRepresentationUserPlaybackCountDecorator =>
+      TrackRepresentationUserPlaybackCountDecorator.writes.writes(t)
     case t: TrackRepresentationWaveformUrlDecorator => TrackRepresentationWaveformUrlDecorator.writes.writes(t)
-    case t: TrackRepresentationSecretTokenUriParamDecorator => TrackRepresentationSecretTokenUriParamDecorator.writes.writes(t)
+    case t: TrackRepresentationSecretTokenUriParamDecorator =>
+      TrackRepresentationSecretTokenUriParamDecorator.writes.writes(t)
     case t: TrackRepresentationQuotaDecorator => TrackRepresentationQuotaDecorator.writes.writes(t)
     case t: TrackRepresentationCountsDecorator => TrackRepresentationCountsDecorator.writes.writes(t)
     case t: TrackRepresentationCommentCountDecorator => TrackRepresentationCommentCountDecorator.writes.writes(t)
@@ -44,9 +46,9 @@ object TrackRepresentationLike {
 }
 
 case class TrackRepresentationCountsDecorator(
-                                               counts: StitchCounts,
-                                               wrapped: TrackRepresentationLike
-                                             ) extends TrackRepresentationLike
+    counts: StitchCounts,
+    wrapped: TrackRepresentationLike
+) extends TrackRepresentationLike
 
 object TrackRepresentationCountsDecorator {
   implicit val writes = Writes[TrackRepresentationCountsDecorator] { dec =>
@@ -60,9 +62,9 @@ object TrackRepresentationCountsDecorator {
 }
 
 case class TrackRepresentationCommentCountDecorator(
-                                                     counts: StitchCounts,
-                                                     wrapped: TrackRepresentationLike
-                                                   ) extends TrackRepresentationLike
+    counts: StitchCounts,
+    wrapped: TrackRepresentationLike
+) extends TrackRepresentationLike
 
 object TrackRepresentationCommentCountDecorator {
   implicit val writes = Writes[TrackRepresentationCommentCountDecorator] { dec =>
@@ -73,11 +75,10 @@ object TrackRepresentationCommentCountDecorator {
 }
 
 case class TrackRepresentationUserPlaybackCountDecorator(
-                                                          wrapped: TrackRepresentationLike
-                                                        ) extends TrackRepresentationLike
+    wrapped: TrackRepresentationLike
+) extends TrackRepresentationLike
 
 object TrackRepresentationUserPlaybackCountDecorator {
-
   // This is also hard-coded to be 1 inside Mothership
   implicit val writes = Writes[TrackRepresentationUserPlaybackCountDecorator] { dec =>
     Json.toJson(dec.wrapped).as[JsObject] ++ Json.obj(
@@ -87,9 +88,9 @@ object TrackRepresentationUserPlaybackCountDecorator {
 }
 
 case class TrackRepresentationUserFavoriteDecorator(
-                                                     isLiked: Boolean,
-                                                     wrapped: TrackRepresentationLike
-                                                   ) extends TrackRepresentationLike
+    isLiked: Boolean,
+    wrapped: TrackRepresentationLike
+) extends TrackRepresentationLike
 
 object TrackRepresentationUserFavoriteDecorator {
   implicit val writes = Writes[TrackRepresentationUserFavoriteDecorator] { dec =>
@@ -100,9 +101,9 @@ object TrackRepresentationUserFavoriteDecorator {
 }
 
 case class TrackRepresentationSecretTokenDecorator(
-                                                    track: Track,
-                                                    wrapped: TrackRepresentationLike
-                                                  ) extends TrackRepresentationLike
+    track: Track,
+    wrapped: TrackRepresentationLike
+) extends TrackRepresentationLike
 
 object TrackRepresentationSecretTokenDecorator {
   implicit val writes = Writes[TrackRepresentationSecretTokenDecorator] { dec =>
@@ -114,9 +115,9 @@ object TrackRepresentationSecretTokenDecorator {
 }
 
 case class TrackRepresentationLabelDecorator(
-                                              label: User,
-                                              wrapped: TrackRepresentationLike
-                                            ) extends TrackRepresentationLike
+    label: User,
+    wrapped: TrackRepresentationLike
+) extends TrackRepresentationLike
 
 object TrackRepresentationLabelDecorator {
   // FIXME: ugly to have to import it here
@@ -130,9 +131,9 @@ object TrackRepresentationLabelDecorator {
 }
 
 case class TrackRepresentationGeoblockingsDecorator(
-                                                     geoblockings: Geoblockings,
-                                                     wrapped: TrackRepresentationLike
-                                                   ) extends TrackRepresentationLike
+    geoblockings: Geoblockings,
+    wrapped: TrackRepresentationLike
+) extends TrackRepresentationLike
 
 object TrackRepresentationGeoblockingsDecorator {
   implicit val writes = Writes[TrackRepresentationGeoblockingsDecorator] { dec =>
@@ -143,9 +144,9 @@ object TrackRepresentationGeoblockingsDecorator {
 }
 
 case class TrackRepresentationDomainLockingsDecorator(
-                                                       domainLockings: Seq[DomainLocking],
-                                                       wrapped: TrackRepresentationLike
-                                                     ) extends TrackRepresentationLike
+    domainLockings: Seq[DomainLocking],
+    wrapped: TrackRepresentationLike
+) extends TrackRepresentationLike
 
 object TrackRepresentationDomainLockingsDecorator {
   implicit val writes = Writes[TrackRepresentationDomainLockingsDecorator] { dec =>
@@ -156,9 +157,9 @@ object TrackRepresentationDomainLockingsDecorator {
 }
 
 case class TrackRepresentationWaveformUrlDecorator(
-                                                    waveformUrl: TrackWaveformUrl,
-                                                    wrapped: TrackRepresentationLike
-                                                  ) extends TrackRepresentationLike
+    waveformUrl: TrackWaveformUrl,
+    wrapped: TrackRepresentationLike
+) extends TrackRepresentationLike
 
 object TrackRepresentationWaveformUrlDecorator {
   implicit val writes = Writes[TrackRepresentationWaveformUrlDecorator] { dec =>
@@ -168,9 +169,9 @@ object TrackRepresentationWaveformUrlDecorator {
 }
 
 case class TrackRepresentationSecretTokenUriParamDecorator(
-                                                            wrapped: TrackRepresentationLike,
-                                                            secretParam: String
-                                                          ) extends TrackRepresentationLike
+    wrapped: TrackRepresentationLike,
+    secretParam: String
+) extends TrackRepresentationLike
 
 object TrackRepresentationSecretTokenUriParamDecorator {
   implicit val writes = Writes[TrackRepresentationSecretTokenUriParamDecorator] { dec =>
@@ -182,7 +183,11 @@ object TrackRepresentationSecretTokenUriParamDecorator {
       addSecretToFieldAsPath("permalink_url", json, dec)
   }
 
-  private def addSecretToFieldAsParam(fieldName: String, json: JsObject, dec: TrackRepresentationSecretTokenUriParamDecorator): JsObject = {
+  private def addSecretToFieldAsParam(
+      fieldName: String,
+      json: JsObject,
+      dec: TrackRepresentationSecretTokenUriParamDecorator
+  ): JsObject = {
     val secret = URLEncoder.encode(dec.secretParam, "UTF-8")
     (json \ fieldName).asOpt[String] match {
       case Some(value) => Json.obj(fieldName -> s"$value?secret_token=$secret")
@@ -190,7 +195,11 @@ object TrackRepresentationSecretTokenUriParamDecorator {
     }
   }
 
-  private def addSecretToFieldAsPath(fieldName: String, json: JsObject, dec: TrackRepresentationSecretTokenUriParamDecorator): JsObject = {
+  private def addSecretToFieldAsPath(
+      fieldName: String,
+      json: JsObject,
+      dec: TrackRepresentationSecretTokenUriParamDecorator
+  ): JsObject = {
     val secret = URLEncoder.encode(dec.secretParam, "UTF-8")
     (json \ fieldName).asOpt[String] match {
       case Some(value) => Json.obj(fieldName -> s"$value/$secret")
@@ -200,16 +209,15 @@ object TrackRepresentationSecretTokenUriParamDecorator {
 }
 
 case class TrackRepresentationQuotaDecorator(
-                                              downloadable: Option[Boolean],
-                                              downloadsPerTrack: Option[Int],
-                                              downloadCount: Int,
-                                              userIsOwner: Boolean,
-                                              wrapped: TrackRepresentationLike
-                                            ) extends TrackRepresentationLike
+    downloadable: Option[Boolean],
+    downloadsPerTrack: Option[Int],
+    downloadCount: Int,
+    userIsOwner: Boolean,
+    wrapped: TrackRepresentationLike
+) extends TrackRepresentationLike
 
 object TrackRepresentationQuotaDecorator {
   implicit val writes = Writes[TrackRepresentationQuotaDecorator] { dec =>
-
     val trackDownloadable = dec.downloadable.getOrElse(false)
     val downloadable: Boolean = (trackDownloadable, dec.downloadsPerTrack) match {
       case (false, _) => false
@@ -228,14 +236,15 @@ object TrackRepresentationQuotaDecorator {
 }
 
 case class TrackRepresentation(
-                                track: Track,
-                                user: User,
-                                isrc: Option[Isrc],
-                                counts: StitchCounts,
-                                label: Option[User],
-                                geoblockings: Geoblockings,
-                                domainlockings: Seq[DomainLocking],
-                                audioMetadata: TrackAudioMetadata) extends TrackRepresentationLike {
+    track: Track,
+    user: User,
+    isrc: Option[Isrc],
+    counts: StitchCounts,
+    label: Option[User],
+    geoblockings: Geoblockings,
+    domainlockings: Seq[DomainLocking],
+    audioMetadata: TrackAudioMetadata
+) extends TrackRepresentationLike {
   def id = track.urn.identifier.toLong
 }
 

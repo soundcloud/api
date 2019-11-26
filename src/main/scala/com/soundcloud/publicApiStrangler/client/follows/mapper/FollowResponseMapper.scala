@@ -6,7 +6,6 @@ import com.twitter.finagle.http.{Response, Status}
 import play.api.libs.json._
 
 object FollowResponseMapper {
-
   def apply(response: Response): FollowResponse =
     response.status match {
       case Status.Created => FollowingCreated(Json.parse(response.contentString).as[Following])

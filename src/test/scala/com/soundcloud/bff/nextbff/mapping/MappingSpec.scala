@@ -6,7 +6,6 @@ import com.soundcloud.jvmkit.module.util.Urn
 import language.reflectiveCalls
 
 class MappingSpec extends UnitSpecification {
-
   trait Context extends Scope {
     implicit val mappingContext = mock[MappingContext]
     val urn = Urn("soundcloud", "tracks", "232")
@@ -23,9 +22,7 @@ class MappingSpec extends UnitSpecification {
   }
 
   "defaults as valid" in new Context {
-    val mapping = new Mapping {
-
-    }
+    val mapping = new Mapping {}
 
     mapping.isValid must beTrue
   }

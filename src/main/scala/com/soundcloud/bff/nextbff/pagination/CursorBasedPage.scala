@@ -8,14 +8,13 @@ import com.twitter.finagle.http.Request
   * pagination mechanism.
   */
 case class CursorBasedPage[T](
-                               param: T,
-                               baseUrl: String,
-                               path: String,
-                               extraParams: Params,
-                               cursor: Option[String],
-                               limit: Int)
-  extends Page[T] {
-
+    param: T,
+    baseUrl: String,
+    path: String,
+    extraParams: Params,
+    cursor: Option[String],
+    limit: Int
+) extends Page[T] {
   /**
     * Creates the next page for the specified cursor position.
     */

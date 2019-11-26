@@ -5,7 +5,14 @@ object InvalidPolicyException {
 }
 
 case class InvalidPolicyException(val invalidPolicyName: String)
-  extends RuntimeException(String.format(InvalidPolicyException.MESSAGE, invalidPolicyName, classOf[ContentPolicy].getSimpleName, ContentPolicy.allPossibleNames))
+    extends RuntimeException(
+      String.format(
+        InvalidPolicyException.MESSAGE,
+        invalidPolicyName,
+        classOf[ContentPolicy].getSimpleName,
+        ContentPolicy.allPossibleNames
+      )
+    )
 
 /**
   * The set of policies to be applied to a content.
@@ -26,7 +33,6 @@ class ContentPolicy(val name: String) {
   * </i> be used.
   */
 object ContentPolicy {
-
   /**
     * Can be used by the client and user.
     */

@@ -20,7 +20,6 @@ import org.mockito.Mockito.when
 import play.api.libs.json.{JsArray, JsNull, JsObject, Json}
 
 class SearchRepositorySpec extends UnitSpecification {
-
   trait Context extends Scope {
     lazy val session = loggedInSession(Urn("soundcloud", "users", "123"))
     lazy val mockService = mock[JsonClient]
@@ -35,11 +34,16 @@ class SearchRepositorySpec extends UnitSpecification {
       )
 
       val response = withContentsOf("search", "tracks").as[JsObject]
-      doReturn(Future.value(jsonResponse(Status.Ok, response))).when(mockService)
+      doReturn(Future.value(jsonResponse(Status.Ok, response)))
+        .when(mockService)
         .getWithSession(session, SearchRepository.TracksPath, commonParams + ("q" -> "bar"), Headers.empty)
       val request = OffsetBasedPage(
         SearchDispatcherRequest(SearchRepository.TracksPath, Set.empty, Map.empty)(x => x),
-        "http://localhost", "/search/tracks", Params("q" -> "bar"), 0, 10
+        "http://localhost",
+        "/search/tracks",
+        Params("q" -> "bar"),
+        0,
+        10
       )
       Await.result(repo.fetch(session, request)) ==== Some(response)
     }
@@ -47,9 +51,9 @@ class SearchRepositorySpec extends UnitSpecification {
 }
 
 class SearchMapperSpec extends UnitSpecification {
-
   val json = withContentsOf("search", "tracks").as[JsObject]
-  val urns = (json \ "docs").as[List[JsObject]]
+  val urns = (json \ "docs")
+    .as[List[JsObject]]
     .map(doc => (doc \ "urn").as[Urn])
   val emptyJson = withContentsOf("search", "empty_result").as[JsObject]
 
@@ -77,7 +81,8 @@ class SearchMapperSpec extends UnitSpecification {
     val caMock = mock[ContentAuthorizationRules]
     val followCountsClient = mock[FollowCountsClient]
     val repostsClient = mock[RepostsClient]
-    val searchEntityMapper = new SearchEntityMapper(okidokiMock, followCountsClient, repostsClient, baseUrl, caMock, null, null, null)
+    val searchEntityMapper =
+      new SearchEntityMapper(okidokiMock, followCountsClient, repostsClient, baseUrl, caMock, null, null, null)
     val searchMapper = new SearchMapper(searchRepoMock, searchEntityMapper, baseUrl)
     private val request = pagedRequest(Map.empty)
 
@@ -127,7 +132,9 @@ class SearchMapperSpec extends UnitSpecification {
         mapper.map(request, json) match {
           case search: PaginatedSearch =>
             // tracks.json: 3 results, 5 total results
-            search.next_href must beSome { s: String => s.contains("offset=3") }
+            search.next_href must beSome { s: String =>
+              s.contains("offset=3")
+            }
           case x => failure("bad mapping, expected PaginatedSearch, got " + x)
         }
       }

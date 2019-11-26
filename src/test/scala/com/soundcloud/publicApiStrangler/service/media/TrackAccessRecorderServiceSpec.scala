@@ -10,7 +10,6 @@ import com.twitter.finagle.http.{Method, Request, Status}
 import com.twitter.util.{Await, Future}
 
 class TrackAccessRecorderServiceSpec extends UnitSpecification {
-
   trait Context extends Scope {
     val trackAccessRecorderClient = mock[TrackAccessRecorderClient]
     val fakeTelemetry = Telemetry.createIsolatedInstance
@@ -31,8 +30,10 @@ class TrackAccessRecorderServiceSpec extends UnitSpecification {
 
     val action = ResponseBuilder().status(Status.Ok).body("foobar").build
 
-    lazy val resultStream = Await.result(service.recordStreamAccess(session, request, trackUrn, loggingEnabled)(Future.value(action)))
-    lazy val resultDownload = Await.result(service.recordDownloadAccess(session, request, trackUrn)(Future.value(action)))
+    lazy val resultStream =
+      Await.result(service.recordStreamAccess(session, request, trackUrn, loggingEnabled)(Future.value(action)))
+    lazy val resultDownload =
+      Await.result(service.recordDownloadAccess(session, request, trackUrn)(Future.value(action)))
   }
 
   Seq("stream", "download").foreach { accessType =>
@@ -147,7 +148,13 @@ class TrackAccessRecorderServiceSpec extends UnitSpecification {
         Future.value(ResponseBuilder().status(Status.Ok).build)
 
       def accessWasRecorded =
-        (there was one(trackAccessRecorderClient).recordAccess(session, trackUrn, accessFor = "download", shouldLog = true, secretToken)).isSuccess
+        (there was one(trackAccessRecorderClient).recordAccess(
+          session,
+          trackUrn,
+          accessFor = "download",
+          shouldLog = true,
+          secretToken
+        )).isSuccess
     }
 
     "when request method is GET" >> {
@@ -169,7 +176,6 @@ class TrackAccessRecorderServiceSpec extends UnitSpecification {
     }
   }
 
-
   "when recording access for stream" >> {
     trait StreamContext extends Context {
       val shouldLog: Boolean
@@ -178,7 +184,13 @@ class TrackAccessRecorderServiceSpec extends UnitSpecification {
         Future.value(ResponseBuilder().status(Status.Ok).build)
 
       def accessWasRecorded =
-        (there was one(trackAccessRecorderClient).recordAccess(session, trackUrn, accessFor = "stream", shouldLog, secretToken)).isSuccess
+        (there was one(trackAccessRecorderClient).recordAccess(
+          session,
+          trackUrn,
+          accessFor = "stream",
+          shouldLog,
+          secretToken
+        )).isSuccess
     }
 
     "when request method is GET" >> {
@@ -188,7 +200,6 @@ class TrackAccessRecorderServiceSpec extends UnitSpecification {
 
         resultStream.status ==== Status.Ok
         accessWasRecorded ==== true
-
       }
     }
 
@@ -199,9 +210,7 @@ class TrackAccessRecorderServiceSpec extends UnitSpecification {
 
         resultStream.status ==== Status.Ok
         accessWasRecorded ==== true
-
       }
-
     }
   }
 }

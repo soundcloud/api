@@ -12,7 +12,6 @@ import com.twitter.util.{Await, Duration, Future}
 import play.api.libs.json.Json
 
 class LieblingClientSpec extends UnitSpecification {
-
   trait Context extends Scope {
     implicit val service = mock[JsonClient]
     implicit val session = new UserSessionBuilder().build()
@@ -29,8 +28,7 @@ class LieblingClientSpec extends UnitSpecification {
     val tracksUrns = List(trackUrn, Urn("soundcloud", "tracks", "101"))
     val notFoundTrackUrn = Urn("soundcloud", "tracks", "0")
 
-    val lieblingLikesCount = Json.parse(
-      """{
+    val lieblingLikesCount = Json.parse("""{
         |  "likes_counts": [
         |    {
         |      "likes_count": 18,
@@ -51,7 +49,11 @@ class LieblingClientSpec extends UnitSpecification {
     "successful response" in new Context() {
       val targets = Seq(playlistUrn, trackUrn)
 
-      expectOkResponse(Path() / "likes_info", lieblingLikesCount, Map("for_urns" -> targets, "includes" -> "likes_counts"))
+      expectOkResponse(
+        Path() / "likes_info",
+        lieblingLikesCount,
+        Map("for_urns" -> targets, "includes" -> "likes_counts")
+      )
       val actual = Await.result(client.likeCounts(session, targets))
 
       actual must haveSize(2)
@@ -60,10 +62,12 @@ class LieblingClientSpec extends UnitSpecification {
 
     "unsucessful response" in new Context {
       val targets = Seq(playlistUrn, trackUrn)
-      service.getWithSession(session,
+      service.getWithSession(
+        session,
         Path() / "likes_info",
         Params("for_urns" -> targets, "includes" -> "likes_counts"),
-        Headers.empty) returns Future.exception(new IndividualRequestTimeoutException(Duration.fromMilliseconds(1000L)))
+        Headers.empty
+      ) returns Future.exception(new IndividualRequestTimeoutException(Duration.fromMilliseconds(1000L)))
 
       val actual = Await.result(client.likeCounts(session, targets))
 
@@ -75,7 +79,11 @@ class LieblingClientSpec extends UnitSpecification {
     "successful response" in new Context() {
       val targets = Seq(playlistUrn, trackUrn)
 
-      expectOkResponse(Path() / "likes_info", lieblingLikesCount, Map("for_urns" -> targets, "includes" -> "likes_counts,liked_track_urns", "user_urn" -> userUrn))
+      expectOkResponse(
+        Path() / "likes_info",
+        lieblingLikesCount,
+        Map("for_urns" -> targets, "includes" -> "likes_counts,liked_track_urns", "user_urn" -> userUrn)
+      )
       val actual = Await.result(client.userLikeCounts(session, targets, userUrn))
 
       actual.likes_counts must haveSize(2)
@@ -95,8 +103,16 @@ class LieblingClientSpec extends UnitSpecification {
         "liked_track_urns" -> (lieblingLikesCount \ "liked_track_urns").get
       )
 
-      expectOkResponse(Path() / "likes_info", firstResponse, Map("for_urns" -> Seq(playlistUrn), "includes" -> "likes_counts,liked_track_urns", "user_urn" -> userUrn))
-      expectOkResponse(Path() / "likes_info", secondResponse, Map("for_urns" -> Seq(trackUrn), "includes" -> "likes_counts,liked_track_urns", "user_urn" -> userUrn))
+      expectOkResponse(
+        Path() / "likes_info",
+        firstResponse,
+        Map("for_urns" -> Seq(playlistUrn), "includes" -> "likes_counts,liked_track_urns", "user_urn" -> userUrn)
+      )
+      expectOkResponse(
+        Path() / "likes_info",
+        secondResponse,
+        Map("for_urns" -> Seq(trackUrn), "includes" -> "likes_counts,liked_track_urns", "user_urn" -> userUrn)
+      )
       val actual = Await.result(client.userLikeCounts(session, targets, userUrn, batchSize = 1))
 
       actual.likes_counts must haveSize(2)
@@ -111,8 +127,7 @@ class LieblingClientSpec extends UnitSpecification {
       val userUrn2 = Urn("soundcloud", "users", "1293871")
       val userUrn3 = Urn("soundcloud", "users", "29874198372")
 
-      val lieblingUserTotalLikeCount = Json.parse(
-        s"""{
+      val lieblingUserTotalLikeCount = Json.parse(s"""{
            |  "users": [{
            |    "user_urn": "${userUrn.toString}",
            |    "track_likes_count": 194,
@@ -131,7 +146,11 @@ class LieblingClientSpec extends UnitSpecification {
     }
 
     "successful response" in new UserTotalLikeCounts {
-      expectOkResponse(Path() / "users_counts", lieblingUserTotalLikeCount, Map("for_urns" -> List(userUrn, userUrn2, userUrn3)))
+      expectOkResponse(
+        Path() / "users_counts",
+        lieblingUserTotalLikeCount,
+        Map("for_urns" -> List(userUrn, userUrn2, userUrn3))
+      )
 
       result.size ==== 2
       result(0).user_urn ==== userUrn
@@ -146,11 +165,8 @@ class LieblingClientSpec extends UnitSpecification {
     }
 
     "unsuccessful response" in new UserTotalLikeCounts {
-      service.getWithSession(
-        session,
-        Path() / "users_counts",
-        Params("for_urns" -> targetUrns),
-        Headers.empty) returns Future.exception(new RuntimeException("noooo"))
+      service.getWithSession(session, Path() / "users_counts", Params("for_urns" -> targetUrns), Headers.empty) returns Future
+        .exception(new RuntimeException("noooo"))
 
       result.size ==== 0
     }
@@ -161,15 +177,16 @@ class LieblingClientSpec extends UnitSpecification {
       val track1 = Urn("soundcloud", "tracks", "48786981")
       val track2 = Urn("soundcloud", "tracks", "2")
       val trackUrns = Seq(track1, track2)
-
     }
 
     "returns if the user has liked the provided tracks" in new UserLikedTracksContext {
-      expectOkResponse(Path() / "likes_info", lieblingLikesCount,
-        Map("for_urns" -> trackUrns, "includes" -> "likes_counts,liked_track_urns", "user_urn" -> userUrn))
+      expectOkResponse(
+        Path() / "likes_info",
+        lieblingLikesCount,
+        Map("for_urns" -> trackUrns, "includes" -> "likes_counts,liked_track_urns", "user_urn" -> userUrn)
+      )
 
       Await.result(client.userLikedTracks(session, trackUrns.toSet, userUrn)) ==== Map(track1 -> true, track2 -> false)
     }
   }
 }
-

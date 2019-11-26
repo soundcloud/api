@@ -13,7 +13,6 @@ import org.mockito.Mockito.{times, verify, verifyZeroInteractions}
 import org.mockito.ArgumentCaptor
 
 class ContentAuthorizationServiceSpec extends UnitSpecification {
-
   trait Context extends Scope {
     val authsy = mock[JsonClient]
     val contentAuthorizationService = new ContentAuthorizationService(authsy)
@@ -23,23 +22,45 @@ class ContentAuthorizationServiceSpec extends UnitSpecification {
 
   "fetch all rules for a given user session and resource list" >> {
     "returns rules for each element" in new Context {
-      val resources = Seq(Urn("soundcloud", "tracks", "123"), Urn("soundcloud", "tracks", "666"), Urn("soundcloud", "tracks", "999"))
+      val resources =
+        Seq(Urn("soundcloud", "tracks", "123"), Urn("soundcloud", "tracks", "666"), Urn("soundcloud", "tracks", "999"))
 
-      authsy.getWithSession(userSession, authsyPath, Params("urns" -> resources), Headers.empty) returns Future(jsonResponse(Status.Ok, withContentsOf("authsy", "by_urns")))
+      authsy.getWithSession(userSession, authsyPath, Params("urns" -> resources), Headers.empty) returns Future(
+        jsonResponse(Status.Ok, withContentsOf("authsy", "by_urns"))
+      )
 
       val rules = Await.result(contentAuthorizationService.findRulesApplicableTo(userSession, resources, None))
       rules ==== Seq(
-        new ContentAuthorization(Urn("soundcloud", "tracks", "666"), ContentPolicy.from("monetize"), Reason.GEO, MonetizationModel.AD_SUPPORTED),
-        new ContentAuthorization(Urn("soundcloud", "tracks", "123"), ContentPolicy.from("monetize"), Reason.GEO, MonetizationModel.AD_SUPPORTED),
-        new ContentAuthorization(Urn("soundcloud", "tracks", "999"), ContentPolicy.from("allowed"), Reason.UNKNOWN, ContentRestriction.NO_OFFLINE_SYNC, MonetizationModel.NOT_APPLICABLE)
+        new ContentAuthorization(
+          Urn("soundcloud", "tracks", "666"),
+          ContentPolicy.from("monetize"),
+          Reason.GEO,
+          MonetizationModel.AD_SUPPORTED
+        ),
+        new ContentAuthorization(
+          Urn("soundcloud", "tracks", "123"),
+          ContentPolicy.from("monetize"),
+          Reason.GEO,
+          MonetizationModel.AD_SUPPORTED
+        ),
+        new ContentAuthorization(
+          Urn("soundcloud", "tracks", "999"),
+          ContentPolicy.from("allowed"),
+          Reason.UNKNOWN,
+          ContentRestriction.NO_OFFLINE_SYNC,
+          MonetizationModel.NOT_APPLICABLE
+        )
       )
     }
   }
 
   "sends a session with the subscription country header when subscription country is provided" in new Context {
-    val resources = Seq(Urn("soundcloud", "tracks", "123"), Urn("soundcloud", "tracks", "666"), Urn("soundcloud", "tracks", "999"))
+    val resources =
+      Seq(Urn("soundcloud", "tracks", "123"), Urn("soundcloud", "tracks", "666"), Urn("soundcloud", "tracks", "999"))
 
-    authsy.getWithSession(any[UserSession], any[Path], any[Params], any[Headers]) returns Future(jsonResponse(Status.Ok, withContentsOf("authsy", "by_urns")))
+    authsy.getWithSession(any[UserSession], any[Path], any[Params], any[Headers]) returns Future(
+      jsonResponse(Status.Ok, withContentsOf("authsy", "by_urns"))
+    )
 
     Await.result(contentAuthorizationService.findRulesApplicableTo(userSession, resources, Option("US")))
 
@@ -56,9 +77,14 @@ class ContentAuthorizationServiceSpec extends UnitSpecification {
   }
 
   "when asking for more than 65 things, make several requests" in new Context {
-    authsy.getWithSession(any[UserSession], any[Path], any[Params], any[Headers]) returns Future(jsonResponse(Status.Ok, withContentsOf("authsy", "by_urns")))
+    authsy.getWithSession(any[UserSession], any[Path], any[Params], any[Headers]) returns Future(
+      jsonResponse(Status.Ok, withContentsOf("authsy", "by_urns"))
+    )
 
-    Await.result(contentAuthorizationService.findRulesApplicableTo(userSession, List.fill(100)(Urn("soundcloud", "tracks", "123")), None))
+    Await.result(
+      contentAuthorizationService
+        .findRulesApplicableTo(userSession, List.fill(100)(Urn("soundcloud", "tracks", "123")), None)
+    )
     verify(authsy, times(2))
   }
 }

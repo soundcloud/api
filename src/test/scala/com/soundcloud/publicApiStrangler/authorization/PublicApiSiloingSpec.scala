@@ -9,9 +9,7 @@ import com.twitter.finagle.http.{Request, Status}
 import com.twitter.util.{Await, Future}
 
 class PublicApiSiloingSpec extends UnitSpecification {
-
   trait Context extends Scope {
-
     protected val request = mock[Request]
 
     protected def getPublicApiSiloing(blacklist: Set[Urn] = defaultMobileBlacklist) = {
@@ -45,7 +43,11 @@ class PublicApiSiloingSpec extends UnitSpecification {
 
   "public api siloing" >> {
     "should correctly parse blacklisted urls" in new Context {
-      val urls = Set(Urn("soundcloud", "applications", "1"), Urn("soundcloud", "applications", "2"), Urn("soundcloud", "applications", "3"))
+      val urls = Set(
+        Urn("soundcloud", "applications", "1"),
+        Urn("soundcloud", "applications", "2"),
+        Urn("soundcloud", "applications", "3")
+      )
 
       val publicApiSiloing = getPublicApiSiloing(urls)
 

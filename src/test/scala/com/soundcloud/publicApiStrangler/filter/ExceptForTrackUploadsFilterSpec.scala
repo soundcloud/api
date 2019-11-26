@@ -7,7 +7,6 @@ import com.twitter.finagle.{Service, SimpleFilter}
 import com.twitter.util.{Await, Future}
 
 class ExceptForTrackUploadsFilterSpec extends UnitSpecification {
-
   class MyFilter extends SimpleFilter[Request, Response] {
     override def apply(request: Request, next: Service[Request, Response]) =
       next(request).map(resp => ResponseBuilder().body("filtered!").build)

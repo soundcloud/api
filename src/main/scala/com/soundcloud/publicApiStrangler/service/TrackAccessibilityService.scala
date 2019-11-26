@@ -7,7 +7,6 @@ import com.soundcloud.publicApiStrangler.client.trackmetadata.Track
 import com.twitter.util.Future
 
 class TrackAccessibilityService(playlistsClient: PlaylistsClient) {
-
   def areTracksAccessible(session: UserSession, tracks: List[Track]): Future[Map[Urn, Boolean]] = {
     Future.collect(tracks.map(track => isTrackAccessible(session, None, track).map((track.urn, _)))).map(_.toMap)
   }
@@ -23,8 +22,10 @@ class TrackAccessibilityService(playlistsClient: PlaylistsClient) {
         case None => Future.False
         case Some(secretToken) => {
           if (secretToken.equals(track.secret_token)) Future.True
-          else playlistsClient.getPlaylistContainingTrackOwnedByUser(track.urn, track.user_urn)
-            .map(_.exists(playlist => playlist.secretToken == secretToken && playlist.userUrn == track.user_urn))
+          else
+            playlistsClient
+              .getPlaylistContainingTrackOwnedByUser(track.urn, track.user_urn)
+              .map(_.exists(playlist => playlist.secretToken == secretToken && playlist.userUrn == track.user_urn))
         }
       }
     }

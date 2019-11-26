@@ -15,6 +15,7 @@ pipelines:
             - exec:
                 command: make
                 arguments:
+                - lint
                 - unit-test
                 - package
                 - publish

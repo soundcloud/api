@@ -5,7 +5,6 @@ import com.twitter.finagle.http.{Response, Status}
 import play.api.libs.json.{JsValue, Json}
 
 object UnfollowResponseMapper {
-
   def apply(response: Response): UnfollowResponse =
     response.status match {
       case Status.Ok => UnfollowSuccessful

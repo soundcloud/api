@@ -8,7 +8,6 @@ import play.api.libs.json.{JsObject, JsValue}
 import scala.collection.mutable.ListBuffer
 
 class TracksVisitorSpec extends UnitSpecification {
-
   trait Context extends Scope {
     val visited = ListBuffer[(Urn, JsValue)]()
 
@@ -26,7 +25,6 @@ class TracksVisitorSpec extends UnitSpecification {
   }
 
   "visits all track objects" >> {
-
     "single track json" in new Context {
       new TracksVisitor(singleTrack).apply(visit) mustEqual Some(singleTrack)
       visited.toList mustEqual urnsAndTracks(List(singleTrack))

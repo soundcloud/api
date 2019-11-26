@@ -8,14 +8,16 @@ import com.soundcloud.publicApiStrangler.client.mothership.OkidokiClient
 import com.soundcloud.publicApiStrangler.client.reposts.RepostsClient
 import com.soundcloud.publicApiStrangler.mapper.timeline.representation.{Playlist, Track, User}
 import com.soundcloud.publicApiStrangler.test.UnitSpecification
-import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures.{entityMapperLieblingLikesInfo, entityMapperOkidokiFetch}
+import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures.{
+  entityMapperLieblingLikesInfo,
+  entityMapperOkidokiFetch
+}
 import com.twitter.util.{Await, Future}
 import org.mockito.Mockito.when
 import org.specs2.mutable.Before
 import play.api.libs.json.JsObject
 
 class EntityMapperSpec extends UnitSpecification {
-
   trait Context extends Scope with Before {
     val userUrn = Urn("soundcloud", "users", "123")
     val okidokiClient = mock[OkidokiClient]
@@ -23,12 +25,14 @@ class EntityMapperSpec extends UnitSpecification {
     val followCountsClient = mock[FollowCountsClient]
     val repostsClient = mock[RepostsClient]
     val entitySummaryMapper = mock[EntitySummaryMapper]
-    lazy val entityMapper = new EntityMapper(okidokiClient,
+    lazy val entityMapper = new EntityMapper(
+      okidokiClient,
       lieblingClient,
       followCountsClient,
       repostsClient,
       "https://foo.com",
-      entitySummaryMapper)
+      entitySummaryMapper
+    )
     val session = new UserSessionBuilder().build()
     val trackUrn = Urn("soundcloud", "tracks", "131352352")
     val playlistUrn = Urn("soundcloud", "playlists", "123")
@@ -75,5 +79,4 @@ class EntityMapperSpec extends UnitSpecification {
     track.downloadable mustEqual Some(false) // downloadable respects `has_downloads_left`
     track.reposts_count mustEqual Some(22)
   }
-
 }

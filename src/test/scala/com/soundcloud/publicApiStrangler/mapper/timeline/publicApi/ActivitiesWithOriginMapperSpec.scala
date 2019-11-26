@@ -5,7 +5,10 @@ import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSessionBuilder
 import com.soundcloud.publicApiStrangler.client.TimelineJsonClient
 import com.soundcloud.publicApiStrangler.mapper.timeline.{EntityMapper, EntitySummaryMapper}
-import com.soundcloud.publicApiStrangler.mapper.timeline.representation.publicApi.{TimelineItemWithOrigin, TimelineWithOrigin}
+import com.soundcloud.publicApiStrangler.mapper.timeline.representation.publicApi.{
+  TimelineItemWithOrigin,
+  TimelineWithOrigin
+}
 import com.soundcloud.publicApiStrangler.test.UnitSpecification
 import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures.timelineMapperActivities
 import com.twitter.util.{Await, Future}
@@ -14,7 +17,6 @@ import org.specs2.mutable.Before
 import play.api.libs.json.JsObject
 
 class ActivitiesWithOriginMapperSpec extends UnitSpecification {
-
   trait Context extends Scope {
     val timelineClient = mock[TimelineJsonClient]
     val entityMapper = mock[EntityMapper]
@@ -36,7 +38,8 @@ class ActivitiesWithOriginMapperSpec extends UnitSpecification {
       val page = CursorBasedPage(urn, "http://foo.com", "/something", Map(), Some(uuid), 100)
 
       override def before: Any = {
-        when(timelineClient.stream(session, Some(uuid), 100, false, Some("uuid"))).thenReturn(Future(timelineMapperActivities.as[JsObject]))
+        when(timelineClient.stream(session, Some(uuid), 100, false, Some("uuid")))
+          .thenReturn(Future(timelineMapperActivities.as[JsObject]))
       }
     }
 
@@ -52,6 +55,5 @@ class ActivitiesWithOriginMapperSpec extends UnitSpecification {
     "builds a futureHref" in new Cursor {
       result.futureHref mustEqual s"http://foo.com/something?uuid%5Bto%5D=$futureUuid&limit=100"
     }
-
   }
 }

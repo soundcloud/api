@@ -8,7 +8,6 @@ import scala.util.control.NonFatal
 case class JsonResponse(status: Status, body: Either[JsUndefined, JsValue], headers: HeaderMap = HeaderMap.apply())
 
 object JsonResponse {
-
   def from[T](response: Response): JsonResponse = {
     contentType(response) match {
       case Some(MediaType.Json) =>
@@ -41,10 +40,11 @@ object JsonResponse {
     }
   }
 
-  private def contentType(response: Response): Option[String] = for {
-    contentType <- response.contentType
-    actualContentType <- contentType.split(";", 2).headOption
-  } yield actualContentType.trim.toLowerCase
+  private def contentType(response: Response): Option[String] =
+    for {
+      contentType <- response.contentType
+      actualContentType <- contentType.split(";", 2).headOption
+    } yield actualContentType.trim.toLowerCase
 
   /**
     * Parses the body content of a Response as `JsValue`.
@@ -66,8 +66,7 @@ object JsonResponse {
           throw new IllegalArgumentException(s"Not valid JSON: \n====\n${response.contentString}\n====", e)
         }
       }
-    }
-    finally {
+    } finally {
       inputStream.close()
     }
   }

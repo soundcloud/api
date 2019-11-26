@@ -8,19 +8,23 @@ import com.soundcloud.publicApiStrangler.client.liebling.{LieblingClient, LikesC
 import com.soundcloud.publicApiStrangler.support.mapping.{InputValidation, ObjectMapping}
 import com.twitter.util.Future
 
-class LikeCountMapper(lieblingClient: LieblingClient) extends Mapper[Urn, LikeInfo]
-  with InputValidation[Urn, LikeInfo] {
-  override def mapNonEmptyInputs(session: UserSession, trackUrns: Set[Urn])(implicit context: MappingContext): Future[Map[Urn, LikeInfo]] = {
+class LikeCountMapper(lieblingClient: LieblingClient)
+    extends Mapper[Urn, LikeInfo]
+    with InputValidation[Urn, LikeInfo] {
+  override def mapNonEmptyInputs(session: UserSession, trackUrns: Set[Urn])(
+      implicit context: MappingContext
+  ): Future[Map[Urn, LikeInfo]] = {
     val userLikesCount: Future[UserLikesCount] =
       if (!session.isAnonymous)
         lieblingClient.userLikeCounts(session, trackUrns.toList, session.getUser)
       else
         lieblingClient.likeCounts(session, trackUrns.toList).map(UserLikesCount(Set.empty, _))
-    userLikesCount.map { case UserLikesCount(likedTracks, likeCounts) =>
-      likeCounts.map { case LikesCount(urn, count) =>
-        urn -> new ObjectMapping[(Boolean, Long)]((likedTracks.contains(urn), count)) with LikeInfo
-      }.toMap
+    userLikesCount.map {
+      case UserLikesCount(likedTracks, likeCounts) =>
+        likeCounts.map {
+          case LikesCount(urn, count) =>
+            urn -> new ObjectMapping[(Boolean, Long)]((likedTracks.contains(urn), count)) with LikeInfo
+        }.toMap
     }
   }
 }
-

@@ -2,7 +2,6 @@ package com.soundcloud.publicApiStrangler.mapper.timeline.representation
 
 import com.soundcloud.bff.nextbff.mapping.JsonMapping
 
-
 trait TimelineItem {
   self: JsonMapping =>
 

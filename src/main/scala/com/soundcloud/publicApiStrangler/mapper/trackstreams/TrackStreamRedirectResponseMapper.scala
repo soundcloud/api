@@ -10,7 +10,6 @@ import play.api.libs.json.Json
   * Maps a set of stream media urls to a redirect response.
   */
 class TrackStreamRedirectResponseMapper extends TrackStreamResponseMapper {
-
   val urlOfInterest = "http_mp3_128_url"
 
   def map(mediaUrls: Future[Set[MediaUrl]], isHeadRequest: Boolean): Future[Response] = {

@@ -2,7 +2,12 @@ package com.soundcloud.publicApiStrangler.authorization
 
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.publicApiStrangler.client.mothership.response.representation.HasUrn
-import com.soundcloud.publicApiStrangler.authorization.policies.{ContentAuthorization, ContentPolicy, ContentRestriction, Reason}
+import com.soundcloud.publicApiStrangler.authorization.policies.{
+  ContentAuthorization,
+  ContentPolicy,
+  ContentRestriction,
+  Reason
+}
 import play.api.libs.json.JsValue
 
 /**
@@ -13,11 +18,16 @@ import play.api.libs.json.JsValue
   * @param available            If the content is available to the request or not. Instead of querying this, please check
   *                             [[Available]] and [[Unavailable]] for pattern matching.
   */
-sealed class Authorization(val jsonContent: JsValue, val contentAuthorization: ContentAuthorization, val available: Boolean) {
+sealed class Authorization(
+    val jsonContent: JsValue,
+    val contentAuthorization: ContentAuthorization,
+    val available: Boolean
+) {
   val urn = HasUrn(jsonContent).orNull
 
-  override def toString = s"${this.getClass.getSimpleName}{available='$available', " +
-    s"policy='${contentAuthorization.getPolicy}', urn='$urn'}"
+  override def toString =
+    s"${this.getClass.getSimpleName}{available='$available', " +
+      s"policy='${contentAuthorization.getPolicy}', urn='$urn'}"
 }
 
 /**
@@ -31,9 +41,11 @@ object Available {
   def unapply(authorization: Authorization): Option[(JsValue, ContentPolicy, Set[ContentRestriction])] = {
     if (authorization.available) {
       Some(
-        (authorization.jsonContent,
+        (
+          authorization.jsonContent,
           authorization.contentAuthorization.getPolicy,
-          authorization.contentAuthorization.getContentRestrictions.toSet)
+          authorization.contentAuthorization.getContentRestrictions.toSet
+        )
       )
     } else {
       None
@@ -47,7 +59,9 @@ object Available {
 object Unavailable {
   def apply(jsonContent: JsValue) = new Authorization(jsonContent, null, false)
 
-  def apply(jsonContent: JsValue, contentAuthorization: ContentAuthorization) = new Authorization(jsonContent, contentAuthorization, false)
+  def apply(jsonContent: JsValue, contentAuthorization: ContentAuthorization) =
+    new Authorization(jsonContent, contentAuthorization, false)
 
-  def unapply(authorization: Authorization): Option[(Urn, Reason)] = Some((authorization.urn, authorization.contentAuthorization.getReason))
+  def unapply(authorization: Authorization): Option[(Urn, Reason)] =
+    Some((authorization.urn, authorization.contentAuthorization.getReason))
 }

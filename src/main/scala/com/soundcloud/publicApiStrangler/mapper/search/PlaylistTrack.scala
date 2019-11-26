@@ -4,14 +4,16 @@ import com.fasterxml.jackson.annotation.JsonIgnore
 import com.soundcloud.publicApiStrangler.client.mothership.response.representation.Track
 import com.soundcloud.publicApiStrangler.support.mapping.ObjectMapping
 
-
 trait PlaylistTracks extends ObjectMapping[List[Track]] {
   self =>
   def baseUrl: String
 
-  val tracks = resource.map(t => new ObjectMapping(t) with PlaylistTrack {
-    @JsonIgnore override def baseUrl: String = self.baseUrl
-  })
+  val tracks = resource.map(
+    t =>
+      new ObjectMapping(t) with PlaylistTrack {
+        @JsonIgnore override def baseUrl: String = self.baseUrl
+      }
+  )
 }
 
 /**

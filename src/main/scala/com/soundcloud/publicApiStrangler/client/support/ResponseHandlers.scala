@@ -5,7 +5,6 @@ import com.twitter.finagle.http.{Response, Status}
 import play.api.libs.json.{JsNull, JsObject, JsValue, Json}
 
 object ResponseHandlers {
-
   object ListResponse {
     def apply(response: Response): List[JsObject] = JsValueResponse(response).as[List[JsObject]]
   }
@@ -59,7 +58,8 @@ object ResponseHandlers {
   }
 
   def invalidResponse(response: Response): Nothing = {
-    throw new IllegalStateException(s"Invalid response: status=${response.statusCode},body=${response.contentString},headers=${response.headerMap}")
+    throw new IllegalStateException(
+      s"Invalid response: status=${response.statusCode},body=${response.contentString},headers=${response.headerMap}"
+    )
   }
-
 }

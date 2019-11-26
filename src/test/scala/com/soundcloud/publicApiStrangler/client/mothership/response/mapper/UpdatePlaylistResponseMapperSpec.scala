@@ -1,6 +1,10 @@
 package com.soundcloud.publicApiStrangler.client.mothership.response.mapper
 
-import com.soundcloud.publicApiStrangler.client.mothership.response.representation.{InvalidUrnUpdatePlaylistResponse, NotAuthorizedUpdatePlaylistResponse, OkUpdatePlaylistResponse}
+import com.soundcloud.publicApiStrangler.client.mothership.response.representation.{
+  InvalidUrnUpdatePlaylistResponse,
+  NotAuthorizedUpdatePlaylistResponse,
+  OkUpdatePlaylistResponse
+}
 import com.soundcloud.publicApiStrangler.client.support.UnhandledResponseException
 import com.soundcloud.publicApiStrangler.test.UnitSpecification
 import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures._
@@ -8,7 +12,6 @@ import com.twitter.finagle.http.Status
 import play.api.libs.json.JsObject
 
 class UpdatePlaylistResponseMapperSpec extends UnitSpecification {
-
   trait Context extends Scope {
     val updatePlaylistResponseMapper = new UpdatePlaylistResponseMapper
     val statusCode: Int

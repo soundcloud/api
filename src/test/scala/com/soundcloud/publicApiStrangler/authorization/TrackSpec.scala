@@ -13,13 +13,13 @@ class TrackSpec extends UnitSpecification {
           Urn("soundcloud", "irrelevant", "1"),
           contentPolicy,
           Reason.CLIENT_APPLICATION,
-          monetizationModel)
+          monetizationModel
+        )
 
         val result = new Track(Json.parse("""{"something":"else"}"""))
           .withContentAuthorization(contentAuthorization)
 
-        result ==== Json.parse(
-          s"""
+        result ==== Json.parse(s"""
              |{
              |  "something": "else",
              |  "policy": "${contentPolicy.toString}",

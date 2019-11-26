@@ -5,7 +5,6 @@ import com.twitter.util.Future
 import play.api.libs.json.JsValue
 
 trait IndividualFetchRepository[I] extends BulkFetchRepository[I] {
-
   override def bulkFetch(session: UserSession, params: Set[I]): Future[Map[I, JsValue]] =
     fetchKeys(session, params).map(rejectEmptyResults).map(_.toMap)
 
@@ -15,9 +14,8 @@ trait IndividualFetchRepository[I] extends BulkFetchRepository[I] {
     }
 
   private def fetchKeys(session: UserSession, params: Set[I]) =
-    Future.collect(params.toList.map {
-      param =>
-        fetch(session, param).map(jsValue => param -> jsValue)
+    Future.collect(params.toList.map { param =>
+      fetch(session, param).map(jsValue => param -> jsValue)
     })
 
   def fetch(session: UserSession, input: I): Future[Option[JsValue]]

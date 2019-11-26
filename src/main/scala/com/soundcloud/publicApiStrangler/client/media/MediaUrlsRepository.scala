@@ -39,7 +39,12 @@ class MediaUrlsRepository(mediaUrlgenClient: MediaUrlgenClient) {
     * @param https                If the returned links should be in HTTP or HTTPS, defaults to true
     * @return Future set of MediaUrls.
     */
-  def byUrn(session: UserSession, trackUrn: Urn, contentAuthorization: ContentAuthorization, https: Boolean = true): Future[Set[MediaUrl]] = {
+  def byUrn(
+      session: UserSession,
+      trackUrn: Urn,
+      contentAuthorization: ContentAuthorization,
+      https: Boolean = true
+  ): Future[Set[MediaUrl]] = {
     fetchMediaUrls(session, trackUrn, Params("ssl" -> https.toString), contentAuthorization)
   }
 
@@ -53,6 +58,11 @@ class MediaUrlsRepository(mediaUrlgenClient: MediaUrlgenClient) {
     * @param contentAuthorization Content authorization for track.
     * @return Future set of Media Urls.
     */
-  def fetchMediaUrls(session: UserSession, trackUrn: Urn, params: Params, contentAuthorization: ContentAuthorization): Future[Set[MediaUrl]] =
+  def fetchMediaUrls(
+      session: UserSession,
+      trackUrn: Urn,
+      params: Params,
+      contentAuthorization: ContentAuthorization
+  ): Future[Set[MediaUrl]] =
     mediaUrlgenClient.trackStreamUrlsFor(session, trackUrn, params, contentAuthorization)
 }

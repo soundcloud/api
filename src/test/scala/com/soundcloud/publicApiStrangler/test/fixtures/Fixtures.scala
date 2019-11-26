@@ -3,7 +3,6 @@ package com.soundcloud.publicApiStrangler.test.fixtures
 import com.soundcloud.publicApiStrangler.test.util.{GlobalJsonFiles, JsonFiles}
 import play.api.libs.json.JsValue
 
-
 object Fixtures {
   lazy val fixtureFiles: JsonFiles = GlobalJsonFiles
 
@@ -40,7 +39,8 @@ object Fixtures {
   lazy val followsAgeUnknownError = contentsOf("follows", "follow_failed_age_unknown")
 
   lazy val trackCoordinatorTrack = contentsOf("track-coordinator", "track")
-  lazy val trackCoordinatorTrackInPublicApiFormat = contentsOf("track-coordinator", "coordinator-track-in-public-api-format")
+  lazy val trackCoordinatorTrackInPublicApiFormat =
+    contentsOf("track-coordinator", "coordinator-track-in-public-api-format")
 
   lazy val consumerSubscription = contentsOf("subscriptions", "consumer-subscription")
 
@@ -53,7 +53,6 @@ object Fixtures {
   lazy val timelinePostedAndLikedPlaylists = contentsOf("timeline", "posted_and_liked_playlists")
   lazy val timelineReposts = contentsOf("timeline", "reposts")
   lazy val timelineLikes = contentsOf("timeline", "likes")
-
 
   lazy val trackmetadataClientEmptyTracks = contentsOf("trackmetadataclient", "empty_tracks")
   lazy val trackmetadataClientMultipleTracks = contentsOf("trackmetadataclient", "multiple_tracks")
@@ -110,6 +109,4 @@ object Fixtures {
   lazy val similarSoundsNonEmpty = contentsOf("similar-sounds", "non-empty")
 
   lazy val userFeedsSettings = fileJson("moshimoshi", "user_feeds_settings")
-
-
 }

@@ -6,7 +6,6 @@ import com.soundcloud.jvmkit.module.util.Urn
 import com.twitter.finagle.http.Request
 
 class CursorBasedPageSpec extends UnitSpecification {
-
   trait Context extends Scope {
     val param = Urn("soundcloud", "tracks", "2")
     val baseUrl = "http://www.foo.bar"

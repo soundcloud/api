@@ -12,7 +12,11 @@ import com.soundcloud.publicApiStrangler.client._
 import com.soundcloud.publicApiStrangler.client.followcounts.FollowCountsClient
 import com.soundcloud.publicApiStrangler.client.follows.FollowsClient
 import com.soundcloud.publicApiStrangler.client.liebling.LieblingClient
-import com.soundcloud.publicApiStrangler.client.media.{MediaServiceClient, TrackAccessRecorderClient, WaveformUrlsGenerator}
+import com.soundcloud.publicApiStrangler.client.media.{
+  MediaServiceClient,
+  TrackAccessRecorderClient,
+  WaveformUrlsGenerator
+}
 import com.soundcloud.publicApiStrangler.client.mothership.{OkidokiClient, RichOkidokiClient}
 import com.soundcloud.publicApiStrangler.client.playlists.{PlaylistDeletionClient, PlaylistsClient}
 import com.soundcloud.publicApiStrangler.client.pubmese.PubmeseClient
@@ -89,16 +93,19 @@ class Clients(config: AppConfig, telemetry: Telemetry) {
 
   val contentAuthorizationRules = new ContentAuthorizationRules(
     new ContentAuthorizationService(jsonClient("authsy")),
-    new SubscriptionsService(subscriptionsService))
+    new SubscriptionsService(subscriptionsService)
+  )
 
-  private val waveformUrlsGenerator = new WaveformUrlsGenerator(config.get(ResourceName("CDN_WAVE"), ConfigConvention.HTTPS_ENDPOINT))
+  private val waveformUrlsGenerator = new WaveformUrlsGenerator(
+    config.get(ResourceName("CDN_WAVE"), ConfigConvention.HTTPS_ENDPOINT)
+  )
 
   val tracksClient = new TracksClient(jsonClient("tracks"))
 
   val mediaServiceClient = new MediaServiceClient(jsonClient("media_service"))
 
-  val trackAccessRecorderService = new TrackAccessRecorderService(
-    new TrackAccessRecorderClient(jsonClient("track_access_recorder")), telemetry)
+  val trackAccessRecorderService =
+    new TrackAccessRecorderService(new TrackAccessRecorderClient(jsonClient("track_access_recorder")), telemetry)
 
   // Whitelist source: http://redash.int.s-cloud.net/queries/632/source
   private val whitelistedClients: Set[Urn] = Set(
@@ -128,13 +135,15 @@ class Clients(config: AppConfig, telemetry: Telemetry) {
   )
 
   val blacklistOfAppIdsForUserSiloing: Set[Urn] =
-    config.get("APP_SILOING_BLACKLIST_APPS", DataSensitivity.NON_SENSITIVE)
+    config
+      .get("APP_SILOING_BLACKLIST_APPS", DataSensitivity.NON_SENSITIVE)
       .split(",")
       .map(appId => Urn.parse(appId.trim).get)
       .toSet
 
   val userAuthentication = UserAuthentication(config, telemetry)
-  val authorizeContent = new AuthorizeHttpResponse(contentAuthorizationRules, userAuthentication, TrackPolicyApplicator(whitelistedClients))
+  val authorizeContent =
+    new AuthorizeHttpResponse(contentAuthorizationRules, userAuthentication, TrackPolicyApplicator(whitelistedClients))
 
   val baseUrl: String = config.get("APP_BASE_URL", DataSensitivity.NON_SENSITIVE)
 
@@ -143,7 +152,6 @@ class Clients(config: AppConfig, telemetry: Telemetry) {
 
   val enrichLikesCounts: () => Future[Boolean] =
     () => rolloutClient.isActive(BasicRolloutFeature("load_user_like_counts_from_liebling"))
-
 
   val richOkidokiClient = new RichOkidokiClient(okidokiJsonClient)
 
@@ -174,7 +182,6 @@ class Clients(config: AppConfig, telemetry: Telemetry) {
     trackAccessibilityService
   )
 
-
   val searchEntityMapper = new SearchEntityMapper(
     okidokiClient,
     followCountsClient,
@@ -187,5 +194,4 @@ class Clients(config: AppConfig, telemetry: Telemetry) {
   )
 
   val playlistDeletionClient = new PlaylistDeletionClient(okidokiJsonClient)
-
 }

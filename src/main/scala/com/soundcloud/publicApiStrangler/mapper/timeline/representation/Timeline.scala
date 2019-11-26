@@ -10,8 +10,7 @@ import com.soundcloud.jvmkit.module.util.Urn
 import play.api.libs.json.{JsObject, JsValue}
 
 abstract class Timeline(jsonValue: JsValue, page: CursorBasedPage[Urn])(implicit context: MappingContext)
-  extends JsonMapping(jsonValue) {
-
+    extends JsonMapping(jsonValue) {
   val collection: Seq[TimelineItem] = mapChildren(events).filterNot(contentDisallowed)
 
   @JsonInclude(JsonInclude.Include.NON_NULL)

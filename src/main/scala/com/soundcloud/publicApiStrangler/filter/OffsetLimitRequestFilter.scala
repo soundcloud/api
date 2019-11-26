@@ -27,7 +27,11 @@ class OffsetLimitRequestFilter(paths: Seq[String], maxOffset: Int) extends Simpl
       .status(Status.Forbidden)
       .header("Status", "403 Forbidden")
       .header("Date", DateTime.now.toString(DateTimeFormat.forPattern("E, d MMM yyyy HH:mm:ss z")))
-      .body(Json.stringify(JsObject(Seq("errors" -> JsArray(Seq(JsObject(Seq("error_message" -> JsString("403 - Forbidden")))))))))
+      .body(
+        Json.stringify(
+          JsObject(Seq("errors" -> JsArray(Seq(JsObject(Seq("error_message" -> JsString("403 - Forbidden")))))))
+        )
+      )
       .build
   }
 }

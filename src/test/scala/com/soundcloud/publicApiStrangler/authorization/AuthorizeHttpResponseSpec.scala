@@ -14,7 +14,6 @@ import org.specs2.mutable.Before
 import play.api.libs.json.{JsValue, Json}
 
 class AuthorizeHttpResponseSpec extends UnitSpecification {
-
   trait Context extends Scope {
     val session = new UserSessionBuilder().build()
     val contentAuthorization = mock[ContentAuthorizationRules]
@@ -25,7 +24,8 @@ class AuthorizeHttpResponseSpec extends UnitSpecification {
 
     def status: Status
 
-    val authorizeContent = new AuthorizeHttpResponse(contentAuthorization, userAuthentication, TrackPolicyApplicator(Set[Urn]()))
+    val authorizeContent =
+      new AuthorizeHttpResponse(contentAuthorization, userAuthentication, TrackPolicyApplicator(Set[Urn]()))
 
     lazy val authorizedResponse = Await.result(authorizeContent.apply(request, status, content))
   }
@@ -63,8 +63,10 @@ class AuthorizeHttpResponseSpec extends UnitSpecification {
 
     def policies: Seq[ContentPolicy]
 
-    val authorizations = tracksArray.as[Seq[JsValue]]
-      .map(_ \ "id").map(_.get)
+    val authorizations = tracksArray
+      .as[Seq[JsValue]]
+      .map(_ \ "id")
+      .map(_.get)
       .map(id => Urn("soundcloud", "tracks", id.toString))
       .zip(policies)
       .map(tuple => new ContentAuthorization(tuple._1, tuple._2, Reason.GEO, MonetizationModel.NOT_APPLICABLE))
@@ -90,7 +92,6 @@ class AuthorizeHttpResponseSpec extends UnitSpecification {
   }
 
   "returns all the tracks when snip" in new TrackArrayContext {
-
     override def policies = Seq(ContentPolicy.SNIP, ContentPolicy.SNIP, ContentPolicy.SNIP)
 
     authorizedResponse.statusCode mustEqual 200
@@ -104,7 +105,9 @@ class AuthorizeHttpResponseSpec extends UnitSpecification {
 
     val tracks = Json.parse(authorizedResponse.getContentString()).as[Seq[JsValue]]
     tracks.size mustEqual 3
-    tracks.map { t => (t \ "duration").as[Int] } ==== Seq(TrackDurationAction.snipDuration, 2000, 326183)
+    tracks.map { t =>
+      (t \ "duration").as[Int]
+    } ==== Seq(TrackDurationAction.snipDuration, 2000, 326183)
   }
 
   "trims a list if a track is blocked others are snip" in new TrackArrayContext {
@@ -132,8 +135,10 @@ class AuthorizeHttpResponseSpec extends UnitSpecification {
 
     def policies: Seq[ContentPolicy]
 
-    val authorizations = (playlist \ "tracks").as[Seq[JsValue]]
-      .map(_ \ "id").map(_.get)
+    val authorizations = (playlist \ "tracks")
+      .as[Seq[JsValue]]
+      .map(_ \ "id")
+      .map(_.get)
       .map(id => Urn("soundcloud", "tracks", id.toString))
       .zip(policies)
       .map(tuple => new ContentAuthorization(tuple._1, tuple._2, Reason.GEO, MonetizationModel.NOT_APPLICABLE))
@@ -157,11 +162,9 @@ class AuthorizeHttpResponseSpec extends UnitSpecification {
       ContentPolicy.ALLOW,
       ContentPolicy.ALLOW,
       ContentPolicy.ALLOW,
-
       ContentPolicy.BLOCK,
       ContentPolicy.BLOCK,
       ContentPolicy.BLOCK,
-
       ContentPolicy.ALLOW,
       ContentPolicy.ALLOW
     )
@@ -177,7 +180,8 @@ class AuthorizeHttpResponseSpec extends UnitSpecification {
     def policies: Seq[ContentPolicy]
 
     val authorizations = (stream \ "collection" \\ "track")
-      .map(_ \ "id").map(_.get)
+      .map(_ \ "id")
+      .map(_.get)
       .map(id => Urn("soundcloud", "tracks", id.toString))
       .zip(policies)
       .map(tuple => new ContentAuthorization(tuple._1, tuple._2, Reason.GEO, MonetizationModel.NOT_APPLICABLE))
@@ -203,9 +207,24 @@ class AuthorizeHttpResponseSpec extends UnitSpecification {
     val status = Status.Ok
 
     val authorizations = Seq(
-      new ContentAuthorization(Urn("soundcloud", "tracks", "1"), ContentPolicy.BLOCK, Reason.GEO, MonetizationModel.NOT_APPLICABLE),
-      new ContentAuthorization(Urn("soundcloud", "tracks", "2"), ContentPolicy.ALLOW, Reason.GEO, MonetizationModel.NOT_APPLICABLE),
-      new ContentAuthorization(Urn("soundcloud", "tracks", "3"), ContentPolicy.ALLOW, Reason.GEO, MonetizationModel.NOT_APPLICABLE)
+      new ContentAuthorization(
+        Urn("soundcloud", "tracks", "1"),
+        ContentPolicy.BLOCK,
+        Reason.GEO,
+        MonetizationModel.NOT_APPLICABLE
+      ),
+      new ContentAuthorization(
+        Urn("soundcloud", "tracks", "2"),
+        ContentPolicy.ALLOW,
+        Reason.GEO,
+        MonetizationModel.NOT_APPLICABLE
+      ),
+      new ContentAuthorization(
+        Urn("soundcloud", "tracks", "3"),
+        ContentPolicy.ALLOW,
+        Reason.GEO,
+        MonetizationModel.NOT_APPLICABLE
+      )
     )
 
     override def before: Any =

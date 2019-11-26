@@ -12,7 +12,6 @@ import com.twitter.util.Future
 import play.api.libs.json.Json
 
 class RepostsHandlerSpec extends UnitSpecification {
-
   trait Context extends HandlerSpecificationScope {
     val user = Urn("soundcloud", "users", "999")
     val track = Urn("soundcloud", "tracks", "100")
@@ -20,7 +19,8 @@ class RepostsHandlerSpec extends UnitSpecification {
     val geo = new Geo("US")
     val baseUrl = "http://api.example.com"
     val requestHeaders = Map("Host" -> "api.example.com")
-    val session = new UserSessionBuilder().setUser(user).setAgent(Urn("soundcloud", "applications", "v2")).setGeo(geo).build()
+    val session =
+      new UserSessionBuilder().setUser(user).setAgent(Urn("soundcloud", "applications", "v2")).setGeo(geo).build()
 
     val repostsClient = mock[RepostsClient]
 
@@ -260,7 +260,8 @@ class RepostsHandlerSpec extends UnitSpecification {
         }
 
         "it returns a next_href and includes extra parameters" in new MultiPageLinkedPartitioningContext {
-          (Json.parse(response.contentString) \ "next_href").as[String] ==== "http://api.example.com/e1/me/track_reposts/ids?limit=1&extraparam=bazbaz&linked_partitioning=1&cursor=foobar"
+          (Json.parse(response.contentString) \ "next_href")
+            .as[String] ==== "http://api.example.com/e1/me/track_reposts/ids?limit=1&extraparam=bazbaz&linked_partitioning=1&cursor=foobar"
         }
       }
 
@@ -283,7 +284,8 @@ class RepostsHandlerSpec extends UnitSpecification {
         }
 
         "it returns a collection with a list of track IDs" in new SinglePageLinkedPartitioningContext {
-          (Json.parse(response.contentString) \ "collection").as[List[Long]] ==== List(track, track2).map(_.identifier.toLong)
+          (Json.parse(response.contentString) \ "collection")
+            .as[List[Long]] ==== List(track, track2).map(_.identifier.toLong)
         }
 
         "it doesn't return a next_href" in new SinglePageLinkedPartitioningContext {

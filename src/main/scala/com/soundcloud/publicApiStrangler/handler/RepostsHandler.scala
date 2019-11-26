@@ -12,7 +12,6 @@ import com.twitter.util.Future
 import play.api.libs.json.Json
 
 class RepostsHandler(userAuthentication: UserAuthentication, repostsClient: RepostsClient) {
-
   def createTracksRepost = createRepost(_: HandlerRequest, "tracks")
 
   def deleteTracksRepost = deleteRepost(_: HandlerRequest, "tracks")
@@ -39,7 +38,10 @@ class RepostsHandler(userAuthentication: UserAuthentication, repostsClient: Repo
     }
   }
 
-  private def getUserRepostables(request: HandlerRequest, callback: (UserSession, Urn, Int, Option[String]) => Future[Reposts]): Future[Response] = {
+  private def getUserRepostables(
+      request: HandlerRequest,
+      callback: (UserSession, Urn, Int, Option[String]) => Future[Reposts]
+  ): Future[Response] = {
     userAuthentication.withLoggedInUser(request) { (session, userUrn) =>
       withPaginationParams(request) { (limit, cursor, linkedPartitioningEnabled) =>
         getAllRepostables(session, userUrn, limit, cursor, callback).map { reposts =>
@@ -65,11 +67,13 @@ class RepostsHandler(userAuthentication: UserAuthentication, repostsClient: Repo
     case Failed => ResponseBuilder.internalServerError()
   }
 
-  private def getAllRepostables(session: UserSession,
-                                user: Urn,
-                                limit: Int,
-                                cursor: Option[String],
-                                callback: (UserSession, Urn, Int, Option[String]) => Future[Reposts]): Future[Reposts] = {
+  private def getAllRepostables(
+      session: UserSession,
+      user: Urn,
+      limit: Int,
+      cursor: Option[String],
+      callback: (UserSession, Urn, Int, Option[String]) => Future[Reposts]
+  ): Future[Reposts] = {
     def nextBatch(acc: Reposts): Future[Reposts] = {
       callback(session, user, RepostsHandler.UpstreamLimit, acc.nextCursor).flatMap {
         case Reposts(urns, None) =>
@@ -87,15 +91,16 @@ class RepostsHandler(userAuthentication: UserAuthentication, repostsClient: Repo
     nextBatch(Reposts(List.empty, cursor))
   }
 
-  private def withPaginationParams(request: HandlerRequest)(action: (Int, Option[String], Boolean) => Future[Response]): Future[Response] = {
+  private def withPaginationParams(
+      request: HandlerRequest
+  )(action: (Int, Option[String], Boolean) => Future[Response]): Future[Response] = {
     val limit = request.params.get("limit").map(_.toInt).getOrElse(200)
 
     if (limit > 0 && limit <= RepostsHandler.DownstreamMaxLimit) {
       val linkedPartitioningEnabled = request.params.get("linked_partitioning").contains("1")
       val cursor = request.params.get("cursor")
       action(limit, cursor, linkedPartitioningEnabled)
-    }
-    else {
+    } else {
       Future.value(ResponseBuilder.badRequest())
     }
   }

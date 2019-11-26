@@ -15,7 +15,6 @@ import org.specs2.mutable.Before
 import play.api.libs.json.JsNull
 
 class FollowCountsClientSpec extends UnitSpecification {
-
   trait Context extends Scope with Before {
     lazy val jsonService = mock[JsonClient]
     lazy val user = Urn("soundcloud", "users", "1")
@@ -46,7 +45,8 @@ class FollowCountsClientSpec extends UnitSpecification {
   }
 
   "returns counts on successful response" in new Context {
-    override def response = Future.value(jsonResponse(Status.Ok, withContentsOf("stitch4follows", "bulk_follow_counts_response")))
+    override def response =
+      Future.value(jsonResponse(Status.Ok, withContentsOf("stitch4follows", "bulk_follow_counts_response")))
 
     result ==== Seq(FollowCounts(user, 10, 20))
   }

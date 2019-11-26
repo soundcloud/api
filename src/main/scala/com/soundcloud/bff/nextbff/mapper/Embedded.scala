@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonValue
 import com.soundcloud.bff.nextbff.mapping.Mapping
 
 trait Embedded[O <: Mapping, R] extends Validatable {
-
   val owner: Mapper[Any, O]
 
   def params: List[Any]
@@ -17,5 +16,7 @@ trait Embedded[O <: Mapping, R] extends Validatable {
     value.getOrElse(nonMaterializedException)
 
   protected def nonMaterializedException =
-    throw new IllegalStateException("Trying to render a non-materialized embedded. Please make sure you are not creating embedded objects lazily.")
+    throw new IllegalStateException(
+      "Trying to render a non-materialized embedded. Please make sure you are not creating embedded objects lazily."
+    )
 }

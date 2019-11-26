@@ -7,7 +7,6 @@ import com.twitter.util.{Await, Future}
 import org.mockito.Mockito.{when, _}
 
 class AcceptOnlyJsonRequestFilterSpec extends UnitSpecification {
-
   trait Context extends Scope {
     val next = mock[Service[Request, Response]]
     val expectedAcceptHeader = "application/json"
@@ -67,8 +66,7 @@ class AcceptOnlyJsonRequestFilterSpec extends UnitSpecification {
   }
 
   "allows json request" >> {
-    for (
-      header <- List(
+    for (header <- List(
         "application/json",
         "application/javascript",
         "text/json",
@@ -78,9 +76,8 @@ class AcceptOnlyJsonRequestFilterSpec extends UnitSpecification {
         "text/x-javascript",
         "application/x-javascript",
         "*",
-        "*/*")
-    ) yield {
-
+        "*/*"
+      )) yield {
       s"using the '$header' header" in new Context {
         val request = Request()
         request.accept = header
@@ -139,7 +136,6 @@ class AcceptOnlyJsonRequestFilterSpec extends UnitSpecification {
   }
 
   "rejects non-json requests with a 406 response" >> {
-
     "using the suffix" in new Context {
       val request = Request("/test.xml")
       val filter = new AcceptOnlyJsonRequestFilter(() => Future.False)

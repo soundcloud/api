@@ -8,7 +8,6 @@ import play.api.libs.json.JsObject
 
 class TracksWithPaginationMapperSpec extends UnitSpecification {
   "Maps a track" >> {
-
     "All fields" in {
       val presented = TracksWithPaginationMapper(moshiPlaylistTracksWithPagination)
 

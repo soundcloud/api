@@ -5,7 +5,6 @@ import com.soundcloud.publicApiStrangler.test.UnitSpecification
 import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures._
 
 class CollectTrackUrnsSpec extends UnitSpecification {
-
   "extract urns from json" >> {
     "single track" in {
       CollectTrackUrns(singleTrack.toString) match {
@@ -25,7 +24,8 @@ class CollectTrackUrnsSpec extends UnitSpecification {
             List(
               Urn("soundcloud", "tracks", "49438146"),
               Urn("soundcloud", "tracks", "49437906"),
-              Urn("soundcloud", "tracks", "48031525"))
+              Urn("soundcloud", "tracks", "48031525")
+            )
         case other =>
           ko
       }
@@ -46,7 +46,8 @@ class CollectTrackUrnsSpec extends UnitSpecification {
               Urn("soundcloud", "tracks", "296"),
               Urn("soundcloud", "tracks", "297"),
               Urn("soundcloud", "tracks", "298"),
-              Urn("soundcloud", "tracks", "299"))
+              Urn("soundcloud", "tracks", "299")
+            )
         case other =>
           ko
       }

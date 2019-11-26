@@ -6,7 +6,13 @@ import com.soundcloud.jvmkit.module.util.{Geo, Path, Urn}
 import com.soundcloud.jvmkit.module.util.session.UserSessionBuilder
 import com.soundcloud.publicApiStrangler.client.follows.representation._
 import com.soundcloud.publicApiStrangler.client.follows.representation.follow._
-import com.soundcloud.publicApiStrangler.client.follows.representation.unfollow.{UnfollowSuccessful, NotFollowing => UnfollowNotFollowing, UnknownError => UnfollowUnknownError, UserAsTarget => UnfollowUserAsTarget, UserNotFound => UnfollowUserNotFound}
+import com.soundcloud.publicApiStrangler.client.follows.representation.unfollow.{
+  UnfollowSuccessful,
+  NotFollowing => UnfollowNotFollowing,
+  UnknownError => UnfollowUnknownError,
+  UserAsTarget => UnfollowUserAsTarget,
+  UserNotFound => UnfollowUserNotFound
+}
 import com.twitter.util.{Await, Future}
 import org.joda.time.DateTime
 import play.api.libs.json.{JsNull, JsString, JsValue, Json}
@@ -38,7 +44,6 @@ object Fixtures {
 }
 
 class FollowsClientSpec extends UnitSpecification {
-
   trait Context extends Scope {
     val user = Urn("soundcloud", "users", "1")
     val anotherUser = Urn("soundcloud", "users", "2")
@@ -49,12 +54,12 @@ class FollowsClientSpec extends UnitSpecification {
   }
 
   "#follow" >> {
-
     trait FollowContext extends Context with After {
       val path = Path() / "follow" / anotherUser
 
       lazy val geo = new Geo("US")
-      lazy val session = new UserSessionBuilder().setUser(user).setAgent(Urn("soundcloud", "applications", "v2")).setGeo(geo).build()
+      lazy val session =
+        new UserSessionBuilder().setUser(user).setAgent(Urn("soundcloud", "applications", "v2")).setGeo(geo).build()
 
       lazy val result = Await.result(client.follow(session, anotherUser))
 
@@ -135,12 +140,12 @@ class FollowsClientSpec extends UnitSpecification {
   }
 
   "#bulkFollow" >> {
-
     trait FollowCotext extends Context with After {
       val path = Path() / "bulkfollow"
 
       lazy val geo = new Geo("US")
-      lazy val session = new UserSessionBuilder().setUser(user).setAgent(Urn("soundcloud", "applications", "v2")).setGeo(geo).build()
+      lazy val session =
+        new UserSessionBuilder().setUser(user).setAgent(Urn("soundcloud", "applications", "v2")).setGeo(geo).build()
 
       lazy val result = Await.result(client.bulkFollow(session, List(anotherUser)))
 
@@ -173,12 +178,12 @@ class FollowsClientSpec extends UnitSpecification {
   }
 
   "#unfollow" >> {
-
     trait UnfollowCotext extends Context with After {
       val path = Path() / "unfollow" / anotherUser
 
       lazy val geo = new Geo("US")
-      lazy val session = new UserSessionBuilder().setUser(user).setAgent(Urn("soundcloud", "applications", "v2")).setGeo(geo).build()
+      lazy val session =
+        new UserSessionBuilder().setUser(user).setAgent(Urn("soundcloud", "applications", "v2")).setGeo(geo).build()
 
       lazy val result = Await.result(client.unfollow(session, anotherUser))
 
@@ -209,13 +214,11 @@ class FollowsClientSpec extends UnitSpecification {
       result ==== UnfollowUserAsTarget
     }
 
-
     "indicates when the target user is not being followed" in new UnfollowCotext {
       mockWith(Status.UnprocessableEntity, Fixtures.notFollowingError)
 
       result ==== UnfollowNotFollowing
     }
-
 
     "handles unknown errors" in new UnfollowCotext {
       mockWith(Status.InternalServerError, JsNull)
@@ -225,7 +228,6 @@ class FollowsClientSpec extends UnitSpecification {
   }
 
   "#followings" >> {
-
     trait FollowingsContext extends Context with After {
       val path = Path() / "users" / user / "followings"
       val params = Params("last_id" -> "12345", "page_size" -> 1)
@@ -273,7 +275,6 @@ class FollowsClientSpec extends UnitSpecification {
   }
 
   "#followers" >> {
-
     trait FollowersContext extends Context with After {
       val path = Path() / "users" / anotherUser / "followers"
       val params = Params("last_id" -> "12345", "page_size" -> 1)
@@ -321,7 +322,6 @@ class FollowsClientSpec extends UnitSpecification {
   }
 
   "#filterFollowings" >> {
-
     trait FilterFollowingsContext extends Context with After {
       val included = Seq(anotherUser)
       val excluded = Seq(yetAnotherUser)
@@ -353,7 +353,6 @@ class FollowsClientSpec extends UnitSpecification {
   }
 
   "#filterFollowers" >> {
-
     trait FilterFollowersContext extends Context with After {
       val included = Seq(anotherUser)
       val excluded = Seq(yetAnotherUser)
@@ -385,7 +384,6 @@ class FollowsClientSpec extends UnitSpecification {
   }
 
   "#followersFollowedBy" >> {
-
     trait FollowersFollowedByContext extends Context with After {
       val path = Path() / "users" / user / "followers_followed" / anotherUser
 
@@ -420,7 +418,6 @@ class FollowsClientSpec extends UnitSpecification {
   }
 
   "#followingsNotFollowedBy" >> {
-
     trait FollowingsNotFollowedByContext extends Context with After {
       val path = Path() / "users" / user / "followings_not_followed" / anotherUser
 
@@ -455,7 +452,6 @@ class FollowsClientSpec extends UnitSpecification {
   }
 
   "#mutualFollowings" >> {
-
     trait FollowingsNotFollowedByContext extends Context with After {
       val path = Path() / "users" / user / "mutual_followings" / anotherUser
 

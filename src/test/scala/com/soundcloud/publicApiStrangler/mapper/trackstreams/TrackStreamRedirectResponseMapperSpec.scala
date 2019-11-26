@@ -7,9 +7,7 @@ import com.twitter.finagle.http.Status
 import com.twitter.util.{Await, Future}
 import org.joda.time.DateTime
 
-
 class TrackStreamRedirectResponseMapperSpec extends UnitSpecification {
-
   trait Context extends Scope {
     val expiresAt = DateTime.now
     val previewMediaUrl = new MediaUrl("preview_mp3_128_url", Url("http://preview"), expiresAt)
@@ -37,9 +35,7 @@ class TrackStreamRedirectResponseMapperSpec extends UnitSpecification {
   }
 
   "TrackStreamRedirectResponseMapper" should {
-
     "when expected URL is provided" >> {
-
       "and it is a GET request" >> {
         "return a 302" in new ExpectedUrlProvidedContext {
           response.status ==== Status.Found
@@ -70,7 +66,6 @@ class TrackStreamRedirectResponseMapperSpec extends UnitSpecification {
     }
 
     "when several URLs are provided" >> {
-
       "and it is a GET request" >> {
         "return a 302" in new SeveralUrlsProvidedContext {
           response.status ==== Status.Found
@@ -101,7 +96,6 @@ class TrackStreamRedirectResponseMapperSpec extends UnitSpecification {
     }
 
     "when expected URL is not provided" >> {
-
       "and it is a GET request" >> {
         "return a 404" in new ExpectedUrlNotProvidedContext {
           response.status ==== Status.NotFound

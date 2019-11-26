@@ -61,8 +61,10 @@ case object Result {
 
   def parseErrors(json: JsValue): Seq[Error] = {
     val errors = json.\("errors").asOpt[JsObject]
-    errors.map {
-      _.fields.map({ case (key, value) => Error(value.as[String], Some(key)) })
-    }.getOrElse(Seq.empty)
+    errors
+      .map {
+        _.fields.map({ case (key, value) => Error(value.as[String], Some(key)) })
+      }
+      .getOrElse(Seq.empty)
   }
 }

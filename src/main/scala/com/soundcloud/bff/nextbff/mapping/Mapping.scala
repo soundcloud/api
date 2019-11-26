@@ -6,8 +6,8 @@ import language.implicitConversions
 
 abstract class Mapping(implicit val context: MappingContext) extends Validatable {
   /**
-   * Allows the mapper to know after materialization whether or not the finished object is valid
-   */
+    * Allows the mapper to know after materialization whether or not the finished object is valid
+    */
   @JsonIgnore
   override def isValid = true
 

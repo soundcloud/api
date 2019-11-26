@@ -7,7 +7,6 @@ import com.twitter.finagle.http.Status
 import play.api.libs.json.{JsNull, JsValue}
 
 class SpotlightResponseMapperSpec extends UnitSpecification {
-
   trait Context extends Scope {
     lazy val spotlightResponseMapper = new SpotlightResponseMapper
 
@@ -40,5 +39,4 @@ class SpotlightResponseMapperSpec extends UnitSpecification {
       spotlight must throwAn[UnhandledResponseException]
     }
   }
-
 }

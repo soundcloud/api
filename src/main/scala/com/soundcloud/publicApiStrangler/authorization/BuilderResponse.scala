@@ -9,7 +9,6 @@ trait BuilderResponse {
   def render = withBody(content)
 
   def withBody(body: String): Response
-
 }
 
 object BuilderResponse {

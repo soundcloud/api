@@ -10,26 +10,37 @@ import play.api.libs.json.{JsLookupResult, Json}
 
 class StitchClient(jsonClient: JsonClient) {
   def countsForTrack(session: UserSession, trackUrn: Urn, userUrn: Urn): Future[StitchCounts] = {
-    countsForTracksByUser(session, userUrn, Set(trackUrn)).map(_ (trackUrn))
+    countsForTracksByUser(session, userUrn, Set(trackUrn)).map(_(trackUrn))
   }
 
-  def countsForTracksByUser(session: UserSession, userUrn: Urn, trackUrns: Set[Urn], batchSize: Int = 50): Future[Map[Urn, StitchCounts]] = {
-    inBatches(trackUrns, batchSize) { trackUrnBatch => {
-      val keys = trackUrnBatch.map(urn => s"${userUrn.identifier}|${urn.identifier}")
-      val keyParam = keys.map(key => s"k=$key").mkString("&")
+  def countsForTracksByUser(
+      session: UserSession,
+      userUrn: Urn,
+      trackUrns: Set[Urn],
+      batchSize: Int = 50
+  ): Future[Map[Urn, StitchCounts]] = {
+    inBatches(trackUrns, batchSize) { trackUrnBatch =>
+      {
+        val keys = trackUrnBatch.map(urn => s"${userUrn.identifier}|${urn.identifier}")
+        val keyParam = keys.map(key => s"k=$key").mkString("&")
 
-      get(session, params(keyParam), keys)
-    }
+        get(session, params(keyParam), keys)
+      }
     }.map(_.flatten.toMap)
   }
 
-  def countsForTracks(session: UserSession, userToTrackUrns: Set[(Urn, Urn)], batchSize: Int = 50): Future[Map[Urn, StitchCounts]] = {
-    inBatches(userToTrackUrns, batchSize) { userToTrackUrnBatch => {
-      val keys = userToTrackUrnBatch.map(key => s"${key._1.identifier}|${key._2.identifier}")
-      val keyParam = keys.map(key => s"k=$key").mkString("&")
+  def countsForTracks(
+      session: UserSession,
+      userToTrackUrns: Set[(Urn, Urn)],
+      batchSize: Int = 50
+  ): Future[Map[Urn, StitchCounts]] = {
+    inBatches(userToTrackUrns, batchSize) { userToTrackUrnBatch =>
+      {
+        val keys = userToTrackUrnBatch.map(key => s"${key._1.identifier}|${key._2.identifier}")
+        val keyParam = keys.map(key => s"k=$key").mkString("&")
 
-      get(session, params(keyParam), keys)
-    }
+        get(session, params(keyParam), keys)
+      }
     }.map(_.flatten.toMap)
   }
 
@@ -43,9 +54,11 @@ class StitchClient(jsonClient: JsonClient) {
   }
 
   private def inBatches[A, B](urns: Set[A], batchSize: Int)(f: (Set[A] => Future[B])): Future[Seq[B]] = {
-    Future.collect {
-      urns.grouped(batchSize).map(f).toList
-    }.map(_.toList)
+    Future
+      .collect {
+        urns.grouped(batchSize).map(f).toList
+      }
+      .map(_.toList)
   }
 
   private def params(keyParam: String) = Params(
@@ -81,5 +94,5 @@ class StitchClient(jsonClient: JsonClient) {
   }
 
   private def parseCountFromCatBody(key: String)(catBody: JsLookupResult): Int =
-    ((catBody \ key \ "series") (0) \ "count").asOpt[Int].getOrElse(0)
+    ((catBody \ key \ "series")(0) \ "count").asOpt[Int].getOrElse(0)
 }

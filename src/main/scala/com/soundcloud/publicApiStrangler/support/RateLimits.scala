@@ -5,9 +5,7 @@ import com.soundcloud.jvmkit.module.bff.ratelimiting.internal.utilities.RegexExt
 import com.soundcloud.jvmkit.module.http.server.HandlerRequest
 import com.soundcloud.publicApiStrangler.handler.SearchHandler._
 
-
 object RateLimits {
-
   private val searchParams = defaultParams ++ trackParams ++ playlistParams
   private val searchZKBucket = "search"
 
@@ -25,5 +23,4 @@ object RateLimits {
   }
 
   val playsRateLimiter = new RateLimitClassifier(playsZKBucket, playRequests)
-
 }

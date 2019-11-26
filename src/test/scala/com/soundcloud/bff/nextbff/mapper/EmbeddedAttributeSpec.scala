@@ -4,13 +4,12 @@ import com.soundcloud.bff.nextbff.mapping.{Mapping, MappingContext}
 import com.soundcloud.publicApiStrangler.test.UnitSpecification
 
 class EmbeddedAttributeSpec extends UnitSpecification {
-
   trait Context extends Scope {
     implicit val context = mock[MappingContext]
     val owner = mock[Mapper[Any, Mapping]]
     val param = "a"
-    val extractor = {
-      mapping: Mapping => "test"
+    val extractor = { mapping: Mapping =>
+      "test"
     }
     val embedded = EmbeddedAttribute(owner, param, extractor)
   }
@@ -35,7 +34,6 @@ class EmbeddedAttributeSpec extends UnitSpecification {
   }
 
   "#isMaterialized returns true after materialization" >> {
-
     "value not found" in new Context {
       embedded.materialize(Map())
       embedded.isMaterialized ==== true
@@ -49,8 +47,8 @@ class EmbeddedAttributeSpec extends UnitSpecification {
   }
 
   "#materialize doesn't apply the mapping function" in new Context {
-    override val extractor = {
-      mapping: Mapping => ???
+    override val extractor = { mapping: Mapping =>
+      ???
     }
     val mapping = new Mapping {}
     embedded.materialize(Map(param -> mapping))

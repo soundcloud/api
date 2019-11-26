@@ -6,7 +6,6 @@ import com.twitter.finagle.http._
 import com.twitter.util.{Await, Future}
 
 class StaticFilesFilterSpec extends UnitSpecification {
-
   trait Context extends Scope {
     val next = mock[Service[Request, Response]]
     val filter = new StaticFilesFilter
@@ -23,18 +22,17 @@ class StaticFilesFilterSpec extends UnitSpecification {
     Request(Method.Get, "/non-static"),
     Request(Method.Get, "/tracks/213"),
     Request(Method.Get, "/nope.txt")
-  ) foreach {
-    request =>
-      s"Passes through all requests that are not static files, testing ${request.method} request to ${request.path} " in new Context {
-        val expected = Response(Version.Http11, Status.Ok)
-        expected.setContentString("dealwithit")
+  ) foreach { request =>
+    s"Passes through all requests that are not static files, testing ${request.method} request to ${request.path} " in new Context {
+      val expected = Response(Version.Http11, Status.Ok)
+      expected.setContentString("dealwithit")
 
-        next.apply(request) returns (Future(expected))
+      next.apply(request) returns (Future(expected))
 
-        val resp = Await.result(filter(request, next))
-        resp.statusCode ==== Status.Ok.code
-        resp.contentString ==== "dealwithit"
-      }
+      val resp = Await.result(filter(request, next))
+      resp.statusCode ==== Status.Ok.code
+      resp.contentString ==== "dealwithit"
+    }
   }
 
   "serves robots.txt" in new Context {
@@ -63,5 +61,3 @@ class StaticFilesFilterSpec extends UnitSpecification {
     resp.headerMap.get("Accept-Ranges") ==== Some("bytes")
   }
 }
-
-

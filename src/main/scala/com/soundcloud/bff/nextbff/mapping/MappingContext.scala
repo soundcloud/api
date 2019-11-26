@@ -6,19 +6,19 @@ import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.twitter.util.Future
 
 import scala.collection.mutable.{Map => MutableMap, Set => MutableSet}
-
-
 @JsonIgnoreType
 class MappingContext(val session: UserSession) {
-
   private val materialized = MutableMap[Mapper[Any, Mapping], MutableMap[Any, Mapping]]()
   private val contents = MutableSet[Embedded[Mapping, Any]]()
 
   def attach[E <: Embedded[_, _]](item: E) = synchronized {
-    contents.find(_ == item).getOrElse {
-      contents += item.asInstanceOf[Embedded[Mapping, Any]]
-      item
-    }.asInstanceOf[E]
+    contents
+      .find(_ == item)
+      .getOrElse {
+        contents += item.asInstanceOf[Embedded[Mapping, Any]]
+        item
+      }
+      .asInstanceOf[E]
   }
 
   def materialize: Future[Unit] = synchronized {
@@ -34,10 +34,9 @@ class MappingContext(val session: UserSession) {
   private def materialize(items: Set[Embedded[Mapping, Any]], mapper: Mapper[Any, Mapping]) = {
     val mapperValues = materialized.getOrElseUpdate(mapper, MutableMap())
     val params = items.map(_.params).flatten -- mapperValues.keys
-    mapper.map(session, params)(this).map {
-      values =>
-        mapperValues ++= values
-        items.map(_.materialize(mapperValues.toMap))
+    mapper.map(session, params)(this).map { values =>
+      mapperValues ++= values
+      items.map(_.materialize(mapperValues.toMap))
     }
   }
 

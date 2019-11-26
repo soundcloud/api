@@ -11,7 +11,6 @@ import com.twitter.util.{Await, Future}
 import play.api.libs.json.{JsArray, JsString}
 
 class GatekeeperClientSpec extends UnitSpecification {
-
   trait Context extends Scope {
     implicit val service = mock[JsonClient]
     implicit val session = mock[UserSession]
@@ -33,13 +32,23 @@ class GatekeeperClientSpec extends UnitSpecification {
   "#featuresFor" >> {
     "returns list of feature names for current logged in user" in new LoggedInUserContext {
       service.getWithSession(session, Path() / "users" / userId / "features", Params.empty, Headers.empty) returns
-        Future(JsonResponseBuilder().status(Status.Ok).body(JsArray(Seq(JsString("foo"), JsString("bar"), JsString("baz"))).toString).build)
+        Future(
+          JsonResponseBuilder()
+            .status(Status.Ok)
+            .body(JsArray(Seq(JsString("foo"), JsString("bar"), JsString("baz"))).toString)
+            .build
+        )
       Await.result(client.featuresFor(session)) ==== Set("foo", "bar", "baz")
     }
 
     "returns list of feature names for anonymous when session is anonymous" in new AnonymousUserContext {
       service.getWithSession(session, Path() / "users" / "anonymous" / "features", Params.empty, Headers.empty) returns
-        Future(JsonResponseBuilder().status(Status.Ok).body(JsArray(Seq(JsString("foo"), JsString("bar"), JsString("baz"))).toString).build)
+        Future(
+          JsonResponseBuilder()
+            .status(Status.Ok)
+            .body(JsArray(Seq(JsString("foo"), JsString("bar"), JsString("baz"))).toString)
+            .build
+        )
       Await.result(client.featuresFor(session)) ==== Set("foo", "bar", "baz")
     }
   }
@@ -58,13 +67,25 @@ class GatekeeperClientSpec extends UnitSpecification {
     }
 
     "returns true for 200 when accessible for anonymous session" in new AnonymousUserContext {
-      service.head(session, Path() / "users" / "anonymous" / "features" / featureName, Params.empty, Headers.empty, None) returns
+      service.head(
+        session,
+        Path() / "users" / "anonymous" / "features" / featureName,
+        Params.empty,
+        Headers.empty,
+        None
+      ) returns
         Future(JsonResponseBuilder().status(Status.Ok).build)
       Await.result(client.isFeatureAccessible(session, featureName)) ==== true
     }
 
     "returns false for 404 when not accessible for anonymous session" in new AnonymousUserContext {
-      service.head(session, Path() / "users" / "anonymous" / "features" / featureName, Params.empty, Headers.empty, None) returns
+      service.head(
+        session,
+        Path() / "users" / "anonymous" / "features" / featureName,
+        Params.empty,
+        Headers.empty,
+        None
+      ) returns
         Future(JsonResponseBuilder().status(Status.NotFound).build)
       Await.result(client.isFeatureAccessible(session, featureName)) ==== false
     }

@@ -9,11 +9,11 @@ import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures._
 import play.api.libs.json.{JsObject, JsValue}
 
 class TrackPolicyApplicatorSpec extends UnitSpecification {
-
   trait Context extends Scope {
     val session = mock[UserSession]
     val urns =
-      tracksArray.as[List[JsObject]]
+      tracksArray
+        .as[List[JsObject]]
         .map(track => (track \ "id").as[Int])
         .map(id => Urn("soundcloud", "tracks", id.toString))
 
@@ -26,7 +26,8 @@ class TrackPolicyApplicatorSpec extends UnitSpecification {
     def durationActions: List[TrackDurationAction]
 
     lazy val trackPolicy = TrackPolicyApplicator(clientWhitelist)
-    lazy val tracksWithPoliciesApplied = trackPolicy(session, new TracksVisitor(tracksArray), rules, durationActions).get
+    lazy val tracksWithPoliciesApplied =
+      trackPolicy(session, new TracksVisitor(tracksArray), rules, durationActions).get
 
     lazy val authorizedTrackIds = extractIds(tracksWithPoliciesApplied)
 
@@ -60,13 +61,17 @@ class TrackPolicyApplicatorSpec extends UnitSpecification {
     "all tracks has 'policy' and 'monetization_model' for whitelisted user agent" in new EverythingAuthorized {
       session.getAgent returns whitelistedClientUrn
 
-      tracksWithPoliciesApplied.as[List[JsObject]].filter(e => !e.keys.contains("policy") || !e.keys.contains("monetization_model")) must beEmpty
+      tracksWithPoliciesApplied
+        .as[List[JsObject]]
+        .filter(e => !e.keys.contains("policy") || !e.keys.contains("monetization_model")) must beEmpty
     }
 
     "no tracks has 'policy' and 'monetization_model' for non-whitelisted user agent" in new EverythingAuthorized {
       session.getAgent returns nonWhitelistedClientUrn
 
-      tracksWithPoliciesApplied.as[List[JsObject]].filter(e => e.keys.contains("policy") || e.keys.contains("monetization_model")) must beEmpty
+      tracksWithPoliciesApplied
+        .as[List[JsObject]]
+        .filter(e => e.keys.contains("policy") || e.keys.contains("monetization_model")) must beEmpty
     }
 
     trait PartiallyAuthorized extends Context {
@@ -76,7 +81,12 @@ class TrackPolicyApplicatorSpec extends UnitSpecification {
 
       def rules = List(
         new ContentAuthorization(allowedTrackUrn, ContentPolicy.ALLOW, Reason.GEO, MonetizationModel.NOT_APPLICABLE),
-        new ContentAuthorization(monetizedTrackUrn, ContentPolicy.MONETIZE, Reason.GEO, MonetizationModel.SUB_HIGH_TIER),
+        new ContentAuthorization(
+          monetizedTrackUrn,
+          ContentPolicy.MONETIZE,
+          Reason.GEO,
+          MonetizationModel.SUB_HIGH_TIER
+        ),
         new ContentAuthorization(blockedTrackUrn, ContentPolicy.BLOCK, Reason.GEO, MonetizationModel.NOT_APPLICABLE)
       )
 
@@ -107,8 +117,18 @@ class TrackPolicyApplicatorSpec extends UnitSpecification {
 
       def rules = List(
         new ContentAuthorization(allowedTrackUrn, ContentPolicy.ALLOW, Reason.GEO, MonetizationModel.NOT_APPLICABLE),
-        new ContentAuthorization(monetizedHighTierTrackUrn, ContentPolicy.MONETIZE, Reason.GEO, MonetizationModel.SUB_HIGH_TIER),
-        new ContentAuthorization(monetizedAdSupportedTrackUrn, ContentPolicy.MONETIZE, Reason.GEO, MonetizationModel.AD_SUPPORTED)
+        new ContentAuthorization(
+          monetizedHighTierTrackUrn,
+          ContentPolicy.MONETIZE,
+          Reason.GEO,
+          MonetizationModel.SUB_HIGH_TIER
+        ),
+        new ContentAuthorization(
+          monetizedAdSupportedTrackUrn,
+          ContentPolicy.MONETIZE,
+          Reason.GEO,
+          MonetizationModel.AD_SUPPORTED
+        )
       )
 
       def durationActions =
@@ -120,7 +140,9 @@ class TrackPolicyApplicatorSpec extends UnitSpecification {
     "returns allowed, tiered and ad-supported tracks for whitelisted clients" in new AdSupported {
       session.getAgent returns whitelistedClientUrn
 
-      authorizedTrackIds mustEqual List(allowedTrackUrn, monetizedHighTierTrackUrn, monetizedAdSupportedTrackUrn).map(_.identifier.toInt)
+      authorizedTrackIds mustEqual List(allowedTrackUrn, monetizedHighTierTrackUrn, monetizedAdSupportedTrackUrn).map(
+        _.identifier.toInt
+      )
     }
 
     "returns only allowed and ad-supported tracks for non-whitelisted clients" in new AdSupported {
@@ -140,10 +162,12 @@ class TrackPolicyApplicatorSpec extends UnitSpecification {
             new ContentAuthorization(urn, ContentPolicy.ALLOW, Reason.GEO, MonetizationModel.NOT_APPLICABLE)
         }
 
-      def durationActions = List(TrackDurationAction(urns(0), NeedsModification, None),
-        TrackDurationAction(urns(1), DoesNotNeedModification, None),
-        TrackDurationAction(urns(2), NeedsModification, Some(90000))
-      )
+      def durationActions =
+        List(
+          TrackDurationAction(urns(0), NeedsModification, None),
+          TrackDurationAction(urns(1), DoesNotNeedModification, None),
+          TrackDurationAction(urns(2), NeedsModification, Some(90000))
+        )
     }
 
     "some tracks have content policy SNIP" in new SomeAreSnip {

@@ -11,11 +11,8 @@ import com.twitter.util.{Await, Future}
 import play.api.libs.json.Json
 
 class MediaUrlgenClientSpec extends UnitSpecification {
-
   "MediaUrlgenClient" should {
-
     "Stream urls" >> {
-
       trait Context extends Scope {
         val jsonService = mock[JsonClient]
         val userSession = mock[UserSession]
@@ -40,15 +37,27 @@ class MediaUrlgenClientSpec extends UnitSpecification {
       }
 
       "return MediaUrls for valid input and http response" in new Context {
-        jsonService.getWithSession(userSession, Path("/media") / urn / "streams", allExpectedRequestParams, Headers.empty) returns Future.value(jsonResponse(Status.Ok, json))
+        jsonService.getWithSession(
+          userSession,
+          Path("/media") / urn / "streams",
+          allExpectedRequestParams,
+          Headers.empty
+        ) returns Future.value(jsonResponse(Status.Ok, json))
         trackStreamUrlMapper.map(json) returns Set(mediaUrl1, mediaUrl2)
-        val trackStreams = Await.result(mediaUrlgenClient.trackStreamUrlsFor(userSession, urn, requestParams, contentAuthorization))
+        val trackStreams =
+          Await.result(mediaUrlgenClient.trackStreamUrlsFor(userSession, urn, requestParams, contentAuthorization))
         trackStreams ==== Set(mediaUrl1, mediaUrl2)
       }
 
       "return empty seq in case media service response is 'Not Found'" in new Context {
-        jsonService.getWithSession(userSession, Path("/media") / urn / "streams", allExpectedRequestParams, Headers.empty) returns Future.value(jsonResponse(Status.NotFound, json))
-        val trackStreamUrls = Await.result(mediaUrlgenClient.trackStreamUrlsFor(userSession, urn, requestParams, contentAuthorization))
+        jsonService.getWithSession(
+          userSession,
+          Path("/media") / urn / "streams",
+          allExpectedRequestParams,
+          Headers.empty
+        ) returns Future.value(jsonResponse(Status.NotFound, json))
+        val trackStreamUrls =
+          Await.result(mediaUrlgenClient.trackStreamUrlsFor(userSession, urn, requestParams, contentAuthorization))
         trackStreamUrls ==== Set()
         there was no(trackStreamUrlMapper).map(json)
       }
@@ -56,9 +65,15 @@ class MediaUrlgenClientSpec extends UnitSpecification {
       "return empty seq in case policy = BLOCK, do not make a request to the downstream" in new Context {
         contentAuthorization.getPolicy returns ContentPolicy.BLOCK
 
-        val trackStreamUrls = Await.result(mediaUrlgenClient.trackStreamUrlsFor(userSession, urn, requestParams, contentAuthorization))
+        val trackStreamUrls =
+          Await.result(mediaUrlgenClient.trackStreamUrlsFor(userSession, urn, requestParams, contentAuthorization))
         trackStreamUrls ==== Set()
-        there was no(jsonService).getWithSession(userSession, Path("/media") / urn / "streams", allExpectedRequestParams, Headers.empty)
+        there was no(jsonService).getWithSession(
+          userSession,
+          Path("/media") / urn / "streams",
+          allExpectedRequestParams,
+          Headers.empty
+        )
       }
     }
   }

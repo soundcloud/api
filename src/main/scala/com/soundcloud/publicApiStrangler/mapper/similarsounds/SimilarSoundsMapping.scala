@@ -11,7 +11,6 @@ import com.soundcloud.publicApiStrangler.support.mapping.ObjectMapping
   * Maps from the list of all available similar tracks to the specific page requested
   */
 trait SimilarSoundsMapping extends ObjectMapping[SimilarSounds] {
-
   def currentPage: OffsetBasedPage[_]
 
   def searchEntityMapper: SearchEntityMapper
@@ -33,7 +32,6 @@ trait SimilarSoundsMapping extends ObjectMapping[SimilarSounds] {
 
   private def hasNext: Boolean =
     resource.similarTracks.drop(currentPage.offset + currentPage.limit).nonEmpty
-
 }
 
 object SimilarSoundsMapping {

@@ -6,50 +6,66 @@ import com.twitter.util.{Await, Future}
 import org.specs2.matcher.ThrownExpectations
 
 trait HandlerSpecificationScope extends org.specs2.specification.Scope with ThrownExpectations {
-
   def routingDefinitions(): List[(Method, String, Handler)]
 
-  def get(handler: Handler,
-          path: String,
-          params: Map[String, String] = Map.empty,
-          headers: Map[String, String] = Map.empty,
-          body: String = ""): Response = execute(Method.Get, handler, path, params, headers, body)
+  def get(
+      handler: Handler,
+      path: String,
+      params: Map[String, String] = Map.empty,
+      headers: Map[String, String] = Map.empty,
+      body: String = ""
+  ): Response = execute(Method.Get, handler, path, params, headers, body)
 
-  def delete(handler: Handler,
-             path: String,
-             params: Map[String, String] = Map.empty,
-             headers: Map[String, String] = Map.empty,
-             body: String = ""): Response = execute(Method.Delete, handler, path, params, headers, body)
+  def delete(
+      handler: Handler,
+      path: String,
+      params: Map[String, String] = Map.empty,
+      headers: Map[String, String] = Map.empty,
+      body: String = ""
+  ): Response = execute(Method.Delete, handler, path, params, headers, body)
 
-  def post(handler: Handler,
-           path: String,
-           params: Map[String, String] = Map.empty,
-           headers: Map[String, String] = Map.empty,
-           body: String = ""): Response = execute(Method.Post, handler, path, params, headers, body)
+  def post(
+      handler: Handler,
+      path: String,
+      params: Map[String, String] = Map.empty,
+      headers: Map[String, String] = Map.empty,
+      body: String = ""
+  ): Response = execute(Method.Post, handler, path, params, headers, body)
 
-  def put(handler: Handler,
-          path: String,
-          params: Map[String, String] = Map.empty,
-          headers: Map[String, String] = Map.empty,
-          body: String = ""): Response = execute(Method.Put, handler, path, params, headers, body)
+  def put(
+      handler: Handler,
+      path: String,
+      params: Map[String, String] = Map.empty,
+      headers: Map[String, String] = Map.empty,
+      body: String = ""
+  ): Response = execute(Method.Put, handler, path, params, headers, body)
 
-  def head(handler: Handler,
-           path: String,
-           params: Map[String, String] = Map.empty,
-           headers: Map[String, String] = Map.empty,
-           body: String = ""): Response = execute(Method.Head, handler, path, params, headers, body)
+  def head(
+      handler: Handler,
+      path: String,
+      params: Map[String, String] = Map.empty,
+      headers: Map[String, String] = Map.empty,
+      body: String = ""
+  ): Response = execute(Method.Head, handler, path, params, headers, body)
 
-  def execute(method: Method,
-              handler: Handler,
-              path: String,
-              params: Map[String, String] = Map.empty,
-              headers: Map[String, String] = Map.empty,
-              body: String = ""): Response = {
-
+  def execute(
+      method: Method,
+      handler: Handler,
+      path: String,
+      params: Map[String, String] = Map.empty,
+      headers: Map[String, String] = Map.empty,
+      body: String = ""
+  ): Response = {
     Await.result(router(createFinagleRequest(method, path, params, headers, body)))
   }
 
-  private def createFinagleRequest(method: Method, path: String, params: Map[String, String], headers: Map[String, String], body: String) = {
+  private def createFinagleRequest(
+      method: Method,
+      path: String,
+      params: Map[String, String],
+      headers: Map[String, String],
+      body: String
+  ) = {
     val finagleRequest = Request(path, params.toList: _*)
     finagleRequest.method = method
     finagleRequest.setContentString(body)
@@ -61,9 +77,12 @@ trait HandlerSpecificationScope extends org.specs2.specification.Scope with Thro
   lazy val router: HandlerRouter = HandlerRouterBuilder
     .register(routingDefinitions())
     .registerFallback(request => {
-      failure(s"No matching routing found for method ${request.method} and uri: ${request.path}\n${format(routingDefinitions())}")
+      failure(
+        s"No matching routing found for method ${request.method} and uri: ${request.path}\n${format(routingDefinitions())}"
+      )
       Future.value(Response()) // only here to make the compiler happy. The above throws an exception.
-    }).build
+    })
+    .build
 
   def format(list: List[(Method, String, Handler)]) = {
     list.size match {

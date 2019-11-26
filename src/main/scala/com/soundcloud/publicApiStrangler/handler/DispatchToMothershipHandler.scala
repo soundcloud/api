@@ -7,7 +7,6 @@ import com.twitter.finagle.http.{Request, Response, Status}
 import com.twitter.util.Future
 
 class DispatchToMothershipHandler(mothershipClient: Service[Request, Response]) extends Handler {
-
   val logger = SoundCloudLoggerFactory.getLogger(getClass)
 
   override def apply(request: HandlerRequest): Future[Response] = dispatchToMothership(request)
@@ -31,7 +30,6 @@ class DispatchToMothershipHandler(mothershipClient: Service[Request, Response]) 
         response
     }
   }
-
 }
 
 object ForwardedRequest {
@@ -47,5 +45,4 @@ object ForwardedRequest {
       case (k, v) => newRequest.headerMap.put(k, v)
     }
   }
-
 }

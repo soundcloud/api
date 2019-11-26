@@ -9,7 +9,10 @@ import com.soundcloud.publicApiStrangler.mapper.similarsounds.SimilarSoundsMappe
 import com.soundcloud.publicApiStrangler.mapper.timeline.e1.{ActivitiesMapper, StreamMapper}
 import com.soundcloud.publicApiStrangler.mapper.timeline.publicApi.ActivitiesWithOriginMapper
 import com.soundcloud.publicApiStrangler.mapper.timeline.{EntityMapper, EntitySummaryMapper, FollowingsTracksMapper}
-import com.soundcloud.publicApiStrangler.mapper.trackstreams.{TrackStreamJsonResponseMapper, TrackStreamRedirectResponseMapper}
+import com.soundcloud.publicApiStrangler.mapper.trackstreams.{
+  TrackStreamJsonResponseMapper,
+  TrackStreamRedirectResponseMapper
+}
 import com.soundcloud.publicApiStrangler.service.media.{DownloadService, StreamService}
 import com.soundcloud.publicApiStrangler.support.CursorPagination
 
@@ -33,7 +36,14 @@ class Handlers(telemetry: Telemetry, clients: Clients) {
     val publicActivitiesMapper = new ActivitiesWithOriginMapper(timelineClient, entityMapper, entitySummaryMapper)
     val followingsTracksMapper = new FollowingsTracksMapper(timelineClient, entityMapper, entitySummaryMapper)
     val pagination = new CursorPagination(baseUrl)
-    new TimelineHandler(userAuthentication, streamMapper, activitiesMapper, publicActivitiesMapper, followingsTracksMapper, pagination)
+    new TimelineHandler(
+      userAuthentication,
+      streamMapper,
+      activitiesMapper,
+      publicActivitiesMapper,
+      followingsTracksMapper,
+      pagination
+    )
   }
 
   val trackStreamsHandler: TrackStreamsHandler = {
@@ -50,7 +60,12 @@ class Handlers(telemetry: Telemetry, clients: Clients) {
       val noProgressiveDownloadRolloutFeature = BasicRolloutFeature("streams-no-progressive-download")
       () => rolloutClient.isActive(noProgressiveDownloadRolloutFeature)
     }
-    val streamService = new StreamService(trackmetadataClient, contentAuthorizationRules, mediaServiceClient, rolloutNoProgressiveDownloadRolloutEnabledFunc)
+    val streamService = new StreamService(
+      trackmetadataClient,
+      contentAuthorizationRules,
+      mediaServiceClient,
+      rolloutNoProgressiveDownloadRolloutEnabledFunc
+    )
 
     new TrackStreamsHandler(
       userAuthentication,
@@ -65,17 +80,21 @@ class Handlers(telemetry: Telemetry, clients: Clients) {
   val trackDownloadHandler: TrackDownloadHandler = new TrackDownloadHandler(
     userAuthentication,
     trackAccessRecorderService,
-    new DownloadService(tracksClient, mediaServiceClient))
+    new DownloadService(tracksClient, mediaServiceClient)
+  )
 
-  val tracksHandler = new TracksHandler(userAuthentication,
+  val tracksHandler = new TracksHandler(
+    userAuthentication,
     trackCoordinatorClient,
     okidokiClient,
     mothershipDispatcher,
-    trackmetadataClient)
+    trackmetadataClient
+  )
 
   val singleTrackHandler = new SingleTrackHandler(userAuthentication, tracksService, telemetry)
 
-  val trackMothershipDispatcherWithCounts = new TrackMothershipDispatcherWithCounts(userAuthentication, mothershipDispatcher, stitchClient)
+  val trackMothershipDispatcherWithCounts =
+    new TrackMothershipDispatcherWithCounts(userAuthentication, mothershipDispatcher, stitchClient)
 
   val userRelatedMothershipDispatcher = new UserRelatedMothershipDispatcher(
     userAuthentication,
@@ -87,10 +106,8 @@ class Handlers(telemetry: Telemetry, clients: Clients) {
   )
 
   val userTracksHandler: UserTracksHandler = {
-    val trackMothershipDispatcherWithCounts = new TrackMothershipDispatcherWithCounts(
-      userAuthentication,
-      mothershipDispatcher,
-      stitchClient)
+    val trackMothershipDispatcherWithCounts =
+      new TrackMothershipDispatcherWithCounts(userAuthentication, mothershipDispatcher, stitchClient)
 
     val shouldUseTrackMetadata = BasicRolloutFeature("track_metadata_for_user_tracks")
 
@@ -104,7 +121,8 @@ class Handlers(telemetry: Telemetry, clients: Clients) {
     )
   }
 
-  val userFollowHandler = new UserFollowHandler(userAuthentication, okidokiClient, followsClient, followCountsClient, repostsClient, baseUrl)
+  val userFollowHandler =
+    new UserFollowHandler(userAuthentication, okidokiClient, followsClient, followCountsClient, repostsClient, baseUrl)
 
   val searchHandler: SearchHandler = {
     val searchRepository = new SearchRepository(searchService)
@@ -137,12 +155,14 @@ class Handlers(telemetry: Telemetry, clients: Clients) {
     )
   }
 
-  val repostersHandler = new RepostersHandler(userAuthentication,
+  val repostersHandler = new RepostersHandler(
+    userAuthentication,
     repostsClient,
     richOkidokiClient,
     followCountsClient,
     lieblingClient,
-    enrichLikesCounts)
+    enrichLikesCounts
+  )
 
   val playlistsHandler = new PlaylistsHandler(userAuthentication, playlistDeletionClient)
 

@@ -6,7 +6,6 @@ import org.specs2.mutable.Specification
 import org.specs2.specification.Scope
 
 class WaveformUrlsGeneratorSpec extends Specification with Mockito {
-
   trait Context extends Scope {
     val waveformUrlsGenerator = new WaveformUrlsGenerator("https://wave.invalid")
   }

@@ -7,7 +7,12 @@ import com.soundcloud.publicApiStrangler.Routing
 import com.soundcloud.publicApiStrangler.client.followcounts.{FollowCounts, FollowCountsClient}
 import com.soundcloud.publicApiStrangler.client.follows.FollowsClient
 import com.soundcloud.publicApiStrangler.client.follows.representation._
-import com.soundcloud.publicApiStrangler.client.follows.representation.follow.{AgeRestrictedUser, AgeUnknownUser, FollowingCreated, UserNotFound}
+import com.soundcloud.publicApiStrangler.client.follows.representation.follow.{
+  AgeRestrictedUser,
+  AgeUnknownUser,
+  FollowingCreated,
+  UserNotFound
+}
 import com.soundcloud.publicApiStrangler.client.follows.representation.unfollow.{UnfollowSuccessful, UserAsTarget}
 import com.soundcloud.publicApiStrangler.client.mothership.OkidokiClient
 import com.soundcloud.publicApiStrangler.client.reposts.RepostsClient
@@ -22,7 +27,6 @@ import play.api.libs.json._
 class UserFollowHandlerSpec extends UnitSpecification {
   sequential
 
-
   trait Context extends HandlerSpecificationScope with BeforeAfter {
     val okidokiMock = mock[OkidokiClient]
     val followsMock = mock[FollowsClient]
@@ -30,8 +34,16 @@ class UserFollowHandlerSpec extends UnitSpecification {
     val repostsClientMock = mock[RepostsClient]
     val userUrn = Urn("soundcloud", "users", "999")
     lazy val geo = new Geo("US")
-    lazy val session = new UserSessionBuilder().setUser(userUrn).setAgent(Urn("soundcloud", "applications", "v2")).setGeo(geo).build()
-    lazy val handler = new UserFollowHandler(new FakeUserAuthentication(session), okidokiMock, followsMock, followCountsClientMock, repostsClientMock, "http://foo")
+    lazy val session =
+      new UserSessionBuilder().setUser(userUrn).setAgent(Urn("soundcloud", "applications", "v2")).setGeo(geo).build()
+    lazy val handler = new UserFollowHandler(
+      new FakeUserAuthentication(session),
+      okidokiMock,
+      followsMock,
+      followCountsClientMock,
+      repostsClientMock,
+      "http://foo"
+    )
 
     override def routingDefinitions = Routing.forUserFollowHandler(handler)
 
@@ -40,8 +52,7 @@ class UserFollowHandlerSpec extends UnitSpecification {
 
     val now = System.currentTimeMillis()
 
-    val user123 = Json.parse(
-      """
+    val user123 = Json.parse("""
         |{
         |  "avatar_url": "https://i1.sndcdn.com/avatars-000092704388-h04iht-large.jpg?86347b7",
         |  "id": 123,
@@ -124,10 +135,14 @@ class UserFollowHandlerSpec extends UnitSpecification {
       override def before: Any = {
         super.before
         val values = Seq(userUrn, Urn("soundcloud", "users", "100"))
-        followsMock.followersFollowedBy(session, userUrn, Urn("soundcloud", "users", "2")) returns Future.value(Some(UserUrns(values)))
+        followsMock.followersFollowedBy(session, userUrn, Urn("soundcloud", "users", "2")) returns Future.value(
+          Some(UserUrns(values))
+        )
         okidokiMock.fetch(session, values.toSet) returns Future.value(okidokiUsers.as[List[JsObject]])
         followCountsClientMock.counts(session, values) returns Future.value(Seq(FollowCounts(values.last, 1111, 2222)))
-        repostsClientMock.getRepostCountsByUrnWithFallback(session, values.toSet) returns Future.value(Map.empty[Urn, Long])
+        repostsClientMock.getRepostCountsByUrnWithFallback(session, values.toSet) returns Future.value(
+          Map.empty[Urn, Long]
+        )
       }
 
       val response = get(handler.fetchFollowersFollowed, "/users/999/followers/followed_by/2", Map("limit" -> "10"))
@@ -141,15 +156,20 @@ class UserFollowHandlerSpec extends UnitSpecification {
       override def before: Any = {
         super.before
         val values = Seq(
-          Urn("soundcloud", "users", "12490957"), Urn("soundcloud", "users", "100")
+          Urn("soundcloud", "users", "12490957"),
+          Urn("soundcloud", "users", "100")
         )
-        followsMock.followingsNotFollowedBy(session, Urn("soundcloud", "users", "999"), Urn("soundcloud", "users", "2")) returns Future.value(Some(UserUrns(values)))
+        followsMock.followingsNotFollowedBy(session, Urn("soundcloud", "users", "999"), Urn("soundcloud", "users", "2")) returns Future
+          .value(Some(UserUrns(values)))
         okidokiMock.fetch(session, values.toSet) returns Future.value(okidokiUsers.as[List[JsObject]])
         followCountsClientMock.counts(session, values) returns Future.value(Seq(FollowCounts(values.last, 1111, 2222)))
-        repostsClientMock.getRepostCountsByUrnWithFallback(session, values.toSet) returns Future.value(Map.empty[Urn, Long])
+        repostsClientMock.getRepostCountsByUrnWithFallback(session, values.toSet) returns Future.value(
+          Map.empty[Urn, Long]
+        )
       }
 
-      val response = get(handler.fetchFollowingsNotFollowedBy, "/users/999/followings/not_followed_by/2", Map("limit" -> "10"))
+      val response =
+        get(handler.fetchFollowingsNotFollowedBy, "/users/999/followings/not_followed_by/2", Map("limit" -> "10"))
       response.status ==== Status.Ok
       Json.parse(response.contentString) ==== Json.obj("collection" -> List(anotherUser123))
     }
@@ -157,19 +177,23 @@ class UserFollowHandlerSpec extends UnitSpecification {
 
   "GET /users/:id/followings/common_to/:other_id" >> {
     "fetches followings" in new Context {
-
       override def before: Any = {
         super.before
         val values = Seq(
-          Urn("soundcloud", "users", "12490957"), Urn("soundcloud", "users", "100")
+          Urn("soundcloud", "users", "12490957"),
+          Urn("soundcloud", "users", "100")
         )
-        followsMock.mutualFollowings(session, Urn("soundcloud", "users", "999"), Urn("soundcloud", "users", "2")) returns Future.value(Some(UserUrns(values)))
+        followsMock.mutualFollowings(session, Urn("soundcloud", "users", "999"), Urn("soundcloud", "users", "2")) returns Future
+          .value(Some(UserUrns(values)))
         okidokiMock.fetch(session, values.toSet) returns Future.value(okidokiUsers.as[List[JsObject]])
         followCountsClientMock.counts(session, values) returns Future.value(Seq(FollowCounts(values.last, 1111, 2222)))
-        repostsClientMock.getRepostCountsByUrnWithFallback(session, values.toSet) returns Future.value(Map.empty[Urn, Long])
+        repostsClientMock.getRepostCountsByUrnWithFallback(session, values.toSet) returns Future.value(
+          Map.empty[Urn, Long]
+        )
       }
 
-      val response = get(handler.fetchMutualFollowings, "/users/999/followings/common_to/2", Map("limit" -> "10", "cursor" -> "2"))
+      val response =
+        get(handler.fetchMutualFollowings, "/users/999/followings/common_to/2", Map("limit" -> "10", "cursor" -> "2"))
       response.status ==== Status.Ok
       Json.parse(response.contentString) ==== Json.obj("collection" -> List(anotherUser123))
     }
@@ -177,17 +201,27 @@ class UserFollowHandlerSpec extends UnitSpecification {
 
   "GET /me/followings/ids" >> {
     "fetches a user's followings" in new Context {
-
       override def before: Any = {
         super.before
         val values = Seq(
-          Following("123-123", new DateTime("2012-02-13T23:30:13.000"), Urn("soundcloud", "users", "12490957"), Urn("soundcloud", "users", "100"))
+          Following(
+            "123-123",
+            new DateTime("2012-02-13T23:30:13.000"),
+            Urn("soundcloud", "users", "12490957"),
+            Urn("soundcloud", "users", "100")
+          )
         )
         val pageInfo = Pagination("123-1234", 2)
-        followsMock.followings(session, session.getUser, None, 10) returns Future.value(Some(FollowingsPage(values, Some(pageInfo))))
+        followsMock.followings(session, session.getUser, None, 10) returns Future.value(
+          Some(FollowingsPage(values, Some(pageInfo)))
+        )
         okidokiMock.fetch(session, values.map(_.target).toSet) returns Future.value(okidokiUsers.as[List[JsObject]])
-        followCountsClientMock.counts(session, values.map(_.target)) returns Future.value(Seq(FollowCounts(values.map(_.target).last, 1111, 2222)))
-        repostsClientMock.getRepostCountsByUrnWithFallback(session, values.map(_.target).toSet) returns Future.value(Map.empty[Urn, Long])
+        followCountsClientMock.counts(session, values.map(_.target)) returns Future.value(
+          Seq(FollowCounts(values.map(_.target).last, 1111, 2222))
+        )
+        repostsClientMock.getRepostCountsByUrnWithFallback(session, values.map(_.target).toSet) returns Future.value(
+          Map.empty[Urn, Long]
+        )
       }
 
       val response = get(handler.fetchFollowings, "/me/followings/ids", Map("limit" -> "10"))
@@ -201,17 +235,27 @@ class UserFollowHandlerSpec extends UnitSpecification {
 
   "GET /me/followers/ids" >> {
     "fetches a user's followings" in new Context {
-
       override def before: Any = {
         super.before
         val values = Seq(
-          Following("123-123", new DateTime("2012-02-13T23:30:13.000"), Urn("soundcloud", "users", "12490957"), Urn("soundcloud", "users", "100"))
+          Following(
+            "123-123",
+            new DateTime("2012-02-13T23:30:13.000"),
+            Urn("soundcloud", "users", "12490957"),
+            Urn("soundcloud", "users", "100")
+          )
         )
         val pageInfo = Pagination("123-1234", 2)
-        followsMock.followers(session, session.getUser, None, 10) returns Future.value(Some(FollowingsPage(values, Some(pageInfo))))
+        followsMock.followers(session, session.getUser, None, 10) returns Future.value(
+          Some(FollowingsPage(values, Some(pageInfo)))
+        )
         okidokiMock.fetch(session, values.map(_.user).toSet) returns Future.value(okidokiUsers.as[List[JsObject]])
-        followCountsClientMock.counts(session, values.map(_.user)) returns Future.value(Seq(FollowCounts(values.map(_.user).last, 1111, 2222)))
-        repostsClientMock.getRepostCountsByUrnWithFallback(session, values.map(_.user).toSet) returns Future.value(Map.empty[Urn, Long])
+        followCountsClientMock.counts(session, values.map(_.user)) returns Future.value(
+          Seq(FollowCounts(values.map(_.user).last, 1111, 2222))
+        )
+        repostsClientMock.getRepostCountsByUrnWithFallback(session, values.map(_.user).toSet) returns Future.value(
+          Map.empty[Urn, Long]
+        )
       }
 
       val response = get(handler.fetchMyFollowerIds, "/me/followers/ids", Map("limit" -> "10"))
@@ -225,7 +269,6 @@ class UserFollowHandlerSpec extends UnitSpecification {
 
   "GET /me/followings" >> {
     trait FollowingsContext extends Context {
-
       val followings = Seq(
         Following("123-123", new DateTime("2012-02-13T23:30:13.000"), Urn("soundcloud", "users", "123"), userUrn)
       )
@@ -233,19 +276,22 @@ class UserFollowHandlerSpec extends UnitSpecification {
       override def before: Any = {
         super.before
         val pageInfo = Pagination("123-1234", 2)
-        followsMock.followings(session, session.getUser, None, 10) returns Future.value(Some(FollowingsPage(followings, Some(pageInfo))))
+        followsMock.followings(session, session.getUser, None, 10) returns Future.value(
+          Some(FollowingsPage(followings, Some(pageInfo)))
+        )
         okidokiMock.fetch(session, followings.map(_.target).toSet) returns Future.value(okidokiUsers.as[List[JsObject]])
       }
     }
 
     "fetches a user's followings" >> {
-
       "with follow counts flag on" in new FollowingsContext {
-
         override def before: Any = {
           super.before
-          followCountsClientMock.counts(session, followings.map(_.target)) returns Future.value(Seq(FollowCounts(followings.head.target, 1111, 2222)))
-          repostsClientMock.getRepostCountsByUrnWithFallback(session, followings.map(_.target).toSet) returns Future.value(Map.empty[Urn, Long])
+          followCountsClientMock.counts(session, followings.map(_.target)) returns Future.value(
+            Seq(FollowCounts(followings.head.target, 1111, 2222))
+          )
+          repostsClientMock.getRepostCountsByUrnWithFallback(session, followings.map(_.target).toSet) returns Future
+            .value(Map.empty[Urn, Long])
         }
 
         val response = get(handler.fetchFollowings, "/me/followings", Map("limit" -> "10", "client_id" -> "FOO"))
@@ -260,17 +306,27 @@ class UserFollowHandlerSpec extends UnitSpecification {
 
   "GET /me/followers" >> {
     "fetches a user's followers" in new Context {
-
       override def before: Any = {
         super.before
         val values = Seq(
-          Following("123-123", new DateTime("2012-02-13T23:30:13.000"), Urn("soundcloud", "users", "12490957"), Urn("soundcloud", "users", "100"))
+          Following(
+            "123-123",
+            new DateTime("2012-02-13T23:30:13.000"),
+            Urn("soundcloud", "users", "12490957"),
+            Urn("soundcloud", "users", "100")
+          )
         )
         val pageInfo = Pagination("123-1234", 2)
-        followsMock.followers(session, session.getUser, Some("foo"), 10) returns Future.value(Some(FollowingsPage(values, Some(pageInfo))))
+        followsMock.followers(session, session.getUser, Some("foo"), 10) returns Future.value(
+          Some(FollowingsPage(values, Some(pageInfo)))
+        )
         okidokiMock.fetch(session, values.map(_.user).toSet) returns Future.value(okidokiUsers.as[List[JsObject]])
-        followCountsClientMock.counts(session, values.map(_.user)) returns Future.value(Seq(FollowCounts(values.map(_.user).last, 1111, 2222)))
-        repostsClientMock.getRepostCountsByUrnWithFallback(session, values.map(_.user).toSet) returns Future.value(Map.empty[Urn, Long])
+        followCountsClientMock.counts(session, values.map(_.user)) returns Future.value(
+          Seq(FollowCounts(values.map(_.user).last, 1111, 2222))
+        )
+        repostsClientMock.getRepostCountsByUrnWithFallback(session, values.map(_.user).toSet) returns Future.value(
+          Map.empty[Urn, Long]
+        )
       }
 
       val response = get(handler.fetchMyFollowers, "/me/followers", Map("limit" -> "10", "cursor" -> "foo"))
@@ -291,8 +347,12 @@ class UserFollowHandlerSpec extends UnitSpecification {
 
       followsMock.filterFollowings(session, userUrn, Seq(candidateUser)) returns Future.value(Some(filteredUserUrns))
       okidokiMock.fetch(session, Set(candidateUser)) returns Future.value(okidokiUsers.as[List[JsObject]])
-      followCountsClientMock.counts(session, Seq(candidateUser)) returns Future.value(Seq(FollowCounts(candidateUser, 1111, 2222)))
-      repostsClientMock.getRepostCountsByUrnWithFallback(session, Set(candidateUser)) returns Future.value(Map.empty[Urn, Long])
+      followCountsClientMock.counts(session, Seq(candidateUser)) returns Future.value(
+        Seq(FollowCounts(candidateUser, 1111, 2222))
+      )
+      repostsClientMock.getRepostCountsByUrnWithFallback(session, Set(candidateUser)) returns Future.value(
+        Map.empty[Urn, Long]
+      )
     }
   }
 
@@ -379,8 +439,12 @@ class UserFollowHandlerSpec extends UnitSpecification {
 
       followsMock.filterFollowers(session, userUrn, Seq(candidateUser)) returns Future.value(Some(filteredUserUrns))
       okidokiMock.fetch(session, Set(candidateUser)) returns Future.value(okidokiUsers.as[List[JsObject]])
-      followCountsClientMock.counts(session, Seq(candidateUser)) returns Future.value(Seq(FollowCounts(candidateUser, 1111, 2222)))
-      repostsClientMock.getRepostCountsByUrnWithFallback(session, Set(candidateUser)) returns Future.value(Map.empty[Urn, Long])
+      followCountsClientMock.counts(session, Seq(candidateUser)) returns Future.value(
+        Seq(FollowCounts(candidateUser, 1111, 2222))
+      )
+      repostsClientMock.getRepostCountsByUrnWithFallback(session, Set(candidateUser)) returns Future.value(
+        Map.empty[Urn, Long]
+      )
     }
   }
 
@@ -468,8 +532,12 @@ class UserFollowHandlerSpec extends UnitSpecification {
         super.before
         val following = Following("1", DateTime.now, userUrn, Urn("soundcloud", "users", "999"))
         followsMock.follow(session, userUrn) returns Future.value(FollowingCreated(following))
-        followCountsClientMock.counts(session, Seq(following.target)) returns Future.value(Seq(FollowCounts(following.target, 1111, 2222)))
-        repostsClientMock.getRepostCountsByUrnWithFallback(session, Set(following.target)) returns Future.value(Map.empty[Urn, Long])
+        followCountsClientMock.counts(session, Seq(following.target)) returns Future.value(
+          Seq(FollowCounts(following.target, 1111, 2222))
+        )
+        repostsClientMock.getRepostCountsByUrnWithFallback(session, Set(following.target)) returns Future.value(
+          Map.empty[Urn, Long]
+        )
       }
 
       val response = put(handler.follow, "/me/followings/999.json", Map("client_id" -> "YOUR_CLIENT_ID"))
@@ -485,8 +553,12 @@ class UserFollowHandlerSpec extends UnitSpecification {
         val following = Following("1", DateTime.now, userUrn, Urn("soundcloud", "users", "999"))
         followsMock.follow(session, userUrn) returns Future.value(FollowingCreated(following))
 
-        followCountsClientMock.counts(session, Seq(following.target)) returns Future.value(Seq(FollowCounts(following.target, 1111, 2222)))
-        repostsClientMock.getRepostCountsByUrnWithFallback(session, Set(following.target)) returns Future.value(Map.empty[Urn, Long])
+        followCountsClientMock.counts(session, Seq(following.target)) returns Future.value(
+          Seq(FollowCounts(following.target, 1111, 2222))
+        )
+        repostsClientMock.getRepostCountsByUrnWithFallback(session, Set(following.target)) returns Future.value(
+          Map.empty[Urn, Long]
+        )
       }
 
       val response = put(handler.follow, "/me/followings/999", Map("client_id" -> "YOUR_CLIENT_ID"))
@@ -530,7 +602,6 @@ class UserFollowHandlerSpec extends UnitSpecification {
       val errors = (Json.parse(response.contentString) \ "errors").as[Seq[JsObject]].head
       (errors \ "error_message").asOpt[String] ==== Option("404 - Not Found")
     }
-
   }
 
   "DELETE /me/followings/:other_id.json" >> {

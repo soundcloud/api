@@ -6,12 +6,14 @@ import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.publicApiStrangler.mapper.timeline.EntitySummaryMapper
 import play.api.libs.json.JsValue
 
-class PlaylistSummary(jsonValue: JsValue,
-                      repostCountsByUrn: Map[Urn, Long],
-                      baseUrl: String,
-                      entitySummaryMapper: EntitySummaryMapper)(implicit context: MappingContext)
-  extends JsonMapping(jsonValue) with UrnSupport {
-
+class PlaylistSummary(
+    jsonValue: JsValue,
+    repostCountsByUrn: Map[Urn, Long],
+    baseUrl: String,
+    entitySummaryMapper: EntitySummaryMapper
+)(implicit context: MappingContext)
+    extends JsonMapping(jsonValue)
+    with UrnSupport {
   val kind = "playlist"
   val id = urn.identifier.toInt
   val created_at = (json \ "created_at").asOpt[String]
@@ -42,7 +44,5 @@ class PlaylistSummary(jsonValue: JsValue,
   val tracks_uri = s"$baseUrl/playlists/$id/tracks"
   val secret_uri = s"$baseUrl/playlists/$id?secret_token=$secret_token"
 
-
   private def userUrn: Option[Urn] = (json \ "user" \ "urn").asOpt[Urn]
-
 }

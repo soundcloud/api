@@ -10,7 +10,6 @@ import com.soundcloud.jvmkit.module.http.client.Params
   * Class containing information needed for pagination.
   */
 trait Page[T] {
-
   val param: T
   val baseUrl: String
   val path: String
@@ -29,7 +28,8 @@ trait Page[T] {
 
   protected lazy val pageUrlPath = Uri(
     pathParts = path.split('/').filterNot(_.isEmpty).toSeq.map(StringPathPart.apply),
-    query = QueryString(allQueryParams)).toString(UriConfig(percentEncode))
+    query = QueryString(allQueryParams)
+  ).toString(UriConfig(percentEncode))
 
   private[this] lazy val allQueryParams: ParamSeq =
     (extraParams ++ params).mapValues(_.value.headOption).toSeq

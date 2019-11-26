@@ -13,7 +13,6 @@ import com.twitter.util.{Await, Future, Try}
 import play.api.libs.json.{JsNull, Json}
 
 class MediaServiceClientSpec extends UnitSpecification {
-
   trait Context extends Scope {
     val jsonClient = mock[JsonClient]
     val userSession = mock[UserSession]
@@ -55,33 +54,57 @@ class MediaServiceClientSpec extends UnitSpecification {
 
   "#fetchStreamUrl" >> {
     "returns a stream url" in new StreamContext {
-      jsonClient.getWithSession(userSession, Path() / "stream" / transcodingUuid / protocol, Params.empty, Headers.empty) returns
+      jsonClient.getWithSession(
+        userSession,
+        Path() / "stream" / transcodingUuid / protocol,
+        Params.empty,
+        Headers.empty
+      ) returns
         Future.value(jsonResponse(Status.Ok, Json.obj("url" -> url)))
 
       Await.result(client.fetchStreamUrl(userSession, transcodingUuid, protocol)) ==== Some(url)
     }
 
     "returns a 500" in new StreamContext {
-      jsonClient.getWithSession(userSession, Path() / "stream" / transcodingUuid / protocol, Params.empty, Headers.empty) returns
+      jsonClient.getWithSession(
+        userSession,
+        Path() / "stream" / transcodingUuid / protocol,
+        Params.empty,
+        Headers.empty
+      ) returns
         Future.value(jsonResponse(Status.InternalServerError, JsNull))
 
-      Try(Await.result(client.fetchStreamUrl(userSession, transcodingUuid, protocol))).throwable should beAnInstanceOf[UnhandledResponseException]
+      Try(Await.result(client.fetchStreamUrl(userSession, transcodingUuid, protocol))).throwable should beAnInstanceOf[
+        UnhandledResponseException
+      ]
     }
   }
 
   "#fetchPreviewUrl" >> {
     "returns a stream url" in new StreamContext {
-      jsonClient.getWithSession(userSession, Path() / "preview" / transcodingUuid / protocol, Params.empty, Headers.empty) returns
+      jsonClient.getWithSession(
+        userSession,
+        Path() / "preview" / transcodingUuid / protocol,
+        Params.empty,
+        Headers.empty
+      ) returns
         Future.value(jsonResponse(Status.Ok, Json.obj("url" -> url)))
 
       Await.result(client.fetchPreviewUrl(userSession, transcodingUuid, protocol)) ==== Some(url)
     }
 
     "returns a 500" in new StreamContext {
-      jsonClient.getWithSession(userSession, Path() / "preview" / transcodingUuid / protocol, Params.empty, Headers.empty) returns
+      jsonClient.getWithSession(
+        userSession,
+        Path() / "preview" / transcodingUuid / protocol,
+        Params.empty,
+        Headers.empty
+      ) returns
         Future.value(jsonResponse(Status.InternalServerError, JsNull))
 
-      Try(Await.result(client.fetchPreviewUrl(userSession, transcodingUuid, protocol))).throwable should beAnInstanceOf[UnhandledResponseException]
+      Try(Await.result(client.fetchPreviewUrl(userSession, transcodingUuid, protocol))).throwable should beAnInstanceOf[
+        UnhandledResponseException
+      ]
     }
   }
 
@@ -102,7 +125,7 @@ class MediaServiceClientSpec extends UnitSpecification {
         result ==== Some("http://download-url")
       }
     }
-    
+
     "when URL is missing" >> {
       trait MissingDownloadContext extends DownloadContext {
         override lazy val response = Future.value(ResponseBuilder.notFound())
@@ -112,7 +135,7 @@ class MediaServiceClientSpec extends UnitSpecification {
         result ==== None
       }
     }
-    
+
     "when response is missing a URL" >> {
       trait MissingUrlContext extends DownloadContext {
         override lazy val response = Future.value(jsonResponse(Status.Ok, Json.obj()))
@@ -122,7 +145,7 @@ class MediaServiceClientSpec extends UnitSpecification {
         result ==== None
       }
     }
-    
+
     "when response is not in JSON format" >> {
       trait MalformedResponseContext extends DownloadContext {
         override lazy val response = Future.value(ResponseBuilder.ok("not json"))

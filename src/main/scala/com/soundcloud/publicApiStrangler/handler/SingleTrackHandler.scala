@@ -13,35 +13,43 @@ import play.api.libs.json.Json
 
 import scala.util.control.NonFatal
 
-
-class SingleTrackHandler(userAuthentication: UserAuthentication, tracksService: TrackRepresentationsService, telemetry: Telemetry) {
+class SingleTrackHandler(
+    userAuthentication: UserAuthentication,
+    tracksService: TrackRepresentationsService,
+    telemetry: Telemetry
+) {
   val logger = SoundCloudLoggerFactory.getLogger(getClass)
 
   def renderTrack(req: HandlerRequest): Future[Response] = {
     stripConditionalRequestHeaders(req)
 
-    userAuthentication.withUserSession(req) { case session =>
-      val callback = req.params.get("callback")
+    userAuthentication.withUserSession(req) {
+      case session =>
+        val callback = req.params.get("callback")
 
-      Try(trackUrn(req)) match {
-        case Return(urn) => {
-          val secretToken = req.params.get("secret_token")
-          tracksService.track(session, urn, secretToken).map {
-            case Success(trackRep) => generateResponse(Status.Ok, Json.stringify(Json.toJson(trackRep)), callback)
-            case NotFound => generateNotFound(callback)
-            case _ => {
-              logger.error(s"Something went wrong while trying to fetch $urn")
-              generateResponse(Status.InternalServerError, "Something went wrong while fetching a track", callback)
-            }
-          } handle {
-            case NonFatal(e) => {
-              logger.error(e.getMessage)
-              generateResponse(Status.InternalServerError, "An unexpected error occured while fetching a track", callback)
+        Try(trackUrn(req)) match {
+          case Return(urn) => {
+            val secretToken = req.params.get("secret_token")
+            tracksService.track(session, urn, secretToken).map {
+              case Success(trackRep) => generateResponse(Status.Ok, Json.stringify(Json.toJson(trackRep)), callback)
+              case NotFound => generateNotFound(callback)
+              case _ => {
+                logger.error(s"Something went wrong while trying to fetch $urn")
+                generateResponse(Status.InternalServerError, "Something went wrong while fetching a track", callback)
+              }
+            } handle {
+              case NonFatal(e) => {
+                logger.error(e.getMessage)
+                generateResponse(
+                  Status.InternalServerError,
+                  "An unexpected error occured while fetching a track",
+                  callback
+                )
+              }
             }
           }
+          case _ => Future.value(generateNotFound(callback))
         }
-        case _ => Future.value(generateNotFound(callback))
-      }
     }
   }
 
@@ -63,9 +71,9 @@ class SingleTrackHandler(userAuthentication: UserAuthentication, tracksService: 
   private val notFoundErrorString = """{"errors":[{"error_message":"404 - Not Found"}]}"""
 
   /*
-  * If-None-Match header causes mothership to return 304
-  * We decided not to support this behavior
-  */
+   * If-None-Match header causes mothership to return 304
+   * We decided not to support this behavior
+   */
   private def stripConditionalRequestHeaders(req: HandlerRequest): Option[String] = {
     req.headerMap.remove("If-None-Match")
   }

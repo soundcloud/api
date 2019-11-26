@@ -9,7 +9,6 @@ import com.twitter.util.{Await, Future}
 import play.api.libs.json.Json
 
 class PlaylistsClientSpec extends UnitSpecification {
-
   trait Context extends Scope {
     val session = PlaylistsClient.session
 
@@ -30,12 +29,15 @@ class PlaylistsClientSpec extends UnitSpecification {
   }
 
   "When all is fine" in new WithServerResponse {
-    val validPlaylistJson = Json.obj("secret_token" -> "s-whatever", "user" -> Json.obj("urn" -> "soundcloud:users:123"))
+    val validPlaylistJson =
+      Json.obj("secret_token" -> "s-whatever", "user" -> Json.obj("urn" -> "soundcloud:users:123"))
 
     response.status returns Status.Ok
     response.contentString returns Json.stringify(Json.arr(validPlaylistJson))
 
-    Await.result(client.getPlaylistContainingTrackOwnedByUser(track, owner)) ==== List(Playlist(Urn("soundcloud", "users", "123"), "s-whatever"))
+    Await.result(client.getPlaylistContainingTrackOwnedByUser(track, owner)) ==== List(
+      Playlist(Urn("soundcloud", "users", "123"), "s-whatever")
+    )
   }
 
   "OK Bad JSON response" in new WithServerResponse {

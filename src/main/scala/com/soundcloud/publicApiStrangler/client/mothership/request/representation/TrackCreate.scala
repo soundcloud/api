@@ -2,29 +2,30 @@ package com.soundcloud.publicApiStrangler.client.mothership.request.representati
 
 import play.api.libs.json._
 
-case class TrackCreate(api_streamable: Option[Boolean],
-                       commentable: Option[Boolean],
-                       description: Option[String],
-                       downloadable: Option[Boolean],
-                       embeddable: Option[Boolean],
-                       feedable: Option[Boolean],
-                       genre: Option[String],
-                       label_name: Option[String],
-                       license: Option[String],
-                       published_at: NullableValue[String],
-                       original_filename: Option[String],
-                       permalink: Option[String],
-                       purchase_title: Option[String],
-                       purchase_url: Option[String],
-                       release_date: Option[String],
-                       reveal_comments: Option[Boolean],
-                       reveal_stats: Option[Boolean],
-                       sharing: Option[String],
-                       tag_list: Option[String],
-                       title: String,
-                       uid: Option[String],
-                       artwork_from_s3: NullableValue[S3Artwork]
-                      )
+case class TrackCreate(
+    api_streamable: Option[Boolean],
+    commentable: Option[Boolean],
+    description: Option[String],
+    downloadable: Option[Boolean],
+    embeddable: Option[Boolean],
+    feedable: Option[Boolean],
+    genre: Option[String],
+    label_name: Option[String],
+    license: Option[String],
+    published_at: NullableValue[String],
+    original_filename: Option[String],
+    permalink: Option[String],
+    purchase_title: Option[String],
+    purchase_url: Option[String],
+    release_date: Option[String],
+    reveal_comments: Option[Boolean],
+    reveal_stats: Option[Boolean],
+    sharing: Option[String],
+    tag_list: Option[String],
+    title: String,
+    uid: Option[String],
+    artwork_from_s3: NullableValue[S3Artwork]
+)
 
 object TrackCreate {
   implicit val format = new Format[TrackCreate] {
@@ -49,7 +50,8 @@ object TrackCreate {
         "sharing" -> Json.toJson(o.sharing),
         "tag_list" -> Json.toJson(o.tag_list),
         "title" -> Json.toJson(o.title),
-        "uid" -> Json.toJson(o.uid))
+        "uid" -> Json.toJson(o.uid)
+      )
 
       val artwork = o.artwork_from_s3.toOptionalJsValue.fold(Json.obj())(jsVal => Json.obj("artwork_from_s3" -> jsVal))
       val publishedAt = o.published_at.toOptionalJsValue.fold(Json.obj())(jsVal => Json.obj("published_at" -> jsVal))

@@ -13,15 +13,17 @@ import com.soundcloud.publicApiStrangler.mapper.timeline.representation.{Comment
 import com.twitter.util.Future
 import play.api.libs.json.JsObject
 
-class EntityMapper(okidokiClient: OkidokiClient,
-                   lieblingClient: LieblingClient,
-                   followCountsClient: FollowCountsClient,
-                   repostsClient: RepostsClient,
-                   baseUrl: String,
-                   entitySummaryMapper: EntitySummaryMapper)
-  extends Mapper[Urn, JsonMapping] {
-
-  override def map(session: UserSession, inputs: Set[Urn])(implicit context: MappingContext): Future[Map[Urn, JsonMapping]] = {
+class EntityMapper(
+    okidokiClient: OkidokiClient,
+    lieblingClient: LieblingClient,
+    followCountsClient: FollowCountsClient,
+    repostsClient: RepostsClient,
+    baseUrl: String,
+    entitySummaryMapper: EntitySummaryMapper
+) extends Mapper[Urn, JsonMapping] {
+  override def map(session: UserSession, inputs: Set[Urn])(
+      implicit context: MappingContext
+  ): Future[Map[Urn, JsonMapping]] = {
     for {
       (entities, likes, followCountsMap, repostCountsByUrn) <- Future.join(
         okidokiClient.fetch(session, inputs),
@@ -33,10 +35,9 @@ class EntityMapper(okidokiClient: OkidokiClient,
       )
     } yield {
       val likesCounts = likes.map(like => like.target_urn -> like.likes_count).toMap
-      entities.map {
-        entity =>
-          val urn = (entity \ "self" \ "urn").as[Urn]
-          urn -> entityFor(urn, entity, likesCounts, followCountsMap, repostCountsByUrn)
+      entities.map { entity =>
+        val urn = (entity \ "self" \ "urn").as[Urn]
+        urn -> entityFor(urn, entity, likesCounts, followCountsMap, repostCountsByUrn)
       }.toMap
     }
   }
@@ -44,13 +45,13 @@ class EntityMapper(okidokiClient: OkidokiClient,
   private def filterByCollection(inputs: List[Urn], collections: List[String]): List[Urn] =
     inputs.filter(urn => collections.contains(urn.collection))
 
-  private def entityFor(urn: Urn,
-                        entityData: JsObject,
-                        likesCounts: Map[Urn, Long],
-                        followCountsMap: Map[Urn, FollowCounts],
-                        repostCountsByUrn: Map[Urn, Long])
-                       (implicit context: MappingContext) = {
-
+  private def entityFor(
+      urn: Urn,
+      entityData: JsObject,
+      likesCounts: Map[Urn, Long],
+      followCountsMap: Map[Urn, FollowCounts],
+      repostCountsByUrn: Map[Urn, Long]
+  )(implicit context: MappingContext) = {
     urn.collection match {
       case "users" => new User(entityData, baseUrl, followCountsMap.get(urn), repostCountsByUrn.get(urn))
       case "tracks" => new Track(entityData, likesCounts, repostCountsByUrn, baseUrl, entitySummaryMapper)
@@ -58,5 +59,4 @@ class EntityMapper(okidokiClient: OkidokiClient,
       case "comments" => new Comment(entityData, baseUrl, entitySummaryMapper)
     }
   }
-
 }

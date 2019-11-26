@@ -11,12 +11,13 @@ import com.soundcloud.publicApiStrangler.mapper.timeline.representation.Timeline
 import com.soundcloud.publicApiStrangler.mapper.timeline.{EntityMapper, EntitySummaryMapper}
 import play.api.libs.json.{JsObject, JsValue}
 
-class TimelineWithUuids(jsonValue: JsValue,
-                        page: CursorBasedPage[Urn],
-                        entityMapper: EntityMapper,
-                        entitySummaryMapper: EntitySummaryMapper)(implicit context: MappingContext)
-  extends Timeline(jsonValue, page) {
-
+class TimelineWithUuids(
+    jsonValue: JsValue,
+    page: CursorBasedPage[Urn],
+    entityMapper: EntityMapper,
+    entitySummaryMapper: EntitySummaryMapper
+)(implicit context: MappingContext)
+    extends Timeline(jsonValue, page) {
   // only include future_href if a cursor is not defined or invalid
   @JsonInclude(JsonInclude.Include.NON_NULL)
   val futureHref: Option[String] = futurePage(
@@ -34,16 +35,14 @@ class TimelineWithUuids(jsonValue: JsValue,
   }
 
   override protected def mapChildren(events: Seq[JsObject]) = {
-    events.map {
-      event =>
-        val urn = (event \ "urn").as[Urn]
-        urn.collection match {
-          case "tracks" => new TrackTimelineItem(event, entityMapper, entitySummaryMapper)
-          case "playlists" => new PlaylistTimelineItem(event, entityMapper, entitySummaryMapper)
-          case "comments" => new CommentTimelineItem(event, entityMapper, entitySummaryMapper)
-          case "affiliations" => new ActorTimelineItem(event, entityMapper)
-        }
+    events.map { event =>
+      val urn = (event \ "urn").as[Urn]
+      urn.collection match {
+        case "tracks" => new TrackTimelineItem(event, entityMapper, entitySummaryMapper)
+        case "playlists" => new PlaylistTimelineItem(event, entityMapper, entitySummaryMapper)
+        case "comments" => new CommentTimelineItem(event, entityMapper, entitySummaryMapper)
+        case "affiliations" => new ActorTimelineItem(event, entityMapper)
+      }
     }
   }
-
 }

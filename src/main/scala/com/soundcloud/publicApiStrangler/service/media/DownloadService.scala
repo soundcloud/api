@@ -13,9 +13,7 @@ case class DownloadOk(url: String) extends DownloadResponse
 
 case object DownloadNotFound extends DownloadResponse
 
-class DownloadService(tracksClient: TracksClient,
-                      mediaServiceClient: MediaServiceClient) {
-
+class DownloadService(tracksClient: TracksClient, mediaServiceClient: MediaServiceClient) {
   def download(session: UserSession, trackUrn: Urn, secretToken: Option[String]): Future[DownloadResponse] = {
     tracksClient.visibleTrack(session, trackUrn, secretToken).flatMap { maybeTrack =>
       (for {
@@ -27,8 +25,7 @@ class DownloadService(tracksClient: TracksClient,
             case Some(url) => DownloadOk(url)
             case _ => DownloadNotFound
           }
-        }
-        else Future.value(DownloadNotFound)
+        } else Future.value(DownloadNotFound)
       }).getOrElse(Future.value(DownloadNotFound))
     }
   }

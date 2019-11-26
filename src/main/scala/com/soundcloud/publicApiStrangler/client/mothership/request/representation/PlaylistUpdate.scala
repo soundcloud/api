@@ -3,20 +3,20 @@ package com.soundcloud.publicApiStrangler.client.mothership.request.representati
 import play.api.libs.json._
 
 case class PlaylistUpdate(
-                           title: NullableValue[String] = MissingValue,
-                           public: NullableValue[Boolean] = MissingValue,
-                           description: NullableValue[String] = MissingValue,
-                           genre: NullableValue[String] = MissingValue,
-                           tag_list: NullableValue[String] = MissingValue,
-                           license: NullableValue[String] = MissingValue,
-                           label_name: NullableValue[String] = MissingValue,
-                           release: NullableValue[String] = MissingValue,
-                           release_date: NullableValue[String] = MissingValue,
-                           purchase_url: NullableValue[String] = MissingValue,
-                           purchase_title: NullableValue[String] = MissingValue,
-                           ean: NullableValue[String] = MissingValue,
-                           permalink: NullableValue[String] = MissingValue
-                         ) {
+    title: NullableValue[String] = MissingValue,
+    public: NullableValue[Boolean] = MissingValue,
+    description: NullableValue[String] = MissingValue,
+    genre: NullableValue[String] = MissingValue,
+    tag_list: NullableValue[String] = MissingValue,
+    license: NullableValue[String] = MissingValue,
+    label_name: NullableValue[String] = MissingValue,
+    release: NullableValue[String] = MissingValue,
+    release_date: NullableValue[String] = MissingValue,
+    purchase_url: NullableValue[String] = MissingValue,
+    purchase_title: NullableValue[String] = MissingValue,
+    ean: NullableValue[String] = MissingValue,
+    permalink: NullableValue[String] = MissingValue
+) {
   def toJsValueList: Seq[(String, JsValue)] =
     this.title.toOptionalJsValue.map("title" -> _).toSeq ++
       this.public.toOptionalJsValue.map("public" -> _).toSeq ++
@@ -31,11 +31,10 @@ case class PlaylistUpdate(
       this.purchase_url.toOptionalJsValue.map("purchase_url" -> _).toSeq ++
       this.purchase_title.toOptionalJsValue.map("purchase_title" -> _).toSeq ++
       this.ean.toOptionalJsValue.map("ean" -> _).toSeq
-
 }
 
 object PlaylistUpdate {
-
-  implicit val writes = Writes[PlaylistUpdate] { o => JsObject(o.toJsValueList) }
+  implicit val writes = Writes[PlaylistUpdate] { o =>
+    JsObject(o.toJsValueList)
+  }
 }
-

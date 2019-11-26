@@ -9,13 +9,11 @@ import play.api.libs.json.JsValue
 import org.mockito.Mockito.when
 
 class IndividualFetchRepositorySpec extends UnitSpecification {
-
   trait Service {
     def fetch(session: UserSession, input: Urn): Future[JsValue]
   }
 
   trait Context extends Scope with Before {
-
     val session = mock[UserSession]
     val urn1 = Urn("soundcloud", "users", "3232")
     val urn2 = Urn("soundcloud", "users", "323")

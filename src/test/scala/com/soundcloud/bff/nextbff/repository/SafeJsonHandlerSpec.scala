@@ -7,7 +7,6 @@ import play.api.libs.json.{JsNull, Json}
 import scala.language.reflectiveCalls
 
 class SafeJsonHandlerSpec extends UnitSpecification {
-
   trait Context extends Scope {
     val handler =
       new SafeJsonHandler {
@@ -59,4 +58,3 @@ class SafeJsonHandlerSpec extends UnitSpecification {
     }
   }
 }
-

@@ -1,6 +1,10 @@
 package com.soundcloud.publicApiStrangler.client.mothership.response.mapper
 
-import com.soundcloud.publicApiStrangler.client.mothership.response.representation.{TrackCursor, TrackMeta, TracksWithPagination}
+import com.soundcloud.publicApiStrangler.client.mothership.response.representation.{
+  TrackCursor,
+  TrackMeta,
+  TracksWithPagination
+}
 import play.api.libs.json.{JsObject, JsValue}
 
 object TracksWithPaginationMapper {

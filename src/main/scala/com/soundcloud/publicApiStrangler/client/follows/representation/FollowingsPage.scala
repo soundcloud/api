@@ -5,7 +5,6 @@ import play.api.libs.json.{JsSuccess, Reads}
 case class FollowingsPage(followings: Seq[Following], next: Option[Pagination])
 
 object FollowingsPage {
-
   implicit val reads: Reads[FollowingsPage] = Reads { json =>
     for {
       paginationLastId <- JsSuccess((json \ "page" \ "last_id").asOpt[String])

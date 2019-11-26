@@ -6,12 +6,10 @@ import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.publicApiStrangler.mapper.timeline.EntitySummaryMapper
 import play.api.libs.json.JsValue
 
-
-class TrackSummary(jsonValue: JsValue,
-                   baseUrl: String,
-                   entitySummaryMapper: EntitySummaryMapper)(implicit context: MappingContext)
-  extends JsonMapping(jsonValue) with UrnSupport {
-
+class TrackSummary(jsonValue: JsValue, baseUrl: String, entitySummaryMapper: EntitySummaryMapper)(
+    implicit context: MappingContext
+) extends JsonMapping(jsonValue)
+    with UrnSupport {
   val id = urn.identifier.toInt
   val kind = "track"
   val created_at = (json \ "created_at").asOpt[String]
@@ -28,8 +26,9 @@ class TrackSummary(jsonValue: JsValue,
   val user_id = userId
   val user_uri = s"$baseUrl/users/$userId"
 
-
-  private def userId: Integer = (json \ "user" \ "urn").asOpt[Urn]
-    .map(_.identifier.toInt: Integer)
-    .orNull
+  private def userId: Integer =
+    (json \ "user" \ "urn")
+      .asOpt[Urn]
+      .map(_.identifier.toInt: Integer)
+      .orNull
 }

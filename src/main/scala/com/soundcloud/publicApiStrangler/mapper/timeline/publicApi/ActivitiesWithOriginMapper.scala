@@ -9,19 +9,19 @@ import com.soundcloud.publicApiStrangler.mapper.timeline.{EntityMapper, EntitySu
 import com.soundcloud.publicApiStrangler.mapper.timeline.representation.publicApi.TimelineWithOrigin
 import com.twitter.util.Future
 
-
-class ActivitiesWithOriginMapper(timelineClient: TimelineJsonClient,
-                                 entityMapper: EntityMapper,
-                                 entitySummaryMapper: EntitySummaryMapper)
-  extends TimelineMapper {
-
-  override def fetch(session: UserSession, page: CursorBasedPage[Urn])(implicit context: MappingContext): Future[TimelineWithOrigin] = {
+class ActivitiesWithOriginMapper(
+    timelineClient: TimelineJsonClient,
+    entityMapper: EntityMapper,
+    entitySummaryMapper: EntitySummaryMapper
+) extends TimelineMapper {
+  override def fetch(session: UserSession, page: CursorBasedPage[Urn])(
+      implicit context: MappingContext
+  ): Future[TimelineWithOrigin] = {
     val (uuid, reverse) = clientCursorParam(page)
 
     // activities on public api are actually the user' STREAM. Go figure.
-    timelineClient.stream(session, uuid.map(_.toString), page.limit, reverse, Some("uuid")).map {
-      json =>
-        new TimelineWithOrigin(json, page, entityMapper, entitySummaryMapper)
+    timelineClient.stream(session, uuid.map(_.toString), page.limit, reverse, Some("uuid")).map { json =>
+      new TimelineWithOrigin(json, page, entityMapper, entitySummaryMapper)
     }
   }
 }

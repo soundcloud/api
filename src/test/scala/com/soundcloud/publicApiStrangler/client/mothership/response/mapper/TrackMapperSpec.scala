@@ -6,7 +6,6 @@ import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures._
 
 class TrackMapperSpec extends UnitSpecification {
   "Maps a track" >> {
-
     "All fields" in {
       val presented = TrackMapper(moshiTrackFull)
 
@@ -37,11 +36,15 @@ class TrackMapperSpec extends UnitSpecification {
       (presented.label_name) must be_==(Some("Foobar records"))
       (presented.last_modified) must be_==("2014/10/27 16:25:25 +0000")
       (presented.license) must be_==(Some("all-rights-reserved"))
-      (presented.original_artwork_url) must be_==(Some("https://i1.sndcdn.com/artworks-000095281756-51d163-original.png"))
+      (presented.original_artwork_url) must be_==(
+        Some("https://i1.sndcdn.com/artworks-000095281756-51d163-original.png")
+      )
       (presented.original_content_size) must be_==(Some(6923))
       (presented.original_format) must be_==(Some("mp3"))
       (presented.permalink) must be_==("awesome-track-2014-10-27-17-25-29-66")
-      (presented.permalink_url) must be_==("https://soundcloud.com/imprisonedprecision/awesome-track-2014-10-27-17-25-29-66")
+      (presented.permalink_url) must be_==(
+        "https://soundcloud.com/imprisonedprecision/awesome-track-2014-10-27-17-25-29-66"
+      )
       (presented.playback_count) must be_==(Some(0))
       (presented.public) must be_==(true)
       (presented.release_date) must be_==(Some("2013-02-01"))

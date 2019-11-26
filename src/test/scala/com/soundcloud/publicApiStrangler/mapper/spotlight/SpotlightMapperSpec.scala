@@ -5,7 +5,6 @@ import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures
 import play.api.libs.json.JsValue
 
 class SpotlightMapperSpec extends UnitSpecification {
-
   trait Context extends Scope {
     val spotlight: Spotlight
   }

@@ -3,7 +3,6 @@ package com.soundcloud.publicApiStrangler.support
 import org.joda.time.{DateTimeZone, Period}
 
 object TimeConversions {
-
   implicit class RichTwitterDuration(val d: com.twitter.util.Duration) extends AnyVal {
     def toJodaPeriod: org.joda.time.Period = {
       new Period(d.inMillis)
@@ -21,5 +20,4 @@ object TimeConversions {
       new org.joda.time.DateTime(t.inMilliseconds, DateTimeZone.UTC)
     }
   }
-
 }

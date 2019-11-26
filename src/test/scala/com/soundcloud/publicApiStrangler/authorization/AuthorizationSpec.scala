@@ -7,12 +7,16 @@ import org.specs2.specification.Scope
 import play.api.libs.json.Json
 
 class AuthorizationSpec extends Specification {
-
   trait Context extends Scope {
     val urn = Urn("soundcloud", "tracks", "12412")
     val content = Json.obj("urn" -> urn.toString, "something" -> "else")
-    val authorization = new ContentAuthorization(urn, ContentPolicy.MONETIZE, Reason.NOT_SUPPORTED,
-      ContentRestriction.ENCRYPTED_STREAM_ONLY, MonetizationModel.AD_SUPPORTED)
+    val authorization = new ContentAuthorization(
+      urn,
+      ContentPolicy.MONETIZE,
+      Reason.NOT_SUPPORTED,
+      ContentRestriction.ENCRYPTED_STREAM_ONLY,
+      MonetizationModel.AD_SUPPORTED
+    )
   }
 
   "pattern matching" >> {

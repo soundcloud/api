@@ -8,7 +8,6 @@ import com.twitter.util.{Await, Future}
 import org.joda.time.DateTime
 
 class TrackAccessibilityServiceSpec extends UnitSpecification {
-
   trait Context extends Scope {
     val playlistsClient = mock[PlaylistsClient]
 
@@ -16,22 +15,20 @@ class TrackAccessibilityServiceSpec extends UnitSpecification {
   }
 
   "#areTracksAccessible" >> {
-
     "returns a value for every track urn" in new Context {
-      val tracks = List(
-        TrackMetadataTrackBuilder(public = true).build,
-        TrackMetadataTrackBuilder(public = false).build)
+      val tracks = List(TrackMetadataTrackBuilder(public = true).build, TrackMetadataTrackBuilder(public = false).build)
 
-      playlistsClient.getPlaylistContainingTrackOwnedByUser(tracks(0).urn, tracks(0).user_urn).returns(Future.value(List.empty))
-      playlistsClient.getPlaylistContainingTrackOwnedByUser(tracks(1).urn, tracks(1).user_urn).returns(Future.value(List.empty))
+      playlistsClient
+        .getPlaylistContainingTrackOwnedByUser(tracks(0).urn, tracks(0).user_urn)
+        .returns(Future.value(List.empty))
+      playlistsClient
+        .getPlaylistContainingTrackOwnedByUser(tracks(1).urn, tracks(1).user_urn)
+        .returns(Future.value(List.empty))
 
       val result = Await.result(service.areTracksAccessible(anonymousSession, tracks))
 
-      result ==== Map(
-        tracks(0).urn -> true,
-        tracks(1).urn -> false)
+      result ==== Map(tracks(0).urn -> true, tracks(1).urn -> false)
     }
-
   }
 
   "#isTrackAccessible" in new Context {
@@ -45,14 +42,16 @@ class TrackAccessibilityServiceSpec extends UnitSpecification {
     val playlist2 = Some(Playlist(user2, secretToken2.get))
     val playlist3 = Some(Playlist(user1, secretToken1.get))
 
-    case class TestData(sessionUser: Option[Urn],
-                        trackOwner: Urn,
-                        public: Boolean,
-                        disabledAt: Option[DateTime],
-                        trackSecretToken: Option[String],
-                        secretTokenInRequest: Option[String],
-                        playlist: Option[Playlist],
-                        shouldBeAllowed: Boolean) {
+    case class TestData(
+        sessionUser: Option[Urn],
+        trackOwner: Urn,
+        public: Boolean,
+        disabledAt: Option[DateTime],
+        trackSecretToken: Option[String],
+        secretTokenInRequest: Option[String],
+        playlist: Option[Playlist],
+        shouldBeAllowed: Boolean
+    ) {
       override def toString = {
         s"""TestData(
            |sessionUser=$sessionUser
@@ -77,7 +76,6 @@ class TrackAccessibilityServiceSpec extends UnitSpecification {
         */
       TestData(Some(user1), user1, true, now, None, None, None, shouldBeAllowed = false),
       TestData(Some(user1), user2, true, now, None, None, None, shouldBeAllowed = false),
-
       /**
         * privacy:
         * - when the track's public, it should be accessible.
@@ -87,7 +85,6 @@ class TrackAccessibilityServiceSpec extends UnitSpecification {
       TestData(Some(user1), user2, true, None, None, None, None, shouldBeAllowed = true),
       TestData(Some(user1), user1, false, None, None, None, None, shouldBeAllowed = true),
       TestData(Some(user1), user2, false, None, None, None, None, shouldBeAllowed = false),
-
       /**
         * secret_token
         * when the track's private and the session user is different from the track owner, the track should only
@@ -97,7 +94,6 @@ class TrackAccessibilityServiceSpec extends UnitSpecification {
       TestData(Some(user1), user2, false, None, None, secretToken2, None, shouldBeAllowed = false),
       TestData(Some(user1), user2, false, None, secretToken1, None, None, shouldBeAllowed = false),
       TestData(Some(user1), user2, false, None, secretToken1, secretToken2, None, shouldBeAllowed = false),
-
       /**
         * playlist secret_token
         * when the track's private and the session user is different form the track owner, and the sent
@@ -122,10 +118,12 @@ class TrackAccessibilityServiceSpec extends UnitSpecification {
         user_urn = data.trackOwner,
         public = data.public,
         secret_token = data.trackSecretToken.getOrElse(""),
-        disabled_at = data.disabledAt).build
+        disabled_at = data.disabledAt
+      ).build
 
       val returnedPlaylists = data.playlist.map(List(_)).getOrElse(List.empty)
-      playlistsClient.getPlaylistContainingTrackOwnedByUser(track.urn, track.user_urn)
+      playlistsClient
+        .getPlaylistContainingTrackOwnedByUser(track.urn, track.user_urn)
         .returns(Future.value(returnedPlaylists))
 
       val result = Await.result(service.isTrackAccessible(session, data.secretTokenInRequest, track))

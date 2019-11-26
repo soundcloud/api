@@ -35,12 +35,13 @@ object App {
     val handlers = new Handlers(telemetry, clients)
     val fallbackHandlerConfig = new FallbackHandlerConfiguration(telemetry, handlers.mothershipDispatcher)
 
-    val bffApplication = BffApplication(Urn("soundcloud", "systems", "public-api-strangler"), config.getApplicationResourceName)
+    val bffApplication =
+      BffApplication(Urn("soundcloud", "systems", "public-api-strangler"), config.getApplicationResourceName)
 
     val memcachedResourceName = ResourceName("PUBLIC_API_STRANGLER_MEMCACHED")
     val memcachedClient = RichMemcachedClient(
-        MemcachedClientConfig.from(memcachedResourceName, config),
-        telemetry
+      MemcachedClientConfig.from(memcachedResourceName, config),
+      telemetry
     )
 
     val curatorFramework = CuratorFramework(config, telemetry)
@@ -63,7 +64,6 @@ object App {
       """/e1/me/playlist_likes/ids""",
       """/e1/me/track_likes""",
       """/e1/me/track_likes/ids""",
-
       """/e1/users/\d+/likes""",
       """/e1/users/\d+/playlist_likes""",
       """/e1/users/\d+/playlist_likes/ids""",
@@ -82,21 +82,24 @@ object App {
     val router = HandlerRouterBuilder()
       .registerFallback(fallbackHandlerConfig.fallbackHandler)
       .register(Method.Get, rateLimitingFacade.statusEndpoint, rateLimitingFacade.rateLimitStatusHandler.handle)
-      .register(List.concat(
-        forUserFollowHandler(handlers.userFollowHandler),
-        forMothershipDispatcher(handlers.mothershipDispatcher),
-        forSingleTrackHandler(handlers.singleTrackHandler),
-        forPlaylistHandler(handlers.playlistsHandler),
-        forSimilarSoundsHandler(handlers.similarSoundsHandler),
-        forTracksHandler(handlers.tracksHandler),
-        forUserRelatedMothershipDispatcher(handlers.userRelatedMothershipDispatcher),
-        forSearchHandler(handlers.searchHandler),
-        forUserTracksHandler(handlers.userTracksHandler),
-        forRepostsHandler(handlers.repostsHandler),
-        forRepostersHandler(handlers.repostersHandler),
-        forTimelineHandler(handlers.timelineHandler),
-        forTrackStreamsHandler(handlers.trackStreamsHandler),
-        forTrackDownloadHandler(handlers.trackDownloadHandler)))
+      .register(
+        List.concat(
+          forUserFollowHandler(handlers.userFollowHandler),
+          forMothershipDispatcher(handlers.mothershipDispatcher),
+          forSingleTrackHandler(handlers.singleTrackHandler),
+          forPlaylistHandler(handlers.playlistsHandler),
+          forSimilarSoundsHandler(handlers.similarSoundsHandler),
+          forTracksHandler(handlers.tracksHandler),
+          forUserRelatedMothershipDispatcher(handlers.userRelatedMothershipDispatcher),
+          forSearchHandler(handlers.searchHandler),
+          forUserTracksHandler(handlers.userTracksHandler),
+          forRepostsHandler(handlers.repostsHandler),
+          forRepostersHandler(handlers.repostersHandler),
+          forTimelineHandler(handlers.timelineHandler),
+          forTrackStreamsHandler(handlers.trackStreamsHandler),
+          forTrackDownloadHandler(handlers.trackDownloadHandler)
+        )
+      )
       .build
 
     val additionalFilters: List[Filter[Request, Response, Request, Response]] =
@@ -104,7 +107,9 @@ object App {
         CorsFilter((_, _) => true), // allow all CORS origins (for now)
         new CorsTelemetryFilter(telemetry, router),
         new StaticFilesFilter,
-        new AcceptOnlyJsonRequestFilter(() => clients.rolloutClient.isActive(BasicRolloutFeature("strip_format_xml_param"))),
+        new AcceptOnlyJsonRequestFilter(
+          () => clients.rolloutClient.isActive(BasicRolloutFeature("strip_format_xml_param"))
+        ),
         new OffsetLimitRequestFilter(limitOffsetPaths, limitOffset),
         new CookieHeaderRemovalFilter,
         new ExceptForTrackUploadsFilter(rateLimitingFacade.filter),
@@ -117,14 +122,18 @@ object App {
       telemetry = telemetry,
       responseDumpSessionRegistry = Some(responseDump),
       customHandlers = List(
-        (Method.Get, rateLimitingFacade.diagnosticsEndpoint, rateLimitingFacade.rateLimitingDiagnosticsAdminHandler.handle)
+        (
+          Method.Get,
+          rateLimitingFacade.diagnosticsEndpoint,
+          rateLimitingFacade.rateLimitingDiagnosticsAdminHandler.handle
+        )
       ),
       exceptionCollector = exceptionCollector,
       applicationRouter = Some(router)
     ).start()
 
-
-    BffHttpServer(resourceName = config.getApplicationResourceName,
+    BffHttpServer(
+      resourceName = config.getApplicationResourceName,
       config = HttpServerConfig.from(config),
       telemetry = telemetry,
       router = router,

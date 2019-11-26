@@ -6,13 +6,10 @@ import com.soundcloud.jvmkit.module.json.UrnFormat._
 import com.soundcloud.jvmkit.module.util.Urn
 import play.api.libs.json.JsValue
 
-class CommentTimelineItem(jsonValue: JsValue,
-                          entityMapper: EntityMapper,
-                          entitySummaryMapper: EntitySummaryMapper)(implicit context: MappingContext)
-  extends JsonMapping(jsonValue) with TimelineItemWithUuid {
-
+class CommentTimelineItem(jsonValue: JsValue, entityMapper: EntityMapper, entitySummaryMapper: EntitySummaryMapper)(
+    implicit context: MappingContext
+) extends JsonMapping(jsonValue)
+    with TimelineItemWithUuid {
   val comment = entityMapper.embed((json \ "urn").as[Urn])
   val user = entitySummaryMapper.embed((json \ "actor").as[Urn])
-
-
 }

@@ -10,19 +10,13 @@ import com.soundcloud.publicApiStrangler.mapper.similarsounds.{SimilarSounds, Si
 import com.twitter.util.Future
 
 class SystemPlaylistsClient(service: JsonClient) extends FetchClient {
-
   /**
     * Fetches all available similar tracks for a given seed track
     *
     * @return None if no similar tracks were found otherwise Some([[SimilarSounds]])
     */
   def fetchSimilar(session: UserSession, seedSoundUrn: Urn): Future[Option[SimilarSounds]] =
-    fetch(service,
-          session,
-          Path() / "similar-sounds" / "get",
-          Map("track_urn" -> seedSoundUrn.toString),
-          Headers.empty)
+    fetch(service, session, Path() / "similar-sounds" / "get", Map("track_urn" -> seedSoundUrn.toString), Headers.empty)
       .map(OptionalSingleItem(_))
       .map(opt => opt.map(SimilarSoundsMapper(_)))
-
 }

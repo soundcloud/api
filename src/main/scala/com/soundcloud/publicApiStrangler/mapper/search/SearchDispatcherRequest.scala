@@ -4,24 +4,16 @@ import com.soundcloud.jvmkit.module.http.client.{Params, StringParam}
 import com.soundcloud.jvmkit.module.util.Path
 import com.twitter.finagle.http.Request
 
-case class SearchDispatcherRequest(searchPath: Path, paginationParams: Set[String], searchHeaders: Map[String, String])
-                                  (val mapParams: Params => Params)
+case class SearchDispatcherRequest(searchPath: Path, paginationParams: Set[String], searchHeaders: Map[String, String])(
+    val mapParams: Params => Params
+)
 
 // two param lists because we don't want to include the function
 // in equality testing in tests
 
 object SearchDispatcherRequest {
-
-  val SearchParameters = Set(
-    "offset",
-    "limit",
-    "anon_user_id",
-    "q",
-    "sort",
-    "user_id",
-    "client_id")
+  val SearchParameters = Set("offset", "limit", "anon_user_id", "q", "sort", "user_id", "client_id")
   val SearchParameterPattern = """^filter\..+""".r
-
 
   val RequestIdHeader = "x-request-id"
 
@@ -84,9 +76,19 @@ object SearchDispatcherRequest {
     raw(SearchRepository.UsersPath, request, CommonParamMappings.keySet, mapCommonParams)
 
   val playlistSearch: Request => SearchDispatcherRequest = request =>
-    raw(SearchRepository.PlaylistsPath, request, CommonParamMappings.keySet ++ PlaylistParamMappings.keySet, mapPlaylistParams)
+    raw(
+      SearchRepository.PlaylistsPath,
+      request,
+      CommonParamMappings.keySet ++ PlaylistParamMappings.keySet,
+      mapPlaylistParams
+    )
 
-  def raw(path: Path, request: Request, paginationParams: Set[String], mapParams: Params => Params): SearchDispatcherRequest = {
+  def raw(
+      path: Path,
+      request: Request,
+      paginationParams: Set[String],
+      mapParams: Params => Params
+  ): SearchDispatcherRequest = {
     val headers = request.headerMap.filterKeys(_.toLowerCase == RequestIdHeader).toMap
     SearchDispatcherRequest(path, paginationParams, headers)(mapParams)
   }

@@ -4,7 +4,11 @@ import com.soundcloud.jvmkit.module.http.client.{JsonClient, Params}
 import com.soundcloud.jvmkit.module.util.http.Headers
 import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.jvmkit.module.util.{Path, Urn}
-import com.soundcloud.publicApiStrangler.client.mothership.request.representation.{EmailCreate, EmailUpdate, TranscodingCreate}
+import com.soundcloud.publicApiStrangler.client.mothership.request.representation.{
+  EmailCreate,
+  EmailUpdate,
+  TranscodingCreate
+}
 import com.soundcloud.publicApiStrangler.client.mothership.response.mapper._
 import com.soundcloud.publicApiStrangler.client.mothership.response.representation._
 import com.soundcloud.publicApiStrangler.client.support.UnhandledResponseException
@@ -17,7 +21,6 @@ import com.twitter.util.Await
 import play.api.libs.json._
 
 class OkidokiClientSpec extends UnitSpecification {
-
   trait Context extends Scope {
     implicit val service = mock[JsonClient]
     implicit val session = mock[UserSession]
@@ -26,10 +29,18 @@ class OkidokiClientSpec extends UnitSpecification {
     val deleteFromPlaylistResponseMapper = mock[DeleteFromPlaylistResponseMapper]
     val createPlaylistResponseMapper = mock[CreatePlaylistResponseMapper]
 
-    val client = new OkidokiClient(service, addToPlaylistResponseMapper, deleteFromPlaylistResponseMapper, createPlaylistResponseMapper)
+    val client = new OkidokiClient(
+      service,
+      addToPlaylistResponseMapper,
+      deleteFromPlaylistResponseMapper,
+      createPlaylistResponseMapper
+    )
 
     val emailFixture = Email(
-      self = Self(Urn("soundcloud", "emails", "111"), "http://moshimoshi.int.s-cloud.net/users/soundcloud:users:49416/emails/soundcloud:emails:111"),
+      self = Self(
+        Urn("soundcloud", "emails", "111"),
+        "http://moshimoshi.int.s-cloud.net/users/soundcloud:users:49416/emails/soundcloud:emails:111"
+      ),
       address = Some("filipe@soundcloud.com"),
       bounced = Some(false),
       confirmed = Some(false),
@@ -38,7 +49,10 @@ class OkidokiClientSpec extends UnitSpecification {
       primary = Some(true)
     )
     val emailFixture2 = Email(
-      self = Self(Urn("soundcloud", "emails", "222"), "http://moshimoshi.int.s-cloud.net/users/soundcloud:users:49416/emails/soundcloud:emails:222"),
+      self = Self(
+        Urn("soundcloud", "emails", "222"),
+        "http://moshimoshi.int.s-cloud.net/users/soundcloud:users:49416/emails/soundcloud:emails:222"
+      ),
       address = Some("marci@soundcloud.com"),
       bounced = Some(true),
       confirmed = Some(true),
@@ -47,9 +61,10 @@ class OkidokiClientSpec extends UnitSpecification {
       primary = Some(false)
     )
 
-    def expectResponseForEndpoint(path: Path, method: Method)
-                                 (requestParams: Params, requestBody: JsValue)
-                                 (status: Status, responseBody: JsValue = JsNull) = {
+    def expectResponseForEndpoint(
+        path: Path,
+        method: Method
+    )(requestParams: Params, requestBody: JsValue)(status: Status, responseBody: JsValue = JsNull) = {
       val optionalRequestBody = requestBody match {
         case JsNull => None
         case x => Some(x)
@@ -67,9 +82,9 @@ class OkidokiClientSpec extends UnitSpecification {
   }
 
   "#fetch" >> {
-
     trait UsersContext extends Context {
-      val urns = Set(Urn("soundcloud", "users", "1"), Urn("soundcloud", "tracks", "1"), Urn("soundcloud", "playlists", "3"))
+      val urns =
+        Set(Urn("soundcloud", "users", "1"), Urn("soundcloud", "tracks", "1"), Urn("soundcloud", "playlists", "3"))
 
       def batchSize = 10
 
@@ -107,12 +122,12 @@ class OkidokiClientSpec extends UnitSpecification {
   }
 
   "#playlistTracks" >> {
-
     trait TestContext extends Context {
       val urn = Urn("soundcloud", "playlists", "1")
       val path = Path() / "playlists" / urn / "tracks_with_pagination"
 
-      def expectPlaylistTracksResponse = expectResponseForEndpoint(path, Method.Get)(_: Params, JsNull)(_: Status, _: JsValue)
+      def expectPlaylistTracksResponse =
+        expectResponseForEndpoint(path, Method.Get)(_: Params, JsNull)(_: Status, _: JsValue)
     }
 
     "invalid response" in new TestContext {
@@ -123,7 +138,11 @@ class OkidokiClientSpec extends UnitSpecification {
     "valid response" in new TestContext {
       val afterParam = 3300
       val limit = 5
-      expectPlaylistTracksResponse(Params("after" -> afterParam.toString, "limit" -> limit.toString), Status.Ok, moshiPlaylistTracksWithPagination)
+      expectPlaylistTracksResponse(
+        Params("after" -> afterParam.toString, "limit" -> limit.toString),
+        Status.Ok,
+        moshiPlaylistTracksWithPagination
+      )
 
       val actual = Await.result(client.playlistTracks(session, urn, Some(limit), Some(afterParam)))
       val expected = TracksWithPaginationMapper(moshiPlaylistTracksWithPagination)
@@ -136,7 +155,6 @@ class OkidokiClientSpec extends UnitSpecification {
   }
 
   "resolve by permalink" >> {
-
     trait ResolveContext extends Context {
       val permalink = "http://soundcloud.com/blah"
       val params = Params("permalink_url" -> permalink)
@@ -163,7 +181,6 @@ class OkidokiClientSpec extends UnitSpecification {
   }
 
   "fetches user emails" >> {
-
     trait EmailsContext extends Context {
       val urn = Urn("soundcloud", "users", "49416")
       val path = Path() / "users" / urn / "emails"
@@ -183,7 +200,6 @@ class OkidokiClientSpec extends UnitSpecification {
   }
 
   "creates user emails" >> {
-
     trait CreateEmailContext extends Context {
       val userUrn = Urn("soundcloud", "users", "1")
       val requestBody = Json.obj("address" -> "user@example.com")
@@ -209,7 +225,9 @@ class OkidokiClientSpec extends UnitSpecification {
 
     "invalid request: conflict" in new CreateEmailContext {
       expectCreateEmailResponse(Status.Conflict, JsNull)
-      Await.result(client.createEmail(session, userUrn, requestBody.as[EmailCreate])) ==== BadRequest(Seq(Error("An email associated with that address already exists", None)))
+      Await.result(client.createEmail(session, userUrn, requestBody.as[EmailCreate])) ==== BadRequest(
+        Seq(Error("An email associated with that address already exists", None))
+      )
     }
 
     "success response" in new CreateEmailContext {
@@ -219,7 +237,6 @@ class OkidokiClientSpec extends UnitSpecification {
   }
 
   "updates user emails" >> {
-
     trait UpdateEmailContext extends Context {
       val userUrn = Urn("soundcloud", "users", "1")
       val emailUrn = Urn("soundcloud", "emails", "2")
@@ -232,17 +249,20 @@ class OkidokiClientSpec extends UnitSpecification {
 
     "invalid response" in new UpdateEmailContext {
       expectUpdateEmailResponse(Status.InternalServerError, JsNull)
-      Await.result(client.updateEmail(session, userUrn, emailUrn, requestBody.as[EmailUpdate])) must throwA[IllegalStateException]
+      Await.result(client.updateEmail(session, userUrn, emailUrn, requestBody.as[EmailUpdate])) must throwA[
+        IllegalStateException
+      ]
     }
 
     "success response" in new UpdateEmailContext {
       expectUpdateEmailResponse(Status.Ok, okidokiUserEmail)
-      Await.result(client.updateEmail(session, userUrn, emailUrn, requestBody.as[EmailUpdate])) ==== Success(emailFixture)
+      Await.result(client.updateEmail(session, userUrn, emailUrn, requestBody.as[EmailUpdate])) ==== Success(
+        emailFixture
+      )
     }
   }
 
   "deletes user emails" >> {
-
     trait DeleteEmailContext extends Context {
       val userUrn = Urn("soundcloud", "users", "1")
       val emailUrn = Urn("soundcloud", "emails", "2")
@@ -263,7 +283,6 @@ class OkidokiClientSpec extends UnitSpecification {
   }
 
   "fetches users restrictions" >> {
-
     trait RestrictionsContext extends Context {
       val possibleBlocker = Urn("soundcloud", "users", "15")
       val possiblyBlockedUser = Urn("soundcloud", "users", "10")
@@ -272,7 +291,9 @@ class OkidokiClientSpec extends UnitSpecification {
 
     "block exists" in new RestrictionsContext {
       expectOkResponse(path, okidokiRestrictionBlock)
-      Await.result(client.fetchRestriction(session, possibleBlocker, possiblyBlockedUser)) ==== Some(UserResourceRestriction("user_blocked"))
+      Await.result(client.fetchRestriction(session, possibleBlocker, possiblyBlockedUser)) ==== Some(
+        UserResourceRestriction("user_blocked")
+      )
     }
 
     "no block exists" in new RestrictionsContext {
@@ -282,7 +303,6 @@ class OkidokiClientSpec extends UnitSpecification {
   }
 
   "creates a transcoding" >> {
-
     trait TranscodingContext extends Context {
       val transcodingCreate = TranscodingCreate("aab123")
       val jsonRequest = Some(Json.parse("""{"transcoding":{"uid":"aab123"}}"""))
@@ -296,7 +316,8 @@ class OkidokiClientSpec extends UnitSpecification {
           Method.Post,
           Headers.empty,
           status,
-          new ExpectedBody(jsonResponse, jsonRequest))
+          new ExpectedBody(jsonResponse, jsonRequest)
+        )
       }
     }
 
@@ -312,7 +333,6 @@ class OkidokiClientSpec extends UnitSpecification {
   }
 
   "#spotlight" >> {
-
     trait SpotlightContext extends Context {
       val user = Urn("soundcloud", "users", "1")
       val path = Path() / "users" / user.identifier / "spotlight"

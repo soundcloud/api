@@ -13,7 +13,6 @@ import scala.collection.JavaConverters._
 import scala.reflect.ClassTag
 
 trait UnitSpecification extends Specification with BeforeAfterEach with Mockito {
-
   type Scope = org.specs2.specification.Scope
 
   override def after: Any = {}
@@ -25,19 +24,22 @@ trait UnitSpecification extends Specification with BeforeAfterEach with Mockito 
   private val someApp = Urn("soundcloud", "systems", "1")
   private val someScopes = Set("a", "b")
 
-  def loggedInSession(urn: Urn) = (new UserSessionBuilder)
-    .setUser(urn)
-    .setAgent(someApp)
-    .setGeo(new Geo("US", "Mountain View", "CA"))
-    .setScopes(someScopes.asJava)
-    .build.asInstanceOf[LoggedInUserSession]
+  def loggedInSession(urn: Urn) =
+    (new UserSessionBuilder)
+      .setUser(urn)
+      .setAgent(someApp)
+      .setGeo(new Geo("US", "Mountain View", "CA"))
+      .setScopes(someScopes.asJava)
+      .build
+      .asInstanceOf[LoggedInUserSession]
 
-  def anonymousSession = (new UserSessionBuilder)
-    .setAgent(someApp)
-    .setScopes(someScopes.asJava)
-    .build.asInstanceOf[AnonymousUserSession]
+  def anonymousSession =
+    (new UserSessionBuilder)
+      .setAgent(someApp)
+      .setScopes(someScopes.asJava)
+      .build
+      .asInstanceOf[AnonymousUserSession]
 
   def jsonResponse(status: Status, json: JsValue, headers: HeaderMap = HeaderMap()) =
     JsonResponseBuilder().status(status).body(Json.stringify(json)).headers(headers.toMap).build
-
 }

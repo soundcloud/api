@@ -4,7 +4,6 @@ import com.soundcloud.jvmkit.module.util.Url
 import org.joda.time.DateTime
 import play.api.libs.json.JsValue
 
-
 /**
   * Maps json response as returned by
   * [[https://github.com/soundcloud/media-service/tree/master/urlgen Media Service urlgen stream representation]]
@@ -33,6 +32,4 @@ class TrackStreamUrlMapper {
     val expiresAt = DateTime.parse((urlJson \ "expires_at").as[String])
     MediaUrl(name, url, expiresAt)
   }
-
 }
-

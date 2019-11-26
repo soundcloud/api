@@ -12,7 +12,6 @@ import org.mockito.Mockito.{verify, when}
 import play.api.libs.json.{JsNull, Json}
 
 class TrackMetadataClientSpec extends UnitSpecification {
-
   trait Context extends Scope {
     val service = mock[JsonClient]
     val trackmetadataClient = new TrackmetadataClient(service)
@@ -25,7 +24,6 @@ class TrackMetadataClientSpec extends UnitSpecification {
     }
 
     "track is not found" >> {
-
       trait NotFoundContext extends TrackContext {
         when(service.getWithSession(anonymousSession, path, Params.empty, Headers.empty))
           .thenReturn(Future(jsonResponse(Status.NotFound, JsNull)))
@@ -87,7 +85,6 @@ class TrackMetadataClientSpec extends UnitSpecification {
     }
 
     "track with rogue attributes" >> {
-
       trait RogueTrack extends TrackContext {
         when(service.getWithSession(anonymousSession, path, Params.empty, Headers.empty))
           .thenReturn(Future(jsonResponse(Status.Ok, trackmetadataClientTracks_rogue)))
@@ -111,7 +108,6 @@ class TrackMetadataClientSpec extends UnitSpecification {
     }
 
     "track where nullable boolean fields are null" >> {
-
       trait NulledBooleansTrack extends TrackContext {
         when(service.getWithSession(anonymousSession, path, Params.empty, Headers.empty))
           .thenReturn(Future(jsonResponse(Status.Ok, trackmetadataClientNullableBooleans)))
@@ -136,7 +132,6 @@ class TrackMetadataClientSpec extends UnitSpecification {
   }
 
   "#tracks" >> {
-
     trait TracksContext extends Context {
       val urn1 = Urn("soundcloud", "tracks", "1")
       val urn2 = Urn("soundcloud", "tracks", "2")
@@ -217,8 +212,7 @@ class TrackMetadataClientSpec extends UnitSpecification {
 
       val path = Path("/users") / userUrn / "tracks" / "urns"
 
-      val jsonBody = Json.parse(
-        s"""
+      val jsonBody = Json.parse(s"""
            |{
            |  "data": ["$urn1", "$urn2"]
            |}

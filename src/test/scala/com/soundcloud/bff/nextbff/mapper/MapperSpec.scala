@@ -9,7 +9,6 @@ import org.mockito.Mockito.when
 import org.specs2.mutable.Before
 
 class MapperSpec extends UnitSpecification {
-
   trait EmbeddedContext extends Scope {
     val session = mock[UserSession]
     implicit val context = new MappingContext(session)
@@ -37,8 +36,8 @@ class MapperSpec extends UnitSpecification {
 
   trait EmbeddedAttributeContext extends EmbeddedContext {
     val urn = Urn("soundcloud", "users", "333")
-    val extractor = {
-      output: TestMapping => output.test
+    val extractor = { output: TestMapping =>
+      output.test
     }
     val embeddedAttribute = EmbeddedAttribute(mapper, urn, extractor)
   }
@@ -81,7 +80,6 @@ class MapperSpec extends UnitSpecification {
   }
 
   trait MaterializeItemContext extends MaterializeContext with Before {
-
     val input = Urn("soundcloud", "users", "333")
     val mapResult = Map[Any, Mapping](input -> new Mapping {})
 
@@ -96,7 +94,6 @@ class MapperSpec extends UnitSpecification {
   }
 
   trait MaterializeListContext extends MaterializeContext with Before {
-
     val urn1 = Urn("soundcloud", "users", "333")
     val urn2 = Urn("soundcloud", "users", "222")
     val inputs = List(urn1, urn2)
@@ -115,11 +112,12 @@ class MapperSpec extends UnitSpecification {
 
   "Mapper[...]#filter" >> {
     "should yield a mapper that filters out items as per the additional constraint specified" in new MaterializeItemContext {
-
       case class Welp(s: String) extends Mapping
 
       val originalMapper = new Mapper[Int, Welp] {
-        override def map(session: UserSession, inputs: Set[Int])(implicit context: MappingContext): Future[Map[Int, Welp]] = Future.value {
+        override def map(session: UserSession, inputs: Set[Int])(
+            implicit context: MappingContext
+        ): Future[Map[Int, Welp]] = Future.value {
           inputs.zip(Seq("ein", "zwei", "hundert").map(Welp)).toMap
         }
       }

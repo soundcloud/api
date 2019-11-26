@@ -6,7 +6,8 @@ import play.api.libs.json.{JsObject, JsValue}
 
 object PlaylistTrackUrnsMapper {
   def apply(json: JsValue): List[Urn] = {
-    (json \ "tracks").as[List[JsObject]]
+    (json \ "tracks")
+      .as[List[JsObject]]
       .map(trackJson => (trackJson \ "self" \ "urn").as[Urn])
   }
 }

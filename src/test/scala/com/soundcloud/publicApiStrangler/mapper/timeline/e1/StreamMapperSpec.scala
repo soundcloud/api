@@ -14,7 +14,6 @@ import org.specs2.mutable.Before
 import play.api.libs.json.JsObject
 
 class StreamMapperSpec extends UnitSpecification {
-
   trait Context extends Scope with Before {
     val timelineClient = mock[TimelineJsonClient]
     val entityMapper = mock[EntityMapper]
@@ -36,7 +35,8 @@ class StreamMapperSpec extends UnitSpecification {
       val page = CursorBasedPage(urn, "https://foo.com", "/something", Map(), None, 100)
 
       override def before: Any = {
-        when(timelineClient.stream(session, None, 100, false, Some("uuid"))).thenReturn(Future(timelineMapperStream.as[JsObject]))
+        when(timelineClient.stream(session, None, 100, false, Some("uuid")))
+          .thenReturn(Future(timelineMapperStream.as[JsObject]))
       }
     }
 
@@ -54,7 +54,8 @@ class StreamMapperSpec extends UnitSpecification {
       val page = CursorBasedPage(urn, "https://foo.com", "/something", Map(), Some(uuid), 100)
 
       override def before: Any = {
-        when(timelineClient.stream(session, Some(uuid), 100, false, Some("uuid"))).thenReturn(Future(timelineMapperStream.as[JsObject]))
+        when(timelineClient.stream(session, Some(uuid), 100, false, Some("uuid")))
+          .thenReturn(Future(timelineMapperStream.as[JsObject]))
       }
     }
 
@@ -77,7 +78,8 @@ class StreamMapperSpec extends UnitSpecification {
       val page = CursorBasedPage(urn, "https://foo.com", "/something", Map("uuid[to]" -> uuid.toString), None, 100)
 
       override def before: Any = {
-        when(timelineClient.stream(session, Some(uuid), 100, true, Some("uuid"))).thenReturn(Future(timelineMapperStream.as[JsObject]))
+        when(timelineClient.stream(session, Some(uuid), 100, true, Some("uuid")))
+          .thenReturn(Future(timelineMapperStream.as[JsObject]))
       }
     }
 
@@ -89,5 +91,4 @@ class StreamMapperSpec extends UnitSpecification {
       result.futureHref mustEqual Some(s"https://foo.com/something?uuid%5Bto%5D=$futureUuid&limit=100")
     }
   }
-
 }

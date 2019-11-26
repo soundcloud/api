@@ -9,10 +9,7 @@ import com.twitter.util.{Await, Future}
 import org.joda.time.DateTime
 
 class MediaUrlsRepositorySpec extends UnitSpecification {
-
-
   "MediaUrlsRepository" should {
-
     trait StreamContext extends Scope {
       val userSession = (new UserSessionBuilder).build()
       val mediaUrlgenClient = mock[MediaUrlgenClient]
@@ -32,7 +29,8 @@ class MediaUrlsRepositorySpec extends UnitSpecification {
       val regularTrackStreams = Set(httpMediaUrl, hlsMediaUrl, rtmpMediaUrl)
 
       val contentAuthorization = mock[ContentAuthorization]
-      mediaUrlgenClient.trackStreamUrlsFor(userSession, desiredTrack, mediaUrlgenParamsSsl, contentAuthorization) returns Future.value(regularTrackStreams)
+      mediaUrlgenClient.trackStreamUrlsFor(userSession, desiredTrack, mediaUrlgenParamsSsl, contentAuthorization) returns Future
+        .value(regularTrackStreams)
     }
 
     "return regular streams when policy = allow" in new StreamContext {
@@ -40,5 +38,4 @@ class MediaUrlsRepositorySpec extends UnitSpecification {
       mediaUrls ==== regularTrackStreams
     }
   }
-
 }

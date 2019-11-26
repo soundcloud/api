@@ -6,13 +6,13 @@ import com.twitter.finagle.http.Request
 /**
   * Allows to create pages specifying default values.
   */
-case class PageBuilder[T] private(
-                                   request: Request,
-                                   param: T,
-                                   baseUrl: String,
-                                   limit: Option[Int] = None,
-                                   extraParams: Params = Params.empty) {
-
+case class PageBuilder[T] private (
+    request: Request,
+    param: T,
+    baseUrl: String,
+    limit: Option[Int] = None,
+    extraParams: Params = Params.empty
+) {
   private val defaultLimit = 10
 
   /**
@@ -42,7 +42,8 @@ case class PageBuilder[T] private(
       request.path,
       extraParams,
       intParam(OffsetBasedPage.offsetParam, standardOffset),
-      limitWithFallbacks)
+      limitWithFallbacks
+    )
 
   /**
     * Builds a cursor based page. It uses the standard cursor
@@ -55,7 +56,8 @@ case class PageBuilder[T] private(
       request.path,
       extraParams,
       param(CursorBasedPage.cursorParam).orElse(standardCursor),
-      limitWithFallbacks)
+      limitWithFallbacks
+    )
 
   private def limitWithFallbacks =
     intParam(Page.limitParam, limit.getOrElse(defaultLimit))
@@ -68,7 +70,6 @@ case class PageBuilder[T] private(
 }
 
 object PageBuilder {
-
   /**
     * Creates the PageBuilder.
     */

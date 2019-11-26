@@ -10,7 +10,6 @@ import com.twitter.util.{Await, Future}
 import play.api.libs.json.{JsNull, Json}
 
 class PubmeseClientSpec extends UnitSpecification {
-
   trait Context extends Scope {
     val jsonClient = mock[JsonClient]
 
@@ -33,27 +32,21 @@ class PubmeseClientSpec extends UnitSpecification {
   "single track" >> {
     "track exists and has an ISRC" in new Context {
       stubbedRequestFor(Set(urn1)) returns
-        Future.value(jsonResponse(Status.Ok,
-          Json.arr(Json.obj("track_urn" -> urn1, "isrc" -> "15RC"))
-        ))
+        Future.value(jsonResponse(Status.Ok, Json.arr(Json.obj("track_urn" -> urn1, "isrc" -> "15RC"))))
 
       Await.result(client.isrcForTrack(session, urn1)) ==== Some(Isrc("15RC"))
     }
 
     "track exists but has no ISRC" in new Context {
       stubbedRequestFor(Set(urn1)) returns
-        Future.value(jsonResponse(Status.Ok,
-          Json.arr(Json.obj("track_urn" -> urn1, "isrc" -> JsNull))
-        ))
+        Future.value(jsonResponse(Status.Ok, Json.arr(Json.obj("track_urn" -> urn1, "isrc" -> JsNull))))
 
       Await.result(client.isrcForTrack(session, urn1)) ==== None
     }
 
     "track does not exist" in new Context {
       stubbedRequestFor(Set(urn1)) returns
-        Future.value(jsonResponse(Status.NotFound,
-          Json.obj()
-        ))
+        Future.value(jsonResponse(Status.NotFound, Json.obj()))
 
       Await.result(client.isrcForTrack(session, urn1)) ==== None
     }
@@ -62,10 +55,15 @@ class PubmeseClientSpec extends UnitSpecification {
   "multiple tracks" >> {
     "track exists and has an ISRC" in new Context {
       stubbedRequestFor(urns) returns
-        Future.value(jsonResponse(Status.Ok, Json.arr(
-          Json.obj("track_urn" -> (urn1), "isrc" -> "15RC"),
-          Json.obj("track_urn" -> (urn2), "isrc" -> "15RC2"))
-        ))
+        Future.value(
+          jsonResponse(
+            Status.Ok,
+            Json.arr(
+              Json.obj("track_urn" -> (urn1), "isrc" -> "15RC"),
+              Json.obj("track_urn" -> (urn2), "isrc" -> "15RC2")
+            )
+          )
+        )
 
       val result = Await.result(client.isrcsForTracks(session, urns))
       result.get(urn1) ==== Some(Isrc("15RC"))
@@ -74,28 +72,29 @@ class PubmeseClientSpec extends UnitSpecification {
 
     "track exists but has no ISRC" in new Context {
       stubbedRequestFor(urns) returns
-        Future.value(jsonResponse(Status.Ok, Json.arr(
-          Json.obj("track_urn" -> (urn1), "isrc" -> JsNull),
-          Json.obj("track_urn" -> (urn2), "isrc" -> "15RC2"))
-        ))
+        Future.value(
+          jsonResponse(
+            Status.Ok,
+            Json.arr(
+              Json.obj("track_urn" -> (urn1), "isrc" -> JsNull),
+              Json.obj("track_urn" -> (urn2), "isrc" -> "15RC2")
+            )
+          )
+        )
 
       Await.result(client.isrcsForTracks(session, urns)).get(urn1) ==== None
     }
 
     "track does not exist" in new Context {
       stubbedRequestFor(urns) returns
-        Future.value(jsonResponse(Status.Ok, Json.arr(
-          Json.obj("track_urn" -> (urn2), "isrc" -> "15RC2"))
-        ))
+        Future.value(jsonResponse(Status.Ok, Json.arr(Json.obj("track_urn" -> (urn2), "isrc" -> "15RC2"))))
 
       Await.result(client.isrcsForTracks(session, urns)).get(urn1) ==== None
     }
 
     "500 response" in new Context {
       stubbedRequestFor(urns) returns
-        Future.value(jsonResponse(Status.InternalServerError,
-          Json.obj()
-        ))
+        Future.value(jsonResponse(Status.InternalServerError, Json.obj()))
 
       Await.result(client.isrcsForTracks(session, urns)).get(urn1) ==== None
     }

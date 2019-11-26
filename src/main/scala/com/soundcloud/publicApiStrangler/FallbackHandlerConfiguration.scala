@@ -93,7 +93,6 @@ class FallbackHandlerConfiguration(telemetry: Telemetry, mothershipDispatcher: D
       """/users/\d+/followings/not_followed_by/""",
       """/e1/users/\d+/sounds""",
       """/e1/users/\d+/likes""",
-
       // https://github.com/soundcloud/soundcloud/blob/master/config/routes.rb#L228-L238
       """/e1/me/likes""",
       """/e1/me/sounds""",
@@ -106,7 +105,6 @@ class FallbackHandlerConfiguration(telemetry: Telemetry, mothershipDispatcher: D
       """/e1/me/track_reposts/ids""",
       """/e1/me/playlist_likes/ids""",
       """/e1/me/playlist_reposts/ids""",
-
       // https://github.com/soundcloud/soundcloud/blob/master/config/routes.rb#L240-L246
       """/i1/me/shortcuts"""
     )
@@ -136,9 +134,5 @@ class FallbackHandlerConfiguration(telemetry: Telemetry, mothershipDispatcher: D
   )
 
   val fallbackHandler =
-    new SpecificStranglingHandler(mothershipDispatcher,
-      whatToStrangle,
-      officialSoundCloudApps,
-      fallthroughCounter)
-
+    new SpecificStranglingHandler(mothershipDispatcher, whatToStrangle, officialSoundCloudApps, fallthroughCounter)
 }

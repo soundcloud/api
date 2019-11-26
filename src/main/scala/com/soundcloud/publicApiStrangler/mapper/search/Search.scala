@@ -14,13 +14,12 @@ trait Pagination[T] {
 
 trait SearchFacet extends JsonMapping {
   val name = (json \ "name").as[String]
-  val facets = (json \ "facets").as[Seq[JsValue]].map {
-    f =>
-      new JsonMapping(f) {
-        val filter = (f \ "filter").as[String]
-        val count = (f \ "count").as[Int]
-        val value = (f \ "value").as[String]
-      }
+  val facets = (json \ "facets").as[Seq[JsValue]].map { f =>
+    new JsonMapping(f) {
+      val filter = (f \ "filter").as[String]
+      val count = (f \ "count").as[Int]
+      val value = (f \ "value").as[String]
+    }
   }
 }
 
@@ -40,22 +39,19 @@ trait Search extends JsonMapping {
   // ignored so that implementations can choose how to expose the results
   @JsonIgnore
   protected val mapSearchResults = {
-    val urns = (json \ "docs").as[List[JsObject]]
+    val urns = (json \ "docs")
+      .as[List[JsObject]]
       .map(doc => (doc \ "urn").as[Urn])
     entityMapper.embed(urns)
   }
-
 }
 
 trait LegacySearch extends Search {
-
   @JsonValue
   def value = mapSearchResults
-
 }
 
 trait PaginatedSearch extends Search with Pagination[EmbeddedItem[JsonMapping]] {
-
   val collection = mapSearchResults
 
   lazy val next_href = {

@@ -5,7 +5,12 @@ import com.soundcloud.bff.nextbff.mapping.{Mapping, MappingContext}
 import com.soundcloud.jvmkit.module.json.UrnFormat._
 import com.soundcloud.jvmkit.module.util.{Url, Urn}
 import com.soundcloud.publicApiStrangler.authorization.ContentAuthorizationRules
-import com.soundcloud.publicApiStrangler.authorization.policies.{ContentAuthorization, ContentPolicy, MonetizationModel, Reason}
+import com.soundcloud.publicApiStrangler.authorization.policies.{
+  ContentAuthorization,
+  ContentPolicy,
+  MonetizationModel,
+  Reason
+}
 import com.soundcloud.publicApiStrangler.client.followcounts.{FollowCounts, FollowCountsClient}
 import com.soundcloud.publicApiStrangler.client.liebling.{LieblingClient, UserLikesCount}
 import com.soundcloud.publicApiStrangler.client.media.{TrackWaveformUrl, WaveformUrlsGenerator}
@@ -24,7 +29,6 @@ import org.specs2.mutable.Before
 import play.api.libs.json.{JsObject, Json}
 
 class SearchEntityMapperSpec extends UnitSpecification {
-
   trait Context extends Scope with Before {
     implicit val context = mock[MappingContext]
     val baseUrl = "https://api.soundcloud.com.com"
@@ -66,7 +70,12 @@ class SearchEntityMapperSpec extends UnitSpecification {
     val likableUrns = Set(trackUrn, playlistUrn)
 
     val authorizations = Seq(
-      new ContentAuthorization(Urn("soundcloud", "tracks", "15273221"), ContentPolicy.ALLOW, Reason.UNKNOWN, MonetizationModel.NOT_APPLICABLE)
+      new ContentAuthorization(
+        Urn("soundcloud", "tracks", "15273221"),
+        ContentPolicy.ALLOW,
+        Reason.UNKNOWN,
+        MonetizationModel.NOT_APPLICABLE
+      )
     )
     val okidokiFetch = contentsOf("okidoki", "search_fetch")
       .as[List[JsObject]]
@@ -84,7 +93,14 @@ class SearchEntityMapperSpec extends UnitSpecification {
       )
       // track metadata for a playlist -- one call per playlist :(
       // should probably return some non-empty list
-      when(okidokiClient.playlistTracks(===(session), ===(Urn("soundcloud", "playlists", "685235")), any[Option[Int]], any[Option[Int]])).thenReturn(
+      when(
+        okidokiClient.playlistTracks(
+          ===(session),
+          ===(Urn("soundcloud", "playlists", "685235")),
+          any[Option[Int]],
+          any[Option[Int]]
+        )
+      ).thenReturn(
         Future(TracksWithPagination(Nil, TrackMeta(None)))
       )
 
@@ -96,14 +112,19 @@ class SearchEntityMapperSpec extends UnitSpecification {
         .thenReturn(Future(lieblingLikesInfo))
 
       // reposts_count enrichment
-      when(repostsClient.getRepostCountsByUrnWithFallback(session, Set.empty)) thenReturn Future.value(Map.empty[Urn, Long])
+      when(repostsClient.getRepostCountsByUrnWithFallback(session, Set.empty)) thenReturn Future.value(
+        Map.empty[Urn, Long]
+      )
       when(repostsClient.getRepostCountsByUrnWithFallback(session, searchResults.toSet)) thenReturn
         Future.value(Map(fetchedUserUrn -> 11L, trackUrn -> 22L, playlistUrn -> 33L))
 
       // waveform URLs
       when(contentAuthorizationService.fetchRules(===(session), any[Seq[Urn]])).thenReturn(Future.value(authorizations))
-      when(waveformUrlsGen.fromUid(any[String])).thenReturn(TrackWaveformUrl("b5uH7mT3hjkm", Url("https://w1.sndcdn.com/b5uH7mT3hjkm_m.png")))
-      followCountsClient.counts(session, Seq(fetchedUserUrn)) returns Future.value(Seq(FollowCounts(fetchedUserUrn, 1111, 2222)))
+      when(waveformUrlsGen.fromUid(any[String]))
+        .thenReturn(TrackWaveformUrl("b5uH7mT3hjkm", Url("https://w1.sndcdn.com/b5uH7mT3hjkm_m.png")))
+      followCountsClient.counts(session, Seq(fetchedUserUrn)) returns Future.value(
+        Seq(FollowCounts(fetchedUserUrn, 1111, 2222))
+      )
     }
 
     def result = Await.result(mapper.materialize(session, searchResults))

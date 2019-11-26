@@ -6,13 +6,13 @@ import com.twitter.util.Future
 import com.soundcloud.publicApiStrangler.authorization.policies._
 
 class ContentAuthorizationRules(contentAuth: ContentAuthorizationService, subscriptions: SubscriptionsService) {
-
   def fetchRules(session: UserSession, urns: Seq[Urn]): Future[Seq[ContentAuthorization]] =
     userCountry(session).flatMap(country => contentAuth.findRulesApplicableTo(session, urns, country))
 
   private def userCountry(session: UserSession): Future[Option[String]] =
     if (session.getTier != UserTier.FREE) {
-      subscriptions.getActiveSubscriptionCountry(session)
+      subscriptions
+        .getActiveSubscriptionCountry(session)
         .map(_.orElse(Option(session.getGeo.getCountryCode)))
     } else {
       Future.value(Option(session.getGeo.getCountryCode))

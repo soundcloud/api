@@ -7,47 +7,49 @@ import org.joda.time.DateTime
 import play.api.libs.json._
 import play.api.libs.json.JodaReads._
 
-case class Track(urn: Urn,
-                 user_urn: Urn,
-                 commentable: Boolean,
-                 description: Option[String],
-                 created_at: DateTime,
-                 disabled_at: Option[DateTime],
-                 downloadable: Option[Boolean],
-                 duration: Int,
-                 genre: Option[String],
-                 last_modified: DateTime,
-                 permalink: String,
-                 permalink_url: Option[String],
-                 public: Boolean,
-                 secret_token: String,
-                 user_tags: List[String],
-                 machine_tags: List[String],
-                 title: String,
-                 uid: Option[String],
-                 api_streamable: Option[Boolean],
-                 streamable: Option[Boolean],
-                 reveal_comments: Boolean,
-                 reveal_stats: Boolean,
-                 label_name: Option[String],
-                 license: String,
-                 embeddable: Option[Boolean],
-                 release_year: Option[Int],
-                 release_month: Option[Int],
-                 release_day: Option[Int],
-                 embeddableBy: EmbeddingPermission,
-                 releaseDate: Option[DateTime],
-                 artwork: Artwork,
-                 published_at: Option[DateTime],
-                 purchase_url: Option[String],
-                 purchase_title: Option[String],
-                 bpm: Option[Double],
-                 track_type: Option[String],
-                 release: Option[String],
-                 key_signature: Option[String],
-                 video_url: Option[String],
-                 label_id: Option[Int],
-                 supply_chain_status: Option[String])
+case class Track(
+    urn: Urn,
+    user_urn: Urn,
+    commentable: Boolean,
+    description: Option[String],
+    created_at: DateTime,
+    disabled_at: Option[DateTime],
+    downloadable: Option[Boolean],
+    duration: Int,
+    genre: Option[String],
+    last_modified: DateTime,
+    permalink: String,
+    permalink_url: Option[String],
+    public: Boolean,
+    secret_token: String,
+    user_tags: List[String],
+    machine_tags: List[String],
+    title: String,
+    uid: Option[String],
+    api_streamable: Option[Boolean],
+    streamable: Option[Boolean],
+    reveal_comments: Boolean,
+    reveal_stats: Boolean,
+    label_name: Option[String],
+    license: String,
+    embeddable: Option[Boolean],
+    release_year: Option[Int],
+    release_month: Option[Int],
+    release_day: Option[Int],
+    embeddableBy: EmbeddingPermission,
+    releaseDate: Option[DateTime],
+    artwork: Artwork,
+    published_at: Option[DateTime],
+    purchase_url: Option[String],
+    purchase_title: Option[String],
+    bpm: Option[Double],
+    track_type: Option[String],
+    release: Option[String],
+    key_signature: Option[String],
+    video_url: Option[String],
+    label_id: Option[Int],
+    supply_chain_status: Option[String]
+)
 
 case class Artwork(filename: Option[String])
 
@@ -56,7 +58,6 @@ object Artwork {
 }
 
 object Track {
-
   implicit val trackReads: Reads[Track] = Reads { json =>
     try {
       JsSuccess(

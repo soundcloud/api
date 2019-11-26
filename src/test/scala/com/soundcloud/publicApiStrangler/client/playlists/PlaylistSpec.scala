@@ -6,7 +6,6 @@ import play.api.libs.json.Json
 
 class PlaylistSpec extends UnitSpecification {
   "reads from JSON" >> {
-
     val json =
       """
         |{

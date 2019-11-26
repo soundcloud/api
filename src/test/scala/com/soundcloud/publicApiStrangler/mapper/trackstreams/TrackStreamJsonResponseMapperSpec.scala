@@ -7,9 +7,7 @@ import com.twitter.finagle.http.Status
 import com.twitter.util.{Await, Future}
 import org.joda.time.DateTime
 
-
 class TrackStreamJsonResponseMapperSpec extends UnitSpecification {
-
   trait Context extends Scope {
     val expiresAt = DateTime.now
     val previewMediaUrl = new MediaUrl("preview_mp3_128_url", Url("http://preview"), expiresAt)
@@ -20,7 +18,6 @@ class TrackStreamJsonResponseMapperSpec extends UnitSpecification {
   }
 
   "TrackStreamJsonResponseMapper" should {
-
     "when URLs are available" >> {
       trait AllUrlsAvailableContext extends Context {
         val urls = Future.value(Set(httpMediaUrl, rtmpMediaUrl, hlsMediaUrl, previewMediaUrl))
@@ -52,7 +49,6 @@ class TrackStreamJsonResponseMapperSpec extends UnitSpecification {
     }
 
     "when no URLs are available" >> {
-
       trait NoUrlsAvailableContext extends Context {
         val urls = Future.value(Set[MediaUrl]())
       }
@@ -81,7 +77,5 @@ class TrackStreamJsonResponseMapperSpec extends UnitSpecification {
         }
       }
     }
-
   }
-
 }

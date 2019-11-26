@@ -4,7 +4,6 @@ import com.soundcloud.bff.nextbff.mapping.{Mapping, MappingContext}
 import com.soundcloud.publicApiStrangler.test.UnitSpecification
 
 class EmbeddedItemSpec extends UnitSpecification {
-
   trait Context extends Scope {
     implicit val context = mock[MappingContext]
     val owner = mock[Mapper[Any, Mapping]]
@@ -32,7 +31,6 @@ class EmbeddedItemSpec extends UnitSpecification {
   }
 
   "#isMaterialized returns true after materialization" >> {
-
     "value not found" in new Context {
       embedded.materialize(Map())
       embedded.isMaterialized ==== true

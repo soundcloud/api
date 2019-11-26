@@ -10,7 +10,6 @@ import com.twitter.finagle.http.{Response, Status}
 import com.twitter.util.{Await, Future}
 
 class PlaylistDeletionClientSpec extends UnitSpecification {
-
   trait Context extends Scope {
     val session = new UserSessionBuilder()
       .setUser(Urn("soundcloud", "users", "2"))
@@ -33,8 +32,12 @@ class PlaylistDeletionClientSpec extends UnitSpecification {
   }
 
   "with transport error" in new Context {
-    jsonClient.deleteWithSession(session, path, Params.empty, Headers.empty, None) returns Future.exception(new RuntimeException)
+    jsonClient.deleteWithSession(session, path, Params.empty, Headers.empty, None) returns Future.exception(
+      new RuntimeException
+    )
 
-    Await.result(client.deletePlaylist(session, urn)) ==== Bad(StringError("Unhandled exception when deleting playlist."))
+    Await.result(client.deletePlaylist(session, urn)) ==== Bad(
+      StringError("Unhandled exception when deleting playlist.")
+    )
   }
 }

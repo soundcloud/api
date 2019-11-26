@@ -6,7 +6,6 @@ import play.api.libs.json.JsObject
 import play.api.libs.json.JsArray
 
 class TracksVisitor(val wrapped: JsValue) {
-
   type VisitTrack = (Urn, Track) => Option[JsValue]
 
   def apply(visit: VisitTrack): Option[JsValue] =

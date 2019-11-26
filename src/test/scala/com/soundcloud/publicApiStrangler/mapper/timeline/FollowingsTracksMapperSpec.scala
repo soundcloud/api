@@ -13,7 +13,6 @@ import org.specs2.mutable.Before
 import play.api.libs.json.JsObject
 
 class FollowingsTracksMapperSpec extends UnitSpecification {
-
   trait Context extends Scope with Before {
     val timelineClient = mock[TimelineJsonClient]
     val entityMapper = mock[EntityMapper]
@@ -35,7 +34,8 @@ class FollowingsTracksMapperSpec extends UnitSpecification {
       val page = CursorBasedPage(urn, "https://foo.com", "/something", Map(), None, 100)
 
       override def before: Any = {
-        when(timelineClient.followingsTracks(session, None, 100, false, Some("uuid"))).thenReturn(Future(timelineFollowingsTracks.as[JsObject]))
+        when(timelineClient.followingsTracks(session, None, 100, false, Some("uuid")))
+          .thenReturn(Future(timelineFollowingsTracks.as[JsObject]))
       }
     }
 
@@ -53,7 +53,8 @@ class FollowingsTracksMapperSpec extends UnitSpecification {
       val page = CursorBasedPage(urn, "https://foo.com", "/something", Map(), Some(uuid), 100)
 
       override def before: Any = {
-        when(timelineClient.followingsTracks(session, Some(uuid), 100, false, Some("uuid"))).thenReturn(Future(timelineFollowingsTracks.as[JsObject]))
+        when(timelineClient.followingsTracks(session, Some(uuid), 100, false, Some("uuid")))
+          .thenReturn(Future(timelineFollowingsTracks.as[JsObject]))
       }
     }
 
@@ -76,7 +77,8 @@ class FollowingsTracksMapperSpec extends UnitSpecification {
       val page = CursorBasedPage(urn, "https://foo.com", "/something", Map("uuid[to]" -> uuid.toString), None, 100)
 
       override def before: Any = {
-        when(timelineClient.followingsTracks(session, Some(uuid), 100, true, Some("uuid"))).thenReturn(Future(timelineFollowingsTracks.as[JsObject]))
+        when(timelineClient.followingsTracks(session, Some(uuid), 100, true, Some("uuid")))
+          .thenReturn(Future(timelineFollowingsTracks.as[JsObject]))
       }
     }
 

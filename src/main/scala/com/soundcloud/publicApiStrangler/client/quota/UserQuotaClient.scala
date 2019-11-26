@@ -17,9 +17,13 @@ class UserQuotaClient(jsonClient: JsonClient) {
       response: Response =>
         response.status match {
           case Status.Ok => {
-            Json.parse(response.contentString).as[List[DownloadsPerTrack]].map { entry =>
-              entry.self.urn -> entry.downloads_per_track
-            }.toMap
+            Json
+              .parse(response.contentString)
+              .as[List[DownloadsPerTrack]]
+              .map { entry =>
+                entry.self.urn -> entry.downloads_per_track
+              }
+              .toMap
           }
           case _ => Map.empty[Urn, Option[Int]]
         }

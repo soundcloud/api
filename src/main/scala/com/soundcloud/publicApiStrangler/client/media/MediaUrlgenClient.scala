@@ -16,7 +16,6 @@ import play.api.libs.json.Json
   * @param trackStreamMapper   TrackStreamMapper
   */
 private[media] class MediaUrlgenClient(jsonClient: JsonClient, trackStreamMapper: TrackStreamUrlMapper) {
-
   /**
     * Client for MediaUrlgen.
     *
@@ -35,7 +34,12 @@ private[media] class MediaUrlgenClient(jsonClient: JsonClient, trackStreamMapper
     * @param contentAuthorization Describes the authorization for a track
     * @return Eventual result containing a Set of MediaUrl objects.
     */
-  def trackStreamUrlsFor(session: UserSession, trackUrn: Urn, requestProperties: Params, contentAuthorization: ContentAuthorization): Future[Set[MediaUrl]] = {
+  def trackStreamUrlsFor(
+      session: UserSession,
+      trackUrn: Urn,
+      requestProperties: Params,
+      contentAuthorization: ContentAuthorization
+  ): Future[Set[MediaUrl]] = {
     val restrictions = contentAuthorization.getContentRestrictions.toArray.map(r => r.toString())
 
     val params = requestProperties ++ Params(

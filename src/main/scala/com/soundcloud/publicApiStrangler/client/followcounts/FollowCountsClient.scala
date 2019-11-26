@@ -25,17 +25,20 @@ class FollowCountsClient(client: JsonClient, config: Config) {
         "followerCounts" -> uriEncodedQueryString(params("f.b.u", userIds)),
         "followingCounts" -> uriEncodedQueryString(params("f.u", userIds))
       )
-      client.getWithSession(session, Path() / "bulk", bulkParams, Headers.empty).map { response =>
-        val topLevelMap = parseBulkResponse(response)
-        val followerCounts = topLevelMap("followerCounts")
-        val followingCounts = topLevelMap("followingCounts")
+      client
+        .getWithSession(session, Path() / "bulk", bulkParams, Headers.empty)
+        .map { response =>
+          val topLevelMap = parseBulkResponse(response)
+          val followerCounts = topLevelMap("followerCounts")
+          val followingCounts = topLevelMap("followingCounts")
 
-        (followerCounts.keys ++ followingCounts.keys).toSeq.distinct.map { urn =>
-          FollowCounts(urn, followerCounts.getOrElse(urn, 0), followingCounts.getOrElse(urn, 0))
+          (followerCounts.keys ++ followingCounts.keys).toSeq.distinct.map { urn =>
+            FollowCounts(urn, followerCounts.getOrElse(urn, 0), followingCounts.getOrElse(urn, 0))
+          }
         }
-      }.handle {
-        case NonFatal(e) => Seq.empty
-      }
+        .handle {
+          case NonFatal(e) => Seq.empty
+        }
     }
   }
 
@@ -56,9 +59,10 @@ class FollowCountsClient(client: JsonClient, config: Config) {
     response.status match {
       case Status.Ok =>
         Json.parse(response.contentString).as[JsObject].value.toMap.mapValues { individualResponseJson =>
-          individualResponseJson.as[JsObject].value.toMap.flatMap { case (userId, jsonValue) =>
-            val value = (individualResponseJson \ userId \ "series" \\ "count").headOption.map(_.as[Long])
-            value.map(Urn("soundcloud", "users", userId) -> _)
+          individualResponseJson.as[JsObject].value.toMap.flatMap {
+            case (userId, jsonValue) =>
+              val value = (individualResponseJson \ userId \ "series" \\ "count").headOption.map(_.as[Long])
+              value.map(Urn("soundcloud", "users", userId) -> _)
           }
         }
       case _ =>

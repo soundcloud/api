@@ -4,12 +4,13 @@ import com.soundcloud.bff.nextbff.mapping.MappingContext
 import com.soundcloud.publicApiStrangler.client.followcounts.FollowCounts
 import play.api.libs.json.{JsObject, JsValue, Json, Writes}
 
-class User(jsonValue: JsValue,
-           baseUrl: String,
-           maybeFollowCounts: Option[FollowCounts],
-           maybeRepostsCount: Option[Long])(implicit context: MappingContext)
-  extends UserSummary(jsonValue, baseUrl) {
-
+class User(
+    jsonValue: JsValue,
+    baseUrl: String,
+    maybeFollowCounts: Option[FollowCounts],
+    maybeRepostsCount: Option[Long]
+)(implicit context: MappingContext)
+    extends UserSummary(jsonValue, baseUrl) {
   val first_name = (json \ "first_name").asOpt[String]
   val last_name = (json \ "last_name").asOpt[String]
   val full_name = (json \ "full_name").asOpt[String]
@@ -26,11 +27,12 @@ class User(jsonValue: JsValue,
   val website_title = nameInNetwork("personal", "title")
   val website = nameInNetwork("personal", "url")
 
-
   private def nameInNetwork(networkName: String, fieldName: String = "username"): Option[String] = {
-    (json \ "links").as[Seq[JsObject]].filter(
-      data => (data \ "network").as[String] == networkName
-    ) match {
+    (json \ "links")
+      .as[Seq[JsObject]]
+      .filter(
+        data => (data \ "network").as[String] == networkName
+      ) match {
       case networkData +: _ => (networkData \ fieldName).asOpt[String]
       case _ => None
     }

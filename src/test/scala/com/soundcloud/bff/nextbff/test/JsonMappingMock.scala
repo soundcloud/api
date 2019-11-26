@@ -10,7 +10,7 @@ abstract class JsonMappingMock extends JsonMapping(null)(null) {
 }
 
 object JsonMappingMock {
-  def prepare[T <: JsonMappingMock : Manifest] = {
+  def prepare[T <: JsonMappingMock: Manifest] = {
     val mock = Mockito.mock(manifest[T].runtimeClass).asInstanceOf[T]
     Mockito.when(mock.value).thenReturn(Map("test" -> "mock"))
     Mockito.when(mock.json).thenReturn(Json.obj("test" -> "mock"))

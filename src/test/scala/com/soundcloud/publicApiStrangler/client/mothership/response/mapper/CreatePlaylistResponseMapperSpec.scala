@@ -8,7 +8,6 @@ import com.twitter.finagle.http.Status
 import play.api.libs.json.{JsObject, Json}
 
 class CreatePlaylistResponseMapperSpec extends UnitSpecification {
-
   trait Context extends Scope {
     val createPlaylistResponseMapper = new CreatePlaylistResponseMapper
     val status: Status

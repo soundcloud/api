@@ -21,7 +21,6 @@ class PublicApiSiloing(checkRollout: () => Future[Boolean], blacklistOfAppIDs: S
     */
   def withSiloedSession[T: ResponseLike](userSession: UserSession)(action: => Future[T]): Future[T] = {
     checkRollout().flatMap { rolloutEnabled =>
-
       val isBlacklisted = blacklisted(userSession)
 
       if (isBlacklisted)

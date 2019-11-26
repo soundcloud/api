@@ -6,7 +6,6 @@ import org.specs2.specification.Scope
 import play.api.libs.json.Json
 
 class HasUrnSpec extends Specification {
-
   trait Context extends Scope {
     val expectedUrn = Urn("soundcloud", "tracks", "1")
   }

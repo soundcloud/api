@@ -154,14 +154,53 @@ object Result {
   def join[A1, A2, A3, A4](a1: Result[A1], a2: Result[A2], a3: Result[A3], a4: Result[A4]): Result[(A1, A2, A3, A4)] =
     (a1 zip a2 zip a3 zip a4).map { case (((a1, a2), a3), a4) => (a1, a2, a3, a4) }
 
-  def join[A1, A2, A3, A4, A5, A6, A7, A8](a1: Result[A1], a2: Result[A2], a3: Result[A3], a4: Result[A4], a5: Result[A5], a6: Result[A6], a7: Result[A7], a8: Result[A8]): Result[(A1, A2, A3, A4, A5, A6, A7, A8)] =
-    (a1 zip a2 zip a3 zip a4 zip a5 zip a6 zip a7 zip a8).map { case (((((((a1, a2), a3), a4), a5), a6), a7), a8) => (a1, a2, a3, a4, a5, a6, a7, a8) }
+  def join[A1, A2, A3, A4, A5, A6, A7, A8](
+      a1: Result[A1],
+      a2: Result[A2],
+      a3: Result[A3],
+      a4: Result[A4],
+      a5: Result[A5],
+      a6: Result[A6],
+      a7: Result[A7],
+      a8: Result[A8]
+  ): Result[(A1, A2, A3, A4, A5, A6, A7, A8)] =
+    (a1 zip a2 zip a3 zip a4 zip a5 zip a6 zip a7 zip a8).map {
+      case (((((((a1, a2), a3), a4), a5), a6), a7), a8) => (a1, a2, a3, a4, a5, a6, a7, a8)
+    }
 
-  def join[A1, A2, A3, A4, A5, A6, A7, A8, A9, A10](a1: Result[A1], a2: Result[A2], a3: Result[A3], a4: Result[A4], a5: Result[A5], a6: Result[A6], a7: Result[A7], a8: Result[A8], a9: Result[A9], a10: Result[A10]): Result[(A1, A2, A3, A4, A5, A6, A7, A8, A9, A10)] =
-    (a1 zip a2 zip a3 zip a4 zip a5 zip a6 zip a7 zip a8 zip a9 zip a10).map { case (((((((((a1, a2), a3), a4), a5), a6), a7), a8), a9), a10) => (a1, a2, a3, a4, a5, a6, a7, a8, a9, a10) }
+  def join[A1, A2, A3, A4, A5, A6, A7, A8, A9, A10](
+      a1: Result[A1],
+      a2: Result[A2],
+      a3: Result[A3],
+      a4: Result[A4],
+      a5: Result[A5],
+      a6: Result[A6],
+      a7: Result[A7],
+      a8: Result[A8],
+      a9: Result[A9],
+      a10: Result[A10]
+  ): Result[(A1, A2, A3, A4, A5, A6, A7, A8, A9, A10)] =
+    (a1 zip a2 zip a3 zip a4 zip a5 zip a6 zip a7 zip a8 zip a9 zip a10).map {
+      case (((((((((a1, a2), a3), a4), a5), a6), a7), a8), a9), a10) => (a1, a2, a3, a4, a5, a6, a7, a8, a9, a10)
+    }
 
-  def join[A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11](a1: Result[A1], a2: Result[A2], a3: Result[A3], a4: Result[A4], a5: Result[A5], a6: Result[A6], a7: Result[A7], a8: Result[A8], a9: Result[A9], a10: Result[A10], a11: Result[A11]): Result[(A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11)] =
-    (a1 zip a2 zip a3 zip a4 zip a5 zip a6 zip a7 zip a8 zip a9 zip a10 zip a11).map { case ((((((((((a1, a2), a3), a4), a5), a6), a7), a8), a9), a10), a11) => (a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11) }
+  def join[A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11](
+      a1: Result[A1],
+      a2: Result[A2],
+      a3: Result[A3],
+      a4: Result[A4],
+      a5: Result[A5],
+      a6: Result[A6],
+      a7: Result[A7],
+      a8: Result[A8],
+      a9: Result[A9],
+      a10: Result[A10],
+      a11: Result[A11]
+  ): Result[(A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11)] =
+    (a1 zip a2 zip a3 zip a4 zip a5 zip a6 zip a7 zip a8 zip a9 zip a10 zip a11).map {
+      case ((((((((((a1, a2), a3), a4), a5), a6), a7), a8), a9), a10), a11) =>
+        (a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11)
+    }
 
   def fromJsonResponse[A](from: JsonResponse, mapFn: JsValue => A): Result[A] = from match {
     case JsonResponse(Status.Ok, Right(json), _) => Success(mapFn(json))

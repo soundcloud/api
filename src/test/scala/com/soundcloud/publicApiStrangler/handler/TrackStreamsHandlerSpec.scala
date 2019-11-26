@@ -6,7 +6,10 @@ import com.soundcloud.jvmkit.module.telemetry.Telemetry
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.publicApiStrangler.Routing
-import com.soundcloud.publicApiStrangler.mapper.trackstreams.{TrackStreamJsonResponseMapper, TrackStreamRedirectResponseMapper}
+import com.soundcloud.publicApiStrangler.mapper.trackstreams.{
+  TrackStreamJsonResponseMapper,
+  TrackStreamRedirectResponseMapper
+}
 import com.soundcloud.publicApiStrangler.service.media._
 import com.soundcloud.publicApiStrangler.test.{FakePublicApiSiloing, HandlerSpecificationScope, UnitSpecification}
 import com.twitter.finagle.http.{Method, Response, Status}
@@ -18,7 +21,12 @@ class TrackStreamsHandlerSpec extends UnitSpecification {
   val fakeTelemetry = Telemetry.createIsolatedInstance
 
   class FakeTrackAccessRecorderService extends TrackAccessRecorderService(null, fakeTelemetry) {
-    override def recordStreamAccess(session: UserSession, request: HandlerRequest, trackUrn: Urn, loggingEnabled: Boolean)(action: => Future[Response]): Future[Response] =
+    override def recordStreamAccess(
+        session: UserSession,
+        request: HandlerRequest,
+        trackUrn: Urn,
+        loggingEnabled: Boolean
+    )(action: => Future[Response]): Future[Response] =
       action
   }
 
@@ -53,74 +61,80 @@ class TrackStreamsHandlerSpec extends UnitSpecification {
   }
 
   "with single stream request" >> {
-    Fragments.foreach(Seq(
-      (Method.Head, "/tracks/5/stream"),
-      (Method.Get, "/tracks/5/stream"),
-      (Method.Head, "/v1/tracks/5/stream"),
-      (Method.Get, "/v1/tracks/5/stream"),
-      (Method.Head, "/tracks/5/stream/"),
-      (Method.Get, "/tracks/5/stream/"),
-      (Method.Head, "/v1/tracks/5/stream/"),
-      (Method.Get, "/v1/tracks/5/stream/"),
-      (Method.Head, "/tracks/5/stream.json"),
-      (Method.Get, "/tracks/5/stream.json"),
-      (Method.Head, "/v1/tracks/5/stream.json"),
-      (Method.Get, "/v1/tracks/5/stream.json"),
-    )) { case (method, path) =>
-      s"${method.toString} $path" in new MediaServiceContext {
-        streamService.fetchSingle(session, trackUrn, None) returns Future.value(StreamUrl(httpMp3))
+    Fragments.foreach(
+      Seq(
+        (Method.Head, "/tracks/5/stream"),
+        (Method.Get, "/tracks/5/stream"),
+        (Method.Head, "/v1/tracks/5/stream"),
+        (Method.Get, "/v1/tracks/5/stream"),
+        (Method.Head, "/tracks/5/stream/"),
+        (Method.Get, "/tracks/5/stream/"),
+        (Method.Head, "/v1/tracks/5/stream/"),
+        (Method.Get, "/v1/tracks/5/stream/"),
+        (Method.Head, "/tracks/5/stream.json"),
+        (Method.Get, "/tracks/5/stream.json"),
+        (Method.Head, "/v1/tracks/5/stream.json"),
+        (Method.Get, "/v1/tracks/5/stream.json")
+      )
+    ) {
+      case (method, path) =>
+        s"${method.toString} $path" in new MediaServiceContext {
+          streamService.fetchSingle(session, trackUrn, None) returns Future.value(StreamUrl(httpMp3))
 
-        val response = call(method, handler.redirectStreamRequest, path)
+          val response = call(method, handler.redirectStreamRequest, path)
 
-        response.statusCode ==== 302
-        if (method == Method.Get) {
-          Json.parse(response.getContentString) ==== Json.obj(
-            "status" -> "302 - Found",
-            "location" -> httpMp3
-          )
+          response.statusCode ==== 302
+          if (method == Method.Get) {
+            Json.parse(response.getContentString) ==== Json.obj(
+              "status" -> "302 - Found",
+              "location" -> httpMp3
+            )
+          }
         }
-      }
     }
   }
 
   "with multiple stream requests" >> {
-    Fragments.foreach(Seq(
-      (Method.Head, "/tracks/5/streams"),
-      (Method.Get, "/tracks/5/streams"),
-      (Method.Head, "/v1/tracks/5/streams"),
-      (Method.Get, "/v1/tracks/5/streams"),
-      (Method.Head, "/i1/tracks/5/streams"),
-      (Method.Get, "/i1/tracks/5/streams"),
-      (Method.Head, "/tracks/5/streams/"),
-      (Method.Get, "/tracks/5/streams/"),
-      (Method.Head, "/v1/tracks/5/streams/"),
-      (Method.Get, "/v1/tracks/5/streams/"),
-      (Method.Head, "/i1/tracks/5/streams/"),
-      (Method.Get, "/i1/tracks/5/streams/"),
-      (Method.Head, "/tracks/5/streams.json"),
-      (Method.Get, "/tracks/5/streams.json"),
-      (Method.Head, "/v1/tracks/5/streams.json"),
-      (Method.Get, "/v1/tracks/5/streams.json"),
-      (Method.Head, "/i1/tracks/5/streams.json"),
-      (Method.Get, "/i1/tracks/5/streams.json"),
-    )) { case (method, path) =>
-      s"${method.toString} $path" in new MediaServiceContext {
-        streamService.fetchMultiple(session, trackUrn, None) returns Future.value(
-          StreamUrls(httpMp3, hlsMp3, Some(hlsOpus), httpPreviewMp3)
-        )
-
-        val response = call(method, handler.handleStreamRequest, path)
-
-        response.statusCode ==== 200
-        if (method == Method.Get) {
-          Json.parse(response.getContentString) ==== Json.obj(
-            "http_mp3_128_url" -> httpMp3,
-            "hls_mp3_128_url" -> hlsMp3,
-            "hls_opus_64_url" -> hlsOpus,
-            "preview_mp3_128_url" -> httpPreviewMp3
+    Fragments.foreach(
+      Seq(
+        (Method.Head, "/tracks/5/streams"),
+        (Method.Get, "/tracks/5/streams"),
+        (Method.Head, "/v1/tracks/5/streams"),
+        (Method.Get, "/v1/tracks/5/streams"),
+        (Method.Head, "/i1/tracks/5/streams"),
+        (Method.Get, "/i1/tracks/5/streams"),
+        (Method.Head, "/tracks/5/streams/"),
+        (Method.Get, "/tracks/5/streams/"),
+        (Method.Head, "/v1/tracks/5/streams/"),
+        (Method.Get, "/v1/tracks/5/streams/"),
+        (Method.Head, "/i1/tracks/5/streams/"),
+        (Method.Get, "/i1/tracks/5/streams/"),
+        (Method.Head, "/tracks/5/streams.json"),
+        (Method.Get, "/tracks/5/streams.json"),
+        (Method.Head, "/v1/tracks/5/streams.json"),
+        (Method.Get, "/v1/tracks/5/streams.json"),
+        (Method.Head, "/i1/tracks/5/streams.json"),
+        (Method.Get, "/i1/tracks/5/streams.json")
+      )
+    ) {
+      case (method, path) =>
+        s"${method.toString} $path" in new MediaServiceContext {
+          streamService.fetchMultiple(session, trackUrn, None) returns Future.value(
+            StreamUrls(httpMp3, hlsMp3, Some(hlsOpus), httpPreviewMp3)
           )
+
+          val response = call(method, handler.handleStreamRequest, path)
+
+          response.statusCode ==== 200
+          if (method == Method.Get) {
+            Json.parse(response.getContentString) ==== Json.obj(
+              "http_mp3_128_url" -> httpMp3,
+              "hls_mp3_128_url" -> hlsMp3,
+              "hls_opus_64_url" -> hlsOpus,
+              "preview_mp3_128_url" -> httpPreviewMp3
+            )
+          }
         }
-      }
     }
   }
 

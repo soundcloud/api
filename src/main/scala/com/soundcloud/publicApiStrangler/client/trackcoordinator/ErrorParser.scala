@@ -4,7 +4,6 @@ import com.soundcloud.publicApiStrangler.client.trackcoordinator.datatypes.Error
 import play.api.libs.json.{JsObject, JsValue, Json}
 
 object ErrorParser {
-
   case class MoshiError(message: String, subject: Option[String], status: Option[Int]) {
     def toErrorMessage = {
       val sub = subject.map(_ + " ").getOrElse("")
@@ -37,8 +36,10 @@ object ErrorParser {
   // {"errors":{"asset_data":"Require either asset_data parameter, or uid and original_filename parameters."}}
   def parseMoshiError(body: JsValue): Set[Error] = {
     val errors = body.\("errors").asOpt[JsObject]
-    errors.map {
-      _.fields.map({ case (key, value) => Error(s"$key ${value.as[String]}") }).toSet
-    }.getOrElse(Set.empty)
+    errors
+      .map {
+        _.fields.map({ case (key, value) => Error(s"$key ${value.as[String]}") }).toSet
+      }
+      .getOrElse(Set.empty)
   }
 }

@@ -5,7 +5,6 @@ import com.soundcloud.publicApiStrangler.test.UnitSpecification
 import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures
 
 class UserMapperSpec extends UnitSpecification {
-
   trait Context extends Scope {
     lazy val userJson = Fixtures.moshiUser
 

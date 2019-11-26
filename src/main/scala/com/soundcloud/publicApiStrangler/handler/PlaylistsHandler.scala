@@ -17,11 +17,11 @@ import play.api.libs.json.Json
   * playlists service in near future.
   */
 class PlaylistsHandler(userAuthentication: UserAuthentication, playlistDeletionClient: PlaylistDeletionClient) {
-
   def handleDelete(request: HandlerRequest): Future[Response] = {
     userAuthentication.withLoggedInUser(request) { (session, _) =>
       playlistDeletionClient.deletePlaylist(session, playlistUrn(request)).map {
-        case Good(status) => JsonResponseBuilder(status = status, body = Json.stringify(Json.obj("status" -> statusDescription(status)))).build
+        case Good(status) =>
+          JsonResponseBuilder(status = status, body = Json.stringify(Json.obj("status" -> statusDescription(status)))).build
         case Bad(_) => ResponseBuilder.internalServerError()
       }
     }

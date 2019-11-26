@@ -10,13 +10,11 @@ import com.twitter.util.{Await, Future}
 import org.mockito.Mockito.verify
 
 class SpecificStranglingHandlerSpec extends UnitSpecification {
-
   trait TestHandler {
     def handle(handlerRequest: HandlerRequest): Future[Response]
   }
 
   trait Context extends Scope {
-
     val pathPatternsToDispatch = List(
       """/announcements""".r,
       """/e1/playlists/\d+/domain-lockings""".r
@@ -36,7 +34,8 @@ class SpecificStranglingHandlerSpec extends UnitSpecification {
     testHandler.handle(request) returns Future(mock[Response])
 
     val telemetry = Telemetry.createIsolatedInstance
-    val counter = telemetry.counter("fallthrough_strangled_by", "testing counter", "method", "path_pattern", "agent_urn")
+    val counter =
+      telemetry.counter("fallthrough_strangled_by", "testing counter", "method", "path_pattern", "agent_urn")
 
     val handler = new SpecificStranglingHandler(testHandler.handle, pathPatternsToDispatch, officialApps, counter)
   }
@@ -49,7 +48,6 @@ class SpecificStranglingHandlerSpec extends UnitSpecification {
   }
 
   "path pattern handling" >> {
-
     trait KnownUrlContext extends Context {
       innerRequest.path returns "/announcements"
     }
@@ -60,23 +58,26 @@ class SpecificStranglingHandlerSpec extends UnitSpecification {
 
     "it increments the counter with the path pattern, if it is recognised" in new KnownUrlContext {
       Await.result(handler.apply(request))
-      val count = telemetry.getSampleValue("fallthrough_strangled_by",
+      val count = telemetry.getSampleValue(
+        "fallthrough_strangled_by",
         Array("method", "path_pattern", "agent_urn"),
-        Array("GET", "/announcements", "soundcloud:applications:124"))
+        Array("GET", "/announcements", "soundcloud:applications:124")
+      )
       count ==== Some(1.0)
     }
 
     "it increments the counter with 'UNKNOWN' if it is not recognised" in new UnknownUrlContext {
       Await.result(handler.apply(request))
-      val count = telemetry.getSampleValue("fallthrough_strangled_by",
+      val count = telemetry.getSampleValue(
+        "fallthrough_strangled_by",
         Array("method", "path_pattern", "agent_urn"),
-        Array("GET", "UNKNOWN", "soundcloud:applications:124"))
+        Array("GET", "UNKNOWN", "soundcloud:applications:124")
+      )
       count ==== Some(1.0)
     }
   }
 
   "agent URN handling" >> {
-
     trait KnownAgentContext extends Context {
       innerRequest.path returns "/announcements"
     }
@@ -89,17 +90,21 @@ class SpecificStranglingHandlerSpec extends UnitSpecification {
     "it increments the counter with the agent URN, if it is recognised" in new KnownAgentContext {
       Await.result(handler.apply(request))
 
-      val count = telemetry.getSampleValue("fallthrough_strangled_by",
+      val count = telemetry.getSampleValue(
+        "fallthrough_strangled_by",
         Array("method", "path_pattern", "agent_urn"),
-        Array("GET", "/announcements", "soundcloud:applications:124"))
+        Array("GET", "/announcements", "soundcloud:applications:124")
+      )
       count ==== Some(1.0)
     }
 
     "it increments the counter with 'soundcloud:applications:external, if it is not recognised" in new UnknownAgentContext {
       Await.result(handler.apply(request))
-      val count = telemetry.getSampleValue("fallthrough_strangled_by",
+      val count = telemetry.getSampleValue(
+        "fallthrough_strangled_by",
         Array("method", "path_pattern", "agent_urn"),
-        Array("GET", "/announcements", "soundcloud:applications:external"))
+        Array("GET", "/announcements", "soundcloud:applications:external")
+      )
       count ==== Some(1.0)
     }
   }

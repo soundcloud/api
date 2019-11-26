@@ -14,53 +14,57 @@ import com.soundcloud.publicApiStrangler.support._
 import com.twitter.finagle.http.Response
 import com.twitter.util.Future
 
-class TimelineHandler(userAuthentication: UserAuthentication,
-                      streamMapper: StreamMapper,
-                      activitiesMapper: ActivitiesMapper,
-                      publicActivitiesMapper: ActivitiesWithOriginMapper,
-                      followingsTracksMapper: FollowingsTracksMapper,
-                      pagination: CursorPagination) {
-
+class TimelineHandler(
+    userAuthentication: UserAuthentication,
+    streamMapper: StreamMapper,
+    activitiesMapper: ActivitiesMapper,
+    publicActivitiesMapper: ActivitiesWithOriginMapper,
+    followingsTracksMapper: FollowingsTracksMapper,
+    pagination: CursorPagination
+) {
   def renderAllActivities(request: HandlerRequest): Future[Response] = renderActivities(request, activitiesMapper)
 
   def renderStreamActivities(request: HandlerRequest): Future[Response] = renderActivities(request, streamMapper)
 
-  def renderPublicActivities(request: HandlerRequest): Future[Response] = renderActivities(request, publicActivitiesMapper)
+  def renderPublicActivities(request: HandlerRequest): Future[Response] =
+    renderActivities(request, publicActivitiesMapper)
 
   private def renderActivities(request: HandlerRequest, mapper: TimelineMapper): Future[Response] =
-    userAuthentication.withLoggedInUser(request) {
-      (session: LoggedInUserSession, userUrn: Urn) =>
-        pagination.withPage(request, userUrn) { page =>
-          mapper.materialize(session, page).map {
-            case Some(info) => JsonResponseBuilder.ok(UntypedJson.write(info.asInstanceOf[Timeline]))
-            case None => ResponseBuilder.notFound()
-          }
+    userAuthentication.withLoggedInUser(request) { (session: LoggedInUserSession, userUrn: Urn) =>
+      pagination.withPage(request, userUrn) { page =>
+        mapper.materialize(session, page).map {
+          case Some(info) => JsonResponseBuilder.ok(UntypedJson.write(info.asInstanceOf[Timeline]))
+          case None => ResponseBuilder.notFound()
         }
+      }
     }
 
-  def renderFollowingsTracks(request: HandlerRequest): Future[Response] = renderFollowingsTracks(request, followingsTracksMapper)
+  def renderFollowingsTracks(request: HandlerRequest): Future[Response] =
+    renderFollowingsTracks(request, followingsTracksMapper)
 
   private def renderFollowingsTracks(request: HandlerRequest, mapper: TimelineMapper): Future[Response] =
-    userAuthentication.withLoggedInUser(request) {
-      (session: LoggedInUserSession, userUrn: Urn) =>
-        pagination.withPage(request, userUrn) { page =>
-          mapper.materialize(session, page).map {
-            case Some(info) =>
-              val tracks = info.collection.map {
-                _.asInstanceOf[TrackTimelineItem].track
-              }
+    userAuthentication.withLoggedInUser(request) { (session: LoggedInUserSession, userUrn: Urn) =>
+      pagination.withPage(request, userUrn) { page =>
+        mapper.materialize(session, page).map {
+          case Some(info) =>
+            val tracks = info.collection.map {
+              _.asInstanceOf[TrackTimelineItem].track
+            }
 
-              if (request.getParam("linked_partitioning", "0") == "1")
-                JsonResponseBuilder.ok(UntypedJson.write(Map(
-                  "next_href" -> info.nextHref,
-                  "collection" -> tracks
-                )))
-              else
-                JsonResponseBuilder.ok(UntypedJson.write(tracks))
+            if (request.getParam("linked_partitioning", "0") == "1")
+              JsonResponseBuilder.ok(
+                UntypedJson.write(
+                  Map(
+                    "next_href" -> info.nextHref,
+                    "collection" -> tracks
+                  )
+                )
+              )
+            else
+              JsonResponseBuilder.ok(UntypedJson.write(tracks))
 
-            case None => ResponseBuilder.notFound()
-          }
+          case None => ResponseBuilder.notFound()
         }
+      }
     }
-
 }

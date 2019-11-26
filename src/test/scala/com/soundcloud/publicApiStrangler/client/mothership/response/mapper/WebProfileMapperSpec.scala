@@ -5,7 +5,6 @@ import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures
 import play.api.libs.json.JsObject
 
 class WebProfileMapperSpec extends UnitSpecification {
-
   trait Context extends Scope {
     lazy val webProfilesJson = Fixtures.moshiWebProfiles
 

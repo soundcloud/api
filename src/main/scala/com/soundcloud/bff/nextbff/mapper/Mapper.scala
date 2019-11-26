@@ -26,23 +26,20 @@ trait Mapper[I, O <: Mapping] { outer =>
   def map(session: UserSession, inputs: Set[I])(implicit context: MappingContext): Future[Map[I, O]]
 
   private val weight =
-    this.getClass.getDeclaredFields.count {
-      field =>
-        classOf[Mapper[_, _]].isAssignableFrom(field.getType)
+    this.getClass.getDeclaredFields.count { field =>
+      classOf[Mapper[_, _]].isAssignableFrom(field.getType)
     }
 
   def filter(condition: O => Boolean) = new Mapper[I, O] {
-    override def map(session: UserSession, inputs: Set[I])
-                    (implicit context: MappingContext): Future[Map[I, O]] = {
+    override def map(session: UserSession, inputs: Set[I])(implicit context: MappingContext): Future[Map[I, O]] = {
       outer.map(session, inputs)(context).map { m =>
-        m.filter { case (_, v) => condition(v)}
+        m.filter { case (_, v) => condition(v) }
       }
     }
   }
 }
 
 object Mapper {
-
   implicit val ordering = new Ordering[Mapper[Any, Mapping]] {
     def compare(x: Mapper[Any, Mapping], y: Mapper[Any, Mapping]) =
       y.weight - x.weight

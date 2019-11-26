@@ -3,7 +3,8 @@ package com.soundcloud.publicApiStrangler.filter
 import com.twitter.finagle.http.{Method, Request, Response}
 import com.twitter.finagle.{Service, SimpleFilter}
 
-class ExceptForTrackUploadsFilter(wrappedFilter: SimpleFilter[Request, Response]) extends SimpleFilter[Request, Response] {
+class ExceptForTrackUploadsFilter(wrappedFilter: SimpleFilter[Request, Response])
+    extends SimpleFilter[Request, Response] {
   val PUT_TRACKS_PATTERN = "\\A/tracks/.*".r
 
   override def apply(request: Request, next: Service[Request, Response]) =

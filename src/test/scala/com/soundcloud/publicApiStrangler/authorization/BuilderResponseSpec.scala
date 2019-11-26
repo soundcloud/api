@@ -4,7 +4,6 @@ import com.soundcloud.publicApiStrangler.test.UnitSpecification
 import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures.singleTrack
 
 class BuilderResponseSpec extends UnitSpecification {
-
   val body = singleTrack.toString
 
   "normal response" >> {
@@ -18,7 +17,6 @@ class BuilderResponseSpec extends UnitSpecification {
   }
 
   "callback response" >> {
-
     val name = "jQuery111002918246176559478_1407849576700"
     val callbackBody = s"""/**/$name($body);"""
 

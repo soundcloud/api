@@ -12,8 +12,12 @@ import com.twitter.util.Future
 
 import scala.util.matching.Regex
 
-class SpecificStranglingHandler(whereToDispatch: Handler, pathsPatternsToDispatch: List[Regex],
-                                officialSoundCloudApps: List[Urn], counter: Counter) extends Handler {
+class SpecificStranglingHandler(
+    whereToDispatch: Handler,
+    pathsPatternsToDispatch: List[Regex],
+    officialSoundCloudApps: List[Urn],
+    counter: Counter
+) extends Handler {
   val logger = SoundCloudLoggerFactory.getLogger(getClass)
 
   override def apply(request: HandlerRequest): Future[Response] = {
@@ -27,13 +31,14 @@ class SpecificStranglingHandler(whereToDispatch: Handler, pathsPatternsToDispatc
     }
   }
 
-
   // This won't work yet, because the request isn't populated with a user session.
   private def agentFor(request: HandlerRequest): Urn = {
     val userAgent = userAgentFrom(request)
-    Option(userAgent).flatMap { agent =>
-      officialSoundCloudApps.collectFirst { case app if app == agent => app }
-    }.getOrElse(externalAppUrn)
+    Option(userAgent)
+      .flatMap { agent =>
+        officialSoundCloudApps.collectFirst { case app if app == agent => app }
+      }
+      .getOrElse(externalAppUrn)
   }
 
   def userAgentFrom(request: HandlerRequest): Urn = {
@@ -50,8 +55,10 @@ class SpecificStranglingHandler(whereToDispatch: Handler, pathsPatternsToDispatc
     val agent = agentFor(request)
     counter.labels(request.method.toString, pathPattern, agent.toString).inc()
     if (pathPattern == "UNKNOWN" || pathPattern == ".*") {
-      logger.info(s"Request for unknown endpoint: pathPattern='$pathPattern', agent='$agent', " +
-        s"method='${request.method.toString}', path='${request.request.path}'")
+      logger.info(
+        s"Request for unknown endpoint: pathPattern='$pathPattern', agent='$agent', " +
+          s"method='${request.method.toString}', path='${request.request.path}'"
+      )
     }
   }
 }

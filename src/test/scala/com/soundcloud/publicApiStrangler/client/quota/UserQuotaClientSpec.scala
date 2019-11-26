@@ -10,7 +10,6 @@ import com.twitter.util.{Await, Future}
 import play.api.libs.json.JsNull
 
 class UserQuotaClientSpec extends UnitSpecification {
-
   trait Context extends Scope {
     val session = anonymousSession
     val jsonClient = mock[JsonClient]
@@ -23,7 +22,6 @@ class UserQuotaClientSpec extends UnitSpecification {
   }
 
   "downloadsPerTrack" >> {
-
     "returns empty response in case of exceptions" in new Context {
       jsonClient.getWithSession(session, path, userUrns, Headers.empty) returns
         Future.exception(new Exception("something wonky happened finagle returned exception"))
@@ -42,7 +40,9 @@ class UserQuotaClientSpec extends UnitSpecification {
 
     "parses the service response when response is 200" in new Context {
       val fixture = withContentsOf("quota", "user_quota_multiple")
-      jsonClient.getWithSession(session, path, userUrns, Headers.empty) returns Future.value(jsonResponse(Status.Ok, fixture))
+      jsonClient.getWithSession(session, path, userUrns, Headers.empty) returns Future.value(
+        jsonResponse(Status.Ok, fixture)
+      )
 
       val result = Await.result(userQuotaClient.downloadsPerTrack(session, userUrns))
       result must haveSize(2)
@@ -54,7 +54,9 @@ class UserQuotaClientSpec extends UnitSpecification {
 
     "if user has unlimited, return None" in new Context {
       val fixture = withContentsOf("quota", "user_quota_multiple_missing_quota")
-      jsonClient.getWithSession(session, path, userUrns, Headers.empty) returns Future.value(jsonResponse(Status.Ok, fixture))
+      jsonClient.getWithSession(session, path, userUrns, Headers.empty) returns Future.value(
+        jsonResponse(Status.Ok, fixture)
+      )
 
       val result = Await.result(userQuotaClient.downloadsPerTrack(session, userUrns))
       result must haveSize(2)

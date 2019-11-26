@@ -11,37 +11,56 @@ import org.specs2.mock.Mockito
 import play.api.libs.json.{JsNull, JsValue, Json}
 
 object Helpers extends Mockito {
-
-  def expectOkResponse(path: Path, expected: JsValue, params: Params = Params.empty, headers: Headers = Headers.empty)
-                      (implicit service: JsonClient, session: UserSession) =
+  def expectOkResponse(path: Path, expected: JsValue, params: Params = Params.empty, headers: Headers = Headers.empty)(
+      implicit service: JsonClient,
+      session: UserSession
+  ) =
     expectResponse(path, params, Method.Get, headers, Status.Ok, ExpectedBody(expected))
 
-  def expectBadRequestResponse(path: Path, params: Params = Params.empty, headers: Headers = Headers.empty)
-                              (implicit service: JsonClient, session: UserSession) =
+  def expectBadRequestResponse(path: Path, params: Params = Params.empty, headers: Headers = Headers.empty)(
+      implicit service: JsonClient,
+      session: UserSession
+  ) =
     expectResponse(path, params, Method.Get, headers, Status.BadRequest)
 
-  def expectForbiddenResponse(path: Path, params: Params = Params.empty, headers: Headers = Headers.empty)
-                             (implicit service: JsonClient, session: UserSession) =
+  def expectForbiddenResponse(path: Path, params: Params = Params.empty, headers: Headers = Headers.empty)(
+      implicit service: JsonClient,
+      session: UserSession
+  ) =
     expectResponse(path, params, Method.Get, headers, Status.Forbidden)
 
-  def expectNotFoundResponse(path: Path, params: Params = Params.empty, headers: Headers = Headers.empty)
-                            (implicit service: JsonClient, session: UserSession) =
+  def expectNotFoundResponse(path: Path, params: Params = Params.empty, headers: Headers = Headers.empty)(
+      implicit service: JsonClient,
+      session: UserSession
+  ) =
     expectResponse(path, params, Method.Get, headers, Status.NotFound)
 
-  def expectUnauthorizedResponse(path: Path, params: Params = Params.empty, headers: Headers = Headers.empty)
-                                (implicit service: JsonClient, session: UserSession) =
+  def expectUnauthorizedResponse(path: Path, params: Params = Params.empty, headers: Headers = Headers.empty)(
+      implicit service: JsonClient,
+      session: UserSession
+  ) =
     expectResponse(path, params, Method.Get, headers, Status.Unauthorized)
 
-  def expectInternalErrorResponse(path: Path, params: Params = Params.empty, headers: Headers = Headers.empty)
-                                 (implicit service: JsonClient, session: UserSession) =
+  def expectInternalErrorResponse(path: Path, params: Params = Params.empty, headers: Headers = Headers.empty)(
+      implicit service: JsonClient,
+      session: UserSession
+  ) =
     expectResponse(path, params, Method.Get, headers, Status.InternalServerError)
 
-  def expectResponseCode(status: Status)(path: Path, params: Params = Params.empty, headers: Headers = Headers.empty)
-                        (implicit service: JsonClient, session: UserSession) =
+  def expectResponseCode(status: Status)(path: Path, params: Params = Params.empty, headers: Headers = Headers.empty)(
+      implicit service: JsonClient,
+      session: UserSession
+  ) =
     expectResponse(path, params, Method.Get, headers, status)
 
-  def expectResponse(path: Path, params: Params, method: Method, headers: Headers, code: Status, expectedBody: MockedBody = new ExpectedBody(JsNull, None))
-                    (implicit service: JsonClient, session: UserSession) = {
+  def expectResponse(
+      path: Path,
+      params: Params,
+      method: Method,
+      headers: Headers,
+      code: Status,
+      expectedBody: MockedBody = new ExpectedBody(JsNull, None)
+  )(implicit service: JsonClient, session: UserSession) = {
     val bodyString = expectedBody.requestBodyString
 
     (method match {
@@ -64,7 +83,6 @@ object Helpers extends Mockito {
     override def requestBodyString = requestBody.map(Json.stringify)
   }
 
-  case class ExpectedBodyWithRawRequest(responseBody: JsValue = JsNull, requestBodyString: Option[String] = None) extends MockedBody {
-  }
-
+  case class ExpectedBodyWithRawRequest(responseBody: JsValue = JsNull, requestBodyString: Option[String] = None)
+      extends MockedBody {}
 }

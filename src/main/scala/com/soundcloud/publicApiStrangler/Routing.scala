@@ -5,7 +5,6 @@ import com.soundcloud.publicApiStrangler.handler.{DispatchToMothershipHandler, _
 import com.twitter.finagle.http.Method
 
 object Routing {
-
   def forUserFollowHandler(userFollowHandler: UserFollowHandler): List[(Method, String, Handler)] = {
     List(
       (Method.Get, "/users/:id/followings", userFollowHandler.fetchFollowingsWithoutAuth),
@@ -21,7 +20,11 @@ object Routing {
       (Method.Get, "/users/:id/followers/followed_by/:other_id", userFollowHandler.fetchFollowersFollowed),
       (Method.Get, "/users/:id/followers/followed_by/:other_id.json", userFollowHandler.fetchFollowersFollowed),
       (Method.Get, "/users/:id/followings/not_followed_by/:other_id", userFollowHandler.fetchFollowingsNotFollowedBy),
-      (Method.Get, "/users/:id/followings/not_followed_by/:other_id.json", userFollowHandler.fetchFollowingsNotFollowedBy),
+      (
+        Method.Get,
+        "/users/:id/followings/not_followed_by/:other_id.json",
+        userFollowHandler.fetchFollowingsNotFollowedBy
+      ),
       (Method.Get, "/users/:id/followings/common_to/:other_id", userFollowHandler.fetchMutualFollowings),
       (Method.Get, "/users/:id/followings/common_to/:other_id.json", userFollowHandler.fetchMutualFollowings),
       (Method.Get, "/users/:id/followers/:other_id", userFollowHandler.fetchPossibleFollowerWithoutAuth),
@@ -132,7 +135,9 @@ object Routing {
     )
   }
 
-  def forUserRelatedMothershipDispatcher(userRelatedMothershipDispatcher: UserRelatedMothershipDispatcher): List[(Method, String, Handler)] = {
+  def forUserRelatedMothershipDispatcher(
+      userRelatedMothershipDispatcher: UserRelatedMothershipDispatcher
+  ): List[(Method, String, Handler)] = {
     List(
       (Method.Get, "/me/suggested/users/:category", userRelatedMothershipDispatcher.dispatchToMothership),
       (Method.Get, "/me/suggested/users/:category.json", userRelatedMothershipDispatcher.dispatchToMothership),

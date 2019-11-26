@@ -1,6 +1,10 @@
 package com.soundcloud.publicApiStrangler.client.mothership.response.mapper
 
-import com.soundcloud.publicApiStrangler.client.mothership.response.representation.{OkResetUserPasswordResponse, ResetUserPasswordResponse, UserDoesntExistButDontExposeThisResetUserPasswordResponse}
+import com.soundcloud.publicApiStrangler.client.mothership.response.representation.{
+  OkResetUserPasswordResponse,
+  ResetUserPasswordResponse,
+  UserDoesntExistButDontExposeThisResetUserPasswordResponse
+}
 import com.soundcloud.publicApiStrangler.client.support.{ResponseMapper, UnhandledResponseException}
 import com.twitter.finagle.http.Response
 

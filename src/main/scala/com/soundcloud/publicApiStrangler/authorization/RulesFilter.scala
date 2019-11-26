@@ -3,14 +3,22 @@ package com.soundcloud.publicApiStrangler.authorization
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.logging.SoundCloudLoggerFactory
 import com.soundcloud.publicApiStrangler.client.mothership.response.representation.HasUrn
-import com.soundcloud.publicApiStrangler.authorization.policies.{ContentAuthorization, ContentPolicy, MonetizationModel, Reason}
+import com.soundcloud.publicApiStrangler.authorization.policies.{
+  ContentAuthorization,
+  ContentPolicy,
+  MonetizationModel,
+  Reason
+}
 import com.twitter.util.Future
 import play.api.libs.json.JsValue
 
 import scala.collection.mutable.ArrayBuffer
 
-
-case class RulesFilterResult(allowedContent: Seq[(JsValue, ContentAuthorization)], allowedUrns: Seq[Urn], filteredUrns: Seq[Urn])
+case class RulesFilterResult(
+    allowedContent: Seq[(JsValue, ContentAuthorization)],
+    allowedUrns: Seq[Urn],
+    filteredUrns: Seq[Urn]
+)
 
 /**
   * Filters contents accordingly to policies.
@@ -20,9 +28,11 @@ case class RulesFilterResult(allowedContent: Seq[(JsValue, ContentAuthorization)
 class RulesFilter(allowedPolicies: ContentPolicy*) {
   val logger = SoundCloudLoggerFactory.getLogger(this.getClass)
 
-  def filter(rules: Future[Seq[ContentAuthorization]], content: Seq[JsValue]): Future[Seq[(JsValue, ContentAuthorization)]] =
+  def filter(
+      rules: Future[Seq[ContentAuthorization]],
+      content: Seq[JsValue]
+  ): Future[Seq[(JsValue, ContentAuthorization)]] =
     rules.map(r => filter(r, content))
-
 
   /**
     * Inpects a sequence of [[JsValue]] and filters out those which don't follow the [[allowedPolicies]].
@@ -42,14 +52,12 @@ class RulesFilter(allowedPolicies: ContentPolicy*) {
         if (permits(rs.getPolicy)) {
           logger.debug(s"[${urn.map(_.toString)}] with rules [$rules] was kept")
           true
-        }
-        else {
+        } else {
           logger.info(s"[${urn.map(_.toString)}] with rules [$rules] was removed")
           false
         }
     }
   }
-
 
   /**
     * Inpects a sequence of [[JsValue]] and filters out those which don't follow the [[allowedPolicies]].
@@ -86,12 +94,13 @@ class RulesFilter(allowedPolicies: ContentPolicy*) {
     *
     * @return The [[ContentAuthorization]], if found or the [[defaultRules( )]] if not.
     */
-  def contentAuthorizationFor(rules: Seq[ContentAuthorization], content: JsValue): ContentAuthorization = content match {
-    case json@HasUrn(urn) => rules.find(_.getUrn == urn).getOrElse(defaultRules(urn))
-    case jsonWithoutUrn =>
-      logger.error(s"Could not authorize, no URN found in : [$jsonWithoutUrn], blocking")
-      new ContentAuthorization(null, ContentPolicy.BLOCK, Reason.UNKNOWN, MonetizationModel.NOT_APPLICABLE)
-  }
+  def contentAuthorizationFor(rules: Seq[ContentAuthorization], content: JsValue): ContentAuthorization =
+    content match {
+      case json @ HasUrn(urn) => rules.find(_.getUrn == urn).getOrElse(defaultRules(urn))
+      case jsonWithoutUrn =>
+        logger.error(s"Could not authorize, no URN found in : [$jsonWithoutUrn], blocking")
+        new ContentAuthorization(null, ContentPolicy.BLOCK, Reason.UNKNOWN, MonetizationModel.NOT_APPLICABLE)
+    }
 
   private def defaultRules(urn: Urn) = {
     new ContentAuthorization(urn, ContentPolicy.ALLOW, Reason.UNKNOWN, MonetizationModel.NOT_APPLICABLE)

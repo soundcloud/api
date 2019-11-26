@@ -10,7 +10,6 @@ import play.api.libs.json.Json
   * Maps track stream media URLs to our expected JSON response.
   */
 class TrackStreamJsonResponseMapper extends TrackStreamResponseMapper {
-
   def map(mediaUrls: Future[Set[MediaUrl]], isHeadRequest: Boolean): Future[Response] = {
     mediaUrls.map { urls =>
       if (urls.isEmpty) {

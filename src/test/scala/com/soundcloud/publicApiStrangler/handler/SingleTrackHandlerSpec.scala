@@ -11,25 +11,28 @@ import com.soundcloud.publicApiStrangler.client.trackcoordinator.datatypes.{NotF
 import com.soundcloud.publicApiStrangler.client.trackmetadata.{Artwork, EmbeddingPermission, Track}
 import com.soundcloud.publicApiStrangler.test.{HandlerSpecificationScope, UnitSpecification}
 import com.soundcloud.publicApiStrangler.Routing
-import com.soundcloud.publicApiStrangler.service.trackrepresentation.{TrackRepresentation, TrackRepresentationLike, TrackRepresentationsService}
+import com.soundcloud.publicApiStrangler.service.trackrepresentation.{
+  TrackRepresentation,
+  TrackRepresentationLike,
+  TrackRepresentationsService
+}
 import com.twitter.finagle.http.Status
 import com.twitter.util.Future
 import org.joda.time.DateTime
 import org.mockito.Mockito.when
 import play.api.libs.json.Json
 
-
 class SingleTrackHandlerSpec extends UnitSpecification {
-
   def trackmetadataTrack(
-                          disabledAt: Option[DateTime] = None,
-                          isPublic: Boolean = true,
-                          secretToken: String = "secr3t-Token",
-                          isDownloadable: Option[Boolean] = Some(false),
-                          user: Urn = Urn("soundcloud", "users", "3000"),
-                          label_id: Option[Int] = None,
-                          reveal_stats: Boolean = false,
-                          reveal_comments: Boolean = true) =
+      disabledAt: Option[DateTime] = None,
+      isPublic: Boolean = true,
+      secretToken: String = "secr3t-Token",
+      isDownloadable: Option[Boolean] = Some(false),
+      user: Urn = Urn("soundcloud", "users", "3000"),
+      label_id: Option[Int] = None,
+      reveal_stats: Boolean = false,
+      reveal_comments: Boolean = true
+  ) =
     Track(
       urn = Urn("soundcloud", "tracks", "987"),
       user_urn = user,
@@ -88,7 +91,8 @@ class SingleTrackHandlerSpec extends UnitSpecification {
       followings_count = Some(20),
       verified = false,
       description = Some("I am a nice person"),
-      updated_at = Some("2016/10/10 11:21:36 +0000"))
+      updated_at = Some("2016/10/10 11:21:36 +0000")
+    )
 
   val trackRepresentation = new TrackRepresentation(
     track = trackmetadataTrack(),
@@ -98,7 +102,8 @@ class SingleTrackHandlerSpec extends UnitSpecification {
     label = None,
     geoblockings = List.empty,
     domainlockings = Seq(),
-    audioMetadata = new TrackAudioMetadata("lol", Some("donkey"), Some(123)))
+    audioMetadata = new TrackAudioMetadata("lol", Some("donkey"), Some(123))
+  )
 
   trait Context extends HandlerSpecificationScope {
     val trackRepresentationsService = mock[TrackRepresentationsService]
@@ -114,11 +119,16 @@ class SingleTrackHandlerSpec extends UnitSpecification {
   }
 
   val validPaths = List("/tracks/987", "/tracks/987/", "/tracks/987.json", "/tracks/987.json/")
-  val nonNumericPaths = List("/tracks/__12", "/tracks/__12/", "/tracks/permalinktrack", "/tracks/permalinktrack/",
-    "/tracks/permalinktrack.json", "/tracks/permalinktrack.json/")
+  val nonNumericPaths = List(
+    "/tracks/__12",
+    "/tracks/__12/",
+    "/tracks/permalinktrack",
+    "/tracks/permalinktrack/",
+    "/tracks/permalinktrack.json",
+    "/tracks/permalinktrack.json/"
+  )
 
-  val expectedJson = Json.parse(
-    """
+  val expectedJson = Json.parse("""
       |{
       |"kind": "track",
       |"id": 987,
@@ -170,61 +180,59 @@ class SingleTrackHandlerSpec extends UnitSpecification {
       |}
     """.stripMargin)
 
+  validPaths.foreach { path =>
+    s"removes conditional request headers for path: $path" in new Context {
+      when(trackRepresentationsService.track(session, trackUrn, None))
+        .thenReturn(Future.value(Success(trackRepresentation)))
 
-  validPaths.foreach {
-    path =>
-      s"removes conditional request headers for path: $path" in new Context {
-        when(trackRepresentationsService.track(session, trackUrn, None)).thenReturn(Future.value(Success(trackRepresentation)))
-
-        val response = get(handler.renderTrack, path, Map.empty, Map("If-None-Match" -> "a8d3ba6d09b68691b77dc75dfcd7a477"))
-        response.status ==== Status.Ok
-        Json.parse(response.contentString) ==== expectedJson
-      }
+      val response =
+        get(handler.renderTrack, path, Map.empty, Map("If-None-Match" -> "a8d3ba6d09b68691b77dc75dfcd7a477"))
+      response.status ==== Status.Ok
+      Json.parse(response.contentString) ==== expectedJson
+    }
   }
 
-  nonNumericPaths.foreach {
-    path =>
-      s"returns 404 for non-numeric track identifier for path: $path" in new Context {
-        val response = get(handler.renderTrack, path)
-        response.status ==== Status.NotFound
-        response.contentString ==== """{"errors":[{"error_message":"404 - Not Found"}]}"""
-        response.headerMap.get("Content-Length") must beSome("48")
-      }
+  nonNumericPaths.foreach { path =>
+    s"returns 404 for non-numeric track identifier for path: $path" in new Context {
+      val response = get(handler.renderTrack, path)
+      response.status ==== Status.NotFound
+      response.contentString ==== """{"errors":[{"error_message":"404 - Not Found"}]}"""
+      response.headerMap.get("Content-Length") must beSome("48")
+    }
   }
 
-  nonNumericPaths.foreach {
-    path =>
-      s"returns 404 wrapped in jsonp for non-numeric track identifier when callback param is provided for path: $path" in new Context {
-        val response = get(handler.renderTrack, path, Map("callback" -> "js_callback_fn"))
-        response.status ==== Status.NotFound
-        response.contentString ==== """/**/js_callback_fn({"errors":[{"error_message":"404 - Not Found"}]});"""
-        response.headerMap.get("Content-Length") must beSome("69")
-      }
+  nonNumericPaths.foreach { path =>
+    s"returns 404 wrapped in jsonp for non-numeric track identifier when callback param is provided for path: $path" in new Context {
+      val response = get(handler.renderTrack, path, Map("callback" -> "js_callback_fn"))
+      response.status ==== Status.NotFound
+      response.contentString ==== """/**/js_callback_fn({"errors":[{"error_message":"404 - Not Found"}]});"""
+      response.headerMap.get("Content-Length") must beSome("69")
+    }
   }
 
-  validPaths.foreach {
-    path =>
-      s"Passes secret token to tracks service for path: $path" in new Context {
-        when(trackRepresentationsService.track(session, trackUrn, Some("s3cret"))).thenReturn(Future.value(Success(trackRepresentation)))
+  validPaths.foreach { path =>
+    s"Passes secret token to tracks service for path: $path" in new Context {
+      when(trackRepresentationsService.track(session, trackUrn, Some("s3cret")))
+        .thenReturn(Future.value(Success(trackRepresentation)))
 
-        val response = get(handler.renderTrack, path, Map("secret_token" -> "s3cret"))
-        response.status ==== Status.Ok
-        Json.parse(response.contentString) ==== expectedJson
-      }
+      val response = get(handler.renderTrack, path, Map("secret_token" -> "s3cret"))
+      response.status ==== Status.Ok
+      Json.parse(response.contentString) ==== expectedJson
+    }
   }
 
+  validPaths.foreach { path =>
+    s"Passes callback parameters to tracks service for path: $path" in new Context {
+      when(trackRepresentationsService.track(session, trackUrn, None))
+        .thenReturn(Future.value(Success(trackRepresentation)))
 
-  validPaths.foreach {
-    path =>
-      s"Passes callback parameters to tracks service for path: $path" in new Context {
-        when(trackRepresentationsService.track(session, trackUrn, None)).thenReturn(Future.value(Success(trackRepresentation)))
+      val expectedPJson =
+        """/**/js_callback_dn({"kind":"track","id":987,"created_at":"2016/05/19 18:03:04 +0000","user_id":3000,"duration":0,"commentable":false,"state":"lol","original_content_size":123,"last_modified":"2016/05/19 18:03:04 +0000","sharing":"public","tag_list":"","permalink":null,"streamable":null,"embeddable_by":"none","purchase_url":"http://example.com/buy/7890","purchase_title":"buy me pls","label_id":null,"genre":null,"title":null,"description":null,"label_name":null,"release":"DR012","track_type":"original","key_signature":"Emaj","isrc":null,"video_url":"http://example.com/video.mp4","bpm":120.7,"release_year":null,"release_month":null,"release_day":null,"original_format":"donkey","license":null,"uri":"https://api.soundcloud.com/tracks/987","user":{"id":3000,"kind":"user","permalink":"giraffe","username":"Dr. G. Raffe","last_modified":"2016/10/10 11:21:36 +0000","uri":"https://api.soundcloud.com/users/3000","permalink_url":"http://soundcloud.com/denis","avatar_url":"https://example.com/giraffe.jpg"},"permalink_url":null,"artwork_url":null,"stream_url":"https://api.soundcloud.com/tracks/987/stream","download_url":"https://api.soundcloud.com/tracks/987/download"});"""
 
-        val expectedPJson = """/**/js_callback_dn({"kind":"track","id":987,"created_at":"2016/05/19 18:03:04 +0000","user_id":3000,"duration":0,"commentable":false,"state":"lol","original_content_size":123,"last_modified":"2016/05/19 18:03:04 +0000","sharing":"public","tag_list":"","permalink":null,"streamable":null,"embeddable_by":"none","purchase_url":"http://example.com/buy/7890","purchase_title":"buy me pls","label_id":null,"genre":null,"title":null,"description":null,"label_name":null,"release":"DR012","track_type":"original","key_signature":"Emaj","isrc":null,"video_url":"http://example.com/video.mp4","bpm":120.7,"release_year":null,"release_month":null,"release_day":null,"original_format":"donkey","license":null,"uri":"https://api.soundcloud.com/tracks/987","user":{"id":3000,"kind":"user","permalink":"giraffe","username":"Dr. G. Raffe","last_modified":"2016/10/10 11:21:36 +0000","uri":"https://api.soundcloud.com/users/3000","permalink_url":"http://soundcloud.com/denis","avatar_url":"https://example.com/giraffe.jpg"},"permalink_url":null,"artwork_url":null,"stream_url":"https://api.soundcloud.com/tracks/987/stream","download_url":"https://api.soundcloud.com/tracks/987/download"});"""
-
-        val response = get(handler.renderTrack, path, Map("callback" -> "js_callback_dn"))
-        response.status ==== Status.Ok
-        response.contentString ==== expectedPJson
-      }
+      val response = get(handler.renderTrack, path, Map("callback" -> "js_callback_dn"))
+      response.status ==== Status.Ok
+      response.contentString ==== expectedPJson
+    }
   }
 
   validPaths.foreach { path =>
@@ -255,7 +263,8 @@ class SingleTrackHandlerSpec extends UnitSpecification {
       }
 
       "it returns 500 for failed futures" in new FromTrackMetadata {
-        override def trackRepresentationLike = Future.exception(new RuntimeException("An unexpected error occured while fetching a track"))
+        override def trackRepresentationLike =
+          Future.exception(new RuntimeException("An unexpected error occured while fetching a track"))
 
         val response = get(handler.renderTrack, path)
         response.status.code ==== 500
@@ -268,7 +277,6 @@ class SingleTrackHandlerSpec extends UnitSpecification {
     def trackRepresentationLike: Future[Result[TrackRepresentationLike]]
 
     when(trackRepresentationsService.track(session, trackUrn, None)).thenReturn(trackRepresentationLike)
-
   }
 
   validPaths.foreach { path =>

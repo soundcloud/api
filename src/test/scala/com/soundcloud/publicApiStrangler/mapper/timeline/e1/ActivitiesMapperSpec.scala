@@ -14,7 +14,6 @@ import org.specs2.mutable.Before
 import play.api.libs.json.JsObject
 
 class ActivitiesMapperSpec extends UnitSpecification {
-
   trait Context extends Scope with Before {
     val timelineClient = mock[TimelineJsonClient]
     val entityMapper = mock[EntityMapper]
@@ -36,7 +35,8 @@ class ActivitiesMapperSpec extends UnitSpecification {
       val page = CursorBasedPage(urn, "https://foo.com", "/something", Map(), Some(uuid), 100)
 
       override def before: Any = {
-        when(timelineClient.activities(session, Some(uuid), 100, false, Some("uuid"))).thenReturn(Future(timelineMapperActivities.as[JsObject]))
+        when(timelineClient.activities(session, Some(uuid), 100, false, Some("uuid")))
+          .thenReturn(Future(timelineMapperActivities.as[JsObject]))
       }
     }
 
@@ -59,7 +59,8 @@ class ActivitiesMapperSpec extends UnitSpecification {
       val page = CursorBasedPage(urn, "https://foo.com", "/something", Map("uuid[to]" -> uuid), None, 100)
 
       override def before: Any = {
-        when(timelineClient.activities(session, Some(uuid), 100, true, Some("uuid"))).thenReturn(Future(timelineMapperActivities.as[JsObject]))
+        when(timelineClient.activities(session, Some(uuid), 100, true, Some("uuid")))
+          .thenReturn(Future(timelineMapperActivities.as[JsObject]))
       }
     }
 
@@ -71,5 +72,4 @@ class ActivitiesMapperSpec extends UnitSpecification {
       result.futureHref mustEqual Some(s"https://foo.com/something?uuid%5Bto%5D=$futureUuid&limit=100")
     }
   }
-
 }

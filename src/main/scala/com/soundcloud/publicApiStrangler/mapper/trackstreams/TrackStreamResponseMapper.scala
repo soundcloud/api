@@ -8,7 +8,5 @@ import com.twitter.util.Future
   * Maps an eventual set of media urls to a response builder.
   */
 trait TrackStreamResponseMapper {
-
   def map(mediaUrls: Future[Set[MediaUrl]], isHeadRequest: Boolean): Future[Response]
-
 }

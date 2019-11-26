@@ -16,7 +16,6 @@ import org.apache.http.util.EntityUtils
 import org.specs2.mutable.BeforeAfter
 
 class ForwardedRequestSpec extends UnitSpecification {
-
   trait Context extends BeforeAfter {
     val server = new MockWebServer()
     val client = Http.client.withStreaming(enabled = false).newService(s"localhost:${server.getPort}")
@@ -32,9 +31,7 @@ class ForwardedRequestSpec extends UnitSpecification {
     val stranglerServerPort = stranglerServer.boundAddress.asInstanceOf[InetSocketAddress].getPort
     val stranglerClient = Http.client.newService(s"localhost:$stranglerServerPort")
 
-    override def before: Any = {
-
-    }
+    override def before: Any = {}
 
     override def after: Any = {
       server.shutdown()
@@ -121,7 +118,6 @@ class ForwardedRequestSpec extends UnitSpecification {
     response.getStatusLine.getStatusCode ==== 200
     EntityUtils.toString(response.getEntity) ==== "donkey"
 
-
     val recordedRequest = server.takeRequest()
     recordedRequest.getMethod ==== "POST"
     recordedRequest.getPath ==== "/tracks"
@@ -133,7 +129,6 @@ class ForwardedRequestSpec extends UnitSpecification {
     recordedRequest.getHeader("X-Favourite-Animal") ==== "zebra"
     recordedRequest.getHeader("Connection") ==== "close"
   }
-
 
   "sends multipart POST requests as chunked" in new Context {
     server.enqueue(new MockResponse().setBody("okey dokey"))
@@ -154,7 +149,8 @@ class ForwardedRequestSpec extends UnitSpecification {
 
     // Build request
     val request = new HttpPost(s"http://localhost:$stranglerServerPort/tracks")
-    val reqEntity = MultipartEntityBuilder.create()
+    val reqEntity = MultipartEntityBuilder
+      .create()
       .addBinaryBody("track[asset_data]", inputStream, ContentType.APPLICATION_OCTET_STREAM, "donkey_song.mp3")
       .build()
     request.setEntity(reqEntity)
@@ -172,7 +168,9 @@ class ForwardedRequestSpec extends UnitSpecification {
     recordedRequest.getHeader("Host") ==== "api.soundcloud.com"
     recordedRequest.getHeader("X-Forwarded-Proto") ==== "https"
     val requestBody = recordedRequest.getBody.readUtf8()
-    requestBody.contains("\r\nContent-Disposition: form-data; name=\"track[asset_data]\"; filename=\"donkey_song.mp3\"\r\n") ==== true
+    requestBody.contains(
+      "\r\nContent-Disposition: form-data; name=\"track[asset_data]\"; filename=\"donkey_song.mp3\"\r\n"
+    ) ==== true
     requestBody.contains("\r\nContent-Type: application/octet-stream\r\n") ==== true
     requestBody.contains("\r\nContent-Transfer-Encoding: binary\r\n") ==== true
     requestBody.contains("\r\n\r\n" + ("\u0000" * 10) + "\r\n--") ==== true

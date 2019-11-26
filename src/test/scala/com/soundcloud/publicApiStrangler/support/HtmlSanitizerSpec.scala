@@ -4,15 +4,12 @@ import org.specs2.mutable.Specification
 import org.specs2.specification.Scope
 
 class HtmlSanitizerSpec extends Specification {
-
   "the sanitizer" should {
-
     "html encode special characters" in new Scope {
-
       HtmlSanitizer.sanitize("<3") ==== "<3"
     }
 
-    "sanitize script tags in html" in new Scope{
+    "sanitize script tags in html" in new Scope {
       HtmlSanitizer.sanitize("<p><script><b>foo</b></script></p> & bar") ==== "<p></p> & bar"
     }
 
@@ -44,7 +41,7 @@ class HtmlSanitizerSpec extends Specification {
       HtmlSanitizer.sanitize("      Bar") ==== "      Bar"
     }
 
-    "does not remove linebreaks" in  new Scope {
+    "does not remove linebreaks" in new Scope {
       HtmlSanitizer.sanitize("Foo\n\nBar") ==== "Foo\n\nBar"
     }
 
@@ -54,8 +51,7 @@ class HtmlSanitizerSpec extends Specification {
 
     "document behaviour of anchor tags" in new Scope {
       HtmlSanitizer.sanitize("<a href=\"https://www.foo/bar\" target=\"_blank\">baz</a>") ====
-                             "<a href=\"https://www.foo/bar\" target=\"_blank\" rel=\"nofollow\">baz</a>"
+        "<a href=\"https://www.foo/bar\" target=\"_blank\" rel=\"nofollow\">baz</a>"
     }
   }
-
 }

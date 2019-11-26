@@ -8,21 +8,20 @@ import com.soundcloud.publicApiStrangler.mapper.timeline.representation.Timeline
 import com.soundcloud.publicApiStrangler.mapper.timeline.{EntityMapper, EntitySummaryMapper}
 import play.api.libs.json.{JsObject, JsValue}
 
-class TimelineWithOrigin(jsonValue: JsValue,
-                         page: CursorBasedPage[Urn],
-                         entityMapper: EntityMapper,
-                         entitySummaryMapper: EntitySummaryMapper)(implicit context: MappingContext)
-  extends Timeline(jsonValue, page) {
-
+class TimelineWithOrigin(
+    jsonValue: JsValue,
+    page: CursorBasedPage[Urn],
+    entityMapper: EntityMapper,
+    entitySummaryMapper: EntitySummaryMapper
+)(implicit context: MappingContext)
+    extends Timeline(jsonValue, page) {
   // always include a future_href
   @JsonInclude(JsonInclude.Include.NON_NULL)
   val futureHref: String = futurePage(events)
 
   override protected def mapChildren(events: Seq[JsObject]) = {
-    events.map {
-      event =>
-        new TimelineItemWithOrigin(event, entityMapper, entitySummaryMapper)
+    events.map { event =>
+      new TimelineItemWithOrigin(event, entityMapper, entitySummaryMapper)
     }
   }
-
 }

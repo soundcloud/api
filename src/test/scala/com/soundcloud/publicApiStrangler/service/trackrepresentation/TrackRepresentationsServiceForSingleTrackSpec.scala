@@ -20,7 +20,6 @@ import org.mockito.Mockito._
 import play.api.libs.json._
 
 class TrackRepresentationsServiceForSingleTrackSpec extends UnitSpecification {
-
   trait Context extends Scope {
     implicit val trackRepresentationWrites = TrackRepresentation.writes
 
@@ -64,7 +63,8 @@ class TrackRepresentationsServiceForSingleTrackSpec extends UnitSpecification {
         followings_count = Some(20),
         verified = false,
         description = Some("I am a nice person"),
-        updated_at = Some("2016/10/10 11:21:36 +0000"))
+        updated_at = Some("2016/10/10 11:21:36 +0000")
+      )
 
     def requestingUser =
       User(
@@ -80,7 +80,8 @@ class TrackRepresentationsServiceForSingleTrackSpec extends UnitSpecification {
         followings_count = Some(20),
         verified = false,
         description = Some("I am a nice person"),
-        updated_at = Some("2016/10/10 11:21:36 +0000"))
+        updated_at = Some("2016/10/10 11:21:36 +0000")
+      )
 
     def label =
       User(
@@ -96,7 +97,8 @@ class TrackRepresentationsServiceForSingleTrackSpec extends UnitSpecification {
         followings_count = Some(10),
         verified = true,
         description = Some("Psychonaut Music Inc."),
-        updated_at = Some("2016/10/10 11:21:36 +0000"))
+        updated_at = Some("2016/10/10 11:21:36 +0000")
+      )
 
     val trackUrn = Urn("soundcloud", "tracks", "987")
     val createdAt = new DateTime(2016, 5, 19, 18, 3, 4)
@@ -120,14 +122,15 @@ class TrackRepresentationsServiceForSingleTrackSpec extends UnitSpecification {
       )
 
     def trackmetadataTrack(
-                            disabledAt: Option[DateTime] = None,
-                            isPublic: Boolean = true,
-                            secretToken: String = "secr3t-Token",
-                            isDownloadable: Boolean = false,
-                            user: Urn = trackOwnerUrn,
-                            label_id: Option[Int] = Some(labelUrn.identifier.toInt),
-                            reveal_stats: Boolean = false,
-                            reveal_comments: Boolean = true) =
+        disabledAt: Option[DateTime] = None,
+        isPublic: Boolean = true,
+        secretToken: String = "secr3t-Token",
+        isDownloadable: Boolean = false,
+        user: Urn = trackOwnerUrn,
+        label_id: Option[Int] = Some(labelUrn.identifier.toInt),
+        reveal_stats: Boolean = false,
+        reveal_comments: Boolean = true
+    ) =
       Track(
         urn = trackUrn,
         user_urn = user,
@@ -186,9 +189,14 @@ class TrackRepresentationsServiceForSingleTrackSpec extends UnitSpecification {
 
     val session: UserSession = new UserSessionBuilder().setUser(requestingUserUrn).build()
 
-    def setUpMocksForExistingTrack(track: Track, session: UserSession, playlists: List[Playlist] = List.empty[Playlist]) = {
+    def setUpMocksForExistingTrack(
+        track: Track,
+        session: UserSession,
+        playlists: List[Playlist] = List.empty[Playlist]
+    ) = {
       when(trackmetadataClient.track(session, trackUrn)).thenReturn(Future.value(Some(track)))
-      when(okidokiClient.fetchUserObjects(session, Set(requestingUserUrn))).thenReturn(Future.value(List(requestingUser)))
+      when(okidokiClient.fetchUserObjects(session, Set(requestingUserUrn)))
+        .thenReturn(Future.value(List(requestingUser)))
       when(okidokiClient.fetchUserObjects(session, Set(labelUrn))).thenReturn(Future.value(List(label)))
       when(okidokiClient.fetchUserObjects(session, Set(trackOwnerUrn))).thenReturn(Future.value(List(trackOwner)))
       when(pubmeseClient.isrcForTrack(session, trackUrn)).thenReturn(Future.value(isrc()))
@@ -196,11 +204,14 @@ class TrackRepresentationsServiceForSingleTrackSpec extends UnitSpecification {
       when(okidokiClient.fetchTrackGeoblockings(session, trackUrn)).thenReturn(Future.value(geoblockings))
       when(okidokiClient.fetchTrackDomainLockings(session, trackUrn)).thenReturn(Future.value(domainLockings))
       when(okidokiClient.fetchTrackAudioMetadata(session, trackUrn)).thenReturn(Future.value(Some(trackAudioMetadata)))
-      when(lieblingClient.userLikeCounts(session, List(trackUrn), session.getUser)).thenReturn(Future.value(userLikesCount))
+      when(lieblingClient.userLikeCounts(session, List(trackUrn), session.getUser))
+        .thenReturn(Future.value(userLikesCount))
       when(waveformUrlsGenerator.fromUid(track.uid.get)).thenReturn(waveformUrl(track.uid.get))
-      when(userQuotaClient.downloadsPerTrack(session, Set(track.user_urn))).thenReturn(Future.value(Map.empty[Urn, Option[Int]]))
+      when(userQuotaClient.downloadsPerTrack(session, Set(track.user_urn)))
+        .thenReturn(Future.value(Map.empty[Urn, Option[Int]]))
 
-      when(playlistsClient.getPlaylistContainingTrackOwnedByUser(track.urn, track.user_urn)).thenReturn(Future.value(playlists))
+      when(playlistsClient.getPlaylistContainingTrackOwnedByUser(track.urn, track.user_urn))
+        .thenReturn(Future.value(playlists))
     }
 
     def setUpMocksForNonExistingTrack = {
@@ -269,11 +280,11 @@ class TrackRepresentationsServiceForSingleTrackSpec extends UnitSpecification {
     when(okidokiClient.fetchTrackDomainLockings(session, trackUrn)).thenReturn(Future.value(domainLockings))
     when(okidokiClient.fetchTrackAudioMetadata(session, trackUrn)).thenReturn(Future.value(Some(trackAudioMetadata)))
 
-    when(playlistsClient.getPlaylistContainingTrackOwnedByUser(track.urn, track.user_urn)).thenReturn(Future.value(List.empty[Playlist]))
+    when(playlistsClient.getPlaylistContainingTrackOwnedByUser(track.urn, track.user_urn))
+      .thenReturn(Future.value(List.empty[Playlist]))
 
     val trackRepLike = Await.result(tracksService.track(session, trackUrn, Some(wrongSecretToken)))
     trackRepLike ==== NotFound
-
   }
 
   "Returns Some(x) for private tracks if there is a correct secret token" in new Context {
@@ -291,10 +302,12 @@ class TrackRepresentationsServiceForSingleTrackSpec extends UnitSpecification {
   "Returns Some(x) for private tracks if there is a correct secret token for a playlist containing the track belonging to the same user" in new Context {
     val correctSecretTokenForPlaylistContainingTheTrack = "playlist-secret"
     val track = trackmetadataTrack(isPublic = false)
-    val playlists = List(Playlist(userUrn = track.user_urn, secretToken = correctSecretTokenForPlaylistContainingTheTrack))
+    val playlists =
+      List(Playlist(userUrn = track.user_urn, secretToken = correctSecretTokenForPlaylistContainingTheTrack))
     setUpMocksForExistingTrack(track, session, playlists)
 
-    val trackRepLike = Await.result(tracksService.track(session, trackUrn, Some(correctSecretTokenForPlaylistContainingTheTrack)))
+    val trackRepLike =
+      Await.result(tracksService.track(session, trackUrn, Some(correctSecretTokenForPlaylistContainingTheTrack)))
     trackRepLike must beLike {
       case Success(rep) =>
         rep must beAnInstanceOf[TrackRepresentationLike]
@@ -305,10 +318,12 @@ class TrackRepresentationsServiceForSingleTrackSpec extends UnitSpecification {
     val correctSecretTokenForPlaylistContainingTheTrack = "playlist-secret"
     val incorrectSecretTokenForPlaylistContainingTheTrack = "not-playlist-secret"
     val track = trackmetadataTrack(isPublic = false)
-    val playlists = List(Playlist(userUrn = track.user_urn, secretToken = correctSecretTokenForPlaylistContainingTheTrack))
+    val playlists =
+      List(Playlist(userUrn = track.user_urn, secretToken = correctSecretTokenForPlaylistContainingTheTrack))
     setUpMocksForExistingTrack(track, session, playlists)
 
-    val trackRepLike = Await.result(tracksService.track(session, trackUrn, Some(incorrectSecretTokenForPlaylistContainingTheTrack)))
+    val trackRepLike =
+      Await.result(tracksService.track(session, trackUrn, Some(incorrectSecretTokenForPlaylistContainingTheTrack)))
     trackRepLike ==== NotFound
   }
 
@@ -319,7 +334,8 @@ class TrackRepresentationsServiceForSingleTrackSpec extends UnitSpecification {
     val playlists = List(Playlist(userUrn = anotherUser, secretToken = correctSecretTokenForPlaylistContainingTheTrack))
     setUpMocksForExistingTrack(track, session, playlists)
 
-    val trackRepLike = Await.result(tracksService.track(session, trackUrn, Some(correctSecretTokenForPlaylistContainingTheTrack)))
+    val trackRepLike =
+      Await.result(tracksService.track(session, trackUrn, Some(correctSecretTokenForPlaylistContainingTheTrack)))
     trackRepLike ==== NotFound
   }
 
@@ -335,7 +351,8 @@ class TrackRepresentationsServiceForSingleTrackSpec extends UnitSpecification {
   "Returns null ISRC when Pubmese is failing" in new Context {
     val track = trackmetadataTrack()
     setUpMocksForExistingTrack(track, session)
-    when(pubmeseClient.isrcForTrack(session, trackUrn)).thenReturn(Future.exception(new RuntimeException("bewm! hahahaaa")))
+    when(pubmeseClient.isrcForTrack(session, trackUrn))
+      .thenReturn(Future.exception(new RuntimeException("bewm! hahahaaa")))
 
     val trackRepLike = Await.result(tracksService.track(session, trackUrn, None))
     trackRepLike match {
@@ -347,7 +364,8 @@ class TrackRepresentationsServiceForSingleTrackSpec extends UnitSpecification {
   "Returns no geoblockings if Moshimoshi is failing" in new Context {
     val track = trackmetadataTrack()
     setUpMocksForExistingTrack(track, session)
-    when(okidokiClient.fetchTrackGeoblockings(session, trackUrn)).thenReturn(Future.exception(new RuntimeException("bewm! hahahaaa")))
+    when(okidokiClient.fetchTrackGeoblockings(session, trackUrn))
+      .thenReturn(Future.exception(new RuntimeException("bewm! hahahaaa")))
 
     val trackRepLike = Await.result(tracksService.track(session, trackUrn, None))
     trackRepLike match {
@@ -371,7 +389,8 @@ class TrackRepresentationsServiceForSingleTrackSpec extends UnitSpecification {
   "Returns no domainlockings if Moshimoshi is failing" in new Context {
     val track = trackmetadataTrack()
     setUpMocksForExistingTrack(track, session)
-    when(okidokiClient.fetchTrackDomainLockings(session, trackUrn)).thenReturn(Future.exception(new RuntimeException("bewm! hahahaaa")))
+    when(okidokiClient.fetchTrackDomainLockings(session, trackUrn))
+      .thenReturn(Future.exception(new RuntimeException("bewm! hahahaaa")))
 
     val trackRepLike = Await.result(tracksService.track(session, trackUrn, None))
     trackRepLike match {
@@ -383,7 +402,8 @@ class TrackRepresentationsServiceForSingleTrackSpec extends UnitSpecification {
   "Returns Success when partial audio metadata for a track is unavailable" in new Context {
     val track = trackmetadataTrack()
     setUpMocksForExistingTrack(track, session)
-    when(okidokiClient.fetchTrackAudioMetadata(session, trackUrn)).thenReturn(Future.value(Some(TrackAudioMetadata("storing", None, None))))
+    when(okidokiClient.fetchTrackAudioMetadata(session, trackUrn))
+      .thenReturn(Future.value(Some(TrackAudioMetadata("storing", None, None))))
 
     val trackRepLike = Await.result(tracksService.track(session, trackUrn, None))
 
@@ -393,7 +413,6 @@ class TrackRepresentationsServiceForSingleTrackSpec extends UnitSpecification {
         audioMetadata \ "state" ==== JsDefined(JsString("storing"))
         audioMetadata \ "original_content_size" ==== JsDefined(JsNull)
         audioMetadata \ "original_format" ==== JsDefined(JsNull)
-
       }
     }
   }
@@ -413,7 +432,7 @@ class TrackRepresentationsServiceForSingleTrackSpec extends UnitSpecification {
     response.contentString ==== """{"errors":[{"error_message":"503 - Service Unavailable"}]}"""
     response.headerMap.get("Content-Length") must beSome("58")
   }
-  */
+   */
 
   "user_favorite" >> {
     "is true when the user has favourited the track, and is logged in" in new Context {
@@ -421,7 +440,8 @@ class TrackRepresentationsServiceForSingleTrackSpec extends UnitSpecification {
       override val userLikesCount = UserLikesCount(Set(track.urn), List.empty)
       override val session = new UserSessionBuilder().setUser(requestingUserUrn).build
       setUpMocksForExistingTrack(track, session)
-      when(lieblingClient.userLikeCounts(session, List(trackUrn), session.getUser)).thenReturn(Future.value(userLikesCount))
+      when(lieblingClient.userLikeCounts(session, List(trackUrn), session.getUser))
+        .thenReturn(Future.value(userLikesCount))
 
       val trackRepLike = Await.result(tracksService.track(session, trackUrn, None))
       trackRepLike match {
@@ -435,7 +455,8 @@ class TrackRepresentationsServiceForSingleTrackSpec extends UnitSpecification {
       override val userLikesCount = UserLikesCount(Set.empty, List.empty)
       override val session = new UserSessionBuilder().setUser(requestingUserUrn).build
       setUpMocksForExistingTrack(track, session)
-      when(lieblingClient.userLikeCounts(session, List(trackUrn), session.getUser)).thenReturn(Future.value(userLikesCount))
+      when(lieblingClient.userLikeCounts(session, List(trackUrn), session.getUser))
+        .thenReturn(Future.value(userLikesCount))
 
       val trackRepLike = Await.result(tracksService.track(session, trackUrn, None))
       trackRepLike match {
@@ -462,7 +483,8 @@ class TrackRepresentationsServiceForSingleTrackSpec extends UnitSpecification {
       val track = trackmetadataTrack()
       override val session = new UserSessionBuilder().setUser(requestingUserUrn).build
       setUpMocksForExistingTrack(track, session)
-      when(lieblingClient.userLikeCounts(session, List(trackUrn), session.getUser)).thenReturn(Future.value(userLikesCount))
+      when(lieblingClient.userLikeCounts(session, List(trackUrn), session.getUser))
+        .thenReturn(Future.value(userLikesCount))
 
       val trackRepLike = Await.result(tracksService.track(session, trackUrn, None))
       trackRepLike match {
@@ -532,8 +554,12 @@ class TrackRepresentationsServiceForSingleTrackSpec extends UnitSpecification {
         case Success(rep) =>
           val json = Json.toJson(rep)
           json \ "uri" ==== JsDefined(JsString("https://api.soundcloud.com/tracks/987?secret_token=s-4kT0a"))
-          json \ "stream_url" ==== JsDefined(JsString("https://api.soundcloud.com/tracks/987/stream?secret_token=s-4kT0a"))
-          json \ "download_url" ==== JsDefined(JsString("https://api.soundcloud.com/tracks/987/download?secret_token=s-4kT0a"))
+          json \ "stream_url" ==== JsDefined(
+            JsString("https://api.soundcloud.com/tracks/987/stream?secret_token=s-4kT0a")
+          )
+          json \ "download_url" ==== JsDefined(
+            JsString("https://api.soundcloud.com/tracks/987/download?secret_token=s-4kT0a")
+          )
           json \ "permalink_url" ==== JsDefined(JsString("http://soundcloud.com/foo/bar/s-4kT0a"))
       }
     }
@@ -555,7 +581,9 @@ class TrackRepresentationsServiceForSingleTrackSpec extends UnitSpecification {
     "is true when track is downloadable, and below user's quota" in new Context {
       val track = trackmetadataTrack(isDownloadable = true)
       setUpMocksForExistingTrack(track, session)
-      userQuotaClient.downloadsPerTrack(session, Set(track.user_urn)) returns Future.value(Map(track.user_urn -> Some(100)))
+      userQuotaClient.downloadsPerTrack(session, Set(track.user_urn)) returns Future.value(
+        Map(track.user_urn -> Some(100))
+      )
       stitchClient.countsForTrack(session, trackUrn, track.user_urn) returns Future.value(StitchCounts(0, 90, 0, 0, 0))
 
       val trackRepLike = Await.result(tracksService.track(session, trackUrn, None))
@@ -583,7 +611,9 @@ class TrackRepresentationsServiceForSingleTrackSpec extends UnitSpecification {
     "is false when track is downloadable, and above user's quota" in new Context {
       val track = trackmetadataTrack(isDownloadable = true)
       setUpMocksForExistingTrack(track, session)
-      userQuotaClient.downloadsPerTrack(session, Set(track.user_urn)) returns Future.value(Map(track.user_urn -> Some(100)))
+      userQuotaClient.downloadsPerTrack(session, Set(track.user_urn)) returns Future.value(
+        Map(track.user_urn -> Some(100))
+      )
       stitchClient.countsForTrack(session, trackUrn, track.user_urn) returns Future.value(StitchCounts(0, 100, 0, 0, 0))
 
       val trackRepLike = Await.result(tracksService.track(session, trackUrn, None))
@@ -597,7 +627,9 @@ class TrackRepresentationsServiceForSingleTrackSpec extends UnitSpecification {
     "is false when track is not downloadable, and below user's quota" in new Context {
       val track = trackmetadataTrack(isDownloadable = false)
       setUpMocksForExistingTrack(track, session)
-      userQuotaClient.downloadsPerTrack(session, Set(track.user_urn)) returns Future.value(Map(track.user_urn -> Some(100)))
+      userQuotaClient.downloadsPerTrack(session, Set(track.user_urn)) returns Future.value(
+        Map(track.user_urn -> Some(100))
+      )
       stitchClient.countsForTrack(session, trackUrn, track.user_urn) returns Future.value(StitchCounts(0, 90, 0, 0, 0))
 
       val trackRepLike = Await.result(tracksService.track(session, trackUrn, None))
@@ -610,13 +642,16 @@ class TrackRepresentationsServiceForSingleTrackSpec extends UnitSpecification {
   }
 
   "downloads_remaining" >> {
-
     "when the requesting user is not the owner of the track" >> {
       "it is not shown" in new Context {
         val track = trackmetadataTrack(isDownloadable = true)
         setUpMocksForExistingTrack(track, session)
-        userQuotaClient.downloadsPerTrack(session, Set(track.user_urn)) returns Future.value(Map(track.user_urn -> Some(100)))
-        stitchClient.countsForTrack(session, trackUrn, track.user_urn) returns Future.value(StitchCounts(0, 90, 0, 0, 0))
+        userQuotaClient.downloadsPerTrack(session, Set(track.user_urn)) returns Future.value(
+          Map(track.user_urn -> Some(100))
+        )
+        stitchClient.countsForTrack(session, trackUrn, track.user_urn) returns Future.value(
+          StitchCounts(0, 90, 0, 0, 0)
+        )
 
         val trackRepLike = Await.result(tracksService.track(session, trackUrn, None))
         trackRepLike match {
@@ -630,8 +665,12 @@ class TrackRepresentationsServiceForSingleTrackSpec extends UnitSpecification {
       "is shown when track is below quota" in new Context {
         val track = trackmetadataTrack(isDownloadable = true, user = session.getUser)
         setUpMocksForExistingTrack(track, session)
-        userQuotaClient.downloadsPerTrack(session, Set(track.user_urn)) returns Future.value(Map(track.user_urn -> Some(100)))
-        stitchClient.countsForTrack(session, trackUrn, track.user_urn) returns Future.value(StitchCounts(0, 90, 0, 0, 0))
+        userQuotaClient.downloadsPerTrack(session, Set(track.user_urn)) returns Future.value(
+          Map(track.user_urn -> Some(100))
+        )
+        stitchClient.countsForTrack(session, trackUrn, track.user_urn) returns Future.value(
+          StitchCounts(0, 90, 0, 0, 0)
+        )
 
         val trackRepLike = Await.result(tracksService.track(session, trackUrn, None))
         trackRepLike match {
@@ -644,8 +683,12 @@ class TrackRepresentationsServiceForSingleTrackSpec extends UnitSpecification {
       "it not shown when the track's user has no quota (eg. is unlimited)" in new Context {
         val track = trackmetadataTrack(isDownloadable = true, user = session.getUser)
         setUpMocksForExistingTrack(track, session)
-        userQuotaClient.downloadsPerTrack(session, Set(track.user_urn)) returns Future.value(Map(track.user_urn -> None))
-        stitchClient.countsForTrack(session, trackUrn, track.user_urn) returns Future.value(StitchCounts(0, 90, 0, 0, 0))
+        userQuotaClient.downloadsPerTrack(session, Set(track.user_urn)) returns Future.value(
+          Map(track.user_urn -> None)
+        )
+        stitchClient.countsForTrack(session, trackUrn, track.user_urn) returns Future.value(
+          StitchCounts(0, 90, 0, 0, 0)
+        )
 
         val trackRepLike = Await.result(tracksService.track(session, trackUrn, None))
         trackRepLike match {
@@ -657,8 +700,12 @@ class TrackRepresentationsServiceForSingleTrackSpec extends UnitSpecification {
       "is shown when no downloads remain" in new Context {
         val track = trackmetadataTrack(isDownloadable = true, user = session.getUser)
         setUpMocksForExistingTrack(track, session)
-        userQuotaClient.downloadsPerTrack(session, Set(track.user_urn)) returns Future.value(Map(track.user_urn -> Some(100)))
-        stitchClient.countsForTrack(session, trackUrn, track.user_urn) returns Future.value(StitchCounts(0, 100, 0, 0, 0))
+        userQuotaClient.downloadsPerTrack(session, Set(track.user_urn)) returns Future.value(
+          Map(track.user_urn -> Some(100))
+        )
+        stitchClient.countsForTrack(session, trackUrn, track.user_urn) returns Future.value(
+          StitchCounts(0, 100, 0, 0, 0)
+        )
 
         val trackRepLike = Await.result(tracksService.track(session, trackUrn, None))
         trackRepLike match {
@@ -671,8 +718,12 @@ class TrackRepresentationsServiceForSingleTrackSpec extends UnitSpecification {
       "is shown even if track is not downloadable" in new Context {
         val track = trackmetadataTrack(isDownloadable = false, user = session.getUser)
         setUpMocksForExistingTrack(track, session)
-        userQuotaClient.downloadsPerTrack(session, Set(track.user_urn)) returns Future.value(Map(track.user_urn -> Some(100)))
-        stitchClient.countsForTrack(session, trackUrn, track.user_urn) returns Future.value(StitchCounts(0, 90, 0, 0, 0))
+        userQuotaClient.downloadsPerTrack(session, Set(track.user_urn)) returns Future.value(
+          Map(track.user_urn -> Some(100))
+        )
+        stitchClient.countsForTrack(session, trackUrn, track.user_urn) returns Future.value(
+          StitchCounts(0, 90, 0, 0, 0)
+        )
 
         val trackRepLike = Await.result(tracksService.track(session, trackUrn, None))
         trackRepLike match {
@@ -709,7 +760,8 @@ class TrackRepresentationsServiceForSingleTrackSpec extends UnitSpecification {
 
         val track = trackmetadataTrack()
         setUpMocksForExistingTrack(track, session)
-        when(stitchClient.countsForTrack(session, trackUrn, trackOwnerUrn)).thenReturn(Future.exception(new RuntimeException("bewm! hahahaaa")))
+        when(stitchClient.countsForTrack(session, trackUrn, trackOwnerUrn))
+          .thenReturn(Future.exception(new RuntimeException("bewm! hahahaaa")))
 
         val trackRepLike = Await.result(tracksService.track(session, trackUrn, None))
 
@@ -820,7 +872,8 @@ class TrackRepresentationsServiceForSingleTrackSpec extends UnitSpecification {
         "returns empty counts if Stitch is failing" in new Context {
           val track = trackmetadataTrack(reveal_stats = true)
           setUpMocksForExistingTrack(track, session)
-          when(stitchClient.countsForTrack(session, trackUrn, trackOwnerUrn)).thenReturn(Future.exception(new RuntimeException("bewm! hahahaaa")))
+          when(stitchClient.countsForTrack(session, trackUrn, trackOwnerUrn))
+            .thenReturn(Future.exception(new RuntimeException("bewm! hahahaaa")))
 
           val trackRepLike = Await.result(tracksService.track(session, trackUrn, None))
 

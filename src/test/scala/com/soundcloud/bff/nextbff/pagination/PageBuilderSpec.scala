@@ -6,7 +6,6 @@ import com.soundcloud.jvmkit.module.util.Urn
 import com.twitter.finagle.http.Request
 
 class PageBuilderSpec extends UnitSpecification {
-
   trait Context extends Scope {
     def request = Request("/stream-with-unicorns", "param" -> "var")
 

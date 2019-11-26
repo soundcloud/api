@@ -4,7 +4,6 @@ import com.soundcloud.publicApiStrangler.test.UnitSpecification
 import play.api.libs.json.{JsNull, Json}
 
 class UserUpdateSpec extends UnitSpecification {
-
   "UserUpdate params renders all specified keys" >> {
     val userUpdate = UserUpdate(
       city = Value("city"),

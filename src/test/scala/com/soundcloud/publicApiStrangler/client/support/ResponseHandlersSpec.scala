@@ -6,7 +6,6 @@ import com.twitter.finagle.http.{Response, Status}
 import play.api.libs.json._
 
 class ResponseHandlersSpec extends UnitSpecification {
-
   def JsonResponse(status: Status, json: JsValue): Response = ???
 
   "JsValueResponse" >> {
@@ -22,7 +21,9 @@ class ResponseHandlersSpec extends UnitSpecification {
 
   "ListResponse" >> {
     "should return List[JsObject] when 200 status" in new Scope {
-      ListResponse(jsonResponse(Status.Ok, JsArray(List(JsObject(List(("foo", JsString("bar")))))))) ==== List(JsObject(List(("foo", JsString("bar")))))
+      ListResponse(jsonResponse(Status.Ok, JsArray(List(JsObject(List(("foo", JsString("bar")))))))) ==== List(
+        JsObject(List(("foo", JsString("bar"))))
+      )
     }
 
     "should throw IllegalStateException when not 200 status" in new Scope {
@@ -74,7 +75,9 @@ class ResponseHandlersSpec extends UnitSpecification {
     }
 
     "should return body when 2xx status with body" in new Scope {
-      SingleItem(jsonResponse(Status.NonAuthoritativeInformation, JsObject(List(("foo", JsString("bar")))))) ==== JsObject(List(("foo", JsString("bar"))))
+      SingleItem(jsonResponse(Status.NonAuthoritativeInformation, JsObject(List(("foo", JsString("bar")))))) ==== JsObject(
+        List(("foo", JsString("bar")))
+      )
     }
 
     "should throw IllegalStateException when not 404 or 2xx status" in new Scope {

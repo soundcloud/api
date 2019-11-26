@@ -10,10 +10,8 @@ import com.twitter.util.Future
 
 class TrackCoordinatorClient(service: JsonClient) {
   def deleteTrack(session: UserSession, trackUrn: Urn): Future[Result[Unit]] = {
-    service.deleteWithSession(session, Path("/tracks") / trackUrn,
-      Params.empty,
-      Headers.empty(),
-      None
-    ).map(TrackDeleteResponseMapper(_))
+    service
+      .deleteWithSession(session, Path("/tracks") / trackUrn, Params.empty, Headers.empty(), None)
+      .map(TrackDeleteResponseMapper(_))
   }
 }

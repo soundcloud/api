@@ -5,10 +5,14 @@ object InvalidRestrictionException {
 }
 
 class InvalidRestrictionException(val invalidRestrictionName: String)
-  extends RuntimeException(String.format(InvalidRestrictionException.MESSAGE,
-    invalidRestrictionName,
-    classOf[ContentRestriction].getSimpleName,
-    ContentRestriction.allPossibleNames))
+    extends RuntimeException(
+      String.format(
+        InvalidRestrictionException.MESSAGE,
+        invalidRestrictionName,
+        classOf[ContentRestriction].getSimpleName,
+        ContentRestriction.allPossibleNames
+      )
+    )
 
 class ContentRestriction(val name: String) {
   /**
@@ -23,7 +27,6 @@ class ContentRestriction(val name: String) {
   * Set of restrictions a client application <i>MUST</i> enforce.
   */
 object ContentRestriction {
-
   /**
     * The content is only available over encrypted streaming
     * (e.g. <a href=http://en.wikipedia.org/wiki/HTTP_Live_Streaming>HLS</a>). Non-encrypted media streams (e.g. MP3)

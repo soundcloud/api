@@ -15,25 +15,24 @@ import com.twitter.util.Future
   * Overrides the public api endpoint used to retrieve similar tracks.
   */
 class SimilarSoundsHandler(
-                            userAuthentication: UserAuthentication,
-                            similarSoundsMapper: SimilarSoundsMapper,
-                            baseUrl: String
-                          ) {
-
+    userAuthentication: UserAuthentication,
+    similarSoundsMapper: SimilarSoundsMapper,
+    baseUrl: String
+) {
   def handleSimilarSoundsRequest(request: HandlerRequest): Future[Response] = {
-    userAuthentication.withUserSession(request) {
-      (session: UserSession) =>
-        val urn = trackUrn(request)
+    userAuthentication.withUserSession(request) { (session: UserSession) =>
+      val urn = trackUrn(request)
 
-        val page = PageBuilder(request, baseUrl)(urn).
-          allowExtraParams(Set(SimilarSoundsMapping.LinkedPartitioning)).
-          defaultLimit(50).
-          buildOffsetBased(0)
+      val page = PageBuilder(request, baseUrl)(urn)
+        .allowExtraParams(Set(SimilarSoundsMapping.LinkedPartitioning))
+        .defaultLimit(50)
+        .buildOffsetBased(0)
 
-        similarSoundsMapper.materialize(session, page).map {
-          case Some(info: SimilarSoundsMapping) => JsonResponseBuilder(body = UntypedJson.write(if (shouldPaginate(request.params)) info else info.collection)).build
-          case None => ResponseBuilder.notFound()
-        }
+      similarSoundsMapper.materialize(session, page).map {
+        case Some(info: SimilarSoundsMapping) =>
+          JsonResponseBuilder(body = UntypedJson.write(if (shouldPaginate(request.params)) info else info.collection)).build
+        case None => ResponseBuilder.notFound()
+      }
     }
   }
 
@@ -43,5 +42,4 @@ class SimilarSoundsHandler(
       .flatMap(_.value.headOption)
       .exists(_.nonEmpty)
   }
-
 }

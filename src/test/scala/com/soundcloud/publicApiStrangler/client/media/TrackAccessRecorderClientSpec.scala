@@ -10,7 +10,6 @@ import com.twitter.finagle.http.Status
 import com.twitter.util.{Await, Future}
 
 class TrackAccessRecorderClientSpec extends UnitSpecification {
-
   trait Context extends Scope {
     val moshimoshiClient = mock[JsonClient]
     val client = new TrackAccessRecorderClient(moshimoshiClient)
@@ -25,7 +24,12 @@ class TrackAccessRecorderClientSpec extends UnitSpecification {
   "#recordAccess" >> {
     "when Moshimoshi returns a 200 response" >> {
       trait OkContext extends Context {
-        moshimoshiClient.getWithSession(session, Path() / "tracks" / trackUrn / "access" / "stream", Params.empty, Headers.empty) returns
+        moshimoshiClient.getWithSession(
+          session,
+          Path() / "tracks" / trackUrn / "access" / "stream",
+          Params.empty,
+          Headers.empty
+        ) returns
           Future.value(ResponseBuilder().status(Status.Ok).build)
       }
 
@@ -36,7 +40,12 @@ class TrackAccessRecorderClientSpec extends UnitSpecification {
 
     "when Moshimoshi returns a non-200 response" >> {
       trait BadContext extends Context {
-        moshimoshiClient.getWithSession(session, Path() / "tracks" / trackUrn / "access" / "stream", Params.empty, Headers.empty) returns
+        moshimoshiClient.getWithSession(
+          session,
+          Path() / "tracks" / trackUrn / "access" / "stream",
+          Params.empty,
+          Headers.empty
+        ) returns
           Future.value(ResponseBuilder().status(Status.BadRequest).build)
       }
 
@@ -48,7 +57,12 @@ class TrackAccessRecorderClientSpec extends UnitSpecification {
     "when stream access should not be logged" >> {
       trait DontLogContext extends Context {
         override val shouldLog = false
-        moshimoshiClient.getWithSession(session, Path() / "tracks" / trackUrn / "access" / "stream", Params("skip_logging" -> "1"), Headers.empty) returns
+        moshimoshiClient.getWithSession(
+          session,
+          Path() / "tracks" / trackUrn / "access" / "stream",
+          Params("skip_logging" -> "1"),
+          Headers.empty
+        ) returns
           Future.value(ResponseBuilder().status(Status.Ok).build)
       }
 
@@ -60,7 +74,12 @@ class TrackAccessRecorderClientSpec extends UnitSpecification {
     "when a secret token is passed" >> {
       trait WithSecretToken extends Context {
         override val secretToken = Some("only4me")
-        moshimoshiClient.getWithSession(session, Path() / "tracks" / trackUrn / "access" / "stream", Params("secret_token" -> "only4me"), Headers.empty) returns
+        moshimoshiClient.getWithSession(
+          session,
+          Path() / "tracks" / trackUrn / "access" / "stream",
+          Params("secret_token" -> "only4me"),
+          Headers.empty
+        ) returns
           Future.value(ResponseBuilder().status(Status.Ok).build)
       }
 

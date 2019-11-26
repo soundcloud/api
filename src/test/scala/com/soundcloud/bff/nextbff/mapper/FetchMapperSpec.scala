@@ -11,7 +11,6 @@ import org.specs2.mutable.Before
 import play.api.libs.json.JsValue
 
 class FetchMapperSpec extends UnitSpecification {
-
   trait Context extends Scope with Before {
     implicit val context = mock[MappingContext]
     val session = mock[UserSession]
@@ -24,7 +23,6 @@ class FetchMapperSpec extends UnitSpecification {
     case class TestMapping(urn: Urn, json: JsValue) extends Mapping
 
     val mapper = new FetchMapper[Urn, TestMapping] {
-
       val repository = repositoryMock
 
       def map(param: Urn, jsValue: JsValue)(implicit context: MappingContext) =
@@ -44,5 +42,4 @@ class FetchMapperSpec extends UnitSpecification {
       jsonMap(mapping.urn) ==== mapping.json
     }
   }
-
 }

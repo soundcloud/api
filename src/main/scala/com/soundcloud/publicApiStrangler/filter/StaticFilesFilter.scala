@@ -8,7 +8,6 @@ import com.twitter.util.Future
 import org.jboss.netty.util.CharsetUtil._
 
 class StaticFilesFilter extends SimpleFilter[Request, Response] {
-
   val crossdomainContents =
     """<?xml version="1.0"?>
       |<!DOCTYPE cross-domain-policy SYSTEM "http://www.macromedia.com/xml/dtds/cross-domain-policy.dtd">
@@ -43,26 +42,33 @@ class StaticFilesFilter extends SimpleFilter[Request, Response] {
   }
 
   private def renderRobots: Future[Response] = {
-    Future.value(ResponseBuilder().
-      mediaType(MediaType.PlainText).
-      body(robotsContents).
-      headers(Map(
-        "Cache-Control" -> s"public, max-age=$oneDayInSeconds",
-        "Content-Length" -> contentLength(robotsContents)
-      )).
-      build
+    Future.value(
+      ResponseBuilder()
+        .mediaType(MediaType.PlainText)
+        .body(robotsContents)
+        .headers(
+          Map(
+            "Cache-Control" -> s"public, max-age=$oneDayInSeconds",
+            "Content-Length" -> contentLength(robotsContents)
+          )
+        )
+        .build
     )
   }
 
   private def renderCrossdomain: Future[Response] = {
-    Future.value(ResponseBuilder().
-      mediaType(MediaType.Xml).
-      body(crossdomainContents).
-      headers(Map(
-        "Accept-Ranges" -> "bytes",
-        "Cache-Control" -> s"public, max-age=$oneDayInSeconds",
-        "Content-Length" -> contentLength(crossdomainContents)
-      ))
-      .build)
+    Future.value(
+      ResponseBuilder()
+        .mediaType(MediaType.Xml)
+        .body(crossdomainContents)
+        .headers(
+          Map(
+            "Accept-Ranges" -> "bytes",
+            "Cache-Control" -> s"public, max-age=$oneDayInSeconds",
+            "Content-Length" -> contentLength(crossdomainContents)
+          )
+        )
+        .build
+    )
   }
 }

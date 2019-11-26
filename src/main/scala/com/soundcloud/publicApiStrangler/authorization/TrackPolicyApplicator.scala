@@ -9,10 +9,20 @@ import play.api.libs.json.{JsObject, JsValue, Json}
 case class TrackPolicyApplicator(clientWhitelist: Set[Urn]) {
   val durationJsonPropertyName = "duration"
 
-  def apply(session: UserSession, visitor: TracksVisitor, rules: Seq[ContentAuthorization], durationActions: List[TrackDurationAction]): Option[JsValue] =
+  def apply(
+      session: UserSession,
+      visitor: TracksVisitor,
+      rules: Seq[ContentAuthorization],
+      durationActions: List[TrackDurationAction]
+  ): Option[JsValue] =
     visit(session, visitor, policiesByUrn(rules), durationsByUrn(durationActions))
 
-  private def visit(session: UserSession, visitor: TracksVisitor, authorizations: Map[Urn, ContentAuthorization], durationActions: Map[Urn, TrackDurationAction]): Option[JsValue] =
+  private def visit(
+      session: UserSession,
+      visitor: TracksVisitor,
+      authorizations: Map[Urn, ContentAuthorization],
+      durationActions: Map[Urn, TrackDurationAction]
+  ): Option[JsValue] =
     visitor.apply {
       case (urn, track) =>
         val contentAuth = authorizations(urn)
@@ -31,10 +41,11 @@ case class TrackPolicyApplicator(clientWhitelist: Set[Urn]) {
   private def allowTrack(contentAuth: ContentAuthorization, userSession: UserSession): Boolean = {
     contentAuth.getPolicy match {
       case ContentPolicy.BLOCK => false
-      case ContentPolicy.MONETIZE => contentAuth.getMonetizationModel match {
-        case MonetizationModel.SUB_HIGH_TIER | MonetizationModel.SUB_MID_TIER => userAgentIsWhitelisted(userSession)
-        case _ => true
-      }
+      case ContentPolicy.MONETIZE =>
+        contentAuth.getMonetizationModel match {
+          case MonetizationModel.SUB_HIGH_TIER | MonetizationModel.SUB_MID_TIER => userAgentIsWhitelisted(userSession)
+          case _ => true
+        }
       case _ => true
     }
   }
@@ -45,7 +56,11 @@ case class TrackPolicyApplicator(clientWhitelist: Set[Urn]) {
   private def durationsByUrn(durationActions: List[TrackDurationAction]): Map[Urn, TrackDurationAction] =
     durationActions.map(durationAction => durationAction.urn -> durationAction).toMap
 
-  private def potentiallyAddContentAuthorization(track: Track, contentAuthorization: ContentAuthorization, userSession: UserSession): JsObject = {
+  private def potentiallyAddContentAuthorization(
+      track: Track,
+      contentAuthorization: ContentAuthorization,
+      userSession: UserSession
+  ): JsObject = {
     if (userAgentIsWhitelisted(userSession)) {
       track.withContentAuthorization(contentAuthorization)
     } else {
