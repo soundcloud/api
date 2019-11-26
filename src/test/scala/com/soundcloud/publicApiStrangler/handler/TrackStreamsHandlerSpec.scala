@@ -2,6 +2,7 @@ package com.soundcloud.publicApiStrangler.handler
 
 import com.soundcloud.jvmkit.module.bff.testsupport.FakeUserAuthentication
 import com.soundcloud.jvmkit.module.http.server.{Handler, HandlerRequest}
+import com.soundcloud.jvmkit.module.telemetry.Telemetry
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.publicApiStrangler.Routing
@@ -14,8 +15,9 @@ import org.specs2.specification.core.Fragments
 import play.api.libs.json.Json
 
 class TrackStreamsHandlerSpec extends UnitSpecification {
+  val fakeTelemetry = Telemetry.createIsolatedInstance
 
-  class FakeTrackAccessRecorderService extends TrackAccessRecorderService(null) {
+  class FakeTrackAccessRecorderService extends TrackAccessRecorderService(null, fakeTelemetry) {
     override def recordStreamAccess(session: UserSession, request: HandlerRequest, trackUrn: Urn, loggingEnabled: Boolean)(action: => Future[Response]): Future[Response] =
       action
   }

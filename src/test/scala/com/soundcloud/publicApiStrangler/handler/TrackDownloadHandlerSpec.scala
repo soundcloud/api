@@ -1,7 +1,8 @@
 package com.soundcloud.publicApiStrangler.handler
 
 import com.soundcloud.jvmkit.module.bff.testsupport.FakeUserAuthentication
-import com.soundcloud.jvmkit.module.http.server.{HandlerRequest}
+import com.soundcloud.jvmkit.module.http.server.HandlerRequest
+import com.soundcloud.jvmkit.module.telemetry.Telemetry
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.publicApiStrangler.Routing
@@ -11,8 +12,9 @@ import com.twitter.finagle.http.{Response, Status}
 import com.twitter.util.Future
 
 class TrackDownloadHandlerSpec extends UnitSpecification {
+  val fakeTelemetry = Telemetry.createIsolatedInstance
 
-  class FakeTrackAccessRecorderService extends TrackAccessRecorderService(null) {
+  class FakeTrackAccessRecorderService extends TrackAccessRecorderService(null, fakeTelemetry) {
     override def recordDownloadAccess(session: UserSession, request: HandlerRequest, trackUrn: Urn)(action: => Future[Response]): Future[Response] =
       action
   }
