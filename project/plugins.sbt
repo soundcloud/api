@@ -1,3 +1,3 @@
 resolvers := Seq(Resolver.defaultLocal, "SC Repo" at "https://maven.dev.s-cloud.net/sc-repo/")
 
-addSbtPlugin("com.soundcloud" % "sbtkit" % "2.13.0")
+addSbtPlugin("com.soundcloud" % "sbtkit" % "2.14.0")
