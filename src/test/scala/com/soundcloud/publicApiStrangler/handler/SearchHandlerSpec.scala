@@ -56,26 +56,6 @@ class SearchHandlerSpec extends UnitSpecification {
 
     override def routingDefinitions = Routing.forSearchHandler(handler)
 
-    // just so we can distinguish a forwarded request. Typically, this would be 200.
-    val forwardStatus = Status.Found
-    val forwardContent = "forwardContent"
-
-    def expectForwardedRequest = {
-      val response = JsonResponseBuilder().body(forwardContent).status(forwardStatus).build
-      fallbackMock.dispatchToMothership(any[HandlerRequest]) returns Future.value(response)
-
-      fallbackMock
-        .dispatch(any[HandlerRequest])
-        .returns(Future(response))
-
-      followCountsClientMock.counts(any[UserSession], any[Seq[Urn]]) returns Future.value(followCountsSeq)
-    }
-
-    def stillForwards(response: Response) = {
-      response.status ==== forwardStatus
-      response.contentString ==== "forwardContent"
-    }
-
     def doesNotForward(response: Response) = {
       there was noCallsTo(fallbackMock)
     }
@@ -106,15 +86,37 @@ class SearchHandlerSpec extends UnitSpecification {
       val searchMock = JsonMappingMock.prepare[SearchMock]
     }
 
-    // TODO fix test
-    //    "forwards to Mothership when q param not present" in new Context {
-    //      endpoints.foreach { case (apiEndPoint, dispatcherEndPoint) =>
-    //        expectForwardedRequest
-    //        val response = get(handler, apiEndPoint)
-    //        fallbackCounter.labels(apiEndPoint).get() ==== 1.0
-    //        stillForwards(response)
-    //      }
-    //    }
+    "forwards to Mothership when q param not present" in new Context {
+      // just so we can distinguish a forwarded request. Typically, this would be 200.
+      val forwardStatus = Status.Found
+      val forwardContent = "forwardContent"
+
+      def expectForwardedRequest = {
+        val response = JsonResponseBuilder().body(forwardContent).status(forwardStatus).build
+        fallbackMock.dispatch(any[HandlerRequest]) returns Future.value(response)
+        trackMothershipDispatcherWithCounts.request(any[HandlerRequest]) returns Future.value(response)
+
+        fallbackMock
+          .dispatch(any[HandlerRequest])
+          .returns(Future(response))
+
+        followCountsClientMock.counts(any[UserSession], any[Seq[Urn]]) returns Future.value(followCountsSeq)
+      }
+
+      def stillForwards(response: Response) = {
+        response.status ==== forwardStatus
+        response.contentString ==== "forwardContent"
+      }
+
+      endpoints.foreach {
+        case (apiEndPoint, dispatcherRequest, handler) =>
+          expectForwardedRequest
+          val response = get(handler, apiEndPoint)
+          // XXX: Instrumentation was removed in ff3609e02af7a026ea52eacc33e32c1fc506a895
+          // fallbackCounter.labels(apiEndPoint).get() ==== 1.0
+          stillForwards(response)
+      }
+    }
 
     "performs a search when q param is present" in new Context {
       endpoints.foreach {

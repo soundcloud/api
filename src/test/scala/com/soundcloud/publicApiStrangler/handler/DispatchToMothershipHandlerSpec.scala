@@ -1,6 +1,6 @@
 package com.soundcloud.publicApiStrangler.handler
 
-import com.soundcloud.jvmkit.module.http.server.{AlwaysMatchesPathMatcher, HandlerRequest}
+import com.soundcloud.jvmkit.module.http.server.HandlerRequest
 import com.soundcloud.publicApiStrangler.test.UnitSpecification
 import com.twitter.finagle.Service
 import com.twitter.finagle.http._
@@ -16,19 +16,14 @@ class DispatchToMothershipHandlerSpec extends UnitSpecification {
       response.headerMap.set("header1", "valueHeader1").set("header2", "valueHeader2")
       response.contentString = "body content"
 
-      val request = Request(Version.Http11, Method.Connect, "/")
-      val handlerRequest = HandlerRequest(AlwaysMatchesPathMatcher, request)
+      val handlerRequest = HandlerRequest()
     }
 
     "returns the response verbatim" >> {
-      "for defaultHandling" in new Context {
-        mothershipClient(any[Request]) returns (Future.value(response))
-        Await.result(handler(handlerRequest)) must be_==(response)
-      }
-
       "for dispatch method" in new Context {
         mothershipClient(any[Request]) returns (Future.value(response))
-        val responseFromHandler = Await.result(handler.dispatch(request))
+        val responseFromHandler = Await.result(handler.dispatch(handlerRequest))
+
         responseFromHandler.status ==== response.status
         responseFromHandler.headerMap.get("header1") ==== Some("valueHeader1")
         responseFromHandler.headerMap.get("header2") ==== Some("valueHeader2")
@@ -36,16 +31,30 @@ class DispatchToMothershipHandlerSpec extends UnitSpecification {
       }
     }
 
-    "returns 500 for failed requests" >> {
-      "for defaultHandling" in new Context {
-        mothershipClient(any[Request]) returns (Future.exception(new IllegalStateException))
-        Await.result(handler(handlerRequest)).statusCode mustEqual 500
-      }
-
+    "returns 500 for non-fatal exceptions" >> {
       "for dispatch method" in new Context {
-        mothershipClient(any[Request]) returns (Future.exception(new IllegalStateException))
-        val responseFromHandler = Await.result(handler.dispatch(request))
+        mothershipClient(any[Request]) returns
+          (Future.exception(
+            new IllegalStateException
+          ))
+        val responseFromHandler = Await.result(handler.dispatch(handlerRequest))
         responseFromHandler.status ==== Status.InternalServerError
+      }
+    }
+
+    "does not handle fatal exceptions" >> {
+      "for dispatch method" in new Context {
+        private val fatalException = new ThreadDeath
+        mothershipClient(any[Request]) returns
+          (Future.exception(
+            fatalException
+          ))
+
+        (try {
+          Await.result(handler.dispatch(handlerRequest))
+        } catch {
+          case (e: Throwable) => e
+        }) ==== fatalException
       }
     }
   }

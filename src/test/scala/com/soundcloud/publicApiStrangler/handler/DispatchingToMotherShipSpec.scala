@@ -4,7 +4,7 @@ import com.soundcloud.jvmkit.module.http.server.{HandlerRequest, ResponseBuilder
 import com.soundcloud.publicApiStrangler.Routing
 import com.soundcloud.publicApiStrangler.test.{HandlerSpecificationScope, UnitSpecification}
 import com.twitter.finagle.http.Method._
-import com.twitter.finagle.http.{Method, Request, Status}
+import com.twitter.finagle.http.{Method, Status}
 import com.twitter.util.Future
 
 class DispatchingToMotherShipSpec extends UnitSpecification {
@@ -59,8 +59,7 @@ class DispatchingToMotherShipSpec extends UnitSpecification {
 
   trait MothershipContext extends HandlerSpecificationScope {
     val dispatcher = mock[DispatchToMothershipHandler]
-    dispatcher.dispatch(any[Request]) returns Future.value(ResponseBuilder.ok())
-    dispatcher.dispatchToMothership(any[HandlerRequest]) returns Future.value(ResponseBuilder.ok())
+    dispatcher.dispatch(any[HandlerRequest]) returns Future.value(ResponseBuilder.ok())
 
     override def routingDefinitions() = Routing.forMothershipDispatcher(dispatcher)
   }
@@ -76,9 +75,9 @@ class DispatchingToMotherShipSpec extends UnitSpecification {
     case (method, endpoint) =>
       s"Mothership dispatcher should handle $method at $endpoint" in new MothershipContext {
         method match {
-          case Method.Get => get(dispatcher.dispatchToMothership, endpoint).status = Status.Ok
-          case Method.Post => post(dispatcher.dispatchToMothership, endpoint).status = Status.Ok
-          case Method.Put => put(dispatcher.dispatchToMothership, endpoint).status = Status.Ok
+          case Method.Get => get(dispatcher.dispatch, endpoint).status = Status.Ok
+          case Method.Post => post(dispatcher.dispatch, endpoint).status = Status.Ok
+          case Method.Put => put(dispatcher.dispatch, endpoint).status = Status.Ok
           case m => throw new UnsupportedOperationException(s"Test for method $m not implemented")
         }
       }

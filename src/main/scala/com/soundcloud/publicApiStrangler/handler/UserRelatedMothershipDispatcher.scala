@@ -45,7 +45,7 @@ class UserRelatedMothershipDispatcher(
   def dispatchToMothership(request: HandlerRequest): Future[Response] = {
     userAuthentication.withUserSession(request) { session =>
       mothershipDispatcher
-        .dispatchToMothership(request.request)
+        .dispatch(request)
         .flatMap(response => {
           lazy val defaultResponse = Future.value(response)
 

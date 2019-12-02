@@ -62,6 +62,7 @@ clean:
 	rm -rf target
 	rm -rf project/project
 	rm -rf project/target
+	rm -rf endToEndTests/target
 
 package: prepare-package-layout
 	sc artifact-manager package --runtime=$(RUNTIME_STACK)

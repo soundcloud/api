@@ -1,7 +1,7 @@
 package com.soundcloud.publicApiStrangler.handler
 
 import com.soundcloud.jvmkit.module.bff.session.UserAuthentication
-import com.soundcloud.jvmkit.module.http.server.{AlwaysMatchesPathMatcher, HandlerRequest}
+import com.soundcloud.jvmkit.module.http.server.HandlerRequest
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.publicApiStrangler.client.stitch.{StitchClient, StitchCounts}
@@ -25,7 +25,7 @@ class TrackMothershipDispatcherWithCounts(
 
     userAuthentication.withUserSession(request) { session =>
       mothershipDispatcher
-        .dispatchToMothership(HandlerRequest(AlwaysMatchesPathMatcher, request))
+        .dispatch(request)
         .flatMap(response => {
           lazy val defaultResponse = Future.value(response)
 

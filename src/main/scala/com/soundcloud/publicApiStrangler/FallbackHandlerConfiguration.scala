@@ -134,5 +134,10 @@ class FallbackHandlerConfiguration(telemetry: Telemetry, mothershipDispatcher: D
   )
 
   val fallbackHandler =
-    new SpecificStranglingHandler(mothershipDispatcher, whatToStrangle, officialSoundCloudApps, fallthroughCounter)
+    new SpecificStranglingHandler(
+      mothershipDispatcher.dispatch,
+      whatToStrangle,
+      officialSoundCloudApps,
+      fallthroughCounter
+    )
 }

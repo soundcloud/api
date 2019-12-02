@@ -1,7 +1,7 @@
 package com.soundcloud.publicApiStrangler.handler
 
 import com.soundcloud.jvmkit.module.bff.testsupport.FakeUserAuthentication
-import com.soundcloud.jvmkit.module.http.server.ResponseBuilder
+import com.soundcloud.jvmkit.module.http.server.{HandlerRequest, ResponseBuilder}
 import com.soundcloud.jvmkit.module.util.session.UserSessionBuilder
 import com.soundcloud.jvmkit.module.util.{Geo, Urn}
 import com.soundcloud.publicApiStrangler.Routing
@@ -13,7 +13,7 @@ import com.soundcloud.publicApiStrangler.client.trackmetadata.{TrackmetadataClie
 import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures._
 import com.soundcloud.publicApiStrangler.test.util.TrackMetadataTrackBuilder
 import com.soundcloud.publicApiStrangler.test.{HandlerSpecificationScope, UnitSpecification}
-import com.twitter.finagle.http.{Request, Status}
+import com.twitter.finagle.http.Status
 import com.twitter.util.Future
 import org.mockito.Mockito.when
 import play.api.libs.json.{JsObject, Json}
@@ -46,7 +46,7 @@ class TracksHandlerSpec extends UnitSpecification {
 
     trackCoordinator.deleteTrack(session, trackUrn) returns Future(Success(()))
     okidoki.fetch(===(session), ===(Set(userUrn))) returns Future(List(user))
-    when(fallback.dispatch(any[Request])).thenReturn(Future.value(ResponseBuilder.ok()))
+    when(fallback.dispatch(any[HandlerRequest])).thenReturn(Future.value(ResponseBuilder.ok()))
     when(trackmetadataClient.track(session, trackUrn)).thenReturn(trackmetadataResponse)
   }
 
@@ -64,7 +64,7 @@ class TracksHandlerSpec extends UnitSpecification {
         "passes through requests with supply_chain_status = manual_upload" in new PutContext {
           override def trackmetadataResponse = trackResponse(Some("manual_upload"))
 
-          when(fallback.dispatch(any[Request]))
+          when(fallback.dispatch(any[HandlerRequest]))
             .thenReturn(Future.value(ResponseBuilder.created("Thank you for creating")))
 
           val response = put(handler.handlePut, path, body = Json.stringify(singleTrack))
@@ -75,7 +75,7 @@ class TracksHandlerSpec extends UnitSpecification {
         "passes through requests with supply_chain_status = null" in new PutContext {
           override def trackmetadataResponse = trackResponse(None)
 
-          when(fallback.dispatch(any[Request]))
+          when(fallback.dispatch(any[HandlerRequest]))
             .thenReturn(Future.value(ResponseBuilder.created("Thank you for creating")))
 
           val response = put(handler.handlePut, path, body = Json.stringify(singleTrack))
