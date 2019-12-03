@@ -80,9 +80,6 @@ object Routing {
       (Method.Get, "/announcements.json", mothershipDispatcher.dispatch),
       (Method.Head, "/me/followings/:other_id", mothershipDispatcher.dispatch),
       (Method.Head, "/me/followings/:other_id.json", mothershipDispatcher.dispatch),
-      (Method.Post, "/oauth2/token", mothershipDispatcher.dispatch),
-      (Method.Post, "/oauth2/token.json", mothershipDispatcher.dispatch),
-      (Method.Post, "/oauth2/token/", mothershipDispatcher.dispatch),
       (Method.Post, "/playlists", mothershipDispatcher.dispatch),
       (Method.Put, "/playlists/:id", mothershipDispatcher.dispatch),
       (Method.Put, "/playlists/:id.json", mothershipDispatcher.dispatch),
@@ -101,6 +98,14 @@ object Routing {
       (Method.Post, "/users/:userId/tracks", mothershipDispatcher.dispatch),
       (Method.Head, "/v1/me/followings/:other_id", mothershipDispatcher.dispatch),
       (Method.Head, "/v1/me/followings/:other_id.json", mothershipDispatcher.dispatch)
+    )
+  }
+
+  def forTokenExchange(handler: Handler): List[(Method, String, Handler)] = {
+    List(
+      (Method.Post, "/oauth2/token", handler),
+      (Method.Post, "/oauth2/token.json", handler),
+      (Method.Post, "/oauth2/token/", handler)
     )
   }
 

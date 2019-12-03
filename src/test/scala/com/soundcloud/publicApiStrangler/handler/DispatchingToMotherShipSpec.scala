@@ -11,9 +11,6 @@ class DispatchingToMotherShipSpec extends UnitSpecification {
   val expectedMotherShipEndpoints = Set(
     (Get, "/announcements"),
     (Get, "/announcements.json"),
-    (Post, "/oauth2/token"),
-    (Post, "/oauth2/token/"),
-    (Post, "/oauth2/token.json"),
     (Post, "/playlists"),
     (Put, "/playlists/1"),
     (Put, "/playlists/1.json"),
@@ -26,6 +23,12 @@ class DispatchingToMotherShipSpec extends UnitSpecification {
     (Post, "/tracks/999"),
     (Post, "/tracks/999.json"),
     (Post, "/users/7110/tracks")
+  )
+
+  val tokenExchangeEndpoints = Set(
+    (Post, "/oauth2/token"),
+    (Post, "/oauth2/token/"),
+    (Post, "/oauth2/token.json")
   )
 
   val expectedUserRelatedMothershipEndpoint = Set(
@@ -64,6 +67,10 @@ class DispatchingToMotherShipSpec extends UnitSpecification {
     override def routingDefinitions() = Routing.forMothershipDispatcher(dispatcher)
   }
 
+  trait TokenExchangeContext extends HandlerSpecificationScope {
+    override def routingDefinitions() = Routing.forTokenExchange(_ => Future(ResponseBuilder.ok()))
+  }
+
   trait UserRelatedMothershipContext extends HandlerSpecificationScope {
     val dispatcher = mock[UserRelatedMothershipDispatcher]
     dispatcher.dispatchToMothership(any[HandlerRequest]) returns Future.value(ResponseBuilder.ok())
@@ -79,6 +86,15 @@ class DispatchingToMotherShipSpec extends UnitSpecification {
           case Method.Post => post(endpoint).status = Status.Ok
           case Method.Put => put(endpoint).status = Status.Ok
           case m => throw new UnsupportedOperationException(s"Test for method $m not implemented")
+        }
+      }
+  }
+
+  tokenExchangeEndpoints foreach {
+    case (method, endpoint) =>
+      s"Mothership dispatcher should handle $method to token exchange $endpoint" in new TokenExchangeContext {
+        method match {
+          case Method.Post => post(endpoint).status = Status.Ok
         }
       }
   }
