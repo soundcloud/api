@@ -31,7 +31,7 @@ class SimilarSoundsHandlerSpec extends UnitSpecification {
 
       when(similarSoundsMapperMock.materialize(anonymousSession, page)).thenReturn(Future(Some(similarSoundsMock)))
 
-      val response = get(similarSoundsHandler.handleSimilarSoundsRequest, path)
+      val response = get(path)
       response.statusCode ==== 200
 
       verify(similarSoundsMapperMock).materialize(anonymousSession, page)
@@ -53,7 +53,7 @@ class SimilarSoundsHandlerSpec extends UnitSpecification {
 
     when(similarSoundsMapperMock.materialize(anonymousSession, page)).thenReturn(Future.value(None))
 
-    val response = get(similarSoundsHandler.handleSimilarSoundsRequest, "/tracks/123/related?limit=22&offset=3")
+    val response = get("/tracks/123/related?limit=22&offset=3")
     response.statusCode ==== 404
 
     verify(similarSoundsMapperMock).materialize(anonymousSession, page)

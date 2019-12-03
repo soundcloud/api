@@ -145,7 +145,7 @@ class UserFollowHandlerSpec extends UnitSpecification {
         )
       }
 
-      val response = get(handler.fetchFollowersFollowed, "/users/999/followers/followed_by/2", Map("limit" -> "10"))
+      val response = get("/users/999/followers/followed_by/2", Map("limit" -> "10"))
       response.status ==== Status.Ok
       Json.parse(response.contentString) ==== Json.obj("collection" -> List(anotherUser123))
     }
@@ -169,7 +169,7 @@ class UserFollowHandlerSpec extends UnitSpecification {
       }
 
       val response =
-        get(handler.fetchFollowingsNotFollowedBy, "/users/999/followings/not_followed_by/2", Map("limit" -> "10"))
+        get("/users/999/followings/not_followed_by/2", Map("limit" -> "10"))
       response.status ==== Status.Ok
       Json.parse(response.contentString) ==== Json.obj("collection" -> List(anotherUser123))
     }
@@ -193,7 +193,7 @@ class UserFollowHandlerSpec extends UnitSpecification {
       }
 
       val response =
-        get(handler.fetchMutualFollowings, "/users/999/followings/common_to/2", Map("limit" -> "10", "cursor" -> "2"))
+        get("/users/999/followings/common_to/2", Map("limit" -> "10", "cursor" -> "2"))
       response.status ==== Status.Ok
       Json.parse(response.contentString) ==== Json.obj("collection" -> List(anotherUser123))
     }
@@ -224,7 +224,7 @@ class UserFollowHandlerSpec extends UnitSpecification {
         )
       }
 
-      val response = get(handler.fetchFollowings, "/me/followings/ids", Map("limit" -> "10"))
+      val response = get("/me/followings/ids", Map("limit" -> "10"))
       response.status ==== Status.Ok
       Json.parse(response.contentString) ==== Json.obj(
         "collection" -> List(123),
@@ -258,7 +258,7 @@ class UserFollowHandlerSpec extends UnitSpecification {
         )
       }
 
-      val response = get(handler.fetchMyFollowerIds, "/me/followers/ids", Map("limit" -> "10"))
+      val response = get("/me/followers/ids", Map("limit" -> "10"))
       response.status ==== Status.Ok
       Json.parse(response.contentString) ==== Json.obj(
         "collection" -> List(123),
@@ -294,7 +294,7 @@ class UserFollowHandlerSpec extends UnitSpecification {
             .value(Map.empty[Urn, Long])
         }
 
-        val response = get(handler.fetchFollowings, "/me/followings", Map("limit" -> "10", "client_id" -> "FOO"))
+        val response = get("/me/followings", Map("limit" -> "10", "client_id" -> "FOO"))
         response.status ==== Status.Ok
         Json.parse(response.contentString) ==== Json.obj(
           "collection" -> List(user123),
@@ -329,7 +329,7 @@ class UserFollowHandlerSpec extends UnitSpecification {
         )
       }
 
-      val response = get(handler.fetchMyFollowers, "/me/followers", Map("limit" -> "10", "cursor" -> "foo"))
+      val response = get("/me/followers", Map("limit" -> "10", "cursor" -> "foo"))
       response.status ==== Status.Ok
       Json.parse(response.contentString) ==== Json.obj(
         "collection" -> List(anotherUser123),
@@ -372,14 +372,14 @@ class UserFollowHandlerSpec extends UnitSpecification {
 
   "GET /me/followings/:other_id" >> {
     "fetches a following" in new FetchesFollowingContext {
-      val response = get(handler.fetchPossibleFollower, "/me/followings/123")
+      val response = get("/me/followings/123")
       response.status ==== Status.SeeOther
       response.headerMap.get("Location") ==== Some("http://foo/users/123")
       Json.parse(response.contentString) ==== user123
     }
 
     "returns not found when the given user is not a following" in new FollowingNotFoundContext {
-      val response = get(handler.fetchPossibleFollower, "/me/followings/123")
+      val response = get("/me/followings/123")
       response.status ==== Status.NotFound
       response.contentString ==== ""
     }
@@ -387,14 +387,14 @@ class UserFollowHandlerSpec extends UnitSpecification {
 
   "GET /me/followings/:other_id.json" >> {
     "fetches a following" in new FetchesFollowingContext {
-      val response = get(handler.fetchPossibleFollower, "/me/followings/123.json")
+      val response = get("/me/followings/123.json")
       response.status ==== Status.SeeOther
       response.headerMap.get("Location") ==== Some("http://foo/users/123")
       Json.parse(response.contentString) ==== user123
     }
 
     "returns not found when the given user is not a following" in new FollowingNotFoundContext {
-      val response = get(handler.fetchPossibleFollower, "/me/followings/123.json")
+      val response = get("/me/followings/123.json")
       response.status ==== Status.NotFound
       response.contentString ==== ""
     }
@@ -402,14 +402,14 @@ class UserFollowHandlerSpec extends UnitSpecification {
 
   "GET /users/:id/followings/:other_id" >> {
     "fetches a following" in new FetchesFollowingContext {
-      val response = get(handler.fetchPossibleFollowingWithoutAuth, "/users/999/followings/123")
+      val response = get("/users/999/followings/123")
       response.status ==== Status.SeeOther
       response.headerMap.get("Location") ==== Some("http://foo/users/123")
       Json.parse(response.contentString) ==== user123
     }
 
     "returns not found when the given user is not a following" in new FollowingNotFoundContext {
-      val response = get(handler.fetchPossibleFollowingWithoutAuth, "/users/999/followings/123")
+      val response = get("/users/999/followings/123")
       response.status ==== Status.NotFound
       response.contentString ==== ""
     }
@@ -417,14 +417,14 @@ class UserFollowHandlerSpec extends UnitSpecification {
 
   "GET /users/:id/followings/:other_id.json" >> {
     "fetches a following" in new FetchesFollowingContext {
-      val response = get(handler.fetchPossibleFollowingWithoutAuth, "/users/999/followings/123.json")
+      val response = get("/users/999/followings/123.json")
       response.status ==== Status.SeeOther
       response.headerMap.get("Location") ==== Some("http://foo/users/123")
       Json.parse(response.contentString) ==== user123
     }
 
     "returns not found when the given user is not a following" in new FollowingNotFoundContext {
-      val response = get(handler.fetchPossibleFollowingWithoutAuth, "/users/999/followings/123.json")
+      val response = get("/users/999/followings/123.json")
       response.status ==== Status.NotFound
       response.contentString ==== ""
     }
@@ -464,7 +464,7 @@ class UserFollowHandlerSpec extends UnitSpecification {
 
   "GET /me/followers/:other_id" >> {
     "fetches a follower" in new FetchesFollowerContext {
-      val response = get(handler.fetchPossibleFollower, "/me/followers/123")
+      val response = get("/me/followers/123")
       response.status ==== Status.SeeOther
       response.headerMap.get("Location") ==== Some("http://foo/users/123")
 
@@ -472,7 +472,7 @@ class UserFollowHandlerSpec extends UnitSpecification {
     }
 
     "returns not found when the given user is not a follower" in new FollowerNotFoundContext {
-      val response = get(handler.fetchPossibleFollower, "/me/followers/123")
+      val response = get("/me/followers/123")
       response.status ==== Status.NotFound
       response.contentString ==== ""
     }
@@ -480,7 +480,7 @@ class UserFollowHandlerSpec extends UnitSpecification {
 
   "GET /me/followers/:other_id.json" >> {
     "fetches a follower" in new FetchesFollowerContext {
-      val response = get(handler.fetchPossibleFollower, "/me/followers/123.json")
+      val response = get("/me/followers/123.json")
       response.status ==== Status.SeeOther
       response.headerMap.get("Location") ==== Some("http://foo/users/123")
 
@@ -488,7 +488,7 @@ class UserFollowHandlerSpec extends UnitSpecification {
     }
 
     "returns not found when the given user is not a follower" in new FollowerNotFoundContext {
-      val response = get(handler.fetchPossibleFollower, "/me/followers/123.json")
+      val response = get("/me/followers/123.json")
       response.status ==== Status.NotFound
       response.contentString ==== ""
     }
@@ -496,7 +496,7 @@ class UserFollowHandlerSpec extends UnitSpecification {
 
   "GET /users/:id/followers/:other_id" >> {
     "fetches a follower" in new FetchesFollowerContext {
-      val response = get(handler.fetchPossibleFollowerWithoutAuth, "/users/999/followers/123")
+      val response = get("/users/999/followers/123")
       response.status ==== Status.SeeOther
       response.headerMap.get("Location") ==== Some("http://foo/users/123")
 
@@ -504,7 +504,7 @@ class UserFollowHandlerSpec extends UnitSpecification {
     }
 
     "returns not found when the given user is not a follower" in new FollowerNotFoundContext {
-      val response = get(handler.fetchPossibleFollowerWithoutAuth, "/users/999/followers/123")
+      val response = get("/users/999/followers/123")
       response.status ==== Status.NotFound
       response.contentString ==== ""
     }
@@ -512,7 +512,7 @@ class UserFollowHandlerSpec extends UnitSpecification {
 
   "GET /users/:id/followers/:other_id.json" >> {
     "fetches a follower" in new FetchesFollowerContext {
-      val response = get(handler.fetchPossibleFollowerWithoutAuth, "/users/999/followers/123.json")
+      val response = get("/users/999/followers/123.json")
       response.status ==== Status.SeeOther
       response.headerMap.get("Location") ==== Some("http://foo/users/123")
 
@@ -520,7 +520,7 @@ class UserFollowHandlerSpec extends UnitSpecification {
     }
 
     "returns not found when the given user is not a follower" in new FollowerNotFoundContext {
-      val response = get(handler.fetchPossibleFollowerWithoutAuth, "/users/999/followers/123.json")
+      val response = get("/users/999/followers/123.json")
       response.status ==== Status.NotFound
       response.contentString ==== ""
     }
@@ -540,7 +540,7 @@ class UserFollowHandlerSpec extends UnitSpecification {
         )
       }
 
-      val response = put(handler.follow, "/me/followings/999.json", Map("client_id" -> "YOUR_CLIENT_ID"))
+      val response = put("/me/followings/999.json", Map("client_id" -> "YOUR_CLIENT_ID"))
       response.status ==== Status.Created
       Json.parse(response.contentString) ==== anotherUser123
     }
@@ -561,7 +561,7 @@ class UserFollowHandlerSpec extends UnitSpecification {
         )
       }
 
-      val response = put(handler.follow, "/me/followings/999", Map("client_id" -> "YOUR_CLIENT_ID"))
+      val response = put("/me/followings/999", Map("client_id" -> "YOUR_CLIENT_ID"))
       response.status ==== Status.Created
       Json.parse(response.contentString) ==== anotherUser123
     }
@@ -572,7 +572,7 @@ class UserFollowHandlerSpec extends UnitSpecification {
         followsMock.follow(session, userUrn) returns Future.value(AgeRestrictedUser)
       }
 
-      val response = put(handler.follow, "/me/followings/999", Map("client_id" -> "YOUR_CLIENT_ID"))
+      val response = put("/me/followings/999", Map("client_id" -> "YOUR_CLIENT_ID"))
       response.status ==== Status.Forbidden
       val errors = (Json.parse(response.contentString) \ "errors").as[Seq[JsObject]].head
       (errors \ "error_message").asOpt[String] ==== Option("DENY_AGE_RESTRICTED")
@@ -585,7 +585,7 @@ class UserFollowHandlerSpec extends UnitSpecification {
         followsMock.follow(session, userUrn) returns Future.value(AgeUnknownUser)
       }
 
-      val response = put(handler.follow, "/me/followings/999", Map("client_id" -> "YOUR_CLIENT_ID"))
+      val response = put("/me/followings/999", Map("client_id" -> "YOUR_CLIENT_ID"))
       response.status ==== Status.Forbidden
       val errors = (Json.parse(response.contentString) \ "errors").as[Seq[JsObject]].head
       (errors \ "error_message").asOpt[String] ==== Option("DENY_AGE_UNKNOWN")
@@ -597,7 +597,7 @@ class UserFollowHandlerSpec extends UnitSpecification {
         followsMock.follow(session, userUrn) returns Future.value(UserNotFound)
       }
 
-      val response = put(handler.follow, "/me/followings/999", Map("client_id" -> "YOUR_CLIENT_ID"))
+      val response = put("/me/followings/999", Map("client_id" -> "YOUR_CLIENT_ID"))
       response.status ==== Status.NotFound
       val errors = (Json.parse(response.contentString) \ "errors").as[Seq[JsObject]].head
       (errors \ "error_message").asOpt[String] ==== Option("404 - Not Found")
@@ -611,7 +611,7 @@ class UserFollowHandlerSpec extends UnitSpecification {
         followsMock.unfollow(session, userUrn) returns Future.value(UnfollowSuccessful)
       }
 
-      val response = delete(handler.unfollow, "/me/followings/999.json", Map("client_id" -> "YOUR_CLIENT_ID"))
+      val response = delete("/me/followings/999.json", Map("client_id" -> "YOUR_CLIENT_ID"))
       response.status ==== Status.Ok
     }
   }
@@ -623,7 +623,7 @@ class UserFollowHandlerSpec extends UnitSpecification {
         followsMock.unfollow(session, userUrn) returns Future.value(UnfollowSuccessful)
       }
 
-      val response = delete(handler.unfollow, "/me/followings/999", Map("client_id" -> "YOUR_CLIENT_ID"))
+      val response = delete("/me/followings/999", Map("client_id" -> "YOUR_CLIENT_ID"))
       response.status ==== Status.Ok
     }
 
@@ -633,7 +633,7 @@ class UserFollowHandlerSpec extends UnitSpecification {
         followsMock.unfollow(session, userUrn) returns Future.value(UserAsTarget)
       }
 
-      val response = delete(handler.unfollow, "/me/followings/999", Map("client_id" -> "YOUR_CLIENT_ID"))
+      val response = delete("/me/followings/999", Map("client_id" -> "YOUR_CLIENT_ID"))
       response.status ==== Status.UnprocessableEntity
     }
   }

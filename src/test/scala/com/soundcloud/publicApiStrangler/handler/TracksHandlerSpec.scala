@@ -67,7 +67,7 @@ class TracksHandlerSpec extends UnitSpecification {
           when(fallback.dispatch(any[HandlerRequest]))
             .thenReturn(Future.value(ResponseBuilder.created("Thank you for creating")))
 
-          val response = put(handler.handlePut, path, body = Json.stringify(singleTrack))
+          val response = put(path, body = Json.stringify(singleTrack))
           response.status ==== Status.Created
           response.contentString ==== "Thank you for creating"
         }
@@ -78,7 +78,7 @@ class TracksHandlerSpec extends UnitSpecification {
           when(fallback.dispatch(any[HandlerRequest]))
             .thenReturn(Future.value(ResponseBuilder.created("Thank you for creating")))
 
-          val response = put(handler.handlePut, path, body = Json.stringify(singleTrack))
+          val response = put(path, body = Json.stringify(singleTrack))
           response.status ==== Status.Created
           response.contentString ==== "Thank you for creating"
         }
@@ -86,7 +86,7 @@ class TracksHandlerSpec extends UnitSpecification {
         "refuses updating tracks with supply_chain_status = supply_chain" in new PutContext {
           override def trackmetadataResponse = trackResponse(Some("supply_chain"))
 
-          val response = put(handler.handlePut, path, body = Json.stringify(singleTrack))
+          val response = put(path, body = Json.stringify(singleTrack))
           response.status ==== Status.Unauthorized
           Json.parse(response.contentString) ==== Json.obj("reason" -> "not allowed")
         }
@@ -94,7 +94,7 @@ class TracksHandlerSpec extends UnitSpecification {
         "refuses updating tracks with supply_chain_status = banana" in new PutContext {
           override def trackmetadataResponse = trackResponse(Some("banana"))
 
-          val response = put(handler.handlePut, path, body = Json.stringify(singleTrack))
+          val response = put(path, body = Json.stringify(singleTrack))
           response.status ==== Status.Unauthorized
           Json.parse(response.contentString) ==== Json.obj("reason" -> "not allowed")
         }
@@ -102,7 +102,7 @@ class TracksHandlerSpec extends UnitSpecification {
         "returns not found when track is not returned" in new PutContext {
           override def trackmetadataResponse = Future.value(None)
 
-          val response = put(handler.handlePut, path, body = Json.stringify(singleTrack))
+          val response = put(path, body = Json.stringify(singleTrack))
           response.status ==== Status.NotFound
           response.contentString ==== ""
         }
@@ -110,7 +110,7 @@ class TracksHandlerSpec extends UnitSpecification {
         "errors if trackmetadata client throws up" in new PutContext {
           override def trackmetadataResponse = Future.exception(new RuntimeException("nooo"))
 
-          val response = put(handler.handlePut, path, body = Json.stringify(singleTrack))
+          val response = put(path, body = Json.stringify(singleTrack))
           response.status ==== Status.InternalServerError
           response.contentString ==== ""
         }
@@ -120,28 +120,28 @@ class TracksHandlerSpec extends UnitSpecification {
 
   "DELETE /tracks/:id" >> {
     "succeeds" in new Context {
-      val response = delete(handler.handleDelete, "/tracks/999")
+      val response = delete("/tracks/999")
       response.status ==== Status.Ok
     }
 
     "not found" in new Context {
       trackCoordinator.deleteTrack(session, trackUrn) returns Future(NotFound)
 
-      val response = delete(handler.handleDelete, "/tracks/999")
+      val response = delete("/tracks/999")
       response.status ==== Status.NotFound
     }
 
     "handles server errors from Track Coordinator" in new Context {
       trackCoordinator.deleteTrack(session, trackUrn) returns Future(ServerError.empty)
 
-      val response = delete(handler.handleDelete, "/tracks/999")
+      val response = delete("/tracks/999")
       response.status ==== Status.InternalServerError
     }
 
     "handles client errors from Track Coordinator" in new Context {
       trackCoordinator.deleteTrack(session, trackUrn) returns Future(ClientError.empty)
 
-      val response = delete(handler.handleDelete, "/tracks/999")
+      val response = delete("/tracks/999")
       response.status ==== Status.InternalServerError
     }
   }

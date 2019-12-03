@@ -55,8 +55,8 @@ class TrackStreamsHandlerSpec extends UnitSpecification {
     val httpPreviewMp3 = "http://mp3-progressive-preview"
 
     def call(method: Method, handler: Handler, path: String) = method match {
-      case Method.Head => head(handler, path)
-      case Method.Get => get(handler, path)
+      case Method.Head => head(path)
+      case Method.Get => get(path)
     }
   }
 
@@ -144,7 +144,7 @@ class TrackStreamsHandlerSpec extends UnitSpecification {
     }
 
     s"should return 302" in new WithSecretTokenContext {
-      val resp = get(handler.redirectStreamRequest, "/tracks/5/stream?secret_token=itsasecret")
+      val resp = get("/tracks/5/stream?secret_token=itsasecret")
       resp.status ==== Status.Found
       resp.headerMap("Location") ==== "http://mp3-progressive"
     }
