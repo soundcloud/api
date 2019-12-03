@@ -86,6 +86,7 @@ object App {
         List.concat(
           forUserFollowHandler(handlers.userFollowHandler),
           forMothershipDispatcher(handlers.mothershipDispatcher),
+          forTokenExchange(handlers.mothershipDispatcher.dispatch _),
           forSingleTrackHandler(handlers.singleTrackHandler),
           forPlaylistHandler(handlers.playlistsHandler),
           forSimilarSoundsHandler(handlers.similarSoundsHandler),
