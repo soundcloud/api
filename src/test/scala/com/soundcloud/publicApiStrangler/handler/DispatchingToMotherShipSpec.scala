@@ -75,9 +75,9 @@ class DispatchingToMotherShipSpec extends UnitSpecification {
     case (method, endpoint) =>
       s"Mothership dispatcher should handle $method at $endpoint" in new MothershipContext {
         method match {
-          case Method.Get => get(dispatcher.dispatch, endpoint).status = Status.Ok
-          case Method.Post => post(dispatcher.dispatch, endpoint).status = Status.Ok
-          case Method.Put => put(dispatcher.dispatch, endpoint).status = Status.Ok
+          case Method.Get => get(endpoint).status = Status.Ok
+          case Method.Post => post(endpoint).status = Status.Ok
+          case Method.Put => put(endpoint).status = Status.Ok
           case m => throw new UnsupportedOperationException(s"Test for method $m not implemented")
         }
       }
@@ -87,10 +87,10 @@ class DispatchingToMotherShipSpec extends UnitSpecification {
     case (method, endpoint) =>
       s"User-related mothership dispatcher should handle $method at $endpoint" in new UserRelatedMothershipContext {
         method match {
-          case Get => get(dispatcher.dispatchToMothership, endpoint).status ==== Status.Ok
-          case Post => post(dispatcher.dispatchToMothership, endpoint).status ==== Status.Ok
-          case Put => put(dispatcher.dispatchToMothership, endpoint).status ==== Status.Ok
-          case Head => head(dispatcher.dispatchToMothership, endpoint).status ==== Status.Ok
+          case Get => get(endpoint).status ==== Status.Ok
+          case Post => post(endpoint).status ==== Status.Ok
+          case Put => put(endpoint).status ==== Status.Ok
+          case Head => head(endpoint).status ==== Status.Ok
           case m => throw new UnsupportedOperationException(s"Test for method $m not implemented")
         }
       }

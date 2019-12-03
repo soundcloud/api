@@ -186,7 +186,7 @@ class SingleTrackHandlerSpec extends UnitSpecification {
         .thenReturn(Future.value(Success(trackRepresentation)))
 
       val response =
-        get(handler.renderTrack, path, Map.empty, Map("If-None-Match" -> "a8d3ba6d09b68691b77dc75dfcd7a477"))
+        get(path, Map.empty, Map("If-None-Match" -> "a8d3ba6d09b68691b77dc75dfcd7a477"))
       response.status ==== Status.Ok
       Json.parse(response.contentString) ==== expectedJson
     }
@@ -194,7 +194,7 @@ class SingleTrackHandlerSpec extends UnitSpecification {
 
   nonNumericPaths.foreach { path =>
     s"returns 404 for non-numeric track identifier for path: $path" in new Context {
-      val response = get(handler.renderTrack, path)
+      val response = get(path)
       response.status ==== Status.NotFound
       response.contentString ==== """{"errors":[{"error_message":"404 - Not Found"}]}"""
       response.headerMap.get("Content-Length") must beSome("48")
@@ -203,7 +203,7 @@ class SingleTrackHandlerSpec extends UnitSpecification {
 
   nonNumericPaths.foreach { path =>
     s"returns 404 wrapped in jsonp for non-numeric track identifier when callback param is provided for path: $path" in new Context {
-      val response = get(handler.renderTrack, path, Map("callback" -> "js_callback_fn"))
+      val response = get(path, Map("callback" -> "js_callback_fn"))
       response.status ==== Status.NotFound
       response.contentString ==== """/**/js_callback_fn({"errors":[{"error_message":"404 - Not Found"}]});"""
       response.headerMap.get("Content-Length") must beSome("69")
@@ -215,7 +215,7 @@ class SingleTrackHandlerSpec extends UnitSpecification {
       when(trackRepresentationsService.track(session, trackUrn, Some("s3cret")))
         .thenReturn(Future.value(Success(trackRepresentation)))
 
-      val response = get(handler.renderTrack, path, Map("secret_token" -> "s3cret"))
+      val response = get(path, Map("secret_token" -> "s3cret"))
       response.status ==== Status.Ok
       Json.parse(response.contentString) ==== expectedJson
     }
@@ -229,7 +229,7 @@ class SingleTrackHandlerSpec extends UnitSpecification {
       val expectedPJson =
         """/**/js_callback_dn({"kind":"track","id":987,"created_at":"2016/05/19 18:03:04 +0000","user_id":3000,"duration":0,"commentable":false,"state":"lol","original_content_size":123,"last_modified":"2016/05/19 18:03:04 +0000","sharing":"public","tag_list":"","permalink":null,"streamable":null,"embeddable_by":"none","purchase_url":"http://example.com/buy/7890","purchase_title":"buy me pls","label_id":null,"genre":null,"title":null,"description":null,"label_name":null,"release":"DR012","track_type":"original","key_signature":"Emaj","isrc":null,"video_url":"http://example.com/video.mp4","bpm":120.7,"release_year":null,"release_month":null,"release_day":null,"original_format":"donkey","license":null,"uri":"https://api.soundcloud.com/tracks/987","user":{"id":3000,"kind":"user","permalink":"giraffe","username":"Dr. G. Raffe","last_modified":"2016/10/10 11:21:36 +0000","uri":"https://api.soundcloud.com/users/3000","permalink_url":"http://soundcloud.com/denis","avatar_url":"https://example.com/giraffe.jpg"},"permalink_url":null,"artwork_url":null,"stream_url":"https://api.soundcloud.com/tracks/987/stream","download_url":"https://api.soundcloud.com/tracks/987/download"});"""
 
-      val response = get(handler.renderTrack, path, Map("callback" -> "js_callback_dn"))
+      val response = get(path, Map("callback" -> "js_callback_dn"))
       response.status ==== Status.Ok
       response.contentString ==== expectedPJson
     }
@@ -246,7 +246,7 @@ class SingleTrackHandlerSpec extends UnitSpecification {
       "it returns 200 for Some()" in new FromTrackMetadata {
         override def trackRepresentationLike = Future.value(Success(trackRepresentation))
 
-        val response = get(handler.renderTrack, path)
+        val response = get(path)
         response.status.code ==== 200
 
         import TrackRepresentation.writes
@@ -257,7 +257,7 @@ class SingleTrackHandlerSpec extends UnitSpecification {
       "it returns 404 for None" in new FromTrackMetadata {
         override def trackRepresentationLike = Future.value(NotFound)
 
-        val response = get(handler.renderTrack, path)
+        val response = get(path)
         response.status.code ==== 404
         response.contentString ==== """{"errors":[{"error_message":"404 - Not Found"}]}"""
       }
@@ -266,7 +266,7 @@ class SingleTrackHandlerSpec extends UnitSpecification {
         override def trackRepresentationLike =
           Future.exception(new RuntimeException("An unexpected error occured while fetching a track"))
 
-        val response = get(handler.renderTrack, path)
+        val response = get(path)
         response.status.code ==== 500
         response.contentString ==== "An unexpected error occured while fetching a track"
       }
@@ -283,7 +283,7 @@ class SingleTrackHandlerSpec extends UnitSpecification {
     s"returns a JSONP response for $path, when a callback parameter is provided" in new JsonpSupportContext {
       override def trackRepresentationLike = Future.value(Success(trackRepresentation))
 
-      val response = get(handler.renderTrack, path, Map("callback" -> "myFunctionName"))
+      val response = get(path, Map("callback" -> "myFunctionName"))
 
       import TrackRepresentation.writes
 
@@ -296,7 +296,7 @@ class SingleTrackHandlerSpec extends UnitSpecification {
     s"returns a JSONP response for 404s at $path, when a callback parameter is provided" in new JsonpSupportContext {
       override def trackRepresentationLike = Future.value(NotFound)
 
-      val response = get(handler.renderTrack, path, Map("callback" -> "myFunctionName"))
+      val response = get(path, Map("callback" -> "myFunctionName"))
       val expectedBody = """/**/myFunctionName({"errors":[{"error_message":"404 - Not Found"}]});"""
       response.statusCode ==== 404
       response.contentString ==== expectedBody

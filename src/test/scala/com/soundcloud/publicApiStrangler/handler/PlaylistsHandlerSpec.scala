@@ -36,7 +36,7 @@ class PlaylistsHandlerSpec extends UnitSpecification {
       when(playlistDeletionClient.deletePlaylist(session, Urn("soundcloud", "playlists", playlistId.toString)))
         .thenReturn(Future.value(deletePlaylistResponse))
 
-      val response = delete(handler.handleDelete _, s"/playlists/$playlistId")
+      val response = delete(s"/playlists/$playlistId")
     }
 
     "returns unauthorized for invalid session" in new DeletePlaylistContext {

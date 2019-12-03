@@ -111,7 +111,7 @@ class SearchHandlerSpec extends UnitSpecification {
       endpoints.foreach {
         case (apiEndPoint, dispatcherRequest, handler) =>
           expectForwardedRequest
-          val response = get(handler, apiEndPoint)
+          val response = get(apiEndPoint)
           // XXX: Instrumentation was removed in ff3609e02af7a026ea52eacc33e32c1fc506a895
           // fallbackCounter.labels(apiEndPoint).get() ==== 1.0
           stillForwards(response)
@@ -128,7 +128,7 @@ class SearchHandlerSpec extends UnitSpecification {
           when(searchMapperMock.materialize(anonymousSession, page))
             .thenReturn(Future(Some(searchMock)))
 
-          val response = get(handler, apiEndPoint, extraParams, Map("Host" -> "api.soundcloud.com"))
+          val response = get(apiEndPoint, extraParams, Map("Host" -> "api.soundcloud.com"))
           response.statusCode ==== 200
           Json.parse(response.contentString) ==== searchMock.json
           doesNotForward(response)
@@ -147,7 +147,7 @@ class SearchHandlerSpec extends UnitSpecification {
           when(searchMapperMock.materialize(anonymousSession, page))
             .thenReturn(Future(Some(searchMock)))
 
-          val response = get(handler, apiEndPoint, Map("q" -> "foo"), Map("Host" -> "api.soundcloud.com"))
+          val response = get(apiEndPoint, Map("q" -> "foo"), Map("Host" -> "api.soundcloud.com"))
           response.statusCode ==== 200
           response.headerMap.get("Cache-Control").get must contain("max-age=" + SearchHandler.MaxCacheAge)
           response.headerMap.get("Cache-Control").get must contain("public")
@@ -168,7 +168,7 @@ class SearchHandlerSpec extends UnitSpecification {
             when(searchMapperMock.materialize(anonymousSession, page))
               .thenReturn(Future(Some(searchMock)))
 
-            val response = get(handler, apiEndPoint, Map("q" -> "foo"), Map("Host" -> "api.soundcloud.com"))
+            val response = get(apiEndPoint, Map("q" -> "foo"), Map("Host" -> "api.soundcloud.com"))
             response.statusCode ==== 200
             doesNotForward(response)
 
@@ -182,7 +182,7 @@ class SearchHandlerSpec extends UnitSpecification {
           param <- Seq("offset", "limit")
         } {
           val response =
-            get(handler, apiEndPoint, Map("q" -> "foo", param -> "not_a_number"), Map("Host" -> "api.soundcloud.com"))
+            get(apiEndPoint, Map("q" -> "foo", param -> "not_a_number"), Map("Host" -> "api.soundcloud.com"))
           response.statusCode ==== 400
           doesNotForward(response)
         }
@@ -194,7 +194,7 @@ class SearchHandlerSpec extends UnitSpecification {
           param <- Seq("offset", "limit")
         } {
           val response =
-            get(handler, apiEndPoint, Map("q" -> "foo", "offset" -> ""), Map("Host" -> "api.soundcloud.com"))
+            get(apiEndPoint, Map("q" -> "foo", "offset" -> ""), Map("Host" -> "api.soundcloud.com"))
           response.statusCode ==== 400
           doesNotForward(response)
         }
@@ -210,7 +210,7 @@ class SearchHandlerSpec extends UnitSpecification {
             when(searchMapperMock.materialize(anonymousSession, page))
               .thenReturn(Future.exception(RepositoryException(Status.BadRequest, "oh, behave!")))
 
-            val response = get(handler, apiEndPoint, extraParams, Map("Host" -> "api.soundcloud.com"))
+            val response = get(apiEndPoint, extraParams, Map("Host" -> "api.soundcloud.com"))
             response.statusCode ==== 400
             doesNotForward(response)
 

@@ -37,7 +37,7 @@ class RepostsHandlerSpec extends UnitSpecification {
         .createRepost(session, track, baseUrl)
         .returns(Future.value(result))
 
-      lazy val response = put(handler.createTracksRepost, "/e1/me/track_reposts/100", Map(), requestHeaders)
+      lazy val response = put("/e1/me/track_reposts/100", Map(), requestHeaders)
     }
 
     "when creating succeeds" in new CreateTrackContext {
@@ -83,7 +83,7 @@ class RepostsHandlerSpec extends UnitSpecification {
         .deleteRepost(session, track, baseUrl)
         .returns(Future.value(result))
 
-      lazy val response = delete(handler.deleteTracksRepost, "/e1/me/track_reposts/100", Map(), requestHeaders)
+      lazy val response = delete("/e1/me/track_reposts/100", Map(), requestHeaders)
     }
 
     "when deleting succeeds" in new DeleteTrackContext {
@@ -116,7 +116,7 @@ class RepostsHandlerSpec extends UnitSpecification {
         .createRepost(session, playlist, baseUrl)
         .returns(Future.value(result))
 
-      lazy val response = put(handler.createPlaylistsRepost, "/e1/me/playlist_reposts/200", Map(), requestHeaders)
+      lazy val response = put("/e1/me/playlist_reposts/200", Map(), requestHeaders)
     }
 
     "when creating succeeds" in new CreatePlaylistContext {
@@ -162,7 +162,7 @@ class RepostsHandlerSpec extends UnitSpecification {
         .deleteRepost(session, playlist, baseUrl)
         .returns(Future.value(result))
 
-      lazy val response = delete(handler.deletePlaylistsRepost, "/e1/me/playlist_reposts/200", Map(), requestHeaders)
+      lazy val response = delete("/e1/me/playlist_reposts/200", Map(), requestHeaders)
     }
 
     "when deleting succeeds" in new DeletePlaylistContext {
@@ -209,29 +209,29 @@ class RepostsHandlerSpec extends UnitSpecification {
     "with linked_partitioning disabled" >> {
       "when one page of track reposts is available" >> {
         "it returns 200 OK" in new OnePageRepostedTracksContext {
-          get(handler.getUserRepostableTracks, "/e1/me/track_reposts/ids", Map(), requestHeaders).status ==== Status.Ok
+          get("/e1/me/track_reposts/ids", Map(), requestHeaders).status ==== Status.Ok
         }
 
         "it returns a list of track IDs" in new OnePageRepostedTracksContext {
-          val response = get(handler.getUserRepostableTracks, "/e1/me/track_reposts/ids", Map(), requestHeaders)
+          val response = get("/e1/me/track_reposts/ids", Map(), requestHeaders)
           Json.parse(response.contentString).as[List[Long]] ==== List(track.identifier.toLong)
         }
       }
 
       "when two pages of track reposts are available" >> {
         "it returns 200 OK" in new MultiPageRepostedTracksContext {
-          get(handler.getUserRepostableTracks, "/e1/me/track_reposts/ids", Map(), requestHeaders).status ==== Status.Ok
+          get("/e1/me/track_reposts/ids", Map(), requestHeaders).status ==== Status.Ok
         }
 
         "it returns a list of track IDs" in new MultiPageRepostedTracksContext {
-          val response = get(handler.getUserRepostableTracks, "/e1/me/track_reposts/ids", Map(), requestHeaders)
+          val response = get("/e1/me/track_reposts/ids", Map(), requestHeaders)
           Json.parse(response.contentString).as[List[Long]] ==== List(track, track2).map(_.identifier.toLong)
         }
       }
 
       "when the limit is not in range" >> {
         "it returns 400 Bad Request" in new OnePageRepostedTracksContext {
-          get(handler.getUserRepostableTracks, "/e1/me/track_reposts/ids", Map("limit" -> "10000"), requestHeaders).status ==== Status.BadRequest
+          get("/e1/me/track_reposts/ids", Map("limit" -> "10000"), requestHeaders).status ==== Status.BadRequest
         }
       }
     }
@@ -240,7 +240,6 @@ class RepostsHandlerSpec extends UnitSpecification {
       "when a next page is available" >> {
         trait MultiPageLinkedPartitioningContext extends MultiPageRepostedTracksContext {
           val response = get(
-            handler.getUserRepostableTracks,
             "/e1/me/track_reposts/ids",
             Map(
               "linked_partitioning" -> "1",
@@ -268,7 +267,6 @@ class RepostsHandlerSpec extends UnitSpecification {
       "when a next page is not available" >> {
         trait SinglePageLinkedPartitioningContext extends MultiPageRepostedTracksContext {
           val response = get(
-            handler.getUserRepostableTracks,
             "/e1/me/track_reposts/ids",
             Map(
               "linked_partitioning" -> "1",
@@ -304,11 +302,11 @@ class RepostsHandlerSpec extends UnitSpecification {
       }
 
       "it returns 200 OK" in new OnePageRepostedPlaylistsContext {
-        get(handler.getUserRepostablePlaylists, "/e1/me/playlist_reposts/ids", Map(), requestHeaders).status ==== Status.Ok
+        get("/e1/me/playlist_reposts/ids", Map(), requestHeaders).status ==== Status.Ok
       }
 
       "it returns a list of playlist IDs" in new OnePageRepostedPlaylistsContext {
-        val response = get(handler.getUserRepostablePlaylists, "/e1/me/playlist_reposts/ids", Map(), requestHeaders)
+        val response = get("/e1/me/playlist_reposts/ids", Map(), requestHeaders)
         Json.parse(response.contentString).as[List[Long]] ==== List(playlist.identifier.toLong)
       }
     }
@@ -327,11 +325,11 @@ class RepostsHandlerSpec extends UnitSpecification {
       }
 
       "it returns 200 OK" in new MultiPageRepostedPlaylistsContext {
-        get(handler.getUserRepostablePlaylists, "/e1/me/playlist_reposts/ids", Map(), requestHeaders).status ==== Status.Ok
+        get("/e1/me/playlist_reposts/ids", Map(), requestHeaders).status ==== Status.Ok
       }
 
       "it returns a list of playlist IDs" in new MultiPageRepostedPlaylistsContext {
-        val response = get(handler.getUserRepostablePlaylists, "/e1/me/playlist_reposts/ids", Map(), requestHeaders)
+        val response = get("/e1/me/playlist_reposts/ids", Map(), requestHeaders)
         Json.parse(response.contentString).as[List[Long]] ==== List(playlist, playlist2).map(_.identifier.toLong)
       }
     }

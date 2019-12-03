@@ -89,7 +89,7 @@ class UserTracksHandlerSpec extends UnitSpecification {
           println(s"For path $path")
           when(tracksService.tracks(session, user, paginationParams(path))).thenReturn(tracksServiceResponse)
 
-          val response = get(handler.handleRequest, path)
+          val response = get(path)
           response.status ==== Status.Ok
           response.contentString ==== expectedResponse
         })
@@ -101,7 +101,7 @@ class UserTracksHandlerSpec extends UnitSpecification {
         val path = s"/users/7110/tracks$queryString"
         when(tracksService.tracks(session, user, paginationParams(path))).thenReturn(tracksServiceResponse)
 
-        val response = get(handler.handleRequest, path)
+        val response = get(path)
         response.status ==== Status.InternalServerError
         response.contentString ==== expectedResponse
       }

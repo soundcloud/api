@@ -83,7 +83,7 @@ class TimeLineHandlerSpec extends UnitSpecification {
     "/e1/me/activities.json"
   ).foreach { endpoint =>
     endpoint in new Context {
-      val response = get(handler.renderAllActivities, endpoint)
+      val response = get(endpoint)
       response.statusCode ==== 200
       response.contentString ==== timelineJsonString(endpoint)
 
@@ -103,7 +103,7 @@ class TimeLineHandlerSpec extends UnitSpecification {
     "/e1/me/stream.json"
   ).foreach { endpoint =>
     endpoint in new Context {
-      val response = get(handler.renderStreamActivities, endpoint)
+      val response = get(endpoint)
       response.statusCode ==== 200
       response.contentString ==== streamTimelineJsonString(endpoint)
 
@@ -134,7 +134,7 @@ class TimeLineHandlerSpec extends UnitSpecification {
     "/me/activities/all/own.json"
   ).foreach { endpoint =>
     endpoint in new Context {
-      val response = get(handler.renderPublicActivities, endpoint)
+      val response = get(endpoint)
       response.statusCode ==== 200
       response.contentString ==== publicCompleteTimelineJsonString(endpoint)
 
@@ -154,7 +154,7 @@ class TimeLineHandlerSpec extends UnitSpecification {
     "/me/followings/tracks.json"
   ).foreach { endpoint =>
     endpoint in new Context {
-      val response = get(handler.renderFollowingsTracks, endpoint)
+      val response = get(endpoint)
       response.statusCode ==== 200
       response.contentString ==== tracksOnlyTimelineJsonString()
 

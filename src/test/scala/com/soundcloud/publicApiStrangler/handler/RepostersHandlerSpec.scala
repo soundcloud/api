@@ -114,9 +114,9 @@ class RepostersHandlerSpec extends UnitSpecification {
     }
 
     "returns result array if no linked_partitioning param" in new TrackReposters {
-      val response = get(handler.trackReposters, s"/e1/tracks/${track.identifier}/reposters", Map.empty, requestHeaders)
+      val response = get(s"/e1/tracks/${track.identifier}/reposters", Map.empty, requestHeaders)
       val responseJson =
-        get(handler.trackReposters, s"/e1/tracks/${track.identifier}/reposters.json", Map.empty, requestHeaders)
+        get(s"/e1/tracks/${track.identifier}/reposters.json", Map.empty, requestHeaders)
 
       response.status ==== responseJson.status
       Json.parse(response.contentString) ==== Json.parse(responseJson.contentString)
@@ -127,13 +127,11 @@ class RepostersHandlerSpec extends UnitSpecification {
 
     "returns result object if linked_partitioning param is present" in new TrackReposters {
       val response = get(
-        handler.trackReposters,
         s"/e1/tracks/${track.identifier}/reposters",
         Map("linked_partitioning" -> "1", "foo" -> "bar"),
         requestHeaders
       )
       val responseJson = get(
-        handler.trackReposters,
         s"/e1/tracks/${track.identifier}/reposters.json",
         Map("linked_partitioning" -> "1", "foo" -> "bar"),
         requestHeaders
@@ -151,13 +149,11 @@ class RepostersHandlerSpec extends UnitSpecification {
 
     "respects limit/cursor params" in new TrackReposters {
       val response = get(
-        handler.trackReposters,
         s"/e1/tracks/${track.identifier}/reposters",
         Map("linked_partitioning" -> "1", "limit" -> "1", "cursor" -> "hallo", "foo" -> "bar"),
         requestHeaders
       )
       val responseJson = get(
-        handler.trackReposters,
         s"/e1/tracks/${track.identifier}/reposters.json",
         Map("linked_partitioning" -> "1", "limit" -> "1", "cursor" -> "hallo", "foo" -> "bar"),
         requestHeaders
@@ -175,13 +171,11 @@ class RepostersHandlerSpec extends UnitSpecification {
 
     "does not return empty next_href" in new TrackReposters {
       val response = get(
-        handler.trackReposters,
         s"/e1/tracks/${noNextHrefTrack.identifier}/reposters",
         Map("linked_partitioning" -> "1", "foo" -> "bar"),
         requestHeaders
       )
       val responseJson = get(
-        handler.trackReposters,
         s"/e1/tracks/${noNextHrefTrack.identifier}/reposters.json",
         Map("linked_partitioning" -> "1", "foo" -> "bar"),
         requestHeaders
@@ -230,13 +224,8 @@ class RepostersHandlerSpec extends UnitSpecification {
 
     "returns result array if no linked_partitioning param" in new PlaylistReposters {
       val response =
-        get(handler.playlistReposters, s"/e1/playlists/${playlist.identifier}/reposters", Map.empty, requestHeaders)
-      val responseJson = get(
-        handler.playlistReposters,
-        s"/e1/playlists/${playlist.identifier}/reposters.json",
-        Map.empty,
-        requestHeaders
-      )
+        get(s"/e1/playlists/${playlist.identifier}/reposters", Map.empty, requestHeaders)
+      val responseJson = get(s"/e1/playlists/${playlist.identifier}/reposters.json", Map.empty, requestHeaders)
 
       response.status ==== responseJson.status
       Json.parse(response.contentString) ==== Json.parse(responseJson.contentString)
@@ -247,13 +236,11 @@ class RepostersHandlerSpec extends UnitSpecification {
 
     "returns result object if linked_partitioning param is present" in new PlaylistReposters {
       val response = get(
-        handler.playlistReposters,
         s"/e1/playlists/${playlist.identifier}/reposters",
         Map("linked_partitioning" -> "1", "foo" -> "bar"),
         requestHeaders
       )
       val responseJson = get(
-        handler.playlistReposters,
         s"/e1/playlists/${playlist.identifier}/reposters.json",
         Map("linked_partitioning" -> "1", "foo" -> "bar"),
         requestHeaders
@@ -271,13 +258,11 @@ class RepostersHandlerSpec extends UnitSpecification {
 
     "respects limit/cursor params" in new PlaylistReposters {
       val responseJson = get(
-        handler.playlistReposters,
         s"/e1/playlists/${playlist.identifier}/reposters.json",
         Map("linked_partitioning" -> "1", "limit" -> "1", "cursor" -> "hallo", "foo" -> "bar"),
         requestHeaders
       )
       val response = get(
-        handler.playlistReposters,
         s"/e1/playlists/${playlist.identifier}/reposters",
         Map("linked_partitioning" -> "1", "limit" -> "1", "cursor" -> "hallo", "foo" -> "bar"),
         requestHeaders
@@ -295,13 +280,11 @@ class RepostersHandlerSpec extends UnitSpecification {
 
     "does not return empty next_href" in new PlaylistReposters {
       val response = get(
-        handler.playlistReposters,
         s"/e1/playlists/${noNextHrefPlaylist.identifier}/reposters",
         Map("linked_partitioning" -> "1", "foo" -> "bar"),
         requestHeaders
       )
       val responseJson = get(
-        handler.playlistReposters,
         s"/e1/playlists/${noNextHrefPlaylist.identifier}/reposters.json",
         Map("linked_partitioning" -> "1", "foo" -> "bar"),
         requestHeaders

@@ -57,7 +57,7 @@ class TrackDownloadHandlerSpec extends UnitSpecification {
         }
 
         s"GET $path should return 302" in new FoundDownloadContext {
-          val response = get(handler.handle, path)
+          val response = get(path)
           response.status ==== Status.Found
           response.headerMap("Location") ==== "https://download-url"
         }
@@ -69,7 +69,7 @@ class TrackDownloadHandlerSpec extends UnitSpecification {
         }
 
         s"GET $path should return 404" in new FoundDownloadContext {
-          val response = get(handler.handle, path)
+          val response = get(path)
           response.status ==== Status.NotFound
         }
       }
@@ -84,7 +84,7 @@ class TrackDownloadHandlerSpec extends UnitSpecification {
     }
 
     s"should return 302" in new MediaServiceWithSecretTokenContext {
-      val response = get(handler.handle, "/tracks/999/download?secret_token=itsasecret")
+      val response = get("/tracks/999/download?secret_token=itsasecret")
       response.status ==== Status.Found
       response.headerMap("Location") ==== "https://download-url"
     }

@@ -9,48 +9,42 @@ trait HandlerSpecificationScope extends org.specs2.specification.Scope with Thro
   def routingDefinitions(): List[(Method, String, Handler)]
 
   def get(
-      handler: Handler,
       path: String,
       params: Map[String, String] = Map.empty,
       headers: Map[String, String] = Map.empty,
       body: String = ""
-  ): Response = execute(Method.Get, handler, path, params, headers, body)
+  ): Response = execute(Method.Get, path, params, headers, body)
 
   def delete(
-      handler: Handler,
       path: String,
       params: Map[String, String] = Map.empty,
       headers: Map[String, String] = Map.empty,
       body: String = ""
-  ): Response = execute(Method.Delete, handler, path, params, headers, body)
+  ): Response = execute(Method.Delete, path, params, headers, body)
 
   def post(
-      handler: Handler,
       path: String,
       params: Map[String, String] = Map.empty,
       headers: Map[String, String] = Map.empty,
       body: String = ""
-  ): Response = execute(Method.Post, handler, path, params, headers, body)
+  ): Response = execute(Method.Post, path, params, headers, body)
 
   def put(
-      handler: Handler,
       path: String,
       params: Map[String, String] = Map.empty,
       headers: Map[String, String] = Map.empty,
       body: String = ""
-  ): Response = execute(Method.Put, handler, path, params, headers, body)
+  ): Response = execute(Method.Put, path, params, headers, body)
 
   def head(
-      handler: Handler,
       path: String,
       params: Map[String, String] = Map.empty,
       headers: Map[String, String] = Map.empty,
       body: String = ""
-  ): Response = execute(Method.Head, handler, path, params, headers, body)
+  ): Response = execute(Method.Head, path, params, headers, body)
 
   def execute(
       method: Method,
-      handler: Handler,
       path: String,
       params: Map[String, String] = Map.empty,
       headers: Map[String, String] = Map.empty,
