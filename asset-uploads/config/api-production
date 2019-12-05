@@ -1,6 +1,6 @@
 source api-production-secrets
 
 MOSHIMOSHI_ADDRESS=dnssrv!http.moshimoshi.prod.mothership.srv
-PUBLIC_API_STRANGLER_ADDRESS=dnssrv!http.strangler-trackupload.prod.public-api.srv
+PUBLIC_API_STRANGLER_ADDRESS=dnssrv!http.strangler.prod.public-api.srv
 
 MAX_REQUEST_BYTES=524288000
