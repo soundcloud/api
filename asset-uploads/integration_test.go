@@ -77,7 +77,6 @@ func TestControllerServiceS3Integration(t *testing.T) {
 	req := httptest.NewRequest("POST", "/tracks", bytes.NewReader(body))
 	req.Host = "api.sc.local"
 	req.Header.Set("Content-Type", "multipart/form-data; boundary=------------------------6808b4f61ea0e5a2")
-	req.Header.Set("X-Track-Asset-Uploads", "true")
 
 	controller.tracks(res, req)
 
