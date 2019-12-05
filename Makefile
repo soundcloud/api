@@ -3,9 +3,6 @@ APP_NAME := $(shell sc manifest name)
 API_COMPONENT := api
 API_CONFIG    := production
 
-APITRACKUPLOAD_COMPONENT := apitrackupload
-APITRACKUPLOAD_CONFIG    := production-apitrackupload
-
 RUNTIME_STACK := jdk-8
 
 DOCKER_IP ?= $(shell sc docker-ip)
@@ -73,7 +70,6 @@ prepare-package-layout:
 	sc add-config config/development
 	sc add-config config/e2e
 	sc add-config config/$(API_CONFIG)
-	sc add-config config/$(APITRACKUPLOAD_CONFIG)
 	sc add-config config/production-secrets.enc
 
 publish:
@@ -91,15 +87,6 @@ publish-deploy:
 		--public-ingress http://api.soundcloud.com:http \
 		--glimpse http.strangler.prod.public-api \
 		--prometheus.port telemetry
-	sc artifact-manager deploy publish \
-		--zone=$(ZONE) \
-		--component="$(APITRACKUPLOAD_COMPONENT)" \
-		--command "./api --config=$(APITRACKUPLOAD_CONFIG)" \
-		--ingress http://$(APP_NAME)-trackupload.k2.lb.s-cloud.net:http \
-		--ingress http://$(APP_NAME)-trackupload.$(ZONE).lb.s-cloud.net:http \
-		--public-ingress http://api.soundcloud.com:http \
-		--glimpse http.strangler-trackupload.prod.public-api \
-		--prometheus.port telemetry
 
 promote-to-stable:
 	sc artifact-manager promote stable
@@ -115,19 +102,7 @@ canary-api:
 		--component="$(API_COMPONENT)" \
 		--replicas=2
 
-canary-apitrackupload:
-	sc k8s canary \
-		--zone=$(ZONE) \
-		--system=public-api-strangler \
-		--env=production \
-		--component="$(APITRACKUPLOAD_COMPONENT)" \
-		--replicas=2
-
 .PHONY: deploy-api
 deploy-api:
 	sc artifact-manager deploy run --zone="$(ZONE)" --component="$(API_COMPONENT)"
-
-.PHONY: deploy-apitrackupload
-deploy-apitrackupload:
-	sc artifact-manager deploy run --zone="$(ZONE)" --component="$(APITRACKUPLOAD_COMPONENT)"
 
