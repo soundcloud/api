@@ -83,15 +83,6 @@ pipelines:
                 command: make
                 arguments:
                 - canary-api
-          canary-apitrackupload:
-            job_type: deploy
-            environment_variables:
-              ZONE: db
-            tasks:
-            - exec:
-                command: make
-                arguments:
-                - canary-apitrackupload
     - deploy-to-production:
         jobs:
           deploy-db:
@@ -103,10 +94,6 @@ pipelines:
                 command: make
                 arguments:
                 - deploy-api
-            - exec:
-                command: make
-                arguments:
-                - deploy-apitrackupload
           deploy-et:
             job_type: deploy
             environment_variables:
@@ -116,10 +103,6 @@ pipelines:
                 command: make
                 arguments:
                 - deploy-api
-            - exec:
-                command: make
-                arguments:
-                - deploy-apitrackupload
     - promote-contract-tests:
         jobs:
           promote-tests:
