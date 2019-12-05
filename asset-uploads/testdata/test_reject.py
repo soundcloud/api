@@ -36,7 +36,6 @@ class TestIntegration(unittest.TestCase, assertions.Assertions):
                 -d "some post data" \
                 -H "Host: api.sc.local" \
                 -H "Content-Type: multipart/form-data; boundary=------------------------2bd6642950bb9c00" \
-                -H "X-Track-Asset-Uploads: true" \
                 asset_uploads/tracks/2/comments
         '''
         res = check_output(cmd, shell=True, stderr=STDOUT).decode('ascii')

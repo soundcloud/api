@@ -9,26 +9,7 @@ import (
 	"mime/multipart"
 	"net/http"
 	"strings"
-
-	"github.com/prometheus/client_golang/prometheus"
 )
-
-var (
-	requestUploadMethod = prometheus.NewCounterVec(
-		prometheus.CounterOpts{
-			Name: "track_upload_method_total",
-			Help: "Count of how often each method to upload a track has been chosen",
-		},
-		[]string{"method"},
-	)
-)
-
-func init() {
-	prometheus.MustRegister(requestUploadMethod)
-	// We know all possible label values, may as well initialize them.
-	requestUploadMethod.WithLabelValues("passthrough").Add(0.0)
-	requestUploadMethod.WithLabelValues("s3").Add(0.0)
-}
 
 type serviceAPI interface {
 	createTrack(*createTrackRequest) (*createTrackResponse, error)
@@ -86,13 +67,6 @@ func (s service) generic(r *genericRequest) (*genericResponse, error) {
 }
 
 func (s service) rewriteMultipartRequest(r *http.Request, boundary string, fn rewritePartFn) (*http.Request, error) {
-	// Unless the feature flag header is set, return the original request.
-	if feature := r.Header.Get("X-Track-Asset-Uploads"); feature == "false" {
-		requestUploadMethod.WithLabelValues("passthrough").Inc()
-		return r, nil
-	}
-	requestUploadMethod.WithLabelValues("s3").Inc()
-
 	header := http.Header{}
 	body := &bytes.Buffer{}
 

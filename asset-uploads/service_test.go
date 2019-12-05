@@ -38,9 +38,7 @@ func TestValidMultipart(t *testing.T) {
 	req := &createTrackRequest{
 		boundary: "------------------------7570ceb7c872df7a",
 		request: func() *http.Request {
-			r := httptest.NewRequest(http.MethodPost, "/", bytes.NewReader(body))
-			r.Header.Set("X-Track-Asset-Uploads", "true")
-			return r
+			return httptest.NewRequest(http.MethodPost, "/", bytes.NewReader(body))
 		}(),
 	}
 
@@ -128,9 +126,7 @@ func TestInvalidMultipart(t *testing.T) {
 		_, err := service.createTrack(&createTrackRequest{
 			boundary: tt.boundary,
 			request: func() *http.Request {
-				r := httptest.NewRequest(http.MethodPost, "/", bytes.NewReader(tt.body))
-				r.Header.Set("X-Track-Asset-Uploads", "true")
-				return r
+				return httptest.NewRequest(http.MethodPost, "/", bytes.NewReader(tt.body))
 			}(),
 		})
 
@@ -200,9 +196,7 @@ func TestExtractAuthToken(t *testing.T) {
 		res, err := service.createTrack(&createTrackRequest{
 			boundary: "------------------------becf7c3b48144d16",
 			request: func() *http.Request {
-				r := httptest.NewRequest(http.MethodPost, "/", bytes.NewReader(tt.body))
-				r.Header.Set("X-Track-Asset-Uploads", "true")
-				return r
+				return httptest.NewRequest(http.MethodPost, "/", bytes.NewReader(tt.body))
 			}(),
 		})
 		if err != nil {
@@ -305,9 +299,7 @@ func TestStoreTrackAssetData(t *testing.T) {
 		res, err := service.createTrack(&createTrackRequest{
 			boundary: "------------------------6808b4f61ea0e5a2",
 			request: func() *http.Request {
-				r := httptest.NewRequest(http.MethodPost, "/", bytes.NewReader(body))
-				r.Header.Set("X-Track-Asset-Uploads", "true")
-				return r
+				return httptest.NewRequest(http.MethodPost, "/", bytes.NewReader(body))
 			}(),
 		})
 
