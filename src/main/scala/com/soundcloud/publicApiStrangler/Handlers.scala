@@ -167,4 +167,14 @@ class Handlers(telemetry: Telemetry, clients: Clients) {
   val playlistsHandler = new PlaylistsHandler(userAuthentication, playlistDeletionClient)
 
   val repostsHandler = new RepostsHandler(userAuthentication, repostsClient)
+
+  val tokenExchangeHandler =
+    new TokenExchangeHandler(mothershipDispatcher.dispatch, new TokenExchangeHandler.Metrics(telemetry))
+  val instrumentTokenExchangeRequest = RolloutFeature("instrument_token_exchange_requests")
+
+  val tokenExchangeRolloutHandler = new RolloutHandler(
+    () => rolloutClient.isActive(instrumentTokenExchangeRequest),
+    mothershipDispatcher.dispatch,
+    tokenExchangeHandler.instrumentedMothershipDispatch
+  )
 }
