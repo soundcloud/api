@@ -1,6 +1,6 @@
 package com.soundcloud.publicApiStrangler
 
-import com.soundcloud.jvmkit.module.rollout.BasicRolloutFeature
+import com.soundcloud.jvmkit.module.rollout.RolloutFeature
 import com.soundcloud.jvmkit.module.telemetry.Telemetry
 import com.soundcloud.publicApiStrangler.authorization.PublicApiSiloing
 import com.soundcloud.publicApiStrangler.handler._
@@ -51,13 +51,13 @@ class Handlers(telemetry: Telemetry, clients: Clients) {
     val trackStreamUrlToRedirectMapper = new TrackStreamRedirectResponseMapper
 
     val rolloutCheckForSiloingFunc = {
-      val siloingEnabledFeature = BasicRolloutFeature("app-siloing-enabled")
+      val siloingEnabledFeature = RolloutFeature("app-siloing-enabled")
       () => rolloutClient.isActive(siloingEnabledFeature)
     }
     val publicApiSiloing = new PublicApiSiloing(rolloutCheckForSiloingFunc, blacklistOfAppIdsForUserSiloing, telemetry)
 
     val rolloutNoProgressiveDownloadRolloutEnabledFunc = {
-      val noProgressiveDownloadRolloutFeature = BasicRolloutFeature("streams-no-progressive-download")
+      val noProgressiveDownloadRolloutFeature = RolloutFeature("streams-no-progressive-download")
       () => rolloutClient.isActive(noProgressiveDownloadRolloutFeature)
     }
     val streamService = new StreamService(
@@ -109,7 +109,7 @@ class Handlers(telemetry: Telemetry, clients: Clients) {
     val trackMothershipDispatcherWithCounts =
       new TrackMothershipDispatcherWithCounts(userAuthentication, mothershipDispatcher, stitchClient)
 
-    val shouldUseTrackMetadata = BasicRolloutFeature("track_metadata_for_user_tracks")
+    val shouldUseTrackMetadata = RolloutFeature("track_metadata_for_user_tracks")
 
     new UserTracksHandler(
       userAuthentication,
