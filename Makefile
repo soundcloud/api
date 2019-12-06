@@ -19,8 +19,10 @@ endif
 
 default: precheckin
 
-run:
+dependencies:
 	docker-compose up --force-recreate -d
+
+run: dependencies
 	sc crun sbt -i --docker-options="-p 5000:5000 -p 5001:5001 --link=strangler_zk --link=strangler_memcached --env-file=config/development" -- sbt run
 
 run-no-docker:
