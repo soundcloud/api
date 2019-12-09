@@ -83,6 +83,30 @@ class TrackAccessRecorderServiceSpec extends UnitSpecification {
         }
       }
 
+      "when client returns 401" >> {
+        trait UnauthorizedContext extends AccessTypeContext {
+          trackAccessRecorderClient.recordAccess(session, trackUrn, accessType, true, secretToken) returns
+            Future.value(ResponseBuilder().status(Status.Unauthorized).build)
+        }
+
+        "action is not executed and 404 is returned" in new UnauthorizedContext {
+          result.status ==== Status.NotFound
+          result.contentString ==== ""
+        }
+      }
+
+      "when client returns 403" >> {
+        trait UnauthorizedContext extends AccessTypeContext {
+          trackAccessRecorderClient.recordAccess(session, trackUrn, accessType, true, secretToken) returns
+            Future.value(ResponseBuilder().status(Status.Forbidden).build)
+        }
+
+        "action is not executed and 404 is returned" in new UnauthorizedContext {
+          result.status ==== Status.NotFound
+          result.contentString ==== ""
+        }
+      }
+
       "when Range header is not set" >> {
         trait NoRangeHeaderContext extends AccessTypeContext {
           override val range = None

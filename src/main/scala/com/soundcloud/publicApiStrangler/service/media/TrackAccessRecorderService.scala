@@ -1,6 +1,6 @@
 package com.soundcloud.publicApiStrangler.service.media
 
-import com.soundcloud.jvmkit.module.http.server.HandlerRequest
+import com.soundcloud.jvmkit.module.http.server.{HandlerRequest, ResponseBuilder}
 import com.soundcloud.jvmkit.module.telemetry.Telemetry
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSession
@@ -44,6 +44,8 @@ class TrackAccessRecorderService(trackAccessRecorderClient: TrackAccessRecorderC
       .flatMap { response =>
         response.status match {
           case Status.Ok => action
+          case Status.Unauthorized | Status.Forbidden =>
+            Future.value(ResponseBuilder().status(Status.NotFound).build)
           case _ => Future.value(response)
         }
       }
