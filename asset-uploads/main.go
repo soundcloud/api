@@ -18,6 +18,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"github.com/gorilla/mux"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/soundcloud/gokit/dnssrv"
 	"github.com/soundcloud/gokit/httpserver"
 	"github.com/soundcloud/gokit/instrumenthttp"
 )
@@ -65,7 +66,7 @@ func main() {
 		Transport: instrumenthttp.Tripperware(
 			"MOSHIMOSHI",
 			instrumenthttp.TripperwareOpts{},
-			http.DefaultTransport,
+			dnssrv.DefaultTransport,
 		),
 	}
 
@@ -90,7 +91,7 @@ func main() {
 	strangler.Transport = instrumenthttp.Tripperware(
 		"PUBLIC_API_STRANGLER",
 		instrumenthttp.TripperwareOpts{},
-		http.DefaultTransport,
+		dnssrv.DefaultTransport,
 	)
 	strangler.ErrorHandler = handleProxyError
 
