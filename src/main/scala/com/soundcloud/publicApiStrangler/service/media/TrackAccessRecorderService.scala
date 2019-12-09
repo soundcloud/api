@@ -10,26 +10,10 @@ import com.twitter.finagle.http.{Method, Response, Status}
 import com.twitter.util.Future
 
 class TrackAccessRecorderService(trackAccessRecorderClient: TrackAccessRecorderClient, telemetry: Telemetry) {
-  private val downloadsWithRangeCounter = telemetry.counter(
-    "downloads_with_range_total",
-    "Number of downloads using Range as header by client application",
-    "appid"
-  )
-
   def recordStreamAccess(session: UserSession, request: HandlerRequest, trackUrn: Urn, loggingEnabled: Boolean = true)(
       action: => Future[Response]
   ): Future[Response] =
     recordAccess(session, request, trackUrn, "stream", loggingEnabled && request.method == Method.Get, action)
-
-  def recordDownloadAccess(session: UserSession, request: HandlerRequest, trackUrn: Urn)(
-      action: => Future[Response]
-  ): Future[Response] = {
-    if (request.headerMap.get("Range").nonEmpty) {
-      val clientAppId = Option(session.getAgent).map(_.identifier).getOrElse("unknown")
-      downloadsWithRangeCounter.labels(clientAppId).inc()
-    }
-    recordAccess(session, request, trackUrn, "download", loggingEnabled = true, action)
-  }
 
   private def recordAccess(
       session: UserSession,

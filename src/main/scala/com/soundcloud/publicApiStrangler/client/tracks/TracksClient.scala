@@ -29,4 +29,19 @@ class TracksClient(jsonClient: JsonClient) {
         }
     }
   }
+
+  def downloadUrl(session: UserSession, downloadRequest: DownloadRequest): Future[DownloadResponse] = {
+    val requestBody = Json.stringify(Json.toJson(downloadRequest))
+
+    jsonClient
+      .postWithSession(session, Path() / "track" / "download", Params.empty, Headers.empty, Some(requestBody))
+      .map { response =>
+        response.status match {
+          case Status.Ok => Json.parse(response.contentString).as[DownloadUrlResponse]
+          case Status.Forbidden => DownloadErrorResponse
+          case Status.NotFound => DownloadErrorResponse
+          case _ => throw UnhandledResponseException(response)
+        }
+      }
+  }
 }

@@ -1,7 +1,6 @@
 package com.soundcloud.publicApiStrangler.handler
 
 import com.soundcloud.jvmkit.module.bff.testsupport.FakeUserAuthentication
-import com.soundcloud.jvmkit.module.http.server.HandlerRequest
 import com.soundcloud.jvmkit.module.telemetry.Telemetry
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSession
@@ -9,30 +8,22 @@ import com.soundcloud.publicApiStrangler.Routing
 import com.soundcloud.publicApiStrangler.service.media.{
   DownloadNotFound,
   DownloadOk,
-  DownloadResponse,
-  DownloadService,
-  TrackAccessRecorderService
+  DownloadOriginalResponse,
+  DownloadService
 }
 import com.soundcloud.publicApiStrangler.test.{HandlerSpecificationScope, UnitSpecification}
-import com.twitter.finagle.http.{Response, Status}
+import com.twitter.finagle.http.Status
 import com.twitter.util.Future
 
 class TrackDownloadHandlerSpec extends UnitSpecification {
   val fakeTelemetry = Telemetry.createIsolatedInstance
-
-  class FakeTrackAccessRecorderService extends TrackAccessRecorderService(null, fakeTelemetry) {
-    override def recordDownloadAccess(session: UserSession, request: HandlerRequest, trackUrn: Urn)(
-        action: => Future[Response]
-    ): Future[Response] =
-      action
-  }
 
   trait Context extends HandlerSpecificationScope {
     val session = mock[UserSession]
     val userAuth = new FakeUserAuthentication(session)
     val downloadService = mock[DownloadService]
 
-    lazy val handler = new TrackDownloadHandler(userAuth, new FakeTrackAccessRecorderService, downloadService)
+    lazy val handler = new TrackDownloadHandler(userAuth, downloadService)
 
     override def routingDefinitions = Routing.forTrackDownloadHandler(handler)
   }
@@ -45,15 +36,15 @@ class TrackDownloadHandlerSpec extends UnitSpecification {
   ).foreach { path =>
     "with media-service" >> {
       trait MediaServiceContext extends Context {
-        val downloadResponse: DownloadResponse
+        val downloadOriginalResponse: DownloadOriginalResponse
         downloadService.download(session, Urn("soundcloud", "tracks", "999"), None) returns Future.value(
-          downloadResponse
+          downloadOriginalResponse
         )
       }
 
       "when download is found" >> {
         trait FoundDownloadContext extends MediaServiceContext {
-          override lazy val downloadResponse = DownloadOk("https://download-url")
+          override lazy val downloadOriginalResponse = DownloadOk("https://download-url")
         }
 
         s"GET $path should return 302" in new FoundDownloadContext {
@@ -65,7 +56,7 @@ class TrackDownloadHandlerSpec extends UnitSpecification {
 
       "when download is not found" >> {
         trait FoundDownloadContext extends MediaServiceContext {
-          override lazy val downloadResponse = DownloadNotFound
+          override lazy val downloadOriginalResponse = DownloadNotFound
         }
 
         s"GET $path should return 404" in new FoundDownloadContext {

@@ -32,15 +32,12 @@ class TrackAccessRecorderServiceSpec extends UnitSpecification {
 
     lazy val resultStream =
       Await.result(service.recordStreamAccess(session, request, trackUrn, loggingEnabled)(Future.value(action)))
-    lazy val resultDownload =
-      Await.result(service.recordDownloadAccess(session, request, trackUrn)(Future.value(action)))
   }
 
-  Seq("stream", "download").foreach { accessType =>
+  Seq("stream").foreach { accessType =>
     trait AccessTypeContext extends Context {
       lazy val result = accessType match {
         case "stream" => resultStream
-        case "download" => resultDownload
       }
     }
 
@@ -138,40 +135,6 @@ class TrackAccessRecorderServiceSpec extends UnitSpecification {
           result.status ==== Status.Ok
           result.contentString ==== "foobar"
         }
-      }
-    }
-  }
-
-  "when recording access for download" >> {
-    trait DownloadContext extends Context {
-      trackAccessRecorderClient.recordAccess(session, trackUrn, accessFor = "download", shouldLog = true, secretToken) returns
-        Future.value(ResponseBuilder().status(Status.Ok).build)
-
-      def accessWasRecorded =
-        (there was one(trackAccessRecorderClient).recordAccess(
-          session,
-          trackUrn,
-          accessFor = "download",
-          shouldLog = true,
-          secretToken
-        )).isSuccess
-    }
-
-    "when request method is GET" >> {
-      "download is logged" in new DownloadContext {
-        override val reqMethod: Method = Method.Get
-
-        resultDownload.status ==== Status.Ok
-        accessWasRecorded ==== true
-      }
-    }
-
-    "when request method is HEAD" >> {
-      "download is logged" in new DownloadContext {
-        override val reqMethod: Method = Method.Head
-
-        resultDownload.status ==== Status.Ok
-        accessWasRecorded ==== true
       }
     }
   }

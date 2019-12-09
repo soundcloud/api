@@ -79,8 +79,7 @@ class Handlers(telemetry: Telemetry, clients: Clients) {
 
   val trackDownloadHandler: TrackDownloadHandler = new TrackDownloadHandler(
     userAuthentication,
-    trackAccessRecorderService,
-    new DownloadService(tracksClient, mediaServiceClient)
+    new DownloadService(tracksClient)
   )
 
   val tracksHandler = new TracksHandler(
