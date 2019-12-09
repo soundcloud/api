@@ -7,8 +7,7 @@ require (
 	github.com/gorilla/mux v1.7.3
 	github.com/prometheus/client_golang v1.0.0
 	github.com/prometheus/common v0.6.0 // indirect
-	github.com/soundcloud/gokit v0.0.0-20190313124751-252f57a2f7a9
+	github.com/soundcloud/gokit v0.0.0-20191205092800-bfdd9a1334d4
 	golang.org/x/sync v0.0.0-20190423024810-112230192c58 // indirect
-	golang.org/x/sys v0.0.0-20190422165155-953cdadca894 // indirect
 	golang.org/x/text v0.3.2 // indirect
 )
