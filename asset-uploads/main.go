@@ -18,8 +18,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"github.com/gorilla/mux"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
-	"github.com/soundcloud/gokit/dnssrv"
 	"github.com/soundcloud/gokit/httpserver"
+	"github.com/soundcloud/gokit/instrumenthttp"
 )
 
 func main() {
@@ -40,11 +40,13 @@ func main() {
 	flag.Parse()
 
 	s3cli := &http.Client{
-		Transport: serviceTransport{
-			name:      "S3",
-			transport: http.DefaultTransport,
-		},
+		Transport: instrumenthttp.Tripperware(
+			"S3",
+			instrumenthttp.TripperwareOpts{},
+			http.DefaultTransport,
+		),
 	}
+
 	s3 := s3.New(
 		session.Must(
 			session.NewSession(&aws.Config{
@@ -60,11 +62,13 @@ func main() {
 	)
 
 	moshicli := &http.Client{
-		Transport: serviceTransport{
-			name:      "MOSHIMOSHI",
-			transport: dnssrv.DefaultTransport,
-		},
+		Transport: instrumenthttp.Tripperware(
+			"MOSHIMOSHI",
+			instrumenthttp.TripperwareOpts{},
+			http.DefaultTransport,
+		),
 	}
+
 	moshi := &moshimoshiClient{
 		client: moshicli,
 		host:   *moshiAddr,
@@ -83,11 +87,11 @@ func main() {
 		log.Fatal(err)
 	}
 	strangler := httputil.NewSingleHostReverseProxy(stranglerURL)
-	strangler.Transport = serviceTransport{
-		name:      "PUBLIC_API_STRANGLER",
-		transport: dnssrv.DefaultTransport,
-	}
-
+	strangler.Transport = instrumenthttp.Tripperware(
+		"PUBLIC_API_STRANGLER",
+		instrumenthttp.TripperwareOpts{},
+		http.DefaultTransport,
+	)
 	strangler.ErrorHandler = handleProxyError
 
 	controller := &controller{

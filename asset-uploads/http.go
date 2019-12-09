@@ -29,30 +29,11 @@ var (
 		},
 		[]string{"method", "path", "status", "statusClass", "client"},
 	)
-
-	outgoingLatency = prometheus.NewHistogramVec(
-		prometheus.HistogramOpts{
-			Name:    "outgoing_http_request_latency_seconds",
-			Help:    "A histogram of the response latency for HTTP requests to other serivces",
-			Buckets: latencyBuckets,
-		},
-		[]string{"service", "method"},
-	)
-
-	outgoingRequests = prometheus.NewCounterVec(
-		prometheus.CounterOpts{
-			Name: "outgoing_http_requests_total",
-			Help: "A counter for the total number of HTTP requests made to other services",
-		},
-		[]string{"service", "method", "status", "statusClass"},
-	)
 )
 
 func init() {
 	prometheus.MustRegister(incomingLatency)
 	prometheus.MustRegister(incomingRequests)
-	prometheus.MustRegister(outgoingLatency)
-	prometheus.MustRegister(outgoingRequests)
 }
 
 type httpEndpointRecorder struct {
@@ -90,39 +71,6 @@ func httpHandler(path string, handler http.HandlerFunc) http.HandlerFunc {
 
 		handler(er, r)
 	}
-}
-
-// Source: https://github.com/soundcloud/hocuspocus/blob/7cf839237ff35d0b81cf797d4833a37eecaf40b5/cmd/api/http.go#L211
-type serviceTransport struct {
-	name      string
-	transport http.RoundTripper
-}
-
-func (t serviceTransport) RoundTrip(req *http.Request) (*http.Response, error) {
-	var (
-		start    = time.Now()
-		method   = req.Method
-		uri      = req.URL.String()
-		res, err = t.transport.RoundTrip(req)
-		duration = time.Since(start)
-	)
-
-	var (
-		// In JVMKit - this is when a client closes the connection before a complete response
-		status      = "499"
-		statusClass = "4xx"
-	)
-	if err == nil {
-		status = labelStatusCode(res.StatusCode)
-		statusClass = labelStatusClass(res.StatusCode)
-	}
-
-	outgoingLatency.WithLabelValues(t.name, req.Method).Observe(duration.Seconds())
-	outgoingRequests.WithLabelValues(t.name, req.Method, status, statusClass).Inc()
-
-	log.Printf("[%d ms] %s %s -> %s (%s)", duration/time.Millisecond, method, uri, status, t.name)
-
-	return res, err
 }
 
 func labelClient(name string) string {
