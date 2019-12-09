@@ -3,101 +3,31 @@ package main
 import (
 	"log"
 	"net/http"
-	"strconv"
+	"os"
 	"strings"
-	"time"
 
-	"github.com/prometheus/client_golang/prometheus"
+	"github.com/soundcloud/gokit/instrumenthttp"
+	"github.com/streadway/handy/report"
 )
 
-var (
-	latencyBuckets = []float64{0.001, 0.002, 0.005, 0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 1, 2, 5, 10, 20, 50}
+type Middleware func(http.Handler) http.Handler
 
-	incomingLatency = prometheus.NewHistogramVec(
-		prometheus.HistogramOpts{
-			Name:    "incoming_http_request_latency_seconds",
-			Help:    "A histogram of the response latency for HTTP requests to this instance",
-			Buckets: latencyBuckets,
-		},
-		[]string{"method", "path", "client"},
-	)
-
-	incomingRequests = prometheus.NewCounterVec(
-		prometheus.CounterOpts{
-			Name: "incoming_http_requests_total",
-			Help: "A counter for the total number of HTTP requests",
-		},
-		[]string{"method", "path", "status", "statusClass", "client"},
-	)
-)
-
-func init() {
-	prometheus.MustRegister(incomingLatency)
-	prometheus.MustRegister(incomingRequests)
+func httpHandler(path string, handler http.Handler) http.Handler {
+	return register(path)(logger()(handler))
 }
 
-type httpEndpointRecorder struct {
-	http.ResponseWriter
-	responseCode int
-}
-
-func (e *httpEndpointRecorder) WriteHeader(code int) {
-	e.responseCode = code
-	e.ResponseWriter.WriteHeader(code)
-}
-
-func httpHandler(path string, handler http.HandlerFunc) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		var (
-			er    = &httpEndpointRecorder{w, 0}
-			start = time.Now()
-		)
-
-		defer func() {
-			var (
-				client      = labelClient(r.Header.Get(http.CanonicalHeaderKey("Sc-System")))
-				duration    = time.Since(start)
-				method      = r.Method
-				status      = labelStatusCode(er.responseCode)
-				statusClass = labelStatusClass(er.responseCode)
-				uri         = r.URL.String()
-			)
-
-			incomingLatency.WithLabelValues(method, path, client).Observe(duration.Seconds())
-			incomingRequests.WithLabelValues(method, path, status, statusClass, client).Inc()
-
-			log.Printf("[%d ms] %s %s -> %s (%s) (path=%s)", duration/time.Millisecond, method, uri, status, client, path)
-		}()
-
-		handler(er, r)
+// Log data about the request
+func logger() Middleware {
+	return func(h http.Handler) http.Handler {
+		return report.JSON(os.Stdout, h)
 	}
 }
 
-func labelClient(name string) string {
-	if name == "" {
-		return "unknown"
+// Instrument the request
+func register(path string) Middleware {
+	return func(h http.Handler) http.Handler {
+		return instrumenthttp.Middleware(instrumenthttp.MiddlewareOpts{Path: path}, h)
 	}
-
-	return name
-}
-
-func labelStatusClass(status int) string {
-	switch {
-	case status < 200:
-		return "1xx"
-	case status < 300:
-		return "2xx"
-	case status < 400:
-		return "3xx"
-	case status < 500:
-		return "4xx"
-	default:
-		return "5xx"
-	}
-}
-
-func labelStatusCode(status int) string {
-	return strconv.Itoa(status)
 }
 
 // Handle errors during proxying. We want to treat errors caused by too-large

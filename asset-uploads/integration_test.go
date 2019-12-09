@@ -78,7 +78,7 @@ func TestControllerServiceS3Integration(t *testing.T) {
 	req.Host = "api.sc.local"
 	req.Header.Set("Content-Type", "multipart/form-data; boundary=------------------------6808b4f61ea0e5a2")
 
-	controller.tracks(res, req)
+	controller.tracks().ServeHTTP(res, req)
 
 	result := res.Result()
 	if want, got := http.StatusCreated, result.StatusCode; want != got {

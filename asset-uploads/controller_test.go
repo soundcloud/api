@@ -39,7 +39,7 @@ func TestTracksAllowedMethods(t *testing.T) {
 		res := httptest.NewRecorder()
 		req := httptest.NewRequest(tt.method, "/", nil)
 
-		controller.tracks(res, req)
+		controller.tracks().ServeHTTP(res, req)
 
 		if want, got := tt.status, res.Result().StatusCode; want != got {
 			t.Errorf("Expected %v to return %v, was: %v", tt.method, want, got)
@@ -70,7 +70,7 @@ func TestTracksRequiresHostname(t *testing.T) {
 			req.Host = tt.hostname
 		}
 
-		controller.tracks(res, req)
+		controller.tracks().ServeHTTP(res, req)
 
 		if want, got := tt.status, res.Result().StatusCode; want != got {
 			t.Errorf("Expected %v with 'Host: %v' to return %v, was %v", tt.method, tt.hostname, want, got)
@@ -97,7 +97,7 @@ func TestTracksRequiresContentType(t *testing.T) {
 		req.Host = "api.sc.local"
 		req.Header.Set("Content-Type", tt.contentType)
 
-		controller.tracks(res, req)
+		controller.tracks().ServeHTTP(res, req)
 
 		if want, got := tt.status, res.Result().StatusCode; want != got {
 			t.Errorf("Expected %v %v to return %v, was: %v", tt.method, tt.contentType, want, got)
@@ -117,7 +117,7 @@ func TestExceedsMaxContentLength(t *testing.T) {
 	req.Host = "api.sc.local"
 	req.Header.Set("Content-Type", "multipart/form-data; boundary=some-boundary")
 
-	controller.tracks(res, req)
+	controller.tracks().ServeHTTP(res, req)
 
 	if want, got := http.StatusRequestEntityTooLarge, res.Result().StatusCode; want != got {
 		t.Errorf("Expected request to return %v, was: %v", want, got)
@@ -146,7 +146,7 @@ func TestTracksLimitsRequestSize(t *testing.T) {
 	req.Header.Set("Content-Type", "multipart/form-data; boundary=some-boundary")
 	req.ContentLength = -1 // Create a request that won't get filtered on Content-Length.
 
-	controller.tracks(res, req)
+	controller.tracks().ServeHTTP(res, req)
 
 	result := res.Result()
 	if want, got := http.StatusRequestEntityTooLarge, result.StatusCode; want != got {
@@ -172,7 +172,7 @@ func TestPassesMultipartBoundary(t *testing.T) {
 	req.Host = "api.sc.local"
 	req.Header.Set("Content-Type", "multipart/form-data; boundary=the-boundary")
 
-	controller.tracks(res, req)
+	controller.tracks().ServeHTTP(res, req)
 }
 
 func TestFailingServiceCall(t *testing.T) {
@@ -189,7 +189,7 @@ func TestFailingServiceCall(t *testing.T) {
 	req.Host = "api.sc.local"
 	req.Header.Set("Content-Type", "multipart/form-data; boundary=some-boundary")
 
-	controller.tracks(res, req)
+	controller.tracks().ServeHTTP(res, req)
 
 	if want, got := http.StatusInternalServerError, res.Result().StatusCode; want != got {
 		t.Errorf("Expected request to return %v, got %v", want, got)
@@ -227,7 +227,7 @@ func TestSuccessfulServiceCall(t *testing.T) {
 	req.Host = "api.sc.local"
 	req.Header.Set("Content-Type", "multipart/form-data; boundary=some-boundary")
 
-	controller.tracks(res, req)
+	controller.tracks().ServeHTTP(res, req)
 
 	result := res.Result()
 	if want, got := http.StatusCreated, result.StatusCode; want != got {
