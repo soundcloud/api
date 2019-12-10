@@ -149,4 +149,15 @@ class TrackStreamsHandlerSpec extends UnitSpecification {
       resp.headerMap("Location") ==== "http://mp3-progressive"
     }
   }
+
+  "when streaming is not allowed" >> {
+    trait StreamingNotAllowedContext extends MediaServiceContext {
+      streamService.fetchSingle(session, trackUrn, None) returns Future.value(StreamNotAllowed)
+    }
+
+    s"should return 404" in new StreamingNotAllowedContext {
+      val resp = get("/tracks/5/stream")
+      resp.status ==== Status.NotFound
+    }
+  }
 }
