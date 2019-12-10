@@ -20,6 +20,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/soundcloud/gokit/dnssrv"
 	"github.com/soundcloud/gokit/httpserver"
+	"github.com/soundcloud/gokit/instrumenthttp"
 )
 
 func main() {
@@ -40,11 +41,13 @@ func main() {
 	flag.Parse()
 
 	s3cli := &http.Client{
-		Transport: serviceTransport{
-			name:      "S3",
-			transport: http.DefaultTransport,
-		},
+		Transport: instrumenthttp.Tripperware(
+			"S3",
+			instrumenthttp.TripperwareOpts{},
+			http.DefaultTransport,
+		),
 	}
+
 	s3 := s3.New(
 		session.Must(
 			session.NewSession(&aws.Config{
@@ -60,11 +63,13 @@ func main() {
 	)
 
 	moshicli := &http.Client{
-		Transport: serviceTransport{
-			name:      "MOSHIMOSHI",
-			transport: dnssrv.DefaultTransport,
-		},
+		Transport: instrumenthttp.Tripperware(
+			"MOSHIMOSHI",
+			instrumenthttp.TripperwareOpts{},
+			dnssrv.DefaultTransport,
+		),
 	}
+
 	moshi := &moshimoshiClient{
 		client: moshicli,
 		host:   *moshiAddr,
@@ -83,11 +88,11 @@ func main() {
 		log.Fatal(err)
 	}
 	strangler := httputil.NewSingleHostReverseProxy(stranglerURL)
-	strangler.Transport = serviceTransport{
-		name:      "PUBLIC_API_STRANGLER",
-		transport: dnssrv.DefaultTransport,
-	}
-
+	strangler.Transport = instrumenthttp.Tripperware(
+		"PUBLIC_API_STRANGLER",
+		instrumenthttp.TripperwareOpts{},
+		dnssrv.DefaultTransport,
+	)
 	strangler.ErrorHandler = handleProxyError
 
 	controller := &controller{
@@ -111,25 +116,27 @@ func main() {
 		w.Write([]byte("OK"))
 	})
 
-	router.HandleFunc("/tracks/{id:[0-9]+}", httpHandler("/tracks/:id", controller.tracks))
-	router.HandleFunc("/tracks/{id:[0-9]+}.json", httpHandler("/tracks/:id.json", controller.tracks))
-	router.HandleFunc("/tracks.json", httpHandler("/tracks.json", controller.tracks))
-	router.HandleFunc("/tracks.json/", httpHandler("/tracks.json/", controller.tracks))
-	router.HandleFunc("/tracks", httpHandler("/tracks", controller.tracks))
-	router.HandleFunc("/tracks/", httpHandler("/tracks/", controller.tracks))
+	tracksHandler := controller.tracks()
 
-	router.HandleFunc("/v1/tracks", httpHandler("/v1/tracks", controller.tracks))
-	router.HandleFunc("/v1/tracks/", httpHandler("/v1/tracks/", controller.tracks))
-	router.HandleFunc("/v1/tracks.json", httpHandler("/v1/tracks.json", controller.tracks))
-	router.HandleFunc("/v1/tracks.json/", httpHandler("/v1/tracks.json/", controller.tracks))
+	router.Handle("/tracks/{id:[0-9]+}", httpHandler("/tracks/:id", tracksHandler))
+	router.Handle("/tracks/{id:[0-9]+}.json", httpHandler("/tracks/:id.json", tracksHandler))
+	router.Handle("/tracks.json", httpHandler("/tracks.json", tracksHandler))
+	router.Handle("/tracks.json/", httpHandler("/tracks.json/", tracksHandler))
+	router.Handle("/tracks", httpHandler("/tracks", tracksHandler))
+	router.Handle("/tracks/", httpHandler("/tracks/", tracksHandler))
 
-	router.HandleFunc("/users/{userId:[0-9]+}/tracks", httpHandler("/users/:userid/tracks", controller.tracks))
-	router.HandleFunc("/users/{userId:[0-9]+}/tracks/", httpHandler("/users/:userid/tracks/", controller.tracks))
+	router.Handle("/v1/tracks", httpHandler("/v1/tracks", tracksHandler))
+	router.Handle("/v1/tracks/", httpHandler("/v1/tracks/", tracksHandler))
+	router.Handle("/v1/tracks.json", httpHandler("/v1/tracks.json", tracksHandler))
+	router.Handle("/v1/tracks.json/", httpHandler("/v1/tracks.json/", tracksHandler))
 
-	router.HandleFunc("/me/tracks", httpHandler("/me/tracks", controller.tracks))
-	router.HandleFunc("/me/tracks.json", httpHandler("/me/tracks.json", controller.tracks))
+	router.Handle("/users/{userId:[0-9]+}/tracks", httpHandler("/users/:userid/tracks", tracksHandler))
+	router.Handle("/users/{userId:[0-9]+}/tracks/", httpHandler("/users/:userid/tracks/", tracksHandler))
 
-	router.PathPrefix("/").Handler(httpHandler("generic", controller.generic))
+	router.Handle("/me/tracks", httpHandler("/me/tracks", tracksHandler))
+	router.Handle("/me/tracks.json", httpHandler("/me/tracks.json", tracksHandler))
+
+	router.PathPrefix("/").Handler(httpHandler("generic", controller.generic()))
 
 	server := httpserver.Graceful{
 		Config: http.Server{

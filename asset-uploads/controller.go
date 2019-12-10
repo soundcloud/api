@@ -16,12 +16,16 @@ type controller struct {
 
 type svcDispatch func(string, *http.Request) (*http.Request, error)
 
-func (c controller) generic(w http.ResponseWriter, r *http.Request) {
-	c.dispatch(w, r, c.svcGeneric)
+func (c controller) generic() http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		c.dispatch(w, r, c.svcGeneric)
+	})
 }
 
-func (c controller) tracks(w http.ResponseWriter, r *http.Request) {
-	c.dispatch(w, r, c.svcTracks)
+func (c controller) tracks() http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		c.dispatch(w, r, c.svcTracks)
+	})
 }
 
 func (c controller) svcGeneric(b string, r *http.Request) (*http.Request, error) {
@@ -98,4 +102,12 @@ func (c controller) dispatch(w http.ResponseWriter, r *http.Request, svc svcDisp
 	}
 
 	c.proxy.ServeHTTP(w, rr)
+}
+
+func labelClient(name string) string {
+	if name == "" {
+		return "unknown"
+	}
+
+	return name
 }
