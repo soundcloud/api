@@ -26,7 +26,13 @@ func logger() Middleware {
 // Instrument the request
 func register(path string) Middleware {
 	return func(h http.Handler) http.Handler {
-		return instrumenthttp.Middleware(instrumenthttp.MiddlewareOpts{Path: path}, h)
+		return instrumenthttp.Middleware(
+			instrumenthttp.MiddlewareOpts{
+				Path:           path,
+				LatencyBuckets: []float64{0.001, 0.002, 0.005, 0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 1, 2, 5, 10, 20, 50},
+			},
+			h,
+		)
 	}
 }
 
