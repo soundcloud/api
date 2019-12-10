@@ -83,11 +83,8 @@ class TrackStreamsHandler(
     val builder = streamResponse match {
       case StreamUrl(url) =>
         ResponseBuilder().header("Location", url).status(Status.Found)
-      case StreamNotFoundError =>
+      case StreamNotFoundError | StreamNotAllowed =>
         ResponseBuilder().status(Status.NotFound)
-      case StreamNotAllowed =>
-        if (session.isAnonymous) ResponseBuilder().status(Status.Unauthorized)
-        else ResponseBuilder().status(Status.Forbidden)
       case _ => ResponseBuilder().status(Status.Ok)
     }
     if (request.method != Method.Head)
