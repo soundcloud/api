@@ -29,40 +29,44 @@ class TokenExchangeHandlerSpec extends UnitSpecification {
 
     "instruments the request body contents" >> {
       "for invalid requests" >> {
-        "unexpected error" in new Context {
+        trait InvalidRequestContext extends Context {
+          override val mothershipResponse = Response(Status.Unauthorized)
+        }
+
+        "unexpected error" in new InvalidRequestContext {
           request.contentType throws new RuntimeException
 
           // Ensure that failing instrumentation does not affect the dispatch.
           Await.result(handler.instrumentedMothershipDispatch(request)) ==== mothershipResponse
 
-          metrics.requestErrorCounter.labels("unexpected_error").get ==== 1.0
+          metrics.requestErrorCounter.labels("unexpected_error", "401").get ==== 1.0
         }
 
-        "missing content type" in new Context {
+        "missing content type" in new InvalidRequestContext {
           request.contentType returns None
           Await.result(handler.instrumentedMothershipDispatch(request))
 
-          metrics.requestErrorCounter.labels("missing_content_type").get ==== 1.0
+          metrics.requestErrorCounter.labels("missing_content_type", "401").get ==== 1.0
         }
 
-        "unsupported content type" in new Context {
+        "unsupported content type" in new InvalidRequestContext {
           request.contentType returns Some("application/json")
           Await.result(handler.instrumentedMothershipDispatch(request))
 
-          metrics.requestErrorCounter.labels("unsupported_content_type").get ==== 1.0
+          metrics.requestErrorCounter.labels("unsupported_content_type", "401").get ==== 1.0
         }
 
-        "incorrect content format" in new Context {
+        "incorrect content format" in new InvalidRequestContext {
           request.contentType returns Some("application/x-www-form-urlencoded")
           request.contentString returns
             """{"this-is-not": "form-urlencoded", "it-is": "json"}"""
 
           Await.result(handler.instrumentedMothershipDispatch(request))
 
-          metrics.requestErrorCounter.labels("invalid_request").get ==== 1.0
+          metrics.requestErrorCounter.labels("invalid_request", "401").get ==== 1.0
         }
 
-        "missing grant type" in new Context {
+        "missing grant type" in new InvalidRequestContext {
           request.contentType returns Some("application/x-www-form-urlencoded")
           request.contentString returns
             "client_id=s6BhdRkqt3&" +
@@ -71,16 +75,16 @@ class TokenExchangeHandlerSpec extends UnitSpecification {
 
           Await.result(handler.instrumentedMothershipDispatch(request))
 
-          metrics.requestErrorCounter.labels("invalid_request").get ==== 1.0
+          metrics.requestErrorCounter.labels("invalid_request", "401").get ==== 1.0
         }
 
-        "invalid grant type" in new Context {
+        "invalid grant type" in new InvalidRequestContext {
           request.contentType returns Some("application/x-www-form-urlencoded")
           request.contentString returns "grant_type=unsupported"
 
           Await.result(handler.instrumentedMothershipDispatch(request))
 
-          metrics.requestErrorCounter.labels("unsupported_grant_type").get ==== 1.0
+          metrics.requestErrorCounter.labels("unsupported_grant_type", "401").get ==== 1.0
         }
       }
 
@@ -98,7 +102,7 @@ class TokenExchangeHandlerSpec extends UnitSpecification {
 
           Await.result(handler.instrumentedMothershipDispatch(request))
 
-          metrics.grantTypeCounter.labels("authorization_code").get ==== 1.0
+          metrics.grantTypeCounter.labels("authorization_code", "200").get ==== 1.0
         }
 
         "Resource Owner Password Credentials" in new ValidRequestContext {
@@ -109,7 +113,7 @@ class TokenExchangeHandlerSpec extends UnitSpecification {
 
           Await.result(handler.instrumentedMothershipDispatch(request))
 
-          metrics.grantTypeCounter.labels("password").get ==== 1.0
+          metrics.grantTypeCounter.labels("password", "200").get ==== 1.0
         }
 
         "Refresh Token" in new ValidRequestContext {
@@ -120,7 +124,7 @@ class TokenExchangeHandlerSpec extends UnitSpecification {
 
           Await.result(handler.instrumentedMothershipDispatch(request))
 
-          metrics.grantTypeCounter.labels("refresh_token").get ==== 1.0
+          metrics.grantTypeCounter.labels("refresh_token", "200").get ==== 1.0
         }
 
         "Client Credentials" in new ValidRequestContext {
@@ -133,7 +137,7 @@ class TokenExchangeHandlerSpec extends UnitSpecification {
 
           Await.result(handler.instrumentedMothershipDispatch(request))
 
-          metrics.grantTypeCounter.labels("client_credentials").get ==== 1.0
+          metrics.grantTypeCounter.labels("client_credentials", "200").get ==== 1.0
         }
       }
     }

@@ -12,28 +12,35 @@ import scala.collection.JavaConverters._
 
 class TokenExchangeHandler(mothershipDispatch: Handler, metrics: TokenExchangeHandler.Metrics) {
   def instrumentedMothershipDispatch(request: HandlerRequest): Future[Response] = {
-    instrument(request)
-    mothershipDispatch(request)
+    instrument(request)(mothershipDispatch)
   }
 
-  private def instrument(request: HandlerRequest): Unit = {
+  private def instrument(request: HandlerRequest)(handler: Handler): Future[Response] = {
     val tokenExchangeRequest = TokenExchangeHandler.Request(request)
 
-    tokenExchangeRequest match {
-      case Right(r) =>
-        metrics.grantTypeCounter.labels(r.grantType.name).inc()
-      case Left(e) =>
-        metrics.requestErrorCounter.labels(e.name).inc()
-    }
+    handler(request).foreach(
+      response =>
+        tokenExchangeRequest match {
+          case Right(r) =>
+            metrics.grantTypeCounter.labels(r.grantType.name, response.statusCode.toString).inc()
+          case Left(e) =>
+            metrics.requestErrorCounter.labels(e.name, response.statusCode.toString).inc()
+        }
+    )
   }
 }
 
 object TokenExchangeHandler {
   class Metrics(telemetry: Telemetry) {
     val grantTypeCounter: Counter =
-      telemetry.counter("oauth_token_exchange_grant_type", "OAuth 2 Token exchange request grant type.", "grant_type")
+      telemetry.counter(
+        "oauth_token_exchange_grant_type",
+        "OAuth 2 Token exchange request grant type.",
+        "grant_type",
+        "response_status"
+      )
     val requestErrorCounter: Counter =
-      telemetry.counter("oauth_token_exchange_error", "OAuth 2 Token exchange error.", "error")
+      telemetry.counter("oauth_token_exchange_error", "OAuth 2 Token exchange error.", "error", "response_status")
   }
 
   // This class is intended to hold the full access token request in the future.
