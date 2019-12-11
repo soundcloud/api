@@ -4,6 +4,8 @@ import (
 	"crypto/md5"
 	"fmt"
 	"io"
+	"net/url"
+	"path/filepath"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
@@ -21,7 +23,8 @@ type uploader struct {
 }
 
 type uploadTrackRequest struct {
-	data io.Reader
+	data     io.Reader
+	filename string
 }
 
 type uploadTrackResponse struct {
@@ -39,9 +42,10 @@ func (u uploader) uploadTrack(req *uploadTrackRequest) (*uploadTrackResponse, er
 	md5 := md5.New()
 	tee := io.TeeReader(req.data, md5)
 	out, err := u.s3Uploader.Upload(&s3manager.UploadInput{
-		Bucket: aws.String(u.s3Bucket),
-		Key:    aws.String(uid),
-		Body:   tee,
+		Bucket:             aws.String(u.s3Bucket),
+		Key:                aws.String(uid),
+		Body:               tee,
+		ContentDisposition: contentDisposition(req.filename),
 	})
 	if err != nil {
 		return nil, err
@@ -56,6 +60,18 @@ func (u uploader) uploadTrack(req *uploadTrackRequest) (*uploadTrackResponse, er
 		md5:      fmt.Sprintf("%x", md5.Sum(nil)),
 		uid:      uid,
 	}, nil
+}
+
+func contentDisposition(filename string) *string {
+	if len(filename) == 0 {
+		return nil
+	}
+	s := filename
+	s = filepath.Base(s)
+	s = url.QueryEscape(s)
+	// handle filenames with characters outside the ASCII set (https://tools.ietf.org/html/rfc8187)
+	s = fmt.Sprintf(`attachment;filename="%s"; filename*=utf-8''%s`, s, s)
+	return &s
 }
 
 // Ensure that uploader implements uploaderAPI.

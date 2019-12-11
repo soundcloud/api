@@ -198,7 +198,10 @@ func (s service) uploadTrackAssetData(p *multipart.Part, w *multipart.Writer) (*
 		return nil, err
 	}
 
-	res, err := s.upload.uploadTrack(&uploadTrackRequest{data: p})
+	res, err := s.upload.uploadTrack(&uploadTrackRequest{
+		data:     p,
+		filename: filename,
+	})
 	if err != nil {
 		return nil, err
 	}
