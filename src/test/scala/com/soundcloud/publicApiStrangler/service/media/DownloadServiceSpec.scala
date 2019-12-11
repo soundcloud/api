@@ -24,7 +24,7 @@ class DownloadServiceSpec extends UnitSpecification with Mockito {
     val subject = new DownloadService(tracksClient)
 
     val downloadUrl = "https://soundcloud.com"
-    val downloadRequest = new DownloadRequest(urn, secretToken)
+    val downloadRequest = new DownloadRequest(urn, secretToken, skipLogging = false)
   }
 
   "fetchDownloadUrl using tracks client" >> {

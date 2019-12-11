@@ -9,4 +9,4 @@ object DownloadRequest {
   implicit val writes: Writes[DownloadRequest] = Json.writes[DownloadRequest]
 }
 
-case class DownloadRequest(urn: Urn, secretToken: Option[String])
+case class DownloadRequest(urn: Urn, secretToken: Option[String], skipLogging: Boolean)

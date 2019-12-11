@@ -4,6 +4,7 @@ import com.soundcloud.jvmkit.module.bff.session.UserAuthentication
 import com.soundcloud.jvmkit.module.http.server.{HandlerRequest, ResponseBuilder}
 import com.soundcloud.publicApiStrangler.TrackUrnUtil.trackUrn
 import com.soundcloud.publicApiStrangler.service.media.{DownloadNotFound, DownloadOk, DownloadService}
+import com.soundcloud.publicApiStrangler.support.RangeHelper
 import com.twitter.finagle.http.{Response, Status}
 import com.twitter.util.{Future, Return, Try}
 
@@ -16,7 +17,7 @@ class TrackDownloadHandler(
       case Return(urn) =>
         userAuthentication.withUserSession(request) { session =>
           val secretToken = request.params.get("secret_token")
-          downloadService.download(session, urn, secretToken).map {
+          downloadService.download(session, urn, secretToken, skipLogging(request)).map {
             case DownloadOk(url) => ResponseBuilder().header("Location", url).status(Status.Found).build
             case DownloadNotFound => ResponseBuilder.notFound()
           }
@@ -24,4 +25,9 @@ class TrackDownloadHandler(
       case _ => Future.value(ResponseBuilder.badRequest())
     }
   }
+
+  // If a client uses this endpoint with Range HTTP header download quota will be incremented
+  // only if the first bytes of the request are being sent
+  private def skipLogging(request: HandlerRequest): Boolean =
+    !request.headerMap.get("Range").forall(RangeHelper.isRequestingFirstByte)
 }

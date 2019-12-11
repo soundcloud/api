@@ -12,8 +12,13 @@ case class DownloadOk(url: String) extends DownloadOriginalResponse
 case object DownloadNotFound extends DownloadOriginalResponse
 
 class DownloadService(tracksClient: TracksClient) {
-  def download(session: UserSession, trackUrn: Urn, secretToken: Option[String]): Future[DownloadOriginalResponse] = {
-    val downloadRequest = DownloadRequest(trackUrn, secretToken)
+  def download(
+      session: UserSession,
+      trackUrn: Urn,
+      secretToken: Option[String],
+      skipLogging: Boolean = false
+  ): Future[DownloadOriginalResponse] = {
+    val downloadRequest = DownloadRequest(trackUrn, secretToken, skipLogging)
 
     tracksClient.downloadUrl(session, downloadRequest).map {
       case DownloadUrlResponse(url) => DownloadOk(url)

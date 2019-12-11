@@ -97,7 +97,7 @@ class TracksClientSpec extends UnitSpecification {
 
   "downloadUrl" >> {
     trait DownloadRequestContext extends Context {
-      val downloadRequest = DownloadRequest(trackUrn, None)
+      val downloadRequest = DownloadRequest(trackUrn, None, skipLogging = false)
     }
 
     "with successful response" >> {
