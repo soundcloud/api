@@ -32,21 +32,21 @@ class DownloadServiceSpec extends UnitSpecification with Mockito {
       when(tracksClient.downloadUrl(session, downloadRequest))
         .thenReturn(Future.value(DownloadUrlResponse(downloadUrl)))
 
-      val response = Await.result(subject.download(session, urn, secretToken))
+      val response = Await.result(subject.download(session, urn, secretToken, skipLogging = false))
       response mustEqual (DownloadOk(downloadUrl))
     }
 
     "Returns error when not found returned from tracks service" in new FetchContext {
       when(tracksClient.downloadUrl(session, downloadRequest)).thenReturn(Future.value(DownloadErrorResponse))
 
-      val response = Await.result(subject.download(session, urn, secretToken))
+      val response = Await.result(subject.download(session, urn, secretToken, skipLogging = false))
       response mustEqual (DownloadNotFound)
     }
 
     "Returns error when not authorized returned from tracks service" in new FetchContext {
       when(tracksClient.downloadUrl(session, downloadRequest)).thenReturn(Future.value(DownloadErrorResponse))
 
-      val response = Await.result(subject.download(session, urn, secretToken))
+      val response = Await.result(subject.download(session, urn, secretToken, skipLogging = false))
       response mustEqual (DownloadNotFound)
     }
   }

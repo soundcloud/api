@@ -16,7 +16,7 @@ class DownloadService(tracksClient: TracksClient) {
       session: UserSession,
       trackUrn: Urn,
       secretToken: Option[String],
-      skipLogging: Boolean = false
+      skipLogging: Boolean
   ): Future[DownloadOriginalResponse] = {
     val downloadRequest = DownloadRequest(trackUrn, secretToken, skipLogging)
 

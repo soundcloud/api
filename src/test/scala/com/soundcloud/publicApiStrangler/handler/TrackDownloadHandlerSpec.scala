@@ -37,9 +37,10 @@ class TrackDownloadHandlerSpec extends UnitSpecification {
     "with media-service" >> {
       trait MediaServiceContext extends Context {
         val downloadOriginalResponse: DownloadOriginalResponse
-        downloadService.download(session, Urn("soundcloud", "tracks", "999"), None) returns Future.value(
-          downloadOriginalResponse
-        )
+        downloadService.download(session, Urn("soundcloud", "tracks", "999"), None, skipLogging = false) returns Future
+          .value(
+            downloadOriginalResponse
+          )
       }
 
       "when download is found" >> {
@@ -69,9 +70,10 @@ class TrackDownloadHandlerSpec extends UnitSpecification {
 
   "with a secret token" >> {
     trait MediaServiceWithSecretTokenContext extends Context {
-      downloadService.download(session, Urn("soundcloud", "tracks", "999"), Some("itsasecret")) returns Future.value(
-        DownloadOk("https://download-url")
-      )
+      downloadService.download(session, Urn("soundcloud", "tracks", "999"), Some("itsasecret"), skipLogging = false) returns Future
+        .value(
+          DownloadOk("https://download-url")
+        )
     }
 
     s"should return 302" in new MediaServiceWithSecretTokenContext {
