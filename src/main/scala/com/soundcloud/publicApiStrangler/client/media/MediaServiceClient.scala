@@ -53,14 +53,4 @@ class MediaServiceClient(jsonClient: JsonClient) {
         }
       }
   }
-
-  def fetchDownloadOriginalUrl(session: UserSession, uid: String): Future[Option[String]] =
-    jsonClient.getWithSession(session, Path() / "download-original" / uid, Params.empty, Headers.empty).map {
-      response =>
-        response.status match {
-          case Status.Ok => (Json.parse(response.contentString) \ "url").asOpt[String]
-          case Status.NotFound => None
-          case _ => throw UnhandledResponseException(response)
-        }
-    }
 }
