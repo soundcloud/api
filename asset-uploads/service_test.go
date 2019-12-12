@@ -53,6 +53,40 @@ func TestValidMultipart(t *testing.T) {
 	}
 }
 
+func TestUploadWithFilename(t *testing.T) {
+	body := []byte(
+		"--------------------------6808b4f61ea0e5a2" +
+			crlf + `Content-Disposition: form-data; name="track[asset_data]"; filename="my_track.wav"` +
+			crlf + "Content-Type: application/octet-stream" +
+			crlf + "" +
+			crlf + "12345" +
+			crlf + "" +
+			crlf + "--------------------------6808b4f61ea0e5a2--" +
+			crlf)
+
+	req := &createTrackRequest{
+		boundary: "------------------------6808b4f61ea0e5a2",
+		request: func() *http.Request {
+			r := httptest.NewRequest(http.MethodPost, "/", bytes.NewReader(body))
+			return r
+		}(),
+	}
+
+	var got *uploadTrackRequest
+	service := &service{
+		upload: &fakeUploader{fn: func(r *uploadTrackRequest) (*uploadTrackResponse, error) {
+			got = r
+			return &uploadTrackResponse{}, nil
+		}},
+	}
+	if _, err := service.createTrack(req); err != nil {
+		t.Fatalf("Expected no error, got %v", err)
+	}
+	if want, got := "my_track.wav", got.filename; want != got {
+		t.Fatalf("wrong filename: want %v, got %v", want, got)
+	}
+}
+
 func TestUnescapedFilename(t *testing.T) {
 	body := []byte(
 		"--------------------------6808b4f61ea0e5a2" +
