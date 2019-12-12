@@ -56,6 +56,13 @@ class TokenExchangeHandlerSpec extends UnitSpecification {
           metrics.requestErrorCounter.labels("unsupported_content_type", "401").get ==== 1.0
         }
 
+        "non-standard multipart content type" in new InvalidRequestContext {
+          request.contentType returns Some("multipart/what-ever+but-most-probably-form-data")
+          Await.result(handler.instrumentedMothershipDispatch(request))
+
+          metrics.requestErrorCounter.labels("non_standard_multipart_content_type: multipart/what-ever+but-most-probably-form-data", "401").get ==== 1.0
+        }
+
         "incorrect content format" in new InvalidRequestContext {
           request.contentType returns Some("application/x-www-form-urlencoded")
           request.contentString returns

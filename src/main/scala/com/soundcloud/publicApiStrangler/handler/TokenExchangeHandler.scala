@@ -68,6 +68,8 @@ object TokenExchangeHandler {
           case Some(MediaType.WwwForm) =>
             val parameters = decodeParameters(request)
             getGrantType(parameters).map(Request(_))
+          case Some(mediaType) if mediaType.matches("multipart\\/.*") =>
+            Left(NonStandardMultipartContentType(mediaType))
           case Some(_) => Left(UnsupportedContentType)
           case None => Left(MissingContentType)
         }
@@ -97,6 +99,7 @@ object TokenExchangeHandler {
     case object UnsupportedGrantType extends RequestError("unsupported_grant_type")
     case object MissingContentType extends RequestError("missing_content_type")
     case object UnsupportedContentType extends RequestError("unsupported_content_type")
+    case class NonStandardMultipartContentType(mediaType: String) extends RequestError(s"non_standard_multipart_content_type: $mediaType")
     case class UnexpectedError(throwable: Throwable) extends RequestError("unexpected_error")
   }
 }
