@@ -4,6 +4,7 @@ import java.util
 
 import com.soundcloud.jvmkit.module.http.server.{Handler, HandlerRequest}
 import com.soundcloud.jvmkit.module.telemetry.{Counter, Telemetry}
+import com.twitter.finagle.http.exp.MultipartDecoder
 import com.twitter.finagle.http.{MediaType, Response}
 import com.twitter.util.{Future, Return, Throw, Try}
 import org.jboss.netty.handler.codec.http.QueryStringDecoder
@@ -68,8 +69,11 @@ object TokenExchangeHandler {
           case Some(MediaType.WwwForm) =>
             val parameters = decodeParameters(request)
             getGrantType(parameters).map(Request(_))
-          case Some(mediaType) if mediaType.matches("multipart\\/.*") =>
-            Left(NonStandardMultipartContentType(mediaType.replaceAll("; .*", "")))
+          case Some(mediaType) if mediaType.matches("multipart\\/.*") => {
+            getGrantType(
+              MultipartDecoder.decode(request).flatMap(_.attributes.get("grant_type").flatMap(_.headOption))
+            ).map(Request(_))
+          }
           case Some(_) => Left(UnsupportedContentType)
           case None => Left(MissingContentType)
         }
@@ -81,7 +85,11 @@ object TokenExchangeHandler {
 
     type Parameters = util.Map[String, util.List[String]]
     private def getGrantType(parameters: Parameters): Either[RequestError, AccessGrantType] = {
-      Option(parameters.get("grant_type")).flatMap(_.asScala.headOption) match {
+      getGrantType(Option(parameters.get("grant_type")).flatMap(_.asScala.headOption))
+    }
+
+    def getGrantType(maybeString: Option[String]): Either[RequestError, AccessGrantType] = {
+      maybeString match {
         case Some(string: String) =>
           AccessGrantType.from(string) match {
             case Some(accessGrant) => Right(accessGrant)
@@ -99,8 +107,6 @@ object TokenExchangeHandler {
     case object UnsupportedGrantType extends RequestError("unsupported_grant_type")
     case object MissingContentType extends RequestError("missing_content_type")
     case object UnsupportedContentType extends RequestError("unsupported_content_type")
-    case class NonStandardMultipartContentType(mediaType: String)
-        extends RequestError(s"non_standard_multipart_content_type: $mediaType")
     case class UnexpectedError(throwable: Throwable) extends RequestError("unexpected_error")
   }
 }
