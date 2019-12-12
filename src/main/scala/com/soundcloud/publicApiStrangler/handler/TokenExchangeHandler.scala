@@ -99,7 +99,8 @@ object TokenExchangeHandler {
     case object UnsupportedGrantType extends RequestError("unsupported_grant_type")
     case object MissingContentType extends RequestError("missing_content_type")
     case object UnsupportedContentType extends RequestError("unsupported_content_type")
-    case class NonStandardMultipartContentType(mediaType: String) extends RequestError(s"non_standard_multipart_content_type: $mediaType")
+    case class NonStandardMultipartContentType(mediaType: String)
+        extends RequestError(s"non_standard_multipart_content_type: $mediaType")
     case class UnexpectedError(throwable: Throwable) extends RequestError("unexpected_error")
   }
 }

@@ -60,7 +60,9 @@ class TokenExchangeHandlerSpec extends UnitSpecification {
           request.contentType returns Some("multipart/what-ever+but-most-probably-form-data")
           Await.result(handler.instrumentedMothershipDispatch(request))
 
-          metrics.requestErrorCounter.labels("non_standard_multipart_content_type: multipart/what-ever+but-most-probably-form-data", "401").get ==== 1.0
+          metrics.requestErrorCounter
+            .labels("non_standard_multipart_content_type: multipart/what-ever+but-most-probably-form-data", "401")
+            .get ==== 1.0
         }
 
         "incorrect content format" in new InvalidRequestContext {
