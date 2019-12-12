@@ -57,7 +57,9 @@ class TokenExchangeHandlerSpec extends UnitSpecification {
         }
 
         "non-standard multipart content type" in new InvalidRequestContext {
-          request.contentType returns Some("multipart/what-ever+but-most-probably-form-data")
+          request.contentType returns Some(
+            "multipart/what-ever+but-most-probably-form-data; boundary=------------nx-skip-this;and-this-too\""
+          )
           Await.result(handler.instrumentedMothershipDispatch(request))
 
           metrics.requestErrorCounter

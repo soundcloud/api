@@ -69,7 +69,7 @@ object TokenExchangeHandler {
             val parameters = decodeParameters(request)
             getGrantType(parameters).map(Request(_))
           case Some(mediaType) if mediaType.matches("multipart\\/.*") =>
-            Left(NonStandardMultipartContentType(mediaType))
+            Left(NonStandardMultipartContentType(mediaType.replaceAll("; .*", "")))
           case Some(_) => Left(UnsupportedContentType)
           case None => Left(MissingContentType)
         }
