@@ -69,7 +69,6 @@ object Helpers extends Mockito {
       case Method.Patch => service.patchWithSession(session, path, params, headers, bodyString)
       case Method.Delete => service.deleteWithSession(session, path, params, headers, bodyString)
       case Method.Put => service.putWithSession(session, path, params, headers, bodyString)
-      case Method.Options => service.options(session, path, params, headers, bodyString)
     }) returns Future(JsonResponseBuilder().status(code).body(Json.stringify(expectedBody.responseBody)).build)
   }
 
