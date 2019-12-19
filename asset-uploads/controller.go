@@ -71,13 +71,13 @@ func (c controller) dispatch(w http.ResponseWriter, r *http.Request, svc svcDisp
 
 	mt, params, err := mime.ParseMediaType(r.Header.Get("Content-Type"))
 	if err != nil {
-		log.Printf("rejected request due to missing content type: %s %s (%s)", method, r.RequestURI, client)
+		log.Printf("rejected request due to missing content type: %s %s (%s) err: %v", method, r.RequestURI, client, err)
 		http.Error(w, emptyResponse, http.StatusMisdirectedRequest)
 		return
 	}
 
 	if !strings.HasPrefix(mt, "multipart/form-data") {
-		log.Printf("rejected request due to unexpected content type: %s %s (%s)", method, r.RequestURI, client)
+		log.Printf("rejected request due to unexpected content type: %s %s (%s) mediaType: %s", method, r.RequestURI, client, mt)
 		http.Error(w, emptyResponse, http.StatusMisdirectedRequest)
 		return
 	}
