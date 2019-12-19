@@ -77,7 +77,7 @@ func (c controller) dispatch(w http.ResponseWriter, r *http.Request, svc svcDisp
 	}
 
 	if !strings.HasPrefix(mt, "multipart/form-data") {
-		log.Printf("rejected request due to unexpected content type: %s %s (%s) mediaType: %s", method, r.RequestURI, client, mt)
+		log.Printf("rejected request due to unexpected content type: %s %s (%s) header: %s", method, r.RequestURI, client, r.Header.Get("Content-Type"))
 		http.Error(w, emptyResponse, http.StatusMisdirectedRequest)
 		return
 	}
