@@ -43,14 +43,15 @@ class JsonFiles {
   }
 
   private def getContentsOfFile(path: File): String = {
-    val contents = try {
-      Source.fromFile(path, encoding).mkString
-    } catch {
-      case NonFatal(e) => {
-        logger.error(s"Error: [$e] while parsing fixture [$path]", e)
-        throw e
+    val contents =
+      try {
+        Source.fromFile(path, encoding).mkString
+      } catch {
+        case NonFatal(e) => {
+          logger.error(s"Error: [$e] while parsing fixture [$path]", e)
+          throw e
+        }
       }
-    }
     contents
   }
 

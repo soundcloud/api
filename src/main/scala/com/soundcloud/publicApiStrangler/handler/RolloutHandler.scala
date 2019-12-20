@@ -19,8 +19,6 @@ object RolloutHandler {
   class InstrumentedPredicate(choice: () => Future[Boolean], counter: Counter, staticValues: Seq[String] = Seq.empty)
       extends (() => Future[Boolean]) {
     def apply(): Future[Boolean] =
-      choice().foreach(
-        (b: Boolean) => counter.labels((staticValues ++ Seq(b.toString)): _*).inc()
-      )
+      choice().foreach((b: Boolean) => counter.labels((staticValues ++ Seq(b.toString)): _*).inc())
   }
 }

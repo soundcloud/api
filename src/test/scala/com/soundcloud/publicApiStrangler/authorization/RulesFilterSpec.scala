@@ -49,14 +49,13 @@ class RulesFilterSpec extends UnitSpecification {
         Json.obj("id" -> JsNumber(id))
       }.toSeq
       val rules = (1 to 4)
-        .map(
-          i =>
-            new ContentAuthorization(
-              Urn("soundcloud", "things", i.toString),
-              ContentPolicy.from("blocked"),
-              Reason.NOT_SUPPORTED,
-              MonetizationModel.NOT_APPLICABLE
-            )
+        .map(i =>
+          new ContentAuthorization(
+            Urn("soundcloud", "things", i.toString),
+            ContentPolicy.from("blocked"),
+            Reason.NOT_SUPPORTED,
+            MonetizationModel.NOT_APPLICABLE
+          )
         )
         .toSeq
       new RulesFilter(ContentPolicy.from("allowed")).filter(rules, jsonContent) must beEmpty

@@ -30,9 +30,7 @@ class User(
   private def nameInNetwork(networkName: String, fieldName: String = "username"): Option[String] = {
     (json \ "links")
       .as[Seq[JsObject]]
-      .filter(
-        data => (data \ "network").as[String] == networkName
-      ) match {
+      .filter(data => (data \ "network").as[String] == networkName) match {
       case networkData +: _ => (networkData \ fieldName).asOpt[String]
       case _ => None
     }

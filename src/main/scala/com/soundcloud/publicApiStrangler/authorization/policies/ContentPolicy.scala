@@ -33,6 +33,7 @@ class ContentPolicy(val name: String) {
   * </i> be used.
   */
 object ContentPolicy {
+
   /**
     * Can be used by the client and user.
     */

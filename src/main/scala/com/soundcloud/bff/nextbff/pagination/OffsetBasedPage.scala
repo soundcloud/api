@@ -9,6 +9,7 @@ import com.twitter.finagle.http.Request
   */
 case class OffsetBasedPage[T](param: T, baseUrl: String, path: String, extraParams: Params, offset: Int, limit: Int)
     extends Page[T] {
+
   /**
     * Infers the next page using offset + limit.
     */

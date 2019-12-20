@@ -19,8 +19,8 @@ class ContentAuthorizationRulesSpec extends UnitSpecification {
     val subsServiceMock = mock[SubscriptionsService]
     val service = new ContentAuthorizationRules(contentAuthMock, subsServiceMock)
     val urns = Seq(Urn("soundcloud", "tracks", "123"), Urn("soundcloud", "tracks", "456"))
-    val authorizations = urns.map(
-      urn => new ContentAuthorization(urn, ContentPolicy.ALLOW, Reason.UNKNOWN, MonetizationModel.NOT_APPLICABLE)
+    val authorizations = urns.map(urn =>
+      new ContentAuthorization(urn, ContentPolicy.ALLOW, Reason.UNKNOWN, MonetizationModel.NOT_APPLICABLE)
     )
 
     def sessionWithTier(tier: UserTier): UserSession = {

@@ -31,10 +31,9 @@ case class TrackPagination(
 
   def calculateFinalPage(tracks: List[Track]): List[Track] = {
     tracks
-      .filter(
-        t =>
-          createdAtFrom.map(t.created_at.isAfter(_)).getOrElse(true) &&
-            createdAtTo.map(t.created_at.isBefore(_)).getOrElse(true)
+      .filter(t =>
+        createdAtFrom.map(t.created_at.isAfter(_)).getOrElse(true) &&
+          createdAtTo.map(t.created_at.isBefore(_)).getOrElse(true)
       )
       .sortBy(-_.urn.identifier.toInt)
       .slice(0, limit)

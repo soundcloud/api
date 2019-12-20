@@ -19,14 +19,13 @@ class TokenExchangeHandler(mothershipDispatch: Handler, metrics: TokenExchangeHa
   private def instrument(request: HandlerRequest)(handler: Handler): Future[Response] = {
     val tokenExchangeRequest = TokenExchangeHandler.Request(request)
 
-    handler(request).foreach(
-      response =>
-        tokenExchangeRequest match {
-          case Right(r) =>
-            metrics.grantTypeCounter.labels(r.grantType.name, response.statusCode.toString).inc()
-          case Left(e) =>
-            metrics.requestErrorCounter.labels(e.name, response.statusCode.toString).inc()
-        }
+    handler(request).foreach(response =>
+      tokenExchangeRequest match {
+        case Right(r) =>
+          metrics.grantTypeCounter.labels(r.grantType.name, response.statusCode.toString).inc()
+        case Left(e) =>
+          metrics.requestErrorCounter.labels(e.name, response.statusCode.toString).inc()
+      }
     )
   }
 }

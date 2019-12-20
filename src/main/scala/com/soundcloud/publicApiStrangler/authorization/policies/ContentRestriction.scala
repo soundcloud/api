@@ -15,6 +15,7 @@ class InvalidRestrictionException(val invalidRestrictionName: String)
     )
 
 class ContentRestriction(val name: String) {
+
   /**
     * Returns the string representation of the enum value
     */
@@ -27,6 +28,7 @@ class ContentRestriction(val name: String) {
   * Set of restrictions a client application <i>MUST</i> enforce.
   */
 object ContentRestriction {
+
   /**
     * The content is only available over encrypted streaming
     * (e.g. <a href=http://en.wikipedia.org/wiki/HTTP_Live_Streaming>HLS</a>). Non-encrypted media streams (e.g. MP3)

@@ -15,6 +15,7 @@ import play.api.libs.json.JsObject
   * Base class for client definitions for internal services
   */
 trait FetchClient {
+
   /**
     * Decodes query params before making a get call on the client
     *

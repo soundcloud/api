@@ -15,6 +15,7 @@ case class CursorBasedPage[T](
     cursor: Option[String],
     limit: Int
 ) extends Page[T] {
+
   /**
     * Creates the next page for the specified cursor position.
     */

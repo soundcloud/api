@@ -10,6 +10,7 @@ import com.soundcloud.publicApiStrangler.mapper.similarsounds.{SimilarSounds, Si
 import com.twitter.util.Future
 
 class SystemPlaylistsClient(service: JsonClient) extends FetchClient {
+
   /**
     * Fetches all available similar tracks for a given seed track
     *

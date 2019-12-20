@@ -15,6 +15,7 @@ import play.api.libs.json.{JsLookupResult, JsObject, JsValue}
 class SimilarSoundsMapper(systemPlaylistsClient: SystemPlaylistsClient, searchEntityMapperxx: SearchEntityMapper)
     extends Mapper[OffsetBasedPage[Urn], SimilarSoundsMapping]
     with InputValidation[OffsetBasedPage[Urn], SimilarSoundsMapping] {
+
   /**
     * For a given list of inputs creates a map from OffsetBasedPage to SimilarSoundsMapping.
     * If input track does not exist no Map is returned which leads to a 404 response upstream.
@@ -39,13 +40,12 @@ class SimilarSoundsMapper(systemPlaylistsClient: SystemPlaylistsClient, searchEn
       implicit context: MappingContext
   ): Future[Option[SimilarSoundsMapping]] = {
     systemPlaylistsClient.fetchSimilar(session, seedTrack.param).map { opt =>
-      opt.map(
-        similarSounds =>
-          new ObjectMapping[SimilarSounds](similarSounds) with SimilarSoundsMapping {
-            override def currentPage: OffsetBasedPage[_] = seedTrack
+      opt.map(similarSounds =>
+        new ObjectMapping[SimilarSounds](similarSounds) with SimilarSoundsMapping {
+          override def currentPage: OffsetBasedPage[_] = seedTrack
 
-            override def searchEntityMapper: SearchEntityMapper = searchEntityMapperxx
-          }
+          override def searchEntityMapper: SearchEntityMapper = searchEntityMapperxx
+        }
       )
     }
   }

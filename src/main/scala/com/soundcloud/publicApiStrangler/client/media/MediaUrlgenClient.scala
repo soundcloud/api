@@ -16,6 +16,7 @@ import play.api.libs.json.Json
   * @param trackStreamMapper   TrackStreamMapper
   */
 private[media] class MediaUrlgenClient(jsonClient: JsonClient, trackStreamMapper: TrackStreamUrlMapper) {
+
   /**
     * Client for MediaUrlgen.
     *

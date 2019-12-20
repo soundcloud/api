@@ -12,6 +12,7 @@ import com.soundcloud.publicApiStrangler.client.support.FetchClient
 import com.twitter.util.Future
 
 class FollowsClient(jsonService: JsonClient) extends FetchClient {
+
   /**
     * Follows the target user.
     * Returns `FollowingCreated` when the target user is followed successfully.

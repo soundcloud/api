@@ -10,6 +10,7 @@ class MonetizationModel(val name: String) {
 }
 
 object MonetizationModel {
+
   /**
     * Nothing to see here.
     */

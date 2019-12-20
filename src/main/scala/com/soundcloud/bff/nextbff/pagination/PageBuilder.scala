@@ -70,6 +70,7 @@ case class PageBuilder[T] private (
 }
 
 object PageBuilder {
+
   /**
     * Creates the PageBuilder.
     */
