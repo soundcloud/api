@@ -18,7 +18,12 @@ class TokenExchangeHandlerSpec extends UnitSpecification {
 
       lazy val handler = new TokenExchangeHandler(dispatchToMothershipHandler, metrics)
 
-      val mothershipResponse = Response(Status.Ok)
+      val mothershipResponseStatus: Status = Status.Ok
+      lazy val mothershipResponse: Response = Response(mothershipResponseStatus)
+
+      def getRequestErrorCount(label: String): Double = {
+        metrics.requestErrorCounter.labels(label, mothershipResponseStatus.code.toString).get
+      }
     }
 
     trait WithMockRequestContext extends Context {
@@ -32,7 +37,7 @@ class TokenExchangeHandlerSpec extends UnitSpecification {
     "instruments the request body contents" >> {
       "for invalid requests" >> {
         trait InvalidRequestContext extends WithMockRequestContext {
-          override val mothershipResponse = Response(Status.Unauthorized)
+          override val mothershipResponseStatus: Status = Status.Unauthorized
         }
 
         "unexpected error" in new InvalidRequestContext {
@@ -41,31 +46,16 @@ class TokenExchangeHandlerSpec extends UnitSpecification {
           // Ensure that failing instrumentation does not affect the dispatch.
           Await.result(handler.instrumentedMothershipDispatch(request)) ==== mothershipResponse
 
-          metrics.requestErrorCounter.labels("unexpected_error", "401").get ==== 1.0
+          getRequestErrorCount("unparseable_request_body") ==== 1.0
         }
 
-        "missing content type" in new InvalidRequestContext {
-          request.contentType returns None
-          Await.result(handler.instrumentedMothershipDispatch(request))
-
-          metrics.requestErrorCounter.labels("missing_content_type", "401").get ==== 1.0
-        }
-
-        "unsupported content type" in new InvalidRequestContext {
-          request.contentType returns Some("application/json")
-          Await.result(handler.instrumentedMothershipDispatch(request))
-
-          metrics.requestErrorCounter.labels("unsupported_content_type", "401").get ==== 1.0
-        }
-
-        "incorrect content format" in new InvalidRequestContext {
-          request.contentType returns Some("application/x-www-form-urlencoded")
+        "malformed request body" in new InvalidRequestContext {
           request.contentString returns
             """{"this-is-not": "form-urlencoded", "it-is": "json"}"""
 
           Await.result(handler.instrumentedMothershipDispatch(request))
 
-          metrics.requestErrorCounter.labels("invalid_request", "401").get ==== 1.0
+          getRequestErrorCount("invalid_request") ==== 1.0
         }
 
         "missing grant type" in new InvalidRequestContext {
@@ -77,7 +67,7 @@ class TokenExchangeHandlerSpec extends UnitSpecification {
 
           Await.result(handler.instrumentedMothershipDispatch(request))
 
-          metrics.requestErrorCounter.labels("invalid_request", "401").get ==== 1.0
+          getRequestErrorCount("invalid_request") ==== 1.0
         }
 
         "invalid grant type" in new InvalidRequestContext {
@@ -86,7 +76,7 @@ class TokenExchangeHandlerSpec extends UnitSpecification {
 
           Await.result(handler.instrumentedMothershipDispatch(request))
 
-          metrics.requestErrorCounter.labels("unsupported_grant_type", "401").get ==== 1.0
+          getRequestErrorCount("unsupported_grant_type") ==== 1.0
         }
       }
 
@@ -161,10 +151,10 @@ class TokenExchangeHandlerSpec extends UnitSpecification {
             )
         }
 
-        "incorrect content format" in new MultipartRequestContext {
+        "malformed request body" in new MultipartRequestContext {
           val parameters = Seq()
 
-          override val mothershipResponse: Response = Response(Status.BadRequest)
+          override val mothershipResponseStatus: Status = Status.BadRequest
 
           override lazy val request: HandlerRequest =
             HandlerRequest(
@@ -178,8 +168,7 @@ class TokenExchangeHandlerSpec extends UnitSpecification {
             )
 
           Await.result(handler.instrumentedMothershipDispatch(request))
-
-          metrics.requestErrorCounter.labels("invalid_request", "400").get ==== 1.0
+          getRequestErrorCount("invalid_request") ==== 1.0
         }
 
         "for valid requests" >> {

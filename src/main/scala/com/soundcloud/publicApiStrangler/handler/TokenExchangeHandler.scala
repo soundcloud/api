@@ -4,8 +4,8 @@ import java.util
 
 import com.soundcloud.jvmkit.module.http.server.{Handler, HandlerRequest}
 import com.soundcloud.jvmkit.module.telemetry.{Counter, Telemetry}
+import com.twitter.finagle.http.Response
 import com.twitter.finagle.http.exp.MultipartDecoder
-import com.twitter.finagle.http.{MediaType, Response}
 import com.twitter.util.{Future, Return, Throw, Try}
 import org.jboss.netty.handler.codec.http.QueryStringDecoder
 
@@ -17,10 +17,8 @@ class TokenExchangeHandler(mothershipDispatch: Handler, metrics: TokenExchangeHa
   }
 
   private def instrument(request: HandlerRequest)(handler: Handler): Future[Response] = {
-    val tokenExchangeRequest = TokenExchangeHandler.Request(request)
-
     handler(request).foreach(response =>
-      tokenExchangeRequest match {
+      TokenExchangeHandler.Request(request) match {
         case Right(r) =>
           metrics.grantTypeCounter.labels(r.grantType.name, response.statusCode.toString).inc()
         case Left(e) =>
@@ -57,6 +55,7 @@ object TokenExchangeHandler {
 
     object AccessGrantType {
       val All = Seq(AuthorizationCode, ResourceOwnerPasswordCredentials, RefreshToken, ClientCredentials)
+
       def from(string: String): Option[AccessGrantType] = {
         All.find(_.name == string)
       }
@@ -65,29 +64,25 @@ object TokenExchangeHandler {
     def apply(request: HandlerRequest): Either[RequestError, Request] = {
       Try {
         request.contentType match {
-          case Some(MediaType.WwwForm) =>
-            val parameters = decodeParameters(request)
-            getGrantType(parameters).map(Request(_))
-          case Some(mediaType) if mediaType.matches("multipart\\/.*") => {
-            getGrantType(
-              MultipartDecoder.decode(request).flatMap(_.attributes.get("grant_type").flatMap(_.headOption))
-            ).map(Request(_))
-          }
-          case Some(_) => Left(UnsupportedContentType)
-          case None => Left(MissingContentType)
+          case Some(mediaType) if mediaType.matches("multipart\\/.*") =>
+            extractGrantType(decodeMultipart(request)).map(Request(_))
+          case _ =>
+            extractGrantType(decodeFormUrlEncoded(request)).map(Request(_))
         }
       } match {
         case Return(r) => r
-        case Throw(e) => Left(UnexpectedError(e))
+        case Throw(_) => Left(UnparseableRequestBody)
       }
     }
 
-    type Parameters = util.Map[String, util.List[String]]
-    private def getGrantType(parameters: Parameters): Either[RequestError, AccessGrantType] = {
-      getGrantType(Option(parameters.get("grant_type")).flatMap(_.asScala.headOption))
+    type Parameters = Map[String, Seq[String]]
+    private def extractGrantType(parameters: Parameters): Either[RequestError, AccessGrantType] = {
+      getValidatedGrantType(
+        parameters.get("grant_type").flatMap(_.headOption)
+      )
     }
 
-    def getGrantType(maybeString: Option[String]): Either[RequestError, AccessGrantType] = {
+    def getValidatedGrantType(maybeString: Option[String]): Either[RequestError, AccessGrantType] = {
       maybeString match {
         case Some(string: String) =>
           AccessGrantType.from(string) match {
@@ -97,15 +92,23 @@ object TokenExchangeHandler {
         case None => Left(InvalidRequest)
       }
     }
-    private def decodeParameters(request: HandlerRequest): Parameters = {
-      new QueryStringDecoder(request.contentString, false).getParameters
+
+    private def decodeFormUrlEncoded(request: HandlerRequest): Parameters = {
+      def immutableScalaMap(javaMap: util.Map[String, util.List[String]]): Parameters = {
+        javaMap.asScala.mapValues(_.asScala.toSeq).toMap
+      }
+
+      immutableScalaMap(new QueryStringDecoder(request.contentString, false).getParameters)
+    }
+
+    private def decodeMultipart(request: HandlerRequest): Parameters = {
+      MultipartDecoder.decode(request).map(_.attributes.map { case (k, v) => k -> v.seq }).getOrElse(Map.empty)
     }
 
     sealed abstract class RequestError(val name: String)
     case object InvalidRequest extends RequestError("invalid_request")
     case object UnsupportedGrantType extends RequestError("unsupported_grant_type")
-    case object MissingContentType extends RequestError("missing_content_type")
-    case object UnsupportedContentType extends RequestError("unsupported_content_type")
-    case class UnexpectedError(throwable: Throwable) extends RequestError("unexpected_error")
+    case object UnparseableRequestBody extends RequestError("unparseable_request_body")
   }
+
 }
