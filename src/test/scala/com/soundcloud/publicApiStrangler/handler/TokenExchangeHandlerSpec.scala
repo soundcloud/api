@@ -161,7 +161,7 @@ class TokenExchangeHandlerSpec extends UnitSpecification {
             )
         }
 
-        "incorrect content format ex" in new MultipartRequestContext {
+        "incorrect content format" in new MultipartRequestContext {
           val parameters = Seq()
 
           override val mothershipResponse: Response = Response(Status.BadRequest)
