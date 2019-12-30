@@ -11,18 +11,36 @@ import org.jboss.netty.handler.codec.http.QueryStringDecoder
 
 import scala.collection.JavaConverters._
 
-class TokenExchangeHandler(mothershipDispatch: Handler, metrics: TokenExchangeHandler.Metrics) {
-  def instrumentedMothershipDispatch(request: HandlerRequest): Future[Response] = {
+class TokenExchangeHandler(
+    mothershipDispatch: Handler,
+    metrics: TokenExchangeHandler.Metrics,
+    parseRequest: HandlerRequest => TokenExchangeHandler.TokenExchangeRequest.ParseResult =
+      TokenExchangeHandler.TokenExchangeRequest.parse
+) {
+  def instrumentedMothershipDispatch(
+      request: HandlerRequest
+  ): Future[Response] = {
     instrument(request)(mothershipDispatch)
   }
 
-  private def instrument(request: HandlerRequest)(handler: Handler): Future[Response] = {
+  private def instrument(
+      request: HandlerRequest
+  )(
+      handler: Handler
+  ): Future[Response] = {
     handler(request).foreach(response =>
-      TokenExchangeHandler.Request(request) match {
-        case Right(r) =>
-          metrics.grantTypeCounter.labels(r.grantType.name, response.statusCode.toString).inc()
-        case Left(e) =>
-          metrics.requestErrorCounter.labels(e.name, response.statusCode.toString).inc()
+      parseRequest(request) match {
+        case Right(tokenExchangeRequest) =>
+          metrics.grantTypeCounter
+            .labels(
+              tokenExchangeRequest.accessGrant.typeName,
+              response.statusCode.toString
+            )
+            .inc()
+        case Left(error) =>
+          metrics.requestErrorCounter
+            .labels(error.name, response.statusCode.toString)
+            .inc()
       }
     )
   }
@@ -38,36 +56,96 @@ object TokenExchangeHandler {
         "response_status"
       )
     val requestErrorCounter: Counter =
-      telemetry.counter("oauth_token_exchange_error", "OAuth 2 Token exchange error.", "error", "response_status")
+      telemetry.counter(
+        "oauth_token_exchange_error",
+        "OAuth 2 Token exchange error.",
+        "error",
+        "response_status"
+      )
   }
 
-  // This class is intended to hold the full access token request in the future.
-  case class Request(
-      grantType: Request.AccessGrantType
+  case class TokenExchangeRequest(
+      clientCredentials: TokenExchangeRequest.ClientCredentials,
+      accessGrant: TokenExchangeRequest.AccessGrant
   )
 
-  object Request {
-    sealed class AccessGrantType(val name: String)
-    val AuthorizationCode = new AccessGrantType("authorization_code")
-    val ResourceOwnerPasswordCredentials = new AccessGrantType("password")
-    val RefreshToken = new AccessGrantType("refresh_token")
-    val ClientCredentials = new AccessGrantType("client_credentials")
+  object TokenExchangeRequest {
+    case class ClientCredentials(clientId: String, clientSecret: String)
 
-    object AccessGrantType {
-      val All = Seq(AuthorizationCode, ResourceOwnerPasswordCredentials, RefreshToken, ClientCredentials)
+    sealed class AccessGrant(val typeName: String)
+    case class AuthorizationCode(code: String, redirectUri: String) extends AccessGrant("authorization_code")
+    case class ResourceOwnerPasswordCredentials(username: String, password: String) extends AccessGrant("password")
+    case class RefreshToken(refreshToken: String) extends AccessGrant("refresh_token")
+    case object ClientCredentialsGrant extends AccessGrant("client_credentials")
 
-      def from(string: String): Option[AccessGrantType] = {
+    abstract sealed class AccessGrantReader(val name: String) {
+      def read(parameters: SingleValuedParameters): Option[AccessGrant]
+    }
+    val AuthorizationCodeReader: AccessGrantReader = new AccessGrantReader(
+      "authorization_code"
+    ) {
+      override def read(parameters: SingleValuedParameters): Option[AccessGrant] = {
+        (
+          parameters.get("code"),
+          parameters.get("redirect_uri")
+        ) match {
+          case (Some(code), Some(redirectUri)) =>
+            Some(AuthorizationCode(code, redirectUri))
+          case _ => None
+        }
+      }
+    }
+    val ResourceOwnerPasswordCredentialsReader: AccessGrantReader =
+      new AccessGrantReader("password") {
+        override def read(parameters: SingleValuedParameters): Option[AccessGrant] = {
+          (
+            parameters.get("username"),
+            parameters.get("password")
+          ) match {
+            case (Some(username), Some(password)) =>
+              Some(ResourceOwnerPasswordCredentials(username, password))
+            case _ => None
+          }
+        }
+      }
+    val RefreshTokenReader: AccessGrantReader = new AccessGrantReader(
+      "refresh_token"
+    ) {
+      override def read(parameters: SingleValuedParameters): Option[AccessGrant] = {
+        parameters.get("refresh_token").map(RefreshToken)
+      }
+    }
+    val ClientCredentialsGrantReader: AccessGrantReader = new AccessGrantReader(
+      "client_credentials"
+    ) {
+      override def read(parameters: SingleValuedParameters): Option[AccessGrant] =
+        Some(ClientCredentialsGrant)
+    }
+
+    object AccessGrantReader {
+      val All: Seq[AccessGrantReader] = Seq(
+        AuthorizationCodeReader,
+        ResourceOwnerPasswordCredentialsReader,
+        RefreshTokenReader,
+        ClientCredentialsGrantReader
+      )
+
+      def from(string: String): Option[AccessGrantReader] = {
         All.find(_.name == string)
       }
     }
 
-    def apply(request: HandlerRequest): Either[RequestError, Request] = {
+    type ParseResult = Either[RequestError, TokenExchangeRequest]
+    def parse(
+        request: HandlerRequest
+    ): ParseResult = {
       Try {
-        request.contentType match {
-          case Some(mediaType) if mediaType.matches("multipart\\/.*") =>
-            extractGrantType(decodeMultipart(request)).map(Request(_))
-          case _ =>
-            extractGrantType(decodeFormUrlEncoded(request)).map(Request(_))
+        val parameters = parseRequestBody(request)
+        (readClientCredentials(parameters), readAccessGrant(parameters)) match {
+          case (Right(cc), Right(ag)) => Right(TokenExchangeRequest(cc, ag))
+          // The error from reading the access grant takes precedence.
+          case (_, Left(agError)) => Left(agError)
+          case (Left(ccError), _) => Left(ccError)
         }
       } match {
         case Return(r) => r
@@ -76,17 +154,47 @@ object TokenExchangeHandler {
     }
 
     type Parameters = Map[String, Seq[String]]
-    private def extractGrantType(parameters: Parameters): Either[RequestError, AccessGrantType] = {
-      getValidatedGrantType(
-        parameters.get("grant_type").flatMap(_.headOption)
-      )
+    type SingleValuedParameters = Map[String, String]
+    private def parseRequestBody(request: HandlerRequest): SingleValuedParameters = {
+      (request.contentType match {
+        case Some(mediaType) if mediaType.matches("multipart\\/.*") =>
+          decodeMultipart(request)
+        case _ =>
+          decodeFormUrlEncoded(request)
+      }).mapValues(_.headOption).collect { case (key, Some(value)) => (key, value) }
     }
 
-    def getValidatedGrantType(maybeString: Option[String]): Either[RequestError, AccessGrantType] = {
+    private def readClientCredentials(
+        parameters: SingleValuedParameters
+    ): Either[RequestError, ClientCredentials] = {
+      (
+        parameters.get("client_id"),
+        parameters.get("client_secret")
+      ) match {
+        case (Some(clientId), Some(clientSecret)) =>
+          Right(ClientCredentials(clientId, clientSecret))
+        case _ => Left(InvalidRequest)
+      }
+    }
+
+    private def readAccessGrant(
+        parameters: SingleValuedParameters
+    ): Either[RequestError, AccessGrant] = {
+      selectAccessGrantReader(
+        parameters.get("grant_type")
+      ).flatMap(_.read(parameters) match {
+        case Some(a) => Right(a)
+        case None => Left(InvalidRequest)
+      })
+    }
+
+    private def selectAccessGrantReader(
+        maybeString: Option[String]
+    ): Either[RequestError, AccessGrantReader] = {
       maybeString match {
         case Some(string: String) =>
-          AccessGrantType.from(string) match {
-            case Some(accessGrant) => Right(accessGrant)
+          AccessGrantReader.from(string) match {
+            case Some(accessGrantReader) => Right(accessGrantReader)
             case None => Left(UnsupportedGrantType)
           }
         case None => Left(InvalidRequest)
@@ -94,15 +202,22 @@ object TokenExchangeHandler {
     }
 
     private def decodeFormUrlEncoded(request: HandlerRequest): Parameters = {
-      def immutableScalaMap(javaMap: util.Map[String, util.List[String]]): Parameters = {
+      def immutableScalaMap(
+          javaMap: util.Map[String, util.List[String]]
+      ): Parameters = {
         javaMap.asScala.mapValues(_.asScala.toSeq).toMap
       }
 
-      immutableScalaMap(new QueryStringDecoder(request.contentString, false).getParameters)
+      immutableScalaMap(
+        new QueryStringDecoder(request.contentString, false).getParameters
+      )
     }
 
     private def decodeMultipart(request: HandlerRequest): Parameters = {
-      MultipartDecoder.decode(request).map(_.attributes.map { case (k, v) => k -> v.seq }).getOrElse(Map.empty)
+      MultipartDecoder
+        .decode(request)
+        .map(_.attributes.map { case (k, v) => k -> v.seq })
+        .getOrElse(Map.empty)
     }
 
     sealed abstract class RequestError(val name: String)
