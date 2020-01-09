@@ -5,7 +5,6 @@
     "contact_channel": "backend-productivity",
     "owner": "backend-engineering-productivity",
     "type": "external_service",
-    "runtime": "jdk-8",
     "status": "production",
     "alert_service": "https://sndcld.pagerduty.com/services/PVZLXKQ",
     "telemetry_dashboard": "http://grafana.int.s-cloud.net/dashboard/db/jvmkit-generic?var-prometheus=public-api-strangler&var-system=public-api-strangler&var-job=public-api-strangler",
