@@ -39,7 +39,7 @@ class TokenExchangeHandler(
             .inc()
         case Left(error) =>
           metrics.requestErrorCounter
-            .labels(error.name, response.statusCode.toString)
+            .labels(error.labelValue, response.statusCode.toString)
             .inc()
       }
     )
@@ -173,7 +173,7 @@ object TokenExchangeHandler {
       ) match {
         case (Some(clientId), Some(clientSecret)) =>
           Right(ClientCredentials(clientId, clientSecret))
-        case _ => Left(InvalidRequest)
+        case _ => Left(InvalidRequest("missing_client_credentials"))
       }
     }
 
@@ -184,7 +184,7 @@ object TokenExchangeHandler {
         parameters.get("grant_type")
       ).flatMap(_.read(parameters) match {
         case Some(a) => Right(a)
-        case None => Left(InvalidRequest)
+        case None => Left(InvalidRequest("incomplete_grant_information"))
       })
     }
 
@@ -197,7 +197,7 @@ object TokenExchangeHandler {
             case Some(accessGrantReader) => Right(accessGrantReader)
             case None => Left(UnsupportedGrantType)
           }
-        case None => Left(InvalidRequest)
+        case None => Left(InvalidRequest("missing_grant_type"))
       }
     }
 
@@ -220,8 +220,12 @@ object TokenExchangeHandler {
         .getOrElse(Map.empty)
     }
 
-    sealed abstract class RequestError(val name: String)
-    case object InvalidRequest extends RequestError("invalid_request")
+    sealed abstract class RequestError(val name: String) {
+      def labelValue: String = name
+    }
+    case class InvalidRequest(val reason: String) extends RequestError("invalid_request") {
+      override def labelValue: String = s"${super.labelValue}:${reason}"
+    }
     case object UnsupportedGrantType extends RequestError("unsupported_grant_type")
     case object UnparseableRequestBody extends RequestError("unparseable_request_body")
   }

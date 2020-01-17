@@ -44,7 +44,7 @@ class TokenExchangeHandlerSpec extends UnitSpecification {
         request.contentString returns
           """{"this-is-not": "form-urlencoded", "it-is": "json"}"""
 
-        TokenExchangeRequest.parse(request) ==== Left(TokenExchangeRequest.InvalidRequest)
+        TokenExchangeRequest.parse(request) ==== Left(TokenExchangeRequest.InvalidRequest("missing_grant_type"))
       }
 
       "results in invalid request when missing grant type" in new WithMockRequestContext {
@@ -53,7 +53,7 @@ class TokenExchangeHandlerSpec extends UnitSpecification {
             "client_secret=gX1fBat3bV&code=i1WsRn1uB1&" +
             "redirect_uri=https%3A%2F%2Fclient%2Eexample%2Ecom%2Fcb"
 
-        TokenExchangeRequest.parse(request) ==== Left(TokenExchangeRequest.InvalidRequest)
+        TokenExchangeRequest.parse(request) ==== Left(TokenExchangeRequest.InvalidRequest("missing_grant_type"))
       }
 
       "results in unsupported grant type when grant type is not supported" in new WithMockRequestContext {
@@ -76,7 +76,7 @@ class TokenExchangeHandlerSpec extends UnitSpecification {
             )
           )
 
-        TokenExchangeRequest.parse(request) ==== Left(TokenExchangeRequest.InvalidRequest)
+        TokenExchangeRequest.parse(request) ==== Left(TokenExchangeRequest.InvalidRequest("missing_grant_type"))
       }
     }
 
@@ -104,7 +104,9 @@ class TokenExchangeHandlerSpec extends UnitSpecification {
             "grant_type=refresh_token&client_id=s6BhdRkqt3&" +
               "refresh_token=n4E9O119d"
 
-          TokenExchangeRequest.parse(request) ==== Left(TokenExchangeRequest.InvalidRequest)
+          TokenExchangeRequest.parse(request) ==== Left(
+            TokenExchangeRequest.InvalidRequest("missing_client_credentials")
+          )
         }
 
         "fails for missing client secret" in new WithMockRequestContext {
@@ -112,7 +114,9 @@ class TokenExchangeHandlerSpec extends UnitSpecification {
             "grant_type=refresh_token&" +
               "client_secret=gX1fBat3bV&refresh_token=n4E9O119d"
 
-          TokenExchangeRequest.parse(request) ==== Left(TokenExchangeRequest.InvalidRequest)
+          TokenExchangeRequest.parse(request) ==== Left(
+            TokenExchangeRequest.InvalidRequest("missing_client_credentials")
+          )
         }
       }
 
@@ -154,7 +158,9 @@ class TokenExchangeHandlerSpec extends UnitSpecification {
               "client_secret=gX1fBat3bV&" +
               "redirect_uri=https%3A%2F%2Fclient%2Eexample%2Ecom%2Fcb"
 
-          TokenExchangeRequest.parse(request) ==== Left(TokenExchangeRequest.InvalidRequest)
+          TokenExchangeRequest.parse(request) ==== Left(
+            TokenExchangeRequest.InvalidRequest("incomplete_grant_information")
+          )
         }
 
         "fails for missing redirect URI" in new WithMockRequestContext {
@@ -162,7 +168,9 @@ class TokenExchangeHandlerSpec extends UnitSpecification {
             "grant_type=authorization_code&client_id=s6BhdRkqt3&" +
               "client_secret=gX1fBat3bV&code=i1WsRn1uB1"
 
-          TokenExchangeRequest.parse(request) ==== Left(TokenExchangeRequest.InvalidRequest)
+          TokenExchangeRequest.parse(request) ==== Left(
+            TokenExchangeRequest.InvalidRequest("incomplete_grant_information")
+          )
         }
       }
 
@@ -201,7 +209,9 @@ class TokenExchangeHandlerSpec extends UnitSpecification {
             "grant_type=password&client_id=s6BhdRkqt3&" +
               "client_secret=47HDu8s&password=A3ddj3w"
 
-          TokenExchangeRequest.parse(request) ==== Left(TokenExchangeRequest.InvalidRequest)
+          TokenExchangeRequest.parse(request) ==== Left(
+            TokenExchangeRequest.InvalidRequest("incomplete_grant_information")
+          )
         }
 
         "fails for missing password" in new WithMockRequestContext {
@@ -209,7 +219,9 @@ class TokenExchangeHandlerSpec extends UnitSpecification {
             "grant_type=password&client_id=s6BhdRkqt3&" +
               "client_secret=47HDu8s&username=johndoe"
 
-          TokenExchangeRequest.parse(request) ==== Left(TokenExchangeRequest.InvalidRequest)
+          TokenExchangeRequest.parse(request) ==== Left(
+            TokenExchangeRequest.InvalidRequest("incomplete_grant_information")
+          )
         }
       }
 
@@ -245,7 +257,9 @@ class TokenExchangeHandlerSpec extends UnitSpecification {
             "grant_type=refresh_token&client_id=s6BhdRkqt3&" +
               "client_secret=8eSEIpnqmM"
 
-          TokenExchangeRequest.parse(request) ==== Left(TokenExchangeRequest.InvalidRequest)
+          TokenExchangeRequest.parse(request) ==== Left(
+            TokenExchangeRequest.InvalidRequest("incomplete_grant_information")
+          )
         }
       }
     }
@@ -303,11 +317,11 @@ class TokenExchangeHandlerSpec extends UnitSpecification {
       }
 
       "counts error type when request is invalid" in new WithMockRequestContext {
-        override val tokenExchangeRequestParseResult = Left(TokenExchangeRequest.InvalidRequest)
+        override val tokenExchangeRequestParseResult = Left(TokenExchangeRequest.InvalidRequest("reason"))
 
         Await.result(handler.instrumentedMothershipDispatch(request))
 
-        getRequestErrorCount("invalid_request") ==== 1.0
+        getRequestErrorCount("invalid_request:reason") ==== 1.0
       }
 
       "counts error type when parsing fails" in new WithMockRequestContext {
