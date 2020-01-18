@@ -6,6 +6,7 @@ import com.soundcloud.jvmkit.module.telemetry.Telemetry
 import com.soundcloud.jvmkit.module.util.Path
 import com.soundcloud.jvmkit.module.util.http.Headers
 import com.soundcloud.publicApiStrangler.handler.TokenExchangeHandler.TokenExchangeRequest
+import com.soundcloud.publicApiStrangler.handler.TokenExchangeHandler.TokenExchangeRequest.RequestError
 import com.soundcloud.publicApiStrangler.test.UnitSpecification
 import com.twitter.finagle.http.{Method, Request, RequestBuilder, Response, Status}
 import com.twitter.util.{Await, Future}
@@ -77,6 +78,28 @@ class TokenExchangeHandlerSpec extends UnitSpecification {
           )
 
         TokenExchangeRequest.parse(request) ==== Left(TokenExchangeRequest.InvalidRequest("missing_grant_type"))
+      }
+    }
+
+    """emulation of Ruby on Rails' "last write wins" for parameter hashes""" >> {
+      "uses the last value if preceding value is blank" in new WithMockRequestContext {
+        request.contentString returns
+          "grant_type=&grant_type=client_credentials&client_id=s6BhdRkqt3&" +
+            "client_secret=47HDu8s"
+
+        TokenExchangeRequest.parse(request) must beLike {
+          case Right(tokenExchangeRequest) => {
+            tokenExchangeRequest.accessGrant ==== TokenExchangeRequest.ClientCredentialsGrant
+          }
+        }
+      }
+
+      "uses the last value if preceding value is non-blank" in new WithMockRequestContext {
+        request.contentString returns
+          "grant_type=client_credentials&grant_type=last_write_wins&client_id=s6BhdRkqt3&" +
+            "client_secret=47HDu8s"
+
+        TokenExchangeRequest.parse(request) must beLeft[RequestError]
       }
     }
 

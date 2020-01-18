@@ -161,7 +161,7 @@ object TokenExchangeHandler {
           decodeMultipart(request)
         case _ =>
           decodeFormUrlEncoded(request)
-      }).mapValues(_.headOption).collect { case (key, Some(value)) => (key, value) }
+      }).mapValues(_.lastOption).collect { case (key, Some(value)) => (key, value) }
     }
 
     private def readClientCredentials(
