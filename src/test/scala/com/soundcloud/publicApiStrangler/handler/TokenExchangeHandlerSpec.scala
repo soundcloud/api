@@ -38,14 +38,18 @@ class TokenExchangeHandlerSpec extends UnitSpecification {
       "results in unparseable request body for unexpected parse errors" in new WithMockRequestContext {
         request.contentType throws new RuntimeException
 
-        TokenExchangeRequest.parse(request) ==== Left(TokenExchangeRequest.UnparseableRequestBody)
+        TokenExchangeRequest.parse(request) ==== Left(
+          TokenExchangeRequest.UnparseableRequestBody
+        )
       }
 
       "results in invalid request when request body is malformed" in new WithMockRequestContext {
         request.contentString returns
           """{"this-is-not": "form-urlencoded", "it-is": "json"}"""
 
-        TokenExchangeRequest.parse(request) ==== Left(TokenExchangeRequest.InvalidRequest("missing_grant_type"))
+        TokenExchangeRequest.parse(request) ==== Left(
+          TokenExchangeRequest.InvalidRequest("missing_grant_type")
+        )
       }
 
       "results in invalid request when missing grant type" in new WithMockRequestContext {
@@ -54,13 +58,17 @@ class TokenExchangeHandlerSpec extends UnitSpecification {
             "client_secret=gX1fBat3bV&code=i1WsRn1uB1&" +
             "redirect_uri=https%3A%2F%2Fclient%2Eexample%2Ecom%2Fcb"
 
-        TokenExchangeRequest.parse(request) ==== Left(TokenExchangeRequest.InvalidRequest("missing_grant_type"))
+        TokenExchangeRequest.parse(request) ==== Left(
+          TokenExchangeRequest.InvalidRequest("missing_grant_type")
+        )
       }
 
       "results in unsupported grant type when grant type is not supported" in new WithMockRequestContext {
         request.contentString returns "grant_type=unsupported"
 
-        TokenExchangeRequest.parse(request) ==== Left(TokenExchangeRequest.UnsupportedGrantType)
+        TokenExchangeRequest.parse(request) ==== Left(
+          TokenExchangeRequest.UnsupportedGrantType
+        )
       }
 
       "results in invalid request when multipart request body is malformed" in new MultipartRequestContext {
@@ -77,7 +85,9 @@ class TokenExchangeHandlerSpec extends UnitSpecification {
             )
           )
 
-        TokenExchangeRequest.parse(request) ==== Left(TokenExchangeRequest.InvalidRequest("missing_grant_type"))
+        TokenExchangeRequest.parse(request) ==== Left(
+          TokenExchangeRequest.InvalidRequest("missing_grant_type")
+        )
       }
     }
 
@@ -155,7 +165,10 @@ class TokenExchangeHandlerSpec extends UnitSpecification {
           TokenExchangeRequest.parse(request) must beLike {
             case Right(tokenExchangeRequest) =>
               tokenExchangeRequest.accessGrant ==== TokenExchangeRequest
-                .AuthorizationCode("i1WsRn1uB1", "https://client.example.com/cb")
+                .AuthorizationCode(
+                  "i1WsRn1uB1",
+                  "https://client.example.com/cb"
+                )
           }
         }
 
@@ -171,7 +184,10 @@ class TokenExchangeHandlerSpec extends UnitSpecification {
           TokenExchangeRequest.parse(request) must beLike {
             case Right(tokenExchangeRequest) =>
               tokenExchangeRequest.accessGrant ==== TokenExchangeRequest
-                .AuthorizationCode("i1WsRn1uB1", "https://client.example.com/cb")
+                .AuthorizationCode(
+                  "i1WsRn1uB1",
+                  "https://client.example.com/cb"
+                )
           }
         }
 
@@ -257,7 +273,8 @@ class TokenExchangeHandlerSpec extends UnitSpecification {
 
           TokenExchangeRequest.parse(request) must beLike {
             case Right(tokenExchangeRequest) =>
-              tokenExchangeRequest.accessGrant ==== TokenExchangeRequest.RefreshToken("n4E9O119d")
+              tokenExchangeRequest.accessGrant ==== TokenExchangeRequest
+                .RefreshToken("n4E9O119d")
           }
         }
 
@@ -271,7 +288,8 @@ class TokenExchangeHandlerSpec extends UnitSpecification {
 
           TokenExchangeRequest.parse(request) must beLike {
             case Right(tokenExchangeRequest) =>
-              tokenExchangeRequest.accessGrant ==== TokenExchangeRequest.RefreshToken("n4E9O119d")
+              tokenExchangeRequest.accessGrant ==== TokenExchangeRequest
+                .RefreshToken("n4E9O119d")
           }
         }
 
@@ -306,7 +324,11 @@ class TokenExchangeHandlerSpec extends UnitSpecification {
         )
 
       lazy val handler =
-        new TokenExchangeHandler(dispatchToMothershipHandler, metrics, _ => tokenExchangeRequestParseResult)
+        new TokenExchangeHandler(
+          dispatchToMothershipHandler,
+          metrics,
+          _ => tokenExchangeRequestParseResult
+        )
 
       val mothershipResponseStatus: Status = Status.Ok
       lazy val mothershipResponse: Response = Response(mothershipResponseStatus)
@@ -340,7 +362,8 @@ class TokenExchangeHandlerSpec extends UnitSpecification {
       }
 
       "counts error type when request is invalid" in new WithMockRequestContext {
-        override val tokenExchangeRequestParseResult = Left(TokenExchangeRequest.InvalidRequest("reason"))
+        override val tokenExchangeRequestParseResult =
+          Left(TokenExchangeRequest.InvalidRequest("reason"))
 
         Await.result(handler.instrumentedMothershipDispatch(request))
 
@@ -348,7 +371,8 @@ class TokenExchangeHandlerSpec extends UnitSpecification {
       }
 
       "counts error type when parsing fails" in new WithMockRequestContext {
-        override val tokenExchangeRequestParseResult = Left(TokenExchangeRequest.UnparseableRequestBody)
+        override val tokenExchangeRequestParseResult =
+          Left(TokenExchangeRequest.UnparseableRequestBody)
 
         Await.result(handler.instrumentedMothershipDispatch(request))
 

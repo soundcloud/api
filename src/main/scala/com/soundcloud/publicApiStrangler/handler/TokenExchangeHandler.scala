@@ -84,7 +84,9 @@ object TokenExchangeHandler {
     val AuthorizationCodeReader: AccessGrantReader = new AccessGrantReader(
       "authorization_code"
     ) {
-      override def read(parameters: SingleValuedParameters): Option[AccessGrant] = {
+      override def read(
+          parameters: SingleValuedParameters
+      ): Option[AccessGrant] = {
         (
           parameters.get("code"),
           parameters.get("redirect_uri")
@@ -97,7 +99,9 @@ object TokenExchangeHandler {
     }
     val ResourceOwnerPasswordCredentialsReader: AccessGrantReader =
       new AccessGrantReader("password") {
-        override def read(parameters: SingleValuedParameters): Option[AccessGrant] = {
+        override def read(
+            parameters: SingleValuedParameters
+        ): Option[AccessGrant] = {
           (
             parameters.get("username"),
             parameters.get("password")
@@ -111,14 +115,18 @@ object TokenExchangeHandler {
     val RefreshTokenReader: AccessGrantReader = new AccessGrantReader(
       "refresh_token"
     ) {
-      override def read(parameters: SingleValuedParameters): Option[AccessGrant] = {
+      override def read(
+          parameters: SingleValuedParameters
+      ): Option[AccessGrant] = {
         parameters.get("refresh_token").map(RefreshToken)
       }
     }
     val ClientCredentialsGrantReader: AccessGrantReader = new AccessGrantReader(
       "client_credentials"
     ) {
-      override def read(parameters: SingleValuedParameters): Option[AccessGrant] =
+      override def read(
+          parameters: SingleValuedParameters
+      ): Option[AccessGrant] =
         Some(ClientCredentialsGrant)
     }
 
@@ -136,9 +144,7 @@ object TokenExchangeHandler {
     }
 
     type ParseResult = Either[RequestError, TokenExchangeRequest]
-    def parse(
-        request: HandlerRequest
-    ): ParseResult = {
+    def parse(request: HandlerRequest): ParseResult = {
       Try {
         val parameters = parseRequestBody(request)
         (readClientCredentials(parameters), readAccessGrant(parameters)) match {
@@ -155,13 +161,17 @@ object TokenExchangeHandler {
 
     type Parameters = Map[String, Seq[String]]
     type SingleValuedParameters = Map[String, String]
-    private def parseRequestBody(request: HandlerRequest): SingleValuedParameters = {
+    private def parseRequestBody(
+        request: HandlerRequest
+    ): SingleValuedParameters = {
       (request.contentType match {
         case Some(mediaType) if mediaType.matches("multipart\\/.*") =>
           decodeMultipart(request)
         case _ =>
           decodeFormUrlEncoded(request)
-      }).mapValues(_.lastOption).collect { case (key, Some(value)) => (key, value) }
+      }).mapValues(_.lastOption).collect {
+        case (key, Some(value)) => (key, value)
+      }
     }
 
     private def readClientCredentials(
