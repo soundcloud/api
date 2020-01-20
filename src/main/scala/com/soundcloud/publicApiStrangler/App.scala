@@ -20,6 +20,7 @@ import com.soundcloud.publicApiStrangler.authorization._
 import com.soundcloud.publicApiStrangler.filter._
 import com.soundcloud.publicApiStrangler.support._
 import com.twitter.finagle.Filter
+import com.twitter.finagle.http.filter.JsonpFilter
 import com.twitter.finagle.http.{Method, Request, Response}
 
 object App {
@@ -103,6 +104,7 @@ object App {
       )
       .build
 
+    // IMPORTANT: the order of these filters matters a lot, be careful when adding new ones or moving things around
     val additionalFilters: List[Filter[Request, Response, Request, Response]] =
       List(
         CorsFilter((_, _) => true), // allow all CORS origins (for now)
@@ -115,6 +117,7 @@ object App {
         new CookieHeaderRemovalFilter,
         new ExceptForTrackUploadsFilter(rateLimitingFacade.filter),
         new ExceptForTrackUploadsFilter(new ContentAuthorizationFilter(clients.authorizeContent)),
+        new JsonpFilter,
         new SuccesfulResponseTypeMetricFilter(telemetry)
       )
 

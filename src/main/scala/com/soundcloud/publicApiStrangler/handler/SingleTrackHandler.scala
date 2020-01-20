@@ -25,48 +25,38 @@ class SingleTrackHandler(
 
     userAuthentication.withUserSession(req) {
       case session =>
-        val callback = req.params.get("callback")
-
         Try(trackUrn(req)) match {
           case Return(urn) => {
             val secretToken = req.params.get("secret_token")
             tracksService.track(session, urn, secretToken).map {
-              case Success(trackRep) => generateResponse(Status.Ok, Json.stringify(Json.toJson(trackRep)), callback)
-              case NotFound => generateNotFound(callback)
+              case Success(trackRep) => generateResponse(Status.Ok, Json.stringify(Json.toJson(trackRep)))
+              case NotFound => generateNotFound
               case _ => {
                 logger.error(s"Something went wrong while trying to fetch $urn")
-                generateResponse(Status.InternalServerError, "Something went wrong while fetching a track", callback)
+                generateResponse(Status.InternalServerError, "Something went wrong while fetching a track")
               }
             } handle {
               case NonFatal(e) => {
                 logger.error(e.getMessage)
                 generateResponse(
                   Status.InternalServerError,
-                  "An unexpected error occured while fetching a track",
-                  callback
+                  "An unexpected error occured while fetching a track"
                 )
               }
             }
           }
-          case _ => Future.value(generateNotFound(callback))
+          case _ => Future.value(generateNotFound)
         }
     }
   }
 
-  private def generateNotFound(callback: Option[String]): Response = {
-    JsonResponseBuilder.notFound(jsonpWrapper(callback, notFoundErrorString))
+  private def generateNotFound: Response = {
+    JsonResponseBuilder.notFound(notFoundErrorString)
   }
 
-  private def generateResponse(status: Status, rawContent: String, callback: Option[String]): Response = {
-    JsonResponseBuilder(status = status, body = jsonpWrapper(callback, rawContent)).build
+  private def generateResponse(status: Status, rawContent: String): Response = {
+    JsonResponseBuilder(status = status, body = rawContent).build
   }
-
-  /**
-    * This JsonpWrapper logic should go to filter,
-    * but should be applied only to the migrated endpoitns.
-    */
-  private def jsonpWrapper(callback: Option[String], contentString: String): String =
-    callback.map(cb => s"/**/$cb($contentString);").getOrElse(contentString)
 
   private val notFoundErrorString = """{"errors":[{"error_message":"404 - Not Found"}]}"""
 

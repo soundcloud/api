@@ -1,11 +1,11 @@
 package com.soundcloud.publicApiStrangler.authorization
 
 import com.soundcloud.jvmkit.module.bff.session.UserAuthentication
-import com.soundcloud.jvmkit.module.http.server.{HandlerRequest, ResponseBuilder}
+import com.soundcloud.jvmkit.module.http.server.{HandlerRequest, JsonResponseBuilder}
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.publicApiStrangler.authorization.TrackDurationActionStatus._
-import com.twitter.finagle.http.{Response, Status}
+import com.twitter.finagle.http.Response
 import com.twitter.util.Future
 import play.api.libs.json.Json
 
@@ -16,44 +16,25 @@ class AuthorizeHttpResponse(
     userAuthentication: UserAuthentication,
     trackPolicyApplicator: TrackPolicyApplicator
 ) {
-  def apply(request: HandlerRequest, status: Status, body: String): Future[Response] =
-    authorize(request, status, body, BuilderResponse(body))
-
-  private def authorize(
-      request: HandlerRequest,
-      status: Status,
-      body: String,
-      originalResponse: BuilderResponse
-  ): Future[Response] =
-    CollectTrackUrns(originalResponse.content) match {
+  def apply(request: HandlerRequest, originalResponse: Response): Future[Response] =
+    CollectTrackUrns(originalResponse.contentString) match {
       case Some((visitor, urns)) =>
-        authorize(request, status, visitor, urns, originalResponse)
+        authorize(request, visitor, urns)
       case None =>
-        Future({
-          val response = originalResponse.render
-          response.status = status
-          response
-        })
+        Future.value(originalResponse)
     }
 
   private def authorize(
       request: HandlerRequest,
-      status: Status,
       visitor: TracksVisitor,
-      urns: Seq[Urn],
-      originalResponse: BuilderResponse
+      urns: Seq[Urn]
   ): Future[Response] =
     userAuthentication.withUserSession(request) { session =>
       contentAuthorization.fetchRules(session, urns).map { rules =>
         val durationActions = extractDurations(session, urns, rules, extractFullTrackDurations(visitor))
         trackPolicyApplicator(session, visitor, rules, durationActions)
-          .map(Json.stringify)
-          .map(originalResponse.withBody)
-          .map(response => {
-            response.status = status
-            response
-          })
-          .getOrElse(ResponseBuilder(status = Status.Forbidden).build)
+          .map(json => JsonResponseBuilder.ok(Json.stringify(json)))
+          .getOrElse(JsonResponseBuilder.forbidden())
       }
     }
 

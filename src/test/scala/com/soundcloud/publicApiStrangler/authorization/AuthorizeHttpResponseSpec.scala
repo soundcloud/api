@@ -1,7 +1,7 @@
 package com.soundcloud.publicApiStrangler.authorization
 
 import com.soundcloud.jvmkit.module.bff.testsupport.FakeUserAuthentication
-import com.soundcloud.jvmkit.module.http.server.HandlerRequest
+import com.soundcloud.jvmkit.module.http.server.{HandlerRequest, JsonResponseBuilder}
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSessionBuilder
 import com.soundcloud.publicApiStrangler.authorization.policies._
@@ -27,7 +27,9 @@ class AuthorizeHttpResponseSpec extends UnitSpecification {
     val authorizeContent =
       new AuthorizeHttpResponse(contentAuthorization, userAuthentication, TrackPolicyApplicator(Set[Urn]()))
 
-    lazy val authorizedResponse = Await.result(authorizeContent.apply(request, status, content))
+    lazy val originalResponse = JsonResponseBuilder(status, content).build
+
+    lazy val authorizedResponse = Await.result(authorizeContent.apply(request, originalResponse))
   }
 
   trait TrackContext extends Context with Before {
@@ -54,7 +56,7 @@ class AuthorizeHttpResponseSpec extends UnitSpecification {
     lazy val policies = new ContentAuthorization(urn, ContentPolicy.BLOCK, Reason.GEO, MonetizationModel.SUB_HIGH_TIER)
 
     authorizedResponse.statusCode mustEqual 403
-    authorizedResponse.getContentString mustEqual ""
+    authorizedResponse.getContentString mustEqual "{}"
   }
 
   trait TrackArrayContext extends Context with Before {

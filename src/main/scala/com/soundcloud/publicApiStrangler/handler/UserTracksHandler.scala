@@ -43,7 +43,6 @@ class UserTracksHandler(
     userAuthentication.withUserSession(req) {
       case session =>
         val userId = req.routeParams("userId")
-        val callback = req.params.get("callback")
 
         val pagination = TrackPagination.fromRequest(req.params, new URL(baseUrl + req.uri))
 
@@ -62,21 +61,20 @@ class UserTracksHandler(
           case Success(urn @ Urn(_, _, numericRegexp())) => {
             getResult(urn).map {
               case Good(tracksRepresentationResult) => {
-                generateResponse(Status.Ok, getRepresentation(tracksRepresentationResult, pagination), callback)
+                generateResponse(Status.Ok, getRepresentation(tracksRepresentationResult, pagination))
               }
               case Bad(error: HttpError) =>
-                generateResponse(error.status, generateErrorBody(error.description), callback)
+                generateResponse(error.status, generateErrorBody(error.description))
               case Bad(error: StringError) =>
-                generateResponse(Status.InternalServerError, generateErrorBody(error.message), callback)
+                generateResponse(Status.InternalServerError, generateErrorBody(error.message))
               case Bad(_) =>
                 generateResponse(
                   Status.InternalServerError,
-                  generateErrorBody("an unexpected error occurred"),
-                  callback
+                  generateErrorBody("an unexpected error occurred")
                 )
             }
           }
-          case _ => Future.value(generateNotFound(callback))
+          case _ => Future.value(generateNotFound)
         }
     }
   }
@@ -96,8 +94,8 @@ class UserTracksHandler(
     }
   }
 
-  private def generateNotFound(callback: Option[String]): Response = {
-    val content = jsonpWrapper(callback, notFoundErrorString)
+  private def generateNotFound: Response = {
+    val content = notFoundErrorString
     val contentLength = content.getBytes("UTF-8").length
     val res = Response(Status.NotFound)
     res.setContentString(content)
@@ -106,8 +104,8 @@ class UserTracksHandler(
     res
   }
 
-  private def generateResponse(status: Status, rawContent: String, callback: Option[String]): Response = {
-    val content = jsonpWrapper(callback, rawContent)
+  private def generateResponse(status: Status, rawContent: String): Response = {
+    val content = rawContent
     val contentLength = content.getBytes("UTF-8").length
     val res = Response(status)
     res.setContentString(content)
@@ -118,13 +116,6 @@ class UserTracksHandler(
 
   private def generateErrorBody(message: String): String =
     Json.stringify(Json.obj("error" -> message))
-
-  /**
-    * This JsonpWrapper logic should go to filter,
-    * but should be applied only to the migrated endpoitns.
-    */
-  private def jsonpWrapper(callback: Option[String], contentString: String): String =
-    callback.map(cb => s"/**/$cb($contentString);").getOrElse(contentString)
 
   private val notFoundErrorString = """{"errors":[{"error_message":"404 - Not Found"}]}"""
 }

@@ -15,7 +15,7 @@ class ContentAuthorizationFilter(authorizeContent: AuthorizeHttpResponse) extend
   }
 
   private def authorize(request: HandlerRequest, originalResponse: Response): Future[Response] =
-    authorizeContent(request, originalResponse.status, originalResponse.contentString).map { authorizationResponse =>
+    authorizeContent(request, originalResponse).map { authorizationResponse =>
       val builder = ResponseBuilder()
         .status(authorizationResponse.status)
         .body(authorizationResponse.contentString)

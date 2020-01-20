@@ -27,7 +27,7 @@ class ContentAuthorizationFilterSpec extends UnitSpecification {
         .build
 
       service.apply(any[Request]) returns Future.value(originalResponse)
-      authorizeContent.apply(any[HandlerRequest], ===(originalResponse.status), ===(originalResponse.contentString)) returns Future
+      authorizeContent.apply(any[HandlerRequest], ===(originalResponse)) returns Future
         .value(expectedResponse)
 
       val authorizedResponse = Await.result(contentAuthorizationFilter.apply(someRequest, service))
@@ -45,7 +45,7 @@ class ContentAuthorizationFilterSpec extends UnitSpecification {
         JsonResponseBuilder().body(bodyWithAuthorizationInformation).status(originalResponse.status).build
 
       service.apply(any[Request]) returns Future.value(originalResponse)
-      authorizeContent.apply(any[HandlerRequest], ===(originalResponse.status), ===(originalResponse.contentString)) returns Future
+      authorizeContent.apply(any[HandlerRequest], ===(originalResponse)) returns Future
         .value(expectedResponse)
 
       val authorizedResponse = Await.result(contentAuthorizationFilter.apply(someRequest, service))
