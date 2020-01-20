@@ -40,8 +40,8 @@ class StaticFilesFilterSpec extends UnitSpecification {
     val resp = Await.result(filter(request, next))
 
     resp.statusCode ==== Status.Ok.code
-    resp.contentString ==== "User-agent: *\nDisallow: \n"
-    resp.contentLength ==== Some(25L)
+    resp.contentString ==== "User-agent: *\nDisallow: /\n"
+    resp.contentLength ==== Some(26L)
     resp.contentType ==== Some("text/plain;charset=utf-8")
 
     resp.headerMap.get("Cache-Control") ==== Some("public, max-age=86400")

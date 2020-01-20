@@ -25,7 +25,7 @@ class StaticFilesFilter extends SimpleFilter[Request, Response] {
       |</cross-domain-policy>
       | """.stripMargin
 
-  val robotsContents = "User-agent: *\nDisallow: \n"
+  val robotsContents = "User-agent: *\nDisallow: /\n"
 
   private val oneDayInSeconds = 1.day.inSeconds
 
