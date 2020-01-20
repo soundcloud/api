@@ -183,10 +183,10 @@ object TokenExchangeHandler {
       (request.contentType match {
         case Some(mediaType) if mediaType.startsWith("multipart/") =>
           Right(decodeMultipart(request))
-        case Some(mediaType) if mediaType == MediaType.WwwForm =>
+        case Some(mediaType) if mediaType.startsWith(MediaType.WwwForm) =>
           Right(decodeFormUrlEncoded(request))
         case Some(mediaType) => {
-          Left(UnsupportedContentType(mediaType.replaceAll("; .*", "")))
+          Left(UnsupportedContentType(mediaType))
         }
         case None =>
           Right(decodeFormUrlEncoded(request))
@@ -259,7 +259,7 @@ object TokenExchangeHandler {
     }
     case class UnsupportedContentType(mediaType: String) extends RequestError("unsupported_content_type") {
       override def labelValue: String =
-        s"${super.labelValue}:${mediaType.replaceAll(";.*", "")}"
+        s"${super.labelValue}:${mediaType.replaceAll(";.*", ";")}"
     }
     case object UnsupportedGrantType extends RequestError("unsupported_grant_type")
     case object UnparseableRequestBody extends RequestError("unparseable_request_body")

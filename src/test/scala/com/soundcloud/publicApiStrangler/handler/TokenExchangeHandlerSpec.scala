@@ -8,7 +8,7 @@ import com.soundcloud.jvmkit.module.util.http.Headers
 import com.soundcloud.publicApiStrangler.handler.TokenExchangeHandler.TokenExchangeRequest
 import com.soundcloud.publicApiStrangler.handler.TokenExchangeHandler.TokenExchangeRequest.RequestError
 import com.soundcloud.publicApiStrangler.test.UnitSpecification
-import com.twitter.finagle.http.{Method, Request, RequestBuilder, Response, Status}
+import com.twitter.finagle.http.{MediaType, Method, Request, RequestBuilder, Response, Status}
 import com.twitter.util.{Await, Future}
 
 class TokenExchangeHandlerSpec extends UnitSpecification {
@@ -16,7 +16,7 @@ class TokenExchangeHandlerSpec extends UnitSpecification {
     trait WithMockRequestContext extends Scope {
       val request: HandlerRequest = mock[HandlerRequest]
 
-      request.contentType returns None
+      request.contentType returns Some(MediaType.WwwForm)
     }
 
     trait MultipartRequestContext extends Scope {
@@ -126,6 +126,38 @@ class TokenExchangeHandlerSpec extends UnitSpecification {
             "client_secret=47HDu8s"
 
         TokenExchangeRequest.parse(request) must beLeft[RequestError]
+      }
+    }
+
+    "omitted Content-Type header" >> {
+      "assumes application/x-www-form-urlencoded" in new WithMockRequestContext {
+        request.contentString returns
+          "grant_type=&grant_type=client_credentials&client_id=s6BhdRkqt3&" +
+            "client_secret=47HDu8s"
+        request.contentType returns None
+
+        TokenExchangeRequest.parse(request) must beLike {
+          case Right(tokenExchangeRequest) => {
+            tokenExchangeRequest.accessGrant ==== TokenExchangeRequest.ClientCredentialsGrant
+          }
+        }
+      }
+    }
+
+    "for application/x-www-form-urlencoded with charset declaration" >> {
+      "ignores charset declaration" in new WithMockRequestContext {
+        request.contentString returns
+          "grant_type=&grant_type=client_credentials&client_id=s6BhdRkqt3&" +
+            "client_secret=47HDu8s"
+        request.contentType returns Some(
+          "application/x-www-form-urlencoded; charset=utf-8"
+        )
+
+        TokenExchangeRequest.parse(request) must beLike {
+          case Right(tokenExchangeRequest) => {
+            tokenExchangeRequest.accessGrant ==== TokenExchangeRequest.ClientCredentialsGrant
+          }
+        }
       }
     }
 
@@ -389,12 +421,23 @@ class TokenExchangeHandlerSpec extends UnitSpecification {
       "counts error type when content type is not supported" in new WithMockRequestContext {
         override val tokenExchangeRequestParseResult = Left(
           TokenExchangeRequest.UnsupportedContentType(
-            "application/json;encoding=utf8, charset=utf-8"
+            "application/json"
           )
         )
         Await.result(handler.instrumentedMothershipDispatch(request))
 
         getRequestErrorCount("unsupported_content_type:application/json") ==== 1.0
+      }
+
+      "counts error type with normalized media type when content type is not supported" in new WithMockRequestContext {
+        override val tokenExchangeRequestParseResult = Left(
+          TokenExchangeRequest.UnsupportedContentType(
+            "application/json;encoding=utf8, charset=utf-8"
+          )
+        )
+        Await.result(handler.instrumentedMothershipDispatch(request))
+
+        getRequestErrorCount("unsupported_content_type:application/json;") ==== 1.0
       }
 
       "counts error type when parsing fails" in new WithMockRequestContext {
