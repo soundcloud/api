@@ -107,6 +107,8 @@ object App {
     // IMPORTANT: the order of these filters matters a lot, be careful when adding new ones or moving things around
     val additionalFilters: List[Filter[Request, Response, Request, Response]] =
       List(
+        new SuccesfulResponseTypeMetricFilter(telemetry),
+        new JsonpFilter,
         CorsFilter((_, _) => true), // allow all CORS origins (for now)
         new CorsTelemetryFilter(telemetry, router),
         new StaticFilesFilter,
@@ -116,9 +118,7 @@ object App {
         new OffsetLimitRequestFilter(limitOffsetPaths, limitOffset),
         new CookieHeaderRemovalFilter,
         new ExceptForTrackUploadsFilter(rateLimitingFacade.filter),
-        new ExceptForTrackUploadsFilter(new ContentAuthorizationFilter(clients.authorizeContent)),
-        new JsonpFilter,
-        new SuccesfulResponseTypeMetricFilter(telemetry)
+        new ExceptForTrackUploadsFilter(new ContentAuthorizationFilter(clients.authorizeContent))
       )
 
     new AdminServer(
