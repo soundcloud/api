@@ -15,6 +15,8 @@ class TokenExchangeHandlerSpec extends UnitSpecification {
   "TokenExchangeRequest deserialization" >> {
     trait WithMockRequestContext extends Scope {
       val request: HandlerRequest = mock[HandlerRequest]
+
+      request.contentType returns None
     }
 
     trait MultipartRequestContext extends Scope {
@@ -49,6 +51,20 @@ class TokenExchangeHandlerSpec extends UnitSpecification {
 
         TokenExchangeRequest.parse(request) ==== Left(
           TokenExchangeRequest.InvalidRequest("missing_grant_type")
+        )
+      }
+
+      "results in unsupported content type when content type is not supported" in new WithMockRequestContext {
+        request.contentString returns
+          """{"this-is-not": "form-urlencoded", "it-is": "json"}"""
+        request.contentType returns Some(
+          "application/json;encoding=utf8, charset=utf-8"
+        )
+
+        TokenExchangeRequest.parse(request) ==== Left(
+          TokenExchangeRequest.UnsupportedContentType(
+            "application/json;encoding=utf8, charset=utf-8"
+          )
         )
       }
 
@@ -368,6 +384,17 @@ class TokenExchangeHandlerSpec extends UnitSpecification {
         Await.result(handler.instrumentedMothershipDispatch(request))
 
         getRequestErrorCount("invalid_request:reason") ==== 1.0
+      }
+
+      "counts error type when content type is not supported" in new WithMockRequestContext {
+        override val tokenExchangeRequestParseResult = Left(
+          TokenExchangeRequest.UnsupportedContentType(
+            "application/json;encoding=utf8, charset=utf-8"
+          )
+        )
+        Await.result(handler.instrumentedMothershipDispatch(request))
+
+        getRequestErrorCount("unsupported_content_type:application/json") ==== 1.0
       }
 
       "counts error type when parsing fails" in new WithMockRequestContext {
