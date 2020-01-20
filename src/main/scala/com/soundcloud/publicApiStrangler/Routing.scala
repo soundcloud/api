@@ -10,11 +10,13 @@ object Routing {
   // (Method.Get, "/tracks", handler)
   // (Method.Get, "/tracks/", handler)
   // (Method.Get, "/tracks.json", handler)
+  // (Method.Get, "/tracks.json/", handler)
   def route(method: Method, path: String, handler: Handler): List[(Method, String, Handler)] = {
     List(
       (method, path, handler),
       (method, path + "/", handler),
-      (method, path + ".json", handler)
+      (method, path + ".json", handler),
+      (method, path + ".json/", handler)
     )
   }
 
@@ -157,7 +159,6 @@ object Routing {
       route(Method.Get, "/users/:userId/favorites/ids", mothershipDispatcher.dispatch) :::
       route(Method.Get, "/users/:userId/favorites/:trackId", mothershipDispatcher.dispatch) :::
       route(Method.Head, "/users/:userId/favorites/:trackId", mothershipDispatcher.dispatch) :::
-      route(Method.Head, "/users/:userId/favorites/:trackId", mothershipDispatcher.dispatch) :::
       route(Method.Put, "/users/:userId/favorites/:trackId", mothershipDispatcher.dispatch) :::
       route(Method.Delete, "/users/:userId/favorites/:trackId", mothershipDispatcher.dispatch) :::
       route(Method.Get, "/me/tracks", mothershipDispatcher.dispatch) :::
@@ -175,7 +176,6 @@ object Routing {
       route(Method.Get, "/users/:userId/playlists", mothershipDispatcher.dispatch) :::
       route(Method.Post, "/users/:userId/playlists", mothershipDispatcher.dispatch) :::
       route(Method.Get, "/users/:userId/playlists/:trackId", mothershipDispatcher.dispatch) :::
-      route(Method.Head, "/users/:userId/playlists/:trackId", mothershipDispatcher.dispatch) :::
       route(Method.Head, "/users/:userId/playlists/:trackId", mothershipDispatcher.dispatch) :::
       route(Method.Put, "/users/:userId/playlists/:trackId", mothershipDispatcher.dispatch) :::
       route(Method.Delete, "/users/:userId/playlists/:trackId", mothershipDispatcher.dispatch) :::
@@ -197,7 +197,7 @@ object Routing {
   }
 
   def forSingleTrackHandler(singleTrackHandler: SingleTrackHandler): List[(Method, String, Handler)] = {
-    route(Method.Post, "/tracks/:trackId", singleTrackHandler.renderTrack)
+    route(Method.Get, "/tracks/:trackId", singleTrackHandler.renderTrack)
   }
 
   def forPlaylistHandler(playlistsHandler: PlaylistsHandler): List[(Method, String, Handler)] = {
