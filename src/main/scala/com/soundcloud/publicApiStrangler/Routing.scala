@@ -25,7 +25,7 @@ object Routing {
       route(Method.Get, "/users/:id/followers", userFollowHandler.fetchFollowersWithoutAuth) :::
       route(Method.Get, "/users/:id/followers/recent", userFollowHandler.fetchFollowersWithoutAuth) :::
       route(Method.Get, "/users/:id/followers/ids", userFollowHandler.fetchFollowerIdsWithoutAuth) :::
-      route(Method.Get, "/users/:id/followings/ids", userFollowHandler.fetchFollowerIdsWithoutAuth) :::
+      route(Method.Get, "/users/:id/followings/ids", userFollowHandler.fetchFollowingIdsWithoutAuth) :::
       route(Method.Get, "/users/:id/followers/followed_by/:other_id", userFollowHandler.fetchFollowersFollowed) :::
       route(
         Method.Get,
