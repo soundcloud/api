@@ -180,16 +180,7 @@ object Routing {
       route(Method.Put, "/users/:userId/playlists/:trackId", mothershipDispatcher.dispatch) :::
       route(Method.Delete, "/users/:userId/playlists/:trackId", mothershipDispatcher.dispatch) :::
       route(Method.Get, "/me/web-profiles", mothershipDispatcher.dispatch) :::
-      route(Method.Post, "/me/web-profiles", mothershipDispatcher.dispatch) :::
-      route(Method.Get, "/me/web-profiles/:trackId", mothershipDispatcher.dispatch) :::
-      route(Method.Put, "/me/web-profiles/:trackId", mothershipDispatcher.dispatch) :::
-      route(Method.Delete, "/me/web-profiles/:trackId", mothershipDispatcher.dispatch) :::
-      route(Method.Get, "/users/:userId/web-profiles", mothershipDispatcher.dispatch) :::
-      route(Method.Post, "/users/:userId/web-profiles", mothershipDispatcher.dispatch) :::
-      route(Method.Get, "/users/:userId/web-profiles/:id", mothershipDispatcher.dispatch) :::
-      route(Method.Head, "/users/:userId/web-profiles/:id", mothershipDispatcher.dispatch) :::
-      route(Method.Put, "/users/:userId/web-profiles/:id", mothershipDispatcher.dispatch) :::
-      route(Method.Delete, "/users/:userId/web-profiles/:id", mothershipDispatcher.dispatch)
+      route(Method.Get, "/users/:userId/web-profiles", mothershipDispatcher.dispatch)
   }
 
   def forTokenExchange(handler: Handler): List[(Method, String, Handler)] = {
