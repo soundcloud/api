@@ -70,6 +70,7 @@ object Routing {
       route(Method.Delete, "/comments/:id", mothershipDispatcher.dispatch) :::
       route(Method.Get, "/comments/:id", mothershipDispatcher.dispatch) :::
       route(Method.Get, "/connect", mothershipDispatcher.dispatch) :::
+      route(Method.Head, "/connect", mothershipDispatcher.dispatch) :::
       route(Method.Get, "/connections", mothershipDispatcher.dispatch) :::
       route(Method.Get, "/connections/:id", mothershipDispatcher.dispatch) :::
       route(Method.Get, "/e1/me/likes", mothershipDispatcher.dispatch) :::
@@ -95,6 +96,7 @@ object Routing {
       route(Method.Put, "/me", mothershipDispatcher.dispatch) :::
       route(Method.Delete, "/me", mothershipDispatcher.dispatch) :::
       route(Method.Post, "/me", mothershipDispatcher.dispatch) :::
+      route(Method.Head, "/me", mothershipDispatcher.dispatch) :::
       route(Method.Post, "/me/blockings", mothershipDispatcher.dispatch) :::
       route(Method.Get, "/me/comments", mothershipDispatcher.dispatch) :::
       route(Method.Post, "/me/comments", mothershipDispatcher.dispatch) :::
