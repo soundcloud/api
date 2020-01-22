@@ -37,6 +37,9 @@ precheckin:
 lint:
 	$(SBT) scalafmtCheckAll
 
+auto-apply-lint:
+	$(SBT) scalafmtAll
+
 end-to-end-test:
 	echo "This assumes you've run make package before"
 	env PUBLIC_API_STRANGLER_VERSION=$(shell sc artifact-manager package-version) \
