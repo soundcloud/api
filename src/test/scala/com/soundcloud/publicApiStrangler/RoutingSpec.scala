@@ -26,4 +26,30 @@ class RoutingSpec extends UnitSpecification {
       (Method.Get, "/path/:id.json/", handler)
     )
   }
+
+  "generate Mothership path combinations" in new Context {
+    Routing.mothershipRoute(Method.Get, "/path", handler) mustEqual List(
+      (Method.Get, "/path", handler),
+      (Method.Get, "/path/", handler),
+      (Method.Get, "/path.json", handler),
+      (Method.Get, "/path.json/", handler),
+      (Method.Get, "/v1/path", handler),
+      (Method.Get, "/v1/path/", handler),
+      (Method.Get, "/v1/path.json", handler),
+      (Method.Get, "/v1/path.json/", handler)
+    )
+  }
+
+  "generate Mothership path combinations with an id" in new Context {
+    Routing.mothershipRoute(Method.Get, "/path/:id", handler) mustEqual List(
+      (Method.Get, "/path/:id", handler),
+      (Method.Get, "/path/:id/", handler),
+      (Method.Get, "/path/:id.json", handler),
+      (Method.Get, "/path/:id.json/", handler),
+      (Method.Get, "/v1/path/:id", handler),
+      (Method.Get, "/v1/path/:id/", handler),
+      (Method.Get, "/v1/path/:id.json", handler),
+      (Method.Get, "/v1/path/:id.json/", handler)
+    )
+  }
 }
