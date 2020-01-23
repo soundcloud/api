@@ -7,7 +7,7 @@ import com.soundcloud.jvmkit.module.util.http.HeadersBuilder
 import com.soundcloud.jvmkit.module.util.logging.SoundCloudLoggerFactory
 import com.soundcloud.jvmkit.module.util.session.UserSessionHeadersConverter
 import com.soundcloud.publicApiStrangler.handler.SpecificStranglingHandler.externalAppUrn
-import com.twitter.finagle.http.Response
+import com.twitter.finagle.http.{Response, Status}
 import com.twitter.util.Future
 
 import scala.util.matching.Regex
@@ -21,8 +21,12 @@ class SpecificStranglingHandler(
   val logger = SoundCloudLoggerFactory.getLogger(getClass)
 
   override def apply(request: HandlerRequest): Future[Response] = {
-    logFallthroughRequest(request)
-    whereToDispatch(request)
+    whereToDispatch(request).map { response =>
+      response.status match {
+        case Status.Successful(_) | Status.Redirection(_) => logFallthroughRequest(request)
+      }
+      response
+    }
   }
 
   private def patternFor(request: HandlerRequest): Option[Regex] = {
