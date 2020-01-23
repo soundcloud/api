@@ -34,7 +34,6 @@ object App {
 
     val clients = new Clients(config, telemetry)
     val handlers = new Handlers(telemetry, clients)
-    val fallbackHandlerConfig = new FallbackHandlerConfiguration(telemetry, handlers.mothershipDispatcher)
 
     val bffApplication =
       BffApplication(Urn("soundcloud", "systems", "public-api-strangler"), config.getApplicationResourceName)
@@ -81,7 +80,6 @@ object App {
     val responseDump = new ResponseDumpSessionRegistry
 
     val router = HandlerRouterBuilder()
-      .registerFallback(fallbackHandlerConfig.fallbackHandler)
       .register(Method.Get, rateLimitingFacade.statusEndpoint, rateLimitingFacade.rateLimitStatusHandler.handle)
       .register(
         List.concat(
