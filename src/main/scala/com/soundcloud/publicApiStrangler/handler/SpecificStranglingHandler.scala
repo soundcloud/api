@@ -24,6 +24,7 @@ class SpecificStranglingHandler(
     whereToDispatch(request).map { response =>
       response.status match {
         case Status.Successful(_) | Status.Redirection(_) => logFallthroughRequest(request)
+        case _ =>
       }
       response
     }
