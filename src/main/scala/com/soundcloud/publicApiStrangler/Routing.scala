@@ -69,7 +69,6 @@ object Routing {
       route(Method.Delete, "/comments/:id", mothershipDispatcher.dispatch) :::
       route(Method.Get, "/comments/:id", mothershipDispatcher.dispatch) :::
       route(Method.Get, "/connect", mothershipDispatcher.dispatch) :::
-      route(Method.Head, "/connect", mothershipDispatcher.dispatch) :::
       route(Method.Get, "/connections", mothershipDispatcher.dispatch) :::
       route(Method.Get, "/connections/:id", mothershipDispatcher.dispatch) :::
       route(Method.Get, "/e1/me/likes", mothershipDispatcher.dispatch) :::
@@ -97,7 +96,6 @@ object Routing {
       route(Method.Put, "/me", mothershipDispatcher.dispatch) :::
       route(Method.Delete, "/me", mothershipDispatcher.dispatch) :::
       route(Method.Post, "/me", mothershipDispatcher.dispatch) :::
-      route(Method.Head, "/me", mothershipDispatcher.dispatch) :::
       route(Method.Post, "/me/blockings", mothershipDispatcher.dispatch) :::
       route(Method.Get, "/me/comments", mothershipDispatcher.dispatch) :::
       route(Method.Post, "/me/comments", mothershipDispatcher.dispatch) :::
@@ -119,7 +117,6 @@ object Routing {
       route(Method.Post, "/tracks/:trackId/comments", mothershipDispatcher.dispatch) :::
       route(Method.Delete, "/tracks/:trackId/comments/:id", mothershipDispatcher.dispatch) :::
       route(Method.Get, "/tracks/:trackId/comments/:id", mothershipDispatcher.dispatch) :::
-      route(Method.Head, "/tracks/:trackId/comments/:id", mothershipDispatcher.dispatch) :::
       route(Method.Get, "/tracks/:trackId/playlists", mothershipDispatcher.dispatch) :::
       route(Method.Post, "/tracks/:trackId/plays", mothershipDispatcher.dispatch) :::
       route(Method.Post, "/transcodings", mothershipDispatcher.dispatch) :::
@@ -131,12 +128,9 @@ object Routing {
       route(Method.Post, "/users/:userId/comments", mothershipDispatcher.dispatch) :::
       route(Method.Delete, "/users/:userId/comments/:id", mothershipDispatcher.dispatch) :::
       route(Method.Get, "/users/:userId/comments/:id", mothershipDispatcher.dispatch) :::
-      route(Method.Head, "/users/:userId/comments/:id", mothershipDispatcher.dispatch) :::
       route(Method.Get, "/users/:userId/connections", mothershipDispatcher.dispatch) :::
       route(Method.Get, "/users/:userId/connections/:id", mothershipDispatcher.dispatch) :::
-      route(Method.Head, "/users/:userId/connections/:id", mothershipDispatcher.dispatch) :::
       route(Method.Post, "/users/:userId/tracks", mothershipDispatcher.dispatch) :::
-      route(Method.Head, "/users/:userId/tracks/:id", mothershipDispatcher.dispatch) :::
       route(Method.Get, "/users/:userId/tracks/:id", mothershipDispatcher.dispatch) :::
       route(Method.Delete, "/users/:userId/tracks/:id", mothershipDispatcher.dispatch) :::
       route(Method.Put, "/users/:userId/tracks/:id", mothershipDispatcher.dispatch) :::
@@ -144,41 +138,32 @@ object Routing {
       route(Method.Get, "/me/favorites", mothershipDispatcher.dispatch) :::
       route(Method.Get, "/me/favorites/ids", mothershipDispatcher.dispatch) :::
       route(Method.Get, "/me/favorites/:trackId", mothershipDispatcher.dispatch) :::
-      route(Method.Head, "/me/favorites/:trackId", mothershipDispatcher.dispatch) :::
       route(Method.Put, "/me/favorites/:trackId", mothershipDispatcher.dispatch) :::
       route(Method.Post, "/me/favorites/:trackId", mothershipDispatcher.dispatch) :::
       route(Method.Delete, "/me/favorites/:trackId", mothershipDispatcher.dispatch) :::
       route(Method.Get, "/users/:userId/favorites", mothershipDispatcher.dispatch) :::
       route(Method.Get, "/users/:userId/favorites/ids", mothershipDispatcher.dispatch) :::
       route(Method.Get, "/users/:userId/favorites/:trackId", mothershipDispatcher.dispatch) :::
-      route(Method.Head, "/users/:userId/favorites/:trackId", mothershipDispatcher.dispatch) :::
       route(Method.Put, "/users/:userId/favorites/:trackId", mothershipDispatcher.dispatch) :::
       route(Method.Post, "/users/:userId/favorites/:trackId", mothershipDispatcher.dispatch) :::
       route(Method.Delete, "/users/:userId/favorites/:trackId", mothershipDispatcher.dispatch) :::
       route(Method.Get, "/me/tracks", mothershipDispatcher.dispatch) :::
       route(Method.Get, "/me/tracks/ids", mothershipDispatcher.dispatch) :::
       route(Method.Get, "/me/tracks/:trackId", mothershipDispatcher.dispatch) :::
-      route(Method.Head, "/me/tracks/:trackId", mothershipDispatcher.dispatch) :::
       route(Method.Put, "/me/tracks/:trackId", mothershipDispatcher.dispatch) :::
       route(Method.Delete, "/me/tracks/:trackId", mothershipDispatcher.dispatch) :::
       route(Method.Get, "/me/playlists", mothershipDispatcher.dispatch) :::
       route(Method.Post, "/me/playlists", mothershipDispatcher.dispatch) :::
       route(Method.Get, "/me/playlists/:trackId", mothershipDispatcher.dispatch) :::
-      route(Method.Head, "/me/playlists/:trackId", mothershipDispatcher.dispatch) :::
       route(Method.Put, "/me/playlists/:trackId", mothershipDispatcher.dispatch) :::
       route(Method.Delete, "/me/playlists/:trackId", mothershipDispatcher.dispatch) :::
       route(Method.Get, "/users/:userId/playlists", mothershipDispatcher.dispatch) :::
       route(Method.Post, "/users/:userId/playlists", mothershipDispatcher.dispatch) :::
       route(Method.Get, "/users/:userId/playlists/:trackId", mothershipDispatcher.dispatch) :::
-      route(Method.Head, "/users/:userId/playlists/:trackId", mothershipDispatcher.dispatch) :::
       route(Method.Put, "/users/:userId/playlists/:trackId", mothershipDispatcher.dispatch) :::
       route(Method.Delete, "/users/:userId/playlists/:trackId", mothershipDispatcher.dispatch) :::
       route(Method.Get, "/me/web-profiles", mothershipDispatcher.dispatch) :::
       route(Method.Get, "/users/:userId/web-profiles", mothershipDispatcher.dispatch) :::
-      route(Method.Head, "/tracks/:trackId", mothershipDispatcher.dispatch) :::
-      route(Method.Head, "/playlists/:playlistId", mothershipDispatcher.dispatch) :::
-      route(Method.Head, "/users/:userId", mothershipDispatcher.dispatch) :::
-      route(Method.Head, "/resolve", mothershipDispatcher.dispatch) :::
       route(Method.Get, "/oembed", mothershipDispatcher.dispatch)
   }
 
@@ -254,15 +239,11 @@ object Routing {
 
   def forTrackStreamsHandler(trackStreamsHandler: TrackStreamsHandler): List[(Method, String, Handler)] = {
     route(Method.Get, "/tracks/:trackId/streams", trackStreamsHandler.handleStreamRequest) :::
-      route(Method.Head, "/tracks/:trackId/streams", trackStreamsHandler.handleStreamRequest) :::
       route(Method.Get, "/tracks/:trackId/stream", trackStreamsHandler.redirectStreamRequest) :::
-      route(Method.Head, "/tracks/:trackId/stream", trackStreamsHandler.redirectStreamRequest) :::
-      route(Method.Get, "/i1/tracks/:trackId/streams", trackStreamsHandler.handleStreamRequest) :::
-      route(Method.Head, "/i1/tracks/:trackId/streams", trackStreamsHandler.handleStreamRequest)
+      route(Method.Get, "/i1/tracks/:trackId/streams", trackStreamsHandler.handleStreamRequest)
   }
 
   def forTrackDownloadHandler(trackDownloadHandler: TrackDownloadHandler): List[(Method, String, Handler)] = {
-    route(Method.Get, "/tracks/:trackId/download", trackDownloadHandler.handle) :::
-      route(Method.Head, "/tracks/:trackId/download", trackDownloadHandler.handle)
+    route(Method.Get, "/tracks/:trackId/download", trackDownloadHandler.handle)
   }
 }
