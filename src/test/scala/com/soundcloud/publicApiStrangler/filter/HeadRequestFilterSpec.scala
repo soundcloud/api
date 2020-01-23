@@ -10,9 +10,8 @@ import org.specs2.specification.Scope
 class HeadRequestFilterSpec extends Specification {
   val bodyMessage = "body"
 
-  class StubService(expectedRequestMethod: Method) extends Service[Request, Response] {
+  class StubService extends Service[Request, Response] {
     override def apply(request: Request): Future[Response] = {
-      request.method ==== expectedRequestMethod
       Future.value(JsonResponseBuilder.ok(bodyMessage))
     }
   }
@@ -23,7 +22,7 @@ class HeadRequestFilterSpec extends Specification {
 
   "GET request" >> {
     trait GetRequestContext extends Context {
-      val service = new StubService(Method.Get)
+      val service = new StubService
       val request = Request(Method.Get, "/")
     }
 
@@ -35,7 +34,7 @@ class HeadRequestFilterSpec extends Specification {
 
   "HEAD request" >> {
     trait GetRequestContext extends Context {
-      val service = new StubService(Method.Get)
+      val service = new StubService
       val request = Request(Method.Head, "/")
     }
 
