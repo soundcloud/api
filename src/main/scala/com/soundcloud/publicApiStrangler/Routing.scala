@@ -9,8 +9,14 @@ object Routing {
   // Mothership routes accept the /v1 suffix
   // See https://github.com/soundcloud/soundcloud/blob/master/lib/rack/extract_api_version.rb
   def route(method: Method, path: String, handler: Handler): List[(Method, String, Handler)] = {
-    withRoutingSuffixes(method, path, handler) :::
-      withRoutingSuffixes(method, "/v1" + path, handler)
+    if (method == Method.Get)
+      withRoutingSuffixes(method, path, handler) :::
+        withRoutingSuffixes(method, "/v1" + path, handler) :::
+        withRoutingSuffixes(Method.Head, path, handler) :::
+        withRoutingSuffixes(Method.Head, "/v1" + path, handler)
+    else
+      withRoutingSuffixes(method, path, handler) :::
+        withRoutingSuffixes(method, "/v1" + path, handler)
   }
 
   // Generates a list of pairs of a route with each possible path combination:
