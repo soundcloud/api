@@ -115,6 +115,7 @@ object App {
         new AcceptOnlyJsonRequestFilter(
           () => clients.rolloutClient.isActive(BasicRolloutFeature("strip_format_xml_param"))
         ),
+        new HeadRequestFilter,
         new OffsetLimitRequestFilter(limitOffsetPaths, limitOffset),
         new CookieHeaderRemovalFilter,
         new ExceptForTrackUploadsFilter(rateLimitingFacade.filter),
