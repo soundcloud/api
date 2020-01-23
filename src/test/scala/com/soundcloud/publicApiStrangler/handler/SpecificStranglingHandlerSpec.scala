@@ -1,6 +1,6 @@
 package com.soundcloud.publicApiStrangler.handler
 
-import com.soundcloud.jvmkit.module.http.server.HandlerRequest
+import com.soundcloud.jvmkit.module.http.server.{HandlerRequest, JsonResponseBuilder}
 import com.soundcloud.jvmkit.module.telemetry.Telemetry
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.AuthorizationHeaders.ScHeaders
@@ -31,7 +31,7 @@ class SpecificStranglingHandlerSpec extends UnitSpecification {
     // we can't mock the handler function directly.
     // Thus we define a mock handler object and hand it's handle function to the object under test
     val testHandler = mock[TestHandler]
-    testHandler.handle(request) returns Future(mock[Response])
+    testHandler.handle(request) returns Future(JsonResponseBuilder.ok())
 
     val telemetry = Telemetry.createIsolatedInstance
     val counter =
