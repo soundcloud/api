@@ -18,6 +18,7 @@ import org.specs2.mutable.BeforeAfter
 import scala.collection.JavaConverters._
 
 class ForwardedRequestSpec extends UnitSpecification {
+
   trait Context extends BeforeAfter {
     val server = new MockWebServer()
     val session = loggedInSession(Urn("soundcloud", "users", "1"))
