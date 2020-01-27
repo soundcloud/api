@@ -11,7 +11,10 @@ import scala.collection.JavaConverters._
 
 import scala.util.control.NonFatal
 
-class DispatchToMothershipHandler(userAuthentication: UserAuthentication, mothershipClient: Service[Request, Response]) {
+class DispatchToMothershipHandler(
+    userAuthentication: UserAuthentication,
+    mothershipClient: Service[Request, Response]
+) {
   val logger = SoundCloudLoggerFactory.getLogger(getClass)
 
   def dispatch(request: HandlerRequest): Future[Response] = {
