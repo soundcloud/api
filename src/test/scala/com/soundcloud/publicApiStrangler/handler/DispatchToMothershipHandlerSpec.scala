@@ -1,6 +1,8 @@
 package com.soundcloud.publicApiStrangler.handler
 
+import com.soundcloud.jvmkit.module.bff.testsupport.FakeUserAuthentication
 import com.soundcloud.jvmkit.module.http.server.HandlerRequest
+import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.publicApiStrangler.test.UnitSpecification
 import com.twitter.finagle.Service
 import com.twitter.finagle.http._
@@ -10,7 +12,10 @@ class DispatchToMothershipHandlerSpec extends UnitSpecification {
   "dispatches requests to the mothership" >> {
     trait Context extends Scope {
       val mothershipClient = mock[Service[Request, Response]]
-      val handler = new DispatchToMothershipHandler(mothershipClient)
+      val session = loggedInSession(Urn("soundcloud", "users", "1"))
+      val userAuthentication = new FakeUserAuthentication(session)
+
+      val handler = new DispatchToMothershipHandler(userAuthentication, mothershipClient)
 
       val response = Response(Status.Ok)
       response.headerMap.set("header1", "valueHeader1").set("header2", "valueHeader2")

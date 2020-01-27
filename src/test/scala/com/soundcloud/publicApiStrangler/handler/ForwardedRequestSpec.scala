@@ -3,6 +3,7 @@ package com.soundcloud.publicApiStrangler.handler
 import java.io.InputStream
 import java.net.InetSocketAddress
 
+import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.publicApiStrangler.test.UnitSpecification
 import com.twitter.finagle.http.{Request, Response}
 import com.twitter.finagle.{Http, Service}
@@ -14,16 +15,18 @@ import org.apache.http.entity.{ContentType, StringEntity}
 import org.apache.http.impl.client.HttpClients
 import org.apache.http.util.EntityUtils
 import org.specs2.mutable.BeforeAfter
+import scala.collection.JavaConverters._
 
 class ForwardedRequestSpec extends UnitSpecification {
   trait Context extends BeforeAfter {
     val server = new MockWebServer()
+    val session = loggedInSession(Urn("soundcloud", "users", "1"))
     val client = Http.client.withStreaming(enabled = false).newService(s"localhost:${server.getPort}")
 
     def stranglerService: Service[Request, Response] =
       new Service[Request, Response] {
         def apply(request: Request): Future[Response] = {
-          client.apply(ForwardedRequest(request))
+          client.apply(ForwardedRequest(request, session))
         }
       }
 
@@ -60,6 +63,12 @@ class ForwardedRequestSpec extends UnitSpecification {
     recordedRequest.getHeader("Transfer-Encoding") ==== null
     recordedRequest.getHeader("Content-Length") ==== "0"
     recordedRequest.getHeader("X-Favourite-Animal") ==== "zebra"
+
+    recordedRequest.getHeader("Sc-User") ==== session.getUser.toString
+    recordedRequest.getHeader("Sc-Agent") ==== session.getAgent.toString
+    recordedRequest.getHeader("Sc-Geo-City") ==== session.getGeo.getCity
+    recordedRequest.getHeader("Sc-Geo-Country-Code") ==== session.getGeo.getCountryCode
+    recordedRequest.getHeader("Sc-Oauth-Scopes") ==== session.getScopes.asScala.mkString(",")
   }
 
   "properly forwards POST request" in new Context {
@@ -82,6 +91,12 @@ class ForwardedRequestSpec extends UnitSpecification {
     recordedRequest.getHeader("Transfer-Encoding") ==== null
     recordedRequest.getHeader("Content-Length") ==== "7"
     recordedRequest.getHeader("X-Favourite-Animal") ==== "zebra"
+
+    recordedRequest.getHeader("Sc-User") ==== session.getUser.toString
+    recordedRequest.getHeader("Sc-Agent") ==== session.getAgent.toString
+    recordedRequest.getHeader("Sc-Geo-City") ==== session.getGeo.getCity
+    recordedRequest.getHeader("Sc-Geo-Country-Code") ==== session.getGeo.getCountryCode
+    recordedRequest.getHeader("Sc-Oauth-Scopes") ==== session.getScopes.asScala.mkString(",")
   }
 
   "properly forwards PUT request" in new Context {
@@ -104,6 +119,12 @@ class ForwardedRequestSpec extends UnitSpecification {
     recordedRequest.getHeader("Transfer-Encoding") ==== null
     recordedRequest.getHeader("Content-Length") ==== "7"
     recordedRequest.getHeader("X-Favourite-Animal") ==== "zebra"
+
+    recordedRequest.getHeader("Sc-User") ==== session.getUser.toString
+    recordedRequest.getHeader("Sc-Agent") ==== session.getAgent.toString
+    recordedRequest.getHeader("Sc-Geo-City") ==== session.getGeo.getCity
+    recordedRequest.getHeader("Sc-Geo-Country-Code") ==== session.getGeo.getCountryCode
+    recordedRequest.getHeader("Sc-Oauth-Scopes") ==== session.getScopes.asScala.mkString(",")
   }
 
   "properly forwards POST request with Connection: close" in new Context {
@@ -128,6 +149,12 @@ class ForwardedRequestSpec extends UnitSpecification {
     recordedRequest.getHeader("Content-Length") ==== "7"
     recordedRequest.getHeader("X-Favourite-Animal") ==== "zebra"
     recordedRequest.getHeader("Connection") ==== "close"
+
+    recordedRequest.getHeader("Sc-User") ==== session.getUser.toString
+    recordedRequest.getHeader("Sc-Agent") ==== session.getAgent.toString
+    recordedRequest.getHeader("Sc-Geo-City") ==== session.getGeo.getCity
+    recordedRequest.getHeader("Sc-Geo-Country-Code") ==== session.getGeo.getCountryCode
+    recordedRequest.getHeader("Sc-Oauth-Scopes") ==== session.getScopes.asScala.mkString(",")
   }
 
   "sends multipart POST requests as chunked" in new Context {

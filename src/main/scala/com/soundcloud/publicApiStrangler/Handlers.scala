@@ -19,7 +19,7 @@ import com.soundcloud.publicApiStrangler.support.CursorPagination
 class Handlers(telemetry: Telemetry, clients: Clients) {
   import clients._
 
-  val mothershipDispatcher = new DispatchToMothershipHandler(publicApiClient)
+  val mothershipDispatcher = new DispatchToMothershipHandler(userAuthentication, publicApiClient)
 
   val timelineHandler: TimelineHandler = {
     val entitySummaryMapper = new EntitySummaryMapper(okidokiClient, repostsClient, baseUrl)
