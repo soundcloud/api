@@ -76,8 +76,10 @@ class ForwardedRequestSpec extends UnitSpecification {
     (Json.parse(recordedRequest.getHeader("X-SC-Auth")) \ "user").as[String] ==== session.getUser.toString
     (Json.parse(recordedRequest.getHeader("X-SC-Auth")) \ "agent").as[String] ==== session.getAgent.toString
     (Json.parse(recordedRequest.getHeader("X-SC-Auth")) \ "geo" \ "city").as[String] ==== session.getGeo.getCity
-    (Json.parse(recordedRequest.getHeader("X-SC-Auth")) \ "geo" \ "country_code").as[String] ==== session.getGeo.getCountryCode
-    (Json.parse(recordedRequest.getHeader("X-SC-Auth")) \ "scopes").as[List[String]] ==== session.getScopes.asScala.toList
+    (Json.parse(recordedRequest.getHeader("X-SC-Auth")) \ "geo" \ "country_code").as[String] ==== session.getGeo
+      .getCountryCode
+    (Json.parse(recordedRequest.getHeader("X-SC-Auth")) \ "scopes")
+      .as[List[String]] ==== session.getScopes.asScala.toList
   }
 
   "properly forwards POST request" in new Context {
@@ -110,8 +112,10 @@ class ForwardedRequestSpec extends UnitSpecification {
     (Json.parse(recordedRequest.getHeader("X-SC-Auth")) \ "user").as[String] ==== session.getUser.toString
     (Json.parse(recordedRequest.getHeader("X-SC-Auth")) \ "agent").as[String] ==== session.getAgent.toString
     (Json.parse(recordedRequest.getHeader("X-SC-Auth")) \ "geo" \ "city").as[String] ==== session.getGeo.getCity
-    (Json.parse(recordedRequest.getHeader("X-SC-Auth")) \ "geo" \ "country_code").as[String] ==== session.getGeo.getCountryCode
-    (Json.parse(recordedRequest.getHeader("X-SC-Auth")) \ "scopes").as[List[String]] ==== session.getScopes.asScala.toList
+    (Json.parse(recordedRequest.getHeader("X-SC-Auth")) \ "geo" \ "country_code").as[String] ==== session.getGeo
+      .getCountryCode
+    (Json.parse(recordedRequest.getHeader("X-SC-Auth")) \ "scopes")
+      .as[List[String]] ==== session.getScopes.asScala.toList
   }
 
   "properly forwards PUT request" in new Context {
@@ -144,8 +148,10 @@ class ForwardedRequestSpec extends UnitSpecification {
     (Json.parse(recordedRequest.getHeader("X-SC-Auth")) \ "user").as[String] ==== session.getUser.toString
     (Json.parse(recordedRequest.getHeader("X-SC-Auth")) \ "agent").as[String] ==== session.getAgent.toString
     (Json.parse(recordedRequest.getHeader("X-SC-Auth")) \ "geo" \ "city").as[String] ==== session.getGeo.getCity
-    (Json.parse(recordedRequest.getHeader("X-SC-Auth")) \ "geo" \ "country_code").as[String] ==== session.getGeo.getCountryCode
-    (Json.parse(recordedRequest.getHeader("X-SC-Auth")) \ "scopes").as[List[String]] ==== session.getScopes.asScala.toList
+    (Json.parse(recordedRequest.getHeader("X-SC-Auth")) \ "geo" \ "country_code").as[String] ==== session.getGeo
+      .getCountryCode
+    (Json.parse(recordedRequest.getHeader("X-SC-Auth")) \ "scopes")
+      .as[List[String]] ==== session.getScopes.asScala.toList
   }
 
   "properly forwards POST request with Connection: close" in new Context {
@@ -180,8 +186,10 @@ class ForwardedRequestSpec extends UnitSpecification {
     (Json.parse(recordedRequest.getHeader("X-SC-Auth")) \ "user").as[String] ==== session.getUser.toString
     (Json.parse(recordedRequest.getHeader("X-SC-Auth")) \ "agent").as[String] ==== session.getAgent.toString
     (Json.parse(recordedRequest.getHeader("X-SC-Auth")) \ "geo" \ "city").as[String] ==== session.getGeo.getCity
-    (Json.parse(recordedRequest.getHeader("X-SC-Auth")) \ "geo" \ "country_code").as[String] ==== session.getGeo.getCountryCode
-    (Json.parse(recordedRequest.getHeader("X-SC-Auth")) \ "scopes").as[List[String]] ==== session.getScopes.asScala.toList
+    (Json.parse(recordedRequest.getHeader("X-SC-Auth")) \ "geo" \ "country_code").as[String] ==== session.getGeo
+      .getCountryCode
+    (Json.parse(recordedRequest.getHeader("X-SC-Auth")) \ "scopes")
+      .as[List[String]] ==== session.getScopes.asScala.toList
   }
 
   "sends multipart POST requests as chunked" in new Context {
