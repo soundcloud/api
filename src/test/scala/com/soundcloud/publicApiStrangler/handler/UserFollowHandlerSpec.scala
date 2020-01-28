@@ -130,27 +130,6 @@ class UserFollowHandlerSpec extends UnitSpecification {
     }
   }
 
-  "GET /users/:id/followers/followed_by/:other_id" >> {
-    "fetches followings" in new Context {
-      override def before: Any = {
-        super.before
-        val values = Seq(userUrn, Urn("soundcloud", "users", "100"))
-        followsMock.followersFollowedBy(session, userUrn, Urn("soundcloud", "users", "2")) returns Future.value(
-          Some(UserUrns(values))
-        )
-        okidokiMock.fetch(session, values.toSet) returns Future.value(okidokiUsers.as[List[JsObject]])
-        followCountsClientMock.counts(session, values) returns Future.value(Seq(FollowCounts(values.last, 1111, 2222)))
-        repostsClientMock.getRepostCountsByUrnWithFallback(session, values.toSet) returns Future.value(
-          Map.empty[Urn, Long]
-        )
-      }
-
-      val response = get("/users/999/followers/followed_by/2", Map("limit" -> "10"))
-      response.status ==== Status.Ok
-      Json.parse(response.contentString) ==== Json.obj("collection" -> List(anotherUser123))
-    }
-  }
-
   "GET /users/:id/followings/not_followed_by/:other_id" >> {
     "fetches followings" in new Context {
       override def before: Any = {

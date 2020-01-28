@@ -114,17 +114,6 @@ class UserFollowHandler(
     )
   }
 
-  def fetchFollowersFollowed(request: HandlerRequest): Future[Response] = {
-    fetchUrns(
-      request,
-      follows.followersFollowedBy(
-        _,
-        _,
-        Urn("soundcloud", "users", request.routeParams("other_id"))
-      )
-    )
-  }
-
   def fetchFollowersWithoutAuth(request: HandlerRequest): Future[Response] =
     fetchPage(request, follows.followers, mapUsersToUsers, fans, requireLogin = false)
 
@@ -139,9 +128,6 @@ class UserFollowHandler(
 
   def fetchFollowingIdsWithoutAuth(request: HandlerRequest) =
     fetchPage(request, follows.followings, userIds, contacts, requireLogin = false)
-
-  def fetchFollowerIdsWithoutAuth(request: HandlerRequest) =
-    fetchPage(request, follows.followers, userIds, fans, requireLogin = false)
 
   def fetchMyFollowingIds(request: HandlerRequest) =
     fetchPage(request, follows.followings, userIds, contacts, requireLogin = true)

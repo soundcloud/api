@@ -61,16 +61,6 @@ class FollowsClient(jsonService: JsonClient) extends FetchClient {
       .map(response => UnfollowResponseMapper(response))
 
   /**
-    * Returns a list of followers of one user followed by another user.
-    * Returns `None` in case of error.
-    */
-  def followersFollowedBy(userSession: UserSession, user: Urn, anotherUser: Urn): Future[Option[UserUrns]] =
-    fetchUrns(
-      userSession,
-      Path() / "users" / user / "followers_followed" / anotherUser
-    )
-
-  /**
     * Returns a list of followings of one user followed by another user.
     * Returns `None` in case of error.
     */
