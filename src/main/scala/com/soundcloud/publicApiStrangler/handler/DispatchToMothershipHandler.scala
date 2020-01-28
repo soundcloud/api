@@ -19,11 +19,20 @@ class DispatchToMothershipHandler(
 
   def dispatch(request: HandlerRequest): Future[Response] = {
     userAuthentication.withUserSession(request) { session =>
-      mothershipClient(ForwardedRequest(request.request, session)).handle {
+      mothershipClient(ForwardedRequest(request.request, Some(session))).handle {
         case NonFatal(exception: Exception) =>
           logger.debug("Bad response from mothership", exception)
           Response(Status.InternalServerError)
       }
+    }
+  }
+
+  // Deprecated! Only used for token exchange until it is properly implemented in PAS itself.
+  def dispatchUnauthenticated(request: HandlerRequest): Future[Response] = {
+    mothershipClient(ForwardedRequest(request.request, None)).handle {
+      case NonFatal(exception: Exception) =>
+        logger.debug("Bad response from mothership", exception)
+        Response(Status.InternalServerError)
     }
   }
 }
@@ -31,10 +40,10 @@ class DispatchToMothershipHandler(
 object ForwardedRequest {
   val mandatoryHeaders = Map("X-Forwarded-Proto" -> "https", "Host" -> "api.soundcloud.com")
 
-  def apply(originalRequest: Request, session: UserSession) = {
+  def apply(originalRequest: Request, maybeSession: Option[UserSession]) = {
     originalRequest.host = "api.soundcloud.com"
     addMandatoryHeaders(originalRequest)
-    addUserSessionHeaders(originalRequest, session)
+    maybeSession.map(session => addUserSessionHeaders(originalRequest, session))
     originalRequest
   }
 

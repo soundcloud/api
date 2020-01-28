@@ -168,12 +168,12 @@ class Handlers(telemetry: Telemetry, clients: Clients) {
   val repostsHandler = new RepostsHandler(userAuthentication, repostsClient)
 
   val tokenExchangeHandler =
-    new TokenExchangeHandler(mothershipDispatcher.dispatch, new TokenExchangeHandler.Metrics(telemetry))
+    new TokenExchangeHandler(mothershipDispatcher.dispatchUnauthenticated, new TokenExchangeHandler.Metrics(telemetry))
   val instrumentTokenExchangeRequest = RolloutFeature("instrument_token_exchange_requests")
 
   val tokenExchangeRolloutHandler = new RolloutHandler(
     () => rolloutClient.isActive(instrumentTokenExchangeRequest),
-    mothershipDispatcher.dispatch,
+    mothershipDispatcher.dispatchUnauthenticated,
     tokenExchangeHandler.instrumentedMothershipDispatch
   )
 }
