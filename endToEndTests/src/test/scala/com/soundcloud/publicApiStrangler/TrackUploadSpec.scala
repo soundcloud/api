@@ -2,6 +2,7 @@ package com.soundcloud.publicApiStrangler
 
 import java.io.InputStream
 
+import com.soundcloud.testutilities.GratisMusikDiebstahl
 import org.apache.http.client.methods.HttpPost
 import org.apache.http.entity.ContentType
 import org.apache.http.entity.mime.MultipartEntityBuilder
@@ -28,7 +29,7 @@ class TrackUploadSpec extends Specification {
       }
 
       // Build request
-      val request = new HttpPost(s"http://strangler:5000/tracks")
+      val request = new HttpPost(s"http://strangler:5000/tracks?client_id=${GratisMusikDiebstahl.clientId}")
       val reqEntity = MultipartEntityBuilder.create()
         .addBinaryBody("track[asset_data]", inputStream, ContentType.APPLICATION_OCTET_STREAM, "donkey_song.mp3")
         .build()

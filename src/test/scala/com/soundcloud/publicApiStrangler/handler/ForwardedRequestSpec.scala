@@ -3,6 +3,7 @@ package com.soundcloud.publicApiStrangler.handler
 import java.io.InputStream
 import java.net.InetSocketAddress
 
+import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.publicApiStrangler.test.UnitSpecification
 import com.twitter.finagle.http.{Request, Response}
 import com.twitter.finagle.{Http, Service}
@@ -14,22 +15,27 @@ import org.apache.http.entity.{ContentType, StringEntity}
 import org.apache.http.impl.client.HttpClients
 import org.apache.http.util.EntityUtils
 import org.specs2.mutable.BeforeAfter
+import play.api.libs.json.Json
+
+import scala.collection.JavaConverters._
 
 class ForwardedRequestSpec extends UnitSpecification {
+
   trait Context extends BeforeAfter {
     val server = new MockWebServer()
+    val session = loggedInSession(Urn("soundcloud", "users", "1"))
     val client = Http.client.withStreaming(enabled = false).newService(s"localhost:${server.getPort}")
 
     def stranglerService: Service[Request, Response] =
       new Service[Request, Response] {
         def apply(request: Request): Future[Response] = {
-          client.apply(ForwardedRequest(request))
+          client.apply(ForwardedRequest(request, Some(session)))
         }
       }
 
-    val stranglerServer = Http.server.withStreaming(true).serve(new InetSocketAddress(0), stranglerService)
-    val stranglerServerPort = stranglerServer.boundAddress.asInstanceOf[InetSocketAddress].getPort
-    val stranglerClient = Http.client.newService(s"localhost:$stranglerServerPort")
+    lazy val stranglerServer = Http.server.withStreaming(true).serve(new InetSocketAddress(0), stranglerService)
+    lazy val stranglerServerPort = stranglerServer.boundAddress.asInstanceOf[InetSocketAddress].getPort
+    lazy val stranglerClient = Http.client.newService(s"localhost:$stranglerServerPort")
 
     override def before: Any = {}
 
@@ -60,6 +66,20 @@ class ForwardedRequestSpec extends UnitSpecification {
     recordedRequest.getHeader("Transfer-Encoding") ==== null
     recordedRequest.getHeader("Content-Length") ==== "0"
     recordedRequest.getHeader("X-Favourite-Animal") ==== "zebra"
+
+    recordedRequest.getHeader("Sc-User") ==== session.getUser.toString
+    recordedRequest.getHeader("Sc-Agent") ==== session.getAgent.toString
+    recordedRequest.getHeader("Sc-Geo-City") ==== session.getGeo.getCity
+    recordedRequest.getHeader("Sc-Geo-Country-Code") ==== session.getGeo.getCountryCode
+    recordedRequest.getHeader("Sc-Oauth-Scopes") ==== session.getScopes.asScala.mkString(",")
+
+    (Json.parse(recordedRequest.getHeader("X-SC-Auth")) \ "user").as[String] ==== session.getUser.toString
+    (Json.parse(recordedRequest.getHeader("X-SC-Auth")) \ "agent").as[String] ==== session.getAgent.toString
+    (Json.parse(recordedRequest.getHeader("X-SC-Auth")) \ "geo" \ "city").as[String] ==== session.getGeo.getCity
+    (Json.parse(recordedRequest.getHeader("X-SC-Auth")) \ "geo" \ "country_code").as[String] ==== session.getGeo
+      .getCountryCode
+    (Json.parse(recordedRequest.getHeader("X-SC-Auth")) \ "scopes")
+      .as[List[String]] ==== session.getScopes.asScala.toList
   }
 
   "properly forwards POST request" in new Context {
@@ -82,6 +102,20 @@ class ForwardedRequestSpec extends UnitSpecification {
     recordedRequest.getHeader("Transfer-Encoding") ==== null
     recordedRequest.getHeader("Content-Length") ==== "7"
     recordedRequest.getHeader("X-Favourite-Animal") ==== "zebra"
+
+    recordedRequest.getHeader("Sc-User") ==== session.getUser.toString
+    recordedRequest.getHeader("Sc-Agent") ==== session.getAgent.toString
+    recordedRequest.getHeader("Sc-Geo-City") ==== session.getGeo.getCity
+    recordedRequest.getHeader("Sc-Geo-Country-Code") ==== session.getGeo.getCountryCode
+    recordedRequest.getHeader("Sc-Oauth-Scopes") ==== session.getScopes.asScala.mkString(",")
+
+    (Json.parse(recordedRequest.getHeader("X-SC-Auth")) \ "user").as[String] ==== session.getUser.toString
+    (Json.parse(recordedRequest.getHeader("X-SC-Auth")) \ "agent").as[String] ==== session.getAgent.toString
+    (Json.parse(recordedRequest.getHeader("X-SC-Auth")) \ "geo" \ "city").as[String] ==== session.getGeo.getCity
+    (Json.parse(recordedRequest.getHeader("X-SC-Auth")) \ "geo" \ "country_code").as[String] ==== session.getGeo
+      .getCountryCode
+    (Json.parse(recordedRequest.getHeader("X-SC-Auth")) \ "scopes")
+      .as[List[String]] ==== session.getScopes.asScala.toList
   }
 
   "properly forwards PUT request" in new Context {
@@ -104,6 +138,20 @@ class ForwardedRequestSpec extends UnitSpecification {
     recordedRequest.getHeader("Transfer-Encoding") ==== null
     recordedRequest.getHeader("Content-Length") ==== "7"
     recordedRequest.getHeader("X-Favourite-Animal") ==== "zebra"
+
+    recordedRequest.getHeader("Sc-User") ==== session.getUser.toString
+    recordedRequest.getHeader("Sc-Agent") ==== session.getAgent.toString
+    recordedRequest.getHeader("Sc-Geo-City") ==== session.getGeo.getCity
+    recordedRequest.getHeader("Sc-Geo-Country-Code") ==== session.getGeo.getCountryCode
+    recordedRequest.getHeader("Sc-Oauth-Scopes") ==== session.getScopes.asScala.mkString(",")
+
+    (Json.parse(recordedRequest.getHeader("X-SC-Auth")) \ "user").as[String] ==== session.getUser.toString
+    (Json.parse(recordedRequest.getHeader("X-SC-Auth")) \ "agent").as[String] ==== session.getAgent.toString
+    (Json.parse(recordedRequest.getHeader("X-SC-Auth")) \ "geo" \ "city").as[String] ==== session.getGeo.getCity
+    (Json.parse(recordedRequest.getHeader("X-SC-Auth")) \ "geo" \ "country_code").as[String] ==== session.getGeo
+      .getCountryCode
+    (Json.parse(recordedRequest.getHeader("X-SC-Auth")) \ "scopes")
+      .as[List[String]] ==== session.getScopes.asScala.toList
   }
 
   "properly forwards POST request with Connection: close" in new Context {
@@ -128,6 +176,20 @@ class ForwardedRequestSpec extends UnitSpecification {
     recordedRequest.getHeader("Content-Length") ==== "7"
     recordedRequest.getHeader("X-Favourite-Animal") ==== "zebra"
     recordedRequest.getHeader("Connection") ==== "close"
+
+    recordedRequest.getHeader("Sc-User") ==== session.getUser.toString
+    recordedRequest.getHeader("Sc-Agent") ==== session.getAgent.toString
+    recordedRequest.getHeader("Sc-Geo-City") ==== session.getGeo.getCity
+    recordedRequest.getHeader("Sc-Geo-Country-Code") ==== session.getGeo.getCountryCode
+    recordedRequest.getHeader("Sc-Oauth-Scopes") ==== session.getScopes.asScala.mkString(",")
+
+    (Json.parse(recordedRequest.getHeader("X-SC-Auth")) \ "user").as[String] ==== session.getUser.toString
+    (Json.parse(recordedRequest.getHeader("X-SC-Auth")) \ "agent").as[String] ==== session.getAgent.toString
+    (Json.parse(recordedRequest.getHeader("X-SC-Auth")) \ "geo" \ "city").as[String] ==== session.getGeo.getCity
+    (Json.parse(recordedRequest.getHeader("X-SC-Auth")) \ "geo" \ "country_code").as[String] ==== session.getGeo
+      .getCountryCode
+    (Json.parse(recordedRequest.getHeader("X-SC-Auth")) \ "scopes")
+      .as[List[String]] ==== session.getScopes.asScala.toList
   }
 
   "sends multipart POST requests as chunked" in new Context {
@@ -174,5 +236,43 @@ class ForwardedRequestSpec extends UnitSpecification {
     requestBody.contains("\r\nContent-Type: application/octet-stream\r\n") ==== true
     requestBody.contains("\r\nContent-Transfer-Encoding: binary\r\n") ==== true
     requestBody.contains("\r\n\r\n" + ("\u0000" * 10) + "\r\n--") ==== true
+  }
+
+  trait UnauthenticatedContext extends Context {
+    override def stranglerService: Service[Request, Response] =
+      new Service[Request, Response] {
+        def apply(request: Request): Future[Response] = {
+          client.apply(ForwardedRequest(request, None))
+        }
+      }
+  }
+
+  "properly forwards unauthenticated requests request" in new UnauthenticatedContext {
+    server.enqueue(new MockResponse().setBody("donkey"))
+
+    val request = new HttpGet(s"http://localhost:$stranglerServerPort/tracks")
+    request.addHeader("X-Favourite-Animal", "zebra")
+    val httpclient = HttpClients.createDefault()
+    val response = httpclient.execute(request)
+    response.getStatusLine.getStatusCode ==== 200
+    EntityUtils.toString(response.getEntity) ==== "donkey"
+
+    val recordedRequest = server.takeRequest()
+    recordedRequest.getMethod ==== "GET"
+    recordedRequest.getPath ==== "/tracks"
+    recordedRequest.getBody.readUtf8() ==== ""
+    recordedRequest.getHeader("Host") ==== "api.soundcloud.com"
+    recordedRequest.getHeader("X-Forwarded-Proto") ==== "https"
+    recordedRequest.getHeader("Transfer-Encoding") ==== null
+    recordedRequest.getHeader("Content-Length") ==== "0"
+    recordedRequest.getHeader("X-Favourite-Animal") ==== "zebra"
+
+    Option(recordedRequest.getHeader("Sc-User")) ==== None
+    Option(recordedRequest.getHeader("Sc-Agent")) ==== None
+    Option(recordedRequest.getHeader("Sc-Geo-City")) ==== None
+    Option(recordedRequest.getHeader("Sc-Geo-Country-Code")) ==== None
+    Option(recordedRequest.getHeader("Sc-Oauth-Scopes")) ==== None
+
+    Option(recordedRequest.getHeader("X-SC-Auth")) ==== None
   }
 }
