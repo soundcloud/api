@@ -98,11 +98,11 @@ class RateLimitingSanitySpecification extends Specification with SpinningUpAppSu
     }
 
     "ratelimit requests for track streams injected via config in code, and not ZK" in new Context {
-      server.get(s"/i1/tracks/177748926/streams?client_id=6320d5b73121db59e21259fc688d940c").status ==== 200
-      server.get(s"/i1/tracks/177748926/streams?client_id=6320d5b73121db59e21259fc688d940c").status ==== 200
-      server.get(s"/i1/tracks/177748926/streams?client_id=6320d5b73121db59e21259fc688d940c").status ==== 200
+      server.get(s"/i1/tracks/177748926/streams?client_id=${GratisMusikDiebstahl.clientId}").status ==== 200
+      server.get(s"/i1/tracks/177748926/streams?client_id=${GratisMusikDiebstahl.clientId}").status ==== 200
+      server.get(s"/i1/tracks/177748926/streams?client_id=${GratisMusikDiebstahl.clientId}").status ==== 200
 
-      server.get(s"/i1/tracks/177748926/streams?client_id=6320d5b73121db59e21259fc688d940c").status ==== 429
+      server.get(s"/i1/tracks/177748926/streams?client_id=${GratisMusikDiebstahl.clientId}").status ==== 429
 
     }
   }

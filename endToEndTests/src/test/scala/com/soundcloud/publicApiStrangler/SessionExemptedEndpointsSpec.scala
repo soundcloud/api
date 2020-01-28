@@ -1,6 +1,6 @@
 package com.soundcloud.publicApiStrangler
 
-import com.soundcloud.testutilities.SpinningUpAppSupport
+import com.soundcloud.testutilities.{GratisMusikDiebstahl, SpinningUpAppSupport}
 import com.twitter.finagle.http.{HeaderMap, Status}
 import org.specs2.mutable.Specification
 import org.specs2.specification.Scope
@@ -22,7 +22,7 @@ class SessionExemptedEndpointsSpec extends Specification with SpinningUpAppSuppo
     "return success for multipart request with oauth2 token" in new Context {
       private val multipartHeaders = HeaderMap(("Content-Type", "multipart/form-data;"))
 
-      server.post("/oauth2/token", "", multipartHeaders).status ==== Status.Ok.code
+      server.post(s"/oauth2/token?client_id=${GratisMusikDiebstahl.clientId}", "", multipartHeaders).status ==== Status.Ok.code
     }
   }
 }
