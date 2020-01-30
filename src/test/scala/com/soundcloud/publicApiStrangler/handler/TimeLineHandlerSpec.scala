@@ -122,7 +122,6 @@ class TimeLineHandlerSpec extends UnitSpecification {
     "/me/activities",
     "/me/activities.json",
     "/me/activities/",
-    "/me/activities/track",
     "/me/activities/tracks",
     "/me/activities/tracks/",
     "/me/activities/tracks.json",

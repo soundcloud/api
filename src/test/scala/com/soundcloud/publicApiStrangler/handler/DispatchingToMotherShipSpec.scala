@@ -19,10 +19,7 @@ class DispatchingToMotherShipSpec extends UnitSpecification {
     (Get, "/tracks/999/comments"),
     (Get, "/tracks/999/comments/"),
     (Get, "/tracks/999/comments.json"),
-    (Get, "/tracks/999/comments.json/"),
-    (Post, "/tracks/999"),
-    (Post, "/tracks/999.json"),
-    (Post, "/users/7110/tracks")
+    (Get, "/tracks/999/comments.json/")
   )
 
   val tokenExchangeEndpoints = Set(
@@ -48,8 +45,6 @@ class DispatchingToMotherShipSpec extends UnitSpecification {
     (Get, "/me/suggested/users/:somecategory.json"),
     (Get, "/users/suggested"),
     (Get, "/users/suggested.json"),
-    (Get, "/me/connections/friends"),
-    (Get, "/me/connections/friends.json"),
     (Get, "/tracks/7110/favoriters"),
     (Get, "/tracks/7110/favoriters.json"),
     (Get, "/tracks/7110/favoriters/123"),

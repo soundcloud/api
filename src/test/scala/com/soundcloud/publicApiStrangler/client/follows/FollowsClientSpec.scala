@@ -383,40 +383,6 @@ class FollowsClientSpec extends UnitSpecification {
     }
   }
 
-  "#followersFollowedBy" >> {
-    trait FollowersFollowedByContext extends Context with After {
-      val path = Path() / "users" / user / "followers_followed" / anotherUser
-
-      lazy val result = Await.result(client.followersFollowedBy(anonymousSession, user, anotherUser))
-
-      def mockWith(status: Status, body: JsValue) =
-        when(serviceMock.getWithSession(anonymousSession, path, Params.empty, Headers.empty))
-          .thenReturn(Future(jsonResponse(status, body)))
-
-      override def after: Any = {
-        verify(serviceMock).getWithSession(anonymousSession, path, Params.empty, Headers.empty)
-      }
-    }
-
-    "returns none when an error happens" in new FollowersFollowedByContext {
-      mockWith(Status.InternalServerError, JsNull)
-
-      result ==== None
-    }
-
-    "returns an empty list of urns when there are no results" in new FollowersFollowedByContext {
-      mockWith(Status.Ok, Fixtures.emptyUserUrns)
-
-      result ==== Some(UserUrns(Seq.empty))
-    }
-
-    "returns a list of urns when results are found" in new FollowersFollowedByContext {
-      mockWith(Status.Ok, Fixtures.userUrns)
-
-      result ==== Some(UserUrns(Seq(anotherUser, yetAnotherUser)))
-    }
-  }
-
   "#followingsNotFollowedBy" >> {
     trait FollowingsNotFollowedByContext extends Context with After {
       val path = Path() / "users" / user / "followings_not_followed" / anotherUser
