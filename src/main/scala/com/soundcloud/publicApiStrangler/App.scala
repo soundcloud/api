@@ -66,14 +66,11 @@ object App {
       """/e1/me/track_likes/ids""",
       """/e1/users/\d+/likes""",
       """/e1/users/\d+/playlist_likes""",
-      """/e1/users/\d+/playlist_likes/ids""",
       """/e1/users/\d+/track_likes""",
-      """/e1/users/\d+/track_likes/ids""",
       """/me/favorites""",
       """/me/favorites/ids""",
       """/tracks/\d+/favoriters""",
-      """/users/\d+/favorites""",
-      """/users/\d+/favorites/ids"""
+      """/users/\d+/favorites"""
     )
     val limitOffset = 200
 

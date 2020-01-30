@@ -79,10 +79,8 @@ object Routing {
       route(Method.Get, "/e1/me/track_likes/ids", mothershipDispatcher.dispatch) :::
       route(Method.Get, "/e1/users/:userId/likes", mothershipDispatcher.dispatch) :::
       route(Method.Get, "/e1/users/:userId/playlist_likes", mothershipDispatcher.dispatch) :::
-      route(Method.Get, "/e1/users/:userId/sounds", mothershipDispatcher.dispatch) :::
       route(Method.Get, "/e1/users/:userId/track_likes", mothershipDispatcher.dispatch) :::
       route(Method.Post, "/i1/comments/:comment_id/spam", mothershipDispatcher.dispatch) :::
-      route(Method.Get, "/i1/me/shortcuts", mothershipDispatcher.dispatch) :::
       route(Method.Put, "/me", mothershipDispatcher.dispatch) :::
       route(Method.Post, "/me/blockings", mothershipDispatcher.dispatch) :::
       route(Method.Get, "/me/comments", mothershipDispatcher.dispatch) :::
@@ -190,6 +188,7 @@ object Routing {
     route(Method.Get, "/e1/me/activities", timelineHandler.renderAllActivities) :::
       route(Method.Get, "/e1/me/stream", timelineHandler.renderStreamActivities) :::
       route(Method.Get, "/me/activities", timelineHandler.renderPublicActivities) :::
+      route(Method.Get, "/me/activities/track", timelineHandler.renderPublicActivities) :::
       route(Method.Get, "/me/activities/tracks", timelineHandler.renderPublicActivities) :::
       route(Method.Get, "/me/activities/tracks/:tag", timelineHandler.renderPublicActivities) :::
       route(Method.Get, "/me/activities/all", timelineHandler.renderPublicActivities) :::
