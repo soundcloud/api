@@ -31,10 +31,6 @@ pipelines:
                 command: make
                 arguments:
                 - publish
-            - exec:
-                command: make
-                arguments:
-                - contract-upload
     - end-to-end-tests:
         jobs:
           end-to-end-tests:
@@ -103,11 +99,3 @@ pipelines:
                 command: make
                 arguments:
                 - deploy-api
-    - promote-contract-tests:
-        jobs:
-          promote-tests:
-            tasks:
-            - exec:
-                command: make
-                arguments:
-                - contract-promote

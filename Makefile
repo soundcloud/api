@@ -51,12 +51,6 @@ end-to-end-test:
 unit-test:
 	$(SBT) test
 
-contract-upload:
-	contract-upload
-
-contract-promote:
-	contract-promote
-
 interactive:
 	$(SBT_INTERACTIVE)
 
