@@ -390,69 +390,6 @@ class MoshimoshiClientSpec extends UnitSpecification {
     }
   }
 
-  "#fetchPlaylistTracks" >> {
-    trait PlaylistTracksContext extends Context {
-      val urn = Urn("soundcloud", "playlists", "10419549")
-
-      def path = Path() / "playlists" / urn / "tracks"
-    }
-
-    "invalid response" >> {
-      "throws exception" in new PlaylistTracksContext {
-        expectInternalErrorResponse(path, Params("limit" -> "10", "offset" -> "0"))
-
-        Await.result(client.fetchPlaylistTracks(session, urn, 10, 0)) must throwA[IllegalStateException]
-      }
-    }
-
-    "ok response" >> {
-      "returns the tracks of the given playlist" in new PlaylistTracksContext {
-        expectOkResponse(path, moshiPlaylistTracks, Params("limit" -> "10", "offset" -> "20"))
-
-        val actual = Await.result(client.fetchPlaylistTracks(session, urn, 10, 20))
-        val expected = moshiPlaylistTracks.as[List[JsObject]].map(TrackMapper(_))
-
-        actual must haveSize(4)
-
-        actual.zip(expected).foreach {
-          case (actualTrack, expectedTrack) =>
-            actualTrack.urn ==== expectedTrack.urn
-            actualTrack.user_urn ==== expectedTrack.user_urn
-            actualTrack.uri ==== expectedTrack.uri
-        }
-      }
-    }
-  }
-
-  "#fetchPlaylistTrackUrns" >> {
-    trait PlaylistTrackUrnsContext extends Context {
-      val playlistUrn = Urn("soundcloud", "playlists", "10419549")
-
-      def path = Path() / "playlists" / playlistUrn / "tracks_with_pagination"
-
-      def params = Params("representation_type" -> "id")
-    }
-
-    "invalid response" >> {
-      "throws exception" in new PlaylistTrackUrnsContext {
-        expectInternalErrorResponse(path, params)
-
-        Await.result(client.fetchPlaylistTrackUrns(session, playlistUrn)) must throwA[IllegalStateException]
-      }
-    }
-
-    "ok response" >> {
-      "returns the tracks of the given playlist" in new PlaylistTrackUrnsContext {
-        expectOkResponse(path, moshiPlaylistTrackUrns, params)
-
-        Await.result(client.fetchPlaylistTrackUrns(session, playlistUrn)) ==== List(
-          Urn("soundcloud", "tracks", "123"),
-          Urn("soundcloud", "tracks", "456")
-        )
-      }
-    }
-  }
-
   "#fetchWebProfiles" >> {
     trait WebProfilesContext extends Context {
       val userUrn = Urn("soundcloud", "users", "1")

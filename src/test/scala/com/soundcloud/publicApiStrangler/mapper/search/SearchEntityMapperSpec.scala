@@ -15,7 +15,6 @@ import com.soundcloud.publicApiStrangler.client.followcounts.{FollowCounts, Foll
 import com.soundcloud.publicApiStrangler.client.liebling.{LieblingClient, UserLikesCount}
 import com.soundcloud.publicApiStrangler.client.media.{TrackWaveformUrl, WaveformUrlsGenerator}
 import com.soundcloud.publicApiStrangler.client.mothership.OkidokiClient
-import com.soundcloud.publicApiStrangler.client.mothership.response.representation.{TrackMeta, TracksWithPagination}
 import com.soundcloud.publicApiStrangler.client.reposts.RepostsClient
 import com.soundcloud.publicApiStrangler.mapper.liebling.LikeCountMapper
 import com.soundcloud.publicApiStrangler.mapper.timeline.EntitySummaryMapper
@@ -90,18 +89,6 @@ class SearchEntityMapperSpec extends UnitSpecification {
       // embedded entity summaries in tracks/playlists/groups metadata
       when(okidokiClient.fetch(session, urns.toSet.filter(_.collection == "users"))).thenReturn(
         Future(okidokiFetch.filter(json => (json \ "self" \ "urn").as[Urn].collection == "users"))
-      )
-      // track metadata for a playlist -- one call per playlist :(
-      // should probably return some non-empty list
-      when(
-        okidokiClient.playlistTracks(
-          ===(session),
-          ===(Urn("soundcloud", "playlists", "685235")),
-          any[Option[Int]],
-          any[Option[Int]]
-        )
-      ).thenReturn(
-        Future(TracksWithPagination(Nil, TrackMeta(None)))
       )
 
       // like counts / authenticated user likes
