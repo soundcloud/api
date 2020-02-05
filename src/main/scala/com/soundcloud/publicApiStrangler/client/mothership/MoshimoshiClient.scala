@@ -5,7 +5,6 @@ import com.soundcloud.jvmkit.module.http.client.{JsonClient, Params}
 import com.soundcloud.jvmkit.module.util.http.Headers
 import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.jvmkit.module.util.{Path, Urn}
-import com.soundcloud.publicApiStrangler.client.support.ResponseHandlers.{JsValueResponse, ListResponse}
 import com.soundcloud.publicApiStrangler.client.mothership.request.representation.{
   PlaylistUpdate,
   TrackCreate,
@@ -15,6 +14,7 @@ import com.soundcloud.publicApiStrangler.client.mothership.request.representatio
 import com.soundcloud.publicApiStrangler.client.mothership.response.mapper._
 import com.soundcloud.publicApiStrangler.client.mothership.response.representation.UserFeedsSettings.format
 import com.soundcloud.publicApiStrangler.client.mothership.response.representation._
+import com.soundcloud.publicApiStrangler.client.support.ResponseHandlers.ListResponse
 import com.soundcloud.publicApiStrangler.client.support.{FetchClient, ResponseHandlers, ResponseMapper}
 import com.twitter.finagle.http.Status
 import com.twitter.util.Future
@@ -44,19 +44,6 @@ class MoshimoshiClient(
 
   def fetchPlaylists(session: UserSession, urns: Set[Urn]): Future[List[JsObject]] =
     fetchByUrns(service, session, Path() / "playlists" / "fetch", urns)
-
-  def fetchPlaylistTracks(session: UserSession, urn: Urn, limit: Int, offset: Int): Future[List[Track]] =
-    fetch(service, session, Path() / "playlists" / urn / "tracks", Params("limit" -> limit, "offset" -> offset))
-      .map(ListResponse(_).map(TrackMapper(_)))
-
-  def fetchPlaylistTrackUrns(session: UserSession, playlistUrn: Urn): Future[List[Urn]] =
-    fetch(
-      service,
-      session,
-      Path() / "playlists" / playlistUrn / "tracks_with_pagination",
-      Params("representation_type" -> "id")
-    ).map(JsValueResponse(_))
-      .map(PlaylistTrackUrnsMapper(_))
 
   def fetchTracks(session: UserSession, urns: Set[Urn]): Future[List[Track]] =
     fetchByUrns(service, session, Path() / "tracks" / "fetch", urns).map(_.map(TrackMapper(_)))

@@ -121,39 +121,6 @@ class OkidokiClientSpec extends UnitSpecification {
     }
   }
 
-  "#playlistTracks" >> {
-    trait TestContext extends Context {
-      val urn = Urn("soundcloud", "playlists", "1")
-      val path = Path() / "playlists" / urn / "tracks_with_pagination"
-
-      def expectPlaylistTracksResponse =
-        expectResponseForEndpoint(path, Method.Get)(_: Params, JsNull)(_: Status, _: JsValue)
-    }
-
-    "invalid response" in new TestContext {
-      expectPlaylistTracksResponse(Params.empty, Status.InternalServerError, JsNull)
-      Await.result(client.playlistTracks(session, urn)) must throwA[IllegalStateException]
-    }
-
-    "valid response" in new TestContext {
-      val afterParam = 3300
-      val limit = 5
-      expectPlaylistTracksResponse(
-        Params("after" -> afterParam.toString, "limit" -> limit.toString),
-        Status.Ok,
-        moshiPlaylistTracksWithPagination
-      )
-
-      val actual = Await.result(client.playlistTracks(session, urn, Some(limit), Some(afterParam)))
-      val expected = TracksWithPaginationMapper(moshiPlaylistTracksWithPagination)
-
-      actual.meta ==== expected.meta
-      actual.tracks must haveSize(1)
-      actual.tracks.head.urn ==== expected.tracks.head.urn
-      actual.tracks.head.duration ==== expected.tracks.head.duration
-    }
-  }
-
   "resolve by permalink" >> {
     trait ResolveContext extends Context {
       val permalink = "http://soundcloud.com/blah"

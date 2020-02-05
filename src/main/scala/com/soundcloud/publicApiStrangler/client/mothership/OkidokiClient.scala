@@ -16,7 +16,6 @@ import com.soundcloud.publicApiStrangler.client.support.ResponseHandlers
 import com.soundcloud.publicApiStrangler.client.support.ResponseHandlers.{
   JsValueResponse,
   OptionalSingleItem,
-  SingleItem,
   UnitResponse
 }
 import com.soundcloud.publicApiStrangler.mapper.spotlight.{Spotlight, SpotlightResponseMapper}
@@ -45,18 +44,6 @@ class OkidokiClient(
 
   def fetch(session: UserSession, urns: Set[Urn]): Future[List[JsObject]] =
     fetchByUrns(service, session, Path() / "fetch", urns)
-
-  def playlistTracks(
-      session: UserSession,
-      urn: Urn,
-      limit: Option[Int] = None,
-      after: Option[Int] = None
-  ): Future[TracksWithPagination] = {
-    val params = (limit.map(v => Params("limit" -> v)) ++ after.map(v => Params("after" -> v))).flatten
-
-    fetch(service, session, Path() / "playlists" / urn / "tracks_with_pagination", Params(params.toSeq: _*))
-      .map(json => TracksWithPaginationMapper(SingleItem(json)))
-  }
 
   def resolve(session: UserSession, permalinkUrl: String): Future[Option[JsObject]] = {
     val params = Params("permalink_url" -> permalinkUrl)
