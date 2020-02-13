@@ -188,7 +188,6 @@ object Routing {
     route(Method.Get, "/e1/me/activities", timelineHandler.renderAllActivities) :::
       route(Method.Get, "/e1/me/stream", timelineHandler.renderStreamActivities) :::
       route(Method.Get, "/me/activities", timelineHandler.renderPublicActivities) :::
-      route(Method.Get, "/me/activities/track", timelineHandler.renderPublicActivities) :::
       route(Method.Get, "/me/activities/tracks", timelineHandler.renderPublicActivities) :::
       route(Method.Get, "/me/activities/tracks/:tag", timelineHandler.renderPublicActivities) :::
       route(Method.Get, "/me/activities/all", timelineHandler.renderPublicActivities) :::
