@@ -9,7 +9,6 @@ services:
     command: ./api --config=api-test
     environment:
       https_proxy: 'http://proxy.dev.s-cloud.net:3128'
-      no_proxy: '.s-cloud.net'
 
   moshimoshi:
     image: docker.dev.s-cloud.net/go-1:latest
