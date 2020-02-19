@@ -15,7 +15,7 @@ class PlaylistSummary(
     extends JsonMapping(jsonValue)
     with UrnSupport {
   val kind = "playlist"
-  val id = urn.identifier.toInt
+  val id = urn.identifier.toLong
   val created_at = (json \ "created_at").asOpt[String]
   val duration = (json \ "duration").asOpt[Int]
   val last_modified = (json \ "last_modified").asOpt[String]
@@ -37,7 +37,7 @@ class PlaylistSummary(
   val permalink_url = (json \ "permalink_url").asOpt[String]
   val artwork_url = (json \ "artwork_url").asOpt[String]
   val license = (json \ "license").asOpt[String]
-  val user_id = if (userUrn.isDefined) userUrn.get.identifier.toInt else None
+  val user_id = if (userUrn.isDefined) userUrn.get.identifier.toLong else None
   val user = if (userUrn.isDefined) entitySummaryMapper.embed(userUrn.get) else None
   val secret_token = (json \ "secret_token").as[String]
   val reposts_count = repostCountsByUrn.get(urn).orElse((json \ "reposts_count").asOpt[Long])

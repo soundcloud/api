@@ -29,7 +29,7 @@ class SingleTrackHandlerSpec extends UnitSpecification {
       secretToken: String = "secr3t-Token",
       isDownloadable: Option[Boolean] = Some(false),
       user: Urn = Urn("soundcloud", "users", "3000"),
-      label_id: Option[Int] = None,
+      label_id: Option[Long] = None,
       reveal_stats: Boolean = false,
       reveal_comments: Boolean = true
   ) =

@@ -29,7 +29,7 @@ object TrackMapper {
       genre = (json \ "genre").asOpt[String],
       geo_blocking = (json \ "geo_blocking").asOpt[Boolean],
       isrc = (json \ "isrc").asOpt[String],
-      label_id = (json \ "label_id").asOpt[Int],
+      label_id = (json \ "label_id").asOpt[Long],
       label_name = (json \ "label_name").asOpt[String],
       last_modified = (json \ "last_modified").as[String],
       license = (json \ "license").asOpt[String],

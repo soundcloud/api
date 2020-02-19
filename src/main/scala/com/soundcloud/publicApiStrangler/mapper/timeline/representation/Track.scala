@@ -28,7 +28,7 @@ class Track(
   val favoritings_count = (json \ "favoritings_count").asOpt[Int]
   val genre = (json \ "genre").asOpt[String]
   val isrc = (json \ "isrc").asOpt[String]
-  val label_id = (json \ "label_id").asOpt[Int]
+  val label_id = (json \ "label_id").asOpt[Long]
   val label_name = (json \ "label_name").asOpt[String]
   val license = (json \ "license").asOpt[String]
   val original_content_size = (json \ "original_content_size").asOpt[Int]

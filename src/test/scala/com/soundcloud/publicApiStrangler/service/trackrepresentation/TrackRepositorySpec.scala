@@ -49,7 +49,7 @@ class TrackRepositorySpec extends UnitSpecification {
 
     def paginationParams: TrackPagination
 
-    def trackmetadataTrack(urn: Urn, ownerUrn: Urn, labelId: Option[Int]) =
+    def trackmetadataTrack(urn: Urn, ownerUrn: Urn, labelId: Option[Long]) =
       TrackMetadataTrackBuilder(urn = urn, user_urn = ownerUrn, label_id = labelId, uid = None).build
 
     def fetchUserObjectsResponse = Future.value(List(tracksOwner))

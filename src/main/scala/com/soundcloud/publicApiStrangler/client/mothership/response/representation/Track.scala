@@ -31,7 +31,7 @@ class Track(
     val genre: Option[String],
     val geo_blocking: Option[Boolean],
     val isrc: Option[String],
-    val label_id: Option[Int],
+    val label_id: Option[Long],
     val label_name: Option[String],
     val last_modified: String,
     val license: Option[String],

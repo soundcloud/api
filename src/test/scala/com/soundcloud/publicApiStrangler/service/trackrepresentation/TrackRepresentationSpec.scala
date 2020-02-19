@@ -115,7 +115,7 @@ trait TrackRepresentationLikeSpecContext {
     release = Some("DR012"),
     key_signature = Some("Emaj"),
     video_url = Some("http://example.com/video.mp4"),
-    label_id = defaultLabelUrn.map(_.identifier.toInt),
+    label_id = defaultLabelUrn.map(_.identifier.toLong),
     supply_chain_status = Some("manual_upload")
   )
 
