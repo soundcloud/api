@@ -26,7 +26,7 @@ case class TrackPagination(
     val start = offset
     val end = start + limit + limit // over-fetch to compensate for client filtering
     // sort by id desc
-    trackUrns.sortBy(-_.identifier.toInt).slice(start, end).toSet
+    trackUrns.sortBy(-_.identifier.toLong).slice(start, end).toSet
   }
 
   def calculateFinalPage(tracks: List[Track]): List[Track] = {
@@ -35,7 +35,7 @@ case class TrackPagination(
         createdAtFrom.map(t.created_at.isAfter(_)).getOrElse(true) &&
           createdAtTo.map(t.created_at.isBefore(_)).getOrElse(true)
       )
-      .sortBy(-_.urn.identifier.toInt)
+      .sortBy(-_.urn.identifier.toLong)
       .slice(0, limit)
   }
 

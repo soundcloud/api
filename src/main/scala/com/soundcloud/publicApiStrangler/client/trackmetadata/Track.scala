@@ -47,7 +47,7 @@ case class Track(
     release: Option[String],
     key_signature: Option[String],
     video_url: Option[String],
-    label_id: Option[Int],
+    label_id: Option[Long],
     supply_chain_status: Option[String]
 )
 
@@ -101,7 +101,7 @@ object Track {
           release = (json \ "release").asOpt[String].map(HtmlSanitizer.sanitize(_)),
           key_signature = (json \ "key_signature").asOpt[String].map(HtmlSanitizer.sanitize(_)),
           video_url = (json \ "video_url").asOpt[String],
-          label_id = (json \ "label_id").asOpt[Int],
+          label_id = (json \ "label_id").asOpt[Long],
           supply_chain_status = (json \ "supply_chain_status").asOpt[String]
         )
       )

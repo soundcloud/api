@@ -22,7 +22,7 @@ trait PlaylistTracks extends ObjectMapping[List[Track]] {
 trait PlaylistTrack extends ObjectMapping[Track] {
   @JsonIgnore def baseUrl: String
 
-  val id = resource.urn.identifier.toInt
+  val id = resource.urn.identifier.toLong
   val kind = "track"
   val created_at = resource.created_at
   val last_modified = resource.last_modified
@@ -35,6 +35,6 @@ trait PlaylistTrack extends ObjectMapping[Track] {
   // use media-service?
   val stream_url = resource.stream_url
   val uri = resource.uri
-  val user_id = resource.user_urn.identifier.toInt
+  val user_id = resource.user_urn.identifier.toLong
   val user_uri = s"$baseUrl/users/$user_id"
 }

@@ -14,7 +14,7 @@ class TrackPolicyApplicatorSpec extends UnitSpecification {
     val urns =
       tracksArray
         .as[List[JsObject]]
-        .map(track => (track \ "id").as[Int])
+        .map(track => (track \ "id").as[Long])
         .map(id => Urn("soundcloud", "tracks", id.toString))
 
     val whitelistedClientUrn = Urn("soundcloud", "applications", "1000")
@@ -34,7 +34,7 @@ class TrackPolicyApplicatorSpec extends UnitSpecification {
     lazy val durations = extractDuration(tracksWithPoliciesApplied)
 
     def extractIds(json: JsValue) =
-      json.as[List[JsObject]].map(e => (e \ "id").as[Int])
+      json.as[List[JsObject]].map(e => (e \ "id").as[Long])
 
     def extractDuration(json: JsValue) =
       json.as[List[JsObject]].map(e => (e \ "duration").as[Int])
@@ -99,14 +99,14 @@ class TrackPolicyApplicatorSpec extends UnitSpecification {
     "returns allowed and monetized tracks for whitelisted clients" in new PartiallyAuthorized {
       session.getAgent returns whitelistedClientUrn
 
-      authorizedTrackIds mustEqual List(allowedTrackUrn, monetizedTrackUrn).map(_.identifier.toInt)
+      authorizedTrackIds mustEqual List(allowedTrackUrn, monetizedTrackUrn).map(_.identifier.toLong)
       durations ==== List(370348, 2000)
     }
 
     "returns only allowed tracks for non-whitelisted clients" in new PartiallyAuthorized {
       session.getAgent returns nonWhitelistedClientUrn
 
-      authorizedTrackIds mustEqual List(allowedTrackUrn).map(_.identifier.toInt)
+      authorizedTrackIds mustEqual List(allowedTrackUrn).map(_.identifier.toLong)
       durations ==== List(370348)
     }
 
@@ -141,14 +141,14 @@ class TrackPolicyApplicatorSpec extends UnitSpecification {
       session.getAgent returns whitelistedClientUrn
 
       authorizedTrackIds mustEqual List(allowedTrackUrn, monetizedHighTierTrackUrn, monetizedAdSupportedTrackUrn).map(
-        _.identifier.toInt
+        _.identifier.toLong
       )
     }
 
     "returns only allowed and ad-supported tracks for non-whitelisted clients" in new AdSupported {
       session.getAgent returns nonWhitelistedClientUrn
 
-      authorizedTrackIds mustEqual List(allowedTrackUrn, monetizedAdSupportedTrackUrn).map(_.identifier.toInt)
+      authorizedTrackIds mustEqual List(allowedTrackUrn, monetizedAdSupportedTrackUrn).map(_.identifier.toLong)
     }
 
     trait SomeAreSnip extends Context {
@@ -186,7 +186,7 @@ class TrackPolicyApplicatorSpec extends UnitSpecification {
         )
 
       override def extractIds(json: JsValue) =
-        (json \ "collection" \\ "track").toList.map(e => (e \ "id").asOpt[Int].getOrElse(-999))
+        (json \ "collection" \\ "track").toList.map(e => (e \ "id").asOpt[Long].getOrElse(-999L))
     }
 
     trait PartiallyAuthorized extends StreamContext {

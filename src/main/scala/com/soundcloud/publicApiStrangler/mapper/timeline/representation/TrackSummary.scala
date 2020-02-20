@@ -10,7 +10,7 @@ class TrackSummary(jsonValue: JsValue, baseUrl: String, entitySummaryMapper: Ent
     implicit context: MappingContext
 ) extends JsonMapping(jsonValue)
     with UrnSupport {
-  val id = urn.identifier.toInt
+  val id = urn.identifier.toLong
   val kind = "track"
   val created_at = (json \ "created_at").asOpt[String]
   val last_modified = (json \ "last_modified").asOpt[String]
@@ -26,9 +26,9 @@ class TrackSummary(jsonValue: JsValue, baseUrl: String, entitySummaryMapper: Ent
   val user_id = userId
   val user_uri = s"$baseUrl/users/$userId"
 
-  private def userId: Integer =
+  private def userId: Long =
     (json \ "user" \ "urn")
       .asOpt[Urn]
-      .map(_.identifier.toInt: Integer)
-      .orNull
+      .map(_.identifier.toLong)
+      .get
 }

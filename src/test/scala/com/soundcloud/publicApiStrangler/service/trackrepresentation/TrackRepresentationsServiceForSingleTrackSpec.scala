@@ -127,7 +127,7 @@ class TrackRepresentationsServiceForSingleTrackSpec extends UnitSpecification {
         secretToken: String = "secr3t-Token",
         isDownloadable: Boolean = false,
         user: Urn = trackOwnerUrn,
-        label_id: Option[Int] = Some(labelUrn.identifier.toInt),
+        label_id: Option[Long] = Some(labelUrn.identifier.toLong),
         reveal_stats: Boolean = false,
         reveal_comments: Boolean = true
     ) =

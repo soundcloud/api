@@ -7,7 +7,7 @@ class UserSummary(jsonValue: JsValue, baseUrl: String)(implicit context: Mapping
     extends JsonMapping(jsonValue)
     with UrnSupport {
   val avatar_url = (json \ "avatar_url").asOpt[String]
-  val id = urn.identifier.toInt
+  val id = urn.identifier.toLong
   val kind = "user"
   val permalink_url = (json \ "permalink_url").asOpt[String]
   val uri = s"$baseUrl/users/$id"

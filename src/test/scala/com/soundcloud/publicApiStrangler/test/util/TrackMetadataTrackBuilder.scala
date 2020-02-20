@@ -44,7 +44,7 @@ case class TrackMetadataTrackBuilder(
     release: Option[String] = Some("release"),
     key_signature: Option[String] = Some("key_signature"),
     video_url: Option[String] = Some("video_url"),
-    label_id: Option[Int] = None,
+    label_id: Option[Long] = None,
     supply_chain_status: Option[String] = Some("manual_upload")
 ) {
   def build: Track = {
