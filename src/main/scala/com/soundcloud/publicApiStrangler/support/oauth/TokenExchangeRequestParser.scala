@@ -30,7 +30,20 @@ class TokenExchangeRequestParser(railsLikeParamsParser: RailsLikeParamsParser) {
       case ClientCredentialsGrant(credentialsGrant) => Right(credentialsGrant)
       case ResourceOwnerPasswordCredentials(passwordCredentials) => Right(passwordCredentials)
       case RefreshToken(token) => Right(token)
-      case _ => Left(UnsupportedGrantType(params.get("grant_type")))
+      case _ => Left(UnsupportedGrantType(params.get("grant_type").map(normalizeUnsupportedGrantType)))
+    }
+  }
+
+  // We used to support grant type extensions for token exchange via social networks:
+  // https://tools.ietf.org/html/draft-ietf-oauth-v2-22#section-4.5
+  //
+  // This capability has been removed from the public API as part of MRR-304 in:
+  // https://github.com/soundcloud/soundcloud/commit/d21cd3659915aab82a683e077b08a5061b790c42
+  private def normalizeUnsupportedGrantType(grantType: String): String = {
+    grantType match {
+      case grant if grant contains "urn:soundcloud:oauth2:grant-type:facebook" => "facebook"
+      case grant if grant contains "urn:soundcloud:oauth2:grant-type:google_plus" => "google_plus"
+      case grant => grant
     }
   }
 }
