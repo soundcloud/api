@@ -100,9 +100,6 @@ object Routing {
       route(Method.Delete, "/tracks/:trackId/comments/:id", mothershipDispatcher.dispatch) :::
       route(Method.Get, "/tracks/:trackId/comments/:id", mothershipDispatcher.dispatch) :::
       route(Method.Post, "/tracks/:trackId/plays", mothershipDispatcher.dispatch) :::
-      route(Method.Post, "/transcodings", mothershipDispatcher.dispatch) :::
-      route(Method.Get, "/transcodings/:uid", mothershipDispatcher.dispatch) :::
-      route(Method.Get, "/upload/policy", mothershipDispatcher.dispatch) :::
       route(Method.Put, "/users/:id", mothershipDispatcher.dispatch) :::
       route(Method.Get, "/users/:userId/tracks/:id", mothershipDispatcher.dispatch) :::
       route(Method.Get, "/me/favorites", mothershipDispatcher.dispatch) :::
