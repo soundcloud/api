@@ -65,10 +65,6 @@ object Routing {
     route(Method.Get, "/apps", mothershipDispatcher.dispatch) :::
       route(Method.Get, "/apps/:id", mothershipDispatcher.dispatch) :::
       route(Method.Get, "/announcements", mothershipDispatcher.dispatch) :::
-      route(Method.Get, "/comments", mothershipDispatcher.dispatch) :::
-      route(Method.Post, "/comments", mothershipDispatcher.dispatch) :::
-      route(Method.Delete, "/comments/:id", mothershipDispatcher.dispatch) :::
-      route(Method.Get, "/comments/:id", mothershipDispatcher.dispatch) :::
       route(Method.Get, "/connect", mothershipDispatcher.dispatch) :::
       route(Method.Get, "/e1/me/likes", mothershipDispatcher.dispatch) :::
       route(Method.Get, "/e1/me/playlist_likes", mothershipDispatcher.dispatch) :::
@@ -80,7 +76,6 @@ object Routing {
       route(Method.Get, "/e1/users/:userId/likes", mothershipDispatcher.dispatch) :::
       route(Method.Get, "/e1/users/:userId/playlist_likes", mothershipDispatcher.dispatch) :::
       route(Method.Get, "/e1/users/:userId/track_likes", mothershipDispatcher.dispatch) :::
-      route(Method.Post, "/i1/comments/:comment_id/spam", mothershipDispatcher.dispatch) :::
       route(Method.Put, "/me", mothershipDispatcher.dispatch) :::
       route(Method.Post, "/me/blockings", mothershipDispatcher.dispatch) :::
       route(Method.Get, "/me/comments", mothershipDispatcher.dispatch) :::
