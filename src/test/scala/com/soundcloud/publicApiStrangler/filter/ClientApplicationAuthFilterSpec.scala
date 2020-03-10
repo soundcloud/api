@@ -34,6 +34,23 @@ class ClientApplicationAuthFilterSpec extends Specification with Mockito {
     }
   }
 
+  "with token exchange request" >> {
+    trait TokenExchangeContext extends Context {
+      override val request = HandlerRequest(Request(Method.Post, "/oauth2/token"))
+    }
+
+    "forwards the request" in new TokenExchangeContext {
+      service.apply(request) returns Future.value(Response(Status.Ok))
+
+      ClientApplicationAuthFilter.blackistedApplicationIds.foreach { appId =>
+        val session = sessionBuilder.setAgent(new Urn("soundcloud", "application", appId)).build()
+        val filter = new ClientApplicationAuthFilter(new FakeUserAuthentication(session), telemetry, router)
+
+        Await.result(filter.apply(request, service)).status ==== Status.Ok
+      }
+    }
+  }
+
   "with missing client application id" >> {
     "forwards the request" in new Context {
       service.apply(request) returns Future.value(Response(Status.Ok))
@@ -46,7 +63,7 @@ class ClientApplicationAuthFilterSpec extends Specification with Mockito {
   }
 
   "with blacklisted client application id" >> {
-    "returns forbudden" in new Context {
+    "returns forbidden" in new Context {
       ClientApplicationAuthFilter.blackistedApplicationIds.foreach { appId =>
         val session = sessionBuilder.setAgent(new Urn("soundcloud", "application", appId)).build()
         val filter = new ClientApplicationAuthFilter(new FakeUserAuthentication(session), telemetry, router)
