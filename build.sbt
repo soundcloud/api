@@ -1,4 +1,4 @@
-val jvmkitVersion = "12.3.0"
+val jvmkitVersion = "12.4.0"
 val specs2Version = "3.8.9" // FIXME: upgrade, 4.3.3 fails randomly on different specs
 val httpComponentsVersion = "4.5.12"
 
