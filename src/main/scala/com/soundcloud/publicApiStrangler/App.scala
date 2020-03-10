@@ -102,6 +102,7 @@ object App {
     // IMPORTANT: the order of these filters matters a lot, be careful when adding new ones or moving things around
     val additionalFilters: List[Filter[Request, Response, Request, Response]] =
       List(
+        new ClientApplicationAuthFilter(clients.userAuthentication, telemetry, router),
         new SuccesfulResponseTypeMetricFilter(telemetry),
         new JsonpFilter,
         CorsFilter((_, _) => true), // allow all CORS origins (for now)
