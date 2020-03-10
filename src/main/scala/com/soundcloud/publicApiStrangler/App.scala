@@ -107,6 +107,7 @@ object App {
         CorsFilter((_, _) => true), // allow all CORS origins (for now)
         new CorsTelemetryFilter(telemetry, router),
         new StaticFilesFilter,
+        new ClientApplicationAuthFilter(clients.userAuthentication, telemetry, router),
         new AcceptOnlyJsonRequestFilter(
           () => clients.rolloutClient.isActive(BasicRolloutFeature("strip_format_xml_param"))
         ),

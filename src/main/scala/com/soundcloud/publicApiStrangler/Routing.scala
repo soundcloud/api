@@ -5,6 +5,7 @@ import com.soundcloud.publicApiStrangler.handler.{DispatchToMothershipHandler, _
 import com.twitter.finagle.http.Method
 
 object Routing {
+  val tokenExchangePath = "/oauth2/token"
 
   // Mothership routes accept the /v1 suffix
   // See https://github.com/soundcloud/soundcloud/blob/master/lib/rack/extract_api_version.rb
@@ -121,7 +122,7 @@ object Routing {
   }
 
   def forTokenExchange(handler: Handler): List[(Method, String, Handler)] = {
-    route(Method.Post, "/oauth2/token", handler)
+    route(Method.Post, tokenExchangePath, handler)
   }
 
   def forSingleTrackHandler(singleTrackHandler: SingleTrackHandler): List[(Method, String, Handler)] = {
