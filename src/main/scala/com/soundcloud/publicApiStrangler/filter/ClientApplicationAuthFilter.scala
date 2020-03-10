@@ -16,16 +16,18 @@ class ClientApplicationAuthFilter(userAuthentication: UserAuthentication, teleme
     "unauthorised_client_application_access_total",
     "Number of unauthorised API accesses by client application id",
     "appid",
-    "path"
+    "path",
+    "method"
   )
 
   override def apply(request: Request, service: Service[Request, Response]): Future[Response] = {
     userAuthentication.withUserSession(HandlerRequest(request)) { userSession =>
       val clientAppId = Option(userSession.getAgent).map(_.identifier).getOrElse("unknown")
       val path = router.pathMatching(request).rawPattern
+      val method = request.method.toString
 
       if (ClientApplicationAuthFilter.blackistedApplicationIds.contains(clientAppId)) {
-        unauthorisedClientApplicationCounter.labels(clientAppId, path).inc()
+        unauthorisedClientApplicationCounter.labels(clientAppId, path, method).inc()
         service(request) // No-Op for now
         //Future.value(JsonResponseBuilder.forbidden())
       } else {
