@@ -45,15 +45,14 @@ class ClientApplicationAuthFilterSpec extends Specification with Mockito {
     }
   }
 
-  // TODO: Enable actual filtering an uncomment this test
-//  "with blacklisted client application id" >> {
-//    "returns forbudden" in new Context {
-//      ClientApplicationAuthFilter.blackistedApplicationIds.foreach { appId =>
-//        val session = sessionBuilder.setAgent(new Urn("soundcloud", "application", appId)).build()
-//        val filter = new ClientApplicationAuthFilter(new FakeUserAuthentication(session), telemetry, router)
-//
-//        Await.result(filter.apply(request, service)).status ==== Status.Forbidden
-//      }
-//    }
-//  }
+  "with blacklisted client application id" >> {
+    "returns forbudden" in new Context {
+      ClientApplicationAuthFilter.blackistedApplicationIds.foreach { appId =>
+        val session = sessionBuilder.setAgent(new Urn("soundcloud", "application", appId)).build()
+        val filter = new ClientApplicationAuthFilter(new FakeUserAuthentication(session), telemetry, router)
+
+        Await.result(filter.apply(request, service)).status ==== Status.Forbidden
+      }
+    }.pendingUntilFixed("not activated yet")
+  }
 }
