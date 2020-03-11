@@ -52,6 +52,8 @@ object ClientApplicationAuthFilter {
     "66152", // SoundCloud MobileWeb development
     "65097", // m.soundcloud.com
     "90575", // SoundCloud Visual Embed Player
-    "43164" // SoundCloud Embed Player
+    "43164", // SoundCloud Embed Player,
+    "124", // SoundCloud iOS,
+    "3152" // SoundCloud Android
   )
 }
