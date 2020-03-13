@@ -9,7 +9,7 @@ import com.soundcloud.publicApiStrangler.test.UnitSpecification
 import com.twitter.finagle.http.Status
 import com.twitter.util.{Await, Future}
 import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures.withContentsOf
-import org.mockito.Mockito.{times, verify, verifyZeroInteractions}
+import org.mockito.Mockito.{times, verify, verifyNoInteractions}
 import org.mockito.ArgumentCaptor
 
 class ContentAuthorizationServiceSpec extends UnitSpecification {
@@ -73,7 +73,7 @@ class ContentAuthorizationServiceSpec extends UnitSpecification {
 
   "don't fetch if the resources sequence is empty" in new Context {
     Await.result(contentAuthorizationService.findRulesApplicableTo(userSession, Seq(), None)) ==== Seq()
-    verifyZeroInteractions(authsy)
+    verifyNoInteractions(authsy)
   }
 
   "when asking for more than 65 things, make several requests" in new Context {
@@ -85,6 +85,6 @@ class ContentAuthorizationServiceSpec extends UnitSpecification {
       contentAuthorizationService
         .findRulesApplicableTo(userSession, List.fill(100)(Urn("soundcloud", "tracks", "123")), None)
     )
-    verify(authsy, times(2))
+    verify(authsy, times(2)).getWithSession(any, any, any, any)
   }
 }

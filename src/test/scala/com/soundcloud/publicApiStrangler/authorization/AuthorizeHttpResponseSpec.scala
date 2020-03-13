@@ -9,7 +9,7 @@ import com.soundcloud.publicApiStrangler.test.UnitSpecification
 import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures._
 import com.twitter.finagle.http.Status
 import com.twitter.util.{Await, Future}
-import org.mockito.Mockito.{verifyZeroInteractions, when}
+import org.mockito.Mockito.{verifyNoInteractions, when}
 import org.specs2.mutable.Before
 import play.api.libs.json.{JsValue, Json}
 
@@ -128,7 +128,7 @@ class AuthorizeHttpResponseSpec extends UnitSpecification {
     authorizedResponse.status mustEqual status
     authorizedResponse.getContentString mustEqual content
 
-    verifyZeroInteractions(contentAuthorization)
+    verifyNoInteractions(contentAuthorization)
   }
 
   trait PlaylistContext extends Context with Before {
