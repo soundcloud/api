@@ -5,6 +5,7 @@ import com.soundcloud.jvmkit.module.http.server.{HandlerRequest, HandlerRouterBu
 import com.soundcloud.jvmkit.module.telemetry.Telemetry
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSessionBuilder
+import com.soundcloud.publicApiStrangler.Routing
 import com.twitter.finagle.Service
 import com.twitter.finagle.http.{Method, Request, Response, Status}
 import com.twitter.util.{Await, Future}
@@ -18,6 +19,7 @@ class ClientApplicationAuthFilterSpec extends Specification with Mockito {
     val telemetry = Telemetry.createIsolatedInstance
     val router = HandlerRouterBuilder()
       .register(Method.Get, "/foo", (_) => Future.value(JsonResponseBuilder.ok()))
+      .register(Method.Post, Routing.tokenExchangePath, (_) => Future.value(JsonResponseBuilder.ok()))
       .build
     val sessionBuilder = new UserSessionBuilder()
     val request = HandlerRequest(Request(Method.Get, s"/foo"))
@@ -70,6 +72,6 @@ class ClientApplicationAuthFilterSpec extends Specification with Mockito {
 
         Await.result(filter.apply(request, service)).status ==== Status.Forbidden
       }
-    }.pendingUntilFixed("not activated yet")
+    }
   }
 }

@@ -110,16 +110,10 @@ class Clients(config: AppConfig, telemetry: Telemetry) {
   // Whitelist source: http://redash.int.s-cloud.net/queries/632/source
   private val whitelistedClients: Set[Urn] = Set(
     Urn("soundcloud", "systems", "soundcloud"), // Agent returned by Authenticator for those with _soundcloud_session cookie
-    Urn("soundcloud", "applications", "124"), // SoundCloud iOS
-    Urn("soundcloud", "applications", "3152"), // SoundCloud Android
     Urn("soundcloud", "applications", "3273"), // Mobile Soundcloud
     Urn("soundcloud", "applications", "3537"), // SoundCloud Desktop
-    Urn("soundcloud", "applications", "43164"), // SoundCloud Player Widget
-    Urn("soundcloud", "applications", "46941"), // SoundCloud.com
     Urn("soundcloud", "applications", "60973"), // SoundCloud Flash Widget
-    Urn("soundcloud", "applications", "65097"), // MobileWeb3
     Urn("soundcloud", "applications", "66151"), // MobileWeb production
-    Urn("soundcloud", "applications", "90575"), // SoundCloud Visual Embed Player
     Urn("soundcloud", "applications", "99561"), // SoundCloud Kik Messenger Card
     Urn("soundcloud", "applications", "120502"), // Twitter Partner
     Urn("soundcloud", "applications", "135495"), // Mobile Web App
@@ -133,13 +127,6 @@ class Clients(config: AppConfig, telemetry: Telemetry) {
     Urn("soundcloud", "applications", "265616"),
     Urn("soundcloud", "applications", "265183")
   )
-
-  val blacklistOfAppIdsForUserSiloing: Set[Urn] =
-    config
-      .get("APP_SILOING_BLACKLIST_APPS", DataSensitivity.NON_SENSITIVE)
-      .split(",")
-      .map(appId => Urn.parse(appId.trim).get)
-      .toSet
 
   val userAuthentication = UserAuthentication(config, telemetry)
   val authorizeContent =
