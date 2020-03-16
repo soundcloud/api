@@ -5,7 +5,11 @@ import com.soundcloud.jvmkit.module.http.server.{HandlerRequest, ResponseBuilder
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.publicApiStrangler.TrackUrnUtil.trackUrn
-import com.soundcloud.publicApiStrangler.mapper.trackstreams.{TrackStreamJsonResponseMapper, TrackStreamRedirectResponseMapper, TrackStreamResponseMapper}
+import com.soundcloud.publicApiStrangler.mapper.trackstreams.{
+  TrackStreamJsonResponseMapper,
+  TrackStreamRedirectResponseMapper,
+  TrackStreamResponseMapper
+}
 import com.soundcloud.publicApiStrangler.service.media._
 import com.twitter.finagle.http.{MediaType, Method, Response, Status}
 import com.twitter.util.{Future, Return, Try}
