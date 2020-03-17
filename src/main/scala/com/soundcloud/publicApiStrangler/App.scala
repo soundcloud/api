@@ -4,14 +4,14 @@ import com.soundcloud.jvmkit.module.admin.AdminServer
 import com.soundcloud.jvmkit.module.bff.BffHttpServer
 import com.soundcloud.jvmkit.module.bff.filters.CorsFilter
 import com.soundcloud.jvmkit.module.bff.ratelimiting.facade._
-import com.soundcloud.jvmkit.module.http.server.HandlerRouterBuilder
 import com.soundcloud.jvmkit.module.http.server.akira.ResponseDumpSessionRegistry
 import com.soundcloud.jvmkit.module.http.server.config.HttpServerConfig
+import com.soundcloud.jvmkit.module.http.server.HandlerRouterBuilder
 import com.soundcloud.jvmkit.module.memcached.RichMemcachedClient
 import com.soundcloud.jvmkit.module.memcached.config.MemcachedClientConfig
 import com.soundcloud.jvmkit.module.rollout.BasicRolloutFeature
-import com.soundcloud.jvmkit.module.telemetry.Telemetry
 import com.soundcloud.jvmkit.module.telemetry.exceptions.{AirbrakeClient, AirbrakeConfig, ExceptionCollector}
+import com.soundcloud.jvmkit.module.telemetry.Telemetry
 import com.soundcloud.jvmkit.module.util.config.AppConfig
 import com.soundcloud.jvmkit.module.util.{ResourceName, Urn}
 import com.soundcloud.jvmkit.module.zookeeper.CuratorFramework
@@ -107,7 +107,7 @@ object App {
         CorsFilter((_, _) => true), // allow all CORS origins (for now)
         new CorsTelemetryFilter(telemetry, router),
         new StaticFilesFilter,
-        new ExceptForTrackUploadsFilter(new ClientApplicationAuthFilter(clients.userAuthentication, telemetry, router)),
+        new ClientApplicationAuthFilter(clients.userAuthentication, telemetry, router),
         new AcceptOnlyJsonRequestFilter(
           () => clients.rolloutClient.isActive(BasicRolloutFeature("strip_format_xml_param"))
         ),

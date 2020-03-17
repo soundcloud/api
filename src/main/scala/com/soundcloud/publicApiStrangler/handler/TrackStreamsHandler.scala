@@ -5,6 +5,7 @@ import com.soundcloud.jvmkit.module.http.server.{HandlerRequest, ResponseBuilder
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.publicApiStrangler.TrackUrnUtil.trackUrn
+import com.soundcloud.publicApiStrangler.authorization.PublicApiSiloing
 import com.soundcloud.publicApiStrangler.mapper.trackstreams.{
   TrackStreamJsonResponseMapper,
   TrackStreamRedirectResponseMapper,
@@ -26,7 +27,8 @@ class TrackStreamsHandler(
     trackStreamUrlToJsonResponseMapper: TrackStreamJsonResponseMapper,
     trackStreamUrlToRedirectMapper: TrackStreamRedirectResponseMapper,
     streamService: StreamService,
-    trackAccessRecorderService: TrackAccessRecorderService
+    trackAccessRecorderService: TrackAccessRecorderService,
+    publicApiSiloing: PublicApiSiloing
 ) {
   def handleStreamRequest(request: HandlerRequest): Future[Response] =
     handleStreamRequest(request, trackStreamUrlToJsonResponseMapper, singleStream = false)
@@ -40,24 +42,26 @@ class TrackStreamsHandler(
       singleStream: Boolean
   ): Future[Response] = {
     userAuthentication.withUserSession(request) { session =>
-      extractParams(request) match {
-        case Some(streamParams) =>
-          handleWithStreamService(session, streamParams, singleStream).flatMap {
-            case StreamNotFoundError => Future.value(renderStreamResponse(request, session, StreamNotFoundError))
-            case StreamNotAllowed => Future.value(renderStreamResponse(request, session, StreamNotAllowed))
-            case streamResponse if singleStream =>
-              trackAccessRecorderService.recordStreamAccess(session, request, streamParams.trackUrn)(
-                Future.value(renderStreamResponse(request, session, streamResponse))
-              )
-            case streamResponse =>
-              trackAccessRecorderService.recordStreamAccess(
-                session,
-                request,
-                streamParams.trackUrn,
-                loggingEnabled = false
-              )(Future.value(renderStreamResponse(request, session, streamResponse)))
-          }
-        case None => Future.value(ResponseBuilder().status(Status.BadRequest).build)
+      publicApiSiloing.withSiloedSession(session) {
+        extractParams(request) match {
+          case Some(streamParams) =>
+            handleWithStreamService(session, streamParams, singleStream).flatMap {
+              case StreamNotFoundError => Future.value(renderStreamResponse(request, session, StreamNotFoundError))
+              case StreamNotAllowed => Future.value(renderStreamResponse(request, session, StreamNotAllowed))
+              case streamResponse if singleStream =>
+                trackAccessRecorderService.recordStreamAccess(session, request, streamParams.trackUrn)(
+                  Future.value(renderStreamResponse(request, session, streamResponse))
+                )
+              case streamResponse =>
+                trackAccessRecorderService.recordStreamAccess(
+                  session,
+                  request,
+                  streamParams.trackUrn,
+                  loggingEnabled = false
+                )(Future.value(renderStreamResponse(request, session, streamResponse)))
+            }
+          case None => Future.value(ResponseBuilder().status(Status.BadRequest).build)
+        }
       }
     }
   }
