@@ -2,7 +2,6 @@ package com.soundcloud.publicApiStrangler
 
 import com.soundcloud.jvmkit.module.rollout.RolloutFeature
 import com.soundcloud.jvmkit.module.telemetry.Telemetry
-import com.soundcloud.publicApiStrangler.authorization.PublicApiSiloing
 import com.soundcloud.publicApiStrangler.handler._
 import com.soundcloud.publicApiStrangler.mapper.search.{SearchMapper, SearchRepository}
 import com.soundcloud.publicApiStrangler.mapper.similarsounds.SimilarSoundsMapper
@@ -51,12 +50,6 @@ class Handlers(telemetry: Telemetry, clients: Clients) {
     val trackStreamUrlToJsonResponseMapper = new TrackStreamJsonResponseMapper
     val trackStreamUrlToRedirectMapper = new TrackStreamRedirectResponseMapper
 
-    val rolloutCheckForSiloingFunc = {
-      val siloingEnabledFeature = RolloutFeature("app-siloing-enabled")
-      () => rolloutClient.isActive(siloingEnabledFeature)
-    }
-    val publicApiSiloing = new PublicApiSiloing(rolloutCheckForSiloingFunc, blacklistOfAppIdsForUserSiloing, telemetry)
-
     val rolloutNoProgressiveDownloadRolloutEnabledFunc = {
       val noProgressiveDownloadRolloutFeature = RolloutFeature("streams-no-progressive-download")
       () => rolloutClient.isActive(noProgressiveDownloadRolloutFeature)
@@ -73,8 +66,7 @@ class Handlers(telemetry: Telemetry, clients: Clients) {
       trackStreamUrlToJsonResponseMapper,
       trackStreamUrlToRedirectMapper,
       streamService,
-      trackAccessRecorderService,
-      publicApiSiloing
+      trackAccessRecorderService
     )
   }
 
