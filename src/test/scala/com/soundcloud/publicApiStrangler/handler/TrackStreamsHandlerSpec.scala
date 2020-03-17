@@ -11,7 +11,7 @@ import com.soundcloud.publicApiStrangler.mapper.trackstreams.{
   TrackStreamRedirectResponseMapper
 }
 import com.soundcloud.publicApiStrangler.service.media._
-import com.soundcloud.publicApiStrangler.test.{HandlerSpecificationScope, UnitSpecification}
+import com.soundcloud.publicApiStrangler.test.{FakePublicApiSiloing, HandlerSpecificationScope, UnitSpecification}
 import com.twitter.finagle.http.{Method, Response, Status}
 import com.twitter.util.Future
 import org.specs2.specification.core.Fragments
@@ -41,7 +41,8 @@ class TrackStreamsHandlerSpec extends UnitSpecification {
       mock[TrackStreamJsonResponseMapper],
       mock[TrackStreamRedirectResponseMapper],
       streamService,
-      new FakeTrackAccessRecorderService
+      new FakeTrackAccessRecorderService,
+      new FakePublicApiSiloing
     )
 
     val trackUrn = Urn("soundcloud", "tracks", "5")
