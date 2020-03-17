@@ -112,6 +112,8 @@ class Clients(config: AppConfig, telemetry: Telemetry) {
     Urn("soundcloud", "systems", "soundcloud"), // Agent returned by Authenticator for those with _soundcloud_session cookie
     Urn("soundcloud", "applications", "3273"), // Mobile Soundcloud
     Urn("soundcloud", "applications", "3537"), // SoundCloud Desktop
+    Urn("soundcloud", "applications", "43164"), // SoundCloud Player Widget
+    Urn("soundcloud", "applications", "90575"), // SoundCloud Visual Embed Player
     Urn("soundcloud", "applications", "60973"), // SoundCloud Flash Widget
     Urn("soundcloud", "applications", "66151"), // MobileWeb production
     Urn("soundcloud", "applications", "99561"), // SoundCloud Kik Messenger Card
