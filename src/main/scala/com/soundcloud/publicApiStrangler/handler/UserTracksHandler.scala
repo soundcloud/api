@@ -22,10 +22,8 @@ import scala.util.{Success, Try}
 
 class UserTracksHandler(
     userAuthentication: UserAuthentication,
-    mothershipDispatcher: TrackMothershipDispatcherWithCounts,
     tracksService: TrackRepresentationsService,
     telemetry: Telemetry,
-    shouldUseTrackMetadata: () => Future[Boolean],
     baseUrl: String
 ) {
   val logger = SoundCloudLoggerFactory.getLogger(getClass)
@@ -33,49 +31,41 @@ class UserTracksHandler(
   private val numericRegexp = """\d+""".r
 
   def handleRequest(req: HandlerRequest): Future[Response] = {
-    shouldUseTrackMetadata().flatMap {
-      case true => buildResponse(req)
-      case false => mothershipDispatcher.request(req)
-    }
-  }
+    userAuthentication.withUserSession(req) { session =>
+      val userId = req.routeParams("userId")
 
-  private def buildResponse(req: HandlerRequest): Future[Response] = {
-    userAuthentication.withUserSession(req) {
-      case session =>
-        val userId = req.routeParams("userId")
+      val pagination = TrackPagination.fromRequest(req.params, new URL(baseUrl + req.uri))
 
-        val pagination = TrackPagination.fromRequest(req.params, new URL(baseUrl + req.uri))
-
-        def getResult(urn: Urn) = {
-          tracksService
-            .tracks(session, urn, pagination)
-            .handle {
-              case NonFatal(e) => {
-                logger.error(e.getMessage)
-                Bad(HttpError(Status.InternalServerError))
-              }
-            }
-        }
-
-        Try(Urn("soundcloud", "users", userId)) match {
-          case Success(urn @ Urn(_, _, numericRegexp())) => {
-            getResult(urn).map {
-              case Good(tracksRepresentationResult) => {
-                generateResponse(Status.Ok, getRepresentation(tracksRepresentationResult, pagination))
-              }
-              case Bad(error: HttpError) =>
-                generateResponse(error.status, generateErrorBody(error.description))
-              case Bad(error: StringError) =>
-                generateResponse(Status.InternalServerError, generateErrorBody(error.message))
-              case Bad(_) =>
-                generateResponse(
-                  Status.InternalServerError,
-                  generateErrorBody("an unexpected error occurred")
-                )
+      def getResult(urn: Urn) = {
+        tracksService
+          .tracks(session, urn, pagination)
+          .handle {
+            case NonFatal(e) => {
+              logger.error(e.getMessage)
+              Bad(HttpError(Status.InternalServerError))
             }
           }
-          case _ => Future.value(generateNotFound)
+      }
+
+      Try(Urn("soundcloud", "users", userId)) match {
+        case Success(urn @ Urn(_, _, numericRegexp())) => {
+          getResult(urn).map {
+            case Good(tracksRepresentationResult) => {
+              generateResponse(Status.Ok, getRepresentation(tracksRepresentationResult, pagination))
+            }
+            case Bad(error: HttpError) =>
+              generateResponse(error.status, generateErrorBody(error.description))
+            case Bad(error: StringError) =>
+              generateResponse(Status.InternalServerError, generateErrorBody(error.message))
+            case Bad(_) =>
+              generateResponse(
+                Status.InternalServerError,
+                generateErrorBody("an unexpected error occurred")
+              )
+          }
         }
+        case _ => Future.value(generateNotFound)
+      }
     }
   }
 

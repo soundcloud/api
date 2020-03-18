@@ -17,8 +17,7 @@ import com.soundcloud.publicApiStrangler.support.ResultF.lift
 import com.soundcloud.publicApiStrangler.support.{Bad, Good, StringError}
 import com.soundcloud.publicApiStrangler.test.{HandlerSpecificationScope, UnitSpecification}
 import com.twitter.finagle.http.Status
-import com.twitter.util.Future
-import org.joda.time.{DateTimeZone, DateTime}
+import org.joda.time.{DateTime, DateTimeZone}
 import org.mockito.Mockito.when
 
 class UserTracksHandlerSpec extends UnitSpecification {
@@ -29,17 +28,13 @@ class UserTracksHandlerSpec extends UnitSpecification {
     val session = loggedInSession(Urn("soundcloud", "users", "1"))
     val userAuthentication = new FakeUserAuthentication(session)
 
-    val mothershipDispatcher = mock[TrackMothershipDispatcherWithCounts]
     val tracksService = mock[TrackRepresentationsService]
     val telemetry = Telemetry.createIsolatedInstance
 
-    val shouldUseTrackMetadata = () => Future.value(true)
     val handler = new UserTracksHandler(
       userAuthentication,
-      mothershipDispatcher,
       tracksService,
       telemetry,
-      shouldUseTrackMetadata,
       "https://api.soundcloud.com"
     )
 
