@@ -117,7 +117,6 @@ class TrackRepresentationsServiceForMultipleTracksSpec extends UnitSpecification
                 audioMetadata,
                 true,
                 waveformUrl,
-                None,
                 Some(10)
               )
             ),
@@ -170,7 +169,6 @@ class TrackRepresentationsServiceForMultipleTracksSpec extends UnitSpecification
               audioMetadata,
               true,
               waveformUrl,
-              None,
               Some(10)
             )
           ),
@@ -197,7 +195,6 @@ class TrackRepresentationsServiceForMultipleTracksSpec extends UnitSpecification
               audioMetadata,
               true,
               waveformUrl,
-              None,
               Some(10)
             )
           ),
@@ -224,7 +221,6 @@ class TrackRepresentationsServiceForMultipleTracksSpec extends UnitSpecification
               audioMetadata,
               false, // relevant bit
               waveformUrl,
-              None,
               Some(10)
             )
           ),
@@ -251,7 +247,6 @@ class TrackRepresentationsServiceForMultipleTracksSpec extends UnitSpecification
               audioMetadata,
               true,
               waveformUrl,
-              None, // relevant bit
               None
             )
           ),

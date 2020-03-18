@@ -131,13 +131,13 @@ trait TrackRepresentationLikeSpecContext {
     )
 }
 
-class TrackRepresentationSecretTokenDecoratorSpec extends UnitSpecification {
+class TrackRepresentationOwnerOnlyDecoratorSpec extends UnitSpecification {
   trait Context extends Scope with TrackRepresentationLikeSpecContext {
-    implicit val writes = TrackRepresentationSecretTokenDecorator.writes
+    implicit val writes = TrackRepresentationOwnerOnlyDecorator.writes
 
     val track: Track = defaultTrack
     val wrapped: TrackRepresentationLike = createTrackRepresentation()
-    val decorator = TrackRepresentationSecretTokenDecorator(track, wrapped)
+    val decorator = TrackRepresentationOwnerOnlyDecorator(track, wrapped)
   }
 
   "adds secret token stuff" in new Context {
@@ -542,13 +542,13 @@ class TrackRepresentationWaveformUrlDecoratorSpec extends UnitSpecification {
   }
 }
 
-class TrackRepresentationSecretTokenUriParamDecoratorSpec extends UnitSpecification {
+class TrackRepresentationPrivateUrlsDecoratorSpec extends UnitSpecification {
   "when all URL fields are present" >> {
     trait UrlsPresentContext extends Scope with TrackRepresentationLikeSpecContext {
-      implicit val writes = TrackRepresentationSecretTokenUriParamDecorator.writes
+      implicit val writes = TrackRepresentationPrivateUrlsDecorator.writes
 
       val wrapped = createTrackRepresentation()
-      val decorator = TrackRepresentationSecretTokenUriParamDecorator(wrapped, "bl3rkbi3")
+      val decorator = TrackRepresentationPrivateUrlsDecorator(wrapped, "bl3rkbi3")
       val json = Json.toJson(decorator)
     }
 
@@ -576,11 +576,11 @@ class TrackRepresentationSecretTokenUriParamDecoratorSpec extends UnitSpecificat
   // Some clients do this, according to our logs
   "when a particular URL field has a badly-encoded secret token" >> {
     trait BadlyFormedSecretTokenContext extends Scope with TrackRepresentationLikeSpecContext {
-      implicit val writes = TrackRepresentationSecretTokenUriParamDecorator.writes
+      implicit val writes = TrackRepresentationPrivateUrlsDecorator.writes
 
       val track = defaultTrack.copy()
       val wrapped = createTrackRepresentation(track = defaultTrack)
-      val decorator = TrackRepresentationSecretTokenUriParamDecorator(wrapped, "badgers?format=json")
+      val decorator = TrackRepresentationPrivateUrlsDecorator(wrapped, "badgers?format=json")
       val json = Json.toJson(decorator)
     }
 

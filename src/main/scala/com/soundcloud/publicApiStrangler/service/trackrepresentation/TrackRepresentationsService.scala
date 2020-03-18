@@ -116,7 +116,6 @@ class TrackRepresentationsService(
                           trackAudioMetadata = audio,
                           isLiked = isLiked,
                           waveformUrl = waveformUrlsGenerator.fromUid(uid),
-                          secretTokenParameter = secretTokenInRequest,
                           downloadsPerTrack = downloadsPerTrack
                         )
                       )
@@ -158,7 +157,6 @@ class TrackRepresentationsService(
               trackAudioMetadata = audio,
               isLiked = tracksResult.isLiked.get(urn).getOrElse(false),
               waveformUrl = waveformUrl,
-              secretTokenParameter = None,
               downloadsPerTrack = tracksResult.downloadsPerTrack.get(urn).flatten
             )
           }
