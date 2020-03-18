@@ -586,7 +586,8 @@ class TrackRepresentationsServiceForSingleTrackSpec extends UnitSpecification {
           List(Playlist(userUrn = track.user_urn, secretToken = correctSecretTokenForPlaylistContainingTheTrack))
         setUpMocksForExistingTrack(track, session, playlists)
 
-        val trackRepLike = Await.result(tracksService.track(session, trackUrn, Some(correctSecretTokenForPlaylistContainingTheTrack)))
+        val trackRepLike =
+          Await.result(tracksService.track(session, trackUrn, Some(correctSecretTokenForPlaylistContainingTheTrack)))
         trackRepLike match {
           case Success(rep) =>
             val json = Json.toJson(rep)
