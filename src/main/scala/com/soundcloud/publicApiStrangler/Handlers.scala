@@ -97,21 +97,12 @@ class Handlers(telemetry: Telemetry, clients: Clients) {
     repostsClient
   )
 
-  val userTracksHandler: UserTracksHandler = {
-    val trackMothershipDispatcherWithCounts =
-      new TrackMothershipDispatcherWithCounts(userAuthentication, mothershipDispatcher, stitchClient)
-
-    val shouldUseTrackMetadata = RolloutFeature("track_metadata_for_user_tracks")
-
-    new UserTracksHandler(
-      userAuthentication,
-      trackMothershipDispatcherWithCounts,
-      tracksService,
-      telemetry,
-      () => rolloutClient.isActive(shouldUseTrackMetadata),
-      baseUrl
-    )
-  }
+  val userTracksHandler = new UserTracksHandler(
+    userAuthentication,
+    tracksService,
+    telemetry,
+    baseUrl
+  )
 
   val userFollowHandler =
     new UserFollowHandler(userAuthentication, okidokiClient, followsClient, followCountsClient, repostsClient, baseUrl)
