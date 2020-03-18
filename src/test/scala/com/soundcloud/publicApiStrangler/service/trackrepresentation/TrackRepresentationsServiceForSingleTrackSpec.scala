@@ -544,35 +544,61 @@ class TrackRepresentationsServiceForSingleTrackSpec extends UnitSpecification {
     }
   }
 
-  "secret_token parameter in URIs" >> {
-    "appends the secret token when one is given" in new Context {
-      val track = trackmetadataTrack().copy(permalink_url = Some("http://soundcloud.com/foo/bar"))
-      setUpMocksForExistingTrack(track, session)
+  "private urls" >> {
+    "track token in params is correct" >> {
+      "appends the track secret token to urls" in new Context {
+        val track = trackmetadataTrack().copy(permalink_url = Some("http://soundcloud.com/foo/bar"), public = false)
+        setUpMocksForExistingTrack(track, session)
 
-      val trackRepLike = Await.result(tracksService.track(session, trackUrn, Some("s-4kT0a")))
-      trackRepLike match {
-        case Success(rep) =>
-          val json = Json.toJson(rep)
-          json \ "uri" ==== JsDefined(JsString("https://api.soundcloud.com/tracks/987?secret_token=s-4kT0a"))
-          json \ "stream_url" ==== JsDefined(
-            JsString("https://api.soundcloud.com/tracks/987/stream?secret_token=s-4kT0a")
-          )
-          json \ "download_url" ==== JsDefined(
-            JsString("https://api.soundcloud.com/tracks/987/download?secret_token=s-4kT0a")
-          )
-          json \ "permalink_url" ==== JsDefined(JsString("http://soundcloud.com/foo/bar/s-4kT0a"))
+        val trackRepLike = Await.result(tracksService.track(session, trackUrn, Some("secr3t-Token")))
+        trackRepLike match {
+          case Success(rep) =>
+            val json = Json.toJson(rep)
+            json \ "uri" ==== JsDefined(JsString("https://api.soundcloud.com/tracks/987?secret_token=secr3t-Token"))
+            json \ "stream_url" ==== JsDefined(
+              JsString("https://api.soundcloud.com/tracks/987/stream?secret_token=secr3t-Token")
+            )
+            json \ "download_url" ==== JsDefined(
+              JsString("https://api.soundcloud.com/tracks/987/download?secret_token=secr3t-Token")
+            )
+            json \ "permalink_url" ==== JsDefined(JsString("http://soundcloud.com/foo/bar/secr3t-Token"))
+        }
+      }
+
+      "does not add a secret token to null values" in new Context {
+        val track = trackmetadataTrack().copy(permalink_url = None)
+        setUpMocksForExistingTrack(track, session)
+
+        val trackRepLike = Await.result(tracksService.track(session, trackUrn, Some("s-4kT0a")))
+        trackRepLike match {
+          case Success(rep) =>
+            val json = Json.toJson(rep)
+            json \ "permalink_url" ==== JsDefined(JsNull)
+        }
       }
     }
 
-    "does not add a secret token to null values" in new Context {
-      val track = trackmetadataTrack().copy(permalink_url = None)
-      setUpMocksForExistingTrack(track, session)
+    "playlist token in params is correct" >> {
+      "appends the track secret token to urls" in new Context {
+        val correctSecretTokenForPlaylistContainingTheTrack = "playlist-secret"
+        val track = trackmetadataTrack().copy(permalink_url = Some("http://soundcloud.com/foo/bar"), public = false)
+        val playlists =
+          List(Playlist(userUrn = track.user_urn, secretToken = correctSecretTokenForPlaylistContainingTheTrack))
+        setUpMocksForExistingTrack(track, session, playlists)
 
-      val trackRepLike = Await.result(tracksService.track(session, trackUrn, Some("s-4kT0a")))
-      trackRepLike match {
-        case Success(rep) =>
-          val json = Json.toJson(rep)
-          json \ "permalink_url" ==== JsDefined(JsNull)
+        val trackRepLike = Await.result(tracksService.track(session, trackUrn, Some(correctSecretTokenForPlaylistContainingTheTrack)))
+        trackRepLike match {
+          case Success(rep) =>
+            val json = Json.toJson(rep)
+            json \ "uri" ==== JsDefined(JsString("https://api.soundcloud.com/tracks/987?secret_token=secr3t-Token"))
+            json \ "stream_url" ==== JsDefined(
+              JsString("https://api.soundcloud.com/tracks/987/stream?secret_token=secr3t-Token")
+            )
+            json \ "download_url" ==== JsDefined(
+              JsString("https://api.soundcloud.com/tracks/987/download?secret_token=secr3t-Token")
+            )
+            json \ "permalink_url" ==== JsDefined(JsString("http://soundcloud.com/foo/bar/secr3t-Token"))
+        }
       }
     }
   }

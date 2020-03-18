@@ -21,7 +21,6 @@ class TrackRepresentationBuilder {
       trackAudioMetadata: TrackAudioMetadata,
       isLiked: Boolean,
       waveformUrl: TrackWaveformUrl,
-      secretTokenParameter: Option[String],
       downloadsPerTrack: Option[Int]
   ): TrackRepresentationLike = {
     val basicTrackRep = TrackRepresentation(
@@ -39,9 +38,8 @@ class TrackRepresentationBuilder {
     val isAnonymous = sessionUser.isEmpty
 
     var rep: TrackRepresentationLike = basicTrackRep
-    // TODO Consider an "owning user" decorator
     if (userIsOwner)
-      rep = TrackRepresentationSecretTokenDecorator(track, rep)
+      rep = TrackRepresentationOwnerOnlyDecorator(track, rep)
     if (userIsOwner || track.reveal_stats)
       rep = TrackRepresentationCountsDecorator(counts, rep)
     if ((userIsOwner || track.reveal_stats) && track.reveal_comments)
@@ -54,8 +52,11 @@ class TrackRepresentationBuilder {
       rep = TrackRepresentationUserFavoriteDecorator(isLiked, rep)
       rep = TrackRepresentationUserPlaybackCountDecorator(rep)
     }
-    secretTokenParameter.map { secret =>
-      rep = TrackRepresentationSecretTokenUriParamDecorator(rep, secret)
+    // The track access has been authorised at this point. If a user can see a private track, it is because they have
+    // an appropriate token, either for the track or containing playlist. This decorator overrides the urls
+    // with an additional secret token of the track.
+    if (!track.public) {
+      rep = TrackRepresentationPrivateUrlsDecorator(rep, track.secret_token)
     }
     label.map { label =>
       rep = TrackRepresentationLabelDecorator(label, rep)
