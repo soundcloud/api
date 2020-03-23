@@ -115,7 +115,8 @@ object App {
         new OffsetLimitRequestFilter(limitOffsetPaths, limitOffset),
         new CookieHeaderRemovalFilter,
         new ExceptForTrackUploadsFilter(rateLimitingFacade.filter),
-        new ExceptForTrackUploadsFilter(new ContentAuthorizationFilter(clients.authorizeContent))
+        new ExceptForTrackUploadsFilter(new ContentAuthorizationFilter(clients.authorizeContent)),
+        new InternalEndpointUsageFilter(clients.userAuthentication, telemetry, router)
       )
 
     new AdminServer(
