@@ -59,7 +59,7 @@ class TrackStreamsHandler(
       extractParams(request) match {
         case Some(streamParams) =>
           handleWithStreamService(session, streamParams, singleStream).flatMap {
-            case MediaStreamNotFoundError =>
+            case MediaStreamNotFoundError | MediaStreamError =>
               Future.value(renderStreamResponse(request, session, MediaStreamNotFoundError))
             case MediaStreamNotAllowed =>
               Future.value(renderStreamResponse(request, session, MediaStreamNotAllowed))
@@ -89,26 +89,26 @@ class TrackStreamsHandler(
       Future
         .join(
           streamService.fetchSingle(session, streamParams.trackUrn, streamParams.secretToken).rescue {
-            case NonFatal(_) => Future.value(MediaStreamNotFoundError)
+            case NonFatal(_) => Future.value(MediaStreamError)
           },
           legacyStreamService.fetchSingle(session, streamParams.trackUrn, streamParams.secretToken)
         )
         .map {
           case (newResult, legacyResult) =>
-            if (!validateResponses(newResult, legacyResult)) logInconsistency(newResult, legacyResult, "single_fetch")
+            if (!validateResponses(newResult, legacyResult)) logInconsistency(newResult, legacyResult, "single_fetch", streamParams)
             legacyResult
         }
     } else {
       Future
         .join(
           streamService.fetchMultiple(session, streamParams.trackUrn, streamParams.secretToken).rescue {
-            case NonFatal(_) => Future.value(MediaStreamNotFoundError)
+            case NonFatal(_) => Future.value(MediaStreamError)
           },
           legacyStreamService.fetchMultiple(session, streamParams.trackUrn, streamParams.secretToken)
         )
         .map {
           case (newResult, legacyResult) =>
-            if (!validateResponses(newResult, legacyResult)) logInconsistency(newResult, legacyResult, "multiple_fetch")
+            if (!validateResponses(newResult, legacyResult)) logInconsistency(newResult, legacyResult, "multiple_fetch", streamParams)
             legacyResult
         }
     }
@@ -158,11 +158,12 @@ class TrackStreamsHandler(
   private def logInconsistency(
       newResult: MediaStreamResponse,
       legacyResult: MediaStreamResponse,
-      label: String
+      label: String,
+      streamParams: StreamParams
   ): Unit = {
     inconsistentStreamResponsesCounter.labels(label).inc()
     logger.warn(
-      s"Inconsistent ${label} responses from new and legacy services:" +
+      s"Inconsistent ${label} responses from new and legacy services for ${streamParams.toString}:" +
         s"new -> ${newResult}; legacy -> ${legacyResult}"
     )
   }
