@@ -1,0 +1,160 @@
+package com.soundcloud.publicApiStrangler.service.media
+
+import com.soundcloud.jvmkit.module.util.Urn
+import com.soundcloud.jvmkit.module.util.session.UserSession
+import com.soundcloud.publicApiStrangler.authorization.ContentAuthorizationRules
+import com.soundcloud.publicApiStrangler.authorization.policies.{
+  ContentAuthorization,
+  ContentPolicy,
+  ContentRestriction
+}
+import com.soundcloud.publicApiStrangler.client.media.{MediaServiceClient, Transcoding}
+import com.soundcloud.publicApiStrangler.client.trackmetadata.{Track, TrackmetadataClient}
+import com.twitter.util.Future
+
+class LegacyStreamService(
+    trackmetadataClient: TrackmetadataClient,
+    contentAuthorizationRules: ContentAuthorizationRules,
+    mediaServiceClient: MediaServiceClient,
+    noProgressiveDownloadRolloutActive: () => Future[Boolean]
+) {
+  private val mp3MimeType = "audio/mpeg"
+  private val opusMimeType = """audio/ogg; codecs="opus""""
+  private val allowedMimeTypes = Set(mp3MimeType, opusMimeType)
+  private val protoProgressive = "progressive"
+  private val protoHls = "hls"
+
+  def fetchMultiple(session: UserSession, trackUrn: Urn, secretToken: Option[String]): Future[MediaStreamResponse] =
+    fetch(session, trackUrn, secretToken, fetchTranscodingUrls)
+
+  def fetchSingle(session: UserSession, trackUrn: Urn, secretToken: Option[String]): Future[MediaStreamResponse] =
+    fetch(session, trackUrn, secretToken, fetchTranscodingUrl)
+
+  private type Fetch = (UserSession, Map[String, Transcoding], ContentPolicy, Boolean) => Future[MediaStreamResponse]
+
+  private def fetch(
+      session: UserSession,
+      trackUrn: Urn,
+      secretToken: Option[String],
+      fetcher: Fetch
+  ): Future[MediaStreamResponse] = {
+    Future
+      .join(
+        noProgressiveDownloadRolloutActive(),
+        trackmetadataClient.track(session, trackUrn),
+        fetchContentAuth(session, trackUrn)
+      )
+      .flatMap {
+        case (noProgressiveDownloadRolloutEnabled, Some(track), Some(contentAuth))
+            if streamingAllowed(track, session.getUser, contentAuth) =>
+          track.uid match {
+            case Some(uid) =>
+              fetchTranscodings(session, uid).flatMap { transcodings =>
+                fetcher(
+                  session,
+                  transcodings,
+                  contentAuth.policy,
+                  progressiveDownloadAllowed(contentAuth.getContentRestrictions, noProgressiveDownloadRolloutEnabled)
+                )
+              }
+            case None => Future.value(MediaStreamNotFoundError)
+          }
+        case (_, Some(_), Some(_)) => Future.value(MediaStreamNotFoundError)
+        case _ => Future.value(MediaStreamNotFoundError)
+      }
+  }
+
+  private def fetchContentAuth(session: UserSession, trackUrn: Urn): Future[Option[ContentAuthorization]] = {
+    contentAuthorizationRules.fetchRules(session, Seq(trackUrn)).map(_.headOption)
+  }
+
+  private def streamingAllowed(track: Track, userUrn: Urn, authorization: ContentAuthorization): Boolean = {
+    track.disabled_at.isEmpty &&
+    ((track.api_streamable.getOrElse(false) && authorization.policy != ContentPolicy.BLOCK) || track.user_urn == userUrn)
+  }
+
+  private def progressiveDownloadAllowed(
+      contentRestriction: Set[ContentRestriction],
+      noProgressiveDownloadRolloutEnabled: Boolean
+  ): Boolean = {
+    !noProgressiveDownloadRolloutEnabled || !contentRestriction.contains(ContentRestriction.NO_PROGRESSIVE_DOWNLOAD)
+  }
+
+  private def fetchTranscodings(session: UserSession, trackUid: String): Future[Map[String, Transcoding]] = {
+    mediaServiceClient.fetchTranscodings(session, trackUid).map { transcodings =>
+      transcodings
+        .groupBy(_.mime_type)
+        .filter { case (mimeType, _) => allowedMimeTypes.contains(mimeType) }
+        .mapValues(_.head)
+    }
+  }
+
+  private def fetchTranscodingUrl(
+      session: UserSession,
+      transcodings: Map[String, Transcoding],
+      policy: ContentPolicy,
+      progressiveDownloadAllowed: Boolean
+  ): Future[MediaStreamResponse] = {
+    transcodings.get(mp3MimeType) match {
+      case Some(mp3) =>
+        (if (policy == ContentPolicy.SNIP || !progressiveDownloadAllowed)
+           mediaServiceClient.fetchPreviewUrl(session, mp3.uuid, protoProgressive)
+         else
+           mediaServiceClient.fetchStreamUrl(session, mp3.uuid, protoProgressive)).map {
+          case Some(url) => MediaStreamUrl(url)
+          case None => MediaStreamNotFoundError
+        }
+      case None => Future.value(MediaStreamNotFoundError)
+    }
+  }
+
+  private def fetchTranscodingUrls(
+      session: UserSession,
+      transcodings: Map[String, Transcoding],
+      policy: ContentPolicy,
+      progressiveDownloadAllowed: Boolean
+  ): Future[MediaStreamResponse] = {
+    transcodings.get(mp3MimeType) match {
+      case Some(mp3) =>
+        if (policy == ContentPolicy.SNIP || !progressiveDownloadAllowed)
+          fetchPreviewUrls(session, mp3)
+        else
+          fetchStreamUrls(session, mp3, transcodings.get(opusMimeType))
+      case None => Future.value(MediaStreamNotFoundError)
+    }
+  }
+
+  private def fetchStreamUrls(
+      session: UserSession,
+      mp3: Transcoding,
+      maybeOpus: Option[Transcoding]
+  ): Future[MediaStreamResponse] = {
+    for {
+      (maybeHttpStream, maybeHlsStream, maybeMp3Preview, maybeOpusStream) <- Future.join(
+        mediaServiceClient.fetchStreamUrl(session, mp3.uuid, protoProgressive),
+        mediaServiceClient.fetchStreamUrl(session, mp3.uuid, protoHls),
+        mediaServiceClient.fetchPreviewUrl(session, mp3.uuid, protoProgressive),
+        maybeOpus match {
+          case Some(opus) => mediaServiceClient.fetchStreamUrl(session, opus.uuid, protoHls)
+          case None => Future.None
+        }
+      )
+    } yield (maybeHttpStream, maybeHlsStream, maybeMp3Preview) match {
+      case (Some(httpStream), Some(hlsStream), Some(preview)) =>
+        MediaStreamUrls(httpStream, hlsStream, maybeOpusStream, preview)
+      case _ => MediaStreamNotFoundError
+    }
+  }
+
+  private def fetchPreviewUrls(session: UserSession, mp3: Transcoding): Future[MediaStreamResponse] = {
+    for {
+      (maybeHttp, maybeHls) <- Future.join(
+        mediaServiceClient.fetchPreviewUrl(session, mp3.uuid, protoProgressive),
+        mediaServiceClient.fetchPreviewUrl(session, mp3.uuid, protoHls)
+      )
+    } yield (maybeHttp, maybeHls) match {
+      case (Some(http), Some(hls)) => PreviewUrls(http, hls)
+      case _ => MediaStreamNotFoundError
+    }
+  }
+}
