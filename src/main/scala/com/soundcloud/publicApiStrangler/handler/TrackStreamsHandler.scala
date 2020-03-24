@@ -95,7 +95,8 @@ class TrackStreamsHandler(
         )
         .map {
           case (newResult, legacyResult) =>
-            if (!validateResponses(newResult, legacyResult)) logInconsistency(newResult, legacyResult, "single_fetch", streamParams)
+            if (!validateResponses(newResult, legacyResult))
+              logInconsistency(newResult, legacyResult, "single_fetch", streamParams)
             legacyResult
         }
     } else {
@@ -108,7 +109,8 @@ class TrackStreamsHandler(
         )
         .map {
           case (newResult, legacyResult) =>
-            if (!validateResponses(newResult, legacyResult)) logInconsistency(newResult, legacyResult, "multiple_fetch", streamParams)
+            if (!validateResponses(newResult, legacyResult))
+              logInconsistency(newResult, legacyResult, "multiple_fetch", streamParams)
             legacyResult
         }
     }
