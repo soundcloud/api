@@ -96,7 +96,7 @@ class TrackStreamsHandler(
         .map {
           case (newResult, legacyResult) =>
             if (!validateResponses(newResult, legacyResult))
-              logInconsistency(newResult, legacyResult, "single_fetch", streamParams)
+              logInconsistency(newResult, legacyResult, "single_fetch", streamParams, session)
             legacyResult
         }
     } else {
@@ -110,7 +110,7 @@ class TrackStreamsHandler(
         .map {
           case (newResult, legacyResult) =>
             if (!validateResponses(newResult, legacyResult))
-              logInconsistency(newResult, legacyResult, "multiple_fetch", streamParams)
+              logInconsistency(newResult, legacyResult, "multiple_fetch", streamParams, session)
             legacyResult
         }
     }
@@ -161,11 +161,12 @@ class TrackStreamsHandler(
       newResult: MediaStreamResponse,
       legacyResult: MediaStreamResponse,
       label: String,
-      streamParams: StreamParams
+      streamParams: StreamParams,
+      session: UserSession
   ): Unit = {
     inconsistentStreamResponsesCounter.labels(label).inc()
     logger.warn(
-      s"Inconsistent ${label} responses from new and legacy services for ${streamParams.toString}:" +
+      s"Inconsistent ${label} responses from new and legacy services for ${streamParams.toString}, user: ${session.user.toString}, client: ${session.agent.toString}:" +
         s"new -> ${newResult}; legacy -> ${legacyResult}"
     )
   }
