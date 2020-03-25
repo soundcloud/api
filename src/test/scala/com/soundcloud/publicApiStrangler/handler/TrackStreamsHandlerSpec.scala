@@ -14,8 +14,6 @@ import com.soundcloud.publicApiStrangler.service.media._
 import com.soundcloud.publicApiStrangler.test.{HandlerSpecificationScope, UnitSpecification}
 import com.twitter.finagle.http.{Method, Response, Status}
 import com.twitter.util.Future
-import io.prometheus.client.Counter
-import io.prometheus.client.Counter.Child
 import org.specs2.specification.core.Fragments
 import play.api.libs.json.Json
 
@@ -37,21 +35,13 @@ class TrackStreamsHandlerSpec extends UnitSpecification {
     val session = loggedInSession(user)
 
     val streamService = mock[StreamService]
-    val legacyStreamService = mock[LegacyStreamService]
-    val telemetry = mock[Telemetry]
-    val mockCounter = mock[Counter]
-    val mockCounterCollector = mock[Child]
-    mockCounter.labels(anyObject) returns mockCounterCollector
-    telemetry.counter(anyString, anyString, anyObject) returns mockCounter
 
     val handler = new TrackStreamsHandler(
       new FakeUserAuthentication(session),
       mock[TrackStreamJsonResponseMapper],
       mock[TrackStreamRedirectResponseMapper],
       streamService,
-      legacyStreamService,
-      new FakeTrackAccessRecorderService,
-      telemetry
+      new FakeTrackAccessRecorderService
     )
 
     val trackUrn = Urn("soundcloud", "tracks", "5")
@@ -89,7 +79,6 @@ class TrackStreamsHandlerSpec extends UnitSpecification {
       case (method, path) =>
         s"${method.toString} $path" in new MediaServiceContext {
           streamService.fetchSingle(session, trackUrn, None) returns Future.value(MediaStreamUrl(httpMp3))
-          legacyStreamService.fetchSingle(session, trackUrn, None) returns Future.value(MediaStreamUrl(httpMp3))
 
           val response = call(method, handler.redirectStreamRequest, path)
 
@@ -133,10 +122,6 @@ class TrackStreamsHandlerSpec extends UnitSpecification {
             MediaStreamUrls(httpMp3, hlsMp3, Some(hlsOpus), httpPreviewMp3)
           )
 
-          legacyStreamService.fetchMultiple(session, trackUrn, None) returns Future.value(
-            MediaStreamUrls(httpMp3, hlsMp3, Some(hlsOpus), httpPreviewMp3)
-          )
-
           val response = call(method, handler.handleStreamRequest, path)
 
           response.statusCode ==== 200
@@ -155,9 +140,6 @@ class TrackStreamsHandlerSpec extends UnitSpecification {
   "with a secret token" >> {
     trait WithSecretTokenContext extends MediaServiceContext {
       streamService.fetchSingle(session, trackUrn, Some("itsasecret")) returns Future.value(MediaStreamUrl(httpMp3))
-      legacyStreamService.fetchSingle(session, trackUrn, Some("itsasecret")) returns Future.value(
-        MediaStreamUrl(httpMp3)
-      )
     }
 
     s"should return 302" in new WithSecretTokenContext {
@@ -170,66 +152,11 @@ class TrackStreamsHandlerSpec extends UnitSpecification {
   "when streaming is not allowed" >> {
     trait StreamingNotAllowedContext extends MediaServiceContext {
       streamService.fetchSingle(session, trackUrn, None) returns Future.value(MediaStreamNotFoundError)
-      legacyStreamService.fetchSingle(session, trackUrn, None) returns Future.value(MediaStreamNotFoundError)
     }
 
     s"should return 404" in new StreamingNotAllowedContext {
       val resp = get("/tracks/5/stream")
       resp.status ==== Status.NotFound
-    }
-  }
-
-  "when validate stream responses from legacyStreamService and newStreamService" >> {
-    "should not log any inconsistency after single fetch call" in new MediaServiceContext {
-      streamService.fetchSingle(session, trackUrn, None) returns Future.value(MediaStreamNotFoundError)
-      legacyStreamService.fetchSingle(session, trackUrn, None) returns Future.value(MediaStreamNotFoundError)
-      get("/tracks/5/stream")
-      there was exactly(0)(mockCounterCollector).inc()
-    }
-
-    "should log inconsistency when different errors after single fetch call" in new MediaServiceContext {
-      streamService.fetchSingle(session, trackUrn, None) returns Future.value(MediaStreamNotFoundError)
-      legacyStreamService.fetchSingle(session, trackUrn, None) returns Future.value(MediaStreamNotAllowed)
-      get("/tracks/5/stream")
-      there was exactly(1)(mockCounterCollector).inc()
-    }
-
-    "should not log any inconsistency after multiple fetch call" in new MediaServiceContext {
-      streamService.fetchMultiple(session, trackUrn, None) returns Future.value(
-        MediaStreamUrls("httpMp3", "hlsMp3", None, "httpPreviewMp3")
-      )
-      legacyStreamService.fetchMultiple(session, trackUrn, None) returns Future.value(
-        MediaStreamUrls("httpMp3", "hlsMp3", None, "httpPreviewMp3")
-      )
-      get("/tracks/5/streams")
-      there was exactly(0)(mockCounterCollector).inc()
-    }
-
-    "should log inconsistency after multiple fetch call" in new MediaServiceContext {
-      streamService.fetchMultiple(session, trackUrn, None) returns Future.value(
-        MediaStreamUrls("httpMp3", "hlsMp3", None, "httpPreviewMp3")
-      )
-      legacyStreamService.fetchMultiple(session, trackUrn, None) returns Future.value(
-        MediaStreamUrls("httpMp3", "hlsMp3", Some("opus"), "httpPreviewMp3")
-      )
-      get("/tracks/5/streams")
-      there was exactly(1)(mockCounterCollector).inc()
-    }
-
-    "should not log inconsistency in previews after multiple fetch call" in new MediaServiceContext {
-      streamService.fetchMultiple(session, trackUrn, None) returns Future.value(PreviewUrls("httpMp3", "hlsMp3"))
-      legacyStreamService.fetchMultiple(session, trackUrn, None) returns Future.value(PreviewUrls("httpMp3", "hlsMp3"))
-      get("/tracks/5/streams")
-      there was exactly(0)(mockCounterCollector).inc()
-    }
-
-    "should log inconsistency in previews after multiple fetch call" in new MediaServiceContext {
-      streamService.fetchMultiple(session, trackUrn, None) returns Future.value(PreviewUrls("httpMp3", "hlsMp3"))
-      legacyStreamService.fetchMultiple(session, trackUrn, None) returns Future.value(
-        PreviewUrls("hthttpMp33", "hlsMp3")
-      )
-      get("/tracks/5/streams")
-      there was exactly(1)(mockCounterCollector).inc()
     }
   }
 }

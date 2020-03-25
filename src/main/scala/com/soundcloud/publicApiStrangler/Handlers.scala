@@ -12,7 +12,7 @@ import com.soundcloud.publicApiStrangler.mapper.trackstreams.{
   TrackStreamJsonResponseMapper,
   TrackStreamRedirectResponseMapper
 }
-import com.soundcloud.publicApiStrangler.service.media.{DownloadService, LegacyStreamService, StreamService}
+import com.soundcloud.publicApiStrangler.service.media.{DownloadService, StreamService}
 import com.soundcloud.publicApiStrangler.support.CursorPagination
 import com.soundcloud.publicApiStrangler.support.oauth.{RailsLikeParamsParser, TokenExchangeRequestParser}
 
@@ -50,28 +50,14 @@ class Handlers(telemetry: Telemetry, clients: Clients) {
     val trackStreamUrlToJsonResponseMapper = new TrackStreamJsonResponseMapper
     val trackStreamUrlToRedirectMapper = new TrackStreamRedirectResponseMapper
 
-    val rolloutNoProgressiveDownloadRolloutEnabledFunc = {
-      val noProgressiveDownloadRolloutFeature = RolloutFeature("streams-no-progressive-download")
-      () => rolloutClient.isActive(noProgressiveDownloadRolloutFeature)
-    }
-
     val streamService = new StreamService(tracksClient)
-
-    val legacyStreamService = new LegacyStreamService(
-      trackmetadataClient,
-      contentAuthorizationRules,
-      mediaServiceClient,
-      rolloutNoProgressiveDownloadRolloutEnabledFunc
-    )
 
     new TrackStreamsHandler(
       userAuthentication,
       trackStreamUrlToJsonResponseMapper,
       trackStreamUrlToRedirectMapper,
       streamService,
-      legacyStreamService,
-      trackAccessRecorderService,
-      telemetry
+      trackAccessRecorderService
     )
   }
 

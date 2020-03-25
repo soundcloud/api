@@ -7,9 +7,7 @@ case class MediaStreamUrls(httpMp3: String, hlsMp3: String, hlsOpus: Option[Stri
     extends MediaStreamResponse
 case class MediaStreamUrl(httpMp3: String) extends MediaStreamResponse
 case class PreviewUrls(httpMp3: String, hlsMp3: String) extends MediaStreamResponse
-case object MediaStreamNotAllowed extends MediaStreamResponse
 case object MediaStreamNotFoundError extends MediaStreamResponse
-case object MediaStreamError extends MediaStreamResponse
 
 object MediaStreamResponse {
   implicit val writes = new Writes[MediaStreamResponse] {
@@ -30,7 +28,7 @@ object MediaStreamResponse {
           "http_mp3_128_url" -> p.httpMp3,
           "hls_mp3_128_url" -> p.hlsMp3
         )
-      case MediaStreamNotFoundError | MediaStreamNotAllowed | MediaStreamError => Json.obj()
+      case MediaStreamNotFoundError => Json.obj()
     }
   }
 }
