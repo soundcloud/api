@@ -3,7 +3,11 @@ package com.soundcloud.publicApiStrangler.service.media
 import com.soundcloud.api.partners.clients.tracks.Transcoding
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSession
-import com.soundcloud.publicApiStrangler.authorization.policies.ContentPolicy
+import com.soundcloud.publicApiStrangler.authorization.policies.{
+  ContentAuthorization,
+  ContentPolicy,
+  ContentRestriction
+}
 import com.soundcloud.publicApiStrangler.client.trackmetadata.Track
 import com.soundcloud.publicApiStrangler.client.tracks.{ContentAuthorizationBuilder, _}
 import com.soundcloud.publicApiStrangler.test.UnitSpecification
@@ -87,6 +91,26 @@ class StreamServiceSpec extends UnitSpecification {
     override lazy val transcodings = List(opusTranscoding)
     Await.result(service.fetchSingle(session, trackUrn, secretToken)) ==== MediaStreamNotFoundError
     Await.result(service.fetchMultiple(session, trackUrn, secretToken)) ==== MediaStreamNotFoundError
+  }
+
+  "downgrades to snippet when MP3 transodings are returned but progressive streaming restricted" in new Context {
+    override lazy val tracks = List(
+      visibleTrack.copy(authorization = new ContentAuthorization(
+        visibleTrack.urn,
+        visibleTrack.authorization.getPolicy,
+        visibleTrack.authorization.getReason,
+        Set[ContentRestriction](ContentRestriction.NO_PROGRESSIVE_DOWNLOAD),
+        visibleTrack.authorization.getMonetizationModel
+      )
+      )
+    )
+
+    override lazy val transcodings = List(mp3Transcoding)
+    Await.result(service.fetchSingle(session, trackUrn, secretToken)) ==== MediaStreamUrl("http://snippet")
+    Await.result(service.fetchMultiple(session, trackUrn, secretToken)) ==== PreviewUrls(
+      "http://snippet",
+      "http://snippet"
+    )
   }
 
   "#fetchSingle" >> {
