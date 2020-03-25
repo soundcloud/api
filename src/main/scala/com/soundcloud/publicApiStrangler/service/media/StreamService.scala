@@ -32,6 +32,7 @@ class StreamService(
   ): Future[MediaStreamResponse] = {
     tracksClient
       .visibleTracks(session, List(TrackRequest(trackUrn, secretToken)))
+      .map(_.filter(_.disabledAt.isEmpty))
       .map(_.headOption)
       .flatMap {
         case Some(track) => fetcher(session, track)

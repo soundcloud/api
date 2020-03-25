@@ -8,7 +8,7 @@ import com.soundcloud.publicApiStrangler.client.trackmetadata.Track
 import com.soundcloud.publicApiStrangler.client.tracks.{ContentAuthorizationBuilder, _}
 import com.soundcloud.publicApiStrangler.test.UnitSpecification
 import com.twitter.util.{Await, Future}
-import org.joda.time.DateTime
+import org.joda.time.{DateTime, LocalDateTime}
 
 class StreamServiceSpec extends UnitSpecification {
 
@@ -44,7 +44,7 @@ class StreamServiceSpec extends UnitSpecification {
     lazy val opusTranscoding =
       Transcoding("opus-uuid", "preset", """audio/ogg; codecs="opus"""", List("progressive"), None, "sq", 180000, None)
 
-    val visibleTrack = new VisibleTrackBuilder()
+    lazy val visibleTrack = new VisibleTrackBuilder()
       .setUrn(trackUrn)
       .setUid(uid)
       .setPublic(true)
@@ -67,6 +67,12 @@ class StreamServiceSpec extends UnitSpecification {
 
   "error when no track is found" in new Context {
     override lazy val tracks = List[VisibleTrack]()
+    Await.result(service.fetchSingle(session, trackUrn, secretToken)) ==== MediaStreamNotFoundError
+    Await.result(service.fetchMultiple(session, trackUrn, secretToken)) ==== MediaStreamNotFoundError
+  }
+
+  "error when track is found but disabled (taken down or over quota)" in new Context {
+    override lazy val tracks = List(visibleTrack.copy(disabledAt = Some(LocalDateTime.now())))
     Await.result(service.fetchSingle(session, trackUrn, secretToken)) ==== MediaStreamNotFoundError
     Await.result(service.fetchMultiple(session, trackUrn, secretToken)) ==== MediaStreamNotFoundError
   }
