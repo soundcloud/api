@@ -3,7 +3,7 @@ package com.soundcloud.publicApiStrangler.service.media
 import com.soundcloud.api.partners.clients.tracks.Transcoding
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSession
-import com.soundcloud.publicApiStrangler.authorization.policies.ContentPolicy
+import com.soundcloud.publicApiStrangler.authorization.policies.{ContentPolicy, ContentRestriction}
 import com.soundcloud.publicApiStrangler.client.tracks._
 import com.twitter.util.Future
 
@@ -32,6 +32,7 @@ class StreamService(
   ): Future[MediaStreamResponse] = {
     tracksClient
       .visibleTracks(session, List(TrackRequest(trackUrn, secretToken)))
+      .map(_.filter(_.disabledAt.isEmpty))
       .map(_.headOption)
       .flatMap {
         case Some(track) => fetcher(session, track)
@@ -54,7 +55,10 @@ class StreamService(
       case Some(mp3) =>
         val streamRequest = StreamRequest(track.urn, track.secretToken, mp3.uuid, protoProgressive)
         val streamResponse =
-          if (track.authorization.policy == ContentPolicy.SNIP)
+          // Some labels disallow progressive streams. The best thing we can do in this case is to downgrade to a snippet.
+          if (track.authorization.policy == ContentPolicy.SNIP || track.authorization.contentRestrictions.contains(
+              ContentRestriction.NO_PROGRESSIVE_DOWNLOAD
+            ))
             tracksClient.previewUrl(session, streamRequest)
           else
             tracksClient.streamUrl(session, streamRequest)
@@ -73,7 +77,10 @@ class StreamService(
     val transcodings = extractTranscodings(session, track)
     transcodings.get(mp3MimeType) match {
       case Some(mp3) =>
-        if (track.authorization.policy == ContentPolicy.SNIP)
+        // Some labels disallow progressive streams. The best thing we can do in this case is to downgrade to a snippet.
+        if (track.authorization.policy == ContentPolicy.SNIP || track.authorization.contentRestrictions.contains(
+            ContentRestriction.NO_PROGRESSIVE_DOWNLOAD
+          ))
           fetchPreviewUrls(session, track, mp3)
         else
           fetchStreamUrls(session, track, mp3, transcodings.get(opusMimeType))
