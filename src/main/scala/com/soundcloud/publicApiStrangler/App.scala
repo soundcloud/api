@@ -45,12 +45,12 @@ object App {
       Urn("soundcloud", "applications", "167582"), // HEOS by Denon (Production)
 
       // other whitelisted apps
-      Urn("soundcloud", "applications", "288860"),
-      Urn("soundcloud", "applications", "271862"),
-      Urn("soundcloud", "applications", "59007"),
-      Urn("soundcloud", "applications", "62023"),
-      Urn("soundcloud", "applications", "265616"),
-      Urn("soundcloud", "applications", "265183")
+      Urn("soundcloud", "applications", "288860"), // STAMP Android
+      Urn("soundcloud", "applications", "271862"), // Hifi
+      Urn("soundcloud", "applications", "59007"), // Soundiiz
+      Urn("soundcloud", "applications", "62023"), // Soundiiz Local
+      Urn("soundcloud", "applications", "265616"), // The Playlist Guru
+      Urn("soundcloud", "applications", "265183") // Spotify SoundCloud Dev
     )
 
     val clients = new Clients(config, telemetry)
