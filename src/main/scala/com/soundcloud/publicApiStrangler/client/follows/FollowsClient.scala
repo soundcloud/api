@@ -7,7 +7,7 @@ import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.publicApiStrangler.client.follows.mapper._
 import com.soundcloud.publicApiStrangler.client.follows.representation.follow._
 import com.soundcloud.publicApiStrangler.client.follows.representation.unfollow._
-import com.soundcloud.publicApiStrangler.client.follows.representation.{FilteredUserUrns, FollowingsPage, UserUrns}
+import com.soundcloud.publicApiStrangler.client.follows.representation.{FilteredUserUrns, FollowingsPage}
 import com.soundcloud.publicApiStrangler.client.support.FetchClient
 import com.twitter.util.Future
 
@@ -59,26 +59,6 @@ class FollowsClient(jsonService: JsonClient) extends FetchClient {
         None
       )
       .map(response => UnfollowResponseMapper(response))
-
-  /**
-    * Returns a list of followings of one user followed by another user.
-    * Returns `None` in case of error.
-    */
-  def followingsNotFollowedBy(userSession: UserSession, user: Urn, anotherUser: Urn): Future[Option[UserUrns]] =
-    fetchUrns(
-      userSession,
-      Path() / "users" / user / "followings_not_followed" / anotherUser
-    )
-
-  /**
-    * Returns a list of mutual followings between two users.
-    * Returns `None` in case of error.
-    */
-  def mutualFollowings(userSession: UserSession, user: Urn, anotherUser: Urn): Future[Option[UserUrns]] =
-    fetchUrns(
-      userSession,
-      Path() / "users" / user / "mutual_followings" / anotherUser
-    )
 
   /**
     * Returns a page of followers of the given user, according to the pagination options.
@@ -147,16 +127,6 @@ class FollowsClient(jsonService: JsonClient) extends FetchClient {
       Path() / "users" / user / "filter_followers",
       candidateUsers
     )
-
-  private def fetchUrns(userSession: UserSession, path: Path): Future[Option[UserUrns]] =
-    jsonService
-      .getWithSession(
-        userSession,
-        path,
-        Params.empty,
-        Headers.empty
-      )
-      .map(SimpleMapper[UserUrns])
 
   private def fetchPage(
       userSession: UserSession,

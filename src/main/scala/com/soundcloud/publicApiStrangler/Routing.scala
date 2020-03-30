@@ -39,16 +39,6 @@ object Routing {
   def forUserFollowHandler(userFollowHandler: UserFollowHandler): List[(Method, String, Handler)] = {
     route(Method.Get, "/users/:id/followings", userFollowHandler.fetchFollowingsWithoutAuth) :::
       route(Method.Get, "/users/:id/followers", userFollowHandler.fetchFollowersWithoutAuth) :::
-      route(
-        Method.Get,
-        "/users/:id/followings/not_followed_by/:other_id",
-        userFollowHandler.fetchFollowingsNotFollowedBy
-      ) :::
-      route(
-        Method.Get,
-        "/users/:id/followings/common_to/:other_id",
-        userFollowHandler.fetchMutualFollowings
-      ) :::
       route(Method.Get, "/users/:id/followers/:other_id", userFollowHandler.fetchPossibleFollowerWithoutAuth) :::
       route(Method.Get, "/users/:id/followings/:other_id", userFollowHandler.fetchPossibleFollowingWithoutAuth) :::
       route(Method.Get, "/me/followings", userFollowHandler.fetchFollowings) :::
@@ -64,7 +54,6 @@ object Routing {
 
   def forMothershipDispatcher(mothershipDispatcher: DispatchToMothershipHandler): List[(Method, String, Handler)] = {
     route(Method.Get, "/apps", mothershipDispatcher.dispatch) :::
-      route(Method.Get, "/apps/:id", mothershipDispatcher.dispatch) :::
       route(Method.Get, "/announcements", mothershipDispatcher.dispatch) :::
       route(Method.Get, "/connect", mothershipDispatcher.dispatch) :::
       route(Method.Get, "/e1/me/likes", mothershipDispatcher.dispatch) :::

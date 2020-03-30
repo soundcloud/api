@@ -130,54 +130,6 @@ class UserFollowHandlerSpec extends UnitSpecification {
     }
   }
 
-  "GET /users/:id/followings/not_followed_by/:other_id" >> {
-    "fetches followings" in new Context {
-      override def before: Any = {
-        super.before
-        val values = Seq(
-          Urn("soundcloud", "users", "12490957"),
-          Urn("soundcloud", "users", "100")
-        )
-        followsMock.followingsNotFollowedBy(session, Urn("soundcloud", "users", "999"), Urn("soundcloud", "users", "2")) returns Future
-          .value(Some(UserUrns(values)))
-        okidokiMock.fetch(session, values.toSet) returns Future.value(okidokiUsers.as[List[JsObject]])
-        followCountsClientMock.counts(session, values) returns Future.value(Seq(FollowCounts(values.last, 1111, 2222)))
-        repostsClientMock.getRepostCountsByUrnWithFallback(session, values.toSet) returns Future.value(
-          Map.empty[Urn, Long]
-        )
-      }
-
-      val response =
-        get("/users/999/followings/not_followed_by/2", Map("limit" -> "10"))
-      response.status ==== Status.Ok
-      Json.parse(response.contentString) ==== Json.obj("collection" -> List(anotherUser123))
-    }
-  }
-
-  "GET /users/:id/followings/common_to/:other_id" >> {
-    "fetches followings" in new Context {
-      override def before: Any = {
-        super.before
-        val values = Seq(
-          Urn("soundcloud", "users", "12490957"),
-          Urn("soundcloud", "users", "100")
-        )
-        followsMock.mutualFollowings(session, Urn("soundcloud", "users", "999"), Urn("soundcloud", "users", "2")) returns Future
-          .value(Some(UserUrns(values)))
-        okidokiMock.fetch(session, values.toSet) returns Future.value(okidokiUsers.as[List[JsObject]])
-        followCountsClientMock.counts(session, values) returns Future.value(Seq(FollowCounts(values.last, 1111, 2222)))
-        repostsClientMock.getRepostCountsByUrnWithFallback(session, values.toSet) returns Future.value(
-          Map.empty[Urn, Long]
-        )
-      }
-
-      val response =
-        get("/users/999/followings/common_to/2", Map("limit" -> "10", "cursor" -> "2"))
-      response.status ==== Status.Ok
-      Json.parse(response.contentString) ==== Json.obj("collection" -> List(anotherUser123))
-    }
-  }
-
   "GET /me/followings/ids" >> {
     "fetches a user's followings" in new Context {
       override def before: Any = {

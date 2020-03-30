@@ -92,28 +92,6 @@ class UserFollowHandler(
       ).build
     )
 
-  def fetchFollowingsNotFollowedBy(request: HandlerRequest): Future[Response] = {
-    fetchUrns(
-      request,
-      follows.followingsNotFollowedBy(
-        _,
-        _,
-        Urn("soundcloud", "users", request.routeParams("other_id"))
-      )
-    )
-  }
-
-  def fetchMutualFollowings(request: HandlerRequest): Future[Response] = {
-    fetchUrns(
-      request,
-      follows.mutualFollowings(
-        _,
-        _,
-        Urn("soundcloud", "users", request.routeParams("other_id"))
-      )
-    )
-  }
-
   def fetchFollowersWithoutAuth(request: HandlerRequest): Future[Response] =
     fetchPage(request, follows.followers, mapUsersToUsers, fans, requireLogin = false)
 
@@ -163,25 +141,6 @@ class UserFollowHandler(
   }
 
   private def cursorParam(request: HandlerRequest) = request.params.get("cursor")
-
-  private def fetchUrns(
-      request: HandlerRequest,
-      fetchFunction: (UserSession, Urn) => Future[Option[UserUrns]]
-  ): Future[Response] = {
-    authenticateIfNeeded(request, requireLogin = false) { (session: UserSession, userToFetch: Urn) =>
-      for {
-        responseOption <- fetchFunction(session, userToFetch)
-        urns = responseOption.map(_.urns.toSet).getOrElse(Set.empty)
-        users <- fetchUsers(session, urns)
-      } yield {
-        responseOption
-          .map { _ =>
-            JsonResponseBuilder.ok(Json.stringify(Json.obj("collection" -> mapUsersToUsers(users))))
-          }
-          .getOrElse(ResponseBuilder.serviceUnavailable())
-      }
-    }
-  }
 
   private def fetchPage[T](
       request: HandlerRequest,
