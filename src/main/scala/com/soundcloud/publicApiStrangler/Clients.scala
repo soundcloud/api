@@ -5,8 +5,8 @@ import com.soundcloud.jvmkit.module.http.client.config.HttpClientConfig
 import com.soundcloud.jvmkit.module.http.client.{HttpClient, JsonClient}
 import com.soundcloud.jvmkit.module.rollout.{BasicRolloutFeature, Rollout}
 import com.soundcloud.jvmkit.module.telemetry.Telemetry
+import com.soundcloud.jvmkit.module.util.ResourceName
 import com.soundcloud.jvmkit.module.util.config.{AppConfig, ConfigConvention, DataSensitivity}
-import com.soundcloud.jvmkit.module.util.{ResourceName, Urn}
 import com.soundcloud.publicApiStrangler.authorization._
 import com.soundcloud.publicApiStrangler.client._
 import com.soundcloud.publicApiStrangler.client.followcounts.FollowCountsClient
@@ -107,30 +107,7 @@ class Clients(config: AppConfig, telemetry: Telemetry) {
   val trackAccessRecorderService =
     new TrackAccessRecorderService(new TrackAccessRecorderClient(jsonClient("track_access_recorder")), telemetry)
 
-  // Whitelist source: http://redash.int.s-cloud.net/queries/632/source
-  private val whitelistedClients: Set[Urn] = Set(
-    Urn("soundcloud", "systems", "soundcloud"), // Agent returned by Authenticator for those with _soundcloud_session cookie
-    Urn("soundcloud", "applications", "3273"), // Mobile Soundcloud
-    Urn("soundcloud", "applications", "3537"), // SoundCloud Desktop
-    Urn("soundcloud", "applications", "60973"), // SoundCloud Flash Widget
-    Urn("soundcloud", "applications", "66151"), // MobileWeb production
-    Urn("soundcloud", "applications", "99561"), // SoundCloud Kik Messenger Card
-    Urn("soundcloud", "applications", "120502"), // Twitter Partner
-    Urn("soundcloud", "applications", "135495"), // Mobile Web App
-    Urn("soundcloud", "applications", "167582"), // HEOS by Denon (Production)
-
-    // other whitelisted apps
-    Urn("soundcloud", "applications", "288860"),
-    Urn("soundcloud", "applications", "271862"),
-    Urn("soundcloud", "applications", "59007"),
-    Urn("soundcloud", "applications", "62023"),
-    Urn("soundcloud", "applications", "265616"),
-    Urn("soundcloud", "applications", "265183")
-  )
-
   val userAuthentication = UserAuthentication(config, telemetry)
-  val authorizeContent =
-    new AuthorizeHttpResponse(contentAuthorizationRules, userAuthentication, TrackPolicyApplicator(whitelistedClients))
 
   val baseUrl: String = config.get("APP_BASE_URL", DataSensitivity.NON_SENSITIVE)
 

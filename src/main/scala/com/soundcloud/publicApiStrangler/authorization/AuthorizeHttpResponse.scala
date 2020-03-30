@@ -1,7 +1,8 @@
 package com.soundcloud.publicApiStrangler.authorization
 
 import com.soundcloud.jvmkit.module.bff.session.UserAuthentication
-import com.soundcloud.jvmkit.module.http.server.{HandlerRequest, JsonResponseBuilder}
+import com.soundcloud.jvmkit.module.http.server.{HandlerRequest, HandlerRouter, JsonResponseBuilder}
+import com.soundcloud.jvmkit.module.telemetry.Telemetry
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.publicApiStrangler.authorization.TrackDurationActionStatus._
@@ -14,8 +15,18 @@ import scala.collection.mutable.ListBuffer
 class AuthorizeHttpResponse(
     contentAuthorization: ContentAuthorizationRules,
     userAuthentication: UserAuthentication,
-    trackPolicyApplicator: TrackPolicyApplicator
+    trackPolicyApplicator: TrackPolicyApplicator,
+    telemetry: Telemetry,
+    router: HandlerRouter
 ) {
+  private val httpResponseAuthCounter = telemetry.counter(
+    "http_response_auth_total",
+    "Number of response track authorizations per application and endpoint",
+    "appid",
+    "path",
+    "method"
+  )
+
   def apply(request: HandlerRequest, originalResponse: Response): Future[Response] =
     CollectTrackUrns(originalResponse.contentString) match {
       case Some((visitor, urns)) =>
@@ -30,6 +41,11 @@ class AuthorizeHttpResponse(
       urns: Seq[Urn]
   ): Future[Response] =
     userAuthentication.withUserSession(request) { session =>
+      val clientAppId = Option(session.getAgent).map(_.identifier).getOrElse("unknown")
+      val method = request.method.toString
+      val path = router.pathMatching(request).rawPattern
+      httpResponseAuthCounter.labels(clientAppId, path, method).inc()
+
       contentAuthorization.fetchRules(session, urns).map { rules =>
         val durationActions = extractDurations(session, urns, rules, extractFullTrackDurations(visitor))
         trackPolicyApplicator(session, visitor, rules, durationActions)

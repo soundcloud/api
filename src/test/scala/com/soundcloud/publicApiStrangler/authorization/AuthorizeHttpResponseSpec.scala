@@ -1,13 +1,14 @@
 package com.soundcloud.publicApiStrangler.authorization
 
 import com.soundcloud.jvmkit.module.bff.testsupport.FakeUserAuthentication
-import com.soundcloud.jvmkit.module.http.server.{HandlerRequest, JsonResponseBuilder}
+import com.soundcloud.jvmkit.module.http.server.{HandlerRequest, HandlerRouterBuilder, JsonResponseBuilder}
+import com.soundcloud.jvmkit.module.telemetry.Telemetry
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSessionBuilder
 import com.soundcloud.publicApiStrangler.authorization.policies._
 import com.soundcloud.publicApiStrangler.test.UnitSpecification
 import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures._
-import com.twitter.finagle.http.Status
+import com.twitter.finagle.http.{Method, Request, Status}
 import com.twitter.util.{Await, Future}
 import org.mockito.Mockito.{verifyNoInteractions, when}
 import org.specs2.mutable.Before
@@ -17,15 +18,25 @@ class AuthorizeHttpResponseSpec extends UnitSpecification {
   trait Context extends Scope {
     val session = new UserSessionBuilder().build()
     val contentAuthorization = mock[ContentAuthorizationRules]
-    val request = mock[HandlerRequest]
+    val request = HandlerRequest(Request("/foo"))
     val userAuthentication = new FakeUserAuthentication(session)
+    val telemetry = Telemetry.createIsolatedInstance
+    val router = HandlerRouterBuilder()
+      .register(Method.Get, "/foo", (_) => Future.value(JsonResponseBuilder.ok()))
+      .build
 
     def content: String
 
     def status: Status
 
     val authorizeContent =
-      new AuthorizeHttpResponse(contentAuthorization, userAuthentication, TrackPolicyApplicator(Set[Urn]()))
+      new AuthorizeHttpResponse(
+        contentAuthorization,
+        userAuthentication,
+        TrackPolicyApplicator(Set[Urn]()),
+        telemetry,
+        router
+      )
 
     lazy val originalResponse = JsonResponseBuilder(status, content).build
 
