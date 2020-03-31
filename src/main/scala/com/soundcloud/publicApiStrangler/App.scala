@@ -32,25 +32,10 @@ object App {
       airbrakeClient = Some(new AirbrakeClient(AirbrakeConfig.from(config)))
     )
 
-    // Whitelist source: http://redash.int.s-cloud.net/queries/632/source
     val whitelistedClients: Set[Urn] = Set(
-      Urn("soundcloud", "systems", "soundcloud"), // Agent returned by Authenticator for those with _soundcloud_session cookie
-      Urn("soundcloud", "applications", "3273"), // Mobile Soundcloud
-      Urn("soundcloud", "applications", "3537"), // SoundCloud Desktop
-      Urn("soundcloud", "applications", "60973"), // SoundCloud Flash Widget
-      Urn("soundcloud", "applications", "66151"), // MobileWeb production
-      Urn("soundcloud", "applications", "99561"), // SoundCloud Kik Messenger Card
-      Urn("soundcloud", "applications", "120502"), // Twitter Partner
-      Urn("soundcloud", "applications", "135495"), // Mobile Web App
       Urn("soundcloud", "applications", "167582"), // HEOS by Denon (Production)
-
-      // other whitelisted apps
-      Urn("soundcloud", "applications", "288860"), // STAMP Android
-      Urn("soundcloud", "applications", "271862"), // Hifi
       Urn("soundcloud", "applications", "59007"), // Soundiiz
-      Urn("soundcloud", "applications", "62023"), // Soundiiz Local
-      Urn("soundcloud", "applications", "265616"), // The Playlist Guru
-      Urn("soundcloud", "applications", "265183") // Spotify SoundCloud Dev
+      Urn("soundcloud", "applications", "62023") // Soundiiz Local
     )
 
     val clients = new Clients(config, telemetry)
