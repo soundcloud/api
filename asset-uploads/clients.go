@@ -8,13 +8,12 @@ import (
 )
 
 const (
-	jsonContentType       = "application/json"
-	moshimoshiAccessToken = "public-api-strangler-assets"
+	jsonContentType  = "application/json"
+	clientSystemName = "public-api-strangler-assets"
 )
 
 type moshimoshiClientAPI interface {
 	createTrackUID() (string, error)
-	createTranscoding(string) error
 }
 
 type moshimoshiClient struct {
@@ -23,7 +22,7 @@ type moshimoshiClient struct {
 }
 
 func (u *moshimoshiClient) createTrackUID() (string, error) {
-	url := fmt.Sprintf("http://%s/track_uids?access_token=%s", u.host, moshimoshiAccessToken)
+	url := fmt.Sprintf("http://%s/track_uids?access_token=%s", u.host, clientSystemName)
 
 	req, err := u.client.Post(url, jsonContentType, nil)
 	if err != nil {
@@ -45,44 +44,53 @@ func (u *moshimoshiClient) createTrackUID() (string, error) {
 	return res.UID, nil
 }
 
-type transcodingRequestSettings struct {
-	UID      string `json:"uid"`
-	Priority string `json:"priority"`
+type mediaServiceClientAPI interface {
+	createTranscoding(string) error
+}
+
+type mediaServiceClient struct {
+	client *http.Client
+	host   string
 }
 
 type transcodingRequest struct {
-	Settings transcodingRequestSettings `json:"transcoding"`
+	UID      string `json:"uid"`
+	Key      string `json:"key"`
+	Priority string `json:"priority"`
 }
 
 func transcodingRequestPayload(uid string) ([]byte, error) {
 	payload := transcodingRequest{
-		transcodingRequestSettings{
-			UID:      uid,
-			Priority: "realtime",
-		},
+		UID:      uid,
+		Key:      uid,
+		Priority: "manual",
 	}
 	return json.Marshal(payload)
 }
 
-func (u *moshimoshiClient) createTranscoding(uid string) error {
-	url := fmt.Sprintf("http://%s/transcodings?access_token=%s", u.host, moshimoshiAccessToken)
+func (u *mediaServiceClient) createTranscoding(uid string) error {
+	url := fmt.Sprintf("http://%s/transcode", u.host)
 
 	bs, err := transcodingRequestPayload(uid)
 	if err != nil {
 		return err
 	}
 
-	req, err := u.client.Post(url, jsonContentType, bytes.NewBuffer(bs))
+	req, err := http.NewRequest("POST", url, bytes.NewBuffer(bs))
+	if err != nil {
+		return err
+	}
+	req.Header.Set("Content-Type", jsonContentType)
+	req.Header.Set("Sc-System", clientSystemName)
+
+	resp, err := u.client.Do(req)
 	if err != nil {
 		return err
 	}
 
-	if req.StatusCode != http.StatusOK {
-		return fmt.Errorf("Failed to trigger transcoding UID: %d", req.StatusCode)
+	if resp.StatusCode != http.StatusAccepted {
+		return fmt.Errorf("Failed to trigger transcoding UID: %d", resp.StatusCode)
 	}
 
 	return nil
 }
-
-// Ensure that moshimoshiClient implements moshimoshiClientAPI.
-var _ moshimoshiClientAPI = (*moshimoshiClient)(nil)

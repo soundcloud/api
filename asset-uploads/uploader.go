@@ -17,9 +17,10 @@ type uploaderAPI interface {
 }
 
 type uploader struct {
-	moshimoshi moshimoshiClientAPI
-	s3Bucket   string
-	s3Uploader s3manageriface.UploaderAPI
+	moshimoshi   moshimoshiClientAPI
+	mediaService mediaServiceClientAPI
+	s3Bucket     string
+	s3Uploader   s3manageriface.UploaderAPI
 }
 
 type uploadTrackRequest struct {
@@ -51,7 +52,7 @@ func (u uploader) uploadTrack(req *uploadTrackRequest) (*uploadTrackResponse, er
 		return nil, err
 	}
 
-	if err := u.moshimoshi.createTranscoding(uid); err != nil {
+	if err := u.mediaService.createTranscoding(uid); err != nil {
 		return nil, err
 	}
 
