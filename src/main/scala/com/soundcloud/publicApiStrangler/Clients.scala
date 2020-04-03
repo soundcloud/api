@@ -5,6 +5,7 @@ import com.soundcloud.jvmkit.module.http.client.config.HttpClientConfig
 import com.soundcloud.jvmkit.module.http.client.{HttpClient, JsonClient}
 import com.soundcloud.jvmkit.module.rollout.{BasicRolloutFeature, Rollout}
 import com.soundcloud.jvmkit.module.telemetry.Telemetry
+import com.soundcloud.jvmkit.module.twirp.filters.ClientTelemetry
 import com.soundcloud.jvmkit.module.util.ResourceName
 import com.soundcloud.jvmkit.module.util.config.{AppConfig, ConfigConvention, DataSensitivity}
 import com.soundcloud.publicApiStrangler.authorization._
@@ -37,6 +38,7 @@ import com.twitter.finagle.Service
 import com.twitter.finagle.http.{Request, Response}
 import com.twitter.finagle.service.RetryPolicy.RetryableWriteException
 import com.twitter.util.{Future, Throw, Try}
+import proto.soundcloud.authenticator.oauth.AuthorizationClientProtobuf
 
 class Clients(config: AppConfig, telemetry: Telemetry) {
   private def jsonClient(resourceName: String) = JsonClient(
@@ -158,4 +160,9 @@ class Clients(config: AppConfig, telemetry: Telemetry) {
   )
 
   val playlistDeletionClient = new PlaylistDeletionClient(okidokiJsonClient)
+
+  private val authorizationConfig = HttpClientConfig.from(ResourceName("oauth_authorization"), config)
+  private val authorizationHttpClient = HttpClient(authorizationConfig, telemetry)
+  private val authorizationTelemetry = ClientTelemetry.from(authorizationConfig, telemetry)
+  val authorizationClient = new AuthorizationClientProtobuf(authorizationHttpClient.httpService, authorizationTelemetry)
 }

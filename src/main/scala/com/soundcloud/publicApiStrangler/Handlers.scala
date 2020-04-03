@@ -13,6 +13,7 @@ import com.soundcloud.publicApiStrangler.mapper.trackstreams.{
   TrackStreamRedirectResponseMapper
 }
 import com.soundcloud.publicApiStrangler.service.media.{DownloadService, StreamService}
+import com.soundcloud.publicApiStrangler.service.oauth.AuthorizationService
 import com.soundcloud.publicApiStrangler.support.CursorPagination
 import com.soundcloud.publicApiStrangler.support.oauth.{RailsLikeParamsParser, TokenExchangeRequestParser}
 
@@ -144,7 +145,12 @@ class Handlers(telemetry: Telemetry, clients: Clients) {
 
   val tokenExchangeRequestMapper = new TokenExchangeRequestParser(new RailsLikeParamsParser())
   val tokenExchangeHandler =
-    new TokenExchangeHandler(mothershipDispatcher.dispatchUnauthenticated, telemetry, tokenExchangeRequestMapper.parse)
+    new TokenExchangeHandler(
+      mothershipDispatcher.dispatchUnauthenticated,
+      telemetry,
+      tokenExchangeRequestMapper.parse,
+      new AuthorizationService(clients.authorizationClient)
+    )
   val instrumentTokenExchangeRequest = RolloutFeature("instrument_token_exchange_requests")
 
   val tokenExchangeRolloutHandler = new RolloutHandler(

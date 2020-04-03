@@ -2,13 +2,8 @@ package com.soundcloud.publicApiStrangler.handler
 
 import com.soundcloud.jvmkit.module.http.server.{Handler, HandlerRequest}
 import com.soundcloud.jvmkit.module.telemetry.Telemetry
-import com.soundcloud.publicApiStrangler.support.oauth.{
-  ClientCredential,
-  ClientCredentialsGrant,
-  TokenExchangeRequest,
-  TokenExchangeRequestError,
-  UnparseableRequest
-}
+import com.soundcloud.publicApiStrangler.service.oauth.AuthorizationService
+import com.soundcloud.publicApiStrangler.support.oauth._
 import com.soundcloud.publicApiStrangler.test.UnitSpecification
 import com.twitter.finagle.http.{Response, Status}
 import com.twitter.util.{Await, Future}
@@ -18,43 +13,41 @@ class TokenExchangeHandlerSpec extends UnitSpecification {
     trait Context extends Scope {
       val telemetry = Telemetry.createIsolatedInstance
 
-      val dispatchToMothershipHandler: Handler =
-        _ => Future.value(mothershipResponse)
+      val dispatchToMothershipHandler: Handler = _ => Future.value(Response(Status.Ok))
+
+      val credential = ClientCredential(id = "s6BhdRkqt3", secret = "47HDu8s")
+      val grant = ClientCredentialsGrant()
 
       val tokenExchangeRequestParseResult: Either[TokenExchangeRequestError, TokenExchangeRequest] =
-        Right(
-          TokenExchangeRequest(
-            accessGrant = ClientCredentialsGrant(),
-            clientCredential = ClientCredential(id = "s6BhdRkqt3", secret = "47HDu8s")
-          )
-        )
+        Right(TokenExchangeRequest(credential, grant))
 
-      lazy val handler =
+      val authorizationService = mock[AuthorizationService]
+      authorizationService.validateAccessGrant(credential, grant).returns(Future.value(true))
+
+      val handler =
         new TokenExchangeHandler(
           dispatchToMothershipHandler,
           telemetry,
-          _ => tokenExchangeRequestParseResult
+          _ => tokenExchangeRequestParseResult,
+          authorizationService
         )
 
-      val mothershipResponseStatus: Status = Status.Ok
-      lazy val mothershipResponse: Response = Response(mothershipResponseStatus)
-
-      def getGrantTypeCount(grantTypeValue: String): Double = {
+      def getGrantTypeCount(grantTypeValue: String, responseStatusValue: String, isValidValue: String): Double = {
         telemetry
           .getSampleValue(
             "oauth_token_exchange_grant_type",
-            Array("grant_type", "response_status"),
-            Array(grantTypeValue, mothershipResponseStatus.code.toString)
+            Array("grant_type", "response_status", "is_valid"),
+            Array(grantTypeValue, responseStatusValue, isValidValue)
           )
           .get
       }
 
-      def getRequestErrorCount(errorValue: String, reasonValue: String): Double = {
+      def getRequestErrorCount(errorValue: String, reasonValue: String, responseStatusValue: String): Double = {
         telemetry
           .getSampleValue(
             "oauth_token_exchange_error",
             Array("error", "reason", "response_status"),
-            Array(errorValue, reasonValue, mothershipResponseStatus.code.toString)
+            Array(errorValue, reasonValue, responseStatusValue)
           )
           .get
       }
@@ -64,24 +57,35 @@ class TokenExchangeHandlerSpec extends UnitSpecification {
       val request: HandlerRequest = mock[HandlerRequest]
     }
 
-    "proxies the request to the dispatch handler" in new WithMockRequestContext {
-      Await.result(handler.instrumentedMothershipDispatch(request)) ==== mothershipResponse
-    }
+    "when the request can be parsed" >> {
+      "proxies the request to the dispatch handler" in new WithMockRequestContext {
+        val result = Await.result(handler.instrumentedMothershipDispatch(request))
 
-    "instruments the request body parse result" >> {
-      "counts grant type when request is valid" in new WithMockRequestContext {
-        Await.result(handler.instrumentedMothershipDispatch(request))
-
-        getGrantTypeCount("client_credentials") ==== 1.0
+        result.status ==== Status.Ok
       }
 
-      "counts error type when parsing fails" in new WithMockRequestContext {
-        override val tokenExchangeRequestParseResult =
-          Left(UnparseableRequest(None))
-
+      "counts grant type and validation result" in new WithMockRequestContext {
         Await.result(handler.instrumentedMothershipDispatch(request))
 
-        getRequestErrorCount("unparseable_request_body", "unknown") ==== 1.0
+        getGrantTypeCount("client_credentials", "200", "true") ==== 1.0
+      }
+    }
+
+    "when the request cannot be parsed" >> {
+      trait UnparseableRequestContext extends WithMockRequestContext {
+        override val tokenExchangeRequestParseResult = Left(UnparseableRequest(None))
+      }
+
+      "fails the request without proxying to the dispatch handler" in new UnparseableRequestContext {
+        val result = Await.result(handler.instrumentedMothershipDispatch(request))
+
+        result.status ==== Status.BadRequest
+      }
+
+      "counts error type" in new UnparseableRequestContext {
+        Await.result(handler.instrumentedMothershipDispatch(request))
+
+        getRequestErrorCount("unparseable_request_body", "unknown", "400") ==== 1.0
       }
     }
   }
