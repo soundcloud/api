@@ -1,6 +1,5 @@
 package com.soundcloud.publicApiStrangler.client.mothership
 
-import com.soundcloud.bff.nextbff.UntypedJson
 import com.soundcloud.jvmkit.module.http.client.{JsonClient, Params}
 import com.soundcloud.jvmkit.module.util.http.Headers
 import com.soundcloud.jvmkit.module.util.session.UserSession
@@ -12,7 +11,6 @@ import com.soundcloud.publicApiStrangler.client.mothership.request.representatio
   UserUpdate
 }
 import com.soundcloud.publicApiStrangler.client.mothership.response.mapper._
-import com.soundcloud.publicApiStrangler.client.mothership.response.representation.UserFeedsSettings.format
 import com.soundcloud.publicApiStrangler.client.mothership.response.representation._
 import com.soundcloud.publicApiStrangler.client.support.ResponseHandlers.ListResponse
 import com.soundcloud.publicApiStrangler.client.support.{FetchClient, ResponseHandlers, ResponseMapper}
@@ -201,33 +199,6 @@ class MoshimoshiClient(
         None
       )
       .map(deletePlaylistResponseMapper(_))
-  }
-
-  def updateUserFeedsSettings(
-      session: UserSession,
-      userUrn: Urn,
-      userFeedsSettings: UserFeedsSettings
-  ): Future[UserFeedsSettings] = {
-    service
-      .putWithSession(
-        session,
-        Path() / "users" / userUrn / "feeds_settings",
-        Params.empty,
-        Headers.empty,
-        Some(UntypedJson.write(userFeedsSettings).toString)
-      )
-      .map(ResponseHandlers.SingleItem(_).as[UserFeedsSettings])
-  }
-
-  def fetchUserFeedsSettings(session: UserSession, userUrn: Urn): Future[Option[UserFeedsSettings]] = {
-    service
-      .getWithSession(
-        session,
-        Path() / "users" / userUrn / "feeds_settings",
-        Params.empty,
-        Headers.empty
-      )
-      .map(ResponseHandlers.OptionalSingleItem(_).map(_.as[UserFeedsSettings]))
   }
 
   def updateUser(session: UserSession, userUrn: Urn, userUpdate: UserUpdate): Future[UpdateUserResponse] =
