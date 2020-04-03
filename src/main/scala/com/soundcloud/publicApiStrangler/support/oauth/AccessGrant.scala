@@ -1,6 +1,6 @@
 package com.soundcloud.publicApiStrangler.support.oauth
 
-sealed class AccessGrant(val grantType: String)
+abstract sealed class AccessGrant(val grantType: String)
 
 object AccessGrant {
   val authorizationCode: String = "authorization_code"
@@ -61,7 +61,8 @@ object ResourceOwnerPasswordCredentialsGrant {
     val password = values.get("password")
 
     (grantType, username, password) match {
-      case (Some(AccessGrant.resourceOwnerPassword), Some(u), Some(p)) => Some(ResourceOwnerPasswordCredentialsGrant(u, p))
+      case (Some(AccessGrant.resourceOwnerPassword), Some(u), Some(p)) =>
+        Some(ResourceOwnerPasswordCredentialsGrant(u, p))
       case _ => None
     }
   }
