@@ -16,13 +16,13 @@ class AccessGrantSpec extends UnitSpecification {
         "redirect_uri" -> "http://example/redirect"
       )
 
-      AuthorizationCode.unapply(params) ==== Some(
-        AuthorizationCode(code = "theCode", redirectUri = "http://example/redirect")
+      AuthorizationCodeGrant.unapply(params) ==== Some(
+        AuthorizationCodeGrant(code = "theCode", redirectUri = "http://example/redirect")
       )
     }
 
     "is not extracted" in new Context {
-      AuthorizationCode.unapply(params) ==== None
+      AuthorizationCodeGrant.unapply(params) ==== None
     }
   }
 
@@ -45,11 +45,11 @@ class AccessGrantSpec extends UnitSpecification {
         "refresh_token" -> "token"
       )
 
-      RefreshToken.unapply(params) ==== Some(RefreshToken(refreshToken = "token"))
+      RefreshTokenGrant.unapply(params) ==== Some(RefreshTokenGrant(refreshToken = "token"))
     }
 
     "is not extracted" in new Context {
-      RefreshToken.unapply(params) ==== None
+      RefreshTokenGrant.unapply(params) ==== None
     }
   }
 
@@ -61,13 +61,13 @@ class AccessGrantSpec extends UnitSpecification {
         "password" -> "p4ss"
       )
 
-      val expected = ResourceOwnerPasswordCredentials(username = "user", password = "p4ss")
+      val expected = ResourceOwnerPasswordCredentialsGrant(username = "user", password = "p4ss")
 
-      ResourceOwnerPasswordCredentials.unapply(params) ==== Some(expected)
+      ResourceOwnerPasswordCredentialsGrant.unapply(params) ==== Some(expected)
     }
 
     "is not extracted" in new Context {
-      ResourceOwnerPasswordCredentials.unapply(params) ==== None
+      ResourceOwnerPasswordCredentialsGrant.unapply(params) ==== None
     }
   }
 }

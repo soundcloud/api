@@ -26,10 +26,10 @@ class TokenExchangeRequestParser(railsLikeParamsParser: RailsLikeParamsParser) {
 
   private def readAccessGrant(params: Map[String, String]): Either[TokenExchangeRequestError, AccessGrant] = {
     params match {
-      case AuthorizationCode(authorizationCode) => Right(authorizationCode)
+      case AuthorizationCodeGrant(authorizationCode) => Right(authorizationCode)
       case ClientCredentialsGrant(credentialsGrant) => Right(credentialsGrant)
-      case ResourceOwnerPasswordCredentials(passwordCredentials) => Right(passwordCredentials)
-      case RefreshToken(token) => Right(token)
+      case ResourceOwnerPasswordCredentialsGrant(passwordCredentials) => Right(passwordCredentials)
+      case RefreshTokenGrant(token) => Right(token)
       case _ => Left(UnsupportedGrantType(params.get("grant_type").map(normalizeUnsupportedGrantType)))
     }
   }
