@@ -66,7 +66,6 @@ object App {
     }
 
     val limitOffsetPaths = Seq(
-      """/e1/me/likes""",
       """/e1/me/playlist_likes""",
       """/e1/me/playlist_likes/ids""",
       """/e1/me/track_likes""",
