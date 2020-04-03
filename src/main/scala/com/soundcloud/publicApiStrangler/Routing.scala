@@ -133,8 +133,7 @@ object Routing {
   def forUserRelatedMothershipDispatcher(
       userRelatedMothershipDispatcher: UserRelatedMothershipDispatcher
   ): List[(Method, String, Handler)] = {
-    route(Method.Get, "/me/suggested/users/:category", userRelatedMothershipDispatcher.dispatchToMothership) :::
-      route(Method.Get, "/tracks/:id/favoriters", userRelatedMothershipDispatcher.dispatchToMothership) :::
+    route(Method.Get, "/tracks/:id/favoriters", userRelatedMothershipDispatcher.dispatchToMothership) :::
       route(Method.Get, "/tracks/:id/favoriters/:user_id", userRelatedMothershipDispatcher.dispatchToMothership) :::
       route(Method.Get, "/users/:id", userRelatedMothershipDispatcher.dispatchToMothership) :::
       route(Method.Get, "/users/:id/comments", userRelatedMothershipDispatcher.dispatchToMothership) :::
