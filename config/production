@@ -86,4 +86,6 @@ MEDIA_SERVICE_SRV_RECORD=dnssrv!http.api.prod.media-service.srv
 TRACK_ACCESS_RECORDER_SRV_RECORD=dnssrv!http.moshimoshi.prod.mothership.srv
 TRACK_ACCESS_RECORDER_CLIENT_REQUEST_TIMEOUT_MILLIS="3000"
 
+OAUTH_AUTHORIZATION_SRV_RECORD=dnssrv!http.oauth.prod.authenticator.srv
+
 CDN_WAVE_HTTPS_ENDPOINT=https://wave.sndcdn.com
