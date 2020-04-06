@@ -18,8 +18,10 @@ class TokenExchangeHandler(
     parseRequest(request) match {
       case Right(TokenExchangeRequest(credential, accessGrant)) =>
         for {
-          response <- mothershipDispatch(request)
-          isValid <- authorizationService.validateAccessGrant(credential, accessGrant)
+          (response, isValid) <- Future.join(
+            mothershipDispatch(request),
+            authorizationService.validateAccessGrant(credential, accessGrant)
+          )
         } yield {
           grantTypeCounter
             .labels(accessGrant.grantType, response.statusCode.toString, isValid.toString)
