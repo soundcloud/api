@@ -41,8 +41,6 @@ class DispatchingToMotherShipSpec extends UnitSpecification {
     (Get, "/users/me/"),
     (Get, "/users/me.json"),
     (Get, "/users/me.json/"),
-    (Get, "/me/suggested/users/somecategory"),
-    (Get, "/me/suggested/users/:somecategory.json"),
     (Get, "/users/suggested"),
     (Get, "/users/suggested.json"),
     (Get, "/tracks/7110/favoriters"),
