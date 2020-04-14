@@ -76,6 +76,14 @@ func (c controller) dispatch(w http.ResponseWriter, r *http.Request, svc svcDisp
 		return
 	}
 
+	// special case: we do expect `multipart/mixed` requests to be redirected to this service,
+	// but we no longer support them. instead we explicitly reject them as "bad request".
+	if strings.HasPrefix(mt, "multipart/mixed") {
+		log.Printf("bad request: content-type multipart/mixed is not supported: %s %s (%s)", method, r.RequestURI, client)
+		http.Error(w, emptyResponse, http.StatusBadRequest)
+		return
+	}
+
 	if !strings.HasPrefix(mt, "multipart/form-data") {
 		log.Printf("rejected request due to unexpected content type: %s %s (%s) header: %s", method, r.RequestURI, client, r.Header.Get("Content-Type"))
 		http.Error(w, emptyResponse, http.StatusMisdirectedRequest)

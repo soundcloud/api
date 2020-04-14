@@ -87,6 +87,7 @@ func TestTracksRequiresContentType(t *testing.T) {
 		0: {http.MethodPost, "application/json", http.StatusMisdirectedRequest},
 		1: {http.MethodPut, "multipart/form-data", http.StatusBadRequest},
 		2: {http.MethodPost, "", http.StatusMisdirectedRequest},
+		3: {http.MethodPut, "multipart/mixed", http.StatusBadRequest},
 	}
 
 	for _, tt := range tests {
