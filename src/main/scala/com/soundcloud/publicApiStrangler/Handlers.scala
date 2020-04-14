@@ -50,7 +50,7 @@ class Handlers(telemetry: Telemetry, clients: Clients) {
     val trackStreamUrlToJsonResponseMapper = new TrackStreamJsonResponseMapper
     val trackStreamUrlToRedirectMapper = new TrackStreamRedirectResponseMapper
 
-    val streamService = new StreamService(tracksClient)
+    val streamService = new StreamService(tracksClient, telemetry)
 
     new TrackStreamsHandler(
       userAuthentication,

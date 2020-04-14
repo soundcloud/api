@@ -1,6 +1,7 @@
 package com.soundcloud.publicApiStrangler.service.media
 
 import com.soundcloud.api.partners.clients.tracks.Transcoding
+import com.soundcloud.jvmkit.module.telemetry.Telemetry
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.publicApiStrangler.authorization.policies.{
@@ -18,7 +19,7 @@ class StreamServiceSpec extends UnitSpecification {
 
   trait Context extends Scope {
     val tracksClient = mock[TracksClient]
-    val service = new StreamService(tracksClient)
+    val service = new StreamService(tracksClient, Telemetry.createIsolatedInstance)
     val session = mock[UserSession]
 
     val track = mock[Track]

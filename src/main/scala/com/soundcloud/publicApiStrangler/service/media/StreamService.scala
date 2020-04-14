@@ -1,20 +1,28 @@
 package com.soundcloud.publicApiStrangler.service.media
 
 import com.soundcloud.api.partners.clients.tracks.Transcoding
+import com.soundcloud.jvmkit.module.telemetry.Telemetry
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSession
-import com.soundcloud.publicApiStrangler.authorization.policies.{ContentPolicy, ContentRestriction}
+import com.soundcloud.publicApiStrangler.authorization.policies.{ContentPolicy, ContentRestriction, MonetizationModel}
 import com.soundcloud.publicApiStrangler.client.tracks._
 import com.twitter.util.Future
 
 class StreamService(
-    tracksClient: TracksClient
+    tracksClient: TracksClient,
+    telemetry: Telemetry
 ) {
   private val mp3MimeType = "audio/mpeg"
   private val opusMimeType = """audio/ogg; codecs="opus""""
   private val allowedMimeTypes = Set(mp3MimeType, opusMimeType)
   private val protoProgressive = "progressive"
   private val protoHls = "hls"
+  private val highTierRequestsCounter = telemetry.counter(
+    "high_tier_stream_requests_total",
+    "Number of stream requests for high tier content by client application",
+    "appid",
+    "result"
+  )
 
   def fetchMultiple(session: UserSession, trackUrn: Urn, secretToken: Option[String]): Future[MediaStreamResponse] =
     fetch(session, trackUrn, secretToken, fetchTranscodingUrls)
@@ -35,7 +43,17 @@ class StreamService(
       .map(_.filter(_.disabledAt.isEmpty))
       .map(_.headOption)
       .flatMap {
-        case Some(track) => fetcher(session, track)
+        case Some(track) => {
+
+          fetcher(session, track).map { fetchResult =>
+            if (track.authorization.getMonetizationModel == MonetizationModel.SUB_HIGH_TIER) {
+              val clientAppId = Option(session.getAgent).map(_.identifier).getOrElse("unknown")
+
+              highTierRequestsCounter.labels(clientAppId, fetchResult.getClass.getName).inc()
+            }
+            fetchResult
+          }
+        }
         case None => Future.value(MediaStreamNotFoundError)
       }
   }
