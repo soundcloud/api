@@ -1,10 +1,14 @@
 package com.soundcloud.publicApiStrangler.service.oauth
 
+import com.soundcloud.jvmkit.module.telemetry.exceptions.ExceptionCollector
+import com.soundcloud.jvmkit.module.telemetry.exceptions.ExceptionHandler._
 import com.soundcloud.publicApiStrangler.support.oauth._
 import com.twitter.util.Future
 import proto.soundcloud.authenticator.{oauth => proto}
 
-class AuthorizationService(service: proto.AuthorizationService) {
+import scala.util.control.NonFatal
+
+class AuthorizationService(service: proto.AuthorizationService, exceptionCollector: ExceptionCollector) {
   private val validationFallbackResponse = proto.ValidateAccessGrantResponse(false)
 
   def validateAccessGrant(clientCredential: ClientCredential, accessGrant: AccessGrant): Future[Boolean] = {
@@ -36,7 +40,7 @@ class AuthorizationService(service: proto.AuthorizationService) {
 
     service
       .validateAccessGrant(proto.ValidateAccessGrantRequest(Some(grant)))
-      .rescue { case _ => Future.value(validationFallbackResponse) }
+      .handleAndReport(exceptionCollector) { case NonFatal(_) => validationFallbackResponse }
       .map(_.isValid)
   }
 }

@@ -2,6 +2,7 @@ package com.soundcloud.publicApiStrangler
 
 import com.soundcloud.jvmkit.module.rollout.RolloutFeature
 import com.soundcloud.jvmkit.module.telemetry.Telemetry
+import com.soundcloud.jvmkit.module.telemetry.exceptions.ExceptionCollector
 import com.soundcloud.publicApiStrangler.handler._
 import com.soundcloud.publicApiStrangler.mapper.search.{SearchMapper, SearchRepository}
 import com.soundcloud.publicApiStrangler.mapper.similarsounds.SimilarSoundsMapper
@@ -17,7 +18,7 @@ import com.soundcloud.publicApiStrangler.service.oauth.AuthorizationService
 import com.soundcloud.publicApiStrangler.support.CursorPagination
 import com.soundcloud.publicApiStrangler.support.oauth.{RailsLikeParamsParser, TokenExchangeRequestParser}
 
-class Handlers(telemetry: Telemetry, clients: Clients) {
+class Handlers(telemetry: Telemetry, clients: Clients, exceptionCollector: ExceptionCollector) {
   import clients._
 
   val mothershipDispatcher = new DispatchToMothershipHandler(userAuthentication, publicApiClient)
@@ -149,7 +150,7 @@ class Handlers(telemetry: Telemetry, clients: Clients) {
       mothershipDispatcher.dispatchUnauthenticated,
       telemetry,
       tokenExchangeRequestMapper.parse,
-      new AuthorizationService(clients.authorizationClient)
+      new AuthorizationService(clients.authorizationClient, exceptionCollector)
     )
   val instrumentTokenExchangeRequest = RolloutFeature("instrument_token_exchange_requests")
 
