@@ -82,4 +82,6 @@ TRACK_ACCESS_RECORDER_SRV_RECORD=dnssrv!http.moshimoshi.prod.mothership.srv.db.s
 
 CDN_WAVE_HTTPS_ENDPOINT=https://wave.sndcdn.com
 
+OAUTH_AUTHORIZATION_SRV_RECORD=dnssrv!http.oauth.prod.authenticator.srv.db.s-cloud.net
+
 IS_DEVELOPENT_MODE=true

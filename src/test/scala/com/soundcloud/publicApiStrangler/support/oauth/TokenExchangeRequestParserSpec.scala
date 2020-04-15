@@ -58,7 +58,7 @@ class TokenExchangeRequestParserSpec extends UnitSpecification {
 
         result ==== Right(
           TokenExchangeRequest(
-            accessGrant = AuthorizationCode(code = "i1WsRn1uB1", redirectUri = "http://redirect/callback"),
+            accessGrant = AuthorizationCodeGrant(code = "i1WsRn1uB1", redirectUri = "http://redirect/callback"),
             clientCredential = ClientCredential(id = "s6BhdRkqt3", secret = "gX1fBat3bV")
           )
         )
@@ -93,7 +93,7 @@ class TokenExchangeRequestParserSpec extends UnitSpecification {
 
         result ==== Right(
           TokenExchangeRequest(
-            accessGrant = ResourceOwnerPasswordCredentials(username = "johndoe", password = "A3ddj3w"),
+            accessGrant = ResourceOwnerPasswordCredentialsGrant(username = "johndoe", password = "A3ddj3w"),
             clientCredential = ClientCredential(id = "s6BhdRkqt3", secret = "gX1fBat3bV")
           )
         )
@@ -110,7 +110,7 @@ class TokenExchangeRequestParserSpec extends UnitSpecification {
 
         result ==== Right(
           TokenExchangeRequest(
-            accessGrant = RefreshToken(refreshToken = "n4E9O119d"),
+            accessGrant = RefreshTokenGrant(refreshToken = "n4E9O119d"),
             clientCredential = ClientCredential(id = "s6BhdRkqt3", secret = "gX1fBat3bVt")
           )
         )

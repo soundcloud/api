@@ -39,7 +39,7 @@ object App {
     )
 
     val clients = new Clients(config, telemetry)
-    val handlers = new Handlers(telemetry, clients)
+    val handlers = new Handlers(telemetry, clients, exceptionCollector)
 
     val bffApplication =
       BffApplication(Urn("soundcloud", "systems", "public-api-strangler"), config.getApplicationResourceName)
