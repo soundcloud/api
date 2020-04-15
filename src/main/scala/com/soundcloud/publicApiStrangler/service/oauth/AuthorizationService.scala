@@ -5,6 +5,8 @@ import com.twitter.util.Future
 import proto.soundcloud.authenticator.{oauth => proto}
 
 class AuthorizationService(service: proto.AuthorizationService) {
+  private val validationFallbackResponse = proto.ValidateAccessGrantResponse(false)
+
   def validateAccessGrant(clientCredential: ClientCredential, accessGrant: AccessGrant): Future[Boolean] = {
     val credential = proto.ClientCredential(
       clientId = clientCredential.id,
@@ -34,6 +36,7 @@ class AuthorizationService(service: proto.AuthorizationService) {
 
     service
       .validateAccessGrant(proto.ValidateAccessGrantRequest(Some(grant)))
+      .rescue { case _ => Future.value(validationFallbackResponse) }
       .map(_.isValid)
   }
 }
