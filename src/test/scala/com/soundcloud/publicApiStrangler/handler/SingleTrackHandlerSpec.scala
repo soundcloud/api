@@ -2,20 +2,23 @@ package com.soundcloud.publicApiStrangler.handler
 
 import com.soundcloud.jvmkit.module.bff.testsupport.FakeUserAuthentication
 import com.soundcloud.jvmkit.module.telemetry.Telemetry
+import com.soundcloud.jvmkit.module.telemetry.exceptions.ExceptionCollector
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSessionBuilder
+import com.soundcloud.publicApiStrangler.Routing
 import com.soundcloud.publicApiStrangler.client.mothership.TrackAudioMetadata
 import com.soundcloud.publicApiStrangler.client.mothership.response.representation.User
 import com.soundcloud.publicApiStrangler.client.stitch.StitchCounts
 import com.soundcloud.publicApiStrangler.client.trackcoordinator.datatypes.{NotFound, Result, Success}
 import com.soundcloud.publicApiStrangler.client.trackmetadata.{Artwork, EmbeddingPermission, Track}
-import com.soundcloud.publicApiStrangler.test.{HandlerSpecificationScope, UnitSpecification}
-import com.soundcloud.publicApiStrangler.Routing
+import com.soundcloud.publicApiStrangler.client.tracks.TrackRequest
 import com.soundcloud.publicApiStrangler.service.trackrepresentation.{
+  LegacyTrackRepresentationsService,
   TrackRepresentation,
   TrackRepresentationLike,
   TrackRepresentationsService
 }
+import com.soundcloud.publicApiStrangler.test.{HandlerSpecificationScope, UnitSpecification}
 import com.twitter.finagle.http.Status
 import com.twitter.util.Future
 import org.joda.time.DateTime
@@ -106,14 +109,22 @@ class SingleTrackHandlerSpec extends UnitSpecification {
   )
 
   trait Context extends HandlerSpecificationScope {
+    val legacyTrackRepresentationsService = mock[LegacyTrackRepresentationsService]
     val trackRepresentationsService = mock[TrackRepresentationsService]
 
     val telemetry = Telemetry.createIsolatedInstance
+    val exceptionCollector = new ExceptionCollector(telemetry)
 
     val session = new UserSessionBuilder().build()
     val trackUrn = Urn("soundcloud", "tracks", "987")
 
-    val handler = new SingleTrackHandler(new FakeUserAuthentication(session), trackRepresentationsService, telemetry)
+    val handler = new SingleTrackHandler(
+      new FakeUserAuthentication(session),
+      trackRepresentationsService,
+      legacyTrackRepresentationsService,
+      telemetry,
+      exceptionCollector
+    )
 
     override def routingDefinitions = Routing.forSingleTrackHandler(handler)
   }
@@ -182,8 +193,10 @@ class SingleTrackHandlerSpec extends UnitSpecification {
 
   validPaths.foreach { path =>
     s"removes conditional request headers for path: $path" in new Context {
-      when(trackRepresentationsService.track(session, trackUrn, None))
+      when(legacyTrackRepresentationsService.track(session, trackUrn, None))
         .thenReturn(Future.value(Success(trackRepresentation)))
+      when(trackRepresentationsService.track(session, TrackRequest(trackUrn, None)))
+        .thenReturn(Future.value(Some(trackRepresentation)))
 
       val response =
         get(path, Map.empty, Map("If-None-Match" -> "a8d3ba6d09b68691b77dc75dfcd7a477"))
@@ -203,8 +216,10 @@ class SingleTrackHandlerSpec extends UnitSpecification {
 
   validPaths.foreach { path =>
     s"Passes secret token to tracks service for path: $path" in new Context {
-      when(trackRepresentationsService.track(session, trackUrn, Some("s3cret")))
+      when(legacyTrackRepresentationsService.track(session, trackUrn, Some("s3cret")))
         .thenReturn(Future.value(Success(trackRepresentation)))
+      when(trackRepresentationsService.track(session, TrackRequest(trackUrn, Some("s3cret"))))
+        .thenReturn(Future.value(Some(trackRepresentation)))
 
       val response = get(path, Map("secret_token" -> "s3cret"))
       response.status ==== Status.Ok
@@ -217,7 +232,11 @@ class SingleTrackHandlerSpec extends UnitSpecification {
       trait FromTrackMetadata extends Context {
         def trackRepresentationLike: Future[Result[TrackRepresentationLike]]
 
-        when(trackRepresentationsService.track(session, trackUrn, None)).thenReturn(trackRepresentationLike)
+        when(legacyTrackRepresentationsService.track(session, trackUrn, None)).thenReturn(trackRepresentationLike)
+        when(trackRepresentationsService.track(session, TrackRequest(trackUrn, None)))
+        // TODO: Implement me once legacyTrackRepresentationsService is gone
+          .thenReturn(Future.None)
+
       }
 
       "it returns 200 for Some()" in new FromTrackMetadata {

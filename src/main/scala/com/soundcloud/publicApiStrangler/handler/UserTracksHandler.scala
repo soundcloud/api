@@ -9,7 +9,7 @@ import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.logging.SoundCloudLoggerFactory
 import com.soundcloud.publicApiStrangler.service.trackrepresentation.{
   TrackPagination,
-  TrackRepresentationsService,
+  LegacyTrackRepresentationsService,
   TracksRepresentationResult
 }
 import com.soundcloud.publicApiStrangler.support.{Bad, Good, StringError}
@@ -22,7 +22,7 @@ import scala.util.{Success, Try}
 
 class UserTracksHandler(
     userAuthentication: UserAuthentication,
-    tracksService: TrackRepresentationsService,
+    tracksService: LegacyTrackRepresentationsService,
     telemetry: Telemetry,
     baseUrl: String
 ) {
@@ -38,7 +38,7 @@ class UserTracksHandler(
 
       def getResult(urn: Urn) = {
         tracksService
-          .tracks(session, urn, pagination)
+          .userTracks(session, urn, pagination)
           .handle {
             case NonFatal(e) => {
               logger.error(e.getMessage)

@@ -2,20 +2,26 @@ package com.soundcloud.publicApiStrangler.service.trackrepresentation
 
 import com.soundcloud.jvmkit.module.util.session.{UserSession, UserSessionBuilder}
 import com.soundcloud.jvmkit.module.util.{Url, Urn}
-import com.soundcloud.publicApiStrangler.client.liebling.{LieblingClient, UserLikesCount}
+import com.soundcloud.publicApiStrangler.authorization.policies.{
+  ContentAuthorization,
+  ContentPolicy,
+  ContentRestriction,
+  MonetizationModel,
+  Reason
+}
+import com.soundcloud.publicApiStrangler.client.liebling.LieblingClient
 import com.soundcloud.publicApiStrangler.client.media.{TrackWaveformUrl, WaveformUrlsGenerator}
 import com.soundcloud.publicApiStrangler.client.mothership.response.representation.{Geoblockings, User}
 import com.soundcloud.publicApiStrangler.client.mothership.{DomainLocking, RichOkidokiClient, TrackAudioMetadata}
-import com.soundcloud.publicApiStrangler.client.playlists.{Playlist, PlaylistsClient}
 import com.soundcloud.publicApiStrangler.client.pubmese.{Isrc, PubmeseClient}
 import com.soundcloud.publicApiStrangler.client.quota.UserQuotaClient
 import com.soundcloud.publicApiStrangler.client.stitch.{StitchClient, StitchCounts}
-import com.soundcloud.publicApiStrangler.client.trackcoordinator.datatypes.{NotFound, Success}
-import com.soundcloud.publicApiStrangler.client.trackmetadata.{Artwork, EmbeddingPermission, Track, TrackmetadataClient}
-import com.soundcloud.publicApiStrangler.service.TrackAccessibilityService
+import com.soundcloud.publicApiStrangler.client.trackmetadata.{Artwork, EmbeddingPermission}
+import com.soundcloud.publicApiStrangler.client.tracks.{TrackRequest, VisibleTrack}
+import com.soundcloud.publicApiStrangler.service.TrackVisibilityService
 import com.soundcloud.publicApiStrangler.test.UnitSpecification
 import com.twitter.util.{Await, Future}
-import org.joda.time.DateTime
+import org.joda.time.LocalDateTime
 import org.mockito.Mockito._
 import play.api.libs.json._
 
@@ -23,26 +29,22 @@ class TrackRepresentationsServiceForSingleTrackSpec extends UnitSpecification {
   trait Context extends Scope {
     implicit val trackRepresentationWrites = TrackRepresentation.writes
 
-    val trackmetadataClient = mock[TrackmetadataClient]
+    val trackVisibilityService = mock[TrackVisibilityService]
     val okidokiClient = mock[RichOkidokiClient]
     val pubmeseClient = mock[PubmeseClient]
     val stitchClient = mock[StitchClient]
     val lieblingClient = mock[LieblingClient]
     val waveformUrlsGenerator = mock[WaveformUrlsGenerator]
     val userQuotaClient = mock[UserQuotaClient]
-    val playlistsClient = mock[PlaylistsClient]
-    val trackAccessibilityService = new TrackAccessibilityService(playlistsClient)
 
     val tracksService = new TrackRepresentationsService(
-      mock[TrackRepository],
-      trackmetadataClient,
+      trackVisibilityService,
       okidokiClient,
       pubmeseClient,
       stitchClient,
       lieblingClient,
       waveformUrlsGenerator,
-      userQuotaClient,
-      trackAccessibilityService
+      userQuotaClient
     )
 
     val requestingUserUrn = Urn("soundcloud", "users", "112")
@@ -101,88 +103,106 @@ class TrackRepresentationsServiceForSingleTrackSpec extends UnitSpecification {
       )
 
     val trackUrn = Urn("soundcloud", "tracks", "987")
-    val createdAt = new DateTime(2016, 5, 19, 18, 3, 4)
-    val lastModified = new DateTime(2016, 5, 20, 18, 3, 4)
-
-    def geoblockings: Option[Geoblockings] = Some(List("DE", "FR"))
-
-    def domainLockings: Seq[DomainLocking] = Seq(
-      DomainLocking(
-        domain = "example.com",
-        urn = Urn("soundcloud", "domain-lockings", "1"),
-        trackUrn = Urn("soundcloud", "tracks", "123")
-      )
+    val trackRequest = TrackRequest(trackUrn, None)
+    val createdAt = new LocalDateTime(2016, 5, 19, 18, 3, 4)
+    val lastModified = new LocalDateTime(2016, 5, 20, 18, 3, 4)
+    val authorization = new ContentAuthorization(
+      trackUrn,
+      ContentPolicy.MONETIZE,
+      Reason.NOT_SUPPORTED,
+      ContentRestriction.ENCRYPTED_STREAM_ONLY,
+      MonetizationModel.AD_SUPPORTED
     )
 
-    def trackAudioMetadata =
-      TrackAudioMetadata(
-        state = "failed",
-        original_content_size = Some(9001),
-        original_format = Some("vqf")
+    def geoblockings: Map[Urn, Geoblockings] = Map(trackUrn -> List("DE", "FR"))
+
+    def domainLockings: Map[Urn, List[DomainLocking]] =
+      Map(
+        trackUrn ->
+          List(
+            DomainLocking(
+              domain = "example.com",
+              urn = Urn("soundcloud", "domain-lockings", "1"),
+              trackUrn = Urn("soundcloud", "tracks", "123")
+            )
+          )
       )
 
-    def trackmetadataTrack(
-        disabledAt: Option[DateTime] = None,
+    def trackAudioMetadata: Map[Urn, TrackAudioMetadata] =
+      Map(
+        trackUrn ->
+          TrackAudioMetadata(
+            state = "failed",
+            original_content_size = Some(9001),
+            original_format = Some("vqf")
+          )
+      )
+
+    def trackvisibilityTrack(
+        disabledAt: Option[LocalDateTime] = None,
         isPublic: Boolean = true,
         secretToken: String = "secr3t-Token",
         isDownloadable: Boolean = false,
         user: Urn = trackOwnerUrn,
-        label_id: Option[Long] = Some(labelUrn.identifier.toLong),
-        reveal_stats: Boolean = false,
-        reveal_comments: Boolean = true
+        labelId: Option[Long] = Some(labelUrn.identifier.toLong),
+        revealStats: Boolean = false,
+        revealComments: Boolean = true
     ) =
-      Track(
+      VisibleTrack(
         urn = trackUrn,
-        user_urn = user,
+        userUrn = user,
         commentable = false,
         description = None,
-        created_at = createdAt,
-        disabled_at = disabledAt,
-        downloadable = Some(isDownloadable),
+        createdAt = createdAt,
+        disabledAt = disabledAt,
+        downloadable = isDownloadable,
         duration = 0,
         genre = None,
-        last_modified = lastModified,
+        lastModified = lastModified,
         permalink = null,
-        permalink_url = None,
+        permalinkUrl = None,
         public = isPublic,
-        secret_token = secretToken,
-        user_tags = List.empty,
-        machine_tags = List.empty,
+        secretToken = Some(secretToken),
+        userTags = List.empty,
+        machineTags = List.empty,
         title = null,
         uid = Some("a1b2c3"),
-        api_streamable = None,
-        streamable = None,
-        reveal_comments = reveal_comments,
-        reveal_stats = reveal_stats,
-        label_name = None,
+        apiStreamable = None,
+        streamable = true,
+        revealStats = revealStats,
+        revealComments = revealComments,
+        labelName = None,
         license = null,
         embeddable = None,
-        release_year = None,
-        release_month = None,
-        release_day = None,
+        releaseYear = None,
+        releaseMonth = None,
+        releaseDay = None,
         embeddableBy = EmbeddingPermission.None,
         releaseDate = None,
         artwork = Artwork(None),
-        published_at = None,
-        purchase_url = Some("http://example.com/buy/7890"),
-        purchase_title = Some("buy me pls"),
+        publishedAt = None,
+        purchaseUrl = Some("http://example.com/buy/7890"),
+        purchaseTitle = Some("buy me pls"),
         bpm = Some(120.7),
-        track_type = Some("original"),
+        trackType = Some("original"),
         release = Some("DR012"),
-        key_signature = Some("Emaj"),
-        video_url = Some("http://example.com/video.mp4"),
-        label_id = label_id,
-        supply_chain_status = None
+        keySignature = Some("Emaj"),
+        videoUrl = Some("http://example.com/video.mp4"),
+        labelId = labelId,
+        supplyChainStatus = None,
+        waveformUrls = List.empty,
+        transcodings = List.empty,
+        authorization = authorization
       )
 
-    def isrc(wrapped: String = "US-S1Z-99-00001"): Option[Isrc] =
-      Some(Isrc(wrapped))
+    def isrc(wrapped: String = "US-S1Z-99-00001"): Map[Urn, Isrc] =
+      Map(trackUrn -> Isrc(wrapped))
 
-    def stitchCounts: StitchCounts =
-      StitchCounts(111, 222, 333, 444, 555)
+    def stitchCounts: Map[Urn, StitchCounts] =
+      Map(trackUrn -> StitchCounts(111, 222, 333, 444, 555))
 
-    def userLikesCount: UserLikesCount =
-      UserLikesCount(Set.empty, List.empty)
+    def userLikedTracks: Map[Urn, Boolean] =
+      Map(trackUrn -> true)
 
     def waveformUrl(uid: String) =
       TrackWaveformUrl(uid, Url("https://bar.sndcdn.com/stream/a1b2c3.png"))
@@ -190,356 +210,259 @@ class TrackRepresentationsServiceForSingleTrackSpec extends UnitSpecification {
     val session: UserSession = new UserSessionBuilder().setUser(requestingUserUrn).build()
 
     def setUpMocksForExistingTrack(
-        track: Track,
-        session: UserSession,
-        playlists: List[Playlist] = List.empty[Playlist]
+        track: VisibleTrack,
+        session: UserSession
     ) = {
-      when(trackmetadataClient.track(session, trackUrn)).thenReturn(Future.value(Some(track)))
+      when(trackVisibilityService.tracks(session, List(trackRequest)))
+        .thenReturn(Future.value(List(track)))
       when(okidokiClient.fetchUserObjects(session, Set(requestingUserUrn)))
         .thenReturn(Future.value(List(requestingUser)))
       when(okidokiClient.fetchUserObjects(session, Set(labelUrn))).thenReturn(Future.value(List(label)))
       when(okidokiClient.fetchUserObjects(session, Set(trackOwnerUrn))).thenReturn(Future.value(List(trackOwner)))
-      when(pubmeseClient.isrcForTrack(session, trackUrn)).thenReturn(Future.value(isrc()))
-      when(stitchClient.countsForTrack(session, trackUrn, trackOwnerUrn)).thenReturn(Future.value(stitchCounts))
-      when(okidokiClient.fetchTrackGeoblockings(session, trackUrn)).thenReturn(Future.value(geoblockings))
-      when(okidokiClient.fetchTrackDomainLockings(session, trackUrn)).thenReturn(Future.value(domainLockings))
-      when(okidokiClient.fetchTrackAudioMetadata(session, trackUrn)).thenReturn(Future.value(Some(trackAudioMetadata)))
-      when(lieblingClient.userLikeCounts(session, List(trackUrn), session.getUser))
-        .thenReturn(Future.value(userLikesCount))
+      when(pubmeseClient.isrcsForTracks(session, Set(trackUrn))).thenReturn(Future.value(isrc()))
+      when(stitchClient.countsForTracks(session, Set((trackOwnerUrn, trackUrn)))).thenReturn(Future.value(stitchCounts))
+      when(okidokiClient.fetchTrackGeoblockings(session, Set(trackUrn))).thenReturn(Future.value(geoblockings))
+      when(okidokiClient.fetchTracksDomainLockings(session, Set(trackUrn))).thenReturn(Future.value(domainLockings))
+      when(okidokiClient.fetchTracksAudioMetadata(session, Set(trackUrn)))
+        .thenReturn(Future.value(trackAudioMetadata))
+      when(lieblingClient.userLikedTracks(session, Set(trackUrn), session.getUser))
+        .thenReturn(Future.value(userLikedTracks))
       when(waveformUrlsGenerator.fromUid(track.uid.get)).thenReturn(waveformUrl(track.uid.get))
-      when(userQuotaClient.downloadsPerTrack(session, Set(track.user_urn)))
+      when(okidokiClient.fetchUsersMap(session, Set(labelUrn)))
+        .thenReturn(Future.value(Map(labelUrn -> trackOwner)))
+      when(userQuotaClient.downloadsPerTrack(session, Set(track.userUrn)))
         .thenReturn(Future.value(Map.empty[Urn, Option[Int]]))
-
-      when(playlistsClient.getPlaylistContainingTrackOwnedByUser(track.urn, track.user_urn))
-        .thenReturn(Future.value(playlists))
     }
 
     def setUpMocksForNonExistingTrack = {
-      when(trackmetadataClient.track(session, trackUrn)).thenReturn(Future.None)
-      when(pubmeseClient.isrcForTrack(session, trackUrn)).thenReturn(Future.value(isrc()))
-      when(okidokiClient.fetchTrackGeoblockings(session, trackUrn)).thenReturn(Future.value(geoblockings))
-      when(okidokiClient.fetchTrackDomainLockings(session, trackUrn)).thenReturn(Future.value(domainLockings))
-      when(okidokiClient.fetchTrackAudioMetadata(session, trackUrn)).thenReturn(Future.value(Some(trackAudioMetadata)))
+      when(trackVisibilityService.tracks(session, List(trackRequest))).thenReturn(Future.value(List.empty))
+      when(pubmeseClient.isrcsForTracks(session, Set(trackUrn))).thenReturn(Future.value(isrc()))
+      when(okidokiClient.fetchTrackGeoblockings(session, Set(trackUrn))).thenReturn(Future.value(geoblockings))
+      when(okidokiClient.fetchTracksDomainLockings(session, Set(trackUrn))).thenReturn(Future.value(domainLockings))
+      when(okidokiClient.fetchTracksAudioMetadata(session, Set(trackUrn)))
+        .thenReturn(Future.value(trackAudioMetadata))
     }
   }
 
   "Returns Some(x) for public tracks" in new Context {
-    val track = trackmetadataTrack()
+    val track = trackvisibilityTrack()
     setUpMocksForExistingTrack(track, session)
 
-    val trackRepLike = Await.result(tracksService.track(session, trackUrn, None))
+    val trackRepLike = Await.result(tracksService.track(session, trackRequest))
 
     trackRepLike match {
-      case Success(rep) =>
+      case Some(rep) =>
         rep must beAnInstanceOf[TrackRepresentationLike]
+      case None =>
     }
-  }
-
-  "Returns NotFound for non existing tracks" in new Context {
-    setUpMocksForNonExistingTrack
-
-    val trackRepLike = Await.result(tracksService.track(session, trackUrn, None))
-    trackRepLike ==== NotFound
-  }
-
-  "Returns NotFound if track is disabled" in new Context {
-    val disabledAt = Some(DateTime.now())
-    val track = trackmetadataTrack(disabledAt)
-    setUpMocksForExistingTrack(track, session)
-
-    val trackRepLike = Await.result(tracksService.track(session, trackUrn, None))
-    trackRepLike ==== NotFound
-  }
-
-  "Returns NotFound when track is not public" in new Context {
-    val track = trackmetadataTrack(isPublic = false)
-    setUpMocksForExistingTrack(track, session)
-
-    val trackRepLike = Await.result(tracksService.track(session, trackUrn, None))
-    trackRepLike ==== NotFound
   }
 
   "Returns Some(x) for private tracks if the owner is requesting" in new Context {
-    val track = trackmetadataTrack(isPublic = false)
+    val track = trackvisibilityTrack(isPublic = false)
     val ownerSession = new UserSessionBuilder().setUser(trackOwnerUrn).build
     setUpMocksForExistingTrack(track, ownerSession)
 
-    val trackRepLike = Await.result(tracksService.track(ownerSession, trackUrn, None))
+    val trackRepLike = Await.result(tracksService.track(ownerSession, trackRequest))
     trackRepLike match {
-      case Success(rep) =>
+      case Some(rep) =>
         rep must beAnInstanceOf[TrackRepresentationLike]
+      case None =>
     }
-  }
-
-  "Returns NotFound for private tracks if there is an incorrect secret token" in new Context {
-    val wrongSecretToken = "secr3tTokenWRONG"
-    val track = trackmetadataTrack(isPublic = false)
-    when(trackmetadataClient.track(session, trackUrn)).thenReturn(Future.value(Some(track)))
-    when(pubmeseClient.isrcForTrack(session, trackUrn)).thenReturn(Future.value(isrc()))
-    when(okidokiClient.fetchTrackGeoblockings(session, trackUrn)).thenReturn(Future.value(geoblockings))
-    when(okidokiClient.fetchTrackDomainLockings(session, trackUrn)).thenReturn(Future.value(domainLockings))
-    when(okidokiClient.fetchTrackAudioMetadata(session, trackUrn)).thenReturn(Future.value(Some(trackAudioMetadata)))
-
-    when(playlistsClient.getPlaylistContainingTrackOwnedByUser(track.urn, track.user_urn))
-      .thenReturn(Future.value(List.empty[Playlist]))
-
-    val trackRepLike = Await.result(tracksService.track(session, trackUrn, Some(wrongSecretToken)))
-    trackRepLike ==== NotFound
   }
 
   "Returns Some(x) for private tracks if there is a correct secret token" in new Context {
     val correctSecretToken = "aSecre_t"
-    val track = trackmetadataTrack(isPublic = false, secretToken = correctSecretToken)
+    val track = trackvisibilityTrack(isPublic = false, secretToken = correctSecretToken)
+    override val trackRequest = TrackRequest(trackUrn, Some(correctSecretToken))
     setUpMocksForExistingTrack(track, session)
 
-    val trackRepLike = Await.result(tracksService.track(session, trackUrn, Some(correctSecretToken)))
+    val trackRepLike = Await.result(tracksService.track(session, trackRequest))
     trackRepLike match {
-      case Success(rep) =>
+      case Some(rep) =>
         rep must beAnInstanceOf[TrackRepresentationLike]
+      case None =>
     }
-  }
-
-  "Returns Some(x) for private tracks if there is a correct secret token for a playlist containing the track belonging to the same user" in new Context {
-    val correctSecretTokenForPlaylistContainingTheTrack = "playlist-secret"
-    val track = trackmetadataTrack(isPublic = false)
-    val playlists =
-      List(Playlist(userUrn = track.user_urn, secretToken = correctSecretTokenForPlaylistContainingTheTrack))
-    setUpMocksForExistingTrack(track, session, playlists)
-
-    val trackRepLike =
-      Await.result(tracksService.track(session, trackUrn, Some(correctSecretTokenForPlaylistContainingTheTrack)))
-    trackRepLike must beLike {
-      case Success(rep) =>
-        rep must beAnInstanceOf[TrackRepresentationLike]
-    }
-  }
-
-  "Returns None for private tracks if there is an incorrect secret token for a playlist containing the track belonging to the same user" in new Context {
-    val correctSecretTokenForPlaylistContainingTheTrack = "playlist-secret"
-    val incorrectSecretTokenForPlaylistContainingTheTrack = "not-playlist-secret"
-    val track = trackmetadataTrack(isPublic = false)
-    val playlists =
-      List(Playlist(userUrn = track.user_urn, secretToken = correctSecretTokenForPlaylistContainingTheTrack))
-    setUpMocksForExistingTrack(track, session, playlists)
-
-    val trackRepLike =
-      Await.result(tracksService.track(session, trackUrn, Some(incorrectSecretTokenForPlaylistContainingTheTrack)))
-    trackRepLike ==== NotFound
-  }
-
-  "Returns None for private tracks if there is an correct secret token for a playlist containing the track belonging to another user" in new Context {
-    val correctSecretTokenForPlaylistContainingTheTrack = "playlist-secret"
-    val anotherUser = Urn("soundcloud", "users", "909")
-    val track = trackmetadataTrack(isPublic = false)
-    val playlists = List(Playlist(userUrn = anotherUser, secretToken = correctSecretTokenForPlaylistContainingTheTrack))
-    setUpMocksForExistingTrack(track, session, playlists)
-
-    val trackRepLike =
-      Await.result(tracksService.track(session, trackUrn, Some(correctSecretTokenForPlaylistContainingTheTrack)))
-    trackRepLike ==== NotFound
-  }
-
-  "Returns NotFound for public tracks if user does not exist" in new Context {
-    val track = trackmetadataTrack()
-    setUpMocksForExistingTrack(track, session)
-    when(okidokiClient.fetchUserObjects(session, Set(trackOwnerUrn))).thenReturn(Future.value(List.empty))
-
-    val trackRepLike = Await.result(tracksService.track(session, trackUrn, None))
-    trackRepLike ==== NotFound
   }
 
   "Returns null ISRC when Pubmese is failing" in new Context {
-    val track = trackmetadataTrack()
+    val track = trackvisibilityTrack()
     setUpMocksForExistingTrack(track, session)
-    when(pubmeseClient.isrcForTrack(session, trackUrn))
+    when(pubmeseClient.isrcsForTracks(session, Set(trackUrn)))
       .thenReturn(Future.exception(new RuntimeException("bewm! hahahaaa")))
 
-    val trackRepLike = Await.result(tracksService.track(session, trackUrn, None))
+    val trackRepLike = Await.result(tracksService.track(session, trackRequest))
     trackRepLike match {
-      case Success(rep) =>
+      case Some(rep) =>
         Json.toJson(rep) \ "isrc" ==== JsDefined(JsNull)
+      case None =>
     }
   }
 
   "Returns no geoblockings if Moshimoshi is failing" in new Context {
-    val track = trackmetadataTrack()
+    val track = trackvisibilityTrack()
     setUpMocksForExistingTrack(track, session)
-    when(okidokiClient.fetchTrackGeoblockings(session, trackUrn))
+    when(okidokiClient.fetchTrackGeoblockings(session, Set(trackUrn)))
       .thenReturn(Future.exception(new RuntimeException("bewm! hahahaaa")))
 
-    val trackRepLike = Await.result(tracksService.track(session, trackUrn, None))
+    val trackRepLike = Await.result(tracksService.track(session, trackRequest))
     trackRepLike match {
-      case Success(rep) =>
+      case Some(rep) =>
         Json.toJson(rep).as[JsObject].keys.contains("available_country_codes") ==== false
+      case None =>
     }
   }
 
   "Returns no geoblockings if Moshimoshi returns an empty list" in new Context {
-    val track = trackmetadataTrack()
+    val track = trackvisibilityTrack()
     setUpMocksForExistingTrack(track, session)
-    when(okidokiClient.fetchTrackGeoblockings(session, trackUrn)).thenReturn(Future.value(Some(List())))
+    when(okidokiClient.fetchTrackGeoblockings(session, Set(trackUrn))).thenReturn(Future.value(Map(trackUrn -> List())))
 
-    val trackRepLike = Await.result(tracksService.track(session, trackUrn, None))
+    val trackRepLike = Await.result(tracksService.track(session, trackRequest))
     trackRepLike match {
-      case Success(rep) =>
+      case Some(rep) =>
         Json.toJson(rep).as[JsObject].keys.contains("available_country_codes") ==== false
+      case None =>
     }
   }
 
   "Returns no domainlockings if Moshimoshi is failing" in new Context {
-    val track = trackmetadataTrack()
+    val track = trackvisibilityTrack()
     setUpMocksForExistingTrack(track, session)
-    when(okidokiClient.fetchTrackDomainLockings(session, trackUrn))
+    when(okidokiClient.fetchTracksDomainLockings(session, Set(trackUrn)))
       .thenReturn(Future.exception(new RuntimeException("bewm! hahahaaa")))
 
-    val trackRepLike = Await.result(tracksService.track(session, trackUrn, None))
+    val trackRepLike = Await.result(tracksService.track(session, trackRequest))
     trackRepLike match {
-      case Success(rep) =>
+      case Some(rep) =>
         Json.toJson(rep).as[JsObject].keys.contains("domain_lockings") ==== false
+      case None =>
     }
   }
 
   "Returns Success when partial audio metadata for a track is unavailable" in new Context {
-    val track = trackmetadataTrack()
+    val track = trackvisibilityTrack()
     setUpMocksForExistingTrack(track, session)
-    when(okidokiClient.fetchTrackAudioMetadata(session, trackUrn))
-      .thenReturn(Future.value(Some(TrackAudioMetadata("storing", None, None))))
-
-    val trackRepLike = Await.result(tracksService.track(session, trackUrn, None))
+    when(okidokiClient.fetchTracksAudioMetadata(session, Set(trackUrn)))
+      .thenReturn(Future.value(Map(trackUrn -> TrackAudioMetadata("storing", None, None))))
+    val trackRepLike = Await.result(tracksService.track(session, trackRequest))
 
     trackRepLike match {
-      case Success(rep) => {
+      case Some(rep) =>
         val audioMetadata = Json.toJson(rep)
         audioMetadata \ "state" ==== JsDefined(JsString("storing"))
         audioMetadata \ "original_content_size" ==== JsDefined(JsNull)
         audioMetadata \ "original_format" ==== JsDefined(JsNull)
-      }
+      case None =>
     }
   }
 
-  // TODO: Changing RichOkidokiClient to not throw exceptions (https://soundcloud.atlassian.net/browse/COS-1068) will
-  //  make it more straight forward to test audio meta data fetch failures.
-  /*
-
-  "Returns 503 if Moshimoshi is failing for the audio endpoint" in new Context {
-    val track = trackmetadataTrack()
-    setUpMocksForExistingTrack(track, session)
-    when(okidokiClient.fetchTrackAudioMetadata(session, trackUrn)).thenReturn(Future.exception(new RuntimeException("bewm! hahahaaa")))
-
-    val trackRepLike = Await.result(tracksService.track(session, trackUrn, None, None))
-
-    response.status ==== Status.ServiceUnavailable
-    response.contentString ==== """{"errors":[{"error_message":"503 - Service Unavailable"}]}"""
-    response.headerMap.get("Content-Length") must beSome("58")
-  }
-   */
-
   "user_favorite" >> {
     "is true when the user has favourited the track, and is logged in" in new Context {
-      val track = trackmetadataTrack()
-      override val userLikesCount = UserLikesCount(Set(track.urn), List.empty)
+      val track = trackvisibilityTrack()
       override val session = new UserSessionBuilder().setUser(requestingUserUrn).build
       setUpMocksForExistingTrack(track, session)
-      when(lieblingClient.userLikeCounts(session, List(trackUrn), session.getUser))
-        .thenReturn(Future.value(userLikesCount))
 
-      val trackRepLike = Await.result(tracksService.track(session, trackUrn, None))
+      val trackRepLike = Await.result(tracksService.track(session, trackRequest))
       trackRepLike match {
-        case Success(rep) =>
+        case Some(rep) =>
           Json.toJson(rep) \ "user_favorite" ==== JsDefined(JsBoolean(true))
+        case None =>
       }
     }
 
     "is false when the user has not favourited the track, and is logged in" in new Context {
-      val track = trackmetadataTrack()
-      override val userLikesCount = UserLikesCount(Set.empty, List.empty)
+      val track = trackvisibilityTrack()
       override val session = new UserSessionBuilder().setUser(requestingUserUrn).build
       setUpMocksForExistingTrack(track, session)
-      when(lieblingClient.userLikeCounts(session, List(trackUrn), session.getUser))
-        .thenReturn(Future.value(userLikesCount))
+      when(lieblingClient.userLikedTracks(session, Set(trackUrn), session.getUser))
+        .thenReturn(Future.value(Map(trackUrn -> false)))
 
-      val trackRepLike = Await.result(tracksService.track(session, trackUrn, None))
+      val trackRepLike = Await.result(tracksService.track(session, trackRequest))
       trackRepLike match {
-        case Success(rep) =>
+        case Some(rep) =>
           Json.toJson(rep) \ "user_favorite" ==== JsDefined(JsBoolean(false))
+        case None =>
       }
     }
 
     "is not present when the user is not logged in" in new Context {
-      val track = trackmetadataTrack()
+      val track = trackvisibilityTrack()
       override val session = anonymousSession
       setUpMocksForExistingTrack(track, session)
 
-      val trackRepLike = Await.result(tracksService.track(session, trackUrn, None))
+      val trackRepLike = Await.result(tracksService.track(session, trackRequest))
       trackRepLike match {
-        case Success(rep) =>
+        case Some(rep) =>
           Json.toJson(rep).as[JsObject].keys.contains("user_favorite") ==== false
+        case None =>
       }
     }
   }
 
   "user_playback_count" >> {
     "is always 1 when the user is logged in" in new Context {
-      val track = trackmetadataTrack()
+      val track = trackvisibilityTrack()
       override val session = new UserSessionBuilder().setUser(requestingUserUrn).build
       setUpMocksForExistingTrack(track, session)
-      when(lieblingClient.userLikeCounts(session, List(trackUrn), session.getUser))
-        .thenReturn(Future.value(userLikesCount))
 
-      val trackRepLike = Await.result(tracksService.track(session, trackUrn, None))
+      val trackRepLike = Await.result(tracksService.track(session, trackRequest))
       trackRepLike match {
-        case Success(rep) =>
+        case Some(rep) =>
           Json.toJson(rep) \ "user_playback_count" ==== JsDefined(JsNumber(1))
+        case None =>
       }
     }
 
     "is not present when the user is not logged in" in new Context {
-      val track = trackmetadataTrack()
+      val track = trackvisibilityTrack()
       override val session = anonymousSession
       session.isAnonymous ==== true
       setUpMocksForExistingTrack(track, session)
 
-      val trackRepLike = Await.result(tracksService.track(session, trackUrn, None))
+      val trackRepLike = Await.result(tracksService.track(session, trackRequest))
       trackRepLike match {
-        case Success(rep) =>
+        case Some(rep) =>
           Json.toJson(rep).as[JsObject].keys.contains("user_playback_count") ==== false
+        case None =>
       }
     }
   }
 
   "waveform_url" >> {
     "is present when urlgen returns a stream URL" in new Context {
-      val track = trackmetadataTrack()
+      val track = trackvisibilityTrack()
       setUpMocksForExistingTrack(track, session)
 
-      val trackRepLike = Await.result(tracksService.track(session, trackUrn, None))
+      val trackRepLike = Await.result(tracksService.track(session, trackRequest))
       trackRepLike match {
-        case Success(rep) =>
+        case Some(rep) =>
           Json.toJson(rep).as[JsObject].keys.contains("waveform_url") ==== true
+        case None =>
       }
     }
   }
 
   "label" >> {
-    "is present when track has a a label" in new Context {
-      val track = trackmetadataTrack()
+    "is present when track has a label" in new Context {
+      val track = trackvisibilityTrack()
       setUpMocksForExistingTrack(track, session)
-
-      val trackRepLike = Await.result(tracksService.track(session, trackUrn, None))
+      val trackRepLike = Await.result(tracksService.track(session, trackRequest))
       trackRepLike match {
-        case Success(rep) =>
+        case Some(rep) =>
           Json.toJson(rep).as[JsObject].keys.contains("label") ==== true
+        case None =>
       }
     }
 
-    "it not present when urlgen returns no stream URLs" in new Context {
-      val track = trackmetadataTrack(label_id = None)
+    "is not present when track has not a label" in new Context {
+      val track = trackvisibilityTrack(labelId = None)
       setUpMocksForExistingTrack(track, session)
-
-      val trackRepLike = Await.result(tracksService.track(session, trackUrn, None))
+      when(okidokiClient.fetchUsersMap(session, Set.empty)).thenReturn(Future.value(Map.empty[Urn, User]))
+      val trackRepLike = Await.result(tracksService.track(session, trackRequest))
       trackRepLike match {
-        case Success(rep) =>
+        case Some(rep) =>
           Json.toJson(rep).as[JsObject].keys.contains("label") ==== false
+        case None =>
       }
     }
   }
@@ -547,12 +470,13 @@ class TrackRepresentationsServiceForSingleTrackSpec extends UnitSpecification {
   "private urls" >> {
     "track token in params is correct" >> {
       "appends the track secret token to urls" in new Context {
-        val track = trackmetadataTrack().copy(permalink_url = Some("http://soundcloud.com/foo/bar"), public = false)
+        val track = trackvisibilityTrack().copy(permalinkUrl = Some("http://soundcloud.com/foo/bar"), public = false)
+        override val trackRequest = TrackRequest(trackUrn, Some("secr3t-Token"))
         setUpMocksForExistingTrack(track, session)
 
-        val trackRepLike = Await.result(tracksService.track(session, trackUrn, Some("secr3t-Token")))
+        val trackRepLike = Await.result(tracksService.track(session, trackRequest))
         trackRepLike match {
-          case Success(rep) =>
+          case Some(rep) =>
             val json = Json.toJson(rep)
             json \ "uri" ==== JsDefined(JsString("https://api.soundcloud.com/tracks/987?secret_token=secr3t-Token"))
             json \ "stream_url" ==== JsDefined(
@@ -562,43 +486,21 @@ class TrackRepresentationsServiceForSingleTrackSpec extends UnitSpecification {
               JsString("https://api.soundcloud.com/tracks/987/download?secret_token=secr3t-Token")
             )
             json \ "permalink_url" ==== JsDefined(JsString("http://soundcloud.com/foo/bar/secr3t-Token"))
+          case None =>
         }
       }
 
       "does not add a secret token to null values" in new Context {
-        val track = trackmetadataTrack().copy(permalink_url = None)
+        val track = trackvisibilityTrack().copy(permalinkUrl = None)
+        override val trackRequest = TrackRequest(trackUrn, Some("s-4kT0a"))
         setUpMocksForExistingTrack(track, session)
 
-        val trackRepLike = Await.result(tracksService.track(session, trackUrn, Some("s-4kT0a")))
+        val trackRepLike = Await.result(tracksService.track(session, trackRequest))
         trackRepLike match {
-          case Success(rep) =>
+          case Some(rep) =>
             val json = Json.toJson(rep)
             json \ "permalink_url" ==== JsDefined(JsNull)
-        }
-      }
-    }
-
-    "playlist token in params is correct" >> {
-      "appends the track secret token to urls" in new Context {
-        val correctSecretTokenForPlaylistContainingTheTrack = "playlist-secret"
-        val track = trackmetadataTrack().copy(permalink_url = Some("http://soundcloud.com/foo/bar"), public = false)
-        val playlists =
-          List(Playlist(userUrn = track.user_urn, secretToken = correctSecretTokenForPlaylistContainingTheTrack))
-        setUpMocksForExistingTrack(track, session, playlists)
-
-        val trackRepLike =
-          Await.result(tracksService.track(session, trackUrn, Some(correctSecretTokenForPlaylistContainingTheTrack)))
-        trackRepLike match {
-          case Success(rep) =>
-            val json = Json.toJson(rep)
-            json \ "uri" ==== JsDefined(JsString("https://api.soundcloud.com/tracks/987?secret_token=secr3t-Token"))
-            json \ "stream_url" ==== JsDefined(
-              JsString("https://api.soundcloud.com/tracks/987/stream?secret_token=secr3t-Token")
-            )
-            json \ "download_url" ==== JsDefined(
-              JsString("https://api.soundcloud.com/tracks/987/download?secret_token=secr3t-Token")
-            )
-            json \ "permalink_url" ==== JsDefined(JsString("http://soundcloud.com/foo/bar/secr3t-Token"))
+          case None =>
         }
       }
     }
@@ -606,64 +508,72 @@ class TrackRepresentationsServiceForSingleTrackSpec extends UnitSpecification {
 
   "downloadable" >> {
     "is true when track is downloadable, and below user's quota" in new Context {
-      val track = trackmetadataTrack(isDownloadable = true)
+      val track = trackvisibilityTrack(isDownloadable = true)
       setUpMocksForExistingTrack(track, session)
-      userQuotaClient.downloadsPerTrack(session, Set(track.user_urn)) returns Future.value(
-        Map(track.user_urn -> Some(100))
+      userQuotaClient.downloadsPerTrack(session, Set(track.userUrn)) returns Future.value(
+        Map(track.userUrn -> Some(100))
       )
-      stitchClient.countsForTrack(session, trackUrn, track.user_urn) returns Future.value(StitchCounts(0, 90, 0, 0, 0))
-
-      val trackRepLike = Await.result(tracksService.track(session, trackUrn, None))
+      stitchClient.countsForTracks(session, Set((track.userUrn, trackUrn))) returns Future.value(
+        Map(trackUrn -> StitchCounts(0, 90, 0, 0, 0))
+      )
+      val trackRepLike = Await.result(tracksService.track(session, trackRequest))
       trackRepLike match {
-        case Success(rep) =>
+        case Some(rep) =>
           val json = Json.toJson(rep)
           json \ "downloadable" ==== JsDefined(JsBoolean(true))
+        case None =>
       }
     }
 
     "it true when track is downloadable, and use has no quota" in new Context {
-      val track = trackmetadataTrack(isDownloadable = true)
+      val track = trackvisibilityTrack(isDownloadable = true)
       setUpMocksForExistingTrack(track, session)
-      userQuotaClient.downloadsPerTrack(session, Set(track.user_urn)) returns Future.value(Map(track.user_urn -> None))
-      stitchClient.countsForTrack(session, trackUrn, track.user_urn) returns Future.value(StitchCounts(0, 90, 0, 0, 0))
-
-      val trackRepLike = Await.result(tracksService.track(session, trackUrn, None))
+      userQuotaClient.downloadsPerTrack(session, Set(track.userUrn)) returns Future.value(Map(track.userUrn -> None))
+      stitchClient.countsForTracks(session, Set((track.userUrn, trackUrn))) returns Future.value(
+        Map(trackUrn -> StitchCounts(0, 90, 0, 0, 0))
+      )
+      val trackRepLike = Await.result(tracksService.track(session, trackRequest))
       trackRepLike match {
-        case Success(rep) =>
+        case Some(rep) =>
           val json = Json.toJson(rep)
           json \ "downloadable" ==== JsDefined(JsBoolean(true))
+        case None =>
       }
     }
 
     "is false when track is downloadable, and above user's quota" in new Context {
-      val track = trackmetadataTrack(isDownloadable = true)
+      val track = trackvisibilityTrack(isDownloadable = true)
       setUpMocksForExistingTrack(track, session)
-      userQuotaClient.downloadsPerTrack(session, Set(track.user_urn)) returns Future.value(
-        Map(track.user_urn -> Some(100))
+      userQuotaClient.downloadsPerTrack(session, Set(track.userUrn)) returns Future.value(
+        Map(track.userUrn -> Some(100))
       )
-      stitchClient.countsForTrack(session, trackUrn, track.user_urn) returns Future.value(StitchCounts(0, 100, 0, 0, 0))
-
-      val trackRepLike = Await.result(tracksService.track(session, trackUrn, None))
+      stitchClient.countsForTracks(session, Set((track.userUrn, trackUrn))) returns Future.value(
+        Map(trackUrn -> StitchCounts(0, 100, 0, 0, 0))
+      )
+      val trackRepLike = Await.result(tracksService.track(session, trackRequest))
       trackRepLike match {
-        case Success(rep) =>
+        case Some(rep) =>
           val json = Json.toJson(rep)
           json \ "downloadable" ==== JsDefined(JsBoolean(false))
+        case None =>
       }
     }
 
     "is false when track is not downloadable, and below user's quota" in new Context {
-      val track = trackmetadataTrack(isDownloadable = false)
+      val track = trackvisibilityTrack()
       setUpMocksForExistingTrack(track, session)
-      userQuotaClient.downloadsPerTrack(session, Set(track.user_urn)) returns Future.value(
-        Map(track.user_urn -> Some(100))
+      userQuotaClient.downloadsPerTrack(session, Set(track.userUrn)) returns Future.value(
+        Map(track.userUrn -> Some(100))
       )
-      stitchClient.countsForTrack(session, trackUrn, track.user_urn) returns Future.value(StitchCounts(0, 90, 0, 0, 0))
-
-      val trackRepLike = Await.result(tracksService.track(session, trackUrn, None))
+      stitchClient.countsForTracks(session, Set((track.userUrn, trackUrn))) returns Future.value(
+        Map(trackUrn -> StitchCounts(0, 90, 0, 0, 0))
+      )
+      val trackRepLike = Await.result(tracksService.track(session, trackRequest))
       trackRepLike match {
-        case Success(rep) =>
+        case Some(rep) =>
           val json = Json.toJson(rep)
           json \ "downloadable" ==== JsDefined(JsBoolean(false))
+        case None =>
       }
     }
   }
@@ -671,92 +581,99 @@ class TrackRepresentationsServiceForSingleTrackSpec extends UnitSpecification {
   "downloads_remaining" >> {
     "when the requesting user is not the owner of the track" >> {
       "it is not shown" in new Context {
-        val track = trackmetadataTrack(isDownloadable = true)
+        val track = trackvisibilityTrack(isDownloadable = true)
         setUpMocksForExistingTrack(track, session)
-        userQuotaClient.downloadsPerTrack(session, Set(track.user_urn)) returns Future.value(
-          Map(track.user_urn -> Some(100))
+        userQuotaClient.downloadsPerTrack(session, Set(track.userUrn)) returns Future.value(
+          Map(track.userUrn -> Some(100))
         )
-        stitchClient.countsForTrack(session, trackUrn, track.user_urn) returns Future.value(
-          StitchCounts(0, 90, 0, 0, 0)
+        stitchClient.countsForTracks(session, Set((track.userUrn, trackUrn))) returns Future.value(
+          Map(trackUrn -> StitchCounts(0, 90, 0, 0, 0))
         )
 
-        val trackRepLike = Await.result(tracksService.track(session, trackUrn, None))
+        val trackRepLike = Await.result(tracksService.track(session, trackRequest))
         trackRepLike match {
-          case Success(rep) =>
+          case Some(rep) =>
             Json.toJson(rep).as[JsObject].keys.contains("downloads_remaining") ==== false
+          case None =>
         }
       }
     }
 
     "when the requesting user is the owner of the track" >> {
       "is shown when track is below quota" in new Context {
-        val track = trackmetadataTrack(isDownloadable = true, user = session.getUser)
+        val track = trackvisibilityTrack(isDownloadable = true, user = session.getUser)
         setUpMocksForExistingTrack(track, session)
-        userQuotaClient.downloadsPerTrack(session, Set(track.user_urn)) returns Future.value(
-          Map(track.user_urn -> Some(100))
+        when(userQuotaClient.downloadsPerTrack(session, Set(track.userUrn))).thenReturn(
+          Future.value(
+            Map(session.getUser -> Some(100))
+          )
         )
-        stitchClient.countsForTrack(session, trackUrn, track.user_urn) returns Future.value(
-          StitchCounts(0, 90, 0, 0, 0)
+        when(stitchClient.countsForTracks(session, Set((track.userUrn, trackUrn)))).thenReturn(
+          Future.value(
+            Map(trackUrn -> StitchCounts(0, 90, 0, 0, 0))
+          )
         )
-
-        val trackRepLike = Await.result(tracksService.track(session, trackUrn, None))
+        val trackRepLike = Await.result(tracksService.track(session, trackRequest))
         trackRepLike match {
-          case Success(rep) =>
+          case Some(rep) =>
             val json = Json.toJson(rep)
             json \ "downloads_remaining" ==== JsDefined(JsNumber(10))
+          case None =>
         }
       }
 
       "it not shown when the track's user has no quota (eg. is unlimited)" in new Context {
-        val track = trackmetadataTrack(isDownloadable = true, user = session.getUser)
+        val track = trackvisibilityTrack(isDownloadable = true, user = session.getUser)
         setUpMocksForExistingTrack(track, session)
-        userQuotaClient.downloadsPerTrack(session, Set(track.user_urn)) returns Future.value(
-          Map(track.user_urn -> None)
+        userQuotaClient.downloadsPerTrack(session, Set(track.userUrn)) returns Future.value(
+          Map(track.userUrn -> None)
         )
-        stitchClient.countsForTrack(session, trackUrn, track.user_urn) returns Future.value(
-          StitchCounts(0, 90, 0, 0, 0)
+        stitchClient.countsForTracks(session, Set((track.userUrn, trackUrn))) returns Future.value(
+          Map(trackUrn -> StitchCounts(0, 90, 0, 0, 0))
         )
 
-        val trackRepLike = Await.result(tracksService.track(session, trackUrn, None))
+        val trackRepLike = Await.result(tracksService.track(session, trackRequest))
         trackRepLike match {
-          case Success(rep) =>
+          case Some(rep) =>
             Json.toJson(rep).as[JsObject].keys.contains("downloads_remaining") ==== false
+          case None =>
         }
       }
 
       "is shown when no downloads remain" in new Context {
-        val track = trackmetadataTrack(isDownloadable = true, user = session.getUser)
+        val track = trackvisibilityTrack(isDownloadable = true, user = session.getUser)
         setUpMocksForExistingTrack(track, session)
-        userQuotaClient.downloadsPerTrack(session, Set(track.user_urn)) returns Future.value(
-          Map(track.user_urn -> Some(100))
+        userQuotaClient.downloadsPerTrack(session, Set(track.userUrn)) returns Future.value(
+          Map(track.userUrn -> Some(100))
         )
-        stitchClient.countsForTrack(session, trackUrn, track.user_urn) returns Future.value(
-          StitchCounts(0, 100, 0, 0, 0)
+        stitchClient.countsForTracks(session, Set((track.userUrn, trackUrn))) returns Future.value(
+          Map(trackUrn -> StitchCounts(0, 100, 0, 0, 0))
         )
-
-        val trackRepLike = Await.result(tracksService.track(session, trackUrn, None))
+        val trackRepLike = Await.result(tracksService.track(session, trackRequest))
         trackRepLike match {
-          case Success(rep) =>
+          case Some(rep) =>
             val json = Json.toJson(rep)
             json \ "downloads_remaining" ==== JsDefined(JsNumber(0))
+          case None =>
         }
       }
 
       "is shown even if track is not downloadable" in new Context {
-        val track = trackmetadataTrack(isDownloadable = false, user = session.getUser)
+        val track = trackvisibilityTrack(user = session.getUser)
         setUpMocksForExistingTrack(track, session)
-        userQuotaClient.downloadsPerTrack(session, Set(track.user_urn)) returns Future.value(
-          Map(track.user_urn -> Some(100))
+        userQuotaClient.downloadsPerTrack(session, Set(track.userUrn)) returns Future.value(
+          Map(track.userUrn -> Some(100))
         )
-        stitchClient.countsForTrack(session, trackUrn, track.user_urn) returns Future.value(
-          StitchCounts(0, 90, 0, 0, 0)
+        stitchClient.countsForTracks(session, Set((track.userUrn, trackUrn))) returns Future.value(
+          Map(trackUrn -> StitchCounts(0, 90, 0, 0, 0))
         )
 
-        val trackRepLike = Await.result(tracksService.track(session, trackUrn, None))
+        val trackRepLike = Await.result(tracksService.track(session, trackRequest))
         trackRepLike match {
-          case Success(rep) =>
+          case Some(rep) =>
             val json = Json.toJson(rep)
             json \ "downloads_remaining" ==== JsDefined(JsNumber(10))
+          case None =>
         }
       }
     }
@@ -767,68 +684,72 @@ class TrackRepresentationsServiceForSingleTrackSpec extends UnitSpecification {
       "returns proper counts" in new Context {
         override val session = new UserSessionBuilder().setUser(trackOwnerUrn).build
 
-        val track = trackmetadataTrack()
+        val track = trackvisibilityTrack()
         setUpMocksForExistingTrack(track, session)
 
-        val trackRepLike = Await.result(tracksService.track(session, trackUrn, None))
+        val trackRepLike = Await.result(tracksService.track(session, trackRequest))
 
         trackRepLike match {
-          case Success(rep) =>
+          case Some(rep) =>
             val json = Json.toJson(rep)
             json \ "playback_count" ==== JsDefined(JsNumber(111))
             json \ "download_count" ==== JsDefined(JsNumber(222))
             json \ "favoritings_count" ==== JsDefined(JsNumber(333))
             json \ "reposts_count" ==== JsDefined(JsNumber(555))
+          case None =>
         }
       }
 
       "returns empty counts if Stitch is failing" in new Context {
         override val session = new UserSessionBuilder().setUser(trackOwnerUrn).build
 
-        val track = trackmetadataTrack()
+        val track = trackvisibilityTrack()
         setUpMocksForExistingTrack(track, session)
-        when(stitchClient.countsForTrack(session, trackUrn, trackOwnerUrn))
+        when(stitchClient.countsForTracks(session, Set((trackOwnerUrn, trackUrn))))
           .thenReturn(Future.exception(new RuntimeException("bewm! hahahaaa")))
 
-        val trackRepLike = Await.result(tracksService.track(session, trackUrn, None))
+        val trackRepLike = Await.result(tracksService.track(session, trackRequest))
 
         trackRepLike match {
-          case Success(rep) =>
+          case Some(rep) =>
             val json = Json.toJson(rep)
             json \ "playback_count" ==== JsDefined(JsNumber(0))
             json \ "download_count" ==== JsDefined(JsNumber(0))
             json \ "favoritings_count" ==== JsDefined(JsNumber(0))
             json \ "comment_count" ==== JsDefined(JsNumber(0))
+          case None =>
         }
       }
 
       "includes comment_count if reveal_comments = true" in new Context {
         override val session = new UserSessionBuilder().setUser(trackOwnerUrn).build
 
-        val track = trackmetadataTrack()
+        val track = trackvisibilityTrack()
         setUpMocksForExistingTrack(track, session)
 
-        val trackRepLike = Await.result(tracksService.track(session, trackUrn, None))
+        val trackRepLike = Await.result(tracksService.track(session, trackRequest))
 
         trackRepLike match {
-          case Success(rep) =>
+          case Some(rep) =>
             val json = Json.toJson(rep)
             json \ "comment_count" ==== JsDefined(JsNumber(444))
+          case None =>
         }
       }
 
       "does not include comment_count if reveal_comments = false" in new Context {
         override val session = new UserSessionBuilder().setUser(trackOwnerUrn).build
 
-        val track = trackmetadataTrack(reveal_comments = false)
+        val track = trackvisibilityTrack(revealComments = false)
         setUpMocksForExistingTrack(track, session)
 
-        val trackRepLike = Await.result(tracksService.track(session, trackUrn, None))
+        val trackRepLike = Await.result(tracksService.track(session, trackRequest))
 
         trackRepLike match {
-          case Success(rep) =>
+          case Some(rep) =>
             val json = Json.toJson(rep)
             json.as[JsObject].keys.contains("comment_count") ==== false
+          case None =>
         }
       }
     }
@@ -836,82 +757,87 @@ class TrackRepresentationsServiceForSingleTrackSpec extends UnitSpecification {
     "not requesting as uploader" >> {
       "track stats are not public" >> {
         "returns no counts" in new Context {
-          val track = trackmetadataTrack()
+          val track = trackvisibilityTrack()
           setUpMocksForExistingTrack(track, session)
 
-          val trackRepLike = Await.result(tracksService.track(session, trackUrn, None))
+          val trackRepLike = Await.result(tracksService.track(session, trackRequest))
 
           trackRepLike match {
-            case Success(rep) =>
+            case Some(rep) =>
               val json = Json.toJson(rep)
               json.as[JsObject].keys.contains("playback_count") ==== false
               json.as[JsObject].keys.contains("download_count") ==== false
               json.as[JsObject].keys.contains("favoritings_count") ==== false
               json.as[JsObject].keys.contains("comment_count") ==== false
+            case None =>
           }
         }
       }
 
       "track has public stats" >> {
         "returns proper counts" in new Context {
-          val track = trackmetadataTrack(reveal_stats = true)
+          val track = trackvisibilityTrack(revealStats = true)
           setUpMocksForExistingTrack(track, session)
 
-          val trackRepLike = Await.result(tracksService.track(session, trackUrn, None))
+          val trackRepLike = Await.result(tracksService.track(session, trackRequest))
 
           trackRepLike match {
-            case Success(rep) =>
+            case Some(rep) =>
               val json = Json.toJson(rep)
               json \ "playback_count" ==== JsDefined(JsNumber(111))
               json \ "download_count" ==== JsDefined(JsNumber(222))
               json \ "favoritings_count" ==== JsDefined(JsNumber(333))
               json \ "comment_count" ==== JsDefined(JsNumber(444))
               json \ "reposts_count" ==== JsDefined(JsNumber(555))
+            case None =>
           }
         }
 
         "includes comment_count if reveal_comments = true" in new Context {
-          val track = trackmetadataTrack(reveal_stats = true)
+          val track = trackvisibilityTrack(revealStats = true)
           setUpMocksForExistingTrack(track, session)
 
-          val trackRepLike = Await.result(tracksService.track(session, trackUrn, None))
+          val trackRepLike = Await.result(tracksService.track(session, trackRequest))
 
           trackRepLike match {
-            case Success(rep) =>
+            case Some(rep) =>
               val json = Json.toJson(rep)
               json \ "comment_count" ==== JsDefined(JsNumber(444))
+            case None =>
           }
         }
 
         "does not include comment_count if reveal_comments = false" in new Context {
-          val track = trackmetadataTrack(reveal_stats = true, reveal_comments = false)
+          val track = trackvisibilityTrack(revealStats = true, revealComments = false)
           setUpMocksForExistingTrack(track, session)
 
-          val trackRepLike = Await.result(tracksService.track(session, trackUrn, None))
+          val trackRepLike = Await.result(tracksService.track(session, trackRequest))
 
           trackRepLike match {
-            case Success(rep) =>
+            case Some(rep) =>
               val json = Json.toJson(rep)
               json.as[JsObject].keys.contains("comment_count") ==== false
+            case None =>
           }
         }
 
         "returns empty counts if Stitch is failing" in new Context {
-          val track = trackmetadataTrack(reveal_stats = true)
+          val track = trackvisibilityTrack(revealStats = true)
           setUpMocksForExistingTrack(track, session)
-          when(stitchClient.countsForTrack(session, trackUrn, trackOwnerUrn))
+          when(stitchClient.countsForTracks(session, Set((trackOwnerUrn, trackUrn))))
             .thenReturn(Future.exception(new RuntimeException("bewm! hahahaaa")))
 
-          val trackRepLike = Await.result(tracksService.track(session, trackUrn, None))
+          val trackRepLike = Await.result(tracksService.track(session, trackRequest))
 
           trackRepLike match {
-            case Success(rep) =>
+            case Some(rep) =>
               val json = Json.toJson(rep)
               json \ "playback_count" ==== JsDefined(JsNumber(0))
               json \ "download_count" ==== JsDefined(JsNumber(0))
               json \ "favoritings_count" ==== JsDefined(JsNumber(0))
               json \ "comment_count" ==== JsDefined(JsNumber(0))
               json \ "reposts_count" ==== JsDefined(JsNumber(0))
+            case None =>
           }
         }
       }

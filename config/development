@@ -1,4 +1,4 @@
-JAVA_OPTS=-Djdk.nio.maxCachedBufferSize=262144
+JAVA_OPTS=-Djdk.nio.maxCachedBufferSize=262144 -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005
 
 APP_NAME=public-api-strangler
 APP_BASE_URL=https://api.soundcloud.com

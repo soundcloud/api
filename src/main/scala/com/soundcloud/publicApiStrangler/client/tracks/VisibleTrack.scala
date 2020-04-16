@@ -45,7 +45,14 @@ case class VisibleTrack(
     purchaseTitle: Option[String],
     authorization: ContentAuthorization,
     transcodings: List[Transcoding],
-    waveformUrls: List[WaveformUrl]
+    supplyChainStatus: Option[String] = None,
+    waveformUrls: List[WaveformUrl],
+    bpm: Option[Double],
+    trackType: Option[String],
+    release: Option[String],
+    keySignature: Option[String],
+    videoUrl: Option[String],
+    labelId: Option[Long]
 )
 
 object VisibleTrack {
@@ -102,7 +109,14 @@ object VisibleTrack {
             MonetizationModel.from((json \ "authorization" \ "monetizationModel").as[String])
           ),
           (json \ "transcodings").as[List[Transcoding]],
-          (json \ "waveformUrls").as[List[WaveformUrl]]
+          (json \ "supplyChainStatus").asOpt[String],
+          (json \ "waveformUrls").as[List[WaveformUrl]],
+          (json \ "bpm").asOpt[Double],
+          (json \ "trackType").asOpt[String],
+          (json \ "release").asOpt[String],
+          (json \ "keySignature").asOpt[String],
+          (json \ "videoUrl").asOpt[String],
+          (json \ "labelId").asOpt[Long]
         )
       )
     } catch {

@@ -20,7 +20,6 @@ import com.soundcloud.publicApiStrangler.support.oauth.{RailsLikeParamsParser, T
 
 class Handlers(telemetry: Telemetry, clients: Clients, exceptionCollector: ExceptionCollector) {
   import clients._
-
   val mothershipDispatcher = new DispatchToMothershipHandler(userAuthentication, publicApiClient)
 
   val timelineHandler: TimelineHandler = {
@@ -76,7 +75,8 @@ class Handlers(telemetry: Telemetry, clients: Clients, exceptionCollector: Excep
     trackmetadataClient
   )
 
-  val singleTrackHandler = new SingleTrackHandler(userAuthentication, tracksService, telemetry)
+  val singleTrackHandler =
+    new SingleTrackHandler(userAuthentication, tracksService, legacyTracksService, telemetry, exceptionCollector)
 
   val trackMothershipDispatcherWithCounts =
     new TrackMothershipDispatcherWithCounts(userAuthentication, mothershipDispatcher, stitchClient)
@@ -92,7 +92,7 @@ class Handlers(telemetry: Telemetry, clients: Clients, exceptionCollector: Excep
 
   val userTracksHandler = new UserTracksHandler(
     userAuthentication,
-    tracksService,
+    legacyTracksService,
     telemetry,
     baseUrl
   )

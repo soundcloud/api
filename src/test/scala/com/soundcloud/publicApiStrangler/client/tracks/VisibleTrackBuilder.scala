@@ -46,9 +46,16 @@ class VisibleTrackBuilder {
   private var publishedAt: Option[LocalDateTime] = None
   private var purchaseUrl: Option[String] = None
   private var purchaseTitle: Option[String] = None
-  private var authorization: ContentAuthorization = (new ContentAuthorizationBuilder()).build
+  private var authorization: ContentAuthorization = new ContentAuthorizationBuilder().build
   private var transcodings: List[Transcoding] = List.empty
+  private var supplyChainStatus: Option[String] = None
   private var waveformUrls: List[WaveformUrl] = List.empty
+  private var bpm: Option[Double] = None
+  private var trackType: Option[String] = None
+  private var release: Option[String] = None
+  private var keySignature: Option[String] = None
+  private var videoUrl: Option[String] = None
+  private var labelId: Option[Long] = None
 
   def setUrn(value: Urn) = {
     urn = value; this
@@ -196,6 +203,34 @@ class VisibleTrackBuilder {
     waveformUrls = value; this
   }
 
+  def setSupplyChainStatus(value: Option[String]) = {
+    supplyChainStatus = value; this
+  }
+
+  def setBpm(value: Option[Double]) = {
+    bpm = value; this
+  }
+
+  def setTrackType(value: Option[String]) = {
+    trackType = value; this
+  }
+
+  def setRelease(value: Option[String]) = {
+    release = value; this
+  }
+
+  def setKeySignature(value: Option[String]) = {
+    keySignature = value; this
+  }
+
+  def setVideoUrl(value: Option[String]) = {
+    videoUrl = value; this
+  }
+
+  def setLabelId(value: Option[Long]) = {
+    labelId = value; this
+  }
+
   def build: VisibleTrack =
     new VisibleTrack(
       urn,
@@ -234,6 +269,13 @@ class VisibleTrackBuilder {
       purchaseTitle,
       authorization,
       transcodings,
-      waveformUrls
+      supplyChainStatus,
+      waveformUrls,
+      bpm,
+      trackType,
+      release,
+      keySignature,
+      videoUrl,
+      labelId
     )
 }

@@ -18,12 +18,12 @@ import com.soundcloud.publicApiStrangler.test.UnitSpecification
 import com.soundcloud.publicApiStrangler.test.util.TrackMetadataTrackBuilder
 import com.twitter.util.Await
 
-class TrackRepresentationsServiceForMultipleTracksSpec extends UnitSpecification {
+class LegacyTrackRepresentationsServiceForMultipleTracksSpec extends UnitSpecification {
   trait Context extends Scope {
     val playlistsClient = mock[PlaylistsClient]
     val trackRepository = mock[TrackRepository]
 
-    val service = new TrackRepresentationsService(
+    val service = new LegacyTrackRepresentationsService(
       trackRepository,
       mock[TrackmetadataClient],
       mock[RichOkidokiClient],
@@ -90,7 +90,7 @@ class TrackRepresentationsServiceForMultipleTracksSpec extends UnitSpecification
 
     def tracksResult: support.Result[TracksResult]
 
-    def result = Await.result(service.tracks(session, userUrn, paginationParams).value)
+    def result = Await.result(service.userTracks(session, userUrn, paginationParams).value)
 
     trackRepository.tracksByUser(session, userUrn, paginationParams).returns(lift(tracksResult))
   }

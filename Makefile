@@ -25,6 +25,9 @@ dependencies:
 run: dependencies
 	sc crun sbt -i --docker-options="-p 5000:5000 -p 5001:5001 --link=strangler_zk --link=strangler_memcached --env-file=config/development" -- sbt run
 
+run-debug: dependencies
+	sc crun sbt -i --docker-options="-p 5000:5000 -p 5001:5001 -p 5005:5005 --link=strangler_zk --link=strangler_memcached --env-file=config/development" -- sbt run
+
 run-no-docker:
 	set -o allexport; source config/development; set +o allexport; sbt run
 

@@ -31,9 +31,13 @@ import com.soundcloud.publicApiStrangler.mapper.liebling.LikeCountMapper
 import com.soundcloud.publicApiStrangler.mapper.search.SearchEntityMapper
 import com.soundcloud.publicApiStrangler.mapper.timeline.EntitySummaryMapper
 import com.soundcloud.publicApiStrangler.mapper.waveform.WaveformMapper
-import com.soundcloud.publicApiStrangler.service.TrackAccessibilityService
+import com.soundcloud.publicApiStrangler.service.{TrackAccessibilityService, TrackVisibilityService}
 import com.soundcloud.publicApiStrangler.service.media.TrackAccessRecorderService
-import com.soundcloud.publicApiStrangler.service.trackrepresentation.{TrackRepository, TrackRepresentationsService}
+import com.soundcloud.publicApiStrangler.service.trackrepresentation.{
+  TrackRepository,
+  LegacyTrackRepresentationsService,
+  TrackRepresentationsService
+}
 import com.twitter.finagle.Service
 import com.twitter.finagle.http.{Request, Response}
 import com.twitter.finagle.service.RetryPolicy.RetryableWriteException
@@ -136,7 +140,9 @@ class Clients(config: AppConfig, telemetry: Telemetry) {
     trackAccessibilityService
   )
 
-  val tracksService = new TrackRepresentationsService(
+  val trackVisibilityService = new TrackVisibilityService(tracksClient)
+
+  val legacyTracksService = new LegacyTrackRepresentationsService(
     trackRepository,
     trackmetadataClient,
     richOkidokiClient,
@@ -146,6 +152,16 @@ class Clients(config: AppConfig, telemetry: Telemetry) {
     waveformUrlsGenerator,
     userQuotaClient,
     trackAccessibilityService
+  )
+
+  val tracksService = new TrackRepresentationsService(
+    trackVisibilityService,
+    richOkidokiClient,
+    pubmeseClient,
+    stitchClient,
+    lieblingClient,
+    waveformUrlsGenerator,
+    userQuotaClient
   )
 
   val searchEntityMapper = new SearchEntityMapper(

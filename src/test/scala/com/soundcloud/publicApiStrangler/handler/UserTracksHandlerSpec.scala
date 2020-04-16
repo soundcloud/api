@@ -10,7 +10,7 @@ import com.soundcloud.publicApiStrangler.Routing
 import com.soundcloud.publicApiStrangler.service.trackrepresentation.{
   TrackPagination,
   TrackRepresentationLikeSpecContext,
-  TrackRepresentationsService,
+  LegacyTrackRepresentationsService,
   TracksRepresentationResult
 }
 import com.soundcloud.publicApiStrangler.support.ResultF.lift
@@ -28,7 +28,7 @@ class UserTracksHandlerSpec extends UnitSpecification {
     val session = loggedInSession(Urn("soundcloud", "users", "1"))
     val userAuthentication = new FakeUserAuthentication(session)
 
-    val tracksService = mock[TrackRepresentationsService]
+    val tracksService = mock[LegacyTrackRepresentationsService]
     val telemetry = Telemetry.createIsolatedInstance
 
     val handler = new UserTracksHandler(
@@ -82,7 +82,7 @@ class UserTracksHandlerSpec extends UnitSpecification {
           s"/users/7110/tracks.json/$queryString"
         ).foreach(path => {
           println(s"For path $path")
-          when(tracksService.tracks(session, user, paginationParams(path))).thenReturn(tracksServiceResponse)
+          when(tracksService.userTracks(session, user, paginationParams(path))).thenReturn(tracksServiceResponse)
 
           val response = get(path)
           response.status ==== Status.Ok
@@ -94,7 +94,7 @@ class UserTracksHandlerSpec extends UnitSpecification {
     "with an error response from tracks service" >> {
       "returns an error response with message" in new TracksForUserContext with ErrorResponse {
         val path = s"/users/7110/tracks$queryString"
-        when(tracksService.tracks(session, user, paginationParams(path))).thenReturn(tracksServiceResponse)
+        when(tracksService.userTracks(session, user, paginationParams(path))).thenReturn(tracksServiceResponse)
 
         val response = get(path)
         response.status ==== Status.InternalServerError

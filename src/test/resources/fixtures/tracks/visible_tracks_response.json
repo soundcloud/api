@@ -130,6 +130,12 @@
         "monetizationModel": "NOT_APPLICABLE",
         "rulesetUuid": null
       },
+      "bpm": null,
+      "trackType": "recording",
+      "release": null,
+      "keySignature": null,
+      "videoUrl": null,
+      "labelId": null,
       "transcodings": [
         {
           "uuid": "b0948be2-0168-4e32-bca6-3c14107edc13",

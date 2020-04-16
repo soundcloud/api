@@ -6,6 +6,7 @@ import com.soundcloud.publicApiStrangler.support.HtmlSanitizer
 import org.joda.time.DateTime
 import play.api.libs.json._
 import play.api.libs.json.JodaReads._
+import com.soundcloud.publicApiStrangler.client.tracks.VisibleTrack
 
 case class Track(
     urn: Urn,
@@ -58,6 +59,52 @@ object Artwork {
 }
 
 object Track {
+  def fromVisibleTrack(visibleTrack: VisibleTrack): Track = {
+    Track(
+      urn = visibleTrack.urn,
+      user_urn = visibleTrack.userUrn,
+      commentable = visibleTrack.commentable,
+      description = visibleTrack.description,
+      created_at = visibleTrack.createdAt.toDateTime,
+      disabled_at = visibleTrack.disabledAt.map(_.toDateTime),
+      downloadable = Some(visibleTrack.downloadable),
+      duration = visibleTrack.duration,
+      genre = visibleTrack.genre,
+      last_modified = visibleTrack.lastModified.toDateTime,
+      permalink = visibleTrack.permalink,
+      permalink_url = visibleTrack.permalinkUrl,
+      public = visibleTrack.public,
+      secret_token = visibleTrack.secretToken.get,
+      user_tags = visibleTrack.userTags,
+      machine_tags = visibleTrack.machineTags,
+      title = visibleTrack.title,
+      uid = visibleTrack.uid,
+      api_streamable = visibleTrack.apiStreamable,
+      streamable = Some(visibleTrack.streamable),
+      reveal_comments = visibleTrack.revealComments,
+      reveal_stats = visibleTrack.revealStats,
+      label_name = visibleTrack.labelName,
+      license = visibleTrack.license,
+      embeddable = visibleTrack.embeddable,
+      release_year = visibleTrack.releaseYear,
+      release_month = visibleTrack.releaseMonth,
+      release_day = visibleTrack.releaseDay,
+      embeddableBy = visibleTrack.embeddableBy,
+      releaseDate = visibleTrack.releaseDate.map(_.toDateTime),
+      artwork = visibleTrack.artwork,
+      published_at = visibleTrack.publishedAt.map(_.toDateTime),
+      purchase_url = visibleTrack.purchaseUrl,
+      purchase_title = visibleTrack.purchaseTitle,
+      bpm = visibleTrack.bpm,
+      track_type = visibleTrack.trackType,
+      release = visibleTrack.release,
+      key_signature = visibleTrack.keySignature,
+      video_url = visibleTrack.videoUrl,
+      label_id = visibleTrack.labelId,
+      supply_chain_status = visibleTrack.supplyChainStatus
+    )
+  }
+
   implicit val trackReads: Reads[Track] = Reads { json =>
     try {
       JsSuccess(
