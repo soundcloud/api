@@ -5,6 +5,7 @@ import com.soundcloud.jvmkit.module.json.UrnFormat._
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.publicApiStrangler.authorization.policies._
 import com.soundcloud.publicApiStrangler.client.trackmetadata.{Artwork, EmbeddingPermission}
+import com.soundcloud.publicApiStrangler.support.HtmlSanitizer
 import org.joda.time.LocalDateTime
 import play.api.libs.json._
 
@@ -77,12 +78,12 @@ object VisibleTrack {
           (json \ "downloadable").as[Boolean],
           (json \ "duration").as[Int],
           (json \ "commentable").as[Boolean],
-          (json \ "genre").asOpt[String],
+          (json \ "genre").asOpt[String].map(HtmlSanitizer.sanitize),
           (json \ "public").as[Boolean],
           (json \ "permalink").as[String],
           (json \ "permalinkUrl").asOpt[String],
           (json \ "userTags").as[List[String]],
-          (json \ "description").asOpt[String],
+          (json \ "description").asOpt[String].map(HtmlSanitizer.sanitize),
           (json \ "secretToken").asOpt[String],
           (json \ "revealStats").as[Boolean],
           (json \ "artwork").as[Artwork],
@@ -91,7 +92,7 @@ object VisibleTrack {
           (json \ "streamable").as[Boolean],
           (json \ "apiStreamable").asOpt[Boolean],
           (json \ "revealComments").as[Boolean],
-          (json \ "labelName").asOpt[String],
+          (json \ "labelName").asOpt[String].map(HtmlSanitizer.sanitize),
           (json \ "license").as[String],
           (json \ "embeddable").asOpt[Boolean],
           (json \ "releaseYear").asOpt[Int],
@@ -100,21 +101,21 @@ object VisibleTrack {
           (json \ "embeddableBy").as[EmbeddingPermission],
           (json \ "releaseDate").asOpt[LocalDateTime],
           (json \ "purchaseUrl").asOpt[String],
-          (json \ "purchaseTitle").asOpt[String],
+          (json \ "purchaseTitle").asOpt[String].map(HtmlSanitizer.sanitize),
           new ContentAuthorization(
             (json \ "urn").as[Urn],
             ContentPolicy.from((json \ "authorization" \ "policy").as[String]),
             Reason.from((json \ "authorization" \ "reason").as[String]),
-            (json \ "authorization" \ "restrictions").as[Set[String]].map(ContentRestriction.from(_)),
+            (json \ "authorization" \ "restrictions").as[Set[String]].map(ContentRestriction.from),
             MonetizationModel.from((json \ "authorization" \ "monetizationModel").as[String])
           ),
           (json \ "transcodings").as[List[Transcoding]],
           (json \ "supplyChainStatus").asOpt[String],
           (json \ "waveformUrls").as[List[WaveformUrl]],
           (json \ "bpm").asOpt[Double],
-          (json \ "trackType").asOpt[String],
-          (json \ "release").asOpt[String],
-          (json \ "keySignature").asOpt[String],
+          (json \ "trackType").asOpt[String].map(HtmlSanitizer.sanitize),
+          (json \ "release").asOpt[String].map(HtmlSanitizer.sanitize),
+          (json \ "keySignature").asOpt[String].map(HtmlSanitizer.sanitize),
           (json \ "videoUrl").asOpt[String],
           (json \ "labelId").asOpt[Long]
         )
