@@ -24,7 +24,7 @@ class DeprecatedEndpointUsageFilter(userAuthentication: UserAuthentication, tele
 
   private val deprecatedEndpointsPrefix = Seq(
     "/e1/",
-    "/i1",
+    "/i1/",
     "/tracks/:trackId/related",
     "/me/tracks/:trackId",
     "/me/activities",
