@@ -71,7 +71,7 @@ object VisibleTrack {
           (json \ "urn").as[Urn],
           (json \ "userUrn").as[Urn],
           (json \ "uid").asOpt[String],
-          (json \ "title").as[String],
+          HtmlSanitizer.sanitize((json \ "title").as[String]),
           (json \ "createdAt").as[LocalDateTime],
           (json \ "disabledAt").asOpt[LocalDateTime],
           (json \ "lastModified").as[LocalDateTime],
