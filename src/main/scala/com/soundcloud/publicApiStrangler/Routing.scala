@@ -53,8 +53,7 @@ object Routing {
   }
 
   def forMothershipDispatcher(mothershipDispatcher: DispatchToMothershipHandler): List[(Method, String, Handler)] = {
-    route(Method.Get, "/announcements", mothershipDispatcher.dispatch) :::
-      route(Method.Get, "/connect", mothershipDispatcher.dispatch) :::
+    route(Method.Get, "/connect", mothershipDispatcher.dispatch) :::
       route(Method.Get, "/e1/me/likes", mothershipDispatcher.dispatch) :::
       route(Method.Get, "/e1/me/playlist_likes", mothershipDispatcher.dispatch) :::
       route(Method.Put, "/e1/me/playlist_likes/:id", mothershipDispatcher.dispatch) :::
@@ -66,12 +65,10 @@ object Routing {
       route(Method.Get, "/e1/users/:userId/playlist_likes", mothershipDispatcher.dispatch) :::
       route(Method.Get, "/e1/users/:userId/track_likes", mothershipDispatcher.dispatch) :::
       route(Method.Put, "/me", mothershipDispatcher.dispatch) :::
-      route(Method.Post, "/me/blockings", mothershipDispatcher.dispatch) :::
       route(Method.Get, "/me/comments", mothershipDispatcher.dispatch) :::
       route(Method.Get, "/me/connections", mothershipDispatcher.dispatch) :::
       route(Method.Get, "/me/connections/:id", mothershipDispatcher.dispatch) :::
       route(Method.Get, "/me/email", mothershipDispatcher.dispatch) :::
-      route(Method.Get, "/me/mutings/users/ids", mothershipDispatcher.dispatch) :::
       route(Method.Post, "/playlists", mothershipDispatcher.dispatch) :::
       route(Method.Put, "/playlists/:id", mothershipDispatcher.dispatch) :::
       route(Method.Get, "/playlists/:id", mothershipDispatcher.dispatch) :::
@@ -83,7 +80,6 @@ object Routing {
       route(Method.Post, "/tracks/:trackId/comments", mothershipDispatcher.dispatch) :::
       route(Method.Delete, "/tracks/:trackId/comments/:id", mothershipDispatcher.dispatch) :::
       route(Method.Get, "/tracks/:trackId/comments/:id", mothershipDispatcher.dispatch) :::
-      route(Method.Post, "/tracks/:trackId/plays", mothershipDispatcher.dispatch) :::
       route(Method.Put, "/users/:id", mothershipDispatcher.dispatch) :::
       route(Method.Get, "/users/:userId/tracks/:id", mothershipDispatcher.dispatch) :::
       route(Method.Get, "/me/favorites", mothershipDispatcher.dispatch) :::
@@ -105,8 +101,7 @@ object Routing {
       route(Method.Get, "/users/:userId/playlists", mothershipDispatcher.dispatch) :::
       route(Method.Get, "/users/:userId/playlists/:trackId", mothershipDispatcher.dispatch) :::
       route(Method.Get, "/me/web-profiles", mothershipDispatcher.dispatch) :::
-      route(Method.Get, "/users/:userId/web-profiles", mothershipDispatcher.dispatch) :::
-      route(Method.Get, "/oembed", mothershipDispatcher.dispatch)
+      route(Method.Get, "/users/:userId/web-profiles", mothershipDispatcher.dispatch)
   }
 
   def forTokenExchange(handler: Handler): List[(Method, String, Handler)] = {

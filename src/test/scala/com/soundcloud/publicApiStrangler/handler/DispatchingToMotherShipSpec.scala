@@ -9,8 +9,6 @@ import com.twitter.util.Future
 
 class DispatchingToMotherShipSpec extends UnitSpecification {
   val expectedMotherShipEndpoints = Set(
-    (Get, "/announcements"),
-    (Get, "/announcements.json"),
     (Post, "/playlists"),
     (Put, "/playlists/1"),
     (Put, "/playlists/1.json"),
