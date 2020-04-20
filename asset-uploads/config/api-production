@@ -1,6 +1,6 @@
 source api-production-secrets
 
-MEDIA_SERVICE_ADDRESS=dnssrv!http.coordinator.prod.media-service.srv
+MEDIA_SERVICE_ADDRESS=dnssrv!http.coordinator.prod.media-service.srv.db.s-cloud.net
 MOSHIMOSHI_ADDRESS=dnssrv!http.moshimoshi.prod.mothership.srv
 PUBLIC_API_STRANGLER_ADDRESS=dnssrv!http.strangler.prod.public-api.srv
 
