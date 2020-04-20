@@ -30,13 +30,18 @@ type fakeMoshimoshiClient struct {
 
 func (f fakeMoshimoshiClient) createTrackUID() (string, error) { return f.uid, nil }
 
-func (f fakeMoshimoshiClient) createTranscoding(string) error { return nil }
+type fakeMediaServiceClient struct {
+	mediaServiceClientAPI
+}
+
+func (f fakeMediaServiceClient) createTranscoding(string) error { return nil }
 
 func TestControllerServiceS3Integration(t *testing.T) {
 	uploader := &uploader{
-		moshimoshi: &fakeMoshimoshiClient{uid: "testUid"},
-		s3Bucket:   "test-bucket",
-		s3Uploader: &fakeS3Manager{},
+		moshimoshi:   &fakeMoshimoshiClient{uid: "testUid"},
+		mediaService: &fakeMediaServiceClient{},
+		s3Bucket:     "test-bucket",
+		s3Uploader:   &fakeS3Manager{},
 	}
 
 	service := &service{

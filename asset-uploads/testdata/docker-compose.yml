@@ -10,6 +10,13 @@ services:
     environment:
       https_proxy: 'http://proxy.dev.s-cloud.net:3128'
 
+  media_service:
+    image: docker.dev.s-cloud.net/go-1:latest
+    volumes:
+      - ../testdata:/srv/test:ro
+    working_dir: /srv/test
+    command: go run media_service.go -listenAddr=:80
+
   moshimoshi:
     image: docker.dev.s-cloud.net/go-1:latest
     volumes:

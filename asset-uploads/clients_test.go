@@ -7,7 +7,7 @@ import (
 
 func TestTranscodingRequestPayload(t *testing.T) {
 	uid := "uvwxyz"
-	want := fmt.Sprintf(`{"transcoding":{"uid":"%s","priority":"realtime"}}`, uid)
+	want := fmt.Sprintf(`{"uid":"%s","key":"%s","priority":"manual"}`, uid, uid)
 
 	payload, err := transcodingRequestPayload(uid)
 	if err != nil {
