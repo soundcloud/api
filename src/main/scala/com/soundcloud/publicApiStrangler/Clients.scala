@@ -5,9 +5,8 @@ import com.soundcloud.jvmkit.module.http.client.config.HttpClientConfig
 import com.soundcloud.jvmkit.module.http.client.{HttpClient, JsonClient}
 import com.soundcloud.jvmkit.module.rollout.{BasicRolloutFeature, Rollout}
 import com.soundcloud.jvmkit.module.telemetry.Telemetry
-import com.soundcloud.jvmkit.module.twirp.filters.ClientTelemetry
-import com.soundcloud.jvmkit.module.util.ResourceName
 import com.soundcloud.jvmkit.module.util.config.{AppConfig, ConfigConvention, DataSensitivity}
+import com.soundcloud.jvmkit.module.util.{ResourceName, Urn}
 import com.soundcloud.publicApiStrangler.authorization._
 import com.soundcloud.publicApiStrangler.client._
 import com.soundcloud.publicApiStrangler.client.followcounts.FollowCountsClient
@@ -31,20 +30,21 @@ import com.soundcloud.publicApiStrangler.mapper.liebling.LikeCountMapper
 import com.soundcloud.publicApiStrangler.mapper.search.SearchEntityMapper
 import com.soundcloud.publicApiStrangler.mapper.timeline.EntitySummaryMapper
 import com.soundcloud.publicApiStrangler.mapper.waveform.WaveformMapper
-import com.soundcloud.publicApiStrangler.service.{TrackAccessibilityService, TrackVisibilityService}
-import com.soundcloud.publicApiStrangler.service.media.TrackAccessRecorderService
+import com.soundcloud.publicApiStrangler.service.media.{StreamService, TrackAccessRecorderService}
 import com.soundcloud.publicApiStrangler.service.trackrepresentation.{
-  TrackRepository,
   LegacyTrackRepresentationsService,
+  TrackRepository,
   TrackRepresentationsService
 }
+import com.soundcloud.publicApiStrangler.service.{TrackAccessibilityService, TrackVisibilityService}
 import com.twitter.finagle.Service
 import com.twitter.finagle.http.{Request, Response}
 import com.twitter.finagle.service.RetryPolicy.RetryableWriteException
 import com.twitter.util.{Future, Throw, Try}
 import proto.soundcloud.authenticator.oauth.AuthorizationClientProtobuf
+import com.soundcloud.jvmkit.module.twirp.filters.ClientTelemetry
 
-class Clients(config: AppConfig, telemetry: Telemetry) {
+class Clients(config: AppConfig, telemetry: Telemetry, whitelistedCients: Set[Urn]) {
   private def jsonClient(resourceName: String) = JsonClient(
     HttpClientConfig.from(ResourceName(resourceName), config),
     telemetry
@@ -140,7 +140,7 @@ class Clients(config: AppConfig, telemetry: Telemetry) {
     trackAccessibilityService
   )
 
-  val trackVisibilityService = new TrackVisibilityService(tracksClient)
+  val trackVisibilityService = new TrackVisibilityService(tracksClient, whitelistedCients)
 
   val legacyTracksService = new LegacyTrackRepresentationsService(
     trackRepository,
@@ -163,6 +163,8 @@ class Clients(config: AppConfig, telemetry: Telemetry) {
     waveformUrlsGenerator,
     userQuotaClient
   )
+
+  val streamService = new StreamService(trackVisibilityService, tracksClient)
 
   val searchEntityMapper = new SearchEntityMapper(
     okidokiClient,

@@ -32,13 +32,14 @@ object App {
       airbrakeClient = Some(new AirbrakeClient(AirbrakeConfig.from(config)))
     )
 
+    // The following client applications have access to high tier (paywalled) content
     val whitelistedClients: Set[Urn] = Set(
       Urn("soundcloud", "applications", "167582"), // HEOS by Denon (Production)
       Urn("soundcloud", "applications", "59007"), // Soundiiz
       Urn("soundcloud", "applications", "62023") // Soundiiz Local
     )
 
-    val clients = new Clients(config, telemetry)
+    val clients = new Clients(config, telemetry, whitelistedClients)
     val handlers = new Handlers(telemetry, clients, exceptionCollector)
 
     val bffApplication =

@@ -13,7 +13,7 @@ import com.soundcloud.publicApiStrangler.mapper.trackstreams.{
   TrackStreamJsonResponseMapper,
   TrackStreamRedirectResponseMapper
 }
-import com.soundcloud.publicApiStrangler.service.media.{DownloadService, StreamService}
+import com.soundcloud.publicApiStrangler.service.media.DownloadService
 import com.soundcloud.publicApiStrangler.service.oauth.AuthorizationService
 import com.soundcloud.publicApiStrangler.support.CursorPagination
 import com.soundcloud.publicApiStrangler.support.oauth.{RailsLikeParamsParser, TokenExchangeRequestParser}
@@ -50,8 +50,6 @@ class Handlers(telemetry: Telemetry, clients: Clients, exceptionCollector: Excep
   val trackStreamsHandler: TrackStreamsHandler = {
     val trackStreamUrlToJsonResponseMapper = new TrackStreamJsonResponseMapper
     val trackStreamUrlToRedirectMapper = new TrackStreamRedirectResponseMapper
-
-    val streamService = new StreamService(tracksClient, telemetry)
 
     new TrackStreamsHandler(
       userAuthentication,
