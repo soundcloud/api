@@ -3,20 +3,24 @@ package com.soundcloud.publicApiStrangler.service
 import com.soundcloud.api.partners.clients.tracks.Transcoding
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSessionBuilder
+import com.soundcloud.publicApiStrangler.authorization.policies._
 import com.soundcloud.publicApiStrangler.client.tracks.{TrackRequest, TracksClient, VisibleTrackBuilder}
+import com.twitter.util.{Await, Future}
+import org.joda.time.LocalDateTime
 import org.specs2.matcher.Scope
 import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
-import com.twitter.util.{Await, Future}
-import org.joda.time.LocalDateTime
 
 class TrackVisibilityServiceSpec extends Specification with Mockito {
 
   trait Context extends Scope {
-    val session = (new UserSessionBuilder).setUser(Urn("soundcloud", "users", "123")).build()
+    val clientApplication = Urn("soundcloud", "applications", "999")
+    lazy val whitelistedClients = Set.empty[Urn]
+    lazy val session =
+      (new UserSessionBuilder).setUser(Urn("soundcloud", "users", "123")).setAgent(clientApplication).build()
     val trackUrn = Urn("soundcloud", "tracks", "432")
     val tracksClient = mock[TracksClient]
-    val service = new TrackVisibilityService(tracksClient)
+    lazy val service = new TrackVisibilityService(tracksClient, whitelistedClients)
     val trackRequest = TrackRequest(trackUrn, None)
     val transcodings = List(
       Transcoding("mp3-uuid", "preset", "audio/mpeg", List("progressive"), None, "sq", 180000, None)
@@ -51,6 +55,42 @@ class TrackVisibilityServiceSpec extends Specification with Mockito {
 
       "filters out non 'audio/mpeg' tracks" in new TranscodingFilterTrackContext {
         Await.result(service.tracks(session, List(trackRequest))) ==== List.empty
+      }
+    }
+
+    "paywalled track filter" >> {
+      trait HighTierFilterTrackContext extends Context {
+        override lazy val visibleTrack =
+          (new VisibleTrackBuilder)
+            .setUrn(trackUrn)
+            .setDisabledAt(None)
+            .setTranscodings(transcodings)
+            .setAuthorization(
+              new ContentAuthorization(
+                trackUrn,
+                ContentPolicy.MONETIZE,
+                Reason.DEFAULT,
+                Set.empty[ContentRestriction],
+                MonetizationModel.SUB_HIGH_TIER
+              )
+            )
+            .build
+      }
+
+      "non whitelisted application" >> {
+        "filters out track" in new HighTierFilterTrackContext {
+          Await.result(service.tracks(session, List(trackRequest))) ==== List.empty
+        }
+      }
+
+      "whitelisted application" >> {
+        trait HighTierWhitelistedAppFilterTrackContext extends HighTierFilterTrackContext {
+          override lazy val whitelistedClients = Set(clientApplication)
+        }
+
+        "does not filter out track" in new HighTierWhitelistedAppFilterTrackContext {
+          Await.result(service.tracks(session, List(trackRequest))) ==== List(visibleTrack)
+        }
       }
     }
   }

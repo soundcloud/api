@@ -1,7 +1,6 @@
 package com.soundcloud.publicApiStrangler.service.media
 
 import com.soundcloud.api.partners.clients.tracks.Transcoding
-import com.soundcloud.jvmkit.module.telemetry.Telemetry
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.publicApiStrangler.authorization.policies.{
@@ -11,15 +10,17 @@ import com.soundcloud.publicApiStrangler.authorization.policies.{
 }
 import com.soundcloud.publicApiStrangler.client.trackmetadata.Track
 import com.soundcloud.publicApiStrangler.client.tracks.{ContentAuthorizationBuilder, _}
+import com.soundcloud.publicApiStrangler.service.TrackVisibilityService
 import com.soundcloud.publicApiStrangler.test.UnitSpecification
 import com.twitter.util.{Await, Future}
-import org.joda.time.{DateTime, LocalDateTime}
+import org.joda.time.DateTime
 
 class StreamServiceSpec extends UnitSpecification {
 
   trait Context extends Scope {
     val tracksClient = mock[TracksClient]
-    val service = new StreamService(tracksClient, Telemetry.createIsolatedInstance)
+    val trackVisibilityService = mock[TrackVisibilityService]
+    val service = new StreamService(trackVisibilityService, tracksClient)
     val session = mock[UserSession]
 
     val track = mock[Track]
@@ -67,23 +68,11 @@ class StreamServiceSpec extends UnitSpecification {
 
     tracksClient.streamUrl(any[UserSession], any[StreamRequest]) returns Future.value(streamUrlResponse)
     tracksClient.previewUrl(any[UserSession], any[StreamRequest]) returns Future.value(streamPreviewUrlResponse)
-    tracksClient.visibleTracks(session, List(trackRequest)) returns Future.value(tracks)
+    trackVisibilityService.tracks(session, List(trackRequest)) returns Future.value(tracks)
   }
 
   "error when no track is found" in new Context {
     override lazy val tracks = List[VisibleTrack]()
-    Await.result(service.fetchSingle(session, trackUrn, secretToken)) ==== MediaStreamNotFoundError
-    Await.result(service.fetchMultiple(session, trackUrn, secretToken)) ==== MediaStreamNotFoundError
-  }
-
-  "error when track is found but disabled (taken down or over quota)" in new Context {
-    override lazy val tracks = List(visibleTrack.copy(disabledAt = Some(LocalDateTime.now())))
-    Await.result(service.fetchSingle(session, trackUrn, secretToken)) ==== MediaStreamNotFoundError
-    Await.result(service.fetchMultiple(session, trackUrn, secretToken)) ==== MediaStreamNotFoundError
-  }
-
-  "error when no transcodings are returned" in new Context {
-    override lazy val transcodings = List.empty[Transcoding]
     Await.result(service.fetchSingle(session, trackUrn, secretToken)) ==== MediaStreamNotFoundError
     Await.result(service.fetchMultiple(session, trackUrn, secretToken)) ==== MediaStreamNotFoundError
   }
