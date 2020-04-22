@@ -143,6 +143,7 @@ object Routing {
 
   def forUserTracksHandler(userTracksHandler: UserTracksHandler): List[(Method, String, Handler)] = {
     route(Method.Get, "/users/:userId/tracks", userTracksHandler.handleRequest)
+    route(Method.Get, "/me/tracks", userTracksHandler.handleMeTracks)
   }
 
   def forRepostsHandler(repostsHandler: RepostsHandler): List[(Method, String, Handler)] = {
