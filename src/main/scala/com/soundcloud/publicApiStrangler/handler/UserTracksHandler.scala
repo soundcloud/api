@@ -43,7 +43,7 @@ class UserTracksHandler(
 
   def handleMeTracks(req: HandlerRequest): Future[Response] = {
     userAuthentication.withLoggedInUser(req) { (session, userUrn) =>
-      performGetTracks(req, session, userUrn.toString)
+      performGetTracks(req, session, userUrn.identifier.toString)
     }
   }
 
