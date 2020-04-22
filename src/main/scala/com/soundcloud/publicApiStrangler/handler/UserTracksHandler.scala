@@ -9,6 +9,7 @@ import com.soundcloud.jvmkit.module.telemetry.exceptions.ExceptionCollector
 import com.soundcloud.jvmkit.module.telemetry.exceptions.ExceptionHandler._
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.logging.SoundCloudLoggerFactory
+import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.publicApiStrangler.service.trackrepresentation.{
   TrackPagination,
   TrackRepresentationsService,
@@ -36,6 +37,15 @@ class UserTracksHandler(
   def handleRequest(req: HandlerRequest): Future[Response] = {
     userAuthentication.withUserSession(req) { session =>
       val userId = req.routeParams("userId")
+      performGetTracks(req, session, userId)
+    }
+  }
+
+  def handleMeTracks(req: HandlerRequest): Future[Response] = {
+    userAuthentication.withLoggedInUser(req) { (session, userUrn) =>
+      performGetTracks(req, session, userUrn.toString)
+    }
+  }
 
       val pagination = TrackPagination.fromRequest(req.params, new URL(baseUrl + req.uri))
 
