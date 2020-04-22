@@ -161,7 +161,8 @@ class Clients(config: AppConfig, telemetry: Telemetry, whitelistedCients: Set[Ur
     stitchClient,
     lieblingClient,
     waveformUrlsGenerator,
-    userQuotaClient
+    userQuotaClient,
+    trackmetadataClient
   )
 
   val streamService = new StreamService(trackVisibilityService, tracksClient)

@@ -8,11 +8,12 @@ import com.soundcloud.publicApiStrangler.client.mothership.{DomainLocking, RichO
 import com.soundcloud.publicApiStrangler.client.pubmese.{Isrc, PubmeseClient}
 import com.soundcloud.publicApiStrangler.client.quota.UserQuotaClient
 import com.soundcloud.publicApiStrangler.client.stitch.{StitchClient, StitchCounts}
-import com.soundcloud.publicApiStrangler.client.tracks.{VisibleTrack, TrackRequest}
+import com.soundcloud.publicApiStrangler.client.tracks.{TrackRequest, VisibleTrack}
 import com.soundcloud.publicApiStrangler.client.mothership.response.representation.{Geoblockings, User}
-import com.soundcloud.publicApiStrangler.client.trackmetadata.Track
+import com.soundcloud.publicApiStrangler.client.trackmetadata.{Track, TrackmetadataClient}
 import com.soundcloud.publicApiStrangler.service.TrackVisibilityService
 import com.twitter.util.Future
+
 import scala.util.control.NonFatal
 
 class TrackRepresentationsService(
@@ -22,7 +23,8 @@ class TrackRepresentationsService(
     stitchClient: StitchClient,
     lieblingClient: LieblingClient,
     waveformUrlsGenerator: WaveformUrlsGenerator,
-    userQuotaClient: UserQuotaClient
+    userQuotaClient: UserQuotaClient,
+    trackmetadataClient: TrackmetadataClient
 ) {
 
   def tracks(session: UserSession, trackRequests: List[TrackRequest]): Future[List[TrackRepresentationLike]] = {
@@ -38,6 +40,22 @@ class TrackRepresentationsService(
       session: UserSession,
       trackRequest: TrackRequest
   ): Future[Option[TrackRepresentationLike]] = tracks(session, List(trackRequest)).map(_.headOption)
+
+  def userTracks(
+      session: UserSession,
+      userUrn: Urn,
+      trackPagination: TrackPagination
+  ): Future[TracksRepresentationResult] = {
+    for {
+      trackUrns <- trackmetadataClient.urnsByUser(session, userUrn)
+      trackUrnsPage = trackPagination.calculateTrackUrnPage(trackUrns).toList
+      visibleTracks <- trackVisibilityService.tracks(session, trackUrnsPage.map(track => TrackRequest(track, None)))
+      sortedVisibleTracks = trackPagination.calculateFinalPage(visibleTracks)
+      enrichedTracks <- enrichTracks(session, sortedVisibleTracks)
+    } yield {
+      TracksRepresentationResult(enrichedTracks, trackPagination.nextHref(enrichedTracks.size))
+    }
+  }
 
   private def enrichTracks(
       session: UserSession,

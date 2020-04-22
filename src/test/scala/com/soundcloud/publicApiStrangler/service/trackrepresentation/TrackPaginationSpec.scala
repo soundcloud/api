@@ -6,6 +6,7 @@ import java.util.TimeZone
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.publicApiStrangler.test.UnitSpecification
 import com.soundcloud.publicApiStrangler.test.util.TrackMetadataTrackBuilder
+import com.soundcloud.publicApiStrangler.client.tracks.VisibleTrackBuilder
 import org.joda.time.{DateTimeZone, DateTime}
 
 import scala.util.Random
@@ -21,6 +22,11 @@ class TrackPaginationSpec extends UnitSpecification {
   def tracks(size: Int) =
     Random
       .shuffle((0 until size).map(n => TrackMetadataTrackBuilder(urn = Urn("soundcloud", "tracks", n.toString)).build))
+      .toList
+
+  def visibleTracks(size: Int) =
+    Random
+      .shuffle((0 until size).map(n => new VisibleTrackBuilder().setUrn(Urn("soundcloud", "tracks", n.toString)).build))
       .toList
 
   "defaults" >> {
@@ -44,13 +50,23 @@ class TrackPaginationSpec extends UnitSpecification {
       }
     }
 
-    "#calculateFinalPage" >> {
+    "#legacyCalculateFinalPage" >> {
       "returns the sorted tracks" >> {
-        pagination.calculateFinalPage(tracks(3)).map(_.urn) ==== List(
+        pagination.legacyCalculateFinalPage(tracks(3)).map(_.urn) ==== List(
           Urn("soundcloud", "tracks", "2"),
           Urn("soundcloud", "tracks", "1"),
           Urn("soundcloud", "tracks", "0")
         )
+      }
+
+      "#calculateFinalPage" >> {
+        "returns the sorted tracks" >> {
+          pagination.calculateFinalPage(visibleTracks(3)).map(_.urn) ==== List(
+            Urn("soundcloud", "tracks", "2"),
+            Urn("soundcloud", "tracks", "1"),
+            Urn("soundcloud", "tracks", "0")
+          )
+        }
       }
     }
   }
@@ -73,12 +89,21 @@ class TrackPaginationSpec extends UnitSpecification {
       }
     }
 
-    "#calculateFinalPage" >> {
+    "#legacyCalculateFinalPage" >> {
       "returns the sorted tracks" >> {
-        pagination.calculateFinalPage(tracks(2)).map(_.urn) ==== List(
+        pagination.legacyCalculateFinalPage(tracks(2)).map(_.urn) ==== List(
           Urn("soundcloud", "tracks", "1"),
           Urn("soundcloud", "tracks", "0")
         )
+      }
+
+      "#calculateFinalPage" >> {
+        "returns the sorted tracks" >> {
+          pagination.calculateFinalPage(visibleTracks(2)).map(_.urn) ==== List(
+            Urn("soundcloud", "tracks", "1"),
+            Urn("soundcloud", "tracks", "0")
+          )
+        }
       }
     }
   }
@@ -146,12 +171,21 @@ class TrackPaginationSpec extends UnitSpecification {
       }
     }
 
-    "#calculateFinalPage" >> {
+    "#legacyCalculateFinalPage" >> {
       "returns the sorted tracks" >> {
-        pagination.calculateFinalPage(tracks(4)).map(_.urn) ==== List(
+        pagination.legacyCalculateFinalPage(tracks(4)).map(_.urn) ==== List(
           Urn("soundcloud", "tracks", "3"),
           Urn("soundcloud", "tracks", "2")
         )
+      }
+
+      "#calculateFinalPage" >> {
+        "returns the sorted tracks" >> {
+          pagination.calculateFinalPage(visibleTracks(4)).map(_.urn) ==== List(
+            Urn("soundcloud", "tracks", "3"),
+            Urn("soundcloud", "tracks", "2")
+          )
+        }
       }
     }
   }
@@ -172,6 +206,21 @@ class TrackPaginationSpec extends UnitSpecification {
         TrackMetadataTrackBuilder(urn = Urn("soundcloud", "tracks", id.toString), created_at = createdAt).build
     }
 
+    val visibleTracksWithCreatedAt = List(
+      (1, new DateTime(2017, 1, 1, 9, 0, 0)),
+      (2, new DateTime(2017, 1, 1, 11, 0, 0)),
+      (3, new DateTime(2017, 1, 10, 9, 0, 0)),
+      (4, new DateTime(2017, 1, 15, 9, 0, 0)),
+      (5, new DateTime(2017, 1, 15, 10, 0, 0)),
+      (6, new DateTime(2017, 1, 20, 10, 0, 0))
+    ).map {
+      case (id, createdAt) =>
+        new VisibleTrackBuilder()
+          .setUrn(Urn("soundcloud", "tracks", id.toString))
+          .setCreatedAt(createdAt.toLocalDateTime)
+          .build
+    }
+
     val pagination = new TrackPagination(None, None, false, Some(from), Some(to), baseUrl)
 
     "#calculateTrackUrnPage" >> {
@@ -181,13 +230,22 @@ class TrackPaginationSpec extends UnitSpecification {
       }
     }
 
-    "#calculateFinalPage" >> {
+    "#legacyCalculateFinalPage" >> {
       "returns the sorted tracks" >> {
-        pagination.calculateFinalPage(tracksWithCreatedAt).map(_.urn) ==== List(
+        pagination.legacyCalculateFinalPage(tracksWithCreatedAt).map(_.urn) ==== List(
           Urn("soundcloud", "tracks", "4"),
           Urn("soundcloud", "tracks", "3"),
           Urn("soundcloud", "tracks", "2")
         )
+      }
+      "#calculateFinalPage" >> {
+        "returns the sorted tracks" >> {
+          pagination.calculateFinalPage(visibleTracksWithCreatedAt).map(_.urn) ==== List(
+            Urn("soundcloud", "tracks", "4"),
+            Urn("soundcloud", "tracks", "3"),
+            Urn("soundcloud", "tracks", "2")
+          )
+        }
       }
     }
   }

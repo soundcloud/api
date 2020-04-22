@@ -4,6 +4,7 @@ import java.net.URL
 
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.publicApiStrangler.client.trackmetadata.Track
+import com.soundcloud.publicApiStrangler.client.tracks.VisibleTrack
 import org.joda.time.format.DateTimeFormat
 import org.joda.time.{DateTime, DateTimeZone}
 
@@ -29,11 +30,21 @@ case class TrackPagination(
     trackUrns.sortBy(-_.identifier.toLong).slice(start, end).toSet
   }
 
-  def calculateFinalPage(tracks: List[Track]): List[Track] = {
+  def legacyCalculateFinalPage(tracks: List[Track]): List[Track] = {
     tracks
       .filter(t =>
         createdAtFrom.map(t.created_at.isAfter(_)).getOrElse(true) &&
           createdAtTo.map(t.created_at.isBefore(_)).getOrElse(true)
+      )
+      .sortBy(-_.urn.identifier.toLong)
+      .slice(0, limit)
+  }
+
+  def calculateFinalPage(tracks: List[VisibleTrack]): List[VisibleTrack] = {
+    tracks
+      .filter(t =>
+        createdAtFrom.map(t.createdAt.toDateTime.isAfter(_)).getOrElse(true) &&
+          createdAtTo.map(t.createdAt.toDateTime.isBefore(_)).getOrElse(true)
       )
       .sortBy(-_.urn.identifier.toLong)
       .slice(0, limit)

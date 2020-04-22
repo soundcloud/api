@@ -47,7 +47,7 @@ class TrackRepository(
         .filter(track => accessibilityCheck.get(track.urn).get)
         .filter(track => audios.get(track.urn).map(_.state == TrackAudioMetadata.FinishedState).getOrElse(true))
 
-      val sortedAccessibleTracks = trackPagination.calculateFinalPage(accessibleTracks)
+      val sortedAccessibleTracks = trackPagination.legacyCalculateFinalPage(accessibleTracks)
 
       val nextHref = trackPagination.nextHref(trackUrns.size)
 
