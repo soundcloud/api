@@ -92,7 +92,6 @@ object Routing {
       route(Method.Get, "/users/:userId/favorites/:trackId", mothershipDispatcher.dispatch) :::
       route(Method.Put, "/users/:userId/favorites/:trackId", mothershipDispatcher.dispatch) :::
       route(Method.Delete, "/users/:userId/favorites/:trackId", mothershipDispatcher.dispatch) :::
-      route(Method.Get, "/me/tracks", mothershipDispatcher.dispatch) :::
       route(Method.Get, "/me/tracks/:trackId", mothershipDispatcher.dispatch) :::
       route(Method.Get, "/me/playlists", mothershipDispatcher.dispatch) :::
       route(Method.Post, "/me/playlists", mothershipDispatcher.dispatch) :::
