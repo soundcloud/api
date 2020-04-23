@@ -9,11 +9,9 @@ import com.soundcloud.publicApiStrangler.Routing
 import com.soundcloud.publicApiStrangler.client.mothership.TrackAudioMetadata
 import com.soundcloud.publicApiStrangler.client.mothership.response.representation.User
 import com.soundcloud.publicApiStrangler.client.stitch.StitchCounts
-import com.soundcloud.publicApiStrangler.client.trackcoordinator.datatypes.{NotFound, Result, Success}
 import com.soundcloud.publicApiStrangler.client.trackmetadata.{Artwork, EmbeddingPermission, Track}
 import com.soundcloud.publicApiStrangler.client.tracks.TrackRequest
 import com.soundcloud.publicApiStrangler.service.trackrepresentation.{
-  LegacyTrackRepresentationsService,
   TrackRepresentation,
   TrackRepresentationLike,
   TrackRepresentationsService
@@ -109,7 +107,6 @@ class SingleTrackHandlerSpec extends UnitSpecification {
   )
 
   trait Context extends HandlerSpecificationScope {
-    val legacyTrackRepresentationsService = mock[LegacyTrackRepresentationsService]
     val trackRepresentationsService = mock[TrackRepresentationsService]
 
     val telemetry = Telemetry.createIsolatedInstance
@@ -121,7 +118,6 @@ class SingleTrackHandlerSpec extends UnitSpecification {
     val handler = new SingleTrackHandler(
       new FakeUserAuthentication(session),
       trackRepresentationsService,
-      legacyTrackRepresentationsService,
       telemetry,
       exceptionCollector
     )
@@ -193,8 +189,6 @@ class SingleTrackHandlerSpec extends UnitSpecification {
 
   validPaths.foreach { path =>
     s"removes conditional request headers for path: $path" in new Context {
-      when(legacyTrackRepresentationsService.track(session, trackUrn, None))
-        .thenReturn(Future.value(Success(trackRepresentation)))
       when(trackRepresentationsService.track(session, TrackRequest(trackUrn, None)))
         .thenReturn(Future.value(Some(trackRepresentation)))
 
@@ -216,8 +210,7 @@ class SingleTrackHandlerSpec extends UnitSpecification {
 
   validPaths.foreach { path =>
     s"Passes secret token to tracks service for path: $path" in new Context {
-      when(legacyTrackRepresentationsService.track(session, trackUrn, Some("s3cret")))
-        .thenReturn(Future.value(Success(trackRepresentation)))
+
       when(trackRepresentationsService.track(session, TrackRequest(trackUrn, Some("s3cret"))))
         .thenReturn(Future.value(Some(trackRepresentation)))
 
@@ -230,17 +223,15 @@ class SingleTrackHandlerSpec extends UnitSpecification {
   validPaths.foreach { path =>
     s"When loading tracks from trackmetadata for: $path" >> {
       trait FromTrackMetadata extends Context {
-        def trackRepresentationLike: Future[Result[TrackRepresentationLike]]
+        def trackRepresentationLike: Future[Option[TrackRepresentationLike]]
 
-        when(legacyTrackRepresentationsService.track(session, trackUrn, None)).thenReturn(trackRepresentationLike)
         when(trackRepresentationsService.track(session, TrackRequest(trackUrn, None)))
-        // TODO: Implement me once legacyTrackRepresentationsService is gone
-          .thenReturn(Future.None)
+          .thenReturn(trackRepresentationLike)
 
       }
 
       "it returns 200 for Some()" in new FromTrackMetadata {
-        override def trackRepresentationLike = Future.value(Success(trackRepresentation))
+        override def trackRepresentationLike = Future.value(Some(trackRepresentation))
 
         val response = get(path)
         response.status.code ==== 200
@@ -251,7 +242,7 @@ class SingleTrackHandlerSpec extends UnitSpecification {
       }
 
       "it returns 404 for None" in new FromTrackMetadata {
-        override def trackRepresentationLike = Future.value(NotFound)
+        override def trackRepresentationLike = Future.value(None)
 
         val response = get(path)
         response.status.code ==== 404
@@ -260,7 +251,7 @@ class SingleTrackHandlerSpec extends UnitSpecification {
 
       "it returns 500 for failed futures" in new FromTrackMetadata {
         override def trackRepresentationLike =
-          Future.exception(new RuntimeException("An unexpected error occured while fetching a track"))
+          Future.exception(new RuntimeException("An unexpected error occurred while fetching a track"))
 
         val response = get(path)
         response.status.code ==== 500

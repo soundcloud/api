@@ -110,3 +110,5 @@ class TrackRepresentationsService(
       }
   }
 }
+
+case class TracksRepresentationResult(tracks: List[TrackRepresentationLike], nextHref: Option[String])

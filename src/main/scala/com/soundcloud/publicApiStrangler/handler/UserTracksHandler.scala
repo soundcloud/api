@@ -5,10 +5,11 @@ import java.net.URL
 import com.soundcloud.jvmkit.module.bff.session.UserAuthentication
 import com.soundcloud.jvmkit.module.http.server.HandlerRequest
 import com.soundcloud.jvmkit.module.telemetry.Telemetry
+import com.soundcloud.jvmkit.module.telemetry.exceptions.ExceptionCollector
+import com.soundcloud.jvmkit.module.telemetry.exceptions.ExceptionHandler._
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.logging.SoundCloudLoggerFactory
 import com.soundcloud.publicApiStrangler.service.trackrepresentation.{
-  LegacyTrackRepresentationsService,
   TrackPagination,
   TrackRepresentationsService,
   TracksRepresentationResult
@@ -24,18 +25,13 @@ import scala.util.{Success, Try}
 class UserTracksHandler(
     userAuthentication: UserAuthentication,
     trackService: TrackRepresentationsService,
-    legacyTracksService: LegacyTrackRepresentationsService,
     telemetry: Telemetry,
-    baseUrl: String
+    baseUrl: String,
+    exceptionCollector: ExceptionCollector
 ) {
   val logger = SoundCloudLoggerFactory.getLogger(getClass)
 
   private val numericRegexp = """\d+""".r
-  private val inconsistentUserTracksFetchResponsesCounter =
-    telemetry.counter(
-      "inconsistent_user_tracks_fetch_response_total",
-      "Count of inconsistent (not matching) responses from legacy and new user tracks fetch"
-    )
 
   def handleRequest(req: HandlerRequest): Future[Response] = {
     userAuthentication.withUserSession(req) { session =>
@@ -43,68 +39,45 @@ class UserTracksHandler(
 
       val pagination = TrackPagination.fromRequest(req.params, new URL(baseUrl + req.uri))
 
-      def getResult(urn: Urn): Future[Result[TracksRepresentationResult]] = {
-        Future
-          .join(
-            trackService
-              .userTracks(session, urn, pagination)
-              .map(Good(_))
-              .handle {
-                case NonFatal(e) =>
-                  logger.error(e.getMessage)
-                  Bad(HttpError(Status.InternalServerError))
-              },
-            legacyTracksService
-              .userTracks(session, urn, pagination)
-              .handle {
-                case NonFatal(e) =>
-                  logger.error(e.getMessage)
-                  Bad(HttpError(Status.InternalServerError))
-              }
-          )
-          .map {
-            case (tracks, legacyTracks) =>
-              compareAndReportTracks(tracks, legacyTracks)
-              legacyTracks
+      def fetchTrackRepresentation(urn: Urn): Future[Result[TracksRepresentationResult]] = {
+        trackService
+          .userTracks(session, urn, pagination)
+          .map(Good(_))
+          .handle {
+            case NonFatal(e) =>
+              logger.error(e.getMessage)
+              Bad(HttpError(Status.InternalServerError))
+
           }
       }
 
       Try(Urn("soundcloud", "users", userId)) match {
         case Success(urn @ Urn(_, _, numericRegexp())) =>
-          getResult(urn).map {
-            case Good(tracksRepresentationResult) =>
-              generateResponse(Status.Ok, getRepresentation(tracksRepresentationResult, pagination))
-            case Bad(error: HttpError) =>
-              generateResponse(error.status, generateErrorBody(error.description))
-            case Bad(error: StringError) =>
-              generateResponse(Status.InternalServerError, generateErrorBody(error.message))
-            case Bad(_) =>
-              generateResponse(
-                Status.InternalServerError,
-                generateErrorBody("an unexpected error occurred")
-              )
-          }
+          fetchTrackRepresentation(urn)
+            .map {
+              case Good(tracksRepresentationResult) =>
+                generateResponse(Status.Ok, getRepresentation(tracksRepresentationResult, pagination))
+              case Bad(error: HttpError) =>
+                generateResponse(error.status, generateErrorBody(error.description))
+              case Bad(error: StringError) =>
+                generateResponse(Status.InternalServerError, generateErrorBody(error.message))
+              case Bad(_) =>
+                generateResponse(
+                  Status.InternalServerError,
+                  generateErrorBody("an unexpected error occurred")
+                )
+            }
+            .handleAndReport(exceptionCollector) {
+              case NonFatal(e) =>
+                logger.error(e.getMessage)
+                generateResponse(
+                  Status.InternalServerError,
+                  generateErrorBody("an unexpected error occurred")
+                )
+
+            }
         case _ => Future.value(generateNotFound)
       }
-    }
-  }
-
-  private def compareAndReportTracks(
-      tracks1: Result[TracksRepresentationResult],
-      tracks2: Result[TracksRepresentationResult]
-  ): Unit = {
-    (tracks1, tracks2) match {
-      case (Good(t1), Good(t2)) =>
-        val t1Json = Json.toJson(t1.tracks)
-        val t2Json = Json.toJson(t2.tracks)
-
-        if (t1Json != t2Json) {
-          inconsistentUserTracksFetchResponsesCounter.inc()
-          SoundCloudLoggerFactory
-            .getLogger(getClass)
-            .warn(s"Track inconsistency: ${Json.stringify(t1Json)} != ${Json.stringify(t2Json)}")
-        }
-      case _ =>
     }
   }
 
