@@ -34,16 +34,16 @@ class UserTracksHandler(
 
   private val numericRegexp = """\d+""".r
 
-  def handleRequest(req: HandlerRequest): Future[Response] = {
+  def getUserTracks(req: HandlerRequest): Future[Response] = {
     userAuthentication.withUserSession(req) { session =>
       val userId = req.routeParams("userId")
       performGetTracks(req, session, userId)
     }
   }
 
-  def handleMeTracks(req: HandlerRequest): Future[Response] = {
+  def getMeTracks(req: HandlerRequest): Future[Response] = {
     userAuthentication.withLoggedInUser(req) { (session, userUrn) =>
-      performGetTracks(req, session, userUrn.identifier.toString)
+      performGetTracks(req, session, userUrn.identifier)
     }
   }
 

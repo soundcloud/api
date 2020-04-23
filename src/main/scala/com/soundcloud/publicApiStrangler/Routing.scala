@@ -142,8 +142,8 @@ object Routing {
   }
 
   def forUserTracksHandler(userTracksHandler: UserTracksHandler): List[(Method, String, Handler)] = {
-    route(Method.Get, "/users/:userId/tracks", userTracksHandler.handleRequest) :::
-      route(Method.Get, "/me/tracks", userTracksHandler.handleMeTracks)
+    route(Method.Get, "/users/:userId/tracks", userTracksHandler.getUserTracks) :::
+      route(Method.Get, "/me/tracks", userTracksHandler.getMeTracks)
   }
 
   def forRepostsHandler(repostsHandler: RepostsHandler): List[(Method, String, Handler)] = {
