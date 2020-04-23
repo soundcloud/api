@@ -14,8 +14,6 @@ import com.soundcloud.publicApiStrangler.service.trackrepresentation.{
   TrackRepresentationsService,
   TracksRepresentationResult
 }
-import com.soundcloud.publicApiStrangler.support.ResultF.lift
-import com.soundcloud.publicApiStrangler.support.{Bad, Good, ResultF, StringError}
 import com.soundcloud.publicApiStrangler.test.{HandlerSpecificationScope, UnitSpecification}
 import com.twitter.finagle.http.Status
 import com.twitter.util.Future
@@ -63,12 +61,9 @@ class UserTracksHandlerSpec extends UnitSpecification {
       def stubService(
           user: Urn,
           paths: List[String],
-          tracksServiceResponse: ResultF[TracksRepresentationResult],
           trackRepresentationResult: TracksRepresentationResult
       ) = {
         paths.foreach(path => {
-          when(legacyTracksService.userTracks(session, user, paginationParams(path)))
-            .thenReturn(tracksServiceResponse)
           when(tracksService.userTracks(session, user, paginationParams(path)))
             .thenReturn(Future.value(trackRepresentationResult))
         })
@@ -83,8 +78,9 @@ class UserTracksHandlerSpec extends UnitSpecification {
     }
 
     trait ErrorResponse extends TracksForUserContext {
-      val errorMessage = "foobar"
-      val trackRepresentationResult = TracksRepresentationResult(List.empty, None)
+      val errorMessage = "500 - Internal Server Error"
+      val trackRepresentationResult =
+        Future.exception(new RuntimeException("An unexpected error occurred while fetching a tracks"))
       // Note that exception text is _not_ included in expected response
       val expectedResponse =
         s"""{"error":"$errorMessage"}"""
@@ -102,7 +98,7 @@ class UserTracksHandlerSpec extends UnitSpecification {
             s"/users/7110/tracks.json/$queryString"
           )
 
-          stubService(user, userTracksPaths, tracksServiceResponse, trackRepresentationResult)
+          stubService(user, userTracksPaths, trackRepresentationResult)
 
           userTracksPaths.foreach(path => {
             val response = get(path)
@@ -117,7 +113,8 @@ class UserTracksHandlerSpec extends UnitSpecification {
           val user = Urn("soundcloud", "users", "7110")
           val path = s"/users/7110/tracks$queryString"
 
-          stubService(user, List(path), tracksServiceResponse, trackRepresentationResult)
+          when(tracksService.userTracks(session, user, paginationParams(path)))
+            .thenReturn(trackRepresentationResult)
 
           val response = get(path)
           response.status ==== Status.InternalServerError
@@ -138,7 +135,7 @@ class UserTracksHandlerSpec extends UnitSpecification {
             s"/me/tracks.json/$queryString"
           )
 
-          stubService(user, meTracksPaths, tracksServiceResponse, trackRepresentationResult)
+          stubService(user, meTracksPaths, trackRepresentationResult)
 
           meTracksPaths.foreach(path => {
             val response = get(path)
@@ -153,7 +150,8 @@ class UserTracksHandlerSpec extends UnitSpecification {
           val user = Urn("soundcloud", "users", "1")
           val path = s"/me/tracks$queryString"
 
-          stubService(user, List(path), tracksServiceResponse, trackRepresentationResult)
+          when(tracksService.userTracks(session, user, paginationParams(path)))
+            .thenReturn(trackRepresentationResult)
 
           val response = get(path)
           response.status ==== Status.InternalServerError
