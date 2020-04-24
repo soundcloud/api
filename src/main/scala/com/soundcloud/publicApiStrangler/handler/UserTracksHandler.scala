@@ -9,6 +9,7 @@ import com.soundcloud.jvmkit.module.telemetry.exceptions.ExceptionCollector
 import com.soundcloud.jvmkit.module.telemetry.exceptions.ExceptionHandler._
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.logging.SoundCloudLoggerFactory
+import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.publicApiStrangler.service.trackrepresentation.{
   TrackPagination,
   TrackRepresentationsService,
@@ -33,51 +34,60 @@ class UserTracksHandler(
 
   private val numericRegexp = """\d+""".r
 
-  def handleRequest(req: HandlerRequest): Future[Response] = {
+  def getUserTracks(req: HandlerRequest): Future[Response] = {
     userAuthentication.withUserSession(req) { session =>
       val userId = req.routeParams("userId")
+      performGetTracks(req, session, userId)
+    }
+  }
 
-      val pagination = TrackPagination.fromRequest(req.params, new URL(baseUrl + req.uri))
+  def getMeTracks(req: HandlerRequest): Future[Response] = {
+    userAuthentication.withLoggedInUser(req) { (session, userUrn) =>
+      performGetTracks(req, session, userUrn.identifier)
+    }
+  }
 
-      def fetchTrackRepresentation(urn: Urn): Future[Result[TracksRepresentationResult]] = {
-        trackService
-          .userTracks(session, urn, pagination)
-          .map(Good(_))
-          .handle {
+  private def performGetTracks(req: HandlerRequest, session: UserSession, userId: String): Future[Response] = {
+    val pagination = TrackPagination.fromRequest(req.params, new URL(baseUrl + req.uri))
+
+    def fetchTrackRepresentation(urn: Urn): Future[Result[TracksRepresentationResult]] = {
+      trackService
+        .userTracks(session, urn, pagination)
+        .map(Good(_))
+        .handle {
+          case NonFatal(e) =>
+            logger.error(e.getMessage)
+            Bad(HttpError(Status.InternalServerError))
+
+        }
+    }
+
+    Try(Urn("soundcloud", "users", userId)) match {
+      case Success(urn @ Urn(_, _, numericRegexp())) =>
+        fetchTrackRepresentation(urn)
+          .map {
+            case Good(tracksRepresentationResult) =>
+              generateResponse(Status.Ok, getRepresentation(tracksRepresentationResult, pagination))
+            case Bad(error: HttpError) =>
+              generateResponse(error.status, generateErrorBody(error.description))
+            case Bad(error: StringError) =>
+              generateResponse(Status.InternalServerError, generateErrorBody(error.message))
+            case Bad(_) =>
+              generateResponse(
+                Status.InternalServerError,
+                generateErrorBody("an unexpected error occurred")
+              )
+          }
+          .handleAndReport(exceptionCollector) {
             case NonFatal(e) =>
               logger.error(e.getMessage)
-              Bad(HttpError(Status.InternalServerError))
+              generateResponse(
+                Status.InternalServerError,
+                generateErrorBody("an unexpected error occurred")
+              )
 
           }
-      }
-
-      Try(Urn("soundcloud", "users", userId)) match {
-        case Success(urn @ Urn(_, _, numericRegexp())) =>
-          fetchTrackRepresentation(urn)
-            .map {
-              case Good(tracksRepresentationResult) =>
-                generateResponse(Status.Ok, getRepresentation(tracksRepresentationResult, pagination))
-              case Bad(error: HttpError) =>
-                generateResponse(error.status, generateErrorBody(error.description))
-              case Bad(error: StringError) =>
-                generateResponse(Status.InternalServerError, generateErrorBody(error.message))
-              case Bad(_) =>
-                generateResponse(
-                  Status.InternalServerError,
-                  generateErrorBody("an unexpected error occurred")
-                )
-            }
-            .handleAndReport(exceptionCollector) {
-              case NonFatal(e) =>
-                logger.error(e.getMessage)
-                generateResponse(
-                  Status.InternalServerError,
-                  generateErrorBody("an unexpected error occurred")
-                )
-
-            }
-        case _ => Future.value(generateNotFound)
-      }
+      case _ => Future.value(generateNotFound)
     }
   }
 

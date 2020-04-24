@@ -92,7 +92,6 @@ object Routing {
       route(Method.Get, "/users/:userId/favorites/:trackId", mothershipDispatcher.dispatch) :::
       route(Method.Put, "/users/:userId/favorites/:trackId", mothershipDispatcher.dispatch) :::
       route(Method.Delete, "/users/:userId/favorites/:trackId", mothershipDispatcher.dispatch) :::
-      route(Method.Get, "/me/tracks", mothershipDispatcher.dispatch) :::
       route(Method.Get, "/me/tracks/:trackId", mothershipDispatcher.dispatch) :::
       route(Method.Get, "/me/playlists", mothershipDispatcher.dispatch) :::
       route(Method.Post, "/me/playlists", mothershipDispatcher.dispatch) :::
@@ -142,7 +141,8 @@ object Routing {
   }
 
   def forUserTracksHandler(userTracksHandler: UserTracksHandler): List[(Method, String, Handler)] = {
-    route(Method.Get, "/users/:userId/tracks", userTracksHandler.handleRequest)
+    route(Method.Get, "/users/:userId/tracks", userTracksHandler.getUserTracks) :::
+      route(Method.Get, "/me/tracks", userTracksHandler.getMeTracks)
   }
 
   def forRepostsHandler(repostsHandler: RepostsHandler): List[(Method, String, Handler)] = {
