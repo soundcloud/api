@@ -54,7 +54,6 @@ object Routing {
 
   def forMothershipDispatcher(mothershipDispatcher: DispatchToMothershipHandler): List[(Method, String, Handler)] = {
     route(Method.Get, "/connect", mothershipDispatcher.dispatch) :::
-      route(Method.Get, "/e1/me/likes", mothershipDispatcher.dispatch) :::
       route(Method.Get, "/e1/me/playlist_likes", mothershipDispatcher.dispatch) :::
       route(Method.Put, "/e1/me/playlist_likes/:id", mothershipDispatcher.dispatch) :::
       route(Method.Get, "/e1/me/playlist_likes/ids", mothershipDispatcher.dispatch) :::
