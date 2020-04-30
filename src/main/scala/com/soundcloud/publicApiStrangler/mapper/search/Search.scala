@@ -5,7 +5,7 @@ import com.soundcloud.bff.nextbff.mapper.EmbeddedItem
 import com.soundcloud.bff.nextbff.mapping.JsonMapping
 import com.soundcloud.bff.nextbff.pagination.OffsetBasedPage
 import com.soundcloud.jvmkit.module.util.Urn
-import com.soundcloud.jvmkit.module.json.UrnFormat._
+import com.soundcloud.jvmkit.module.json.play.UrnFormat._
 import play.api.libs.json.{JsObject, JsValue}
 
 trait Pagination[T] {

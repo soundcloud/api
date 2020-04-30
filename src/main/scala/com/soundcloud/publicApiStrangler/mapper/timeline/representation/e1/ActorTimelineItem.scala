@@ -2,7 +2,7 @@ package com.soundcloud.publicApiStrangler.mapper.timeline.representation.e1
 
 import com.soundcloud.bff.nextbff.mapping.{JsonMapping, MappingContext}
 import com.soundcloud.publicApiStrangler.mapper.timeline.EntityMapper
-import com.soundcloud.jvmkit.module.json.UrnFormat._
+import com.soundcloud.jvmkit.module.json.play.UrnFormat._
 import com.soundcloud.jvmkit.module.util.Urn
 import play.api.libs.json.JsValue
 

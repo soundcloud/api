@@ -1,7 +1,7 @@
 package com.soundcloud.publicApiStrangler.client.tracks
 
 import com.soundcloud.jvmkit.module.util.Urn
-import com.soundcloud.jvmkit.module.json.UrnFormat._
+import com.soundcloud.jvmkit.module.json.play.UrnFormat._
 import play.api.libs.json.{Json, Reads, Writes}
 
 object DownloadRequest {

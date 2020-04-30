@@ -1,7 +1,7 @@
 package com.soundcloud.publicApiStrangler.client.trackmetadata
 
 import com.soundcloud.jvmkit.module.util.Urn
-import com.soundcloud.jvmkit.module.json.UrnFormat._
+import com.soundcloud.jvmkit.module.json.play.UrnFormat._
 import com.soundcloud.publicApiStrangler.support.HtmlSanitizer
 import org.joda.time.DateTime
 import play.api.libs.json._

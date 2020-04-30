@@ -1,6 +1,6 @@
 package com.soundcloud.publicApiStrangler.client.playlists
 
-import com.soundcloud.jvmkit.module.json.UrnFormat._
+import com.soundcloud.jvmkit.module.json.play.UrnFormat._
 import com.soundcloud.jvmkit.module.util.Urn
 import play.api.libs.json.{JsResult, JsSuccess, JsValue, Reads}
 

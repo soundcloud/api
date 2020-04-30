@@ -2,7 +2,7 @@ package com.soundcloud.publicApiStrangler.client.mothership
 
 import com.soundcloud.bff.nextbff.mapping.MappingContext
 import com.soundcloud.jvmkit.module.http.client.{JsonClient, Params}
-import com.soundcloud.jvmkit.module.json.UrnFormat._
+import com.soundcloud.jvmkit.module.json.play.UrnFormat._
 import com.soundcloud.jvmkit.module.util.http.Headers
 import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.jvmkit.module.util.{Path, Urn}

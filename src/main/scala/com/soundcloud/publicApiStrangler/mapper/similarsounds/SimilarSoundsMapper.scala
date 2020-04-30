@@ -6,7 +6,7 @@ import com.soundcloud.bff.nextbff.pagination.OffsetBasedPage
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.publicApiStrangler.client.SystemPlaylistsClient
-import com.soundcloud.jvmkit.module.json.UrnFormat._
+import com.soundcloud.jvmkit.module.json.play.UrnFormat._
 import com.soundcloud.publicApiStrangler.mapper.search.SearchEntityMapper
 import com.soundcloud.publicApiStrangler.support.mapping.{InputValidation, ObjectMapping}
 import com.twitter.util.Future

@@ -1,7 +1,7 @@
 package com.soundcloud.publicApiStrangler.mapper.search
 
 import com.soundcloud.bff.nextbff.mapping.MappingContext
-import com.soundcloud.jvmkit.module.json.UrnFormat._
+import com.soundcloud.jvmkit.module.json.play.UrnFormat._
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.publicApiStrangler.client.followcounts.FollowCounts
 import com.soundcloud.publicApiStrangler.mapper.timeline.representation.User

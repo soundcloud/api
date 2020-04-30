@@ -2,7 +2,7 @@ package com.soundcloud.publicApiStrangler.mapper.search
 
 import com.fasterxml.jackson.annotation.JsonIgnore
 import com.soundcloud.bff.nextbff.mapping.MappingContext
-import com.soundcloud.jvmkit.module.json.UrnFormat._
+import com.soundcloud.jvmkit.module.json.play.UrnFormat._
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.publicApiStrangler.mapper.liebling.LikeCountMapper

@@ -2,7 +2,7 @@ package com.soundcloud.publicApiStrangler.client.mothership.response.representat
 
 import com.soundcloud.jvmkit.module.util.Urn
 import play.api.libs.json.Json
-import com.soundcloud.jvmkit.module.json.UrnFormat._
+import com.soundcloud.jvmkit.module.json.play.UrnFormat._
 
 case class TrackPurchaseLink(
     track_urn: Urn,

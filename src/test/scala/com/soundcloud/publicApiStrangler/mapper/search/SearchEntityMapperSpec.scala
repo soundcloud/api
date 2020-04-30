@@ -2,7 +2,7 @@ package com.soundcloud.publicApiStrangler.mapper.search
 
 import com.soundcloud.bff.nextbff.UntypedJson
 import com.soundcloud.bff.nextbff.mapping.{Mapping, MappingContext}
-import com.soundcloud.jvmkit.module.json.UrnFormat._
+import com.soundcloud.jvmkit.module.json.play.UrnFormat._
 import com.soundcloud.jvmkit.module.util.{Url, Urn}
 import com.soundcloud.publicApiStrangler.authorization.ContentAuthorizationRules
 import com.soundcloud.publicApiStrangler.authorization.policies.{

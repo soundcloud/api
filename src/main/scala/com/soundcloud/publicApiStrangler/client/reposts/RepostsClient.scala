@@ -4,7 +4,7 @@ import com.soundcloud.jvmkit.module.http.client.{JsonClient, Params}
 import com.soundcloud.jvmkit.module.util.{Path, Urn}
 import com.soundcloud.jvmkit.module.util.http.Headers
 import com.soundcloud.jvmkit.module.util.session.UserSession
-import com.soundcloud.jvmkit.module.json.UrnFormat._
+import com.soundcloud.jvmkit.module.json.play.UrnFormat._
 import com.soundcloud.publicApiStrangler.client.reposts.RepostsClient._
 import com.soundcloud.publicApiStrangler.client.support.FetchClient
 import com.twitter.finagle.http.{Response, Status}

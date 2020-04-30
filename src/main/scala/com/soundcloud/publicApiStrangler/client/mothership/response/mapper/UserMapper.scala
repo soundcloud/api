@@ -1,6 +1,6 @@
 package com.soundcloud.publicApiStrangler.client.mothership.response.mapper
 
-import com.soundcloud.jvmkit.module.json.UrnFormat._
+import com.soundcloud.jvmkit.module.json.play.UrnFormat._
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.publicApiStrangler.client.mothership.response.representation.User
 import play.api.libs.json.JsValue

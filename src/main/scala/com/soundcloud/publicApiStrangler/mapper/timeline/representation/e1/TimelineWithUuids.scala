@@ -5,7 +5,7 @@ import java.util.UUID
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.soundcloud.bff.nextbff.mapping.MappingContext
 import com.soundcloud.bff.nextbff.pagination.CursorBasedPage
-import com.soundcloud.jvmkit.module.json.UrnFormat._
+import com.soundcloud.jvmkit.module.json.play.UrnFormat._
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.publicApiStrangler.mapper.timeline.representation.Timeline
 import com.soundcloud.publicApiStrangler.mapper.timeline.{EntityMapper, EntitySummaryMapper}
