@@ -8,10 +8,10 @@ import com.soundcloud.jvmkit.module.telemetry.Telemetry
 import com.soundcloud.jvmkit.module.telemetry.exceptions.ExceptionCollector
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.publicApiStrangler.Routing
+import com.soundcloud.publicApiStrangler.service.LikesService
 import com.soundcloud.publicApiStrangler.service.trackrepresentation.{
   TrackPagination,
   TrackRepresentationLikeSpecContext,
-  TrackRepresentationsService,
   TracksCollection
 }
 import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures.contentsOf
@@ -21,7 +21,7 @@ import com.twitter.util.Future
 import org.joda.time.{DateTime, DateTimeZone}
 import org.mockito.Mockito.when
 
-class UserTracksHandlerSpec extends UnitSpecification {
+class LikesHandlerSpec extends UnitSpecification {
   TimeZone.setDefault(TimeZone.getTimeZone("UTC"))
   DateTimeZone.setDefault(DateTimeZone.UTC)
 
@@ -29,18 +29,18 @@ class UserTracksHandlerSpec extends UnitSpecification {
     val session = loggedInSession(Urn("soundcloud", "users", "1"))
     val userAuthentication = new FakeUserAuthentication(session)
 
-    val tracksService = mock[TrackRepresentationsService]
+    val likesService = mock[LikesService]
     val telemetry = Telemetry.createIsolatedInstance
     val exceptionCollector = new ExceptionCollector(telemetry)
 
-    val handler = new UserTracksHandler(
+    val handler = new LikesHandler(
       userAuthentication,
-      tracksService,
+      likesService,
       "https://api.soundcloud.com",
       exceptionCollector
     )
 
-    override def routingDefinitions = Routing.forUserTracksHandler(handler)
+    override def routingDefinitions = Routing.forLikesHandler(handler)
   }
 
   "Getting tracks" >> {
@@ -60,13 +60,11 @@ class UserTracksHandlerSpec extends UnitSpecification {
 
       def stubService(
           user: Urn,
-          paths: List[String],
+          path: String,
           tracksCollection: TracksCollection
       ) = {
-        paths.foreach(path => {
-          when(tracksService.userTracks(session, user, paginationParams(path)))
-            .thenReturn(Future.value(tracksCollection))
-        })
+        when(likesService.userTracksLikes(session, user, paginationParams(path)))
+          .thenReturn(Future.value(tracksCollection))
       }
     }
 
@@ -76,42 +74,33 @@ class UserTracksHandlerSpec extends UnitSpecification {
     }
 
     trait ErrorResponse extends TracksForUserContext {
-      val errorMessage = "500 - Internal Server Error"
+      val errorMessage = "an unexpected error occurred"
       val trackRepresentationResult =
         Future.exception(new RuntimeException("An unexpected error occurred while fetching a tracks"))
-      // Note that exception text is _not_ included in expected response
       val expectedResponse =
         s"""{"error":"$errorMessage"}"""
     }
 
-    "GET /users/:id/tracks" >> {
+    "GET /users/:userId/favorites" >> {
       "with a successful response from tracks service" >> {
         "returns tracks" in new TracksForUserContext with SuccessfulResponse {
-          val user = Urn("soundcloud", "users", "7110")
+          val user = Urn("soundcloud", "users", "1")
+          val path = s"/users/1/favorites/$queryString"
 
-          val userTracksPaths = List(
-            s"/users/7110/tracks$queryString",
-            s"/users/7110/tracks/$queryString",
-            s"/users/7110/tracks.json$queryString",
-            s"/users/7110/tracks.json/$queryString"
-          )
+          stubService(user, path, tracksCollection)
 
-          stubService(user, userTracksPaths, tracksCollection)
-
-          userTracksPaths.foreach(path => {
-            val response = get(path)
-            response.status ==== Status.Ok
-            response.contentString ==== expectedResponse
-          })
+          val response = get(path)
+          response.status ==== Status.Ok
+          response.contentString ==== expectedResponse
         }
       }
 
       "with an error response from tracks service" >> {
         "returns an error response with message" in new TracksForUserContext with ErrorResponse {
-          val user = Urn("soundcloud", "users", "7110")
-          val path = s"/users/7110/tracks$queryString"
+          val user = Urn("soundcloud", "users", "1")
+          val path = s"/users/1/favorites/$queryString"
 
-          when(tracksService.userTracks(session, user, paginationParams(path)))
+          when(likesService.userTracksLikes(session, user, paginationParams(path)))
             .thenReturn(trackRepresentationResult)
 
           val response = get(path)
@@ -121,34 +110,26 @@ class UserTracksHandlerSpec extends UnitSpecification {
       }
     }
 
-    "GET /me/tracks" >> {
+    "GET /me/favorites" >> {
       "with a successful response from tracks service" >> {
         "returns tracks" in new TracksForUserContext with SuccessfulResponse {
           val user = Urn("soundcloud", "users", "1")
+          val path = s"/me/favorites/$queryString"
 
-          val meTracksPaths = List(
-            s"/me/tracks$queryString",
-            s"/me/tracks/$queryString",
-            s"/me/tracks.json$queryString",
-            s"/me/tracks.json/$queryString"
-          )
+          stubService(user, path, tracksCollection)
 
-          stubService(user, meTracksPaths, tracksCollection)
-
-          meTracksPaths.foreach(path => {
-            val response = get(path)
-            response.status ==== Status.Ok
-            response.contentString ==== expectedResponse
-          })
+          val response = get(path)
+          response.status ==== Status.Ok
+          response.contentString ==== expectedResponse
         }
       }
 
       "with an error response from tracks service" >> {
         "returns an error response with message" in new TracksForUserContext with ErrorResponse {
           val user = Urn("soundcloud", "users", "1")
-          val path = s"/me/tracks$queryString"
+          val path = s"/me/favorites/$queryString"
 
-          when(tracksService.userTracks(session, user, paginationParams(path)))
+          when(likesService.userTracksLikes(session, user, paginationParams(path)))
             .thenReturn(trackRepresentationResult)
 
           val response = get(path)

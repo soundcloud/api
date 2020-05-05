@@ -9,6 +9,7 @@ import com.soundcloud.publicApiStrangler.test.Helpers._
 import com.soundcloud.publicApiStrangler.test.UnitSpecification
 import com.twitter.finagle.IndividualRequestTimeoutException
 import com.twitter.util.{Await, Duration, Future}
+import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures._
 import play.api.libs.json.Json
 
 class LieblingClientSpec extends UnitSpecification {
@@ -26,6 +27,7 @@ class LieblingClientSpec extends UnitSpecification {
 
     val trackUrn = Urn("soundcloud", "tracks", "48786981")
     val tracksUrns = List(trackUrn, Urn("soundcloud", "tracks", "101"))
+    val likedTracksForUser = contentsOf("liebling", "liked_tracks_for_user")
     val notFoundTrackUrn = Urn("soundcloud", "tracks", "0")
 
     val lieblingLikesCount = Json.parse("""{
@@ -187,6 +189,27 @@ class LieblingClientSpec extends UnitSpecification {
       )
 
       Await.result(client.userLikedTracks(session, trackUrns.toSet, userUrn)) ==== Map(track1 -> true, track2 -> false)
+    }
+  }
+
+  "#userTracksLikes" >> {
+    trait UserTracksLikesContext extends Context {
+      lazy val result = Await.result(client.userTracksLikes(session, userUrn))
+    }
+
+    "returns liked track Urns for user" in new UserTracksLikesContext {
+      expectOkResponse(
+        Path() / "users" / userUrn / "track_likes",
+        likedTracksForUser
+      )
+
+      result ==== List(trackUrn)
+    }
+
+    "unsuccessful response" in new UserTracksLikesContext {
+      expectInternalErrorResponse(Path() / "users" / userUrn / "track_likes")
+
+      result ==== List.empty
     }
   }
 }

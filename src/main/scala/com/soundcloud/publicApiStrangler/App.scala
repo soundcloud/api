@@ -99,7 +99,8 @@ object App {
           forRepostersHandler(handlers.repostersHandler),
           forTimelineHandler(handlers.timelineHandler),
           forTrackStreamsHandler(handlers.trackStreamsHandler),
-          forTrackDownloadHandler(handlers.trackDownloadHandler)
+          forTrackDownloadHandler(handlers.trackDownloadHandler),
+          forLikesHandler(handlers.likesHandler)
         )
       )
       .build

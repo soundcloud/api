@@ -1,0 +1,19 @@
+{
+  "likes":[
+    {
+      "user_urn":"soundcloud:users:1",
+      "target_urn":"soundcloud:tracks:48786981",
+      "created_at":1457272245,
+      "created":"2016-03-06T13:50:45Z"
+    }
+  ],
+  "meta":{
+    "cursor":{
+      "next_href":"http://http.web.prod.liebling.dd.srv.int.s-cloud.net/users/soundcloud:users:1/track_likes?cursor=1457272245169700&page_size=1",
+      "next_params":{
+        "cursor":"1457272245169700",
+        "page_size":1
+      }
+    }
+  }
+}

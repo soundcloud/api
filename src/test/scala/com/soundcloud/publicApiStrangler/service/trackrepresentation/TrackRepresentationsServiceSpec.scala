@@ -252,6 +252,7 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
     ) = {
       setUpMocksForExistingTrack(track, session)
       when(trackmetadataClient.urnsByUser(session, trackOwnerUrn)).thenReturn(Future.value(List(trackUrn)))
+      when(lieblingClient.userTracksLikes(session, trackOwnerUrn)).thenReturn(Future.value(List(trackUrn)))
       when(trackPagination.calculateTrackUrnPage(List(trackUrn))).thenReturn(Set(trackUrn))
       when(trackPagination.calculateFinalPage(List(track))).thenReturn(List(track))
     }
@@ -866,13 +867,12 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
       val track = trackvisibilityTrack()
       setUpMocksForMultipleExistingTracks(track, session)
 
-      val trackRepResult = Await.result(tracksService.userTracks(session, trackOwnerUrn, trackPagination))
+      val tracksCollection = Await.result(tracksService.userTracks(session, trackOwnerUrn, trackPagination))
 
-      trackRepResult match {
+      tracksCollection match {
         case rep =>
-          rep must beAnInstanceOf[TracksRepresentationResult]
+          rep must beAnInstanceOf[TracksCollection]
       }
     }
   }
-
 }

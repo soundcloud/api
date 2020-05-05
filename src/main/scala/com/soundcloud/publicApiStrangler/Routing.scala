@@ -80,13 +80,11 @@ object Routing {
       route(Method.Get, "/tracks/:trackId/comments/:id", mothershipDispatcher.dispatch) :::
       route(Method.Put, "/users/:id", mothershipDispatcher.dispatch) :::
       route(Method.Get, "/users/:userId/tracks/:id", mothershipDispatcher.dispatch) :::
-      route(Method.Get, "/me/favorites", mothershipDispatcher.dispatch) :::
       route(Method.Get, "/me/favorites/ids", mothershipDispatcher.dispatch) :::
       route(Method.Get, "/me/favorites/:trackId", mothershipDispatcher.dispatch) :::
       route(Method.Put, "/me/favorites/:trackId", mothershipDispatcher.dispatch) :::
       route(Method.Post, "/me/favorites/:trackId", mothershipDispatcher.dispatch) :::
       route(Method.Delete, "/me/favorites/:trackId", mothershipDispatcher.dispatch) :::
-      route(Method.Get, "/users/:userId/favorites", mothershipDispatcher.dispatch) :::
       route(Method.Get, "/users/:userId/favorites/:trackId", mothershipDispatcher.dispatch) :::
       route(Method.Put, "/users/:userId/favorites/:trackId", mothershipDispatcher.dispatch) :::
       route(Method.Delete, "/users/:userId/favorites/:trackId", mothershipDispatcher.dispatch) :::
@@ -176,5 +174,10 @@ object Routing {
 
   def forTrackDownloadHandler(trackDownloadHandler: TrackDownloadHandler): List[(Method, String, Handler)] = {
     route(Method.Get, "/tracks/:trackId/download", trackDownloadHandler.handle)
+  }
+
+  def forLikesHandler(likesHandler: LikesHandler): List[(Method, String, Handler)] = {
+    route(Method.Get, "/users/:userId/favorites", likesHandler.getUserTracksLikes) :::
+      route(Method.Get, "/me/favorites", likesHandler.getMeTracksLikes)
   }
 }

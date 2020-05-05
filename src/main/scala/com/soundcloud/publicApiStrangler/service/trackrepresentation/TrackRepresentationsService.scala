@@ -45,15 +45,27 @@ class TrackRepresentationsService(
       session: UserSession,
       userUrn: Urn,
       trackPagination: TrackPagination
-  ): Future[TracksRepresentationResult] = {
+  ): Future[TracksCollection] = {
     for {
       trackUrns <- trackmetadataClient.urnsByUser(session, userUrn)
-      trackUrnsPage = trackPagination.calculateTrackUrnPage(trackUrns).toList
+      enrichedTracks <- resolveTracks(session, trackUrns, trackPagination)
+    } yield {
+      enrichedTracks
+    }
+  }
+
+  def resolveTracks(
+      session: UserSession,
+      trackUrns: List[Urn],
+      trackPagination: TrackPagination
+  ): Future[TracksCollection] = {
+    val trackUrnsPage = trackPagination.calculateTrackUrnPage(trackUrns).toList
+    for {
       visibleTracks <- trackVisibilityService.tracks(session, trackUrnsPage.map(track => TrackRequest(track, None)))
       sortedVisibleTracks = trackPagination.calculateFinalPage(visibleTracks)
       enrichedTracks <- enrichTracks(session, sortedVisibleTracks)
     } yield {
-      TracksRepresentationResult(enrichedTracks, trackPagination.nextHref(enrichedTracks.size))
+      TracksCollection(enrichedTracks, trackPagination.nextHref(enrichedTracks.size))
     }
   }
 
@@ -110,5 +122,3 @@ class TrackRepresentationsService(
       }
   }
 }
-
-case class TracksRepresentationResult(tracks: List[TrackRepresentationLike], nextHref: Option[String])
