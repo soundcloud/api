@@ -3,7 +3,7 @@ package com.soundcloud.publicApiStrangler.client.liebling
 import com.soundcloud.jvmkit.module.util.Urn
 import org.joda.time.DateTime
 import play.api.libs.json._
-import com.soundcloud.jvmkit.module.json.UrnFormat._
+import com.soundcloud.jvmkit.module.json.play.UrnFormat._
 
 object Like {
   val ISO8601 = "yyyy-MM-dd'T'HH:mm:ssZ"
