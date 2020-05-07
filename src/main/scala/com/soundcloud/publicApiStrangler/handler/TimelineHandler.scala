@@ -6,7 +6,6 @@ import com.soundcloud.jvmkit.module.http.server.{HandlerRequest, JsonResponseBui
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.LoggedInUserSession
 import com.soundcloud.publicApiStrangler.mapper.timeline._
-import com.soundcloud.publicApiStrangler.mapper.timeline.e1.StreamMapper
 import com.soundcloud.publicApiStrangler.mapper.timeline.publicApi.ActivitiesWithOriginMapper
 import com.soundcloud.publicApiStrangler.mapper.timeline.representation.Timeline
 import com.soundcloud.publicApiStrangler.mapper.timeline.representation.e1.TrackTimelineItem
@@ -16,13 +15,10 @@ import com.twitter.util.Future
 
 class TimelineHandler(
     userAuthentication: UserAuthentication,
-    streamMapper: StreamMapper,
     publicActivitiesMapper: ActivitiesWithOriginMapper,
     followingsTracksMapper: FollowingsTracksMapper,
     pagination: CursorPagination
 ) {
-
-  def renderStreamActivities(request: HandlerRequest): Future[Response] = renderActivities(request, streamMapper)
 
   def renderPublicActivities(request: HandlerRequest): Future[Response] =
     renderActivities(request, publicActivitiesMapper)

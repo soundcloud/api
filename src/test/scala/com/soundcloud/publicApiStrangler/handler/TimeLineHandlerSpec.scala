@@ -8,7 +8,6 @@ import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.publicApiStrangler.Routing
 import com.soundcloud.publicApiStrangler.client.TimelineJsonClient
 import com.soundcloud.publicApiStrangler.client.followcounts.FollowCounts
-import com.soundcloud.publicApiStrangler.mapper.timeline.e1.StreamMapper
 import com.soundcloud.publicApiStrangler.mapper.timeline.publicApi.ActivitiesWithOriginMapper
 import com.soundcloud.publicApiStrangler.mapper.timeline.representation.{Playlist, Track, User}
 import com.soundcloud.publicApiStrangler.mapper.timeline.{EntityMapper, EntitySummaryMapper, FollowingsTracksMapper}
@@ -57,7 +56,6 @@ class TimeLineHandlerSpec extends UnitSpecification {
     // With the entity mappers returning json objects, let the TimeLineHandler fiddle them together and assert the results
     val handler = new TimelineHandler(
       new FakeUserAuthentication(session),
-      new StreamMapper(timelineClient, entityMapper, entitySummaryMapper),
       new ActivitiesWithOriginMapper(timelineClient, entityMapper, entitySummaryMapper),
       new FollowingsTracksMapper(timelineClient, entityMapper, entitySummaryMapper),
       new CursorPagination(baseUrl)
@@ -71,26 +69,6 @@ class TimeLineHandlerSpec extends UnitSpecification {
     timelineClient
       .followingsTracks(any[UserSession], any[Option[String]], any[Int], any[Boolean], any[Option[String]])
       .returns(Future.value(onlyTracksTimeline))
-  }
-
-  // stream endpoints
-  Seq(
-    "/e1/me/stream",
-    "/e1/me/stream.json"
-  ).foreach { endpoint =>
-    endpoint in new Context {
-      val response = get(endpoint)
-      response.statusCode ==== 200
-      response.contentString ==== streamTimelineJsonString(endpoint)
-
-      there was one(timelineClient).stream(
-        ===(session),
-        any[Option[String]],
-        any[Int],
-        any[Boolean],
-        any[Option[String]]
-      )
-    }
   }
 
   // public activity endpoints

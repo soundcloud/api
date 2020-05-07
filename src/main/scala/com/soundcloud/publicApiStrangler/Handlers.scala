@@ -6,7 +6,6 @@ import com.soundcloud.jvmkit.module.telemetry.exceptions.ExceptionCollector
 import com.soundcloud.publicApiStrangler.handler._
 import com.soundcloud.publicApiStrangler.mapper.search.{SearchMapper, SearchRepository}
 import com.soundcloud.publicApiStrangler.mapper.similarsounds.SimilarSoundsMapper
-import com.soundcloud.publicApiStrangler.mapper.timeline.e1.StreamMapper
 import com.soundcloud.publicApiStrangler.mapper.timeline.publicApi.ActivitiesWithOriginMapper
 import com.soundcloud.publicApiStrangler.mapper.timeline.{EntityMapper, EntitySummaryMapper, FollowingsTracksMapper}
 import com.soundcloud.publicApiStrangler.mapper.trackstreams.{
@@ -32,13 +31,11 @@ class Handlers(telemetry: Telemetry, clients: Clients, exceptionCollector: Excep
       baseUrl,
       entitySummaryMapper
     )
-    val streamMapper = new StreamMapper(timelineClient, entityMapper, entitySummaryMapper)
     val publicActivitiesMapper = new ActivitiesWithOriginMapper(timelineClient, entityMapper, entitySummaryMapper)
     val followingsTracksMapper = new FollowingsTracksMapper(timelineClient, entityMapper, entitySummaryMapper)
     val pagination = new CursorPagination(baseUrl)
     new TimelineHandler(
       userAuthentication,
-      streamMapper,
       publicActivitiesMapper,
       followingsTracksMapper,
       pagination
