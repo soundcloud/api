@@ -116,7 +116,8 @@ class Handlers(telemetry: Telemetry, clients: Clients, exceptionCollector: Excep
       baseUrl,
       lieblingClient,
       userRelatedMothershipDispatcher,
-      trackMothershipDispatcherWithCounts
+      trackMothershipDispatcherWithCounts,
+      telemetry
     )
   }
 

@@ -51,7 +51,8 @@ class SearchHandlerSpec extends UnitSpecification {
       "http://api.soundcloud.com",
       lieblingClientMock,
       userRelatedMothershipDispatcher,
-      trackMothershipDispatcherWithCounts
+      trackMothershipDispatcherWithCounts,
+      Telemetry.createIsolatedInstance
     )
 
     override def routingDefinitions = Routing.forSearchHandler(handler)
