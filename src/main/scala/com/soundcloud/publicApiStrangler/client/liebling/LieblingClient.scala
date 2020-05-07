@@ -64,6 +64,21 @@ class LieblingClient(jsonClient: JsonClient) extends FetchClient {
   }
 
   /**
+    * Returns all user-liked tracks
+    */
+  def userTracksLikes(
+      session: UserSession,
+      userUrn: Urn
+  ): Future[List[Urn]] = {
+    fetch(jsonClient, session, Path() / "users" / userUrn / "track_likes").map { response =>
+      response.status match {
+        case Status.Ok => Json.parse(response.contentString).as[LikesPage].likes.map(_.target_urn)
+        case _ => List.empty
+      }
+    }
+  }
+
+  /**
     * Returns a map of track urn to boolean indicating if the provided user has liked that track or not.
     */
   def userLikedTracks(
@@ -80,6 +95,26 @@ class LieblingClient(jsonClient: JsonClient) extends FetchClient {
       })
       .map(defaultLikes ++ _)
   }
+
+  /**
+    * Returns the tracks from given urn input list that are liked by given user
+    *
+    * @param session   User session.
+    * @param userUrn   User urn.
+    * @param trackUrns Input track urns.
+    * @return List of track urns from input list that are liked by given user as defined by user urn.
+    * @see https://github.com/soundcloud/liebling/tree/master/doc#user-content-get-likes-info
+    */
+  def tracksLikedByUser(session: UserSession, userUrn: Urn, trackUrns: List[Urn]): Future[List[Urn]] =
+    inBatches(trackUrns, 50) { urnBatch =>
+      fetchLikes(
+        session,
+        Path() / "likes_info",
+        Map("for_urns" -> urnBatch, "user_urn" -> userUrn, "includes" -> "liked_track_urns")
+      ).map(json => (json \ "liked_track_urns").as[List[Urn]])
+    }.handle {
+      case NonFatal(_) => List.empty
+    }
 
   private def fetchLikes(
       session: UserSession,

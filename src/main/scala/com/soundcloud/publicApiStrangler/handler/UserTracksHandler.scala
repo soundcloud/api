@@ -24,6 +24,10 @@ import play.api.libs.json.Json
 
 import scala.util.control.NonFatal
 
+object Implicits {
+  implicit val urnWrites = Writes[Urn](urn => Json.toJson(urn.toString))
+}
+
 class UserTracksHandler(
     userAuthentication: UserAuthentication,
     userTracksService: UserTracksService,
