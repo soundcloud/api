@@ -96,7 +96,6 @@ object App {
           forSearchHandler(handlers.searchHandler),
           forUserTracksHandler(handlers.userTracksHandler),
           forRepostsHandler(handlers.repostsHandler),
-          forRepostersHandler(handlers.repostersHandler),
           forTimelineHandler(handlers.timelineHandler),
           forTrackStreamsHandler(handlers.trackStreamsHandler),
           forTrackDownloadHandler(handlers.trackDownloadHandler),
