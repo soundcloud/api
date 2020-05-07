@@ -72,7 +72,6 @@ object Routing {
       route(Method.Get, "/playlists/:id", mothershipDispatcher.dispatch) :::
       route(Method.Get, "/playlists/:playlistId/tracks", mothershipDispatcher.dispatch) :::
       route(Method.Get, "/resolve", mothershipDispatcher.dispatch) :::
-      route(Method.Post, "/resolve", mothershipDispatcher.dispatch) :::
       route(Method.Post, "/tracks", mothershipDispatcher.dispatch) :::
       route(Method.Get, "/tracks/:trackId/comments", mothershipDispatcher.dispatch) :::
       route(Method.Post, "/tracks/:trackId/comments", mothershipDispatcher.dispatch) :::
