@@ -5,7 +5,7 @@ import com.soundcloud.bff.nextbff.pagination.PageBuilder
 import com.soundcloud.bff.nextbff.repository.RepositoryException
 import com.soundcloud.jvmkit.module.bff.session.UserAuthentication
 import com.soundcloud.jvmkit.module.http.server.{Handler, HandlerRequest, JsonResponseBuilder, ResponseBuilder}
-import com.soundcloud.jvmkit.module.telemetry.Counter
+import com.soundcloud.jvmkit.module.telemetry.{Counter, Telemetry}
 import com.soundcloud.publicApiStrangler.client.followcounts.FollowCountsClient
 import com.soundcloud.publicApiStrangler.client.liebling.LieblingClient
 import com.soundcloud.publicApiStrangler.handler.SearchHandler._
@@ -25,39 +25,53 @@ class SearchHandler(
     baseUrl: String,
     lieblingClient: LieblingClient,
     userRelatedMothershipDispatcher: UserRelatedMothershipDispatcher,
-    trackMothershipDispatcherWithCounts: TrackMothershipDispatcherWithCounts
+    trackMothershipDispatcherWithCounts: TrackMothershipDispatcherWithCounts,
+    telemetry: Telemetry
 ) {
+  private val resourceRequestsCounter = telemetry.counter(
+    "top_level_resource_requests_total",
+    "Number of entity requests by type",
+    "request_type",
+    "resource_type"
+  )
+
   def dispatchUserRequest = dispatchRequest(
     defaultParams,
     SearchDispatcherRequest.userSearch,
+    "user",
     userRelatedMothershipDispatcher.dispatchToMothership _
   )
 
   def dispatchPlaylistRequest = dispatchRequest(
     playlistParams,
-    SearchDispatcherRequest.playlistSearch
+    SearchDispatcherRequest.playlistSearch,
+    "playlist"
   )
 
   def dispatchTrackRequest = {
     dispatchRequest(
       trackParams,
       SearchDispatcherRequest.trackSearch,
+      "track",
       trackMothershipDispatcherWithCounts.request _
     )
   }
 
   /**
-    * Perform a search for tracks. Logic to determine whether this is a search
+    * Perform a search for a given entity. Logic to determine whether this is a search
     * and if we should forward the request to Mothership.
     */
   private def dispatchRequest(
       searchParams: Set[String],
       makeRequest: HandlerRequest => SearchDispatcherRequest,
+      resourceType: String,
       mothershipDispatcherFn: Handler = mothershipDispatcher.dispatch
   ): Handler = { request =>
     if (isSearchRequest(request.params, searchParams)) {
+      resourceRequestsCounter.labels("search", resourceType).inc()
       search(request, makeRequest(request))
     } else {
+      resourceRequestsCounter.labels("filter", resourceType).inc()
       mothershipDispatcherFn(request)
     }
   }
