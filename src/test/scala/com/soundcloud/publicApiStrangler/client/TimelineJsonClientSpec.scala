@@ -86,31 +86,6 @@ class TimelineJsonClientSpec extends UnitSpecification {
     }
   }
 
-  "#activities" >> {
-    "with cursor" in new Context {
-      expectOkResponse(
-        Path() / "activities",
-        timelineActivities,
-        Map("page_size" -> "10", "cursor" -> "deadbeef", "direction" -> "after")
-      )
-      timelineActivities ==== Await.result(client.activities(session, Some("deadbeef"), 10))
-    }
-
-    "with reverse cursor" in new Context {
-      expectOkResponse(
-        Path() / "activities",
-        timelineActivities,
-        Map("page_size" -> "10", "cursor" -> "deadbeef", "direction" -> "before")
-      )
-      timelineActivities ==== Await.result(client.activities(session, Some("deadbeef"), 10, true))
-    }
-
-    "without cursor" in new Context {
-      expectOkResponse(Path() / "activities", timelineActivities, Map("page_size" -> "50"))
-      timelineActivities ==== Await.result(client.activities(session, None))
-    }
-  }
-
   "#profile" >> {
     "with cursor" in new Context {
       expectOkResponse(

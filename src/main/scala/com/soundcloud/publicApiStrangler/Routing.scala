@@ -156,7 +156,6 @@ object Routing {
   }
 
   def forTimelineHandler(timelineHandler: TimelineHandler): List[(Method, String, Handler)] = {
-    route(Method.Get, "/e1/me/activities", timelineHandler.renderAllActivities) :::
       route(Method.Get, "/e1/me/stream", timelineHandler.renderStreamActivities) :::
       route(Method.Get, "/me/activities", timelineHandler.renderPublicActivities) :::
       route(Method.Get, "/me/activities/tracks", timelineHandler.renderPublicActivities) :::
