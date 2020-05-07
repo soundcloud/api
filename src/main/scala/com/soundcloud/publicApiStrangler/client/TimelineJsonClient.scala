@@ -51,26 +51,6 @@ class TimelineJsonClient(service: JsonClient) extends FetchClient {
       Headers.empty
     ).map(SingleItem(_))
 
-  /*
-   * Fetches activities
-   *
-   * The reverseCursor parameter allows fetching items *before* a given cursor, if set to true
-   */
-  def activities(
-      session: UserSession,
-      cursor: Option[String],
-      pageSize: Int = 50,
-      reverseCursor: Boolean = false,
-      cursorEncoding: Option[String] = None
-  ): Future[JsObject] =
-    fetch(
-      service,
-      session,
-      Path() / "activities",
-      paramsFor(cursor, pageSize, reverseCursor, cursorEncoding),
-      Headers.empty
-    ).map(SingleItem(_))
-
   def profile(
       session: UserSession,
       user: Urn,
