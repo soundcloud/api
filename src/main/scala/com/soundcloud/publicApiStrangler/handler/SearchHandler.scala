@@ -6,6 +6,7 @@ import com.soundcloud.bff.nextbff.repository.RepositoryException
 import com.soundcloud.jvmkit.module.bff.session.UserAuthentication
 import com.soundcloud.jvmkit.module.http.server.{Handler, HandlerRequest, JsonResponseBuilder, ResponseBuilder}
 import com.soundcloud.jvmkit.module.telemetry.{Counter, Telemetry}
+import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.publicApiStrangler.client.followcounts.FollowCountsClient
 import com.soundcloud.publicApiStrangler.client.liebling.LieblingClient
 import com.soundcloud.publicApiStrangler.handler.SearchHandler._
@@ -32,7 +33,8 @@ class SearchHandler(
     "top_level_resource_requests_total",
     "Number of entity requests by type",
     "request_type",
-    "resource_type"
+    "resource_type",
+    "client_id"
   )
 
   def dispatchUserRequest = dispatchRequest(
@@ -67,13 +69,18 @@ class SearchHandler(
       resourceType: String,
       mothershipDispatcherFn: Handler = mothershipDispatcher.dispatch
   ): Handler = { request =>
-    if (isSearchRequest(request.params, searchParams)) {
-      resourceRequestsCounter.labels("search", resourceType).inc()
-      search(request, makeRequest(request))
-    } else {
-      resourceRequestsCounter.labels("filter", resourceType).inc()
-      mothershipDispatcherFn(request)
-    }
+    userAuthentication
+      .withUserSession(request) { session =>
+        val clientAppId = Option(session.getAgent).map(_.identifier).getOrElse("unknown")
+
+        if (isSearchRequest(request.params, searchParams)) {
+          resourceRequestsCounter.labels("search", resourceType, clientAppId).inc()
+          search(request, session, makeRequest(request))
+        } else {
+          resourceRequestsCounter.labels("filter", resourceType, clientAppId).inc()
+          mothershipDispatcherFn(request)
+        }
+      }
   }
 
   private def isSearchRequest(params: ParamMap, searchParams: Set[String]): Boolean = {
@@ -88,31 +95,33 @@ class SearchHandler(
     }
   }
 
-  private def search(request: HandlerRequest, searchRequest: SearchDispatcherRequest): Future[Response] = {
-    userAuthentication
-      .withUserSession(request) { session =>
-        val validPagination = for {
-          o <- validateParam(request, "offset", _ >= 0)
-          l <- validateParam(request, "limit", _ > 0)
-        } yield o && l
+  private def search(
+      request: HandlerRequest,
+      session: UserSession,
+      searchRequest: SearchDispatcherRequest
+  ): Future[Response] = {
+    val validPagination = for {
+      o <- validateParam(request, "offset", _ >= 0)
+      l <- validateParam(request, "limit", _ > 0)
+    } yield o && l
 
-        validPagination match {
-          case Return(true) =>
-            val page = PageBuilder(request, baseUrl)(searchRequest)
-              .allowExtraParams(searchRequest.paginationParams + SearchMapper.LinkedPartitioning)
-              .buildOffsetBased()
-            searchMapper.materialize(session, page).map {
-              case Some(info) => JsonResponseBuilder.ok(UntypedJson.write(info))
-              case _ => ResponseBuilder.notFound()
-            } handle {
-              case RepositoryException(Status.BadRequest, _) =>
-                ResponseBuilder.badRequest()
-            }
-
-          case _ => Future.value(ResponseBuilder.badRequest())
+    val response = validPagination match {
+      case Return(true) =>
+        val page = PageBuilder(request, baseUrl)(searchRequest)
+          .allowExtraParams(searchRequest.paginationParams + SearchMapper.LinkedPartitioning)
+          .buildOffsetBased()
+        searchMapper.materialize(session, page).map {
+          case Some(info) => JsonResponseBuilder.ok(UntypedJson.write(info))
+          case _ => ResponseBuilder.notFound()
+        } handle {
+          case RepositoryException(Status.BadRequest, _) =>
+            ResponseBuilder.badRequest()
         }
-      }
-      .map(appendCacheHeaders(_))
+
+      case _ => Future.value(ResponseBuilder.badRequest())
+    }
+    response.map(appendCacheHeaders(_))
+    response
   }
 
   private def appendCacheHeaders(response: Response) = {
