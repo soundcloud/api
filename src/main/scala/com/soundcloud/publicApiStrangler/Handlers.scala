@@ -125,15 +125,6 @@ class Handlers(telemetry: Telemetry, clients: Clients, exceptionCollector: Excep
     )
   }
 
-  val repostersHandler = new RepostersHandler(
-    userAuthentication,
-    repostsClient,
-    richOkidokiClient,
-    followCountsClient,
-    lieblingClient,
-    enrichLikesCounts
-  )
-
   val playlistsHandler = new PlaylistsHandler(userAuthentication, playlistDeletionClient)
 
   val repostsHandler = new RepostsHandler(userAuthentication, repostsClient)
