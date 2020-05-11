@@ -72,7 +72,6 @@ object Routing {
       route(Method.Get, "/playlists/:id", mothershipDispatcher.dispatch) :::
       route(Method.Get, "/playlists/:playlistId/tracks", mothershipDispatcher.dispatch) :::
       route(Method.Get, "/resolve", mothershipDispatcher.dispatch) :::
-      route(Method.Post, "/resolve", mothershipDispatcher.dispatch) :::
       route(Method.Post, "/tracks", mothershipDispatcher.dispatch) :::
       route(Method.Get, "/tracks/:trackId/comments", mothershipDispatcher.dispatch) :::
       route(Method.Post, "/tracks/:trackId/comments", mothershipDispatcher.dispatch) :::
@@ -148,11 +147,6 @@ object Routing {
       route(Method.Delete, "/e1/me/playlist_reposts/:id", repostsHandler.deletePlaylistsRepost) :::
       route(Method.Get, "/e1/me/track_reposts/ids", repostsHandler.getUserRepostableTracks) :::
       route(Method.Get, "/e1/me/playlist_reposts/ids", repostsHandler.getUserRepostablePlaylists)
-  }
-
-  def forRepostersHandler(repostersHandler: RepostersHandler): List[(Method, String, Handler)] = {
-    route(Method.Get, "/e1/tracks/:id/reposters", repostersHandler.trackReposters) :::
-      route(Method.Get, "/e1/playlists/:id/reposters", repostersHandler.playlistReposters)
   }
 
   def forTimelineHandler(timelineHandler: TimelineHandler): List[(Method, String, Handler)] = {
