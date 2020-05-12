@@ -43,8 +43,6 @@ object Routing {
       route(Method.Get, "/users/:id/followings/:other_id", userFollowHandler.fetchPossibleFollowingWithoutAuth) :::
       route(Method.Get, "/me/followings", userFollowHandler.fetchFollowings) :::
       route(Method.Get, "/me/followers", userFollowHandler.fetchMyFollowers) :::
-      route(Method.Get, "/me/followers/ids", userFollowHandler.fetchMyFollowerIds) :::
-      route(Method.Get, "/me/followings/ids", userFollowHandler.fetchMyFollowingIds) :::
       route(Method.Get, "/me/followers/:other_id", userFollowHandler.fetchPossibleFollower) :::
       route(Method.Get, "/me/followings/:other_id", userFollowHandler.fetchPossibleFollowing) :::
       route(Method.Post, "/me/followings/:other_id", userFollowHandler.follow) :::
@@ -56,10 +54,8 @@ object Routing {
     route(Method.Get, "/connect", mothershipDispatcher.dispatch) :::
       route(Method.Get, "/e1/me/playlist_likes", mothershipDispatcher.dispatch) :::
       route(Method.Put, "/e1/me/playlist_likes/:id", mothershipDispatcher.dispatch) :::
-      route(Method.Get, "/e1/me/playlist_likes/ids", mothershipDispatcher.dispatch) :::
       route(Method.Delete, "/e1/me/track_likes/:id", mothershipDispatcher.dispatch) :::
       route(Method.Put, "/e1/me/track_likes/:id", mothershipDispatcher.dispatch) :::
-      route(Method.Get, "/e1/me/track_likes/ids", mothershipDispatcher.dispatch) :::
       route(Method.Get, "/e1/users/:userId/playlist_likes", mothershipDispatcher.dispatch) :::
       route(Method.Get, "/e1/users/:userId/track_likes", mothershipDispatcher.dispatch) :::
       route(Method.Put, "/me", mothershipDispatcher.dispatch) :::
@@ -79,7 +75,6 @@ object Routing {
       route(Method.Get, "/tracks/:trackId/comments/:id", mothershipDispatcher.dispatch) :::
       route(Method.Put, "/users/:id", mothershipDispatcher.dispatch) :::
       route(Method.Get, "/users/:userId/tracks/:id", mothershipDispatcher.dispatch) :::
-      route(Method.Get, "/me/favorites/ids", mothershipDispatcher.dispatch) :::
       route(Method.Get, "/me/favorites/:trackId", mothershipDispatcher.dispatch) :::
       route(Method.Put, "/me/favorites/:trackId", mothershipDispatcher.dispatch) :::
       route(Method.Post, "/me/favorites/:trackId", mothershipDispatcher.dispatch) :::
@@ -144,9 +139,7 @@ object Routing {
     route(Method.Put, "/e1/me/track_reposts/:id", repostsHandler.createTracksRepost) :::
       route(Method.Delete, "/e1/me/track_reposts/:id", repostsHandler.deleteTracksRepost) :::
       route(Method.Put, "/e1/me/playlist_reposts/:id", repostsHandler.createPlaylistsRepost) :::
-      route(Method.Delete, "/e1/me/playlist_reposts/:id", repostsHandler.deletePlaylistsRepost) :::
-      route(Method.Get, "/e1/me/track_reposts/ids", repostsHandler.getUserRepostableTracks) :::
-      route(Method.Get, "/e1/me/playlist_reposts/ids", repostsHandler.getUserRepostablePlaylists)
+      route(Method.Delete, "/e1/me/playlist_reposts/:id", repostsHandler.deletePlaylistsRepost)
   }
 
   def forTimelineHandler(timelineHandler: TimelineHandler): List[(Method, String, Handler)] = {

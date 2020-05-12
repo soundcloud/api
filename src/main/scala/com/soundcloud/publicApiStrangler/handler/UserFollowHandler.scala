@@ -107,12 +107,6 @@ class UserFollowHandler(
   def fetchFollowingIdsWithoutAuth(request: HandlerRequest) =
     fetchPage(request, follows.followings, userIds, contacts, requireLogin = false)
 
-  def fetchMyFollowingIds(request: HandlerRequest) =
-    fetchPage(request, follows.followings, userIds, contacts, requireLogin = true)
-
-  def fetchMyFollowerIds(request: HandlerRequest) =
-    fetchPage(request, follows.followers, userIds, fans, requireLogin = true)
-
   def fetchPossibleFollowingWithoutAuth(request: HandlerRequest) =
     fetchUser(request, follows.filterFollowings, requireLogin = false)
 

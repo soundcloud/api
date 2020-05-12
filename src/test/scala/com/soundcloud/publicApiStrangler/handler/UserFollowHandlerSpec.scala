@@ -16,11 +16,11 @@ import com.soundcloud.publicApiStrangler.client.follows.representation.follow.{
 import com.soundcloud.publicApiStrangler.client.follows.representation.unfollow.{UnfollowSuccessful, UserAsTarget}
 import com.soundcloud.publicApiStrangler.client.mothership.OkidokiClient
 import com.soundcloud.publicApiStrangler.client.reposts.RepostsClient
-import com.soundcloud.publicApiStrangler.test.{HandlerSpecificationScope, UnitSpecification}
 import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures._
+import com.soundcloud.publicApiStrangler.test.{HandlerSpecificationScope, UnitSpecification}
 import com.twitter.finagle.http.Status
 import com.twitter.util.Future
-import org.joda.time.{DateTimeUtils, DateTime}
+import org.joda.time.{DateTime, DateTimeUtils}
 import org.specs2.mutable.BeforeAfter
 import play.api.libs.json._
 
@@ -127,74 +127,6 @@ class UserFollowHandlerSpec extends UnitSpecification {
 
     override def after = {
       DateTimeUtils.setCurrentMillisSystem()
-    }
-  }
-
-  "GET /me/followings/ids" >> {
-    "fetches a user's followings" in new Context {
-      override def before: Any = {
-        super.before
-        val values = Seq(
-          Following(
-            "123-123",
-            new DateTime("2012-02-13T23:30:13.000"),
-            Urn("soundcloud", "users", "12490957"),
-            Urn("soundcloud", "users", "100")
-          )
-        )
-        val pageInfo = Pagination("123-1234", 2)
-        followsMock.followings(session, session.getUser, None, 10) returns Future.value(
-          Some(FollowingsPage(values, Some(pageInfo)))
-        )
-        okidokiMock.fetch(session, values.map(_.target).toSet) returns Future.value(okidokiUsers.as[List[JsObject]])
-        followCountsClientMock.counts(session, values.map(_.target)) returns Future.value(
-          Seq(FollowCounts(values.map(_.target).last, 1111, 2222))
-        )
-        repostsClientMock.getRepostCountsByUrnWithFallback(session, values.map(_.target).toSet) returns Future.value(
-          Map.empty[Urn, Long]
-        )
-      }
-
-      val response = get("/me/followings/ids", Map("limit" -> "10"))
-      response.status ==== Status.Ok
-      Json.parse(response.contentString) ==== Json.obj(
-        "collection" -> List(123),
-        "next_href" -> "http://foo/me/followings/ids?page_size=2&cursor=123-1234"
-      )
-    }
-  }
-
-  "GET /me/followers/ids" >> {
-    "fetches a user's followings" in new Context {
-      override def before: Any = {
-        super.before
-        val values = Seq(
-          Following(
-            "123-123",
-            new DateTime("2012-02-13T23:30:13.000"),
-            Urn("soundcloud", "users", "12490957"),
-            Urn("soundcloud", "users", "100")
-          )
-        )
-        val pageInfo = Pagination("123-1234", 2)
-        followsMock.followers(session, session.getUser, None, 10) returns Future.value(
-          Some(FollowingsPage(values, Some(pageInfo)))
-        )
-        okidokiMock.fetch(session, values.map(_.user).toSet) returns Future.value(okidokiUsers.as[List[JsObject]])
-        followCountsClientMock.counts(session, values.map(_.user)) returns Future.value(
-          Seq(FollowCounts(values.map(_.user).last, 1111, 2222))
-        )
-        repostsClientMock.getRepostCountsByUrnWithFallback(session, values.map(_.user).toSet) returns Future.value(
-          Map.empty[Urn, Long]
-        )
-      }
-
-      val response = get("/me/followers/ids", Map("limit" -> "10"))
-      response.status ==== Status.Ok
-      Json.parse(response.contentString) ==== Json.obj(
-        "collection" -> List(123),
-        "next_href" -> "http://foo/me/followers/ids?page_size=2&cursor=123-1234"
-      )
     }
   }
 
