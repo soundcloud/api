@@ -6,6 +6,7 @@ import com.soundcloud.bff.nextbff.repository.RepositoryException
 import com.soundcloud.jvmkit.module.bff.session.UserAuthentication
 import com.soundcloud.jvmkit.module.http.server.{Handler, HandlerRequest, JsonResponseBuilder, ResponseBuilder}
 import com.soundcloud.jvmkit.module.telemetry.{Counter, Telemetry}
+import com.soundcloud.jvmkit.module.util.logging.SoundCloudLoggerFactory
 import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.publicApiStrangler.client.followcounts.FollowCountsClient
 import com.soundcloud.publicApiStrangler.client.liebling.LieblingClient
@@ -33,6 +34,21 @@ class SearchHandler(
     "top_level_resource_requests_total",
     "Number of entity requests by type",
     "request_type",
+    "resource_type",
+    "client_id"
+  )
+
+  private val requestsParamsCounter = telemetry.counter(
+    "top_level_resource_filter_request_params_total",
+    "Number of requested params for filter requests by type",
+    "resource_type",
+    "client_id",
+    "param"
+  )
+
+  private val requestsWithoutParamsCounter = telemetry.counter(
+    "top_level_resource_filter_request_without_params_total",
+    "Number of entity requests without params by type",
     "resource_type",
     "client_id"
   )
@@ -77,7 +93,21 @@ class SearchHandler(
           resourceRequestsCounter.labels("search", resourceType, clientAppId).inc()
           search(request, session, makeRequest(request))
         } else {
+          SoundCloudLoggerFactory
+            .getLogger(getClass)
+            .warn(s"Top Level Entty request, params: ${request.params.toString()}, appId: ${clientAppId}")
+
           resourceRequestsCounter.labels("filter", resourceType, clientAppId).inc()
+
+          if (allowedFilters.forall(filterKey => !request.params.keySet.contains(filterKey))) {
+            requestsWithoutParamsCounter.labels(resourceType, clientAppId).inc()
+          }
+          allowedFilters.foreach { filterKey =>
+            if (request.params.keySet.contains(filterKey)) {
+              requestsParamsCounter.labels(resourceType, clientAppId, filterKey).inc()
+            }
+          }
+
           mothershipDispatcherFn(request)
         }
       }
@@ -135,4 +165,19 @@ object SearchHandler {
   val defaultParams = Set("q")
   val playlistParams = Set("q", "license")
   val trackParams = Set("q", "genres", "tags", "license")
+  val allowedFilters = List(
+    "q",
+    "tags",
+    "filter",
+    "license",
+    "bpm[from]",
+    "bpm[to]",
+    "duration[from]",
+    "duration[to]",
+    "created_at[from]",
+    "created_at[to]",
+    "ids",
+    "genres",
+    "types"
+  )
 }
