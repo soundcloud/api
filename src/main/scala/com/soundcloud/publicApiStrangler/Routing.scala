@@ -78,6 +78,7 @@ object Routing {
       route(Method.Get, "/me/favorites/ids", mothershipDispatcher.dispatch) :::
       route(Method.Get, "/me/favorites/:trackId", mothershipDispatcher.dispatch) :::
       route(Method.Get, "/me/favorites/ids", mothershipDispatcher.dispatch) :::
+      route(Method.Get, "/users/:userId/tracks/:id", mothershipDispatcher.dispatch) :::
       route(Method.Put, "/me/favorites/:trackId", mothershipDispatcher.dispatch) :::
       route(Method.Post, "/me/favorites/:trackId", mothershipDispatcher.dispatch) :::
       route(Method.Delete, "/me/favorites/:trackId", mothershipDispatcher.dispatch) :::
