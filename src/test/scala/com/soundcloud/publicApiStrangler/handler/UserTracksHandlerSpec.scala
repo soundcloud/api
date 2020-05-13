@@ -73,6 +73,16 @@ class UserTracksHandlerSpec extends UnitSpecification with TrackRepresentationLi
             .thenReturn(Future.value(tracksCollection))
         })
       }
+
+      def stubService(
+          user: Urn,
+          path: String,
+          trackUrns: List[Urn],
+          tracksCollection: TracksCollection
+      ) = {
+        when(likesService.userTracksLikesById(session, user, trackUrns))
+          .thenReturn(Future.value(tracksCollection))
+      }
     }
 
     trait SuccessfulResponse extends TrackRepresentationLikeSpecContext with TracksForUserContext {
@@ -273,6 +283,49 @@ class UserTracksHandlerSpec extends UnitSpecification with TrackRepresentationLi
             response.statusCode ==== 500
             response.contentString ==== expected500Response
           }
+        }
+      }
+    }
+
+    "GET /users/:userId/favorites/:trackId" >> {
+      "with a successful response from tracks service" >> {
+        "returns first track" in new TracksForUserContext with SuccessfulResponse {
+          val user = Urn("soundcloud", "users", "1")
+          val trackUrns = List(Urn("soundcloud", "tracks", "48786981"))
+          val path = s"/users/1/favorites/48786981$queryString"
+
+          stubService(user, path, trackUrns, tracksCollection)
+
+          val response = get(path)
+          response.status ==== Status.Ok
+          response.contentString ==== Json.toJson(tracksCollection.tracks.headOption).toString()
+        }
+
+        "returns not found if empty" in new TracksForUserContext with SuccessfulResponse {
+          val user = Urn("soundcloud", "users", "1")
+          val trackUrns = List(Urn("soundcloud", "tracks", "48786981"))
+          val path = s"/users/1/favorites/48786981$queryString"
+
+          stubService(user, path, trackUrns, TracksCollection(List(), None))
+
+          val response = get(path)
+          response.status ==== Status.NotFound
+          response.contentString ==== """{"errors":[{"error_message":"404 - Not Found"}]}"""
+        }
+      }
+
+      "with an error response from tracks service" >> {
+        "returns an error response with message" in new TracksForUserContext with ErrorResponse {
+          val user = Urn("soundcloud", "users", "1")
+          val trackUrns = List(Urn("soundcloud", "tracks", "48786981"))
+          val path = s"/users/1/favorites/48786981$queryString"
+
+          when(likesService.userTracksLikesById(session, user, trackUrns))
+            .thenReturn(trackRepresentationResult)
+
+          val response = get(path)
+          response.status ==== Status.InternalServerError
+          response.contentString ==== expectedResponse
         }
       }
     }

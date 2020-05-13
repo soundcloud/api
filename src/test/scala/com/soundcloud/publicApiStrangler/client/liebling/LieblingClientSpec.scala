@@ -189,4 +189,53 @@ class LieblingClientSpec extends UnitSpecification {
       Await.result(client.userLikedTracks(session, trackUrns.toSet, userUrn)) ==== Map(track1 -> true, track2 -> false)
     }
   }
+
+  "#tracksLikedByUser" >> {
+    trait TracksLikedByUserContext extends Context {
+      val track1 = Urn("soundcloud", "tracks", "48786981")
+      val track2 = Urn("soundcloud", "tracks", "2")
+      val trackUrns = Seq(track1, track2)
+      lazy val result = Await.result(client.tracksLikedByUser(session, userUrn, trackUrns.toList))
+    }
+
+    "for a given set of urns, returns the urns of tracks that have been liked" in new TracksLikedByUserContext {
+      expectOkResponse(
+        Path() / "likes_info",
+        lieblingLikesCount,
+        Map("for_urns" -> trackUrns, "includes" -> "liked_track_urns", "user_urn" -> userUrn)
+      )
+
+      result ==== List(Urn("soundcloud", "tracks", "48786981"))
+    }
+
+    "unsuccessful response" in new TracksLikedByUserContext {
+      expectInternalErrorResponse(
+        Path() / "likes_info",
+        Map("for_urns" -> trackUrns, "includes" -> "liked_track_urns", "user_urn" -> userUrn)
+      )
+
+      result ==== List.empty
+    }
+  }
+
+  "#userTracksLikes" >> {
+    trait UserTracksLikesContext extends Context {
+      lazy val result = Await.result(client.userTracksLikes(session, userUrn))
+    }
+
+    "returns liked track Urns for user" in new UserTracksLikesContext {
+      expectOkResponse(
+        Path() / "users" / userUrn / "track_likes",
+        likedTracksForUser
+      )
+
+      result ==== List(trackUrn)
+    }
+
+    "unsuccessful response" in new UserTracksLikesContext {
+      expectInternalErrorResponse(Path() / "users" / userUrn / "track_likes")
+
+      result ==== List.empty
+    }
+  }
 }
