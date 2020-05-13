@@ -58,6 +58,8 @@ class TrackRepresentationsService(
       session: UserSession,
       trackUrns: List[Urn]
   ): Future[TracksCollection] = {
+    if (trackUrns.isEmpty) TracksCollection(List.empty, None)
+
     for {
       visibleTracks <- trackVisibilityService.tracks(session, trackUrns.map(track => TrackRequest(track, None)))
       enrichedTracks <- enrichTracks(session, visibleTracks)

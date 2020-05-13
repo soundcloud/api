@@ -46,12 +46,20 @@ class LikesServiceSpec extends UnitSpecification {
       }
     }
 
-    "#userTracksLikesById" >> {
-      "calls service with session and track urns" in new Context {
-        val expectedTrackurns = List(trackUrn)
-        Await.result(likesService.userTracksLikesById(session, trackOwnerUrn, expectedTrackurns))
+    "#userTracksLikesForUrns" >> {
+      "when all data is available" in new Context {
+        val track = trackvisibilityTrack()
+        setUpMocksForMultipleExistingTracks(track, session)
+        when(lieblingClient.tracksLikedByUser(session, trackOwnerUrn, List(track.urn)))
+          .thenReturn(Future.value(List(trackUrn)))
 
-        verify(trackRepresentationsService).resolveTracks(session, expectedTrackurns)
+        val tracksCollection =
+          Await.result(likesService.userTracksLikesForUrns(session, trackOwnerUrn, List(track.urn)))
+
+        tracksCollection match {
+          case rep =>
+            rep must beAnInstanceOf[TracksCollection]
+        }
       }
     }
   }

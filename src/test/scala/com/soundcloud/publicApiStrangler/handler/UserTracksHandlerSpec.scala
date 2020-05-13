@@ -80,7 +80,7 @@ class UserTracksHandlerSpec extends UnitSpecification with TrackRepresentationLi
           trackUrns: List[Urn],
           tracksCollection: TracksCollection
       ) = {
-        when(likesService.userTracksLikesById(session, user, trackUrns))
+        when(likesService.userTracksLikesForUrns(session, user, trackUrns))
           .thenReturn(Future.value(tracksCollection))
       }
     }
@@ -320,7 +320,7 @@ class UserTracksHandlerSpec extends UnitSpecification with TrackRepresentationLi
           val trackUrns = List(Urn("soundcloud", "tracks", "48786981"))
           val path = s"/users/1/favorites/48786981$queryString"
 
-          when(likesService.userTracksLikesById(session, user, trackUrns))
+          when(likesService.userTracksLikesForUrns(session, user, trackUrns))
             .thenReturn(trackRepresentationResult)
 
           val response = get(path)
@@ -363,7 +363,7 @@ class UserTracksHandlerSpec extends UnitSpecification with TrackRepresentationLi
           val trackUrns = List(Urn("soundcloud", "tracks", "48786981"))
           val path = s"/me/favorites/48786981$queryString"
 
-          when(likesService.userTracksLikesById(session, user, trackUrns))
+          when(likesService.userTracksLikesForUrns(session, user, trackUrns))
             .thenReturn(trackRepresentationResult)
 
           val response = get(path)

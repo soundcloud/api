@@ -27,11 +27,16 @@ class LikesService(
     }
   }
 
-  def userTracksLikesById(
+  def userTracksLikesForUrns(
       session: UserSession,
       userUrn: Urn,
       trackUrns: List[Urn]
   ): Future[TracksCollection] = {
-    trackRepresentationsService.resolveTracks(session, trackUrns)
+    for {
+      likedTrackUrns <- lieblingClient.tracksLikedByUser(session, userUrn, trackUrns)
+      enrichedTracks <- trackRepresentationsService.resolveTracks(session, likedTrackUrns)
+    } yield {
+      enrichedTracks
+    }
   }
 }
