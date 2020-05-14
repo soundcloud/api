@@ -12,6 +12,7 @@ import com.soundcloud.publicApiStrangler.service.UserTracksService
 
 import com.soundcloud.publicApiStrangler.service.trackrepresentation.{
   TrackPagination,
+  TrackRepresentationLike,
   TrackRepresentationLikeSpecContext,
   TracksCollection
 }
@@ -76,17 +77,17 @@ class UserTracksHandlerSpec extends UnitSpecification with TrackRepresentationLi
 
       def stubService(
           user: Urn,
-          path: String,
-          trackUrns: List[Urn],
-          tracksCollection: TracksCollection
+          trackUrn: Urn,
+          trackRepresentation: Option[TrackRepresentationLike]
       ) = {
-        when(likesService.userTrackLikeForUrn(session, user, trackUrns))
-          .thenReturn(Future.value(tracksCollection))
+        when(likesService.userTrackLikeForUrn(session, user, trackUrn))
+          .thenReturn(Future.value(trackRepresentation))
       }
     }
 
     trait SuccessfulResponse extends TrackRepresentationLikeSpecContext with TracksForUserContext {
-      val tracksCollection = TracksCollection(List(createTrackRepresentation()), None)
+      val trackRepresentation = createTrackRepresentation()
+      val tracksCollection = TracksCollection(List(trackRepresentation), None)
       val expectedResponse = contentsOf("tracks", "track_representation_response").toString()
     }
 
@@ -289,24 +290,24 @@ class UserTracksHandlerSpec extends UnitSpecification with TrackRepresentationLi
 
     "GET /users/:userId/favorites/:trackId" >> {
       "with a successful response from tracks service" >> {
-        "returns first track" in new TracksForUserContext with SuccessfulResponse {
+        "returns track" in new TracksForUserContext with SuccessfulResponse {
           val user = Urn("soundcloud", "users", "1")
-          val trackUrns = List(Urn("soundcloud", "tracks", "48786981"))
+          val urn = Urn("soundcloud", "tracks", "48786981")
           val path = s"/users/1/favorites/48786981$queryString"
 
-          stubService(user, path, trackUrns, tracksCollection)
+          stubService(user, urn, Some(trackRepresentation))
 
           val response = get(path)
           response.status ==== Status.Ok
-          response.contentString ==== Json.toJson(tracksCollection.tracks.headOption).toString()
+          response.contentString ==== Json.toJson(trackRepresentation).toString()
         }
 
         "returns not found if empty" in new TracksForUserContext with SuccessfulResponse {
           val user = Urn("soundcloud", "users", "1")
-          val trackUrns = List(Urn("soundcloud", "tracks", "48786981"))
+          val urn = Urn("soundcloud", "tracks", "48786981")
           val path = s"/users/1/favorites/48786981$queryString"
 
-          stubService(user, path, trackUrns, TracksCollection(List(), None))
+          stubService(user, urn, None)
 
           val response = get(path)
           response.status ==== Status.NotFound
@@ -317,10 +318,10 @@ class UserTracksHandlerSpec extends UnitSpecification with TrackRepresentationLi
       "with an error response from tracks service" >> {
         "returns an error response with message" in new TracksForUserContext with ErrorResponse {
           val user = Urn("soundcloud", "users", "1")
-          val trackUrns = List(Urn("soundcloud", "tracks", "48786981"))
+          val trackUrn = Urn("soundcloud", "tracks", "48786981")
           val path = s"/users/1/favorites/48786981$queryString"
 
-          when(likesService.userTrackLikeForUrn(session, user, trackUrns))
+          when(likesService.userTrackLikeForUrn(session, user, trackUrn))
             .thenReturn(trackRepresentationResult)
 
           val response = get(path)
@@ -332,24 +333,24 @@ class UserTracksHandlerSpec extends UnitSpecification with TrackRepresentationLi
 
     "GET /me/favorites/:trackId" >> {
       "with a successful response from tracks service" >> {
-        "returns first track" in new TracksForUserContext with SuccessfulResponse {
+        "returns track" in new TracksForUserContext with SuccessfulResponse {
           val user = Urn("soundcloud", "users", "1")
-          val trackUrns = List(Urn("soundcloud", "tracks", "48786981"))
+          val urn = Urn("soundcloud", "tracks", "48786981")
           val path = s"/me/favorites/48786981$queryString"
 
-          stubService(user, path, trackUrns, tracksCollection)
+          stubService(user, urn, Some(trackRepresentation))
 
           val response = get(path)
           response.status ==== Status.Ok
-          response.contentString ==== Json.toJson(tracksCollection.tracks.headOption).toString()
+          response.contentString ==== Json.toJson(trackRepresentation).toString()
         }
 
         "returns not found if empty" in new TracksForUserContext with SuccessfulResponse {
           val user = Urn("soundcloud", "users", "1")
-          val trackUrns = List(Urn("soundcloud", "tracks", "48786981"))
+          val urn = Urn("soundcloud", "tracks", "48786981")
           val path = s"/me/favorites/48786981$queryString"
 
-          stubService(user, path, trackUrns, TracksCollection(List(), None))
+          stubService(user, urn, None)
 
           val response = get(path)
           response.status ==== Status.NotFound
@@ -360,10 +361,10 @@ class UserTracksHandlerSpec extends UnitSpecification with TrackRepresentationLi
       "with an error response from tracks service" >> {
         "returns an error response with message" in new TracksForUserContext with ErrorResponse {
           val user = Urn("soundcloud", "users", "1")
-          val trackUrns = List(Urn("soundcloud", "tracks", "48786981"))
+          val trackUrn = Urn("soundcloud", "tracks", "48786981")
           val path = s"/me/favorites/48786981$queryString"
 
-          when(likesService.userTrackLikeForUrn(session, user, trackUrns))
+          when(likesService.userTrackLikeForUrn(session, user, trackUrn))
             .thenReturn(trackRepresentationResult)
 
           val response = get(path)

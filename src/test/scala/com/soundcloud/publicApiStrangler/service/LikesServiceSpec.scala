@@ -54,7 +54,7 @@ class LikesServiceSpec extends UnitSpecification {
           .thenReturn(Future.value(List(trackUrn)))
 
         val tracksCollection =
-          Await.result(likesService.userTrackLikeForUrn(session, trackOwnerUrn, List(track.urn)))
+          Await.result(likesService.userTrackLikeForUrn(session, trackOwnerUrn, track.urn))
 
         tracksCollection match {
           case rep =>
