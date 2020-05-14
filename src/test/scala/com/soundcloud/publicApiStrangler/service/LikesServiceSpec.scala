@@ -50,7 +50,7 @@ class LikesServiceSpec extends UnitSpecification {
       "when all data is available" in new Context {
         val track = trackvisibilityTrack()
         setUpMocksForMultipleExistingTracks(track, session)
-        when(lieblingClient.tracksLikedByUser(session, trackOwnerUrn, List(track.urn)))
+        when(lieblingClient.userTracksLikesForUrns(session, trackOwnerUrn, List(track.urn)))
           .thenReturn(Future.value(List(trackUrn)))
 
         val tracksCollection =

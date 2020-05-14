@@ -34,7 +34,7 @@ class LikesService(
       trackUrns: List[Urn]
   ): Future[TracksCollection] = {
     for {
-      likedTrackUrns <- lieblingClient.tracksLikedByUser(session, userUrn, trackUrns)
+      likedTrackUrns <- lieblingClient.userTracksLikesForUrns(session, userUrn, trackUrns)
       enrichedTracks <- trackRepresentationsService.tracks(
         session,
         likedTrackUrns.map(track => TrackRequest(track, None))

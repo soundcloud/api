@@ -105,7 +105,7 @@ class LieblingClient(jsonClient: JsonClient) extends FetchClient {
     * @return List of track urns from input list that are liked by given user as defined by user urn.
     * @see https://github.com/soundcloud/liebling/tree/master/doc#user-content-get-likes-info
     */
-  def tracksLikedByUser(session: UserSession, userUrn: Urn, trackUrns: List[Urn]): Future[List[Urn]] =
+  def userTracksLikesForUrns(session: UserSession, userUrn: Urn, trackUrns: List[Urn]): Future[List[Urn]] =
     inBatches(trackUrns, 50) { urnBatch =>
       fetchLikes(
         session,

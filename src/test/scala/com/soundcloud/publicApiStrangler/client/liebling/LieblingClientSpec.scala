@@ -190,12 +190,12 @@ class LieblingClientSpec extends UnitSpecification {
     }
   }
 
-  "#tracksLikedByUser" >> {
+  "#userTracksLikesForUrns" >> {
     trait TracksLikedByUserContext extends Context {
       val track1 = Urn("soundcloud", "tracks", "48786981")
       val track2 = Urn("soundcloud", "tracks", "2")
       val trackUrns = Seq(track1, track2)
-      lazy val result = Await.result(client.tracksLikedByUser(session, userUrn, trackUrns.toList))
+      lazy val result = Await.result(client.userTracksLikesForUrns(session, userUrn, trackUrns.toList))
     }
 
     "for a given set of urns, returns the urns of tracks that have been liked" in new TracksLikedByUserContext {
