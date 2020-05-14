@@ -46,7 +46,7 @@ class LikesServiceSpec extends UnitSpecification {
       }
     }
 
-    "#userTracksLikesForUrns" >> {
+    "#userTrackLikeForUrn" >> {
       "when all data is available" in new Context {
         val track = trackvisibilityTrack()
         setUpMocksForMultipleExistingTracks(track, session)
@@ -54,7 +54,7 @@ class LikesServiceSpec extends UnitSpecification {
           .thenReturn(Future.value(List(trackUrn)))
 
         val tracksCollection =
-          Await.result(likesService.userTracksLikesForUrns(session, trackOwnerUrn, List(track.urn)))
+          Await.result(likesService.userTrackLikeForUrn(session, trackOwnerUrn, List(track.urn)))
 
         tracksCollection match {
           case rep =>
