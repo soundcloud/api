@@ -3,6 +3,7 @@ package com.soundcloud.publicApiStrangler.service
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.publicApiStrangler.client.liebling.LieblingClient
+import com.soundcloud.publicApiStrangler.client.tracks.TrackRequest
 import com.soundcloud.publicApiStrangler.service.trackrepresentation.{
   TrackPagination,
   TrackRepresentationsService,
@@ -34,9 +35,12 @@ class LikesService(
   ): Future[TracksCollection] = {
     for {
       likedTrackUrns <- lieblingClient.tracksLikedByUser(session, userUrn, trackUrns)
-      enrichedTracks <- trackRepresentationsService.resolveTracks(session, likedTrackUrns)
+      enrichedTracks <- trackRepresentationsService.tracks(
+        session,
+        likedTrackUrns.map(track => TrackRequest(track, None))
+      )
     } yield {
-      enrichedTracks
+      TracksCollection(enrichedTracks, None)
     }
   }
 }
