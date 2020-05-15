@@ -86,6 +86,7 @@ class Handlers(telemetry: Telemetry, clients: Clients, exceptionCollector: Excep
   val userTracksHandler = new UserTracksHandler(
     userAuthentication,
     tracksService,
+    telemetry,
     baseUrl,
     exceptionCollector
   )
@@ -128,8 +129,6 @@ class Handlers(telemetry: Telemetry, clients: Clients, exceptionCollector: Excep
   val playlistsHandler = new PlaylistsHandler(userAuthentication, playlistDeletionClient)
 
   val repostsHandler = new RepostsHandler(userAuthentication, repostsClient)
-
-  val likesHandler = new LikesHandler(userAuthentication, likesService, baseUrl, exceptionCollector)
 
   val tokenExchangeRequestMapper = new TokenExchangeRequestParser(new RailsLikeParamsParser())
   val tokenExchangeHandler =

@@ -98,8 +98,7 @@ object App {
           forRepostsHandler(handlers.repostsHandler),
           forTimelineHandler(handlers.timelineHandler),
           forTrackStreamsHandler(handlers.trackStreamsHandler),
-          forTrackDownloadHandler(handlers.trackDownloadHandler),
-          forLikesHandler(handlers.likesHandler)
+          forTrackDownloadHandler(handlers.trackDownloadHandler)
         )
       )
       .build

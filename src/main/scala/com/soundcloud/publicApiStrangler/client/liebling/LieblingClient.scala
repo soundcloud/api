@@ -7,7 +7,6 @@ import com.soundcloud.jvmkit.module.util.logging.SoundCloudLoggerFactory
 import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.jvmkit.module.json.play.UrnFormat._
 import com.soundcloud.publicApiStrangler.client.support.{FetchClient, ResponseHandlers}
-import com.twitter.finagle.http.Status
 import com.twitter.util.Future
 import play.api.libs.json.{JsObject, Json, Reads, Writes}
 
@@ -80,18 +79,6 @@ class LieblingClient(jsonClient: JsonClient) extends FetchClient {
         userLikeCounts.liked_track_urns.map((_ -> true)).toMap
       })
       .map(defaultLikes ++ _)
-  }
-
-  def userTracksLikes(
-      session: UserSession,
-      userUrn: Urn
-  ): Future[List[Urn]] = {
-    fetch(jsonClient, session, Path() / "users" / userUrn / "track_likes").map { response =>
-      response.status match {
-        case Status.Ok => Json.parse(response.contentString).as[LikesPage].likes.map(_.target_urn)
-        case _ => List.empty
-      }
-    }
   }
 
   private def fetchLikes(
