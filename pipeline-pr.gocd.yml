@@ -2,7 +2,7 @@
 format_version: 2
 pipelines:
   public-api-strangler-pr:
-    group: backend-engineering-productivity-pr
+    group: core-clients
     label_template: "${COUNT}-${git[:7]}"
     materials:
       git:
