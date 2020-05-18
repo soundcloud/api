@@ -50,23 +50,13 @@ class TrackPaginationSpec extends UnitSpecification {
       }
     }
 
-    "#legacyCalculateFinalPage" >> {
+    "#calculateFinalPage" >> {
       "returns the sorted tracks" >> {
-        pagination.legacyCalculateFinalPage(tracks(3)).map(_.urn) ==== List(
+        pagination.calculateFinalPage(visibleTracks(3)).map(_.urn) ==== List(
           Urn("soundcloud", "tracks", "2"),
           Urn("soundcloud", "tracks", "1"),
           Urn("soundcloud", "tracks", "0")
         )
-      }
-
-      "#calculateFinalPage" >> {
-        "returns the sorted tracks" >> {
-          pagination.calculateFinalPage(visibleTracks(3)).map(_.urn) ==== List(
-            Urn("soundcloud", "tracks", "2"),
-            Urn("soundcloud", "tracks", "1"),
-            Urn("soundcloud", "tracks", "0")
-          )
-        }
       }
     }
   }
@@ -89,21 +79,12 @@ class TrackPaginationSpec extends UnitSpecification {
       }
     }
 
-    "#legacyCalculateFinalPage" >> {
+    "#calculateFinalPage" >> {
       "returns the sorted tracks" >> {
-        pagination.legacyCalculateFinalPage(tracks(2)).map(_.urn) ==== List(
+        pagination.calculateFinalPage(visibleTracks(2)).map(_.urn) ==== List(
           Urn("soundcloud", "tracks", "1"),
           Urn("soundcloud", "tracks", "0")
         )
-      }
-
-      "#calculateFinalPage" >> {
-        "returns the sorted tracks" >> {
-          pagination.calculateFinalPage(visibleTracks(2)).map(_.urn) ==== List(
-            Urn("soundcloud", "tracks", "1"),
-            Urn("soundcloud", "tracks", "0")
-          )
-        }
       }
     }
   }
@@ -171,21 +152,12 @@ class TrackPaginationSpec extends UnitSpecification {
       }
     }
 
-    "#legacyCalculateFinalPage" >> {
+    "#calculateFinalPage" >> {
       "returns the sorted tracks" >> {
-        pagination.legacyCalculateFinalPage(tracks(4)).map(_.urn) ==== List(
+        pagination.calculateFinalPage(visibleTracks(4)).map(_.urn) ==== List(
           Urn("soundcloud", "tracks", "3"),
           Urn("soundcloud", "tracks", "2")
         )
-      }
-
-      "#calculateFinalPage" >> {
-        "returns the sorted tracks" >> {
-          pagination.calculateFinalPage(visibleTracks(4)).map(_.urn) ==== List(
-            Urn("soundcloud", "tracks", "3"),
-            Urn("soundcloud", "tracks", "2")
-          )
-        }
       }
     }
   }
@@ -230,22 +202,13 @@ class TrackPaginationSpec extends UnitSpecification {
       }
     }
 
-    "#legacyCalculateFinalPage" >> {
+    "#calculateFinalPage" >> {
       "returns the sorted tracks" >> {
-        pagination.legacyCalculateFinalPage(tracksWithCreatedAt).map(_.urn) ==== List(
+        pagination.calculateFinalPage(visibleTracksWithCreatedAt).map(_.urn) ==== List(
           Urn("soundcloud", "tracks", "4"),
           Urn("soundcloud", "tracks", "3"),
           Urn("soundcloud", "tracks", "2")
         )
-      }
-      "#calculateFinalPage" >> {
-        "returns the sorted tracks" >> {
-          pagination.calculateFinalPage(visibleTracksWithCreatedAt).map(_.urn) ==== List(
-            Urn("soundcloud", "tracks", "4"),
-            Urn("soundcloud", "tracks", "3"),
-            Urn("soundcloud", "tracks", "2")
-          )
-        }
       }
     }
   }

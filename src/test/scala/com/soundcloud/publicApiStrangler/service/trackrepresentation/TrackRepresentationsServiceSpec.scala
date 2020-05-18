@@ -860,19 +860,4 @@ class TrackRepresentationsServiceSpec extends UnitSpecification {
       }
     }
   }
-
-  "#userTracks" >> {
-    "when all data is available" in new Context {
-      val track = trackvisibilityTrack()
-      setUpMocksForMultipleExistingTracks(track, session)
-
-      val trackRepResult = Await.result(tracksService.userTracks(session, trackOwnerUrn, trackPagination))
-
-      trackRepResult match {
-        case rep =>
-          rep must beAnInstanceOf[TracksRepresentationResult]
-      }
-    }
-  }
-
 }

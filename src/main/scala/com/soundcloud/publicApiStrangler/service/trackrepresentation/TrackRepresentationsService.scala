@@ -41,23 +41,7 @@ class TrackRepresentationsService(
       trackRequest: TrackRequest
   ): Future[Option[TrackRepresentationLike]] = tracks(session, List(trackRequest)).map(_.headOption)
 
-  def userTracks(
-      session: UserSession,
-      userUrn: Urn,
-      trackPagination: TrackPagination
-  ): Future[TracksRepresentationResult] = {
-    for {
-      trackUrns <- trackmetadataClient.urnsByUser(session, userUrn)
-      trackUrnsPage = trackPagination.calculateTrackUrnPage(trackUrns).toList
-      visibleTracks <- trackVisibilityService.tracks(session, trackUrnsPage.map(track => TrackRequest(track, None)))
-      sortedVisibleTracks = trackPagination.calculateFinalPage(visibleTracks)
-      enrichedTracks <- enrichTracks(session, sortedVisibleTracks)
-    } yield {
-      TracksRepresentationResult(enrichedTracks, trackPagination.nextHref(enrichedTracks.size))
-    }
-  }
-
-  private def enrichTracks(
+  def enrichTracks(
       session: UserSession,
       visibleTracks: List[VisibleTrack]
   ): Future[List[TrackRepresentationLike]] = {
@@ -110,5 +94,3 @@ class TrackRepresentationsService(
       }
   }
 }
-
-case class TracksRepresentationResult(tracks: List[TrackRepresentationLike], nextHref: Option[String])

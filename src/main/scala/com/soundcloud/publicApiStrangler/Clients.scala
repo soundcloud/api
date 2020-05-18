@@ -32,7 +32,7 @@ import com.soundcloud.publicApiStrangler.mapper.timeline.EntitySummaryMapper
 import com.soundcloud.publicApiStrangler.mapper.waveform.WaveformMapper
 import com.soundcloud.publicApiStrangler.service.media.{StreamService, TrackAccessRecorderService}
 import com.soundcloud.publicApiStrangler.service.trackrepresentation.TrackRepresentationsService
-import com.soundcloud.publicApiStrangler.service.TrackVisibilityService
+import com.soundcloud.publicApiStrangler.service.{TrackVisibilityService, UserTracksService}
 import com.twitter.finagle.Service
 import com.twitter.finagle.http.{Request, Response}
 import com.twitter.finagle.service.RetryPolicy.RetryableWriteException
@@ -135,6 +135,8 @@ class Clients(config: AppConfig, telemetry: Telemetry, whitelistedCients: Set[Ur
     userQuotaClient,
     trackmetadataClient
   )
+
+  val userTracksService = new UserTracksService(trackVisibilityService, tracksService, trackmetadataClient)
 
   val streamService = new StreamService(trackVisibilityService, tracksClient)
 

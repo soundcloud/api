@@ -3,7 +3,6 @@ package com.soundcloud.publicApiStrangler.service.trackrepresentation
 import java.net.URL
 
 import com.soundcloud.jvmkit.module.util.Urn
-import com.soundcloud.publicApiStrangler.client.trackmetadata.Track
 import com.soundcloud.publicApiStrangler.client.tracks.VisibleTrack
 import org.joda.time.format.DateTimeFormat
 import org.joda.time.{DateTime, DateTimeZone}
@@ -28,16 +27,6 @@ case class TrackPagination(
     val end = start + limit + limit // over-fetch to compensate for client filtering
     // sort by id desc
     trackUrns.sortBy(-_.identifier.toLong).slice(start, end).toSet
-  }
-
-  def legacyCalculateFinalPage(tracks: List[Track]): List[Track] = {
-    tracks
-      .filter(t =>
-        createdAtFrom.map(t.created_at.isAfter(_)).getOrElse(true) &&
-          createdAtTo.map(t.created_at.isBefore(_)).getOrElse(true)
-      )
-      .sortBy(-_.urn.identifier.toLong)
-      .slice(0, limit)
   }
 
   def calculateFinalPage(tracks: List[VisibleTrack]): List[VisibleTrack] = {
