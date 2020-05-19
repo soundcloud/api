@@ -1,20 +1,17 @@
 package com.soundcloud.publicApiStrangler.service
 
-import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.{UserSession, UserSessionBuilder}
-import com.soundcloud.publicApiStrangler.client.trackmetadata.TrackmetadataClient
-import com.soundcloud.publicApiStrangler.service.trackrepresentation.{
-  TrackPagination,
-  TrackRepresentationsService,
-  TrackRepresentationsServiceSpec,
-  TracksCollection
-}
-import com.soundcloud.publicApiStrangler.test.UnitSpecification
-import com.twitter.util.Await
+import com.soundcloud.publicApiStrangler.client.pubmese.Isrc
+import com.soundcloud.publicApiStrangler.client.stitch.StitchCounts
+import com.soundcloud.publicApiStrangler.client.trackmetadata.{Track, TrackmetadataClient}
+import com.soundcloud.publicApiStrangler.client.tracks.VisibleTrack
+import com.soundcloud.publicApiStrangler.service.trackrepresentation._
+import com.twitter.util.{Await, Future}
+import org.mockito.Mockito.when
 
-class UserTracksServiceSpec extends UnitSpecification {
+class UserTracksServiceSpec extends TrackRepresentationsSpecificationContext {
 
-  trait Context extends TrackRepresentationsServiceSpec {
+  trait Context extends TrackRepresentationsContext {
 
     val trackVisibilityService = mock[TrackVisibilityService]
     val trackRepresentationsService = mock[TrackRepresentationsService]
@@ -27,22 +24,49 @@ class UserTracksServiceSpec extends UnitSpecification {
       trackmetadataClient
     )
 
-    val requestingUserUrn = Urn("soundcloud", "users", "112")
-    val trackOwnerUrn = Urn("soundcloud", "users", "3000")
-    val trackUrn = Urn("soundcloud", "tracks", "987")
     val session: UserSession = new UserSessionBuilder().setUser(requestingUserUrn).build()
+    val builder = new TrackRepresentationBuilder
 
-    "#userTracks" >> {
-      "when all data is available" in new Context {
-        val track = trackvisibilityTrack()
-        setUpMocksForMultipleExistingTracks(track, session)
+    def trackRepresentationLike: TrackRepresentationLike =
+      builder.build(
+        sessionUser = session.user,
+        track = Track.fromVisibleTrack(trackvisibilityTrack()),
+        user = trackOwner,
+        isrc = Some(Isrc("US-S1Z-99-00001")),
+        counts = StitchCounts(111, 222, 333, 444, 555),
+        label = None,
+        geoblockings = geoblockingsList,
+        domainLockings = domainLockingsList,
+        trackAudioMetadata = trackAudioMetadataList,
+        isLiked = true,
+        waveformUrl = waveformUrl(trackUrn.identifier),
+        downloadsPerTrack = Some(0)
+      )
 
-        val tracksCollection = Await.result(userTracksService.userTracks(session, trackOwnerUrn, trackPagination))
+    def setUpMocksForMultipleExistingTracks(
+        track: VisibleTrack,
+        session: UserSession
+    ) = {
+      when(trackVisibilityService.tracks(session, List(trackRequest)))
+        .thenReturn(Future.value(List(track)))
+      when(trackRepresentationsService.enrichTracks(session, List(track)))
+        .thenReturn(Future.value(List(trackRepresentationLike)))
+      when(trackmetadataClient.urnsByUser(session, trackOwnerUrn)).thenReturn(Future.value(List(trackUrn)))
+      when(trackPagination.calculateTrackUrnPage(List(trackUrn))).thenReturn(Set(trackUrn))
+      when(trackPagination.calculateFinalPage(List(track))).thenReturn(List(track))
+    }
+  }
 
-        tracksCollection match {
-          case rep =>
-            rep must beAnInstanceOf[TracksCollection]
-        }
+  "#userTracks" >> {
+    "when all data is available" in new Context {
+      val track = trackvisibilityTrack()
+      setUpMocksForMultipleExistingTracks(track, session)
+
+      val tracksCollection = Await.result(userTracksService.userTracks(session, trackOwnerUrn, trackPagination))
+
+      tracksCollection match {
+        case rep =>
+          rep must beAnInstanceOf[TracksCollection]
       }
     }
   }
