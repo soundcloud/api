@@ -16,9 +16,9 @@ import org.joda.time.LocalDateTime
 trait TrackRepresentationsSpecificationContext extends UnitSpecification {
 
   trait TrackRepresentationsContext extends Scope {
-    val session: UserSession = new UserSessionBuilder().setUser(requestingUserUrn).build()
     val trackUrn = Urn("soundcloud", "tracks", "987")
     val requestingUserUrn = Urn("soundcloud", "users", "112")
+    val session: UserSession = new UserSessionBuilder().setUser(requestingUserUrn).build()
     val labelUrn = Urn("soundcloud", "users", "678")
     val trackOwnerUrn = Urn("soundcloud", "users", "3000")
     val createdAt = new LocalDateTime(2016, 5, 19, 18, 3, 4)
