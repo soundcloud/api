@@ -7,7 +7,8 @@ import com.soundcloud.publicApiStrangler.client.tracks.TrackRequest
 import com.soundcloud.publicApiStrangler.service.trackrepresentation.{
   TrackPagination,
   TrackRepresentationsService,
-  TracksCollection
+  TracksCollection,
+  TrackRepresentationLike
 }
 import com.twitter.util.Future
 
@@ -33,6 +34,21 @@ class UserTracksService(
       enrichedTracks <- trackRepresentationsService.enrichTracks(session, sortedVisibleTracks)
     } yield {
       TracksCollection(enrichedTracks, trackPagination.nextHref(enrichedTracks.size))
+    }
+  }
+
+  def userTrack(
+      trackUrn: Urn,
+      session: UserSession,
+      userId: String,
+      secretToken: Option[String]
+  ): Future[Option[TrackRepresentationLike]] = {
+    for {
+      visibleTracks <- trackVisibilityService.tracks(session, List(TrackRequest(trackUrn, secretToken)))
+      userOwnedTracks = visibleTracks.filter(_.userUrn.identifier == userId)
+      enrichedTracks <- trackRepresentationsService.enrichTracks(session, userOwnedTracks)
+    } yield {
+      enrichedTracks.headOption
     }
   }
 }

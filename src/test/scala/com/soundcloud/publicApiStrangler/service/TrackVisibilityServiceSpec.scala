@@ -16,8 +16,9 @@ class TrackVisibilityServiceSpec extends Specification with Mockito {
   trait Context extends Scope {
     val clientApplication = Urn("soundcloud", "applications", "999")
     lazy val whitelistedClients = Set.empty[Urn]
+    lazy val userUrn = Urn("soundcloud", "users", "123")
     lazy val session =
-      (new UserSessionBuilder).setUser(Urn("soundcloud", "users", "123")).setAgent(clientApplication).build()
+      (new UserSessionBuilder).setUser(userUrn).setAgent(clientApplication).build()
     val trackUrn = Urn("soundcloud", "tracks", "432")
     val tracksClient = mock[TracksClient]
     lazy val service = new TrackVisibilityService(tracksClient, whitelistedClients)
@@ -26,12 +27,17 @@ class TrackVisibilityServiceSpec extends Specification with Mockito {
       Transcoding("mp3-uuid", "preset", "audio/mpeg", List("progressive"), None, "sq", 180000, None)
     )
     lazy val visibleTrack =
-      (new VisibleTrackBuilder).setUrn(trackUrn).setDisabledAt(None).setTranscodings(transcodings).build
+      (new VisibleTrackBuilder)
+        .setUrn(trackUrn)
+        .setUserUrn(userUrn)
+        .setDisabledAt(None)
+        .setTranscodings(transcodings)
+        .build
 
     tracksClient.visibleTracks(session, List(trackRequest)) returns Future.value(List(visibleTrack))
   }
 
-  "#visibleTracks" >> {
+  "#tracks" >> {
     "returns visible tracks" in new Context {
       Await.result(service.tracks(session, List(trackRequest))) ==== List(visibleTrack)
     }

@@ -9,6 +9,7 @@ import com.soundcloud.jvmkit.module.telemetry.exceptions.ExceptionCollector
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.publicApiStrangler.Routing
 import com.soundcloud.publicApiStrangler.service.UserTracksService
+
 import com.soundcloud.publicApiStrangler.service.trackrepresentation.{
   TrackPagination,
   TrackRepresentationLikeSpecContext,
@@ -20,8 +21,12 @@ import com.twitter.finagle.http.Status
 import com.twitter.util.Future
 import org.joda.time.{DateTime, DateTimeZone}
 import org.mockito.Mockito.when
+import play.api.libs.json.Json
 
-class UserTracksHandlerSpec extends UnitSpecification {
+class UserTracksHandlerSpec extends UnitSpecification with TrackRepresentationLikeSpecContext {
+
+  val mockTrackRepresentation = createTrackRepresentation()
+
   TimeZone.setDefault(TimeZone.getTimeZone("UTC"))
   DateTimeZone.setDefault(DateTimeZone.UTC)
 
@@ -154,6 +159,120 @@ class UserTracksHandlerSpec extends UnitSpecification {
           val response = get(path)
           response.status ==== Status.InternalServerError
           response.contentString ==== expectedResponse
+        }
+      }
+
+    }
+
+  }
+
+  "Getting single track" >> {
+    trait TrackForUserContext extends Context {
+      def stubService(
+          trackUrn: Urn
+      ) = {
+        when(userTracksService.userTrack(trackUrn, session, "1", Some("s3cret")))
+          .thenReturn(Future.value(Some(mockTrackRepresentation)))
+
+        when(userTracksService.userTrack(trackUrn, session, "2", Some("s3cret")))
+          .thenReturn(Future.value(None))
+      }
+    }
+
+    trait SuccessfulResponse {
+      val expectedResponse = mockTrackRepresentation
+    }
+
+    trait ErrorResponse {
+      val expected404Response = "{\"error\":\"404 - Not Found\"}"
+      val expected500Response = "An unexpected error occured while fetching a track"
+    }
+
+    "GET users/:userId/tracks/:trackId" >> {
+      "with a successful response from tracks service" >> {
+        "return track" in new TrackForUserContext with SuccessfulResponse {
+          val path = "/users/1/tracks/987"
+
+          stubService(Urn("soundcloud", "tracks", "987"))
+
+          val response = get(path, Map("secret_token" -> "s3cret"))
+          response.status ==== Status.Ok
+          response.contentString ==== Json.stringify(Json.toJson(expectedResponse))
+
+        }
+      }
+
+      "with a 404 from tracks service" >> {
+        "returns an error response" in new TrackForUserContext with ErrorResponse {
+          val path = "/users/2/tracks/404"
+
+          stubService(Urn("soundcloud", "tracks", "404"))
+
+          val response = get(path, Map("secret_token" -> "s3cret"))
+
+          response.status ==== Status(404)
+          response.statusCode ==== 404
+          response.contentString ==== expected404Response
+        }
+      }
+
+      "with a 500 from tracks service" >> {
+        "returns an error response" in new TrackForUserContext with ErrorResponse {
+          val path = "/users/2/tracks/500"
+
+          when(userTracksService.userTrack(Urn("soundcloud", "tracks", "500"), session, "2", Some("s3cret")))
+            .thenReturn(Future.exception(new RuntimeException))
+
+          val response = get(path, Map("secret_token" -> "s3cret"))
+
+          response.status ==== Status.InternalServerError
+          response.statusCode ==== 500
+          response.contentString ==== expected500Response
+        }
+      }
+
+      "GET me/tracks/:trackId" >> {
+        "with a successful response from tracks service" >> {
+          "return track" in new TrackForUserContext with SuccessfulResponse {
+            val path = "/me/tracks/987"
+
+            stubService(Urn("soundcloud", "tracks", "987"))
+            val response = get(path, Map("secret_token" -> "s3cret"))
+
+            response.status ==== Status.Ok
+            response.statusCode ==== 200
+            response.contentString ==== Json.stringify(Json.toJson(expectedResponse))
+          }
+        }
+
+        "with a 404 from tracks service" >> {
+          "returns an error response with message" in new TrackForUserContext with ErrorResponse {
+            val path = "/me/tracks/404"
+
+            when(userTracksService.userTrack(Urn("soundcloud", "tracks", "404"), session, "1", Some("s3cret")))
+              .thenReturn(Future.value(None))
+
+            val response = get(path, Map("secret_token" -> "s3cret"))
+
+            response.status ==== Status(404)
+            response.statusCode ==== 404
+            response.contentString ==== expected404Response
+          }
+        }
+
+        "with a 500 from tracks service" >> {
+          "returns an error response" in new TrackForUserContext with ErrorResponse {
+            val path = "/me/tracks/500"
+
+            when(userTracksService.userTrack(Urn("soundcloud", "tracks", "500"), session, "1", Some("s3cret")))
+              .thenReturn(Future.exception(new RuntimeException))
+
+            val response = get(path, Map("secret_token" -> "s3cret"))
+
+            response.status ==== Status.InternalServerError
+            response.statusCode ==== 500
+            response.contentString ==== expected500Response
+          }
         }
       }
     }

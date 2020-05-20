@@ -125,7 +125,9 @@ class SingleTrackHandlerSpec extends UnitSpecification {
     override def routingDefinitions = Routing.forSingleTrackHandler(handler)
   }
 
-  val validPaths = List("/tracks/987", "/tracks/987/", "/tracks/987.json", "/tracks/987.json/")
+  val validPaths =
+    List("/tracks/987", "/tracks/987/", "/tracks/987.json", "/tracks/987.json/")
+
   val nonNumericPaths = List(
     "/tracks/__12",
     "/tracks/__12/",
@@ -210,7 +212,6 @@ class SingleTrackHandlerSpec extends UnitSpecification {
 
   validPaths.foreach { path =>
     s"Passes secret token to tracks service for path: $path" in new Context {
-
       when(trackRepresentationsService.track(session, TrackRequest(trackUrn, Some("s3cret"))))
         .thenReturn(Future.value(Some(trackRepresentation)))
 

@@ -54,6 +54,7 @@ class SingleTrackHandler(
       }
     }
   }
+
   private def fetchTrackRepresentation(
       session: UserSession,
       urn: Urn,
@@ -66,6 +67,7 @@ class SingleTrackHandler(
         case _ => NotFound
       }
   }
+
   private def generateNotFound: Response = {
     JsonResponseBuilder.notFound(notFoundErrorString)
   }
