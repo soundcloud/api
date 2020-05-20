@@ -1,21 +1,18 @@
 package com.soundcloud.publicApiStrangler.service
 
-import com.soundcloud.jvmkit.module.util.Urn
-import com.soundcloud.jvmkit.module.util.session.{UserSession, UserSessionBuilder}
 import com.soundcloud.publicApiStrangler.client.liebling.LieblingClient
 import com.soundcloud.publicApiStrangler.service.trackrepresentation.{
   TrackPagination,
+  TrackRepresentationWaveformUrlDecorator,
   TrackRepresentationsService,
-  TrackRepresentationsServiceSpec,
-  TracksCollection
+  TrackRepresentationsSpecificationContext
 }
-import com.soundcloud.publicApiStrangler.test.UnitSpecification
 import com.twitter.util.{Await, Future}
 import org.mockito.Mockito._
 
-class LikesServiceSpec extends UnitSpecification {
+class LikesServiceSpec extends TrackRepresentationsSpecificationContext {
 
-  trait Context extends TrackRepresentationsServiceSpec {
+  trait Context extends TrackRepresentationsContext {
 
     val trackRepresentationsService = mock[TrackRepresentationsService]
     val lieblingClient = mock[LieblingClient]
@@ -25,26 +22,22 @@ class LikesServiceSpec extends UnitSpecification {
       trackRepresentationsService,
       lieblingClient
     )
+  }
 
-    val requestingUserUrn = Urn("soundcloud", "users", "112")
-    val trackOwnerUrn = Urn("soundcloud", "users", "3000")
-    val trackUrn = Urn("soundcloud", "tracks", "987")
-    val session: UserSession = new UserSessionBuilder().setUser(requestingUserUrn).build()
+  "#userTrackLikeForUrn" >> {
+    "when all data is available" in new Context {
+      val track = trackvisibilityTrack()
+      when(trackRepresentationsService.tracks(session, List(trackRequest)))
+        .thenReturn(Future.value(List(trackRepresentationLike)))
+      when(lieblingClient.userTracksLikesForUrns(session, trackOwnerUrn, List(track.urn)))
+        .thenReturn(Future.value(List(trackUrn)))
 
-    "#userTrackLikeForUrn" >> {
-      "when all data is available" in new Context {
-        val track = trackvisibilityTrack()
-        setUpMocksForExistingTrack(track, session)
-        when(lieblingClient.userTracksLikesForUrns(session, trackOwnerUrn, List(track.urn)))
-          .thenReturn(Future.value(List(trackUrn)))
+      val tracksCollection =
+        Await.result(likesService.userTrackLikeForUrn(session, trackOwnerUrn, track.urn))
 
-        val tracksCollection =
-          Await.result(likesService.userTrackLikeForUrn(session, trackOwnerUrn, track.urn))
-
-        tracksCollection match {
-          case rep =>
-            rep must beAnInstanceOf[TracksCollection]
-        }
+      tracksCollection match {
+        case rep =>
+          rep must beAnInstanceOf[Option[TrackRepresentationWaveformUrlDecorator]]
       }
     }
   }
