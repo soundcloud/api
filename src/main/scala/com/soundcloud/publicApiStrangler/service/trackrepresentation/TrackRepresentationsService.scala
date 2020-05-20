@@ -41,19 +41,6 @@ class TrackRepresentationsService(
       trackRequest: TrackRequest
   ): Future[Option[TrackRepresentationLike]] = tracks(session, List(trackRequest)).map(_.headOption)
 
-  def userTracks(
-      session: UserSession,
-      userUrn: Urn,
-      trackPagination: TrackPagination
-  ): Future[TracksCollection] = {
-    for {
-      trackUrns <- trackmetadataClient.urnsByUser(session, userUrn)
-      enrichedTracks <- resolveTracks(session, trackUrns, trackPagination)
-    } yield {
-      enrichedTracks
-    }
-  }
-
   def resolveTracks(
       session: UserSession,
       trackUrns: List[Urn],
