@@ -64,21 +64,6 @@ class LieblingClient(jsonClient: JsonClient) extends FetchClient {
   }
 
   /**
-    * Returns all user-liked tracks
-    */
-  def userTracksLikes(
-      session: UserSession,
-      userUrn: Urn
-  ): Future[List[Urn]] = {
-    fetch(jsonClient, session, Path() / "users" / userUrn / "track_likes").map { response =>
-      response.status match {
-        case Status.Ok => Json.parse(response.contentString).as[LikesPage].likes.map(_.target_urn)
-        case _ => List.empty
-      }
-    }
-  }
-
-  /**
     * Returns a map of track urn to boolean indicating if the provided user has liked that track or not.
     */
   def userLikedTracks(

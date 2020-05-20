@@ -69,7 +69,7 @@ class TrackRepresentationsService(
     }
   }
 
-  private def enrichTracks(
+  def enrichTracks(
       session: UserSession,
       visibleTracks: List[VisibleTrack]
   ): Future[List[TrackRepresentationLike]] = {

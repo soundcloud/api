@@ -217,25 +217,4 @@ class LieblingClientSpec extends UnitSpecification {
       result ==== List.empty
     }
   }
-
-  "#userTracksLikes" >> {
-    trait UserTracksLikesContext extends Context {
-      lazy val result = Await.result(client.userTracksLikes(session, userUrn))
-    }
-
-    "returns liked track Urns for user" in new UserTracksLikesContext {
-      expectOkResponse(
-        Path() / "users" / userUrn / "track_likes",
-        likedTracksForUser
-      )
-
-      result ==== List(trackUrn)
-    }
-
-    "unsuccessful response" in new UserTracksLikesContext {
-      expectInternalErrorResponse(Path() / "users" / userUrn / "track_likes")
-
-      result ==== List.empty
-    }
-  }
 }

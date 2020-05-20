@@ -24,7 +24,7 @@ import play.api.libs.json.Json
 
 import scala.util.control.NonFatal
 
-class LikesHandler(
+class UserTracksHandler(
     userAuthentication: UserAuthentication,
     userTracksService: UserTracksService,
     baseUrl: String,
