@@ -9,7 +9,6 @@ import com.soundcloud.jvmkit.module.telemetry.exceptions.ExceptionCollector
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.publicApiStrangler.Routing
 import com.soundcloud.publicApiStrangler.service.UserTracksService
-
 import com.soundcloud.publicApiStrangler.service.trackrepresentation.{
   TrackPagination,
   TrackRepresentationLikeSpecContext,
@@ -76,7 +75,8 @@ class UserTracksHandlerSpec extends UnitSpecification with TrackRepresentationLi
     }
 
     trait SuccessfulResponse extends TrackRepresentationLikeSpecContext with TracksForUserContext {
-      val tracksCollection = TracksCollection(List(createTrackRepresentation()), None)
+      val trackRepresentation = createTrackRepresentation()
+      val tracksCollection = TracksCollection(List(trackRepresentation), None)
       val expectedResponse = contentsOf("tracks", "track_representation_response").toString()
     }
 

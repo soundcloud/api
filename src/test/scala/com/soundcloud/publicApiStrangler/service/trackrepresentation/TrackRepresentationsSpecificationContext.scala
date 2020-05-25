@@ -1,19 +1,14 @@
 package com.soundcloud.publicApiStrangler.service.trackrepresentation
 
+import com.soundcloud.jvmkit.module.util.session.{UserSession, UserSessionBuilder}
 import com.soundcloud.jvmkit.module.util.{Url, Urn}
-import com.soundcloud.publicApiStrangler.authorization.policies.{
-  ContentAuthorization,
-  ContentPolicy,
-  ContentRestriction,
-  MonetizationModel,
-  Reason
-}
+import com.soundcloud.publicApiStrangler.authorization.policies._
 import com.soundcloud.publicApiStrangler.client.media.TrackWaveformUrl
-import com.soundcloud.publicApiStrangler.client.mothership.{DomainLocking, TrackAudioMetadata}
 import com.soundcloud.publicApiStrangler.client.mothership.response.representation.{Geoblockings, User}
+import com.soundcloud.publicApiStrangler.client.mothership.{DomainLocking, TrackAudioMetadata}
 import com.soundcloud.publicApiStrangler.client.pubmese.Isrc
 import com.soundcloud.publicApiStrangler.client.stitch.StitchCounts
-import com.soundcloud.publicApiStrangler.client.trackmetadata.{Artwork, EmbeddingPermission}
+import com.soundcloud.publicApiStrangler.client.trackmetadata.{Artwork, EmbeddingPermission, Track}
 import com.soundcloud.publicApiStrangler.client.tracks.{TrackRequest, VisibleTrack}
 import com.soundcloud.publicApiStrangler.test.UnitSpecification
 import org.joda.time.LocalDateTime
@@ -23,6 +18,7 @@ trait TrackRepresentationsSpecificationContext extends UnitSpecification {
   trait TrackRepresentationsContext extends Scope {
     val trackUrn = Urn("soundcloud", "tracks", "987")
     val requestingUserUrn = Urn("soundcloud", "users", "112")
+    val session: UserSession = new UserSessionBuilder().setUser(requestingUserUrn).build()
     val labelUrn = Urn("soundcloud", "users", "678")
     val trackOwnerUrn = Urn("soundcloud", "users", "3000")
     val createdAt = new LocalDateTime(2016, 5, 19, 18, 3, 4)
@@ -48,6 +44,7 @@ trait TrackRepresentationsSpecificationContext extends UnitSpecification {
       original_format = Some("vqf")
     )
     val trackRequest = TrackRequest(trackUrn, None)
+    val trackRepresentationBuilder = new TrackRepresentationBuilder
 
     def trackOwner =
       User(
@@ -174,5 +171,21 @@ trait TrackRepresentationsSpecificationContext extends UnitSpecification {
 
     def waveformUrl(uid: String) =
       TrackWaveformUrl(uid, Url("https://bar.sndcdn.com/stream/a1b2c3.png"))
+
+    def trackRepresentationLike: TrackRepresentationLike =
+      trackRepresentationBuilder.build(
+        sessionUser = session.user,
+        track = Track.fromVisibleTrack(trackvisibilityTrack()),
+        user = trackOwner,
+        isrc = Some(Isrc("US-S1Z-99-00001")),
+        counts = StitchCounts(111, 222, 333, 444, 555),
+        label = None,
+        geoblockings = geoblockingsList,
+        domainLockings = domainLockingsList,
+        trackAudioMetadata = trackAudioMetadataList,
+        isLiked = true,
+        waveformUrl = waveformUrl(trackUrn.identifier),
+        downloadsPerTrack = Some(0)
+      )
   }
 }

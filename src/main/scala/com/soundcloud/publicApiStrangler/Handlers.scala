@@ -144,4 +144,6 @@ class Handlers(telemetry: Telemetry, clients: Clients, exceptionCollector: Excep
     mothershipDispatcher.dispatchUnauthenticated,
     tokenExchangeHandler.instrumentedMothershipDispatch
   )
+
+  val likesHandler = new LikesHandler(userAuthentication, likesService, baseUrl, exceptionCollector)
 }

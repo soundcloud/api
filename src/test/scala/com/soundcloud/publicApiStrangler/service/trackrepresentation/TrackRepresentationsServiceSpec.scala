@@ -41,8 +41,6 @@ class TrackRepresentationsServiceSpec extends TrackRepresentationsSpecificationC
       trackmetadataClient
     )
 
-    val session: UserSession = new UserSessionBuilder().setUser(requestingUserUrn).build()
-
     def setUpMocksForExistingTrack(
         track: VisibleTrack,
         session: UserSession

@@ -81,6 +81,26 @@ class LieblingClient(jsonClient: JsonClient) extends FetchClient {
       .map(defaultLikes ++ _)
   }
 
+  /**
+    * Returns the tracks from given urn input list that are liked by given user
+    *
+    * @param session   User session.
+    * @param userUrn   User urn.
+    * @param trackUrns Input track urns.
+    * @return List of track urns from input list that are liked by given user as defined by user urn.
+    * @see https://github.com/soundcloud/liebling/tree/master/doc#user-content-get-likes-info
+    */
+  def userTracksLikesForUrns(session: UserSession, userUrn: Urn, trackUrns: List[Urn]): Future[List[Urn]] =
+    inBatches(trackUrns, 50) { urnBatch =>
+      fetchLikes(
+        session,
+        Path() / "likes_info",
+        Map("for_urns" -> urnBatch, "user_urn" -> userUrn, "includes" -> "liked_track_urns")
+      ).map(json => (json \ "liked_track_urns").as[List[Urn]])
+    }.handle {
+      case NonFatal(_) => List.empty
+    }
+
   private def fetchLikes(
       session: UserSession,
       path: Path,
