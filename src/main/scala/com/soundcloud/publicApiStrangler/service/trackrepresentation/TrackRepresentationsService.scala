@@ -41,21 +41,6 @@ class TrackRepresentationsService(
       trackRequest: TrackRequest
   ): Future[Option[TrackRepresentationLike]] = tracks(session, List(trackRequest)).map(_.headOption)
 
-  def resolveTracks(
-      session: UserSession,
-      trackUrns: List[Urn],
-      trackPagination: TrackPagination
-  ): Future[TracksCollection] = {
-    val trackUrnsPage = trackPagination.calculateTrackUrnPage(trackUrns).toList
-    for {
-      visibleTracks <- trackVisibilityService.tracks(session, trackUrnsPage.map(track => TrackRequest(track, None)))
-      sortedVisibleTracks = trackPagination.calculateFinalPage(visibleTracks)
-      enrichedTracks <- enrichTracks(session, sortedVisibleTracks)
-    } yield {
-      TracksCollection(enrichedTracks, trackPagination.nextHref(enrichedTracks.size))
-    }
-  }
-
   def enrichTracks(
       session: UserSession,
       visibleTracks: List[VisibleTrack]
