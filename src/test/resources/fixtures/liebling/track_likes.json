@@ -1,0 +1,26 @@
+{
+  "likes": [
+    {
+      "created_at": 1358467799,
+      "created": "2013-01-18T00:09:59Z",
+      "target_urn": "soundcloud:tracks:101",
+      "user_urn": "soundcloud:users:100"
+    },
+    {
+      "created_at": 1358467797,
+      "created": "2013-01-18T00:09:57Z",
+      "target_urn": "soundcloud:tracks:100",
+      "user_urn": "soundcloud:users:100"
+    }
+  ],
+  "meta": {
+    "cursor": {
+      "next_params": {
+        "before": 1358467797,
+        "cursor": "1358467797123456",
+        "page_size": 2
+      },
+      "next_href": "http://liebling.int.s-cloud.net/users/soundcloud:users:100/track_likes?before=1358467797&cursor=1358467797123456&page_size=2"
+    }
+  }
+}

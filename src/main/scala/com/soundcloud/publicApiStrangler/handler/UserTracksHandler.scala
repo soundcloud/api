@@ -116,6 +116,7 @@ class UserTracksHandler(
   }
 
   private def performGetTracks(req: HandlerRequest, session: UserSession, userId: String): Future[Response] = {
+    val hasLinkedPartitioning = req.params.get("linked_partitioning").isDefined
     val pagination = TrackPagination.fromRequest(req.params, new URL(baseUrl + req.uri))
 
     def fetchTrackRepresentation(urn: Urn): Future[Result[TracksCollection]] = {
@@ -136,7 +137,7 @@ class UserTracksHandler(
           .map {
             case Good(tracksRepresentationResult) =>
               JsonResponseBuilder.ok(
-                TracksCollection.getRepresentation(tracksRepresentationResult, pagination)
+                TracksCollection.getRepresentation(tracksRepresentationResult, hasLinkedPartitioning)
               )
             case Bad(error: HttpError) =>
               JsonResponseBuilder(error.status, generateErrorBody(error.description)).build

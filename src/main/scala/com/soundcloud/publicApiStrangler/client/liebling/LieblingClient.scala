@@ -6,6 +6,8 @@ import com.soundcloud.jvmkit.module.util.{Path, Urn}
 import com.soundcloud.jvmkit.module.util.logging.SoundCloudLoggerFactory
 import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.jvmkit.module.json.play.UrnFormat._
+import com.soundcloud.jvmkit.module.telemetry.exceptions.ExceptionCollector
+import com.soundcloud.jvmkit.module.telemetry.exceptions.ExceptionHandler._
 import com.soundcloud.publicApiStrangler.client.support.{FetchClient, ResponseHandlers}
 import com.twitter.util.Future
 import play.api.libs.json.{JsObject, Json, Reads, Writes}
@@ -15,7 +17,7 @@ import scala.util.control.NonFatal
 /**
   * https://github.com/soundcloud/liebling/tree/master/doc
   */
-class LieblingClient(jsonClient: JsonClient) extends FetchClient {
+class LieblingClient(jsonClient: JsonClient, exceptionCollector: ExceptionCollector) extends FetchClient {
   val logger = SoundCloudLoggerFactory.getLogger(getClass)
 
   def likeCounts(session: UserSession, targetUrns: Seq[Urn]): Future[List[LikesCount]] =
@@ -101,6 +103,21 @@ class LieblingClient(jsonClient: JsonClient) extends FetchClient {
       case NonFatal(_) => List.empty
     }
 
+  def userTracksLikes(
+      session: UserSession,
+      userUrn: Urn,
+      cursor: Option[String],
+      pageSize: Int = 50
+  ): Future[LikesPage] = {
+    fetch(jsonClient, session, Path() / "users" / userUrn / "track_likes", paramsFor(cursor, pageSize))
+      .map { response =>
+        Json.parse(response.contentString).as[LikesPage]
+      }
+      .handleAndReport(exceptionCollector) {
+        case NonFatal(_) => emptyLikesPage
+      }
+  }
+
   private def fetchLikes(
       session: UserSession,
       path: Path,
@@ -123,6 +140,21 @@ class LieblingClient(jsonClient: JsonClient) extends FetchClient {
         inputs.grouped(batchSize).map(fetch).toSeq
       }
       .map(_.reduce(combine))
+
+  private def paramsFor(cursor: Option[String], pageSize: Int, urns: List[Urn] = List.empty): Params =
+    Map("page_size" -> pageSize.toString) ++
+      cursor.map(c => Map("cursor" -> c)).getOrElse(Map.empty) ++
+      urns.headOption.map(_ => Map("urns" -> urns.map(_.toString).mkString(","))).getOrElse(Map.empty)
+
+  def emptyLikesPage: LikesPage = LikesPage(
+    likes = List.empty,
+    meta = LikesPageMeta(
+      cursor = LikesPageCursor(
+        next_params = None,
+        next_href = None
+      )
+    )
+  )
 }
 
 case class LikesCount(target_urn: Urn, likes_count: Long)

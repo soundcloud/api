@@ -5,6 +5,7 @@ import com.soundcloud.jvmkit.module.http.client.config.HttpClientConfig
 import com.soundcloud.jvmkit.module.http.client.{HttpClient, JsonClient}
 import com.soundcloud.jvmkit.module.rollout.{BasicRolloutFeature, Rollout}
 import com.soundcloud.jvmkit.module.telemetry.Telemetry
+import com.soundcloud.jvmkit.module.telemetry.exceptions.ExceptionCollector
 import com.soundcloud.jvmkit.module.util.config.{AppConfig, ConfigConvention, DataSensitivity}
 import com.soundcloud.jvmkit.module.util.{ResourceName, Urn}
 import com.soundcloud.publicApiStrangler.authorization._
@@ -40,7 +41,12 @@ import com.twitter.util.{Future, Throw, Try}
 import proto.soundcloud.authenticator.oauth.AuthorizationClientProtobuf
 import com.soundcloud.jvmkit.module.twirp.filters.ClientTelemetry
 
-class Clients(config: AppConfig, telemetry: Telemetry, whitelistedCients: Set[Urn]) {
+class Clients(
+    config: AppConfig,
+    telemetry: Telemetry,
+    whitelistedCients: Set[Urn],
+    exceptionCollector: ExceptionCollector
+) {
   private def jsonClient(resourceName: String) = JsonClient(
     HttpClientConfig.from(ResourceName(resourceName), config),
     telemetry
@@ -51,7 +57,7 @@ class Clients(config: AppConfig, telemetry: Telemetry, whitelistedCients: Set[Ur
 
   val timelineClient = new TimelineJsonClient(jsonClient("timeline"))
 
-  val lieblingClient = new LieblingClient(jsonClient("liebling"))
+  val lieblingClient = new LieblingClient(jsonClient("liebling"), exceptionCollector)
 
   val publicApiClient: Service[Request, Response] = {
     val name = ResourceName("PUBLIC_API")
@@ -138,6 +144,8 @@ class Clients(config: AppConfig, telemetry: Telemetry, whitelistedCients: Set[Ur
 
   val userTracksService = new UserTracksService(trackVisibilityService, tracksService, trackmetadataClient)
 
+  val likesService = new LikesService(tracksService, lieblingClient)
+
   val streamService = new StreamService(trackVisibilityService, tracksClient)
 
   val searchEntityMapper = new SearchEntityMapper(
@@ -157,6 +165,4 @@ class Clients(config: AppConfig, telemetry: Telemetry, whitelistedCients: Set[Ur
   private val authorizationHttpClient = HttpClient(authorizationConfig, telemetry)
   private val authorizationTelemetry = ClientTelemetry.from(authorizationConfig, telemetry)
   val authorizationClient = new AuthorizationClientProtobuf(authorizationHttpClient.httpService, authorizationTelemetry)
-
-  val likesService = new LikesService(tracksService, lieblingClient)
 }

@@ -129,6 +129,8 @@ class Handlers(telemetry: Telemetry, clients: Clients, exceptionCollector: Excep
 
   val repostsHandler = new RepostsHandler(userAuthentication, repostsClient)
 
+  val likesHandler = new LikesHandler(userAuthentication, likesService, baseUrl, exceptionCollector)
+
   val tokenExchangeRequestMapper = new TokenExchangeRequestParser(new RailsLikeParamsParser())
   val tokenExchangeHandler =
     new TokenExchangeHandler(
@@ -144,6 +146,4 @@ class Handlers(telemetry: Telemetry, clients: Clients, exceptionCollector: Excep
     mothershipDispatcher.dispatchUnauthenticated,
     tokenExchangeHandler.instrumentedMothershipDispatch
   )
-
-  val likesHandler = new LikesHandler(userAuthentication, likesService, baseUrl, exceptionCollector)
 }

@@ -6,8 +6,8 @@ case class TracksCollection(tracks: List[TrackRepresentationLike], nextHref: Opt
 
 object TracksCollection {
 
-  def getRepresentation(tracksCollection: TracksCollection, pagination: TrackPagination) = {
-    if (pagination.linkedPartitioning) {
+  def getRepresentation(tracksCollection: TracksCollection, hasLinkedPartitioning: Boolean) = {
+    if (hasLinkedPartitioning) {
       val tracksJson = Json.obj("collection" -> Json.toJson(tracksCollection.tracks))
       val json = tracksCollection.nextHref
         .map(nextHref => {

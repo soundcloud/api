@@ -39,7 +39,7 @@ object App {
       Urn("soundcloud", "applications", "62023") // Soundiiz Local
     )
 
-    val clients = new Clients(config, telemetry, whitelistedClients)
+    val clients = new Clients(config, telemetry, whitelistedClients, exceptionCollector)
     val handlers = new Handlers(telemetry, clients, exceptionCollector)
 
     val bffApplication =

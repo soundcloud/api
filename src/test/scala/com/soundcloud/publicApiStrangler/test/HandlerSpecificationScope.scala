@@ -63,6 +63,7 @@ trait HandlerSpecificationScope extends org.specs2.specification.Scope with Thro
     val finagleRequest = Request(path, params.toList: _*)
     finagleRequest.method = method
     finagleRequest.setContentString(body)
+    finagleRequest.host = "localhost"
     finagleRequest.setContentTypeJson()
     headers.foreach { case (key, value) => finagleRequest.headerMap.set(key, value) }
     finagleRequest

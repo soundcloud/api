@@ -14,6 +14,7 @@ class TrackVisibilityService(tracksClient: TracksClient, whitelistedClients: Set
       filteredVisibleTracks = visibleTracks.filter { track =>
         track.disabledAt.isEmpty && // Filters tracks that are disabled (taken down or over quota)
         track.transcodings.exists(_.mimeType == "audio/mpeg") && // Filters out non playable tracks (missing transcoding)
+        track.authorization.policy != ContentPolicy.BLOCK &&
         (whitelistedClients.contains(session.getAgent) || !isPaywalledTrack(track)) // Filters out paywalled tracks unless client is whitelisted
       }
     } yield {

@@ -2,6 +2,8 @@ package com.soundcloud.publicApiStrangler.client.liebling
 
 import com.soundcloud.jvmkit.module.http.client.{JsonClient, Params}
 import com.soundcloud.jvmkit.module.json.play.UrnFormat._
+import com.soundcloud.jvmkit.module.telemetry.Telemetry
+import com.soundcloud.jvmkit.module.telemetry.exceptions.ExceptionCollector
 import com.soundcloud.jvmkit.module.util.http.Headers
 import com.soundcloud.jvmkit.module.util.session.UserSessionBuilder
 import com.soundcloud.jvmkit.module.util.{Path, Urn}
@@ -9,13 +11,16 @@ import com.soundcloud.publicApiStrangler.test.Helpers._
 import com.soundcloud.publicApiStrangler.test.UnitSpecification
 import com.twitter.finagle.IndividualRequestTimeoutException
 import com.twitter.util.{Await, Duration, Future}
+import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures._
 import play.api.libs.json.Json
 
 class LieblingClientSpec extends UnitSpecification {
   trait Context extends Scope {
     implicit val service = mock[JsonClient]
     implicit val session = new UserSessionBuilder().build()
-    val client = new LieblingClient(service)
+    val telemetry = Telemetry.defaultInstance
+    val exceptionCollector = new ExceptionCollector(telemetry)
+    val client = new LieblingClient(service, exceptionCollector)
 
     val userUrn = Urn("soundcloud", "users", "10419549")
     val notFoundUserUrn = Urn("soundcloud", "users", "0")
@@ -26,6 +31,7 @@ class LieblingClientSpec extends UnitSpecification {
 
     val trackUrn = Urn("soundcloud", "tracks", "48786981")
     val tracksUrns = List(trackUrn, Urn("soundcloud", "tracks", "101"))
+    val lieblingTrackLikes = contentsOf("liebling", "track_likes")
     val notFoundTrackUrn = Urn("soundcloud", "tracks", "0")
 
     val lieblingLikesCount = Json.parse("""{
@@ -215,6 +221,30 @@ class LieblingClientSpec extends UnitSpecification {
       )
 
       result ==== List.empty
+    }
+  }
+
+  "#userTrackLikes" >> {
+    "successful response" in new Context {
+      expectOkResponse(
+        Path() / "users" / userUrn / "track_likes",
+        lieblingTrackLikes,
+        Params("cursor" -> "1234567890123456", "page_size" -> "2")
+      )
+
+      val result = Await.result(client.userTracksLikes(session, userUrn, Some("1234567890123456"), 2))
+      result.likes must haveSize(2)
+      result.meta.cursor.next_params ==== Some(LikesPageNextParams("1358467797123456", 2))
+    }
+
+    "non successful response" in new Context {
+      expectInternalErrorResponse(
+        Path() / "users" / userUrn / "track_likes",
+        Map("cursor" -> "1234567890123456", "page_size" -> "2")
+      )
+
+      val result = Await.result(client.userTracksLikes(session, userUrn, Some("1234567890123456"), 2))
+      result ==== client.emptyLikesPage
     }
   }
 }
