@@ -39,7 +39,9 @@ class DeprecatedEndpointUsageFilter(userAuthentication: UserAuthentication, tele
     "/playlists/:playlistId/tracks",
     "/tracks/:id/favoriters/:user_id",
     "/me/email",
-    "/me/favorites/ids"
+    "/me/favorites/ids",
+    "/users/:userId/favorites/:trackId",
+    "/me/favorites/:trackId"
   )
 
   override def apply(request: Request, service: Service[Request, Response]): Future[Response] = {
