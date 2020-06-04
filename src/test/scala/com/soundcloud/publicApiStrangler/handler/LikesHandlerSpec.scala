@@ -199,7 +199,7 @@ class LikesHandlerSpec extends UnitSpecification {
 
           val response = get(path)
           response.status ==== Status.InternalServerError
-          response.contentString ==== expectedResponse
+          response.contentString ==== "{\"error\":\"500 - Internal Server Error\"}"
         }
       }
     }
@@ -228,7 +228,7 @@ class LikesHandlerSpec extends UnitSpecification {
 
           val response = get(path)
           response.status ==== Status.InternalServerError
-          response.contentString ==== expectedResponse
+          response.contentString ==== "{\"error\":\"500 - Internal Server Error\"}"
         }
       }
     }

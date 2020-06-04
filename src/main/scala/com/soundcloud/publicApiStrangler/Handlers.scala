@@ -5,7 +5,6 @@ import com.soundcloud.jvmkit.module.telemetry.Telemetry
 import com.soundcloud.jvmkit.module.telemetry.exceptions.ExceptionCollector
 import com.soundcloud.publicApiStrangler.handler._
 import com.soundcloud.publicApiStrangler.mapper.search.{SearchMapper, SearchRepository}
-import com.soundcloud.publicApiStrangler.mapper.similarsounds.SimilarSoundsMapper
 import com.soundcloud.publicApiStrangler.mapper.timeline.publicApi.ActivitiesWithOriginMapper
 import com.soundcloud.publicApiStrangler.mapper.timeline.{EntityMapper, EntitySummaryMapper, FollowingsTracksMapper}
 import com.soundcloud.publicApiStrangler.mapper.trackstreams.{
@@ -116,11 +115,10 @@ class Handlers(telemetry: Telemetry, clients: Clients, exceptionCollector: Excep
     )
   }
 
-  val similarSoundsHandler: SimilarSoundsHandler = {
-    val similarSoundsMapper = new SimilarSoundsMapper(systemPlaylistsClient, searchEntityMapper)
-    new SimilarSoundsHandler(
+  val similarTracksHandler: SimilarTracksHandler = {
+    new SimilarTracksHandler(
       userAuthentication,
-      similarSoundsMapper,
+      similarTracksService,
       baseUrl
     )
   }

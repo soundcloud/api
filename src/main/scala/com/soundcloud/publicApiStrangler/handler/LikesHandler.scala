@@ -10,6 +10,7 @@ import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.publicApiStrangler.service.LikesService
 import com.soundcloud.publicApiStrangler.service.pagination.Pagination
 import com.soundcloud.publicApiStrangler.service.trackrepresentation.TracksCollection
+import com.soundcloud.publicApiStrangler.handler.representation.tracks.TrackRepresentationResponse.handleResponseFromService
 import com.soundcloud.publicApiStrangler.support.{Bad, Good, Result}
 import com.twitter.finagle.http.{Response, Status}
 import com.twitter.util.Future
@@ -94,23 +95,11 @@ class LikesHandler(
             Bad(HttpError(Status.InternalServerError))
         }
     }
+
     Try(Urn("soundcloud", "users", userId)) match {
       case Success(urn @ Urn(_, _, numericRegexp())) =>
-        fetchTrackRepresentation(urn)
-          .map {
-            case Good(tracksRepresentationResult) =>
-              JsonResponseBuilder.ok(
-                TracksCollection.getRepresentation(tracksRepresentationResult, hasLinkedPartitioning)
-              )
-            case Bad(_) =>
-              JsonResponseBuilder.internalServerError(generateErrorBody("an unexpected error occurred"))
-          }
-          .handleAndReport(exceptionCollector) {
-            case NonFatal(e) =>
-              logger.error(e.getMessage)
-              JsonResponseBuilder.internalServerError(generateErrorBody("an unexpected error occurred"))
-
-          }
+        val trackRepresentation = fetchTrackRepresentation(urn)
+        handleResponseFromService(trackRepresentation, hasLinkedPartitioning)
       case _ => Future.value(JsonResponseBuilder.notFound(notFoundErrorString))
     }
   }

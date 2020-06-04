@@ -41,6 +41,10 @@ class TrackRepresentationsService(
       trackRequest: TrackRequest
   ): Future[Option[TrackRepresentationLike]] = tracks(session, List(trackRequest)).map(_.headOption)
 
+  /*
+   * TODO: This method should be private, but in order to do this TrackRepresentationLike needs to be refactored/unified
+   *  so that the same set of fields is always returned
+   */
   def enrichTracks(
       session: UserSession,
       visibleTracks: List[VisibleTrack]

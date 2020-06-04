@@ -102,8 +102,8 @@ object Routing {
     route(Method.Delete, "/playlists/:id", playlistsHandler.handleDelete)
   }
 
-  def forSimilarSoundsHandler(similarSoundsHandler: SimilarSoundsHandler): List[(Method, String, Handler)] = {
-    route(Method.Get, "/tracks/:trackId/related", similarSoundsHandler.handleSimilarSoundsRequest)
+  def forSimilarTracksHandler(similarTracksHandler: SimilarTracksHandler): List[(Method, String, Handler)] = {
+    route(Method.Get, "/tracks/:trackId/related", similarTracksHandler.handleSimilarTracks)
   }
 
   def forTracksHandler(tracksHandler: TracksHandler): List[(Method, String, Handler)] = {

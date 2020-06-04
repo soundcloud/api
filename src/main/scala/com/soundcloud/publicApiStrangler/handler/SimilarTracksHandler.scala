@@ -1,0 +1,50 @@
+package com.soundcloud.publicApiStrangler.handler
+
+import java.net.URL
+
+import com.soundcloud.jvmkit.module.bff.session.UserAuthentication
+import com.soundcloud.jvmkit.module.http.server.HandlerRequest
+import com.soundcloud.jvmkit.module.util.Urn
+import com.soundcloud.jvmkit.module.util.session.UserSession
+import com.soundcloud.publicApiStrangler.TrackUrnUtil.trackUrn
+import com.soundcloud.publicApiStrangler.handler.representation.tracks.TrackRepresentationResponse.handleResponseFromService
+import com.soundcloud.publicApiStrangler.service.SimilarTracksService
+import com.soundcloud.publicApiStrangler.service.trackrepresentation.{TrackPagination, TracksCollection}
+import com.soundcloud.publicApiStrangler.support.{Bad, Good, Result}
+import com.twitter.finagle.http.{Response, Status}
+import com.twitter.util.Future
+
+/**
+  * Overrides the public api endpoint used to retrieve similar tracks.
+  */
+class SimilarTracksHandler(
+    userAuthentication: UserAuthentication,
+    similarTracksService: SimilarTracksService,
+    baseUrl: String
+) {
+
+  def handleSimilarTracks(request: HandlerRequest): Future[Response] = {
+    userAuthentication.withUserSession(request) { (session: UserSession) =>
+      val pagination = TrackPagination.fromRequest(request.params, new URL(baseUrl + request.uri))
+      val hasLinkedPartitioning = request.params.get("linked_partitioning").isDefined
+
+      val urn = trackUrn(request)
+
+      val similarTracks = performGetSimilarTracks(session, urn, pagination)
+      handleResponseFromService(similarTracks, hasLinkedPartitioning)
+    }
+  }
+
+  def performGetSimilarTracks(
+      session: UserSession,
+      trackUrn: Urn,
+      pagination: TrackPagination
+  ): Future[Result[TracksCollection]] = {
+    similarTracksService
+      .similarTracks(session, trackUrn, pagination)
+      .map {
+        case Some(res) => Good(res)
+        case None => Bad(HttpError(Status.NotFound))
+      }
+  }
+}

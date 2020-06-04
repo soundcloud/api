@@ -15,8 +15,9 @@ import com.soundcloud.publicApiStrangler.service.trackrepresentation.{
   TrackRepresentationLike,
   TracksCollection
 }
-import com.soundcloud.publicApiStrangler.support.{Bad, Good, Result, StringError}
+import com.soundcloud.publicApiStrangler.support.{Bad, Good, Result}
 import com.soundcloud.publicApiStrangler.TrackUrnUtil.trackUrn
+import com.soundcloud.publicApiStrangler.handler.representation.tracks.TrackRepresentationResponse.handleResponseFromService
 
 import com.twitter.finagle.http.{Response, Status}
 import com.twitter.util.{Future, Return, Try}
@@ -133,24 +134,8 @@ class UserTracksHandler(
 
     Try(Urn("soundcloud", "users", userId)) match {
       case Return(urn @ Urn(_, _, numericRegexp())) =>
-        fetchTrackRepresentation(urn)
-          .map {
-            case Good(tracksRepresentationResult) =>
-              JsonResponseBuilder.ok(
-                TracksCollection.getRepresentation(tracksRepresentationResult, hasLinkedPartitioning)
-              )
-            case Bad(error: HttpError) =>
-              JsonResponseBuilder(error.status, generateErrorBody(error.description)).build
-            case Bad(error: StringError) =>
-              JsonResponseBuilder.internalServerError(generateErrorBody(error.message))
-            case Bad(_) =>
-              JsonResponseBuilder.internalServerError(generateErrorBody("an unexpected error occurred"))
-          }
-          .handleAndReport(exceptionCollector) {
-            case NonFatal(e) =>
-              logger.error(e.getMessage)
-              JsonResponseBuilder.internalServerError(generateErrorBody("an unexpected error occurred"))
-          }
+        val trackRepresentation = fetchTrackRepresentation(urn)
+        handleResponseFromService(trackRepresentation, hasLinkedPartitioning)
       case _ => Future.value(JsonResponseBuilder.notFound(notFoundErrorString))
     }
   }

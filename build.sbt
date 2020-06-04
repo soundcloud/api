@@ -1,8 +1,10 @@
 val jvmkitVersion = "12.6.1"
 val specs2Version = "4.9.2"
 val httpComponentsVersion = "4.5.12"
+val outcomeVersion = "0.12"
 
-lazy val publicApiStrangler = project.in(file("."))
+lazy val publicApiStrangler = project
+  .in(file("."))
   .enablePlugins(SbtKitPlugin, TwirpSbtPlugin)
   .settings(
     name := "public-api-strangler",
@@ -16,18 +18,18 @@ lazy val publicApiStrangler = project.in(file("."))
       "com.soundcloud" %% "jvmkit-twirp" % jvmkitVersion,
       "com.netaporter" %% "scala-uri" % "0.4.16",
       "org.jsoup" % "jsoup" % "1.11.3",
-
+      "com.soundcloud" %% "outcome-core" % outcomeVersion,
       "com.squareup.okhttp3" % "mockwebserver" % "3.11.0" % "test",
       "org.apache.httpcomponents" % "httpclient" % httpComponentsVersion % "test",
       "org.apache.httpcomponents" % "httpmime" % httpComponentsVersion % "test",
-
       "org.specs2" %% "specs2-core" % specs2Version % "test",
       "org.specs2" %% "specs2-mock" % specs2Version % "test"
     ),
     mainClass in Compile := Some("com.soundcloud.publicApiStrangler.App")
   )
 
-lazy val endToEnd = project.in(file("endToEndTests"))
+lazy val endToEnd = project
+  .in(file("endToEndTests"))
   .enablePlugins(SbtKitPlugin)
   .settings(
     name := "endToEnd",

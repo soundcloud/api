@@ -90,7 +90,7 @@ object App {
           forTokenExchange(handlers.tokenExchangeRolloutHandler.handle _),
           forSingleTrackHandler(handlers.singleTrackHandler),
           forPlaylistHandler(handlers.playlistsHandler),
-          forSimilarSoundsHandler(handlers.similarSoundsHandler),
+          forSimilarTracksHandler(handlers.similarTracksHandler),
           forTracksHandler(handlers.tracksHandler),
           forUserRelatedMothershipDispatcher(handlers.userRelatedMothershipDispatcher),
           forSearchHandler(handlers.searchHandler),
