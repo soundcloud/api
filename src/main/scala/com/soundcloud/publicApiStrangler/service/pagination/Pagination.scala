@@ -41,6 +41,7 @@ object Pagination {
 
   protected[pagination] val DefaultPageSize = 50
   protected[pagination] val NormalizedPageSizeParam = "page_size"
+  protected[pagination] val AlternativePageSizeParam = "limit"
   protected[pagination] val NormalizedCursorParam = "cursor"
 
   private val FalsyValues = Set("0", "")
@@ -51,7 +52,7 @@ object Pagination {
       path = path(request),
       extraParams = getExtraParams(request, extraParams),
       cursor = request.params.get(Pagination.NormalizedCursorParam).filterNot(FalsyValues.contains),
-      pageSize = request.params.get(Pagination.NormalizedPageSizeParam).map(_.toInt).getOrElse(DefaultPageSize)
+      pageSize = getPageSize(request.params)
     )
   }
 
@@ -62,6 +63,17 @@ object Pagination {
   private def path(request: Request) = request.path
 
   private def getExtraParams(request: Request, paramNames: Seq[String]) = {
-    ParamMap(request.params)
+    ParamMap(request.params.filter {
+      case (name, _) =>
+        paramNames.contains(name)
+    })
+  }
+
+  private def getPageSize(params: ParamMap): Int = {
+    params
+      .get(Pagination.NormalizedPageSizeParam)
+      .orElse(params.get(Pagination.AlternativePageSizeParam))
+      .map(_.toInt)
+      .getOrElse(DefaultPageSize)
   }
 }

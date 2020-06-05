@@ -52,7 +52,7 @@ class LikesHandlerSpec extends UnitSpecification {
       def paginationParams(path: String): CursorBasedPagination = {
         val mockRequest = Request(path)
         mockRequest.host = "localhost"
-        Pagination.buildCursorBasedPagination(mockRequest)
+        Pagination.buildCursorBasedPagination(mockRequest, Seq("linked_partitioning"))
 
       }
 

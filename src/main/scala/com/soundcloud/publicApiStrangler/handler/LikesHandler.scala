@@ -83,7 +83,7 @@ class LikesHandler(
 
   private def performGetTracksLikes(request: HandlerRequest, session: UserSession, userId: String): Future[Response] = {
     val hasLinkedPartitioning = request.params.get("linked_partitioning").isDefined
-    val pagination = Pagination.buildCursorBasedPagination(request)
+    val pagination = Pagination.buildCursorBasedPagination(request, Seq("linked_partitioning"))
 
     def fetchTrackRepresentation(urn: Urn): Future[Result[TracksCollection]] = {
       likesService
