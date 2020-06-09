@@ -2,7 +2,7 @@ package com.soundcloud.publicApiStrangler.service
 
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSession
-import com.soundcloud.publicApiStrangler.client.liebling.LieblingClient
+import com.soundcloud.publicApiStrangler.client.liebling._
 import com.soundcloud.publicApiStrangler.client.tracks.TrackRequest
 import com.soundcloud.publicApiStrangler.service.pagination.CursorBasedPagination
 import com.soundcloud.publicApiStrangler.service.trackrepresentation.{
@@ -12,10 +12,30 @@ import com.soundcloud.publicApiStrangler.service.trackrepresentation.{
 }
 import com.twitter.util.Future
 
+sealed trait CreateResponse
+case object OkCreateResponse extends CreateResponse
+case object OkCreatedCreateResponse extends CreateResponse
+case object NotAuthorizedCreateResponse extends CreateResponse
+case object NotFoundCreateResponse extends CreateResponse
+case object SpamBlockedCreateResponse extends CreateResponse
+
 class LikesService(
     trackRepresentationsService: TrackRepresentationsService,
     lieblingClient: LieblingClient
 ) {
+
+  def createTrackLike(
+      session: UserSession,
+      urn: Urn
+  ) = {
+    lieblingClient.createTrackLike(session, urn).map {
+      case LikeCreated => OkCreatedCreateResponse
+      case LikeAlreadyExists => OkCreateResponse
+      case UserBlocked => NotAuthorizedCreateResponse
+      case UserHasSpamWarning => SpamBlockedCreateResponse
+      case _ => NotFoundCreateResponse
+    }
+  }
 
   def userTrackLikeForUrn(
       session: UserSession,

@@ -12,6 +12,8 @@ import com.soundcloud.publicApiStrangler.test.UnitSpecification
 import com.twitter.finagle.IndividualRequestTimeoutException
 import com.twitter.util.{Await, Duration, Future}
 import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures._
+import com.twitter.finagle.http.{Response, Status}
+import org.mockito.Mockito.when
 import play.api.libs.json.Json
 
 class LieblingClientSpec extends UnitSpecification {
@@ -34,6 +36,8 @@ class LieblingClientSpec extends UnitSpecification {
     val lieblingTrackLikes = contentsOf("liebling", "track_likes")
     val notFoundTrackUrn = Urn("soundcloud", "tracks", "0")
 
+    val requestBodyString = s"""{"user_urn":"${userUrn.toString}"}"""
+
     val lieblingLikesCount = Json.parse("""{
         |  "likes_counts": [
         |    {
@@ -49,6 +53,31 @@ class LieblingClientSpec extends UnitSpecification {
         |    "soundcloud:tracks:48786981"
         |  ]
         |}""".stripMargin)
+  }
+
+  "#createTrackLike" >> {
+    trait LikeCreatedContext extends Context {
+      override implicit val session = loggedInSession(userUrn)
+    }
+
+    "creates a like response" in new LikeCreatedContext {
+      when(
+        service.postWithSession(
+          session,
+          Path() / "tracks" / trackUrn.toString / "likes",
+          Params.empty,
+          Headers.empty,
+          Some(requestBodyString)
+        )
+      ).thenReturn(Future {
+        val response = Response(Status.Created)
+        response.setContentString(lieblingLikeCreationSuccess)
+        response
+      })
+
+      val actual = Await.result(client.createTrackLike(session, trackUrn))
+      actual ==== LikeCreated
+    }
   }
 
   "#likeCounts" >> {

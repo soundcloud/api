@@ -1,0 +1,9 @@
+package com.soundcloud.publicApiStrangler.client.liebling
+
+sealed trait CreateLikeResponse
+case object LikeCreated extends CreateLikeResponse
+case object LikeAlreadyExists extends CreateLikeResponse
+case object UserBlocked extends CreateLikeResponse
+case object UserHasSpamWarning extends CreateLikeResponse
+case object LikeableNotFound extends CreateLikeResponse
+case object UrnNotValid extends CreateLikeResponse

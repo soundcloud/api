@@ -20,6 +20,15 @@ import scala.util.control.NonFatal
 class LieblingClient(jsonClient: JsonClient, exceptionCollector: ExceptionCollector) extends FetchClient {
   val logger = SoundCloudLoggerFactory.getLogger(getClass)
 
+  /**
+    * @see https://github.com/soundcloud/liebling/tree/master/doc#like-a-track
+    */
+  def createTrackLike(session: UserSession, track: Urn): Future[CreateLikeResponse] =
+    createLike(
+      session,
+      Path() / "tracks" / track.toString / "likes"
+    )
+
   def likeCounts(session: UserSession, targetUrns: Seq[Urn]): Future[List[LikesCount]] =
     inBatches(targetUrns.toList, 50) { urns =>
       fetchLikes(
@@ -145,6 +154,21 @@ class LieblingClient(jsonClient: JsonClient, exceptionCollector: ExceptionCollec
     Map("page_size" -> pageSize.toString) ++
       cursor.map(c => Map("cursor" -> c)).getOrElse(Map.empty) ++
       urns.headOption.map(_ => Map("urns" -> urns.map(_.toString).mkString(","))).getOrElse(Map.empty)
+
+  private def createLike(session: UserSession, path: Path): Future[CreateLikeResponse] =
+    jsonClient
+      .postWithSession(
+        session,
+        path,
+        Params.empty,
+        Headers.empty,
+        jsonBody(session)
+      )
+      .map(CreateLikeResponseMapper(_))
+
+  private def jsonBody(session: UserSession): Option[String] = {
+    Some(Json.obj("user_urn" -> session.getUser.toString).toString)
+  }
 
   def emptyLikesPage: LikesPage = LikesPage(
     likes = List.empty,

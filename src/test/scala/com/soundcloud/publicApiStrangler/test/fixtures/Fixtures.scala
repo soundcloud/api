@@ -15,6 +15,10 @@ object Fixtures {
     case None => throw new IllegalStateException(s"File [$prefix/$name] not found")
   }
 
+  private def fileToString(prefix: String, name: String): String = {
+    contentsOf(prefix, name).toString()
+  }
+
   lazy val singleTrack = contentsOf("public_api", "single_track")
   lazy val tracksArray = contentsOf("public_api", "tracks_array")
   lazy val playlist = contentsOf("public_api", "playlist")
@@ -111,4 +115,6 @@ object Fixtures {
   lazy val tracksStreamResponse = fileJson("tracks", "stream_response")
   lazy val tracksDownloadResponse = fileJson("tracks", "download_response")
   lazy val visibleTracksResponse = fileJson("tracks", "visible_tracks_response")
+
+  lazy val lieblingLikeCreationSuccess = fileToString("liebling", "like_creation_success")
 }

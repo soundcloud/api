@@ -7,10 +7,10 @@ import com.soundcloud.jvmkit.module.telemetry.exceptions.ExceptionHandler._
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.logging.SoundCloudLoggerFactory
 import com.soundcloud.jvmkit.module.util.session.UserSession
-import com.soundcloud.publicApiStrangler.service.LikesService
 import com.soundcloud.publicApiStrangler.service.pagination.Pagination
 import com.soundcloud.publicApiStrangler.service.trackrepresentation.TracksCollection
 import com.soundcloud.publicApiStrangler.handler.representation.tracks.TrackRepresentationResponse.handleResponseFromService
+import com.soundcloud.publicApiStrangler.service._
 import com.soundcloud.publicApiStrangler.support.{Bad, Good, Result}
 import com.twitter.finagle.http.{Response, Status}
 import com.twitter.util.Future
@@ -38,6 +38,26 @@ class LikesHandler(
   def getMeLikedTrackId(req: HandlerRequest): Future[Response] = {
     userAuthentication.withLoggedInUser(req) { (session, userUrn) =>
       performGetUserLikedTrackId(req, session, userUrn.identifier)
+    }
+  }
+
+  def createMeLikedTrackId(req: HandlerRequest): Future[Response] = {
+    userAuthentication.withLoggedInUser(req) { (session, _) =>
+      val trackId = req.routeParams("trackId")
+      Try(Urn("soundcloud", "tracks", trackId)) match {
+        case Success(trackUrn @ Urn(_, _, numericRegexp())) =>
+          likesService.createTrackLike(session, trackUrn).map { createResponse =>
+            val body = responseBodyForCreateResponse(createResponse)
+            createResponse match {
+              case OkCreatedCreateResponse => JsonResponseBuilder.created(body)
+              case OkCreateResponse => JsonResponseBuilder.ok(body)
+              case NotAuthorizedCreateResponse => JsonResponseBuilder.unauthorized(body)
+              case NotFoundCreateResponse => JsonResponseBuilder.notFound(body)
+              case SpamBlockedCreateResponse => JsonResponseBuilder(Status.TooManyRequests, body).build
+            }
+          }
+        case _ => Future.value(JsonResponseBuilder.badRequest(requestBodyForStatus(Status.BadRequest)))
+      }
     }
   }
 
@@ -108,4 +128,19 @@ class LikesHandler(
     Json.stringify(Json.obj("error" -> message))
 
   private val notFoundErrorString = """{"errors":[{"error_message":"404 - Not Found"}]}"""
+
+  private def responseBodyForCreateResponse(createResponse: CreateResponse): String = {
+    val status = createResponse match {
+      case OkCreatedCreateResponse => Status.Created
+      case OkCreateResponse => Status.Ok
+      case NotAuthorizedCreateResponse => Status.Forbidden
+      case NotFoundCreateResponse => Status.NotFound
+      case SpamBlockedCreateResponse => Status.TooManyRequests
+    }
+    requestBodyForStatus(status)
+  }
+
+  private def requestBodyForStatus(status: Status): String = {
+    Json.stringify(Json.obj("status" -> s"${status.code} - ${status.reason}"))
+  }
 }

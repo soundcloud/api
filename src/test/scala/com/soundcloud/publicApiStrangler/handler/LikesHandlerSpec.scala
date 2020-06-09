@@ -2,17 +2,23 @@ package com.soundcloud.publicApiStrangler.handler
 
 import java.util.TimeZone
 
+import com.soundcloud.jvmkit.module.bff.session.UserAuthentication
 import com.soundcloud.jvmkit.module.bff.testsupport.FakeUserAuthentication
 import com.soundcloud.jvmkit.module.telemetry.Telemetry
 import com.soundcloud.jvmkit.module.telemetry.exceptions.ExceptionCollector
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.publicApiStrangler.Routing
-import com.soundcloud.publicApiStrangler.service.LikesService
 import com.soundcloud.publicApiStrangler.service.pagination.{CursorBasedPagination, Pagination}
 import com.soundcloud.publicApiStrangler.service.trackrepresentation.{
   TrackRepresentationLike,
   TrackRepresentationLikeSpecContext,
   TracksCollection
+}
+import com.soundcloud.publicApiStrangler.service.{
+  LikesService,
+  OkCreatedCreateResponse,
+  OkCreateResponse,
+  SpamBlockedCreateResponse
 }
 import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures.contentsOf
 import com.soundcloud.publicApiStrangler.test.{HandlerSpecificationScope, UnitSpecification}
@@ -20,6 +26,7 @@ import com.twitter.finagle.http.{Request, Status}
 import com.twitter.util.Future
 import org.joda.time.DateTimeZone
 import org.mockito.Mockito.when
+import org.specs2.mutable.BeforeAfter
 import play.api.libs.json.Json
 
 class LikesHandlerSpec extends UnitSpecification {
@@ -28,7 +35,7 @@ class LikesHandlerSpec extends UnitSpecification {
 
   trait Context extends HandlerSpecificationScope {
     val session = loggedInSession(Urn("soundcloud", "users", "1"))
-    val userAuthentication = new FakeUserAuthentication(session)
+    val userAuthentication: UserAuthentication
 
     val likesService = mock[LikesService]
     val telemetry = Telemetry.createIsolatedInstance
@@ -46,6 +53,8 @@ class LikesHandlerSpec extends UnitSpecification {
 
   "Getting tracks" >> {
     trait TracksForUserContext extends Context {
+      lazy val userAuthentication = new FakeUserAuthentication(session)
+
       val queryString =
         "?page_size=1&cursor=2&linked_partitioning=1"
 
@@ -229,6 +238,105 @@ class LikesHandlerSpec extends UnitSpecification {
           val response = get(path)
           response.status ==== Status.InternalServerError
           response.contentString ==== "{\"error\":\"500 - Internal Server Error\"}"
+        }
+      }
+    }
+  }
+
+  "Creating tracks" >> {
+
+    "POST /me/favorites/:trackId" >> {
+      trait LoggedOutContext extends Context {
+        lazy val userAuthentication = new FakeUserAuthentication(anonymousSession)
+      }
+
+      trait LoggedInContext extends Context {
+        lazy val userAuthentication = new FakeUserAuthentication(session)
+      }
+
+      trait PostTrackLikeContext extends Context with BeforeAfter {
+        override def before: Any = {}
+        override def after: Any = {}
+
+        lazy val trackUrn = Urn("soundcloud", "tracks", "1")
+        lazy val jsonBody = """{"json": "body"}"""
+        lazy val response = post(s"/me/favorites/${trackUrn.identifier}", Map(), Map(), jsonBody)
+      }
+
+      "logged in" >> {
+        trait LoggedInPostTrackLikeContext extends PostTrackLikeContext with LoggedInContext
+
+        "when path contains a not liked URN" >> {
+          trait NonLikedUrnContext extends LoggedInPostTrackLikeContext {
+            override def before: Any = {
+              super.before
+              when(likesService.createTrackLike(session, trackUrn))
+                .thenReturn(Future.value(OkCreatedCreateResponse))
+            }
+          }
+
+          "returns 201" in new NonLikedUrnContext {
+            response.statusCode ==== 201
+          }
+
+          "renders correct body" in new NonLikedUrnContext {
+            Json.parse(response.contentString) ==== Json.obj("status" -> "201 - Created")
+          }
+        }
+
+        "when URN is already liked" >> {
+          trait AlreadyLikedUrnContext extends LoggedInPostTrackLikeContext {
+            override def before: Any = {
+              super.before
+              when(likesService.createTrackLike(session, trackUrn))
+                .thenReturn(Future.value(OkCreateResponse))
+            }
+          }
+
+          "returns 200" in new AlreadyLikedUrnContext {
+            response.statusCode ==== 200
+          }
+
+          "renders correct body" in new AlreadyLikedUrnContext {
+            Json.parse(response.contentString) ==== Json.obj("status" -> "200 - OK")
+          }
+        }
+
+        "when urn is invalid" >> {
+          trait InvalidUrnPostTrackLikeContext extends PostTrackLikeContext with LoggedInContext {
+            override lazy val trackUrn = Urn("soundcloud", "tracks", ":")
+          }
+
+          "returns 400" in new InvalidUrnPostTrackLikeContext {
+            response.statusCode ==== 400
+          }
+
+          "renders correct body" in new InvalidUrnPostTrackLikeContext {
+            Json.parse(response.contentString) ==== Json.obj("status" -> "400 - Bad Request")
+          }
+        }
+
+        "when the request is spam blocked" >> {
+          trait SpamPostTrackLikesContext extends LoggedInPostTrackLikeContext {
+            override def before: Any = {
+              super.before
+              when(likesService.createTrackLike(session, trackUrn)).thenReturn(Future.value(SpamBlockedCreateResponse))
+            }
+          }
+
+          "returns 429" in new SpamPostTrackLikesContext {
+            response.statusCode ==== 429
+          }
+
+          "renders correct body" in new SpamPostTrackLikesContext {
+            Json.parse(response.contentString) ==== Json.obj("status" -> "429 - Too Many Requests")
+          }
+        }
+      }
+
+      "logged out" >> {
+        "returns 401" in new PostTrackLikeContext with LoggedOutContext {
+          response.statusCode ==== 401
         }
       }
     }
