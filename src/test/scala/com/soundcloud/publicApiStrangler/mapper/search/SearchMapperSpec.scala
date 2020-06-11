@@ -26,21 +26,16 @@ class SearchRepositorySpec extends UnitSpecification {
     lazy val repo = new SearchRepository(mockService)
   }
 
-  "track search" >> {
+  "playlists search" >> {
     "adds filter.content_type=FREE and filter.content_country=<countryCode>" in new Context {
-      val commonParams = Params(
-        "filter.content_tier" -> "FREE",
-        "filter.content_country" -> "US"
-      )
-
       val response = withContentsOf("search", "tracks").as[JsObject]
       doReturn(Future.value(jsonResponse(Status.Ok, response)))
         .when(mockService)
-        .getWithSession(session, SearchRepository.TracksPath, commonParams + ("q" -> "bar"), Headers.empty)
+        .getWithSession(session, SearchRepository.PlaylistsPath, Params("q" -> "bar"), Headers.empty)
       val request = OffsetBasedPage(
-        SearchDispatcherRequest(SearchRepository.TracksPath, Set.empty, Map.empty)(x => x),
+        SearchDispatcherRequest(SearchRepository.PlaylistsPath, Set.empty, Map.empty)(x => x),
         "http://localhost",
-        "/search/tracks",
+        "/search/playlists",
         Params("q" -> "bar"),
         0,
         10
@@ -63,11 +58,18 @@ class SearchMapperSpec extends UnitSpecification {
 
     val baseUrl = "http://example.org"
     val mapper = new SearchMapper(searchRepoMock, entityMapperMock, baseUrl)
-    val path = SearchRepository.TracksPath
+    val path = SearchRepository.PlaylistsPath
     val query = SearchDispatcherRequest(path, Set.empty, Map.empty)(identity)
 
     def pagedRequest(params: Map[String, Param]) =
-      OffsetBasedPage(query, "http://api-v2.soundcloud.com", "http://api-v2.soundcloud.com/search/tracks", params, 0, 3)
+      OffsetBasedPage(
+        query,
+        "http://api-v2.soundcloud.com",
+        "http://api-v2.soundcloud.com/search/playlists",
+        params,
+        0,
+        3
+      )
 
     val sessionMock = new UserSessionBuilder().build()
     implicit val context = new MappingContext(sessionMock)
@@ -82,7 +84,7 @@ class SearchMapperSpec extends UnitSpecification {
     val followCountsClient = mock[FollowCountsClient]
     val repostsClient = mock[RepostsClient]
     val searchEntityMapper =
-      new SearchEntityMapper(okidokiMock, followCountsClient, repostsClient, baseUrl, caMock, null, null, null)
+      new SearchEntityMapper(okidokiMock, followCountsClient, repostsClient, baseUrl, null, null)
     val searchMapper = new SearchMapper(searchRepoMock, searchEntityMapper, baseUrl)
     private val request = pagedRequest(Map.empty)
 

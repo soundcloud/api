@@ -5,14 +5,11 @@ import com.soundcloud.bff.nextbff.mapping.{JsonMapping, MappingContext}
 import com.soundcloud.jvmkit.module.json.play.UrnFormat._
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSession
-import com.soundcloud.publicApiStrangler.authorization.ContentAuthorizationRules
 import com.soundcloud.publicApiStrangler.client.followcounts.{FollowCounts, FollowCountsClient}
 import com.soundcloud.publicApiStrangler.client.mothership.OkidokiClient
 import com.soundcloud.publicApiStrangler.client.reposts.RepostsClient
 import com.soundcloud.publicApiStrangler.mapper.liebling.LikeCountMapper
 import com.soundcloud.publicApiStrangler.mapper.timeline.EntitySummaryMapper
-import com.soundcloud.publicApiStrangler.mapper.waveform.WaveformMapper
-import com.soundcloud.publicApiStrangler.authorization.policies.ContentAuthorization
 import com.soundcloud.publicApiStrangler.support.mapping.InputValidation
 import com.twitter.util.Future
 import play.api.libs.json.JsObject
@@ -22,8 +19,6 @@ class SearchEntityMapper(
     followCountsClient: FollowCountsClient,
     repostsClient: RepostsClient,
     baseUrl: String,
-    contentAuthorization: ContentAuthorizationRules,
-    waveform: WaveformMapper,
     likeCountMapper: LikeCountMapper,
     entitySummaryMapper: EntitySummaryMapper
 ) extends Mapper[Urn, JsonMapping]
@@ -31,13 +26,11 @@ class SearchEntityMapper(
   override def mapNonEmptyInputs(session: UserSession, inputs: Set[Urn])(
       implicit context: MappingContext
   ): Future[Map[Urn, JsonMapping]] = {
-    val trackUrns = inputs.filter(_.collection == "tracks")
     val userUrns = inputs.filter(_.collection == "users")
 
     for {
-      (entities, authorizations, followCountsMap, repostsCountsByUrn) <- Future.join(
+      (entities, followCountsMap, repostsCountsByUrn) <- Future.join(
         okidokiClient.fetch(session, inputs),
-        contentAuthorization.fetchRules(session, trackUrns.toSeq).map(authorizationsByUrn),
         followCountsClient
           .counts(session, userUrns.toList)
           .map(_.map(followCounts => (followCounts.userUrn, followCounts)).toMap),
@@ -46,7 +39,7 @@ class SearchEntityMapper(
     } yield {
       entities.map { entity =>
         val urn = (entity \ "self" \ "urn").as[Urn]
-        urn -> entityFor(session, urn, entity, authorizations, followCountsMap, repostsCountsByUrn)
+        urn -> entityFor(session, urn, entity, followCountsMap, repostsCountsByUrn)
       }.toMap
     }
   }
@@ -55,28 +48,13 @@ class SearchEntityMapper(
       session: UserSession,
       urn: Urn,
       entityData: JsObject,
-      contentAuthorization: Map[Urn, ContentAuthorization],
       followCountsMap: Map[Urn, FollowCounts],
       repostCountsByUrn: Map[Urn, Long]
   )(implicit context: MappingContext) = {
     urn.collection match {
       case "users" => new SearchUser(entityData, baseUrl, followCountsMap.get(urn), repostCountsByUrn.get(urn))
-      case "tracks" =>
-        new SearchTrack(
-          session,
-          entityData,
-          likeCountMapper,
-          repostCountsByUrn,
-          baseUrl,
-          entitySummaryMapper,
-          contentAuthorization(urn),
-          waveform
-        )
       case "playlists" =>
         new SearchPlaylist(entityData, likeCountMapper, repostCountsByUrn, baseUrl, entitySummaryMapper)
     }
   }
-
-  private def authorizationsByUrn(rules: Seq[ContentAuthorization]): Map[Urn, ContentAuthorization] =
-    rules.map(rule => rule.getUrn -> rule).toMap
 }

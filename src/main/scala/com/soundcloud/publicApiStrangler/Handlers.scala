@@ -70,9 +70,6 @@ class Handlers(telemetry: Telemetry, clients: Clients, exceptionCollector: Excep
   val singleTrackHandler =
     new SingleTrackHandler(userAuthentication, tracksService, telemetry, exceptionCollector)
 
-  val trackMothershipDispatcherWithCounts =
-    new TrackMothershipDispatcherWithCounts(userAuthentication, mothershipDispatcher, stitchClient)
-
   val userRelatedMothershipDispatcher = new UserRelatedMothershipDispatcher(
     userAuthentication,
     mothershipDispatcher,
@@ -93,7 +90,7 @@ class Handlers(telemetry: Telemetry, clients: Clients, exceptionCollector: Excep
     new UserFollowHandler(userAuthentication, okidokiClient, followsClient, followCountsClient, repostsClient, baseUrl)
 
   val searchHandler: SearchHandler = {
-    val searchRepository = new SearchRepository(searchService)
+    val searchRepository = new SearchRepository(searchJsonClient)
     val searchMapper = new SearchMapper(searchRepository, searchEntityMapper, baseUrl)
     val mothershipCounter = telemetry.counter(
       "search_mothership_fallback_total",
@@ -110,7 +107,7 @@ class Handlers(telemetry: Telemetry, clients: Clients, exceptionCollector: Excep
       baseUrl,
       lieblingClient,
       userRelatedMothershipDispatcher,
-      trackMothershipDispatcherWithCounts,
+      searchService,
       telemetry
     )
   }

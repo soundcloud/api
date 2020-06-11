@@ -1,11 +1,14 @@
 package com.soundcloud.publicApiStrangler.handler
 
+import java.net.URL
+
 import com.soundcloud.bff.nextbff.pagination.OffsetBasedPage
 import com.soundcloud.bff.nextbff.repository.RepositoryException
 import com.soundcloud.bff.nextbff.test.JsonMappingMock
 import com.soundcloud.jvmkit.module.bff.testsupport.FakeUserAuthentication
 import com.soundcloud.jvmkit.module.http.server.{HandlerRequest, JsonResponseBuilder}
 import com.soundcloud.jvmkit.module.telemetry.Telemetry
+import com.soundcloud.jvmkit.module.telemetry.exceptions.ExceptionCollector
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.publicApiStrangler.Routing
@@ -13,6 +16,13 @@ import com.soundcloud.publicApiStrangler.client.followcounts.{FollowCounts, Foll
 import com.soundcloud.publicApiStrangler.client.liebling.LieblingClient
 import com.soundcloud.publicApiStrangler.client.reposts.RepostsClient
 import com.soundcloud.publicApiStrangler.mapper.search.{Search, SearchDispatcherRequest, SearchMapper}
+import com.soundcloud.publicApiStrangler.service.SearchService
+import com.soundcloud.publicApiStrangler.service.trackrepresentation.{
+  TrackPagination,
+  TrackRepresentationLikeSpecContext,
+  TracksCollection
+}
+import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures.contentsOf
 import com.soundcloud.publicApiStrangler.test.{HandlerSpecificationScope, UnitSpecification}
 import com.twitter.finagle.http.{Response, Status}
 import com.twitter.util.Future
@@ -29,6 +39,8 @@ class SearchHandlerSpec extends UnitSpecification {
     val followCountsClientMock = mock[FollowCountsClient]
     val lieblingClientMock = mock[LieblingClient]
     val repostsClientMock = mock[RepostsClient]
+    val exceptionCollector = new ExceptionCollector(Telemetry.createIsolatedInstance)
+    val searchService = mock[SearchService]
 
     val authentication = new FakeUserAuthentication(anonymousSession)
     val userRelatedMothershipDispatcher = new UserRelatedMothershipDispatcher(
@@ -40,8 +52,6 @@ class SearchHandlerSpec extends UnitSpecification {
       repostsClientMock
     )
 
-    val trackMothershipDispatcherWithCounts = mock[TrackMothershipDispatcherWithCounts]
-
     val handler = new SearchHandler(
       authentication,
       fallbackMock,
@@ -51,7 +61,7 @@ class SearchHandlerSpec extends UnitSpecification {
       "http://api.soundcloud.com",
       lieblingClientMock,
       userRelatedMothershipDispatcher,
-      trackMothershipDispatcherWithCounts,
+      searchService,
       Telemetry.createIsolatedInstance
     )
 
@@ -65,16 +75,8 @@ class SearchHandlerSpec extends UnitSpecification {
   "when resource that supports search is called" >> {
     trait Context extends ForwardContext {
       val endpoints = Seq(
-        ("/tracks", SearchDispatcherRequest.trackSearch, handler.dispatchTrackRequest),
-        ("/tracks/", SearchDispatcherRequest.trackSearch, handler.dispatchTrackRequest),
-        ("/tracks.json", SearchDispatcherRequest.trackSearch, handler.dispatchTrackRequest),
-        ("/tracks.json/", SearchDispatcherRequest.trackSearch, handler.dispatchTrackRequest),
-        ("/v1/tracks", SearchDispatcherRequest.trackSearch, handler.dispatchTrackRequest),
-        ("/v1/tracks.json", SearchDispatcherRequest.trackSearch, handler.dispatchTrackRequest),
         ("/users", SearchDispatcherRequest.userSearch, handler.dispatchUserRequest),
-        ("/users.json", SearchDispatcherRequest.userSearch, handler.dispatchUserRequest),
-        ("/playlists", SearchDispatcherRequest.playlistSearch, handler.dispatchPlaylistRequest),
-        ("/playlists.json", SearchDispatcherRequest.playlistSearch, handler.dispatchPlaylistRequest)
+        ("/playlists", SearchDispatcherRequest.playlistSearch, handler.dispatchPlaylistRequest)
       )
 
       val queryParams = Map("q" -> "foo")
@@ -95,7 +97,6 @@ class SearchHandlerSpec extends UnitSpecification {
       def expectForwardedRequest = {
         val response = JsonResponseBuilder().body(forwardContent).status(forwardStatus).build
         fallbackMock.dispatch(any[HandlerRequest]) returns Future.value(response)
-        trackMothershipDispatcherWithCounts.request(any[HandlerRequest]) returns Future.value(response)
 
         fallbackMock
           .dispatch(any[HandlerRequest])
@@ -220,4 +221,41 @@ class SearchHandlerSpec extends UnitSpecification {
       }
     }
   }
+
+  "/tracks" >> {
+    trait Context extends ForwardContext with TrackRepresentationLikeSpecContext {
+      val trackRepresentation = createTrackRepresentation()
+      val tracksCollection = TracksCollection(List(trackRepresentation), None)
+      val session = loggedInSession(Urn("soundcloud", "users", "1"))
+
+      val path = "/tracks"
+      def paginationParams(path: String) =
+        TrackPagination(
+          Some(5),
+          Some(10),
+          true,
+          None,
+          None,
+          new URL("http://api.soundcloud.com" + path)
+        )
+    }
+
+    "returns track search results" in new Context {
+      val expectedResponse = contentsOf("tracks", "track_representation_response")
+      val queryString = "?q=foo&offset=10&limit=5&linked_partitioning=1"
+      searchService.searchTracks(
+        anonymousSession,
+        Map("q" -> "foo", "offset" -> "10", "limit" -> "5", "linked_partitioning" -> "1"),
+        paginationParams(path + queryString)
+      ) returns Future
+        .value(
+          tracksCollection
+        )
+      val response = get(path, Map("q" -> "foo", "offset" -> "10", "limit" -> "5", "linked_partitioning" -> "1"))
+
+      response.statusCode ==== 200
+      Json.parse(response.contentString) ==== expectedResponse
+    }
+  }
+
 }

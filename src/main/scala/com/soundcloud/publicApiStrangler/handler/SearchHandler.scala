@@ -1,5 +1,7 @@
 package com.soundcloud.publicApiStrangler.handler
 
+import java.net.URL
+
 import com.soundcloud.bff.nextbff.UntypedJson
 import com.soundcloud.bff.nextbff.pagination.PageBuilder
 import com.soundcloud.bff.nextbff.repository.RepositoryException
@@ -11,9 +13,15 @@ import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.publicApiStrangler.client.followcounts.FollowCountsClient
 import com.soundcloud.publicApiStrangler.client.liebling.LieblingClient
 import com.soundcloud.publicApiStrangler.handler.SearchHandler._
+import com.soundcloud.publicApiStrangler.handler.representation.tracks.TrackRepresentationResponse.handleResponseFromService
 import com.soundcloud.publicApiStrangler.mapper.search.{SearchDispatcherRequest, SearchMapper}
+import com.soundcloud.publicApiStrangler.service.SearchService
+import com.soundcloud.publicApiStrangler.service.trackrepresentation.{TrackPagination, TracksCollection}
+import com.soundcloud.publicApiStrangler.support.{Bad, Good, Result}
 import com.twitter.finagle.http.{ParamMap, Response, Status}
 import com.twitter.util.{Future, Return, Try}
+
+import scala.util.control.NonFatal
 
 /**
   * Redirects search queries on to search-dispatcher and fetches meta data.
@@ -27,7 +35,7 @@ class SearchHandler(
     baseUrl: String,
     lieblingClient: LieblingClient,
     userRelatedMothershipDispatcher: UserRelatedMothershipDispatcher,
-    trackMothershipDispatcherWithCounts: TrackMothershipDispatcherWithCounts,
+    searchService: SearchService,
     telemetry: Telemetry
 ) {
   private val resourceRequestsCounter = telemetry.counter(
@@ -52,6 +60,7 @@ class SearchHandler(
     "resource_type",
     "client_id"
   )
+  val logger = SoundCloudLoggerFactory.getLogger(getClass)
 
   def dispatchUserRequest = dispatchRequest(
     defaultParams,
@@ -66,13 +75,30 @@ class SearchHandler(
     "playlist"
   )
 
-  def dispatchTrackRequest = {
-    dispatchRequest(
-      trackParams,
-      SearchDispatcherRequest.trackSearch,
-      "track",
-      trackMothershipDispatcherWithCounts.request _
-    )
+  def searchTracks(req: HandlerRequest): Future[Response] = {
+    userAuthentication.withUserSession(req) { session =>
+      performSearchTracks(req, session)
+    }
+  }
+
+  private def performSearchTracks(req: HandlerRequest, session: UserSession): Future[Response] = {
+    val hasLinkedPartitioning = req.params.get("linked_partitioning").isDefined
+    val pagination = TrackPagination.fromRequest(req.params, new URL(baseUrl + req.uri))
+
+    def fetchTracksRepresentation(params: Map[String, String]): Future[Result[TracksCollection]] = {
+      searchService
+        .searchTracks(session, params, pagination)
+        .map(Good(_))
+        .handle {
+          case NonFatal(e) =>
+            logger.error(e.getMessage)
+            Bad(HttpError(Status.InternalServerError))
+
+        }
+    }
+    val trackRepresentation = fetchTracksRepresentation(req.params)
+    handleResponseFromService(trackRepresentation, hasLinkedPartitioning)
+
   }
 
   /**

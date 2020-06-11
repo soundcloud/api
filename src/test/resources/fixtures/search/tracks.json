@@ -1,6 +1,6 @@
 {
-  "qid": "qid123",
   "query": "query",
+  "query_urn": "soundcloud:search:test-query-urn",
   "docs": [
     {
       "urn": "soundcloud:tracks:3406"

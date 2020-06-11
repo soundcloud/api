@@ -3,8 +3,7 @@ package com.soundcloud.publicApiStrangler.mapper.search
 import com.soundcloud.bff.nextbff.UntypedJson
 import com.soundcloud.bff.nextbff.mapping.{Mapping, MappingContext}
 import com.soundcloud.jvmkit.module.json.play.UrnFormat._
-import com.soundcloud.jvmkit.module.util.{Url, Urn}
-import com.soundcloud.publicApiStrangler.authorization.ContentAuthorizationRules
+import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.publicApiStrangler.authorization.policies.{
   ContentAuthorization,
   ContentPolicy,
@@ -13,12 +12,10 @@ import com.soundcloud.publicApiStrangler.authorization.policies.{
 }
 import com.soundcloud.publicApiStrangler.client.followcounts.{FollowCounts, FollowCountsClient}
 import com.soundcloud.publicApiStrangler.client.liebling.{LieblingClient, UserLikesCount}
-import com.soundcloud.publicApiStrangler.client.media.{TrackWaveformUrl, WaveformUrlsGenerator}
 import com.soundcloud.publicApiStrangler.client.mothership.OkidokiClient
 import com.soundcloud.publicApiStrangler.client.reposts.RepostsClient
 import com.soundcloud.publicApiStrangler.mapper.liebling.LikeCountMapper
 import com.soundcloud.publicApiStrangler.mapper.timeline.EntitySummaryMapper
-import com.soundcloud.publicApiStrangler.mapper.waveform.WaveformMapper
 import com.soundcloud.publicApiStrangler.test.UnitSpecification
 import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures._
 import com.twitter.util.{Await, Future}
@@ -37,36 +34,30 @@ class SearchEntityMapperSpec extends UnitSpecification {
     val okidokiClient = mock[OkidokiClient]
     val followCountsClient = mock[FollowCountsClient]
     val repostsClient = mock[RepostsClient]
-    val contentAuthorizationService = mock[ContentAuthorizationRules]
     val lieblingClient = mock[LieblingClient]
     val likeCountMapper = new LikeCountMapper(lieblingClient)
-    val waveformUrlsGen = mock[WaveformUrlsGenerator]
     val entitySummaryMapper = new EntitySummaryMapper(okidokiClient, repostsClient, baseUrl)
     val mapper = new SearchEntityMapper(
       okidokiClient,
       followCountsClient,
       repostsClient,
       baseUrl,
-      contentAuthorizationService,
-      new WaveformMapper(waveformUrlsGen),
       likeCountMapper,
       entitySummaryMapper
     )
 
     val urns = List(
       Urn("soundcloud", "users", "2097360"),
-      Urn("soundcloud", "tracks", "15273221"),
       Urn("soundcloud", "playlists", "685235"),
       Urn("soundcloud", "groups", "30910")
     )
 
-    val searchResults = Urn("soundcloud", "tracks", "-1") :: urns // doesn't exist in okidoki response
+    val searchResults = urns
 
     val fetchedUserUrn = Urn("soundcloud", "users", "2097360")
 
-    val trackUrn = Urn("soundcloud", "tracks", "15273221")
     val playlistUrn = Urn("soundcloud", "playlists", "685235")
-    val likableUrns = Set(trackUrn, playlistUrn)
+    val likableUrns = Set(playlistUrn)
 
     val authorizations = Seq(
       new ContentAuthorization(
@@ -103,12 +94,8 @@ class SearchEntityMapperSpec extends UnitSpecification {
         Map.empty[Urn, Long]
       )
       when(repostsClient.getRepostCountsByUrnWithFallback(session, searchResults.toSet)) thenReturn
-        Future.value(Map(fetchedUserUrn -> 11L, trackUrn -> 22L, playlistUrn -> 33L))
+        Future.value(Map(fetchedUserUrn -> 11L, playlistUrn -> 33L))
 
-      // waveform URLs
-      when(contentAuthorizationService.fetchRules(===(session), any[Seq[Urn]])).thenReturn(Future.value(authorizations))
-      when(waveformUrlsGen.fromUid(any[String]))
-        .thenReturn(TrackWaveformUrl("b5uH7mT3hjkm", Url("https://w1.sndcdn.com/b5uH7mT3hjkm_m.png")))
       followCountsClient.counts(session, Seq(fetchedUserUrn)) returns Future.value(
         Seq(FollowCounts(fetchedUserUrn, 1111, 2222))
       )
@@ -120,24 +107,10 @@ class SearchEntityMapperSpec extends UnitSpecification {
   }
 
   "builds the proper mappings" >> {
-    "with purchase URL + title" in new Context {
-      result.size mustEqual 3
-      val List(userJson, trackJson, playlistJson) = result.map(mappingToJsObject)
-
-      (trackJson \ "purchase_url").as[String] ==== "http://example.com/store/music"
-      (trackJson \ "purchase_title").as[String] ==== "i need the money ok"
-    }
 
     "with follow counts" in new Context {
-      result.size mustEqual 3
-      val List(userJson, trackJson, playlistJson) = result.map(mappingToJsObject)
-
-      (trackJson \ "kind").as[String] ==== "track"
-      (trackJson \ "waveform_url").as[String] ==== "https://w1.sndcdn.com/b5uH7mT3hjkm_m.png"
-      (trackJson \ "duration").asOpt[Int] ==== Some(269555)
-      (trackJson \ "streamable").asOpt[Boolean] ==== Some(false)
-      (trackJson \ "downloadable").asOpt[Boolean] ==== Some(true)
-      (trackJson \ "download_url").asOpt[String] ==== Some("https://api.soundcloud.com/tracks/15273221/download")
+      result.size mustEqual 2
+      val List(userJson, playlistJson) = result.map(mappingToJsObject)
 
       (userJson \ "kind").as[String] ==== "user"
       val subs = (userJson \ "subscriptions").as[List[JsObject]]
@@ -154,15 +127,12 @@ class SearchEntityMapperSpec extends UnitSpecification {
     }
 
     "with enriched reposts_count fields" in new Context {
-      result.size mustEqual 3
-      val List(userJson, trackJson, playlistJson) = result.map(mappingToJsObject)
+      result.size mustEqual 2
+      val List(userJson, playlistJson) = result.map(mappingToJsObject)
 
       (userJson \ "kind").as[String] ==== "user"
       (userJson \ "id").as[Int].toString ==== fetchedUserUrn.identifier
       (userJson \ "reposts_count").asOpt[Long] ==== Some(11L)
-
-      (trackJson \ "kind").as[String] ==== "track"
-      (trackJson \ "reposts_count").asOpt[Long] ==== Some(22L)
 
       (playlistJson \ "kind").as[String] ==== "playlist"
       (playlistJson \ "reposts_count").asOpt[Long] ==== Some(33L)

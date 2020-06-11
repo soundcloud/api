@@ -30,12 +30,12 @@ import com.soundcloud.publicApiStrangler.client.tracks.TracksClient
 import com.soundcloud.publicApiStrangler.mapper.liebling.LikeCountMapper
 import com.soundcloud.publicApiStrangler.mapper.search.SearchEntityMapper
 import com.soundcloud.publicApiStrangler.mapper.timeline.EntitySummaryMapper
-import com.soundcloud.publicApiStrangler.mapper.waveform.WaveformMapper
 import com.soundcloud.publicApiStrangler.service.media.{StreamService, TrackAccessRecorderService}
 import com.soundcloud.publicApiStrangler.service.trackrepresentation.TrackRepresentationsService
 import com.soundcloud.publicApiStrangler.service.{
   LikesService,
   SimilarTracksService,
+  SearchService,
   TrackVisibilityService,
   UserTracksService
 }
@@ -45,6 +45,7 @@ import com.twitter.finagle.service.RetryPolicy.RetryableWriteException
 import com.twitter.util.{Future, Throw, Try}
 import proto.soundcloud.authenticator.oauth.AuthorizationClientProtobuf
 import com.soundcloud.jvmkit.module.twirp.filters.ClientTelemetry
+import com.soundcloud.publicApiStrangler.client.search.SearchClient
 
 class Clients(
     config: AppConfig,
@@ -63,6 +64,9 @@ class Clients(
   val timelineClient = new TimelineJsonClient(jsonClient("timeline"))
 
   val lieblingClient = new LieblingClient(jsonClient("liebling"), exceptionCollector)
+
+  val searchJsonClient = jsonClient("search")
+  val searchClient = new SearchClient(searchJsonClient)
 
   val publicApiClient: Service[Request, Response] = {
     val name = ResourceName("PUBLIC_API")
@@ -91,8 +95,6 @@ class Clients(
   val pubmeseClient = new PubmeseClient(jsonClient("pubmese"))
 
   val stitchClient = new StitchClient(jsonClient("stitch"))
-
-  val searchService: JsonClient = jsonClient("search")
 
   private val subscriptionsService = jsonClient("user_subscriptions")
 
@@ -151,6 +153,7 @@ class Clients(
 
   val similarTracksService = new SimilarTracksService(trackVisibilityService, tracksService, systemPlaylistsClient)
   val likesService = new LikesService(tracksService, lieblingClient)
+  val searchService = new SearchService(tracksService, searchClient)
 
   val streamService = new StreamService(trackVisibilityService, tracksClient)
 
@@ -159,8 +162,6 @@ class Clients(
     followCountsClient,
     repostsClient,
     baseUrl,
-    contentAuthorizationRules,
-    new WaveformMapper(waveformUrlsGenerator),
     new LikeCountMapper(lieblingClient),
     new EntitySummaryMapper(okidokiClient, repostsClient, baseUrl)
   )
