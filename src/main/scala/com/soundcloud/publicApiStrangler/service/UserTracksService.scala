@@ -8,12 +8,11 @@ import com.soundcloud.publicApiStrangler.service.trackrepresentation.{
   TrackPagination,
   TrackRepresentationsService,
   TracksCollection,
-  TrackRepresentationLike
+  TrackRepresentation
 }
 import com.twitter.util.Future
 
 class UserTracksService(
-    trackVisibilityService: TrackVisibilityService,
     trackRepresentationsService: TrackRepresentationsService,
     trackmetadataClient: TrackmetadataClient
 ) {
@@ -26,14 +25,10 @@ class UserTracksService(
     for {
       trackUrns <- trackmetadataClient.urnsByUser(session, userUrn)
       trackUrnsPage = trackPagination.calculateTrackUrnPage(trackUrns).toList
-      visibleTracks <- trackVisibilityService.tracks(
-        session,
-        trackUrnsPage.map(track => TrackRequest(track, None))
-      )
-      sortedVisibleTracks = trackPagination.calculateFinalPage(visibleTracks)
-      enrichedTracks <- trackRepresentationsService.enrichTracks(session, sortedVisibleTracks)
+      tracks <- trackRepresentationsService.tracks(session, trackUrnsPage.map(TrackRequest(_, None)))
+      finalPage = trackPagination.calculateFinalPage(tracks)
     } yield {
-      TracksCollection(enrichedTracks, trackPagination.nextHref(enrichedTracks.size))
+      TracksCollection(finalPage, trackPagination.nextHref(finalPage.size))
     }
   }
 
@@ -42,13 +37,12 @@ class UserTracksService(
       session: UserSession,
       userId: String,
       secretToken: Option[String]
-  ): Future[Option[TrackRepresentationLike]] = {
+  ): Future[Option[TrackRepresentation]] = {
     for {
-      visibleTracks <- trackVisibilityService.tracks(session, List(TrackRequest(trackUrn, secretToken)))
-      userOwnedTracks = visibleTracks.filter(_.userUrn.identifier == userId)
-      enrichedTracks <- trackRepresentationsService.enrichTracks(session, userOwnedTracks)
+      track <- trackRepresentationsService.track(session, TrackRequest(trackUrn, secretToken))
+      userOwnedTrack = track.filter(_.track.user_urn.identifier == userId)
     } yield {
-      enrichedTracks.headOption
+      userOwnedTrack
     }
   }
 }

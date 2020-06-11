@@ -11,7 +11,7 @@ import com.soundcloud.publicApiStrangler.client.tracks.{TrackRequest, VisibleTra
 import com.soundcloud.publicApiStrangler.mapper.similarsounds.{SimilarSounds, SimilarSoundsMeta}
 import com.soundcloud.publicApiStrangler.service.trackrepresentation.{
   TrackPagination,
-  TrackRepresentationLikeSpecContext,
+  TrackRepresentationSpecContext,
   TrackRepresentationsService,
   TracksCollection
 }
@@ -21,7 +21,7 @@ import org.mockito.Mockito.when
 
 class SimilarTracksServiceSpec extends UnitSpecification {
 
-  trait Context extends TrackRepresentationLikeSpecContext with Scope {
+  trait Context extends TrackRepresentationSpecContext with Scope {
     val loggedInUser = Urn("soundcloud", "users", "1")
 
     val session = loggedInSession(loggedInUser)
@@ -56,6 +56,8 @@ class SimilarTracksServiceSpec extends UnitSpecification {
       SimilarSoundsMeta(50, "variant", "source", Urn("soundcloud", "systems", "123"))
     )
 
+    val similarSoundsMockUrns = similarSoundsMock.similarTracks.toList
+
     val transcodings = List(
       Transcoding("mp3-uuid", "preset", "audio/mpeg", List("progressive"), None, "sq", 180000, None)
     )
@@ -69,11 +71,11 @@ class SimilarTracksServiceSpec extends UnitSpecification {
         .setSecretToken(Some("secret"))
         .build
 
-    val trackRepresentationLikeMock =
-      createTrackRepresentation(Track.fromVisibleTrack(visibleTrackMock), similarTrackOwnerUser)
+    val trackRepresentationMock =
+      createTrackRepresentation(track = Track.fromVisibleTrack(visibleTrackMock), user = similarTrackOwnerUser)
 
     val similarTracksService =
-      new SimilarTracksService(trackVisibilityService, trackRepresentationService, systemPlaylistsClient)
+      new SimilarTracksService(trackRepresentationService, systemPlaylistsClient)
 
     val trackPagination = TrackPagination(
       Some(1),
@@ -88,10 +90,8 @@ class SimilarTracksServiceSpec extends UnitSpecification {
   "#similarTracks" >> {
     "returns similar tracks when they exist" in new Context {
       when(systemPlaylistsClient.fetchSimilar(session, track)).thenReturn(Future(Some(similarSoundsMock)))
-      when(trackVisibilityService.tracks(session, List(TrackRequest(similarTrack, None))))
-        .thenReturn(Future(List(visibleTrackMock)))
-      when(trackRepresentationService.enrichTracks(session, List(visibleTrackMock)))
-        .thenReturn(Future(List(trackRepresentationLikeMock)))
+      when(trackRepresentationService.tracks(session, similarSoundsMockUrns.map(TrackRequest(_, None))))
+        .thenReturn(Future(List(trackRepresentationMock)))
 
       val similarTracks = Await.result(similarTracksService.similarTracks(session, track, trackPagination))
 
@@ -103,9 +103,7 @@ class SimilarTracksServiceSpec extends UnitSpecification {
 
     "returns None when no track recommendations" in new Context {
       when(systemPlaylistsClient.fetchSimilar(session, track)).thenReturn(Future(None))
-      when(trackVisibilityService.tracks(session, List.empty))
-        .thenReturn(Future(List.empty))
-      when(trackRepresentationService.enrichTracks(session, List.empty))
+      when(trackRepresentationService.tracks(session, List.empty))
         .thenReturn(Future(List.empty))
 
       val similarTracks = Await.result(similarTracksService.similarTracks(session, track, trackPagination))

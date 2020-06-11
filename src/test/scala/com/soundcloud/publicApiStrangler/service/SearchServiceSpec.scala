@@ -3,6 +3,7 @@ package com.soundcloud.publicApiStrangler.service
 import com.soundcloud.jvmkit.module.http.client.Params
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.publicApiStrangler.client.search.{Doc, SearchClient, SearchResponse}
+import com.soundcloud.publicApiStrangler.client.tracks.TrackRequest
 import com.soundcloud.publicApiStrangler.service.trackrepresentation.{
   TrackPagination,
   TrackRepresentationsService,
@@ -20,6 +21,7 @@ class SearchServiceSpec extends TrackRepresentationsSpecificationContext {
     val searchClient = mock[SearchClient]
     val trackPagination = mock[TrackPagination]
 
+    val trackRepresentationMock = createTrackRepresentation
     val searchService = new SearchService(
       trackRepresentationsService,
       searchClient
@@ -29,11 +31,10 @@ class SearchServiceSpec extends TrackRepresentationsSpecificationContext {
   "#searchTracks" >> {
     "when all data is available" in new Context {
       val query = "foo"
-      val track = trackvisibilityTrack()
       val queryUrn = Urn("soundcloud", "search", "foo")
 
-      when(trackRepresentationsService.tracks(session, List(trackRequest)))
-        .thenReturn(Future.value(List(trackRepresentationLike)))
+      when(trackRepresentationsService.tracks(session, List(TrackRequest(trackRepresentationMock.track.urn, None))))
+        .thenReturn(Future.value(List(trackRepresentationMock)))
       when(
         searchClient.searchTracks(
           ===(session),

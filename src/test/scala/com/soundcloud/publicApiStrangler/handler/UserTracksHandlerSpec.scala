@@ -11,10 +11,9 @@ import com.soundcloud.publicApiStrangler.Routing
 import com.soundcloud.publicApiStrangler.service.UserTracksService
 import com.soundcloud.publicApiStrangler.service.trackrepresentation.{
   TrackPagination,
-  TrackRepresentationLikeSpecContext,
+  TrackRepresentationSpecContext,
   TracksCollection
 }
-import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures.contentsOf
 import com.soundcloud.publicApiStrangler.test.{HandlerSpecificationScope, UnitSpecification}
 import com.twitter.finagle.http.Status
 import com.twitter.util.Future
@@ -22,7 +21,7 @@ import org.joda.time.{DateTime, DateTimeZone}
 import org.mockito.Mockito.when
 import play.api.libs.json.Json
 
-class UserTracksHandlerSpec extends UnitSpecification with TrackRepresentationLikeSpecContext {
+class UserTracksHandlerSpec extends UnitSpecification with TrackRepresentationSpecContext {
 
   val mockTrackRepresentation = createTrackRepresentation()
 
@@ -74,10 +73,10 @@ class UserTracksHandlerSpec extends UnitSpecification with TrackRepresentationLi
       }
     }
 
-    trait SuccessfulResponse extends TrackRepresentationLikeSpecContext with TracksForUserContext {
+    trait SuccessfulResponse extends TrackRepresentationSpecContext with TracksForUserContext {
       val trackRepresentation = createTrackRepresentation()
       val tracksCollection = TracksCollection(List(trackRepresentation), None)
-      val expectedResponse = contentsOf("tracks", "track_representation_response").toString()
+      val expectedResponse = TracksCollection.getRepresentation(tracksCollection, true)
     }
 
     trait ErrorResponse extends TracksForUserContext {

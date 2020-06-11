@@ -145,13 +145,12 @@ class Clients(
     stitchClient,
     lieblingClient,
     waveformUrlsGenerator,
-    userQuotaClient,
-    trackmetadataClient
+    userQuotaClient
   )
 
-  val userTracksService = new UserTracksService(trackVisibilityService, tracksService, trackmetadataClient)
+  val userTracksService = new UserTracksService(tracksService, trackmetadataClient)
 
-  val similarTracksService = new SimilarTracksService(trackVisibilityService, tracksService, systemPlaylistsClient)
+  val similarTracksService = new SimilarTracksService(tracksService, systemPlaylistsClient)
   val likesService = new LikesService(tracksService, lieblingClient)
   val searchService = new SearchService(tracksService, searchClient)
 

@@ -6,14 +6,13 @@ import com.soundcloud.publicApiStrangler.client.SystemPlaylistsClient
 import com.soundcloud.publicApiStrangler.client.tracks.TrackRequest
 import com.soundcloud.publicApiStrangler.service.trackrepresentation.{
   TrackPagination,
-  TrackRepresentationLike,
+  TrackRepresentation,
   TrackRepresentationsService,
   TracksCollection
 }
 import com.twitter.util.Future
 
 class SimilarTracksService(
-    trackVisibilityService: TrackVisibilityService,
     trackRepresentationsService: TrackRepresentationsService,
     systemPlaylistsClient: SystemPlaylistsClient
 ) {
@@ -27,16 +26,12 @@ class SimilarTracksService(
       similarTracks <- systemPlaylistsClient.fetchSimilar(session, trackUrn)
       trackUrns = similarTracks.map(similarTrack => similarTrack.similarTracks).getOrElse(List.empty).toList
       trackUrnsPage = trackPagination.calculateTrackUrnPage(trackUrns).toList
-      visibleTracks <- trackVisibilityService.tracks(
-        session,
-        trackUrnsPage.map(track => TrackRequest(track, None))
-      )
-      sortedVisibleTracks = trackPagination.calculateFinalPage(visibleTracks)
-      enrichedTracks <- trackRepresentationsService.enrichTracks(session, sortedVisibleTracks)
+      tracks <- trackRepresentationsService.tracks(session, trackUrnsPage.map(TrackRequest(_, None)))
+      finalPage = trackPagination.calculateFinalPage(tracks)
     } yield {
-      enrichedTracks match {
-        case tracks: List[TrackRepresentationLike] if !tracks.isEmpty =>
-          Some(TracksCollection(tracks, trackPagination.nextHref(enrichedTracks.size)))
+      finalPage match {
+        case _: List[TrackRepresentation] if !finalPage.isEmpty =>
+          Some(TracksCollection(finalPage, trackPagination.nextHref(finalPage.size)))
         case _ =>
           None
       }

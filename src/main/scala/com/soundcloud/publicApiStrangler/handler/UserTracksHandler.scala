@@ -12,7 +12,7 @@ import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.publicApiStrangler.service.UserTracksService
 import com.soundcloud.publicApiStrangler.service.trackrepresentation.{
   TrackPagination,
-  TrackRepresentationLike,
+  TrackRepresentation,
   TracksCollection
 }
 import com.soundcloud.publicApiStrangler.support.{Bad, Good, Result}
@@ -102,7 +102,7 @@ class UserTracksHandler(
       session: UserSession,
       urn: Urn,
       secretToken: Option[String]
-  ): Future[Result[TrackRepresentationLike]] = {
+  ): Future[Result[TrackRepresentation]] = {
     userTracksService
       .userTrack(
         urn,

@@ -2,7 +2,7 @@ package com.soundcloud.publicApiStrangler.service.trackrepresentation
 
 import play.api.libs.json.Json
 
-case class TracksCollection(tracks: List[TrackRepresentationLike], nextHref: Option[String])
+case class TracksCollection(tracks: List[TrackRepresentation], nextHref: Option[String])
 
 object TracksCollection {
 

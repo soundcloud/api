@@ -172,7 +172,7 @@ trait TrackRepresentationsSpecificationContext extends UnitSpecification {
     def waveformUrl(uid: String) =
       TrackWaveformUrl(uid, Url("https://bar.sndcdn.com/stream/a1b2c3.png"))
 
-    def trackRepresentationLike: TrackRepresentationLike =
+    def createTrackRepresentation: TrackRepresentation =
       trackRepresentationBuilder.build(
         sessionUser = session.user,
         track = Track.fromVisibleTrack(trackvisibilityTrack()),

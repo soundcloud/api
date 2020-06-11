@@ -8,14 +8,14 @@ import com.soundcloud.publicApiStrangler.Routing
 import com.soundcloud.publicApiStrangler.service.SimilarTracksService
 import com.soundcloud.publicApiStrangler.service.trackrepresentation.{
   TrackPagination,
-  TrackRepresentationLikeSpecContext,
+  TrackRepresentationSpecContext,
   TracksCollection
 }
 import com.soundcloud.publicApiStrangler.test.{HandlerSpecificationScope, UnitSpecification}
 import com.twitter.util.Future
 import org.mockito.Mockito.when
 
-class SimilarTracksHandlerSpec extends UnitSpecification with TrackRepresentationLikeSpecContext {
+class SimilarTracksHandlerSpec extends UnitSpecification with TrackRepresentationSpecContext {
   trait Context extends HandlerSpecificationScope {
     val session = loggedInSession(Urn("soundcloud", "users", "1"))
     val trackUrn = Urn("soundcloud", "tracks", "1")

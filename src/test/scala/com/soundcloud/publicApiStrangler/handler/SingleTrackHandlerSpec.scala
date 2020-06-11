@@ -13,7 +13,7 @@ import com.soundcloud.publicApiStrangler.client.trackmetadata.{Artwork, Embeddin
 import com.soundcloud.publicApiStrangler.client.tracks.TrackRequest
 import com.soundcloud.publicApiStrangler.service.trackrepresentation.{
   TrackRepresentation,
-  TrackRepresentationLike,
+  TrackRepresentationSpecContext,
   TrackRepresentationsService
 }
 import com.soundcloud.publicApiStrangler.test.{HandlerSpecificationScope, UnitSpecification}
@@ -23,7 +23,7 @@ import org.joda.time.DateTime
 import org.mockito.Mockito.when
 import play.api.libs.json.Json
 
-class SingleTrackHandlerSpec extends UnitSpecification {
+class SingleTrackHandlerSpec extends UnitSpecification with TrackRepresentationSpecContext {
   def trackmetadataTrack(
       disabledAt: Option[DateTime] = None,
       isPublic: Boolean = true,
@@ -95,7 +95,7 @@ class SingleTrackHandlerSpec extends UnitSpecification {
       updated_at = Some("2016/10/10 11:21:36 +0000")
     )
 
-  val trackRepresentation = new TrackRepresentation(
+  val mockTrackRepresentation = createTrackRepresentation(
     track = trackmetadataTrack(),
     user = user,
     isrc = None,
@@ -138,64 +138,80 @@ class SingleTrackHandlerSpec extends UnitSpecification {
   )
 
   val expectedJson = Json.parse("""
-      |{
-      |"kind": "track",
-      |"id": 987,
-      |"created_at": "2016/05/19 18:03:04 +0000",
-      |"user_id": 3000,
-      |"duration": 0,
-      |"commentable": false,
-      |"state": "lol",
-      |"original_content_size": 123,
-      |"last_modified": "2016/05/19 18:03:04 +0000",
-      |"sharing": "public",
-      |"tag_list": "",
-      |"permalink": null,
-      |"streamable": null,
-      |"embeddable_by": "none",
-      |"purchase_url": "http://example.com/buy/7890",
-      |"purchase_title": "buy me pls",
-      |"label_id": null,
-      |"genre": null,
-      |"title": null,
-      |"description": null,
-      |"label_name": null,
-      |"release": "DR012",
-      |"track_type": "original",
-      |"key_signature": "Emaj",
-      |"isrc": null,
-      |"video_url": "http://example.com/video.mp4",
-      |"bpm": 120.7,
-      |"release_year": null,
-      |"release_month": null,
-      |"release_day": null,
-      |"original_format": "donkey",
-      |"license": null,
-      |"uri": "https://api.soundcloud.com/tracks/987",
-      |"user": {
-      |  "id": 3000,
-      |  "kind": "user",
-      |  "permalink": "giraffe",
-      |  "username": "Dr. G. Raffe",
-      |  "last_modified": "2016/10/10 11:21:36 +0000",
-      |  "uri": "https://api.soundcloud.com/users/3000",
-      |  "permalink_url": "http://soundcloud.com/denis",
-      |  "avatar_url": "https://example.com/giraffe.jpg"
-      |},
-      |"permalink_url": null,
-      |"artwork_url": null,
-      |"stream_url": "https://api.soundcloud.com/tracks/987/stream",
-      |"download_url": "https://api.soundcloud.com/tracks/987/download"
-      |}
+      {
+    |    "artwork_url": null,
+    |    "available_country_codes": null,
+    |    "bpm": 120.7,
+    |    "comment_count": null,
+    |    "commentable": false,
+    |    "created_at": "2016/05/19 18:03:04 +0000",
+    |    "description": null,
+    |    "domain_lockings": null,
+    |    "download_count": null,
+    |    "download_url": "https://api.soundcloud.com/tracks/987/download",
+    |    "downloadable": false,
+    |    "downloads_remaining": null,
+    |    "duration": 0,
+    |    "embeddable_by": "none",
+    |    "favoritings_count": null,
+    |    "genre": null,
+    |    "id": 987,
+    |    "isrc": null,
+    |    "key_signature": "Emaj",
+    |    "kind": "track",
+    |    "label": null,
+    |    "label_id": null,
+    |    "label_name": null,
+    |    "last_modified": "2016/05/19 18:03:04 +0000",
+    |    "license": null,
+    |    "original_content_size": 123,
+    |    "original_format": "donkey",
+    |    "permalink": null,
+    |    "permalink_url": null,
+    |    "playback_count": null,
+    |    "purchase_title": "buy me pls",
+    |    "purchase_url": "http://example.com/buy/7890",
+    |    "release": "DR012",
+    |    "release_day": null,
+    |    "release_month": null,
+    |    "release_year": null,
+    |    "reposts_count": null,
+    |    "secret_token": null,
+    |    "secret_uri": null,
+    |    "sharing": "public",
+    |    "state": "lol",
+    |    "stream_url": "https://api.soundcloud.com/tracks/987/stream",
+    |    "streamable": null,
+    |    "tag_list": "",
+    |    "title": null,
+    |    "track_type": "original",
+    |    "uri": "https://api.soundcloud.com/tracks/987",
+    |    "user": {
+    |        "avatar_url": "https://example.com/giraffe.jpg",
+    |        "id": 3000,
+    |        "kind": "user",
+    |        "last_modified": "2016/10/10 11:21:36 +0000",
+    |        "permalink": "giraffe",
+    |        "permalink_url": "http://soundcloud.com/denis",
+    |        "uri": "https://api.soundcloud.com/users/3000",
+    |        "username": "Dr. G. Raffe"
+    |    },
+    |    "user_favorite": false,
+    |    "user_id": 3000,
+    |    "user_playback_count": 1,
+    |    "video_url": "http://example.com/video.mp4",
+    |    "waveform_url": "https://bar.sndcdn.com/stream/a1b2c3.png"
+    |}
     """.stripMargin)
 
   validPaths.foreach { path =>
     s"removes conditional request headers for path: $path" in new Context {
       when(trackRepresentationsService.track(session, TrackRequest(trackUrn, None)))
-        .thenReturn(Future.value(Some(trackRepresentation)))
+        .thenReturn(Future.value(Some(mockTrackRepresentation)))
 
       val response =
         get(path, Map.empty, Map("If-None-Match" -> "a8d3ba6d09b68691b77dc75dfcd7a477"))
+
       response.status ==== Status.Ok
       Json.parse(response.contentString) ==== expectedJson
     }
@@ -213,7 +229,7 @@ class SingleTrackHandlerSpec extends UnitSpecification {
   validPaths.foreach { path =>
     s"Passes secret token to tracks service for path: $path" in new Context {
       when(trackRepresentationsService.track(session, TrackRequest(trackUrn, Some("s3cret"))))
-        .thenReturn(Future.value(Some(trackRepresentation)))
+        .thenReturn(Future.value(Some(mockTrackRepresentation)))
 
       val response = get(path, Map("secret_token" -> "s3cret"))
       response.status ==== Status.Ok
@@ -224,26 +240,25 @@ class SingleTrackHandlerSpec extends UnitSpecification {
   validPaths.foreach { path =>
     s"When loading tracks from trackmetadata for: $path" >> {
       trait FromTrackMetadata extends Context {
-        def trackRepresentationLike: Future[Option[TrackRepresentationLike]]
+        def trackRepresentation: Future[Option[TrackRepresentation]]
 
         when(trackRepresentationsService.track(session, TrackRequest(trackUrn, None)))
-          .thenReturn(trackRepresentationLike)
+          .thenReturn(trackRepresentation)
 
       }
 
       "it returns 200 for Some()" in new FromTrackMetadata {
-        override def trackRepresentationLike = Future.value(Some(trackRepresentation))
+        override def trackRepresentation: Future[Option[TrackRepresentation]] =
+          Future.value(Some(mockTrackRepresentation))
 
         val response = get(path)
         response.status.code ==== 200
 
-        import TrackRepresentation.writes
-
-        response.contentString ==== Json.stringify(Json.toJson(trackRepresentation))
+        response.contentString ==== Json.stringify(Json.toJson(mockTrackRepresentation))
       }
 
       "it returns 404 for None" in new FromTrackMetadata {
-        override def trackRepresentationLike = Future.value(None)
+        override def trackRepresentation = Future.value(None)
 
         val response = get(path)
         response.status.code ==== 404
@@ -251,7 +266,7 @@ class SingleTrackHandlerSpec extends UnitSpecification {
       }
 
       "it returns 500 for failed futures" in new FromTrackMetadata {
-        override def trackRepresentationLike =
+        override def trackRepresentation =
           Future.exception(new RuntimeException("An unexpected error occurred while fetching a track"))
 
         val response = get(path)

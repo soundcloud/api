@@ -10,7 +10,7 @@ import com.soundcloud.publicApiStrangler.client.quota.UserQuotaClient
 import com.soundcloud.publicApiStrangler.client.stitch.{StitchClient, StitchCounts}
 import com.soundcloud.publicApiStrangler.client.tracks.{TrackRequest, VisibleTrack}
 import com.soundcloud.publicApiStrangler.client.mothership.response.representation.{Geoblockings, User}
-import com.soundcloud.publicApiStrangler.client.trackmetadata.{Track, TrackmetadataClient}
+import com.soundcloud.publicApiStrangler.client.trackmetadata.{Track}
 import com.soundcloud.publicApiStrangler.service.TrackVisibilityService
 import com.twitter.util.Future
 
@@ -23,11 +23,10 @@ class TrackRepresentationsService(
     stitchClient: StitchClient,
     lieblingClient: LieblingClient,
     waveformUrlsGenerator: WaveformUrlsGenerator,
-    userQuotaClient: UserQuotaClient,
-    trackmetadataClient: TrackmetadataClient
+    userQuotaClient: UserQuotaClient
 ) {
 
-  def tracks(session: UserSession, trackRequests: List[TrackRequest]): Future[List[TrackRepresentationLike]] = {
+  def tracks(session: UserSession, trackRequests: List[TrackRequest]): Future[List[TrackRepresentation]] = {
     for {
       visibleTracks <- trackVisibilityService.tracks(session, trackRequests)
       enrichedTracks <- enrichTracks(session, visibleTracks)
@@ -39,16 +38,12 @@ class TrackRepresentationsService(
   def track(
       session: UserSession,
       trackRequest: TrackRequest
-  ): Future[Option[TrackRepresentationLike]] = tracks(session, List(trackRequest)).map(_.headOption)
+  ): Future[Option[TrackRepresentation]] = tracks(session, List(trackRequest)).map(_.headOption)
 
-  /*
-   * TODO: This method should be private, but in order to do this TrackRepresentationLike needs to be refactored/unified
-   *  so that the same set of fields is always returned
-   */
-  def enrichTracks(
+  private def enrichTracks(
       session: UserSession,
       visibleTracks: List[VisibleTrack]
-  ): Future[List[TrackRepresentationLike]] = {
+  ): Future[List[TrackRepresentation]] = {
     val urns = visibleTracks.map(_.urn).toSet
     val userUrns = visibleTracks.map(_.userUrn).toSet
     val builder = new TrackRepresentationBuilder

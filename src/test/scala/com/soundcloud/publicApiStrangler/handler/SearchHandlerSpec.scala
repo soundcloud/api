@@ -19,10 +19,9 @@ import com.soundcloud.publicApiStrangler.mapper.search.{Search, SearchDispatcher
 import com.soundcloud.publicApiStrangler.service.SearchService
 import com.soundcloud.publicApiStrangler.service.trackrepresentation.{
   TrackPagination,
-  TrackRepresentationLikeSpecContext,
+  TrackRepresentationSpecContext,
   TracksCollection
 }
-import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures.contentsOf
 import com.soundcloud.publicApiStrangler.test.{HandlerSpecificationScope, UnitSpecification}
 import com.twitter.finagle.http.{Response, Status}
 import com.twitter.util.Future
@@ -223,7 +222,7 @@ class SearchHandlerSpec extends UnitSpecification {
   }
 
   "/tracks" >> {
-    trait Context extends ForwardContext with TrackRepresentationLikeSpecContext {
+    trait Context extends ForwardContext with TrackRepresentationSpecContext {
       val trackRepresentation = createTrackRepresentation()
       val tracksCollection = TracksCollection(List(trackRepresentation), None)
       val session = loggedInSession(Urn("soundcloud", "users", "1"))
@@ -241,7 +240,6 @@ class SearchHandlerSpec extends UnitSpecification {
     }
 
     "returns track search results" in new Context {
-      val expectedResponse = contentsOf("tracks", "track_representation_response")
       val queryString = "?q=foo&offset=10&limit=5&linked_partitioning=1"
       searchService.searchTracks(
         anonymousSession,
@@ -254,7 +252,7 @@ class SearchHandlerSpec extends UnitSpecification {
       val response = get(path, Map("q" -> "foo", "offset" -> "10", "limit" -> "5", "linked_partitioning" -> "1"))
 
       response.statusCode ==== 200
-      Json.parse(response.contentString) ==== expectedResponse
+      response.contentString ==== TracksCollection.getRepresentation(tracksCollection, true)
     }
   }
 

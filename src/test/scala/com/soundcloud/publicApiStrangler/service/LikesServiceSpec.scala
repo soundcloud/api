@@ -4,7 +4,7 @@ import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.publicApiStrangler.client.liebling._
 import com.soundcloud.publicApiStrangler.service.pagination.CursorBasedPagination
 import com.soundcloud.publicApiStrangler.service.trackrepresentation.{
-  TrackRepresentationWaveformUrlDecorator,
+  TrackRepresentation,
   TrackRepresentationsService,
   TrackRepresentationsSpecificationContext,
   TracksCollection
@@ -105,7 +105,7 @@ class LikesServiceSpec extends TrackRepresentationsSpecificationContext {
     "when all data is available" in new Context {
       val track = trackvisibilityTrack()
       when(trackRepresentationsService.tracks(session, List(trackRequest)))
-        .thenReturn(Future.value(List(trackRepresentationLike)))
+        .thenReturn(Future.value(List(createTrackRepresentation)))
       when(lieblingClient.userTracksLikesForUrns(session, trackOwnerUrn, List(track.urn)))
         .thenReturn(Future.value(List(trackUrn)))
 
@@ -114,7 +114,7 @@ class LikesServiceSpec extends TrackRepresentationsSpecificationContext {
 
       tracksCollection match {
         case rep =>
-          rep must beAnInstanceOf[Option[TrackRepresentationWaveformUrlDecorator]]
+          rep must beAnInstanceOf[Option[TrackRepresentation]]
       }
     }
   }
@@ -132,7 +132,7 @@ class LikesServiceSpec extends TrackRepresentationsSpecificationContext {
         )
       )
       when(trackRepresentationsService.tracks(session, List(trackRequest)))
-        .thenReturn(Future.value(List(trackRepresentationLike)))
+        .thenReturn(Future.value(List(createTrackRepresentation)))
       when(lieblingClient.userTracksLikes(session, trackOwnerUrn, pagination.cursor, pagination.pageSize))
         .thenReturn(Future.value(likesPage))
 

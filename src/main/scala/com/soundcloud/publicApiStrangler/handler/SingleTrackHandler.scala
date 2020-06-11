@@ -14,7 +14,7 @@ import com.soundcloud.jvmkit.module.telemetry.exceptions.ExceptionHandler._
 import com.twitter.finagle.http.{Response, Status}
 import com.twitter.util.{Future, Return, Try}
 import play.api.libs.json._
-import com.soundcloud.publicApiStrangler.service.trackrepresentation.TrackRepresentationLike
+import com.soundcloud.publicApiStrangler.service.trackrepresentation.TrackRepresentation
 import com.soundcloud.publicApiStrangler.client.tracks.TrackRequest
 
 import scala.util.control.NonFatal
@@ -59,7 +59,7 @@ class SingleTrackHandler(
       session: UserSession,
       urn: Urn,
       secretToken: Option[String]
-  ): Future[Result[TrackRepresentationLike]] = {
+  ): Future[Result[TrackRepresentation]] = {
     tracksService
       .track(session, TrackRequest(urn, secretToken))
       .map {

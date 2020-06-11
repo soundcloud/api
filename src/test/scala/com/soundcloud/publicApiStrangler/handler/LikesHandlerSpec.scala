@@ -10,8 +10,8 @@ import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.publicApiStrangler.Routing
 import com.soundcloud.publicApiStrangler.service.pagination.{CursorBasedPagination, Pagination}
 import com.soundcloud.publicApiStrangler.service.trackrepresentation.{
-  TrackRepresentationLike,
-  TrackRepresentationLikeSpecContext,
+  TrackRepresentation,
+  TrackRepresentationSpecContext,
   TracksCollection
 }
 import com.soundcloud.publicApiStrangler.service.{
@@ -20,7 +20,6 @@ import com.soundcloud.publicApiStrangler.service.{
   OkCreateResponse,
   SpamBlockedCreateResponse
 }
-import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures.contentsOf
 import com.soundcloud.publicApiStrangler.test.{HandlerSpecificationScope, UnitSpecification}
 import com.twitter.finagle.http.{Request, Status}
 import com.twitter.util.Future
@@ -68,7 +67,7 @@ class LikesHandlerSpec extends UnitSpecification {
       def stubUserTrackLikeForUrn(
           user: Urn,
           trackUrn: Urn,
-          trackRepresentation: Option[TrackRepresentationLike]
+          trackRepresentation: Option[TrackRepresentation]
       ) = {
         when(likesService.userTrackLikeForUrn(session, user, trackUrn))
           .thenReturn(Future.value(trackRepresentation))
@@ -84,10 +83,10 @@ class LikesHandlerSpec extends UnitSpecification {
       }
     }
 
-    trait SuccessfulResponse extends TrackRepresentationLikeSpecContext with TracksForUserContext {
+    trait SuccessfulResponse extends TrackRepresentationSpecContext with TracksForUserContext {
       val trackRepresentation = createTrackRepresentation()
       val tracksCollection = TracksCollection(List(trackRepresentation), None)
-      val expectedResponse = contentsOf("tracks", "track_representation_response").toString()
+      val expectedResponse = TracksCollection.getRepresentation(tracksCollection, true)
     }
 
     trait ErrorResponse extends TracksForUserContext {

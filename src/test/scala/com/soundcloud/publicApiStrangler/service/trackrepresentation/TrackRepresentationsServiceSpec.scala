@@ -37,8 +37,7 @@ class TrackRepresentationsServiceSpec extends TrackRepresentationsSpecificationC
       stitchClient,
       lieblingClient,
       waveformUrlsGenerator,
-      userQuotaClient,
-      trackmetadataClient
+      userQuotaClient
     )
 
     def setUpMocksForExistingTrack(
@@ -86,7 +85,7 @@ class TrackRepresentationsServiceSpec extends TrackRepresentationsSpecificationC
 
       trackRepLike match {
         case Some(rep) =>
-          rep must beAnInstanceOf[TrackRepresentationLike]
+          rep must beAnInstanceOf[TrackRepresentation]
         case None =>
       }
     }
@@ -99,7 +98,7 @@ class TrackRepresentationsServiceSpec extends TrackRepresentationsSpecificationC
       val trackRepLike = Await.result(tracksService.track(ownerSession, trackRequest))
       trackRepLike match {
         case Some(rep) =>
-          rep must beAnInstanceOf[TrackRepresentationLike]
+          rep must beAnInstanceOf[TrackRepresentation]
         case None =>
       }
     }
@@ -113,7 +112,7 @@ class TrackRepresentationsServiceSpec extends TrackRepresentationsSpecificationC
       val trackRepLike = Await.result(tracksService.track(session, trackRequest))
       trackRepLike match {
         case Some(rep) =>
-          rep must beAnInstanceOf[TrackRepresentationLike]
+          rep must beAnInstanceOf[TrackRepresentation]
         case None =>
       }
     }
@@ -140,8 +139,7 @@ class TrackRepresentationsServiceSpec extends TrackRepresentationsSpecificationC
 
       val trackRepLike = Await.result(tracksService.track(session, trackRequest))
       trackRepLike match {
-        case Some(rep) =>
-          Json.toJson(rep).as[JsObject].keys.contains("available_country_codes") ==== false
+        case Some(rep) => Json.toJson(rep).as[JsObject].value("available_country_codes") === JsNull
         case None =>
       }
     }
@@ -155,7 +153,7 @@ class TrackRepresentationsServiceSpec extends TrackRepresentationsSpecificationC
       val trackRepLike = Await.result(tracksService.track(session, trackRequest))
       trackRepLike match {
         case Some(rep) =>
-          Json.toJson(rep).as[JsObject].keys.contains("available_country_codes") ==== false
+          Json.toJson(rep).as[JsObject].value("available_country_codes") === JsNull
         case None =>
       }
     }
@@ -169,7 +167,7 @@ class TrackRepresentationsServiceSpec extends TrackRepresentationsSpecificationC
       val trackRepLike = Await.result(tracksService.track(session, trackRequest))
       trackRepLike match {
         case Some(rep) =>
-          Json.toJson(rep).as[JsObject].keys.contains("domain_lockings") ==== false
+          Json.toJson(rep).as[JsObject].value("domain_lockings") === JsNull
         case None =>
       }
     }
@@ -228,7 +226,7 @@ class TrackRepresentationsServiceSpec extends TrackRepresentationsSpecificationC
         val trackRepLike = Await.result(tracksService.track(session, trackRequest))
         trackRepLike match {
           case Some(rep) =>
-            Json.toJson(rep).as[JsObject].keys.contains("user_favorite") ==== false
+            Json.toJson(rep).as[JsObject].value("user_favorite") === JsNull
           case None =>
         }
       }
@@ -257,7 +255,7 @@ class TrackRepresentationsServiceSpec extends TrackRepresentationsSpecificationC
         val trackRepLike = Await.result(tracksService.track(session, trackRequest))
         trackRepLike match {
           case Some(rep) =>
-            Json.toJson(rep).as[JsObject].keys.contains("user_playback_count") ==== false
+            Json.toJson(rep).as[JsObject].value("user_playback_count") === JsNull
           case None =>
         }
       }
@@ -296,7 +294,7 @@ class TrackRepresentationsServiceSpec extends TrackRepresentationsSpecificationC
         val trackRepLike = Await.result(tracksService.track(session, trackRequest))
         trackRepLike match {
           case Some(rep) =>
-            Json.toJson(rep).as[JsObject].keys.contains("label") ==== false
+            Json.toJson(rep).as[JsObject].value("label") === JsNull
           case None =>
         }
       }
@@ -307,9 +305,11 @@ class TrackRepresentationsServiceSpec extends TrackRepresentationsSpecificationC
         "appends the track secret token to urls" in new Context {
           val track = trackvisibilityTrack().copy(permalinkUrl = Some("http://soundcloud.com/foo/bar"), public = false)
           override val trackRequest = TrackRequest(trackUrn, Some("secr3t-Token"))
-          setUpMocksForExistingTrack(track, session)
 
-          val trackRepLike = Await.result(tracksService.track(session, trackRequest))
+          val trackOwnerSession = new UserSessionBuilder().setUser(trackOwner.urn).build()
+          setUpMocksForExistingTrack(track, trackOwnerSession)
+
+          val trackRepLike = Await.result(tracksService.track(trackOwnerSession, trackRequest))
           trackRepLike match {
             case Some(rep) =>
               val json = Json.toJson(rep)
@@ -428,7 +428,7 @@ class TrackRepresentationsServiceSpec extends TrackRepresentationsSpecificationC
           val trackRepLike = Await.result(tracksService.track(session, trackRequest))
           trackRepLike match {
             case Some(rep) =>
-              Json.toJson(rep).as[JsObject].keys.contains("downloads_remaining") ==== false
+              Json.toJson(rep).as[JsObject].value("downloads_remaining") === JsNull
             case None =>
           }
         }
@@ -470,7 +470,7 @@ class TrackRepresentationsServiceSpec extends TrackRepresentationsSpecificationC
           val trackRepLike = Await.result(tracksService.track(session, trackRequest))
           trackRepLike match {
             case Some(rep) =>
-              Json.toJson(rep).as[JsObject].keys.contains("downloads_remaining") ==== false
+              Json.toJson(rep).as[JsObject].value("downloads_remaining") === JsNull
             case None =>
           }
         }
@@ -583,7 +583,7 @@ class TrackRepresentationsServiceSpec extends TrackRepresentationsSpecificationC
           trackRepLike match {
             case Some(rep) =>
               val json = Json.toJson(rep)
-              json.as[JsObject].keys.contains("comment_count") ==== false
+              json.as[JsObject].value("comment_count") === JsNull
             case None =>
           }
         }
@@ -600,10 +600,10 @@ class TrackRepresentationsServiceSpec extends TrackRepresentationsSpecificationC
             trackRepLike match {
               case Some(rep) =>
                 val json = Json.toJson(rep)
-                json.as[JsObject].keys.contains("playback_count") ==== false
-                json.as[JsObject].keys.contains("download_count") ==== false
-                json.as[JsObject].keys.contains("favoritings_count") ==== false
-                json.as[JsObject].keys.contains("comment_count") ==== false
+                json.as[JsObject].value("playback_count") === JsNull
+                json.as[JsObject].value("download_count") === JsNull
+                json.as[JsObject].value("favoritings_count") === JsNull
+                json.as[JsObject].value("comment_count") === JsNull
               case None =>
             }
           }
@@ -651,7 +651,7 @@ class TrackRepresentationsServiceSpec extends TrackRepresentationsSpecificationC
             trackRepLike match {
               case Some(rep) =>
                 val json = Json.toJson(rep)
-                json.as[JsObject].keys.contains("comment_count") ==== false
+                json.as[JsObject].value("comment_count") === JsNull
               case None =>
             }
           }
