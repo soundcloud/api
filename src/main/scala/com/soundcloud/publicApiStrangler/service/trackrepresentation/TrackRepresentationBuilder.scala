@@ -42,14 +42,14 @@ class TrackRepresentationBuilder {
       downloadCount = getCount(userIsOwner, track, "download_count", counts),
       favoritingsCount = getCount(userIsOwner, track, "favoritings_count", counts),
       repostsCount = getCount(userIsOwner, track, "reposts_count", counts),
-      secretToken = getSecretToken(track, userIsOwner),
+      secretToken = getSecretTokenForPrivateTrack(track),
       releaseDay = releaseDayFor(track),
       releaseMonth = releaseMonthFor(track),
-      uri = urlFor(track, getSecretToken(track, userIsOwner)),
-      streamUrl = urlFor(track, "stream", getSecretToken(track, userIsOwner)),
-      downloadUrl = urlFor(track, "download", getSecretToken(track, userIsOwner)),
-      permalinkUrl = secretPath(track.permalink_url, track, getSecretToken(track, userIsOwner)),
-      secretUri = getSecretUri(track, userIsOwner),
+      uri = urlFor(track, getSecretTokenForPrivateTrack(track)),
+      streamUrl = urlFor(track, "stream", getSecretTokenForPrivateTrack(track)),
+      downloadUrl = urlFor(track, "download", getSecretTokenForPrivateTrack(track)),
+      permalinkUrl = secretPath(track.permalink_url, track, getSecretTokenForPrivateTrack(track)),
+      secretUri = getSecretUri(track),
       commentCount = getCommentCount(track, userIsOwner, counts),
       userFavourite = if (!isAnonymous) Some(isLiked) else None,
       userPlaybackCount = if (!isAnonymous) Some(1) else None,
@@ -66,11 +66,11 @@ class TrackRepresentationBuilder {
   private def releaseMonthFor(track: Track): Option[Int] =
     track.release_year.map(_ => track.release_month.getOrElse(1))
 
-  private def getSecretToken(track: Track, userIsOwner: Boolean): Option[String] =
-    if (userIsOwner) Some(track.secret_token) else None
+  private def getSecretTokenForPrivateTrack(track: Track): Option[String] =
+    if (!track.public) Some(track.secret_token) else None
 
-  private def getSecretUri(track: Track, userIsOwner: Boolean): Option[String] = {
-    if (userIsOwner)
+  private def getSecretUri(track: Track): Option[String] = {
+    if (!track.public)
       Some(s"https://api.soundcloud.com/tracks/${track.urn.identifier}?secret_token=${track.secret_token}")
     else None
   }

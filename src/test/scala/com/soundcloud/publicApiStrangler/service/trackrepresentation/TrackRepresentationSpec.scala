@@ -150,19 +150,6 @@ trait TrackRepresentationSpecContext {
 }
 
 class TrackRepresentationSpec extends UnitSpecification with TrackRepresentationSpecContext {
-  "when user is owner" >> {
-    trait Context extends Scope {
-      val trackRepresentation: TrackRepresentation = createTrackRepresentation(loggedInUser = userUrn)
-    }
-
-    "adds secret token stuff" in new Context {
-      val json = Json.toJson(trackRepresentation)
-
-      json \ "secret_token" ==== JsDefined(JsString("s-53CR37"))
-      json \ "secret_uri" ==== JsDefined(JsString("https://api.soundcloud.com/tracks/1324?secret_token=s-53CR37"))
-    }
-  }
-
   "geoblocking" >> {
     trait Context extends Scope with TrackRepresentationSpecContext {
       val geoblockings: Geoblockings = List("DE", "FR")
@@ -550,8 +537,13 @@ class TrackRepresentationSpec extends UnitSpecification with TrackRepresentation
 
         val nonPublicTrack = defaultTrack.copy(public = false, secret_token = "bl3rkbi3")
         val trackRepresentation: TrackRepresentation =
-          createTrackRepresentation(track = nonPublicTrack, loggedInUser = userUrn)
+          createTrackRepresentation(track = nonPublicTrack)
         val json = Json.toJson(trackRepresentation)
+      }
+
+      "adds secret token stuff" in new UrlsPresentContext {
+        json \ "secret_token" ==== JsDefined(JsString("bl3rkbi3"))
+        json \ "secret_uri" ==== JsDefined(JsString("https://api.soundcloud.com/tracks/1324?secret_token=bl3rkbi3"))
       }
 
       "adds the secret token to the URI" in new UrlsPresentContext {
