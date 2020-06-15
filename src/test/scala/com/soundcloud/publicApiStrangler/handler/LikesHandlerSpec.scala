@@ -5,7 +5,6 @@ import java.util.TimeZone
 import com.soundcloud.jvmkit.module.bff.session.UserAuthentication
 import com.soundcloud.jvmkit.module.bff.testsupport.FakeUserAuthentication
 import com.soundcloud.jvmkit.module.telemetry.Telemetry
-import com.soundcloud.jvmkit.module.telemetry.exceptions.ExceptionCollector
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.publicApiStrangler.Routing
 import com.soundcloud.publicApiStrangler.service.pagination.{CursorBasedPagination, Pagination}
@@ -38,14 +37,8 @@ class LikesHandlerSpec extends UnitSpecification {
 
     val likesService = mock[LikesService]
     val telemetry = Telemetry.createIsolatedInstance
-    val exceptionCollector = new ExceptionCollector(telemetry)
 
-    val handler = new LikesHandler(
-      userAuthentication,
-      likesService,
-      "https://api.soundcloud.com",
-      exceptionCollector
-    )
+    val handler = new LikesHandler(userAuthentication, likesService, "https://api.soundcloud.com")
 
     override def routingDefinitions = Routing.forLikesHandler(handler)
   }
@@ -89,14 +82,6 @@ class LikesHandlerSpec extends UnitSpecification {
       val expectedResponse = TracksCollection.getRepresentation(tracksCollection, true)
     }
 
-    trait ErrorResponse extends TracksForUserContext {
-      val errorMessage = "an unexpected error occurred"
-      val trackRepresentationResult =
-        Future.exception(new RuntimeException("An unexpected error occurred while fetching a tracks"))
-      val expectedResponse =
-        s"""{"error":"$errorMessage"}"""
-    }
-
     "GET /users/:userId/favorites/:trackId" >> {
       "with a successful response from tracks service" >> {
         "returns track" in new TracksForUserContext with SuccessfulResponse {
@@ -121,21 +106,6 @@ class LikesHandlerSpec extends UnitSpecification {
           val response = get(path)
           response.status ==== Status.NotFound
           response.contentString ==== """{"errors":[{"error_message":"404 - Not Found"}]}"""
-        }
-      }
-
-      "with an error response from tracks service" >> {
-        "returns an error response with message" in new TracksForUserContext with ErrorResponse {
-          val user = Urn("soundcloud", "users", "1")
-          val trackUrn = Urn("soundcloud", "tracks", "48786981")
-          val path = s"/users/1/favorites/48786981$queryString"
-
-          when(likesService.userTrackLikeForUrn(session, user, trackUrn))
-            .thenReturn(trackRepresentationResult)
-
-          val response = get(path)
-          response.status ==== Status.InternalServerError
-          response.contentString ==== expectedResponse
         }
       }
     }
@@ -166,21 +136,6 @@ class LikesHandlerSpec extends UnitSpecification {
           response.contentString ==== """{"errors":[{"error_message":"404 - Not Found"}]}"""
         }
       }
-
-      "with an error response from tracks service" >> {
-        "returns an error response with message" in new TracksForUserContext with ErrorResponse {
-          val user = Urn("soundcloud", "users", "1")
-          val trackUrn = Urn("soundcloud", "tracks", "48786981")
-          val path = s"/me/favorites/48786981$queryString"
-
-          when(likesService.userTrackLikeForUrn(session, user, trackUrn))
-            .thenReturn(trackRepresentationResult)
-
-          val response = get(path)
-          response.status ==== Status.InternalServerError
-          response.contentString ==== expectedResponse
-        }
-      }
     }
 
     "GET /users/:userId/favorites" >> {
@@ -196,20 +151,6 @@ class LikesHandlerSpec extends UnitSpecification {
           response.contentString ==== expectedResponse
         }
       }
-
-      "with an error response from tracks service" >> {
-        "returns an error response with message" in new TracksForUserContext with ErrorResponse {
-          val user = Urn("soundcloud", "users", "1")
-          val path = s"/users/1/favorites/$queryString"
-
-          when(likesService.userTracksLikes(session, user, paginationParams(path)))
-            .thenReturn(trackRepresentationResult)
-
-          val response = get(path)
-          response.status ==== Status.InternalServerError
-          response.contentString ==== "{\"error\":\"500 - Internal Server Error\"}"
-        }
-      }
     }
 
     "GET /me/favorites" >> {
@@ -223,20 +164,6 @@ class LikesHandlerSpec extends UnitSpecification {
           val response = get(path)
           response.status ==== Status.Ok
           response.contentString ==== expectedResponse
-        }
-      }
-
-      "with an error response from tracks service" >> {
-        "returns an error response with message" in new TracksForUserContext with ErrorResponse {
-          val user = Urn("soundcloud", "users", "1")
-          val path = s"/me/favorites/$queryString"
-
-          when(likesService.userTracksLikes(session, user, paginationParams(path)))
-            .thenReturn(trackRepresentationResult)
-
-          val response = get(path)
-          response.status ==== Status.InternalServerError
-          response.contentString ==== "{\"error\":\"500 - Internal Server Error\"}"
         }
       }
     }

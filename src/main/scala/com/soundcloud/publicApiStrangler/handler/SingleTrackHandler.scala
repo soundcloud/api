@@ -5,27 +5,21 @@ import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.http.server.{HandlerRequest, JsonResponseBuilder}
 import com.soundcloud.jvmkit.module.telemetry.Telemetry
-import com.soundcloud.jvmkit.module.util.logging.SoundCloudLoggerFactory
+import com.soundcloud.outcome._
 import com.soundcloud.publicApiStrangler.TrackUrnUtil.trackUrn
-import com.soundcloud.publicApiStrangler.client.trackcoordinator.datatypes.{NotFound, Result, Success}
 import com.soundcloud.publicApiStrangler.service.trackrepresentation.TrackRepresentationsService
-import com.soundcloud.jvmkit.module.telemetry.exceptions.ExceptionCollector
-import com.soundcloud.jvmkit.module.telemetry.exceptions.ExceptionHandler._
 import com.twitter.finagle.http.{Response, Status}
 import com.twitter.util.{Future, Return, Try}
 import play.api.libs.json._
 import com.soundcloud.publicApiStrangler.service.trackrepresentation.TrackRepresentation
 import com.soundcloud.publicApiStrangler.client.tracks.TrackRequest
-
-import scala.util.control.NonFatal
+import com.soundcloud.publicApiStrangler.handler.support.UnhandledOutcomeException
 
 class SingleTrackHandler(
     userAuthentication: UserAuthentication,
     tracksService: TrackRepresentationsService,
-    telemetry: Telemetry,
-    exceptionCollector: ExceptionCollector
+    telemetry: Telemetry
 ) {
-  val logger = SoundCloudLoggerFactory.getLogger(getClass)
 
   def renderTrack(req: HandlerRequest): Future[Response] = {
     stripConditionalRequestHeaders(req)
@@ -36,19 +30,9 @@ class SingleTrackHandler(
           val secretToken = req.params.get("secret_token")
           fetchTrackRepresentation(session, urn, secretToken)
             .map {
-              case Success(trackRep) => generateResponse(Status.Ok, Json.stringify(Json.toJson(trackRep)))
-              case NotFound => generateNotFound
-              case _ =>
-                logger.error(s"Something went wrong while trying to fetch $urn")
-                generateResponse(Status.InternalServerError, "Something went wrong while fetching a track")
-            }
-            .handleAndReport(exceptionCollector) {
-              case NonFatal(e) =>
-                logger.error(e.getMessage)
-                generateResponse(
-                  Status.InternalServerError,
-                  "An unexpected error occured while fetching a track"
-                )
+              case Good(trackRep) => generateResponse(Status.Ok, Json.stringify(Json.toJson(trackRep)))
+              case Bad(NotFound(_)) => generateNotFound
+              case _ => throw new UnhandledOutcomeException
             }
         case _ => Future.value(generateNotFound)
       }
@@ -59,12 +43,12 @@ class SingleTrackHandler(
       session: UserSession,
       urn: Urn,
       secretToken: Option[String]
-  ): Future[Result[TrackRepresentation]] = {
+  ): Future[Outcome[TrackRepresentation]] = {
     tracksService
       .track(session, TrackRequest(urn, secretToken))
       .map {
-        case Some(track) => Success(track)
-        case _ => NotFound
+        case Some(track) => Good(track)
+        case _ => NotFound().bad
       }
   }
 

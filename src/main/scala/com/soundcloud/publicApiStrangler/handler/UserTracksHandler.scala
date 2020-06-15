@@ -4,34 +4,27 @@ import java.net.URL
 
 import com.soundcloud.jvmkit.module.bff.session.UserAuthentication
 import com.soundcloud.jvmkit.module.http.server.{HandlerRequest, JsonResponseBuilder}
-import com.soundcloud.jvmkit.module.telemetry.exceptions.ExceptionCollector
-import com.soundcloud.jvmkit.module.telemetry.exceptions.ExceptionHandler._
 import com.soundcloud.jvmkit.module.util.Urn
-import com.soundcloud.jvmkit.module.util.logging.SoundCloudLoggerFactory
 import com.soundcloud.jvmkit.module.util.session.UserSession
+import com.soundcloud.outcome._
 import com.soundcloud.publicApiStrangler.service.UserTracksService
 import com.soundcloud.publicApiStrangler.service.trackrepresentation.{
   TrackPagination,
   TrackRepresentation,
   TracksCollection
 }
-import com.soundcloud.publicApiStrangler.support.{Bad, Good, Result}
 import com.soundcloud.publicApiStrangler.TrackUrnUtil.trackUrn
 import com.soundcloud.publicApiStrangler.handler.representation.tracks.TrackRepresentationResponse.handleResponseFromService
-
+import com.soundcloud.publicApiStrangler.handler.support.UnhandledOutcomeException
 import com.twitter.finagle.http.{Response, Status}
 import com.twitter.util.{Future, Return, Try}
 import play.api.libs.json.Json
 
-import scala.util.control.NonFatal
-
 class UserTracksHandler(
     userAuthentication: UserAuthentication,
     userTracksService: UserTracksService,
-    baseUrl: String,
-    exceptionCollector: ExceptionCollector
+    baseUrl: String
 ) {
-  val logger = SoundCloudLoggerFactory.getLogger(getClass)
 
   private val numericRegexp = """\d+""".r
 
@@ -84,16 +77,8 @@ class UserTracksHandler(
       .map {
         case Good(trackRep) =>
           generateResponse(Status.Ok, Json.stringify(Json.toJson(trackRep)))
-        case Bad(error: HttpError) => JsonResponseBuilder(error.status, generateErrorBody(error.description)).build
-        case _ =>
-          generateResponse(Status.InternalServerError, "Something went wrong while fetching a track")
-      }
-      .handleAndReport(exceptionCollector) {
-        case NonFatal(e) =>
-          generateResponse(
-            Status.InternalServerError,
-            "An unexpected error occured while fetching a track"
-          )
+        case Bad(NotFound(_)) => JsonResponseBuilder.notFound(notFoundErrorString)
+        case _ => throw new UnhandledOutcomeException
       }
   }
 
@@ -102,7 +87,7 @@ class UserTracksHandler(
       session: UserSession,
       urn: Urn,
       secretToken: Option[String]
-  ): Future[Result[TrackRepresentation]] = {
+  ): Future[Outcome[TrackRepresentation]] = {
     userTracksService
       .userTrack(
         urn,
@@ -112,7 +97,7 @@ class UserTracksHandler(
       )
       .map {
         case Some(track) => Good(track)
-        case _ => Bad(HttpError(Status.NotFound))
+        case None => NotFound().bad
       }
   }
 
@@ -120,16 +105,10 @@ class UserTracksHandler(
     val hasLinkedPartitioning = req.params.get("linked_partitioning").isDefined
     val pagination = TrackPagination.fromRequest(req.params, new URL(baseUrl + req.uri))
 
-    def fetchTrackRepresentation(urn: Urn): Future[Result[TracksCollection]] = {
+    def fetchTrackRepresentation(urn: Urn): Future[Outcome[TracksCollection]] = {
       userTracksService
         .userTracks(session, urn, pagination)
         .map(Good(_))
-        .handle {
-          case NonFatal(e) =>
-            logger.error(e.getMessage)
-            Bad(HttpError(Status.InternalServerError))
-
-        }
     }
 
     Try(Urn("soundcloud", "users", userId)) match {
@@ -139,9 +118,6 @@ class UserTracksHandler(
       case _ => Future.value(JsonResponseBuilder.notFound(notFoundErrorString))
     }
   }
-
-  private def generateErrorBody(message: String): String =
-    Json.stringify(Json.obj("error" -> message))
 
   private def generateResponse(status: Status, rawContent: String): Response = {
     JsonResponseBuilder(status = status, body = rawContent).build

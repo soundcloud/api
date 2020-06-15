@@ -4,14 +4,14 @@ import com.soundcloud.jvmkit.module.http.client.{JsonClient, Params}
 import com.soundcloud.jvmkit.module.util.http.Headers
 import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.jvmkit.module.util.{Path, Urn}
-import com.soundcloud.publicApiStrangler.support.{Bad, StringError, Good, Result}
+import com.soundcloud.outcome._
 import com.twitter.finagle.http.Status
 import com.twitter.util.Future
 
 import scala.util.control.NonFatal
 
 class PlaylistDeletionClient(jsonClient: JsonClient) {
-  def deletePlaylist(session: UserSession, urn: Urn): Future[Result[Status]] = {
+  def deletePlaylist(session: UserSession, urn: Urn): Future[Outcome[Status]] = {
     jsonClient
       .deleteWithSession(
         session,
@@ -22,6 +22,8 @@ class PlaylistDeletionClient(jsonClient: JsonClient) {
       )
       .map { response =>
         Good(response.status)
-      } handle { case NonFatal(_) => Bad(StringError("Unhandled exception when deleting playlist.")) }
+      } handle {
+      case NonFatal(_) => NotValid("Unhandled exception when deleting playlist.").bad
+    }
   }
 }

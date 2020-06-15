@@ -1,9 +1,0 @@
-package com.soundcloud.publicApiStrangler.handler
-
-import com.soundcloud.publicApiStrangler.support.ErrorLike
-import com.twitter.finagle.http.Status
-
-case class HttpError(status: Status) extends ErrorLike {
-  def description: String =
-    s"${status.code} - ${com.twitter.finagle.http.Status(status.code).reason}"
-}

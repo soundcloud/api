@@ -2,7 +2,6 @@ package com.soundcloud.publicApiStrangler.handler
 
 import com.soundcloud.jvmkit.module.bff.testsupport.FakeUserAuthentication
 import com.soundcloud.jvmkit.module.telemetry.Telemetry
-import com.soundcloud.jvmkit.module.telemetry.exceptions.ExceptionCollector
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSessionBuilder
 import com.soundcloud.publicApiStrangler.Routing
@@ -110,7 +109,6 @@ class SingleTrackHandlerSpec extends UnitSpecification with TrackRepresentationS
     val trackRepresentationsService = mock[TrackRepresentationsService]
 
     val telemetry = Telemetry.createIsolatedInstance
-    val exceptionCollector = new ExceptionCollector(telemetry)
 
     val session = new UserSessionBuilder().build()
     val trackUrn = Urn("soundcloud", "tracks", "987")
@@ -118,23 +116,17 @@ class SingleTrackHandlerSpec extends UnitSpecification with TrackRepresentationS
     val handler = new SingleTrackHandler(
       new FakeUserAuthentication(session),
       trackRepresentationsService,
-      telemetry,
-      exceptionCollector
+      telemetry
     )
 
     override def routingDefinitions = Routing.forSingleTrackHandler(handler)
   }
 
-  val validPaths =
-    List("/tracks/987", "/tracks/987/", "/tracks/987.json", "/tracks/987.json/")
+  val path = "/tracks/987"
 
   val nonNumericPaths = List(
     "/tracks/__12",
-    "/tracks/__12/",
-    "/tracks/permalinktrack",
-    "/tracks/permalinktrack/",
-    "/tracks/permalinktrack.json",
-    "/tracks/permalinktrack.json/"
+    "/tracks/permalinktrack"
   )
 
   val expectedJson = Json.parse("""
@@ -204,17 +196,15 @@ class SingleTrackHandlerSpec extends UnitSpecification with TrackRepresentationS
     |}
     """.stripMargin)
 
-  validPaths.foreach { path =>
-    s"removes conditional request headers for path: $path" in new Context {
-      when(trackRepresentationsService.track(session, TrackRequest(trackUrn, None)))
-        .thenReturn(Future.value(Some(mockTrackRepresentation)))
+  s"removes conditional request headers for path: $path" in new Context {
+    when(trackRepresentationsService.track(session, TrackRequest(trackUrn, None)))
+      .thenReturn(Future.value(Some(mockTrackRepresentation)))
 
-      val response =
-        get(path, Map.empty, Map("If-None-Match" -> "a8d3ba6d09b68691b77dc75dfcd7a477"))
+    val response =
+      get(path, Map.empty, Map("If-None-Match" -> "a8d3ba6d09b68691b77dc75dfcd7a477"))
 
-      response.status ==== Status.Ok
-      Json.parse(response.contentString) ==== expectedJson
-    }
+    response.status ==== Status.Ok
+    Json.parse(response.contentString) ==== expectedJson
   }
 
   nonNumericPaths.foreach { path =>
@@ -226,53 +216,40 @@ class SingleTrackHandlerSpec extends UnitSpecification with TrackRepresentationS
     }
   }
 
-  validPaths.foreach { path =>
-    s"Passes secret token to tracks service for path: $path" in new Context {
-      when(trackRepresentationsService.track(session, TrackRequest(trackUrn, Some("s3cret"))))
-        .thenReturn(Future.value(Some(mockTrackRepresentation)))
+  s"Passes secret token to tracks service for path: $path" in new Context {
+    when(trackRepresentationsService.track(session, TrackRequest(trackUrn, Some("s3cret"))))
+      .thenReturn(Future.value(Some(mockTrackRepresentation)))
 
-      val response = get(path, Map("secret_token" -> "s3cret"))
-      response.status ==== Status.Ok
-      Json.parse(response.contentString) ==== expectedJson
-    }
+    val response = get(path, Map("secret_token" -> "s3cret"))
+    response.status ==== Status.Ok
+    Json.parse(response.contentString) ==== expectedJson
   }
 
-  validPaths.foreach { path =>
-    s"When loading tracks from trackmetadata for: $path" >> {
-      trait FromTrackMetadata extends Context {
-        def trackRepresentation: Future[Option[TrackRepresentation]]
+  s"When loading tracks from trackmetadata for: $path" >> {
+    trait FromTrackMetadata extends Context {
+      def trackRepresentation: Future[Option[TrackRepresentation]]
 
-        when(trackRepresentationsService.track(session, TrackRequest(trackUrn, None)))
-          .thenReturn(trackRepresentation)
+      when(trackRepresentationsService.track(session, TrackRequest(trackUrn, None)))
+        .thenReturn(trackRepresentation)
 
-      }
+    }
 
-      "it returns 200 for Some()" in new FromTrackMetadata {
-        override def trackRepresentation: Future[Option[TrackRepresentation]] =
-          Future.value(Some(mockTrackRepresentation))
+    "it returns 200 for Some()" in new FromTrackMetadata {
+      override def trackRepresentation: Future[Option[TrackRepresentation]] =
+        Future.value(Some(mockTrackRepresentation))
 
-        val response = get(path)
-        response.status.code ==== 200
+      val response = get(path)
+      response.status.code ==== 200
 
-        response.contentString ==== Json.stringify(Json.toJson(mockTrackRepresentation))
-      }
+      response.contentString ==== Json.stringify(Json.toJson(mockTrackRepresentation))
+    }
 
-      "it returns 404 for None" in new FromTrackMetadata {
-        override def trackRepresentation = Future.value(None)
+    "it returns 404 for None" in new FromTrackMetadata {
+      override def trackRepresentation = Future.value(None)
 
-        val response = get(path)
-        response.status.code ==== 404
-        response.contentString ==== """{"errors":[{"error_message":"404 - Not Found"}]}"""
-      }
-
-      "it returns 500 for failed futures" in new FromTrackMetadata {
-        override def trackRepresentation =
-          Future.exception(new RuntimeException("An unexpected error occurred while fetching a track"))
-
-        val response = get(path)
-        response.status.code ==== 500
-        response.contentString ==== "An unexpected error occured while fetching a track"
-      }
+      val response = get(path)
+      response.status.code ==== 404
+      response.contentString ==== """{"errors":[{"error_message":"404 - Not Found"}]}"""
     }
   }
 }

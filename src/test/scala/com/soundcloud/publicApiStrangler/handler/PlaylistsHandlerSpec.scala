@@ -3,9 +3,9 @@ package com.soundcloud.publicApiStrangler.handler
 import com.soundcloud.jvmkit.module.bff.testsupport.FakeUserAuthentication
 import com.soundcloud.jvmkit.module.util.session.UserSessionBuilder
 import com.soundcloud.jvmkit.module.util.{Geo, Urn}
+import com.soundcloud.outcome._
 import com.soundcloud.publicApiStrangler.Routing
 import com.soundcloud.publicApiStrangler.client.playlists.PlaylistDeletionClient
-import com.soundcloud.publicApiStrangler.support.{Good, Result}
 import com.soundcloud.publicApiStrangler.test.{HandlerSpecificationScope, UnitSpecification}
 import com.twitter.finagle.http.Status
 import com.twitter.util.Future
@@ -31,7 +31,7 @@ class PlaylistsHandlerSpec extends UnitSpecification {
   "DELETE /playlists/:id" >> {
     trait DeletePlaylistContext extends Context {
       val playlistId = 123
-      lazy val deletePlaylistResponse: Result[Status] = Good(Status.Ok)
+      lazy val deletePlaylistResponse: Outcome[Status] = Good(Status.Ok)
 
       when(playlistDeletionClient.deletePlaylist(session, Urn("soundcloud", "playlists", playlistId.toString)))
         .thenReturn(Future.value(deletePlaylistResponse))

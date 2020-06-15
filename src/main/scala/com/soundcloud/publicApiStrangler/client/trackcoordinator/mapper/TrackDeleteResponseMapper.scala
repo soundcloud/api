@@ -1,15 +1,14 @@
 package com.soundcloud.publicApiStrangler.client.trackcoordinator.mapper
 
-import com.soundcloud.publicApiStrangler.client.trackcoordinator.ErrorParser
-import com.soundcloud.publicApiStrangler.client.trackcoordinator.datatypes._
+import com.soundcloud.outcome._
 import com.twitter.finagle.http.{Response, Status}
 
 object TrackDeleteResponseMapper {
-  def apply(response: Response): Result[Unit] = {
+  def apply(response: Response): Outcome[Unit] = {
     response.status match {
-      case Status.Accepted => Success(())
-      case Status.NotFound => NotFound
-      case _ => ServerError(ErrorParser.parse(response.contentString))
+      case Status.Accepted => Good(())
+      case Status.NotFound => NotFound().bad
+      case _ => NotValid(response.contentString).bad
     }
   }
 }

@@ -5,7 +5,7 @@ import com.soundcloud.jvmkit.module.http.server.{HandlerRequest, JsonResponseBui
 import com.soundcloud.publicApiStrangler.TrackUrnUtil.trackUrn
 import com.soundcloud.publicApiStrangler.client.mothership.OkidokiClient
 import com.soundcloud.publicApiStrangler.client.trackcoordinator.TrackCoordinatorClient
-import com.soundcloud.publicApiStrangler.client.trackcoordinator.datatypes._
+import com.soundcloud.outcome._
 import com.soundcloud.publicApiStrangler.client.trackmetadata.TrackmetadataClient
 import com.twitter.finagle.http.Response
 import com.twitter.util.Future
@@ -28,8 +28,8 @@ class TracksHandler(
   def handleDelete(request: HandlerRequest): Future[Response] = {
     userAuthentication.withLoggedInUser(request) { (session, _) =>
       trackCoordinator.deleteTrack(session, trackUrn(request)).map {
-        case Success(()) => ResponseBuilder.ok()
-        case NotFound => ResponseBuilder.notFound()
+        case Good(()) => ResponseBuilder.ok()
+        case Bad(NotFound(_)) => ResponseBuilder.notFound()
         case _ => ResponseBuilder.internalServerError()
       }
     }

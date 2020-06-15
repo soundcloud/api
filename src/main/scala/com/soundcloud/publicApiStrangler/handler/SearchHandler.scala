@@ -17,11 +17,9 @@ import com.soundcloud.publicApiStrangler.handler.representation.tracks.TrackRepr
 import com.soundcloud.publicApiStrangler.mapper.search.{SearchDispatcherRequest, SearchMapper}
 import com.soundcloud.publicApiStrangler.service.SearchService
 import com.soundcloud.publicApiStrangler.service.trackrepresentation.{TrackPagination, TracksCollection}
-import com.soundcloud.publicApiStrangler.support.{Bad, Good, Result}
 import com.twitter.finagle.http.{ParamMap, Response, Status}
 import com.twitter.util.{Future, Return, Try}
-
-import scala.util.control.NonFatal
+import com.soundcloud.outcome._
 
 /**
   * Redirects search queries on to search-dispatcher and fetches meta data.
@@ -60,7 +58,6 @@ class SearchHandler(
     "resource_type",
     "client_id"
   )
-  val logger = SoundCloudLoggerFactory.getLogger(getClass)
 
   def dispatchUserRequest = dispatchRequest(
     defaultParams,
@@ -85,16 +82,10 @@ class SearchHandler(
     val hasLinkedPartitioning = req.params.get("linked_partitioning").isDefined
     val pagination = TrackPagination.fromRequest(req.params, new URL(baseUrl + req.uri))
 
-    def fetchTracksRepresentation(params: Map[String, String]): Future[Result[TracksCollection]] = {
+    def fetchTracksRepresentation(params: Map[String, String]): Future[Outcome[TracksCollection]] = {
       searchService
         .searchTracks(session, params, pagination)
         .map(Good(_))
-        .handle {
-          case NonFatal(e) =>
-            logger.error(e.getMessage)
-            Bad(HttpError(Status.InternalServerError))
-
-        }
     }
     val trackRepresentation = fetchTracksRepresentation(req.params)
     handleResponseFromService(trackRepresentation, hasLinkedPartitioning)

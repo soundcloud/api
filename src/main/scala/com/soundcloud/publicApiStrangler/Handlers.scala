@@ -68,7 +68,7 @@ class Handlers(telemetry: Telemetry, clients: Clients, exceptionCollector: Excep
   )
 
   val singleTrackHandler =
-    new SingleTrackHandler(userAuthentication, tracksService, telemetry, exceptionCollector)
+    new SingleTrackHandler(userAuthentication, tracksService, telemetry)
 
   val userRelatedMothershipDispatcher = new UserRelatedMothershipDispatcher(
     userAuthentication,
@@ -82,8 +82,7 @@ class Handlers(telemetry: Telemetry, clients: Clients, exceptionCollector: Excep
   val userTracksHandler = new UserTracksHandler(
     userAuthentication,
     userTracksService,
-    baseUrl,
-    exceptionCollector
+    baseUrl
   )
 
   val userFollowHandler =
@@ -124,7 +123,7 @@ class Handlers(telemetry: Telemetry, clients: Clients, exceptionCollector: Excep
 
   val repostsHandler = new RepostsHandler(userAuthentication, repostsClient)
 
-  val likesHandler = new LikesHandler(userAuthentication, likesService, baseUrl, exceptionCollector)
+  val likesHandler = new LikesHandler(userAuthentication, likesService, baseUrl)
 
   val tokenExchangeRequestMapper = new TokenExchangeRequestParser(new RailsLikeParamsParser())
   val tokenExchangeHandler =

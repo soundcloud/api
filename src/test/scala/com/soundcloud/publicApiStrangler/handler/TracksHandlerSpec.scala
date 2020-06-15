@@ -8,7 +8,7 @@ import com.soundcloud.publicApiStrangler.Routing
 import com.soundcloud.publicApiStrangler.authorization.Track
 import com.soundcloud.publicApiStrangler.client.mothership.OkidokiClient
 import com.soundcloud.publicApiStrangler.client.trackcoordinator.TrackCoordinatorClient
-import com.soundcloud.publicApiStrangler.client.trackcoordinator.datatypes.{ClientError, NotFound, ServerError, Success}
+import com.soundcloud.outcome._
 import com.soundcloud.publicApiStrangler.client.trackmetadata.{TrackmetadataClient, Track => TMTrack}
 import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures._
 import com.soundcloud.publicApiStrangler.test.util.TrackMetadataTrackBuilder
@@ -44,7 +44,7 @@ class TracksHandlerSpec extends UnitSpecification {
 
     override def routingDefinitions = Routing.forTracksHandler(handler)
 
-    trackCoordinator.deleteTrack(session, trackUrn) returns Future(Success(()))
+    trackCoordinator.deleteTrack(session, trackUrn) returns Future(Good(()))
     okidoki.fetch(===(session), ===(Set(userUrn))) returns Future(List(user))
     when(fallback.dispatch(any[HandlerRequest])).thenReturn(Future.value(ResponseBuilder.ok()))
     when(trackmetadataClient.track(session, trackUrn)).thenReturn(trackmetadataResponse)
@@ -125,21 +125,21 @@ class TracksHandlerSpec extends UnitSpecification {
     }
 
     "not found" in new Context {
-      trackCoordinator.deleteTrack(session, trackUrn) returns Future(NotFound)
+      trackCoordinator.deleteTrack(session, trackUrn) returns Future(NotFound().bad)
 
       val response = delete("/tracks/999")
       response.status ==== Status.NotFound
     }
 
     "handles server errors from Track Coordinator" in new Context {
-      trackCoordinator.deleteTrack(session, trackUrn) returns Future(ServerError.empty)
+      trackCoordinator.deleteTrack(session, trackUrn) returns Future(NotValid("").bad)
 
       val response = delete("/tracks/999")
       response.status ==== Status.InternalServerError
     }
 
     "handles client errors from Track Coordinator" in new Context {
-      trackCoordinator.deleteTrack(session, trackUrn) returns Future(ClientError.empty)
+      trackCoordinator.deleteTrack(session, trackUrn) returns Future(NotValid("").bad)
 
       val response = delete("/tracks/999")
       response.status ==== Status.InternalServerError
