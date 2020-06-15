@@ -149,7 +149,7 @@ trait TrackRepresentationSpecContext {
     )
 }
 
-class TrackRepresentationSpec extends UnitSpecification with TrackRepresentationSpecContext {
+class TrackRepresentationSpec extends UnitSpecification {
   "geoblocking" >> {
     trait Context extends Scope with TrackRepresentationSpecContext {
       val geoblockings: Geoblockings = List("DE", "FR")

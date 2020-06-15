@@ -2,10 +2,11 @@ package com.soundcloud.publicApiStrangler.handler
 
 import com.soundcloud.jvmkit.module.util.Urn
 import play.api.libs.json.{JsNull, Json}
+import com.soundcloud.publicApiStrangler.service.trackrepresentation.TrackRepresentationSpecContext
 
-trait TimeLineHandlerTestData {
+trait TimeLineHandlerTestData extends TrackRepresentationSpecContext {
   val usrUrn = Urn("soundcloud", "users", "1")
-  val trackUrn = Urn("soundcloud", "tracks", "2")
+  override val trackUrn = Urn("soundcloud", "tracks", "2")
   val playlistUrn = Urn("soundcloud", "playlists", "3")
   val baseUrl = "www.soundcloud.com"
 
@@ -134,6 +135,8 @@ trait TimeLineHandlerTestData {
       )
     )
   )
+
+  val mockTrackRepresentation = createTrackRepresentation()
 
   /**
     * The endpoint is encoded in the response, so keep this part variable

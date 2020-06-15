@@ -34,6 +34,7 @@ import com.soundcloud.publicApiStrangler.service.media.{StreamService, TrackAcce
 import com.soundcloud.publicApiStrangler.service.trackrepresentation.TrackRepresentationsService
 import com.soundcloud.publicApiStrangler.service.{
   LikesService,
+  TimelineService,
   SimilarTracksService,
   SearchService,
   TrackVisibilityService,
@@ -147,6 +148,8 @@ class Clients(
     waveformUrlsGenerator,
     userQuotaClient
   )
+
+  val timelineService = new TimelineService(timelineClient, tracksService)
 
   val userTracksService = new UserTracksService(tracksService, trackmetadataClient)
 

@@ -37,7 +37,8 @@ class Handlers(telemetry: Telemetry, clients: Clients, exceptionCollector: Excep
       userAuthentication,
       publicActivitiesMapper,
       followingsTracksMapper,
-      pagination
+      pagination,
+      timelineService
     )
   }
 

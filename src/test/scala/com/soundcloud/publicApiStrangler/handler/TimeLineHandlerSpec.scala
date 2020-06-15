@@ -6,20 +6,27 @@ import com.soundcloud.jvmkit.module.bff.testsupport.FakeUserAuthentication
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.publicApiStrangler.Routing
+import com.soundcloud.publicApiStrangler.service.TimelineService
 import com.soundcloud.publicApiStrangler.client.TimelineJsonClient
 import com.soundcloud.publicApiStrangler.client.followcounts.FollowCounts
 import com.soundcloud.publicApiStrangler.mapper.timeline.publicApi.ActivitiesWithOriginMapper
 import com.soundcloud.publicApiStrangler.mapper.timeline.representation.{Playlist, Track, User}
 import com.soundcloud.publicApiStrangler.mapper.timeline.{EntityMapper, EntitySummaryMapper, FollowingsTracksMapper}
+import com.soundcloud.publicApiStrangler.service.pagination.{Pagination}
+import com.soundcloud.publicApiStrangler.service.timeline.{Timeline, TimelineMeta, TrackTimelineItem}
 import com.soundcloud.publicApiStrangler.support.CursorPagination
 import com.soundcloud.publicApiStrangler.test.{HandlerSpecificationScope, UnitSpecification}
+import com.twitter.finagle.http.{Request}
 import com.twitter.util.Future
+import org.joda.time.DateTime
+import org.mockito.Mockito._
 
 class TimeLineHandlerSpec extends UnitSpecification {
   trait Context extends HandlerSpecificationScope with TimeLineHandlerTestData {
     val entityMapper = mock[EntityMapper]
     val entitySummaryMapper = mock[EntitySummaryMapper]
     val timelineClient = mock[TimelineJsonClient]
+    val timelineService = mock[TimelineService]
 
     val session = loggedInSession(usrUrn)
     val context = new MappingContext(session)
@@ -58,7 +65,8 @@ class TimeLineHandlerSpec extends UnitSpecification {
       new FakeUserAuthentication(session),
       new ActivitiesWithOriginMapper(timelineClient, entityMapper, entitySummaryMapper),
       new FollowingsTracksMapper(timelineClient, entityMapper, entitySummaryMapper),
-      new CursorPagination(baseUrl)
+      new CursorPagination(baseUrl),
+      timelineService
     )
 
     override def routingDefinitions = Routing.forTimelineHandler(handler)
@@ -71,20 +79,78 @@ class TimeLineHandlerSpec extends UnitSpecification {
       .returns(Future.value(onlyTracksTimeline))
   }
 
+  "render track activities" >> {
+    trait SuccessfulCase extends Context {
+      val mockTimelineItems = List(
+        new TrackTimelineItem(createdAt = new DateTime().toString, List.empty, mockTrackRepresentation)
+      )
+      val mockTimelineMeta =
+        TimelineMeta(Some("00000172-9b87-0a50-ffff-ffff8eec7ee8"), Some("00000172-9b87-0a50-ffff-ffff8eec7ee8"))
+    }
+
+    trait FailureCase extends Context {
+      val mockTimelineItems = List.empty
+      val mockTimelineMeta = TimelineMeta(None, None)
+    }
+
+    "returns successful response with valid request" in new SuccessfulCase {
+      val queryParams = "?limit=10"
+      val path = s"/me/activities/tracks${queryParams}"
+
+      val mockRequest = Request(path)
+      mockRequest.host = "localhost"
+      val pagination = Pagination.buildCursorBasedPagination(mockRequest, Seq("linked_partitioning"))
+
+      val mockTimelineResponse = Timeline(mockTimelineItems, mockTimelineMeta, pagination)
+      when(timelineService.fetchTimelineTracksForUser(session, None, false, 10, Some("uuid"), pagination))
+        .thenReturn(Future.value(mockTimelineResponse))
+
+      val result = get(path)
+
+      result.statusCode === 200
+      result.contentString = mockTimelineResponse.getRepresentation()
+    }
+
+    "return Timeline with empty tracks if no track events found" in new FailureCase {
+      val queryParams = "?limit=10"
+      val path = s"/me/activities/tracks${queryParams}"
+
+      val mockRequest = Request(path)
+      mockRequest.host = "localhost"
+      val pagination = Pagination.buildCursorBasedPagination(mockRequest, Seq("linked_partitioning"))
+
+      val mockTimelineResponse = Timeline(mockTimelineItems, mockTimelineMeta, pagination)
+      when(timelineService.fetchTimelineTracksForUser(session, None, false, 10, Some("uuid"), pagination))
+        .thenReturn(Future.value(mockTimelineResponse))
+
+      val result = get(path)
+      result.statusCode === 200
+      result.contentString === mockTimelineResponse.getRepresentation()
+    }
+
+    "returns 404 if not Timeline returned from service" in new Context {
+      val queryParams = "?limit=10"
+      val path = s"/me/activities/tracks${queryParams}"
+
+      val mockRequest = Request(path)
+      mockRequest.host = "localhost"
+      val pagination = Pagination.buildCursorBasedPagination(mockRequest, Seq("linked_partitioning"))
+
+      when(timelineService.fetchTimelineTracksForUser(session, None, false, 10, Some("uuid"), pagination))
+        .thenReturn(Future.value(null))
+
+      val result = get(path)
+      result.statusCode === 404
+      result.contentString === "{\"errors\":[{\"error_message\":\"404 - Not Found\"}]}"
+    }
+  }
+
   // public activity endpoints
   Seq(
     "/me/activities",
-    "/me/activities.json",
-    "/me/activities/",
-    "/me/activities/tracks",
-    "/me/activities/tracks/",
-    "/me/activities/tracks.json",
     "/me/activities/tracks/sometag",
-    "/me/activities/tracks/sometag.json",
     "/me/activities/all",
-    "/me/activities/all.json",
-    "/me/activities/all/own",
-    "/me/activities/all/own.json"
+    "/me/activities/all/own"
   ).foreach { endpoint =>
     endpoint in new Context {
       val response = get(endpoint)
@@ -101,23 +167,18 @@ class TimeLineHandlerSpec extends UnitSpecification {
     }
   }
 
-  // IFTTT endpoints
-  Seq(
-    "/me/followings/tracks",
-    "/me/followings/tracks.json"
-  ).foreach { endpoint =>
-    endpoint in new Context {
-      val response = get(endpoint)
-      response.statusCode ==== 200
-      response.contentString ==== tracksOnlyTimelineJsonString()
+  "get following tracks" in new Context {
+    val path = "/me/followings/tracks"
+    val response = get(path)
+    response.statusCode ==== 200
+    response.contentString ==== tracksOnlyTimelineJsonString()
 
-      there was one(timelineClient).followingsTracks(
-        ===(session),
-        any[Option[String]],
-        any[Int],
-        any[Boolean],
-        any[Option[String]]
-      )
-    }
+    there was one(timelineClient).followingsTracks(
+      ===(session),
+      any[Option[String]],
+      any[Int],
+      any[Boolean],
+      any[Option[String]]
+    )
   }
 }

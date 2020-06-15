@@ -16,10 +16,8 @@ trait TimelineMapper extends Mapper[CursorBasedPage[Urn], Timeline] {
 
   protected def clientCursorParam(page: CursorBasedPage[Urn]): (Option[UUID], Boolean) = {
     page.extraParams.get("uuid[to]") match {
-      case Some(StringParam(uuid)) =>
-        (Some(UUID.fromString(uuid)), true)
-      case _ =>
-        (page.cursor.map(UUID.fromString), false)
+      case Some(StringParam(uuid)) => (Some(UUID.fromString(uuid)), true)
+      case _ => (page.cursor.map(UUID.fromString), false)
     }
   }
 

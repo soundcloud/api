@@ -5,7 +5,6 @@ import play.api.libs.json.Json
 case class TracksCollection(tracks: List[TrackRepresentation], nextHref: Option[String])
 
 object TracksCollection {
-
   def getRepresentation(tracksCollection: TracksCollection, hasLinkedPartitioning: Boolean) = {
     if (hasLinkedPartitioning) {
       val tracksJson = Json.obj("collection" -> Json.toJson(tracksCollection.tracks))
