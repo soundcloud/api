@@ -95,60 +95,76 @@ class TimeLineHandlerSpec extends UnitSpecification {
 
     "returns successful response with valid request" in new SuccessfulCase {
       val queryParams = "?limit=10"
-      val path = s"/me/activities/tracks${queryParams}"
+      Seq(
+        "/me/activities/tracks",
+        "/me/activities/tracks/sometag"
+      ).foreach { endpoint =>
+        val path = s"${endpoint}${queryParams}"
 
-      val mockRequest = Request(path)
-      mockRequest.host = "localhost"
-      val pagination = Pagination.buildCursorBasedPagination(mockRequest, Seq("linked_partitioning"))
+        val mockRequest = Request(path)
+        mockRequest.host = "localhost"
+        val pagination = Pagination.buildCursorBasedPagination(mockRequest, Seq("linked_partitioning"))
 
-      val mockTimelineResponse = Timeline(mockTimelineItems, mockTimelineMeta, pagination)
-      when(timelineService.fetchTimelineTracksForUser(session, None, false, 10, Some("uuid"), pagination))
-        .thenReturn(Future.value(mockTimelineResponse))
+        val mockTimelineResponse = Timeline(mockTimelineItems, mockTimelineMeta, pagination)
+        when(timelineService.fetchTimelineTracksForUser(session, None, false, 10, Some("uuid"), pagination))
+          .thenReturn(Future.value(mockTimelineResponse))
 
-      val result = get(path)
+        val result = get(path)
 
-      result.statusCode === 200
-      result.contentString = mockTimelineResponse.getRepresentation()
+        result.statusCode === 200
+        result.contentString = mockTimelineResponse.getRepresentation()
+      }
     }
 
     "return Timeline with empty tracks if no track events found" in new FailureCase {
       val queryParams = "?limit=10"
-      val path = s"/me/activities/tracks${queryParams}"
 
-      val mockRequest = Request(path)
-      mockRequest.host = "localhost"
-      val pagination = Pagination.buildCursorBasedPagination(mockRequest, Seq("linked_partitioning"))
+      Seq(
+        "/me/activities/tracks",
+        "/me/activities/tracks/sometag"
+      ).foreach { endpoint =>
+        val path = s"${endpoint}${queryParams}"
 
-      val mockTimelineResponse = Timeline(mockTimelineItems, mockTimelineMeta, pagination)
-      when(timelineService.fetchTimelineTracksForUser(session, None, false, 10, Some("uuid"), pagination))
-        .thenReturn(Future.value(mockTimelineResponse))
+        val mockRequest = Request(path)
+        mockRequest.host = "localhost"
+        val pagination = Pagination.buildCursorBasedPagination(mockRequest, Seq("linked_partitioning"))
 
-      val result = get(path)
-      result.statusCode === 200
-      result.contentString === mockTimelineResponse.getRepresentation()
+        val mockTimelineResponse = Timeline(mockTimelineItems, mockTimelineMeta, pagination)
+        when(timelineService.fetchTimelineTracksForUser(session, None, false, 10, Some("uuid"), pagination))
+          .thenReturn(Future.value(mockTimelineResponse))
+
+        val result = get(path)
+        result.statusCode === 200
+        result.contentString === mockTimelineResponse.getRepresentation()
+      }
     }
 
     "returns 404 if not Timeline returned from service" in new Context {
       val queryParams = "?limit=10"
-      val path = s"/me/activities/tracks${queryParams}"
 
-      val mockRequest = Request(path)
-      mockRequest.host = "localhost"
-      val pagination = Pagination.buildCursorBasedPagination(mockRequest, Seq("linked_partitioning"))
+      Seq(
+        "/me/activities/tracks",
+        "/me/activities/tracks/sometag"
+      ).foreach { endpoint =>
+        val path = s"${endpoint}${queryParams}"
 
-      when(timelineService.fetchTimelineTracksForUser(session, None, false, 10, Some("uuid"), pagination))
-        .thenReturn(Future.value(null))
+        val mockRequest = Request(path)
+        mockRequest.host = "localhost"
+        val pagination = Pagination.buildCursorBasedPagination(mockRequest, Seq("linked_partitioning"))
 
-      val result = get(path)
-      result.statusCode === 404
-      result.contentString === "{\"errors\":[{\"error_message\":\"404 - Not Found\"}]}"
+        when(timelineService.fetchTimelineTracksForUser(session, None, false, 10, Some("uuid"), pagination))
+          .thenReturn(Future.value(null))
+
+        val result = get(path)
+        result.statusCode === 404
+        result.contentString === "{\"errors\":[{\"error_message\":\"404 - Not Found\"}]}"
+      }
     }
   }
 
   // public activity endpoints
   Seq(
     "/me/activities",
-    "/me/activities/tracks/sometag",
     "/me/activities/all",
     "/me/activities/all/own"
   ).foreach { endpoint =>
