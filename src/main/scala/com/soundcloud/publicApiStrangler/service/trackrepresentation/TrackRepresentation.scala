@@ -95,6 +95,7 @@ object TrackRepresentation {
         "license" -> rep.track.license,
         "uri" -> rep.uri,
         "user" -> rep.user,
+        "user_uri" -> s"https://api.soundcloud.com/users/${rep.user.urn.identifier}",
         "permalink_url" -> rep.permalinkUrl,
         "artwork_url" -> rep.track.artwork.filename.map(imageUrl(_)),
         "stream_url" -> rep.streamUrl,

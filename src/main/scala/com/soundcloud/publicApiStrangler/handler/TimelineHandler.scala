@@ -12,18 +12,18 @@ import com.soundcloud.publicApiStrangler.handler.support.UnhandledOutcomeExcepti
 import com.soundcloud.publicApiStrangler.mapper.timeline._
 import com.soundcloud.publicApiStrangler.mapper.timeline.publicApi.ActivitiesWithOriginMapper
 import com.soundcloud.publicApiStrangler.mapper.timeline.representation.Timeline
-import com.soundcloud.publicApiStrangler.mapper.timeline.representation.e1.TrackTimelineItem
 import com.soundcloud.publicApiStrangler.service.TimelineService
 import com.soundcloud.publicApiStrangler.service.pagination.{CursorBasedPagination, Pagination}
 import com.soundcloud.publicApiStrangler.service.timeline.{Timeline => SimpleTimeline}
+import com.soundcloud.publicApiStrangler.service.trackrepresentation.TrackRepresentation
 import com.soundcloud.publicApiStrangler.support._
 import com.twitter.finagle.http.Response
 import com.twitter.util.Future
+import play.api.libs.json.Json
 
 class TimelineHandler(
     userAuthentication: UserAuthentication,
     publicActivitiesMapper: ActivitiesWithOriginMapper,
-    followingsTracksMapper: FollowingsTracksMapper,
     pagination: CursorPagination,
     timelineService: TimelineService
 ) {
@@ -57,7 +57,7 @@ class TimelineHandler(
 
       val limit = pagination.pageSize
 
-      performGetActivities(session, cursor.map(_.toString), reverseCursor, limit, pagination)
+      performGetTrackActivities(session, cursor.map(_.toString), reverseCursor, limit, pagination)
         .map {
           case Good(timeline) => {
             JsonResponseBuilder.ok(timeline.getRepresentation())
@@ -68,7 +68,7 @@ class TimelineHandler(
     }
   }
 
-  private def performGetActivities(
+  private def performGetTrackActivities(
       session: LoggedInUserSession,
       cursor: Option[String],
       reverseCursor: Boolean,
@@ -83,34 +83,38 @@ class TimelineHandler(
       }
   }
 
-  def renderFollowingsTracks(request: HandlerRequest): Future[Response] =
-    renderFollowingsTracks(request, followingsTracksMapper)
+  def renderFollowingTracks(request: HandlerRequest): Future[Response] = {
+    userAuthentication.withLoggedInUser(request) { (session: LoggedInUserSession, _) =>
+      val pagination = Pagination.buildCursorBasedPagination(request, Seq("linked_partitioning"))
 
-  private def renderFollowingsTracks(request: HandlerRequest, mapper: TimelineMapper): Future[Response] =
-    userAuthentication.withLoggedInUser(request) { (session: LoggedInUserSession, userUrn: Urn) =>
-      pagination.withPage(request, userUrn) { page =>
-        mapper.materialize(session, page).map {
-          case Some(info) =>
-            val tracks = info.collection.map {
-              _.asInstanceOf[TrackTimelineItem].track
-            }
-
-            if (request.getParam("linked_partitioning", "0") == "1")
-              JsonResponseBuilder.ok(
-                UntypedJson.write(
-                  Map(
-                    "next_href" -> info.nextHref,
-                    "collection" -> tracks
-                  )
-                )
-              )
-            else
-              JsonResponseBuilder.ok(UntypedJson.write(tracks))
-
-          case None => ResponseBuilder.notFound()
-        }
+      val (cursor, reverseCursor) = pagination.extraParams.get("uuid[to]") match {
+        case Some(uuid) => (Some(UUID.fromString(uuid)), true)
+        case _ => (pagination.cursor.map(UUID.fromString), false)
       }
+
+      val limit = pagination.pageSize
+      performGetFollowingTrackActivities(session, cursor.map(_.toString), reverseCursor, limit)
+        .map {
+          case Good(tracks) => JsonResponseBuilder.ok(Json.stringify(Json.toJson(tracks)))
+          case Bad(NotFound(_)) => JsonResponseBuilder.notFound(notFoundErrorString)
+          case _ => throw new UnhandledOutcomeException
+        }
     }
+  }
+
+  private def performGetFollowingTrackActivities(
+      session: LoggedInUserSession,
+      cursor: Option[String],
+      reverseCursor: Boolean,
+      limit: Int
+  ): Future[Outcome[List[TrackRepresentation]]] = {
+    timelineService
+      .fetchFollowingTracksForUser(session, cursor, reverseCursor, limit, cursorEncoding = Some("uuid"))
+      .map {
+        case tracks: List[TrackRepresentation] => Good(tracks)
+        case _ => NotFound().bad
+      }
+  }
 
   private val notFoundErrorString = """{"errors":[{"error_message":"404 - Not Found"}]}"""
 }

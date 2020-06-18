@@ -142,7 +142,7 @@ object Routing {
       route(Method.Get, "/me/activities/tracks/:tag", timelineHandler.renderPublicTrackActivities) :::
       route(Method.Get, "/me/activities/all", timelineHandler.renderPublicActivities) :::
       route(Method.Get, "/me/activities/all/own", timelineHandler.renderPublicActivities) :::
-      route(Method.Get, "/me/followings/tracks", timelineHandler.renderFollowingsTracks)
+      route(Method.Get, "/me/followings/tracks", timelineHandler.renderFollowingTracks)
   }
 
   def forTrackStreamsHandler(trackStreamsHandler: TrackStreamsHandler): List[(Method, String, Handler)] = {

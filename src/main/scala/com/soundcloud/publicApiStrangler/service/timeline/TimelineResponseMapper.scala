@@ -22,7 +22,7 @@ class TimelineResponseMapper {
     val cursor = (json \ "cursor").asOpt[String]
 
     (json \ "type").as[String] match {
-      case "track" => Some(TimelineEvent(TrackTimelineEventType, timestamp, urn, actor))
+      case "track" => Some(TimelineEvent(TrackTimelineEventType, timestamp, urn, actor, cursor))
       case "track:like" => Some(TimelineEvent(TrackLikeTimelineEventType, timestamp, urn, actor, cursor))
       case "users-tracks-likes" => Some(TimelineEvent(TrackLikeTimelineEventType, timestamp, urn, actor, cursor))
       case "likes" => Some(TimelineEvent(TrackLikeTimelineEventType, timestamp, urn, actor, cursor))

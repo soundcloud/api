@@ -1,7 +1,7 @@
 package com.soundcloud.publicApiStrangler.service
 
 import com.soundcloud.jvmkit.module.util.Urn
-import com.soundcloud.jvmkit.module.util.session.LoggedInUserSession
+import com.soundcloud.jvmkit.module.util.session.{LoggedInUserSession}
 import com.soundcloud.publicApiStrangler.client.TimelineJsonClient
 import com.soundcloud.publicApiStrangler.client.tracks.TrackRequest
 import com.soundcloud.publicApiStrangler.service.pagination.CursorBasedPagination
@@ -12,7 +12,7 @@ import com.twitter.util.Future
 class TimelineService(
     timelineJsonClient: TimelineJsonClient,
     trackRepresentationsService: TrackRepresentationsService,
-    streamResponseMapper: TimelineResponseMapper = new TimelineResponseMapper()
+    timelineResponseMapper: TimelineResponseMapper = new TimelineResponseMapper()
 ) {
 
   def fetchTimelineTracksForUser(
@@ -25,7 +25,7 @@ class TimelineService(
   ): Future[Timeline] = {
     for {
       trackActivities <- timelineJsonClient.stream(session, cursor, limit, reverseCursor, cursorEncoding)
-      timelineResponse = streamResponseMapper(trackActivities)
+      timelineResponse = timelineResponseMapper(trackActivities)
       tracks <- fetchFullItemList(session, timelineResponse.events)
     } yield {
       val timelineItems = timelineResponse.events.flatMap(event => createTrackTimelineItem(tracks, event))
@@ -59,5 +59,19 @@ class TimelineService(
     } yield {
       new TrackTimelineItem(event.timestamp, tags, trackRep)
     }
+  }
+
+  def fetchFollowingTracksForUser(
+      session: LoggedInUserSession,
+      cursor: Option[String],
+      reverseCursor: Boolean,
+      limit: Int,
+      cursorEncoding: Option[String]
+  ): Future[List[TrackRepresentation]] = {
+    for {
+      trackActivities <- timelineJsonClient.followingsTracks(session, cursor, limit, reverseCursor, cursorEncoding)
+      timelineResponse = timelineResponseMapper(trackActivities)
+      tracks <- fetchFullItemList(session, timelineResponse.events)
+    } yield tracks
   }
 }

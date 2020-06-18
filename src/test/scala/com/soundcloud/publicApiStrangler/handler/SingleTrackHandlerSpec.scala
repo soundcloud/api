@@ -191,9 +191,10 @@ class SingleTrackHandlerSpec extends UnitSpecification with TrackRepresentationS
     |    "user_favorite": false,
     |    "user_id": 3000,
     |    "user_playback_count": 1,
+    |    "user_uri": "https://api.soundcloud.com/users/3000",
     |    "video_url": "http://example.com/video.mp4",
     |    "waveform_url": "https://bar.sndcdn.com/stream/a1b2c3.png"
-    |}
+    |} 
     """.stripMargin)
 
   s"removes conditional request headers for path: $path" in new Context {

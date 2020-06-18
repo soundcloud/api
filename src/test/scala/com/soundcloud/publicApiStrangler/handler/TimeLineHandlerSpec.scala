@@ -6,20 +6,21 @@ import com.soundcloud.jvmkit.module.bff.testsupport.FakeUserAuthentication
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.publicApiStrangler.Routing
-import com.soundcloud.publicApiStrangler.service.TimelineService
 import com.soundcloud.publicApiStrangler.client.TimelineJsonClient
 import com.soundcloud.publicApiStrangler.client.followcounts.FollowCounts
 import com.soundcloud.publicApiStrangler.mapper.timeline.publicApi.ActivitiesWithOriginMapper
 import com.soundcloud.publicApiStrangler.mapper.timeline.representation.{Playlist, Track, User}
-import com.soundcloud.publicApiStrangler.mapper.timeline.{EntityMapper, EntitySummaryMapper, FollowingsTracksMapper}
-import com.soundcloud.publicApiStrangler.service.pagination.{Pagination}
+import com.soundcloud.publicApiStrangler.mapper.timeline.{EntityMapper, EntitySummaryMapper}
+import com.soundcloud.publicApiStrangler.service.TimelineService
+import com.soundcloud.publicApiStrangler.service.pagination.Pagination
 import com.soundcloud.publicApiStrangler.service.timeline.{Timeline, TimelineMeta, TrackTimelineItem}
 import com.soundcloud.publicApiStrangler.support.CursorPagination
 import com.soundcloud.publicApiStrangler.test.{HandlerSpecificationScope, UnitSpecification}
-import com.twitter.finagle.http.{Request}
+import com.twitter.finagle.http.Request
 import com.twitter.util.Future
 import org.joda.time.DateTime
 import org.mockito.Mockito._
+import play.api.libs.json.Json
 
 class TimeLineHandlerSpec extends UnitSpecification {
   trait Context extends HandlerSpecificationScope with TimeLineHandlerTestData {
@@ -64,7 +65,6 @@ class TimeLineHandlerSpec extends UnitSpecification {
     val handler = new TimelineHandler(
       new FakeUserAuthentication(session),
       new ActivitiesWithOriginMapper(timelineClient, entityMapper, entitySummaryMapper),
-      new FollowingsTracksMapper(timelineClient, entityMapper, entitySummaryMapper),
       new CursorPagination(baseUrl),
       timelineService
     )
@@ -162,6 +162,53 @@ class TimeLineHandlerSpec extends UnitSpecification {
     }
   }
 
+  "get followings tracks" >> {
+    trait SuccessfulCase extends Context {
+      val mockTimelineResponse = List(mockTrackRepresentation)
+    }
+
+    trait FailureCase extends Context {
+      val emptyTimelineResponse = List.empty
+      val noTimelineResponse = null
+    }
+
+    "successfully returns followings tracks" in new SuccessfulCase {
+      val queryParams = "?limit=10"
+      val path = s"/me/followings/tracks${queryParams}"
+
+      when(timelineService.fetchFollowingTracksForUser(session, None, false, 10, Some("uuid")))
+        .thenReturn(Future.value(mockTimelineResponse))
+
+      val result = get(path)
+      result.statusCode === 200
+      result.contentString === Json.stringify(Json.toJson(List(mockTrackRepresentation)))
+    }
+
+    "returns an empty array if now followings tracks found" in new FailureCase {
+      val queryParams = "?limit=10"
+      val path = s"/me/followings/tracks${queryParams}"
+
+      when(timelineService.fetchFollowingTracksForUser(session, None, false, 10, Some("uuid")))
+        .thenReturn(Future.value(emptyTimelineResponse))
+
+      val result = get(path)
+      result.statusCode === 200
+      result.contentString === "[]"
+    }
+
+    "returns a 404 if timeline service doesn't return tracks" in new FailureCase {
+      val queryParams = "?limit=10"
+      val path = s"/me/followings/tracks${queryParams}"
+
+      when(timelineService.fetchFollowingTracksForUser(session, None, false, 10, Some("uuid")))
+        .thenReturn(Future.value(noTimelineResponse))
+
+      val result = get(path)
+      result.statusCode === 404
+      result.contentString === "{\"errors\":[{\"error_message\":\"404 - Not Found\"}]}"
+    }
+  }
+
   // public activity endpoints
   Seq(
     "/me/activities",
@@ -181,20 +228,5 @@ class TimeLineHandlerSpec extends UnitSpecification {
         any[Option[String]]
       )
     }
-  }
-
-  "get following tracks" in new Context {
-    val path = "/me/followings/tracks"
-    val response = get(path)
-    response.statusCode ==== 200
-    response.contentString ==== tracksOnlyTimelineJsonString()
-
-    there was one(timelineClient).followingsTracks(
-      ===(session),
-      any[Option[String]],
-      any[Int],
-      any[Boolean],
-      any[Option[String]]
-    )
   }
 }
