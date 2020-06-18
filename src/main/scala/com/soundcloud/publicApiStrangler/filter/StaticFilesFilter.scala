@@ -5,7 +5,6 @@ import com.twitter.conversions.DurationOps._
 import com.twitter.finagle.http.{MediaType, Method, Request, Response}
 import com.twitter.finagle.{Service, SimpleFilter}
 import com.twitter.util.Future
-import org.jboss.netty.util.CharsetUtil._
 
 class StaticFilesFilter extends SimpleFilter[Request, Response] {
   val crossdomainContents =
@@ -29,10 +28,6 @@ class StaticFilesFilter extends SimpleFilter[Request, Response] {
 
   private val oneDayInSeconds = 1.day.inSeconds
 
-  private def contentLength(content: String) = {
-    content.getBytes(UTF_8).length.toString
-  }
-
   override def apply(request: Request, next: Service[Request, Response]) = {
     (request.method, request.path) match {
       case (Method.Get, "/robots.txt") => renderRobots
@@ -44,13 +39,9 @@ class StaticFilesFilter extends SimpleFilter[Request, Response] {
   private def renderRobots: Future[Response] = {
     Future.value(
       ResponseBuilder()
-        .mediaType(MediaType.PlainText)
         .body(robotsContents)
         .headers(
-          Map(
-            "Cache-Control" -> s"public, max-age=$oneDayInSeconds",
-            "Content-Length" -> contentLength(robotsContents)
-          )
+          Map("Cache-Control" -> s"public, max-age=$oneDayInSeconds")
         )
         .build
     )
@@ -59,13 +50,11 @@ class StaticFilesFilter extends SimpleFilter[Request, Response] {
   private def renderCrossdomain: Future[Response] = {
     Future.value(
       ResponseBuilder()
-        .mediaType(MediaType.Xml)
         .body(crossdomainContents)
         .headers(
           Map(
-            "Accept-Ranges" -> "bytes",
             "Cache-Control" -> s"public, max-age=$oneDayInSeconds",
-            "Content-Length" -> contentLength(crossdomainContents)
+            "Content-Type" -> MediaType.XmlUtf8
           )
         )
         .build

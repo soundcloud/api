@@ -53,9 +53,7 @@ class ContentAuthorizationFilterSpec extends UnitSpecification {
       authorizedResponse.status mustEqual expectedResponse.status
       authorizedResponse.contentString mustEqual expectedResponse.contentString
       val contentLength = expectedResponse.contentString.getBytes(StandardCharsets.UTF_8).length
-      authorizedResponse.headerMap.toMap mustEqual expectedResponse.headerMap.toMap ++ Map(
-        "Content-Length" -> contentLength.toString
-      )
+      authorizedResponse.headerMap.toMap mustEqual expectedResponse.headerMap.toMap
     }
   }
 }

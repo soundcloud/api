@@ -1,4 +1,4 @@
-val jvmkitVersion = "12.6.1"
+val jvmkitVersion = "12.8.1"
 val specs2Version = "4.9.2"
 val httpComponentsVersion = "4.5.12"
 val outcomeVersion = "0.12"

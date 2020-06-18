@@ -88,7 +88,7 @@ class TrackStreamsHandler(
       case _ => ResponseBuilder().status(Status.Ok)
     }
     if (request.method != Method.Head)
-      builder.mediaType(MediaType.Json).body(Json.stringify(Json.toJson(streamResponse))).build
+      builder.header("Content-Type", MediaType.JsonUtf8).body(Json.stringify(Json.toJson(streamResponse))).build
     else
       builder.build
   }

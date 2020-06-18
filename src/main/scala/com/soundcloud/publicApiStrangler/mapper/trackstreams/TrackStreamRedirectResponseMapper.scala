@@ -29,7 +29,7 @@ class TrackStreamRedirectResponseMapper extends TrackStreamResponseMapper {
 
     if (!isHeadRequest) {
       val content = Json.obj("status" -> "302 - Found", "location" -> url.url.s)
-      builder.mediaType(MediaType.Json).body(Json.stringify(content)).build
+      builder.header("Content-Type", MediaType.JsonUtf8).body(Json.stringify(content)).build
     } else {
       builder.build
     }

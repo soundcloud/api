@@ -16,15 +16,10 @@ class ContentAuthorizationFilter(authorizeContent: AuthorizeHttpResponse) extend
 
   private def authorize(request: HandlerRequest, originalResponse: Response): Future[Response] =
     authorizeContent(request, originalResponse).map { authorizationResponse =>
-      val builder = ResponseBuilder()
-        .status(authorizationResponse.status)
-        .body(authorizationResponse.contentString)
-        .headers(originalResponse.headerMap.toMap)
-        .chunked(originalResponse.isChunked)
-
-      if (originalResponse.mediaType.isDefined)
-        builder.mediaType(originalResponse.mediaType.get).build
-      else
-        builder.build
+      ResponseBuilder(
+        authorizationResponse.status,
+        authorizationResponse.contentString,
+        headers = originalResponse.headerMap.toMap
+      ).build
     }
 }

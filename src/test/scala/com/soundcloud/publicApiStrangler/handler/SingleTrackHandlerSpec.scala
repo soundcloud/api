@@ -213,7 +213,6 @@ class SingleTrackHandlerSpec extends UnitSpecification with TrackRepresentationS
       val response = get(path)
       response.status ==== Status.NotFound
       response.contentString ==== """{"errors":[{"error_message":"404 - Not Found"}]}"""
-      response.headerMap.get("Content-Length") must beSome("48")
     }
   }
 
