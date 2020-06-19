@@ -82,7 +82,7 @@ class TimeLineHandlerSpec extends UnitSpecification {
   "render track activities" >> {
     trait SuccessfulCase extends Context {
       val mockTimelineItems = List(
-        new TrackTimelineItem(createdAt = new DateTime().toString, List.empty, mockTrackRepresentation)
+        new TrackTimelineItem(createdAt = new DateTime().toString, mockTrackRepresentation)
       )
       val mockTimelineMeta =
         TimelineMeta(Some("00000172-9b87-0a50-ffff-ffff8eec7ee8"), Some("00000172-9b87-0a50-ffff-ffff8eec7ee8"))

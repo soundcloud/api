@@ -52,14 +52,10 @@ class TimelineService(
   private def createTrackTimelineItem(
       tracks: List[TrackRepresentation],
       event: TimelineEvent
-  ): Option[TrackTimelineItem] = {
-    for {
-      trackRep <- tracks.find(_.track.urn.toString == event.urn.toString)
-      tags = trackRep.track.machine_tags ++ trackRep.track.user_tags
-    } yield {
-      new TrackTimelineItem(event.timestamp, tags, trackRep)
-    }
-  }
+  ): Option[TrackTimelineItem] =
+    tracks
+      .find(_.track.urn.toString == event.urn.toString)
+      .map(trackRep => new TrackTimelineItem(event.timestamp, trackRep))
 
   def fetchFollowingTracksForUser(
       session: LoggedInUserSession,
