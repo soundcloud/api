@@ -1,0 +1,11 @@
+{
+    "likes": [
+        {
+            "created": "2013-01-18T00:09:57Z",
+            "created_at": 1358467797,
+            "deleted_at": "2014-05-22T00:12:33Z",
+            "target_urn": "soundcloud:playlists:100",
+            "user_urn": "soundcloud:users:100"
+        }
+    ]
+}

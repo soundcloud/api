@@ -74,7 +74,6 @@ object Routing {
       route(Method.Get, "/tracks/:trackId/comments/:id", mothershipDispatcher.dispatch) :::
       route(Method.Put, "/users/:id", mothershipDispatcher.dispatch) :::
       route(Method.Get, "/me/favorites/ids", mothershipDispatcher.dispatch) :::
-      route(Method.Delete, "/me/favorites/:trackId", mothershipDispatcher.dispatch) :::
       route(Method.Get, "/me/playlists", mothershipDispatcher.dispatch) :::
       route(Method.Post, "/me/playlists", mothershipDispatcher.dispatch) :::
       route(Method.Get, "/me/playlists/:trackId", mothershipDispatcher.dispatch) :::
@@ -160,6 +159,7 @@ object Routing {
       route(Method.Get, "/me/favorites/:trackId", likesHandler.getMeLikedTrackId) :::
       route(Method.Post, "/me/favorites/:trackId", likesHandler.createMeLikedTrackId) :::
       route(Method.Put, "/me/favorites/:trackId", likesHandler.createMeLikedTrackId) :::
+      route(Method.Delete, "/me/favorites/:trackId", likesHandler.deleteMeLikedTrackId) :::
       route(Method.Get, "/users/:userId/favorites", likesHandler.getUserTracksLikes) :::
       route(Method.Get, "/me/favorites", likesHandler.getMeTracksLikes)
   }

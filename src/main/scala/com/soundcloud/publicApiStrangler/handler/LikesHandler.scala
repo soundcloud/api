@@ -9,6 +9,7 @@ import com.soundcloud.publicApiStrangler.service.trackrepresentation.TracksColle
 import com.soundcloud.publicApiStrangler.handler.representation.tracks.TrackRepresentationResponse.handleResponseFromService
 import com.soundcloud.publicApiStrangler.service._
 import com.soundcloud.outcome._
+import com.soundcloud.publicApiStrangler.client.liebling.{LikeDeleted, LikeNotFound}
 import com.twitter.finagle.http.{Response, Status}
 import com.twitter.util.Future
 import play.api.libs.json.Json
@@ -49,6 +50,19 @@ class LikesHandler(userAuthentication: UserAuthentication, likesService: LikesSe
         case _ => Future.value(JsonResponseBuilder.badRequest(requestBodyForStatus(Status.BadRequest)))
       }
     }
+  }
+
+  def deleteMeLikedTrackId(req: HandlerRequest): Future[Response] = userAuthentication.withLoggedInUser(req) {
+    (session, _) =>
+      val trackId = req.routeParams("trackId")
+      Try(Urn("soundcloud", "tracks", trackId)) match {
+        case Success(trackUrn @ Urn(_, _, numericRegexp())) =>
+          likesService.deleteTrackLike(session, trackUrn).map {
+            case LikeDeleted => JsonResponseBuilder.ok(requestBodyForStatus(Status.Ok))
+            case LikeNotFound => JsonResponseBuilder.notFound(notFoundErrorString)
+          }
+        case _ => Future.value(JsonResponseBuilder.badRequest(requestBodyForStatus(Status.BadRequest)))
+      }
   }
 
   private def performGetUserLikedTrackId(

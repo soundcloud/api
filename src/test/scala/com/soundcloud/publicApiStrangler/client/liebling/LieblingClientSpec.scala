@@ -9,10 +9,10 @@ import com.soundcloud.jvmkit.module.util.session.UserSessionBuilder
 import com.soundcloud.jvmkit.module.util.{Path, Urn}
 import com.soundcloud.publicApiStrangler.test.Helpers._
 import com.soundcloud.publicApiStrangler.test.UnitSpecification
-import com.twitter.finagle.IndividualRequestTimeoutException
-import com.twitter.util.{Await, Duration, Future}
 import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures._
+import com.twitter.finagle.IndividualRequestTimeoutException
 import com.twitter.finagle.http.{Response, Status}
+import com.twitter.util.{Await, Duration, Future}
 import org.mockito.Mockito.when
 import play.api.libs.json.Json
 
@@ -77,6 +77,31 @@ class LieblingClientSpec extends UnitSpecification {
 
       val actual = Await.result(client.createTrackLike(session, trackUrn))
       actual ==== LikeCreated
+    }
+  }
+
+  "#deleteTrackLike" >> {
+    trait LikeDeletedContext extends Context {
+      override implicit val session = loggedInSession(userUrn)
+    }
+
+    "creates a like response" in new LikeDeletedContext {
+      when(
+        service.deleteWithSession(
+          session,
+          Path() / "tracks" / trackUrn.toString / "likes",
+          Params.empty,
+          Headers.empty,
+          Some(requestBodyString)
+        )
+      ).thenReturn(Future {
+        val response = Response(Status.Ok)
+        response.setContentString(lieblingLikeDeletionSuccess)
+        response
+      })
+
+      val actual = Await.result(client.deleteTrackLike(session, trackUrn))
+      actual must beAnInstanceOf[DeleteLikeResponse]
     }
   }
 

@@ -37,6 +37,9 @@ class LikesService(
     }
   }
 
+  def deleteTrackLike(session: UserSession, urn: Urn): Future[DeleteLikeResponse] =
+    lieblingClient.deleteTrackLike(session, urn)
+
   def userTrackLikeForUrn(
       session: UserSession,
       userUrn: Urn,

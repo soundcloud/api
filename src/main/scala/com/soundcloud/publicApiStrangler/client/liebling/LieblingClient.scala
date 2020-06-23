@@ -29,6 +29,15 @@ class LieblingClient(jsonClient: JsonClient, exceptionCollector: ExceptionCollec
       Path() / "tracks" / track.toString / "likes"
     )
 
+  /**
+    * @see https://github.com/soundcloud/liebling/tree/master/doc#unlike-a-track
+    */
+  def deleteTrackLike(session: UserSession, track: Urn): Future[DeleteLikeResponse] =
+    deleteLike(
+      session,
+      Path() / "tracks" / track.toString / "likes"
+    )
+
   def likeCounts(session: UserSession, targetUrns: Seq[Urn]): Future[List[LikesCount]] =
     inBatches(targetUrns.toList, 50) { urns =>
       fetchLikes(
@@ -165,6 +174,17 @@ class LieblingClient(jsonClient: JsonClient, exceptionCollector: ExceptionCollec
         jsonBody(session)
       )
       .map(CreateLikeResponseMapper(_))
+
+  private def deleteLike(session: UserSession, path: Path): Future[DeleteLikeResponse] =
+    jsonClient
+      .deleteWithSession(
+        session,
+        path,
+        Params.empty,
+        Headers.empty,
+        jsonBody(session)
+      )
+      .map(DeleteLikeResponseMapper(_))
 
   private def jsonBody(session: UserSession): Option[String] = {
     Some(Json.obj("user_urn" -> session.getUser.toString).toString)

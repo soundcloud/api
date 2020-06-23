@@ -101,6 +101,40 @@ class LikesServiceSpec extends TrackRepresentationsSpecificationContext {
     }
   }
 
+  "#deleteTrackLike" >> {
+    trait DeleteTrackLike extends Context {
+      lazy val itemUrn = Urn("soundcloud", "tracks", "1")
+      lazy val result = Await.result(likesService.deleteTrackLike(session, itemUrn))
+      val lieblingResult: DeleteLikeResponse
+
+      override def before: Any = {
+        super.before
+
+        when(lieblingClient.deleteTrackLike(session, itemUrn)).thenReturn(Future.value(lieblingResult))
+      }
+    }
+
+    "#when liebling successfully deletes a like" >> {
+      trait LikeAddedContext extends DeleteTrackLike {
+        override val lieblingResult = LikeDeleted
+      }
+
+      "returns an LikeDeleted" in new LikeAddedContext {
+        result ==== LikeDeleted
+      }
+    }
+
+    "#when like was not found" >> {
+      trait LikeNotFoundContext extends DeleteTrackLike {
+        override val lieblingResult = LikeNotFound
+      }
+
+      "returns an LikeNotFound" in new LikeNotFoundContext {
+        result ==== LikeNotFound
+      }
+    }
+  }
+
   "#userTrackLikeForUrn" >> {
     "when all data is available" in new Context {
       val track = trackvisibilityTrack()

@@ -7,6 +7,7 @@ import com.soundcloud.jvmkit.module.bff.testsupport.FakeUserAuthentication
 import com.soundcloud.jvmkit.module.telemetry.Telemetry
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.publicApiStrangler.Routing
+import com.soundcloud.publicApiStrangler.client.liebling.{LikeDeleted, LikeNotFound}
 import com.soundcloud.publicApiStrangler.service.pagination.{CursorBasedPagination, Pagination}
 import com.soundcloud.publicApiStrangler.service.trackrepresentation.{
   TrackRepresentation,
@@ -15,8 +16,8 @@ import com.soundcloud.publicApiStrangler.service.trackrepresentation.{
 }
 import com.soundcloud.publicApiStrangler.service.{
   LikesService,
-  OkCreatedCreateResponse,
   OkCreateResponse,
+  OkCreatedCreateResponse,
   SpamBlockedCreateResponse
 }
 import com.soundcloud.publicApiStrangler.test.{HandlerSpecificationScope, UnitSpecification}
@@ -41,6 +42,14 @@ class LikesHandlerSpec extends UnitSpecification {
     val handler = new LikesHandler(userAuthentication, likesService, "https://api.soundcloud.com")
 
     override def routingDefinitions = Routing.forLikesHandler(handler)
+  }
+
+  trait LoggedOutContext extends Context {
+    lazy val userAuthentication = new FakeUserAuthentication(anonymousSession)
+  }
+
+  trait LoggedInContext extends Context {
+    lazy val userAuthentication = new FakeUserAuthentication(session)
   }
 
   "Getting tracks" >> {
@@ -172,13 +181,6 @@ class LikesHandlerSpec extends UnitSpecification {
   "Creating tracks" >> {
 
     "POST /me/favorites/:trackId" >> {
-      trait LoggedOutContext extends Context {
-        lazy val userAuthentication = new FakeUserAuthentication(anonymousSession)
-      }
-
-      trait LoggedInContext extends Context {
-        lazy val userAuthentication = new FakeUserAuthentication(session)
-      }
 
       trait PostTrackLikeContext extends Context with BeforeAfter {
         override def before: Any = {}
@@ -262,6 +264,81 @@ class LikesHandlerSpec extends UnitSpecification {
 
       "logged out" >> {
         "returns 401" in new PostTrackLikeContext with LoggedOutContext {
+          response.statusCode ==== 401
+        }
+      }
+    }
+  }
+
+  "Deleting tracks" >> {
+
+    "DELETE /me/favorites/:trackId" >> {
+
+      trait DeleteTrackLikeContext extends Context with BeforeAfter {
+        override def before: Any = {}
+        override def after: Any = {}
+
+        lazy val trackUrn = Urn("soundcloud", "tracks", "1")
+        lazy val jsonBody = """{"json": "body"}"""
+        lazy val response = delete(s"/me/favorites/${trackUrn.identifier}", Map(), Map(), jsonBody)
+      }
+
+      "logged in" >> {
+        trait LoggedInDeleteTrackLikeContext extends DeleteTrackLikeContext with LoggedInContext
+
+        "when path contains a not liked URN" >> {
+          trait NonLikedUrnContext extends LoggedInDeleteTrackLikeContext {
+            override def before: Any = {
+              super.before
+              when(likesService.deleteTrackLike(session, trackUrn))
+                .thenReturn(Future.value(LikeNotFound))
+            }
+          }
+
+          "returns 404" in new NonLikedUrnContext {
+            response.statusCode ==== 404
+          }
+
+          "renders correct body" in new NonLikedUrnContext {
+            response.contentString ==== """{"errors":[{"error_message":"404 - Not Found"}]}"""
+          }
+        }
+
+        "when URN is liked" >> {
+          trait LikedUrnContext extends LoggedInDeleteTrackLikeContext {
+            override def before: Any = {
+              super.before
+              when(likesService.deleteTrackLike(session, trackUrn))
+                .thenReturn(Future.value(LikeDeleted))
+            }
+          }
+
+          "returns 200" in new LikedUrnContext {
+            response.statusCode ==== 200
+          }
+
+          "renders correct body" in new LikedUrnContext {
+            Json.parse(response.contentString) ==== Json.obj("status" -> "200 - OK")
+          }
+        }
+
+        "when urn is invalid" >> {
+          trait InvalidUrnDeleteTrackLikeContext extends DeleteTrackLikeContext with LoggedInContext {
+            override lazy val trackUrn = Urn("soundcloud", "tracks", ":")
+          }
+
+          "returns 400" in new InvalidUrnDeleteTrackLikeContext {
+            response.statusCode ==== 400
+          }
+
+          "renders correct body" in new InvalidUrnDeleteTrackLikeContext {
+            Json.parse(response.contentString) ==== Json.obj("status" -> "400 - Bad Request")
+          }
+        }
+      }
+
+      "logged out" >> {
+        "returns 401" in new DeleteTrackLikeContext with LoggedOutContext {
           response.statusCode ==== 401
         }
       }

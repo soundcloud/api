@@ -117,4 +117,5 @@ object Fixtures {
   lazy val visibleTracksResponse = fileJson("tracks", "visible_tracks_response")
 
   lazy val lieblingLikeCreationSuccess = fileToString("liebling", "like_creation_success")
+  lazy val lieblingLikeDeletionSuccess = fileToString("liebling", "like_deletion_success")
 }
