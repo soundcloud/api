@@ -28,6 +28,7 @@ func (u *moshimoshiClient) createTrackUID() (string, error) {
 	if err != nil {
 		return "", err
 	}
+	defer req.Body.Close()
 
 	if req.StatusCode != http.StatusCreated {
 		return "", fmt.Errorf("Failed to create track UID: %d", req.StatusCode)
@@ -87,6 +88,7 @@ func (u *mediaServiceClient) createTranscoding(uid string) error {
 	if err != nil {
 		return err
 	}
+	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusAccepted {
 		return fmt.Errorf("Failed to trigger transcoding UID: %d", resp.StatusCode)
