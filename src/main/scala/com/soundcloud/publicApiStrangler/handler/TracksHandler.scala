@@ -2,6 +2,7 @@ package com.soundcloud.publicApiStrangler.handler
 
 import com.soundcloud.jvmkit.module.bff.session.UserAuthentication
 import com.soundcloud.jvmkit.module.http.server.{HandlerRequest, JsonResponseBuilder, ResponseBuilder}
+import com.soundcloud.jvmkit.module.util.logging.SoundCloudLoggerFactory
 import com.soundcloud.publicApiStrangler.TrackUrnUtil.trackUrn
 import com.soundcloud.publicApiStrangler.client.mothership.OkidokiClient
 import com.soundcloud.publicApiStrangler.client.trackcoordinator.TrackCoordinatorClient
@@ -9,6 +10,7 @@ import com.soundcloud.outcome._
 import com.soundcloud.publicApiStrangler.client.trackmetadata.TrackmetadataClient
 import com.twitter.finagle.http.Response
 import com.twitter.util.Future
+import org.slf4j.Logger
 import play.api.libs.json.Json
 
 import scala.util.control.NonFatal
@@ -23,7 +25,8 @@ class TracksHandler(
     trackCoordinator: TrackCoordinatorClient,
     okidokiClient: OkidokiClient,
     mothershipDispatcher: DispatchToMothershipHandler,
-    trackmetadataClient: TrackmetadataClient
+    trackmetadataClient: TrackmetadataClient,
+    logger: Logger = SoundCloudLoggerFactory.getLogger(getClass)
 ) {
   def handleDelete(request: HandlerRequest): Future[Response] = {
     userAuthentication.withLoggedInUser(request) { (session, _) =>
@@ -38,6 +41,9 @@ class TracksHandler(
   def handlePut(request: HandlerRequest): Future[Response] =
     userAuthentication.withLoggedInUser(request) { (session, _) =>
       val urn = trackUrn(request)
+      logger.debug(
+        s"PUT /tracks${urn.identifier} | request media type ${request.mediaType} | request body: ${request.contentString} "
+      )
       trackmetadataClient
         .track(session, urn)
         .flatMap {
