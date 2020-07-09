@@ -41,7 +41,7 @@ class TracksHandler(
   def handlePut(request: HandlerRequest): Future[Response] =
     userAuthentication.withLoggedInUser(request) { (session, _) =>
       val urn = trackUrn(request)
-      logger.debug(
+      logger.info(
         s"PUT /tracks${urn.identifier} | request media type ${request.mediaType} | request body: ${request.contentString} "
       )
       trackmetadataClient
