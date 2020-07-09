@@ -13,7 +13,7 @@ import com.twitter.util.{Future, Return, Try}
 import play.api.libs.json._
 import com.soundcloud.publicApiStrangler.service.trackrepresentation.TrackRepresentation
 import com.soundcloud.publicApiStrangler.client.tracks.TrackRequest
-import com.soundcloud.publicApiStrangler.handler.support.UnhandledOutcomeException
+import com.soundcloud.publicApiStrangler.handler.support.error.UnhandledOutcomeException
 
 class SingleTrackHandler(
     userAuthentication: UserAuthentication,

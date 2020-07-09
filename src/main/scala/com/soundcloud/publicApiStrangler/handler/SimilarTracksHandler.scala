@@ -8,7 +8,7 @@ import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.outcome._
 import com.soundcloud.publicApiStrangler.TrackUrnUtil.trackUrn
-import com.soundcloud.publicApiStrangler.handler.representation.tracks.TrackRepresentationResponse.handleResponseFromService
+import com.soundcloud.publicApiStrangler.handler.representation.tracks.TrackRepresentationResponse.handleTracksCollectionResponseFromService
 import com.soundcloud.publicApiStrangler.service.SimilarTracksService
 import com.soundcloud.publicApiStrangler.service.trackrepresentation.{TrackPagination, TracksCollection}
 import com.twitter.finagle.http.Response
@@ -31,7 +31,7 @@ class SimilarTracksHandler(
       val urn = trackUrn(request)
 
       val similarTracks = performGetSimilarTracks(session, urn, pagination)
-      handleResponseFromService(similarTracks, hasLinkedPartitioning)
+      handleTracksCollectionResponseFromService(similarTracks, hasLinkedPartitioning)
     }
   }
 
