@@ -14,8 +14,8 @@ import com.soundcloud.publicApiStrangler.service.trackrepresentation.{
   TracksCollection
 }
 import com.soundcloud.publicApiStrangler.TrackUrnUtil.trackUrn
-import com.soundcloud.publicApiStrangler.handler.representation.tracks.TrackRepresentationResponse.handleTracksCollectionResponseFromService
-import com.soundcloud.publicApiStrangler.handler.support.error.UnhandledOutcomeException
+import com.soundcloud.publicApiStrangler.handler.representation.tracks.TrackRepresentationResponse.handleResponseFromService
+import com.soundcloud.publicApiStrangler.handler.support.UnhandledOutcomeException
 import com.twitter.finagle.http.{Response, Status}
 import com.twitter.util.{Future, Return, Try}
 import play.api.libs.json.Json
@@ -114,7 +114,7 @@ class UserTracksHandler(
     Try(Urn("soundcloud", "users", userId)) match {
       case Return(urn @ Urn(_, _, numericRegexp())) =>
         val trackRepresentation = fetchTrackRepresentation(urn)
-        handleTracksCollectionResponseFromService(trackRepresentation, hasLinkedPartitioning)
+        handleResponseFromService(trackRepresentation, hasLinkedPartitioning)
       case _ => Future.value(JsonResponseBuilder.notFound(notFoundErrorString))
     }
   }

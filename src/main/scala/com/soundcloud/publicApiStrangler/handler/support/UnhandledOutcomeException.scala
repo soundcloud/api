@@ -1,3 +1,3 @@
-package com.soundcloud.publicApiStrangler.handler.support.error
+package com.soundcloud.publicApiStrangler.handler.support
 
 class UnhandledOutcomeException extends Exception(s"Unhandled outcome")

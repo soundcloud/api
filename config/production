@@ -88,7 +88,4 @@ TRACK_ACCESS_RECORDER_CLIENT_REQUEST_TIMEOUT_MILLIS="3000"
 
 OAUTH_AUTHORIZATION_SRV_RECORD=dnssrv!http.oauth.prod.authenticator.srv
 
-HOCUSPOCUS_SRV_RECORD=dnssrv!http.api.prod.hocuspocus.srv.db.s-cloud.net
-HOCUSPOCUS_CLIENT_REQUEST_TIMEOUT_MILLIS=5000
-
 CDN_WAVE_HTTPS_ENDPOINT=https://wave.sndcdn.com

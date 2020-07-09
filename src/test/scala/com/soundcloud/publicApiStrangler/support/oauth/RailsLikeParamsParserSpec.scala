@@ -111,10 +111,10 @@ class RailsLikeParamsParserSpec extends UnitSpecification {
           .buildFormPost(multipart = true)
       }
 
-      "return None given empty body" in new MultipartContext {
+      "return query parameters" in new MultipartContext {
         override val fields = Seq.empty
 
-        params ==== None
+        params ==== Some(Map("a" -> "b"))
       }
 
       "return additional parameters from the request body" in new MultipartContext {

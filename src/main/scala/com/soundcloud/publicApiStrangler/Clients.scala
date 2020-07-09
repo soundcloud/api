@@ -18,8 +18,6 @@ import com.soundcloud.publicApiStrangler.client.media.{
   TrackAccessRecorderClient,
   WaveformUrlsGenerator
 }
-
-import com.soundcloud.hocuspocus.HocuspocusClientProtobuf
 import com.soundcloud.publicApiStrangler.client.mothership.{OkidokiClient, RichOkidokiClient}
 import com.soundcloud.publicApiStrangler.client.playlists.{PlaylistDeletionClient, PlaylistsClient}
 import com.soundcloud.publicApiStrangler.client.pubmese.PubmeseClient
@@ -33,12 +31,12 @@ import com.soundcloud.publicApiStrangler.mapper.liebling.LikeCountMapper
 import com.soundcloud.publicApiStrangler.mapper.search.SearchEntityMapper
 import com.soundcloud.publicApiStrangler.mapper.timeline.EntitySummaryMapper
 import com.soundcloud.publicApiStrangler.service.media.{StreamService, TrackAccessRecorderService}
-import com.soundcloud.publicApiStrangler.service.trackrepresentation.{TrackRepresentationsService, TrackUpdateService}
+import com.soundcloud.publicApiStrangler.service.trackrepresentation.TrackRepresentationsService
 import com.soundcloud.publicApiStrangler.service.{
   LikesService,
-  SearchService,
-  SimilarTracksService,
   TimelineService,
+  SimilarTracksService,
+  SearchService,
   TrackVisibilityService,
   UserTracksService
 }
@@ -153,13 +151,8 @@ class Clients(
 
   val timelineService = new TimelineService(timelineClient, tracksService)
 
-  private val hocuspocusConfig = HttpClientConfig.from(ResourceName("hocuspocus"), config)
-  private val hocuspocusHttpClient = HttpClient(hocuspocusConfig, telemetry)
-  private val hocuspocusTelemetry = ClientTelemetry.from(hocuspocusConfig, telemetry)
-  val hocuspocusClient = new HocuspocusClientProtobuf(hocuspocusHttpClient.httpService, hocuspocusTelemetry)
-
   val userTracksService = new UserTracksService(tracksService, trackmetadataClient)
-  val trackUpdateService = new TrackUpdateService(trackCoordinatorClient, hocuspocusClient, tracksService)
+
   val similarTracksService = new SimilarTracksService(tracksService, systemPlaylistsClient)
   val likesService = new LikesService(tracksService, lieblingClient)
   val searchService = new SearchService(tracksService, searchClient)

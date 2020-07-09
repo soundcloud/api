@@ -101,7 +101,7 @@ object Routing {
   }
 
   def forTracksHandler(tracksHandler: TracksHandler): List[(Method, String, Handler)] = {
-    route(Method.Put, "/tracks/:trackId", tracksHandler.handleUpdateTrack) :::
+    route(Method.Put, "/tracks/:trackId", tracksHandler.handlePut) :::
       route(Method.Delete, "/tracks/:trackId", tracksHandler.handleDelete)
   }
 

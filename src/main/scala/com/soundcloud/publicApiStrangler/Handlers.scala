@@ -61,7 +61,9 @@ class Handlers(telemetry: Telemetry, clients: Clients, exceptionCollector: Excep
   val tracksHandler = new TracksHandler(
     userAuthentication,
     trackCoordinatorClient,
-    trackUpdateService
+    okidokiClient,
+    mothershipDispatcher,
+    trackmetadataClient
   )
 
   val singleTrackHandler =

@@ -1,43 +1,35 @@
 package com.soundcloud.publicApiStrangler.handler
 
-import java.nio.file.{Files, Paths}
-
 import com.soundcloud.jvmkit.module.bff.testsupport.FakeUserAuthentication
+import com.soundcloud.jvmkit.module.http.server.{HandlerRequest, ResponseBuilder}
 import com.soundcloud.jvmkit.module.util.session.UserSessionBuilder
 import com.soundcloud.jvmkit.module.util.{Geo, Urn}
-import com.soundcloud.outcome._
 import com.soundcloud.publicApiStrangler.Routing
 import com.soundcloud.publicApiStrangler.authorization.Track
+import com.soundcloud.publicApiStrangler.client.mothership.OkidokiClient
 import com.soundcloud.publicApiStrangler.client.trackcoordinator.TrackCoordinatorClient
-import com.soundcloud.publicApiStrangler.client.trackmetadata.{Track => TMTrack}
-import com.soundcloud.publicApiStrangler.handler.support.requestParser.{
-  TrackArtworkUpdateRequest,
-  TrackAssetDataUpdateRequest,
-  TrackMetadataUpdateRequest
-}
-import com.soundcloud.publicApiStrangler.service.trackrepresentation.{
-  TrackRepresentation,
-  TrackRepresentationSpecContext,
-  TrackUpdateService
-}
+import com.soundcloud.outcome._
+import com.soundcloud.publicApiStrangler.client.trackmetadata.{TrackmetadataClient, Track => TMTrack}
 import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures._
+import com.soundcloud.publicApiStrangler.test.util.TrackMetadataTrackBuilder
 import com.soundcloud.publicApiStrangler.test.{HandlerSpecificationScope, UnitSpecification}
-import com.twitter.finagle.http.{FileElement, Status}
-import com.twitter.io.Buf
+import com.twitter.finagle.http.Status
 import com.twitter.util.Future
-import org.mockito.Mockito._
-import play.api.libs.json.Json
+import org.mockito.Mockito.when
+import play.api.libs.json.{JsObject, Json}
 
-class TracksHandlerSpec extends UnitSpecification with TrackRepresentationSpecContext {
+class TracksHandlerSpec extends UnitSpecification {
   trait Context extends HandlerSpecificationScope {
+    val fallback = mock[DispatchToMothershipHandler]
     val trackCoordinator = mock[TrackCoordinatorClient]
-    val trackUpdateService = mock[TrackUpdateService]
+    val okidoki = mock[OkidokiClient]
+    val trackmetadataClient = mock[TrackmetadataClient]
     val trackUrn = Urn("soundcloud", "tracks", "999")
     val userUrn = Urn("soundcloud", "users", "102661606")
     val loggedInUserUrn = Urn("soundcloud", "users", "2")
+    val users = okidokiUsers.as[List[JsObject]]
     val user = users.head
     val track = mock[Track]
-    val mockTrackRepresentation = createTrackRepresentation()
 
     lazy val geo = new Geo("US")
     lazy val session = new UserSessionBuilder()
@@ -45,212 +37,83 @@ class TracksHandlerSpec extends UnitSpecification with TrackRepresentationSpecCo
       .setAgent(Urn("soundcloud", "applications", "v2"))
       .setGeo(geo)
       .build()
-
     lazy val handler =
-      new TracksHandler(
-        new FakeUserAuthentication(session),
-        trackCoordinator,
-        trackUpdateService
-      )
+      new TracksHandler(new FakeUserAuthentication(session), trackCoordinator, okidoki, fallback, trackmetadataClient)
 
     def trackmetadataResponse: Future[Option[TMTrack]] = Future.value(None)
 
     override def routingDefinitions = Routing.forTracksHandler(handler)
 
     trackCoordinator.deleteTrack(session, trackUrn) returns Future(Good(()))
-
-    def setupMockForTrackUpdateMetadata(
-        metadataUpdateOutcome: Outcome[TrackRepresentation],
-        trackUpdate: Option[TrackMetadataUpdateRequest] = None,
-        artworkUpdate: Option[TrackArtworkUpdateRequest] = None,
-        assetUpdate: Option[TrackAssetDataUpdateRequest] = None
-    ) = {
-      when(
-        trackUpdateService
-          .updateTrack(
-            artworkUpdate,
-            assetUpdate,
-            trackUpdate,
-            mockTrackRepresentation.track.urn,
-            session
-          )
-      ).thenReturn(
-        Future.value(metadataUpdateOutcome)
-      )
-    }
+    okidoki.fetch(===(session), ===(Set(userUrn))) returns Future(List(user))
+    when(fallback.dispatch(any[HandlerRequest])).thenReturn(Future.value(ResponseBuilder.ok()))
+    when(trackmetadataClient.track(session, trackUrn)).thenReturn(trackmetadataResponse)
   }
 
-  "PUT /tracks/:id" >> {
-    "Json request" >> {
-      trait SuccessContext extends Context {
-        val requestBody =
-          """
-            | {
-            |   "track": {
-            |     "title": "changed",
-            |     "description": "changed"
-            |    }
-            | }
-            |""".stripMargin
-        val trackUpdate = Json.parse(requestBody).asOpt[TrackMetadataUpdateRequest]
-
-        val expectedResponse = mockTrackRepresentation.copy(
-          track = mockTrackRepresentation.track.copy(
-            description = Some("changed"),
-            title = "changed"
-          )
-        )
+  List(
+    "/tracks/999",
+    "/tracks/999.json"
+  ).foreach { path =>
+    {
+      trait PutContext extends Context {
+        def trackResponse(supplyChainStatus: Option[String]) =
+          Future.value(Some(TrackMetadataTrackBuilder(supply_chain_status = supplyChainStatus).build))
       }
 
-      trait FailureContext extends Context {
-        val requestBody =
-          """
-            | {
-            |   "track": {
-            |     "title": "changed",
-            |     "description": "changed"
-            |    }
-            | }
-            |""".stripMargin
-        val trackUpdate = Json.parse(requestBody).asOpt[TrackMetadataUpdateRequest]
+      s"PUT $path" >> {
+        "passes through requests with supply_chain_status = manual_upload" in new PutContext {
+          override def trackmetadataResponse = trackResponse(Some("manual_upload"))
 
-        val invalidRequestBody =
-          """
-            | {
-            |   "blabla": "i'm not a track update"
-            | }
-            |""".stripMargin
-      }
+          when(fallback.dispatch(any[HandlerRequest]))
+            .thenReturn(Future.value(ResponseBuilder.created("Thank you for creating")))
 
-      "returns 200 on successful update" in new SuccessContext {
-        val path = s"/tracks/${mockTrackRepresentation.track.urn.identifier}"
+          val response = put(path, body = Json.stringify(singleTrack))
+          response.status ==== Status.Created
+          response.contentString ==== "Thank you for creating"
+        }
 
-        println(
-          s"calling with ${trackUpdate.toString} and urn ${mockTrackRepresentation.track.urn.toString} and session ${session.toString}"
-        )
-        setupMockForTrackUpdateMetadata(metadataUpdateOutcome = Good(expectedResponse), trackUpdate = trackUpdate)
+        "passes through requests with supply_chain_status = null" in new PutContext {
+          override def trackmetadataResponse = trackResponse(None)
 
-        val response = put(path, body = requestBody)
-        response.statusCode === 200
-        response.contentString === Json.stringify(Json.toJson((expectedResponse)))
-      }
+          when(fallback.dispatch(any[HandlerRequest]))
+            .thenReturn(Future.value(ResponseBuilder.created("Thank you for creating")))
 
-      "returns 404 when track does not exist" in new FailureContext {
-        val path = s"/tracks/${mockTrackRepresentation.track.urn.identifier}"
-        setupMockForTrackUpdateMetadata(metadataUpdateOutcome = NotFound().bad, trackUpdate = trackUpdate)
+          val response = put(path, body = Json.stringify(singleTrack))
+          response.status ==== Status.Created
+          response.contentString ==== "Thank you for creating"
+        }
 
-        val response = put(path, body = requestBody)
-        response.statusCode === 404
-      }
+        "refuses updating tracks with supply_chain_status = supply_chain" in new PutContext {
+          override def trackmetadataResponse = trackResponse(Some("supply_chain"))
 
-      "returns 500 on invalid request" in new FailureContext {
-        val path = s"/tracks/${mockTrackRepresentation.track.urn.identifier}"
+          val response = put(path, body = Json.stringify(singleTrack))
+          response.status ==== Status.Unauthorized
+          Json.parse(response.contentString) ==== Json.obj("reason" -> "not allowed")
+        }
 
-        val response = put(path, body = invalidRequestBody)
-        response.statusCode === 400
-      }
-    }
-  }
+        "refuses updating tracks with supply_chain_status = banana" in new PutContext {
+          override def trackmetadataResponse = trackResponse(Some("banana"))
 
-  "Multipart/form request" >> {
-    trait SuccessContext extends Context {
-      val requestBody = Seq[(String, String)](("track[title]", "changed"), ("track[description]", "changed"))
-      val parsedRequestBody = Map[String, String]("title" -> "changed", "description" -> "changed")
+          val response = put(path, body = Json.stringify(singleTrack))
+          response.status ==== Status.Unauthorized
+          Json.parse(response.contentString) ==== Json.obj("reason" -> "not allowed")
+        }
 
-      val trackUpdate = TrackMetadataUpdateRequest.fromMultipartForm(parsedRequestBody)
-      val expectedResponse = mockTrackRepresentation.copy(
-        track = mockTrackRepresentation.track.copy(
-          description = Some("changed"),
-          title = "changed"
-        )
-      )
-    }
+        "returns not found when track is not returned" in new PutContext {
+          override def trackmetadataResponse = Future.value(None)
 
-    trait FailureContext extends Context {
-      val requestBody = Seq[(String, String)](("track[title]", "changed"), ("track[description]", "changed"))
-      val parsedRequestBody = Map[String, String]("title" -> "changed", "description" -> "changed")
+          val response = put(path, body = Json.stringify(singleTrack))
+          response.status ==== Status.NotFound
+          response.contentString ==== ""
+        }
 
-      val trackUpdate = TrackMetadataUpdateRequest.fromMultipartForm(parsedRequestBody)
-    }
+        "errors if trackmetadata client throws up" in new PutContext {
+          override def trackmetadataResponse = Future.exception(new RuntimeException("nooo"))
 
-    "returns a 200 on a valid request" in new SuccessContext {
-      val path = s"/tracks/${mockTrackRepresentation.track.urn.identifier}"
-
-      setupMockForTrackUpdateMetadata(metadataUpdateOutcome = Good(expectedResponse), trackUpdate = trackUpdate)
-
-      val response = putMultiform(path, body = requestBody)
-      response.statusCode === 200
-      response.contentString === Json.stringify(Json.toJson((expectedResponse)))
-    }
-
-    "returns a 404 if track when track does not exist" in new FailureContext {
-      val path = s"/tracks/${mockTrackRepresentation.track.urn.identifier}"
-
-      setupMockForTrackUpdateMetadata(metadataUpdateOutcome = NotFound().bad, trackUpdate = trackUpdate)
-
-      val response = putMultiform(path, body = requestBody)
-      response.statusCode === 404
-    }
-
-    "file upload" >> {
-      trait WithArtworkData {
-        val bytes = Files.readAllBytes(
-          Paths.get(this.getClass.getClassLoader.getResource("test-image.jpg").toURI)
-        )
-
-        val file =
-          FileElement("track[artwork_data]", Buf.ByteArray.Owned(bytes), Some("image/jpeg"), Some("test-image.jpg"))
-      }
-
-      "can upload artwork" in new SuccessContext with WithArtworkData {
-        val path = s"/tracks/${mockTrackRepresentation.track.urn.identifier}"
-
-        when(
-          trackUpdateService
-            .updateTrack(
-              anyObject[Option[TrackArtworkUpdateRequest]],
-              ===(None),
-              ===(None),
-              ===(mockTrackRepresentation.track.urn),
-              ===(session)
-            )
-        ).thenReturn(
-          Future.value(Good(mockTrackRepresentation))
-        )
-
-        val response = putMultiform(
-          path,
-          maybeFile = Some(file)
-        )
-
-        response.statusCode === 200
-        response.contentString === Json.stringify(Json.toJson(mockTrackRepresentation))
-
-      }
-    }
-
-    "asset data upload" >> {
-      trait WithAssetData extends Context {
-        val requestBody = Seq[(String, String)](("track[uid]", "12345"), ("track[original_filename]", "audio.mp3"))
-        val parsedRequestBody = Map[String, String]("uid" -> "12345", "original_filename" -> "audio.mp3")
-
-        val assetUpdate = TrackAssetDataUpdateRequest.fromMultipartForm(parsedRequestBody)
-        val trackUpdate = TrackMetadataUpdateRequest.fromMultipartForm(parsedRequestBody)
-        val expectedResponse = mockTrackRepresentation
-      }
-
-      "can upload track asset data" in new WithAssetData {
-        val path = s"/tracks/${mockTrackRepresentation.track.urn.identifier}"
-
-        setupMockForTrackUpdateMetadata(
-          assetUpdate = assetUpdate,
-          trackUpdate = trackUpdate,
-          metadataUpdateOutcome = Good(expectedResponse)
-        )
-
-        val response = putMultiform(path, body = requestBody)
-        response.statusCode === 200
-        response.contentString === Json.stringify(Json.toJson((expectedResponse)))
+          val response = put(path, body = Json.stringify(singleTrack))
+          response.status ==== Status.InternalServerError
+          response.contentString ==== ""
+        }
       }
     }
   }

@@ -6,7 +6,7 @@ import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.publicApiStrangler.service.pagination.Pagination
 import com.soundcloud.publicApiStrangler.service.trackrepresentation.TracksCollection
-import com.soundcloud.publicApiStrangler.handler.representation.tracks.TrackRepresentationResponse.handleTracksCollectionResponseFromService
+import com.soundcloud.publicApiStrangler.handler.representation.tracks.TrackRepresentationResponse.handleResponseFromService
 import com.soundcloud.publicApiStrangler.service._
 import com.soundcloud.outcome._
 import com.soundcloud.publicApiStrangler.client.liebling.{LikeDeleted, LikeNotFound}
@@ -114,7 +114,7 @@ class LikesHandler(userAuthentication: UserAuthentication, likesService: LikesSe
     Try(Urn("soundcloud", "users", userId)) match {
       case Success(urn @ Urn(_, _, numericRegexp())) =>
         val trackRepresentation = fetchTrackRepresentation(urn)
-        handleTracksCollectionResponseFromService(trackRepresentation, hasLinkedPartitioning)
+        handleResponseFromService(trackRepresentation, hasLinkedPartitioning)
       case _ => Future.value(JsonResponseBuilder.notFound(notFoundErrorString))
     }
   }
