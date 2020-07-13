@@ -79,7 +79,8 @@ class Handlers(telemetry: Telemetry, clients: Clients, exceptionCollector: Excep
   val userTracksHandler = new UserTracksHandler(
     userAuthentication,
     userTracksService,
-    baseUrl
+    baseUrl,
+    telemetry
   )
 
   val userFollowHandler =

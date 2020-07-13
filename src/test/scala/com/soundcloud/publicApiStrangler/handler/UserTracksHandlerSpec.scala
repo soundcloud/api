@@ -37,7 +37,8 @@ class UserTracksHandlerSpec extends UnitSpecification with TrackRepresentationSp
     val handler = new UserTracksHandler(
       userAuthentication,
       userTracksService,
-      "https://api.soundcloud.com"
+      "https://api.soundcloud.com",
+      telemetry
     )
 
     override def routingDefinitions = Routing.forUserTracksHandler(handler)

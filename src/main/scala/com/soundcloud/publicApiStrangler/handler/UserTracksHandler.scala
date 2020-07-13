@@ -4,6 +4,7 @@ import java.net.URL
 
 import com.soundcloud.jvmkit.module.bff.session.UserAuthentication
 import com.soundcloud.jvmkit.module.http.server.{HandlerRequest, JsonResponseBuilder}
+import com.soundcloud.jvmkit.module.telemetry.Telemetry
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.outcome._
@@ -23,10 +24,17 @@ import play.api.libs.json.Json
 class UserTracksHandler(
     userAuthentication: UserAuthentication,
     userTracksService: UserTracksService,
-    baseUrl: String
+    baseUrl: String,
+    telemetry: Telemetry
 ) {
 
   private val numericRegexp = """\d+""".r
+  private val offsetParamsCounter = telemetry.counter(
+    "user_tracks_offset_params_total",
+    "Number of requested params for user tracks endpoints",
+    "client_id",
+    "linked_partitioning"
+  )
 
   def getTrackByUser(req: HandlerRequest): Future[Response] = {
     userAuthentication.withUserSession(req) { (session) =>
@@ -110,7 +118,10 @@ class UserTracksHandler(
         .userTracks(session, urn, pagination)
         .map(Good(_))
     }
-
+    if (req.params.keySet.contains("offset")) {
+      val clientAppId = Option(session.getAgent).map(_.identifier).getOrElse("unknown")
+      offsetParamsCounter.labels(clientAppId, hasLinkedPartitioning.toString).inc()
+    }
     Try(Urn("soundcloud", "users", userId)) match {
       case Return(urn @ Urn(_, _, numericRegexp())) =>
         val trackRepresentation = fetchTrackRepresentation(urn)
