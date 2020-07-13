@@ -8,7 +8,7 @@ import com.soundcloud.jvmkit.module.http.server.{HandlerRequest, JsonResponseBui
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.LoggedInUserSession
 import com.soundcloud.outcome._
-import com.soundcloud.publicApiStrangler.handler.support.UnhandledOutcomeException
+import com.soundcloud.publicApiStrangler.handler.support.error.UnhandledOutcomeException
 import com.soundcloud.publicApiStrangler.mapper.timeline._
 import com.soundcloud.publicApiStrangler.mapper.timeline.publicApi.ActivitiesWithOriginMapper
 import com.soundcloud.publicApiStrangler.mapper.timeline.representation.Timeline

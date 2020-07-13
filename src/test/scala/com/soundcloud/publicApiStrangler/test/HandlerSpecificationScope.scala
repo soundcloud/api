@@ -1,7 +1,7 @@
 package com.soundcloud.publicApiStrangler.test
 
 import com.soundcloud.jvmkit.module.http.server._
-import com.twitter.finagle.http.{Method, Request, Response}
+import com.twitter.finagle.http._
 import com.twitter.util.{Await, Future}
 import org.specs2.matcher.ThrownExpectations
 
@@ -36,6 +36,15 @@ trait HandlerSpecificationScope extends org.specs2.specification.Scope with Thro
       body: String = ""
   ): Response = execute(Method.Put, path, params, headers, body)
 
+  def putForm(
+      path: String,
+      params: Map[String, String] = Map.empty,
+      headers: Map[String, String] = Map.empty,
+      body: Seq[(String, String)] = Seq.empty,
+      isMultipart: Boolean = false,
+      maybeFile: Option[FileElement] = None
+  ): Response = executeForm(Method.Put, path, params, headers, body, isMultipart, maybeFile)
+
   def head(
       path: String,
       params: Map[String, String] = Map.empty,
@@ -53,6 +62,22 @@ trait HandlerSpecificationScope extends org.specs2.specification.Scope with Thro
     Await.result(router(createFinagleRequest(method, path, params, headers, body)))
   }
 
+  def executeForm(
+      method: Method,
+      path: String,
+      params: Map[String, String] = Map.empty,
+      headers: Map[String, String] = Map.empty,
+      body: Seq[(String, String)] = Seq.empty,
+      isMultipart: Boolean,
+      maybeFile: Option[FileElement]
+  ): Response = {
+    maybeFile match {
+      case Some(file) =>
+        Await.result(router(createMultipartFinagleRequestWithFile(method, path, params, headers, body, file)))
+      case _ => Await.result(router(createFinagleFormRequest(method, path, params, headers, body, isMultipart)))
+    }
+  }
+
   private def createFinagleRequest(
       method: Method,
       path: String,
@@ -67,6 +92,47 @@ trait HandlerSpecificationScope extends org.specs2.specification.Scope with Thro
     finagleRequest.setContentTypeJson()
     headers.foreach { case (key, value) => finagleRequest.headerMap.set(key, value) }
     finagleRequest
+  }
+
+  private def createFinagleFormRequest(
+      method: Method,
+      path: String,
+      params: Map[String, String],
+      headers: Map[String, String],
+      body: Seq[(String, String)],
+      isMultipart: Boolean
+  ) = {
+    val request =
+      RequestBuilder
+        .create()
+        .url(Request.queryString(s"http://api.test${path}", params))
+        .addFormElement(body: _*)
+        .addHeaders(headers)
+        .buildFormPost(multipart = isMultipart)
+
+    request.method = method
+    request
+  }
+
+  private def createMultipartFinagleRequestWithFile(
+      method: Method,
+      path: String,
+      params: Map[String, String],
+      headers: Map[String, String],
+      body: Seq[(String, String)],
+      file: FileElement
+  ) = {
+    val request =
+      RequestBuilder
+        .create()
+        .url(Request.queryString(s"http://api.test${path}", params))
+        .addFormElement(body: _*)
+        .addHeaders(headers)
+        .add(file)
+        .buildFormPost(multipart = true)
+
+    request.method = method
+    request
   }
 
   lazy val router: HandlerRouter = HandlerRouterBuilder

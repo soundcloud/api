@@ -13,7 +13,7 @@ import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.publicApiStrangler.client.followcounts.FollowCountsClient
 import com.soundcloud.publicApiStrangler.client.liebling.LieblingClient
 import com.soundcloud.publicApiStrangler.handler.SearchHandler._
-import com.soundcloud.publicApiStrangler.handler.representation.tracks.TrackRepresentationResponse.handleResponseFromService
+import com.soundcloud.publicApiStrangler.handler.representation.tracks.TrackRepresentationResponse.handleTracksCollectionResponseFromService
 import com.soundcloud.publicApiStrangler.mapper.search.{SearchDispatcherRequest, SearchMapper}
 import com.soundcloud.publicApiStrangler.service.SearchService
 import com.soundcloud.publicApiStrangler.service.trackrepresentation.{TrackPagination, TracksCollection}
@@ -88,7 +88,7 @@ class SearchHandler(
         .map(Good(_))
     }
     val trackRepresentation = fetchTracksRepresentation(req.params)
-    handleResponseFromService(trackRepresentation, hasLinkedPartitioning)
+    handleTracksCollectionResponseFromService(trackRepresentation, hasLinkedPartitioning)
 
   }
 

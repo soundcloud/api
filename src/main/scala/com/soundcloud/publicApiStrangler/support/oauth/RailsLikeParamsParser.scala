@@ -1,12 +1,15 @@
 package com.soundcloud.publicApiStrangler.support.oauth
 
+import java.io.File
+
 import com.soundcloud.jvmkit.module.http.server.HandlerRequest
-import com.twitter.finagle.http.exp.MultipartDecoder
+import com.twitter.finagle.http.exp.Multipart.{InMemoryFileUpload, OnDiskFileUpload}
+import com.twitter.finagle.http.exp.{Multipart, MultipartDecoder}
 import com.twitter.finagle.http.{MediaType, Request}
-import com.twitter.io.Buf
+import com.twitter.io.{Buf, Files}
 import play.api.libs.json._
 
-import scala.util.Try
+import scala.util.{Success, Try}
 
 class RailsLikeParamsParser {
   def parse(request: HandlerRequest): Option[Map[String, String]] = {
@@ -14,6 +17,13 @@ class RailsLikeParamsParser {
       requestParams <- Some(request.params)
       bodyParams <- parseRequestBody(request)
     } yield requestParams ++ bodyParams
+  }
+
+  def parseFilesFromRequest(request: HandlerRequest, fileName: String): Option[Array[Byte]] = {
+    request.mediaType match {
+      case Some(MediaType.MultipartForm) => parseMultipartBodyWithFiles(request, fileName)
+      case _ => None
+    }
   }
 
   private def parseRequestBody(request: Request): Option[Map[String, String]] = {
@@ -49,10 +59,35 @@ class RailsLikeParamsParser {
     }
   }
 
+  private def parseMultipartBodyWithFiles(request: Request, fileName: String): Option[Array[Byte]] = {
+    MultipartDecoder.decode(request) match {
+      case Some(Multipart(_, files)) =>
+        files.get(fileName) match {
+          case Some(fileUpload :: _) =>
+            fileUpload match {
+              case InMemoryFileUpload(content: Buf, _, _, _) =>
+                Some(Buf.ByteArray.Owned.extract(content))
+
+              case OnDiskFileUpload(content: File, _, _, _) => {
+                Some(Files.readBytes(file = content))
+              }
+            }
+          case _ => None
+
+        }
+      case _ => None
+    }
+  }
+
   private def parseMultipartBody(request: Request): Option[Map[String, String]] = {
-    Try(MultipartDecoder.decode(request).map(_.attributes))
-      .map(extractMultipartParams)
-      .toOption
+    Try(
+      MultipartDecoder
+        .decode(request)
+        .map(_.attributes)
+    ).map(extractMultipartParams) match {
+      case Success(params) if !params.isEmpty => Some(params)
+      case _ => None
+    }
   }
 
   private def extractMultipartParams(attributes: Option[Map[String, Seq[String]]]): Map[String, String] = {
