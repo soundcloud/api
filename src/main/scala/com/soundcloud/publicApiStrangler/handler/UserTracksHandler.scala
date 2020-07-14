@@ -119,8 +119,11 @@ class UserTracksHandler(
         .map(Good(_))
     }
     if (req.params.keySet.contains("offset")) {
-      val clientAppId = Option(session.getAgent).map(_.identifier).getOrElse("unknown")
-      offsetParamsCounter.labels(clientAppId, hasLinkedPartitioning.toString).inc()
+      val offset = Try(req.params.get("offset").map(_.toInt)).toOption.flatten.getOrElse(0)
+      if (offset > 0) {
+        val clientAppId = Option(session.getAgent).map(_.identifier).getOrElse("unknown")
+        offsetParamsCounter.labels(clientAppId, hasLinkedPartitioning.toString).inc()
+      }
     }
     Try(Urn("soundcloud", "users", userId)) match {
       case Return(urn @ Urn(_, _, numericRegexp())) =>
