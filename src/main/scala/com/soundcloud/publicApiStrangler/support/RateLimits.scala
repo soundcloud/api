@@ -1,7 +1,6 @@
 package com.soundcloud.publicApiStrangler.support
 
 import com.soundcloud.jvmkit.module.bff.ratelimiting.internal.core.RateLimitClassifier
-import com.soundcloud.jvmkit.module.bff.ratelimiting.internal.utilities.RegexExtensions._
 import com.soundcloud.jvmkit.module.http.server.HandlerRequest
 import com.soundcloud.publicApiStrangler.handler.SearchHandler._
 
@@ -19,7 +18,7 @@ object RateLimits {
   private val playsZKBucket = "plays"
 
   private def playRequests: RateLimitClassifier.rateLimitClassifier = {
-    case req: HandlerRequest if playsRegex =~ req.path => true
+    case req: HandlerRequest if playsRegex.findFirstMatchIn(req.path).isDefined => true
   }
 
   val playsRateLimiter = new RateLimitClassifier(playsZKBucket, playRequests)
