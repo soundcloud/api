@@ -78,7 +78,7 @@ class Clients(
       case (_, Throw(RetryableWriteException(_))) => true
     }
 
-    HttpClient(
+    HttpClient[String](
       HttpClientConfig.from(name, config),
       telemetry,
       retryOn = Some(writeExceptions)
@@ -154,7 +154,7 @@ class Clients(
   val timelineService = new TimelineService(timelineClient, tracksService)
 
   private val hocuspocusConfig = HttpClientConfig.from(ResourceName("hocuspocus"), config)
-  private val hocuspocusHttpClient = HttpClient(hocuspocusConfig, telemetry)
+  private val hocuspocusHttpClient = HttpClient[String](hocuspocusConfig, telemetry)
   private val hocuspocusTelemetry = ClientTelemetry.from(hocuspocusConfig, telemetry)
   val hocuspocusClient = new HocuspocusClientProtobuf(hocuspocusHttpClient.httpService, hocuspocusTelemetry)
 
@@ -178,7 +178,7 @@ class Clients(
   val playlistDeletionClient = new PlaylistDeletionClient(okidokiJsonClient)
 
   private val authorizationConfig = HttpClientConfig.from(ResourceName("oauth_authorization"), config)
-  private val authorizationHttpClient = HttpClient(authorizationConfig, telemetry)
+  private val authorizationHttpClient = HttpClient[String](authorizationConfig, telemetry)
   private val authorizationTelemetry = ClientTelemetry.from(authorizationConfig, telemetry)
   val authorizationClient = new AuthorizationClientProtobuf(authorizationHttpClient.httpService, authorizationTelemetry)
 }
