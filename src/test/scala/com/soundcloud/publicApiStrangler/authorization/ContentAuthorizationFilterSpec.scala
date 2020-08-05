@@ -2,7 +2,7 @@ package com.soundcloud.publicApiStrangler.authorization
 
 import java.nio.charset.StandardCharsets
 
-import com.soundcloud.jvmkit.module.http.server.{AlwaysMatchesPathMatcher, HandlerRequest, JsonResponseBuilder}
+import com.soundcloud.jvmkit.module.http.server.{HandlerRequest, JsonResponseBuilder}
 import com.soundcloud.publicApiStrangler.test.UnitSpecification
 import com.twitter.finagle.Service
 import com.twitter.finagle.http.{Request, Response}
@@ -10,7 +10,7 @@ import com.twitter.util.{Await, Future}
 
 class ContentAuthorizationFilterSpec extends UnitSpecification {
   trait Context extends Scope {
-    val someRequest = HandlerRequest(AlwaysMatchesPathMatcher, Request("/something")).request
+    val someRequest = Request("/something")
 
     val service = mock[Service[Request, Response]]
     val authorizeContent = mock[AuthorizeHttpResponse]
