@@ -22,4 +22,13 @@ object RateLimits {
   }
 
   val playsRateLimiter = new RateLimitClassifier(playsZKBucket, playRequests)
+
+  private val repostsRegex = """\/e1\/me\/(track|playlist)_reposts\/(.+)""".r
+  private val repostsBucket = "reposts"
+
+  private def repostRequests: RateLimitClassifier.rateLimitClassifier = {
+    case req: HandlerRequest if repostsRegex.findFirstMatchIn(req.path).isDefined => true
+  }
+
+  val repostsRateLimiter = new RateLimitClassifier(repostsBucket, repostRequests)
 }

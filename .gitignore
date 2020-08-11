@@ -21,3 +21,14 @@ production.overrides
 .oracle_jre_usage/
 config/production_api.sh
 config/production_apitrackupload.sh
+
+# metals plugin for vscode
+.bloop
+.metals
+metals.sbt
+
+# vscode
+.vscode
+
+# Local History for Visual Studio Code
+.history
