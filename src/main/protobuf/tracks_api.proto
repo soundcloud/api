@@ -1,0 +1,125 @@
+syntax = "proto3";
+
+package proto.soundcloud.tracks.api;
+
+option java_package = "proto.soundcloud.tracks.api";
+
+import "google/protobuf/wrappers.proto";
+import "common_session.proto";
+import "google/protobuf/timestamp.proto";
+
+service Tracks {
+    // This method is for getting visible tracks.
+    // Potential errors:
+    // Requests must be for less than 1000 tracks: InvalidArgument, "You requested too many tracks."
+    // Requests must contain valid URNs: InvalidArgument, "There were invalid URNS in your request."
+    // Requests must contain a valid UserSession with a Geo: InvalidArgument, "No valid UserSession or Geo was provided."
+    // Unknown errors will return an Internal error code
+    rpc GetVisibleTracks(GetVisibleTracksRequest) returns (GetVisibleTracksResponse) {};
+}
+
+message GetVisibleTracksRequest {
+    repeated TrackRequest track_requests = 1;
+    bool bypass_progressive_download_restriction = 2;
+    proto.soundcloud.common.session.UserSession user_session = 3; // You must provide a UserSession
+}
+
+message TrackRequest {
+    string urn = 1;
+    google.protobuf.StringValue secret_token = 2; // optional
+}
+
+
+message GetVisibleTracksResponse {
+    repeated Track tracks = 1;
+}
+
+message Track {
+    string urn = 1;
+    string user_urn = 2;
+    google.protobuf.StringValue uid = 3; // optional
+    string title = 4;
+    google.protobuf.Timestamp created_at = 5;
+    google.protobuf.Timestamp disabled_at = 6; // optional
+    google.protobuf.Timestamp last_modified = 7;
+    bool downloadable = 8;
+    int64 duration = 9;
+    bool commentable = 10;
+    google.protobuf.StringValue genre = 11; // optional
+    bool public = 12;
+    string permalink = 13;
+    google.protobuf.StringValue permalink_url = 14;
+    repeated string user_tags = 15;
+    google.protobuf.StringValue description = 16; // optional
+    google.protobuf.StringValue secret_token = 17; // optional
+    bool reveal_stats = 18;
+    google.protobuf.StringValue artwork = 19; // optional
+    google.protobuf.Timestamp published_at = 20; // optional
+    repeated string machine_tags = 21;
+    google.protobuf.BoolValue api_streamable = 22; // optional
+    bool streamable = 23;
+    bool reveal_comments = 24;
+    google.protobuf.StringValue label_name = 25; // optional
+    string license = 26;
+    google.protobuf.BoolValue embeddable = 27; // optional
+    google.protobuf.Int32Value release_year = 28; // optional
+    google.protobuf.Int32Value release_month = 29; // optional
+    google.protobuf.Int32Value release_day = 30; // optional
+    string embeddable_by = 31;
+    google.protobuf.Timestamp release_date = 32;  // optional
+    google.protobuf.StringValue purchase_url = 33; // optional
+    google.protobuf.StringValue purchase_title = 34; // optional
+    google.protobuf.StringValue supply_chain_status = 35; // optional
+    ContentAuthorization authorization = 36;
+    repeated Transcoding transcodings = 37;
+    repeated WaveformUrl waveform_urls = 38;
+    google.protobuf.DoubleValue bpm = 39; // deprecated, optional
+    google.protobuf.StringValue trackType = 40; // deprecated, optional
+    google.protobuf.StringValue release = 41; // deprecated, optional
+    google.protobuf.StringValue keySignature = 42; // deprecated, optional
+    google.protobuf.StringValue videoUrl = 43; // deprecated, optional
+    google.protobuf.Int64Value labelId = 44; // deprecated, optional
+}
+
+message ContentAuthorization {
+    string policy = 1;
+    string reason = 2;
+    repeated string restrictions = 3;
+    string monetization_model = 4;
+    google.protobuf.StringValue ruleset_uuid = 5;
+}
+
+message Transcoding {
+    enum Quality {
+        UNKNOWN = 0;
+        HIGH = 1;
+        STANDARD = 2;
+    }
+    string uuid = 1;
+    string preset = 2;
+    string mime_type = 3;
+    repeated string protocols = 4;
+    repeated google.protobuf.StringValue protocols_snippet = 5; // optional
+    Quality quality = 6;
+    int64 duration_ms = 7;
+    google.protobuf.Int64Value duration_snippet_ms = 8; // optional
+    google.protobuf.Int64Value file_size = 9; // optional
+    LoudnessNormalization loudness = 10; // optional
+}
+
+message LoudnessNormalization {
+    double inputI = 1;
+    double inputTp = 2;
+    double inputLra = 3;
+    double inputThreshold = 4;
+    double targetI = 5;
+    double targetTp = 6;
+    double targetLra = 7;
+    double targetThreshold = 8;
+}
+
+message WaveformUrl {
+    string waveform_type = 1;
+    string json = 2;
+    string png = 3;
+}

@@ -18,8 +18,8 @@ import com.soundcloud.publicApiStrangler.client.media.{
   TrackAccessRecorderClient,
   WaveformUrlsGenerator
 }
-
 import com.soundcloud.hocuspocus.HocuspocusClientProtobuf
+import com.soundcloud.jvmkit.module.twirp.TwirpClient
 import com.soundcloud.publicApiStrangler.client.mothership.{OkidokiClient, RichOkidokiClient}
 import com.soundcloud.publicApiStrangler.client.playlists.{PlaylistDeletionClient, PlaylistsClient}
 import com.soundcloud.publicApiStrangler.client.pubmese.PubmeseClient
@@ -49,6 +49,8 @@ import com.twitter.util.{Future, Throw, Try}
 import proto.soundcloud.authenticator.oauth.AuthorizationClientProtobuf
 import com.soundcloud.jvmkit.module.twirp.filters.ClientTelemetry
 import com.soundcloud.publicApiStrangler.client.search.SearchClient
+import com.soundcloud.publicApiStrangler.service.tracks.VisibleTrackMapper
+import proto.soundcloud.tracks.api.TracksClientProtobuf
 
 class Clients(
     config: AppConfig,
@@ -119,6 +121,12 @@ class Clients(
   )
 
   val tracksClient = new TracksClient(jsonClient("tracks"))
+  val tracksTwirpClient = TwirpClient(
+    ResourceName("tracks"),
+    config,
+    telemetry,
+    new TracksClientProtobuf(_, _)
+  )
 
   val mediaServiceClient = new MediaServiceClient(jsonClient("media_service"))
 
@@ -139,7 +147,15 @@ class Clients(
 
   val userQuotaClient = new UserQuotaClient(okidokiJsonClient)
 
-  val trackVisibilityService = new TrackVisibilityService(tracksClient, whitelistedCients)
+  val trackVisibilityService =
+    new TrackVisibilityService(
+      tracksClient,
+      tracksTwirpClient,
+      new VisibleTrackMapper,
+      telemetry,
+      exceptionCollector,
+      whitelistedCients
+    )
 
   val tracksService = new TrackRepresentationsService(
     trackVisibilityService,

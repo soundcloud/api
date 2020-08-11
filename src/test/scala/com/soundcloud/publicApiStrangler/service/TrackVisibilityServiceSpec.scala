@@ -1,15 +1,19 @@
 package com.soundcloud.publicApiStrangler.service
 
 import com.soundcloud.api.partners.clients.tracks.Transcoding
+import com.soundcloud.jvmkit.module.telemetry.Telemetry
+import com.soundcloud.jvmkit.module.telemetry.exceptions.ExceptionCollector
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSessionBuilder
 import com.soundcloud.publicApiStrangler.authorization.policies._
 import com.soundcloud.publicApiStrangler.client.tracks.{TrackRequest, TracksClient, VisibleTrackBuilder}
+import com.soundcloud.publicApiStrangler.service.tracks.VisibleTrackMapper
 import com.twitter.util.{Await, Future}
 import org.joda.time.LocalDateTime
 import org.specs2.matcher.Scope
 import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
+import proto.soundcloud.tracks.api.{GetVisibleTracksRequest, GetVisibleTracksResponse, TracksService}
 
 class TrackVisibilityServiceSpec extends Specification with Mockito {
 
@@ -21,7 +25,16 @@ class TrackVisibilityServiceSpec extends Specification with Mockito {
       (new UserSessionBuilder).setUser(userUrn).setAgent(clientApplication).build()
     val trackUrn = Urn("soundcloud", "tracks", "432")
     val tracksClient = mock[TracksClient]
-    lazy val service = new TrackVisibilityService(tracksClient, whitelistedClients)
+    val tracksTwinagleClient = mock[TracksService]
+    val telemetry = Telemetry.createIsolatedInstance
+    lazy val service = new TrackVisibilityService(
+      tracksClient,
+      tracksTwinagleClient,
+      new VisibleTrackMapper,
+      telemetry,
+      new ExceptionCollector(telemetry),
+      whitelistedClients
+    )
     val trackRequest = TrackRequest(trackUrn, None)
     val transcodings = List(
       Transcoding("mp3-uuid", "preset", "audio/mpeg", List("progressive"), None, "sq", 180000, None)
@@ -35,6 +48,9 @@ class TrackVisibilityServiceSpec extends Specification with Mockito {
         .build
 
     tracksClient.visibleTracks(session, List(trackRequest)) returns Future.value(List(visibleTrack))
+    tracksTwinagleClient.getVisibleTracks(anyObject[GetVisibleTracksRequest]) returns Future.value(
+      GetVisibleTracksResponse()
+    )
   }
 
   "#tracks" >> {
