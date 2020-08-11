@@ -12,6 +12,7 @@ import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
 import org.specs2.specification.Scope
 import play.api.libs.json.Json
+import com.soundcloud.outcome._
 
 class SearchClientSpec extends Specification with Mockito {
 
@@ -33,8 +34,8 @@ class SearchClientSpec extends Specification with Mockito {
         Headers.empty
       )
     ).thenReturn(Future.value(JsonResponseBuilder.ok(json)))
-    val result = Await.result(client.searchTracks(userSession, params))
-    result ==== expected
+    val result = Await.result(client.searchTracks(userSession, params).value)
+    result ==== expected.good
   }
 
 }

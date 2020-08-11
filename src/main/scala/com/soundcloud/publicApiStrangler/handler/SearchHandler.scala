@@ -85,8 +85,9 @@ class SearchHandler(
     def fetchTracksRepresentation(params: Map[String, String]): Future[Outcome[TracksCollection]] = {
       searchService
         .searchTracks(session, params, pagination)
-        .map(Good(_))
+        .value
     }
+
     val trackRepresentation = fetchTracksRepresentation(req.params)
     handleTracksCollectionResponseFromService(trackRepresentation, hasLinkedPartitioning)
 

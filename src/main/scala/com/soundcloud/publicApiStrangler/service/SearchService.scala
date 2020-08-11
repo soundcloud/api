@@ -2,6 +2,7 @@ package com.soundcloud.publicApiStrangler.service
 
 import com.soundcloud.jvmkit.module.http.client.{Params, StringParam}
 import com.soundcloud.jvmkit.module.util.session.UserSession
+import com.soundcloud.outcome._
 import com.soundcloud.publicApiStrangler.client.search.SearchClient
 import com.soundcloud.publicApiStrangler.client.tracks.TrackRequest
 import com.soundcloud.publicApiStrangler.service.trackrepresentation.{
@@ -9,7 +10,6 @@ import com.soundcloud.publicApiStrangler.service.trackrepresentation.{
   TrackRepresentationsService,
   TracksCollection
 }
-import com.twitter.util.Future
 
 class SearchService(
     trackRepresentationsService: TrackRepresentationsService,
@@ -20,17 +20,20 @@ class SearchService(
       session: UserSession,
       params: Map[String, String],
       trackPagination: TrackPagination
-  ): Future[TracksCollection] = {
+  ): OutcomeF[TracksCollection] = {
     val mapParams = mapTrackParams(params) ++ Params(
       "filter.content_tier" -> "FREE",
       "filter.content_country" -> session.getGeo.getCountryCode
     )
+
     for {
       searchPage <- searchClient.searchTracks(session, mapParams)
-      enrichedTracks <- trackRepresentationsService.tracks(
-        session,
-        searchPage.docs.map(doc => TrackRequest(doc.urn, None)).toList
-      )
+      enrichedTracks <- trackRepresentationsService
+        .tracks(
+          session,
+          searchPage.docs.map(doc => TrackRequest(doc.urn, None)).toList
+        )
+        .outcomeF
     } yield {
       TracksCollection(enrichedTracks, trackPagination.nextHref(searchPage.total_results.toInt))
     }

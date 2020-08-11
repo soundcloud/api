@@ -20,6 +20,8 @@ object TrackRepresentationResponse {
           JsonResponseBuilder.ok(
             TracksCollection.getRepresentation(tracksRepresentationResult, hasLinkedPartitioning)
           )
+
+        case Bad(NotValid(_)) => JsonResponseBuilder.badRequest(generateErrorBody("invalid request"))
         case Bad(NotFound(_)) => JsonResponseBuilder.notFound(generateErrorBody("not found"))
         case _ => throw new UnhandledOutcomeException
       }

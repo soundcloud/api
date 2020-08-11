@@ -12,6 +12,7 @@ import com.soundcloud.publicApiStrangler.service.trackrepresentation.{
 }
 import com.twitter.util.{Await, Future}
 import org.mockito.Mockito._
+import com.soundcloud.outcome._
 
 class SearchServiceSpec extends TrackRepresentationsSpecificationContext {
 
@@ -42,26 +43,22 @@ class SearchServiceSpec extends TrackRepresentationsSpecificationContext {
           anyObject
         )
       ).thenReturn(
-        Future.value(
-          SearchResponse(
-            query,
-            queryUrn,
-            0,
-            5,
-            1,
-            1000,
-            Seq(Doc(trackUrn)),
-            None
-          )
-        )
+        SearchResponse(
+          query,
+          queryUrn,
+          0,
+          5,
+          1,
+          1000,
+          Seq(Doc(trackUrn)),
+          None
+        ).goodF
       )
 
-      val tracksCollection = Await.result(searchService.searchTracks(session, Map("q" -> query), trackPagination))
+      val result = Await.result(searchService.searchTracks(session, Map("q" -> query), trackPagination).value)
 
-      tracksCollection match {
-        case rep =>
-          rep must beAnInstanceOf[TracksCollection]
-      }
+      val tracksCollection = result.getOrElse(TracksCollection(List.empty, None))
+      tracksCollection.tracks ==== List(trackRepresentationMock)
     }
   }
 }

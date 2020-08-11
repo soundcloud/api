@@ -5,9 +5,9 @@ import com.soundcloud.jvmkit.module.util.http.Headers
 import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.jvmkit.module.util.{Path, Urn}
 import com.twitter.finagle.http.Status
-import com.twitter.util.Future
 import play.api.libs.json.Json
 import com.soundcloud.jvmkit.module.json.play.UrnFormat._
+import com.soundcloud.outcome._
 
 case class Doc(urn: Urn)
 
@@ -44,7 +44,7 @@ object SearchResponse {
 
 class SearchClient(jsonClient: JsonClient) {
 
-  def searchTracks(session: UserSession, params: Params, headers: Headers = Headers.empty): Future[SearchResponse] =
+  def searchTracks(session: UserSession, params: Params, headers: Headers = Headers.empty): OutcomeF[SearchResponse] =
     search(session, Path() / "search" / "tracks", params, headers)
 
   def search(
@@ -52,12 +52,16 @@ class SearchClient(jsonClient: JsonClient) {
       path: Path,
       params: Params,
       headers: Headers = Headers.empty
-  ): Future[SearchResponse] = {
-    jsonClient.getWithSession(session, path, params, headers).map { response =>
-      response.status match {
-        case Status.Ok => Json.parse(response.contentString).as[SearchResponse]
-        case _ => throw new RuntimeException(response.toString)
+  ): OutcomeF[SearchResponse] = {
+    jsonClient
+      .getWithSession(session, path, params, headers)
+      .map { response =>
+        response.status match {
+          case Status.Ok => Json.parse(response.contentString).as[SearchResponse].good
+          case Status.BadRequest => NotValid("invalid request").bad
+          case _ => throw new RuntimeException(response.toString)
+        }
       }
-    }
+      .outcomeF
   }
 }

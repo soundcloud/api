@@ -11,6 +11,7 @@ import com.soundcloud.jvmkit.module.telemetry.Telemetry
 import com.soundcloud.jvmkit.module.telemetry.exceptions.ExceptionCollector
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSession
+import com.soundcloud.outcome._
 import com.soundcloud.publicApiStrangler.Routing
 import com.soundcloud.publicApiStrangler.client.followcounts.{FollowCounts, FollowCountsClient}
 import com.soundcloud.publicApiStrangler.client.liebling.LieblingClient
@@ -249,10 +250,25 @@ class SearchHandlerSpec extends UnitSpecification {
         .value(
           tracksCollection
         )
+        .outcomeF
       val response = get(path, Map("q" -> "foo", "offset" -> "10", "limit" -> "5", "linked_partitioning" -> "1"))
 
       response.statusCode ==== 200
       response.contentString ==== TracksCollection.getRepresentation(tracksCollection, true)
+    }
+
+    "returns a 400 when fetchTracksRepresentation returns invalid request" in new Context {
+      val queryString = "?q=foo&offset=10&limit=5&linked_partitioning=1"
+      searchService.searchTracks(
+        anonymousSession,
+        Map("q" -> "foo", "offset" -> "10", "limit" -> "5", "linked_partitioning" -> "1"),
+        paginationParams(path + queryString)
+      ) returns NotValid("not valid").badF
+
+      val response = get(path, Map("q" -> "foo", "offset" -> "10", "limit" -> "5", "linked_partitioning" -> "1"))
+
+      response.statusCode ==== 400
+      response.contentString ==== Json.stringify(Json.obj("error" -> "invalid request"))
     }
   }
 
