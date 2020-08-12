@@ -41,7 +41,10 @@ class TrackVisibilityService(
         )
         .map {
           case (jsonTracks, twinagleTracks) =>
-            compareAndReportTracks(jsonTracks, twinagleTracks)
+            compareAndReportTracks(
+              jsonTracks.map(_.copy(transcodings = List.empty)),
+              twinagleTracks.map(_.copy(transcodings = List.empty))
+            )
             jsonTracks
         }
 
