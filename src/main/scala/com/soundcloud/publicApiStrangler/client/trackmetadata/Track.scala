@@ -1,12 +1,11 @@
 package com.soundcloud.publicApiStrangler.client.trackmetadata
 
-import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.json.play.UrnFormat._
-import com.soundcloud.publicApiStrangler.support.HtmlSanitizer
-import org.joda.time.DateTime
-import play.api.libs.json._
-import play.api.libs.json.JodaReads._
+import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.publicApiStrangler.client.tracks.VisibleTrack
+import org.joda.time.DateTime
+import play.api.libs.json.JodaReads._
+import play.api.libs.json._
 
 case class Track(
     urn: Urn,
@@ -112,12 +111,12 @@ object Track {
           urn = (json \ "urn").as[Urn],
           user_urn = (json \ "user_urn").as[Urn],
           commentable = (json \ "commentable").as[Boolean],
-          description = (json \ "description").asOpt[String].map(HtmlSanitizer.sanitize(_)),
+          description = (json \ "description").asOpt[String],
           created_at = (json \ "created_at").as[DateTime],
           disabled_at = (json \ "disabled_at").asOpt[DateTime],
           downloadable = (json \ "downloadable").asOpt[Boolean],
           duration = (json \ "duration").as[Int],
-          genre = (json \ "genre").asOpt[String].map(HtmlSanitizer.sanitize(_)),
+          genre = (json \ "genre").asOpt[String],
           last_modified = (json \ "last_modified").as[DateTime],
           permalink = (json \ "permalink").as[String],
           permalink_url = (json \ "permalink_url").asOpt[String],
@@ -125,13 +124,13 @@ object Track {
           secret_token = (json \ "secret_token").as[String],
           user_tags = (json \ "user_tags").as[List[String]],
           machine_tags = (json \ "machine_tags").as[List[String]],
-          title = HtmlSanitizer.sanitize((json \ "title").as[String]),
+          title = (json \ "title").as[String],
           uid = (json \ "uid").asOpt[String],
           api_streamable = (json \ "api_streamable").asOpt[Boolean],
           streamable = (json \ "api_streamable").asOpt[Boolean],
           reveal_comments = (json \ "reveal_comments").as[Boolean],
           reveal_stats = (json \ "reveal_stats").as[Boolean],
-          label_name = (json \ "label_name").asOpt[String].map(HtmlSanitizer.sanitize(_)),
+          label_name = (json \ "label_name").asOpt[String],
           license = (json \ "license").as[String],
           embeddable = (json \ "embeddable").asOpt[Boolean],
           release_year = (json \ "release_year").asOpt[Int],
@@ -142,11 +141,11 @@ object Track {
           artwork = (json \ "artwork").as[Artwork],
           published_at = (json \ "published_at").asOpt[DateTime],
           purchase_url = (json \ "purchase_url").asOpt[String],
-          purchase_title = (json \ "purchase_title").asOpt[String].map(HtmlSanitizer.sanitize(_)),
+          purchase_title = (json \ "purchase_title").asOpt[String],
           bpm = (json \ "bpm").asOpt[Double],
-          track_type = (json \ "track_type").asOpt[String].map(HtmlSanitizer.sanitize(_)),
-          release = (json \ "release").asOpt[String].map(HtmlSanitizer.sanitize(_)),
-          key_signature = (json \ "key_signature").asOpt[String].map(HtmlSanitizer.sanitize(_)),
+          track_type = (json \ "track_type").asOpt[String],
+          release = (json \ "release").asOpt[String],
+          key_signature = (json \ "key_signature").asOpt[String],
           video_url = (json \ "video_url").asOpt[String],
           label_id = (json \ "label_id").asOpt[Long],
           supply_chain_status = (json \ "supply_chain_status").asOpt[String]

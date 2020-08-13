@@ -4,6 +4,7 @@ import com.soundcloud.publicApiStrangler.client.mothership.{DomainLocking, Track
 import com.soundcloud.publicApiStrangler.client.mothership.response.representation.User
 import com.soundcloud.publicApiStrangler.client.pubmese.Isrc
 import com.soundcloud.publicApiStrangler.client.trackmetadata.Track
+import com.soundcloud.publicApiStrangler.support.HtmlSanitizer
 import org.joda.time.format.DateTimeFormat
 import play.api.libs.json._
 
@@ -76,15 +77,15 @@ object TrackRepresentation {
         "streamable" -> rep.track.api_streamable,
         "embeddable_by" -> rep.track.embeddableBy,
         "purchase_url" -> rep.track.purchase_url,
-        "purchase_title" -> rep.track.purchase_title,
+        "purchase_title" -> rep.track.purchase_title.map(HtmlSanitizer.sanitize),
         "label_id" -> rep.track.label_id,
-        "genre" -> rep.track.genre,
-        "title" -> rep.track.title,
-        "description" -> rep.track.description,
-        "label_name" -> rep.track.label_name,
-        "release" -> rep.track.release,
-        "track_type" -> rep.track.track_type,
-        "key_signature" -> rep.track.key_signature,
+        "genre" -> rep.track.genre.map(HtmlSanitizer.sanitize),
+        "title" -> HtmlSanitizer.sanitize(rep.track.title),
+        "description" -> rep.track.description.map(HtmlSanitizer.sanitize),
+        "label_name" -> rep.track.label_name.map(HtmlSanitizer.sanitize),
+        "release" -> rep.track.release.map(HtmlSanitizer.sanitize),
+        "track_type" -> rep.track.track_type.map(HtmlSanitizer.sanitize),
+        "key_signature" -> rep.track.key_signature.map(HtmlSanitizer.sanitize),
         "isrc" -> rep.isrc.map(_.toString),
         "video_url" -> rep.track.video_url,
         "bpm" -> rep.track.bpm.map(roundBpm(_)),

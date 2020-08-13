@@ -5,7 +5,6 @@ import com.soundcloud.jvmkit.module.json.play.UrnFormat._
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.publicApiStrangler.authorization.policies._
 import com.soundcloud.publicApiStrangler.client.trackmetadata.{Artwork, EmbeddingPermission}
-import com.soundcloud.publicApiStrangler.support.HtmlSanitizer
 import org.joda.time.LocalDateTime
 import play.api.libs.json._
 
@@ -71,19 +70,19 @@ object VisibleTrack {
           (json \ "urn").as[Urn],
           (json \ "userUrn").as[Urn],
           (json \ "uid").asOpt[String],
-          HtmlSanitizer.sanitize((json \ "title").as[String]),
+          (json \ "title").as[String],
           (json \ "createdAt").as[LocalDateTime],
           (json \ "disabledAt").asOpt[LocalDateTime],
           (json \ "lastModified").as[LocalDateTime],
           (json \ "downloadable").as[Boolean],
           (json \ "duration").as[Int],
           (json \ "commentable").as[Boolean],
-          (json \ "genre").asOpt[String].map(HtmlSanitizer.sanitize),
+          (json \ "genre").asOpt[String],
           (json \ "public").as[Boolean],
           (json \ "permalink").as[String],
           (json \ "permalinkUrl").asOpt[String],
           (json \ "userTags").as[List[String]],
-          (json \ "description").asOpt[String].map(HtmlSanitizer.sanitize),
+          (json \ "description").asOpt[String],
           (json \ "secretToken").asOpt[String],
           (json \ "revealStats").as[Boolean],
           (json \ "artwork").as[Artwork],
@@ -92,7 +91,7 @@ object VisibleTrack {
           (json \ "streamable").as[Boolean],
           (json \ "apiStreamable").asOpt[Boolean],
           (json \ "revealComments").as[Boolean],
-          (json \ "labelName").asOpt[String].map(HtmlSanitizer.sanitize),
+          (json \ "labelName").asOpt[String],
           (json \ "license").as[String],
           (json \ "embeddable").asOpt[Boolean],
           (json \ "releaseYear").asOpt[Int],
@@ -101,7 +100,7 @@ object VisibleTrack {
           (json \ "embeddableBy").as[EmbeddingPermission],
           (json \ "releaseDate").asOpt[LocalDateTime],
           (json \ "purchaseUrl").asOpt[String],
-          (json \ "purchaseTitle").asOpt[String].map(HtmlSanitizer.sanitize),
+          (json \ "purchaseTitle").asOpt[String],
           new ContentAuthorization(
             (json \ "urn").as[Urn],
             ContentPolicy.from((json \ "authorization" \ "policy").as[String]),
@@ -113,9 +112,9 @@ object VisibleTrack {
           (json \ "supplyChainStatus").asOpt[String],
           (json \ "waveformUrls").as[List[WaveformUrl]],
           (json \ "bpm").asOpt[Double],
-          (json \ "trackType").asOpt[String].map(HtmlSanitizer.sanitize),
-          (json \ "release").asOpt[String].map(HtmlSanitizer.sanitize),
-          (json \ "keySignature").asOpt[String].map(HtmlSanitizer.sanitize),
+          (json \ "trackType").asOpt[String],
+          (json \ "release").asOpt[String],
+          (json \ "keySignature").asOpt[String],
           (json \ "videoUrl").asOpt[String],
           (json \ "labelId").asOpt[Long]
         )

@@ -84,29 +84,6 @@ class TrackMetadataClientSpec extends UnitSpecification {
       }
     }
 
-    "track with rogue attributes" >> {
-      trait RogueTrack extends TrackContext {
-        when(service.getWithSession(anonymousSession, path, Params.empty, Headers.empty))
-          .thenReturn(Future(jsonResponse(Status.Ok, trackmetadataClientTracks_rogue)))
-      }
-
-      "sanitize attributes" in new RogueTrack {
-        val response = Await.result(trackmetadataClient.track(anonymousSession, urn))
-
-        response must beSome[Track]
-        val track = response.get
-
-        track.description ==== Some("alltime classic")
-        track.title ==== "<p> Foo Bar!! </p>"
-        track.genre ==== Some("Dance <3")
-        track.purchase_title ==== Some("So & So")
-        track.label_name ==== Some("Someone@somewhere.com")
-        track.track_type ==== Some("something sane")
-        track.release ==== Some("<li> Release </li>")
-        track.key_signature ==== Some("011ACFDVKFJ011ACFDVKFJ")
-      }
-    }
-
     "track where nullable boolean fields are null" >> {
       trait NulledBooleansTrack extends TrackContext {
         when(service.getWithSession(anonymousSession, path, Params.empty, Headers.empty))

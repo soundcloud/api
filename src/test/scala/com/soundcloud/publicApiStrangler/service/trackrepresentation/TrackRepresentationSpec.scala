@@ -923,5 +923,28 @@ class TrackRepresentationSpec extends UnitSpecification {
       val trackJson = Json.toJson(trackRep)
       trackJson \ "user" \ "avatar_url" ==== JsDefined(JsString("https://example.com/img.png"))
     }
+
+    "sanitizes string values" in new Context {
+      val track = defaultTrack.copy(
+        purchase_title = Some("<script></script>bla"),
+        genre = Some("<script></script>bla"),
+        title = "<script></script>bla",
+        description = Some("<script></script>bla"),
+        label_name = Some("<script></script>bla"),
+        release = Some("<script></script>bla"),
+        track_type = Some("<script></script>bla"),
+        key_signature = Some("<script></script>bla")
+      )
+      val trackRep = createTrackRepresentation(track = track)
+      val trackJson = Json.toJson(trackRep)
+      trackJson \ "purchase_title" ==== JsDefined(JsString("bla"))
+      trackJson \ "genre" ==== JsDefined(JsString("bla"))
+      trackJson \ "title" ==== JsDefined(JsString("bla"))
+      trackJson \ "description" ==== JsDefined(JsString("bla"))
+      trackJson \ "label_name" ==== JsDefined(JsString("bla"))
+      trackJson \ "release" ==== JsDefined(JsString("bla"))
+      trackJson \ "track_type" ==== JsDefined(JsString("bla"))
+      trackJson \ "key_signature" ==== JsDefined(JsString("bla"))
+    }
   }
 }
