@@ -149,11 +149,8 @@ class Clients(
 
   val trackVisibilityService =
     new TrackVisibilityService(
-      tracksClient,
       tracksTwirpClient,
       new VisibleTrackMapper,
-      telemetry,
-      exceptionCollector,
       whitelistedCients
     )
 

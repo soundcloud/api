@@ -1,19 +1,22 @@
 package com.soundcloud.publicApiStrangler.service
 
 import com.soundcloud.api.partners.clients.tracks.Transcoding
-import com.soundcloud.jvmkit.module.telemetry.Telemetry
-import com.soundcloud.jvmkit.module.telemetry.exceptions.ExceptionCollector
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSessionBuilder
 import com.soundcloud.publicApiStrangler.authorization.policies._
-import com.soundcloud.publicApiStrangler.client.tracks.{TrackRequest, TracksClient, VisibleTrackBuilder}
+import com.soundcloud.publicApiStrangler.client.tracks.{TrackRequest, VisibleTrackBuilder}
 import com.soundcloud.publicApiStrangler.service.tracks.VisibleTrackMapper
 import com.twitter.util.{Await, Future}
 import org.joda.time.LocalDateTime
 import org.specs2.matcher.Scope
 import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
-import proto.soundcloud.tracks.api.{GetVisibleTracksRequest, GetVisibleTracksResponse, TracksService}
+import proto.soundcloud.tracks.api.{
+  GetVisibleTracksRequest,
+  GetVisibleTracksResponse,
+  TracksService,
+  Track => ProtoTrack
+}
 
 class TrackVisibilityServiceSpec extends Specification with Mockito {
 
@@ -24,15 +27,11 @@ class TrackVisibilityServiceSpec extends Specification with Mockito {
     lazy val session =
       (new UserSessionBuilder).setUser(userUrn).setAgent(clientApplication).build()
     val trackUrn = Urn("soundcloud", "tracks", "432")
-    val tracksClient = mock[TracksClient]
     val tracksTwinagleClient = mock[TracksService]
-    val telemetry = Telemetry.createIsolatedInstance
+    val mapper = smartMock[VisibleTrackMapper]
     lazy val service = new TrackVisibilityService(
-      tracksClient,
       tracksTwinagleClient,
-      new VisibleTrackMapper,
-      telemetry,
-      new ExceptionCollector(telemetry),
+      mapper,
       whitelistedClients
     )
     val trackRequest = TrackRequest(trackUrn, None)
@@ -47,10 +46,12 @@ class TrackVisibilityServiceSpec extends Specification with Mockito {
         .setTranscodings(transcodings)
         .build
 
-    tracksClient.visibleTracks(session, List(trackRequest)) returns Future.value(List(visibleTrack))
+    val protoTrack = ProtoTrack()
+
     tracksTwinagleClient.getVisibleTracks(anyObject[GetVisibleTracksRequest]) returns Future.value(
-      GetVisibleTracksResponse()
+      GetVisibleTracksResponse(tracks = Seq(protoTrack))
     )
+    mapper.apply(protoTrack) returns visibleTrack
   }
 
   "#tracks" >> {
