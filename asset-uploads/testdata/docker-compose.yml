@@ -4,7 +4,7 @@ services:
   asset_uploads:
     image: docker.dev.s-cloud.net/public-api-strangler-asset-uploads:$TAG
     depends_on:
-      - moshimoshi
+      - media_service
       - public_api_strangler
     command: ./api --config=api-test
     environment:
@@ -16,13 +16,6 @@ services:
       - ../testdata:/srv/test:ro
     working_dir: /srv/test
     command: go run media_service.go -listenAddr=:80
-
-  moshimoshi:
-    image: docker.dev.s-cloud.net/go-1:latest
-    volumes:
-      - ../testdata:/srv/test:ro
-    working_dir: /srv/test
-    command: go run moshimoshi_service.go -listenAddr=:80
 
   public_api_strangler:
     image: docker.dev.s-cloud.net/go-1:latest

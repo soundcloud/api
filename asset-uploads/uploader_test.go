@@ -30,8 +30,7 @@ func TestUploaderContentDisposition(t *testing.T) {
 		t.Run(test.filename, func(t *testing.T) {
 			var got *s3manager.UploadInput
 			up := uploader{
-				moshimoshi:   fakeMoshimoshiClient{uid: "uid"},
-				mediaService: fakeMediaServiceClient{},
+				mediaService: fakeMediaServiceClient{uid: "uid"},
 				s3Bucket:     "bucket",
 				s3Uploader: fakeS3{
 					uploadFn: func(in *s3manager.UploadInput) (*s3manager.UploadOutput, error) {

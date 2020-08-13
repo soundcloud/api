@@ -12,46 +12,46 @@ const (
 	clientSystemName = "public-api-strangler-assets"
 )
 
-type moshimoshiClientAPI interface {
-	createTrackUID() (string, error)
-}
-
-type moshimoshiClient struct {
-	client *http.Client
-	host   string
-}
-
-func (u *moshimoshiClient) createTrackUID() (string, error) {
-	url := fmt.Sprintf("http://%s/track_uids?access_token=%s", u.host, clientSystemName)
-
-	req, err := u.client.Post(url, jsonContentType, nil)
-	if err != nil {
-		return "", err
-	}
-	defer req.Body.Close()
-
-	if req.StatusCode != http.StatusCreated {
-		return "", fmt.Errorf("Failed to create track UID: %d", req.StatusCode)
-	}
-
-	res := &struct {
-		UID string `json:"uid"`
-	}{}
-
-	if err := json.NewDecoder(req.Body).Decode(res); err != nil {
-		return "", err
-	}
-
-	return res.UID, nil
-}
-
 type mediaServiceClientAPI interface {
+	createTrackUID() (string, error)
 	createTranscoding(string) error
 }
 
 type mediaServiceClient struct {
 	client *http.Client
 	host   string
+}
+
+func (u *mediaServiceClient) createTrackUID() (string, error) {
+	url := fmt.Sprintf("http://%s/uid", u.host)
+
+	req, err := http.NewRequest("POST", url, nil)
+	if err != nil {
+		return "", err
+	}
+
+	req.Header.Set("Content-Type", jsonContentType)
+	req.Header.Set("Sc-System", clientSystemName)
+
+	resp, err := u.client.Do(req)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusCreated {
+		return "", fmt.Errorf("Failed to create track upload UID: %d", resp.StatusCode)
+	}
+
+	res := &struct {
+		UID string `json:"uid"`
+	}{}
+
+	if err := json.NewDecoder(resp.Body).Decode(res); err != nil {
+		return "", err
+	}
+
+	return res.UID, nil
 }
 
 type transcodingRequest struct {

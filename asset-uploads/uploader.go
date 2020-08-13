@@ -17,10 +17,9 @@ type uploaderAPI interface {
 }
 
 type uploader struct {
-	moshimoshi   moshimoshiClientAPI
-	mediaService mediaServiceClientAPI
-	s3Bucket     string
-	s3Uploader   s3manageriface.UploaderAPI
+	mediaService            mediaServiceClientAPI
+	s3Bucket                string
+	s3Uploader              s3manageriface.UploaderAPI
 }
 
 type uploadTrackRequest struct {
@@ -35,7 +34,7 @@ type uploadTrackResponse struct {
 }
 
 func (u uploader) uploadTrack(req *uploadTrackRequest) (*uploadTrackResponse, error) {
-	uid, err := u.moshimoshi.createTrackUID()
+	uid, err := u.mediaService.createTrackUID()
 	if err != nil {
 		return nil, err
 	}

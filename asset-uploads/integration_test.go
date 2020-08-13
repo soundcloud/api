@@ -23,23 +23,18 @@ func (f fakeS3Manager) Upload(i *s3manager.UploadInput, opts ...func(*s3manager.
 	return &s3manager.UploadOutput{}, nil
 }
 
-type fakeMoshimoshiClient struct {
-	moshimoshiClientAPI
+type fakeMediaServiceClient struct {
+	mediaServiceClientAPI
 	uid string
 }
 
-func (f fakeMoshimoshiClient) createTrackUID() (string, error) { return f.uid, nil }
-
-type fakeMediaServiceClient struct {
-	mediaServiceClientAPI
-}
+func (f fakeMediaServiceClient) createTrackUID() (string, error) { return f.uid, nil }
 
 func (f fakeMediaServiceClient) createTranscoding(string) error { return nil }
 
 func TestControllerServiceS3Integration(t *testing.T) {
 	uploader := &uploader{
-		moshimoshi:   &fakeMoshimoshiClient{uid: "testUid"},
-		mediaService: &fakeMediaServiceClient{},
+		mediaService: &fakeMediaServiceClient{uid: "testUid"},
 		s3Bucket:     "test-bucket",
 		s3Uploader:   &fakeS3Manager{},
 	}

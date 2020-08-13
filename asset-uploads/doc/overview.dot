@@ -15,8 +15,14 @@ digraph overview {
     label="Mothership";
     rank=same;
 
-    ms_moshimoshi [label="moshimoshi"];
     ms_public_api [label="Public API"];
+  }
+
+  subgraph cluster_media_service {
+    label="Media-service";
+    rank=same;
+
+    media_service_coordinator [label="coordinator"];
   }
 
   subgraph cluster_pas {
@@ -33,9 +39,9 @@ digraph overview {
 
   // Specific flow for POST/PUT + multipart/form-data requests.
   ampelmann -> pas_asset_uploads     [style="dotted", label="route multipart/form-data request"];
-  pas_asset_uploads -> ms_moshimoshi [style="dotted", label="allocate track UID (1)"];
+  pas_asset_uploads -> media_service_coordinator [style="dotted", label="allocate track UID (1)"];
   pas_asset_uploads -> s3            [style="dotted", label="upload track (2)"];
   pas_asset_uploads -> pas_api       [style="dotted", label="forward UID S3 reference (3)"];
-  pas_asset_uploads -> ms_moshimoshi [style="dotted", label="trigger transcoding (4)"]
+  pas_asset_uploads -> media_service_coordinator [style="dotted", label="trigger transcoding (4)"]
 
 }

@@ -28,7 +28,6 @@ func main() {
 		addr      = flag.String("addr", ":80", "Listen address")
 		adminAddr = flag.String("admin-addr", ":5000", "Listen address admin server")
 
-		moshiAddr        = flag.String("moshimoshi-addr", os.Getenv("MOSHIMOSHI_ADDRESS"), "MoshiMoshi service address")
 		mediaServiceAddr = flag.String("media-service-addr", os.Getenv("MEDIA_SERVICE_ADDRESS"), "media service address")
 
 		stranglerAddr = flag.String("strangler-addr", os.Getenv("PUBLIC_API_STRANGLER_ADDRESS"), "Public API strangler service address")
@@ -64,19 +63,6 @@ func main() {
 		),
 	)
 
-	moshicli := &http.Client{
-		Transport: instrumenthttp.Tripperware(
-			"MOSHIMOSHI",
-			instrumenthttp.TripperwareOpts{},
-			dnssrv.DefaultTransport,
-		),
-	}
-
-	moshi := &moshimoshiClient{
-		client: moshicli,
-		host:   *moshiAddr,
-	}
-
 	mediacli := &http.Client{
 		Transport: instrumenthttp.Tripperware(
 			"MEDIA_SERVICE",
@@ -92,7 +78,6 @@ func main() {
 
 	service := &service{
 		upload: &uploader{
-			moshimoshi:   moshi,
 			mediaService: mediaService,
 			s3Uploader:   s3manager.NewUploaderWithClient(s3),
 			s3Bucket:     *s3Bucket,
