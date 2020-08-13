@@ -34,8 +34,9 @@ class SearchServiceSpec extends TrackRepresentationsSpecificationContext {
       val query = "foo"
       val queryUrn = Urn("soundcloud", "search", "foo")
 
-      when(trackRepresentationsService.tracks(session, List(TrackRequest(trackRepresentationMock.track.urn, None))))
-        .thenReturn(Future.value(List(trackRepresentationMock)))
+      when(
+        trackRepresentationsService.tracks(session, List(TrackRequest(trackRepresentationMock.visibleTrack.urn, None)))
+      ).thenReturn(Future.value(List(trackRepresentationMock)))
       when(
         searchClient.searchTracks(
           ===(session),

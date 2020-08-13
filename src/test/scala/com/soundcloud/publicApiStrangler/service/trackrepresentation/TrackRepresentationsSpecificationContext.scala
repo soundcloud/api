@@ -8,8 +8,7 @@ import com.soundcloud.publicApiStrangler.client.mothership.response.representati
 import com.soundcloud.publicApiStrangler.client.mothership.{DomainLocking, TrackAudioMetadata}
 import com.soundcloud.publicApiStrangler.client.pubmese.Isrc
 import com.soundcloud.publicApiStrangler.client.stitch.StitchCounts
-import com.soundcloud.publicApiStrangler.client.trackmetadata.{Artwork, EmbeddingPermission, Track}
-import com.soundcloud.publicApiStrangler.client.tracks.{TrackRequest, VisibleTrack}
+import com.soundcloud.publicApiStrangler.client.tracks.{Artwork, EmbeddingPermission, TrackRequest, VisibleTrack}
 import com.soundcloud.publicApiStrangler.test.UnitSpecification
 import org.joda.time.LocalDateTime
 
@@ -175,7 +174,7 @@ trait TrackRepresentationsSpecificationContext extends UnitSpecification {
     def createTrackRepresentation: TrackRepresentation =
       trackRepresentationBuilder.build(
         sessionUser = session.user,
-        track = Track.fromVisibleTrack(trackvisibilityTrack()),
+        visibleTrack = trackvisibilityTrack(),
         user = trackOwner,
         isrc = Some(Isrc("US-S1Z-99-00001")),
         counts = StitchCounts(111, 222, 333, 444, 555),

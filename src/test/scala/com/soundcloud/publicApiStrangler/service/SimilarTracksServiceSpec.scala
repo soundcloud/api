@@ -6,7 +6,6 @@ import com.soundcloud.api.partners.clients.tracks.Transcoding
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.publicApiStrangler.client.SystemPlaylistsClient
 import com.soundcloud.publicApiStrangler.client.mothership.response.representation.User
-import com.soundcloud.publicApiStrangler.client.trackmetadata.Track
 import com.soundcloud.publicApiStrangler.client.tracks.{TrackRequest, VisibleTrackBuilder}
 import com.soundcloud.publicApiStrangler.mapper.similarsounds.{SimilarSounds, SimilarSoundsMeta}
 import com.soundcloud.publicApiStrangler.service.trackrepresentation.{
@@ -15,8 +14,8 @@ import com.soundcloud.publicApiStrangler.service.trackrepresentation.{
   TrackRepresentationsService,
   TracksCollection
 }
-import com.twitter.util.{Await, Future}
 import com.soundcloud.publicApiStrangler.test.UnitSpecification
+import com.twitter.util.{Await, Future}
 import org.mockito.Mockito.when
 
 class SimilarTracksServiceSpec extends UnitSpecification {
@@ -72,7 +71,7 @@ class SimilarTracksServiceSpec extends UnitSpecification {
         .build
 
     val trackRepresentationMock =
-      createTrackRepresentation(track = Track.fromVisibleTrack(visibleTrackMock), user = similarTrackOwnerUser)
+      createTrackRepresentation(visibleTrack = visibleTrackMock, user = similarTrackOwnerUser)
 
     val similarTracksService =
       new SimilarTracksService(trackRepresentationService, systemPlaylistsClient)

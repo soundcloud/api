@@ -2,7 +2,7 @@ package com.soundcloud.publicApiStrangler.service
 
 import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.publicApiStrangler.client.trackmetadata.TrackmetadataClient
-import com.soundcloud.publicApiStrangler.client.tracks.{TrackRequest}
+import com.soundcloud.publicApiStrangler.client.tracks.TrackRequest
 import com.soundcloud.publicApiStrangler.service.trackrepresentation._
 import com.twitter.util.{Await, Future}
 import org.mockito.Mockito.when
@@ -26,11 +26,12 @@ class UserTracksServiceSpec extends TrackRepresentationsSpecificationContext {
         track: TrackRepresentation,
         session: UserSession
     ) = {
-      when(trackRepresentationsService.tracks(session, List(TrackRequest(track.track.urn, None))))
+      when(trackRepresentationsService.tracks(session, List(TrackRequest(track.visibleTrack.urn, None))))
         .thenReturn(Future.value(List(track)))
-      when(trackmetadataClient.urnsByUser(session, trackOwnerUrn)).thenReturn(Future.value(List(track.track.urn)))
+      when(trackmetadataClient.urnsByUser(session, trackOwnerUrn))
+        .thenReturn(Future.value(List(track.visibleTrack.urn)))
       when(trackPagination.calculateFinalPage(List(track))).thenReturn(List(track))
-      when(trackPagination.calculateTrackUrnPage(List(track.track.urn))).thenReturn(Set(track.track.urn))
+      when(trackPagination.calculateTrackUrnPage(List(track.visibleTrack.urn))).thenReturn(Set(track.visibleTrack.urn))
     }
 
     def setUpMocksForExistingTrack(
@@ -38,7 +39,7 @@ class UserTracksServiceSpec extends TrackRepresentationsSpecificationContext {
         session: UserSession,
         secretToken: Option[String]
     ) = {
-      when(trackRepresentationsService.track(session, TrackRequest(track.track.urn, secretToken)))
+      when(trackRepresentationsService.track(session, TrackRequest(track.visibleTrack.urn, secretToken)))
         .thenReturn(Future.value(Some(track)))
     }
   }
@@ -61,7 +62,8 @@ class UserTracksServiceSpec extends TrackRepresentationsSpecificationContext {
 
         val trackRepresentation =
           Await.result(
-            userTracksService.userTrack(track.track.urn, session, track.user.urn.identifier, Some("secr3t-Token"))
+            userTracksService
+              .userTrack(track.visibleTrack.urn, session, track.user.urn.identifier, Some("secr3t-Token"))
           )
 
         trackRepresentation match {
@@ -72,11 +74,11 @@ class UserTracksServiceSpec extends TrackRepresentationsSpecificationContext {
       }
 
       "when data is not available" in new Context {
-        when(trackRepresentationsService.track(session, TrackRequest(track.track.urn, Some("secr3t-Token"))))
+        when(trackRepresentationsService.track(session, TrackRequest(track.visibleTrack.urn, Some("secr3t-Token"))))
           .thenReturn(Future.value(None))
 
         val trackRepresentation =
-          Await.result(userTracksService.userTrack(track.track.urn, session, "123", Some("secr3t-Token")))
+          Await.result(userTracksService.userTrack(track.visibleTrack.urn, session, "123", Some("secr3t-Token")))
 
         trackRepresentation.isEmpty
       }

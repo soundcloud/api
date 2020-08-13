@@ -40,27 +40,27 @@ class TrackUpdateServiceSpec extends UnitSpecification with TrackRepresentationS
 
     val mockTrackMetadataUpdateResult =
       TrackMetadataUpdateResult(
-        urn = mockTrackRepresentation.track.urn.toString,
-        public = mockTrackRepresentation.track.public,
-        api_streamable = mockTrackRepresentation.track.api_streamable,
-        commentable = mockTrackRepresentation.track.commentable,
+        urn = mockTrackRepresentation.visibleTrack.urn.toString,
+        public = mockTrackRepresentation.visibleTrack.public,
+        api_streamable = mockTrackRepresentation.visibleTrack.apiStreamable,
+        commentable = mockTrackRepresentation.visibleTrack.commentable,
         description = Some("changed"),
         title = "changed",
-        downloadable = mockTrackRepresentation.track.downloadable,
-        embeddable = mockTrackRepresentation.track.embeddable,
-        genre = mockTrackRepresentation.track.genre,
+        downloadable = Some(mockTrackRepresentation.visibleTrack.downloadable),
+        embeddable = mockTrackRepresentation.visibleTrack.embeddable,
+        genre = mockTrackRepresentation.visibleTrack.genre,
         geo_blockings = Some(mockTrackRepresentation.geoblockings.get.toList),
         isrc = Some(mockTrackRepresentation.isrc.get.toString),
-        label_name = mockTrackRepresentation.track.label_name,
-        license = mockTrackRepresentation.track.license,
-        permalink = mockTrackRepresentation.track.permalink,
-        purchase_title = mockTrackRepresentation.track.purchase_title,
-        purchase_url = mockTrackRepresentation.track.purchase_url,
-        release_day = mockTrackRepresentation.track.release_day,
-        release_month = mockTrackRepresentation.track.release_month,
-        reveal_comments = mockTrackRepresentation.track.reveal_comments,
-        reveal_stats = mockTrackRepresentation.track.reveal_stats,
-        tag_list = Some(mockTrackRepresentation.track.user_tags.mkString(","))
+        label_name = mockTrackRepresentation.visibleTrack.labelName,
+        license = mockTrackRepresentation.visibleTrack.license,
+        permalink = mockTrackRepresentation.visibleTrack.permalink,
+        purchase_title = mockTrackRepresentation.visibleTrack.purchaseTitle,
+        purchase_url = mockTrackRepresentation.visibleTrack.purchaseUrl,
+        release_day = mockTrackRepresentation.visibleTrack.releaseDay,
+        release_month = mockTrackRepresentation.visibleTrack.releaseMonth,
+        reveal_comments = mockTrackRepresentation.visibleTrack.revealComments,
+        reveal_stats = mockTrackRepresentation.visibleTrack.revealStats,
+        tag_list = Some(mockTrackRepresentation.visibleTrack.userTags.mkString(","))
       )
 
     def setupMocksForUpdateTrackMeta(
@@ -104,8 +104,8 @@ class TrackUpdateServiceSpec extends UnitSpecification with TrackRepresentationS
       val metadataUpdateParams = Map[String, String]("title" -> "changed", "description" -> "changed")
       val updateRequest = TrackMetadataUpdateRequest.fromForm(metadataUpdateParams)
 
-      val expectedResponse = mockTrackRepresentation.copy(track =
-        mockTrackRepresentation.track.copy(title = "changed", description = Some("changed"))
+      val expectedResponse = mockTrackRepresentation.copy(visibleTrack =
+        mockTrackRepresentation.visibleTrack.copy(title = "changed", description = Some("changed"))
       )
     }
 
@@ -116,13 +116,13 @@ class TrackUpdateServiceSpec extends UnitSpecification with TrackRepresentationS
 
     "Successfully updates metadata on valid request" in new SuccessContext {
       setupMocksForUpdateTrackMeta(
-        mockTrackRepresentation.track.urn,
+        mockTrackRepresentation.visibleTrack.urn,
         updateRequest,
         None,
         Good(mockTrackMetadataUpdateResult)
       )
 
-      setupMocksForTrackService(mockTrackRepresentation.track.urn, Some(mockTrackRepresentation))
+      setupMocksForTrackService(mockTrackRepresentation.visibleTrack.urn, Some(mockTrackRepresentation))
 
       val result = Await.result(
         trackUpdateService.updateTrack(
@@ -143,13 +143,13 @@ class TrackUpdateServiceSpec extends UnitSpecification with TrackRepresentationS
 
     "Returns nothing if update call fails" in new FailureContext {
       setupMocksForUpdateTrackMeta(
-        mockTrackRepresentation.track.urn,
+        mockTrackRepresentation.visibleTrack.urn,
         updateRequest,
         None,
         NotFound().bad
       )
 
-      setupMocksForTrackService(mockTrackRepresentation.track.urn, Some(mockTrackRepresentation))
+      setupMocksForTrackService(mockTrackRepresentation.visibleTrack.urn, Some(mockTrackRepresentation))
 
       val result = Await.result(
         trackUpdateService.updateTrack(
@@ -170,13 +170,13 @@ class TrackUpdateServiceSpec extends UnitSpecification with TrackRepresentationS
 
     "Returns nothing if track fetch call fails" in new FailureContext {
       setupMocksForUpdateTrackMeta(
-        mockTrackRepresentation.track.urn,
+        mockTrackRepresentation.visibleTrack.urn,
         updateRequest,
         None,
         Good(mockTrackMetadataUpdateResult)
       )
 
-      setupMocksForTrackService(mockTrackRepresentation.track.urn, None)
+      setupMocksForTrackService(mockTrackRepresentation.visibleTrack.urn, None)
 
       Await.result(
         trackUpdateService.updateTrack(None, None, updateRequest, trackUrn, ownerSession)
@@ -194,12 +194,12 @@ class TrackUpdateServiceSpec extends UnitSpecification with TrackRepresentationS
       )
 
       val artworkUpdateOnlyUpdateResponse = mockTrackMetadataUpdateResult.copy(
-        description = mockTrackRepresentation.track.description,
-        title = mockTrackRepresentation.track.title
+        description = mockTrackRepresentation.visibleTrack.description,
+        title = mockTrackRepresentation.visibleTrack.title
       )
 
-      val expectedResponse = mockTrackRepresentation.copy(track =
-        mockTrackRepresentation.track.copy(title = "changed", description = Some("changed"))
+      val expectedResponse = mockTrackRepresentation.copy(visibleTrack =
+        mockTrackRepresentation.visibleTrack.copy(title = "changed", description = Some("changed"))
       )
     }
 
@@ -209,8 +209,8 @@ class TrackUpdateServiceSpec extends UnitSpecification with TrackRepresentationS
       val trackArtworkUpdateResult = TrackArtworkUpdateResult(bucket = "bucket", filename = "filename")
 
       val artworkUpdateOnlyUpdateResponse = mockTrackMetadataUpdateResult.copy(
-        description = mockTrackRepresentation.track.description,
-        title = mockTrackRepresentation.track.title
+        description = mockTrackRepresentation.visibleTrack.description,
+        title = mockTrackRepresentation.visibleTrack.title
       )
     }
 
@@ -230,7 +230,7 @@ class TrackUpdateServiceSpec extends UnitSpecification with TrackRepresentationS
           Some(trackArtworkMetaRequest),
           None,
           trackMetadataRequest,
-          mockTrackRepresentation.track.urn,
+          mockTrackRepresentation.visibleTrack.urn,
           ownerSession
         )
       )
@@ -258,7 +258,7 @@ class TrackUpdateServiceSpec extends UnitSpecification with TrackRepresentationS
           Some(trackArtworkMetaRequest),
           None,
           None,
-          mockTrackRepresentation.track.urn,
+          mockTrackRepresentation.visibleTrack.urn,
           ownerSession
         )
       )
@@ -286,7 +286,7 @@ class TrackUpdateServiceSpec extends UnitSpecification with TrackRepresentationS
           Some(trackArtworkMetaRequest),
           None,
           None,
-          mockTrackRepresentation.track.urn,
+          mockTrackRepresentation.visibleTrack.urn,
           ownerSession
         )
       ) must throwAn[UnhandledOutcomeException]
@@ -301,8 +301,8 @@ class TrackUpdateServiceSpec extends UnitSpecification with TrackRepresentationS
       )
 
       val assetUpdateOnlyUpdateResponse = mockTrackMetadataUpdateResult.copy(
-        description = mockTrackRepresentation.track.description,
-        title = mockTrackRepresentation.track.title
+        description = mockTrackRepresentation.visibleTrack.description,
+        title = mockTrackRepresentation.visibleTrack.title
       )
     }
 
@@ -313,8 +313,8 @@ class TrackUpdateServiceSpec extends UnitSpecification with TrackRepresentationS
       )
 
       val assetUpdateOnlyUpdateResponse = mockTrackMetadataUpdateResult.copy(
-        description = mockTrackRepresentation.track.description,
-        title = mockTrackRepresentation.track.title
+        description = mockTrackRepresentation.visibleTrack.description,
+        title = mockTrackRepresentation.visibleTrack.title
       )
     }
 

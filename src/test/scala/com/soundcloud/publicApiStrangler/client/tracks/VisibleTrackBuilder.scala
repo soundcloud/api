@@ -3,8 +3,7 @@ package com.soundcloud.publicApiStrangler.client.tracks
 import com.soundcloud.api.partners.clients.tracks.Transcoding
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.publicApiStrangler.authorization.policies.ContentAuthorization
-import com.soundcloud.publicApiStrangler.client.trackmetadata.EmbeddingPermission.All
-import com.soundcloud.publicApiStrangler.client.trackmetadata.{Artwork, EmbeddingPermission}
+import com.soundcloud.publicApiStrangler.client.tracks.EmbeddingPermission.All
 import org.joda.time.LocalDateTime
 
 import scala.util.Random

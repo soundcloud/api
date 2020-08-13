@@ -9,7 +9,6 @@ import com.soundcloud.outcome._
 import com.soundcloud.publicApiStrangler.Routing
 import com.soundcloud.publicApiStrangler.authorization.Track
 import com.soundcloud.publicApiStrangler.client.trackcoordinator.TrackCoordinatorClient
-import com.soundcloud.publicApiStrangler.client.trackmetadata.{Track => TMTrack}
 import com.soundcloud.publicApiStrangler.handler.support.requestParser.{
   TrackArtworkUpdateRequest,
   TrackAssetDataUpdateRequest,
@@ -53,8 +52,6 @@ class TracksHandlerSpec extends UnitSpecification with TrackRepresentationSpecCo
         trackUpdateService
       )
 
-    def trackmetadataResponse: Future[Option[TMTrack]] = Future.value(None)
-
     override def routingDefinitions = Routing.forTracksHandler(handler)
 
     trackCoordinator.deleteTrack(session, trackUrn) returns Future(Good(()))
@@ -71,7 +68,7 @@ class TracksHandlerSpec extends UnitSpecification with TrackRepresentationSpecCo
             artworkUpdate,
             assetUpdate,
             trackUpdate,
-            mockTrackRepresentation.track.urn,
+            mockTrackRepresentation.visibleTrack.urn,
             session
           )
       ).thenReturn(
@@ -95,7 +92,7 @@ class TracksHandlerSpec extends UnitSpecification with TrackRepresentationSpecCo
         val trackUpdate = Json.parse(requestBody).asOpt[TrackMetadataUpdateRequest]
 
         val expectedResponse = mockTrackRepresentation.copy(
-          track = mockTrackRepresentation.track.copy(
+          visibleTrack = mockTrackRepresentation.visibleTrack.copy(
             description = Some("changed"),
             title = "changed"
           )
@@ -123,10 +120,10 @@ class TracksHandlerSpec extends UnitSpecification with TrackRepresentationSpecCo
       }
 
       "returns 200 on successful update" in new SuccessContext {
-        val path = s"/tracks/${mockTrackRepresentation.track.urn.identifier}"
+        val path = s"/tracks/${mockTrackRepresentation.visibleTrack.urn.identifier}"
 
         println(
-          s"calling with ${trackUpdate.toString} and urn ${mockTrackRepresentation.track.urn.toString} and session ${session.toString}"
+          s"calling with ${trackUpdate.toString} and urn ${mockTrackRepresentation.visibleTrack.urn.toString} and session ${session.toString}"
         )
         setupMockForTrackUpdateMetadata(metadataUpdateOutcome = Good(expectedResponse), trackUpdate = trackUpdate)
 
@@ -136,7 +133,7 @@ class TracksHandlerSpec extends UnitSpecification with TrackRepresentationSpecCo
       }
 
       "returns 404 when track does not exist" in new FailureContext {
-        val path = s"/tracks/${mockTrackRepresentation.track.urn.identifier}"
+        val path = s"/tracks/${mockTrackRepresentation.visibleTrack.urn.identifier}"
         setupMockForTrackUpdateMetadata(metadataUpdateOutcome = NotFound().bad, trackUpdate = trackUpdate)
 
         val response = put(path, body = requestBody)
@@ -144,7 +141,7 @@ class TracksHandlerSpec extends UnitSpecification with TrackRepresentationSpecCo
       }
 
       "returns 500 on invalid request" in new FailureContext {
-        val path = s"/tracks/${mockTrackRepresentation.track.urn.identifier}"
+        val path = s"/tracks/${mockTrackRepresentation.visibleTrack.urn.identifier}"
 
         val response = put(path, body = invalidRequestBody)
         response.statusCode === 400
@@ -159,7 +156,7 @@ class TracksHandlerSpec extends UnitSpecification with TrackRepresentationSpecCo
 
       val trackUpdate = TrackMetadataUpdateRequest.fromForm(parsedRequestBody)
       val expectedResponse = mockTrackRepresentation.copy(
-        track = mockTrackRepresentation.track.copy(
+        visibleTrack = mockTrackRepresentation.visibleTrack.copy(
           description = Some("changed"),
           title = "changed"
         )
@@ -174,7 +171,7 @@ class TracksHandlerSpec extends UnitSpecification with TrackRepresentationSpecCo
     }
 
     "Returns a 200 on a valid request" in new SuccessContext {
-      val path = s"/tracks/${mockTrackRepresentation.track.urn.identifier}"
+      val path = s"/tracks/${mockTrackRepresentation.visibleTrack.urn.identifier}"
 
       setupMockForTrackUpdateMetadata(metadataUpdateOutcome = Good(expectedResponse), trackUpdate = trackUpdate)
 
@@ -185,7 +182,7 @@ class TracksHandlerSpec extends UnitSpecification with TrackRepresentationSpecCo
     }
 
     "returns a 404 if track does not exist" in new FailureContext {
-      val path = s"/tracks/${mockTrackRepresentation.track.urn.identifier}"
+      val path = s"/tracks/${mockTrackRepresentation.visibleTrack.urn.identifier}"
 
       setupMockForTrackUpdateMetadata(metadataUpdateOutcome = NotFound().bad, trackUpdate = trackUpdate)
 
@@ -201,7 +198,7 @@ class TracksHandlerSpec extends UnitSpecification with TrackRepresentationSpecCo
 
       val trackUpdate = TrackMetadataUpdateRequest.fromForm(parsedRequestBody)
       val expectedResponse = mockTrackRepresentation.copy(
-        track = mockTrackRepresentation.track.copy(
+        visibleTrack = mockTrackRepresentation.visibleTrack.copy(
           description = Some("changed"),
           title = "changed"
         )
@@ -216,7 +213,7 @@ class TracksHandlerSpec extends UnitSpecification with TrackRepresentationSpecCo
     }
 
     "returns a 200 on a valid request" in new SuccessContext {
-      val path = s"/tracks/${mockTrackRepresentation.track.urn.identifier}"
+      val path = s"/tracks/${mockTrackRepresentation.visibleTrack.urn.identifier}"
 
       setupMockForTrackUpdateMetadata(metadataUpdateOutcome = Good(expectedResponse), trackUpdate = trackUpdate)
 
@@ -226,7 +223,7 @@ class TracksHandlerSpec extends UnitSpecification with TrackRepresentationSpecCo
     }
 
     "returns a 404 if track when track does not exist" in new FailureContext {
-      val path = s"/tracks/${mockTrackRepresentation.track.urn.identifier}"
+      val path = s"/tracks/${mockTrackRepresentation.visibleTrack.urn.identifier}"
 
       setupMockForTrackUpdateMetadata(metadataUpdateOutcome = NotFound().bad, trackUpdate = trackUpdate)
 
@@ -245,7 +242,7 @@ class TracksHandlerSpec extends UnitSpecification with TrackRepresentationSpecCo
       }
 
       "can upload artwork" in new SuccessContext with WithArtworkData {
-        val path = s"/tracks/${mockTrackRepresentation.track.urn.identifier}"
+        val path = s"/tracks/${mockTrackRepresentation.visibleTrack.urn.identifier}"
 
         when(
           trackUpdateService
@@ -253,7 +250,7 @@ class TracksHandlerSpec extends UnitSpecification with TrackRepresentationSpecCo
               anyObject[Option[TrackArtworkUpdateRequest]],
               ===(None),
               ===(None),
-              ===(mockTrackRepresentation.track.urn),
+              ===(mockTrackRepresentation.visibleTrack.urn),
               ===(session)
             )
         ).thenReturn(
@@ -283,7 +280,7 @@ class TracksHandlerSpec extends UnitSpecification with TrackRepresentationSpecCo
       }
 
       "can upload track asset data" in new WithAssetData {
-        val path = s"/tracks/${mockTrackRepresentation.track.urn.identifier}"
+        val path = s"/tracks/${mockTrackRepresentation.visibleTrack.urn.identifier}"
 
         setupMockForTrackUpdateMetadata(
           assetUpdate = assetUpdate,

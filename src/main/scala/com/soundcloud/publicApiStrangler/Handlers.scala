@@ -65,7 +65,7 @@ class Handlers(telemetry: Telemetry, clients: Clients, exceptionCollector: Excep
   )
 
   val singleTrackHandler =
-    new SingleTrackHandler(userAuthentication, tracksService, telemetry)
+    new SingleTrackHandler(userAuthentication, tracksService)
 
   val userRelatedMothershipDispatcher = new UserRelatedMothershipDispatcher(
     userAuthentication,

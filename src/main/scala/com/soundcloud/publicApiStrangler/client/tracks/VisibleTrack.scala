@@ -4,7 +4,6 @@ import com.soundcloud.api.partners.clients.tracks.Transcoding
 import com.soundcloud.jvmkit.module.json.play.UrnFormat._
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.publicApiStrangler.authorization.policies._
-import com.soundcloud.publicApiStrangler.client.trackmetadata.{Artwork, EmbeddingPermission}
 import org.joda.time.LocalDateTime
 import play.api.libs.json._
 

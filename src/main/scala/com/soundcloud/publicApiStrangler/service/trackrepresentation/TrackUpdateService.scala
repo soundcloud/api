@@ -123,25 +123,25 @@ class TrackUpdateService(
     trackRep.copy(
       isrc = getIsrc(metadataUpdate.isrc),
       geoblockings = metadataUpdate.geo_blockings.map(getGeoBlockings(_)).getOrElse(None),
-      track = trackRep.track.copy(
+      visibleTrack = trackRep.visibleTrack.copy(
         title = metadataUpdate.title,
         genre = metadataUpdate.genre,
         public = metadataUpdate.public,
         description = metadataUpdate.description,
-        api_streamable = metadataUpdate.api_streamable,
+        apiStreamable = metadataUpdate.api_streamable,
         commentable = metadataUpdate.commentable,
-        downloadable = metadataUpdate.downloadable,
+        downloadable = metadataUpdate.downloadable.getOrElse(false),
         embeddable = metadataUpdate.embeddable,
-        label_name = metadataUpdate.label_name,
+        labelName = metadataUpdate.label_name,
         license = metadataUpdate.license,
         permalink = metadataUpdate.permalink,
-        purchase_title = metadataUpdate.purchase_title,
-        purchase_url = metadataUpdate.purchase_url,
-        release_day = metadataUpdate.release_day,
-        release_month = metadataUpdate.release_month,
-        reveal_comments = metadataUpdate.reveal_comments,
-        reveal_stats = metadataUpdate.reveal_stats,
-        user_tags = metadataUpdate.tag_list.map(_.split(",").toList).getOrElse(List.empty)
+        purchaseTitle = metadataUpdate.purchase_title,
+        purchaseUrl = metadataUpdate.purchase_url,
+        releaseDay = metadataUpdate.release_day,
+        releaseMonth = metadataUpdate.release_month,
+        revealComments = metadataUpdate.reveal_comments,
+        revealStats = metadataUpdate.reveal_stats,
+        userTags = metadataUpdate.tag_list.map(_.split(",").toList).getOrElse(List.empty)
       )
     )
   }

@@ -4,9 +4,9 @@ import java.net.URL
 import java.util.TimeZone
 
 import com.soundcloud.jvmkit.module.util.Urn
+import com.soundcloud.publicApiStrangler.client.tracks.VisibleTrackBuilder
 import com.soundcloud.publicApiStrangler.test.UnitSpecification
-import com.soundcloud.publicApiStrangler.test.util.TrackMetadataTrackBuilder
-import org.joda.time.{DateTime, DateTimeZone}
+import org.joda.time.{DateTime, DateTimeZone, LocalDateTime}
 
 import scala.util.Random
 
@@ -18,16 +18,13 @@ class TrackPaginationSpec extends UnitSpecification with TrackRepresentationSpec
 
   def trackUrns(size: Int) = Random.shuffle((0 until size).map(n => Urn("soundcloud", "tracks", n.toString))).toList
 
-  def tracks(size: Int) =
-    Random
-      .shuffle((0 until size).map(n => TrackMetadataTrackBuilder(urn = Urn("soundcloud", "tracks", n.toString)).build))
-      .toList
-
   def trackRepresentations(size: Int) =
     Random
       .shuffle(
         (0 until size)
-          .map(n => createTrackRepresentation(track = defaultTrack.copy(urn = Urn("soundcloud", "tracks", n.toString))))
+          .map(n =>
+            createTrackRepresentation(visibleTrack = defaultTrack.copy(urn = Urn("soundcloud", "tracks", n.toString)))
+          )
       )
       .toList
 
@@ -54,7 +51,7 @@ class TrackPaginationSpec extends UnitSpecification with TrackRepresentationSpec
 
     "#calculateFinalPage" >> {
       "returns the sorted tracks" >> {
-        pagination.calculateFinalPage(trackRepresentations(3)).map(_.track.urn) ==== List(
+        pagination.calculateFinalPage(trackRepresentations(3)).map(_.visibleTrack.urn) ==== List(
           Urn("soundcloud", "tracks", "2"),
           Urn("soundcloud", "tracks", "1"),
           Urn("soundcloud", "tracks", "0")
@@ -83,7 +80,7 @@ class TrackPaginationSpec extends UnitSpecification with TrackRepresentationSpec
 
     "#calculateFinalPage" >> {
       "returns the sorted tracks" >> {
-        pagination.calculateFinalPage(trackRepresentations(2)).map(_.track.urn) ==== List(
+        pagination.calculateFinalPage(trackRepresentations(2)).map(_.visibleTrack.urn) ==== List(
           Urn("soundcloud", "tracks", "1"),
           Urn("soundcloud", "tracks", "0")
         )
@@ -156,7 +153,7 @@ class TrackPaginationSpec extends UnitSpecification with TrackRepresentationSpec
 
     "#calculateFinalPage" >> {
       "returns the sorted tracks" >> {
-        pagination.calculateFinalPage(trackRepresentations(4)).map(_.track.urn) ==== List(
+        pagination.calculateFinalPage(trackRepresentations(4)).map(_.visibleTrack.urn) ==== List(
           Urn("soundcloud", "tracks", "3"),
           Urn("soundcloud", "tracks", "2")
         )
@@ -169,28 +166,28 @@ class TrackPaginationSpec extends UnitSpecification with TrackRepresentationSpec
     val to = new DateTime(2017, 1, 15, 10, 0, 0)
 
     val tracksWithCreatedAt = List(
-      (1, new DateTime(2017, 1, 1, 9, 0, 0)),
-      (2, new DateTime(2017, 1, 1, 11, 0, 0)),
-      (3, new DateTime(2017, 1, 10, 9, 0, 0)),
-      (4, new DateTime(2017, 1, 15, 9, 0, 0)),
-      (5, new DateTime(2017, 1, 15, 10, 0, 0)),
-      (6, new DateTime(2017, 1, 20, 10, 0, 0))
+      (1, new LocalDateTime(2017, 1, 1, 9, 0, 0)),
+      (2, new LocalDateTime(2017, 1, 1, 11, 0, 0)),
+      (3, new LocalDateTime(2017, 1, 10, 9, 0, 0)),
+      (4, new LocalDateTime(2017, 1, 15, 9, 0, 0)),
+      (5, new LocalDateTime(2017, 1, 15, 10, 0, 0)),
+      (6, new LocalDateTime(2017, 1, 20, 10, 0, 0))
     ).map {
       case (id, createdAt) =>
-        TrackMetadataTrackBuilder(urn = Urn("soundcloud", "tracks", id.toString), created_at = createdAt).build
+        (new VisibleTrackBuilder).setUrn(Urn("soundcloud", "tracks", id.toString)).setCreatedAt(createdAt).build
     }
 
     val trackRepresentationsWithCreatedAt = List(
-      (1, new DateTime(2017, 1, 1, 9, 0, 0)),
-      (2, new DateTime(2017, 1, 1, 11, 0, 0)),
-      (3, new DateTime(2017, 1, 10, 9, 0, 0)),
-      (4, new DateTime(2017, 1, 15, 9, 0, 0)),
-      (5, new DateTime(2017, 1, 15, 10, 0, 0)),
-      (6, new DateTime(2017, 1, 20, 10, 0, 0))
+      (1, new LocalDateTime(2017, 1, 1, 9, 0, 0)),
+      (2, new LocalDateTime(2017, 1, 1, 11, 0, 0)),
+      (3, new LocalDateTime(2017, 1, 10, 9, 0, 0)),
+      (4, new LocalDateTime(2017, 1, 15, 9, 0, 0)),
+      (5, new LocalDateTime(2017, 1, 15, 10, 0, 0)),
+      (6, new LocalDateTime(2017, 1, 20, 10, 0, 0))
     ).map {
       case (id, createdAt) =>
-        createTrackRepresentation(track =
-          defaultTrack.copy(urn = Urn("soundcloud", "tracks", id.toString), created_at = createdAt)
+        createTrackRepresentation(visibleTrack =
+          defaultTrack.copy(urn = Urn("soundcloud", "tracks", id.toString), createdAt = createdAt)
         )
     }
 
@@ -207,7 +204,7 @@ class TrackPaginationSpec extends UnitSpecification with TrackRepresentationSpec
       "returns the sorted tracks" >> {
         pagination
           .calculateFinalPage(trackRepresentationsWithCreatedAt)
-          .map(_.track.urn) ==== List(
+          .map(_.visibleTrack.urn) ==== List(
           Urn("soundcloud", "tracks", "4"),
           Urn("soundcloud", "tracks", "3"),
           Urn("soundcloud", "tracks", "2")

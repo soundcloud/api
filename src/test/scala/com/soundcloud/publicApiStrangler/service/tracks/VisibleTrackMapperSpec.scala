@@ -6,8 +6,7 @@ import com.soundcloud.api.partners.clients.tracks.Transcoding
 import com.soundcloud.jvmkit.module.twirp.proto.WellKnownOps._
 import com.soundcloud.jvmkit.module.util.{Url, Urn}
 import com.soundcloud.publicApiStrangler.authorization.policies._
-import com.soundcloud.publicApiStrangler.client.trackmetadata.{Artwork, EmbeddingPermission}
-import com.soundcloud.publicApiStrangler.client.tracks.{WaveformType, WaveformUrl}
+import com.soundcloud.publicApiStrangler.client.tracks.{Artwork, EmbeddingPermission, WaveformType, WaveformUrl}
 import org.joda.time.LocalDateTime
 import org.specs2.mutable.Specification
 import org.specs2.specification.Scope

@@ -8,12 +8,11 @@ import com.soundcloud.publicApiStrangler.authorization.policies.{
   ContentPolicy,
   ContentRestriction
 }
-import com.soundcloud.publicApiStrangler.client.trackmetadata.Track
 import com.soundcloud.publicApiStrangler.client.tracks.{ContentAuthorizationBuilder, _}
 import com.soundcloud.publicApiStrangler.service.TrackVisibilityService
 import com.soundcloud.publicApiStrangler.test.UnitSpecification
 import com.twitter.util.{Await, Future}
-import org.joda.time.DateTime
+import org.joda.time.LocalDateTime
 
 class StreamServiceSpec extends UnitSpecification {
 
@@ -23,7 +22,7 @@ class StreamServiceSpec extends UnitSpecification {
     val service = new StreamService(trackVisibilityService, tracksClient)
     val session = mock[UserSession]
 
-    val track = mock[Track]
+    val track = mock[VisibleTrack]
     val trackUid = "some-uid"
     val trackUrn = Urn("soundcloud", "tracks", "2")
     val userUrn = Urn("soundcloud", "users", "42")
@@ -32,12 +31,12 @@ class StreamServiceSpec extends UnitSpecification {
     lazy val maybeStreamable = Some(true)
 
     lazy val uid: Option[String] = Some(trackUid)
-    lazy val disabledAt: Option[DateTime] = None
+    lazy val disabledAt: Option[LocalDateTime] = None
 
     track.uid returns uid
-    track.api_streamable returns maybeStreamable
-    track.user_urn returns userUrn
-    track.disabled_at returns disabledAt
+    track.apiStreamable returns maybeStreamable
+    track.userUrn returns userUrn
+    track.disabledAt returns disabledAt
 
     val streamRequest = mock[StreamRequest]
 

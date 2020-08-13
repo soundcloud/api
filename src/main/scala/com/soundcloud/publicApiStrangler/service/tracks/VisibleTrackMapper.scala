@@ -5,8 +5,7 @@ import java.time.Instant
 import com.soundcloud.api.partners.clients.tracks.Transcoding
 import com.soundcloud.jvmkit.module.util.{Url, Urn}
 import com.soundcloud.publicApiStrangler.authorization.policies._
-import com.soundcloud.publicApiStrangler.client.trackmetadata.{Artwork, EmbeddingPermission}
-import com.soundcloud.publicApiStrangler.client.tracks.{VisibleTrack, WaveformType, WaveformUrl}
+import com.soundcloud.publicApiStrangler.client.tracks._
 import org.joda.time.LocalDateTime
 import proto.soundcloud.tracks.api.Transcoding.Quality
 import proto.soundcloud.tracks.api.{Track => ProtoTrack}

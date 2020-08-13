@@ -4,13 +4,12 @@ import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.publicApiStrangler.client.liebling.LieblingClient
 import com.soundcloud.publicApiStrangler.client.media.WaveformUrlsGenerator
+import com.soundcloud.publicApiStrangler.client.mothership.response.representation.{Geoblockings, User}
 import com.soundcloud.publicApiStrangler.client.mothership.{DomainLocking, RichOkidokiClient}
 import com.soundcloud.publicApiStrangler.client.pubmese.{Isrc, PubmeseClient}
 import com.soundcloud.publicApiStrangler.client.quota.UserQuotaClient
 import com.soundcloud.publicApiStrangler.client.stitch.{StitchClient, StitchCounts}
 import com.soundcloud.publicApiStrangler.client.tracks.{TrackRequest, VisibleTrack}
-import com.soundcloud.publicApiStrangler.client.mothership.response.representation.{Geoblockings, User}
-import com.soundcloud.publicApiStrangler.client.trackmetadata.{Track}
 import com.soundcloud.publicApiStrangler.service.TrackVisibilityService
 import com.twitter.util.Future
 
@@ -77,7 +76,7 @@ class TrackRepresentationsService(
           visibleTracks.map { visibleTrack =>
             builder.build(
               sessionUser = session.user,
-              track = Track.fromVisibleTrack(visibleTrack),
+              visibleTrack = visibleTrack,
               user = users(visibleTrack.userUrn),
               isrc = isrcs.get(visibleTrack.urn),
               counts = counts.get(visibleTrack.urn).getOrElse(StitchCounts(0, 0, 0, 0, 0)),

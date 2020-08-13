@@ -1,7 +1,7 @@
 package com.soundcloud.publicApiStrangler.service
 
 import com.soundcloud.jvmkit.module.util.Urn
-import com.soundcloud.jvmkit.module.util.session.{LoggedInUserSession}
+import com.soundcloud.jvmkit.module.util.session.LoggedInUserSession
 import com.soundcloud.publicApiStrangler.client.TimelineJsonClient
 import com.soundcloud.publicApiStrangler.client.tracks.TrackRequest
 import com.soundcloud.publicApiStrangler.service.pagination.CursorBasedPagination
@@ -54,7 +54,7 @@ class TimelineService(
       event: TimelineEvent
   ): Option[TrackTimelineItem] =
     tracks
-      .find(_.track.urn.toString == event.urn.toString)
+      .find(_.visibleTrack.urn.toString == event.urn.toString)
       .map(trackRep => new TrackTimelineItem(event.timestamp, trackRep))
 
   def fetchFollowingTracksForUser(

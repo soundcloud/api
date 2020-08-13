@@ -1,4 +1,4 @@
-package com.soundcloud.publicApiStrangler.client.trackmetadata
+package com.soundcloud.publicApiStrangler.client.tracks
 
 sealed abstract class EmbeddingPermission(stringValue: String) extends EnumValue[EmbeddingPermission](stringValue)
 

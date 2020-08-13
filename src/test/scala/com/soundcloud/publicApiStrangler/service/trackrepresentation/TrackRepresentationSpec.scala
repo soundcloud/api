@@ -1,14 +1,16 @@
 package com.soundcloud.publicApiStrangler.service.trackrepresentation
 
+import com.soundcloud.api.partners.clients.tracks.Transcoding
 import com.soundcloud.jvmkit.module.util.{Url, Urn}
+import com.soundcloud.publicApiStrangler.authorization.policies._
 import com.soundcloud.publicApiStrangler.client.media.TrackWaveformUrl
 import com.soundcloud.publicApiStrangler.client.mothership.response.representation.{Geoblockings, User}
 import com.soundcloud.publicApiStrangler.client.mothership.{DomainLocking, TrackAudioMetadata}
 import com.soundcloud.publicApiStrangler.client.pubmese.Isrc
 import com.soundcloud.publicApiStrangler.client.stitch.StitchCounts
-import com.soundcloud.publicApiStrangler.client.trackmetadata.{Artwork, EmbeddingPermission, Track}
+import com.soundcloud.publicApiStrangler.client.tracks.{Artwork, EmbeddingPermission, VisibleTrack, WaveformUrl}
 import com.soundcloud.publicApiStrangler.test.UnitSpecification
-import org.joda.time.DateTime
+import org.joda.time.LocalDateTime
 import play.api.libs.json._
 
 trait TrackRepresentationSpecContext {
@@ -18,7 +20,7 @@ trait TrackRepresentationSpecContext {
 
   def createTrackRepresentation(
       loggedInUser: Urn = Urn("soundcloud", "users", "555"),
-      track: Track = defaultTrack,
+      visibleTrack: VisibleTrack = defaultTrack,
       user: User = defaultUser,
       isrc: Option[Isrc] = defaultIsrc,
       counts: StitchCounts = defaultCounts,
@@ -34,7 +36,7 @@ trait TrackRepresentationSpecContext {
 
     builder.build(
       sessionUser = Some(loggedInUser),
-      track = track,
+      visibleTrack = visibleTrack,
       user = user,
       isrc = isrc,
       counts = counts,
@@ -93,48 +95,57 @@ trait TrackRepresentationSpecContext {
       updated_at = Some("2016/10/10 11:21:36 +0000")
     )
 
-  def defaultTrack = Track(
+  def defaultTrack = VisibleTrack(
     urn = trackUrn,
-    user_urn = userUrn,
+    userUrn = userUrn,
     commentable = false,
     description = Some("Follow @samstarling !"),
-    created_at = new DateTime(2015, 2, 15, 16, 47, 27),
-    disabled_at = None,
-    downloadable = Some(false),
+    createdAt = new LocalDateTime(2015, 2, 15, 16, 47, 27),
+    disabledAt = None,
+    downloadable = false,
     duration = 120,
     genre = Some("future bass"),
-    last_modified = new DateTime(2016, 8, 8, 13, 28, 53),
+    lastModified = new LocalDateTime(2016, 8, 8, 13, 28, 53),
     permalink = "plsty-remix",
-    permalink_url = Some("http://soundcloud.com/nirvana/plsty-remix"),
+    permalinkUrl = Some("http://soundcloud.com/nirvana/plsty-remix"),
     public = true,
-    secret_token = "s-53CR37",
-    user_tags = List("dubstep", "folk", "tag with spaces"),
-    machine_tags = List("system:foo", "system:bar", "awesomeness:very high"),
+    secretToken = Some("s-53CR37"),
+    userTags = List("dubstep", "folk", "tag with spaces"),
+    machineTags = List("system:foo", "system:bar", "awesomeness:very high"),
     title = "Baby Bash",
     uid = Some("a1b2c3"),
-    api_streamable = Some(true),
-    streamable = Some(false),
-    reveal_comments = false,
-    reveal_stats = false,
-    label_name = Some("Denis Owns"),
+    apiStreamable = Some(true),
+    streamable = false,
+    revealComments = false,
+    revealStats = false,
+    labelName = Some("Denis Owns"),
     license = "all-rights-reserved",
     embeddable = None,
-    release_year = Some(1991),
-    release_month = Some(1),
-    release_day = Some(2),
+    releaseYear = Some(1991),
+    releaseMonth = Some(1),
+    releaseDay = Some(2),
     embeddableBy = EmbeddingPermission.Me,
     releaseDate = None,
     artwork = Artwork(filename = Some("artworks-FuwbhSJORvKH-0-original.jpg")),
-    published_at = None,
-    purchase_url = Some("http://example.com/buy/7890"),
-    purchase_title = Some("buy me pls"),
+    publishedAt = None,
+    purchaseUrl = Some("http://example.com/buy/7890"),
+    purchaseTitle = Some("buy me pls"),
     bpm = Some(120.7),
-    track_type = Some("original"),
+    trackType = Some("original"),
     release = Some("DR012"),
-    key_signature = Some("Emaj"),
-    video_url = Some("http://example.com/video.mp4"),
-    label_id = defaultLabelUrn.map(_.identifier.toLong),
-    supply_chain_status = Some("manual_upload")
+    keySignature = Some("Emaj"),
+    videoUrl = Some("http://example.com/video.mp4"),
+    labelId = defaultLabelUrn.map(_.identifier.toLong),
+    supplyChainStatus = Some("manual_upload"),
+    authorization = new ContentAuthorization(
+      trackUrn,
+      ContentPolicy.MONETIZE,
+      Reason.NOT_SUPPORTED,
+      ContentRestriction.ENCRYPTED_STREAM_ONLY,
+      MonetizationModel.AD_SUPPORTED
+    ),
+    transcodings = List.empty[Transcoding],
+    waveformUrls = List.empty[WaveformUrl]
   )
 
   def defaultIsrc = Some(Isrc("US-S1Z-99-00001"))
@@ -434,10 +445,10 @@ class TrackRepresentationSpec extends UnitSpecification {
   "counts" >> {
     trait Context extends Scope with TrackRepresentationSpecContext {
 
-      val revealStatsTrack = defaultTrack.copy(reveal_stats = true)
+      val revealStatsTrack = defaultTrack.copy(revealStats = true)
       val counts = StitchCounts(111, 222, 333, 444, 555)
       val trackRepresentation: TrackRepresentation =
-        createTrackRepresentation(track = revealStatsTrack, counts = counts, loggedInUser = userUrn)
+        createTrackRepresentation(visibleTrack = revealStatsTrack, counts = counts, loggedInUser = userUrn)
     }
 
     "adds counts" in new Context {
@@ -453,10 +464,10 @@ class TrackRepresentationSpec extends UnitSpecification {
   "comment counts" >> {
     trait Context extends Scope with TrackRepresentationSpecContext {
 
-      val showCommentsTrack = defaultTrack.copy(reveal_comments = true, reveal_stats = true)
+      val showCommentsTrack = defaultTrack.copy(revealComments = true, revealStats = true)
       val counts = StitchCounts(1, 2, 3, 444, 555)
       val trackRepresentation: TrackRepresentation =
-        createTrackRepresentation(track = showCommentsTrack, counts = counts, loggedInUser = userUrn)
+        createTrackRepresentation(visibleTrack = showCommentsTrack, counts = counts, loggedInUser = userUrn)
     }
 
     "adds counts" in new Context {
@@ -535,9 +546,9 @@ class TrackRepresentationSpec extends UnitSpecification {
     "when all URL fields are present" >> {
       trait UrlsPresentContext extends Scope with TrackRepresentationSpecContext {
 
-        val nonPublicTrack = defaultTrack.copy(public = false, secret_token = "bl3rkbi3")
+        val nonPublicTrack = defaultTrack.copy(public = false, secretToken = Some("bl3rkbi3"))
         val trackRepresentation: TrackRepresentation =
-          createTrackRepresentation(track = nonPublicTrack)
+          createTrackRepresentation(visibleTrack = nonPublicTrack)
         val json = Json.toJson(trackRepresentation)
       }
 
@@ -572,10 +583,10 @@ class TrackRepresentationSpec extends UnitSpecification {
       "when a particular URL field has a badly-encoded secret token" >> {
         trait BadlyFormedSecretTokenContext extends Scope with TrackRepresentationSpecContext {
 
-          val nonPublicTrack = defaultTrack.copy(public = false, secret_token = "badgers?format=json")
+          val nonPublicTrack = defaultTrack.copy(public = false, secretToken = Some("badgers?format=json"))
           val trackRepresentation =
             createTrackRepresentation(
-              track = nonPublicTrack,
+              visibleTrack = nonPublicTrack,
               loggedInUser = userUrn
             )
           val json = Json.toJson(trackRepresentation)
@@ -628,7 +639,7 @@ class TrackRepresentationSpec extends UnitSpecification {
         "adds downloadable as true when downloads are below the user's quota" in new Context {
           val trackRepresentation: TrackRepresentation =
             createTrackRepresentation(
-              track = defaultTrack.copy(downloadable = Some(true)),
+              visibleTrack = defaultTrack.copy(downloadable = true),
               downloadsPerTrack = Some(100),
               counts = ninetyDownloads
             )
@@ -640,7 +651,7 @@ class TrackRepresentationSpec extends UnitSpecification {
         "adds downloadable as false when downloads are exactly at the user's quota" in new Context {
           val trackRepresentation: TrackRepresentation =
             createTrackRepresentation(
-              track = defaultTrack.copy(downloadable = Some(true)),
+              visibleTrack = defaultTrack.copy(downloadable = true),
               downloadsPerTrack = Some(100),
               counts = oneHundredDownloads
             )
@@ -651,7 +662,7 @@ class TrackRepresentationSpec extends UnitSpecification {
         "adds downloadable as false when downloads are above the user's quota" in new Context {
           val trackRepresentation: TrackRepresentation =
             createTrackRepresentation(
-              track = defaultTrack.copy(downloadable = Some(true)),
+              visibleTrack = defaultTrack.copy(downloadable = true),
               downloadsPerTrack = Some(100),
               counts = oneThousandDownloads
             )
@@ -662,7 +673,7 @@ class TrackRepresentationSpec extends UnitSpecification {
         "adds downloadable as true when the user has no quota (ie. unlimited)" in new Context {
           val trackRepresentation =
             createTrackRepresentation(
-              track = defaultTrack.copy(downloadable = Some(true)),
+              visibleTrack = defaultTrack.copy(downloadable = true),
               downloadsPerTrack = None,
               counts = oneThousandDownloads
             )
@@ -694,7 +705,7 @@ class TrackRepresentationSpec extends UnitSpecification {
         "adds downloadable as false when downloads are below the user's quota" in new Context {
           val trackRepresentation =
             createTrackRepresentation(
-              track = defaultTrack.copy(downloadable = None),
+              visibleTrack = defaultTrack.copy(downloadable = false),
               downloadsPerTrack = Some(100),
               counts = ninetyDownloads
             )
@@ -705,7 +716,7 @@ class TrackRepresentationSpec extends UnitSpecification {
         "adds downloadable as false when the user has no quota (ie. unlimited)" in new Context {
           val trackRepresentation =
             createTrackRepresentation(
-              track = defaultTrack.copy(downloadable = None),
+              visibleTrack = defaultTrack.copy(downloadable = false),
               downloadsPerTrack = None,
               counts = ninetyDownloads
             )
@@ -720,7 +731,7 @@ class TrackRepresentationSpec extends UnitSpecification {
         "adds number of downloads remaining, if the user has a quota" in new Context {
           val trackRepresentation =
             createTrackRepresentation(
-              track = defaultTrack.copy(downloadable = Some(true)),
+              visibleTrack = defaultTrack.copy(downloadable = true),
               downloadsPerTrack = Some(100),
               counts = ninetyDownloads,
               loggedInUser = userUrn
@@ -732,7 +743,7 @@ class TrackRepresentationSpec extends UnitSpecification {
         "adds number of downloads remaining, even if track has no downloads remaining" in new Context {
           val trackRepresentation =
             createTrackRepresentation(
-              track = defaultTrack.copy(downloadable = Some(true)),
+              visibleTrack = defaultTrack.copy(downloadable = true),
               downloadsPerTrack = Some(100),
               counts = oneHundredDownloads,
               loggedInUser = userUrn
@@ -744,7 +755,7 @@ class TrackRepresentationSpec extends UnitSpecification {
         "adds number of downloads remaining, even if track is not downloadable" in new Context {
           val trackRepresentation =
             createTrackRepresentation(
-              track = defaultTrack.copy(downloadable = Some(true)),
+              visibleTrack = defaultTrack.copy(downloadable = true),
               downloadsPerTrack = Some(100),
               counts = oneHundredDownloads,
               loggedInUser = userUrn
@@ -757,7 +768,7 @@ class TrackRepresentationSpec extends UnitSpecification {
           "does not add number of downloads remaining, if the user has a quota" in new Context {
             val trackRepresentation =
               createTrackRepresentation(
-                track = defaultTrack.copy(downloadable = Some(true)),
+                visibleTrack = defaultTrack.copy(downloadable = true),
                 downloadsPerTrack = Some(100),
                 counts = ninetyDownloads
               )
@@ -768,7 +779,7 @@ class TrackRepresentationSpec extends UnitSpecification {
           "does not add number of downloads remaining, if the user has no quota (ie. unlimited)" in new Context {
             val trackRepresentation =
               createTrackRepresentation(
-                track = defaultTrack.copy(downloadable = Some(true)),
+                visibleTrack = defaultTrack.copy(downloadable = true),
                 downloadsPerTrack = None,
                 counts = ninetyDownloads,
                 loggedInUser = userUrn
@@ -835,12 +846,14 @@ class TrackRepresentationSpec extends UnitSpecification {
 
     "streamable" >> {
       "true if api_streamable = true" in new Context {
-        val trackJson = Json.toJson(createTrackRepresentation(track = defaultTrack.copy(api_streamable = Some(true))))
+        val trackJson =
+          Json.toJson(createTrackRepresentation(visibleTrack = defaultTrack.copy(apiStreamable = Some(true))))
         trackJson \ "streamable" ==== JsDefined(JsBoolean(true))
       }
 
       "false if api_streamable = false" in new Context {
-        val trackJson = Json.toJson(createTrackRepresentation(track = defaultTrack.copy(api_streamable = Some(false))))
+        val trackJson =
+          Json.toJson(createTrackRepresentation(visibleTrack = defaultTrack.copy(apiStreamable = Some(false))))
         trackJson \ "streamable" ==== JsDefined(JsBoolean(false))
       }
     }
@@ -848,39 +861,39 @@ class TrackRepresentationSpec extends UnitSpecification {
     "artwork_url" >> {
       "replaces original with large" in new Context {
         val artwork = Artwork(filename = Some("donkey-original.jpg"))
-        val trackJson = Json.toJson(createTrackRepresentation(track = defaultTrack.copy(artwork = artwork)))
+        val trackJson = Json.toJson(createTrackRepresentation(visibleTrack = defaultTrack.copy(artwork = artwork)))
         trackJson \ "artwork_url" ==== JsDefined(JsString("https://i1.sndcdn.com/donkey-large.jpg"))
       }
 
       "replaces png with jpg" in new Context {
         val artwork = Artwork(filename = Some("donkey-original.png"))
-        val trackJson = Json.toJson(createTrackRepresentation(track = defaultTrack.copy(artwork = artwork)))
+        val trackJson = Json.toJson(createTrackRepresentation(visibleTrack = defaultTrack.copy(artwork = artwork)))
         trackJson \ "artwork_url" ==== JsDefined(JsString("https://i1.sndcdn.com/donkey-large.jpg"))
       }
     }
 
     "sharing" in new Context {
       val publicTrack = defaultTrack.copy(public = true)
-      val publicTrackRepresentation = createTrackRepresentation(track = publicTrack)
+      val publicTrackRepresentation = createTrackRepresentation(visibleTrack = publicTrack)
       val publicTrackJson = Json.toJson(publicTrackRepresentation)
       publicTrackJson \ "sharing" ==== JsDefined(JsString("public"))
 
       val privateTrack = defaultTrack.copy(public = false)
-      val privateTrackRepresentation = createTrackRepresentation(track = privateTrack)
+      val privateTrackRepresentation = createTrackRepresentation(visibleTrack = privateTrack)
       val privateTrackJson = Json.toJson(privateTrackRepresentation)
       privateTrackJson \ "sharing" ==== JsDefined(JsString("private"))
     }
 
     "strangely specific bpm values" in new Context {
-      val track = defaultTrack.copy(bpm = Some(128.10000610351562))
-      val trackRep = createTrackRepresentation(track = track)
+      val visibleTrack = defaultTrack.copy(bpm = Some(128.10000610351562))
+      val trackRep = createTrackRepresentation(visibleTrack = visibleTrack)
       val trackJson = Json.toJson(trackRep)
       trackJson \ "bpm" ==== JsDefined(JsNumber(128.1))
     }
 
     "release year, but no release day/month" in new Context {
-      val track = defaultTrack.copy(release_year = Some(2016), release_month = None, release_day = None)
-      val trackRep = createTrackRepresentation(track = track)
+      val visibleTrack = defaultTrack.copy(releaseYear = Some(2016), releaseMonth = None, releaseDay = None)
+      val trackRep = createTrackRepresentation(visibleTrack = visibleTrack)
       val trackJson = Json.toJson(trackRep)
       trackJson \ "release_year" ==== JsDefined(JsNumber(2016))
       trackJson \ "release_month" ==== JsDefined(JsNumber(1))
@@ -888,8 +901,8 @@ class TrackRepresentationSpec extends UnitSpecification {
     }
 
     "no release year" in new Context {
-      val track = defaultTrack.copy(release_year = None, release_month = Some(2))
-      val trackRep = createTrackRepresentation(track = track)
+      val visibleTrack = defaultTrack.copy(releaseYear = None, releaseMonth = Some(2))
+      val trackRep = createTrackRepresentation(visibleTrack = visibleTrack)
       val trackJson = Json.toJson(trackRep)
       trackJson \ "release_year" ==== JsDefined(JsNull)
       trackJson \ "release_month" ==== JsDefined(JsNull)
@@ -897,45 +910,45 @@ class TrackRepresentationSpec extends UnitSpecification {
     }
 
     "weird artwork filename" in new Context {
-      val track = defaultTrack.copy(artwork = Artwork(filename = Some("adfhlsh.jpg")))
-      val trackRep = createTrackRepresentation(track = track)
+      val visibleTrack = defaultTrack.copy(artwork = Artwork(filename = Some("adfhlsh.jpg")))
+      val trackRep = createTrackRepresentation(visibleTrack = visibleTrack)
       val trackJson = Json.toJson(trackRep)
       trackJson \ "artwork_url" ==== JsDefined(JsString("https://i1.sndcdn.com/adfhlsh.jpg"))
     }
 
     "user avatar URL with HTTP and no trailing number" in new Context {
       val user = defaultUser.copy(avatar_url = "http://example.com/img.png")
-      val trackRep = createTrackRepresentation(track = defaultTrack, user = user)
+      val trackRep = createTrackRepresentation(visibleTrack = defaultTrack, user = user)
       val trackJson = Json.toJson(trackRep)
       trackJson \ "user" \ "avatar_url" ==== JsDefined(JsString("https://example.com/img.png"))
     }
 
     "user avatar URL with HTTP and trailing number" in new Context {
       val user = defaultUser.copy(avatar_url = "http://example.com/img.png?123")
-      val trackRep = createTrackRepresentation(track = defaultTrack, user = user)
+      val trackRep = createTrackRepresentation(visibleTrack = defaultTrack, user = user)
       val trackJson = Json.toJson(trackRep)
       trackJson \ "user" \ "avatar_url" ==== JsDefined(JsString("https://example.com/img.png"))
     }
 
     "user avatar URL with HTTPS and trailing number" in new Context {
       val user = defaultUser.copy(avatar_url = "https://example.com/img.png?123")
-      val trackRep = createTrackRepresentation(track = defaultTrack, user = user)
+      val trackRep = createTrackRepresentation(visibleTrack = defaultTrack, user = user)
       val trackJson = Json.toJson(trackRep)
       trackJson \ "user" \ "avatar_url" ==== JsDefined(JsString("https://example.com/img.png"))
     }
 
     "sanitizes string values" in new Context {
-      val track = defaultTrack.copy(
-        purchase_title = Some("<script></script>bla"),
+      val visibleTrack = defaultTrack.copy(
+        purchaseTitle = Some("<script></script>bla"),
         genre = Some("<script></script>bla"),
         title = "<script></script>bla",
         description = Some("<script></script>bla"),
-        label_name = Some("<script></script>bla"),
+        labelName = Some("<script></script>bla"),
         release = Some("<script></script>bla"),
-        track_type = Some("<script></script>bla"),
-        key_signature = Some("<script></script>bla")
+        trackType = Some("<script></script>bla"),
+        keySignature = Some("<script></script>bla")
       )
-      val trackRep = createTrackRepresentation(track = track)
+      val trackRep = createTrackRepresentation(visibleTrack = visibleTrack)
       val trackJson = Json.toJson(trackRep)
       trackJson \ "purchase_title" ==== JsDefined(JsString("bla"))
       trackJson \ "genre" ==== JsDefined(JsString("bla"))

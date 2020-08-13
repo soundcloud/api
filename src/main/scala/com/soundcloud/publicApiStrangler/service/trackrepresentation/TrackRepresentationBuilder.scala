@@ -8,14 +8,14 @@ import com.soundcloud.publicApiStrangler.client.mothership.response.representati
 import com.soundcloud.publicApiStrangler.client.mothership.{DomainLocking, TrackAudioMetadata}
 import com.soundcloud.publicApiStrangler.client.pubmese.Isrc
 import com.soundcloud.publicApiStrangler.client.stitch.StitchCounts
-import com.soundcloud.publicApiStrangler.client.trackmetadata.Track
+import com.soundcloud.publicApiStrangler.client.tracks.VisibleTrack
 
 import scala.collection.immutable.HashSet
 
 class TrackRepresentationBuilder {
   def build(
       sessionUser: Option[Urn],
-      track: Track,
+      visibleTrack: VisibleTrack,
       user: User,
       isrc: Option[Isrc],
       counts: StitchCounts,
@@ -27,56 +27,63 @@ class TrackRepresentationBuilder {
       waveformUrl: TrackWaveformUrl,
       downloadsPerTrack: Option[Int]
   ): TrackRepresentation = {
-    val userIsOwner = sessionUser.map(track.user_urn == _).getOrElse(false)
+    val userIsOwner = sessionUser.map(visibleTrack.userUrn == _).getOrElse(false)
     val isAnonymous = sessionUser.isEmpty
 
     TrackRepresentation(
-      track = track,
+      visibleTrack = visibleTrack,
       user = user,
       isrc = isrc,
       label = label,
       geoblockings = getAvailableCountryNodes(geoblockings),
       domainlockings = getDomainLockings(domainLockings),
       audioMetadata = trackAudioMetadata,
-      playbackCount = getCount(userIsOwner, track, "playback_count", counts),
-      downloadCount = getCount(userIsOwner, track, "download_count", counts),
-      favoritingsCount = getCount(userIsOwner, track, "favoritings_count", counts),
-      repostsCount = getCount(userIsOwner, track, "reposts_count", counts),
-      secretToken = getSecretTokenForPrivateTrack(track),
-      releaseDay = releaseDayFor(track),
-      releaseMonth = releaseMonthFor(track),
-      uri = urlFor(track, getSecretTokenForPrivateTrack(track)),
-      streamUrl = urlFor(track, "stream", getSecretTokenForPrivateTrack(track)),
-      downloadUrl = urlFor(track, "download", getSecretTokenForPrivateTrack(track)),
-      permalinkUrl = secretPath(track.permalink_url, track, getSecretTokenForPrivateTrack(track)),
-      secretUri = getSecretUri(track),
-      commentCount = getCommentCount(track, userIsOwner, counts),
+      playbackCount = getCount(userIsOwner, visibleTrack, "playback_count", counts),
+      downloadCount = getCount(userIsOwner, visibleTrack, "download_count", counts),
+      favoritingsCount = getCount(userIsOwner, visibleTrack, "favoritings_count", counts),
+      repostsCount = getCount(userIsOwner, visibleTrack, "reposts_count", counts),
+      secretToken = getSecretTokenForPrivateTrack(visibleTrack),
+      releaseDay = releaseDayFor(visibleTrack),
+      releaseMonth = releaseMonthFor(visibleTrack),
+      uri = urlFor(visibleTrack, getSecretTokenForPrivateTrack(visibleTrack)),
+      streamUrl = urlFor(visibleTrack, "stream", getSecretTokenForPrivateTrack(visibleTrack)),
+      downloadUrl = urlFor(visibleTrack, "download", getSecretTokenForPrivateTrack(visibleTrack)),
+      permalinkUrl = secretPath(visibleTrack.permalinkUrl, visibleTrack, getSecretTokenForPrivateTrack(visibleTrack)),
+      secretUri = getSecretUri(visibleTrack),
+      commentCount = getCommentCount(visibleTrack, userIsOwner, counts),
       userFavourite = if (!isAnonymous) Some(isLiked) else None,
       userPlaybackCount = if (!isAnonymous) Some(1) else None,
       waveformUrl = waveformUrl.pngUrl.s,
-      downloadable = getDownloadable(track, downloadsPerTrack, counts),
+      downloadable = getDownloadable(visibleTrack, downloadsPerTrack, counts),
       downloadsRemaining = getDownloadsRemaining(counts, downloadsPerTrack, userIsOwner)
     )
   }
   private val baseUrl = "https://api.soundcloud.com/tracks"
 
-  private def releaseDayFor(track: Track): Option[Int] =
-    track.release_year.map(_ => track.release_day.getOrElse(1))
+  private def releaseDayFor(visibleTrack: VisibleTrack): Option[Int] =
+    visibleTrack.releaseYear.map(_ => visibleTrack.releaseDay.getOrElse(1))
 
-  private def releaseMonthFor(track: Track): Option[Int] =
-    track.release_year.map(_ => track.release_month.getOrElse(1))
+  private def releaseMonthFor(visibleTrack: VisibleTrack): Option[Int] =
+    visibleTrack.releaseYear.map(_ => visibleTrack.releaseMonth.getOrElse(1))
 
-  private def getSecretTokenForPrivateTrack(track: Track): Option[String] =
-    if (!track.public) Some(track.secret_token) else None
+  private def getSecretTokenForPrivateTrack(visibleTrack: VisibleTrack): Option[String] =
+    if (!visibleTrack.public) visibleTrack.secretToken else None
 
-  private def getSecretUri(track: Track): Option[String] = {
-    if (!track.public)
-      Some(s"https://api.soundcloud.com/tracks/${track.urn.identifier}?secret_token=${track.secret_token}")
+  private def getSecretUri(visibleTrack: VisibleTrack): Option[String] = {
+    if (!visibleTrack.public)
+      visibleTrack.secretToken.map(token =>
+        s"https://api.soundcloud.com/tracks/${visibleTrack.urn.identifier}?secret_token=${token}"
+      )
     else None
   }
 
-  private def getCount(userIsOwner: Boolean, track: Track, countType: String, counts: StitchCounts): Option[Int] = {
-    if (userIsOwner || track.reveal_stats)
+  private def getCount(
+      userIsOwner: Boolean,
+      visibleTrack: VisibleTrack,
+      countType: String,
+      counts: StitchCounts
+  ): Option[Int] = {
+    if (userIsOwner || visibleTrack.revealStats)
       countType match {
         case "playback_count" => Some(counts.playback_count)
         case "download_count" => Some(counts.download_count)
@@ -87,8 +94,8 @@ class TrackRepresentationBuilder {
     else None
   }
 
-  private def getCommentCount(track: Track, userIsOwner: Boolean, counts: StitchCounts): Option[Int] = {
-    if ((userIsOwner || track.reveal_stats) && track.reveal_comments)
+  private def getCommentCount(visibleTrack: VisibleTrack, userIsOwner: Boolean, counts: StitchCounts): Option[Int] = {
+    if ((userIsOwner || visibleTrack.revealStats) && visibleTrack.revealComments)
       Some(counts.comment_count)
     else None
   }
@@ -108,14 +115,14 @@ class TrackRepresentationBuilder {
 
   }
 
-  private def urlFor(track: Track, subresource: String, secretParam: Option[String]) =
-    secretUrl(s"${baseUrl}/${track.urn.identifier.toLong}/$subresource", track, secretParam)
+  private def urlFor(visibleTrack: VisibleTrack, subresource: String, secretParam: Option[String]) =
+    secretUrl(s"${baseUrl}/${visibleTrack.urn.identifier.toLong}/$subresource", visibleTrack, secretParam)
 
-  private def urlFor(track: Track, secretParam: Option[String]) =
-    secretUrl(s"${baseUrl}/${track.urn.identifier.toLong}", track, secretParam)
+  private def urlFor(visibleTrack: VisibleTrack, secretParam: Option[String]) =
+    secretUrl(s"${baseUrl}/${visibleTrack.urn.identifier.toLong}", visibleTrack, secretParam)
 
-  private def secretUrl(url: String, track: Track, secretParam: Option[String]): Option[String] = {
-    if (!track.public && !secretParam.isEmpty) {
+  private def secretUrl(url: String, visibleTrack: VisibleTrack, secretParam: Option[String]): Option[String] = {
+    if (!visibleTrack.public && !secretParam.isEmpty) {
       val secret = URLEncoder.encode(secretParam.get, "UTF-8")
       Some(s"${url}?secret_token=$secret")
     } else {
@@ -123,10 +130,14 @@ class TrackRepresentationBuilder {
     }
   }
 
-  private def secretPath(path: Option[String], track: Track, secretParam: Option[String]): Option[String] = {
+  private def secretPath(
+      path: Option[String],
+      visibleTrack: VisibleTrack,
+      secretParam: Option[String]
+  ): Option[String] = {
     path
       .map(p => {
-        if (!track.public && !secretParam.isEmpty) {
+        if (!visibleTrack.public && !secretParam.isEmpty) {
           val secret = URLEncoder.encode(secretParam.get, "UTF-8")
           Some(s"${p}/$secret")
         } else {
@@ -137,8 +148,8 @@ class TrackRepresentationBuilder {
 
   }
 
-  private def getDownloadable(track: Track, downloadsPerTrack: Option[Int], counts: StitchCounts) = {
-    val trackDownloadable = track.downloadable.getOrElse(false)
+  private def getDownloadable(visibleTrack: VisibleTrack, downloadsPerTrack: Option[Int], counts: StitchCounts) = {
+    val trackDownloadable = visibleTrack.downloadable
 
     (trackDownloadable, downloadsPerTrack) match {
       case (false, _) => false
