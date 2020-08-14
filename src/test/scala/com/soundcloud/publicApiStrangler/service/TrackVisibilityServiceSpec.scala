@@ -22,7 +22,7 @@ class TrackVisibilityServiceSpec extends Specification with Mockito {
 
   trait Context extends Scope {
     val clientApplication = Urn("soundcloud", "applications", "999")
-    lazy val whitelistedClients = Set.empty[Urn]
+    lazy val allowlistedClients = Set.empty[Urn]
     lazy val userUrn = Urn("soundcloud", "users", "123")
     lazy val session =
       (new UserSessionBuilder).setUser(userUrn).setAgent(clientApplication).build()
@@ -32,7 +32,7 @@ class TrackVisibilityServiceSpec extends Specification with Mockito {
     lazy val service = new TrackVisibilityService(
       tracksTwinagleClient,
       mapper,
-      whitelistedClients
+      allowlistedClients
     )
     val trackRequest = TrackRequest(trackUrn, None)
     val transcodings = List(
@@ -100,18 +100,18 @@ class TrackVisibilityServiceSpec extends Specification with Mockito {
             .build
       }
 
-      "non whitelisted application" >> {
+      "untrusted application" >> {
         "filters out track" in new HighTierFilterTrackContext {
           Await.result(service.tracks(session, List(trackRequest))) ==== List.empty
         }
       }
 
-      "whitelisted application" >> {
-        trait HighTierWhitelistedAppFilterTrackContext extends HighTierFilterTrackContext {
-          override lazy val whitelistedClients = Set(clientApplication)
+      "trusted application" >> {
+        trait HighTierAllowlistedAppFilterTrackContext extends HighTierFilterTrackContext {
+          override lazy val allowlistedClients = Set(clientApplication)
         }
 
-        "does not filter out track" in new HighTierWhitelistedAppFilterTrackContext {
+        "does not filter out track" in new HighTierAllowlistedAppFilterTrackContext {
           Await.result(service.tracks(session, List(trackRequest))) ==== List(visibleTrack)
         }
       }

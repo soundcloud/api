@@ -12,7 +12,7 @@ import proto.soundcloud.tracks.api.{GetVisibleTracksRequest, TracksService, Trac
 class TrackVisibilityService(
     tracksTwinagleClient: TracksService,
     visibleTrackMapper: VisibleTrackMapper,
-    whitelistedClients: Set[Urn]
+    allowlistedClients: Set[Urn]
 ) {
   def tracks(session: UserSession, trackRequests: List[TrackRequest]): Future[List[VisibleTrack]] = {
     for {
@@ -21,7 +21,7 @@ class TrackVisibilityService(
         track.disabledAt.isEmpty && // Filters tracks that are disabled (taken down or over quota)
         track.transcodings.exists(_.mimeType == "audio/mpeg") && // Filters out non playable tracks (missing transcoding)
         track.authorization.policy != ContentPolicy.BLOCK &&
-        (whitelistedClients.contains(session.getAgent) || !isPaywalledTrack(track)) // Filters out paywalled tracks unless client is whitelisted
+        (allowlistedClients.contains(session.getAgent) || !isPaywalledTrack(track)) // Filters out paywalled tracks unless client is allowlisted
       }
     } yield {
       filteredVisibleTracks

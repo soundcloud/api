@@ -33,7 +33,7 @@ class MoshimoshiClient(
     resetUserPasswordResponseMapper: ResponseMapper[ResetUserPasswordResponse] = new ResetUserPasswordResponseMapper,
     deleteUserResponseMapper: ResponseMapper[DeleteUserResponse] = new DeleteUserResponseMapper
 ) extends FetchClient {
-  private val WHITELISTED_HEADERS = Set("x-real-ip", "x-forwarded-for")
+  private val ALLOWLISTED_HEADERS = Set("x-real-ip", "x-forwarded-for")
 
   def fetchTrack(session: UserSession, urn: Urn): Future[Option[Track]] = {
     fetch(service, session, Path() / "tracks" / urn, Params.empty, Headers.empty)
@@ -87,7 +87,7 @@ class MoshimoshiClient(
 
   private def filterHeaders(headers: Headers): Headers = {
     val elems = (for {
-      key <- headers.entrySet.asScala.map(_.getKey) if WHITELISTED_HEADERS.contains(key.toLowerCase)
+      key <- headers.entrySet.asScala.map(_.getKey) if ALLOWLISTED_HEADERS.contains(key.toLowerCase)
       value <- headers.getAll(key).asScala
     } yield (key, value)).toSeq
     Headers(elems: _*)

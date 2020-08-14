@@ -55,7 +55,7 @@ import proto.soundcloud.tracks.api.TracksClientProtobuf
 class Clients(
     config: AppConfig,
     telemetry: Telemetry,
-    whitelistedCients: Set[Urn],
+    allowlistedCients: Set[Urn],
     exceptionCollector: ExceptionCollector
 ) {
   private def jsonClient(resourceName: String) = JsonClient(
@@ -151,7 +151,7 @@ class Clients(
     new TrackVisibilityService(
       tracksTwirpClient,
       new VisibleTrackMapper,
-      whitelistedCients
+      allowlistedCients
     )
 
   val tracksService = new TrackRepresentationsService(

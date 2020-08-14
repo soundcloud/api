@@ -25,7 +25,7 @@ class ClientApplicationAuthFilterSpec extends Specification with Mockito {
     val request = HandlerRequest(Request(Method.Get, s"/foo"))
   }
 
-  "with non blacklisted client application id" >> {
+  "with allowlisted client application id" >> {
     "forwards the request" in new Context {
       service.apply(request) returns Future.value(Response(Status.Ok))
 
@@ -64,7 +64,7 @@ class ClientApplicationAuthFilterSpec extends Specification with Mockito {
     }
   }
 
-  "with blacklisted client application id" >> {
+  "with denylisted client application id" >> {
     "returns forbidden" in new Context {
       ClientApplicationAuthFilter.blackistedApplicationIds.foreach { appId =>
         val session = sessionBuilder.setAgent(new Urn("soundcloud", "application", appId)).build()

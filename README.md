@@ -12,9 +12,9 @@ See [CONTRIBUTING.md](https://github.com/soundcloud/public-api-strangler/blob/ma
 
 ## Notes
 
-### Rate limiting whitelist
+### Rate limiting allowlist
 
-The rate limiting feature makes use of a whitelist of client application URNs
-that will never be rate-limited. The source of truth for this whitelist is the
+The rate limiting feature makes use of a allowlist of client application URNs
+that will never be rate-limited. The source of truth for this allowlist is the
 Zookeeper cluster and is managed by the
 [Rate Limiting Service](https://github.com/soundcloud/ratelimiting/).

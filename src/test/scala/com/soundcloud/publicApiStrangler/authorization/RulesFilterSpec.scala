@@ -65,7 +65,7 @@ class RulesFilterSpec extends UnitSpecification {
   }
 
   "json content with URNs" >> {
-    "returns only items matching whitelisted policies" in new Context {
+    "returns only items matching allowlisted policies" in new Context {
       new RulesFilter(ContentPolicy.from("allowed"), ContentPolicy.from("monetize"))
         .filter(allRules, allJson)
         .map(_._1)

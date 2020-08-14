@@ -32,7 +32,7 @@ object Reason {
 
   /**
     * The rightsholder has decided that the content won't be available for this {@link com.soundcloud.jvmkit.UserSession}.
-    * This often means the content is available only to whitelisted client applications and/or user accounts.
+    * This often means the content is available only to allowlisted client applications and/or user accounts.
     */
   case object RIGHTSHOLDER_RESTRICTED extends Reason("RIGHTSHOLDER_RESTRICTED")
 

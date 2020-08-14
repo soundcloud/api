@@ -23,7 +23,7 @@ case class RulesFilterResult(
 /**
   * Filters contents accordingly to policies.
   *
-  * @param allowedPolicies The whitelisted policies, anything but these will be rejected.
+  * @param allowedPolicies The allowlisted policies, anything but these will be rejected.
   */
 class RulesFilter(allowedPolicies: ContentPolicy*) {
   val logger = SoundCloudLoggerFactory.getLogger(this.getClass)

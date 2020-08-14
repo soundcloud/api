@@ -9,7 +9,7 @@ import com.twitter.finagle.{Service, SimpleFilter}
 import com.twitter.util.Future
 
 /**
-  * Block access to the API based on a blacklist of client application ids
+  * Block access to the API based on a denylist of client application ids
   */
 class ClientApplicationAuthFilter(userAuthentication: UserAuthentication, telemetry: Telemetry, router: HandlerRouter)
     extends SimpleFilter[Request, Response] {

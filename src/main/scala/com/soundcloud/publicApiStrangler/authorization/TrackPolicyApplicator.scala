@@ -6,7 +6,7 @@ import com.soundcloud.publicApiStrangler.authorization.TrackDurationActionStatus
 import com.soundcloud.publicApiStrangler.authorization.policies.{ContentAuthorization, ContentPolicy, MonetizationModel}
 import play.api.libs.json.{JsObject, JsValue, Json}
 
-case class TrackPolicyApplicator(clientWhitelist: Set[Urn]) {
+case class TrackPolicyApplicator(clientAllowlist: Set[Urn]) {
   val durationJsonPropertyName = "duration"
 
   def apply(
@@ -43,7 +43,7 @@ case class TrackPolicyApplicator(clientWhitelist: Set[Urn]) {
       case ContentPolicy.BLOCK => false
       case ContentPolicy.MONETIZE =>
         contentAuth.getMonetizationModel match {
-          case MonetizationModel.SUB_HIGH_TIER | MonetizationModel.SUB_MID_TIER => userAgentIsWhitelisted(userSession)
+          case MonetizationModel.SUB_HIGH_TIER | MonetizationModel.SUB_MID_TIER => userAgentIsAllowlisted(userSession)
           case _ => true
         }
       case _ => true
@@ -61,15 +61,15 @@ case class TrackPolicyApplicator(clientWhitelist: Set[Urn]) {
       contentAuthorization: ContentAuthorization,
       userSession: UserSession
   ): JsObject = {
-    if (userAgentIsWhitelisted(userSession)) {
+    if (userAgentIsAllowlisted(userSession)) {
       track.withContentAuthorization(contentAuthorization)
     } else {
       track.withoutContentAuthorization
     }
   }
 
-  private def userAgentIsWhitelisted(userSession: UserSession) = {
-    clientWhitelist.contains(userSession.getAgent)
+  private def userAgentIsAllowlisted(userSession: UserSession) = {
+    clientAllowlist.contains(userSession.getAgent)
   }
 
   private def potentiallyReplaceDurations(track: Track, durationAction: TrackDurationAction): Track = {

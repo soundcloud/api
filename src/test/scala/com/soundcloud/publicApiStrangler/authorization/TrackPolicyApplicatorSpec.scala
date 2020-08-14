@@ -17,15 +17,15 @@ class TrackPolicyApplicatorSpec extends UnitSpecification {
         .map(track => (track \ "id").as[Long])
         .map(id => Urn("soundcloud", "tracks", id.toString))
 
-    val whitelistedClientUrn = Urn("soundcloud", "applications", "1000")
-    val nonWhitelistedClientUrn = Urn("soundcloud", "applications", "2000")
-    val clientWhitelist = Set(whitelistedClientUrn)
+    val allowlistedClientUrn = Urn("soundcloud", "applications", "1000")
+    val denylistedClientUrn = Urn("soundcloud", "applications", "2000")
+    val clientAllowlist = Set(allowlistedClientUrn)
 
     def rules: List[ContentAuthorization]
 
     def durationActions: List[TrackDurationAction]
 
-    lazy val trackPolicy = TrackPolicyApplicator(clientWhitelist)
+    lazy val trackPolicy = TrackPolicyApplicator(clientAllowlist)
     lazy val tracksWithPoliciesApplied =
       trackPolicy(session, new TracksVisitor(tracksArray), rules, durationActions).get
 
@@ -58,16 +58,16 @@ class TrackPolicyApplicatorSpec extends UnitSpecification {
       durations ==== List(370348, 2000, 326183)
     }
 
-    "all tracks has 'policy' and 'monetization_model' for whitelisted user agent" in new EverythingAuthorized {
-      session.getAgent returns whitelistedClientUrn
+    "all tracks has 'policy' and 'monetization_model' for allowlisted user agent" in new EverythingAuthorized {
+      session.getAgent returns allowlistedClientUrn
 
       tracksWithPoliciesApplied
         .as[List[JsObject]]
         .filter(e => !e.keys.contains("policy") || !e.keys.contains("monetization_model")) must beEmpty
     }
 
-    "no tracks has 'policy' and 'monetization_model' for non-whitelisted user agent" in new EverythingAuthorized {
-      session.getAgent returns nonWhitelistedClientUrn
+    "no tracks has 'policy' and 'monetization_model' for non-allowlisted user agent" in new EverythingAuthorized {
+      session.getAgent returns denylistedClientUrn
 
       tracksWithPoliciesApplied
         .as[List[JsObject]]
@@ -96,15 +96,15 @@ class TrackPolicyApplicatorSpec extends UnitSpecification {
         }
     }
 
-    "returns allowed and monetized tracks for whitelisted clients" in new PartiallyAuthorized {
-      session.getAgent returns whitelistedClientUrn
+    "returns allowed and monetized tracks for allowlisted clients" in new PartiallyAuthorized {
+      session.getAgent returns allowlistedClientUrn
 
       authorizedTrackIds mustEqual List(allowedTrackUrn, monetizedTrackUrn).map(_.identifier.toLong)
       durations ==== List(370348, 2000)
     }
 
-    "returns only allowed tracks for non-whitelisted clients" in new PartiallyAuthorized {
-      session.getAgent returns nonWhitelistedClientUrn
+    "returns only allowed tracks for non-allowlisted clients" in new PartiallyAuthorized {
+      session.getAgent returns denylistedClientUrn
 
       authorizedTrackIds mustEqual List(allowedTrackUrn).map(_.identifier.toLong)
       durations ==== List(370348)
@@ -137,16 +137,16 @@ class TrackPolicyApplicatorSpec extends UnitSpecification {
         }
     }
 
-    "returns allowed, tiered and ad-supported tracks for whitelisted clients" in new AdSupported {
-      session.getAgent returns whitelistedClientUrn
+    "returns allowed, tiered and ad-supported tracks for allowlisted clients" in new AdSupported {
+      session.getAgent returns allowlistedClientUrn
 
       authorizedTrackIds mustEqual List(allowedTrackUrn, monetizedHighTierTrackUrn, monetizedAdSupportedTrackUrn).map(
         _.identifier.toLong
       )
     }
 
-    "returns only allowed and ad-supported tracks for non-whitelisted clients" in new AdSupported {
-      session.getAgent returns nonWhitelistedClientUrn
+    "returns only allowed and ad-supported tracks for non-allowlisted clients" in new AdSupported {
+      session.getAgent returns denylistedClientUrn
 
       authorizedTrackIds mustEqual List(allowedTrackUrn, monetizedAdSupportedTrackUrn).map(_.identifier.toLong)
     }
@@ -182,7 +182,7 @@ class TrackPolicyApplicatorSpec extends UnitSpecification {
 
       override lazy val authorizedTrackIds =
         extractIds(
-          TrackPolicyApplicator(clientWhitelist)(session, new TracksVisitor(stream), rules, durationActions).get
+          TrackPolicyApplicator(clientAllowlist)(session, new TracksVisitor(stream), rules, durationActions).get
         )
 
       override def extractIds(json: JsValue) =
