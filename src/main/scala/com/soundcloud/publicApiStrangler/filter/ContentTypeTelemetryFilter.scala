@@ -22,7 +22,7 @@ class ContentTypeTelemetryFilter(telemetry: Telemetry, router: HandlerRouter) ex
       .labels(
         request.method.name,
         path,
-        request.contentType.getOrElse("(none)")
+        request.contentType.map(_.split(';').head).getOrElse("(none)")
       )
       .inc()
 
