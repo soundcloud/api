@@ -1,3 +1,6 @@
+// DO NOT EDIT
+// This file has been automatically downloaded via 'sc idl fetch' from an upstream project.
+
 syntax = "proto3";
 
 package proto.soundcloud.tracks.api;
@@ -22,6 +25,7 @@ message GetVisibleTracksRequest {
     repeated TrackRequest track_requests = 1;
     bool bypass_progressive_download_restriction = 2;
     proto.soundcloud.common.session.UserSession user_session = 3; // You must provide a UserSession
+    google.protobuf.StringValue subscription_country_code = 4; // optional, will be fetched by this service is not present
 }
 
 message TrackRequest {

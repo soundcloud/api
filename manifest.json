@@ -18,7 +18,8 @@
       "authenticator",
       "authsy",
       "gatekeeper",
-      "geoip",
+      "geoip2",
+      "hocuspocus",
       "liebling",
       "media-service",
       "moshimoshi",
@@ -26,6 +27,7 @@
       "public-api",
       "search-dispatcher-remix",
       "system-playlists",
-      "timeline"
+      "timeline",
+      "tracks"
     ]
 }

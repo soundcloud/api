@@ -1,0 +1,33 @@
+// DO NOT EDIT
+// This file has been automatically downloaded via 'sc idl fetch' from an upstream project.
+
+syntax = "proto3";
+
+package proto.soundcloud.gatekeeper.api;
+
+enum Plan {
+    DEFAULT_UNUSED = 0;
+    GO = 1;
+    GO_PLUS = 2;
+    GO_PLUS_DJ = 3;
+    PRO = 4;
+    PRO_UNLIMITED = 5;
+}
+
+message UpdateCachedSubscriptionRequest {
+    string user_urn = 1;
+    Plan plan = 2;
+}
+
+message UpdateCachedSubscriptionResponse {
+
+}
+
+service Gatekeeper {
+    // UpdateCachedSubscription allows clients to write to the overlay cache to cover over replication delays after subscription purchase.
+    // This endpoint is meant to be used by BFFs and Payment systems when they observe a successful purchase.
+    //
+    // returns `invalid_argument` when `UpdateCachedSubscriptionRequest` contains unrecognized `Plan` values, the DEFAULT_UNUSED Plan or malformed `user_urn`s
+    rpc UpdateCachedSubscription (UpdateCachedSubscriptionRequest) returns (UpdateCachedSubscriptionResponse) {
+    }
+}
