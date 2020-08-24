@@ -21,7 +21,7 @@ import com.soundcloud.publicApiStrangler.client.media.{
 import com.soundcloud.hocuspocus.HocuspocusClientProtobuf
 import com.soundcloud.jvmkit.module.twirp.TwirpClient
 import com.soundcloud.publicApiStrangler.client.mothership.{OkidokiClient, RichOkidokiClient}
-import com.soundcloud.publicApiStrangler.client.playlists.{PlaylistDeletionClient, PlaylistsClient}
+import com.soundcloud.publicApiStrangler.client.playlists.PlaylistDeletionClient
 import com.soundcloud.publicApiStrangler.client.pubmese.PubmeseClient
 import com.soundcloud.publicApiStrangler.client.quota.UserQuotaClient
 import com.soundcloud.publicApiStrangler.client.reposts.RepostsClient
@@ -104,8 +104,6 @@ class Clients(
   private val subscriptionsService = jsonClient("user_subscriptions")
 
   private val stitch4followsService = jsonClient("stitch4follows")
-
-  val playlistsClient = new PlaylistsClient(jsonClient("playlist"))
 
   val followCountsClient = new FollowCountsClient(stitch4followsService, config)
 
