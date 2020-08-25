@@ -65,7 +65,7 @@ message Playlist {
     google.protobuf.Timestamp updated_at = 18; // optional
     string user_urn = 19;
     int64 likes_count = 20;
-    bool is_album = 21; // optional
+    bool is_album = 21;
     string set_type = 22;
     bool managed_by_feeds = 23;
     int64 reposts_count = 24;
@@ -78,6 +78,6 @@ message Playlist {
     google.protobuf.StringValue purchase_url = 31; // optional
     google.protobuf.StringValue cursor = 32; // optional
     google.protobuf.StringValue ean = 33; // optional
-    bool streamable = 34;
+    google.protobuf.BoolValue streamable = 34; // optional
     string uri = 35;
 }

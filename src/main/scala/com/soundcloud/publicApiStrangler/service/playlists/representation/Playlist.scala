@@ -1,5 +1,6 @@
 package com.soundcloud.publicApiStrangler.service.playlists.representation
 
+import java.net.URLEncoder
 import java.time.format.DateTimeFormatter
 import java.time.{Instant, LocalDateTime, ZoneOffset}
 
@@ -37,7 +38,7 @@ case class Playlist(
     purchaseTitle: Option[String],
     artworkUrl: String,
     ean: Option[String],
-    streamable: Boolean,
+    streamable: Option[Boolean],
     embeddableBy: String,
     labelId: Option[String],
     user: User,
@@ -125,10 +126,10 @@ object Playlist {
       releaseMonth = releaseMonth,
       releaseYear = releaseYear,
       permalink = playlist.permalink,
-      permalinkUrl = playlist.permalinkUrl,
+      permalinkUrl = createFullPermalinkUrl(playlist),
       description = playlist.description,
       uri = playlist.uri,
-      tagList = playlist.userTags.mkString(" "),
+      tagList = getTagList(playlist.userTags),
       trackCount = playlist.trackCount,
       lastModified = playlist.updatedAt,
       license = playlist.license,
@@ -149,5 +150,23 @@ object Playlist {
       user = playlistOwner,
       tracks = playlistTracks
     )
+  }
+
+  /*
+   This method converts a list of the format [tag_a, tag_b] to a string like '"tag_a" "tag_b"'
+   */
+  private def getTagList(userTags: List[String]): String = {
+    if (userTags.nonEmpty) userTags.mkString("\"", "\" \"", "\"") else ""
+  }
+
+  private def createFullPermalinkUrl(
+      visiblePlaylist: VisiblePlaylist
+  ): String = {
+    if (!visiblePlaylist.public && visiblePlaylist.secretToken.isDefined) {
+      val secret = URLEncoder.encode(visiblePlaylist.secretToken.get, "UTF-8")
+      s"${visiblePlaylist.permalinkUrl}/$secret"
+    } else {
+      visiblePlaylist.permalinkUrl
+    }
   }
 }

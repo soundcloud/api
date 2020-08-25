@@ -89,7 +89,7 @@ class PlaylistsHandlerSpec extends UnitSpecification {
         purchaseTitle = None,
         artworkUrl = "",
         ean = None,
-        streamable = false,
+        streamable = Some(false),
         embeddableBy = "",
         labelId = None,
         user = user,

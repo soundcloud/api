@@ -36,7 +36,7 @@ case class VisiblePlaylist(
     purchaseUrl: Option[String],
     cursor: Option[String],
     ean: Option[String],
-    streamable: Boolean,
+    streamable: Option[Boolean],
     uri: String,
     trackRequests: List[TrackRequest]
 )

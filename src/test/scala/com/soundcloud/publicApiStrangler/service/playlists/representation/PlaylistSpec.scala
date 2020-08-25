@@ -24,9 +24,9 @@ class PlaylistSpec extends Specification with TrackRepresentationSpecContext {
       trackCount = 7,
       userTags = List("retro", "vintage"),
       releaseDate = Some(playlistReleaseInstant),
-      public = true,
+      public = false,
       sharing = "",
-      secretToken = None,
+      secretToken = Some("secret"),
       updatedAt = None,
       userUrn = userUrn.toString,
       likesCount = 1,
@@ -43,7 +43,7 @@ class PlaylistSpec extends Specification with TrackRepresentationSpecContext {
       purchaseUrl = None,
       cursor = None,
       ean = Some("7641825109894"),
-      streamable = false,
+      streamable = Some(false),
       uri = "https://api.soundcloud.com/playlists/42703821",
       trackRequests = List.empty
     )
@@ -61,18 +61,18 @@ class PlaylistSpec extends Specification with TrackRepresentationSpecContext {
       playlist.createdAt ==== Some(playlistReleaseInstant)
       playlist.duration ==== 120
       playlist.genre ==== "metal"
-      playlist.permalinkUrl ==== "http://soundcloud.com/some-random-link"
+      playlist.permalinkUrl ==== "http://soundcloud.com/some-random-link/secret"
       playlist.permalink ==== "some-random-link"
       playlist.artworkUrl ==== "http://some.url/link"
       playlist.trackCount ==== 7
-      playlist.tagList ==== "retro vintage"
+      playlist.tagList ==== "\"retro\" \"vintage\""
       playlist.releaseDay ==== Some(19)
       playlist.releaseMonth ==== Some(8)
       playlist.releaseYear ==== Some(2013)
       playlist.embeddableBy ==== ""
       playlist.downloadable === None
       playlist.ean ==== Some("7641825109894")
-      playlist.streamable ==== false
+      playlist.streamable ==== Some(false)
       playlist.uri ==== "https://api.soundcloud.com/playlists/42703821"
       playlist.user ==== defaultUser
       playlist.tracks ==== List(trackRepresentation)
