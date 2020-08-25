@@ -18,6 +18,7 @@ import com.soundcloud.publicApiStrangler.client.media.{
   TrackAccessRecorderClient,
   WaveformUrlsGenerator
 }
+import proto.soundcloud.playlists.api.PlaylistsClientProtobuf
 import com.soundcloud.hocuspocus.HocuspocusClientProtobuf
 import com.soundcloud.jvmkit.module.twirp.TwirpClient
 import com.soundcloud.publicApiStrangler.client.mothership.{OkidokiClient, RichOkidokiClient}
@@ -36,6 +37,7 @@ import com.soundcloud.publicApiStrangler.service.media.{StreamService, TrackAcce
 import com.soundcloud.publicApiStrangler.service.trackrepresentation.{TrackRepresentationsService, TrackUpdateService}
 import com.soundcloud.publicApiStrangler.service.{
   LikesService,
+  PlaylistsService,
   SearchService,
   SimilarTracksService,
   TimelineService,
@@ -119,11 +121,19 @@ class Clients(
   )
 
   val tracksClient = new TracksClient(jsonClient("tracks"))
+
   val tracksTwirpClient = TwirpClient(
     ResourceName("tracks"),
     config,
     telemetry,
     new TracksClientProtobuf(_, _)
+  )
+
+  val playlistsTwirpClient = TwirpClient(
+    ResourceName("playlists"),
+    config,
+    telemetry,
+    new PlaylistsClientProtobuf(_, _)
   )
 
   val mediaServiceClient = new MediaServiceClient(jsonClient("media_service"))
@@ -173,6 +183,7 @@ class Clients(
   val trackUpdateService = new TrackUpdateService(trackCoordinatorClient, hocuspocusClient, tracksService)
   val similarTracksService = new SimilarTracksService(tracksService, systemPlaylistsClient)
   val likesService = new LikesService(tracksService, lieblingClient)
+  val playlistService = new PlaylistsService(playlistsTwirpClient, tracksService, okidokiClient)
   val searchService = new SearchService(tracksService, searchClient)
 
   val streamService = new StreamService(trackVisibilityService, tracksClient)

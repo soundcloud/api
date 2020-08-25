@@ -1,6 +1,7 @@
 package com.soundcloud.publicApiStrangler.service.pagination
 
 import com.twitter.finagle.http.{ParamMap, Request}
+import org.specs2.matcher.Scope
 import org.specs2.mutable.Specification
 
 class PaginationSpec extends Specification {
@@ -85,7 +86,7 @@ class PaginationSpec extends Specification {
         s"$baseUrl$path?key=value&cursor=1&page_size=$pageSize"
       ),
       (
-        Pagination.buildCursorBasedPagination _,
+        CursorBasedPagination.build _,
         (
           CursorBasedPagination(baseUrl, path, ParamMap(), Some("1"), pageSize),
           CursorBasedPagination(
@@ -100,5 +101,29 @@ class PaginationSpec extends Specification {
         )
       )
     )
+  }
+
+  "OffsetBasedPagination" >> {
+    "can build offset pagination from request with no offset" in new Scope {
+      val request = mockRequest(Map("limit" -> "2"))
+      val pagination = OffsetBasedPagination.build(request)
+      pagination.limit ==== 2
+      pagination.offset ==== None
+      pagination.normalizedHref ==== s"$baseUrl$path?offset=0&limit=2"
+
+      val next = pagination.nextPage(2)
+      next.offset ==== Some(2)
+    }
+
+    "can build offset pagination from request with offset" in new Scope {
+      val request = mockRequest(Map("limit" -> "2", "offset" -> "2"))
+      val pagination = OffsetBasedPagination.build(request)
+      pagination.limit ==== 2
+      pagination.offset ==== Some(2)
+      pagination.normalizedHref ==== s"$baseUrl$path?offset=2&limit=2"
+
+      val next = pagination.nextPage(4)
+      next.offset ==== Some(4)
+    }
   }
 }

@@ -8,7 +8,7 @@ import com.soundcloud.jvmkit.module.telemetry.Telemetry
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.publicApiStrangler.Routing
 import com.soundcloud.publicApiStrangler.client.liebling.{LikeDeleted, LikeNotFound}
-import com.soundcloud.publicApiStrangler.service.pagination.{CursorBasedPagination, Pagination}
+import com.soundcloud.publicApiStrangler.service.pagination.CursorBasedPagination
 import com.soundcloud.publicApiStrangler.service.trackrepresentation.{
   TrackRepresentation,
   TrackRepresentationSpecContext,
@@ -62,7 +62,7 @@ class LikesHandlerSpec extends UnitSpecification {
       def paginationParams(path: String): CursorBasedPagination = {
         val mockRequest = Request(path)
         mockRequest.host = "localhost"
-        Pagination.buildCursorBasedPagination(mockRequest, Seq("linked_partitioning"))
+        CursorBasedPagination.build(mockRequest, Seq("linked_partitioning"))
 
       }
 

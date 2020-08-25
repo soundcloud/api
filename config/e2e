@@ -35,6 +35,7 @@ GEOIP_SRV_RECORD=dnssrv!http.geoip2http.prod.geoip.srv.db.s-cloud.net
 STITCH_SRV_RECORD=dnssrv!http.web-total-counts.prod.stitch4counts.srv.db.s-cloud.net
 REPOSTS_SRV_RECORD="dnssrv!http.api.prod.reposts.srv.db.s-cloud.net"
 REPOSTS_CLIENT_REQUEST_TIMEOUT_MILLIS="5000"
+PLAYLISTS_SRV_RECORD=dnssrv!http.api.prod.playlists.srv.db.s-cloud.net
 
 # Playlists and listings are being extracted out of Mothership, this configuration value is in anticipation of that.
 PLAYLIST_SRV_RECORD="dnssrv!http.moshimoshi.prod.mothership.srv.db.s-cloud.net"

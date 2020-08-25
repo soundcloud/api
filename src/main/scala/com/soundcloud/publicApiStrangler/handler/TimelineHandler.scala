@@ -13,7 +13,7 @@ import com.soundcloud.publicApiStrangler.mapper.timeline._
 import com.soundcloud.publicApiStrangler.mapper.timeline.publicApi.ActivitiesWithOriginMapper
 import com.soundcloud.publicApiStrangler.mapper.timeline.representation.Timeline
 import com.soundcloud.publicApiStrangler.service.TimelineService
-import com.soundcloud.publicApiStrangler.service.pagination.{CursorBasedPagination, Pagination}
+import com.soundcloud.publicApiStrangler.service.pagination.{CursorBasedPagination}
 import com.soundcloud.publicApiStrangler.service.timeline.{Timeline => SimpleTimeline}
 import com.soundcloud.publicApiStrangler.service.trackrepresentation.TrackRepresentation
 import com.soundcloud.publicApiStrangler.support._
@@ -48,7 +48,7 @@ class TimelineHandler(
 
   private def renderTrackActivities(request: HandlerRequest): Future[Response] = {
     userAuthentication.withLoggedInUser(request) { (session: LoggedInUserSession, _) =>
-      val pagination = Pagination.buildCursorBasedPagination(request, Seq("linked_partitioning"))
+      val pagination = CursorBasedPagination.build(request, Seq("linked_partitioning"))
 
       val (cursor, reverseCursor) = pagination.extraParams.get("uuid[to]") match {
         case Some(uuid) => (Some(UUID.fromString(uuid)), true)
@@ -85,7 +85,7 @@ class TimelineHandler(
 
   def renderFollowingTracks(request: HandlerRequest): Future[Response] = {
     userAuthentication.withLoggedInUser(request) { (session: LoggedInUserSession, _) =>
-      val pagination = Pagination.buildCursorBasedPagination(request, Seq("linked_partitioning"))
+      val pagination = CursorBasedPagination.build(request, Seq("linked_partitioning"))
 
       val (cursor, reverseCursor) = pagination.extraParams.get("uuid[to]") match {
         case Some(uuid) => (Some(UUID.fromString(uuid)), true)

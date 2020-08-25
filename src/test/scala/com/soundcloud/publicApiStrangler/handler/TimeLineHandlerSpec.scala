@@ -12,7 +12,7 @@ import com.soundcloud.publicApiStrangler.mapper.timeline.publicApi.ActivitiesWit
 import com.soundcloud.publicApiStrangler.mapper.timeline.representation.{Playlist, Track, User}
 import com.soundcloud.publicApiStrangler.mapper.timeline.{EntityMapper, EntitySummaryMapper}
 import com.soundcloud.publicApiStrangler.service.TimelineService
-import com.soundcloud.publicApiStrangler.service.pagination.Pagination
+import com.soundcloud.publicApiStrangler.service.pagination.CursorBasedPagination
 import com.soundcloud.publicApiStrangler.service.timeline.{Timeline, TimelineMeta, TrackTimelineItem}
 import com.soundcloud.publicApiStrangler.support.CursorPagination
 import com.soundcloud.publicApiStrangler.test.{HandlerSpecificationScope, UnitSpecification}
@@ -103,7 +103,7 @@ class TimeLineHandlerSpec extends UnitSpecification {
 
         val mockRequest = Request(path)
         mockRequest.host = "localhost"
-        val pagination = Pagination.buildCursorBasedPagination(mockRequest, Seq("linked_partitioning"))
+        val pagination = CursorBasedPagination.build(mockRequest, Seq("linked_partitioning"))
 
         val mockTimelineResponse = Timeline(mockTimelineItems, mockTimelineMeta, pagination)
         when(timelineService.fetchTimelineTracksForUser(session, None, false, 10, Some("uuid"), pagination))
@@ -127,7 +127,7 @@ class TimeLineHandlerSpec extends UnitSpecification {
 
         val mockRequest = Request(path)
         mockRequest.host = "localhost"
-        val pagination = Pagination.buildCursorBasedPagination(mockRequest, Seq("linked_partitioning"))
+        val pagination = CursorBasedPagination.build(mockRequest, Seq("linked_partitioning"))
 
         val mockTimelineResponse = Timeline(mockTimelineItems, mockTimelineMeta, pagination)
         when(timelineService.fetchTimelineTracksForUser(session, None, false, 10, Some("uuid"), pagination))
@@ -150,7 +150,7 @@ class TimeLineHandlerSpec extends UnitSpecification {
 
         val mockRequest = Request(path)
         mockRequest.host = "localhost"
-        val pagination = Pagination.buildCursorBasedPagination(mockRequest, Seq("linked_partitioning"))
+        val pagination = CursorBasedPagination.build(mockRequest, Seq("linked_partitioning"))
 
         when(timelineService.fetchTimelineTracksForUser(session, None, false, 10, Some("uuid"), pagination))
           .thenReturn(Future.value(null))

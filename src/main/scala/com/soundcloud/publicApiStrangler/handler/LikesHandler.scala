@@ -4,7 +4,7 @@ import com.soundcloud.jvmkit.module.bff.session.UserAuthentication
 import com.soundcloud.jvmkit.module.http.server.{HandlerRequest, JsonResponseBuilder}
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSession
-import com.soundcloud.publicApiStrangler.service.pagination.Pagination
+import com.soundcloud.publicApiStrangler.service.pagination.CursorBasedPagination
 import com.soundcloud.publicApiStrangler.service.trackrepresentation.TracksCollection
 import com.soundcloud.publicApiStrangler.handler.representation.tracks.TrackRepresentationResponse.handleTracksCollectionResponseFromService
 import com.soundcloud.publicApiStrangler.service._
@@ -103,7 +103,7 @@ class LikesHandler(userAuthentication: UserAuthentication, likesService: LikesSe
 
   private def performGetTracksLikes(request: HandlerRequest, session: UserSession, userId: String): Future[Response] = {
     val hasLinkedPartitioning = request.params.get("linked_partitioning").isDefined
-    val pagination = Pagination.buildCursorBasedPagination(request, Seq("linked_partitioning"))
+    val pagination = CursorBasedPagination.build(request, Seq("linked_partitioning"))
 
     def fetchTrackRepresentation(urn: Urn): Future[Outcome[TracksCollection]] = {
       likesService

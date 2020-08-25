@@ -64,7 +64,6 @@ object Routing {
       route(Method.Get, "/me/email", mothershipDispatcher.dispatch) :::
       route(Method.Post, "/playlists", mothershipDispatcher.dispatch) :::
       route(Method.Put, "/playlists/:id", mothershipDispatcher.dispatch) :::
-      route(Method.Get, "/playlists/:id", mothershipDispatcher.dispatch) :::
       route(Method.Get, "/playlists/:playlistId/tracks", mothershipDispatcher.dispatch) :::
       route(Method.Get, "/resolve", mothershipDispatcher.dispatch) :::
       route(Method.Post, "/tracks", mothershipDispatcher.dispatch) :::
@@ -93,7 +92,8 @@ object Routing {
   }
 
   def forPlaylistHandler(playlistsHandler: PlaylistsHandler): List[(Method, String, Handler)] = {
-    route(Method.Delete, "/playlists/:id", playlistsHandler.handleDelete)
+    route(Method.Delete, "/playlists/:id", playlistsHandler.handleDelete) :::
+      route(Method.Get, "/playlists/:id", playlistsHandler.handleGet)
   }
 
   def forSimilarTracksHandler(similarTracksHandler: SimilarTracksHandler): List[(Method, String, Handler)] = {

@@ -1,0 +1,83 @@
+// DO NOT EDIT
+// This file has been automatically downloaded via 'sc idl fetch' from an upstream dependency.
+
+syntax = "proto3";
+
+package proto.soundcloud.playlists.api;
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/wrappers.proto";
+
+import "common_session.proto";
+
+message PlaylistRequest {
+    string urn = 1;
+    google.protobuf.StringValue secret_token = 2; // optional
+    PlaylistPagination pagination = 3; // optional
+}
+
+message PlaylistPagination {
+    google.protobuf.StringValue cursor = 1; // optional
+    int64 limit = 2;
+}
+
+message GetVisiblePlaylistsRequest {
+    repeated PlaylistRequest playlist_requests = 1;
+    proto.soundcloud.common.session.UserSession user_session = 2;
+    google.protobuf.StringValue subscription_country_code = 3; // optional
+}
+
+message PlaylistResponse {
+    Playlist playlist = 1;
+    repeated TrackRequest track_requests = 2;
+    PlaylistPagination pagination = 3; // optional
+}
+
+message GetVisiblePlaylistsResponse {
+    repeated PlaylistResponse playlist_response = 1;
+}
+
+service Playlists {
+    rpc GetVisiblePlaylists (GetVisiblePlaylistsRequest) returns (GetVisiblePlaylistsResponse) {}
+}
+
+message TrackRequest {
+    string urn = 1;
+    google.protobuf.StringValue secret_token = 2; // optional
+}
+
+message Playlist {
+    string urn = 2;
+    string title = 3;
+    google.protobuf.StringValue description = 4; // optional
+    google.protobuf.Timestamp created_at = 5;
+    int64 duration = 6;
+    string genre = 7;
+    string permalink_url = 8;
+    string permalink = 9;
+    string artwork_url = 10;
+    int64 track_count = 12;
+    repeated string user_tags = 13;
+    google.protobuf.Timestamp release_date = 14; // optional
+    bool public = 15;
+    string sharing = 16;
+    google.protobuf.StringValue secret_token = 17; // optional
+    google.protobuf.Timestamp updated_at = 18; // optional
+    string user_urn = 19;
+    int64 likes_count = 20;
+    bool is_album = 21; // optional
+    string set_type = 22;
+    bool managed_by_feeds = 23;
+    int64 reposts_count = 24;
+    google.protobuf.Timestamp published_at = 25; // optional
+    string embeddable_by = 26;
+    google.protobuf.StringValue license = 27; // optional
+    google.protobuf.StringValue label_name = 28; // optional
+    google.protobuf.StringValue label_id = 29; // optional
+    google.protobuf.StringValue purchase_title = 30; // optional
+    google.protobuf.StringValue purchase_url = 31; // optional
+    google.protobuf.StringValue cursor = 32; // optional
+    google.protobuf.StringValue ean = 33; // optional
+    bool streamable = 34;
+    string uri = 35;
+}

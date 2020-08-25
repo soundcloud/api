@@ -1,0 +1,42 @@
+package com.soundcloud.publicApiStrangler.service.playlists.representation
+
+import java.time.Instant
+
+import com.soundcloud.publicApiStrangler.client.tracks.TrackRequest
+
+case class VisiblePlaylist(
+    urn: String,
+    title: String,
+    description: Option[String],
+    createdAt: Option[Instant],
+    duration: Long,
+    genre: String,
+    permalinkUrl: String,
+    permalink: String,
+    artworkUrl: String,
+    trackCount: Long,
+    userTags: List[String],
+    releaseDate: Option[Instant],
+    public: Boolean,
+    sharing: String,
+    secretToken: Option[String],
+    updatedAt: Option[Instant],
+    userUrn: String,
+    likesCount: Long,
+    isAlbum: Boolean,
+    setType: String,
+    managedByFeeds: Boolean,
+    repostsCount: Long,
+    publishedAt: Option[Instant],
+    embeddableBy: String,
+    license: Option[String],
+    labelName: Option[String],
+    labelId: Option[String],
+    purchaseTitle: Option[String],
+    purchaseUrl: Option[String],
+    cursor: Option[String],
+    ean: Option[String],
+    streamable: Boolean,
+    uri: String,
+    trackRequests: List[TrackRequest]
+)
