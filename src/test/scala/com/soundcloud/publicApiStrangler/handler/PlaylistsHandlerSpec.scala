@@ -85,6 +85,7 @@ class PlaylistsHandlerSpec extends UnitSpecification {
         downloadable = None,
         sharing = "",
         createdAt = None,
+        release = None,
         purchaseTitle = None,
         artworkUrl = "",
         ean = None,

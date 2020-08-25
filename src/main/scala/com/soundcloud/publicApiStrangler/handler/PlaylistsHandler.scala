@@ -66,10 +66,10 @@ class PlaylistsHandler(
       .map {
         case (mothershipResponse, playlistsResponse) =>
           val mothershipPlaylistJson = removeUnecessaryFields(
-            Json.parse(mothershipResponse.contentString).as[JsObject]
+            Json.parse(mothershipResponse.contentString.replace("null", "\"\"")).as[JsObject]
           )
           val newPlaylistJson = removeUnecessaryFields(
-            Json.parse(playlistsResponse.contentString).as[JsObject]
+            Json.parse(playlistsResponse.contentString.replace("null", "\"\"")).as[JsObject]
           )
 
           compareAndReportPlaylists(
