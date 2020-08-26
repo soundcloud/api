@@ -2,9 +2,7 @@ package com.soundcloud.publicApiStrangler.handler
 
 import com.soundcloud.jvmkit.module.bff.session.UserAuthentication
 import com.soundcloud.jvmkit.module.http.server.{HandlerRequest, JsonResponseBuilder, ResponseBuilder}
-import com.soundcloud.jvmkit.module.telemetry.Telemetry
 import com.soundcloud.jvmkit.module.util.Urn
-import com.soundcloud.jvmkit.module.util.logging.SoundCloudLoggerFactory
 import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.outcome._
 import com.soundcloud.publicApiStrangler.client.playlists.PlaylistDeletionClient
@@ -19,16 +17,8 @@ import play.api.libs.json.{JsObject, Json}
 class PlaylistsHandler(
     userAuthentication: UserAuthentication,
     playlistDeletionClient: PlaylistDeletionClient,
-    playlistsService: PlaylistsService,
-    mothershipDispatcher: DispatchToMothershipHandler,
-    telemetry: Telemetry
+    playlistsService: PlaylistsService
 ) {
-  private val inconsistentPlaylistFetchResponsesCounter =
-    telemetry.counter(
-      "inconsistent_playlist_fetch_response_total",
-      "Count of inconsistent (not matching) responses from legacy and new playlist fetch"
-    )
-
   def handleDelete(request: HandlerRequest): Future[Response] = {
     userAuthentication.withLoggedInUser(request) { (session, _) =>
       playlistDeletionClient.deletePlaylist(session, getPlaylistUrn(request)).map {
@@ -55,42 +45,6 @@ class PlaylistsHandler(
     fieldsToOmit.foldLeft(json: JsObject)((json, keyToOmit) => {
       json - keyToOmit
     })
-  }
-
-  def handleGet(request: HandlerRequest): Future[Response] = {
-    Future
-      .join(
-        mothershipDispatcher.dispatch(request),
-        handleFetchPlaylist(request)
-      )
-      .map {
-        case (mothershipResponse, playlistsResponse) =>
-          val mothershipPlaylistJson = removeUnecessaryFields(
-            Json.parse(mothershipResponse.contentString.replace("null", "\"\"")).as[JsObject]
-          )
-          val newPlaylistJson = removeUnecessaryFields(
-            Json.parse(playlistsResponse.contentString.replace("null", "\"\"")).as[JsObject]
-          )
-
-          compareAndReportPlaylists(
-            newPlaylistJson,
-            mothershipPlaylistJson
-          )
-          mothershipResponse
-      }
-  }
-
-  private def compareAndReportPlaylists(
-      playlist1: JsObject,
-      playlist2: JsObject
-  ): Unit = {
-    if (playlist1 != playlist2) {
-      inconsistentPlaylistFetchResponsesCounter.inc()
-      SoundCloudLoggerFactory
-        .getLogger(getClass)
-        .warn(s"Playlist inconsistency: ${playlist1} != ${playlist2}")
-    }
-
   }
 
   def handleFetchPlaylist(request: HandlerRequest): Future[Response] = {
