@@ -93,7 +93,9 @@ class PlaylistsHandlerSpec extends UnitSpecification {
         embeddableBy = "",
         labelId = None,
         user = user,
-        tracks = List.empty
+        tracks = List.empty,
+        secretToken = None,
+        secretUri = None
       )
   }
 

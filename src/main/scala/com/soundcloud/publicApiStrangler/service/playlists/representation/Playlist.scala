@@ -42,7 +42,9 @@ case class Playlist(
     embeddableBy: String,
     labelId: Option[String],
     user: User,
-    tracks: List[TrackRepresentation]
+    tracks: List[TrackRepresentation],
+    secretUri: Option[String],
+    secretToken: Option[String]
 )
 
 object Playlist {
@@ -64,7 +66,7 @@ object Playlist {
   }
 
   implicit val playlistWrites = Writes[Playlist] { playlist =>
-    Json.obj(
+    val playlistJson = Json.obj(
       "duration" -> playlist.duration,
       "genre" -> playlist.genre,
       "release_day" -> playlist.releaseDay,
@@ -101,13 +103,18 @@ object Playlist {
       "artwork_url" -> playlist.artworkUrl,
       "purchase_url" -> playlist.purchaseUrl
     )
+
+    playlist.secretToken.map(token => playlistJson ++ Json.obj("secret_token" -> token))
+    playlist.secretUri.map(uri => playlistJson ++ Json.obj("secret_uri" -> uri))
+    playlistJson
   }
 
   def fromVisiblePlaylist(
       playlist: VisiblePlaylist,
       playlistTracks: List[TrackRepresentation],
       playlistOwner: User,
-      maybeLabel: Option[User]
+      maybeLabel: Option[User],
+      requestingUserUrn: Option[Urn]
   ): Playlist = {
     val releaseDay =
       playlist.releaseDate.map(date => LocalDateTime.ofInstant(date, ZoneOffset.UTC).getDayOfMonth)
@@ -148,7 +155,13 @@ object Playlist {
       label = maybeLabel,
       purchaseUrl = playlist.purchaseUrl,
       user = playlistOwner,
-      tracks = playlistTracks
+      tracks = playlistTracks,
+      secretToken = requestingUserUrn.flatMap(ownerUrn =>
+        if (!playlist.public && playlist.userUrn == ownerUrn.toString) playlist.secretToken else None
+      ),
+      secretUri = requestingUserUrn.flatMap(ownerUrn =>
+        if (!playlist.public && playlist.userUrn == ownerUrn.toString) Some(playlist.uri) else None
+      )
     )
   }
 

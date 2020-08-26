@@ -44,7 +44,7 @@ class PlaylistSpec extends Specification with TrackRepresentationSpecContext {
       cursor = None,
       ean = Some("7641825109894"),
       streamable = Some(false),
-      uri = "https://api.soundcloud.com/playlists/42703821",
+      uri = "https://api.soundcloud.com/playlists/42703821?secret_token=secret",
       trackRequests = List.empty
     )
 
@@ -52,7 +52,13 @@ class PlaylistSpec extends Specification with TrackRepresentationSpecContext {
     "fields are mapped correctly" in {
       val trackRepresentation = createTrackRepresentation()
       val playlist =
-        Playlist.fromVisiblePlaylist(visiblePlaylist, List(trackRepresentation), defaultUser, Some(defaultLabel))
+        Playlist.fromVisiblePlaylist(
+          visiblePlaylist,
+          List(trackRepresentation),
+          defaultUser,
+          Some(defaultLabel),
+          Some(Urn("soundcloud", "users", "1"))
+        )
 
       playlist.title ==== "playlist mix"
       playlist.id ==== 42703821
@@ -73,17 +79,40 @@ class PlaylistSpec extends Specification with TrackRepresentationSpecContext {
       playlist.downloadable === None
       playlist.ean ==== Some("7641825109894")
       playlist.streamable ==== Some(false)
-      playlist.uri ==== "https://api.soundcloud.com/playlists/42703821"
+      playlist.uri ==== "https://api.soundcloud.com/playlists/42703821?secret_token=secret"
       playlist.user ==== defaultUser
       playlist.tracks ==== List(trackRepresentation)
+      playlist.secretUri ==== None
+      playlist.secretToken ==== None
     }
 
     "downloadable is set to true if all tracks are downloadable" in {
       val downloadableTrack = createTrackRepresentation().copy(downloadable = true)
       val playlist =
-        Playlist.fromVisiblePlaylist(visiblePlaylist, List(downloadableTrack), defaultUser, Some(defaultLabel))
+        Playlist.fromVisiblePlaylist(
+          visiblePlaylist,
+          List(downloadableTrack),
+          defaultUser,
+          Some(defaultLabel),
+          Some(Urn("soundcloud", "users", "1"))
+        )
 
       playlist.downloadable ==== Some(true)
+    }
+
+    "owner only fields are added when requesting user owns playlist" in {
+      val downloadableTrack = createTrackRepresentation().copy(downloadable = true)
+      val playlist =
+        Playlist.fromVisiblePlaylist(
+          visiblePlaylist,
+          List(downloadableTrack),
+          defaultUser,
+          Some(defaultLabel),
+          Some(Urn.parse(visiblePlaylist.userUrn).get)
+        )
+
+      playlist.secretToken ==== Some("secret")
+      playlist.secretUri ==== Some("https://api.soundcloud.com/playlists/42703821?secret_token=secret")
     }
   }
 }

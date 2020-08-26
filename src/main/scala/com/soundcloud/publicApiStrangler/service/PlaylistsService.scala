@@ -56,7 +56,7 @@ class PlaylistsService(
         .map(id => moshimoshiClient.fetchUserObjects(session, Set(Urn("soundcloud", "users", id))).map(_.headOption))
         .getOrElse(Future.None)
     } yield Some(
-      Playlist.fromVisiblePlaylist(visiblePlaylist, tracks, playlistOwner, maybeLabelOwner)
+      Playlist.fromVisiblePlaylist(visiblePlaylist, tracks, playlistOwner, maybeLabelOwner, session.user)
     )
   }
 
