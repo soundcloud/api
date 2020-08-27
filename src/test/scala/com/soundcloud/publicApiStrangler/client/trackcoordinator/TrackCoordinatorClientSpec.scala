@@ -45,38 +45,36 @@ class TrackCoordinatorClientSpec extends UnitSpecification {
     val requestBody = Json.stringify(
       Json.toJson(trackMetadataUpdateRequest.track).as[JsObject] ++ Json.obj(
         "artwork_from_s3" -> Json.toJson(trackArtworkMetaResponse)
-      )
+      ) ++ Json.toJson(trackAssetDataUpdateRequest).as[JsObject]
     )
 
-    val trackAssetUpdateRequestBody = Json.stringify(Json.toJson(trackAssetDataUpdateRequest))
+    val expectedResponse = TrackMetadataUpdateResult(
+      urn = "soundcloud:sounds:174088262",
+      public = true,
+      title = "Awesome Track",
+      api_streamable = Some(true),
+      commentable = true,
+      description = Some("This track is awesome"),
+      downloadable = Some(false),
+      embeddable = Some(true),
+      genre = Some("Free jazz"),
+      geo_blockings = Some(List("US")),
+      isrc = Some("US-S1Z-99-00001"),
+      label_name = Some("Foobar records"),
+      license = "all-rights-reserved",
+      permalink = "awesome-track-2014-10-27-17-25-29-66",
+      purchase_title = Some("buy123"),
+      purchase_url = Some("http://buy.that.com"),
+      release_day = Some(1),
+      release_month = Some(2),
+      reveal_comments = true,
+      reveal_stats = true,
+      tag_list = Some("tag onw two \"hello tag\" tōkyō")
+    )
   }
 
   "Update track metadata" >> {
     trait SuccessContext extends Context {
-      val expectedResponse = TrackMetadataUpdateResult(
-        urn = "soundcloud:sounds:174088262",
-        public = true,
-        title = "Awesome Track",
-        api_streamable = Some(true),
-        commentable = true,
-        description = Some("This track is awesome"),
-        downloadable = Some(false),
-        embeddable = Some(true),
-        genre = Some("Free jazz"),
-        geo_blockings = Some(List("US")),
-        isrc = Some("US-S1Z-99-00001"),
-        label_name = Some("Foobar records"),
-        license = "all-rights-reserved",
-        permalink = "awesome-track-2014-10-27-17-25-29-66",
-        purchase_title = Some("buy123"),
-        purchase_url = Some("http://buy.that.com"),
-        release_day = Some(1),
-        release_month = Some(2),
-        reveal_comments = true,
-        reveal_stats = true,
-        tag_list = Some("tag onw two \"hello tag\" tōkyō")
-      )
-
       when(jsonClient.putWithSession(session, path, Params.empty, Headers.empty, Some(requestBody)))
         .thenReturn(
           Future(jsonResponse(Status.Ok, Fixtures.trackCoordinatorTrack))
@@ -99,7 +97,13 @@ class TrackCoordinatorClientSpec extends UnitSpecification {
     "Successfully update track metadata" in new SuccessContext {
       val result =
         Await.result(
-          client.updateTrack(session, trackUrn, Some(trackMetadataUpdateRequest), Some(trackArtworkMetaResponse))
+          client.updateTrack(
+            session,
+            trackUrn,
+            Some(trackAssetDataUpdateRequest),
+            Some(trackMetadataUpdateRequest),
+            Some(trackArtworkMetaResponse)
+          )
         )
 
       result mustEqual Good(expectedResponse)
@@ -108,7 +112,13 @@ class TrackCoordinatorClientSpec extends UnitSpecification {
     "Update metadata returns 404 when not found" in new NotFoundContext {
       val result =
         Await.result(
-          client.updateTrack(session, trackUrn, Some(trackMetadataUpdateRequest), Some(trackArtworkMetaResponse))
+          client.updateTrack(
+            session,
+            trackUrn,
+            Some(trackAssetDataUpdateRequest),
+            Some(trackMetadataUpdateRequest),
+            Some(trackArtworkMetaResponse)
+          )
         )
 
       result mustEqual NotFound().bad
@@ -116,23 +126,30 @@ class TrackCoordinatorClientSpec extends UnitSpecification {
 
     "Handles unexpected error" in new ErrorContext {
       Await.result(
-        client.updateTrack(session, trackUrn, Some(trackMetadataUpdateRequest), Some(trackArtworkMetaResponse))
+        client.updateTrack(
+          session,
+          trackUrn,
+          Some(trackAssetDataUpdateRequest),
+          Some(trackMetadataUpdateRequest),
+          Some(trackArtworkMetaResponse)
+        )
       ) must throwAn[UnhandledResponseException]
     }
   }
 
   "Update track asset data" >> {
     trait SuccessContext extends Context {
+
       when(
         jsonClient.putWithSession(
           session,
           Path("/tracks") / trackUrn,
           Params.empty,
           Headers.empty,
-          Some(trackAssetUpdateRequestBody)
+          Some(requestBody)
         )
       ).thenReturn(
-        Future(jsonResponse(Status.Ok, JsNull))
+        Future(jsonResponse(Status.Ok, Json.toJson(expectedResponse)))
       )
     }
 
@@ -143,7 +160,7 @@ class TrackCoordinatorClientSpec extends UnitSpecification {
           Path("/tracks") / trackUrn,
           Params.empty,
           Headers.empty,
-          Some(trackAssetUpdateRequestBody)
+          Some(requestBody)
         )
       ).thenReturn(
         Future(jsonResponse(Status.NotFound, JsNull))
@@ -157,7 +174,7 @@ class TrackCoordinatorClientSpec extends UnitSpecification {
           Path("/tracks") / trackUrn,
           Params.empty,
           Headers.empty,
-          Some(trackAssetUpdateRequestBody)
+          Some(requestBody)
         )
       ).thenReturn(
         Future(jsonResponse(Status.InternalServerError, Json.obj("400" -> "Invalid Request")))
@@ -167,16 +184,28 @@ class TrackCoordinatorClientSpec extends UnitSpecification {
     "Successfully update track audio data" in new SuccessContext {
       val result =
         Await.result(
-          client.updateTrackAssetData(trackAssetDataUpdateRequest, session, trackUrn)
+          client.updateTrack(
+            session,
+            trackUrn,
+            Some(trackAssetDataUpdateRequest),
+            Some(trackMetadataUpdateRequest),
+            Some(trackArtworkMetaResponse)
+          )
         )
 
-      result mustEqual Good(())
+      result mustEqual Good(expectedResponse)
     }
 
     "Return 404 if track not found" in new NotFoundContext {
       val result =
         Await.result(
-          client.updateTrackAssetData(trackAssetDataUpdateRequest, session, trackUrn)
+          client.updateTrack(
+            session,
+            trackUrn,
+            Some(trackAssetDataUpdateRequest),
+            Some(trackMetadataUpdateRequest),
+            Some(trackArtworkMetaResponse)
+          )
         )
 
       result mustEqual NotFound().bad
@@ -184,7 +213,13 @@ class TrackCoordinatorClientSpec extends UnitSpecification {
 
     "Handles unexpected error" in new ErrorContext {
       Await.result(
-        client.updateTrackAssetData(trackAssetDataUpdateRequest, session, trackUrn)
+        client.updateTrack(
+          session,
+          trackUrn,
+          Some(trackAssetDataUpdateRequest),
+          Some(trackMetadataUpdateRequest),
+          Some(trackArtworkMetaResponse)
+        )
       ) must throwAn[UnhandledResponseException]
     }
   }

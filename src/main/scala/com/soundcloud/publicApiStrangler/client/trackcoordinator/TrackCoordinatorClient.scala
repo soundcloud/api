@@ -22,37 +22,28 @@ class TrackCoordinatorClient(service: JsonClient) {
       .map(TrackCoordinatorResponseMapper(_))
   }
 
-  def updateTrackAssetData(
-      trackAssetDataUpdate: TrackAssetDataUpdateRequest,
-      session: UserSession,
-      trackUrn: Urn
-  ): Future[Outcome[Unit]] = {
-    val requestBody = Json.stringify(Json.toJson(trackAssetDataUpdate))
-    service
-      .putWithSession(session, Path("/tracks") / trackUrn, Params.empty, Headers.empty, Some(requestBody))
-      .map(TrackCoordinatorResponseMapper(_))
-  }
-
   def updateTrack(
       session: UserSession,
       trackUrn: Urn,
-      updateTrackMetadata: Option[TrackMetadataUpdateRequest],
-      artworkMetadata: Option[TrackArtworkUpdateResult]
+      maybeUpdateTrackAsset: Option[TrackAssetDataUpdateRequest],
+      maybeUpdateTrackMetadata: Option[TrackMetadataUpdateRequest],
+      maybeArtworkMetadata: Option[TrackArtworkUpdateResult]
   ): Future[Outcome[TrackMetadataUpdateResult]] = {
-
-    val trackMetadataJson =
-      (updateTrackMetadata, artworkMetadata) match {
-        case (Some(trackMeta), Some(artworkMeta)) =>
-          Json.toJson(trackMeta.track).as[JsObject] ++ Json.obj("artwork_from_s3" -> Json.toJson(artworkMeta))
-        case (None, Some(artworkMeta)) => Json.obj("artwork_from_s3" -> Json.toJson(artworkMeta))
-        case (Some(trackMeta), None) => Json.toJson(trackMeta.track)
-        case _ => Json.obj()
-      }
-
-    val requestBody = Json.stringify(Json.toJson(trackMetadataJson))
-
+    val requestBody = buildBody(maybeUpdateTrackAsset, maybeUpdateTrackMetadata, maybeArtworkMetadata)
     service
       .putWithSession(session, Path("/tracks") / trackUrn, Params.empty, Headers.empty, Some(requestBody))
       .map(TrackMetadataUpdateMapper(_))
+  }
+
+  private def buildBody(
+      maybeUpdateTrackAsset: Option[TrackAssetDataUpdateRequest],
+      maybeUpdateTrackMetadata: Option[TrackMetadataUpdateRequest],
+      maybeArtworkMetadata: Option[TrackArtworkUpdateResult]
+  ): String = {
+    var body = Json.obj()
+    maybeUpdateTrackAsset.foreach(trackAsset => body = body ++ Json.toJson(trackAsset).as[JsObject])
+    maybeUpdateTrackMetadata.foreach(metadata => body = body ++ Json.toJson(metadata.track).as[JsObject])
+    maybeArtworkMetadata.foreach(artworkMeta => body = body ++ Json.obj("artwork_from_s3" -> Json.toJson(artworkMeta)))
+    Json.stringify(body)
   }
 }

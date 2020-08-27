@@ -32,26 +32,17 @@ class TrackUpdateService(
       trackUrn: Urn,
       session: UserSession
   ): Future[Outcome[TrackRepresentation]] = {
-    for {
-      (assetUpdateResult, metadataUpdateResult) <- Future.join(
-        maybeUpdateTrackAsset match {
-          case Some(trackAsset) =>
-            trackCoordinatorClient.updateTrackAssetData(trackAsset, session, trackUrn)
-          case _ => Future.value(Good(()))
-        },
-        uploadArtworkToS3AndUpdateMetadata(maybeUpdateAlbumArt, maybeTrackMetadata, trackUrn, session)
-      )
-    } yield {
-      (assetUpdateResult, metadataUpdateResult) match {
-        case (Good(_), Good(_)) => metadataUpdateResult
-        case (Bad(outcome), _) => outcome.bad
-        case (_, Bad(outcome)) => outcome.bad
-        case _ => throw new UnhandledOutcomeException()
-      }
-    }
+    uploadArtworkToS3AndUpdateTrack(
+      maybeUpdateTrackAsset,
+      maybeUpdateAlbumArt,
+      maybeTrackMetadata,
+      trackUrn,
+      session
+    )
   }
 
-  private def uploadArtworkToS3AndUpdateMetadata(
+  private def uploadArtworkToS3AndUpdateTrack(
+      maybeUpdateTrackAsset: Option[TrackAssetDataUpdateRequest],
       maybeUpdateAlbumArt: Option[TrackArtworkUpdateRequest],
       updateTrackMetadata: Option[TrackMetadataUpdateRequest],
       trackUrn: Urn,
@@ -71,20 +62,27 @@ class TrackUpdateService(
       }
 
       updatedTrack <- uploadeImageResponse.flatMap(image =>
-        updateTrackMetadataAndArtwork(updateTrackMetadata, image, session, trackUrn)
+        updateTrackMetadataAndArtwork(maybeUpdateTrackAsset, updateTrackMetadata, image, session, trackUrn)
       )
     } yield updatedTrack
 
   }
 
   private def updateTrackMetadataAndArtwork(
+      maybeUpdateTrackAsset: Option[TrackAssetDataUpdateRequest],
       updateTrackMetadata: Option[TrackMetadataUpdateRequest],
       imageMetadata: Option[TrackArtworkUpdateResult],
       session: UserSession,
       trackUrn: Urn
   ): Future[Outcome[TrackRepresentation]] = {
     for {
-      updateResult <- trackCoordinatorClient.updateTrack(session, trackUrn, updateTrackMetadata, imageMetadata)
+      updateResult <- trackCoordinatorClient.updateTrack(
+        session,
+        trackUrn,
+        maybeUpdateTrackAsset,
+        updateTrackMetadata,
+        imageMetadata
+      )
       maybeTrack <- trackRepresentationsService.track(session, new TrackRequest(trackUrn, None))
       result = (updateResult, maybeTrack) match {
         case (Good(updateResult), Some(track)) => Good(buildUpdatedTrackWithNewMetadata(track, updateResult))
