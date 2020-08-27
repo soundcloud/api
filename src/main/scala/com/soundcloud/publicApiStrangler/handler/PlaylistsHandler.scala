@@ -2,6 +2,7 @@ package com.soundcloud.publicApiStrangler.handler
 
 import com.soundcloud.jvmkit.module.bff.session.UserAuthentication
 import com.soundcloud.jvmkit.module.http.server.{HandlerRequest, JsonResponseBuilder, ResponseBuilder}
+import com.soundcloud.jvmkit.module.telemetry.Telemetry
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.outcome._
@@ -17,8 +18,17 @@ import play.api.libs.json.Json
 class PlaylistsHandler(
     userAuthentication: UserAuthentication,
     playlistDeletionClient: PlaylistDeletionClient,
-    playlistsService: PlaylistsService
+    playlistsService: PlaylistsService,
+    mothershipDispatcher: DispatchToMothershipHandler,
+    telemetry: Telemetry
 ) {
+  private val usagePermalinkFetchPlaylistsCounter =
+    telemetry.counter(
+      "usage_permalink_fetching_playlist",
+      "Count of total number of usage of permalink to fetch playlists",
+      "client_id"
+    )
+
   def handleDelete(request: HandlerRequest): Future[Response] = {
     userAuthentication.withLoggedInUser(request) { (session, _) =>
       playlistDeletionClient.deletePlaylist(session, getPlaylistUrn(request)).map {
@@ -26,6 +36,21 @@ class PlaylistsHandler(
           JsonResponseBuilder(status = status, body = Json.stringify(Json.obj("status" -> statusDescription(status)))).build
         case Bad(_) => ResponseBuilder.internalServerError()
       }
+    }
+  }
+
+  def handleGet(request: HandlerRequest): Future[Response] = {
+    val IdParamPattern = "(\\d+)".r
+    val playlistUrn = request.routeParams("id")
+
+    userAuthentication.withUserSession(request) { session =>
+      val clientAppId = Option(session.getAgent).map(_.identifier).getOrElse("unknown")
+      playlistUrn match {
+        case IdParamPattern(_) => None
+        case _ =>
+          usagePermalinkFetchPlaylistsCounter.labels(clientAppId).inc()
+      }
+      mothershipDispatcher.dispatch(request)
     }
   }
 
