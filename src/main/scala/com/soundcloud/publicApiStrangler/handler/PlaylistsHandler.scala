@@ -12,7 +12,7 @@ import com.soundcloud.publicApiStrangler.service.pagination.OffsetBasedPaginatio
 import com.soundcloud.publicApiStrangler.service.playlists.representation.Playlist
 import com.twitter.finagle.http.{Response, Status}
 import com.twitter.util.Future
-import play.api.libs.json.{JsObject, Json}
+import play.api.libs.json.Json
 
 class PlaylistsHandler(
     userAuthentication: UserAuthentication,
@@ -27,24 +27,6 @@ class PlaylistsHandler(
         case Bad(_) => ResponseBuilder.internalServerError()
       }
     }
-  }
-
-  def removeUnecessaryFields(json: JsObject): JsObject = {
-    val fieldsToOmit =
-      List(
-        "downloadable",
-        "label",
-        "favoritings_count",
-        "comment_count",
-        "isrc",
-        "playback_count",
-        "waveform_url",
-        "tracks"
-      )
-
-    fieldsToOmit.foldLeft(json: JsObject)((json, keyToOmit) => {
-      json - keyToOmit
-    })
   }
 
   def handleFetchPlaylist(request: HandlerRequest): Future[Response] = {
