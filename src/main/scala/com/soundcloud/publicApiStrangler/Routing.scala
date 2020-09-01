@@ -93,7 +93,7 @@ object Routing {
 
   def forPlaylistHandler(playlistsHandler: PlaylistsHandler): List[(Method, String, Handler)] = {
     route(Method.Delete, "/playlists/:id", playlistsHandler.handleDelete) :::
-      route(Method.Get, "/playlists/:id", playlistsHandler.handleGet)
+      route(Method.Get, "/playlists/:id", playlistsHandler.handleFetchPlaylist)
   }
 
   def forSimilarTracksHandler(similarTracksHandler: SimilarTracksHandler): List[(Method, String, Handler)] = {

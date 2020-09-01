@@ -1,8 +1,6 @@
 package com.soundcloud.publicApiStrangler.handler
 
 import com.soundcloud.jvmkit.module.bff.testsupport.FakeUserAuthentication
-import com.soundcloud.jvmkit.module.http.server.{HandlerRequest, JsonResponseBuilder}
-import com.soundcloud.jvmkit.module.telemetry.Telemetry
 import com.soundcloud.jvmkit.module.util.session.UserSessionBuilder
 import com.soundcloud.jvmkit.module.util.{Geo, Urn}
 import com.soundcloud.outcome._
@@ -14,7 +12,7 @@ import com.soundcloud.publicApiStrangler.service.playlists.representation.Playli
 import com.soundcloud.publicApiStrangler.test.{HandlerSpecificationScope, UnitSpecification}
 import com.twitter.finagle.http.Status
 import com.twitter.util.Future
-import org.mockito.Mockito.when
+import org.mockito.Mockito.{verify, when}
 import play.api.libs.json.{JsDefined, JsString, Json}
 
 class PlaylistsHandlerSpec extends UnitSpecification {
@@ -28,16 +26,12 @@ class PlaylistsHandlerSpec extends UnitSpecification {
 
     val playlistDeletionClient = mock[PlaylistDeletionClient]
     val playlistsService = mock[PlaylistsService]
-    val mothershipDispatcher = mock[DispatchToMothershipHandler]
-    val telemetry = Telemetry.createIsolatedInstance
     val playlistUrn = Urn("soundcloud", "playlists", "1")
 
     lazy val handler = new PlaylistsHandler(
       new FakeUserAuthentication(session),
       playlistDeletionClient,
-      playlistsService,
-      mothershipDispatcher,
-      telemetry
+      playlistsService
     )
 
     override def routingDefinitions = Routing.forPlaylistHandler(handler)
@@ -156,14 +150,13 @@ class PlaylistsHandlerSpec extends UnitSpecification {
     "passes secret token to playlists service" in new Context {
       when(playlistsService.fetchPlaylist(session, playlistUrn, Some("s3cret"), None))
         .thenReturn(Future.value(Good(playlist)))
-      mothershipDispatcher.dispatch(any[HandlerRequest]) returns Future.value(JsonResponseBuilder.ok())
       get("/playlists/1", Map("secret_token" -> "s3cret"))
+      verify(playlistsService).fetchPlaylist(session, playlistUrn, Some("s3cret"), None)
     }
 
     "it returns 200 when a playlist is found" in new Context {
       when(playlistsService.fetchPlaylist(session, playlistUrn, None, None))
         .thenReturn(Future.value(Good(playlist)))
-      mothershipDispatcher.dispatch(any[HandlerRequest]) returns Future.value(JsonResponseBuilder.ok())
       val response = get("/playlists/1")
       response.status.code ==== 200
     }
@@ -171,7 +164,6 @@ class PlaylistsHandlerSpec extends UnitSpecification {
     "it returns 404 for None" in new Context {
       when(playlistsService.fetchPlaylist(session, playlistUrn, None, None))
         .thenReturn(Future.value(NotFound("playlist not found").bad))
-      mothershipDispatcher.dispatch(any[HandlerRequest]) returns Future.value(JsonResponseBuilder.notFound())
 
       val response = get("/playlists/1")
       response.status.code ==== 404
