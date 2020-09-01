@@ -6,7 +6,7 @@ import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSessionBuilder
 import com.soundcloud.outcome._
 import com.soundcloud.publicApiStrangler.client.trackcoordinator.TrackCoordinatorClient
-import com.soundcloud.publicApiStrangler.client.tracks.{TrackMetadataUpdateResult, TrackRequest}
+import com.soundcloud.publicApiStrangler.client.tracks.{TrackCoordinatorTrack, TrackRequest}
 import com.soundcloud.publicApiStrangler.handler.support.error.UnhandledOutcomeException
 import com.soundcloud.publicApiStrangler.handler.support.requestParser.{
   TrackArtworkUpdateRequest,
@@ -39,7 +39,7 @@ class TrackUpdateServiceSpec extends UnitSpecification with TrackRepresentationS
     }
 
     val mockTrackMetadataUpdateResult =
-      TrackMetadataUpdateResult(
+      TrackCoordinatorTrack(
         urn = mockTrackRepresentation.visibleTrack.urn.toString,
         public = mockTrackRepresentation.visibleTrack.public,
         api_streamable = mockTrackRepresentation.visibleTrack.apiStreamable,
@@ -68,7 +68,7 @@ class TrackUpdateServiceSpec extends UnitSpecification with TrackRepresentationS
         trackAssetDataUpdateRequest: Option[TrackAssetDataUpdateRequest],
         updateTrackMetadata: Option[TrackMetadataUpdateRequest],
         artworkMetadata: Option[TrackArtworkUpdateResult],
-        expectedResponse: Outcome[TrackMetadataUpdateResult]
+        expectedResponse: Outcome[TrackCoordinatorTrack]
     ) = {
       when(
         trackCoordinatorClient.updateTrack(

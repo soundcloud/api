@@ -4,10 +4,10 @@ import com.google.protobuf.ByteString
 import com.soundcloud.hocuspocus.{HocuspocusService, Image, Kind, Raw}
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSession
-import com.soundcloud.outcome._
+import com.soundcloud.outcome.{Outcome, _}
 import com.soundcloud.publicApiStrangler.client.pubmese.Isrc
 import com.soundcloud.publicApiStrangler.client.trackcoordinator.TrackCoordinatorClient
-import com.soundcloud.publicApiStrangler.client.tracks.{TrackMetadataUpdateResult, TrackRequest}
+import com.soundcloud.publicApiStrangler.client.tracks.{TrackCoordinatorTrack, TrackRequest}
 import com.soundcloud.publicApiStrangler.handler.support.error.UnhandledOutcomeException
 import com.soundcloud.publicApiStrangler.handler.support.requestParser.{
   TrackArtworkUpdateRequest,
@@ -24,7 +24,6 @@ class TrackUpdateService(
     hocuspocusService: HocuspocusService,
     trackRepresentationsService: TrackRepresentationsService
 ) {
-
   def updateTrack(
       maybeUpdateAlbumArt: Option[TrackArtworkUpdateRequest],
       maybeUpdateTrackAsset: Option[TrackAssetDataUpdateRequest],
@@ -32,60 +31,46 @@ class TrackUpdateService(
       trackUrn: Urn,
       session: UserSession
   ): Future[Outcome[TrackRepresentation]] = {
-    uploadArtworkToS3AndUpdateTrack(
-      maybeUpdateTrackAsset,
-      maybeUpdateAlbumArt,
-      maybeTrackMetadata,
-      trackUrn,
-      session
-    )
-  }
-
-  private def uploadArtworkToS3AndUpdateTrack(
-      maybeUpdateTrackAsset: Option[TrackAssetDataUpdateRequest],
-      maybeUpdateAlbumArt: Option[TrackArtworkUpdateRequest],
-      updateTrackMetadata: Option[TrackMetadataUpdateRequest],
-      trackUrn: Urn,
-      session: UserSession
-  ): Future[Outcome[TrackRepresentation]] = {
     for {
-      _ <- Future.Unit
-      uploadeImageResponse = maybeUpdateAlbumArt match {
-        case Some(artworkMetadata) =>
-          hocuspocusService
-            .storeImage(
-              Raw(Kind.ARTWORKS, ByteString.copyFrom(artworkMetadata.imageData))
-            )
-            .map(image => createTrackArtworkUpdate(image))
-
-        case _ => Future.None
-      }
-
-      updatedTrack <- uploadeImageResponse.flatMap(image =>
-        updateTrackMetadataAndArtwork(maybeUpdateTrackAsset, updateTrackMetadata, image, session, trackUrn)
-      )
-    } yield updatedTrack
-
-  }
-
-  private def updateTrackMetadataAndArtwork(
-      maybeUpdateTrackAsset: Option[TrackAssetDataUpdateRequest],
-      updateTrackMetadata: Option[TrackMetadataUpdateRequest],
-      imageMetadata: Option[TrackArtworkUpdateResult],
-      session: UserSession,
-      trackUrn: Urn
-  ): Future[Outcome[TrackRepresentation]] = {
-    for {
+      uploadeImageResponse <- uploadArtworkToS3(maybeUpdateAlbumArt, trackUrn, session)
       updateResult <- trackCoordinatorClient.updateTrack(
         session,
         trackUrn,
         maybeUpdateTrackAsset,
-        updateTrackMetadata,
-        imageMetadata
+        maybeTrackMetadata,
+        uploadeImageResponse
       )
+      trackRepresentation <- buildTrackRepresentation(updateResult, session, trackUrn)
+    } yield trackRepresentation
+  }
+
+  private def uploadArtworkToS3(
+      maybeUpdateAlbumArt: Option[TrackArtworkUpdateRequest],
+      trackUrn: Urn,
+      session: UserSession
+  ): Future[Option[TrackArtworkUpdateResult]] = {
+    maybeUpdateAlbumArt match {
+      case Some(artworkMetadata) =>
+        hocuspocusService
+          .storeImage(
+            Raw(Kind.ARTWORKS, ByteString.copyFrom(artworkMetadata.imageData))
+          )
+          .map(image => createTrackArtworkUpdate(image))
+
+      case _ => Future.None
+    }
+  }
+
+  private def buildTrackRepresentation(
+      trackCoordinatorTrack: Outcome[TrackCoordinatorTrack],
+      session: UserSession,
+      trackUrn: Urn
+  ): Future[Outcome[TrackRepresentation]] = {
+    for {
       maybeTrack <- trackRepresentationsService.track(session, new TrackRequest(trackUrn, None))
-      result = (updateResult, maybeTrack) match {
-        case (Good(updateResult), Some(track)) => Good(buildUpdatedTrackWithNewMetadata(track, updateResult))
+      result = (trackCoordinatorTrack, maybeTrack) match {
+        case (Good(trackCoordinatorTrack), Some(track)) =>
+          Good(buildUpdatedTrackWithNewMetadata(track, trackCoordinatorTrack))
         case (Bad(outcome), _) => outcome.bad
         case _ => throw new UnhandledOutcomeException
       }
@@ -116,7 +101,7 @@ class TrackUpdateService(
 
   def buildUpdatedTrackWithNewMetadata(
       trackRep: TrackRepresentation,
-      metadataUpdate: TrackMetadataUpdateResult
+      metadataUpdate: TrackCoordinatorTrack
   ): TrackRepresentation = {
     trackRep.copy(
       isrc = getIsrc(metadataUpdate.isrc),

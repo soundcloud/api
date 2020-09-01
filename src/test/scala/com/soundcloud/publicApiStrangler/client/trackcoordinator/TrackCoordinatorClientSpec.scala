@@ -6,7 +6,7 @@ import com.soundcloud.jvmkit.module.util.session.UserSessionBuilder
 import com.soundcloud.jvmkit.module.util.{Path, Urn}
 import com.soundcloud.outcome._
 import com.soundcloud.publicApiStrangler.client.support.UnhandledResponseException
-import com.soundcloud.publicApiStrangler.client.tracks.TrackMetadataUpdateResult
+import com.soundcloud.publicApiStrangler.client.tracks.TrackCoordinatorTrack
 import com.soundcloud.publicApiStrangler.handler.support.requestParser.{
   TrackArtworkUpdateResult,
   TrackAssetDataUpdateRequest,
@@ -48,7 +48,7 @@ class TrackCoordinatorClientSpec extends UnitSpecification {
       ) ++ Json.toJson(trackAssetDataUpdateRequest).as[JsObject]
     )
 
-    val expectedResponse = TrackMetadataUpdateResult(
+    val expectedResponse = TrackCoordinatorTrack(
       urn = "soundcloud:sounds:174088262",
       public = true,
       title = "Awesome Track",

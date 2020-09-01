@@ -3,7 +3,7 @@ package com.soundcloud.publicApiStrangler.client.tracks
 import play.api.libs.json.JsonNaming.SnakeCase
 import play.api.libs.json.{Format, Json, JsonConfiguration}
 
-case class TrackMetadataUpdateResult(
+case class TrackCoordinatorTrack(
     urn: String,
     public: Boolean,
     title: String,
@@ -27,8 +27,8 @@ case class TrackMetadataUpdateResult(
     tag_list: Option[String]
 )
 
-object TrackMetadataUpdateResult {
+object TrackCoordinatorTrack {
   private val snakeCase = Json.configured(JsonConfiguration(SnakeCase))
 
-  implicit val format: Format[TrackMetadataUpdateResult] = snakeCase.format
+  implicit val format: Format[TrackCoordinatorTrack] = snakeCase.format
 }

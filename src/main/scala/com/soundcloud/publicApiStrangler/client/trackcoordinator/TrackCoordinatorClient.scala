@@ -6,7 +6,7 @@ import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.jvmkit.module.util.{Path, Urn}
 import com.soundcloud.outcome._
 import com.soundcloud.publicApiStrangler.client.trackcoordinator.mapper._
-import com.soundcloud.publicApiStrangler.client.tracks.TrackMetadataUpdateResult
+import com.soundcloud.publicApiStrangler.client.tracks.TrackCoordinatorTrack
 import com.soundcloud.publicApiStrangler.handler.support.requestParser.{
   TrackArtworkUpdateResult,
   TrackAssetDataUpdateRequest,
@@ -28,11 +28,11 @@ class TrackCoordinatorClient(service: JsonClient) {
       maybeUpdateTrackAsset: Option[TrackAssetDataUpdateRequest],
       maybeUpdateTrackMetadata: Option[TrackMetadataUpdateRequest],
       maybeArtworkMetadata: Option[TrackArtworkUpdateResult]
-  ): Future[Outcome[TrackMetadataUpdateResult]] = {
+  ): Future[Outcome[TrackCoordinatorTrack]] = {
     val requestBody = buildBody(maybeUpdateTrackAsset, maybeUpdateTrackMetadata, maybeArtworkMetadata)
     service
       .putWithSession(session, Path("/tracks") / trackUrn, Params.empty, Headers.empty, Some(requestBody))
-      .map(TrackMetadataUpdateMapper(_))
+      .map(TrackCoordinatorTrackMapper(_))
   }
 
   private def buildBody(
