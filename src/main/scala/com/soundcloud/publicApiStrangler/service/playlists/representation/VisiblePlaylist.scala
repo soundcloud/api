@@ -2,8 +2,6 @@ package com.soundcloud.publicApiStrangler.service.playlists.representation
 
 import java.time.Instant
 
-import com.soundcloud.publicApiStrangler.client.tracks.TrackRequest
-
 case class VisiblePlaylist(
     urn: String,
     title: String,
@@ -38,5 +36,5 @@ case class VisiblePlaylist(
     ean: Option[String],
     streamable: Option[Boolean],
     uri: String,
-    trackRequests: List[TrackRequest]
+    trackRequests: PlaylistTrackRequests
 )

@@ -3,14 +3,38 @@ package com.soundcloud.publicApiStrangler.service.playlists
 import java.time.Instant
 
 import com.soundcloud.jvmkit.module.twirp.proto.WellKnownOps._
+import com.soundcloud.jvmkit.module.util.Urn
+import com.soundcloud.publicApiStrangler.client.tracks.TrackRequest
+import com.soundcloud.publicApiStrangler.service.pagination.OffsetBasedPagination
+import com.twitter.finagle.http.ParamMap
 import org.specs2.matcher.Scope
 import org.specs2.mutable.Specification
-import proto.soundcloud.playlists.api.{PlaylistResponse, Playlist => ProtoPlaylist}
+import proto.soundcloud.playlists.api.{
+  PlaylistPagination,
+  PlaylistResponse,
+  Playlist => ProtoPlaylist,
+  TrackRequest => ProtoTrackRequest
+}
 
 class PlaylistProtoMapperSpec extends Specification {
   trait Context extends Scope {
     val defaultInstant = Instant.now()
     val defaultProtoDate = defaultInstant.asProto
+
+    val trackUrn = Urn("soundcloud", "tracks", "1")
+    val trackSecret = Some("s3creT")
+    val protoTrackRequests = Seq(ProtoTrackRequest(urn = trackUrn.toString, secretToken = trackSecret))
+
+    val currentPagination = Some(
+      OffsetBasedPagination(
+        baseUrl = "http://api.soundcloud.com",
+        path = "/playlists",
+        extraParams = ParamMap(),
+        offset = None,
+        limit = 1
+      )
+    )
+    val nextPagination = Some(PlaylistPagination(limit = 1, cursor = Some("2")))
 
     val playlistProto = new ProtoPlaylist(
       urn = "soundcloud:playlists:123",
@@ -52,10 +76,25 @@ class PlaylistProtoMapperSpec extends Specification {
   "createPlaylist" >> {
     "can create VisiblePlaylist" in new Context {
       val mapper = new PlaylistProtoMapper
-      val result = mapper(PlaylistResponse(playlist = Some(playlistProto)))
+      val result = mapper(
+        PlaylistResponse(
+          playlist = Some(playlistProto),
+          trackRequests = protoTrackRequests,
+          pagination = nextPagination
+        ),
+        currentPagination
+      )
+
       result must not beEmpty
 
+      val expectedPagination = currentPagination.map(pagination => pagination.copy(offset = Some(2)))
+      val expectedTrackRequests = List(TrackRequest(urn = trackUrn, secretToken = trackSecret))
+
       val visiblePlaylist = result.get
+
+      visiblePlaylist.trackRequests.requests ==== expectedTrackRequests
+      visiblePlaylist.trackRequests.pagination ==== expectedPagination
+
       visiblePlaylist.urn ==== "soundcloud:playlists:123"
       visiblePlaylist.title ==== "my favourite music"
       visiblePlaylist.description ==== Some("bla bla bla")
@@ -92,7 +131,7 @@ class PlaylistProtoMapperSpec extends Specification {
 
     "returns None when no visible playlist supplied" in new Context {
       val mapper = new PlaylistProtoMapper
-      val result = mapper(PlaylistResponse(playlist = None))
+      val result = mapper(PlaylistResponse(playlist = None), pagination = None)
       result must beEmpty
     }
   }

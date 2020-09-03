@@ -8,7 +8,7 @@ import com.soundcloud.publicApiStrangler.client.mothership.MoshimoshiClient
 import com.soundcloud.publicApiStrangler.service.pagination.OffsetBasedPagination
 import com.soundcloud.publicApiStrangler.service.playlists.PlaylistProtoMapper
 import com.soundcloud.publicApiStrangler.service.playlists.representation.{Playlist, VisiblePlaylist}
-import com.soundcloud.publicApiStrangler.service.trackrepresentation.TrackRepresentationsService
+import com.soundcloud.publicApiStrangler.service.trackrepresentation.{TrackRepresentationsService, TracksCollection}
 import com.twitter.util.Future
 import proto.soundcloud.playlists.api.{
   GetVisiblePlaylistsRequest,
@@ -23,6 +23,29 @@ class PlaylistsService(
     moshimoshiClient: MoshimoshiClient,
     playlistProtoMapper: PlaylistProtoMapper = new PlaylistProtoMapper()
 ) {
+
+  def fetchPlaylistTracks(
+      session: UserSession,
+      playlistUrn: Urn,
+      candidateSecretToken: Option[String],
+      pagination: Option[OffsetBasedPagination]
+  ): Future[Outcome[TracksCollection]] = {
+    for {
+      visiblePlaylist <- getPlaylistObject(session, playlistUrn, pagination, candidateSecretToken)
+      playlistTrackRequests = visiblePlaylist.map(_.trackRequests)
+      tracks <- playlistTrackRequests
+        .map(trackRequests => tracksService.tracks(session, trackRequests.requests))
+        .getOrElse(Future.value(List.empty))
+    } yield {
+      visiblePlaylist match {
+        case Some(_) =>
+          val nextHref =
+            playlistTrackRequests.flatMap(trackRequests => trackRequests.pagination.map(_.normalizedHref))
+          TracksCollection(tracks, nextHref).good
+        case _ => NotFound("playlist not found").bad
+      }
+    }
+  }
 
   def fetchPlaylist(
       session: UserSession,
@@ -48,7 +71,7 @@ class PlaylistsService(
       session: UserSession
   ): Future[Option[Playlist]] = {
     for {
-      tracks <- tracksService.tracks(session, visiblePlaylist.trackRequests)
+      tracks <- tracksService.tracks(session, visiblePlaylist.trackRequests.requests)
       playlistOwner <- moshimoshiClient
         .fetchUserObjects(session, Set(Urn.parse(visiblePlaylist.userUrn).get))
         .map(_.head)
@@ -79,7 +102,7 @@ class PlaylistsService(
     playlistsTwirpService
       .getVisiblePlaylists(getVisiblePlaylistsRequest)
       .map(response => {
-        response.playlistResponse.toList.flatMap(playlistProtoMapper.apply).headOption
+        response.playlistResponse.toList.flatMap(response => playlistProtoMapper.apply(response, pagination)).headOption
       })
   }
 

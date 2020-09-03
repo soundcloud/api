@@ -8,15 +8,17 @@ import com.soundcloud.publicApiStrangler.Routing
 import com.soundcloud.publicApiStrangler.client.mothership.response.representation.User
 import com.soundcloud.publicApiStrangler.client.playlists.PlaylistDeletionClient
 import com.soundcloud.publicApiStrangler.service.PlaylistsService
+import com.soundcloud.publicApiStrangler.service.pagination.OffsetBasedPagination
 import com.soundcloud.publicApiStrangler.service.playlists.representation.Playlist
+import com.soundcloud.publicApiStrangler.service.trackrepresentation.{TrackRepresentationSpecContext, TracksCollection}
 import com.soundcloud.publicApiStrangler.test.{HandlerSpecificationScope, UnitSpecification}
-import com.twitter.finagle.http.Status
+import com.twitter.finagle.http.{Request, Status}
 import com.twitter.util.Future
 import org.mockito.Mockito.{verify, when}
 import play.api.libs.json.{JsDefined, JsString, Json}
 
 class PlaylistsHandlerSpec extends UnitSpecification {
-  trait Context extends HandlerSpecificationScope {
+  trait Context extends HandlerSpecificationScope with TrackRepresentationSpecContext {
     lazy val geo = new Geo("US")
     lazy val session = new UserSessionBuilder()
       .setUser(Urn("soundcloud", "users", "2"))
@@ -35,6 +37,9 @@ class PlaylistsHandlerSpec extends UnitSpecification {
     )
 
     override def routingDefinitions = Routing.forPlaylistHandler(handler)
+
+    val requestedTrack1 = createTrackRepresentation()
+    val requestedTrack2 = createTrackRepresentation()
 
     val user =
       User(
@@ -91,6 +96,7 @@ class PlaylistsHandlerSpec extends UnitSpecification {
         secretToken = None,
         secretUri = None
       )
+
   }
 
   "DELETE /playlists/:id" >> {
@@ -166,6 +172,41 @@ class PlaylistsHandlerSpec extends UnitSpecification {
         .thenReturn(Future.value(NotFound("playlist not found").bad))
 
       val response = get("/playlists/1")
+      response.status.code ==== 404
+    }
+  }
+
+  "GET /playlists/:id/tracks" >> {
+    "returns track collection when playlist found" in new Context {
+      val unpaginatedTracksCollection = TracksCollection(List(requestedTrack1, requestedTrack2), None)
+
+      when(playlistsService.fetchPlaylistTracks(session, playlistUrn, None, None))
+        .thenReturn(Future.value(Good(unpaginatedTracksCollection)))
+
+      val response = get("/playlists/1/tracks")
+      response.status.code ==== 200
+    }
+
+    "returns paginated track collection" in new Context {
+      val path = "/playlists/1/tracks?linked_partitioning=true&limit=1&secret_token=s-3creT"
+      val mockRequest = Request(path)
+      mockRequest.host = "localhost"
+      val pagination = OffsetBasedPagination.build(mockRequest, Seq("linked_partitioning"))
+      val paginatedTracksCollection =
+        TracksCollection(List(requestedTrack1, requestedTrack2), Some(pagination.normalizedHref))
+
+      when(playlistsService.fetchPlaylistTracks(session, playlistUrn, Some("s-3creT"), Some(pagination)))
+        .thenReturn(Future.value(Good(paginatedTracksCollection)))
+
+      val response = get(path)
+      response.status.code ==== 200
+    }
+
+    "returns 404 when no playlist found" in new Context {
+      when(playlistsService.fetchPlaylistTracks(session, playlistUrn, None, None))
+        .thenReturn(Future.value(Bad(NotFound("playlist not found"))))
+
+      val response = get("/playlists/1/tracks")
       response.status.code ==== 404
     }
   }

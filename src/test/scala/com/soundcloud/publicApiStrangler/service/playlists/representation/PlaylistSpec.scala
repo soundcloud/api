@@ -45,7 +45,7 @@ class PlaylistSpec extends Specification with TrackRepresentationSpecContext {
       ean = Some("7641825109894"),
       streamable = Some(false),
       uri = "https://api.soundcloud.com/playlists/42703821?secret_token=secret",
-      trackRequests = List.empty
+      trackRequests = PlaylistTrackRequests(requests = List.empty, pagination = None)
     )
 
   "#fromVisiblePlaylist" >> {

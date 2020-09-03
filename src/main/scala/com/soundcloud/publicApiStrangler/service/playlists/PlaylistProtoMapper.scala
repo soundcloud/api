@@ -1,13 +1,22 @@
 package com.soundcloud.publicApiStrangler.service.playlists
 
 import com.soundcloud.jvmkit.module.twirp.proto.WellKnownOps._
-import com.soundcloud.jvmkit.module.util.Urn
-import proto.soundcloud.playlists.api.{Playlist, PlaylistResponse, TrackRequest => ProtoTrackRequest}
-import com.soundcloud.publicApiStrangler.client.tracks.TrackRequest
-import com.soundcloud.publicApiStrangler.service.playlists.representation.VisiblePlaylist
+import com.soundcloud.publicApiStrangler.service.pagination.OffsetBasedPagination
+import com.soundcloud.publicApiStrangler.service.playlists.representation.{PlaylistTrackRequests, VisiblePlaylist}
+import proto.soundcloud.playlists.api.{
+  Playlist,
+  PlaylistPagination,
+  PlaylistResponse,
+  TrackRequest => ProtoTrackRequest
+}
 
 class PlaylistProtoMapper {
-  def createPlaylist(playlist: Playlist, trackRequests: Seq[ProtoTrackRequest]): VisiblePlaylist = {
+  def createPlaylist(
+      playlist: Playlist,
+      trackRequests: Seq[ProtoTrackRequest],
+      currentPagination: Option[OffsetBasedPagination],
+      nextPagination: Option[PlaylistPagination]
+  ): VisiblePlaylist = {
     VisiblePlaylist(
       urn = playlist.urn,
       title = playlist.title,
@@ -42,16 +51,17 @@ class PlaylistProtoMapper {
       ean = playlist.ean,
       streamable = playlist.streamable,
       uri = playlist.uri,
-      trackRequests = trackRequests
-        .map(trackRequest => TrackRequest(urn = Urn.parse(trackRequest.urn).get, secretToken = trackRequest.secretToken)
-        )
-        .toList
+      trackRequests = PlaylistTrackRequests.build(trackRequests.toList, currentPagination, nextPagination)
     )
   }
 
-  def apply(protoPlaylist: PlaylistResponse): Option[VisiblePlaylist] = {
+  def apply(
+      protoPlaylist: PlaylistResponse,
+      pagination: Option[OffsetBasedPagination]
+  ): Option[VisiblePlaylist] = {
     protoPlaylist.playlist match {
-      case Some(playlist) => Some(createPlaylist(playlist, protoPlaylist.trackRequests))
+      case Some(playlist) =>
+        Some(createPlaylist(playlist, protoPlaylist.trackRequests, pagination, protoPlaylist.pagination))
       case _ => None
     }
   }
