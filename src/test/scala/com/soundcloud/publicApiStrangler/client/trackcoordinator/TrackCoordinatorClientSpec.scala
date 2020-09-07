@@ -43,9 +43,9 @@ class TrackCoordinatorClientSpec extends UnitSpecification {
     val path = Path("/tracks") / trackUrn
 
     val requestBody = Json.stringify(
-      Json.toJson(trackMetadataUpdateRequest.track).as[JsObject] ++ Json.obj(
-        "artwork_from_s3" -> Json.toJson(trackArtworkMetaResponse)
-      ) ++ Json.toJson(trackAssetDataUpdateRequest).as[JsObject]
+      Json.toJson(trackAssetDataUpdateRequest).as[JsObject] ++
+        Json.toJson(trackMetadataUpdateRequest.track).as[JsObject] ++
+        Json.obj("artwork_from_s3" -> Json.toJson(trackArtworkMetaResponse))
     )
 
     val expectedResponse = TrackCoordinatorTrack(

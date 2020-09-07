@@ -2,8 +2,10 @@ package com.soundcloud.publicApiStrangler.client.mothership.request.representati
 
 import play.api.libs.json._
 
+import scala.annotation.unchecked.uncheckedVariance
+
 sealed trait NonNullableValue[+A] {
-  def toOptionalJsValue(implicit writes: Writes[A]): Option[JsValue] = this match {
+  def toOptionalJsValue(implicit writes: Writes[A @uncheckedVariance]): Option[JsValue] = this match {
     case NonNullValue(value) => Some(Json.toJson(value))
     case NonNullMissingValue => None
   }

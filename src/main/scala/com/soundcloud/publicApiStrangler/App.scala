@@ -61,6 +61,7 @@ object App {
         telemetry,
         memcachedClient,
         clients.rolloutClient,
+        exceptionCollector,
         Some(Seq(RateLimits.playsRateLimiter, RateLimits.searchRateLimiter, RateLimits.repostsRateLimiter))
       )
     }
