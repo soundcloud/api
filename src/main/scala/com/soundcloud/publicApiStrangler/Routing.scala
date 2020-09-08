@@ -1,8 +1,9 @@
 package com.soundcloud.publicApiStrangler
 
-import com.soundcloud.jvmkit.module.http.server.Handler
+import com.soundcloud.jvmkit.module.http.server.{Handler, JsonResponseBuilder}
 import com.soundcloud.publicApiStrangler.handler.{DispatchToMothershipHandler, _}
 import com.twitter.finagle.http.Method
+import com.twitter.util.Future
 
 object Routing {
   val tokenExchangePath = "/oauth2/token"
@@ -162,5 +163,9 @@ object Routing {
       route(Method.Delete, "/me/favorites/:trackId", likesHandler.deleteMeLikedTrackId) :::
       route(Method.Get, "/users/:userId/favorites", likesHandler.getUserTracksLikes) :::
       route(Method.Get, "/me/favorites", likesHandler.getMeTracksLikes)
+  }
+
+  def forDummyHandler(): List[(Method, String, Handler)] = {
+    route(Method.Get, "/dummy", (_) => Future.value(JsonResponseBuilder.ok("{}")))
   }
 }

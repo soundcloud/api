@@ -100,7 +100,8 @@ object App {
           forTimelineHandler(handlers.timelineHandler),
           forTrackStreamsHandler(handlers.trackStreamsHandler),
           forTrackDownloadHandler(handlers.trackDownloadHandler),
-          forLikesHandler(handlers.likesHandler)
+          forLikesHandler(handlers.likesHandler),
+          forDummyHandler()
         )
       )
       .build

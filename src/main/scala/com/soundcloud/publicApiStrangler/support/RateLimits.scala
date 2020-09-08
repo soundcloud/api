@@ -31,4 +31,12 @@ object RateLimits {
   }
 
   val repostsRateLimiter = new RateLimitClassifier(repostsBucket, repostRequests)
+
+  private val dummyBucket = "dummy"
+
+  private def dummyRequests: RateLimitClassifier.rateLimitClassifier = {
+    case req: HandlerRequest if req.path.startsWith("/dummy") => true
+  }
+
+  val dummyRateLimiter = new RateLimitClassifier(dummyBucket, dummyRequests)
 }
