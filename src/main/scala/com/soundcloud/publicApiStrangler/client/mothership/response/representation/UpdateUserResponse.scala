@@ -1,9 +1,0 @@
-package com.soundcloud.publicApiStrangler.client.mothership.response.representation
-
-sealed trait UpdateUserResponse
-
-case object OkUpdateUserResponse extends UpdateUserResponse
-
-case object NotAuthorizedUpdateUserResponse extends UpdateUserResponse
-
-case object InvalidUrnUpdateUserResponse extends UpdateUserResponse

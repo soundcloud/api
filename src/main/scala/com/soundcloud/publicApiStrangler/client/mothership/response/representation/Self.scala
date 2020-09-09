@@ -4,12 +4,8 @@ import com.soundcloud.jvmkit.module.util.Urn
 import play.api.libs.json.Json
 import com.soundcloud.jvmkit.module.json.play.UrnFormat._
 
-case class TrackPurchaseLink(
-    track_urn: Urn,
-    title: Option[String],
-    url: String
-)
+case class Self(urn: Urn, url: String)
 
-object TrackPurchaseLink {
-  implicit val format = Json.format[TrackPurchaseLink]
+object Self {
+  implicit val reads = Json.reads[Self]
 }

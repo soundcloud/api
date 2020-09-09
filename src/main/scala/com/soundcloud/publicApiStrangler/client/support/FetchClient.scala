@@ -34,14 +34,6 @@ trait FetchClient {
   ): Future[Response] =
     service.getWithSession(session, path, decodedParams(params), headers)
 
-  def fetchWithoutSession(
-      service: JsonClient,
-      path: Path,
-      params: Params = Params.empty,
-      headers: Headers = Headers.empty
-  ): Future[Response] =
-    service.get(path, decodedParams(params), headers)
-
   def fetchByUrns(
       service: JsonClient,
       session: UserSession,
@@ -52,18 +44,6 @@ trait FetchClient {
   ): Future[List[JsObject]] = {
     inBatches(urns.toList, batchSize) { urnBatch =>
       fetch(service, session, path, urnBatch, headers).map(ListResponse(_))
-    }
-  }
-
-  def fetchByUrnsWithoutSession(
-      service: JsonClient,
-      path: Path,
-      urns: Set[Urn],
-      batchSize: Int = 50,
-      headers: Headers = Headers.empty
-  ): Future[List[JsObject]] = {
-    inBatches(urns.toList, batchSize) { urnBatch =>
-      fetchWithoutSession(service, path, urnBatch, headers).map(ListResponse(_))
     }
   }
 

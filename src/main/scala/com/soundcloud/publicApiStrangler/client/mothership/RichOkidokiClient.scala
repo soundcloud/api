@@ -1,6 +1,5 @@
 package com.soundcloud.publicApiStrangler.client.mothership
 
-import com.soundcloud.bff.nextbff.mapping.MappingContext
 import com.soundcloud.jvmkit.module.http.client.{JsonClient, Params}
 import com.soundcloud.jvmkit.module.json.play.UrnFormat._
 import com.soundcloud.jvmkit.module.util.http.Headers
@@ -8,7 +7,6 @@ import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.jvmkit.module.util.{Path, Urn}
 import com.soundcloud.publicApiStrangler.client.mothership.response.mapper.UserMapper
 import com.soundcloud.publicApiStrangler.client.mothership.response.representation.{Geoblockings, User}
-import com.soundcloud.publicApiStrangler.mapper.reposts.representation.RepostsUser
 import com.twitter.finagle.http.Status.Successful
 import com.twitter.finagle.http.{Response, Status}
 import com.twitter.util.Future
@@ -17,20 +15,18 @@ import play.api.libs.json._
 case class DomainLocking(domain: String, urn: Urn, trackUrn: Urn)
 
 object DomainLocking {
-  implicit val reads: Reads[DomainLocking] = new Reads[DomainLocking] {
-    def reads(json: JsValue): JsResult[DomainLocking] =
-      try {
-        JsSuccess(
-          DomainLocking(
-            domain = (json \ "domain").as[String],
-            urn = (json \ "self" \ "urn").as[Urn],
-            trackUrn = (json \ "track_urn").as[Urn]
-          )
+  implicit val reads: Reads[DomainLocking] = (json: JsValue) =>
+    try {
+      JsSuccess(
+        DomainLocking(
+          domain = (json \ "domain").as[String],
+          urn = (json \ "self" \ "urn").as[Urn],
+          trackUrn = (json \ "track_urn").as[Urn]
         )
-      } catch {
-        case ex: Exception => JsError(ex.getMessage)
-      }
-  }
+      )
+    } catch {
+      case ex: Exception => JsError(ex.getMessage)
+    }
 }
 
 case class TrackAudioMetadata(
@@ -159,25 +155,5 @@ class RichOkidokiClient(service: JsonClient) extends OkidokiClient(service) {
           }
       }
     }.map(_.map(user => (user.urn -> user)).toMap)
-  }
-
-  def fetchRepostsUsersWithoutCounts(
-      session: UserSession,
-      urns: Set[Urn],
-      baseUrl: String,
-      batchSize: Int = 50
-  ): Future[List[RepostsUser]] = {
-    inBatches(urns.toList, batchSize) { urnBatch =>
-      service.getWithSession(session, Path() / "users" / "fetch", Params("urns" -> urnBatch), Headers.empty()).map {
-        response: Response =>
-          response.status match {
-            case Successful(_) =>
-              Json.parse(response.contentString).as[List[JsValue]].map { jsonUser =>
-                RepostsUser(jsonUser, baseUrl, None, None, None)(new MappingContext(session))
-              }
-            case _ => List.empty
-          }
-      }
-    }
   }
 }

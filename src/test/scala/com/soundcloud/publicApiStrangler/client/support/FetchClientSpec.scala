@@ -35,25 +35,6 @@ class FetchClientSpec extends UnitSpecification {
     }
   }
 
-  "#fetchWithoutSession" >> {
-    "params needs decoding" >> {
-      trait ServiceContext extends Context {
-        val params = Params("test" -> "%2C")
-        val response = jsonResponse(Status.Ok, JsString("test"))
-
-        when(serviceMock.get(path, Params("test" -> ","), Headers.empty))
-          .thenReturn(Future.value(response))
-      }
-
-      "it decodes the params" in new ServiceContext {
-        val json =
-          Await.result(serviceClient.fetchWithoutSession(serviceMock, path, params, Headers.empty)).contentString
-        json ==== JsString("test").toString
-        there was one(serviceMock).get(path, Params("test" -> ","), Headers.empty)
-      }
-    }
-  }
-
   "#fetchByUrns" >> {
     "given urns are empty" >> {
       "returns empty list" in new Context {
@@ -122,22 +103,6 @@ class FetchClientSpec extends UnitSpecification {
           there was one(serviceMock).getWithSession(anonymousSession, path, urns.tail.toList, Headers.empty)
         }
       }
-    }
-  }
-
-  "#fetchByUrnsWithoutSession" >> {
-    trait TestContext extends Context {
-      val urns = Set(Urn("soundcloud", "users", "1"), Urn("soundcloud", "users", "2"))
-      val responseJson = List(JsObject(Seq.empty), JsObject(Seq.empty))
-      val response = jsonResponse(Status.Ok, JsArray(responseJson))
-
-      when(serviceMock.get(path, urns.toList, Headers.empty)).thenReturn(Future.value(response))
-    }
-
-    "makes one call to service" in new TestContext {
-      val json = Await.result(serviceClient.fetchByUrnsWithoutSession(serviceMock, path, urns))
-      json ==== responseJson
-      there was one(serviceMock).get(path, urns.toList, Headers.empty)
     }
   }
 }

@@ -1,9 +1,0 @@
-package com.soundcloud.publicApiStrangler.client.mothership.response.representation
-
-sealed trait DeleteFromPlaylistResponse
-
-case object OkDeleteFromPlaylistResponse extends DeleteFromPlaylistResponse
-
-case object NotAuthorizedDeleteFromPlaylistResponse extends DeleteFromPlaylistResponse
-
-case object InvalidUrnDeleteFromPlaylistResponse extends DeleteFromPlaylistResponse

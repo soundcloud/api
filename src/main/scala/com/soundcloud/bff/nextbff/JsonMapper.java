@@ -9,7 +9,7 @@ import com.soundcloud.jvmkit.module.util.Urn;
 import com.soundcloud.publicApiStrangler.support.UrnSerializer;
 
 public class JsonMapper {
-    private ObjectMapper mapper = new ObjectMapper()
+    private final ObjectMapper mapper = new ObjectMapper()
             .registerModule(new JodaModule())
             .configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)
             .registerModule(new SimpleModule().addSerializer(Urn.class, new UrnSerializer()))
