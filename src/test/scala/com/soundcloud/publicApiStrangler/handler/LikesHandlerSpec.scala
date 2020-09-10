@@ -9,10 +9,10 @@ import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.publicApiStrangler.Routing
 import com.soundcloud.publicApiStrangler.client.liebling.{LikeDeleted, LikeNotFound}
 import com.soundcloud.publicApiStrangler.service.pagination.CursorBasedPagination
+import com.soundcloud.publicApiStrangler.service.playlists.representation.Collection
 import com.soundcloud.publicApiStrangler.service.trackrepresentation.{
   TrackRepresentation,
-  TrackRepresentationSpecContext,
-  TracksCollection
+  TrackRepresentationSpecContext
 }
 import com.soundcloud.publicApiStrangler.service.{
   LikesService,
@@ -78,17 +78,17 @@ class LikesHandlerSpec extends UnitSpecification {
       def stubUserTracksLikes(
           user: Urn,
           path: String,
-          tracksCollection: TracksCollection
+          collection: Collection[TrackRepresentation]
       ) = {
         when(likesService.userTracksLikes(session, user, paginationParams(path)))
-          .thenReturn(Future.value(tracksCollection))
+          .thenReturn(Future.value(collection))
       }
     }
 
     trait SuccessfulResponse extends TrackRepresentationSpecContext with TracksForUserContext {
       val trackRepresentation = createTrackRepresentation()
-      val tracksCollection = TracksCollection(List(trackRepresentation), None)
-      val expectedResponse = TracksCollection.getRepresentation(tracksCollection, true)
+      val tracksCollection = Collection(List(trackRepresentation), None)
+      val expectedResponse = Collection.getRepresentation(tracksCollection, true)
     }
 
     "GET /users/:userId/favorites/:trackId" >> {

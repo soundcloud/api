@@ -8,11 +8,12 @@ import com.soundcloud.publicApiStrangler.client.SystemPlaylistsClient
 import com.soundcloud.publicApiStrangler.client.mothership.response.representation.User
 import com.soundcloud.publicApiStrangler.client.tracks.{TrackRequest, VisibleTrackBuilder}
 import com.soundcloud.publicApiStrangler.mapper.similarsounds.{SimilarSounds, SimilarSoundsMeta}
+import com.soundcloud.publicApiStrangler.service.playlists.representation.Collection
 import com.soundcloud.publicApiStrangler.service.trackrepresentation.{
   TrackPagination,
+  TrackRepresentation,
   TrackRepresentationSpecContext,
-  TrackRepresentationsService,
-  TracksCollection
+  TrackRepresentationsService
 }
 import com.soundcloud.publicApiStrangler.test.UnitSpecification
 import com.twitter.util.{Await, Future}
@@ -95,7 +96,7 @@ class SimilarTracksServiceSpec extends UnitSpecification {
       val similarTracks = Await.result(similarTracksService.similarTracks(session, track, trackPagination))
 
       similarTracks match {
-        case Some(res) => res must beAnInstanceOf[TracksCollection]
+        case Some(res) => res must beAnInstanceOf[Collection[TrackRepresentation]]
         case _ => failure
       }
     }

@@ -45,7 +45,6 @@ class SearchRepository(searchService: JsonClient)
 
 object SearchRepository {
   val UsersPath = Path() / "search" / "users"
-  val PlaylistsPath = Path() / "search" / "playlists"
 }
 
 class SearchMapper(val repository: SearchRepository, submapper: SearchEntityMapper, baseUrl: String)

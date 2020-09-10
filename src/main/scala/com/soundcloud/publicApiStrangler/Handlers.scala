@@ -89,23 +89,12 @@ class Handlers(telemetry: Telemetry, clients: Clients, exceptionCollector: Excep
   val searchHandler: SearchHandler = {
     val searchRepository = new SearchRepository(searchJsonClient)
     val searchMapper = new SearchMapper(searchRepository, searchEntityMapper, baseUrl)
-    val mothershipCounter = telemetry.counter(
-      "search_mothership_fallback_total",
-      "Number of requests to search endpoints with missing/invalid query parameters that get propagated to Mothership",
-      "path"
-    )
-
     new SearchHandler(
       userAuthentication,
-      mothershipDispatcher,
-      mothershipCounter,
-      followCountsClient,
       searchMapper,
       baseUrl,
-      lieblingClient,
       userRelatedMothershipDispatcher,
-      searchService,
-      telemetry
+      searchService
     )
   }
 

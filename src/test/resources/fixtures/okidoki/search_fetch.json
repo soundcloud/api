@@ -89,45 +89,5 @@
     "default_license": null,
     "default_license_simple": "all-rights-reserved",
     "stealth": false
-  },
-  {
-    "created_at": "2011/04/01 16:45:47 +0000",
-    "description": "Produced by Butch Vig and mixed by Alan Moulder, Wasting Light was recorded entirely on analog tape in the garage of Grohl s home in California s San Fernando Valley. The no computers/no software back to basics approach has resulted in arguably the strongest and most cohesive effort of the band s 15-year-plus career: From first single Rope to the frenetic opener Bridge Burning to the beautifully bipolar These Days to stunning guest spots from Bob Mould ( Dear Rosemary\") and Krist Novoselic (\"I Should Have Known\"), Wasting Light is a singular triumph: a band that s headlined arenas, stadiums and festivals the world over stripping itself down to the bare essentials and coming up with a world class band s finest hour.",
-    "genre": "Rock",
-    "id": 685235,
-    "label_id": null,
-    "label_name": "RCA",
-    "permalink": "wasting-light",
-    "public": true,
-    "purchase_url": "http://www.smarturl.it/fooswlpreorder",
-    "release": "",
-    "title": "Wasting Light",
-    "self": {
-      "urn": "soundcloud:sets:685235",
-      "url": "http://moshimoshi.int.s-cloud.net/playlists/soundcloud:sets:685235"
-    },
-    "permalink_url": "https://soundcloud.com/foofighters/sets/wasting-light",
-    "track_count": 11,
-    "artwork_url": "https://i1.sndcdn.com/artworks-000006030493-mdxbk1-large.jpg",
-    "original_artwork_url": "https://i1.sndcdn.com/artworks-000006030493-mdxbk1-original.jpg",
-    "duration": 2877794,
-    "likes_count": 4743,
-    "reposts_count": 1259,
-    "sharing": "public",
-    "streamable": true,
-    "license": "all-rights-reserved",
-    "tag_list": "Foo Fighters \"Wasting Light\" \"Dave Grohl\" Butch Vig",
-    "embeddable_by": "all",
-    "purchase_title": "Buy Wasting Light",
-    "secret_token": "s-ySdsT",
-    "release_date": "2011-04-12",
-    "release_year": 2011,
-    "release_month": 4,
-    "release_day": 12,
-    "last_modified": "2012/05/18 19:12:25 +0000",
-    "user": {
-      "urn": "soundcloud:users:2097360",
-      "url": "http://moshimoshi.int.s-cloud.net/users/soundcloud:users:2097360"
-    }
   }
 ]

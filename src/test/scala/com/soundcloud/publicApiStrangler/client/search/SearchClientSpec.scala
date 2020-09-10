@@ -20,10 +20,10 @@ class SearchClientSpec extends Specification with Mockito {
     val mockClient = smartMock[JsonClient]
     val client = new SearchClient(mockClient)
     val userSession = mock[UserSession]
-    val json = withContentsOf("search", "tracks").toString()
   }
 
   "should search tracks" in new Context {
+    val json = withContentsOf("search", "tracks").toString()
     val params = Params("q" -> "foo")
     val expected = Json.parse(json).as[SearchResponse]
     when(
@@ -38,4 +38,19 @@ class SearchClientSpec extends Specification with Mockito {
     result ==== expected.good
   }
 
+  "should search playlists" in new Context {
+    val json = withContentsOf("search", "tracks").toString()
+    val params = Params("q" -> "foo")
+    val expected = Json.parse(json).as[SearchResponse]
+    when(
+      mockClient.getWithSession(
+        userSession,
+        Path() / "search" / "playlists",
+        params,
+        Headers.empty
+      )
+    ).thenReturn(Future.value(JsonResponseBuilder.ok(json)))
+    val result = Await.result(client.searchPlaylists(userSession, params).value)
+    result ==== expected.good
+  }
 }

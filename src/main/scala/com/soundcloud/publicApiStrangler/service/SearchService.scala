@@ -5,22 +5,26 @@ import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.outcome._
 import com.soundcloud.publicApiStrangler.client.search.SearchClient
 import com.soundcloud.publicApiStrangler.client.tracks.TrackRequest
+import com.soundcloud.publicApiStrangler.service.pagination.OffsetBasedPagination
+import com.soundcloud.publicApiStrangler.service.playlists.PlaylistRequest
+import com.soundcloud.publicApiStrangler.service.playlists.representation.{Collection, Playlist}
 import com.soundcloud.publicApiStrangler.service.trackrepresentation.{
   TrackPagination,
-  TrackRepresentationsService,
-  TracksCollection
+  TrackRepresentation,
+  TrackRepresentationsService
 }
 
 class SearchService(
+    searchClient: SearchClient,
     trackRepresentationsService: TrackRepresentationsService,
-    searchClient: SearchClient
+    playlistsService: PlaylistsService
 ) {
 
   def searchTracks(
       session: UserSession,
       params: Map[String, String],
       trackPagination: TrackPagination
-  ): OutcomeF[TracksCollection] = {
+  ): OutcomeF[Collection[TrackRepresentation]] = {
     val mapParams = mapTrackParams(params) ++ Params(
       "filter.content_tier" -> "FREE",
       "filter.content_country" -> session.getGeo.getCountryCode
@@ -35,7 +39,23 @@ class SearchService(
         )
         .outcomeF
     } yield {
-      TracksCollection(enrichedTracks, trackPagination.nextHref(searchPage.total_results.toInt))
+      Collection(enrichedTracks, trackPagination.nextHref(searchPage.total_results.toInt))
+    }
+  }
+
+  def searchPlaylists(
+      session: UserSession,
+      params: Map[String, String],
+      pagination: OffsetBasedPagination
+  ): OutcomeF[Collection[Playlist]] = {
+    val mapParams = mapPlaylistParams(params)
+
+    for {
+      searchPage <- searchClient.searchPlaylists(session, mapParams)
+      playlistRequests = searchPage.docs.map(doc => PlaylistRequest(urn = doc.urn, None))
+      playlists <- playlistsService.fetchPlaylists(session, playlistRequests.toList, Some(pagination)).outcomeF
+    } yield {
+      Collection(playlists, pagination.nextHref(searchPage.total_results.toInt))
     }
   }
 
@@ -65,4 +85,22 @@ class SearchService(
     case ("filter", v) if v.value contains "downloadable" => "filter.downloadable" -> StringParam("true")
     case ("filter", v) if v.value contains "streamable" => "filter.streamable" -> StringParam("true")
   }
+
+  private val PlaylistParamMappings = Map(
+    "q" -> "q",
+    "offset" -> "offset",
+    "limit" -> "limit",
+    "order" -> "sort",
+    "created_at" -> "filter.created_at",
+    "ids" -> "filter.id",
+    "client_id" -> "client_id",
+    "genres" -> "filter.genre",
+    "tags" -> "filter.tag"
+  )
+  val playlistParams: Seq[String] = PlaylistParamMappings.keys.toSeq
+
+  private def mapPlaylistParams(params: Params): Params = params.collect {
+    case (k, v) if PlaylistParamMappings contains k => PlaylistParamMappings(k) -> v
+  }
+
 }

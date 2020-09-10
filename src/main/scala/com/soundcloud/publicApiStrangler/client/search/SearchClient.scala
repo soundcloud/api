@@ -47,6 +47,13 @@ class SearchClient(jsonClient: JsonClient) {
   def searchTracks(session: UserSession, params: Params, headers: Headers = Headers.empty): OutcomeF[SearchResponse] =
     search(session, Path() / "search" / "tracks", params, headers)
 
+  def searchPlaylists(
+      session: UserSession,
+      params: Params,
+      headers: Headers = Headers.empty
+  ): OutcomeF[SearchResponse] =
+    search(session, Path() / "search" / "playlists", params, headers)
+
   def search(
       session: UserSession,
       path: Path,

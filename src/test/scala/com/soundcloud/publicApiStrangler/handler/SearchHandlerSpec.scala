@@ -18,13 +18,14 @@ import com.soundcloud.publicApiStrangler.client.liebling.LieblingClient
 import com.soundcloud.publicApiStrangler.client.reposts.RepostsClient
 import com.soundcloud.publicApiStrangler.mapper.search.{Search, SearchDispatcherRequest, SearchMapper}
 import com.soundcloud.publicApiStrangler.service.SearchService
-import com.soundcloud.publicApiStrangler.service.trackrepresentation.{
-  TrackPagination,
-  TrackRepresentationSpecContext,
-  TracksCollection
+import com.soundcloud.publicApiStrangler.service.pagination.OffsetBasedPagination
+import com.soundcloud.publicApiStrangler.service.playlists.representation.{
+  PlaylistRepresentationSpecContext,
+  Collection
 }
+import com.soundcloud.publicApiStrangler.service.trackrepresentation.{TrackPagination, TrackRepresentationSpecContext}
 import com.soundcloud.publicApiStrangler.test.{HandlerSpecificationScope, UnitSpecification}
-import com.twitter.finagle.http.{Response, Status}
+import com.twitter.finagle.http.{Request, Response, Status}
 import com.twitter.util.Future
 import org.mockito.Mockito.{verify, when}
 import play.api.libs.json.Json
@@ -34,7 +35,6 @@ class SearchHandlerSpec extends UnitSpecification {
     def followCountsSeq: Seq[FollowCounts] = Seq.empty
 
     val fallbackMock = mock[DispatchToMothershipHandler]
-    val fallbackCounter = Telemetry.createIsolatedInstance.counter("foo", "bar", "path")
     val searchMapperMock = mock[SearchMapper]
     val followCountsClientMock = mock[FollowCountsClient]
     val lieblingClientMock = mock[LieblingClient]
@@ -54,15 +54,10 @@ class SearchHandlerSpec extends UnitSpecification {
 
     val handler = new SearchHandler(
       authentication,
-      fallbackMock,
-      fallbackCounter,
-      followCountsClientMock,
       searchMapperMock,
       "http://api.soundcloud.com",
-      lieblingClientMock,
       userRelatedMothershipDispatcher,
-      searchService,
-      Telemetry.createIsolatedInstance
+      searchService
     )
 
     override def routingDefinitions = Routing.forSearchHandler(handler)
@@ -75,8 +70,7 @@ class SearchHandlerSpec extends UnitSpecification {
   "when resource that supports search is called" >> {
     trait Context extends ForwardContext {
       val endpoints = Seq(
-        ("/users", SearchDispatcherRequest.userSearch, handler.dispatchUserRequest),
-        ("/playlists", SearchDispatcherRequest.playlistSearch, handler.dispatchPlaylistRequest)
+        ("/users", SearchDispatcherRequest.userSearch, handler.dispatchUserRequest)
       )
 
       val queryParams = Map("q" -> "foo")
@@ -114,8 +108,6 @@ class SearchHandlerSpec extends UnitSpecification {
         case (apiEndPoint, dispatcherRequest, handler) =>
           expectForwardedRequest
           val response = get(apiEndPoint)
-          // XXX: Instrumentation was removed in ff3609e02af7a026ea52eacc33e32c1fc506a895
-          // fallbackCounter.labels(apiEndPoint).get() ==== 1.0
           stillForwards(response)
       }
     }
@@ -225,8 +217,7 @@ class SearchHandlerSpec extends UnitSpecification {
   "/tracks" >> {
     trait Context extends ForwardContext with TrackRepresentationSpecContext {
       val trackRepresentation = createTrackRepresentation()
-      val tracksCollection = TracksCollection(List(trackRepresentation), None)
-      val session = loggedInSession(Urn("soundcloud", "users", "1"))
+      val tracksCollection = Collection(List(trackRepresentation), None)
 
       val path = "/tracks"
       def paginationParams(path: String) =
@@ -254,10 +245,10 @@ class SearchHandlerSpec extends UnitSpecification {
       val response = get(path, Map("q" -> "foo", "offset" -> "10", "limit" -> "5", "linked_partitioning" -> "1"))
 
       response.statusCode ==== 200
-      response.contentString ==== TracksCollection.getRepresentation(tracksCollection, true)
+      response.contentString ==== Collection.getRepresentation(tracksCollection, true)
     }
 
-    "returns a 400 when fetchTracksRepresentation returns invalid request" in new Context {
+    "returns a 400 when search service returns invalid request" in new Context {
       val queryString = "?q=foo&offset=10&limit=5&linked_partitioning=1"
       searchService.searchTracks(
         anonymousSession,
@@ -272,4 +263,49 @@ class SearchHandlerSpec extends UnitSpecification {
     }
   }
 
+  "/playlists" >> {
+    trait Context extends ForwardContext with PlaylistRepresentationSpecContext {
+      val playlistsCollections = Collection(List(playlist), None)
+
+      val path = "/playlists"
+      searchService.playlistParams returns Seq("linked_partitioning", "q")
+
+      def paginationParams(path: String): OffsetBasedPagination = {
+        val mockRequest = Request(path)
+        mockRequest.host = "localhost"
+        OffsetBasedPagination.build(mockRequest, searchService.playlistParams)
+      }
+    }
+
+    "returns playlist search results" in new Context {
+      val queryString = "?q=foo&offset=10&limit=5&linked_partitioning=1"
+      searchService.searchPlaylists(
+        anonymousSession,
+        Map("q" -> "foo", "offset" -> "10", "limit" -> "5", "linked_partitioning" -> "1"),
+        paginationParams(path + queryString)
+      ) returns Future
+        .value(
+          playlistsCollections
+        )
+        .outcomeF
+      val response = get(path, Map("q" -> "foo", "offset" -> "10", "limit" -> "5", "linked_partitioning" -> "1"))
+
+      response.statusCode ==== 200
+      response.contentString ==== Collection.getRepresentation(playlistsCollections, true)
+    }
+
+    "returns a 400 when search service returns invalid request" in new Context {
+      val queryString = "?q=foo&offset=10&limit=5&linked_partitioning=1"
+      searchService.searchPlaylists(
+        anonymousSession,
+        Map("q" -> "foo", "offset" -> "10", "limit" -> "5", "linked_partitioning" -> "1"),
+        paginationParams(path + queryString)
+      ) returns NotValid("not valid").badF
+
+      val response = get(path, Map("q" -> "foo", "offset" -> "10", "limit" -> "5", "linked_partitioning" -> "1"))
+
+      response.statusCode ==== 400
+      response.contentString ==== Json.stringify(Json.obj("error" -> "invalid request"))
+    }
+  }
 }

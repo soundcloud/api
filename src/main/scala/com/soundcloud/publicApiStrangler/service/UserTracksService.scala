@@ -4,11 +4,11 @@ import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.publicApiStrangler.client.trackmetadata.TrackmetadataClient
 import com.soundcloud.publicApiStrangler.client.tracks.TrackRequest
+import com.soundcloud.publicApiStrangler.service.playlists.representation.Collection
 import com.soundcloud.publicApiStrangler.service.trackrepresentation.{
   TrackPagination,
-  TrackRepresentationsService,
-  TracksCollection,
-  TrackRepresentation
+  TrackRepresentation,
+  TrackRepresentationsService
 }
 import com.twitter.util.Future
 
@@ -21,14 +21,14 @@ class UserTracksService(
       session: UserSession,
       userUrn: Urn,
       trackPagination: TrackPagination
-  ): Future[TracksCollection] = {
+  ): Future[Collection[TrackRepresentation]] = {
     for {
       trackUrns <- trackmetadataClient.urnsByUser(session, userUrn)
       trackUrnsPage = trackPagination.calculateTrackUrnPage(trackUrns).toList
       tracks <- trackRepresentationsService.tracks(session, trackUrnsPage.map(TrackRequest(_, None)))
       finalPage = trackPagination.calculateFinalPage(tracks)
     } yield {
-      TracksCollection(finalPage, trackPagination.nextHref(finalPage.size))
+      Collection(finalPage, trackPagination.nextHref(finalPage.size))
     }
   }
 

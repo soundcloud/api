@@ -4,12 +4,11 @@ import com.soundcloud.jvmkit.module.bff.session.UserAuthentication
 import com.soundcloud.jvmkit.module.http.server.{HandlerRequest, JsonResponseBuilder}
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSession
-import com.soundcloud.publicApiStrangler.service.pagination.CursorBasedPagination
-import com.soundcloud.publicApiStrangler.service.trackrepresentation.TracksCollection
-import com.soundcloud.publicApiStrangler.handler.representation.tracks.TrackRepresentationResponse.handleTracksCollectionResponseFromService
-import com.soundcloud.publicApiStrangler.service._
 import com.soundcloud.outcome._
 import com.soundcloud.publicApiStrangler.client.liebling.{LikeDeleted, LikeNotFound}
+import com.soundcloud.publicApiStrangler.handler.representation.collection.CollectionResponse
+import com.soundcloud.publicApiStrangler.service._
+import com.soundcloud.publicApiStrangler.service.pagination.CursorBasedPagination
 import com.twitter.finagle.http.{Response, Status}
 import com.twitter.util.Future
 import play.api.libs.json.Json
@@ -102,19 +101,15 @@ class LikesHandler(userAuthentication: UserAuthentication, likesService: LikesSe
   }
 
   private def performGetTracksLikes(request: HandlerRequest, session: UserSession, userId: String): Future[Response] = {
-    val hasLinkedPartitioning = request.params.get("linked_partitioning").isDefined
+    val hasLinkedPartitioning = request.params.contains("linked_partitioning")
     val pagination = CursorBasedPagination.build(request, Seq("linked_partitioning"))
-
-    def fetchTrackRepresentation(urn: Urn): Future[Outcome[TracksCollection]] = {
-      likesService
-        .userTracksLikes(session, urn, pagination)
-        .map(Good(_))
-    }
 
     Try(Urn("soundcloud", "users", userId)) match {
       case Success(urn @ Urn(_, _, numericRegexp())) =>
-        val trackRepresentation = fetchTrackRepresentation(urn)
-        handleTracksCollectionResponseFromService(trackRepresentation, hasLinkedPartitioning)
+        val tracksCollection = likesService
+          .userTracksLikes(session, urn, pagination)
+          .map(Good(_))
+        CollectionResponse.handleCollectionResponse(tracksCollection, hasLinkedPartitioning)
       case _ => Future.value(JsonResponseBuilder.notFound(notFoundErrorString))
     }
   }

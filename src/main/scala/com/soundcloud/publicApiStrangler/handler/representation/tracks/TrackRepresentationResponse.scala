@@ -3,29 +3,12 @@ package com.soundcloud.publicApiStrangler.handler.representation.tracks
 import com.soundcloud.jvmkit.module.http.server.JsonResponseBuilder
 import com.soundcloud.outcome._
 import com.soundcloud.publicApiStrangler.handler.support.error.UnhandledOutcomeException
-import com.soundcloud.publicApiStrangler.service.trackrepresentation.{TrackRepresentation, TracksCollection}
+import com.soundcloud.publicApiStrangler.service.trackrepresentation.TrackRepresentation
 import com.twitter.finagle.http.{Response, Status}
 import com.twitter.util.Future
 import play.api.libs.json.Json
 
 object TrackRepresentationResponse {
-
-  def handleTracksCollectionResponseFromService(
-      outcome: Future[Outcome[TracksCollection]],
-      hasLinkedPartitioning: Boolean
-  ): Future[Response] = {
-    outcome
-      .map {
-        case Good(tracksRepresentationResult) =>
-          JsonResponseBuilder.ok(
-            TracksCollection.getRepresentation(tracksRepresentationResult, hasLinkedPartitioning)
-          )
-
-        case Bad(NotValid(_)) => JsonResponseBuilder.badRequest(generateErrorBody("invalid request"))
-        case Bad(NotFound(_)) => JsonResponseBuilder.notFound(generateErrorBody("not found"))
-        case _ => throw new UnhandledOutcomeException
-      }
-  }
 
   def handleTrackRepresentationResponseFromService(
       outcome: Future[Outcome[TrackRepresentation]]

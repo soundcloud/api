@@ -3,47 +3,19 @@ package com.soundcloud.publicApiStrangler.mapper.search
 import com.soundcloud.bff.nextbff.UntypedJson
 import com.soundcloud.bff.nextbff.mapping.MappingContext
 import com.soundcloud.bff.nextbff.pagination.OffsetBasedPage
-import com.soundcloud.jvmkit.module.http.client.{JsonClient, Param, Params}
+import com.soundcloud.jvmkit.module.http.client.{Param, Params}
+import com.soundcloud.jvmkit.module.json.play.UrnFormat._
 import com.soundcloud.jvmkit.module.util.Urn
-import com.soundcloud.jvmkit.module.util.http.Headers
 import com.soundcloud.jvmkit.module.util.session.UserSessionBuilder
 import com.soundcloud.publicApiStrangler.authorization.ContentAuthorizationRules
-import com.soundcloud.jvmkit.module.json.play.UrnFormat._
 import com.soundcloud.publicApiStrangler.client.followcounts.FollowCountsClient
 import com.soundcloud.publicApiStrangler.client.mothership.OkidokiClient
 import com.soundcloud.publicApiStrangler.client.reposts.RepostsClient
 import com.soundcloud.publicApiStrangler.test.UnitSpecification
 import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures.withContentsOf
-import com.twitter.finagle.http.Status
 import com.twitter.util.{Await, Future}
 import org.mockito.Mockito.when
 import play.api.libs.json.{JsArray, JsNull, JsObject, Json}
-
-class SearchRepositorySpec extends UnitSpecification {
-  trait Context extends Scope {
-    lazy val session = loggedInSession(Urn("soundcloud", "users", "123"))
-    lazy val mockService = mock[JsonClient]
-    lazy val repo = new SearchRepository(mockService)
-  }
-
-  "playlists search" >> {
-    "adds filter.content_type=FREE and filter.content_country=<countryCode>" in new Context {
-      val response = withContentsOf("search", "tracks").as[JsObject]
-      doReturn(Future.value(jsonResponse(Status.Ok, response)))
-        .when(mockService)
-        .getWithSession(session, SearchRepository.PlaylistsPath, Params("q" -> "bar"), Headers.empty)
-      val request = OffsetBasedPage(
-        SearchDispatcherRequest(SearchRepository.PlaylistsPath, Set.empty, Map.empty)(x => x),
-        "http://localhost",
-        "/search/playlists",
-        Params("q" -> "bar"),
-        0,
-        10
-      )
-      Await.result(repo.fetch(session, request)) ==== Some(response)
-    }
-  }
-}
 
 class SearchMapperSpec extends UnitSpecification {
   val json = withContentsOf("search", "tracks").as[JsObject]
@@ -58,7 +30,7 @@ class SearchMapperSpec extends UnitSpecification {
 
     val baseUrl = "http://example.org"
     val mapper = new SearchMapper(searchRepoMock, entityMapperMock, baseUrl)
-    val path = SearchRepository.PlaylistsPath
+    val path = SearchRepository.UsersPath
     val query = SearchDispatcherRequest(path, Set.empty, Map.empty)(identity)
 
     def pagedRequest(params: Map[String, Param]) =
@@ -84,7 +56,7 @@ class SearchMapperSpec extends UnitSpecification {
     val followCountsClient = mock[FollowCountsClient]
     val repostsClient = mock[RepostsClient]
     val searchEntityMapper =
-      new SearchEntityMapper(okidokiMock, followCountsClient, repostsClient, baseUrl, null, null)
+      new SearchEntityMapper(okidokiMock, followCountsClient, repostsClient, baseUrl)
     val searchMapper = new SearchMapper(searchRepoMock, searchEntityMapper, baseUrl)
     private val request = pagedRequest(Map.empty)
 

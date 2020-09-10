@@ -26,14 +26,7 @@ object SearchDispatcherRequest {
     "client_id" -> "client_id"
   )
 
-  private val PlaylistParamMappings = Map(
-    "genres" -> "filter.genre",
-    "tags" -> "filter.tag"
-  )
-
   def mapCommonParams(params: Params): Params = mapParams(params, CommonParamMappings)
-
-  def mapPlaylistParams(params: Params): Params = mapParams(params, CommonParamMappings ++ PlaylistParamMappings)
 
   def mapParams(params: Params, paramMappings: Map[String, String]): Params = params.collect {
     case (k, v) if paramMappings contains k => (paramMappings(k), v)
@@ -41,14 +34,6 @@ object SearchDispatcherRequest {
 
   val userSearch: Request => SearchDispatcherRequest = request =>
     raw(SearchRepository.UsersPath, request, CommonParamMappings.keySet, mapCommonParams)
-
-  val playlistSearch: Request => SearchDispatcherRequest = request =>
-    raw(
-      SearchRepository.PlaylistsPath,
-      request,
-      CommonParamMappings.keySet ++ PlaylistParamMappings.keySet,
-      mapPlaylistParams
-    )
 
   def raw(
       path: Path,

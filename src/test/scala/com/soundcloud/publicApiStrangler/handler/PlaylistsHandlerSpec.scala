@@ -5,12 +5,14 @@ import com.soundcloud.jvmkit.module.util.session.UserSessionBuilder
 import com.soundcloud.jvmkit.module.util.{Geo, Urn}
 import com.soundcloud.outcome._
 import com.soundcloud.publicApiStrangler.Routing
-import com.soundcloud.publicApiStrangler.client.mothership.response.representation.User
 import com.soundcloud.publicApiStrangler.client.playlists.PlaylistDeletionClient
 import com.soundcloud.publicApiStrangler.service.PlaylistsService
 import com.soundcloud.publicApiStrangler.service.pagination.OffsetBasedPagination
-import com.soundcloud.publicApiStrangler.service.playlists.representation.Playlist
-import com.soundcloud.publicApiStrangler.service.trackrepresentation.{TrackRepresentationSpecContext, TracksCollection}
+import com.soundcloud.publicApiStrangler.service.playlists.representation.{
+  Collection,
+  PlaylistRepresentationSpecContext
+}
+import com.soundcloud.publicApiStrangler.service.trackrepresentation.TrackRepresentationSpecContext
 import com.soundcloud.publicApiStrangler.test.{HandlerSpecificationScope, UnitSpecification}
 import com.twitter.finagle.http.{Request, Status}
 import com.twitter.util.Future
@@ -18,7 +20,10 @@ import org.mockito.Mockito.{verify, when}
 import play.api.libs.json.{JsDefined, JsString, Json}
 
 class PlaylistsHandlerSpec extends UnitSpecification {
-  trait Context extends HandlerSpecificationScope with TrackRepresentationSpecContext {
+  trait Context
+      extends HandlerSpecificationScope
+      with TrackRepresentationSpecContext
+      with PlaylistRepresentationSpecContext {
     lazy val geo = new Geo("US")
     lazy val session = new UserSessionBuilder()
       .setUser(Urn("soundcloud", "users", "2"))
@@ -40,63 +45,6 @@ class PlaylistsHandlerSpec extends UnitSpecification {
 
     val requestedTrack1 = createTrackRepresentation()
     val requestedTrack2 = createTrackRepresentation()
-
-    val user =
-      User(
-        urn = Urn("soundcloud", "users", "1"),
-        permalink = "giraffe",
-        username = "Dr. G. Raffe",
-        avatar_url = "http://example.com/giraffe.jpg?123456789",
-        permalink_url = "https://soundcloud.com/denis",
-        city = None,
-        country = None,
-        tracks_count = 1,
-        followers_count = Some(20000),
-        followings_count = Some(20),
-        verified = false,
-        description = Some("I am a nice person"),
-        updated_at = Some("2016/10/10 11:21:36 +0000")
-      )
-
-    val playlist =
-      Playlist(
-        title = "test",
-        id = 1,
-        duration = 120,
-        userId = 1,
-        kind = "playlist",
-        releaseDay = None,
-        permalinkUrl = "http://soundcloud.com/test",
-        genre = "metal",
-        permalink = "test",
-        purchaseUrl = None,
-        releaseMonth = None,
-        description = None,
-        uri = "http://soundcloud.com",
-        labelName = None,
-        label = None,
-        tagList = "",
-        releaseYear = None,
-        trackCount = 1,
-        lastModified = None,
-        license = None,
-        playlistType = "",
-        downloadable = None,
-        sharing = "",
-        createdAt = None,
-        release = None,
-        purchaseTitle = None,
-        artworkUrl = "",
-        ean = None,
-        streamable = Some(false),
-        embeddableBy = "",
-        labelId = None,
-        user = user,
-        tracks = List.empty,
-        secretToken = None,
-        secretUri = None
-      )
-
   }
 
   "DELETE /playlists/:id" >> {
@@ -178,7 +126,7 @@ class PlaylistsHandlerSpec extends UnitSpecification {
 
   "GET /playlists/:id/tracks" >> {
     "returns track collection when playlist found" in new Context {
-      val unpaginatedTracksCollection = TracksCollection(List(requestedTrack1, requestedTrack2), None)
+      val unpaginatedTracksCollection = Collection(List(requestedTrack1, requestedTrack2), None)
 
       when(playlistsService.fetchPlaylistTracks(session, playlistUrn, None, None))
         .thenReturn(Future.value(Good(unpaginatedTracksCollection)))
@@ -193,7 +141,7 @@ class PlaylistsHandlerSpec extends UnitSpecification {
       mockRequest.host = "localhost"
       val pagination = OffsetBasedPagination.build(mockRequest, Seq("linked_partitioning"))
       val paginatedTracksCollection =
-        TracksCollection(List(requestedTrack1, requestedTrack2), Some(pagination.normalizedHref))
+        Collection(List(requestedTrack1, requestedTrack2), Some(pagination.normalizedHref))
 
       when(playlistsService.fetchPlaylistTracks(session, playlistUrn, Some("s-3creT"), Some(pagination)))
         .thenReturn(Future.value(Good(paginatedTracksCollection)))

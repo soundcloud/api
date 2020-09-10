@@ -125,5 +125,17 @@ class PaginationSpec extends Specification {
       val next = pagination.nextPage(4)
       next.offset ==== Some(4)
     }
+
+    "it returns a valid nextHref when there are still resources to consume" in new Scope {
+      val request = mockRequest(Map("limit" -> "10", "offset" -> "5"))
+      val pagination = OffsetBasedPagination.build(request)
+      pagination.nextHref(20) ==== Some(s"$baseUrl$path?offset=15&limit=10")
+    }
+
+    "it returns an empty nextHref when the limit is reached" in new Scope {
+      val request = mockRequest(Map("limit" -> "20", "offset" -> "10"))
+      val pagination = OffsetBasedPagination.build(request)
+      pagination.nextHref(20) ==== None
+    }
   }
 }

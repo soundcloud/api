@@ -30,9 +30,7 @@ import com.soundcloud.publicApiStrangler.client.stitch.StitchClient
 import com.soundcloud.publicApiStrangler.client.trackcoordinator.TrackCoordinatorClient
 import com.soundcloud.publicApiStrangler.client.trackmetadata.TrackmetadataClient
 import com.soundcloud.publicApiStrangler.client.tracks.TracksClient
-import com.soundcloud.publicApiStrangler.mapper.liebling.LikeCountMapper
 import com.soundcloud.publicApiStrangler.mapper.search.SearchEntityMapper
-import com.soundcloud.publicApiStrangler.mapper.timeline.EntitySummaryMapper
 import com.soundcloud.publicApiStrangler.service.media.{StreamService, TrackAccessRecorderService}
 import com.soundcloud.publicApiStrangler.service.trackrepresentation.{TrackRepresentationsService, TrackUpdateService}
 import com.soundcloud.publicApiStrangler.service.{
@@ -183,19 +181,12 @@ class Clients(
   val trackUpdateService = new TrackUpdateService(trackCoordinatorClient, hocuspocusClient, tracksService)
   val similarTracksService = new SimilarTracksService(tracksService, systemPlaylistsClient)
   val likesService = new LikesService(tracksService, lieblingClient)
-  val playlistService = new PlaylistsService(playlistsTwirpClient, tracksService, okidokiClient)
-  val searchService = new SearchService(tracksService, searchClient)
+  val playlistService = new PlaylistsService(playlistsTwirpClient, tracksService, okidokiClient, exceptionCollector)
+  val searchService = new SearchService(searchClient, tracksService, playlistService)
 
   val streamService = new StreamService(trackVisibilityService, tracksClient)
 
-  val searchEntityMapper = new SearchEntityMapper(
-    okidokiClient,
-    followCountsClient,
-    repostsClient,
-    baseUrl,
-    new LikeCountMapper(lieblingClient),
-    new EntitySummaryMapper(okidokiClient, repostsClient, baseUrl)
-  )
+  val searchEntityMapper = new SearchEntityMapper(okidokiClient, followCountsClient, repostsClient, baseUrl)
 
   val playlistDeletionClient = new PlaylistDeletionClient(okidokiJsonClient)
 

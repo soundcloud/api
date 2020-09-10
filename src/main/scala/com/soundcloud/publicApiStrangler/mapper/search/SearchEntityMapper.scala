@@ -5,22 +5,17 @@ import com.soundcloud.bff.nextbff.mapping.{JsonMapping, MappingContext}
 import com.soundcloud.jvmkit.module.json.play.UrnFormat._
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSession
-import com.soundcloud.publicApiStrangler.client.followcounts.{FollowCounts, FollowCountsClient}
+import com.soundcloud.publicApiStrangler.client.followcounts.FollowCountsClient
 import com.soundcloud.publicApiStrangler.client.mothership.OkidokiClient
 import com.soundcloud.publicApiStrangler.client.reposts.RepostsClient
-import com.soundcloud.publicApiStrangler.mapper.liebling.LikeCountMapper
-import com.soundcloud.publicApiStrangler.mapper.timeline.EntitySummaryMapper
 import com.soundcloud.publicApiStrangler.support.mapping.InputValidation
 import com.twitter.util.Future
-import play.api.libs.json.JsObject
 
 class SearchEntityMapper(
     okidokiClient: OkidokiClient,
     followCountsClient: FollowCountsClient,
     repostsClient: RepostsClient,
-    baseUrl: String,
-    likeCountMapper: LikeCountMapper,
-    entitySummaryMapper: EntitySummaryMapper
+    baseUrl: String
 ) extends Mapper[Urn, JsonMapping]
     with InputValidation[Urn, JsonMapping] {
   override def mapNonEmptyInputs(session: UserSession, inputs: Set[Urn])(
@@ -39,22 +34,8 @@ class SearchEntityMapper(
     } yield {
       entities.map { entity =>
         val urn = (entity \ "self" \ "urn").as[Urn]
-        urn -> entityFor(session, urn, entity, followCountsMap, repostsCountsByUrn)
+        urn -> new SearchUser(entity, baseUrl, followCountsMap.get(urn), repostsCountsByUrn.get(urn))
       }.toMap
-    }
-  }
-
-  private def entityFor(
-      session: UserSession,
-      urn: Urn,
-      entityData: JsObject,
-      followCountsMap: Map[Urn, FollowCounts],
-      repostCountsByUrn: Map[Urn, Long]
-  )(implicit context: MappingContext) = {
-    urn.collection match {
-      case "users" => new SearchUser(entityData, baseUrl, followCountsMap.get(urn), repostCountsByUrn.get(urn))
-      case "playlists" =>
-        new SearchPlaylist(entityData, likeCountMapper, repostCountsByUrn, baseUrl, entitySummaryMapper)
     }
   }
 }

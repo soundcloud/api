@@ -8,9 +8,10 @@ import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.outcome._
 import com.soundcloud.publicApiStrangler.TrackUrnUtil.trackUrn
-import com.soundcloud.publicApiStrangler.handler.representation.tracks.TrackRepresentationResponse.handleTracksCollectionResponseFromService
+import com.soundcloud.publicApiStrangler.handler.representation.collection.CollectionResponse
 import com.soundcloud.publicApiStrangler.service.SimilarTracksService
-import com.soundcloud.publicApiStrangler.service.trackrepresentation.{TrackPagination, TracksCollection}
+import com.soundcloud.publicApiStrangler.service.playlists.representation.Collection
+import com.soundcloud.publicApiStrangler.service.trackrepresentation.{TrackPagination, TrackRepresentation}
 import com.twitter.finagle.http.Response
 import com.twitter.util.Future
 
@@ -26,12 +27,12 @@ class SimilarTracksHandler(
   def handleSimilarTracks(request: HandlerRequest): Future[Response] = {
     userAuthentication.withUserSession(request) { (session: UserSession) =>
       val pagination = TrackPagination.fromRequest(request.params, new URL(baseUrl + request.uri))
-      val hasLinkedPartitioning = request.params.get("linked_partitioning").isDefined
+      val hasLinkedPartitioning = request.params.contains("linked_partitioning")
 
       val urn = trackUrn(request)
 
-      val similarTracks = performGetSimilarTracks(session, urn, pagination)
-      handleTracksCollectionResponseFromService(similarTracks, hasLinkedPartitioning)
+      val similarTracksCollection = performGetSimilarTracks(session, urn, pagination)
+      CollectionResponse.handleCollectionResponse(similarTracksCollection, hasLinkedPartitioning)
     }
   }
 
@@ -39,7 +40,7 @@ class SimilarTracksHandler(
       session: UserSession,
       trackUrn: Urn,
       pagination: TrackPagination
-  ): Future[Outcome[TracksCollection]] = {
+  ): Future[Outcome[Collection[TrackRepresentation]]] = {
     similarTracksService
       .similarTracks(session, trackUrn, pagination)
       .map {

@@ -15,6 +15,16 @@ case class OffsetBasedPagination(
     extraParams +
       ((OffsetBasedPagination.NormalizedOffsetParam, offset.getOrElse(0))) +
       ((OffsetBasedPagination.NormalizedLimitParam, limit))
+
+  def nextHref(totalItems: Int): Option[String] = {
+    val nextOffset = offset.getOrElse(0) + limit
+
+    if (totalItems < nextOffset) {
+      None
+    } else {
+      Some(nextPage(nextOffset).normalizedHref)
+    }
+  }
 }
 
 object OffsetBasedPagination extends PaginationHelpers {

@@ -5,11 +5,8 @@ import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.publicApiStrangler.client.liebling._
 import com.soundcloud.publicApiStrangler.client.tracks.TrackRequest
 import com.soundcloud.publicApiStrangler.service.pagination.CursorBasedPagination
-import com.soundcloud.publicApiStrangler.service.trackrepresentation.{
-  TrackRepresentation,
-  TrackRepresentationsService,
-  TracksCollection
-}
+import com.soundcloud.publicApiStrangler.service.playlists.representation.Collection
+import com.soundcloud.publicApiStrangler.service.trackrepresentation.{TrackRepresentation, TrackRepresentationsService}
 import com.twitter.util.Future
 
 sealed trait CreateResponse
@@ -60,7 +57,7 @@ class LikesService(
       session: UserSession,
       userUrn: Urn,
       pagination: CursorBasedPagination
-  ): Future[TracksCollection] = {
+  ): Future[Collection[TrackRepresentation]] = {
     for {
       likesPage <- lieblingClient.userTracksLikes(session, userUrn, pagination.cursor, pagination.pageSize)
       enrichedTracks <- trackRepresentationsService.tracks(
@@ -71,7 +68,7 @@ class LikesService(
       val nextHref =
         likesPage.meta.cursor.next_params.map(params => pagination.nextPage(params.cursor)).map(_.normalizedHref)
 
-      TracksCollection(enrichedTracks, nextHref)
+      Collection(enrichedTracks, nextHref)
     }
   }
 }

@@ -1,5 +1,7 @@
 package com.soundcloud.publicApiStrangler.service
 
+import com.soundcloud.jvmkit.module.telemetry.Telemetry
+import com.soundcloud.jvmkit.module.telemetry.exceptions.ExceptionCollector
 import com.soundcloud.jvmkit.module.twirp.proto.UserSessionOps._
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.{UserSession, UserSessionBuilder}
@@ -7,23 +9,25 @@ import com.soundcloud.publicApiStrangler.client.mothership.MoshimoshiClient
 import com.soundcloud.publicApiStrangler.client.tracks.TrackRequest
 import com.soundcloud.publicApiStrangler.service.pagination.OffsetBasedPagination
 import com.soundcloud.publicApiStrangler.service.trackrepresentation.{
+  TrackRepresentation,
   TrackRepresentationSpecContext,
-  TrackRepresentationsService,
-  TracksCollection
+  TrackRepresentationsService
 }
 import com.soundcloud.publicApiStrangler.test.UnitSpecification
 import com.twitter.finagle.http.ParamMap
 import com.twitter.util.{Await, Future}
 import org.mockito.Mockito.when
 import com.soundcloud.outcome._
+import com.soundcloud.publicApiStrangler.service.playlists.PlaylistRequest
+import com.soundcloud.publicApiStrangler.service.playlists.representation.Collection
 import proto.soundcloud.common.session.{UserSession => ProtoUserSession}
 import proto.soundcloud.playlists.api.{
   GetVisiblePlaylistsRequest,
   GetVisiblePlaylistsResponse,
   PlaylistPagination,
-  PlaylistRequest,
   PlaylistResponse,
   Playlist => ProtoPlaylist,
+  PlaylistRequest => ProtoPlaylistRequest,
   PlaylistsService => PlaylistsTwirpService,
   TrackRequest => ProtoTrackRequest
 }
@@ -53,18 +57,22 @@ class PlaylistsServiceSpec extends UnitSpecification {
     val playlistsTwirpServiceMock = mock[PlaylistsTwirpService]
     val trackServiceMock = mock[TrackRepresentationsService]
     val moshimoshiClientMock = mock[MoshimoshiClient]
+    val telemetry = Telemetry.defaultInstance
+    val exceptionCollector = new ExceptionCollector(telemetry)
 
-    val playlistsService = new PlaylistsService(playlistsTwirpServiceMock, trackServiceMock, moshimoshiClientMock)
+    val playlistsService =
+      new PlaylistsService(playlistsTwirpServiceMock, trackServiceMock, moshimoshiClientMock, exceptionCollector)
+    val playlistRequests = List(PlaylistRequest(requestedPlaylistUrn, candidateSecretToken))
   }
 
   trait SuccessContext extends Context {
-    val requestWithPagination = PlaylistRequest(
+    val requestWithPagination = ProtoPlaylistRequest(
       urn = requestedPlaylistUrn.toString,
       secretToken = candidateSecretToken,
       pagination = Some(pagination)
     )
 
-    val requestWithoutPagination = PlaylistRequest(
+    val requestWithoutPagination = ProtoPlaylistRequest(
       urn = requestedPlaylistUrn.toString,
       secretToken = candidateSecretToken,
       pagination = None
@@ -92,10 +100,31 @@ class PlaylistsServiceSpec extends UnitSpecification {
     when(moshimoshiClientMock.fetchUserObjects(session, Set(playlistOwner.urn)))
       .thenReturn(Future.value(List(playlistOwner)))
     when(moshimoshiClientMock.fetchUserObjects(session, Set(labelUrn))).thenReturn(Future.value(List(defaultLabel)))
+
+    def setUpMocksForPlaylists(
+        pagination: Option[PlaylistPagination],
+        visiblePlaylistsRequest: GetVisiblePlaylistsRequest,
+        requestedPlaylistTracks: List[TrackRepresentation] = List(requestedPlaylistTrack)
+    ) = {
+      val expectedPlaylistResponse = GetVisiblePlaylistsResponse(playlistResponse = Seq(
+        PlaylistResponse(
+          playlist = Some(protoPlaylist),
+          trackRequests = protoTrack,
+          pagination = pagination
+        )
+      )
+      )
+
+      when(playlistsTwirpServiceMock.getVisiblePlaylists(getVisiblePlaylistsRequest = visiblePlaylistsRequest))
+        .thenReturn(Future.value(expectedPlaylistResponse))
+      when(
+        trackServiceMock.tracks(session, List(TrackRequest(urn = requestedPlaylistTrackUrn, secretToken = None)))
+      ).thenReturn(Future.value(requestedPlaylistTracks))
+    }
   }
 
   trait NotFoundContext extends Context {
-    val request = PlaylistRequest(
+    val request = ProtoPlaylistRequest(
       urn = requestedPlaylistUrn.toString,
       secretToken = candidateSecretToken
     )
@@ -116,22 +145,9 @@ class PlaylistsServiceSpec extends UnitSpecification {
       .thenReturn(Future.value(expectedPlaylistResponse))
   }
 
-  "fetchPlaylist" >> {
+  "#fetchPlaylist" >> {
     "can fetch a playlist given playlist, secret token, and pagination" in new SuccessContext {
-      val expectedPlaylistResponse = GetVisiblePlaylistsResponse(playlistResponse = Seq(
-        PlaylistResponse(
-          playlist = Some(protoPlaylist),
-          trackRequests = protoTrack,
-          pagination = Some(PlaylistPagination(cursor = Some("4"), limit = 2))
-        )
-      )
-      )
-
-      when(playlistsTwirpServiceMock.getVisiblePlaylists(getVisiblePlaylistsRequest = getVisiblePlaylistWithPagination))
-        .thenReturn(Future.value(expectedPlaylistResponse))
-      when(
-        trackServiceMock.tracks(session, List(TrackRequest(urn = requestedPlaylistTrackUrn, secretToken = None)))
-      ).thenReturn(Future.value(List(requestedPlaylistTrack)))
+      setUpMocksForPlaylists(Some(PlaylistPagination(cursor = Some("4"), limit = 2)), getVisiblePlaylistWithPagination)
 
       val result =
         Await.result(
@@ -150,20 +166,7 @@ class PlaylistsServiceSpec extends UnitSpecification {
     }
 
     "can fetch a playlist without pagination" in new SuccessContext {
-      val expectedPlaylistResponse = GetVisiblePlaylistsResponse(playlistResponse = Seq(
-        PlaylistResponse(
-          playlist = Some(protoPlaylist),
-          trackRequests = protoTrack,
-          pagination = None
-        )
-      )
-      )
-
-      when(playlistsTwirpServiceMock.getVisiblePlaylists(getVisiblePlaylistsRequest = getVisiblePlaylist))
-        .thenReturn(Future.value(expectedPlaylistResponse))
-      when(
-        trackServiceMock.tracks(session, List(TrackRequest(urn = requestedPlaylistTrackUrn, secretToken = None)))
-      ).thenReturn(Future.value(List(requestedPlaylistTrack)))
+      setUpMocksForPlaylists(None, getVisiblePlaylist)
 
       val result =
         Await.result(
@@ -192,26 +195,13 @@ class PlaylistsServiceSpec extends UnitSpecification {
     }
   }
 
-  "fetchPlaylistTracks" >> {
+  "#fetchPlaylistTracks" >> {
     "can retrieve playlist tracks without pagination" in new SuccessContext {
-      val expectedPlaylistResponse = GetVisiblePlaylistsResponse(playlistResponse = Seq(
-        PlaylistResponse(
-          playlist = Some(protoPlaylist),
-          trackRequests = protoTracks,
-          pagination = None
-        )
+      setUpMocksForPlaylists(
+        None,
+        getVisiblePlaylist,
+        List(requestedPlaylistTrack, requestedPlaylistTrack1, requestedPlaylistTrack2)
       )
-      )
-
-      when(playlistsTwirpServiceMock.getVisiblePlaylists(getVisiblePlaylistsRequest = getVisiblePlaylist))
-        .thenReturn(Future.value(expectedPlaylistResponse))
-
-      when(
-        trackServiceMock.tracks(
-          session,
-          protoTracks.map(track => TrackRequest(Urn.parse(track.urn).get, track.secretToken)).toList
-        )
-      ).thenReturn(Future.value(List(requestedPlaylistTrack, requestedPlaylistTrack1, requestedPlaylistTrack2)))
 
       val result =
         Await.result(
@@ -220,11 +210,11 @@ class PlaylistsServiceSpec extends UnitSpecification {
         )
 
       result match {
-        case Good(tracksCollection: TracksCollection) =>
-          tracksCollection.tracks.length ==== 3
-          tracksCollection.tracks(0).id ==== requestedPlaylistTrack.id
-          tracksCollection.tracks(1).id ==== requestedPlaylistTrack1.id
-          tracksCollection.tracks(2).id ==== requestedPlaylistTrack2.id
+        case Good(tracksCollection: Collection[TrackRepresentation]) =>
+          tracksCollection.items.length ==== 3
+          tracksCollection.items(0).id ==== requestedPlaylistTrack.id
+          tracksCollection.items(1).id ==== requestedPlaylistTrack1.id
+          tracksCollection.items(2).id ==== requestedPlaylistTrack2.id
           tracksCollection.nextHref.isEmpty
         case _ => failure(s"incorrectly returned ${result.toString}")
       }
@@ -232,25 +222,7 @@ class PlaylistsServiceSpec extends UnitSpecification {
 
     "can retrieve playlist tracks with pagination" in new SuccessContext {
       override val protoTrack: Seq[ProtoTrackRequest] = Seq(protoTracks.head)
-
-      val expectedPlaylistResponse = GetVisiblePlaylistsResponse(playlistResponse = Seq(
-        PlaylistResponse(
-          playlist = Some(protoPlaylist),
-          trackRequests = protoTracks,
-          pagination = Some(PlaylistPagination(limit = 2, cursor = Some("2")))
-        )
-      )
-      )
-
-      when(playlistsTwirpServiceMock.getVisiblePlaylists(getVisiblePlaylistsRequest = getVisiblePlaylistWithPagination))
-        .thenReturn(Future.value(expectedPlaylistResponse))
-
-      when(
-        trackServiceMock.tracks(
-          session,
-          protoTracks.map(track => TrackRequest(Urn.parse(track.urn).get, track.secretToken)).toList
-        )
-      ).thenReturn(Future.value(List(requestedPlaylistTrack)))
+      setUpMocksForPlaylists(Some(PlaylistPagination(cursor = Some("2"), limit = 2)), getVisiblePlaylistWithPagination)
 
       val result =
         Await.result(
@@ -259,9 +231,9 @@ class PlaylistsServiceSpec extends UnitSpecification {
         )
 
       result match {
-        case Good(tracksCollection: TracksCollection) =>
-          tracksCollection.tracks.length ==== 1
-          tracksCollection.tracks(0).id ==== requestedPlaylistTrack.id
+        case Good(tracksCollection: Collection[TrackRepresentation]) =>
+          tracksCollection.items.length ==== 1
+          tracksCollection.items(0).id ==== requestedPlaylistTrack.id
           tracksCollection.nextHref ==== Some("https://api.soundcloud.com/playlists?offset=2&limit=2")
         case _ => failure(s"incorrectly returned ${result.toString}")
       }
@@ -275,6 +247,50 @@ class PlaylistsServiceSpec extends UnitSpecification {
         )
 
       result ==== Bad(NotFound("playlist not found"))
+    }
+  }
+
+  "#fetchPlaylists" >> {
+    "can fetch a list of playlists given playlist, secret token, and pagination" in new SuccessContext {
+      setUpMocksForPlaylists(Some(PlaylistPagination(cursor = Some("4"), limit = 2)), getVisiblePlaylistWithPagination)
+
+      val result =
+        Await.result(
+          playlistsService
+            .fetchPlaylists(session, playlistRequests, Some(offsetBasedPagination))
+        )
+
+      result.length ==== 1
+      result(0).id ==== requestedPlaylistUrn.identifier.toLong
+      result(0).userId ==== playlistOwner.urn.identifier.toLong
+      result(0).tracks.length ==== 1
+      result(0).tracks(0).id ==== requestedPlaylistTrack.id
+    }
+
+    "can fetch a list of playlists without pagination" in new SuccessContext {
+      setUpMocksForPlaylists(None, getVisiblePlaylist)
+
+      val result =
+        Await.result(
+          playlistsService
+            .fetchPlaylists(session, playlistRequests, None)
+        )
+
+      result.length ==== 1
+      result(0).id ==== requestedPlaylistUrn.identifier.toLong
+      result(0).userId ==== playlistOwner.urn.identifier.toLong
+      result(0).tracks.length ==== 1
+      result(0).tracks(0).id ==== requestedPlaylistTrack.id
+    }
+
+    "returns empty list if no playlist returned from client" in new NotFoundContext {
+      val result =
+        Await.result(
+          playlistsService
+            .fetchPlaylists(session, playlistRequests, None)
+        )
+
+      result ==== List.empty
     }
   }
 }

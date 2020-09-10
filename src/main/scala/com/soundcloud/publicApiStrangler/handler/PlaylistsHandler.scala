@@ -8,7 +8,7 @@ import com.soundcloud.publicApiStrangler.client.playlists.PlaylistDeletionClient
 import com.soundcloud.publicApiStrangler.handler.support.error.UnhandledOutcomeException
 import com.soundcloud.publicApiStrangler.service.PlaylistsService
 import com.soundcloud.publicApiStrangler.service.pagination.OffsetBasedPagination
-import com.soundcloud.publicApiStrangler.service.trackrepresentation.TracksCollection
+import com.soundcloud.publicApiStrangler.service.playlists.representation.Collection
 import com.twitter.finagle.http.{Response, Status}
 import com.twitter.util.Future
 import play.api.libs.json.Json
@@ -54,7 +54,7 @@ class PlaylistsHandler(
 
       playlistsService.fetchPlaylistTracks(session, playlistUrn, candidateSecretToken, pagination).map {
         case Good(tracks) =>
-          JsonResponseBuilder.ok(body = TracksCollection.getRepresentation(tracks, hasLinkedPartitioning.isDefined))
+          JsonResponseBuilder.ok(body = Collection.getRepresentation(tracks, hasLinkedPartitioning.isDefined))
         case Bad(NotFound(_)) => JsonResponseBuilder.notFound(generateErrorBody("not found"))
         case _ => throw new UnhandledOutcomeException
       }

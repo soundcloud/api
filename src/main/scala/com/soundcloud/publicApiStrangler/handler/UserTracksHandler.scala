@@ -8,15 +8,11 @@ import com.soundcloud.jvmkit.module.telemetry.Telemetry
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.outcome._
-import com.soundcloud.publicApiStrangler.service.UserTracksService
-import com.soundcloud.publicApiStrangler.service.trackrepresentation.{
-  TrackPagination,
-  TrackRepresentation,
-  TracksCollection
-}
 import com.soundcloud.publicApiStrangler.TrackUrnUtil.trackUrn
-import com.soundcloud.publicApiStrangler.handler.representation.tracks.TrackRepresentationResponse.handleTracksCollectionResponseFromService
+import com.soundcloud.publicApiStrangler.handler.representation.collection.CollectionResponse
 import com.soundcloud.publicApiStrangler.handler.support.error.UnhandledOutcomeException
+import com.soundcloud.publicApiStrangler.service.UserTracksService
+import com.soundcloud.publicApiStrangler.service.trackrepresentation.{TrackPagination, TrackRepresentation}
 import com.twitter.finagle.http.{Response, Status}
 import com.twitter.util.{Future, Return, Try}
 import play.api.libs.json.Json
@@ -110,14 +106,9 @@ class UserTracksHandler(
   }
 
   private def performGetTracks(req: HandlerRequest, session: UserSession, userId: String): Future[Response] = {
-    val hasLinkedPartitioning = req.params.get("linked_partitioning").isDefined
+    val hasLinkedPartitioning = req.params.contains("linked_partitioning")
     val pagination = TrackPagination.fromRequest(req.params, new URL(baseUrl + req.uri))
 
-    def fetchTrackRepresentation(urn: Urn): Future[Outcome[TracksCollection]] = {
-      userTracksService
-        .userTracks(session, urn, pagination)
-        .map(Good(_))
-    }
     if (req.params.keySet.contains("offset")) {
       val offset = Try(req.params.get("offset").map(_.toInt)).toOption.flatten.getOrElse(0)
       if (offset > 0) {
@@ -127,8 +118,10 @@ class UserTracksHandler(
     }
     Try(Urn("soundcloud", "users", userId)) match {
       case Return(urn @ Urn(_, _, numericRegexp())) =>
-        val trackRepresentation = fetchTrackRepresentation(urn)
-        handleTracksCollectionResponseFromService(trackRepresentation, hasLinkedPartitioning)
+        val tracksCollection = userTracksService
+          .userTracks(session, urn, pagination)
+          .map(Good(_))
+        CollectionResponse.handleCollectionResponse(tracksCollection, hasLinkedPartitioning)
       case _ => Future.value(JsonResponseBuilder.notFound(notFoundErrorString))
     }
   }

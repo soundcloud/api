@@ -1,0 +1,20 @@
+{
+  "query": "query",
+  "query_urn": "soundcloud:search:test-query-urn",
+  "docs": [
+    {
+      "urn": "soundcloud:playlists:3406"
+    },
+    {
+      "urn": "soundcloud:playlists:157"
+    },
+    {
+      "urn": "soundcloud:playlists:4876"
+    }
+  ],
+  "total_results": 5,
+  "query_time_in_millis": 23,
+  "offset": 0,
+  "limit": 3,
+  "took": "26.449946ms"
+}
