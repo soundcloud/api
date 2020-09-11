@@ -6,7 +6,7 @@ import com.soundcloud.jvmkit.module.util.session.UserSessionBuilder
 import com.soundcloud.jvmkit.module.util.{Path, Urn}
 import com.soundcloud.outcome._
 import com.soundcloud.publicApiStrangler.client.support.UnhandledResponseException
-import com.soundcloud.publicApiStrangler.client.tracks.TrackCoordinatorTrack
+import com.soundcloud.publicApiStrangler.client.tracks.{PublisherMetadata, TrackCoordinatorTrack}
 import com.soundcloud.publicApiStrangler.handler.support.requestParser.{
   TrackArtworkUpdateResult,
   TrackAssetDataUpdateRequest,
@@ -59,7 +59,7 @@ class TrackCoordinatorClientSpec extends UnitSpecification {
       embeddable = Some(true),
       genre = Some("Free jazz"),
       geo_blockings = Some(List("US")),
-      isrc = Some("US-S1Z-99-00001"),
+      publisher_metadata = Some(PublisherMetadata(isrc = Some("DEABC1234567"))),
       label_name = Some("Foobar records"),
       license = "all-rights-reserved",
       permalink = "awesome-track-2014-10-27-17-25-29-66",

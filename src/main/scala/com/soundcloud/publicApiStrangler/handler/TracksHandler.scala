@@ -71,6 +71,7 @@ class TracksHandler(
 
     val extractedParams = metadataUpdateParams.map(extractTrackFieldsFromParams)
     val metadataUpdates = extractedParams.map(TrackMetadataUpdateRequest.fromForm).getOrElse(None)
+
     val assetDataUpdates = extractedParams.map(TrackAssetDataUpdateRequest.fromForm).getOrElse(None)
 
     (artworkDataUpdates, metadataUpdates, assetDataUpdates) match {

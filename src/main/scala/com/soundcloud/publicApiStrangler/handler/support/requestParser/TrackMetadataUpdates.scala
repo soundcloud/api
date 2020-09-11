@@ -1,7 +1,7 @@
 package com.soundcloud.publicApiStrangler.handler.support.requestParser
 
-import com.soundcloud.publicApiStrangler.client.mothership.request.representation.{NonNullableValue, NullableValue}
-import play.api.libs.json.{JsError, JsObject, JsSuccess, Json, Reads, Writes}
+import com.soundcloud.publicApiStrangler.client.mothership.request.representation._
+import play.api.libs.json._
 
 import scala.util.{Success, Try}
 
@@ -29,31 +29,40 @@ case class TrackMetadataUpdates(
 
 object TrackMetadataUpdates {
   implicit val reads = Reads[TrackMetadataUpdates] { json =>
-    Try(
-      TrackMetadataUpdates(
-        api_streamable = NullableValue.read[Boolean](json \ "api_streamable"),
-        commentable = NullableValue.read[Boolean](json \ "commentable"),
-        description = NullableValue.read[String](json \ "description"),
-        downloadable = NullableValue.read[Boolean](json \ "downloadable"),
-        embeddable = NullableValue.read[Boolean](json \ "embeddable"),
-        genre = NullableValue.read[String](json \ "genre"),
-        geo_blockings = NullableValue.read[List[String]](json \ "geo_blockings"),
-        label_name = NullableValue.read[String](json \ "label_name"),
-        license = NullableValue.read[String](json \ "license"),
-        permalink = NonNullableValue.read[String](json \ "permalink"),
-        purchase_title = NullableValue.read[String](json \ "purchase_title"),
-        purchase_url = NullableValue.read[String](json \ "purchase_url"),
-        release_date = NullableValue.read[String](json \ "release_date"),
-        reveal_comments = NullableValue.read[Boolean](json \ "reveal_comments"),
-        reveal_stats = NullableValue.read[Boolean](json \ "reveal_stats"),
-        sharing = NullableValue.read[String](json \ "sharing"),
-        tag_list = NullableValue.read[String](json \ "tag_list"),
-        title = NonNullableValue.read[String](json \ "title"),
-        isrc = NullableValue.read[String](json \ "isrc")
-      )
-    ) match {
-      case Success(value) => JsSuccess(value)
-      case _ => JsError("invalid track data")
+    {
+      val embeddable = json \ "embeddable_by" match {
+        case JsDefined(JsString("all")) => Value(true)
+        case JsDefined(JsString("me")) => Value(false)
+        case JsDefined(JsNull) => NullValue
+        case _ => MissingValue
+      }
+
+      Try(
+        TrackMetadataUpdates(
+          api_streamable = NullableValue.read[Boolean](json \ "streamable"),
+          commentable = NullableValue.read[Boolean](json \ "commentable"),
+          description = NullableValue.read[String](json \ "description"),
+          downloadable = NullableValue.read[Boolean](json \ "downloadable"),
+          embeddable = embeddable,
+          genre = NullableValue.read[String](json \ "genre"),
+          geo_blockings = NullableValue.read[List[String]](json \ "geo_blockings"),
+          label_name = NullableValue.read[String](json \ "label_name"),
+          license = NullableValue.read[String](json \ "license"),
+          permalink = NonNullableValue.read[String](json \ "permalink"),
+          purchase_title = NullableValue.read[String](json \ "purchase_title"),
+          purchase_url = NullableValue.read[String](json \ "purchase_url"),
+          release_date = NullableValue.read[String](json \ "release_date"),
+          reveal_comments = NullableValue.read[Boolean](json \ "reveal_comments"),
+          reveal_stats = NullableValue.read[Boolean](json \ "reveal_stats"),
+          sharing = NullableValue.read[String](json \ "sharing"),
+          tag_list = NullableValue.read[String](json \ "tag_list"),
+          title = NonNullableValue.read[String](json \ "title"),
+          isrc = NullableValue.read[String](json \ "isrc")
+        )
+      ) match {
+        case Success(value) => JsSuccess(value)
+        case _ => JsError("invalid track data")
+      }
     }
   }
 
@@ -78,8 +87,18 @@ object TrackMetadataUpdates {
         getNullable(trackUpdate.purchase_title, "purchase_title") ++
         getNullable(trackUpdate.release_date, "release_date") ++
         getNullable(trackUpdate.reveal_comments, "reveal_comments") ++
+        getNullable(trackUpdate.reveal_stats, "reveal_stats") ++
         getNullable(trackUpdate.tag_list, "tag_list") ++
-        getNullable(trackUpdate.isrc, "isrc")
+        getNullable(trackUpdate.purchase_url, "purchase_url") ++
+        getNullable(trackUpdate.sharing, "sharing") ++
+        getNullable(trackUpdate.label_name, "label_name") ++
+        trackUpdate.isrc.toOptionalJsValue.fold(Json.obj())(isrc =>
+          Json.obj(
+            "publisher_metadata" -> Json.obj(
+              "isrc" -> isrc
+            )
+          )
+        )
 
     val nonNullableJsonVals =
       getNonNullable(trackUpdate.title, "title") ++

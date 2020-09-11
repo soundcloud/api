@@ -3,6 +3,13 @@ package com.soundcloud.publicApiStrangler.client.tracks
 import play.api.libs.json.JsonNaming.SnakeCase
 import play.api.libs.json.{Format, Json, JsonConfiguration}
 
+case class PublisherMetadata(isrc: Option[String])
+
+object PublisherMetadata {
+  private val snakeCase = Json.configured(JsonConfiguration(SnakeCase))
+  implicit val format: Format[PublisherMetadata] = snakeCase.format
+}
+
 case class TrackCoordinatorTrack(
     urn: String,
     public: Boolean,
@@ -14,7 +21,7 @@ case class TrackCoordinatorTrack(
     embeddable: Option[Boolean],
     genre: Option[String],
     geo_blockings: Option[List[String]],
-    isrc: Option[String],
+    publisher_metadata: Option[PublisherMetadata],
     label_name: Option[String],
     license: String,
     permalink: String,

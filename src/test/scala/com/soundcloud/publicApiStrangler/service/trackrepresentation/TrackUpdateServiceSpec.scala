@@ -6,7 +6,7 @@ import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSessionBuilder
 import com.soundcloud.outcome._
 import com.soundcloud.publicApiStrangler.client.trackcoordinator.TrackCoordinatorClient
-import com.soundcloud.publicApiStrangler.client.tracks.{TrackCoordinatorTrack, TrackRequest}
+import com.soundcloud.publicApiStrangler.client.tracks.{PublisherMetadata, TrackCoordinatorTrack, TrackRequest}
 import com.soundcloud.publicApiStrangler.handler.support.error.UnhandledOutcomeException
 import com.soundcloud.publicApiStrangler.handler.support.requestParser.{
   TrackArtworkUpdateRequest,
@@ -50,7 +50,7 @@ class TrackUpdateServiceSpec extends UnitSpecification with TrackRepresentationS
         embeddable = mockTrackRepresentation.visibleTrack.embeddable,
         genre = mockTrackRepresentation.visibleTrack.genre,
         geo_blockings = Some(mockTrackRepresentation.geoblockings.get.toList),
-        isrc = Some(mockTrackRepresentation.isrc.get.toString),
+        publisher_metadata = Some(PublisherMetadata(isrc = Some(mockTrackRepresentation.isrc.get.toString))),
         label_name = mockTrackRepresentation.visibleTrack.labelName,
         license = mockTrackRepresentation.visibleTrack.license,
         permalink = mockTrackRepresentation.visibleTrack.permalink,

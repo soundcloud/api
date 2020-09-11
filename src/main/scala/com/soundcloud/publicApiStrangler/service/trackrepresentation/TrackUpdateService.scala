@@ -32,7 +32,7 @@ class TrackUpdateService(
       session: UserSession
   ): Future[Outcome[TrackRepresentation]] = {
     for {
-      uploadeImageResponse <- uploadArtworkToS3(maybeUpdateAlbumArt, trackUrn, session)
+      uploadeImageResponse <- uploadArtworkToS3(maybeUpdateAlbumArt)
       updateResult <- trackCoordinatorClient.updateTrack(
         session,
         trackUrn,
@@ -45,9 +45,7 @@ class TrackUpdateService(
   }
 
   private def uploadArtworkToS3(
-      maybeUpdateAlbumArt: Option[TrackArtworkUpdateRequest],
-      trackUrn: Urn,
-      session: UserSession
+      maybeUpdateAlbumArt: Option[TrackArtworkUpdateRequest]
   ): Future[Option[TrackArtworkUpdateResult]] = {
     maybeUpdateAlbumArt match {
       case Some(artworkMetadata) =>
@@ -90,13 +88,7 @@ class TrackUpdateService(
       case (acc, value) => acc + value
     }
 
-    if (!blockings.isEmpty) Some(blockings) else None
-  }
-
-  private def getIsrc(isrc: Option[String]): Option[Isrc] = {
-    isrc.map(isrc => {
-      Isrc(isrc)
-    })
+    if (blockings.nonEmpty) Some(blockings) else None
   }
 
   def buildUpdatedTrackWithNewMetadata(
@@ -104,8 +96,8 @@ class TrackUpdateService(
       metadataUpdate: TrackCoordinatorTrack
   ): TrackRepresentation = {
     trackRep.copy(
-      isrc = getIsrc(metadataUpdate.isrc),
-      geoblockings = metadataUpdate.geo_blockings.map(getGeoBlockings(_)).getOrElse(None),
+      isrc = metadataUpdate.publisher_metadata.flatMap(publisherMetadata => publisherMetadata.isrc.map(Isrc)),
+      geoblockings = metadataUpdate.geo_blockings.flatMap(getGeoBlockings),
       visibleTrack = trackRep.visibleTrack.copy(
         title = metadataUpdate.title,
         genre = metadataUpdate.genre,

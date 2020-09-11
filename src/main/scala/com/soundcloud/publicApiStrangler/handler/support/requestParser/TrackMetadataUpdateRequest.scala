@@ -4,6 +4,7 @@ import com.soundcloud.publicApiStrangler.client.mothership.request.representatio
   MissingValue,
   NonNullMissingValue,
   NonNullValue,
+  NullValue,
   Value
 }
 import play.api.libs.json.{JsError, JsSuccess, Reads}
@@ -26,14 +27,23 @@ object TrackMetadataUpdateRequest {
   }
 
   def fromForm(params: Map[String, String]): Option[TrackMetadataUpdateRequest] = {
+    val embeddable = params
+      .get("embeddable_by")
+      .map {
+        case "all" => Value(true)
+        case "me" => Value(false)
+        case _ => NullValue
+      }
+      .getOrElse(MissingValue)
+
     try {
       Some(
         TrackMetadataUpdateRequest(
           track = new TrackMetadataUpdates(
-            api_streamable = params.get("api_streamable").map(v => Value[Boolean](v.toBoolean)).getOrElse(MissingValue),
+            api_streamable = params.get("streamable").map(v => Value[Boolean](v.toBoolean)).getOrElse(MissingValue),
             description = params.get("description").map(v => Value[String](v)).getOrElse(MissingValue),
             downloadable = params.get("downloadable").map(v => Value[Boolean](v.toBoolean)).getOrElse(MissingValue),
-            embeddable = params.get("embeddable").map(v => Value[Boolean](v.toBoolean)).getOrElse(MissingValue),
+            embeddable = embeddable,
             genre = params.get("genre").map(v => Value[String](v)).getOrElse(MissingValue),
             geo_blockings = params
               .get("geo_blockings")
