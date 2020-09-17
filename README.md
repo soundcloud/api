@@ -18,3 +18,23 @@ The rate limiting feature makes use of a allowlist of client application URNs
 that will never be rate-limited. The source of truth for this allowlist is the
 Zookeeper cluster and is managed by the
 [Rate Limiting Service](https://github.com/soundcloud/ratelimiting/).
+
+### OAuth access grant exchange acceptance tests
+
+The `./access-grant-exchange-acceptance-tests` directory contains scripts to
+support interactive acceptance testing of the supported OAuth access grant
+exchange flows. These intention of these tests is mainly to ensure that no
+regressions are introduced while extracting the access grant exchange from
+Mothership into Public API Strangler.
+
+The test suite can be run for a local instance,
+
+```
+sc crun --interactive --docker-options '--net=host' base-dev 'export SC_API_BASE_URL=http://localhost:5000/; sh access-grant-exchange-acceptance-tests/test-suite.sh'
+```
+
+or for the production system.
+
+```
+sc crun --interactive base-dev sh access-grant-exchange-acceptance-tests/test-suite.sh
+```
