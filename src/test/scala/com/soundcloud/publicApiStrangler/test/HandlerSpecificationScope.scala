@@ -29,6 +29,15 @@ trait HandlerSpecificationScope extends org.specs2.specification.Scope with Thro
       body: String = ""
   ): Response = execute(Method.Post, path, params, headers, body)
 
+  def postForm(
+      path: String,
+      params: Map[String, String] = Map.empty,
+      headers: Map[String, String] = Map.empty,
+      body: Seq[(String, String)] = Seq.empty,
+      isMultipart: Boolean = false,
+      maybeFile: Option[FileElement] = None
+  ): Response = executeForm(Method.Post, path, params, headers, body, isMultipart, maybeFile)
+
   def put(
       path: String,
       params: Map[String, String] = Map.empty,

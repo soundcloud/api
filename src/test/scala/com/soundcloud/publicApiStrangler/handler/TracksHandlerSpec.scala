@@ -8,24 +8,27 @@ import com.soundcloud.jvmkit.module.util.{Geo, Urn}
 import com.soundcloud.outcome._
 import com.soundcloud.publicApiStrangler.Routing
 import com.soundcloud.publicApiStrangler.authorization.Track
-import com.soundcloud.publicApiStrangler.client.trackcoordinator.TrackCoordinatorClient
+import com.soundcloud.publicApiStrangler.client.trackcoordinator.{TrackCoordinatorClient, TrackCoordinatorTrack}
 import com.soundcloud.publicApiStrangler.handler.support.requestParser.{
   TrackArtworkUpdateRequest,
+  TrackAssetDataCreateRequest,
   TrackAssetDataUpdateRequest,
   TrackMetadataUpdateRequest
 }
+import com.soundcloud.publicApiStrangler.service.CreatedTrack.CreatedTrack
 import com.soundcloud.publicApiStrangler.service.trackrepresentation.{
   TrackRepresentation,
   TrackRepresentationSpecContext,
   TrackUpdateService
 }
+import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures
 import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures._
 import com.soundcloud.publicApiStrangler.test.{HandlerSpecificationScope, UnitSpecification}
 import com.twitter.finagle.http.{FileElement, Status}
 import com.twitter.io.Buf
 import com.twitter.util.Future
 import org.mockito.Mockito._
-import play.api.libs.json.Json
+import play.api.libs.json._
 
 class TracksHandlerSpec extends UnitSpecification with TrackRepresentationSpecContext {
   trait Context extends HandlerSpecificationScope {
@@ -147,150 +150,308 @@ class TracksHandlerSpec extends UnitSpecification with TrackRepresentationSpecCo
         response.statusCode === 400
       }
     }
-  }
 
-  "application/x-www-form-urlencoded request" >> {
-    trait SuccessContext extends Context {
-      val requestBody = Seq[(String, String)](("track[title]", "changed"), ("track[description]", "changed"))
-      val parsedRequestBody = Map[String, String]("title" -> "changed", "description" -> "changed")
+    "application/x-www-form-urlencoded request" >> {
+      trait SuccessContext extends Context {
+        val requestBody = Seq[(String, String)](("track[title]", "changed"), ("track[description]", "changed"))
+        val parsedRequestBody = Map[String, String]("title" -> "changed", "description" -> "changed")
 
-      val trackUpdate = TrackMetadataUpdateRequest.fromForm(parsedRequestBody)
-      val expectedResponse = mockTrackRepresentation.copy(
-        visibleTrack = mockTrackRepresentation.visibleTrack.copy(
-          description = Some("changed"),
-          title = "changed"
+        val trackUpdate = TrackMetadataUpdateRequest.fromForm(parsedRequestBody)
+        val expectedResponse = mockTrackRepresentation.copy(
+          visibleTrack = mockTrackRepresentation.visibleTrack.copy(
+            description = Some("changed"),
+            title = "changed"
+          )
         )
-      )
-    }
-
-    trait FailureContext extends Context {
-      val requestBody = Seq[(String, String)](("track[title]", "changed"), ("track[description]", "changed"))
-      val parsedRequestBody = Map[String, String]("title" -> "changed", "description" -> "changed")
-
-      val trackUpdate = TrackMetadataUpdateRequest.fromForm(parsedRequestBody)
-    }
-
-    "Returns a 200 on a valid request" in new SuccessContext {
-      val path = s"/tracks/${mockTrackRepresentation.visibleTrack.urn.identifier}"
-
-      setupMockForTrackUpdateMetadata(metadataUpdateOutcome = Good(expectedResponse), trackUpdate = trackUpdate)
-
-      val response = putForm(path, body = requestBody)
-
-      response.statusCode === 200
-      response.contentString === Json.stringify(Json.toJson((expectedResponse)))
-    }
-
-    "returns a 404 if track does not exist" in new FailureContext {
-      val path = s"/tracks/${mockTrackRepresentation.visibleTrack.urn.identifier}"
-
-      setupMockForTrackUpdateMetadata(metadataUpdateOutcome = NotFound().bad, trackUpdate = trackUpdate)
-
-      val response = putForm(path, body = requestBody)
-      response.statusCode === 404
-    }
-  }
-
-  "Multipart/form request" >> {
-    trait SuccessContext extends Context {
-      val requestBody = Seq[(String, String)](("track[title]", "changed"), ("track[description]", "changed"))
-      val parsedRequestBody = Map[String, String]("title" -> "changed", "description" -> "changed")
-
-      val trackUpdate = TrackMetadataUpdateRequest.fromForm(parsedRequestBody)
-      val expectedResponse = mockTrackRepresentation.copy(
-        visibleTrack = mockTrackRepresentation.visibleTrack.copy(
-          description = Some("changed"),
-          title = "changed"
-        )
-      )
-    }
-
-    trait FailureContext extends Context {
-      val requestBody = Seq[(String, String)](("track[title]", "changed"), ("track[description]", "changed"))
-      val parsedRequestBody = Map[String, String]("title" -> "changed", "description" -> "changed")
-
-      val trackUpdate = TrackMetadataUpdateRequest.fromForm(parsedRequestBody)
-    }
-
-    "returns a 200 on a valid request" in new SuccessContext {
-      val path = s"/tracks/${mockTrackRepresentation.visibleTrack.urn.identifier}"
-
-      setupMockForTrackUpdateMetadata(metadataUpdateOutcome = Good(expectedResponse), trackUpdate = trackUpdate)
-
-      val response = putForm(path, body = requestBody, isMultipart = true)
-      response.statusCode === 200
-      response.contentString === Json.stringify(Json.toJson((expectedResponse)))
-    }
-
-    "returns a 404 if track when track does not exist" in new FailureContext {
-      val path = s"/tracks/${mockTrackRepresentation.visibleTrack.urn.identifier}"
-
-      setupMockForTrackUpdateMetadata(metadataUpdateOutcome = NotFound().bad, trackUpdate = trackUpdate)
-
-      val response = putForm(path, body = requestBody, isMultipart = true)
-      response.statusCode === 404
-    }
-
-    "file upload" >> {
-      trait WithArtworkData {
-        val bytes = Files.readAllBytes(
-          Paths.get(this.getClass.getClassLoader.getResource("test-image.jpg").toURI)
-        )
-
-        val file =
-          FileElement("track[artwork_data]", Buf.ByteArray.Owned(bytes), Some("image/jpeg"), Some("test-image.jpg"))
       }
 
-      "can upload artwork" in new SuccessContext with WithArtworkData {
+      trait FailureContext extends Context {
+        val requestBody = Seq[(String, String)](("track[title]", "changed"), ("track[description]", "changed"))
+        val parsedRequestBody = Map[String, String]("title" -> "changed", "description" -> "changed")
+
+        val trackUpdate = TrackMetadataUpdateRequest.fromForm(parsedRequestBody)
+      }
+
+      "Returns a 200 on a valid request" in new SuccessContext {
         val path = s"/tracks/${mockTrackRepresentation.visibleTrack.urn.identifier}"
 
-        when(
-          trackUpdateService
-            .updateTrack(
-              anyObject[Option[TrackArtworkUpdateRequest]],
-              ===(None),
-              ===(None),
-              ===(mockTrackRepresentation.visibleTrack.urn),
-              ===(session)
-            )
-        ).thenReturn(
-          Future.value(Good(mockTrackRepresentation))
-        )
+        setupMockForTrackUpdateMetadata(metadataUpdateOutcome = Good(expectedResponse), trackUpdate = trackUpdate)
 
-        val response = putForm(
-          path,
-          maybeFile = Some(file),
-          isMultipart = true
-        )
+        val response = putForm(path, body = requestBody)
 
         response.statusCode === 200
-        response.contentString === Json.stringify(Json.toJson(mockTrackRepresentation))
+        response.contentString === Json.stringify(Json.toJson((expectedResponse)))
+      }
 
+      "returns a 404 if track does not exist" in new FailureContext {
+        val path = s"/tracks/${mockTrackRepresentation.visibleTrack.urn.identifier}"
+
+        setupMockForTrackUpdateMetadata(metadataUpdateOutcome = NotFound().bad, trackUpdate = trackUpdate)
+
+        val response = putForm(path, body = requestBody)
+        response.statusCode === 404
       }
     }
 
-    "asset data upload" >> {
-      trait WithAssetData extends Context {
-        val requestBody = Seq[(String, String)](("track[uid]", "12345"), ("track[original_filename]", "audio.mp3"))
-        val parsedRequestBody = Map[String, String]("uid" -> "12345", "original_filename" -> "audio.mp3")
+    "Multipart/form request" >> {
+      trait SuccessContext extends Context {
+        val requestBody = Seq[(String, String)](("track[title]", "changed"), ("track[description]", "changed"))
+        val parsedRequestBody = Map[String, String]("title" -> "changed", "description" -> "changed")
 
-        val assetUpdate = TrackAssetDataUpdateRequest.fromForm(parsedRequestBody)
         val trackUpdate = TrackMetadataUpdateRequest.fromForm(parsedRequestBody)
-        val expectedResponse = mockTrackRepresentation
+        val expectedResponse = mockTrackRepresentation.copy(
+          visibleTrack = mockTrackRepresentation.visibleTrack.copy(
+            description = Some("changed"),
+            title = "changed"
+          )
+        )
       }
 
-      "can upload track asset data" in new WithAssetData {
+      trait FailureContext extends Context {
+        val requestBody = Seq[(String, String)](("track[title]", "changed"), ("track[description]", "changed"))
+        val parsedRequestBody = Map[String, String]("title" -> "changed", "description" -> "changed")
+
+        val trackUpdate = TrackMetadataUpdateRequest.fromForm(parsedRequestBody)
+      }
+
+      "returns a 200 on a valid request" in new SuccessContext {
         val path = s"/tracks/${mockTrackRepresentation.visibleTrack.urn.identifier}"
 
-        setupMockForTrackUpdateMetadata(
-          assetUpdate = assetUpdate,
-          trackUpdate = trackUpdate,
-          metadataUpdateOutcome = Good(expectedResponse)
-        )
+        setupMockForTrackUpdateMetadata(metadataUpdateOutcome = Good(expectedResponse), trackUpdate = trackUpdate)
 
         val response = putForm(path, body = requestBody, isMultipart = true)
         response.statusCode === 200
         response.contentString === Json.stringify(Json.toJson((expectedResponse)))
+      }
+
+      "returns a 404 if track when track does not exist" in new FailureContext {
+        val path = s"/tracks/${mockTrackRepresentation.visibleTrack.urn.identifier}"
+
+        setupMockForTrackUpdateMetadata(metadataUpdateOutcome = NotFound().bad, trackUpdate = trackUpdate)
+
+        val response = putForm(path, body = requestBody, isMultipart = true)
+        response.statusCode === 404
+      }
+
+      "file upload" >> {
+        trait WithArtworkData {
+          val bytes = Files.readAllBytes(
+            Paths.get(this.getClass.getClassLoader.getResource("test-image.jpg").toURI)
+          )
+
+          val file =
+            FileElement("track[artwork_data]", Buf.ByteArray.Owned(bytes), Some("image/jpeg"), Some("test-image.jpg"))
+        }
+
+        "can upload artwork" in new SuccessContext with WithArtworkData {
+          val path = s"/tracks/${mockTrackRepresentation.visibleTrack.urn.identifier}"
+
+          when(
+            trackUpdateService
+              .updateTrack(
+                anyObject[Option[TrackArtworkUpdateRequest]],
+                ===(None),
+                ===(None),
+                ===(mockTrackRepresentation.visibleTrack.urn),
+                ===(session)
+              )
+          ).thenReturn(
+            Future.value(Good(mockTrackRepresentation))
+          )
+
+          val response = putForm(
+            path,
+            maybeFile = Some(file),
+            isMultipart = true
+          )
+
+          response.statusCode === 200
+          response.contentString === Json.stringify(Json.toJson(mockTrackRepresentation))
+
+        }
+      }
+
+      "asset data upload" >> {
+        trait WithAssetData extends Context {
+          val requestBody = Seq[(String, String)](("track[uid]", "12345"), ("track[original_filename]", "audio.mp3"))
+          val parsedRequestBody = Map[String, String]("uid" -> "12345", "original_filename" -> "audio.mp3")
+
+          val assetUpdate = TrackAssetDataUpdateRequest.fromForm(parsedRequestBody)
+          val trackUpdate = TrackMetadataUpdateRequest.fromForm(parsedRequestBody)
+          val expectedResponse = mockTrackRepresentation
+        }
+
+        "can upload track asset data" in new WithAssetData {
+          val path = s"/tracks/${mockTrackRepresentation.visibleTrack.urn.identifier}"
+
+          setupMockForTrackUpdateMetadata(
+            assetUpdate = assetUpdate,
+            trackUpdate = trackUpdate,
+            metadataUpdateOutcome = Good(expectedResponse)
+          )
+
+          val response = putForm(path, body = requestBody, isMultipart = true)
+          response.statusCode === 200
+          response.contentString === Json.stringify(Json.toJson((expectedResponse)))
+        }
+      }
+    }
+  }
+
+  "POST /tracks" >> {
+
+    "application/x-www-form-urlencoded request" >> {
+
+      trait UrlEncodedContext extends Context {
+        val path = s"/tracks_experimental"
+        def stubTrackUpdateServiceCreate(
+            createdTrackOutcome: Outcome[CreatedTrack],
+            trackUpdate: Option[TrackMetadataUpdateRequest] = None,
+            artworkUpdate: Option[TrackArtworkUpdateRequest] = None,
+            assetUpdate: TrackAssetDataCreateRequest
+        ) = {
+          when(
+            trackUpdateService
+              .createTrack(
+                assetUpdate,
+                artworkUpdate,
+                trackUpdate,
+                session
+              )
+          ).thenReturn(
+            Future.value(createdTrackOutcome)
+          )
+        }
+        val requestBody = Seq[(String, String)](("track[uid]", "12345"), ("track[original_filename]", "audio.mp3"))
+        val parsedRequestBody = Map[String, String]("uid" -> "12345", "original_filename" -> "audio.mp3")
+        val assetUpdate = TrackAssetDataCreateRequest("audio.mp3", "12345")
+        val trackUpdate = TrackMetadataUpdateRequest.fromForm(parsedRequestBody)
+        val bytes = Files.readAllBytes(
+          Paths.get(this.getClass.getClassLoader.getResource("test-image.jpg").toURI)
+        )
+        val artworkUpdate = Some(TrackArtworkUpdateRequest(bytes))
+        val file =
+          FileElement("track[artwork_data]", Buf.ByteArray.Owned(bytes), Some("image/jpeg"), Some("test-image.jpg"))
+
+        val invalidRequestString = """{"errors":[{"error_message":"Require uid and original_filename parameters."}]}"""
+      }
+
+      trait SuccessContext extends UrlEncodedContext {
+        val trackCoordinatorTrack = Fixtures.trackCoordinatorTrack.as[TrackCoordinatorTrack]
+        val expectedResponse = CreatedTrack(trackCoordinatorTrack)
+      }
+
+      trait FailureContext extends UrlEncodedContext {
+        val expectedResponse = NotFound().bad
+      }
+
+      "Returns a 200 on a valid request" in new SuccessContext {
+        stubTrackUpdateServiceCreate(
+          createdTrackOutcome = Good(expectedResponse),
+          trackUpdate = trackUpdate,
+          assetUpdate = assetUpdate
+        )
+
+        val response = postForm(path, body = requestBody)
+
+        response.statusCode === 201
+        response.headerMap.get("Location") === Some("https://api.soundcloud.com/tracks/174088262")
+        response.contentString === Json.stringify(Json.toJson((expectedResponse)))
+      }
+
+      "returns a 404 if track does not exist" in new FailureContext {
+        stubTrackUpdateServiceCreate(
+          createdTrackOutcome = expectedResponse,
+          trackUpdate = trackUpdate,
+          assetUpdate = assetUpdate
+        )
+
+        val response = postForm(path, body = requestBody)
+        response.statusCode === 404
+      }
+
+      "Generates unprocessable entity response if no asset found" in new FailureContext {
+        override val requestBody = Seq[(String, String)](("track[uid]", "12345"))
+        val response = postForm(path, body = requestBody)
+        response.statusCode === 422
+        response.contentString === invalidRequestString
+      }
+    }
+
+    "Multipart/form request" >> {
+
+      trait MultiPartFormContext extends Context {
+        val path = s"/tracks_experimental"
+        def stubTrackUpdateServiceCreate(
+            createdTrackOutcome: Outcome[CreatedTrack],
+            trackUpdate: Option[TrackMetadataUpdateRequest] = None,
+            assetUpdate: TrackAssetDataCreateRequest
+        ) = {
+          when(
+            trackUpdateService
+              .createTrack(
+                ===(assetUpdate),
+                anyObject[Option[TrackArtworkUpdateRequest]],
+                ===(trackUpdate),
+                ===(session)
+              )
+          ).thenReturn(
+            Future.value(createdTrackOutcome)
+          )
+        }
+        val requestBody = Seq[(String, String)](("track[uid]", "12345"), ("track[original_filename]", "audio.mp3"))
+        val parsedRequestBody = Map[String, String]("uid" -> "12345", "original_filename" -> "audio.mp3")
+        val assetUpdate = TrackAssetDataCreateRequest("audio.mp3", "12345")
+        val trackUpdate = TrackMetadataUpdateRequest.fromForm(parsedRequestBody)
+        val bytes = Files.readAllBytes(
+          Paths.get(this.getClass.getClassLoader.getResource("test-image.jpg").toURI)
+        )
+        val artworkUpdate = Some(TrackArtworkUpdateRequest(bytes))
+        val file =
+          FileElement("track[artwork_data]", Buf.ByteArray.Owned(bytes), Some("image/jpeg"), Some("test-image.jpg"))
+
+        val invalidRequestString = """{"errors":[{"error_message":"Require uid and original_filename parameters."}]}"""
+      }
+
+      trait SuccessContext extends MultiPartFormContext {
+        val trackCoordinatorTrack = Fixtures.trackCoordinatorTrack.as[TrackCoordinatorTrack]
+        val expectedResponse = CreatedTrack(trackCoordinatorTrack)
+      }
+
+      trait FailureContext extends MultiPartFormContext {
+        val expectedResponse = NotFound().bad
+      }
+
+      "Returns a 200 on a valid request" in new SuccessContext {
+        stubTrackUpdateServiceCreate(
+          createdTrackOutcome = Good(expectedResponse),
+          trackUpdate = trackUpdate,
+          assetUpdate = assetUpdate
+        )
+
+        val response = postForm(path, body = requestBody, maybeFile = Some(file), isMultipart = true)
+
+        response.statusCode === 201
+        response.headerMap.get("Location") === Some("https://api.soundcloud.com/tracks/174088262")
+        response.contentString === Json.stringify(Json.toJson((expectedResponse)))
+      }
+
+      "returns a 404 if track does not exist" in new FailureContext {
+        stubTrackUpdateServiceCreate(
+          createdTrackOutcome = expectedResponse,
+          trackUpdate = trackUpdate,
+          assetUpdate = assetUpdate
+        )
+
+        val response = postForm(path, body = requestBody, maybeFile = Some(file), isMultipart = true)
+        response.statusCode === 404
+      }
+
+      "Generates unprocessable entity response if no asset found" in new FailureContext {
+        override val requestBody = Seq[(String, String)](("track[uid]", "12345"))
+        val response = postForm(path, body = requestBody)
+        response.statusCode === 422
+        response.contentString === invalidRequestString
       }
     }
   }

@@ -6,15 +6,17 @@ import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.outcome.{Outcome, _}
 import com.soundcloud.publicApiStrangler.client.pubmese.Isrc
-import com.soundcloud.publicApiStrangler.client.trackcoordinator.TrackCoordinatorClient
-import com.soundcloud.publicApiStrangler.client.tracks.{TrackCoordinatorTrack, TrackRequest}
+import com.soundcloud.publicApiStrangler.client.trackcoordinator.{TrackCoordinatorClient, TrackCoordinatorTrack}
+import com.soundcloud.publicApiStrangler.client.tracks.TrackRequest
 import com.soundcloud.publicApiStrangler.handler.support.error.UnhandledOutcomeException
 import com.soundcloud.publicApiStrangler.handler.support.requestParser.{
   TrackArtworkUpdateRequest,
   TrackArtworkUpdateResult,
+  TrackAssetDataCreateRequest,
   TrackAssetDataUpdateRequest,
   TrackMetadataUpdateRequest
 }
+import com.soundcloud.publicApiStrangler.service.CreatedTrack.CreatedTrack
 import com.twitter.util.Future
 
 import scala.collection.immutable.HashSet
@@ -33,15 +35,33 @@ class TrackUpdateService(
   ): Future[Outcome[TrackRepresentation]] = {
     for {
       uploadeImageResponse <- uploadArtworkToS3(maybeUpdateAlbumArt)
-      updateResult <- trackCoordinatorClient.updateTrack(
+      trackCoordinatorTrack <- trackCoordinatorClient.updateTrack(
         session,
         trackUrn,
         maybeUpdateTrackAsset,
         maybeTrackMetadata,
         uploadeImageResponse
       )
-      trackRepresentation <- buildTrackRepresentation(updateResult, session, trackUrn)
+      trackRepresentation <- buildTrackRepresentation(trackCoordinatorTrack, session, trackUrn)
     } yield trackRepresentation
+  }
+
+  def createTrack(
+      trackAsset: TrackAssetDataCreateRequest,
+      maybeUpdateAlbumArt: Option[TrackArtworkUpdateRequest],
+      maybeTrackMetadata: Option[TrackMetadataUpdateRequest],
+      session: UserSession
+  ): Future[Outcome[CreatedTrack]] = {
+    for {
+      uploadeImageResponse <- uploadArtworkToS3(maybeUpdateAlbumArt)
+      trackCoordinatorTrack <- trackCoordinatorClient.createTrack(
+        session,
+        trackAsset,
+        maybeTrackMetadata,
+        uploadeImageResponse
+      )
+      createdTrack <- buildCreatedTrack(trackCoordinatorTrack)
+    } yield createdTrack
   }
 
   private def uploadArtworkToS3(
@@ -56,6 +76,16 @@ class TrackUpdateService(
           .map(image => createTrackArtworkUpdate(image))
 
       case _ => Future.None
+    }
+  }
+
+  private def buildCreatedTrack(
+      trackCoordinatorTrack: Outcome[TrackCoordinatorTrack]
+  ): Future[Outcome[CreatedTrack]] = {
+    trackCoordinatorTrack match {
+      case Good(trackCoordinatorTrack) => Future.value(Good(CreatedTrack(trackCoordinatorTrack)))
+      case Bad(outcome) => Future.value(outcome.bad)
+      case _ => throw new UnhandledOutcomeException
     }
   }
 

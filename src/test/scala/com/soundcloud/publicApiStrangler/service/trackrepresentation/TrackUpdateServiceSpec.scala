@@ -5,16 +5,17 @@ import com.soundcloud.hocuspocus.{HocuspocusService, Image, Kind, Raw}
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSessionBuilder
 import com.soundcloud.outcome._
-import com.soundcloud.publicApiStrangler.client.trackcoordinator.TrackCoordinatorClient
-import com.soundcloud.publicApiStrangler.client.tracks.{PublisherMetadata, TrackCoordinatorTrack, TrackRequest}
-import com.soundcloud.publicApiStrangler.handler.support.error.UnhandledOutcomeException
-import com.soundcloud.publicApiStrangler.handler.support.requestParser.{
-  TrackArtworkUpdateRequest,
-  TrackArtworkUpdateResult,
-  TrackAssetDataUpdateRequest,
-  TrackMetadataUpdateRequest
+import com.soundcloud.publicApiStrangler.client.trackcoordinator.{
+  PublisherMetadata,
+  TrackCoordinatorClient,
+  TrackCoordinatorTrack
 }
+import com.soundcloud.publicApiStrangler.client.tracks.TrackRequest
+import com.soundcloud.publicApiStrangler.handler.support.error.UnhandledOutcomeException
+import com.soundcloud.publicApiStrangler.handler.support.requestParser._
+import com.soundcloud.publicApiStrangler.service.CreatedTrack.CreatedTrack
 import com.soundcloud.publicApiStrangler.test.UnitSpecification
+import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures
 import com.twitter.io.Buf
 import com.twitter.io.Buf.ByteArray
 import com.twitter.util.{Await, Future}
@@ -60,7 +61,9 @@ class TrackUpdateServiceSpec extends UnitSpecification with TrackRepresentationS
         release_month = mockTrackRepresentation.visibleTrack.releaseMonth,
         reveal_comments = mockTrackRepresentation.visibleTrack.revealComments,
         reveal_stats = mockTrackRepresentation.visibleTrack.revealStats,
-        tag_list = Some(mockTrackRepresentation.visibleTrack.userTags.mkString(","))
+        tag_list = Some(mockTrackRepresentation.visibleTrack.userTags.mkString(",")),
+        secret_token = Some("s-8USae"),
+        uri = "https://api.soundcloud.com/tracks/174088262"
       )
 
     def setupMocksForUpdateTrackMeta(
@@ -92,305 +95,396 @@ class TrackUpdateServiceSpec extends UnitSpecification with TrackRepresentationS
     }
   }
 
-  "Update track metadata" >> {
-    trait SuccessContext extends Context {
-      val metadataUpdateParams = Map[String, String]("title" -> "changed", "description" -> "changed")
-      val metaDataUpdateRequest = TrackMetadataUpdateRequest.fromForm(metadataUpdateParams)
-      val trackAssetDataUpdateRequest =
-        TrackAssetDataUpdateRequest(replacing_original_filename = "filename", replacing_uid = "uid")
+  "#updateTrack" >> {
 
-      val expectedResponse = mockTrackRepresentation.copy(visibleTrack =
-        mockTrackRepresentation.visibleTrack.copy(title = "changed", description = Some("changed"))
-      )
-    }
+    "metadata" >> {
+      trait SuccessContext extends Context {
+        val metadataUpdateParams = Map[String, String]("title" -> "changed", "description" -> "changed")
+        val metaDataUpdateRequest = TrackMetadataUpdateRequest.fromForm(metadataUpdateParams)
+        val trackAssetDataUpdateRequest =
+          TrackAssetDataUpdateRequest(replacing_original_filename = "filename", replacing_uid = "uid")
 
-    trait FailureContext extends Context {
-      val metadataUpdateParams = Map[String, String]("title" -> "changed", "description" -> "changed")
-      val updateRequest = TrackMetadataUpdateRequest.fromForm(metadataUpdateParams)
-    }
-
-    "Successfully updates metadata on valid request" in new SuccessContext {
-      setupMocksForUpdateTrackMeta(
-        trackUrn = mockTrackRepresentation.visibleTrack.urn,
-        trackAssetDataUpdateRequest = None,
-        updateTrackMetadata = metaDataUpdateRequest,
-        artworkMetadata = None,
-        expectedResponse = Good(mockTrackMetadataUpdateResult)
-      )
-
-      setupMocksForTrackService(mockTrackRepresentation.visibleTrack.urn, Some(mockTrackRepresentation))
-
-      val result = Await.result(
-        trackUpdateService.updateTrack(
-          maybeUpdateAlbumArt = None,
-          maybeUpdateTrackAsset = None,
-          metaDataUpdateRequest,
-          trackUrn,
-          ownerSession
+        val expectedResponse = mockTrackRepresentation.copy(visibleTrack =
+          mockTrackRepresentation.visibleTrack.copy(title = "changed", description = Some("changed"))
         )
-      )
-
-      result match {
-        case Good(track) =>
-          Json.toJson(track) === Json.toJson(expectedResponse)
-        case _ =>
       }
-    }
 
-    "Returns nothing if update call fails" in new FailureContext {
-      setupMocksForUpdateTrackMeta(
-        mockTrackRepresentation.visibleTrack.urn,
-        trackAssetDataUpdateRequest = None,
-        updateRequest,
-        artworkMetadata = None,
-        NotFound().bad
-      )
+      trait FailureContext extends Context {
+        val metadataUpdateParams = Map[String, String]("title" -> "changed", "description" -> "changed")
+        val updateRequest = TrackMetadataUpdateRequest.fromForm(metadataUpdateParams)
+      }
 
-      setupMocksForTrackService(mockTrackRepresentation.visibleTrack.urn, Some(mockTrackRepresentation))
+      "Successfully updates metadata on valid request" in new SuccessContext {
+        setupMocksForUpdateTrackMeta(
+          trackUrn = mockTrackRepresentation.visibleTrack.urn,
+          trackAssetDataUpdateRequest = None,
+          updateTrackMetadata = metaDataUpdateRequest,
+          artworkMetadata = None,
+          expectedResponse = Good(mockTrackMetadataUpdateResult)
+        )
 
-      val result = Await.result(
-        trackUpdateService.updateTrack(
-          maybeUpdateAlbumArt = None,
-          maybeUpdateTrackAsset = None,
+        setupMocksForTrackService(mockTrackRepresentation.visibleTrack.urn, Some(mockTrackRepresentation))
+
+        val result = Await.result(
+          trackUpdateService.updateTrack(
+            maybeUpdateAlbumArt = None,
+            maybeUpdateTrackAsset = None,
+            metaDataUpdateRequest,
+            trackUrn,
+            ownerSession
+          )
+        )
+
+        result match {
+          case Good(track) =>
+            Json.toJson(track) === Json.toJson(expectedResponse)
+          case _ =>
+        }
+      }
+
+      "Returns nothing if update call fails" in new FailureContext {
+        setupMocksForUpdateTrackMeta(
+          mockTrackRepresentation.visibleTrack.urn,
+          trackAssetDataUpdateRequest = None,
           updateRequest,
-          trackUrn,
-          ownerSession
+          artworkMetadata = None,
+          NotFound().bad
         )
-      )
 
-      result.isLeft
-      result match {
-        case Bad(NotFound(msg)) => msg === "Resource not found"
-        case _ =>
+        setupMocksForTrackService(mockTrackRepresentation.visibleTrack.urn, Some(mockTrackRepresentation))
+
+        val result = Await.result(
+          trackUpdateService.updateTrack(
+            maybeUpdateAlbumArt = None,
+            maybeUpdateTrackAsset = None,
+            updateRequest,
+            trackUrn,
+            ownerSession
+          )
+        )
+
+        result.isLeft
+        result match {
+          case Bad(NotFound(msg)) => msg === "Resource not found"
+          case _ =>
+        }
+      }
+
+      "Returns nothing if track fetch call fails" in new FailureContext {
+        setupMocksForUpdateTrackMeta(
+          mockTrackRepresentation.visibleTrack.urn,
+          trackAssetDataUpdateRequest = None,
+          updateRequest,
+          artworkMetadata = None,
+          Good(mockTrackMetadataUpdateResult)
+        )
+
+        setupMocksForTrackService(mockTrackRepresentation.visibleTrack.urn, None)
+
+        Await.result(
+          trackUpdateService.updateTrack(None, None, updateRequest, trackUrn, ownerSession)
+        ) must throwAn[UnhandledOutcomeException]
       }
     }
 
-    "Returns nothing if track fetch call fails" in new FailureContext {
-      setupMocksForUpdateTrackMeta(
-        mockTrackRepresentation.visibleTrack.urn,
-        trackAssetDataUpdateRequest = None,
-        updateRequest,
-        artworkMetadata = None,
-        Good(mockTrackMetadataUpdateResult)
-      )
+    "album artwork" >> {
+      trait SuccessContent extends Context {
+        val bytes = ByteArray("i-am-an-image".getBytes(): _*)
+        val trackArtworkMetaRequest = TrackArtworkUpdateRequest(imageData = Buf.ByteArray.Owned.extract(bytes))
+        val trackArtworkUpdateResult = TrackArtworkUpdateResult(bucket = "bucket", filename = "filename")
+        val trackMetadataRequest = TrackMetadataUpdateRequest.fromForm(
+          Map[String, String]("title" -> "changed", "description" -> "changed")
+        )
 
-      setupMocksForTrackService(mockTrackRepresentation.visibleTrack.urn, None)
+        val artworkUpdateOnlyUpdateResponse = mockTrackMetadataUpdateResult.copy(
+          description = mockTrackRepresentation.visibleTrack.description,
+          title = mockTrackRepresentation.visibleTrack.title
+        )
 
-      Await.result(
-        trackUpdateService.updateTrack(None, None, updateRequest, trackUrn, ownerSession)
-      ) must throwAn[UnhandledOutcomeException]
-    }
-  }
+        val expectedResponse = mockTrackRepresentation.copy(visibleTrack =
+          mockTrackRepresentation.visibleTrack.copy(title = "changed", description = Some("changed"))
+        )
+      }
 
-  "Update track album artwork" >> {
-    trait SuccessContent extends Context {
-      val bytes = ByteArray("i-am-an-image".getBytes(): _*)
-      val trackArtworkMetaRequest = TrackArtworkUpdateRequest(imageData = Buf.ByteArray.Owned.extract(bytes))
-      val trackArtworkUpdateResult = TrackArtworkUpdateResult(bucket = "bucket", filename = "filename")
-      val trackMetadataRequest = TrackMetadataUpdateRequest.fromForm(
-        Map[String, String]("title" -> "changed", "description" -> "changed")
-      )
+      trait FailureContext extends Context {
+        val bytes = ByteArray("i-am-an-image".getBytes(): _*)
+        val trackArtworkMetaRequest = TrackArtworkUpdateRequest(imageData = Buf.ByteArray.Owned.extract(bytes))
+        val trackArtworkUpdateResult = TrackArtworkUpdateResult(bucket = "bucket", filename = "filename")
 
-      val artworkUpdateOnlyUpdateResponse = mockTrackMetadataUpdateResult.copy(
-        description = mockTrackRepresentation.visibleTrack.description,
-        title = mockTrackRepresentation.visibleTrack.title
-      )
+        val artworkUpdateOnlyUpdateResponse = mockTrackMetadataUpdateResult.copy(
+          description = mockTrackRepresentation.visibleTrack.description,
+          title = mockTrackRepresentation.visibleTrack.title
+        )
+      }
 
-      val expectedResponse = mockTrackRepresentation.copy(visibleTrack =
-        mockTrackRepresentation.visibleTrack.copy(title = "changed", description = Some("changed"))
-      )
-    }
-
-    trait FailureContext extends Context {
-      val bytes = ByteArray("i-am-an-image".getBytes(): _*)
-      val trackArtworkMetaRequest = TrackArtworkUpdateRequest(imageData = Buf.ByteArray.Owned.extract(bytes))
-      val trackArtworkUpdateResult = TrackArtworkUpdateResult(bucket = "bucket", filename = "filename")
-
-      val artworkUpdateOnlyUpdateResponse = mockTrackMetadataUpdateResult.copy(
-        description = mockTrackRepresentation.visibleTrack.description,
-        title = mockTrackRepresentation.visibleTrack.title
-      )
-    }
-
-    "Can update track and album data" in new SuccessContent {
-      setupMocksForUpdateTrackMeta(
-        trackUrn,
-        trackAssetDataUpdateRequest = None,
-        trackMetadataRequest,
-        Some(trackArtworkUpdateResult),
-        Good(mockTrackMetadataUpdateResult)
-      )
-
-      setupMocksForHocusPocusService(trackArtworkMetaRequest)
-      setupMocksForTrackService(trackUrn, Some(expectedResponse))
-
-      val result = Await.result(
-        trackUpdateService.updateTrack(
-          Some(trackArtworkMetaRequest),
-          maybeUpdateTrackAsset = None,
+      "Can update track and album data" in new SuccessContent {
+        setupMocksForUpdateTrackMeta(
+          trackUrn,
+          trackAssetDataUpdateRequest = None,
           trackMetadataRequest,
-          mockTrackRepresentation.visibleTrack.urn,
-          ownerSession
+          Some(trackArtworkUpdateResult),
+          Good(mockTrackMetadataUpdateResult)
         )
-      )
 
-      result match {
-        case Good(track) =>
-          Json.toJson(track) === Json.toJson(expectedResponse)
-        case _ =>
+        setupMocksForHocusPocusService(trackArtworkMetaRequest)
+        setupMocksForTrackService(trackUrn, Some(expectedResponse))
+
+        val result = Await.result(
+          trackUpdateService.updateTrack(
+            Some(trackArtworkMetaRequest),
+            maybeUpdateTrackAsset = None,
+            trackMetadataRequest,
+            mockTrackRepresentation.visibleTrack.urn,
+            ownerSession
+          )
+        )
+
+        result match {
+          case Good(track) =>
+            Json.toJson(track) === Json.toJson(expectedResponse)
+          case _ =>
+        }
+      }
+
+      "Can update only album data" in new SuccessContent {
+        setupMocksForUpdateTrackMeta(
+          trackUrn,
+          trackAssetDataUpdateRequest = None,
+          updateTrackMetadata = None,
+          Some(trackArtworkUpdateResult),
+          Good(artworkUpdateOnlyUpdateResponse)
+        )
+
+        setupMocksForHocusPocusService(trackArtworkMetaRequest)
+        setupMocksForTrackService(trackUrn, Some(mockTrackRepresentation))
+
+        val result = Await.result(
+          trackUpdateService.updateTrack(
+            Some(trackArtworkMetaRequest),
+            maybeUpdateTrackAsset = None,
+            maybeTrackMetadata = None,
+            mockTrackRepresentation.visibleTrack.urn,
+            ownerSession
+          )
+        )
+
+        result match {
+          case Good(track) =>
+            Json.toJson(track) === Json.toJson(mockTrackRepresentation)
+          case _ =>
+        }
+      }
+
+      "Returns error if track does not exist" in new FailureContext {
+        setupMocksForUpdateTrackMeta(
+          trackUrn,
+          trackAssetDataUpdateRequest = None,
+          updateTrackMetadata = None,
+          Some(trackArtworkUpdateResult),
+          Good(artworkUpdateOnlyUpdateResponse)
+        )
+
+        setupMocksForHocusPocusService(trackArtworkMetaRequest)
+        setupMocksForTrackService(trackUrn, None)
+
+        Await.result(
+          trackUpdateService.updateTrack(
+            Some(trackArtworkMetaRequest),
+            maybeUpdateTrackAsset = None,
+            maybeTrackMetadata = None,
+            mockTrackRepresentation.visibleTrack.urn,
+            ownerSession
+          )
+        ) must throwAn[UnhandledOutcomeException]
       }
     }
 
-    "Can update only album data" in new SuccessContent {
-      setupMocksForUpdateTrackMeta(
-        trackUrn,
-        trackAssetDataUpdateRequest = None,
-        updateTrackMetadata = None,
-        Some(trackArtworkUpdateResult),
-        Good(artworkUpdateOnlyUpdateResponse)
-      )
-
-      setupMocksForHocusPocusService(trackArtworkMetaRequest)
-      setupMocksForTrackService(trackUrn, Some(mockTrackRepresentation))
-
-      val result = Await.result(
-        trackUpdateService.updateTrack(
-          Some(trackArtworkMetaRequest),
-          maybeUpdateTrackAsset = None,
-          maybeTrackMetadata = None,
-          mockTrackRepresentation.visibleTrack.urn,
-          ownerSession
+    "asset data" >> {
+      trait SuccessContext extends Context {
+        val trackAssetDataUpdateRequest = TrackAssetDataUpdateRequest(
+          replacing_original_filename = "replacing-filename",
+          replacing_uid = "replacing-uid"
         )
-      )
 
-      result match {
-        case Good(track) =>
-          Json.toJson(track) === Json.toJson(mockTrackRepresentation)
-        case _ =>
+        val assetUpdateOnlyUpdateResponse = mockTrackMetadataUpdateResult.copy(
+          description = mockTrackRepresentation.visibleTrack.description,
+          title = mockTrackRepresentation.visibleTrack.title
+        )
       }
-    }
 
-    "Returns error if track does not exist" in new FailureContext {
-      setupMocksForUpdateTrackMeta(
-        trackUrn,
-        trackAssetDataUpdateRequest = None,
-        updateTrackMetadata = None,
-        Some(trackArtworkUpdateResult),
-        Good(artworkUpdateOnlyUpdateResponse)
-      )
-
-      setupMocksForHocusPocusService(trackArtworkMetaRequest)
-      setupMocksForTrackService(trackUrn, None)
-
-      Await.result(
-        trackUpdateService.updateTrack(
-          Some(trackArtworkMetaRequest),
-          maybeUpdateTrackAsset = None,
-          maybeTrackMetadata = None,
-          mockTrackRepresentation.visibleTrack.urn,
-          ownerSession
+      trait FailureContext extends Context {
+        val trackAssetDataUpdateRequest = TrackAssetDataUpdateRequest(
+          replacing_original_filename = "invalid-filename",
+          replacing_uid = "invalid-uid"
         )
-      ) must throwAn[UnhandledOutcomeException]
+
+        val assetUpdateOnlyUpdateResponse = mockTrackMetadataUpdateResult.copy(
+          description = mockTrackRepresentation.visibleTrack.description,
+          title = mockTrackRepresentation.visibleTrack.title
+        )
+      }
+
+      "Successfully updates asset data" in new SuccessContext {
+        setupMocksForTrackService(trackUrn, Some(mockTrackRepresentation))
+        setupMocksForUpdateTrackMeta(
+          trackUrn,
+          Some(trackAssetDataUpdateRequest),
+          updateTrackMetadata = None,
+          artworkMetadata = None,
+          Good(assetUpdateOnlyUpdateResponse)
+        )
+
+        val result = Await.result(
+          trackUpdateService.updateTrack(
+            maybeUpdateAlbumArt = None,
+            Some(trackAssetDataUpdateRequest),
+            maybeTrackMetadata = None,
+            trackUrn,
+            ownerSession
+          )
+        )
+
+        result match {
+          case Good(track) =>
+            Json.toJson(track) === Json.toJson(mockTrackRepresentation)
+          case _ =>
+        }
+      }
+
+      "returns 404 if track asset data not found" in new FailureContext {
+        setupMocksForTrackService(trackUrn, Some(mockTrackRepresentation))
+        setupMocksForUpdateTrackMeta(trackUrn, Some(trackAssetDataUpdateRequest), None, None, NotFound().bad)
+
+        val result = Await.result(
+          trackUpdateService.updateTrack(
+            maybeUpdateAlbumArt = None,
+            Some(trackAssetDataUpdateRequest),
+            maybeTrackMetadata = None,
+            trackUrn,
+            ownerSession
+          )
+        )
+
+        result.isLeft
+        result match {
+          case Bad(NotFound(msg)) => msg === "Resource not found"
+          case _ =>
+        }
+      }
+
+      "returns 400 if request was invalid" in new FailureContext {
+        setupMocksForTrackService(trackUrn, Some(mockTrackRepresentation))
+        setupMocksForUpdateTrackMeta(
+          trackUrn = trackUrn,
+          Some(trackAssetDataUpdateRequest),
+          updateTrackMetadata = None,
+          artworkMetadata = None,
+          NotValid("invalid request").bad
+        )
+
+        val result = Await.result(
+          trackUpdateService.updateTrack(
+            maybeUpdateAlbumArt = None,
+            Some(trackAssetDataUpdateRequest),
+            maybeTrackMetadata = None,
+            trackUrn,
+            ownerSession
+          )
+        )
+
+        result.isLeft
+        result match {
+          case Bad(NotFound(msg)) => msg === "invalid request"
+          case _ =>
+        }
+      }
     }
   }
 
-  "update track asset data" >> {
-    trait SuccessContext extends Context {
-      val trackAssetDataUpdateRequest = TrackAssetDataUpdateRequest(
-        replacing_original_filename = "replacing-filename",
-        replacing_uid = "replacing-uid"
-      )
+  "#createTrack" >> {
 
-      val assetUpdateOnlyUpdateResponse = mockTrackMetadataUpdateResult.copy(
-        description = mockTrackRepresentation.visibleTrack.description,
-        title = mockTrackRepresentation.visibleTrack.title
-      )
+    trait CreateTrackContext extends Context {
+      def stubTrackCoordinatorClient(
+          trackAsset: TrackAssetDataCreateRequest,
+          trackMetadata: Option[TrackMetadataUpdateRequest],
+          trackArtwork: Option[TrackArtworkUpdateResult],
+          expectedResponse: Outcome[TrackCoordinatorTrack]
+      ) = {
+        when(
+          trackCoordinatorClient.createTrack(
+            ownerSession,
+            trackAsset,
+            trackMetadata,
+            trackArtwork
+          )
+        ).thenReturn(Future.value(expectedResponse))
+      }
+
+      val metadataUpdateParams = Map[String, String]("title" -> "the title", "description" -> "the description")
+      val metaDataUpdateRequest = TrackMetadataUpdateRequest.fromForm(metadataUpdateParams)
+      val trackAssetDataCreateRequest = TrackAssetDataCreateRequest(original_filename = "filename", uid = "uid")
+      val trackCoordinatorTrack = Fixtures.trackCoordinatorTrack.as[TrackCoordinatorTrack]
+      val trackArtworkUpdateResult = TrackArtworkUpdateResult(bucket = "bucket", filename = "filename")
+      val bytes = ByteArray("i-am-an-image".getBytes(): _*)
+      val trackArtworkMetaRequest = TrackArtworkUpdateRequest(imageData = Buf.ByteArray.Owned.extract(bytes))
+      val expectedResponse = CreatedTrack(trackCoordinatorTrack)
+      setupMocksForHocusPocusService(trackArtworkMetaRequest)
     }
 
-    trait FailureContext extends Context {
-      val trackAssetDataUpdateRequest = TrackAssetDataUpdateRequest(
-        replacing_original_filename = "invalid-filename",
-        replacing_uid = "invalid-uid"
-      )
+    "When track coordinator succeeds" >> {
 
-      val assetUpdateOnlyUpdateResponse = mockTrackMetadataUpdateResult.copy(
-        description = mockTrackRepresentation.visibleTrack.description,
-        title = mockTrackRepresentation.visibleTrack.title
-      )
-    }
-
-    "Successfully updates asset data" in new SuccessContext {
-      setupMocksForTrackService(trackUrn, Some(mockTrackRepresentation))
-      setupMocksForUpdateTrackMeta(
-        trackUrn,
-        Some(trackAssetDataUpdateRequest),
-        updateTrackMetadata = None,
-        artworkMetadata = None,
-        Good(assetUpdateOnlyUpdateResponse)
-      )
-
-      val result = Await.result(
-        trackUpdateService.updateTrack(
-          maybeUpdateAlbumArt = None,
-          Some(trackAssetDataUpdateRequest),
-          maybeTrackMetadata = None,
-          trackUrn,
-          ownerSession
+      trait SuccessContext extends CreateTrackContext {
+        stubTrackCoordinatorClient(
+          trackAssetDataCreateRequest,
+          metaDataUpdateRequest,
+          Some(trackArtworkUpdateResult),
+          Good(trackCoordinatorTrack)
         )
-      )
+      }
 
-      result match {
-        case Good(track) =>
-          Json.toJson(track) === Json.toJson(mockTrackRepresentation)
-        case _ =>
+      "Returns CreatedTrack" in new SuccessContext {
+
+        val result = Await.result(
+          trackUpdateService.createTrack(
+            trackAsset = trackAssetDataCreateRequest,
+            maybeUpdateAlbumArt = Some(trackArtworkMetaRequest),
+            metaDataUpdateRequest,
+            ownerSession
+          )
+        )
+
+        result match {
+          case Good(track) =>
+            Json.toJson(track) === Json.toJson(expectedResponse)
+          case _ => true must beFalse
+        }
       }
     }
-
-    "returns 404 if track asset data not found" in new FailureContext {
-      setupMocksForTrackService(trackUrn, Some(mockTrackRepresentation))
-      setupMocksForUpdateTrackMeta(trackUrn, Some(trackAssetDataUpdateRequest), None, None, NotFound().bad)
-
-      val result = Await.result(
-        trackUpdateService.updateTrack(
-          maybeUpdateAlbumArt = None,
-          Some(trackAssetDataUpdateRequest),
-          maybeTrackMetadata = None,
-          trackUrn,
-          ownerSession
+    "When track coordinator fails" >> {
+      trait FailureContext extends CreateTrackContext {
+        stubTrackCoordinatorClient(
+          trackAssetDataCreateRequest,
+          metaDataUpdateRequest,
+          Some(trackArtworkUpdateResult),
+          NotFound().bad
         )
-      )
-
-      result.isLeft
-      result match {
-        case Bad(NotFound(msg)) => msg === "Resource not found"
-        case _ =>
       }
-    }
 
-    "returns 400 if request was invalid" in new FailureContext {
-      setupMocksForTrackService(trackUrn, Some(mockTrackRepresentation))
-      setupMocksForUpdateTrackMeta(
-        trackUrn = trackUrn,
-        Some(trackAssetDataUpdateRequest),
-        updateTrackMetadata = None,
-        artworkMetadata = None,
-        NotValid("invalid request").bad
-      )
-
-      val result = Await.result(
-        trackUpdateService.updateTrack(
-          maybeUpdateAlbumArt = None,
-          Some(trackAssetDataUpdateRequest),
-          maybeTrackMetadata = None,
-          trackUrn,
-          ownerSession
+      "Returns nothing" in new FailureContext {
+        val result = Await.result(
+          trackUpdateService.createTrack(
+            trackAsset = trackAssetDataCreateRequest,
+            maybeUpdateAlbumArt = Some(trackArtworkMetaRequest),
+            metaDataUpdateRequest,
+            ownerSession
+          )
         )
-      )
 
-      result.isLeft
-      result match {
-        case Bad(NotFound(msg)) => msg === "invalid request"
-        case _ =>
+        result.isLeft
+        result match {
+          case Bad(NotFound(msg)) => msg === "Resource not found"
+          case _ => true must beFalse
+        }
       }
     }
   }

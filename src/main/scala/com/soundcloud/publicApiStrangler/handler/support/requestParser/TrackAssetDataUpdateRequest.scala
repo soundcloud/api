@@ -4,12 +4,13 @@ import play.api.libs.json.Json
 
 import scala.util.control.NonFatal
 
-case class TrackAssetDataUpdateRequest(
-    replacing_original_filename: String,
-    replacing_uid: String
-)
+trait TrackAssetRequestParams[T] {
+  def fromForm(params: Map[String, String]): Option[T]
+}
 
-object TrackAssetDataUpdateRequest {
+case class TrackAssetDataUpdateRequest(replacing_original_filename: String, replacing_uid: String)
+
+object TrackAssetDataUpdateRequest extends TrackAssetRequestParams[TrackAssetDataUpdateRequest] {
   implicit val writes = Json.writes[TrackAssetDataUpdateRequest]
 
   def fromForm(params: Map[String, String]): Option[TrackAssetDataUpdateRequest] = {

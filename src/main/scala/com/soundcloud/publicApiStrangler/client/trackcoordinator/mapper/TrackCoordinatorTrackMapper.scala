@@ -2,7 +2,7 @@ package com.soundcloud.publicApiStrangler.client.trackcoordinator.mapper
 
 import com.soundcloud.outcome._
 import com.soundcloud.publicApiStrangler.client.support.UnhandledResponseException
-import com.soundcloud.publicApiStrangler.client.tracks.TrackCoordinatorTrack
+import com.soundcloud.publicApiStrangler.client.trackcoordinator.TrackCoordinatorTrack
 import com.twitter.finagle.http.{Response, Status}
 import play.api.libs.json.Json
 
