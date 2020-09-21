@@ -51,17 +51,6 @@ class SimilarTracksHandlerSpec extends UnitSpecification with TrackRepresentatio
     response.statusCode ==== 200
   }
 
-  "processes requests to /tracks/:trackId/related.json" in new Context {
-    val paginationParams = "?limit=1&offset=2"
-    val path = "/tracks/1/related.json"
-
-    when(similarTracksService.similarTracks(session, trackUrn, paginationParams(path + paginationParams)))
-      .thenReturn(Future(Some(mocktracksCollection)))
-
-    val response = get(path + paginationParams)
-    response.statusCode ==== 200
-  }
-
   "returns 404 if mapper returns none" in new Context {
     val paginationParams = "?limit=1&offset=2"
     val path = "/tracks/123/related"

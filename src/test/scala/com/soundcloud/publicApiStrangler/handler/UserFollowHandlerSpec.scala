@@ -248,21 +248,6 @@ class UserFollowHandlerSpec extends UnitSpecification {
     }
   }
 
-  "GET /me/followings/:other_id.json" >> {
-    "fetches a following" in new FetchesFollowingContext {
-      val response = get("/me/followings/123.json")
-      response.status ==== Status.SeeOther
-      response.headerMap.get("Location") ==== Some("http://foo/users/123")
-      Json.parse(response.contentString) ==== user123
-    }
-
-    "returns not found when the given user is not a following" in new FollowingNotFoundContext {
-      val response = get("/me/followings/123.json")
-      response.status ==== Status.NotFound
-      response.contentString ==== ""
-    }
-  }
-
   "GET /users/:id/followings/:other_id" >> {
     "fetches a following" in new FetchesFollowingContext {
       val response = get("/users/999/followings/123")
@@ -273,21 +258,6 @@ class UserFollowHandlerSpec extends UnitSpecification {
 
     "returns not found when the given user is not a following" in new FollowingNotFoundContext {
       val response = get("/users/999/followings/123")
-      response.status ==== Status.NotFound
-      response.contentString ==== ""
-    }
-  }
-
-  "GET /users/:id/followings/:other_id.json" >> {
-    "fetches a following" in new FetchesFollowingContext {
-      val response = get("/users/999/followings/123.json")
-      response.status ==== Status.SeeOther
-      response.headerMap.get("Location") ==== Some("http://foo/users/123")
-      Json.parse(response.contentString) ==== user123
-    }
-
-    "returns not found when the given user is not a following" in new FollowingNotFoundContext {
-      val response = get("/users/999/followings/123.json")
       response.status ==== Status.NotFound
       response.contentString ==== ""
     }
@@ -341,22 +311,6 @@ class UserFollowHandlerSpec extends UnitSpecification {
     }
   }
 
-  "GET /me/followers/:other_id.json" >> {
-    "fetches a follower" in new FetchesFollowerContext {
-      val response = get("/me/followers/123.json")
-      response.status ==== Status.SeeOther
-      response.headerMap.get("Location") ==== Some("http://foo/users/123")
-
-      Json.parse(response.contentString) ==== user123
-    }
-
-    "returns not found when the given user is not a follower" in new FollowerNotFoundContext {
-      val response = get("/me/followers/123.json")
-      response.status ==== Status.NotFound
-      response.contentString ==== ""
-    }
-  }
-
   "GET /users/:id/followers/:other_id" >> {
     "fetches a follower" in new FetchesFollowerContext {
       val response = get("/users/999/followers/123")
@@ -370,42 +324,6 @@ class UserFollowHandlerSpec extends UnitSpecification {
       val response = get("/users/999/followers/123")
       response.status ==== Status.NotFound
       response.contentString ==== ""
-    }
-  }
-
-  "GET /users/:id/followers/:other_id.json" >> {
-    "fetches a follower" in new FetchesFollowerContext {
-      val response = get("/users/999/followers/123.json")
-      response.status ==== Status.SeeOther
-      response.headerMap.get("Location") ==== Some("http://foo/users/123")
-
-      Json.parse(response.contentString) ==== user123
-    }
-
-    "returns not found when the given user is not a follower" in new FollowerNotFoundContext {
-      val response = get("/users/999/followers/123.json")
-      response.status ==== Status.NotFound
-      response.contentString ==== ""
-    }
-  }
-
-  "PUT /me/followings/:other_id.json" >> {
-    "works like the route without .json" in new Context {
-      override def before: Any = {
-        super.before
-        val following = Following("1", DateTime.now, userUrn, Urn("soundcloud", "users", "999"))
-        followsMock.follow(session, userUrn) returns Future.value(FollowingCreated(following))
-        followCountsClientMock.counts(session, Seq(following.target)) returns Future.value(
-          Seq(FollowCounts(following.target, 1111, 2222))
-        )
-        repostsClientMock.getRepostCountsByUrnWithFallback(session, Set(following.target)) returns Future.value(
-          Map.empty[Urn, Long]
-        )
-      }
-
-      val response = put("/me/followings/999.json", Map("client_id" -> "YOUR_CLIENT_ID"))
-      response.status ==== Status.Created
-      Json.parse(response.contentString) ==== anotherUser123
     }
   }
 
@@ -464,18 +382,6 @@ class UserFollowHandlerSpec extends UnitSpecification {
       response.status ==== Status.NotFound
       val errors = (Json.parse(response.contentString) \ "errors").as[Seq[JsObject]].head
       (errors \ "error_message").asOpt[String] ==== Option("404 - Not Found")
-    }
-  }
-
-  "DELETE /me/followings/:other_id.json" >> {
-    "works like the route without .json" in new Context {
-      override def before: Any = {
-        super.before
-        followsMock.unfollow(session, userUrn) returns Future.value(UnfollowSuccessful)
-      }
-
-      val response = delete("/me/followings/999.json", Map("client_id" -> "YOUR_CLIENT_ID"))
-      response.status ==== Status.Ok
     }
   }
 

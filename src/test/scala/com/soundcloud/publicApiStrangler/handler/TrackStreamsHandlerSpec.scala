@@ -63,21 +63,11 @@ class TrackStreamsHandlerSpec extends UnitSpecification {
     Fragments.foreach(
       Seq(
         (Method.Head, "/tracks/5/stream"),
-        (Method.Get, "/tracks/5/stream"),
-        (Method.Head, "/v1/tracks/5/stream"),
-        (Method.Get, "/v1/tracks/5/stream"),
-        (Method.Head, "/tracks/5/stream/"),
-        (Method.Get, "/tracks/5/stream/"),
-        (Method.Head, "/v1/tracks/5/stream/"),
-        (Method.Get, "/v1/tracks/5/stream/"),
-        (Method.Head, "/tracks/5/stream.json"),
-        (Method.Get, "/tracks/5/stream.json"),
-        (Method.Head, "/v1/tracks/5/stream.json"),
-        (Method.Get, "/v1/tracks/5/stream.json")
+        (Method.Get, "/tracks/5/stream")
       )
     ) {
       case (method, path) =>
-        s"${method.toString} $path" in new MediaServiceContext {
+        "GET /tracks/5/stream" in new MediaServiceContext {
           streamService.fetchSingle(session, trackUrn, None) returns Future.value(MediaStreamUrl(httpMp3))
 
           val response = call(method, handler.redirectStreamRequest, path)
@@ -97,23 +87,7 @@ class TrackStreamsHandlerSpec extends UnitSpecification {
     Fragments.foreach(
       Seq(
         (Method.Head, "/tracks/5/streams"),
-        (Method.Get, "/tracks/5/streams"),
-        (Method.Head, "/v1/tracks/5/streams"),
-        (Method.Get, "/v1/tracks/5/streams"),
-        (Method.Head, "/i1/tracks/5/streams"),
-        (Method.Get, "/i1/tracks/5/streams"),
-        (Method.Head, "/tracks/5/streams/"),
-        (Method.Get, "/tracks/5/streams/"),
-        (Method.Head, "/v1/tracks/5/streams/"),
-        (Method.Get, "/v1/tracks/5/streams/"),
-        (Method.Head, "/i1/tracks/5/streams/"),
-        (Method.Get, "/i1/tracks/5/streams/"),
-        (Method.Head, "/tracks/5/streams.json"),
-        (Method.Get, "/tracks/5/streams.json"),
-        (Method.Head, "/v1/tracks/5/streams.json"),
-        (Method.Get, "/v1/tracks/5/streams.json"),
-        (Method.Head, "/i1/tracks/5/streams.json"),
-        (Method.Get, "/i1/tracks/5/streams.json")
+        (Method.Get, "/tracks/5/streams")
       )
     ) {
       case (method, path) =>

@@ -11,44 +11,17 @@ class DispatchingToMotherShipSpec extends UnitSpecification {
   val expectedMotherShipEndpoints = Set(
     (Post, "/playlists"),
     (Put, "/playlists/1"),
-    (Put, "/playlists/1.json"),
     (Get, "/resolve"),
-    (Get, "/resolve.json"),
-    (Get, "/tracks/999/comments"),
-    (Get, "/tracks/999/comments/"),
-    (Get, "/tracks/999/comments.json"),
-    (Get, "/tracks/999/comments.json/")
-  )
-
-  val tokenExchangeEndpoints = Set(
-    (Post, "/oauth2/token"),
-    (Post, "/oauth2/token/"),
-    (Post, "/oauth2/token.json")
+    (Get, "/tracks/999/comments")
   )
 
   val expectedUserRelatedMothershipEndpoint = Set(
     (Get, "/users/7110"),
-    (Get, "/users/7110/"),
-    (Get, "/users/7110.json"),
-    (Get, "/users/7110.json/"),
     (Get, "/users/7110/comments"),
-    (Get, "/users/7110/comments/"),
-    (Get, "/users/7110/comments.json"),
-    (Get, "/users/7110/comments.json/"),
     (Get, "/users/me"),
-    (Get, "/users/me/"),
-    (Get, "/users/me.json"),
-    (Get, "/users/me.json/"),
     (Get, "/users/suggested"),
-    (Get, "/users/suggested.json"),
     (Get, "/tracks/7110/favoriters"),
-    (Get, "/tracks/7110/favoriters.json"),
-    (Get, "/tracks/7110/favoriters/123"),
-    (Get, "/tracks/7110/favoriters/123.json"),
-    (Get, "/me"),
-    (Get, "/me/"),
-    (Get, "/me.json"),
-    (Get, "/me.json/")
+    (Get, "/me")
   )
 
   trait MothershipContext extends HandlerSpecificationScope {
@@ -81,13 +54,9 @@ class DispatchingToMotherShipSpec extends UnitSpecification {
       }
   }
 
-  tokenExchangeEndpoints foreach {
-    case (method, endpoint) =>
-      s"Mothership dispatcher should handle $method to token exchange $endpoint" in new TokenExchangeContext {
-        method match {
-          case Method.Post => post(endpoint).status = Status.Ok
-        }
-      }
+  "Mothership dispatcher should handle POST to token exchange /oauth2/token" in new TokenExchangeContext {
+    post("/oauth2/token").status = Status.Ok
+
   }
 
   expectedUserRelatedMothershipEndpoint foreach {
