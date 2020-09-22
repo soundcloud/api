@@ -7,21 +7,22 @@ import com.soundcloud.publicApiStrangler.support.oauth._
 import com.soundcloud.publicApiStrangler.test.UnitSpecification
 import com.twitter.finagle.http.{Response, Status}
 import com.twitter.util.{Await, Future}
+import play.api.libs.json.{JsDefined, JsString, Json}
 
 class TokenExchangeHandlerSpec extends UnitSpecification {
   "#instrumentedMothershipDispatch" >> {
     trait Context extends Scope {
-      val telemetry = Telemetry.createIsolatedInstance
+      val telemetry: Telemetry = Telemetry.createIsolatedInstance
 
       val dispatchToMothershipHandler: Handler = _ => Future.value(Response(Status.Ok))
 
-      val credential = ClientCredential(id = "s6BhdRkqt3", secret = "47HDu8s")
-      val grant = ClientCredentialsGrant()
+      val credential: ClientCredential = ClientCredential(id = "s6BhdRkqt3", secret = "47HDu8s")
+      val grant: ClientCredentialsGrant = ClientCredentialsGrant()
 
       val tokenExchangeRequestParseResult: Either[TokenExchangeRequestError, TokenExchangeRequest] =
         Right(TokenExchangeRequest(credential, grant))
 
-      val authorizationService = mock[AuthorizationService]
+      val authorizationService: AuthorizationService = mock[AuthorizationService]
       authorizationService.validateAccessGrant(credential, grant).returns(Future.value(true))
 
       val handler =
@@ -58,16 +59,58 @@ class TokenExchangeHandlerSpec extends UnitSpecification {
     }
 
     "when the request can be parsed" >> {
-      "proxies the request to the dispatch handler" in new WithMockRequestContext {
-        val result = Await.result(handler.instrumentedMothershipDispatch(request))
+      "and the grant type is supported" >> {
+        "and statically valid" >> {
+          "proxies the request to the dispatch handler" in new WithMockRequestContext {
+            val result: Response = Await.result(handler.instrumentedMothershipDispatch(request))
 
-        result.status ==== Status.Ok
+            result.status ==== Status.Ok
+          }
+
+          "counts grant type and validation result" in new WithMockRequestContext {
+            Await.result(handler.instrumentedMothershipDispatch(request))
+
+            getGrantTypeCount("client_credentials", "200", "true") ==== 1.0
+          }
+        }
+
+        "but statically invalid" >> {
+          trait InvalidGrantContext extends WithMockRequestContext {
+            override val tokenExchangeRequestParseResult = Left(InvalidGrant(Some("password")))
+          }
+
+          "fails the request without proxying to the dispatch handler" in new InvalidGrantContext {
+            val result: Response = Await.result(handler.instrumentedMothershipDispatch(request))
+
+            result.status ==== Status.BadRequest
+            (Json.parse(result.contentString) \ "error_code") ==== JsDefined(JsString("invalid_grant"))
+          }
+
+          "counts error type" in new InvalidGrantContext {
+            Await.result(handler.instrumentedMothershipDispatch(request))
+
+            getRequestErrorCount("invalid_grant", "password", "400") ==== 1.0
+          }
+        }
       }
 
-      "counts grant type and validation result" in new WithMockRequestContext {
-        Await.result(handler.instrumentedMothershipDispatch(request))
+      "but the grant type is not supported" >> {
+        trait UnsupportedGrantTypeContext extends WithMockRequestContext {
+          override val tokenExchangeRequestParseResult = Left(UnsupportedGrantType(Some("this_type_is_not_supported")))
+        }
 
-        getGrantTypeCount("client_credentials", "200", "true") ==== 1.0
+        "fails the request without proxying to the dispatch handler" in new UnsupportedGrantTypeContext {
+          val result: Response = Await.result(handler.instrumentedMothershipDispatch(request))
+
+          result.status ==== Status.BadRequest
+          (Json.parse(result.contentString) \ "error_code") ==== JsDefined(JsString("unsupported_grant_type"))
+        }
+
+        "counts error type" in new UnsupportedGrantTypeContext {
+          Await.result(handler.instrumentedMothershipDispatch(request))
+
+          getRequestErrorCount("unsupported_grant_type", "this_type_is_not_supported", "400") ==== 1.0
+        }
       }
     }
 
@@ -77,9 +120,10 @@ class TokenExchangeHandlerSpec extends UnitSpecification {
       }
 
       "fails the request without proxying to the dispatch handler" in new UnparseableRequestContext {
-        val result = Await.result(handler.instrumentedMothershipDispatch(request))
+        val result: Response = Await.result(handler.instrumentedMothershipDispatch(request))
 
         result.status ==== Status.BadRequest
+        (Json.parse(result.contentString) \ "error_code") ==== JsDefined(JsString("invalid_request"))
       }
 
       "counts error type" in new UnparseableRequestContext {

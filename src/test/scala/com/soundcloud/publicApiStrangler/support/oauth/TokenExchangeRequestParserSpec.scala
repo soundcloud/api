@@ -12,13 +12,13 @@ class TokenExchangeRequestParserSpec extends UnitSpecification {
       val parser = new TokenExchangeRequestParser(paramsParser)
 
       val request: Request
-      lazy val result = parser.parse(HandlerRequest(request))
+      lazy val result: Either[TokenExchangeRequestError, TokenExchangeRequest] = parser.parse(HandlerRequest(request))
     }
 
     "fail for requests that can't be parsed" in new Context {
-      val invalidJsonBody = Buf.Empty
+      val invalidJsonBody: Buf = Buf.Empty
 
-      override val request = RequestBuilder()
+      override val request: Request = RequestBuilder()
         .url(Request.queryString("http://api/test", Map("client_id" -> "s6BhdRkqt3", "client_secret" -> "secret")))
         .setHeader("Content-Type", "application/json")
         .buildPost(invalidJsonBody)
@@ -29,10 +29,20 @@ class TokenExchangeRequestParserSpec extends UnitSpecification {
     trait RequestWithParamsContext extends Context {
       val params: Map[String, String]
 
-      override lazy val request = RequestBuilder()
+      override lazy val request: Request = RequestBuilder()
         .url(Request.queryString("http://api/test"))
         .addFormElement(params.toSeq: _*)
-        .buildFormPost(false)
+        .buildFormPost(multipart = false)
+    }
+
+    "fail for requests with blank grant type" in new RequestWithParamsContext {
+      override val params = Map(
+        "grant_type" -> "",
+        "client_id" -> "s6BhdRkqt3",
+        "client_secret" -> "gX1fBat3bV"
+      )
+
+      result ==== Left(InvalidRequest("missing_grant_type"))
     }
 
     "fail for requests with unsupported grant type" in new RequestWithParamsContext {
@@ -114,6 +124,16 @@ class TokenExchangeRequestParserSpec extends UnitSpecification {
             clientCredential = ClientCredential(id = "s6BhdRkqt3", secret = "gX1fBat3bVt")
           )
         )
+      }
+
+      "return an invalid refresh token grant" in new RequestWithParamsContext {
+        override val params = Map(
+          "grant_type" -> "refresh_token",
+          "client_id" -> "s6BhdRkqt3",
+          "client_secret" -> "gX1fBat3bVt"
+        )
+
+        result ==== Left(InvalidGrant(Some("refresh_token")))
       }
     }
   }

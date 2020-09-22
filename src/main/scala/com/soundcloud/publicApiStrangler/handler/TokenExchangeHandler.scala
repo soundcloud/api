@@ -1,11 +1,20 @@
 package com.soundcloud.publicApiStrangler.handler
 
-import com.soundcloud.jvmkit.module.http.server.{Handler, HandlerRequest}
+import com.soundcloud.jvmkit.module.http.server.{Handler, HandlerRequest, JsonResponseBuilder}
 import com.soundcloud.jvmkit.module.telemetry.Telemetry
 import com.soundcloud.publicApiStrangler.service.oauth.AuthorizationService
-import com.soundcloud.publicApiStrangler.support.oauth.{TokenExchangeRequest, TokenExchangeRequestError}
+import com.soundcloud.publicApiStrangler.support.oauth.{
+  InvalidGrant,
+  InvalidRequest,
+  MissingClientCredentials,
+  TokenExchangeRequest,
+  TokenExchangeRequestError,
+  UnparseableRequest,
+  UnsupportedGrantType
+}
 import com.twitter.finagle.http.{Response, Status}
 import com.twitter.util.Future
+import play.api.libs.json.Json
 
 class TokenExchangeHandler(
     mothershipDispatch: Handler,
@@ -14,7 +23,7 @@ class TokenExchangeHandler(
     authorizationService: AuthorizationService
 ) {
 
-  def instrumentedMothershipDispatch(request: HandlerRequest): Future[Response] = {
+  def instrumentedMothershipDispatch(request: HandlerRequest): Future[Response] =
     parseRequest(request) match {
       case Right(TokenExchangeRequest(credential, accessGrant)) =>
         for {
@@ -29,17 +38,23 @@ class TokenExchangeHandler(
 
           response
         }
-
       case Left(error) =>
-        val response = Response(Status.BadRequest)
+        val response =
+          JsonResponseBuilder(Status.BadRequest, Json.stringify(Json.obj("error_code" -> errorCode(error))))
 
         requestErrorCounter
-          .labels(error.errorType, error.reason, response.statusCode.toString)
+          .labels(error.errorType, error.reason, response.status.code.toString)
           .inc()
 
-        Future.value(response)
+        Future.value(response.build)
     }
-  }
+
+  private def errorCode(error: TokenExchangeRequestError) =
+    error match {
+      case InvalidRequest(_) | UnparseableRequest(_) => "invalid_request"
+      case UnsupportedGrantType(_) => "unsupported_grant_type"
+      case InvalidGrant(_) | MissingClientCredentials() => "invalid_grant"
+    }
 
   private val grantTypeCounter = telemetry.counter(
     "oauth_token_exchange_grant_type",

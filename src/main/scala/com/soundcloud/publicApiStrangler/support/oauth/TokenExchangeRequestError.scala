@@ -8,9 +8,15 @@ case class MissingClientCredentials() extends TokenExchangeRequestError("missing
   def reason: String = "unknown"
 }
 
+case class InvalidGrant(requestedGrantType: Option[String]) extends TokenExchangeRequestError("invalid_grant") {
+  def reason: String = requestedGrantType.getOrElse("unknown")
+}
+
 case class UnparseableRequest(mediaType: Option[String]) extends TokenExchangeRequestError("unparseable_request_body") {
   def reason: String = mediaType.getOrElse("unknown")
 }
+
+case class InvalidRequest(reason: String) extends TokenExchangeRequestError("invalid_request")
 
 case class UnsupportedGrantType(requestedGrantType: Option[String])
     extends TokenExchangeRequestError("unsupported_grant_type") {

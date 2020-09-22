@@ -3,71 +3,77 @@ package com.soundcloud.publicApiStrangler.support.oauth
 import com.soundcloud.publicApiStrangler.test.UnitSpecification
 
 class AccessGrantSpec extends UnitSpecification {
-
   trait Context extends Scope {
-    val params: Map[String, String] = Map.empty
+    val params: AccessGrant.Params = AccessGrant.Params.from(Map.empty)
   }
 
   "AuthorizationCode" >> {
-    "is extracted when params are complete" in new Context {
-      override val params = Map(
-        "grant_type" -> "authorization_code",
-        "code" -> "theCode",
-        "redirect_uri" -> "http://example/redirect"
+    "is instantiated when params are complete" in new Context {
+      override val params: AccessGrant.Params = AccessGrant.Params.from(
+        Map(
+          "grant_type" -> "authorization_code",
+          "code" -> "theCode",
+          "redirect_uri" -> "http://example/redirect"
+        )
       )
 
-      AuthorizationCodeGrant.unapply(params) ==== Some(
+      AuthorizationCodeGrant.from(params) ==== Right(
         AuthorizationCodeGrant(code = "theCode", redirectUri = "http://example/redirect")
       )
     }
 
-    "is not extracted" in new Context {
-      AuthorizationCodeGrant.unapply(params) ==== None
+    "is not instantiated" in new Context {
+      AuthorizationCodeGrant.from(params) ==== Left(InvalidGrant(None))
     }
   }
 
   "ClientCredentialsGrant" >> {
-    "is extracted when params are complete" in new Context {
-      override val params = Map("grant_type" -> "client_credentials")
+    "is instantiated when params are complete" in new Context {
+      override val params: AccessGrant.Params = AccessGrant.Params.from(Map("grant_type" -> "client_credentials"))
 
-      ClientCredentialsGrant.unapply(params) ==== Some(ClientCredentialsGrant())
+      ClientCredentialsGrant.from(params) ==== Right(ClientCredentialsGrant())
     }
 
-    "is not extracted" in new Context {
-      ClientCredentialsGrant.unapply(params) ==== None
+    "is not instantiated" in new Context {
+      ClientCredentialsGrant.from(params) ==== Left(InvalidGrant(None))
     }
   }
 
   "RefreshToken" >> {
-    "is extracted when params are complete" in new Context {
-      override val params = Map(
-        "grant_type" -> "refresh_token",
-        "refresh_token" -> "token"
+    "is instantiated when params are complete" in new Context {
+      override val params: AccessGrant.Params = AccessGrant.Params.from(
+        Map(
+          "grant_type" -> "refresh_token",
+          "refresh_token" -> "token"
+        )
       )
 
-      RefreshTokenGrant.unapply(params) ==== Some(RefreshTokenGrant(refreshToken = "token"))
+      RefreshTokenGrant.from(params) ==== Right(RefreshTokenGrant(refreshToken = "token"))
     }
 
-    "is not extracted" in new Context {
-      RefreshTokenGrant.unapply(params) ==== None
+    "is not instantiated" in new Context {
+      RefreshTokenGrant.from(params) ==== Left(InvalidGrant(None))
     }
   }
 
   "ResourceOwnerPasswordCredentials" >> {
-    "is extracted when params are complete" in new Context {
-      override val params = Map(
-        "grant_type" -> "password",
-        "username" -> "user",
-        "password" -> "p4ss"
+    "is instantiated when params are complete" in new Context {
+      override val params: AccessGrant.Params = AccessGrant.Params.from(
+        Map(
+          "grant_type" -> "password",
+          "username" -> "user",
+          "password" -> "p4ss"
+        )
       )
 
-      val expected = ResourceOwnerPasswordCredentialsGrant(username = "user", password = "p4ss")
+      val expected: ResourceOwnerPasswordCredentialsGrant =
+        ResourceOwnerPasswordCredentialsGrant(username = "user", password = "p4ss")
 
-      ResourceOwnerPasswordCredentialsGrant.unapply(params) ==== Some(expected)
+      ResourceOwnerPasswordCredentialsGrant.from(params) ==== Right(expected)
     }
 
-    "is not extracted" in new Context {
-      ResourceOwnerPasswordCredentialsGrant.unapply(params) ==== None
+    "is not instantiated" in new Context {
+      ResourceOwnerPasswordCredentialsGrant.from(params) ==== Left(InvalidGrant(None))
     }
   }
 }

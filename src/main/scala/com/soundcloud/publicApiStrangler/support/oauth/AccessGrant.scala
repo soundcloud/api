@@ -3,67 +3,85 @@ package com.soundcloud.publicApiStrangler.support.oauth
 abstract sealed class AccessGrant(val grantType: String)
 
 object AccessGrant {
-  val authorizationCode: String = "authorization_code"
-  val clientCredentials: String = "client_credentials"
-  val resourceOwnerPassword: String = "password"
-  val refreshToken: String = "refresh_token"
+  type Validation[A] = Either[TokenExchangeRequestError, A]
+
+  case class Params(
+      grantType: Option[String],
+      clientId: Option[String],
+      clientSecret: Option[String],
+      code: Option[String],
+      redirectUri: Option[String],
+      refreshToken: Option[String],
+      username: Option[String],
+      password: Option[String]
+  )
+
+  object Params {
+    def from(values: Map[String, String]): Params = {
+      def getNonBlank(key: String) = values.get(key).map(_.trim).filter(!_.isEmpty)
+
+      Params(
+        getNonBlank("grant_type"),
+        getNonBlank("client_id"),
+        getNonBlank("client_secret"),
+        getNonBlank("code"),
+        getNonBlank("redirect_uri"),
+        getNonBlank("refresh_token"),
+        getNonBlank("username"),
+        getNonBlank("password")
+      )
+    }
+  }
 }
 
-case class AuthorizationCodeGrant(code: String, redirectUri: String) extends AccessGrant(AccessGrant.authorizationCode)
+case class AuthorizationCodeGrant(code: String, redirectUri: String) extends AccessGrant(AuthorizationCodeGrant.Name)
 
 object AuthorizationCodeGrant {
-  def unapply(values: Map[String, String]): Option[AuthorizationCodeGrant] = {
-    val grantType = values.get("grant_type")
-    val code = values.get("code")
-    val redirectURI = values.get("redirect_uri")
+  val Name: String = "authorization_code"
 
-    (grantType, code, redirectURI) match {
-      case (Some(AccessGrant.authorizationCode), Some(c), Some(r)) => Some(AuthorizationCodeGrant(c, r))
-      case _ => None
+  def from(params: AccessGrant.Params): AccessGrant.Validation[AuthorizationCodeGrant] =
+    params match {
+      case AccessGrant.Params(Some(Name), _, _, Some(code), Some(redirectUri), _, _, _) =>
+        Right(AuthorizationCodeGrant(code, redirectUri))
+      case _ => Left(InvalidGrant(params.grantType))
     }
-  }
 }
 
-case class ClientCredentialsGrant() extends AccessGrant(AccessGrant.clientCredentials)
+case class ClientCredentialsGrant() extends AccessGrant(ClientCredentialsGrant.Name)
 
 object ClientCredentialsGrant {
-  def unapply(values: Map[String, String]): Option[ClientCredentialsGrant] = {
-    val grantType = values.get("grant_type")
+  val Name: String = "client_credentials"
 
-    grantType match {
-      case Some(AccessGrant.clientCredentials) => Some(ClientCredentialsGrant())
-      case _ => None
+  def from(params: AccessGrant.Params): AccessGrant.Validation[ClientCredentialsGrant] =
+    params match {
+      case AccessGrant.Params(Some(Name), _, _, _, _, _, _, _) => Right(ClientCredentialsGrant())
+      case _ => Left(InvalidGrant(params.grantType))
     }
-  }
 }
 
-case class RefreshTokenGrant(refreshToken: String) extends AccessGrant(AccessGrant.refreshToken)
+case class RefreshTokenGrant(refreshToken: String) extends AccessGrant(RefreshTokenGrant.Name)
 
 object RefreshTokenGrant {
-  def unapply(values: Map[String, String]): Option[RefreshTokenGrant] = {
-    val grantType = values.get("grant_type")
-    val refreshToken = values.get("refresh_token")
+  val Name: String = "refresh_token"
 
-    (grantType, refreshToken) match {
-      case (Some(AccessGrant.refreshToken), Some(r)) => Some(RefreshTokenGrant(r))
-      case _ => None
+  def from(params: AccessGrant.Params): AccessGrant.Validation[RefreshTokenGrant] =
+    params match {
+      case AccessGrant.Params(Some(Name), _, _, _, _, Some(refreshToken), _, _) =>
+        Right(RefreshTokenGrant(refreshToken))
+      case _ => Left(InvalidGrant(params.grantType))
     }
-  }
 }
 
 case class ResourceOwnerPasswordCredentialsGrant(username: String, password: String)
-    extends AccessGrant(AccessGrant.resourceOwnerPassword)
+    extends AccessGrant(ResourceOwnerPasswordCredentialsGrant.Name)
 
 object ResourceOwnerPasswordCredentialsGrant {
-  def unapply(values: Map[String, String]): Option[ResourceOwnerPasswordCredentialsGrant] = {
-    val grantType = values.get("grant_type")
-    val username = values.get("username")
-    val password = values.get("password")
+  val Name: String = "password"
 
-    (grantType, username, password) match {
-      case (Some(AccessGrant.resourceOwnerPassword), Some(u), Some(p)) =>
-        Some(ResourceOwnerPasswordCredentialsGrant(u, p))
-      case _ => None
+  def from(params: AccessGrant.Params): AccessGrant.Validation[ResourceOwnerPasswordCredentialsGrant] =
+    params match {
+      case AccessGrant.Params(Some(Name), _, _, _, _, _, Some(username), Some(password)) =>
+        Right(ResourceOwnerPasswordCredentialsGrant(username, password))
+      case _ => Left(InvalidGrant(params.grantType))
     }
-  }
 }
