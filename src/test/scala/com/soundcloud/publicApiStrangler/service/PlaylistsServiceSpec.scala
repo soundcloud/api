@@ -104,12 +104,14 @@ class PlaylistsServiceSpec extends UnitSpecification {
     def setUpMocksForPlaylists(
         pagination: Option[PlaylistPagination],
         visiblePlaylistsRequest: GetVisiblePlaylistsRequest,
-        requestedPlaylistTracks: List[TrackRepresentation] = List(requestedPlaylistTrack)
+        trackRequests: List[TrackRequest],
+        requestedPlaylistTracks: List[TrackRepresentation] = List(requestedPlaylistTrack),
+        protoTrackRequests: Seq[ProtoTrackRequest] = protoTrack
     ) = {
       val expectedPlaylistResponse = GetVisiblePlaylistsResponse(playlistResponse = Seq(
         PlaylistResponse(
           playlist = Some(protoPlaylist),
-          trackRequests = protoTrack,
+          trackRequests = protoTrackRequests,
           pagination = pagination
         )
       )
@@ -118,7 +120,7 @@ class PlaylistsServiceSpec extends UnitSpecification {
       when(playlistsTwirpServiceMock.getVisiblePlaylists(getVisiblePlaylistsRequest = visiblePlaylistsRequest))
         .thenReturn(Future.value(expectedPlaylistResponse))
       when(
-        trackServiceMock.tracks(session, List(TrackRequest(urn = requestedPlaylistTrackUrn, secretToken = None)))
+        trackServiceMock.tracks(session, trackRequests)
       ).thenReturn(Future.value(requestedPlaylistTracks))
     }
   }
@@ -147,7 +149,11 @@ class PlaylistsServiceSpec extends UnitSpecification {
 
   "#fetchPlaylist" >> {
     "can fetch a playlist given playlist, secret token, and pagination" in new SuccessContext {
-      setUpMocksForPlaylists(Some(PlaylistPagination(cursor = Some("4"), limit = 2)), getVisiblePlaylistWithPagination)
+      setUpMocksForPlaylists(
+        pagination = Some(PlaylistPagination(cursor = Some("4"), limit = 2)),
+        trackRequests = List(TrackRequest(urn = requestedPlaylistTrackUrn, secretToken = None)),
+        visiblePlaylistsRequest = getVisiblePlaylistWithPagination
+      )
 
       val result =
         Await.result(
@@ -159,14 +165,18 @@ class PlaylistsServiceSpec extends UnitSpecification {
         case Good(playlist) =>
           playlist.id ==== requestedPlaylistUrn.identifier.toLong
           playlist.userId ==== playlistOwner.urn.identifier.toLong
-          playlist.tracks.length ==== 1
-          playlist.tracks(0).id ==== requestedPlaylistTrack.id
+          playlist.tracks.get.length ==== 1
+          playlist.tracks.get(0).id ==== requestedPlaylistTrack.id
         case _ => failure(s"returned ${result.toString} instead of Good(_)")
       }
     }
 
     "can fetch a playlist without pagination" in new SuccessContext {
-      setUpMocksForPlaylists(None, getVisiblePlaylist)
+      setUpMocksForPlaylists(
+        pagination = None,
+        visiblePlaylistsRequest = getVisiblePlaylist,
+        trackRequests = List(TrackRequest(urn = requestedPlaylistTrackUrn, secretToken = None))
+      )
 
       val result =
         Await.result(
@@ -178,8 +188,8 @@ class PlaylistsServiceSpec extends UnitSpecification {
         case Good(playlist) =>
           playlist.id ==== requestedPlaylistUrn.identifier.toLong
           playlist.userId ==== playlistOwner.urn.identifier.toLong
-          playlist.tracks.length ==== 1
-          playlist.tracks(0).id ==== requestedPlaylistTrack.id
+          playlist.tracks.get.length ==== 1
+          playlist.tracks.get(0).id ==== requestedPlaylistTrack.id
         case _ => failure(s"returned ${result.toString} instead of Good(_)")
       }
     }
@@ -198,9 +208,10 @@ class PlaylistsServiceSpec extends UnitSpecification {
   "#fetchPlaylistTracks" >> {
     "can retrieve playlist tracks without pagination" in new SuccessContext {
       setUpMocksForPlaylists(
-        None,
-        getVisiblePlaylist,
-        List(requestedPlaylistTrack, requestedPlaylistTrack1, requestedPlaylistTrack2)
+        pagination = None,
+        visiblePlaylistsRequest = getVisiblePlaylist,
+        requestedPlaylistTracks = List(requestedPlaylistTrack, requestedPlaylistTrack1, requestedPlaylistTrack2),
+        trackRequests = List(TrackRequest(urn = requestedPlaylistTrackUrn, secretToken = None))
       )
 
       val result =
@@ -222,7 +233,11 @@ class PlaylistsServiceSpec extends UnitSpecification {
 
     "can retrieve playlist tracks with pagination" in new SuccessContext {
       override val protoTrack: Seq[ProtoTrackRequest] = Seq(protoTracks.head)
-      setUpMocksForPlaylists(Some(PlaylistPagination(cursor = Some("2"), limit = 2)), getVisiblePlaylistWithPagination)
+      setUpMocksForPlaylists(
+        pagination = Some(PlaylistPagination(cursor = Some("2"), limit = 2)),
+        visiblePlaylistsRequest = getVisiblePlaylistWithPagination,
+        trackRequests = List(TrackRequest(urn = requestedPlaylistTrackUrn, secretToken = None))
+      )
 
       val result =
         Await.result(
@@ -252,7 +267,11 @@ class PlaylistsServiceSpec extends UnitSpecification {
 
   "#fetchPlaylists" >> {
     "can fetch a list of playlists given playlist, secret token, and pagination" in new SuccessContext {
-      setUpMocksForPlaylists(Some(PlaylistPagination(cursor = Some("4"), limit = 2)), getVisiblePlaylistWithPagination)
+      setUpMocksForPlaylists(
+        pagination = Some(PlaylistPagination(cursor = Some("4"), limit = 2)),
+        visiblePlaylistsRequest = getVisiblePlaylistWithPagination,
+        trackRequests = List(TrackRequest(urn = requestedPlaylistTrackUrn, secretToken = None))
+      )
 
       val result =
         Await.result(
@@ -263,12 +282,16 @@ class PlaylistsServiceSpec extends UnitSpecification {
       result.length ==== 1
       result(0).id ==== requestedPlaylistUrn.identifier.toLong
       result(0).userId ==== playlistOwner.urn.identifier.toLong
-      result(0).tracks.length ==== 1
-      result(0).tracks(0).id ==== requestedPlaylistTrack.id
+      result(0).tracks.get.length ==== 1
+      result(0).tracks.get(0).id ==== requestedPlaylistTrack.id
     }
 
     "can fetch a list of playlists without pagination" in new SuccessContext {
-      setUpMocksForPlaylists(None, getVisiblePlaylist)
+      setUpMocksForPlaylists(
+        None,
+        getVisiblePlaylist,
+        trackRequests = List(TrackRequest(urn = requestedPlaylistTrackUrn, secretToken = None))
+      )
 
       val result =
         Await.result(
@@ -279,8 +302,8 @@ class PlaylistsServiceSpec extends UnitSpecification {
       result.length ==== 1
       result(0).id ==== requestedPlaylistUrn.identifier.toLong
       result(0).userId ==== playlistOwner.urn.identifier.toLong
-      result(0).tracks.length ==== 1
-      result(0).tracks(0).id ==== requestedPlaylistTrack.id
+      result(0).tracks.get.length ==== 1
+      result(0).tracks.get(0).id ==== requestedPlaylistTrack.id
     }
 
     "returns empty list if no playlist returned from client" in new NotFoundContext {
@@ -291,6 +314,50 @@ class PlaylistsServiceSpec extends UnitSpecification {
         )
 
       result ==== List.empty
+    }
+  }
+
+  "#fetchPlaylistMetadataOnly" >> {
+    "returns playlists without tracks field" in new SuccessContext {
+      val emptyPagination = PlaylistPagination()
+      val request = requestWithPagination.copy(pagination = Some(emptyPagination))
+      val getPlaylistRequest =
+        GetVisiblePlaylistsRequest(playlistRequests = Seq(request), userSession = Some(protoSession))
+
+      setUpMocksForPlaylists(
+        pagination = None,
+        visiblePlaylistsRequest = getPlaylistRequest,
+        trackRequests = List.empty,
+        requestedPlaylistTracks = List.empty,
+        protoTrackRequests = Seq.empty
+      )
+
+      val result =
+        Await.result(
+          playlistsService
+            .fetchPlaylistsMetadataOnly(session, List(PlaylistRequest(requestedPlaylistUrn, candidateSecretToken)))
+        )
+
+      result.length ==== 1
+      result(0).tracks must beEmpty
+    }
+
+    "returns an empty list if no playlists found" in new SuccessContext {
+      val emptyPagination = PlaylistPagination()
+      val request = requestWithPagination.copy(pagination = Some(emptyPagination))
+      val getPlaylistRequest =
+        GetVisiblePlaylistsRequest(playlistRequests = Seq(request), userSession = Some(protoSession))
+
+      when(playlistsTwirpServiceMock.getVisiblePlaylists(getVisiblePlaylistsRequest = getPlaylistRequest))
+        .thenReturn(Future.value(GetVisiblePlaylistsResponse(playlistResponse = Seq.empty)))
+
+      val result =
+        Await.result(
+          playlistsService
+            .fetchPlaylistsMetadataOnly(session, List(PlaylistRequest(requestedPlaylistUrn, candidateSecretToken)))
+        )
+
+      result.length ==== 0
     }
   }
 }

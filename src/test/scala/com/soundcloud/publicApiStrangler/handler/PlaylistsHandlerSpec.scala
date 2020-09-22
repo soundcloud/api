@@ -8,10 +8,8 @@ import com.soundcloud.publicApiStrangler.Routing
 import com.soundcloud.publicApiStrangler.client.playlists.PlaylistDeletionClient
 import com.soundcloud.publicApiStrangler.service.PlaylistsService
 import com.soundcloud.publicApiStrangler.service.pagination.OffsetBasedPagination
-import com.soundcloud.publicApiStrangler.service.playlists.representation.{
-  Collection,
-  PlaylistRepresentationSpecContext
-}
+import com.soundcloud.publicApiStrangler.service.playlists.PlaylistBuilder
+import com.soundcloud.publicApiStrangler.service.playlists.representation.Collection
 import com.soundcloud.publicApiStrangler.service.trackrepresentation.TrackRepresentationSpecContext
 import com.soundcloud.publicApiStrangler.test.{HandlerSpecificationScope, UnitSpecification}
 import com.twitter.finagle.http.{Request, Status}
@@ -20,11 +18,9 @@ import org.mockito.Mockito.{verify, when}
 import play.api.libs.json.{JsDefined, JsString, Json}
 
 class PlaylistsHandlerSpec extends UnitSpecification {
-  trait Context
-      extends HandlerSpecificationScope
-      with TrackRepresentationSpecContext
-      with PlaylistRepresentationSpecContext {
+  trait Context extends HandlerSpecificationScope with TrackRepresentationSpecContext with Scope {
     lazy val geo = new Geo("US")
+    val playlist = new PlaylistBuilder().build
     lazy val session = new UserSessionBuilder()
       .setUser(Urn("soundcloud", "users", "2"))
       .setAgent(Urn("soundcloud", "applications", "v2"))

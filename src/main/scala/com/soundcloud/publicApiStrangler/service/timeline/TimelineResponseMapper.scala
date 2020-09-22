@@ -15,7 +15,7 @@ class TimelineResponseMapper {
       mapMeta((json \ "meta").as[JsValue])
     )
 
-  def mapEvent(json: JsObject) = {
+  def mapEvent(json: JsObject): Option[TimelineEvent] = {
     val timestamp = rfc3339ToGMTFormat((json \ "timestamp").as[String])
     val urn = Urn.parse((json \ "urn").as[String]).get
     val actor = Urn.parse((json \ "actor").as[String]).get
@@ -23,10 +23,9 @@ class TimelineResponseMapper {
 
     (json \ "type").as[String] match {
       case "track" => Some(TimelineEvent(TrackTimelineEventType, timestamp, urn, actor, cursor))
-      case "track:like" => Some(TimelineEvent(TrackLikeTimelineEventType, timestamp, urn, actor, cursor))
-      case "users-tracks-likes" => Some(TimelineEvent(TrackLikeTimelineEventType, timestamp, urn, actor, cursor))
-      case "likes" => Some(TimelineEvent(TrackLikeTimelineEventType, timestamp, urn, actor, cursor))
       case "track:repost" => Some(TimelineEvent(TrackRepostTimelineEventType, timestamp, urn, actor, cursor))
+      case "playlist" => Some(TimelineEvent(PlaylistTimelineEventType, timestamp, urn, actor, cursor))
+      case "playlist:repost" => Some(TimelineEvent(PlaylistRepostTimelineEventType, timestamp, urn, actor, cursor))
       case _ => None
     }
   }

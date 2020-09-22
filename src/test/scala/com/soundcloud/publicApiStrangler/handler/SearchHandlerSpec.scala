@@ -19,10 +19,8 @@ import com.soundcloud.publicApiStrangler.client.reposts.RepostsClient
 import com.soundcloud.publicApiStrangler.mapper.search.{Search, SearchDispatcherRequest, SearchMapper}
 import com.soundcloud.publicApiStrangler.service.SearchService
 import com.soundcloud.publicApiStrangler.service.pagination.OffsetBasedPagination
-import com.soundcloud.publicApiStrangler.service.playlists.representation.{
-  PlaylistRepresentationSpecContext,
-  Collection
-}
+import com.soundcloud.publicApiStrangler.service.playlists.PlaylistBuilder
+import com.soundcloud.publicApiStrangler.service.playlists.representation.Collection
 import com.soundcloud.publicApiStrangler.service.trackrepresentation.{TrackPagination, TrackRepresentationSpecContext}
 import com.soundcloud.publicApiStrangler.test.{HandlerSpecificationScope, UnitSpecification}
 import com.twitter.finagle.http.{Request, Response, Status}
@@ -264,7 +262,8 @@ class SearchHandlerSpec extends UnitSpecification {
   }
 
   "/playlists" >> {
-    trait Context extends ForwardContext with PlaylistRepresentationSpecContext {
+    trait Context extends ForwardContext {
+      val playlist = new PlaylistBuilder().build
       val playlistsCollections = Collection(List(playlist), None)
 
       val path = "/playlists"

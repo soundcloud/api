@@ -5,7 +5,8 @@ import com.soundcloud.jvmkit.module.util.session.{LoggedInUserSession, UserSessi
 import com.soundcloud.publicApiStrangler.client.TimelineJsonClient
 import com.soundcloud.publicApiStrangler.client.tracks.TrackRequest
 import com.soundcloud.publicApiStrangler.service.pagination.CursorBasedPagination
-import com.soundcloud.publicApiStrangler.service.timeline.{Timeline, TrackTimelineItem}
+import com.soundcloud.publicApiStrangler.service.playlists.{PlaylistBuilder, PlaylistRequest}
+import com.soundcloud.publicApiStrangler.service.timeline.{PlaylistTimelineItem, Timeline, TrackTimelineItem}
 import com.soundcloud.publicApiStrangler.service.trackrepresentation.{
   TrackRepresentation,
   TrackRepresentationsService,
@@ -19,9 +20,30 @@ import play.api.libs.json.{JsNull, JsObject, JsString, Json}
 class TimelineServiceSpec extends TrackRepresentationsSpecificationContext {
   trait Context extends TrackRepresentationsContext {
     val followingUserUrn = Urn("soundcloud", "users", "2012")
+    val playlistUrn1 = Urn("soundcloud", "playlists", "88")
+    val playlistUrn2 = Urn("soundcloud", "playlists", "99")
+    val playlist1 = new PlaylistBuilder().setId(playlistUrn1.identifier.toLong).build
+    val playlist2 = new PlaylistBuilder().setId(playlistUrn2.identifier.toLong).build
+
     val mockTrackRepresentation = createTrackRepresentation
     val timelineStreamMock: JsObject = Json.obj(
       "events" -> Json.arr(
+        Json.obj(
+          "type" -> JsString("playlist"),
+          "timestamp" -> JsString("2020/06/11 00:01:18 +0000"),
+          "urn" -> JsString(playlistUrn1.toString),
+          "actor" -> JsString(requestingUserUrn.toString),
+          "cursor" -> JsString("000001723-8888-0a50-fffg-ffff8eecj774"),
+          "unique_id" -> JsString("000001723-8888-0a50-fffg-ffff8eecj774")
+        ),
+        Json.obj(
+          "type" -> JsString("playlist:repost"),
+          "timestamp" -> JsString("2020/06/11 00:00:18 +0000"),
+          "urn" -> JsString(playlistUrn2.toString),
+          "actor" -> JsString(requestingUserUrn.toString),
+          "cursor" -> JsString("000001723-8888-0a50-eeee-ffff8eecj775"),
+          "unique_id" -> JsString("000001723-8888-0a50-eeee-ffff8eecj775")
+        ),
         Json.obj(
           "type" -> JsString("track"),
           "timestamp" -> JsString("2020/06/10 00:00:18 +0000"),
@@ -63,19 +85,20 @@ class TimelineServiceSpec extends TrackRepresentationsSpecificationContext {
     )
 
     val baseUrl = "https://api.soundcloud.com"
-    val tracksPagination =
-      CursorBasedPagination("https://api.soundcloud.com", "me/activities/tracks", ParamMap(), Some("2"), 1)
+    val pagination =
+      CursorBasedPagination("https://api.soundcloud.com", "me/activities/*", ParamMap(), Some("2"), 3)
 
     val timelineClient = mock[TimelineJsonClient]
     val trackService = mock[TrackRepresentationsService]
+    val playlistsService = mock[PlaylistsService]
 
-    val timelineService = new TimelineService(timelineClient, trackService)
+    val timelineService = new TimelineService(timelineClient, trackService, playlistsService)
   }
 
   "#fetchTimelineTracksForUser" >> {
     trait SuccessCase extends Context {
       def setupMocksForTimelineResponse(session: UserSession) = {
-        when(timelineClient.stream(session, None, 10, false, Some("uuid")))
+        when(timelineClient.stream(session, None, 10, reverseCursor = false, Some("uuid")))
           .thenReturn(Future.value(timelineStreamMock))
 
         when(trackService.tracks(session, List(TrackRequest(trackUrn, None))))
@@ -85,7 +108,7 @@ class TimelineServiceSpec extends TrackRepresentationsSpecificationContext {
 
     trait FailureCase extends Context {
       def setupMocksForTimelineResponse(session: UserSession) = {
-        when(timelineClient.stream(session, None, 10, false, Some("uuid")))
+        when(timelineClient.stream(session, None, 10, reverseCursor = false, Some("uuid")))
           .thenReturn(Future.value(emptyTimelineStreamMock))
 
         when(trackService.tracks(session, List.empty))
@@ -99,10 +122,10 @@ class TimelineServiceSpec extends TrackRepresentationsSpecificationContext {
         timelineService.fetchTimelineTracksForUser(
           session.asInstanceOf[LoggedInUserSession],
           None,
-          false,
+          reverseCursor = false,
           10,
           Some("uuid"),
-          tracksPagination
+          pagination
         )
       )
 
@@ -121,10 +144,10 @@ class TimelineServiceSpec extends TrackRepresentationsSpecificationContext {
         timelineService.fetchTimelineTracksForUser(
           session.asInstanceOf[LoggedInUserSession],
           None,
-          false,
+          reverseCursor = false,
           10,
           Some("uuid"),
-          tracksPagination
+          pagination
         )
       )
 
@@ -133,10 +156,88 @@ class TimelineServiceSpec extends TrackRepresentationsSpecificationContext {
     }
   }
 
+  "#fetchTimelineForUser" >> {
+    trait SuccessCase extends Context {
+      def setupMocksForTimelineResponse(session: UserSession) = {
+        when(timelineClient.stream(session, None, 10, reverseCursor = false, Some("uuid")))
+          .thenReturn(Future.value(timelineStreamMock))
+
+        when(trackService.tracks(session, List(TrackRequest(trackUrn, None))))
+          .thenReturn(Future.value(List(mockTrackRepresentation)))
+
+        when(
+          playlistsService.fetchPlaylistsMetadataOnly(
+            session,
+            List(PlaylistRequest(playlistUrn1, None), PlaylistRequest(playlistUrn2, None))
+          )
+        ).thenReturn(Future.value(List(playlist1, playlist2)))
+      }
+    }
+
+    trait FailureCase extends Context {
+      def setupMocksForTimelineResponse(session: UserSession) = {
+        when(timelineClient.stream(session, None, 10, reverseCursor = false, Some("uuid")))
+          .thenReturn(Future.value(emptyTimelineStreamMock))
+
+        when(trackService.tracks(session, List.empty))
+          .thenReturn(Future.value(List.empty))
+
+        when(playlistsService.fetchPlaylistsMetadataOnly(session, List.empty))
+          .thenReturn(Future.value(List.empty))
+      }
+    }
+
+    "returns data on successful request" in new SuccessCase {
+      setupMocksForTimelineResponse(session)
+
+      val response = Await.result(
+        timelineService.fetchTimelineForUser(
+          session.asInstanceOf[LoggedInUserSession],
+          None,
+          reverseCursor = false,
+          10,
+          Some("uuid"),
+          pagination
+        )
+      )
+
+      response must beAnInstanceOf[Timeline]
+      response.timelineItems.length === 3
+
+      response.timelineItems(0) must beAnInstanceOf[PlaylistTimelineItem]
+      response.timelineItems(1) must beAnInstanceOf[PlaylistTimelineItem]
+      response.timelineItems(2) must beAnInstanceOf[TrackTimelineItem]
+
+      response.metaInfo.nextPageCursor === Some("00000172-9b87-0a50-ffff-ffff8eec7ee8")
+      response.metaInfo.previousPageCursor === Some("00000172-9b87-0a50-ffff-ffff8eec7ee8")
+    }
+
+    "returns empty timeline items list if no activities found" in new FailureCase {
+      setupMocksForTimelineResponse(session)
+
+      val response = Await.result(
+        timelineService.fetchTimelineForUser(
+          session.asInstanceOf[LoggedInUserSession],
+          None,
+          reverseCursor = false,
+          10,
+          Some("uuid"),
+          pagination
+        )
+      )
+
+      response must beAnInstanceOf[Timeline]
+      response.timelineItems.length === 0
+
+      response.metaInfo.nextPageCursor === None
+      response.metaInfo.previousPageCursor === None
+    }
+  }
+
   "#fetchFollowingTracksForUser" >> {
     trait SuccessCase extends Context {
       def setupMocksForTimelineResponse(session: UserSession) = {
-        when(timelineClient.followingsTracks(session, None, 10, false, Some("uuid")))
+        when(timelineClient.followingsTracks(session, None, 10, reverseCursor = false, Some("uuid")))
           .thenReturn(Future.value(timelineFollowingTracksMock))
 
         when(trackService.tracks(session, List(TrackRequest(trackUrn, None))))
@@ -146,7 +247,7 @@ class TimelineServiceSpec extends TrackRepresentationsSpecificationContext {
 
     trait FailureCase extends Context {
       def setupMocksForTimelineResponse(session: UserSession) = {
-        when(timelineClient.followingsTracks(session, None, 10, false, Some("uuid")))
+        when(timelineClient.followingsTracks(session, None, 10, reverseCursor = false, Some("uuid")))
           .thenReturn(Future.value(emptyTimelineStreamMock))
 
         when(trackService.tracks(session, List.empty))
@@ -161,7 +262,7 @@ class TimelineServiceSpec extends TrackRepresentationsSpecificationContext {
         timelineService.fetchFollowingTracksForUser(
           session.asInstanceOf[LoggedInUserSession],
           None,
-          false,
+          reverseCursor = false,
           10,
           Some("uuid")
         )
@@ -178,7 +279,7 @@ class TimelineServiceSpec extends TrackRepresentationsSpecificationContext {
         timelineService.fetchFollowingTracksForUser(
           session.asInstanceOf[LoggedInUserSession],
           None,
-          false,
+          reverseCursor = false,
           10,
           Some("uuid")
         )

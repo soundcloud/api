@@ -57,7 +57,8 @@ class PlaylistSpec extends Specification with TrackRepresentationSpecContext {
           List(trackRepresentation),
           defaultUser,
           Some(defaultLabel),
-          Some(Urn("soundcloud", "users", "1"))
+          Some(Urn("soundcloud", "users", "1")),
+          showTracks = true
         )
 
       playlist.title ==== "playlist mix"
@@ -81,7 +82,7 @@ class PlaylistSpec extends Specification with TrackRepresentationSpecContext {
       playlist.streamable ==== Some(false)
       playlist.uri ==== "https://api.soundcloud.com/playlists/42703821?secret_token=secret"
       playlist.user ==== defaultUser
-      playlist.tracks ==== List(trackRepresentation)
+      playlist.tracks ==== Some(List(trackRepresentation))
       playlist.secretUri ==== None
       playlist.secretToken ==== None
     }
@@ -94,7 +95,8 @@ class PlaylistSpec extends Specification with TrackRepresentationSpecContext {
           List(downloadableTrack),
           defaultUser,
           Some(defaultLabel),
-          Some(Urn("soundcloud", "users", "1"))
+          Some(Urn("soundcloud", "users", "1")),
+          showTracks = true
         )
 
       playlist.downloadable ==== Some(true)
@@ -108,11 +110,28 @@ class PlaylistSpec extends Specification with TrackRepresentationSpecContext {
           List(downloadableTrack),
           defaultUser,
           Some(defaultLabel),
-          Some(Urn.parse(visiblePlaylist.userUrn).get)
+          Some(Urn.parse(visiblePlaylist.userUrn).get),
+          showTracks = true
         )
 
       playlist.secretToken ==== Some("secret")
       playlist.secretUri ==== Some("https://api.soundcloud.com/playlists/42703821?secret_token=secret")
+    }
+
+    "if showTracks is set to false, tracks should be set to None" in {
+      val trackRepresentation = createTrackRepresentation()
+
+      val playlist =
+        Playlist.fromVisiblePlaylist(
+          visiblePlaylist,
+          List(trackRepresentation),
+          defaultUser,
+          Some(defaultLabel),
+          Some(Urn.parse(visiblePlaylist.userUrn).get),
+          showTracks = false
+        )
+
+      playlist.tracks must beEmpty
     }
   }
 }

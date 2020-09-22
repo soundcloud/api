@@ -8,7 +8,7 @@ import play.api.libs.json.Json
 case class Timeline(timelineItems: List[TimelineItem], metaInfo: TimelineMeta, pagination: CursorBasedPagination) {
 
   def getRepresentation(): String = {
-    val collectionJson = Json.arr(timelineItems.map(item => item.getRepresentation()))
+    val collectionJson = timelineItems.map(item => item.getRepresentation())
     Json.stringify(
       Json.obj(
         "collection" -> collectionJson,

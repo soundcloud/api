@@ -15,7 +15,8 @@ class PlaylistProtoMapper {
       playlist: Playlist,
       trackRequests: Seq[ProtoTrackRequest],
       currentPagination: Option[OffsetBasedPagination],
-      nextPagination: Option[PlaylistPagination]
+      nextPagination: Option[PlaylistPagination],
+      includeTracks: Boolean = true
   ): VisiblePlaylist = {
     VisiblePlaylist(
       urn = playlist.urn,

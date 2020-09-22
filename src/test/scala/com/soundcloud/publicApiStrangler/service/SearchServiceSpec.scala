@@ -13,16 +13,13 @@ import com.twitter.util.{Await, Future}
 import org.mockito.Mockito._
 import com.soundcloud.outcome._
 import com.soundcloud.publicApiStrangler.service.pagination.OffsetBasedPagination
-import com.soundcloud.publicApiStrangler.service.playlists.PlaylistRequest
-import com.soundcloud.publicApiStrangler.service.playlists.representation.{
-  PlaylistRepresentationSpecContext,
-  Collection
-}
+import com.soundcloud.publicApiStrangler.service.playlists.{PlaylistBuilder, PlaylistRequest}
+import com.soundcloud.publicApiStrangler.service.playlists.representation.Collection
 
 class SearchServiceSpec extends TrackRepresentationsSpecificationContext {
 
-  trait Context extends TrackRepresentationsContext with PlaylistRepresentationSpecContext {
-
+  trait Context extends TrackRepresentationsContext {
+    val playlist = new PlaylistBuilder().build
     val trackRepresentationsService = mock[TrackRepresentationsService]
     val playlistsService = mock[PlaylistsService]
     val searchClient = mock[SearchClient]

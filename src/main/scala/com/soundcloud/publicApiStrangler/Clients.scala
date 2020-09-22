@@ -170,8 +170,6 @@ class Clients(
     userQuotaClient
   )
 
-  val timelineService = new TimelineService(timelineClient, tracksService)
-
   private val hocuspocusConfig = HttpClientConfig.from(ResourceName("hocuspocus"), config)
   private val hocuspocusHttpClient = HttpClient[String](hocuspocusConfig, telemetry)
   private val hocuspocusTelemetry = ClientTelemetry.from(hocuspocusConfig, telemetry)
@@ -183,6 +181,8 @@ class Clients(
   val likesService = new LikesService(tracksService, lieblingClient)
   val playlistService = new PlaylistsService(playlistsTwirpClient, tracksService, okidokiClient, exceptionCollector)
   val searchService = new SearchService(searchClient, tracksService, playlistService)
+
+  val timelineService = new TimelineService(timelineClient, tracksService, playlistService)
 
   val streamService = new StreamService(trackVisibilityService, tracksClient)
 

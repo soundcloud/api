@@ -25,6 +25,7 @@ case class Playlist(
     uri: String,
     labelName: Option[String],
     label: Option[User],
+    likesCount: Long,
     tagList: String,
     releaseYear: Option[Int],
     trackCount: Long,
@@ -42,7 +43,7 @@ case class Playlist(
     embeddableBy: String,
     labelId: Option[String],
     user: User,
-    tracks: List[TrackRepresentation],
+    tracks: Option[List[TrackRepresentation]],
     secretUri: Option[String],
     secretToken: Option[String]
 )
@@ -66,13 +67,14 @@ object Playlist {
   }
 
   implicit val playlistWrites = Writes[Playlist] { playlist =>
-    val playlistJson = Json.obj(
+    val tracks = playlist.tracks.map(tracks => Json.obj("tracks" -> Json.toJson(tracks))).getOrElse(Json.obj())
+
+    var playlistJson = Json.obj(
       "duration" -> playlist.duration,
       "genre" -> playlist.genre,
       "release_day" -> playlist.releaseDay,
       "permalink" -> playlist.permalink,
       "permalink_url" -> playlist.permalinkUrl,
-      "release_day" -> playlist.releaseDay,
       "release_month" -> playlist.releaseMonth,
       "release_year" -> playlist.releaseYear,
       "description" -> playlist.description,
@@ -85,15 +87,16 @@ object Playlist {
       "user_id" -> playlist.userId,
       "last_modified" -> playlist.lastModified.map(formatter.format(_)),
       "license" -> playlist.license,
-      "tracks" -> Json.toJson(playlist.tracks),
       "user" -> Json.toJson(playlist.user),
       "playlist_type" -> playlist.playlistType,
       "type" -> playlist.playlistType,
       "id" -> playlist.id,
       "downloadable" -> playlist.downloadable,
+      "likes_count" -> playlist.likesCount,
       "sharing" -> playlist.sharing,
       "created_at" -> playlist.createdAt.map(formatter.format(_)),
       "release" -> playlist.release,
+      "tags" -> playlist.tagList,
       "kind" -> playlist.kind,
       "title" -> playlist.title,
       "purchase_title" -> playlist.purchaseTitle,
@@ -101,11 +104,13 @@ object Playlist {
       "streamable" -> playlist.streamable,
       "embeddable_by" -> playlist.embeddableBy,
       "artwork_url" -> playlist.artworkUrl,
-      "purchase_url" -> playlist.purchaseUrl
+      "purchase_url" -> playlist.purchaseUrl,
+      "tracks_uri" -> s"${playlist.uri}/tracks"
     )
 
-    playlist.secretToken.map(token => playlistJson ++ Json.obj("secret_token" -> token))
-    playlist.secretUri.map(uri => playlistJson ++ Json.obj("secret_uri" -> uri))
+    playlist.secretToken.foreach(token => playlistJson = playlistJson ++ Json.obj("secret_token" -> token))
+    playlist.secretUri.foreach(uri => playlistJson = playlistJson ++ Json.obj("secret_uri" -> uri))
+    playlistJson = playlistJson ++ tracks
     playlistJson
   }
 
@@ -114,13 +119,15 @@ object Playlist {
       playlistTracks: List[TrackRepresentation],
       playlistOwner: User,
       maybeLabel: Option[User],
-      requestingUserUrn: Option[Urn]
+      requestingUserUrn: Option[Urn],
+      showTracks: Boolean
   ): Playlist = {
     val releaseDay =
       playlist.releaseDate.map(date => LocalDateTime.ofInstant(date, ZoneOffset.UTC).getDayOfMonth)
     val releaseMonth =
       playlist.releaseDate.map(date => LocalDateTime.ofInstant(date, ZoneOffset.UTC).getMonth.getValue)
     val releaseYear = playlist.releaseDate.map(date => LocalDateTime.ofInstant(date, ZoneOffset.UTC).getYear)
+    val tracks = if (showTracks) Some(playlistTracks) else None
 
     Playlist(
       title = playlist.title,
@@ -149,13 +156,14 @@ object Playlist {
       artworkUrl = playlist.artworkUrl,
       ean = playlist.ean,
       streamable = playlist.streamable,
+      likesCount = playlist.likesCount,
       embeddableBy = playlist.embeddableBy,
       labelId = playlist.labelId,
       labelName = playlist.labelName,
       label = maybeLabel,
       purchaseUrl = playlist.purchaseUrl,
       user = playlistOwner,
-      tracks = playlistTracks,
+      tracks = tracks,
       secretToken = requestingUserUrn.flatMap(ownerUrn =>
         if (!playlist.public && playlist.userUrn == ownerUrn.toString) playlist.secretToken else None
       ),
