@@ -5,17 +5,13 @@ import com.soundcloud.hocuspocus.{HocuspocusService, Image, Kind, Raw}
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.outcome.{Outcome, _}
+import com.soundcloud.publicApiStrangler.client.mothership.MoshimoshiClient
+import com.soundcloud.publicApiStrangler.client.mothership.response.representation.User
 import com.soundcloud.publicApiStrangler.client.pubmese.Isrc
 import com.soundcloud.publicApiStrangler.client.trackcoordinator.{TrackCoordinatorClient, TrackCoordinatorTrack}
 import com.soundcloud.publicApiStrangler.client.tracks.TrackRequest
 import com.soundcloud.publicApiStrangler.handler.support.error.UnhandledOutcomeException
-import com.soundcloud.publicApiStrangler.handler.support.requestParser.{
-  TrackArtworkUpdateRequest,
-  TrackArtworkUpdateResult,
-  TrackAssetDataCreateRequest,
-  TrackAssetDataUpdateRequest,
-  TrackMetadataUpdateRequest
-}
+import com.soundcloud.publicApiStrangler.handler.support.requestParser._
 import com.soundcloud.publicApiStrangler.service.CreatedTrack.CreatedTrack
 import com.twitter.util.Future
 
@@ -23,6 +19,7 @@ import scala.collection.immutable.HashSet
 
 class TrackUpdateService(
     trackCoordinatorClient: TrackCoordinatorClient,
+    moshimoshiClient: MoshimoshiClient,
     hocuspocusService: HocuspocusService,
     trackRepresentationsService: TrackRepresentationsService
 ) {
@@ -53,6 +50,7 @@ class TrackUpdateService(
       session: UserSession
   ): Future[Outcome[CreatedTrack]] = {
     for {
+      user <- fetchUser(session, session.getUser)
       uploadeImageResponse <- uploadArtworkToS3(maybeUpdateAlbumArt)
       trackCoordinatorTrack <- trackCoordinatorClient.createTrack(
         session,
@@ -60,8 +58,15 @@ class TrackUpdateService(
         maybeTrackMetadata,
         uploadeImageResponse
       )
-      createdTrack <- buildCreatedTrack(trackCoordinatorTrack)
+      createdTrack <- buildCreatedTrack(trackCoordinatorTrack, user)
     } yield createdTrack
+  }
+
+  private def fetchUser(session: UserSession, urn: Urn): Future[Outcome[User]] = {
+    moshimoshiClient.fetchUserObjects(session, Set(urn)).map {
+      case head :: _ => head.good
+      case _ => NotFound().bad
+    }
   }
 
   private def uploadArtworkToS3(
@@ -80,11 +85,14 @@ class TrackUpdateService(
   }
 
   private def buildCreatedTrack(
-      trackCoordinatorTrack: Outcome[TrackCoordinatorTrack]
+      trackCoordinatorTrack: Outcome[TrackCoordinatorTrack],
+      user: Outcome[User]
   ): Future[Outcome[CreatedTrack]] = {
-    trackCoordinatorTrack match {
-      case Good(trackCoordinatorTrack) => Future.value(Good(CreatedTrack(trackCoordinatorTrack)))
-      case Bad(outcome) => Future.value(outcome.bad)
+    (trackCoordinatorTrack, user) match {
+      case (Good(trackCoordinatorTrack), Good(user)) =>
+        Future.value(Good(CreatedTrack(trackCoordinatorTrack, user)))
+      case (Bad(outcome), _) => Future.value(outcome.bad)
+      case (_, Bad(outcome)) => Future.value(outcome.bad)
       case _ => throw new UnhandledOutcomeException
     }
   }

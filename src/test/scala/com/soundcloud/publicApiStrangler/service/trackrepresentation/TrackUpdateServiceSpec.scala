@@ -5,6 +5,9 @@ import com.soundcloud.hocuspocus.{HocuspocusService, Image, Kind, Raw}
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSessionBuilder
 import com.soundcloud.outcome._
+import com.soundcloud.publicApiStrangler.client.mothership.OkidokiClient
+import com.soundcloud.publicApiStrangler.client.mothership.response.mapper.UserMapper
+import com.soundcloud.publicApiStrangler.client.mothership.response.representation.User
 import com.soundcloud.publicApiStrangler.client.trackcoordinator.{
   TrackCoordinatorClient,
   TrackCoordinatorTrack,
@@ -20,18 +23,20 @@ import com.twitter.io.Buf
 import com.twitter.io.Buf.ByteArray
 import com.twitter.util.{Await, Future}
 import org.mockito.Mockito._
-import play.api.libs.json.Json
+import play.api.libs.json.{JsObject, Json}
 
 class TrackUpdateServiceSpec extends UnitSpecification with TrackRepresentationSpecContext {
   trait Context extends Scope {
     val trackCoordinatorClient = mock[TrackCoordinatorClient]
+    val okidokiClient = mock[OkidokiClient]
     val hocuspocusService = mock[HocuspocusService]
     val trackService = mock[TrackRepresentationsService]
 
     val mockTrackRepresentation = createTrackRepresentation()
     val ownerSession = new UserSessionBuilder().setUser(mockTrackRepresentation.user.urn).build
 
-    val trackUpdateService = new TrackUpdateService(trackCoordinatorClient, hocuspocusService, trackService)
+    val trackUpdateService =
+      new TrackUpdateService(trackCoordinatorClient, okidokiClient, hocuspocusService, trackService)
 
     def setupMocksForTrackService(trackUrn: Urn, expectedResponse: Option[TrackRepresentation]) = {
       when(trackService.track(ownerSession, new TrackRequest(trackUrn, None))).thenReturn(
@@ -396,6 +401,17 @@ class TrackUpdateServiceSpec extends UnitSpecification with TrackRepresentationS
         ).thenReturn(Future.value(expectedResponse))
       }
 
+      def stubOkidokiClient(
+          expectedResponse: List[User]
+      ) = {
+        when(
+          okidokiClient.fetchUserObjects(
+            ownerSession,
+            Set(userUrn)
+          )
+        ).thenReturn(Future.value(expectedResponse))
+      }
+
       val metadataUpdateParams = Map[String, String]("title" -> "the title", "description" -> "the description")
       val metaDataUpdateRequest = TrackMetadataUpdateRequest.fromForm(metadataUpdateParams)
       val trackAssetDataCreateRequest = TrackAssetDataCreateRequest(original_filename = "filename", uid = "uid")
@@ -403,13 +419,17 @@ class TrackUpdateServiceSpec extends UnitSpecification with TrackRepresentationS
       val trackArtworkUpdateResult = TrackArtworkUpdateResult(bucket = "bucket", filename = "filename")
       val bytes = ByteArray("i-am-an-image".getBytes(): _*)
       val trackArtworkMetaRequest = TrackArtworkUpdateRequest(imageData = Buf.ByteArray.Owned.extract(bytes))
-      val expectedResponse = CreatedTrack(trackCoordinatorTrack)
+      val users = Fixtures.okidokiUsers.as[List[JsObject]].map(UserMapper(_))
+      val user = users.head
+      val expectedResponse = CreatedTrack(trackCoordinatorTrack, user)
       setupMocksForHocusPocusService(trackArtworkMetaRequest)
     }
 
-    "When track coordinator succeeds" >> {
+    "When track coordinator and okidoki user fetch succeeds" >> {
 
       trait SuccessContext extends CreateTrackContext {
+        stubOkidokiClient(users)
+
         stubTrackCoordinatorClient(
           trackAssetDataCreateRequest,
           metaDataUpdateRequest,
@@ -438,6 +458,7 @@ class TrackUpdateServiceSpec extends UnitSpecification with TrackRepresentationS
     }
     "When track coordinator fails" >> {
       trait FailureContext extends CreateTrackContext {
+        stubOkidokiClient(users)
         stubTrackCoordinatorClient(
           trackAssetDataCreateRequest,
           metaDataUpdateRequest,
@@ -446,7 +467,37 @@ class TrackUpdateServiceSpec extends UnitSpecification with TrackRepresentationS
         )
       }
 
-      "Returns nothing" in new FailureContext {
+      "Returns not found" in new FailureContext {
+        val result = Await.result(
+          trackUpdateService.createTrack(
+            trackAsset = trackAssetDataCreateRequest,
+            maybeUpdateAlbumArt = Some(trackArtworkMetaRequest),
+            metaDataUpdateRequest,
+            ownerSession
+          )
+        )
+
+        result.isLeft
+        result match {
+          case Bad(NotFound(msg)) => msg === "Resource not found"
+          case _ => true must beFalse
+        }
+      }
+    }
+
+    "When user fetch fails" >> {
+      trait FailureContext extends CreateTrackContext {
+        stubOkidokiClient(List())
+
+        stubTrackCoordinatorClient(
+          trackAssetDataCreateRequest,
+          metaDataUpdateRequest,
+          Some(trackArtworkUpdateResult),
+          Good(trackCoordinatorTrack)
+        )
+      }
+
+      "Returns not found" in new FailureContext {
         val result = Await.result(
           trackUpdateService.createTrack(
             trackAsset = trackAssetDataCreateRequest,

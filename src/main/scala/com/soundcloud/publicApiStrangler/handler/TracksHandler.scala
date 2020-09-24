@@ -133,15 +133,15 @@ class TracksHandler(
     assetParams match {
       case None => unprocessableEntityResponse
       case Some(asset) =>
-        val response = trackUpdateService.createTrack(
+        val createdTrack = trackUpdateService.createTrack(
           asset,
           artworkParams,
           metadataParams,
           session
         )
-        handleCreateTrackResponseFromService(response)
-    }
+        handleCreateTrackResponseFromService(createdTrack)
 
+    }
   }
 
   private def createTrackFromUrlEncodedRequest(
@@ -152,14 +152,13 @@ class TracksHandler(
     assetDataParams match {
       case None => unprocessableEntityResponse
       case Some(asset) =>
-        val response =
-          trackUpdateService.createTrack(
-            asset,
-            None,
-            metadataParams,
-            session
-          )
-        handleCreateTrackResponseFromService(response)
+        val createdTrack = trackUpdateService.createTrack(
+          asset,
+          None,
+          metadataParams,
+          session
+        )
+        handleCreateTrackResponseFromService(createdTrack)
     }
   }
 

@@ -107,6 +107,7 @@
     "date_of_birth": "1984\/12\/01",
     "gender": "female",
     "default_license": null,
-    "stealth": false
+    "stealth": false,
+    "verified": true
   }
 ]

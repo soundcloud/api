@@ -1,7 +1,7 @@
 package com.soundcloud.publicApiStrangler.mapper.timeline.representation
 
 import com.soundcloud.bff.nextbff.mapping.{JsonMapping, MappingContext}
-import play.api.libs.json.JsValue
+import play.api.libs.json._
 
 class UserSummary(jsonValue: JsValue, baseUrl: String)(implicit context: MappingContext)
     extends JsonMapping(jsonValue)

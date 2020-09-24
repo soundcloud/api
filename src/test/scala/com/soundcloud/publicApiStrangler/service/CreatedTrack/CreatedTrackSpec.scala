@@ -1,20 +1,24 @@
 package com.soundcloud.publicApiStrangler.service.CreatedTrack
 
 import com.soundcloud.jvmkit.module.util.Urn
+import com.soundcloud.publicApiStrangler.client.mothership.response.mapper.UserMapper
 import com.soundcloud.publicApiStrangler.client.trackcoordinator.TrackCoordinatorTrackFixtures
+import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures
 import org.specs2.mutable.Specification
 import org.specs2.specification.Scope
 import play.api.libs.json.Json.obj
-import play.api.libs.json.{JsNull, JsValue, Json}
+import play.api.libs.json.{JsNull, JsObject, JsValue, Json}
 
 class CreatedTrackSpec extends Specification {
   "#writes" >> {
     trait WritesContext extends Scope {
 
       def public: Boolean = false
+      val users = Fixtures.okidokiUsers.as[List[JsObject]].map(UserMapper(_))
+      val user = users.head
       val trackCoordinatorTrack = new TrackCoordinatorTrackFixtures().build(public)
       def result: JsValue = {
-        Json.toJson(CreatedTrack(trackCoordinatorTrack))
+        Json.toJson(CreatedTrack(trackCoordinatorTrack, user))
       }
     }
 
@@ -57,6 +61,16 @@ class CreatedTrackSpec extends Specification {
         "title" -> trackCoordinatorTrack.title,
         "track_type" -> trackCoordinatorTrack.track_type,
         "uri" -> trackCoordinatorTrack.uri,
+        "user" -> obj(
+          "avatar_url" -> user.avatar_url,
+          "id" -> user.urn.identifier.toLong,
+          "kind" -> "user",
+          "permalink_url" -> user.permalink_url,
+          "uri" -> s"https://api.soundcloud.com/users/${user.urn.identifier}",
+          "username" -> user.username,
+          "permalink" -> user.permalink,
+          "last_modified" -> user.updated_at
+        ),
         "user_id" -> Urn.parse(trackCoordinatorTrack.user_urn).get.identifier.toLong,
         "waveform_url" -> trackCoordinatorTrack.waveform_url
       )

@@ -1,6 +1,7 @@
 package com.soundcloud.publicApiStrangler.client.mothership.response.representation
 
 import com.soundcloud.jvmkit.module.util.Urn
+import play.api.libs.json.{Json, Writes}
 
 case class User(
     urn: Urn,
@@ -17,3 +18,18 @@ case class User(
     description: Option[String],
     updated_at: Option[String]
 )
+
+object User {
+  implicit val writes = Writes[User] { user =>
+    Json.obj(
+      "id" -> user.urn.identifier.toLong,
+      "kind" -> "user",
+      "permalink" -> user.permalink,
+      "username" -> user.username,
+      "last_modified" -> user.updated_at,
+      "uri" -> s"https://api.soundcloud.com/users/${user.urn.identifier}",
+      "permalink_url" -> user.permalink_url,
+      "avatar_url" -> user.avatar_url.replaceAll("\\?[0-9]+$", "").replaceAll("^http:", "https:")
+    )
+  }
+}

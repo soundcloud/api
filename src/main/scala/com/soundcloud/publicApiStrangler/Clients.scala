@@ -1,11 +1,14 @@
 package com.soundcloud.publicApiStrangler
 
+import com.soundcloud.hocuspocus.HocuspocusClientProtobuf
 import com.soundcloud.jvmkit.module.bff.session.UserAuthentication
 import com.soundcloud.jvmkit.module.http.client.config.HttpClientConfig
 import com.soundcloud.jvmkit.module.http.client.{HttpClient, JsonClient}
 import com.soundcloud.jvmkit.module.rollout.{BasicRolloutFeature, Rollout}
 import com.soundcloud.jvmkit.module.telemetry.Telemetry
 import com.soundcloud.jvmkit.module.telemetry.exceptions.ExceptionCollector
+import com.soundcloud.jvmkit.module.twirp.TwirpClient
+import com.soundcloud.jvmkit.module.twirp.filters.ClientTelemetry
 import com.soundcloud.jvmkit.module.util.config.{AppConfig, ConfigConvention, DataSensitivity}
 import com.soundcloud.jvmkit.module.util.{ResourceName, Urn}
 import com.soundcloud.publicApiStrangler.authorization._
@@ -18,14 +21,12 @@ import com.soundcloud.publicApiStrangler.client.media.{
   TrackAccessRecorderClient,
   WaveformUrlsGenerator
 }
-import proto.soundcloud.playlists.api.PlaylistsClientProtobuf
-import com.soundcloud.hocuspocus.HocuspocusClientProtobuf
-import com.soundcloud.jvmkit.module.twirp.TwirpClient
 import com.soundcloud.publicApiStrangler.client.mothership.{OkidokiClient, RichOkidokiClient}
 import com.soundcloud.publicApiStrangler.client.playlists.PlaylistDeletionClient
 import com.soundcloud.publicApiStrangler.client.pubmese.PubmeseClient
 import com.soundcloud.publicApiStrangler.client.quota.UserQuotaClient
 import com.soundcloud.publicApiStrangler.client.reposts.RepostsClient
+import com.soundcloud.publicApiStrangler.client.search.SearchClient
 import com.soundcloud.publicApiStrangler.client.stitch.StitchClient
 import com.soundcloud.publicApiStrangler.client.trackcoordinator.TrackCoordinatorClient
 import com.soundcloud.publicApiStrangler.client.trackmetadata.TrackmetadataClient
@@ -33,23 +34,14 @@ import com.soundcloud.publicApiStrangler.client.tracks.TracksClient
 import com.soundcloud.publicApiStrangler.mapper.search.SearchEntityMapper
 import com.soundcloud.publicApiStrangler.service.media.{StreamService, TrackAccessRecorderService}
 import com.soundcloud.publicApiStrangler.service.trackrepresentation.{TrackRepresentationsService, TrackUpdateService}
-import com.soundcloud.publicApiStrangler.service.{
-  LikesService,
-  PlaylistsService,
-  SearchService,
-  SimilarTracksService,
-  TimelineService,
-  TrackVisibilityService,
-  UserTracksService
-}
+import com.soundcloud.publicApiStrangler.service.tracks.VisibleTrackMapper
+import com.soundcloud.publicApiStrangler.service._
 import com.twitter.finagle.Service
 import com.twitter.finagle.http.{Request, Response}
 import com.twitter.finagle.service.RetryPolicy.RetryableWriteException
 import com.twitter.util.{Future, Throw, Try}
 import proto.soundcloud.authenticator.oauth.AuthorizationClientProtobuf
-import com.soundcloud.jvmkit.module.twirp.filters.ClientTelemetry
-import com.soundcloud.publicApiStrangler.client.search.SearchClient
-import com.soundcloud.publicApiStrangler.service.tracks.VisibleTrackMapper
+import proto.soundcloud.playlists.api.PlaylistsClientProtobuf
 import proto.soundcloud.tracks.api.TracksClientProtobuf
 
 class Clients(
@@ -176,7 +168,8 @@ class Clients(
   val hocuspocusClient = new HocuspocusClientProtobuf(hocuspocusHttpClient.httpService, hocuspocusTelemetry)
 
   val userTracksService = new UserTracksService(tracksService, trackmetadataClient)
-  val trackUpdateService = new TrackUpdateService(trackCoordinatorClient, hocuspocusClient, tracksService)
+  val trackUpdateService =
+    new TrackUpdateService(trackCoordinatorClient, okidokiClient, hocuspocusClient, tracksService)
   val similarTracksService = new SimilarTracksService(tracksService, systemPlaylistsClient)
   val likesService = new LikesService(tracksService, lieblingClient)
   val playlistService = new PlaylistsService(playlistsTwirpClient, tracksService, okidokiClient, exceptionCollector)

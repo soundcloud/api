@@ -8,6 +8,7 @@ import com.soundcloud.jvmkit.module.util.{Geo, Urn}
 import com.soundcloud.outcome._
 import com.soundcloud.publicApiStrangler.Routing
 import com.soundcloud.publicApiStrangler.authorization.Track
+import com.soundcloud.publicApiStrangler.client.mothership.response.mapper.UserMapper
 import com.soundcloud.publicApiStrangler.client.trackcoordinator.{TrackCoordinatorClient, TrackCoordinatorTrack}
 import com.soundcloud.publicApiStrangler.handler.support.requestParser.{
   TrackArtworkUpdateRequest,
@@ -300,9 +301,14 @@ class TracksHandlerSpec extends UnitSpecification with TrackRepresentationSpecCo
 
   "POST /tracks" >> {
 
+    trait PostContext extends Context {
+      val users = Fixtures.okidokiUsers.as[List[JsObject]].map(UserMapper(_))
+      val userObj = users.head
+    }
+
     "application/x-www-form-urlencoded request" >> {
 
-      trait UrlEncodedContext extends Context {
+      trait UrlEncodedContext extends PostContext {
         val path = s"/tracks_experimental"
         def stubTrackUpdateServiceCreate(
             createdTrackOutcome: Outcome[CreatedTrack],
@@ -338,7 +344,8 @@ class TracksHandlerSpec extends UnitSpecification with TrackRepresentationSpecCo
 
       trait SuccessContext extends UrlEncodedContext {
         val trackCoordinatorTrack = Fixtures.trackCoordinatorTrack.as[TrackCoordinatorTrack]
-        val expectedResponse = CreatedTrack(trackCoordinatorTrack)
+
+        val expectedResponse = CreatedTrack(trackCoordinatorTrack, userObj)
       }
 
       trait FailureContext extends UrlEncodedContext {
@@ -380,7 +387,7 @@ class TracksHandlerSpec extends UnitSpecification with TrackRepresentationSpecCo
 
     "Multipart/form request" >> {
 
-      trait MultiPartFormContext extends Context {
+      trait MultiPartFormContext extends PostContext {
         val path = s"/tracks_experimental"
         def stubTrackUpdateServiceCreate(
             createdTrackOutcome: Outcome[CreatedTrack],
@@ -415,7 +422,7 @@ class TracksHandlerSpec extends UnitSpecification with TrackRepresentationSpecCo
 
       trait SuccessContext extends MultiPartFormContext {
         val trackCoordinatorTrack = Fixtures.trackCoordinatorTrack.as[TrackCoordinatorTrack]
-        val expectedResponse = CreatedTrack(trackCoordinatorTrack)
+        val expectedResponse = CreatedTrack(trackCoordinatorTrack, userObj)
       }
 
       trait FailureContext extends MultiPartFormContext {

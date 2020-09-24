@@ -1,10 +1,11 @@
 package com.soundcloud.publicApiStrangler.service.CreatedTrack
 
 import com.soundcloud.jvmkit.module.util.Urn
+import com.soundcloud.publicApiStrangler.client.mothership.response.representation.User
 import com.soundcloud.publicApiStrangler.client.trackcoordinator.TrackCoordinatorTrack
 import play.api.libs.json.{Json, Writes}
 
-case class CreatedTrack(trackCoordinatorTrack: TrackCoordinatorTrack) {
+case class CreatedTrack(trackCoordinatorTrack: TrackCoordinatorTrack, user: User) {
   def location = trackCoordinatorTrack.uri
 }
 
@@ -50,6 +51,7 @@ object CreatedTrack {
       "title" -> t.trackCoordinatorTrack.title,
       "track_type" -> t.trackCoordinatorTrack.track_type,
       "uri" -> t.trackCoordinatorTrack.uri,
+      "user" -> t.user,
       "user_id" -> Urn.parse(t.trackCoordinatorTrack.user_urn).get.identifier.toLong,
       "waveform_url" -> t.trackCoordinatorTrack.waveform_url
     )
