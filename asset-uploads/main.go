@@ -124,6 +124,7 @@ func main() {
 	router.Handle("/tracks.json", httpHandler("/tracks.json", tracksHandler))
 	router.Handle("/tracks.json/", httpHandler("/tracks.json/", tracksHandler))
 	router.Handle("/tracks", httpHandler("/tracks", tracksHandler))
+	router.Handle("/tracks_experimental", httpHandler("/tracks_experimental", tracksHandler))
 	router.Handle("/tracks/", httpHandler("/tracks/", tracksHandler))
 
 	router.Handle("/v1/tracks", httpHandler("/v1/tracks", tracksHandler))
