@@ -1,0 +1,109 @@
+package com.soundcloud.publicApiStrangler.client.trackcoordinator
+
+import com.soundcloud.publicApiStrangler.service.trackrepresentation.TrackRepresentation
+
+class TrackCoordinatorTrackFixtures {
+
+  def build(public: Boolean = true): TrackCoordinatorTrack = {
+    TrackCoordinatorTrack(
+      api_streamable = Some(true),
+      artwork_url = Some("https://i1.sndcdn.com/artworks-000095281756-51d163-large.jpg"),
+      commentable = true,
+      created_at = "2014/10/27 16:25:25 +0000",
+      description = Some("This track is awesome"),
+      download_url = "https://api.soundcloud.com/tracks/174088262/download",
+      downloadable = Some(false),
+      downloads_count = 0,
+      duration = 0,
+      embeddable_by = "all",
+      embeddable = Some(true),
+      favoritings_count = 0,
+      genre = Some("Free jazz"),
+      geo_blockings = Some(List("US")),
+      isrc = Some("US-S1Z-99-00001"),
+      label_id = None,
+      label_name = Some("Foobar records"),
+      last_modified = "2014/10/27 16:25:25 +0000",
+      license = "all-rights-reserved",
+      original_content_size = Some(6923),
+      original_format = Some("mp3"),
+      permalink = "awesome-track-2014-10-27-17-25-29-66",
+      permalink_url = "https://soundcloud.com/imprisonedprecision/awesome-track-2014-10-27-17-25-29-66",
+      playback_count = 0,
+      public = public,
+      publisher_metadata = Some(PublisherMetadata(Some("DEABC1234567"))),
+      purchase_title = Some("buy123"),
+      purchase_url = Some("http://buy.that.com"),
+      release_day = Some(1),
+      release_month = Some(2),
+      release_year = Some(2013),
+      reveal_comments = true,
+      reveal_stats = true,
+      secret_token = Some("s-8USae"),
+      sharing = "public",
+      state = "storing",
+      stream_url = "https://media.soundcloud.com/stream/2014-10-27-17-25-29-66",
+      streamable = true,
+      tag_list = Some("tag onw two \"hello tag\" tōkyō"),
+      title = "Awesome Track",
+      track_type = None,
+      uri = "https://api.soundcloud.com/tracks/174088262",
+      urn = "soundcloud:sounds:174088262",
+      user_urn = "soundcloud:users:102661606",
+      waveform_url = "https://wis.sndcdn.com/images/player-waveform-medium.png?1414404638"
+    )
+  }
+
+  def fromTrackRepresentation(trackRepresentation: TrackRepresentation): TrackCoordinatorTrack = {
+    TrackCoordinatorTrack(
+      api_streamable = trackRepresentation.visibleTrack.apiStreamable,
+      artwork_url = Some("https://i1.sndcdn.com/artworks-000095281756-51d163-large.jpg"),
+      commentable = trackRepresentation.visibleTrack.commentable,
+      created_at = "2014/10/27 16:25:25 +0000",
+      description = Some("changed"),
+      download_url = "https://api.soundcloud.com/tracks/174088262/download",
+      downloadable = Some(trackRepresentation.visibleTrack.downloadable),
+      downloads_count = 0,
+      duration = 0,
+      embeddable_by = "all",
+      embeddable = trackRepresentation.visibleTrack.embeddable,
+      favoritings_count = 0,
+      genre = trackRepresentation.visibleTrack.genre,
+      geo_blockings = Some(trackRepresentation.geoblockings.get.toList),
+      isrc = Some("US-S1Z-99-00001"),
+      label_id = None,
+      label_name = trackRepresentation.visibleTrack.labelName,
+      last_modified = "2014/10/27 16:25:25 +0000",
+      license = trackRepresentation.visibleTrack.license,
+      original_content_size = Some(6923),
+      original_format = Some("mp3"),
+      permalink = trackRepresentation.visibleTrack.permalink,
+      permalink_url = "https://soundcloud.com/imprisonedprecision/awesome-track-2014-10-27-17-25-29-66",
+      playback_count = 0,
+      public = trackRepresentation.visibleTrack.public,
+      publisher_metadata = Some(PublisherMetadata(isrc = Some(trackRepresentation.isrc.get.toString))),
+      purchase_title = trackRepresentation.visibleTrack.purchaseTitle,
+      purchase_url = trackRepresentation.visibleTrack.purchaseUrl,
+      release_day = trackRepresentation.visibleTrack.releaseDay,
+      release_month = trackRepresentation.visibleTrack.releaseMonth,
+      release_year = Some(2013),
+      reveal_comments = trackRepresentation.visibleTrack.revealComments,
+      reveal_stats = trackRepresentation.visibleTrack.revealStats,
+      secret_token = Some("s-8USae"),
+      sharing = "public",
+      state = "storing",
+      stream_url = "https://media.soundcloud.com/stream/2014-10-27-17-25-29-66",
+      streamable = true,
+      tag_list = Some(trackRepresentation.visibleTrack.userTags.mkString(",")),
+      title = "changed",
+      track_type = None,
+      uri = "https://api.soundcloud.com/tracks/174088262",
+      urn = trackRepresentation.visibleTrack.urn.toString,
+      user_urn = "soundcloud:users:102661606",
+      waveform_url = "https://wis.sndcdn.com/images/player-waveform-medium.png?1414404638"
+    )
+  }
+
+  object build
+
+}

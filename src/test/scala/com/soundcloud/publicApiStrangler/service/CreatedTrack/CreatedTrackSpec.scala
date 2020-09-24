@@ -1,6 +1,7 @@
 package com.soundcloud.publicApiStrangler.service.CreatedTrack
 
-import com.soundcloud.publicApiStrangler.client.trackcoordinator.{PublisherMetadata, TrackCoordinatorTrack}
+import com.soundcloud.jvmkit.module.util.Urn
+import com.soundcloud.publicApiStrangler.client.trackcoordinator.TrackCoordinatorTrackFixtures
 import org.specs2.mutable.Specification
 import org.specs2.specification.Scope
 import play.api.libs.json.Json.obj
@@ -11,44 +12,53 @@ class CreatedTrackSpec extends Specification {
     trait WritesContext extends Scope {
 
       def public: Boolean = false
-
+      val trackCoordinatorTrack = new TrackCoordinatorTrackFixtures().build(public)
       def result: JsValue = {
-        val trackCoordinatorTrack = TrackCoordinatorTrack(
-          urn = "soundcloud:sounds:174088262",
-          public = public,
-          title = "Awesome Track",
-          api_streamable = Some(true),
-          commentable = true,
-          description = Some("This track is awesome"),
-          downloadable = Some(false),
-          embeddable = Some(true),
-          genre = Some("Free jazz"),
-          geo_blockings = Some(List("US")),
-          publisher_metadata = Some(PublisherMetadata(Some("US-S1Z-99-00001"))),
-          label_name = Some("Foobar records"),
-          license = "all-rights-reserved",
-          permalink = "awesome-track-2014-10-27-17-25-29-66",
-          purchase_title = Some("buy123"),
-          purchase_url = Some("http://buy.that.com"),
-          release_day = Some(1),
-          release_month = Some(2),
-          reveal_comments = true,
-          reveal_stats = true,
-          tag_list = Some("tag onw two \"hello tag\" tōkyō"),
-          secret_token = Some("s-8USae"),
-          uri = "https://api.soundcloud.com/tracks/174088262"
-        )
         Json.toJson(CreatedTrack(trackCoordinatorTrack))
       }
     }
 
     "when the track is private" in new WritesContext {
       result ==== obj(
-        "id" -> 174088262,
+        "artwork_url" -> trackCoordinatorTrack.artwork_url,
+        "commentable" -> trackCoordinatorTrack.commentable,
+        "created_at" -> trackCoordinatorTrack.created_at,
+        "description" -> trackCoordinatorTrack.description,
+        "download_count" -> trackCoordinatorTrack.downloads_count,
+        "download_url" -> trackCoordinatorTrack.download_url,
+        "downloadable" -> trackCoordinatorTrack.downloadable,
+        "duration" -> trackCoordinatorTrack.duration,
+        "embeddable_by" -> trackCoordinatorTrack.embeddable_by,
+        "favoritings_count" -> trackCoordinatorTrack.favoritings_count,
+        "genre" -> trackCoordinatorTrack.genre,
+        "id" -> Urn.parse(trackCoordinatorTrack.urn).get.identifier.toLong,
+        "isrc" -> trackCoordinatorTrack.isrc,
         "kind" -> "track",
-        "permalink" -> "awesome-track-2014-10-27-17-25-29-66",
-        "secret_token" -> "s-8USae",
-        "urn" -> "soundcloud:sounds:174088262"
+        "label_id" -> trackCoordinatorTrack.label_id,
+        "label_name" -> trackCoordinatorTrack.label_name,
+        "last_modified" -> trackCoordinatorTrack.last_modified,
+        "license" -> trackCoordinatorTrack.license,
+        "original_content_size" -> trackCoordinatorTrack.original_content_size,
+        "original_format" -> trackCoordinatorTrack.original_format,
+        "permalink_url" -> trackCoordinatorTrack.permalink_url,
+        "permalink" -> trackCoordinatorTrack.permalink,
+        "playback_count" -> trackCoordinatorTrack.playback_count,
+        "purchase_title" -> trackCoordinatorTrack.purchase_title,
+        "purchase_url" -> trackCoordinatorTrack.purchase_url,
+        "release_day" -> trackCoordinatorTrack.release_day,
+        "release_month" -> trackCoordinatorTrack.release_month,
+        "release_year" -> trackCoordinatorTrack.release_year,
+        "secret_token" -> trackCoordinatorTrack.secret_token,
+        "sharing" -> trackCoordinatorTrack.sharing,
+        "state" -> trackCoordinatorTrack.state,
+        "stream_url" -> trackCoordinatorTrack.stream_url,
+        "streamable" -> trackCoordinatorTrack.streamable,
+        "tag_list" -> trackCoordinatorTrack.tag_list,
+        "title" -> trackCoordinatorTrack.title,
+        "track_type" -> trackCoordinatorTrack.track_type,
+        "uri" -> trackCoordinatorTrack.uri,
+        "user_id" -> Urn.parse(trackCoordinatorTrack.user_urn).get.identifier.toLong,
+        "waveform_url" -> trackCoordinatorTrack.waveform_url
       )
     }
 

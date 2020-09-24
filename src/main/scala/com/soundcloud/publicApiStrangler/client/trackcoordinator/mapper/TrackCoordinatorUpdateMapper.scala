@@ -6,11 +6,22 @@ import com.soundcloud.publicApiStrangler.client.trackcoordinator.TrackCoordinato
 import com.twitter.finagle.http.{Response, Status}
 import play.api.libs.json.Json
 
-object TrackCoordinatorTrackMapper {
+object TrackCoordinatorUpdateMapper {
   def apply(response: Response): Outcome[TrackCoordinatorTrack] = {
 
     response.status match {
       case Status.Ok => Json.parse(response.contentString).as[TrackCoordinatorTrack].good
+      case Status.NotFound => NotFound().bad
+      case _ => throw UnhandledResponseException(response)
+    }
+  }
+}
+
+object TrackCoordinatorCreateMapper {
+  def apply(response: Response): Outcome[TrackCoordinatorTrack] = {
+
+    response.status match {
+      case Status.Created => Json.parse(response.contentString).as[TrackCoordinatorTrack].good
       case Status.NotFound => NotFound().bad
       case _ => throw UnhandledResponseException(response)
     }

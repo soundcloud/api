@@ -43,31 +43,7 @@ class TrackCoordinatorClientSpec extends UnitSpecification {
     val trackAssetDataCreateRequest =
       TrackAssetDataCreateRequest(original_filename = "filename", uid = "uid")
 
-    val expectedResponse = TrackCoordinatorTrack(
-      urn = "soundcloud:sounds:174088262",
-      public = true,
-      title = "Awesome Track",
-      api_streamable = Some(true),
-      commentable = true,
-      description = Some("This track is awesome"),
-      downloadable = Some(false),
-      embeddable = Some(true),
-      genre = Some("Free jazz"),
-      geo_blockings = Some(List("US")),
-      publisher_metadata = Some(PublisherMetadata(isrc = Some("DEABC1234567"))),
-      label_name = Some("Foobar records"),
-      license = "all-rights-reserved",
-      permalink = "awesome-track-2014-10-27-17-25-29-66",
-      purchase_title = Some("buy123"),
-      purchase_url = Some("http://buy.that.com"),
-      release_day = Some(1),
-      release_month = Some(2),
-      reveal_comments = true,
-      reveal_stats = true,
-      tag_list = Some("tag onw two \"hello tag\" tōkyō"),
-      secret_token = Some("s-8USae"),
-      uri = "https://api.soundcloud.com/tracks/174088262"
-    )
+    val expectedResponse = new TrackCoordinatorTrackFixtures().build()
   }
 
   trait CreateContext extends Context {
@@ -99,7 +75,7 @@ class TrackCoordinatorClientSpec extends UnitSpecification {
       trait SuccessContext extends CreateContext {
         when(jsonClient.postWithSession(session, path, Params.empty, Headers.empty, Some(requestBody)))
           .thenReturn(
-            Future(jsonResponse(Status.Ok, Fixtures.trackCoordinatorTrack))
+            Future(jsonResponse(Status.Created, Fixtures.trackCoordinatorTrack))
           )
       }
 
@@ -168,7 +144,7 @@ class TrackCoordinatorClientSpec extends UnitSpecification {
             Some(requestBody)
           )
         ).thenReturn(
-          Future(jsonResponse(Status.Ok, Json.toJson(expectedResponse)))
+          Future(jsonResponse(Status.Created, Json.toJson(expectedResponse)))
         )
       }
 

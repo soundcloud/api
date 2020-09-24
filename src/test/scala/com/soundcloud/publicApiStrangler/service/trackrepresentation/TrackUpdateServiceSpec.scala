@@ -6,9 +6,9 @@ import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSessionBuilder
 import com.soundcloud.outcome._
 import com.soundcloud.publicApiStrangler.client.trackcoordinator.{
-  PublisherMetadata,
   TrackCoordinatorClient,
-  TrackCoordinatorTrack
+  TrackCoordinatorTrack,
+  TrackCoordinatorTrackFixtures
 }
 import com.soundcloud.publicApiStrangler.client.tracks.TrackRequest
 import com.soundcloud.publicApiStrangler.handler.support.error.UnhandledOutcomeException
@@ -40,31 +40,7 @@ class TrackUpdateServiceSpec extends UnitSpecification with TrackRepresentationS
     }
 
     val mockTrackMetadataUpdateResult =
-      TrackCoordinatorTrack(
-        urn = mockTrackRepresentation.visibleTrack.urn.toString,
-        public = mockTrackRepresentation.visibleTrack.public,
-        api_streamable = mockTrackRepresentation.visibleTrack.apiStreamable,
-        commentable = mockTrackRepresentation.visibleTrack.commentable,
-        description = Some("changed"),
-        title = "changed",
-        downloadable = Some(mockTrackRepresentation.visibleTrack.downloadable),
-        embeddable = mockTrackRepresentation.visibleTrack.embeddable,
-        genre = mockTrackRepresentation.visibleTrack.genre,
-        geo_blockings = Some(mockTrackRepresentation.geoblockings.get.toList),
-        publisher_metadata = Some(PublisherMetadata(isrc = Some(mockTrackRepresentation.isrc.get.toString))),
-        label_name = mockTrackRepresentation.visibleTrack.labelName,
-        license = mockTrackRepresentation.visibleTrack.license,
-        permalink = mockTrackRepresentation.visibleTrack.permalink,
-        purchase_title = mockTrackRepresentation.visibleTrack.purchaseTitle,
-        purchase_url = mockTrackRepresentation.visibleTrack.purchaseUrl,
-        release_day = mockTrackRepresentation.visibleTrack.releaseDay,
-        release_month = mockTrackRepresentation.visibleTrack.releaseMonth,
-        reveal_comments = mockTrackRepresentation.visibleTrack.revealComments,
-        reveal_stats = mockTrackRepresentation.visibleTrack.revealStats,
-        tag_list = Some(mockTrackRepresentation.visibleTrack.userTags.mkString(",")),
-        secret_token = Some("s-8USae"),
-        uri = "https://api.soundcloud.com/tracks/174088262"
-      )
+      new TrackCoordinatorTrackFixtures().fromTrackRepresentation(mockTrackRepresentation)
 
     def setupMocksForUpdateTrackMeta(
         trackUrn: Urn,

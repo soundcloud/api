@@ -31,7 +31,7 @@ class TrackCoordinatorClient(service: JsonClient) {
     val requestBody = buildCreateBody(trackAsset, maybeUpdateTrackMetadata, maybeArtworkMetadata)
     service
       .postWithSession(session, Path("/tracks"), Params.empty, Headers.empty, Some(requestBody))
-      .map(TrackCoordinatorTrackMapper(_))
+      .map(TrackCoordinatorCreateMapper(_))
   }
 
   def updateTrack(
@@ -44,7 +44,7 @@ class TrackCoordinatorClient(service: JsonClient) {
     val requestBody = buildUpdateBody(maybeUpdateTrackAsset, maybeUpdateTrackMetadata, maybeArtworkMetadata)
     service
       .putWithSession(session, Path("/tracks") / trackUrn, Params.empty, Headers.empty, Some(requestBody))
-      .map(TrackCoordinatorTrackMapper(_))
+      .map(TrackCoordinatorUpdateMapper(_))
   }
 
   private def buildCreateBody(
