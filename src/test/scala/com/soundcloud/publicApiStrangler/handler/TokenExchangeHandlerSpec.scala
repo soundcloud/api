@@ -76,7 +76,7 @@ class TokenExchangeHandlerSpec extends UnitSpecification {
 
         "but statically invalid" >> {
           trait InvalidGrantContext extends WithMockRequestContext {
-            override val tokenExchangeRequestParseResult = Left(InvalidGrant(Some("password")))
+            override val tokenExchangeRequestParseResult = Left(InvalidGrant("password"))
           }
 
           "fails the request without proxying to the dispatch handler" in new InvalidGrantContext {
@@ -96,7 +96,7 @@ class TokenExchangeHandlerSpec extends UnitSpecification {
 
       "but the grant type is not supported" >> {
         trait UnsupportedGrantTypeContext extends WithMockRequestContext {
-          override val tokenExchangeRequestParseResult = Left(UnsupportedGrantType(Some("this_type_is_not_supported")))
+          override val tokenExchangeRequestParseResult = Left(UnsupportedGrantType("this_type_is_not_supported"))
         }
 
         "fails the request without proxying to the dispatch handler" in new UnsupportedGrantTypeContext {

@@ -45,6 +45,16 @@ class TokenExchangeRequestParserSpec extends UnitSpecification {
       result ==== Left(InvalidRequest("missing_grant_type"))
     }
 
+    "fail when client credentials are missing" in new RequestWithParamsContext {
+      override val params = Map(
+        "grant_type" -> "password",
+        "username" -> "johndoe",
+        "password" -> "password"
+      )
+
+      result ==== Left(MissingClientCredentials())
+    }
+
     "fail for requests with unsupported grant type" in new RequestWithParamsContext {
       override val params = Map(
         "grant_type" -> "invalid",
@@ -52,7 +62,7 @@ class TokenExchangeRequestParserSpec extends UnitSpecification {
         "client_secret" -> "gX1fBat3bV"
       )
 
-      result ==== Left(UnsupportedGrantType(Some("invalid")))
+      result ==== Left(UnsupportedGrantType("invalid"))
     }
 
     "with supported grant types" >> {
@@ -133,7 +143,7 @@ class TokenExchangeRequestParserSpec extends UnitSpecification {
           "client_secret" -> "gX1fBat3bVt"
         )
 
-        result ==== Left(InvalidGrant(Some("refresh_token")))
+        result ==== Left(InvalidGrant("refresh_token"))
       }
     }
   }
