@@ -19,7 +19,7 @@ import com.twitter.util.{Await, Future}
 import org.mockito.Mockito.when
 import com.soundcloud.outcome._
 import com.soundcloud.publicApiStrangler.service.playlists.PlaylistRequest
-import com.soundcloud.publicApiStrangler.service.playlists.representation.Collection
+import com.soundcloud.publicApiStrangler.service.representation.collection.Collection
 import proto.soundcloud.common.session.{UserSession => ProtoUserSession}
 import proto.soundcloud.playlists.api.{
   GetVisiblePlaylistsRequest,

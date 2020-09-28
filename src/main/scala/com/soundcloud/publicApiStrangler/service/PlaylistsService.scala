@@ -8,8 +8,9 @@ import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.outcome._
 import com.soundcloud.publicApiStrangler.client.mothership.MoshimoshiClient
 import com.soundcloud.publicApiStrangler.service.pagination.OffsetBasedPagination
-import com.soundcloud.publicApiStrangler.service.playlists.representation.{Collection, Playlist, VisiblePlaylist}
+import com.soundcloud.publicApiStrangler.service.playlists.representation.{Playlist, VisiblePlaylist}
 import com.soundcloud.publicApiStrangler.service.playlists.{PlaylistProtoMapper, PlaylistRequest}
+import com.soundcloud.publicApiStrangler.service.representation.collection.Collection
 import com.soundcloud.publicApiStrangler.service.trackrepresentation.{TrackRepresentation, TrackRepresentationsService}
 import com.twitter.util.Future
 import proto.soundcloud.playlists.api.{

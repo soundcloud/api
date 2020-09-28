@@ -3,7 +3,7 @@ package com.soundcloud.publicApiStrangler.service
 import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.publicApiStrangler.client.trackmetadata.TrackmetadataClient
 import com.soundcloud.publicApiStrangler.client.tracks.TrackRequest
-import com.soundcloud.publicApiStrangler.service.playlists.representation.Collection
+import com.soundcloud.publicApiStrangler.service.representation.collection.Collection
 import com.soundcloud.publicApiStrangler.service.trackrepresentation._
 import com.twitter.util.{Await, Future}
 import org.mockito.Mockito.when

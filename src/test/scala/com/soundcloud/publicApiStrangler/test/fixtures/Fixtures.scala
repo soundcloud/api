@@ -62,6 +62,7 @@ object Fixtures {
   lazy val moshiUser = contentsOf("moshimoshi", "user")
   lazy val moshiUsers = contentsOf("moshimoshi", "users")
   lazy val moshiUser2 = contentsOf("moshimoshi", "user2")
+  lazy val moshimoshiPlaylistsChrono = contentsOf("moshimoshi", "playlists_chrono")
 
   lazy val similarSoundsNonEmpty = contentsOf("similar-sounds", "non-empty")
 

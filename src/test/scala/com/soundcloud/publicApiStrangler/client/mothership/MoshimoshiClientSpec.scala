@@ -1,14 +1,18 @@
 package com.soundcloud.publicApiStrangler.client.mothership
 
-import com.soundcloud.jvmkit.module.http.client.JsonClient
-import com.soundcloud.jvmkit.module.util.http.{Headers, HeadersBuilder}
+import com.soundcloud.jvmkit.module.http.client.{JsonClient, Params}
+import com.soundcloud.jvmkit.module.util.http.Headers
 import com.soundcloud.jvmkit.module.util.{Path, Urn}
+import com.soundcloud.publicApiStrangler.client.chrono.ChronoResponse
 import com.soundcloud.publicApiStrangler.client.mothership.response.mapper._
+import com.soundcloud.publicApiStrangler.service.pagination.CursorBasedPagination
 import com.soundcloud.publicApiStrangler.test.Helpers._
 import com.soundcloud.publicApiStrangler.test.UnitSpecification
 import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures._
-import com.twitter.util.Await
-import play.api.libs.json.{JsObject, Json, _}
+import com.twitter.finagle.http.{ParamMap, Status}
+import com.twitter.util.{Await, Future}
+import org.mockito.Mockito.when
+import play.api.libs.json._
 
 class MoshimoshiClientSpec extends UnitSpecification {
   trait Context extends Scope {
@@ -20,18 +24,6 @@ class MoshimoshiClientSpec extends UnitSpecification {
     )
   }
 
-  def buildHeaders(entries: (String, String)*): Headers =
-    entries.foldLeft(new HeadersBuilder()) { case (builder, (key, value)) => builder.set(key, value) }.build()
-
-  // A recent play-json upgrade has introduced a change that does not preserve Map key ordering, thus breaking some
-  // specs that rely on comparing JSON as as strings. Since this is limited to only a few specs in this class only,
-  // we just re-parse the json and create a fresh object to ensure we have the correct ordering. Sorry.
-  // See https://github.com/playframework/play-json/issues/236
-  def fixTrackFixture(v: JsValue): JsValue = {
-    val track = (v \ "track").as[JsObject]
-    Json.obj("track" -> (track ++ Json.obj()))
-  }
-
   "#fetchUserObjects" >> {
     trait UsersContext extends Context {
       val urns = Set(Urn("soundcloud", "users", "10419549"), Urn("soundcloud", "users", "123123123"))
@@ -41,12 +33,10 @@ class MoshimoshiClientSpec extends UnitSpecification {
       def fetch = Await.result(client.fetchUserObjects(session, urns))
     }
 
-    "found response" >> {
-      "gotta fetch'em all" in new UsersContext {
-        expectOkResponse(path, moshiUsers, urns.toList)
+    "found response" in new UsersContext {
+      expectOkResponse(path, moshiUsers, urns.toList)
 
-        fetch ==== List(UserMapper(moshiUser), UserMapper(moshiUser2))
-      }
+      fetch ==== List(UserMapper(moshiUser), UserMapper(moshiUser2))
     }
 
     "not found response" in new UsersContext {
@@ -59,6 +49,48 @@ class MoshimoshiClientSpec extends UnitSpecification {
       expectInternalErrorResponse(path, urns.toList)
 
       fetch must throwA[IllegalStateException]
+    }
+  }
+
+  "#userPlaylists" >> {
+    trait PlaylistsByUser extends Context {
+      val userUrn = Urn("soundcloud", "users", "1")
+
+      val path = Path("/users") / userUrn / "playlists" / "chrono"
+      val pagination = CursorBasedPagination(
+        "https://api.soundcloud.com",
+        "/users/1/playlists/",
+        ParamMap(),
+        Some("2"),
+        2
+      )
+    }
+
+    "200 status" in new PlaylistsByUser {
+      when(
+        service.getWithSession(
+          anonymousSession,
+          path,
+          Params("cursor" -> "2", "limit" -> "2", "direction" -> "desc"),
+          Headers.empty
+        )
+      ).thenReturn(Future(jsonResponse(Status.Ok, moshimoshiPlaylistsChrono)))
+
+      val result = Await.result(client.userPlaylists(anonymousSession, userUrn, pagination))
+      result.items must haveSize(2)
+    }
+
+    "500 status" in new PlaylistsByUser {
+      when(
+        service.getWithSession(
+          anonymousSession,
+          path,
+          Params("cursor" -> "2", "limit" -> "2", "direction" -> "desc"),
+          Headers.empty
+        )
+      ).thenReturn(Future(jsonResponse(Status.InternalServerError, JsNull)))
+
+      Await.result(client.userPlaylists(anonymousSession, userUrn, pagination)) ==== ChronoResponse.emptyResponse
     }
   }
 }

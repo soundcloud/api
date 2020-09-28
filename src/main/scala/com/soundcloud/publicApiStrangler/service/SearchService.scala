@@ -7,7 +7,8 @@ import com.soundcloud.publicApiStrangler.client.search.SearchClient
 import com.soundcloud.publicApiStrangler.client.tracks.TrackRequest
 import com.soundcloud.publicApiStrangler.service.pagination.OffsetBasedPagination
 import com.soundcloud.publicApiStrangler.service.playlists.PlaylistRequest
-import com.soundcloud.publicApiStrangler.service.playlists.representation.{Collection, Playlist}
+import com.soundcloud.publicApiStrangler.service.playlists.representation.Playlist
+import com.soundcloud.publicApiStrangler.service.representation.collection.Collection
 import com.soundcloud.publicApiStrangler.service.trackrepresentation.{
   TrackPagination,
   TrackRepresentation,

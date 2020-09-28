@@ -3,7 +3,7 @@ package com.soundcloud.publicApiStrangler.handler.representation.collection
 import com.soundcloud.jvmkit.module.http.server.JsonResponseBuilder
 import com.soundcloud.outcome._
 import com.soundcloud.publicApiStrangler.handler.support.error.UnhandledOutcomeException
-import com.soundcloud.publicApiStrangler.service.playlists.representation.Collection
+import com.soundcloud.publicApiStrangler.service.representation.collection.Collection
 import com.twitter.finagle.http.Response
 import com.twitter.util.Future
 import play.api.libs.json.{Json, Writes}

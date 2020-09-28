@@ -103,6 +103,7 @@ object App {
           forUserRelatedMothershipDispatcher(handlers.userRelatedMothershipDispatcher),
           forSearchHandler(handlers.searchHandler),
           forUserTracksHandler(handlers.userTracksHandler),
+          forUserPlaylistsHandler(handlers.userPlaylistsHandler),
           forRepostsHandler(handlers.repostsHandler),
           forTimelineHandler(handlers.timelineHandler),
           forTrackStreamsHandler(handlers.trackStreamsHandler),

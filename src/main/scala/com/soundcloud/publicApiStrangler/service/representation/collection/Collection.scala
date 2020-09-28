@@ -1,4 +1,4 @@
-package com.soundcloud.publicApiStrangler.service.playlists.representation
+package com.soundcloud.publicApiStrangler.service.representation.collection
 
 import play.api.libs.json.{Json, Writes}
 

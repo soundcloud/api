@@ -173,6 +173,7 @@ class Clients(
   val similarTracksService = new SimilarTracksService(tracksService, systemPlaylistsClient)
   val likesService = new LikesService(tracksService, lieblingClient)
   val playlistService = new PlaylistsService(playlistsTwirpClient, tracksService, okidokiClient, exceptionCollector)
+  val userPlaylistsService = new UserPlaylistsService(playlistService, okidokiClient)
   val searchService = new SearchService(searchClient, tracksService, playlistService)
 
   val timelineService = new TimelineService(timelineClient, tracksService, playlistService)
