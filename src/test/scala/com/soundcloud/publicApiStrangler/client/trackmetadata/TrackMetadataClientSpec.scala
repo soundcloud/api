@@ -3,11 +3,14 @@ package com.soundcloud.publicApiStrangler.client.trackmetadata
 import com.soundcloud.jvmkit.module.http.client.{JsonClient, Params}
 import com.soundcloud.jvmkit.module.util.http.Headers
 import com.soundcloud.jvmkit.module.util.{Path, Urn}
+import com.soundcloud.publicApiStrangler.client.chrono.ChronoResponse
+import com.soundcloud.publicApiStrangler.service.pagination.CursorBasedPagination
 import com.soundcloud.publicApiStrangler.test.UnitSpecification
-import com.twitter.finagle.http.Status
+import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures._
+import com.twitter.finagle.http.{ParamMap, Status}
 import com.twitter.util.{Await, Future}
 import org.mockito.Mockito.when
-import play.api.libs.json.{JsNull, Json}
+import play.api.libs.json.JsNull
 
 class TrackMetadataClientSpec extends UnitSpecification {
   trait Context extends Scope {
@@ -15,33 +18,48 @@ class TrackMetadataClientSpec extends UnitSpecification {
     val trackmetadataClient = new TrackmetadataClient(service)
   }
 
-  "#urnsByUser" >> {
-    trait UrnsByUserContext extends Context {
+  "#userTracks" >> {
+    trait TracksByUser extends Context {
       val userUrn = Urn("soundcloud", "users", "1")
       val urn1 = Urn("soundcloud", "tracks", "1")
       val urn2 = Urn("soundcloud", "tracks", "2")
 
-      val path = Path("/users") / userUrn / "tracks" / "urns"
+      val path = Path("/users") / userUrn / "tracks" / "chrono"
+      val pagination = CursorBasedPagination(
+        "https://api.soundcloud.com",
+        "/users/1/tracks/",
+        ParamMap(),
+        Some("2"),
+        2
+      )
 
-      val jsonBody = Json.parse(s"""
-           |{
-           |  "data": ["$urn1", "$urn2"]
-           |}
-         """.stripMargin)
     }
 
-    "200 status" in new UrnsByUserContext {
-      when(service.getWithSession(anonymousSession, path, Params.empty, Headers.empty))
-        .thenReturn(Future(jsonResponse(Status.Ok, jsonBody)))
+    "200 status" in new TracksByUser {
+      when(
+        service.getWithSession(
+          anonymousSession,
+          path,
+          Params("cursor" -> "2", "limit" -> "2", "direction" -> "desc"),
+          Headers.empty
+        )
+      ).thenReturn(Future(jsonResponse(Status.Ok, trackmetadataClientTracks_chrono)))
 
-      Await.result(trackmetadataClient.urnsByUser(anonymousSession, userUrn)) ==== List(urn1, urn2)
+      var result = Await.result(trackmetadataClient.userTracks(anonymousSession, userUrn, pagination))
+      result.items must haveSize(2)
     }
 
-    "500 status" in new UrnsByUserContext {
-      when(service.getWithSession(anonymousSession, path, Params.empty, Headers.empty))
-        .thenReturn(Future(jsonResponse(Status.InternalServerError, JsNull)))
+    "500 status" in new TracksByUser {
+      when(
+        service.getWithSession(
+          anonymousSession,
+          path,
+          Params("cursor" -> "2", "limit" -> "2", "direction" -> "desc"),
+          Headers.empty
+        )
+      ).thenReturn(Future(jsonResponse(Status.InternalServerError, JsNull)))
 
-      Await.result(trackmetadataClient.urnsByUser(anonymousSession, userUrn)) ==== List.empty
+      Await.result(trackmetadataClient.userTracks(anonymousSession, userUrn, pagination)) ==== ChronoResponse.emptyResponse
     }
   }
 }

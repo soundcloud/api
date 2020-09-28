@@ -1,0 +1,23 @@
+{
+  "items": [
+    {
+      "timestamp": "2019-08-25T20:25:31.000Z",
+      "type": "tracks",
+      "urn": "soundcloud:tracks:670900448",
+      "cursor": "2019-08-25T20:25:31.000Z,tracks,00670900448"
+    },
+    {
+      "timestamp": "2019-08-25T20:24:47.000Z",
+      "type": "tracks",
+      "urn": "soundcloud:tracks:670900202",
+      "cursor": "2019-08-25T20:24:47.000Z,tracks,00670900202"
+    }
+  ],
+  "meta": {
+    "params": {
+      "limit": 2,
+      "direction": "desc"
+    },
+    "valid_for_caching": true
+  }
+}

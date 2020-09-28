@@ -58,6 +58,7 @@ object Fixtures {
   lazy val timelineLikes = contentsOf("timeline", "likes")
 
   lazy val okidokiUsers = contentsOf("okidoki", "users")
+  lazy val trackmetadataClientTracks_chrono = contentsOf("trackmetadataclient", "tracks_chrono")
 
   lazy val moshiUser = contentsOf("moshimoshi", "user")
   lazy val moshiUsers = contentsOf("moshimoshi", "users")

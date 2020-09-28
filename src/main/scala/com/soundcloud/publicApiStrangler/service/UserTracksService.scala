@@ -2,14 +2,12 @@ package com.soundcloud.publicApiStrangler.service
 
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSession
+import com.soundcloud.publicApiStrangler.client.chrono.ChronoItem
 import com.soundcloud.publicApiStrangler.client.trackmetadata.TrackmetadataClient
 import com.soundcloud.publicApiStrangler.client.tracks.TrackRequest
+import com.soundcloud.publicApiStrangler.service.pagination.CursorBasedPagination
 import com.soundcloud.publicApiStrangler.service.representation.collection.Collection
-import com.soundcloud.publicApiStrangler.service.trackrepresentation.{
-  TrackPagination,
-  TrackRepresentation,
-  TrackRepresentationsService
-}
+import com.soundcloud.publicApiStrangler.service.trackrepresentation.{TrackRepresentation, TrackRepresentationsService}
 import com.twitter.util.Future
 
 class UserTracksService(
@@ -20,15 +18,16 @@ class UserTracksService(
   def userTracks(
       session: UserSession,
       userUrn: Urn,
-      trackPagination: TrackPagination
+      pagination: CursorBasedPagination
   ): Future[Collection[TrackRepresentation]] = {
     for {
-      trackUrns <- trackmetadataClient.urnsByUser(session, userUrn)
-      trackUrnsPage = trackPagination.calculateTrackUrnPage(trackUrns).toList
-      tracks <- trackRepresentationsService.tracks(session, trackUrnsPage.map(TrackRequest(_, None)))
-      finalPage = trackPagination.calculateFinalPage(tracks)
+      userTracksResponse <- trackmetadataClient.userTracks(session, userUrn, pagination)
+      enrichedTracks <- trackRepresentationsService.tracks(
+        session,
+        userTracksResponse.items.map(item => TrackRequest(item.urn, None))
+      )
     } yield {
-      Collection(finalPage, trackPagination.nextHref(finalPage.size))
+      Collection(enrichedTracks, userTracksNextHref(userTracksResponse.items, pagination))
     }
   }
 
@@ -43,6 +42,18 @@ class UserTracksService(
       userOwnedTrack = track.filter(_.visibleTrack.userUrn.identifier == userId)
     } yield {
       userOwnedTrack
+    }
+  }
+
+  private def userTracksNextHref(items: List[ChronoItem], pagination: CursorBasedPagination): Option[String] = {
+    if (items.nonEmpty) {
+      Some(
+        pagination
+          .nextPage(items.last.cursor)
+          .normalizedHref
+      )
+    } else {
+      None
     }
   }
 }

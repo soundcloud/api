@@ -1,10 +1,7 @@
 package com.soundcloud.publicApiStrangler.handler
 
-import java.net.URL
-
 import com.soundcloud.jvmkit.module.bff.session.UserAuthentication
 import com.soundcloud.jvmkit.module.http.server.{HandlerRequest, JsonResponseBuilder}
-import com.soundcloud.jvmkit.module.telemetry.Telemetry
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.outcome._
@@ -12,25 +9,18 @@ import com.soundcloud.publicApiStrangler.support.TrackUrnUtil.trackUrn
 import com.soundcloud.publicApiStrangler.handler.representation.collection.CollectionResponse
 import com.soundcloud.publicApiStrangler.handler.support.error.UnhandledOutcomeException
 import com.soundcloud.publicApiStrangler.service.UserTracksService
-import com.soundcloud.publicApiStrangler.service.trackrepresentation.{TrackPagination, TrackRepresentation}
+import com.soundcloud.publicApiStrangler.service.pagination.CursorBasedPagination
+import com.soundcloud.publicApiStrangler.service.trackrepresentation.TrackRepresentation
 import com.twitter.finagle.http.{Response, Status}
 import com.twitter.util.{Future, Return, Try}
 import play.api.libs.json.Json
 
 class UserTracksHandler(
     userAuthentication: UserAuthentication,
-    userTracksService: UserTracksService,
-    baseUrl: String,
-    telemetry: Telemetry
+    userTracksService: UserTracksService
 ) {
 
   private val numericRegexp = """\d+""".r
-  private val offsetParamsCounter = telemetry.counter(
-    "user_tracks_offset_params_total",
-    "Number of requested params for user tracks endpoints",
-    "client_id",
-    "linked_partitioning"
-  )
 
   def getTrackByUser(req: HandlerRequest): Future[Response] = {
     userAuthentication.withUserSession(req) { (session) =>
@@ -107,15 +97,8 @@ class UserTracksHandler(
 
   private def performGetTracks(req: HandlerRequest, session: UserSession, userId: String): Future[Response] = {
     val hasLinkedPartitioning = req.params.contains("linked_partitioning")
-    val pagination = TrackPagination.fromRequest(req.params, new URL(baseUrl + req.uri))
+    val pagination = CursorBasedPagination.build(req, Seq("linked_partitioning"))
 
-    if (req.params.keySet.contains("offset")) {
-      val offset = Try(req.params.get("offset").map(_.toInt)).toOption.flatten.getOrElse(0)
-      if (offset > 0) {
-        val clientAppId = Option(session.getAgent).map(_.identifier).getOrElse("unknown")
-        offsetParamsCounter.labels(clientAppId, hasLinkedPartitioning.toString).inc()
-      }
-    }
     Try(Urn("soundcloud", "users", userId)) match {
       case Return(urn @ Urn(_, _, numericRegexp())) =>
         val tracksCollection = userTracksService

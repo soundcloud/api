@@ -1,23 +1,21 @@
 package com.soundcloud.publicApiStrangler.handler
 
-import java.net.URL
 import java.util.TimeZone
 
 import com.soundcloud.jvmkit.module.bff.testsupport.FakeUserAuthentication
-import com.soundcloud.jvmkit.module.telemetry.Telemetry
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.publicApiStrangler.Routing
 import com.soundcloud.publicApiStrangler.service.UserTracksService
 import com.soundcloud.publicApiStrangler.service.representation.collection.Collection
+import com.soundcloud.publicApiStrangler.service.pagination.CursorBasedPagination
 import com.soundcloud.publicApiStrangler.service.trackrepresentation.{
-  TrackPagination,
   TrackRepresentation,
   TrackRepresentationSpecContext
 }
 import com.soundcloud.publicApiStrangler.test.{HandlerSpecificationScope, UnitSpecification}
-import com.twitter.finagle.http.Status
+import com.twitter.finagle.http.{Request, Status}
 import com.twitter.util.Future
-import org.joda.time.{DateTime, DateTimeZone}
+import org.joda.time.DateTimeZone
 import org.mockito.Mockito.when
 import play.api.libs.json.Json
 
@@ -33,13 +31,10 @@ class UserTracksHandlerSpec extends UnitSpecification with TrackRepresentationSp
     val userAuthentication = new FakeUserAuthentication(session)
 
     val userTracksService = mock[UserTracksService]
-    val telemetry = Telemetry.createIsolatedInstance
 
     val handler = new UserTracksHandler(
       userAuthentication,
-      userTracksService,
-      "https://api.soundcloud.com",
-      telemetry
+      userTracksService
     )
 
     override def routingDefinitions = Routing.forUserTracksHandler(handler)
@@ -50,15 +45,12 @@ class UserTracksHandlerSpec extends UnitSpecification with TrackRepresentationSp
       val queryString =
         "?limit=1&offset=2&linked_partitioning=yes-please&created_at[from]=2017-01-01%2010:00:00&created_at[to]=2017-01-15%2010:00:00"
 
-      def paginationParams(path: String) =
-        TrackPagination(
-          Some(1),
-          Some(2),
-          true,
-          Some(new DateTime(2017, 1, 1, 10, 0, 0)),
-          Some(new DateTime(2017, 1, 15, 10, 0, 0)),
-          new URL("https://api.soundcloud.com" + path)
-        )
+      def paginationParams(path: String): CursorBasedPagination = {
+        val mockRequest = Request(path)
+        mockRequest.host = "localhost"
+        CursorBasedPagination.build(mockRequest, Seq("linked_partitioning"))
+
+      }
 
       def stubService(
           user: Urn,
