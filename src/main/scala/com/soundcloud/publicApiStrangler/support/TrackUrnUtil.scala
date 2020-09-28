@@ -1,4 +1,4 @@
-package com.soundcloud.publicApiStrangler
+package com.soundcloud.publicApiStrangler.support
 
 import com.soundcloud.jvmkit.module.http.server.HandlerRequest
 import com.soundcloud.jvmkit.module.util.Urn

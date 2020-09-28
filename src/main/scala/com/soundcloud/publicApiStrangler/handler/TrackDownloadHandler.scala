@@ -2,7 +2,7 @@ package com.soundcloud.publicApiStrangler.handler
 
 import com.soundcloud.jvmkit.module.bff.session.UserAuthentication
 import com.soundcloud.jvmkit.module.http.server.{HandlerRequest, ResponseBuilder}
-import com.soundcloud.publicApiStrangler.TrackUrnUtil.trackUrn
+import com.soundcloud.publicApiStrangler.support.TrackUrnUtil.trackUrn
 import com.soundcloud.publicApiStrangler.service.media.{DownloadNotFound, DownloadOk, DownloadService}
 import com.soundcloud.publicApiStrangler.support.RangeHelper
 import com.twitter.finagle.http.{Response, Status}

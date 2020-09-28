@@ -5,7 +5,7 @@ import com.soundcloud.jvmkit.module.http.server.{HandlerRequest, JsonResponseBui
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.outcome._
-import com.soundcloud.publicApiStrangler.TrackUrnUtil.trackUrn
+import com.soundcloud.publicApiStrangler.support.TrackUrnUtil.trackUrn
 import com.soundcloud.publicApiStrangler.client.trackcoordinator.TrackCoordinatorClient
 import com.soundcloud.publicApiStrangler.handler.representation.tracks.TrackRepresentationResponse.{
   handleCreateTrackResponseFromService,

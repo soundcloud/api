@@ -6,21 +6,24 @@ import com.soundcloud.jvmkit.module.bff.testsupport.FakeUserAuthentication
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.publicApiStrangler.Routing
 import com.soundcloud.publicApiStrangler.service.UserPlaylistsService
-import com.soundcloud.publicApiStrangler.service.pagination.CursorBasedPagination
+import com.soundcloud.publicApiStrangler.service.pagination.{CursorBasedPagination, OffsetBasedPagination}
 import com.soundcloud.publicApiStrangler.service.playlists.PlaylistBuilder
 import com.soundcloud.publicApiStrangler.service.playlists.representation.Playlist
 import com.soundcloud.publicApiStrangler.service.representation.collection.Collection
 import com.soundcloud.publicApiStrangler.test.{HandlerSpecificationScope, UnitSpecification}
 import com.twitter.finagle.http.{Request, Status}
+import com.soundcloud.outcome._
 import com.twitter.util.Future
 import org.joda.time.DateTimeZone
 import org.mockito.Mockito.when
+import play.api.libs.json.Json
 
 class UserPlaylistsHandlerSpec extends UnitSpecification {
   TimeZone.setDefault(TimeZone.getTimeZone("UTC"))
   DateTimeZone.setDefault(DateTimeZone.UTC)
 
   trait Context extends HandlerSpecificationScope {
+    val playlist = new PlaylistBuilder().build
     val session = loggedInSession(Urn("soundcloud", "users", "1"))
     val userAuthentication = new FakeUserAuthentication(session)
 
@@ -32,18 +35,18 @@ class UserPlaylistsHandlerSpec extends UnitSpecification {
     )
 
     override def routingDefinitions = Routing.forUserPlaylistsHandler(handler)
+
   }
 
-  "Getting playlists" >> {
+  "Getting multiple playlists" >> {
     trait PlaylistsForUserContext extends Context {
       val queryString =
-        "?page_size=1&offset=2&linked_partitioning=1"
+        "?page_size=1&cursor=2&linked_partitioning=1"
 
       def paginationParams(path: String): CursorBasedPagination = {
         val mockRequest = Request(path)
         mockRequest.host = "localhost"
         CursorBasedPagination.build(mockRequest, Seq("linked_partitioning"))
-
       }
 
       def stubService(
@@ -57,12 +60,11 @@ class UserPlaylistsHandlerSpec extends UnitSpecification {
     }
 
     trait SuccessfulResponse extends PlaylistsForUserContext {
-      val playlist = new PlaylistBuilder().build
       val playlistsCollection = Collection(List(playlist), None)
       val expectedResponse = Collection.getRepresentation(playlistsCollection, true)
     }
 
-    trait SuccessfulEmptyResponse {
+    trait SuccessfulEmptyResponse extends PlaylistsForUserContext {
       val playlistsCollection = Collection[Playlist](List.empty, None)
       val expectedResponse = Collection.getRepresentation(playlistsCollection, true)
     }
@@ -126,4 +128,92 @@ class UserPlaylistsHandlerSpec extends UnitSpecification {
     }
 
   }
+
+  "Getting single playlist" >> {
+    trait PlaylistsForUserContext extends Context {
+      val queryString =
+        "?limit=1&offset=2&linked_partitioning=1&secret_token=s3cret"
+
+      def paginationParams(path: String): OffsetBasedPagination = {
+        val mockRequest = Request(path)
+        mockRequest.host = "localhost"
+        OffsetBasedPagination.build(mockRequest, Seq("linked_partitioning"))
+      }
+
+      def stubService(
+          playlistUrn: Urn,
+          path: String,
+          userId: String,
+          response: Outcome[Playlist]
+      ) = {
+        when(
+          userPlaylistsService.userPlaylist(session, playlistUrn, Some("s3cret"), Some(paginationParams(path)), userId)
+        ).thenReturn(Future.value(response))
+      }
+    }
+
+    trait SuccessfulResponse extends Context {
+      val expectedResponse = playlist
+    }
+
+    trait ErrorResponse {
+      val expected404Response = "{\"errors\":[{\"error_message\":\"404 - Not Found\"}]}"
+    }
+
+    "GET /users/:userId/playlists/:id" >> {
+      "with a successful response from playlists service" >> {
+        "return playlist" in new PlaylistsForUserContext with SuccessfulResponse {
+          val userId = "1"
+          val path = s"/users/$userId/playlists/987$queryString"
+
+          stubService(Urn("soundcloud", "playlists", "987"), path, userId, playlist.good)
+          val response = get(path)
+
+          response.status ==== Status.Ok
+          response.contentString ==== Json.stringify(Json.toJson(expectedResponse))
+
+        }
+      }
+
+      "with a 404 from playlists service" >> {
+        "returns an error response" in new PlaylistsForUserContext with ErrorResponse {
+          val userId = "2"
+          val path = s"/users/$userId/playlists/404$queryString"
+
+          stubService(Urn("soundcloud", "playlists", "404"), path, userId, NotFound("playlist not found").bad)
+          val response = get(path)
+
+          response.status ==== Status.NotFound
+          response.contentString ==== expected404Response
+        }
+      }
+
+      "GET /me/playlists/:id" >> {
+        "with a successful response from playlists service" >> {
+          "return playlist" in new PlaylistsForUserContext with SuccessfulResponse {
+            val path = s"/me/playlists/987$queryString"
+
+            stubService(Urn("soundcloud", "playlists", "987"), path, "1", playlist.good)
+            val response = get(path)
+
+            response.status ==== Status.Ok
+            response.contentString ==== Json.stringify(Json.toJson(expectedResponse))
+          }
+        }
+
+        "with a 404 from playlists service" >> {
+          "returns an error response with message" in new PlaylistsForUserContext with ErrorResponse {
+            val path = s"/me/playlists/404$queryString"
+
+            stubService(Urn("soundcloud", "playlists", "404"), path, "1", NotFound("playlist not found").bad)
+            val response = get(path)
+
+            response.status ==== Status.NotFound
+            response.contentString ==== expected404Response
+          }
+        }
+      }
+    }
+  }
+
 }

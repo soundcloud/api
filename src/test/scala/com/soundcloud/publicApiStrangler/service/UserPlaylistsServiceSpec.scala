@@ -1,6 +1,7 @@
 package com.soundcloud.publicApiStrangler.service
 
 import com.soundcloud.jvmkit.module.util.Urn
+import com.soundcloud.outcome._
 import com.soundcloud.publicApiStrangler.client.chrono.{ChronoItem, ChronoMeta, ChronoMetaParams, ChronoResponse}
 import com.soundcloud.publicApiStrangler.client.mothership.MoshimoshiClient
 import com.soundcloud.publicApiStrangler.service.pagination.CursorBasedPagination
@@ -61,6 +62,39 @@ class UserPlaylistsServiceSpec extends UnitSpecification {
 
       playlistsCollection.items ==== List.empty
       playlistsCollection.nextHref ==== None
+    }
+  }
+
+  "#userPlaylist" >> {
+    "when all data is available" in new Context {
+      when(playlistService.fetchPlaylist(session, playlistUrn, Some("secr3t-Token"), None))
+        .thenReturn(Future.value(Good(playlist)))
+
+      val result =
+        Await.result(
+          userPlaylistsService
+            .userPlaylist(session, playlistUrn, Some("secr3t-Token"), None, playlist.userId.toString)
+        )
+
+      result match {
+        case Good(playlist) =>
+          playlist.id ==== playlistUrn.identifier.toLong
+          playlist.userId ==== playlist.userId
+        case _ => failure(s"returned ${result.toString} instead of Good(_)")
+      }
+    }
+
+    "when data is not available" in new Context {
+      when(playlistService.fetchPlaylist(session, playlistUrn, Some("secr3t-Token"), None))
+        .thenReturn(Future.value(NotFound("playlist not found").bad))
+
+      val result =
+        Await.result(
+          userPlaylistsService
+            .userPlaylist(session, playlistUrn, Some("secr3t-Token"), None, session.getUser.identifier)
+        )
+
+      result ==== Bad(NotFound("playlist not found"))
     }
   }
 }

@@ -2,9 +2,10 @@ package com.soundcloud.publicApiStrangler.service
 
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSession
+import com.soundcloud.outcome._
 import com.soundcloud.publicApiStrangler.client.chrono.ChronoItem
 import com.soundcloud.publicApiStrangler.client.mothership.MoshimoshiClient
-import com.soundcloud.publicApiStrangler.service.pagination.CursorBasedPagination
+import com.soundcloud.publicApiStrangler.service.pagination.{CursorBasedPagination, OffsetBasedPagination}
 import com.soundcloud.publicApiStrangler.service.playlists.PlaylistRequest
 import com.soundcloud.publicApiStrangler.service.playlists.representation.Playlist
 import com.soundcloud.publicApiStrangler.service.representation.collection.Collection
@@ -29,6 +30,19 @@ class UserPlaylistsService(
       )
     } yield {
       Collection(playlists, nextHref(userPlaylistsResponse.items, pagination))
+    }
+  }
+
+  def userPlaylist(
+      session: UserSession,
+      playlistUrn: Urn,
+      secretToken: Option[String],
+      pagination: Option[OffsetBasedPagination],
+      userId: String
+  ): Future[Outcome[Playlist]] = {
+    playlistsService.fetchPlaylist(session, playlistUrn, secretToken, pagination).map {
+      case Good(playlist) if playlist.userId == userId.toLong => playlist.good
+      case _ => NotFound("playlist not found").bad
     }
   }
 

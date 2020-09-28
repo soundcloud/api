@@ -2,7 +2,7 @@ package com.soundcloud.publicApiStrangler.support
 
 import com.soundcloud.jvmkit.module.http.server.HandlerRequest
 import com.soundcloud.jvmkit.module.util.Urn
-import com.soundcloud.publicApiStrangler.TrackUrnUtil.trackUrn
+import com.soundcloud.publicApiStrangler.support.TrackUrnUtil.trackUrn
 import com.twitter.finagle.http.ParamMap
 import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification

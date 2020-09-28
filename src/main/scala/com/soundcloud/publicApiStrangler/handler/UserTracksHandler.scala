@@ -8,7 +8,7 @@ import com.soundcloud.jvmkit.module.telemetry.Telemetry
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.outcome._
-import com.soundcloud.publicApiStrangler.TrackUrnUtil.trackUrn
+import com.soundcloud.publicApiStrangler.support.TrackUrnUtil.trackUrn
 import com.soundcloud.publicApiStrangler.handler.representation.collection.CollectionResponse
 import com.soundcloud.publicApiStrangler.handler.support.error.UnhandledOutcomeException
 import com.soundcloud.publicApiStrangler.service.UserTracksService

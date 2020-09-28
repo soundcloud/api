@@ -74,9 +74,7 @@ object Routing {
       route(Method.Put, "/users/:id", mothershipDispatcher.dispatch) :::
       route(Method.Get, "/me/favorites/ids", mothershipDispatcher.dispatch) :::
       route(Method.Post, "/me/playlists", mothershipDispatcher.dispatch) :::
-      route(Method.Get, "/me/playlists/:trackId", mothershipDispatcher.dispatch) :::
       route(Method.Put, "/me/playlists/:trackId", mothershipDispatcher.dispatch) :::
-      route(Method.Get, "/users/:userId/playlists/:trackId", mothershipDispatcher.dispatch) :::
       route(Method.Get, "/me/web-profiles", mothershipDispatcher.dispatch) :::
       route(Method.Get, "/users/:userId/web-profiles", mothershipDispatcher.dispatch)
   }
@@ -130,7 +128,9 @@ object Routing {
 
   def forUserPlaylistsHandler(userPlaylistsHandler: UserPlaylistsHandler): List[(Method, String, Handler)] = {
     route(Method.Get, "/users/:userId/playlists", userPlaylistsHandler.getUserPlaylists) :::
-      route(Method.Get, "/me/playlists", userPlaylistsHandler.getMePlaylists)
+      route(Method.Get, "/me/playlists", userPlaylistsHandler.getMePlaylists) :::
+      route(Method.Get, "/users/:userId/playlists/:id", userPlaylistsHandler.getUserPlaylist) :::
+      route(Method.Get, "/me/playlists/:id", userPlaylistsHandler.getMePlaylist)
   }
 
   def forRepostsHandler(repostsHandler: RepostsHandler): List[(Method, String, Handler)] = {
