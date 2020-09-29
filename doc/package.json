@@ -1,0 +1,12 @@
+{
+  "name": "swagger-ui",
+  "version": "0.0.1",
+  "main": "app.js",
+  "author": "SoundCloud",
+  "dependencies": {
+    "express": "^4.17.1",
+    "swagger-ui-express": "4.1.4",
+    "yamljs": "0.3.0"
+  },
+  "devDependencies": {}
+}

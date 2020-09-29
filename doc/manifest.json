@@ -1,0 +1,12 @@
+{
+  "name": "Public-API-Strangler-doc",
+  "description": "Swagger UI for API Public",
+  "contact_email": "core-clients@soundcloud.com",
+  "contact_channel": "core-clients-logs",
+  "ci_dashboard": "https://ci.dev.s-cloud.net/go/tab/pipeline/history/public-api-strangler",
+  "owner": "core-clients",
+  "status": "production",
+  "type": "internal_service",
+  "data_sensitivity": ["no_user_data"],
+  "dependencies": []
+}

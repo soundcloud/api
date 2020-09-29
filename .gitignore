@@ -21,6 +21,8 @@ production.overrides
 .oracle_jre_usage/
 config/production_api.sh
 config/production_apitrackupload.sh
+doc/node_modules
+.DS_Store
 
 # metals plugin for vscode
 .bloop

@@ -1,0 +1,208 @@
+openapi: 3.0.1
+info:
+  title: SoundCloud Public API Specification
+  description: "API Public OpenAPI Draft"
+  contact:
+    name: Public API strangler
+  version: 2.2.2
+  termsOfService: https://developers.soundcloud.com/docs/api/terms-of-use
+servers:
+  - url: https://api.soundcloud.com
+paths:
+  /me:
+    get:
+      summary: "Returns an authenticated user’s information."
+      tags:
+        - me
+      security:
+        - ClientId: []
+          AuthHeader: []
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              examples:
+                default:
+                  $ref: "#/components/examples/User"
+        404:
+          description: The user could not be found
+  /me/followings:
+    get:
+      summary: "Returns user’s followings users."
+      tags:
+        - me
+      security:
+        - ClientId: []
+          AuthHeader: []
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              examples:
+                default:
+                  $ref: "#/components/examples/UserFollowings"
+        404:
+          description: The user could not be found
+  /me/followers:
+    get:
+      summary: "Returns user’s followers users."
+      tags:
+        - me
+      security:
+        - ClientId: []
+          AuthHeader: []
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              examples:
+                default:
+                  $ref: "#/components/examples/UserFollowers"
+        404:
+          description: The user could not be found
+  /users/{user_urn}/followings:
+    get:
+      summary: "Returns user’s list of followings users."
+      tags:
+        - user
+      security:
+        - ClientId: []
+          AuthHeader: []
+      parameters:
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/user_urn'
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              examples:
+                default:
+                  $ref: "#/components/examples/UserFollowings"
+        404:
+          description: The user could not be found
+  /users/{user_urn}/followers:
+    get:
+      summary: "Returns user’s list of followers users."
+      tags:
+        - user
+      security:
+        - ClientId: []
+          AuthHeader: []
+      parameters:
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/user_urn'
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              examples:
+                default:
+                  $ref: "#/components/examples/UserFollowers"
+        404:
+          description: The user could not be found
+components:
+  parameters:
+    user_urn:
+      in: path
+      name: user_urn
+      required: true
+      schema:
+        type: string
+      description: SoundCloud User URN
+    track_urn:
+      in: path
+      name: track_urn
+      required: true
+      schema:
+        type: string
+      description: SoundCloud Track URN
+    playlist_urn:
+      in: path
+      name: playlist_urn
+      required: true
+      schema:
+        type: string
+      description: SoundCloud Playlist URN
+    limit:
+      in: query
+      name: limit
+      required: false
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 10
+      description: Number of results to return in the collection.
+  securitySchemes:
+    ClientId:
+      in: query
+      type: apiKey
+      name: client_id
+      description: Your product key. This is not the same as the API key used for most requests
+    AuthHeader:
+      in: header
+      type: apiKey
+      name: Authorization
+      description: 'The string "OAuth " followed by the user’s token: OAuth ACCESS_TOKEN'
+  examples:
+    UserBasic:
+      value:
+        id: 1234
+        kind: user
+        uri: https://api.soundcloud.com/users/1234
+        permalink_url: https://soundcloud.com/permalink
+        avatar_url: https://i1.sndcdn.com/avatars.jpg
+        permalink: permalink
+        username: some.user
+        last_modified: 2020/01/03 12:08:25 +0000
+        first_name: First_name
+        last_name: Last_name
+        full_name: Full Name
+        country: Country
+        city: City
+        discogs_name:
+        myspace_name:
+        website:
+        website_title:
+        track_count: 0
+        playlist_count: 3
+        online: false
+        plan: Free
+        public_favorites_count: 20
+        followers_count: 0
+        followings_count: 0
+        reposts_count: 0
+    User:
+      value:
+        allOf:
+          - $ref: "#/components/examples/UserBasic/value"
+        subscriptions: []
+        upload_seconds_left: 10800
+        quota:
+          unlimited_upload_quota: false
+          upload_seconds_used: 0
+          upload_seconds_left: 10800
+        private_tracks_count: 0
+        private_playlists_count: 0
+        primary_email_confirmed: true
+        locale: en
+        description:
+    UserFollowings:
+      value:
+        collection:
+          - 
+            allOf:
+              - $ref: "#/components/examples/UserBasic/value"
+        next_href: https://api.soundcloud.com/users/1234/followings?client_id=client_id&page_size=10&cursor=1234567
+    UserFollowers:
+      value:
+        collection:
+          - 
+            allOf:
+              - $ref: "#/components/examples/UserBasic/value"
+        next_href: https://api.soundcloud.com/users/1234/followers?client_id=client_id&page_size=10&cursor=1234567
