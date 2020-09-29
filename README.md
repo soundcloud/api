@@ -10,6 +10,8 @@ Several small features, like rate-limiting and other security checks, are implem
 
 See [CONTRIBUTING.md](https://github.com/soundcloud/public-api-strangler/blob/master/CONTRIBUTING.md#making-a-change) for development and contribution guidelines.
 
+[CD Pipeline](https://ci.soundcloud.org/go/pipeline/activity/public-api-strangler).
+
 ## Notes
 
 ### Rate limiting allowlist
