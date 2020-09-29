@@ -97,8 +97,7 @@ class UserPlaylistsHandlerSpec extends UnitSpecification {
         val path = s"/users/NaN/playlists$queryString"
 
         val response = get(path)
-        response.status ==== Status.NotFound
-        response.contentString ==== """{"errors":[{"error_message":"404 - Not Found"}]}"""
+        response.status ==== Status.BadRequest
       }
     }
 

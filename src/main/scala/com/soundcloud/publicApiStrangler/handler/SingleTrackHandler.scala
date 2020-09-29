@@ -5,12 +5,12 @@ import com.soundcloud.jvmkit.module.http.server.{HandlerRequest, JsonResponseBui
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.outcome._
-import com.soundcloud.publicApiStrangler.support.TrackUrnUtil.trackUrn
+import com.soundcloud.publicApiStrangler.support.TrackUrnUtil.getTrackUrn
 import com.soundcloud.publicApiStrangler.client.tracks.TrackRequest
 import com.soundcloud.publicApiStrangler.handler.support.error.UnhandledOutcomeException
 import com.soundcloud.publicApiStrangler.service.trackrepresentation.{TrackRepresentation, TrackRepresentationsService}
 import com.twitter.finagle.http.{Response, Status}
-import com.twitter.util.{Future, Return, Try}
+import com.twitter.util.{Future, Return, Throw, Try}
 import play.api.libs.json._
 
 class SingleTrackHandler(
@@ -20,7 +20,7 @@ class SingleTrackHandler(
 
   def renderTrack(req: HandlerRequest): Future[Response] = {
     userAuthentication.withUserSession(req) { session =>
-      Try(trackUrn(req)) match {
+      Try(getTrackUrn(req)) match {
         case Return(urn) =>
           val secretToken = req.params.get("secret_token")
           fetchTrackRepresentation(session, urn, secretToken)
@@ -29,7 +29,7 @@ class SingleTrackHandler(
               case Bad(NotFound(_)) => generateNotFound
               case _ => throw new UnhandledOutcomeException
             }
-        case _ => Future.value(generateNotFound)
+        case Throw(e) => Future.value(JsonResponseBuilder.badRequest(e.getMessage))
       }
     }
   }

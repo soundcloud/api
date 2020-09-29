@@ -2,24 +2,22 @@ package com.soundcloud.publicApiStrangler.handler
 
 import com.soundcloud.jvmkit.module.bff.session.UserAuthentication
 import com.soundcloud.jvmkit.module.http.server.{HandlerRequest, JsonResponseBuilder}
-import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.outcome._
 import com.soundcloud.publicApiStrangler.handler.representation.collection.CollectionResponse
 import com.soundcloud.publicApiStrangler.handler.support.error.UnhandledOutcomeException
 import com.soundcloud.publicApiStrangler.service.UserPlaylistsService
 import com.soundcloud.publicApiStrangler.service.pagination.{CursorBasedPagination, OffsetBasedPagination}
-import com.soundcloud.publicApiStrangler.support.PlaylistUrnUtil.playlistUrn
+import com.soundcloud.publicApiStrangler.support.PlaylistUrnUtil.getPlaylistUrn
+import com.soundcloud.publicApiStrangler.support.UserUrnUtil.getUserUrn
 import com.twitter.finagle.http.{Response, Status}
-import com.twitter.util.{Future, Return, Try}
+import com.twitter.util.{Future, Return, Throw, Try}
 import play.api.libs.json.Json
 
 class UserPlaylistsHandler(
     userAuthentication: UserAuthentication,
     userPlaylistsService: UserPlaylistsService
 ) {
-
-  private val numericRegexp = """\d+""".r
 
   def getUserPlaylist(req: HandlerRequest): Future[Response] = {
     userAuthentication.withUserSession(req) { session =>
@@ -40,17 +38,21 @@ class UserPlaylistsHandler(
       hasLinkedPartitioning.map(_ => OffsetBasedPagination.build(req, Seq("linked_partitioning")))
     val secretToken = req.params.get("secret_token")
 
-    Try(Urn("soundcloud", "users", userId)) match {
-      case Return(urn @ Urn(_, _, numericRegexp())) =>
-        userPlaylistsService
-          .userPlaylist(session, playlistUrn(req), secretToken, pagination, urn.identifier)
-          .map {
-            case Good(playlist) =>
-              generateResponse(Status.Ok, Json.stringify(Json.toJson(playlist)))
-            case Bad(NotFound(_)) => JsonResponseBuilder.notFound(notFoundErrorString)
-            case _ => throw new UnhandledOutcomeException
-          }
-      case _ => Future.value(JsonResponseBuilder.notFound(notFoundErrorString))
+    Try(getUserUrn(userId)) match {
+      case Return(userUrn) =>
+        Try(getPlaylistUrn(req)) match {
+          case Return(playlistUrn) =>
+            userPlaylistsService
+              .userPlaylist(session, playlistUrn, secretToken, pagination, userUrn.identifier)
+              .map {
+                case Good(playlist) =>
+                  generateResponse(Status.Ok, Json.stringify(Json.toJson(playlist)))
+                case Bad(NotFound(_)) => JsonResponseBuilder.notFound(notFoundErrorString)
+                case _ => throw new UnhandledOutcomeException
+              }
+          case Throw(e) => Future.value(JsonResponseBuilder.badRequest(e.getMessage))
+        }
+      case Throw(e) => Future.value(JsonResponseBuilder.badRequest(e.getMessage))
     }
   }
 
@@ -71,14 +73,14 @@ class UserPlaylistsHandler(
     val hasLinkedPartitioning = req.params.contains("linked_partitioning")
     val pagination = CursorBasedPagination.build(req, Seq("linked_partitioning"))
 
-    Try(Urn("soundcloud", "users", userId)) match {
-      case Return(urn @ Urn(_, _, numericRegexp())) =>
+    Try(getUserUrn(userId)) match {
+      case Return(urn) =>
         val playlistsCollection =
           userPlaylistsService
             .userPlaylists(session, urn, pagination)
             .map(Good(_))
         CollectionResponse.handleCollectionResponse(playlistsCollection, hasLinkedPartitioning)
-      case _ => Future.value(JsonResponseBuilder.notFound(notFoundErrorString))
+      case Throw(e) => Future.value(JsonResponseBuilder.badRequest(e.getMessage))
     }
   }
 

@@ -2,7 +2,7 @@ package com.soundcloud.publicApiStrangler.support
 
 import com.soundcloud.jvmkit.module.http.server.HandlerRequest
 import com.soundcloud.jvmkit.module.util.Urn
-import com.soundcloud.publicApiStrangler.support.PlaylistUrnUtil.playlistUrn
+import com.soundcloud.publicApiStrangler.support.PlaylistUrnUtil.getPlaylistUrn
 import com.twitter.finagle.http.ParamMap
 import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
@@ -13,13 +13,13 @@ class PlaylistUrnUtilSpec extends Specification with Mockito {
     val request = smartMock[HandlerRequest]
     request.routeParams returns ParamMap("id" -> "1234")
 
-    playlistUrn(request) ==== Urn("soundcloud", "playlists", "1234")
+    getPlaylistUrn(request) ==== Urn("soundcloud", "playlists", "1234")
   }
 
   "throws illegal state exception if not a valid playlist id" in new Scope {
     val request = smartMock[HandlerRequest]
     request.routeParams returns ParamMap("id" -> "abc1234")
 
-    playlistUrn(request) must throwA[IllegalArgumentException]
+    getPlaylistUrn(request) must throwA[IllegalArgumentException]
   }
 }

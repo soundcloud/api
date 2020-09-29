@@ -4,7 +4,7 @@ import com.soundcloud.jvmkit.module.http.server.HandlerRequest
 import com.soundcloud.jvmkit.module.util.Urn
 
 object TrackUrnUtil {
-  def trackUrn(request: HandlerRequest): Urn = {
+  def getTrackUrn(request: HandlerRequest): Urn = {
     val IdParamPattern = "^(\\d+)$".r
     request.routeParams("trackId") match {
       case IdParamPattern(id) => Urn("soundcloud", "tracks", id)

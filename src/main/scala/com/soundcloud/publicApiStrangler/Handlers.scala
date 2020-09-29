@@ -93,7 +93,7 @@ class Handlers(telemetry: Telemetry, clients: Clients, exceptionCollector: Excep
 
   val repostsHandler = new RepostsHandler(userAuthentication, repostsClient)
 
-  val likesHandler = new LikesHandler(userAuthentication, likesService, baseUrl)
+  val likesHandler = new LikesHandler(userAuthentication, likesService)
 
   val tokenExchangeRequestMapper = new TokenExchangeRequestParser(new RailsLikeParamsParser())
   val tokenExchangeHandler =

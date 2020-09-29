@@ -8,9 +8,9 @@ import com.soundcloud.publicApiStrangler.handler.support.error.UnhandledOutcomeE
 import com.soundcloud.publicApiStrangler.service.PlaylistsService
 import com.soundcloud.publicApiStrangler.service.pagination.OffsetBasedPagination
 import com.soundcloud.publicApiStrangler.service.representation.collection.Collection
-import com.soundcloud.publicApiStrangler.support.PlaylistUrnUtil.playlistUrn
+import com.soundcloud.publicApiStrangler.support.PlaylistUrnUtil.getPlaylistUrn
 import com.twitter.finagle.http.{Response, Status}
-import com.twitter.util.Future
+import com.twitter.util.{Future, Return, Throw, Try}
 import play.api.libs.json.Json
 
 class PlaylistsHandler(
@@ -20,45 +20,55 @@ class PlaylistsHandler(
 ) {
   def handleDelete(request: HandlerRequest): Future[Response] = {
     userAuthentication.withLoggedInUser(request) { (session, _) =>
-      playlistDeletionClient.deletePlaylist(session, playlistUrn(request)).map {
-        case Good(status) =>
-          JsonResponseBuilder(status = status, body = Json.stringify(Json.obj("status" -> statusDescription(status)))).build
-        case Bad(_) => ResponseBuilder.internalServerError()
+      Try(getPlaylistUrn(request)) match {
+        case Return(urn) =>
+          playlistDeletionClient.deletePlaylist(session, urn).map {
+            case Good(status) =>
+              JsonResponseBuilder(
+                status = status,
+                body = Json.stringify(Json.obj("status" -> statusDescription(status)))
+              ).build
+            case Bad(_) => ResponseBuilder.internalServerError()
+          }
+        case Throw(e) => Future.value(JsonResponseBuilder.badRequest(e.getMessage))
       }
     }
   }
 
   def handleFetchPlaylist(request: HandlerRequest): Future[Response] = {
     userAuthentication.withUserSession(request) { session =>
-      val urn = playlistUrn(request)
       val candidateSecretToken = request.params.get("secret_token")
       val hasLinkedPartitioning = request.params.get("linked_partitioning")
       val pagination =
         hasLinkedPartitioning.map(_ => OffsetBasedPagination.build(request, Seq("linked_partitioning")))
-
-      playlistsService.fetchPlaylist(session, urn, candidateSecretToken, pagination).map {
-        case Good(playlist) => JsonResponseBuilder.ok(body = Json.stringify(Json.toJson(playlist)))
-        case Bad(NotFound(_)) => JsonResponseBuilder.notFound(generateErrorBody("not found"))
-        case _ => throw new UnhandledOutcomeException
+      Try(getPlaylistUrn(request)) match {
+        case Return(urn) =>
+          playlistsService.fetchPlaylist(session, urn, candidateSecretToken, pagination).map {
+            case Good(playlist) => JsonResponseBuilder.ok(body = Json.stringify(Json.toJson(playlist)))
+            case Bad(NotFound(_)) => JsonResponseBuilder.notFound(generateErrorBody("not found"))
+            case _ => throw new UnhandledOutcomeException
+          }
+        case Throw(e) => Future.value(JsonResponseBuilder.badRequest(e.getMessage))
       }
     }
   }
 
   def handleFetchPlaylistTracks(request: HandlerRequest): Future[Response] = {
     userAuthentication.withUserSession(request) { session =>
-      val urn = playlistUrn(request)
       val candidateSecretToken = request.params.get("secret_token")
       val hasLinkedPartitioning = request.params.get("linked_partitioning")
       val pagination =
         hasLinkedPartitioning.map(_ => OffsetBasedPagination.build(request, Seq("linked_partitioning")))
-
-      playlistsService.fetchPlaylistTracks(session, urn, candidateSecretToken, pagination).map {
-        case Good(tracks) =>
-          JsonResponseBuilder.ok(body = Collection.getRepresentation(tracks, hasLinkedPartitioning.isDefined))
-        case Bad(NotFound(_)) => JsonResponseBuilder.notFound(generateErrorBody("not found"))
-        case _ => throw new UnhandledOutcomeException
+      Try(getPlaylistUrn(request)) match {
+        case Return(urn) =>
+          playlistsService.fetchPlaylistTracks(session, urn, candidateSecretToken, pagination).map {
+            case Good(tracks) =>
+              JsonResponseBuilder.ok(body = Collection.getRepresentation(tracks, hasLinkedPartitioning.isDefined))
+            case Bad(NotFound(_)) => JsonResponseBuilder.notFound(generateErrorBody("not found"))
+            case _ => throw new UnhandledOutcomeException
+          }
+        case Throw(e) => Future.value(JsonResponseBuilder.badRequest(e.getMessage))
       }
-
     }
   }
 

@@ -2,21 +2,19 @@ package com.soundcloud.publicApiStrangler.handler
 
 import com.soundcloud.jvmkit.module.bff.session.UserAuthentication
 import com.soundcloud.jvmkit.module.http.server.{HandlerRequest, JsonResponseBuilder}
-import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.outcome._
 import com.soundcloud.publicApiStrangler.client.liebling.{LikeDeleted, LikeNotFound}
 import com.soundcloud.publicApiStrangler.handler.representation.collection.CollectionResponse
 import com.soundcloud.publicApiStrangler.service._
 import com.soundcloud.publicApiStrangler.service.pagination.CursorBasedPagination
+import com.soundcloud.publicApiStrangler.support.TrackUrnUtil.getTrackUrn
+import com.soundcloud.publicApiStrangler.support.UserUrnUtil.getUserUrn
 import com.twitter.finagle.http.{Response, Status}
-import com.twitter.util.Future
+import com.twitter.util.{Future, Return, Throw, Try}
 import play.api.libs.json.Json
 
-import scala.util.{Success, Try}
-
-class LikesHandler(userAuthentication: UserAuthentication, likesService: LikesService, baseUrl: String) {
-  private val numericRegexp = """\d+""".r
+class LikesHandler(userAuthentication: UserAuthentication, likesService: LikesService) {
 
   def getUserLikedTrackId(req: HandlerRequest): Future[Response] = {
     userAuthentication.withUserSession(req) { session =>
@@ -33,10 +31,9 @@ class LikesHandler(userAuthentication: UserAuthentication, likesService: LikesSe
 
   def createMeLikedTrackId(req: HandlerRequest): Future[Response] = {
     userAuthentication.withLoggedInUser(req) { (session, _) =>
-      val trackId = req.routeParams("trackId")
-      Try(Urn("soundcloud", "tracks", trackId)) match {
-        case Success(trackUrn @ Urn(_, _, numericRegexp())) =>
-          likesService.createTrackLike(session, trackUrn).map { createResponse =>
+      Try(getTrackUrn(req)) match {
+        case Return(urn) =>
+          likesService.createTrackLike(session, urn).map { createResponse =>
             val body = responseBodyForCreateResponse(createResponse)
             createResponse match {
               case OkCreatedCreateResponse => JsonResponseBuilder.created(body)
@@ -53,10 +50,9 @@ class LikesHandler(userAuthentication: UserAuthentication, likesService: LikesSe
 
   def deleteMeLikedTrackId(req: HandlerRequest): Future[Response] = userAuthentication.withLoggedInUser(req) {
     (session, _) =>
-      val trackId = req.routeParams("trackId")
-      Try(Urn("soundcloud", "tracks", trackId)) match {
-        case Success(trackUrn @ Urn(_, _, numericRegexp())) =>
-          likesService.deleteTrackLike(session, trackUrn).map {
+      Try(getTrackUrn(req)) match {
+        case Return(urn) =>
+          likesService.deleteTrackLike(session, urn).map {
             case LikeDeleted => JsonResponseBuilder.ok(requestBodyForStatus(Status.Ok))
             case LikeNotFound => JsonResponseBuilder.notFound(notFoundErrorString)
           }
@@ -69,11 +65,10 @@ class LikesHandler(userAuthentication: UserAuthentication, likesService: LikesSe
       session: UserSession,
       userId: String
   ): Future[Response] = {
-    val trackId = request.routeParams("trackId")
-    Try(Urn("soundcloud", "users", userId)) match {
-      case Success(userUrn @ Urn(_, _, numericRegexp())) =>
-        Try(Urn("soundcloud", "tracks", trackId)) match {
-          case Success(trackUrn @ Urn(_, _, numericRegexp())) =>
+    Try(getUserUrn(userId)) match {
+      case Return(userUrn) =>
+        Try(getTrackUrn(request)) match {
+          case Return(trackUrn) =>
             likesService
               .userTrackLikeForUrn(session, userUrn, trackUrn)
               .map {
@@ -83,7 +78,7 @@ class LikesHandler(userAuthentication: UserAuthentication, likesService: LikesSe
               }
           case _ => Future.value(JsonResponseBuilder.notFound(notFoundErrorString))
         }
-      case _ => Future.value(JsonResponseBuilder.notFound(notFoundErrorString))
+      case Throw(e) => Future.value(JsonResponseBuilder.badRequest(e.getMessage))
     }
   }
 
@@ -104,13 +99,13 @@ class LikesHandler(userAuthentication: UserAuthentication, likesService: LikesSe
     val hasLinkedPartitioning = request.params.contains("linked_partitioning")
     val pagination = CursorBasedPagination.build(request, Seq("linked_partitioning"))
 
-    Try(Urn("soundcloud", "users", userId)) match {
-      case Success(urn @ Urn(_, _, numericRegexp())) =>
+    Try(getUserUrn(userId)) match {
+      case Return(urn) =>
         val tracksCollection = likesService
           .userTracksLikes(session, urn, pagination)
           .map(Good(_))
         CollectionResponse.handleCollectionResponse(tracksCollection, hasLinkedPartitioning)
-      case _ => Future.value(JsonResponseBuilder.notFound(notFoundErrorString))
+      case Throw(e) => Future.value(JsonResponseBuilder.badRequest(e.getMessage))
     }
   }
 

@@ -5,14 +5,15 @@ import com.soundcloud.jvmkit.module.http.server.{HandlerRequest, JsonResponseBui
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.outcome._
-import com.soundcloud.publicApiStrangler.support.TrackUrnUtil.trackUrn
+import com.soundcloud.publicApiStrangler.support.TrackUrnUtil.getTrackUrn
 import com.soundcloud.publicApiStrangler.handler.representation.collection.CollectionResponse
 import com.soundcloud.publicApiStrangler.handler.support.error.UnhandledOutcomeException
 import com.soundcloud.publicApiStrangler.service.UserTracksService
 import com.soundcloud.publicApiStrangler.service.pagination.CursorBasedPagination
 import com.soundcloud.publicApiStrangler.service.trackrepresentation.TrackRepresentation
+import com.soundcloud.publicApiStrangler.support.UserUrnUtil.getUserUrn
 import com.twitter.finagle.http.{Response, Status}
-import com.twitter.util.{Future, Return, Try}
+import com.twitter.util.{Future, Return, Throw, Try}
 import play.api.libs.json.Json
 
 class UserTracksHandler(
@@ -20,28 +21,24 @@ class UserTracksHandler(
     userTracksService: UserTracksService
 ) {
 
-  private val numericRegexp = """\d+""".r
-
   def getTrackByUser(req: HandlerRequest): Future[Response] = {
     userAuthentication.withUserSession(req) { (session) =>
-      Try(trackUrn(req)) match {
+      Try(getTrackUrn(req)) match {
         case Return(urn) =>
           val userId = req.routeParams("userId")
           getTrack(userId, session, urn, req)
-
-        case _ => Future.value(JsonResponseBuilder.notFound(notFoundErrorString))
+        case Throw(e) => Future.value(JsonResponseBuilder.badRequest(e.getMessage))
       }
     }
   }
 
   def getTrackByMe(req: HandlerRequest): Future[Response] = {
     userAuthentication.withLoggedInUser(req) { (session, userUrn) =>
-      Try(trackUrn(req)) match {
+      Try(getTrackUrn(req)) match {
         case Return(urn) =>
           val userId = userUrn.identifier
           getTrack(userId, session, urn, req)
-        case _ =>
-          Future.value(JsonResponseBuilder.notFound(notFoundErrorString))
+        case Throw(e) => Future.value(JsonResponseBuilder.badRequest(e.getMessage))
       }
     }
   }
@@ -99,13 +96,13 @@ class UserTracksHandler(
     val hasLinkedPartitioning = req.params.contains("linked_partitioning")
     val pagination = CursorBasedPagination.build(req, Seq("linked_partitioning"))
 
-    Try(Urn("soundcloud", "users", userId)) match {
-      case Return(urn @ Urn(_, _, numericRegexp())) =>
+    Try(getUserUrn(userId)) match {
+      case Return(urn) =>
         val tracksCollection = userTracksService
           .userTracks(session, urn, pagination)
           .map(Good(_))
         CollectionResponse.handleCollectionResponse(tracksCollection, hasLinkedPartitioning)
-      case _ => Future.value(JsonResponseBuilder.notFound(notFoundErrorString))
+      case Throw(e) => Future.value(JsonResponseBuilder.badRequest(e.getMessage))
     }
   }
 

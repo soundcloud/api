@@ -5,7 +5,7 @@ import com.soundcloud.jvmkit.module.http.server.{HandlerRequest, JsonResponseBui
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.outcome._
-import com.soundcloud.publicApiStrangler.support.TrackUrnUtil.trackUrn
+import com.soundcloud.publicApiStrangler.support.TrackUrnUtil.getTrackUrn
 import com.soundcloud.publicApiStrangler.client.trackcoordinator.TrackCoordinatorClient
 import com.soundcloud.publicApiStrangler.handler.representation.tracks.TrackRepresentationResponse.{
   handleCreateTrackResponseFromService,
@@ -15,7 +15,7 @@ import com.soundcloud.publicApiStrangler.handler.support.requestParser._
 import com.soundcloud.publicApiStrangler.service.trackrepresentation.TrackUpdateService
 import com.soundcloud.publicApiStrangler.support.oauth.RailsLikeParamsParser
 import com.twitter.finagle.http._
-import com.twitter.util.Future
+import com.twitter.util.{Future, Return, Throw, Try}
 import play.api.libs.json.Json
 
 /**
@@ -32,23 +32,29 @@ class TracksHandler(
 
   def handleDelete(request: HandlerRequest): Future[Response] = {
     userAuthentication.withLoggedInUser(request) { (session, _) =>
-      trackCoordinator.deleteTrack(session, trackUrn(request)).map {
-        case Good(()) => ResponseBuilder.ok()
-        case Bad(NotFound(_)) => ResponseBuilder.notFound()
-        case _ => ResponseBuilder.internalServerError()
+      Try(getTrackUrn(request)) match {
+        case Return(urn) =>
+          trackCoordinator.deleteTrack(session, urn).map {
+            case Good(()) => ResponseBuilder.ok()
+            case Bad(NotFound(_)) => ResponseBuilder.notFound()
+            case _ => ResponseBuilder.internalServerError()
+          }
+        case Throw(e) => Future.value(JsonResponseBuilder.badRequest(e.getMessage))
       }
     }
   }
 
   def handleUpdateTrack(request: HandlerRequest): Future[Response] = {
     userAuthentication.withLoggedInUser(request) { (session, _) =>
-      val urn = trackUrn(request)
-
-      request.mediaType match {
-        case Some(MediaType.MultipartForm) => updateTrackFromMultipartRequest(request, session, urn)
-        case Some(MediaType.Json) => updateTrackFromJsonRequest(request, session, urn)
-        case Some(MediaType.WwwForm) => updateTrackFromUrlEncodedRequest(request, session, urn)
-        case _ => generateBadResponse
+      Try(getTrackUrn(request)) match {
+        case Return(urn) =>
+          request.mediaType match {
+            case Some(MediaType.MultipartForm) => updateTrackFromMultipartRequest(request, session, urn)
+            case Some(MediaType.Json) => updateTrackFromJsonRequest(request, session, urn)
+            case Some(MediaType.WwwForm) => updateTrackFromUrlEncodedRequest(request, session, urn)
+            case _ => generateBadResponse
+          }
+        case Throw(e) => Future.value(JsonResponseBuilder.badRequest(e.getMessage))
       }
     }
   }

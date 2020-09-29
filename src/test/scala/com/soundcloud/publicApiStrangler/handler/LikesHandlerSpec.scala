@@ -39,7 +39,7 @@ class LikesHandlerSpec extends UnitSpecification {
     val likesService = mock[LikesService]
     val telemetry = Telemetry.createIsolatedInstance
 
-    val handler = new LikesHandler(userAuthentication, likesService, "https://api.soundcloud.com")
+    val handler = new LikesHandler(userAuthentication, likesService)
 
     override def routingDefinitions = Routing.forLikesHandler(handler)
   }
