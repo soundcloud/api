@@ -1,6 +1,6 @@
 package com.soundcloud.publicApiStrangler.support
 
-import com.soundcloud.jvmkit.module.bff.ratelimiting.internal.core.RateLimitClassifier
+import com.soundcloud.jvmkit.module.bff.ratelimiting.RateLimitClassifier
 import com.soundcloud.jvmkit.module.http.server.HandlerRequest
 import com.soundcloud.publicApiStrangler.handler.SearchHandler._
 
