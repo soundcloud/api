@@ -132,6 +132,9 @@ object App {
         new CorsTelemetryFilter(telemetry, router),
         new StaticFilesFilter,
         new ExceptForTrackUploadsFilter(new ClientApplicationAuthFilter(clients.userAuthentication, telemetry, router)),
+        new ExceptForTrackUploadsFilter(
+          new ClientApplicationActivityTelemetryFilter(clients.userAuthentication, telemetry, router)
+        ),
         new AcceptOnlyJsonRequestFilter(
           () => clients.rolloutClient.isActive(BasicRolloutFeature("strip_format_xml_param"))
         ),
