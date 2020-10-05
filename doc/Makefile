@@ -42,7 +42,8 @@ publish-deploy:
 		--ingress=http://$(SYSTEM).lb.$(ZONE).s-cloud.net:http \
 		--ingress=http://$(SYSTEM).int.s-cloud.net:http
 		--ingress=http://$(SYSTEM):http
-
+		--ingress=https://$(SYSTEM).soundcloud.org:http
+		
 deploy:
 	sc artifact-manager deploy run \
 		--zone=$(ZONE) \

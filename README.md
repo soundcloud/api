@@ -1,5 +1,8 @@
 # Public API Strangler (PAS)
 
+[![Swagger UI](https://img.shields.io/badge/API-Swagger%20UI-green)](https://public-api-doc.soundcloud.org/)
+
+
 **Service discovery name:** `http.strangler.prod.public-api.srv.db.s-cloud.net`
 
 An implementation of the [_strangler_ pattern](http://martinfowler.com/bliki/StranglerApplication.html) for Mothership's Public API.
