@@ -100,15 +100,15 @@ pipelines:
                 arguments:
                 - deploy-api
     - deploy-doc:
-      jobs:
-        deploy:
-          tasks:
-          - exec:
-              command: make
-              arguments:
-              - package
-              - publish
-              - publish-deploy
-              - promote
-              - deploy
-              working_directory: doc
+        jobs:
+          deploy:
+            tasks:
+            - exec:
+                command: make
+                arguments:
+                - package
+                - publish
+                - publish-deploy
+                - promote
+                - deploy
+                working_directory: doc
