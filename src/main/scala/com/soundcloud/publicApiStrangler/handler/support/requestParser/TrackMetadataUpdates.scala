@@ -17,6 +17,7 @@ case class TrackMetadataUpdates(
     license: NullableValue[String],
     permalink: NonNullableValue[String],
     purchase_url: NullableValue[String],
+    release: NullableValue[String],
     release_date: NullableValue[String],
     sharing: NullableValue[String],
     tag_list: NullableValue[String],
@@ -51,6 +52,7 @@ object TrackMetadataUpdates {
           permalink = NonNullableValue.read[String](json \ "permalink"),
           purchase_title = NullableValue.read[String](json \ "purchase_title"),
           purchase_url = NullableValue.read[String](json \ "purchase_url"),
+          release = NullableValue.read[String](json \ "release"),
           release_date = NullableValue.read[String](json \ "release_date"),
           reveal_comments = NullableValue.read[Boolean](json \ "reveal_comments"),
           reveal_stats = NullableValue.read[Boolean](json \ "reveal_stats"),
@@ -92,6 +94,7 @@ object TrackMetadataUpdates {
         getNullable(trackUpdate.purchase_url, "purchase_url") ++
         getNullable(trackUpdate.sharing, "sharing") ++
         getNullable(trackUpdate.label_name, "label_name") ++
+        getNullable(trackUpdate.release, "release") ++
         trackUpdate.isrc.toOptionalJsValue.fold(Json.obj())(isrc =>
           Json.obj(
             "publisher_metadata" -> Json.obj(

@@ -54,6 +54,7 @@ object TrackMetadataUpdateRequest {
             license = params.get("license").map(v => Value[String](v)).getOrElse(MissingValue),
             permalink = params.get("permalink").map(v => NonNullValue[String](v)).getOrElse(NonNullMissingValue),
             purchase_url = params.get("purchase_url").map(v => Value[String](v)).getOrElse(MissingValue),
+            release = params.get("release").map(v => Value[String](v)).getOrElse(MissingValue),
             release_date = params.get("release_date").map(v => Value[String](v)).getOrElse(MissingValue),
             sharing = params.get("sharing").map(v => Value[String](v)).getOrElse(MissingValue),
             tag_list = params.get("tag_list").map(v => Value[String](v)).getOrElse(MissingValue),

@@ -21,6 +21,7 @@ class TrackMetadataUpdateRequestSpec extends UnitSpecification {
         license = Value("test_license"),
         permalink = NonNullValue("permalinky"),
         purchase_url = Value("purchase.com/track"),
+        release = Value("1234"),
         release_date = Value("2008/04/29 22:14:25 +0000"),
         sharing = Value("all"),
         tag_list = Value("tags, tags, tags"),
@@ -32,7 +33,7 @@ class TrackMetadataUpdateRequestSpec extends UnitSpecification {
     )
 
     val requestBodyExpected =
-      """{"title":"new title","permalink":"permalinky","api_streamable":true,"commentable":true,"description":"a random description","downloadable":false,"embeddable":true,"genre":"bossa nova","geo_blockings":["EN","DE"],"license":"test_license","purchase_title":"new title","release_date":"2008/04/29 22:14:25 +0000","reveal_comments":true,"reveal_stats":false,"tag_list":"tags, tags, tags","purchase_url":"purchase.com/track","sharing":"all","label_name":"alexxx","publisher_metadata":{"isrc":"is-rc"}}"""
+      """{"title":"new title","permalink":"permalinky","api_streamable":true,"commentable":true,"description":"a random description","downloadable":false,"embeddable":true,"genre":"bossa nova","geo_blockings":["EN","DE"],"license":"test_license","purchase_title":"new title","release_date":"2008/04/29 22:14:25 +0000","reveal_comments":true,"reveal_stats":false,"tag_list":"tags, tags, tags","purchase_url":"purchase.com/track","sharing":"all","label_name":"alexxx","release":"1234","publisher_metadata":{"isrc":"is-rc"}}"""
   }
 
   "can read json" in new Context {
@@ -54,6 +55,7 @@ class TrackMetadataUpdateRequestSpec extends UnitSpecification {
       "license" -> "test_license",
       "permalink" -> "permalinky",
       "purchase_url" -> "purchase.com/track",
+      "release" -> "1234",
       "release_date" -> "2008/04/29 22:14:25 +0000",
       "sharing" -> "all",
       "tag_list" -> "tags, tags, tags",

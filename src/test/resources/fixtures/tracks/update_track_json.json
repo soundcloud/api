@@ -13,6 +13,7 @@
     "license": "test_license",
     "permalink": "permalinky",
     "purchase_url": "purchase.com/track",
+    "release": "1234",
     "release_date": "2008/04/29 22:14:25 +0000",
     "sharing": "all",
     "tag_list": "tags, tags, tags",

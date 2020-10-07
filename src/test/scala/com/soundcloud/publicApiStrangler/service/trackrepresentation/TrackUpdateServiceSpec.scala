@@ -77,13 +77,10 @@ class TrackUpdateServiceSpec extends UnitSpecification with TrackRepresentationS
   }
 
   "#updateTrack" >> {
-
     "metadata" >> {
       trait SuccessContext extends Context {
         val metadataUpdateParams = Map[String, String]("title" -> "changed", "description" -> "changed")
         val metaDataUpdateRequest = TrackMetadataUpdateRequest.fromForm(metadataUpdateParams)
-        val trackAssetDataUpdateRequest =
-          TrackAssetDataUpdateRequest(replacing_original_filename = "filename", replacing_uid = "uid")
 
         val expectedResponse = mockTrackRepresentation.copy(visibleTrack =
           mockTrackRepresentation.visibleTrack.copy(title = "changed", description = Some("changed"))

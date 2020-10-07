@@ -53,6 +53,7 @@
   },
   "purchase_title":"buy123",
   "purchase_url":"http://buy.that.com",
+  "release": "1234",
   "release_date": "2013-02-01",
   "release_day": 1,
   "release_month": 2,

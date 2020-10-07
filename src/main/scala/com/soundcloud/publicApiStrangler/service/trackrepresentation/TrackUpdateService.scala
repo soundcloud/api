@@ -150,6 +150,7 @@ class TrackUpdateService(
         permalink = metadataUpdate.permalink,
         purchaseTitle = metadataUpdate.purchase_title,
         purchaseUrl = metadataUpdate.purchase_url,
+        release = metadataUpdate.release,
         releaseDay = metadataUpdate.release_day,
         releaseMonth = metadataUpdate.release_month,
         revealComments = metadataUpdate.reveal_comments,
