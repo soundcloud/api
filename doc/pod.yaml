@@ -1,0 +1,25 @@
+containers:
+- name: {{ component }}
+  image: {{ image }}
+  command: {{ cmd }}
+  ports:
+  - name: http
+    containerPort: 80
+  readinessProbe:
+    httpGet:
+      port: 80
+      path: /
+    initialDelaySeconds: 30
+    timeoutSeconds: 1
+  livenessProbe:
+    httpGet:
+      port: 80
+      path: /
+    initialDelaySeconds: 1800
+    timeoutSeconds: 1
+  resources:
+    requests:
+      cpu: 100m
+      memory: 20Mi
+    limits:
+      memory: 100Mi
