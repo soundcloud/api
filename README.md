@@ -6,7 +6,7 @@ This repository is a means for our current API users to engage with SoundCloud o
 * [API documentation] 
 * [Developer portal]
 * [Backstage blog]
-* [Javascript SDK]
+* [API announcements]
 
 **NOTE: This is not a forum for requesting new API keys. While we hope to explore opening up access again, we're currently not issuing new keys to 3rd party apps. Please subscribe to our [@SoundCloudDev] on Twitter for updates**
 
@@ -20,8 +20,15 @@ Please use the [issue tracker] in this repository for bug reports, feature reque
 
 In order to show your support for issues filed here, please add a thumbs up emoji 👍🏽. 
 
+## Frequently asked questions
+### Can I request for an API key for a new app?
+While we hope to explore opening up access again, we're currently not issuing new keys to 3rd party apps. Please subscribe to our [@SoundCloudDev] on Twitter for updates
+
+### I am an official partner of SoundCloud. Can I use this issue tracker for a technical question?
+This repository only deals with the public-facing API. Any partnership-specific questions don’t belong here as this is a public forum; please contact your SoundCloud partnership contact.
+
 ## Stay in touch
-For all SoundCloud developer related announcements, please subscribe to [@SoundCloudDev] or follow our RSS-enabled [Backstage Blog]
+For all SoundCloud developer related announcements, please subscribe to [@SoundCloudDev], our [Backstage blog] or our [API announcements]
 
 [@SoundCloudDev]: https://twitter.com/soundclouddev
 [Backstage Blog]: https://developers.soundcloud.com/blog/
@@ -29,6 +36,7 @@ For all SoundCloud developer related announcements, please subscribe to [@SoundC
 [Developer portal]: https://developers.soundcloud.com/
 [issue tracker]: https://www.github.com/soundcloud/api/issues
 [Javascript SDK]: https://github.com/soundcloud/soundcloud-javascript
+[API announcements]: https://developers.soundcloud.com/blog/category/announcements
 
 [bug]: https://github.com/soundcloud/api/labels/bug
 [suggestion]: https://github.com/soundcloud/api/labels/suggestion
