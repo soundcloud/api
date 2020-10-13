@@ -6,6 +6,7 @@ This repository is a means for our current API users to engage with SoundCloud o
 * [API documentation] 
 * [Developer portal]
 * [Backstage blog]
+* [Javascript SDK]
 
 **NOTE: This is not a forum for requesting new API keys. While we hope to explore opening up access again, we're currently not issuing new keys to 3rd party apps. Please subscribe to our [@SoundCloudDev] on Twitter for updates**
 
@@ -13,7 +14,7 @@ This repository is a means for our current API users to engage with SoundCloud o
 Please use the [issue tracker] in this repository for bug reports, feature requests, suggestions and documentation improvements. We will triage the request and mark it as one of the following types:
 
 - <kbd>[bug]</kbd> — Unexpected behaviour relating to the API that can be reproduced.
-- <kbd>[suggestion]</kbd> — Requests for additional functionality or changes in the Web API that has been acknowledged by SoundCloud.
+- <kbd>[suggestion]</kbd> — Requests for additional functionality or changes in the API that has been acknowledged by SoundCloud.
 - <kbd>[documentation]</kbd> — Requests for changes to documentation that has been acknowledged by SoundCloud.
 - <kbd>[question]</kbd> — Relates to the API, but does not fit into the above categories.
 
