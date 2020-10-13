@@ -11,7 +11,7 @@ servers:
 paths:
   /me:
     get:
-      summary: "Returns an authenticated user’s information."
+      summary: Returns an authenticated user’s information.
       tags:
         - me
       security:
@@ -29,7 +29,7 @@ paths:
           description: The user could not be found
   /me/followings:
     get:
-      summary: "Returns user’s followings users."
+      summary: Returns list of followings users.
       tags:
         - me
       security:
@@ -47,7 +47,7 @@ paths:
           description: The user could not be found
   /me/followers:
     get:
-      summary: "Returns user’s followers users."
+      summary: Returns list of followers users.
       tags:
         - me
       security:
@@ -63,17 +63,184 @@ paths:
                   $ref: "#/components/examples/UserFollowers"
         404:
           description: The user could not be found
-  /users/{user_urn}/followings:
+  /me/favorites/ids:
     get:
-      summary: "Returns user’s list of followings users."
+      summary: Returns user’s favorites ids.
+      tags:
+        - me
+      security:
+        - ClientId: []
+          AuthHeader: []
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              examples:
+                default:
+                  $ref: "#/components/examples/UserFavoritesId"
+        404:
+          description: The user could not be found
+  /me/playlists:
+    get:
+      summary: Returns user’s playlists.
+      description: return playlist info, playlist tracks and tracks owner info
+      tags:
+        - me
+      security:
+        - ClientId: []
+          AuthHeader: []
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              examples:
+                default:
+                  $ref: "#/components/examples/UserPlaylists"
+        404:
+          description: The user could not be found
+  /me/followers/{other_id}:
+    get:
+      summary: Returns follower user.
+      tags:
+        - me
+      security:
+        - ClientId: []
+          AuthHeader: []
+      parameters:
+        - $ref: '#/components/parameters/other_id'
+        - $ref: '#/components/parameters/limit'
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              examples:
+                default:
+                  $ref: '#/components/examples/User'
+        404:
+          description: Not Found
+        503:
+          description: Service Unavailable
+  /me/followings/{other_id}:
+    get:
+      summary: Returns following user.
+      tags:
+        - me
+      security:
+        - ClientId: []
+          AuthHeader: []
+      parameters:
+        - $ref: '#/components/parameters/other_id'
+        - $ref: '#/components/parameters/limit'
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              examples:
+                default:
+                  $ref: '#/components/examples/User'
+        404:
+          description: Not Found
+        503:
+          description: Service Unavailable
+    post:
+      summary: Endpoint to follow another user
+      tags:
+        - me
+      security:
+        - ClientId: []
+          AuthHeader: []
+      parameters:
+        - $ref: '#/components/parameters/other_id'
+      responses:
+        201:
+          description: Success
+          content:
+            application/json:
+              examples:
+                200:
+                  $ref: '#/components/examples/OK'
+                201:
+                  $ref: '#/components/examples/User'
+        404:
+          description: Not Found
+          content:
+            application/json:
+              examples:
+                default:
+                  $ref: '#/components/examples/Error404'
+        500:
+          description: Internal Server Error
+    put:
+      summary: Follow user
+      tags:
+        - me
+      security:
+        - ClientId: []
+          AuthHeader: []
+      parameters:
+        - $ref: "#/components/parameters/other_id"
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              examples:
+                default:
+                  $ref: '#/components/examples/User'
+        401:
+          description: Unauthorized
+        404:
+          description: Not Found
+          content:
+            application/json:
+              examples:
+                default:
+                  $ref: '#/components/examples/Error404'
+        500:
+          description: Internal Server Error
+    delete:
+      summary: Unfollw user
+      tags:
+        - me
+      security:
+        - ClientId: []
+          AuthHeader: []
+      parameters:
+        - $ref: "#/components/parameters/other_id"
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              examples:
+                default:
+                  $ref: '#/components/examples/OK'
+        401:
+          description: Unauthorized
+        404:
+          description: Not Found
+          content:
+            application/json:
+              examples:
+                default:
+                  $ref: '#/components/examples/Error404'
+        500:
+          description: Internal Server Error
+  /users/{id}/followings:
+    get:
+      summary: Returns user’s list of followings users.
       tags:
         - user
       security:
         - ClientId: []
           AuthHeader: []
       parameters:
+        - $ref: '#/components/parameters/id'
         - $ref: '#/components/parameters/limit'
-        - $ref: '#/components/parameters/user_urn'
       responses:
         200:
           description: Success
@@ -84,17 +251,17 @@ paths:
                   $ref: "#/components/examples/UserFollowings"
         404:
           description: The user could not be found
-  /users/{user_urn}/followers:
+  /users/{id}/followers:
     get:
-      summary: "Returns user’s list of followers users."
+      summary: Returns user’s list of followers users.
       tags:
         - user
       security:
         - ClientId: []
           AuthHeader: []
       parameters:
+        - $ref: '#/components/parameters/id'
         - $ref: '#/components/parameters/limit'
-        - $ref: '#/components/parameters/user_urn'
       responses:
         200:
           description: Success
@@ -105,15 +272,66 @@ paths:
                   $ref: "#/components/examples/UserFollowers"
         404:
           description: The user could not be found
+  /users/{id}/followers/{other_id}:
+    get:
+      summary: Return user's follower user info.
+      description: Returns other user info if he follow the first one.
+      tags:
+        - user
+      security:
+        - ClientId: []
+          AuthHeader: []
+      parameters:
+        - $ref: '#/components/parameters/id'
+        - $ref: '#/components/parameters/other_id'
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              examples:
+                default:
+                  $ref: "#/components/examples/User"
+        404:
+          description: Not Found
+  /users/{id}/followings/{other_id}:
+    get:
+      summary: Return user's followings user info.
+      description: Returns other user info if he follow the first one.
+      tags:
+        - user
+      security:
+        - ClientId: []
+          AuthHeader: []
+      parameters:
+        - $ref: '#/components/parameters/id'
+        - $ref: '#/components/parameters/other_id'
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              examples:
+                default:
+                  $ref: "#/components/examples/User"
+        404:
+          description: Not Found
 components:
   parameters:
-    user_urn:
+    id:
       in: path
-      name: user_urn
+      name: id
       required: true
       schema:
-        type: string
-      description: SoundCloud User URN
+        type: integer
+      description: SoundCloud User id
+    other_id:
+      in: path
+      name: other_id
+      required: true
+      schema:
+        type: integer
+      description: SoundCloud User id
     track_urn:
       in: path
       name: track_urn
@@ -150,9 +368,15 @@ components:
       name: Authorization
       description: 'The string "OAuth " followed by the user’s token: OAuth ACCESS_TOKEN'
   examples:
-    UserBasic:
+    OK:
       value:
-        id: 1234
+        status: Status(200) - OK
+    Created:
+      value:
+        status: 201 - Created
+    User:
+      value:
+        id: 12345
         kind: user
         uri: https://api.soundcloud.com/users/1234
         permalink_url: https://soundcloud.com/permalink
@@ -177,11 +401,13 @@ components:
         followers_count: 0
         followings_count: 0
         reposts_count: 0
-    User:
-      value:
-        allOf:
-          - $ref: "#/components/examples/UserBasic/value"
-        subscriptions: []
+        comments_count: 9
+        description: 
+        likes_count: 0
+        subscriptions:
+          - product:
+              id: some-id
+              name: some.name
         upload_seconds_left: 10800
         quota:
           unlimited_upload_quota: false
@@ -191,18 +417,135 @@ components:
         private_playlists_count: 0
         primary_email_confirmed: true
         locale: en
-        description:
     UserFollowings:
       value:
         collection:
           - 
             allOf:
-              - $ref: "#/components/examples/UserBasic/value"
+              - $ref: "#/components/examples/User/value"
         next_href: https://api.soundcloud.com/users/1234/followings?client_id=client_id&page_size=10&cursor=1234567
     UserFollowers:
       value:
         collection:
           - 
             allOf:
-              - $ref: "#/components/examples/UserBasic/value"
+              - $ref: "#/components/examples/User/value"
         next_href: https://api.soundcloud.com/users/1234/followers?client_id=client_id&page_size=10&cursor=1234567
+    UserFavoritesId:
+      value:
+        - 1234
+        - 5678
+        - 3456
+    UserPlaylists:
+      value:
+        - duration: 110000
+          release_day: 
+          permalink_url: https://soundcloud.com/permalink/sets/club
+          genre: ''
+          permalink: permalink
+          purchase_url: 
+          release_month: 
+          description: 
+          tags: ''
+          uri: https://api.soundcloud.com/playlists/12345
+          label_name: 
+          label: 
+          tag_list: ''
+          release_year: 
+          track_count: 1
+          user_id: 1234
+          last_modified: 2020/01/08 09:13:00 +0000
+          license: all-rights-reserved
+          tracks:
+          - kind: track
+            id: 123456
+            created_at: 2019/01/15 15:40:49 +0000
+            user_id: 1234567
+            duration: 40000
+            commentable: true
+            comment_count: 4
+            state: finished
+            original_content_size: 71698112
+            last_modified: 2020/02/05 05:56:22 +0000
+            sharing: public
+            tag_list: ''
+            permalink: permalink
+            streamable: true
+            embeddable_by: all
+            purchase_url: 
+            purchase_title: 
+            label_id: 
+            genre: Rock
+            title: Some title
+            description: 
+            label_name: some label
+            release: 
+            track_type: 
+            key_signature: 
+            isrc: 
+            video_url: 
+            bpm: 
+            release_year: 2019
+            release_month: 8
+            release_day: 22
+            original_format: wav
+            license: all-rights-reserved
+            uri: https://api.soundcloud.com/tracks/1234
+            user:
+              id: 12345
+              kind: user
+              permalink: permalink
+              username: user.name
+              last_modified: 2020/01/10 21:36:49 +0000
+              uri: https://api.soundcloud.com/users/12345
+              permalink_url: https://soundcloud.com/permalink
+              avatar_url: https://i1.sndcdn.com/avatars.jpg
+            user_uri: https://api.soundcloud.com/users/12345
+            permalink_url: https://soundcloud.com/userPermalink/trackPermalink
+            artwork_url: https://i1.sndcdn.com/artworks-large.jpg
+            stream_url: https://api.soundcloud.com/tracks/12345/stream
+            download_url: https://api.soundcloud.com/tracks/12345/download
+            waveform_url: https://wave.sndcdn.com/someString.png
+            domain_lockings: 
+            available_country_codes: 
+            label: 
+            secret_token: 
+            secret_uri: 
+            user_favorite: true
+            user_playback_count: 1
+            playback_count: 8027
+            download_count: 0
+            favoritings_count: 271
+            reposts_count: 18
+            downloadable: false
+            downloads_remaining: 
+          playlist_type: ''
+          id: 12345
+          tracks_uri: https://api.soundcloud.com/playlists/12345/tracks
+          downloadable: 
+          sharing: public
+          created_at: 2020/01/16 16:09:54 +0000
+          release: 
+          likes_count: 0
+          kind: playlist
+          title: some title
+          type: ''
+          purchase_title: 
+          artwork_url: ''
+          ean: 
+          streamable: true
+          user:
+            permalink_url: https://soundcloud.com/permalink
+            permalink: permalink
+            username: user.name
+            uri: https://api.soundcloud.com/users/12345
+            last_modified: 2020/09/03 14:08:25 +0000
+            id: 12345
+            kind: user
+            avatar_url: https://i1.sndcdn.com/avatars-large.jpg
+          embeddable_by: all
+          label_id:
+    Error404:
+      value:
+        errors:
+        - error_message: 404 - Not Found
