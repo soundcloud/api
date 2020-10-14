@@ -27,6 +27,97 @@ paths:
                   $ref: "#/components/examples/User"
         404:
           description: The user could not be found
+    put:
+      summary: Returns ?.
+      tags:
+        - me
+      security:
+        - ClientId: []
+          AuthHeader: []
+      responses:
+        200:
+          description: Success
+  /me/tracks:
+    get:
+      summary: Returns a list of tracks.
+      tags:
+        - me
+      security:
+        - ClientId: []
+          AuthHeader: []
+      responses:
+        200:
+          description: Success
+  /me/tracks/{track_id}:
+    get:
+      summary: Returns a list of tracks.
+      tags:
+        - me
+      security:
+        - ClientId: []
+          AuthHeader: []
+      parameters:
+        - $ref: '#/components/parameters/track_id'
+      responses:
+        200:
+          description: Success
+  /me/activities:
+    get:
+      summary: Returns a list of activities.
+      tags:
+        - me
+      security:
+        - ClientId: []
+          AuthHeader: []
+      responses:
+        200:
+          description: Success
+  /me/activities/all:
+    get:
+      summary: Returns a list of activities.
+      tags:
+        - me
+      security:
+        - ClientId: []
+          AuthHeader: []
+      responses:
+        200:
+          description: Success
+  /me/activities/all/own:
+    get:
+      summary: Returns a list of activities.
+      tags:
+        - me
+      security:
+        - ClientId: []
+          AuthHeader: []
+      responses:
+        200:
+          description: Success
+  /me/activities/tracks:
+    get:
+      summary: Returns a list of tracks activities.
+      tags:
+        - me
+      security:
+        - ClientId: []
+          AuthHeader: []
+      responses:
+        200:
+          description: Success
+  /me/activities/tracks/{tag}:
+    get:
+      summary: Returns a list of tracks activities.
+      tags:
+        - me
+      security:
+        - ClientId: []
+          AuthHeader: []
+      parameters:
+        - $ref: '#/components/parameters/tag'
+      responses:
+        200:
+          description: Success
   /me/followings:
     get:
       summary: Returns list of followings users.
@@ -45,6 +136,17 @@ paths:
                   $ref: "#/components/examples/UserFollowings"
         404:
           description: The user could not be found
+  /me/followings/tracks:
+    get:
+      summary: Returns list of tracks.
+      tags:
+        - me
+      security:
+        - ClientId: []
+          AuthHeader: []
+      responses:
+        200:
+          description: Success
   /me/followers:
     get:
       summary: Returns list of followers users.
@@ -63,6 +165,73 @@ paths:
                   $ref: "#/components/examples/UserFollowers"
         404:
           description: The user could not be found
+  /me/favorites:
+    get:
+      summary: Returns a list of favorite tracks.
+      tags:
+        - me
+      security:
+        - ClientId: []
+          AuthHeader: []
+      responses:
+        200:
+          description: Success
+  /me/favorites/{track_id}:
+    get:
+      summary: Returns favorite track.
+      tags:
+        - me
+      security:
+        - ClientId: []
+          AuthHeader: []
+      parameters:
+        - $ref: '#/components/parameters/track_id'
+      responses:
+        200:
+          description: Success
+        404:
+          description: Not Found
+          content:
+            application/json:
+              examples:
+                default:
+                  $ref: '#/components/examples/Error404'
+    post:
+      summary: Post favorite track. 
+      tags:
+        - me
+      security:
+        - ClientId: []
+          AuthHeader: []
+      parameters:
+        - $ref: '#/components/parameters/track_id'
+      responses:
+        200:
+          description: Success
+    put:
+      summary: Put favorite track. 
+      tags:
+        - me
+      security:
+        - ClientId: []
+          AuthHeader: []
+      parameters:
+        - $ref: '#/components/parameters/track_id'
+      responses:
+        200:
+          description: Success
+    delete:
+      summary: Delete favorite track. 
+      tags:
+        - me
+      security:
+        - ClientId: []
+          AuthHeader: []
+      parameters:
+        - $ref: '#/components/parameters/track_id'
+      responses:
+        200:
+          description: Success
   /me/favorites/ids:
     get:
       summary: Returns user’s favorites ids.
@@ -100,6 +269,41 @@ paths:
                   $ref: "#/components/examples/UserPlaylists"
         404:
           description: The user could not be found
+    post:
+      summary: Returns user’s favorites ids.
+      tags:
+        - me
+      security:
+        - ClientId: []
+          AuthHeader: []
+      responses:
+        200:
+          description: Success
+  /me/playlists/{track_id}:
+    get:
+      summary: Returns favorite track.
+      tags:
+        - me
+      security:
+        - ClientId: []
+          AuthHeader: []
+      parameters:
+        - $ref: '#/components/parameters/track_id'
+      responses:
+        200:
+          description: Success
+    put:
+      summary: Returns favorite track.
+      tags:
+        - me
+      security:
+        - ClientId: []
+          AuthHeader: []
+      parameters:
+        - $ref: '#/components/parameters/track_id'
+      responses:
+        200:
+          description: Success
   /me/followers/{other_id}:
     get:
       summary: Returns follower user.
@@ -332,20 +536,20 @@ components:
       schema:
         type: integer
       description: SoundCloud User id
-    track_urn:
+    track_id:
       in: path
-      name: track_urn
+      name: track_id
+      required: true
+      schema:
+        type: integer
+      description: SoundCloud Track id
+    tag:
+      in: path
+      name: tag
       required: true
       schema:
         type: string
-      description: SoundCloud Track URN
-    playlist_urn:
-      in: path
-      name: playlist_urn
-      required: true
-      schema:
-        type: string
-      description: SoundCloud Playlist URN
+      description: tag
     limit:
       in: query
       name: limit
