@@ -37,30 +37,6 @@ paths:
       responses:
         200:
           description: Success
-  /me/tracks:
-    get:
-      summary: Returns a list of tracks.
-      tags:
-        - me
-      security:
-        - ClientId: []
-          AuthHeader: []
-      responses:
-        200:
-          description: Success
-  /me/tracks/{track_id}:
-    get:
-      summary: Returns a list of tracks.
-      tags:
-        - me
-      security:
-        - ClientId: []
-          AuthHeader: []
-      parameters:
-        - $ref: '#/components/parameters/track_id'
-      responses:
-        200:
-          description: Success
   /me/activities:
     get:
       summary: Returns a list of activities.
@@ -85,7 +61,7 @@ paths:
           description: Success
   /me/activities/all/own:
     get:
-      summary: Returns a list of activities.
+      summary: Returns a list of activities that requesting user owns.
       tags:
         - me
       security:
@@ -96,7 +72,7 @@ paths:
           description: Success
   /me/activities/tracks:
     get:
-      summary: Returns a list of tracks activities.
+      summary: Returns a list of tracks' activities.
       tags:
         - me
       security:
@@ -279,16 +255,16 @@ paths:
       responses:
         200:
           description: Success
-  /me/playlists/{track_id}:
+  /me/playlists/{playlist_id}:
     get:
-      summary: Returns favorite track.
+      summary: Returns playlist.
       tags:
         - me
       security:
         - ClientId: []
           AuthHeader: []
       parameters:
-        - $ref: '#/components/parameters/track_id'
+        - $ref: '#/components/parameters/playlist_id'
       responses:
         200:
           description: Success
@@ -300,7 +276,7 @@ paths:
         - ClientId: []
           AuthHeader: []
       parameters:
-        - $ref: '#/components/parameters/track_id'
+        - $ref: '#/components/parameters/playlist_id'
       responses:
         200:
           description: Success
@@ -434,7 +410,207 @@ paths:
                   $ref: '#/components/examples/Error404'
         500:
           description: Internal Server Error
-  /users/{id}/followings:
+  /me/tracks:
+    get:
+      summary: Returns a list of tracks.
+      tags:
+        - me
+      security:
+        - ClientId: []
+          AuthHeader: []
+      responses:
+        200:
+          description: Success
+  /me/tracks/{track_id}:
+    get:
+      summary: Returns a list of tracks.
+      tags:
+        - me
+      security:
+        - ClientId: []
+          AuthHeader: []
+      parameters:
+        - $ref: '#/components/parameters/track_id'
+      responses:
+        200:
+          description: Success
+  /tracks:
+    get:
+      summary: Returns ???.
+      tags:
+        - tracks
+      security:
+        - ClientId: []
+          AuthHeader: []
+      responses:
+        200:
+          description: Success
+    # post:
+    #   summary: Returns ???.
+    #   tags:
+    #     - tracks
+    #   security:
+    #     - ClientId: []
+    #       AuthHeader: []
+    #   responses:
+    #     200:
+    #       description: Success
+  /tracks/{track_id}:
+    get:
+      summary: Returns ???.
+      tags:
+        - tracks
+      security:
+        - ClientId: []
+          AuthHeader: []
+      parameters:
+        - $ref: '#/components/parameters/track_id'
+      responses:
+        200:
+          description: Success
+    # put:
+    #   summary: Returns ???.
+    #   tags:
+    #     - tracks
+    #   security:
+    #     - ClientId: []
+    #       AuthHeader: []
+    #   parameters:
+    #     - $ref: '#/components/parameters/track_id'
+    #   responses:
+    #     200:
+    #       description: Success
+    # delete:
+    #   summary: Returns ???.
+    #   tags:
+    #     - tracks
+    #   security:
+    #     - ClientId: []
+    #       AuthHeader: []
+    #   parameters:
+    #     - $ref: '#/components/parameters/track_id'
+    #   responses:
+    #     200:
+    #       description: Success
+  /tracks/{track_id}/comments:
+    get:
+      summary: Returns the comments posted for the given track with id `track_id`.
+      tags:
+        - tracks
+      security:
+        - ClientId: []
+          AuthHeader: []
+      parameters:
+        - $ref: '#/components/parameters/track_id'
+      responses:
+        200:
+          description: Success
+    # post:
+    #   summary: Returns ???.
+    #   tags:
+    #     - tracks
+    #   security:
+    #     - ClientId: []
+    #       AuthHeader: []
+    #   parameters:
+    #     - $ref: '#/components/parameters/track_id'
+    #   responses:
+    #     200:
+    #       description: Success
+  # /tracks/{track_id}/comments/{comment_id}:
+  #   get:
+  #     summary: Returns ???.
+  #     tags:
+  #       - tracks
+  #     security:
+  #       - ClientId: []
+  #         AuthHeader: []
+  #     parameters:
+  #       - $ref: '#/components/parameters/track_id'
+  #       - $ref: '#/components/parameters/comment_id'
+  #     responses:
+  #       200:
+  #         description: Success
+  #   delete:
+  #     summary: Returns ???.
+  #     tags:
+  #       - tracks
+  #     security:
+  #       - ClientId: []
+  #         AuthHeader: []
+  #     parameters:
+  #       - $ref: '#/components/parameters/track_id'
+  #       - $ref: '#/components/parameters/comment_id'
+  #     responses:
+  #       200:
+  #         description: Success
+  # /tracks/{track_id}/download:
+  #   get:
+  #     summary: Returns ???.
+  #     tags:
+  #       - tracks
+  #     security:
+  #       - ClientId: []
+  #         AuthHeader: []
+  #     parameters:
+  #       - $ref: '#/components/parameters/track_id'
+  #     responses:
+  #       200:
+  #         description: Success
+  /tracks/{track_id}/favoriters:
+    get:
+      summary: Returns ???.
+      tags:
+        - tracks
+      security:
+        - ClientId: []
+          AuthHeader: []
+      parameters:
+        - $ref: '#/components/parameters/track_id'
+      responses:
+        200:
+          description: Success
+  /tracks/{track_id}/favoriters/{user_id}:
+    get:
+      summary: Returns ???.
+      tags:
+        - tracks
+      security:
+        - ClientId: []
+          AuthHeader: []
+      parameters:
+        - $ref: '#/components/parameters/track_id'
+        - $ref: '#/components/parameters/user_id'
+      responses:
+        200:
+          description: Success
+  /tracks/{track_id}/related:
+    get:
+      summary: Returns ???.
+      tags:
+        - tracks
+      security:
+        - ClientId: []
+          AuthHeader: []
+      parameters:
+        - $ref: '#/components/parameters/track_id'
+      responses:
+        200:
+          description: Success
+  /tracks/{track_id}/streams:
+    get:
+      summary: Returns ???.
+      tags:
+        - tracks
+      security:
+        - ClientId: []
+          AuthHeader: []
+      parameters:
+        - $ref: '#/components/parameters/track_id'
+      responses:
+        200:
+          description: Success
+  /users/{user_id}/followings:
     get:
       summary: Returns user’s list of followings users.
       tags:
@@ -443,7 +619,7 @@ paths:
         - ClientId: []
           AuthHeader: []
       parameters:
-        - $ref: '#/components/parameters/id'
+        - $ref: '#/components/parameters/user_id'
         - $ref: '#/components/parameters/limit'
       responses:
         200:
@@ -455,7 +631,7 @@ paths:
                   $ref: "#/components/examples/UserFollowings"
         404:
           description: The user could not be found
-  /users/{id}/followers:
+  /users/{user_id}/followers:
     get:
       summary: Returns user’s list of followers users.
       tags:
@@ -464,7 +640,7 @@ paths:
         - ClientId: []
           AuthHeader: []
       parameters:
-        - $ref: '#/components/parameters/id'
+        - $ref: '#/components/parameters/user_id'
         - $ref: '#/components/parameters/limit'
       responses:
         200:
@@ -476,7 +652,7 @@ paths:
                   $ref: "#/components/examples/UserFollowers"
         404:
           description: The user could not be found
-  /users/{id}/followers/{other_id}:
+  /users/{user_id}/followers/{other_id}:
     get:
       summary: Return user's follower user info.
       description: Returns other user info if he follow the first one.
@@ -486,7 +662,7 @@ paths:
         - ClientId: []
           AuthHeader: []
       parameters:
-        - $ref: '#/components/parameters/id'
+        - $ref: '#/components/parameters/user_id'
         - $ref: '#/components/parameters/other_id'
       responses:
         200:
@@ -498,7 +674,7 @@ paths:
                   $ref: "#/components/examples/User"
         404:
           description: Not Found
-  /users/{id}/followings/{other_id}:
+  /users/{user_id}/followings/{other_id}:
     get:
       summary: Return user's followings user info.
       description: Returns other user info if he follow the first one.
@@ -508,7 +684,7 @@ paths:
         - ClientId: []
           AuthHeader: []
       parameters:
-        - $ref: '#/components/parameters/id'
+        - $ref: '#/components/parameters/user_id'
         - $ref: '#/components/parameters/other_id'
       responses:
         200:
@@ -522,9 +698,9 @@ paths:
           description: Not Found
 components:
   parameters:
-    id:
+    user_id:
       in: path
-      name: id
+      name: user_id
       required: true
       schema:
         type: integer
@@ -543,6 +719,20 @@ components:
       schema:
         type: integer
       description: SoundCloud Track id
+    comment_id:
+      in: path
+      name: comment_id
+      required: true
+      schema:
+        type: integer
+      description: SoundCloud comment id
+    playlist_id:
+      in: path
+      name: playlist_id
+      required: true
+      schema:
+        type: integer
+      description: SoundCloud playlist id
     tag:
       in: path
       name: tag
