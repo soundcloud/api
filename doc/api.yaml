@@ -434,6 +434,77 @@ paths:
       responses:
         200:
           description: Success
+  # /playlists:
+  #   get:
+  #     summary: Returns  error ???.
+  #     tags:
+  #       - playlists
+  #     security:
+  #       - ClientId: []
+  #         AuthHeader: []
+  #     responses:
+  #       200:
+  #         description: Success
+  #   post:
+  #     summary: Returns  error ???.
+  #     tags:
+  #       - playlists
+  #     security:
+  #       - ClientId: []
+  #         AuthHeader: []
+  #     responses:
+  #       200:
+  #         description: Success
+  /playlists/{playlist_id}:
+    get:
+      summary: Return playlist
+      tags:
+        - playlists
+      security:
+        - ClientId: []
+          AuthHeader: []
+      parameters:
+        - $ref: "#/components/parameters/playlist_id"
+      responses:
+        200:
+          description: Success
+    put:
+      summary: Return playlist
+      tags:
+        - playlists
+      security:
+        - ClientId: []
+          AuthHeader: []
+      parameters:
+        - $ref: "#/components/parameters/playlist_id"
+      responses:
+        200:
+          description: Success
+    delete:
+      summary: Delete playlist
+      tags:
+        - playlists
+      security:
+        - ClientId: []
+          AuthHeader: []
+      parameters:
+        - $ref: "#/components/parameters/playlist_id"
+      responses:
+        200:
+          description: Success
+  /playlists/{playlist_id}/tracks:
+    get:
+      summary: Return playlist's tracks
+      tags:
+        - playlists
+      security:
+        - ClientId: []
+          AuthHeader: []
+      parameters:
+        - $ref: "#/components/parameters/playlist_id"
+      responses:
+        200:
+          description: Success
   /tracks:
     get:
       summary: Returns ???.
