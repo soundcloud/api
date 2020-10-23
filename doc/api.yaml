@@ -8,6 +8,15 @@ info:
   termsOfService: https://developers.soundcloud.com/docs/api/terms-of-use
 servers:
   - url: https://api.soundcloud.com
+tags:
+  - name: me
+    description: Own User Endpoints
+  - name: playlists
+    description: Playlist Endpoints
+  - name: tracks
+    description: Tracks Endpoints
+  - name: users
+    description: Users Endpoint
 paths:
   /me:
     get:
@@ -15,8 +24,7 @@ paths:
       tags:
         - me
       security:
-        - ClientId: []
-          AuthHeader: []
+        - AuthHeader: []
       responses:
         200:
           description: Success
@@ -25,83 +33,240 @@ paths:
               examples:
                 default:
                   $ref: "#/components/examples/User"
-        404:
-          description: The user could not be found
-    put:
-      summary: Returns ?.
-      tags:
-        - me
-      security:
-        - ClientId: []
-          AuthHeader: []
-      responses:
-        200:
-          description: Success
+        401:
+          description: 'Error: Unauthorized'
+          content:
+            application/json:
+              examples:
+                default:
+                  $ref: "#/components/examples/Error401"
+    # put:
+    #   summary: Returns ?.
+    #   tags:
+    #     - me
+    #   security:
+    #     - AuthHeader: []
+    #   responses:
+    #     200:
+    #       description: Success
   /me/activities:
     get:
-      summary: Returns a list of activities.
+      summary: Recent activities.
       tags:
         - me
       security:
-        - ClientId: []
-          AuthHeader: []
+        - AuthHeader: []
+      parameters:
+        - $ref: '#/components/parameters/limit'
       responses:
         200:
           description: Success
-  /me/activities/all:
-    get:
-      summary: Returns a list of activities.
-      tags:
-        - me
-      security:
-        - ClientId: []
-          AuthHeader: []
-      responses:
-        200:
-          description: Success
+          content:
+            application/json:
+              examples:
+                default:
+                  $ref: "#/components/examples/Activities"
+        401:
+          description: 'Error: Unauthorized'
+  # /me/activities/all:
+  #   get:
+  #     summary: Returns a list of activities.
+  #     tags:
+  #       - me
+  #     security:
+  #       - AuthHeader: []
+  #     parameters:
+  #       - $ref: '#/components/parameters/limit'
+  #     responses:
+  #       200:
+  #         description: Success
   /me/activities/all/own:
     get:
-      summary: Returns a list of activities that requesting user owns.
+      summary: Recent activities on the logged-in users tracks.
       tags:
         - me
       security:
-        - ClientId: []
-          AuthHeader: []
+        - AuthHeader: []
+      parameters:
+        - $ref: '#/components/parameters/limit'
       responses:
         200:
           description: Success
+          content:
+            application/json:
+              examples:
+                default:
+                  $ref: "#/components/examples/ActivitiesAllOwn"
+        401:
+          description: 'Error: Unauthorized'
   /me/activities/tracks:
     get:
-      summary: Returns a list of tracks' activities.
+      summary: Recent track related activities.
       tags:
         - me
       security:
-        - ClientId: []
-          AuthHeader: []
-      responses:
-        200:
-          description: Success
-  /me/activities/tracks/{tag}:
-    get:
-      summary: Returns a list of tracks activities.
-      tags:
-        - me
-      security:
-        - ClientId: []
-          AuthHeader: []
+        - AuthHeader: []
       parameters:
-        - $ref: '#/components/parameters/tag'
+        - $ref: '#/components/parameters/limit'
       responses:
         200:
           description: Success
+          content:
+            application/json:
+              examples:
+                default:
+                  $ref: "#/components/examples/ActivitiesTracks"
+        401:
+          description: 'Error: Unauthorized'
+  # /me/activities/tracks/{tag}:
+  #   get:
+  #     summary: Returns a list of tracks activities.
+  #     tags:
+  #       - me
+  #     security:
+  #       - AuthHeader: []
+  #     parameters:
+  #       - $ref: '#/components/parameters/tag'
+  #       - $ref: '#/components/parameters/limit'
+  #     responses:
+  #       200:
+  #         description: Success
+  /me/connections:
+    get:
+      summary: Returns a list of user's connection information.
+      tags:
+        - me
+      security:
+        - AuthHeader: []
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              examples:
+                default:
+                  $ref: "#/components/examples/Connections"
+        401:
+          description: 'Error: Unauthorized'
+  /me/connections/{connection_id}:
+    get:
+      summary: Returns a user's connection information.
+      tags:
+        - me
+      security:
+        - AuthHeader: []
+      parameters:
+        - $ref: '#/components/parameters/connection_id'
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              examples:
+                default:
+                  $ref: "#/components/examples/Connection"
+        401:
+          description: 'Error: Unauthorized'
+        404:
+          description: 'Error: Not Found'
+          content:
+            application/json:
+              examples:
+                default:
+                  $ref: "#/components/examples/Error404"
+  /me/favorites:
+    get:
+      summary: Returns a list of favorite tracks.
+      tags:
+        - me
+      security:
+        - AuthHeader: []
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              examples:
+                default:
+                  $ref: "#/components/examples/Tracks"
+        401:
+          description: 'Error: Unauthorized'
+  # /me/favorites/{track_id}:
+  #   get:
+  #     summary: Returns favorite track.
+  #     tags:
+  #       - me
+  #     security:
+  #       - AuthHeader: []
+  #     parameters:
+  #       - $ref: '#/components/parameters/track_id'
+  #     responses:
+  #       200:
+  #         description: Success
+  #       404:
+  #         description: Not Found
+  #         content:
+  #           application/json:
+  #             examples:
+  #               default:
+  #                 $ref: '#/components/examples/Error404'
+  #   post:
+  #     summary: Post favorite track.
+  #     tags:
+  #       - me
+  #     security:
+  #       - AuthHeader: []
+  #     parameters:
+  #       - $ref: '#/components/parameters/track_id'
+  #     responses:
+  #       200:
+  #         description: Success
+  #   put:
+  #     summary: Put favorite track.
+  #     tags:
+  #       - me
+  #     security:
+  #       - AuthHeader: []
+  #     parameters:
+  #       - $ref: '#/components/parameters/track_id'
+  #     responses:
+  #       200:
+  #         description: Success
+  #   delete:
+  #     summary: Delete favorite track.
+  #     tags:
+  #       - me
+  #     security:
+  #       - AuthHeader: []
+  #     parameters:
+  #       - $ref: '#/components/parameters/track_id'
+  #     responses:
+  #       200:
+  #         description: Success
+  # /me/favorites/ids:
+  #   get:
+  #     summary: Returns user’s favorites ids.
+  #     tags:
+  #       - me
+  #     security:
+  #       - AuthHeader: []
+  #     responses:
+  #       200:
+  #         description: Success
+  #         content:
+  #           application/json:
+  #             examples:
+  #               default:
+  #                 $ref: "#/components/examples/FavoritesIds"
+  #       404:
+  #         description: The user could not be found
   /me/followings:
     get:
-      summary: Returns list of followings users.
+      summary: Returns a List of users who are followed by me.
       tags:
         - me
       security:
-        - ClientId: []
-          AuthHeader: []
+        - AuthHeader: []
       responses:
         200:
           description: Success
@@ -110,27 +275,17 @@ paths:
               examples:
                 default:
                   $ref: "#/components/examples/UserFollowings"
-        404:
-          description: The user could not be found
-  /me/followings/tracks:
+        401:
+          description: 'Error: Unauthorized'
+  /me/followings/{user_id}:
     get:
-      summary: Returns list of tracks.
+      summary: Return a user who is followed by me.
       tags:
         - me
       security:
-        - ClientId: []
-          AuthHeader: []
-      responses:
-        200:
-          description: Success
-  /me/followers:
-    get:
-      summary: Returns list of followers users.
-      tags:
-        - me
-      security:
-        - ClientId: []
-          AuthHeader: []
+        - AuthHeader: []
+      parameters:
+        - $ref: '#/components/parameters/user_id'
       responses:
         200:
           description: Success
@@ -138,205 +293,31 @@ paths:
             application/json:
               examples:
                 default:
-                  $ref: "#/components/examples/UserFollowers"
+                  $ref: "#/components/examples/User"
+        401:
+          description: 'Error: Unauthorized'
         404:
-          description: The user could not be found
-  /me/favorites:
-    get:
-      summary: Returns a list of favorite tracks.
-      tags:
-        - me
-      security:
-        - ClientId: []
-          AuthHeader: []
-      responses:
-        200:
-          description: Success
-  /me/favorites/{track_id}:
-    get:
-      summary: Returns favorite track.
-      tags:
-        - me
-      security:
-        - ClientId: []
-          AuthHeader: []
-      parameters:
-        - $ref: '#/components/parameters/track_id'
-      responses:
-        200:
-          description: Success
-        404:
-          description: Not Found
-          content:
-            application/json:
-              examples:
-                default:
-                  $ref: '#/components/examples/Error404'
-    post:
-      summary: Post favorite track. 
-      tags:
-        - me
-      security:
-        - ClientId: []
-          AuthHeader: []
-      parameters:
-        - $ref: '#/components/parameters/track_id'
-      responses:
-        200:
-          description: Success
-    put:
-      summary: Put favorite track. 
-      tags:
-        - me
-      security:
-        - ClientId: []
-          AuthHeader: []
-      parameters:
-        - $ref: '#/components/parameters/track_id'
-      responses:
-        200:
-          description: Success
-    delete:
-      summary: Delete favorite track. 
-      tags:
-        - me
-      security:
-        - ClientId: []
-          AuthHeader: []
-      parameters:
-        - $ref: '#/components/parameters/track_id'
-      responses:
-        200:
-          description: Success
-  /me/favorites/ids:
-    get:
-      summary: Returns user’s favorites ids.
-      tags:
-        - me
-      security:
-        - ClientId: []
-          AuthHeader: []
-      responses:
-        200:
-          description: Success
-          content:
-            application/json:
-              examples:
-                default:
-                  $ref: "#/components/examples/UserFavoritesId"
-        404:
-          description: The user could not be found
-  /me/playlists:
-    get:
-      summary: Returns user’s playlists.
-      description: return playlist info, playlist tracks and tracks owner info
-      tags:
-        - me
-      security:
-        - ClientId: []
-          AuthHeader: []
-      responses:
-        200:
-          description: Success
-          content:
-            application/json:
-              examples:
-                default:
-                  $ref: "#/components/examples/UserPlaylists"
-        404:
-          description: The user could not be found
-    post:
-      summary: Returns user’s favorites ids.
-      tags:
-        - me
-      security:
-        - ClientId: []
-          AuthHeader: []
-      responses:
-        200:
-          description: Success
-  /me/playlists/{playlist_id}:
-    get:
-      summary: Returns playlist.
-      tags:
-        - me
-      security:
-        - ClientId: []
-          AuthHeader: []
-      parameters:
-        - $ref: '#/components/parameters/playlist_id'
-      responses:
-        200:
-          description: Success
-    put:
-      summary: Returns favorite track.
-      tags:
-        - me
-      security:
-        - ClientId: []
-          AuthHeader: []
-      parameters:
-        - $ref: '#/components/parameters/playlist_id'
-      responses:
-        200:
-          description: Success
-  /me/followers/{other_id}:
-    get:
-      summary: Returns follower user.
-      tags:
-        - me
-      security:
-        - ClientId: []
-          AuthHeader: []
-      parameters:
-        - $ref: '#/components/parameters/other_id'
-        - $ref: '#/components/parameters/limit'
-      responses:
-        200:
-          description: Success
-          content:
-            application/json:
-              examples:
-                default:
-                  $ref: '#/components/examples/User'
-        404:
-          description: Not Found
+          description: 'Error: Not Found'
         503:
-          description: Service Unavailable
-  /me/followings/{other_id}:
-    get:
-      summary: Returns following user.
+          description: 'Error: Service Unavailable'
+    put:
+      summary: Put a user who will be followed by me.
       tags:
         - me
       security:
-        - ClientId: []
-          AuthHeader: []
+        - AuthHeader: []
       parameters:
-        - $ref: '#/components/parameters/other_id'
-        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/user_id'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                user_id:
+                  type: integer
       responses:
         200:
-          description: Success
-          content:
-            application/json:
-              examples:
-                default:
-                  $ref: '#/components/examples/User'
-        404:
-          description: Not Found
-        503:
-          description: Service Unavailable
-    post:
-      summary: Endpoint to follow another user
-      tags:
-        - me
-      security:
-        - ClientId: []
-          AuthHeader: []
-      parameters:
-        - $ref: '#/components/parameters/other_id'
-      responses:
-        201:
           description: Success
           content:
             application/json:
@@ -345,24 +326,111 @@ paths:
                   $ref: '#/components/examples/OK'
                 201:
                   $ref: '#/components/examples/User'
+        401:
+          description: 'Error: Unauthorized'
         404:
-          description: Not Found
+          description: 'Error: Not Found'
           content:
             application/json:
               examples:
                 default:
-                  $ref: '#/components/examples/Error404'
-        500:
-          description: Internal Server Error
-    put:
-      summary: Follow user
+                  $ref: "#/components/examples/Error404"
+    # post:
+    #   summary: Endpoint to follow another user
+    #   tags:
+    #     - me
+    #   security:
+    #     - AuthHeader: []
+    #   parameters:
+    #     - $ref: '#/components/parameters/user_id'
+    #   responses:
+    #     201:
+    #       description: Success
+    #       content:
+    #         application/json:
+    #           examples:
+    #             200:
+    #               $ref: '#/components/examples/OK'
+    #             201:
+    #               $ref: '#/components/examples/User'
+    #     404:
+    #       description: Not Found
+    #       content:
+    #         application/json:
+    #           examples:
+    #             default:
+    #               $ref: '#/components/examples/Error404'
+    #     500:
+    #       description: Internal Server Error
+    delete:
+      summary: Delete a user who is followed by me.
       tags:
         - me
       security:
-        - ClientId: []
-          AuthHeader: []
+        - AuthHeader: []
       parameters:
-        - $ref: "#/components/parameters/other_id"
+        - $ref: '#/components/parameters/user_id'
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              examples:
+                200:
+                  $ref: '#/components/examples/OK'
+        401:
+          description: 'Error: Unauthorized'
+        404:
+          description: 'Error: Not Found'
+          content:
+            application/json:
+              examples:
+                default:
+                  $ref: "#/components/examples/Error404"
+        422:
+          description:   'Error: Unprocessable Entity'
+          content:
+            application/json:
+              examples:
+                422:
+                  $ref: '#/components/examples/Error422'
+  # /me/followings/tracks:
+  #   get:
+  #     summary: Returns all the tracks of all the followings of me.
+  #     tags:
+  #       - me
+  #     security:
+  #       - AuthHeader: []
+  #     responses:
+  #       200:
+  #         description: Success
+  /me/followers:
+    get:
+      summary: Returns a list of users who are following me.
+      tags:
+        - me
+      security:
+        - AuthHeader: []
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              examples:
+                default:
+                  $ref: "#/components/examples/UserFollowers"
+        401:
+          description: 'Error: Unauthorized'
+  /me/followers/{other_id}:
+    get:
+      summary: Returns a user who is following me.
+      tags:
+        - me
+      security:
+        - AuthHeader: []
+      parameters:
+        - $ref: '#/components/parameters/other_id'
+        - $ref: '#/components/parameters/limit'
       responses:
         200:
           description: Success
@@ -372,25 +440,19 @@ paths:
                 default:
                   $ref: '#/components/examples/User'
         401:
-          description: Unauthorized
+          description: 'Error: Unauthorized'
         404:
           description: Not Found
-          content:
-            application/json:
-              examples:
-                default:
-                  $ref: '#/components/examples/Error404'
-        500:
-          description: Internal Server Error
-    delete:
-      summary: Unfollw user
+        503:
+          description: Service Unavailable
+  /me/playlists:
+    get:
+      summary: Returns user’s playlists (sets).
+      description: return playlist info, playlist tracks and tracks owner info
       tags:
         - me
       security:
-        - ClientId: []
-          AuthHeader: []
-      parameters:
-        - $ref: "#/components/parameters/other_id"
+        - AuthHeader: []
       responses:
         200:
           description: Success
@@ -398,42 +460,87 @@ paths:
             application/json:
               examples:
                 default:
-                  $ref: '#/components/examples/OK'
+                  $ref: "#/components/examples/PlaylistsAndTracks"
         401:
-          description: Unauthorized
-        404:
-          description: Not Found
-          content:
-            application/json:
-              examples:
-                default:
-                  $ref: '#/components/examples/Error404'
-        500:
-          description: Internal Server Error
+          description: 'Error: Unauthorized'
+    # post:
+    #   summary: Returns user’s favorites ids.
+    #   tags:
+    #     - me
+    #   security:
+    #     - AuthHeader: []
+    #   responses:
+    #     200:
+    #       description: Success
+  # /me/playlists/{playlist_id}:
+  #   get:
+  #     summary: Returns playlist.
+  #     tags:
+  #       - me
+  #     security:
+  #       - AuthHeader: []
+  #     parameters:
+  #       - $ref: '#/components/parameters/playlist_id'
+  #     responses:
+  #       200:
+  #         description: Success
+  #   put:
+  #     summary: Returns favorite track.
+  #     tags:
+  #       - me
+  #     security:
+  #       - AuthHeader: []
+  #     parameters:
+  #       - $ref: '#/components/parameters/playlist_id'
+  #     responses:
+  #       200:
+  #         description: Success
   /me/tracks:
     get:
-      summary: Returns a list of tracks.
+      summary: Returns a list of user's tracks.
       tags:
         - me
       security:
-        - ClientId: []
-          AuthHeader: []
+        - AuthHeader: []
       responses:
         200:
           description: Success
-  /me/tracks/{track_id}:
+          content:
+            application/json:
+              examples:
+                default:
+                  $ref: "#/components/examples/Tracks"
+        401:
+          description: 'Error: Unauthorized'
+  # /me/tracks/{track_id}:
+  #   get:
+  #     summary: Returns a list of tracks.
+  #     tags:
+  #       - me
+  #     security:
+  #       - AuthHeader: []
+  #     parameters:
+  #       - $ref: '#/components/parameters/track_id'
+  #     responses:
+  #       200:
+  #         description: Success
+  /me/web-profiles:
     get:
-      summary: Returns a list of tracks.
+      summary: Returns a list of user's web profiles.
       tags:
         - me
       security:
-        - ClientId: []
-          AuthHeader: []
-      parameters:
-        - $ref: '#/components/parameters/track_id'
+        - AuthHeader: []
       responses:
         200:
           description: Success
+          content:
+            application/json:
+              examples:
+                default:
+                  $ref: "#/components/examples/Web-profiles"
+        401:
+          description: 'Error: Unauthorized'
   # /playlists:
   #   get:
   #     summary: Returns  error ???.
@@ -951,6 +1058,13 @@ components:
       schema:
         type: integer
       description: SoundCloud comment id
+    connection_id:
+      in: path
+      name: connection_id
+      required: true
+      schema:
+        type: integer
+      description: SoundCloud connection id
     playlist_id:
       in: path
       name: playlist_id
@@ -987,55 +1101,89 @@ components:
       name: Authorization
       description: 'The string "OAuth " followed by the user’s token: OAuth ACCESS_TOKEN'
   examples:
-    OK:
+    Activities:
       value:
-        status: Status(200) - OK
+        collection:
+          - type: track
+            created_at: 2020/10/12 12:02:44 +0000
+            origin:
+              allOf:
+              - $ref: "#/components/examples/Track/value"
+          - type: playlist
+            created_at: 2020/10/12 12:02:44 +0000
+            origin:
+              allOf:
+              - $ref: "#/components/examples/Track/value"
+        next_href: https://api.soundcloud.com/me/activities?limit=10&cursor=00000
+        future_href: https://api.soundcloud.com/me/activities?limit=10&cursor=000001
+    ActivitiesAllOwn:
+      value:
+        collection:
+          - type: track
+            created_at: 2020/10/12 12:02:44 +0000
+            origin:
+              allOf:
+              - $ref: "#/components/examples/Track/value"
+          - type: playlist
+            created_at: 2020/10/12 12:02:44 +0000
+            origin:
+              allOf:
+              - $ref: "#/components/examples/Track/value"
+        next_href: https://api.soundcloud.com/me/activities/all/own?limit=10&cursor=00000
+        future_href: https://api.soundcloud.com/me/activities/all/own?limit=10&cursor=000001
+    ActivitiesTracks:
+      value:
+        collection:
+          - type: track
+            created_at: 2020/10/12 12:02:44 +0000
+            origin:
+              allOf:
+              - $ref: "#/components/examples/Track/value"
+          - type: playlist
+            created_at: 2020/10/12 12:02:44 +0000
+            origin:
+              allOf:
+              - $ref: "#/components/examples/Track/value"
+        next_href: https://api.soundcloud.com/me/activities/tracks?limit=10&cursor=00000
+        future_href: https://api.soundcloud.com/me/activities/tracks?limit=10&cursor=000001
+    Connection:
+      value:
+        kind: connection
+        id: 1234
+        created_at: 1995/07/24 08:55:02 +0000
+        display_name: Full Name
+        post_publish: true
+        post_favorite: true
+        type: google_plus
+        service: google_plus
+        uri: https://api.soundcloud.com/connections/1234
+    Connections:
+      value:
+        - allOf:
+          - $ref: "#/components/examples/Connection/value"
     Created:
       value:
         status: 201 - Created
-    User:
+    Error401:
       value:
-        id: 12345
-        kind: user
-        uri: https://api.soundcloud.com/users/1234
-        permalink_url: https://soundcloud.com/permalink
-        avatar_url: https://i1.sndcdn.com/avatars.jpg
-        permalink: permalink
-        username: some.user
-        last_modified: 2020/01/03 12:08:25 +0000
-        first_name: First_name
-        last_name: Last_name
-        full_name: Full Name
-        country: Country
-        city: City
-        discogs_name:
-        myspace_name:
-        website:
-        website_title:
-        track_count: 0
-        playlist_count: 3
-        online: false
-        plan: Free
-        public_favorites_count: 20
-        followers_count: 0
-        followings_count: 0
-        reposts_count: 0
-        comments_count: 9
-        description: 
-        likes_count: 0
-        subscriptions:
-          - product:
-              id: some-id
-              name: some.name
-        upload_seconds_left: 10800
-        quota:
-          unlimited_upload_quota: false
-          upload_seconds_used: 0
-          upload_seconds_left: 10800
-        private_tracks_count: 0
-        private_playlists_count: 0
-        primary_email_confirmed: true
-        locale: en
+        errors:
+        - error_message: 401 - Unauthorized
+    Error404:
+      value:
+        errors:
+        - error_message: 404 - Not Found
+    Error422:
+      value:
+        errors:
+        - error_message: 422 - Unprocessable Entity
+    FavoritesIds:
+      value:
+        - 1234
+        - 5678
+        - 3456
+    OK:
+      value:
+        status: Status(200) - OK
     UserFollowings:
       value:
         collection:
@@ -1050,121 +1198,218 @@ components:
             allOf:
               - $ref: "#/components/examples/User/value"
         next_href: https://api.soundcloud.com/users/1234/followers?client_id=client_id&page_size=10&cursor=1234567
-    UserFavoritesId:
+    Playlist:
       value:
-        - 1234
-        - 5678
-        - 3456
-    UserPlaylists:
+        artwork_url: ''
+        created_at: 2020/07/16 16:09:54 +0000
+        description:
+        downloadable: true
+        duration: 11000
+        ean:
+        embeddable_by: all
+        genre: ''
+        id: 12345
+        kind: playlist
+        label:
+        label_id:
+        label_name:
+        last_modified: 2020/09/08 09:13:00 +0000
+        license: all-rights-reserved
+        likes_count: 0
+        permalink: permalink
+        permalink_url: https://soundcloud.com/userPermalink/sets/permalink
+        playlist_type: ''
+        purchase_title:
+        purchase_url:
+        release:
+        release_day:
+        release_month:
+        release_year:
+        sharing: public
+        streamable: true
+        tag_list: ''
+        tags: ''
+        title: permalink
+        track_count: 2
+        tracks_uri: https://api.soundcloud.com/playlists/12345/tracks
+        type: ''
+        uri: https://api.soundcloud.com/playlists/12345
+        user:
+          permalink_url: https://soundcloud.com/uesrPermalink
+          permalink: userPermalink
+          username: user.name
+          uri: https://api.soundcloud.com/users/1234
+          last_modified: 2020/09/03 14:08:25 +0000
+          id: 1234
+          kind: user
+          avatar_url: https://i1.sndcdn.com/avatars-test-large.jpg
+        user_id: 1234
+    PlaylistsAndTracks:
       value:
-        - duration: 110000
-          release_day: 
-          permalink_url: https://soundcloud.com/permalink/sets/club
-          genre: ''
+        artwork_url: ''
+        created_at: 2020/01/16 16:09:54 +0000
+        description:
+        downloadable:
+        duration: 110000
+        ean:
+        embeddable_by: all
+        genre: ''
+        id: 12345
+        kind: playlist
+        label:
+        label_id:
+        label_name:
+        last_modified: 2020/01/08 09:13:00 +0000
+        license: all-rights-reserved
+        likes_count: 0
+        permalink: permalink
+        permalink_url: https://soundcloud.com/permalink/sets/club
+        playlist_type: ''
+        purchase_title:
+        purchase_url:
+        release:
+        release_day:
+        release_month:
+        release_year:
+        sharing: public
+        streamable: true
+        tag_list: ''
+        tags: ''
+        title: some title
+        track_count: 1
+        tracks:
+          allOf:
+          - $ref: "#/components/examples/Track/value"
+        tracks_uri: https://api.soundcloud.com/playlists/12345/tracks
+        type: ''
+        uri: https://api.soundcloud.com/playlists/12345
+        user:
+          permalink_url: https://soundcloud.com/permalink
           permalink: permalink
-          purchase_url: 
-          release_month: 
-          description: 
-          tags: ''
-          uri: https://api.soundcloud.com/playlists/12345
-          label_name: 
-          label: 
-          tag_list: ''
-          release_year: 
-          track_count: 1
-          user_id: 1234
-          last_modified: 2020/01/08 09:13:00 +0000
-          license: all-rights-reserved
-          tracks:
-          - kind: track
-            id: 123456
-            created_at: 2019/01/15 15:40:49 +0000
-            user_id: 1234567
-            duration: 40000
-            commentable: true
-            comment_count: 4
-            state: finished
-            original_content_size: 71698112
-            last_modified: 2020/02/05 05:56:22 +0000
-            sharing: public
-            tag_list: ''
-            permalink: permalink
-            streamable: true
-            embeddable_by: all
-            purchase_url: 
-            purchase_title: 
-            label_id: 
-            genre: Rock
-            title: Some title
-            description: 
-            label_name: some label
-            release: 
-            track_type: 
-            key_signature: 
-            isrc: 
-            video_url: 
-            bpm: 
-            release_year: 2019
-            release_month: 8
-            release_day: 22
-            original_format: wav
-            license: all-rights-reserved
-            uri: https://api.soundcloud.com/tracks/1234
-            user:
-              id: 12345
-              kind: user
-              permalink: permalink
-              username: user.name
-              last_modified: 2020/01/10 21:36:49 +0000
-              uri: https://api.soundcloud.com/users/12345
-              permalink_url: https://soundcloud.com/permalink
-              avatar_url: https://i1.sndcdn.com/avatars.jpg
-            user_uri: https://api.soundcloud.com/users/12345
-            permalink_url: https://soundcloud.com/userPermalink/trackPermalink
-            artwork_url: https://i1.sndcdn.com/artworks-large.jpg
-            stream_url: https://api.soundcloud.com/tracks/12345/stream
-            download_url: https://api.soundcloud.com/tracks/12345/download
-            waveform_url: https://wave.sndcdn.com/someString.png
-            domain_lockings: 
-            available_country_codes: 
-            label: 
-            secret_token: 
-            secret_uri: 
-            user_favorite: true
-            user_playback_count: 1
-            playback_count: 8027
-            download_count: 0
-            favoritings_count: 271
-            reposts_count: 18
-            downloadable: false
-            downloads_remaining: 
-          playlist_type: ''
+          username: user.name
+          uri: https://api.soundcloud.com/users/12345
+          last_modified: 2020/09/03 14:08:25 +0000
           id: 12345
-          tracks_uri: https://api.soundcloud.com/playlists/12345/tracks
-          downloadable: 
-          sharing: public
-          created_at: 2020/01/16 16:09:54 +0000
-          release: 
-          likes_count: 0
-          kind: playlist
-          title: some title
-          type: ''
-          purchase_title: 
-          artwork_url: ''
-          ean: 
-          streamable: true
-          user:
-            permalink_url: https://soundcloud.com/permalink
-            permalink: permalink
-            username: user.name
-            uri: https://api.soundcloud.com/users/12345
-            last_modified: 2020/09/03 14:08:25 +0000
-            id: 12345
-            kind: user
-            avatar_url: https://i1.sndcdn.com/avatars-large.jpg
-          embeddable_by: all
-          label_id:
-    Error404:
+          kind: user
+          avatar_url: https://i1.sndcdn.com/avatars-large.jpg
+        user_id: 1234
+    Track:
       value:
-        errors:
-        - error_message: 404 - Not Found
+        artwork_url: https://i1.sndcdn.com/artworks-large.jpg
+        available_country_codes:
+        bpm:
+        comment_count: 4
+        commentable: true
+        created_at: 2019/01/15 15:40:49 +0000
+        description:
+        domain_lockings:
+        download_count: 0
+        download_url: https://api.soundcloud.com/tracks/1234/download
+        downloadable: false
+        downloads_remaining:
+        duration: 40000
+        embeddable_by: all
+        favoritings_count: 271
+        genre: Rock
+        id: 1234
+        isrc:
+        key_signature:
+        kind: track
+        label:
+        label_id:
+        label_name: some label
+        last_modified: 2020/02/05 05:56:22 +0000
+        license: all-rights-reserved
+        original_content_size: 716981
+        original_format: wav
+        permalink: permalink
+        permalink_url: https://soundcloud.com/userPermalink/trackPermalink
+        playback_count: 8027
+        purchase_title:
+        purchase_url:
+        release:
+        release_day: 22
+        release_month: 8
+        release_year: 2019
+        reposts_count: 18
+        secret_token:
+        secret_uri:
+        sharing: public
+        state: finished
+        stream_url: https://api.soundcloud.com/tracks/1234/stream
+        streamable: true
+        tag_list: ''
+        title: Some title
+        track_type:
+        uri: https://api.soundcloud.com/tracks/1234
+        user:
+          id: 123456
+          kind: user
+          permalink: permalink
+          username: user.name
+          last_modified: 2020/01/10 21:36:49 +0000
+          uri: https://api.soundcloud.com/users/123456
+          permalink_url: https://soundcloud.com/permalink
+          avatar_url: https://i1.sndcdn.com/avatars.jpg
+        user_favorite: true
+        user_id: 123456
+        user_playback_count: 1
+        user_uri: https://api.soundcloud.com/users/123456
+        video_url:
+        waveform_url: https://wave.sndcdn.com/someString.png
+    Tracks:
+      value:
+        - allOf:
+          - $ref: "#/components/examples/Track/value"
+    User:
+      value:
+        avatar_url: https://i1.sndcdn.com/avatars.jpg
+        city: City
+        comments_count: 9
+        country: Country
+        description:
+        discogs_name:
+        first_name: First_name
+        followers_count: 0
+        followings_count: 0
+        full_name: Full Name
+        id: 12345
+        kind: user
+        last_modified: 2020/01/03 12:08:25 +0000
+        last_name: Last_name
+        likes_count: 0
+        locale: en
+        myspace_name:
+        online: false
+        permalink: permalink
+        permalink_url: https://soundcloud.com/permalink
+        plan: Free
+        playlist_count: 3
+        primary_email_confirmed: true
+        private_playlists_count: 0
+        private_tracks_count: 0
+        public_favorites_count: 20
+        quota:
+          unlimited_upload_quota: false
+          upload_seconds_used: 0
+          upload_seconds_left: 10800
+        reposts_count: 0
+        subscriptions:
+        - product:
+            id: some-id
+            name: some.name
+        track_count: 0
+        upload_seconds_left: 10800
+        uri: https://api.soundcloud.com/users/1234
+        username: some.user
+        website:
+        website_title:
+    Web-profiles:
+      value:
+        - created_at: 1995/10/20 12:10:39 +0000
+          id: 1234
+          kind: web-profile
+          service: facebook
+          title: my facebook
+          url: http://facebook.com
+          username: username
