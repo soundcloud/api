@@ -8,8 +8,6 @@ class TrackCoordinatorTrackFixtures {
     TrackCoordinatorTrack(
       api_streamable = Some(true),
       artwork_url = Some("https://i1.sndcdn.com/artworks-000095281756-51d163-large.jpg"),
-      bpm = Some(123),
-      comment_count = 1,
       commentable = true,
       created_at = "2014/10/27 16:25:25 +0000",
       description = Some("This track is awesome"),
@@ -23,7 +21,6 @@ class TrackCoordinatorTrackFixtures {
       genre = Some("Free jazz"),
       geo_blockings = Some(List("US")),
       isrc = Some("US-S1Z-99-00001"),
-      key_signature = Some("A"),
       label_id = None,
       label_name = Some("Foobar records"),
       last_modified = "2014/10/27 16:25:25 +0000",
@@ -54,7 +51,6 @@ class TrackCoordinatorTrackFixtures {
       uri = "https://api.soundcloud.com/tracks/174088262",
       urn = "soundcloud:sounds:174088262",
       user_urn = "soundcloud:users:102661606",
-      video_url = None,
       waveform_url = "https://wis.sndcdn.com/images/player-waveform-medium.png?1414404638"
     )
   }
@@ -63,8 +59,6 @@ class TrackCoordinatorTrackFixtures {
     TrackCoordinatorTrack(
       api_streamable = trackRepresentation.visibleTrack.apiStreamable,
       artwork_url = Some("https://i1.sndcdn.com/artworks-000095281756-51d163-large.jpg"),
-      bpm = Some(123),
-      comment_count = 1,
       commentable = trackRepresentation.visibleTrack.commentable,
       created_at = "2014/10/27 16:25:25 +0000",
       description = Some("changed"),
@@ -78,7 +72,6 @@ class TrackCoordinatorTrackFixtures {
       genre = trackRepresentation.visibleTrack.genre,
       geo_blockings = Some(trackRepresentation.geoblockings.get.toList),
       isrc = Some("US-S1Z-99-00001"),
-      key_signature = Some("A"),
       label_id = None,
       label_name = trackRepresentation.visibleTrack.labelName,
       last_modified = "2014/10/27 16:25:25 +0000",
@@ -109,7 +102,6 @@ class TrackCoordinatorTrackFixtures {
       uri = "https://api.soundcloud.com/tracks/174088262",
       urn = trackRepresentation.visibleTrack.urn.toString,
       user_urn = "soundcloud:users:102661606",
-      video_url = None,
       waveform_url = "https://wis.sndcdn.com/images/player-waveform-medium.png?1414404638"
     )
   }

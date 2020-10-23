@@ -1,7 +1,6 @@
 {
   "api_streamable": true,
   "artwork_url": "https://i1.sndcdn.com/artworks-000095281756-51d163-large.jpg",
-  "bpm": 123,
   "bucket": "soundcloud-media",
   "commentable": true,
   "comments_count": 0,
@@ -21,7 +20,6 @@
   "geo_blocking": false,
   "geo_blockings" : ["US"],
   "isrc": "US-S1Z-99-00001",
-  "key_signature": "A",
   "label_id": null,
   "label_name": "Foobar records",
   "last_modified": "2014/10/27 16:25:25 +0000",
@@ -76,7 +74,6 @@
   "uri": "https://api.soundcloud.com/tracks/174088262",
   "urn": "soundcloud:sounds:174088262",
   "user_urn": "soundcloud:users:102661606",
-  "video_url": null,
   "waveform_url": "https://wis.sndcdn.com/images/player-waveform-medium.png?1414404638",
   "has_downloads_left":true
 }

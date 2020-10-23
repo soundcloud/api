@@ -13,8 +13,6 @@ object PublisherMetadata {
 case class TrackCoordinatorTrack(
     api_streamable: Option[Boolean],
     artwork_url: Option[String],
-    bpm: Option[Int],
-    comment_count: Int,
     commentable: Boolean,
     created_at: String,
     description: Option[String],
@@ -28,7 +26,6 @@ case class TrackCoordinatorTrack(
     genre: Option[String],
     geo_blockings: Option[List[String]],
     isrc: Option[String],
-    key_signature: Option[String],
     label_id: Option[Int],
     label_name: Option[String],
     last_modified: String,
@@ -58,9 +55,7 @@ case class TrackCoordinatorTrack(
     track_type: Option[String],
     uri: String,
     urn: String,
-    user_playback_count: Option[Int] = Some(1), // Was hardcoded in the public api (https://github.com/soundcloud/soundcloud/blob/74c72f348f50b64e0e6fccd4bbd1c963249dc33b/app/resources/api/track_resource.rb#L91)
     user_urn: String,
-    video_url: Option[String],
     waveform_url: String
 )
 
@@ -72,9 +67,7 @@ object TrackCoordinatorTrack {
       Json.obj(
         "api_streamable" -> Json.toJson(o.api_streamable),
         "artwork_url" -> Json.toJson(o.artwork_url),
-        "bpm" -> Json.toJson(o.bpm),
         "commentable" -> Json.toJson(o.commentable),
-        "comment_count" -> Json.toJson(o.comment_count),
         "created_at" -> Json.toJson(o.created_at),
         "description" -> Json.toJson(o.description),
         "download_url" -> Json.toJson(o.download_url),
@@ -87,7 +80,6 @@ object TrackCoordinatorTrack {
         "genre" -> Json.toJson(o.genre),
         "geo_blockings" -> Json.toJson(o.geo_blockings),
         "isrc" -> Json.toJson(o.isrc),
-        "key_signature" -> Json.toJson(o.key_signature),
         "label_id" -> Json.toJson(o.label_id),
         "label_name" -> Json.toJson(o.label_name),
         "last_modified" -> Json.toJson(o.last_modified),
@@ -117,9 +109,7 @@ object TrackCoordinatorTrack {
         "track_type" -> Json.toJson(o.track_type),
         "uri" -> Json.toJson(o.uri),
         "urn" -> Json.toJson(o.urn),
-        "user_playback_count" -> Json.toJson(o.user_playback_count),
         "user_urn" -> Json.toJson(o.user_urn),
-        "video_url" -> Json.toJson(o.video_url),
         "waveform_url" -> Json.toJson(o.waveform_url)
       )
     }
@@ -128,8 +118,6 @@ object TrackCoordinatorTrack {
       TrackCoordinatorTrack(
         api_streamable = (json \ "api_streamable").asOpt[Boolean],
         artwork_url = (json \ "artwork_url").asOpt[String],
-        bpm = (json \ "bpm").asOpt[Int],
-        comment_count = (json \ "comments_count").as[Int],
         commentable = (json \ "commentable").as[Boolean],
         created_at = (json \ "created_at").as[String],
         description = (json \ "description").asOpt[String],
@@ -143,7 +131,6 @@ object TrackCoordinatorTrack {
         genre = (json \ "genre").asOpt[String],
         geo_blockings = (json \ "geo_blockings").asOpt[List[String]],
         isrc = (json \ "isrc").asOpt[String],
-        key_signature = (json \ "key_signature").asOpt[String],
         label_id = (json \ "label_id").asOpt[Int],
         label_name = (json \ "label_name").asOpt[String],
         last_modified = (json \ "last_modified").as[String],
@@ -174,7 +161,6 @@ object TrackCoordinatorTrack {
         uri = (json \ "uri").as[String],
         urn = (json \ "urn").as[String],
         user_urn = (json \ "user_urn").as[String],
-        video_url = (json \ "video_url").asOpt[String],
         waveform_url = (json \ "waveform_url").as[String]
       )
     }

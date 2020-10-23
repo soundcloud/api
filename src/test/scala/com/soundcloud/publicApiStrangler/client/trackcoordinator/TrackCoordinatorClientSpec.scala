@@ -43,7 +43,7 @@ class TrackCoordinatorClientSpec extends UnitSpecification {
     val trackAssetDataCreateRequest =
       TrackAssetDataCreateRequest(original_filename = "filename", uid = "uid")
 
-    val expectedResponse = Json.parse(Json.stringify(Fixtures.trackCoordinatorTrack)).as[TrackCoordinatorTrack]
+    val expectedResponse = new TrackCoordinatorTrackFixtures().build()
   }
 
   trait CreateContext extends Context {
@@ -144,7 +144,7 @@ class TrackCoordinatorClientSpec extends UnitSpecification {
             Some(requestBody)
           )
         ).thenReturn(
-          Future(jsonResponse(Status.Created, Fixtures.trackCoordinatorTrack))
+          Future(jsonResponse(Status.Created, Json.toJson(expectedResponse)))
         )
       }
 
@@ -294,7 +294,7 @@ class TrackCoordinatorClientSpec extends UnitSpecification {
             Some(requestBody)
           )
         ).thenReturn(
-          Future(jsonResponse(Status.Ok, Fixtures.trackCoordinatorTrack))
+          Future(jsonResponse(Status.Ok, Json.toJson(expectedResponse)))
         )
       }
 
