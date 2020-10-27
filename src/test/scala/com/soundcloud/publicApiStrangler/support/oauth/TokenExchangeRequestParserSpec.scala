@@ -29,8 +29,13 @@ class TokenExchangeRequestParserSpec extends UnitSpecification {
     trait RequestWithParamsContext extends Context {
       val params: Map[String, String]
 
+      val remoteIp = "0.1.2.3"
+      val userAgent = "Netscape Navigator 0.86 Beta 3"
+
       override lazy val request: Request = RequestBuilder()
         .url(Request.queryString("http://api/test"))
+        .setHeader("X-Real-Ip", remoteIp)
+        .setHeader("User-Agent", userAgent)
         .addFormElement(params.toSeq: _*)
         .buildFormPost(multipart = false)
     }
@@ -78,8 +83,9 @@ class TokenExchangeRequestParserSpec extends UnitSpecification {
 
         result ==== Right(
           TokenExchangeRequest(
-            accessGrant = AuthorizationCodeGrant(code = "i1WsRn1uB1", redirectUri = "http://redirect/callback"),
-            clientCredential = ClientCredential(id = "s6BhdRkqt3", secret = "gX1fBat3bV")
+            ClientCredential("s6BhdRkqt3", "gX1fBat3bV"),
+            AuthorizationCodeGrant("i1WsRn1uB1", "http://redirect/callback"),
+            RequestContext(remoteIp, userAgent)
           )
         )
       }
@@ -95,8 +101,9 @@ class TokenExchangeRequestParserSpec extends UnitSpecification {
 
         result ==== Right(
           TokenExchangeRequest(
-            accessGrant = ClientCredentialsGrant(),
-            clientCredential = ClientCredential(id = "s6BhdRkqt3", secret = "gX1fBat3bV")
+            ClientCredential("s6BhdRkqt3", "gX1fBat3bV"),
+            ClientCredentialsGrant(),
+            RequestContext(remoteIp, userAgent)
           )
         )
       }
@@ -113,8 +120,9 @@ class TokenExchangeRequestParserSpec extends UnitSpecification {
 
         result ==== Right(
           TokenExchangeRequest(
-            accessGrant = ResourceOwnerPasswordCredentialsGrant(username = "johndoe", password = "A3ddj3w"),
-            clientCredential = ClientCredential(id = "s6BhdRkqt3", secret = "gX1fBat3bV")
+            ClientCredential("s6BhdRkqt3", "gX1fBat3bV"),
+            ResourceOwnerPasswordCredentialsGrant("johndoe", "A3ddj3w"),
+            RequestContext(remoteIp, userAgent)
           )
         )
       }
@@ -130,8 +138,9 @@ class TokenExchangeRequestParserSpec extends UnitSpecification {
 
         result ==== Right(
           TokenExchangeRequest(
-            accessGrant = RefreshTokenGrant(refreshToken = "n4E9O119d"),
-            clientCredential = ClientCredential(id = "s6BhdRkqt3", secret = "gX1fBat3bVt")
+            ClientCredential("s6BhdRkqt3", "gX1fBat3bVt"),
+            RefreshTokenGrant("n4E9O119d"),
+            RequestContext(remoteIp, userAgent)
           )
         )
       }

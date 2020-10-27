@@ -28,6 +28,11 @@ message ResourceOwnerPasswordCredentialsGrant {
   string password = 2;
 }
 
+message Context {
+  string remote_ip = 1;
+  string user_agent = 2;
+}
+
 message AccessGrant {
   ClientCredential client_credential = 1;
 
@@ -37,6 +42,8 @@ message AccessGrant {
     RefreshTokenGrant refresh_token_grant = 4;
     ResourceOwnerPasswordCredentialsGrant resource_owner_password_credentials_grant = 5;
   }
+
+  Context context = 6;
 }
 
 message ValidateAccessGrantRequest {

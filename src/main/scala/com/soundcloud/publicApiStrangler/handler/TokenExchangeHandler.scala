@@ -25,11 +25,11 @@ class TokenExchangeHandler(
 
   def instrumentedMothershipDispatch(request: HandlerRequest): Future[Response] =
     parseRequest(request) match {
-      case Right(TokenExchangeRequest(credential, accessGrant)) =>
+      case Right(TokenExchangeRequest(credential, accessGrant, context)) =>
         for {
           (response, isValid) <- Future.join(
             mothershipDispatch(request),
-            authorizationService.validateAccessGrant(credential, accessGrant)
+            authorizationService.validateAccessGrant(credential, accessGrant, context)
           )
         } yield {
           grantTypeCounter

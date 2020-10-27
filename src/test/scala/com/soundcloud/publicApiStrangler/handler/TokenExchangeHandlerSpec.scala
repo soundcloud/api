@@ -18,12 +18,13 @@ class TokenExchangeHandlerSpec extends UnitSpecification {
 
       val credential: ClientCredential = ClientCredential(id = "s6BhdRkqt3", secret = "47HDu8s")
       val grant: ClientCredentialsGrant = ClientCredentialsGrant()
+      val context: RequestContext = RequestContext("0.1.2.3", "Netscape Navigator 0.86 Beta 3")
 
       val tokenExchangeRequestParseResult: Either[TokenExchangeRequestError, TokenExchangeRequest] =
-        Right(TokenExchangeRequest(credential, grant))
+        Right(TokenExchangeRequest(credential, grant, context))
 
       val authorizationService: AuthorizationService = mock[AuthorizationService]
-      authorizationService.validateAccessGrant(credential, grant).returns(Future.value(true))
+      authorizationService.validateAccessGrant(===(credential), ===(grant), any()).returns(Future.value(true))
 
       val handler =
         new TokenExchangeHandler(

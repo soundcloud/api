@@ -11,32 +11,29 @@ import scala.util.control.NonFatal
 class AuthorizationService(service: proto.AuthorizationService, exceptionCollector: ExceptionCollector) {
   private val validationFallbackResponse = proto.ValidateAccessGrantResponse(false)
 
-  def validateAccessGrant(clientCredential: ClientCredential, accessGrant: AccessGrant): Future[Boolean] = {
-    val credential = proto.ClientCredential(
-      clientId = clientCredential.id,
-      clientSecret = clientCredential.secret
-    )
+  def validateAccessGrant(
+      clientCredential: ClientCredential,
+      accessGrant: AccessGrant,
+      context: RequestContext
+  ): Future[Boolean] = {
+    val credential =
+      proto.ClientCredential(clientCredential.id, clientCredential.secret)
 
-    val grant = (proto.AccessGrant(clientCredential = Some(credential)), accessGrant) match {
-      case (grant, a: AuthorizationCodeGrant) =>
-        val authorizationCodeGrant = proto.AuthorizationCodeGrant(
-          code = a.code,
-          redirectUri = a.redirectUri
-        )
+    val grantType: proto.AccessGrant.GrantType =
+      accessGrant match {
+        case a: AuthorizationCodeGrant =>
+          proto.AccessGrant.GrantType.AuthorizationCodeGrant(proto.AuthorizationCodeGrant(a.code, a.redirectUri))
+        case _: ClientCredentialsGrant =>
+          proto.AccessGrant.GrantType.ClientCredentialsGrant(proto.ClientCredentialsGrant())
+        case r: RefreshTokenGrant =>
+          proto.AccessGrant.GrantType.RefreshTokenGrant(proto.RefreshTokenGrant(r.refreshToken))
+        case r: ResourceOwnerPasswordCredentialsGrant =>
+          proto.AccessGrant.GrantType
+            .ResourceOwnerPasswordCredentialsGrant(proto.ResourceOwnerPasswordCredentialsGrant(r.password, r.username))
+      }
 
-        grant.withAuthorizationCodeGrant(authorizationCodeGrant)
-      case (grant, _: ClientCredentialsGrant) =>
-        grant.withClientCredentialsGrant(proto.ClientCredentialsGrant())
-      case (grant, r: RefreshTokenGrant) =>
-        grant.withRefreshTokenGrant(proto.RefreshTokenGrant(r.refreshToken))
-      case (grant, r: ResourceOwnerPasswordCredentialsGrant) =>
-        val resourceOwnerPasswordCredentialsGrant = proto.ResourceOwnerPasswordCredentialsGrant(
-          password = r.password,
-          username = r.username
-        )
-
-        grant.withResourceOwnerPasswordCredentialsGrant(resourceOwnerPasswordCredentialsGrant)
-    }
+    val grant =
+      proto.AccessGrant(Some(credential), grantType, Some(proto.Context(context.remoteIp, context.userAgent)))
 
     service
       .validateAccessGrant(proto.ValidateAccessGrantRequest(Some(grant)))

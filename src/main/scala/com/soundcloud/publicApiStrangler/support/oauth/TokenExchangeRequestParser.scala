@@ -8,7 +8,8 @@ class TokenExchangeRequestParser(railsLikeParamsParser: RailsLikeParamsParser) {
       params <- railsLikeParamsParser.parse(request).toRight(UnparseableRequest(request.mediaType))
       accessGrant <- readAccessGrant(params)
       clientCredential <- readClientCredential(params)
-    } yield TokenExchangeRequest(clientCredential, accessGrant)
+      context <- readContext(request)
+    } yield TokenExchangeRequest(clientCredential, accessGrant, context)
 
   private def getNonBlank(values: Map[String, String], key: String) =
     values.get(key).filter(!_.trim.isEmpty)
@@ -50,5 +51,11 @@ class TokenExchangeRequestParser(railsLikeParamsParser: RailsLikeParamsParser) {
 
       case None =>
         Left(InvalidRequest("missing_grant_type"))
+    }
+
+  private def readContext(request: HandlerRequest): Either[TokenExchangeRequestError, RequestContext] =
+    (request.remoteIp(), request.headerMap.get("User-Agent").getOrElse("")) match {
+      case (Some(remoteIp), userAgent) => Right(RequestContext(remoteIp, userAgent))
+      case _ => Left(InvalidRequest("remote_ip_missing"))
     }
 }
