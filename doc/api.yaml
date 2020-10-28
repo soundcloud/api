@@ -312,10 +312,7 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                user_id:
-                  type: integer
+              $ref: '#/components/schemas/UserId'
       responses:
         200:
           description: Success
@@ -612,17 +609,17 @@ paths:
       responses:
         200:
           description: Success
-  /tracks:
-    get:
-      summary: Returns ???.
-      tags:
-        - tracks
-      security:
-        - ClientId: []
-          AuthHeader: []
-      responses:
-        200:
-          description: Success
+  # /tracks:
+  #   get:
+  #     summary: Returns ???.
+  #     tags:
+  #       - tracks
+  #     security:
+  #       - ClientId: []
+  #         AuthHeader: []
+  #     responses:
+  #       200:
+  #         description: Success
     # post:
     #   summary: Returns ???.
     #   tags:
@@ -635,54 +632,111 @@ paths:
     #       description: Success
   /tracks/{track_id}:
     get:
-      summary: Returns ???.
+      summary: Returns a track.
       tags:
         - tracks
       security:
         - ClientId: []
-          AuthHeader: []
       parameters:
         - $ref: '#/components/parameters/track_id'
       responses:
         200:
           description: Success
-    # put:
-    #   summary: Returns ???.
-    #   tags:
-    #     - tracks
-    #   security:
-    #     - ClientId: []
-    #       AuthHeader: []
-    #   parameters:
-    #     - $ref: '#/components/parameters/track_id'
-    #   responses:
-    #     200:
-    #       description: Success
-    # delete:
-    #   summary: Returns ???.
-    #   tags:
-    #     - tracks
-    #   security:
-    #     - ClientId: []
-    #       AuthHeader: []
-    #   parameters:
-    #     - $ref: '#/components/parameters/track_id'
-    #   responses:
-    #     200:
-    #       description: Success
+          content:
+            application/json:
+              examples:
+                default:
+                  $ref: '#/components/examples/Track'
+        401:
+          description: 'Error: Unauthorized'
+        404:
+          description: 'Error: Not Found'
+          content:
+            application/json:
+              examples:
+                default:
+                  $ref: '#/components/examples/Error404'
+    put:
+      summary: Updating a track information.
+      tags:
+        - tracks
+      security:
+        - AuthHeader: []
+      parameters:
+        - $ref: '#/components/parameters/track_id'
+      requestBody:
+        description: Track payload
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateTrackRequest"
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              examples:
+                default:
+                  $ref: '#/components/examples/Track'
+        400:
+          description: 'Error: Bad Request'
+          content:
+            application/json:
+              examples:
+                default:
+                  $ref: '#/components/examples/Error400'
+        401:
+          description: 'Error: Unauthorized'
+        404:
+          description: 'Error: Not Found'
+          content:
+            application/json:
+              examples:
+                default:
+                  $ref: '#/components/examples/Error404'
+        500:
+          description: 'Error: Internal Server Error'
+    delete:
+      summary: Delete a track.
+      tags:
+        - tracks
+      security:
+        - AuthHeader: []
+      parameters:
+        - $ref: '#/components/parameters/track_id'
+      responses:
+        200:
+          description: Success
+        401:
+          description: 'Error: Unauthorized'
+        404:
+          description: 'Error: Not Found'
   /tracks/{track_id}/comments:
     get:
-      summary: Returns the comments posted for the given track with id `track_id`.
+      summary: Returns the comments posted on the given track(track_id).
       tags:
         - tracks
       security:
         - ClientId: []
-          AuthHeader: []
       parameters:
         - $ref: '#/components/parameters/track_id'
       responses:
         200:
           description: Success
+          content:
+            application/json:
+              examples:
+                default:
+                  $ref: '#/components/examples/Comments'
+        401:
+          description: 'Error: Unauthorized'
+        404:
+          description: 'Error: Not Found'
+          content:
+            application/json:
+              examples:
+                default:
+                  $ref: '#/components/examples/Error404'
     # post:
     #   summary: Returns ???.
     #   tags:
@@ -709,6 +763,8 @@ paths:
   #     responses:
   #       200:
   #         description: Success
+  #       404:
+  #         description: 'Error: Not Found'
   #   delete:
   #     summary: Returns ???.
   #     tags:
@@ -737,57 +793,96 @@ paths:
   #         description: Success
   /tracks/{track_id}/favoriters:
     get:
-      summary: Returns ???.
+      summary: Returns a list of users who favorited the track.
       tags:
         - tracks
       security:
         - ClientId: []
-          AuthHeader: []
       parameters:
         - $ref: '#/components/parameters/track_id'
       responses:
         200:
           description: Success
+          content:
+            application/json:
+              examples:
+                default:
+                  $ref: '#/components/examples/Users'
+        401:
+          description: 'Error: Unauthorized'
+        404:
+          description: 'Error: Not Found'
+          content:
+            application/json:
+              examples:
+                default:
+                  $ref: '#/components/examples/Error404'
   /tracks/{track_id}/favoriters/{user_id}:
     get:
-      summary: Returns ???.
+      summary: Returns a user who has favorited the track.
       tags:
         - tracks
       security:
-        - ClientId: []
-          AuthHeader: []
+        - AuthHeader: []
       parameters:
         - $ref: '#/components/parameters/track_id'
         - $ref: '#/components/parameters/user_id'
       responses:
         200:
           description: Success
+          content:
+            application/json:
+              examples:
+                default:
+                  $ref: '#/components/examples/User'
+        401:
+          description: 'Error: Unauthorized'
+        404:
+          description: 'Error: Not Found'
+          content:
+            application/json:
+              examples:
+                default:
+                  $ref: '#/components/examples/Error404'
   /tracks/{track_id}/related:
     get:
-      summary: Returns ???.
+      summary: Returns all related tracks for input track id.
       tags:
         - tracks
       security:
         - ClientId: []
-          AuthHeader: []
       parameters:
         - $ref: '#/components/parameters/track_id'
       responses:
         200:
           description: Success
-  /tracks/{track_id}/streams:
-    get:
-      summary: Returns ???.
-      tags:
-        - tracks
-      security:
-        - ClientId: []
-          AuthHeader: []
-      parameters:
-        - $ref: '#/components/parameters/track_id'
-      responses:
-        200:
-          description: Success
+          content:
+            application/json:
+              examples:
+                default:
+                  $ref: '#/components/examples/Tracks'
+        401:
+          description: 'Error: Unauthorized'
+        404:
+          description: 'Error: Not Found'
+          content:
+            application/json:
+              examples:
+                default:
+                  $ref: '#/components/examples/Err404'
+  # /tracks/{track_id}/streams:
+  #   get:
+  #     summary: Returns ???.
+  #     tags:
+  #       - tracks
+  #     security:
+  #       - ClientId: []
+  #         AuthHeader: []
+  #     parameters:
+  #       - $ref: '#/components/parameters/track_id'
+  #     responses:
+  #       200:
+  #         description: Success
   /resolve:
     get:
       summary: Returns ?.
@@ -1099,7 +1194,85 @@ components:
       in: header
       type: apiKey
       name: Authorization
-      description: 'The string "OAuth " followed by the user’s token: OAuth ACCESS_TOKEN'
+      description: 'The string "OAuth" followed by the user’s token: OAuth ACCESS_TOKEN'
+  schemas:
+    UpdateTrackRequest:
+      type: object
+      properties:
+        track:
+          type: object
+          properties:
+            title:
+              type: string
+            permalink:
+              type: string
+            sharing:
+              type: string
+              enum:
+                - public
+                - private
+              default: public
+            embeddable_by:
+              type: string
+              enum:
+                - all
+                - me
+                - none
+              description: 'who can embed this track "all", "me", or "none"'
+            purchase_url:
+              type: string
+            description:
+              type: string
+            genre:
+              type: string
+            tag_list:
+              type: string
+              description: "The tag_list property contains a list of tags separated by spaces. Multiword tags are quoted in doublequotes. We also support machine tags that follow the pattern NAMESPACE:KEY=VALUE. For example: geo:lat=43.555
+                camel:size=medium
+                “machine:tag=with space”
+                Machine tags are not revealed to the user on the track pages."
+            label_name:
+              type: string
+            release:
+              type: string
+            release_date:
+              title: write only!
+              type: string
+              description: string, formatted as yyyy-mm-dd, representing release date
+            streamable:
+              type: boolean
+              default: true
+            downloadable:
+              type: boolean
+              default: true
+            license:
+              type: string
+              enum:
+                - no-rights-reserved
+                - all-rights-reserved
+                - cc-by
+                - cc-by-nc
+                - cc-by-nd
+                - cc-by-sa
+                - cc-by-nc-nd
+                - cc-by-nc-sa
+              description: 'Possible values: no-rights-reserved, all-rights-reserved, cc-by, cc-by-nc, cc-by-nd, cc-by-sa, cc-by-nc-nd, cc-by-nc-sa'
+            commentable:
+              type: boolean
+              default: true
+            isrc:
+              type: string
+            artwork_data:
+              title: only for uploading, for PRO users
+              type: string
+            asset_data:
+              title: Only for uploading
+              type: string
+    UserId:
+      type: object
+      properties:
+        user_id:
+          type: integer
   examples:
     Activities:
       value:
@@ -1161,9 +1334,36 @@ components:
       value:
         - allOf:
           - $ref: "#/components/examples/Connection/value"
+    Comment:
+      value:
+        body: "some comment"
+        created_at: 2020/10/20 08:01:52 +0000
+        id: 123
+        kind: comment
+        timestamp: 34185
+        track_id: 1234
+        uri: https://api.soundcloud.com/comments/123
+        user:
+          id: 123456
+          kind: user
+          permalink: permalink
+          username: username
+          last_modified: 1995/09/24 00:02:00 +0000
+          uri: https://api.soundcloud.com/users/123456
+          permalink_url: https://soundcloud.com/permalink
+          avatar_url: https://i1.sndcdn.com/avatars-large.jpg
+        user_id: 123456
+    Comments:
+      value:
+        - allOf:
+          - $ref: "#/components/examples/Comment/value"
     Created:
       value:
         status: 201 - Created
+    Error400:
+      value:
+        errors:
+        - error_message: 400 - Invalid Request
     Error401:
       value:
         errors:
@@ -1172,6 +1372,9 @@ components:
       value:
         errors:
         - error_message: 404 - Not Found
+    Err404:
+      value:
+        error: Not Found
     Error422:
       value:
         errors:
@@ -1404,6 +1607,10 @@ components:
         username: some.user
         website:
         website_title:
+    Users:
+      value:
+        - allOf:
+          - $ref: "#/components/examples/User/value"
     Web-profiles:
       value:
         - created_at: 1995/10/20 12:10:39 +0000
