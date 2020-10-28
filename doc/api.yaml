@@ -15,8 +15,10 @@ tags:
     description: Playlist Endpoints
   - name: tracks
     description: Tracks Endpoints
+  - name: resolve
+    description: resolve Endpoint
   - name: users
-    description: Users Endpoint
+    description: Users Endpoints
 paths:
   /me:
     get:
@@ -457,7 +459,7 @@ paths:
             application/json:
               examples:
                 default:
-                  $ref: "#/components/examples/PlaylistsAndTracks"
+                  $ref: "#/components/examples/PlaylistAndTracks"
         401:
           description: 'Error: Unauthorized'
     # post:
@@ -559,56 +561,56 @@ paths:
   #     responses:
   #       200:
   #         description: Success
-  /playlists/{playlist_id}:
-    get:
-      summary: Return playlist
-      tags:
-        - playlists
-      security:
-        - ClientId: []
-          AuthHeader: []
-      parameters:
-        - $ref: "#/components/parameters/playlist_id"
-      responses:
-        200:
-          description: Success
-    put:
-      summary: Return playlist
-      tags:
-        - playlists
-      security:
-        - ClientId: []
-          AuthHeader: []
-      parameters:
-        - $ref: "#/components/parameters/playlist_id"
-      responses:
-        200:
-          description: Success
-    delete:
-      summary: Delete playlist
-      tags:
-        - playlists
-      security:
-        - ClientId: []
-          AuthHeader: []
-      parameters:
-        - $ref: "#/components/parameters/playlist_id"
-      responses:
-        200:
-          description: Success
-  /playlists/{playlist_id}/tracks:
-    get:
-      summary: Return playlist's tracks
-      tags:
-        - playlists
-      security:
-        - ClientId: []
-          AuthHeader: []
-      parameters:
-        - $ref: "#/components/parameters/playlist_id"
-      responses:
-        200:
-          description: Success
+  # /playlists/{playlist_id}:
+  #   get:
+  #     summary: Return playlist
+  #     tags:
+  #       - playlists
+  #     security:
+  #       - ClientId: []
+  #         AuthHeader: []
+  #     parameters:
+  #       - $ref: "#/components/parameters/playlist_id"
+  #     responses:
+  #       200:
+  #         description: Success
+  #   put:
+  #     summary: Return playlist
+  #     tags:
+  #       - playlists
+  #     security:
+  #       - ClientId: []
+  #         AuthHeader: []
+  #     parameters:
+  #       - $ref: "#/components/parameters/playlist_id"
+  #     responses:
+  #       200:
+  #         description: Success
+  #   delete:
+  #     summary: Delete playlist
+  #     tags:
+  #       - playlists
+  #     security:
+  #       - ClientId: []
+  #         AuthHeader: []
+  #     parameters:
+  #       - $ref: "#/components/parameters/playlist_id"
+  #     responses:
+  #       200:
+  #         description: Success
+  # /playlists/{playlist_id}/tracks:
+  #   get:
+  #     summary: Return playlist's tracks
+  #     tags:
+  #       - playlists
+  #     security:
+  #       - ClientId: []
+  #         AuthHeader: []
+  #     parameters:
+  #       - $ref: "#/components/parameters/playlist_id"
+  #     responses:
+  #       200:
+  #         description: Success
   # /tracks:
   #   get:
   #     summary: Returns ???.
@@ -885,15 +887,37 @@ paths:
   #         description: Success
   /resolve:
     get:
-      summary: Returns ?.
+      summary: Returns access API resources.
       tags:
         - resolve
       security:
         - ClientId: []
           AuthHeader: []
+      parameters:
+        - $ref: '#/components/parameters/url'
       responses:
         200:
           description: Success
+          content:
+            application/json:
+              examples:
+                user:
+                  $ref: "#/components/examples/User"
+                track:
+                  $ref: "#/components/examples/Track"
+                playlist:
+                  $ref: "#/components/examples/PlaylistAndTracks"
+        401:
+          description: 'Error: Unauthorized'
+        404:
+          description: 'Error: Not Found'
+          content:
+            application/json:
+              examples:
+                default:
+                  $ref: "#/components/examples/Error404"
+        406:
+          description: 'Error: Not Acceptable'
   /users:
     get:
       summary: Returns users list.
@@ -1167,6 +1191,13 @@ components:
       schema:
         type: integer
       description: SoundCloud playlist id
+    url:
+      in: query
+      name: url
+      required: true
+      schema:
+        type: string
+      description: SoundCloud URL
     tag:
       in: path
       name: tag
@@ -1447,7 +1478,7 @@ components:
           kind: user
           avatar_url: https://i1.sndcdn.com/avatars-test-large.jpg
         user_id: 1234
-    PlaylistsAndTracks:
+    PlaylistAndTracks:
       value:
         artwork_url: ''
         created_at: 2020/01/16 16:09:54 +0000
@@ -1481,8 +1512,8 @@ components:
         title: some title
         track_count: 1
         tracks:
-          allOf:
-          - $ref: "#/components/examples/Track/value"
+          - allOf:
+            - $ref: "#/components/examples/Track/value"
         tracks_uri: https://api.soundcloud.com/playlists/12345/tracks
         type: ''
         uri: https://api.soundcloud.com/playlists/12345
