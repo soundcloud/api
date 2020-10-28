@@ -5,7 +5,7 @@ import java.nio.file.{Files, Paths}
 import com.soundcloud.jvmkit.module.bff.testsupport.FakeUserAuthentication
 import com.soundcloud.jvmkit.module.util.session.UserSessionBuilder
 import com.soundcloud.jvmkit.module.util.{Geo, Urn}
-import com.soundcloud.outcome._
+import com.soundcloud.jvmkit.module.outcome._
 import com.soundcloud.publicApiStrangler.Routing
 import com.soundcloud.publicApiStrangler.authorization.Track
 import com.soundcloud.publicApiStrangler.client.mothership.response.mapper.UserMapper

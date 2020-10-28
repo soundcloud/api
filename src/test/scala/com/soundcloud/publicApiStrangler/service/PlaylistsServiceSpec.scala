@@ -17,7 +17,7 @@ import com.soundcloud.publicApiStrangler.test.UnitSpecification
 import com.twitter.finagle.http.ParamMap
 import com.twitter.util.{Await, Future}
 import org.mockito.Mockito.when
-import com.soundcloud.outcome._
+import com.soundcloud.jvmkit.module.outcome._
 import com.soundcloud.publicApiStrangler.service.playlists.PlaylistRequest
 import com.soundcloud.publicApiStrangler.service.representation.collection.Collection
 import proto.soundcloud.common.session.{UserSession => ProtoUserSession}

@@ -2,7 +2,7 @@ package com.soundcloud.publicApiStrangler.service
 
 import com.soundcloud.jvmkit.module.http.client.{Params, StringParam}
 import com.soundcloud.jvmkit.module.util.session.UserSession
-import com.soundcloud.outcome._
+import com.soundcloud.jvmkit.module.outcome._
 import com.soundcloud.publicApiStrangler.client.search.SearchClient
 import com.soundcloud.publicApiStrangler.client.tracks.TrackRequest
 import com.soundcloud.publicApiStrangler.service.pagination.OffsetBasedPagination

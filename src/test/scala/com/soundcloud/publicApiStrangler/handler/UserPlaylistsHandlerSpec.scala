@@ -12,7 +12,7 @@ import com.soundcloud.publicApiStrangler.service.playlists.representation.Playli
 import com.soundcloud.publicApiStrangler.service.representation.collection.Collection
 import com.soundcloud.publicApiStrangler.test.{HandlerSpecificationScope, UnitSpecification}
 import com.twitter.finagle.http.{Request, Status}
-import com.soundcloud.outcome._
+import com.soundcloud.jvmkit.module.outcome._
 import com.twitter.util.Future
 import org.joda.time.DateTimeZone
 import org.mockito.Mockito.when

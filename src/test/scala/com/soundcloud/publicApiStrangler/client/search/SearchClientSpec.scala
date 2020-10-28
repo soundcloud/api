@@ -12,7 +12,7 @@ import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
 import org.specs2.specification.Scope
 import play.api.libs.json.Json
-import com.soundcloud.outcome._
+import com.soundcloud.jvmkit.module.outcome._
 
 class SearchClientSpec extends Specification with Mockito {
 

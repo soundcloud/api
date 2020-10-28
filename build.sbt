@@ -1,7 +1,6 @@
 val jvmkitVersion = "14.2.0"
 val specs2Version = "4.9.2"
 val httpComponentsVersion = "4.5.12"
-val outcomeVersion = "0.12"
 
 lazy val publicApiStrangler = project
   .in(file("."))
@@ -15,10 +14,10 @@ lazy val publicApiStrangler = project
       "com.soundcloud" %% "jvmkit-rollout" % jvmkitVersion,
       "com.soundcloud" %% "jvmkit-memcached" % jvmkitVersion,
       "com.soundcloud" %% "jvmkit-json-play" % jvmkitVersion,
+      "com.soundcloud" %% "jvmkit-outcome" % jvmkitVersion,
       "com.soundcloud" %% "jvmkit-twirp" % jvmkitVersion,
       "com.netaporter" %% "scala-uri" % "0.4.16",
       "org.jsoup" % "jsoup" % "1.11.3",
-      "com.soundcloud" %% "outcome-core" % outcomeVersion,
       "com.squareup.okhttp3" % "mockwebserver" % "3.11.0" % "test",
       "org.apache.httpcomponents" % "httpclient" % httpComponentsVersion % "test",
       "org.apache.httpcomponents" % "httpmime" % httpComponentsVersion % "test",

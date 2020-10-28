@@ -7,7 +7,7 @@ import com.soundcloud.jvmkit.module.util.{Path, Urn}
 import com.twitter.finagle.http.Status
 import play.api.libs.json.Json
 import com.soundcloud.jvmkit.module.json.play.UrnFormat._
-import com.soundcloud.outcome._
+import com.soundcloud.jvmkit.module.outcome._
 
 case class Doc(urn: Urn)
 

@@ -3,7 +3,7 @@ package com.soundcloud.publicApiStrangler.handler
 import com.soundcloud.jvmkit.module.bff.testsupport.FakeUserAuthentication
 import com.soundcloud.jvmkit.module.util.session.UserSessionBuilder
 import com.soundcloud.jvmkit.module.util.{Geo, Urn}
-import com.soundcloud.outcome._
+import com.soundcloud.jvmkit.module.outcome._
 import com.soundcloud.publicApiStrangler.Routing
 import com.soundcloud.publicApiStrangler.client.playlists.PlaylistDeletionClient
 import com.soundcloud.publicApiStrangler.service.PlaylistsService

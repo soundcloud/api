@@ -1,7 +1,7 @@
 package com.soundcloud.publicApiStrangler.handler.representation.tracks
 
 import com.soundcloud.jvmkit.module.http.server.JsonResponseBuilder
-import com.soundcloud.outcome._
+import com.soundcloud.jvmkit.module.outcome._
 import com.soundcloud.publicApiStrangler.handler.support.error.UnhandledOutcomeException
 import com.soundcloud.publicApiStrangler.service.CreatedTrack.CreatedTrack
 import com.soundcloud.publicApiStrangler.service.trackrepresentation.{TrackRepresentation}

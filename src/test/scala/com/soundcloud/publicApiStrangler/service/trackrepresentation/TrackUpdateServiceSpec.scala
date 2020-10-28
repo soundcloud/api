@@ -4,7 +4,7 @@ import com.google.protobuf.ByteString
 import com.soundcloud.hocuspocus.{HocuspocusService, Image, Kind, Raw}
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSessionBuilder
-import com.soundcloud.outcome._
+import com.soundcloud.jvmkit.module.outcome._
 import com.soundcloud.publicApiStrangler.client.mothership.OkidokiClient
 import com.soundcloud.publicApiStrangler.client.mothership.response.mapper.UserMapper
 import com.soundcloud.publicApiStrangler.client.mothership.response.representation.User
