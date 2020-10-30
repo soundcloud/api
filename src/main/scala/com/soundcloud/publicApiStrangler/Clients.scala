@@ -55,6 +55,17 @@ class Clients(
     telemetry
   )
 
+  private val trackCoordinatorJsonClient = {
+    val writeExceptions: PartialFunction[(Request, Try[Response]), Boolean] = {
+      case (_, Throw(RetryableWriteException(_))) => true
+    }
+    JsonClient(
+      config = HttpClientConfig.from(ResourceName("track_coordinator"), config),
+      telemetry = telemetry,
+      retryOn = Some(writeExceptions)
+    )
+  }
+
   private val okidokiJsonClient = jsonClient("okidoki")
   val okidokiClient = new OkidokiClient(okidokiJsonClient)
 
@@ -87,7 +98,7 @@ class Clients(
 
   val systemPlaylistsClient = new SystemPlaylistsClient(jsonClient("system_playlists"))
 
-  val trackCoordinatorClient = new TrackCoordinatorClient(jsonClient("track_coordinator"))
+  val trackCoordinatorClient = new TrackCoordinatorClient(trackCoordinatorJsonClient)
 
   val pubmeseClient = new PubmeseClient(jsonClient("pubmese"))
 

@@ -103,6 +103,7 @@ canary-api:
 		--env=production \
 		--component="$(API_COMPONENT)" \
 		--replicas=2
+		--duration=60m
 
 .PHONY: deploy-api
 deploy-api:
