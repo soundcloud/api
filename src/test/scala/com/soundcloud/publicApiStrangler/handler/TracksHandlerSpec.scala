@@ -309,7 +309,7 @@ class TracksHandlerSpec extends UnitSpecification with TrackRepresentationSpecCo
     "application/x-www-form-urlencoded request" >> {
 
       trait UrlEncodedContext extends PostContext {
-        val path = "/tracks"
+        val path = s"/tracks_experimental"
         def stubTrackUpdateServiceCreate(
             createdTrackOutcome: Outcome[CreatedTrack],
             trackUpdate: Option[TrackMetadataUpdateRequest] = None,
@@ -352,7 +352,7 @@ class TracksHandlerSpec extends UnitSpecification with TrackRepresentationSpecCo
         val expectedResponse = NotFound().bad
       }
 
-      "Returns a 201 on a valid request" in new SuccessContext {
+      "Returns a 200 on a valid request" in new SuccessContext {
         stubTrackUpdateServiceCreate(
           createdTrackOutcome = Good(expectedResponse),
           trackUpdate = trackUpdate,
@@ -388,7 +388,7 @@ class TracksHandlerSpec extends UnitSpecification with TrackRepresentationSpecCo
     "Multipart/form request" >> {
 
       trait MultiPartFormContext extends PostContext {
-        val path = "/tracks"
+        val path = s"/tracks_experimental"
         def stubTrackUpdateServiceCreate(
             createdTrackOutcome: Outcome[CreatedTrack],
             trackUpdate: Option[TrackMetadataUpdateRequest] = None,
@@ -429,7 +429,7 @@ class TracksHandlerSpec extends UnitSpecification with TrackRepresentationSpecCo
         val expectedResponse = NotFound().bad
       }
 
-      "Returns a 201 on a valid request" in new SuccessContext {
+      "Returns a 200 on a valid request" in new SuccessContext {
         stubTrackUpdateServiceCreate(
           createdTrackOutcome = Good(expectedResponse),
           trackUpdate = trackUpdate,

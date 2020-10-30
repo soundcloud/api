@@ -64,6 +64,7 @@ object Routing {
       route(Method.Post, "/playlists", mothershipDispatcher.dispatch) :::
       route(Method.Put, "/playlists/:id", mothershipDispatcher.dispatch) :::
       route(Method.Get, "/resolve", mothershipDispatcher.dispatch) :::
+      route(Method.Post, "/tracks", mothershipDispatcher.dispatch) :::
       route(Method.Get, "/tracks/:trackId/comments", mothershipDispatcher.dispatch) :::
       route(Method.Post, "/tracks/:trackId/comments", mothershipDispatcher.dispatch) :::
       route(Method.Delete, "/tracks/:trackId/comments/:id", mothershipDispatcher.dispatch) :::
@@ -96,7 +97,7 @@ object Routing {
 
   def forTracksHandler(tracksHandler: TracksHandler): List[(Method, String, Handler)] = {
     route(Method.Put, "/tracks/:trackId", tracksHandler.handleUpdateTrack) :::
-      route(Method.Post, "/tracks", tracksHandler.handleCreate) :::
+      route(Method.Post, "/tracks_experimental", tracksHandler.handleCreate) :::
       route(Method.Delete, "/tracks/:trackId", tracksHandler.handleDelete)
   }
 
