@@ -4,7 +4,7 @@ import com.soundcloud.jvmkit.module.rollout.RolloutFeature
 import com.soundcloud.jvmkit.module.telemetry.Telemetry
 import com.soundcloud.jvmkit.module.telemetry.exceptions.ExceptionCollector
 import com.soundcloud.publicApiStrangler.handler._
-import com.soundcloud.publicApiStrangler.mapper.search.{SearchMapper, SearchRepository}
+import com.soundcloud.publicApiStrangler.handler.search.SearchHandler
 import com.soundcloud.publicApiStrangler.mapper.trackstreams.{
   TrackStreamJsonResponseMapper,
   TrackStreamRedirectResponseMapper
@@ -67,11 +67,8 @@ class Handlers(telemetry: Telemetry, clients: Clients, exceptionCollector: Excep
     new UserFollowHandler(userAuthentication, okidokiClient, followsClient, followCountsClient, repostsClient, baseUrl)
 
   val searchHandler: SearchHandler = {
-    val searchRepository = new SearchRepository(searchJsonClient)
-    val searchMapper = new SearchMapper(searchRepository, searchEntityMapper, baseUrl)
     new SearchHandler(
       userAuthentication,
-      searchMapper,
       baseUrl,
       userRelatedMothershipDispatcher,
       searchService

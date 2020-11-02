@@ -2,25 +2,71 @@ package com.soundcloud.publicApiStrangler.client.mothership.response.mapper
 
 import com.soundcloud.jvmkit.module.json.play.UrnFormat._
 import com.soundcloud.jvmkit.module.util.Urn
-import com.soundcloud.publicApiStrangler.client.mothership.response.representation.User
-import play.api.libs.json.JsValue
+import com.soundcloud.publicApiStrangler.client.followcounts.FollowCounts
+import com.soundcloud.publicApiStrangler.client.mothership.response.representation.{Product, Subscription, User}
+import play.api.libs.json.{JsObject, JsValue}
 
 object UserMapper {
-  def apply(json: JsValue): User = {
+  private def getSubscriptions(json: JsValue): Seq[Subscription] = {
+    (json \ "subscriptions")
+      .asOpt[Seq[JsObject]]
+      .map(_.map(sub => {
+        val id = (sub \ "product" \ "urn").as[Urn].identifier
+        val name = (sub \ "product" \ "name").as[String]
+        Subscription(Product(id, name))
+      }))
+      .getOrElse(Seq.empty)
+  }
+
+  private def getNameInNetwork(json: JsValue, networkName: String, fieldName: String = "username"): Option[String] = {
+    (json \ "links")
+      .asOpt[Seq[JsObject]]
+      .flatMap(links =>
+        links.filter(data => (data \ "network").as[String] == networkName) match {
+          case networkData +: _ => (networkData \ fieldName).asOpt[String]
+          case _ => None
+        }
+      )
+  }
+
+  def apply(
+      json: JsValue,
+      maybeFollowCounts: Option[Map[Urn, FollowCounts]] = None,
+      maybeRepostsCounts: Option[Map[Urn, Long]] = None
+  ): User = {
+    val urn = (json \ "self" \ "urn").as[Urn]
+    val followCounts = maybeFollowCounts.flatMap(_.get(urn))
+    val repostCounts = maybeRepostsCounts.flatMap(_.get(urn))
+
     new User(
-      (json \ "self" \ "urn").as[Urn],
-      (json \ "permalink").as[String],
-      (json \ "username").as[String],
-      (json \ "avatar_url").as[String],
-      (json \ "permalink_url").as[String],
-      (json \ "city").asOpt[String],
-      (json \ "country").asOpt[String],
-      (json \ "tracks_count").as[Int],
-      (json \ "followers_count").asOpt[Int],
-      (json \ "followings_count").asOpt[Int],
-      (json \ "verified").as[Boolean],
-      (json \ "description").asOpt[String],
-      (json \ "updated_at").asOpt[String]
+      urn = urn,
+      permalink = (json \ "permalink").as[String],
+      username = (json \ "username").as[String],
+      avatar_url = (json \ "avatar_url").as[String],
+      permalink_url = (json \ "permalink_url").as[String],
+      city = (json \ "city").asOpt[String],
+      country = (json \ "country").asOpt[String],
+      tracks_count = (json \ "tracks_count").as[Int],
+      public_tracks_count = (json \ "public_tracks_count").asOpt[Int],
+      followings_count = followCounts.map(_.followings).orElse((json \ "followings_count").asOpt[Long]),
+      followers_count = followCounts.map(_.followers).orElse((json \ "followers_count").asOpt[Long]),
+      verified = (json \ "verified").as[Boolean],
+      description = (json \ "description").asOpt[String],
+      updated_at = (json \ "updated_at").asOpt[String],
+      discogs_name = getNameInNetwork(json, "discogs"),
+      first_name = (json \ "first_name").asOpt[String],
+      last_name = (json \ "last_name").asOpt[String],
+      full_name = (json \ "full_name").asOpt[String],
+      myspace_name = getNameInNetwork(json, "myspace"),
+      website_title = getNameInNetwork(json, "personal", "title"),
+      website = getNameInNetwork(json, "personal", "url"),
+      plan = (json \ "plan").asOpt[String],
+      subscriptions = getSubscriptions(json),
+      public_favorites_count = (json \ "public_favorites_count").asOpt[Long],
+      public_playlists_count = (json \ "public_playlists_count").asOpt[Int],
+      comments_count = (json \ "comments_count").asOpt[Int],
+      likes_count = (json \ "public_favorites_count").asOpt[Long],
+      reposts_count = repostCounts.orElse((json \ "reposts_count").asOpt[Long])
     )
   }
 }

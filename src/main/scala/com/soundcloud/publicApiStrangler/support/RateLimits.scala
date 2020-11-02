@@ -2,7 +2,7 @@ package com.soundcloud.publicApiStrangler.support
 
 import com.soundcloud.jvmkit.module.bff.ratelimiting.RateLimitClassifier
 import com.soundcloud.jvmkit.module.http.server.HandlerRequest
-import com.soundcloud.publicApiStrangler.handler.SearchHandler._
+import com.soundcloud.publicApiStrangler.handler.search.SearchHandler._
 
 object RateLimits {
   private val searchParams = defaultParams ++ trackParams ++ playlistParams

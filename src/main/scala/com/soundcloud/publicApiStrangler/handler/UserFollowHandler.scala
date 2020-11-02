@@ -1,6 +1,5 @@
 package com.soundcloud.publicApiStrangler.handler
 
-import com.soundcloud.bff.nextbff.mapping.MappingContext
 import com.soundcloud.jvmkit.module.bff.session.UserAuthentication
 import com.soundcloud.jvmkit.module.http.server.{HandlerRequest, JsonResponseBuilder, ResponseBuilder}
 import com.soundcloud.jvmkit.module.json.play.UrnFormat._
@@ -224,7 +223,6 @@ class UserFollowHandler(
   }
 
   private def fetchUsers(session: UserSession, urns: Set[Urn]): Future[List[User]] = {
-    val context = new MappingContext(session)
     for {
       (users, followCountsMap, repostCountsByUrn) <- Future.join(
         okidoki.fetch(session, urns),
@@ -234,11 +232,13 @@ class UserFollowHandler(
         repostsClient.getRepostCountsByUrnWithFallback(session, urns)
       )
     } yield {
-      users.map { user =>
+      val userInstances = users.map { user =>
         val userUrn = (user \ "self" \ "urn").as[Urn]
         val followCounts = followCountsMap.get(userUrn)
-        new User(user, baseUrl, followCounts, repostCountsByUrn.get(userUrn))(context)
+        new User(user, baseUrl, followCounts, repostCountsByUrn.get(userUrn))
       }
+
+      sortByProvidedUrns(userInstances, urns.toSeq).toList
     }
   }
 
@@ -288,5 +288,12 @@ class UserFollowHandler(
         body = Json.stringify(JsObject(Seq("errors" -> errors)))
       ).build
     )
+  }
+
+  private def sortByProvidedUrns(users: Seq[User], urns: Seq[Urn]): Seq[User] = {
+    val orderedByUrn = Ordering.by(urns.zipWithIndex.toMap compose {
+      (_: User).id
+    })
+    users.sorted(orderedByUrn)
   }
 }

@@ -31,11 +31,10 @@ import com.soundcloud.publicApiStrangler.client.stitch.StitchClient
 import com.soundcloud.publicApiStrangler.client.trackcoordinator.TrackCoordinatorClient
 import com.soundcloud.publicApiStrangler.client.trackmetadata.TrackmetadataClient
 import com.soundcloud.publicApiStrangler.client.tracks.TracksClient
-import com.soundcloud.publicApiStrangler.mapper.search.SearchEntityMapper
+import com.soundcloud.publicApiStrangler.service._
 import com.soundcloud.publicApiStrangler.service.media.{StreamService, TrackAccessRecorderService}
 import com.soundcloud.publicApiStrangler.service.trackrepresentation.{TrackRepresentationsService, TrackUpdateService}
 import com.soundcloud.publicApiStrangler.service.tracks.VisibleTrackMapper
-import com.soundcloud.publicApiStrangler.service._
 import com.twitter.finagle.Service
 import com.twitter.finagle.http.{Request, Response}
 import com.twitter.finagle.service.RetryPolicy.RetryableWriteException
@@ -174,13 +173,12 @@ class Clients(
   val likesService = new LikesService(tracksService, lieblingClient)
   val playlistService = new PlaylistsService(playlistsTwirpClient, tracksService, okidokiClient, exceptionCollector)
   val userPlaylistsService = new UserPlaylistsService(playlistService, okidokiClient)
-  val searchService = new SearchService(searchClient, tracksService, playlistService)
+  val searchService =
+    new SearchService(searchClient, tracksService, followCountsClient, repostsClient, playlistService, okidokiClient)
 
   val timelineService = new TimelineService(timelineClient, tracksService, playlistService)
 
   val streamService = new StreamService(trackVisibilityService, tracksClient)
-
-  val searchEntityMapper = new SearchEntityMapper(okidokiClient, followCountsClient, repostsClient, baseUrl)
 
   val playlistDeletionClient = new PlaylistDeletionClient(okidokiJsonClient)
 

@@ -6,13 +6,13 @@ import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSessionBuilder
 import com.soundcloud.publicApiStrangler.Routing
 import com.soundcloud.publicApiStrangler.client.mothership.TrackAudioMetadata
-import com.soundcloud.publicApiStrangler.client.mothership.response.representation.User
 import com.soundcloud.publicApiStrangler.client.stitch.StitchCounts
 import com.soundcloud.publicApiStrangler.client.tracks.{TrackRequest, VisibleTrackBuilder}
 import com.soundcloud.publicApiStrangler.service.trackrepresentation.{
   TrackRepresentationSpecContext,
   TrackRepresentationsService
 }
+import com.soundcloud.publicApiStrangler.service.users.UserBuilder
 import com.soundcloud.publicApiStrangler.test.{HandlerSpecificationScope, UnitSpecification}
 import com.twitter.finagle.http.Status
 import com.twitter.util.Future
@@ -31,22 +31,7 @@ class SingleTrackHandlerSpec extends UnitSpecification with TrackRepresentationS
     .setCommentable(false)
     .build
 
-  val user =
-    User(
-      urn = Urn("soundcloud", "users", "3000"),
-      permalink = "giraffe",
-      username = "Dr. G. Raffe",
-      avatar_url = "http://example.com/giraffe.jpg",
-      permalink_url = "http://soundcloud.com/denis",
-      city = None,
-      country = None,
-      tracks_count = 1,
-      followers_count = Some(20000),
-      followings_count = Some(20),
-      verified = false,
-      description = Some("I am a nice person"),
-      updated_at = Some("2016/10/10 11:21:36 +0000")
-    )
+  val user = new UserBuilder().build
 
   val trackRepresentation = createTrackRepresentation(
     visibleTrack = visibleTrack,

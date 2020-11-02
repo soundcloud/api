@@ -5,7 +5,6 @@ import java.net.URL
 import com.soundcloud.api.partners.clients.tracks.Transcoding
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.publicApiStrangler.client.SystemPlaylistsClient
-import com.soundcloud.publicApiStrangler.client.mothership.response.representation.User
 import com.soundcloud.publicApiStrangler.client.tracks.{TrackRequest, VisibleTrackBuilder}
 import com.soundcloud.publicApiStrangler.mapper.similarsounds.{SimilarSounds, SimilarSoundsMeta}
 import com.soundcloud.publicApiStrangler.service.representation.collection.Collection
@@ -15,6 +14,7 @@ import com.soundcloud.publicApiStrangler.service.trackrepresentation.{
   TrackRepresentationSpecContext,
   TrackRepresentationsService
 }
+import com.soundcloud.publicApiStrangler.service.users.UserBuilder
 import com.soundcloud.publicApiStrangler.test.UnitSpecification
 import com.twitter.util.{Await, Future}
 import org.mockito.Mockito.when
@@ -30,22 +30,7 @@ class SimilarTracksServiceSpec extends UnitSpecification {
     val similarTrack = Urn("soundcloud", "tracks", "2")
     val similarTrackOwner = Urn("soundcloud", "users", "2")
 
-    def similarTrackOwnerUser =
-      User(
-        urn = similarTrackOwner,
-        permalink = "similarUser",
-        username = "SimilarUser123",
-        avatar_url = "",
-        permalink_url = "https://soundcloud.com/SimilarUser123",
-        city = None,
-        country = None,
-        tracks_count = 1,
-        followers_count = Some(20000),
-        followings_count = Some(20),
-        verified = false,
-        updated_at = Some("2019/06/27 11:21:36 +0000"),
-        description = Some("-")
-      )
+    def similarTrackOwnerUser = new UserBuilder().setUrn(similarTrackOwner).build
 
     val systemPlaylistsClient = mock[SystemPlaylistsClient]
     val trackVisibilityService = mock[TrackVisibilityService]

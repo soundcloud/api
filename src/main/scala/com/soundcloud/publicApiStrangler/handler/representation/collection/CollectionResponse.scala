@@ -9,6 +9,8 @@ import com.twitter.util.Future
 import play.api.libs.json.{Json, Writes}
 
 object CollectionResponse {
+  val MaxCacheAge = 60
+
   def handleCollectionResponse[T: Writes](
       outcome: Future[Outcome[Collection[T]]],
       hasLinkedPartitioning: Boolean
@@ -16,9 +18,10 @@ object CollectionResponse {
     outcome
       .map {
         case Good(collectionResponse) =>
-          JsonResponseBuilder.ok(
+          val response = JsonResponseBuilder.ok(
             Collection.getRepresentation(collectionResponse, hasLinkedPartitioning)
           )
+          appendCacheHeaders(response)
 
         case Bad(NotValid(_)) => JsonResponseBuilder.badRequest(generateErrorBody("invalid request"))
         case Bad(NotFound(_)) => JsonResponseBuilder.notFound(generateErrorBody("not found"))
@@ -28,4 +31,9 @@ object CollectionResponse {
 
   private def generateErrorBody(message: String): String =
     Json.stringify(Json.obj("error" -> message))
+
+  private def appendCacheHeaders(response: Response) = {
+    response.headerMap.set("Cache-Control", s"public, max-age=$MaxCacheAge, must-revalidate")
+    response
+  }
 }

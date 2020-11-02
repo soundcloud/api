@@ -1,6 +1,7 @@
 package com.soundcloud.publicApiStrangler
 
 import com.soundcloud.jvmkit.module.http.server.{Handler, JsonResponseBuilder}
+import com.soundcloud.publicApiStrangler.handler.search.SearchHandler
 import com.soundcloud.publicApiStrangler.handler.{DispatchToMothershipHandler, _}
 import com.twitter.finagle.http.Method
 import com.twitter.util.Future

@@ -3,7 +3,7 @@ package com.soundcloud.publicApiStrangler.client.mothership
 import com.soundcloud.jvmkit.module.http.client.{JsonClient, Params}
 import com.soundcloud.jvmkit.module.util.http.Headers
 import com.soundcloud.jvmkit.module.util.{Path, Urn}
-import com.soundcloud.publicApiStrangler.client.mothership.response.representation.User
+import com.soundcloud.publicApiStrangler.service.users.UserBuilder
 import com.soundcloud.publicApiStrangler.test.UnitSpecification
 import com.twitter.finagle.http.Status
 import com.twitter.util.{Await, Future}
@@ -392,7 +392,7 @@ class RichOkidokiClientSpec extends UnitSpecification {
            |    "self": {
            |      "urn": "soundcloud:users:2"
            |    }
-           |  }
+           | }
            |]
         """.stripMargin)
 
@@ -421,51 +421,99 @@ class RichOkidokiClientSpec extends UnitSpecification {
 
       val batchSize = 2
       Await.result(client.fetchUsersMap(session, urns, batchSize)) ==== Map(
-        Urn("soundcloud", "users", "1") -> User(
-          firstBatch.head,
-          "permalink1",
-          "username1",
-          "avatar_url1",
-          "permalink_url1",
-          None,
-          None,
-          1,
-          None,
-          None,
-          false,
-          None,
-          None
-        ),
-        Urn("soundcloud", "users", "2") -> User(
-          firstBatch.last,
-          "permalink2",
-          "username2",
-          "avatar_url2",
-          "permalink_url2",
-          None,
-          None,
-          2,
-          None,
-          None,
-          true,
-          None,
-          None
-        ),
-        Urn("soundcloud", "users", "3") -> User(
-          secondBatch.head,
-          "permalink3",
-          "username3",
-          "avatar_url3",
-          "permalink_url3",
-          None,
-          None,
-          3,
-          None,
-          None,
-          false,
-          None,
-          None
-        )
+        Urn("soundcloud", "users", "1") ->
+          new UserBuilder()
+            .setUrn(firstBatch.head)
+            .setPermalink("permalink1")
+            .setUsername("username1")
+            .setAvatarUrl("avatar_url1")
+            .setPermalinkUrl("permalink_url1")
+            .setCity(None)
+            .setCountry(None)
+            .setTracksCount(1)
+            .setFollowersCount(None)
+            .setFollowingsCount(None)
+            .setVerified(false)
+            .setDescription(None)
+            .setUpdatedAt(None)
+            .setPublicTracksCount(None)
+            .setPublicPlaylistsCount(None)
+            .setDiscogsName(None)
+            .setFirstName(None)
+            .setLastName(None)
+            .setFullName(None)
+            .setMyspaceName(None)
+            .setWebsite(None)
+            .setWebsiteTitle(None)
+            .setPlan(None)
+            .setSubscriptions(Seq.empty)
+            .setPublicFavouritesCount(None)
+            .setCommentsCount(None)
+            .setLikesCount(None)
+            .setRepostsCount(None)
+            .build,
+        Urn("soundcloud", "users", "2") ->
+          new UserBuilder()
+            .setUrn(firstBatch.last)
+            .setPermalink("permalink2")
+            .setUsername("username2")
+            .setAvatarUrl("avatar_url2")
+            .setPermalinkUrl("permalink_url2")
+            .setCity(None)
+            .setCountry(None)
+            .setTracksCount(2)
+            .setFollowersCount(None)
+            .setFollowingsCount(None)
+            .setVerified(true)
+            .setDescription(None)
+            .setUpdatedAt(None)
+            .setPublicTracksCount(None)
+            .setPublicPlaylistsCount(None)
+            .setDiscogsName(None)
+            .setFirstName(None)
+            .setLastName(None)
+            .setFullName(None)
+            .setMyspaceName(None)
+            .setWebsite(None)
+            .setWebsiteTitle(None)
+            .setPlan(None)
+            .setSubscriptions(Seq.empty)
+            .setPublicFavouritesCount(None)
+            .setCommentsCount(None)
+            .setLikesCount(None)
+            .setRepostsCount(None)
+            .build,
+        Urn("soundcloud", "users", "3") ->
+          new UserBuilder()
+            .setUrn(secondBatch.head)
+            .setPermalink("permalink3")
+            .setUsername("username3")
+            .setAvatarUrl("avatar_url3")
+            .setPermalinkUrl("permalink_url3")
+            .setCity(None)
+            .setCountry(None)
+            .setTracksCount(3)
+            .setFollowersCount(None)
+            .setFollowingsCount(None)
+            .setVerified(false)
+            .setDescription(None)
+            .setUpdatedAt(None)
+            .setPublicTracksCount(None)
+            .setPublicPlaylistsCount(None)
+            .setDiscogsName(None)
+            .setFirstName(None)
+            .setLastName(None)
+            .setFullName(None)
+            .setMyspaceName(None)
+            .setWebsite(None)
+            .setWebsiteTitle(None)
+            .setPlan(None)
+            .setSubscriptions(Seq.empty)
+            .setPublicFavouritesCount(None)
+            .setCommentsCount(None)
+            .setLikesCount(None)
+            .setRepostsCount(None)
+            .build
       )
     }
 

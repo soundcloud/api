@@ -2,27 +2,13 @@ package com.soundcloud.publicApiStrangler.service.playlists
 
 import java.time.Instant
 
-import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.publicApiStrangler.client.mothership.response.representation.User
 import com.soundcloud.publicApiStrangler.service.playlists.representation.Playlist
 import com.soundcloud.publicApiStrangler.service.trackrepresentation.TrackRepresentation
+import com.soundcloud.publicApiStrangler.service.users.UserBuilder
 
 class PlaylistBuilder {
-  private val defaultUser = User(
-    urn = Urn("soundcloud", "users", "1"),
-    permalink = "giraffe",
-    username = "Dr. G. Raffe",
-    avatar_url = "http://example.com/giraffe.jpg?123456789",
-    permalink_url = "https://soundcloud.com/denis",
-    city = None,
-    country = None,
-    tracks_count = 1,
-    followers_count = Some(20000),
-    followings_count = Some(20),
-    verified = false,
-    description = Some("I am a nice person"),
-    updated_at = Some("2016/10/10 11:21:36 +0000")
-  )
+  private val defaultUser = new UserBuilder().build
 
   private var title: String = "my playlist"
   private var id: Long = 123L

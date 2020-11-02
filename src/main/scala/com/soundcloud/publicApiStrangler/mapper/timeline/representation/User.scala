@@ -1,16 +1,14 @@
 package com.soundcloud.publicApiStrangler.mapper.timeline.representation
 
-import com.soundcloud.bff.nextbff.mapping.MappingContext
 import com.soundcloud.publicApiStrangler.client.followcounts.FollowCounts
 import play.api.libs.json.{JsObject, JsValue, Json, Writes}
 
 class User(
-    jsonValue: JsValue,
+    json: JsValue,
     baseUrl: String,
     maybeFollowCounts: Option[FollowCounts],
     maybeRepostsCount: Option[Long]
-)(implicit context: MappingContext)
-    extends UserSummary(jsonValue, baseUrl) {
+) extends UserSummary(json, baseUrl) {
   val first_name = (json \ "first_name").asOpt[String]
   val last_name = (json \ "last_name").asOpt[String]
   val full_name = (json \ "full_name").asOpt[String]
@@ -49,7 +47,7 @@ object User {
     override def writes(u: User): JsValue = {
       Json.obj(
         "avatar_url" -> u.avatar_url,
-        "id" -> u.id,
+        "id" -> u.id.identifier.toLong,
         "kind" -> u.kind,
         "permalink_url" -> u.permalink_url,
         "uri" -> u.uri,

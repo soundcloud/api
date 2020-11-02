@@ -4,11 +4,12 @@ import com.soundcloud.jvmkit.module.util.session.{UserSession, UserSessionBuilde
 import com.soundcloud.jvmkit.module.util.{Url, Urn}
 import com.soundcloud.publicApiStrangler.authorization.policies._
 import com.soundcloud.publicApiStrangler.client.media.TrackWaveformUrl
-import com.soundcloud.publicApiStrangler.client.mothership.response.representation.{Geoblockings, User}
+import com.soundcloud.publicApiStrangler.client.mothership.response.representation.Geoblockings
 import com.soundcloud.publicApiStrangler.client.mothership.{DomainLocking, TrackAudioMetadata}
 import com.soundcloud.publicApiStrangler.client.pubmese.Isrc
 import com.soundcloud.publicApiStrangler.client.stitch.StitchCounts
 import com.soundcloud.publicApiStrangler.client.tracks.{Artwork, EmbeddingPermission, TrackRequest, VisibleTrack}
+import com.soundcloud.publicApiStrangler.service.users.UserBuilder
 import com.soundcloud.publicApiStrangler.test.UnitSpecification
 import org.joda.time.LocalDateTime
 
@@ -45,56 +46,11 @@ trait TrackRepresentationsSpecificationContext extends UnitSpecification {
     val trackRequest = TrackRequest(trackUrn, None)
     val trackRepresentationBuilder = new TrackRepresentationBuilder
 
-    def trackOwner =
-      User(
-        urn = trackOwnerUrn,
-        permalink = "giraffe",
-        username = "Dr. G. Raffe",
-        avatar_url = "http://example.com/giraffe.jpg",
-        permalink_url = "http://soundcloud.com/denis",
-        city = None,
-        country = None,
-        tracks_count = 1,
-        followers_count = Some(20000),
-        followings_count = Some(20),
-        verified = false,
-        description = Some("I am a nice person"),
-        updated_at = Some("2016/10/10 11:21:36 +0000")
-      )
+    def trackOwner = new UserBuilder().setUrn(trackOwnerUrn).build
 
-    def requestingUser =
-      User(
-        urn = requestingUserUrn,
-        permalink = "giraffe",
-        username = "Dr. G. Raffe",
-        avatar_url = "http://example.com/giraffe.jpg",
-        permalink_url = "http://soundcloud.com/denis",
-        city = None,
-        country = None,
-        tracks_count = 1,
-        followers_count = Some(20000),
-        followings_count = Some(20),
-        verified = false,
-        description = Some("I am a nice person"),
-        updated_at = Some("2016/10/10 11:21:36 +0000")
-      )
+    def requestingUser = new UserBuilder().setUrn(requestingUserUrn).build
 
-    def label =
-      User(
-        urn = labelUrn,
-        permalink = "raz",
-        username = "Raz Putin",
-        avatar_url = "http://example.com/raz.jpg",
-        permalink_url = "https://soundcloud.com/raz",
-        city = None,
-        country = None,
-        tracks_count = 4,
-        followers_count = Some(10000),
-        followings_count = Some(10),
-        verified = true,
-        description = Some("Psychonaut Music Inc."),
-        updated_at = Some("2016/10/10 11:21:36 +0000")
-      )
+    def label = new UserBuilder().setUrn(labelUrn).build
 
     def geoblockings: Map[Urn, Geoblockings] = Map(trackUrn -> geoblockingsList)
 

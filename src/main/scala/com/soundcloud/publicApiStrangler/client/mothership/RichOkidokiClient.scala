@@ -153,6 +153,7 @@ class RichOkidokiClient(service: JsonClient) extends OkidokiClient(service) {
               case _ => List.empty
             }
           }
+
       }
     }.map(_.map(user => (user.urn -> user)).toMap)
   }

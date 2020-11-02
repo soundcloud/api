@@ -108,6 +108,7 @@
     "gender": "female",
     "default_license": null,
     "stealth": false,
-    "verified": true
+    "verified": true,
+    "public_tracks_count": 49
   }
 ]

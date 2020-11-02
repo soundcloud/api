@@ -1,8 +1,14 @@
 package com.soundcloud.publicApiStrangler.service
 
 import com.soundcloud.jvmkit.module.http.client.{Params, StringParam}
+import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.jvmkit.module.outcome._
+import com.soundcloud.publicApiStrangler.client.followcounts.FollowCountsClient
+import com.soundcloud.publicApiStrangler.client.mothership.OkidokiClient
+import com.soundcloud.publicApiStrangler.client.mothership.response.mapper.UserMapper
+import com.soundcloud.publicApiStrangler.client.mothership.response.representation.User
+import com.soundcloud.publicApiStrangler.client.reposts.RepostsClient
 import com.soundcloud.publicApiStrangler.client.search.SearchClient
 import com.soundcloud.publicApiStrangler.client.tracks.TrackRequest
 import com.soundcloud.publicApiStrangler.service.pagination.OffsetBasedPagination
@@ -18,8 +24,33 @@ import com.soundcloud.publicApiStrangler.service.trackrepresentation.{
 class SearchService(
     searchClient: SearchClient,
     trackRepresentationsService: TrackRepresentationsService,
-    playlistsService: PlaylistsService
+    followCountsClient: FollowCountsClient,
+    repostsClient: RepostsClient,
+    playlistsService: PlaylistsService,
+    okidokiClient: OkidokiClient
 ) {
+  def searchUsers(
+      session: UserSession,
+      params: Map[String, String],
+      pagination: OffsetBasedPagination
+  ): OutcomeF[Collection[User]] = {
+    val mapParams = mapUserParams(params)
+
+    for {
+      searchPage <- searchClient.searchUsers(session, mapParams)
+      userUrns = searchPage.docs.map(_.urn).toSet
+      followCountsMap <- followCountsClient
+        .counts(session, userUrns.toSeq)
+        .map(_.map(followCounts => (followCounts.userUrn, followCounts)).toMap)
+        .outcomeF
+      repostsCounts <- repostsClient.getRepostCountsByUrnWithFallback(session, userUrns).outcomeF
+      users <- okidokiClient
+        .fetch(session, userUrns)
+        .map(_.map(UserMapper(_, Some(followCountsMap), Some(repostsCounts))))
+        .outcomeF
+      sortedUsers = sortByProvidedUrns(users, searchPage.docs.map(_.urn))
+    } yield Collection[User](sortedUsers.toList, pagination.nextHref(searchPage.total_results.toInt))
+  }
 
   def searchTracks(
       session: UserSession,
@@ -104,4 +135,27 @@ class SearchService(
     case (k, v) if PlaylistParamMappings contains k => PlaylistParamMappings(k) -> v
   }
 
+  private val UserParamMappings = Map(
+    "q" -> "q",
+    "offset" -> "offset",
+    "limit" -> "limit",
+    "order" -> "sort",
+    "created_at" -> "filter.created_at",
+    "created_at[from]" -> "filter.created_at[from]",
+    "created_at[to]" -> "filter.created_at[to]",
+    "ids" -> "filter.id",
+    "client_id" -> "client_id",
+    "place" -> "filter.place"
+  )
+
+  private def mapUserParams(params: Params): Params = params.collect {
+    case (k, v) if UserParamMappings contains k => UserParamMappings(k) -> v
+  }
+
+  private def sortByProvidedUrns(users: Seq[User], urns: Seq[Urn]): Seq[User] = {
+    val orderedByUrn = Ordering.by(urns.zipWithIndex.toMap compose {
+      (_: User).urn
+    })
+    users.sorted(orderedByUrn)
+  }
 }

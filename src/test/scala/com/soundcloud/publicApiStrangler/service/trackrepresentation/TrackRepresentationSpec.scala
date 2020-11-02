@@ -9,6 +9,7 @@ import com.soundcloud.publicApiStrangler.client.mothership.{DomainLocking, Track
 import com.soundcloud.publicApiStrangler.client.pubmese.Isrc
 import com.soundcloud.publicApiStrangler.client.stitch.StitchCounts
 import com.soundcloud.publicApiStrangler.client.tracks.{Artwork, EmbeddingPermission, VisibleTrack, WaveformUrl}
+import com.soundcloud.publicApiStrangler.service.users.UserBuilder
 import com.soundcloud.publicApiStrangler.test.UnitSpecification
 import org.joda.time.LocalDateTime
 import play.api.libs.json._
@@ -59,41 +60,10 @@ trait TrackRepresentationSpecContext {
       original_content_size = Some(9001)
     )
 
-  def defaultUser =
-    User(
-      urn = userUrn,
-      permalink = "giraffe",
-      username = "Dr. G. Raffe",
-      avatar_url = "http://example.com/giraffe.jpg?123456789",
-      permalink_url = "https://soundcloud.com/denis",
-      city = None,
-      country = None,
-      tracks_count = 1,
-      followers_count = Some(20000),
-      followings_count = Some(20),
-      verified = false,
-      description = Some("I am a nice person"),
-      updated_at = Some("2016/10/10 11:21:36 +0000")
-    )
-
+  def defaultUser = new UserBuilder().setUrn(userUrn).build
   def defaultLabelUrn = Some(labelUrn)
 
-  def defaultLabel: User =
-    User(
-      urn = labelUrn,
-      permalink = "raz",
-      username = "Raz Putin",
-      avatar_url = "http://example.com/raz.jpg?123456789",
-      permalink_url = "https://soundcloud.com/raz",
-      city = None,
-      country = None,
-      tracks_count = 4,
-      followers_count = Some(10000),
-      followings_count = Some(10),
-      verified = true,
-      description = Some("Psychonaut Music Inc."),
-      updated_at = Some("2016/10/10 11:21:36 +0000")
-    )
+  def defaultLabel: User = new UserBuilder().setUrn(labelUrn).build
 
   def defaultTrack = VisibleTrack(
     urn = trackUrn,
@@ -435,10 +405,10 @@ class TrackRepresentationSpec extends UnitSpecification {
       val labelJson = json \ "label"
       labelJson \ "id" ==== JsDefined(JsNumber(999))
       labelJson \ "kind" ==== JsDefined(JsString("user"))
-      labelJson \ "permalink" ==== JsDefined(JsString("raz"))
+      labelJson \ "permalink" ==== JsDefined(JsString("giraffe"))
       labelJson \ "uri" ==== JsDefined(JsString("https://api.soundcloud.com/users/999"))
-      labelJson \ "permalink_url" ==== JsDefined(JsString("https://soundcloud.com/raz"))
-      labelJson \ "avatar_url" ==== JsDefined(JsString("https://example.com/raz.jpg"))
+      labelJson \ "permalink_url" ==== JsDefined(JsString("https://soundcloud.com/denis"))
+      labelJson \ "avatar_url" ==== JsDefined(JsString("https://example.com/giraffe.jpg"))
     }
   }
 

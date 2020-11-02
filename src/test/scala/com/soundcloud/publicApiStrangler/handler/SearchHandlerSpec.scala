@@ -2,9 +2,6 @@ package com.soundcloud.publicApiStrangler.handler
 
 import java.net.URL
 
-import com.soundcloud.bff.nextbff.pagination.OffsetBasedPage
-import com.soundcloud.bff.nextbff.repository.RepositoryException
-import com.soundcloud.bff.nextbff.test.JsonMappingMock
 import com.soundcloud.jvmkit.module.bff.testsupport.FakeUserAuthentication
 import com.soundcloud.jvmkit.module.http.server.{HandlerRequest, JsonResponseBuilder}
 import com.soundcloud.jvmkit.module.telemetry.Telemetry
@@ -15,17 +12,21 @@ import com.soundcloud.jvmkit.module.outcome._
 import com.soundcloud.publicApiStrangler.Routing
 import com.soundcloud.publicApiStrangler.client.followcounts.{FollowCounts, FollowCountsClient}
 import com.soundcloud.publicApiStrangler.client.liebling.LieblingClient
+import com.soundcloud.publicApiStrangler.client.mothership.response.representation.User
 import com.soundcloud.publicApiStrangler.client.reposts.RepostsClient
-import com.soundcloud.publicApiStrangler.mapper.search.{Search, SearchDispatcherRequest, SearchMapper}
+import com.soundcloud.publicApiStrangler.handler.representation.collection.CollectionResponse.MaxCacheAge
+import com.soundcloud.publicApiStrangler.handler.search.SearchHandler
+import com.soundcloud.publicApiStrangler.handler.search.representation.SearchUser.searchUserWrites
 import com.soundcloud.publicApiStrangler.service.SearchService
 import com.soundcloud.publicApiStrangler.service.pagination.OffsetBasedPagination
 import com.soundcloud.publicApiStrangler.service.playlists.PlaylistBuilder
 import com.soundcloud.publicApiStrangler.service.representation.collection.Collection
 import com.soundcloud.publicApiStrangler.service.trackrepresentation.{TrackPagination, TrackRepresentationSpecContext}
+import com.soundcloud.publicApiStrangler.service.users.UserBuilder
 import com.soundcloud.publicApiStrangler.test.{HandlerSpecificationScope, UnitSpecification}
 import com.twitter.finagle.http.{Request, Response, Status}
 import com.twitter.util.Future
-import org.mockito.Mockito.{verify, when}
+import org.mockito.Mockito.when
 import play.api.libs.json.Json
 
 class SearchHandlerSpec extends UnitSpecification {
@@ -33,7 +34,6 @@ class SearchHandlerSpec extends UnitSpecification {
     def followCountsSeq: Seq[FollowCounts] = Seq.empty
 
     val fallbackMock = mock[DispatchToMothershipHandler]
-    val searchMapperMock = mock[SearchMapper]
     val followCountsClientMock = mock[FollowCountsClient]
     val lieblingClientMock = mock[LieblingClient]
     val repostsClientMock = mock[RepostsClient]
@@ -52,7 +52,6 @@ class SearchHandlerSpec extends UnitSpecification {
 
     val handler = new SearchHandler(
       authentication,
-      searchMapperMock,
       "http://api.soundcloud.com",
       userRelatedMothershipDispatcher,
       searchService
@@ -65,20 +64,17 @@ class SearchHandlerSpec extends UnitSpecification {
     }
   }
 
-  "when resource that supports search is called" >> {
+  "/users" >> {
     trait Context extends ForwardContext {
-      val endpoints = Seq(
-        ("/users", SearchDispatcherRequest.userSearch, handler.dispatchUserRequest)
-      )
+      val userUrn = Urn("soundcloud", "users", "88")
+      val user = new UserBuilder().setUrn(userUrn).build
+      val userCollection = Collection[User](items = List(user), nextHref = None)
 
       val queryParams = Map("q" -> "foo")
       val pageParams = Map("offset" -> "0", "limit" -> "10")
       val extraParams = pageParams ++ queryParams
-      val headers = Map.empty[String, String]
 
-      abstract class SearchMock extends JsonMappingMock with Search
-
-      val searchMock = JsonMappingMock.prepare[SearchMock]
+      val expectedResponse = Collection.getRepresentation(userCollection, false)(searchUserWrites)
     }
 
     "forwards to Mothership when q param not present" in new Context {
@@ -102,114 +98,65 @@ class SearchHandlerSpec extends UnitSpecification {
         response.contentString ==== "forwardContent"
       }
 
-      endpoints.foreach {
-        case (apiEndPoint, dispatcherRequest, handler) =>
-          expectForwardedRequest
-          val response = get(apiEndPoint)
-          stillForwards(response)
-      }
+      expectForwardedRequest
+      val response = get("/users")
+      stillForwards(response)
     }
 
     "performs a search when q param is present" in new Context {
-      endpoints.foreach {
-        case (apiEndPoint, dispatcherRequest, handler) =>
-          val request = com.twitter.finagle.http.Request(apiEndPoint, extraParams.toSeq: _*)
-          val query = dispatcherRequest(request)
-          val page = OffsetBasedPage(query, "http://api.soundcloud.com", apiEndPoint, extraParams, 0, 10)
+      val request = Request("/users", extraParams.toSeq: _*)
+      request.host = "localhost"
+      val page = OffsetBasedPagination.build(request, Seq("linked_partitioning"))
 
-          when(searchMapperMock.materialize(anonymousSession, page))
-            .thenReturn(Future(Some(searchMock)))
-
-          val response = get(apiEndPoint, extraParams, Map("Host" -> "api.soundcloud.com"))
-          response.statusCode ==== 200
-          Json.parse(response.contentString) ==== searchMock.json
-          doesNotForward(response)
-
-          verify(searchMapperMock).materialize(anonymousSession, page)
-      }
+      when(searchService.searchUsers(anonymousSession, request.params, page))
+        .thenReturn(Good(userCollection).outcomeF)
+      val response = get("/users", extraParams, Map("Host" -> "localhost"))
+      response.statusCode ==== 200
+      response.contentString ==== expectedResponse
+      doesNotForward(response)
     }
 
     "response contains a caching header" in new Context {
-      endpoints.foreach {
-        case (apiEndPoint, dispatcherRequest, handler) =>
-          val request = com.twitter.finagle.http.Request(apiEndPoint, queryParams.toSeq: _*)
-          val query = dispatcherRequest(request)
-          val page = OffsetBasedPage(query, "http://api.soundcloud.com", apiEndPoint, queryParams, 0, 10)
+      val request = Request("/users", extraParams.toSeq: _*)
+      request.host = "localhost"
+      val page = OffsetBasedPagination.build(request, Seq("linked_partitioning"))
 
-          when(searchMapperMock.materialize(anonymousSession, page))
-            .thenReturn(Future(Some(searchMock)))
+      when(searchService.searchUsers(anonymousSession, request.params, page))
+        .thenReturn(Good(userCollection).outcomeF)
+      val response = get("/users", extraParams, Map("Host" -> "localhost"))
 
-          val response = get(apiEndPoint, Map("q" -> "foo"), Map("Host" -> "api.soundcloud.com"))
-          response.statusCode ==== 200
-          response.headerMap.get("Cache-Control").get must contain("max-age=" + SearchHandler.MaxCacheAge)
-          response.headerMap.get("Cache-Control").get must contain("public")
-          doesNotForward(response)
+      response.statusCode ==== 200
 
-          verify(searchMapperMock).materialize(anonymousSession, page)
-      }
+      response.headerMap.get("Cache-Control").get must contain("max-age=" + MaxCacheAge)
+      response.headerMap.get("Cache-Control").get must contain("public")
+      doesNotForward(response)
     }
 
-    "Pagination error handling" >> {
-      "200 when no pagination params" in new Context {
-        endpoints.foreach {
-          case (apiEndPoint, dispatcherRequest, handler) =>
-            val request = com.twitter.finagle.http.Request(apiEndPoint, queryParams.toSeq: _*)
-            val query = dispatcherRequest(request)
-            val page = OffsetBasedPage(query, "http://api.soundcloud.com", apiEndPoint, queryParams, 0, 10)
+    "200 when no pagination params" in new Context {
+      val request = Request("/users", queryParams.toSeq: _*)
+      request.host = "localhost"
+      val page = OffsetBasedPagination.build(request, Seq("linked_partitioning"))
 
-            when(searchMapperMock.materialize(anonymousSession, page))
-              .thenReturn(Future(Some(searchMock)))
+      when(searchService.searchUsers(anonymousSession, request.params, page))
+        .thenReturn(Good(userCollection).outcomeF)
 
-            val response = get(apiEndPoint, Map("q" -> "foo"), Map("Host" -> "api.soundcloud.com"))
-            response.statusCode ==== 200
-            doesNotForward(response)
-
-            verify(searchMapperMock).materialize(anonymousSession, page)
-        }
-      }
-
-      "400 when offset/limit is junk" in new Context {
-        for {
-          (apiEndPoint, dispatcherRequest, handler) <- endpoints
-          param <- Seq("offset", "limit")
-        } {
-          val response =
-            get(apiEndPoint, Map("q" -> "foo", param -> "not_a_number"), Map("Host" -> "api.soundcloud.com"))
-          response.statusCode ==== 400
-          doesNotForward(response)
-        }
-      }
-
-      "400 when limit/offset is present, but empty" in new Context {
-        for {
-          (apiEndPoint, dispatcherRequest, handler) <- endpoints
-          param <- Seq("offset", "limit")
-        } {
-          val response =
-            get(apiEndPoint, Map("q" -> "foo", "offset" -> ""), Map("Host" -> "api.soundcloud.com"))
-          response.statusCode ==== 400
-          doesNotForward(response)
-        }
-      }
-
-      "400 when dispatcher returns a 400" in new Context {
-        endpoints.foreach {
-          case (apiEndPoint, dispatcherRequest, handler) =>
-            val request = com.twitter.finagle.http.Request(apiEndPoint, extraParams.toSeq: _*)
-            val query = dispatcherRequest(request)
-            val page = OffsetBasedPage(query, "http://api.soundcloud.com", apiEndPoint, extraParams, 0, 10)
-
-            when(searchMapperMock.materialize(anonymousSession, page))
-              .thenReturn(Future.exception(RepositoryException(Status.BadRequest, "oh, behave!")))
-
-            val response = get(apiEndPoint, extraParams, Map("Host" -> "api.soundcloud.com"))
-            response.statusCode ==== 400
-            doesNotForward(response)
-
-            verify(searchMapperMock).materialize(anonymousSession, page)
-        }
-      }
+      val response = get("/users", request.params, Map("Host" -> "localhost"))
+      response.statusCode ==== 200
+      doesNotForward(response)
     }
+
+    "returns 400 when search service returns error" in new Context {
+      val request = Request("/users", queryParams.toSeq: _*)
+      request.host = "localhost"
+      val page = OffsetBasedPagination.build(request, Seq("linked_partitioning"))
+
+      when(searchService.searchUsers(anonymousSession, request.params, page))
+        .thenReturn(NotValid("not valid").badF)
+
+      val response = get("/users", request.params, Map("Host" -> "localhost"))
+      response.statusCode ==== 400
+    }
+
   }
 
   "/tracks" >> {
