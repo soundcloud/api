@@ -69,7 +69,8 @@ class RailsLikeParamsParser {
                 Some(Buf.ByteArray.Owned.extract(content))
 
               case OnDiskFileUpload(content: File, _, _, _) => {
-                Some(Files.readBytes(file = content))
+                val limit = 1024 * 1024 * 12
+                Some(Files.readBytes(file = content, limit = limit))
               }
             }
           case _ => None
