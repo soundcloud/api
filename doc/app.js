@@ -4,9 +4,17 @@ const app = express();
 const swaggerUi = require('swagger-ui-express');
 const YAML = require('yamljs');
 const swaggerDocument = YAML.load('./api.yaml');
- 
-app.use('/', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+const path = require('path');
+
+var options = {
+  explorer: false,
+  customCssUrl: '/assets/custom.css'
+}
+
 app.set('port', process.env.PORT || 3000);
+
+app.use('/assets', express.static(path.join(__dirname, 'assets')));
+app.use('/', swaggerUi.serve, swaggerUi.setup(swaggerDocument, options));
 
 const server = app.listen(app.get('port'),
   function(){

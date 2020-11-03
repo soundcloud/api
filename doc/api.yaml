@@ -13,10 +13,10 @@ tags:
     description: Own User Endpoints
   - name: tracks
     description: Tracks Endpoints
-  - name: resolve
-    description: resolve Endpoint
   - name: users
-    description: Users Endpoints
+    description: A SoundCloud User
+  - name: resolve
+    description: Resolve Endpoint
 paths:
   /me:
     get:

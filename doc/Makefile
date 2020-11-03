@@ -21,6 +21,7 @@ package:
 	sc add-files run-swagger-ui.sh
 	$(CRUN) --  npm install
 	sc add-files node_modules
+	sc add-files assets
 
 	sc gen-wrapper-script --target="./run-swagger-ui.sh" --wrapper=$(COMPONENT)
 	sc artifact-manager package --runtime=nodejs-12
