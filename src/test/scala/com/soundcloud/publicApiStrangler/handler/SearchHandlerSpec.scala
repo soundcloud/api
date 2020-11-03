@@ -31,6 +31,7 @@ import play.api.libs.json.Json
 
 class SearchHandlerSpec extends UnitSpecification {
   trait ForwardContext extends HandlerSpecificationScope {
+
     def followCountsSeq: Seq[FollowCounts] = Seq.empty
 
     val fallbackMock = mock[DispatchToMothershipHandler]

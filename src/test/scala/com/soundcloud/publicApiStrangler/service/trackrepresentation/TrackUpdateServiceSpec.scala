@@ -454,30 +454,60 @@ class TrackUpdateServiceSpec extends UnitSpecification with TrackRepresentationS
       }
     }
     "When track coordinator fails" >> {
-      trait FailureContext extends CreateTrackContext {
-        stubOkidokiClient(users)
-        stubTrackCoordinatorClient(
-          trackAssetDataCreateRequest,
-          metaDataUpdateRequest,
-          Some(trackArtworkUpdateResult),
-          NotFound().bad
-        )
-      }
-
-      "Returns not found" in new FailureContext {
-        val result = Await.result(
-          trackUpdateService.createTrack(
-            trackAsset = trackAssetDataCreateRequest,
-            maybeUpdateAlbumArt = Some(trackArtworkMetaRequest),
+      "with Not Found" >> {
+        trait NotFoundContext extends CreateTrackContext {
+          stubOkidokiClient(users)
+          stubTrackCoordinatorClient(
+            trackAssetDataCreateRequest,
             metaDataUpdateRequest,
-            ownerSession
+            Some(trackArtworkUpdateResult),
+            NotFound().bad
           )
-        )
+        }
 
-        result.isLeft
-        result match {
-          case Bad(NotFound(msg)) => msg === "Resource not found"
-          case _ => true must beFalse
+        "Returns not found" in new NotFoundContext {
+          val result = Await.result(
+            trackUpdateService.createTrack(
+              trackAsset = trackAssetDataCreateRequest,
+              maybeUpdateAlbumArt = Some(trackArtworkMetaRequest),
+              metaDataUpdateRequest,
+              ownerSession
+            )
+          )
+
+          result.isLeft
+          result match {
+            case Bad(NotFound(msg)) => msg === "Resource not found"
+            case _ => true must beFalse
+          }
+        }
+      }
+      "with Invalid Request" >> {
+        trait InvalidRequestContext extends CreateTrackContext {
+          stubOkidokiClient(users)
+          stubTrackCoordinatorClient(
+            trackAssetDataCreateRequest,
+            metaDataUpdateRequest,
+            Some(trackArtworkUpdateResult),
+            NotValid("invalid request").bad
+          )
+        }
+
+        "Returns invalid request" in new InvalidRequestContext {
+          val result = Await.result(
+            trackUpdateService.createTrack(
+              trackAsset = trackAssetDataCreateRequest,
+              maybeUpdateAlbumArt = Some(trackArtworkMetaRequest),
+              metaDataUpdateRequest,
+              ownerSession
+            )
+          )
+
+          result.isLeft
+          result match {
+            case Bad(NotValid(msg)) => msg === List("invalid request")
+            case _ => true must beFalse
+          }
         }
       }
     }

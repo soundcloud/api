@@ -309,7 +309,7 @@ class TracksHandlerSpec extends UnitSpecification with TrackRepresentationSpecCo
     "application/x-www-form-urlencoded request" >> {
 
       trait UrlEncodedContext extends PostContext {
-        val path = s"/tracks_experimental"
+        val path = "/tracks"
         def stubTrackUpdateServiceCreate(
             createdTrackOutcome: Outcome[CreatedTrack],
             trackUpdate: Option[TrackMetadataUpdateRequest] = None,
@@ -348,11 +348,15 @@ class TracksHandlerSpec extends UnitSpecification with TrackRepresentationSpecCo
         val expectedResponse = CreatedTrack(trackCoordinatorTrack, userObj)
       }
 
-      trait FailureContext extends UrlEncodedContext {
+      trait NotFoundContext extends UrlEncodedContext {
         val expectedResponse = NotFound().bad
       }
 
-      "Returns a 200 on a valid request" in new SuccessContext {
+      trait InvalidRequestContext extends UrlEncodedContext {
+        val expectedResponse = NotValid("invalid request").bad
+      }
+
+      "Returns a 201 on a valid request" in new SuccessContext {
         stubTrackUpdateServiceCreate(
           createdTrackOutcome = Good(expectedResponse),
           trackUpdate = trackUpdate,
@@ -366,7 +370,7 @@ class TracksHandlerSpec extends UnitSpecification with TrackRepresentationSpecCo
         response.contentString === Json.stringify(Json.toJson((expectedResponse)))
       }
 
-      "returns a 404 if track does not exist" in new FailureContext {
+      "returns a 404 if track does not exist" in new NotFoundContext {
         stubTrackUpdateServiceCreate(
           createdTrackOutcome = expectedResponse,
           trackUpdate = trackUpdate,
@@ -377,7 +381,19 @@ class TracksHandlerSpec extends UnitSpecification with TrackRepresentationSpecCo
         response.statusCode === 404
       }
 
-      "Generates unprocessable entity response if no asset found" in new FailureContext {
+      "returns a 400 for an invalid request" in new InvalidRequestContext {
+        stubTrackUpdateServiceCreate(
+          createdTrackOutcome = expectedResponse,
+          trackUpdate = trackUpdate,
+          assetUpdate = assetUpdate
+        )
+
+        val response = postForm(path, body = requestBody)
+        response.statusCode === 400
+        response.contentString === "{\"error\":\"invalid request\"}"
+      }
+
+      "Generates unprocessable entity response if no asset found" in new NotFoundContext {
         override val requestBody = Seq[(String, String)](("track[uid]", "12345"))
         val response = postForm(path, body = requestBody)
         response.statusCode === 422
@@ -388,7 +404,7 @@ class TracksHandlerSpec extends UnitSpecification with TrackRepresentationSpecCo
     "Multipart/form request" >> {
 
       trait MultiPartFormContext extends PostContext {
-        val path = s"/tracks_experimental"
+        val path = "/tracks"
         def stubTrackUpdateServiceCreate(
             createdTrackOutcome: Outcome[CreatedTrack],
             trackUpdate: Option[TrackMetadataUpdateRequest] = None,
@@ -429,7 +445,11 @@ class TracksHandlerSpec extends UnitSpecification with TrackRepresentationSpecCo
         val expectedResponse = NotFound().bad
       }
 
-      "Returns a 200 on a valid request" in new SuccessContext {
+      trait InvalidRequestContext extends MultiPartFormContext {
+        val expectedResponse = NotValid("invalid request").bad
+      }
+
+      "Returns a 201 on a valid request" in new SuccessContext {
         stubTrackUpdateServiceCreate(
           createdTrackOutcome = Good(expectedResponse),
           trackUpdate = trackUpdate,
@@ -452,6 +472,18 @@ class TracksHandlerSpec extends UnitSpecification with TrackRepresentationSpecCo
 
         val response = postForm(path, body = requestBody, maybeFile = Some(file), isMultipart = true)
         response.statusCode === 404
+      }
+
+      "returns a 400 for an invalid request" in new InvalidRequestContext {
+        stubTrackUpdateServiceCreate(
+          createdTrackOutcome = expectedResponse,
+          trackUpdate = trackUpdate,
+          assetUpdate = assetUpdate
+        )
+
+        val response = postForm(path, body = requestBody)
+        response.statusCode === 400
+        response.contentString === "{\"error\":\"invalid request\"}"
       }
 
       "Generates unprocessable entity response if no asset found" in new FailureContext {
