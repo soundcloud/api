@@ -1,5 +1,6 @@
 package com.soundcloud.publicApiStrangler.handler
 
+import com.soundcloud.publicApiStrangler.handler.representation.serializers.UserFollowRepresentation.userFollowWrites
 import com.soundcloud.jvmkit.module.bff.session.UserAuthentication
 import com.soundcloud.jvmkit.module.http.server.{HandlerRequest, JsonResponseBuilder, ResponseBuilder}
 import com.soundcloud.jvmkit.module.json.play.UrnFormat._
@@ -17,8 +18,10 @@ import com.soundcloud.publicApiStrangler.client.follows.representation.unfollow.
   UserNotFound => UnfollowUserNotFound
 }
 import com.soundcloud.publicApiStrangler.client.mothership.OkidokiClient
+import com.soundcloud.publicApiStrangler.client.mothership.response.mapper.UserMapper
+import com.soundcloud.publicApiStrangler.client.mothership.response.representation.User
 import com.soundcloud.publicApiStrangler.client.reposts.RepostsClient
-import com.soundcloud.publicApiStrangler.mapper.timeline.representation.User
+import com.soundcloud.publicApiStrangler.service.representation.collection.Collection
 import com.twitter.finagle.http.{Response, Status}
 import com.twitter.util.Future
 import org.joda.time.format.DateTimeFormat
@@ -71,7 +74,11 @@ class UserFollowHandler(
 
   private def renderFollow(session: LoggedInUserSession, target: Urn): Future[Response] = {
     fetchUsers(session, Set(target)).map { users =>
-      JsonResponseBuilder.created(Json.stringify(Json.toJson(users.headOption)))
+      JsonResponseBuilder.created(
+        users.headOption
+          .map(user => Json.stringify(Json.toJson(user)(userFollowWrites)))
+          .getOrElse(Json.stringify(JsNull))
+      )
     }
   }
 
@@ -104,7 +111,7 @@ class UserFollowHandler(
     fetchPage(request, follows.followings, mapUsersToUsers, contacts, requireLogin = true)
 
   def fetchFollowingIdsWithoutAuth(request: HandlerRequest) =
-    fetchPage(request, follows.followings, userIds, contacts, requireLogin = false)
+    fetchPage(request, follows.followings, mapUsersToUrns, contacts, requireLogin = false)
 
   def fetchPossibleFollowingWithoutAuth(request: HandlerRequest) =
     fetchUser(request, follows.filterFollowings, requireLogin = false)
@@ -117,9 +124,16 @@ class UserFollowHandler(
 
   def fetchPossibleFollower(request: HandlerRequest) = fetchUser(request, follows.filterFollowers, requireLogin = true)
 
-  private def mapUsersToUsers(users: List[User]): List[JsValue] = Json.toJson(users).as[List[JsValue]]
+  private def mapUsersToUsers(users: List[User], nextHref: Option[String]): String = {
+    val userCollection = Collection[User](users, nextHref)
+    Collection.getRepresentation(userCollection, true)(userFollowWrites)
+  }
 
-  private def userIds(users: List[User]): List[JsValue] = Json.toJson(users.map(u => u.id)).as[List[JsValue]]
+  private def mapUsersToUrns(users: List[User], nextHref: Option[String]): String = {
+    val urns = users.map(u => u.urn)
+    val urnCollection = Collection(urns, nextHref)
+    Collection.getRepresentation(urnCollection, true)
+  }
 
   private def fans(affiliations: Seq[Following]): Seq[Urn] = affiliations.map(_.user)
 
@@ -138,7 +152,7 @@ class UserFollowHandler(
   private def fetchPage[T](
       request: HandlerRequest,
       fetchFunction: (UserSession, Urn, Option[String], Int) => Future[Option[FollowingsPage]],
-      mapUsers: List[User] => List[JsValue],
+      serializeUsers: (List[User], Option[String]) => String,
       users: Seq[Following] => Seq[Urn],
       requireLogin: Boolean
   ): Future[Response] = {
@@ -150,14 +164,10 @@ class UserFollowHandler(
       } yield {
         affiliationsOption
           .map { affiliations =>
-            JsonResponseBuilder.ok(
-              Json.stringify(
-                Json.obj(
-                  "collection" -> mapUsers(users),
-                  "next_href" -> nextHref(baseUrl, request.request.path, affiliations.next, request.params)
-                )
-              )
-            )
+            {
+              val next = nextHref(baseUrl, request.request.path, affiliations.next, request.params)
+              JsonResponseBuilder.ok(serializeUsers(users, next))
+            }
           }
           .getOrElse(ResponseBuilder.serviceUnavailable())
       }
@@ -184,7 +194,7 @@ class UserFollowHandler(
               JsonResponseBuilder(
                 status = Status.SeeOther,
                 headers = Map("Location" -> s"$baseUrl/users/$userId"),
-                body = Json.stringify(Json.toJson(users.head))
+                body = Json.stringify(Json.toJson(users.head)(userFollowWrites))
               ).build
             } else {
               ResponseBuilder.notFound()
@@ -231,15 +241,7 @@ class UserFollowHandler(
           .map(_.map(followCounts => (followCounts.userUrn, followCounts)).toMap),
         repostsClient.getRepostCountsByUrnWithFallback(session, urns)
       )
-    } yield {
-      val userInstances = users.map { user =>
-        val userUrn = (user \ "self" \ "urn").as[Urn]
-        val followCounts = followCountsMap.get(userUrn)
-        new User(user, baseUrl, followCounts, repostCountsByUrn.get(userUrn))
-      }
-
-      sortByProvidedUrns(userInstances, urns.toSeq).toList
-    }
+    } yield users.map(UserMapper(_, Some(followCountsMap), Some(repostCountsByUrn)))
   }
 
   private def findUserAge(session: UserSession, userUrn: Urn): Future[Option[Int]] = {
@@ -288,12 +290,5 @@ class UserFollowHandler(
         body = Json.stringify(JsObject(Seq("errors" -> errors)))
       ).build
     )
-  }
-
-  private def sortByProvidedUrns(users: Seq[User], urns: Seq[Urn]): Seq[User] = {
-    val orderedByUrn = Ordering.by(urns.zipWithIndex.toMap compose {
-      (_: User).id
-    })
-    users.sorted(orderedByUrn)
   }
 }

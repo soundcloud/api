@@ -2,6 +2,7 @@ package com.soundcloud.publicApiStrangler.handler
 
 import java.net.URL
 
+import com.soundcloud.publicApiStrangler.handler.representation.serializers.SearchUserRepresentation.searchUserWrites
 import com.soundcloud.jvmkit.module.bff.testsupport.FakeUserAuthentication
 import com.soundcloud.jvmkit.module.http.server.{HandlerRequest, JsonResponseBuilder}
 import com.soundcloud.jvmkit.module.telemetry.Telemetry
@@ -16,7 +17,6 @@ import com.soundcloud.publicApiStrangler.client.mothership.response.representati
 import com.soundcloud.publicApiStrangler.client.reposts.RepostsClient
 import com.soundcloud.publicApiStrangler.handler.representation.collection.CollectionResponse.MaxCacheAge
 import com.soundcloud.publicApiStrangler.handler.search.SearchHandler
-import com.soundcloud.publicApiStrangler.handler.search.representation.SearchUser.searchUserWrites
 import com.soundcloud.publicApiStrangler.service.SearchService
 import com.soundcloud.publicApiStrangler.service.pagination.OffsetBasedPagination
 import com.soundcloud.publicApiStrangler.service.playlists.PlaylistBuilder

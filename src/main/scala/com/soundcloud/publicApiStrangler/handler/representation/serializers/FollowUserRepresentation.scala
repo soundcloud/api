@@ -1,10 +1,10 @@
-package com.soundcloud.publicApiStrangler.handler.search.representation
+package com.soundcloud.publicApiStrangler.handler.representation.serializers
 
 import com.soundcloud.publicApiStrangler.client.mothership.response.representation.User
 import play.api.libs.json.{Json, Writes}
 
-object SearchUser {
-  implicit val searchUserWrites = Writes[User] { user =>
+object UserFollowRepresentation {
+  implicit val userFollowWrites = Writes[User] { user =>
     Json.obj(
       "avatar_url" -> user.avatar_url.replaceAll("\\?[0-9]+$", "").replaceAll("^http:", "https:"),
       "id" -> user.urn.identifier.toLong,
@@ -20,7 +20,7 @@ object SearchUser {
       "city" -> user.city,
       "description" -> user.description,
       "country" -> user.country,
-      "track_count" -> user.public_tracks_count,
+      "track_count" -> user.tracks_count,
       "public_favorites_count" -> user.public_favorites_count,
       "reposts_count" -> user.reposts_count,
       "followers_count" -> user.followers_count,
@@ -33,8 +33,7 @@ object SearchUser {
       "comments_count" -> user.comments_count,
       "online" -> user.online,
       "likes_count" -> user.likes_count,
-      "playlist_count" -> user.public_playlists_count,
-      "subscriptions" -> Json.toJson(user.subscriptions)
+      "playlist_count" -> user.public_playlists_count
     )
   }
 }

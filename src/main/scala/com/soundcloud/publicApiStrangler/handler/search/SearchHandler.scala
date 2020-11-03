@@ -2,7 +2,7 @@ package com.soundcloud.publicApiStrangler.handler.search
 
 import java.net.URL
 
-import com.soundcloud.publicApiStrangler.handler.search.representation.SearchUser.searchUserWrites
+import com.soundcloud.publicApiStrangler.handler.representation.serializers.SearchUserRepresentation.searchUserWrites
 import com.soundcloud.jvmkit.module.bff.session.UserAuthentication
 import com.soundcloud.jvmkit.module.http.server.{Handler, HandlerRequest}
 import com.soundcloud.jvmkit.module.util.session.UserSession
