@@ -11,6 +11,8 @@ servers:
 tags:
   - name: me
     description: Own User Endpoints
+  - name: playlists
+    description: Playlists Endpoints
   - name: tracks
     description: Tracks Endpoints
   - name: users
@@ -552,17 +554,34 @@ paths:
                   $ref: "#/components/examples/Web-profiles"
         401:
           description: 'Error: Unauthorized'
-  # /playlists:
-  #   get:
-  #     summary: Returns  error ???.
-  #     tags:
-  #       - playlists
-  #     security:
-  #       - ClientId: []
-  #         AuthHeader: []
-  #     responses:
-  #       200:
-  #         description: Success
+  /playlists:
+    get:
+      summary: Returns a list of playlists tracks included.
+      tags:
+        - playlists
+      security:
+        - ClientId: []
+          AuthHeader: []
+      parameters:
+        - $ref: "#/components/parameters/q"
+        - $ref: '#/components/parameters/limit'
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              examples:
+                default:
+                  $ref: "#/components/examples/PlaylistAndTracks"
+        400:
+          description: 'Error: Bad Request'
+          content:
+            application/json:
+              examples:
+                default:
+                  $ref: "#/components/examples/Err400"
+        401:
+          description: 'Error: Unauthorized'
   #   post:
   #     summary: Returns  error ???.
   #     tags:
@@ -1292,6 +1311,13 @@ components:
         maximum: 100
         default: 10
       description: Number of results to return in the collection.
+    q:
+      in: query
+      name: q
+      required: true
+      schema:
+        type: string
+      description: Playlist search query
   securitySchemes:
     ClientId:
       in: query
@@ -1472,6 +1498,9 @@ components:
     Created:
       value:
         status: 201 - Created
+    Err400:
+      value:
+        error: invalid request
     Error400:
       value:
         errors:
