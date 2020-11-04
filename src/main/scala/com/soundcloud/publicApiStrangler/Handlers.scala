@@ -70,7 +70,6 @@ class Handlers(telemetry: Telemetry, clients: Clients, exceptionCollector: Excep
     new SearchHandler(
       userAuthentication,
       baseUrl,
-      userRelatedMothershipDispatcher,
       searchService
     )
   }

@@ -113,7 +113,7 @@ object Routing {
 
   def forSearchHandler(searchHandler: SearchHandler): List[(Method, String, Handler)] = {
     route(Method.Get, "/tracks", searchHandler.searchTracks) :::
-      route(Method.Get, "/users", searchHandler.dispatchUserRequest) :::
+      route(Method.Get, "/users", searchHandler.searchUsers) :::
       route(Method.Get, "/playlists", searchHandler.searchPlaylists)
   }
 

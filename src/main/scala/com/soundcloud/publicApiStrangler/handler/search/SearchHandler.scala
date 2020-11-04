@@ -2,12 +2,11 @@ package com.soundcloud.publicApiStrangler.handler.search
 
 import java.net.URL
 
-import com.soundcloud.publicApiStrangler.handler.representation.serializers.SearchUserRepresentation.searchUserWrites
 import com.soundcloud.jvmkit.module.bff.session.UserAuthentication
-import com.soundcloud.jvmkit.module.http.server.{Handler, HandlerRequest}
+import com.soundcloud.jvmkit.module.http.server.HandlerRequest
 import com.soundcloud.jvmkit.module.util.session.UserSession
-import com.soundcloud.publicApiStrangler.handler.UserRelatedMothershipDispatcher
 import com.soundcloud.publicApiStrangler.handler.representation.collection.CollectionResponse
+import com.soundcloud.publicApiStrangler.handler.representation.serializers.SearchUserRepresentation.searchUserWrites
 import com.soundcloud.publicApiStrangler.handler.search.SearchHandler._
 import com.soundcloud.publicApiStrangler.service.SearchService
 import com.soundcloud.publicApiStrangler.service.pagination.OffsetBasedPagination
@@ -21,13 +20,14 @@ import com.twitter.util.Future
 class SearchHandler(
     userAuthentication: UserAuthentication,
     baseUrl: String,
-    userRelatedMothershipDispatcher: UserRelatedMothershipDispatcher,
     searchService: SearchService
 ) {
-  def dispatchUserRequest = dispatchRequest(
-    defaultParams,
-    userRelatedMothershipDispatcher.dispatchToMothership _
-  )
+
+  def searchUsers(req: HandlerRequest): Future[Response] =
+    addWildcardIfNoSearchQuery(req, defaultParams, searchUsers)
+
+  def searchPlaylists(req: HandlerRequest): Future[Response] =
+    addWildcardIfNoSearchQuery(req, defaultParams, searchPlaylists)
 
   def searchTracks(req: HandlerRequest): Future[Response] = {
     userAuthentication.withUserSession(req) { session =>
@@ -41,50 +41,57 @@ class SearchHandler(
     }
   }
 
-  def searchPlaylists(req: HandlerRequest): Future[Response] = {
-    userAuthentication.withUserSession(req) { session =>
-      val hasLinkedPartitioning = req.params.contains("linked_partitioning")
-      val pagination = OffsetBasedPagination.build(req, Seq("linked_partitioning") ++ searchService.playlistParams)
+  private def searchPlaylists(
+      req: HandlerRequest,
+      session: UserSession,
+      extraParams: Option[ParamMap]
+  ): Future[Response] = {
+    val hasLinkedPartitioning = req.params.contains("linked_partitioning")
+    val pagination = OffsetBasedPagination.build(req, Seq("linked_partitioning") ++ searchService.playlistParams)
 
-      val playlistsCollection =
-        searchService
-          .searchPlaylists(session, req.params, pagination)
-          .value
-      CollectionResponse.handleCollectionResponse(playlistsCollection, hasLinkedPartitioning)
-    }
+    val params = extraParams.map(_ ++ req.params).getOrElse(req.params)
+
+    val playlistsCollection =
+      searchService
+        .searchPlaylists(session, params, pagination)
+        .value
+    CollectionResponse.handleCollectionResponse(playlistsCollection, hasLinkedPartitioning)
+
   }
 
-  def searchUsers(req: HandlerRequest, session: UserSession): Future[Response] = {
+  private def searchUsers(
+      req: HandlerRequest,
+      session: UserSession,
+      extraParams: Option[ParamMap]
+  ): Future[Response] = {
     val hasLinkedPartitioning = req.params.contains("linked_partitioning")
     val pagination = OffsetBasedPagination.build(req, Seq("linked_partitioning"))
 
+    val params = extraParams.map(_ ++ req.params).getOrElse(req.params)
     val usersCollection =
       searchService
-        .searchUsers(session, req.params, pagination)
+        .searchUsers(session, params, pagination)
         .value
     CollectionResponse.handleCollectionResponse(usersCollection, hasLinkedPartitioning)(searchUserWrites)
 
   }
 
-  /**
-    * Perform a search for a given entity. Logic to determine whether this is a search
-    * and if we should forward the request to Mothership.
-    */
-  private def dispatchRequest(
+  private def addWildcardIfNoSearchQuery(
+      request: HandlerRequest,
       searchParams: Set[String],
-      mothershipDispatcherFn: Handler
-  ): Handler = { request =>
+      search: (HandlerRequest, UserSession, Option[ParamMap]) => Future[Response]
+  ): Future[Response] = {
     userAuthentication
       .withUserSession(request) { session =>
-        if (isSearchRequest(request.params, searchParams)) {
-          searchUsers(request, session)
+        if (containsSearchQuery(request.params, searchParams)) {
+          search(request, session, None)
         } else {
-          mothershipDispatcherFn(request)
+          search(request, session, Some(ParamMap("q" -> "*")))
         }
       }
   }
 
-  private def isSearchRequest(params: ParamMap, searchParams: Set[String]): Boolean = {
+  private def containsSearchQuery(params: ParamMap, searchParams: Set[String]): Boolean = {
     val paramsWithContent = params.collect { case (k, v) if v != null && v.nonEmpty => k }.toSet
     (searchParams intersect paramsWithContent).nonEmpty
   }

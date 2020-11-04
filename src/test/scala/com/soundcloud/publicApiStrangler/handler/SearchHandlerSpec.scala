@@ -2,20 +2,18 @@ package com.soundcloud.publicApiStrangler.handler
 
 import java.net.URL
 
-import com.soundcloud.publicApiStrangler.handler.representation.serializers.SearchUserRepresentation.searchUserWrites
 import com.soundcloud.jvmkit.module.bff.testsupport.FakeUserAuthentication
-import com.soundcloud.jvmkit.module.http.server.{HandlerRequest, JsonResponseBuilder}
+import com.soundcloud.jvmkit.module.outcome._
 import com.soundcloud.jvmkit.module.telemetry.Telemetry
 import com.soundcloud.jvmkit.module.telemetry.exceptions.ExceptionCollector
 import com.soundcloud.jvmkit.module.util.Urn
-import com.soundcloud.jvmkit.module.util.session.UserSession
-import com.soundcloud.jvmkit.module.outcome._
 import com.soundcloud.publicApiStrangler.Routing
 import com.soundcloud.publicApiStrangler.client.followcounts.{FollowCounts, FollowCountsClient}
 import com.soundcloud.publicApiStrangler.client.liebling.LieblingClient
 import com.soundcloud.publicApiStrangler.client.mothership.response.representation.User
 import com.soundcloud.publicApiStrangler.client.reposts.RepostsClient
 import com.soundcloud.publicApiStrangler.handler.representation.collection.CollectionResponse.MaxCacheAge
+import com.soundcloud.publicApiStrangler.handler.representation.serializers.SearchUserRepresentation.searchUserWrites
 import com.soundcloud.publicApiStrangler.handler.search.SearchHandler
 import com.soundcloud.publicApiStrangler.service.SearchService
 import com.soundcloud.publicApiStrangler.service.pagination.OffsetBasedPagination
@@ -24,7 +22,7 @@ import com.soundcloud.publicApiStrangler.service.representation.collection.Colle
 import com.soundcloud.publicApiStrangler.service.trackrepresentation.{TrackPagination, TrackRepresentationSpecContext}
 import com.soundcloud.publicApiStrangler.service.users.UserBuilder
 import com.soundcloud.publicApiStrangler.test.{HandlerSpecificationScope, UnitSpecification}
-import com.twitter.finagle.http.{Request, Response, Status}
+import com.twitter.finagle.http.Request
 import com.twitter.util.Future
 import org.mockito.Mockito.when
 import play.api.libs.json.Json
@@ -42,27 +40,14 @@ class SearchHandlerSpec extends UnitSpecification {
     val searchService = mock[SearchService]
 
     val authentication = new FakeUserAuthentication(anonymousSession)
-    val userRelatedMothershipDispatcher = new UserRelatedMothershipDispatcher(
-      authentication,
-      fallbackMock,
-      followCountsClientMock,
-      lieblingClientMock,
-      () => Future.value(true),
-      repostsClientMock
-    )
 
     val handler = new SearchHandler(
       authentication,
       "http://api.soundcloud.com",
-      userRelatedMothershipDispatcher,
       searchService
     )
 
     override def routingDefinitions = Routing.forSearchHandler(handler)
-
-    def doesNotForward(response: Response) = {
-      there was noCallsTo(fallbackMock)
-    }
   }
 
   "/users" >> {
@@ -78,32 +63,6 @@ class SearchHandlerSpec extends UnitSpecification {
       val expectedResponse = Collection.getRepresentation(userCollection, false)(searchUserWrites)
     }
 
-    "forwards to Mothership when q param not present" in new Context {
-      // just so we can distinguish a forwarded request. Typically, this would be 200.
-      val forwardStatus = Status.Found
-      val forwardContent = "forwardContent"
-
-      def expectForwardedRequest = {
-        val response = JsonResponseBuilder().body(forwardContent).status(forwardStatus).build
-        fallbackMock.dispatch(any[HandlerRequest]) returns Future.value(response)
-
-        fallbackMock
-          .dispatch(any[HandlerRequest])
-          .returns(Future(response))
-
-        followCountsClientMock.counts(any[UserSession], any[Seq[Urn]]) returns Future.value(followCountsSeq)
-      }
-
-      def stillForwards(response: Response) = {
-        response.status ==== forwardStatus
-        response.contentString ==== "forwardContent"
-      }
-
-      expectForwardedRequest
-      val response = get("/users")
-      stillForwards(response)
-    }
-
     "performs a search when q param is present" in new Context {
       val request = Request("/users", extraParams.toSeq: _*)
       request.host = "localhost"
@@ -114,7 +73,19 @@ class SearchHandlerSpec extends UnitSpecification {
       val response = get("/users", extraParams, Map("Host" -> "localhost"))
       response.statusCode ==== 200
       response.contentString ==== expectedResponse
-      doesNotForward(response)
+    }
+
+    "adds wildcard q param to request when not present" in new Context {
+      val wildcardParam = Map("q" -> "*")
+      val request = Request("/users", pageParams.toSeq: _*)
+      request.host = "localhost"
+      val page = OffsetBasedPagination.build(request, Seq("linked_partitioning"))
+
+      when(searchService.searchUsers(anonymousSession, request.params ++ wildcardParam, page))
+        .thenReturn(Good(userCollection).outcomeF)
+      val response = get("/users", pageParams, Map("Host" -> "localhost"))
+      response.statusCode ==== 200
+      response.contentString ==== expectedResponse
     }
 
     "response contains a caching header" in new Context {
@@ -130,7 +101,6 @@ class SearchHandlerSpec extends UnitSpecification {
 
       response.headerMap.get("Cache-Control").get must contain("max-age=" + MaxCacheAge)
       response.headerMap.get("Cache-Control").get must contain("public")
-      doesNotForward(response)
     }
 
     "200 when no pagination params" in new Context {
@@ -143,7 +113,6 @@ class SearchHandlerSpec extends UnitSpecification {
 
       val response = get("/users", request.params, Map("Host" -> "localhost"))
       response.statusCode ==== 200
-      doesNotForward(response)
     }
 
     "returns 400 when search service returns error" in new Context {
@@ -236,6 +205,23 @@ class SearchHandlerSpec extends UnitSpecification {
         )
         .outcomeF
       val response = get(path, Map("q" -> "foo", "offset" -> "10", "limit" -> "5", "linked_partitioning" -> "1"))
+
+      response.statusCode ==== 200
+      response.contentString ==== Collection.getRepresentation(playlistsCollections, true)
+    }
+
+    "adds wildcard q param to request when not present" in new Context {
+      val queryString = "?offset=10&limit=5&linked_partitioning=1"
+      searchService.searchPlaylists(
+        anonymousSession,
+        Map("q" -> "*", "offset" -> "10", "limit" -> "5", "linked_partitioning" -> "1"),
+        paginationParams(path + queryString)
+      ) returns Future
+        .value(
+          playlistsCollections
+        )
+        .outcomeF
+      val response = get(path, Map("offset" -> "10", "limit" -> "5", "linked_partitioning" -> "1"))
 
       response.statusCode ==== 200
       response.contentString ==== Collection.getRepresentation(playlistsCollections, true)
