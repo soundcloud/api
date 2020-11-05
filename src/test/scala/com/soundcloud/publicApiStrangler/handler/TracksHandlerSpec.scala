@@ -390,7 +390,7 @@ class TracksHandlerSpec extends UnitSpecification with TrackRepresentationSpecCo
 
         val response = postForm(path, body = requestBody)
         response.statusCode === 400
-        response.contentString === "{\"error\":\"List(invalid request)\"}"
+        response.contentString === "{\"error\":\"invalid request\"}"
       }
 
       "Generates unprocessable entity response if no asset found" in new NotFoundContext {
@@ -483,7 +483,7 @@ class TracksHandlerSpec extends UnitSpecification with TrackRepresentationSpecCo
 
         val response = postForm(path, body = requestBody)
         response.statusCode === 400
-        response.contentString === "{\"error\":\"List(invalid request)\"}"
+        response.contentString === "{\"error\":\"invalid request\"}"
       }
 
       "Generates unprocessable entity response if no asset found" in new FailureContext {

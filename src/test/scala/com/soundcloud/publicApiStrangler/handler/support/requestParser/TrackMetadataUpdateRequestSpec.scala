@@ -41,33 +41,72 @@ class TrackMetadataUpdateRequestSpec extends UnitSpecification {
     metadataUpdates ==== metadataUpdatesExpected
   }
 
-  "can read from map" in new Context {
-    val inputArgMap = Map(
-      "streamable" -> "true",
-      "commentable" -> "true",
-      "description" -> "a random description",
-      "downloadable" -> "false",
-      "embeddable_by" -> "all",
-      "genre" -> "bossa nova",
-      "geo_blockings" -> "EN,DE",
-      "isrc" -> "is-rc",
-      "label_name" -> "alexxx",
-      "license" -> "test_license",
-      "permalink" -> "permalinky",
-      "purchase_url" -> "purchase.com/track",
-      "release" -> "1234",
-      "release_date" -> "2008/04/29 22:14:25 +0000",
-      "sharing" -> "all",
-      "tag_list" -> "tags, tags, tags",
-      "title" -> "new title",
-      "reveal_stats" -> "false",
-      "reveal_comments" -> "true",
-      "purchase_title" -> "new title"
-    )
+  "when reading from a Map" >> {
+    "succeeds" in new Context {
+      val inputArgMap = Map(
+        "streamable" -> "true",
+        "commentable" -> "true",
+        "description" -> "a random description",
+        "downloadable" -> "false",
+        "embeddable_by" -> "all",
+        "genre" -> "bossa nova",
+        "geo_blockings" -> "EN,DE",
+        "isrc" -> "is-rc",
+        "label_name" -> "alexxx",
+        "license" -> "test_license",
+        "permalink" -> "permalinky",
+        "purchase_url" -> "purchase.com/track",
+        "release" -> "1234",
+        "release_date" -> "2008/04/29 22:14:25 +0000",
+        "sharing" -> "all",
+        "tag_list" -> "tags, tags, tags",
+        "title" -> "new title",
+        "reveal_stats" -> "false",
+        "reveal_comments" -> "true",
+        "purchase_title" -> "new title"
+      )
 
-    val metadataUpdates = TrackMetadataUpdateRequest.fromForm(inputArgMap)
-    metadataUpdates.isEmpty ==== false
-    metadataUpdates.get ==== metadataUpdatesExpected
+      val metadataUpdates = TrackMetadataUpdateRequest.fromForm(inputArgMap)
+      metadataUpdates.isEmpty ==== false
+      metadataUpdates.get ==== metadataUpdatesExpected
+    }
+
+    trait BooleanTestContext extends Context {
+      def inputMap(booleanString: String): Map[String, String] = {
+        Map(
+          "streamable" -> booleanString,
+          "commentable" -> booleanString,
+          "description" -> "a random description",
+          "downloadable" -> booleanString,
+          "embeddable_by" -> "all",
+          "genre" -> "bossa nova",
+          "geo_blockings" -> "EN,DE",
+          "isrc" -> "is-rc",
+          "label_name" -> "alexxx",
+          "license" -> "test_license",
+          "permalink" -> "permalinky",
+          "purchase_url" -> "purchase.com/track",
+          "release" -> "1234",
+          "release_date" -> "2008/04/29 22:14:25 +0000",
+          "sharing" -> "all",
+          "tag_list" -> "tags, tags, tags",
+          "title" -> "new title",
+          "reveal_stats" -> booleanString,
+          "reveal_comments" -> booleanString,
+          "purchase_title" -> "new title"
+        )
+      }
+    }
+
+    "can handle all varieties of boolean strings" in new BooleanTestContext {
+      val boolTypes = Seq("true", "false", "1", "0")
+
+      boolTypes.foreach { boolString =>
+        val map = inputMap(boolString)
+        val metadataUpdates = TrackMetadataUpdateRequest.fromForm(map)
+        metadataUpdates.get !=== null
+      }
+    }
   }
 
   "can write to request body" in new Context {

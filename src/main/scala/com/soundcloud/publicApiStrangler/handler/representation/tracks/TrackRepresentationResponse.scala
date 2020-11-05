@@ -20,7 +20,7 @@ object TrackRepresentationResponse {
         generateResponse(Status.Created, Json.stringify(Json.toJson(createdTrack)), headers)
       }
       case Bad(NotFound(_)) => JsonResponseBuilder.notFound(generateErrorBody("not found"))
-      case Bad(NotValid(msg)) => JsonResponseBuilder.badRequest(generateErrorBody(msg.toString()))
+      case Bad(NotValid(_)) => JsonResponseBuilder.badRequest(generateErrorBody("invalid request"))
 
       case _ => throw new UnhandledOutcomeException
     }
