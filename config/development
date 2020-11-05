@@ -62,6 +62,8 @@ SLO_AVAILABILITY_TARGET=0.99999
 TIMELINE_CLIENT_REQUEST_TIMEOUT_MILLIS=2000
 
 SEARCH_SRV_RECORD=dnssrv!http.publicapi.prod.search.srv.db.s-cloud.net
+SEARCH_CLIENT_REQUEST_TIMEOUT_MILLIS=3000
+
 TIMELINE_SRV_RECORD=dnssrv!http.api.prod.timeline.srv.db.s-cloud.net
 
 TRACK_COORDINATOR_SRV_RECORD=dnssrv!http.coordinator.prod.tracks.srv.db.s-cloud.net
