@@ -40,9 +40,9 @@ object TrackMetadataUpdateRequest {
       Some(
         TrackMetadataUpdateRequest(
           track = new TrackMetadataUpdates(
-            api_streamable = params.get("streamable").map(v => Value[Boolean](v.toBoolean)).getOrElse(MissingValue),
+            api_streamable = params.get("streamable").map(v => Value[Boolean](toBoolean(v))).getOrElse(MissingValue),
             description = params.get("description").map(v => Value[String](v)).getOrElse(MissingValue),
-            downloadable = params.get("downloadable").map(v => Value[Boolean](v.toBoolean)).getOrElse(MissingValue),
+            downloadable = params.get("downloadable").map(v => Value[Boolean](toBoolean(v))).getOrElse(MissingValue),
             embeddable = embeddable,
             genre = params.get("genre").map(v => Value[String](v)).getOrElse(MissingValue),
             geo_blockings = params
@@ -59,10 +59,10 @@ object TrackMetadataUpdateRequest {
             sharing = params.get("sharing").map(v => Value[String](v)).getOrElse(MissingValue),
             tag_list = params.get("tag_list").map(v => Value[String](v)).getOrElse(MissingValue),
             title = params.get("title").map(v => NonNullValue[String](v)).getOrElse(NonNullMissingValue),
-            commentable = params.get("commentable").map(v => Value[Boolean](v.toBoolean)).getOrElse(MissingValue),
-            reveal_stats = params.get("reveal_stats").map(v => Value[Boolean](v.toBoolean)).getOrElse(MissingValue),
+            commentable = params.get("commentable").map(v => Value[Boolean](toBoolean(v))).getOrElse(MissingValue),
+            reveal_stats = params.get("reveal_stats").map(v => Value[Boolean](toBoolean(v))).getOrElse(MissingValue),
             reveal_comments =
-              params.get("reveal_comments").map(v => Value[Boolean](v.toBoolean)).getOrElse(MissingValue),
+              params.get("reveal_comments").map(v => Value[Boolean](toBoolean(v))).getOrElse(MissingValue),
             purchase_title = params.get("purchase_title").map(v => Value[String](v)).getOrElse(MissingValue)
           )
         )
@@ -70,5 +70,18 @@ object TrackMetadataUpdateRequest {
     } catch {
       case NonFatal(_) => None
     }
+  }
+
+  private def toBoolean(s: String): Boolean = {
+
+    if (s != null) s.toLowerCase match {
+      case "0" => false
+      case "1" => true
+      case "true" => true
+      case "false" => false
+      case _ => throw new IllegalArgumentException("For input string: \"" + s + "\"")
+    }
+    else
+      throw new IllegalArgumentException("For input string: \"null\"")
   }
 }
