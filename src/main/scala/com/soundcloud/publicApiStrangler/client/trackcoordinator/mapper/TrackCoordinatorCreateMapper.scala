@@ -11,7 +11,7 @@ object TrackCoordinatorCreateMapper {
 
     response.status match {
       case Status.Created => Json.parse(response.contentString).as[TrackCoordinatorTrack].good
-      case Status.BadRequest => NotValid("invalid request").bad
+      case Status.BadRequest => NotValid(response.contentString).bad
       case Status.NotFound => NotFound().bad
       case _ => throw UnhandledResponseException(response)
     }
