@@ -9,6 +9,8 @@ info:
 servers:
   - url: https://api.soundcloud.com
 tags:
+  - name: auth
+    description: /connect and /oauth2/token Endpoints
   - name: me
     description: Own User Endpoints
   - name: playlists
@@ -20,6 +22,23 @@ tags:
   - name: resolve
     description: Resolve Endpoint
 paths:
+  /connect:
+    get:
+      summary: The OAuth2 authorization endpoint. Your app redirects a user to this endpoint, allowing them to delegate access to their account.
+      tags:
+        - auth
+      security:
+        - ClientId: []
+          AuthHeader: []
+      parameters:
+        - $ref: '#/components/parameters/client_id'
+        - $ref: '#/components/parameters/redirect_uri'
+        - $ref: '#/components/parameters/response_type'
+      responses:
+        200:
+          description: Success
+        401:
+          description: 'Error: Unauthorized'
   /me:
     get:
       summary: Returns an authenticated user’s information.
@@ -1311,6 +1330,31 @@ components:
         maximum: 100
         default: 10
       description: Number of results to return in the collection.
+    client_id:
+      in: query
+      name: client_id
+      required: true
+      schema:
+        type: string
+      description: client_id
+    redirect_uri:
+      in: query
+      name: redirect_uri
+      required: true
+      schema:
+        type: string
+      description: redirect_uri
+    response_type:
+      in: query
+      name: response_type
+      required: true
+      schema:
+        type: string
+        enum:
+          - code
+          - token
+          - code_and_token
+      description: response type query
     q:
       in: query
       name: q
