@@ -9,8 +9,8 @@ info:
 servers:
   - url: https://api.soundcloud.com
 tags:
-  - name: auth
-    description: /connect and /oauth2/token Endpoints
+  - name: OAuth
+    description: Authorization Endpoints.
   - name: me
     description: Own User Endpoints
   - name: playlists
@@ -26,7 +26,7 @@ paths:
     get:
       summary: The OAuth2 authorization endpoint. Your app redirects a user to this endpoint, allowing them to delegate access to their account.
       tags:
-        - auth
+        - OAuth
       security:
         - ClientId: []
           AuthHeader: []
@@ -37,6 +37,36 @@ paths:
       responses:
         200:
           description: Success
+        401:
+          description: 'Error: Unauthorized'
+  /oauth2/token:
+    post:
+      summary: This endpoint accepts POST requests and is used to provision access tokens once a user has authorized your application.
+      tags:
+        - OAuth
+      security:
+        - ClientId: []
+      requestBody:
+        description: OAׁuth payload
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OAuth2Token'
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              examples:
+                client_credentials:
+                  $ref: "#/components/examples/ClientCredentials"
+        400:
+          description: 'Error: Bad Request'
+          content:
+            application/json:
+              examples:
+                default:
+                  $ref: "#/components/examples/ErrInvalidGrant"
         401:
           description: 'Error: Unauthorized'
   /me:
@@ -60,7 +90,7 @@ paths:
             application/json:
               examples:
                 default:
-                  $ref: "#/components/examples/Error401"
+                  $ref: "#/components/examples/ErrorUnauthorized"
     # put:
     #   summary: Returns ?.
     #   tags:
@@ -196,7 +226,7 @@ paths:
             application/json:
               examples:
                 default:
-                  $ref: "#/components/examples/Error404"
+                  $ref: "#/components/examples/ErrorNotFound"
   /me/favorites:
     get:
       summary: Returns a list of favorite tracks.
@@ -234,7 +264,7 @@ paths:
   #           application/json:
   #             examples:
   #               default:
-  #                 $ref: '#/components/examples/Error404'
+  #                 $ref: '#/components/examples/ErrorNotFound'
   #   post:
   #     summary: Post favorite track.
   #     tags:
@@ -358,7 +388,7 @@ paths:
             application/json:
               examples:
                 default:
-                  $ref: "#/components/examples/Error404"
+                  $ref: "#/components/examples/ErrorNotFound"
     # post:
     #   summary: Endpoint to follow another user
     #   tags:
@@ -383,7 +413,7 @@ paths:
     #         application/json:
     #           examples:
     #             default:
-    #               $ref: '#/components/examples/Error404'
+    #               $ref: '#/components/examples/ErrorNotFound'
     #     500:
     #       description: Internal Server Error
     delete:
@@ -410,14 +440,14 @@ paths:
             application/json:
               examples:
                 default:
-                  $ref: "#/components/examples/Error404"
+                  $ref: "#/components/examples/ErrorNotFound"
         422:
           description:   'Error: Unprocessable Entity'
           content:
             application/json:
               examples:
                 422:
-                  $ref: '#/components/examples/Error422'
+                  $ref: '#/components/examples/ErrorUnprocessableEntity'
   # /me/followings/tracks:
   #   get:
   #     summary: Returns all the tracks of all the followings of me.
@@ -598,7 +628,7 @@ paths:
             application/json:
               examples:
                 default:
-                  $ref: "#/components/examples/Err400"
+                  $ref: "#/components/examples/ErrInvalidRequest"
         401:
           description: 'Error: Unauthorized'
   #   post:
@@ -707,7 +737,7 @@ paths:
             application/json:
               examples:
                 default:
-                  $ref: '#/components/examples/Error404'
+                  $ref: '#/components/examples/ErrorNotFound'
     put:
       summary: Updating a track information.
       tags:
@@ -736,7 +766,7 @@ paths:
             application/json:
               examples:
                 default:
-                  $ref: '#/components/examples/Error400'
+                  $ref: '#/components/examples/ErrorInvalidRequest'
         401:
           description: 'Error: Unauthorized'
         404:
@@ -745,7 +775,7 @@ paths:
             application/json:
               examples:
                 default:
-                  $ref: '#/components/examples/Error404'
+                  $ref: '#/components/examples/ErrorNotFound'
         500:
           description: 'Error: Internal Server Error'
     delete:
@@ -789,7 +819,7 @@ paths:
             application/json:
               examples:
                 default:
-                  $ref: '#/components/examples/Error404'
+                  $ref: '#/components/examples/ErrorNotFound'
     # post:
     #   summary: Returns ???.
     #   tags:
@@ -870,7 +900,7 @@ paths:
             application/json:
               examples:
                 default:
-                  $ref: '#/components/examples/Error404'
+                  $ref: '#/components/examples/ErrorNotFound'
   /tracks/{track_id}/favoriters/{user_id}:
     get:
       summary: Returns a user who has favorited the track.
@@ -897,7 +927,7 @@ paths:
             application/json:
               examples:
                 default:
-                  $ref: '#/components/examples/Error404'
+                  $ref: '#/components/examples/ErrorNotFound'
   /tracks/{track_id}/related:
     get:
       summary: Returns all related tracks for input track id.
@@ -924,7 +954,7 @@ paths:
             application/json:
               examples:
                 default:
-                  $ref: '#/components/examples/Err404'
+                  $ref: '#/components/examples/ErrNotFound'
   # /tracks/{track_id}/streams:
   #   get:
   #     summary: Returns ???.
@@ -988,7 +1018,7 @@ paths:
             application/json:
               examples:
                 default:
-                  $ref: "#/components/examples/Error404"
+                  $ref: "#/components/examples/ErrorNotFound"
     # put:
     #   summary: Returns user's information.
     #   tags:
@@ -1028,7 +1058,7 @@ paths:
             application/json:
               examples:
                 default:
-                  $ref: "#/components/examples/Error404"
+                  $ref: "#/components/examples/ErrorNotFound"
   /users/{user_id}/favorites:
     get:
       summary: Returns a list of user's favorites tracks.
@@ -1261,7 +1291,7 @@ paths:
             application/json:
               examples:
                 default:
-                  $ref: "#/components/examples/Error404"
+                  $ref: "#/components/examples/ErrorNotFound"
 components:
   parameters:
     user_id:
@@ -1354,14 +1384,14 @@ components:
           - code
           - token
           - code_and_token
-      description: response type query
+      description: response type
     q:
       in: query
       name: q
       required: true
       schema:
         type: string
-      description: Playlist search query
+      description: search
   securitySchemes:
     ClientId:
       in: query
@@ -1374,6 +1404,36 @@ components:
       name: Authorization
       description: 'The string "OAuth" followed by the user’s token: OAuth ACCESS_TOKEN'
   schemas:
+    OAuth2Token:
+      type: object
+      properties:
+        client_id:
+          type: string
+          description: client_id
+        redirect_uri:
+          type: string
+          description: redirect_uri
+        response_type:
+          type: string
+          enum:
+            - code
+            - token
+            - code_and_token
+          description: response type
+        client_secret:
+          type: string
+          description: Client secret
+        grant_type:
+          type: string
+          enum:
+            - authorization_code
+            - refresh_token
+            - password
+            - client_credentials
+          description: Grant type
+        authorization_code:
+          type: string
+          description: Authorization code
     UpdateTrackRequest:
       type: object
       properties:
@@ -1497,6 +1557,12 @@ components:
               - $ref: "#/components/examples/Track/value"
         next_href: https://api.soundcloud.com/me/activities/tracks?limit=10&cursor=00000
         future_href: https://api.soundcloud.com/me/activities/tracks?limit=10&cursor=000001
+    ClientCredentials:
+      value:
+        access_token: some string
+        expires_in: 21599
+        scope: ''
+        refresh_token: some string
     Comment:
       value:
         body: comment body
@@ -1542,25 +1608,28 @@ components:
     Created:
       value:
         status: 201 - Created
-    Err400:
+    ErrInvalidGrant:
+      value:
+        error_code: invalid_grant
+    ErrInvalidRequest:
       value:
         error: invalid request
-    Error400:
+    ErrorInvalidRequest:
       value:
         errors:
         - error_message: 400 - Invalid Request
-    Error401:
+    ErrorUnauthorized:
       value:
         errors:
         - error_message: 401 - Unauthorized
-    Error404:
+    ErrorNotFound:
       value:
         errors:
         - error_message: 404 - Not Found
-    Err404:
+    ErrNotFound:
       value:
         error: Not Found
-    Error422:
+    ErrorUnprocessableEntity:
       value:
         errors:
         - error_message: 422 - Unprocessable Entity
