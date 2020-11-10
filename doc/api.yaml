@@ -9,7 +9,7 @@ info:
 servers:
   - url: https://api.soundcloud.com
 tags:
-  - name: OAuth
+  - name: oauth
     description: Authentication and Authorization Endpoints.
   - name: me
     description: Own User Endpoints.
@@ -20,13 +20,13 @@ tags:
   - name: users
     description: SoundCloud Users Endpoints.
   - name: miscellaneous
-    description: Miscellaneous Endpoint.
+    description: Miscellaneous Endpoints.
 paths:
   /connect:
     get:
       summary: The OAuth2 authorization endpoint. Your app redirects a user to this endpoint, allowing them to delegate access to their account.
       tags:
-        - OAuth
+        - oauth
       security:
         - ClientId: []
           AuthHeader: []
@@ -43,7 +43,7 @@ paths:
     post:
       summary: This endpoint accepts POST requests and is used to provision access tokens once a user has authorized your application.
       tags:
-        - OAuth
+        - oauth
       security:
         - ClientId: []
       requestBody:

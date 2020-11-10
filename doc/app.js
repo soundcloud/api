@@ -8,7 +8,8 @@ const path = require('path');
 
 var options = {
   explorer: false,
-  customCssUrl: '/assets/custom.css'
+  customCssUrl: '/assets/custom.css',
+  customfavIcon: '/assets/favicon.ico'
 }
 
 app.set('port', process.env.PORT || 3000);
