@@ -10,17 +10,17 @@ servers:
   - url: https://api.soundcloud.com
 tags:
   - name: OAuth
-    description: Authorization Endpoints.
+    description: Authentication and Authorization Endpoints.
   - name: me
-    description: Own User Endpoints
+    description: Own User Endpoints.
   - name: playlists
-    description: Playlists Endpoints
+    description: Playlists Endpoints.
   - name: tracks
-    description: Tracks Endpoints
+    description: Tracks Endpoints.
   - name: users
-    description: A SoundCloud User
-  - name: resolve
-    description: Resolve Endpoint
+    description: SoundCloud Users Endpoints.
+  - name: miscellaneous
+    description: Miscellaneous Endpoint.
 paths:
   /connect:
     get:
@@ -972,7 +972,7 @@ paths:
     get:
       summary: Returns access API resources.
       tags:
-        - resolve
+        - miscellaneous
       security:
         - ClientId: []
           AuthHeader: []
@@ -1294,27 +1294,13 @@ paths:
                   $ref: "#/components/examples/ErrorNotFound"
 components:
   parameters:
-    user_id:
-      in: path
-      name: user_id
+    client_id:
+      in: query
+      name: client_id
       required: true
       schema:
-        type: integer
-      description: SoundCloud User id
-    other_id:
-      in: path
-      name: other_id
-      required: true
-      schema:
-        type: integer
-      description: SoundCloud User id
-    track_id:
-      in: path
-      name: track_id
-      required: true
-      schema:
-        type: integer
-      description: SoundCloud Track id
+        type: string
+      description: client_id
     comment_id:
       in: path
       name: comment_id
@@ -1329,27 +1315,6 @@ components:
       schema:
         type: integer
       description: SoundCloud connection id
-    playlist_id:
-      in: path
-      name: playlist_id
-      required: true
-      schema:
-        type: integer
-      description: SoundCloud playlist id
-    url:
-      in: query
-      name: url
-      required: true
-      schema:
-        type: string
-      description: SoundCloud URL
-    tag:
-      in: path
-      name: tag
-      required: true
-      schema:
-        type: string
-      description: tag
     limit:
       in: query
       name: limit
@@ -1360,13 +1325,27 @@ components:
         maximum: 100
         default: 10
       description: Number of results to return in the collection.
-    client_id:
+    other_id:
+      in: path
+      name: other_id
+      required: true
+      schema:
+        type: integer
+      description: SoundCloud User id
+    playlist_id:
+      in: path
+      name: playlist_id
+      required: true
+      schema:
+        type: integer
+      description: SoundCloud playlist id
+    q:
       in: query
-      name: client_id
+      name: q
       required: true
       schema:
         type: string
-      description: client_id
+      description: search
     redirect_uri:
       in: query
       name: redirect_uri
@@ -1385,13 +1364,34 @@ components:
           - token
           - code_and_token
       description: response type
-    q:
-      in: query
-      name: q
+    tag:
+      in: path
+      name: tag
       required: true
       schema:
         type: string
-      description: search
+      description: tag
+    track_id:
+      in: path
+      name: track_id
+      required: true
+      schema:
+        type: integer
+      description: SoundCloud Track id
+    url:
+      in: query
+      name: url
+      required: true
+      schema:
+        type: string
+      description: SoundCloud URL
+    user_id:
+      in: path
+      name: user_id
+      required: true
+      schema:
+        type: integer
+      description: SoundCloud User id
   securitySchemes:
     ClientId:
       in: query
