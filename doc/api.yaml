@@ -1,10 +1,9 @@
 openapi: 3.0.1
 info:
   title: SoundCloud Public API Specification
-  description: "API Public OpenAPI Draft"
   contact:
     name: Public API strangler
-  version: 2.2.2
+  version: 1.0.0
   termsOfService: https://developers.soundcloud.com/docs/api/terms-of-use
 servers:
   - url: https://api.soundcloud.com
@@ -71,7 +70,7 @@ paths:
           description: 'Error: Unauthorized'
   /me:
     get:
-      summary: Returns an authenticated user’s information.
+      summary: Returns the authenticated user’s information.
       tags:
         - me
       security:
@@ -102,7 +101,7 @@ paths:
     #       description: Success
   /me/activities:
     get:
-      summary: Recent activities.
+      summary: Returns the authenticated user's activities.
       tags:
         - me
       security:
@@ -133,7 +132,7 @@ paths:
   #         description: Success
   /me/activities/all/own:
     get:
-      summary: Recent activities on the logged-in users tracks.
+      summary: Recent the authenticated user's activities.
       tags:
         - me
       security:
@@ -152,7 +151,7 @@ paths:
           description: 'Error: Unauthorized'
   /me/activities/tracks:
     get:
-      summary: Recent track related activities.
+      summary: Returns the authenticated user's recent track related activities.
       tags:
         - me
       security:
@@ -184,7 +183,7 @@ paths:
   #         description: Success
   /me/connections:
     get:
-      summary: Returns a list of user's connection information.
+      summary: Returns a list of the authenticated user's connected social accounts.
       tags:
         - me
       security:
@@ -203,7 +202,7 @@ paths:
           description: 'Error: Unauthorized'
   /me/connections/{connection_id}:
     get:
-      summary: Returns a user's connection information.
+      summary: Returns the authenticated user's connected social account.
       tags:
         - me
       security:
@@ -229,7 +228,7 @@ paths:
                   $ref: "#/components/examples/ErrorNotFound"
   /me/favorites:
     get:
-      summary: Returns a list of favorite tracks.
+      summary: Returns a list of favorited or liked tracks of the authenticated user.
       tags:
         - me
       security:
@@ -317,7 +316,7 @@ paths:
   #         description: The user could not be found
   /me/followings:
     get:
-      summary: Returns a List of users who are followed by me.
+      summary: Returns a list of users who are followed by the authenticated user.
       tags:
         - me
       security:
@@ -336,7 +335,7 @@ paths:
           description: 'Error: Unauthorized'
   /me/followings/{user_id}:
     get:
-      summary: Return a user who is followed by me.
+      summary: Returns a user who is followed by the authenticated user.
       tags:
         - me
       security:
@@ -358,7 +357,7 @@ paths:
         503:
           description: 'Error: Service Unavailable'
     put:
-      summary: Put a user who will be followed by me.
+      summary: Follows a user.
       tags:
         - me
       security:
@@ -390,7 +389,7 @@ paths:
                 default:
                   $ref: "#/components/examples/ErrorNotFound"
     # post:
-    #   summary: Endpoint to follow another user
+    #   summary: Endpoint to follow another user.
     #   tags:
     #     - me
     #   security:
@@ -417,7 +416,7 @@ paths:
     #     500:
     #       description: Internal Server Error
     delete:
-      summary: Delete a user who is followed by me.
+      summary: Deletes a user who is followed by the authenticated user.
       tags:
         - me
       security:
@@ -460,7 +459,7 @@ paths:
   #         description: Success
   /me/followers:
     get:
-      summary: Returns a list of users who are following me.
+      summary: Returns a list of users who are following the authenticated user.
       tags:
         - me
       security:
@@ -477,15 +476,15 @@ paths:
                   $ref: "#/components/examples/UserFollowers"
         401:
           description: 'Error: Unauthorized'
-  /me/followers/{other_id}:
+  /me/followers/{follower_id}:
     get:
-      summary: Returns a user who is following me.
+      summary: Returns a user who is following the authenticated user.
       tags:
         - me
       security:
         - AuthHeader: []
       parameters:
-        - $ref: '#/components/parameters/other_id'
+        - $ref: '#/components/parameters/follower_id'
         - $ref: '#/components/parameters/limit'
       responses:
         200:
@@ -504,7 +503,7 @@ paths:
   /me/playlists:
     get:
       summary: Returns user’s playlists (sets).
-      description: return playlist info, playlist tracks and tracks owner info
+      description: Returns playlist info, playlist tracks and tracks owner info.
       tags:
         - me
       security:
@@ -586,7 +585,7 @@ paths:
   #         description: Success
   /me/web-profiles:
     get:
-      summary: Returns a list of user's web profiles.
+      summary: Returns a list of the authenticated user's links added to their profile.
       tags:
         - me
       security:
@@ -605,7 +604,7 @@ paths:
           description: 'Error: Unauthorized'
   /playlists:
     get:
-      summary: Returns a list of playlists tracks included.
+      summary: Returns a list of playlists with tracks included in response.
       tags:
         - playlists
       security:
@@ -643,7 +642,7 @@ paths:
   #         description: Success
   # /playlists/{playlist_id}:
   #   get:
-  #     summary: Return playlist
+  #     summary: Returns a playlist.
   #     tags:
   #       - playlists
   #     security:
@@ -655,7 +654,7 @@ paths:
   #       200:
   #         description: Success
   #   put:
-  #     summary: Return playlist
+  #     summary: Creates a playlist.
   #     tags:
   #       - playlists
   #     security:
@@ -667,7 +666,7 @@ paths:
   #       200:
   #         description: Success
   #   delete:
-  #     summary: Delete playlist
+  #     summary: Deletes a playlist.
   #     tags:
   #       - playlists
   #     security:
@@ -680,7 +679,7 @@ paths:
   #         description: Success
   # /playlists/{playlist_id}/tracks:
   #   get:
-  #     summary: Return playlist's tracks
+  #     summary: Returns playlist's tracks.
   #     tags:
   #       - playlists
   #     security:
@@ -739,7 +738,7 @@ paths:
                 default:
                   $ref: '#/components/examples/ErrorNotFound'
     put:
-      summary: Updating a track information.
+      summary: Updates a track's information.
       tags:
         - tracks
       security:
@@ -779,7 +778,7 @@ paths:
         500:
           description: 'Error: Internal Server Error'
     delete:
-      summary: Delete a track.
+      summary: Deletes a track.
       tags:
         - tracks
       security:
@@ -795,7 +794,7 @@ paths:
           description: 'Error: Not Found'
   /tracks/{track_id}/comments:
     get:
-      summary: Returns the comments posted on the given track(track_id).
+      summary: Returns the comments posted on the track(track_id).
       tags:
         - tracks
       security:
@@ -876,7 +875,7 @@ paths:
   #         description: Success
   /tracks/{track_id}/favoriters:
     get:
-      summary: Returns a list of users who favorited the track.
+      summary: Returns a list of users who have favorited or liked the track.
       tags:
         - tracks
       security:
@@ -903,7 +902,7 @@ paths:
                   $ref: '#/components/examples/ErrorNotFound'
   /tracks/{track_id}/favoriters/{user_id}:
     get:
-      summary: Returns a user who has favorited the track.
+      summary: Returns a user who has favorited or liked the track.
       tags:
         - tracks
       security:
@@ -930,7 +929,7 @@ paths:
                   $ref: '#/components/examples/ErrorNotFound'
   /tracks/{track_id}/related:
     get:
-      summary: Returns all related tracks for input track id.
+      summary: Returns all related tracks of track on SoundCloud.
       tags:
         - tracks
       security:
@@ -970,7 +969,7 @@ paths:
   #         description: Success
   /resolve:
     get:
-      summary: Returns access API resources.
+      summary: Resolves soundcloud.com URLs to Resource URLs to use with the API.
       tags:
         - miscellaneous
       security:
@@ -1061,7 +1060,7 @@ paths:
                   $ref: "#/components/examples/ErrorNotFound"
   /users/{user_id}/favorites:
     get:
-      summary: Returns a list of user's favorites tracks.
+      summary: Returns a list of user's favorited or liked tracks.
       tags:
         - users
       security:
@@ -1096,7 +1095,7 @@ paths:
   #         description: Success
   /users/{user_id}/followers:
     get:
-      summary: Returns a list of user’s followers users.
+      summary: Returns a list of user’s followers.
       description: Returns a list of users that follows (user_id).
       tags:
         - users
@@ -1118,10 +1117,10 @@ paths:
           description: 'Error: Unauthorized'
         503:
           description: 'Error: Service Unavailable'
-  /users/{user_id}/followers/{other_id}:
+  /users/{user_id}/followers/{follower_id}:
     get:
-      summary: Return user's follower user.
-      description: Returns a (other_id) that follows (user_id).
+      summary: Returns a user's follower.
+      description: Returns a (follower's user_id) that follows (user_id).
       tags:
         - users
       security:
@@ -1129,7 +1128,7 @@ paths:
           AuthHeader: []
       parameters:
         - $ref: '#/components/parameters/user_id'
-        - $ref: '#/components/parameters/other_id'
+        - $ref: '#/components/parameters/follower_id'
       responses:
         200:
           description: Success
@@ -1146,7 +1145,7 @@ paths:
           description: 'Error: Service Unavailable'
   /users/{user_id}/followings:
     get:
-      summary: Returns a list of user’s followings users.
+      summary: Returns a list of user’s followings.
       description: Returns list of users that (user_id) follows.
       tags:
         - users
@@ -1168,10 +1167,10 @@ paths:
           description: 'Error: Unauthorized'
         503:
           description: 'Error: Service Unavailable'
-  /users/{user_id}/followings/{other_id}:
+  /users/{user_id}/followings/{following_id}:
     get:
-      summary: Return user's followings user.
-      description: Returns (other_id) that is followed by (user_id).
+      summary: Returns a user's following.
+      description: Returns (following_id) that is followed by (user_id).
       tags:
         - users
       security:
@@ -1179,7 +1178,7 @@ paths:
           AuthHeader: []
       parameters:
         - $ref: '#/components/parameters/user_id'
-        - $ref: '#/components/parameters/other_id'
+        - $ref: '#/components/parameters/following_id'
       responses:
         200:
           description: Success
@@ -1196,7 +1195,7 @@ paths:
           description: 'Error: Service Unavailable'
   /users/{user_id}/playlists:
     get:
-      summary: Return a list of user's playlists.
+      summary: Returns a list of user's playlists.
       tags:
         - users
       security:
@@ -1217,7 +1216,7 @@ paths:
           description: 'Error: Unauthorized'
   # /users/{user_id}/playlists/{track_id}:
   #   get:
-  #     summary: Return user's playlists list.
+  #     summary: Returns user's playlists list.
   #     tags:
   #       - users
   #     security:
@@ -1231,7 +1230,7 @@ paths:
   #         description: Success
   /users/{user_id}/tracks:
     get:
-      summary: Return a list of user's tracks.
+      summary: Returns a list of user's tracks.
       tags:
         - users
       security:
@@ -1252,7 +1251,7 @@ paths:
           description: 'Error: Unauthorized'
   # /users/{user_id}/tracks/{track_id}:
   #   get:
-  #     summary: Return user's track.
+  #     summary: Returns user's track.
   #     tags:
   #       - users
   #     security:
@@ -1266,7 +1265,7 @@ paths:
   #         description: Success
   /users/{user_id}/web-profiles:
     get:
-      summary: Return list of user's web-profiles.
+      summary: Returns list of user's links added to their profile (website, facebook, instagram).
       tags:
         - users
       security:
@@ -1325,13 +1324,20 @@ components:
         maximum: 100
         default: 10
       description: Number of results to return in the collection.
-    other_id:
+    follower_id:
       in: path
-      name: other_id
+      name: follower_id
       required: true
       schema:
         type: integer
-      description: SoundCloud User id
+      description: SoundCloud User id to denote a Follower
+    following_id:
+      in: path
+      name: following_id
+      required: true
+      schema:
+        type: integer
+      description: SoundCloud User id to denote a Following of a user
     playlist_id:
       in: path
       name: playlist_id
