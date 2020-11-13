@@ -33,4 +33,5 @@ metals.sbt
 .vscode
 
 # Local History for Visual Studio Code
-.history.bsp/
+.history
+.bsp/

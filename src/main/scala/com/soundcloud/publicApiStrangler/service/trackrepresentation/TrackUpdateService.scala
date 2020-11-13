@@ -58,7 +58,7 @@ class TrackUpdateService(
         maybeTrackMetadata,
         uploadeImageResponse
       )
-      createdTrack <- buildCreatedTrack(trackCoordinatorTrack, user)
+      createdTrack <- buildCreatedTrack(session, trackCoordinatorTrack, user)
     } yield createdTrack
   }
 
@@ -85,12 +85,13 @@ class TrackUpdateService(
   }
 
   private def buildCreatedTrack(
+      userSession: UserSession,
       trackCoordinatorTrack: Outcome[TrackCoordinatorTrack],
       user: Outcome[User]
   ): Future[Outcome[CreatedTrack]] = {
     (trackCoordinatorTrack, user) match {
       case (Good(trackCoordinatorTrack), Good(user)) =>
-        Future.value(Good(CreatedTrack(trackCoordinatorTrack, user)))
+        Future.value(Good(CreatedTrack(trackCoordinatorTrack, user, userSession.agent)))
       case (Bad(outcome), _) => Future.value(outcome.bad)
       case (_, Bad(outcome)) => Future.value(outcome.bad)
       case _ => throw new UnhandledOutcomeException

@@ -26,6 +26,7 @@ import org.mockito.Mockito._
 import play.api.libs.json.{JsObject, Json}
 
 class TrackUpdateServiceSpec extends UnitSpecification with TrackRepresentationSpecContext {
+
   trait Context extends Scope {
     val trackCoordinatorClient = mock[TrackCoordinatorClient]
     val okidokiClient = mock[OkidokiClient]
@@ -418,7 +419,7 @@ class TrackUpdateServiceSpec extends UnitSpecification with TrackRepresentationS
       val trackArtworkMetaRequest = TrackArtworkUpdateRequest(imageData = Buf.ByteArray.Owned.extract(bytes))
       val users = Fixtures.okidokiUsers.as[List[JsObject]].map(UserMapper(_))
       val user = users.head
-      val expectedResponse = CreatedTrack(trackCoordinatorTrack, user)
+      val expectedResponse = CreatedTrack(trackCoordinatorTrack, user, None)
       setupMocksForHocusPocusService(trackArtworkMetaRequest)
     }
 

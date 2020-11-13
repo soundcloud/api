@@ -5,7 +5,7 @@ import com.soundcloud.publicApiStrangler.client.mothership.response.representati
 import com.soundcloud.publicApiStrangler.client.trackcoordinator.TrackCoordinatorTrack
 import play.api.libs.json.{Json, Writes}
 
-case class CreatedTrack(trackCoordinatorTrack: TrackCoordinatorTrack, user: User) {
+case class CreatedTrack(trackCoordinatorTrack: TrackCoordinatorTrack, user: User, agentUrn: Option[Urn]) {
   def location = trackCoordinatorTrack.uri
 
   private def secretToken =
@@ -26,13 +26,21 @@ case class CreatedTrack(trackCoordinatorTrack: TrackCoordinatorTrack, user: User
     else s"${trackCoordinatorTrack.stream_url}?$secretTokenParam"
 
   private def permalinkUrl: String =
-    if (trackCoordinatorTrack.public) trackCoordinatorTrack.permalink_url
-    else s"${trackCoordinatorTrack.permalink_url}/${secretToken.getOrElse("")}"
+    if (trackCoordinatorTrack.public) {
+      trackCoordinatorTrack.permalink_url
+    } else if (agentUrn.contains(CreatedTrack.AbletonLiveApplication)) {
+      // TODO: remove this workaround once better solution for Ableton integration is found: https://jira.soundcloud.org/browse/INT-279
+      trackCoordinatorTrack.permalink_url
+    } else {
+      s"${trackCoordinatorTrack.permalink_url}/${secretToken.getOrElse("")}"
+    }
 
   private def secretTokenParam = s"secret_token=${secretToken.getOrElse("")}"
 }
 
 object CreatedTrack {
+  private val AbletonLiveApplication = Urn("soundcloud", "applications", "45176")
+
   implicit val writes: Writes[CreatedTrack] = Writes[CreatedTrack] { t =>
     Json.obj(
       "artwork_url" -> t.trackCoordinatorTrack.artwork_url,

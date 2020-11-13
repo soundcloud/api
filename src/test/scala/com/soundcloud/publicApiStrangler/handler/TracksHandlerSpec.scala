@@ -345,7 +345,7 @@ class TracksHandlerSpec extends UnitSpecification with TrackRepresentationSpecCo
       trait SuccessContext extends UrlEncodedContext {
         val trackCoordinatorTrack = Fixtures.trackCoordinatorTrack.as[TrackCoordinatorTrack]
 
-        val expectedResponse = CreatedTrack(trackCoordinatorTrack, userObj)
+        val expectedResponse = CreatedTrack(trackCoordinatorTrack, userObj, None)
       }
 
       trait NotFoundContext extends UrlEncodedContext {
@@ -438,7 +438,7 @@ class TracksHandlerSpec extends UnitSpecification with TrackRepresentationSpecCo
 
       trait SuccessContext extends MultiPartFormContext {
         val trackCoordinatorTrack = Fixtures.trackCoordinatorTrack.as[TrackCoordinatorTrack]
-        val expectedResponse = CreatedTrack(trackCoordinatorTrack, userObj)
+        val expectedResponse = CreatedTrack(trackCoordinatorTrack, userObj, None)
       }
 
       trait FailureContext extends MultiPartFormContext {

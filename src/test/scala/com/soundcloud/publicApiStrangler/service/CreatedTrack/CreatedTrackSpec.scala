@@ -14,11 +14,15 @@ class CreatedTrackSpec extends Specification {
     trait WritesContext extends Scope {
 
       def public: Boolean = false
+
+      def agentUrn: Option[Urn] = None
+
       val users = Fixtures.okidokiUsers.as[List[JsObject]].map(UserMapper(_))
       val user = users.head
       val trackCoordinatorTrack = new TrackCoordinatorTrackFixtures().build(public)
+
       def result: JsValue = {
-        Json.toJson(CreatedTrack(trackCoordinatorTrack, user))
+        Json.toJson(CreatedTrack(trackCoordinatorTrack, user, agentUrn))
       }
     }
 
@@ -99,6 +103,14 @@ class CreatedTrackSpec extends Specification {
       (result \ "download_url").get ==== JsString(trackCoordinatorTrack.download_url)
       (result \ "stream_url").get ==== JsString(trackCoordinatorTrack.stream_url)
       (result \ "permalink_url").get ==== JsString(trackCoordinatorTrack.permalink_url)
+    }
+
+    "when track is private and the client is Ableton application" >> {
+      "should return permalink_url without secret token" in new WritesContext {
+        override def agentUrn: Option[Urn] = Some(Urn("soundcloud", "applications", "45176"))
+
+        (result \ "permalink_url").get ==== JsString(trackCoordinatorTrack.permalink_url)
+      }
     }
   }
 }
