@@ -20,7 +20,7 @@ class PlaylistSpec extends Specification with TrackRepresentationSpecContext {
       genre = "metal",
       permalinkUrl = "http://soundcloud.com/some-random-link",
       permalink = "some-random-link",
-      artworkUrl = "http://some.url/link",
+      artworkUrl = Some("http://some.url/link"),
       trackCount = 7,
       userTags = List("retro", "vintage"),
       releaseDate = Some(playlistReleaseInstant),
@@ -70,7 +70,7 @@ class PlaylistSpec extends Specification with TrackRepresentationSpecContext {
       playlist.genre ==== "metal"
       playlist.permalinkUrl ==== "http://soundcloud.com/some-random-link/secret"
       playlist.permalink ==== "some-random-link"
-      playlist.artworkUrl ==== "http://some.url/link"
+      playlist.artworkUrl ==== Some("http://some.url/link")
       playlist.trackCount ==== 7
       playlist.tagList ==== "\"retro\" \"vintage\""
       playlist.releaseDay ==== Some(19)

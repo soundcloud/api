@@ -103,7 +103,7 @@ class PlaylistProtoMapperSpec extends Specification {
       visiblePlaylist.genre ==== "music?"
       visiblePlaylist.permalink ==== "my_favourite_music"
       visiblePlaylist.permalinkUrl ==== "http://api.soundcloud.com/my_favourite_music"
-      visiblePlaylist.artworkUrl ==== "http://foo.com/artwork"
+      visiblePlaylist.artworkUrl ==== Some("http://foo.com/artwork")
       visiblePlaylist.trackCount ==== 5
       visiblePlaylist.releaseDate ==== Some(defaultInstant)
       visiblePlaylist.public ==== true

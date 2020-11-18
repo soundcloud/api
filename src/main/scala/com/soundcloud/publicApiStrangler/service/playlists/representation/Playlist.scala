@@ -37,7 +37,7 @@ case class Playlist(
     createdAt: Option[Instant],
     release: Option[String],
     purchaseTitle: Option[String],
-    artworkUrl: String,
+    artworkUrl: Option[String],
     ean: Option[String],
     streamable: Option[Boolean],
     embeddableBy: String,

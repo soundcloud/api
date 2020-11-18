@@ -11,7 +11,7 @@ case class VisiblePlaylist(
     genre: String,
     permalinkUrl: String,
     permalink: String,
-    artworkUrl: String,
+    artworkUrl: Option[String],
     trackCount: Long,
     userTags: List[String],
     releaseDate: Option[Instant],

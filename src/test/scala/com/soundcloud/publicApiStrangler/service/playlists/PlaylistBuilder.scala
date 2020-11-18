@@ -36,7 +36,7 @@ class PlaylistBuilder {
   private var createdAt: Option[Instant] = Some(Instant.now())
   private var release: Option[String] = Some("")
   private var purchaseTitle: Option[String] = Some("my playlist")
-  private var artworkUrl: String = "artwork.jpeg"
+  private var artworkUrl: Option[String] = Some("artwork.jpeg")
   private var ean: Option[String] = Some("1ae")
   private var streamable: Option[Boolean] = Some(true)
   private var embeddableBy: String = "all"
@@ -72,7 +72,7 @@ class PlaylistBuilder {
   def setCreatedAt(value: Option[Instant]) = { createdAt = value; this }
   def setRelease(value: Option[String]) = { release = value; this }
   def setPurchaseTitle(value: Option[String]) = { purchaseTitle = value; this }
-  def setArtworkUrl(value: String) = { artworkUrl = value; this }
+  def setArtworkUrl(value: Option[String]) = { artworkUrl = value; this }
   def setEan(value: Option[String]) = { ean = value; this }
   def setStreamable(value: Option[Boolean]) = { streamable = value; this }
   def setEmbeddableBy(value: String) = { embeddableBy = value; this }

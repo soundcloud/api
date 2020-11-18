@@ -15,8 +15,7 @@ class PlaylistProtoMapper {
       playlist: Playlist,
       trackRequests: Seq[ProtoTrackRequest],
       currentPagination: Option[OffsetBasedPagination],
-      nextPagination: Option[PlaylistPagination],
-      includeTracks: Boolean = true
+      nextPagination: Option[PlaylistPagination]
   ): VisiblePlaylist = {
     VisiblePlaylist(
       urn = playlist.urn,
@@ -27,7 +26,7 @@ class PlaylistProtoMapper {
       genre = playlist.genre,
       permalink = playlist.permalink,
       permalinkUrl = playlist.permalinkUrl,
-      artworkUrl = playlist.artworkUrl,
+      artworkUrl = if (playlist.artworkUrl.nonEmpty) Some(playlist.artworkUrl) else None,
       trackCount = playlist.trackCount,
       userTags = playlist.userTags.toList,
       releaseDate = playlist.releaseDate.map(_.asInstant),
