@@ -40,10 +40,11 @@ publish-deploy:
 		--component=$(COMPONENT) \
 		--glimpse=http.$(COMPONENT).prod.$(SYSTEM) \
 		--env=production \
-		--ingress=http://$(SYSTEM).lb.$(ZONE).s-cloud.net:http \
-		--ingress=http://$(SYSTEM).int.s-cloud.net:http \
+		--ingress=http://$(SYSTEM).lb.$(ZONE).s-cloud.net:http/docs/api/explorer \
+		--ingress=http://$(SYSTEM).int.s-cloud.net:http/docs/api/explorer \
 		--ingress=http://$(SYSTEM):http \
-		--ingress=https://$(SYSTEM).soundcloud.org:http
+		--public-ingress=https://$(SYSTEM).soundcloud.org:http/docs/api/explorer \
+		--public-ingress=https://developers.soundcloud.com:http/docs/api/explorer
 		
 deploy:
 	sc artifact-manager deploy run \

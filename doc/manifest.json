@@ -6,7 +6,7 @@
   "ci_dashboard": "https://ci.dev.s-cloud.net/go/tab/pipeline/history/public-api-strangler",
   "owner": "core-clients",
   "status": "production",
-  "type": "internal_service",
+  "type": "external_service",
   "data_sensitivity": ["no_user_data"],
   "dependencies": []
 }

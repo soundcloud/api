@@ -17,6 +17,7 @@ app.set('port', process.env.PORT || 3000);
 
 app.use('/assets', express.static(path.join(__dirname, 'assets')));
 app.use('/', swaggerUi.serve, swaggerUi.setup(swaggerDocument, options));
+app.use('/docs/api/explorer', swaggerUi.serve, swaggerUi.setup(swaggerDocument, options));
 
 const server = app.listen(app.get('port'),
   function(){
