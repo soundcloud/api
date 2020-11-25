@@ -46,11 +46,15 @@ paths:
       security:
         - ClientId: []
       requestBody:
-        description: OAׁuth payload
+        description: OAׁuth payload.
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/OAuth2Token'
+              oneOf:
+                - $ref: '#/components/schemas/authorization_code'
+                - $ref: '#/components/schemas/client_credentials'
+                - $ref: '#/components/schemas/refresh_token'
+                - $ref: '#/components/schemas/password'
       responses:
         200:
           description: Success
@@ -68,6 +72,7 @@ paths:
                   $ref: "#/components/examples/ErrInvalidGrant"
         401:
           description: 'Error: Unauthorized'
+
   /me:
     get:
       summary: Returns the authenticated user’s information.
@@ -1410,36 +1415,70 @@ components:
       name: Authorization
       description: 'The string "OAuth" followed by the user’s token: OAuth ACCESS_TOKEN'
   schemas:
-    OAuth2Token:
+    authorization_code:
       type: object
       properties:
-        client_id:
-          type: string
-          description: client_id
-        redirect_uri:
-          type: string
-          description: redirect_uri
-        response_type:
-          type: string
-          enum:
-            - code
-            - token
-            - code_and_token
-          description: response type
-        client_secret:
-          type: string
-          description: Client secret
         grant_type:
           type: string
           enum:
             - authorization_code
-            - refresh_token
-            - password
             - client_credentials
-          description: Grant type
         authorization_code:
           type: string
           description: Authorization code
+        client_id:
+          type: string
+          description: Client ID
+        redirect_uri:
+          type: string
+          description: Redirect URI
+        client_secret:
+          type: string
+          description: Client secret
+    client_credentials:
+      allOf:
+      - $ref: "#/components/schemas/authorization_code"
+    refresh_token:
+      type: object
+      properties:
+        grant_type:
+          type: string
+          enum:
+            - refresh_token
+        refresh_token:
+          type: string
+          description: Refresh token
+        client_id:
+          type: string
+          description: Client ID
+        redirect_uri:
+          type: string
+          description: Redirect URI
+        client_secret:
+          type: string
+          description: Client secret
+    password:
+      type: object
+      properties:
+        grant_type:
+          type: string
+          enum:
+            - password
+        user_name:
+          type: string
+          description: User name
+        password:
+          type: string
+          description: User password
+        client_id:
+          type: string
+          description: Client ID
+        redirect_uri:
+          type: string
+          description: Redirect URI
+        client_secret:
+          type: string
+          description: Client secret
     UpdateTrackRequest:
       type: object
       properties:
