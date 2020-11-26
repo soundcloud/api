@@ -13,6 +13,7 @@ import com.soundcloud.jvmkit.module.util.config.{AppConfig, ConfigConvention, Da
 import com.soundcloud.jvmkit.module.util.{ResourceName, Urn}
 import com.soundcloud.publicApiStrangler.authorization._
 import com.soundcloud.publicApiStrangler.client._
+import com.soundcloud.publicApiStrangler.client.comments.MoshimoshiCommentsClient
 import com.soundcloud.publicApiStrangler.client.followcounts.FollowCountsClient
 import com.soundcloud.publicApiStrangler.client.follows.FollowsClient
 import com.soundcloud.publicApiStrangler.client.liebling.LieblingClient
@@ -32,6 +33,7 @@ import com.soundcloud.publicApiStrangler.client.trackcoordinator.TrackCoordinato
 import com.soundcloud.publicApiStrangler.client.trackmetadata.TrackmetadataClient
 import com.soundcloud.publicApiStrangler.client.tracks.TracksClient
 import com.soundcloud.publicApiStrangler.service._
+import com.soundcloud.publicApiStrangler.service.comments.CommentService
 import com.soundcloud.publicApiStrangler.service.media.{StreamService, TrackAccessRecorderService}
 import com.soundcloud.publicApiStrangler.service.trackrepresentation.{TrackRepresentationsService, TrackUpdateService}
 import com.soundcloud.publicApiStrangler.service.tracks.VisibleTrackMapper
@@ -91,6 +93,8 @@ class Clients(
   val pubmeseClient = new PubmeseClient(jsonClient("pubmese"))
 
   val stitchClient = new StitchClient(jsonClient("stitch"))
+
+  lazy val moshimoshiCommentsClient = new MoshimoshiCommentsClient(jsonClient("moshimoshi_comments"))
 
   private val subscriptionsService = jsonClient("user_subscriptions")
 
@@ -181,6 +185,7 @@ class Clients(
   val streamService = new StreamService(trackVisibilityService, tracksClient)
 
   val playlistDeletionClient = new PlaylistDeletionClient(okidokiJsonClient)
+  val commentsService = new CommentService(richOkidokiClient, moshimoshiCommentsClient)
 
   private val authorizationConfig = HttpClientConfig.from(ResourceName("oauth_authorization"), config)
   private val authorizationHttpClient = HttpClient[String](authorizationConfig, telemetry)

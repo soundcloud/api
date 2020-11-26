@@ -249,7 +249,7 @@ class PlaylistsServiceSpec extends UnitSpecification {
         case Good(tracksCollection: Collection[TrackRepresentation]) =>
           tracksCollection.items.length ==== 1
           tracksCollection.items(0).id ==== requestedPlaylistTrack.id
-          tracksCollection.nextHref ==== Some("https://api.soundcloud.com/playlists?offset=2&limit=2")
+          tracksCollection.nextHref ==== Some("https://api.soundcloud.com/playlists?limit=2&offset=2")
         case _ => failure(s"incorrectly returned ${result.toString}")
       }
     }

@@ -109,6 +109,7 @@ object App {
           forTrackStreamsHandler(handlers.trackStreamsHandler),
           forTrackDownloadHandler(handlers.trackDownloadHandler),
           forLikesHandler(handlers.likesHandler),
+          forCommentsHandler(handlers.commentsHandler),
           forDummyHandler()
         )
       )

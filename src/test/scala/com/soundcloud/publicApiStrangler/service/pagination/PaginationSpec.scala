@@ -79,11 +79,11 @@ class PaginationSpec extends Specification {
     testSuite(
       (
         CursorBasedPagination(baseUrl, path, extraParams, None, pageSize),
-        s"$baseUrl$path?key=value&cursor=&page_size=$pageSize"
+        s"$baseUrl$path?cursor=&key=value&page_size=$pageSize"
       ),
       (
         CursorBasedPagination(baseUrl, path, extraParams, Some("1"), pageSize),
-        s"$baseUrl$path?key=value&cursor=1&page_size=$pageSize"
+        s"$baseUrl$path?cursor=1&key=value&page_size=$pageSize"
       ),
       (
         CursorBasedPagination.build _,
@@ -109,7 +109,7 @@ class PaginationSpec extends Specification {
       val pagination = OffsetBasedPagination.build(request)
       pagination.limit ==== 2
       pagination.offset ==== None
-      pagination.normalizedHref ==== s"$baseUrl$path?offset=0&limit=2"
+      pagination.normalizedHref ==== s"$baseUrl$path?limit=2&offset=0"
 
       val next = pagination.nextPage(2)
       next.offset ==== Some(2)
@@ -120,7 +120,7 @@ class PaginationSpec extends Specification {
       val pagination = OffsetBasedPagination.build(request)
       pagination.limit ==== 2
       pagination.offset ==== Some(2)
-      pagination.normalizedHref ==== s"$baseUrl$path?offset=2&limit=2"
+      pagination.normalizedHref ==== s"$baseUrl$path?limit=2&offset=2"
 
       val next = pagination.nextPage(4)
       next.offset ==== Some(4)
@@ -129,7 +129,7 @@ class PaginationSpec extends Specification {
     "it returns a valid nextHref when there are still resources to consume" in new Scope {
       val request = mockRequest(Map("limit" -> "10", "offset" -> "5"))
       val pagination = OffsetBasedPagination.build(request)
-      pagination.nextHref(20) ==== Some(s"$baseUrl$path?offset=15&limit=10")
+      pagination.nextHref(20) ==== Some(s"$baseUrl$path?limit=10&offset=15")
     }
 
     "it returns an empty nextHref when the limit is reached" in new Scope {

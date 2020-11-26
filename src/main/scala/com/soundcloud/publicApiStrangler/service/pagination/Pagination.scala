@@ -16,7 +16,7 @@ abstract class Pagination(
   def normalizedHref: String =
     Request(
       s"$baseUrl$path",
-      getParams.toSeq: _*
+      getParams.toSeq.sorted: _*
     ).uri
 
 }

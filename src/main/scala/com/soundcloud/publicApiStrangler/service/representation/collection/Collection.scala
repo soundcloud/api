@@ -13,4 +13,17 @@ object Collection {
       Json.stringify(Json.toJson(collection.items))
     }
   }
+
+  def getNonNullRepresentation[T: Writes](collection: Collection[T], hasLinkedPartitioning: Boolean): String = {
+    if (hasLinkedPartitioning) {
+      var json = Json.obj("collection" -> Json.toJson(collection.items))
+      collection.nextHref match {
+        case Some(nextHref) => json = json ++ Json.obj("next_href" -> nextHref)
+        case None => json = json
+      }
+      Json.stringify(json)
+    } else {
+      Json.stringify(Json.toJson(collection.items))
+    }
+  }
 }

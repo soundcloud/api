@@ -11,8 +11,7 @@ class DispatchingToMotherShipSpec extends UnitSpecification {
   val expectedMotherShipEndpoints = Set(
     (Post, "/playlists"),
     (Put, "/playlists/1"),
-    (Get, "/resolve"),
-    (Get, "/tracks/999/comments")
+    (Get, "/resolve")
   )
 
   val expectedUserRelatedMothershipEndpoint = Set(

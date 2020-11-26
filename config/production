@@ -95,3 +95,5 @@ HOCUSPOCUS_CLIENT_REQUEST_TIMEOUT_MILLIS=5000
 PLAYLISTS_SRV_RECORD=dnssrv!http.api.prod.playlists.srv
 
 CDN_WAVE_HTTPS_ENDPOINT=https://wave.sndcdn.com
+
+MOSHIMOSHI_COMMENTS_SRV_RECORD=dnssrv!http.moshimoshi-comments.prod.mothership.srv

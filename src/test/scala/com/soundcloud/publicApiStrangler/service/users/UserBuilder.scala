@@ -98,3 +98,13 @@ class UserBuilder {
     )
   }
 }
+
+object UserBuilder {
+  def user(userId: Long): User = {
+    val builder = new UserBuilder()
+    builder.setUrn(urnFor(userId))
+    builder.build
+  }
+
+  def urnFor(userId: Long): Urn = Urn("soundcloud", "users", userId.toString)
+}

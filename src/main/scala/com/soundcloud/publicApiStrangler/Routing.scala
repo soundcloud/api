@@ -1,6 +1,7 @@
 package com.soundcloud.publicApiStrangler
 
 import com.soundcloud.jvmkit.module.http.server.{Handler, JsonResponseBuilder}
+import com.soundcloud.publicApiStrangler.handler.comments.CommentsHandler
 import com.soundcloud.publicApiStrangler.handler.search.SearchHandler
 import com.soundcloud.publicApiStrangler.handler.{DispatchToMothershipHandler, _}
 import com.twitter.finagle.http.Method
@@ -65,7 +66,6 @@ object Routing {
       route(Method.Post, "/playlists", mothershipDispatcher.dispatch) :::
       route(Method.Put, "/playlists/:id", mothershipDispatcher.dispatch) :::
       route(Method.Get, "/resolve", mothershipDispatcher.dispatch) :::
-      route(Method.Get, "/tracks/:trackId/comments", mothershipDispatcher.dispatch) :::
       route(Method.Post, "/tracks/:trackId/comments", mothershipDispatcher.dispatch) :::
       route(Method.Delete, "/tracks/:trackId/comments/:id", mothershipDispatcher.dispatch) :::
       route(Method.Get, "/tracks/:trackId/comments/:id", mothershipDispatcher.dispatch) :::
@@ -165,6 +165,14 @@ object Routing {
       route(Method.Delete, "/me/favorites/:trackId", likesHandler.deleteMeLikedTrackId) :::
       route(Method.Get, "/users/:userId/favorites", likesHandler.getUserTracksLikes) :::
       route(Method.Get, "/me/favorites", likesHandler.getMeTracksLikes)
+  }
+
+  def forCommentsHandler(commentsHandler: CommentsHandler): List[(Method, String, Handler)] = {
+    route(Method.Get, "/tracks/:trackId/comments", commentsHandler.getCommentsForTrack)
+  }
+
+  def forCommentsHandlerTests(commentsHandler: CommentsHandler): List[(Method, String, Handler)] = {
+    route(Method.Get, "/tracks/:trackId/comments", commentsHandler.performGetCommentsForTrack)
   }
 
   def forDummyHandler(): List[(Method, String, Handler)] = {

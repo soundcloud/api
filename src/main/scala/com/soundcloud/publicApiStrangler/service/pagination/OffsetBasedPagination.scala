@@ -10,6 +10,7 @@ case class OffsetBasedPagination(
     limit: Int
 ) extends Pagination(baseUrl, path) {
   def nextPage(offset: Int): OffsetBasedPagination = copy(offset = Some(offset))
+  def nextPage: OffsetBasedPagination = nextPage(offset.getOrElse(0) + limit)
 
   override def getParams =
     extraParams +

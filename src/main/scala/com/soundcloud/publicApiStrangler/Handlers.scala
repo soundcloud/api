@@ -4,6 +4,7 @@ import com.soundcloud.jvmkit.module.rollout.RolloutFeature
 import com.soundcloud.jvmkit.module.telemetry.Telemetry
 import com.soundcloud.jvmkit.module.telemetry.exceptions.ExceptionCollector
 import com.soundcloud.publicApiStrangler.handler._
+import com.soundcloud.publicApiStrangler.handler.comments.CommentsHandler
 import com.soundcloud.publicApiStrangler.handler.search.SearchHandler
 import com.soundcloud.publicApiStrangler.mapper.trackstreams.{
   TrackStreamJsonResponseMapper,
@@ -106,4 +107,6 @@ class Handlers(telemetry: Telemetry, clients: Clients, exceptionCollector: Excep
     mothershipDispatcher.dispatchUnauthenticated,
     tokenExchangeHandler.instrumentedMothershipDispatch
   )
+
+  val commentsHandler = new CommentsHandler(userAuthentication, commentsService, mothershipDispatcher, telemetry)
 }
