@@ -57,7 +57,12 @@ class MoshimoshiCommentsClient(service: JsonClient) {
       .getWithSession(session, path, serviceParams, Headers.empty())
       .map { response =>
         response.status match {
-          case Status.Ok => Json.parse(response.contentString).as[MoshimoshiCommentsPagedResponse].good
+          case Status.Ok => {
+            val commentsPagedResponse = Json.parse(response.contentString).as[MoshimoshiCommentsPagedResponse]
+            if (commentsPagedResponse.collection.nonEmpty) {
+              commentsPagedResponse.good
+            } else NotFound().bad
+          }
           case Status.NotFound => NotFound().bad
           case Status.BadRequest => NotValid(response.contentString).bad
           case _ => throw UnhandledResponseException(response)
