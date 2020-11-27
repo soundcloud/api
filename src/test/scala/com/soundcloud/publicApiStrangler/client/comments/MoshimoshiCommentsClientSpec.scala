@@ -39,12 +39,6 @@ class MoshimoshiCommentsClientSpec extends UnitSpecification {
       Await.result(client.fetchTrackComments(session, track, pagination)) ==== NotFound().bad
     }
 
-    "Returns not found if moshi returns an empty collection" in new SuccessContext {
-      override val response = ResponseBuilder.ok("""{"collection": []}""")
-      stubService(response)
-      Await.result(client.fetchTrackComments(session, track, pagination)) ==== NotFound().bad
-    }
-
     "Returns not valid for a bad request response" in new Context {
       stubService(ResponseBuilder.badRequest())
       Await.result(client.fetchTrackComments(session, track, pagination)) ==== NotValid("").bad
