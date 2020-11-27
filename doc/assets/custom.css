@@ -17,7 +17,7 @@
     display: block;
     -moz-box-sizing: border-box;
     box-sizing: border-box;
-    background: url(/assets/sc-logo-vertical-50-white.png) no-repeat;
+    background: url(./assets/sc-logo-vertical-50-white.png) no-repeat;
     width: 180px;
     height: 50px;
     padding-left: 180px;

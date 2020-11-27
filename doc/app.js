@@ -8,19 +8,15 @@ const path = require('path');
 
 var options = {
   explorer: false,
-  customCssUrl: '/assets/custom.css',
-  customfavIcon: '/assets/favicon.ico',
+  customCssUrl: './assets/custom.css',
+  customfavIcon: './assets/favicon.ico',
   customSiteTitle: 'SoundCloud Public API Specification'
-}
-const logStart = (req, res, next) => {
-  console.log(`Request received for ${req.url}`)
-  next()
 }
 
 app.set('port', process.env.PORT || 3000);
 
 app.use('/assets', express.static(path.join(__dirname, 'assets')));
-app.use('/', logStart, swaggerUi.serve, swaggerUi.setup(swaggerDocument, options));
+app.use('/', swaggerUi.serve, swaggerUi.setup(swaggerDocument, options));
 
 const server = app.listen(app.get('port'),
   function(){
