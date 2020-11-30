@@ -11,7 +11,7 @@ import com.soundcloud.jvmkit.module.memcached.RichMemcachedClient
 import com.soundcloud.jvmkit.module.memcached.config.MemcachedClientConfig
 import com.soundcloud.jvmkit.module.rollout.BasicRolloutFeature
 import com.soundcloud.jvmkit.module.telemetry.Telemetry
-import com.soundcloud.jvmkit.module.telemetry.exceptions.{AirbrakeClient, AirbrakeConfig, ExceptionCollector}
+import com.soundcloud.jvmkit.module.telemetry.exceptions.ExceptionCollector
 import com.soundcloud.jvmkit.module.util.config.AppConfig
 import com.soundcloud.jvmkit.module.util.{ResourceName, Urn}
 import com.soundcloud.jvmkit.module.zookeeper.CuratorFramework
@@ -28,8 +28,7 @@ object App {
     val config = new AppConfig
     val telemetry = Telemetry.defaultInstance
     val exceptionCollector = new ExceptionCollector(
-      telemetry,
-      airbrakeClient = Some(new AirbrakeClient(AirbrakeConfig.from(config)))
+      telemetry
     )
 
     // The following client applications have access to high tier (paywalled) content

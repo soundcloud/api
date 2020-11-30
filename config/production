@@ -1,5 +1,3 @@
-source production-secrets.enc
-
 APP_NAME="public-api-strangler"
 
 JAVA_OPTS="-XX:+UseCompressedOops -XX:+UseConcMarkSweepGC -XX:NewRatio=1 -Xmx2G -Xms2G -XX:ParallelGCThreads=2 -Dcom.twitter.jvm.numProcs=10 -Djdk.nio.maxCachedBufferSize=262144"

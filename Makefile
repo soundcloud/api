@@ -72,7 +72,6 @@ prepare-package-layout:
 	sc add-config config/development
 	sc add-config config/e2e
 	sc add-config config/$(API_CONFIG)
-	sc add-config config/production-secrets.enc
 
 publish:
 	sc artifact-manager publish
