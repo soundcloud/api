@@ -2,11 +2,9 @@ package com.soundcloud.publicApiStrangler.handler.comments
 
 import com.soundcloud.jvmkit.module.bff.testsupport.FakeUserAuthentication
 import com.soundcloud.jvmkit.module.outcome._
-import com.soundcloud.jvmkit.module.telemetry.Telemetry
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.publicApiStrangler.Routing
 import com.soundcloud.publicApiStrangler.client.comments.Comment
-import com.soundcloud.publicApiStrangler.handler.DispatchToMothershipHandler
 import com.soundcloud.publicApiStrangler.service.comments.CommentService
 import com.soundcloud.publicApiStrangler.service.pagination.OffsetBasedPagination
 import com.soundcloud.publicApiStrangler.service.representation.collection.Collection
@@ -14,16 +12,14 @@ import com.soundcloud.publicApiStrangler.service.users.UserBuilder
 import com.soundcloud.publicApiStrangler.test.{HandlerSpecificationScope, UnitSpecification}
 import com.twitter.finagle.http.{ParamMap, Status}
 import com.twitter.util.Future
-import org.specs2.mock.Mockito
 import org.mockito.Mockito.verify
+import org.specs2.mock.Mockito
 import play.api.libs.json.Json
 
 class CommentsHandlerSpec extends UnitSpecification with Mockito {
   trait CommentsHandlerContext extends HandlerSpecificationScope {
 
     val commentService = mock[CommentService]
-    val mothershipDispatcher = mock[DispatchToMothershipHandler]
-    val telemetry = mock[Telemetry]
 
     val validTrackId = 262857585
     val validTrackUrn = Urn("soundcloud", "tracks", validTrackId.toString())
@@ -47,8 +43,8 @@ class CommentsHandlerSpec extends UnitSpecification with Mockito {
         .returns(Future.value(outcome))
     }
 
-    lazy val handler = new CommentsHandler(userAuthentication, commentService, mothershipDispatcher, telemetry)
-    override def routingDefinitions() = Routing.forCommentsHandlerTests(handler)
+    lazy val handler = new CommentsHandler(userAuthentication, commentService)
+    override def routingDefinitions() = Routing.forCommentsHandler(handler)
   }
 
   "GET /tracks/:trackId/comments" >> {

@@ -108,5 +108,5 @@ class Handlers(telemetry: Telemetry, clients: Clients, exceptionCollector: Excep
     tokenExchangeHandler.instrumentedMothershipDispatch
   )
 
-  val commentsHandler = new CommentsHandler(userAuthentication, commentsService, mothershipDispatcher, telemetry)
+  val commentsHandler = new CommentsHandler(userAuthentication, commentsService)
 }

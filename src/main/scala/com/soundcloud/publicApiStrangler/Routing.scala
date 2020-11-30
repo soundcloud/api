@@ -171,10 +171,6 @@ object Routing {
     route(Method.Get, "/tracks/:trackId/comments", commentsHandler.getCommentsForTrack)
   }
 
-  def forCommentsHandlerTests(commentsHandler: CommentsHandler): List[(Method, String, Handler)] = {
-    route(Method.Get, "/tracks/:trackId/comments", commentsHandler.performGetCommentsForTrack)
-  }
-
   def forDummyHandler(): List[(Method, String, Handler)] = {
     route(Method.Get, "/dummy", (_) => Future.value(JsonResponseBuilder.ok("{}")))
   }
