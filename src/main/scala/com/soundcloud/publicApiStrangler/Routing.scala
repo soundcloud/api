@@ -68,7 +68,6 @@ object Routing {
       route(Method.Get, "/resolve", mothershipDispatcher.dispatch) :::
       route(Method.Post, "/tracks/:trackId/comments", mothershipDispatcher.dispatch) :::
       route(Method.Delete, "/tracks/:trackId/comments/:id", mothershipDispatcher.dispatch) :::
-      route(Method.Get, "/tracks/:trackId/comments/:id", mothershipDispatcher.dispatch) :::
       route(Method.Put, "/users/:id", mothershipDispatcher.dispatch) :::
       route(Method.Get, "/me/favorites/ids", mothershipDispatcher.dispatch) :::
       route(Method.Post, "/me/playlists", mothershipDispatcher.dispatch) :::
