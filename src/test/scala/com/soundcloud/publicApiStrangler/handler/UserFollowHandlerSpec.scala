@@ -20,7 +20,7 @@ import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures._
 import com.soundcloud.publicApiStrangler.test.{HandlerSpecificationScope, UnitSpecification}
 import com.twitter.finagle.http.Status
 import com.twitter.util.Future
-import org.joda.time.{DateTime, DateTimeUtils}
+import org.joda.time.{DateTime, DateTimeUtils, LocalDate, Years}
 import org.specs2.mutable.BeforeAfter
 import play.api.libs.json._
 
@@ -357,7 +357,9 @@ class UserFollowHandlerSpec extends UnitSpecification {
       response.status ==== Status.Forbidden
       val errors = (Json.parse(response.contentString) \ "errors").as[Seq[JsObject]].head
       (errors \ "error_message").asOpt[String] ==== Option("DENY_AGE_RESTRICTED")
-      (errors \ "age").asOpt[Long] ==== Option(35)
+      (errors \ "age").asOpt[Long] ==== Option(
+        Years.yearsBetween(LocalDate.parse("1984-12-01"), new LocalDate()).getYears
+      )
     }
 
     "render the age-unknown errors" in new Context {
