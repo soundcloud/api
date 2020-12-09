@@ -119,7 +119,6 @@ object Routing {
   def forUserTracksHandler(userTracksHandler: UserTracksHandler): List[(Method, String, Handler)] = {
     route(Method.Get, "/users/:userId/tracks", userTracksHandler.getUserTracks) :::
       route(Method.Get, "/me/tracks", userTracksHandler.getMeTracks) :::
-      route(Method.Get, "/users/:userId/tracks/:trackId", userTracksHandler.getTrackByUser) :::
       route(Method.Get, "/me/tracks/:trackId", userTracksHandler.getTrackByMe)
   }
 

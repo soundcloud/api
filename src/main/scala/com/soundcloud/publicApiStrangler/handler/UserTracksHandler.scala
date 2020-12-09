@@ -21,17 +21,6 @@ class UserTracksHandler(
     userTracksService: UserTracksService
 ) {
 
-  def getTrackByUser(req: HandlerRequest): Future[Response] = {
-    userAuthentication.withUserSession(req) { (session) =>
-      Try(getTrackUrn(req)) match {
-        case Return(urn) =>
-          val userId = req.routeParams("userId")
-          getTrack(userId, session, urn, req)
-        case Throw(e) => Future.value(JsonResponseBuilder.badRequest(e.getMessage))
-      }
-    }
-  }
-
   def getTrackByMe(req: HandlerRequest): Future[Response] = {
     userAuthentication.withLoggedInUser(req) { (session, userUrn) =>
       Try(getTrackUrn(req)) match {
