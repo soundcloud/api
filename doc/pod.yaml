@@ -19,7 +19,7 @@ containers:
     timeoutSeconds: 1
   resources:
     requests:
-      cpu: 2
-      memory: 100Mi
+      cpu: 0.1
+      memory: 20Mi
     limits:
       memory: 200Mi

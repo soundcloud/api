@@ -1,5 +1,6 @@
 ZONE ?= db
 SYSTEM := $(shell sc manifest name)
+API_SYSTEM := $(shell sc manifest name --manifest=../manifest.json)
 COMPONENT := doc
 
 CRUN = sc crun nodejs-12
@@ -36,7 +37,7 @@ promote:
 publish-deploy:
 	sc artifact-manager deploy publish \
 		--zone=$(ZONE) \
-		--system=$(SYSTEM) \
+		--system=$(API_SYSTEM) \
 		--component=$(COMPONENT) \
 		--glimpse=http.$(COMPONENT).prod.$(SYSTEM) \
 		--env=production \
@@ -49,6 +50,6 @@ publish-deploy:
 deploy:
 	sc artifact-manager deploy run \
 		--zone=$(ZONE) \
-		--system=$(SYSTEM) \
+		--system=$(API_SYSTEM) \
 		--component=$(COMPONENT) \
 		--env=production
