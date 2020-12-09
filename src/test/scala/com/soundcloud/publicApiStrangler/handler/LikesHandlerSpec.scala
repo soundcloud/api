@@ -91,34 +91,6 @@ class LikesHandlerSpec extends UnitSpecification {
       val expectedResponse = Collection.getRepresentation(tracksCollection, true)
     }
 
-    "GET /users/:userId/favorites/:trackId" >> {
-      "with a successful response from tracks service" >> {
-        "returns track" in new TracksForUserContext with SuccessfulResponse {
-          val user = Urn("soundcloud", "users", "1")
-          val urn = Urn("soundcloud", "tracks", "48786981")
-          val path = s"/users/1/favorites/48786981$queryString"
-
-          stubUserTrackLikeForUrn(user, urn, Some(trackRepresentation))
-
-          val response = get(path)
-          response.status ==== Status.Ok
-          response.contentString ==== Json.toJson(trackRepresentation).toString()
-        }
-
-        "returns not found if empty" in new TracksForUserContext with SuccessfulResponse {
-          val user = Urn("soundcloud", "users", "1")
-          val urn = Urn("soundcloud", "tracks", "48786981")
-          val path = s"/users/1/favorites/48786981$queryString"
-
-          stubUserTrackLikeForUrn(user, urn, None)
-
-          val response = get(path)
-          response.status ==== Status.NotFound
-          response.contentString ==== """{"errors":[{"error_message":"404 - Not Found"}]}"""
-        }
-      }
-    }
-
     "GET /me/favorites/:trackId" >> {
       "with a successful response from tracks service" >> {
         "returns track" in new TracksForUserContext with SuccessfulResponse {

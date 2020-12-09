@@ -155,8 +155,7 @@ object Routing {
   }
 
   def forLikesHandler(likesHandler: LikesHandler): List[(Method, String, Handler)] = {
-    route(Method.Get, "/users/:userId/favorites/:trackId", likesHandler.getUserLikedTrackId) :::
-      route(Method.Get, "/me/favorites/:trackId", likesHandler.getMeLikedTrackId) :::
+    route(Method.Get, "/me/favorites/:trackId", likesHandler.getMeLikedTrackId) :::
       route(Method.Post, "/me/favorites/:trackId", likesHandler.createMeLikedTrackId) :::
       route(Method.Put, "/me/favorites/:trackId", likesHandler.createMeLikedTrackId) :::
       route(Method.Delete, "/me/favorites/:trackId", likesHandler.deleteMeLikedTrackId) :::

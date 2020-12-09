@@ -16,13 +16,6 @@ import play.api.libs.json.Json
 
 class LikesHandler(userAuthentication: UserAuthentication, likesService: LikesService) {
 
-  def getUserLikedTrackId(req: HandlerRequest): Future[Response] = {
-    userAuthentication.withUserSession(req) { session =>
-      val userId = req.routeParams("userId")
-      performGetUserLikedTrackId(req, session, userId)
-    }
-  }
-
   def getMeLikedTrackId(req: HandlerRequest): Future[Response] = {
     userAuthentication.withLoggedInUser(req) { (session, userUrn) =>
       performGetUserLikedTrackId(req, session, userUrn.identifier)
