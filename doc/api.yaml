@@ -309,6 +309,8 @@ paths:
   #       - me
   #     security:
   #       - AuthHeader: []
+  #     parameters:
+  #       - $ref: '#/components/parameters/limitIds'
   #     responses:
   #       200:
   #         description: Success
@@ -1326,9 +1328,19 @@ components:
       schema:
         type: integer
         minimum: 1
-        maximum: 100
-        default: 10
+        maximum: 200
+        default: 50
       description: Number of results to return in the collection.
+    # limitIds:
+    #   in: query
+    #   name: limit
+    #   required: false
+    #   schema:
+    #     type: integer
+    #     minimum: 1
+    #     maximum: 2000
+    #     default: 50
+    #   description: Number of Ids to return in the collection.
     follower_id:
       in: path
       name: follower_id
@@ -1678,11 +1690,11 @@ components:
       value:
         errors:
         - error_message: 422 - Unprocessable Entity
-    FavoritesIds:
-      value:
-        - 1234
-        - 5678
-        - 3456
+    # FavoritesIds:
+    #   value:
+    #     - 1234
+    #     - 5678
+    #     - 3456
     OK:
       value:
         status: Status(200) - OK
