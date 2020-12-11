@@ -124,6 +124,7 @@ object Routing {
   def forUserPlaylistsHandler(userPlaylistsHandler: UserPlaylistsHandler): List[(Method, String, Handler)] = {
     route(Method.Get, "/users/:userId/playlists", userPlaylistsHandler.getUserPlaylists) :::
       route(Method.Get, "/me/playlists", userPlaylistsHandler.getMePlaylists) :::
+      route(Method.Get, "/users/:userId/playlists/:id", userPlaylistsHandler.getUserPlaylist) :::
       route(Method.Get, "/me/playlists/:id", userPlaylistsHandler.getMePlaylist)
   }
 

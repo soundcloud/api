@@ -159,28 +159,57 @@ class UserPlaylistsHandlerSpec extends UnitSpecification {
       val expected404Response = "{\"errors\":[{\"error_message\":\"404 - Not Found\"}]}"
     }
 
-    "GET /me/playlists/:id" >> {
+    "GET /users/:userId/playlists/:id" >> {
       "with a successful response from playlists service" >> {
         "return playlist" in new PlaylistsForUserContext with SuccessfulResponse {
-          val path = s"/me/playlists/987$queryString"
+          val userId = "1"
+          val path = s"/users/$userId/playlists/987$queryString"
 
-          stubService(Urn("soundcloud", "playlists", "987"), path, "1", playlist.good)
+          stubService(Urn("soundcloud", "playlists", "987"), path, userId, playlist.good)
           val response = get(path)
 
           response.status ==== Status.Ok
           response.contentString ==== Json.stringify(Json.toJson(expectedResponse))
+
         }
       }
 
       "with a 404 from playlists service" >> {
-        "returns an error response with message" in new PlaylistsForUserContext with ErrorResponse {
-          val path = s"/me/playlists/404$queryString"
+        "returns an error response" in new PlaylistsForUserContext with ErrorResponse {
+          val userId = "2"
+          val path = s"/users/$userId/playlists/404$queryString"
 
-          stubService(Urn("soundcloud", "playlists", "404"), path, "1", NotFound("playlist not found").bad)
+          stubService(Urn("soundcloud", "playlists", "404"), path, userId, NotFound("playlist not found").bad)
           val response = get(path)
 
           response.status ==== Status.NotFound
           response.contentString ==== expected404Response
+        }
+      }
+
+      "GET /me/playlists/:id" >> {
+        "with a successful response from playlists service" >> {
+          "return playlist" in new PlaylistsForUserContext with SuccessfulResponse {
+            val path = s"/me/playlists/987$queryString"
+
+            stubService(Urn("soundcloud", "playlists", "987"), path, "1", playlist.good)
+            val response = get(path)
+
+            response.status ==== Status.Ok
+            response.contentString ==== Json.stringify(Json.toJson(expectedResponse))
+          }
+        }
+
+        "with a 404 from playlists service" >> {
+          "returns an error response with message" in new PlaylistsForUserContext with ErrorResponse {
+            val path = s"/me/playlists/404$queryString"
+
+            stubService(Urn("soundcloud", "playlists", "404"), path, "1", NotFound("playlist not found").bad)
+            val response = get(path)
+
+            response.status ==== Status.NotFound
+            response.contentString ==== expected404Response
+          }
         }
       }
     }

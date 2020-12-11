@@ -19,6 +19,13 @@ class UserPlaylistsHandler(
     userPlaylistsService: UserPlaylistsService
 ) {
 
+  def getUserPlaylist(req: HandlerRequest): Future[Response] = {
+    userAuthentication.withUserSession(req) { session =>
+      val userId = req.routeParams("userId")
+      performGetPlaylist(req, session, userId)
+    }
+  }
+
   def getMePlaylist(req: HandlerRequest): Future[Response] = {
     userAuthentication.withLoggedInUser(req) { (session, userUrn) =>
       performGetPlaylist(req, session, userUrn.identifier)
