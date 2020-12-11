@@ -1749,14 +1749,8 @@ components:
         type: ''
         uri: https://api.soundcloud.com/playlists/12345
         user:
-          permalink_url: https://soundcloud.com/uesrPermalink
-          permalink: userPermalink
-          username: user.name
-          uri: https://api.soundcloud.com/users/1234
-          last_modified: 2020/09/03 14:08:25 +0000
-          id: 1234
-          kind: user
-          avatar_url: https://i1.sndcdn.com/avatars-test-large.jpg
+          allOf:
+            - $ref: "#/components/examples/UserOf/value"
         user_id: 1234
     PlaylistAndTracks:
       value:
@@ -1798,14 +1792,8 @@ components:
         type: ''
         uri: https://api.soundcloud.com/playlists/12345
         user:
-          permalink_url: https://soundcloud.com/permalink
-          permalink: permalink
-          username: user.name
-          uri: https://api.soundcloud.com/users/12345
-          last_modified: 2020/09/03 14:08:25 +0000
-          id: 12345
-          kind: user
-          avatar_url: https://i1.sndcdn.com/avatars-large.jpg
+          allOf:
+            - $ref: "#/components/examples/UserOf/value"
         user_id: 1234
     Track:
       value:
@@ -1857,14 +1845,8 @@ components:
         track_type:
         uri: https://api.soundcloud.com/tracks/1234
         user:
-          id: 123456
-          kind: user
-          permalink: permalink
-          username: user.name
-          last_modified: 2020/01/10 21:36:49 +0000
-          uri: https://api.soundcloud.com/users/123456
-          permalink_url: https://soundcloud.com/permalink
-          avatar_url: https://i1.sndcdn.com/avatars.jpg
+          allOf:
+            - $ref: "#/components/examples/UserOf/value"
         user_favorite: true
         user_id: 123456
         user_playback_count: 1
@@ -1918,6 +1900,16 @@ components:
         username: some.user
         website:
         website_title:
+    UserOf:
+      value:
+        avatar_url: https://i1.sndcdn.com/avatars-large.jpg
+        id: 12345
+        kind: user
+        last_modified: 2020/09/03 14:08:25 +0000
+        permalink: permalink
+        permalink_url: https://soundcloud.com/permalink
+        uri: https://api.soundcloud.com/users/12345
+        username: user.name
     Users:
       value:
         - allOf:
