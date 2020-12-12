@@ -826,18 +826,41 @@ paths:
               examples:
                 default:
                   $ref: '#/components/examples/ErrorNotFound'
-    # post:
-    #   summary: Returns ???.
-    #   tags:
-    #     - tracks
-    #   security:
-    #     - ClientId: []
-    #       AuthHeader: []
-    #   parameters:
-    #     - $ref: '#/components/parameters/track_id'
-    #   responses:
-    #     200:
-    #       description: Success
+    post:
+      summary: Returns the newly created comment on success
+      tags:
+        - tracks
+      security:
+        - ClientId: []
+          AuthHeader: []
+      parameters:
+        - $ref: '#/components/parameters/track_id'
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              examples:
+                default:
+                  $ref: '#/components/examples/Comments'
+        401:
+          description: 'Error: Unauthorized'
+        403:
+          description: 'Error: Forbidden'
+        422:
+          description: 'Error: Unprocessable Entity'
+          content:
+            application/json:
+              examples:
+                422:
+                  $ref: '#/components/examples/ErrorUnprocessableEntity'
+        429:  
+          description: 'Error: Too Many Requests'
+          content:
+            application/json:
+              examples:
+                429:
+                  $ref: '#/components/examples/ErrorTooManyRequests'
   # /tracks/{track_id}/comments/{comment_id}:
   #   get:
   #     summary: Returns ???.
@@ -1679,6 +1702,10 @@ components:
       value:
         errors:
         - error_message: 401 - Unauthorized
+    ErrorForbidden:
+      value:
+        errors:
+        - error_message: You are not authorized to perform that action.
     ErrorNotFound:
       value:
         errors:
@@ -1690,6 +1717,10 @@ components:
       value:
         errors:
         - error_message: 422 - Unprocessable Entity
+    ErrorTooManyRequests:
+      value:
+        errors:
+        - error_message: spam_warning_urn
     # FavoritesIds:
     #   value:
     #     - 1234
