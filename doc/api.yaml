@@ -195,6 +195,7 @@ paths:
         - AuthHeader: []
       parameters:
         - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/offset'
       responses:
         200:
           description: Success
@@ -330,6 +331,7 @@ paths:
         - AuthHeader: []
       parameters:
         - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/offset'
       responses:
         200:
           description: Success
@@ -492,7 +494,6 @@ paths:
         - AuthHeader: []
       parameters:
         - $ref: '#/components/parameters/follower_id'
-        - $ref: '#/components/parameters/limit'
       responses:
         200:
           description: Success
@@ -620,6 +621,7 @@ paths:
       parameters:
         - $ref: "#/components/parameters/q"
         - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/offset'
       responses:
         200:
           description: Success
@@ -809,6 +811,7 @@ paths:
       parameters:
         - $ref: '#/components/parameters/track_id'
         - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/offset'
       responses:
         200:
           description: Success
@@ -913,6 +916,7 @@ paths:
       parameters:
         - $ref: '#/components/parameters/track_id'
         - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/offset'
       responses:
         200:
           description: Success
@@ -967,6 +971,7 @@ paths:
       parameters:
         - $ref: '#/components/parameters/track_id'
         - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/offset'
       responses:
         200:
           description: Success
@@ -1071,6 +1076,7 @@ paths:
       parameters:
         - $ref: '#/components/parameters/user_id'
         - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/offset'
       responses:
         200:
           description: Success
@@ -1378,6 +1384,14 @@ components:
       schema:
         type: integer
       description: SoundCloud User id to denote a Following of a user
+    offset:
+      in: query
+      name: offset
+      required: false
+      schema:
+        type: integer
+        default: 0
+      description: Offset of first result
     playlist_id:
       in: path
       name: playlist_id
