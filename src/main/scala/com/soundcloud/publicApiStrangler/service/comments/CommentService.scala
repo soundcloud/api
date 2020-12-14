@@ -9,13 +9,16 @@ import com.soundcloud.publicApiStrangler.client.comments.{
   MoshimoshiCommentsComment,
   MoshimoshiCommentsPagedResponse
 }
-import com.soundcloud.publicApiStrangler.client.mothership.RichOkidokiClient
+import com.soundcloud.publicApiStrangler.client.mothership.response.representation.User
+import com.soundcloud.publicApiStrangler.client.mothership.{MoshimoshiClient, RichOkidokiClient}
+import com.soundcloud.publicApiStrangler.handler.comments.CreateCommentParams
 import com.soundcloud.publicApiStrangler.service.pagination.OffsetBasedPagination
 import com.soundcloud.publicApiStrangler.service.representation.collection.Collection
 import com.twitter.util.Future
 
 class CommentService(
     okidokiClient: RichOkidokiClient,
+    moshimoshiClient: MoshimoshiClient,
     moshimoshiCommentsClient: MoshimoshiCommentsClient
 ) {
 
@@ -30,6 +33,26 @@ class CommentService(
         case Good(moshimoshiComments) => buildComments(session, moshimoshiComments, pagination)
         case Bad(outcome) => Future.value(outcome.bad)
       }
+  }
+
+  def createComment(session: UserSession, params: CreateCommentParams): Future[Outcome[Comment]] = {
+    moshimoshiClient
+      .createComment(session, params)
+      .flatMap {
+        case Good(okidokiComment) => {
+          fetchUsers(session, okidokiComment).map(usersMap =>
+            usersMap.get(okidokiComment.user.self.urn) match {
+              case Some(miniUser) => Comment.fromOkidokiComment(okidokiComment, miniUser, params.secretToken).good
+              case None => NotFound().bad
+            }
+          )
+        }
+        case Bad(badThing) => Future.value(badThing.bad)
+      }
+  }
+
+  private def fetchUsers(session: UserSession, moshimoshiComment: MoshimoshiCommentsComment): Future[Map[Urn, User]] = {
+    okidokiClient.fetchUsersMap(session, Set(moshimoshiComment.user.self.urn))
   }
 
   private def buildComments(

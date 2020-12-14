@@ -1,6 +1,7 @@
 package com.soundcloud.publicApiStrangler.client.mothership
 
 import com.soundcloud.jvmkit.module.http.client.{JsonClient, Params}
+import com.soundcloud.jvmkit.module.telemetry.exceptions.ExceptionCollector
 import com.soundcloud.jvmkit.module.util.http.Headers
 import com.soundcloud.jvmkit.module.util.{Path, Urn}
 import com.soundcloud.publicApiStrangler.service.users.UserBuilder
@@ -15,7 +16,8 @@ class RichOkidokiClientSpec extends UnitSpecification {
     val session = anonymousSession
 
     val jsonClient = mock[JsonClient]
-    lazy val client = new RichOkidokiClient(jsonClient)
+    val exceptionCollector = mock[ExceptionCollector]
+    lazy val client = new RichOkidokiClient(jsonClient, exceptionCollector)
   }
 
   "track audio" >> {

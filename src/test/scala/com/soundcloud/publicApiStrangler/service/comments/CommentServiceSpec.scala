@@ -3,12 +3,14 @@ package com.soundcloud.publicApiStrangler.service.comments
 import com.soundcloud.jvmkit.module.outcome._
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.publicApiStrangler.client.comments._
-import com.soundcloud.publicApiStrangler.client.mothership.RichOkidokiClient
 import com.soundcloud.publicApiStrangler.client.mothership.response.representation.User
+import com.soundcloud.publicApiStrangler.client.mothership.{MoshimoshiClient, RichOkidokiClient}
+import com.soundcloud.publicApiStrangler.handler.comments.CreateCommentParams
 import com.soundcloud.publicApiStrangler.service.pagination.OffsetBasedPagination
 import com.soundcloud.publicApiStrangler.service.representation.collection.Collection
 import com.soundcloud.publicApiStrangler.service.users.UserBuilder
 import com.soundcloud.publicApiStrangler.test.UnitSpecification
+import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures
 import com.twitter.finagle.http.ParamMap
 import com.twitter.util.{Await, Future}
 import org.mockito.Mockito._
@@ -17,11 +19,14 @@ import org.specs2.mock.Mockito
 class CommentServiceSpec extends UnitSpecification with Mockito {
 
   trait Context extends Scope {
-    val moshimoshiCommentsClient = mock[MoshimoshiCommentsClient]
     val okidokiClient = mock[RichOkidokiClient]
+    val moshimoshiClient = mock[MoshimoshiClient]
+    val moshimoshiCommentsClient = mock[MoshimoshiCommentsClient]
 
     val trackId = 4876
     val trackUrn = Urn("soundcloud", "tracks", trackId.toString())
+
+    val moshimoshiResponse = Fixtures.okidokiComment
 
     val someClientId = "veryrealclientid"
 
@@ -91,7 +96,7 @@ class CommentServiceSpec extends UnitSpecification with Mockito {
       )
     )
 
-    val commentService = new CommentService(okidokiClient, moshimoshiCommentsClient)
+    val commentService = new CommentService(okidokiClient, moshimoshiClient, moshimoshiCommentsClient)
 
   }
 
@@ -177,4 +182,59 @@ class CommentServiceSpec extends UnitSpecification with Mockito {
     }
   }
 
+  "#createComment" >> {
+    "returns Comment on success" in new Context {
+      val createCommentParams = CreateCommentParams(trackUrn, "bar", Some(1000), None)
+      val okidokiComment = moshimoshiResponse.as[MoshimoshiCommentsComment]
+      val user = UserBuilder.user(1)
+
+      when(moshimoshiClient.createComment(anonymousSession, createCommentParams))
+        .thenReturn(Future(okidokiComment.good))
+      when(okidokiClient.fetchUsersMap(anonymousSession, Set(okidokiComment.user.self.urn)))
+        .thenReturn(Future(Map(okidokiComment.user.self.urn -> user)))
+
+      val result = Await.result(commentService.createComment(anonymousSession, createCommentParams))
+      result ==== Comment.fromOkidokiComment(okidokiComment, user).good
+    }
+
+    "adds secret token to comment if present" in new Context {
+      val secretToken = Some("secret-token")
+      val createCommentParams = CreateCommentParams(trackUrn, "bar", Some(1000), secretToken)
+      val okidokiComment = moshimoshiResponse.as[MoshimoshiCommentsComment]
+      val user = UserBuilder.user(1)
+
+      when(moshimoshiClient.createComment(anonymousSession, createCommentParams))
+        .thenReturn(Future(okidokiComment.good))
+      when(okidokiClient.fetchUsersMap(anonymousSession, Set(okidokiComment.user.self.urn)))
+        .thenReturn(Future(Map(okidokiComment.user.self.urn -> user)))
+
+      val result = Await.result(commentService.createComment(anonymousSession, createCommentParams))
+      result match {
+        case Good(comment) => comment.uri ==== "https://api.soundcloud.com/comments/123?secret_token=secret-token"
+        case Bad(_) => true ==== false
+      }
+    }
+
+    "forwards failures" in new Context {
+      val createCommentParams = CreateCommentParams(trackUrn, "bar", Some(1000), None)
+
+      when(moshimoshiClient.createComment(anonymousSession, createCommentParams)).thenReturn(Future(NotValid("").bad))
+
+      val result = Await.result(commentService.createComment(anonymousSession, createCommentParams))
+      result ==== NotValid("").bad
+    }
+
+    "handles userservice failures" in new Context {
+      val createCommentParams = CreateCommentParams(trackUrn, "bar", Some(1000), None)
+      val okidokiComment = moshimoshiResponse.as[MoshimoshiCommentsComment]
+
+      when(moshimoshiClient.createComment(anonymousSession, createCommentParams))
+        .thenReturn(Future(okidokiComment.good))
+      when(okidokiClient.fetchUsersMap(anonymousSession, Set(okidokiComment.user.self.urn)))
+        .thenReturn(Future(Map.empty[Urn, User]))
+
+      val result = Await.result(commentService.createComment(anonymousSession, createCommentParams))
+      result ==== NotFound().bad
+    }
+  }
 }

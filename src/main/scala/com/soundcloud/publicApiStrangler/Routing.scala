@@ -66,7 +66,6 @@ object Routing {
       route(Method.Post, "/playlists", mothershipDispatcher.dispatch) :::
       route(Method.Put, "/playlists/:id", mothershipDispatcher.dispatch) :::
       route(Method.Get, "/resolve", mothershipDispatcher.dispatch) :::
-      route(Method.Post, "/tracks/:trackId/comments", mothershipDispatcher.dispatch) :::
       route(Method.Put, "/users/:id", mothershipDispatcher.dispatch) :::
       route(Method.Get, "/me/favorites/ids", mothershipDispatcher.dispatch) :::
       route(Method.Post, "/me/playlists", mothershipDispatcher.dispatch) :::
@@ -164,7 +163,8 @@ object Routing {
   }
 
   def forCommentsHandler(commentsHandler: CommentsHandler): List[(Method, String, Handler)] = {
-    route(Method.Get, "/tracks/:trackId/comments", commentsHandler.getCommentsForTrack)
+    route(Method.Get, "/tracks/:trackId/comments", commentsHandler.getCommentsForTrack) :::
+      route(Method.Post, "/tracks/:trackId/comments", commentsHandler.createCommentsForTrack)
   }
 
   def forDummyHandler(): List[(Method, String, Handler)] = {

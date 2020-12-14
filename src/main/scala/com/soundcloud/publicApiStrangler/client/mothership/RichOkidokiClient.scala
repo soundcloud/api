@@ -2,6 +2,7 @@ package com.soundcloud.publicApiStrangler.client.mothership
 
 import com.soundcloud.jvmkit.module.http.client.{JsonClient, Params}
 import com.soundcloud.jvmkit.module.json.play.UrnFormat._
+import com.soundcloud.jvmkit.module.telemetry.exceptions.ExceptionCollector
 import com.soundcloud.jvmkit.module.util.http.Headers
 import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.jvmkit.module.util.{Path, Urn}
@@ -41,7 +42,14 @@ object TrackAudioMetadata {
   implicit val reads = Json.reads[TrackAudioMetadata]
 }
 
-class RichOkidokiClient(service: JsonClient) extends OkidokiClient(service) {
+sealed trait OkidokiError
+object UnprocessableEntity extends OkidokiError
+object TooManyRequests extends OkidokiError
+case class RateLimitedError(spamWarningUrn: Urn) extends OkidokiError
+
+class RichOkidokiClient(service: JsonClient, exceptionCollector: ExceptionCollector)
+    extends OkidokiClient(service, exceptionCollector) {
+
   def fetchTrackDomainLockings(session: UserSession, trackUrn: Urn): Future[Seq[DomainLocking]] =
     fetch(service, session, Path() / "tracks" / trackUrn.identifier / "domain_lockings") map { response: Response =>
       response.status match {

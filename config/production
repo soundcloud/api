@@ -95,3 +95,4 @@ PLAYLISTS_SRV_RECORD=dnssrv!http.api.prod.playlists.srv
 CDN_WAVE_HTTPS_ENDPOINT=https://wave.sndcdn.com
 
 MOSHIMOSHI_COMMENTS_SRV_RECORD=dnssrv!http.moshimoshi-comments.prod.mothership.srv
+MOSHIMOSHI_SRV_RECORD=dnssrv!http.moshimoshi.prod.mothership.srv

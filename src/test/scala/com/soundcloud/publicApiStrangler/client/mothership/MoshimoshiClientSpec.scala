@@ -1,27 +1,94 @@
 package com.soundcloud.publicApiStrangler.client.mothership
 
 import com.soundcloud.jvmkit.module.http.client.{JsonClient, Params}
+import com.soundcloud.jvmkit.module.outcome.{CustomError, NotAllowed, NotValid}
+import com.soundcloud.jvmkit.module.telemetry.exceptions.ExceptionCollector
 import com.soundcloud.jvmkit.module.util.http.Headers
 import com.soundcloud.jvmkit.module.util.{Path, Urn}
 import com.soundcloud.publicApiStrangler.client.chrono.ChronoResponse
 import com.soundcloud.publicApiStrangler.client.mothership.response.mapper._
+import com.soundcloud.publicApiStrangler.handler.comments.CreateCommentParams
 import com.soundcloud.publicApiStrangler.service.pagination.CursorBasedPagination
 import com.soundcloud.publicApiStrangler.test.Helpers._
 import com.soundcloud.publicApiStrangler.test.UnitSpecification
+import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures
 import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures._
 import com.twitter.finagle.http.{ParamMap, Status}
 import com.twitter.util.{Await, Future}
 import org.mockito.Mockito.when
 import play.api.libs.json._
+import com.soundcloud.jvmkit.module.outcome._
+import com.soundcloud.publicApiStrangler.client.comments.MoshimoshiCommentsComment
 
 class MoshimoshiClientSpec extends UnitSpecification {
   trait Context extends Scope {
     implicit val service = mock[JsonClient]
+    val exceptionCollector = mock[ExceptionCollector]
 
     implicit val session = loggedInSession(Urn("soundcloud", "users", "1"))
     val client = new MoshimoshiClient(
-      service
+      service,
+      exceptionCollector
     )
+  }
+
+  "#createComment" >> {
+    trait CreateCommentContext extends Context {
+      val path = Path() / "comments"
+      val trackUrn = Urn("soundcloud", "tracks", "2")
+
+      val createCommentParams = CreateCommentParams(trackUrn, "body", Some(1000), None)
+      val serviceParams = Params(
+        "track_id" -> createCommentParams.trackUrn.identifier,
+        "comment[body]" -> createCommentParams.body,
+        "comment[timestamp]" -> "1000"
+      )
+
+      val moshimoshiComment = Fixtures.okidokiComment
+    }
+
+    "201 response" in new CreateCommentContext {
+      when(service.postWithSession(session, path, serviceParams, Headers.empty, None))
+        .thenReturn(Future.value(jsonResponse(Status.Created, moshimoshiComment)))
+
+      Await.result(client.createComment(session, createCommentParams)) ==== moshimoshiComment
+        .as[MoshimoshiCommentsComment]
+        .good
+    }
+
+    "422 response" in new CreateCommentContext {
+      when(service.postWithSession(session, path, serviceParams, Headers.empty, None))
+        .thenReturn(Future.value(jsonResponse(Status.UnprocessableEntity, JsNull)))
+
+      Await.result(client.createComment(session, createCommentParams)) ==== CustomError(UnprocessableEntity).bad
+    }
+
+    "403 response" in new CreateCommentContext {
+      when(service.postWithSession(session, path, serviceParams, Headers.empty, None))
+        .thenReturn(Future.value(jsonResponse(Status.Forbidden, JsNull)))
+
+      Await.result(client.createComment(session, createCommentParams)) ==== NotAllowed().bad
+    }
+
+    "429 response" in new CreateCommentContext {
+      val spamWarning = Fixtures.okidokiSpamWarning
+      when(service.postWithSession(session, path, serviceParams, Headers.empty, None))
+        .thenReturn(Future.value(jsonResponse(Status.TooManyRequests, spamWarning)))
+
+      val expectedError = CustomError(
+        TooManyRequests,
+        Some(CustomError(RateLimitedError(Urn("soundcloud", "spam-warnings", "1"))))
+      )
+
+      Await.result(client.createComment(session, createCommentParams)) ==== expectedError.bad
+    }
+
+    "Unhandled response returns NotValid" in new CreateCommentContext {
+      when(service.postWithSession(session, path, serviceParams, Headers.empty, None))
+        .thenReturn(Future.value(jsonResponse(Status.RequestEntityTooLarge, JsNull)))
+
+      Await.result(client.createComment(session, createCommentParams)) ==== NotValid("Something went wrong").bad
+    }
   }
 
   "#fetchUserObjects" >> {

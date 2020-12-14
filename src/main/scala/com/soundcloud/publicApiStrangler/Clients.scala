@@ -22,7 +22,7 @@ import com.soundcloud.publicApiStrangler.client.media.{
   TrackAccessRecorderClient,
   WaveformUrlsGenerator
 }
-import com.soundcloud.publicApiStrangler.client.mothership.{OkidokiClient, RichOkidokiClient}
+import com.soundcloud.publicApiStrangler.client.mothership.{MoshimoshiClient, OkidokiClient, RichOkidokiClient}
 import com.soundcloud.publicApiStrangler.client.playlists.PlaylistDeletionClient
 import com.soundcloud.publicApiStrangler.client.pubmese.PubmeseClient
 import com.soundcloud.publicApiStrangler.client.quota.UserQuotaClient
@@ -57,7 +57,7 @@ class Clients(
   )
 
   private val okidokiJsonClient = jsonClient("okidoki")
-  val okidokiClient = new OkidokiClient(okidokiJsonClient)
+  val okidokiClient = new OkidokiClient(okidokiJsonClient, exceptionCollector)
 
   val timelineClient = new TimelineJsonClient(jsonClient("timeline"))
 
@@ -95,6 +95,7 @@ class Clients(
   val stitchClient = new StitchClient(jsonClient("stitch"))
 
   lazy val moshimoshiCommentsClient = new MoshimoshiCommentsClient(jsonClient("moshimoshi_comments"))
+  lazy val moshimoshiClient = new MoshimoshiClient(jsonClient("moshimoshi"), exceptionCollector)
 
   private val subscriptionsService = jsonClient("user_subscriptions")
 
@@ -144,7 +145,7 @@ class Clients(
   val enrichLikesCounts: () => Future[Boolean] =
     () => rolloutClient.isActive(BasicRolloutFeature("load_user_like_counts_from_liebling"))
 
-  val richOkidokiClient = new RichOkidokiClient(okidokiJsonClient)
+  val richOkidokiClient = new RichOkidokiClient(okidokiJsonClient, exceptionCollector)
 
   val userQuotaClient = new UserQuotaClient(okidokiJsonClient)
 
@@ -185,7 +186,8 @@ class Clients(
   val streamService = new StreamService(trackVisibilityService, tracksClient)
 
   val playlistDeletionClient = new PlaylistDeletionClient(okidokiJsonClient)
-  val commentsService = new CommentService(richOkidokiClient, moshimoshiCommentsClient)
+  val commentsService =
+    new CommentService(richOkidokiClient, moshimoshiClient, moshimoshiCommentsClient)
 
   private val authorizationConfig = HttpClientConfig.from(ResourceName("oauth_authorization"), config)
   private val authorizationHttpClient = HttpClient[String](authorizationConfig, telemetry)

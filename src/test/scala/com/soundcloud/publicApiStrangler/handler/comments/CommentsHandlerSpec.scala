@@ -3,8 +3,10 @@ package com.soundcloud.publicApiStrangler.handler.comments
 import com.soundcloud.jvmkit.module.bff.testsupport.FakeUserAuthentication
 import com.soundcloud.jvmkit.module.outcome._
 import com.soundcloud.jvmkit.module.util.Urn
+import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.publicApiStrangler.Routing
 import com.soundcloud.publicApiStrangler.client.comments.Comment
+import com.soundcloud.publicApiStrangler.client.mothership.{RateLimitedError, TooManyRequests}
 import com.soundcloud.publicApiStrangler.service.comments.CommentService
 import com.soundcloud.publicApiStrangler.service.pagination.OffsetBasedPagination
 import com.soundcloud.publicApiStrangler.service.representation.collection.Collection
@@ -34,14 +36,8 @@ class CommentsHandlerSpec extends UnitSpecification with Mockito {
       "linked_partitioning" -> "1"
     )
 
-    val session = loggedInSession(Urn("soundcloud", "users", "1"))
+    val session: UserSession = loggedInSession(Urn("soundcloud", "users", "1"))
     val userAuthentication = new FakeUserAuthentication(session)
-
-    def stubService(outcome: Outcome[Collection[Comment]]) = {
-      commentService
-        .fetchTracksComments(any, any, any)
-        .returns(Future.value(outcome))
-    }
 
     lazy val handler = new CommentsHandler(userAuthentication, commentService)
     override def routingDefinitions() = Routing.forCommentsHandler(handler)
@@ -49,15 +45,23 @@ class CommentsHandlerSpec extends UnitSpecification with Mockito {
 
   "GET /tracks/:trackId/comments" >> {
 
+    trait GetContext extends CommentsHandlerContext {
+      def stubService(outcome: Outcome[Collection[Comment]]) = {
+        commentService
+          .fetchTracksComments(any, any, any)
+          .returns(Future.value(outcome))
+      }
+    }
+
     "when service returns Good" >> {
-      "returns ok" in new CommentsHandlerContext {
+      "returns ok" in new GetContext {
         stubService(Collection(List[Comment](), None).good)
 
         val response = get(s"/tracks/${validTrackId}/comments", params, headers)
         response.status ==== Status.Ok
       }
 
-      "when linked_partitioning param present, returns a collection of Comments and nextHref" in new CommentsHandlerContext {
+      "when linked_partitioning param present, returns a collection of Comments and nextHref" in new GetContext {
         val nextHref = "https://de.link.com"
         val collection = Collection(List(comment), Some(nextHref))
         stubService(collection.good)
@@ -69,7 +73,7 @@ class CommentsHandlerSpec extends UnitSpecification with Mockito {
         response.contentString ==== Json.stringify(representation)
       }
 
-      "when linked_partitioning param present, does not render nextHref if it's null" in new CommentsHandlerContext {
+      "when linked_partitioning param present, does not render nextHref if it's null" in new GetContext {
         val collection = Collection(List(comment), None)
         stubService(collection.good)
 
@@ -80,7 +84,7 @@ class CommentsHandlerSpec extends UnitSpecification with Mockito {
         response.contentString ==== Json.stringify(representation)
       }
 
-      "when linked_partitioning param absent, returns a flat array of Comments" in new CommentsHandlerContext {
+      "when linked_partitioning param absent, returns a flat array of Comments" in new GetContext {
         val collection = Collection(List(comment), None)
         stubService(collection.good)
 
@@ -90,7 +94,7 @@ class CommentsHandlerSpec extends UnitSpecification with Mockito {
         response.contentString ==== Json.stringify(Json.toJson(collection.items))
       }
 
-      "defaults limit to 200 if param not present" in new CommentsHandlerContext {
+      "defaults limit to 200 if param not present" in new GetContext {
         stubService(Collection(List[Comment](), None).good)
 
         val response = get(s"/tracks/${validTrackId}/comments", params, headers)
@@ -109,7 +113,7 @@ class CommentsHandlerSpec extends UnitSpecification with Mockito {
         )
       }
 
-      "includes the secret_token in the request and pagination" in new CommentsHandlerContext {
+      "includes the secret_token in the request and pagination" in new GetContext {
         stubService(Collection(List[Comment](), None).good)
 
         override val params = Map(
@@ -138,7 +142,7 @@ class CommentsHandlerSpec extends UnitSpecification with Mockito {
         )
       }
 
-      "attaches a 10 minute cache control header" in new CommentsHandlerContext {
+      "attaches a 10 minute cache control header" in new GetContext {
         stubService(Collection(List[Comment](), None).good)
 
         val response = get(s"/tracks/${validTrackId}/comments", params, headers)
@@ -149,7 +153,7 @@ class CommentsHandlerSpec extends UnitSpecification with Mockito {
     }
 
     "when service returns Bad" >> {
-      "when service returns NotFound, returns not found" in new CommentsHandlerContext {
+      "when service returns NotFound, returns not found" in new GetContext {
         stubService(NotFound().bad)
 
         val response = get(s"/tracks/${validTrackId}/comments", params, headers)
@@ -157,7 +161,7 @@ class CommentsHandlerSpec extends UnitSpecification with Mockito {
         response.contentString ==== """{"errors":[{"error_message":"404 - Not Found"}]}"""
       }
 
-      "any other Bad, returns bad request" in new CommentsHandlerContext {
+      "any other Bad, returns bad request" in new GetContext {
         stubService(CustomError("").bad)
 
         val response = get(s"/tracks/${validTrackId}/comments", params, headers)
@@ -165,13 +169,172 @@ class CommentsHandlerSpec extends UnitSpecification with Mockito {
         response.contentString ==== "{}"
       }
 
-      "does not attach a cache control header" in new CommentsHandlerContext {
+      "does not attach a cache control header" in new GetContext {
         stubService(NotFound().bad)
 
         val response = get(s"/tracks/${validTrackId}/comments", params, headers)
 
         response.status ==== Status.NotFound
         response.headerMap.get("Cache-Control") ==== None
+      }
+    }
+  }
+
+  "POST /tracks/:track_id/comments" >> {
+
+    trait PostContext extends CommentsHandlerContext {
+      def stubService(outcome: Outcome[Comment]) = {
+        commentService
+          .createComment(any, any)
+          .returns(Future.value(outcome))
+      }
+    }
+
+    "failure cases" >> {
+      "returns a 401 for an anonymous user" in new PostContext {
+        override val session = anonymousSession
+        val body = ""
+        val response = post(s"/tracks/${validTrackId}/comments", Map.empty, headers, body)
+        response.status ==== Status.Unauthorized
+      }
+
+      "no comment parameter returns a 422 and gives error message" in new PostContext {
+        val body = ""
+        val response = post(s"/tracks/${validTrackId}/comments", Map.empty, headers, body)
+
+        response.status ==== Status.UnprocessableEntity
+        response.contentString ==== """{"errors":[{"error_message":"Parameter comment is missing"}]}"""
+      }
+
+      "no comment body parameter returns a 422 and gives error message" in new PostContext {
+        val body =
+          """
+            |{
+            |  "comment": {
+            |    "timestamp": 5000
+            |  }
+            |}
+            |""".stripMargin
+
+        val response = post(s"/tracks/${validTrackId}/comments", Map.empty, headers, body)
+
+        response.status ==== Status.UnprocessableEntity
+        response.contentString ==== """{"errors":[{"error_message":"Body can't be blank"}]}"""
+      }
+
+      "returns 429 and the spam warning urn when spamblocked" in new PostContext {
+        val spamUrn = Urn("soundcloud", "spam-warnings", "42")
+        val rateLimitError = RateLimitedError(spamUrn)
+        val customError = CustomError(
+          TooManyRequests,
+          Some(CustomError(rateLimitError))
+        ).bad
+        stubService(customError)
+
+        val body =
+          """
+            |{
+            |  "comment": {
+            |    "body": "comment body", 
+            |    "timestamp": 5000
+            |  }
+            |}
+            |""".stripMargin
+
+        val response = post(s"/tracks/${validTrackId}/comments", Map.empty, headers, body)
+
+        response.status ==== Status.TooManyRequests
+        response.contentString === s"""{"spam_warning_urn":"${spamUrn.toString}"}"""
+      }
+    }
+
+    "success cases" >> {
+      "returns a 201 created on success" in new PostContext {
+        stubService(comment.good)
+        val body =
+          """
+            |{
+            |  "comment": {
+            |    "body": "comment body", 
+            |    "timestamp": 5000
+            |  }
+            |}
+            |""".stripMargin
+        val response = post(s"/tracks/${validTrackId}/comments", Map.empty, headers, body)
+        response.status ==== Status.Created
+        response.contentString ==== Json.stringify(Json.toJson(comment))
+      }
+
+      "adds Location header" in new PostContext {
+        stubService(comment.good)
+        val body =
+          """
+            |{
+            |  "comment": {
+            |    "body": "comment body", 
+            |    "timestamp": 5000
+            |  }
+            |}
+            |""".stripMargin
+        val response = post(s"/tracks/${validTrackId}/comments", Map.empty, headers, body)
+        response.headerMap.get("Location") ==== Some("https://api.soundcloud.com/comments/1")
+      }
+
+      "accepts Int as timestamp" in new PostContext {
+        stubService(comment.good)
+        val timestamp = 5000
+        val body =
+          s"""
+            |{
+            |  "comment": {
+            |    "body": "comment body", 
+            |    "timestamp": $timestamp
+            |  }
+            |}
+            |""".stripMargin
+        val response = post(s"/tracks/${validTrackId}/comments", Map.empty, headers, body)
+
+        verify(commentService)
+          .createComment(session, CreateCommentParams(validTrackUrn, "comment body", Some(timestamp), None))
+      }
+
+      "accepts Float as timestamp" in new PostContext {
+        stubService(comment.good)
+        val timestamp = 5000.123
+        val body =
+          s"""
+             |{
+             |  "comment": {
+             |    "body": "comment body", 
+             |    "timestamp": $timestamp
+             |  }
+             |}
+             |""".stripMargin
+        val response = post(s"/tracks/${validTrackId}/comments", Map.empty, headers, body)
+
+        verify(commentService)
+          .createComment(session, CreateCommentParams(validTrackUrn, "comment body", Some(timestamp.toInt), None))
+      }
+
+      "accepts String as timestamp" in new PostContext {
+        stubService(comment.good)
+        val timestamp = "5000.123"
+        val body =
+          s"""
+             |{
+             |  "comment": {
+             |    "body": "comment body", 
+             |    "timestamp": $timestamp
+             |  }
+             |}
+             |""".stripMargin
+        val response = post(s"/tracks/${validTrackId}/comments", Map.empty, headers, body)
+
+        verify(commentService)
+          .createComment(
+            session,
+            CreateCommentParams(validTrackUrn, "comment body", Some(timestamp.toFloat.toInt), None)
+          )
       }
     }
   }
