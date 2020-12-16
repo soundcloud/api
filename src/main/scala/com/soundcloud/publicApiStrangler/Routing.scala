@@ -58,15 +58,11 @@ object Routing {
       route(Method.Put, "/e1/me/playlist_likes/:id", mothershipDispatcher.dispatch) :::
       route(Method.Delete, "/e1/me/track_likes/:id", mothershipDispatcher.dispatch) :::
       route(Method.Put, "/e1/me/track_likes/:id", mothershipDispatcher.dispatch) :::
-      route(Method.Put, "/me", mothershipDispatcher.dispatch) :::
-      route(Method.Get, "/me/comments", mothershipDispatcher.dispatch) :::
       route(Method.Get, "/me/connections", mothershipDispatcher.dispatch) :::
       route(Method.Get, "/me/connections/:id", mothershipDispatcher.dispatch) :::
-      route(Method.Get, "/me/email", mothershipDispatcher.dispatch) :::
       route(Method.Post, "/playlists", mothershipDispatcher.dispatch) :::
       route(Method.Put, "/playlists/:id", mothershipDispatcher.dispatch) :::
       route(Method.Get, "/resolve", mothershipDispatcher.dispatch) :::
-      route(Method.Put, "/users/:id", mothershipDispatcher.dispatch) :::
       route(Method.Get, "/me/favorites/ids", mothershipDispatcher.dispatch) :::
       route(Method.Post, "/me/playlists", mothershipDispatcher.dispatch) :::
       route(Method.Put, "/me/playlists/:trackId", mothershipDispatcher.dispatch) :::
