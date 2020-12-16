@@ -10,7 +10,8 @@ var options = {
   explorer: false,
   customCssUrl: './assets/custom.css',
   customfavIcon: './assets/favicon.ico',
-  customSiteTitle: 'SoundCloud Public API Specification'
+  customSiteTitle: 'SoundCloud Public API Specification',
+  customJs: './assets/tracking.js'
 }
 
 app.set('port', process.env.PORT || 3000);
