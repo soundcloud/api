@@ -185,7 +185,6 @@ class TimelineHandlerSpec extends UnitSpecification {
 
       Seq(
         "/me/activities",
-        "/me/activities/all",
         "/me/activities/all/own"
       ).foreach { endpoint =>
         val path = s"${endpoint}${queryParams}"
@@ -210,7 +209,6 @@ class TimelineHandlerSpec extends UnitSpecification {
 
         Seq(
           "/me/activities",
-          "/me/activities/all",
           "/me/activities/all/own"
         ).foreach { endpoint =>
           val path = s"${endpoint}${queryParams}"

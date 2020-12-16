@@ -134,7 +134,6 @@ object Routing {
     route(Method.Get, "/me/activities/tracks", timelineHandler.renderPublicTrackStream) :::
       route(Method.Get, "/me/activities/tracks/:tag", timelineHandler.renderPublicTrackStream) :::
       route(Method.Get, "/me/activities", timelineHandler.renderPublicStream) :::
-      route(Method.Get, "/me/activities/all", timelineHandler.renderPublicStream) :::
       route(Method.Get, "/me/activities/all/own", timelineHandler.renderPublicStream) :::
       route(Method.Get, "/me/followings/tracks", timelineHandler.renderFollowingTracks)
   }
