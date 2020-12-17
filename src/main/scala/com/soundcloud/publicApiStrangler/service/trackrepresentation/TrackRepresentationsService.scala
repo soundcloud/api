@@ -5,7 +5,7 @@ import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.publicApiStrangler.client.liebling.LieblingClient
 import com.soundcloud.publicApiStrangler.client.media.WaveformUrlsGenerator
 import com.soundcloud.publicApiStrangler.client.mothership.response.representation.{Geoblockings, User}
-import com.soundcloud.publicApiStrangler.client.mothership.{DomainLocking, RichOkidokiClient}
+import com.soundcloud.publicApiStrangler.client.mothership.RichOkidokiClient
 import com.soundcloud.publicApiStrangler.client.pubmese.{Isrc, PubmeseClient}
 import com.soundcloud.publicApiStrangler.client.quota.UserQuotaClient
 import com.soundcloud.publicApiStrangler.client.stitch.{StitchClient, StitchCounts}
@@ -60,9 +60,6 @@ class TrackRepresentationsService(
           .getOrElse(Future.value(Map.empty[Urn, Boolean])),
         pubmeseClient.isrcsForTracks(session, urns).handle { case NonFatal(_) => Map.empty[Urn, Isrc] },
         okidokiClient.fetchTrackGeoblockings(session, urns).handle { case NonFatal(_) => Map.empty[Urn, Geoblockings] },
-        okidokiClient.fetchTracksDomainLockings(session, urns).handle {
-          case NonFatal(_) => Map.empty[Urn, List[DomainLocking]]
-        },
         stitchClient.countsForTracks(session, visibleTracks.map(track => (track.userUrn, track.urn)).toSet).handle {
           case NonFatal(_) => Map.empty[Urn, StitchCounts]
         },
@@ -72,7 +69,7 @@ class TrackRepresentationsService(
         userQuotaClient.downloadsPerTrack(session, userUrns).handle { case NonFatal(_) => Map.empty[Urn, Option[Int]] }
       )
       .map {
-        case (users, audios, isLiked, isrcs, geoBlockings, domainLockings, counts, labels, downloadsPerTrack) =>
+        case (users, audios, isLiked, isrcs, geoBlockings, counts, labels, downloadsPerTrack) =>
           visibleTracks.map { visibleTrack =>
             builder.build(
               sessionUser = session.user,
@@ -82,7 +79,6 @@ class TrackRepresentationsService(
               counts = counts.get(visibleTrack.urn).getOrElse(StitchCounts(0, 0, 0, 0, 0)),
               label = visibleTrack.labelId.flatMap(id => labels.get(Urn("soundcloud", "users", id.toString))),
               geoblockings = geoBlockings.get(visibleTrack.urn).getOrElse(List.empty),
-              domainLockings = domainLockings.get(visibleTrack.urn).getOrElse(List.empty),
               trackAudioMetadata = audios(visibleTrack.urn),
               isLiked = isLiked.get(visibleTrack.urn).getOrElse(false),
               waveformUrl = waveformUrls(visibleTrack.uid.getOrElse("")),

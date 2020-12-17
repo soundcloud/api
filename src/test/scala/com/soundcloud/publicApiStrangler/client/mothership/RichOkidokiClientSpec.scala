@@ -9,7 +9,7 @@ import com.soundcloud.publicApiStrangler.test.UnitSpecification
 import com.twitter.finagle.http.Status
 import com.twitter.util.{Await, Future}
 import org.mockito.Mockito._
-import play.api.libs.json.{JsArray, JsNull, JsValue, Json}
+import play.api.libs.json.{JsNull, Json}
 
 class RichOkidokiClientSpec extends UnitSpecification {
   trait GenericContext extends Scope {
@@ -78,76 +78,6 @@ class RichOkidokiClientSpec extends UnitSpecification {
     }
 
     "exception response" in new TrackAudioMetadataContext {
-      override def mockResponse = Future.exception(new RuntimeException("kaboom"))
-
-      resultT.isThrow === true
-    }
-  }
-
-  "track domain lockings" >> {
-    trait TrackDomainLockingsContext extends GenericContext {
-      def resultF = client.fetchTrackDomainLockings(session, urn)
-
-      def resultT = Await.result(resultF.liftToTry)
-
-      def result = Await.result(resultF)
-
-      lazy val path = Path() / "tracks" / urn.identifier / "domain_lockings"
-      val urn = Urn("soundcloud", "tracks", "123")
-
-      def mockTrackDomainLockings: Seq[DomainLocking] =
-        Seq(
-          DomainLocking(
-            domain = "example.com",
-            urn = Urn("soundcloud", "domain-lockings", "1"),
-            trackUrn = Urn("soundcloud", "tracks", "2")
-          )
-        )
-
-      def mockResponseContents: JsValue =
-        JsArray(
-          Seq(
-            Json.obj(
-              "domain" -> "example.com",
-              "self" -> Json.obj(
-                "urn" -> "soundcloud:domain-lockings:112358"
-              ),
-              "track_urn" -> "soundcloud:tracks:12"
-            )
-          )
-        )
-
-      def mockResponseStatus: Status = Status.Ok
-
-      def mockResponse = Future.value(jsonResponse(mockResponseStatus, mockResponseContents))
-
-      when(jsonClient.getWithSession(beTypedEqualTo(session), beTypedEqualTo(path), any[Params], any[Headers]))
-        .thenReturn(mockResponse)
-    }
-
-    "200 response" in new TrackDomainLockingsContext {
-      result ==== Seq(
-        DomainLocking(
-          domain = "example.com",
-          urn = Urn("soundcloud", "domain-lockings", "112358"),
-          trackUrn = Urn("soundcloud", "tracks", "12")
-        )
-      )
-    }
-
-    "404 response" in new TrackDomainLockingsContext {
-      override def mockResponseStatus = Status.InternalServerError
-
-      resultT.isThrow === true
-    }
-
-    "500 response" in new TrackDomainLockingsContext {
-      override def mockResponseStatus = Status.InternalServerError
-
-      resultT.isThrow === true
-    }
-
-    "exception response" in new TrackDomainLockingsContext {
       override def mockResponse = Future.exception(new RuntimeException("kaboom"))
 
       resultT.isThrow === true
@@ -271,91 +201,6 @@ class RichOkidokiClientSpec extends UnitSpecification {
         .thenReturn(Future.value(jsonResponse(Status.InternalServerError, JsNull)))
 
       Await.result(client.fetchTracksAudioMetadata(session, urns)) ==== Map.empty
-    }
-  }
-
-  "#fetchTracksDomainLockings" >> {
-    trait GeoblockingsContext extends GenericContext {
-      val path = Path() / "domain_lockings"
-
-      val urns = Set(
-        Urn("soundcloud", "tracks", "1"),
-        Urn("soundcloud", "tracks", "2"),
-        Urn("soundcloud", "tracks", "3"),
-        Urn("soundcloud", "tracks", "4")
-      )
-
-      val (firstBatch, secondBatch) = urns.splitAt(2)
-
-      val firstBatchJson = Json.parse(s"""
-           |[
-           |  {
-           |    "domain": "domain1",
-           |    "track_urn": "${firstBatch.head}",
-           |    "self": {
-           |      "urn": "soundcloud:domain-lockings:1"
-           |    }
-           |  }, {
-           |    "domain": "domain2",
-           |    "track_urn": "${firstBatch.head}",
-           |    "self": {
-           |      "urn": "soundcloud:domain-lockings:2"
-           |    }
-           |  }, {
-           |    "domain": "domain3",
-           |    "track_urn": "${firstBatch.last}",
-           |    "self": {
-           |      "urn": "soundcloud:domain-lockings:3"
-           |    }
-           |  }
-           |]
-        """.stripMargin)
-
-      val secondBatchJson = Json.parse(s"""
-           |[
-           |  {
-           |    "domain": "domain4",
-           |    "track_urn": "${secondBatch.head}",
-           |    "self": {
-           |      "urn": "soundcloud:domain-lockings:4"
-           |    }
-           |  }
-           |]
-        """.stripMargin)
-    }
-
-    "200 response" in new GeoblockingsContext {
-      when(
-        jsonClient
-          .getWithSession(session, path, Map("track_ids" -> firstBatch.map(_.identifier).mkString(",")), Headers.empty)
-      ).thenReturn(Future.value(jsonResponse(Status.Ok, firstBatchJson)))
-      when(
-        jsonClient
-          .getWithSession(session, path, Map("track_ids" -> secondBatch.map(_.identifier).mkString(",")), Headers.empty)
-      ).thenReturn(Future.value(jsonResponse(Status.Ok, secondBatchJson)))
-
-      val batchSize = 2
-      Await.result(client.fetchTracksDomainLockings(session, urns, batchSize)) ==== Map(
-        Urn("soundcloud", "tracks", "1") -> List(
-          DomainLocking("domain1", Urn("soundcloud", "domain-lockings", "1"), Urn("soundcloud", "tracks", "1")),
-          DomainLocking("domain2", Urn("soundcloud", "domain-lockings", "2"), Urn("soundcloud", "tracks", "1"))
-        ),
-        Urn("soundcloud", "tracks", "2") -> List(
-          DomainLocking("domain3", Urn("soundcloud", "domain-lockings", "3"), Urn("soundcloud", "tracks", "2"))
-        ),
-        Urn("soundcloud", "tracks", "3") -> List(
-          DomainLocking("domain4", Urn("soundcloud", "domain-lockings", "4"), Urn("soundcloud", "tracks", "3"))
-        )
-      )
-    }
-
-    "500 response" in new GeoblockingsContext {
-      when(
-        jsonClient
-          .getWithSession(session, path, Params("track_ids" -> urns.map(_.identifier).mkString(",")), Headers.empty)
-      ).thenReturn(Future.value(jsonResponse(Status.InternalServerError, JsNull)))
-
-      Await.result(client.fetchTracksDomainLockings(session, urns)) ==== Map.empty
     }
   }
 

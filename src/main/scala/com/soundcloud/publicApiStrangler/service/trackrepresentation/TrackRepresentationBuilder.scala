@@ -5,7 +5,7 @@ import java.net.URLEncoder
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.publicApiStrangler.client.media.TrackWaveformUrl
 import com.soundcloud.publicApiStrangler.client.mothership.response.representation.{Geoblockings, User}
-import com.soundcloud.publicApiStrangler.client.mothership.{DomainLocking, TrackAudioMetadata}
+import com.soundcloud.publicApiStrangler.client.mothership.TrackAudioMetadata
 import com.soundcloud.publicApiStrangler.client.pubmese.Isrc
 import com.soundcloud.publicApiStrangler.client.stitch.StitchCounts
 import com.soundcloud.publicApiStrangler.client.tracks.VisibleTrack
@@ -21,7 +21,6 @@ class TrackRepresentationBuilder {
       counts: StitchCounts,
       label: Option[User],
       geoblockings: Geoblockings,
-      domainLockings: Seq[DomainLocking],
       trackAudioMetadata: TrackAudioMetadata,
       isLiked: Boolean,
       waveformUrl: TrackWaveformUrl,
@@ -36,7 +35,6 @@ class TrackRepresentationBuilder {
       isrc = isrc,
       label = label,
       geoblockings = getAvailableCountryNodes(geoblockings),
-      domainlockings = getDomainLockings(domainLockings),
       audioMetadata = trackAudioMetadata,
       playbackCount = getCount(userIsOwner, visibleTrack, "playback_count", counts),
       downloadCount = getCount(userIsOwner, visibleTrack, "download_count", counts),
@@ -104,15 +102,6 @@ class TrackRepresentationBuilder {
     if (!geoblockings.isEmpty)
       Some(Country.officiallyAssignedAlpha2Codes.--(geoblockings))
     else None
-  }
-
-  private def getDomainLockings(domainLockings: Seq[DomainLocking]): Option[Seq[DomainLocking]] = {
-    if (!domainLockings.isEmpty) {
-      Some(domainLockings)
-    } else {
-      None
-    }
-
   }
 
   private def urlFor(visibleTrack: VisibleTrack, subresource: String, secretParam: Option[String]) =

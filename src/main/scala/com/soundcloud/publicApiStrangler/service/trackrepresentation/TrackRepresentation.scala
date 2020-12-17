@@ -1,7 +1,7 @@
 package com.soundcloud.publicApiStrangler.service.trackrepresentation
 
 import com.soundcloud.publicApiStrangler.client.mothership.response.representation.User
-import com.soundcloud.publicApiStrangler.client.mothership.{DomainLocking, TrackAudioMetadata}
+import com.soundcloud.publicApiStrangler.client.mothership.TrackAudioMetadata
 import com.soundcloud.publicApiStrangler.client.pubmese.Isrc
 import com.soundcloud.publicApiStrangler.client.tracks.VisibleTrack
 import com.soundcloud.publicApiStrangler.support.HtmlSanitizer
@@ -34,7 +34,6 @@ case class TrackRepresentation(
     userFavourite: Option[Boolean],
     userPlaybackCount: Option[Int],
     audioMetadata: TrackAudioMetadata,
-    domainlockings: Option[Seq[DomainLocking]],
     waveformUrl: String
 ) {
   def id = visibleTrack.urn.identifier.toLong
@@ -102,7 +101,7 @@ object TrackRepresentation {
         "stream_url" -> rep.streamUrl,
         "download_url" -> rep.downloadUrl,
         "waveform_url" -> rep.waveformUrl,
-        "domain_lockings" -> rep.domainlockings.map(_.map(domainLocking => Json.obj("domain" -> domainLocking.domain))),
+        "domain_lockings" -> None,
         "available_country_codes" -> rep.geoblockings,
         "label" -> rep.label,
         "secret_token" -> rep.secretToken,

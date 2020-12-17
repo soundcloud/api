@@ -13,23 +13,6 @@ import com.twitter.finagle.http.{Response, Status}
 import com.twitter.util.Future
 import play.api.libs.json._
 
-case class DomainLocking(domain: String, urn: Urn, trackUrn: Urn)
-
-object DomainLocking {
-  implicit val reads: Reads[DomainLocking] = (json: JsValue) =>
-    try {
-      JsSuccess(
-        DomainLocking(
-          domain = (json \ "domain").as[String],
-          urn = (json \ "self" \ "urn").as[Urn],
-          trackUrn = (json \ "track_urn").as[Urn]
-        )
-      )
-    } catch {
-      case ex: Exception => JsError(ex.getMessage)
-    }
-}
-
 case class TrackAudioMetadata(
     state: String,
     original_format: Option[String],
@@ -49,38 +32,6 @@ case class RateLimitedError(spamWarningUrn: Urn) extends OkidokiError
 
 class RichOkidokiClient(service: JsonClient, exceptionCollector: ExceptionCollector)
     extends OkidokiClient(service, exceptionCollector) {
-
-  def fetchTrackDomainLockings(session: UserSession, trackUrn: Urn): Future[Seq[DomainLocking]] =
-    fetch(service, session, Path() / "tracks" / trackUrn.identifier / "domain_lockings") map { response: Response =>
-      response.status match {
-        case Status.Ok => Json.parse(response.contentString).as[List[DomainLocking]]
-        case _ => throw new RuntimeException("Unexpected response status")
-      }
-    }
-
-  def fetchTracksDomainLockings(
-      session: UserSession,
-      trackUrns: Set[Urn],
-      batchSize: Int = 50
-  ): Future[Map[Urn, List[DomainLocking]]] = {
-    inBatches(trackUrns.toList, batchSize) { urnBatch =>
-      {
-        service
-          .getWithSession(
-            session,
-            Path() / "domain_lockings",
-            Params("track_ids" -> urnBatch.map(_.identifier).mkString(",")),
-            Headers.empty()
-          )
-          .map { response: Response =>
-            response.status match {
-              case Successful(_) => Json.parse(response.contentString).as[List[DomainLocking]]
-              case _ => List.empty
-            }
-          }
-      }
-    }.map(_.groupBy(_.trackUrn))
-  }
 
   def fetchTrackAudioMetadata(session: UserSession, trackUrn: Urn): Future[Option[TrackAudioMetadata]] =
     fetch(service, session, Path() / "tracks" / trackUrn / "audio") map { response: Response =>

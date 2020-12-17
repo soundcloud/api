@@ -5,7 +5,7 @@ import com.soundcloud.jvmkit.module.util.{Url, Urn}
 import com.soundcloud.publicApiStrangler.authorization.policies._
 import com.soundcloud.publicApiStrangler.client.media.TrackWaveformUrl
 import com.soundcloud.publicApiStrangler.client.mothership.response.representation.{Geoblockings, User}
-import com.soundcloud.publicApiStrangler.client.mothership.{DomainLocking, TrackAudioMetadata}
+import com.soundcloud.publicApiStrangler.client.mothership.TrackAudioMetadata
 import com.soundcloud.publicApiStrangler.client.pubmese.Isrc
 import com.soundcloud.publicApiStrangler.client.stitch.StitchCounts
 import com.soundcloud.publicApiStrangler.client.tracks.{Artwork, EmbeddingPermission, VisibleTrack, WaveformUrl}
@@ -27,7 +27,6 @@ trait TrackRepresentationSpecContext {
       counts: StitchCounts = defaultCounts,
       label: Option[User] = None,
       geoblockings: Geoblockings = defaultGeoblockings,
-      domainlockings: Seq[DomainLocking] = defaultDomainLockings,
       audioMetadata: TrackAudioMetadata = defaultTrackAudioMetadata,
       downloadsPerTrack: Option[Int] = None,
       waveformUrl: TrackWaveformUrl = TrackWaveformUrl("some_uid", Url("https://bar.sndcdn.com/stream/a1b2c3.png")),
@@ -43,7 +42,6 @@ trait TrackRepresentationSpecContext {
       counts = counts,
       label = label,
       geoblockings = geoblockings,
-      domainLockings = domainlockings,
       trackAudioMetadata = audioMetadata,
       isLiked = isLiked,
       waveformUrl = waveformUrl,
@@ -123,11 +121,6 @@ trait TrackRepresentationSpecContext {
   def defaultCounts = StitchCounts(111, 222, 333, 444, 555)
 
   def defaultGeoblockings: Geoblockings = List("DE", "FR")
-
-  def defaultDomainLockings: Seq[DomainLocking] =
-    Seq(
-      DomainLocking(domain = "example.com", trackUrn = trackUrn, urn = Urn("soundcloud", "domain-lockings", "97802143"))
-    )
 }
 
 class TrackRepresentationSpec extends UnitSpecification {
@@ -475,15 +468,12 @@ class TrackRepresentationSpec extends UnitSpecification {
   "domain lockings" >> {
     trait Context extends Scope with TrackRepresentationSpecContext {
 
-      val domainLockings = defaultDomainLockings
-      val trackRepresentation: TrackRepresentation = createTrackRepresentation(domainlockings = domainLockings)
+      val trackRepresentation: TrackRepresentation = createTrackRepresentation()
     }
 
-    "adds domain locking info" in new Context {
+    "are null" in new Context {
       val json = Json.toJson(trackRepresentation)
-
-      val domainLockingJson = json \ "domain_lockings"
-      domainLockingJson(0) \ "domain" ==== JsDefined(JsString("example.com"))
+      json.as[JsObject].value("domain_lockings") === JsNull
     }
   }
 

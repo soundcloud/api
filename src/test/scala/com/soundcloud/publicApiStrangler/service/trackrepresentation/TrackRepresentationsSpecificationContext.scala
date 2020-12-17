@@ -5,7 +5,7 @@ import com.soundcloud.jvmkit.module.util.{Url, Urn}
 import com.soundcloud.publicApiStrangler.authorization.policies._
 import com.soundcloud.publicApiStrangler.client.media.TrackWaveformUrl
 import com.soundcloud.publicApiStrangler.client.mothership.response.representation.Geoblockings
-import com.soundcloud.publicApiStrangler.client.mothership.{DomainLocking, TrackAudioMetadata}
+import com.soundcloud.publicApiStrangler.client.mothership.TrackAudioMetadata
 import com.soundcloud.publicApiStrangler.client.pubmese.Isrc
 import com.soundcloud.publicApiStrangler.client.stitch.StitchCounts
 import com.soundcloud.publicApiStrangler.client.tracks.{Artwork, EmbeddingPermission, TrackRequest, VisibleTrack}
@@ -31,13 +31,7 @@ trait TrackRepresentationsSpecificationContext extends UnitSpecification {
       MonetizationModel.AD_SUPPORTED
     )
     val geoblockingsList = List("DE", "FR")
-    val domainLockingsList = List(
-      DomainLocking(
-        domain = "example.com",
-        urn = Urn("soundcloud", "domain-lockings", "1"),
-        trackUrn = Urn("soundcloud", "tracks", "123")
-      )
-    )
+
     val trackAudioMetadataList = TrackAudioMetadata(
       state = "failed",
       original_content_size = Some(9001),
@@ -53,8 +47,6 @@ trait TrackRepresentationsSpecificationContext extends UnitSpecification {
     def label = new UserBuilder().setUrn(labelUrn).build
 
     def geoblockings: Map[Urn, Geoblockings] = Map(trackUrn -> geoblockingsList)
-
-    def domainLockings: Map[Urn, List[DomainLocking]] = Map(trackUrn -> domainLockingsList)
 
     def trackAudioMetadata: Map[Urn, TrackAudioMetadata] = Map(trackUrn -> trackAudioMetadataList)
 
@@ -136,7 +128,6 @@ trait TrackRepresentationsSpecificationContext extends UnitSpecification {
         counts = StitchCounts(111, 222, 333, 444, 555),
         label = None,
         geoblockings = geoblockingsList,
-        domainLockings = domainLockingsList,
         trackAudioMetadata = trackAudioMetadataList,
         isLiked = true,
         waveformUrl = waveformUrl(trackUrn.identifier),

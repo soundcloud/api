@@ -53,7 +53,6 @@ class TrackRepresentationsServiceSpec extends TrackRepresentationsSpecificationC
       when(pubmeseClient.isrcsForTracks(session, Set(trackUrn))).thenReturn(Future.value(isrc()))
       when(stitchClient.countsForTracks(session, Set((trackOwnerUrn, trackUrn)))).thenReturn(Future.value(stitchCounts))
       when(okidokiClient.fetchTrackGeoblockings(session, Set(trackUrn))).thenReturn(Future.value(geoblockings))
-      when(okidokiClient.fetchTracksDomainLockings(session, Set(trackUrn))).thenReturn(Future.value(domainLockings))
       when(okidokiClient.fetchTracksAudioMetadata(session, Set(trackUrn)))
         .thenReturn(Future.value(trackAudioMetadata))
       when(lieblingClient.userLikedTracks(session, Set(trackUrn), session.getUser))
@@ -69,7 +68,6 @@ class TrackRepresentationsServiceSpec extends TrackRepresentationsSpecificationC
       when(trackVisibilityService.tracks(session, List(trackRequest))).thenReturn(Future.value(List.empty))
       when(pubmeseClient.isrcsForTracks(session, Set(trackUrn))).thenReturn(Future.value(isrc()))
       when(okidokiClient.fetchTrackGeoblockings(session, Set(trackUrn))).thenReturn(Future.value(geoblockings))
-      when(okidokiClient.fetchTracksDomainLockings(session, Set(trackUrn))).thenReturn(Future.value(domainLockings))
       when(okidokiClient.fetchTracksAudioMetadata(session, Set(trackUrn)))
         .thenReturn(Future.value(trackAudioMetadata))
     }
@@ -154,20 +152,6 @@ class TrackRepresentationsServiceSpec extends TrackRepresentationsSpecificationC
       trackRepLike match {
         case Some(rep) =>
           Json.toJson(rep).as[JsObject].value("available_country_codes") === JsNull
-        case None =>
-      }
-    }
-
-    "Returns no domainlockings if Moshimoshi is failing" in new Context {
-      val track = trackvisibilityTrack()
-      setUpMocksForExistingTrack(track, session)
-      when(okidokiClient.fetchTracksDomainLockings(session, Set(trackUrn)))
-        .thenReturn(Future.exception(new RuntimeException("bewm! hahahaaa")))
-
-      val trackRepLike = Await.result(tracksService.track(session, trackRequest))
-      trackRepLike match {
-        case Some(rep) =>
-          Json.toJson(rep).as[JsObject].value("domain_lockings") === JsNull
         case None =>
       }
     }
