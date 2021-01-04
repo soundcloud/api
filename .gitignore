@@ -23,6 +23,7 @@ config/production_api.sh
 config/production_apitrackupload.sh
 doc/node_modules
 .DS_Store
+*.log
 
 # metals plugin for vscode
 .bloop
