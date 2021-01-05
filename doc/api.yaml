@@ -95,15 +95,6 @@ paths:
               examples:
                 default:
                   $ref: "#/components/examples/ErrorUnauthorized"
-    # put:
-    #   summary: Returns ?.
-    #   tags:
-    #     - me
-    #   security:
-    #     - AuthHeader: []
-    #   responses:
-    #     200:
-    #       description: Success
   /me/activities:
     get:
       summary: Returns the authenticated user's activities.
@@ -123,18 +114,6 @@ paths:
                   $ref: "#/components/examples/Activities"
         401:
           description: 'Error: Unauthorized'
-  # /me/activities/all:
-  #   get:
-  #     summary: Returns a list of activities.
-  #     tags:
-  #       - me
-  #     security:
-  #       - AuthHeader: []
-  #     parameters:
-  #       - $ref: '#/components/parameters/limit'
-  #     responses:
-  #       200:
-  #         description: Success
   /me/activities/all/own:
     get:
       summary: Recent the authenticated user's activities.
@@ -857,7 +836,7 @@ paths:
               examples:
                 422:
                   $ref: '#/components/examples/ErrorUnprocessableEntity'
-        429:  
+        429:
           description: 'Error: Too Many Requests'
           content:
             application/json:
@@ -865,21 +844,6 @@ paths:
                 429:
                   $ref: '#/components/examples/ErrorTooManyRequests'
   # /tracks/{track_id}/comments/{comment_id}:
-  #   get:
-  #     summary: Returns ???.
-  #     tags:
-  #       - tracks
-  #     security:
-  #       - ClientId: []
-  #         AuthHeader: []
-  #     parameters:
-  #       - $ref: '#/components/parameters/track_id'
-  #       - $ref: '#/components/parameters/comment_id'
-  #     responses:
-  #       200:
-  #         description: Success
-  #       404:
-  #         description: 'Error: Not Found'
   #   delete:
   #     summary: Returns ???.
   #     tags:
@@ -1053,18 +1017,6 @@ paths:
               examples:
                 default:
                   $ref: "#/components/examples/ErrorNotFound"
-    # put:
-    #   summary: Returns user's information.
-    #   tags:
-    #     - user
-    #   security:
-    #     - ClientId: []
-    #       AuthHeader: []
-    #   parameters:
-    #     - $ref: '#/components/parameters/user_id'
-    #   responses:
-    #     200:
-    #       description: Success
   /users/{user_id}/comments:
     get:
       summary: Returns a list of user's comments.
@@ -1115,20 +1067,6 @@ paths:
                   $ref: "#/components/examples/Tracks"
         401:
           description: 'Error: Unauthorized'
-  # /users/{user_id}/favorites/{track_id}:
-  #   get:
-  #     summary: Returns user's favorite track.
-  #     tags:
-  #       - users
-  #     security:
-  #       - ClientId: []
-  #         AuthHeader: []
-  #     parameters:
-  #       - $ref: '#/components/parameters/user_id'
-  #       - $ref: '#/components/parameters/track_id'
-  #     responses:
-  #       200:
-  #         description: Success
   /users/{user_id}/followers:
     get:
       summary: Returns a list of user’s followers.
@@ -1285,20 +1223,6 @@ paths:
                   $ref: "#/components/examples/Tracks"
         401:
           description: 'Error: Unauthorized'
-  # /users/{user_id}/tracks/{track_id}:
-  #   get:
-  #     summary: Returns user's track.
-  #     tags:
-  #       - users
-  #     security:
-  #       - ClientId: []
-  #         AuthHeader: []
-  #     parameters:
-  #       - $ref: '#/components/parameters/user_id'
-  #       - $ref: '#/components/parameters/track_id'
-  #     responses:
-  #       200:
-  #         description: Success
   /users/{user_id}/web-profiles:
     get:
       summary: Returns list of user's links added to their profile (website, facebook, instagram).
@@ -1746,14 +1670,14 @@ components:
     UserFollowings:
       value:
         collection:
-          - 
+          -
             allOf:
               - $ref: "#/components/examples/User/value"
         next_href: https://api.soundcloud.com/users/1234/followings?client_id=client_id&page_size=10&cursor=1234567
     UserFollowers:
       value:
         collection:
-          - 
+          -
             allOf:
               - $ref: "#/components/examples/User/value"
         next_href: https://api.soundcloud.com/users/1234/followers?client_id=client_id&page_size=10&cursor=1234567
