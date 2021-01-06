@@ -15,7 +15,7 @@ class ErrorResponseSpec extends Specification {
       "status" -> "403 - Forbidden",
       "error" -> null,
       "errors" -> Json.arr(Json.obj("some_key" -> "Something")),
-      "link" -> "https://github.com/soundcloud/api"
+      "link" -> "https://developers.soundcloud.com/docs/api/explorer/open-api"
     )
   }
 
@@ -25,7 +25,7 @@ class ErrorResponseSpec extends Specification {
     Json.parse(response.contentString) === Json.obj(
       "code" -> 403,
       "message" -> "Something",
-      "link" -> "https://github.com/soundcloud/api",
+      "link" -> "https://developers.soundcloud.com/docs/api/explorer/open-api",
       "status" -> "403 - Forbidden",
       "error" -> null,
       "errors" -> Json.arr(Json.obj("error_message" -> "Something"))
@@ -38,7 +38,7 @@ class ErrorResponseSpec extends Specification {
     Json.parse(response.contentString) === Json.obj(
       "code" -> 403,
       "message" -> "",
-      "link" -> "https://github.com/soundcloud/api",
+      "link" -> "https://developers.soundcloud.com/docs/api/explorer/open-api",
       "status" -> "403 - Forbidden",
       "error" -> null,
       "errors" -> Json.arr()
@@ -51,11 +51,37 @@ class ErrorResponseSpec extends Specification {
     Json.parse(response.contentString) === Json.obj(
       "code" -> 403,
       "message" -> "",
-      "link" -> "https://github.com/soundcloud/api",
+      "link" -> "https://developers.soundcloud.com/docs/api/explorer/open-api",
       "status" -> "403 - Forbidden",
       "error" -> null,
       "errors" -> Json.arr(),
       "else" -> "other"
+    )
+  }
+
+  "links to issue tracker when an unexpected error" in new Scope {
+    val response = ErrorResponse(Status.InternalServerError)
+    response.statusCode === 500
+    Json.parse(response.contentString) === Json.obj(
+      "code" -> 500,
+      "message" -> "",
+      "link" -> "https://github.com/soundcloud/api",
+      "status" -> "500 - Internal Server Error",
+      "error" -> null,
+      "errors" -> Json.arr()
+    )
+  }
+
+  "links to rate limiting article when 429" in new Scope {
+    val response = ErrorResponse(Status.TooManyRequests)
+    response.statusCode === 429
+    Json.parse(response.contentString) === Json.obj(
+      "code" -> 429,
+      "message" -> "",
+      "link" -> "https://developers.soundcloud.com/docs/api/rate-limits#errors",
+      "status" -> "429 - Too Many Requests",
+      "error" -> null,
+      "errors" -> Json.arr()
     )
   }
 }

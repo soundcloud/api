@@ -25,7 +25,7 @@ object ErrorResponse {
           Json.obj(
             "code" -> status.code,
             "message" -> message,
-            "link" -> "https://github.com/soundcloud/api",
+            "link" -> linkForCode(status.code),
             // all the below properties exist for backward compatibility only
             "status" -> s"${status.code} - ${status.reason}",
             "errors" -> deprecatedErrorDetails.toList,
@@ -34,5 +34,11 @@ object ErrorResponse {
         )
       )
       .build
+  }
+
+  private def linkForCode(code: Int): String = code match {
+    case 429 => "https://developers.soundcloud.com/docs/api/rate-limits#errors"
+    case c if c >= 500 => "https://github.com/soundcloud/api"
+    case c if c >= 400 => "https://developers.soundcloud.com/docs/api/explorer/open-api"
   }
 }

@@ -127,6 +127,7 @@ object App {
     val additionalFilters: List[Filter[Request, Response, Request, Response]] =
       List(
         new SuccesfulResponseTypeMetricFilter(telemetry),
+        new ErrorResponseTypeFilter(telemetry),
         new JsonpFilter,
         CorsFilter((_, _) => true), // allow all CORS origins (for now)
         new CorsTelemetryFilter(telemetry, router),
