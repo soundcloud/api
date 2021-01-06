@@ -1,9 +1,10 @@
 package com.soundcloud.publicApiStrangler.filter
 
 import com.soundcloud.jvmkit.module.bff.session.UserAuthentication
-import com.soundcloud.jvmkit.module.http.server.{HandlerRequest, HandlerRouter, JsonResponseBuilder}
+import com.soundcloud.jvmkit.module.http.server.{HandlerRequest, HandlerRouter}
 import com.soundcloud.jvmkit.module.telemetry.Telemetry
 import com.soundcloud.publicApiStrangler.Routing
+import com.soundcloud.publicApiStrangler.support.ErrorResponse
 import com.twitter.finagle.http.{Request, Response}
 import com.twitter.finagle.{Service, SimpleFilter}
 import com.twitter.util.Future
@@ -35,7 +36,7 @@ class ClientApplicationAuthFilter(userAuthentication: UserAuthentication, teleme
 
         if (ClientApplicationAuthFilter.blackistedApplicationIds.contains(clientAppId)) {
           unauthorisedClientApplicationCounter.labels(clientAppId, path, method).inc()
-          Future.value(JsonResponseBuilder.forbidden())
+          Future.value(ErrorResponse.forbidden())
         } else {
           service(request)
         }

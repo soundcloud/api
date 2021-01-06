@@ -1,20 +1,13 @@
 package com.soundcloud.publicApiStrangler.handler
 
-import com.soundcloud.jvmkit.module.http.server.{Handler, HandlerRequest, JsonResponseBuilder}
+import com.soundcloud.jvmkit.module.http.server.{Handler, HandlerRequest}
 import com.soundcloud.jvmkit.module.telemetry.Telemetry
 import com.soundcloud.publicApiStrangler.service.oauth.AuthorizationService
-import com.soundcloud.publicApiStrangler.support.oauth.{
-  InvalidGrant,
-  InvalidRequest,
-  MissingClientCredentials,
-  TokenExchangeRequest,
-  TokenExchangeRequestError,
-  UnparseableRequest,
-  UnsupportedGrantType
-}
+import com.soundcloud.publicApiStrangler.support.ErrorResponse
+import com.soundcloud.publicApiStrangler.support.oauth._
 import com.twitter.finagle.http.{Response, Status}
 import com.twitter.util.Future
-import play.api.libs.json.Json
+import play.api.libs.json.JsString
 
 class TokenExchangeHandler(
     mothershipDispatch: Handler,
@@ -39,14 +32,17 @@ class TokenExchangeHandler(
           response
         }
       case Left(error) =>
-        val response =
-          JsonResponseBuilder(Status.BadRequest, Json.stringify(Json.obj("error_code" -> errorCode(error))))
+        val response = ErrorResponse(
+          Status.BadRequest,
+          errorCode(error),
+          Some(Map("error_code" -> JsString(errorCode(error)))) // backwards compatibility
+        )
 
         requestErrorCounter
           .labels(error.errorType, error.reason, response.status.code.toString)
           .inc()
 
-        Future.value(response.build)
+        Future.value(response)
     }
 
   private def errorCode(error: TokenExchangeRequestError) =

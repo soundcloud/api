@@ -338,8 +338,6 @@ class TracksHandlerSpec extends UnitSpecification with TrackRepresentationSpecCo
         val artworkUpdate = Some(TrackArtworkUpdateRequest(bytes))
         val file =
           FileElement("track[artwork_data]", Buf.ByteArray.Owned(bytes), Some("image/jpeg"), Some("test-image.jpg"))
-
-        val invalidRequestString = """{"errors":[{"error_message":"Require uid and original_filename parameters."}]}"""
       }
 
       trait SuccessContext extends UrlEncodedContext {
@@ -390,14 +388,12 @@ class TracksHandlerSpec extends UnitSpecification with TrackRepresentationSpecCo
 
         val response = postForm(path, body = requestBody)
         response.statusCode === 400
-        response.contentString === "{\"error\":\"invalid request\"}"
       }
 
       "Generates unprocessable entity response if no asset found" in new NotFoundContext {
         override val requestBody = Seq[(String, String)](("track[uid]", "12345"))
         val response = postForm(path, body = requestBody)
         response.statusCode === 422
-        response.contentString === invalidRequestString
       }
     }
 
@@ -432,8 +428,6 @@ class TracksHandlerSpec extends UnitSpecification with TrackRepresentationSpecCo
         val artworkUpdate = Some(TrackArtworkUpdateRequest(bytes))
         val file =
           FileElement("track[artwork_data]", Buf.ByteArray.Owned(bytes), Some("image/jpeg"), Some("test-image.jpg"))
-
-        val invalidRequestString = """{"errors":[{"error_message":"Require uid and original_filename parameters."}]}"""
       }
 
       trait SuccessContext extends MultiPartFormContext {
@@ -483,14 +477,12 @@ class TracksHandlerSpec extends UnitSpecification with TrackRepresentationSpecCo
 
         val response = postForm(path, body = requestBody)
         response.statusCode === 400
-        response.contentString === "{\"error\":\"invalid request\"}"
       }
 
       "Generates unprocessable entity response if no asset found" in new FailureContext {
         override val requestBody = Seq[(String, String)](("track[uid]", "12345"))
         val response = postForm(path, body = requestBody)
         response.statusCode === 422
-        response.contentString === invalidRequestString
       }
     }
   }

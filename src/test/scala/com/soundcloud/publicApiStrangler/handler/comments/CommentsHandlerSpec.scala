@@ -16,7 +16,7 @@ import com.twitter.finagle.http.{ParamMap, Status}
 import com.twitter.util.Future
 import org.mockito.Mockito.verify
 import org.specs2.mock.Mockito
-import play.api.libs.json.Json
+import play.api.libs.json.{JsString, Json}
 
 class CommentsHandlerSpec extends UnitSpecification with Mockito {
   trait CommentsHandlerContext extends HandlerSpecificationScope {
@@ -158,7 +158,7 @@ class CommentsHandlerSpec extends UnitSpecification with Mockito {
 
         val response = get(s"/tracks/${validTrackId}/comments", params, headers)
         response.status ==== Status.NotFound
-        response.contentString ==== """{"errors":[{"error_message":"404 - Not Found"}]}"""
+        response.contentString must contain("404 - Not Found")
       }
 
       "any other Bad, returns bad request" in new GetContext {
@@ -166,7 +166,6 @@ class CommentsHandlerSpec extends UnitSpecification with Mockito {
 
         val response = get(s"/tracks/${validTrackId}/comments", params, headers)
         response.status ==== Status.BadRequest
-        response.contentString ==== "{}"
       }
 
       "does not attach a cache control header" in new GetContext {
@@ -203,7 +202,7 @@ class CommentsHandlerSpec extends UnitSpecification with Mockito {
         val response = post(s"/tracks/${validTrackId}/comments", Map.empty, headers, body)
 
         response.status ==== Status.UnprocessableEntity
-        response.contentString ==== """{"errors":[{"error_message":"Parameter comment is missing"}]}"""
+        (Json.parse(response.contentString) \ "message").get === JsString("Parameter comment is missing.")
       }
 
       "no comment body parameter returns a 422 and gives error message" in new PostContext {
@@ -219,7 +218,7 @@ class CommentsHandlerSpec extends UnitSpecification with Mockito {
         val response = post(s"/tracks/${validTrackId}/comments", Map.empty, headers, body)
 
         response.status ==== Status.UnprocessableEntity
-        response.contentString ==== """{"errors":[{"error_message":"Body can't be blank"}]}"""
+        (Json.parse(response.contentString) \ "message").get === JsString("Body can't be blank.")
       }
 
       "returns 429 and the spam warning urn when spamblocked" in new PostContext {
@@ -244,7 +243,7 @@ class CommentsHandlerSpec extends UnitSpecification with Mockito {
         val response = post(s"/tracks/${validTrackId}/comments", Map.empty, headers, body)
 
         response.status ==== Status.TooManyRequests
-        response.contentString === s"""{"spam_warning_urn":"${spamUrn.toString}"}"""
+        (Json.parse(response.contentString) \ "spam_warning_urn").get === JsString(spamUrn.toString)
       }
     }
 

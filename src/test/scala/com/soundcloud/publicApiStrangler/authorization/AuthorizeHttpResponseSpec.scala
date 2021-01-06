@@ -67,7 +67,6 @@ class AuthorizeHttpResponseSpec extends UnitSpecification {
     lazy val policies = new ContentAuthorization(urn, ContentPolicy.BLOCK, Reason.GEO, MonetizationModel.SUB_HIGH_TIER)
 
     authorizedResponse.statusCode mustEqual 403
-    authorizedResponse.getContentString mustEqual "{}"
   }
 
   trait TrackArrayContext extends Context with Before {

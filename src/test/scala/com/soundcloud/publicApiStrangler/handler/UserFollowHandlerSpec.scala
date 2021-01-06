@@ -244,7 +244,6 @@ class UserFollowHandlerSpec extends UnitSpecification {
     "returns not found when the given user is not a following" in new FollowingNotFoundContext {
       val response = get("/me/followings/123")
       response.status ==== Status.NotFound
-      response.contentString ==== ""
     }
   }
 
@@ -259,7 +258,6 @@ class UserFollowHandlerSpec extends UnitSpecification {
     "returns not found when the given user is not a following" in new FollowingNotFoundContext {
       val response = get("/users/999/followings/123")
       response.status ==== Status.NotFound
-      response.contentString ==== ""
     }
   }
 
@@ -307,7 +305,6 @@ class UserFollowHandlerSpec extends UnitSpecification {
     "returns not found when the given user is not a follower" in new FollowerNotFoundContext {
       val response = get("/me/followers/123")
       response.status ==== Status.NotFound
-      response.contentString ==== ""
     }
   }
 
@@ -323,7 +320,6 @@ class UserFollowHandlerSpec extends UnitSpecification {
     "returns not found when the given user is not a follower" in new FollowerNotFoundContext {
       val response = get("/users/999/followers/123")
       response.status ==== Status.NotFound
-      response.contentString ==== ""
     }
   }
 
@@ -382,8 +378,7 @@ class UserFollowHandlerSpec extends UnitSpecification {
 
       val response = put("/me/followings/999", Map("client_id" -> "YOUR_CLIENT_ID"))
       response.status ==== Status.NotFound
-      val errors = (Json.parse(response.contentString) \ "errors").as[Seq[JsObject]].head
-      (errors \ "error_message").asOpt[String] ==== Option("404 - Not Found")
+      (Json.parse(response.contentString) \ "status").get === JsString("404 - Not Found")
     }
   }
 

@@ -42,14 +42,15 @@ class OffsetLimitRequestFilterSpec extends UnitSpecification {
         "handles offset over limit" in new Context {
           val request = offsetOverLimitRequest(path)
 
-          response.statusCode mustEqual 403
+          response.statusCode mustEqual 400
+          response.contentString must contain("Offset must be less than 200")
           verifyNoMoreInteractions(next)
         }
 
         "handles offset over limit with trailing spaces" in new Context {
           val request = Request(path, "offset" -> ((maxOffset + 1).toString + " "))
 
-          response.statusCode mustEqual 403
+          response.statusCode mustEqual 400
           verifyNoMoreInteractions(next)
         }
 

@@ -1,0 +1,38 @@
+package com.soundcloud.publicApiStrangler.support
+
+import com.soundcloud.jvmkit.module.http.server.JsonResponseBuilder
+import com.twitter.finagle.http.{Response, Status}
+import play.api.libs.json.{JsString, JsValue, Json}
+
+object ErrorResponse {
+  def notFound(error: String = "") = apply(Status.NotFound, error)
+  def badRequest(error: String = "") = apply(Status.BadRequest, error)
+  def forbidden() = apply(Status.Forbidden)
+
+  def apply(
+      status: Status,
+      message: String = "",
+      extraAttributes: Option[Map[String, JsValue]] = None,
+      errorDetails: Option[Map[String, JsValue]] = None
+  ): Response = {
+    val deprecatedErrorDetails =
+      errorDetails.orElse(if (message.isEmpty) None else Some(Map("error_message" -> JsString(message))))
+
+    new JsonResponseBuilder()
+      .status(status)
+      .body(
+        Json.stringify(
+          Json.obj(
+            "code" -> status.code,
+            "message" -> message,
+            "link" -> "https://github.com/soundcloud/api",
+            // all the below properties exist for backward compatibility only
+            "status" -> s"${status.code} - ${status.reason}",
+            "errors" -> deprecatedErrorDetails.toList,
+            "error" -> null
+          ) ++ Json.toJsObject(extraAttributes.getOrElse(Map.empty))
+        )
+      )
+      .build
+  }
+}

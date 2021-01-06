@@ -1,12 +1,9 @@
 package com.soundcloud.publicApiStrangler.filter
 
-import com.soundcloud.jvmkit.module.http.server.JsonResponseBuilder
-import com.twitter.finagle.http.{Request, Response, Status}
+import com.soundcloud.publicApiStrangler.support.ErrorResponse
+import com.twitter.finagle.http.{Request, Response}
 import com.twitter.finagle.{Service, SimpleFilter}
 import com.twitter.util.Future
-import org.joda.time.DateTime
-import org.joda.time.format.DateTimeFormat
-import play.api.libs.json.{JsArray, JsObject, JsString, Json}
 
 class OffsetLimitRequestFilter(paths: Seq[String], maxOffset: Int) extends SimpleFilter[Request, Response] {
   override def apply(request: Request, next: Service[Request, Response]) = {
@@ -16,22 +13,9 @@ class OffsetLimitRequestFilter(paths: Seq[String], maxOffset: Int) extends Simpl
     }
   }
 
-  private def denial = Future.value(mimicMotherShipBadRequestResponseBuilder)
+  private def denial = Future.value(ErrorResponse.badRequest(s"Offset must be less than $maxOffset"))
 
   private def optStringToOptInt(string: Option[String]) = {
     string.map(_.trim).filter(!_.isEmpty).filter(_.forall(_.isDigit)).map(_.toInt)
-  }
-
-  private lazy val mimicMotherShipBadRequestResponseBuilder = {
-    new JsonResponseBuilder()
-      .status(Status.Forbidden)
-      .header("Status", "403 Forbidden")
-      .header("Date", DateTime.now.toString(DateTimeFormat.forPattern("E, d MMM yyyy HH:mm:ss z")))
-      .body(
-        Json.stringify(
-          JsObject(Seq("errors" -> JsArray(Seq(JsObject(Seq("error_message" -> JsString("403 - Forbidden")))))))
-        )
-      )
-      .build
   }
 }

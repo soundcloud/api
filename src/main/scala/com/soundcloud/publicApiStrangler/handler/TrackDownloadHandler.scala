@@ -1,10 +1,10 @@
 package com.soundcloud.publicApiStrangler.handler
 
 import com.soundcloud.jvmkit.module.bff.session.UserAuthentication
-import com.soundcloud.jvmkit.module.http.server.{HandlerRequest, JsonResponseBuilder, ResponseBuilder}
-import com.soundcloud.publicApiStrangler.support.TrackUrnUtil.getTrackUrn
+import com.soundcloud.jvmkit.module.http.server.{HandlerRequest, ResponseBuilder}
 import com.soundcloud.publicApiStrangler.service.media.{DownloadNotFound, DownloadOk, DownloadService}
-import com.soundcloud.publicApiStrangler.support.RangeHelper
+import com.soundcloud.publicApiStrangler.support.TrackUrnUtil.getTrackUrn
+import com.soundcloud.publicApiStrangler.support.{ErrorResponse, RangeHelper}
 import com.twitter.finagle.http.{Response, Status}
 import com.twitter.util.{Future, Return, Throw, Try}
 
@@ -22,7 +22,7 @@ class TrackDownloadHandler(
             case DownloadNotFound => ResponseBuilder.notFound()
           }
         }
-      case Throw(e) => Future.value(JsonResponseBuilder.badRequest(e.getMessage))
+      case Throw(e) => Future.value(ErrorResponse.badRequest(e.getMessage))
     }
   }
 

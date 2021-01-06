@@ -26,7 +26,7 @@ import com.twitter.util.Future
 import org.joda.time.DateTimeZone
 import org.mockito.Mockito.when
 import org.specs2.mutable.BeforeAfter
-import play.api.libs.json.Json
+import play.api.libs.json.{JsString, Json}
 
 class LikesHandlerSpec extends UnitSpecification {
   TimeZone.setDefault(TimeZone.getTimeZone("UTC"))
@@ -114,7 +114,6 @@ class LikesHandlerSpec extends UnitSpecification {
 
           val response = get(path)
           response.status ==== Status.NotFound
-          response.contentString ==== """{"errors":[{"error_message":"404 - Not Found"}]}"""
         }
       }
     }
@@ -212,7 +211,7 @@ class LikesHandlerSpec extends UnitSpecification {
           }
 
           "renders correct body" in new InvalidUrnPostTrackLikeContext {
-            Json.parse(response.contentString) ==== Json.obj("status" -> "400 - Bad Request")
+            (Json.parse(response.contentString) \ "status").get ==== JsString("400 - Bad Request")
           }
         }
 
@@ -229,7 +228,7 @@ class LikesHandlerSpec extends UnitSpecification {
           }
 
           "renders correct body" in new SpamPostTrackLikesContext {
-            Json.parse(response.contentString) ==== Json.obj("status" -> "429 - Too Many Requests")
+            (Json.parse(response.contentString) \ "status").get ==== JsString("429 - Too Many Requests")
           }
         }
       }
@@ -270,10 +269,6 @@ class LikesHandlerSpec extends UnitSpecification {
           "returns 404" in new NonLikedUrnContext {
             response.statusCode ==== 404
           }
-
-          "renders correct body" in new NonLikedUrnContext {
-            response.contentString ==== """{"errors":[{"error_message":"404 - Not Found"}]}"""
-          }
         }
 
         "when URN is liked" >> {
@@ -304,7 +299,7 @@ class LikesHandlerSpec extends UnitSpecification {
           }
 
           "renders correct body" in new InvalidUrnDeleteTrackLikeContext {
-            Json.parse(response.contentString) ==== Json.obj("status" -> "400 - Bad Request")
+            (Json.parse(response.contentString) \ "status").get ==== JsString("400 - Bad Request")
           }
         }
       }

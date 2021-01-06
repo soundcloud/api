@@ -1,13 +1,14 @@
 package com.soundcloud.publicApiStrangler.handler
 
 import com.soundcloud.jvmkit.module.bff.session.UserAuthentication
-import com.soundcloud.jvmkit.module.http.server.{HandlerRequest, JsonResponseBuilder, ResponseBuilder}
+import com.soundcloud.jvmkit.module.http.server.{HandlerRequest, JsonResponseBuilder}
 import com.soundcloud.jvmkit.module.outcome._
 import com.soundcloud.publicApiStrangler.client.playlists.PlaylistDeletionClient
 import com.soundcloud.publicApiStrangler.handler.support.error.UnhandledOutcomeException
 import com.soundcloud.publicApiStrangler.service.PlaylistsService
 import com.soundcloud.publicApiStrangler.service.pagination.OffsetBasedPagination
 import com.soundcloud.publicApiStrangler.service.representation.collection.Collection
+import com.soundcloud.publicApiStrangler.support.ErrorResponse
 import com.soundcloud.publicApiStrangler.support.PlaylistUrnUtil.getPlaylistUrn
 import com.twitter.finagle.http.{Response, Status}
 import com.twitter.util.{Future, Return, Throw, Try}
@@ -28,9 +29,9 @@ class PlaylistsHandler(
                 status = status,
                 body = Json.stringify(Json.obj("status" -> statusDescription(status)))
               ).build
-            case Bad(_) => ResponseBuilder.internalServerError()
+            case Bad(_) => ErrorResponse(Status.InternalServerError)
           }
-        case Throw(e) => Future.value(JsonResponseBuilder.badRequest(e.getMessage))
+        case Throw(e) => Future.value(ErrorResponse.badRequest(e.getMessage))
       }
     }
   }
@@ -45,10 +46,10 @@ class PlaylistsHandler(
         case Return(urn) =>
           playlistsService.fetchPlaylist(session, urn, candidateSecretToken, pagination).map {
             case Good(playlist) => JsonResponseBuilder.ok(body = Json.stringify(Json.toJson(playlist)))
-            case Bad(NotFound(_)) => JsonResponseBuilder.notFound(generateErrorBody("not found"))
+            case Bad(NotFound(_)) => ErrorResponse.notFound()
             case _ => throw new UnhandledOutcomeException
           }
-        case Throw(e) => Future.value(JsonResponseBuilder.badRequest(e.getMessage))
+        case Throw(e) => Future.value(ErrorResponse.badRequest(e.getMessage))
       }
     }
   }
@@ -64,10 +65,10 @@ class PlaylistsHandler(
           playlistsService.fetchPlaylistTracks(session, urn, candidateSecretToken, pagination).map {
             case Good(tracks) =>
               JsonResponseBuilder.ok(body = Collection.getRepresentation(tracks, hasLinkedPartitioning.isDefined))
-            case Bad(NotFound(_)) => JsonResponseBuilder.notFound(generateErrorBody("not found"))
+            case Bad(NotFound(_)) => ErrorResponse.notFound()
             case _ => throw new UnhandledOutcomeException
           }
-        case Throw(e) => Future.value(JsonResponseBuilder.badRequest(e.getMessage))
+        case Throw(e) => Future.value(ErrorResponse.badRequest(e.getMessage))
       }
     }
   }
@@ -76,6 +77,4 @@ class PlaylistsHandler(
     s"${status.code} - ${com.twitter.finagle.http.Status(status.code).reason}"
   }
 
-  private def generateErrorBody(message: String): String =
-    Json.stringify(Json.obj("error" -> message))
 }

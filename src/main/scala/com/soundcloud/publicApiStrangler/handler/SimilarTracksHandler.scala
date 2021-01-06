@@ -3,14 +3,15 @@ package com.soundcloud.publicApiStrangler.handler
 import java.net.URL
 
 import com.soundcloud.jvmkit.module.bff.session.UserAuthentication
-import com.soundcloud.jvmkit.module.http.server.{HandlerRequest, JsonResponseBuilder}
+import com.soundcloud.jvmkit.module.http.server.HandlerRequest
+import com.soundcloud.jvmkit.module.outcome._
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSession
-import com.soundcloud.jvmkit.module.outcome._
 import com.soundcloud.publicApiStrangler.handler.representation.collection.CollectionResponse
 import com.soundcloud.publicApiStrangler.service.SimilarTracksService
 import com.soundcloud.publicApiStrangler.service.representation.collection.Collection
 import com.soundcloud.publicApiStrangler.service.trackrepresentation.{TrackPagination, TrackRepresentation}
+import com.soundcloud.publicApiStrangler.support.ErrorResponse
 import com.soundcloud.publicApiStrangler.support.TrackUrnUtil.getTrackUrn
 import com.twitter.finagle.http.Response
 import com.twitter.util.{Future, Return, Throw, Try}
@@ -33,7 +34,7 @@ class SimilarTracksHandler(
         case Return(urn) =>
           val similarTracksCollection = performGetSimilarTracks(session, urn, pagination)
           CollectionResponse.handleCollectionResponse(similarTracksCollection, hasLinkedPartitioning)
-        case Throw(e) => Future.value(JsonResponseBuilder.badRequest(e.getMessage))
+        case Throw(e) => Future.value(ErrorResponse.badRequest(e.getMessage))
       }
     }
   }

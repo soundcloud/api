@@ -118,10 +118,6 @@ class UserTracksHandlerSpec extends UnitSpecification with TrackRepresentationSp
       val expectedResponse = mockTrackRepresentation
     }
 
-    trait ErrorResponse {
-      val expected404Response = "{\"errors\":[{\"error_message\":\"404 - Not Found\"}]}"
-    }
-
     "GET me/tracks/:trackId" >> {
       "with a successful response from tracks service" >> {
         "return track" in new TrackForUserContext with SuccessfulResponse {
@@ -137,7 +133,7 @@ class UserTracksHandlerSpec extends UnitSpecification with TrackRepresentationSp
       }
 
       "with a 404 from tracks service" >> {
-        "returns an error response with message" in new TrackForUserContext with ErrorResponse {
+        "returns an error response with message" in new TrackForUserContext {
           val path = "/me/tracks/404"
 
           when(userTracksService.userTrack(Urn("soundcloud", "tracks", "404"), session, "1", Some("s3cret")))
@@ -147,7 +143,6 @@ class UserTracksHandlerSpec extends UnitSpecification with TrackRepresentationSp
 
           response.status ==== Status(404)
           response.statusCode ==== 404
-          response.contentString ==== expected404Response
         }
       }
     }

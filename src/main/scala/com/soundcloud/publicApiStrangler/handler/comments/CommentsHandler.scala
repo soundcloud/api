@@ -11,8 +11,9 @@ import com.soundcloud.publicApiStrangler.service.representation.collection.Colle
 import com.twitter.conversions.DurationOps._
 import com.twitter.finagle.http.{Response, Status}
 import com.twitter.util.{Duration, Future, Try}
-import play.api.libs.json.{JsValue, Json}
+import play.api.libs.json.{JsString, JsValue, Json}
 import com.soundcloud.publicApiStrangler.client.mothership._
+import com.soundcloud.publicApiStrangler.support.ErrorResponse
 
 class CommentsHandler(
     userAuthentication: UserAuthentication,
@@ -27,8 +28,8 @@ class CommentsHandler(
           val body = Collection.getNonNullRepresentation(comments, request.params.get("linked_partitioning").isDefined)
           JsonResponseBuilder(Status.Ok, body, buildCacheHeaders(Some(10.minutes))).build
         }
-        case Bad(NotFound(_)) => JsonResponseBuilder.notFound(notFoundErrorString)
-        case Bad(_) => JsonResponseBuilder.badRequest()
+        case Bad(NotFound(_)) => ErrorResponse.notFound()
+        case Bad(_) => ErrorResponse.badRequest()
       }
     }
   }
@@ -37,11 +38,11 @@ class CommentsHandler(
     userAuthentication.withLoggedInUser(request) { (session, _) =>
       val commentJsValue = parseCommentJson(request)
       commentJsValue match {
-        case None => Future.value(JsonResponseBuilder(Status.UnprocessableEntity, noCommentErrorString).build)
+        case None => Future.value(ErrorResponse(Status.UnprocessableEntity, noCommentErrorString))
         case Some(commentJson) => {
           val body = (commentJson \ "body").asOpt[String]
           if (!body.isDefined) {
-            Future.value(JsonResponseBuilder(Status.UnprocessableEntity, noCommentBodyErrorString).build)
+            Future.value(ErrorResponse(Status.UnprocessableEntity, noCommentBodyErrorString))
           } else {
             val commentParams = extractCommentParams(request, commentJson)
             commentService.createComment(session, commentParams).map {
@@ -61,10 +62,10 @@ class CommentsHandler(
 
   private def createErrorResponse(applicationError: ApplicationError): Response = {
     applicationError match {
-      case _: NotAllowed => JsonResponseBuilder(Status.Forbidden, forbiddenErrorString).build
+      case _: NotAllowed => ErrorResponse(Status.Forbidden, forbiddenErrorString)
       case CustomError(TooManyRequests, Some(CustomError(context: RateLimitedError, _))) =>
-        JsonResponseBuilder(Status.TooManyRequests, spamWarningError(context.spamWarningUrn)).build
-      case _ => JsonResponseBuilder.badRequest()
+        ErrorResponse(Status.TooManyRequests, "Spam warning", Some(spamWarningError(context.spamWarningUrn)))
+      case _ => ErrorResponse.badRequest()
     }
   }
 
@@ -111,10 +112,8 @@ class CommentsHandler(
       }
       .getOrElse(Map.empty)
 
-  private val notFoundErrorString = """{"errors":[{"error_message":"404 - Not Found"}]}"""
-  private val noCommentErrorString = """{"errors":[{"error_message":"Parameter comment is missing"}]}"""
-  private val noCommentBodyErrorString = """{"errors":[{"error_message":"Body can't be blank"}]}"""
-  private val forbiddenErrorString =
-    """{"errors":[{"error_message":"You are not authorized to perform that action."}]}"""
-  private def spamWarningError(urn: Urn): String = s"""{"spam_warning_urn":"${urn.toString}"}"""
+  private val noCommentErrorString = "Parameter comment is missing."
+  private val noCommentBodyErrorString = "Body can't be blank."
+  private val forbiddenErrorString = "You are not authorized to perform that action."
+  private def spamWarningError(urn: Urn): Map[String, JsString] = Map("spam_warning_urn" -> JsString(urn.toString))
 }

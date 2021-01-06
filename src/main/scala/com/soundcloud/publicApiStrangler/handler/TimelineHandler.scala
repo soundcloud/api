@@ -11,6 +11,7 @@ import com.soundcloud.publicApiStrangler.service.TimelineService
 import com.soundcloud.publicApiStrangler.service.pagination.CursorBasedPagination
 import com.soundcloud.publicApiStrangler.service.timeline.{Timeline => SimpleTimeline}
 import com.soundcloud.publicApiStrangler.service.trackrepresentation.TrackRepresentation
+import com.soundcloud.publicApiStrangler.support.ErrorResponse
 import com.twitter.finagle.http.Response
 import com.twitter.util.Future
 import play.api.libs.json.Json
@@ -40,7 +41,7 @@ class TimelineHandler(
           case Good(timeline) => {
             JsonResponseBuilder.ok(timeline.getRepresentation())
           }
-          case Bad(NotFound(_)) => JsonResponseBuilder.notFound(notFoundErrorString)
+          case Bad(NotFound(_)) => ErrorResponse.notFound()
           case _ => throw new UnhandledOutcomeException
         }
     }
@@ -66,7 +67,7 @@ class TimelineHandler(
           case Good(timeline) => {
             JsonResponseBuilder.ok(timeline.getRepresentation())
           }
-          case Bad(NotFound(_)) => JsonResponseBuilder.notFound(notFoundErrorString)
+          case Bad(NotFound(_)) => ErrorResponse.notFound()
           case _ => throw new UnhandledOutcomeException
         }
     }
@@ -115,7 +116,7 @@ class TimelineHandler(
       performGetFollowingTrackActivities(session, cursor.map(_.toString), reverseCursor, limit)
         .map {
           case Good(tracks) => JsonResponseBuilder.ok(Json.stringify(Json.toJson(tracks)))
-          case Bad(NotFound(_)) => JsonResponseBuilder.notFound(notFoundErrorString)
+          case Bad(NotFound(_)) => ErrorResponse.notFound()
           case _ => throw new UnhandledOutcomeException
         }
     }
@@ -134,6 +135,4 @@ class TimelineHandler(
         case _ => NotFound().bad
       }
   }
-
-  private val notFoundErrorString = """{"errors":[{"error_message":"404 - Not Found"}]}"""
 }

@@ -8,6 +8,7 @@ import com.soundcloud.publicApiStrangler.client.liebling.{LikeDeleted, LikeNotFo
 import com.soundcloud.publicApiStrangler.handler.representation.collection.CollectionResponse
 import com.soundcloud.publicApiStrangler.service._
 import com.soundcloud.publicApiStrangler.service.pagination.CursorBasedPagination
+import com.soundcloud.publicApiStrangler.support.ErrorResponse
 import com.soundcloud.publicApiStrangler.support.TrackUrnUtil.getTrackUrn
 import com.soundcloud.publicApiStrangler.support.UserUrnUtil.getUserUrn
 import com.twitter.finagle.http.{Response, Status}
@@ -26,17 +27,14 @@ class LikesHandler(userAuthentication: UserAuthentication, likesService: LikesSe
     userAuthentication.withLoggedInUser(req) { (session, _) =>
       Try(getTrackUrn(req)) match {
         case Return(urn) =>
-          likesService.createTrackLike(session, urn).map { createResponse =>
-            val body = responseBodyForCreateResponse(createResponse)
-            createResponse match {
-              case OkCreatedCreateResponse => JsonResponseBuilder.created(body)
-              case OkCreateResponse => JsonResponseBuilder.ok(body)
-              case NotAuthorizedCreateResponse => JsonResponseBuilder.unauthorized(body)
-              case NotFoundCreateResponse => JsonResponseBuilder.notFound(body)
-              case SpamBlockedCreateResponse => JsonResponseBuilder(Status.TooManyRequests, body).build
-            }
+          likesService.createTrackLike(session, urn).map {
+            case OkCreatedCreateResponse => JsonResponseBuilder.created(requestBodyForStatus(Status.Created))
+            case OkCreateResponse => JsonResponseBuilder.ok(requestBodyForStatus(Status.Ok))
+            case NotAuthorizedCreateResponse => ErrorResponse(Status.Unauthorized)
+            case NotFoundCreateResponse => ErrorResponse.notFound()
+            case SpamBlockedCreateResponse => ErrorResponse(Status.TooManyRequests)
           }
-        case _ => Future.value(JsonResponseBuilder.badRequest(requestBodyForStatus(Status.BadRequest)))
+        case _ => Future.value(ErrorResponse.badRequest())
       }
     }
   }
@@ -47,9 +45,9 @@ class LikesHandler(userAuthentication: UserAuthentication, likesService: LikesSe
         case Return(urn) =>
           likesService.deleteTrackLike(session, urn).map {
             case LikeDeleted => JsonResponseBuilder.ok(requestBodyForStatus(Status.Ok))
-            case LikeNotFound => JsonResponseBuilder.notFound(notFoundErrorString)
+            case LikeNotFound => ErrorResponse.notFound()
           }
-        case _ => Future.value(JsonResponseBuilder.badRequest(requestBodyForStatus(Status.BadRequest)))
+        case _ => Future.value(ErrorResponse.badRequest())
       }
   }
 
@@ -65,13 +63,13 @@ class LikesHandler(userAuthentication: UserAuthentication, likesService: LikesSe
             likesService
               .userTrackLikeForUrn(session, userUrn, trackUrn)
               .map {
-                case None => JsonResponseBuilder.notFound(notFoundErrorString)
+                case None => ErrorResponse.notFound()
                 case Some(track) => JsonResponseBuilder.ok(Json.stringify(Json.toJson(track)))
 
               }
-          case _ => Future.value(JsonResponseBuilder.notFound(notFoundErrorString))
+          case _ => Future.value(ErrorResponse.notFound())
         }
-      case Throw(e) => Future.value(JsonResponseBuilder.badRequest(e.getMessage))
+      case Throw(e) => Future.value(ErrorResponse.badRequest(e.getMessage))
     }
   }
 
@@ -98,21 +96,8 @@ class LikesHandler(userAuthentication: UserAuthentication, likesService: LikesSe
           .userTracksLikes(session, urn, pagination)
           .map(Good(_))
         CollectionResponse.handleCollectionResponse(tracksCollection, hasLinkedPartitioning)
-      case Throw(e) => Future.value(JsonResponseBuilder.badRequest(e.getMessage))
+      case Throw(e) => Future.value(ErrorResponse.badRequest(e.getMessage))
     }
-  }
-
-  private val notFoundErrorString = """{"errors":[{"error_message":"404 - Not Found"}]}"""
-
-  private def responseBodyForCreateResponse(createResponse: CreateResponse): String = {
-    val status = createResponse match {
-      case OkCreatedCreateResponse => Status.Created
-      case OkCreateResponse => Status.Ok
-      case NotAuthorizedCreateResponse => Status.Forbidden
-      case NotFoundCreateResponse => Status.NotFound
-      case SpamBlockedCreateResponse => Status.TooManyRequests
-    }
-    requestBodyForStatus(status)
   }
 
   private def requestBodyForStatus(status: Status): String = {

@@ -1,11 +1,10 @@
 package com.soundcloud.publicApiStrangler.handler
 
 import com.soundcloud.jvmkit.module.bff.session.UserAuthentication
-import com.soundcloud.jvmkit.module.http.server.{HandlerRequest, JsonResponseBuilder, ResponseBuilder}
+import com.soundcloud.jvmkit.module.http.server.{HandlerRequest, ResponseBuilder}
+import com.soundcloud.jvmkit.module.outcome._
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSession
-import com.soundcloud.jvmkit.module.outcome._
-import com.soundcloud.publicApiStrangler.support.TrackUrnUtil.getTrackUrn
 import com.soundcloud.publicApiStrangler.client.trackcoordinator.TrackCoordinatorClient
 import com.soundcloud.publicApiStrangler.handler.representation.tracks.TrackRepresentationResponse.{
   handleCreateTrackResponseFromService,
@@ -13,6 +12,8 @@ import com.soundcloud.publicApiStrangler.handler.representation.tracks.TrackRepr
 }
 import com.soundcloud.publicApiStrangler.handler.support.requestParser._
 import com.soundcloud.publicApiStrangler.service.trackrepresentation.TrackUpdateService
+import com.soundcloud.publicApiStrangler.support.ErrorResponse
+import com.soundcloud.publicApiStrangler.support.TrackUrnUtil.getTrackUrn
 import com.soundcloud.publicApiStrangler.support.oauth.RailsLikeParamsParser
 import com.twitter.finagle.http._
 import com.twitter.util.{Future, Return, Throw, Try}
@@ -39,7 +40,7 @@ class TracksHandler(
             case Bad(NotFound(_)) => ResponseBuilder.notFound()
             case _ => ResponseBuilder.internalServerError()
           }
-        case Throw(e) => Future.value(JsonResponseBuilder.badRequest(e.getMessage))
+        case Throw(e) => Future.value(ErrorResponse.badRequest(e.getMessage))
       }
     }
   }
@@ -54,7 +55,7 @@ class TracksHandler(
             case Some(MediaType.WwwForm) => updateTrackFromUrlEncodedRequest(request, session, urn)
             case _ => generateBadResponse
           }
-        case Throw(e) => Future.value(JsonResponseBuilder.badRequest(e.getMessage))
+        case Throw(e) => Future.value(ErrorResponse.badRequest(e.getMessage))
       }
     }
   }
@@ -205,11 +206,9 @@ class TracksHandler(
     }
   }
 
-  private def generateBadResponse: Future[Response] = Future.value(JsonResponseBuilder.badRequest(invalidRequestString))
-  private val invalidRequestString = """{"errors":[{"error_message":"400 - Invalid Request"}]}"""
+  private def generateBadResponse: Future[Response] =
+    Future.value(ErrorResponse.badRequest("400 - Invalid Request"))
 
-  private def unprocessableEntityResponse: Future[Response] = {
-    val body = """{"errors":[{"error_message":"Require uid and original_filename parameters."}]}"""
-    Future.value(JsonResponseBuilder(status = Status.UnprocessableEntity, body = body).build)
-  }
+  private def unprocessableEntityResponse: Future[Response] =
+    Future.value(ErrorResponse(Status.UnprocessableEntity, "Require uid and original_filename parameters."))
 }

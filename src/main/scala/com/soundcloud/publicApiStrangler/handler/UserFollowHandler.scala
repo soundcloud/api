@@ -1,6 +1,5 @@
 package com.soundcloud.publicApiStrangler.handler
 
-import com.soundcloud.publicApiStrangler.handler.representation.serializers.UserFollowRepresentation.userFollowWrites
 import com.soundcloud.jvmkit.module.bff.session.UserAuthentication
 import com.soundcloud.jvmkit.module.http.server.{HandlerRequest, JsonResponseBuilder, ResponseBuilder}
 import com.soundcloud.jvmkit.module.json.play.UrnFormat._
@@ -21,7 +20,9 @@ import com.soundcloud.publicApiStrangler.client.mothership.OkidokiClient
 import com.soundcloud.publicApiStrangler.client.mothership.response.mapper.UserMapper
 import com.soundcloud.publicApiStrangler.client.mothership.response.representation.User
 import com.soundcloud.publicApiStrangler.client.reposts.RepostsClient
+import com.soundcloud.publicApiStrangler.handler.representation.serializers.UserFollowRepresentation.userFollowWrites
 import com.soundcloud.publicApiStrangler.service.representation.collection.Collection
+import com.soundcloud.publicApiStrangler.support.ErrorResponse
 import com.twitter.finagle.http.{Response, Status}
 import com.twitter.util.Future
 import org.joda.time.format.DateTimeFormat
@@ -43,7 +44,7 @@ class UserFollowHandler(
       val user = Urn("soundcloud", "users", request.routeParams.get("other_id").get)
       follows.follow(session, user).flatMap {
         case _: FollowingCreated => renderFollow(session, user)
-        case AlreadyFollowing => renderStatus(Status.Ok)
+        case AlreadyFollowing => renderStatus()
         case UserNotFound => renderError(Status.NotFound)
         case SpamBlocked => renderError(Status.TooManyRequests)
         case MaxFollowingsReached => renderError(Status.UnprocessableEntity)
@@ -64,7 +65,7 @@ class UserFollowHandler(
     userAuthentication.withLoggedInUser(request) { (session, userUrn) =>
       val user = Urn("soundcloud", "users", request.routeParams.get("other_id").get)
       follows.unfollow(session, user).flatMap {
-        case UnfollowSuccessful => renderStatus(Status.Ok)
+        case UnfollowSuccessful => renderStatus()
         case UnfollowUserNotFound => renderError(Status.NotFound)
         case UnfollowUserAsTarget | NotFollowing => renderError(Status.UnprocessableEntity)
         case _: UnfollowUnknownError => renderError(Status.InternalServerError)
@@ -82,21 +83,15 @@ class UserFollowHandler(
     }
   }
 
-  private def renderStatus(status: Status): Future[Response] =
+  private def renderStatus(): Future[Response] =
     Future.value(
       JsonResponseBuilder(
-        status,
-        body = Json.stringify(Json.obj("status" -> s"$status - ${status.reason}"))
+        Status.Ok,
+        body = Json.stringify(Json.obj("status" -> "200 - Successful"))
       ).build
     )
 
-  private def renderError(status: Status): Future[Response] =
-    Future.value(
-      JsonResponseBuilder(
-        status,
-        body = Json.stringify(Json.obj("errors" -> Seq(Map("error_message" -> s"${status.code} - ${status.reason}"))))
-      ).build
-    )
+  private def renderError(status: Status): Future[Response] = Future.value(ErrorResponse(status))
 
   def fetchFollowersWithoutAuth(request: HandlerRequest): Future[Response] =
     fetchPage(request, follows.followers, mapUsersToUsers, fans, requireLogin = false)
@@ -257,38 +252,9 @@ class UserFollowHandler(
   }
 
   private def denyAgeRestricted(age: Long): Future[Response] = {
-    val errors = JsArray(
-      Seq(
-        JsObject(
-          Seq(
-            "error_message" -> JsString("DENY_AGE_RESTRICTED"),
-            "age" -> JsNumber(age)
-          )
-        )
-      )
-    )
-    forbidden(errors)
+    val errors = Map("error_message" -> JsString("DENY_AGE_RESTRICTED"), "age" -> JsNumber(age))
+    Future.value(ErrorResponse(Status.Forbidden, "DENY_AGE_RESTRICTED", None, Some(errors)))
   }
 
-  private def denyAgeUnknown: Future[Response] = {
-    val errors = JsArray(
-      Seq(
-        JsObject(
-          Seq(
-            "error_message" -> JsString("DENY_AGE_UNKNOWN")
-          )
-        )
-      )
-    )
-    forbidden(errors)
-  }
-
-  private def forbidden(errors: JsArray): Future[Response] = {
-    Future.value(
-      JsonResponseBuilder(
-        status = Status.Forbidden,
-        body = Json.stringify(JsObject(Seq("errors" -> errors)))
-      ).build
-    )
-  }
+  private def denyAgeUnknown: Future[Response] = Future.value(ErrorResponse(Status.Forbidden, "DENY_AGE_UNKNOWN"))
 }

@@ -6,6 +6,7 @@ import com.soundcloud.jvmkit.module.telemetry.Telemetry
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.publicApiStrangler.authorization.TrackDurationActionStatus._
+import com.soundcloud.publicApiStrangler.support.ErrorResponse
 import com.twitter.finagle.http.Response
 import com.twitter.util.Future
 import play.api.libs.json.Json
@@ -50,7 +51,7 @@ class AuthorizeHttpResponse(
         val durationActions = extractDurations(session, urns, rules, extractFullTrackDurations(visitor))
         trackPolicyApplicator(session, visitor, rules, durationActions)
           .map(json => JsonResponseBuilder.ok(Json.stringify(json)))
-          .getOrElse(JsonResponseBuilder.forbidden())
+          .getOrElse(ErrorResponse.forbidden())
       }
     }
 

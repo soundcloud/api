@@ -25,7 +25,6 @@ import com.soundcloud.publicApiStrangler.test.{HandlerSpecificationScope, UnitSp
 import com.twitter.finagle.http.Request
 import com.twitter.util.Future
 import org.mockito.Mockito.when
-import play.api.libs.json.Json
 
 class SearchHandlerSpec extends UnitSpecification {
   trait ForwardContext extends HandlerSpecificationScope {
@@ -174,7 +173,6 @@ class SearchHandlerSpec extends UnitSpecification {
       val response = get(path, Map("q" -> "foo", "offset" -> "10", "limit" -> "5", "linked_partitioning" -> "1"))
 
       response.statusCode ==== 400
-      response.contentString ==== Json.stringify(Json.obj("error" -> "invalid request"))
     }
   }
 
@@ -238,7 +236,6 @@ class SearchHandlerSpec extends UnitSpecification {
       val response = get(path, Map("q" -> "foo", "offset" -> "10", "limit" -> "5", "linked_partitioning" -> "1"))
 
       response.statusCode ==== 400
-      response.contentString ==== Json.stringify(Json.obj("error" -> "invalid request"))
     }
   }
 }

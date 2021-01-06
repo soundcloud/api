@@ -112,7 +112,6 @@ class TimelineHandlerSpec extends UnitSpecification {
 
         val result = get(path)
         result.statusCode === 404
-        result.contentString === "{\"errors\":[{\"error_message\":\"404 - Not Found\"}]}"
       }
     }
   }
@@ -160,7 +159,6 @@ class TimelineHandlerSpec extends UnitSpecification {
 
       val result = get(path)
       result.statusCode === 404
-      result.contentString === "{\"errors\":[{\"error_message\":\"404 - Not Found\"}]}"
     }
   }
 

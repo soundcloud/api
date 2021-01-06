@@ -155,10 +155,6 @@ class UserPlaylistsHandlerSpec extends UnitSpecification {
       val expectedResponse = playlist
     }
 
-    trait ErrorResponse {
-      val expected404Response = "{\"errors\":[{\"error_message\":\"404 - Not Found\"}]}"
-    }
-
     "GET /users/:userId/playlists/:id" >> {
       "with a successful response from playlists service" >> {
         "return playlist" in new PlaylistsForUserContext with SuccessfulResponse {
@@ -175,7 +171,7 @@ class UserPlaylistsHandlerSpec extends UnitSpecification {
       }
 
       "with a 404 from playlists service" >> {
-        "returns an error response" in new PlaylistsForUserContext with ErrorResponse {
+        "returns an error response" in new PlaylistsForUserContext {
           val userId = "2"
           val path = s"/users/$userId/playlists/404$queryString"
 
@@ -183,7 +179,6 @@ class UserPlaylistsHandlerSpec extends UnitSpecification {
           val response = get(path)
 
           response.status ==== Status.NotFound
-          response.contentString ==== expected404Response
         }
       }
 
@@ -201,14 +196,13 @@ class UserPlaylistsHandlerSpec extends UnitSpecification {
         }
 
         "with a 404 from playlists service" >> {
-          "returns an error response with message" in new PlaylistsForUserContext with ErrorResponse {
+          "returns an error response with message" in new PlaylistsForUserContext {
             val path = s"/me/playlists/404$queryString"
 
             stubService(Urn("soundcloud", "playlists", "404"), path, "1", NotFound("playlist not found").bad)
             val response = get(path)
 
             response.status ==== Status.NotFound
-            response.contentString ==== expected404Response
           }
         }
       }
