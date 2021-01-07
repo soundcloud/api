@@ -12,6 +12,8 @@ tags:
     description: Authentication and Authorization Endpoints.
   - name: me
     description: Own User Endpoints.
+  - name: search
+    description: Search Endpoints.
   - name: playlists
     description: Playlists Endpoints.
   - name: tracks
@@ -321,6 +323,26 @@ paths:
                   $ref: "#/components/examples/UserFollowings"
         401:
           description: 'Error: Unauthorized'
+  /me/followings/tracks:
+    get:
+      summary: Returns a list of recent tracks from users followed by the authenticated user.
+      tags:
+        - me
+      security:
+        - AuthHeader: []
+      parameters:
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/offset'
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              examples:
+                default:
+                  $ref: "#/components/examples/Tracks"
+        401:
+          description: 'Error: Unauthorized'
   /me/followings/{user_id}:
     get:
       summary: Returns a user who is followed by the authenticated user.
@@ -589,11 +611,49 @@ paths:
                   $ref: "#/components/examples/Web-profiles"
         401:
           description: 'Error: Unauthorized'
+  /tracks:
+    get:
+      summary: Performs a track search based on a query
+      tags:
+        - search
+      security:
+        - ClientId: []
+          AuthHeader: []
+      parameters:
+        - $ref: "#/components/parameters/q"
+        - $ref: "#/components/parameters/ids"
+        - $ref: "#/components/parameters/genres"
+        - $ref: "#/components/parameters/tags"
+        - $ref: "#/components/parameters/bpm[from]"
+        - $ref: "#/components/parameters/bpm[to]"
+        - $ref: "#/components/parameters/duration[from]"
+        - $ref: "#/components/parameters/duration[to]"
+        - $ref: "#/components/parameters/created_at[from]"
+        - $ref: "#/components/parameters/created_at[to]"
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/offset'
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              examples:
+                default:
+                  $ref: "#/components/examples/Tracks"
+        400:
+          description: 'Error: Bad Request'
+          content:
+            application/json:
+              examples:
+                default:
+                  $ref: "#/components/examples/ErrInvalidRequest"
+        401:
+          description: 'Error: Unauthorized'
   /playlists:
     get:
-      summary: Returns a list of playlists with tracks included in response.
+      summary: Performs a playlist search based on a query
       tags:
-        - playlists
+        - search
       security:
         - ClientId: []
           AuthHeader: []
@@ -618,6 +678,36 @@ paths:
                   $ref: "#/components/examples/ErrInvalidRequest"
         401:
           description: 'Error: Unauthorized'
+  /users:
+    get:
+      summary: Performs a user search based on a query
+      tags:
+        - search
+      security:
+        - ClientId: []
+          AuthHeader: []
+      parameters:
+        - $ref: "#/components/parameters/q"
+        - $ref: "#/components/parameters/ids"
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/offset'
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              examples:
+                default:
+                  $ref: "#/components/examples/Users"
+        400:
+          description: 'Error: Bad Request'
+          content:
+            application/json:
+              examples:
+                default:
+                  $ref: "#/components/examples/ErrInvalidRequest"
+        401:
+          description: 'Error: Unauthorized'
   #   post:
   #     summary: Returns  error ???.
   #     tags:
@@ -628,19 +718,33 @@ paths:
   #     responses:
   #       200:
   #         description: Success
-  # /playlists/{playlist_id}:
-  #   get:
-  #     summary: Returns a playlist.
-  #     tags:
-  #       - playlists
-  #     security:
-  #       - ClientId: []
-  #         AuthHeader: []
-  #     parameters:
-  #       - $ref: "#/components/parameters/playlist_id"
-  #     responses:
-  #       200:
-  #         description: Success
+  /playlists/{playlist_id}:
+    get:
+      summary: Returns a playlist.
+      tags:
+        - playlists
+      security:
+        - ClientId: []
+          AuthHeader: []
+      parameters:
+        - $ref: "#/components/parameters/playlist_id"
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              examples:
+                default:
+                  $ref: "#/components/examples/Playlist"
+        400:
+          description: 'Error: Bad Request'
+          content:
+            application/json:
+              examples:
+                default:
+                  $ref: "#/components/examples/ErrInvalidRequest"
+        401:
+          description: 'Error: Unauthorized'
   #   put:
   #     summary: Creates a playlist.
   #     tags:
@@ -699,6 +803,33 @@ paths:
     #   responses:
     #     200:
     #       description: Success
+  /playlists/{playlist_id}/tracks:
+    get:
+      summary: Returns tracks under a playlist.
+      tags:
+        - playlists
+      security:
+        - ClientId: []
+          AuthHeader: []
+      parameters:
+        - $ref: "#/components/parameters/playlist_id"
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              examples:
+                default:
+                  $ref: "#/components/examples/Playlist"
+        400:
+          description: 'Error: Bad Request'
+          content:
+            application/json:
+              examples:
+                default:
+                  $ref: "#/components/examples/ErrInvalidRequest"
+        401:
+          description: 'Error: Unauthorized'
   /tracks/{track_id}:
     get:
       summary: Returns a track.
@@ -780,6 +911,32 @@ paths:
           description: 'Error: Unauthorized'
         404:
           description: 'Error: Not Found'
+  /tracks/{track_id}/streams:
+    get:
+      summary: Returns a track's streamable URLs
+      tags:
+        - tracks
+      security:
+        - ClientId: []
+      parameters:
+        - $ref: '#/components/parameters/track_id'
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              examples:
+                default:
+                  $ref: '#/components/examples/Streams'
+        401:
+          description: 'Error: Unauthorized'
+        404:
+          description: 'Error: Not Found'
+          content:
+            application/json:
+              examples:
+                default:
+                  $ref: '#/components/examples/ErrorNotFound'
   /tracks/{track_id}/comments:
     get:
       summary: Returns the comments posted on the track(track_id).
@@ -1253,6 +1410,20 @@ paths:
                   $ref: "#/components/examples/ErrorNotFound"
 components:
   parameters:
+    bpm[from]:
+      in: query
+      name: bpm[from]
+      required: false
+      schema:
+        type: integer
+      description: Return tracks with at least this bpm value
+    bpm[to]:
+      in: query
+      name: bpm[to]
+      required: false
+      schema:
+        type: integer
+      description: Return tracks with at most this bpm value
     client_id:
       in: query
       name: client_id
@@ -1260,20 +1431,48 @@ components:
       schema:
         type: string
       description: client_id
-    comment_id:
-      in: path
-      name: comment_id
-      required: true
+    created_at[from]:
+      in: query
+      name: created_at[from]
+      required: false
+      schema:
+        type: string
+      description: (yyyy-mm-dd hh:mm:ss) return tracks created at this date or later
+    created_at[to]:
+      in: query
+      name: created_at[to]
+      required: false
+      schema:
+        type: string
+      description: (yyyy-mm-dd hh:mm:ss) return tracks created at this date or earlier
+    duration[from]:
+      in: query
+      name: duration[from]
+      required: false
       schema:
         type: integer
-      description: SoundCloud comment id
-    connection_id:
-      in: path
-      name: connection_id
-      required: true
+      description: Return tracks with at least this duration value
+    duration[to]:
+      in: query
+      name: duration[to]
+      required: false
       schema:
         type: integer
-      description: SoundCloud connection id
+      description: Return tracks with at most this duration value
+    genres:
+      in: query
+      name: genres
+      required: false
+      schema:
+        type: string
+      description: A comma separated list of genres
+    ids:
+      in: query
+      name: ids
+      required: false
+      schema:
+        type: string
+      description: A comma separated list of track ids to filter on
     limit:
       in: query
       name: limit
@@ -1294,20 +1493,6 @@ components:
     #     maximum: 2000
     #     default: 50
     #   description: Number of Ids to return in the collection.
-    follower_id:
-      in: path
-      name: follower_id
-      required: true
-      schema:
-        type: integer
-      description: SoundCloud User id to denote a Follower
-    following_id:
-      in: path
-      name: following_id
-      required: true
-      schema:
-        type: integer
-      description: SoundCloud User id to denote a Following of a user
     offset:
       in: query
       name: offset
@@ -1316,13 +1501,6 @@ components:
         type: integer
         default: 0
       description: Offset of first result
-    playlist_id:
-      in: path
-      name: playlist_id
-      required: true
-      schema:
-        type: integer
-      description: SoundCloud playlist id
     q:
       in: query
       name: q
@@ -1348,6 +1526,56 @@ components:
           - token
           - code_and_token
       description: response type
+    tags:
+      in: query
+      name: tags
+      required: false
+      schema:
+        type: string
+      description: A comma separated list of tags
+    url:
+      in: query
+      name: url
+      required: true
+      schema:
+        type: string
+      description: SoundCloud URL
+    # path #
+    comment_id:
+      in: path
+      name: comment_id
+      required: true
+      schema:
+        type: integer
+      description: SoundCloud comment id
+    connection_id:
+      in: path
+      name: connection_id
+      required: true
+      schema:
+        type: integer
+      description: SoundCloud connection id
+    follower_id:
+      in: path
+      name: follower_id
+      required: true
+      schema:
+        type: integer
+      description: SoundCloud User id to denote a Follower
+    following_id:
+      in: path
+      name: following_id
+      required: true
+      schema:
+        type: integer
+      description: SoundCloud User id to denote a Following of a user
+    playlist_id:
+      in: path
+      name: playlist_id
+      required: true
+      schema:
+        type: integer
+      description: SoundCloud playlist id
     tag:
       in: path
       name: tag
@@ -1362,13 +1590,6 @@ components:
       schema:
         type: integer
       description: SoundCloud Track id
-    url:
-      in: query
-      name: url
-      required: true
-      schema:
-        type: string
-      description: SoundCloud URL
     user_id:
       in: path
       name: user_id
@@ -1764,6 +1985,12 @@ components:
           allOf:
             - $ref: "#/components/examples/UserOf/value"
         user_id: 1234
+    Streams:
+      value:
+        http_mp3_128_url: https://cf-media.sndcdn.com/ 
+        hls_mp3_128_url: https://cf-media.sndcdn.com/
+        hls_opus_64_url: https://cf-media.sndcdn.com/
+        preview_mp3_128_url: https://cf-media.sndcdn.com/
     Track:
       value:
         artwork_url: https://i1.sndcdn.com/artworks-large.jpg
