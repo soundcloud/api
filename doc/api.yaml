@@ -39,7 +39,7 @@ paths:
         200:
           description: Success
         401:
-          description: 'Error: Unauthorized'
+          $ref: '#/components/responses/Unauthorized'
   /oauth2/token:
     post:
       summary: This endpoint accepts POST requests and is used to provision access tokens once a user has authorized your application.
@@ -66,15 +66,16 @@ paths:
                 client_credentials:
                   $ref: "#/components/examples/ClientCredentials"
         400:
-          description: 'Error: Bad Request'
+          description: 'Bad Request'
           content:
             application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorInvalidGrant'
               examples:
                 default:
-                  $ref: "#/components/examples/ErrInvalidGrant"
+                  $ref: "#/components/examples/ErrorInvalidGrant"
         401:
-          description: 'Error: Unauthorized'
-
+          $ref: '#/components/responses/Unauthorized'
   /me:
     get:
       summary: Returns the authenticated user’s information.
@@ -91,12 +92,7 @@ paths:
                 default:
                   $ref: "#/components/examples/User"
         401:
-          description: 'Error: Unauthorized'
-          content:
-            application/json:
-              examples:
-                default:
-                  $ref: "#/components/examples/ErrorUnauthorized"
+          $ref: '#/components/responses/Unauthorized'
   /me/activities:
     get:
       summary: Returns the authenticated user's activities.
@@ -115,7 +111,7 @@ paths:
                 default:
                   $ref: "#/components/examples/Activities"
         401:
-          description: 'Error: Unauthorized'
+          $ref: '#/components/responses/Unauthorized'
   /me/activities/all/own:
     get:
       summary: Recent the authenticated user's activities.
@@ -134,7 +130,7 @@ paths:
                 default:
                   $ref: "#/components/examples/ActivitiesAllOwn"
         401:
-          description: 'Error: Unauthorized'
+          $ref: '#/components/responses/Unauthorized'
   /me/activities/tracks:
     get:
       summary: Returns the authenticated user's recent track related activities.
@@ -153,7 +149,7 @@ paths:
                 default:
                   $ref: "#/components/examples/ActivitiesTracks"
         401:
-          description: 'Error: Unauthorized'
+          $ref: '#/components/responses/Unauthorized'
   # /me/activities/tracks/{tag}:
   #   get:
   #     summary: Returns a list of tracks activities.
@@ -186,7 +182,7 @@ paths:
                 default:
                   $ref: "#/components/examples/Connections"
         401:
-          description: 'Error: Unauthorized'
+          $ref: '#/components/responses/Unauthorized'
   /me/connections/{connection_id}:
     get:
       summary: Returns the authenticated user's connected social account.
@@ -205,14 +201,9 @@ paths:
                 default:
                   $ref: "#/components/examples/Connection"
         401:
-          description: 'Error: Unauthorized'
+          $ref: '#/components/responses/Unauthorized'
         404:
-          description: 'Error: Not Found'
-          content:
-            application/json:
-              examples:
-                default:
-                  $ref: "#/components/examples/ErrorNotFound"
+          $ref: '#/components/responses/NotFound'
   /me/favorites:
     get:
       summary: Returns a list of favorited or liked tracks of the authenticated user.
@@ -231,7 +222,7 @@ paths:
                 default:
                   $ref: "#/components/examples/Tracks"
         401:
-          description: 'Error: Unauthorized'
+          $ref: '#/components/responses/Unauthorized'
   # /me/favorites/{track_id}:
   #   get:
   #     summary: Returns favorite track.
@@ -245,12 +236,6 @@ paths:
   #       200:
   #         description: Success
   #       404:
-  #         description: Not Found
-  #         content:
-  #           application/json:
-  #             examples:
-  #               default:
-  #                 $ref: '#/components/examples/ErrorNotFound'
   #   post:
   #     summary: Post favorite track.
   #     tags:
@@ -322,7 +307,7 @@ paths:
                 default:
                   $ref: "#/components/examples/UserFollowings"
         401:
-          description: 'Error: Unauthorized'
+          $ref: '#/components/responses/Unauthorized'
   /me/followings/tracks:
     get:
       summary: Returns a list of recent tracks from users followed by the authenticated user.
@@ -342,7 +327,7 @@ paths:
                 default:
                   $ref: "#/components/examples/Tracks"
         401:
-          description: 'Error: Unauthorized'
+          $ref: '#/components/responses/Unauthorized'
   /me/followings/{user_id}:
     get:
       summary: Returns a user who is followed by the authenticated user.
@@ -361,11 +346,9 @@ paths:
                 default:
                   $ref: "#/components/examples/User"
         401:
-          description: 'Error: Unauthorized'
+          $ref: '#/components/responses/Unauthorized'
         404:
-          description: 'Error: Not Found'
-        503:
-          description: 'Error: Service Unavailable'
+          $ref: '#/components/responses/NotFound'
     put:
       summary: Follows a user.
       tags:
@@ -390,14 +373,9 @@ paths:
                 201:
                   $ref: '#/components/examples/User'
         401:
-          description: 'Error: Unauthorized'
+          $ref: '#/components/responses/Unauthorized'
         404:
-          description: 'Error: Not Found'
-          content:
-            application/json:
-              examples:
-                default:
-                  $ref: "#/components/examples/ErrorNotFound"
+          $ref: '#/components/responses/NotFound'
     # post:
     #   summary: Endpoint to follow another user.
     #   tags:
@@ -417,12 +395,6 @@ paths:
     #             201:
     #               $ref: '#/components/examples/User'
     #     404:
-    #       description: Not Found
-    #       content:
-    #         application/json:
-    #           examples:
-    #             default:
-    #               $ref: '#/components/examples/ErrorNotFound'
     #     500:
     #       description: Internal Server Error
     delete:
@@ -442,21 +414,11 @@ paths:
                 200:
                   $ref: '#/components/examples/OK'
         401:
-          description: 'Error: Unauthorized'
+          $ref: '#/components/responses/Unauthorized'
         404:
-          description: 'Error: Not Found'
-          content:
-            application/json:
-              examples:
-                default:
-                  $ref: "#/components/examples/ErrorNotFound"
+          $ref: '#/components/responses/NotFound'
         422:
-          description:   'Error: Unprocessable Entity'
-          content:
-            application/json:
-              examples:
-                422:
-                  $ref: '#/components/examples/ErrorUnprocessableEntity'
+          $ref: '#/components/responses/UnprocessableEntity'
   # /me/followings/tracks:
   #   get:
   #     summary: Returns all the tracks of all the followings of me.
@@ -485,7 +447,7 @@ paths:
                 default:
                   $ref: "#/components/examples/UserFollowers"
         401:
-          description: 'Error: Unauthorized'
+          $ref: '#/components/responses/Unauthorized'
   /me/followers/{follower_id}:
     get:
       summary: Returns a user who is following the authenticated user.
@@ -504,11 +466,7 @@ paths:
                 default:
                   $ref: '#/components/examples/User'
         401:
-          description: 'Error: Unauthorized'
-        404:
-          description: Not Found
-        503:
-          description: Service Unavailable
+          $ref: '#/components/responses/Unauthorized'
   /me/playlists:
     get:
       summary: Returns user’s playlists (sets).
@@ -528,7 +486,9 @@ paths:
                 default:
                   $ref: "#/components/examples/PlaylistAndTracks"
         401:
-          description: 'Error: Unauthorized'
+          $ref: '#/components/responses/Unauthorized'
+        404:
+          $ref: '#/components/responses/NotFound'
     # post:
     #   summary: Returns user’s favorites ids.
     #   tags:
@@ -579,7 +539,7 @@ paths:
                 default:
                   $ref: "#/components/examples/Tracks"
         401:
-          description: 'Error: Unauthorized'
+          $ref: '#/components/responses/Unauthorized'
   # /me/tracks/{track_id}:
   #   get:
   #     summary: Returns a list of tracks.
@@ -610,7 +570,7 @@ paths:
                 default:
                   $ref: "#/components/examples/Web-profiles"
         401:
-          description: 'Error: Unauthorized'
+          $ref: '#/components/responses/Unauthorized'
   /tracks:
     get:
       summary: Performs a track search based on a query
@@ -641,14 +601,9 @@ paths:
                 default:
                   $ref: "#/components/examples/Tracks"
         400:
-          description: 'Error: Bad Request'
-          content:
-            application/json:
-              examples:
-                default:
-                  $ref: "#/components/examples/ErrInvalidRequest"
+          $ref: '#/components/responses/BadRequest'
         401:
-          description: 'Error: Unauthorized'
+          $ref: '#/components/responses/Unauthorized'
   /playlists:
     get:
       summary: Performs a playlist search based on a query
@@ -670,14 +625,9 @@ paths:
                 default:
                   $ref: "#/components/examples/PlaylistAndTracks"
         400:
-          description: 'Error: Bad Request'
-          content:
-            application/json:
-              examples:
-                default:
-                  $ref: "#/components/examples/ErrInvalidRequest"
+          $ref: '#/components/responses/BadRequest'
         401:
-          description: 'Error: Unauthorized'
+          $ref: '#/components/responses/Unauthorized'
   /users:
     get:
       summary: Performs a user search based on a query
@@ -700,14 +650,9 @@ paths:
                 default:
                   $ref: "#/components/examples/Users"
         400:
-          description: 'Error: Bad Request'
-          content:
-            application/json:
-              examples:
-                default:
-                  $ref: "#/components/examples/ErrInvalidRequest"
+          $ref: '#/components/responses/BadRequest'
         401:
-          description: 'Error: Unauthorized'
+          $ref: '#/components/responses/Unauthorized'
   #   post:
   #     summary: Returns  error ???.
   #     tags:
@@ -737,14 +682,9 @@ paths:
                 default:
                   $ref: "#/components/examples/Playlist"
         400:
-          description: 'Error: Bad Request'
-          content:
-            application/json:
-              examples:
-                default:
-                  $ref: "#/components/examples/ErrInvalidRequest"
+          $ref: '#/components/responses/BadRequest'
         401:
-          description: 'Error: Unauthorized'
+          $ref: '#/components/responses/Unauthorized'
   #   put:
   #     summary: Creates a playlist.
   #     tags:
@@ -822,14 +762,9 @@ paths:
                 default:
                   $ref: "#/components/examples/Playlist"
         400:
-          description: 'Error: Bad Request'
-          content:
-            application/json:
-              examples:
-                default:
-                  $ref: "#/components/examples/ErrInvalidRequest"
+          $ref: '#/components/responses/BadRequest'
         401:
-          description: 'Error: Unauthorized'
+          $ref: '#/components/responses/Unauthorized'
   /tracks/{track_id}:
     get:
       summary: Returns a track.
@@ -848,14 +783,9 @@ paths:
                 default:
                   $ref: '#/components/examples/Track'
         401:
-          description: 'Error: Unauthorized'
+          $ref: '#/components/responses/Unauthorized'
         404:
-          description: 'Error: Not Found'
-          content:
-            application/json:
-              examples:
-                default:
-                  $ref: '#/components/examples/ErrorNotFound'
+          $ref: '#/components/responses/NotFound'
     put:
       summary: Updates a track's information.
       tags:
@@ -879,23 +809,9 @@ paths:
                 default:
                   $ref: '#/components/examples/Track'
         400:
-          description: 'Error: Bad Request'
-          content:
-            application/json:
-              examples:
-                default:
-                  $ref: '#/components/examples/ErrorInvalidRequest'
+          $ref: '#/components/responses/BadRequest'
         401:
-          description: 'Error: Unauthorized'
-        404:
-          description: 'Error: Not Found'
-          content:
-            application/json:
-              examples:
-                default:
-                  $ref: '#/components/examples/ErrorNotFound'
-        500:
-          description: 'Error: Internal Server Error'
+          $ref: '#/components/responses/Unauthorized'
     delete:
       summary: Deletes a track.
       tags:
@@ -908,9 +824,9 @@ paths:
         200:
           description: Success
         401:
-          description: 'Error: Unauthorized'
+          $ref: '#/components/responses/Unauthorized'
         404:
-          description: 'Error: Not Found'
+          $ref: '#/components/responses/NotFound'
   /tracks/{track_id}/streams:
     get:
       summary: Returns a track's streamable URLs
@@ -929,14 +845,9 @@ paths:
                 default:
                   $ref: '#/components/examples/Streams'
         401:
-          description: 'Error: Unauthorized'
+          $ref: '#/components/responses/Unauthorized'
         404:
-          description: 'Error: Not Found'
-          content:
-            application/json:
-              examples:
-                default:
-                  $ref: '#/components/examples/ErrorNotFound'
+          $ref: '#/components/responses/NotFound'
   /tracks/{track_id}/comments:
     get:
       summary: Returns the comments posted on the track(track_id).
@@ -957,14 +868,9 @@ paths:
                 default:
                   $ref: '#/components/examples/Comments'
         401:
-          description: 'Error: Unauthorized'
+          $ref: '#/components/responses/Unauthorized'
         404:
-          description: 'Error: Not Found'
-          content:
-            application/json:
-              examples:
-                default:
-                  $ref: '#/components/examples/ErrorNotFound'
+          $ref: '#/components/responses/NotFound'
     post:
       summary: Returns the newly created comment on success
       tags:
@@ -983,23 +889,13 @@ paths:
                 default:
                   $ref: '#/components/examples/Comments'
         401:
-          description: 'Error: Unauthorized'
+          $ref: '#/components/responses/Unauthorized'
         403:
-          description: 'Error: Forbidden'
+          $ref: '#/components/responses/Forbidden'
         422:
-          description: 'Error: Unprocessable Entity'
-          content:
-            application/json:
-              examples:
-                422:
-                  $ref: '#/components/examples/ErrorUnprocessableEntity'
+          $ref: '#/components/responses/UnprocessableEntity'
         429:
-          description: 'Error: Too Many Requests'
-          content:
-            application/json:
-              examples:
-                429:
-                  $ref: '#/components/examples/ErrorTooManyRequests'
+          $ref: '#/components/responses/TooManyRequests'
   # /tracks/{track_id}/comments/{comment_id}:
   #   delete:
   #     summary: Returns ???.
@@ -1047,14 +943,9 @@ paths:
                 default:
                   $ref: '#/components/examples/Users'
         401:
-          description: 'Error: Unauthorized'
+          $ref: '#/components/responses/Unauthorized'
         404:
-          description: 'Error: Not Found'
-          content:
-            application/json:
-              examples:
-                default:
-                  $ref: '#/components/examples/ErrorNotFound'
+          $ref: '#/components/responses/NotFound'
   /tracks/{track_id}/favoriters/{user_id}:
     get:
       summary: Returns a user who has favorited or liked the track.
@@ -1074,14 +965,9 @@ paths:
                 default:
                   $ref: '#/components/examples/User'
         401:
-          description: 'Error: Unauthorized'
+          $ref: '#/components/responses/Unauthorized'
         404:
-          description: 'Error: Not Found'
-          content:
-            application/json:
-              examples:
-                default:
-                  $ref: '#/components/examples/ErrorNotFound'
+          $ref: '#/components/responses/NotFound'
   /tracks/{track_id}/related:
     get:
       summary: Returns all related tracks of track on SoundCloud.
@@ -1102,14 +988,9 @@ paths:
                 default:
                   $ref: '#/components/examples/Tracks'
         401:
-          description: 'Error: Unauthorized'
+          $ref: '#/components/responses/Unauthorized'
         404:
-          description: 'Error: Not Found'
-          content:
-            application/json:
-              examples:
-                default:
-                  $ref: '#/components/examples/ErrNotFound'
+          $ref: '#/components/responses/NotFound'
   # /tracks/{track_id}/streams:
   #   get:
   #     summary: Returns ???.
@@ -1166,14 +1047,9 @@ paths:
                 default:
                   $ref: "#/components/examples/User"
         401:
-          description: 'Error: Unauthorized'
+          $ref: '#/components/responses/Unauthorized'
         404:
-          description: 'Error: Not Found'
-          content:
-            application/json:
-              examples:
-                default:
-                  $ref: "#/components/examples/ErrorNotFound"
+          $ref: '#/components/responses/NotFound'
   /users/{user_id}/comments:
     get:
       summary: Returns a list of user's comments.
@@ -1195,14 +1071,9 @@ paths:
                 default:
                   $ref: "#/components/examples/Comments"
         401:
-          description: 'Error: Unauthorized'
+          $ref: '#/components/responses/Unauthorized'
         404:
-          description: 'Error: Not Found'
-          content:
-            application/json:
-              examples:
-                default:
-                  $ref: "#/components/examples/ErrorNotFound"
+          $ref: '#/components/responses/NotFound'
   /users/{user_id}/favorites:
     get:
       summary: Returns a list of user's favorited or liked tracks.
@@ -1223,7 +1094,7 @@ paths:
                 default:
                   $ref: "#/components/examples/Tracks"
         401:
-          description: 'Error: Unauthorized'
+          $ref: '#/components/responses/Unauthorized'
   /users/{user_id}/followers:
     get:
       summary: Returns a list of user’s followers.
@@ -1245,9 +1116,7 @@ paths:
                 default:
                   $ref: "#/components/examples/UserFollowers"
         401:
-          description: 'Error: Unauthorized'
-        503:
-          description: 'Error: Service Unavailable'
+          $ref: '#/components/responses/Unauthorized'
   /users/{user_id}/followers/{follower_id}:
     get:
       summary: Returns a user's follower.
@@ -1269,11 +1138,7 @@ paths:
                 default:
                   $ref: "#/components/examples/User"
         401:
-          description: 'Error: Unauthorized'
-        404:
-          description: 'Error: Not Found'
-        503:
-          description: 'Error: Service Unavailable'
+          $ref: '#/components/responses/Unauthorized'
   /users/{user_id}/followings:
     get:
       summary: Returns a list of user’s followings.
@@ -1295,9 +1160,7 @@ paths:
                 default:
                   $ref: "#/components/examples/UserFollowings"
         401:
-          description: 'Error: Unauthorized'
-        503:
-          description: 'Error: Service Unavailable'
+          $ref: '#/components/responses/Unauthorized'
   /users/{user_id}/followings/{following_id}:
     get:
       summary: Returns a user's following.
@@ -1319,11 +1182,9 @@ paths:
                 default:
                   $ref: "#/components/examples/User"
         401:
-          description: 'Error: Unauthorized'
+          $ref: '#/components/responses/Unauthorized'
         404:
-          description: 'Error: Not Found'
-        503:
-          description: 'Error: Service Unavailable'
+          $ref: '#/components/responses/NotFound'
   /users/{user_id}/playlists:
     get:
       summary: Returns a list of user's playlists.
@@ -1344,7 +1205,7 @@ paths:
                 default:
                   $ref: "#/components/examples/PlaylistAndTracks"
         401:
-          description: 'Error: Unauthorized'
+          $ref: '#/components/responses/Unauthorized'
   # /users/{user_id}/playlists/{track_id}:
   #   get:
   #     summary: Returns user's playlists list.
@@ -1379,7 +1240,7 @@ paths:
                 default:
                   $ref: "#/components/examples/Tracks"
         401:
-          description: 'Error: Unauthorized'
+          $ref: '#/components/responses/Unauthorized'
   /users/{user_id}/web-profiles:
     get:
       summary: Returns list of user's links added to their profile (website, facebook, instagram).
@@ -1400,14 +1261,9 @@ paths:
                 default:
                   $ref: "#/components/examples/Web-profiles"
         401:
-          description: 'Error: Unauthorized'
+          $ref: '#/components/responses/Unauthorized'
         404:
-          description: 'Error: Not Found'
-          content:
-            application/json:
-              examples:
-                default:
-                  $ref: "#/components/examples/ErrorNotFound"
+          $ref: '#/components/responses/NotFound'
 components:
   parameters:
     bpm[from]:
@@ -1750,6 +1606,94 @@ components:
       properties:
         user_id:
           type: integer
+    Error:
+      type: object
+      properties:
+        code:
+          type: integer
+        message:
+          type: string
+        link:
+          type: string
+        error:
+          type: string
+          deprecated: true
+        errors:
+          type: object
+          deprecated: true
+        status:
+          type: string
+          deprecated: true
+    ErrorInvalidGrant:
+      allOf:
+        - $ref: '#/components/schemas/Error'
+        - type: object
+          properties:
+            message:
+              type: string
+              enum: [invalid_request, unsupported_grant_type, invalid_grant]
+    TooManyRequests:
+      allOf:
+        - $ref: '#/components/schemas/Error'
+        - type: object
+          properties:
+            spam_warning_urn:
+              type: string
+  responses:
+    BadRequest:
+      description: Bad Request
+      content:
+        application/json:
+          examples:
+            default:
+              $ref: '#/components/examples/BadRequest'
+          schema:
+            $ref: '#/components/schemas/Error'
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          examples:
+            default:
+              $ref: '#/components/examples/Unauthorized'
+          schema:
+            $ref: '#/components/schemas/Error'
+    Forbidden:
+      description: Forbidden
+      content:
+        application/json:
+          examples:
+            default:
+              $ref: '#/components/examples/Forbidden'
+          schema:
+            $ref: '#/components/schemas/Error'
+    NotFound:
+      description: Not Found
+      content:
+        application/json:
+          examples:
+            default:
+              $ref: '#/components/examples/NotFound'
+          schema:
+            $ref: '#/components/schemas/Error'
+    UnprocessableEntity:
+      description: Unprocessable Entity
+      content:
+        application/json:
+          examples:
+            default:
+              $ref: '#/components/examples/UnprocessableEntity'
+          schema:
+            $ref: '#/components/schemas/Error'
+    TooManyRequests:
+      description: Too Many Requests
+      content:
+        application/json:
+          examples:
+            default:
+              $ref: '#/components/examples/TooManyRequests'
+          schema:
+            $ref: '#/components/schemas/TooManyRequests'
   examples:
     Activities:
       value:
@@ -1847,39 +1791,42 @@ components:
     Created:
       value:
         status: 201 - Created
-    ErrInvalidGrant:
+    ErrorInvalidGrant:
       value:
-        error_code: invalid_grant
-    ErrInvalidRequest:
+        code: 400
+        message: invalid_grant
+        link: https://developers.soundcloud.com/docs/api/explorer/open-api
+    BadRequest:
       value:
-        error: invalid request
-    ErrorInvalidRequest:
+        code: 400
+        message: Detailed message of errors, when available
+        link: https://developers.soundcloud.com/docs/api/explorer/open-api
+    Unauthorized:
       value:
-        errors:
-        - error_message: 400 - Invalid Request
-    ErrorUnauthorized:
+        code: 401
+        message: Detailed message of errors, when available
+        link: https://developers.soundcloud.com/docs/api/explorer/open-api
+    Forbidden:
       value:
-        errors:
-        - error_message: 401 - Unauthorized
-    ErrorForbidden:
+        code: 403
+        message: Detailed message of errors, when available
+        link: https://developers.soundcloud.com/docs/api/explorer/open-api
+    NotFound:
       value:
-        errors:
-        - error_message: You are not authorized to perform that action.
-    ErrorNotFound:
+        code: 404
+        message: Detailed message of errors, when available
+        link: https://developers.soundcloud.com/docs/api/explorer/open-api
+    UnprocessableEntity:
       value:
-        errors:
-        - error_message: 404 - Not Found
-    ErrNotFound:
+        code: 422
+        message: Detailed message of errors, when available
+        link: https://developers.soundcloud.com/docs/api/explorer/open-api
+    TooManyRequests:
       value:
-        error: Not Found
-    ErrorUnprocessableEntity:
-      value:
-        errors:
-        - error_message: 422 - Unprocessable Entity
-    ErrorTooManyRequests:
-      value:
-        errors:
-        - error_message: spam_warning_urn
+        code: 429
+        message: Detailed message of errors, when available
+        spam_warning_urn: soundcloud:spam-warnings:1
+        link: https://developers.soundcloud.com/docs/api/rate-limits#errors
     # FavoritesIds:
     #   value:
     #     - 1234
