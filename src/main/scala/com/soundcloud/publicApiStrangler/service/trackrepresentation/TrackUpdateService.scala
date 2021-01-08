@@ -51,12 +51,12 @@ class TrackUpdateService(
   ): Future[Outcome[CreatedTrack]] = {
     for {
       user <- fetchUser(session, session.getUser)
-      uploadeImageResponse <- uploadArtworkToS3(maybeUpdateAlbumArt)
+      uploadedImageResponse <- uploadArtworkToS3(maybeUpdateAlbumArt)
       trackCoordinatorTrack <- trackCoordinatorClient.createTrack(
         session,
         trackAsset,
         maybeTrackMetadata,
-        uploadeImageResponse
+        uploadedImageResponse
       )
       createdTrack <- buildCreatedTrack(session, trackCoordinatorTrack, user)
     } yield createdTrack

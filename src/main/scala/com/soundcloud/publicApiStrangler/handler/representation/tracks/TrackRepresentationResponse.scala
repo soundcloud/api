@@ -16,12 +16,11 @@ object TrackRepresentationResponse {
       outcome: Future[Outcome[CreatedTrack]]
   ): Future[Response] = {
     outcome.map {
-      case Good(createdTrack) => {
+      case Good(createdTrack) =>
         val headers = Map("Location" -> createdTrack.location)
         generateResponse(Status.Created, Json.stringify(Json.toJson(createdTrack)), headers)
-      }
       case Bad(NotFound(_)) => ErrorResponse.notFound()
-      case Bad(NotValid(_)) => ErrorResponse.badRequest()
+      case Bad(NotValid(msg)) => ErrorResponse.badRequest(msg.head)
 
       case _ => throw new UnhandledOutcomeException
     }
