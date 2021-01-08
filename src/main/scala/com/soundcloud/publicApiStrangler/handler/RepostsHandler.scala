@@ -1,10 +1,11 @@
 package com.soundcloud.publicApiStrangler.handler
 
 import com.soundcloud.jvmkit.module.bff.session.UserAuthentication
-import com.soundcloud.jvmkit.module.http.server.{HandlerRequest, JsonResponseBuilder, ResponseBuilder}
+import com.soundcloud.jvmkit.module.http.server.{HandlerRequest, ResponseBuilder}
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.publicApiStrangler.client.reposts.RepostsClient
 import com.soundcloud.publicApiStrangler.client.reposts.RepostsClient._
+import com.soundcloud.publicApiStrangler.support.ErrorResponse
 import com.twitter.finagle.http.{Response, Status}
 import com.twitter.util.Future
 
@@ -41,8 +42,8 @@ class RepostsHandler(userAuthentication: UserAuthentication, repostsClient: Repo
     case Created => ResponseBuilder.created()
     case Deleted => ResponseBuilder.ok()
     case AlreadyExists => ResponseBuilder.ok()
-    case NotFound => ResponseBuilder.notFound()
-    case SpamBlocked => JsonResponseBuilder(status = Status.TooManyRequests).build
-    case Failed => ResponseBuilder.internalServerError()
+    case NotFound => ErrorResponse.notFound()
+    case SpamBlocked => ErrorResponse(Status.TooManyRequests)
+    case Failed => ErrorResponse(Status.InternalServerError)
   }
 }

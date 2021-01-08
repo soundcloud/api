@@ -164,7 +164,7 @@ class UserFollowHandler(
               JsonResponseBuilder.ok(serializeUsers(users, next))
             }
           }
-          .getOrElse(ResponseBuilder.serviceUnavailable())
+          .getOrElse(ErrorResponse(Status.ServiceUnavailable))
       }
     }
   }
@@ -195,7 +195,7 @@ class UserFollowHandler(
               ResponseBuilder.notFound()
             }
           }
-          .getOrElse(ResponseBuilder.serviceUnavailable())
+          .getOrElse(ErrorResponse(Status.ServiceUnavailable))
       }
     }
 

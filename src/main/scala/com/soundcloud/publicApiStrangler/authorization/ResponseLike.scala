@@ -1,5 +1,6 @@
 package com.soundcloud.publicApiStrangler.authorization
 
+import com.soundcloud.publicApiStrangler.support.ErrorResponse
 import com.twitter.finagle.http._
 
 trait ResponseLike[R] {
@@ -54,12 +55,12 @@ object ResponseLike {
       if (!r.headerMap.contains(key)) setHeader(r, key, value)
     }
 
-    def unauthorized = Response(Status.Unauthorized)
+    def unauthorized = ErrorResponse(Status.Unauthorized)
 
-    def serviceUnavailableError = Response(Status.ServiceUnavailable)
+    def serviceUnavailableError = ErrorResponse(Status.ServiceUnavailable)
 
-    def internalServerError = Response(Status.InternalServerError)
+    def internalServerError = ErrorResponse(Status.InternalServerError)
 
-    def badRequest = Response(Status.BadRequest)
+    def badRequest = ErrorResponse(Status.BadRequest)
   }
 }

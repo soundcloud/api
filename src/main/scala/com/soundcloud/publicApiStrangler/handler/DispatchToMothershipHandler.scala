@@ -4,11 +4,12 @@ import com.soundcloud.jvmkit.module.bff.session.UserAuthentication
 import com.soundcloud.jvmkit.module.http.server.HandlerRequest
 import com.soundcloud.jvmkit.module.util.logging.SoundCloudLoggerFactory
 import com.soundcloud.jvmkit.module.util.session.{UserSession, UserSessionHeadersConverter}
+import com.soundcloud.publicApiStrangler.support.ErrorResponse
 import com.twitter.finagle.Service
 import com.twitter.finagle.http.{Request, Response, Status}
 import com.twitter.util.Future
-import scala.collection.JavaConverters._
 
+import scala.collection.JavaConverters._
 import scala.util.control.NonFatal
 
 class DispatchToMothershipHandler(
@@ -22,7 +23,7 @@ class DispatchToMothershipHandler(
       mothershipClient(ForwardedRequest(request.request, Some(session))).handle {
         case NonFatal(exception: Exception) =>
           logger.debug("Bad response from mothership", exception)
-          Response(Status.InternalServerError)
+          ErrorResponse(Status.InternalServerError)
       }
     }
   }
@@ -32,7 +33,7 @@ class DispatchToMothershipHandler(
     mothershipClient(ForwardedRequest(request.request, None)).handle {
       case NonFatal(exception: Exception) =>
         logger.debug("Bad response from mothership", exception)
-        Response(Status.InternalServerError)
+        ErrorResponse(Status.InternalServerError)
     }
   }
 }

@@ -8,6 +8,7 @@ import com.soundcloud.publicApiStrangler.client.followcounts.{FollowCounts, Foll
 import com.soundcloud.publicApiStrangler.client.liebling.{LieblingClient, UserTotalLikes}
 import com.soundcloud.publicApiStrangler.client.reposts.RepostsClient
 import com.soundcloud.publicApiStrangler.handler.UserRelatedMothershipDispatcher.SubstitutionsByUser
+import com.soundcloud.publicApiStrangler.support.ErrorResponse
 import com.twitter.finagle.http.Response
 import com.twitter.util.{Future, Try}
 import play.api.libs.json.Json.JsValueWrapper
@@ -58,7 +59,7 @@ class UserRelatedMothershipDispatcher(
               enrichResponse(session, userUrns, responseJson, response)
             }).getOrElse(defaultResponse)
           } else {
-            defaultResponse
+            defaultResponse.map(parseError)
           }
         })
     }
@@ -204,6 +205,12 @@ class UserRelatedMothershipDispatcher(
         case _ => None
       }
     }
+
+  private def parseError(response: Response): Response = {
+    val errorMessage = Try(Json.parse(response.contentString) \ "errors" \\ "error_message")
+      .map(_.map(_.as[String]).mkString(", "))
+    ErrorResponse(response.status, errorMessage.getOrElse(""))
+  }
 }
 
 object UserRelatedMothershipDispatcher {

@@ -50,7 +50,6 @@ class RepostsHandlerSpec extends UnitSpecification {
       override def result = NotFound
 
       response.status ==== Status.NotFound
-      response.contentString.length ==== 0
     }
 
     "when creating fails because the track was already reposted" in new CreateTrackContext {
@@ -70,7 +69,6 @@ class RepostsHandlerSpec extends UnitSpecification {
       override def result = Failed
 
       response.status ==== Status.InternalServerError
-      response.contentString.length ==== 0
     }
   }
 
@@ -96,14 +94,12 @@ class RepostsHandlerSpec extends UnitSpecification {
       override def result = NotFound
 
       response.status ==== Status.NotFound
-      response.contentString.length ==== 0
     }
 
     "when deleting fails because of an unknown reason" in new DeleteTrackContext {
       override def result = Failed
 
       response.status ==== Status.InternalServerError
-      response.contentString.length ==== 0
     }
   }
 
@@ -129,7 +125,6 @@ class RepostsHandlerSpec extends UnitSpecification {
       override def result = NotFound
 
       response.status ==== Status.NotFound
-      response.contentString.length ==== 0
     }
 
     "when creating fails because the playlist was already reposted" in new CreatePlaylistContext {
@@ -149,7 +144,6 @@ class RepostsHandlerSpec extends UnitSpecification {
       override def result = Failed
 
       response.status ==== Status.InternalServerError
-      response.contentString.length ==== 0
     }
   }
 
@@ -175,14 +169,12 @@ class RepostsHandlerSpec extends UnitSpecification {
       override def result = NotFound
 
       response.status ==== Status.NotFound
-      response.contentString.length ==== 0
     }
 
     "when deleting fails because of an unknown reason" in new DeletePlaylistContext {
       override def result = Failed
 
       response.status ==== Status.InternalServerError
-      response.contentString.length ==== 0
     }
   }
 }

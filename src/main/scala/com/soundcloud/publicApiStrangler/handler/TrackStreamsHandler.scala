@@ -11,6 +11,7 @@ import com.soundcloud.publicApiStrangler.mapper.trackstreams.{
   TrackStreamResponseMapper
 }
 import com.soundcloud.publicApiStrangler.service.media._
+import com.soundcloud.publicApiStrangler.support.ErrorResponse
 import com.twitter.finagle.http.{MediaType, Method, Response, Status}
 import com.twitter.util.{Future, Return, Try}
 import play.api.libs.json.Json
@@ -58,7 +59,7 @@ class TrackStreamsHandler(
                 loggingEnabled = false
               )(Future.value(renderStreamResponse(request, session, streamResponse)))
           }
-        case None => Future.value(ResponseBuilder().status(Status.BadRequest).build)
+        case None => Future.value(ErrorResponse.badRequest())
       }
     }
   }
@@ -84,7 +85,7 @@ class TrackStreamsHandler(
       case MediaStreamUrl(url) =>
         ResponseBuilder().header("Location", url).status(Status.Found)
       case MediaStreamNotFoundError =>
-        ResponseBuilder().status(Status.NotFound)
+        return ErrorResponse.notFound()
       case _ => ResponseBuilder().status(Status.Ok)
     }
     if (request.method != Method.Head)

@@ -86,12 +86,23 @@ class UserRelatedMothershipDispatcherSpec extends UnitSpecification {
 
       Await.result(dispatcher.dispatchToMothership(request)).getContentString() ==== "Not a JSON response"
     }
-    "with a non-OK status code from mothership, it returns the same status code" in new Context {
+    "with a non-OK status code from mothership, it returns the same status code and parses error" in new Context {
+      override def responseStatusFromMothership = Status.InternalServerError
+
+      override def responseBodyFromMothership = Json.obj("errors" -> List(Json.obj("error_message" -> "Some error")))
+
+      result.status ==== Status.InternalServerError
+      (Json.parse(result.contentString) \ "message").as[String] === "Some error"
+
+    }
+    "with a non-OK status code from mothership and no parseable body, it returns the same status code" in new Context {
       override def responseStatusFromMothership = Status.InternalServerError
 
       override def responseBodyFromMothership = user
 
       result.status ==== Status.InternalServerError
+      (Json.parse(result.contentString) \ "message").as[String] === ""
+
     }
     "with an OK status code from mothership" >> {
       "it returns an object that matches the one from Mothership" in new Context {
