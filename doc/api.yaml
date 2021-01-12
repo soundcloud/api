@@ -604,6 +604,43 @@ paths:
           $ref: '#/components/responses/BadRequest'
         401:
           $ref: '#/components/responses/Unauthorized'
+    post:
+      summary: Uploads a new track.
+      tags:
+        - tracks
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/TrackDataRequest'
+                - type: object
+                  required:
+                    - track[title]
+                    - track[asset_data]
+          multipart/x-www-form-urlencoded:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/TrackDataRequest'
+                - type: object
+                  required:
+                    - track[title]
+                    - track[asset_data]
+      security:
+        - ClientId: []
+          AuthHeader: []
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              examples:
+                default:
+                  $ref: '#/components/examples/Track'
+        400:
+          $ref: '#/components/responses/BadRequest'
+        401:
+          $ref: '#/components/responses/Unauthorized'
   /playlists:
     get:
       summary: Performs a playlist search based on a query
@@ -733,16 +770,6 @@ paths:
   #     responses:
   #       200:
   #         description: Success
-    # post:
-    #   summary: Returns ???.
-    #   tags:
-    #     - tracks
-    #   security:
-    #     - ClientId: []
-    #       AuthHeader: []
-    #   responses:
-    #     200:
-    #       description: Success
   /playlists/{playlist_id}/tracks:
     get:
       summary: Returns tracks under a playlist.
@@ -799,7 +826,13 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/UpdateTrackRequest"
+              $ref: "#/components/schemas/TrackMetadataRequest"
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TrackDataRequest'
+          multipart/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TrackDataRequest'
       responses:
         200:
           description: Success
@@ -1529,7 +1562,7 @@ components:
         client_secret:
           type: string
           description: Client secret
-    UpdateTrackRequest:
+    TrackMetadataRequest:
       type: object
       properties:
         track:
@@ -1560,7 +1593,7 @@ components:
               type: string
             tag_list:
               type: string
-              description: "The tag_list property contains a list of tags separated by spaces. Multiword tags are quoted in doublequotes. We also support machine tags that follow the pattern NAMESPACE:KEY=VALUE. For example: geo:lat=43.555
+              description: "The tag_list property contains a list of tags separated by spaces. Multiword tags are quoted in double quotes. We also support machine tags that follow the pattern NAMESPACE:KEY=VALUE. For example: geo:lat=43.555
                 camel:size=medium
                 “machine:tag=with space”
                 Machine tags are not revealed to the user on the track pages."
@@ -1595,12 +1628,77 @@ components:
               default: true
             isrc:
               type: string
-            artwork_data:
-              title: only for uploading, for PRO users
-              type: string
-            asset_data:
-              title: Only for uploading
-              type: string
+    TrackDataRequest:
+      type: object
+      properties:
+        track[title]:
+          type: string
+        track[asset_data]:
+          title: Only for uploading
+          type: string
+          format: binary
+        track[permalink]:
+          type: string
+        track[sharing]:
+          type: string
+          enum:
+            - public
+            - private
+          default: public
+        track[embeddable_by]:
+          type: string
+          enum:
+            - all
+            - me
+            - none
+          description: 'who can embed this track "all", "me", or "none"'
+        track[purchase_url]:
+          type: string
+        track[description]:
+          type: string
+        track[genre]:
+          type: string
+        track[tag_list]:
+          type: string
+          description: "The tag_list property contains a list of tags separated by spaces. Multiword tags are quoted in double quotes. We also support machine tags that follow the pattern NAMESPACE:KEY=VALUE. For example: geo:lat=43.555
+                camel:size=medium
+                “machine:tag=with space”
+                Machine tags are not revealed to the user on the track pages."
+        track[label_name]:
+          type: string
+        track[release]:
+          type: string
+        track[release_date]:
+          title: write only!
+          type: string
+          description: string, formatted as yyyy-mm-dd, representing release date
+        track[streamable]:
+          type: boolean
+          default: true
+        track[downloadable]:
+          type: boolean
+          default: true
+        track[license]:
+          type: string
+          enum:
+            - no-rights-reserved
+            - all-rights-reserved
+            - cc-by
+            - cc-by-nc
+            - cc-by-nd
+            - cc-by-sa
+            - cc-by-nc-nd
+            - cc-by-nc-sa
+          description: 'Possible values: no-rights-reserved, all-rights-reserved, cc-by, cc-by-nc, cc-by-nd, cc-by-sa, cc-by-nc-nd, cc-by-nc-sa'
+        track[commentable]:
+          type: boolean
+          default: true
+        track[isrc]:
+          type: string
+        track[artwork_data]:
+          title: Only for uploading, for PRO users
+          type: string
+          format: binary
     UserId:
       type: object
       properties:
