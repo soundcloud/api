@@ -55,15 +55,15 @@ object Routing {
 
   def forMothershipDispatcher(mothershipDispatcher: DispatchToMothershipHandler): List[(Method, String, Handler)] = {
     route(Method.Get, "/connect", mothershipDispatcher.dispatch) :::
-      route(Method.Put, "/e1/me/playlist_likes/:id", mothershipDispatcher.dispatch) :::
-      route(Method.Delete, "/e1/me/track_likes/:id", mothershipDispatcher.dispatch) :::
-      route(Method.Put, "/e1/me/track_likes/:id", mothershipDispatcher.dispatch) :::
+      route(Method.Put, "/e1/me/playlist_likes/:id", mothershipDispatcher.dispatch) ::: // deprecate
+      route(Method.Delete, "/e1/me/track_likes/:id", mothershipDispatcher.dispatch) ::: // deprecate
+      route(Method.Put, "/e1/me/track_likes/:id", mothershipDispatcher.dispatch) ::: // deprecate
       route(Method.Get, "/me/connections", mothershipDispatcher.dispatch) :::
       route(Method.Get, "/me/connections/:id", mothershipDispatcher.dispatch) :::
       route(Method.Post, "/playlists", mothershipDispatcher.dispatch) :::
       route(Method.Put, "/playlists/:id", mothershipDispatcher.dispatch) :::
       route(Method.Get, "/resolve", mothershipDispatcher.dispatch) :::
-      route(Method.Get, "/me/favorites/ids", mothershipDispatcher.dispatch) :::
+      route(Method.Get, "/me/favorites/ids", mothershipDispatcher.dispatch) ::: // deprecate
       route(Method.Post, "/me/playlists", mothershipDispatcher.dispatch) :::
       route(Method.Put, "/me/playlists/:trackId", mothershipDispatcher.dispatch) :::
       route(Method.Get, "/me/web-profiles", mothershipDispatcher.dispatch) :::
@@ -124,10 +124,14 @@ object Routing {
   }
 
   def forRepostsHandler(repostsHandler: RepostsHandler): List[(Method, String, Handler)] = {
-    route(Method.Put, "/e1/me/track_reposts/:id", repostsHandler.createTracksRepost) :::
-      route(Method.Delete, "/e1/me/track_reposts/:id", repostsHandler.deleteTracksRepost) :::
-      route(Method.Put, "/e1/me/playlist_reposts/:id", repostsHandler.createPlaylistsRepost) :::
-      route(Method.Delete, "/e1/me/playlist_reposts/:id", repostsHandler.deletePlaylistsRepost)
+    route(Method.Put, "/e1/me/track_reposts/:id", repostsHandler.createTracksRepost) ::: // deprecate
+      route(Method.Delete, "/e1/me/track_reposts/:id", repostsHandler.deleteTracksRepost) ::: // deprecate
+      route(Method.Put, "/e1/me/playlist_reposts/:id", repostsHandler.createPlaylistsRepost) ::: // deprecate
+      route(Method.Delete, "/e1/me/playlist_reposts/:id", repostsHandler.deletePlaylistsRepost) ::: // deprecate
+      route(Method.Post, "/reposts/tracks/:id", repostsHandler.createTracksRepost) :::
+      route(Method.Delete, "/reposts/tracks/:id", repostsHandler.deleteTracksRepost) :::
+      route(Method.Post, "/reposts/playlists/:id", repostsHandler.createPlaylistsRepost) :::
+      route(Method.Delete, "/reposts/playlists/:id", repostsHandler.deletePlaylistsRepost)
   }
 
   def forTimelineHandler(timelineHandler: TimelineHandler): List[(Method, String, Handler)] = {
@@ -141,7 +145,7 @@ object Routing {
   def forTrackStreamsHandler(trackStreamsHandler: TrackStreamsHandler): List[(Method, String, Handler)] = {
     route(Method.Get, "/tracks/:trackId/streams", trackStreamsHandler.handleStreamRequest) :::
       route(Method.Get, "/tracks/:trackId/stream", trackStreamsHandler.redirectStreamRequest) :::
-      route(Method.Get, "/i1/tracks/:trackId/streams", trackStreamsHandler.handleStreamRequest)
+      route(Method.Get, "/i1/tracks/:trackId/streams", trackStreamsHandler.handleStreamRequest) // deprecate
   }
 
   def forTrackDownloadHandler(trackDownloadHandler: TrackDownloadHandler): List[(Method, String, Handler)] = {
@@ -149,12 +153,19 @@ object Routing {
   }
 
   def forLikesHandler(likesHandler: LikesHandler): List[(Method, String, Handler)] = {
-    route(Method.Get, "/me/favorites/:trackId", likesHandler.getMeLikedTrackId) :::
-      route(Method.Post, "/me/favorites/:trackId", likesHandler.createMeLikedTrackId) :::
-      route(Method.Put, "/me/favorites/:trackId", likesHandler.createMeLikedTrackId) :::
-      route(Method.Delete, "/me/favorites/:trackId", likesHandler.deleteMeLikedTrackId) :::
-      route(Method.Get, "/users/:userId/favorites", likesHandler.getUserTracksLikes) :::
-      route(Method.Get, "/me/favorites", likesHandler.getMeTracksLikes)
+    route(Method.Get, "/me/favorites/:trackId", likesHandler.getMeLikedTrackId) ::: // deprecate
+      route(Method.Post, "/me/favorites/:trackId", likesHandler.createMeLikedTrackId) ::: // deprecate
+      route(Method.Put, "/me/favorites/:trackId", likesHandler.createMeLikedTrackId) ::: // deprecate
+      route(Method.Delete, "/me/favorites/:trackId", likesHandler.deleteMeLikedTrackId) ::: // deprecate
+      route(Method.Get, "/users/:userId/favorites", likesHandler.getUserTracksLikes) ::: // deprecate
+      route(Method.Get, "/me/favorites", likesHandler.getMeTracksLikes) ::: // deprecate
+      route(Method.Get, "/me/likes/tracks", likesHandler.getMeTracksLikes) :::
+      route(Method.Get, "/users/:userId/likes/tracks", likesHandler.getUserTracksLikes) :::
+      route(Method.Post, "/likes/tracks/:trackId", likesHandler.createMeLikedTrackId) :::
+      route(Method.Delete, "/likes/tracks/:trackId", likesHandler.deleteMeLikedTrackId) :::
+      route(Method.Post, "/likes/playlists/:id", likesHandler.createMeLikedPlaylistId) :::
+      route(Method.Delete, "/likes/playlists/:id", likesHandler.deleteMeLikedPlaylistId)
+    // todo - fetching a list of likes(users) of a playlist
   }
 
   def forCommentsHandler(commentsHandler: CommentsHandler): List[(Method, String, Handler)] = {

@@ -105,6 +105,56 @@ class LieblingClientSpec extends UnitSpecification {
     }
   }
 
+  "#createPlaylistLike" >> {
+    trait LikeCreatedContext extends Context {
+      override implicit val session = loggedInSession(userUrn)
+    }
+
+    "creates a like response" in new LikeCreatedContext {
+      when(
+        service.postWithSession(
+          session,
+          Path() / "playlists" / playlistUrn.toString / "likes",
+          Params.empty,
+          Headers.empty,
+          Some(requestBodyString)
+        )
+      ).thenReturn(Future {
+        val response = Response(Status.Created)
+        response.setContentString(lieblingLikeCreationSuccess)
+        response
+      })
+
+      val actual = Await.result(client.createPlaylistLike(session, playlistUrn))
+      actual ==== LikeCreated
+    }
+  }
+
+  "#deletePlaylistLike" >> {
+    trait LikeDeletedContext extends Context {
+      override implicit val session = loggedInSession(userUrn)
+    }
+
+    "creates a like response" in new LikeDeletedContext {
+      when(
+        service.deleteWithSession(
+          session,
+          Path() / "playlists" / playlistUrn.toString / "likes",
+          Params.empty,
+          Headers.empty,
+          Some(requestBodyString)
+        )
+      ).thenReturn(Future {
+        val response = Response(Status.Ok)
+        response.setContentString(lieblingLikeDeletionSuccess)
+        response
+      })
+
+      val actual = Await.result(client.deletePlaylistLike(session, playlistUrn))
+      actual must beAnInstanceOf[DeleteLikeResponse]
+    }
+  }
+
   "#likeCounts" >> {
     "successful response" in new Context() {
       val targets = Seq(playlistUrn, trackUrn)

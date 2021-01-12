@@ -37,6 +37,22 @@ class LikesService(
   def deleteTrackLike(session: UserSession, urn: Urn): Future[DeleteLikeResponse] =
     lieblingClient.deleteTrackLike(session, urn)
 
+  def createPlaylistLike(
+      session: UserSession,
+      urn: Urn
+  ) = {
+    lieblingClient.createPlaylistLike(session, urn).map {
+      case LikeCreated => OkCreatedCreateResponse
+      case LikeAlreadyExists => OkCreateResponse
+      case UserBlocked => NotAuthorizedCreateResponse
+      case UserHasSpamWarning => SpamBlockedCreateResponse
+      case _ => NotFoundCreateResponse
+    }
+  }
+
+  def deletePlaylistLike(session: UserSession, urn: Urn): Future[DeleteLikeResponse] =
+    lieblingClient.deletePlaylistLike(session, urn)
+
   def userTrackLikeForUrn(
       session: UserSession,
       userUrn: Urn,

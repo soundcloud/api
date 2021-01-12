@@ -135,6 +135,103 @@ class LikesServiceSpec extends TrackRepresentationsSpecificationContext {
     }
   }
 
+  "#createPlaylistLike" >> {
+    trait CreatePlaylistLike extends Context {
+      lazy val itemUrn = Urn("soundcloud", "playlists", "1")
+      val lieblingResult: CreateLikeResponse
+
+      lazy val result = Await.result(likesService.createPlaylistLike(session, itemUrn))
+
+      override def before: Any = {
+        when(lieblingClient.createPlaylistLike(session, itemUrn)).thenReturn(Future.value(lieblingResult))
+      }
+    }
+
+    "#when liebling successfully creates a like" >> {
+      trait LikeAddedContext extends CreatePlaylistLike {
+        override val lieblingResult = LikeCreated
+      }
+
+      "returns an OkCreatedCreateResponse" in new LikeAddedContext {
+        result ==== OkCreatedCreateResponse
+      }
+    }
+
+    "#when like already exists" >> {
+      trait LikeAddedContext extends CreatePlaylistLike {
+        override val lieblingResult = LikeAlreadyExists
+      }
+
+      "returns an OkCreateResponse" in new LikeAddedContext {
+        result ==== OkCreateResponse
+      }
+    }
+
+    "#when user is blocked" >> {
+      trait LikeAddedContext extends CreatePlaylistLike {
+        override val lieblingResult = UserBlocked
+      }
+
+      "returns an NotAuthorizedCreateResponse" in new LikeAddedContext {
+        result ==== NotAuthorizedCreateResponse
+      }
+    }
+
+    "#when request is rate limited" >> {
+      trait LikeAddedContext extends CreatePlaylistLike {
+        override val lieblingResult = UserHasSpamWarning
+      }
+
+      "returns an SpamBlockedCreateResponse" in new LikeAddedContext {
+        result ==== SpamBlockedCreateResponse
+      }
+    }
+
+    "#when something went wrong" >> {
+      trait LikeAddedContext extends CreatePlaylistLike {
+        override val lieblingResult = LikeableNotFound
+      }
+
+      "returns an NotAuthorizedCreateResponse" in new LikeAddedContext {
+        result ==== NotFoundCreateResponse
+      }
+    }
+  }
+
+  "#deletePlaylistLike" >> {
+    trait DeletePlaylistLike extends Context {
+      lazy val itemUrn = Urn("soundcloud", "playlists", "1")
+      lazy val result = Await.result(likesService.deletePlaylistLike(session, itemUrn))
+      val lieblingResult: DeleteLikeResponse
+
+      override def before: Any = {
+        super.before
+
+        when(lieblingClient.deletePlaylistLike(session, itemUrn)).thenReturn(Future.value(lieblingResult))
+      }
+    }
+
+    "#when liebling successfully deletes a like" >> {
+      trait LikeAddedContext extends DeletePlaylistLike {
+        override val lieblingResult = LikeDeleted
+      }
+
+      "returns an LikeDeleted" in new LikeAddedContext {
+        result ==== LikeDeleted
+      }
+    }
+
+    "#when like was not found" >> {
+      trait LikeNotFoundContext extends DeletePlaylistLike {
+        override val lieblingResult = LikeNotFound
+      }
+
+      "returns an LikeNotFound" in new LikeNotFoundContext {
+        result ==== LikeNotFound
+      }
+    }
+  }
+
   "#userTrackLikeForUrn" >> {
     "when all data is available" in new Context {
       val track = trackvisibilityTrack()

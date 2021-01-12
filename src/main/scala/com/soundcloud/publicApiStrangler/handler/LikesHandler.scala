@@ -11,6 +11,7 @@ import com.soundcloud.publicApiStrangler.service.pagination.CursorBasedPaginatio
 import com.soundcloud.publicApiStrangler.support.ErrorResponse
 import com.soundcloud.publicApiStrangler.support.TrackUrnUtil.getTrackUrn
 import com.soundcloud.publicApiStrangler.support.UserUrnUtil.getUserUrn
+import com.soundcloud.publicApiStrangler.support.PlaylistUrnUtil.getPlaylistUrn
 import com.twitter.finagle.http.{Response, Status}
 import com.twitter.util.{Future, Return, Throw, Try}
 import play.api.libs.json.Json
@@ -44,6 +45,34 @@ class LikesHandler(userAuthentication: UserAuthentication, likesService: LikesSe
       Try(getTrackUrn(req)) match {
         case Return(urn) =>
           likesService.deleteTrackLike(session, urn).map {
+            case LikeDeleted => JsonResponseBuilder.ok(requestBodyForStatus(Status.Ok))
+            case LikeNotFound => ErrorResponse.notFound()
+          }
+        case _ => Future.value(ErrorResponse.badRequest())
+      }
+  }
+
+  def createMeLikedPlaylistId(req: HandlerRequest): Future[Response] = {
+    userAuthentication.withLoggedInUser(req) { (session, _) =>
+      Try(getPlaylistUrn(req)) match {
+        case Return(urn) =>
+          likesService.createPlaylistLike(session, urn).map {
+            case OkCreatedCreateResponse => JsonResponseBuilder.created(requestBodyForStatus(Status.Created))
+            case OkCreateResponse => JsonResponseBuilder.ok(requestBodyForStatus(Status.Ok))
+            case NotAuthorizedCreateResponse => ErrorResponse(Status.Unauthorized)
+            case NotFoundCreateResponse => ErrorResponse.notFound()
+            case SpamBlockedCreateResponse => ErrorResponse(Status.TooManyRequests)
+          }
+        case _ => Future.value(ErrorResponse.badRequest())
+      }
+    }
+  }
+
+  def deleteMeLikedPlaylistId(req: HandlerRequest): Future[Response] = userAuthentication.withLoggedInUser(req) {
+    (session, _) =>
+      Try(getPlaylistUrn(req)) match {
+        case Return(urn) =>
+          likesService.deletePlaylistLike(session, urn).map {
             case LikeDeleted => JsonResponseBuilder.ok(requestBodyForStatus(Status.Ok))
             case LikeNotFound => ErrorResponse.notFound()
           }

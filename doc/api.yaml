@@ -20,6 +20,10 @@ tags:
     description: Tracks Endpoints.
   - name: users
     description: SoundCloud Users Endpoints.
+  - name: likes
+    description: Liking Tracks & Playlists.
+  - name: reposts
+    description: Reposting Tracks & Playlists.
   - name: miscellaneous
     description: Miscellaneous Endpoints.
 paths:
@@ -204,7 +208,7 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         404:
           $ref: '#/components/responses/NotFound'
-  /me/favorites:
+  /me/likes/tracks:
     get:
       summary: Returns a list of favorited or liked tracks of the authenticated user.
       tags:
@@ -223,52 +227,6 @@ paths:
                   $ref: "#/components/examples/Tracks"
         401:
           $ref: '#/components/responses/Unauthorized'
-  # /me/favorites/{track_id}:
-  #   get:
-  #     summary: Returns favorite track.
-  #     tags:
-  #       - me
-  #     security:
-  #       - AuthHeader: []
-  #     parameters:
-  #       - $ref: '#/components/parameters/track_id'
-  #     responses:
-  #       200:
-  #         description: Success
-  #       404:
-  #   post:
-  #     summary: Post favorite track.
-  #     tags:
-  #       - me
-  #     security:
-  #       - AuthHeader: []
-  #     parameters:
-  #       - $ref: '#/components/parameters/track_id'
-  #     responses:
-  #       200:
-  #         description: Success
-  #   put:
-  #     summary: Put favorite track.
-  #     tags:
-  #       - me
-  #     security:
-  #       - AuthHeader: []
-  #     parameters:
-  #       - $ref: '#/components/parameters/track_id'
-  #     responses:
-  #       200:
-  #         description: Success
-  #   delete:
-  #     summary: Delete favorite track.
-  #     tags:
-  #       - me
-  #     security:
-  #       - AuthHeader: []
-  #     parameters:
-  #       - $ref: '#/components/parameters/track_id'
-  #     responses:
-  #       200:
-  #         description: Success
   # /me/favorites/ids:
   #   get:
   #     summary: Returns user’s favorites ids.
@@ -1297,6 +1255,179 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         404:
           $ref: '#/components/responses/NotFound'
+  /users/{user_id}/likes/tracks:
+    get:
+      summary: Returns a list of user's liked tracks.
+      tags:
+        - users
+      security:
+        - ClientId: []
+          AuthHeader: []
+      parameters:
+        - $ref: '#/components/parameters/user_id'
+        - $ref: '#/components/parameters/limit'
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              examples:
+                default:
+                  $ref: "#/components/examples/Tracks"
+        400:
+          $ref: '#/components/responses/BadRequest'
+        401:
+          $ref: '#/components/responses/Unauthorized'
+        404:
+          $ref: '#/components/responses/NotFound'
+  /likes/tracks/{track_id}: 
+    post:
+      summary: Likes a track.
+      tags:
+        - likes
+      security:
+        - AuthHeader: []
+      parameters:
+        - $ref: '#/components/parameters/track_id'
+      responses:
+        200:
+          $ref: '#/components/responses/Success'
+        201:
+          $ref: '#/components/responses/Created'
+        400:
+          $ref: '#/components/responses/BadRequest'
+        401:
+          $ref: '#/components/responses/Unauthorized'
+        404:
+          $ref: '#/components/responses/NotFound'
+        429:
+          $ref: '#/components/responses/TooManyRequests'
+    delete:
+      summary: Unlikes a track.
+      tags:
+        - likes
+      security:
+        - AuthHeader: []
+      parameters:
+        - $ref: '#/components/parameters/track_id'
+      responses:
+        200:
+          $ref: '#/components/responses/Success'
+        400:
+          $ref: '#/components/responses/BadRequest'
+        404:
+          $ref: '#/components/responses/NotFound'
+  /likes/playlists/{playlist_id}: 
+    # get:
+    #   summary: Returns a liked playlists.
+    #   tags:
+    #     - likes
+    #   security:
+    #     - AuthHeader: []
+    #   parameters:
+    #     - $ref: '#/components/parameters/playlist_id'
+    #   responses:
+    #     200:
+    #       description: Success
+    #     404:
+    post:
+      summary: Likes a playlist.
+      tags:
+        - likes
+      security:
+        - AuthHeader: []
+      parameters:
+        - $ref: '#/components/parameters/playlist_id'
+      responses:
+        200:
+          $ref: '#/components/responses/Success'
+        201:
+          $ref: '#/components/responses/Created'
+        400:
+          $ref: '#/components/responses/BadRequest'
+        401:
+          $ref: '#/components/responses/Unauthorized'
+        404:
+          $ref: '#/components/responses/NotFound'
+        429:
+          $ref: '#/components/responses/TooManyRequests'
+    delete:
+      summary: Unlikes a playlist.
+      tags:
+        - likes
+      security:
+        - AuthHeader: []
+      parameters:
+        - $ref: '#/components/parameters/playlist_id'
+      responses:
+        200:
+          $ref: '#/components/responses/Success'
+        400:
+          $ref: '#/components/responses/BadRequest'
+        404:
+          $ref: '#/components/responses/NotFound'
+  /reposts/tracks/{track_id}:
+    post:
+      summary: Reposts a track as the authenticated user
+      tags:
+        - reposts
+      security:
+        - AuthHeader: []
+      parameters:
+        - $ref: '#/components/parameters/track_id'
+      responses:
+        200:
+          description: Success
+        401:
+          $ref: '#/components/responses/Unauthorized'
+        404:
+          $ref: '#/components/responses/NotFound'
+    delete:
+      summary: Removes a repost on a track as the authenticated user
+      tags:
+        - reposts
+      security:
+        - AuthHeader: []
+      parameters:
+        - $ref: '#/components/parameters/track_id'
+      responses:
+        200:
+          description: Success
+        401:
+          $ref: '#/components/responses/Unauthorized'
+        404:
+          $ref: '#/components/responses/NotFound'
+  /reposts/playlists/{playlist_id}:
+    post:
+      summary: Reposts a playlist as the authenticated user
+      tags:
+        - reposts
+      security:
+        - AuthHeader: []
+      parameters:
+        - $ref: '#/components/parameters/playlist_id'
+      responses:
+        200:
+          description: Success
+        401:
+          $ref: '#/components/responses/Unauthorized'
+        404:
+          $ref: '#/components/responses/NotFound'
+    delete:
+      summary: Removes a repost on a playlist as the authenticated user
+      tags:
+        - reposts
+      security:
+        - AuthHeader: []
+      parameters:
+        - $ref: '#/components/parameters/playlist_id'
+      responses:
+        200:
+          description: Success
+        401:
+          $ref: '#/components/responses/Unauthorized'
+        404:
+          $ref: '#/components/responses/NotFound'
 components:
   parameters:
     bpm[from]:
@@ -1738,6 +1869,20 @@ components:
             spam_warning_urn:
               type: string
   responses:
+    Success:
+      description: Success
+      content:
+        application/json:
+          examples:
+            default:
+              $ref: '#/components/examples/Success'
+    Created:
+      description: Created
+      content:
+        application/json:
+          examples:
+            default:
+              $ref: '#/components/examples/Created'
     BadRequest:
       description: Bad Request
       content:
@@ -1886,6 +2031,9 @@ components:
       value:
         - allOf:
           - $ref: "#/components/examples/Connection/value"
+    Success:
+      value:
+        status: 200 - OK
     Created:
       value:
         status: 201 - Created
