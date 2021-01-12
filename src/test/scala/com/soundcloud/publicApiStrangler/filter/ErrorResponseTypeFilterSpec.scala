@@ -1,6 +1,11 @@
 package com.soundcloud.publicApiStrangler.filter
 
-import com.soundcloud.jvmkit.module.http.server.{JsonResponseBuilder, ResponseBuilder}
+import com.soundcloud.jvmkit.module.http.server.{
+  HandlerRouter,
+  JsonResponseBuilder,
+  ResponseBuilder,
+  SinatraPathPatternParser
+}
 import com.soundcloud.jvmkit.module.telemetry.Telemetry
 import com.soundcloud.publicApiStrangler.test.UnitSpecification
 import com.twitter.finagle.Service
@@ -12,8 +17,10 @@ import play.api.libs.json.Json
 class ErrorResponseTypeFilterSpec extends UnitSpecification {
   trait Context extends Scope {
     val next = mock[Service[Request, Response]]
+    val router = mock[HandlerRouter]
     val telemetry = Telemetry.createIsolatedInstance
-    val filter = new ErrorResponseTypeFilter(telemetry)
+    val filter = new ErrorResponseTypeFilter(telemetry, router)
+    when(router.pathMatching(anyObject[Request])).thenReturn(SinatraPathPatternParser("/tracks/:id"))
   }
 
   "leaves 2xx responses unchanged" in new Context {
@@ -34,12 +41,12 @@ class ErrorResponseTypeFilterSpec extends UnitSpecification {
   }
 
   "adds body in case of failed response" in new Context {
-    val request = Request("/some-path")
+    val request = Request("/tracks/123")
     val responseFromNextService = JsonResponseBuilder.badRequest()
     when(next.apply(request)).thenReturn(Future.value(responseFromNextService))
 
     val response = Json.parse(Await.result(filter(request, next)).contentString)
     (response \ "code").as[Int] mustEqual 400
-    filter.emptyBodyErrorResponseCounter.labels("/some-path", "400").get === 1
+    filter.emptyBodyErrorResponseCounter.labels("/tracks/:id", "400").get === 1
   }
 }
