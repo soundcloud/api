@@ -15,32 +15,32 @@ DEFAULT_REQUEST_LATENCY_BUCKETS="0.001,0.005,0.010,0.020,0.050,0.100,0.200,0.300
 # TODO(beep): make the rest of these SRV config entries just .srv (i.e. zone-local) as
 # other services are made multi-zone
 
-AUTHENTICATOR_SRV_RECORD="dnssrv!http.api.prod.authenticator.srv"
-AUTHSY_SRV_RECORD="dnssrv!http.api.prod.authsy.srv"
-FOLLOWS_SRV_RECORD="dnssrv!http.api.prod.follows.srv"
-GOBBLY_SRV_RECORD="dnssrv!http.api.prod.gobbly.srv.db.s-cloud.net"
-GATEKEEPER_SRV_RECORD="dnssrv!http.api.prod.gatekeeper.srv"
-PUBMESE_SRV_RECORD="dnssrv!http.api.prod.pubmese.srv.db.s-cloud.net"
-GEOIP_SRV_RECORD="dnssrv!http.geoip2http.prod.geoip.srv"
-STITCH_SRV_RECORD="dnssrv!http.web-total-counts.prod.stitch4counts.srv.db.s-cloud.net"
-REPOSTS_SRV_RECORD="dnssrv!http.api.prod.reposts.srv"
+AUTHENTICATOR_SRV_RECORD="dnssrv!http.api.prod.authenticator.srv.${ZONE}.s-cloud.net."
+AUTHSY_SRV_RECORD="dnssrv!http.api.prod.authsy.srv.${ZONE}.s-cloud.net."
+FOLLOWS_SRV_RECORD="dnssrv!http.api.prod.follows.srv.${ZONE}.s-cloud.net."
+GOBBLY_SRV_RECORD="dnssrv!http.api.prod.gobbly.srv.db.s-cloud.net."
+GATEKEEPER_SRV_RECORD="dnssrv!http.api.prod.gatekeeper.srv.${ZONE}.s-cloud.net."
+PUBMESE_SRV_RECORD="dnssrv!http.api.prod.pubmese.srv.db.s-cloud.net."
+GEOIP_SRV_RECORD="dnssrv!http.geoip2http.prod.geoip.srv.${ZONE}.s-cloud.net."
+STITCH_SRV_RECORD="dnssrv!http.web-total-counts.prod.stitch4counts.srv.db.s-cloud.net."
+REPOSTS_SRV_RECORD="dnssrv!http.api.prod.reposts.srv.${ZONE}.s-cloud.net."
 REPOSTS_CLIENT_REQUEST_TIMEOUT_MILLIS="5000"
 
 # Playlists and listings are being extracted out of Mothership, this configuration value is in anticipation of that.
-PLAYLIST_SRV_RECORD="dnssrv!http.moshimoshi.prod.mothership.srv"
+PLAYLIST_SRV_RECORD="dnssrv!http.moshimoshi.prod.mothership.srv.${ZONE}.s-cloud.net."
 
-PUBLIC_API_ADDRESS="dnssrv!http.public-api.prod.mothership.srv"
+PUBLIC_API_ADDRESS="dnssrv!http.public-api.prod.mothership.srv.${ZONE}.s-cloud.net."
 PUBLIC_API_CLIENT_REQUEST_TIMEOUT_MILLIS="30000"
 PUBLIC_API_CLIENT_FOLLOW_REDIRECTS=false
 
-OKIDOKI_SRV_RECORD="dnssrv!http.okidoki.prod.moshimoshi.srv"
+OKIDOKI_SRV_RECORD="dnssrv!http.okidoki.prod.moshimoshi.srv.${ZONE}.s-cloud.net."
 
 RATELIMITING_CIRCUITBREAKER_MAX_CONSECUTIVE_FAILURES="5"
 RATELIMITING_CIRCUITBREAKER_RESET_TIMEOUT_IN_MILLIS="1000"
 RATELIMITING_CLIENT_REQUEST_TIMEOUT_MILLIS="2000"
 RATELIMITING_CLIENT_RETRIES="1"
 RATELIMITING_MAX_PROMETHEUS_COUNTER_LABELS="100"
-RATELIMITING_SRV_RECORD="dnssrv!http.api.prod.ratelimiting.srv"
+RATELIMITING_SRV_RECORD="dnssrv!http.api.prod.ratelimiting.srv.${ZONE}.s-cloud.net."
 
 SLO_ERROR_RATE_THRESHOLD=0.0001
 SLO_LATENCY_P99_THRESHOLD_SECONDS=0.500
@@ -48,24 +48,24 @@ SLO_AVAILABILITY_TARGET=0.99999
 
 TIMELINE_CLIENT_REQUEST_TIMEOUT_MILLIS="2000"
 
-SEARCH_SRV_RECORD="dnssrv!http.publicapi.prod.search.srv.db.s-cloud.net"
+SEARCH_SRV_RECORD="dnssrv!http.publicapi.prod.search.srv.db.s-cloud.net."
 SEARCH_CLIENT_REQUEST_TIMEOUT_MILLIS=3000
 
-TIMELINE_SRV_RECORD="dnssrv!http.api.prod.timeline.srv"
+TIMELINE_SRV_RECORD="dnssrv!http.api.prod.timeline.srv.${ZONE}.s-cloud.net."
 
-LIEBLING_SRV_RECORD="dnssrv!http.web.prod.liebling.srv"
-SYSTEM_PLAYLISTS_SRV_RECORD="dnssrv!http.api.prod.system-playlists.srv"
+LIEBLING_SRV_RECORD="dnssrv!http.web.prod.liebling.srv.${ZONE}.s-cloud.net."
+SYSTEM_PLAYLISTS_SRV_RECORD="dnssrv!http.api.prod.system-playlists.srv.${ZONE}.s-cloud.net."
 
-TRACK_COORDINATOR_SRV_RECORD="dnssrv!http.coordinator.prod.tracks.srv.db.s-cloud.net"
+TRACK_COORDINATOR_SRV_RECORD="dnssrv!http.coordinator.prod.tracks.srv.db.s-cloud.net."
 
-USER_SUBSCRIPTIONS_SRV_RECORD="dnssrv!http.server.production.subscriptions.srv"
+USER_SUBSCRIPTIONS_SRV_RECORD="dnssrv!http.server.production.subscriptions.srv.${ZONE}.s-cloud.net."
 
 RATELIMIT_MAX_CONN="999999"
 
-PUBLIC_API_STRANGLER_MEMCACHED_SRV_RECORD="dnssrv!memcached.cache.prod.public-api-strangler.srv"
-ZOOKEEPER_ADDRESS="dnssrv!zookeeper.coordinator.prod.rollout.srv.db.s-cloud.net"
+PUBLIC_API_STRANGLER_MEMCACHED_SRV_RECORD="dnssrv!memcached.cache.prod.public-api-strangler.srv.${ZONE}.s-cloud.net."
+ZOOKEEPER_ADDRESS="dnssrv!zookeeper.coordinator.prod.rollout.srv.db.s-cloud.net."
 
-STITCH4FOLLOWS_SRV_RECORD="dnssrv!http.web-follows.prod.stitch4counts.srv.db.s-cloud.net"
+STITCH4FOLLOWS_SRV_RECORD="dnssrv!http.web-follows.prod.stitch4counts.srv.db.s-cloud.net."
 STITCH_BULK_FETCH_MAX_ENTRIES="7"
 
 OKIDOKI_CLIENT_FAILURE_ACCRUAL_REQ_SUCCESS_RATE="0.95"
@@ -76,23 +76,23 @@ AUTHENTICATOR_CLIENT_FAILURE_ACCRUAL_REQ_SUCCESS_RATE="0.99"
 AUTHENTICATOR_CLIENT_FAILURE_ACCRUAL_WINDOW="1000"
 AUTHENTICATOR_CLIENT_FAILURE_ACCRUAL_MARK_DEAD_FOR_MILLIS="100"
 
-TRACKMETADATA_SRV_RECORD=dnssrv!http.api.prod.trackmetadata.srv
+TRACKMETADATA_SRV_RECORD=dnssrv!http.api.prod.trackmetadata.srv.${ZONE}.s-cloud.net.
 
-TRACKS_SRV_RECORD=dnssrv!http.api.prod.tracks.srv
+TRACKS_SRV_RECORD=dnssrv!http.api.prod.tracks.srv.${ZONE}.s-cloud.net.
 
-MEDIA_SERVICE_SRV_RECORD=dnssrv!http.api.prod.media-service.srv
+MEDIA_SERVICE_SRV_RECORD=dnssrv!http.api.prod.media-service.srv.${ZONE}.s-cloud.net.
 
-TRACK_ACCESS_RECORDER_SRV_RECORD=dnssrv!http.moshimoshi.prod.mothership.srv
+TRACK_ACCESS_RECORDER_SRV_RECORD=dnssrv!http.moshimoshi.prod.mothership.srv.${ZONE}.s-cloud.net.
 TRACK_ACCESS_RECORDER_CLIENT_REQUEST_TIMEOUT_MILLIS="3000"
 
-OAUTH_AUTHORIZATION_SRV_RECORD=dnssrv!http.oauth.prod.authenticator.srv
+OAUTH_AUTHORIZATION_SRV_RECORD=dnssrv!http.oauth.prod.authenticator.srv.${ZONE}.s-cloud.net.
 
-HOCUSPOCUS_SRV_RECORD=dnssrv!http.api.prod.hocuspocus.srv.db.s-cloud.net
+HOCUSPOCUS_SRV_RECORD=dnssrv!http.api.prod.hocuspocus.srv.db.s-cloud.net.
 HOCUSPOCUS_CLIENT_REQUEST_TIMEOUT_MILLIS=5000
 
-PLAYLISTS_SRV_RECORD=dnssrv!http.api.prod.playlists.srv
+PLAYLISTS_SRV_RECORD=dnssrv!http.api.prod.playlists.srv.${ZONE}.s-cloud.net.
 
 CDN_WAVE_HTTPS_ENDPOINT=https://wave.sndcdn.com
 
-MOSHIMOSHI_COMMENTS_SRV_RECORD=dnssrv!http.moshimoshi-comments.prod.mothership.srv
-MOSHIMOSHI_SRV_RECORD=dnssrv!http.moshimoshi.prod.mothership.srv
+MOSHIMOSHI_COMMENTS_SRV_RECORD=dnssrv!http.moshimoshi-comments.prod.mothership.srv.${ZONE}.s-cloud.net.
+MOSHIMOSHI_SRV_RECORD=dnssrv!http.moshimoshi.prod.mothership.srv.${ZONE}.s-cloud.net.
