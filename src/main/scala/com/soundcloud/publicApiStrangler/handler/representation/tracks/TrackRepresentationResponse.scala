@@ -26,14 +26,14 @@ object TrackRepresentationResponse {
     }
   }
 
-  def handleTrackRepresentationResponseFromService(
+  def handleUpdateTrackResponseFromService(
       outcome: Future[Outcome[TrackRepresentation]]
   ): Future[Response] = {
     outcome.map {
       case Good(trackRep) =>
         generateResponse(Status.Ok, Json.stringify(Json.toJson(trackRep)))
       case Bad(NotFound(_)) => ErrorResponse.notFound()
-      case Bad(NotValid(_)) => ErrorResponse.badRequest()
+      case Bad(NotValid(msg)) => ErrorResponse.badRequest(msg.head)
 
       case _ => throw new UnhandledOutcomeException
     }

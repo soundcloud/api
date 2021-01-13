@@ -8,7 +8,7 @@ import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.publicApiStrangler.client.trackcoordinator.TrackCoordinatorClient
 import com.soundcloud.publicApiStrangler.handler.representation.tracks.TrackRepresentationResponse.{
   handleCreateTrackResponseFromService,
-  handleTrackRepresentationResponseFromService
+  handleUpdateTrackResponseFromService
 }
 import com.soundcloud.publicApiStrangler.handler.support.requestParser._
 import com.soundcloud.publicApiStrangler.service.trackrepresentation.TrackUpdateService
@@ -87,7 +87,7 @@ class TracksHandler(
             urn,
             session
           )
-        handleTrackRepresentationResponseFromService(response)
+        handleUpdateTrackResponseFromService(response)
     }
   }
 
@@ -96,7 +96,7 @@ class TracksHandler(
     metadataUpdateParams match {
       case Some(_) =>
         val response = trackUpdateService.updateTrack(None, None, metadataUpdateParams, urn, session)
-        handleTrackRepresentationResponseFromService(response)
+        handleUpdateTrackResponseFromService(response)
       case _ => generateBadResponse
     }
   }
@@ -118,7 +118,7 @@ class TracksHandler(
             urn,
             session
           )
-        handleTrackRepresentationResponseFromService(response)
+        handleUpdateTrackResponseFromService(response)
     }
   }
 

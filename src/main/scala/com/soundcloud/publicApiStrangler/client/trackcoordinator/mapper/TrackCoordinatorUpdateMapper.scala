@@ -12,6 +12,9 @@ object TrackCoordinatorUpdateMapper {
     response.status match {
       case Status.Ok => Json.parse(response.contentString).as[TrackCoordinatorTrack].good
       case Status.NotFound => NotFound().bad
+      case Status.BadRequest => {
+        NotValid(TrackCoordinatorError.extractTrackCoordinatorErrorMessage(response.contentString)).bad
+      }
       case _ => throw UnhandledResponseException(response)
     }
   }
