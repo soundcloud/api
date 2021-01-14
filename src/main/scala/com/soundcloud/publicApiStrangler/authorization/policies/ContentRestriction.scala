@@ -47,9 +47,9 @@ object ContentRestriction {
   case object NO_PROGRESSIVE_DOWNLOAD extends ContentRestriction("NO_PROGRESSIVE_DOWNLOAD")
 
   /**
-    * The content can be shared to an external platform.
+    * The content cannot be shared to an external platform.
     */
-  case object ALLOW_EXTERNAL_SHARE extends ContentRestriction("ALLOW_EXTERNAL_SHARE")
+  case object NO_EXTERNAL_SHARE extends ContentRestriction("NO_EXTERNAL_SHARE")
 
   /**
     * Converts List of Strings into List of {@link ContentRestriction} instances.
@@ -64,7 +64,7 @@ object ContentRestriction {
     values.find(_.name == n).getOrElse(throw new IllegalArgumentException(s"No value for name $n"))
   }
 
-  def values = List(ENCRYPTED_STREAM_ONLY, NO_OFFLINE_SYNC, NO_PROGRESSIVE_DOWNLOAD, ALLOW_EXTERNAL_SHARE)
+  def values = List(ENCRYPTED_STREAM_ONLY, NO_OFFLINE_SYNC, NO_PROGRESSIVE_DOWNLOAD, NO_EXTERNAL_SHARE)
 
   /**
     * Returns string set of all possible string-representations of the enum
