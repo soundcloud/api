@@ -2,7 +2,8 @@ openapi: 3.0.1
 info:
   title: SoundCloud Public API Specification
   contact:
-    name: Public API strangler
+    name: API issue tracker
+    url: https://github.com/soundcloud/api
   version: 1.0.0
   termsOfService: https://developers.soundcloud.com/docs/api/terms-of-use
 servers:
@@ -227,25 +228,26 @@ paths:
                   $ref: "#/components/examples/Tracks"
         401:
           $ref: '#/components/responses/Unauthorized'
-  # /me/favorites/ids:
-  #   get:
-  #     summary: Returns user’s favorites ids.
-  #     tags:
-  #       - me
-  #     security:
-  #       - AuthHeader: []
-  #     parameters:
-  #       - $ref: '#/components/parameters/limitIds'
-  #     responses:
-  #       200:
-  #         description: Success
-  #         content:
-  #           application/json:
-  #             examples:
-  #               default:
-  #                 $ref: "#/components/examples/FavoritesIds"
-  #       404:
-  #         description: The user could not be found
+  /me/favorites/ids:
+    get:
+      summary: Returns user’s favorites ids. (use /me/likes/tracks instead to fetch the authenticated user's likes)
+      deprecated: true
+      tags:
+        - me
+      security:
+        - AuthHeader: []
+      parameters:
+        - $ref: '#/components/parameters/limitIds'
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              examples:
+                default:
+                  $ref: "#/components/examples/FavoritesIds"
+        404:
+          description: The user could not be found
   /me/followings:
     get:
       summary: Returns a list of users who are followed by the authenticated user.
@@ -288,7 +290,8 @@ paths:
           $ref: '#/components/responses/Unauthorized'
   /me/followings/{user_id}:
     get:
-      summary: Returns a user who is followed by the authenticated user.
+      summary: Returns a user who is followed by the authenticated user. (use /users/{user_id} instead, to fetch the user details)
+      deprecated: true
       tags:
         - me
       security:
@@ -408,7 +411,8 @@ paths:
           $ref: '#/components/responses/Unauthorized'
   /me/followers/{follower_id}:
     get:
-      summary: Returns a user who is following the authenticated user.
+      summary: Returns a user who is following the authenticated user. (use /users/{user_id} instead, to fetch the user details)
+      deprecated: true
       tags:
         - me
       security:
@@ -456,18 +460,18 @@ paths:
     #   responses:
     #     200:
     #       description: Success
-  # /me/playlists/{playlist_id}:
-  #   get:
-  #     summary: Returns playlist.
-  #     tags:
-  #       - me
-  #     security:
-  #       - AuthHeader: []
-  #     parameters:
-  #       - $ref: '#/components/parameters/playlist_id'
-  #     responses:
-  #       200:
-  #         description: Success
+  /me/playlists/{playlist_id}:
+    get:
+      summary: Returns playlist. (use /playlists/{playlist_id} instead, to fetch the playlist details)
+      tags:
+        - me
+      security:
+        - AuthHeader: []
+      parameters:
+        - $ref: '#/components/parameters/playlist_id'
+      responses:
+        200:
+          description: Success
   #   put:
   #     summary: Returns favorite track.
   #     tags:
@@ -498,18 +502,19 @@ paths:
                   $ref: "#/components/examples/Tracks"
         401:
           $ref: '#/components/responses/Unauthorized'
-  # /me/tracks/{track_id}:
-  #   get:
-  #     summary: Returns a list of tracks.
-  #     tags:
-  #       - me
-  #     security:
-  #       - AuthHeader: []
-  #     parameters:
-  #       - $ref: '#/components/parameters/track_id'
-  #     responses:
-  #       200:
-  #         description: Success
+  /me/tracks/{track_id}:
+    get:
+      summary: Returns a list of tracks. (use /tracks/{track_id} instead, to fetch the track details)
+      deprecated: true
+      tags:
+        - me
+      security:
+        - AuthHeader: []
+      parameters:
+        - $ref: '#/components/parameters/track_id'
+      responses:
+        200:
+          description: Success
   /me/web-profiles:
     get:
       summary: Returns a list of the authenticated user's links added to their profile.
@@ -939,7 +944,8 @@ paths:
           $ref: '#/components/responses/NotFound'
   /tracks/{track_id}/favoriters/{user_id}:
     get:
-      summary: Returns a user who has favorited or liked the track.
+      summary: Returns a user who has favorited or liked the track. (use /users/{user_id} instead, to fetch the user details)
+      deprecated: true
       tags:
         - tracks
       security:
@@ -1067,7 +1073,8 @@ paths:
           $ref: '#/components/responses/NotFound'
   /users/{user_id}/favorites:
     get:
-      summary: Returns a list of user's favorited or liked tracks.
+      summary: Returns a list of user's favorited or liked tracks. (use /users/:userId/likes/tracks instead, to fetch a user's likes)
+      deprecated: true
       tags:
         - users
       security:
@@ -1110,8 +1117,9 @@ paths:
           $ref: '#/components/responses/Unauthorized'
   /users/{user_id}/followers/{follower_id}:
     get:
-      summary: Returns a user's follower.
+      summary: Returns a user's follower. (use /users/{user_id} instead, to fetch the user details)
       description: Returns a (follower's user_id) that follows (user_id).
+      deprecated: true
       tags:
         - users
       security:
@@ -1154,8 +1162,9 @@ paths:
           $ref: '#/components/responses/Unauthorized'
   /users/{user_id}/followings/{following_id}:
     get:
-      summary: Returns a user's following.
+      summary: Returns a user's following. (use /users/{user_id} instead, to fetch the user details)
       description: Returns (following_id) that is followed by (user_id).
+      deprecated: true
       tags:
         - users
       security:

@@ -42,12 +42,12 @@ object Routing {
   def forUserFollowHandler(userFollowHandler: UserFollowHandler): List[(Method, String, Handler)] = {
     route(Method.Get, "/users/:id/followings", userFollowHandler.fetchFollowingsWithoutAuth) :::
       route(Method.Get, "/users/:id/followers", userFollowHandler.fetchFollowersWithoutAuth) :::
-      route(Method.Get, "/users/:id/followers/:other_id", userFollowHandler.fetchPossibleFollowerWithoutAuth) :::
-      route(Method.Get, "/users/:id/followings/:other_id", userFollowHandler.fetchPossibleFollowingWithoutAuth) :::
+      route(Method.Get, "/users/:id/followers/:other_id", userFollowHandler.fetchPossibleFollowerWithoutAuth) ::: // deprecate
+      route(Method.Get, "/users/:id/followings/:other_id", userFollowHandler.fetchPossibleFollowingWithoutAuth) ::: // deprecate
       route(Method.Get, "/me/followings", userFollowHandler.fetchFollowings) :::
       route(Method.Get, "/me/followers", userFollowHandler.fetchMyFollowers) :::
-      route(Method.Get, "/me/followers/:other_id", userFollowHandler.fetchPossibleFollower) :::
-      route(Method.Get, "/me/followings/:other_id", userFollowHandler.fetchPossibleFollowing) :::
+      route(Method.Get, "/me/followers/:other_id", userFollowHandler.fetchPossibleFollower) ::: // deprecate
+      route(Method.Get, "/me/followings/:other_id", userFollowHandler.fetchPossibleFollowing) ::: // deprecate
       route(Method.Post, "/me/followings/:other_id", userFollowHandler.follow) :::
       route(Method.Put, "/me/followings/:other_id", userFollowHandler.follow) :::
       route(Method.Delete, "/me/followings/:other_id", userFollowHandler.unfollow)
@@ -98,7 +98,7 @@ object Routing {
       userRelatedMothershipDispatcher: UserRelatedMothershipDispatcher
   ): List[(Method, String, Handler)] = {
     route(Method.Get, "/tracks/:id/favoriters", userRelatedMothershipDispatcher.dispatchToMothership) :::
-      route(Method.Get, "/tracks/:id/favoriters/:user_id", userRelatedMothershipDispatcher.dispatchToMothership) :::
+      route(Method.Get, "/tracks/:id/favoriters/:user_id", userRelatedMothershipDispatcher.dispatchToMothership) ::: // deprecate
       route(Method.Get, "/users/:id", userRelatedMothershipDispatcher.dispatchToMothership) :::
       route(Method.Get, "/users/:id/comments", userRelatedMothershipDispatcher.dispatchToMothership) :::
       route(Method.Get, "/me", userRelatedMothershipDispatcher.dispatchToMothership)
@@ -113,14 +113,14 @@ object Routing {
   def forUserTracksHandler(userTracksHandler: UserTracksHandler): List[(Method, String, Handler)] = {
     route(Method.Get, "/users/:userId/tracks", userTracksHandler.getUserTracks) :::
       route(Method.Get, "/me/tracks", userTracksHandler.getMeTracks) :::
-      route(Method.Get, "/me/tracks/:trackId", userTracksHandler.getTrackByMe)
+      route(Method.Get, "/me/tracks/:trackId", userTracksHandler.getTrackByMe) // deprecate
   }
 
   def forUserPlaylistsHandler(userPlaylistsHandler: UserPlaylistsHandler): List[(Method, String, Handler)] = {
     route(Method.Get, "/users/:userId/playlists", userPlaylistsHandler.getUserPlaylists) :::
       route(Method.Get, "/me/playlists", userPlaylistsHandler.getMePlaylists) :::
       route(Method.Get, "/users/:userId/playlists/:id", userPlaylistsHandler.getUserPlaylist) :::
-      route(Method.Get, "/me/playlists/:id", userPlaylistsHandler.getMePlaylist)
+      route(Method.Get, "/me/playlists/:id", userPlaylistsHandler.getMePlaylist) // deprecate
   }
 
   def forRepostsHandler(repostsHandler: RepostsHandler): List[(Method, String, Handler)] = {
@@ -136,7 +136,7 @@ object Routing {
 
   def forTimelineHandler(timelineHandler: TimelineHandler): List[(Method, String, Handler)] = {
     route(Method.Get, "/me/activities/tracks", timelineHandler.renderPublicTrackStream) :::
-      route(Method.Get, "/me/activities/tracks/:tag", timelineHandler.renderPublicTrackStream) :::
+      route(Method.Get, "/me/activities/tracks/:tag", timelineHandler.renderPublicTrackStream) ::: // deprecate
       route(Method.Get, "/me/activities", timelineHandler.renderPublicStream) :::
       route(Method.Get, "/me/activities/all/own", timelineHandler.renderPublicStream) :::
       route(Method.Get, "/me/followings/tracks", timelineHandler.renderFollowingTracks)
