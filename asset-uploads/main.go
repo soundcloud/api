@@ -78,9 +78,10 @@ func main() {
 
 	service := &service{
 		upload: &uploader{
-			mediaService: mediaService,
-			s3Uploader:   s3manager.NewUploaderWithClient(s3),
-			s3Bucket:     *s3Bucket,
+			mediaService: 	mediaService,
+			s3Uploader:   	s3manager.NewUploaderWithClient(s3),
+			s3Bucket:     	*s3Bucket,
+			s3KeyGenerator: generateS3Key,
 		},
 	}
 

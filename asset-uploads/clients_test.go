@@ -6,10 +6,11 @@ import (
 )
 
 func TestTranscodingRequestPayload(t *testing.T) {
-	uid := "uvwxyz"
-	want := fmt.Sprintf(`{"uid":"%s","key":"%s","priority":"manual"}`, uid, uid)
+	key := "public-api/uvwxyz"
+	filename := "Так закалялась сталь.mp3"
+	want := fmt.Sprintf(`{"key":"%s","priority":"manual","filename":"%s"}`, key, filename)
 
-	payload, err := transcodingRequestPayload(uid)
+	payload, err := transcodingRequestPayload(key, filename)
 	if err != nil {
 		t.Fatalf("expected generating payload not to fail, got: %v", err)
 	}

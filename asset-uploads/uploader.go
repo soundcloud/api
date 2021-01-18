@@ -4,12 +4,11 @@ import (
 	"crypto/md5"
 	"fmt"
 	"io"
-	"net/url"
-	"path/filepath"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager/s3manageriface"
+	"github.com/google/uuid"
 )
 
 type uploaderAPI interface {
@@ -20,6 +19,7 @@ type uploader struct {
 	mediaService            mediaServiceClientAPI
 	s3Bucket                string
 	s3Uploader              s3manageriface.UploaderAPI
+	s3KeyGenerator			func() string
 }
 
 type uploadTrackRequest struct {
@@ -34,24 +34,21 @@ type uploadTrackResponse struct {
 }
 
 func (u uploader) uploadTrack(req *uploadTrackRequest) (*uploadTrackResponse, error) {
-	uid, err := u.mediaService.createTrackUID()
-	if err != nil {
-		return nil, err
-	}
+	key := u.s3KeyGenerator()
 
 	md5 := md5.New()
 	tee := io.TeeReader(req.data, md5)
 	out, err := u.s3Uploader.Upload(&s3manager.UploadInput{
 		Bucket:             aws.String(u.s3Bucket),
-		Key:                aws.String(uid),
+		Key:                aws.String(key),
 		Body:               tee,
-		ContentDisposition: contentDisposition(req.filename),
 	})
 	if err != nil {
 		return nil, err
 	}
 
-	if err := u.mediaService.createTranscoding(uid); err != nil {
+	uid, err := u.mediaService.createTranscoding(key, req.filename)
+	if err != nil {
 		return nil, err
 	}
 
@@ -62,16 +59,8 @@ func (u uploader) uploadTrack(req *uploadTrackRequest) (*uploadTrackResponse, er
 	}, nil
 }
 
-func contentDisposition(filename string) *string {
-	if len(filename) == 0 {
-		return nil
-	}
-	s := filename
-	s = filepath.Base(s)
-	s = url.QueryEscape(s)
-	// handle filenames with characters outside the ASCII set (https://tools.ietf.org/html/rfc8187)
-	s = fmt.Sprintf(`attachment;filename="%s"; filename*=utf-8''%s`, s, s)
-	return &s
+func generateS3Key() string {
+	return fmt.Sprintf("public-api/%s", uuid.New().String())
 }
 
 // Ensure that uploader implements uploaderAPI.

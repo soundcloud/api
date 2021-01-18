@@ -25,7 +25,7 @@ func main() {
 		w.Write([]byte("OK"))
 	}))
 
-	http.HandleFunc("/uid", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	http.HandleFunc("/transcode", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		log.Println(r)
 
 		if r.Method != "POST" {
@@ -43,20 +43,8 @@ func main() {
 
 		uid := base64.URLEncoding.EncodeToString(b)
 
-		w.WriteHeader(http.StatusCreated)
-		w.Write([]byte(fmt.Sprintf(responseFormat, uid[0:uidBytes])))
-	}))
-
-	http.HandleFunc("/transcode", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		log.Println(r)
-
-		if r.Method != "POST" {
-			http.Error(w, fmt.Sprintf("Unsupported HTTP method: %s", r.Method), http.StatusBadRequest)
-			return
-		}
-
 		w.WriteHeader(http.StatusAccepted)
-		w.Write([]byte("{\"status\": \"queued\"}"))
+		w.Write([]byte(fmt.Sprintf(responseFormat, uid[0:uidBytes])))
 	}))
 
 	http.ListenAndServe(*listenAddr, nil)

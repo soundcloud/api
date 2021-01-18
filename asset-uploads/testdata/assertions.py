@@ -51,19 +51,17 @@ class Assertions:
                 .format(filename), request_dump):
             raise AssertionError('Expected track[original_filename]')
 
-    def assertTrackUID(self, request_dump):
+    def assertTrackAssetLocation(self, request_dump):
         header = search(
-            r'X-Track-Asset-Location:.*\.amazonaws\.com/(?P<uid>[0-9a-zA-Z_-]{12})\r\n',
+            r'X-Track-Asset-Location:.*\.amazonaws\.com/public-api/(?P<uuid>[0-9a-f-]{36})\r\n',
             request_dump)
         if not header:
             raise AssertionError('Expected X-Track-Asset-Location: ' +
                                  request_dump)
 
+    def assertTrackUID(self, request_dump):
         form_data = search(
             r'Content-Disposition: form-data; name="track\[uid\]"\r\n\r\n(?P<uid>[0-9a-zA-Z_-]{12})\r\n',
             request_dump)
         if not form_data:
             raise AssertionError('Expected track[uid]: ' + request_dump)
-
-        if header.group('uid') != form_data.group('uid'):
-            raise AssertionError('Expected UID to match: ' + request_dump)

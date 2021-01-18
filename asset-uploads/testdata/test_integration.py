@@ -47,6 +47,7 @@ class TestIntegration(unittest.TestCase, assertions.Assertions):
         self.assertNoTrackAssetData(res)
         self.assertRequest(res, 'POST', '/tracks')
         self.assertTrackOriginalFilename(res, 'test_chunk.wav')
+        self.assertTrackAssetLocation(res)
         self.assertTrackUID(res)
 
     def test_alternate_routes(self):
@@ -70,6 +71,7 @@ class TestIntegration(unittest.TestCase, assertions.Assertions):
             self.assertNoTrackAssetData(res)
             self.assertRequest(res, 'POST', path)
             self.assertTrackOriginalFilename(res, 'test_chunk.wav')
+            self.assertTrackAssetLocation(res)
             self.assertTrackUID(res)
 
     def test_chunk_large(self):
@@ -102,6 +104,7 @@ class TestIntegration(unittest.TestCase, assertions.Assertions):
         self.assertNoTrackAssetData(res)
         self.assertRequest(res, 'POST', '/tracks')
         self.assertTrackOriginalFilename(res, 'test_length.wav')
+        self.assertTrackAssetLocation(res)
         self.assertTrackUID(res)
 
     def test_length_large(self):
@@ -148,6 +151,7 @@ class TestIntegration(unittest.TestCase, assertions.Assertions):
         self.assertNoTrackAssetData(res)
         self.assertRequest(res, 'POST', '/tracks')
         self.assertTrackOriginalFilename(res, '')
+        self.assertTrackAssetLocation(res)
         self.assertTrackUID(res)
 
     def test_generic(self):

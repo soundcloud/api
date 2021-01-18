@@ -28,15 +28,16 @@ type fakeMediaServiceClient struct {
 	uid string
 }
 
-func (f fakeMediaServiceClient) createTrackUID() (string, error) { return f.uid, nil }
-
-func (f fakeMediaServiceClient) createTranscoding(string) error { return nil }
+func (f fakeMediaServiceClient) createTranscoding(string, string) (string, error) { return f.uid, nil }
 
 func TestControllerServiceS3Integration(t *testing.T) {
 	uploader := &uploader{
 		mediaService: &fakeMediaServiceClient{uid: "testUid"},
 		s3Bucket:     "test-bucket",
 		s3Uploader:   &fakeS3Manager{},
+		s3KeyGenerator: func() string {
+			return "public-api/foobar"
+		},
 	}
 
 	service := &service{
