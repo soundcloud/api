@@ -102,6 +102,7 @@ pipelines:
     - deploy-doc:
         jobs:
           deploy:
+            job_type: deploy
             tasks:
             - exec:
                 command: make
