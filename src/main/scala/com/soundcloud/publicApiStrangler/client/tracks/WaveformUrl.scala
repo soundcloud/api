@@ -5,19 +5,6 @@ import play.api.libs.json._
 
 case class WaveformUrl(waveformType: WaveformType, json: Url, png: Url)
 
-object WaveformUrl {
-  implicit val reads: Reads[WaveformUrl] = new Reads[WaveformUrl] {
-    override def reads(json: JsValue): JsResult[WaveformUrl] =
-      JsSuccess(
-        WaveformUrl(
-          (json \ "waveformType").as[WaveformType],
-          Url((json \ "json").as[String]),
-          Url((json \ "png").as[String])
-        )
-      )
-  }
-}
-
 class WaveformType(s: String) {
   override def toString: String = s
 }
