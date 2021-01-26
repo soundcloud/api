@@ -237,15 +237,10 @@ paths:
       security:
         - AuthHeader: []
       parameters:
-        - $ref: '#/components/parameters/limitIds'
+        - $ref: '#/components/parameters/limit'
       responses:
         200:
           description: Success
-          content:
-            application/json:
-              examples:
-                default:
-                  $ref: "#/components/examples/FavoritesIds"
         404:
           description: The user could not be found
   /me/followings:
@@ -446,7 +441,7 @@ paths:
             application/json:
               examples:
                 default:
-                  $ref: "#/components/examples/PlaylistAndTracks"
+                  $ref: "#/components/examples/Playlist"
         401:
           $ref: '#/components/responses/Unauthorized'
         404:
@@ -463,6 +458,7 @@ paths:
   /me/playlists/{playlist_id}:
     get:
       summary: Returns playlist. (use /playlists/{playlist_id} instead, to fetch the playlist details)
+      deprecated: true
       tags:
         - me
       security:
@@ -517,7 +513,8 @@ paths:
           description: Success
   /me/web-profiles:
     get:
-      summary: Returns a list of the authenticated user's links added to their profile.
+      summary: Returns a list of the authenticated user's links added to their profile. (use /users/{user_id}/web-profiles instead)
+      deprecated: true
       tags:
         - me
       security:
@@ -623,11 +620,35 @@ paths:
             application/json:
               examples:
                 default:
-                  $ref: "#/components/examples/PlaylistAndTracks"
+                  $ref: "#/components/examples/Playlist"
         400:
           $ref: '#/components/responses/BadRequest'
         401:
           $ref: '#/components/responses/Unauthorized'
+    post:
+      summary: Creates a playlist.
+      tags:
+        - playlists
+      security:
+        - AuthHeader: []
+      requestBody:
+        description: Create Playlist request
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateUpdatePlaylistRequest'
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              examples:
+                default:
+                  $ref: "#/components/examples/Playlist"
+        401:
+          $ref: '#/components/responses/Unauthorized'
+        404:
+          $ref: '#/components/responses/NotFound'
   /users:
     get:
       summary: Performs a user search based on a query
@@ -685,54 +706,48 @@ paths:
           $ref: '#/components/responses/BadRequest'
         401:
           $ref: '#/components/responses/Unauthorized'
-  #   put:
-  #     summary: Creates a playlist.
-  #     tags:
-  #       - playlists
-  #     security:
-  #       - ClientId: []
-  #         AuthHeader: []
-  #     parameters:
-  #       - $ref: "#/components/parameters/playlist_id"
-  #     responses:
-  #       200:
-  #         description: Success
-  #   delete:
-  #     summary: Deletes a playlist.
-  #     tags:
-  #       - playlists
-  #     security:
-  #       - ClientId: []
-  #         AuthHeader: []
-  #     parameters:
-  #       - $ref: "#/components/parameters/playlist_id"
-  #     responses:
-  #       200:
-  #         description: Success
-  # /playlists/{playlist_id}/tracks:
-  #   get:
-  #     summary: Returns playlist's tracks.
-  #     tags:
-  #       - playlists
-  #     security:
-  #       - ClientId: []
-  #         AuthHeader: []
-  #     parameters:
-  #       - $ref: "#/components/parameters/playlist_id"
-  #     responses:
-  #       200:
-  #         description: Success
-  # /tracks:
-  #   get:
-  #     summary: Returns ???.
-  #     tags:
-  #       - tracks
-  #     security:
-  #       - ClientId: []
-  #         AuthHeader: []
-  #     responses:
-  #       200:
-  #         description: Success
+    put:
+      summary: Updates a playlist.
+      tags:
+        - playlists
+      security:
+        - AuthHeader: []
+      parameters:
+        - $ref: "#/components/parameters/playlist_id"
+      requestBody:
+        description: Playlist payload
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateUpdatePlaylistRequest'
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              examples:
+                default:
+                  $ref: "#/components/examples/Playlist"
+        401:
+          $ref: '#/components/responses/Unauthorized'
+        404:
+          $ref: '#/components/responses/NotFound'
+    delete:
+      summary: Deletes a playlist.
+      tags:
+        - playlists
+      security:
+        - ClientId: []
+          AuthHeader: []
+      parameters:
+        - $ref: "#/components/parameters/playlist_id"
+      responses:
+        202:
+          $ref: '#/components/responses/Accepted'
+        401:
+          $ref: '#/components/responses/Unauthorized'
+        404:
+          $ref: '#/components/responses/NotFound'
   /playlists/{playlist_id}/tracks:
     get:
       summary: Returns tracks under a playlist.
@@ -1203,7 +1218,7 @@ paths:
             application/json:
               examples:
                 default:
-                  $ref: "#/components/examples/PlaylistAndTracks"
+                  $ref: "#/components/examples/Playlist"
         401:
           $ref: '#/components/responses/Unauthorized'
   # /users/{user_id}/playlists/{track_id}:
@@ -1512,16 +1527,6 @@ components:
         maximum: 200
         default: 50
       description: Number of results to return in the collection.
-    # limitIds:
-    #   in: query
-    #   name: limit
-    #   required: false
-    #   schema:
-    #     type: integer
-    #     minimum: 1
-    #     maximum: 2000
-    #     default: 50
-    #   description: Number of Ids to return in the collection.
     offset:
       in: query
       name: offset
@@ -1768,6 +1773,35 @@ components:
               default: true
             isrc:
               type: string
+    CreateUpdatePlaylistRequest:
+      type: object
+      properties:
+        playlist:
+          type: object
+          properties:
+            title:
+              description: Title of the playlist
+              type: string
+            description:
+              description: Description of the playlist
+              type: string
+            sharing:
+              description: public or private
+              type: string
+              enum:
+                - public
+                - private
+            tracks:
+              description: List of tracks to add to playlist
+              type: array
+              items:
+                type: object
+                required:
+                  - id
+                properties:
+                  id: 
+                    description: SoundCloud track id
+                    type: string
     TrackDataRequest:
       type: object
       properties:
@@ -1885,6 +1919,13 @@ components:
           examples:
             default:
               $ref: '#/components/examples/Success'
+    Accepted:
+      description: Accepted
+      content:
+        application/json:
+          examples:
+            default:
+              $ref: '#/components/examples/Accepted'
     Created:
       description: Created
       content:
@@ -2043,6 +2084,9 @@ components:
     Success:
       value:
         status: 200 - OK
+    Accepted:
+      value:
+        status: 202 - Accepted
     Created:
       value:
         status: 201 - Created
@@ -2137,46 +2181,6 @@ components:
         tags: ''
         title: permalink
         track_count: 2
-        tracks_uri: https://api.soundcloud.com/playlists/12345/tracks
-        type: ''
-        uri: https://api.soundcloud.com/playlists/12345
-        user:
-          allOf:
-            - $ref: "#/components/examples/UserOf/value"
-        user_id: 1234
-    PlaylistAndTracks:
-      value:
-        artwork_url: ''
-        created_at: 2020/01/16 16:09:54 +0000
-        description:
-        downloadable:
-        duration: 110000
-        ean:
-        embeddable_by: all
-        genre: ''
-        id: 12345
-        kind: playlist
-        label:
-        label_id:
-        label_name:
-        last_modified: 2020/01/08 09:13:00 +0000
-        license: all-rights-reserved
-        likes_count: 0
-        permalink: permalink
-        permalink_url: https://soundcloud.com/permalink/sets/club
-        playlist_type: ''
-        purchase_title:
-        purchase_url:
-        release:
-        release_day:
-        release_month:
-        release_year:
-        sharing: public
-        streamable: true
-        tag_list: ''
-        tags: ''
-        title: some title
-        track_count: 1
         tracks:
           - allOf:
             - $ref: "#/components/examples/Track/value"
