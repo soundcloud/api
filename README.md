@@ -20,6 +20,10 @@ Please use the [issue tracker] in this repository for bug reports, feature reque
 
 In order to show your support for issues filed here, please add a thumbs up emoji 👍🏽. 
 
+## Security Issues
+
+Please don't post security issues or vulnerabilities here. Instead, submit them to our public [bug-bounty program] to get triaged and receive bounty payouts.
+
 ## Frequently asked questions
 ### Can I request for an API key for a new app?
 While we hope to explore opening up access again, we're currently not issuing new keys to 3rd party apps. Please subscribe to our [@SoundCloudDev] on Twitter for updates
@@ -48,3 +52,5 @@ For all SoundCloud developer related announcements, please subscribe to [@SoundC
 [duplicate]:  https://github.com/soundcloud/api/labels/duplicate
 [more info needed]: https://github.com/soundcloud/api/labels/more%20info%20needed
 [inactive]:  https://github.com/soundcloud/api/labels/inactive
+
+[bug-bounty program]: https://bugcrowd.com/soundcloud
