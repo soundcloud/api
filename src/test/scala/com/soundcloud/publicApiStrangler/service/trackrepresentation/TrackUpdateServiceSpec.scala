@@ -385,7 +385,7 @@ class TrackUpdateServiceSpec extends UnitSpecification with TrackRepresentationS
     trait CreateTrackContext extends Context {
       def stubTrackCoordinatorClient(
           trackAsset: TrackAssetDataCreateRequest,
-          trackMetadata: Option[TrackMetadataUpdateRequest],
+          trackMetadata: TrackMetadataCreateRequest,
           trackArtwork: Option[TrackArtworkUpdateResult],
           expectedResponse: Outcome[TrackCoordinatorTrack]
       ) = {
@@ -411,7 +411,7 @@ class TrackUpdateServiceSpec extends UnitSpecification with TrackRepresentationS
       }
 
       val metadataUpdateParams = Map[String, String]("title" -> "the title", "description" -> "the description")
-      val metaDataUpdateRequest = TrackMetadataUpdateRequest.fromForm(metadataUpdateParams)
+      val metaDataUpdateRequest = TrackMetadataCreateRequest.fromForm(metadataUpdateParams).get
       val trackAssetDataCreateRequest = TrackAssetDataCreateRequest(original_filename = "filename", uid = "uid")
       val trackCoordinatorTrack = Fixtures.trackCoordinatorTrack.as[TrackCoordinatorTrack]
       val trackArtworkUpdateResult = TrackArtworkUpdateResult(bucket = "bucket", filename = "filename")
@@ -441,7 +441,7 @@ class TrackUpdateServiceSpec extends UnitSpecification with TrackRepresentationS
         val result = Await.result(
           trackUpdateService.createTrack(
             trackAsset = trackAssetDataCreateRequest,
-            maybeUpdateAlbumArt = Some(trackArtworkMetaRequest),
+            maybeAlbumArt = Some(trackArtworkMetaRequest),
             metaDataUpdateRequest,
             ownerSession
           )
@@ -470,7 +470,7 @@ class TrackUpdateServiceSpec extends UnitSpecification with TrackRepresentationS
           val result = Await.result(
             trackUpdateService.createTrack(
               trackAsset = trackAssetDataCreateRequest,
-              maybeUpdateAlbumArt = Some(trackArtworkMetaRequest),
+              maybeAlbumArt = Some(trackArtworkMetaRequest),
               metaDataUpdateRequest,
               ownerSession
             )
@@ -498,7 +498,7 @@ class TrackUpdateServiceSpec extends UnitSpecification with TrackRepresentationS
           val result = Await.result(
             trackUpdateService.createTrack(
               trackAsset = trackAssetDataCreateRequest,
-              maybeUpdateAlbumArt = Some(trackArtworkMetaRequest),
+              maybeAlbumArt = Some(trackArtworkMetaRequest),
               metaDataUpdateRequest,
               ownerSession
             )
@@ -529,7 +529,7 @@ class TrackUpdateServiceSpec extends UnitSpecification with TrackRepresentationS
         val result = Await.result(
           trackUpdateService.createTrack(
             trackAsset = trackAssetDataCreateRequest,
-            maybeUpdateAlbumArt = Some(trackArtworkMetaRequest),
+            maybeAlbumArt = Some(trackArtworkMetaRequest),
             metaDataUpdateRequest,
             ownerSession
           )

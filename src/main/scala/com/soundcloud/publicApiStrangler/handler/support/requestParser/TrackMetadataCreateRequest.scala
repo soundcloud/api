@@ -7,34 +7,40 @@ import com.soundcloud.publicApiStrangler.client.mothership.request.representatio
   Value
 }
 import com.soundcloud.publicApiStrangler.handler.support.requestParser.TrackMetadataRequest.{getEmbeddable, toBoolean}
-import play.api.libs.json.{JsError, JsSuccess, Reads}
+import play.api.libs.json.{JsError, JsObject, JsSuccess, Reads}
 
 import scala.util.{Success, Try}
 
-case class TrackMetadataUpdateRequest(track: TrackMetadataUpdates) extends TrackMetadataRequest {
+case class TrackMetadataCreateRequest(track: TrackMetadataUpdates) extends TrackMetadataRequest {
   def getTrack: TrackMetadataUpdates = track
 }
 
-object TrackMetadataUpdateRequest {
-  implicit val reads = Reads[TrackMetadataUpdateRequest] { json =>
+object TrackMetadataCreateRequest {
+  val RequiredFields = Set("title") // throw error if title is not defined
+
+  def containsRequiredFields(json: JsObject): Boolean = {
+    RequiredFields.subsetOf(json.keys)
+  }
+
+  implicit val reads = Reads[TrackMetadataCreateRequest] { json =>
     Try(
-      TrackMetadataUpdateRequest(
-        (json \ "track").as[TrackMetadataUpdates]
+      TrackMetadataCreateRequest(
+        track = (json \ "track").as[TrackMetadataUpdates]
       )
     ) match {
-      case Success(value) => JsSuccess(value)
+      case Success(value) if containsRequiredFields((json \ "track").as[JsObject]) => JsSuccess(value)
       case _ => JsError("invalid track data")
     }
   }
 
-  def fromForm(params: Map[String, String]): Option[TrackMetadataUpdateRequest] = {
+  def fromForm(params: Map[String, String]): Option[TrackMetadataCreateRequest] = {
     val embeddable = getEmbeddable(
       params
         .get("embeddable_by")
     )
 
     Try(
-      TrackMetadataUpdateRequest(
+      TrackMetadataCreateRequest(
         track =
           new TrackMetadataUpdates(
             api_streamable = params.get("streamable").map(v => Value[Boolean](toBoolean(v))).getOrElse(MissingValue),
@@ -55,7 +61,7 @@ object TrackMetadataUpdateRequest {
             release_date = params.get("release_date").map(v => Value[String](v)).getOrElse(MissingValue),
             sharing = params.get("sharing").map(v => Value[String](v)).getOrElse(MissingValue),
             tag_list = params.get("tag_list").map(v => Value[String](v)).getOrElse(MissingValue),
-            title = params.get("title").map(v => NonNullValue[String](v)).getOrElse(NonNullMissingValue),
+            title = params.get("title").map(v => NonNullValue[String](v)).get, // throw error if title is not defined
             commentable = params.get("commentable").map(v => Value[Boolean](toBoolean(v))).getOrElse(MissingValue),
             reveal_stats = params.get("reveal_stats").map(v => Value[Boolean](toBoolean(v))).getOrElse(MissingValue),
             reveal_comments =

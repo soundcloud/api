@@ -10,6 +10,7 @@ import com.soundcloud.publicApiStrangler.handler.support.requestParser.{
   TrackArtworkUpdateResult,
   TrackAssetDataCreateRequest,
   TrackAssetDataUpdateRequest,
+  TrackMetadataCreateRequest,
   TrackMetadataUpdateRequest
 }
 import com.soundcloud.publicApiStrangler.test.UnitSpecification
@@ -28,6 +29,12 @@ class TrackCoordinatorClientSpec extends UnitSpecification {
     val userUrn = Urn("soundcloud", "users", "123")
     val trackUrn = Urn("soundcloud", "tracks", "123")
     val session = new UserSessionBuilder().setUser(userUrn).build
+
+    val trackMetadataCreateRequest = TrackMetadataCreateRequest
+      .fromForm(
+        Map[String, String]("title" -> "changed", "description" -> "changed")
+      )
+      .get
 
     val trackMetadataUpdateRequest = TrackMetadataUpdateRequest
       .fromForm(
@@ -98,7 +105,7 @@ class TrackCoordinatorClientSpec extends UnitSpecification {
             client.createTrack(
               session,
               trackAssetDataCreateRequest,
-              Some(trackMetadataUpdateRequest),
+              trackMetadataCreateRequest,
               Some(trackArtworkMetaResponse)
             )
           )
@@ -112,7 +119,7 @@ class TrackCoordinatorClientSpec extends UnitSpecification {
             client.createTrack(
               session,
               trackAssetDataCreateRequest,
-              Some(trackMetadataUpdateRequest),
+              trackMetadataCreateRequest,
               Some(trackArtworkMetaResponse)
             )
           )
@@ -125,7 +132,7 @@ class TrackCoordinatorClientSpec extends UnitSpecification {
           client.createTrack(
             session,
             trackAssetDataCreateRequest,
-            Some(trackMetadataUpdateRequest),
+            trackMetadataCreateRequest,
             Some(trackArtworkMetaResponse)
           )
         ) must throwAn[UnhandledResponseException]
@@ -182,7 +189,7 @@ class TrackCoordinatorClientSpec extends UnitSpecification {
             client.createTrack(
               session,
               trackAssetDataCreateRequest,
-              Some(trackMetadataUpdateRequest),
+              trackMetadataCreateRequest,
               Some(trackArtworkMetaResponse)
             )
           )
@@ -196,7 +203,7 @@ class TrackCoordinatorClientSpec extends UnitSpecification {
             client.createTrack(
               session,
               trackAssetDataCreateRequest,
-              Some(trackMetadataUpdateRequest),
+              trackMetadataCreateRequest,
               Some(trackArtworkMetaResponse)
             )
           )
@@ -209,7 +216,7 @@ class TrackCoordinatorClientSpec extends UnitSpecification {
           client.createTrack(
             session,
             trackAssetDataCreateRequest,
-            Some(trackMetadataUpdateRequest),
+            trackMetadataCreateRequest,
             Some(trackArtworkMetaResponse)
           )
         ) must throwAn[UnhandledResponseException]

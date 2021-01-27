@@ -45,17 +45,17 @@ class TrackUpdateService(
 
   def createTrack(
       trackAsset: TrackAssetDataCreateRequest,
-      maybeUpdateAlbumArt: Option[TrackArtworkUpdateRequest],
-      maybeTrackMetadata: Option[TrackMetadataUpdateRequest],
+      maybeAlbumArt: Option[TrackArtworkUpdateRequest],
+      trackMetadata: TrackMetadataCreateRequest,
       session: UserSession
   ): Future[Outcome[CreatedTrack]] = {
     for {
       user <- fetchUser(session, session.getUser)
-      uploadedImageResponse <- uploadArtworkToS3(maybeUpdateAlbumArt)
+      uploadedImageResponse <- uploadArtworkToS3(maybeAlbumArt)
       trackCoordinatorTrack <- trackCoordinatorClient.createTrack(
         session,
         trackAsset,
-        maybeTrackMetadata,
+        trackMetadata,
         uploadedImageResponse
       )
       createdTrack <- buildCreatedTrack(session, trackCoordinatorTrack, user)

@@ -73,7 +73,7 @@ class TracksHandler(
       *  https://softwareengineering.stackexchange.com/a/319429
       */
     request.method = Method.Post
-    val (metatdataParams, artworkParams, assetParams) = multipartFormParams(request, TrackAssetDataUpdateRequest)
+    val (metatdataParams, artworkParams, assetParams) = multipartFormParamsUpdate(request, TrackAssetDataUpdateRequest)
     request.method = Method.Put
 
     (artworkParams, metatdataParams, assetParams) match {
@@ -106,7 +106,7 @@ class TracksHandler(
       session: UserSession,
       urn: Urn
   ): Future[Response] = {
-    val (metadataParams, assetDataParams) = urlEncodedRequestParams(request, TrackAssetDataUpdateRequest)
+    val (metadataParams, assetDataParams) = urlEncodedRequestParamsUpdate(request, TrackAssetDataUpdateRequest)
     (metadataParams, assetDataParams) match {
       case (None, None) => generateBadResponse
       case _ =>
@@ -136,18 +136,17 @@ class TracksHandler(
       request: HandlerRequest,
       session: UserSession
   ): Future[Response] = {
-    val (metadataParams, artworkParams, assetParams) = multipartFormParams(request, TrackAssetDataCreateRequest)
-    assetParams match {
-      case None => unprocessableEntityResponse
-      case Some(asset) =>
+    val (metadataParams, artwork, assetParams) = multipartFormParamsCreate(request, TrackAssetDataCreateRequest)
+    (assetParams, metadataParams) match {
+      case (Some(asset), Some(metadata)) =>
         val createdTrack = trackUpdateService.createTrack(
           asset,
-          artworkParams,
-          metadataParams,
+          artwork,
+          metadata,
           session
         )
         handleCreateTrackResponseFromService(createdTrack)
-
+      case _ => unprocessableEntityResponse
     }
   }
 
@@ -155,43 +154,80 @@ class TracksHandler(
       request: HandlerRequest,
       session: UserSession
   ): Future[Response] = {
-    val (metadataParams, assetDataParams) = urlEncodedRequestParams(request, TrackAssetDataCreateRequest)
-    assetDataParams match {
-      case None => unprocessableEntityResponse
-      case Some(asset) =>
+    val (metadataParams, assetDataParams) = urlEncodedRequestParamsCreate(request, TrackAssetDataCreateRequest)
+    (assetDataParams, metadataParams) match {
+      case (Some(asset), Some(metadata)) =>
         val createdTrack = trackUpdateService.createTrack(
           asset,
           None,
-          metadataParams,
+          metadata,
           session
         )
         handleCreateTrackResponseFromService(createdTrack)
+      case _ => unprocessableEntityResponse
     }
   }
 
-  private def multipartFormParams[T](
+  private def multipartFormParamsUpdate[T](
       request: HandlerRequest,
       assetParamsExtractor: TrackAssetRequestParams[T]
   ): (Option[TrackMetadataUpdateRequest], Option[TrackArtworkUpdateRequest], Option[T]) = {
+    val (extractedParams, assetDataUpdates, artworkDataUpdates) =
+      getExtractedParamsWithAssetAndArtworkData(request, assetParamsExtractor)
+    val metadataUpdates = extractedParams.map(TrackMetadataUpdateRequest.fromForm).getOrElse(None)
+    (metadataUpdates, artworkDataUpdates, assetDataUpdates)
+  }
+
+  private def multipartFormParamsCreate[T](
+      request: HandlerRequest,
+      assetParamsExtractor: TrackAssetRequestParams[T]
+  ): (Option[TrackMetadataCreateRequest], Option[TrackArtworkUpdateRequest], Option[T]) = {
+    val (extractedParams, assetDataUpdates, artworkDataUpdates) =
+      getExtractedParamsWithAssetAndArtworkData(request, assetParamsExtractor)
+    val metadataUpdates = extractedParams.map(TrackMetadataCreateRequest.fromForm).getOrElse(None)
+    (metadataUpdates, artworkDataUpdates, assetDataUpdates)
+  }
+
+  private def getExtractedParamsWithAssetAndArtworkData[T](
+      request: HandlerRequest,
+      assetParamsExtractor: TrackAssetRequestParams[T]
+  ): (Option[Map[String, String]], Option[T], Option[TrackArtworkUpdateRequest]) = {
     val metadataUpdateParams = paramsParser.parse(request)
     val albumArtworkUpdate = paramsParser.parseFilesFromRequest(request, "track[artwork_data]")
     val artworkDataUpdates = albumArtworkUpdate.map(TrackArtworkUpdateRequest)
 
     val extractedParams = metadataUpdateParams.map(extractTrackFieldsFromParams)
-    val metadataUpdates = extractedParams.map(TrackMetadataUpdateRequest.fromForm).getOrElse(None)
     val assetDataUpdates = extractedParams.map(assetParamsExtractor.fromForm).getOrElse(None)
-    (metadataUpdates, artworkDataUpdates, assetDataUpdates)
+
+    (extractedParams, assetDataUpdates, artworkDataUpdates)
   }
 
-  private def urlEncodedRequestParams[T](
+  private def urlEncodedRequestParamsUpdate[T](
       request: HandlerRequest,
       extractor: TrackAssetRequestParams[T]
   ): (Option[TrackMetadataUpdateRequest], Option[T]) = {
+    val (extractedParams, assetDataUpdates) = extractedParamsAndAssetData(request, extractor)
+    val metadataUpdates = TrackMetadataUpdateRequest.fromForm(extractedParams)
+    (metadataUpdates, assetDataUpdates)
+  }
+
+  private def urlEncodedRequestParamsCreate[T](
+      request: HandlerRequest,
+      extractor: TrackAssetRequestParams[T]
+  ): (Option[TrackMetadataCreateRequest], Option[T]) = {
+    val (extractedParams, assetDataUpdates) = extractedParamsAndAssetData(request, extractor)
+    val metadataUpdates = TrackMetadataCreateRequest.fromForm(extractedParams)
+    (metadataUpdates, assetDataUpdates)
+  }
+
+  private def extractedParamsAndAssetData[T](
+      request: HandlerRequest,
+      extractor: TrackAssetRequestParams[T]
+  ): (Map[String, String], Option[T]) = {
     val metadataUpdateParams = request.params
     val extractedParams = extractTrackFieldsFromParams(metadataUpdateParams)
     val assetDataUpdates = extractor.fromForm(extractedParams)
-    val metadataUpdates = TrackMetadataUpdateRequest.fromForm(extractedParams)
-    (metadataUpdates, assetDataUpdates)
+    (extractedParams, assetDataUpdates)
   }
 
   private def extractTrackFieldsFromParams(multipartParams: Map[String, String]): Map[String, String] = {
@@ -210,5 +246,5 @@ class TracksHandler(
     Future.value(ErrorResponse.badRequest("400 - Invalid Request"))
 
   private def unprocessableEntityResponse: Future[Response] =
-    Future.value(ErrorResponse(Status.UnprocessableEntity, "Require uid and original_filename parameters."))
+    Future.value(ErrorResponse(Status.UnprocessableEntity, "Require uid, original_filename, and title parameters."))
 }

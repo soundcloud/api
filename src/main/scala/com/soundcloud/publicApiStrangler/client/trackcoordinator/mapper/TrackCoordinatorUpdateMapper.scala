@@ -8,7 +8,6 @@ import play.api.libs.json.Json
 
 object TrackCoordinatorUpdateMapper {
   def apply(response: Response): Outcome[TrackCoordinatorTrack] = {
-
     response.status match {
       case Status.Ok => Json.parse(response.contentString).as[TrackCoordinatorTrack].good
       case Status.NotFound => NotFound().bad

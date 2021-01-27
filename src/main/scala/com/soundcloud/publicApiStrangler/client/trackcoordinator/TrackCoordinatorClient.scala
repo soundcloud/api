@@ -10,6 +10,8 @@ import com.soundcloud.publicApiStrangler.handler.support.requestParser.{
   TrackArtworkUpdateResult,
   TrackAssetDataCreateRequest,
   TrackAssetDataUpdateRequest,
+  TrackMetadataCreateRequest,
+  TrackMetadataRequest,
   TrackMetadataUpdateRequest
 }
 import com.twitter.util.Future
@@ -25,10 +27,10 @@ class TrackCoordinatorClient(service: JsonClient) {
   def createTrack(
       session: UserSession,
       trackAsset: TrackAssetDataCreateRequest,
-      maybeUpdateTrackMetadata: Option[TrackMetadataUpdateRequest],
+      trackMetadata: TrackMetadataCreateRequest,
       maybeArtworkMetadata: Option[TrackArtworkUpdateResult]
   ): Future[Outcome[TrackCoordinatorTrack]] = {
-    val requestBody = buildCreateBody(trackAsset, maybeUpdateTrackMetadata, maybeArtworkMetadata)
+    val requestBody = buildCreateBody(trackAsset, trackMetadata, maybeArtworkMetadata)
     service
       .postWithSession(session, Path("/tracks"), Params.empty, Headers.empty, Some(requestBody))
       .map(TrackCoordinatorCreateMapper(_))
@@ -49,11 +51,11 @@ class TrackCoordinatorClient(service: JsonClient) {
 
   private def buildCreateBody(
       trackAsset: TrackAssetDataCreateRequest,
-      maybeTrackMetadata: Option[TrackMetadataUpdateRequest],
+      trackMetadata: TrackMetadataCreateRequest,
       maybeArtworkMetadata: Option[TrackArtworkUpdateResult]
   ): String = {
     val body = Json.toJson(trackAsset).as[JsObject]
-    bodyString(body, maybeTrackMetadata, maybeArtworkMetadata)
+    bodyString(body, Some(trackMetadata), maybeArtworkMetadata)
   }
 
   private def buildUpdateBody(
@@ -68,11 +70,11 @@ class TrackCoordinatorClient(service: JsonClient) {
 
   private def bodyString(
       assetBody: JsObject,
-      maybeUpdateTrackMetadata: Option[TrackMetadataUpdateRequest],
+      maybeUpdateTrackMetadata: Option[TrackMetadataRequest],
       maybeArtworkMetadata: Option[TrackArtworkUpdateResult]
   ): String = {
     var body = assetBody
-    maybeUpdateTrackMetadata.foreach(metadata => body = body ++ Json.toJson(metadata.track).as[JsObject])
+    maybeUpdateTrackMetadata.foreach(metadata => body = body ++ Json.toJson(metadata.getTrack).as[JsObject])
     maybeArtworkMetadata.foreach(artworkMeta => body = body ++ Json.obj("artwork_from_s3" -> Json.toJson(artworkMeta)))
     Json.stringify(body)
   }

@@ -1,7 +1,6 @@
 package com.soundcloud.publicApiStrangler.handler
 
 import java.nio.file.{Files, Paths}
-
 import com.soundcloud.jvmkit.module.bff.testsupport.FakeUserAuthentication
 import com.soundcloud.jvmkit.module.util.session.UserSessionBuilder
 import com.soundcloud.jvmkit.module.util.{Geo, Urn}
@@ -14,6 +13,7 @@ import com.soundcloud.publicApiStrangler.handler.support.requestParser.{
   TrackArtworkUpdateRequest,
   TrackAssetDataCreateRequest,
   TrackAssetDataUpdateRequest,
+  TrackMetadataCreateRequest,
   TrackMetadataUpdateRequest
 }
 import com.soundcloud.publicApiStrangler.service.CreatedTrack.CreatedTrack
@@ -126,9 +126,6 @@ class TracksHandlerSpec extends UnitSpecification with TrackRepresentationSpecCo
       "returns 200 on successful update" in new SuccessContext {
         val path = s"/tracks/${mockTrackRepresentation.visibleTrack.urn.identifier}"
 
-        println(
-          s"calling with ${trackUpdate.toString} and urn ${mockTrackRepresentation.visibleTrack.urn.toString} and session ${session.toString}"
-        )
         setupMockForTrackUpdateMetadata(metadataUpdateOutcome = Good(expectedResponse), trackUpdate = trackUpdate)
 
         val response = put(path, body = requestBody)
@@ -312,7 +309,7 @@ class TracksHandlerSpec extends UnitSpecification with TrackRepresentationSpecCo
         val path = "/tracks"
         def stubTrackUpdateServiceCreate(
             createdTrackOutcome: Outcome[CreatedTrack],
-            trackUpdate: Option[TrackMetadataUpdateRequest] = None,
+            trackUpdate: TrackMetadataCreateRequest,
             artworkUpdate: Option[TrackArtworkUpdateRequest] = None,
             assetUpdate: TrackAssetDataCreateRequest
         ) = {
@@ -328,10 +325,15 @@ class TracksHandlerSpec extends UnitSpecification with TrackRepresentationSpecCo
             Future.value(createdTrackOutcome)
           )
         }
-        val requestBody = Seq[(String, String)](("track[uid]", "12345"), ("track[original_filename]", "audio.mp3"))
-        val parsedRequestBody = Map[String, String]("uid" -> "12345", "original_filename" -> "audio.mp3")
+        val requestBody = Seq[(String, String)](
+          ("track[uid]", "12345"),
+          ("track[original_filename]", "audio.mp3"),
+          ("track[title]", "my track")
+        )
+        val parsedRequestBody =
+          Map[String, String]("uid" -> "12345", "original_filename" -> "audio.mp3", "title" -> "my track")
         val assetUpdate = TrackAssetDataCreateRequest("audio.mp3", "12345")
-        val trackUpdate = TrackMetadataUpdateRequest.fromForm(parsedRequestBody)
+        val trackUpdate = TrackMetadataCreateRequest.fromForm(parsedRequestBody).get
         val bytes = Files.readAllBytes(
           Paths.get(this.getClass.getClassLoader.getResource("test-image.jpg").toURI)
         )
@@ -391,7 +393,13 @@ class TracksHandlerSpec extends UnitSpecification with TrackRepresentationSpecCo
       }
 
       "Generates unprocessable entity response if no asset found" in new NotFoundContext {
-        override val requestBody = Seq[(String, String)](("track[uid]", "12345"))
+        override val requestBody = Seq[(String, String)](("track[title]", "my track"))
+        val response = postForm(path, body = requestBody)
+        response.statusCode === 422
+      }
+
+      "Generates unprocessable entity if no title found" in new NotFoundContext {
+        override val requestBody = Seq[(String, String)](("track[uid]", "12345"), ("original_filename" -> "audio.mp3"))
         val response = postForm(path, body = requestBody)
         response.statusCode === 422
       }
@@ -403,7 +411,7 @@ class TracksHandlerSpec extends UnitSpecification with TrackRepresentationSpecCo
         val path = "/tracks"
         def stubTrackUpdateServiceCreate(
             createdTrackOutcome: Outcome[CreatedTrack],
-            trackUpdate: Option[TrackMetadataUpdateRequest] = None,
+            trackUpdate: Option[TrackMetadataCreateRequest] = None,
             assetUpdate: TrackAssetDataCreateRequest
         ) = {
           when(
@@ -411,17 +419,22 @@ class TracksHandlerSpec extends UnitSpecification with TrackRepresentationSpecCo
               .createTrack(
                 ===(assetUpdate),
                 anyObject[Option[TrackArtworkUpdateRequest]],
-                ===(trackUpdate),
+                ===(trackUpdate.get),
                 ===(session)
               )
           ).thenReturn(
             Future.value(createdTrackOutcome)
           )
         }
-        val requestBody = Seq[(String, String)](("track[uid]", "12345"), ("track[original_filename]", "audio.mp3"))
-        val parsedRequestBody = Map[String, String]("uid" -> "12345", "original_filename" -> "audio.mp3")
+        val requestBody = Seq[(String, String)](
+          ("track[uid]", "12345"),
+          ("track[original_filename]", "audio.mp3"),
+          ("track[title]", "my track")
+        )
+        val parsedRequestBody =
+          Map[String, String]("uid" -> "12345", "original_filename" -> "audio.mp3", "title" -> "my track")
         val assetUpdate = TrackAssetDataCreateRequest("audio.mp3", "12345")
-        val trackUpdate = TrackMetadataUpdateRequest.fromForm(parsedRequestBody)
+        val trackUpdate = TrackMetadataCreateRequest.fromForm(parsedRequestBody)
         val bytes = Files.readAllBytes(
           Paths.get(this.getClass.getClassLoader.getResource("test-image.jpg").toURI)
         )
@@ -480,7 +493,12 @@ class TracksHandlerSpec extends UnitSpecification with TrackRepresentationSpecCo
       }
 
       "Generates unprocessable entity response if no asset found" in new FailureContext {
-        override val requestBody = Seq[(String, String)](("track[uid]", "12345"))
+        override val requestBody = Seq[(String, String)](("track[title]", "my track"))
+        val response = postForm(path, body = requestBody)
+        response.statusCode === 422
+      }
+      "Generates unprocessable entity if no title found" in new FailureContext {
+        override val requestBody = Seq[(String, String)](("track[uid]", "12345"), ("original_filename" -> "audio.mp3"))
         val response = postForm(path, body = requestBody)
         response.statusCode === 422
       }
