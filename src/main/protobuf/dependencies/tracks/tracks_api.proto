@@ -7,6 +7,7 @@ package proto.soundcloud.tracks.api;
 
 option java_package = "proto.soundcloud.tracks.api";
 
+import "google/protobuf/field_mask.proto";
 import "google/protobuf/wrappers.proto";
 import "common_session.proto";
 import "google/protobuf/timestamp.proto";
@@ -18,7 +19,40 @@ service Tracks {
     // Requests must contain valid URNs: InvalidArgument, "There were invalid URNS in your request."
     // Requests must contain a valid UserSession with a Geo: InvalidArgument, "No valid UserSession or Geo was provided."
     // Unknown errors will return an Internal error code
-    rpc GetVisibleTracks(GetVisibleTracksRequest) returns (GetVisibleTracksResponse) {};
+    rpc GetVisibleTracks (GetVisibleTracksRequest) returns (GetVisibleTracksResponse) {};
+
+    // Get visible tracks that are visible to any user.
+    // This method behaves exactly the same as the previous one. The only difference is that
+    // it substitutes provided user session by an anonymous one when calling dependencies.
+    rpc GetGenerallyVisibleTracks (GetGenerallyVisibleTracksRequest) returns (GetVisibleTracksResponse) {};
+
+    // This method is for getting a media stream URL for a track.
+    // Potential errors:
+    // Requests must contain a valid UserSession: InvalidArgument, "No valid UserSession was provided."
+    // Requests must contain valid URN: InvalidArgument, "Invalid track URN."
+    // Media stream request wasn't authorized: Unauthenticated, "Stream not authorized."
+    // Media stream wasn't found: NotFound, "Stream not found."
+    // Unknown errors will return an Internal error code
+    rpc GetMediaStream (GetMediaStreamRequest) returns (GetMediaStreamResponse) {};
+
+    // This method is for getting a snippet in desired length with desired cut using start and end marks
+    // Potential errors:
+    // Requests must contain a valid UserSession: InvalidArgument, "No valid UserSession was provided."
+    // Requests must contain valid URN: InvalidArgument, "Invalid track URN."
+    // Snippet request wasn't authorized: Unauthenticated, "Snippet creation is not authorized."
+    // Transcoding wasn't found: NotFound, "Audio for snippet was not found."
+    // Unknown errors will return an Internal error code
+    rpc GetShareableSnippet (GetSnippetRequest) returns (GetSnippetResponse) {};
+
+    // This method is for getting a internal snippet in desired length with desired cut using start and end marks
+    // Internal snippet creation is not requiring sharable policy on the track, unlike sharable snippet
+    // Potential errors:
+    // Requests must contain a valid UserSession: InvalidArgument, "No valid UserSession was provided."
+    // Requests must contain valid URN: InvalidArgument, "Invalid track URN."
+    // Snippet request wasn't authorized: Unauthenticated, "Snippet creation is not authorized."
+    // Transcoding wasn't found: NotFound, "Audio for snippet was not found."
+    // Unknown errors will return an Internal error code
+    rpc GetInternalSnippet (GetSnippetRequest) returns (GetSnippetResponse) {};
 }
 
 message GetVisibleTracksRequest {
@@ -26,6 +60,7 @@ message GetVisibleTracksRequest {
     bool bypass_progressive_download_restriction = 2;
     proto.soundcloud.common.session.UserSession user_session = 3; // You must provide a UserSession
     google.protobuf.StringValue subscription_country_code = 4; // optional, will be fetched by this service is not present
+    google.protobuf.FieldMask track_field_mask = 5; // optional, if not specified `TrackFieldMasks.DefaultTrackFieldMask` is used
 }
 
 message TrackRequest {
@@ -38,7 +73,99 @@ message GetVisibleTracksResponse {
     repeated Track tracks = 1;
 }
 
+message GetGenerallyVisibleTracksRequest {
+    repeated TrackRequest track_requests = 1;
+    proto.soundcloud.common.session.UserSession user_session = 2; // You must provide a UserSession
+}
+
+message GetMediaStreamRequest {
+    proto.soundcloud.common.session.UserSession user_session = 1; // You must provide a UserSession
+    string urn = 2;
+    google.protobuf.StringValue secret_token = 3; // optional
+    string transcoding_id = 4;
+    string protocol = 5;
+    bool bypass_progressive_download_restriction = 6;
+}
+
+message GetSnippetRequest {
+    proto.soundcloud.common.session.UserSession user_session = 1; // You must provide a UserSession
+    string urn = 2;
+    google.protobuf.StringValue secret_token = 3;
+    int32 start = 4;
+    int32 end = 5;
+    string protocol = 6;
+    string mime_type = 7;
+    Transcoding.Quality quality = 8;
+}
+
+message GetSnippetResponse {
+    string url = 1;
+    string mime_type = 2;
+    Transcoding.Quality quality = 3;
+}
+
+message GetMediaStreamResponse {
+    string url = 1;
+    string mime_type = 2;
+}
+
 message Track {
+    string urn = 1;
+    string user_urn = 2;
+    google.protobuf.StringValue uid = 3; // optional
+    string title = 4;
+    google.protobuf.Timestamp created_at = 5;
+    google.protobuf.Timestamp disabled_at = 6; // optional
+    google.protobuf.Timestamp last_modified = 7;
+    bool downloadable = 8;
+    int64 duration = 9;
+    bool commentable = 10;
+    google.protobuf.StringValue genre = 11; // optional
+    bool public = 12;
+    string permalink = 13;
+    google.protobuf.StringValue permalink_url = 14;
+    repeated string user_tags = 15;
+    google.protobuf.StringValue description = 16; // optional
+    google.protobuf.StringValue secret_token = 17; // optional
+    bool reveal_stats = 18;
+    google.protobuf.StringValue artwork = 19; // optional
+    google.protobuf.Timestamp published_at = 20; // optional
+    repeated string machine_tags = 21;
+    google.protobuf.BoolValue api_streamable = 22; // optional
+    bool streamable = 23;
+    bool reveal_comments = 24;
+    google.protobuf.StringValue label_name = 25; // optional
+    string license = 26;
+    google.protobuf.BoolValue embeddable = 27; // optional
+    google.protobuf.Int32Value release_year = 28; // optional
+    google.protobuf.Int32Value release_month = 29; // optional
+    google.protobuf.Int32Value release_day = 30; // optional
+    string embeddable_by = 31;
+    google.protobuf.Timestamp release_date = 32; // optional
+    google.protobuf.StringValue purchase_url = 33; // optional
+    google.protobuf.StringValue purchase_title = 34; // optional
+    google.protobuf.StringValue supply_chain_status = 35; // optional
+    ContentAuthorization authorization = 36;
+    repeated Transcoding transcodings = 37;
+    repeated WaveformUrl waveform_urls = 38;
+    google.protobuf.DoubleValue bpm = 39; // deprecated, optional
+    google.protobuf.StringValue trackType = 40; // deprecated, optional
+    google.protobuf.StringValue release = 41; // deprecated, optional
+    google.protobuf.StringValue keySignature = 42; // deprecated, optional
+    google.protobuf.StringValue videoUrl = 43; // deprecated, optional
+    google.protobuf.Int64Value labelId = 44; // deprecated, optional
+    google.protobuf.StringValue fileType = 45; // optional
+    google.protobuf.Int64Value contentSize = 46; // optional
+
+    // additional fields that are not included in the response
+    // unless they are specified in the track field mask
+    Tracklist tracklist = 47; // optional
+
+    // duplicates top-level metadata fields
+    Metadata metadata = 48;
+}
+
+message Metadata {
     string urn = 1;
     string user_urn = 2;
     google.protobuf.StringValue uid = 3; // optional
@@ -74,15 +201,14 @@ message Track {
     google.protobuf.StringValue purchase_url = 33; // optional
     google.protobuf.StringValue purchase_title = 34; // optional
     google.protobuf.StringValue supply_chain_status = 35; // optional
-    ContentAuthorization authorization = 36;
-    repeated Transcoding transcodings = 37;
-    repeated WaveformUrl waveform_urls = 38;
-    google.protobuf.DoubleValue bpm = 39; // deprecated, optional
-    google.protobuf.StringValue trackType = 40; // deprecated, optional
-    google.protobuf.StringValue release = 41; // deprecated, optional
-    google.protobuf.StringValue keySignature = 42; // deprecated, optional
-    google.protobuf.StringValue videoUrl = 43; // deprecated, optional
-    google.protobuf.Int64Value labelId = 44; // deprecated, optional
+    google.protobuf.DoubleValue bpm = 36; // deprecated, optional
+    google.protobuf.StringValue trackType = 37; // deprecated, optional
+    google.protobuf.StringValue release = 38; // deprecated, optional
+    google.protobuf.StringValue keySignature = 39; // deprecated, optional
+    google.protobuf.StringValue videoUrl = 40; // deprecated, optional
+    google.protobuf.Int64Value labelId = 41; // deprecated, optional
+    google.protobuf.StringValue fileType = 42; // optional
+    google.protobuf.Int64Value contentSize = 43; // optional
 }
 
 message ContentAuthorization {
@@ -126,4 +252,32 @@ message WaveformUrl {
     string waveform_type = 1;
     string json = 2;
     string png = 3;
+}
+
+message Tracklist {
+    repeated TrackSegment segments = 1;
+}
+
+message TrackSegment {
+    string urn = 1;
+    Track track = 2;
+    google.protobuf.Int32Value start_ms = 3;
+    google.protobuf.Int32Value end_ms = 4;
+    repeated Artist artists = 5;
+    Label label = 6;
+
+    message Track {
+        google.protobuf.StringValue reference_track_urn = 1;
+        string title = 2;
+    }
+
+    message Artist {
+        string name = 1;
+        google.protobuf.StringValue urn = 2;
+    }
+
+    message Label {
+        string name = 1;
+        google.protobuf.StringValue urn = 2;
+    }
 }

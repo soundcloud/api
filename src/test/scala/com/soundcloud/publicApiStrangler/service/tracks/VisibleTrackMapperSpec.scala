@@ -1,7 +1,6 @@
 package com.soundcloud.publicApiStrangler.service.tracks
 
 import java.time.Instant
-
 import com.soundcloud.api.partners.clients.tracks.Transcoding
 import com.soundcloud.jvmkit.module.twirp.proto.WellKnownOps._
 import com.soundcloud.jvmkit.module.util.{Url, Urn}
@@ -11,6 +10,7 @@ import org.joda.time.LocalDateTime
 import org.specs2.mutable.Specification
 import org.specs2.specification.Scope
 import proto.soundcloud.tracks.api.{
+  Metadata,
   ContentAuthorization => ProtoContentAuthorization,
   Track => ProtoTrack,
   Transcoding => ProtoTranscoding,
@@ -25,41 +25,45 @@ class VisiblePartnersTrackMapperSpec extends Specification {
     val mapper = new VisibleTrackMapper()
 
     val protoTrack = ProtoTrack(
-      urn = trackUrn.toString,
-      userUrn = userUrn.toString,
-      uid = None,
-      title = "Some title",
-      createdAt = Some(Instant.parse("2013-08-19T02:29:15.000Z").asProto),
-      disabledAt = None,
-      lastModified = Some(Instant.parse("2013-08-19T03:29:15.000Z").asProto),
-      downloadable = false,
-      duration = 123,
-      commentable = true,
-      genre = None,
-      public = false,
-      permalink = "lost-ii-by-dead-battery-dabin",
-      permalinkUrl = Some(s"https://soundcloud.com/owner-perma/lost-ii-by-dead-battery-dabin"),
-      userTags = List.empty,
-      description = None,
-      secretToken = None,
-      revealStats = true,
-      artwork = Some("dummy_artwork_filename-original.png"),
-      publishedAt = None,
-      machineTags = List.empty,
-      streamable = true,
-      apiStreamable = Some(true),
-      revealComments = true,
-      labelName = None,
-      license = "all-rights-reserved",
-      embeddable = None,
-      releaseYear = None,
-      releaseMonth = None,
-      releaseDay = None,
-      embeddableBy = "all",
-      releaseDate = None,
-      purchaseUrl = None,
-      purchaseTitle = None,
-      supplyChainStatus = Some("manual_upload"),
+      metadata = Some(
+        Metadata(
+          urn = trackUrn.toString,
+          userUrn = userUrn.toString,
+          uid = None,
+          title = "Some title",
+          createdAt = Some(Instant.parse("2013-08-19T02:29:15.000Z").asProto),
+          disabledAt = None,
+          lastModified = Some(Instant.parse("2013-08-19T03:29:15.000Z").asProto),
+          downloadable = false,
+          duration = 123,
+          commentable = true,
+          genre = None,
+          public = false,
+          permalink = "lost-ii-by-dead-battery-dabin",
+          permalinkUrl = Some(s"https://soundcloud.com/owner-perma/lost-ii-by-dead-battery-dabin"),
+          userTags = List.empty,
+          description = None,
+          secretToken = None,
+          revealStats = true,
+          artwork = Some("dummy_artwork_filename-original.png"),
+          publishedAt = None,
+          machineTags = List.empty,
+          streamable = true,
+          apiStreamable = Some(true),
+          revealComments = true,
+          labelName = None,
+          license = "all-rights-reserved",
+          embeddable = None,
+          releaseYear = None,
+          releaseMonth = None,
+          releaseDay = None,
+          embeddableBy = "all",
+          releaseDate = None,
+          purchaseUrl = None,
+          purchaseTitle = None,
+          supplyChainStatus = Some("manual_upload")
+        )
+      ),
       authorization = Some(
         ProtoContentAuthorization(
           policy = "ALLOW",

@@ -15,8 +15,10 @@ import proto.soundcloud.tracks.api.{
   GetVisibleTracksRequest,
   GetVisibleTracksResponse,
   TracksService,
-  Track => ProtoTrack
+  Track => ProtoTrack,
+  TrackRequest => ProtoTrackRequest
 }
+import com.soundcloud.jvmkit.module.twirp.proto.UserSessionOps._
 
 class TrackVisibilityServiceSpec extends Specification with Mockito {
 
@@ -47,8 +49,14 @@ class TrackVisibilityServiceSpec extends Specification with Mockito {
         .build
 
     val protoTrack = ProtoTrack()
+    val request = GetVisibleTracksRequest(
+      trackRequests =
+        List(trackRequest).map(trackRequest => ProtoTrackRequest(trackRequest.urn.toString, trackRequest.secretToken)),
+      trackFieldMask = Some(TrackVisibilityService.TrackFieldMask.asProtoFieldMask),
+      userSession = Some(session.asProtoSession)
+    )
 
-    tracksTwinagleClient.getVisibleTracks(anyObject[GetVisibleTracksRequest]) returns Future.value(
+    tracksTwinagleClient.getVisibleTracks(request) returns Future.value(
       GetVisibleTracksResponse(tracks = Seq(protoTrack))
     )
     mapper.apply(protoTrack) returns visibleTrack

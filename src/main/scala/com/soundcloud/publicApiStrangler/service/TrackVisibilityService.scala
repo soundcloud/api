@@ -1,5 +1,6 @@
 package com.soundcloud.publicApiStrangler.service
 
+import com.soundcloud.jvmkit.module.twirp.fieldmasks.FieldMask
 import com.soundcloud.jvmkit.module.twirp.proto.UserSessionOps._
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSession
@@ -7,7 +8,7 @@ import com.soundcloud.publicApiStrangler.authorization.policies.{ContentPolicy, 
 import com.soundcloud.publicApiStrangler.client.tracks.{TrackRequest, VisibleTrack}
 import com.soundcloud.publicApiStrangler.service.tracks.VisibleTrackMapper
 import com.twitter.util.Future
-import proto.soundcloud.tracks.api.{GetVisibleTracksRequest, TracksService, TrackRequest => TwirpTrackRequest}
+import proto.soundcloud.tracks.api.{GetVisibleTracksRequest, TracksService, TrackRequest => TwirpTrackRequest, Track}
 
 class TrackVisibilityService(
     tracksTwinagleClient: TracksService,
@@ -39,10 +40,12 @@ class TrackVisibilityService(
       session: UserSession,
       trackRequests: Seq[TrackRequest]
   ): Future[List[VisibleTrack]] = {
+
     val request = GetVisibleTracksRequest(
       trackRequests = trackRequests.toList.map(trackRequest =>
         TwirpTrackRequest(trackRequest.urn.toString, trackRequest.secretToken)
       ),
+      trackFieldMask = Some(TrackVisibilityService.TrackFieldMask.asProtoFieldMask),
       userSession = Some(session.asProtoSession)
     )
 
@@ -51,4 +54,15 @@ class TrackVisibilityService(
         .map(visibleTrackMapper.apply)
     }
   }
+}
+
+object TrackVisibilityService {
+  val TrackFieldMask = FieldMask.select[Track](
+    Set(
+      Track.METADATA_FIELD_NUMBER,
+      Track.TRANSCODINGS_FIELD_NUMBER,
+      Track.WAVEFORM_URLS_FIELD_NUMBER,
+      Track.AUTHORIZATION_FIELD_NUMBER
+    )
+  )
 }
