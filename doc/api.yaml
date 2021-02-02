@@ -544,12 +544,12 @@ paths:
         - $ref: "#/components/parameters/ids"
         - $ref: "#/components/parameters/genres"
         - $ref: "#/components/parameters/tags"
-        - $ref: "#/components/parameters/bpm[from]"
-        - $ref: "#/components/parameters/bpm[to]"
-        - $ref: "#/components/parameters/duration[from]"
-        - $ref: "#/components/parameters/duration[to]"
-        - $ref: "#/components/parameters/created_at[from]"
-        - $ref: "#/components/parameters/created_at[to]"
+        - $ref: "#/components/parameters/bpm_from"
+        - $ref: "#/components/parameters/bpm_to"
+        - $ref: "#/components/parameters/duration_from"
+        - $ref: "#/components/parameters/duration_to"
+        - $ref: "#/components/parameters/created_at_from"
+        - $ref: "#/components/parameters/created_at_to"
         - $ref: '#/components/parameters/limit'
         - $ref: '#/components/parameters/offset'
       responses:
@@ -574,7 +574,6 @@ paths:
             schema:
               allOf:
                 - $ref: '#/components/schemas/TrackDataRequest'
-                - type: object
                   required:
                     - track[title]
                     - track[asset_data]
@@ -582,7 +581,6 @@ paths:
             schema:
               allOf:
                 - $ref: '#/components/schemas/TrackDataRequest'
-                - type: object
                   required:
                     - track[title]
                     - track[asset_data]
@@ -1454,14 +1452,14 @@ paths:
           $ref: '#/components/responses/NotFound'
 components:
   parameters:
-    bpm[from]:
+    bpm_from:
       in: query
       name: bpm[from]
       required: false
       schema:
         type: integer
       description: Return tracks with at least this bpm value
-    bpm[to]:
+    bpm_to:
       in: query
       name: bpm[to]
       required: false
@@ -1475,28 +1473,28 @@ components:
       schema:
         type: string
       description: client_id
-    created_at[from]:
+    created_at_from:
       in: query
       name: created_at[from]
       required: false
       schema:
         type: string
       description: (yyyy-mm-dd hh:mm:ss) return tracks created at this date or later
-    created_at[to]:
+    created_at_to:
       in: query
       name: created_at[to]
       required: false
       schema:
         type: string
       description: (yyyy-mm-dd hh:mm:ss) return tracks created at this date or earlier
-    duration[from]:
+    duration_from:
       in: query
       name: duration[from]
       required: false
       schema:
         type: integer
       description: Return tracks with at least this duration value
-    duration[to]:
+    duration_to:
       in: query
       name: duration[to]
       required: false
