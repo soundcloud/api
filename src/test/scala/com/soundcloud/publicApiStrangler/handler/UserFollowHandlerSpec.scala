@@ -161,7 +161,7 @@ class UserFollowHandlerSpec extends UnitSpecification {
         response.status ==== Status.Ok
         Json.parse(response.contentString) ==== Json.obj(
           "collection" -> List(user123),
-          "next_href" -> "http://foo/me/followings?client_id=FOO&page_size=2&cursor=123-1234"
+          "next_href" -> "http://foo/me/followings?client_id=FOO&cursor=123-1234&page_size=2"
         )
       }
     }
@@ -196,7 +196,7 @@ class UserFollowHandlerSpec extends UnitSpecification {
       response.status ==== Status.Ok
       Json.parse(response.contentString) ==== Json.obj(
         "collection" -> List(anotherUser123),
-        "next_href" -> "http://foo/me/followers?page_size=2&cursor=123-1234"
+        "next_href" -> "http://foo/me/followers?cursor=123-1234&page_size=2"
       )
     }
   }
