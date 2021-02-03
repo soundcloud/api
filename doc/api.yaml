@@ -40,6 +40,7 @@ paths:
         - $ref: '#/components/parameters/client_id'
         - $ref: '#/components/parameters/redirect_uri'
         - $ref: '#/components/parameters/response_type'
+        - $ref: '#/components/parameters/scope'
       responses:
         200:
           description: Success
@@ -53,32 +54,46 @@ paths:
       security:
         - ClientId: []
       requestBody:
-        description: OAׁuth payload.
         content:
-          application/json:
+          application/x-www-form-urlencoded:
             schema:
               oneOf:
-                - $ref: '#/components/schemas/authorization_code'
-                - $ref: '#/components/schemas/client_credentials'
-                - $ref: '#/components/schemas/refresh_token'
-                - $ref: '#/components/schemas/password'
+                - $ref: '#/components/schemas/AuthorizationCode'
+                - $ref: '#/components/schemas/RefreshToken'
+                - $ref: '#/components/schemas/Password'
+            examples:
+              AuthorizationCode:
+                $ref: '#/components/examples/AuthorizationCode'
+              ClientCredentials:
+                $ref: '#/components/examples/ClientCredentials'
+              Password:
+                $ref: '#/components/examples/Password'
+              RefreshToken:
+                $ref: '#/components/examples/RefreshToken'
       responses:
         200:
           description: Success
           content:
             application/json:
               examples:
-                client_credentials:
-                  $ref: "#/components/examples/ClientCredentials"
+                ExpiringToken:
+                  $ref: "#/components/examples/ExpiringToken"
+                NonExpiringToken:
+                  $ref: "#/components/examples/NonExpiringToken"
         400:
           description: 'Bad Request'
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorInvalidGrant'
+                oneOf:
+                  - $ref: '#/components/schemas/Error'
               examples:
-                default:
+                ErrorInvalidGrant:
                   $ref: "#/components/examples/ErrorInvalidGrant"
+                ErrorUnsupportedGrant:
+                  $ref: "#/components/examples/ErrorUnsupportedGrant"
+                BadRequest:
+                  $ref: "#/components/examples/BadRequest"
         401:
           $ref: '#/components/responses/Unauthorized'
   /me:
@@ -1558,6 +1573,13 @@ components:
           - token
           - code_and_token
       description: response type
+    scope:
+      in: query
+      name: scope
+      required: true
+      schema:
+        type: string
+      description: Scope
     tags:
       in: query
       name: tags
@@ -1641,7 +1663,7 @@ components:
       name: Authorization
       description: 'The string "OAuth" followed by the user’s token: OAuth ACCESS_TOKEN'
   schemas:
-    authorization_code:
+    AuthorizationCode:
       type: object
       properties:
         grant_type:
@@ -1661,10 +1683,7 @@ components:
         client_secret:
           type: string
           description: Client secret
-    client_credentials:
-      allOf:
-      - $ref: "#/components/schemas/authorization_code"
-    refresh_token:
+    RefreshToken:
       type: object
       properties:
         grant_type:
@@ -1683,8 +1702,9 @@ components:
         client_secret:
           type: string
           description: Client secret
-    password:
+    Password:
       type: object
+      deprecated: true
       properties:
         grant_type:
           type: string
@@ -1894,14 +1914,6 @@ components:
         status:
           type: string
           deprecated: true
-    ErrorInvalidGrant:
-      allOf:
-        - $ref: '#/components/schemas/Error'
-        - type: object
-          properties:
-            message:
-              type: string
-              enum: [invalid_request, unsupported_grant_type, invalid_grant]
     TooManyRequests:
       allOf:
         - $ref: '#/components/schemas/Error'
@@ -1986,6 +1998,30 @@ components:
           schema:
             $ref: '#/components/schemas/TooManyRequests'
   examples:
+    AuthorizationCode:
+      value:
+        grant_type: authorization_code
+        client_id: CLIENT_ID
+        client_secret: CLIENT_SECRET
+        redirect_uri: https://mywebsite/auth/soundcloud
+        code: 1-123456-12345678-FAbcfbe9ir2wdj0
+    ClientCredentials:
+      value:
+        grant_type: client_credentials
+        client_id: CLIENT_ID
+        client_secret: CLIENT_SECRET
+    Password:
+      value:
+        client_id: CLIENT_ID
+        client_secret: CLIENT_SECRET
+        username: my-user-name
+        password: my-password
+    RefreshToken:
+      value:
+        grant_type: refresh_token
+        client_id: CLIENT_ID
+        client_secret: CLIENT_SECRET
+        refresh_token: 1234c331329477150e7b6056ff212345
     Activities:
       value:
         collection:
@@ -2031,12 +2067,16 @@ components:
               - $ref: "#/components/examples/Track/value"
         next_href: https://api.soundcloud.com/me/activities/tracks?limit=10&cursor=00000
         future_href: https://api.soundcloud.com/me/activities/tracks?limit=10&cursor=000001
-    ClientCredentials:
+    ExpiringToken:
       value:
         access_token: some string
         expires_in: 21599
         scope: ''
         refresh_token: some string
+    NonExpiringToken:
+      value:
+        access_token: some string
+        scope: 'non-expiring'
     Comment:
       value:
         body: comment body
@@ -2092,7 +2132,12 @@ components:
       value:
         code: 400
         message: invalid_grant
-        link: https://developers.soundcloud.com/docs/api/explorer/open-api
+        link: https://developers.soundcloud.com/docs/api/guide#authentication
+    ErrorUnsupportedGrant:
+      value:
+        code: 400
+        message: unsupported_grant
+        link: https://developers.soundcloud.com/docs/api/guide#authentication
     BadRequest:
       value:
         code: 400
