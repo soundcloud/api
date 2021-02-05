@@ -270,12 +270,7 @@ paths:
         - $ref: '#/components/parameters/offset'
       responses:
         200:
-          description: Success
-          content:
-            application/json:
-              examples:
-                default:
-                  $ref: "#/components/examples/UserFollowings"
+          $ref: "#/components/responses/Users"
         401:
           $ref: '#/components/responses/Unauthorized'
   /me/followings/tracks:
@@ -401,12 +396,7 @@ paths:
         - $ref: '#/components/parameters/limit'
       responses:
         200:
-          description: Success
-          content:
-            application/json:
-              examples:
-                default:
-                  $ref: "#/components/examples/UserFollowers"
+          $ref: "#/components/responses/Users"
         401:
           $ref: '#/components/responses/Unauthorized'
   /me/followers/{follower_id}:
@@ -662,12 +652,7 @@ paths:
         - $ref: '#/components/parameters/offset'
       responses:
         200:
-          description: Success
-          content:
-            application/json:
-              examples:
-                default:
-                  $ref: "#/components/examples/Users"
+          $ref: "#/components/responses/UsersList"
         400:
           $ref: '#/components/responses/BadRequest'
         401:
@@ -945,12 +930,7 @@ paths:
         - $ref: '#/components/parameters/offset'
       responses:
         200:
-          description: Success
-          content:
-            application/json:
-              examples:
-                default:
-                  $ref: '#/components/examples/Users'
+          $ref: "#/components/responses/UsersList"
         401:
           $ref: '#/components/responses/Unauthorized'
         404:
@@ -1110,12 +1090,7 @@ paths:
         - $ref: '#/components/parameters/limit'
       responses:
         200:
-          description: Success
-          content:
-            application/json:
-              examples:
-                default:
-                  $ref: "#/components/examples/UserFollowers"
+          $ref: "#/components/responses/Users"
         401:
           $ref: '#/components/responses/Unauthorized'
   /users/{user_id}/followers/{follower_id}:
@@ -1150,12 +1125,7 @@ paths:
         - $ref: '#/components/parameters/limit'
       responses:
         200:
-          description: Success
-          content:
-            application/json:
-              examples:
-                default:
-                  $ref: "#/components/examples/UserFollowings"
+          $ref: "#/components/responses/Users"
         401:
           $ref: '#/components/responses/Unauthorized'
   /users/{user_id}/followings/{following_id}:
@@ -2006,6 +1976,19 @@ components:
         website_title:
           description: a custom title for the website.
           type: string
+    Users:
+      type: object
+      properties:
+        collection:
+          type: array
+          items:
+            $ref: '#/components/schemas/User'
+        next_href: 
+          type: string
+    UsersList:
+      type: array
+      items:
+        $ref: '#/components/schemas/User'
   responses:
     Success:
       description: Success
@@ -2091,6 +2074,24 @@ components:
           examples:
             default:
               $ref: "#/components/examples/User"
+    Users:
+      description: Success
+      content:
+        application/json:
+          schema: 
+            $ref: '#/components/schemas/Users'
+          examples:
+            default:
+              $ref: "#/components/examples/Users"
+    UsersList:
+      description: Success
+      content:
+        application/json:
+          schema: 
+            $ref: '#/components/schemas/UsersList'
+          examples:
+            default:
+              $ref: "#/components/examples/UsersList"
   examples:
     AuthorizationCode:
       value:
@@ -2271,20 +2272,6 @@ components:
     OK:
       value:
         status: Status(200) - OK
-    UserFollowings:
-      value:
-        collection:
-          -
-            allOf:
-              - $ref: "#/components/examples/User/value"
-        next_href: https://api.soundcloud.com/users/1234/followings?client_id=client_id&page_size=10&cursor=1234567
-    UserFollowers:
-      value:
-        collection:
-          -
-            allOf:
-              - $ref: "#/components/examples/User/value"
-        next_href: https://api.soundcloud.com/users/1234/followers?client_id=client_id&page_size=10&cursor=1234567
     Playlist:
       value:
         artwork_url: ''
@@ -2446,10 +2433,17 @@ components:
         permalink_url: https://soundcloud.com/permalink
         uri: https://api.soundcloud.com/users/12345
         username: user.name
-    Users:
+    UsersList:
       value:
         - allOf:
           - $ref: "#/components/examples/User/value"
+    Users:
+      value:
+        collection:
+          -
+            allOf:
+              - $ref: "#/components/examples/User/value"
+        next_href: https://api.soundcloud.com/collection?client_id=client_id&page_size=10&cursor=1234567
     Web-profiles:
       value:
         - created_at: 1995/10/20 12:10:39 +0000
