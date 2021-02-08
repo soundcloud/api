@@ -34,8 +34,8 @@ paths:
       tags:
         - oauth
       security:
-        - ClientId: []
-          AuthHeader: []
+        - ClientId: [ ]
+          AuthHeader: [ ]
       parameters:
         - $ref: '#/components/parameters/client_id'
         - $ref: '#/components/parameters/redirect_uri'
@@ -52,7 +52,7 @@ paths:
       tags:
         - oauth
       security:
-        - ClientId: []
+        - ClientId: [ ]
       requestBody:
         content:
           application/x-www-form-urlencoded:
@@ -102,7 +102,7 @@ paths:
       tags:
         - me
       security:
-        - AuthHeader: []
+        - AuthHeader: [ ]
       responses:
         200:
           description: Success
@@ -119,17 +119,12 @@ paths:
       tags:
         - me
       security:
-        - AuthHeader: []
+        - AuthHeader: [ ]
       parameters:
         - $ref: '#/components/parameters/limit'
       responses:
         200:
-          description: Success
-          content:
-            application/json:
-              examples:
-                default:
-                  $ref: "#/components/examples/Activities"
+          $ref: "#/components/responses/Activities"
         401:
           $ref: '#/components/responses/Unauthorized'
   /me/activities/all/own:
@@ -138,17 +133,12 @@ paths:
       tags:
         - me
       security:
-        - AuthHeader: []
+        - AuthHeader: [ ]
       parameters:
         - $ref: '#/components/parameters/limit'
       responses:
         200:
-          description: Success
-          content:
-            application/json:
-              examples:
-                default:
-                  $ref: "#/components/examples/ActivitiesAllOwn"
+          $ref: "#/components/responses/Activities"
         401:
           $ref: '#/components/responses/Unauthorized'
   /me/activities/tracks:
@@ -157,17 +147,12 @@ paths:
       tags:
         - me
       security:
-        - AuthHeader: []
+        - AuthHeader: [ ]
       parameters:
         - $ref: '#/components/parameters/limit'
       responses:
         200:
-          description: Success
-          content:
-            application/json:
-              examples:
-                default:
-                  $ref: "#/components/examples/ActivitiesTracks"
+          $ref: "#/components/responses/Activities"
         401:
           $ref: '#/components/responses/Unauthorized'
   # /me/activities/tracks/{tag}:
@@ -189,7 +174,7 @@ paths:
       tags:
         - me
       security:
-        - AuthHeader: []
+        - AuthHeader: [ ]
       parameters:
         - $ref: '#/components/parameters/limit'
         - $ref: '#/components/parameters/offset'
@@ -209,7 +194,7 @@ paths:
       tags:
         - me
       security:
-        - AuthHeader: []
+        - AuthHeader: [ ]
       parameters:
         - $ref: '#/components/parameters/connection_id'
       responses:
@@ -230,17 +215,12 @@ paths:
       tags:
         - me
       security:
-        - AuthHeader: []
+        - AuthHeader: [ ]
       parameters:
         - $ref: '#/components/parameters/limit'
       responses:
         200:
-          description: Success
-          content:
-            application/json:
-              examples:
-                default:
-                  $ref: "#/components/examples/Tracks"
+          $ref: "#/components/responses/TracksList"
         401:
           $ref: '#/components/responses/Unauthorized'
   /me/favorites/ids:
@@ -250,7 +230,7 @@ paths:
       tags:
         - me
       security:
-        - AuthHeader: []
+        - AuthHeader: [ ]
       parameters:
         - $ref: '#/components/parameters/limit'
       responses:
@@ -264,7 +244,7 @@ paths:
       tags:
         - me
       security:
-        - AuthHeader: []
+        - AuthHeader: [ ]
       parameters:
         - $ref: '#/components/parameters/limit'
         - $ref: '#/components/parameters/offset'
@@ -279,18 +259,13 @@ paths:
       tags:
         - me
       security:
-        - AuthHeader: []
+        - AuthHeader: [ ]
       parameters:
         - $ref: '#/components/parameters/limit'
         - $ref: '#/components/parameters/offset'
       responses:
         200:
-          description: Success
-          content:
-            application/json:
-              examples:
-                default:
-                  $ref: "#/components/examples/Tracks"
+          $ref: "#/components/responses/Tracks"
         401:
           $ref: '#/components/responses/Unauthorized'
   /me/followings/{user_id}:
@@ -300,7 +275,7 @@ paths:
       tags:
         - me
       security:
-        - AuthHeader: []
+        - AuthHeader: [ ]
       parameters:
         - $ref: '#/components/parameters/user_id'
       responses:
@@ -315,7 +290,7 @@ paths:
       tags:
         - me
       security:
-        - AuthHeader: []
+        - AuthHeader: [ ]
       parameters:
         - $ref: '#/components/parameters/user_id'
       responses:
@@ -358,7 +333,7 @@ paths:
       tags:
         - me
       security:
-        - AuthHeader: []
+        - AuthHeader: [ ]
       parameters:
         - $ref: '#/components/parameters/user_id'
       responses:
@@ -391,7 +366,7 @@ paths:
       tags:
         - me
       security:
-        - AuthHeader: []
+        - AuthHeader: [ ]
       parameters:
         - $ref: '#/components/parameters/limit'
       responses:
@@ -406,7 +381,7 @@ paths:
       tags:
         - me
       security:
-        - AuthHeader: []
+        - AuthHeader: [ ]
       parameters:
         - $ref: '#/components/parameters/follower_id'
       responses:
@@ -421,17 +396,12 @@ paths:
       tags:
         - me
       security:
-        - AuthHeader: []
+        - AuthHeader: [ ]
       parameters:
         - $ref: '#/components/parameters/limit'
       responses:
         200:
-          description: Success
-          content:
-            application/json:
-              examples:
-                default:
-                  $ref: "#/components/examples/Playlist"
+          $ref: "#/components/responses/PlaylistsArray"
         401:
           $ref: '#/components/responses/Unauthorized'
         404:
@@ -452,12 +422,12 @@ paths:
       tags:
         - me
       security:
-        - AuthHeader: []
+        - AuthHeader: [ ]
       parameters:
         - $ref: '#/components/parameters/playlist_id'
       responses:
         200:
-          description: Success
+          $ref: "#/components/responses/Playlist"
   #   put:
   #     summary: Returns favorite track.
   #     tags:
@@ -475,32 +445,27 @@ paths:
       tags:
         - me
       security:
-        - AuthHeader: []
+        - AuthHeader: [ ]
       parameters:
         - $ref: '#/components/parameters/limit'
       responses:
         200:
-          description: Success
-          content:
-            application/json:
-              examples:
-                default:
-                  $ref: "#/components/examples/Tracks"
+          $ref: "#/components/responses/TracksList"
         401:
           $ref: '#/components/responses/Unauthorized'
   /me/tracks/{track_id}:
     get:
-      summary: Returns a list of tracks. (use /tracks/{track_id} instead, to fetch the track details)
+      summary: Returns a specified track. (use /tracks/{track_id} instead, to fetch the track details)
       deprecated: true
       tags:
         - me
       security:
-        - AuthHeader: []
+        - AuthHeader: [ ]
       parameters:
         - $ref: '#/components/parameters/track_id'
       responses:
         200:
-          description: Success
+          $ref: "#/components/responses/Track"
   /me/web-profiles:
     get:
       summary: Returns a list of the authenticated user's links added to their profile. (use /users/{user_id}/web-profiles instead)
@@ -508,7 +473,7 @@ paths:
       tags:
         - me
       security:
-        - AuthHeader: []
+        - AuthHeader: [ ]
       parameters:
         - $ref: '#/components/parameters/limit'
       responses:
@@ -527,8 +492,8 @@ paths:
       tags:
         - search
       security:
-        - ClientId: []
-          AuthHeader: []
+        - ClientId: [ ]
+          AuthHeader: [ ]
       parameters:
         - $ref: "#/components/parameters/q"
         - $ref: "#/components/parameters/ids"
@@ -544,12 +509,7 @@ paths:
         - $ref: '#/components/parameters/offset'
       responses:
         200:
-          description: Success
-          content:
-            application/json:
-              examples:
-                default:
-                  $ref: "#/components/examples/Tracks"
+          $ref: "#/components/responses/TracksList"
         400:
           $ref: '#/components/responses/BadRequest'
         401:
@@ -575,16 +535,11 @@ paths:
                     - track[title]
                     - track[asset_data]
       security:
-        - ClientId: []
-          AuthHeader: []
+        - ClientId: [ ]
+          AuthHeader: [ ]
       responses:
         200:
-          description: Success
-          content:
-            application/json:
-              examples:
-                default:
-                  $ref: '#/components/examples/Track'
+          $ref: '#/components/responses/Track'
         400:
           $ref: '#/components/responses/BadRequest'
         401:
@@ -595,20 +550,15 @@ paths:
       tags:
         - search
       security:
-        - ClientId: []
-          AuthHeader: []
+        - ClientId: [ ]
+          AuthHeader: [ ]
       parameters:
         - $ref: "#/components/parameters/q"
         - $ref: '#/components/parameters/limit'
         - $ref: '#/components/parameters/offset'
       responses:
         200:
-          description: Success
-          content:
-            application/json:
-              examples:
-                default:
-                  $ref: "#/components/examples/Playlist"
+          $ref: "#/components/responses/Playlist"
         400:
           $ref: '#/components/responses/BadRequest'
         401:
@@ -618,7 +568,7 @@ paths:
       tags:
         - playlists
       security:
-        - AuthHeader: []
+        - AuthHeader: [ ]
       requestBody:
         description: Create Playlist request
         content:
@@ -627,12 +577,7 @@ paths:
               $ref: '#/components/schemas/CreateUpdatePlaylistRequest'
       responses:
         200:
-          description: Success
-          content:
-            application/json:
-              examples:
-                default:
-                  $ref: "#/components/examples/Playlist"
+          $ref: "#/components/responses/Playlist"
         401:
           $ref: '#/components/responses/Unauthorized'
         404:
@@ -643,8 +588,8 @@ paths:
       tags:
         - search
       security:
-        - ClientId: []
-          AuthHeader: []
+        - ClientId: [ ]
+          AuthHeader: [ ]
       parameters:
         - $ref: "#/components/parameters/q"
         - $ref: "#/components/parameters/ids"
@@ -673,18 +618,13 @@ paths:
       tags:
         - playlists
       security:
-        - ClientId: []
-          AuthHeader: []
+        - ClientId: [ ]
+          AuthHeader: [ ]
       parameters:
         - $ref: "#/components/parameters/playlist_id"
       responses:
         200:
-          description: Success
-          content:
-            application/json:
-              examples:
-                default:
-                  $ref: "#/components/examples/Playlist"
+          $ref: "#/components/responses/Playlist"
         400:
           $ref: '#/components/responses/BadRequest'
         401:
@@ -694,7 +634,7 @@ paths:
       tags:
         - playlists
       security:
-        - AuthHeader: []
+        - AuthHeader: [ ]
       parameters:
         - $ref: "#/components/parameters/playlist_id"
       requestBody:
@@ -705,12 +645,7 @@ paths:
               $ref: '#/components/schemas/CreateUpdatePlaylistRequest'
       responses:
         200:
-          description: Success
-          content:
-            application/json:
-              examples:
-                default:
-                  $ref: "#/components/examples/Playlist"
+          $ref: "#/components/responses/Playlist"
         401:
           $ref: '#/components/responses/Unauthorized'
         404:
@@ -720,8 +655,8 @@ paths:
       tags:
         - playlists
       security:
-        - ClientId: []
-          AuthHeader: []
+        - ClientId: [ ]
+          AuthHeader: [ ]
       parameters:
         - $ref: "#/components/parameters/playlist_id"
       responses:
@@ -737,18 +672,13 @@ paths:
       tags:
         - playlists
       security:
-        - ClientId: []
-          AuthHeader: []
+        - ClientId: [ ]
+          AuthHeader: [ ]
       parameters:
         - $ref: "#/components/parameters/playlist_id"
       responses:
         200:
-          description: Success
-          content:
-            application/json:
-              examples:
-                default:
-                  $ref: "#/components/examples/Playlist"
+          $ref: "#/components/responses/TracksList"
         400:
           $ref: '#/components/responses/BadRequest'
         401:
@@ -759,17 +689,12 @@ paths:
       tags:
         - tracks
       security:
-        - ClientId: []
+        - ClientId: [ ]
       parameters:
         - $ref: '#/components/parameters/track_id'
       responses:
         200:
-          description: Success
-          content:
-            application/json:
-              examples:
-                default:
-                  $ref: '#/components/examples/Track'
+          $ref: '#/components/responses/Track'
         401:
           $ref: '#/components/responses/Unauthorized'
         404:
@@ -779,7 +704,7 @@ paths:
       tags:
         - tracks
       security:
-        - AuthHeader: []
+        - AuthHeader: [ ]
       parameters:
         - $ref: '#/components/parameters/track_id'
       requestBody:
@@ -796,12 +721,7 @@ paths:
               $ref: '#/components/schemas/TrackDataRequest'
       responses:
         200:
-          description: Success
-          content:
-            application/json:
-              examples:
-                default:
-                  $ref: '#/components/examples/Track'
+          $ref: '#/components/responses/Track'
         400:
           $ref: '#/components/responses/BadRequest'
         401:
@@ -811,7 +731,7 @@ paths:
       tags:
         - tracks
       security:
-        - AuthHeader: []
+        - AuthHeader: [ ]
       parameters:
         - $ref: '#/components/parameters/track_id'
       responses:
@@ -827,7 +747,7 @@ paths:
       tags:
         - tracks
       security:
-        - ClientId: []
+        - ClientId: [ ]
       parameters:
         - $ref: '#/components/parameters/track_id'
       responses:
@@ -848,7 +768,7 @@ paths:
       tags:
         - tracks
       security:
-        - ClientId: []
+        - ClientId: [ ]
       parameters:
         - $ref: '#/components/parameters/track_id'
         - $ref: '#/components/parameters/limit'
@@ -870,8 +790,8 @@ paths:
       tags:
         - tracks
       security:
-        - ClientId: []
-          AuthHeader: []
+        - ClientId: [ ]
+          AuthHeader: [ ]
       parameters:
         - $ref: '#/components/parameters/track_id'
       responses:
@@ -923,7 +843,7 @@ paths:
       tags:
         - tracks
       security:
-        - ClientId: []
+        - ClientId: [ ]
       parameters:
         - $ref: '#/components/parameters/track_id'
         - $ref: '#/components/parameters/limit'
@@ -942,7 +862,7 @@ paths:
       tags:
         - tracks
       security:
-        - AuthHeader: []
+        - AuthHeader: [ ]
       parameters:
         - $ref: '#/components/parameters/track_id'
         - $ref: '#/components/parameters/user_id'
@@ -959,19 +879,14 @@ paths:
       tags:
         - tracks
       security:
-        - ClientId: []
+        - ClientId: [ ]
       parameters:
         - $ref: '#/components/parameters/track_id'
         - $ref: '#/components/parameters/limit'
         - $ref: '#/components/parameters/offset'
       responses:
         200:
-          description: Success
-          content:
-            application/json:
-              examples:
-                default:
-                  $ref: '#/components/examples/Tracks'
+          $ref: '#/components/responses/TracksList'
         401:
           $ref: '#/components/responses/Unauthorized'
         404:
@@ -995,8 +910,8 @@ paths:
       tags:
         - miscellaneous
       security:
-        - ClientId: []
-          AuthHeader: []
+        - ClientId: [ ]
+          AuthHeader: [ ]
       parameters:
         - $ref: '#/components/parameters/url'
       responses:
@@ -1019,8 +934,8 @@ paths:
       tags:
         - users
       security:
-        - ClientId: []
-          AuthHeader: []
+        - ClientId: [ ]
+          AuthHeader: [ ]
       parameters:
         - $ref: '#/components/parameters/user_id'
       responses:
@@ -1036,8 +951,8 @@ paths:
       tags:
         - users
       security:
-        - ClientId: []
-          AuthHeader: []
+        - ClientId: [ ]
+          AuthHeader: [ ]
       parameters:
         - $ref: '#/components/parameters/user_id'
         - $ref: '#/components/parameters/limit'
@@ -1061,8 +976,8 @@ paths:
       tags:
         - users
       security:
-        - ClientId: []
-          AuthHeader: []
+        - ClientId: [ ]
+          AuthHeader: [ ]
       parameters:
         - $ref: '#/components/parameters/user_id'
         - $ref: '#/components/parameters/limit'
@@ -1083,8 +998,8 @@ paths:
       tags:
         - users
       security:
-        - ClientId: []
-          AuthHeader: []
+        - ClientId: [ ]
+          AuthHeader: [ ]
       parameters:
         - $ref: '#/components/parameters/user_id'
         - $ref: '#/components/parameters/limit'
@@ -1101,8 +1016,8 @@ paths:
       tags:
         - users
       security:
-        - ClientId: []
-          AuthHeader: []
+        - ClientId: [ ]
+          AuthHeader: [ ]
       parameters:
         - $ref: '#/components/parameters/user_id'
         - $ref: '#/components/parameters/follower_id'
@@ -1118,8 +1033,8 @@ paths:
       tags:
         - users
       security:
-        - ClientId: []
-          AuthHeader: []
+        - ClientId: [ ]
+          AuthHeader: [ ]
       parameters:
         - $ref: '#/components/parameters/user_id'
         - $ref: '#/components/parameters/limit'
@@ -1136,8 +1051,8 @@ paths:
       tags:
         - users
       security:
-        - ClientId: []
-          AuthHeader: []
+        - ClientId: [ ]
+          AuthHeader: [ ]
       parameters:
         - $ref: '#/components/parameters/user_id'
         - $ref: '#/components/parameters/following_id'
@@ -1154,19 +1069,14 @@ paths:
       tags:
         - users
       security:
-        - ClientId: []
-          AuthHeader: []
+        - ClientId: [ ]
+          AuthHeader: [ ]
       parameters:
         - $ref: '#/components/parameters/user_id'
         - $ref: '#/components/parameters/limit'
       responses:
         200:
-          description: Success
-          content:
-            application/json:
-              examples:
-                default:
-                  $ref: "#/components/examples/Playlist"
+          $ref: "#/components/responses/PlaylistsArray"
         401:
           $ref: '#/components/responses/Unauthorized'
   # /users/{user_id}/playlists/{track_id}:
@@ -1189,19 +1099,14 @@ paths:
       tags:
         - users
       security:
-        - ClientId: []
-          AuthHeader: []
+        - ClientId: [ ]
+          AuthHeader: [ ]
       parameters:
         - $ref: '#/components/parameters/user_id'
         - $ref: '#/components/parameters/limit'
       responses:
         200:
-          description: Success
-          content:
-            application/json:
-              examples:
-                default:
-                  $ref: "#/components/examples/Tracks"
+          $ref: "#/components/responses/TracksList"
         401:
           $ref: '#/components/responses/Unauthorized'
   /users/{user_id}/web-profiles:
@@ -1210,8 +1115,8 @@ paths:
       tags:
         - users
       security:
-        - ClientId: []
-          AuthHeader: []
+        - ClientId: [ ]
+          AuthHeader: [ ]
       parameters:
         - $ref: '#/components/parameters/user_id'
         - $ref: '#/components/parameters/limit'
@@ -1233,32 +1138,27 @@ paths:
       tags:
         - users
       security:
-        - ClientId: []
-          AuthHeader: []
+        - ClientId: [ ]
+          AuthHeader: [ ]
       parameters:
         - $ref: '#/components/parameters/user_id'
         - $ref: '#/components/parameters/limit'
       responses:
         200:
-          description: Success
-          content:
-            application/json:
-              examples:
-                default:
-                  $ref: "#/components/examples/Tracks"
+          $ref: "#/components/responses/TracksList"
         400:
           $ref: '#/components/responses/BadRequest'
         401:
           $ref: '#/components/responses/Unauthorized'
         404:
           $ref: '#/components/responses/NotFound'
-  /likes/tracks/{track_id}: 
+  /likes/tracks/{track_id}:
     post:
       summary: Likes a track.
       tags:
         - likes
       security:
-        - AuthHeader: []
+        - AuthHeader: [ ]
       parameters:
         - $ref: '#/components/parameters/track_id'
       responses:
@@ -1279,7 +1179,7 @@ paths:
       tags:
         - likes
       security:
-        - AuthHeader: []
+        - AuthHeader: [ ]
       parameters:
         - $ref: '#/components/parameters/track_id'
       responses:
@@ -1289,7 +1189,7 @@ paths:
           $ref: '#/components/responses/BadRequest'
         404:
           $ref: '#/components/responses/NotFound'
-  /likes/playlists/{playlist_id}: 
+  /likes/playlists/{playlist_id}:
     # get:
     #   summary: Returns a liked playlists.
     #   tags:
@@ -1307,7 +1207,7 @@ paths:
       tags:
         - likes
       security:
-        - AuthHeader: []
+        - AuthHeader: [ ]
       parameters:
         - $ref: '#/components/parameters/playlist_id'
       responses:
@@ -1328,7 +1228,7 @@ paths:
       tags:
         - likes
       security:
-        - AuthHeader: []
+        - AuthHeader: [ ]
       parameters:
         - $ref: '#/components/parameters/playlist_id'
       responses:
@@ -1344,7 +1244,7 @@ paths:
       tags:
         - reposts
       security:
-        - AuthHeader: []
+        - AuthHeader: [ ]
       parameters:
         - $ref: '#/components/parameters/track_id'
       responses:
@@ -1359,7 +1259,7 @@ paths:
       tags:
         - reposts
       security:
-        - AuthHeader: []
+        - AuthHeader: [ ]
       parameters:
         - $ref: '#/components/parameters/track_id'
       responses:
@@ -1375,7 +1275,7 @@ paths:
       tags:
         - reposts
       security:
-        - AuthHeader: []
+        - AuthHeader: [ ]
       parameters:
         - $ref: '#/components/parameters/playlist_id'
       responses:
@@ -1390,7 +1290,7 @@ paths:
       tags:
         - reposts
       security:
-        - AuthHeader: []
+        - AuthHeader: [ ]
       parameters:
         - $ref: '#/components/parameters/playlist_id'
       responses:
@@ -1752,7 +1652,7 @@ components:
                 required:
                   - id
                 properties:
-                  id: 
+                  id:
                     description: SoundCloud track id
                     type: string
     TrackDataRequest:
@@ -1941,6 +1841,7 @@ components:
         subscriptions:
           description: a list subscriptions associated with the user
           items:
+            type: array
             anyOf:
               - description: subscription
                 properties:
@@ -1960,7 +1861,6 @@ components:
                     description: if the subscription is recurring or not
                     type: boolean
                 type: object
-          type: array
         track_count:
           description: number of public tracks.
           type: integer
@@ -1983,12 +1883,352 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/User'
-        next_href: 
+        next_href:
           type: string
     UsersList:
       type: array
       items:
         $ref: '#/components/schemas/User'
+    Track:
+      type: object
+      description: Soundcloud Track object.
+      properties:
+        title:
+          description: Track title.
+          type: string
+        track_type:
+          description: Track type.
+          type: string
+        artwork_url:
+          description: URL to a JPEG image.
+          type: string
+        available_country_codes:
+          description: List of countries where track is available.
+          type: string
+        bpm:
+          description: Tempo.
+          type: integer
+        comment_count:
+          description: Number of comments.
+          type: integer
+        commentable:
+          description: Is commentable.
+          type: boolean
+        created_at:
+          description: Created timestamp.
+          type: string
+        description:
+          description: Track description.
+          type: string
+        domain_lockings:
+          description: Domain lockings.
+          type: string
+        download_count:
+          description: NUmber of downloads.
+          type: integer
+        download_url:
+          description: URL to download a track.
+          type: string
+        downloadable:
+          description: Is downloadable.
+          type: string
+        downloads_remaining:
+          description: Number of remaining downloads.
+          type: integer
+        duration:
+          description: Track duration.
+          type: integer
+        embeddable_by:
+          description: Embeddable by.
+          type: string
+        favoritings_count:
+          description: Number of favoritings.
+          type: integer
+        genre:
+          description: Genre
+          type: string
+        id:
+          description: Track identifier.
+          type: integer
+        isrc:
+          description: ISRC code.
+          type: string
+        key_signature:
+          description: Key signature.
+          type: string
+        kind:
+          description: Type of object (track).
+          type: string
+        label:
+          description: Label user.
+          allOf:
+            - $ref: "#/components/schemas/User"
+        label_id:
+          description: Label user identifier.
+          type: integer
+        label_name:
+          description: Label user name.
+          type: string
+        last_modified:
+          description: Last modified timestamp.
+          type: string
+        license:
+          description: License
+          type: string
+        original_content_size:
+          description: Content size.
+          type: integer
+        original_format:
+          description: Format.
+          type: string
+        permalink:
+          description: Permalink.
+          type: string
+        permalink_url:
+          description: Permalink URL.
+          type: string
+        playback_count:
+          description: Number of plays.
+          type: integer
+        purchase_title:
+          description: Purchase title.
+          type: string
+        purchase_url:
+          description: Purchase URL.
+          type: string
+        release:
+          description: Release.
+          type: string
+        release_day:
+          description: Day of release.
+          type: integer
+        release_month:
+          description: Month of release.
+          type: integer
+        release_year:
+          description: Year of release.
+          type: integer
+        reposts_count:
+          description: Number of reposts.
+          type: integer
+        secret_token:
+          description: Secret token.
+          type: string
+        secret_uri:
+          description: Secret URL.
+          type: string
+        sharing:
+          description: Type of sharing (public/private).
+          type: string
+        state:
+          description: Track state.
+          type: string
+        stream_url:
+          description: URL to stream.
+          type: string
+        streamable:
+          description: Is streamable.
+          type: boolean
+        tag_list:
+          description: Tags.
+          type: string
+        uri:
+          description: Track URI.
+          type: string
+        user:
+          description: User who uploaded a track
+          allOf:
+            - $ref: "#/components/schemas/User"
+        user_favorite:
+          description: Is user's favourite.
+          type: boolean
+        user_id:
+          description: User identifier.
+          type: integer
+        user_playback_count:
+          description: Number of plays by a user.
+          type: integer
+        user_uri:
+          description: User URI.
+          type: string
+        video_url:
+          description: Video URL.
+          type: string
+        waveform_url:
+          description: Waveform URL.
+          type: string
+    Tracks:
+      type: object
+      properties:
+        collection:
+          type: array
+          items:
+            $ref: '#/components/schemas/Track'
+        next_href:
+          type: string
+    TracksList:
+      type: array
+      items:
+        $ref: '#/components/schemas/Track'
+    Playlist:
+      type: object
+      description: Soundcloud Playlist Object
+      properties:
+        title:
+          description: Playlist title.
+          type: string
+        id:
+          description: Playlist identifier.
+          type: integer
+        kind:
+          description: Type of Soundcloud object (playlist).
+          type: string
+        artwork_url:
+          description: URL to a JPEG image.
+          type: string
+        created_at:
+          description: Created timestamp.
+          type: string
+        description:
+          description: Playlist description.
+          type: string
+        downloadable:
+          description: is downloadable.
+          type: boolean
+        duration:
+          description: Playlist duration.
+          type: integer
+        ean:
+          description: European Article Number.
+          type: string
+        embeddable_by:
+          description: Embeddable by.
+          type: string
+        genre:
+          description: Playlist genre.
+          type: string
+        label:
+          description: Label user.
+          allOf:
+            - $ref: "#/components/schemas/User"
+        label_id:
+          description: Label user identifier.
+          type: integer
+        label_name:
+          description: Label name.
+          type: string
+        last_modified:
+          description: Last modified timestamp.
+          type: string
+        license:
+          description: License.
+          type: string
+        likes_count:
+          description: Count of playlist likes.
+          type: integer
+        permalink:
+          description: Playlist permalink.
+          type: string
+        permalink_url:
+          description: Playlist permalink URL.
+          type: string
+        playlist_type:
+          description: Type of playlist.
+          type: string
+        purchase_title:
+          description: Purchase title.
+          type: string
+        purchase_url:
+          description: Purchase URL.
+          type: string
+        release:
+          description: Release.
+          type: string
+        release_day:
+          description: Day of release.
+          type: integer
+        release_month:
+          description: Month of release.
+          type: integer
+        release_year:
+          description: Year of release.
+          type: integer
+        sharing:
+          description: Type of sharing (private/public).
+          type: string
+        streamable:
+          description: Is streamable.
+          type: boolean
+        tag_list:
+          description: Tags.
+          type: string
+        tags:
+          description: Tags.
+          type: string
+        track_count:
+          description: Count of tracks.
+          type: integer
+        tracks:
+          description: List of tracks.
+          type: array
+          items:
+            $ref: "#/components/schemas/Track"
+        tracks_uri:
+          description: tracks URI.
+          type: string
+        type:
+          description: Playlist type.
+          type: string
+        uri:
+          description: Playlist URI.
+          type: string
+        user:
+          description: User.
+          allOf:
+            - $ref: "#/components/schemas/User"
+        user_id:
+          description: User identifier.
+          type: integer
+    Playlists:
+      type: object
+      properties:
+        collection:
+          type: array
+          items:
+            $ref: '#/components/schemas/Playlist'
+        next_href:
+          type: string
+    PlaylistsArray:
+      type: array
+      items:
+        $ref: '#/components/schemas/Playlist'
+    Activities:
+      type: object
+      description: User's activities.
+      properties:
+        collection:
+          type: array
+          items:
+            type: object
+            properties:
+              type:
+                description: Type of activity (track).
+                type: string
+              created_at:
+                description: Created timestamp.
+                type: string
+              description:
+                description: Activity description.
+                type: string
+              origin:
+                description: Origin.
+                oneOf:
+                  - $ref: "#/components/schemas/Track"
+                  - $ref: "#/components/schemas/Playlist"
+        next_href:
+          type: string
+        future_href:
+          type: string
   responses:
     Success:
       description: Success
@@ -2069,7 +2309,7 @@ components:
       description: Success
       content:
         application/json:
-          schema: 
+          schema:
             $ref: '#/components/schemas/User'
           examples:
             default:
@@ -2078,7 +2318,7 @@ components:
       description: Success
       content:
         application/json:
-          schema: 
+          schema:
             $ref: '#/components/schemas/Users'
           examples:
             default:
@@ -2087,11 +2327,74 @@ components:
       description: Success
       content:
         application/json:
-          schema: 
+          schema:
             $ref: '#/components/schemas/UsersList'
           examples:
             default:
               $ref: "#/components/examples/UsersList"
+    Track:
+      description: Success
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Track'
+          examples:
+            default:
+              $ref: "#/components/examples/Track"
+    Tracks:
+      description: Success
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Tracks'
+          examples:
+            default:
+              $ref: "#/components/examples/Tracks"
+    TracksList:
+      description: Success
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/TracksList'
+          examples:
+            default:
+              $ref: "#/components/examples/TracksList"
+    Playlist:
+      description: Success
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Playlist'
+          examples:
+            default:
+              $ref: "#/components/examples/Playlist"
+    Playlists:
+      description: Success
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Playlists'
+          examples:
+            default:
+              $ref: "#/components/examples/Playlists"
+    PlaylistsArray:
+      description: Success
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/PlaylistsArray'
+          examples:
+            default:
+              $ref: "#/components/examples/PlaylistsArray"
+    Activities:
+      description: Success
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Activities'
+          examples:
+            default:
+              $ref: "#/components/examples/Activities"
   examples:
     AuthorizationCode:
       value:
@@ -2124,44 +2427,14 @@ components:
             created_at: 2020/10/12 12:02:44 +0000
             origin:
               allOf:
-              - $ref: "#/components/examples/Track/value"
+                - $ref: "#/components/examples/Track/value"
           - type: playlist
             created_at: 2020/10/12 12:02:44 +0000
             origin:
               allOf:
-              - $ref: "#/components/examples/Track/value"
+                - $ref: "#/components/examples/Playlist/value"
         next_href: https://api.soundcloud.com/me/activities?limit=10&cursor=00000
         future_href: https://api.soundcloud.com/me/activities?limit=10&cursor=000001
-    ActivitiesAllOwn:
-      value:
-        collection:
-          - type: track
-            created_at: 2020/10/12 12:02:44 +0000
-            origin:
-              allOf:
-              - $ref: "#/components/examples/Track/value"
-          - type: playlist
-            created_at: 2020/10/12 12:02:44 +0000
-            origin:
-              allOf:
-              - $ref: "#/components/examples/Track/value"
-        next_href: https://api.soundcloud.com/me/activities/all/own?limit=10&cursor=00000
-        future_href: https://api.soundcloud.com/me/activities/all/own?limit=10&cursor=000001
-    ActivitiesTracks:
-      value:
-        collection:
-          - type: track
-            created_at: 2020/10/12 12:02:44 +0000
-            origin:
-              allOf:
-              - $ref: "#/components/examples/Track/value"
-          - type: playlist
-            created_at: 2020/10/12 12:02:44 +0000
-            origin:
-              allOf:
-              - $ref: "#/components/examples/Track/value"
-        next_href: https://api.soundcloud.com/me/activities/tracks?limit=10&cursor=00000
-        future_href: https://api.soundcloud.com/me/activities/tracks?limit=10&cursor=000001
     ExpiringToken:
       value:
         access_token: some string
@@ -2198,7 +2471,7 @@ components:
     Comments:
       value:
         - allOf:
-          - $ref: "#/components/examples/Comment/value"
+            - $ref: "#/components/examples/Comment/value"
     Connection:
       value:
         created_at: 1995/07/24 08:55:02 +0000
@@ -2213,7 +2486,7 @@ components:
     Connections:
       value:
         - allOf:
-          - $ref: "#/components/examples/Connection/value"
+            - $ref: "#/components/examples/Connection/value"
     Success:
       value:
         status: 200 - OK
@@ -2307,7 +2580,7 @@ components:
         track_count: 2
         tracks:
           - allOf:
-            - $ref: "#/components/examples/Track/value"
+              - $ref: "#/components/examples/Track/value"
         tracks_uri: https://api.soundcloud.com/playlists/12345/tracks
         type: ''
         uri: https://api.soundcloud.com/playlists/12345
@@ -2315,9 +2588,19 @@ components:
           allOf:
             - $ref: "#/components/examples/UserOf/value"
         user_id: 1234
+    Playlists:
+      value:
+        collection:
+          - allOf:
+              - $ref: "#/components/examples/Playlist/value"
+        next_href: https://api.soundcloud.com/collection?client_id=client_id&page_size=10&cursor=1234567
+    PlaylistsArray:
+      value:
+        - allOf:
+            - $ref: "#/components/examples/Playlist/value"
     Streams:
       value:
-        http_mp3_128_url: https://cf-media.sndcdn.com/ 
+        http_mp3_128_url: https://cf-media.sndcdn.com/
         hls_mp3_128_url: https://cf-media.sndcdn.com/
         hls_opus_64_url: https://cf-media.sndcdn.com/
         preview_mp3_128_url: https://cf-media.sndcdn.com/
@@ -2381,8 +2664,14 @@ components:
         waveform_url: https://wave.sndcdn.com/someString.png
     Tracks:
       value:
+        collection:
+          - allOf:
+              - $ref: "#/components/examples/Track/value"
+        next_href: https://api.soundcloud.com/collection?client_id=client_id&page_size=10&cursor=1234567
+    TracksList:
+      value:
         - allOf:
-          - $ref: "#/components/examples/Track/value"
+            - $ref: "#/components/examples/Track/value"
     User:
       value:
         avatar_url: https://i1.sndcdn.com/avatars.jpg
@@ -2414,9 +2703,9 @@ components:
           upload_seconds_left: 10800
         reposts_count: 0
         subscriptions:
-        - product:
-            id: some-id
-            name: some.name
+          - product:
+              id: some-id
+              name: some.name
         track_count: 0
         upload_seconds_left: 10800
         uri: https://api.soundcloud.com/users/1234
@@ -2436,12 +2725,11 @@ components:
     UsersList:
       value:
         - allOf:
-          - $ref: "#/components/examples/User/value"
+            - $ref: "#/components/examples/User/value"
     Users:
       value:
         collection:
-          -
-            allOf:
+          - allOf:
               - $ref: "#/components/examples/User/value"
         next_href: https://api.soundcloud.com/collection?client_id=client_id&page_size=10&cursor=1234567
     Web-profiles:
