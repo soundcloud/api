@@ -12,6 +12,7 @@ trait TrackMetadataRequest {
 }
 
 object TrackMetadataRequest {
+
   def toBoolean(value: String): Boolean = {
 
     if (value != null) value.toLowerCase match {

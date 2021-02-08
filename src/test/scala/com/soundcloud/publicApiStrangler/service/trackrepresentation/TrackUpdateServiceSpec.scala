@@ -411,7 +411,7 @@ class TrackUpdateServiceSpec extends UnitSpecification with TrackRepresentationS
       }
 
       val metadataUpdateParams = Map[String, String]("title" -> "the title", "description" -> "the description")
-      val metaDataUpdateRequest = TrackMetadataCreateRequest.fromForm(metadataUpdateParams).get
+      val metaDataUpdateRequest = TrackMetadataCreateRequest.fromForm(metadataUpdateParams).getOrElse(null)
       val trackAssetDataCreateRequest = TrackAssetDataCreateRequest(original_filename = "filename", uid = "uid")
       val trackCoordinatorTrack = Fixtures.trackCoordinatorTrack.as[TrackCoordinatorTrack]
       val trackArtworkUpdateResult = TrackArtworkUpdateResult(bucket = "bucket", filename = "filename")

@@ -309,22 +309,25 @@ class TracksHandlerSpec extends UnitSpecification with TrackRepresentationSpecCo
         val path = "/tracks"
         def stubTrackUpdateServiceCreate(
             createdTrackOutcome: Outcome[CreatedTrack],
-            trackUpdate: TrackMetadataCreateRequest,
+            trackUpdate: Outcome[TrackMetadataCreateRequest],
             artworkUpdate: Option[TrackArtworkUpdateRequest] = None,
             assetUpdate: TrackAssetDataCreateRequest
         ) = {
-          when(
-            trackUpdateService
-              .createTrack(
-                assetUpdate,
-                artworkUpdate,
-                trackUpdate,
-                session
-              )
-          ).thenReturn(
-            Future.value(createdTrackOutcome)
-          )
+          trackUpdate.map(metadata => {
+            when(
+              trackUpdateService
+                .createTrack(
+                  assetUpdate,
+                  artworkUpdate,
+                  metadata,
+                  session
+                )
+            ).thenReturn(
+              Future.value(createdTrackOutcome)
+            )
+          })
         }
+
         val requestBody = Seq[(String, String)](
           ("track[uid]", "12345"),
           ("track[original_filename]", "audio.mp3"),
@@ -333,7 +336,7 @@ class TracksHandlerSpec extends UnitSpecification with TrackRepresentationSpecCo
         val parsedRequestBody =
           Map[String, String]("uid" -> "12345", "original_filename" -> "audio.mp3", "title" -> "my track")
         val assetUpdate = TrackAssetDataCreateRequest("audio.mp3", "12345")
-        val trackUpdate = TrackMetadataCreateRequest.fromForm(parsedRequestBody).get
+        val trackUpdate = TrackMetadataCreateRequest.fromForm(parsedRequestBody)
         val bytes = Files.readAllBytes(
           Paths.get(this.getClass.getClassLoader.getResource("test-image.jpg").toURI)
         )
@@ -411,20 +414,22 @@ class TracksHandlerSpec extends UnitSpecification with TrackRepresentationSpecCo
         val path = "/tracks"
         def stubTrackUpdateServiceCreate(
             createdTrackOutcome: Outcome[CreatedTrack],
-            trackUpdate: Option[TrackMetadataCreateRequest] = None,
+            trackUpdate: Outcome[TrackMetadataCreateRequest],
             assetUpdate: TrackAssetDataCreateRequest
         ) = {
-          when(
-            trackUpdateService
-              .createTrack(
-                ===(assetUpdate),
-                anyObject[Option[TrackArtworkUpdateRequest]],
-                ===(trackUpdate.get),
-                ===(session)
-              )
-          ).thenReturn(
-            Future.value(createdTrackOutcome)
-          )
+          trackUpdate.map(metadata => {
+            when(
+              trackUpdateService
+                .createTrack(
+                  ===(assetUpdate),
+                  anyObject[Option[TrackArtworkUpdateRequest]],
+                  ===(metadata),
+                  ===(session)
+                )
+            ).thenReturn(
+              Future.value(createdTrackOutcome)
+            )
+          })
         }
         val requestBody = Seq[(String, String)](
           ("track[uid]", "12345"),

@@ -1,12 +1,16 @@
 package com.soundcloud.publicApiStrangler.handler.support.requestParser
 
+import cats.implicits._
+import com.soundcloud.jvmkit.module.outcome._
 import com.soundcloud.publicApiStrangler.client.mothership.request.representation.{
   MissingValue,
   NonNullMissingValue,
   NonNullValue,
+  NullableValue,
   Value
 }
-import com.soundcloud.publicApiStrangler.handler.support.requestParser.TrackMetadataRequest.{getEmbeddable, toBoolean}
+
+import com.soundcloud.publicApiStrangler.handler.support.requestParser.TrackMetadataRequest.getEmbeddable
 import play.api.libs.json.{JsError, JsObject, JsSuccess, Reads}
 
 import scala.util.{Success, Try}
@@ -16,6 +20,46 @@ case class TrackMetadataCreateRequest(track: TrackMetadataUpdates) extends Track
 }
 
 object TrackMetadataCreateRequest {
+  def fromForm(params: Map[String, String]): Outcome[TrackMetadataCreateRequest] = {
+    for {
+      api_streamable <- parseBooleanInput(params, "streamable")
+      downloadable <- parseBooleanInput(params, "downloadable")
+      commentable <- parseBooleanInput(params, "commentable")
+      reveal_stats <- parseBooleanInput(params, "reveal_stats")
+      reveal_comments <- parseBooleanInput(params, "reveal_comments")
+
+      title <- params
+        .get("title")
+        .map(v => NonNullValue[String](v))
+        .outcome
+        .leftMap(_ => NotValid("title field is required"))
+
+      track = new TrackMetadataUpdates(
+        embeddable = getEmbeddable(params.get("embeddable_by")),
+        description = parseNullableStringInput(params, "description"),
+        genre = parseNullableStringInput(params, "genre"),
+        isrc = parseNullableStringInput(params, "isrc"),
+        label_name = parseNullableStringInput(params, "label_name"),
+        license = parseNullableStringInput(params, "license"),
+        purchase_url = parseNullableStringInput(params, "purchase_url"),
+        release = parseNullableStringInput(params, "release"),
+        release_date = parseNullableStringInput(params, "release_date"),
+        sharing = parseNullableStringInput(params, "sharing"),
+        tag_list = parseNullableStringInput(params, "tag_list"),
+        purchase_title = parseNullableStringInput(params, "purchase_title"),
+        geo_blockings =
+          params.get("geo_blockings").map(v => Value[List[String]](v.split(",").toList)).getOrElse(MissingValue),
+        permalink = params.get("permalink").map(v => NonNullValue[String](v)).getOrElse(NonNullMissingValue),
+        api_streamable = api_streamable,
+        downloadable = downloadable,
+        title = title,
+        commentable = commentable,
+        reveal_stats = reveal_stats,
+        reveal_comments = reveal_comments
+      )
+    } yield TrackMetadataCreateRequest(track)
+  }
+
   val RequiredFields = Set("title") // throw error if title is not defined
 
   def containsRequiredFields(json: JsObject): Boolean = {
@@ -33,42 +77,29 @@ object TrackMetadataCreateRequest {
     }
   }
 
-  def fromForm(params: Map[String, String]): Option[TrackMetadataCreateRequest] = {
-    val embeddable = getEmbeddable(
-      params
-        .get("embeddable_by")
-    )
+  def toBoolean(value: String): Outcome[Boolean] = {
+    if (value != null) value.toLowerCase match {
+      case "0" => false.good
+      case "1" => true.good
+      case "true" => true.good
+      case "false" => false.good
+      case _ => Bad(NotValid(""))
+    }
+    else Bad(NotValid(""))
+  }
 
-    Try(
-      TrackMetadataCreateRequest(
-        track =
-          new TrackMetadataUpdates(
-            api_streamable = params.get("streamable").map(v => Value[Boolean](toBoolean(v))).getOrElse(MissingValue),
-            description = params.get("description").map(v => Value[String](v)).getOrElse(MissingValue),
-            downloadable = params.get("downloadable").map(v => Value[Boolean](toBoolean(v))).getOrElse(MissingValue),
-            embeddable = embeddable,
-            genre = params.get("genre").map(v => Value[String](v)).getOrElse(MissingValue),
-            geo_blockings = params
-              .get("geo_blockings")
-              .map(v => Value[List[String]](v.split(",").toList))
-              .getOrElse(MissingValue),
-            isrc = params.get("isrc").map(v => Value[String](v)).getOrElse(MissingValue),
-            label_name = params.get("label_name").map(v => Value[String](v)).getOrElse(MissingValue),
-            license = params.get("license").map(v => Value[String](v)).getOrElse(MissingValue),
-            permalink = params.get("permalink").map(v => NonNullValue[String](v)).getOrElse(NonNullMissingValue),
-            purchase_url = params.get("purchase_url").map(v => Value[String](v)).getOrElse(MissingValue),
-            release = params.get("release").map(v => Value[String](v)).getOrElse(MissingValue),
-            release_date = params.get("release_date").map(v => Value[String](v)).getOrElse(MissingValue),
-            sharing = params.get("sharing").map(v => Value[String](v)).getOrElse(MissingValue),
-            tag_list = params.get("tag_list").map(v => Value[String](v)).getOrElse(MissingValue),
-            title = params.get("title").map(v => NonNullValue[String](v)).get, // throw error if title is not defined
-            commentable = params.get("commentable").map(v => Value[Boolean](toBoolean(v))).getOrElse(MissingValue),
-            reveal_stats = params.get("reveal_stats").map(v => Value[Boolean](toBoolean(v))).getOrElse(MissingValue),
-            reveal_comments =
-              params.get("reveal_comments").map(v => Value[Boolean](toBoolean(v))).getOrElse(MissingValue),
-            purchase_title = params.get("purchase_title").map(v => Value[String](v)).getOrElse(MissingValue)
-          )
-      )
-    ).toOption
+  private def parseBooleanInput(params: Map[String, String], fieldName: String): Outcome[NullableValue[Boolean]] = {
+    params
+      .get(fieldName)
+      .map {
+        toBoolean(_)
+          .map(Value[Boolean])
+          .leftMap(_ => NotValid(s"invalid ${fieldName} value"))
+      }
+      .getOrElse(MissingValue.good)
+  }
+
+  private def parseNullableStringInput(params: Map[String, String], fieldName: String): NullableValue[String] = {
+    params.get(fieldName).map(v => Value[String](v)).getOrElse(MissingValue)
   }
 }

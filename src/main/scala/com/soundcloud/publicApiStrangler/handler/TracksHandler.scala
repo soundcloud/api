@@ -10,6 +10,7 @@ import com.soundcloud.publicApiStrangler.handler.representation.tracks.TrackRepr
   handleCreateTrackResponseFromService,
   handleUpdateTrackResponseFromService
 }
+import com.soundcloud.publicApiStrangler.handler.support.error.UnhandledOutcomeException
 import com.soundcloud.publicApiStrangler.handler.support.requestParser._
 import com.soundcloud.publicApiStrangler.service.trackrepresentation.TrackUpdateService
 import com.soundcloud.publicApiStrangler.support.ErrorResponse
@@ -137,17 +138,7 @@ class TracksHandler(
       session: UserSession
   ): Future[Response] = {
     val (metadataParams, artwork, assetParams) = multipartFormParamsCreate(request, TrackAssetDataCreateRequest)
-    (assetParams, metadataParams) match {
-      case (Some(asset), Some(metadata)) =>
-        val createdTrack = trackUpdateService.createTrack(
-          asset,
-          artwork,
-          metadata,
-          session
-        )
-        handleCreateTrackResponseFromService(createdTrack)
-      case _ => unprocessableEntityResponse
-    }
+    createTrack(metadataParams, assetParams, artwork, session)
   }
 
   private def createTrackFromUrlEncodedRequest(
@@ -155,16 +146,27 @@ class TracksHandler(
       session: UserSession
   ): Future[Response] = {
     val (metadataParams, assetDataParams) = urlEncodedRequestParamsCreate(request, TrackAssetDataCreateRequest)
+    createTrack(metadataParams, assetDataParams, None, session)
+  }
+
+  private def createTrack(
+      metadataParams: Outcome[TrackMetadataCreateRequest],
+      assetDataParams: Option[TrackAssetDataCreateRequest],
+      artworkData: Option[TrackArtworkUpdateRequest],
+      session: UserSession
+  ): Future[Response] = {
     (assetDataParams, metadataParams) match {
-      case (Some(asset), Some(metadata)) =>
+      case (Some(asset), Good(metadata)) =>
         val createdTrack = trackUpdateService.createTrack(
           asset,
-          None,
+          artworkData,
           metadata,
           session
         )
         handleCreateTrackResponseFromService(createdTrack)
-      case _ => unprocessableEntityResponse
+      case (None, _) => invalidAssetDataResponse
+      case (_, Bad(NotValid(errors))) => Future.value(ErrorResponse.badRequest(errors.head))
+      case _ => throw new UnhandledOutcomeException
     }
   }
 
@@ -181,10 +183,11 @@ class TracksHandler(
   private def multipartFormParamsCreate[T](
       request: HandlerRequest,
       assetParamsExtractor: TrackAssetRequestParams[T]
-  ): (Option[TrackMetadataCreateRequest], Option[TrackArtworkUpdateRequest], Option[T]) = {
+  ): (Outcome[TrackMetadataCreateRequest], Option[TrackArtworkUpdateRequest], Option[T]) = {
     val (extractedParams, assetDataUpdates, artworkDataUpdates) =
       getExtractedParamsWithAssetAndArtworkData(request, assetParamsExtractor)
-    val metadataUpdates = extractedParams.map(TrackMetadataCreateRequest.fromForm).getOrElse(None)
+    val metadataUpdates =
+      extractedParams.map(TrackMetadataCreateRequest.fromForm).getOrElse(NotValid("TODO  parsing error").bad)
     (metadataUpdates, artworkDataUpdates, assetDataUpdates)
   }
 
@@ -214,7 +217,7 @@ class TracksHandler(
   private def urlEncodedRequestParamsCreate[T](
       request: HandlerRequest,
       extractor: TrackAssetRequestParams[T]
-  ): (Option[TrackMetadataCreateRequest], Option[T]) = {
+  ): (Outcome[TrackMetadataCreateRequest], Option[T]) = {
     val (extractedParams, assetDataUpdates) = extractedParamsAndAssetData(request, extractor)
     val metadataUpdates = TrackMetadataCreateRequest.fromForm(extractedParams)
     (metadataUpdates, assetDataUpdates)
@@ -245,6 +248,6 @@ class TracksHandler(
   private def generateBadResponse: Future[Response] =
     Future.value(ErrorResponse.badRequest("400 - Invalid Request"))
 
-  private def unprocessableEntityResponse: Future[Response] =
-    Future.value(ErrorResponse(Status.UnprocessableEntity, "Require uid, original_filename, and title parameters."))
+  private def invalidAssetDataResponse: Future[Response] =
+    Future.value(ErrorResponse(Status.UnprocessableEntity, "unable to process provided asset_data"))
 }

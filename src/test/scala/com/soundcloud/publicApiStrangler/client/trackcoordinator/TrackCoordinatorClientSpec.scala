@@ -34,7 +34,7 @@ class TrackCoordinatorClientSpec extends UnitSpecification {
       .fromForm(
         Map[String, String]("title" -> "changed", "description" -> "changed")
       )
-      .get
+      .getOrElse(null)
 
     val trackMetadataUpdateRequest = TrackMetadataUpdateRequest
       .fromForm(
