@@ -105,12 +105,7 @@ paths:
         - AuthHeader: [ ]
       responses:
         200:
-          description: Success
-          content:
-            application/json:
-              examples:
-                default:
-                  $ref: "#/components/examples/User"
+          $ref: '#/components/responses/User'
         401:
           $ref: '#/components/responses/Unauthorized'
   /me/activities:
@@ -180,12 +175,7 @@ paths:
         - $ref: '#/components/parameters/offset'
       responses:
         200:
-          description: Success
-          content:
-            application/json:
-              examples:
-                default:
-                  $ref: "#/components/examples/Connections"
+          $ref: '#/components/responses/Connections'
         401:
           $ref: '#/components/responses/Unauthorized'
   /me/connections/{connection_id}:
@@ -199,12 +189,7 @@ paths:
         - $ref: '#/components/parameters/connection_id'
       responses:
         200:
-          description: Success
-          content:
-            application/json:
-              examples:
-                default:
-                  $ref: "#/components/examples/Connection"
+          $ref: '#/components/responses/Connection'
         401:
           $ref: '#/components/responses/Unauthorized'
         404:
@@ -478,12 +463,7 @@ paths:
         - $ref: '#/components/parameters/limit'
       responses:
         200:
-          description: Success
-          content:
-            application/json:
-              examples:
-                default:
-                  $ref: "#/components/examples/Web-profiles"
+          $ref: '#/components/responses/WebProfiles'
         401:
           $ref: '#/components/responses/Unauthorized'
   /tracks:
@@ -917,17 +897,6 @@ paths:
       responses:
         200:
           description: Success
-  # /users:
-  #   get:
-  #     summary: Returns users list.
-  #     tags:
-  #       - users
-  #     security:
-  #       - ClientId: []
-  #         AuthHeader: []
-  #     responses:
-  #       200:
-  #         description: Success
   /users/{user_id}:
     get:
       summary: Returns a user.
@@ -1122,12 +1091,7 @@ paths:
         - $ref: '#/components/parameters/limit'
       responses:
         200:
-          description: Success
-          content:
-            application/json:
-              examples:
-                default:
-                  $ref: "#/components/examples/Web-profiles"
+          $ref: '#/components/responses/WebProfiles'
         401:
           $ref: '#/components/responses/Unauthorized'
         404:
@@ -1560,6 +1524,40 @@ components:
         client_secret:
           type: string
           description: Client secret
+    Connection:
+      type: object
+      properties:
+        created_at: 
+          type: string
+          description: Created timestamp.
+        display_name: 
+          type: string
+          description: Full Name.
+        id:
+          type: integer
+          description: Unique identifier
+        kind:
+          type: string
+          description: Kind of resource.
+        post_favorite:
+          type: boolean
+          deprecated: true
+        post_publish:
+          type: boolean
+          deprecated: true
+        service: 
+          type: string
+          description: Service.
+        type:
+          type: string
+          description: Type.
+        uri:
+          type: string
+          description: The external link URI.
+    Connections:
+      type: array
+      items:
+        $ref: '#/components/schemas/Connection'
     TrackMetadataRequest:
       type: object
       properties:
@@ -2229,6 +2227,33 @@ components:
           type: string
         future_href:
           type: string
+    WebProfiles:
+      type: array
+      description: User's links added to their profile
+      items:
+        type: object
+        properties:
+            created_at:
+                description: Timestamp of when the link was added to the profile.
+                type: string
+            id:
+                description: Id
+                type: integer
+            kind:
+                description: Kind
+                type: string
+            service:
+                description: Service or platform
+                type: string
+            title:
+                description: Link's title
+                type: string
+            url:
+                description: URL of the external link
+                type: string
+            username:
+                description: Username extracted from the external link
+                type: string
   responses:
     Success:
       description: Success
@@ -2305,6 +2330,24 @@ components:
               $ref: '#/components/examples/TooManyRequests'
           schema:
             $ref: '#/components/schemas/TooManyRequests'
+    Connection:
+      description: Success
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Connection'
+          examples:
+            default:
+              $ref: "#/components/examples/Connection"
+    Connections:
+      description: Success
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Connections'
+          examples:
+            default:
+              $ref: "#/components/examples/Connections"
     User:
       description: Success
       content:
@@ -2395,6 +2438,15 @@ components:
           examples:
             default:
               $ref: "#/components/examples/Activities"
+    WebProfiles:
+      description: Success
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/WebProfiles'
+          examples:
+            default:
+              $ref: "#/components/examples/WebProfiles"
   examples:
     AuthorizationCode:
       value:
@@ -2732,7 +2784,7 @@ components:
           - allOf:
               - $ref: "#/components/examples/User/value"
         next_href: https://api.soundcloud.com/collection?client_id=client_id&page_size=10&cursor=1234567
-    Web-profiles:
+    WebProfiles:
       value:
         - created_at: 1995/10/20 12:10:39 +0000
           id: 1234
