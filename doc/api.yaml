@@ -203,9 +203,10 @@ paths:
         - AuthHeader: [ ]
       parameters:
         - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/linked_partitioning'
       responses:
         200:
-          $ref: "#/components/responses/TracksList"
+          $ref: "#/components/responses/Tracks"
         401:
           $ref: '#/components/responses/Unauthorized'
   /me/favorites/ids:
@@ -433,9 +434,10 @@ paths:
         - AuthHeader: [ ]
       parameters:
         - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/linked_partitioning'
       responses:
         200:
-          $ref: "#/components/responses/TracksList"
+          $ref: "#/components/responses/Tracks"
         401:
           $ref: '#/components/responses/Unauthorized'
   /me/tracks/{track_id}:
@@ -487,9 +489,10 @@ paths:
         - $ref: "#/components/parameters/created_at_to"
         - $ref: '#/components/parameters/limit'
         - $ref: '#/components/parameters/offset'
+        - $ref: '#/components/parameters/linked_partitioning'
       responses:
         200:
-          $ref: "#/components/responses/TracksList"
+          $ref: "#/components/responses/Tracks"
         400:
           $ref: '#/components/responses/BadRequest'
         401:
@@ -536,9 +539,10 @@ paths:
         - $ref: "#/components/parameters/q"
         - $ref: '#/components/parameters/limit'
         - $ref: '#/components/parameters/offset'
+        - $ref: '#/components/parameters/linked_partitioning'
       responses:
         200:
-          $ref: "#/components/responses/Playlist"
+          $ref: "#/components/responses/Playlists"
         400:
           $ref: '#/components/responses/BadRequest'
         401:
@@ -575,9 +579,10 @@ paths:
         - $ref: "#/components/parameters/ids"
         - $ref: '#/components/parameters/limit'
         - $ref: '#/components/parameters/offset'
+        - $ref: '#/components/parameters/linked_partitioning'
       responses:
         200:
-          $ref: "#/components/responses/UsersList"
+          $ref: "#/components/responses/Users"
         400:
           $ref: '#/components/responses/BadRequest'
         401:
@@ -656,9 +661,10 @@ paths:
           AuthHeader: [ ]
       parameters:
         - $ref: "#/components/parameters/playlist_id"
+        - $ref: "#/components/parameters/linked_partitioning"
       responses:
         200:
-          $ref: "#/components/responses/TracksList"
+          $ref: "#/components/responses/Tracks"
         400:
           $ref: '#/components/responses/BadRequest'
         401:
@@ -732,12 +738,7 @@ paths:
         - $ref: '#/components/parameters/track_id'
       responses:
         200:
-          description: Success
-          content:
-            application/json:
-              examples:
-                default:
-                  $ref: '#/components/examples/Streams'
+          $ref: '#/components/responses/Streams'
         401:
           $ref: '#/components/responses/Unauthorized'
         404:
@@ -753,14 +754,10 @@ paths:
         - $ref: '#/components/parameters/track_id'
         - $ref: '#/components/parameters/limit'
         - $ref: '#/components/parameters/offset'
+        - $ref: '#/components/parameters/linked_partitioning'
       responses:
         200:
-          description: Success
-          content:
-            application/json:
-              examples:
-                default:
-                  $ref: '#/components/examples/Comments'
+          $ref: '#/components/responses/Comments'
         401:
           $ref: '#/components/responses/Unauthorized'
         404:
@@ -864,9 +861,10 @@ paths:
         - $ref: '#/components/parameters/track_id'
         - $ref: '#/components/parameters/limit'
         - $ref: '#/components/parameters/offset'
+        - $ref: '#/components/parameters/linked_partitioning'
       responses:
         200:
-          $ref: '#/components/responses/TracksList'
+          $ref: '#/components/responses/Tracks'
         401:
           $ref: '#/components/responses/Unauthorized'
         404:
@@ -928,12 +926,7 @@ paths:
         - $ref: '#/components/parameters/offset'
       responses:
         200:
-          description: Success
-          content:
-            application/json:
-              examples:
-                default:
-                  $ref: "#/components/examples/Comments"
+          $ref: "#/components/responses/CommentsList"
         401:
           $ref: '#/components/responses/Unauthorized'
         404:
@@ -950,14 +943,10 @@ paths:
       parameters:
         - $ref: '#/components/parameters/user_id'
         - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/linked_partitioning'
       responses:
         200:
-          description: Success
-          content:
-            application/json:
-              examples:
-                default:
-                  $ref: "#/components/examples/Tracks"
+          $ref: "#/components/responses/Tracks"
         401:
           $ref: '#/components/responses/Unauthorized'
   /users/{user_id}/followers:
@@ -1043,9 +1032,10 @@ paths:
       parameters:
         - $ref: '#/components/parameters/user_id'
         - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/linked_partitioning'
       responses:
         200:
-          $ref: "#/components/responses/PlaylistsArray"
+          $ref: "#/components/responses/Playlists"
         401:
           $ref: '#/components/responses/Unauthorized'
   # /users/{user_id}/playlists/{track_id}:
@@ -1073,9 +1063,10 @@ paths:
       parameters:
         - $ref: '#/components/parameters/user_id'
         - $ref: '#/components/parameters/limit'
+        - $ref: "#/components/parameters/linked_partitioning"
       responses:
         200:
-          $ref: "#/components/responses/TracksList"
+          $ref: "#/components/responses/Tracks"
         401:
           $ref: '#/components/responses/Unauthorized'
   /users/{user_id}/web-profiles:
@@ -1107,9 +1098,10 @@ paths:
       parameters:
         - $ref: '#/components/parameters/user_id'
         - $ref: '#/components/parameters/limit'
+        - $ref: "#/components/parameters/linked_partitioning"
       responses:
         200:
-          $ref: "#/components/responses/TracksList"
+          $ref: "#/components/responses/Tracks"
         400:
           $ref: '#/components/responses/BadRequest'
         401:
@@ -1340,13 +1332,14 @@ components:
         default: 50
       description: Number of results to return in the collection.
     offset:
+      deprecated: true
       in: query
       name: offset
       required: false
       schema:
         type: integer
         default: 0
-      description: Offset of first result
+      description: Offset of first result. Deprecated, use `linked_partitioning` instead.
     q:
       in: query
       name: q
@@ -1450,6 +1443,14 @@ components:
       schema:
         type: integer
       description: SoundCloud User id
+    linked_partitioning:
+      in: query
+      name: linked_partitioning
+      required: false
+      schema:
+        type: boolean
+        example: true
+      description: Returns paginated collection of items (recommended, returning a list without pagination is deprecated and should not be used)
   securitySchemes:
     ClientId:
       in: query
@@ -1527,10 +1528,10 @@ components:
     Connection:
       type: object
       properties:
-        created_at: 
+        created_at:
           type: string
           description: Created timestamp.
-        display_name: 
+        display_name:
           type: string
           description: Full Name.
         id:
@@ -1545,7 +1546,7 @@ components:
         post_publish:
           type: boolean
           deprecated: true
-        service: 
+        service:
           type: string
           description: Service.
         type:
@@ -1884,6 +1885,7 @@ components:
         next_href:
           type: string
     UsersList:
+      deprecated: true
       type: array
       items:
         $ref: '#/components/schemas/User'
@@ -2065,6 +2067,7 @@ components:
         next_href:
           type: string
     TracksList:
+      deprecated: true
       type: array
       items:
         $ref: '#/components/schemas/Track'
@@ -2197,6 +2200,7 @@ components:
         next_href:
           type: string
     PlaylistsArray:
+      deprecated: true
       type: array
       items:
         $ref: '#/components/schemas/Playlist'
@@ -2233,27 +2237,82 @@ components:
       items:
         type: object
         properties:
-            created_at:
-                description: Timestamp of when the link was added to the profile.
-                type: string
-            id:
-                description: Id
-                type: integer
-            kind:
-                description: Kind
-                type: string
-            service:
-                description: Service or platform
-                type: string
-            title:
-                description: Link's title
-                type: string
-            url:
-                description: URL of the external link
-                type: string
-            username:
-                description: Username extracted from the external link
-                type: string
+          created_at:
+            description: Timestamp of when the link was added to the profile.
+            type: string
+          id:
+            description: Id
+            type: integer
+          kind:
+            description: Kind
+            type: string
+          service:
+            description: Service or platform
+            type: string
+          title:
+            description: Link's title
+            type: string
+          url:
+            description: URL of the external link
+            type: string
+          username:
+            description: Username extracted from the external link
+            type: string
+    Comment:
+      type: object
+      description: User's Comment
+      properties:
+        body:
+          description: Comment body.
+          type: string
+        created_at:
+          description: Created timestamp.
+          type: string
+        id:
+          description: Identifier.
+          type: integer
+        kind:
+          description: Kind (comment).
+          type: string
+        timestamp:
+          description: Timestamp.
+          type: string
+        track_id:
+          description: Track's identifier.
+          type: integer
+        uri:
+          description: Comment's URL.
+          type: string
+        user:
+          $ref: '#/components/schemas/User'
+        user_id:
+          description: User's identifier.
+          type: integer
+    Comments:
+      type: object
+      properties:
+        collection:
+          type: array
+          items:
+            $ref: '#/components/schemas/Comment'
+        next_href:
+          type: [ string, null ]
+    CommentsList:
+      deprecated: true
+      type: array
+      items:
+        $ref: '#/components/schemas/Comment'
+    Streams:
+      type: object
+      properties:
+        http_mp3_128_url:
+          type: string
+        hls_mp3_128_url:
+          type: string
+        hls_opus_64_url:
+          type: string
+        preview_mp3_128_url:
+          type: string
   responses:
     Success:
       description: Success
@@ -2362,10 +2421,14 @@ components:
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/Users'
+            oneOf:
+              - $ref: '#/components/schemas/Users'
+              - $ref: '#/components/schemas/UsersList'
           examples:
             default:
               $ref: "#/components/examples/Users"
+            usersList:
+              $ref: "#/components/examples/UsersList"
     UsersList:
       description: Success
       content:
@@ -2389,18 +2452,13 @@ components:
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/Tracks'
+            oneOf:
+              - $ref: '#/components/schemas/Tracks'
+              - $ref: '#/components/schemas/TracksList'
           examples:
             default:
               $ref: "#/components/examples/Tracks"
-    TracksList:
-      description: Success
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/TracksList'
-          examples:
-            default:
+            tracksList:
               $ref: "#/components/examples/TracksList"
     Playlist:
       description: Success
@@ -2416,10 +2474,14 @@ components:
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/Playlists'
+            oneOf:
+              - $ref: '#/components/schemas/Playlists'
+              - $ref: '#/components/schemas/PlaylistsArray'
           examples:
             default:
               $ref: "#/components/examples/Playlists"
+            playlistsArray:
+              $ref: "#/components/examples/PlaylistsArray"
     PlaylistsArray:
       description: Success
       content:
@@ -2447,6 +2509,37 @@ components:
           examples:
             default:
               $ref: "#/components/examples/WebProfiles"
+    Comments:
+      description: Success
+      content:
+        application/json:
+          schema:
+            oneOf:
+              - $ref: '#/components/schemas/Comments'
+              - $ref: '#/components/schemas/CommentsList'
+          examples:
+            default:
+              $ref: "#/components/examples/Comments"
+            commentsList:
+              $ref: "#/components/examples/CommentsList"
+    CommentsList:
+      description: Success
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/CommentsList'
+          examples:
+            default:
+              $ref: "#/components/examples/CommentsList"
+    Streams:
+      description: Success
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Streams'
+          examples:
+            default:
+              $ref: "#/components/examples/Streams"
   examples:
     AuthorizationCode:
       value:
@@ -2521,6 +2614,13 @@ components:
           reposts_count: 0
         user_id: 12345
     Comments:
+      value:
+        collection:
+          - allOf:
+              - $ref: "#/components/examples/Comment/value"
+        next_href: https://api.soundcloud.com/collection?client_id=client_id&page_size=10&cursor=1234567
+    CommentsList:
+      description: Deprecated, use Comments instead.
       value:
         - allOf:
             - $ref: "#/components/examples/Comment/value"
@@ -2647,6 +2747,7 @@ components:
               - $ref: "#/components/examples/Playlist/value"
         next_href: https://api.soundcloud.com/collection?client_id=client_id&page_size=10&cursor=1234567
     PlaylistsArray:
+      description: Deprecated, use Playlists instead.
       value:
         - allOf:
             - $ref: "#/components/examples/Playlist/value"
@@ -2721,6 +2822,7 @@ components:
               - $ref: "#/components/examples/Track/value"
         next_href: https://api.soundcloud.com/collection?client_id=client_id&page_size=10&cursor=1234567
     TracksList:
+      description: Deprecated, use Tracks instead.
       value:
         - allOf:
             - $ref: "#/components/examples/Track/value"
@@ -2775,6 +2877,7 @@ components:
         uri: https://api.soundcloud.com/users/12345
         username: user.name
     UsersList:
+      description: Deprecated, use Users instead.
       value:
         - allOf:
             - $ref: "#/components/examples/User/value"
