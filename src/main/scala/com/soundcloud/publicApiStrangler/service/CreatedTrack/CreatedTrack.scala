@@ -80,7 +80,7 @@ object CreatedTrack {
       "sharing" -> t.trackCoordinatorTrack.sharing,
       "state" -> t.trackCoordinatorTrack.state,
       "stream_url" -> t.streamUrl,
-      "streamable" -> t.trackCoordinatorTrack.streamable,
+      "streamable" -> t.trackCoordinatorTrack.api_streamable,
       "tag_list" -> t.trackCoordinatorTrack.tag_list,
       "title" -> t.trackCoordinatorTrack.title,
       "track_type" -> t.trackCoordinatorTrack.track_type,

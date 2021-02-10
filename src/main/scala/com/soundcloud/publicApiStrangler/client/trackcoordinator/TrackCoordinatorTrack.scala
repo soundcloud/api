@@ -70,7 +70,6 @@ object TrackCoordinatorTrack {
 
     override def writes(o: TrackCoordinatorTrack) = {
       Json.obj(
-        "api_streamable" -> Json.toJson(o.api_streamable),
         "artwork_url" -> Json.toJson(o.artwork_url),
         "bpm" -> Json.toJson(o.bpm),
         "commentable" -> Json.toJson(o.commentable),
@@ -111,7 +110,7 @@ object TrackCoordinatorTrack {
         "sharing" -> Json.toJson(o.sharing),
         "state" -> Json.toJson(o.state),
         "stream_url" -> Json.toJson(o.stream_url),
-        "streamable" -> Json.toJson(o.streamable),
+        "streamable" -> Json.toJson(o.api_streamable),
         "tag_list" -> Json.toJson(o.tag_list),
         "title" -> Json.toJson(o.title),
         "track_type" -> Json.toJson(o.track_type),
