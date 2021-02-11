@@ -32,7 +32,10 @@ class TracksHandler(
     paramsParser: RailsLikeParamsParser = new RailsLikeParamsParser
 ) {
 
-  def handleDelete(request: HandlerRequest): Future[Response] = {
+  /**
+    * Methods for track deletion
+    */
+  def handleDeleteTrack(request: HandlerRequest): Future[Response] = {
     userAuthentication.withLoggedInUser(request) { (session, _) =>
       Try(getTrackUrn(request)) match {
         case Return(urn) =>
@@ -46,6 +49,9 @@ class TracksHandler(
     }
   }
 
+  /**
+    * Methods for track update
+    */
   def handleUpdateTrack(request: HandlerRequest): Future[Response] = {
     userAuthentication.withLoggedInUser(request) { (session, _) =>
       Try(getTrackUrn(request)) match {
@@ -74,31 +80,18 @@ class TracksHandler(
       *  https://softwareengineering.stackexchange.com/a/319429
       */
     request.method = Method.Post
-    val (metatdataParams, artworkParams, assetParams) = multipartFormParamsUpdate(request, TrackAssetDataUpdateRequest)
+    val extractedParams = paramsParser.parse(request).map(extractTrackFieldsFromParams)
+
+    val artwork = paramsParser.parseFilesFromRequest(request, "track[artwork_data]").map(TrackArtworkUpdateRequest)
+    val assetParams = extractedParams.map(TrackAssetDataUpdateRequest.fromForm).getOrElse(None)
+    val metadataParams =
+      extractedParams.map(TrackMetadataUpdateRequest.fromForm).getOrElse(None)
+
     request.method = Method.Put
 
-    (artworkParams, metatdataParams, assetParams) match {
+    (artwork, metadataParams, assetParams) match {
       case (None, None, None) => generateBadResponse
-      case _ =>
-        val response =
-          trackUpdateService.updateTrack(
-            artworkParams,
-            assetParams,
-            metatdataParams,
-            urn,
-            session
-          )
-        handleUpdateTrackResponseFromService(response)
-    }
-  }
-
-  private def updateTrackFromJsonRequest(request: HandlerRequest, session: UserSession, urn: Urn): Future[Response] = {
-    val metadataUpdateParams = Json.parse(request.contentString).asOpt[TrackMetadataUpdateRequest]
-    metadataUpdateParams match {
-      case Some(_) =>
-        val response = trackUpdateService.updateTrack(None, None, metadataUpdateParams, urn, session)
-        handleUpdateTrackResponseFromService(response)
-      case _ => generateBadResponse
+      case _ => updateTrack(artwork, assetParams, metadataParams, urn, session)
     }
   }
 
@@ -107,23 +100,47 @@ class TracksHandler(
       session: UserSession,
       urn: Urn
   ): Future[Response] = {
-    val (metadataParams, assetDataParams) = urlEncodedRequestParamsUpdate(request, TrackAssetDataUpdateRequest)
-    (metadataParams, assetDataParams) match {
+    val extractedParams = extractTrackFieldsFromParams(request.params)
+    val assetData = TrackAssetDataUpdateRequest.fromForm(extractedParams)
+    val metadata = TrackMetadataUpdateRequest.fromForm(extractedParams)
+
+    (metadata, assetData) match {
       case (None, None) => generateBadResponse
-      case _ =>
-        val response =
-          trackUpdateService.updateTrack(
-            None,
-            assetDataParams,
-            metadataParams,
-            urn,
-            session
-          )
-        handleUpdateTrackResponseFromService(response)
+      case _ => updateTrack(None, assetData, metadata, urn, session)
     }
   }
 
-  def handleCreate(request: HandlerRequest): Future[Response] = {
+  private def updateTrackFromJsonRequest(request: HandlerRequest, session: UserSession, urn: Urn): Future[Response] = {
+    val metadata = Json.parse(request.contentString).asOpt[TrackMetadataUpdateRequest]
+    metadata match {
+      case Some(_) => updateTrack(None, None, metadata, urn, session)
+      case _ => generateBadResponse
+    }
+  }
+
+  private def updateTrack(
+      artwork: Option[TrackArtworkUpdateRequest],
+      assetData: Option[TrackAssetDataUpdateRequest],
+      metadata: Option[TrackMetadataUpdateRequest],
+      trackUrn: Urn,
+      session: UserSession
+  ): Future[Response] = {
+    val response =
+      trackUpdateService.updateTrack(
+        artwork,
+        assetData,
+        metadata,
+        trackUrn,
+        session
+      )
+
+    handleUpdateTrackResponseFromService(response)
+  }
+
+  /**
+    * Methods for track creation
+    */
+  def handleCreateTrack(request: HandlerRequest): Future[Response] = {
     userAuthentication.withLoggedInUser(request) { (session, _) =>
       request.mediaType match {
         case Some(MediaType.MultipartForm) => createTrackFromMultipartRequest(request, session)
@@ -137,29 +154,37 @@ class TracksHandler(
       request: HandlerRequest,
       session: UserSession
   ): Future[Response] = {
-    val (metadataParams, artwork, assetParams) = multipartFormParamsCreate(request, TrackAssetDataCreateRequest)
-    createTrack(metadataParams, assetParams, artwork, session)
+    val extractedParams = paramsParser.parse(request).map(extractTrackFieldsFromParams)
+
+    val artwork = paramsParser.parseFilesFromRequest(request, "track[artwork_data]").map(TrackArtworkUpdateRequest)
+    val assetData = extractedParams.map(TrackAssetDataCreateRequest.fromForm).getOrElse(None)
+    val metadata =
+      extractedParams.map(TrackMetadataCreateRequest.fromForm).getOrElse(NotValid("Invalid request").bad)
+
+    createTrack(metadata, assetData, artwork, session)
   }
 
   private def createTrackFromUrlEncodedRequest(
       request: HandlerRequest,
       session: UserSession
   ): Future[Response] = {
-    val (metadataParams, assetDataParams) = urlEncodedRequestParamsCreate(request, TrackAssetDataCreateRequest)
-    createTrack(metadataParams, assetDataParams, None, session)
+    val extractedParams = extractTrackFieldsFromParams(request.params)
+    val assetData = TrackAssetDataCreateRequest.fromForm(extractedParams)
+    val metadata = TrackMetadataCreateRequest.fromForm(extractedParams)
+    createTrack(metadata, assetData, None, session)
   }
 
   private def createTrack(
-      metadataParams: Outcome[TrackMetadataCreateRequest],
-      assetDataParams: Option[TrackAssetDataCreateRequest],
-      artworkData: Option[TrackArtworkUpdateRequest],
+      maybeMetadata: Outcome[TrackMetadataCreateRequest],
+      maybeAssetData: Option[TrackAssetDataCreateRequest],
+      artwork: Option[TrackArtworkUpdateRequest],
       session: UserSession
   ): Future[Response] = {
-    (assetDataParams, metadataParams) match {
-      case (Some(asset), Good(metadata)) =>
+    (maybeAssetData, maybeMetadata) match {
+      case (Some(assetData), Good(metadata)) =>
         val createdTrack = trackUpdateService.createTrack(
-          asset,
-          artworkData,
+          assetData,
+          artwork,
           metadata,
           session
         )
@@ -168,69 +193,6 @@ class TracksHandler(
       case (_, Bad(NotValid(errors))) => Future.value(ErrorResponse.badRequest(errors.head))
       case _ => throw new UnhandledOutcomeException
     }
-  }
-
-  private def multipartFormParamsUpdate[T](
-      request: HandlerRequest,
-      assetParamsExtractor: TrackAssetRequestParams[T]
-  ): (Option[TrackMetadataUpdateRequest], Option[TrackArtworkUpdateRequest], Option[T]) = {
-    val (extractedParams, assetDataUpdates, artworkDataUpdates) =
-      getExtractedParamsWithAssetAndArtworkData(request, assetParamsExtractor)
-    val metadataUpdates = extractedParams.map(TrackMetadataUpdateRequest.fromForm).getOrElse(None)
-    (metadataUpdates, artworkDataUpdates, assetDataUpdates)
-  }
-
-  private def multipartFormParamsCreate[T](
-      request: HandlerRequest,
-      assetParamsExtractor: TrackAssetRequestParams[T]
-  ): (Outcome[TrackMetadataCreateRequest], Option[TrackArtworkUpdateRequest], Option[T]) = {
-    val (extractedParams, assetDataUpdates, artworkDataUpdates) =
-      getExtractedParamsWithAssetAndArtworkData(request, assetParamsExtractor)
-    val metadataUpdates =
-      extractedParams.map(TrackMetadataCreateRequest.fromForm).getOrElse(NotValid("TODO  parsing error").bad)
-    (metadataUpdates, artworkDataUpdates, assetDataUpdates)
-  }
-
-  private def getExtractedParamsWithAssetAndArtworkData[T](
-      request: HandlerRequest,
-      assetParamsExtractor: TrackAssetRequestParams[T]
-  ): (Option[Map[String, String]], Option[T], Option[TrackArtworkUpdateRequest]) = {
-    val metadataUpdateParams = paramsParser.parse(request)
-    val albumArtworkUpdate = paramsParser.parseFilesFromRequest(request, "track[artwork_data]")
-    val artworkDataUpdates = albumArtworkUpdate.map(TrackArtworkUpdateRequest)
-
-    val extractedParams = metadataUpdateParams.map(extractTrackFieldsFromParams)
-    val assetDataUpdates = extractedParams.map(assetParamsExtractor.fromForm).getOrElse(None)
-
-    (extractedParams, assetDataUpdates, artworkDataUpdates)
-  }
-
-  private def urlEncodedRequestParamsUpdate[T](
-      request: HandlerRequest,
-      extractor: TrackAssetRequestParams[T]
-  ): (Option[TrackMetadataUpdateRequest], Option[T]) = {
-    val (extractedParams, assetDataUpdates) = extractedParamsAndAssetData(request, extractor)
-    val metadataUpdates = TrackMetadataUpdateRequest.fromForm(extractedParams)
-    (metadataUpdates, assetDataUpdates)
-  }
-
-  private def urlEncodedRequestParamsCreate[T](
-      request: HandlerRequest,
-      extractor: TrackAssetRequestParams[T]
-  ): (Outcome[TrackMetadataCreateRequest], Option[T]) = {
-    val (extractedParams, assetDataUpdates) = extractedParamsAndAssetData(request, extractor)
-    val metadataUpdates = TrackMetadataCreateRequest.fromForm(extractedParams)
-    (metadataUpdates, assetDataUpdates)
-  }
-
-  private def extractedParamsAndAssetData[T](
-      request: HandlerRequest,
-      extractor: TrackAssetRequestParams[T]
-  ): (Map[String, String], Option[T]) = {
-    val metadataUpdateParams = request.params
-    val extractedParams = extractTrackFieldsFromParams(metadataUpdateParams)
-    val assetDataUpdates = extractor.fromForm(extractedParams)
-    (extractedParams, assetDataUpdates)
   }
 
   private def extractTrackFieldsFromParams(multipartParams: Map[String, String]): Map[String, String] = {

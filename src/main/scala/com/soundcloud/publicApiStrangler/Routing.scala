@@ -90,8 +90,8 @@ object Routing {
 
   def forTracksHandler(tracksHandler: TracksHandler): List[(Method, String, Handler)] = {
     route(Method.Put, "/tracks/:trackId", tracksHandler.handleUpdateTrack) :::
-      route(Method.Post, "/tracks", tracksHandler.handleCreate) :::
-      route(Method.Delete, "/tracks/:trackId", tracksHandler.handleDelete)
+      route(Method.Post, "/tracks", tracksHandler.handleCreateTrack) :::
+      route(Method.Delete, "/tracks/:trackId", tracksHandler.handleDeleteTrack)
   }
 
   def forUserRelatedMothershipDispatcher(
