@@ -6,7 +6,7 @@ import com.soundcloud.jvmkit.module.util.logging.SoundCloudLoggerFactory
 import com.soundcloud.jvmkit.module.util.session.{UserSession, UserSessionHeadersConverter}
 import com.soundcloud.publicApiStrangler.support.ErrorResponse
 import com.twitter.finagle.Service
-import com.twitter.finagle.http.{Fields, Request, Response, Status}
+import com.twitter.finagle.http.{Request, Response, Status}
 import com.twitter.util.Future
 
 import scala.collection.JavaConverters._
@@ -20,7 +20,7 @@ class DispatchToMothershipHandler(
 
   def dispatch(request: HandlerRequest): Future[Response] = {
     userAuthentication.withUserSession(request) { session =>
-      mothershipClient(ForwardedRequest(request.request, Some(session))).map(removeContentLengthHeader).handle {
+      mothershipClient(ForwardedRequest(request.request, Some(session))).handle {
         case NonFatal(exception: Exception) =>
           logger.debug("Bad response from mothership", exception)
           ErrorResponse(Status.InternalServerError)
@@ -30,16 +30,11 @@ class DispatchToMothershipHandler(
 
   // Deprecated! Only used for token exchange until it is properly implemented in PAS itself.
   def dispatchUnauthenticated(request: HandlerRequest): Future[Response] = {
-    mothershipClient(ForwardedRequest(request.request, None)).map(removeContentLengthHeader).handle {
+    mothershipClient(ForwardedRequest(request.request, None)).handle {
       case NonFatal(exception: Exception) =>
         logger.debug("Bad response from mothership", exception)
         ErrorResponse(Status.InternalServerError)
     }
-  }
-
-  private def removeContentLengthHeader(response: Response) = {
-    response.headerMap.removeHeader(Fields.ContentLength)
-    response
   }
 }
 

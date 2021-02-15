@@ -18,9 +18,7 @@ class DispatchToMothershipHandlerSpec extends UnitSpecification {
       val handler = new DispatchToMothershipHandler(userAuthentication, mothershipClient)
 
       val response = Response(Status.Ok)
-      response.headerMap
-        .set("header1", "valueHeader1")
-        .set("header2", "valueHeader2")
+      response.headerMap.set("header1", "valueHeader1").set("header2", "valueHeader2")
       response.contentString = "body content"
 
       val handlerRequest = HandlerRequest()
@@ -35,15 +33,6 @@ class DispatchToMothershipHandlerSpec extends UnitSpecification {
         responseFromHandler.headerMap.get("header1") ==== Some("valueHeader1")
         responseFromHandler.headerMap.get("header2") ==== Some("valueHeader2")
         responseFromHandler.getContentString() ==== "body content"
-      }
-
-      // Only required until https://github.com/soundcloud/jvmkit-modules/pull/646 is released.
-      "except for the `Content-Length` header (regardless of casing)" in new Context {
-        response.headerMap
-          .set(Fields.ContentLength.toLowerCase, "200")
-        mothershipClient(any[Request]) returns (Future.value(response))
-        val responseFromHandler = Await.result(handler.dispatch(handlerRequest))
-        responseFromHandler.headerMap.get(Fields.ContentLength) ==== None
       }
     }
 
@@ -99,15 +88,6 @@ class DispatchToMothershipHandlerSpec extends UnitSpecification {
         responseFromHandler.headerMap.get("header1") ==== Some("valueHeader1")
         responseFromHandler.headerMap.get("header2") ==== Some("valueHeader2")
         responseFromHandler.getContentString() ==== "body content"
-      }
-
-      // Only required until https://github.com/soundcloud/jvmkit-modules/pull/646 is released.
-      "except for the `Content-Length` header (regardless of casing)" in new Context {
-        response.headerMap
-          .set(Fields.ContentLength.toLowerCase, "200")
-        mothershipClient(any[Request]) returns (Future.value(response))
-        val responseFromHandler = Await.result(handler.dispatch(handlerRequest))
-        responseFromHandler.headerMap.get(Fields.ContentLength) ==== None
       }
     }
 
