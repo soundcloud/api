@@ -98,7 +98,6 @@ object Routing {
       userRelatedMothershipDispatcher: UserRelatedMothershipDispatcher
   ): List[(Method, String, Handler)] = {
     route(Method.Get, "/tracks/:id/favoriters", userRelatedMothershipDispatcher.dispatchToMothership) :::
-      route(Method.Get, "/tracks/:id/favoriters/:user_id", userRelatedMothershipDispatcher.dispatchToMothership) ::: // deprecate
       route(Method.Get, "/users/:id", userRelatedMothershipDispatcher.dispatchToMothership) :::
       route(Method.Get, "/users/:id/comments", userRelatedMothershipDispatcher.dispatchToMothership) :::
       route(Method.Get, "/me", userRelatedMothershipDispatcher.dispatchToMothership)

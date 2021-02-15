@@ -34,7 +34,6 @@ class DeprecatedEndpointUsageFilter(userAuthentication: UserAuthentication, tele
     "/me/favorites/ids",
     "/me/favorites/:trackId",
     "/users/:userId/favorites",
-    "/tracks/:id/favoriters/:user_id", // delete - unused
     "/me/tracks/:trackId",
     "/me/playlists/:id",
     "/me/activities/tracks/:tag"

@@ -819,24 +819,6 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         404:
           $ref: '#/components/responses/NotFound'
-  /tracks/{track_id}/favoriters/{user_id}:
-    get:
-      summary: Returns a user who has favorited or liked the track. (use /users/{user_id} instead, to fetch the user details)
-      deprecated: true
-      tags:
-        - tracks
-      security:
-        - AuthHeader: [ ]
-      parameters:
-        - $ref: '#/components/parameters/track_id'
-        - $ref: '#/components/parameters/user_id'
-      responses:
-        200:
-          $ref: '#/components/responses/User'
-        401:
-          $ref: '#/components/responses/Unauthorized'
-        404:
-          $ref: '#/components/responses/NotFound'
   /tracks/{track_id}/related:
     get:
       summary: Returns all related tracks of track on SoundCloud.
