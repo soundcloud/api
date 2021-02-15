@@ -25,24 +25,19 @@ class DeprecatedEndpointUsageFilter(userAuthentication: UserAuthentication, tele
   private val deprecatedEndpointsPrefix = Seq(
     "/e1/",
     "/i1/",
-    "/tracks/:trackId/related",
-    "/me/tracks/:trackId",
-    "/me/activities",
-    "/me/followings",
-    "/me/followers",
-    "/me/comments",
-    "/me/connections",
     "/me/web-profiles",
-    "/users/:id/followings",
-    "/users/:id/followers",
-    "/users/:userId/web-profiles",
-    "/playlists/:playlistId/tracks",
-    "/tracks/:id/favoriters/:user_id",
-    "/me/email",
+    "/users/:id/followers/:other_id",
+    "/users/:id/followings/:other_id",
+    "/me/followers/:other_id",
+    "/me/followings/:other_id", // only get
+    "/me/favorites",
     "/me/favorites/ids",
-    "/users/:userId/favorites/:trackId",
     "/me/favorites/:trackId",
-    "/tracks"
+    "/users/:userId/favorites",
+    "/tracks/:id/favoriters/:user_id", // delete - unused
+    "/me/tracks/:trackId",
+    "/me/playlists/:id",
+    "/me/activities/tracks/:tag"
   )
 
   override def apply(request: Request, service: Service[Request, Response]): Future[Response] = {

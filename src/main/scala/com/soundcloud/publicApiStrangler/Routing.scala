@@ -66,7 +66,7 @@ object Routing {
       route(Method.Get, "/me/favorites/ids", mothershipDispatcher.dispatch) ::: // deprecate
       route(Method.Post, "/me/playlists", mothershipDispatcher.dispatch) :::
       route(Method.Put, "/me/playlists/:trackId", mothershipDispatcher.dispatch) :::
-      route(Method.Get, "/me/web-profiles", mothershipDispatcher.dispatch) :::
+      route(Method.Get, "/me/web-profiles", mothershipDispatcher.dispatch) ::: // deprecate
       route(Method.Get, "/users/:userId/web-profiles", mothershipDispatcher.dispatch)
   }
 

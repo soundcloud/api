@@ -150,19 +150,6 @@ paths:
           $ref: "#/components/responses/Activities"
         401:
           $ref: '#/components/responses/Unauthorized'
-  # /me/activities/tracks/{tag}:
-  #   get:
-  #     summary: Returns a list of tracks activities.
-  #     tags:
-  #       - me
-  #     security:
-  #       - AuthHeader: []
-  #     parameters:
-  #       - $ref: '#/components/parameters/tag'
-  #       - $ref: '#/components/parameters/limit'
-  #     responses:
-  #       200:
-  #         description: Success
   /me/connections:
     get:
       summary: Returns a list of the authenticated user's connected social accounts.
