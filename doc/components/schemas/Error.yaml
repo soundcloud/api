@@ -1,0 +1,17 @@
+type: object
+properties:
+  code:
+    type: integer
+  message:
+    type: string
+  link:
+    type: string
+  error:
+    type: string
+    deprecated: true
+  errors:
+    type: object
+    deprecated: true
+  status:
+    type: string
+    deprecated: true

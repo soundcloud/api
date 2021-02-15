@@ -1,0 +1,10 @@
+type: object
+properties:
+  http_mp3_128_url:
+    type: string
+  hls_mp3_128_url:
+    type: string
+  hls_opus_64_url:
+    type: string
+  preview_mp3_128_url:
+    type: string

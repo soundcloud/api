@@ -1,0 +1,19 @@
+type: object
+properties:
+  grant_type:
+    type: string
+    enum:
+      - authorization_code
+      - client_credentials
+  authorization_code:
+    type: string
+    description: Authorization code
+  client_id:
+    type: string
+    description: Client ID
+  redirect_uri:
+    type: string
+    description: Redirect URI
+  client_secret:
+    type: string
+    description: Client secret

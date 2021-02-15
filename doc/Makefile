@@ -7,11 +7,29 @@ CRUN = sc crun nodejs-12
 
 .PHONY: run clean package publish promote publish-deploy deploy
 
-run:
+resolve_api: node_modules
+	multi-file-swagger -o yaml api.yaml > compiled_api.yaml
+
+node_modules:
+	npm i
+
+run: resolve_api
 	$(CRUN) -i -o'-p3000:3000' -- node app.js
+	$(MAKE) clear
+
+test: resolve_api
+	echo "Assumes you have set endpoint:'http://127.0.0.1:5000' in ./dredd.yml"
+	npm test
+	$(MAKE) clear
+
+contract-test:
+	'./run-dredd-test.sh'
 
 clean:
 	rm -rf node_modules
+
+clear:
+	rm compiled_api.yaml
 
 package:
 	sc add-config config/*
@@ -23,7 +41,7 @@ package:
 	$(CRUN) --  npm install
 	sc add-files node_modules
 	sc add-files assets
-
+	sc add-files components
 	sc gen-wrapper-script --target="./run-swagger-ui.sh" --wrapper=$(COMPONENT)
 	sc artifact-manager package --runtime=nodejs-12
 

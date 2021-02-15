@@ -1,0 +1,5 @@
+value:
+  access_token: some string
+  expires_in: 21599
+  scope: ''
+  refresh_token: some string

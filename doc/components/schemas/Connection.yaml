@@ -1,0 +1,29 @@
+type: object
+properties:
+  created_at:
+    type: string
+    description: Created timestamp.
+  display_name:
+    type: string
+    description: Full Name.
+  id:
+    type: integer
+    description: Unique identifier
+  kind:
+    type: string
+    description: Kind of resource.
+  post_favorite:
+    type: boolean
+    deprecated: true
+  post_publish:
+    type: boolean
+    deprecated: true
+  service:
+    type: string
+    description: Service.
+  type:
+    type: string
+    description: Type.
+  uri:
+    type: string
+    description: The external link URI.

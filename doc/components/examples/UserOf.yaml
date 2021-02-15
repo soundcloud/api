@@ -1,0 +1,9 @@
+value:
+  avatar_url: https://i1.sndcdn.com/avatars-large.jpg
+  id: 12345
+  kind: user
+  last_modified: 2020/09/03 14:08:25 +0000
+  permalink: permalink
+  permalink_url: https://soundcloud.com/permalink
+  uri: https://api.soundcloud.com/users/12345
+  username: user.name

@@ -1,0 +1,18 @@
+type: object
+properties:
+  grant_type:
+    type: string
+    enum:
+      - refresh_token
+  refresh_token:
+    type: string
+    description: Refresh token
+  client_id:
+    type: string
+    description: Client ID
+  redirect_uri:
+    type: string
+    description: Redirect URI
+  client_secret:
+    type: string
+    description: Client secret

@@ -1,0 +1,124 @@
+type: object
+description: SoundCloud User object
+properties:
+  avatar_url:
+    description: URL to a JPEG image.
+    type: string
+  city:
+    description: city.
+    type: string
+  country:
+    description: country.
+    type: string
+  description:
+    description: description.
+    type: string
+  discogs_name:
+    description: discogs name.
+    type: string
+  first_name:
+    description: first name.
+    type: string
+  followers_count:
+    description: number of followers.
+    type: integer
+  followings_count:
+    description: number of followed users.
+    type: integer
+  full_name:
+    description: first and last name.
+    type: string
+  id:
+    description: unique identifier
+    type: integer
+  kind:
+    description: kind of resource.
+    type: string
+  last_modified:
+    description: last modified timestamp.
+    type: string
+  last_name:
+    description: last name.
+    type: string
+  locale:
+    description: locale.
+    type: string
+  myspace_name:
+    description: myspace name
+    type: string
+    deprecated: true
+  permalink:
+    description: permalink of the resource.
+    type: string
+  permalink_url:
+    description: URL to the SoundCloud.com page.
+    type: string
+  plan:
+    description: subscription plan of the user.
+    type: string
+  playlist_count:
+    description: number of public playlists.
+    type: integer
+  primary_email_confirmed:
+    description: boolean if email is confirmed.
+    type: boolean
+  private_playlists_count:
+    description: number of private playlists.
+    type: integer
+  private_tracks_count:
+    description: number of private tracks.
+    type: integer
+  public_favorites_count:
+    description: number of favorited public tracks
+    type: integer
+  quota:
+    description: user's upload quota
+    properties:
+      unlimited_upload_quota:
+        description: unlimited upload quota.
+        type: boolean
+      upload_seconds_used:
+        description: upload seconds used.
+        type: integer
+    type: object
+  reposts_count:
+    description: number of reposts from user
+    type: integer
+  subscriptions:
+    description: a list subscriptions associated with the user
+    items:
+      type: array
+      anyOf:
+        - description: subscription
+          properties:
+            product:
+              description: product
+              properties:
+                id:
+                  description: subscription id
+                    instance.
+                  type: string
+                name:
+                  description: subscription name
+                    instance.
+                  type: string
+              type: object
+            recurring:
+              description: if the subscription is recurring or not
+              type: boolean
+          type: object
+  track_count:
+    description: number of public tracks.
+    type: integer
+  uri:
+    description: API resource URL.
+    type: string
+  username:
+    description: username
+    type: string
+  website:
+    description: a URL to the website.
+    type: string
+  website_title:
+    description: a custom title for the website.
+    type: string

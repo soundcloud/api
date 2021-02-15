@@ -1,0 +1,26 @@
+type: array
+description: User's links added to their profile
+items:
+  type: object
+  properties:
+    created_at:
+      description: Timestamp of when the link was added to the profile.
+      type: string
+    id:
+      description: Id
+      type: integer
+    kind:
+      description: Kind
+      type: string
+    service:
+      description: Service or platform
+      type: string
+    title:
+      description: Link's title
+      type: string
+    url:
+      description: URL of the external link
+      type: string
+    username:
+      description: Username extracted from the external link
+      type: string

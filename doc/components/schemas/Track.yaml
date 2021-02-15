@@ -1,0 +1,167 @@
+type: object
+description: Soundcloud Track object.
+properties:
+  title:
+    description: Track title.
+    type: string
+  track_type:
+    description: Track type.
+    type: string
+  artwork_url:
+    description: URL to a JPEG image.
+    type: string
+  available_country_codes:
+    description: List of countries where track is available.
+    type: string
+  bpm:
+    description: Tempo.
+    type: integer
+  comment_count:
+    description: Number of comments.
+    type: integer
+  commentable:
+    description: Is commentable.
+    type: boolean
+  created_at:
+    description: Created timestamp.
+    type: string
+  description:
+    description: Track description.
+    type: string
+  domain_lockings:
+    description: Domain lockings.
+    type: string
+  download_count:
+    description: NUmber of downloads.
+    type: integer
+  download_url:
+    description: URL to download a track.
+    type: string
+  downloadable:
+    description: Is downloadable.
+    type: string
+  downloads_remaining:
+    description: Number of remaining downloads.
+    type: integer
+  duration:
+    description: Track duration.
+    type: integer
+  embeddable_by:
+    description: Embeddable by.
+    type: string
+  favoritings_count:
+    description: Number of favoritings.
+    type: integer
+  genre:
+    description: Genre
+    type: string
+  id:
+    description: Track identifier.
+    type: integer
+  isrc:
+    description: ISRC code.
+    type: string
+  key_signature:
+    description: Key signature.
+    type: string
+  kind:
+    description: Type of object (track).
+    type: string
+  label:
+    description: Label user.
+    allOf:
+      - $ref: "#/components/schemas/User"
+  label_id:
+    description: Label user identifier.
+    type: integer
+  label_name:
+    description: Label user name.
+    type: string
+  last_modified:
+    description: Last modified timestamp.
+    type: string
+  license:
+    description: License
+    type: string
+  original_content_size:
+    description: Content size.
+    type: integer
+  original_format:
+    description: Format.
+    type: string
+  permalink:
+    description: Permalink.
+    type: string
+  permalink_url:
+    description: Permalink URL.
+    type: string
+  playback_count:
+    description: Number of plays.
+    type: integer
+  purchase_title:
+    description: Purchase title.
+    type: string
+  purchase_url:
+    description: Purchase URL.
+    type: string
+  release:
+    description: Release.
+    type: string
+  release_day:
+    description: Day of release.
+    type: integer
+  release_month:
+    description: Month of release.
+    type: integer
+  release_year:
+    description: Year of release.
+    type: integer
+  reposts_count:
+    description: Number of reposts.
+    type: integer
+  secret_token:
+    description: Secret token.
+    type: string
+  secret_uri:
+    description: Secret URL.
+    type: string
+  sharing:
+    description: Type of sharing (public/private).
+    type: string
+  state:
+    description: Track state.
+    type: string
+  stream_url:
+    description: URL to stream.
+    type: string
+  streamable:
+    description: Is streamable.
+    type: boolean
+  tag_list:
+    description: Tags.
+    type: string
+  uri:
+    description: Track URI.
+    type: string
+  user:
+    description: User who uploaded a track
+    allOf:
+      - $ref: "#/components/schemas/User"
+  user_favorite:
+    description: Is user's favourite.
+    type: boolean
+  user_id:
+    description: User identifier.
+    type: integer
+  user_playback_count:
+    description: Number of plays by a user.
+    type: integer
+  user_uri:
+    description: User URI.
+    type: string
+  video_url:
+    description: Video URL.
+    type: string
+  waveform_url:
+    description: Waveform URL.
+    type: string

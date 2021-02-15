@@ -1,4 +1,5 @@
 APP_NAME := $(shell sc manifest name)
+PUBLIC_API_STRANGLER_VERSION := $(shell sc artifact-manager package-version)
 
 API_COMPONENT := api
 API_CONFIG    := production
@@ -43,13 +44,31 @@ lint:
 auto-apply-lint:
 	$(SBT) scalafmtAll
 
-end-to-end-test:
+docker-up-%:
 	echo "This assumes you've run make package before"
-	env PUBLIC_API_STRANGLER_VERSION=$(shell sc artifact-manager package-version) \
-		docker-compose -f docker-compose-e2e-tests.yml up --force-recreate -d publicapistrangler
+	CONFIG=$* VERSION=$(PUBLIC_API_STRANGLER_VERSION) \
+	docker-compose -f docker-compose-e2e-tests.yml up --force-recreate -d publicapistrangler
+
+wait:
 	sc wait http $(DOCKER_IP):4567/-/health # wait for publicapistub
 	sc wait http $(DOCKER_IP):5000/-/health # wait for publicapistrangler
+
+end-to-end-test: remove-containers docker-up-e2e wait
 	sc crun sbt --docker-options="--link=strangler_api:strangler --link=strangler_zk:zookeeper" -- sbt endToEnd/test
+	make docker-down
+
+local-contract-test: remove-containers docker-up-development wait
+	cd doc && make test
+
+contract-test: package remove-containers docker-up-development wait
+	sc crun -l nodejs-12-dev -- make --directory=doc contract-test
+	make docker-down
+
+docker-down:
+	CONFIG= VERSION=$(PUBLIC_API_STRANGLER_VERSION) docker-compose down
+
+remove-containers:
+	CONFIG= VERSION=$(PUBLIC_API_STRANGLER_VERSION) docker-compose rm -s -f
 
 unit-test:
 	$(SBT) test

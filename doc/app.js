@@ -3,7 +3,7 @@ const express = require('express');
 const app = express();
 const swaggerUi = require('swagger-ui-express');
 const YAML = require('yamljs');
-const swaggerDocument = YAML.load('./api.yaml');
+const swaggerDocument = YAML.load('./compiled_api.yaml');
 const path = require('path');
 
 var options = {

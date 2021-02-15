@@ -1,0 +1,226 @@
+Success:
+  description: Success
+  content:
+    application/json:
+      examples:
+        default:
+          $ref: '#/components/examples/Success'
+Accepted:
+  description: Accepted
+  content:
+    application/json:
+      examples:
+        default:
+          $ref: '#/components/examples/Accepted'
+Created:
+  description: Created
+  content:
+    application/json:
+      examples:
+        default:
+          $ref: '#/components/examples/Created'
+BadRequest:
+  description: Bad Request
+  content:
+    application/json:
+      examples:
+        default:
+          $ref: '#/components/examples/BadRequest'
+      schema:
+        $ref: '#/components/schemas/Error'
+Unauthorized:
+  description: Unauthorized
+  content:
+    application/json:
+      examples:
+        default:
+          $ref: '#/components/examples/Unauthorized'
+      schema:
+        $ref: '#/components/schemas/Error'
+Forbidden:
+  description: Forbidden
+  content:
+    application/json:
+      examples:
+        default:
+          $ref: '#/components/examples/Forbidden'
+      schema:
+        $ref: '#/components/schemas/Error'
+NotFound:
+  description: Not Found
+  content:
+    application/json:
+      examples:
+        default:
+          $ref: '#/components/examples/NotFound'
+      schema:
+        $ref: '#/components/schemas/Error'
+UnprocessableEntity:
+  description: Unprocessable Entity
+  content:
+    application/json:
+      examples:
+        default:
+          $ref: '#/components/examples/UnprocessableEntity'
+      schema:
+        $ref: '#/components/schemas/Error'
+TooManyRequests:
+  description: Too Many Requests
+  content:
+    application/json:
+      examples:
+        default:
+          $ref: '#/components/examples/TooManyRequests'
+      schema:
+        $ref: '#/components/schemas/TooManyRequests'
+Connection:
+  description: Success
+  content:
+    application/json:
+      schema:
+        $ref: '#/components/schemas/Connection'
+      examples:
+        default:
+          $ref: "#/components/examples/Connection"
+Connections:
+  description: Success
+  content:
+    application/json:
+      schema:
+        $ref: '#/components/schemas/Connections'
+      examples:
+        default:
+          $ref: "#/components/examples/Connections"
+User:
+  description: Success
+  content:
+    application/json:
+      schema:
+        $ref: '#/components/schemas/User'
+      examples:
+        default:
+          $ref: "#/components/examples/User"
+Users:
+  description: Success
+  content:
+    application/json:
+      schema:
+        oneOf:
+          - $ref: '#/components/schemas/Users'
+          - $ref: '#/components/schemas/UsersList'
+      examples:
+        default:
+          $ref: "#/components/examples/Users"
+        usersList:
+          $ref: "#/components/examples/UsersList"
+UsersList:
+  description: Success
+  content:
+    application/json:
+      schema:
+        $ref: '#/components/schemas/UsersList'
+      examples:
+        default:
+          $ref: "#/components/examples/UsersList"
+Track:
+  description: Success
+  content:
+    application/json:
+      schema:
+        $ref: '#/components/schemas/Track'
+      examples:
+        default:
+          $ref: "#/components/examples/Track"
+Tracks:
+  description: Success
+  content:
+    application/json:
+      schema:
+        oneOf:
+          - $ref: '#/components/schemas/Tracks'
+          - $ref: '#/components/schemas/TracksList'
+      examples:
+        default:
+          $ref: "#/components/examples/Tracks"
+        tracksList:
+          $ref: "#/components/examples/TracksList"
+Playlist:
+  description: Success
+  content:
+    application/json:
+      schema:
+        $ref: '#/components/schemas/Playlist'
+      examples:
+        default:
+          $ref: "#/components/examples/Playlist"
+Playlists:
+  description: Success
+  content:
+    application/json:
+      schema:
+        oneOf:
+          - $ref: '#/components/schemas/Playlists'
+          - $ref: '#/components/schemas/PlaylistsArray'
+      examples:
+        default:
+          $ref: "#/components/examples/Playlists"
+        playlistsArray:
+          $ref: "#/components/examples/PlaylistsArray"
+PlaylistsArray:
+  description: Success
+  content:
+    application/json:
+      schema:
+        $ref: '#/components/schemas/PlaylistsArray'
+      examples:
+        default:
+          $ref: "#/components/examples/PlaylistsArray"
+Activities:
+  description: Success
+  content:
+    application/json:
+      schema:
+        $ref: '#/components/schemas/Activities'
+      examples:
+        default:
+          $ref: "#/components/examples/Activities"
+WebProfiles:
+  description: Success
+  content:
+    application/json:
+      schema:
+        $ref: '#/components/schemas/WebProfiles'
+      examples:
+        default:
+          $ref: "#/components/examples/WebProfiles"
+Comments:
+  description: Success
+  content:
+    application/json:
+      schema:
+        oneOf:
+          - $ref: '#/components/schemas/Comments'
+          - $ref: '#/components/schemas/CommentsList'
+      examples:
+        default:
+          $ref: "#/components/examples/Comments"
+        commentsList:
+          $ref: "#/components/examples/CommentsList"
+CommentsList:
+  description: Success
+  content:
+    application/json:
+      schema:
+        $ref: '#/components/schemas/CommentsList'
+      examples:
+        default:
+          $ref: "#/components/examples/CommentsList"
+Streams:
+  description: Success
+  content:
+    application/json:
+      schema:
+        $ref: '#/components/schemas/Streams'
+      examples:
+        default:
+          $ref: "#/components/examples/Streams"

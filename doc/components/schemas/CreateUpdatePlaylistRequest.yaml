@@ -1,0 +1,28 @@
+type: object
+properties:
+  playlist:
+    type: object
+    properties:
+      title:
+        description: Title of the playlist
+        type: string
+      description:
+        description: Description of the playlist
+        type: string
+      sharing:
+        description: public or private
+        type: string
+        enum:
+          - public
+          - private
+      tracks:
+        description: List of tracks to add to playlist
+        type: array
+        items:
+          type: object
+          required:
+            - id
+          properties:
+            id:
+              description: SoundCloud track id
+              type: string

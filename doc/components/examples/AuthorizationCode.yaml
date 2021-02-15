@@ -1,0 +1,6 @@
+value:
+  grant_type: authorization_code
+  client_id: CLIENT_ID
+  client_secret: CLIENT_SECRET
+  redirect_uri: https://mywebsite/auth/soundcloud
+  code: 1-123456-12345678-FAbcfbe9ir2wdj0

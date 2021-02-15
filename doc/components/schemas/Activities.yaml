@@ -1,0 +1,26 @@
+type: object
+description: User's activities.
+properties:
+  collection:
+    type: array
+    items:
+      type: object
+      properties:
+        type:
+          description: Type of activity (track).
+          type: string
+        created_at:
+          description: Created timestamp.
+          type: string
+        description:
+          description: Activity description.
+          type: string
+        origin:
+          description: Origin.
+          oneOf:
+            - $ref: "#/components/schemas/Track"
+            - $ref: "#/components/schemas/Playlist"
+  next_href:
+    type: string
+  future_href:
+    type: string

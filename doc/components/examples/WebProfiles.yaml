@@ -1,0 +1,8 @@
+value:
+  - created_at: 1995/10/20 12:10:39 +0000
+    id: 1234
+    kind: web-profile
+    service: facebook
+    title: my facebook
+    url: http://facebook.com
+    username: username

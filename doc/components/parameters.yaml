@@ -1,0 +1,193 @@
+bpm_from:
+  in: query
+  name: bpm[from]
+  required: false
+  schema:
+    type: integer
+  description: Return tracks with at least this bpm value
+bpm_to:
+  in: query
+  name: bpm[to]
+  required: false
+  schema:
+    type: integer
+  description: Return tracks with at most this bpm value
+client_id:
+  in: query
+  name: client_id
+  required: true
+  schema:
+    type: string
+  description: client_id
+created_at_from:
+  in: query
+  name: created_at[from]
+  required: false
+  schema:
+    type: string
+  description: (yyyy-mm-dd hh:mm:ss) return tracks created at this date or later
+created_at_to:
+  in: query
+  name: created_at[to]
+  required: false
+  schema:
+    type: string
+  description: (yyyy-mm-dd hh:mm:ss) return tracks created at this date or earlier
+duration_from:
+  in: query
+  name: duration[from]
+  required: false
+  schema:
+    type: integer
+  description: Return tracks with at least this duration value
+duration_to:
+  in: query
+  name: duration[to]
+  required: false
+  schema:
+    type: integer
+  description: Return tracks with at most this duration value
+genres:
+  in: query
+  name: genres
+  required: false
+  schema:
+    type: string
+  description: A comma separated list of genres
+ids:
+  in: query
+  name: ids
+  required: false
+  schema:
+    type: string
+  description: A comma separated list of track ids to filter on
+limit:
+  in: query
+  name: limit
+  required: false
+  schema:
+    type: integer
+    minimum: 1
+    maximum: 200
+    default: 50
+  description: Number of results to return in the collection.
+offset:
+  deprecated: true
+  in: query
+  name: offset
+  required: false
+  schema:
+    type: integer
+    default: 0
+  description: Offset of first result. Deprecated, use `linked_partitioning` instead.
+q:
+  in: query
+  name: q
+  required: true
+  schema:
+    type: string
+  description: search
+redirect_uri:
+  in: query
+  name: redirect_uri
+  required: true
+  schema:
+    type: string
+  description: redirect_uri
+response_type:
+  in: query
+  name: response_type
+  required: true
+  schema:
+    type: string
+    enum:
+      - code
+      - token
+      - code_and_token
+  description: response type
+scope:
+  in: query
+  name: scope
+  required: true
+  schema:
+    type: string
+  description: Scope
+tags:
+  in: query
+  name: tags
+  required: false
+  schema:
+    type: string
+  description: A comma separated list of tags
+url:
+  in: query
+  name: url
+  required: true
+  schema:
+    type: string
+  description: SoundCloud URL
+linked_partitioning:
+  in: query
+  name: linked_partitioning
+  required: false
+  schema:
+    type: boolean
+    example: true
+  description: Returns paginated collection of items (recommended, returning a list without pagination is deprecated and should not be used)
+# path #
+comment_id:
+  in: path
+  name: comment_id
+  required: true
+  schema:
+    type: integer
+  description: SoundCloud comment id
+connection_id:
+  in: path
+  name: connection_id
+  required: true
+  schema:
+    type: integer
+  description: SoundCloud connection id
+follower_id:
+  in: path
+  name: follower_id
+  required: true
+  schema:
+    type: integer
+  description: SoundCloud User id to denote a Follower
+following_id:
+  in: path
+  name: following_id
+  required: true
+  schema:
+    type: integer
+  description: SoundCloud User id to denote a Following of a user
+playlist_id:
+  in: path
+  name: playlist_id
+  required: true
+  schema:
+    type: integer
+  description: SoundCloud playlist id
+tag:
+  in: path
+  name: tag
+  required: true
+  schema:
+    type: string
+  description: tag
+track_id:
+  in: path
+  name: track_id
+  required: true
+  schema:
+    type: integer
+  description: SoundCloud Track id
+user_id:
+  in: path
+  name: user_id
+  required: true
+  schema:
+    type: integer
+  description: SoundCloud User id

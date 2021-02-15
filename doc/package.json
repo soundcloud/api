@@ -6,7 +6,13 @@
   "dependencies": {
     "express": "^4.17.1",
     "swagger-ui-express": "4.1.4",
+    "multi-file-swagger": "^2.3.0",
     "yamljs": "0.3.0"
   },
-  "devDependencies": {}
+  "scripts": {
+    "test": "dredd"
+  },
+  "devDependencies": {
+    "dredd": "^14.0.0"
+  }
 }

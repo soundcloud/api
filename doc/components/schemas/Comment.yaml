@@ -1,0 +1,29 @@
+type: object
+description: User's Comment
+properties:
+  body:
+    description: Comment body.
+    type: string
+  created_at:
+    description: Created timestamp.
+    type: string
+  id:
+    description: Identifier.
+    type: integer
+  kind:
+    description: Kind (comment).
+    type: string
+  timestamp:
+    description: Timestamp.
+    type: string
+  track_id:
+    description: Track's identifier.
+    type: integer
+  uri:
+    description: Comment's URL.
+    type: string
+  user:
+    $ref: '#/components/schemas/User'
+  user_id:
+    description: User's identifier.
+    type: integer
