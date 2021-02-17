@@ -7,6 +7,7 @@ import com.soundcloud.publicApiStrangler.test.UnitSpecification
 import com.twitter.finagle.Service
 import com.twitter.finagle.http._
 import com.twitter.util.{Await, Future}
+import org.specs2.matcher.Matcher
 
 class DispatchToMothershipHandlerSpec extends UnitSpecification {
   "dispatches authenticated requests to the mothership" >> {
@@ -33,6 +34,40 @@ class DispatchToMothershipHandlerSpec extends UnitSpecification {
         responseFromHandler.headerMap.get("header1") ==== Some("valueHeader1")
         responseFromHandler.headerMap.get("header2") ==== Some("valueHeader2")
         responseFromHandler.getContentString() ==== "body content"
+      }
+    }
+
+    "useInternalHeaders header" >> {
+      trait UseInternalHeadersContext extends Context {
+        val sessionClientUrn = Urn("soundcloud", "applications", "123")
+        override val session = loggedInSession(Urn("soundcloud", "users", "1")).copy(agent = Some(sessionClientUrn))
+        override val userAuthentication = new FakeUserAuthentication(session)
+
+        mothershipClient(any[Request]) returns (Future.value(response))
+        def responseFromHandler: Response = Await.result(handler.dispatch(handlerRequest))
+
+        def useInternalHeadersIsPresent: Matcher[Request] = {
+          (_: Request).headerMap.keySet must contain("X-oauth-use-internal-headers")
+        }
+      }
+
+      "is added for client requests on useInternalHeadersClients list" in new UseInternalHeadersContext {
+        val userInternalHeadersClients = Set(sessionClientUrn)
+        override val handler =
+          new DispatchToMothershipHandler(userAuthentication, mothershipClient, userInternalHeadersClients)
+
+        responseFromHandler.status ==== response.status
+        there was one(mothershipClient).apply(useInternalHeadersIsPresent)
+      }
+
+      "is not added for client not list" in new UseInternalHeadersContext {
+        val userInternalHeadersClients = Set(Urn("soundcloud", "applications", "999"))
+        override val handler =
+          new DispatchToMothershipHandler(userAuthentication, mothershipClient, userInternalHeadersClients)
+
+        responseFromHandler.status ==== response.status
+        there was one(mothershipClient).apply(any[Request])
+        there was no(mothershipClient).apply(useInternalHeadersIsPresent)
       }
     }
 
