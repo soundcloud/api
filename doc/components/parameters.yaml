@@ -5,6 +5,7 @@ bpm_from:
   schema:
     type: integer
   description: Return tracks with at least this bpm value
+  example: 123
 bpm_to:
   in: query
   name: bpm[to]
@@ -12,6 +13,7 @@ bpm_to:
   schema:
     type: integer
   description: Return tracks with at most this bpm value
+  example: 456
 client_id:
   in: query
   name: client_id
@@ -19,6 +21,7 @@ client_id:
   schema:
     type: string
   description: client_id
+  example: some client
 created_at_from:
   in: query
   name: created_at[from]
@@ -26,6 +29,7 @@ created_at_from:
   schema:
     type: string
   description: (yyyy-mm-dd hh:mm:ss) return tracks created at this date or later
+  example: 2020-12-24 00:00:00
 created_at_to:
   in: query
   name: created_at[to]
@@ -33,6 +37,7 @@ created_at_to:
   schema:
     type: string
   description: (yyyy-mm-dd hh:mm:ss) return tracks created at this date or earlier
+  example: 2020-12-26 00:00:00
 duration_from:
   in: query
   name: duration[from]
@@ -40,6 +45,7 @@ duration_from:
   schema:
     type: integer
   description: Return tracks with at least this duration value
+  example: 123456
 duration_to:
   in: query
   name: duration[to]
@@ -47,6 +53,7 @@ duration_to:
   schema:
     type: integer
   description: Return tracks with at most this duration value
+  example: 123456
 genres:
   in: query
   name: genres
@@ -54,6 +61,7 @@ genres:
   schema:
     type: string
   description: A comma separated list of genres
+  example: Pop,House
 ids:
   in: query
   name: ids
@@ -61,6 +69,7 @@ ids:
   schema:
     type: string
   description: A comma separated list of track ids to filter on
+  example: 1,2,3
 limit:
   in: query
   name: limit
@@ -71,6 +80,7 @@ limit:
     maximum: 200
     default: 50
   description: Number of results to return in the collection.
+  example: 2
 offset:
   deprecated: true
   in: query
@@ -80,6 +90,7 @@ offset:
     type: integer
     default: 0
   description: Offset of first result. Deprecated, use `linked_partitioning` instead.
+  example: 0
 q:
   in: query
   name: q
@@ -87,6 +98,7 @@ q:
   schema:
     type: string
   description: search
+  example: hello
 redirect_uri:
   in: query
   name: redirect_uri
@@ -94,6 +106,7 @@ redirect_uri:
   schema:
     type: string
   description: redirect_uri
+  example: https://soundcloud.com
 response_type:
   in: query
   name: response_type
@@ -105,6 +118,7 @@ response_type:
       - token
       - code_and_token
   description: response type
+  example: code_and_token
 scope:
   in: query
   name: scope
@@ -112,6 +126,7 @@ scope:
   schema:
     type: string
   description: Scope
+  example: default
 tags:
   in: query
   name: tags
@@ -119,6 +134,7 @@ tags:
   schema:
     type: string
   description: A comma separated list of tags
+  example: test
 url:
   in: query
   name: url
@@ -126,14 +142,15 @@ url:
   schema:
     type: string
   description: SoundCloud URL
+  example: https://soundcloud.com/user-434241656
 linked_partitioning:
   in: query
   name: linked_partitioning
   required: false
   schema:
     type: boolean
-    example: true
   description: Returns paginated collection of items (recommended, returning a list without pagination is deprecated and should not be used)
+  example: true
 # path #
 comment_id:
   in: path
@@ -142,6 +159,7 @@ comment_id:
   schema:
     type: integer
   description: SoundCloud comment id
+  example: 123456
 connection_id:
   in: path
   name: connection_id
@@ -149,6 +167,7 @@ connection_id:
   schema:
     type: integer
   description: SoundCloud connection id
+  example: 123456
 follower_id:
   in: path
   name: follower_id
@@ -156,6 +175,7 @@ follower_id:
   schema:
     type: integer
   description: SoundCloud User id to denote a Follower
+  example: 743372812
 following_id:
   in: path
   name: following_id
@@ -163,6 +183,7 @@ following_id:
   schema:
     type: integer
   description: SoundCloud User id to denote a Following of a user
+  example: 743372812
 playlist_id:
   in: path
   name: playlist_id
@@ -170,6 +191,7 @@ playlist_id:
   schema:
     type: integer
   description: SoundCloud playlist id
+  example: 1212217033
 tag:
   in: path
   name: tag
@@ -177,6 +199,7 @@ tag:
   schema:
     type: string
   description: tag
+  example: some tag
 track_id:
   in: path
   name: track_id
@@ -184,6 +207,7 @@ track_id:
   schema:
     type: integer
   description: SoundCloud Track id
+  example: 463532259
 user_id:
   in: path
   name: user_id
@@ -191,3 +215,4 @@ user_id:
   schema:
     type: integer
   description: SoundCloud User id
+  example: 948745750

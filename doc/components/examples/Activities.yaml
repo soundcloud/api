@@ -1,6 +1,6 @@
 value:
   collection:
-    - type: track
+    - type: track:repost
       created_at: 2020/10/12 12:02:44 +0000
       origin:
         allOf:

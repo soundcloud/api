@@ -42,8 +42,8 @@ paths:
         - $ref: '#/components/parameters/response_type'
         - $ref: '#/components/parameters/scope'
       responses:
-        200:
-          description: Success
+        302:
+          $ref: '#/components/responses/FoundHtml'
         401:
           $ref: '#/components/responses/Unauthorized'
   /oauth2/token:
@@ -105,7 +105,7 @@ paths:
         - AuthHeader: [ ]
       responses:
         200:
-          $ref: '#/components/responses/User'
+          $ref: '#/components/responses/CompleteUser'
         401:
           $ref: '#/components/responses/Unauthorized'
   /me/activities:
@@ -238,7 +238,7 @@ paths:
         - $ref: '#/components/parameters/offset'
       responses:
         200:
-          $ref: "#/components/responses/Tracks"
+          $ref: "#/components/responses/TracksList"
         401:
           $ref: '#/components/responses/Unauthorized'
   /me/followings/{user_id}:
@@ -253,7 +253,7 @@ paths:
         - $ref: '#/components/parameters/user_id'
       responses:
         200:
-          $ref: '#/components/responses/User'
+          $ref: '#/components/responses/CompleteUser'
         401:
           $ref: '#/components/responses/Unauthorized'
         404:
@@ -359,7 +359,7 @@ paths:
         - $ref: '#/components/parameters/follower_id'
       responses:
         200:
-          $ref: '#/components/responses/User'
+          $ref: '#/components/responses/CompleteUser'
         401:
           $ref: '#/components/responses/Unauthorized'
   /me/playlists:
@@ -862,8 +862,8 @@ paths:
       parameters:
         - $ref: '#/components/parameters/url'
       responses:
-        200:
-          description: Success
+        302:
+          $ref: "#/components/responses/Found"
   /users/{user_id}:
     get:
       summary: Returns a user.
@@ -876,7 +876,7 @@ paths:
         - $ref: '#/components/parameters/user_id'
       responses:
         200:
-          $ref: '#/components/responses/User'
+          $ref: '#/components/responses/CompleteUser'
         401:
           $ref: '#/components/responses/Unauthorized'
         404:
@@ -950,7 +950,7 @@ paths:
         - $ref: '#/components/parameters/follower_id'
       responses:
         200:
-          $ref: '#/components/responses/User'
+          $ref: '#/components/responses/CompleteUser'
         401:
           $ref: '#/components/responses/Unauthorized'
   /users/{user_id}/followings:
@@ -985,7 +985,7 @@ paths:
         - $ref: '#/components/parameters/following_id'
       responses:
         200:
-          $ref: '#/components/responses/User'
+          $ref: '#/components/responses/CompleteUser'
         401:
           $ref: '#/components/responses/Unauthorized'
         404:
@@ -1249,6 +1249,15 @@ components:
       $ref: './components/schemas/CreateUpdatePlaylistRequest.yaml'
     TrackDataRequest:
       $ref: './components/schemas/TrackDataRequest.yaml'
+    Found:
+      type: object
+      properties:
+        status:
+          type: string
+          description: Status code.
+        location:
+          type: string
+          description: Location URL of the resource.
     Error:
       $ref: './components/schemas/Error.yaml'
     TooManyRequests:
@@ -1260,6 +1269,8 @@ components:
               type: string
     User:
       $ref: './components/schemas/User.yaml'
+    CompleteUser:
+      $ref: './components/schemas/CompleteUser.yaml'
     Users:
       type: object
       properties:
@@ -1320,7 +1331,7 @@ components:
           items:
             $ref: '#/components/schemas/Comment'
         next_href:
-          type: [string, null]
+          type: [ string, null ]
     CommentsList:
       deprecated: true
       type: array
@@ -1350,33 +1361,28 @@ components:
     Comments:
       value:
         collection:
-          - allOf:
-              - $ref: "#/components/examples/Comment/value"
+          $ref: "#/components/examples/Comment/value"
         next_href: https://api.soundcloud.com/collection?client_id=client_id&page_size=10&cursor=1234567
     CommentsList:
       description: Deprecated, use Comments instead.
       value:
-        - allOf:
-            - $ref: "#/components/examples/Comment/value"
+        $ref: "#/components/examples/Comment/value"
     Connection:
       $ref: './components/examples/Connection.yaml'
     Connections:
       value:
-        - allOf:
-            - $ref: "#/components/examples/Connection/value"
+        $ref: "#/components/examples/Connection/value"
     Playlist:
       $ref: './components/examples/Playlist.yaml'
     Playlists:
       value:
         collection:
-          - allOf:
-              - $ref: "#/components/examples/Playlist/value"
+          $ref: "#/components/examples/Playlist/value"
         next_href: https://api.soundcloud.com/collection?client_id=client_id&page_size=10&cursor=1234567
     PlaylistsArray:
       description: Deprecated, use Playlists instead.
       value:
-        - allOf:
-            - $ref: "#/components/examples/Playlist/value"
+        $ref: "#/components/examples/Playlist/value"
     Streams:
       $ref: './components/examples/Streams.yaml'
     Track:
@@ -1384,28 +1390,26 @@ components:
     Tracks:
       value:
         collection:
-          - allOf:
-              - $ref: "#/components/examples/Track/value"
+          $ref: "#/components/examples/Track/value"
         next_href: https://api.soundcloud.com/collection?client_id=client_id&page_size=10&cursor=1234567
     TracksList:
       description: Deprecated, use Tracks instead.
       value:
-        - allOf:
-            - $ref: "#/components/examples/Track/value"
+        $ref: "#/components/examples/Track/value"
     User:
       $ref: './components/examples/User.yaml'
+    CompleteUser:
+      $ref: './components/examples/CompleteUser.yaml'
     UserOf:
       $ref: './components/examples/UserOf.yaml'
     UsersList:
       description: Deprecated, use Users instead.
       value:
-        - allOf:
-            - $ref: "#/components/examples/User/value"
+        $ref: "#/components/examples/User/value"
     Users:
       value:
         collection:
-          - allOf:
-              - $ref: "#/components/examples/User/value"
+          $ref: "#/components/examples/User/value"
         next_href: https://api.soundcloud.com/collection?client_id=client_id&page_size=10&cursor=1234567
     WebProfiles:
       $ref: './components/examples/WebProfiles.yaml'
@@ -1459,11 +1463,6 @@ components:
         message: Detailed message of errors, when available
         spam_warning_urn: soundcloud:spam-warnings:1
         link: https://developers.soundcloud.com/docs/api/rate-limits#errors
-    # FavoritesIds:
-    #   value:
-    #     - 1234
-    #     - 5678
-    #     - 3456
     OK:
       value:
         status: Status(200) - OK

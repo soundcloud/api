@@ -12,6 +12,18 @@ Accepted:
       examples:
         default:
           $ref: '#/components/examples/Accepted'
+Found:
+  description: Found
+  content:
+    application/json; charset=utf-8:
+      schema:
+        $ref: '#/components/schemas/Found'
+FoundHtml:
+  description: Found
+  content:
+    text/html; charset=utf-8:
+      schema:
+        type: string
 Created:
   description: Created
   content:
@@ -76,7 +88,7 @@ TooManyRequests:
 Connection:
   description: Success
   content:
-    application/json:
+    application/json; charset=utf-8:
       schema:
         $ref: '#/components/schemas/Connection'
       examples:
@@ -85,7 +97,7 @@ Connection:
 Connections:
   description: Success
   content:
-    application/json:
+    application/json; charset=utf-8:
       schema:
         $ref: '#/components/schemas/Connections'
       examples:
@@ -94,16 +106,25 @@ Connections:
 User:
   description: Success
   content:
-    application/json:
+    application/json; charset=utf-8:
       schema:
         $ref: '#/components/schemas/User'
       examples:
         default:
           $ref: "#/components/examples/User"
+CompleteUser:
+  description: Success
+  content:
+    application/json; charset=utf-8:
+      schema:
+        $ref: '#/components/schemas/CompleteUser'
+      examples:
+        default:
+          $ref: "#/components/examples/CompleteUser"
 Users:
   description: Success
   content:
-    application/json:
+    application/json; charset=utf-8:
       schema:
         oneOf:
           - $ref: '#/components/schemas/Users'
@@ -116,7 +137,7 @@ Users:
 UsersList:
   description: Success
   content:
-    application/json:
+    application/json; charset=utf-8:
       schema:
         $ref: '#/components/schemas/UsersList'
       examples:
@@ -125,7 +146,7 @@ UsersList:
 Track:
   description: Success
   content:
-    application/json:
+    application/json; charset=utf-8:
       schema:
         $ref: '#/components/schemas/Track'
       examples:
@@ -134,7 +155,7 @@ Track:
 Tracks:
   description: Success
   content:
-    application/json:
+    application/json; charset=utf-8:
       schema:
         oneOf:
           - $ref: '#/components/schemas/Tracks'
@@ -144,10 +165,19 @@ Tracks:
           $ref: "#/components/examples/Tracks"
         tracksList:
           $ref: "#/components/examples/TracksList"
+TracksList:
+  description: Success
+  content:
+    application/json; charset=utf-8:
+      schema:
+        $ref: '#/components/schemas/TracksList'
+      examples:
+        default:
+          $ref: "#/components/examples/TracksList"
 Playlist:
   description: Success
   content:
-    application/json:
+    application/json; charset=utf-8:
       schema:
         $ref: '#/components/schemas/Playlist'
       examples:
@@ -156,7 +186,7 @@ Playlist:
 Playlists:
   description: Success
   content:
-    application/json:
+    application/json; charset=utf-8:
       schema:
         oneOf:
           - $ref: '#/components/schemas/Playlists'
@@ -169,7 +199,7 @@ Playlists:
 PlaylistsArray:
   description: Success
   content:
-    application/json:
+    application/json; charset=utf-8:
       schema:
         $ref: '#/components/schemas/PlaylistsArray'
       examples:
@@ -178,7 +208,7 @@ PlaylistsArray:
 Activities:
   description: Success
   content:
-    application/json:
+    application/json; charset=utf-8:
       schema:
         $ref: '#/components/schemas/Activities'
       examples:
@@ -187,7 +217,7 @@ Activities:
 WebProfiles:
   description: Success
   content:
-    application/json:
+    application/json; charset=utf-8:
       schema:
         $ref: '#/components/schemas/WebProfiles'
       examples:
@@ -196,7 +226,7 @@ WebProfiles:
 Comments:
   description: Success
   content:
-    application/json:
+    application/json; charset=utf-8:
       schema:
         oneOf:
           - $ref: '#/components/schemas/Comments'
@@ -209,7 +239,7 @@ Comments:
 CommentsList:
   description: Success
   content:
-    application/json:
+    application/json; charset=utf-8:
       schema:
         $ref: '#/components/schemas/CommentsList'
       examples:
@@ -218,7 +248,7 @@ CommentsList:
 Streams:
   description: Success
   content:
-    application/json:
+    application/json; charset=utf-8:
       schema:
         $ref: '#/components/schemas/Streams'
       examples:

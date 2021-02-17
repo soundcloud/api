@@ -5,8 +5,8 @@
   "author": "SoundCloud",
   "dependencies": {
     "express": "^4.17.1",
-    "swagger-ui-express": "4.1.4",
     "multi-file-swagger": "^2.3.0",
+    "swagger-ui-express": "4.1.4",
     "yamljs": "0.3.0"
   },
   "scripts": {

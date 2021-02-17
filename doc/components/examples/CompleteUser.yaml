@@ -12,12 +12,20 @@ value:
   kind: user
   last_modified: 2020/01/03 12:08:25 +0000
   last_name: Last_name
+  locale: en
   myspace_name:
   permalink: permalink
   permalink_url: https://soundcloud.com/permalink
   plan: Free
   playlist_count: 3
+  primary_email_confirmed: true
+  private_playlists_count: 0
+  private_tracks_count: 0
   public_favorites_count: 20
+  quota:
+    unlimited_upload_quota: false
+    upload_seconds_used: 0
+    upload_seconds_left: 10800
   reposts_count: 0
   subscriptions:
     - product:

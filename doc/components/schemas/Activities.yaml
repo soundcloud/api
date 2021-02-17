@@ -12,12 +12,10 @@ properties:
         created_at:
           description: Created timestamp.
           type: string
-        description:
-          description: Activity description.
-          type: string
         origin:
           description: Origin.
-          oneOf:
+          type: object
+          anyOf:
             - $ref: "#/components/schemas/Track"
             - $ref: "#/components/schemas/Playlist"
   next_href:

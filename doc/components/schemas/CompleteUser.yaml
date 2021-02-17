@@ -40,6 +40,9 @@ properties:
   last_name:
     description: last name.
     type: string
+  locale:
+    description: locale.
+    type: string
   myspace_name:
     description: myspace name
     type: string
@@ -56,9 +59,28 @@ properties:
   playlist_count:
     description: number of public playlists.
     type: integer
+  primary_email_confirmed:
+    description: boolean if email is confirmed.
+    type: boolean
+  private_playlists_count:
+    description: number of private playlists.
+    type: integer
+  private_tracks_count:
+    description: number of private tracks.
+    type: integer
   public_favorites_count:
     description: number of favorited public tracks
     type: integer
+  quota:
+    description: user's upload quota
+    properties:
+      unlimited_upload_quota:
+        description: unlimited upload quota.
+        type: boolean
+      upload_seconds_used:
+        description: upload seconds used.
+        type: integer
+    type: object
   reposts_count:
     description: number of reposts from user
     type: integer

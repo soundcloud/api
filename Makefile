@@ -60,7 +60,9 @@ end-to-end-test: remove-containers docker-up-e2e wait
 local-contract-test: remove-containers docker-up-development wait
 	cd doc && make test
 
-contract-test: package remove-containers docker-up-development wait
+contract-test: package remove-containers docker-up-development
+	sc crun -l base-dev -- sc wait http publicapistub:4567/-/health
+	sc crun -l base-dev -- sc wait http publicapistrangler:5000/-/health
 	sc crun -l nodejs-12-dev -- make --directory=doc contract-test
 	make docker-down
 
