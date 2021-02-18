@@ -10,7 +10,7 @@ import com.twitter.util.Future
 class ErrorResponseTypeFilter(telemetry: Telemetry, router: HandlerRouter) extends SimpleFilter[Request, Response] {
   val emptyBodyErrorResponseCounter =
     telemetry.counter(
-      "empty_body_error_response_counter",
+      "empty_body_error_response_total",
       "Counter for all error responses that lacked a body, before reaching our filters",
       "path",
       "statusCode"

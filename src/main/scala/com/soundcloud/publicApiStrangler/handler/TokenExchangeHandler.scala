@@ -53,7 +53,7 @@ class TokenExchangeHandler(
     }
 
   private val grantTypeCounter = telemetry.counter(
-    "oauth_token_exchange_grant_type",
+    "oauth_token_exchange_grant_type_total",
     "OAuth 2 Token exchange request grant type.",
     "grant_type",
     "response_status",
@@ -61,7 +61,7 @@ class TokenExchangeHandler(
   )
 
   private val requestErrorCounter = telemetry.counter(
-    "oauth_token_exchange_error",
+    "oauth_token_exchange_error_total",
     "OAuth 2 Token exchange error.",
     "error",
     "reason",

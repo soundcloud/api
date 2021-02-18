@@ -37,7 +37,7 @@ class TokenExchangeHandlerSpec extends UnitSpecification {
       def getGrantTypeCount(grantTypeValue: String, responseStatusValue: String, isValidValue: String): Double = {
         telemetry
           .getSampleValue(
-            "oauth_token_exchange_grant_type",
+            "oauth_token_exchange_grant_type_total",
             Array("grant_type", "response_status", "is_valid"),
             Array(grantTypeValue, responseStatusValue, isValidValue)
           )
@@ -47,7 +47,7 @@ class TokenExchangeHandlerSpec extends UnitSpecification {
       def getRequestErrorCount(errorValue: String, reasonValue: String, responseStatusValue: String): Double = {
         telemetry
           .getSampleValue(
-            "oauth_token_exchange_error",
+            "oauth_token_exchange_error_total",
             Array("error", "reason", "response_status"),
             Array(errorValue, reasonValue, responseStatusValue)
           )

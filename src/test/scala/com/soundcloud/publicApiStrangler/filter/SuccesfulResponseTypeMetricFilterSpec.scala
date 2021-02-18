@@ -14,13 +14,13 @@ class SuccesfulResponseTypeMetricFilterSpec extends UnitSpecification {
     val telemetry = Telemetry.createIsolatedInstance
     val filter = new SuccesfulResponseTypeMetricFilter(telemetry)
 
-    def xmlCount = telemetry.getSampleValue("successful_response_type_counter", Array("type"), Array("xml"))
+    def xmlCount = telemetry.getSampleValue("successful_response_type_total", Array("type"), Array("xml"))
 
-    def jsonCount = telemetry.getSampleValue("successful_response_type_counter", Array("type"), Array("json"))
+    def jsonCount = telemetry.getSampleValue("successful_response_type_total", Array("type"), Array("json"))
 
-    def jsonpCount = telemetry.getSampleValue("successful_response_type_counter", Array("type"), Array("jsonp"))
+    def jsonpCount = telemetry.getSampleValue("successful_response_type_total", Array("type"), Array("jsonp"))
 
-    def undefinedCount = telemetry.getSampleValue("successful_response_type_counter", Array("type"), Array("undefined"))
+    def undefinedCount = telemetry.getSampleValue("successful_response_type_total", Array("type"), Array("undefined"))
   }
 
   "Doesn't produce any metrics for non 2XX responses" in new Context {

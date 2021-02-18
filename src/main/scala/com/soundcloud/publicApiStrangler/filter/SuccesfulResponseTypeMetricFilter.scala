@@ -8,7 +8,7 @@ import play.api.libs.json.Json
 
 class SuccesfulResponseTypeMetricFilter(telemetry: Telemetry) extends SimpleFilter[Request, Response] {
   val successfulResponseTypeCounter =
-    telemetry.counter("successful_response_type_counter", "Counter for successful responses", "type")
+    telemetry.counter("successful_response_type_total", "Counter for successful responses", "type")
 
   override def apply(request: Request, next: Service[Request, Response]) = {
     next(request).map { response =>
