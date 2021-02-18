@@ -1,39 +1,76 @@
 const hooks = require('hooks');
+
+var responseStash = {};
 var skipDeprecatedTransactionIds = [
-    "GET (200) /users/948745750/followings/743372812",
+    "GET (200) /users/948745750/followings/25219981",
     "GET (200) /users/948745750/followers/743372812",
     "GET (200) /tracks/463532259/favoriters/948745750",
     "GET (200) /me/followers/743372812",
-    "GET (200) /me/tracks/463532259",
+    "GET (200) /me/tracks/308946187",
     "GET (200) /me/followings/948745750"
 ];
 var skipTransactionIds = [
-    "GET (200) /me/connections/123456"
+    "POST (200) /oauth2/token",
+    "POST (401) /oauth2/token",
+    "GET (200) /me/connections/123456",
+    "POST (200) /tracks",
+    "PUT (200) /tracks/308946187",
+    "DELETE (200) /tracks/308946187",
+    "POST (200) /tracks/308946187/comments",
+    "POST (201) /reposts/tracks/308946187",
+    "DELETE (200) /reposts/tracks/308946187",
+    "POST (201) /likes/tracks/308946187",
+    "DELETE (200) /likes/tracks/308946187"
 ];
+var replacePlaylistIdTransactionIds = [
+    "PUT (200) /playlists/10",
+    "DELETE (202) /playlists/10"
+];
+var skippedStatuses = ["400", "403", "404", "422", "429", "500"];
 
 function addCredentials(transaction) {
     const clientId = process.env.CLIENT_ID;
     const accessToken = process.env.ACCESS_TOKEN;
 
-    var paramToAdd = "client_id=u1aX7EnUd90ul1sbwLwj7cN6fqytmrcV";
+    var paramToAdd = "client_id=" + clientId;
     if (transaction.fullPath.indexOf('?') > -1) {
        transaction.fullPath += "&" + paramToAdd;
     } else {
       transaction.fullPath += "?" + paramToAdd;
     }
 
-    transaction.request.headers.Authorization = "OAuth 1-292145-948745750-f92d4f20a8c56";
+    transaction.request.headers.Authorization = "OAuth " + accessToken;
+    return transaction;
+}
+
+function replaceId(transaction, actual, updated) {
+    var url = transaction.fullPath;
+    transaction.fullPath = url.replace(actual, updated);
     return transaction;
 }
 
 hooks.beforeEach((transaction, done) => {
-    if (transaction.expected.statusCode > "302" || transaction.request.method != "GET"
-    || skipDeprecatedTransactionIds.includes(transaction.id) || skipTransactionIds.includes(transaction.id)) {
+
+    if (skippedStatuses.includes(transaction.expected.statusCode)
+        || skipDeprecatedTransactionIds.includes(transaction.id)
+        || skipTransactionIds.includes(transaction.id)) {
         transaction.skip = true;
     }
 
     if (transaction.expected.statusCode != "401") {
-            addCredentials(transaction);
+        addCredentials(transaction);
+    }
+
+    if (replacePlaylistIdTransactionIds.includes(transaction.id)) {
+        replaceId(transaction, '10', responseStash.playlist_id);
+    }
+
+    if (transaction.id == "POST (200) /likes/playlists/1212781357") {
+        replaceId(transaction, '1212781357', '1168654222');
+    }
+
+    if (transaction.id == "PUT (200) /me/followings/743372812") {
+            replaceId(transaction, '743372812', '25219981');
     }
 
     done();
@@ -42,5 +79,11 @@ hooks.beforeEach((transaction, done) => {
 hooks.before("/connect > The OAuth2 authorization endpoint. Your app redirects a user to this endpoint, allowing them to delegate access to their account. > 200", (transaction, done) => {
     var newPath = transaction.fullPath.replace("?client_id=some%20client&", "?");
     transaction.fullPath = newPath;
+    done();
+});
+
+hooks.after("/playlists > Creates a playlist. > 200 > application/json; charset=utf-8", (transaction, done) => {
+    var responseBody = JSON.parse(transaction.real.body);
+    responseStash.playlist_id = responseBody.id;
     done();
 });

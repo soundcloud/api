@@ -74,7 +74,7 @@ paths:
         200:
           description: Success
           content:
-            application/json:
+            application/json; charset=utf-8:
               examples:
                 ExpiringToken:
                   $ref: "#/components/examples/ExpiringToken"
@@ -265,17 +265,12 @@ paths:
       security:
         - AuthHeader: [ ]
       parameters:
-        - $ref: '#/components/parameters/user_id'
+        - $ref: '#/components/parameters/user_id_to_follow'
       responses:
         200:
-          description: Success
-          content:
-            application/json:
-              examples:
-                200:
-                  $ref: '#/components/examples/OK'
-                201:
-                  $ref: '#/components/examples/User'
+          $ref: '#/components/responses/Successful'
+        201:
+          $ref: '#/components/responses/User'
         401:
           $ref: '#/components/responses/Unauthorized'
         404:
@@ -308,12 +303,12 @@ paths:
       security:
         - AuthHeader: [ ]
       parameters:
-        - $ref: '#/components/parameters/user_id'
+        - $ref: '#/components/parameters/user_id_to_follow'
       responses:
         200:
           description: Success
           content:
-            application/json:
+            application/json; charset=utf-8:
               examples:
                 200:
                   $ref: '#/components/examples/OK'
@@ -323,16 +318,16 @@ paths:
           $ref: '#/components/responses/NotFound'
         422:
           $ref: '#/components/responses/UnprocessableEntity'
-  # /me/followings/tracks:
-  #   get:
-  #     summary: Returns all the tracks of all the followings of me.
-  #     tags:
-  #       - me
-  #     security:
-  #       - AuthHeader: []
-  #     responses:
-  #       200:
-  #         description: Success
+  #  /me/followings/tracks:
+  #    get:
+  #      summary: Returns all the tracks of all the followings of me.
+  #      tags:
+  #        - me
+  #      security:
+  #        - AuthHeader: [ ]
+  #      responses:
+  #        200:
+  #          description: Success
   /me/followers:
     get:
       summary: Returns a list of users who are following the authenticated user.
@@ -468,12 +463,9 @@ paths:
         - $ref: "#/components/parameters/ids"
         - $ref: "#/components/parameters/genres"
         - $ref: "#/components/parameters/tags"
-        - $ref: "#/components/parameters/bpm_from"
-        - $ref: "#/components/parameters/bpm_to"
-        - $ref: "#/components/parameters/duration_from"
-        - $ref: "#/components/parameters/duration_to"
-        - $ref: "#/components/parameters/created_at_from"
-        - $ref: "#/components/parameters/created_at_to"
+        - $ref: "#/components/parameters/bpm"
+        - $ref: "#/components/parameters/duration"
+        - $ref: "#/components/parameters/created_at"
         - $ref: '#/components/parameters/limit'
         - $ref: '#/components/parameters/offset'
         - $ref: '#/components/parameters/linked_partitioning'
@@ -484,6 +476,8 @@ paths:
           $ref: '#/components/responses/BadRequest'
         401:
           $ref: '#/components/responses/Unauthorized'
+        500:
+          description: Internal Server Error
     post:
       summary: Uploads a new track.
       tags:
@@ -492,18 +486,16 @@ paths:
         content:
           multipart/form-data:
             schema:
-              allOf:
-                - $ref: '#/components/schemas/TrackDataRequest'
-                  required:
-                    - track[title]
-                    - track[asset_data]
+              $ref: '#/components/schemas/TrackDataRequest'
+              required:
+                - track[title]
+                - track[asset_data]
           multipart/x-www-form-urlencoded:
             schema:
-              allOf:
-                - $ref: '#/components/schemas/TrackDataRequest'
-                  required:
-                    - track[title]
-                    - track[asset_data]
+              $ref: '#/components/schemas/TrackDataRequest'
+              required:
+                - track[title]
+                - track[asset_data]
       security:
         - ClientId: [ ]
           AuthHeader: [ ]
@@ -546,6 +538,9 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/CreateUpdatePlaylistRequest'
+            examples:
+              default:
+                $ref: "#/components/examples/CreateUpdatePlaylistRequest"
       responses:
         200:
           $ref: "#/components/responses/Playlist"
@@ -608,13 +603,16 @@ paths:
       security:
         - AuthHeader: [ ]
       parameters:
-        - $ref: "#/components/parameters/playlist_id"
+        - $ref: "#/components/parameters/fake_playlist_id"
       requestBody:
         description: Playlist payload
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/CreateUpdatePlaylistRequest'
+            examples:
+              default:
+                $ref: "#/components/examples/CreateUpdatePlaylistRequest"
       responses:
         200:
           $ref: "#/components/responses/Playlist"
@@ -630,7 +628,7 @@ paths:
         - ClientId: [ ]
           AuthHeader: [ ]
       parameters:
-        - $ref: "#/components/parameters/playlist_id"
+        - $ref: "#/components/parameters/fake_playlist_id"
       responses:
         202:
           $ref: '#/components/responses/Accepted'
@@ -1087,10 +1085,10 @@ paths:
       parameters:
         - $ref: '#/components/parameters/track_id'
       responses:
-        200:
-          $ref: '#/components/responses/Success'
         201:
           $ref: '#/components/responses/Created'
+        200:
+          $ref: '#/components/responses/Success'
         400:
           $ref: '#/components/responses/BadRequest'
         401:
@@ -1173,8 +1171,8 @@ paths:
       parameters:
         - $ref: '#/components/parameters/track_id'
       responses:
-        200:
-          description: Success
+        201:
+          description: Created
         401:
           $ref: '#/components/responses/Unauthorized'
         404:
@@ -1202,10 +1200,10 @@ paths:
       security:
         - AuthHeader: [ ]
       parameters:
-        - $ref: '#/components/parameters/playlist_id'
+        - $ref: '#/components/parameters/repost_playlist_id'
       responses:
-        200:
-          description: Success
+        201:
+          description: Created
         401:
           $ref: '#/components/responses/Unauthorized'
         404:
@@ -1217,7 +1215,7 @@ paths:
       security:
         - AuthHeader: [ ]
       parameters:
-        - $ref: '#/components/parameters/playlist_id'
+        - $ref: '#/components/parameters/repost_playlist_id'
       responses:
         200:
           description: Success
@@ -1269,6 +1267,8 @@ components:
               type: string
     User:
       $ref: './components/schemas/User.yaml'
+    MetaUser:
+      $ref: './components/schemas/MetaUser.yaml'
     CompleteUser:
       $ref: './components/schemas/CompleteUser.yaml'
     Users:
@@ -1356,6 +1356,8 @@ components:
       $ref: './components/examples/ExpiringToken.yaml'
     NonExpiringToken:
       $ref: './components/examples/NonExpiringToken.yaml'
+    CreateUpdatePlaylistRequest:
+      $ref: './components/examples/CreateUpdatePlaylistRequest.yaml'
     Comment:
       $ref: './components/examples/Comment.yaml'
     Comments:
@@ -1416,6 +1418,9 @@ components:
     Success:
       value:
         status: 200 - OK
+    Successful:
+      value:
+        status: 200 - Successful
     Accepted:
       value:
         status: 202 - Accepted

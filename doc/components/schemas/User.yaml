@@ -62,6 +62,22 @@ properties:
   reposts_count:
     description: number of reposts from user
     type: integer
+  track_count:
+    description: number of public tracks.
+    type: integer
+  uri:
+    description: API resource URL.
+    type: string
+  username:
+    description: username
+    type: string
+  website:
+    description: a URL to the website.
+    type: string
+  website_title:
+    description: a custom title for the website.
+    type: string
+additionalProperties:
   subscriptions:
     description: a list subscriptions associated with the user
     items:
@@ -85,18 +101,3 @@ properties:
               description: if the subscription is recurring or not
               type: boolean
           type: object
-  track_count:
-    description: number of public tracks.
-    type: integer
-  uri:
-    description: API resource URL.
-    type: string
-  username:
-    description: username
-    type: string
-  website:
-    description: a URL to the website.
-    type: string
-  website_title:
-    description: a custom title for the website.
-    type: string

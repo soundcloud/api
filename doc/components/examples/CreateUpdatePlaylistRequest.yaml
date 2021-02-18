@@ -1,0 +1,9 @@
+value:
+  playlist:
+    title: Test Auto-created Playlist
+    description: Playlist for test purposes
+    sharing: private
+    tracks:
+      - id: 219787221
+      - id: 783019264
+      - id: 870073492

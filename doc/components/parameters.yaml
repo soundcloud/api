@@ -1,19 +1,20 @@
-bpm_from:
+bpm:
   in: query
-  name: bpm[from]
+  name: bpm
+  description: Return tracks with a specified bpm[from], bpm[to]
   required: false
+  style: deepObject
   schema:
-    type: integer
-  description: Return tracks with at least this bpm value
-  example: 123
-bpm_to:
-  in: query
-  name: bpm[to]
-  required: false
-  schema:
-    type: integer
-  description: Return tracks with at most this bpm value
-  example: 456
+    type: object
+    properties:
+      from:
+        type: integer
+        description: Return tracks with at least this bpm value
+        example: 123
+      to:
+        type: integer
+        description: Return tracks with at most this bpm value
+        example: 456
 client_id:
   in: query
   name: client_id
@@ -22,38 +23,40 @@ client_id:
     type: string
   description: client_id
   example: some client
-created_at_from:
+created_at:
   in: query
-  name: created_at[from]
+  name: created_at
+  description: (yyyy-mm-dd hh:mm:ss) return tracks created within the specified dates
   required: false
+  style: deepObject
   schema:
-    type: string
-  description: (yyyy-mm-dd hh:mm:ss) return tracks created at this date or later
-  example: 2020-12-24 00:00:00
-created_at_to:
+    type: object
+    properties:
+      from:
+        type: string
+        description: (yyyy-mm-dd hh:mm:ss) return tracks created at this date or later
+        example: 2020-12-24 00:00:00
+      to:
+        type: string
+        description: (yyyy-mm-dd hh:mm:ss) return tracks created at this date or earlier
+        example: 2020-12-26 00:00:00
+duration:
   in: query
-  name: created_at[to]
+  name: duration
+  description: Return tracks within a specified duration range
   required: false
+  style: deepObject
   schema:
-    type: string
-  description: (yyyy-mm-dd hh:mm:ss) return tracks created at this date or earlier
-  example: 2020-12-26 00:00:00
-duration_from:
-  in: query
-  name: duration[from]
-  required: false
-  schema:
-    type: integer
-  description: Return tracks with at least this duration value
-  example: 123456
-duration_to:
-  in: query
-  name: duration[to]
-  required: false
-  schema:
-    type: integer
-  description: Return tracks with at most this duration value
-  example: 123456
+    type: object
+    properties:
+      from:
+        type: integer
+        description: Return tracks with at least this duration value
+        example: 123456
+      to:
+        type: integer
+        description: Return tracks with at most this duration value
+        example: 456789
 genres:
   in: query
   name: genres
@@ -183,7 +186,7 @@ following_id:
   schema:
     type: integer
   description: SoundCloud User id to denote a Following of a user
-  example: 743372812
+  example: 25219981
 playlist_id:
   in: path
   name: playlist_id
@@ -191,7 +194,23 @@ playlist_id:
   schema:
     type: integer
   description: SoundCloud playlist id
-  example: 1212217033
+  example: 1212781357
+fake_playlist_id:
+  in: path
+  name: playlist_id
+  required: true
+  schema:
+    type: integer
+  description: SoundCloud playlist id
+  example: 10
+repost_playlist_id:
+  in: path
+  name: playlist_id
+  required: true
+  schema:
+    type: integer
+  description: SoundCloud playlist id
+  example: 1205584273
 tag:
   in: path
   name: tag
@@ -207,7 +226,7 @@ track_id:
   schema:
     type: integer
   description: SoundCloud Track id
-  example: 463532259
+  example: 308946187
 user_id:
   in: path
   name: user_id
@@ -216,3 +235,11 @@ user_id:
     type: integer
   description: SoundCloud User id
   example: 948745750
+user_id_to_follow:
+  in: path
+  name: user_id
+  required: true
+  schema:
+    type: integer
+  description: SoundCloud User id
+  example: 743372812

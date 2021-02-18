@@ -7,10 +7,10 @@ properties:
   link:
     type: string
   error:
-    type: string
+    type: [ string, null ]
     deprecated: true
   errors:
-    type: object
+    type: array
     deprecated: true
   status:
     type: string

@@ -31,12 +31,10 @@ value:
   title: permalink
   track_count: 2
   tracks:
-    - allOf:
-        - $ref: "#/components/examples/Track/value"
+    $ref: "#/components/examples/Track/value"
   tracks_uri: https://api.soundcloud.com/playlists/12345/tracks
   type: ''
   uri: https://api.soundcloud.com/playlists/12345
   user:
-    allOf:
-      - $ref: "#/components/examples/UserOf/value"
+    $ref: "#/components/examples/UserOf/value"
   user_id: 1234

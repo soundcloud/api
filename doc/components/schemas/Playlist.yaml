@@ -34,10 +34,6 @@ properties:
   genre:
     description: Playlist genre.
     type: string
-  label:
-    description: Label user.
-    allOf:
-      - $ref: "#/components/schemas/User"
   label_id:
     description: Label user identifier.
     type: integer
@@ -50,9 +46,6 @@ properties:
   license:
     description: License.
     type: string
-  likes_count:
-    description: Count of playlist likes.
-    type: integer
   permalink:
     description: Playlist permalink.
     type: string
@@ -89,9 +82,6 @@ properties:
   tag_list:
     description: Tags.
     type: string
-  tags:
-    description: Tags.
-    type: string
   track_count:
     description: Count of tracks.
     type: integer
@@ -100,9 +90,6 @@ properties:
     type: array
     items:
       $ref: "#/components/schemas/Track"
-  tracks_uri:
-    description: tracks URI.
-    type: string
   type:
     description: Playlist type.
     type: string
@@ -110,9 +97,19 @@ properties:
     description: Playlist URI.
     type: string
   user:
-    description: User.
-    allOf:
-      - $ref: "#/components/schemas/User"
+    $ref: "#/components/schemas/MetaUser"
   user_id:
     description: User identifier.
     type: integer
+additionalProperties:
+  likes_count:
+    description: Count of playlist likes.
+    type: integer
+  label:
+    $ref: "#/components/schemas/MetaUser"
+  tracks_uri:
+    description: tracks URI.
+    type: [ string, null ]
+  tags:
+    description: Tags.
+    type: [ string, null ]

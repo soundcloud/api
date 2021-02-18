@@ -10,9 +10,6 @@ properties:
   artwork_url:
     description: URL to a JPEG image.
     type: string
-  available_country_codes:
-    description: List of countries where track is available.
-    type: string
   bpm:
     description: Tempo.
     type: integer
@@ -28,21 +25,12 @@ properties:
   description:
     description: Track description.
     type: string
-  domain_lockings:
-    description: Domain lockings.
-    type: string
   download_count:
     description: NUmber of downloads.
     type: integer
-  download_url:
-    description: URL to download a track.
-    type: string
   downloadable:
     description: Is downloadable.
     type: string
-  downloads_remaining:
-    description: Number of remaining downloads.
-    type: integer
   duration:
     description: Track duration.
     type: integer
@@ -67,10 +55,6 @@ properties:
   kind:
     description: Type of object (track).
     type: string
-  label:
-    description: Label user.
-    allOf:
-      - $ref: "#/components/schemas/User"
   label_id:
     description: Label user identifier.
     type: integer
@@ -116,15 +100,6 @@ properties:
   release_year:
     description: Year of release.
     type: integer
-  reposts_count:
-    description: Number of reposts.
-    type: integer
-  secret_token:
-    description: Secret token.
-    type: string
-  secret_uri:
-    description: Secret URL.
-    type: string
   sharing:
     description: Type of sharing (public/private).
     type: string
@@ -145,8 +120,7 @@ properties:
     type: string
   user:
     description: User who uploaded a track
-    allOf:
-      - $ref: "#/components/schemas/User"
+    $ref: "#/components/schemas/MetaUser"
   user_favorite:
     description: Is user's favourite.
     type: boolean
@@ -156,12 +130,36 @@ properties:
   user_playback_count:
     description: Number of plays by a user.
     type: integer
-  user_uri:
-    description: User URI.
-    type: string
   video_url:
     description: Video URL.
     type: string
   waveform_url:
     description: Waveform URL.
+    type: string
+additionalProperties:
+  available_country_codes:
+    description: List of countries where track is available.
+    type: string
+  domain_lockings:
+    description: Domain lockings.
+    type: string
+  download_url:
+    description: URL to download a track.
+    type: string
+  downloads_remaining:
+    description: Number of remaining downloads.
+    type: integer
+  label:
+    $ref: "#/components/schemas/MetaUser"
+  reposts_count:
+    description: Number of reposts.
+    type: integer
+  secret_token:
+    description: Secret token.
+    type: string
+  secret_uri:
+    description: Secret URL.
+    type: string
+  user_uri:
+    description: User URI.
     type: string

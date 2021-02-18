@@ -1,14 +1,21 @@
 Success:
   description: Success
   content:
-    application/json:
+    application/json; charset=utf-8:
       examples:
         default:
           $ref: '#/components/examples/Success'
+Successful:
+  description: Success
+  content:
+    application/json; charset=utf-8:
+      examples:
+        default:
+          $ref: '#/components/examples/Successful'
 Accepted:
   description: Accepted
   content:
-    application/json:
+    application/json; charset=utf-8:
       examples:
         default:
           $ref: '#/components/examples/Accepted'
@@ -27,7 +34,7 @@ FoundHtml:
 Created:
   description: Created
   content:
-    application/json:
+    application/json; charset=utf-8:
       examples:
         default:
           $ref: '#/components/examples/Created'
@@ -43,7 +50,7 @@ BadRequest:
 Unauthorized:
   description: Unauthorized
   content:
-    application/json:
+    application/json; charset=utf-8:
       examples:
         default:
           $ref: '#/components/examples/Unauthorized'

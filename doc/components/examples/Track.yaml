@@ -47,8 +47,7 @@ value:
   track_type:
   uri: https://api.soundcloud.com/tracks/1234
   user:
-    allOf:
-      - $ref: "#/components/examples/UserOf/value"
+    $ref: "#/components/examples/UserOf/value"
   user_favorite: true
   user_id: 123456
   user_playback_count: 1

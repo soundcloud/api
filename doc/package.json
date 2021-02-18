@@ -10,7 +10,7 @@
     "yamljs": "0.3.0"
   },
   "scripts": {
-    "test": "dredd"
+    "test": "export $(curl -fsS -T ./config/secrets.enc https://shibboleth.int.s-cloud.net/decrypt); dredd"
   },
   "devDependencies": {
     "dredd": "^14.0.0"
