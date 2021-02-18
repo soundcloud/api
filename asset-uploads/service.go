@@ -124,7 +124,7 @@ func isTrackUpload(p *multipart.Part) bool {
 	// which can result in an empty FormName here. Check the raw header value
 	// to see if this part contains track asset data.
 	if p.FormName() == "" {
-		header := p.Header["Content-Disposition"]
+		header := p.Header.Values("Content-Disposition")
 		for _, val := range header {
 			if strings.Contains(val, `name="track[asset_data]"`) {
 				return true
