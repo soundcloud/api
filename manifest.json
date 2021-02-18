@@ -1,9 +1,9 @@
 {
     "name": "public-api-strangler",
     "description": "An implementation of the Strangler Pattern for the mothership's Public API",
-    "contact_email": "core-clients@soundcloud.com",
-    "contact_channel": "core-clients",
-    "owner": "core-clients",
+    "contact_email": "integrations-team@soundcloud.com",
+    "contact_channel": "integrations-alerts",
+    "owner": "integrations-team",
     "status": "production",
     "type": "external_service",
     "alert_service": "https://sndcld.pagerduty.com/services/PYW11IP",

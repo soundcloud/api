@@ -1,7 +1,7 @@
 # Comment to be posted to on PRs from first time contributors in your repository
 newPRComment: >
   Thanks for opening this pull request!
-  We aim to review the PR's as soon as possible, but please give the team at least 2 working days to review your PR. If your PR is urgent, please ping us in #core-clients.
+  We aim to review the PR's as soon as possible, but please give the team at least 2 working days to review your PR. If your PR is urgent, please ping us in #integrations.
   You can learn more about BFFs (including architectural guidelines and best practices) in the [BFF Documentation](http://eng-doc.int.s-cloud.net/guidelines/bff).
 # Comment to be posted to on pull requests merged by a first time user
 PRMergeComment: >
