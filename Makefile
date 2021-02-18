@@ -107,7 +107,7 @@ publish-deploy:
 		--ingress http://$(APP_NAME).int.s-cloud.net:http \
 		--ingress http://public-api.int.s-cloud.net:http \
 		--public-ingress http://api.soundcloud.com:http \
-		--slack-channel '#integrations-alerts' \
+		--slack-channel '#deploys' \
 		--glimpse http.strangler.prod.public-api \
 		--prometheus.port telemetry
 
