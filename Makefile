@@ -106,7 +106,7 @@ publish-deploy:
 		--zone=$(ZONE) \
 		--component="$(API_COMPONENT)" \
 		--command "./api --config=$(API_CONFIG)" \
-		--ingress http://$(APP_NAME).k2.lb.s-cloud.net:http \d
+		--ingress http://$(APP_NAME).k2.lb.s-cloud.net:http \
 		--ingress http://$(APP_NAME).$(ZONE).lb.s-cloud.net:http \
 		--ingress http://$(APP_NAME).int.s-cloud.net:http \
 		--ingress http://public-api.int.s-cloud.net:http \
