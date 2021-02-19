@@ -10,15 +10,18 @@ pipelines:
     stages:
     - test:
         jobs:
-          unit-tests:
+          lint:
             tasks:
             - exec:
                 command: make
                 arguments:
                 - lint
+          unit-test:
+            tasks:
+            - exec:
+                command: make
+                arguments:
                 - unit-test
-                - package
-                - publish
           asset-uploader-unit-tests:
             tasks:
             - exec:
@@ -43,3 +46,11 @@ pipelines:
                 - -C
                 - asset-uploads
                 - test-integration
+    - contract-tests:
+        jobs:
+          contract-test:
+            tasks:
+            - exec:
+                command: make
+                arguments:
+                - contract-test

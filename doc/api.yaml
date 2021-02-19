@@ -490,12 +490,18 @@ paths:
               required:
                 - track[title]
                 - track[asset_data]
+            examples:
+              default:
+                $ref: '#/components/examples/TrackDataRequest'
           multipart/x-www-form-urlencoded:
             schema:
               $ref: '#/components/schemas/TrackDataRequest'
               required:
                 - track[title]
                 - track[asset_data]
+            examples:
+              default:
+                $ref: '#/components/examples/TrackDataRequest'
       security:
         - ClientId: [ ]
           AuthHeader: [ ]
@@ -1358,6 +1364,8 @@ components:
       $ref: './components/examples/NonExpiringToken.yaml'
     CreateUpdatePlaylistRequest:
       $ref: './components/examples/CreateUpdatePlaylistRequest.yaml'
+    TrackDataRequest:
+      $ref: './components/examples/TrackDataRequest.yaml'
     Comment:
       $ref: './components/examples/Comment.yaml'
     Comments:

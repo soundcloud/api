@@ -10,7 +10,7 @@ class SessionExemptedEndpointsSpec extends Specification with SpinningUpAppSuppo
   "Public API Strangler" should {
 
     trait Context extends Scope {
-      val server = TestServer("strangler", 5000)
+      val server = TestServer("publicapistrangler", 5000)
     }
 
     "return success when probing crossdomain filters endpoint" in new Context {

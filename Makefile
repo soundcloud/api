@@ -53,11 +53,15 @@ wait:
 	sc wait http $(DOCKER_IP):4567/-/health # wait for publicapistub
 	sc wait http $(DOCKER_IP):5000/-/health # wait for publicapistrangler
 
-end-to-end-test: remove-containers docker-up-e2e wait
-	sc crun sbt --docker-options="--link=strangler_api:strangler --link=strangler_zk:zookeeper" -- sbt endToEnd/test
+end-to-end-test: remove-containers docker-up-e2e
+	sc crun -l base-dev -- sc wait http publicapistub:4567/-/health
+	sc crun -l base-dev -- sc wait http publicapistrangler:5000/-/health
+	sc crun -l sbt  -- sbt endToEnd/test
 	make docker-down
 
-local-contract-test: remove-containers docker-up-development wait
+local-contract-test: remove-containers docker-up-development
+	sc wait http $(DOCKER_IP):4567/-/health # wait for publicapistub
+	sc wait http $(DOCKER_IP):5000/-/health # wait for publicapistrangler
 	cd doc && make test
 
 contract-test: package remove-containers docker-up-development
@@ -102,7 +106,7 @@ publish-deploy:
 		--zone=$(ZONE) \
 		--component="$(API_COMPONENT)" \
 		--command "./api --config=$(API_CONFIG)" \
-		--ingress http://$(APP_NAME).k2.lb.s-cloud.net:http \
+		--ingress http://$(APP_NAME).k2.lb.s-cloud.net:http \d
 		--ingress http://$(APP_NAME).$(ZONE).lb.s-cloud.net:http \
 		--ingress http://$(APP_NAME).int.s-cloud.net:http \
 		--ingress http://public-api.int.s-cloud.net:http \

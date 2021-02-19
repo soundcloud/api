@@ -10,8 +10,8 @@ import org.specs2.specification.Scope
 class RateLimitingSanitySpecification extends Specification with SpinningUpAppSupport {
 
   trait Context extends Scope {
-    val server = TestServer("strangler", 5000)
-    val adminServer = TestServer("strangler", 5001)
+    val server = TestServer("publicapistrangler", 5000)
+    val adminServer = TestServer("publicapistrangler", 5001)
 
     val zkClient = {
       val zookeeperServers = "zookeeper:2181"

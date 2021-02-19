@@ -1,33 +1,35 @@
----
-memcached:
-  image: docker.dev.s-cloud.net/sc-memcached:release
-  container_name: strangler_memcached
-  ports:
-    - "11211:11211"
+version: '2.3'
 
-zookeeper:
-  image: docker.dev.s-cloud.net/sc-zookeeper
-  container_name: strangler_zk
-  ports:
-    - "2181:2181"
+services:
+  memcached:
+    image: docker.dev.s-cloud.net/sc-memcached:release
+    container_name: strangler_memcached
+    ports:
+      - "11211:11211"
 
-# This container is only ever used by tests.
-publicapistrangler:
-  image: docker.dev.s-cloud.net/public-api-strangler:$VERSION
-  container_name: strangler_api
-  command: bash -lex -c "./api --config=$CONFIG"
-  ports:
-    - "5000:5000"
-    - "5001:5001"
-  links:
-    - memcached:memcached
-    - zookeeper:zookeeper
-    - publicapistub:publicapistub
+  zookeeper:
+    image: docker.dev.s-cloud.net/sc-zookeeper
+    container_name: strangler_zk
+    ports:
+      - "2181:2181"
 
-publicapistub:
-  image: docker.dev.s-cloud.net/ruby-2.6
-  command: bash -ex -c "gem install sinatra --no-document ; ruby /tmp/pas/tools/public-api-stub.rb"
-  volumes:
-    - .:/tmp/pas
-  ports:
-    - "4567:4567"
+  # This container is only ever used by tests.
+  publicapistrangler:
+    image: docker.dev.s-cloud.net/public-api-strangler:$VERSION
+    container_name: strangler_api
+    command: bash -lex -c "./api --config=$CONFIG"
+    ports:
+      - "5000:5000"
+      - "5001:5001"
+    links:
+      - memcached:memcached
+      - zookeeper:zookeeper
+      - publicapistub:publicapistub
+
+  publicapistub:
+    image: docker.dev.s-cloud.net/ruby-2.6
+    command: bash -ex -c "gem install sinatra --no-document ; ruby /tmp/pas/tools/public-api-stub.rb"
+    volumes:
+      - .:/tmp/pas
+    ports:
+      - "4567:4567"

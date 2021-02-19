@@ -26,6 +26,10 @@ pipelines:
             - exec:
                 command: make
                 arguments:
+                - contract-test
+            - exec:
+                command: make
+                arguments:
                 - package
             - exec:
                 command: make

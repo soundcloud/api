@@ -1,0 +1,19 @@
+value:
+  track[title]: Test drum sample
+  track[asset_data]: "<binary string>"
+  track[permalink]: test-drum-sample
+  track[sharing]: private
+  track[embeddable_by]: me
+  track[purchase_url]:
+  track[description]: Public-api test sample upload
+  track[genre]: Pop
+  track[tag_list]:
+  track[label_name]:
+  track[release]:
+  track[release_date]: 2021-02-18
+  track[streamable]: true
+  track[downloadable]: false
+  track[license]: no-rights-reserved
+  track[commentable]: true
+  track[isrc]:
+  track[artwork_data]:
