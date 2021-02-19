@@ -37,6 +37,7 @@ pipelines:
             - exec:
                 command: make
                 arguments:
+                - package
                 - end-to-end-test
           asset-uploader-integration-tests:
             tasks:
