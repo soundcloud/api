@@ -8,7 +8,7 @@ CRUN = sc crun nodejs-12
 .PHONY: run clean package publish promote publish-deploy deploy
 
 resolve_api: node_modules
-	multi-file-swagger -o yaml api.yaml > compiled_api.yaml
+	./node_modules/.bin/multi-file-swagger -o yaml api.yaml > compiled_api.yaml
 
 node_modules:
 	npm i

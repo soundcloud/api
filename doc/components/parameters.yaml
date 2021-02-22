@@ -21,7 +21,7 @@ client_id:
   required: true
   schema:
     type: string
-  description: client_id
+  description: The client id belonging to your application
   example: some client
 created_at:
   in: query
@@ -108,7 +108,7 @@ redirect_uri:
   required: true
   schema:
     type: string
-  description: redirect_uri
+  description: The redirect uri you have configured for your application
   example: https://soundcloud.com
 response_type:
   in: query
@@ -120,8 +120,8 @@ response_type:
       - code
       - token
       - code_and_token
-  description: response type
-  example: code_and_token
+  description: It's recommended to use "code" here
+  example: code
 scope:
   in: query
   name: scope
@@ -130,6 +130,14 @@ scope:
     type: string
   description: Scope
   example: default
+state:
+  in: query
+  name: state
+  required: false
+  schema:
+    type: string
+  description: Any value included here will be appended to the redirect URI. Use this for CSRF protection.
+  example: encrypted_session_info
 tags:
   in: query
   name: tags
