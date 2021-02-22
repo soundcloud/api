@@ -1,6 +1,4 @@
-[JIRA](https://jira.soundcloud.com/browse/)
-
-### JIRA ID: TEMP-1111
+[JIRA](https://jira.soundcloud.com/browse/TEMP-1111)
 
 ## Scope
 
