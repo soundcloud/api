@@ -3,7 +3,6 @@ package com.soundcloud.publicApiStrangler
 import com.soundcloud.jvmkit.module.rollout.RolloutFeature
 import com.soundcloud.jvmkit.module.telemetry.Telemetry
 import com.soundcloud.jvmkit.module.telemetry.exceptions.ExceptionCollector
-import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.publicApiStrangler.handler._
 import com.soundcloud.publicApiStrangler.handler.comments.CommentsHandler
 import com.soundcloud.publicApiStrangler.handler.search.SearchHandler
@@ -18,12 +17,11 @@ import com.soundcloud.publicApiStrangler.support.oauth.{RailsLikeParamsParser, T
 class Handlers(
     telemetry: Telemetry,
     clients: Clients,
-    exceptionCollector: ExceptionCollector,
-    useInternalHeadersForAuthorizationClients: Set[Urn]
+    exceptionCollector: ExceptionCollector
 ) {
   import clients._
   val mothershipDispatcher =
-    new DispatchToMothershipHandler(userAuthentication, publicApiClient, useInternalHeadersForAuthorizationClients)
+    new DispatchToMothershipHandler(userAuthentication, publicApiClient)
 
   val timelineHandler: TimelineHandler = new TimelineHandler(
     userAuthentication,

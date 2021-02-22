@@ -38,14 +38,8 @@ object App {
       Urn("soundcloud", "applications", "62023") // Soundiiz Local
     )
 
-    // The following client applications use internal headers for authorization in public-api [AUTH-992]
-    val useInternalHeadersForAuthorizationClients: Set[Urn] = Set(
-      Urn("soundcloud", "applications", "314313"), // Test App
-      Urn("soundcloud", "applications", "314315") // Test App
-    )
-
     val clients = new Clients(config, telemetry, allowlistedClients, exceptionCollector)
-    val handlers = new Handlers(telemetry, clients, exceptionCollector, useInternalHeadersForAuthorizationClients)
+    val handlers = new Handlers(telemetry, clients, exceptionCollector)
 
     val bffApplication =
       BffApplication(Urn("soundcloud", "systems", "public-api-strangler"), config.getApplicationResourceName)
