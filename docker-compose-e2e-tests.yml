@@ -16,7 +16,6 @@ services:
   # This container is only ever used by tests.
   publicapistrangler:
     image: docker.dev.s-cloud.net/public-api-strangler:$VERSION
-    container_name: strangler_api
     command: bash -lex -c "./api --config=$CONFIG"
     ports:
       - "5000:5000"
@@ -33,3 +32,11 @@ services:
       - .:/tmp/pas
     ports:
       - "4567:4567"
+
+  asset-uploads:
+    image: docker.dev.s-cloud.net/public-api-strangler-asset-uploads:$VERSION
+    command: ./api --config=api-contract-test
+    ports:
+      - "5005:5005"
+    links:
+      - publicapistrangler:publicapistrangler

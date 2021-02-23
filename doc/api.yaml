@@ -508,14 +508,11 @@ paths:
               required:
                 - track[title]
                 - track[asset_data]
-            examples:
-              default:
-                $ref: '#/components/examples/TrackDataRequest'
       security:
         - ClientId: [ ]
           AuthHeader: [ ]
       responses:
-        200:
+        201:
           $ref: '#/components/responses/Track'
         400:
           $ref: '#/components/responses/BadRequest'
@@ -1488,3 +1485,6 @@ components:
     OK:
       value:
         status: Status(200) - OK
+    TrackMetadataRequest:
+      value:
+        track[title]: Updated Test Track

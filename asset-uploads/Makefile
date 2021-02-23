@@ -21,11 +21,13 @@ assemble: config/api-production
 assemble: config/api-production-secrets.enc
 assemble: config/api-test
 assemble: config/api-test-secrets.enc
+assemble: config/api-contract-test
 assemble: target/api
 	sc add-config config/api-production
 	sc add-config config/api-production-secrets.enc
 	sc add-config config/api-test
 	sc add-config config/api-test-secrets.enc
+	sc add-config config/api-contract-test
 	sc add-files --strip-components=1 target/api
 	sc gen-wrapper-script \
 		--target='api -addr=$$HOSTNAME:$$PORT -admin-addr=$$HOSTNAME:$$TELE_PORT -max-request-bytes=$$MAX_REQUEST_BYTES' \

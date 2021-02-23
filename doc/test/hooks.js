@@ -1,4 +1,6 @@
 const hooks = require('hooks');
+const Multipart = require('multi-part');
+const fs = require('fs');
 
 var responseStash = {};
 var skipDeprecatedTransactionIds = [
@@ -13,9 +15,7 @@ var skipTransactionIds = [
     "POST (200) /oauth2/token",
     "POST (401) /oauth2/token",
     "GET (200) /me/connections/123456",
-    "POST (200) /tracks",
     "PUT (200) /tracks/308946187",
-    "DELETE (200) /tracks/308946187",
     "POST (200) /tracks/308946187/comments",
     "POST (201) /reposts/tracks/308946187",
     "DELETE (200) /reposts/tracks/308946187",
@@ -50,10 +50,10 @@ function replaceId(transaction, actual, updated) {
 }
 
 hooks.beforeEach((transaction, done) => {
-
     if (skippedStatuses.includes(transaction.expected.statusCode)
         || skipDeprecatedTransactionIds.includes(transaction.id)
-        || skipTransactionIds.includes(transaction.id)) {
+        || skipTransactionIds.includes(transaction.id)
+        || transaction.request.headers["Content-Type"] == 'multipart/x-www-form-urlencoded') {
         transaction.skip = true;
     }
 
@@ -70,9 +70,27 @@ hooks.beforeEach((transaction, done) => {
     }
 
     if (transaction.id == "PUT (200) /me/followings/743372812") {
-            replaceId(transaction, '743372812', '25219981');
+        replaceId(transaction, '743372812', '25219981');
     }
 
+    if (transaction. id == "PUT (200) /tracks/308946187" || transaction.id == "DELETE (200) /tracks/308946187") {
+        replaceId(transaction, '308946187', responseStash.track_id);
+    }
+
+    done();
+});
+
+hooks.before("/tracks > Uploads a new track. > 201 > application/json; charset=utf-8", async (transaction, done) => {
+    transaction.port = "5005";
+
+    const form = new Multipart();
+    form.append('track[title]', 'Test sample track');
+    form.append('track[asset_data]', fs.createReadStream('./test/test-sample.wav'), {filename: 'test-sample.wav', contentType: 'audio/wav'});
+    form.append('track[sharing]', 'private');
+
+    transaction.request.body = (await form.buffer()).toString('base64');
+    transaction.request.bodyEncoding = 'base64';
+    transaction.request.headers['Content-Type'] = form.getHeaders()['content-type'];
     done();
 });
 
@@ -87,3 +105,12 @@ hooks.after("/playlists > Creates a playlist. > 200 > application/json; charset=
     responseStash.playlist_id = responseBody.id;
     done();
 });
+
+hooks.after("/tracks > Uploads a new track. > 201 > application/json; charset=utf-8", (transaction, done) => {
+    if (typeof transaction.real !== 'undefined') {
+        var responseBody = JSON.parse(transaction.real.body);
+        responseStash.track_id = responseBody.id;
+    }
+    done();
+});
+

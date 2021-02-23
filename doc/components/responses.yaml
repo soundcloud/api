@@ -41,7 +41,7 @@ Created:
 BadRequest:
   description: Bad Request
   content:
-    application/json:
+    application/json; charset=utf-8:
       examples:
         default:
           $ref: '#/components/examples/BadRequest'
