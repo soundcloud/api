@@ -1,18 +1,8 @@
 ---
-memcached:
-  image: docker.dev.s-cloud.net/sc-memcached:release
-  container_name: strangler_memcached
-  ports:
-    - "11211:11211"
+version: '2.3'
+services:
+  strangler_memcached:
+    image: docker.dev.s-cloud.net/sc-memcached:release
 
-zookeeper:
-  image: docker.dev.s-cloud.net/sc-zookeeper
-  container_name: strangler_zk
-  ports:
-    - "2181:2181"
-
-dev:
-  image: docker.dev.s-cloud.net/base-dev
-  links:
-    - memcached:memcached
-    - zookeeper:zookeeper
+  strangler_zk:
+    image: docker.dev.s-cloud.net/sc-zookeeper
