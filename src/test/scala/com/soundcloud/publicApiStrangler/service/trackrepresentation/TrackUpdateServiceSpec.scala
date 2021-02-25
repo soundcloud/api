@@ -48,10 +48,12 @@ class TrackUpdateServiceSpec extends UnitSpecification with TrackRepresentationS
     val mockTrackMetadataUpdateResult =
       new TrackCoordinatorTrackFixtures().fromTrackRepresentation(mockTrackRepresentation)
 
+    val emptyTrackUpdate = TrackMetadataUpdateRequest.fromForm(Map.empty).getOrElse(null)
+
     def setupMocksForUpdateTrackMeta(
         trackUrn: Urn,
         trackAssetDataUpdateRequest: Option[TrackAssetDataUpdateRequest],
-        updateTrackMetadata: Option[TrackMetadataUpdateRequest],
+        updateTrackMetadata: TrackMetadataUpdateRequest,
         artworkMetadata: Option[TrackArtworkUpdateResult],
         expectedResponse: Outcome[TrackCoordinatorTrack]
     ) = {
@@ -81,7 +83,7 @@ class TrackUpdateServiceSpec extends UnitSpecification with TrackRepresentationS
     "metadata" >> {
       trait SuccessContext extends Context {
         val metadataUpdateParams = Map[String, String]("title" -> "changed", "description" -> "changed")
-        val metaDataUpdateRequest = TrackMetadataUpdateRequest.fromForm(metadataUpdateParams)
+        val metaDataUpdateRequest = TrackMetadataUpdateRequest.fromForm(metadataUpdateParams).getOrElse(null)
 
         val expectedResponse = mockTrackRepresentation.copy(visibleTrack =
           mockTrackRepresentation.visibleTrack.copy(title = "changed", description = Some("changed"))
@@ -90,7 +92,7 @@ class TrackUpdateServiceSpec extends UnitSpecification with TrackRepresentationS
 
       trait FailureContext extends Context {
         val metadataUpdateParams = Map[String, String]("title" -> "changed", "description" -> "changed")
-        val updateRequest = TrackMetadataUpdateRequest.fromForm(metadataUpdateParams)
+        val updateRequest = TrackMetadataUpdateRequest.fromForm(metadataUpdateParams).getOrElse(null)
       }
 
       "Successfully updates metadata on valid request" in new SuccessContext {
@@ -171,9 +173,11 @@ class TrackUpdateServiceSpec extends UnitSpecification with TrackRepresentationS
         val bytes = ByteArray("i-am-an-image".getBytes(): _*)
         val trackArtworkMetaRequest = TrackArtworkUpdateRequest(imageData = Buf.ByteArray.Owned.extract(bytes))
         val trackArtworkUpdateResult = TrackArtworkUpdateResult(bucket = "bucket", filename = "filename")
-        val trackMetadataRequest = TrackMetadataUpdateRequest.fromForm(
-          Map[String, String]("title" -> "changed", "description" -> "changed")
-        )
+        val trackMetadataRequest = TrackMetadataUpdateRequest
+          .fromForm(
+            Map[String, String]("title" -> "changed", "description" -> "changed")
+          )
+          .getOrElse(null)
 
         val artworkUpdateOnlyUpdateResponse = mockTrackMetadataUpdateResult.copy(
           description = mockTrackRepresentation.visibleTrack.description,
@@ -229,7 +233,7 @@ class TrackUpdateServiceSpec extends UnitSpecification with TrackRepresentationS
         setupMocksForUpdateTrackMeta(
           trackUrn,
           trackAssetDataUpdateRequest = None,
-          updateTrackMetadata = None,
+          updateTrackMetadata = emptyTrackUpdate,
           Some(trackArtworkUpdateResult),
           Good(artworkUpdateOnlyUpdateResponse)
         )
@@ -241,7 +245,7 @@ class TrackUpdateServiceSpec extends UnitSpecification with TrackRepresentationS
           trackUpdateService.updateTrack(
             Some(trackArtworkMetaRequest),
             maybeUpdateTrackAsset = None,
-            maybeTrackMetadata = None,
+            trackMetadata = emptyTrackUpdate,
             mockTrackRepresentation.visibleTrack.urn,
             ownerSession
           )
@@ -258,7 +262,7 @@ class TrackUpdateServiceSpec extends UnitSpecification with TrackRepresentationS
         setupMocksForUpdateTrackMeta(
           trackUrn,
           trackAssetDataUpdateRequest = None,
-          updateTrackMetadata = None,
+          updateTrackMetadata = emptyTrackUpdate,
           Some(trackArtworkUpdateResult),
           Good(artworkUpdateOnlyUpdateResponse)
         )
@@ -270,7 +274,7 @@ class TrackUpdateServiceSpec extends UnitSpecification with TrackRepresentationS
           trackUpdateService.updateTrack(
             Some(trackArtworkMetaRequest),
             maybeUpdateTrackAsset = None,
-            maybeTrackMetadata = None,
+            trackMetadata = emptyTrackUpdate,
             mockTrackRepresentation.visibleTrack.urn,
             ownerSession
           )
@@ -308,7 +312,7 @@ class TrackUpdateServiceSpec extends UnitSpecification with TrackRepresentationS
         setupMocksForUpdateTrackMeta(
           trackUrn,
           Some(trackAssetDataUpdateRequest),
-          updateTrackMetadata = None,
+          updateTrackMetadata = emptyTrackUpdate,
           artworkMetadata = None,
           Good(assetUpdateOnlyUpdateResponse)
         )
@@ -317,7 +321,7 @@ class TrackUpdateServiceSpec extends UnitSpecification with TrackRepresentationS
           trackUpdateService.updateTrack(
             maybeUpdateAlbumArt = None,
             Some(trackAssetDataUpdateRequest),
-            maybeTrackMetadata = None,
+            trackMetadata = emptyTrackUpdate,
             trackUrn,
             ownerSession
           )
@@ -332,13 +336,19 @@ class TrackUpdateServiceSpec extends UnitSpecification with TrackRepresentationS
 
       "returns 404 if track asset data not found" in new FailureContext {
         setupMocksForTrackService(trackUrn, Some(mockTrackRepresentation))
-        setupMocksForUpdateTrackMeta(trackUrn, Some(trackAssetDataUpdateRequest), None, None, NotFound().bad)
+        setupMocksForUpdateTrackMeta(
+          trackUrn,
+          Some(trackAssetDataUpdateRequest),
+          emptyTrackUpdate,
+          None,
+          NotFound().bad
+        )
 
         val result = Await.result(
           trackUpdateService.updateTrack(
             maybeUpdateAlbumArt = None,
             Some(trackAssetDataUpdateRequest),
-            maybeTrackMetadata = None,
+            trackMetadata = emptyTrackUpdate,
             trackUrn,
             ownerSession
           )
@@ -356,7 +366,7 @@ class TrackUpdateServiceSpec extends UnitSpecification with TrackRepresentationS
         setupMocksForUpdateTrackMeta(
           trackUrn = trackUrn,
           Some(trackAssetDataUpdateRequest),
-          updateTrackMetadata = None,
+          updateTrackMetadata = emptyTrackUpdate,
           artworkMetadata = None,
           NotValid("invalid request").bad
         )
@@ -365,7 +375,7 @@ class TrackUpdateServiceSpec extends UnitSpecification with TrackRepresentationS
           trackUpdateService.updateTrack(
             maybeUpdateAlbumArt = None,
             Some(trackAssetDataUpdateRequest),
-            maybeTrackMetadata = None,
+            trackMetadata = emptyTrackUpdate,
             trackUrn,
             ownerSession
           )

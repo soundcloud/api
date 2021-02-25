@@ -26,7 +26,7 @@ class TrackUpdateService(
   def updateTrack(
       maybeUpdateAlbumArt: Option[TrackArtworkUpdateRequest],
       maybeUpdateTrackAsset: Option[TrackAssetDataUpdateRequest],
-      maybeTrackMetadata: Option[TrackMetadataUpdateRequest],
+      trackMetadata: TrackMetadataUpdateRequest,
       trackUrn: Urn,
       session: UserSession
   ): Future[Outcome[TrackRepresentation]] = {
@@ -36,7 +36,7 @@ class TrackUpdateService(
         session,
         trackUrn,
         maybeUpdateTrackAsset,
-        maybeTrackMetadata,
+        trackMetadata,
         uploadeImageResponse
       )
       trackRepresentation <- buildTrackRepresentation(trackCoordinatorTrack, session, trackUrn)

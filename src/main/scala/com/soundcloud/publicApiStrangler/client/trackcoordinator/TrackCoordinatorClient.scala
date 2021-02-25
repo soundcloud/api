@@ -40,10 +40,10 @@ class TrackCoordinatorClient(service: JsonClient) {
       session: UserSession,
       trackUrn: Urn,
       maybeUpdateTrackAsset: Option[TrackAssetDataUpdateRequest],
-      maybeUpdateTrackMetadata: Option[TrackMetadataUpdateRequest],
+      updateTrackMetadata: TrackMetadataUpdateRequest,
       maybeArtworkMetadata: Option[TrackArtworkUpdateResult]
   ): Future[Outcome[TrackCoordinatorTrack]] = {
-    val requestBody = buildUpdateBody(maybeUpdateTrackAsset, maybeUpdateTrackMetadata, maybeArtworkMetadata)
+    val requestBody = buildUpdateBody(maybeUpdateTrackAsset, updateTrackMetadata, maybeArtworkMetadata)
     service
       .putWithSession(session, Path("/tracks") / trackUrn, Params.empty, Headers.empty, Some(requestBody))
       .map(TrackCoordinatorUpdateMapper(_))
@@ -55,12 +55,12 @@ class TrackCoordinatorClient(service: JsonClient) {
       maybeArtworkMetadata: Option[TrackArtworkUpdateResult]
   ): String = {
     val body = Json.toJson(trackAsset).as[JsObject]
-    bodyString(body, Some(trackMetadata), maybeArtworkMetadata)
+    bodyString(body, trackMetadata, maybeArtworkMetadata)
   }
 
   private def buildUpdateBody(
       maybeUpdateTrackAsset: Option[TrackAssetDataUpdateRequest],
-      maybeUpdateTrackMetadata: Option[TrackMetadataUpdateRequest],
+      maybeUpdateTrackMetadata: TrackMetadataUpdateRequest,
       maybeArtworkMetadata: Option[TrackArtworkUpdateResult]
   ): String = {
     var body = Json.obj()
@@ -70,11 +70,12 @@ class TrackCoordinatorClient(service: JsonClient) {
 
   private def bodyString(
       assetBody: JsObject,
-      maybeUpdateTrackMetadata: Option[TrackMetadataRequest],
+      trackMetadata: TrackMetadataRequest,
       maybeArtworkMetadata: Option[TrackArtworkUpdateResult]
   ): String = {
     var body = assetBody
-    maybeUpdateTrackMetadata.foreach(metadata => body = body ++ Json.toJson(metadata.getTrack).as[JsObject])
+
+    body = body ++ Json.toJson(trackMetadata.getTrack).as[JsObject]
     maybeArtworkMetadata.foreach(artworkMeta => body = body ++ Json.obj("artwork_from_s3" -> Json.toJson(artworkMeta)))
     Json.stringify(body)
   }

@@ -42,6 +42,8 @@ class TracksHandlerSpec extends UnitSpecification with TrackRepresentationSpecCo
     val track = mock[Track]
     val mockTrackRepresentation = createTrackRepresentation()
 
+    val emptyTrackUpdate = TrackMetadataUpdateRequest.fromForm(Map.empty).getOrElse(null)
+
     lazy val geo = new Geo("US")
     lazy val session = new UserSessionBuilder()
       .setUser(loggedInUserUrn)
@@ -62,10 +64,11 @@ class TracksHandlerSpec extends UnitSpecification with TrackRepresentationSpecCo
 
     def setupMockForTrackUpdateMetadata(
         metadataUpdateOutcome: Outcome[TrackRepresentation],
-        trackUpdate: Option[TrackMetadataUpdateRequest] = None,
+        trackUpdate: TrackMetadataUpdateRequest,
         artworkUpdate: Option[TrackArtworkUpdateRequest] = None,
         assetUpdate: Option[TrackAssetDataUpdateRequest] = None
     ) = {
+
       when(
         trackUpdateService
           .updateTrack(
@@ -93,7 +96,7 @@ class TracksHandlerSpec extends UnitSpecification with TrackRepresentationSpecCo
             |    }
             | }
             |""".stripMargin
-        val trackUpdate = Json.parse(requestBody).asOpt[TrackMetadataUpdateRequest]
+        val trackUpdate = Json.parse(requestBody).as[TrackMetadataUpdateRequest]
 
         val expectedResponse = mockTrackRepresentation.copy(
           visibleTrack = mockTrackRepresentation.visibleTrack.copy(
@@ -113,7 +116,7 @@ class TracksHandlerSpec extends UnitSpecification with TrackRepresentationSpecCo
             |    }
             | }
             |""".stripMargin
-        val trackUpdate = Json.parse(requestBody).asOpt[TrackMetadataUpdateRequest]
+        val trackUpdate = Json.parse(requestBody).as[TrackMetadataUpdateRequest]
 
         val invalidRequestBody =
           """
@@ -154,7 +157,7 @@ class TracksHandlerSpec extends UnitSpecification with TrackRepresentationSpecCo
         val requestBody = Seq[(String, String)](("track[title]", "changed"), ("track[description]", "changed"))
         val parsedRequestBody = Map[String, String]("title" -> "changed", "description" -> "changed")
 
-        val trackUpdate = TrackMetadataUpdateRequest.fromForm(parsedRequestBody)
+        val trackUpdate = TrackMetadataUpdateRequest.fromForm(parsedRequestBody).getOrElse(null)
         val expectedResponse = mockTrackRepresentation.copy(
           visibleTrack = mockTrackRepresentation.visibleTrack.copy(
             description = Some("changed"),
@@ -167,7 +170,7 @@ class TracksHandlerSpec extends UnitSpecification with TrackRepresentationSpecCo
         val requestBody = Seq[(String, String)](("track[title]", "changed"), ("track[description]", "changed"))
         val parsedRequestBody = Map[String, String]("title" -> "changed", "description" -> "changed")
 
-        val trackUpdate = TrackMetadataUpdateRequest.fromForm(parsedRequestBody)
+        val trackUpdate = TrackMetadataUpdateRequest.fromForm(parsedRequestBody).getOrElse(null)
       }
 
       "Returns a 200 on a valid request" in new SuccessContext {
@@ -196,7 +199,7 @@ class TracksHandlerSpec extends UnitSpecification with TrackRepresentationSpecCo
         val requestBody = Seq[(String, String)](("track[title]", "changed"), ("track[description]", "changed"))
         val parsedRequestBody = Map[String, String]("title" -> "changed", "description" -> "changed")
 
-        val trackUpdate = TrackMetadataUpdateRequest.fromForm(parsedRequestBody)
+        val trackUpdate = TrackMetadataUpdateRequest.fromForm(parsedRequestBody).getOrElse(null)
         val expectedResponse = mockTrackRepresentation.copy(
           visibleTrack = mockTrackRepresentation.visibleTrack.copy(
             description = Some("changed"),
@@ -209,7 +212,7 @@ class TracksHandlerSpec extends UnitSpecification with TrackRepresentationSpecCo
         val requestBody = Seq[(String, String)](("track[title]", "changed"), ("track[description]", "changed"))
         val parsedRequestBody = Map[String, String]("title" -> "changed", "description" -> "changed")
 
-        val trackUpdate = TrackMetadataUpdateRequest.fromForm(parsedRequestBody)
+        val trackUpdate = TrackMetadataUpdateRequest.fromForm(parsedRequestBody).getOrElse(null)
       }
 
       "returns a 200 on a valid request" in new SuccessContext {
@@ -249,7 +252,7 @@ class TracksHandlerSpec extends UnitSpecification with TrackRepresentationSpecCo
               .updateTrack(
                 anyObject[Option[TrackArtworkUpdateRequest]],
                 ===(None),
-                ===(None),
+                ===(emptyTrackUpdate),
                 ===(mockTrackRepresentation.visibleTrack.urn),
                 ===(session)
               )
@@ -275,7 +278,7 @@ class TracksHandlerSpec extends UnitSpecification with TrackRepresentationSpecCo
           val parsedRequestBody = Map[String, String]("uid" -> "12345", "original_filename" -> "audio.mp3")
 
           val assetUpdate = TrackAssetDataUpdateRequest.fromForm(parsedRequestBody)
-          val trackUpdate = TrackMetadataUpdateRequest.fromForm(parsedRequestBody)
+          val trackUpdate = TrackMetadataUpdateRequest.fromForm(parsedRequestBody).getOrElse(null)
           val expectedResponse = mockTrackRepresentation
         }
 

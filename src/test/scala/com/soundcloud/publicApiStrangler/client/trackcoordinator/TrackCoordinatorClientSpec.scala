@@ -40,7 +40,7 @@ class TrackCoordinatorClientSpec extends UnitSpecification {
       .fromForm(
         Map[String, String]("title" -> "changed", "description" -> "changed")
       )
-      .get
+      .getOrElse(null)
 
     val bytes = ByteArray("i-am-an-image".getBytes(): _*)
     val trackArtworkMetaResponse = TrackArtworkUpdateResult("bucket", "filename")
@@ -253,7 +253,7 @@ class TrackCoordinatorClientSpec extends UnitSpecification {
               session,
               trackUrn,
               Some(trackAssetDataUpdateRequest),
-              Some(trackMetadataUpdateRequest),
+              trackMetadataUpdateRequest,
               Some(trackArtworkMetaResponse)
             )
           )
@@ -268,7 +268,7 @@ class TrackCoordinatorClientSpec extends UnitSpecification {
               session,
               trackUrn,
               Some(trackAssetDataUpdateRequest),
-              Some(trackMetadataUpdateRequest),
+              trackMetadataUpdateRequest,
               Some(trackArtworkMetaResponse)
             )
           )
@@ -282,7 +282,7 @@ class TrackCoordinatorClientSpec extends UnitSpecification {
             session,
             trackUrn,
             Some(trackAssetDataUpdateRequest),
-            Some(trackMetadataUpdateRequest),
+            trackMetadataUpdateRequest,
             Some(trackArtworkMetaResponse)
           )
         ) must throwAn[UnhandledResponseException]
@@ -340,7 +340,7 @@ class TrackCoordinatorClientSpec extends UnitSpecification {
               session,
               trackUrn,
               Some(trackAssetDataUpdateRequest),
-              Some(trackMetadataUpdateRequest),
+              trackMetadataUpdateRequest,
               Some(trackArtworkMetaResponse)
             )
           )
@@ -355,7 +355,7 @@ class TrackCoordinatorClientSpec extends UnitSpecification {
               session,
               trackUrn,
               Some(trackAssetDataUpdateRequest),
-              Some(trackMetadataUpdateRequest),
+              trackMetadataUpdateRequest,
               Some(trackArtworkMetaResponse)
             )
           )
@@ -369,7 +369,7 @@ class TrackCoordinatorClientSpec extends UnitSpecification {
             session,
             trackUrn,
             Some(trackAssetDataUpdateRequest),
-            Some(trackMetadataUpdateRequest),
+            trackMetadataUpdateRequest,
             Some(trackArtworkMetaResponse)
           )
         ) must throwAn[UnhandledResponseException]

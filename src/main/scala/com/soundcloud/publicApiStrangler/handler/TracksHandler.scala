@@ -74,25 +74,23 @@ class TracksHandler(
   ): Future[Response] = {
 
     /**
-      *  Ugly, but we have to manually change the request method from PUT to POST, otherwise MultiPart.Decode will return None
-      *  We change it back to Put after the parse call to avoid any potential side effects
-      *  https://twitter.github.io/finagle/docs/com/twitter/finagle/http/exp/MultipartDecoder.html
-      *  https://softwareengineering.stackexchange.com/a/319429
+      * Ugly, but we have to manually change the request method from PUT to POST, otherwise MultiPart.Decode will return None
+      * We change it back to Put after the parse call to avoid any potential side effects
+      * https://twitter.github.io/finagle/docs/com/twitter/finagle/http/exp/MultipartDecoder.html
+      * https://softwareengineering.stackexchange.com/a/319429
       */
     request.method = Method.Post
     val extractedParams = paramsParser.parse(request).map(extractTrackFieldsFromParams)
 
     val artwork = paramsParser.parseFilesFromRequest(request, "track[artwork_data]").map(TrackArtworkUpdateRequest)
     val assetParams = extractedParams.map(TrackAssetDataUpdateRequest.fromForm).getOrElse(None)
-    val metadataParams =
-      extractedParams.map(TrackMetadataUpdateRequest.fromForm).getOrElse(None)
+
+    val params = extractedParams.getOrElse(Map.empty)
+    val metadataParams = TrackMetadataUpdateRequest.fromForm(params)
 
     request.method = Method.Put
 
-    (artwork, metadataParams, assetParams) match {
-      case (None, None, None) => generateBadResponse
-      case _ => updateTrack(artwork, assetParams, metadataParams, urn, session)
-    }
+    updateTrack(artwork, assetParams, metadataParams, urn, session)
   }
 
   private def updateTrackFromUrlEncodedRequest(
@@ -104,37 +102,39 @@ class TracksHandler(
     val assetData = TrackAssetDataUpdateRequest.fromForm(extractedParams)
     val metadata = TrackMetadataUpdateRequest.fromForm(extractedParams)
 
-    (metadata, assetData) match {
-      case (None, None) => generateBadResponse
-      case _ => updateTrack(None, assetData, metadata, urn, session)
-    }
+    updateTrack(None, assetData, metadata, urn, session)
   }
 
   private def updateTrackFromJsonRequest(request: HandlerRequest, session: UserSession, urn: Urn): Future[Response] = {
-    val metadata = Json.parse(request.contentString).asOpt[TrackMetadataUpdateRequest]
-    metadata match {
-      case Some(_) => updateTrack(None, None, metadata, urn, session)
-      case _ => generateBadResponse
-    }
+    val metadata = Json
+      .parse(request.contentString)
+      .asOpt[TrackMetadataUpdateRequest]
+      .map(Good(_))
+      .getOrElse(Bad(NotValid("invalid metadata")))
+
+    updateTrack(None, None, metadata, urn, session)
   }
 
   private def updateTrack(
       artwork: Option[TrackArtworkUpdateRequest],
       assetData: Option[TrackAssetDataUpdateRequest],
-      metadata: Option[TrackMetadataUpdateRequest],
+      metadataParams: Outcome[TrackMetadataUpdateRequest],
       trackUrn: Urn,
       session: UserSession
   ): Future[Response] = {
-    val response =
-      trackUpdateService.updateTrack(
-        artwork,
-        assetData,
-        metadata,
-        trackUrn,
-        session
-      )
-
-    handleUpdateTrackResponseFromService(response)
+    metadataParams match {
+      case Good(metadata) =>
+        val updatedTrack = trackUpdateService.updateTrack(
+          artwork,
+          assetData,
+          metadata,
+          trackUrn,
+          session
+        )
+        handleUpdateTrackResponseFromService(updatedTrack)
+      case Bad(NotValid(errors)) => Future.value(ErrorResponse.badRequest(errors.head))
+      case _ => throw new UnhandledOutcomeException
+    }
   }
 
   /**

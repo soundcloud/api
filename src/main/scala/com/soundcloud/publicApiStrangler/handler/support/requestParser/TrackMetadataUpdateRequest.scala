@@ -1,12 +1,17 @@
 package com.soundcloud.publicApiStrangler.handler.support.requestParser
 
+import com.soundcloud.jvmkit.module.outcome._
 import com.soundcloud.publicApiStrangler.client.mothership.request.representation.{
   MissingValue,
   NonNullMissingValue,
   NonNullValue,
   Value
 }
-import com.soundcloud.publicApiStrangler.handler.support.requestParser.TrackMetadataRequest.{getEmbeddable, toBoolean}
+import com.soundcloud.publicApiStrangler.handler.support.requestParser.TrackMetadataRequest.{
+  getEmbeddable,
+  parseBooleanInput,
+  parseNullableStringInput
+}
 import play.api.libs.json.{JsError, JsSuccess, Reads}
 
 import scala.util.{Success, Try}
@@ -16,6 +21,40 @@ case class TrackMetadataUpdateRequest(track: TrackMetadataUpdates) extends Track
 }
 
 object TrackMetadataUpdateRequest {
+  def fromForm(params: Map[String, String]): Outcome[TrackMetadataUpdateRequest] = {
+    for {
+      api_streamable <- parseBooleanInput(params, "streamable")
+      downloadable <- parseBooleanInput(params, "downloadable")
+      commentable <- parseBooleanInput(params, "commentable")
+      reveal_stats <- parseBooleanInput(params, "reveal_stats")
+      reveal_comments <- parseBooleanInput(params, "reveal_comments")
+
+      track = new TrackMetadataUpdates(
+        embeddable = getEmbeddable(params.get("embeddable_by")),
+        description = parseNullableStringInput(params, "description"),
+        genre = parseNullableStringInput(params, "genre"),
+        isrc = parseNullableStringInput(params, "isrc"),
+        label_name = parseNullableStringInput(params, "label_name"),
+        license = parseNullableStringInput(params, "license"),
+        purchase_url = parseNullableStringInput(params, "purchase_url"),
+        release = parseNullableStringInput(params, "release"),
+        release_date = parseNullableStringInput(params, "release_date"),
+        sharing = parseNullableStringInput(params, "sharing"),
+        tag_list = parseNullableStringInput(params, "tag_list"),
+        purchase_title = parseNullableStringInput(params, "purchase_title"),
+        title = params.get("title").map(v => NonNullValue[String](v)).getOrElse(NonNullMissingValue),
+        permalink = params.get("permalink").map(v => NonNullValue[String](v)).getOrElse(NonNullMissingValue),
+        geo_blockings =
+          params.get("geo_blockings").map(v => Value[List[String]](v.split(",").toList)).getOrElse(MissingValue),
+        api_streamable = api_streamable,
+        downloadable = downloadable,
+        commentable = commentable,
+        reveal_stats = reveal_stats,
+        reveal_comments = reveal_comments
+      )
+    } yield TrackMetadataUpdateRequest(track)
+  }
+
   implicit val reads = Reads[TrackMetadataUpdateRequest] { json =>
     Try(
       TrackMetadataUpdateRequest(
@@ -25,44 +64,5 @@ object TrackMetadataUpdateRequest {
       case Success(value) => JsSuccess(value)
       case _ => JsError("invalid track data")
     }
-  }
-
-  def fromForm(params: Map[String, String]): Option[TrackMetadataUpdateRequest] = {
-    val embeddable = getEmbeddable(
-      params
-        .get("embeddable_by")
-    )
-
-    Try(
-      TrackMetadataUpdateRequest(
-        track =
-          new TrackMetadataUpdates(
-            api_streamable = params.get("streamable").map(v => Value[Boolean](toBoolean(v))).getOrElse(MissingValue),
-            description = params.get("description").map(v => Value[String](v)).getOrElse(MissingValue),
-            downloadable = params.get("downloadable").map(v => Value[Boolean](toBoolean(v))).getOrElse(MissingValue),
-            embeddable = embeddable,
-            genre = params.get("genre").map(v => Value[String](v)).getOrElse(MissingValue),
-            geo_blockings = params
-              .get("geo_blockings")
-              .map(v => Value[List[String]](v.split(",").toList))
-              .getOrElse(MissingValue),
-            isrc = params.get("isrc").map(v => Value[String](v)).getOrElse(MissingValue),
-            label_name = params.get("label_name").map(v => Value[String](v)).getOrElse(MissingValue),
-            license = params.get("license").map(v => Value[String](v)).getOrElse(MissingValue),
-            permalink = params.get("permalink").map(v => NonNullValue[String](v)).getOrElse(NonNullMissingValue),
-            purchase_url = params.get("purchase_url").map(v => Value[String](v)).getOrElse(MissingValue),
-            release = params.get("release").map(v => Value[String](v)).getOrElse(MissingValue),
-            release_date = params.get("release_date").map(v => Value[String](v)).getOrElse(MissingValue),
-            sharing = params.get("sharing").map(v => Value[String](v)).getOrElse(MissingValue),
-            tag_list = params.get("tag_list").map(v => Value[String](v)).getOrElse(MissingValue),
-            title = params.get("title").map(v => NonNullValue[String](v)).getOrElse(NonNullMissingValue),
-            commentable = params.get("commentable").map(v => Value[Boolean](toBoolean(v))).getOrElse(MissingValue),
-            reveal_stats = params.get("reveal_stats").map(v => Value[Boolean](toBoolean(v))).getOrElse(MissingValue),
-            reveal_comments =
-              params.get("reveal_comments").map(v => Value[Boolean](toBoolean(v))).getOrElse(MissingValue),
-            purchase_title = params.get("purchase_title").map(v => Value[String](v)).getOrElse(MissingValue)
-          )
-      )
-    ).toOption
   }
 }

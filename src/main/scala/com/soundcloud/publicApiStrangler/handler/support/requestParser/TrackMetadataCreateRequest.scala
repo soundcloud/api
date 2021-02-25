@@ -6,11 +6,13 @@ import com.soundcloud.publicApiStrangler.client.mothership.request.representatio
   MissingValue,
   NonNullMissingValue,
   NonNullValue,
-  NullableValue,
   Value
 }
-
-import com.soundcloud.publicApiStrangler.handler.support.requestParser.TrackMetadataRequest.getEmbeddable
+import com.soundcloud.publicApiStrangler.handler.support.requestParser.TrackMetadataRequest.{
+  getEmbeddable,
+  parseBooleanInput,
+  parseNullableStringInput
+}
 import play.api.libs.json.{JsError, JsObject, JsSuccess, Reads}
 
 import scala.util.{Success, Try}
@@ -75,31 +77,5 @@ object TrackMetadataCreateRequest {
       case Success(value) if containsRequiredFields((json \ "track").as[JsObject]) => JsSuccess(value)
       case _ => JsError("invalid track data")
     }
-  }
-
-  def toBoolean(value: String): Outcome[Boolean] = {
-    if (value != null) value.toLowerCase match {
-      case "0" => false.good
-      case "1" => true.good
-      case "true" => true.good
-      case "false" => false.good
-      case _ => Bad(NotValid(""))
-    }
-    else Bad(NotValid(""))
-  }
-
-  private def parseBooleanInput(params: Map[String, String], fieldName: String): Outcome[NullableValue[Boolean]] = {
-    params
-      .get(fieldName)
-      .map {
-        toBoolean(_)
-          .map(Value[Boolean])
-          .leftMap(_ => NotValid(s"invalid ${fieldName} value"))
-      }
-      .getOrElse(MissingValue.good)
-  }
-
-  private def parseNullableStringInput(params: Map[String, String], fieldName: String): NullableValue[String] = {
-    params.get(fieldName).map(v => Value[String](v)).getOrElse(MissingValue)
   }
 }

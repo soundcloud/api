@@ -1,5 +1,6 @@
 package com.soundcloud.publicApiStrangler.handler.support.requestParser
 
+import com.soundcloud.jvmkit.module.outcome._
 import com.soundcloud.publicApiStrangler.client.mothership.request.representation.{NonNullValue, Value}
 import com.soundcloud.publicApiStrangler.test.UnitSpecification
 import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures._
@@ -67,8 +68,7 @@ class TrackMetadataUpdateRequestSpec extends UnitSpecification {
       )
 
       val metadataUpdates = TrackMetadataUpdateRequest.fromForm(inputArgMap)
-      metadataUpdates.isEmpty ==== false
-      metadataUpdates.get ==== metadataUpdatesExpected
+      metadataUpdates ==== metadataUpdatesExpected.good
     }
 
     trait BooleanTestContext extends Context {
@@ -104,7 +104,10 @@ class TrackMetadataUpdateRequestSpec extends UnitSpecification {
       boolTypes.foreach { boolString =>
         val map = inputMap(boolString)
         val metadataUpdates = TrackMetadataUpdateRequest.fromForm(map)
-        metadataUpdates.get !=== null
+        metadataUpdates match {
+          case Good(_) => ok
+          case _ => ko
+        }
       }
     }
   }
