@@ -95,7 +95,7 @@ package: prepare-package-layout
 	sc artifact-manager package --runtime=$(RUNTIME_STACK)
 
 prepare-package-layout:
-	sc crun sbt -- sbt scDebianLayout:packageBin
+	sc crun sbt -- sbt packageSC
 	sc gen-wrapper-script --target="bin/$(APP_NAME)" --wrapper=api
 	sc add-config config/development
 	sc add-config config/e2e
