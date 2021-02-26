@@ -1,7 +1,9 @@
 # asset-uploads
 
 This is a `public-api-strangler` component that preprocesses, rewrites and
-forwards `multipart/form-data` requests.
+forwards ALL `multipart/form-data` requests. Even if a route does not exist for
+the given endpoint, the request is forwarded as is to the `api`
+component.
 
 Specifically this component handles:
 

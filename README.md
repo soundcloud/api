@@ -17,6 +17,11 @@ See [CONTRIBUTING.md](https://github.com/soundcloud/public-api-strangler/blob/ma
 
 ## Notes
 
+### Multipart requests
+
+All `multipart/form-data` requests are forwarded by [ampelmann](https://github.com/soundcloud/ampelmann/blob/master/ampelmann.json#L94-L115)
+to the [`asset-uploads` component](https://github.com/soundcloud/public-api-strangler/blob/master/asset-uploads/README.md).
+
 ### Rate limiting allowlist
 
 The rate limiting feature makes use of a allowlist of client application URNs

@@ -41,5 +41,6 @@ digraph overview {
   ampelmann -> pas_asset_uploads     [style="dotted", label="route multipart/form-data request"];
   pas_asset_uploads -> s3            [style="dotted", label="upload track (1)"];
   pas_asset_uploads -> media_service_coordinator [style="dotted", label="trigger transcoding (2)"]
+  pas_asset_uploads -> pas_api [label="forward request (3)"]
 
 }
