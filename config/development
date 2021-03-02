@@ -69,7 +69,7 @@ TRACK_COORDINATOR_SRV_RECORD=dnssrv!http.coordinator.prod.tracks.srv.db.s-cloud.
 LIEBLING_SRV_RECORD=dnssrv!http.web.prod.liebling.srv.db.s-cloud.net.
 SYSTEM_PLAYLISTS_SRV_RECORD=dnssrv!http.api.prod.system-playlists.srv.db.s-cloud.net.
 
-USER_SUBSCRIPTIONS_SRV_RECORD=dnssrv!http.server.sandbox.subscriptions.srv.db.s-cloud.net.
+SUBMARINE_SRV_RECORD=dnssrv!http.api.staging.submarine.srv.db.s-cloud.net.
 
 STITCH4FOLLOWS_SRV_RECORD=dnssrv!http.web-follows.prod.stitch4counts.srv.db.s-cloud.net.
 STITCH_BULK_FETCH_MAX_ENTRIES=7

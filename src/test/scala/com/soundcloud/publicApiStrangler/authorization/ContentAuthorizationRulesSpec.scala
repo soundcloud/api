@@ -16,8 +16,8 @@ import scala.collection.JavaConverters._
 class ContentAuthorizationRulesSpec extends UnitSpecification {
   trait Context extends Scope {
     val contentAuthMock = mock[ContentAuthorizationService]
-    val subsServiceMock = mock[SubscriptionsService]
-    val service = new ContentAuthorizationRules(contentAuthMock, subsServiceMock)
+    val submarineServiceMock = mock[SubmarineService]
+    val service = new ContentAuthorizationRules(contentAuthMock, submarineServiceMock)
     val urns = Seq(Urn("soundcloud", "tracks", "123"), Urn("soundcloud", "tracks", "456"))
     val authorizations = urns.map(urn =>
       new ContentAuthorization(urn, ContentPolicy.ALLOW, Reason.UNKNOWN, MonetizationModel.NOT_APPLICABLE)
@@ -40,13 +40,13 @@ class ContentAuthorizationRulesSpec extends UnitSpecification {
 
     Await.result(service.fetchRules(session, urns)) ==== authorizations
 
-    there were noCallsTo(subsServiceMock)
+    there were noCallsTo(submarineServiceMock)
   }
 
   "looks up consumer subs country for high-tier subscriber" in new Context {
     val session = sessionWithTier(UserTier.HIGH)
 
-    subsServiceMock.getActiveSubscriptionCountry(session) returns Future.value(Option("FR"))
+    submarineServiceMock.getActiveSubscriptionCountry(session) returns Future.value(Option("FR"))
     contentAuthMock.findRulesApplicableTo(session, urns, Option("FR")) returns Future.value(authorizations)
 
     Await.result(service.fetchRules(session, urns)) ==== authorizations
@@ -55,7 +55,7 @@ class ContentAuthorizationRulesSpec extends UnitSpecification {
   "looks up consumer subs country for mid-tier subscriber" in new Context {
     val session = sessionWithTier(UserTier.MID)
 
-    subsServiceMock.getActiveSubscriptionCountry(session) returns Future.value(Option("FR"))
+    submarineServiceMock.getActiveSubscriptionCountry(session) returns Future.value(Option("FR"))
     contentAuthMock.findRulesApplicableTo(session, urns, Option("FR")) returns Future.value(authorizations)
 
     Await.result(service.fetchRules(session, urns)) ==== authorizations
@@ -64,7 +64,7 @@ class ContentAuthorizationRulesSpec extends UnitSpecification {
   "looks up geo country when subscription country is unavailable" in new Context {
     val session = sessionWithTier(UserTier.MID)
 
-    subsServiceMock.getActiveSubscriptionCountry(session) returns Future.value(None)
+    submarineServiceMock.getActiveSubscriptionCountry(session) returns Future.value(None)
     contentAuthMock.findRulesApplicableTo(session, urns, Option("US")) returns Future.value(authorizations)
 
     Await.result(service.fetchRules(session, urns)) ==== authorizations

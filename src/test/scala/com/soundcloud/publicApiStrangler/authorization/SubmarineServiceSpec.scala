@@ -10,11 +10,11 @@ import com.twitter.finagle.http.Status
 import com.twitter.util.{Await, Future}
 import play.api.libs.json.JsNull
 
-class SubscriptionsServiceSpec extends UnitSpecification {
+class SubmarineServiceSpec extends UnitSpecification {
   "#getActiveSubscriptionCountry" >> {
     trait Context extends Scope {
       val client = mock[JsonClient]
-      val service = new SubscriptionsService(client)
+      val service = new SubmarineService(client)
       val user = Urn("soundcloud", "users", "66")
       val session = loggedInSession(user)
       val activeConsumerSubPath = Path("/api") / "users" / user / "consumer_subscriptions" / "active"

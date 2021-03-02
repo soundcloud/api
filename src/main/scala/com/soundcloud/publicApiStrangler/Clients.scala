@@ -97,7 +97,7 @@ class Clients(
   lazy val moshimoshiCommentsClient = new MoshimoshiCommentsClient(jsonClient("moshimoshi_comments"))
   lazy val moshimoshiClient = new MoshimoshiClient(jsonClient("moshimoshi"), exceptionCollector)
 
-  private val subscriptionsService = jsonClient("user_subscriptions")
+  private val submarineClient = jsonClient("submarine")
 
   private val stitch4followsService = jsonClient("stitch4follows")
 
@@ -107,7 +107,7 @@ class Clients(
 
   val contentAuthorizationRules = new ContentAuthorizationRules(
     new ContentAuthorizationService(jsonClient("authsy")),
-    new SubscriptionsService(subscriptionsService)
+    new SubmarineService(submarineClient)
   )
 
   private val waveformUrlsGenerator = new WaveformUrlsGenerator(
