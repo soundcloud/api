@@ -241,7 +241,7 @@ class TracksHandlerSpec extends UnitSpecification with TrackRepresentationSpecCo
           )
 
           val file =
-            FileElement("track[artwork_data]", Buf.ByteArray.Owned(bytes), Some("image/jpeg"))
+            FileElement("track[artwork_data]", Buf.ByteArray.Owned(bytes), Some("image/jpeg"), Some("test-image.jpg"))
         }
 
         "can upload artwork" in new SuccessContext with WithArtworkData {
@@ -448,7 +448,7 @@ class TracksHandlerSpec extends UnitSpecification with TrackRepresentationSpecCo
         )
         val artworkUpdate = Some(TrackArtworkUpdateRequest(bytes))
         val file =
-          FileElement("track[artwork_data]", Buf.ByteArray.Owned(bytes), Some("image/jpeg"))
+          FileElement("track[artwork_data]", Buf.ByteArray.Owned(bytes), Some("image/jpeg"), Some("test-image.jpg"))
       }
 
       trait SuccessContext extends MultiPartFormContext {
