@@ -1,12 +1,10 @@
 package com.soundcloud.publicApiStrangler.support.oauth
 
-import java.io.File
-
 import com.soundcloud.jvmkit.module.http.server.HandlerRequest
-import com.twitter.finagle.http.exp.Multipart.{InMemoryFileUpload, OnDiskFileUpload}
+import com.twitter.conversions.StorageUnitOps._
 import com.twitter.finagle.http.exp.{Multipart, MultipartDecoder}
 import com.twitter.finagle.http.{MediaType, Request}
-import com.twitter.io.{Buf, Files}
+import com.twitter.io.Buf
 import play.api.libs.json._
 
 import scala.util.{Success, Try}
@@ -60,19 +58,13 @@ class RailsLikeParamsParser {
   }
 
   private def parseMultipartBodyWithFiles(request: Request, fileName: String): Option[Array[Byte]] = {
-    MultipartDecoder.decode(request) match {
+    val limit = 12.megabytes
+    MultipartDecoder.decode(request, limit) match {
       case Some(Multipart(_, files)) =>
         files.get(fileName) match {
-          case Some(fileUpload :: _) =>
-            fileUpload match {
-              case InMemoryFileUpload(content: Buf, _, _, _) =>
-                Some(Buf.ByteArray.Owned.extract(content))
-
-              case OnDiskFileUpload(content: File, _, _, _) => {
-                val limit = 1024 * 1024 * 12
-                Some(Files.readBytes(file = content, limit = limit))
-              }
-            }
+          case Some(Multipart.InMemoryFileUpload(content, _, _, _) :: _) =>
+            Some(Buf.ByteArray.Owned.extract(content))
+          case Some(_) => throw new IllegalArgumentException("file upload too large")
           case _ => None
 
         }
