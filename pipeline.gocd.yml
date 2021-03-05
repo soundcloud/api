@@ -13,28 +13,18 @@ pipelines:
     stages:
     - test:
         jobs:
-          unit-tests-and-publish:
+          lint:
             tasks:
             - exec:
                 command: make
                 arguments:
                 - lint
+          unit-test:
+            tasks:
             - exec:
                 command: make
                 arguments:
                 - unit-test
-            - exec:
-                command: make
-                arguments:
-                - contract-test
-            - exec:
-                command: make
-                arguments:
-                - package
-            - exec:
-                command: make
-                arguments:
-                - publish
     - end-to-end-tests:
         jobs:
           end-to-end-tests:
@@ -43,6 +33,24 @@ pipelines:
                 command: make
                 arguments:
                 - end-to-end-test
+          contract-tests:
+            tasks:
+            - exec:
+                command: make
+                arguments:
+                - contract-test
+    - publish:
+        jobs:
+          publish:
+            tasks:
+            - exec:
+                command: make
+                arguments:
+                - package
+            - exec:
+                command: make
+                arguments:
+                - publish
     - publish-deploy:
         jobs:
           publish-deploy-db:

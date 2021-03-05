@@ -47,8 +47,6 @@ pipelines:
                 - -C
                 - asset-uploads
                 - test-integration
-    - contract-tests:
-        jobs:
           contract-test:
             tasks:
             - exec:
