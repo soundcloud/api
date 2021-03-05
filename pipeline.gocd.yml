@@ -25,6 +25,13 @@ pipelines:
                 command: make
                 arguments:
                 - unit-test
+          publish:
+            tasks:
+              - exec:
+                  command: make
+                  arguments:
+                    - package
+                    - publish
     - end-to-end-tests:
         jobs:
           end-to-end-tests:
@@ -39,18 +46,6 @@ pipelines:
                 command: make
                 arguments:
                 - contract-test
-    - publish:
-        jobs:
-          publish:
-            tasks:
-            - exec:
-                command: make
-                arguments:
-                - package
-            - exec:
-                command: make
-                arguments:
-                - publish
     - publish-deploy:
         jobs:
           publish-deploy-db:
