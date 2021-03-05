@@ -2,9 +2,9 @@ package com.soundcloud.publicApiStrangler.service.trackrepresentation
 
 import com.google.protobuf.ByteString
 import com.soundcloud.hocuspocus.{HocuspocusService, Image, Kind, Raw}
+import com.soundcloud.jvmkit.module.outcome._
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSessionBuilder
-import com.soundcloud.jvmkit.module.outcome._
 import com.soundcloud.publicApiStrangler.client.mothership.OkidokiClient
 import com.soundcloud.publicApiStrangler.client.mothership.response.mapper.UserMapper
 import com.soundcloud.publicApiStrangler.client.mothership.response.representation.User
@@ -73,7 +73,7 @@ class TrackUpdateServiceSpec extends UnitSpecification with TrackRepresentationS
     ) = {
       when(
         hocuspocusService.storeImage(
-          Raw(Kind.ARTWORKS, ByteString.copyFrom(maybeUpdateAlbumArt.imageData))
+          Raw(Kind.ARTWORKS, ByteString.copyFrom(Buf.ByteArray.Owned.extract(maybeUpdateAlbumArt.imageData)))
         )
       ).thenReturn(Future.value(Image(kind = Kind.ARTWORKS, originUri = "s3://bucket/filename")))
     }
@@ -171,7 +171,7 @@ class TrackUpdateServiceSpec extends UnitSpecification with TrackRepresentationS
     "album artwork" >> {
       trait SuccessContent extends Context {
         val bytes = ByteArray("i-am-an-image".getBytes(): _*)
-        val trackArtworkMetaRequest = TrackArtworkUpdateRequest(imageData = Buf.ByteArray.Owned.extract(bytes))
+        val trackArtworkMetaRequest = TrackArtworkUpdateRequest(imageData = bytes)
         val trackArtworkUpdateResult = TrackArtworkUpdateResult(bucket = "bucket", filename = "filename")
         val trackMetadataRequest = TrackMetadataUpdateRequest
           .fromForm(
@@ -191,7 +191,7 @@ class TrackUpdateServiceSpec extends UnitSpecification with TrackRepresentationS
 
       trait FailureContext extends Context {
         val bytes = ByteArray("i-am-an-image".getBytes(): _*)
-        val trackArtworkMetaRequest = TrackArtworkUpdateRequest(imageData = Buf.ByteArray.Owned.extract(bytes))
+        val trackArtworkMetaRequest = TrackArtworkUpdateRequest(imageData = bytes)
         val trackArtworkUpdateResult = TrackArtworkUpdateResult(bucket = "bucket", filename = "filename")
 
         val artworkUpdateOnlyUpdateResponse = mockTrackMetadataUpdateResult.copy(
@@ -426,7 +426,7 @@ class TrackUpdateServiceSpec extends UnitSpecification with TrackRepresentationS
       val trackCoordinatorTrack = Fixtures.trackCoordinatorTrack.as[TrackCoordinatorTrack]
       val trackArtworkUpdateResult = TrackArtworkUpdateResult(bucket = "bucket", filename = "filename")
       val bytes = ByteArray("i-am-an-image".getBytes(): _*)
-      val trackArtworkMetaRequest = TrackArtworkUpdateRequest(imageData = Buf.ByteArray.Owned.extract(bytes))
+      val trackArtworkMetaRequest = TrackArtworkUpdateRequest(imageData = bytes)
       val users = Fixtures.okidokiUsers.as[List[JsObject]].map(UserMapper(_))
       val user = users.head
       val expectedResponse = CreatedTrack(trackCoordinatorTrack, user, None)

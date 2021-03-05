@@ -1,3 +1,5 @@
 package com.soundcloud.publicApiStrangler.handler.support.requestParser
 
-case class TrackArtworkUpdateRequest(imageData: Array[Byte])
+import com.twitter.io.Buf
+
+case class TrackArtworkUpdateRequest(imageData: Buf)

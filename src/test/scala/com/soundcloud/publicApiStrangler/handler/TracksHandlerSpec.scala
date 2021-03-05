@@ -1,21 +1,16 @@
 package com.soundcloud.publicApiStrangler.handler
 
 import java.nio.file.{Files, Paths}
+
 import com.soundcloud.jvmkit.module.bff.testsupport.FakeUserAuthentication
+import com.soundcloud.jvmkit.module.outcome._
 import com.soundcloud.jvmkit.module.util.session.UserSessionBuilder
 import com.soundcloud.jvmkit.module.util.{Geo, Urn}
-import com.soundcloud.jvmkit.module.outcome._
 import com.soundcloud.publicApiStrangler.Routing
 import com.soundcloud.publicApiStrangler.authorization.Track
 import com.soundcloud.publicApiStrangler.client.mothership.response.mapper.UserMapper
 import com.soundcloud.publicApiStrangler.client.trackcoordinator.{TrackCoordinatorClient, TrackCoordinatorTrack}
-import com.soundcloud.publicApiStrangler.handler.support.requestParser.{
-  TrackArtworkUpdateRequest,
-  TrackAssetDataCreateRequest,
-  TrackAssetDataUpdateRequest,
-  TrackMetadataCreateRequest,
-  TrackMetadataUpdateRequest
-}
+import com.soundcloud.publicApiStrangler.handler.support.requestParser._
 import com.soundcloud.publicApiStrangler.service.CreatedTrack.CreatedTrack
 import com.soundcloud.publicApiStrangler.service.trackrepresentation.{
   TrackRepresentation,
@@ -26,8 +21,8 @@ import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures
 import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures._
 import com.soundcloud.publicApiStrangler.test.{HandlerSpecificationScope, UnitSpecification}
 import com.twitter.finagle.http.{FileElement, Status}
-import com.twitter.io.Buf
-import com.twitter.util.Future
+import com.twitter.io.{Buf, BufReader, Reader}
+import com.twitter.util.{Await, Future}
 import org.mockito.Mockito._
 import play.api.libs.json._
 
@@ -340,12 +335,12 @@ class TracksHandlerSpec extends UnitSpecification with TrackRepresentationSpecCo
           Map[String, String]("uid" -> "12345", "original_filename" -> "audio.mp3", "title" -> "my track")
         val assetUpdate = TrackAssetDataCreateRequest("audio.mp3", "12345")
         val trackUpdate = TrackMetadataCreateRequest.fromForm(parsedRequestBody)
-        val bytes = Files.readAllBytes(
-          Paths.get(this.getClass.getClassLoader.getResource("test-image.jpg").toURI)
+        val buf = Await.result(
+          BufReader.readAll(Reader.fromStream(this.getClass.getClassLoader.getResourceAsStream("test-image.jpg")))
         )
-        val artworkUpdate = Some(TrackArtworkUpdateRequest(bytes))
+        val artworkUpdate = Some(TrackArtworkUpdateRequest(buf))
         val file =
-          FileElement("track[artwork_data]", Buf.ByteArray.Owned(bytes), Some("image/jpeg"), Some("test-image.jpg"))
+          FileElement("track[artwork_data]", buf, Some("image/jpeg"), Some("test-image.jpg"))
       }
 
       trait SuccessContext extends UrlEncodedContext {
@@ -443,12 +438,12 @@ class TracksHandlerSpec extends UnitSpecification with TrackRepresentationSpecCo
           Map[String, String]("uid" -> "12345", "original_filename" -> "audio.mp3", "title" -> "my track")
         val assetUpdate = TrackAssetDataCreateRequest("audio.mp3", "12345")
         val trackUpdate = TrackMetadataCreateRequest.fromForm(parsedRequestBody)
-        val bytes = Files.readAllBytes(
-          Paths.get(this.getClass.getClassLoader.getResource("test-image.jpg").toURI)
+        val buf = Await.result(
+          BufReader.readAll(Reader.fromStream(this.getClass.getClassLoader.getResourceAsStream("test-image.jpg")))
         )
-        val artworkUpdate = Some(TrackArtworkUpdateRequest(bytes))
+        val artworkUpdate = Some(TrackArtworkUpdateRequest(buf))
         val file =
-          FileElement("track[artwork_data]", Buf.ByteArray.Owned(bytes), Some("image/jpeg"), Some("test-image.jpg"))
+          FileElement("track[artwork_data]", buf, Some("image/jpeg"), Some("test-image.jpg"))
       }
 
       trait SuccessContext extends MultiPartFormContext {

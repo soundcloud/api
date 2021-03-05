@@ -6,7 +6,8 @@ import com.soundcloud.jvmkit.module.http.server.HandlerRequest
 import com.twitter.finagle.http.exp.Multipart.{InMemoryFileUpload, OnDiskFileUpload}
 import com.twitter.finagle.http.exp.{Multipart, MultipartDecoder}
 import com.twitter.finagle.http.{MediaType, Request}
-import com.twitter.io.{Buf, Files}
+import com.twitter.io.{Buf, BufReader, Reader}
+import com.twitter.util.Future
 import play.api.libs.json._
 
 import scala.util.{Success, Try}
@@ -19,10 +20,10 @@ class RailsLikeParamsParser {
     } yield requestParams ++ bodyParams
   }
 
-  def parseFilesFromRequest(request: HandlerRequest, fileName: String): Option[Array[Byte]] = {
+  def parseFilesFromRequest(request: HandlerRequest, fileName: String): Future[Option[Buf]] = {
     request.mediaType match {
       case Some(MediaType.MultipartForm) => parseMultipartBodyWithFiles(request, fileName)
-      case _ => None
+      case _ => Future.value(None)
     }
   }
 
@@ -59,24 +60,24 @@ class RailsLikeParamsParser {
     }
   }
 
-  private def parseMultipartBodyWithFiles(request: Request, fileName: String): Option[Array[Byte]] = {
+  private def parseMultipartBodyWithFiles(request: Request, fileName: String): Future[Option[Buf]] = {
     MultipartDecoder.decode(request) match {
       case Some(Multipart(_, files)) =>
         files.get(fileName) match {
           case Some(fileUpload :: _) =>
             fileUpload match {
               case InMemoryFileUpload(content: Buf, _, _, _) =>
-                Some(Buf.ByteArray.Owned.extract(content))
+                Future.value(Some(content))
 
               case OnDiskFileUpload(content: File, _, _, _) => {
                 val limit = 1024 * 1024 * 12
-                Some(Files.readBytes(file = content, limit = limit))
+                BufReader.readAll(Reader.fromFile(content, limit)).map(Some(_))
               }
             }
-          case _ => None
+          case _ => Future.value(None)
 
         }
-      case _ => None
+      case _ => Future.value(None)
     }
   }
 

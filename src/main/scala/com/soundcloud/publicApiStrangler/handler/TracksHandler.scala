@@ -82,7 +82,8 @@ class TracksHandler(
     request.method = Method.Post
     val extractedParams = paramsParser.parse(request).map(extractTrackFieldsFromParams)
 
-    val artwork = paramsParser.parseFilesFromRequest(request, "track[artwork_data]").map(TrackArtworkUpdateRequest)
+    val artwork =
+      paramsParser.parseFilesFromRequest(request, "track[artwork_data]").map(_.map(TrackArtworkUpdateRequest))
     val assetParams = extractedParams.map(TrackAssetDataUpdateRequest.fromForm).getOrElse(None)
 
     val params = extractedParams.getOrElse(Map.empty)
@@ -90,7 +91,10 @@ class TracksHandler(
 
     request.method = Method.Put
 
-    updateTrack(artwork, assetParams, metadataParams, urn, session)
+    for {
+      artworkRequest <- artwork
+      response <- updateTrack(artworkRequest, assetParams, metadataParams, urn, session)
+    } yield response
   }
 
   private def updateTrackFromUrlEncodedRequest(
@@ -156,12 +160,16 @@ class TracksHandler(
   ): Future[Response] = {
     val extractedParams = paramsParser.parse(request).map(extractTrackFieldsFromParams)
 
-    val artwork = paramsParser.parseFilesFromRequest(request, "track[artwork_data]").map(TrackArtworkUpdateRequest)
+    val artwork =
+      paramsParser.parseFilesFromRequest(request, "track[artwork_data]").map(_.map(TrackArtworkUpdateRequest))
     val assetData = extractedParams.map(TrackAssetDataCreateRequest.fromForm).getOrElse(None)
     val metadata =
       extractedParams.map(TrackMetadataCreateRequest.fromForm).getOrElse(NotValid("Invalid request").bad)
 
-    createTrack(metadata, assetData, artwork, session)
+    for {
+      artworkRequest <- artwork
+      response <- createTrack(metadata, assetData, artworkRequest, session)
+    } yield response
   }
 
   private def createTrackFromUrlEncodedRequest(

@@ -2,9 +2,9 @@ package com.soundcloud.publicApiStrangler.service.trackrepresentation
 
 import com.google.protobuf.ByteString
 import com.soundcloud.hocuspocus.{HocuspocusService, Image, Kind, Raw}
+import com.soundcloud.jvmkit.module.outcome.{Outcome, _}
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSession
-import com.soundcloud.jvmkit.module.outcome.{Outcome, _}
 import com.soundcloud.publicApiStrangler.client.mothership.MoshimoshiClient
 import com.soundcloud.publicApiStrangler.client.mothership.response.representation.User
 import com.soundcloud.publicApiStrangler.client.pubmese.Isrc
@@ -13,6 +13,7 @@ import com.soundcloud.publicApiStrangler.client.tracks.TrackRequest
 import com.soundcloud.publicApiStrangler.handler.support.error.UnhandledOutcomeException
 import com.soundcloud.publicApiStrangler.handler.support.requestParser._
 import com.soundcloud.publicApiStrangler.service.CreatedTrack.CreatedTrack
+import com.twitter.io.Buf
 import com.twitter.util.Future
 
 import scala.collection.immutable.HashSet
@@ -76,7 +77,7 @@ class TrackUpdateService(
       case Some(artworkMetadata) =>
         hocuspocusService
           .storeImage(
-            Raw(Kind.ARTWORKS, ByteString.copyFrom(artworkMetadata.imageData))
+            Raw(Kind.ARTWORKS, ByteString.copyFrom(Buf.ByteArray.Owned.extract(artworkMetadata.imageData)))
           )
           .map(image => createTrackArtworkUpdate(image))
 
