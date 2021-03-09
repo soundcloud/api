@@ -139,8 +139,18 @@ canary-api:
 deploy-api:
 	sc artifact-manager deploy run --zone="$(ZONE)" --component="$(API_COMPONENT)"
 
+CPU_REQUEST_db = 2
+CPU_REQUEST_et = 300m
+CPU_REQUEST = $(if $(CPU_REQUEST_$(ZONE)),$(CPU_REQUEST_$(ZONE)),$(error CPU_REQUEST is not set for ZONE $(ZONE)))
+
+MEMORY_REQUEST_db = 5Gi
+MEMORY_REQUEST_et = 1Gi
+MEMORY_REQUEST = $(if $(MEMORY_REQUEST_$(ZONE)),$(MEMORY_REQUEST_$(ZONE)),$(error MEMORY_REQUEST is not set for ZONE $(ZONE)))
+
 deploy-prometheus:
-	sc prometheus deploy -z $(ZONE) -s public-api-strangler -e production --volume-size=8Gi \
+	sc prometheus deploy -z $(ZONE) -s public-api-strangler -e production \
+		--cpu.request=$(CPU_REQUEST) \
+		--memory.request=$(MEMORY_REQUEST) \
 		--rule=config/prometheus.yml \
 		--rule=https://ent.int.s-cloud.net/prometheus/rules/prometheus_base.yml \
 		--rule=https://ent.int.s-cloud.net/prometheus/rules/jvmkit.yml \
