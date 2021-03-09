@@ -1,0 +1,83 @@
+groups:
+- name: public_api_strangler
+  rules:
+  - alert: PublicApiHigh5xxRate
+    expr: |2
+        sum by(job, system, env, component, track) (system_method_path_status:incoming_http_requests_5xx:rate1m{system="public-api-strangler", path!="undefined"})
+      / sum by(job, system, env, component, track) (system_method_path_status_statusClass:incoming_http_requests:rate1m{system="public-api-strangler", path!="undefined"})
+      * 100
+      > 1
+    for: 15m
+    labels:
+      severity: "warning"
+    annotations:
+      summary: "High 5xx rate"
+      description: "{{ $value }}% of the incoming HTTP requests per second for system {{ $labels.system }} result in a 5xx response."
+      runbook: "https://eng-doc.soundcloud.org/runbooks/integrations/public-api-strangler"
+
+  - alert: PublicApiHighInternal5xxRate
+    expr: |2
+        sum by(job, system, env, component, track, status) (system_method_path_status:incoming_http_requests_5xx:rate1m{system="public-api-strangler", path!="undefined"}) 
+      / sum by(job, system, env, component, track, status) (system_method_service_status:outgoing_http_requests_5xx:rate1m{system="public-api-strangler"}) 
+      > 1
+    for: 15m
+    labels:
+      severity: "warning"
+    annotations:
+      summary: "High Internal 5xx rate"
+      description: "{{ $value }}% of the incoming HTTP requests per second for system {{ $labels.system }} result in a 5xx response from our system that does not map to a downstream error."
+      runbook: "https://eng-doc.soundcloud.org/runbooks/integrations/public-api-strangler"
+
+  - alert: PublicApiHigh5xxRateByPath
+    expr: |2
+        (sum by(job, system, env, component, track, path, method) (system_method_path_status:incoming_http_requests_5xx:rate1m{system="public-api-strangler", path!="undefined"}) > 0.1)
+      / sum by(job, system, env, component, track, path, method) (system_method_path_status_statusClass:incoming_http_requests:rate1m{system="public-api-strangler", path!="undefined"})
+      * 100
+      > 1
+    for: 15m
+    labels:
+      severity: "warning"
+    annotations:
+      summary: "High 5xx rate for specific endpoint"
+      description: "{{ $value }}% of the incoming HTTP requests per second for path {{ $labels.method }} {{ $labels.path }} result in a 5xx response."
+      runbook: "https://eng-doc.soundcloud.org/runbooks/integrations/public-api-strangler"
+
+  - alert: PublicApiHigh499Rate
+    expr: |2
+        sum by(job, system, env, component, track,path,method) (system_method_path_status_statusClass:incoming_http_requests:rate1m{status="499", system="public-api-strangler", path!~".*(undefined|generic|stream|playlists|download).*",method!~"(PUT|POST)"})
+      / sum by(job, system, env, component, track,path, method) (system_method_path_status_statusClass:incoming_http_requests:rate1m{system="public-api-strangler", path!="undefined"})
+      * 100
+      > 10
+    for: 15m
+    labels:
+      severity: "warning"
+    annotations:
+      summary: "High 499 rate"
+      description: "Our clients are canceling {{ $value }}% of the requests due to timeouts for {{ $labels.method }} {{ $labels.path }}, which might indicate a higher latency than expected."
+      runbook: "https://eng-doc.soundcloud.org/runbooks/integrations/public-api-strangler"
+
+  # 90th percentile @ 500ms adjusts for rarely-occurring expensive requests while still giving us a good indicator that something is wrong with the system.
+  - alert: PublicApiHighRequestLatency
+    expr: |2
+        system_env_component_track:incoming_http_request_latency_seconds:90th_percentile_1m{system="public-api-strangler", env="production", component="api"}
+      * 1000
+      > 500
+    for: 15m
+    labels:
+      severity: "warning"
+    annotations:
+      summary: "High request latency"
+      description: "The incoming HTTP request latency for system {{ $labels.system }} is {{ $value }}ms."
+      runbook: "https://eng-doc.soundcloud.org/runbooks/integrations/public-api-strangler"
+
+  - alert: AssetUploadsAPIMisdirectedRequests
+    expr: |2
+      sum(rate(incoming_http_requests_total{system="public-api-strangler", component="asset-uploads-api", env="production", status="421"}[1h])) 
+      > 0
+    for: 15m
+    labels:
+      severity: "warning"
+    annotations:
+      summary: "Public-API-Strangler asset-uploads-api is receiving unexpected requests"
+      description: "The asset-uploads-api component of public-api-strangler is rejecting {{ $labels.method }} requests."
+      runbook: "https://eng-doc.soundcloud.org/runbooks/integrations/public-api-strangler#assetuploadsapimisdirectedrequests"

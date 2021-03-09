@@ -41,6 +41,9 @@ lint:
 auto-apply-lint:
 	$(SBT) scalafmtAll
 
+check-prometheus:
+	sc prometheus promtool -- check rules config/prometheus.yml
+
 docker-up-%:
 	echo "This assumes you've run make package & make package-assets before"
 	CONFIG=$* VERSION=$(PUBLIC_API_STRANGLER_VERSION) \
@@ -136,3 +139,11 @@ canary-api:
 deploy-api:
 	sc artifact-manager deploy run --zone="$(ZONE)" --component="$(API_COMPONENT)"
 
+deploy-prometheus:
+	sc prometheus deploy -z $(ZONE) -s public-api-strangler -e production --volume-size=8Gi \
+		--rule=config/prometheus.yml \
+		--rule=https://ent.int.s-cloud.net/prometheus/rules/prometheus_base.yml \
+		--rule=https://ent.int.s-cloud.net/prometheus/rules/jvmkit.yml \
+		--rule=https://ent.int.s-cloud.net/prometheus/rules/canary_vs_release.yml \
+		--rule=https://ent.int.s-cloud.net/prometheus/rules/slo.yml \
+		--rule=https://ent.int.s-cloud.net/prometheus/rules/memcached.yml 

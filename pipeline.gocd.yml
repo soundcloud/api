@@ -32,6 +32,12 @@ pipelines:
                   arguments:
                     - package
                     - publish
+          check-prometheus:
+            tasks:
+            - exec:
+                command: make
+                arguments:
+                - check-prometheus
     - end-to-end-tests:
         jobs:
           end-to-end-tests:
@@ -106,6 +112,26 @@ pipelines:
                 command: make
                 arguments:
                 - deploy-api
+    - deploy-prometheus:
+        jobs:
+          deploy-db:
+            job_type: deploy
+            environment_variables:
+              ZONE: db
+            tasks:
+            - exec:
+                command: make
+                arguments:
+                - deploy-prometheus
+          deploy-et:
+            job_type: deploy
+            environment_variables:
+              ZONE: et
+            tasks:
+            - exec:
+                command: make
+                arguments:
+                - deploy-prometheus
     - deploy-doc:
         jobs:
           deploy:

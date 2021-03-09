@@ -30,6 +30,12 @@ pipelines:
                 - -C
                 - asset-uploads
                 - test-unit
+          check-prometheus:
+            tasks:
+            - exec:
+                command: make
+                arguments:
+                - check-prometheus
     - end-to-end-tests:
         jobs:
           end-to-end-tests:
