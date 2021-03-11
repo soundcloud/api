@@ -1,11 +1,9 @@
 package com.soundcloud.publicApiStrangler.handler
 
-import java.util.UUID
-
 import com.soundcloud.jvmkit.module.bff.session.UserAuthentication
 import com.soundcloud.jvmkit.module.http.server.{HandlerRequest, JsonResponseBuilder}
-import com.soundcloud.jvmkit.module.util.session.LoggedInUserSession
 import com.soundcloud.jvmkit.module.outcome._
+import com.soundcloud.jvmkit.module.util.session.LoggedInUserSession
 import com.soundcloud.publicApiStrangler.handler.support.error.UnhandledOutcomeException
 import com.soundcloud.publicApiStrangler.service.TimelineService
 import com.soundcloud.publicApiStrangler.service.pagination.CursorBasedPagination
@@ -15,6 +13,9 @@ import com.soundcloud.publicApiStrangler.support.ErrorResponse
 import com.twitter.finagle.http.Response
 import com.twitter.util.Future
 import play.api.libs.json.Json
+
+import java.util.UUID
+import scala.util.{Failure, Success, Try}
 
 /**
   * Note: the PAS API refers to 'activities' in the endpoint syntax, but internally we call the /stream endpoint from Timeline,
@@ -29,21 +30,25 @@ class TimelineHandler(
     userAuthentication.withLoggedInUser(request) { (session: LoggedInUserSession, _) =>
       val pagination = CursorBasedPagination.build(request, Seq("linked_partitioning"))
 
-      val (cursor, reverseCursor) = pagination.extraParams.get("uuid[to]") match {
-        case Some(uuid) => (Some(UUID.fromString(uuid)), true)
-        case _ => (pagination.cursor.map(UUID.fromString), false)
+      val (cursor, reverseCursor) = Try(extractCursor(pagination)) match {
+        case Failure(_) => return Future.value(ErrorResponse.badRequest("Cursor is not a valid UUID."))
+        case Success(value) => value
       }
-
       val limit = pagination.pageSize
 
       performGetAllStreamItems(session, cursor.map(_.toString), reverseCursor, limit, pagination)
         .map {
-          case Good(timeline) => {
-            JsonResponseBuilder.ok(timeline.getRepresentation())
-          }
+          case Good(timeline) => JsonResponseBuilder.ok(timeline.getRepresentation())
           case Bad(NotFound(_)) => ErrorResponse.notFound()
           case _ => throw new UnhandledOutcomeException
         }
+    }
+  }
+
+  private def extractCursor(pagination: CursorBasedPagination): (Option[UUID], Boolean) = {
+    pagination.extraParams.get("uuid[to]") match {
+      case Some(uuid) => (Some(UUID.fromString(uuid)), true)
+      case _ => (pagination.cursor.map(UUID.fromString), false)
     }
   }
 
@@ -55,18 +60,16 @@ class TimelineHandler(
     userAuthentication.withLoggedInUser(request) { (session: LoggedInUserSession, _) =>
       val pagination = CursorBasedPagination.build(request, Seq("linked_partitioning"))
 
-      val (cursor, reverseCursor) = pagination.extraParams.get("uuid[to]") match {
-        case Some(uuid) => (Some(UUID.fromString(uuid)), true)
-        case _ => (pagination.cursor.map(UUID.fromString), false)
+      val (cursor, reverseCursor) = Try(extractCursor(pagination)) match {
+        case Failure(_) => return Future.value(ErrorResponse.badRequest("Cursor is not a valid UUID."))
+        case Success(value) => value
       }
 
       val limit = pagination.pageSize
 
       performGetTrackStreamItems(session, cursor.map(_.toString), reverseCursor, limit, pagination)
         .map {
-          case Good(timeline) => {
-            JsonResponseBuilder.ok(timeline.getRepresentation())
-          }
+          case Good(timeline) => JsonResponseBuilder.ok(timeline.getRepresentation())
           case Bad(NotFound(_)) => ErrorResponse.notFound()
           case _ => throw new UnhandledOutcomeException
         }
@@ -107,9 +110,9 @@ class TimelineHandler(
     userAuthentication.withLoggedInUser(request) { (session: LoggedInUserSession, _) =>
       val pagination = CursorBasedPagination.build(request, Seq("linked_partitioning"))
 
-      val (cursor, reverseCursor) = pagination.extraParams.get("uuid[to]") match {
-        case Some(uuid) => (Some(UUID.fromString(uuid)), true)
-        case _ => (pagination.cursor.map(UUID.fromString), false)
+      val (cursor, reverseCursor) = Try(extractCursor(pagination)) match {
+        case Failure(_) => return Future.value(ErrorResponse.badRequest("Cursor is not a valid UUID."))
+        case Success(value) => value
       }
 
       val limit = pagination.pageSize
