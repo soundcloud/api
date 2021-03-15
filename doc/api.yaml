@@ -601,6 +601,7 @@ paths:
           AuthHeader: [ ]
       parameters:
         - $ref: "#/components/parameters/playlist_id"
+        - $ref: "#/components/parameters/secret_token"
       responses:
         200:
           $ref: "#/components/responses/Playlist"
@@ -658,6 +659,7 @@ paths:
           AuthHeader: [ ]
       parameters:
         - $ref: "#/components/parameters/playlist_id"
+        - $ref: "#/components/parameters/secret_token"
         - $ref: "#/components/parameters/linked_partitioning"
       responses:
         200:
@@ -675,6 +677,7 @@ paths:
         - ClientId: [ ]
       parameters:
         - $ref: '#/components/parameters/track_id'
+        - $ref: "#/components/parameters/secret_token"
       responses:
         200:
           $ref: '#/components/responses/Track'
@@ -733,6 +736,7 @@ paths:
         - ClientId: [ ]
       parameters:
         - $ref: '#/components/parameters/track_id'
+        - $ref: "#/components/parameters/secret_token"
       responses:
         200:
           $ref: '#/components/responses/Streams'

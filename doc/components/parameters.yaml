@@ -162,6 +162,13 @@ linked_partitioning:
     type: boolean
   description: Returns paginated collection of items (recommended, returning a list without pagination is deprecated and should not be used)
   example: true
+secret_token:
+  in: query
+  name: secret_token
+  required: false
+  schema:
+    type: string
+  description: A secret token to fetch private playlists/tracks
 # path #
 comment_id:
   in: path
