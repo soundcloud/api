@@ -1,10 +1,11 @@
 package com.soundcloud.publicApiStrangler.service.playlists.representation
 
-import java.time.{LocalDateTime, ZoneOffset}
-
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.publicApiStrangler.service.trackrepresentation.TrackRepresentationSpecContext
 import org.specs2.mutable.Specification
+import play.api.libs.json.Json
+
+import java.time.{LocalDateTime, ZoneOffset}
 
 class PlaylistSpec extends Specification with TrackRepresentationSpecContext {
   val playlistUrn = Urn("soundcloud", "playlists", "42703821")
@@ -132,6 +133,41 @@ class PlaylistSpec extends Specification with TrackRepresentationSpecContext {
         )
 
       playlist.tracks must beEmpty
+    }
+
+    "Json representation has correct track_uri with secret_token" in {
+      val trackRepresentation = createTrackRepresentation()
+
+      val playlist =
+        Playlist.fromVisiblePlaylist(
+          visiblePlaylist,
+          List(trackRepresentation),
+          defaultUser,
+          Some(defaultLabel),
+          Some(Urn.parse(visiblePlaylist.userUrn).get),
+          showTracks = true
+        )
+
+      val json = Json.toJson(playlist)
+      (json \ "tracks_uri").as[String] ==== "https://api.soundcloud.com/playlists/42703821/tracks?secret_token=secret"
+    }
+
+    "Json representation has correct track_uri without secret_token" in {
+      val trackRepresentation = createTrackRepresentation()
+
+      val visiblePlaylistNoSecret = visiblePlaylist.copy(secretToken = None)
+      val playlist =
+        Playlist.fromVisiblePlaylist(
+          visiblePlaylistNoSecret,
+          List(trackRepresentation),
+          defaultUser,
+          Some(defaultLabel),
+          Some(Urn.parse(visiblePlaylist.userUrn).get),
+          showTracks = true
+        )
+
+      val json = Json.toJson(playlist)
+      (json \ "tracks_uri").as[String] ==== "https://api.soundcloud.com/playlists/42703821/tracks"
     }
   }
 }

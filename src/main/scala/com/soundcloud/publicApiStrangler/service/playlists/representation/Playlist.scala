@@ -1,13 +1,13 @@
 package com.soundcloud.publicApiStrangler.service.playlists.representation
 
-import java.net.URLEncoder
-import java.time.format.DateTimeFormatter
-import java.time.{Instant, LocalDateTime, ZoneOffset}
-
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.publicApiStrangler.client.mothership.response.representation.User
 import com.soundcloud.publicApiStrangler.service.trackrepresentation.TrackRepresentation
 import play.api.libs.json._
+
+import java.net.URLEncoder
+import java.time.format.DateTimeFormatter
+import java.time.{Instant, LocalDateTime, ZoneOffset}
 
 case class Playlist(
     title: String,
@@ -92,7 +92,7 @@ object Playlist {
       "embeddable_by" -> playlist.embeddableBy,
       "artwork_url" -> playlist.artworkUrl,
       "purchase_url" -> playlist.purchaseUrl,
-      "tracks_uri" -> s"${playlist.uri}/tracks"
+      "tracks_uri" -> trackUri(playlist)
     )
 
     playlist.secretToken.foreach(token => playlistJson = playlistJson ++ Json.obj("secret_token" -> token))
@@ -176,5 +176,14 @@ object Playlist {
     } else {
       visiblePlaylist.permalinkUrl
     }
+  }
+
+  private val baseUrl = "https://api.soundcloud.com/playlists"
+
+  private def trackUri(playlist: Playlist) =
+    secretUrl(s"$baseUrl/${playlist.id}/tracks", playlist)
+
+  private def secretUrl(url: String, playlist: Playlist): String = {
+    playlist.secretToken.map(token => s"$url?secret_token=$token").getOrElse(url)
   }
 }
