@@ -13,6 +13,7 @@ import proto.soundcloud.tracks.api.{
   Metadata,
   ContentAuthorization => ProtoContentAuthorization,
   Track => ProtoTrack,
+  TrackType => ProtoTrackType,
   Transcoding => ProtoTranscoding,
   WaveformUrl => ProtoWaveformUrl
 }
@@ -94,7 +95,7 @@ class VisiblePartnersTrackMapperSpec extends Specification {
         )
       ),
       bpm = None,
-      trackType = None,
+      trackType = ProtoTrackType.DEMO,
       release = None,
       keySignature = None,
       videoUrl = None,

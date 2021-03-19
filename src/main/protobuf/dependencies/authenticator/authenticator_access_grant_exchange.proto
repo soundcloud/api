@@ -1,0 +1,72 @@
+// DO NOT EDIT
+// This file has been automatically downloaded via 'sc idl fetch' from an upstream dependency.
+
+syntax = "proto3";
+
+package proto.soundcloud.authenticator.access_grant_exchange;
+
+import "google/protobuf/wrappers.proto";
+
+service AccessGrantExchange {
+  rpc AuthorizationCodeExchange(AuthorizationCodeGrant) returns (AuthorizationCodeExchangeResponse);
+  rpc RefreshTokenExchange(RefreshTokenGrant) returns (RefreshTokenExchangeResponse);
+}
+
+message AuthorizationCodeGrant {
+  ClientCredential client_credential = 1;
+  string code = 2;
+  string redirect_uri = 3;
+}
+
+message AuthorizationCodeExchangeResponse {
+  oneof result {
+    AccessTokenResponse access_token_response = 1;
+    AuthorizationCodeExchangeErrorResponse error_response = 2;
+  }
+}
+
+message AuthorizationCodeExchangeErrorResponse {
+  oneof error {
+    InvalidClient invalid_client = 1;
+    UnauthorizedClient unauthorized_client = 2;
+    InvalidGrant invalid_grant = 3;
+  }
+}
+
+message RefreshTokenGrant {
+  ClientCredential client_credential = 1;
+  string refresh_token = 2;
+}
+
+message RefreshTokenExchangeResponse {
+  oneof result {
+    AccessTokenResponse access_token_response = 1;
+    RefreshTokenExchangeErrorResponse error_response = 2;
+  }
+}
+
+message RefreshTokenExchangeErrorResponse {
+  oneof error {
+    InvalidClient invalid_client = 1;
+    UnauthorizedClient unauthorized_client = 2;
+    InvalidGrant invalid_grant = 3;
+  }
+}
+
+message ClientCredential {
+  string client_id = 1;
+  string client_secret = 2;
+}
+
+message AccessTokenResponse {
+  string access_token = 1;
+  google.protobuf.Int32Value expires_in_seconds = 2; // Not Required
+  google.protobuf.StringValue refresh_token = 3; // Not Required
+  repeated string scope = 4; // Not Required
+}
+
+message InvalidClient{}
+
+message UnauthorizedClient{}
+
+message InvalidGrant{}

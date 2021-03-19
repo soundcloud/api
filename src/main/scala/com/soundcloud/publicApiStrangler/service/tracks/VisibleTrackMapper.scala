@@ -104,7 +104,7 @@ class VisibleTrackMapper {
         .map(wfu => WaveformUrl(WaveformType.parse(wfu.waveformType), Url(wfu.json), Url(wfu.png)))
         .toList,
       bpm = metadata.bpm,
-      trackType = metadata.trackType,
+      trackType = TrackType.fromProto(metadata.trackType).map(_.trackType),
       release = metadata.release,
       keySignature = metadata.keySignature,
       videoUrl = metadata.videoUrl,

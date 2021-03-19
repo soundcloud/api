@@ -13,19 +13,49 @@ import "common_session.proto";
 import "google/protobuf/timestamp.proto";
 
 service Tracks {
-    // This method is for getting visible tracks.
-    // Potential errors:
-    // Requests must be for less than 1000 tracks: InvalidArgument, "You requested too many tracks."
-    // Requests must contain valid URNs: InvalidArgument, "There were invalid URNS in your request."
-    // Requests must contain a valid UserSession with a Geo: InvalidArgument, "No valid UserSession or Geo was provided."
-    // Unknown errors will return an Internal error code
+    // here for backwards compatability, to be removed after clients point to TrackMetadata service
     rpc GetVisibleTracks (GetVisibleTracksRequest) returns (GetVisibleTracksResponse) {};
 
-    // Get visible tracks that are visible to any user.
-    // This method behaves exactly the same as the previous one. The only difference is that
-    // it substitutes provided user session by an anonymous one when calling dependencies.
+    // here for backwards compatability, to be removed after clients point to TrackMetadata service
     rpc GetGenerallyVisibleTracks (GetGenerallyVisibleTracksRequest) returns (GetVisibleTracksResponse) {};
 
+    // here for backwards compatability, to be removed after clients point to Media service
+    rpc GetMediaStream (GetMediaStreamRequest) returns (GetMediaStreamResponse) {};
+
+    // here for backwards compatability, to be removed after clients point to Media service
+    rpc GetMediaPreview (GetMediaStreamRequest) returns (GetMediaStreamResponse) {};
+
+    // here for backwards compatability, to be removed after clients point to Snippet service
+    rpc GetShareableSnippet (GetSnippetRequest) returns (GetSnippetResponse) {};
+
+    // here for backwards compatability, to be removed after clients point to Snippet service
+    rpc GetSnippetMediaStream (GetSnippetMediaStreamRequest) returns (GetMediaStreamResponse) {};
+
+    // here for backwards compatability, to be removed after clients point to Likes service
+    rpc LikeTrack (LikeTrackRequest) returns (LikeTrackResponse) {};
+
+    // here for backwards compatability, to be removed after clients point to Likes service
+    rpc UnlikeTrack (LikeTrackRequest) returns (LikeTrackResponse) {};
+}
+
+service Likes {
+    rpc LikeTrack (LikeTrackRequest) returns (LikeTrackResponse) {};
+
+    rpc UnlikeTrack (LikeTrackRequest) returns (LikeTrackResponse) {};
+}
+
+message LikeTrackRequest {
+    proto.soundcloud.common.session.UserSession user_session = 1; // You must provide a UserSession
+    string track_urn = 2;
+}
+
+message LikeTrackResponse {
+    google.protobuf.Timestamp created_at = 1;
+    string target_urn = 2;
+    string user_urn = 3;
+}
+
+service Media {
     // This method is for getting a media stream URL for a track.
     // Potential errors:
     // Requests must contain a valid UserSession: InvalidArgument, "No valid UserSession was provided."
@@ -35,6 +65,42 @@ service Tracks {
     // Unknown errors will return an Internal error code
     rpc GetMediaStream (GetMediaStreamRequest) returns (GetMediaStreamResponse) {};
 
+    // This method is for getting a preview media URL for a track.
+    // Potential errors:
+    // Requests must contain a valid UserSession: InvalidArgument, "No valid UserSession was provided."
+    // Requests must contain valid URN: InvalidArgument, "Invalid track URN."
+    // Media stream request wasn't authorized: Unauthenticated, "Stream not authorized."
+    // Media stream wasn't found: NotFound, "Stream not found."
+    // Unknown errors will return an Internal error code
+    rpc GetMediaPreview (GetMediaStreamRequest) returns (GetMediaStreamResponse) {};
+}
+
+message GetMediaStreamRequest {
+    proto.soundcloud.common.session.UserSession user_session = 1; // You must provide a UserSession
+    string urn = 2;
+    google.protobuf.StringValue secret_token = 3; // optional
+    string transcoding_id = 4;
+    string protocol = 5;
+    bool bypass_progressive_download_restriction = 6;
+}
+
+message GetSnippetMediaStreamRequest {
+    proto.soundcloud.common.session.UserSession user_session = 1; // You must provide a UserSession
+    string urn = 2;
+    google.protobuf.StringValue secret_token = 3; // optional
+    string transcoding_id = 4;
+    string protocol = 5;
+    bool bypass_progressive_download_restriction = 6;
+    int32 start_seconds = 7;
+    int32 end_seconds = 8;
+}
+
+message GetMediaStreamResponse {
+    string url = 1;
+    string mime_type = 2;
+}
+
+service Snippets {
     // This method is for getting a snippet in desired length with desired cut using start and end marks
     // Potential errors:
     // Requests must contain a valid UserSession: InvalidArgument, "No valid UserSession was provided."
@@ -52,7 +118,39 @@ service Tracks {
     // Snippet request wasn't authorized: Unauthenticated, "Snippet creation is not authorized."
     // Transcoding wasn't found: NotFound, "Audio for snippet was not found."
     // Unknown errors will return an Internal error code
-    rpc GetInternalSnippet (GetSnippetRequest) returns (GetSnippetResponse) {};
+    rpc GetSnippetMediaStream (GetSnippetMediaStreamRequest) returns (GetMediaStreamResponse) {};
+}
+
+message GetSnippetRequest {
+    proto.soundcloud.common.session.UserSession user_session = 1; // You must provide a UserSession
+    string urn = 2;
+    google.protobuf.StringValue secret_token = 3;
+    int32 start = 4;
+    int32 end = 5;
+    string protocol = 6;
+    string mime_type = 7;
+    Transcoding.Quality quality = 8;
+}
+
+message GetSnippetResponse {
+    string url = 1;
+    string mime_type = 2;
+    Transcoding.Quality quality = 3;
+}
+
+service TrackMetadata {
+    // This method is for getting visible tracks.
+    // Potential errors:
+    // Requests must be for less than 1000 tracks: InvalidArgument, "You requested too many tracks."
+    // Requests must contain valid URNs: InvalidArgument, "There were invalid URNS in your request."
+    // Requests must contain a valid UserSession with a Geo: InvalidArgument, "No valid UserSession or Geo was provided."
+    // Unknown errors will return an Internal error code
+    rpc GetVisibleTracks (GetVisibleTracksRequest) returns (GetVisibleTracksResponse) {};
+
+    // Get visible tracks that are visible to any user.
+    // This method behaves exactly the same as the previous one. The only difference is that
+    // it substitutes provided user session by an anonymous one when calling dependencies.
+    rpc GetGenerallyVisibleTracks (GetGenerallyVisibleTracksRequest) returns (GetVisibleTracksResponse) {};
 }
 
 message GetVisibleTracksRequest {
@@ -78,35 +176,22 @@ message GetGenerallyVisibleTracksRequest {
     proto.soundcloud.common.session.UserSession user_session = 2; // You must provide a UserSession
 }
 
-message GetMediaStreamRequest {
-    proto.soundcloud.common.session.UserSession user_session = 1; // You must provide a UserSession
-    string urn = 2;
-    google.protobuf.StringValue secret_token = 3; // optional
-    string transcoding_id = 4;
-    string protocol = 5;
-    bool bypass_progressive_download_restriction = 6;
-}
-
-message GetSnippetRequest {
-    proto.soundcloud.common.session.UserSession user_session = 1; // You must provide a UserSession
-    string urn = 2;
-    google.protobuf.StringValue secret_token = 3;
-    int32 start = 4;
-    int32 end = 5;
-    string protocol = 6;
-    string mime_type = 7;
-    Transcoding.Quality quality = 8;
-}
-
-message GetSnippetResponse {
-    string url = 1;
-    string mime_type = 2;
-    Transcoding.Quality quality = 3;
-}
-
-message GetMediaStreamResponse {
-    string url = 1;
-    string mime_type = 2;
+enum TrackType {
+    UNKNOWN = 0;
+    OTHER = 1;
+    ORIGINAL = 2;
+    REMIX = 3;
+    LIVE = 4;
+    RECORDING = 5;
+    SPOKEN = 6;
+    PODCAST = 7;
+    DEMO = 8;
+    IN_PROGRESS = 9;
+    STEM = 10;
+    LOOP = 11;
+    SOUND = 12;
+    SAMPLE = 13;
+    DJ_MIX = 14;
 }
 
 message Track {
@@ -149,7 +234,7 @@ message Track {
     repeated Transcoding transcodings = 37;
     repeated WaveformUrl waveform_urls = 38;
     google.protobuf.DoubleValue bpm = 39; // deprecated, optional
-    google.protobuf.StringValue trackType = 40; // deprecated, optional
+    TrackType trackType = 40; // optional
     google.protobuf.StringValue release = 41; // deprecated, optional
     google.protobuf.StringValue keySignature = 42; // deprecated, optional
     google.protobuf.StringValue videoUrl = 43; // deprecated, optional
@@ -163,6 +248,10 @@ message Track {
 
     // duplicates top-level metadata fields
     Metadata metadata = 48;
+
+    // additional fields that are not included in the response
+    // unless they are specified in the track field mask
+    Counts counts = 49; // optional
 }
 
 message Metadata {
@@ -202,7 +291,7 @@ message Metadata {
     google.protobuf.StringValue purchase_title = 34; // optional
     google.protobuf.StringValue supply_chain_status = 35; // optional
     google.protobuf.DoubleValue bpm = 36; // deprecated, optional
-    google.protobuf.StringValue trackType = 37; // deprecated, optional
+    TrackType trackType = 37; // optional
     google.protobuf.StringValue release = 38; // deprecated, optional
     google.protobuf.StringValue keySignature = 39; // deprecated, optional
     google.protobuf.StringValue videoUrl = 40; // deprecated, optional
@@ -280,4 +369,12 @@ message TrackSegment {
         string name = 1;
         google.protobuf.StringValue urn = 2;
     }
+}
+
+message Counts {
+    google.protobuf.Int64Value plays = 1;
+    google.protobuf.Int64Value downloads = 2;
+    google.protobuf.Int64Value likes = 3;
+    google.protobuf.Int64Value reposts = 4;
+    google.protobuf.Int64Value comments = 5;
 }
