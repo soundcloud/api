@@ -12,6 +12,7 @@ import com.soundcloud.publicApiStrangler.authorization.policies.{
 import com.soundcloud.publicApiStrangler.client.tracks.{ContentAuthorizationBuilder, _}
 import com.soundcloud.publicApiStrangler.service.TrackVisibilityService
 import com.soundcloud.publicApiStrangler.test.UnitSpecification
+import com.soundcloud.twinagle.{ErrorCode, TwinagleException}
 import com.twitter.util.{Await, Future}
 import org.joda.time.LocalDateTime
 import proto.soundcloud.tracks.api.{GetMediaStreamRequest, GetMediaStreamResponse, MediaService}
@@ -120,6 +121,30 @@ class StreamServiceSpec extends UnitSpecification {
   "#fetchSingle" >> {
     "when track is streamable and policy is not BLOCK" >> {
       "when rollout is active" >> {
+        "Map NotFound response from Tracks to MediaStreamNotFoundError" in new Context {
+          tracksMediaTwirpClient.getMediaStream(any[GetMediaStreamRequest]) returns Future.exception(
+            TwinagleException(ErrorCode.NotFound, "stream not found")
+          )
+
+          tracksMediaTwirpClient.getMediaPreview(any[GetMediaStreamRequest]) returns Future.exception(
+            TwinagleException(ErrorCode.NotFound, "stream not found")
+          )
+
+          Await.result(service.fetchSingle(session, trackUrn, secretToken)) ==== MediaStreamNotFoundError
+        }
+
+        "Map Unauthenticated response from Tracks to MediaStreamNotFoundError" in new Context {
+          tracksMediaTwirpClient.getMediaStream(any[GetMediaStreamRequest]) returns Future.exception(
+            TwinagleException(ErrorCode.Unauthenticated, "stream not authorised")
+          )
+
+          tracksMediaTwirpClient.getMediaPreview(any[GetMediaStreamRequest]) returns Future.exception(
+            TwinagleException(ErrorCode.Unauthenticated, "stream not authorised")
+          )
+
+          Await.result(service.fetchSingle(session, trackUrn, secretToken)) ==== MediaStreamNotFoundError
+        }
+
         "returns an MP3 stream url with rollout" in new Context {
           tracksMediaTwirpClient.getMediaStream(any[GetMediaStreamRequest]) returns Future.value(streamUrlTwirpResponse)
 
@@ -157,6 +182,30 @@ class StreamServiceSpec extends UnitSpecification {
 
   "#fetchMultiple" >> {
     "when rollout is active" >> {
+      "Map NotFound response from Tracks to MediaStreamNotFoundError" in new Context {
+        tracksMediaTwirpClient.getMediaStream(any[GetMediaStreamRequest]) returns Future.exception(
+          TwinagleException(ErrorCode.NotFound, "stream not found")
+        )
+
+        tracksMediaTwirpClient.getMediaPreview(any[GetMediaStreamRequest]) returns Future.exception(
+          TwinagleException(ErrorCode.NotFound, "stream not found")
+        )
+
+        Await.result(service.fetchMultiple(session, trackUrn, secretToken)) ==== MediaStreamNotFoundError
+      }
+
+      "Map Unauthenticated response from Tracks to MediaStreamNotFoundError" in new Context {
+        tracksMediaTwirpClient.getMediaStream(any[GetMediaStreamRequest]) returns Future.exception(
+          TwinagleException(ErrorCode.Unauthenticated, "stream not authorised")
+        )
+
+        tracksMediaTwirpClient.getMediaPreview(any[GetMediaStreamRequest]) returns Future.exception(
+          TwinagleException(ErrorCode.Unauthenticated, "stream not authorised")
+        )
+
+        Await.result(service.fetchMultiple(session, trackUrn, secretToken)) ==== MediaStreamNotFoundError
+      }
+
       "returns multiple stream urls and one snippet url" in new Context {
         val a = "http://stream/mp3/progressive"
         val b = "http://stream/mp3/hls"

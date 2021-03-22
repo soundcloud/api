@@ -2,12 +2,13 @@ package com.soundcloud.publicApiStrangler.service.media
 
 import com.soundcloud.api.partners.clients.tracks.Transcoding
 import com.soundcloud.jvmkit.module.rollout.{Rollout, RolloutFeature}
-import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.twirp.proto.UserSessionOps._
+import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.publicApiStrangler.authorization.policies.{ContentPolicy, ContentRestriction}
 import com.soundcloud.publicApiStrangler.client.tracks._
 import com.soundcloud.publicApiStrangler.service.TrackVisibilityService
+import com.soundcloud.twinagle.{ErrorCode, TwinagleException}
 import com.twitter.util.Future
 import proto.soundcloud.tracks.api.{GetMediaStreamRequest, MediaService}
 
@@ -200,7 +201,13 @@ class StreamService(
       protocol = protocol
     )
 
-    tracksMediaService.getMediaPreview(request).map(res => StreamUrlResponse(res.url, res.mimeType))
+    tracksMediaService
+      .getMediaPreview(request)
+      .map(res => StreamUrlResponse(res.url, res.mimeType))
+      .handle {
+        case TwinagleException(ErrorCode.NotFound, _, _, _) => StreamErrorResponse
+        case TwinagleException(ErrorCode.Unauthenticated, _, _, _) => StreamErrorResponse
+      }
   }
 
   private def fetchStreamUrl(
@@ -220,6 +227,12 @@ class StreamService(
       protocol = protocol
     )
 
-    tracksMediaService.getMediaStream(request).map(res => StreamUrlResponse(res.url, res.mimeType))
+    tracksMediaService
+      .getMediaStream(request)
+      .map(res => StreamUrlResponse(res.url, res.mimeType))
+      .handle {
+        case TwinagleException(ErrorCode.NotFound, _, _, _) => StreamErrorResponse
+        case TwinagleException(ErrorCode.Unauthenticated, _, _, _) => StreamErrorResponse
+      }
   }
 }
