@@ -8,10 +8,15 @@ import com.soundcloud.publicApiStrangler.authorization.policies.{ContentPolicy, 
 import com.soundcloud.publicApiStrangler.client.tracks.{TrackRequest, VisibleTrack}
 import com.soundcloud.publicApiStrangler.service.tracks.VisibleTrackMapper
 import com.twitter.util.Future
-import proto.soundcloud.tracks.api.{GetVisibleTracksRequest, TracksService, TrackRequest => TwirpTrackRequest, Track}
+import proto.soundcloud.tracks.api.{
+  GetVisibleTracksRequest,
+  Track,
+  TrackMetadataService,
+  TrackRequest => TwirpTrackRequest
+}
 
 class TrackVisibilityService(
-    tracksTwinagleClient: TracksService,
+    tracksTwinagleClient: TrackMetadataService,
     visibleTrackMapper: VisibleTrackMapper,
     allowlistedClients: Set[Urn]
 ) {

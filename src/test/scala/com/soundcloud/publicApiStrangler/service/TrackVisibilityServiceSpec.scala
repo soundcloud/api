@@ -1,6 +1,7 @@
 package com.soundcloud.publicApiStrangler.service
 
 import com.soundcloud.api.partners.clients.tracks.Transcoding
+import com.soundcloud.jvmkit.module.twirp.proto.UserSessionOps._
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSessionBuilder
 import com.soundcloud.publicApiStrangler.authorization.policies._
@@ -14,11 +15,10 @@ import org.specs2.mutable.Specification
 import proto.soundcloud.tracks.api.{
   GetVisibleTracksRequest,
   GetVisibleTracksResponse,
-  TracksService,
+  TrackMetadataService,
   Track => ProtoTrack,
   TrackRequest => ProtoTrackRequest
 }
-import com.soundcloud.jvmkit.module.twirp.proto.UserSessionOps._
 
 class TrackVisibilityServiceSpec extends Specification with Mockito {
 
@@ -29,7 +29,7 @@ class TrackVisibilityServiceSpec extends Specification with Mockito {
     lazy val session =
       (new UserSessionBuilder).setUser(userUrn).setAgent(clientApplication).build()
     val trackUrn = Urn("soundcloud", "tracks", "432")
-    val tracksTwinagleClient = mock[TracksService]
+    val tracksTwinagleClient = mock[TrackMetadataService]
     val mapper = smartMock[VisibleTrackMapper]
     lazy val service = new TrackVisibilityService(
       tracksTwinagleClient,

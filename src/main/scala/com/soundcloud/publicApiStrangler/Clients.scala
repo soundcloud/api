@@ -43,7 +43,7 @@ import com.twitter.finagle.service.RetryPolicy.RetryableWriteException
 import com.twitter.util.{Future, Throw, Try}
 import proto.soundcloud.authenticator.oauth.AuthorizationClientProtobuf
 import proto.soundcloud.playlists.api.PlaylistsClientProtobuf
-import proto.soundcloud.tracks.api.{MediaClientProtobuf, TracksClientProtobuf}
+import proto.soundcloud.tracks.api.{MediaClientProtobuf, TrackMetadataClientProtobuf}
 
 class Clients(
     config: AppConfig,
@@ -123,11 +123,12 @@ class Clients(
     new MediaClientProtobuf(_, _)
   )
 
-  val tracksTwirpClient = TwirpClient(
+  // TrackMetadata service from the Tracks VAS
+  val trackMetadataTwirpClient = TwirpClient(
     ResourceName("tracks"),
     config,
     telemetry,
-    new TracksClientProtobuf(_, _)
+    new TrackMetadataClientProtobuf(_, _)
   )
 
   val playlistsTwirpClient = TwirpClient(
@@ -158,7 +159,7 @@ class Clients(
 
   val trackVisibilityService =
     new TrackVisibilityService(
-      tracksTwirpClient,
+      trackMetadataTwirpClient,
       new VisibleTrackMapper,
       allowlistedCients
     )
