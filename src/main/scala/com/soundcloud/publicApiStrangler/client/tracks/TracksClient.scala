@@ -10,36 +10,6 @@ import com.twitter.util.Future
 import play.api.libs.json._
 
 class TracksClient(jsonClient: JsonClient) {
-  def streamUrl(session: UserSession, streamRequest: StreamRequest): Future[StreamResponse] = {
-    val requestBody = Json.stringify(Json.toJson(streamRequest))
-
-    jsonClient
-      .postWithSession(session, Path() / "track" / "stream", Params.empty, Headers.empty, Some(requestBody))
-      .map { response =>
-        response.status match {
-          case Status.Ok => Json.parse(response.contentString).as[StreamUrlResponse]
-          case Status.Unauthorized => StreamErrorResponse
-          case Status.NotFound => StreamErrorResponse
-          case _ => throw UnhandledResponseException(response)
-        }
-      }
-  }
-
-  def previewUrl(session: UserSession, streamRequest: StreamRequest): Future[StreamResponse] = {
-    val requestBody = Json.stringify(Json.toJson(streamRequest))
-
-    jsonClient
-      .postWithSession(session, Path() / "track" / "preview", Params.empty, Headers.empty, Some(requestBody))
-      .map { response =>
-        response.status match {
-          case Status.Ok => Json.parse(response.contentString).as[StreamUrlResponse]
-          case Status.Unauthorized => StreamErrorResponse
-          case Status.NotFound => StreamErrorResponse
-          case _ => throw UnhandledResponseException(response)
-        }
-      }
-  }
-
   def downloadUrl(session: UserSession, downloadRequest: DownloadRequest): Future[DownloadResponse] = {
     val requestBody = Json.stringify(Json.toJson(downloadRequest))
 

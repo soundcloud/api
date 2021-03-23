@@ -1,7 +1,6 @@
 package com.soundcloud.publicApiStrangler.service.media
 
 import com.soundcloud.api.partners.clients.tracks.Transcoding
-import com.soundcloud.jvmkit.module.rollout.{Rollout, RolloutFeature}
 import com.soundcloud.jvmkit.module.twirp.proto.UserSessionOps._
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSession
@@ -14,18 +13,13 @@ import proto.soundcloud.tracks.api.{GetMediaStreamRequest, MediaService}
 
 class StreamService(
     trackVisibilityService: TrackVisibilityService,
-    tracksClient: TracksClient,
-    tracksMediaService: MediaService,
-    rollout: Rollout
+    tracksMediaService: MediaService
 ) {
   private val mp3MimeType = "audio/mpeg"
   private val opusMimeType = """audio/ogg; codecs="opus""""
   private val allowedMimeTypes = Set(mp3MimeType, opusMimeType)
   private val protoProgressive = "progressive"
   private val protoHls = "hls"
-
-  val trackStreamUrlRollout = RolloutFeature("twirp-stream-url")
-  val trackPreviewUrlRollout = RolloutFeature("twirp-preview-url")
 
   def fetchMultiple(session: UserSession, trackUrn: Urn, secretToken: Option[String]): Future[MediaStreamResponse] =
     fetch(session, trackUrn, secretToken, fetchTranscodingUrls)
@@ -68,9 +62,9 @@ class StreamService(
           if (track.authorization.policy == ContentPolicy.SNIP || track.authorization.contentRestrictions.contains(
               ContentRestriction.NO_PROGRESSIVE_DOWNLOAD
             ))
-            fetchPreviewUrlRollout(session, track.urn, track.secretToken, mp3.uuid, protoProgressive)
+            fetchPreviewUrl(session, track.urn, track.secretToken, mp3.uuid, protoProgressive)
           else
-            fetchStreamUrlRollout(session, track.urn, track.secretToken, mp3.uuid, protoProgressive)
+            fetchStreamUrl(session, track.urn, track.secretToken, mp3.uuid, protoProgressive)
         streamResponse.map {
           case StreamUrlResponse(url, _) => MediaStreamUrl(url)
           case _ => MediaStreamNotFoundError
@@ -105,12 +99,12 @@ class StreamService(
   ): Future[MediaStreamResponse] = {
     for {
       (maybeHttpStream, maybeHlsStream, maybeMp3Preview, maybeOpusStream) <- Future.join(
-        fetchStreamUrlRollout(session, track.urn, track.secretToken, mp3.uuid, protoProgressive),
-        fetchStreamUrlRollout(session, track.urn, track.secretToken, mp3.uuid, protoHls),
-        fetchPreviewUrlRollout(session, track.urn, track.secretToken, mp3.uuid, protoProgressive),
+        fetchStreamUrl(session, track.urn, track.secretToken, mp3.uuid, protoProgressive),
+        fetchStreamUrl(session, track.urn, track.secretToken, mp3.uuid, protoHls),
+        fetchPreviewUrl(session, track.urn, track.secretToken, mp3.uuid, protoProgressive),
         maybeOpus match {
           case Some(opus) =>
-            fetchStreamUrlRollout(session, track.urn, track.secretToken, opus.uuid, protoHls)
+            fetchStreamUrl(session, track.urn, track.secretToken, opus.uuid, protoHls)
           case None => Future.None
         }
       )
@@ -138,50 +132,13 @@ class StreamService(
   ): Future[MediaStreamResponse] = {
     for {
       (maybeHttp, maybeHls) <- Future.join(
-        fetchPreviewUrlRollout(session, track.urn, track.secretToken, mp3.uuid, protoProgressive),
-        fetchPreviewUrlRollout(session, track.urn, track.secretToken, mp3.uuid, protoHls)
+        fetchPreviewUrl(session, track.urn, track.secretToken, mp3.uuid, protoProgressive),
+        fetchPreviewUrl(session, track.urn, track.secretToken, mp3.uuid, protoHls)
       )
     } yield (maybeHttp, maybeHls) match {
       case (StreamUrlResponse(http, _), StreamUrlResponse(hls, _)) => PreviewUrls(http, hls)
       case _ => MediaStreamNotFoundError
     }
-  }
-
-  private def fetchStreamUrlRollout(
-      session: UserSession,
-      urn: Urn,
-      secretToken: Option[String],
-      transcodingId: String,
-      protocol: String
-  ): Future[StreamResponse] = {
-    rollout
-      .isActive(trackStreamUrlRollout)
-      .flatMap(isActive => {
-        if (isActive) {
-          fetchStreamUrl(session, urn, secretToken, transcodingId, protocol)
-        } else {
-          tracksClient.streamUrl(session, StreamRequest(urn, secretToken, transcodingId, protocol))
-        }
-      })
-  }
-
-  private def fetchPreviewUrlRollout(
-      session: UserSession,
-      urn: Urn,
-      secretToken: Option[String],
-      transcodingId: String,
-      protocol: String
-  ): Future[StreamResponse] = {
-    rollout
-      .isActive(trackPreviewUrlRollout)
-      .flatMap(isActive => {
-        if (isActive) {
-          fetchPreviewUrl(session, urn, secretToken, transcodingId, protocol)
-        } else {
-          tracksClient.previewUrl(session, StreamRequest(urn, secretToken, transcodingId, protocol))
-        }
-      })
-
   }
 
   private def fetchPreviewUrl(

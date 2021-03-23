@@ -1,9 +1,8 @@
 package com.soundcloud.publicApiStrangler.service.media
 
 import com.soundcloud.api.partners.clients.tracks.Transcoding
-import com.soundcloud.jvmkit.module.rollout.Rollout
 import com.soundcloud.jvmkit.module.util.Urn
-import com.soundcloud.jvmkit.module.util.session.{UserSession, UserSessionBuilder}
+import com.soundcloud.jvmkit.module.util.session.UserSessionBuilder
 import com.soundcloud.publicApiStrangler.authorization.policies.{
   ContentAuthorization,
   ContentPolicy,
@@ -20,12 +19,10 @@ import proto.soundcloud.tracks.api.{GetMediaStreamRequest, GetMediaStreamRespons
 class StreamServiceSpec extends UnitSpecification {
 
   trait Context extends Scope {
-    val tracksClient = mock[TracksClient]
     val trackVisibilityService = mock[TrackVisibilityService]
     val tracksMediaTwirpClient = mock[MediaService]
-    val rollout = mock[Rollout]
 
-    val service = new StreamService(trackVisibilityService, tracksClient, tracksMediaTwirpClient, rollout)
+    val service = new StreamService(trackVisibilityService, tracksMediaTwirpClient)
     val session = new UserSessionBuilder().build()
 
     val track = mock[VisibleTrack]
@@ -68,17 +65,11 @@ class StreamServiceSpec extends UnitSpecification {
     val trackClientResponse = mock[TrackRequest]
     lazy val tracks = List(visibleTrack)
 
-    lazy val streamUrlResponse = StreamUrlResponse("http://stream", "audio/mpeg")
     lazy val streamUrlTwirpResponse = GetMediaStreamResponse("http://stream", "audio/mpeg")
-    lazy val streamPreviewUrlResponse = StreamUrlResponse("http://snippet", "audio/mpeg")
     lazy val streamPreviewUrlTwirpResponse = GetMediaStreamResponse("http://snippet", "audio/mpeg")
 
-    rollout.isActive(any()) returns Future.True
-
-    tracksClient.streamUrl(any[UserSession], any[StreamRequest]) returns Future.value(streamUrlResponse)
     tracksMediaTwirpClient.getMediaStream(any[GetMediaStreamRequest]) returns Future.value(streamUrlTwirpResponse)
 
-    tracksClient.previewUrl(any[UserSession], any[StreamRequest]) returns Future.value(streamPreviewUrlResponse)
     tracksMediaTwirpClient.getMediaPreview(any[GetMediaStreamRequest]) returns Future.value(
       streamPreviewUrlTwirpResponse
     )
@@ -120,68 +111,6 @@ class StreamServiceSpec extends UnitSpecification {
 
   "#fetchSingle" >> {
     "when track is streamable and policy is not BLOCK" >> {
-      "when rollout is active" >> {
-        "Map NotFound response from Tracks to MediaStreamNotFoundError" in new Context {
-          tracksMediaTwirpClient.getMediaStream(any[GetMediaStreamRequest]) returns Future.exception(
-            TwinagleException(ErrorCode.NotFound, "stream not found")
-          )
-
-          tracksMediaTwirpClient.getMediaPreview(any[GetMediaStreamRequest]) returns Future.exception(
-            TwinagleException(ErrorCode.NotFound, "stream not found")
-          )
-
-          Await.result(service.fetchSingle(session, trackUrn, secretToken)) ==== MediaStreamNotFoundError
-        }
-
-        "Map Unauthenticated response from Tracks to MediaStreamNotFoundError" in new Context {
-          tracksMediaTwirpClient.getMediaStream(any[GetMediaStreamRequest]) returns Future.exception(
-            TwinagleException(ErrorCode.Unauthenticated, "stream not authorised")
-          )
-
-          tracksMediaTwirpClient.getMediaPreview(any[GetMediaStreamRequest]) returns Future.exception(
-            TwinagleException(ErrorCode.Unauthenticated, "stream not authorised")
-          )
-
-          Await.result(service.fetchSingle(session, trackUrn, secretToken)) ==== MediaStreamNotFoundError
-        }
-
-        "returns an MP3 stream url with rollout" in new Context {
-          tracksMediaTwirpClient.getMediaStream(any[GetMediaStreamRequest]) returns Future.value(streamUrlTwirpResponse)
-
-          val result = Await.result(service.fetchSingle(session, trackUrn, secretToken))
-
-          result ==== MediaStreamUrl("http://stream")
-        }
-
-        "returns an MP3 snippet url if policy is SNIP" in new Context {
-          override lazy val policy = ContentPolicy.SNIP
-          val result = Await.result(service.fetchSingle(session, trackUrn, secretToken))
-          result ==== MediaStreamUrl("http://snippet")
-        }
-      }
-
-      "when rollout is not active" >> {
-        "returns an MP3 stream url with rollout" in new Context {
-          rollout.isActive(any()) returns Future.False
-          tracksClient.streamUrl(session, streamRequest) returns Future.value(streamUrlResponse)
-
-          val result = Await.result(service.fetchSingle(session, trackUrn, secretToken))
-
-          result ==== MediaStreamUrl("http://stream")
-        }
-
-        "returns an MP3 snippet url if policy is SNIP" in new Context {
-          rollout.isActive(any()) returns Future.False
-          override lazy val policy = ContentPolicy.SNIP
-          val result = Await.result(service.fetchSingle(session, trackUrn, secretToken))
-          result ==== MediaStreamUrl("http://snippet")
-        }
-      }
-    }
-  }
-
-  "#fetchMultiple" >> {
-    "when rollout is active" >> {
       "Map NotFound response from Tracks to MediaStreamNotFoundError" in new Context {
         tracksMediaTwirpClient.getMediaStream(any[GetMediaStreamRequest]) returns Future.exception(
           TwinagleException(ErrorCode.NotFound, "stream not found")
@@ -191,7 +120,7 @@ class StreamServiceSpec extends UnitSpecification {
           TwinagleException(ErrorCode.NotFound, "stream not found")
         )
 
-        Await.result(service.fetchMultiple(session, trackUrn, secretToken)) ==== MediaStreamNotFoundError
+        Await.result(service.fetchSingle(session, trackUrn, secretToken)) ==== MediaStreamNotFoundError
       }
 
       "Map Unauthenticated response from Tracks to MediaStreamNotFoundError" in new Context {
@@ -203,107 +132,96 @@ class StreamServiceSpec extends UnitSpecification {
           TwinagleException(ErrorCode.Unauthenticated, "stream not authorised")
         )
 
-        Await.result(service.fetchMultiple(session, trackUrn, secretToken)) ==== MediaStreamNotFoundError
+        Await.result(service.fetchSingle(session, trackUrn, secretToken)) ==== MediaStreamNotFoundError
       }
 
-      "returns multiple stream urls and one snippet url" in new Context {
-        val a = "http://stream/mp3/progressive"
-        val b = "http://stream/mp3/hls"
-        val c = "http://stream/opus/hls"
-        val d = "http://snippet"
+      "returns an MP3 stream url with rollout" in new Context {
+        tracksMediaTwirpClient.getMediaStream(any[GetMediaStreamRequest]) returns Future.value(streamUrlTwirpResponse)
 
-        tracksMediaTwirpClient.getMediaStream(any[GetMediaStreamRequest]) returns (Future.value(
-          GetMediaStreamResponse(a, "audio/mpeg")
-        ),
-        Future.value(GetMediaStreamResponse(b, "audio/mpeg")),
-        Future.value(GetMediaStreamResponse(c, """audio/ogg; codecs="opus"""")))
+        val result = Await.result(service.fetchSingle(session, trackUrn, secretToken))
 
-        val result = Await.result(service.fetchMultiple(session, trackUrn, secretToken))
-        result ==== MediaStreamUrls(a, b, Some(c), d)
+        result ==== MediaStreamUrl("http://stream")
       }
 
-      "returns multiple snippet urls if policy is SNIP" in new Context {
+      "returns an MP3 snippet url if policy is SNIP" in new Context {
         override lazy val policy = ContentPolicy.SNIP
-        val a = "http://stream/mp3/progressive"
-        val b = "http://stream/mp3/hls"
-
-        tracksMediaTwirpClient.getMediaPreview(any[GetMediaStreamRequest]) returns (
-          Future.value(
-            GetMediaStreamResponse(a, "audio/mpeg")
-          ),
-          Future.value(GetMediaStreamResponse(b, "audio/mpeg"))
-        )
-
-        val result = Await.result(service.fetchMultiple(session, trackUrn, secretToken))
-        result ==== PreviewUrls(a, b)
-      }
-
-      "returns only MP3 urls if Opus transcoding is missing" in new Context {
-        override lazy val transcodings = List(mp3Transcoding)
-
-        val a = "http://stream/mp3/progressive"
-        val b = "http://stream/mp3/hls"
-        val c = "http://snippet"
-
-        tracksMediaTwirpClient.getMediaStream(any[GetMediaStreamRequest]) returns (Future.value(
-          GetMediaStreamResponse(a, "audio/mpeg")
-        ),
-        Future.value(GetMediaStreamResponse(b, "audio/mpeg")))
-
-        val result = Await.result(service.fetchMultiple(session, trackUrn, secretToken))
-        result ==== MediaStreamUrls(a, b, None, c)
+        val result = Await.result(service.fetchSingle(session, trackUrn, secretToken))
+        result ==== MediaStreamUrl("http://snippet")
       }
     }
+  }
 
-    "when rollout is not active" >> {
-      "returns multiple stream urls and one snippet url" in new Context {
-        rollout.isActive(any()) returns Future.False
-        val a = "http://stream/mp3/progressive"
-        val b = "http://stream/mp3/hls"
-        val c = "http://stream/opus/hls"
-        val d = "http://snippet"
+  "#fetchMultiple" >> {
+    "Map NotFound response from Tracks to MediaStreamNotFoundError" in new Context {
+      tracksMediaTwirpClient.getMediaStream(any[GetMediaStreamRequest]) returns Future.exception(
+        TwinagleException(ErrorCode.NotFound, "stream not found")
+      )
 
-        tracksClient.streamUrl(any[UserSession], any[StreamRequest]) returns (Future.value(
-          StreamUrlResponse(a, "audio/mpeg")
+      tracksMediaTwirpClient.getMediaPreview(any[GetMediaStreamRequest]) returns Future.exception(
+        TwinagleException(ErrorCode.NotFound, "stream not found")
+      )
+
+      Await.result(service.fetchMultiple(session, trackUrn, secretToken)) ==== MediaStreamNotFoundError
+    }
+
+    "Map Unauthenticated response from Tracks to MediaStreamNotFoundError" in new Context {
+      tracksMediaTwirpClient.getMediaStream(any[GetMediaStreamRequest]) returns Future.exception(
+        TwinagleException(ErrorCode.Unauthenticated, "stream not authorised")
+      )
+
+      tracksMediaTwirpClient.getMediaPreview(any[GetMediaStreamRequest]) returns Future.exception(
+        TwinagleException(ErrorCode.Unauthenticated, "stream not authorised")
+      )
+
+      Await.result(service.fetchMultiple(session, trackUrn, secretToken)) ==== MediaStreamNotFoundError
+    }
+
+    "returns multiple stream urls and one snippet url" in new Context {
+      val a = "http://stream/mp3/progressive"
+      val b = "http://stream/mp3/hls"
+      val c = "http://stream/opus/hls"
+      val d = "http://snippet"
+
+      tracksMediaTwirpClient.getMediaStream(any[GetMediaStreamRequest]) returns (Future.value(
+        GetMediaStreamResponse(a, "audio/mpeg")
+      ),
+      Future.value(GetMediaStreamResponse(b, "audio/mpeg")),
+      Future.value(GetMediaStreamResponse(c, """audio/ogg; codecs="opus"""")))
+
+      val result = Await.result(service.fetchMultiple(session, trackUrn, secretToken))
+      result ==== MediaStreamUrls(a, b, Some(c), d)
+    }
+
+    "returns multiple snippet urls if policy is SNIP" in new Context {
+      override lazy val policy = ContentPolicy.SNIP
+      val a = "http://stream/mp3/progressive"
+      val b = "http://stream/mp3/hls"
+
+      tracksMediaTwirpClient.getMediaPreview(any[GetMediaStreamRequest]) returns (
+        Future.value(
+          GetMediaStreamResponse(a, "audio/mpeg")
         ),
-        Future.value(StreamUrlResponse(b, "audio/mpeg")),
-        Future.value(StreamUrlResponse(c, """audio/ogg; codecs="opus"""")))
+        Future.value(GetMediaStreamResponse(b, "audio/mpeg"))
+      )
 
-        val result = Await.result(service.fetchMultiple(session, trackUrn, secretToken))
-        result ==== MediaStreamUrls(a, b, Some(c), d)
-      }
+      val result = Await.result(service.fetchMultiple(session, trackUrn, secretToken))
+      result ==== PreviewUrls(a, b)
+    }
 
-      "returns multiple snippet urls if policy is SNIP" in new Context {
-        rollout.isActive(any()) returns Future.False
-        override lazy val policy = ContentPolicy.SNIP
-        val a = "http://stream/mp3/progressive"
-        val b = "http://stream/mp3/hls"
+    "returns only MP3 urls if Opus transcoding is missing" in new Context {
+      override lazy val transcodings = List(mp3Transcoding)
 
-        tracksClient.previewUrl(any[UserSession], any[StreamRequest]) returns (Future.value(
-          StreamUrlResponse(a, "audio/mpeg")
-        ),
-        Future.value(StreamUrlResponse(b, "audio/mpeg")))
+      val a = "http://stream/mp3/progressive"
+      val b = "http://stream/mp3/hls"
+      val c = "http://snippet"
 
-        val result = Await.result(service.fetchMultiple(session, trackUrn, secretToken))
-        result ==== PreviewUrls(a, b)
-      }
+      tracksMediaTwirpClient.getMediaStream(any[GetMediaStreamRequest]) returns (Future.value(
+        GetMediaStreamResponse(a, "audio/mpeg")
+      ),
+      Future.value(GetMediaStreamResponse(b, "audio/mpeg")))
 
-      "returns only MP3 urls if Opus transcoding is missing" in new Context {
-        rollout.isActive(any()) returns Future.False
-        override lazy val transcodings = List(mp3Transcoding)
-
-        val a = "http://stream/mp3/progressive"
-        val b = "http://stream/mp3/hls"
-        val c = "http://snippet"
-
-        tracksClient.streamUrl(any[UserSession], any[StreamRequest]) returns (Future.value(
-          StreamUrlResponse(a, "audio/mpeg")
-        ),
-        Future.value(StreamUrlResponse(b, "audio/mpeg")))
-
-        val result = Await.result(service.fetchMultiple(session, trackUrn, secretToken))
-        result ==== MediaStreamUrls(a, b, None, c)
-      }
+      val result = Await.result(service.fetchMultiple(session, trackUrn, secretToken))
+      result ==== MediaStreamUrls(a, b, None, c)
     }
   }
 
