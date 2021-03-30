@@ -15,7 +15,6 @@ service Authsy {
     // PermissionDenied when there is no subscription country present for a subscriber
     // Internal in the case of any other exception
     rpc GetBulkAuthorizations (GetBulkAuthorizationsRequest) returns (GetBulkAuthorizationsResponse) {};
-    rpc GetMonetizingTerritories (GetMonetizingTerritoriesRequest) returns (GetMonetizingTerritoriesResponse) {};
 }
 
 message GetBulkAuthorizationsRequest {
@@ -45,11 +44,4 @@ message Authorization {
 
 message GetBulkAuthorizationsResponse {
     repeated Authorization authorizations = 1;
-}
-
-
-message GetMonetizingTerritoriesRequest {}
-
-message GetMonetizingTerritoriesResponse {
-    repeated string territories = 1;
 }
