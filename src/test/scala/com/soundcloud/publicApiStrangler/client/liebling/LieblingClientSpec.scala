@@ -55,31 +55,6 @@ class LieblingClientSpec extends UnitSpecification {
         |}""".stripMargin)
   }
 
-  "#deleteTrackLike" >> {
-    trait LikeDeletedContext extends Context {
-      override implicit val session = loggedInSession(userUrn)
-    }
-
-    "creates a like response" in new LikeDeletedContext {
-      when(
-        service.deleteWithSession(
-          session,
-          Path() / "tracks" / trackUrn.toString / "likes",
-          Params.empty,
-          Headers.empty,
-          Some(requestBodyString)
-        )
-      ).thenReturn(Future {
-        val response = Response(Status.Ok)
-        response.setContentString(lieblingLikeDeletionSuccess)
-        response
-      })
-
-      val actual = Await.result(client.deleteTrackLike(session, trackUrn))
-      actual must beAnInstanceOf[DeleteLikeResponse]
-    }
-  }
-
   "#createPlaylistLike" >> {
     trait LikeCreatedContext extends Context {
       override implicit val session = loggedInSession(userUrn)

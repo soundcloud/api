@@ -42,8 +42,17 @@ class LikesService(
       }
   }
 
-  def deleteTrackLike(session: UserSession, urn: Urn): Future[DeleteLikeResponse] =
-    lieblingClient.deleteTrackLike(session, urn)
+  def deleteTrackLike(session: UserSession, urn: Urn): Future[DeleteLikeResponse] = {
+    val request = LikeTrackRequest(userSession = Some(session.asProtoSession), trackUrn = urn.toString)
+
+    likesTwirpClient
+      .unlikeTrack(request)
+      .map(_ => LikeDeleted)
+      .handle {
+        case TwinagleException(ErrorCode.NotFound, _, _, _) => LikeNotFound
+        case TwinagleException(_, msg, _, _) => throw new RuntimeException(s"unexpected response from tracks: ${msg}")
+      }
+  }
 
   def createPlaylistLike(
       session: UserSession,

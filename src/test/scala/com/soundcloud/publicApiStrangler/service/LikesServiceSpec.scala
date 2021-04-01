@@ -52,7 +52,6 @@ class LikesServiceSpec extends TrackRepresentationsSpecificationContext {
       val created = Instant.now
       val timestamp = Timestamp.of(created.getEpochSecond, created.getNano)
       val request = LikeTrackRequest(userSession = Some(session.asProtoSession), trackUrn = trackUrn.toString)
-
     }
 
     "returns an OkCreatedCreateResponse when Tracks successfully creates a like" in new CreateTrackLike {
@@ -65,7 +64,6 @@ class LikesServiceSpec extends TrackRepresentationsSpecificationContext {
       )
       val result = Await.result(likesService.createTrackLike(session, trackUrn))
       result ==== OkCreateResponse
-
     }
 
     "returns NotFoundCreateResponse when tracks responds with NotFound" in new CreateTrackLike {
@@ -75,7 +73,6 @@ class LikesServiceSpec extends TrackRepresentationsSpecificationContext {
 
       val result = Await.result(likesService.createTrackLike(session, trackUrn))
       result ==== NotFoundCreateResponse
-
     }
 
     "returns NotAuthorizedCreateResponse when tracks responds with PermissionDenied" in new CreateTrackLike {
@@ -85,7 +82,6 @@ class LikesServiceSpec extends TrackRepresentationsSpecificationContext {
 
       val result = Await.result(likesService.createTrackLike(session, trackUrn))
       result ==== NotAuthorizedCreateResponse
-
     }
 
     "returns SpamBlockedCreateResponse when tracks responds with ResourceExhausted" in new CreateTrackLike {
@@ -100,35 +96,31 @@ class LikesServiceSpec extends TrackRepresentationsSpecificationContext {
 
   "#deleteTrackLike" >> {
     trait DeleteTrackLike extends Context {
-      lazy val itemUrn = Urn("soundcloud", "tracks", "1")
-      lazy val result = Await.result(likesService.deleteTrackLike(session, itemUrn))
-      val lieblingResult: DeleteLikeResponse
-
-      override def before: Any = {
-        super.before
-
-        when(lieblingClient.deleteTrackLike(session, itemUrn)).thenReturn(Future.value(lieblingResult))
-      }
+      val userUrn = Urn("soundcloud", "users", "1")
+      val created = Instant.now
+      val timestamp = Timestamp.of(created.getEpochSecond, created.getNano)
+      val request = LikeTrackRequest(userSession = Some(session.asProtoSession), trackUrn = trackUrn.toString)
     }
 
-    "#when liebling successfully deletes a like" >> {
-      trait LikeAddedContext extends DeleteTrackLike {
-        override val lieblingResult = LikeDeleted
-      }
-
-      "returns an LikeDeleted" in new LikeAddedContext {
-        result ==== LikeDeleted
-      }
+    "returns LikeDeleted when tracks successfully deletes a like" in new DeleteTrackLike {
+      tracksTwinagleClient.unlikeTrack(request) returns Future.value(
+        LikeTrackResponse(
+          Some(timestamp),
+          trackUrn.toString,
+          userUrn.toString
+        )
+      )
+      val result = Await.result(likesService.deleteTrackLike(session, trackUrn))
+      result ==== LikeDeleted
     }
 
-    "#when like was not found" >> {
-      trait LikeNotFoundContext extends DeleteTrackLike {
-        override val lieblingResult = LikeNotFound
-      }
+    "returns LikeNotFound when like was not found" in new DeleteTrackLike {
+      tracksTwinagleClient.unlikeTrack(request) returns Future.exception(
+        TwinagleException(ErrorCode.NotFound, "Track not found")
+      )
 
-      "returns an LikeNotFound" in new LikeNotFoundContext {
-        result ==== LikeNotFound
-      }
+      val result = Await.result(likesService.deleteTrackLike(session, trackUrn))
+      result ==== LikeNotFound
     }
   }
 

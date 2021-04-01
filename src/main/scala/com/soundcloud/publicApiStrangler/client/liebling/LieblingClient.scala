@@ -21,15 +21,6 @@ class LieblingClient(jsonClient: JsonClient, exceptionCollector: ExceptionCollec
   val logger = SoundCloudLoggerFactory.getLogger(getClass)
 
   /**
-    * @see https://github.com/soundcloud/liebling/tree/master/doc#unlike-a-track
-    */
-  def deleteTrackLike(session: UserSession, track: Urn): Future[DeleteLikeResponse] =
-    deleteLike(
-      session,
-      Path() / "tracks" / track.toString / "likes"
-    )
-
-  /**
     * @see https://github.com/soundcloud/liebling/tree/master/doc#like-a-playlist
     */
   def createPlaylistLike(session: UserSession, playlist: Urn): Future[CreateLikeResponse] =
