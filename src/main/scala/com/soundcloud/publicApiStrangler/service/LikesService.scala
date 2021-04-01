@@ -8,6 +8,9 @@ import com.soundcloud.publicApiStrangler.service.pagination.CursorBasedPaginatio
 import com.soundcloud.publicApiStrangler.service.representation.collection.Collection
 import com.soundcloud.publicApiStrangler.service.trackrepresentation.{TrackRepresentation, TrackRepresentationsService}
 import com.twitter.util.Future
+import proto.soundcloud.tracks.api.{LikeTrackRequest, LikesClientProtobuf}
+import com.soundcloud.twinagle.{ErrorCode, TwinagleException}
+import com.soundcloud.jvmkit.module.twirp.proto.UserSessionOps._
 
 sealed trait CreateResponse
 case object OkCreateResponse extends CreateResponse
@@ -18,20 +21,25 @@ case object SpamBlockedCreateResponse extends CreateResponse
 
 class LikesService(
     trackRepresentationsService: TrackRepresentationsService,
-    lieblingClient: LieblingClient
+    lieblingClient: LieblingClient,
+    likesTwirpClient: LikesClientProtobuf
 ) {
 
   def createTrackLike(
       session: UserSession,
       urn: Urn
-  ) = {
-    lieblingClient.createTrackLike(session, urn).map {
-      case LikeCreated => OkCreatedCreateResponse
-      case LikeAlreadyExists => OkCreateResponse
-      case UserBlocked => NotAuthorizedCreateResponse
-      case UserHasSpamWarning => SpamBlockedCreateResponse
-      case _ => NotFoundCreateResponse
-    }
+  ): Future[CreateResponse] = {
+    val request = LikeTrackRequest(userSession = Some(session.asProtoSession), trackUrn = urn.toString)
+
+    likesTwirpClient
+      .likeTrack(request)
+      .map(_ => OkCreateResponse)
+      .handle {
+        case TwinagleException(ErrorCode.NotFound, _, _, _) => NotFoundCreateResponse
+        case TwinagleException(ErrorCode.PermissionDenied, _, _, _) => NotAuthorizedCreateResponse
+        case TwinagleException(ErrorCode.ResourceExhausted, _, _, _) => SpamBlockedCreateResponse
+        case TwinagleException(_, msg, _, _) => throw new RuntimeException(s"unexpected response from tracks: ${msg}")
+      }
   }
 
   def deleteTrackLike(session: UserSession, urn: Urn): Future[DeleteLikeResponse] =

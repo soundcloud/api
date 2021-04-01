@@ -1101,8 +1101,6 @@ paths:
       parameters:
         - $ref: '#/components/parameters/track_id'
       responses:
-        201:
-          $ref: '#/components/responses/Created'
         200:
           $ref: '#/components/responses/Success'
         400:

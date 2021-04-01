@@ -138,25 +138,7 @@ class LikesHandlerSpec extends UnitSpecification {
       "logged in" >> {
         trait LoggedInPostTrackLikeContext extends PostTrackLikeContext with LoggedInContext
 
-        "when path contains a not liked URN" >> {
-          trait NonLikedUrnContext extends LoggedInPostTrackLikeContext {
-            override def before: Any = {
-              super.before
-              when(likesService.createTrackLike(session, trackUrn))
-                .thenReturn(Future.value(OkCreatedCreateResponse))
-            }
-          }
-
-          "returns 201" in new NonLikedUrnContext {
-            response.statusCode ==== 201
-          }
-
-          "renders correct body" in new NonLikedUrnContext {
-            Json.parse(response.contentString) ==== Json.obj("status" -> "201 - Created")
-          }
-        }
-
-        "when URN is already liked" >> {
+        "when URN is valid" >> {
           trait AlreadyLikedUrnContext extends LoggedInPostTrackLikeContext {
             override def before: Any = {
               super.before
@@ -174,7 +156,7 @@ class LikesHandlerSpec extends UnitSpecification {
           }
         }
 
-        "when urn is invalid" >> {
+        "when URN is invalid" >> {
           trait InvalidUrnPostTrackLikeContext extends PostTrackLikeContext with LoggedInContext {
             override lazy val trackUrn = Urn("soundcloud", "tracks", ":")
           }
@@ -563,25 +545,7 @@ class LikesHandlerSpec extends UnitSpecification {
       "logged in" >> {
         trait LoggedInPostTrackLikeContext extends PostTrackLikeContext with LoggedInContext
 
-        "when path contains a not liked URN" >> {
-          trait NonLikedUrnContext extends LoggedInPostTrackLikeContext {
-            override def before: Any = {
-              super.before
-              when(likesService.createTrackLike(session, trackUrn))
-                .thenReturn(Future.value(OkCreatedCreateResponse))
-            }
-          }
-
-          "returns 201" in new NonLikedUrnContext {
-            response.statusCode ==== 201
-          }
-
-          "renders correct body" in new NonLikedUrnContext {
-            Json.parse(response.contentString) ==== Json.obj("status" -> "201 - Created")
-          }
-        }
-
-        "when URN is already liked" >> {
+        "when URN is valid" >> {
           trait AlreadyLikedUrnContext extends LoggedInPostTrackLikeContext {
             override def before: Any = {
               super.before
@@ -599,7 +563,7 @@ class LikesHandlerSpec extends UnitSpecification {
           }
         }
 
-        "when urn is invalid" >> {
+        "when URN is invalid" >> {
           trait InvalidUrnPostTrackLikeContext extends PostTrackLikeContext with LoggedInContext {
             override lazy val trackUrn = Urn("soundcloud", "tracks", ":")
           }

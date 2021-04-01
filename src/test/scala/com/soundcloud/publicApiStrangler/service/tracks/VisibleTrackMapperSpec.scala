@@ -18,7 +18,7 @@ import proto.soundcloud.tracks.api.{
   WaveformUrl => ProtoWaveformUrl
 }
 
-class VisiblePartnersTrackMapperSpec extends Specification {
+class VisibleTrackMapperSpec extends Specification {
 
   trait Context extends Scope {
     val trackUrn = Urn("soundcloud", "tracks", "432")
@@ -62,7 +62,13 @@ class VisiblePartnersTrackMapperSpec extends Specification {
           releaseDate = None,
           purchaseUrl = None,
           purchaseTitle = None,
-          supplyChainStatus = Some("manual_upload")
+          supplyChainStatus = Some("manual_upload"),
+          bpm = None,
+          trackType = ProtoTrackType.DEMO,
+          release = None,
+          keySignature = None,
+          videoUrl = None,
+          labelId = None
         )
       ),
       authorization = Some(
@@ -93,13 +99,7 @@ class VisiblePartnersTrackMapperSpec extends Specification {
           json = "https://wave.invalid/NnPYWvWwB6ln_m.json",
           png = "https://wave.invalid/NnPYWvWwB6ln_m.png"
         )
-      ),
-      bpm = None,
-      trackType = ProtoTrackType.DEMO,
-      release = None,
-      keySignature = None,
-      videoUrl = None,
-      labelId = None
+      )
     )
   }
 
@@ -168,7 +168,7 @@ class VisiblePartnersTrackMapperSpec extends Specification {
         )
       )
       visibleTrack.bpm ==== None
-      visibleTrack.trackType ==== None
+      visibleTrack.trackType ==== Some("demo")
       visibleTrack.release ==== None
       visibleTrack.keySignature ==== None
       visibleTrack.videoUrl ==== None

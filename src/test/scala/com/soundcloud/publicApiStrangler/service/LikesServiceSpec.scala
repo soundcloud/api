@@ -1,5 +1,6 @@
 package com.soundcloud.publicApiStrangler.service
 
+import com.google.protobuf.timestamp.Timestamp
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.publicApiStrangler.client.liebling._
 import com.soundcloud.publicApiStrangler.service.pagination.CursorBasedPagination
@@ -13,6 +14,11 @@ import com.twitter.finagle.http.ParamMap
 import com.twitter.util.{Await, Future}
 import org.mockito.Mockito._
 import org.specs2.mutable.BeforeAfter
+import proto.soundcloud.tracks.api.{LikeTrackRequest, LikeTrackResponse, LikesClientProtobuf}
+import com.soundcloud.jvmkit.module.twirp.proto.UserSessionOps._
+import com.soundcloud.twinagle.{ErrorCode, TwinagleException}
+
+import java.time.Instant
 
 class LikesServiceSpec extends TrackRepresentationsSpecificationContext {
 
@@ -27,10 +33,12 @@ class LikesServiceSpec extends TrackRepresentationsSpecificationContext {
       Some("2"),
       1
     )
+    val tracksTwinagleClient = mock[LikesClientProtobuf]
 
     val likesService = new LikesService(
       trackRepresentationsService,
-      lieblingClient
+      lieblingClient,
+      tracksTwinagleClient
     )
 
     override def before: Any = {}
@@ -40,64 +48,53 @@ class LikesServiceSpec extends TrackRepresentationsSpecificationContext {
 
   "#createTrackLike" >> {
     trait CreateTrackLike extends Context {
-      lazy val itemUrn = Urn("soundcloud", "tracks", "1")
-      val lieblingResult: CreateLikeResponse
+      val userUrn = Urn("soundcloud", "users", "1")
+      val created = Instant.now
+      val timestamp = Timestamp.of(created.getEpochSecond, created.getNano)
+      val request = LikeTrackRequest(userSession = Some(session.asProtoSession), trackUrn = trackUrn.toString)
 
-      lazy val result = Await.result(likesService.createTrackLike(session, itemUrn))
-
-      override def before: Any = {
-        when(lieblingClient.createTrackLike(session, itemUrn)).thenReturn(Future.value(lieblingResult))
-      }
     }
 
-    "#when liebling successfully creates a like" >> {
-      trait LikeAddedContext extends CreateTrackLike {
-        override val lieblingResult = LikeCreated
-      }
+    "returns an OkCreatedCreateResponse when Tracks successfully creates a like" in new CreateTrackLike {
+      tracksTwinagleClient.likeTrack(request) returns Future.value(
+        LikeTrackResponse(
+          Some(timestamp),
+          trackUrn.toString,
+          userUrn.toString
+        )
+      )
+      val result = Await.result(likesService.createTrackLike(session, trackUrn))
+      result ==== OkCreateResponse
 
-      "returns an OkCreatedCreateResponse" in new LikeAddedContext {
-        result ==== OkCreatedCreateResponse
-      }
     }
 
-    "#when like already exists" >> {
-      trait LikeAddedContext extends CreateTrackLike {
-        override val lieblingResult = LikeAlreadyExists
-      }
+    "returns NotFoundCreateResponse when tracks responds with NotFound" in new CreateTrackLike {
+      tracksTwinagleClient.likeTrack(request) returns Future.exception(
+        TwinagleException(ErrorCode.NotFound, "Track not found")
+      )
 
-      "returns an OkCreateResponse" in new LikeAddedContext {
-        result ==== OkCreateResponse
-      }
+      val result = Await.result(likesService.createTrackLike(session, trackUrn))
+      result ==== NotFoundCreateResponse
+
     }
 
-    "#when user is blocked" >> {
-      trait LikeAddedContext extends CreateTrackLike {
-        override val lieblingResult = UserBlocked
-      }
+    "returns NotAuthorizedCreateResponse when tracks responds with PermissionDenied" in new CreateTrackLike {
+      tracksTwinagleClient.likeTrack(request) returns Future.exception(
+        TwinagleException(ErrorCode.PermissionDenied, "User blocked")
+      )
 
-      "returns an NotAuthorizedCreateResponse" in new LikeAddedContext {
-        result ==== NotAuthorizedCreateResponse
-      }
+      val result = Await.result(likesService.createTrackLike(session, trackUrn))
+      result ==== NotAuthorizedCreateResponse
+
     }
 
-    "#when request is rate limited" >> {
-      trait LikeAddedContext extends CreateTrackLike {
-        override val lieblingResult = UserHasSpamWarning
-      }
+    "returns SpamBlockedCreateResponse when tracks responds with ResourceExhausted" in new CreateTrackLike {
+      tracksTwinagleClient.likeTrack(request) returns Future.exception(
+        TwinagleException(ErrorCode.ResourceExhausted, "Spam alert")
+      )
 
-      "returns an SpamBlockedCreateResponse" in new LikeAddedContext {
-        result ==== SpamBlockedCreateResponse
-      }
-    }
-
-    "#when something went wrong" >> {
-      trait LikeAddedContext extends CreateTrackLike {
-        override val lieblingResult = LikeableNotFound
-      }
-
-      "returns an NotAuthorizedCreateResponse" in new LikeAddedContext {
-        result ==== NotFoundCreateResponse
-      }
+      val result = Await.result(likesService.createTrackLike(session, trackUrn))
+      result ==== SpamBlockedCreateResponse
     }
   }
 

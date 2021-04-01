@@ -29,8 +29,7 @@ class LikesHandler(userAuthentication: UserAuthentication, likesService: LikesSe
       Try(getTrackUrn(req)) match {
         case Return(urn) =>
           likesService.createTrackLike(session, urn).map {
-            case OkCreatedCreateResponse => JsonResponseBuilder.created(requestBodyForStatus(Status.Created))
-            case OkCreateResponse => JsonResponseBuilder.ok(requestBodyForStatus(Status.Ok))
+            case OkCreateResponse | OkCreatedCreateResponse => JsonResponseBuilder.ok(requestBodyForStatus(Status.Ok))
             case NotAuthorizedCreateResponse => ErrorResponse(Status.Unauthorized)
             case NotFoundCreateResponse => ErrorResponse.notFound()
             case SpamBlockedCreateResponse => ErrorResponse(Status.TooManyRequests)

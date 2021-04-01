@@ -43,7 +43,7 @@ import com.twitter.finagle.service.RetryPolicy.RetryableWriteException
 import com.twitter.util.{Future, Throw, Try}
 import proto.soundcloud.authenticator.oauth.AuthorizationClientProtobuf
 import proto.soundcloud.playlists.api.PlaylistsClientProtobuf
-import proto.soundcloud.tracks.api.{MediaClientProtobuf, TrackMetadataClientProtobuf}
+import proto.soundcloud.tracks.api.{LikesClientProtobuf, MediaClientProtobuf, TrackMetadataClientProtobuf}
 
 class Clients(
     config: AppConfig,
@@ -131,6 +131,13 @@ class Clients(
     new TrackMetadataClientProtobuf(_, _)
   )
 
+  val likeTracksTwirpClient = TwirpClient(
+    ResourceName("tracks"),
+    config,
+    telemetry,
+    new LikesClientProtobuf(_, _)
+  )
+
   val playlistsTwirpClient = TwirpClient(
     ResourceName("playlists"),
     config,
@@ -183,7 +190,7 @@ class Clients(
   val trackUpdateService =
     new TrackUpdateService(trackCoordinatorClient, okidokiClient, hocuspocusClient, tracksService)
   val similarTracksService = new SimilarTracksService(tracksService, systemPlaylistsClient)
-  val likesService = new LikesService(tracksService, lieblingClient)
+  val likesService = new LikesService(tracksService, lieblingClient, likeTracksTwirpClient)
   val playlistService = new PlaylistsService(playlistsTwirpClient, tracksService, okidokiClient, exceptionCollector)
   val userPlaylistsService = new UserPlaylistsService(playlistService, okidokiClient)
   val searchService =
