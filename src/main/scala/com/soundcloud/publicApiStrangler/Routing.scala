@@ -56,8 +56,6 @@ object Routing {
   def forMothershipDispatcher(mothershipDispatcher: DispatchToMothershipHandler): List[(Method, String, Handler)] = {
     route(Method.Get, "/connect", mothershipDispatcher.dispatch) :::
       route(Method.Put, "/e1/me/playlist_likes/:id", mothershipDispatcher.dispatch) ::: // deprecate
-      route(Method.Delete, "/e1/me/track_likes/:id", mothershipDispatcher.dispatch) ::: // deprecate
-      route(Method.Put, "/e1/me/track_likes/:id", mothershipDispatcher.dispatch) ::: // deprecate
       route(Method.Get, "/me/connections", mothershipDispatcher.dispatch) :::
       route(Method.Get, "/me/connections/:id", mothershipDispatcher.dispatch) :::
       route(Method.Post, "/playlists", mothershipDispatcher.dispatch) :::
