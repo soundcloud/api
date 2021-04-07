@@ -1,6 +1,5 @@
 package com.soundcloud.publicApiStrangler.service
 
-import com.soundcloud.jvmkit.module.twirp.fieldmasks.FieldMask
 import com.soundcloud.jvmkit.module.twirp.proto.UserSessionOps._
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSession
@@ -14,6 +13,7 @@ import proto.soundcloud.tracks.api.{
   TrackMetadataService,
   TrackRequest => TwirpTrackRequest
 }
+import scalapb.FieldMaskUtil
 
 class TrackVisibilityService(
     tracksTwinagleClient: TrackMetadataService,
@@ -50,7 +50,7 @@ class TrackVisibilityService(
       trackRequests = trackRequests.toList.map(trackRequest =>
         TwirpTrackRequest(trackRequest.urn.toString, trackRequest.secretToken)
       ),
-      trackFieldMask = Some(TrackVisibilityService.TrackFieldMask.asProtoFieldMask),
+      trackFieldMask = Some(TrackVisibilityService.TrackFieldMask),
       userSession = Some(session.asProtoSession)
     )
 
@@ -62,7 +62,7 @@ class TrackVisibilityService(
 }
 
 object TrackVisibilityService {
-  val TrackFieldMask = FieldMask.select[Track](
+  val TrackFieldMask = FieldMaskUtil.selectFieldNumbers[Track](
     Set(
       Track.METADATA_FIELD_NUMBER,
       Track.TRANSCODINGS_FIELD_NUMBER,

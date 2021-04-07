@@ -52,7 +52,7 @@ class TrackVisibilityServiceSpec extends Specification with Mockito {
     val request = GetVisibleTracksRequest(
       trackRequests =
         List(trackRequest).map(trackRequest => ProtoTrackRequest(trackRequest.urn.toString, trackRequest.secretToken)),
-      trackFieldMask = Some(TrackVisibilityService.TrackFieldMask.asProtoFieldMask),
+      trackFieldMask = Some(TrackVisibilityService.TrackFieldMask),
       userSession = Some(session.asProtoSession)
     )
 
