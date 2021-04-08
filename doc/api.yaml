@@ -772,6 +772,29 @@ paths:
           AuthHeader: [ ]
       parameters:
         - $ref: '#/components/parameters/track_id'
+      requestBody:
+        description: |
+          Body of a comment
+        required: true
+        content:
+          application/json; charset=utf-8:
+            schema:
+              type: object
+              properties:
+                comment:
+                  type: object
+                  properties:
+                    body:
+                      type: string
+                      description: Comment's content
+                      example: test comment
+                    timestamp:
+                      description: Timestamp of a comment. String or float representation is supported
+                      oneOf:
+                        - type: string
+                        - type: number
+                  required:
+                    - body
       responses:
         200:
           description: Success

@@ -24,10 +24,9 @@ class CommentsHandler(
     userAuthentication.withUserSession(request) { session =>
       val track = Urn("soundcloud", "tracks", request.routeParams("trackId"))
       commentService.fetchTracksComments(session, track, pagination(request)).map {
-        case Good(comments) => {
-          val body = Collection.getNonNullRepresentation(comments, request.params.get("linked_partitioning").isDefined)
+        case Good(comments) =>
+          val body = Collection.getNonNullRepresentation(comments, request.params.contains("linked_partitioning"))
           JsonResponseBuilder(Status.Ok, body, buildCacheHeaders(Some(10.minutes))).build
-        }
         case Bad(NotFound(_)) => ErrorResponse.notFound()
         case Bad(_) => ErrorResponse.badRequest()
       }
@@ -39,9 +38,9 @@ class CommentsHandler(
       val commentJsValue = parseCommentJson(request)
       commentJsValue match {
         case None => Future.value(ErrorResponse(Status.UnprocessableEntity, noCommentErrorString))
-        case Some(commentJson) => {
+        case Some(commentJson) =>
           val body = (commentJson \ "body").asOpt[String]
-          if (!body.isDefined) {
+          if (body.isEmpty) {
             Future.value(ErrorResponse(Status.UnprocessableEntity, noCommentBodyErrorString))
           } else {
             val commentParams = extractCommentParams(request, commentJson)
@@ -50,7 +49,6 @@ class CommentsHandler(
               case Bad(applicationError) => createErrorResponse(applicationError)
             }
           }
-        }
       }
     }
   }
