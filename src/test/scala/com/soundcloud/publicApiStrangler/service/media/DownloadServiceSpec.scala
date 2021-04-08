@@ -1,10 +1,8 @@
 package com.soundcloud.publicApiStrangler.service.media
 
-import com.soundcloud.jvmkit.module.rollout.{Rollout, RolloutFeature}
 import com.soundcloud.jvmkit.module.twirp.proto.UserSessionOps._
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSessionBuilder
-import com.soundcloud.publicApiStrangler.client.tracks.TracksClient
 import com.soundcloud.publicApiStrangler.test.UnitSpecification
 import com.soundcloud.twinagle.{ErrorCode, TwinagleException}
 import com.twitter.util.{Await, Future}
@@ -19,11 +17,8 @@ class DownloadServiceSpec extends UnitSpecification with Mockito {
     val secretToken = Some("super secret")
 
     // subject and mocked dependencies
-    val tracksClient = mock[TracksClient]
     val mediaService = mock[MediaService]
-    val rolloutClient = mock[Rollout]
-
-    val subject = new DownloadService(tracksClient, mediaService, rolloutClient)
+    val subject = new DownloadService(mediaService)
 
     val downloadUrl = "https://soundcloud.com"
 
@@ -33,8 +28,6 @@ class DownloadServiceSpec extends UnitSpecification with Mockito {
       secretToken = secretToken,
       skipLogging = Some(false)
     )
-
-    when(rolloutClient.isActive(any[RolloutFeature])).thenReturn(Future.True)
   }
 
   "fetchDownloadUrl using tracks client" >> {

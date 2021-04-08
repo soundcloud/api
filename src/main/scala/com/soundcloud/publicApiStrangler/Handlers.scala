@@ -43,7 +43,7 @@ class Handlers(
 
   val trackDownloadHandler: TrackDownloadHandler = new TrackDownloadHandler(
     userAuthentication,
-    new DownloadService(tracksClient, tracksMediaTwirpClient, rolloutClient)
+    new DownloadService(tracksMediaTwirpClient)
   )
 
   val tracksHandler = new TracksHandler(

@@ -31,7 +31,6 @@ import com.soundcloud.publicApiStrangler.client.search.SearchClient
 import com.soundcloud.publicApiStrangler.client.stitch.StitchClient
 import com.soundcloud.publicApiStrangler.client.trackcoordinator.TrackCoordinatorClient
 import com.soundcloud.publicApiStrangler.client.trackmetadata.TrackmetadataClient
-import com.soundcloud.publicApiStrangler.client.tracks.TracksClient
 import com.soundcloud.publicApiStrangler.service._
 import com.soundcloud.publicApiStrangler.service.comments.CommentService
 import com.soundcloud.publicApiStrangler.service.media.{StreamService, TrackAccessRecorderService}
@@ -113,8 +112,6 @@ class Clients(
   private val waveformUrlsGenerator = new WaveformUrlsGenerator(
     config.get(ResourceName("CDN_WAVE"), ConfigConvention.HTTPS_ENDPOINT)
   )
-
-  val tracksClient = new TracksClient(jsonClient("tracks"))
 
   val tracksMediaTwirpClient = TwirpClient(
     ResourceName("tracks"),
