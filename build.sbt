@@ -7,7 +7,7 @@ lazy val publicApiStrangler = project
   .enablePlugins(SbtKitPlugin, TwirpSbtPlugin)
   .settings(
     name := "public-api-strangler",
-    scalaVersion := "2.12.13", // FIXME: remove this line to upgrade to 2.13.x
+    scalaVersion := scalaVersion212,
     libraryDependencies ++= Seq(
       "com.soundcloud" %% "jvmkit-http-client" % jvmkitVersion,
       "com.soundcloud" %% "jvmkit-admin-server" % jvmkitVersion,
@@ -25,7 +25,7 @@ lazy val publicApiStrangler = project
       "org.specs2" %% "specs2-core" % specs2Version % "test",
       "org.specs2" %% "specs2-mock" % specs2Version % "test"
     ),
-    mainClass in Compile := Some("com.soundcloud.publicApiStrangler.App")
+    Compile / mainClass := Some("com.soundcloud.publicApiStrangler.App")
   )
 
 lazy val endToEnd = project
@@ -33,7 +33,7 @@ lazy val endToEnd = project
   .enablePlugins(SbtKitPlugin)
   .settings(
     name := "endToEnd",
-    scalaVersion := "2.12.13", // FIXME: remove this line to upgrade to 2.13.x
+    scalaVersion := scalaVersion212,
     libraryDependencies ++= Seq(
       "org.specs2" %% "specs2-core" % specs2Version,
       "org.specs2" %% "specs2-mock" % specs2Version,
