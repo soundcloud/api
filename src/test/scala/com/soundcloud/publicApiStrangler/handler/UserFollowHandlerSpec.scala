@@ -308,21 +308,6 @@ class UserFollowHandlerSpec extends UnitSpecification {
     }
   }
 
-  "GET /users/:id/followers/:other_id" >> {
-    "fetches a follower" in new FetchesFollowerContext {
-      val response = get("/users/999/followers/123")
-      response.status ==== Status.SeeOther
-      response.headerMap.get("Location") ==== Some("http://foo/users/123")
-
-      Json.parse(response.contentString) ==== user123
-    }
-
-    "returns not found when the given user is not a follower" in new FollowerNotFoundContext {
-      val response = get("/users/999/followers/123")
-      response.status ==== Status.NotFound
-    }
-  }
-
   "PUT /me/followings/:other_id" >> {
     "follows a profile" in new Context {
       override def before: Any = {

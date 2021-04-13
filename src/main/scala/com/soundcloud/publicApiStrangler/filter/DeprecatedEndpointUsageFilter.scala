@@ -25,8 +25,6 @@ class DeprecatedEndpointUsageFilter(userAuthentication: UserAuthentication, tele
   private val deprecatedEndpointsPrefix = Seq(
     "/e1/",
     "/i1/",
-    "/me/web-profiles",
-    "/users/:id/followers/:other_id",
     "/users/:id/followings/:other_id",
     "/me/followers/:other_id",
     "/me/followings/:other_id", // only get

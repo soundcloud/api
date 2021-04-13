@@ -444,21 +444,6 @@ paths:
       responses:
         200:
           $ref: "#/components/responses/Track"
-  /me/web-profiles:
-    get:
-      summary: Returns a list of the authenticated user's links added to their profile. (use /users/{user_id}/web-profiles instead)
-      deprecated: true
-      tags:
-        - me
-      security:
-        - AuthHeader: [ ]
-      parameters:
-        - $ref: '#/components/parameters/limit'
-      responses:
-        200:
-          $ref: '#/components/responses/WebProfiles'
-        401:
-          $ref: '#/components/responses/Unauthorized'
   /tracks:
     get:
       summary: Performs a track search based on a query
@@ -970,24 +955,6 @@ paths:
       responses:
         200:
           $ref: "#/components/responses/Users"
-        401:
-          $ref: '#/components/responses/Unauthorized'
-  /users/{user_id}/followers/{follower_id}:
-    get:
-      summary: Returns a user's follower. (use /users/{user_id} instead, to fetch the user details)
-      description: Returns a (follower's user_id) that follows (user_id).
-      deprecated: true
-      tags:
-        - users
-      security:
-        - ClientId: [ ]
-          AuthHeader: [ ]
-      parameters:
-        - $ref: '#/components/parameters/user_id'
-        - $ref: '#/components/parameters/follower_id'
-      responses:
-        200:
-          $ref: '#/components/responses/CompleteUser'
         401:
           $ref: '#/components/responses/Unauthorized'
   /users/{user_id}/followings:

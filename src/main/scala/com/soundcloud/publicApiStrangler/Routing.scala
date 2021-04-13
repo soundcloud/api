@@ -42,7 +42,6 @@ object Routing {
   def forUserFollowHandler(userFollowHandler: UserFollowHandler): List[(Method, String, Handler)] = {
     route(Method.Get, "/users/:id/followings", userFollowHandler.fetchFollowingsWithoutAuth) :::
       route(Method.Get, "/users/:id/followers", userFollowHandler.fetchFollowersWithoutAuth) :::
-      route(Method.Get, "/users/:id/followers/:other_id", userFollowHandler.fetchPossibleFollowerWithoutAuth) ::: // deprecate
       route(Method.Get, "/users/:id/followings/:other_id", userFollowHandler.fetchPossibleFollowingWithoutAuth) ::: // deprecate
       route(Method.Get, "/me/followings", userFollowHandler.fetchFollowings) :::
       route(Method.Get, "/me/followers", userFollowHandler.fetchMyFollowers) :::
@@ -64,7 +63,6 @@ object Routing {
       route(Method.Get, "/me/favorites/ids", mothershipDispatcher.dispatch) ::: // deprecate
       route(Method.Post, "/me/playlists", mothershipDispatcher.dispatch) :::
       route(Method.Put, "/me/playlists/:trackId", mothershipDispatcher.dispatch) :::
-      route(Method.Get, "/me/web-profiles", mothershipDispatcher.dispatch) ::: // deprecate
       route(Method.Get, "/users/:userId/web-profiles", mothershipDispatcher.dispatch)
   }
 
