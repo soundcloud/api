@@ -72,15 +72,11 @@ trait SpinningUpAppSupport {
     lazy val headers = response.headerMap
     lazy val location = response.headerMap.get("Location").orNull
     lazy val json = {
-      if (response.statusCode > 199 && response.statusCode < 300) {
-        val contentType = response.headerMap.get("Content-Type").get
-        if (contentType.startsWith(MediaType.Json)) {
-          Json.parse(body)
-        } else {
-          throw new ServerUnderTestException(s"Invalid content type in response: $contentType")
-        }
+      val contentType = response.headerMap.get("Content-Type").get
+      if (contentType.startsWith(MediaType.Json)) {
+        Json.parse(body)
       } else {
-        throw new ServerUnderTestException(s"Invalid response. Status: ${response.status}. Body: $body")
+        throw new ServerUnderTestException(s"Invalid content type in response: $contentType")
       }
     }
   }

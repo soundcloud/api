@@ -52,6 +52,7 @@ class StreamService(
               else fetchStreamUrls(session, visibleTrack, mp3, singleStream)
             })
             .getOrElse(Future.value(NotFound().bad))
+        case Some(Bad(err)) => Future.value(err.bad)
         case _ => Future.value(NotFound().bad)
       })
   }

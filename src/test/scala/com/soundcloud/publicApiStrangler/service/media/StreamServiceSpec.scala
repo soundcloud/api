@@ -7,10 +7,11 @@ import com.soundcloud.jvmkit.module.util.session.UserSessionBuilder
 import com.soundcloud.publicApiStrangler.authorization.policies.{
   ContentAuthorization,
   ContentPolicy,
-  ContentRestriction
+  ContentRestriction,
+  Reason
 }
 import com.soundcloud.publicApiStrangler.client.tracks.{ContentAuthorizationBuilder, _}
-import com.soundcloud.publicApiStrangler.service.TrackVisibilityService
+import com.soundcloud.publicApiStrangler.service.{TrackVisibilityService, UnavailableByPolicy}
 import com.soundcloud.publicApiStrangler.test.UnitSpecification
 import com.soundcloud.twinagle.{ErrorCode, TwinagleException}
 import com.twitter.util.{Await, Future}
@@ -84,6 +85,13 @@ class StreamServiceSpec extends UnitSpecification {
     Await.result(service.fetchMultiple(session, trackUrn, secretToken)) ==== NotFound().bad
   }
 
+  "error when track is not streamable" in new Context {
+    lazy val unavailableError = CustomError(UnavailableByPolicy(trackUrn, Reason.NOT_SUPPORTED)).bad
+    override lazy val tracks = List[Outcome[VisibleTrack]](unavailableError)
+    Await.result(service.fetchSingle(session, trackUrn, secretToken)) ==== unavailableError
+    Await.result(service.fetchMultiple(session, trackUrn, secretToken)) ==== unavailableError
+  }
+
   "error when no MP3 transodings are returned" in new Context {
     override lazy val transcodings = List(opusTranscoding)
     Await.result(service.fetchSingle(session, trackUrn, secretToken)) ==== NotFound().bad
@@ -155,7 +163,7 @@ class StreamServiceSpec extends UnitSpecification {
   }
 
   "#fetchMultiple" >> {
-    "Map NotFound response from Tracks to bad outcome" in new Context {
+    "Map NotFound response from Tracks to unavailableError outcome" in new Context {
       tracksMediaTwirpClient.getMediaStream(any[GetMediaStreamRequest]) returns Future.exception(
         TwinagleException(ErrorCode.NotFound, "stream not found")
       )

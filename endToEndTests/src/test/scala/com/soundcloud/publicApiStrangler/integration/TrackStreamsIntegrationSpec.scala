@@ -29,7 +29,7 @@ class TrackStreamsIntegrationSpec extends ServerSetup {
     }
 
     "should return an error for a track with api_streamable=false" in new TrackStreamContext {
-      val response = server.get(path(freeTierNonStreamableTrackId))
+      val response = server.get(path(freeTierNonStreamableTrackId), authenticatedUSHeaders)
 
       response.status === 404
     }
@@ -37,13 +37,15 @@ class TrackStreamsIntegrationSpec extends ServerSetup {
     "should return error for a blocked track" in new TrackStreamContext {
       val response = server.get(path(blockedTrackId), authenticatedUSHeaders)
 
-      response.status === 404
+      response.status === 403
+      (response.json \ "message").as[String] === "This content is only available on SoundCloud."
     }
 
     "should return error for a paywalled track" in new TrackStreamContext {
       val response = server.get(path(paywalledTrackId), authenticatedUSHeaders)
 
-      response.status === 404
+      response.status === 403
+      (response.json \ "message").as[String] === "This content is only available on SoundCloud."
     }
   }
 
