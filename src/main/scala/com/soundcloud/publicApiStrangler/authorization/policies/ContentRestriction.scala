@@ -1,19 +1,5 @@
 package com.soundcloud.publicApiStrangler.authorization.policies
 
-object InvalidRestrictionException {
-  val MESSAGE: String = "[%s] is not a valid %s, must be one of [%s]"
-}
-
-class InvalidRestrictionException(val invalidRestrictionName: String)
-    extends RuntimeException(
-      String.format(
-        InvalidRestrictionException.MESSAGE,
-        invalidRestrictionName,
-        classOf[ContentRestriction].getSimpleName,
-        ContentRestriction.allPossibleNames
-      )
-    )
-
 class ContentRestriction(val name: String) {
 
   /**

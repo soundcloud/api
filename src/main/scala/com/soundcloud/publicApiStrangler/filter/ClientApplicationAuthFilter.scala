@@ -34,7 +34,7 @@ class ClientApplicationAuthFilter(userAuthentication: UserAuthentication, teleme
         val clientAppId = Option(userSession.getAgent).map(_.identifier).getOrElse("unknown")
         val method = request.method.toString
 
-        if (ClientApplicationAuthFilter.blackistedApplicationIds.contains(clientAppId)) {
+        if (ClientApplicationAuthFilter.blockedApplicationIds.contains(clientAppId)) {
           unauthorisedClientApplicationCounter.labels(clientAppId, path, method).inc()
           Future.value(ErrorResponse.forbidden())
         } else {
@@ -46,7 +46,7 @@ class ClientApplicationAuthFilter(userAuthentication: UserAuthentication, teleme
 }
 
 object ClientApplicationAuthFilter {
-  val blackistedApplicationIds = Set(
+  val blockedApplicationIds = Set(
     "41763", // SoundCloud.com (development)
     "46941", // SoundCloud.com,
     "66152", // SoundCloud MobileWeb development

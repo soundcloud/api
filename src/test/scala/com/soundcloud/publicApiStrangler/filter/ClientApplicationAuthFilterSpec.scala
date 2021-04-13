@@ -44,7 +44,7 @@ class ClientApplicationAuthFilterSpec extends Specification with Mockito {
     "forwards the request" in new TokenExchangeContext {
       service.apply(request) returns Future.value(Response(Status.Ok))
 
-      ClientApplicationAuthFilter.blackistedApplicationIds.foreach { appId =>
+      ClientApplicationAuthFilter.blockedApplicationIds.foreach { appId =>
         val session = sessionBuilder.setAgent(new Urn("soundcloud", "application", appId)).build()
         val filter = new ClientApplicationAuthFilter(new FakeUserAuthentication(session), telemetry, router)
 
@@ -66,7 +66,7 @@ class ClientApplicationAuthFilterSpec extends Specification with Mockito {
 
   "with denylisted client application id" >> {
     "returns forbidden" in new Context {
-      ClientApplicationAuthFilter.blackistedApplicationIds.foreach { appId =>
+      ClientApplicationAuthFilter.blockedApplicationIds.foreach { appId =>
         val session = sessionBuilder.setAgent(new Urn("soundcloud", "application", appId)).build()
         val filter = new ClientApplicationAuthFilter(new FakeUserAuthentication(session), telemetry, router)
 
