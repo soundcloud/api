@@ -27,7 +27,7 @@ class TrackRepresentationsService(
 
   def tracks(session: UserSession, trackRequests: List[TrackRequest]): Future[List[TrackRepresentation]] = {
     for {
-      visibleTracks <- trackVisibilityService.tracks(session, trackRequests)
+      visibleTracks <- trackVisibilityService.visibleTracks(session, trackRequests)
       enrichedTracks <- enrichTracks(session, visibleTracks)
     } yield {
       enrichedTracks

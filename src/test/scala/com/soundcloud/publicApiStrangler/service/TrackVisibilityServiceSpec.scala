@@ -1,6 +1,7 @@
 package com.soundcloud.publicApiStrangler.service
 
 import com.soundcloud.api.partners.clients.tracks.Transcoding
+import com.soundcloud.jvmkit.module.outcome._
 import com.soundcloud.jvmkit.module.twirp.proto.UserSessionOps._
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSessionBuilder
@@ -64,7 +65,20 @@ class TrackVisibilityServiceSpec extends Specification with Mockito {
 
   "#tracks" >> {
     "returns visible tracks" in new Context {
-      Await.result(service.tracks(session, List(trackRequest))) ==== List(visibleTrack)
+      Await.result(service.tracks(session, List(trackRequest))) ==== List(visibleTrack.good)
+    }
+
+    "track not available for api streaming" >> {
+      trait NotApiStreamableTrackContext extends Context {
+        override lazy val visibleTrack =
+          (new VisibleTrackBuilder).setUrn(trackUrn).setApiStreamable(Some(false)).build
+      }
+
+      "filters out disabled tracks" in new NotApiStreamableTrackContext {
+        Await.result(service.tracks(session, List(trackRequest))) ==== List(
+          CustomError(UnavailableByPolicy(trackUrn, Reason.NOT_SUPPORTED)).bad
+        )
+      }
     }
 
     "disabled track" >> {
@@ -74,7 +88,9 @@ class TrackVisibilityServiceSpec extends Specification with Mockito {
       }
 
       "filters out disabled tracks" in new DisabledTrackContext {
-        Await.result(service.tracks(session, List(trackRequest))) ==== List.empty
+        Await.result(service.tracks(session, List(trackRequest))) ==== List(
+          CustomError(UnavailableByPolicy(trackUrn, Reason.UNKNOWN)).bad
+        )
       }
     }
 
@@ -85,7 +101,9 @@ class TrackVisibilityServiceSpec extends Specification with Mockito {
       }
 
       "filters out non 'audio/mpeg' tracks" in new TranscodingFilterTrackContext {
-        Await.result(service.tracks(session, List(trackRequest))) ==== List.empty
+        Await.result(service.tracks(session, List(trackRequest))) ==== List(
+          CustomError(UnavailableByPolicy(trackUrn, Reason.UNKNOWN)).bad
+        )
       }
     }
 
@@ -110,7 +128,9 @@ class TrackVisibilityServiceSpec extends Specification with Mockito {
 
       "untrusted application" >> {
         "filters out track" in new HighTierFilterTrackContext {
-          Await.result(service.tracks(session, List(trackRequest))) ==== List.empty
+          Await.result(service.tracks(session, List(trackRequest))) ==== List(
+            CustomError(UnavailableByPolicy(trackUrn, Reason.NOT_SUPPORTED)).bad
+          )
         }
       }
 
@@ -120,9 +140,21 @@ class TrackVisibilityServiceSpec extends Specification with Mockito {
         }
 
         "does not filter out track" in new HighTierAllowlistedAppFilterTrackContext {
-          Await.result(service.tracks(session, List(trackRequest))) ==== List(visibleTrack)
+          Await.result(service.tracks(session, List(trackRequest))) ==== List(visibleTrack.good)
         }
       }
+    }
+  }
+
+  "#visibleTracks" >> {
+    "returns visible tracks" in new Context {
+      Await.result(service.visibleTracks(session, List(trackRequest))) ==== List(visibleTrack)
+    }
+
+    "filters out bad tracks" in new Context {
+      override lazy val visibleTrack =
+        (new VisibleTrackBuilder).setUrn(trackUrn).setDisabledAt(Some(LocalDateTime.now())).build
+      Await.result(service.visibleTracks(session, List(trackRequest))) ==== List.empty
     }
   }
 }

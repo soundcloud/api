@@ -7,7 +7,7 @@ import play.api.libs.json.{JsString, JsValue, Json}
 object ErrorResponse {
   def notFound(error: String = "") = apply(Status.NotFound, error)
   def badRequest(error: String = "") = apply(Status.BadRequest, error)
-  def forbidden() = apply(Status.Forbidden)
+  def forbidden(error: String = "") = apply(Status.Forbidden, error)
 
   def apply(
       status: Status,

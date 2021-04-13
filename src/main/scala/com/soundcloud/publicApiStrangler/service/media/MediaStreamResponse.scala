@@ -3,7 +3,6 @@ package com.soundcloud.publicApiStrangler.service.media
 import play.api.libs.json.{JsValue, Json, Writes}
 
 trait MediaStreamResponse
-case object MediaStreamNotFoundError extends MediaStreamResponse
 case class RedirectStreamResponse(httpMp3: String) extends MediaStreamResponse
 case class MediaStreamUrls(
     httpMp3: String,
@@ -15,7 +14,6 @@ case class MediaStreamUrls(
 object MediaStreamResponse {
   implicit val writes = new Writes[MediaStreamResponse] {
     override def writes(resp: MediaStreamResponse): JsValue = resp match {
-      case MediaStreamNotFoundError => Json.obj()
       case RedirectStreamResponse(httpMp3) => Json.obj("status" -> "302 - Found", "location" -> httpMp3)
       case MediaStreamUrls(httpMp3, hlsMp3, hlsOpus, httpPreviewMp3) => {
         val opus = hlsOpus.map(opus => Json.obj("hls_opus_64_url" -> opus)).getOrElse(Json.obj())

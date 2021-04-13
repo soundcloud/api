@@ -2,16 +2,19 @@ package com.soundcloud.publicApiStrangler.handler
 
 import com.soundcloud.jvmkit.module.bff.session.UserAuthentication
 import com.soundcloud.jvmkit.module.http.server.{HandlerRequest, ResponseBuilder}
+import com.soundcloud.jvmkit.module.outcome._
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSession
-import com.soundcloud.publicApiStrangler.support.TrackUrnUtil.getTrackUrn
+import com.soundcloud.publicApiStrangler.authorization.Reasonator
 import com.soundcloud.publicApiStrangler.mapper.trackstreams.{
   TrackStreamJsonResponseMapper,
   TrackStreamRedirectResponseMapper,
   TrackStreamResponseMapper
 }
+import com.soundcloud.publicApiStrangler.service.UnavailableByPolicy
 import com.soundcloud.publicApiStrangler.service.media._
 import com.soundcloud.publicApiStrangler.support.ErrorResponse
+import com.soundcloud.publicApiStrangler.support.TrackUrnUtil.getTrackUrn
 import com.twitter.finagle.http.{MediaType, Method, Response, Status}
 import com.twitter.util.{Future, Return, Try}
 import play.api.libs.json.Json
@@ -45,19 +48,16 @@ class TrackStreamsHandler(
       extractParams(request) match {
         case Some(streamParams) =>
           handleWithStreamService(session, streamParams, singleStream).flatMap {
-            case MediaStreamNotFoundError =>
-              Future.value(renderStreamResponse(request, session, MediaStreamNotFoundError))
-            case streamResponse if singleStream =>
-              trackAccessRecorderService.recordStreamAccess(session, request, streamParams.trackUrn)(
-                Future.value(renderStreamResponse(request, session, streamResponse))
-              )
-            case streamResponse =>
+            case Good(streamResponse) =>
               trackAccessRecorderService.recordStreamAccess(
                 session,
                 request,
                 streamParams.trackUrn,
                 loggingEnabled = false
               )(Future.value(renderStreamResponse(request, session, streamResponse)))
+            case Bad(CustomError(UnavailableByPolicy(_, reason), _)) =>
+              Future.value(Reasonator.reasonToError(reason))
+            case Bad(_) => Future.value(ErrorResponse.notFound())
           }
         case None => Future.value(ErrorResponse.badRequest())
       }
@@ -68,7 +68,7 @@ class TrackStreamsHandler(
       session: UserSession,
       streamParams: StreamParams,
       singleStream: Boolean
-  ): Future[MediaStreamResponse] = {
+  ): Future[Outcome[MediaStreamResponse]] = {
     if (singleStream) {
       streamService.fetchSingle(session, streamParams.trackUrn, streamParams.secretToken)
     } else {
@@ -84,8 +84,6 @@ class TrackStreamsHandler(
     val builder = streamResponse match {
       case RedirectStreamResponse(url) =>
         ResponseBuilder().header("Location", url).status(Status.Found)
-      case MediaStreamNotFoundError =>
-        return ErrorResponse.notFound()
       case _ => ResponseBuilder().status(Status.Ok)
     }
     if (request.method != Method.Head)

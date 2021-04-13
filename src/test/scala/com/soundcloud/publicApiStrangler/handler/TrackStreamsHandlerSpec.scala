@@ -2,14 +2,17 @@ package com.soundcloud.publicApiStrangler.handler
 
 import com.soundcloud.jvmkit.module.bff.testsupport.FakeUserAuthentication
 import com.soundcloud.jvmkit.module.http.server.{Handler, HandlerRequest}
+import com.soundcloud.jvmkit.module.outcome._
 import com.soundcloud.jvmkit.module.telemetry.Telemetry
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.publicApiStrangler.Routing
+import com.soundcloud.publicApiStrangler.authorization.policies.Reason
 import com.soundcloud.publicApiStrangler.mapper.trackstreams.{
   TrackStreamJsonResponseMapper,
   TrackStreamRedirectResponseMapper
 }
+import com.soundcloud.publicApiStrangler.service.UnavailableByPolicy
 import com.soundcloud.publicApiStrangler.service.media._
 import com.soundcloud.publicApiStrangler.test.{HandlerSpecificationScope, UnitSpecification}
 import com.twitter.finagle.http.{Method, Response, Status}
@@ -68,7 +71,7 @@ class TrackStreamsHandlerSpec extends UnitSpecification {
     ) {
       case (method, path) =>
         "GET /tracks/5/stream" in new MediaServiceContext {
-          streamService.fetchSingle(session, trackUrn, None) returns Future.value(RedirectStreamResponse(httpMp3))
+          streamService.fetchSingle(session, trackUrn, None) returns Future.value(RedirectStreamResponse(httpMp3).good)
 
           val response = call(method, handler.redirectStreamRequest, path)
 
@@ -93,7 +96,7 @@ class TrackStreamsHandlerSpec extends UnitSpecification {
       case (method, path) =>
         s"${method.toString} $path" in new MediaServiceContext {
           streamService.fetchMultiple(session, trackUrn, None) returns Future.value(
-            MediaStreamUrls(httpMp3, hlsMp3, Some(hlsOpus), Some(httpPreviewMp3))
+            MediaStreamUrls(httpMp3, hlsMp3, Some(hlsOpus), Some(httpPreviewMp3)).good
           )
 
           val response = call(method, handler.handleStreamRequest, path)
@@ -114,7 +117,7 @@ class TrackStreamsHandlerSpec extends UnitSpecification {
   "with a secret token" >> {
     trait WithSecretTokenContext extends MediaServiceContext {
       streamService.fetchSingle(session, trackUrn, Some("itsasecret")) returns Future.value(
-        RedirectStreamResponse(httpMp3)
+        RedirectStreamResponse(httpMp3).good
       )
     }
 
@@ -125,14 +128,28 @@ class TrackStreamsHandlerSpec extends UnitSpecification {
     }
   }
 
-  "when streaming is not allowed" >> {
+  "when streaming is not found" >> {
     trait StreamingNotAllowedContext extends MediaServiceContext {
-      streamService.fetchSingle(session, trackUrn, None) returns Future.value(MediaStreamNotFoundError)
+      streamService.fetchSingle(session, trackUrn, None) returns Future.value(NotFound().bad)
     }
 
     s"should return 404" in new StreamingNotAllowedContext {
       val resp = get("/tracks/5/stream")
       resp.status ==== Status.NotFound
+    }
+  }
+
+  "when streaming is not allowed" >> {
+    trait StreamingNotAllowedContext extends MediaServiceContext {
+      streamService.fetchSingle(session, trackUrn, None) returns Future.value(
+        CustomError(UnavailableByPolicy(trackUrn, Reason.GEO)).bad
+      )
+    }
+
+    s"should return 404" in new StreamingNotAllowedContext {
+      val resp = get("/tracks/5/stream")
+      resp.status ==== Status.Forbidden
+      (Json.parse(resp.contentString) \ "message").as[String] ==== "Sorry, this track is not available in your area."
     }
   }
 }

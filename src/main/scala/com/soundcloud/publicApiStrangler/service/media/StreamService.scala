@@ -1,6 +1,7 @@
 package com.soundcloud.publicApiStrangler.service.media
 
 import com.soundcloud.api.partners.clients.tracks.Transcoding
+import com.soundcloud.jvmkit.module.outcome._
 import com.soundcloud.jvmkit.module.twirp.proto.UserSessionOps._
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSession
@@ -20,10 +21,18 @@ class StreamService(
   private val protoProgressive = "progressive"
   private val protoHls = "hls"
 
-  def fetchMultiple(session: UserSession, trackUrn: Urn, secretToken: Option[String]): Future[MediaStreamResponse] =
+  def fetchMultiple(
+      session: UserSession,
+      trackUrn: Urn,
+      secretToken: Option[String]
+  ): Future[Outcome[MediaStreamResponse]] =
     fetch(session, trackUrn, secretToken, singleStream = false)
 
-  def fetchSingle(session: UserSession, trackUrn: Urn, secretToken: Option[String]): Future[MediaStreamResponse] =
+  def fetchSingle(
+      session: UserSession,
+      trackUrn: Urn,
+      secretToken: Option[String]
+  ): Future[Outcome[MediaStreamResponse]] =
     fetch(session, trackUrn, secretToken, singleStream = true)
 
   private def fetch(
@@ -31,22 +40,20 @@ class StreamService(
       trackUrn: Urn,
       secretToken: Option[String],
       singleStream: Boolean
-  ): Future[MediaStreamResponse] = {
+  ): Future[Outcome[MediaStreamResponse]] = {
     trackVisibilityService
       .tracks(session, List(TrackRequest(trackUrn, secretToken)))
-      .map(_.headOption)
-      .flatMap(visibleTrack =>
-        visibleTrack
-          .flatMap(track => {
-            track.transcodings
-              .find(_.mimeType == mp3MimeType)
-              .map(mp3 => {
-                if (streamNotAllowed(track)) fetchPreviewUrls(session, track, mp3, singleStream)
-                else fetchStreamUrls(session, track, mp3, singleStream)
-              })
-          })
-          .getOrElse(Future.value(MediaStreamNotFoundError))
-      )
+      .flatMap(_.headOption match {
+        case Some(Good(visibleTrack)) =>
+          visibleTrack.transcodings
+            .find(_.mimeType == mp3MimeType)
+            .map(mp3 => {
+              if (streamNotAllowed(visibleTrack)) fetchPreviewUrls(session, visibleTrack, mp3, singleStream)
+              else fetchStreamUrls(session, visibleTrack, mp3, singleStream)
+            })
+            .getOrElse(Future.value(NotFound().bad))
+        case _ => Future.value(NotFound().bad)
+      })
   }
 
   // Some labels disallow progressive streams. The best thing we can do in this case is to downgrade to a snippet.
@@ -59,13 +66,13 @@ class StreamService(
       track: VisibleTrack,
       mp3: Transcoding,
       singleStream: Boolean
-  ): Future[MediaStreamResponse] = {
+  ): Future[Outcome[MediaStreamResponse]] = {
     val futureHttpStream = fetchStreamUrl(session, track.urn, track.secretToken, mp3.uuid, protoProgressive)
 
     if (singleStream) {
       return futureHttpStream.map {
-        case Some(http) => RedirectStreamResponse(http)
-        case None => MediaStreamNotFoundError
+        case Some(http) => RedirectStreamResponse(http).good
+        case None => NotFound().bad
       }
     }
 
@@ -80,8 +87,8 @@ class StreamService(
       .join(futureHttpStream, futureHlsStream, futureOpusStream, futureMp3Preview)
       .map {
         case (Some(httpStream), Some(hlsStream), opus, preview) =>
-          MediaStreamUrls(httpStream, hlsStream, opus, preview)
-        case _ => MediaStreamNotFoundError
+          MediaStreamUrls(httpStream, hlsStream, opus, preview).good
+        case _ => NotFound().bad
       }
   }
 
@@ -90,7 +97,7 @@ class StreamService(
       track: VisibleTrack,
       mp3: Transcoding,
       singleStream: Boolean
-  ): Future[MediaStreamResponse] = {
+  ): Future[Outcome[MediaStreamResponse]] = {
     val futureHttpStream = fetchPreviewUrl(session, track.urn, track.secretToken, mp3.uuid, protoProgressive)
     val futureHlsStream =
       if (singleStream) Future.None else fetchPreviewUrl(session, track.urn, track.secretToken, mp3.uuid, protoHls)
@@ -98,9 +105,9 @@ class StreamService(
     Future
       .join(futureHttpStream, futureHlsStream)
       .map {
-        case (Some(http), Some(hls)) => MediaStreamUrls(http, hls)
-        case (Some(http), _) if singleStream => RedirectStreamResponse(http)
-        case _ => MediaStreamNotFoundError
+        case (Some(http), Some(hls)) => MediaStreamUrls(http, hls).good
+        case (Some(http), _) if singleStream => RedirectStreamResponse(http).good
+        case _ => NotFound().bad
       }
   }
 
