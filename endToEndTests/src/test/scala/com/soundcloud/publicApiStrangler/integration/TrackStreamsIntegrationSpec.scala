@@ -34,18 +34,17 @@ class TrackStreamsIntegrationSpec extends ServerSetup {
       response.status === 404
     }
 
-    // TODO rate limited
-//    "should return error for a blocked track" in new TrackStreamContext {
-//      val response = server.get(path(blockedTrackId), authenticatedUSHeaders)
-//
-//      response.status === 404
-//    }
-//
-//    "should return error for a paywalled track" in new TrackStreamContext {
-//      val response = server.get(path(paywalledTrackId), authenticatedUSHeaders)
-//
-//      response.status === 404
-//    }
+    "should return error for a blocked track" in new TrackStreamContext {
+      val response = server.get(path(blockedTrackId), authenticatedUSHeaders)
+
+      response.status === 404
+    }
+
+    "should return error for a paywalled track" in new TrackStreamContext {
+      val response = server.get(path(paywalledTrackId), authenticatedUSHeaders)
+
+      response.status === 404
+    }
   }
 
 }

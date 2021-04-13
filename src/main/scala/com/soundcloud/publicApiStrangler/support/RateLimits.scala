@@ -9,7 +9,7 @@ object RateLimits {
   private val searchZKBucket = "search"
 
   private def searchRequests: RateLimitClassifier.rateLimitClassifier = {
-    case req: HandlerRequest if searchParams.find(x => req.params.contains(x)).isDefined => true
+    case req: HandlerRequest if searchParams.exists(x => req.params.contains(x)) => true
   }
 
   val searchRateLimiter = new RateLimitClassifier(searchZKBucket, searchRequests)

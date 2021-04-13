@@ -1,13 +1,10 @@
 package com.soundcloud.testutilities
 
-import com.soundcloud.jvmkit.module.zookeeper.{BasePath, ZkClient}
 import com.twitter.finagle
 import com.twitter.finagle.Http
 import com.twitter.finagle.builder.ClientBuilder
 import com.twitter.finagle.http._
 import com.twitter.util.{Await, Duration}
-import org.apache.curator.framework.CuratorFrameworkFactory
-import org.apache.curator.retry.ExponentialBackoffRetry
 import org.specs2.mutable.Specification
 import org.specs2.specification.Scope
 import play.api.libs.json.Json
@@ -85,23 +82,6 @@ trait SpinningUpAppSupport {
       } else {
         throw new ServerUnderTestException(s"Invalid response. Status: ${response.status}. Body: $body")
       }
-    }
-  }
-
-  object ZKSetup {
-    val zkClient = {
-      val zookeeperServers = "zookeeper:2181"
-      val baseSleepTimeInMilliseconds = 1000
-      val maxNumberOfRetries = 5
-      val retryPolicy = new ExponentialBackoffRetry(baseSleepTimeInMilliseconds, maxNumberOfRetries)
-      val curatorZookeeperClient = CuratorFrameworkFactory.newClient(zookeeperServers, retryPolicy)
-      curatorZookeeperClient.start()
-      curatorZookeeperClient.blockUntilConnected()
-      new ZkClient(curatorZookeeperClient)
-    }
-
-    def setData(path: String, data: String) = {
-      zkClient.createRecursively(BasePath.from(path), data.getBytes)
     }
   }
 }
