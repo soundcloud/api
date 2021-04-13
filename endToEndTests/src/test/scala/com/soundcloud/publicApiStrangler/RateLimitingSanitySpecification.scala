@@ -1,37 +1,19 @@
 package com.soundcloud.publicApiStrangler
 
-import com.soundcloud.jvmkit.module.zookeeper.{BasePath, ZkClient}
 import com.soundcloud.testutilities.{GratisMusikDiebstahl, SpinningUpAppSupport}
-import org.apache.curator.framework.CuratorFrameworkFactory
-import org.apache.curator.retry.ExponentialBackoffRetry
 import org.specs2.mutable.Specification
-import org.specs2.specification.Scope
 
 class RateLimitingSanitySpecification extends Specification with SpinningUpAppSupport {
 
-  trait Context extends Scope {
+  trait RateContext extends Context {
     val server = TestServer("publicapistrangler", 5000)
     val adminServer = TestServer("publicapistrangler", 5001)
 
-    val zkClient = {
-      val zookeeperServers = "zookeeper:2181"
-      val baseSleepTimeInMilliseconds = 1000
-      val maxNumberOfRetries = 5
-      val retryPolicy = new ExponentialBackoffRetry(baseSleepTimeInMilliseconds, maxNumberOfRetries)
-      val curatorZookeeperClient = CuratorFrameworkFactory.newClient(zookeeperServers, retryPolicy)
-      curatorZookeeperClient.start()
-      curatorZookeeperClient.blockUntilConnected()
-      new ZkClient(curatorZookeeperClient)
-    }
-
-    private[RateLimitingSanitySpecification] def setData(zkClient: ZkClient, path: String, data: String) = {
-      zkClient.createRecursively(BasePath.from(path), data.getBytes)
-    }
-
-    setData(zkClient, "/public-api-strangler/rollouts/wire-rate-limits", "100")
-    setData(zkClient, "/public-api-strangler/rollouts/probe-rate-limits", "100")
-    setData(zkClient, "/public-api-strangler/rollouts/enforce-rate-limits", "100")
-    setData(zkClient, "/ratelimiting/public-api-strangler/ratelimitgroups/default",
+    ZKSetup.setData("/public-api-strangler/rollouts/wire-rate-limits", "100")
+    ZKSetup.setData("/public-api-strangler/rollouts/probe-rate-limits", "100")
+    ZKSetup.setData("/public-api-strangler/rollouts/enforce-rate-limits", "100")
+    ZKSetup.setData(
+      "/ratelimiting/public-api-strangler/ratelimitgroups/default",
       """
         |{
         |  "id": "default",
@@ -74,12 +56,13 @@ class RateLimitingSanitySpecification extends Specification with SpinningUpAppSu
         |    }
         |  ]
         |}
-      """.stripMargin)
+      """.stripMargin
+    )
   }
 
   "Public API Strangler" should {
 
-    "rate limit test requests satisfying custom classifier, with search query params" in new Context {
+    "rate limit test requests satisfying custom classifier, with search query params" in new RateContext {
 
       server.get(s"/tracks/13158665.json?client_id=${GratisMusikDiebstahl.clientId}&q=search-foo").status ==== 200
       server.get(s"/tracks/13158665.json?client_id=${GratisMusikDiebstahl.clientId}&license=search-bar").status ==== 200
@@ -97,7 +80,7 @@ class RateLimitingSanitySpecification extends Specification with SpinningUpAppSu
       server.get(s"/tracks/13158665.json?client_id=${GratisMusikDiebstahl.clientId}").status ==== 200
     }
 
-    "ratelimit requests for track streams injected via config in code, and not ZK" in new Context {
+    "ratelimit requests for track streams injected via config in code, and not ZK" in new RateContext {
       server.get(s"/i1/tracks/177748926/streams?client_id=${GratisMusikDiebstahl.clientId}").status ==== 200
       server.get(s"/i1/tracks/177748926/streams?client_id=${GratisMusikDiebstahl.clientId}").status ==== 200
       server.get(s"/i1/tracks/177748926/streams?client_id=${GratisMusikDiebstahl.clientId}").status ==== 200

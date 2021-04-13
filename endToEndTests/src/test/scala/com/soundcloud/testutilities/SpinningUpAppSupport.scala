@@ -1,16 +1,18 @@
 package com.soundcloud.testutilities
 
-import java.nio.charset.StandardCharsets
-
+import com.soundcloud.jvmkit.module.zookeeper.{BasePath, ZkClient}
 import com.twitter.finagle
 import com.twitter.finagle.Http
 import com.twitter.finagle.builder.ClientBuilder
 import com.twitter.finagle.http._
 import com.twitter.util.{Await, Duration}
+import org.apache.curator.framework.CuratorFrameworkFactory
+import org.apache.curator.retry.ExponentialBackoffRetry
 import org.specs2.mutable.Specification
 import org.specs2.specification.Scope
 import play.api.libs.json.Json
 
+import java.nio.charset.StandardCharsets
 
 trait SpinningUpAppSupport {
   this: Specification =>
@@ -22,7 +24,6 @@ trait SpinningUpAppSupport {
   case class TestServer(host: String, port: Int) {
     val timeout = Duration.fromSeconds(15)
     val serverAddress = s"$host:$port"
-    val serverUrl = s"http://$serverAddress"
 
     private lazy val client: finagle.Service[Request, Response] = {
       ClientBuilder()
@@ -72,7 +73,7 @@ trait SpinningUpAppSupport {
     lazy val body = response.contentString
     lazy val status = response.status.code
     lazy val headers = response.headerMap
-    lazy val location = response.headerMap.get("Location").getOrElse(null)
+    lazy val location = response.headerMap.get("Location").orNull
     lazy val json = {
       if (response.statusCode > 199 && response.statusCode < 300) {
         val contentType = response.headerMap.get("Content-Type").get
@@ -87,5 +88,20 @@ trait SpinningUpAppSupport {
     }
   }
 
-}
+  object ZKSetup {
+    val zkClient = {
+      val zookeeperServers = "zookeeper:2181"
+      val baseSleepTimeInMilliseconds = 1000
+      val maxNumberOfRetries = 5
+      val retryPolicy = new ExponentialBackoffRetry(baseSleepTimeInMilliseconds, maxNumberOfRetries)
+      val curatorZookeeperClient = CuratorFrameworkFactory.newClient(zookeeperServers, retryPolicy)
+      curatorZookeeperClient.start()
+      curatorZookeeperClient.blockUntilConnected()
+      new ZkClient(curatorZookeeperClient)
+    }
 
+    def setData(path: String, data: String) = {
+      zkClient.createRecursively(BasePath.from(path), data.getBytes)
+    }
+  }
+}
