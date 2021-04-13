@@ -82,7 +82,7 @@ class TrackStreamsHandler(
       streamResponse: MediaStreamResponse
   ): Response = {
     val builder = streamResponse match {
-      case MediaStreamUrl(url) =>
+      case RedirectStreamResponse(url) =>
         ResponseBuilder().header("Location", url).status(Status.Found)
       case MediaStreamNotFoundError =>
         return ErrorResponse.notFound()

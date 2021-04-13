@@ -9,7 +9,7 @@ import com.soundcloud.publicApiStrangler.client.tracks._
 import com.soundcloud.publicApiStrangler.service.TrackVisibilityService
 import com.soundcloud.twinagle.{ErrorCode, TwinagleException}
 import com.twitter.util.Future
-import proto.soundcloud.tracks.api.{GetMediaStreamRequest, MediaService}
+import proto.soundcloud.tracks.api.{GetMediaStreamRequest, GetMediaStreamResponse, MediaService}
 
 class StreamService(
     trackVisibilityService: TrackVisibilityService,
@@ -17,163 +17,106 @@ class StreamService(
 ) {
   private val mp3MimeType = "audio/mpeg"
   private val opusMimeType = """audio/ogg; codecs="opus""""
-  private val allowedMimeTypes = Set(mp3MimeType, opusMimeType)
   private val protoProgressive = "progressive"
   private val protoHls = "hls"
 
   def fetchMultiple(session: UserSession, trackUrn: Urn, secretToken: Option[String]): Future[MediaStreamResponse] =
-    fetch(session, trackUrn, secretToken, fetchTranscodingUrls)
+    fetch(session, trackUrn, secretToken, singleStream = false)
 
   def fetchSingle(session: UserSession, trackUrn: Urn, secretToken: Option[String]): Future[MediaStreamResponse] =
-    fetch(session, trackUrn, secretToken, fetchTranscodingUrl)
-
-  private type Fetch = (UserSession, VisibleTrack) => Future[MediaStreamResponse]
+    fetch(session, trackUrn, secretToken, singleStream = true)
 
   private def fetch(
       session: UserSession,
       trackUrn: Urn,
       secretToken: Option[String],
-      fetcher: Fetch
+      singleStream: Boolean
   ): Future[MediaStreamResponse] = {
     trackVisibilityService
       .tracks(session, List(TrackRequest(trackUrn, secretToken)))
       .map(_.headOption)
-      .flatMap {
-        case Some(track) => fetcher(session, track)
-        case None => Future.value(MediaStreamNotFoundError)
-      }
+      .flatMap(visibleTrack =>
+        visibleTrack
+          .flatMap(track => {
+            track.transcodings
+              .find(_.mimeType == mp3MimeType)
+              .map(mp3 => {
+                if (streamNotAllowed(track)) fetchPreviewUrls(session, track, mp3, singleStream)
+                else fetchStreamUrls(session, track, mp3, singleStream)
+              })
+          })
+          .getOrElse(Future.value(MediaStreamNotFoundError))
+      )
   }
 
-  private def extractTranscodings(session: UserSession, track: VisibleTrack): Map[String, Transcoding] = {
-    track.transcodings
-      .groupBy(_.mimeType)
-      .filter { case (mimeType, _) => allowedMimeTypes.contains(mimeType) }
-      .mapValues(_.head)
-  }
-
-  private def fetchTranscodingUrl(
-      session: UserSession,
-      track: VisibleTrack
-  ): Future[MediaStreamResponse] = {
-    extractTranscodings(session, track).get(mp3MimeType) match {
-      case Some(mp3) =>
-        val streamResponse =
-          // Some labels disallow progressive streams. The best thing we can do in this case is to downgrade to a snippet.
-          if (track.authorization.policy == ContentPolicy.SNIP || track.authorization.contentRestrictions.contains(
-              ContentRestriction.NO_PROGRESSIVE_DOWNLOAD
-            ))
-            fetchPreviewUrl(session, track.urn, track.secretToken, mp3.uuid, protoProgressive)
-          else
-            fetchStreamUrl(session, track.urn, track.secretToken, mp3.uuid, protoProgressive)
-        streamResponse.map {
-          case StreamUrlResponse(url, _) => MediaStreamUrl(url)
-          case _ => MediaStreamNotFoundError
-        }
-      case None => Future.value(MediaStreamNotFoundError)
-    }
-  }
-
-  private def fetchTranscodingUrls(
-      session: UserSession,
-      track: VisibleTrack
-  ): Future[MediaStreamResponse] = {
-    val transcodings = extractTranscodings(session, track)
-    transcodings.get(mp3MimeType) match {
-      case Some(mp3) =>
-        // Some labels disallow progressive streams. The best thing we can do in this case is to downgrade to a snippet.
-        if (track.authorization.policy == ContentPolicy.SNIP || track.authorization.contentRestrictions.contains(
-            ContentRestriction.NO_PROGRESSIVE_DOWNLOAD
-          ))
-          fetchPreviewUrls(session, track, mp3)
-        else
-          fetchStreamUrls(session, track, mp3, transcodings.get(opusMimeType))
-      case None => Future.value(MediaStreamNotFoundError)
-    }
-  }
+  // Some labels disallow progressive streams. The best thing we can do in this case is to downgrade to a snippet.
+  private def streamNotAllowed(track: VisibleTrack): Boolean =
+    track.authorization.policy == ContentPolicy.SNIP ||
+      track.authorization.contentRestrictions.contains(ContentRestriction.NO_PROGRESSIVE_DOWNLOAD)
 
   private def fetchStreamUrls(
       session: UserSession,
       track: VisibleTrack,
       mp3: Transcoding,
-      maybeOpus: Option[Transcoding]
+      singleStream: Boolean
   ): Future[MediaStreamResponse] = {
-    for {
-      (maybeHttpStream, maybeHlsStream, maybeMp3Preview, maybeOpusStream) <- Future.join(
-        fetchStreamUrl(session, track.urn, track.secretToken, mp3.uuid, protoProgressive),
-        fetchStreamUrl(session, track.urn, track.secretToken, mp3.uuid, protoHls),
-        fetchPreviewUrl(session, track.urn, track.secretToken, mp3.uuid, protoProgressive),
-        maybeOpus match {
-          case Some(opus) =>
-            fetchStreamUrl(session, track.urn, track.secretToken, opus.uuid, protoHls)
-          case None => Future.None
-        }
-      )
-    } yield (maybeHttpStream, maybeHlsStream, maybeMp3Preview, maybeOpusStream) match {
-      case (
-          StreamUrlResponse(httpStream, _),
-          StreamUrlResponse(hlsStream, _),
-          StreamUrlResponse(preview, _),
-          opusStreamResult
-          ) =>
-        opusStreamResult match {
-          case StreamUrlResponse(opusUrl, _) =>
-            MediaStreamUrls(httpStream, hlsStream, Some(opusUrl), preview)
-          case _ =>
-            MediaStreamUrls(httpStream, hlsStream, None, preview)
-        }
-      case _ => MediaStreamNotFoundError
+    val futureHttpStream = fetchStreamUrl(session, track.urn, track.secretToken, mp3.uuid, protoProgressive)
+
+    if (singleStream) {
+      return futureHttpStream.map {
+        case Some(http) => RedirectStreamResponse(http)
+        case None => MediaStreamNotFoundError
+      }
     }
+
+    val futureHlsStream = fetchStreamUrl(session, track.urn, track.secretToken, mp3.uuid, protoHls)
+    val futureOpusStream = track.transcodings
+      .find(_.mimeType == opusMimeType)
+      .map(opus => fetchStreamUrl(session, track.urn, track.secretToken, opus.uuid, protoHls))
+      .getOrElse(Future.None)
+    val futureMp3Preview = fetchPreviewUrl(session, track.urn, track.secretToken, mp3.uuid, protoProgressive)
+
+    Future
+      .join(futureHttpStream, futureHlsStream, futureOpusStream, futureMp3Preview)
+      .map {
+        case (Some(httpStream), Some(hlsStream), opus, preview) =>
+          MediaStreamUrls(httpStream, hlsStream, opus, preview)
+        case _ => MediaStreamNotFoundError
+      }
   }
 
   private def fetchPreviewUrls(
       session: UserSession,
       track: VisibleTrack,
-      mp3: Transcoding
+      mp3: Transcoding,
+      singleStream: Boolean
   ): Future[MediaStreamResponse] = {
-    for {
-      (maybeHttp, maybeHls) <- Future.join(
-        fetchPreviewUrl(session, track.urn, track.secretToken, mp3.uuid, protoProgressive),
-        fetchPreviewUrl(session, track.urn, track.secretToken, mp3.uuid, protoHls)
-      )
-    } yield (maybeHttp, maybeHls) match {
-      case (StreamUrlResponse(http, _), StreamUrlResponse(hls, _)) => PreviewUrls(http, hls)
-      case _ => MediaStreamNotFoundError
-    }
-  }
+    val futureHttpStream = fetchPreviewUrl(session, track.urn, track.secretToken, mp3.uuid, protoProgressive)
+    val futureHlsStream =
+      if (singleStream) Future.None else fetchPreviewUrl(session, track.urn, track.secretToken, mp3.uuid, protoHls)
 
-  private def fetchPreviewUrl(
-      session: UserSession,
-      urn: Urn,
-      secretToken: Option[String],
-      transcodingId: String,
-      protocol: String
-  ): Future[StreamResponse] = {
-    val protoUserSession = session.asProtoSession
-
-    val request = GetMediaStreamRequest(
-      userSession = Some(protoUserSession),
-      urn = urn.toString,
-      secretToken = secretToken,
-      transcodingId = transcodingId,
-      protocol = protocol
-    )
-
-    tracksMediaService
-      .getMediaPreview(request)
-      .map(res => StreamUrlResponse(res.url, res.mimeType))
-      .handle {
-        case TwinagleException(ErrorCode.NotFound, _, _, _) => StreamErrorResponse
-        case TwinagleException(ErrorCode.Unauthenticated, _, _, _) => StreamErrorResponse
+    Future
+      .join(futureHttpStream, futureHlsStream)
+      .map {
+        case (Some(http), Some(hls)) => MediaStreamUrls(http, hls)
+        case (Some(http), _) if singleStream => RedirectStreamResponse(http)
+        case _ => MediaStreamNotFoundError
       }
   }
 
-  private def fetchStreamUrl(
+  private def fetchPreviewUrl: (UserSession, Urn, Option[String], String, String) => Future[Option[String]] =
+    fetchUrl(tracksMediaService.getMediaPreview)
+
+  private def fetchStreamUrl: (UserSession, Urn, Option[String], String, String) => Future[Option[String]] =
+    fetchUrl(tracksMediaService.getMediaStream)
+
+  private def fetchUrl(fetchAction: GetMediaStreamRequest => Future[GetMediaStreamResponse])(
       session: UserSession,
       urn: Urn,
       secretToken: Option[String],
       transcodingId: String,
       protocol: String
-  ): Future[StreamResponse] = {
+  ): Future[Option[String]] = {
     val protoUserSession = session.asProtoSession
 
     val request = GetMediaStreamRequest(
@@ -184,12 +127,11 @@ class StreamService(
       protocol = protocol
     )
 
-    tracksMediaService
-      .getMediaStream(request)
-      .map(res => StreamUrlResponse(res.url, res.mimeType))
+    fetchAction(request)
+      .map(res => Some(res.url))
       .handle {
-        case TwinagleException(ErrorCode.NotFound, _, _, _) => StreamErrorResponse
-        case TwinagleException(ErrorCode.Unauthenticated, _, _, _) => StreamErrorResponse
+        case TwinagleException(ErrorCode.NotFound, _, _, _) => None
+        case TwinagleException(ErrorCode.Unauthenticated, _, _, _) => None
       }
   }
 }

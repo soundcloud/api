@@ -68,7 +68,7 @@ class TrackStreamsHandlerSpec extends UnitSpecification {
     ) {
       case (method, path) =>
         "GET /tracks/5/stream" in new MediaServiceContext {
-          streamService.fetchSingle(session, trackUrn, None) returns Future.value(MediaStreamUrl(httpMp3))
+          streamService.fetchSingle(session, trackUrn, None) returns Future.value(RedirectStreamResponse(httpMp3))
 
           val response = call(method, handler.redirectStreamRequest, path)
 
@@ -93,7 +93,7 @@ class TrackStreamsHandlerSpec extends UnitSpecification {
       case (method, path) =>
         s"${method.toString} $path" in new MediaServiceContext {
           streamService.fetchMultiple(session, trackUrn, None) returns Future.value(
-            MediaStreamUrls(httpMp3, hlsMp3, Some(hlsOpus), httpPreviewMp3)
+            MediaStreamUrls(httpMp3, hlsMp3, Some(hlsOpus), Some(httpPreviewMp3))
           )
 
           val response = call(method, handler.handleStreamRequest, path)
@@ -113,7 +113,9 @@ class TrackStreamsHandlerSpec extends UnitSpecification {
 
   "with a secret token" >> {
     trait WithSecretTokenContext extends MediaServiceContext {
-      streamService.fetchSingle(session, trackUrn, Some("itsasecret")) returns Future.value(MediaStreamUrl(httpMp3))
+      streamService.fetchSingle(session, trackUrn, Some("itsasecret")) returns Future.value(
+        RedirectStreamResponse(httpMp3)
+      )
     }
 
     s"should return 302" in new WithSecretTokenContext {
