@@ -2,6 +2,7 @@ package com.soundcloud.publicApiStrangler.handler
 
 import com.soundcloud.jvmkit.module.bff.testsupport.FakeUserAuthentication
 import com.soundcloud.jvmkit.module.http.server.{HandlerRequest, JsonResponseBuilder, ResponseBuilder}
+import com.soundcloud.jvmkit.module.telemetry.Telemetry
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSessionBuilder
 import com.soundcloud.publicApiStrangler.Routing
@@ -25,6 +26,7 @@ class UserRelatedMothershipDispatcherSpec extends UnitSpecification {
     val repostsClientMock = mock[RepostsClient]
     val mothershipDispatcherMock = mock[DispatchToMothershipHandler]
     val request = HandlerRequest(mock[Request])
+    val telemetry = Telemetry.createIsolatedInstance
 
     def loadUserLikeCountsFromLiebling: Boolean = false
 
@@ -34,7 +36,8 @@ class UserRelatedMothershipDispatcherSpec extends UnitSpecification {
       followCountsClientMock,
       lieblingClientMock,
       () => Future.value(loadUserLikeCountsFromLiebling),
-      repostsClientMock
+      repostsClientMock,
+      telemetry
     )
 
     override def routingDefinitions = Routing.forUserRelatedMothershipDispatcher(dispatcher)

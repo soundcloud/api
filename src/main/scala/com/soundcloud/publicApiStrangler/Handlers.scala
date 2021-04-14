@@ -61,7 +61,8 @@ class Handlers(
     followCountsClient,
     lieblingClient,
     enrichLikesCounts,
-    repostsClient
+    repostsClient,
+    telemetry
   )
 
   val userTracksHandler = new UserTracksHandler(
