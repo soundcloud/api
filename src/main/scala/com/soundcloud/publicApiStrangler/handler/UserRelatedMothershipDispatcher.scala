@@ -78,18 +78,18 @@ class UserRelatedMothershipDispatcher(
     }
   }
 
-  private def countPaginationMethodIfNeeded(request: HandlerRequest) = {
-    if (!request.path.isEmpty)
+  private def countPaginationMethodIfNeeded(request: HandlerRequest): Unit = {
+    if (request.path.nonEmpty)
       request.path match {
-        case trackIdFavoritersRegex(_) => {
-          if (request.params.get("cursor").isDefined) {
+        case trackIdFavoritersRegex(_) =>
+          if (request.params.contains("cursor")) {
             trackIdFavoritersPaginationCounter.labels("cursor").inc()
-          } else if (request.params.get("offset").isDefined) {
+          } else if (request.params.contains("offset")) {
             trackIdFavoritersPaginationCounter.labels("offset").inc()
           } else {
             trackIdFavoritersPaginationCounter.labels("none").inc()
           }
-        }
+        case _ =>
       }
   }
 
