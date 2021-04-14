@@ -1,6 +1,5 @@
 package com.soundcloud.publicApiStrangler.service.tracks
 
-import com.soundcloud.api.partners.clients.tracks.Transcoding
 import com.soundcloud.jvmkit.module.util.{Url, Urn}
 import com.soundcloud.publicApiStrangler.authorization.policies._
 import com.soundcloud.publicApiStrangler.client.tracks._

@@ -1,6 +1,5 @@
 package com.soundcloud.publicApiStrangler.client.tracks
 
-import com.soundcloud.api.partners.clients.tracks.Transcoding
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.publicApiStrangler.authorization.policies._
 import org.joda.time.LocalDateTime

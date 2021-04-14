@@ -1,11 +1,9 @@
 package com.soundcloud.publicApiStrangler.service
 
 import java.net.URL
-
-import com.soundcloud.api.partners.clients.tracks.Transcoding
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.publicApiStrangler.client.SystemPlaylistsClient
-import com.soundcloud.publicApiStrangler.client.tracks.{TrackRequest, VisibleTrackBuilder}
+import com.soundcloud.publicApiStrangler.client.tracks.{TrackRequest, Transcoding, VisibleTrackBuilder}
 import com.soundcloud.publicApiStrangler.mapper.similarsounds.{SimilarSounds, SimilarSoundsMeta}
 import com.soundcloud.publicApiStrangler.service.representation.collection.Collection
 import com.soundcloud.publicApiStrangler.service.trackrepresentation.{

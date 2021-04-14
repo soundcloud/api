@@ -1,12 +1,11 @@
 package com.soundcloud.publicApiStrangler.service
 
-import com.soundcloud.api.partners.clients.tracks.Transcoding
 import com.soundcloud.jvmkit.module.outcome._
 import com.soundcloud.jvmkit.module.twirp.proto.UserSessionOps._
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSessionBuilder
 import com.soundcloud.publicApiStrangler.authorization.policies._
-import com.soundcloud.publicApiStrangler.client.tracks.{TrackRequest, VisibleTrackBuilder}
+import com.soundcloud.publicApiStrangler.client.tracks.{TrackRequest, Transcoding, VisibleTrackBuilder}
 import com.soundcloud.publicApiStrangler.service.tracks.VisibleTrackMapper
 import com.twitter.util.{Await, Future}
 import org.joda.time.LocalDateTime

@@ -1,6 +1,5 @@
 package com.soundcloud.publicApiStrangler.service.trackrepresentation
 
-import com.soundcloud.api.partners.clients.tracks.Transcoding
 import com.soundcloud.jvmkit.module.util.{Url, Urn}
 import com.soundcloud.publicApiStrangler.authorization.policies._
 import com.soundcloud.publicApiStrangler.client.media.TrackWaveformUrl
@@ -8,7 +7,13 @@ import com.soundcloud.publicApiStrangler.client.mothership.TrackAudioMetadata
 import com.soundcloud.publicApiStrangler.client.mothership.response.representation.{Geoblockings, User}
 import com.soundcloud.publicApiStrangler.client.pubmese.Isrc
 import com.soundcloud.publicApiStrangler.client.stitch.StitchCounts
-import com.soundcloud.publicApiStrangler.client.tracks.{Artwork, EmbeddingPermission, VisibleTrack, WaveformUrl}
+import com.soundcloud.publicApiStrangler.client.tracks.{
+  Artwork,
+  EmbeddingPermission,
+  Transcoding,
+  VisibleTrack,
+  WaveformUrl
+}
 import com.soundcloud.publicApiStrangler.service.users.UserBuilder
 import com.soundcloud.publicApiStrangler.test.UnitSpecification
 import org.joda.time.LocalDateTime

@@ -71,8 +71,6 @@ object Fixtures {
 
   lazy val similarSoundsNonEmpty = contentsOf("similar-sounds", "non-empty")
 
-  lazy val tracksStreamResponse = fileJson("tracks", "stream_response")
-  lazy val tracksDownloadResponse = fileJson("tracks", "download_response")
   lazy val updateTrackJson = fileJson("tracks", "update_track_json")
   lazy val createTrackJson = fileJson("tracks", "create_track")
 

@@ -1,6 +1,5 @@
 package com.soundcloud.publicApiStrangler.service.media
 
-import com.soundcloud.api.partners.clients.tracks.Transcoding
 import com.soundcloud.jvmkit.module.outcome._
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSessionBuilder

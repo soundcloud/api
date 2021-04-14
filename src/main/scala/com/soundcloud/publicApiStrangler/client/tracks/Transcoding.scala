@@ -1,4 +1,4 @@
-package com.soundcloud.api.partners.clients.tracks
+package com.soundcloud.publicApiStrangler.client.tracks
 
 case class Transcoding(
     uuid: String,
