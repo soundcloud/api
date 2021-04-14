@@ -2,7 +2,7 @@ package com.soundcloud.publicApiStrangler.client.tracks
 
 import com.soundcloud.api.partners.clients.tracks.Transcoding
 import com.soundcloud.jvmkit.module.util.Urn
-import com.soundcloud.publicApiStrangler.authorization.policies.ContentAuthorization
+import com.soundcloud.publicApiStrangler.authorization.policies.{Access, ContentAuthorization}
 import com.soundcloud.publicApiStrangler.client.tracks.EmbeddingPermission.All
 import org.joda.time.LocalDateTime
 
@@ -55,6 +55,7 @@ class VisibleTrackBuilder {
   private var keySignature: Option[String] = None
   private var videoUrl: Option[String] = None
   private var labelId: Option[Long] = None
+  private var access: Option[Access] = None
 
   def setUrn(value: Urn) = {
     urn = value; this
@@ -230,8 +231,12 @@ class VisibleTrackBuilder {
     labelId = value; this
   }
 
+  def setAccess(value: Option[Access]) = {
+    access = value; this
+  }
+
   def build: VisibleTrack =
-    new VisibleTrack(
+    VisibleTrack(
       urn,
       userUrn,
       uid,
@@ -275,6 +280,7 @@ class VisibleTrackBuilder {
       release,
       keySignature,
       videoUrl,
-      labelId
+      labelId,
+      access
     )
 }

@@ -1,7 +1,5 @@
 package com.soundcloud.publicApiStrangler.service.tracks
 
-import java.time.Instant
-
 import com.soundcloud.api.partners.clients.tracks.Transcoding
 import com.soundcloud.jvmkit.module.util.{Url, Urn}
 import com.soundcloud.publicApiStrangler.authorization.policies._
@@ -9,6 +7,8 @@ import com.soundcloud.publicApiStrangler.client.tracks._
 import org.joda.time.LocalDateTime
 import proto.soundcloud.tracks.api.Transcoding.Quality
 import proto.soundcloud.tracks.api.{Track => ProtoTrack}
+
+import java.time.Instant
 
 class VisibleTrackMapper {
 
@@ -108,7 +108,8 @@ class VisibleTrackMapper {
       release = metadata.release,
       keySignature = metadata.keySignature,
       videoUrl = metadata.videoUrl,
-      labelId = metadata.labelId
+      labelId = metadata.labelId,
+      access = None
     )
   }
 }

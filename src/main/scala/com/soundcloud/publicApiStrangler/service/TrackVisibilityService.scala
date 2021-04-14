@@ -4,7 +4,7 @@ import com.soundcloud.jvmkit.module.outcome.{CustomError, Outcome, _}
 import com.soundcloud.jvmkit.module.twirp.proto.UserSessionOps._
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSession
-import com.soundcloud.publicApiStrangler.authorization.policies.{ContentPolicy, MonetizationModel, Reason}
+import com.soundcloud.publicApiStrangler.authorization.policies.{Access, ContentPolicy, MonetizationModel, Reason}
 import com.soundcloud.publicApiStrangler.client.tracks.{TrackRequest, VisibleTrack}
 import com.soundcloud.publicApiStrangler.service.tracks.VisibleTrackMapper
 import com.twitter.util.Future
@@ -66,6 +66,19 @@ class TrackVisibilityService(
     tracksTwinagleClient.getVisibleTracks(request).map { tracksResponse =>
       tracksResponse.tracks.toList
         .map(visibleTrackMapper.apply)
+        .map(visibleTrack => {
+          val access =
+            getAccessFromPolicy(visibleTrack.authorization.policy, visibleTrack.apiStreamable.getOrElse(true))
+          visibleTrack.copy(access = Some(access))
+        })
+    }
+  }
+
+  private def getAccessFromPolicy(policy: ContentPolicy, apiStreamable: Boolean): Access = {
+    (policy, apiStreamable) match {
+      case (_, false) | (ContentPolicy.BLOCK, _) => Access.Blocked
+      case (ContentPolicy.SNIP, _) => Access.Preview
+      case _ => Access.Playable
     }
   }
 }

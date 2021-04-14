@@ -1,7 +1,7 @@
 package com.soundcloud.publicApiStrangler.service.trackrepresentation
 
-import com.soundcloud.publicApiStrangler.client.mothership.response.representation.User
 import com.soundcloud.publicApiStrangler.client.mothership.TrackAudioMetadata
+import com.soundcloud.publicApiStrangler.client.mothership.response.representation.User
 import com.soundcloud.publicApiStrangler.client.pubmese.Isrc
 import com.soundcloud.publicApiStrangler.client.tracks.VisibleTrack
 import com.soundcloud.publicApiStrangler.support.HtmlSanitizer
@@ -87,7 +87,7 @@ object TrackRepresentation {
         "key_signature" -> rep.visibleTrack.keySignature.map(HtmlSanitizer.sanitize),
         "isrc" -> rep.isrc.map(_.toString),
         "video_url" -> rep.visibleTrack.videoUrl,
-        "bpm" -> rep.visibleTrack.bpm.map(roundBpm(_)),
+        "bpm" -> rep.visibleTrack.bpm.map(roundBpm),
         "release_year" -> rep.visibleTrack.releaseYear,
         "release_month" -> rep.releaseMonth,
         "release_day" -> rep.releaseDay,
@@ -97,7 +97,7 @@ object TrackRepresentation {
         "user" -> rep.user,
         "user_uri" -> s"https://api.soundcloud.com/users/${rep.user.urn.identifier}",
         "permalink_url" -> rep.permalinkUrl,
-        "artwork_url" -> rep.visibleTrack.artwork.filename.map(imageUrl(_)),
+        "artwork_url" -> rep.visibleTrack.artwork.filename.map(imageUrl),
         "stream_url" -> rep.streamUrl,
         "download_url" -> rep.downloadUrl,
         "waveform_url" -> rep.waveformUrl,
@@ -113,7 +113,8 @@ object TrackRepresentation {
         "favoritings_count" -> rep.favoritingsCount,
         "reposts_count" -> rep.repostsCount,
         "downloadable" -> rep.downloadable,
-        "downloads_remaining" -> rep.downloadsRemaining
+        "downloads_remaining" -> rep.downloadsRemaining,
+        "access" -> rep.visibleTrack.access.map(_.name)
       )
 
     }

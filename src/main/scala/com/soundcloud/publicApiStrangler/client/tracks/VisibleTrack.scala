@@ -49,5 +49,6 @@ case class VisibleTrack(
     release: Option[String],
     keySignature: Option[String],
     videoUrl: Option[String],
-    labelId: Option[Long]
+    labelId: Option[Long],
+    access: Option[Access]
 )

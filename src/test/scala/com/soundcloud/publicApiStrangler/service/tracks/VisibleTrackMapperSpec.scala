@@ -1,6 +1,5 @@
 package com.soundcloud.publicApiStrangler.service.tracks
 
-import java.time.Instant
 import com.soundcloud.api.partners.clients.tracks.Transcoding
 import com.soundcloud.jvmkit.module.twirp.proto.WellKnownOps._
 import com.soundcloud.jvmkit.module.util.{Url, Urn}
@@ -17,6 +16,8 @@ import proto.soundcloud.tracks.api.{
   Transcoding => ProtoTranscoding,
   WaveformUrl => ProtoWaveformUrl
 }
+
+import java.time.Instant
 
 class VisibleTrackMapperSpec extends Specification {
 
@@ -132,7 +133,7 @@ class VisibleTrackMapperSpec extends Specification {
       visibleTrack.revealComments ==== true
       visibleTrack.labelName ==== None
       visibleTrack.license ==== "all-rights-reserved"
-      visibleTrack.embeddable == Some(true)
+      visibleTrack.embeddable.contains(true)
       visibleTrack.releaseYear ==== None
       visibleTrack.releaseMonth ==== None
       visibleTrack.releaseDay ==== None
@@ -173,6 +174,7 @@ class VisibleTrackMapperSpec extends Specification {
       visibleTrack.keySignature ==== None
       visibleTrack.videoUrl ==== None
       visibleTrack.labelId ==== None
+      visibleTrack.access ==== None
     }
 
   }

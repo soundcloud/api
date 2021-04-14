@@ -1,15 +1,14 @@
 package com.soundcloud.publicApiStrangler.service.trackrepresentation
 
-import java.net.URLEncoder
-
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.publicApiStrangler.client.media.TrackWaveformUrl
-import com.soundcloud.publicApiStrangler.client.mothership.response.representation.{Geoblockings, User}
 import com.soundcloud.publicApiStrangler.client.mothership.TrackAudioMetadata
+import com.soundcloud.publicApiStrangler.client.mothership.response.representation.{Geoblockings, User}
 import com.soundcloud.publicApiStrangler.client.pubmese.Isrc
 import com.soundcloud.publicApiStrangler.client.stitch.StitchCounts
 import com.soundcloud.publicApiStrangler.client.tracks.VisibleTrack
 
+import java.net.URLEncoder
 import scala.collection.immutable.HashSet
 
 class TrackRepresentationBuilder {
@@ -26,7 +25,7 @@ class TrackRepresentationBuilder {
       waveformUrl: TrackWaveformUrl,
       downloadsPerTrack: Option[Int]
   ): TrackRepresentation = {
-    val userIsOwner = sessionUser.map(visibleTrack.userUrn == _).getOrElse(false)
+    val userIsOwner = sessionUser.contains(visibleTrack.userUrn)
     val isAnonymous = sessionUser.isEmpty
 
     TrackRepresentation(
@@ -70,7 +69,7 @@ class TrackRepresentationBuilder {
   private def getSecretUri(visibleTrack: VisibleTrack): Option[String] = {
     if (!visibleTrack.public)
       visibleTrack.secretToken.map(token =>
-        s"https://api.soundcloud.com/tracks/${visibleTrack.urn.identifier}?secret_token=${token}"
+        s"https://api.soundcloud.com/tracks/${visibleTrack.urn.identifier}?secret_token=$token"
       )
     else None
   }
@@ -99,21 +98,21 @@ class TrackRepresentationBuilder {
   }
 
   private def getAvailableCountryNodes(geoblockings: Geoblockings): Option[HashSet[String]] = {
-    if (!geoblockings.isEmpty)
+    if (geoblockings.nonEmpty)
       Some(Country.officiallyAssignedAlpha2Codes.--(geoblockings))
     else None
   }
 
   private def urlFor(visibleTrack: VisibleTrack, subresource: String, secretParam: Option[String]) =
-    secretUrl(s"${baseUrl}/${visibleTrack.urn.identifier.toLong}/$subresource", visibleTrack, secretParam)
+    secretUrl(s"$baseUrl/${visibleTrack.urn.identifier.toLong}/$subresource", visibleTrack, secretParam)
 
   private def urlFor(visibleTrack: VisibleTrack, secretParam: Option[String]) =
-    secretUrl(s"${baseUrl}/${visibleTrack.urn.identifier.toLong}", visibleTrack, secretParam)
+    secretUrl(s"$baseUrl/${visibleTrack.urn.identifier.toLong}", visibleTrack, secretParam)
 
   private def secretUrl(url: String, visibleTrack: VisibleTrack, secretParam: Option[String]): Option[String] = {
-    if (!visibleTrack.public && !secretParam.isEmpty) {
+    if (!visibleTrack.public && secretParam.isDefined) {
       val secret = URLEncoder.encode(secretParam.get, "UTF-8")
-      Some(s"${url}?secret_token=$secret")
+      Some(s"$url?secret_token=$secret")
     } else {
       Some(url)
     }
@@ -124,16 +123,14 @@ class TrackRepresentationBuilder {
       visibleTrack: VisibleTrack,
       secretParam: Option[String]
   ): Option[String] = {
-    path
-      .map(p => {
-        if (!visibleTrack.public && !secretParam.isEmpty) {
-          val secret = URLEncoder.encode(secretParam.get, "UTF-8")
-          Some(s"${p}/$secret")
-        } else {
-          Some(p)
-        }
-      })
-      .getOrElse(None)
+    path.flatMap(p => {
+      if (!visibleTrack.public && secretParam.isDefined) {
+        val secret = URLEncoder.encode(secretParam.get, "UTF-8")
+        Some(s"$p/$secret")
+      } else {
+        Some(p)
+      }
+    })
 
   }
 

@@ -18,7 +18,7 @@ class TracksIntegrationSpec extends ServerSetup {
       )
       (response.json \ "duration").as[Int] must equalTo(189613)
       (response.json \ "streamable").as[Boolean] must equalTo(true)
-//        (response.json \ "access").as[String] must equalTo("playable")
+      (response.json \ "access").as[String] must equalTo("playable")
     }
 
     "should return a snippet of a track" in new TrackContext {
@@ -31,7 +31,7 @@ class TracksIntegrationSpec extends ServerSetup {
       )
       (response.json \ "duration").as[Int] must equalTo(30000)
       (response.json \ "streamable").as[Boolean] must equalTo(true)
-//        (response.json \ "access").as[String] must equalTo("preview")
+      (response.json \ "access").as[String] must equalTo("preview")
     }
 
     "should return a track with api_streamable=false" in new TrackContext {
@@ -44,7 +44,7 @@ class TracksIntegrationSpec extends ServerSetup {
       )
       (response.json \ "duration").as[Int] must equalTo(7889)
       (response.json \ "streamable").as[Boolean] must equalTo(false)
-//        (response.json \ "access").as[String] must equalTo("blocked")
+      (response.json \ "access").as[String] must equalTo("blocked")
     }
 
     "should return error for a blocked track" in new TrackContext {

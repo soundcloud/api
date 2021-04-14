@@ -24,22 +24,14 @@ import proto.soundcloud.tracks.api.{
 class TrackVisibilityServiceSpec extends Specification with Mockito {
 
   trait Context extends Scope {
-    val clientApplication = Urn("soundcloud", "applications", "999")
     lazy val allowlistedClients = Set.empty[Urn]
     lazy val userUrn = Urn("soundcloud", "users", "123")
     lazy val session =
       (new UserSessionBuilder).setUser(userUrn).setAgent(clientApplication).build()
-    val trackUrn = Urn("soundcloud", "tracks", "432")
-    val tracksTwinagleClient = mock[TrackMetadataService]
-    val mapper = smartMock[VisibleTrackMapper]
     lazy val service = new TrackVisibilityService(
       tracksTwinagleClient,
       mapper,
       allowlistedClients
-    )
-    val trackRequest = TrackRequest(trackUrn, None)
-    val transcodings = List(
-      Transcoding("mp3-uuid", "preset", "audio/mpeg", List("progressive"), None, "sq", 180000, None)
     )
     lazy val visibleTrack =
       (new VisibleTrackBuilder)
@@ -47,8 +39,16 @@ class TrackVisibilityServiceSpec extends Specification with Mockito {
         .setUserUrn(userUrn)
         .setDisabledAt(None)
         .setTranscodings(transcodings)
+        .setAccess(Some(Access.Playable))
         .build
-
+    val clientApplication = Urn("soundcloud", "applications", "999")
+    val trackUrn = Urn("soundcloud", "tracks", "432")
+    val tracksTwinagleClient = mock[TrackMetadataService]
+    val mapper = smartMock[VisibleTrackMapper]
+    val trackRequest = TrackRequest(trackUrn, None)
+    val transcodings = List(
+      Transcoding("mp3-uuid", "preset", "audio/mpeg", List("progressive"), None, "sq", 180000, None)
+    )
     val protoTrack = ProtoTrack()
     val request = GetVisibleTracksRequest(
       trackRequests =
@@ -123,6 +123,7 @@ class TrackVisibilityServiceSpec extends Specification with Mockito {
                 MonetizationModel.SUB_HIGH_TIER
               )
             )
+            .setAccess(Some(Access.Playable))
             .build
       }
 

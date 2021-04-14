@@ -76,7 +76,7 @@ class TrackRepresentationsServiceSpec extends TrackRepresentationsSpecificationC
   "#tracks" >> {
 
     "Returns Some(x) for public tracks" in new Context {
-      val track = trackvisibilityTrack()
+      val track = trackVisibilityTrack()
       setUpMocksForExistingTrack(track, session)
 
       val trackRepLike = Await.result(tracksService.track(session, trackRequest))
@@ -89,7 +89,7 @@ class TrackRepresentationsServiceSpec extends TrackRepresentationsSpecificationC
     }
 
     "Returns Some(x) for private tracks if the owner is requesting" in new Context {
-      val track = trackvisibilityTrack(isPublic = false)
+      val track = trackVisibilityTrack(isPublic = false)
       val ownerSession = new UserSessionBuilder().setUser(trackOwnerUrn).build
       setUpMocksForExistingTrack(track, ownerSession)
 
@@ -103,7 +103,7 @@ class TrackRepresentationsServiceSpec extends TrackRepresentationsSpecificationC
 
     "Returns Some(x) for private tracks if there is a correct secret token" in new Context {
       val correctSecretToken = "aSecre_t"
-      val track = trackvisibilityTrack(isPublic = false, secretToken = correctSecretToken)
+      val track = trackVisibilityTrack(isPublic = false, secretToken = correctSecretToken)
       override val trackRequest = TrackRequest(trackUrn, Some(correctSecretToken))
       setUpMocksForExistingTrack(track, session)
 
@@ -116,7 +116,7 @@ class TrackRepresentationsServiceSpec extends TrackRepresentationsSpecificationC
     }
 
     "Returns null ISRC when Pubmese is failing" in new Context {
-      val track = trackvisibilityTrack()
+      val track = trackVisibilityTrack()
       setUpMocksForExistingTrack(track, session)
       when(pubmeseClient.isrcsForTracks(session, Set(trackUrn)))
         .thenReturn(Future.exception(new RuntimeException("bewm! hahahaaa")))
@@ -130,7 +130,7 @@ class TrackRepresentationsServiceSpec extends TrackRepresentationsSpecificationC
     }
 
     "Returns no geoblockings if Moshimoshi is failing" in new Context {
-      val track = trackvisibilityTrack()
+      val track = trackVisibilityTrack()
       setUpMocksForExistingTrack(track, session)
       when(okidokiClient.fetchTrackGeoblockings(session, Set(trackUrn)))
         .thenReturn(Future.exception(new RuntimeException("bewm! hahahaaa")))
@@ -143,7 +143,7 @@ class TrackRepresentationsServiceSpec extends TrackRepresentationsSpecificationC
     }
 
     "Returns no geoblockings if Moshimoshi returns an empty list" in new Context {
-      val track = trackvisibilityTrack()
+      val track = trackVisibilityTrack()
       setUpMocksForExistingTrack(track, session)
       when(okidokiClient.fetchTrackGeoblockings(session, Set(trackUrn)))
         .thenReturn(Future.value(Map(trackUrn -> List())))
@@ -157,7 +157,7 @@ class TrackRepresentationsServiceSpec extends TrackRepresentationsSpecificationC
     }
 
     "Returns Success when partial audio metadata for a track is unavailable" in new Context {
-      val track = trackvisibilityTrack()
+      val track = trackVisibilityTrack()
       setUpMocksForExistingTrack(track, session)
       when(okidokiClient.fetchTracksAudioMetadata(session, Set(trackUrn)))
         .thenReturn(Future.value(Map(trackUrn -> TrackAudioMetadata("storing", None, None))))
@@ -175,7 +175,7 @@ class TrackRepresentationsServiceSpec extends TrackRepresentationsSpecificationC
 
     "user_favorite" >> {
       "is true when the user has favourited the track, and is logged in" in new Context {
-        val track = trackvisibilityTrack()
+        val track = trackVisibilityTrack()
         override val session = new UserSessionBuilder().setUser(requestingUserUrn).build
         setUpMocksForExistingTrack(track, session)
 
@@ -188,7 +188,7 @@ class TrackRepresentationsServiceSpec extends TrackRepresentationsSpecificationC
       }
 
       "is false when the user has not favourited the track, and is logged in" in new Context {
-        val track = trackvisibilityTrack()
+        val track = trackVisibilityTrack()
         override val session = new UserSessionBuilder().setUser(requestingUserUrn).build
         setUpMocksForExistingTrack(track, session)
         when(lieblingClient.userLikedTracks(session, Set(trackUrn), session.getUser))
@@ -203,7 +203,7 @@ class TrackRepresentationsServiceSpec extends TrackRepresentationsSpecificationC
       }
 
       "is not present when the user is not logged in" in new Context {
-        val track = trackvisibilityTrack()
+        val track = trackVisibilityTrack()
         override val session = anonymousSession
         setUpMocksForExistingTrack(track, session)
 
@@ -218,7 +218,7 @@ class TrackRepresentationsServiceSpec extends TrackRepresentationsSpecificationC
 
     "user_playback_count" >> {
       "is always 1 when the user is logged in" in new Context {
-        val track = trackvisibilityTrack()
+        val track = trackVisibilityTrack()
         override val session = new UserSessionBuilder().setUser(requestingUserUrn).build
         setUpMocksForExistingTrack(track, session)
 
@@ -231,7 +231,7 @@ class TrackRepresentationsServiceSpec extends TrackRepresentationsSpecificationC
       }
 
       "is not present when the user is not logged in" in new Context {
-        val track = trackvisibilityTrack()
+        val track = trackVisibilityTrack()
         override val session = anonymousSession
         session.isAnonymous ==== true
         setUpMocksForExistingTrack(track, session)
@@ -247,7 +247,7 @@ class TrackRepresentationsServiceSpec extends TrackRepresentationsSpecificationC
 
     "waveform_url" >> {
       "is present when urlgen returns a stream URL" in new Context {
-        val track = trackvisibilityTrack()
+        val track = trackVisibilityTrack()
         setUpMocksForExistingTrack(track, session)
 
         val trackRepLike = Await.result(tracksService.track(session, trackRequest))
@@ -261,7 +261,7 @@ class TrackRepresentationsServiceSpec extends TrackRepresentationsSpecificationC
 
     "label" >> {
       "is present when track has a label" in new Context {
-        val track = trackvisibilityTrack()
+        val track = trackVisibilityTrack()
         setUpMocksForExistingTrack(track, session)
         val trackRepLike = Await.result(tracksService.track(session, trackRequest))
         trackRepLike match {
@@ -272,7 +272,7 @@ class TrackRepresentationsServiceSpec extends TrackRepresentationsSpecificationC
       }
 
       "is not present when track has not a label" in new Context {
-        val track = trackvisibilityTrack(labelId = None)
+        val track = trackVisibilityTrack(labelId = None)
         setUpMocksForExistingTrack(track, session)
         when(okidokiClient.fetchUsersMap(session, Set.empty)).thenReturn(Future.value(Map.empty[Urn, User]))
         val trackRepLike = Await.result(tracksService.track(session, trackRequest))
@@ -287,7 +287,7 @@ class TrackRepresentationsServiceSpec extends TrackRepresentationsSpecificationC
     "private urls" >> {
       "track token in params is correct" >> {
         "appends the track secret token to urls" in new Context {
-          val track = trackvisibilityTrack().copy(permalinkUrl = Some("http://soundcloud.com/foo/bar"), public = false)
+          val track = trackVisibilityTrack().copy(permalinkUrl = Some("http://soundcloud.com/foo/bar"), public = false)
           override val trackRequest = TrackRequest(trackUrn, Some("secr3t-Token"))
 
           val trackOwnerSession = new UserSessionBuilder().setUser(trackOwner.urn).build()
@@ -310,7 +310,7 @@ class TrackRepresentationsServiceSpec extends TrackRepresentationsSpecificationC
         }
 
         "does not add a secret token to null values" in new Context {
-          val track = trackvisibilityTrack().copy(permalinkUrl = None)
+          val track = trackVisibilityTrack().copy(permalinkUrl = None)
           override val trackRequest = TrackRequest(trackUrn, Some("s-4kT0a"))
           setUpMocksForExistingTrack(track, session)
 
@@ -327,7 +327,7 @@ class TrackRepresentationsServiceSpec extends TrackRepresentationsSpecificationC
 
     "downloadable" >> {
       "is true when track is downloadable, and below user's quota" in new Context {
-        val track = trackvisibilityTrack(isDownloadable = true)
+        val track = trackVisibilityTrack(isDownloadable = true)
         setUpMocksForExistingTrack(track, session)
         userQuotaClient.downloadsPerTrack(session, Set(track.userUrn)) returns Future.value(
           Map(track.userUrn -> Some(100))
@@ -345,7 +345,7 @@ class TrackRepresentationsServiceSpec extends TrackRepresentationsSpecificationC
       }
 
       "it true when track is downloadable, and use has no quota" in new Context {
-        val track = trackvisibilityTrack(isDownloadable = true)
+        val track = trackVisibilityTrack(isDownloadable = true)
         setUpMocksForExistingTrack(track, session)
         userQuotaClient.downloadsPerTrack(session, Set(track.userUrn)) returns Future.value(Map(track.userUrn -> None))
         stitchClient.countsForTracks(session, Set((track.userUrn, trackUrn))) returns Future.value(
@@ -361,7 +361,7 @@ class TrackRepresentationsServiceSpec extends TrackRepresentationsSpecificationC
       }
 
       "is false when track is downloadable, and above user's quota" in new Context {
-        val track = trackvisibilityTrack(isDownloadable = true)
+        val track = trackVisibilityTrack(isDownloadable = true)
         setUpMocksForExistingTrack(track, session)
         userQuotaClient.downloadsPerTrack(session, Set(track.userUrn)) returns Future.value(
           Map(track.userUrn -> Some(100))
@@ -379,7 +379,7 @@ class TrackRepresentationsServiceSpec extends TrackRepresentationsSpecificationC
       }
 
       "is false when track is not downloadable, and below user's quota" in new Context {
-        val track = trackvisibilityTrack()
+        val track = trackVisibilityTrack()
         setUpMocksForExistingTrack(track, session)
         userQuotaClient.downloadsPerTrack(session, Set(track.userUrn)) returns Future.value(
           Map(track.userUrn -> Some(100))
@@ -400,7 +400,7 @@ class TrackRepresentationsServiceSpec extends TrackRepresentationsSpecificationC
     "downloads_remaining" >> {
       "when the requesting user is not the owner of the track" >> {
         "it is not shown" in new Context {
-          val track = trackvisibilityTrack(isDownloadable = true)
+          val track = trackVisibilityTrack(isDownloadable = true)
           setUpMocksForExistingTrack(track, session)
           userQuotaClient.downloadsPerTrack(session, Set(track.userUrn)) returns Future.value(
             Map(track.userUrn -> Some(100))
@@ -420,7 +420,7 @@ class TrackRepresentationsServiceSpec extends TrackRepresentationsSpecificationC
 
       "when the requesting user is the owner of the track" >> {
         "is shown when track is below quota" in new Context {
-          val track = trackvisibilityTrack(isDownloadable = true, user = session.getUser)
+          val track = trackVisibilityTrack(isDownloadable = true, user = session.getUser)
           setUpMocksForExistingTrack(track, session)
           when(userQuotaClient.downloadsPerTrack(session, Set(track.userUrn))).thenReturn(
             Future.value(
@@ -442,7 +442,7 @@ class TrackRepresentationsServiceSpec extends TrackRepresentationsSpecificationC
         }
 
         "it not shown when the track's user has no quota (eg. is unlimited)" in new Context {
-          val track = trackvisibilityTrack(isDownloadable = true, user = session.getUser)
+          val track = trackVisibilityTrack(isDownloadable = true, user = session.getUser)
           setUpMocksForExistingTrack(track, session)
           userQuotaClient.downloadsPerTrack(session, Set(track.userUrn)) returns Future.value(
             Map(track.userUrn -> None)
@@ -460,7 +460,7 @@ class TrackRepresentationsServiceSpec extends TrackRepresentationsSpecificationC
         }
 
         "is shown when no downloads remain" in new Context {
-          val track = trackvisibilityTrack(isDownloadable = true, user = session.getUser)
+          val track = trackVisibilityTrack(isDownloadable = true, user = session.getUser)
           setUpMocksForExistingTrack(track, session)
           userQuotaClient.downloadsPerTrack(session, Set(track.userUrn)) returns Future.value(
             Map(track.userUrn -> Some(100))
@@ -478,7 +478,7 @@ class TrackRepresentationsServiceSpec extends TrackRepresentationsSpecificationC
         }
 
         "is shown even if track is not downloadable" in new Context {
-          val track = trackvisibilityTrack(user = session.getUser)
+          val track = trackVisibilityTrack(user = session.getUser)
           setUpMocksForExistingTrack(track, session)
           userQuotaClient.downloadsPerTrack(session, Set(track.userUrn)) returns Future.value(
             Map(track.userUrn -> Some(100))
@@ -503,7 +503,7 @@ class TrackRepresentationsServiceSpec extends TrackRepresentationsSpecificationC
         "returns proper counts" in new Context {
           override val session = new UserSessionBuilder().setUser(trackOwnerUrn).build
 
-          val track = trackvisibilityTrack()
+          val track = trackVisibilityTrack()
           setUpMocksForExistingTrack(track, session)
 
           val trackRepLike = Await.result(tracksService.track(session, trackRequest))
@@ -522,7 +522,7 @@ class TrackRepresentationsServiceSpec extends TrackRepresentationsSpecificationC
         "returns empty counts if Stitch is failing" in new Context {
           override val session = new UserSessionBuilder().setUser(trackOwnerUrn).build
 
-          val track = trackvisibilityTrack()
+          val track = trackVisibilityTrack()
           setUpMocksForExistingTrack(track, session)
           when(stitchClient.countsForTracks(session, Set((trackOwnerUrn, trackUrn))))
             .thenReturn(Future.exception(new RuntimeException("bewm! hahahaaa")))
@@ -543,7 +543,7 @@ class TrackRepresentationsServiceSpec extends TrackRepresentationsSpecificationC
         "includes comment_count if reveal_comments = true" in new Context {
           override val session = new UserSessionBuilder().setUser(trackOwnerUrn).build
 
-          val track = trackvisibilityTrack()
+          val track = trackVisibilityTrack()
           setUpMocksForExistingTrack(track, session)
 
           val trackRepLike = Await.result(tracksService.track(session, trackRequest))
@@ -559,7 +559,7 @@ class TrackRepresentationsServiceSpec extends TrackRepresentationsSpecificationC
         "does not include comment_count if reveal_comments = false" in new Context {
           override val session = new UserSessionBuilder().setUser(trackOwnerUrn).build
 
-          val track = trackvisibilityTrack(revealComments = false)
+          val track = trackVisibilityTrack(revealComments = false)
           setUpMocksForExistingTrack(track, session)
 
           val trackRepLike = Await.result(tracksService.track(session, trackRequest))
@@ -576,7 +576,7 @@ class TrackRepresentationsServiceSpec extends TrackRepresentationsSpecificationC
       "not requesting as uploader" >> {
         "track stats are not public" >> {
           "returns no counts" in new Context {
-            val track = trackvisibilityTrack()
+            val track = trackVisibilityTrack()
             setUpMocksForExistingTrack(track, session)
 
             val trackRepLike = Await.result(tracksService.track(session, trackRequest))
@@ -595,7 +595,7 @@ class TrackRepresentationsServiceSpec extends TrackRepresentationsSpecificationC
 
         "track has public stats" >> {
           "returns proper counts" in new Context {
-            val track = trackvisibilityTrack(revealStats = true)
+            val track = trackVisibilityTrack(revealStats = true)
             setUpMocksForExistingTrack(track, session)
 
             val trackRepLike = Await.result(tracksService.track(session, trackRequest))
@@ -613,7 +613,7 @@ class TrackRepresentationsServiceSpec extends TrackRepresentationsSpecificationC
           }
 
           "includes comment_count if reveal_comments = true" in new Context {
-            val track = trackvisibilityTrack(revealStats = true)
+            val track = trackVisibilityTrack(revealStats = true)
             setUpMocksForExistingTrack(track, session)
 
             val trackRepLike = Await.result(tracksService.track(session, trackRequest))
@@ -627,7 +627,7 @@ class TrackRepresentationsServiceSpec extends TrackRepresentationsSpecificationC
           }
 
           "does not include comment_count if reveal_comments = false" in new Context {
-            val track = trackvisibilityTrack(revealStats = true, revealComments = false)
+            val track = trackVisibilityTrack(revealStats = true, revealComments = false)
             setUpMocksForExistingTrack(track, session)
 
             val trackRepLike = Await.result(tracksService.track(session, trackRequest))
@@ -641,7 +641,7 @@ class TrackRepresentationsServiceSpec extends TrackRepresentationsSpecificationC
           }
 
           "returns empty counts if Stitch is failing" in new Context {
-            val track = trackvisibilityTrack(revealStats = true)
+            val track = trackVisibilityTrack(revealStats = true)
             setUpMocksForExistingTrack(track, session)
             when(stitchClient.countsForTracks(session, Set((trackOwnerUrn, trackUrn))))
               .thenReturn(Future.exception(new RuntimeException("bewm! hahahaaa")))

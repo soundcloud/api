@@ -223,7 +223,7 @@ class LikesServiceSpec extends TrackRepresentationsSpecificationContext {
 
   "#userTrackLikeForUrn" >> {
     "when all data is available" in new Context {
-      val track = trackvisibilityTrack()
+      val track = trackVisibilityTrack()
       when(trackRepresentationsService.tracks(session, List(trackRequest)))
         .thenReturn(Future.value(List(createTrackRepresentation)))
       when(lieblingClient.userTracksLikesForUrns(session, trackOwnerUrn, List(track.urn)))
@@ -241,7 +241,7 @@ class LikesServiceSpec extends TrackRepresentationsSpecificationContext {
 
   "#userTracksLikes" >> {
     "when all data is available" in new Context {
-      val track = trackvisibilityTrack()
+      val track = trackVisibilityTrack()
       val likesPage = LikesPage(
         likes = List(Like(requestingUserUrn, trackUrn, createdAt.toDateTime(), None)),
         meta = LikesPageMeta(

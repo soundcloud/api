@@ -4,8 +4,8 @@ import com.soundcloud.jvmkit.module.util.session.{UserSession, UserSessionBuilde
 import com.soundcloud.jvmkit.module.util.{Url, Urn}
 import com.soundcloud.publicApiStrangler.authorization.policies._
 import com.soundcloud.publicApiStrangler.client.media.TrackWaveformUrl
-import com.soundcloud.publicApiStrangler.client.mothership.response.representation.Geoblockings
 import com.soundcloud.publicApiStrangler.client.mothership.TrackAudioMetadata
+import com.soundcloud.publicApiStrangler.client.mothership.response.representation.Geoblockings
 import com.soundcloud.publicApiStrangler.client.pubmese.Isrc
 import com.soundcloud.publicApiStrangler.client.stitch.StitchCounts
 import com.soundcloud.publicApiStrangler.client.tracks.{Artwork, EmbeddingPermission, TrackRequest, VisibleTrack}
@@ -50,7 +50,7 @@ trait TrackRepresentationsSpecificationContext extends UnitSpecification {
 
     def trackAudioMetadata: Map[Urn, TrackAudioMetadata] = Map(trackUrn -> trackAudioMetadataList)
 
-    def trackvisibilityTrack(
+    def trackVisibilityTrack(
         disabledAt: Option[LocalDateTime] = None,
         isPublic: Boolean = true,
         secretToken: String = "secr3t-Token",
@@ -104,7 +104,8 @@ trait TrackRepresentationsSpecificationContext extends UnitSpecification {
         supplyChainStatus = None,
         waveformUrls = List.empty,
         transcodings = List.empty,
-        authorization = authorization
+        authorization = authorization,
+        access = Some(Access.Playable)
       )
 
     def isrc(wrapped: String = "US-S1Z-99-00001"): Map[Urn, Isrc] =
@@ -122,7 +123,7 @@ trait TrackRepresentationsSpecificationContext extends UnitSpecification {
     def createTrackRepresentation: TrackRepresentation =
       trackRepresentationBuilder.build(
         sessionUser = session.user,
-        visibleTrack = trackvisibilityTrack(),
+        visibleTrack = trackVisibilityTrack(),
         user = trackOwner,
         isrc = Some(Isrc("US-S1Z-99-00001")),
         counts = StitchCounts(111, 222, 333, 444, 555),

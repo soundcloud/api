@@ -4,8 +4,8 @@ import com.soundcloud.api.partners.clients.tracks.Transcoding
 import com.soundcloud.jvmkit.module.util.{Url, Urn}
 import com.soundcloud.publicApiStrangler.authorization.policies._
 import com.soundcloud.publicApiStrangler.client.media.TrackWaveformUrl
-import com.soundcloud.publicApiStrangler.client.mothership.response.representation.{Geoblockings, User}
 import com.soundcloud.publicApiStrangler.client.mothership.TrackAudioMetadata
+import com.soundcloud.publicApiStrangler.client.mothership.response.representation.{Geoblockings, User}
 import com.soundcloud.publicApiStrangler.client.pubmese.Isrc
 import com.soundcloud.publicApiStrangler.client.stitch.StitchCounts
 import com.soundcloud.publicApiStrangler.client.tracks.{Artwork, EmbeddingPermission, VisibleTrack, WaveformUrl}
@@ -113,7 +113,8 @@ trait TrackRepresentationSpecContext {
       MonetizationModel.AD_SUPPORTED
     ),
     transcodings = List.empty[Transcoding],
-    waveformUrls = List.empty[WaveformUrl]
+    waveformUrls = List.empty[WaveformUrl],
+    access = Some(Access.Playable)
   )
 
   def defaultIsrc = Some(Isrc("US-S1Z-99-00001"))
@@ -467,7 +468,6 @@ class TrackRepresentationSpec extends UnitSpecification {
 
   "domain lockings" >> {
     trait Context extends Scope with TrackRepresentationSpecContext {
-
       val trackRepresentation: TrackRepresentation = createTrackRepresentation()
     }
 
@@ -479,7 +479,6 @@ class TrackRepresentationSpec extends UnitSpecification {
 
   "user playback count" >> {
     trait Context extends Scope with TrackRepresentationSpecContext {
-
       val trackRepresentation: TrackRepresentation = createTrackRepresentation()
     }
 
@@ -793,6 +792,7 @@ class TrackRepresentationSpec extends UnitSpecification {
       trackJson \ "state" ==== JsDefined(JsString("finished"))
       trackJson \ "original_format" ==== JsDefined(JsString("vqf"))
       trackJson \ "original_content_size" ==== JsDefined(JsNumber(9001))
+      trackJson \ "access" ==== JsDefined(JsString("playable"))
 
       val userJson = trackJson \ "user"
       userJson \ "id" ==== JsDefined(JsNumber(3456))
@@ -918,6 +918,13 @@ class TrackRepresentationSpec extends UnitSpecification {
       trackJson \ "release" ==== JsDefined(JsString("bla"))
       trackJson \ "track_type" ==== JsDefined(JsString("bla"))
       trackJson \ "key_signature" ==== JsDefined(JsString("bla"))
+    }
+
+    "no access" in new Context {
+      val visibleTrack = defaultTrack.copy(access = None)
+      val trackRep = createTrackRepresentation(visibleTrack = visibleTrack)
+      val trackJson = Json.toJson(trackRep)
+      trackJson \ "access" ==== JsDefined(JsNull)
     }
   }
 }
