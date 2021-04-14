@@ -80,21 +80,18 @@ class StreamServiceSpec extends UnitSpecification {
 
   "error when no track is found" in new Context {
     override lazy val tracks = List[Outcome[VisibleTrack]]()
-    Await.result(service.fetchSingle(session, trackUrn, secretToken)) ==== NotFound().bad
-    Await.result(service.fetchMultiple(session, trackUrn, secretToken)) ==== NotFound().bad
+    Await.result(service.fetchUrls(session, trackUrn, secretToken)) ==== NotFound().bad
   }
 
   "error when track is not streamable" in new Context {
     lazy val unavailableError = CustomError(UnavailableByPolicy(trackUrn, Reason.NOT_SUPPORTED)).bad
     override lazy val tracks = List[Outcome[VisibleTrack]](unavailableError)
-    Await.result(service.fetchSingle(session, trackUrn, secretToken)) ==== unavailableError
-    Await.result(service.fetchMultiple(session, trackUrn, secretToken)) ==== unavailableError
+    Await.result(service.fetchUrls(session, trackUrn, secretToken)) ==== unavailableError
   }
 
   "error when no MP3 transodings are returned" in new Context {
     override lazy val transcodings = List(opusTranscoding)
-    Await.result(service.fetchSingle(session, trackUrn, secretToken)) ==== NotFound().bad
-    Await.result(service.fetchMultiple(session, trackUrn, secretToken)) ==== NotFound().bad
+    Await.result(service.fetchUrls(session, trackUrn, secretToken)) ==== NotFound().bad
   }
 
   "downgrades to snippet when MP3 transodings are returned but progressive streaming restricted" in new Context {
@@ -112,16 +109,18 @@ class StreamServiceSpec extends UnitSpecification {
     )
 
     override lazy val transcodings = List(mp3Transcoding)
-    Await.result(service.fetchSingle(session, trackUrn, secretToken)) ==== RedirectStreamResponse("http://snippet").good
-    Await.result(service.fetchMultiple(session, trackUrn, secretToken)) ==== MediaStreamUrls(
+    Await.result(service.fetchUrls(session, trackUrn, secretToken, singleStream = true)) ==== RedirectStreamResponse(
+      "http://snippet"
+    ).good
+    Await.result(service.fetchUrls(session, trackUrn, secretToken)) ==== MediaStreamUrls(
       "http://snippet",
       "http://snippet"
     ).good
   }
 
-  "#fetchSingle" >> {
+  "#fetchUrls single" >> {
     "when track is streamable and policy is not BLOCK" >> {
-      "Map NotFound response from Tracks to MediaStreamNotFoundError" in new Context {
+      "Map NotFound response from Tracks to NotFound" in new Context {
         tracksMediaTwirpClient.getMediaStream(any[GetMediaStreamRequest]) returns Future.exception(
           TwinagleException(ErrorCode.NotFound, "stream not found")
         )
@@ -130,10 +129,10 @@ class StreamServiceSpec extends UnitSpecification {
           TwinagleException(ErrorCode.NotFound, "stream not found")
         )
 
-        Await.result(service.fetchSingle(session, trackUrn, secretToken)) ==== NotFound().bad
+        Await.result(service.fetchUrls(session, trackUrn, secretToken, singleStream = true)) ==== NotFound().bad
       }
 
-      "Map Unauthenticated response from Tracks to MediaStreamNotFoundError" in new Context {
+      "Map Unauthenticated response from Tracks to NotAllowed" in new Context {
         tracksMediaTwirpClient.getMediaStream(any[GetMediaStreamRequest]) returns Future.exception(
           TwinagleException(ErrorCode.Unauthenticated, "stream not authorised")
         )
@@ -142,26 +141,26 @@ class StreamServiceSpec extends UnitSpecification {
           TwinagleException(ErrorCode.Unauthenticated, "stream not authorised")
         )
 
-        Await.result(service.fetchSingle(session, trackUrn, secretToken)) ==== NotFound().bad
+        Await.result(service.fetchUrls(session, trackUrn, secretToken, singleStream = true)) ==== NotAuthorized().bad
       }
 
-      "returns an MP3 stream url with rollout" in new Context {
+      "returns an MP3 stream url" in new Context {
         tracksMediaTwirpClient.getMediaStream(any[GetMediaStreamRequest]) returns Future.value(streamUrlTwirpResponse)
 
-        val result = Await.result(service.fetchSingle(session, trackUrn, secretToken))
+        val result = Await.result(service.fetchUrls(session, trackUrn, secretToken, singleStream = true))
 
         result ==== RedirectStreamResponse("http://stream").good
       }
 
       "returns an MP3 snippet url if policy is SNIP" in new Context {
         override lazy val policy = ContentPolicy.SNIP
-        val result = Await.result(service.fetchSingle(session, trackUrn, secretToken))
+        val result = Await.result(service.fetchUrls(session, trackUrn, secretToken, true))
         result ==== RedirectStreamResponse("http://snippet").good
       }
     }
   }
 
-  "#fetchMultiple" >> {
+  "#fetchUrls multiple" >> {
     "Map NotFound response from Tracks to unavailableError outcome" in new Context {
       tracksMediaTwirpClient.getMediaStream(any[GetMediaStreamRequest]) returns Future.exception(
         TwinagleException(ErrorCode.NotFound, "stream not found")
@@ -171,10 +170,10 @@ class StreamServiceSpec extends UnitSpecification {
         TwinagleException(ErrorCode.NotFound, "stream not found")
       )
 
-      Await.result(service.fetchMultiple(session, trackUrn, secretToken)) ==== NotFound().bad
+      Await.result(service.fetchUrls(session, trackUrn, secretToken)) ==== NotFound().bad
     }
 
-    "Map Unauthenticated response from Tracks to MediaStreamNotFoundError" in new Context {
+    "Map Unauthenticated response from Tracks to not authorized" in new Context {
       tracksMediaTwirpClient.getMediaStream(any[GetMediaStreamRequest]) returns Future.exception(
         TwinagleException(ErrorCode.Unauthenticated, "stream not authorised")
       )
@@ -183,7 +182,7 @@ class StreamServiceSpec extends UnitSpecification {
         TwinagleException(ErrorCode.Unauthenticated, "stream not authorised")
       )
 
-      Await.result(service.fetchMultiple(session, trackUrn, secretToken)) ==== NotFound().bad
+      Await.result(service.fetchUrls(session, trackUrn, secretToken)) ==== NotAuthorized().bad
     }
 
     "returns multiple stream urls and one snippet url" in new Context {
@@ -198,7 +197,7 @@ class StreamServiceSpec extends UnitSpecification {
       Future.value(GetMediaStreamResponse(b, "audio/mpeg")),
       Future.value(GetMediaStreamResponse(c, """audio/ogg; codecs="opus"""")))
 
-      val result = Await.result(service.fetchMultiple(session, trackUrn, secretToken))
+      val result = Await.result(service.fetchUrls(session, trackUrn, secretToken))
       result ==== MediaStreamUrls(a, b, Some(c), Some(d)).good
     }
 
@@ -214,7 +213,7 @@ class StreamServiceSpec extends UnitSpecification {
         Future.value(GetMediaStreamResponse(b, "audio/mpeg"))
       )
 
-      val result = Await.result(service.fetchMultiple(session, trackUrn, secretToken))
+      val result = Await.result(service.fetchUrls(session, trackUrn, secretToken))
       result ==== MediaStreamUrls(a, b).good
     }
 
@@ -230,7 +229,7 @@ class StreamServiceSpec extends UnitSpecification {
       ),
       Future.value(GetMediaStreamResponse(b, "audio/mpeg")))
 
-      val result = Await.result(service.fetchMultiple(session, trackUrn, secretToken))
+      val result = Await.result(service.fetchUrls(session, trackUrn, secretToken))
       result ==== MediaStreamUrls(a, b, None, Some(c)).good
     }
   }

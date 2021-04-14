@@ -31,7 +31,7 @@ class TrackStreamsIntegrationSpec extends ServerSetup {
     "should return an error for a track with api_streamable=false" in new TrackStreamContext {
       val response = server.get(path(freeTierNonStreamableTrackId), authenticatedUSHeaders)
 
-      response.status === 404
+      response.status === 403
     }
 
     "should return error for a blocked track" in new TrackStreamContext {

@@ -47,7 +47,7 @@ class TrackStreamsHandler(
     userAuthentication.withUserSession(request) { session =>
       extractParams(request) match {
         case Some(streamParams) =>
-          handleWithStreamService(session, streamParams, singleStream).flatMap {
+          streamService.fetchUrls(session, streamParams.trackUrn, streamParams.secretToken, singleStream).flatMap {
             case Good(streamResponse) =>
               trackAccessRecorderService.recordStreamAccess(
                 session,
@@ -57,22 +57,11 @@ class TrackStreamsHandler(
               )(Future.value(renderStreamResponse(request, session, streamResponse)))
             case Bad(CustomError(UnavailableByPolicy(_, reason), _)) =>
               Future.value(Reasonator.reasonToError(reason))
+            case Bad(NotAuthorized(_)) => Future.value(ErrorResponse.forbidden())
             case Bad(_) => Future.value(ErrorResponse.notFound())
           }
         case None => Future.value(ErrorResponse.badRequest())
       }
-    }
-  }
-
-  private def handleWithStreamService(
-      session: UserSession,
-      streamParams: StreamParams,
-      singleStream: Boolean
-  ): Future[Outcome[MediaStreamResponse]] = {
-    if (singleStream) {
-      streamService.fetchSingle(session, streamParams.trackUrn, streamParams.secretToken)
-    } else {
-      streamService.fetchMultiple(session, streamParams.trackUrn, streamParams.secretToken)
     }
   }
 

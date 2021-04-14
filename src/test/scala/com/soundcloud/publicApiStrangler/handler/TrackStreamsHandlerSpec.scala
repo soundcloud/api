@@ -71,7 +71,8 @@ class TrackStreamsHandlerSpec extends UnitSpecification {
     ) {
       case (method, path) =>
         "GET /tracks/5/stream" in new MediaServiceContext {
-          streamService.fetchSingle(session, trackUrn, None) returns Future.value(RedirectStreamResponse(httpMp3).good)
+          streamService.fetchUrls(session, trackUrn, None, singleStream = true) returns
+            Future.value(RedirectStreamResponse(httpMp3).good)
 
           val response = call(method, handler.redirectStreamRequest, path)
 
@@ -95,7 +96,7 @@ class TrackStreamsHandlerSpec extends UnitSpecification {
     ) {
       case (method, path) =>
         s"${method.toString} $path" in new MediaServiceContext {
-          streamService.fetchMultiple(session, trackUrn, None) returns Future.value(
+          streamService.fetchUrls(session, trackUrn, None) returns Future.value(
             MediaStreamUrls(httpMp3, hlsMp3, Some(hlsOpus), Some(httpPreviewMp3)).good
           )
 
@@ -116,7 +117,7 @@ class TrackStreamsHandlerSpec extends UnitSpecification {
 
   "with a secret token" >> {
     trait WithSecretTokenContext extends MediaServiceContext {
-      streamService.fetchSingle(session, trackUrn, Some("itsasecret")) returns Future.value(
+      streamService.fetchUrls(session, trackUrn, Some("itsasecret"), singleStream = true) returns Future.value(
         RedirectStreamResponse(httpMp3).good
       )
     }
@@ -130,7 +131,7 @@ class TrackStreamsHandlerSpec extends UnitSpecification {
 
   "when streaming is not found" >> {
     trait StreamingNotAllowedContext extends MediaServiceContext {
-      streamService.fetchSingle(session, trackUrn, None) returns Future.value(NotFound().bad)
+      streamService.fetchUrls(session, trackUrn, None, singleStream = true) returns Future.value(NotFound().bad)
     }
 
     s"should return 404" in new StreamingNotAllowedContext {
@@ -141,7 +142,7 @@ class TrackStreamsHandlerSpec extends UnitSpecification {
 
   "when streaming is not allowed" >> {
     trait StreamingNotAllowedContext extends MediaServiceContext {
-      streamService.fetchSingle(session, trackUrn, None) returns Future.value(
+      streamService.fetchUrls(session, trackUrn, None, singleStream = true) returns Future.value(
         CustomError(UnavailableByPolicy(trackUrn, Reason.GEO)).bad
       )
     }

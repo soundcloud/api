@@ -20,25 +20,11 @@ class StreamService(
   private val protoProgressive = "progressive"
   private val protoHls = "hls"
 
-  def fetchMultiple(
-      session: UserSession,
-      trackUrn: Urn,
-      secretToken: Option[String]
-  ): Future[Outcome[MediaStreamResponse]] =
-    fetch(session, trackUrn, secretToken, singleStream = false)
-
-  def fetchSingle(
-      session: UserSession,
-      trackUrn: Urn,
-      secretToken: Option[String]
-  ): Future[Outcome[MediaStreamResponse]] =
-    fetch(session, trackUrn, secretToken, singleStream = true)
-
-  private def fetch(
+  def fetchUrls(
       session: UserSession,
       trackUrn: Urn,
       secretToken: Option[String],
-      singleStream: Boolean
+      singleStream: Boolean = false
   ): Future[Outcome[MediaStreamResponse]] = {
     trackVisibilityService
       .tracks(session, List(TrackRequest(trackUrn, secretToken)))
@@ -69,26 +55,21 @@ class StreamService(
   ): Future[Outcome[MediaStreamResponse]] = {
     val futureHttpStream = fetchStreamUrl(session, track.urn, track.secretToken, mp3.uuid, protoProgressive)
 
-    if (singleStream) {
-      return futureHttpStream.map {
-        case Some(http) => RedirectStreamResponse(http).good
-        case None => NotFound().bad
-      }
-    }
+    if (singleStream) return futureHttpStream.map(_.map(RedirectStreamResponse))
 
     val futureHlsStream = fetchStreamUrl(session, track.urn, track.secretToken, mp3.uuid, protoHls)
     val futureOpusStream = track.transcodings
       .find(_.mimeType == opusMimeType)
       .map(opus => fetchStreamUrl(session, track.urn, track.secretToken, opus.uuid, protoHls))
-      .getOrElse(Future.None)
+      .getOrElse(Future.value(NotFound().bad))
     val futureMp3Preview = fetchPreviewUrl(session, track.urn, track.secretToken, mp3.uuid, protoProgressive)
 
     Future
       .join(futureHttpStream, futureHlsStream, futureOpusStream, futureMp3Preview)
       .map {
-        case (Some(httpStream), Some(hlsStream), opus, preview) =>
-          MediaStreamUrls(httpStream, hlsStream, opus, preview).good
-        case _ => NotFound().bad
+        case (Good(http), Good(hls), opus, preview) => MediaStreamUrls(http, hls, opus.toOption, preview.toOption).good
+        case (Bad(err), _, _, _) => err.bad
+        case (_, Bad(err), _, _) => err.bad
       }
   }
 
@@ -99,31 +80,33 @@ class StreamService(
       singleStream: Boolean
   ): Future[Outcome[MediaStreamResponse]] = {
     val futureHttpStream = fetchPreviewUrl(session, track.urn, track.secretToken, mp3.uuid, protoProgressive)
-    val futureHlsStream =
-      if (singleStream) Future.None else fetchPreviewUrl(session, track.urn, track.secretToken, mp3.uuid, protoHls)
+
+    if (singleStream) return futureHttpStream.map(_.map(RedirectStreamResponse))
+
+    val futureHlsStream = fetchPreviewUrl(session, track.urn, track.secretToken, mp3.uuid, protoHls)
 
     Future
       .join(futureHttpStream, futureHlsStream)
       .map {
-        case (Some(http), Some(hls)) => MediaStreamUrls(http, hls).good
-        case (Some(http), _) if singleStream => RedirectStreamResponse(http).good
-        case _ => NotFound().bad
+        case (Good(http), Good(hls)) => MediaStreamUrls(http, hls).good
+        case (Bad(err), _) => err.bad
+        case (_, Bad(err)) => err.bad
       }
   }
 
-  private def fetchPreviewUrl: (UserSession, Urn, Option[String], String, String) => Future[Option[String]] =
-    fetchUrl(tracksMediaService.getMediaPreview)
+  private def fetchPreviewUrl: (UserSession, Urn, Option[String], String, String) => Future[Outcome[String]] =
+    fetch(tracksMediaService.getMediaPreview)
 
-  private def fetchStreamUrl: (UserSession, Urn, Option[String], String, String) => Future[Option[String]] =
-    fetchUrl(tracksMediaService.getMediaStream)
+  private def fetchStreamUrl: (UserSession, Urn, Option[String], String, String) => Future[Outcome[String]] =
+    fetch(tracksMediaService.getMediaStream)
 
-  private def fetchUrl(fetchAction: GetMediaStreamRequest => Future[GetMediaStreamResponse])(
+  private def fetch(fetchAction: GetMediaStreamRequest => Future[GetMediaStreamResponse])(
       session: UserSession,
       urn: Urn,
       secretToken: Option[String],
       transcodingId: String,
       protocol: String
-  ): Future[Option[String]] = {
+  ): Future[Outcome[String]] = {
     val protoUserSession = session.asProtoSession
 
     val request = GetMediaStreamRequest(
@@ -135,10 +118,10 @@ class StreamService(
     )
 
     fetchAction(request)
-      .map(res => Some(res.url))
+      .map(res => res.url.good)
       .handle {
-        case TwinagleException(ErrorCode.NotFound, _, _, _) => None
-        case TwinagleException(ErrorCode.Unauthenticated, _, _, _) => None
+        case TwinagleException(ErrorCode.NotFound, _, _, _) => NotFound().bad
+        case TwinagleException(ErrorCode.Unauthenticated, _, _, _) => NotAuthorized().bad
       }
   }
 }
