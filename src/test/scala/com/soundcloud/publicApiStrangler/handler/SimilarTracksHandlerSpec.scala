@@ -5,6 +5,7 @@ import java.net.URL
 import com.soundcloud.jvmkit.module.bff.testsupport.FakeUserAuthentication
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.publicApiStrangler.Routing
+import com.soundcloud.publicApiStrangler.handler.support.requestParser.AccessParams
 import com.soundcloud.publicApiStrangler.service.SimilarTracksService
 import com.soundcloud.publicApiStrangler.service.representation.collection.Collection
 import com.soundcloud.publicApiStrangler.service.trackrepresentation.{TrackPagination, TrackRepresentationSpecContext}
@@ -44,8 +45,10 @@ class SimilarTracksHandlerSpec extends UnitSpecification with TrackRepresentatio
     val paginationParams = "?limit=1&offset=2"
     val path = s"/tracks/1/related"
 
-    when(similarTracksService.similarTracks(session, trackUrn, paginationParams(path + paginationParams)))
-      .thenReturn(Future(Some(mocktracksCollection)))
+    when(
+      similarTracksService
+        .similarTracks(session, trackUrn, AccessParams.defaultAccess, paginationParams(path + paginationParams))
+    ).thenReturn(Future(Some(mocktracksCollection)))
 
     val response = get(path + paginationParams)
     response.statusCode ==== 200
@@ -57,7 +60,12 @@ class SimilarTracksHandlerSpec extends UnitSpecification with TrackRepresentatio
 
     when(
       similarTracksService
-        .similarTracks(session, Urn("soundcloud", "tracks", "123"), paginationParams(path + paginationParams))
+        .similarTracks(
+          session,
+          Urn("soundcloud", "tracks", "123"),
+          AccessParams.defaultAccess,
+          paginationParams(path + paginationParams)
+        )
     ).thenReturn(Future(None))
 
     val response = get(path + paginationParams)

@@ -21,17 +21,14 @@ class SimilarTracksService(
   def similarTracks(
       session: UserSession,
       trackUrn: Urn,
+      access: AccessParams,
       trackPagination: TrackPagination
   ): Future[Option[Collection[TrackRepresentation]]] = {
     for {
       similarTracks <- systemPlaylistsClient.fetchSimilar(session, trackUrn)
       trackUrns = similarTracks.map(similarTrack => similarTrack.similarTracks).getOrElse(List.empty).toList
       trackUrnsPage = trackPagination.calculateTrackUrnPage(trackUrns).toList
-      tracks <- trackRepresentationsService.tracks(
-        session,
-        trackUrnsPage.map(TrackRequest(_, None)),
-        AccessParams.defaultAccess
-      )
+      tracks <- trackRepresentationsService.tracks(session, trackUrnsPage.map(TrackRequest(_, None)), access)
       finalPage = trackPagination.calculateFinalPage(tracks)
     } yield {
       finalPage match {

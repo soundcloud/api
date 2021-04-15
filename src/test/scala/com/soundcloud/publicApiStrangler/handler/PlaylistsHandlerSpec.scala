@@ -6,6 +6,7 @@ import com.soundcloud.jvmkit.module.util.{Geo, Urn}
 import com.soundcloud.jvmkit.module.outcome._
 import com.soundcloud.publicApiStrangler.Routing
 import com.soundcloud.publicApiStrangler.client.playlists.PlaylistDeletionClient
+import com.soundcloud.publicApiStrangler.handler.support.requestParser.AccessParams
 import com.soundcloud.publicApiStrangler.service.PlaylistsService
 import com.soundcloud.publicApiStrangler.service.pagination.OffsetBasedPagination
 import com.soundcloud.publicApiStrangler.service.playlists.PlaylistBuilder
@@ -124,7 +125,7 @@ class PlaylistsHandlerSpec extends UnitSpecification {
     "returns track collection when playlist found" in new Context {
       val unpaginatedTracksCollection = Collection(List(requestedTrack1, requestedTrack2), None)
 
-      when(playlistsService.fetchPlaylistTracks(session, playlistUrn, None, None))
+      when(playlistsService.fetchPlaylistTracks(session, playlistUrn, None, AccessParams.defaultAccess, None))
         .thenReturn(Future.value(Good(unpaginatedTracksCollection)))
 
       val response = get("/playlists/1/tracks")
@@ -139,15 +140,17 @@ class PlaylistsHandlerSpec extends UnitSpecification {
       val paginatedTracksCollection =
         Collection(List(requestedTrack1, requestedTrack2), Some(pagination.normalizedHref))
 
-      when(playlistsService.fetchPlaylistTracks(session, playlistUrn, Some("s-3creT"), Some(pagination)))
-        .thenReturn(Future.value(Good(paginatedTracksCollection)))
+      when(
+        playlistsService
+          .fetchPlaylistTracks(session, playlistUrn, Some("s-3creT"), AccessParams.defaultAccess, Some(pagination))
+      ).thenReturn(Future.value(Good(paginatedTracksCollection)))
 
       val response = get(path)
       response.status.code ==== 200
     }
 
     "returns 404 when no playlist found" in new Context {
-      when(playlistsService.fetchPlaylistTracks(session, playlistUrn, None, None))
+      when(playlistsService.fetchPlaylistTracks(session, playlistUrn, None, AccessParams.defaultAccess, None))
         .thenReturn(Future.value(Bad(NotFound("playlist not found"))))
 
       val response = get("/playlists/1/tracks")

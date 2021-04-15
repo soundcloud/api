@@ -36,6 +36,7 @@ class PlaylistsService(
       session: UserSession,
       playlistUrn: Urn,
       candidateSecretToken: Option[String],
+      access: AccessParams,
       pagination: Option[OffsetBasedPagination]
   ): Future[Outcome[Collection[TrackRepresentation]]] = {
     val playlistRequest = PlaylistRequest(urn = playlistUrn, secretToken = candidateSecretToken)
@@ -44,7 +45,7 @@ class PlaylistsService(
       visiblePlaylist = visiblePlaylistObject.flatMap(response => playlistProtoMapper.apply(response, pagination))
       playlistTrackRequests = visiblePlaylist.map(_.trackRequests).headOption
       tracks <- playlistTrackRequests
-        .map(trackRequests => tracksService.tracks(session, trackRequests.requests, AccessParams.defaultAccess))
+        .map(trackRequests => tracksService.tracks(session, trackRequests.requests, access))
         .getOrElse(Future.value(List.empty))
     } yield {
       playlistTrackRequests match {

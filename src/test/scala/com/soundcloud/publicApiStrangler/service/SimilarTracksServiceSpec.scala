@@ -80,7 +80,8 @@ class SimilarTracksServiceSpec extends UnitSpecification {
           .tracks(session, similarSoundsMockUrns.map(TrackRequest(_, None)), AccessParams.defaultAccess)
       ).thenReturn(Future(List(trackRepresentationMock)))
 
-      val similarTracks = Await.result(similarTracksService.similarTracks(session, track, trackPagination))
+      val similarTracks =
+        Await.result(similarTracksService.similarTracks(session, track, AccessParams.defaultAccess, trackPagination))
 
       similarTracks match {
         case Some(res) => res must beAnInstanceOf[Collection[TrackRepresentation]]
@@ -93,7 +94,8 @@ class SimilarTracksServiceSpec extends UnitSpecification {
       when(trackRepresentationService.tracks(session, List.empty, AccessParams.defaultAccess))
         .thenReturn(Future(List.empty))
 
-      val similarTracks = Await.result(similarTracksService.similarTracks(session, track, trackPagination))
+      val similarTracks =
+        Await.result(similarTracksService.similarTracks(session, track, AccessParams.defaultAccess, trackPagination))
 
       similarTracks must beEmpty
     }

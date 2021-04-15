@@ -5,6 +5,7 @@ import com.soundcloud.jvmkit.module.http.server.{HandlerRequest, JsonResponseBui
 import com.soundcloud.jvmkit.module.outcome._
 import com.soundcloud.publicApiStrangler.client.playlists.PlaylistDeletionClient
 import com.soundcloud.publicApiStrangler.handler.support.error.UnhandledOutcomeException
+import com.soundcloud.publicApiStrangler.handler.support.requestParser.AccessParamsExtractor
 import com.soundcloud.publicApiStrangler.service.PlaylistsService
 import com.soundcloud.publicApiStrangler.service.pagination.OffsetBasedPagination
 import com.soundcloud.publicApiStrangler.service.representation.collection.Collection
@@ -60,9 +61,10 @@ class PlaylistsHandler(
       val hasLinkedPartitioning = request.params.get("linked_partitioning")
       val pagination =
         hasLinkedPartitioning.map(_ => OffsetBasedPagination.build(request, Seq("linked_partitioning")))
+      val access = AccessParamsExtractor.unapply(request.params)
       Try(getPlaylistUrn(request)) match {
         case Return(urn) =>
-          playlistsService.fetchPlaylistTracks(session, urn, candidateSecretToken, pagination).map {
+          playlistsService.fetchPlaylistTracks(session, urn, candidateSecretToken, access, pagination).map {
             case Good(tracks) =>
               JsonResponseBuilder.ok(body = Collection.getRepresentation(tracks, hasLinkedPartitioning.isDefined))
             case Bad(NotFound(_)) => ErrorResponse.notFound()

@@ -218,7 +218,7 @@ class PlaylistsServiceSpec extends UnitSpecification {
       val result =
         Await.result(
           playlistsService
-            .fetchPlaylistTracks(session, requestedPlaylistUrn, candidateSecretToken, None)
+            .fetchPlaylistTracks(session, requestedPlaylistUrn, candidateSecretToken, AccessParams.defaultAccess, None)
         )
 
       result match {
@@ -243,7 +243,13 @@ class PlaylistsServiceSpec extends UnitSpecification {
       val result =
         Await.result(
           playlistsService
-            .fetchPlaylistTracks(session, requestedPlaylistUrn, candidateSecretToken, Some(offsetBasedPagination))
+            .fetchPlaylistTracks(
+              session,
+              requestedPlaylistUrn,
+              candidateSecretToken,
+              AccessParams.defaultAccess,
+              Some(offsetBasedPagination)
+            )
         )
 
       result match {
@@ -259,7 +265,7 @@ class PlaylistsServiceSpec extends UnitSpecification {
       val result =
         Await.result(
           playlistsService
-            .fetchPlaylistTracks(session, requestedPlaylistUrn, candidateSecretToken, None)
+            .fetchPlaylistTracks(session, requestedPlaylistUrn, candidateSecretToken, AccessParams.defaultAccess, None)
         )
 
       result ==== Bad(NotFound("playlist not found"))

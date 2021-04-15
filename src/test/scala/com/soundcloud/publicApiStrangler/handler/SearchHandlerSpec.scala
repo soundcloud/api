@@ -22,7 +22,7 @@ import com.soundcloud.publicApiStrangler.service.representation.collection.Colle
 import com.soundcloud.publicApiStrangler.service.trackrepresentation.{TrackPagination, TrackRepresentationSpecContext}
 import com.soundcloud.publicApiStrangler.service.users.UserBuilder
 import com.soundcloud.publicApiStrangler.test.{HandlerSpecificationScope, UnitSpecification}
-import com.twitter.finagle.http.Request
+import com.twitter.finagle.http.{ParamMap, Request}
 import com.twitter.util.Future
 import org.mockito.Mockito.when
 
@@ -149,7 +149,7 @@ class SearchHandlerSpec extends UnitSpecification {
       val queryString = "?q=foo&offset=10&limit=5&linked_partitioning=1"
       searchService.searchTracks(
         anonymousSession,
-        Map("q" -> "foo", "offset" -> "10", "limit" -> "5", "linked_partitioning" -> "1"),
+        ParamMap(("q", "foo"), ("offset", "10"), ("limit", "5"), ("linked_partitioning", "1")),
         paginationParams(path + queryString)
       ) returns Future
         .value(
@@ -166,7 +166,7 @@ class SearchHandlerSpec extends UnitSpecification {
       val queryString = "?q=foo&offset=10&limit=5&linked_partitioning=1"
       searchService.searchTracks(
         anonymousSession,
-        Map("q" -> "foo", "offset" -> "10", "limit" -> "5", "linked_partitioning" -> "1"),
+        ParamMap(("q", "foo"), ("offset", "10"), ("limit", "5"), ("linked_partitioning", "1")),
         paginationParams(path + queryString)
       ) returns NotValid("not valid").badF
 

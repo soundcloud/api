@@ -4,7 +4,7 @@ import com.soundcloud.jvmkit.module.outcome._
 import com.soundcloud.jvmkit.module.twirp.proto.UserSessionOps._
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSession
-import com.soundcloud.publicApiStrangler.authorization.policies.{ContentPolicy, ContentRestriction}
+import com.soundcloud.publicApiStrangler.authorization.policies.{Access, ContentPolicy, ContentRestriction}
 import com.soundcloud.publicApiStrangler.client.tracks._
 import com.soundcloud.publicApiStrangler.handler.support.requestParser.AccessParams
 import com.soundcloud.publicApiStrangler.service.TrackVisibilityService
@@ -28,7 +28,7 @@ class StreamService(
       singleStream: Boolean = false
   ): Future[Outcome[MediaStreamResponse]] = {
     trackVisibilityService
-      .tracks(session, List(TrackRequest(trackUrn, secretToken)), AccessParams.defaultAccess)
+      .tracks(session, List(TrackRequest(trackUrn, secretToken)), AccessParams(Set(Access.Preview, Access.Playable)))
       .flatMap(_.headOption match {
         case Some(Good(visibleTrack)) =>
           visibleTrack.transcodings

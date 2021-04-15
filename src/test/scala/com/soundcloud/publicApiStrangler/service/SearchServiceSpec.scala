@@ -19,6 +19,7 @@ import com.soundcloud.publicApiStrangler.service.trackrepresentation.{
   TrackRepresentationsSpecificationContext
 }
 import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures
+import com.twitter.finagle.http.ParamMap
 import com.twitter.util.{Await, Future}
 import org.mockito.Mockito._
 import play.api.libs.json.JsObject
@@ -157,7 +158,7 @@ class SearchServiceSpec extends TrackRepresentationsSpecificationContext {
         ).goodF
       )
 
-      val result = Await.result(searchService.searchTracks(session, Map("q" -> query), trackPagination).value)
+      val result = Await.result(searchService.searchTracks(session, ParamMap(("q", query)), trackPagination).value)
 
       val tracksCollection = result.getOrElse(Collection(List.empty, None))
       tracksCollection.items ==== List(trackRepresentationMock)
@@ -186,7 +187,7 @@ class SearchServiceSpec extends TrackRepresentationsSpecificationContext {
         ).goodF
       )
 
-      val result = Await.result(searchService.searchTracks(session, Map("q" -> query), trackPagination).value)
+      val result = Await.result(searchService.searchTracks(session, ParamMap(("q", query)), trackPagination).value)
 
       val tracksCollection = result.getOrElse(Collection(List.empty, None))
       tracksCollection.items ==== List.empty

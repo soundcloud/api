@@ -1,9 +1,9 @@
 package com.soundcloud.publicApiStrangler.service
 
 import com.soundcloud.jvmkit.module.http.client.{Params, StringParam}
+import com.soundcloud.jvmkit.module.outcome._
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSession
-import com.soundcloud.jvmkit.module.outcome._
 import com.soundcloud.publicApiStrangler.client.followcounts.FollowCountsClient
 import com.soundcloud.publicApiStrangler.client.mothership.OkidokiClient
 import com.soundcloud.publicApiStrangler.client.mothership.response.mapper.UserMapper
@@ -11,7 +11,7 @@ import com.soundcloud.publicApiStrangler.client.mothership.response.representati
 import com.soundcloud.publicApiStrangler.client.reposts.RepostsClient
 import com.soundcloud.publicApiStrangler.client.search.SearchClient
 import com.soundcloud.publicApiStrangler.client.tracks.TrackRequest
-import com.soundcloud.publicApiStrangler.handler.support.requestParser.AccessParams
+import com.soundcloud.publicApiStrangler.handler.support.requestParser.AccessParamsExtractor
 import com.soundcloud.publicApiStrangler.service.pagination.OffsetBasedPagination
 import com.soundcloud.publicApiStrangler.service.playlists.PlaylistRequest
 import com.soundcloud.publicApiStrangler.service.playlists.representation.Playlist
@@ -21,6 +21,7 @@ import com.soundcloud.publicApiStrangler.service.trackrepresentation.{
   TrackRepresentation,
   TrackRepresentationsService
 }
+import com.twitter.finagle.http.ParamMap
 
 class SearchService(
     searchClient: SearchClient,
@@ -55,13 +56,14 @@ class SearchService(
 
   def searchTracks(
       session: UserSession,
-      params: Map[String, String],
+      params: ParamMap,
       trackPagination: TrackPagination
   ): OutcomeF[Collection[TrackRepresentation]] = {
     val mapParams = mapTrackParams(params) ++ Params(
       "filter.content_tier" -> "FREE",
       "filter.content_country" -> session.getGeo.getCountryCode
     )
+    val access = AccessParamsExtractor.unapply(params)
 
     for {
       searchPage <- searchClient.searchTracks(session, mapParams)
@@ -69,7 +71,7 @@ class SearchService(
         .tracks(
           session,
           searchPage.docs.map(doc => TrackRequest(doc.urn, None)).toList,
-          AccessParams.defaultAccess
+          access
         )
         .outcomeF
     } yield {

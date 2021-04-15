@@ -8,6 +8,7 @@ import com.soundcloud.jvmkit.module.outcome._
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.publicApiStrangler.handler.representation.collection.CollectionResponse
+import com.soundcloud.publicApiStrangler.handler.support.requestParser.{AccessParams, AccessParamsExtractor}
 import com.soundcloud.publicApiStrangler.service.SimilarTracksService
 import com.soundcloud.publicApiStrangler.service.representation.collection.Collection
 import com.soundcloud.publicApiStrangler.service.trackrepresentation.{TrackPagination, TrackRepresentation}
@@ -29,10 +30,11 @@ class SimilarTracksHandler(
     userAuthentication.withUserSession(request) { (session: UserSession) =>
       val pagination = TrackPagination.fromRequest(request.params, new URL(baseUrl + request.uri))
       val hasLinkedPartitioning = request.params.contains("linked_partitioning")
+      val access = AccessParamsExtractor.unapply(request.params)
 
       Try(getTrackUrn(request)) match {
         case Return(urn) =>
-          val similarTracksCollection = performGetSimilarTracks(session, urn, pagination)
+          val similarTracksCollection = performGetSimilarTracks(session, urn, access, pagination)
           CollectionResponse.handleCollectionResponse(similarTracksCollection, hasLinkedPartitioning)
         case Throw(e) => Future.value(ErrorResponse.badRequest(e.getMessage))
       }
@@ -42,10 +44,11 @@ class SimilarTracksHandler(
   def performGetSimilarTracks(
       session: UserSession,
       trackUrn: Urn,
+      access: AccessParams,
       pagination: TrackPagination
   ): Future[Outcome[Collection[TrackRepresentation]]] = {
     similarTracksService
-      .similarTracks(session, trackUrn, pagination)
+      .similarTracks(session, trackUrn, access, pagination)
       .map {
         case Some(res) => Good(res)
         case None => NotFound().bad
