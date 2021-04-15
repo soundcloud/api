@@ -21,6 +21,7 @@ class TimelineService(
 
   def fetchFollowingTracksForUser(
       session: LoggedInUserSession,
+      access: AccessParams,
       cursor: Option[String],
       reverseCursor: Boolean,
       limit: Int,
@@ -29,12 +30,13 @@ class TimelineService(
     for {
       trackActivities <- timelineJsonClient.followingsTracks(session, cursor, limit, reverseCursor, cursorEncoding)
       timelineResponse = timelineResponseMapper(trackActivities)
-      tracks <- getTrackRepresentations(session, timelineResponse.events)
+      tracks <- getTrackRepresentations(session, timelineResponse.events, access)
     } yield tracks
   }
 
   def fetchTimelineForUser(
       session: LoggedInUserSession,
+      access: AccessParams,
       cursor: Option[String],
       reverseCursor: Boolean,
       limit: Int,
@@ -43,7 +45,7 @@ class TimelineService(
   ): Future[Timeline] = {
     for {
       timelineResponse <- fetchTimelineObjects(session, cursor, reverseCursor, limit, cursorEncoding)
-      tracks <- getTrackRepresentations(session, timelineResponse.events)
+      tracks <- getTrackRepresentations(session, timelineResponse.events, access)
       playlists <- getPlaylistRepresentations(session, timelineResponse.events)
     } yield {
       val timelineItems = createTimelineItems(timelineResponse.events, tracks, playlists)
@@ -53,6 +55,7 @@ class TimelineService(
 
   def fetchTimelineTracksForUser(
       session: LoggedInUserSession,
+      access: AccessParams,
       cursor: Option[String],
       reverseCursor: Boolean,
       limit: Int,
@@ -61,7 +64,7 @@ class TimelineService(
   ): Future[Timeline] = {
     for {
       timelineResponse <- fetchTimelineObjects(session, cursor, reverseCursor, limit, cursorEncoding)
-      tracks <- getTrackRepresentations(session, timelineResponse.events)
+      tracks <- getTrackRepresentations(session, timelineResponse.events, access)
     } yield {
       val trackTimelineItems = timelineResponse.events.flatMap(event => createTrackTimelineItem(tracks, event))
       Timeline(trackTimelineItems, timelineResponse.meta, pagination)
@@ -97,11 +100,12 @@ class TimelineService(
 
   private def getTrackRepresentations(
       session: LoggedInUserSession,
-      events: List[TimelineEvent]
+      events: List[TimelineEvent],
+      access: AccessParams
   ): Future[List[TrackRepresentation]] = {
     val trackUrns = trackUrnsFromEvents(events)
     trackRepresentationsService
-      .tracks(session, trackUrns.map(TrackRequest(_, None)), AccessParams.explicitAccess)
+      .tracks(session, trackUrns.map(TrackRequest(_, None)), access)
   }
 
   private def getPlaylistRepresentations(

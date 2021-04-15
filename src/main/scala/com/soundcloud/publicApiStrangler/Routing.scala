@@ -130,8 +130,8 @@ object Routing {
   }
 
   def forTimelineHandler(timelineHandler: TimelineHandler): List[(Method, String, Handler)] = {
-    route(Method.Get, "/me/activities/tracks", timelineHandler.renderPublicTrackStream) :::
-      route(Method.Get, "/me/activities/tracks/:tag", timelineHandler.renderPublicTrackStream) ::: // deprecate
+    route(Method.Get, "/me/activities/tracks", timelineHandler.renderTrackStream) :::
+      route(Method.Get, "/me/activities/tracks/:tag", timelineHandler.renderTrackStream) ::: // deprecate
       route(Method.Get, "/me/activities", timelineHandler.renderPublicStream) :::
       route(Method.Get, "/me/activities/all/own", timelineHandler.renderPublicStream) :::
       route(Method.Get, "/me/followings/tracks", timelineHandler.renderFollowingTracks)

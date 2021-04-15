@@ -1,11 +1,12 @@
 package com.soundcloud.publicApiStrangler.handler
 
-import com.soundcloud.publicApiStrangler.service.playlists.PlaylistBuilder
 import com.soundcloud.jvmkit.module.bff.testsupport.FakeUserAuthentication
 import com.soundcloud.publicApiStrangler.Routing
 import com.soundcloud.publicApiStrangler.client.TimelineJsonClient
+import com.soundcloud.publicApiStrangler.handler.support.requestParser.AccessParams
 import com.soundcloud.publicApiStrangler.service.TimelineService
 import com.soundcloud.publicApiStrangler.service.pagination.CursorBasedPagination
+import com.soundcloud.publicApiStrangler.service.playlists.PlaylistBuilder
 import com.soundcloud.publicApiStrangler.service.timeline.{
   PlaylistTimelineItem,
   Timeline,
@@ -20,6 +21,7 @@ import org.mockito.Mockito._
 import play.api.libs.json.Json
 
 class TimelineHandlerSpec extends UnitSpecification {
+
   trait Context extends HandlerSpecificationScope with TimeLineHandlerTestData {
     val timelineClient = mock[TimelineJsonClient]
     val timelineService = mock[TimelineService]
@@ -30,6 +32,8 @@ class TimelineHandlerSpec extends UnitSpecification {
       new FakeUserAuthentication(session),
       timelineService
     )
+
+    val access = AccessParams.defaultAccess
 
     override def routingDefinitions = Routing.forTimelineHandler(handler)
   }
@@ -54,14 +58,14 @@ class TimelineHandlerSpec extends UnitSpecification {
         "/me/activities/tracks",
         "/me/activities/tracks/sometag"
       ).foreach { endpoint =>
-        val path = s"${endpoint}${queryParams}"
+        val path = s"$endpoint$queryParams"
 
         val mockRequest = Request(path)
         mockRequest.host = "localhost"
         val pagination = CursorBasedPagination.build(mockRequest, Seq("linked_partitioning"))
 
         val mockTimelineResponse = Timeline(mockTimelineItems, mockTimelineMeta, pagination)
-        when(timelineService.fetchTimelineTracksForUser(session, None, false, 10, Some("uuid"), pagination))
+        when(timelineService.fetchTimelineTracksForUser(session, access, None, false, 10, Some("uuid"), pagination))
           .thenReturn(Future.value(mockTimelineResponse))
 
         val result = get(path)
@@ -78,14 +82,14 @@ class TimelineHandlerSpec extends UnitSpecification {
         "/me/activities/tracks",
         "/me/activities/tracks/sometag"
       ).foreach { endpoint =>
-        val path = s"${endpoint}${queryParams}"
+        val path = s"$endpoint$queryParams"
 
         val mockRequest = Request(path)
         mockRequest.host = "localhost"
         val pagination = CursorBasedPagination.build(mockRequest, Seq("linked_partitioning"))
 
         val mockTimelineResponse = Timeline(mockTimelineItems, mockTimelineMeta, pagination)
-        when(timelineService.fetchTimelineTracksForUser(session, None, false, 10, Some("uuid"), pagination))
+        when(timelineService.fetchTimelineTracksForUser(session, access, None, false, 10, Some("uuid"), pagination))
           .thenReturn(Future.value(mockTimelineResponse))
 
         val result = get(path)
@@ -101,13 +105,13 @@ class TimelineHandlerSpec extends UnitSpecification {
         "/me/activities/tracks",
         "/me/activities/tracks/sometag"
       ).foreach { endpoint =>
-        val path = s"${endpoint}${queryParams}"
+        val path = s"$endpoint$queryParams"
 
         val mockRequest = Request(path)
         mockRequest.host = "localhost"
         val pagination = CursorBasedPagination.build(mockRequest, Seq("linked_partitioning"))
 
-        when(timelineService.fetchTimelineTracksForUser(session, None, false, 10, Some("uuid"), pagination))
+        when(timelineService.fetchTimelineTracksForUser(session, access, None, false, 10, Some("uuid"), pagination))
           .thenReturn(Future.value(null))
 
         val result = get(path)
@@ -128,9 +132,9 @@ class TimelineHandlerSpec extends UnitSpecification {
 
     "successfully returns followings tracks" in new SuccessfulCase {
       val queryParams = "?limit=10"
-      val path = s"/me/followings/tracks${queryParams}"
+      val path = s"/me/followings/tracks$queryParams"
 
-      when(timelineService.fetchFollowingTracksForUser(session, None, false, 10, Some("uuid")))
+      when(timelineService.fetchFollowingTracksForUser(session, access, None, false, 10, Some("uuid")))
         .thenReturn(Future.value(mockTimelineResponse))
 
       val result = get(path)
@@ -140,9 +144,9 @@ class TimelineHandlerSpec extends UnitSpecification {
 
     "returns an empty array if now followings tracks found" in new FailureCase {
       val queryParams = "?limit=10"
-      val path = s"/me/followings/tracks${queryParams}"
+      val path = s"/me/followings/tracks$queryParams"
 
-      when(timelineService.fetchFollowingTracksForUser(session, None, false, 10, Some("uuid")))
+      when(timelineService.fetchFollowingTracksForUser(session, access, None, false, 10, Some("uuid")))
         .thenReturn(Future.value(emptyTimelineResponse))
 
       val result = get(path)
@@ -152,9 +156,9 @@ class TimelineHandlerSpec extends UnitSpecification {
 
     "returns a 404 if timeline service doesn't return tracks" in new FailureCase {
       val queryParams = "?limit=10"
-      val path = s"/me/followings/tracks${queryParams}"
+      val path = s"/me/followings/tracks$queryParams"
 
-      when(timelineService.fetchFollowingTracksForUser(session, None, false, 10, Some("uuid")))
+      when(timelineService.fetchFollowingTracksForUser(session, access, None, false, 10, Some("uuid")))
         .thenReturn(Future.value(noTimelineResponse))
 
       val result = get(path)
@@ -185,14 +189,14 @@ class TimelineHandlerSpec extends UnitSpecification {
         "/me/activities",
         "/me/activities/all/own"
       ).foreach { endpoint =>
-        val path = s"${endpoint}${queryParams}"
+        val path = s"$endpoint$queryParams"
 
         val mockRequest = Request(path)
         mockRequest.host = "localhost"
         val pagination = CursorBasedPagination.build(mockRequest, Seq("linked_partitioning"))
 
         val mockTimelineResponse = Timeline(mockTimelineItems, mockTimelineMeta, pagination)
-        when(timelineService.fetchTimelineForUser(session, None, false, 10, Some("uuid"), pagination))
+        when(timelineService.fetchTimelineForUser(session, access, None, false, 10, Some("uuid"), pagination))
           .thenReturn(Future.value(mockTimelineResponse))
 
         val result = get(path)
@@ -209,14 +213,14 @@ class TimelineHandlerSpec extends UnitSpecification {
           "/me/activities",
           "/me/activities/all/own"
         ).foreach { endpoint =>
-          val path = s"${endpoint}${queryParams}"
+          val path = s"$endpoint$queryParams"
 
           val mockRequest = Request(path)
           mockRequest.host = "localhost"
           val pagination = CursorBasedPagination.build(mockRequest, Seq("linked_partitioning"))
 
           val mockTimelineResponse = Timeline(mockTimelineItems, mockTimelineMeta, pagination)
-          when(timelineService.fetchTimelineForUser(session, None, false, 10, Some("uuid"), pagination))
+          when(timelineService.fetchTimelineForUser(session, access, None, false, 10, Some("uuid"), pagination))
             .thenReturn(Future.value(mockTimelineResponse))
 
           val result = get(path)

@@ -26,7 +26,7 @@ class TimelineServiceSpec extends TrackRepresentationsSpecificationContext {
     val playlist1 = new PlaylistBuilder().setId(playlistUrn1.identifier.toLong).build
     val playlist2 = new PlaylistBuilder().setId(playlistUrn2.identifier.toLong).build
 
-    val access = AccessParams.explicitAccess
+    val access = AccessParams.defaultAccess
 
     val mockTrackRepresentation = createTrackRepresentation
     val timelineStreamMock: JsObject = Json.obj(
@@ -124,6 +124,7 @@ class TimelineServiceSpec extends TrackRepresentationsSpecificationContext {
       val response = Await.result(
         timelineService.fetchTimelineTracksForUser(
           session.asInstanceOf[LoggedInUserSession],
+          access,
           None,
           reverseCursor = false,
           10,
@@ -134,7 +135,7 @@ class TimelineServiceSpec extends TrackRepresentationsSpecificationContext {
 
       response must beAnInstanceOf[Timeline]
       response.timelineItems.length === 1
-      response.timelineItems(0) must beAnInstanceOf[TrackTimelineItem]
+      response.timelineItems.head must beAnInstanceOf[TrackTimelineItem]
 
       response.metaInfo.nextPageCursor === Some("00000172-9b87-0a50-ffff-ffff8eec7ee8")
       response.metaInfo.previousPageCursor === Some("00000172-9b87-0a50-ffff-ffff8eec7ee8")
@@ -146,6 +147,7 @@ class TimelineServiceSpec extends TrackRepresentationsSpecificationContext {
       val response = Await.result(
         timelineService.fetchTimelineTracksForUser(
           session.asInstanceOf[LoggedInUserSession],
+          access,
           None,
           reverseCursor = false,
           10,
@@ -196,6 +198,7 @@ class TimelineServiceSpec extends TrackRepresentationsSpecificationContext {
       val response = Await.result(
         timelineService.fetchTimelineForUser(
           session.asInstanceOf[LoggedInUserSession],
+          access,
           None,
           reverseCursor = false,
           10,
@@ -207,7 +210,7 @@ class TimelineServiceSpec extends TrackRepresentationsSpecificationContext {
       response must beAnInstanceOf[Timeline]
       response.timelineItems.length === 3
 
-      response.timelineItems(0) must beAnInstanceOf[PlaylistTimelineItem]
+      response.timelineItems.head must beAnInstanceOf[PlaylistTimelineItem]
       response.timelineItems(1) must beAnInstanceOf[PlaylistTimelineItem]
       response.timelineItems(2) must beAnInstanceOf[TrackTimelineItem]
 
@@ -221,6 +224,7 @@ class TimelineServiceSpec extends TrackRepresentationsSpecificationContext {
       val response = Await.result(
         timelineService.fetchTimelineForUser(
           session.asInstanceOf[LoggedInUserSession],
+          access,
           None,
           reverseCursor = false,
           10,
@@ -264,6 +268,7 @@ class TimelineServiceSpec extends TrackRepresentationsSpecificationContext {
       val response = Await.result(
         timelineService.fetchFollowingTracksForUser(
           session.asInstanceOf[LoggedInUserSession],
+          access,
           None,
           reverseCursor = false,
           10,
@@ -281,6 +286,7 @@ class TimelineServiceSpec extends TrackRepresentationsSpecificationContext {
       val response = Await.result(
         timelineService.fetchFollowingTracksForUser(
           session.asInstanceOf[LoggedInUserSession],
+          access,
           None,
           reverseCursor = false,
           10,
