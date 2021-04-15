@@ -19,6 +19,7 @@ class UserTracksService(
   def userTracks(
       session: UserSession,
       userUrn: Urn,
+      access: AccessParams,
       pagination: CursorBasedPagination
   ): Future[Collection[TrackRepresentation]] = {
     for {
@@ -26,7 +27,7 @@ class UserTracksService(
       enrichedTracks <- trackRepresentationsService.tracks(
         session,
         userTracksResponse.items.map(item => TrackRequest(item.urn, None)),
-        AccessParams.defaultAccess
+        access
       )
     } yield {
       Collection(enrichedTracks, userTracksNextHref(userTracksResponse.items, pagination))

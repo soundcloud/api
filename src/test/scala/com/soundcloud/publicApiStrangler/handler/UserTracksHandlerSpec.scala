@@ -1,13 +1,12 @@
 package com.soundcloud.publicApiStrangler.handler
 
-import java.util.TimeZone
-
 import com.soundcloud.jvmkit.module.bff.testsupport.FakeUserAuthentication
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.publicApiStrangler.Routing
+import com.soundcloud.publicApiStrangler.handler.support.requestParser.AccessParams
 import com.soundcloud.publicApiStrangler.service.UserTracksService
-import com.soundcloud.publicApiStrangler.service.representation.collection.Collection
 import com.soundcloud.publicApiStrangler.service.pagination.CursorBasedPagination
+import com.soundcloud.publicApiStrangler.service.representation.collection.Collection
 import com.soundcloud.publicApiStrangler.service.trackrepresentation.{
   TrackRepresentation,
   TrackRepresentationSpecContext
@@ -18,6 +17,8 @@ import com.twitter.util.Future
 import org.joda.time.DateTimeZone
 import org.mockito.Mockito.when
 import play.api.libs.json.Json
+
+import java.util.TimeZone
 
 class UserTracksHandlerSpec extends UnitSpecification with TrackRepresentationSpecContext {
 
@@ -55,9 +56,10 @@ class UserTracksHandlerSpec extends UnitSpecification with TrackRepresentationSp
       def stubService(
           user: Urn,
           path: String,
-          collection: Collection[TrackRepresentation]
+          collection: Collection[TrackRepresentation],
+          access: AccessParams = AccessParams.defaultAccess
       ) = {
-        when(userTracksService.userTracks(session, user, paginationParams(path)))
+        when(userTracksService.userTracks(session, user, access, paginationParams(path)))
           .thenReturn(Future.value(collection))
       }
     }
@@ -90,7 +92,7 @@ class UserTracksHandlerSpec extends UnitSpecification with TrackRepresentationSp
           val user = Urn("soundcloud", "users", "1")
           val path = s"/me/tracks$queryString"
 
-          stubService(user, path, tracksCollection)
+          stubService(user, path, tracksCollection, AccessParams.explicitAccess)
 
           val response = get(path)
           response.status ==== Status.Ok

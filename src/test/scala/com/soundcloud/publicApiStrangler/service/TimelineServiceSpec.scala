@@ -26,6 +26,8 @@ class TimelineServiceSpec extends TrackRepresentationsSpecificationContext {
     val playlist1 = new PlaylistBuilder().setId(playlistUrn1.identifier.toLong).build
     val playlist2 = new PlaylistBuilder().setId(playlistUrn2.identifier.toLong).build
 
+    val access = AccessParams.explicitAccess
+
     val mockTrackRepresentation = createTrackRepresentation
     val timelineStreamMock: JsObject = Json.obj(
       "events" -> Json.arr(
@@ -102,7 +104,7 @@ class TimelineServiceSpec extends TrackRepresentationsSpecificationContext {
         when(timelineClient.stream(session, None, 10, reverseCursor = false, Some("uuid")))
           .thenReturn(Future.value(timelineStreamMock))
 
-        when(trackService.tracks(session, List(TrackRequest(trackUrn, None)), AccessParams.defaultAccess))
+        when(trackService.tracks(session, List(TrackRequest(trackUrn, None)), access))
           .thenReturn(Future.value(List(mockTrackRepresentation)))
       }
     }
@@ -112,7 +114,7 @@ class TimelineServiceSpec extends TrackRepresentationsSpecificationContext {
         when(timelineClient.stream(session, None, 10, reverseCursor = false, Some("uuid")))
           .thenReturn(Future.value(emptyTimelineStreamMock))
 
-        when(trackService.tracks(session, List.empty, AccessParams.defaultAccess))
+        when(trackService.tracks(session, List.empty, access))
           .thenReturn(Future.value(List.empty))
       }
     }
@@ -163,7 +165,7 @@ class TimelineServiceSpec extends TrackRepresentationsSpecificationContext {
         when(timelineClient.stream(session, None, 10, reverseCursor = false, Some("uuid")))
           .thenReturn(Future.value(timelineStreamMock))
 
-        when(trackService.tracks(session, List(TrackRequest(trackUrn, None)), AccessParams.defaultAccess))
+        when(trackService.tracks(session, List(TrackRequest(trackUrn, None)), access))
           .thenReturn(Future.value(List(mockTrackRepresentation)))
 
         when(
@@ -180,7 +182,7 @@ class TimelineServiceSpec extends TrackRepresentationsSpecificationContext {
         when(timelineClient.stream(session, None, 10, reverseCursor = false, Some("uuid")))
           .thenReturn(Future.value(emptyTimelineStreamMock))
 
-        when(trackService.tracks(session, List.empty, AccessParams.defaultAccess))
+        when(trackService.tracks(session, List.empty, access))
           .thenReturn(Future.value(List.empty))
 
         when(playlistsService.fetchPlaylistsMetadataOnly(session, List.empty))
@@ -241,7 +243,7 @@ class TimelineServiceSpec extends TrackRepresentationsSpecificationContext {
         when(timelineClient.followingsTracks(session, None, 10, reverseCursor = false, Some("uuid")))
           .thenReturn(Future.value(timelineFollowingTracksMock))
 
-        when(trackService.tracks(session, List(TrackRequest(trackUrn, None)), AccessParams.defaultAccess))
+        when(trackService.tracks(session, List(TrackRequest(trackUrn, None)), access))
           .thenReturn(Future.value(List(mockTrackRepresentation)))
       }
     }
@@ -251,7 +253,7 @@ class TimelineServiceSpec extends TrackRepresentationsSpecificationContext {
         when(timelineClient.followingsTracks(session, None, 10, reverseCursor = false, Some("uuid")))
           .thenReturn(Future.value(emptyTimelineStreamMock))
 
-        when(trackService.tracks(session, List.empty, AccessParams.defaultAccess))
+        when(trackService.tracks(session, List.empty, access))
           .thenReturn(Future.value(List.empty))
       }
     }

@@ -2,16 +2,17 @@ package com.soundcloud.publicApiStrangler.handler
 
 import com.soundcloud.jvmkit.module.bff.session.UserAuthentication
 import com.soundcloud.jvmkit.module.http.server.{HandlerRequest, JsonResponseBuilder}
-import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.jvmkit.module.outcome._
+import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.publicApiStrangler.client.liebling.{LikeDeleted, LikeNotFound}
 import com.soundcloud.publicApiStrangler.handler.representation.collection.CollectionResponse
+import com.soundcloud.publicApiStrangler.handler.support.requestParser.{AccessParams, AccessParamsExtractor}
 import com.soundcloud.publicApiStrangler.service._
 import com.soundcloud.publicApiStrangler.service.pagination.CursorBasedPagination
 import com.soundcloud.publicApiStrangler.support.ErrorResponse
+import com.soundcloud.publicApiStrangler.support.PlaylistUrnUtil.getPlaylistUrn
 import com.soundcloud.publicApiStrangler.support.TrackUrnUtil.getTrackUrn
 import com.soundcloud.publicApiStrangler.support.UserUrnUtil.getUserUrn
-import com.soundcloud.publicApiStrangler.support.PlaylistUrnUtil.getPlaylistUrn
 import com.twitter.finagle.http.{Response, Status}
 import com.twitter.util.{Future, Return, Throw, Try}
 import play.api.libs.json.Json
@@ -104,24 +105,30 @@ class LikesHandler(userAuthentication: UserAuthentication, likesService: LikesSe
   def getUserTracksLikes(req: HandlerRequest): Future[Response] = {
     userAuthentication.withUserSession(req) { session =>
       val userId = req.routeParams("userId")
-      performGetTracksLikes(req, session, userId)
+      val access = AccessParamsExtractor.unapply(req.params)
+      performGetTracksLikes(req, session, userId, access)
     }
   }
 
   def getMeTracksLikes(req: HandlerRequest): Future[Response] = {
     userAuthentication.withLoggedInUser(req) { (session, userUrn) =>
-      performGetTracksLikes(req, session, userUrn.identifier)
+      performGetTracksLikes(req, session, userUrn.identifier, AccessParams.explicitAccess)
     }
   }
 
-  private def performGetTracksLikes(request: HandlerRequest, session: UserSession, userId: String): Future[Response] = {
+  private def performGetTracksLikes(
+      request: HandlerRequest,
+      session: UserSession,
+      userId: String,
+      access: AccessParams
+  ): Future[Response] = {
     val hasLinkedPartitioning = request.params.contains("linked_partitioning")
     val pagination = CursorBasedPagination.build(request, Seq("linked_partitioning"))
 
     Try(getUserUrn(userId)) match {
       case Return(urn) =>
         val tracksCollection = likesService
-          .userTracksLikes(session, urn, pagination)
+          .userTracksLikes(session, urn, access, pagination)
           .map(Good(_))
         CollectionResponse.handleCollectionResponse(tracksCollection, hasLinkedPartitioning)
       case Throw(e) => Future.value(ErrorResponse.badRequest(e.getMessage))

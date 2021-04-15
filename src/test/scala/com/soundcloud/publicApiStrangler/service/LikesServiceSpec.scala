@@ -1,8 +1,10 @@
 package com.soundcloud.publicApiStrangler.service
 
 import com.google.protobuf.timestamp.Timestamp
+import com.soundcloud.jvmkit.module.twirp.proto.UserSessionOps._
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.publicApiStrangler.client.liebling._
+import com.soundcloud.publicApiStrangler.handler.support.requestParser.AccessParams
 import com.soundcloud.publicApiStrangler.service.pagination.CursorBasedPagination
 import com.soundcloud.publicApiStrangler.service.representation.collection.Collection
 import com.soundcloud.publicApiStrangler.service.trackrepresentation.{
@@ -10,14 +12,12 @@ import com.soundcloud.publicApiStrangler.service.trackrepresentation.{
   TrackRepresentationsService,
   TrackRepresentationsSpecificationContext
 }
+import com.soundcloud.twinagle.{ErrorCode, TwinagleException}
 import com.twitter.finagle.http.ParamMap
 import com.twitter.util.{Await, Future}
 import org.mockito.Mockito._
 import org.specs2.mutable.BeforeAfter
 import proto.soundcloud.tracks.api.{LikeTrackRequest, LikeTrackResponse, LikesClientProtobuf}
-import com.soundcloud.jvmkit.module.twirp.proto.UserSessionOps._
-import com.soundcloud.publicApiStrangler.handler.support.requestParser.AccessParams
-import com.soundcloud.twinagle.{ErrorCode, TwinagleException}
 
 import java.time.Instant
 
@@ -252,12 +252,13 @@ class LikesServiceSpec extends TrackRepresentationsSpecificationContext {
           )
         )
       )
-      when(trackRepresentationsService.tracks(session, List(trackRequest), AccessParams.defaultAccess))
+      val access = AccessParams.defaultAccess
+      when(trackRepresentationsService.tracks(session, List(trackRequest), access))
         .thenReturn(Future.value(List(createTrackRepresentation)))
       when(lieblingClient.userTracksLikes(session, trackOwnerUrn, pagination.cursor, pagination.pageSize))
         .thenReturn(Future.value(likesPage))
 
-      val tracksCollection = Await.result(likesService.userTracksLikes(session, trackOwnerUrn, pagination))
+      val tracksCollection = Await.result(likesService.userTracksLikes(session, trackOwnerUrn, access, pagination))
 
       tracksCollection match {
         case rep =>

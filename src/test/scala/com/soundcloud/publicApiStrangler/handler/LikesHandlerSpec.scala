@@ -1,13 +1,13 @@
 package com.soundcloud.publicApiStrangler.handler
 
 import java.util.TimeZone
-
 import com.soundcloud.jvmkit.module.bff.session.UserAuthentication
 import com.soundcloud.jvmkit.module.bff.testsupport.FakeUserAuthentication
 import com.soundcloud.jvmkit.module.telemetry.Telemetry
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.publicApiStrangler.Routing
 import com.soundcloud.publicApiStrangler.client.liebling.{LikeDeleted, LikeNotFound}
+import com.soundcloud.publicApiStrangler.handler.support.requestParser.AccessParams
 import com.soundcloud.publicApiStrangler.service.pagination.CursorBasedPagination
 import com.soundcloud.publicApiStrangler.service.representation.collection.Collection
 import com.soundcloud.publicApiStrangler.service.trackrepresentation.{
@@ -78,9 +78,10 @@ class LikesHandlerSpec extends UnitSpecification {
       def stubUserTracksLikes(
           user: Urn,
           path: String,
-          collection: Collection[TrackRepresentation]
+          collection: Collection[TrackRepresentation],
+          access: AccessParams = AccessParams.defaultAccess
       ) = {
-        when(likesService.userTracksLikes(session, user, paginationParams(path)))
+        when(likesService.userTracksLikes(session, user, access, paginationParams(path)))
           .thenReturn(Future.value(collection))
       }
     }
@@ -112,7 +113,7 @@ class LikesHandlerSpec extends UnitSpecification {
           val user = Urn("soundcloud", "users", "1")
           val path = s"/me/likes/tracks/$queryString"
 
-          stubUserTracksLikes(user, path, tracksCollection)
+          stubUserTracksLikes(user, path, tracksCollection, AccessParams.explicitAccess)
 
           val response = get(path)
           response.status ==== Status.Ok
@@ -458,9 +459,10 @@ class LikesHandlerSpec extends UnitSpecification {
       def stubUserTracksLikes(
           user: Urn,
           path: String,
-          collection: Collection[TrackRepresentation]
+          collection: Collection[TrackRepresentation],
+          access: AccessParams = AccessParams.defaultAccess
       ) = {
-        when(likesService.userTracksLikes(session, user, paginationParams(path)))
+        when(likesService.userTracksLikes(session, user, access, paginationParams(path)))
           .thenReturn(Future.value(collection))
       }
     }
@@ -519,7 +521,7 @@ class LikesHandlerSpec extends UnitSpecification {
           val user = Urn("soundcloud", "users", "1")
           val path = s"/me/favorites/$queryString"
 
-          stubUserTracksLikes(user, path, tracksCollection)
+          stubUserTracksLikes(user, path, tracksCollection, AccessParams.explicitAccess)
 
           val response = get(path)
           response.status ==== Status.Ok

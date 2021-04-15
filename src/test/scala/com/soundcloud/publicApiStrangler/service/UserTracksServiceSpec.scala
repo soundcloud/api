@@ -30,6 +30,7 @@ class UserTracksServiceSpec extends TrackRepresentationsSpecificationContext {
     )
 
     val track = createTrackRepresentation
+    val access = AccessParams.defaultAccess
 
     val chronoResponse = ChronoResponse(
       items = List(ChronoItem("", "tracks", trackUrn, "2")),
@@ -48,12 +49,12 @@ class UserTracksServiceSpec extends TrackRepresentationsSpecificationContext {
     "when all data is available" in new Context {
       when(
         trackRepresentationsService
-          .tracks(session, List(TrackRequest(track.visibleTrack.urn, None)), AccessParams.defaultAccess)
+          .tracks(session, List(TrackRequest(track.visibleTrack.urn, None)), access)
       ).thenReturn(Future.value(List(track)))
       when(trackmetadataClient.userTracks(session, trackOwnerUrn, pagination))
         .thenReturn(Future.value(chronoResponse))
 
-      val tracksCollection = Await.result(userTracksService.userTracks(session, trackOwnerUrn, pagination))
+      val tracksCollection = Await.result(userTracksService.userTracks(session, trackOwnerUrn, access, pagination))
 
       tracksCollection match {
         case rep =>
@@ -63,12 +64,12 @@ class UserTracksServiceSpec extends TrackRepresentationsSpecificationContext {
       "when data is not available" in new Context {
         when(
           trackRepresentationsService
-            .tracks(session, List(TrackRequest(track.visibleTrack.urn, None)), AccessParams.defaultAccess)
+            .tracks(session, List(TrackRequest(track.visibleTrack.urn, None)), access)
         ).thenReturn(Future.value(List.empty))
         when(trackmetadataClient.userTracks(session, trackOwnerUrn, pagination))
           .thenReturn(Future.value(ChronoResponse.emptyResponse))
 
-        val tracksCollection = Await.result(userTracksService.userTracks(session, trackOwnerUrn, pagination))
+        val tracksCollection = Await.result(userTracksService.userTracks(session, trackOwnerUrn, access, pagination))
         tracksCollection.items ==== List.empty
         tracksCollection.nextHref ==== None
       }

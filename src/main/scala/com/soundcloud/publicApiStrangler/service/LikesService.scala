@@ -91,6 +91,7 @@ class LikesService(
   def userTracksLikes(
       session: UserSession,
       userUrn: Urn,
+      access: AccessParams,
       pagination: CursorBasedPagination
   ): Future[Collection[TrackRepresentation]] = {
     for {
@@ -98,7 +99,7 @@ class LikesService(
       enrichedTracks <- trackRepresentationsService.tracks(
         session,
         likesPage.likes.map(like => TrackRequest(like.target_urn, None)),
-        AccessParams.defaultAccess
+        access
       )
     } yield {
       val nextHref =

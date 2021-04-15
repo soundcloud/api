@@ -101,7 +101,7 @@ class TimelineService(
   ): Future[List[TrackRepresentation]] = {
     val trackUrns = trackUrnsFromEvents(events)
     trackRepresentationsService
-      .tracks(session, trackUrns.map(TrackRequest(_, None)), AccessParams.defaultAccess)
+      .tracks(session, trackUrns.map(TrackRequest(_, None)), AccessParams.explicitAccess)
   }
 
   private def getPlaylistRepresentations(
