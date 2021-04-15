@@ -6,6 +6,7 @@ import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSessionBuilder
 import com.soundcloud.publicApiStrangler.authorization.policies._
 import com.soundcloud.publicApiStrangler.client.tracks.{TrackRequest, Transcoding, VisibleTrackBuilder}
+import com.soundcloud.publicApiStrangler.handler.support.requestParser.AccessParams
 import com.soundcloud.publicApiStrangler.service.tracks.VisibleTrackMapper
 import com.twitter.util.{Await, Future}
 import org.joda.time.LocalDateTime
@@ -40,6 +41,7 @@ class TrackVisibilityServiceSpec extends Specification with Mockito {
         .setTranscodings(transcodings)
         .setAccess(Some(Access.Playable))
         .build
+    lazy val access = AccessParams()
     val clientApplication = Urn("soundcloud", "applications", "999")
     val trackUrn = Urn("soundcloud", "tracks", "432")
     val tracksTwinagleClient = mock[TrackMetadataService]
@@ -63,20 +65,33 @@ class TrackVisibilityServiceSpec extends Specification with Mockito {
   }
 
   "#tracks" >> {
-    "returns visible tracks" in new Context {
-      Await.result(service.tracks(session, List(trackRequest))) ==== List(visibleTrack.good)
+    "returns visible tracks by default" in new Context {
+      Await.result(service.tracks(session, List(trackRequest), access)) ==== List(visibleTrack.good)
     }
 
-    "track not available for api streaming" >> {
+    "track not available for api streaming, default access" >> {
       trait NotApiStreamableTrackContext extends Context {
         override lazy val visibleTrack =
           (new VisibleTrackBuilder).setUrn(trackUrn).setApiStreamable(Some(false)).build
       }
 
-      "filters out disabled tracks" in new NotApiStreamableTrackContext {
-        Await.result(service.tracks(session, List(trackRequest))) ==== List(
+      "filters out non streamable tracks" in new NotApiStreamableTrackContext {
+        Await.result(service.tracks(session, List(trackRequest), access)) ==== List(
           CustomError(UnavailableByPolicy(trackUrn, Reason.NOT_SUPPORTED)).bad
         )
+      }
+    }
+
+    "track not available for api streaming, full access" >> {
+      trait NotApiStreamableTrackContext extends Context {
+        override lazy val visibleTrack = (new VisibleTrackBuilder).setUrn(trackUrn).setApiStreamable(Some(false)).build
+        override lazy val access = AccessParams(Set(Access.Playable, Access.Preview, Access.Blocked))
+
+        val expectedTrack = visibleTrack.copy(access = Some(Access.Blocked))
+      }
+
+      "returns metadata for non streamable tracks" in new NotApiStreamableTrackContext {
+        Await.result(service.tracks(session, List(trackRequest), access)) ==== List(expectedTrack.good)
       }
     }
 
@@ -87,22 +102,7 @@ class TrackVisibilityServiceSpec extends Specification with Mockito {
       }
 
       "filters out disabled tracks" in new DisabledTrackContext {
-        Await.result(service.tracks(session, List(trackRequest))) ==== List(
-          CustomError(UnavailableByPolicy(trackUrn, Reason.UNKNOWN)).bad
-        )
-      }
-    }
-
-    "transcoding filter track" >> {
-      trait TranscodingFilterTrackContext extends Context {
-        override lazy val visibleTrack =
-          (new VisibleTrackBuilder).setUrn(trackUrn).setTranscodings(List.empty).build
-      }
-
-      "filters out non 'audio/mpeg' tracks" in new TranscodingFilterTrackContext {
-        Await.result(service.tracks(session, List(trackRequest))) ==== List(
-          CustomError(UnavailableByPolicy(trackUrn, Reason.UNKNOWN)).bad
-        )
+        Await.result(service.tracks(session, List(trackRequest), access)) ==== List.empty
       }
     }
 
@@ -122,39 +122,96 @@ class TrackVisibilityServiceSpec extends Specification with Mockito {
                 MonetizationModel.SUB_HIGH_TIER
               )
             )
-            .setAccess(Some(Access.Playable))
             .build
       }
 
       "untrusted application" >> {
-        "filters out track" in new HighTierFilterTrackContext {
-          Await.result(service.tracks(session, List(trackRequest))) ==== List(
-            CustomError(UnavailableByPolicy(trackUrn, Reason.NOT_SUPPORTED)).bad
+
+        "filters out track, default access" in new HighTierFilterTrackContext {
+          Await.result(service.tracks(session, List(trackRequest), access)) ==== List(
+            CustomError(UnavailableByPolicy(trackUrn, Reason.DEFAULT)).bad
           )
+        }
+
+        "return track, full access" in new HighTierFilterTrackContext {
+          override lazy val access = AccessParams(Set(Access.Playable, Access.Preview, Access.Blocked))
+          val expectedTrack = visibleTrack.copy(access = Some(Access.Blocked))
+
+          Await.result(service.tracks(session, List(trackRequest), access)) ==== List(expectedTrack.good)
         }
       }
 
       "trusted application" >> {
-        trait HighTierAllowlistedAppFilterTrackContext extends HighTierFilterTrackContext {
+        trait HighTierAllowlistedAppFilterTrackContext extends Context {
+          override lazy val visibleTrack =
+            (new VisibleTrackBuilder)
+              .setUrn(trackUrn)
+              .setDisabledAt(None)
+              .setTranscodings(transcodings)
+              .setAuthorization(
+                new ContentAuthorization(
+                  trackUrn,
+                  ContentPolicy.MONETIZE,
+                  Reason.DEFAULT,
+                  Set.empty[ContentRestriction],
+                  MonetizationModel.SUB_HIGH_TIER
+                )
+              )
+              .build
           override lazy val allowlistedClients = Set(clientApplication)
+          val expectedTrack = visibleTrack.copy(access = Some(Access.Preview))
         }
 
         "does not filter out track" in new HighTierAllowlistedAppFilterTrackContext {
-          Await.result(service.tracks(session, List(trackRequest))) ==== List(visibleTrack.good)
+          Await.result(service.tracks(session, List(trackRequest), access)) ==== List(expectedTrack.good)
         }
+      }
+    }
+
+    "blocked track filter" >> {
+
+      trait BlockedTrackContext extends Context {
+        override lazy val visibleTrack =
+          (new VisibleTrackBuilder)
+            .setUrn(trackUrn)
+            .setDisabledAt(None)
+            .setTranscodings(transcodings)
+            .setAuthorization(
+              new ContentAuthorization(
+                trackUrn,
+                ContentPolicy.BLOCK,
+                Reason.GEO,
+                Set.empty[ContentRestriction],
+                MonetizationModel.NOT_APPLICABLE
+              )
+            )
+            .build
+      }
+
+      "filters out track, default access" in new BlockedTrackContext {
+        Await.result(service.tracks(session, List(trackRequest), access)) ==== List(
+          CustomError(UnavailableByPolicy(trackUrn, Reason.GEO)).bad
+        )
+      }
+
+      "returns track, full access" in new BlockedTrackContext {
+        override lazy val access = AccessParams(Set(Access.Playable, Access.Preview, Access.Blocked))
+        val expectedTrack = visibleTrack.copy(access = Some(Access.Blocked))
+
+        Await.result(service.tracks(session, List(trackRequest), access)) ==== List(expectedTrack.good)
       }
     }
   }
 
   "#visibleTracks" >> {
     "returns visible tracks" in new Context {
-      Await.result(service.visibleTracks(session, List(trackRequest))) ==== List(visibleTrack)
+      Await.result(service.visibleTracks(session, List(trackRequest), access)) ==== List(visibleTrack)
     }
 
     "filters out bad tracks" in new Context {
       override lazy val visibleTrack =
         (new VisibleTrackBuilder).setUrn(trackUrn).setDisabledAt(Some(LocalDateTime.now())).build
-      Await.result(service.visibleTracks(session, List(trackRequest))) ==== List.empty
+      Await.result(service.visibleTracks(session, List(trackRequest), access)) ==== List.empty
     }
   }
 }

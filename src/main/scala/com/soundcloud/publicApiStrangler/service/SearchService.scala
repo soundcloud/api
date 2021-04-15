@@ -11,6 +11,7 @@ import com.soundcloud.publicApiStrangler.client.mothership.response.representati
 import com.soundcloud.publicApiStrangler.client.reposts.RepostsClient
 import com.soundcloud.publicApiStrangler.client.search.SearchClient
 import com.soundcloud.publicApiStrangler.client.tracks.TrackRequest
+import com.soundcloud.publicApiStrangler.handler.support.requestParser.AccessParams
 import com.soundcloud.publicApiStrangler.service.pagination.OffsetBasedPagination
 import com.soundcloud.publicApiStrangler.service.playlists.PlaylistRequest
 import com.soundcloud.publicApiStrangler.service.playlists.representation.Playlist
@@ -67,7 +68,8 @@ class SearchService(
       enrichedTracks <- trackRepresentationsService
         .tracks(
           session,
-          searchPage.docs.map(doc => TrackRequest(doc.urn, None)).toList
+          searchPage.docs.map(doc => TrackRequest(doc.urn, None)).toList,
+          AccessParams.defaultAccess
         )
         .outcomeF
     } yield {

@@ -1,9 +1,9 @@
 package com.soundcloud.publicApiStrangler.service
 
-import java.net.URL
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.publicApiStrangler.client.SystemPlaylistsClient
 import com.soundcloud.publicApiStrangler.client.tracks.{TrackRequest, Transcoding, VisibleTrackBuilder}
+import com.soundcloud.publicApiStrangler.handler.support.requestParser.AccessParams
 import com.soundcloud.publicApiStrangler.mapper.similarsounds.{SimilarSounds, SimilarSoundsMeta}
 import com.soundcloud.publicApiStrangler.service.representation.collection.Collection
 import com.soundcloud.publicApiStrangler.service.trackrepresentation.{
@@ -16,6 +16,8 @@ import com.soundcloud.publicApiStrangler.service.users.UserBuilder
 import com.soundcloud.publicApiStrangler.test.UnitSpecification
 import com.twitter.util.{Await, Future}
 import org.mockito.Mockito.when
+
+import java.net.URL
 
 class SimilarTracksServiceSpec extends UnitSpecification {
 
@@ -73,8 +75,10 @@ class SimilarTracksServiceSpec extends UnitSpecification {
   "#similarTracks" >> {
     "returns similar tracks when they exist" in new Context {
       when(systemPlaylistsClient.fetchSimilar(session, track)).thenReturn(Future(Some(similarSoundsMock)))
-      when(trackRepresentationService.tracks(session, similarSoundsMockUrns.map(TrackRequest(_, None))))
-        .thenReturn(Future(List(trackRepresentationMock)))
+      when(
+        trackRepresentationService
+          .tracks(session, similarSoundsMockUrns.map(TrackRequest(_, None)), AccessParams.defaultAccess)
+      ).thenReturn(Future(List(trackRepresentationMock)))
 
       val similarTracks = Await.result(similarTracksService.similarTracks(session, track, trackPagination))
 
@@ -86,7 +90,7 @@ class SimilarTracksServiceSpec extends UnitSpecification {
 
     "returns None when no track recommendations" in new Context {
       when(systemPlaylistsClient.fetchSimilar(session, track)).thenReturn(Future(None))
-      when(trackRepresentationService.tracks(session, List.empty))
+      when(trackRepresentationService.tracks(session, List.empty, AccessParams.defaultAccess))
         .thenReturn(Future(List.empty))
 
       val similarTracks = Await.result(similarTracksService.similarTracks(session, track, trackPagination))

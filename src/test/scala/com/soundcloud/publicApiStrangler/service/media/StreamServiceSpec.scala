@@ -10,6 +10,7 @@ import com.soundcloud.publicApiStrangler.authorization.policies.{
   Reason
 }
 import com.soundcloud.publicApiStrangler.client.tracks.{ContentAuthorizationBuilder, _}
+import com.soundcloud.publicApiStrangler.handler.support.requestParser.AccessParams
 import com.soundcloud.publicApiStrangler.service.{TrackVisibilityService, UnavailableByPolicy}
 import com.soundcloud.publicApiStrangler.test.UnitSpecification
 import com.soundcloud.twinagle.{ErrorCode, TwinagleException}
@@ -75,7 +76,7 @@ class StreamServiceSpec extends UnitSpecification {
       streamPreviewUrlTwirpResponse
     )
 
-    trackVisibilityService.tracks(session, List(trackRequest)) returns Future.value(tracks)
+    trackVisibilityService.tracks(session, List(trackRequest), AccessParams.defaultAccess) returns Future.value(tracks)
   }
 
   "error when no track is found" in new Context {

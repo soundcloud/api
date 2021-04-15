@@ -9,6 +9,7 @@ import com.soundcloud.publicApiStrangler.client.mothership.response.mapper.UserM
 import com.soundcloud.publicApiStrangler.client.reposts.RepostsClient
 import com.soundcloud.publicApiStrangler.client.search.{Doc, SearchClient, SearchResponse}
 import com.soundcloud.publicApiStrangler.client.tracks.TrackRequest
+import com.soundcloud.publicApiStrangler.handler.support.requestParser.AccessParams
 import com.soundcloud.publicApiStrangler.service.pagination.OffsetBasedPagination
 import com.soundcloud.publicApiStrangler.service.playlists.{PlaylistBuilder, PlaylistRequest}
 import com.soundcloud.publicApiStrangler.service.representation.collection.Collection
@@ -131,7 +132,11 @@ class SearchServiceSpec extends TrackRepresentationsSpecificationContext {
   "#searchTracks" >> {
     "when all data is available" in new Context {
       when(
-        trackRepresentationsService.tracks(session, List(TrackRequest(trackRepresentationMock.visibleTrack.urn, None)))
+        trackRepresentationsService.tracks(
+          session,
+          List(TrackRequest(trackRepresentationMock.visibleTrack.urn, None)),
+          AccessParams.defaultAccess
+        )
       ).thenReturn(Future.value(List(trackRepresentationMock)))
       when(
         searchClient.searchTracks(
@@ -160,7 +165,7 @@ class SearchServiceSpec extends TrackRepresentationsSpecificationContext {
 
     "when data is not available" in new Context {
       when(
-        trackRepresentationsService.tracks(session, List.empty)
+        trackRepresentationsService.tracks(session, List.empty, AccessParams.defaultAccess)
       ).thenReturn(Future.value(List.empty))
       when(
         searchClient.searchTracks(

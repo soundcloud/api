@@ -4,6 +4,7 @@ import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.{LoggedInUserSession, UserSession}
 import com.soundcloud.publicApiStrangler.client.TimelineJsonClient
 import com.soundcloud.publicApiStrangler.client.tracks.TrackRequest
+import com.soundcloud.publicApiStrangler.handler.support.requestParser.AccessParams
 import com.soundcloud.publicApiStrangler.service.pagination.CursorBasedPagination
 import com.soundcloud.publicApiStrangler.service.playlists.{PlaylistBuilder, PlaylistRequest}
 import com.soundcloud.publicApiStrangler.service.timeline.{PlaylistTimelineItem, Timeline, TrackTimelineItem}
@@ -101,7 +102,7 @@ class TimelineServiceSpec extends TrackRepresentationsSpecificationContext {
         when(timelineClient.stream(session, None, 10, reverseCursor = false, Some("uuid")))
           .thenReturn(Future.value(timelineStreamMock))
 
-        when(trackService.tracks(session, List(TrackRequest(trackUrn, None))))
+        when(trackService.tracks(session, List(TrackRequest(trackUrn, None)), AccessParams.defaultAccess))
           .thenReturn(Future.value(List(mockTrackRepresentation)))
       }
     }
@@ -111,7 +112,7 @@ class TimelineServiceSpec extends TrackRepresentationsSpecificationContext {
         when(timelineClient.stream(session, None, 10, reverseCursor = false, Some("uuid")))
           .thenReturn(Future.value(emptyTimelineStreamMock))
 
-        when(trackService.tracks(session, List.empty))
+        when(trackService.tracks(session, List.empty, AccessParams.defaultAccess))
           .thenReturn(Future.value(List.empty))
       }
     }
@@ -162,7 +163,7 @@ class TimelineServiceSpec extends TrackRepresentationsSpecificationContext {
         when(timelineClient.stream(session, None, 10, reverseCursor = false, Some("uuid")))
           .thenReturn(Future.value(timelineStreamMock))
 
-        when(trackService.tracks(session, List(TrackRequest(trackUrn, None))))
+        when(trackService.tracks(session, List(TrackRequest(trackUrn, None)), AccessParams.defaultAccess))
           .thenReturn(Future.value(List(mockTrackRepresentation)))
 
         when(
@@ -179,7 +180,7 @@ class TimelineServiceSpec extends TrackRepresentationsSpecificationContext {
         when(timelineClient.stream(session, None, 10, reverseCursor = false, Some("uuid")))
           .thenReturn(Future.value(emptyTimelineStreamMock))
 
-        when(trackService.tracks(session, List.empty))
+        when(trackService.tracks(session, List.empty, AccessParams.defaultAccess))
           .thenReturn(Future.value(List.empty))
 
         when(playlistsService.fetchPlaylistsMetadataOnly(session, List.empty))
@@ -240,7 +241,7 @@ class TimelineServiceSpec extends TrackRepresentationsSpecificationContext {
         when(timelineClient.followingsTracks(session, None, 10, reverseCursor = false, Some("uuid")))
           .thenReturn(Future.value(timelineFollowingTracksMock))
 
-        when(trackService.tracks(session, List(TrackRequest(trackUrn, None))))
+        when(trackService.tracks(session, List(TrackRequest(trackUrn, None)), AccessParams.defaultAccess))
           .thenReturn(Future.value(List(mockTrackRepresentation)))
       }
     }
@@ -250,7 +251,7 @@ class TimelineServiceSpec extends TrackRepresentationsSpecificationContext {
         when(timelineClient.followingsTracks(session, None, 10, reverseCursor = false, Some("uuid")))
           .thenReturn(Future.value(emptyTimelineStreamMock))
 
-        when(trackService.tracks(session, List.empty))
+        when(trackService.tracks(session, List.empty, AccessParams.defaultAccess))
           .thenReturn(Future.value(List.empty))
       }
     }

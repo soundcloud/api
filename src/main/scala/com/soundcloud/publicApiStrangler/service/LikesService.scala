@@ -11,6 +11,7 @@ import com.twitter.util.Future
 import proto.soundcloud.tracks.api.{LikeTrackRequest, LikesClientProtobuf}
 import com.soundcloud.twinagle.{ErrorCode, TwinagleException}
 import com.soundcloud.jvmkit.module.twirp.proto.UserSessionOps._
+import com.soundcloud.publicApiStrangler.handler.support.requestParser.AccessParams
 
 sealed trait CreateResponse
 case object OkCreateResponse extends CreateResponse
@@ -79,7 +80,8 @@ class LikesService(
       likedTrackUrns <- lieblingClient.userTracksLikesForUrns(session, userUrn, List(trackUrn))
       enrichedTracks <- trackRepresentationsService.tracks(
         session,
-        likedTrackUrns.map(track => TrackRequest(track, None))
+        likedTrackUrns.map(track => TrackRequest(track, None)),
+        AccessParams.defaultAccess
       )
     } yield {
       enrichedTracks.headOption
@@ -95,7 +97,8 @@ class LikesService(
       likesPage <- lieblingClient.userTracksLikes(session, userUrn, pagination.cursor, pagination.pageSize)
       enrichedTracks <- trackRepresentationsService.tracks(
         session,
-        likesPage.likes.map(like => TrackRequest(like.target_urn, None))
+        likesPage.likes.map(like => TrackRequest(like.target_urn, None)),
+        AccessParams.defaultAccess
       )
     } yield {
       val nextHref =

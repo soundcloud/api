@@ -4,6 +4,7 @@ import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.LoggedInUserSession
 import com.soundcloud.publicApiStrangler.client.TimelineJsonClient
 import com.soundcloud.publicApiStrangler.client.tracks.TrackRequest
+import com.soundcloud.publicApiStrangler.handler.support.requestParser.AccessParams
 import com.soundcloud.publicApiStrangler.service.pagination.CursorBasedPagination
 import com.soundcloud.publicApiStrangler.service.playlists.PlaylistRequest
 import com.soundcloud.publicApiStrangler.service.playlists.representation.Playlist
@@ -100,7 +101,7 @@ class TimelineService(
   ): Future[List[TrackRepresentation]] = {
     val trackUrns = trackUrnsFromEvents(events)
     trackRepresentationsService
-      .tracks(session, trackUrns.map(TrackRequest(_, None)))
+      .tracks(session, trackUrns.map(TrackRequest(_, None)), AccessParams.defaultAccess)
   }
 
   private def getPlaylistRepresentations(

@@ -34,17 +34,18 @@ class TracksIntegrationSpec extends ServerSetup {
       (response.json \ "access").as[String] must equalTo("preview")
     }
 
-    "should return a track with api_streamable=false" in new TrackContext {
+    "should return an error for a track with api_streamable=false" in new TrackContext {
       val response = server.get(path(freeTierNonStreamableTrackId))
 
-      response.status === 200
-
-      (response.json \ "stream_url").as[String] must equalTo(
-        s"https://api.soundcloud.com/tracks/$freeTierNonStreamableTrackId/stream"
-      )
-      (response.json \ "duration").as[Int] must equalTo(7889)
-      (response.json \ "streamable").as[Boolean] must equalTo(false)
-      (response.json \ "access").as[String] must equalTo("blocked")
+      response.status === 404
+//      response.status === 200
+//
+//      (response.json \ "stream_url").as[String] must equalTo(
+//        s"https://api.soundcloud.com/tracks/$freeTierNonStreamableTrackId/stream"
+//      )
+//      (response.json \ "duration").as[Int] must equalTo(7889)
+//      (response.json \ "streamable").as[Boolean] must equalTo(false)
+//      (response.json \ "access").as[String] must equalTo("blocked")
     }
 
     "should return error for a blocked track" in new TrackContext {

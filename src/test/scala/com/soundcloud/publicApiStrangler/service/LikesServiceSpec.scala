@@ -16,6 +16,7 @@ import org.mockito.Mockito._
 import org.specs2.mutable.BeforeAfter
 import proto.soundcloud.tracks.api.{LikeTrackRequest, LikeTrackResponse, LikesClientProtobuf}
 import com.soundcloud.jvmkit.module.twirp.proto.UserSessionOps._
+import com.soundcloud.publicApiStrangler.handler.support.requestParser.AccessParams
 import com.soundcloud.twinagle.{ErrorCode, TwinagleException}
 
 import java.time.Instant
@@ -224,7 +225,7 @@ class LikesServiceSpec extends TrackRepresentationsSpecificationContext {
   "#userTrackLikeForUrn" >> {
     "when all data is available" in new Context {
       val track = trackVisibilityTrack()
-      when(trackRepresentationsService.tracks(session, List(trackRequest)))
+      when(trackRepresentationsService.tracks(session, List(trackRequest), AccessParams.defaultAccess))
         .thenReturn(Future.value(List(createTrackRepresentation)))
       when(lieblingClient.userTracksLikesForUrns(session, trackOwnerUrn, List(track.urn)))
         .thenReturn(Future.value(List(trackUrn)))
@@ -251,7 +252,7 @@ class LikesServiceSpec extends TrackRepresentationsSpecificationContext {
           )
         )
       )
-      when(trackRepresentationsService.tracks(session, List(trackRequest)))
+      when(trackRepresentationsService.tracks(session, List(trackRequest), AccessParams.defaultAccess))
         .thenReturn(Future.value(List(createTrackRepresentation)))
       when(lieblingClient.userTracksLikes(session, trackOwnerUrn, pagination.cursor, pagination.pageSize))
         .thenReturn(Future.value(likesPage))

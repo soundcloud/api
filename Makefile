@@ -38,6 +38,7 @@ precheckin:
 lint:
 	$(SBT) scalafmtCheckAll
 
+format: auto-apply-lint
 auto-apply-lint:
 	$(SBT) scalafmtAll
 

@@ -18,6 +18,7 @@ import com.twitter.finagle.http.ParamMap
 import com.twitter.util.{Await, Future}
 import org.mockito.Mockito.when
 import com.soundcloud.jvmkit.module.outcome._
+import com.soundcloud.publicApiStrangler.handler.support.requestParser.AccessParams
 import com.soundcloud.publicApiStrangler.service.playlists.PlaylistRequest
 import com.soundcloud.publicApiStrangler.service.representation.collection.Collection
 import proto.soundcloud.common.session.{UserSession => ProtoUserSession}
@@ -120,7 +121,7 @@ class PlaylistsServiceSpec extends UnitSpecification {
       when(playlistsTwirpServiceMock.getVisiblePlaylists(getVisiblePlaylistsRequest = visiblePlaylistsRequest))
         .thenReturn(Future.value(expectedPlaylistResponse))
       when(
-        trackServiceMock.tracks(session, trackRequests)
+        trackServiceMock.tracks(session, trackRequests, AccessParams.defaultAccess)
       ).thenReturn(Future.value(requestedPlaylistTracks))
     }
   }

@@ -10,6 +10,7 @@ import com.soundcloud.publicApiStrangler.client.pubmese.{Isrc, PubmeseClient}
 import com.soundcloud.publicApiStrangler.client.quota.UserQuotaClient
 import com.soundcloud.publicApiStrangler.client.stitch.{StitchClient, StitchCounts}
 import com.soundcloud.publicApiStrangler.client.tracks.{TrackRequest, VisibleTrack}
+import com.soundcloud.publicApiStrangler.handler.support.requestParser.AccessParams
 import com.soundcloud.publicApiStrangler.service.TrackVisibilityService
 import com.twitter.util.Future
 
@@ -25,9 +26,13 @@ class TrackRepresentationsService(
     userQuotaClient: UserQuotaClient
 ) {
 
-  def tracks(session: UserSession, trackRequests: List[TrackRequest]): Future[List[TrackRepresentation]] = {
+  def tracks(
+      session: UserSession,
+      trackRequests: List[TrackRequest],
+      access: AccessParams
+  ): Future[List[TrackRepresentation]] = {
     for {
-      visibleTracks <- trackVisibilityService.visibleTracks(session, trackRequests)
+      visibleTracks <- trackVisibilityService.visibleTracks(session, trackRequests, access)
       enrichedTracks <- enrichTracks(session, visibleTracks)
     } yield {
       enrichedTracks
@@ -37,7 +42,8 @@ class TrackRepresentationsService(
   def track(
       session: UserSession,
       trackRequest: TrackRequest
-  ): Future[Option[TrackRepresentation]] = tracks(session, List(trackRequest)).map(_.headOption)
+  ): Future[Option[TrackRepresentation]] =
+    tracks(session, List(trackRequest), AccessParams.defaultAccess).map(_.headOption)
 
   private def enrichTracks(
       session: UserSession,

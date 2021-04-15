@@ -1,12 +1,13 @@
 package com.soundcloud.publicApiStrangler.service
 
+import com.soundcloud.jvmkit.module.outcome._
 import com.soundcloud.jvmkit.module.telemetry.exceptions.ExceptionCollector
 import com.soundcloud.jvmkit.module.telemetry.exceptions.ExceptionHandler.FutureExtensions
 import com.soundcloud.jvmkit.module.twirp.proto.UserSessionOps._
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSession
-import com.soundcloud.jvmkit.module.outcome._
 import com.soundcloud.publicApiStrangler.client.mothership.MoshimoshiClient
+import com.soundcloud.publicApiStrangler.handler.support.requestParser.AccessParams
 import com.soundcloud.publicApiStrangler.service.pagination.OffsetBasedPagination
 import com.soundcloud.publicApiStrangler.service.playlists.representation.{Playlist, VisiblePlaylist}
 import com.soundcloud.publicApiStrangler.service.playlists.{PlaylistProtoMapper, PlaylistRequest}
@@ -43,7 +44,7 @@ class PlaylistsService(
       visiblePlaylist = visiblePlaylistObject.flatMap(response => playlistProtoMapper.apply(response, pagination))
       playlistTrackRequests = visiblePlaylist.map(_.trackRequests).headOption
       tracks <- playlistTrackRequests
-        .map(trackRequests => tracksService.tracks(session, trackRequests.requests))
+        .map(trackRequests => tracksService.tracks(session, trackRequests.requests, AccessParams.defaultAccess))
         .getOrElse(Future.value(List.empty))
     } yield {
       playlistTrackRequests match {
@@ -119,7 +120,7 @@ class PlaylistsService(
       showTracks: Boolean
   ): Future[Option[Playlist]] = {
     for {
-      tracks <- tracksService.tracks(session, visiblePlaylist.trackRequests.requests)
+      tracks <- tracksService.tracks(session, visiblePlaylist.trackRequests.requests, AccessParams.defaultAccess)
       playlistOwner <- moshimoshiClient
         .fetchUserObjects(session, Set(Urn.parse(visiblePlaylist.userUrn).get))
         .map(_.head)

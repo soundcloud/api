@@ -11,6 +11,7 @@ import com.soundcloud.publicApiStrangler.client.quota.UserQuotaClient
 import com.soundcloud.publicApiStrangler.client.stitch.{StitchClient, StitchCounts}
 import com.soundcloud.publicApiStrangler.client.trackmetadata.TrackmetadataClient
 import com.soundcloud.publicApiStrangler.client.tracks.{TrackRequest, VisibleTrack}
+import com.soundcloud.publicApiStrangler.handler.support.requestParser.AccessParams
 import com.soundcloud.publicApiStrangler.service.TrackVisibilityService
 import com.twitter.util.{Await, Future}
 import org.mockito.Mockito._
@@ -44,7 +45,7 @@ class TrackRepresentationsServiceSpec extends TrackRepresentationsSpecificationC
         track: VisibleTrack,
         session: UserSession
     ) = {
-      when(trackVisibilityService.visibleTracks(session, List(trackRequest)))
+      when(trackVisibilityService.visibleTracks(session, List(trackRequest), AccessParams.defaultAccess))
         .thenReturn(Future.value(List(track)))
       when(okidokiClient.fetchUserObjects(session, Set(requestingUserUrn)))
         .thenReturn(Future.value(List(requestingUser)))
@@ -65,7 +66,8 @@ class TrackRepresentationsServiceSpec extends TrackRepresentationsSpecificationC
     }
 
     def setUpMocksForNonExistingTrack = {
-      when(trackVisibilityService.visibleTracks(session, List(trackRequest))).thenReturn(Future.value(List.empty))
+      when(trackVisibilityService.visibleTracks(session, List(trackRequest), AccessParams.defaultAccess))
+        .thenReturn(Future.value(List.empty))
       when(pubmeseClient.isrcsForTracks(session, Set(trackUrn))).thenReturn(Future.value(isrc()))
       when(okidokiClient.fetchTrackGeoblockings(session, Set(trackUrn))).thenReturn(Future.value(geoblockings))
       when(okidokiClient.fetchTracksAudioMetadata(session, Set(trackUrn)))

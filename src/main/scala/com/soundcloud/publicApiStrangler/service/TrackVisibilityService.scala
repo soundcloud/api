@@ -6,6 +6,7 @@ import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.publicApiStrangler.authorization.policies.{Access, ContentPolicy, MonetizationModel, Reason}
 import com.soundcloud.publicApiStrangler.client.tracks.{TrackRequest, VisibleTrack}
+import com.soundcloud.publicApiStrangler.handler.support.requestParser.AccessParams
 import com.soundcloud.publicApiStrangler.service.tracks.VisibleTrackMapper
 import com.twitter.util.Future
 import proto.soundcloud.tracks.api.{
@@ -23,37 +24,27 @@ class TrackVisibilityService(
     visibleTrackMapper: VisibleTrackMapper,
     allowlistedClients: Set[Urn]
 ) {
-  def visibleTracks(session: UserSession, trackRequests: List[TrackRequest]): Future[List[VisibleTrack]] = {
-    tracks(session, trackRequests).map(allTracks => allTracks.filter(_.isRight).map(_.right.get))
+  def visibleTracks(
+      session: UserSession,
+      trackRequests: List[TrackRequest],
+      access: AccessParams
+  ): Future[List[VisibleTrack]] = {
+    tracks(session, trackRequests, access).map(allTracks => allTracks.filter(_.isRight).map(_.right.get))
   }
 
-  def tracks(session: UserSession, trackRequests: List[TrackRequest]): Future[List[Outcome[VisibleTrack]]] = {
-    for {
-      visibleTracks <- fetchVisibleTracks(session, trackRequests)
-    } yield visibleTracks.map(track => filterAllowed(session.getAgent, track))
-  }
-
-  private def filterAllowed(client: Urn, track: VisibleTrack): Outcome[VisibleTrack] = {
-    if (track.disabledAt.isEmpty && // Filters tracks that are disabled (taken down or over quota)
-      track.transcodings.exists(_.mimeType == "audio/mpeg") && // Filters out non playable tracks (missing transcoding)
-      track.authorization.policy != ContentPolicy.BLOCK &&
-      isFreeOrAllowlisted(client, track)) // Filters out paywalled tracks unless client is allowlisted
-      track.good
-    else if (!track.apiStreamable.getOrElse(true) || !isFreeOrAllowlisted(client, track))
-      CustomError(UnavailableByPolicy(track.urn, Reason.NOT_SUPPORTED)).bad
-    else CustomError(UnavailableByPolicy(track.urn, track.authorization.reason)).bad
-  }
-
-  private def isFreeOrAllowlisted(client: Urn, track: VisibleTrack): Boolean = {
-    val isPaywalled = track.authorization.policy == ContentPolicy.MONETIZE &&
-      track.authorization.getMonetizationModel == MonetizationModel.SUB_HIGH_TIER
-    allowlistedClients.contains(client) || !isPaywalled
+  def tracks(
+      session: UserSession,
+      trackRequests: List[TrackRequest],
+      access: AccessParams
+  ): Future[List[Outcome[VisibleTrack]]] = {
+    fetchVisibleTracks(session, trackRequests, access)
   }
 
   private def fetchVisibleTracks(
       session: UserSession,
-      trackRequests: Seq[TrackRequest]
-  ): Future[List[VisibleTrack]] = {
+      trackRequests: Seq[TrackRequest],
+      access: AccessParams
+  ): Future[List[Outcome[VisibleTrack]]] = {
 
     val request = GetVisibleTracksRequest(
       trackRequests = trackRequests.toList.map(trackRequest =>
@@ -66,18 +57,40 @@ class TrackVisibilityService(
     tracksTwinagleClient.getVisibleTracks(request).map { tracksResponse =>
       tracksResponse.tracks.toList
         .map(visibleTrackMapper.apply)
-        .map(visibleTrack => {
-          val access =
-            getAccessFromPolicy(visibleTrack.authorization.policy, visibleTrack.apiStreamable.getOrElse(true))
-          visibleTrack.copy(access = Some(access))
-        })
+        .filter(visibleTrack => visibleTrack.disabledAt.isEmpty)
+        .map(applyRules(session.getAgent, _, access.access))
     }
   }
 
-  private def getAccessFromPolicy(policy: ContentPolicy, apiStreamable: Boolean): Access = {
-    (policy, apiStreamable) match {
-      case (_, false) | (ContentPolicy.BLOCK, _) => Access.Blocked
-      case (ContentPolicy.SNIP, _) => Access.Preview
+  private def applyRules(client: Urn, track: VisibleTrack, allowedAccesses: Set[Access]): Outcome[VisibleTrack] = {
+    val trackAccess =
+      getAccessFromPolicy(
+        track.authorization.policy,
+        track.authorization.monetizationModel,
+        track.apiStreamable.getOrElse(true),
+        client
+      )
+
+    if (allowedAccesses.contains(trackAccess)) {
+      track.copy(access = Some(trackAccess)).good
+    } else if (!track.apiStreamable.getOrElse(true)) {
+      CustomError(UnavailableByPolicy(track.urn, Reason.NOT_SUPPORTED)).bad
+    } else {
+      CustomError(UnavailableByPolicy(track.urn, track.authorization.reason)).bad
+    }
+  }
+
+  private def getAccessFromPolicy(
+      policy: ContentPolicy,
+      model: MonetizationModel,
+      apiStreamable: Boolean,
+      client: Urn
+  ): Access = {
+    (policy, model, apiStreamable) match {
+      case (_, _, false) | (ContentPolicy.BLOCK, _, _) => Access.Blocked
+      case (ContentPolicy.MONETIZE, MonetizationModel.SUB_HIGH_TIER, _) =>
+        if (!allowlistedClients.contains(client)) Access.Blocked else Access.Preview
+      case (ContentPolicy.SNIP, _, _) => Access.Preview
       case _ => Access.Playable
     }
   }

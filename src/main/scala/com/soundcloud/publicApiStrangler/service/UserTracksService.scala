@@ -5,6 +5,7 @@ import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.publicApiStrangler.client.chrono.ChronoItem
 import com.soundcloud.publicApiStrangler.client.trackmetadata.TrackmetadataClient
 import com.soundcloud.publicApiStrangler.client.tracks.TrackRequest
+import com.soundcloud.publicApiStrangler.handler.support.requestParser.AccessParams
 import com.soundcloud.publicApiStrangler.service.pagination.CursorBasedPagination
 import com.soundcloud.publicApiStrangler.service.representation.collection.Collection
 import com.soundcloud.publicApiStrangler.service.trackrepresentation.{TrackRepresentation, TrackRepresentationsService}
@@ -24,7 +25,8 @@ class UserTracksService(
       userTracksResponse <- trackmetadataClient.userTracks(session, userUrn, pagination)
       enrichedTracks <- trackRepresentationsService.tracks(
         session,
-        userTracksResponse.items.map(item => TrackRequest(item.urn, None))
+        userTracksResponse.items.map(item => TrackRequest(item.urn, None)),
+        AccessParams.defaultAccess
       )
     } yield {
       Collection(enrichedTracks, userTracksNextHref(userTracksResponse.items, pagination))

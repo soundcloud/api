@@ -3,6 +3,7 @@ package com.soundcloud.publicApiStrangler.service
 import com.soundcloud.publicApiStrangler.client.chrono.{ChronoItem, ChronoMeta, ChronoMetaParams, ChronoResponse}
 import com.soundcloud.publicApiStrangler.client.trackmetadata.TrackmetadataClient
 import com.soundcloud.publicApiStrangler.client.tracks.TrackRequest
+import com.soundcloud.publicApiStrangler.handler.support.requestParser.AccessParams
 import com.soundcloud.publicApiStrangler.service.pagination.CursorBasedPagination
 import com.soundcloud.publicApiStrangler.service.representation.collection.Collection
 import com.soundcloud.publicApiStrangler.service.trackrepresentation._
@@ -45,8 +46,10 @@ class UserTracksServiceSpec extends TrackRepresentationsSpecificationContext {
 
   "#userTracks" >> {
     "when all data is available" in new Context {
-      when(trackRepresentationsService.tracks(session, List(TrackRequest(track.visibleTrack.urn, None))))
-        .thenReturn(Future.value(List(track)))
+      when(
+        trackRepresentationsService
+          .tracks(session, List(TrackRequest(track.visibleTrack.urn, None)), AccessParams.defaultAccess)
+      ).thenReturn(Future.value(List(track)))
       when(trackmetadataClient.userTracks(session, trackOwnerUrn, pagination))
         .thenReturn(Future.value(chronoResponse))
 
@@ -58,8 +61,10 @@ class UserTracksServiceSpec extends TrackRepresentationsSpecificationContext {
       }
 
       "when data is not available" in new Context {
-        when(trackRepresentationsService.tracks(session, List(TrackRequest(track.visibleTrack.urn, None))))
-          .thenReturn(Future.value(List.empty))
+        when(
+          trackRepresentationsService
+            .tracks(session, List(TrackRequest(track.visibleTrack.urn, None)), AccessParams.defaultAccess)
+        ).thenReturn(Future.value(List.empty))
         when(trackmetadataClient.userTracks(session, trackOwnerUrn, pagination))
           .thenReturn(Future.value(ChronoResponse.emptyResponse))
 
