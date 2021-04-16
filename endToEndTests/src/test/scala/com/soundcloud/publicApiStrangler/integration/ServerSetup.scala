@@ -9,7 +9,7 @@ trait ServerSetup extends IntegrationSpecification with SpinningUpAppSupport {
     val server = TestServer("publicapistrangler", 5000)
 
     def clientId = "u1aX7EnUd90ul1sbwLwj7cN6fqytmrcV" //config.get("CLIENT_ID", DataSensitivity.NON_SENSITIVE)
-    def token = "1-292145-948745750-e568a972c01be" //config.get("ACCESS_TOKEN", DataSensitivity.NON_SENSITIVE)
+    def token = "1-292145-948745750-a0f8d513624e6" //config.get("ACCESS_TOKEN", DataSensitivity.NON_SENSITIVE)
 
     lazy val freeTierTrackId = "405325995"
     lazy val freeTierNonStreamableTrackId = "1015448728"

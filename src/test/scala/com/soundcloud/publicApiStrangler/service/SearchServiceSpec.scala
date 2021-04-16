@@ -67,16 +67,7 @@ class SearchServiceSpec extends TrackRepresentationsSpecificationContext {
           anyObject
         )
       ).thenReturn(
-        SearchResponse(
-          query,
-          queryUrn,
-          0,
-          5,
-          1,
-          1000,
-          Seq(Doc(userUrn)),
-          None
-        ).goodF
+        SearchResponse(query, queryUrn, 0, 5, 1, 1000, Seq(Doc(userUrn)), None).goodF
       )
 
       when(followCountsClient.counts(session, Seq(userUrn)))
@@ -101,16 +92,7 @@ class SearchServiceSpec extends TrackRepresentationsSpecificationContext {
           anyObject
         )
       ).thenReturn(
-        SearchResponse(
-          query,
-          queryUrn,
-          0,
-          5,
-          1,
-          1000,
-          Seq.empty,
-          None
-        ).goodF
+        SearchResponse(query, queryUrn, 0, 5, 1, 1000, Seq.empty, None).goodF
       )
 
       when(followCountsClient.counts(session, Seq.empty))
@@ -131,62 +113,48 @@ class SearchServiceSpec extends TrackRepresentationsSpecificationContext {
   }
 
   "#searchTracks" >> {
-    "when all data is available" in new Context {
-      when(
-        trackRepresentationsService.tracks(
-          session,
-          List(TrackRequest(trackRepresentationMock.visibleTrack.urn, None)),
-          AccessParams.defaultAccess
-        )
-      ).thenReturn(Future.value(List(trackRepresentationMock)))
-      when(
-        searchClient.searchTracks(
-          ===(session),
-          ===(Params("q" -> query, "filter.content_tier" -> "FREE", "filter.content_country" -> "--")),
-          anyObject
-        )
-      ).thenReturn(
-        SearchResponse(
-          query,
-          queryUrn,
-          0,
-          5,
-          1,
-          1000,
-          Seq(Doc(trackUrn)),
-          None
-        ).goodF
-      )
+    trait TrackContext extends Context {
+      lazy val response: OutcomeF[SearchResponse] =
+        SearchResponse(query, queryUrn, 0, 5, 1, 1000, Seq(Doc(trackUrn)), None).goodF
+      lazy val tracks = List(trackRepresentationMock)
 
+      when(
+        trackRepresentationsService.tracks(===(session), anyObject[List[TrackRequest]], anyObject[AccessParams])
+      ).thenReturn(Future.value(tracks))
+      when(searchClient.searchTracks(===(session), anyObject, anyObject)).thenReturn(response)
+    }
+
+    "when all data is available" in new TrackContext {
       val result = Await.result(searchService.searchTracks(session, ParamMap(("q", query)), trackPagination).value)
 
       val tracksCollection = result.getOrElse(Collection(List.empty, None))
       tracksCollection.items ==== List(trackRepresentationMock)
+      there was one(searchClient).searchTracks(
+        ===(session),
+        ===(Params("q" -> query, "filter.content_tier" -> "FREE", "filter.content_country" -> "--")),
+        anyObject
+      )
     }
 
-    "when data is not available" in new Context {
-      when(
-        trackRepresentationsService.tracks(session, List.empty, AccessParams.defaultAccess)
-      ).thenReturn(Future.value(List.empty))
-      when(
-        searchClient.searchTracks(
-          ===(session),
-          ===(Params("q" -> query, "filter.content_tier" -> "FREE", "filter.content_country" -> "--")),
-          anyObject
-        )
-      ).thenReturn(
-        SearchResponse(
-          query,
-          queryUrn,
-          0,
-          0,
-          0,
-          1000,
-          Seq.empty,
-          None
-        ).goodF
+    "overrides content tier when access is defined" in new TrackContext {
+      val result = Await.result(
+        searchService
+          .searchTracks(session, ParamMap(("q", query), ("access", "playable,preview,blocked")), trackPagination)
+          .value
       )
 
+      val tracksCollection = result.getOrElse(Collection(List.empty, None))
+      tracksCollection.items ==== List(trackRepresentationMock)
+      there was one(searchClient).searchTracks(
+        ===(session),
+        ===(Params("q" -> query, "filter.content_tier" -> "ANY", "filter.content_country" -> "--")),
+        anyObject
+      )
+    }
+
+    "when data is not available" in new TrackContext {
+      override lazy val tracks = List.empty
+      override lazy val response = SearchResponse(query, queryUrn, 0, 0, 0, 1000, Seq.empty, None).goodF
       val result = Await.result(searchService.searchTracks(session, ParamMap(("q", query)), trackPagination).value)
 
       val tracksCollection = result.getOrElse(Collection(List.empty, None))

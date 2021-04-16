@@ -27,5 +27,6 @@ case class AccessParams(access: Set[Access] = Set(Access.Preview, Access.Playabl
 
 object AccessParams {
   val defaultAccess: AccessParams = AccessParams()
+  val streamAccess: AccessParams = AccessParams(Set(Access.Playable, Access.Preview))
   val explicitAccess: AccessParams = AccessParams(Set(Access.Playable, Access.Preview, Access.Blocked))
 }

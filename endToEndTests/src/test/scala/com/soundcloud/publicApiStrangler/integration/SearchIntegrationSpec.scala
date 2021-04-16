@@ -1,0 +1,54 @@
+package com.soundcloud.publicApiStrangler.integration
+
+import play.api.libs.json.JsArray
+
+class SearchIntegrationSpec extends ServerSetup {
+
+  trait SearchContext extends IntegrationContext {
+
+    def searchPath(route: String = "/tracks", params: Map[String, String] = Map.empty): String = {
+      super.path(route, Map("linked_partitioning" -> "true", "limit" -> "5") ++ params)
+    }
+  }
+
+  "/tracks" >> {
+    "should return only full tracks, if no access are present (free tier is default)" in new SearchContext {
+      val response = server.get(
+        searchPath(params = Map("q" -> "Crazy In Love")),
+        authenticatedUSHeaders
+      )
+
+      response.status === 200
+
+      val searchResult = (response.json \ "collection").as[JsArray].value
+      searchResult.map(item => (item \ "access").as[String] mustEqual "playable")
+    }
+
+    "should return full tracks and snippets, if access=playable,preview" in new SearchContext {
+      val response = server.get(
+        searchPath(params = Map("q" -> "better", "limit" -> "10", "access" -> "playable,preview"))
+      )
+
+      response.status === 200
+
+      val searchResult = (response.json \ "collection").as[JsArray].value
+
+      searchResult.map(item => (item \ "access").as[String] must beOneOf("playable", "preview"))
+      searchResult.map(item => (item \ "access").as[String]) must contain(
+        allOf("playable", "preview")
+      )
+    }
+
+    "should return blocked tracks as well, full access" in new SearchContext {
+      val response = server.get(
+        searchPath(params = Map("q" -> "better", "access" -> "playable,preview,blocked"))
+      )
+
+      response.status === 200
+
+      val searchResult = (response.json \ "collection").as[JsArray].value
+//      searchResult.map(item => (item \ "access").as[String]) must contain("blocked")
+    }
+
+  }
+}

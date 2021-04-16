@@ -59,20 +59,18 @@ class SearchService(
       params: ParamMap,
       trackPagination: TrackPagination
   ): OutcomeF[Collection[TrackRepresentation]] = {
+    val access = AccessParamsExtractor.unapply(params)
+    // to keep current behavior, we only fetch free tracks if no access filter defined
+    val contentTier = if (params.get("access").isDefined) "ANY" else "FREE"
     val mapParams = mapTrackParams(params) ++ Params(
-      "filter.content_tier" -> "FREE",
+      "filter.content_tier" -> contentTier,
       "filter.content_country" -> session.getGeo.getCountryCode
     )
-    val access = AccessParamsExtractor.unapply(params)
 
     for {
       searchPage <- searchClient.searchTracks(session, mapParams)
       enrichedTracks <- trackRepresentationsService
-        .tracks(
-          session,
-          searchPage.docs.map(doc => TrackRequest(doc.urn, None)).toList,
-          access
-        )
+        .tracks(session, searchPage.docs.map(doc => TrackRequest(doc.urn, None)).toList, access)
         .outcomeF
     } yield {
       Collection(enrichedTracks, trackPagination.nextHref(searchPage.total_results.toInt))
