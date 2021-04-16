@@ -50,6 +50,8 @@ class ClientApplicationActivityTelemetryFilter(
 object ClientApplicationActivityTelemetryFilter {
   val targetApplicationIds = Set(
     "59007", // Soundiiz
+    "62023", // Soundiiz local
+    "167582", // Denon
     "273212",
     "70783",
     "86099",
