@@ -79,15 +79,16 @@ class SearchService(
 
   def searchPlaylists(
       session: UserSession,
-      params: Map[String, String],
+      params: ParamMap,
       pagination: OffsetBasedPagination
   ): OutcomeF[Collection[Playlist]] = {
     val mapParams = mapPlaylistParams(params)
+    val access = AccessParamsExtractor.unapply(params)
 
     for {
       searchPage <- searchClient.searchPlaylists(session, mapParams)
       playlistRequests = searchPage.docs.map(doc => PlaylistRequest(urn = doc.urn, None))
-      playlists <- playlistsService.fetchPlaylists(session, playlistRequests.toList, Some(pagination)).outcomeF
+      playlists <- playlistsService.fetchPlaylists(session, playlistRequests.toList, access, Some(pagination)).outcomeF
     } yield {
       Collection(playlists, pagination.nextHref(searchPage.total_results.toInt))
     }

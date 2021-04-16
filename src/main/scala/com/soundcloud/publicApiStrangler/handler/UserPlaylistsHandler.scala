@@ -6,6 +6,7 @@ import com.soundcloud.jvmkit.module.outcome._
 import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.publicApiStrangler.handler.representation.collection.CollectionResponse
 import com.soundcloud.publicApiStrangler.handler.support.error.UnhandledOutcomeException
+import com.soundcloud.publicApiStrangler.handler.support.requestParser.{AccessParams, AccessParamsExtractor}
 import com.soundcloud.publicApiStrangler.service.UserPlaylistsService
 import com.soundcloud.publicApiStrangler.service.pagination.{CursorBasedPagination, OffsetBasedPagination}
 import com.soundcloud.publicApiStrangler.support.ErrorResponse
@@ -38,13 +39,14 @@ class UserPlaylistsHandler(
     val pagination =
       hasLinkedPartitioning.map(_ => OffsetBasedPagination.build(req, Seq("linked_partitioning")))
     val secretToken = req.params.get("secret_token")
+    val access = AccessParamsExtractor.unapply(req.params)
 
     Try(getUserUrn(userId)) match {
       case Return(userUrn) =>
         Try(getPlaylistUrn(req)) match {
           case Return(playlistUrn) =>
             userPlaylistsService
-              .userPlaylist(session, playlistUrn, secretToken, pagination, userUrn.identifier)
+              .userPlaylist(session, playlistUrn, secretToken, pagination, userUrn.identifier, access)
               .map {
                 case Good(playlist) =>
                   JsonResponseBuilder.ok(Json.stringify(Json.toJson(playlist)))
@@ -60,17 +62,24 @@ class UserPlaylistsHandler(
   def getUserPlaylists(req: HandlerRequest): Future[Response] = {
     userAuthentication.withUserSession(req) { session =>
       val userId = req.routeParams("userId")
-      performGetPlaylists(req, session, userId)
+      val access = AccessParamsExtractor.unapply(req.params)
+
+      performGetPlaylists(req, session, userId, access)
     }
   }
 
   def getMePlaylists(req: HandlerRequest): Future[Response] = {
     userAuthentication.withLoggedInUser(req) { (session, userUrn) =>
-      performGetPlaylists(req, session, userUrn.identifier)
+      performGetPlaylists(req, session, userUrn.identifier, AccessParams.explicitAccess)
     }
   }
 
-  private def performGetPlaylists(req: HandlerRequest, session: UserSession, userId: String): Future[Response] = {
+  private def performGetPlaylists(
+      req: HandlerRequest,
+      session: UserSession,
+      userId: String,
+      access: AccessParams
+  ): Future[Response] = {
     val hasLinkedPartitioning = req.params.contains("linked_partitioning")
     val pagination = CursorBasedPagination.build(req, Seq("linked_partitioning"))
 
@@ -78,7 +87,7 @@ class UserPlaylistsHandler(
       case Return(urn) =>
         val playlistsCollection =
           userPlaylistsService
-            .userPlaylists(session, urn, pagination)
+            .userPlaylists(session, urn, access, pagination)
             .map(Good(_))
         CollectionResponse.handleCollectionResponse(playlistsCollection, hasLinkedPartitioning)
       case Throw(e) => Future.value(ErrorResponse.badRequest(e.getMessage))

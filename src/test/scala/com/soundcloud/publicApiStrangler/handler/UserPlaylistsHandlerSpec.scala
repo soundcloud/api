@@ -1,7 +1,6 @@
 package com.soundcloud.publicApiStrangler.handler
 
 import java.util.TimeZone
-
 import com.soundcloud.jvmkit.module.bff.testsupport.FakeUserAuthentication
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.publicApiStrangler.Routing
@@ -13,6 +12,7 @@ import com.soundcloud.publicApiStrangler.service.representation.collection.Colle
 import com.soundcloud.publicApiStrangler.test.{HandlerSpecificationScope, UnitSpecification}
 import com.twitter.finagle.http.{Request, Status}
 import com.soundcloud.jvmkit.module.outcome._
+import com.soundcloud.publicApiStrangler.handler.support.requestParser.AccessParams
 import com.twitter.util.Future
 import org.joda.time.DateTimeZone
 import org.mockito.Mockito.when
@@ -52,9 +52,10 @@ class UserPlaylistsHandlerSpec extends UnitSpecification {
       def stubService(
           user: Urn,
           path: String,
-          collection: Collection[Playlist]
+          collection: Collection[Playlist],
+          access: AccessParams = AccessParams.defaultAccess
       ) = {
-        when(userPlaylistsService.userPlaylists(session, user, paginationParams(path)))
+        when(userPlaylistsService.userPlaylists(session, user, access, paginationParams(path)))
           .thenReturn(Future.value(collection))
       }
     }
@@ -107,7 +108,7 @@ class UserPlaylistsHandlerSpec extends UnitSpecification {
           val userUrn = Urn("soundcloud", "users", "1")
           val path = s"/me/playlists$queryString"
 
-          stubService(userUrn, path, playlistsCollection)
+          stubService(userUrn, path, playlistsCollection, AccessParams.explicitAccess)
 
           val response = get(path)
           response.status ==== Status.Ok
@@ -117,7 +118,7 @@ class UserPlaylistsHandlerSpec extends UnitSpecification {
           val userUrn = Urn("soundcloud", "users", "1")
           val path = s"/me/playlists$queryString"
 
-          stubService(userUrn, path, playlistsCollection)
+          stubService(userUrn, path, playlistsCollection, AccessParams.explicitAccess)
 
           val response = get(path)
           response.status ==== Status.Ok
@@ -143,10 +144,18 @@ class UserPlaylistsHandlerSpec extends UnitSpecification {
           playlistUrn: Urn,
           path: String,
           userId: String,
-          response: Outcome[Playlist]
+          response: Outcome[Playlist],
+          access: AccessParams = AccessParams.defaultAccess
       ) = {
         when(
-          userPlaylistsService.userPlaylist(session, playlistUrn, Some("s3cret"), Some(paginationParams(path)), userId)
+          userPlaylistsService.userPlaylist(
+            session,
+            playlistUrn,
+            Some("s3cret"),
+            Some(paginationParams(path)),
+            userId,
+            access
+          )
         ).thenReturn(Future.value(response))
       }
     }

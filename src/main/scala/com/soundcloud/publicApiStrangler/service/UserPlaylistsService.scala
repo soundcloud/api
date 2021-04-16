@@ -1,10 +1,11 @@
 package com.soundcloud.publicApiStrangler.service
 
+import com.soundcloud.jvmkit.module.outcome._
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSession
-import com.soundcloud.jvmkit.module.outcome._
 import com.soundcloud.publicApiStrangler.client.chrono.ChronoItem
 import com.soundcloud.publicApiStrangler.client.mothership.MoshimoshiClient
+import com.soundcloud.publicApiStrangler.handler.support.requestParser.AccessParams
 import com.soundcloud.publicApiStrangler.service.pagination.{CursorBasedPagination, OffsetBasedPagination}
 import com.soundcloud.publicApiStrangler.service.playlists.PlaylistRequest
 import com.soundcloud.publicApiStrangler.service.playlists.representation.Playlist
@@ -19,6 +20,7 @@ class UserPlaylistsService(
   def userPlaylists(
       session: UserSession,
       userUrn: Urn,
+      access: AccessParams,
       pagination: CursorBasedPagination
   ): Future[Collection[Playlist]] = {
     for {
@@ -26,6 +28,7 @@ class UserPlaylistsService(
       playlists <- playlistsService.fetchPlaylists(
         session,
         userPlaylistsResponse.items.map(item => PlaylistRequest(item.urn, None)),
+        access,
         None
       )
     } yield {
@@ -38,9 +41,10 @@ class UserPlaylistsService(
       playlistUrn: Urn,
       secretToken: Option[String],
       pagination: Option[OffsetBasedPagination],
-      userId: String
+      userId: String,
+      access: AccessParams
   ): Future[Outcome[Playlist]] = {
-    playlistsService.fetchPlaylist(session, playlistUrn, secretToken, pagination).map {
+    playlistsService.fetchPlaylist(session, playlistUrn, secretToken, access, pagination).map {
       case Good(playlist) if playlist.userId == userId.toLong => playlist.good
       case _ => NotFound("playlist not found").bad
     }

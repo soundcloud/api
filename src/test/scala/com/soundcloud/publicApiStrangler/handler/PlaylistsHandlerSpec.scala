@@ -42,6 +42,7 @@ class PlaylistsHandlerSpec extends UnitSpecification {
 
     val requestedTrack1 = createTrackRepresentation()
     val requestedTrack2 = createTrackRepresentation()
+    val access = AccessParams.defaultAccess
   }
 
   "DELETE /playlists/:id" >> {
@@ -99,21 +100,21 @@ class PlaylistsHandlerSpec extends UnitSpecification {
 
   "GET /playlists/:id" >> {
     "passes secret token to playlists service" in new Context {
-      when(playlistsService.fetchPlaylist(session, playlistUrn, Some("s3cret"), None))
+      when(playlistsService.fetchPlaylist(session, playlistUrn, Some("s3cret"), access, None))
         .thenReturn(Future.value(Good(playlist)))
       get("/playlists/1", Map("secret_token" -> "s3cret"))
-      verify(playlistsService).fetchPlaylist(session, playlistUrn, Some("s3cret"), None)
+      verify(playlistsService).fetchPlaylist(session, playlistUrn, Some("s3cret"), access, None)
     }
 
     "it returns 200 when a playlist is found" in new Context {
-      when(playlistsService.fetchPlaylist(session, playlistUrn, None, None))
+      when(playlistsService.fetchPlaylist(session, playlistUrn, None, access, None))
         .thenReturn(Future.value(Good(playlist)))
       val response = get("/playlists/1")
       response.status.code ==== 200
     }
 
     "it returns 404 for None" in new Context {
-      when(playlistsService.fetchPlaylist(session, playlistUrn, None, None))
+      when(playlistsService.fetchPlaylist(session, playlistUrn, None, access, None))
         .thenReturn(Future.value(NotFound("playlist not found").bad))
 
       val response = get("/playlists/1")
@@ -125,7 +126,7 @@ class PlaylistsHandlerSpec extends UnitSpecification {
     "returns track collection when playlist found" in new Context {
       val unpaginatedTracksCollection = Collection(List(requestedTrack1, requestedTrack2), None)
 
-      when(playlistsService.fetchPlaylistTracks(session, playlistUrn, None, AccessParams.defaultAccess, None))
+      when(playlistsService.fetchPlaylistTracks(session, playlistUrn, None, access, None))
         .thenReturn(Future.value(Good(unpaginatedTracksCollection)))
 
       val response = get("/playlists/1/tracks")
@@ -142,7 +143,7 @@ class PlaylistsHandlerSpec extends UnitSpecification {
 
       when(
         playlistsService
-          .fetchPlaylistTracks(session, playlistUrn, Some("s-3creT"), AccessParams.defaultAccess, Some(pagination))
+          .fetchPlaylistTracks(session, playlistUrn, Some("s-3creT"), access, Some(pagination))
       ).thenReturn(Future.value(Good(paginatedTracksCollection)))
 
       val response = get(path)
@@ -150,7 +151,7 @@ class PlaylistsHandlerSpec extends UnitSpecification {
     }
 
     "returns 404 when no playlist found" in new Context {
-      when(playlistsService.fetchPlaylistTracks(session, playlistUrn, None, AccessParams.defaultAccess, None))
+      when(playlistsService.fetchPlaylistTracks(session, playlistUrn, None, access, None))
         .thenReturn(Future.value(Bad(NotFound("playlist not found"))))
 
       val response = get("/playlists/1/tracks")

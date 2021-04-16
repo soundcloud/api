@@ -1,7 +1,5 @@
 package com.soundcloud.publicApiStrangler.handler
 
-import java.net.URL
-
 import com.soundcloud.jvmkit.module.bff.testsupport.FakeUserAuthentication
 import com.soundcloud.jvmkit.module.outcome._
 import com.soundcloud.jvmkit.module.telemetry.Telemetry
@@ -26,7 +24,10 @@ import com.twitter.finagle.http.{ParamMap, Request}
 import com.twitter.util.Future
 import org.mockito.Mockito.when
 
+import java.net.URL
+
 class SearchHandlerSpec extends UnitSpecification {
+
   trait ForwardContext extends HandlerSpecificationScope {
 
     def followCountsSeq: Seq[FollowCounts] = Seq.empty
@@ -195,7 +196,7 @@ class SearchHandlerSpec extends UnitSpecification {
       val queryString = "?q=foo&offset=10&limit=5&linked_partitioning=1"
       searchService.searchPlaylists(
         anonymousSession,
-        Map("q" -> "foo", "offset" -> "10", "limit" -> "5", "linked_partitioning" -> "1"),
+        ParamMap("q" -> "foo", "offset" -> "10", "limit" -> "5", "linked_partitioning" -> "1"),
         paginationParams(path + queryString)
       ) returns Future
         .value(
@@ -212,7 +213,7 @@ class SearchHandlerSpec extends UnitSpecification {
       val queryString = "?offset=10&limit=5&linked_partitioning=1"
       searchService.searchPlaylists(
         anonymousSession,
-        Map("q" -> "*", "offset" -> "10", "limit" -> "5", "linked_partitioning" -> "1"),
+        ParamMap("q" -> "*", "offset" -> "10", "limit" -> "5", "linked_partitioning" -> "1"),
         paginationParams(path + queryString)
       ) returns Future
         .value(
@@ -229,7 +230,7 @@ class SearchHandlerSpec extends UnitSpecification {
       val queryString = "?q=foo&offset=10&limit=5&linked_partitioning=1"
       searchService.searchPlaylists(
         anonymousSession,
-        Map("q" -> "foo", "offset" -> "10", "limit" -> "5", "linked_partitioning" -> "1"),
+        ParamMap("q" -> "foo", "offset" -> "10", "limit" -> "5", "linked_partitioning" -> "1"),
         paginationParams(path + queryString)
       ) returns NotValid("not valid").badF
 

@@ -1,5 +1,6 @@
 package com.soundcloud.publicApiStrangler.service
 
+import com.soundcloud.jvmkit.module.outcome._
 import com.soundcloud.jvmkit.module.telemetry.Telemetry
 import com.soundcloud.jvmkit.module.telemetry.exceptions.ExceptionCollector
 import com.soundcloud.jvmkit.module.twirp.proto.UserSessionOps._
@@ -7,7 +8,10 @@ import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.{UserSession, UserSessionBuilder}
 import com.soundcloud.publicApiStrangler.client.mothership.MoshimoshiClient
 import com.soundcloud.publicApiStrangler.client.tracks.TrackRequest
+import com.soundcloud.publicApiStrangler.handler.support.requestParser.AccessParams
 import com.soundcloud.publicApiStrangler.service.pagination.OffsetBasedPagination
+import com.soundcloud.publicApiStrangler.service.playlists.PlaylistRequest
+import com.soundcloud.publicApiStrangler.service.representation.collection.Collection
 import com.soundcloud.publicApiStrangler.service.trackrepresentation.{
   TrackRepresentation,
   TrackRepresentationSpecContext,
@@ -17,10 +21,6 @@ import com.soundcloud.publicApiStrangler.test.UnitSpecification
 import com.twitter.finagle.http.ParamMap
 import com.twitter.util.{Await, Future}
 import org.mockito.Mockito.when
-import com.soundcloud.jvmkit.module.outcome._
-import com.soundcloud.publicApiStrangler.handler.support.requestParser.AccessParams
-import com.soundcloud.publicApiStrangler.service.playlists.PlaylistRequest
-import com.soundcloud.publicApiStrangler.service.representation.collection.Collection
 import proto.soundcloud.common.session.{UserSession => ProtoUserSession}
 import proto.soundcloud.playlists.api.{
   GetVisiblePlaylistsRequest,
@@ -34,6 +34,7 @@ import proto.soundcloud.playlists.api.{
 }
 
 class PlaylistsServiceSpec extends UnitSpecification {
+
   trait Context extends Scope with TrackRepresentationSpecContext {
     val offsetBasedPagination =
       OffsetBasedPagination("https://api.soundcloud.com", "/playlists", ParamMap(), Some(2), 2)
@@ -64,6 +65,7 @@ class PlaylistsServiceSpec extends UnitSpecification {
     val playlistsService =
       new PlaylistsService(playlistsTwirpServiceMock, trackServiceMock, moshimoshiClientMock, exceptionCollector)
     val playlistRequests = List(PlaylistRequest(requestedPlaylistUrn, candidateSecretToken))
+    val access = AccessParams.defaultAccess
   }
 
   trait SuccessContext extends Context {
@@ -159,7 +161,7 @@ class PlaylistsServiceSpec extends UnitSpecification {
       val result =
         Await.result(
           playlistsService
-            .fetchPlaylist(session, requestedPlaylistUrn, candidateSecretToken, Some(offsetBasedPagination))
+            .fetchPlaylist(session, requestedPlaylistUrn, candidateSecretToken, access, Some(offsetBasedPagination))
         )
 
       result match {
@@ -182,7 +184,7 @@ class PlaylistsServiceSpec extends UnitSpecification {
       val result =
         Await.result(
           playlistsService
-            .fetchPlaylist(session, requestedPlaylistUrn, candidateSecretToken, None)
+            .fetchPlaylist(session, requestedPlaylistUrn, candidateSecretToken, access, None)
         )
 
       result match {
@@ -190,7 +192,7 @@ class PlaylistsServiceSpec extends UnitSpecification {
           playlist.id ==== requestedPlaylistUrn.identifier.toLong
           playlist.userId ==== playlistOwner.urn.identifier.toLong
           playlist.tracks.get.length ==== 1
-          playlist.tracks.get(0).id ==== requestedPlaylistTrack.id
+          playlist.tracks.get.head.id ==== requestedPlaylistTrack.id
         case _ => failure(s"returned ${result.toString} instead of Good(_)")
       }
     }
@@ -199,7 +201,7 @@ class PlaylistsServiceSpec extends UnitSpecification {
       val result =
         Await.result(
           playlistsService
-            .fetchPlaylist(session, requestedPlaylistUrn, candidateSecretToken, None)
+            .fetchPlaylist(session, requestedPlaylistUrn, candidateSecretToken, access, None)
         )
 
       result ==== Bad(NotFound("playlist not found"))
@@ -218,13 +220,13 @@ class PlaylistsServiceSpec extends UnitSpecification {
       val result =
         Await.result(
           playlistsService
-            .fetchPlaylistTracks(session, requestedPlaylistUrn, candidateSecretToken, AccessParams.defaultAccess, None)
+            .fetchPlaylistTracks(session, requestedPlaylistUrn, candidateSecretToken, access, None)
         )
 
       result match {
         case Good(tracksCollection: Collection[TrackRepresentation]) =>
           tracksCollection.items.length ==== 3
-          tracksCollection.items(0).id ==== requestedPlaylistTrack.id
+          tracksCollection.items.head.id ==== requestedPlaylistTrack.id
           tracksCollection.items(1).id ==== requestedPlaylistTrack1.id
           tracksCollection.items(2).id ==== requestedPlaylistTrack2.id
           tracksCollection.nextHref.isEmpty
@@ -283,14 +285,14 @@ class PlaylistsServiceSpec extends UnitSpecification {
       val result =
         Await.result(
           playlistsService
-            .fetchPlaylists(session, playlistRequests, Some(offsetBasedPagination))
+            .fetchPlaylists(session, playlistRequests, access, Some(offsetBasedPagination))
         )
 
       result.length ==== 1
-      result(0).id ==== requestedPlaylistUrn.identifier.toLong
-      result(0).userId ==== playlistOwner.urn.identifier.toLong
-      result(0).tracks.get.length ==== 1
-      result(0).tracks.get(0).id ==== requestedPlaylistTrack.id
+      result.head.id ==== requestedPlaylistUrn.identifier.toLong
+      result.head.userId ==== playlistOwner.urn.identifier.toLong
+      result.head.tracks.get.length ==== 1
+      result.head.tracks.get.head.id ==== requestedPlaylistTrack.id
     }
 
     "can fetch a list of playlists without pagination" in new SuccessContext {
@@ -303,21 +305,21 @@ class PlaylistsServiceSpec extends UnitSpecification {
       val result =
         Await.result(
           playlistsService
-            .fetchPlaylists(session, playlistRequests, None)
+            .fetchPlaylists(session, playlistRequests, access, None)
         )
 
       result.length ==== 1
-      result(0).id ==== requestedPlaylistUrn.identifier.toLong
-      result(0).userId ==== playlistOwner.urn.identifier.toLong
-      result(0).tracks.get.length ==== 1
-      result(0).tracks.get(0).id ==== requestedPlaylistTrack.id
+      result.head.id ==== requestedPlaylistUrn.identifier.toLong
+      result.head.userId ==== playlistOwner.urn.identifier.toLong
+      result.head.tracks.get.length ==== 1
+      result.head.tracks.get.head.id ==== requestedPlaylistTrack.id
     }
 
     "returns empty list if no playlist returned from client" in new NotFoundContext {
       val result =
         Await.result(
           playlistsService
-            .fetchPlaylists(session, playlistRequests, None)
+            .fetchPlaylists(session, playlistRequests, access, None)
         )
 
       result ==== List.empty
@@ -346,7 +348,7 @@ class PlaylistsServiceSpec extends UnitSpecification {
         )
 
       result.length ==== 1
-      result(0).tracks must beEmpty
+      result.head.tracks must beEmpty
     }
 
     "returns an empty list if no playlists found" in new SuccessContext {

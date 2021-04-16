@@ -6,7 +6,7 @@ class TracksIntegrationSpec extends ServerSetup {
     def path(id: String): String = super.path(s"/tracks/$id")
   }
 
-  "requesting a track resource" >> {
+  "requesting a track resource by default" >> {
 
     "should return a streamable track" in new TrackContext {
       val response = server.get(path(freeTierTrackId))
@@ -34,30 +34,43 @@ class TracksIntegrationSpec extends ServerSetup {
       (response.json \ "access").as[String] must equalTo("preview")
     }
 
-    "should return an error for a track with api_streamable=false" in new TrackContext {
+    "should return a track with api_streamable=false" in new TrackContext {
       val response = server.get(path(freeTierNonStreamableTrackId))
 
-      response.status === 404
-//      response.status === 200
-//
+      response.status === 200
+
+      (response.json \ "stream_url").as[String] must equalTo(
+        s"https://api.soundcloud.com/tracks/$freeTierNonStreamableTrackId/stream"
+      )
+      (response.json \ "duration").as[Int] must equalTo(7889)
+      (response.json \ "streamable").as[Boolean] must equalTo(false)
+      (response.json \ "access").as[String] must equalTo("blocked")
+    }
+
+    "should return an error for a blocked track" in new TrackContext {
+      val response = server.get(path(blockedTrackId), authenticatedUSHeaders)
+
+      response.status === 403
+
 //      (response.json \ "stream_url").as[String] must equalTo(
-//        s"https://api.soundcloud.com/tracks/$freeTierNonStreamableTrackId/stream"
+//        s"https://api.soundcloud.com/tracks/$blockedTrackId/stream"
 //      )
 //      (response.json \ "duration").as[Int] must equalTo(7889)
 //      (response.json \ "streamable").as[Boolean] must equalTo(false)
 //      (response.json \ "access").as[String] must equalTo("blocked")
     }
 
-    "should return error for a blocked track" in new TrackContext {
-      val response = server.get(path(blockedTrackId), authenticatedUSHeaders)
-
-      response.status === 404
-    }
-
-    "should return error for a paywalled track" in new TrackContext {
+    "should return an error for a paywalled track, not allowlisted app" in new TrackContext {
       val response = server.get(path(paywalledTrackId), authenticatedUSHeaders)
 
-      response.status === 404
+      response.status === 403
+
+//      (response.json \ "stream_url").as[String] must equalTo(
+//        s"https://api.soundcloud.com/tracks/$paywalledTrackId/stream"
+//      )
+//      (response.json \ "duration").as[Int] must equalTo(7889)
+//      (response.json \ "streamable").as[Boolean] must equalTo(false)
+//      (response.json \ "access").as[String] must equalTo("blocked")
     }
   }
 }

@@ -105,7 +105,7 @@ class TrackUpdateService(
       trackUrn: Urn
   ): Future[Outcome[TrackRepresentation]] = {
     for {
-      maybeTrack <- trackRepresentationsService.track(session, new TrackRequest(trackUrn, None))
+      maybeTrack <- trackRepresentationsService.track(session, TrackRequest(trackUrn, None))
       result = (trackCoordinatorTrack, maybeTrack) match {
         case (Good(trackCoordinatorTrack), Some(track)) =>
           Good(buildUpdatedTrackWithNewMetadata(track, trackCoordinatorTrack))

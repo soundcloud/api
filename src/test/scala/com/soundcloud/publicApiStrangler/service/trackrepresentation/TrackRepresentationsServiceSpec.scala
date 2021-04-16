@@ -45,7 +45,7 @@ class TrackRepresentationsServiceSpec extends TrackRepresentationsSpecificationC
         track: VisibleTrack,
         session: UserSession
     ) = {
-      when(trackVisibilityService.visibleTracks(session, List(trackRequest), AccessParams.defaultAccess))
+      when(trackVisibilityService.visibleTracks(session, List(trackRequest), AccessParams.explicitAccess))
         .thenReturn(Future.value(List(track)))
       when(okidokiClient.fetchUserObjects(session, Set(requestingUserUrn)))
         .thenReturn(Future.value(List(requestingUser)))
@@ -66,7 +66,7 @@ class TrackRepresentationsServiceSpec extends TrackRepresentationsSpecificationC
     }
 
     def setUpMocksForNonExistingTrack = {
-      when(trackVisibilityService.visibleTracks(session, List(trackRequest), AccessParams.defaultAccess))
+      when(trackVisibilityService.visibleTracks(session, List(trackRequest), AccessParams.explicitAccess))
         .thenReturn(Future.value(List.empty))
       when(pubmeseClient.isrcsForTracks(session, Set(trackUrn))).thenReturn(Future.value(isrc()))
       when(okidokiClient.fetchTrackGeoblockings(session, Set(trackUrn))).thenReturn(Future.value(geoblockings))

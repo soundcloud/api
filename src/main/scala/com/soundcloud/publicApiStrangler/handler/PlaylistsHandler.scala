@@ -43,9 +43,10 @@ class PlaylistsHandler(
       val hasLinkedPartitioning = request.params.get("linked_partitioning")
       val pagination =
         hasLinkedPartitioning.map(_ => OffsetBasedPagination.build(request, Seq("linked_partitioning")))
+      val access = AccessParamsExtractor.unapply(request.params)
       Try(getPlaylistUrn(request)) match {
         case Return(urn) =>
-          playlistsService.fetchPlaylist(session, urn, candidateSecretToken, pagination).map {
+          playlistsService.fetchPlaylist(session, urn, candidateSecretToken, access, pagination).map {
             case Good(playlist) => JsonResponseBuilder.ok(body = Json.stringify(Json.toJson(playlist)))
             case Bad(NotFound(_)) => ErrorResponse.notFound()
             case _ => throw new UnhandledOutcomeException

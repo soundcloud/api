@@ -43,7 +43,7 @@ class TrackRepresentationsService(
       session: UserSession,
       trackRequest: TrackRequest
   ): Future[Option[TrackRepresentation]] =
-    tracks(session, List(trackRequest), AccessParams.defaultAccess).map(_.headOption)
+    tracks(session, List(trackRequest), AccessParams.explicitAccess).map(_.headOption)
 
   private def enrichTracks(
       session: UserSession,

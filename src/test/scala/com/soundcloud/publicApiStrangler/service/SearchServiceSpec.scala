@@ -55,7 +55,7 @@ class SearchServiceSpec extends TrackRepresentationsSpecificationContext {
     val queryUrn = Urn("soundcloud", "search", "foo")
     val playlistUrn = Urn("soundcloud", "playlists", playlist.id.toString)
     val userUrn = user.urn
-
+    val access = AccessParams.defaultAccess
   }
 
   "#searchUsers" >> {
@@ -165,7 +165,12 @@ class SearchServiceSpec extends TrackRepresentationsSpecificationContext {
   "#searchPlaylists" >> {
     "when all data is available" in new Context {
       when(
-        playlistsService.fetchPlaylists(session, List(PlaylistRequest(playlistUrn, None)), Some(offsetBasedPagination))
+        playlistsService.fetchPlaylists(
+          session,
+          List(PlaylistRequest(playlistUrn, None)),
+          access,
+          Some(offsetBasedPagination)
+        )
       ).thenReturn(Future.value(List(playlist)))
       when(
         searchClient.searchPlaylists(
@@ -186,7 +191,8 @@ class SearchServiceSpec extends TrackRepresentationsSpecificationContext {
         ).goodF
       )
 
-      val result = Await.result(searchService.searchPlaylists(session, Map("q" -> query), offsetBasedPagination).value)
+      val result =
+        Await.result(searchService.searchPlaylists(session, ParamMap("q" -> query), offsetBasedPagination).value)
 
       val playlistsCollection = result.getOrElse(Collection(List.empty, None))
       playlistsCollection.items ==== List(playlist)
@@ -194,7 +200,7 @@ class SearchServiceSpec extends TrackRepresentationsSpecificationContext {
 
     "when data is not available" in new Context {
       when(
-        playlistsService.fetchPlaylists(session, List.empty, Some(offsetBasedPagination))
+        playlistsService.fetchPlaylists(session, List.empty, access, Some(offsetBasedPagination))
       ).thenReturn(Future.value(List.empty))
 
       when(
@@ -216,7 +222,8 @@ class SearchServiceSpec extends TrackRepresentationsSpecificationContext {
         ).goodF
       )
 
-      val result = Await.result(searchService.searchPlaylists(session, Map("q" -> query), offsetBasedPagination).value)
+      val result =
+        Await.result(searchService.searchPlaylists(session, ParamMap("q" -> query), offsetBasedPagination).value)
 
       val playlistsCollection = result.getOrElse(Collection(List.empty, None))
       playlistsCollection.items ==== List.empty

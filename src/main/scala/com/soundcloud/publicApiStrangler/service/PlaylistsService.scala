@@ -62,10 +62,11 @@ class PlaylistsService(
       session: UserSession,
       playlistUrn: Urn,
       candidateSecretToken: Option[String],
+      access: AccessParams,
       pagination: Option[OffsetBasedPagination]
   ): Future[Outcome[Playlist]] = {
     val playlistRequest = PlaylistRequest(urn = playlistUrn, secretToken = candidateSecretToken)
-    fetchPlaylists(session, List(playlistRequest), pagination)
+    fetchPlaylists(session, List(playlistRequest), access, pagination)
       .map(_.headOption)
       .map {
         case Some(playlist) => playlist.good
@@ -76,13 +77,25 @@ class PlaylistsService(
   def fetchPlaylists(
       session: UserSession,
       playlistRequests: List[PlaylistRequest],
+      access: AccessParams,
       pagination: Option[OffsetBasedPagination]
   ): Future[List[Playlist]] = {
     for {
       visiblePlaylistObjects <- getPlaylistsWithTracks(session, playlistRequests, pagination)
       visiblePlaylists = visiblePlaylistObjects.flatMap(response => playlistProtoMapper.apply(response, pagination))
-      playlists <- getFullPlaylists(visiblePlaylists, session, showTracks = true)
+      playlists <- getFullPlaylists(visiblePlaylists, session, access, showTracks = true)
     } yield playlists
+  }
+
+  private def getPlaylistsWithTracks(
+      session: UserSession,
+      playlistRequests: List[PlaylistRequest],
+      pagination: Option[OffsetBasedPagination]
+  ): Future[List[PlaylistResponse]] = {
+    val playlistPagination =
+      pagination.map(p => PlaylistPagination(cursor = p.offset.map(_.toString), limit = p.limit))
+
+    getPlaylistObjects(session, playlistRequests, playlistPagination)
   }
 
   def fetchPlaylistsMetadataOnly(
@@ -92,20 +105,21 @@ class PlaylistsService(
     for {
       visiblePlaylistObjects <- getPlaylistsWithoutTracks(session, playlistRequests)
       visiblePlaylists = visiblePlaylistObjects.flatMap(response => playlistProtoMapper.apply(response, None))
-      playlists <- getFullPlaylists(visiblePlaylists, session, showTracks = false)
+      playlists <- getFullPlaylists(visiblePlaylists, session, AccessParams.defaultAccess, showTracks = false)
     } yield playlists
   }
 
   private def getFullPlaylists(
       visiblePlaylists: List[VisiblePlaylist],
       session: UserSession,
+      access: AccessParams,
       showTracks: Boolean
   ): Future[List[Playlist]] = {
     for {
       maybePlaylists <- Future
         .collect(
           visiblePlaylists.map(playlist =>
-            getFullPlaylist(playlist, session, showTracks).handleAndReport(exceptionCollector) {
+            getFullPlaylist(playlist, session, access, showTracks).handleAndReport(exceptionCollector) {
               case NonFatal(_) => None
             }
           )
@@ -118,10 +132,11 @@ class PlaylistsService(
   private def getFullPlaylist(
       visiblePlaylist: VisiblePlaylist,
       session: UserSession,
+      access: AccessParams,
       showTracks: Boolean
   ): Future[Option[Playlist]] = {
     for {
-      tracks <- tracksService.tracks(session, visiblePlaylist.trackRequests.requests, AccessParams.defaultAccess)
+      tracks <- tracksService.tracks(session, visiblePlaylist.trackRequests.requests, access)
       playlistOwner <- moshimoshiClient
         .fetchUserObjects(session, Set(Urn.parse(visiblePlaylist.userUrn).get))
         .map(_.head)
@@ -131,17 +146,6 @@ class PlaylistsService(
     } yield Some(
       Playlist.fromVisiblePlaylist(visiblePlaylist, tracks, playlistOwner, maybeLabelOwner, session.user, showTracks)
     )
-  }
-
-  private def getPlaylistsWithTracks(
-      session: UserSession,
-      playlistRequests: List[PlaylistRequest],
-      pagination: Option[OffsetBasedPagination]
-  ): Future[List[PlaylistResponse]] = {
-    val playlistPagination =
-      pagination.map(p => PlaylistPagination(cursor = p.offset.map(_.toString), limit = p.limit))
-
-    getPlaylistObjects(session, playlistRequests, playlistPagination)
   }
 
   private def getPlaylistsWithoutTracks(

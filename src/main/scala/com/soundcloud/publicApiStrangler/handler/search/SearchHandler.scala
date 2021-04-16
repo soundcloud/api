@@ -1,7 +1,5 @@
 package com.soundcloud.publicApiStrangler.handler.search
 
-import java.net.URL
-
 import com.soundcloud.jvmkit.module.bff.session.UserAuthentication
 import com.soundcloud.jvmkit.module.http.server.HandlerRequest
 import com.soundcloud.jvmkit.module.util.session.UserSession
@@ -13,6 +11,8 @@ import com.soundcloud.publicApiStrangler.service.pagination.OffsetBasedPaginatio
 import com.soundcloud.publicApiStrangler.service.trackrepresentation.TrackPagination
 import com.twitter.finagle.http.{ParamMap, Response}
 import com.twitter.util.Future
+
+import java.net.URL
 
 /**
   * Redirects search queries on to search-dispatcher and fetches meta data.
@@ -49,7 +49,7 @@ class SearchHandler(
     val hasLinkedPartitioning = req.params.contains("linked_partitioning")
     val pagination = OffsetBasedPagination.build(req, Seq("linked_partitioning") ++ searchService.playlistParams)
 
-    val params = extraParams.map(_ ++ req.params).getOrElse(req.params)
+    val params = ParamMap(extraParams.map(_ ++ req.params).getOrElse(req.params))
 
     val playlistsCollection =
       searchService
