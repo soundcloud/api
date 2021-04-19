@@ -16,7 +16,6 @@
     },
     "dependencies": [
       "authenticator",
-      "authsy",
       "gatekeeper",
       "geoip2",
       "hocuspocus",

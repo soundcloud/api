@@ -65,7 +65,7 @@ class UserRelatedMothershipDispatcher(
 
           if (response.statusCode < 300) {
             (for {
-              responseJson <- Try(Json.parse(response.getContentString())).toOption
+              responseJson <- Try(Json.parse(response.contentString)).toOption
               userUrns = extractUserUrns(responseJson)
               if userUrns.nonEmpty
             } yield {

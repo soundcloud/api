@@ -1,5 +1,6 @@
 package com.soundcloud.publicApiStrangler.service.trackrepresentation
 
+import com.soundcloud.publicApiStrangler.authorization.policies.ContentPolicy
 import com.soundcloud.publicApiStrangler.client.mothership.TrackAudioMetadata
 import com.soundcloud.publicApiStrangler.client.mothership.response.representation.User
 import com.soundcloud.publicApiStrangler.client.pubmese.Isrc
@@ -34,12 +35,15 @@ case class TrackRepresentation(
     userFavourite: Option[Boolean],
     userPlaybackCount: Option[Int],
     audioMetadata: TrackAudioMetadata,
-    waveformUrl: String
+    waveformUrl: String,
+    policy: Option[String],
+    monetizationModel: Option[String]
 ) {
   def id = visibleTrack.urn.identifier.toLong
 }
 
 object TrackRepresentation {
+  private val snippetDurationMs = 30000
   private val dateTimeFormat = DateTimeFormat.forPattern("yyyy/MM/dd HH:mm:ss +0000")
   private val cdnRoot = "https://i1.sndcdn.com"
 
@@ -64,7 +68,7 @@ object TrackRepresentation {
         "id" -> rep.id,
         "created_at" -> rep.visibleTrack.createdAt.toString(dateTimeFormat),
         "user_id" -> rep.user.urn.identifier.toLong,
-        "duration" -> rep.visibleTrack.duration,
+        "duration" -> trackDuration(rep.visibleTrack),
         "commentable" -> rep.visibleTrack.commentable,
         "comment_count" -> rep.commentCount,
         "state" -> rep.audioMetadata.state,
@@ -114,9 +118,20 @@ object TrackRepresentation {
         "reposts_count" -> rep.repostsCount,
         "downloadable" -> rep.downloadable,
         "downloads_remaining" -> rep.downloadsRemaining,
-        "access" -> rep.visibleTrack.access.map(_.name)
+        "access" -> rep.visibleTrack.access.map(_.name),
+        "policy" -> rep.policy,
+        "monetization_model" -> rep.monetizationModel
       )
 
+    }
+
+    def trackDuration(visibleTrack: VisibleTrack): Int = {
+      val fullDuration = visibleTrack.duration
+      if (visibleTrack.authorization.policy == ContentPolicy.SNIP && fullDuration > snippetDurationMs) {
+        snippetDurationMs
+      } else {
+        fullDuration
+      }
     }
 
     private def roundBpm(f: Double): Double =

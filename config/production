@@ -16,7 +16,6 @@ DEFAULT_REQUEST_LATENCY_BUCKETS="0.001,0.005,0.010,0.020,0.050,0.100,0.200,0.300
 # other services are made multi-zone
 
 AUTHENTICATOR_SRV_RECORD="dnssrv!http.api.prod.authenticator.srv.${ZONE}.s-cloud.net."
-AUTHSY_SRV_RECORD="dnssrv!http.api.prod.authsy.srv.${ZONE}.s-cloud.net."
 FOLLOWS_SRV_RECORD="dnssrv!http.api.prod.follows.srv.${ZONE}.s-cloud.net."
 GOBBLY_SRV_RECORD="dnssrv!http.api.prod.gobbly.srv.db.s-cloud.net."
 GATEKEEPER_SRV_RECORD="dnssrv!http.api.prod.gatekeeper.srv.${ZONE}.s-cloud.net."
@@ -57,8 +56,6 @@ LIEBLING_SRV_RECORD="dnssrv!http.web.prod.liebling.srv.${ZONE}.s-cloud.net."
 SYSTEM_PLAYLISTS_SRV_RECORD="dnssrv!http.api.prod.system-playlists.srv.${ZONE}.s-cloud.net."
 
 TRACK_COORDINATOR_SRV_RECORD="dnssrv!http.coordinator.prod.tracks.srv.db.s-cloud.net."
-
-SUBMARINE_SRV_RECORD="dnssrv!http.api.prod.submarine.srv.${ZONE}.s-cloud.net."
 
 RATELIMIT_MAX_CONN="999999"
 

@@ -1,7 +1,7 @@
 package com.soundcloud.publicApiStrangler.handler
 
 import com.soundcloud.jvmkit.module.bff.session.UserAuthentication
-import com.soundcloud.jvmkit.module.http.server.HandlerRequest
+import com.soundcloud.jvmkit.module.http.server.{HandlerRequest, JsonResponseBuilder}
 import com.soundcloud.jvmkit.module.util.logging.SoundCloudLoggerFactory
 import com.soundcloud.jvmkit.module.util.session.{UserSession, UserSessionHeadersConverter}
 import com.soundcloud.publicApiStrangler.support.ErrorResponse
@@ -22,6 +22,7 @@ class DispatchToMothershipHandler(
   def dispatch(request: HandlerRequest): Future[Response] = {
     userAuthentication.withUserSession(request) { session =>
       mothershipClient(ForwardedRequest(request.request, Some(session)))
+        .map(res => JsonResponseBuilder(res.status, res.contentString, res.headerMap.toMap).build)
         .handle {
           case NonFatal(exception: Exception) =>
             logger.debug("Bad response from mothership", exception)
@@ -32,11 +33,13 @@ class DispatchToMothershipHandler(
 
   // Deprecated! Only used for token exchange until it is properly implemented in PAS itself.
   def dispatchUnauthenticated(request: HandlerRequest): Future[Response] = {
-    mothershipClient(ForwardedRequest(request.request, None)).handle {
-      case NonFatal(exception: Exception) =>
-        logger.debug("Bad response from mothership", exception)
-        ErrorResponse(Status.InternalServerError)
-    }
+    mothershipClient(ForwardedRequest(request.request, None))
+      .map(res => JsonResponseBuilder(res.status, res.contentString, res.headerMap.toMap).build)
+      .handle {
+        case NonFatal(exception: Exception) =>
+          logger.debug("Bad response from mothership", exception)
+          ErrorResponse(Status.InternalServerError)
+      }
   }
 }
 
