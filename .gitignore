@@ -37,3 +37,4 @@ metals.sbt
 # Local History for Visual Studio Code
 .history
 .bsp/
+config/e2e.secrets

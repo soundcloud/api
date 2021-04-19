@@ -42,6 +42,15 @@ format: auto-apply-lint
 auto-apply-lint:
 	$(SBT) scalafmtAll
 
+fetch-token:
+	curl -X POST "https://api.soundcloud.com/oauth2/token" \
+		-d "grant_type=password" \
+		-d "username=$(USER)" -d "password=$(PASSWORD)" \
+		-d "client_id=$(CLIENT_ID)" -d "client_secret=$(CLIENT_SECRET)"
+
+generate-token:
+	sc crun base-dev --config=e2e.secrets --enable-proxy 'make -s fetch-token | jq .access_token'
+
 check-prometheus:
 	sc prometheus promtool -- check rules config/prometheus.yml
 
@@ -60,7 +69,7 @@ end-to-end-test: remove-containers
 	docker-compose -f docker-compose-e2e-tests.yml up --force-recreate -d publicapistrangler
 	sc crun -l base-dev -- sc wait http publicapistub:4567/-/health
 	sc crun -l base-dev -- sc wait http publicapistrangler:5000/-/health
-	sc crun -l sbt  -- sbt endToEnd/test
+	sc crun -l sbt -e ACCESS_TOKEN=$(shell make -s generate-token) --config=e2e.secrets -- sbt endToEnd/test
 	make docker-down
 
 local-contract-test: remove-containers docker-up-development

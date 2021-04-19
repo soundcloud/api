@@ -1,5 +1,6 @@
 package com.soundcloud.publicApiStrangler.integration
 
+import com.soundcloud.jvmkit.module.util.config.{AppConfig, DataSensitivity}
 import com.soundcloud.testutilities.SpinningUpAppSupport
 import com.twitter.finagle.http.{HeaderMap, Request}
 
@@ -7,9 +8,10 @@ trait ServerSetup extends IntegrationSpecification with SpinningUpAppSupport {
 
   trait IntegrationContext extends Context {
     val server = TestServer("publicapistrangler", 5000)
+    val config = new AppConfig
 
-    def clientId = "u1aX7EnUd90ul1sbwLwj7cN6fqytmrcV" //config.get("CLIENT_ID", DataSensitivity.NON_SENSITIVE)
-    def token = "1-292145-743372812-7774af36cf340" //config.get("ACCESS_TOKEN", DataSensitivity.NON_SENSITIVE)
+    def clientId = config.get("CLIENT_ID", DataSensitivity.NON_SENSITIVE)
+    def token = config.get("ACCESS_TOKEN", DataSensitivity.NON_SENSITIVE)
 
     lazy val freeTierTrackId = "405325995"
     lazy val freeTierNonStreamableTrackId = "1015448728"
