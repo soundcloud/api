@@ -61,7 +61,7 @@ class SearchService(
   ): OutcomeF[Collection[TrackRepresentation]] = {
     val access = AccessParamsExtractor.unapply(params)
     // to keep current behavior, we only fetch free tracks if no access filter defined
-    val contentTier = if (params.contains("access")) "ANY" else "FREE"
+    val contentTier = if (params.get("access").isDefined) "ANY" else "FREE"
     val mapParams = mapTrackParams(params) ++ Params(
       "filter.content_tier" -> contentTier,
       "filter.content_country" -> session.getGeo.getCountryCode
