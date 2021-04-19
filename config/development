@@ -26,6 +26,7 @@ ZOOKEEPER_ADDRESS=strangler_zk:2181
 
 AUTHENTICATOR_SRV_RECORD=dnssrv!http.api.prod.authenticator.srv.db.s-cloud.net.
 AUTHENTICATOR_CLIENT_REQUEST_TIMEOUT_MILLIS=10000
+AUTHSY_SRV_RECORD=dnssrv!http.api.prod.authsy.srv.db.s-cloud.net.
 FOLLOWS_SRV_RECORD=dnssrv!http.api.prod.follows.srv.db.s-cloud.net.
 GOBBLY_SRV_RECORD=dnssrv!http.api.prod.gobbly.srv.db.s-cloud.net.
 GATEKEEPER_SRV_RECORD=dnssrv!http.api.prod.gatekeeper.srv.db.s-cloud.net.
@@ -68,6 +69,8 @@ TRACK_COORDINATOR_SRV_RECORD=dnssrv!http.coordinator.prod.tracks.srv.db.s-cloud.
 
 LIEBLING_SRV_RECORD=dnssrv!http.web.prod.liebling.srv.db.s-cloud.net.
 SYSTEM_PLAYLISTS_SRV_RECORD=dnssrv!http.api.prod.system-playlists.srv.db.s-cloud.net.
+
+SUBMARINE_SRV_RECORD=dnssrv!http.api.staging.submarine.srv.db.s-cloud.net.
 
 STITCH4FOLLOWS_SRV_RECORD=dnssrv!http.web-follows.prod.stitch4counts.srv.db.s-cloud.net.
 STITCH_BULK_FETCH_MAX_ENTRIES=7

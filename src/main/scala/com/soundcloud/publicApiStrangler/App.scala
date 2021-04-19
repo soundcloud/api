@@ -16,6 +16,7 @@ import com.soundcloud.jvmkit.module.util.config.AppConfig
 import com.soundcloud.jvmkit.module.util.{ResourceName, Urn}
 import com.soundcloud.jvmkit.module.zookeeper.CuratorFramework
 import com.soundcloud.publicApiStrangler.Routing._
+import com.soundcloud.publicApiStrangler.authorization._
 import com.soundcloud.publicApiStrangler.filter._
 import com.soundcloud.publicApiStrangler.support._
 import com.twitter.finagle.Filter
@@ -30,7 +31,14 @@ object App {
       telemetry
     )
 
-    val clients = new Clients(config, telemetry, exceptionCollector)
+    // The following client applications have access to high tier (paywalled) content
+    val allowlistedClients: Set[Urn] = Set(
+      Urn("soundcloud", "applications", "167582"), // HEOS by Denon (Production)
+      Urn("soundcloud", "applications", "59007"), // Soundiiz
+      Urn("soundcloud", "applications", "62023") // Soundiiz Local
+    )
+
+    val clients = new Clients(config, telemetry, allowlistedClients, exceptionCollector)
     val handlers = new Handlers(telemetry, clients, exceptionCollector)
 
     val bffApplication =
@@ -106,6 +114,15 @@ object App {
       )
       .build
 
+    val authorizeContent =
+      new AuthorizeHttpResponse(
+        clients.contentAuthorizationRules,
+        clients.userAuthentication,
+        TrackPolicyApplicator(allowlistedClients),
+        telemetry,
+        router
+      )
+
     // IMPORTANT: the order of these filters matters a lot, be careful when adding new ones or moving things around
     val additionalFilters: List[Filter[Request, Response, Request, Response]] =
       List(
@@ -126,6 +143,7 @@ object App {
         new OffsetLimitRequestFilter(limitOffsetPaths, limitOffset),
         new CookieHeaderRemovalFilter,
         new ExceptForTrackUploadsFilter(rateLimitingFacade.filter),
+        new ExceptForTrackUploadsFilter(new ContentAuthorizationFilter(authorizeContent)),
         new DeprecatedEndpointUsageFilter(clients.userAuthentication, telemetry, router),
         new ContentTypeTelemetryFilter(telemetry, router)
       )

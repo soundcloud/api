@@ -78,7 +78,6 @@ class TrackRepresentationsService(
         case (users, audios, isLiked, isrcs, geoBlockings, counts, labels, downloadsPerTrack) =>
           visibleTracks.map { visibleTrack =>
             builder.build(
-              client = session.agent,
               sessionUser = session.user,
               visibleTrack = visibleTrack,
               user = users(visibleTrack.userUrn),

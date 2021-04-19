@@ -4,7 +4,6 @@ import com.soundcloud.jvmkit.module.outcome._
 import com.soundcloud.jvmkit.module.twirp.proto.UserSessionOps._
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSessionBuilder
-import com.soundcloud.publicApiStrangler.authorization.AllowlistedClients
 import com.soundcloud.publicApiStrangler.authorization.policies._
 import com.soundcloud.publicApiStrangler.client.tracks.{TrackRequest, Transcoding, VisibleTrackBuilder}
 import com.soundcloud.publicApiStrangler.handler.support.requestParser.AccessParams
@@ -25,12 +24,14 @@ import proto.soundcloud.tracks.api.{
 class TrackVisibilityServiceSpec extends Specification with Mockito {
 
   trait Context extends Scope {
+    lazy val allowlistedClients = Set.empty[Urn]
     lazy val userUrn = Urn("soundcloud", "users", "123")
     lazy val session =
       (new UserSessionBuilder).setUser(userUrn).setAgent(clientApplication).build()
     lazy val service = new TrackVisibilityService(
       tracksTwinagleClient,
-      mapper
+      mapper,
+      allowlistedClients
     )
     lazy val visibleTrack =
       (new VisibleTrackBuilder)
@@ -41,7 +42,7 @@ class TrackVisibilityServiceSpec extends Specification with Mockito {
         .setAccess(Some(Access.Playable))
         .build
     lazy val access = AccessParams()
-    lazy val clientApplication = Urn("soundcloud", "applications", "999")
+    val clientApplication = Urn("soundcloud", "applications", "999")
     val trackUrn = Urn("soundcloud", "tracks", "432")
     val tracksTwinagleClient = mock[TrackMetadataService]
     val mapper = smartMock[VisibleTrackMapper]
@@ -157,7 +158,7 @@ class TrackVisibilityServiceSpec extends Specification with Mockito {
                 )
               )
               .build
-          override lazy val clientApplication = AllowlistedClients.clients.head
+          override lazy val allowlistedClients = Set(clientApplication)
           val expectedTrack = visibleTrack.copy(access = Some(Access.Preview))
         }
 

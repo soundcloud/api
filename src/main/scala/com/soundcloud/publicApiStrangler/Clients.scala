@@ -9,8 +9,9 @@ import com.soundcloud.jvmkit.module.telemetry.Telemetry
 import com.soundcloud.jvmkit.module.telemetry.exceptions.ExceptionCollector
 import com.soundcloud.jvmkit.module.twirp.TwirpClient
 import com.soundcloud.jvmkit.module.twirp.filters.ClientTelemetry
-import com.soundcloud.jvmkit.module.util.ResourceName
 import com.soundcloud.jvmkit.module.util.config.{AppConfig, ConfigConvention, DataSensitivity}
+import com.soundcloud.jvmkit.module.util.{ResourceName, Urn}
+import com.soundcloud.publicApiStrangler.authorization._
 import com.soundcloud.publicApiStrangler.client._
 import com.soundcloud.publicApiStrangler.client.comments.MoshimoshiCommentsClient
 import com.soundcloud.publicApiStrangler.client.followcounts.FollowCountsClient
@@ -46,6 +47,7 @@ import proto.soundcloud.tracks.api.{LikesClientProtobuf, MediaClientProtobuf, Tr
 class Clients(
     config: AppConfig,
     telemetry: Telemetry,
+    allowlistedCients: Set[Urn],
     exceptionCollector: ExceptionCollector
 ) {
   private def jsonClient(resourceName: String) = JsonClient(
@@ -94,11 +96,18 @@ class Clients(
   lazy val moshimoshiCommentsClient = new MoshimoshiCommentsClient(jsonClient("moshimoshi_comments"))
   lazy val moshimoshiClient = new MoshimoshiClient(jsonClient("moshimoshi"), exceptionCollector)
 
+  private val submarineClient = jsonClient("submarine")
+
   private val stitch4followsService = jsonClient("stitch4follows")
 
   val followCountsClient = new FollowCountsClient(stitch4followsService, config)
 
   val trackmetadataClient = new TrackmetadataClient(jsonClient("trackmetadata"))
+
+  val contentAuthorizationRules = new ContentAuthorizationRules(
+    new ContentAuthorizationService(jsonClient("authsy")),
+    new SubmarineService(submarineClient)
+  )
 
   private val waveformUrlsGenerator = new WaveformUrlsGenerator(
     config.get(ResourceName("CDN_WAVE"), ConfigConvention.HTTPS_ENDPOINT)
@@ -155,7 +164,8 @@ class Clients(
   val trackVisibilityService =
     new TrackVisibilityService(
       trackMetadataTwirpClient,
-      new VisibleTrackMapper
+      new VisibleTrackMapper,
+      allowlistedCients
     )
 
   val tracksService = new TrackRepresentationsService(

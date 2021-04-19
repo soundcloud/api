@@ -4,7 +4,6 @@ import com.soundcloud.jvmkit.module.outcome.{CustomError, Outcome, _}
 import com.soundcloud.jvmkit.module.twirp.proto.UserSessionOps._
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSession
-import com.soundcloud.publicApiStrangler.authorization.AllowlistedClients
 import com.soundcloud.publicApiStrangler.authorization.policies.{Access, ContentPolicy, MonetizationModel, Reason}
 import com.soundcloud.publicApiStrangler.client.tracks.{TrackRequest, VisibleTrack}
 import com.soundcloud.publicApiStrangler.handler.support.requestParser.AccessParams
@@ -22,7 +21,8 @@ case class UnavailableByPolicy(urn: Urn, reason: Reason)
 
 class TrackVisibilityService(
     tracksTwinagleClient: TrackMetadataService,
-    visibleTrackMapper: VisibleTrackMapper
+    visibleTrackMapper: VisibleTrackMapper,
+    allowlistedClients: Set[Urn]
 ) {
   def visibleTracks(
       session: UserSession,
@@ -89,7 +89,7 @@ class TrackVisibilityService(
     (policy, model, apiStreamable) match {
       case (_, _, false) | (ContentPolicy.BLOCK, _, _) => Access.Blocked
       case (ContentPolicy.MONETIZE, MonetizationModel.SUB_HIGH_TIER, _) =>
-        if (!AllowlistedClients.clients.contains(client)) Access.Blocked else Access.Preview
+        if (!allowlistedClients.contains(client)) Access.Blocked else Access.Preview
       case (ContentPolicy.SNIP, _, _) => Access.Preview
       case _ => Access.Playable
     }

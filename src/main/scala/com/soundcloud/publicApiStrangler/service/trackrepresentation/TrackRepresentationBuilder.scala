@@ -7,16 +7,12 @@ import com.soundcloud.publicApiStrangler.client.mothership.response.representati
 import com.soundcloud.publicApiStrangler.client.pubmese.Isrc
 import com.soundcloud.publicApiStrangler.client.stitch.StitchCounts
 import com.soundcloud.publicApiStrangler.client.tracks.VisibleTrack
+
 import java.net.URLEncoder
-
-import com.soundcloud.publicApiStrangler.authorization.AllowlistedClients
-import com.soundcloud.publicApiStrangler.authorization.policies.{ContentPolicy, MonetizationModel}
-
 import scala.collection.immutable.HashSet
 
 class TrackRepresentationBuilder {
   def build(
-      client: Option[Urn],
       sessionUser: Option[Urn],
       visibleTrack: VisibleTrack,
       user: User,
@@ -56,9 +52,7 @@ class TrackRepresentationBuilder {
       userPlaybackCount = if (!isAnonymous) Some(1) else None,
       waveformUrl = waveformUrl.pngUrl.s,
       downloadable = getDownloadable(visibleTrack, downloadsPerTrack, counts),
-      downloadsRemaining = getDownloadsRemaining(counts, downloadsPerTrack, userIsOwner),
-      policy = getPolicy(visibleTrack.authorization.policy, client),
-      monetizationModel = getMonetizationModel(visibleTrack.authorization.monetizationModel, client)
+      downloadsRemaining = getDownloadsRemaining(counts, downloadsPerTrack, userIsOwner)
     )
   }
   private val baseUrl = "https://api.soundcloud.com/tracks"
@@ -161,17 +155,4 @@ class TrackRepresentationBuilder {
     }
   }
 
-  private def getPolicy(policy: ContentPolicy, client: Option[Urn]): Option[String] = {
-    client.flatMap(urn =>
-      if (AllowlistedClients.clients.contains(urn)) Some(policy.name)
-      else None
-    )
-  }
-
-  private def getMonetizationModel(monetizationModel: MonetizationModel, client: Option[Urn]): Option[String] = {
-    client.flatMap(urn =>
-      if (AllowlistedClients.clients.contains(urn)) Some(monetizationModel.name)
-      else None
-    )
-  }
 }

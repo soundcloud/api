@@ -122,7 +122,6 @@ trait TrackRepresentationsSpecificationContext extends UnitSpecification {
 
     def createTrackRepresentation: TrackRepresentation =
       trackRepresentationBuilder.build(
-        client = session.agent,
         sessionUser = session.user,
         visibleTrack = trackVisibilityTrack(),
         user = trackOwner,

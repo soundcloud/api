@@ -1,7 +1,6 @@
 package com.soundcloud.publicApiStrangler.service.trackrepresentation
 
 import com.soundcloud.jvmkit.module.util.{Url, Urn}
-import com.soundcloud.publicApiStrangler.authorization.AllowlistedClients
 import com.soundcloud.publicApiStrangler.authorization.policies._
 import com.soundcloud.publicApiStrangler.client.media.TrackWaveformUrl
 import com.soundcloud.publicApiStrangler.client.mothership.TrackAudioMetadata
@@ -26,7 +25,6 @@ trait TrackRepresentationSpecContext {
   val labelUrn = Urn("soundcloud", "users", "999")
 
   def createTrackRepresentation(
-      client: Urn = Urn("soundcloud", "applications", "123"),
       loggedInUser: Urn = Urn("soundcloud", "users", "555"),
       visibleTrack: VisibleTrack = defaultTrack,
       user: User = defaultUser,
@@ -42,7 +40,6 @@ trait TrackRepresentationSpecContext {
     val builder = new TrackRepresentationBuilder
 
     builder.build(
-      client = Some(client),
       sessionUser = Some(loggedInUser),
       visibleTrack = visibleTrack,
       user = user,
@@ -79,7 +76,7 @@ trait TrackRepresentationSpecContext {
     createdAt = new LocalDateTime(2015, 2, 15, 16, 47, 27),
     disabledAt = None,
     downloadable = false,
-    duration = 60000,
+    duration = 120,
     genre = Some("future bass"),
     lastModified = new LocalDateTime(2016, 8, 8, 13, 28, 53),
     permalink = "plsty-remix",
@@ -497,60 +494,6 @@ class TrackRepresentationSpec extends UnitSpecification {
     }
   }
 
-  "duration" >> {
-    trait Context extends Scope with TrackRepresentationSpecContext {
-      val trackRepresentation: TrackRepresentation = createTrackRepresentation()
-    }
-
-    "returns the duration of the playable track" in new Context {
-      val json = Json.toJson(trackRepresentation)
-
-      json \ "duration" ==== JsDefined(JsNumber(60000))
-    }
-
-    "replaces the track duration if snippet" in new Context {
-      val json = Json.toJson(
-        createTrackRepresentation(visibleTrack = defaultTrack.copy(
-          authorization = new ContentAuthorization(
-            trackUrn,
-            ContentPolicy.SNIP,
-            Reason.NOT_SUPPORTED,
-            ContentRestriction.ENCRYPTED_STREAM_ONLY,
-            MonetizationModel.AD_SUPPORTED
-          )
-        )
-        )
-      )
-
-      json \ "duration" ==== JsDefined(JsNumber(30000))
-    }
-  }
-
-  "policy and monetization model" >> {
-    trait Context extends Scope with TrackRepresentationSpecContext {
-      val trackRepresentation: TrackRepresentation = createTrackRepresentation(client = AllowlistedClients.clients.head)
-    }
-
-    "does not set policy and monetization model when not allowlisted" in new Context {
-      val json = Json.toJson(createTrackRepresentation())
-
-      json \ "policy" ==== JsDefined(JsNull)
-      json \ "monetization_model" ==== JsDefined(JsNull)
-    }
-
-    "sets the policy when the client is allowlisted" in new Context {
-      val json = Json.toJson(trackRepresentation)
-
-      json \ "policy" ==== JsDefined(JsString("MONETIZE"))
-    }
-
-    "sets the monetization model when the client is allowlisted" in new Context {
-      val json = Json.toJson(trackRepresentation)
-
-      json \ "monetization_model" ==== JsDefined(JsString("AD_SUPPORTED"))
-    }
-  }
-
   "waveform url" >> {
     trait Context extends Scope with TrackRepresentationSpecContext {
       val trackRepresentation: TrackRepresentation = createTrackRepresentation()
@@ -822,7 +765,7 @@ class TrackRepresentationSpec extends UnitSpecification {
       trackJson \ "id" ==== JsDefined(JsNumber(1324))
       trackJson \ "created_at" ==== JsDefined(JsString("2015/02/15 16:47:27 +0000"))
       trackJson \ "user_id" ==== JsDefined(JsNumber(3456))
-      trackJson \ "duration" ==== JsDefined(JsNumber(60000))
+      trackJson \ "duration" ==== JsDefined(JsNumber(120))
       trackJson \ "commentable" ==== JsDefined(JsBoolean(false))
       trackJson \ "last_modified" ==== JsDefined(JsString("2016/08/08 13:28:53 +0000"))
       trackJson \ "tag_list" ==== JsDefined(

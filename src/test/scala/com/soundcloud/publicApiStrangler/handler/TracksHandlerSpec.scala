@@ -7,6 +7,7 @@ import com.soundcloud.jvmkit.module.outcome._
 import com.soundcloud.jvmkit.module.util.session.UserSessionBuilder
 import com.soundcloud.jvmkit.module.util.{Geo, Urn}
 import com.soundcloud.publicApiStrangler.Routing
+import com.soundcloud.publicApiStrangler.authorization.Track
 import com.soundcloud.publicApiStrangler.client.mothership.response.mapper.UserMapper
 import com.soundcloud.publicApiStrangler.client.trackcoordinator.{TrackCoordinatorClient, TrackCoordinatorTrack}
 import com.soundcloud.publicApiStrangler.handler.support.requestParser._
@@ -33,6 +34,7 @@ class TracksHandlerSpec extends UnitSpecification with TrackRepresentationSpecCo
     val userUrn = Urn("soundcloud", "users", "102661606")
     val loggedInUserUrn = Urn("soundcloud", "users", "2")
     val user = users.head
+    val track = mock[Track]
     val mockTrackRepresentation = createTrackRepresentation()
 
     val emptyTrackUpdate = TrackMetadataUpdateRequest.fromForm(Map.empty).getOrElse(null)
