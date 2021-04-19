@@ -169,6 +169,24 @@ secret_token:
   schema:
     type: string
   description: A secret token to fetch private playlists/tracks
+access:
+  in: query
+  name: access
+  schema:
+    type: array
+    items:
+      type: string
+      enum:
+        - playable
+        - preview
+        - blocked
+    default: playable,preview
+  description: >
+    Filters content by level of access the user (logged in or anonymous) has to the track.
+    The result list will include only tracks with the specified access. Include all options if you'd
+    like to see all possible tracks. See `Track#access` schema for more details.
+  style: form
+  explode: false
 # path #
 comment_id:
   in: path
