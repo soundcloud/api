@@ -47,30 +47,22 @@ class TracksIntegrationSpec extends ServerSetup {
       (response.json \ "access").as[String] must equalTo("blocked")
     }
 
-    "should return an error for a blocked track" in new TrackContext {
+    "should return a blocked track" in new TrackContext {
       val response = server.get(path(blockedTrackId), authenticatedUSHeaders)
 
-      response.status === 403
-
-//      (response.json \ "stream_url").as[String] must equalTo(
-//        s"https://api.soundcloud.com/tracks/$blockedTrackId/stream"
-//      )
-//      (response.json \ "duration").as[Int] must equalTo(7889)
-//      (response.json \ "streamable").as[Boolean] must equalTo(false)
-//      (response.json \ "access").as[String] must equalTo("blocked")
+      (response.json \ "stream_url").as[String] must equalTo(
+        s"https://api.soundcloud.com/tracks/$blockedTrackId/stream"
+      )
+      (response.json \ "access").as[String] must equalTo("blocked")
     }
 
-    "should return an error for a paywalled track, not allowlisted app" in new TrackContext {
+    "should return a paywalled track, not allowlisted app" in new TrackContext {
       val response = server.get(path(paywalledTrackId), authenticatedUSHeaders)
 
-      response.status === 403
-
-//      (response.json \ "stream_url").as[String] must equalTo(
-//        s"https://api.soundcloud.com/tracks/$paywalledTrackId/stream"
-//      )
-//      (response.json \ "duration").as[Int] must equalTo(7889)
-//      (response.json \ "streamable").as[Boolean] must equalTo(false)
-//      (response.json \ "access").as[String] must equalTo("blocked")
+      (response.json \ "stream_url").as[String] must equalTo(
+        s"https://api.soundcloud.com/tracks/$paywalledTrackId/stream"
+      )
+      (response.json \ "access").as[String] must equalTo("blocked")
     }
   }
 }
