@@ -4,8 +4,8 @@ import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.publicApiStrangler.client.liebling.LieblingClient
 import com.soundcloud.publicApiStrangler.client.media.WaveformUrlsGenerator
-import com.soundcloud.publicApiStrangler.client.mothership.response.representation.{Geoblockings, User}
 import com.soundcloud.publicApiStrangler.client.mothership.RichOkidokiClient
+import com.soundcloud.publicApiStrangler.client.mothership.response.representation.{Geoblockings, User}
 import com.soundcloud.publicApiStrangler.client.pubmese.{Isrc, PubmeseClient}
 import com.soundcloud.publicApiStrangler.client.quota.UserQuotaClient
 import com.soundcloud.publicApiStrangler.client.stitch.{StitchClient, StitchCounts}
@@ -83,11 +83,11 @@ class TrackRepresentationsService(
               visibleTrack = visibleTrack,
               user = users(visibleTrack.userUrn),
               isrc = isrcs.get(visibleTrack.urn),
-              counts = counts.get(visibleTrack.urn).getOrElse(StitchCounts(0, 0, 0, 0, 0)),
+              counts = counts.getOrElse(visibleTrack.urn, StitchCounts(0, 0, 0, 0, 0)),
               label = visibleTrack.labelId.flatMap(id => labels.get(Urn("soundcloud", "users", id.toString))),
-              geoblockings = geoBlockings.get(visibleTrack.urn).getOrElse(List.empty),
+              geoblockings = geoBlockings.getOrElse(visibleTrack.urn, List.empty),
               trackAudioMetadata = audios(visibleTrack.urn),
-              isLiked = isLiked.get(visibleTrack.urn).getOrElse(false),
+              isLiked = isLiked.getOrElse(visibleTrack.urn, false),
               waveformUrl = waveformUrls(visibleTrack.uid.getOrElse("")),
               downloadsPerTrack = downloadsPerTrack.get(visibleTrack.userUrn).flatten
             )

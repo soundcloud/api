@@ -628,6 +628,19 @@ class TrackRepresentationSpec extends UnitSpecification {
     }
   }
 
+  "stream url" >> {
+    trait Context extends Scope with TrackRepresentationSpecContext {
+      override def defaultTrack: VisibleTrack = super.defaultTrack.copy(access = Some(Access.Blocked))
+    }
+
+    "no stream url present when track is blocked" in new Context {
+      val trackRepresentation: TrackRepresentation = createTrackRepresentation()
+      val json = Json.toJson(trackRepresentation)
+
+      json \ "stream_url" ==== JsDefined(JsNull)
+    }
+  }
+
   "quota counts" >> {
     trait Context extends Scope with TrackRepresentationSpecContext {
       val ninetyDownloads = StitchCounts(

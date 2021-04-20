@@ -1,17 +1,16 @@
 package com.soundcloud.publicApiStrangler.service.trackrepresentation
 
 import com.soundcloud.jvmkit.module.util.Urn
+import com.soundcloud.publicApiStrangler.authorization.AllowlistedClients
+import com.soundcloud.publicApiStrangler.authorization.policies.{Access, ContentPolicy, MonetizationModel}
 import com.soundcloud.publicApiStrangler.client.media.TrackWaveformUrl
 import com.soundcloud.publicApiStrangler.client.mothership.TrackAudioMetadata
 import com.soundcloud.publicApiStrangler.client.mothership.response.representation.{Geoblockings, User}
 import com.soundcloud.publicApiStrangler.client.pubmese.Isrc
 import com.soundcloud.publicApiStrangler.client.stitch.StitchCounts
 import com.soundcloud.publicApiStrangler.client.tracks.VisibleTrack
+
 import java.net.URLEncoder
-
-import com.soundcloud.publicApiStrangler.authorization.AllowlistedClients
-import com.soundcloud.publicApiStrangler.authorization.policies.{ContentPolicy, MonetizationModel}
-
 import scala.collection.immutable.HashSet
 
 class TrackRepresentationBuilder {
@@ -47,7 +46,7 @@ class TrackRepresentationBuilder {
       releaseDay = releaseDayFor(visibleTrack),
       releaseMonth = releaseMonthFor(visibleTrack),
       uri = urlFor(visibleTrack, getSecretTokenForPrivateTrack(visibleTrack)),
-      streamUrl = urlFor(visibleTrack, "stream", getSecretTokenForPrivateTrack(visibleTrack)),
+      streamUrl = getStreamUrl(visibleTrack),
       downloadUrl = urlFor(visibleTrack, "download", getSecretTokenForPrivateTrack(visibleTrack)),
       permalinkUrl = secretPath(visibleTrack.permalinkUrl, visibleTrack, getSecretTokenForPrivateTrack(visibleTrack)),
       secretUri = getSecretUri(visibleTrack),
@@ -174,4 +173,11 @@ class TrackRepresentationBuilder {
       else None
     )
   }
+  private def getStreamUrl(visibleTrack: VisibleTrack): Option[String] = {
+    if (visibleTrack.access.contains(Access.Blocked))
+      None
+    else
+      urlFor(visibleTrack, "stream", getSecretTokenForPrivateTrack(visibleTrack))
+  }
+
 }
