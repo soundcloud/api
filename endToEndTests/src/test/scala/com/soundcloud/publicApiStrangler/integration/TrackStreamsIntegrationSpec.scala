@@ -1,6 +1,8 @@
 package com.soundcloud.publicApiStrangler.integration
 
-class TrackStreamsIntegrationSpec extends ServerSetup {
+import com.soundcloud.publicApiStrangler.testutilities.IntegrationTest
+
+class TrackStreamsIntegrationSpec extends IntegrationTest {
 
   trait TrackStreamContext extends IntegrationContext {
     def path(id: String): String = super.path(s"/tracks/$id/streams")

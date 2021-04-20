@@ -21,17 +21,8 @@ services:
       - "5000:5000"
       - "5001:5001"
     links:
-      - memcached:memcached
       - zookeeper:zookeeper
-      - publicapistub:publicapistub
-
-  publicapistub:
-    image: ${SC_DOCKER_REPO}/ruby-2.6
-    command: bash -ex -c "gem install sinatra --no-document ; ruby /tmp/pas/tools/public-api-stub.rb"
-    volumes:
-      - .:/tmp/pas
-    ports:
-      - "4567:4567"
+      - memcached:memcached
 
   asset-uploads:
     image: ${SC_DOCKER_REPO}/public-api-strangler-asset-uploads:$VERSION

@@ -1,4 +1,4 @@
-package com.soundcloud.testutilities
+package com.soundcloud.publicApiStrangler.testutilities
 
 import com.twitter.finagle
 import com.twitter.finagle.Http

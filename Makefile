@@ -56,33 +56,23 @@ check-prometheus:
 
 docker-up-%:
 	echo "This assumes you've run make package & make package-assets before"
-	CONFIG=$* VERSION=$(PUBLIC_API_STRANGLER_VERSION) \
-	docker-compose -f docker-compose-e2e-tests.yml up -d
-
-wait:
-	sc wait http $(DOCKER_IP):4567/-/health # wait for publicapistub
-	sc wait http $(DOCKER_IP):5000/-/health # wait for publicapistrangler
+	CONFIG=$* VERSION=$(PUBLIC_API_STRANGLER_VERSION) docker-compose -f docker-compose-e2e-tests.yml up -d
+	sc crun -l base-dev -- sc wait http publicapistrangler:5000/-/health
 
 end-to-end-test: remove-containers
 	echo "This assumes you've run make package before"
-	CONFIG=e2e VERSION=$(PUBLIC_API_STRANGLER_VERSION) \
-	docker-compose -f docker-compose-e2e-tests.yml up --force-recreate -d publicapistrangler
-	sc crun -l base-dev -- sc wait http publicapistub:4567/-/health
+	CONFIG=e2e VERSION=$(PUBLIC_API_STRANGLER_VERSION) docker-compose -f docker-compose-e2e-tests.yml up -d publicapistrangler
 	sc crun -l base-dev -- sc wait http publicapistrangler:5000/-/health
 	sc crun -l sbt -e ACCESS_TOKEN=$(shell make -s generate-token) --config=e2e.secrets -- sbt endToEnd/test
 	make docker-down
 
 local-contract-test: remove-containers docker-up-development
-	sc wait http $(DOCKER_IP):4567/-/health # wait for publicapistub
-	sc wait http $(DOCKER_IP):5000/-/health # wait for publicapistrangler
 	cd doc && make test
 
 package-assets:
 	make --directory=asset-uploads package
 
 contract-test: package package-assets remove-containers docker-up-development
-	sc crun -l base-dev -- sc wait http publicapistub:4567/-/health
-	sc crun -l base-dev -- sc wait http publicapistrangler:5000/-/health
 	sc crun -l nodejs-12-dev -- make --directory=doc contract-test
 	make docker-down
 

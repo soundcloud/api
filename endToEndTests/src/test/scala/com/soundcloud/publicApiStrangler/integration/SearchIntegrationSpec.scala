@@ -1,8 +1,9 @@
 package com.soundcloud.publicApiStrangler.integration
 
+import com.soundcloud.publicApiStrangler.testutilities.IntegrationTest
 import play.api.libs.json.JsArray
 
-class SearchIntegrationSpec extends ServerSetup {
+class SearchIntegrationSpec extends IntegrationTest {
 
   trait SearchContext extends IntegrationContext {
 
