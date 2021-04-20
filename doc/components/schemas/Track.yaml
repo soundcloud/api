@@ -178,3 +178,14 @@ additionalProperties:
     deprecated: true
     description: User URI.
     type: string
+  access:
+    type: string
+    description: >
+      Level of access the user (logged in or anonymous) has to the track.
+        * `playable` - user is allowed to listen to a full track.
+        * `preview` - user is allowed to preview a track, meaning a snippet is available
+        * `blocked` - user can only see the metadata of a track, no streaming is possible
+    enum:
+      - playable
+      - preview
+      - blocked

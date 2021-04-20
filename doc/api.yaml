@@ -125,6 +125,7 @@ paths:
       security:
         - AuthHeader: [ ]
       parameters:
+        - $ref: '#/components/parameters/access'
         - $ref: '#/components/parameters/limit'
       responses:
         200:
@@ -139,6 +140,7 @@ paths:
       security:
         - AuthHeader: [ ]
       parameters:
+        - $ref: '#/components/parameters/access'
         - $ref: '#/components/parameters/limit'
       responses:
         200:
@@ -153,6 +155,7 @@ paths:
       security:
         - AuthHeader: [ ]
       parameters:
+        - $ref: '#/components/parameters/access'
         - $ref: '#/components/parameters/limit'
       responses:
         200:
@@ -243,6 +246,7 @@ paths:
       security:
         - AuthHeader: [ ]
       parameters:
+        - $ref: '#/components/parameters/access'
         - $ref: '#/components/parameters/limit'
         - $ref: '#/components/parameters/offset'
       responses:
@@ -327,16 +331,6 @@ paths:
           $ref: '#/components/responses/NotFound'
         422:
           $ref: '#/components/responses/UnprocessableEntity'
-  #  /me/followings/tracks:
-  #    get:
-  #      summary: Returns all the tracks of all the followings of me.
-  #      tags:
-  #        - me
-  #      security:
-  #        - AuthHeader: [ ]
-  #      responses:
-  #        200:
-  #          description: Success
   /me/followers:
     get:
       summary: Returns a list of users who are following the authenticated user.
@@ -405,17 +399,6 @@ paths:
       responses:
         200:
           $ref: "#/components/responses/Playlist"
-  #   put:
-  #     summary: Returns favorite track.
-  #     tags:
-  #       - me
-  #     security:
-  #       - AuthHeader: []
-  #     parameters:
-  #       - $ref: '#/components/parameters/playlist_id'
-  #     responses:
-  #       200:
-  #         description: Success
   /me/tracks:
     get:
       summary: Returns a list of user's tracks.
@@ -460,6 +443,7 @@ paths:
         - $ref: "#/components/parameters/bpm"
         - $ref: "#/components/parameters/duration"
         - $ref: "#/components/parameters/created_at"
+        - $ref: '#/components/parameters/access'
         - $ref: '#/components/parameters/limit'
         - $ref: '#/components/parameters/offset'
         - $ref: '#/components/parameters/linked_partitioning'
@@ -513,6 +497,7 @@ paths:
           AuthHeader: [ ]
       parameters:
         - $ref: "#/components/parameters/q"
+        - $ref: '#/components/parameters/access'
         - $ref: '#/components/parameters/limit'
         - $ref: '#/components/parameters/offset'
         - $ref: '#/components/parameters/linked_partitioning'
@@ -587,6 +572,7 @@ paths:
       parameters:
         - $ref: "#/components/parameters/playlist_id"
         - $ref: "#/components/parameters/secret_token"
+        - $ref: "#/components/parameters/access"
       responses:
         200:
           $ref: "#/components/responses/Playlist"
@@ -645,6 +631,7 @@ paths:
       parameters:
         - $ref: "#/components/parameters/playlist_id"
         - $ref: "#/components/parameters/secret_token"
+        - $ref: "#/components/parameters/access"
         - $ref: "#/components/parameters/linked_partitioning"
       responses:
         200:
@@ -781,7 +768,7 @@ paths:
                   required:
                     - body
       responses:
-        200:
+        201:
           description: Success
           content:
             application/json:
@@ -796,33 +783,6 @@ paths:
           $ref: '#/components/responses/UnprocessableEntity'
         429:
           $ref: '#/components/responses/TooManyRequests'
-  # /tracks/{track_id}/comments/{comment_id}:
-  #   delete:
-  #     summary: Returns ???.
-  #     tags:
-  #       - tracks
-  #     security:
-  #       - ClientId: []
-  #         AuthHeader: []
-  #     parameters:
-  #       - $ref: '#/components/parameters/track_id'
-  #       - $ref: '#/components/parameters/comment_id'
-  #     responses:
-  #       200:
-  #         description: Success
-  # /tracks/{track_id}/download:
-  #   get:
-  #     summary: Returns ???.
-  #     tags:
-  #       - tracks
-  #     security:
-  #       - ClientId: []
-  #         AuthHeader: []
-  #     parameters:
-  #       - $ref: '#/components/parameters/track_id'
-  #     responses:
-  #       200:
-  #         description: Success
   /tracks/{track_id}/favoriters:
     get:
       summary: Returns a list of users who have favorited or liked the track.
@@ -850,6 +810,7 @@ paths:
         - ClientId: [ ]
       parameters:
         - $ref: '#/components/parameters/track_id'
+        - $ref: '#/components/parameters/access'
         - $ref: '#/components/parameters/limit'
         - $ref: '#/components/parameters/offset'
         - $ref: '#/components/parameters/linked_partitioning'
@@ -860,19 +821,6 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         404:
           $ref: '#/components/responses/NotFound'
-  # /tracks/{track_id}/streams:
-  #   get:
-  #     summary: Returns ???.
-  #     tags:
-  #       - tracks
-  #     security:
-  #       - ClientId: []
-  #         AuthHeader: []
-  #     parameters:
-  #       - $ref: '#/components/parameters/track_id'
-  #     responses:
-  #       200:
-  #         description: Success
   /resolve:
     get:
       summary: Resolves soundcloud.com URLs to Resource URLs to use with the API.
@@ -1004,6 +952,7 @@ paths:
           AuthHeader: [ ]
       parameters:
         - $ref: '#/components/parameters/user_id'
+        - $ref: '#/components/parameters/access'
         - $ref: '#/components/parameters/limit'
         - $ref: '#/components/parameters/linked_partitioning'
       responses:
@@ -1011,20 +960,6 @@ paths:
           $ref: "#/components/responses/Playlists"
         401:
           $ref: '#/components/responses/Unauthorized'
-  # /users/{user_id}/playlists/{track_id}:
-  #   get:
-  #     summary: Returns user's playlists list.
-  #     tags:
-  #       - users
-  #     security:
-  #       - ClientId: []
-  #         AuthHeader: []
-  #     parameters:
-  #       - $ref: '#/components/parameters/user_id'
-  #       - $ref: '#/components/parameters/track_id'
-  #     responses:
-  #       200:
-  #         description: Success
   /users/{user_id}/tracks:
     get:
       summary: Returns a list of user's tracks.
@@ -1035,6 +970,7 @@ paths:
           AuthHeader: [ ]
       parameters:
         - $ref: '#/components/parameters/user_id'
+        - $ref: '#/components/parameters/access'
         - $ref: '#/components/parameters/limit'
         - $ref: "#/components/parameters/linked_partitioning"
       responses:
@@ -1070,6 +1006,7 @@ paths:
           AuthHeader: [ ]
       parameters:
         - $ref: '#/components/parameters/user_id'
+        - $ref: '#/components/parameters/access'
         - $ref: '#/components/parameters/limit'
         - $ref: "#/components/parameters/linked_partitioning"
       responses:
@@ -1117,18 +1054,6 @@ paths:
         404:
           $ref: '#/components/responses/NotFound'
   /likes/playlists/{playlist_id}:
-    # get:
-    #   summary: Returns a liked playlists.
-    #   tags:
-    #     - likes
-    #   security:
-    #     - AuthHeader: []
-    #   parameters:
-    #     - $ref: '#/components/parameters/playlist_id'
-    #   responses:
-    #     200:
-    #       description: Success
-    #     404:
     post:
       summary: Likes a playlist.
       tags:

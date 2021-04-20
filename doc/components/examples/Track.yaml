@@ -54,3 +54,4 @@ value:
   user_uri: https://api.soundcloud.com/users/123456
   video_url:
   waveform_url: https://wave.sndcdn.com/someString.png
+  access: playable
