@@ -49,6 +49,7 @@ class ClientApplicationActivityTelemetryFilter(
 
 object ClientApplicationActivityTelemetryFilter {
   val targetApplicationIds = Set(
+    // APPS ALLOWLISTED IN API-V2
     "59007", // Soundiiz
     "62023", // Soundiiz local
     "167582", // Denon
@@ -66,6 +67,10 @@ object ClientApplicationActivityTelemetryFilter {
     "304454", // Auryo
     "178345", // Audiu
     "178720", // Audiu Test
+
+    // APPS ALLOWLISTED IN AUTHSY
+    "300128", // Google Home production
+    "302417", // Google Home development
     "72194", // Temporary hack to enable 3lau (user 1887081) to access their own tracks (see PT-1535) http://www.lessthan3.com
     "164687", // Temporary hack to enable Sara Hartman (user 5095933) to access their own tracks (see https://groups.google.com/a/soundcloud.com/d/msg/partner-tools/jRGskGPH7z4/E1I8YGLzCQAJ)
     "87595", // This American Life
