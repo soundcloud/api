@@ -27,7 +27,7 @@ class SearchIntegrationSpec extends IntegrationTest {
 
     "should return full tracks and snippets, if access=playable,preview" in new SearchContext {
       val response = server.get(
-        searchPath(params = Map("q" -> "better", "limit" -> "10", "access" -> "playable,preview"))
+        searchPath(params = Map("q" -> "better", "limit" -> "30", "access" -> "playable,preview"))
       )
 
       response.status === 200
@@ -42,7 +42,7 @@ class SearchIntegrationSpec extends IntegrationTest {
 
     "should return blocked tracks as well, full access" in new SearchContext {
       val response = server.get(
-        searchPath(params = Map("q" -> "better", "access" -> "playable,preview,blocked"))
+        searchPath(params = Map("q" -> "better", "limit" -> "30", "access" -> "playable,preview,blocked"))
       )
 
       response.status === 200
