@@ -16,11 +16,7 @@ var skipTransactionIds = [
     "POST (401) /oauth2/token",
     "GET (200) /me/connections/123456",
     "PUT (200) /tracks/308946187",
-    "POST (200) /tracks/308946187/comments",
-    "POST (201) /reposts/tracks/308946187",
-    "DELETE (200) /reposts/tracks/308946187",
-    "POST (201) /likes/tracks/308946187",
-    "DELETE (200) /likes/tracks/308946187"
+    "POST (201) /tracks/308946187/comments"
 ];
 var replacePlaylistIdTransactionIds = [
     "PUT (200) /playlists/10",
@@ -76,11 +72,11 @@ hooks.beforeEach((transaction, done) => {
     if (transaction. id == "PUT (200) /tracks/308946187" || transaction.id == "DELETE (200) /tracks/308946187") {
         replaceId(transaction, '308946187', responseStash.track_id);
     }
-
     done();
 });
 
 hooks.before("/tracks > Uploads a new track. > 201 > application/json; charset=utf-8", async (transaction, done) => {
+    transaction.host = "asset-uploads";
     transaction.port = "5005";
 
     const form = new Multipart();
@@ -100,17 +96,16 @@ hooks.before("/connect > The OAuth2 authorization endpoint. Your app redirects a
     done();
 });
 
-hooks.after("/playlists > Creates a playlist. > 200 > application/json; charset=utf-8", (transaction, done) => {
+hooks.after("/playlists > Creates a playlist. > 201 > application/json; charset=utf-8", (transaction, done) => {
     var responseBody = JSON.parse(transaction.real.body);
     responseStash.playlist_id = responseBody.id;
     done();
 });
 
 hooks.after("/tracks > Uploads a new track. > 201 > application/json; charset=utf-8", (transaction, done) => {
-    if (typeof transaction.real !== 'undefined') {
-        var responseBody = JSON.parse(transaction.real.body);
-        responseStash.track_id = responseBody.id;
+    if (typeof transaction.real !== 'undefined' && typeof transaction.real.body === 'string') {
+      var responseBody = JSON.parse(transaction.real.body);
+      responseStash.track_id = responseBody.id;
     }
     done();
 });
-

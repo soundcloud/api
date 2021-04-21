@@ -13,6 +13,9 @@ properties:
   kind:
     description: Kind (comment).
     type: string
+  user_id:
+    description: User's identifier.
+    type: integer
   timestamp:
     description: Timestamp.
     type: string
@@ -23,7 +26,39 @@ properties:
     description: Comment's URL.
     type: string
   user:
-    $ref: '#/components/schemas/User'
-  user_id:
-    description: User's identifier.
-    type: integer
+    type: object
+    description: SoundCloud User object
+    properties:
+      id:
+        description: unique identifier
+        type: integer
+      kind:
+        description: kind of resource.
+        type: string
+      permalink:
+        description: permalink of the resource.
+        type: string
+      username:
+        description: username
+        type: string
+      last_modified:
+        description: last modified timestamp.
+        type: string
+      uri:
+        description: API resource URL.
+        type: string
+      permalink_url:
+        description: URL to the SoundCloud.com page.
+        type: string
+      avatar_url:
+        description: URL to a JPEG image.
+        type: string
+      followers_count:
+        description: number of followers.
+        type: integer
+      followings_count:
+        description: number of followed users.
+        type: integer
+      reposts_count:
+        description: number of reposts from user
+        type: integer

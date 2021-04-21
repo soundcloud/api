@@ -10,9 +10,6 @@
     "swagger-ui-express": "4.1.4",
     "yamljs": "0.3.0"
   },
-  "scripts": {
-    "test": "export $(curl -fsS -T ./config/secrets.enc https://shibboleth.int.s-cloud.net/decrypt); dredd"
-  },
   "devDependencies": {
     "dredd": "^14.0.0"
   }

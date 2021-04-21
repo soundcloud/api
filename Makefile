@@ -58,6 +58,7 @@ docker-up-%:
 	echo "This assumes you've run make package & make package-assets before"
 	CONFIG=$* VERSION=$(PUBLIC_API_STRANGLER_VERSION) docker-compose -f docker-compose-e2e-tests.yml up -d
 	sc crun -l base-dev -- sc wait http publicapistrangler:5000/-/health
+	sc crun -l base-dev -- sc wait http asset-uploads:5005/-/health
 
 end-to-end-test: remove-containers
 	echo "This assumes you've run make package before"
@@ -73,7 +74,7 @@ package-assets:
 	make --directory=asset-uploads package
 
 contract-test: package package-assets remove-containers docker-up-development
-	sc crun -l nodejs-12-dev -- make --directory=doc contract-test
+	sc crun -l nodejs-12-dev -e ACCESS_TOKEN=$(shell make -s generate-token) --enable-proxy --config=e2e.secrets -- make --directory=doc contract-test
 	make docker-down
 
 docker-down:

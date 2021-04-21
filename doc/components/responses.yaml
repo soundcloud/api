@@ -28,7 +28,7 @@ Found:
 FoundHtml:
   description: Found
   content:
-    text/html; charset=utf-8:
+    application/json; charset=utf-8:
       schema:
         type: string
 Created:
@@ -230,6 +230,15 @@ WebProfiles:
       examples:
         default:
           $ref: "#/components/examples/WebProfiles"
+Comment:
+  description: Success
+  content:
+    application/json; charset=utf-8:
+      schema:
+          - $ref: '#/components/schemas/Comment'
+      examples:
+        default:
+          $ref: "#/components/examples/Comment"
 Comments:
   description: Success
   content:

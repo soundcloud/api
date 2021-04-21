@@ -31,3 +31,5 @@ services:
       - "5005:5005"
     links:
       - publicapistrangler:publicapistrangler
+    environment:
+      https_proxy: 'http://proxy.dev.s-cloud.net:3128'

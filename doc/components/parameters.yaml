@@ -260,6 +260,14 @@ track_id:
     type: integer
   description: SoundCloud Track id
   example: 308946187
+test_track_id:
+  in: path
+  name: track_id
+  required: true
+  schema:
+    type: integer
+  description: SoundCloud Track id
+  example: 1015448728
 user_id:
   in: path
   name: user_id

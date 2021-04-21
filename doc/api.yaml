@@ -524,7 +524,7 @@ paths:
               default:
                 $ref: "#/components/examples/CreateUpdatePlaylistRequest"
       responses:
-        200:
+        201:
           $ref: "#/components/responses/Playlist"
         401:
           $ref: '#/components/responses/Unauthorized'
@@ -769,12 +769,7 @@ paths:
                     - body
       responses:
         201:
-          description: Success
-          content:
-            application/json:
-              examples:
-                default:
-                  $ref: '#/components/examples/Comments'
+          $ref: '#/components/responses/Comment'
         401:
           $ref: '#/components/responses/Unauthorized'
         403:
@@ -1026,7 +1021,7 @@ paths:
       security:
         - AuthHeader: [ ]
       parameters:
-        - $ref: '#/components/parameters/track_id'
+        - $ref: '#/components/parameters/test_track_id'
       responses:
         200:
           $ref: '#/components/responses/Success'
@@ -1045,7 +1040,7 @@ paths:
       security:
         - AuthHeader: [ ]
       parameters:
-        - $ref: '#/components/parameters/track_id'
+        - $ref: '#/components/parameters/test_track_id'
       responses:
         200:
           $ref: '#/components/responses/Success'
@@ -1098,7 +1093,7 @@ paths:
       security:
         - AuthHeader: [ ]
       parameters:
-        - $ref: '#/components/parameters/track_id'
+        - $ref: '#/components/parameters/test_track_id'
       responses:
         201:
           description: Created
@@ -1113,7 +1108,7 @@ paths:
       security:
         - AuthHeader: [ ]
       parameters:
-        - $ref: '#/components/parameters/track_id'
+        - $ref: '#/components/parameters/test_track_id'
       responses:
         200:
           description: Success

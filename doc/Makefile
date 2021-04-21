@@ -18,12 +18,10 @@ run: resolve_api
 	$(MAKE) clear
 
 test: resolve_api
-	echo "Assumes you have set endpoint:'http://127.0.0.1:5000' in ./dredd.yml"
-	npm test
+	./node_modules/.bin/dredd
 	$(MAKE) clear
 
-contract-test:
-	'./run-dredd-test.sh'
+contract-test: test
 
 clean:
 	rm -rf node_modules
