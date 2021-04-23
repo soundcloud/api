@@ -53,7 +53,7 @@ class TrackStreamsHandler(
                 session,
                 request,
                 streamParams.trackUrn,
-                loggingEnabled = false
+                loggingEnabled = singleStream
               )(Future.value(renderStreamResponse(request, session, streamResponse)))
             case Bad(CustomError(UnavailableByPolicy(_, reason), _)) =>
               Future.value(Reasonator.reasonToError(reason))

@@ -1,13 +1,14 @@
 package com.soundcloud.publicApiStrangler.handler
 
 import com.soundcloud.jvmkit.module.bff.testsupport.FakeUserAuthentication
-import com.soundcloud.jvmkit.module.http.server.{Handler, HandlerRequest}
+import com.soundcloud.jvmkit.module.http.server.{Handler, ResponseBuilder}
 import com.soundcloud.jvmkit.module.outcome._
 import com.soundcloud.jvmkit.module.telemetry.Telemetry
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.publicApiStrangler.Routing
 import com.soundcloud.publicApiStrangler.authorization.policies.Reason
+import com.soundcloud.publicApiStrangler.client.media.TrackAccessRecorderClient
 import com.soundcloud.publicApiStrangler.mapper.trackstreams.{
   TrackStreamJsonResponseMapper,
   TrackStreamRedirectResponseMapper
@@ -15,36 +16,27 @@ import com.soundcloud.publicApiStrangler.mapper.trackstreams.{
 import com.soundcloud.publicApiStrangler.service.UnavailableByPolicy
 import com.soundcloud.publicApiStrangler.service.media._
 import com.soundcloud.publicApiStrangler.test.{HandlerSpecificationScope, UnitSpecification}
-import com.twitter.finagle.http.{Method, Response, Status}
+import com.twitter.finagle.http.{Method, Status}
 import com.twitter.util.Future
 import org.specs2.specification.core.Fragments
 import play.api.libs.json.Json
 
 class TrackStreamsHandlerSpec extends UnitSpecification {
-  val fakeTelemetry = Telemetry.createIsolatedInstance
-
-  class FakeTrackAccessRecorderService extends TrackAccessRecorderService(null, fakeTelemetry) {
-    override def recordStreamAccess(
-        session: UserSession,
-        request: HandlerRequest,
-        trackUrn: Urn,
-        loggingEnabled: Boolean
-    )(action: => Future[Response]): Future[Response] =
-      action
-  }
-
   trait MediaServiceContext extends HandlerSpecificationScope {
     val user = Urn("soundcloud", "users", "1234")
     val session = loggedInSession(user)
 
     val streamService = mock[StreamService]
+    val trackAccessClient = mock[TrackAccessRecorderClient]
+    trackAccessClient.recordAccess(any[UserSession], any[Urn], anyString, anyBoolean, any[Option[String]]) returns Future
+      .value(ResponseBuilder.ok())
 
     val handler = new TrackStreamsHandler(
       new FakeUserAuthentication(session),
       mock[TrackStreamJsonResponseMapper],
       mock[TrackStreamRedirectResponseMapper],
       streamService,
-      new FakeTrackAccessRecorderService
+      new TrackAccessRecorderService(trackAccessClient, mock[Telemetry])
     )
 
     val trackUrn = Urn("soundcloud", "tracks", "5")
@@ -85,6 +77,20 @@ class TrackStreamsHandlerSpec extends UnitSpecification {
           }
         }
     }
+
+    "records access and logs" in new MediaServiceContext {
+      streamService.fetchUrls(session, trackUrn, None, singleStream = true) returns
+        Future.value(RedirectStreamResponse(httpMp3).good)
+
+      val response = get("/tracks/5/stream")
+      there was one(trackAccessClient).recordAccess(
+        ===(session),
+        ===(trackUrn),
+        ===("stream"),
+        ===(true),
+        any[Option[String]]
+      )
+    }
   }
 
   "with multiple stream requests" >> {
@@ -112,6 +118,21 @@ class TrackStreamsHandlerSpec extends UnitSpecification {
             )
           }
         }
+    }
+
+    "records access and with logging disabled" in new MediaServiceContext {
+      streamService.fetchUrls(session, trackUrn, None) returns Future.value(
+        MediaStreamUrls(httpMp3, hlsMp3, Some(hlsOpus), Some(httpPreviewMp3)).good
+      )
+
+      val response = get("/tracks/5/streams")
+      there was one(trackAccessClient).recordAccess(
+        ===(session),
+        ===(trackUrn),
+        ===("stream"),
+        ===(false),
+        any[Option[String]]
+      )
     }
   }
 
