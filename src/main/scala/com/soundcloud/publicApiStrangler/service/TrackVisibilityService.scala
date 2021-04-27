@@ -57,9 +57,18 @@ class TrackVisibilityService(
     tracksTwinagleClient.getVisibleTracks(request).map { tracksResponse =>
       tracksResponse.tracks.toList
         .map(visibleTrackMapper.apply)
-        .filter(visibleTrack => visibleTrack.disabledAt.isEmpty)
+        .filter(filterTracks)
         .map(applyRules(session.getAgent, _, access.access))
     }
+  }
+
+  private def filterTracks(visibleTrack: VisibleTrack): Boolean = {
+    // FIX: this is a temporary fix for leaking unreleased tracks.
+    // We should filter these further downstream when Authsy gives us a policy that better reflects this situation
+    // more info: https://docs.google.com/document/d/1t116Wy2mXZRXgsFQP9tG9C6aMV0hdcA99Ycii2J-ne0/edit#bookmark=id.lgz2nr3bvijl
+    val unknownVisibility = visibleTrack.authorization.policy == ContentPolicy.BLOCK &&
+      visibleTrack.authorization.reason == Reason.CLIENT_APPLICATION
+    visibleTrack.disabledAt.isEmpty && !unknownVisibility
   }
 
   private def applyRules(client: Urn, track: VisibleTrack, allowedAccesses: Set[Access]): Outcome[VisibleTrack] = {

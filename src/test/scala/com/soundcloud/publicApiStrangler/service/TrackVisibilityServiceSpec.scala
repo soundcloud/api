@@ -95,12 +95,27 @@ class TrackVisibilityServiceSpec extends Specification with Mockito {
     }
 
     "disabled track" >> {
-      trait DisabledTrackContext extends Context {
+      "filters out disabled tracks" in new Context {
         override lazy val visibleTrack =
           (new VisibleTrackBuilder).setUrn(trackUrn).setDisabledAt(Some(LocalDateTime.now())).build
+        Await.result(service.tracks(session, List(trackRequest), access)) ==== List.empty
       }
 
-      "filters out disabled tracks" in new DisabledTrackContext {
+      "filters out unreleased supply chain tracks" in new Context {
+        override lazy val visibleTrack =
+          (new VisibleTrackBuilder)
+            .setUrn(trackUrn)
+            .setAuthorization(
+              new ContentAuthorization(
+                trackUrn,
+                ContentPolicy.BLOCK,
+                Reason.CLIENT_APPLICATION,
+                Set.empty[ContentRestriction],
+                MonetizationModel.SUB_HIGH_TIER
+              )
+            )
+            .build
+
         Await.result(service.tracks(session, List(trackRequest), access)) ==== List.empty
       }
     }
