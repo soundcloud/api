@@ -16,6 +16,6 @@ class OffsetLimitRequestFilter(paths: Seq[String], maxOffset: Int) extends Simpl
   private def denial = Future.value(ErrorResponse.badRequest(s"Offset must be less than $maxOffset"))
 
   private def optStringToOptInt(string: Option[String]) = {
-    string.map(_.trim).filter(!_.isEmpty).filter(_.forall(_.isDigit)).map(_.toInt)
+    string.map(_.trim).filter(_.nonEmpty).filter(_.forall(_.isDigit)).map(_.toInt)
   }
 }

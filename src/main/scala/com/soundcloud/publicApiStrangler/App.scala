@@ -127,7 +127,7 @@ object App {
         new CookieHeaderRemovalFilter,
         new ExceptForTrackUploadsFilter(rateLimitingFacade.filter),
         new DeprecatedEndpointUsageFilter(clients.userAuthentication, telemetry, router),
-        new ContentTypeTelemetryFilter(telemetry, router)
+        new RequestTelemetryFilter(clients.userAuthentication, telemetry, router)
       )
 
     new AdminServer(
