@@ -39,15 +39,14 @@ class TrackStreamsIntegrationSpec extends IntegrationTest {
     "should return error for a blocked track" in new TrackStreamContext {
       val response = server.get(path(blockedTrackId), authenticatedUSHeaders)
 
-//      response.status === 403
-//      (response.json \ "message").as[String] === "This content is only available on SoundCloud."
+      response.status === 403
+      (response.json \ "message").as[String] === "This content is only available on SoundCloud."
     }
 
-    "should return error for a paywalled track" in new TrackStreamContext {
-      val response = server.get(path(paywalledTrackId), authenticatedUSHeaders)
+    "should return error for a rights-holder restricted track" in new TrackStreamContext {
+      val response = server.get(path(rightsholderRestrictedTrackId), authenticatedUSHeaders)
 
-//      response.status === 403
-//      (response.json \ "message").as[String] === "This content is only available on SoundCloud."
+      response.status === 404
     }
   }
 

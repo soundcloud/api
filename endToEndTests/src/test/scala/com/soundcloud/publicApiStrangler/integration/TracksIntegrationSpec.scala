@@ -47,18 +47,17 @@ class TracksIntegrationSpec extends IntegrationTest {
       (response.json \ "access").as[String] must equalTo("blocked")
     }
 
-    "should return a blocked track" in new TrackContext {
+    "should return a blocked track, not allowlisted app" in new TrackContext {
       val response = server.get(path(blockedTrackId), authenticatedUSHeaders)
 
-//      (response.json \ "stream_url").asOpt[String] must beNone
-//      (response.json \ "access").as[String] must equalTo("blocked")
+      (response.json \ "stream_url").asOpt[String] must beNone
+      (response.json \ "access").as[String] must equalTo("blocked")
     }
 
-    "should return a paywalled track, not allowlisted app" in new TrackContext {
-      val response = server.get(path(paywalledTrackId), authenticatedUSHeaders)
+    "should return an error for a rights-holder restricted track" in new TrackContext {
+      val response = server.get(path(rightsholderRestrictedTrackId), authenticatedUSHeaders)
 
-//      (response.json \ "stream_url").asOpt[String] must beNone
-//      (response.json \ "access").as[String] must equalTo("blocked")
+      response.status === 404
     }
   }
 }
