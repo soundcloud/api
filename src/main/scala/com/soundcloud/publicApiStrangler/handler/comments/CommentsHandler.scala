@@ -60,7 +60,7 @@ class CommentsHandler(
 
   private def createErrorResponse(applicationError: ApplicationError): Response = {
     applicationError match {
-      case _: NotAllowed => ErrorResponse(Status.Forbidden, forbiddenErrorString)
+      case _: NotAllowed => ErrorResponse.badRequest()
       case CustomError(TooManyRequests, Some(CustomError(context: RateLimitedError, _))) =>
         ErrorResponse(Status.TooManyRequests, "Spam warning", Some(spamWarningError(context.spamWarningUrn)))
       case _ => ErrorResponse.badRequest()
@@ -112,6 +112,5 @@ class CommentsHandler(
 
   private val noCommentErrorString = "Parameter comment is missing."
   private val noCommentBodyErrorString = "Body can't be blank."
-  private val forbiddenErrorString = "You are not authorized to perform that action."
   private def spamWarningError(urn: Urn): Map[String, JsString] = Map("spam_warning_urn" -> JsString(urn.toString))
 }

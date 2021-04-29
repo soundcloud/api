@@ -20,7 +20,7 @@ var skipTransactionIds = [
 ];
 var replacePlaylistIdTransactionIds = [
     "PUT (200) /playlists/10",
-    "DELETE (202) /playlists/10"
+    "DELETE (200) /playlists/10"
 ];
 var skippedStatuses = ["400", "403", "404", "422", "429", "500"];
 

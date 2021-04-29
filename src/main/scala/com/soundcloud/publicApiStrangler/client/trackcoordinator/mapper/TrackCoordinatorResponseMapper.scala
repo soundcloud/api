@@ -9,7 +9,7 @@ object TrackCoordinatorResponseMapper {
 
     response.status match {
       case Status.Accepted | Status.Ok => Good(())
-      case Status.NotFound => NotFound().bad
+      case Status.NotFound | Status.Unauthorized | Status.Forbidden => NotFound().bad
       case _ => throw UnhandledResponseException(response)
     }
   }

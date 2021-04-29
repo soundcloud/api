@@ -1,12 +1,14 @@
 package com.soundcloud.publicApiStrangler.client.mothership
 
 import com.soundcloud.jvmkit.module.http.client.{JsonClient, Params}
-import com.soundcloud.jvmkit.module.outcome.{CustomError, NotAllowed, NotValid, Outcome}
+import com.soundcloud.jvmkit.module.outcome.{CustomError, NotValid, Outcome, _}
 import com.soundcloud.jvmkit.module.telemetry.exceptions.ExceptionCollector
+import com.soundcloud.jvmkit.module.telemetry.exceptions.ExceptionHandler._
 import com.soundcloud.jvmkit.module.util.http.Headers
 import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.jvmkit.module.util.{Path, Urn}
 import com.soundcloud.publicApiStrangler.client.chrono.ChronoResponse
+import com.soundcloud.publicApiStrangler.client.comments.MoshimoshiCommentsComment
 import com.soundcloud.publicApiStrangler.client.mothership.response.mapper._
 import com.soundcloud.publicApiStrangler.client.mothership.response.representation._
 import com.soundcloud.publicApiStrangler.client.support.FetchClient
@@ -15,9 +17,6 @@ import com.soundcloud.publicApiStrangler.service.pagination.CursorBasedPaginatio
 import com.twitter.finagle.http.Status
 import com.twitter.util.{Future, Try}
 import play.api.libs.json.{JsNull, JsValue, Json}
-import com.soundcloud.jvmkit.module.outcome._
-import com.soundcloud.jvmkit.module.telemetry.exceptions.ExceptionHandler._
-import com.soundcloud.publicApiStrangler.client.comments.MoshimoshiCommentsComment
 
 import scala.util.control.NonFatal
 
@@ -76,7 +75,7 @@ class MoshimoshiClient(
         response.status match {
           case Status.Created => Json.parse(response.contentString).as[MoshimoshiCommentsComment].good
           case Status.UnprocessableEntity => CustomError(UnprocessableEntity).bad
-          case Status.Forbidden => NotAllowed().bad
+          case Status.Unauthorized | Status.Forbidden => NotAllowed().bad
           case Status.TooManyRequests => {
             val rateLimitError = parseRateLimitedError(Try(Json.parse(response.contentString)).getOrElse(JsNull))
             CustomError(

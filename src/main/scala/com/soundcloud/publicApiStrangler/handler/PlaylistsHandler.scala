@@ -25,11 +25,9 @@ class PlaylistsHandler(
       Try(getPlaylistUrn(request)) match {
         case Return(urn) =>
           playlistDeletionClient.deletePlaylist(session, urn).map {
-            case Good(status) =>
-              JsonResponseBuilder(
-                status = status,
-                body = Json.stringify(Json.obj("status" -> statusDescription(status)))
-              ).build
+            case Good(_) =>
+              JsonResponseBuilder.ok(body = Json.stringify(Json.obj("status" -> statusDescription(Status.Ok))))
+            case Bad(NotFound(_)) => ErrorResponse.notFound()
             case Bad(_) => ErrorResponse(Status.InternalServerError)
           }
         case Throw(e) => Future.value(ErrorResponse.badRequest(e.getMessage))

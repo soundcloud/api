@@ -28,7 +28,7 @@ class PlaylistDeletionClientSpec extends UnitSpecification {
     val response = mock[Response].status returns Status.Ok
     jsonClient.deleteWithSession(session, path, Params.empty, Headers.empty, None) returns Future.value(response)
 
-    Await.result(client.deletePlaylist(session, urn)) ==== Good(Status.Ok)
+    Await.result(client.deletePlaylist(session, urn)) ==== Good(())
   }
 
   "with transport error" in new Context {

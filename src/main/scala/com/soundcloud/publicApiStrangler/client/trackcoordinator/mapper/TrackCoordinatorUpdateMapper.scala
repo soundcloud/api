@@ -10,7 +10,7 @@ object TrackCoordinatorUpdateMapper {
   def apply(response: Response): Outcome[TrackCoordinatorTrack] = {
     response.status match {
       case Status.Ok => Json.parse(response.contentString).as[TrackCoordinatorTrack].good
-      case Status.NotFound => NotFound().bad
+      case Status.NotFound | Status.Unauthorized => NotFound().bad
       case Status.BadRequest => {
         NotValid(TrackCoordinatorError.extractTrackCoordinatorErrorMessage(response.contentString)).bad
       }

@@ -614,10 +614,8 @@ paths:
       parameters:
         - $ref: "#/components/parameters/fake_playlist_id"
       responses:
-        202:
-          $ref: '#/components/responses/Accepted'
-        401:
-          $ref: '#/components/responses/Unauthorized'
+        200:
+          description: Success
         404:
           $ref: '#/components/responses/NotFound'
   /playlists/{playlist_id}/tracks:
@@ -695,8 +693,6 @@ paths:
       responses:
         200:
           description: Success
-        401:
-          $ref: '#/components/responses/Unauthorized'
         404:
           $ref: '#/components/responses/NotFound'
   /tracks/{track_id}/streams:
@@ -770,10 +766,6 @@ paths:
       responses:
         201:
           $ref: '#/components/responses/Comment'
-        401:
-          $ref: '#/components/responses/Unauthorized'
-        403:
-          $ref: '#/components/responses/Forbidden'
         422:
           $ref: '#/components/responses/UnprocessableEntity'
         429:

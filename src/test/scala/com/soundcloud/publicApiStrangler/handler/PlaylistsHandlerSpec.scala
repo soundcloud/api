@@ -48,7 +48,7 @@ class PlaylistsHandlerSpec extends UnitSpecification {
   "DELETE /playlists/:id" >> {
     trait DeletePlaylistContext extends Context {
       val playlistId = 123
-      lazy val deletePlaylistResponse: Outcome[Status] = Good(Status.Ok)
+      lazy val deletePlaylistResponse: Outcome[Unit] = Good(())
 
       when(playlistDeletionClient.deletePlaylist(session, Urn("soundcloud", "playlists", playlistId.toString)))
         .thenReturn(Future.value(deletePlaylistResponse))
@@ -63,35 +63,14 @@ class PlaylistsHandlerSpec extends UnitSpecification {
     }
 
     "returns ok" in new DeletePlaylistContext {
-      override lazy val deletePlaylistResponse = Good(Status.Ok)
+      override lazy val deletePlaylistResponse = Good(())
 
       response.status ==== Status.Ok
       Json.parse(response.contentString) \ "status" ==== JsDefined(JsString("200 - OK"))
     }
 
-    "returns accepted" in new DeletePlaylistContext {
-      override lazy val deletePlaylistResponse = Good(Status.Accepted)
-
-      response.status ==== Status.Accepted
-      Json.parse(response.contentString) \ "status" ==== JsDefined(JsString("202 - Accepted"))
-    }
-
-    "returns unauthorized" in new DeletePlaylistContext {
-      override lazy val deletePlaylistResponse = Good(Status.Unauthorized)
-
-      response.status ==== Status.Unauthorized
-      Json.parse(response.contentString) \ "status" ==== JsDefined(JsString("401 - Unauthorized"))
-    }
-
-    "returns forbidden" in new DeletePlaylistContext {
-      override lazy val deletePlaylistResponse = Good(Status.Forbidden)
-
-      response.status ==== Status.Forbidden
-      Json.parse(response.contentString) \ "status" ==== JsDefined(JsString("403 - Forbidden"))
-    }
-
     "returns not found" in new DeletePlaylistContext {
-      override lazy val deletePlaylistResponse = Good(Status.NotFound)
+      override lazy val deletePlaylistResponse = NotFound().bad
 
       response.status ==== Status.NotFound
       Json.parse(response.contentString) \ "status" ==== JsDefined(JsString("404 - Not Found"))
