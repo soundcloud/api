@@ -8,7 +8,7 @@ import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.publicApiStrangler.Routing
 import com.soundcloud.publicApiStrangler.client.followcounts.{FollowCounts, FollowCountsClient}
 import com.soundcloud.publicApiStrangler.client.liebling.LieblingClient
-import com.soundcloud.publicApiStrangler.client.mothership.response.representation.User
+import com.soundcloud.publicApiStrangler.client.mothership.response.representation.UserRepresentation
 import com.soundcloud.publicApiStrangler.client.reposts.RepostsClient
 import com.soundcloud.publicApiStrangler.handler.representation.collection.CollectionResponse.MaxCacheAge
 import com.soundcloud.publicApiStrangler.handler.representation.serializers.SearchUserRepresentation.searchUserWrites
@@ -54,7 +54,7 @@ class SearchHandlerSpec extends UnitSpecification {
     trait Context extends ForwardContext {
       val userUrn = Urn("soundcloud", "users", "88")
       val user = new UserBuilder().setUrn(userUrn).build
-      val userCollection = Collection[User](items = List(user), nextHref = None)
+      val userCollection = Collection[UserRepresentation](items = List(user), nextHref = None)
 
       val queryParams = Map("q" -> "foo")
       val pageParams = Map("offset" -> "0", "limit" -> "10")

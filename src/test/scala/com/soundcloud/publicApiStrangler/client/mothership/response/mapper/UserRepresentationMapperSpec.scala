@@ -4,11 +4,11 @@ import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.publicApiStrangler.test.UnitSpecification
 import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures
 
-class UserMapperSpec extends UnitSpecification {
+class UserRepresentationMapperSpec extends UnitSpecification {
   trait Context extends Scope {
     lazy val userJson = Fixtures.moshiUser
 
-    lazy val user = UserMapper(userJson)
+    lazy val user = UserRepresentationMapper(userJson)
   }
 
   "maps the urn" in new Context {

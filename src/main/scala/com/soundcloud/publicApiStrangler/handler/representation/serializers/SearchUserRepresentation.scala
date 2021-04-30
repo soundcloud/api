@@ -1,10 +1,10 @@
 package com.soundcloud.publicApiStrangler.handler.representation.serializers
 
-import com.soundcloud.publicApiStrangler.client.mothership.response.representation.User
+import com.soundcloud.publicApiStrangler.client.mothership.response.representation.UserRepresentation
 import play.api.libs.json.{Json, Writes}
 
 object SearchUserRepresentation {
-  implicit val searchUserWrites = Writes[User] { user =>
+  implicit val searchUserWrites = Writes[UserRepresentation] { user =>
     Json.obj(
       "avatar_url" -> user.avatar_url.replaceAll("\\?[0-9]+$", "").replaceAll("^http:", "https:"),
       "id" -> user.urn.identifier.toLong,

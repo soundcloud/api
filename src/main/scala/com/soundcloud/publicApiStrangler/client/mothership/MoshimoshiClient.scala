@@ -25,8 +25,8 @@ class MoshimoshiClient(
     exceptionCollector: ExceptionCollector
 ) extends FetchClient {
 
-  def fetchUserObjects(session: UserSession, urns: Set[Urn]): Future[List[User]] =
-    fetchByUrns(service, session, Path() / "users" / "fetch", urns).map(_.map(UserMapper(_)))
+  def fetchUserObjects(session: UserSession, urns: Set[Urn]): Future[List[UserRepresentation]] =
+    fetchByUrns(service, session, Path() / "users" / "fetch", urns).map(_.map(UserRepresentationMapper(_)))
 
   def userPlaylists(
       session: UserSession,

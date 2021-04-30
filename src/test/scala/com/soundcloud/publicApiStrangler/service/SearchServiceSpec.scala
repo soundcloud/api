@@ -5,7 +5,7 @@ import com.soundcloud.jvmkit.module.outcome._
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.publicApiStrangler.client.followcounts.{FollowCounts, FollowCountsClient}
 import com.soundcloud.publicApiStrangler.client.mothership.OkidokiClient
-import com.soundcloud.publicApiStrangler.client.mothership.response.mapper.UserMapper
+import com.soundcloud.publicApiStrangler.client.mothership.response.mapper.UserRepresentationMapper
 import com.soundcloud.publicApiStrangler.client.reposts.RepostsClient
 import com.soundcloud.publicApiStrangler.client.search.{Doc, SearchClient, SearchResponse}
 import com.soundcloud.publicApiStrangler.client.tracks.TrackRequest
@@ -28,7 +28,7 @@ class SearchServiceSpec extends TrackRepresentationsSpecificationContext {
 
   trait Context extends TrackRepresentationsContext {
     val playlist = new PlaylistBuilder().build
-    var user = Fixtures.okidokiUsers.as[List[JsObject]].map(UserMapper(_)).head
+    var user = Fixtures.okidokiUsers.as[List[JsObject]].map(UserRepresentationMapper(_)).head
     user = user.copy(reposts_count = Some(500L))
 
     val trackRepresentationsService = mock[TrackRepresentationsService]

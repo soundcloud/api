@@ -1,7 +1,7 @@
 package com.soundcloud.publicApiStrangler.service.CreatedTrack
 
 import com.soundcloud.jvmkit.module.util.Urn
-import com.soundcloud.publicApiStrangler.client.mothership.response.mapper.UserMapper
+import com.soundcloud.publicApiStrangler.client.mothership.response.mapper.UserRepresentationMapper
 import com.soundcloud.publicApiStrangler.client.trackcoordinator.TrackCoordinatorTrackFixtures
 import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures
 import org.specs2.mutable.Specification
@@ -17,7 +17,7 @@ class CreatedTrackSpec extends Specification {
 
       def agentUrn: Option[Urn] = None
 
-      val users = Fixtures.okidokiUsers.as[List[JsObject]].map(UserMapper(_))
+      val users = Fixtures.okidokiUsers.as[List[JsObject]].map(UserRepresentationMapper(_))
       val user = users.head
       val trackCoordinatorTrack = new TrackCoordinatorTrackFixtures().build(public)
 

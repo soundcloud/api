@@ -1,7 +1,7 @@
 package com.soundcloud.publicApiStrangler.service.playlists.representation
 
 import com.soundcloud.jvmkit.module.util.Urn
-import com.soundcloud.publicApiStrangler.client.mothership.response.representation.User
+import com.soundcloud.publicApiStrangler.client.mothership.response.representation.UserRepresentation
 import com.soundcloud.publicApiStrangler.service.trackrepresentation.TrackRepresentation
 import play.api.libs.json._
 
@@ -24,7 +24,7 @@ case class Playlist(
     description: Option[String],
     uri: String,
     labelName: Option[String],
-    label: Option[User],
+    label: Option[UserRepresentation],
     likesCount: Long,
     tagList: String,
     releaseYear: Option[Int],
@@ -42,7 +42,7 @@ case class Playlist(
     streamable: Option[Boolean],
     embeddableBy: String,
     labelId: Option[String],
-    user: User,
+    user: UserRepresentation,
     tracks: Option[List[TrackRepresentation]],
     secretUri: Option[String],
     secretToken: Option[String]
@@ -104,8 +104,8 @@ object Playlist {
   def fromVisiblePlaylist(
       playlist: VisiblePlaylist,
       playlistTracks: List[TrackRepresentation],
-      playlistOwner: User,
-      maybeLabel: Option[User],
+      playlistOwner: UserRepresentation,
+      maybeLabel: Option[UserRepresentation],
       requestingUserUrn: Option[Urn],
       showTracks: Boolean
   ): Playlist = {

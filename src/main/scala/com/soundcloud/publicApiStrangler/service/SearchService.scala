@@ -6,8 +6,8 @@ import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.publicApiStrangler.client.followcounts.FollowCountsClient
 import com.soundcloud.publicApiStrangler.client.mothership.OkidokiClient
-import com.soundcloud.publicApiStrangler.client.mothership.response.mapper.UserMapper
-import com.soundcloud.publicApiStrangler.client.mothership.response.representation.User
+import com.soundcloud.publicApiStrangler.client.mothership.response.mapper.UserRepresentationMapper
+import com.soundcloud.publicApiStrangler.client.mothership.response.representation.UserRepresentation
 import com.soundcloud.publicApiStrangler.client.reposts.RepostsClient
 import com.soundcloud.publicApiStrangler.client.search.SearchClient
 import com.soundcloud.publicApiStrangler.client.tracks.TrackRequest
@@ -35,7 +35,7 @@ class SearchService(
       session: UserSession,
       params: Map[String, String],
       pagination: OffsetBasedPagination
-  ): OutcomeF[Collection[User]] = {
+  ): OutcomeF[Collection[UserRepresentation]] = {
     val mapParams = mapUserParams(params)
 
     for {
@@ -48,10 +48,10 @@ class SearchService(
       repostsCounts <- repostsClient.getRepostCountsByUrnWithFallback(session, userUrns).outcomeF
       users <- okidokiClient
         .fetch(session, userUrns)
-        .map(_.map(UserMapper(_, Some(followCountsMap), Some(repostsCounts))))
+        .map(_.map(UserRepresentationMapper(_, Some(followCountsMap), Some(repostsCounts))))
         .outcomeF
       sortedUsers = sortByProvidedUrns(users, searchPage.docs.map(_.urn))
-    } yield Collection[User](sortedUsers.toList, pagination.nextHref(searchPage.total_results.toInt))
+    } yield Collection[UserRepresentation](sortedUsers.toList, pagination.nextHref(searchPage.total_results.toInt))
   }
 
   def searchTracks(
@@ -155,9 +155,9 @@ class SearchService(
     case (k, v) if UserParamMappings contains k => UserParamMappings(k) -> v
   }
 
-  private def sortByProvidedUrns(users: Seq[User], urns: Seq[Urn]): Seq[User] = {
+  private def sortByProvidedUrns(users: Seq[UserRepresentation], urns: Seq[Urn]): Seq[UserRepresentation] = {
     val orderedByUrn = Ordering.by(urns.zipWithIndex.toMap compose {
-      (_: User).urn
+      (_: UserRepresentation).urn
     })
     users.sorted(orderedByUrn)
   }

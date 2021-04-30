@@ -4,7 +4,7 @@ import com.soundcloud.hocuspocus.HocuspocusClientProtobuf
 import com.soundcloud.jvmkit.module.bff.session.UserAuthentication
 import com.soundcloud.jvmkit.module.http.client.config.HttpClientConfig
 import com.soundcloud.jvmkit.module.http.client.{HttpClient, JsonClient}
-import com.soundcloud.jvmkit.module.rollout.{BasicRolloutFeature, Rollout}
+import com.soundcloud.jvmkit.module.rollout.Rollout
 import com.soundcloud.jvmkit.module.telemetry.Telemetry
 import com.soundcloud.jvmkit.module.telemetry.exceptions.ExceptionCollector
 import com.soundcloud.jvmkit.module.twirp.TwirpClient
@@ -35,10 +35,11 @@ import com.soundcloud.publicApiStrangler.service.comments.CommentService
 import com.soundcloud.publicApiStrangler.service.media.{StreamService, TrackAccessRecorderService}
 import com.soundcloud.publicApiStrangler.service.trackrepresentation.{TrackRepresentationsService, TrackUpdateService}
 import com.soundcloud.publicApiStrangler.service.tracks.VisibleTrackMapper
+import com.soundcloud.publicApiStrangler.service.users.UserRepresentationsService
 import com.twitter.finagle.Service
 import com.twitter.finagle.http.{Request, Response}
 import com.twitter.finagle.service.RetryPolicy.RetryableWriteException
-import com.twitter.util.{Future, Throw, Try}
+import com.twitter.util.{Throw, Try}
 import proto.soundcloud.authenticator.oauth.AuthorizationClientProtobuf
 import proto.soundcloud.playlists.api.PlaylistsClientProtobuf
 import proto.soundcloud.tracks.api.{LikesClientProtobuf, MediaClientProtobuf, TrackMetadataClientProtobuf}
@@ -145,9 +146,6 @@ class Clients(
   val rolloutClient = Rollout(config, telemetry)
   val rollout = Some(rolloutClient)
 
-  val enrichLikesCounts: () => Future[Boolean] =
-    () => rolloutClient.isActive(BasicRolloutFeature("load_user_like_counts_from_liebling"))
-
   val richOkidokiClient = new RichOkidokiClient(okidokiJsonClient, exceptionCollector)
 
   val userQuotaClient = new UserQuotaClient(okidokiJsonClient)
@@ -195,4 +193,7 @@ class Clients(
   private val authorizationHttpClient = HttpClient[String](authorizationConfig, telemetry)
   private val authorizationTelemetry = ClientTelemetry.from(authorizationConfig, telemetry)
   val authorizationClient = new AuthorizationClientProtobuf(authorizationHttpClient.httpService, authorizationTelemetry)
+
+  val userRepresentationService =
+    new UserRepresentationsService(followCountsClient, repostsClient, okidokiClient, lieblingClient)
 }

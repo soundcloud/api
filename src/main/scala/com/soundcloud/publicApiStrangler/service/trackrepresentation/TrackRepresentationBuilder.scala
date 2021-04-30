@@ -5,7 +5,7 @@ import com.soundcloud.publicApiStrangler.authorization.AllowlistedClients
 import com.soundcloud.publicApiStrangler.authorization.policies.{Access, ContentPolicy, MonetizationModel}
 import com.soundcloud.publicApiStrangler.client.media.TrackWaveformUrl
 import com.soundcloud.publicApiStrangler.client.mothership.TrackAudioMetadata
-import com.soundcloud.publicApiStrangler.client.mothership.response.representation.{Geoblockings, User}
+import com.soundcloud.publicApiStrangler.client.mothership.response.representation.{Geoblockings, UserRepresentation}
 import com.soundcloud.publicApiStrangler.client.pubmese.Isrc
 import com.soundcloud.publicApiStrangler.client.stitch.StitchCounts
 import com.soundcloud.publicApiStrangler.client.tracks.VisibleTrack
@@ -18,10 +18,10 @@ class TrackRepresentationBuilder {
       client: Option[Urn],
       sessionUser: Option[Urn],
       visibleTrack: VisibleTrack,
-      user: User,
+      user: UserRepresentation,
       isrc: Option[Isrc],
       counts: StitchCounts,
-      label: Option[User],
+      label: Option[UserRepresentation],
       geoblockings: Geoblockings,
       trackAudioMetadata: TrackAudioMetadata,
       isLiked: Boolean,

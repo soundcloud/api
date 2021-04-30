@@ -41,7 +41,6 @@ class UserRelatedMothershipDispatcher(
     mothershipDispatcher: DispatchToMothershipHandler,
     followCountsClient: FollowCountsClient,
     lieblingClient: LieblingClient,
-    shouldLoadCountsFromLiebling: () => Future[Boolean],
     repostsClient: RepostsClient,
     telemetry: Telemetry
 ) {
@@ -151,27 +150,22 @@ class UserRelatedMothershipDispatcher(
   }
 
   private def lieblingSubstitutions(session: UserSession, userUrns: Set[Urn]): Future[SubstitutionsByUser] =
-    shouldLoadCountsFromLiebling().flatMap {
-      case true =>
-        lieblingClient
-          .userTotalLikeCount(session, userUrns.toSeq)
-          .map(_.map(count => (count.user_urn, count)).toMap)
-          .map { fetchedData: Map[Urn, UserTotalLikes] =>
-            userUrns
-              .map { urn: Urn =>
-                fetchedData.getOrElse(urn, UserTotalLikes(urn, 0, 0))
-              }
-              .map { likeCounts =>
-                (
-                  likeCounts.user_urn,
-                  List("public_favorites_count" -> Json.toJsFieldJsValueWrapper(likeCounts.totalLikeCount))
-                )
-              }
-              .toMap
+    lieblingClient
+      .userTotalLikeCount(session, userUrns.toSeq)
+      .map(_.map(count => (count.user_urn, count)).toMap)
+      .map { fetchedData: Map[Urn, UserTotalLikes] =>
+        userUrns
+          .map { urn: Urn =>
+            fetchedData.getOrElse(urn, UserTotalLikes(urn, 0, 0))
           }
-      case false =>
-        Future.value(Map.empty)
-    }
+          .map { likeCounts =>
+            (
+              likeCounts.user_urn,
+              List("public_favorites_count" -> Json.toJsFieldJsValueWrapper(likeCounts.totalLikeCount))
+            )
+          }
+          .toMap
+      }
 
   private def injectKeys(json: JsValue, fn: Int => Seq[(String, JsValueWrapper)]): JsValue = {
     json \ "collection" match {

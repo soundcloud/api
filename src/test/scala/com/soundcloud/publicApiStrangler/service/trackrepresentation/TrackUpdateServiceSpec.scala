@@ -6,8 +6,8 @@ import com.soundcloud.jvmkit.module.outcome._
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSessionBuilder
 import com.soundcloud.publicApiStrangler.client.mothership.OkidokiClient
-import com.soundcloud.publicApiStrangler.client.mothership.response.mapper.UserMapper
-import com.soundcloud.publicApiStrangler.client.mothership.response.representation.User
+import com.soundcloud.publicApiStrangler.client.mothership.response.mapper.UserRepresentationMapper
+import com.soundcloud.publicApiStrangler.client.mothership.response.representation.UserRepresentation
 import com.soundcloud.publicApiStrangler.client.trackcoordinator.{
   TrackCoordinatorClient,
   TrackCoordinatorTrack,
@@ -410,7 +410,7 @@ class TrackUpdateServiceSpec extends UnitSpecification with TrackRepresentationS
       }
 
       def stubOkidokiClient(
-          expectedResponse: List[User]
+          expectedResponse: List[UserRepresentation]
       ) = {
         when(
           okidokiClient.fetchUserObjects(
@@ -427,7 +427,7 @@ class TrackUpdateServiceSpec extends UnitSpecification with TrackRepresentationS
       val trackArtworkUpdateResult = TrackArtworkUpdateResult(bucket = "bucket", filename = "filename")
       val bytes = ByteArray("i-am-an-image".getBytes(): _*)
       val trackArtworkMetaRequest = TrackArtworkUpdateRequest(imageData = bytes)
-      val users = Fixtures.okidokiUsers.as[List[JsObject]].map(UserMapper(_))
+      val users = Fixtures.okidokiUsers.as[List[JsObject]].map(UserRepresentationMapper(_))
       val user = users.head
       val expectedResponse = CreatedTrack(trackCoordinatorTrack, user, None)
       setupMocksForHocusPocusService(trackArtworkMetaRequest)

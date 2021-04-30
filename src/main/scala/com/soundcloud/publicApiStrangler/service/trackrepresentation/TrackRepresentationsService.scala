@@ -5,7 +5,7 @@ import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.publicApiStrangler.client.liebling.LieblingClient
 import com.soundcloud.publicApiStrangler.client.media.WaveformUrlsGenerator
 import com.soundcloud.publicApiStrangler.client.mothership.RichOkidokiClient
-import com.soundcloud.publicApiStrangler.client.mothership.response.representation.{Geoblockings, User}
+import com.soundcloud.publicApiStrangler.client.mothership.response.representation.{Geoblockings, UserRepresentation}
 import com.soundcloud.publicApiStrangler.client.pubmese.{Isrc, PubmeseClient}
 import com.soundcloud.publicApiStrangler.client.quota.UserQuotaClient
 import com.soundcloud.publicApiStrangler.client.stitch.{StitchClient, StitchCounts}
@@ -70,7 +70,7 @@ class TrackRepresentationsService(
           case NonFatal(_) => Map.empty[Urn, StitchCounts]
         },
         okidokiClient.fetchUsersMap(session, userUrnsFromLabelIds.toSet).handle {
-          case NonFatal(_) => Map.empty[Urn, User]
+          case NonFatal(_) => Map.empty[Urn, UserRepresentation]
         },
         userQuotaClient.downloadsPerTrack(session, userUrns).handle { case NonFatal(_) => Map.empty[Urn, Option[Int]] }
       )

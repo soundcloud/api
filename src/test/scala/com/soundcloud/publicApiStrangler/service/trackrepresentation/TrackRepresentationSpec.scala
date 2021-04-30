@@ -5,7 +5,7 @@ import com.soundcloud.publicApiStrangler.authorization.AllowlistedClients
 import com.soundcloud.publicApiStrangler.authorization.policies._
 import com.soundcloud.publicApiStrangler.client.media.TrackWaveformUrl
 import com.soundcloud.publicApiStrangler.client.mothership.TrackAudioMetadata
-import com.soundcloud.publicApiStrangler.client.mothership.response.representation.{Geoblockings, User}
+import com.soundcloud.publicApiStrangler.client.mothership.response.representation.{Geoblockings, UserRepresentation}
 import com.soundcloud.publicApiStrangler.client.pubmese.Isrc
 import com.soundcloud.publicApiStrangler.client.stitch.StitchCounts
 import com.soundcloud.publicApiStrangler.client.tracks.{
@@ -29,10 +29,10 @@ trait TrackRepresentationSpecContext {
       client: Urn = Urn("soundcloud", "applications", "123"),
       loggedInUser: Urn = Urn("soundcloud", "users", "555"),
       visibleTrack: VisibleTrack = defaultTrack,
-      user: User = defaultUser,
+      user: UserRepresentation = defaultUser,
       isrc: Option[Isrc] = defaultIsrc,
       counts: StitchCounts = defaultCounts,
-      label: Option[User] = None,
+      label: Option[UserRepresentation] = None,
       geoblockings: Geoblockings = defaultGeoblockings,
       audioMetadata: TrackAudioMetadata = defaultTrackAudioMetadata,
       downloadsPerTrack: Option[Int] = None,
@@ -69,7 +69,7 @@ trait TrackRepresentationSpecContext {
   def defaultUser = new UserBuilder().setUrn(userUrn).build
   def defaultLabelUrn = Some(labelUrn)
 
-  def defaultLabel: User = new UserBuilder().setUrn(labelUrn).build
+  def defaultLabel: UserRepresentation = new UserBuilder().setUrn(labelUrn).build
 
   def defaultTrack = VisibleTrack(
     urn = trackUrn,
@@ -397,7 +397,7 @@ class TrackRepresentationSpec extends UnitSpecification {
   "labels" >> {
     trait Context extends Scope with TrackRepresentationSpecContext {
 
-      val label: User = defaultLabel
+      val label: UserRepresentation = defaultLabel
       val trackRepresentation: TrackRepresentation = createTrackRepresentation(label = Some(label))
     }
 

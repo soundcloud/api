@@ -4,7 +4,7 @@ import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.{UserSession, UserSessionBuilder}
 import com.soundcloud.publicApiStrangler.client.liebling.LieblingClient
 import com.soundcloud.publicApiStrangler.client.media.WaveformUrlsGenerator
-import com.soundcloud.publicApiStrangler.client.mothership.response.representation.User
+import com.soundcloud.publicApiStrangler.client.mothership.response.representation.UserRepresentation
 import com.soundcloud.publicApiStrangler.client.mothership.{RichOkidokiClient, TrackAudioMetadata}
 import com.soundcloud.publicApiStrangler.client.pubmese.PubmeseClient
 import com.soundcloud.publicApiStrangler.client.quota.UserQuotaClient
@@ -276,7 +276,8 @@ class TrackRepresentationsServiceSpec extends TrackRepresentationsSpecificationC
       "is not present when track has not a label" in new Context {
         val track = trackVisibilityTrack(labelId = None)
         setUpMocksForExistingTrack(track, session)
-        when(okidokiClient.fetchUsersMap(session, Set.empty)).thenReturn(Future.value(Map.empty[Urn, User]))
+        when(okidokiClient.fetchUsersMap(session, Set.empty))
+          .thenReturn(Future.value(Map.empty[Urn, UserRepresentation]))
         val trackRepLike = Await.result(tracksService.track(session, trackRequest))
         trackRepLike match {
           case Some(rep) =>

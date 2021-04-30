@@ -9,7 +9,7 @@ import com.soundcloud.publicApiStrangler.client.comments.{
   MoshimoshiCommentsComment,
   MoshimoshiCommentsPagedResponse
 }
-import com.soundcloud.publicApiStrangler.client.mothership.response.representation.User
+import com.soundcloud.publicApiStrangler.client.mothership.response.representation.UserRepresentation
 import com.soundcloud.publicApiStrangler.client.mothership.{MoshimoshiClient, RichOkidokiClient}
 import com.soundcloud.publicApiStrangler.handler.comments.CreateCommentParams
 import com.soundcloud.publicApiStrangler.service.pagination.OffsetBasedPagination
@@ -51,7 +51,10 @@ class CommentService(
       }
   }
 
-  private def fetchUsers(session: UserSession, moshimoshiComment: MoshimoshiCommentsComment): Future[Map[Urn, User]] = {
+  private def fetchUsers(
+      session: UserSession,
+      moshimoshiComment: MoshimoshiCommentsComment
+  ): Future[Map[Urn, UserRepresentation]] = {
     okidokiClient.fetchUsersMap(session, Set(moshimoshiComment.user.self.urn))
   }
 

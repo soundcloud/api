@@ -1,7 +1,7 @@
 package com.soundcloud.publicApiStrangler.service.users
 
 import com.soundcloud.jvmkit.module.util.Urn
-import com.soundcloud.publicApiStrangler.client.mothership.response.representation.{Subscription, User}
+import com.soundcloud.publicApiStrangler.client.mothership.response.representation.{Subscription, UserRepresentation}
 
 class UserBuilder {
   private var urn: Urn = Urn("soundcloud", "users", "1")
@@ -64,8 +64,8 @@ class UserBuilder {
   def setRepostsCount(value: Option[Long]) = { reposts_count = value; this }
   def setOnline(value: Boolean) = { online = value; this }
 
-  def build: User = {
-    User(
+  def build: UserRepresentation = {
+    UserRepresentation(
       urn = this.urn,
       permalink = this.permalink,
       username = this.username,
@@ -100,7 +100,7 @@ class UserBuilder {
 }
 
 object UserBuilder {
-  def user(userId: Long): User = {
+  def user(userId: Long): UserRepresentation = {
     val builder = new UserBuilder()
     builder.setUrn(urnFor(userId))
     builder.build

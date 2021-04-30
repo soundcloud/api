@@ -60,7 +60,6 @@ class Handlers(
     mothershipDispatcher,
     followCountsClient,
     lieblingClient,
-    enrichLikesCounts,
     repostsClient,
     telemetry
   )

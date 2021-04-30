@@ -17,7 +17,7 @@
     "activated_at": "2007/09/12 08:55:00 +0000",
     "followers_count": 0,
     "followings_count": 0,
-    "public_favorites_count": 10010,
+    "public_favorites_count": 0,
     "self": {
       "urn": "soundcloud:users:123",
       "url": "http://moshimoshi.int.s-cloud.net/users/soundcloud:users:123"
@@ -48,9 +48,9 @@
     "default_license": null,
     "default_license_simple": "all-rights-reserved",
     "stealth": false,
-    "locale": "",
+    "locale": "en_GB",
     "comments_count": 10100,
-    "reposts_count": 11000,
+    "reposts_count": 0,
     "verified": false
   }
 ]

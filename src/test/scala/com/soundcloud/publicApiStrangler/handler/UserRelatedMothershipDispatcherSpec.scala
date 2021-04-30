@@ -28,14 +28,11 @@ class UserRelatedMothershipDispatcherSpec extends UnitSpecification {
     val request = HandlerRequest(mock[Request])
     val telemetry = Telemetry.createIsolatedInstance
 
-    def loadUserLikeCountsFromLiebling: Boolean = false
-
     val dispatcher = new UserRelatedMothershipDispatcher(
       userAuthenticationMock,
       mothershipDispatcherMock,
       followCountsClientMock,
       lieblingClientMock,
-      () => Future.value(loadUserLikeCountsFromLiebling),
       repostsClientMock,
       telemetry
     )
@@ -108,16 +105,6 @@ class UserRelatedMothershipDispatcherSpec extends UnitSpecification {
 
     }
     "with an OK status code from mothership" >> {
-      "it returns an object that matches the one from Mothership" in new Context {
-        override def responseBodyFromMothership = user
-
-        override def userUrns = Seq(user1)
-
-        override def followCountsSeq = Seq(FollowCounts(user1, 100, 101)) // same as Mothership, so enrich is a noop
-
-        resultJson ==== responseBodyFromMothership
-      }
-
       "follow count enrichment" >> {
         "when follows does not return counts" >> {
           "defaults to zero for a single object" in new Context {
@@ -226,15 +213,15 @@ class UserRelatedMothershipDispatcherSpec extends UnitSpecification {
       }
 
       "like count enrichment" >> {
-        "with rollout inactive" >> {
-          "is not done for a single object" in new Context {
+        "and liebling not returning counts" >> {
+          "defaults to zero for a single object" in new Context {
             override def responseBodyFromMothership = user
 
             override def userUrns = Seq(user1)
 
-            (resultJson \ "public_favorites_count").as[Long] ==== 123
+            (resultJson \ "public_favorites_count").as[Long] ==== 0
           }
-          "is not done for users in the top level" in new Context {
+          "defaults to zero for users in the top level" in new Context {
             override def responseBodyFromMothership = users
 
             override def userUrns = Seq(user2, user3)
@@ -242,10 +229,10 @@ class UserRelatedMothershipDispatcherSpec extends UnitSpecification {
             val values = resultJson.as[JsArray].value
 
             values.size ==== 2
-            (values.head \ "public_favorites_count").as[Long] ==== 234
-            (values.last \ "public_favorites_count").as[Long] ==== 654
+            (values.head \ "public_favorites_count").as[Long] ==== 0
+            (values.last \ "public_favorites_count").as[Long] ==== 0
           }
-          "is not done for users in a collection" in new Context {
+          "defaults to zero for users in a collection" in new Context {
             override def responseBodyFromMothership = usersInCollection
 
             override def userUrns = Seq(user2, user3)
@@ -253,10 +240,10 @@ class UserRelatedMothershipDispatcherSpec extends UnitSpecification {
             val values = (resultJson \ "collection").as[JsArray].value
 
             values.size ==== 2
-            (values.head \ "public_favorites_count").as[Long] ==== 987
-            (values.last \ "public_favorites_count").as[Long] ==== 123
+            (values.head \ "public_favorites_count").as[Long] ==== 0
+            (values.last \ "public_favorites_count").as[Long] ==== 0
           }
-          "is not done for objects containing a user" in new Context {
+          "defaults to zero for objects containing a user" in new Context {
             override def responseBodyFromMothership = objectsWithUsers
 
             override def userUrns = Seq(user2, user3)
@@ -264,106 +251,58 @@ class UserRelatedMothershipDispatcherSpec extends UnitSpecification {
             val values = resultJson.as[JsArray].value
 
             values.size ==== 2
-            (values.head \ "user" \ "public_favorites_count").as[Long] ==== 456
-            (values.last \ "user" \ "public_favorites_count").as[Long] ==== 765
+            (values.head \ "user" \ "public_favorites_count").as[Long] ==== 0
+            (values.last \ "user" \ "public_favorites_count").as[Long] ==== 0
           }
         }
-        "with rollout active" >> {
-          trait EnrichLikeCounts extends Context {
-            override def loadUserLikeCountsFromLiebling = true
+        "and liebling returning counts" >> {
+          "is done for a single object" in new Context {
+            override def responseBodyFromMothership = user
+
+            override def userUrns = Seq(user1)
+
+            override def userTotalLikesList = List(UserTotalLikes(user1, 100, 200))
+
+            (resultJson \ "public_favorites_count").as[Long] ==== 300
           }
+          "is done for users in the top level" in new Context {
+            override def responseBodyFromMothership = users
 
-          "and liebling not returning counts" >> {
-            "defaults to zero for a single object" in new EnrichLikeCounts {
-              override def responseBodyFromMothership = user
+            override def userUrns = Seq(user2, user3)
 
-              override def userUrns = Seq(user1)
+            override def userTotalLikesList = List(UserTotalLikes(user2, 100, 200), UserTotalLikes(user3, 300, 400))
 
-              (resultJson \ "public_favorites_count").as[Long] ==== 0
-            }
-            "defaults to zero for users in the top level" in new EnrichLikeCounts {
-              override def responseBodyFromMothership = users
+            val values = resultJson.as[JsArray].value
 
-              override def userUrns = Seq(user2, user3)
-
-              val values = resultJson.as[JsArray].value
-
-              values.size ==== 2
-              (values.head \ "public_favorites_count").as[Long] ==== 0
-              (values.last \ "public_favorites_count").as[Long] ==== 0
-            }
-            "defaults to zero for users in a collection" in new EnrichLikeCounts {
-              override def responseBodyFromMothership = usersInCollection
-
-              override def userUrns = Seq(user2, user3)
-
-              val values = (resultJson \ "collection").as[JsArray].value
-
-              values.size ==== 2
-              (values.head \ "public_favorites_count").as[Long] ==== 0
-              (values.last \ "public_favorites_count").as[Long] ==== 0
-            }
-            "defaults to zero for objects containing a user" in new EnrichLikeCounts {
-              override def responseBodyFromMothership = objectsWithUsers
-
-              override def userUrns = Seq(user2, user3)
-
-              val values = resultJson.as[JsArray].value
-
-              values.size ==== 2
-              (values.head \ "user" \ "public_favorites_count").as[Long] ==== 0
-              (values.last \ "user" \ "public_favorites_count").as[Long] ==== 0
-            }
+            values.size ==== 2
+            (values.head \ "public_favorites_count").as[Long] ==== 300
+            (values.last \ "public_favorites_count").as[Long] ==== 700
           }
-          "and liebling returning counts" >> {
-            "is done for a single object" in new EnrichLikeCounts {
-              override def responseBodyFromMothership = user
+          "is done for users in a collection" in new Context {
+            override def responseBodyFromMothership = usersInCollection
 
-              override def userUrns = Seq(user1)
+            override def userUrns = Seq(user2, user3)
 
-              override def userTotalLikesList = List(UserTotalLikes(user1, 100, 200))
+            override def userTotalLikesList = List(UserTotalLikes(user2, 100, 0), UserTotalLikes(user3, 300, 1))
 
-              (resultJson \ "public_favorites_count").as[Long] ==== 300
-            }
-            "is done for users in the top level" in new EnrichLikeCounts {
-              override def responseBodyFromMothership = users
+            val values = (resultJson \ "collection").as[JsArray].value
 
-              override def userUrns = Seq(user2, user3)
+            values.size ==== 2
+            (values.head \ "public_favorites_count").as[Long] ==== 100
+            (values.last \ "public_favorites_count").as[Long] ==== 301
+          }
+          "is done for objects containing a user" in new Context {
+            override def responseBodyFromMothership = objectsWithUsers
 
-              override def userTotalLikesList = List(UserTotalLikes(user2, 100, 200), UserTotalLikes(user3, 300, 400))
+            override def userUrns = Seq(user2, user3)
 
-              val values = resultJson.as[JsArray].value
+            override def userTotalLikesList = List(UserTotalLikes(user2, 100, 1), UserTotalLikes(user3, 300, 0))
 
-              values.size ==== 2
-              (values.head \ "public_favorites_count").as[Long] ==== 300
-              (values.last \ "public_favorites_count").as[Long] ==== 700
-            }
-            "is done for users in a collection" in new EnrichLikeCounts {
-              override def responseBodyFromMothership = usersInCollection
+            val values = resultJson.as[JsArray].value
 
-              override def userUrns = Seq(user2, user3)
-
-              override def userTotalLikesList = List(UserTotalLikes(user2, 100, 0), UserTotalLikes(user3, 300, 1))
-
-              val values = (resultJson \ "collection").as[JsArray].value
-
-              values.size ==== 2
-              (values.head \ "public_favorites_count").as[Long] ==== 100
-              (values.last \ "public_favorites_count").as[Long] ==== 301
-            }
-            "is done for objects containing a user" in new EnrichLikeCounts {
-              override def responseBodyFromMothership = objectsWithUsers
-
-              override def userUrns = Seq(user2, user3)
-
-              override def userTotalLikesList = List(UserTotalLikes(user2, 100, 1), UserTotalLikes(user3, 300, 0))
-
-              val values = resultJson.as[JsArray].value
-
-              values.size ==== 2
-              (values.head \ "user" \ "public_favorites_count").as[Long] ==== 101
-              (values.last \ "user" \ "public_favorites_count").as[Long] ==== 300
-            }
+            values.size ==== 2
+            (values.head \ "user" \ "public_favorites_count").as[Long] ==== 101
+            (values.last \ "user" \ "public_favorites_count").as[Long] ==== 300
           }
         }
       }

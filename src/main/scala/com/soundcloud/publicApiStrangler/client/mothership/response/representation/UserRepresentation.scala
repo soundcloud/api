@@ -15,7 +15,7 @@ object Subscription {
   implicit val writes: Writes[Subscription] = Json.writes[Subscription]
 }
 
-case class User(
+case class UserRepresentation(
     urn: Urn,
     permalink: String,
     username: String,
@@ -44,11 +44,15 @@ case class User(
     comments_count: Option[Int], // deprecated, kept for structure
     likes_count: Option[Long], // deprecated, kept for structure
     reposts_count: Option[Long], // deprecated, kept for structure
-    online: Boolean = false // deprecated, kept for structure
+    online: Boolean = false, // deprecated, kept for structure
+    private_tracks_count: Option[Long] = None,
+    private_playlists_count: Option[Long] = None,
+    primary_email_confirmed: Option[Boolean] = None,
+    locale: Option[String] = None
 )
 
-object User {
-  implicit val writes = Writes[User] { user =>
+object UserRepresentation {
+  implicit val writes = Writes[UserRepresentation] { user =>
     Json.obj(
       "id" -> user.urn.identifier.toLong,
       "kind" -> "user",

@@ -103,7 +103,7 @@ class MoshimoshiClientSpec extends UnitSpecification {
     "found response" in new UsersContext {
       expectOkResponse(path, moshiUsers, urns.toList)
 
-      fetch ==== List(UserMapper(moshiUser), UserMapper(moshiUser2))
+      fetch ==== List(UserRepresentationMapper(moshiUser), UserRepresentationMapper(moshiUser2))
     }
 
     "not found response" in new UsersContext {

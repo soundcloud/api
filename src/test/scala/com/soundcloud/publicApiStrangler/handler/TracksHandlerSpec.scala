@@ -7,7 +7,7 @@ import com.soundcloud.jvmkit.module.outcome._
 import com.soundcloud.jvmkit.module.util.session.UserSessionBuilder
 import com.soundcloud.jvmkit.module.util.{Geo, Urn}
 import com.soundcloud.publicApiStrangler.Routing
-import com.soundcloud.publicApiStrangler.client.mothership.response.mapper.UserMapper
+import com.soundcloud.publicApiStrangler.client.mothership.response.mapper.UserRepresentationMapper
 import com.soundcloud.publicApiStrangler.client.trackcoordinator.{TrackCoordinatorClient, TrackCoordinatorTrack}
 import com.soundcloud.publicApiStrangler.handler.support.requestParser._
 import com.soundcloud.publicApiStrangler.service.CreatedTrack.CreatedTrack
@@ -295,7 +295,7 @@ class TracksHandlerSpec extends UnitSpecification with TrackRepresentationSpecCo
   "POST /tracks" >> {
 
     trait PostContext extends Context {
-      val users = Fixtures.okidokiUsers.as[List[JsObject]].map(UserMapper(_))
+      val users = Fixtures.okidokiUsers.as[List[JsObject]].map(UserRepresentationMapper(_))
       val userObj = users.head
     }
 

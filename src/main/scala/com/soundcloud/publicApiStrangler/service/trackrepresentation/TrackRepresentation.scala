@@ -1,8 +1,9 @@
 package com.soundcloud.publicApiStrangler.service.trackrepresentation
 
 import com.soundcloud.publicApiStrangler.authorization.policies.ContentPolicy
+import com.soundcloud.publicApiStrangler.client.mothership.response.representation.UserRepresentation
 import com.soundcloud.publicApiStrangler.client.mothership.TrackAudioMetadata
-import com.soundcloud.publicApiStrangler.client.mothership.response.representation.User
+import com.soundcloud.publicApiStrangler.client.mothership.response.representation.UserRepresentation
 import com.soundcloud.publicApiStrangler.client.pubmese.Isrc
 import com.soundcloud.publicApiStrangler.client.tracks.VisibleTrack
 import com.soundcloud.publicApiStrangler.support.HtmlSanitizer
@@ -13,9 +14,9 @@ import scala.collection.immutable.HashSet
 
 case class TrackRepresentation(
     visibleTrack: VisibleTrack,
-    user: User,
+    user: UserRepresentation,
     isrc: Option[Isrc],
-    label: Option[User],
+    label: Option[UserRepresentation],
     geoblockings: Option[HashSet[String]],
     playbackCount: Option[Int],
     downloadable: Boolean,
@@ -49,7 +50,7 @@ object TrackRepresentation {
 
   implicit val writes = new Writes[TrackRepresentation] {
 
-    implicit val userWrites = Writes[User] { user =>
+    implicit val userWrites = Writes[UserRepresentation] { user =>
       Json.obj(
         "id" -> user.urn.identifier.toLong,
         "kind" -> "user",

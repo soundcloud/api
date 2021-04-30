@@ -6,7 +6,7 @@ import com.soundcloud.jvmkit.module.outcome.{Outcome, _}
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.publicApiStrangler.client.mothership.MoshimoshiClient
-import com.soundcloud.publicApiStrangler.client.mothership.response.representation.User
+import com.soundcloud.publicApiStrangler.client.mothership.response.representation.UserRepresentation
 import com.soundcloud.publicApiStrangler.client.pubmese.Isrc
 import com.soundcloud.publicApiStrangler.client.trackcoordinator.{TrackCoordinatorClient, TrackCoordinatorTrack}
 import com.soundcloud.publicApiStrangler.client.tracks.TrackRequest
@@ -63,7 +63,7 @@ class TrackUpdateService(
     } yield createdTrack
   }
 
-  private def fetchUser(session: UserSession, urn: Urn): Future[Outcome[User]] = {
+  private def fetchUser(session: UserSession, urn: Urn): Future[Outcome[UserRepresentation]] = {
     moshimoshiClient.fetchUserObjects(session, Set(urn)).map {
       case head :: _ => head.good
       case _ => NotFound().bad
@@ -88,7 +88,7 @@ class TrackUpdateService(
   private def buildCreatedTrack(
       userSession: UserSession,
       trackCoordinatorTrack: Outcome[TrackCoordinatorTrack],
-      user: Outcome[User]
+      user: Outcome[UserRepresentation]
   ): Future[Outcome[CreatedTrack]] = {
     (trackCoordinatorTrack, user) match {
       case (Good(trackCoordinatorTrack), Good(user)) =>

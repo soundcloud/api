@@ -2,7 +2,7 @@ package com.soundcloud.publicApiStrangler.service.playlists
 
 import java.time.Instant
 
-import com.soundcloud.publicApiStrangler.client.mothership.response.representation.User
+import com.soundcloud.publicApiStrangler.client.mothership.response.representation.UserRepresentation
 import com.soundcloud.publicApiStrangler.service.playlists.representation.Playlist
 import com.soundcloud.publicApiStrangler.service.trackrepresentation.TrackRepresentation
 import com.soundcloud.publicApiStrangler.service.users.UserBuilder
@@ -24,7 +24,7 @@ class PlaylistBuilder {
   private var description: Option[String] = Some("best playlist ever")
   private var uri: String = "https://soundcloud.com/playlists/123"
   private var labelName: Option[String] = Some("red eye records")
-  private var label: Option[User] = None
+  private var label: Option[UserRepresentation] = None
   private var tagList: String = "beats techno slapper"
   private var releaseYear: Option[Int] = Some(1)
   private var trackCount: Long = 12L
@@ -41,7 +41,7 @@ class PlaylistBuilder {
   private var streamable: Option[Boolean] = Some(true)
   private var embeddableBy: String = "all"
   private var labelId: Option[String] = None
-  private var user: User = defaultUser
+  private var user: UserRepresentation = defaultUser
   private var tracks: Option[List[TrackRepresentation]] = None
   private var secretUri: Option[String] = Some("https://soundcloud.com/user1212/my-playlist?secret_token=s3creT")
   private var secretToken: Option[String] = Some("s3creT")
@@ -60,7 +60,7 @@ class PlaylistBuilder {
   def setDescription(value: Option[String]) = { description = value; this }
   def setUri(value: String) = { uri = value; this }
   def setLabelName(value: Option[String]) = { labelName = value; this }
-  def setLabel(value: Option[User]) = { label = value; this }
+  def setLabel(value: Option[UserRepresentation]) = { label = value; this }
   def setTagList(value: String) = { tagList = value; this }
   def setReleaseYear(value: Option[Int]) = { releaseYear = value; this }
   def setTrackCount(value: Long) = { trackCount = value; this }
@@ -77,7 +77,7 @@ class PlaylistBuilder {
   def setStreamable(value: Option[Boolean]) = { streamable = value; this }
   def setEmbeddableBy(value: String) = { embeddableBy = value; this }
   def setLabelId(value: Option[String]) = { labelId = value; this }
-  def setUser(value: User) = { user = value; this }
+  def setUser(value: UserRepresentation) = { user = value; this }
   def setTracks(value: Option[List[TrackRepresentation]]) = { tracks = value; this }
   def setSecretUri(value: Option[String]) = { secretUri = value; this }
   def setSecretToken(value: Option[String]) = { secretToken = value; this }

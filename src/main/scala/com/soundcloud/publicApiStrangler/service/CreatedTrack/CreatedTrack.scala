@@ -1,11 +1,11 @@
 package com.soundcloud.publicApiStrangler.service.CreatedTrack
 
 import com.soundcloud.jvmkit.module.util.Urn
-import com.soundcloud.publicApiStrangler.client.mothership.response.representation.User
+import com.soundcloud.publicApiStrangler.client.mothership.response.representation.UserRepresentation
 import com.soundcloud.publicApiStrangler.client.trackcoordinator.TrackCoordinatorTrack
 import play.api.libs.json.{Json, Writes}
 
-case class CreatedTrack(trackCoordinatorTrack: TrackCoordinatorTrack, user: User, agentUrn: Option[Urn]) {
+case class CreatedTrack(trackCoordinatorTrack: TrackCoordinatorTrack, user: UserRepresentation, agentUrn: Option[Urn]) {
   def location = trackCoordinatorTrack.uri
 
   private def secretToken =

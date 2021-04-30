@@ -6,8 +6,8 @@ import com.soundcloud.jvmkit.module.telemetry.exceptions.ExceptionCollector
 import com.soundcloud.jvmkit.module.util.http.Headers
 import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.jvmkit.module.util.{Path, Urn}
-import com.soundcloud.publicApiStrangler.client.mothership.response.mapper.UserMapper
-import com.soundcloud.publicApiStrangler.client.mothership.response.representation.{Geoblockings, User}
+import com.soundcloud.publicApiStrangler.client.mothership.response.mapper.UserRepresentationMapper
+import com.soundcloud.publicApiStrangler.client.mothership.response.representation.{Geoblockings, UserRepresentation}
 import com.twitter.finagle.http.Status.Successful
 import com.twitter.finagle.http.{Response, Status}
 import com.twitter.util.Future
@@ -96,7 +96,7 @@ class RichOkidokiClient(service: JsonClient, exceptionCollector: ExceptionCollec
     }.map(_.toMap)
   }
 
-  def fetchUsersMap(session: UserSession, urns: Set[Urn], batchSize: Int = 50): Future[Map[Urn, User]] = {
+  def fetchUsersMap(session: UserSession, urns: Set[Urn], batchSize: Int = 50): Future[Map[Urn, UserRepresentation]] = {
     inBatches(urns.toList, batchSize) { urnBatch =>
       {
         service
@@ -108,7 +108,8 @@ class RichOkidokiClient(service: JsonClient, exceptionCollector: ExceptionCollec
           )
           .map { response: Response =>
             response.status match {
-              case Successful(_) => Json.parse(response.contentString).as[List[JsValue]].map(UserMapper(_))
+              case Successful(_) =>
+                Json.parse(response.contentString).as[List[JsValue]].map(UserRepresentationMapper(_))
               case _ => List.empty
             }
           }

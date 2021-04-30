@@ -17,8 +17,8 @@ import com.soundcloud.publicApiStrangler.client.follows.representation.unfollow.
   UserNotFound => UnfollowUserNotFound
 }
 import com.soundcloud.publicApiStrangler.client.mothership.OkidokiClient
-import com.soundcloud.publicApiStrangler.client.mothership.response.mapper.UserMapper
-import com.soundcloud.publicApiStrangler.client.mothership.response.representation.User
+import com.soundcloud.publicApiStrangler.client.mothership.response.mapper.UserRepresentationMapper
+import com.soundcloud.publicApiStrangler.client.mothership.response.representation.UserRepresentation
 import com.soundcloud.publicApiStrangler.client.reposts.RepostsClient
 import com.soundcloud.publicApiStrangler.handler.representation.serializers.UserFollowRepresentation.userFollowWrites
 import com.soundcloud.publicApiStrangler.service.representation.collection.Collection
@@ -119,12 +119,12 @@ class UserFollowHandler(
 
   def fetchPossibleFollower(request: HandlerRequest) = fetchUser(request, follows.filterFollowers, requireLogin = true)
 
-  private def mapUsersToUsers(users: List[User], nextHref: Option[String]): String = {
-    val userCollection = Collection[User](users, nextHref)
+  private def mapUsersToUsers(users: List[UserRepresentation], nextHref: Option[String]): String = {
+    val userCollection = Collection[UserRepresentation](users, nextHref)
     Collection.getRepresentation(userCollection, true)(userFollowWrites)
   }
 
-  private def mapUsersToUrns(users: List[User], nextHref: Option[String]): String = {
+  private def mapUsersToUrns(users: List[UserRepresentation], nextHref: Option[String]): String = {
     val urns = users.map(u => u.urn)
     val urnCollection = Collection(urns, nextHref)
     Collection.getRepresentation(urnCollection, true)
@@ -147,7 +147,7 @@ class UserFollowHandler(
   private def fetchPage[T](
       request: HandlerRequest,
       fetchFunction: (UserSession, Urn, Option[String], Int) => Future[Option[FollowingsPage]],
-      serializeUsers: (List[User], Option[String]) => String,
+      serializeUsers: (List[UserRepresentation], Option[String]) => String,
       users: Seq[Following] => Seq[Urn],
       requireLogin: Boolean
   ): Future[Response] = {
@@ -227,7 +227,7 @@ class UserFollowHandler(
     }
   }
 
-  private def fetchUsers(session: UserSession, urns: Set[Urn]): Future[List[User]] = {
+  private def fetchUsers(session: UserSession, urns: Set[Urn]): Future[List[UserRepresentation]] = {
     for {
       (users, followCountsMap, repostCountsByUrn) <- Future.join(
         okidoki.fetch(session, urns),
@@ -236,7 +236,7 @@ class UserFollowHandler(
           .map(_.map(followCounts => (followCounts.userUrn, followCounts)).toMap),
         repostsClient.getRepostCountsByUrnWithFallback(session, urns)
       )
-    } yield users.map(UserMapper(_, Some(followCountsMap), Some(repostCountsByUrn)))
+    } yield users.map(UserRepresentationMapper(_, Some(followCountsMap), Some(repostCountsByUrn)))
   }
 
   private def findUserAge(session: UserSession, userUrn: Urn): Future[Option[Int]] = {

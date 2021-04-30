@@ -3,7 +3,7 @@ package com.soundcloud.publicApiStrangler.service.comments
 import com.soundcloud.jvmkit.module.outcome._
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.publicApiStrangler.client.comments._
-import com.soundcloud.publicApiStrangler.client.mothership.response.representation.User
+import com.soundcloud.publicApiStrangler.client.mothership.response.representation.UserRepresentation
 import com.soundcloud.publicApiStrangler.client.mothership.{MoshimoshiClient, RichOkidokiClient}
 import com.soundcloud.publicApiStrangler.handler.comments.CreateCommentParams
 import com.soundcloud.publicApiStrangler.service.pagination.OffsetBasedPagination
@@ -174,7 +174,8 @@ class CommentServiceSpec extends UnitSpecification with Mockito {
           Future.value(MoshimoshiCommentsPagedResponse(Seq.empty, Some("http://the-next-href-of-your-dreams.com")).good)
         )
 
-      when(okidokiClient.fetchUsersMap(anonymousSession, Set.empty)).thenReturn(Future(Map.empty[Urn, User]))
+      when(okidokiClient.fetchUsersMap(anonymousSession, Set.empty))
+        .thenReturn(Future(Map.empty[Urn, UserRepresentation]))
 
       val result = Await.result(commentService.fetchTracksComments(anonymousSession, trackUrn, pagination))
 
@@ -231,7 +232,7 @@ class CommentServiceSpec extends UnitSpecification with Mockito {
       when(moshimoshiClient.createComment(anonymousSession, createCommentParams))
         .thenReturn(Future(okidokiComment.good))
       when(okidokiClient.fetchUsersMap(anonymousSession, Set(okidokiComment.user.self.urn)))
-        .thenReturn(Future(Map.empty[Urn, User]))
+        .thenReturn(Future(Map.empty[Urn, UserRepresentation]))
 
       val result = Await.result(commentService.createComment(anonymousSession, createCommentParams))
       result ==== NotFound().bad

@@ -1,6 +1,6 @@
 package com.soundcloud.publicApiStrangler.client.comments
 
-import com.soundcloud.publicApiStrangler.client.mothership.response.representation.User
+import com.soundcloud.publicApiStrangler.client.mothership.response.representation.UserRepresentation
 import play.api.libs.json.{Json, Writes}
 
 case class Comment(
@@ -10,7 +10,7 @@ case class Comment(
     timestamp: Option[Int],
     trackId: Long,
     userId: Long,
-    user: User,
+    user: UserRepresentation,
     secretToken: Option[String] = None
 ) {
   def uri: String = {
@@ -41,7 +41,7 @@ object Comment {
 
   def fromOkidokiComment(
       moshimoshiComment: MoshimoshiCommentsComment,
-      user: User,
+      user: UserRepresentation,
       secretToken: Option[String] = None
   ): Comment =
     Comment(
