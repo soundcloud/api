@@ -90,7 +90,14 @@ class CreatedTrackSpec extends Specification {
         "user_id" -> Urn.parse(trackCoordinatorTrack.user_urn).get.identifier.toLong,
         "user_playback_count" -> trackCoordinatorTrack.user_playback_count,
         "video_url" -> trackCoordinatorTrack.video_url,
-        "waveform_url" -> trackCoordinatorTrack.waveform_url
+        "waveform_url" -> trackCoordinatorTrack.waveform_url,
+        "access" -> None,
+        "available_country_codes" -> None,
+        "downloads_remaining" -> None,
+        "domain_lockings" -> None,
+        "label" -> None,
+        "reposts_count" -> 0,
+        "user_uri" -> None
       )
     }
 

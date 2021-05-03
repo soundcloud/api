@@ -525,7 +525,7 @@ paths:
                 $ref: "#/components/examples/CreateUpdatePlaylistRequest"
       responses:
         201:
-          $ref: "#/components/responses/Playlist"
+          $ref: "#/components/responses/LegacyPlaylist"
         401:
           $ref: '#/components/responses/Unauthorized'
         404:
@@ -599,7 +599,7 @@ paths:
                 $ref: "#/components/examples/CreateUpdatePlaylistRequest"
       responses:
         200:
-          $ref: "#/components/responses/Playlist"
+          $ref: "#/components/responses/LegacyPlaylist"
         401:
           $ref: '#/components/responses/Unauthorized'
         404:

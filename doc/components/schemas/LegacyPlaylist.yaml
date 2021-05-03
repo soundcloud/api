@@ -1,0 +1,115 @@
+type: object
+description: Soundcloud Playlist Object
+properties:
+  title:
+    description: Playlist title.
+    type: string
+  id:
+    description: Playlist identifier.
+    type: integer
+  kind:
+    description: Type of Soundcloud object (playlist).
+    type: string
+  artwork_url:
+    description: URL to a JPEG image.
+    type: string
+  created_at:
+    description: Created timestamp.
+    type: string
+  description:
+    description: Playlist description.
+    type: string
+  downloadable:
+    description: is downloadable.
+    type: boolean
+  duration:
+    description: Playlist duration.
+    type: integer
+  ean:
+    description: European Article Number.
+    type: string
+  embeddable_by:
+    description: Embeddable by.
+    type: string
+  genre:
+    description: Playlist genre.
+    type: string
+  label_id:
+    description: Label user identifier.
+    type: integer
+  label_name:
+    description: Label name.
+    type: string
+  last_modified:
+    description: Last modified timestamp.
+    type: string
+  license:
+    description: License.
+    type: string
+  permalink:
+    description: Playlist permalink.
+    type: string
+  permalink_url:
+    description: Playlist permalink URL.
+    type: string
+  playlist_type:
+    description: Type of playlist.
+    type: string
+  purchase_title:
+    description: Purchase title.
+    type: string
+  purchase_url:
+    description: Purchase URL.
+    type: string
+  release:
+    description: Release.
+    type: string
+  release_day:
+    description: Day of release.
+    type: integer
+  release_month:
+    description: Month of release.
+    type: integer
+  release_year:
+    description: Year of release.
+    type: integer
+  sharing:
+    description: Type of sharing (private/public).
+    type: string
+  streamable:
+    description: Is streamable.
+    type: boolean
+  tag_list:
+    description: Tags.
+    type: string
+  track_count:
+    description: Count of tracks.
+    type: integer
+  tracks:
+    description: List of tracks.
+    type: array
+    items:
+      $ref: "./LegacyTrack.yaml"
+  type:
+    description: Playlist type.
+    type: string
+  uri:
+    description: Playlist URI.
+    type: string
+  user:
+    $ref: "#/components/schemas/MetaUser"
+  user_id:
+    description: User identifier.
+    type: integer
+additionalProperties:
+  likes_count:
+    description: Count of playlist likes.
+    type: integer
+  label:
+    $ref: "#/components/schemas/MetaUser"
+  tracks_uri:
+    description: tracks URI.
+    type: [ string, null ]
+  tags:
+    description: Tags.
+    type: [ string, null ]

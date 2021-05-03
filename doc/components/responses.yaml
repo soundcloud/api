@@ -190,6 +190,12 @@ Playlist:
       examples:
         default:
           $ref: "#/components/examples/Playlist"
+LegacyPlaylist:
+  description: Success
+  content:
+    application/json; charset=utf-8:
+      schema:
+        $ref: './schemas/LegacyPlaylist.yaml'
 Playlists:
   description: Success
   content:

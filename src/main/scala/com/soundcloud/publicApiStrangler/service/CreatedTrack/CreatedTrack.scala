@@ -90,7 +90,14 @@ object CreatedTrack {
       "user_id" -> Urn.parse(t.trackCoordinatorTrack.user_urn).get.identifier.toLong,
       "user_playback_count" -> t.trackCoordinatorTrack.user_playback_count,
       "video_url" -> t.trackCoordinatorTrack.video_url,
-      "waveform_url" -> t.trackCoordinatorTrack.waveform_url
+      "waveform_url" -> t.trackCoordinatorTrack.waveform_url,
+      "access" -> None,
+      "available_country_codes" -> None,
+      "downloads_remaining" -> None,
+      "domain_lockings" -> None,
+      "label" -> None,
+      "reposts_count" -> 0,
+      "user_uri" -> None
     )
   }
 }
