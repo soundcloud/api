@@ -3,10 +3,7 @@ package com.soundcloud.publicApiStrangler.service
 import com.soundcloud.jvmkit.module.http.client.Params
 import com.soundcloud.jvmkit.module.outcome._
 import com.soundcloud.jvmkit.module.util.Urn
-import com.soundcloud.publicApiStrangler.client.followcounts.{FollowCounts, FollowCountsClient}
-import com.soundcloud.publicApiStrangler.client.mothership.OkidokiClient
 import com.soundcloud.publicApiStrangler.client.mothership.response.mapper.UserRepresentationMapper
-import com.soundcloud.publicApiStrangler.client.reposts.RepostsClient
 import com.soundcloud.publicApiStrangler.client.search.{Doc, SearchClient, SearchResponse}
 import com.soundcloud.publicApiStrangler.client.tracks.TrackRequest
 import com.soundcloud.publicApiStrangler.handler.support.requestParser.AccessParams
@@ -18,6 +15,7 @@ import com.soundcloud.publicApiStrangler.service.trackrepresentation.{
   TrackRepresentationsService,
   TrackRepresentationsSpecificationContext
 }
+import com.soundcloud.publicApiStrangler.service.users.UserRepresentationsService
 import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures
 import com.twitter.finagle.http.ParamMap
 import com.twitter.util.{Await, Future}
@@ -37,18 +35,14 @@ class SearchServiceSpec extends TrackRepresentationsSpecificationContext {
     val searchClient = mock[SearchClient]
     val trackPagination = mock[TrackPagination]
     val offsetBasedPagination = mock[OffsetBasedPagination]
-    val followCountsClient = mock[FollowCountsClient]
-    val repostsClient = mock[RepostsClient]
-    val okidokiClient = mock[OkidokiClient]
+    val userRepresentationsService = mock[UserRepresentationsService]
 
     val trackRepresentationMock = createTrackRepresentation
     val searchService = new SearchService(
       searchClient,
       trackRepresentationsService,
-      followCountsClient,
-      repostsClient,
       playlistsService,
-      okidokiClient
+      userRepresentationsService
     )
 
     val query = "foo"
@@ -70,14 +64,7 @@ class SearchServiceSpec extends TrackRepresentationsSpecificationContext {
         SearchResponse(query, queryUrn, 0, 5, 1, 1000, Seq(Doc(userUrn)), None).goodF
       )
 
-      when(followCountsClient.counts(session, Seq(userUrn)))
-        .thenReturn(Future.value(Seq(FollowCounts(userUrn = userUrn, followers = 20976L, followings = 118L))))
-
-      when(repostsClient.getRepostCountsByUrnWithFallback(session, Set(userUrn)))
-        .thenReturn(Future.value(Map(userUrn -> 500L)))
-
-      when(okidokiClient.fetch(session, Set(userUrn)))
-        .thenReturn(Future.value(Fixtures.okidokiUsers.as[List[JsObject]]))
+      when(userRepresentationsService.getUsers(session, Set(userUrn))).thenReturn(Future.value(List(user)))
 
       val result = Await.result(searchService.searchUsers(session, Map("q" -> query), offsetBasedPagination).value)
       val usersCollection = result.getOrElse(Collection(List.empty, None))
@@ -95,15 +82,7 @@ class SearchServiceSpec extends TrackRepresentationsSpecificationContext {
         SearchResponse(query, queryUrn, 0, 5, 1, 1000, Seq.empty, None).goodF
       )
 
-      when(followCountsClient.counts(session, Seq.empty))
-        .thenReturn(Future.value(Seq.empty))
-
-      // TODO: figure out why empty map doesn't work
-      when(repostsClient.getRepostCountsByUrnWithFallback(session, Set.empty))
-        .thenReturn(Future.value(Map(userUrn -> 500L)))
-
-      when(okidokiClient.fetch(session, Set.empty))
-        .thenReturn(Future.value(List.empty))
+      when(userRepresentationsService.getUsers(session, Set.empty)).thenReturn(Future.value(List.empty))
 
       val result = Await.result(searchService.searchUsers(session, Map("q" -> query), offsetBasedPagination).value)
 

@@ -178,8 +178,10 @@ class Clients(
   val likesService = new LikesService(tracksService, lieblingClient, likeTracksTwirpClient)
   val playlistService = new PlaylistsService(playlistsTwirpClient, tracksService, okidokiClient, exceptionCollector)
   val userPlaylistsService = new UserPlaylistsService(playlistService, okidokiClient)
+  val userRepresentationsService =
+    new UserRepresentationsService(followCountsClient, repostsClient, okidokiClient, lieblingClient)
   val searchService =
-    new SearchService(searchClient, tracksService, followCountsClient, repostsClient, playlistService, okidokiClient)
+    new SearchService(searchClient, tracksService, playlistService, userRepresentationsService)
 
   val timelineService = new TimelineService(timelineClient, tracksService, playlistService)
 

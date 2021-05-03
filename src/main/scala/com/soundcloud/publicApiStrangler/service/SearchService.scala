@@ -4,11 +4,7 @@ import com.soundcloud.jvmkit.module.http.client.{Params, StringParam}
 import com.soundcloud.jvmkit.module.outcome._
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSession
-import com.soundcloud.publicApiStrangler.client.followcounts.FollowCountsClient
-import com.soundcloud.publicApiStrangler.client.mothership.OkidokiClient
-import com.soundcloud.publicApiStrangler.client.mothership.response.mapper.UserRepresentationMapper
 import com.soundcloud.publicApiStrangler.client.mothership.response.representation.UserRepresentation
-import com.soundcloud.publicApiStrangler.client.reposts.RepostsClient
 import com.soundcloud.publicApiStrangler.client.search.SearchClient
 import com.soundcloud.publicApiStrangler.client.tracks.TrackRequest
 import com.soundcloud.publicApiStrangler.handler.support.requestParser.AccessParamsExtractor
@@ -22,14 +18,13 @@ import com.soundcloud.publicApiStrangler.service.trackrepresentation.{
   TrackRepresentationsService
 }
 import com.twitter.finagle.http.ParamMap
+import com.soundcloud.publicApiStrangler.service.users.UserRepresentationsService
 
 class SearchService(
     searchClient: SearchClient,
     trackRepresentationsService: TrackRepresentationsService,
-    followCountsClient: FollowCountsClient,
-    repostsClient: RepostsClient,
     playlistsService: PlaylistsService,
-    okidokiClient: OkidokiClient
+    userRepresentationsService: UserRepresentationsService
 ) {
   def searchUsers(
       session: UserSession,
@@ -41,15 +36,7 @@ class SearchService(
     for {
       searchPage <- searchClient.searchUsers(session, mapParams)
       userUrns = searchPage.docs.map(_.urn).toSet
-      followCountsMap <- followCountsClient
-        .counts(session, userUrns.toSeq)
-        .map(_.map(followCounts => (followCounts.userUrn, followCounts)).toMap)
-        .outcomeF
-      repostsCounts <- repostsClient.getRepostCountsByUrnWithFallback(session, userUrns).outcomeF
-      users <- okidokiClient
-        .fetch(session, userUrns)
-        .map(_.map(UserRepresentationMapper(_, Some(followCountsMap), Some(repostsCounts))))
-        .outcomeF
+      users <- userRepresentationsService.getUsers(session, userUrns).outcomeF
       sortedUsers = sortByProvidedUrns(users, searchPage.docs.map(_.urn))
     } yield Collection[UserRepresentation](sortedUsers.toList, pagination.nextHref(searchPage.total_results.toInt))
   }
