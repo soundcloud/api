@@ -81,7 +81,8 @@ class UserFollowHandlerSpec extends UnitSpecification {
         |  "comments_count": null,
         |  "online": false,
         |  "likes_count": 5,
-        |  "playlist_count": null
+        |  "playlist_count": null,
+        |  "subscriptions": []
         |}
       """.stripMargin)
 
@@ -115,7 +116,8 @@ class UserFollowHandlerSpec extends UnitSpecification {
         |  "comments_count": null,
         |  "online": false,
         |  "likes_count": 5,
-        |  "playlist_count": null
+        |  "playlist_count": null,
+        |  "subscriptions": []
         |}
       """.stripMargin
     )

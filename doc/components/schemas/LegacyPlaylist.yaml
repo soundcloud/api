@@ -101,15 +101,3 @@ properties:
   user_id:
     description: User identifier.
     type: integer
-additionalProperties:
-  likes_count:
-    description: Count of playlist likes.
-    type: integer
-  label:
-    $ref: "#/components/schemas/MetaUser"
-  tracks_uri:
-    description: tracks URI.
-    type: [ string, null ]
-  tags:
-    description: Tags.
-    type: [ string, null ]

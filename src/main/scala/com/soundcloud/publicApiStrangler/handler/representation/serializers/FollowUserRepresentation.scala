@@ -1,7 +1,7 @@
 package com.soundcloud.publicApiStrangler.handler.representation.serializers
 
 import com.soundcloud.publicApiStrangler.client.mothership.response.representation.UserRepresentation
-import play.api.libs.json.{Json, Writes}
+import play.api.libs.json.{JsArray, Json, Writes}
 
 object UserFollowRepresentation {
   implicit val userFollowWrites = Writes[UserRepresentation] { user =>
@@ -33,7 +33,8 @@ object UserFollowRepresentation {
       "comments_count" -> user.comments_count,
       "online" -> user.online,
       "likes_count" -> user.likes_count,
-      "playlist_count" -> user.public_playlists_count
+      "playlist_count" -> user.public_playlists_count,
+      "subscriptions" -> JsArray()
     )
   }
 }

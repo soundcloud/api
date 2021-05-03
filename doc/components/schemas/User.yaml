@@ -77,9 +77,9 @@ properties:
   website_title:
     description: a custom title for the website.
     type: string
-additionalProperties:
   subscriptions:
     description: a list subscriptions associated with the user
+    deprecated: true
     items:
       type: array
       anyOf:

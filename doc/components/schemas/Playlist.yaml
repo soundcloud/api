@@ -101,7 +101,6 @@ properties:
   user_id:
     description: User identifier.
     type: integer
-additionalProperties:
   likes_count:
     description: Count of playlist likes.
     type: integer
