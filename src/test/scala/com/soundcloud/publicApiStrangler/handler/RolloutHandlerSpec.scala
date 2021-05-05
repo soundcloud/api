@@ -44,7 +44,7 @@ class RolloutHandlerSpec extends Specification {
         ResponseBuilder.ok(body = "alternative")
 
       val telemetry = Telemetry.createIsolatedInstance
-      val counter = telemetry.counter("name", "docString", "static", "choice")
+      val counter = telemetry.counter("name_total", "docString", "static", "choice")
       val instrumentedChoice: () => Future[Boolean] =
         new RolloutHandler.InstrumentedPredicate(
           () => Future(rolloutResult),
@@ -72,7 +72,7 @@ class RolloutHandlerSpec extends Specification {
     "integration" >> {
       trait IntegrationContext extends Context {
         val telemetry = Telemetry.createIsolatedInstance
-        val counter = telemetry.counter("name", "docString", "choice")
+        val counter = telemetry.counter("name_total", "docString", "choice")
 
         override lazy val choice: () => Future[Boolean] =
           new RolloutHandler.InstrumentedPredicate(
