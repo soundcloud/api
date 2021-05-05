@@ -57,7 +57,7 @@ class SimilarTracksServiceSpec extends UnitSpecification {
         .build
 
     val trackRepresentationMock =
-      createTrackRepresentation(visibleTrack = visibleTrackMock, user = similarTrackOwnerUser)
+      createTrackRepresentationFromVisibleTrack(visibleTrack = visibleTrackMock, user = similarTrackOwnerUser)
 
     val similarTracksService =
       new SimilarTracksService(trackRepresentationService, systemPlaylistsClient)

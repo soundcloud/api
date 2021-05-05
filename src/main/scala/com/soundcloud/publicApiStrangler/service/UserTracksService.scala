@@ -42,7 +42,7 @@ class UserTracksService(
   ): Future[Option[TrackRepresentation]] = {
     for {
       track <- trackRepresentationsService.track(session, TrackRequest(trackUrn, secretToken))
-      userOwnedTrack = track.filter(_.visibleTrack.userUrn.identifier == userId)
+      userOwnedTrack = track.filter(_.user.urn.identifier == userId)
     } yield {
       userOwnedTrack
     }

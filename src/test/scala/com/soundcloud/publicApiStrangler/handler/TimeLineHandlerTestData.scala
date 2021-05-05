@@ -136,7 +136,7 @@ trait TimeLineHandlerTestData extends TrackRepresentationSpecContext {
     )
   )
 
-  val mockTrackRepresentation = createTrackRepresentation()
+  val mockTrackRepresentation = createTrackRepresentationFromVisibleTrack()
 
   /**
     * The endpoint is encoded in the response, so keep this part variable

@@ -51,7 +51,6 @@ class TrackRepresentationsService(
   ): Future[List[TrackRepresentation]] = {
     val urns = visibleTracks.map(_.urn).toSet
     val userUrns = visibleTracks.map(_.userUrn).toSet
-    val builder = new TrackRepresentationBuilder
     val waveformUrls = visibleTracks.flatMap(_.uid).map(uid => uid -> waveformUrlsGenerator.fromUid(uid)).toMap
     val userUrnsFromLabelIds =
       visibleTracks.flatMap(_.labelId).map(labelId => Urn("soundcloud", "users", labelId.toString))
@@ -77,7 +76,7 @@ class TrackRepresentationsService(
       .map {
         case (users, audios, isLiked, isrcs, geoBlockings, counts, labels, downloadsPerTrack) =>
           visibleTracks.map { visibleTrack =>
-            builder.build(
+            TrackRepresentationBuilder.fromVisibleTrack(
               client = session.agent,
               sessionUser = session.user,
               visibleTrack = visibleTrack,

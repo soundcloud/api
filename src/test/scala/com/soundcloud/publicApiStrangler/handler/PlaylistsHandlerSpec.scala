@@ -40,8 +40,8 @@ class PlaylistsHandlerSpec extends UnitSpecification {
 
     override def routingDefinitions = Routing.forPlaylistHandler(handler)
 
-    val requestedTrack1 = createTrackRepresentation()
-    val requestedTrack2 = createTrackRepresentation()
+    val requestedTrack1 = createTrackRepresentationFromVisibleTrack()
+    val requestedTrack2 = createTrackRepresentationFromVisibleTrack()
     val access = AccessParams.defaultAccess
   }
 

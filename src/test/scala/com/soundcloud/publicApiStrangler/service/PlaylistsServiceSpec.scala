@@ -46,9 +46,9 @@ class PlaylistsServiceSpec extends UnitSpecification {
     val requestedPlaylistTrackUrn1 = Urn("soundcloud", "tracks", "2")
     val requestedPlaylistTrackUrn2 = Urn("soundcloud", "tracks", "3")
 
-    val requestedPlaylistTrack = createTrackRepresentation()
-    val requestedPlaylistTrack1 = createTrackRepresentation()
-    val requestedPlaylistTrack2 = createTrackRepresentation()
+    val requestedPlaylistTrack = createTrackRepresentationFromVisibleTrack()
+    val requestedPlaylistTrack1 = createTrackRepresentationFromVisibleTrack()
+    val requestedPlaylistTrack2 = createTrackRepresentationFromVisibleTrack()
 
     val candidateSecretToken = Some("s3creT")
     val pagination = PlaylistPagination(cursor = Some("2"), limit = 2)
@@ -169,7 +169,7 @@ class PlaylistsServiceSpec extends UnitSpecification {
           playlist.id ==== requestedPlaylistUrn.identifier.toLong
           playlist.userId ==== playlistOwner.urn.identifier.toLong
           playlist.tracks.get.length ==== 1
-          playlist.tracks.get(0).id ==== requestedPlaylistTrack.id
+          playlist.tracks.get(0).urn ==== requestedPlaylistTrack.urn
         case _ => failure(s"returned ${result.toString} instead of Good(_)")
       }
     }
@@ -192,7 +192,7 @@ class PlaylistsServiceSpec extends UnitSpecification {
           playlist.id ==== requestedPlaylistUrn.identifier.toLong
           playlist.userId ==== playlistOwner.urn.identifier.toLong
           playlist.tracks.get.length ==== 1
-          playlist.tracks.get.head.id ==== requestedPlaylistTrack.id
+          playlist.tracks.get.head.urn ==== requestedPlaylistTrack.urn
         case _ => failure(s"returned ${result.toString} instead of Good(_)")
       }
     }
@@ -226,9 +226,9 @@ class PlaylistsServiceSpec extends UnitSpecification {
       result match {
         case Good(tracksCollection: Collection[TrackRepresentation]) =>
           tracksCollection.items.length ==== 3
-          tracksCollection.items.head.id ==== requestedPlaylistTrack.id
-          tracksCollection.items(1).id ==== requestedPlaylistTrack1.id
-          tracksCollection.items(2).id ==== requestedPlaylistTrack2.id
+          tracksCollection.items.head.urn ==== requestedPlaylistTrack.urn
+          tracksCollection.items(1).urn ==== requestedPlaylistTrack1.urn
+          tracksCollection.items(2).urn ==== requestedPlaylistTrack2.urn
           tracksCollection.nextHref.isEmpty
         case _ => failure(s"incorrectly returned ${result.toString}")
       }
@@ -257,7 +257,7 @@ class PlaylistsServiceSpec extends UnitSpecification {
       result match {
         case Good(tracksCollection: Collection[TrackRepresentation]) =>
           tracksCollection.items.length ==== 1
-          tracksCollection.items(0).id ==== requestedPlaylistTrack.id
+          tracksCollection.items(0).urn ==== requestedPlaylistTrack.urn
           tracksCollection.nextHref ==== Some("https://api.soundcloud.com/playlists?limit=2&offset=2")
         case _ => failure(s"incorrectly returned ${result.toString}")
       }
@@ -292,7 +292,7 @@ class PlaylistsServiceSpec extends UnitSpecification {
       result.head.id ==== requestedPlaylistUrn.identifier.toLong
       result.head.userId ==== playlistOwner.urn.identifier.toLong
       result.head.tracks.get.length ==== 1
-      result.head.tracks.get.head.id ==== requestedPlaylistTrack.id
+      result.head.tracks.get.head.urn ==== requestedPlaylistTrack.urn
     }
 
     "can fetch a list of playlists without pagination" in new SuccessContext {
@@ -312,7 +312,7 @@ class PlaylistsServiceSpec extends UnitSpecification {
       result.head.id ==== requestedPlaylistUrn.identifier.toLong
       result.head.userId ==== playlistOwner.urn.identifier.toLong
       result.head.tracks.get.length ==== 1
-      result.head.tracks.get.head.id ==== requestedPlaylistTrack.id
+      result.head.tracks.get.head.urn ==== requestedPlaylistTrack.urn
     }
 
     "returns empty list if no playlist returned from client" in new NotFoundContext {

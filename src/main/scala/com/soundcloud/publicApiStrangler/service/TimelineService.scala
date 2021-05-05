@@ -134,7 +134,7 @@ class TimelineService(
       event: TimelineEvent
   ): Option[TrackTimelineItem] =
     tracks
-      .find(_.visibleTrack.urn.toString == event.urn.toString)
+      .find(_.urn.toString == event.urn.toString)
       .map(trackRep =>
         event.eventType match {
           case TrackRepostTimelineEventType =>

@@ -22,7 +22,7 @@ import java.util.TimeZone
 
 class UserTracksHandlerSpec extends UnitSpecification with TrackRepresentationSpecContext {
 
-  val mockTrackRepresentation = createTrackRepresentation()
+  val mockTrackRepresentation = createTrackRepresentationFromVisibleTrack()
 
   TimeZone.setDefault(TimeZone.getTimeZone("UTC"))
   DateTimeZone.setDefault(DateTimeZone.UTC)
@@ -65,7 +65,7 @@ class UserTracksHandlerSpec extends UnitSpecification with TrackRepresentationSp
     }
 
     trait SuccessfulResponse extends TrackRepresentationSpecContext with TracksForUserContext {
-      val trackRepresentation = createTrackRepresentation()
+      val trackRepresentation = createTrackRepresentationFromVisibleTrack()
       val tracksCollection = Collection(List(trackRepresentation), None)
       val expectedResponse = Collection.getRepresentation(tracksCollection, true)
     }

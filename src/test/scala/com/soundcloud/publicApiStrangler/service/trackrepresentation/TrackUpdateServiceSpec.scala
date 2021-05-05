@@ -16,7 +16,6 @@ import com.soundcloud.publicApiStrangler.client.trackcoordinator.{
 import com.soundcloud.publicApiStrangler.client.tracks.TrackRequest
 import com.soundcloud.publicApiStrangler.handler.support.error.UnhandledOutcomeException
 import com.soundcloud.publicApiStrangler.handler.support.requestParser._
-import com.soundcloud.publicApiStrangler.service.CreatedTrack.CreatedTrack
 import com.soundcloud.publicApiStrangler.test.UnitSpecification
 import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures
 import com.twitter.io.Buf
@@ -33,14 +32,14 @@ class TrackUpdateServiceSpec extends UnitSpecification with TrackRepresentationS
     val hocuspocusService = mock[HocuspocusService]
     val trackService = mock[TrackRepresentationsService]
 
-    val mockTrackRepresentation = createTrackRepresentation()
+    val mockTrackRepresentation = createTrackRepresentationFromVisibleTrack()
     val ownerSession = new UserSessionBuilder().setUser(mockTrackRepresentation.user.urn).build
 
     val trackUpdateService =
       new TrackUpdateService(trackCoordinatorClient, okidokiClient, hocuspocusService, trackService)
 
     def setupMocksForTrackService(trackUrn: Urn, expectedResponse: Option[TrackRepresentation]) = {
-      when(trackService.track(ownerSession, new TrackRequest(trackUrn, None))).thenReturn(
+      when(trackService.track(ownerSession, TrackRequest(trackUrn, None))).thenReturn(
         Future.value(expectedResponse)
       )
     }
@@ -85,9 +84,7 @@ class TrackUpdateServiceSpec extends UnitSpecification with TrackRepresentationS
         val metadataUpdateParams = Map[String, String]("title" -> "changed", "description" -> "changed")
         val metaDataUpdateRequest = TrackMetadataUpdateRequest.fromForm(metadataUpdateParams).getOrElse(null)
 
-        val expectedResponse = mockTrackRepresentation.copy(visibleTrack =
-          mockTrackRepresentation.visibleTrack.copy(title = "changed", description = Some("changed"))
-        )
+        val expectedResponse = mockTrackRepresentation.copy(title = "changed", description = Some("changed"))
       }
 
       trait FailureContext extends Context {
@@ -97,14 +94,14 @@ class TrackUpdateServiceSpec extends UnitSpecification with TrackRepresentationS
 
       "Successfully updates metadata on valid request" in new SuccessContext {
         setupMocksForUpdateTrackMeta(
-          trackUrn = mockTrackRepresentation.visibleTrack.urn,
+          trackUrn = mockTrackRepresentation.urn,
           trackAssetDataUpdateRequest = None,
           updateTrackMetadata = metaDataUpdateRequest,
           artworkMetadata = None,
           expectedResponse = Good(mockTrackMetadataUpdateResult)
         )
 
-        setupMocksForTrackService(mockTrackRepresentation.visibleTrack.urn, Some(mockTrackRepresentation))
+        setupMocksForTrackService(mockTrackRepresentation.urn, Some(mockTrackRepresentation))
 
         val result = Await.result(
           trackUpdateService.updateTrack(
@@ -125,14 +122,14 @@ class TrackUpdateServiceSpec extends UnitSpecification with TrackRepresentationS
 
       "Returns nothing if update call fails" in new FailureContext {
         setupMocksForUpdateTrackMeta(
-          mockTrackRepresentation.visibleTrack.urn,
+          mockTrackRepresentation.urn,
           trackAssetDataUpdateRequest = None,
           updateRequest,
           artworkMetadata = None,
           NotFound().bad
         )
 
-        setupMocksForTrackService(mockTrackRepresentation.visibleTrack.urn, Some(mockTrackRepresentation))
+        setupMocksForTrackService(mockTrackRepresentation.urn, Some(mockTrackRepresentation))
 
         val result = Await.result(
           trackUpdateService.updateTrack(
@@ -153,14 +150,14 @@ class TrackUpdateServiceSpec extends UnitSpecification with TrackRepresentationS
 
       "Returns nothing if track fetch call fails" in new FailureContext {
         setupMocksForUpdateTrackMeta(
-          mockTrackRepresentation.visibleTrack.urn,
+          mockTrackRepresentation.urn,
           trackAssetDataUpdateRequest = None,
           updateRequest,
           artworkMetadata = None,
           Good(mockTrackMetadataUpdateResult)
         )
 
-        setupMocksForTrackService(mockTrackRepresentation.visibleTrack.urn, None)
+        setupMocksForTrackService(mockTrackRepresentation.urn, None)
 
         Await.result(
           trackUpdateService.updateTrack(None, None, updateRequest, trackUrn, ownerSession)
@@ -180,13 +177,11 @@ class TrackUpdateServiceSpec extends UnitSpecification with TrackRepresentationS
           .getOrElse(null)
 
         val artworkUpdateOnlyUpdateResponse = mockTrackMetadataUpdateResult.copy(
-          description = mockTrackRepresentation.visibleTrack.description,
-          title = mockTrackRepresentation.visibleTrack.title
+          description = mockTrackRepresentation.description,
+          title = mockTrackRepresentation.title
         )
 
-        val expectedResponse = mockTrackRepresentation.copy(visibleTrack =
-          mockTrackRepresentation.visibleTrack.copy(title = "changed", description = Some("changed"))
-        )
+        val expectedResponse = mockTrackRepresentation.copy(title = "changed", description = Some("changed"))
       }
 
       trait FailureContext extends Context {
@@ -195,8 +190,8 @@ class TrackUpdateServiceSpec extends UnitSpecification with TrackRepresentationS
         val trackArtworkUpdateResult = TrackArtworkUpdateResult(bucket = "bucket", filename = "filename")
 
         val artworkUpdateOnlyUpdateResponse = mockTrackMetadataUpdateResult.copy(
-          description = mockTrackRepresentation.visibleTrack.description,
-          title = mockTrackRepresentation.visibleTrack.title
+          description = mockTrackRepresentation.description,
+          title = mockTrackRepresentation.title
         )
       }
 
@@ -217,7 +212,7 @@ class TrackUpdateServiceSpec extends UnitSpecification with TrackRepresentationS
             Some(trackArtworkMetaRequest),
             maybeUpdateTrackAsset = None,
             trackMetadataRequest,
-            mockTrackRepresentation.visibleTrack.urn,
+            mockTrackRepresentation.urn,
             ownerSession
           )
         )
@@ -246,7 +241,7 @@ class TrackUpdateServiceSpec extends UnitSpecification with TrackRepresentationS
             Some(trackArtworkMetaRequest),
             maybeUpdateTrackAsset = None,
             trackMetadata = emptyTrackUpdate,
-            mockTrackRepresentation.visibleTrack.urn,
+            mockTrackRepresentation.urn,
             ownerSession
           )
         )
@@ -275,7 +270,7 @@ class TrackUpdateServiceSpec extends UnitSpecification with TrackRepresentationS
             Some(trackArtworkMetaRequest),
             maybeUpdateTrackAsset = None,
             trackMetadata = emptyTrackUpdate,
-            mockTrackRepresentation.visibleTrack.urn,
+            mockTrackRepresentation.urn,
             ownerSession
           )
         ) must throwAn[UnhandledOutcomeException]
@@ -290,8 +285,8 @@ class TrackUpdateServiceSpec extends UnitSpecification with TrackRepresentationS
         )
 
         val assetUpdateOnlyUpdateResponse = mockTrackMetadataUpdateResult.copy(
-          description = mockTrackRepresentation.visibleTrack.description,
-          title = mockTrackRepresentation.visibleTrack.title
+          description = mockTrackRepresentation.description,
+          title = mockTrackRepresentation.title
         )
       }
 
@@ -302,8 +297,8 @@ class TrackUpdateServiceSpec extends UnitSpecification with TrackRepresentationS
         )
 
         val assetUpdateOnlyUpdateResponse = mockTrackMetadataUpdateResult.copy(
-          description = mockTrackRepresentation.visibleTrack.description,
-          title = mockTrackRepresentation.visibleTrack.title
+          description = mockTrackRepresentation.description,
+          title = mockTrackRepresentation.title
         )
       }
 
@@ -429,7 +424,7 @@ class TrackUpdateServiceSpec extends UnitSpecification with TrackRepresentationS
       val trackArtworkMetaRequest = TrackArtworkUpdateRequest(imageData = bytes)
       val users = Fixtures.okidokiUsers.as[List[JsObject]].map(UserRepresentationMapper(_))
       val user = users.head
-      val expectedResponse = CreatedTrack(trackCoordinatorTrack, user, None)
+      val expectedResponse = TrackRepresentationBuilder.fromTrackCoordinatorTrack(trackCoordinatorTrack, user, None)
       setupMocksForHocusPocusService(trackArtworkMetaRequest)
     }
 
@@ -446,7 +441,7 @@ class TrackUpdateServiceSpec extends UnitSpecification with TrackRepresentationS
         )
       }
 
-      "Returns CreatedTrack" in new SuccessContext {
+      "Returns TrackRepresentation" in new SuccessContext {
 
         val result = Await.result(
           trackUpdateService.createTrack(
@@ -458,8 +453,7 @@ class TrackUpdateServiceSpec extends UnitSpecification with TrackRepresentationS
         )
 
         result match {
-          case Good(track) =>
-            Json.toJson(track) === Json.toJson(expectedResponse)
+          case Good(track) => Json.toJson(track) === Json.toJson(expectedResponse)
           case _ => true must beFalse
         }
       }

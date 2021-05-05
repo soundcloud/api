@@ -38,7 +38,6 @@ trait TrackRepresentationsSpecificationContext extends UnitSpecification {
       original_format = Some("vqf")
     )
     val trackRequest = TrackRequest(trackUrn, None)
-    val trackRepresentationBuilder = new TrackRepresentationBuilder
 
     def trackOwner = new UserBuilder().setUrn(trackOwnerUrn).build
 
@@ -121,7 +120,7 @@ trait TrackRepresentationsSpecificationContext extends UnitSpecification {
       TrackWaveformUrl(uid, Url("https://bar.sndcdn.com/stream/a1b2c3.png"))
 
     def createTrackRepresentation: TrackRepresentation =
-      trackRepresentationBuilder.build(
+      TrackRepresentationBuilder.fromVisibleTrack(
         client = session.agent,
         sessionUser = session.user,
         visibleTrack = trackVisibilityTrack(),

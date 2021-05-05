@@ -37,7 +37,7 @@ class SimilarTracksHandlerSpec extends UnitSpecification with TrackRepresentatio
 
     override def routingDefinitions = Routing.forSimilarTracksHandler(similarTracksHandler)
 
-    val mockTrackRepresentation = createTrackRepresentation()
+    val mockTrackRepresentation = createTrackRepresentationFromVisibleTrack()
     val mocktracksCollection = Collection(List(mockTrackRepresentation), None)
   }
 

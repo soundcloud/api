@@ -31,15 +31,15 @@ case class TrackPagination(
   def calculateFinalPage(tracks: List[TrackRepresentation]): List[TrackRepresentation] = {
     tracks
       .filter(t =>
-        createdAtFrom.forall(t.visibleTrack.createdAt.toDateTime.isAfter(_)) &&
-          createdAtTo.forall(t.visibleTrack.createdAt.toDateTime.isBefore(_))
+        createdAtFrom.forall(t.createdAt.toDateTime.isAfter(_)) &&
+          createdAtTo.forall(t.createdAt.toDateTime.isBefore(_))
       )
       .sortBy(-_.id)
       .slice(0, limit)
   }
 
   def nextHref(totalTracks: Int): Option[String] = {
-    if (linkedPartitioning == false) {
+    if (!linkedPartitioning) {
       None
     } else {
       val nextOffset = offset + limit
@@ -74,7 +74,7 @@ object TrackPagination {
     TrackPagination(
       Try(params.get("limit").map(_.toInt)).toOption.flatten,
       Try(params.get("offset").map(_.toInt)).toOption.flatten,
-      params.get("linked_partitioning").isDefined,
+      params.contains("linked_partitioning"),
       params.get("created_at[from]").flatMap(tryParseDate),
       params.get("created_at[to]").flatMap(tryParseDate),
       requestUrl

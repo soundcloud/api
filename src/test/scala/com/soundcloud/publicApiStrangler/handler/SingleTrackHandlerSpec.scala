@@ -33,7 +33,7 @@ class SingleTrackHandlerSpec extends UnitSpecification with TrackRepresentationS
 
   val user = new UserBuilder().build
 
-  val trackRepresentation = createTrackRepresentation(
+  val trackRepresentation = createTrackRepresentationFromVisibleTrack(
     visibleTrack = visibleTrack,
     user = user,
     isrc = None,

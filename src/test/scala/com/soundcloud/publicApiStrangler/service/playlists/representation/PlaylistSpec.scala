@@ -51,7 +51,7 @@ class PlaylistSpec extends Specification with TrackRepresentationSpecContext {
 
   "#fromVisiblePlaylist" >> {
     "fields are mapped correctly" in {
-      val trackRepresentation = createTrackRepresentation()
+      val trackRepresentation = createTrackRepresentationFromVisibleTrack()
       val playlist =
         Playlist.fromVisiblePlaylist(
           visiblePlaylist,
@@ -89,7 +89,7 @@ class PlaylistSpec extends Specification with TrackRepresentationSpecContext {
     }
 
     "downloadable is set to true if all tracks are downloadable" in {
-      val downloadableTrack = createTrackRepresentation().copy(downloadable = true)
+      val downloadableTrack = createTrackRepresentationFromVisibleTrack().copy(downloadable = true)
       val playlist =
         Playlist.fromVisiblePlaylist(
           visiblePlaylist,
@@ -104,7 +104,7 @@ class PlaylistSpec extends Specification with TrackRepresentationSpecContext {
     }
 
     "owner only fields are added when requesting user owns playlist" in {
-      val downloadableTrack = createTrackRepresentation().copy(downloadable = true)
+      val downloadableTrack = createTrackRepresentationFromVisibleTrack().copy(downloadable = true)
       val playlist =
         Playlist.fromVisiblePlaylist(
           visiblePlaylist,
@@ -120,7 +120,7 @@ class PlaylistSpec extends Specification with TrackRepresentationSpecContext {
     }
 
     "if showTracks is set to false, tracks should be set to None" in {
-      val trackRepresentation = createTrackRepresentation()
+      val trackRepresentation = createTrackRepresentationFromVisibleTrack()
 
       val playlist =
         Playlist.fromVisiblePlaylist(
@@ -136,7 +136,7 @@ class PlaylistSpec extends Specification with TrackRepresentationSpecContext {
     }
 
     "Json representation has correct track_uri with secret_token" in {
-      val trackRepresentation = createTrackRepresentation()
+      val trackRepresentation = createTrackRepresentationFromVisibleTrack()
 
       val playlist =
         Playlist.fromVisiblePlaylist(
@@ -153,7 +153,7 @@ class PlaylistSpec extends Specification with TrackRepresentationSpecContext {
     }
 
     "Json representation has correct track_uri without secret_token" in {
-      val trackRepresentation = createTrackRepresentation()
+      val trackRepresentation = createTrackRepresentationFromVisibleTrack()
 
       val visiblePlaylistNoSecret = visiblePlaylist.copy(secretToken = None)
       val playlist =

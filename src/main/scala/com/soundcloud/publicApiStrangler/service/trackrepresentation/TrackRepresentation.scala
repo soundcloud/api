@@ -1,52 +1,77 @@
 package com.soundcloud.publicApiStrangler.service.trackrepresentation
 
-import com.soundcloud.publicApiStrangler.authorization.policies.ContentPolicy
-import com.soundcloud.publicApiStrangler.client.mothership.response.representation.UserRepresentation
+import com.soundcloud.jvmkit.module.util.Urn
+import com.soundcloud.publicApiStrangler.authorization.policies.Access
 import com.soundcloud.publicApiStrangler.client.mothership.TrackAudioMetadata
 import com.soundcloud.publicApiStrangler.client.mothership.response.representation.UserRepresentation
 import com.soundcloud.publicApiStrangler.client.pubmese.Isrc
-import com.soundcloud.publicApiStrangler.client.tracks.VisibleTrack
+import com.soundcloud.publicApiStrangler.client.tracks.EmbeddingPermission
 import com.soundcloud.publicApiStrangler.support.HtmlSanitizer
+import org.joda.time.LocalDateTime
 import org.joda.time.format.DateTimeFormat
 import play.api.libs.json._
 
 import scala.collection.immutable.HashSet
 
 case class TrackRepresentation(
-    visibleTrack: VisibleTrack,
-    user: UserRepresentation,
+    urn: Urn,
+    createdAt: LocalDateTime,
+    duration: Int,
+    lastModified: LocalDateTime,
+    public: Boolean,
+    userTags: Option[String],
+    machineTags: Option[String],
+    permalink: String,
+    apiStreamable: Option[Boolean],
+    embeddableBy: EmbeddingPermission,
+    purchaseUrl: Option[String],
+    purchaseTitle: Option[String],
+    labelId: Option[Long],
+    genre: Option[String],
+    title: String,
+    description: Option[String],
+    labelName: Option[String],
+    release: Option[String],
+    trackType: Option[String],
+    keySignature: Option[String],
     isrc: Option[Isrc],
-    label: Option[UserRepresentation],
-    geoblockings: Option[HashSet[String]],
-    playbackCount: Option[Int],
-    downloadable: Boolean,
-    downloadCount: Option[Int],
-    downloadsRemaining: Option[Int],
-    favoritingsCount: Option[Int],
-    repostsCount: Option[Int],
-    secretToken: Option[String],
+    videoUrl: Option[String],
+    bpm: Option[Double],
+    releaseYear: Option[Int],
     releaseDay: Option[Int],
     releaseMonth: Option[Int],
+    license: String,
     uri: Option[String],
+    user: UserRepresentation,
+    permalinkUrl: Option[String],
+    artworkUrl: Option[String],
     streamUrl: Option[String],
     downloadUrl: Option[String],
-    permalinkUrl: Option[String],
+    waveformUrl: String,
+    availableCountries: Option[HashSet[String]],
+    label: Option[UserRepresentation],
+    secretToken: Option[String],
     secretUri: Option[String],
-    commentCount: Option[Int],
     userFavourite: Option[Boolean],
     userPlaybackCount: Option[Int],
-    audioMetadata: TrackAudioMetadata,
-    waveformUrl: String,
+    playbackCount: Option[Int],
+    downloadCount: Option[Int],
+    commentCount: Option[Int],
+    favoritingsCount: Option[Int],
+    repostsCount: Option[Int],
+    commentable: Boolean,
+    downloadable: Boolean,
+    downloadsRemaining: Option[Int],
+    access: Option[Access],
     policy: Option[String],
-    monetizationModel: Option[String]
+    monetizationModel: Option[String],
+    audioMetadata: TrackAudioMetadata
 ) {
-  def id = visibleTrack.urn.identifier.toLong
+  def id = urn.identifier.toLong
 }
 
 object TrackRepresentation {
-  private val snippetDurationMs = 30000
-  private val dateTimeFormat = DateTimeFormat.forPattern("yyyy/MM/dd HH:mm:ss +0000")
-  private val cdnRoot = "https://i1.sndcdn.com"
+  val dateTimeFormat = DateTimeFormat.forPattern("yyyy/MM/dd HH:mm:ss +0000")
 
   implicit val writes = new Writes[TrackRepresentation] {
 
@@ -67,47 +92,47 @@ object TrackRepresentation {
       Json.obj(
         "kind" -> "track",
         "id" -> rep.id,
-        "created_at" -> rep.visibleTrack.createdAt.toString(dateTimeFormat),
+        "created_at" -> rep.createdAt.toString(dateTimeFormat),
         "user_id" -> rep.user.urn.identifier.toLong,
-        "duration" -> trackDuration(rep.visibleTrack),
-        "commentable" -> rep.visibleTrack.commentable,
+        "duration" -> rep.duration,
+        "commentable" -> rep.commentable,
         "comment_count" -> rep.commentCount,
         "state" -> rep.audioMetadata.state,
         "original_content_size" -> rep.audioMetadata.original_content_size,
-        "last_modified" -> rep.visibleTrack.lastModified.toString(dateTimeFormat),
-        "sharing" -> (if (rep.visibleTrack.public) "public" else "private"),
-        "tag_list" -> mkTagList(rep),
-        "permalink" -> rep.visibleTrack.permalink,
-        "streamable" -> rep.visibleTrack.apiStreamable,
-        "embeddable_by" -> rep.visibleTrack.embeddableBy,
-        "purchase_url" -> rep.visibleTrack.purchaseUrl,
-        "purchase_title" -> rep.visibleTrack.purchaseTitle.map(HtmlSanitizer.sanitize),
-        "label_id" -> rep.visibleTrack.labelId,
-        "genre" -> rep.visibleTrack.genre.map(HtmlSanitizer.sanitize),
-        "title" -> HtmlSanitizer.sanitize(rep.visibleTrack.title),
-        "description" -> rep.visibleTrack.description.map(HtmlSanitizer.sanitize),
-        "label_name" -> rep.visibleTrack.labelName.map(HtmlSanitizer.sanitize),
-        "release" -> rep.visibleTrack.release.map(HtmlSanitizer.sanitize),
-        "track_type" -> rep.visibleTrack.trackType.map(HtmlSanitizer.sanitize),
-        "key_signature" -> rep.visibleTrack.keySignature.map(HtmlSanitizer.sanitize),
+        "last_modified" -> rep.lastModified.toString(dateTimeFormat),
+        "sharing" -> (if (rep.public) "public" else "private"),
+        "tag_list" -> (rep.machineTags ++ rep.userTags).mkString(" "),
+        "permalink" -> rep.permalink,
+        "streamable" -> rep.apiStreamable,
+        "embeddable_by" -> rep.embeddableBy,
+        "purchase_url" -> rep.purchaseUrl,
+        "purchase_title" -> rep.purchaseTitle.map(HtmlSanitizer.sanitize),
+        "label_id" -> rep.labelId,
+        "genre" -> rep.genre.map(HtmlSanitizer.sanitize),
+        "title" -> HtmlSanitizer.sanitize(rep.title),
+        "description" -> rep.description.map(HtmlSanitizer.sanitize),
+        "label_name" -> rep.labelName.map(HtmlSanitizer.sanitize),
+        "release" -> rep.release.map(HtmlSanitizer.sanitize),
+        "track_type" -> rep.trackType.map(HtmlSanitizer.sanitize),
+        "key_signature" -> rep.keySignature.map(HtmlSanitizer.sanitize),
         "isrc" -> rep.isrc.map(_.toString),
-        "video_url" -> rep.visibleTrack.videoUrl,
-        "bpm" -> rep.visibleTrack.bpm.map(roundBpm),
-        "release_year" -> rep.visibleTrack.releaseYear,
+        "video_url" -> rep.videoUrl,
+        "bpm" -> rep.bpm.map(roundBpm),
+        "release_year" -> rep.releaseYear,
         "release_month" -> rep.releaseMonth,
         "release_day" -> rep.releaseDay,
         "original_format" -> rep.audioMetadata.original_format,
-        "license" -> rep.visibleTrack.license,
+        "license" -> rep.license,
         "uri" -> rep.uri,
         "user" -> rep.user,
         "user_uri" -> s"https://api.soundcloud.com/users/${rep.user.urn.identifier}",
         "permalink_url" -> rep.permalinkUrl,
-        "artwork_url" -> rep.visibleTrack.artwork.filename.map(imageUrl),
+        "artwork_url" -> rep.artworkUrl,
         "stream_url" -> rep.streamUrl,
         "download_url" -> rep.downloadUrl,
         "waveform_url" -> rep.waveformUrl,
         "domain_lockings" -> None,
-        "available_country_codes" -> rep.geoblockings,
+        "available_country_codes" -> rep.availableCountries,
         "label" -> rep.label,
         "secret_token" -> rep.secretToken,
         "secret_uri" -> rep.secretUri,
@@ -119,41 +144,12 @@ object TrackRepresentation {
         "reposts_count" -> rep.repostsCount,
         "downloadable" -> rep.downloadable,
         "downloads_remaining" -> rep.downloadsRemaining,
-        "access" -> rep.visibleTrack.access.map(_.name),
-        "policy" -> rep.policy,
-        "monetization_model" -> rep.monetizationModel
+        "access" -> rep.access.map(_.name),
+        "policy" -> rep.policy, // empty unless requested by allowlisted client
+        "monetization_model" -> rep.monetizationModel // empty unless requested by allowlisted client
       )
-
     }
 
-    def trackDuration(visibleTrack: VisibleTrack): Int = {
-      val fullDuration = visibleTrack.duration
-      if (visibleTrack.authorization.policy == ContentPolicy.SNIP && fullDuration > snippetDurationMs) {
-        snippetDurationMs
-      } else {
-        fullDuration
-      }
-    }
-
-    private def roundBpm(f: Double): Double =
-      (f * 10000.0).round.toDouble / 10000.0
-
-    private def mkTagList(rep: TrackRepresentation): String =
-      (rep.visibleTrack.machineTags ++ rep.visibleTrack.userTags).map(quoteTagIfNecessary _).mkString(" ")
-
-    private def quoteTagIfNecessary(tag: String): String =
-      if (tag.exists(_.isSpaceChar))
-        "\"" + tag + "\""
-      else
-        tag
-
-    private def imageUrl(imageFile: String): String = {
-      val s3FilenamePattern = """(.*)-original\.\w*""".r
-
-      imageFile match {
-        case s3FilenamePattern(s3filename) => cdnRoot + s"/$s3filename-large.jpg"
-        case _ => cdnRoot + "/" + imageFile
-      }
-    }
+    private def roundBpm(f: Double): Double = (f * 10000.0).round.toDouble / 10000.0
   }
 }

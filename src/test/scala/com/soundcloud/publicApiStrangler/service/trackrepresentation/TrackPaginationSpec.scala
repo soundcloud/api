@@ -23,7 +23,9 @@ class TrackPaginationSpec extends UnitSpecification with TrackRepresentationSpec
       .shuffle(
         (0 until size)
           .map(n =>
-            createTrackRepresentation(visibleTrack = defaultTrack.copy(urn = Urn("soundcloud", "tracks", n.toString)))
+            createTrackRepresentationFromVisibleTrack(visibleTrack =
+              defaultTrack.copy(urn = Urn("soundcloud", "tracks", n.toString))
+            )
           )
       )
       .toList
@@ -51,7 +53,7 @@ class TrackPaginationSpec extends UnitSpecification with TrackRepresentationSpec
 
     "#calculateFinalPage" >> {
       "returns the sorted tracks" >> {
-        pagination.calculateFinalPage(trackRepresentations(3)).map(_.visibleTrack.urn) ==== List(
+        pagination.calculateFinalPage(trackRepresentations(3)).map(_.urn) ==== List(
           Urn("soundcloud", "tracks", "2"),
           Urn("soundcloud", "tracks", "1"),
           Urn("soundcloud", "tracks", "0")
@@ -80,7 +82,7 @@ class TrackPaginationSpec extends UnitSpecification with TrackRepresentationSpec
 
     "#calculateFinalPage" >> {
       "returns the sorted tracks" >> {
-        pagination.calculateFinalPage(trackRepresentations(2)).map(_.visibleTrack.urn) ==== List(
+        pagination.calculateFinalPage(trackRepresentations(2)).map(_.urn) ==== List(
           Urn("soundcloud", "tracks", "1"),
           Urn("soundcloud", "tracks", "0")
         )
@@ -153,7 +155,7 @@ class TrackPaginationSpec extends UnitSpecification with TrackRepresentationSpec
 
     "#calculateFinalPage" >> {
       "returns the sorted tracks" >> {
-        pagination.calculateFinalPage(trackRepresentations(4)).map(_.visibleTrack.urn) ==== List(
+        pagination.calculateFinalPage(trackRepresentations(4)).map(_.urn) ==== List(
           Urn("soundcloud", "tracks", "3"),
           Urn("soundcloud", "tracks", "2")
         )
@@ -186,7 +188,7 @@ class TrackPaginationSpec extends UnitSpecification with TrackRepresentationSpec
       (6, new LocalDateTime(2017, 1, 20, 10, 0, 0))
     ).map {
       case (id, createdAt) =>
-        createTrackRepresentation(visibleTrack =
+        createTrackRepresentationFromVisibleTrack(visibleTrack =
           defaultTrack.copy(urn = Urn("soundcloud", "tracks", id.toString), createdAt = createdAt)
         )
     }
@@ -204,7 +206,7 @@ class TrackPaginationSpec extends UnitSpecification with TrackRepresentationSpec
       "returns the sorted tracks" >> {
         pagination
           .calculateFinalPage(trackRepresentationsWithCreatedAt)
-          .map(_.visibleTrack.urn) ==== List(
+          .map(_.urn) ==== List(
           Urn("soundcloud", "tracks", "4"),
           Urn("soundcloud", "tracks", "3"),
           Urn("soundcloud", "tracks", "2")

@@ -3,7 +3,6 @@ package com.soundcloud.publicApiStrangler.handler.representation.tracks
 import com.soundcloud.jvmkit.module.http.server.JsonResponseBuilder
 import com.soundcloud.jvmkit.module.outcome._
 import com.soundcloud.publicApiStrangler.handler.support.error.UnhandledOutcomeException
-import com.soundcloud.publicApiStrangler.service.CreatedTrack.CreatedTrack
 import com.soundcloud.publicApiStrangler.service.trackrepresentation.TrackRepresentation
 import com.soundcloud.publicApiStrangler.support.ErrorResponse
 import com.twitter.finagle.http.{Response, Status}
@@ -13,11 +12,11 @@ import play.api.libs.json.Json
 object TrackRepresentationResponse {
 
   def handleCreateTrackResponseFromService(
-      outcome: Future[Outcome[CreatedTrack]]
+      outcome: Future[Outcome[TrackRepresentation]]
   ): Future[Response] = {
     outcome.map {
       case Good(createdTrack) =>
-        val headers = Map("Location" -> createdTrack.location)
+        val headers = Map("Location" -> createdTrack.uri.getOrElse(""))
         generateResponse(Status.Created, Json.stringify(Json.toJson(createdTrack)), headers)
       case Bad(NotFound(_)) => ErrorResponse.notFound()
       case Bad(NotValid(msg)) => ErrorResponse.badRequest(msg.head)

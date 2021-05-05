@@ -12,7 +12,6 @@ import com.soundcloud.publicApiStrangler.client.trackcoordinator.{TrackCoordinat
 import com.soundcloud.publicApiStrangler.client.tracks.TrackRequest
 import com.soundcloud.publicApiStrangler.handler.support.error.UnhandledOutcomeException
 import com.soundcloud.publicApiStrangler.handler.support.requestParser._
-import com.soundcloud.publicApiStrangler.service.CreatedTrack.CreatedTrack
 import com.twitter.io.Buf
 import com.twitter.util.Future
 
@@ -49,7 +48,7 @@ class TrackUpdateService(
       maybeAlbumArt: Option[TrackArtworkUpdateRequest],
       trackMetadata: TrackMetadataCreateRequest,
       session: UserSession
-  ): Future[Outcome[CreatedTrack]] = {
+  ): Future[Outcome[TrackRepresentation]] = {
     for {
       user <- fetchUser(session, session.getUser)
       uploadedImageResponse <- uploadArtworkToS3(maybeAlbumArt)
@@ -89,10 +88,12 @@ class TrackUpdateService(
       userSession: UserSession,
       trackCoordinatorTrack: Outcome[TrackCoordinatorTrack],
       user: Outcome[UserRepresentation]
-  ): Future[Outcome[CreatedTrack]] = {
+  ): Future[Outcome[TrackRepresentation]] = {
     (trackCoordinatorTrack, user) match {
       case (Good(trackCoordinatorTrack), Good(user)) =>
-        Future.value(Good(CreatedTrack(trackCoordinatorTrack, user, userSession.agent)))
+        Future.value(
+          Good(TrackRepresentationBuilder.fromTrackCoordinatorTrack(trackCoordinatorTrack, user, userSession.agent))
+        )
       case (Bad(outcome), _) => Future.value(outcome.bad)
       case (_, Bad(outcome)) => Future.value(outcome.bad)
       case _ => throw new UnhandledOutcomeException
@@ -135,30 +136,26 @@ class TrackUpdateService(
       trackRep: TrackRepresentation,
       metadataUpdate: TrackCoordinatorTrack
   ): TrackRepresentation = {
+
     trackRep.copy(
       isrc = metadataUpdate.publisher_metadata.flatMap(publisherMetadata => publisherMetadata.isrc.map(Isrc)),
-      geoblockings = metadataUpdate.geo_blockings.flatMap(getGeoBlockings),
-      visibleTrack = trackRep.visibleTrack.copy(
-        title = metadataUpdate.title,
-        genre = metadataUpdate.genre,
-        public = metadataUpdate.public,
-        description = metadataUpdate.description,
-        apiStreamable = metadataUpdate.api_streamable,
-        commentable = metadataUpdate.commentable,
-        downloadable = metadataUpdate.downloadable.getOrElse(false),
-        embeddable = metadataUpdate.embeddable,
-        labelName = metadataUpdate.label_name,
-        license = metadataUpdate.license,
-        permalink = metadataUpdate.permalink,
-        purchaseTitle = metadataUpdate.purchase_title,
-        purchaseUrl = metadataUpdate.purchase_url,
-        release = metadataUpdate.release,
-        releaseDay = metadataUpdate.release_day,
-        releaseMonth = metadataUpdate.release_month,
-        revealComments = metadataUpdate.reveal_comments,
-        revealStats = metadataUpdate.reveal_stats,
-        userTags = metadataUpdate.tag_list.map(_.split(",").toList).getOrElse(List.empty)
-      )
+      availableCountries = metadataUpdate.geo_blockings.flatMap(getGeoBlockings),
+      title = metadataUpdate.title,
+      genre = metadataUpdate.genre,
+      public = metadataUpdate.public,
+      description = metadataUpdate.description,
+      apiStreamable = metadataUpdate.api_streamable,
+      commentable = metadataUpdate.commentable,
+      downloadable = metadataUpdate.downloadable.getOrElse(false),
+      labelName = metadataUpdate.label_name,
+      license = metadataUpdate.license,
+      permalink = metadataUpdate.permalink,
+      purchaseTitle = metadataUpdate.purchase_title,
+      purchaseUrl = metadataUpdate.purchase_url,
+      release = metadataUpdate.release,
+      releaseDay = metadataUpdate.release_day,
+      releaseMonth = metadataUpdate.release_month,
+      userTags = metadataUpdate.tag_list
     )
   }
 }

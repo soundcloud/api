@@ -65,7 +65,6 @@ case class TrackCoordinatorTrack(
 )
 
 object TrackCoordinatorTrack {
-
   implicit val format = new Format[TrackCoordinatorTrack] {
 
     override def writes(o: TrackCoordinatorTrack) = {

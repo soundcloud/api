@@ -49,7 +49,7 @@ class UserTracksServiceSpec extends TrackRepresentationsSpecificationContext {
     "when all data is available" in new Context {
       when(
         trackRepresentationsService
-          .tracks(session, List(TrackRequest(track.visibleTrack.urn, None)), access)
+          .tracks(session, List(TrackRequest(track.urn, None)), access)
       ).thenReturn(Future.value(List(track)))
       when(trackmetadataClient.userTracks(session, trackOwnerUrn, pagination))
         .thenReturn(Future.value(chronoResponse))
@@ -64,7 +64,7 @@ class UserTracksServiceSpec extends TrackRepresentationsSpecificationContext {
       "when data is not available" in new Context {
         when(
           trackRepresentationsService
-            .tracks(session, List(TrackRequest(track.visibleTrack.urn, None)), access)
+            .tracks(session, List(TrackRequest(track.urn, None)), access)
         ).thenReturn(Future.value(List.empty))
         when(trackmetadataClient.userTracks(session, trackOwnerUrn, pagination))
           .thenReturn(Future.value(ChronoResponse.emptyResponse))
@@ -77,13 +77,13 @@ class UserTracksServiceSpec extends TrackRepresentationsSpecificationContext {
 
     "#userTrack" >> {
       "when all data is available" in new Context {
-        when(trackRepresentationsService.track(session, TrackRequest(track.visibleTrack.urn, Some("secr3t-Token"))))
+        when(trackRepresentationsService.track(session, TrackRequest(track.urn, Some("secr3t-Token"))))
           .thenReturn(Future.value(Some(track)))
 
         val trackRepresentation =
           Await.result(
             userTracksService
-              .userTrack(track.visibleTrack.urn, session, track.user.urn.identifier, Some("secr3t-Token"))
+              .userTrack(track.urn, session, track.user.urn.identifier, Some("secr3t-Token"))
           )
 
         trackRepresentation match {
@@ -94,11 +94,11 @@ class UserTracksServiceSpec extends TrackRepresentationsSpecificationContext {
       }
 
       "when data is not available" in new Context {
-        when(trackRepresentationsService.track(session, TrackRequest(track.visibleTrack.urn, Some("secr3t-Token"))))
+        when(trackRepresentationsService.track(session, TrackRequest(track.urn, Some("secr3t-Token"))))
           .thenReturn(Future.value(None))
 
         val trackRepresentation =
-          Await.result(userTracksService.userTrack(track.visibleTrack.urn, session, "123", Some("secr3t-Token")))
+          Await.result(userTracksService.userTrack(track.urn, session, "123", Some("secr3t-Token")))
 
         trackRepresentation.isEmpty
       }

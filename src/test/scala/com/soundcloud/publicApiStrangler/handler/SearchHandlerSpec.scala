@@ -131,7 +131,7 @@ class SearchHandlerSpec extends UnitSpecification {
 
   "/tracks" >> {
     trait Context extends ForwardContext with TrackRepresentationSpecContext {
-      val trackRepresentation = createTrackRepresentation()
+      val trackRepresentation = createTrackRepresentationFromVisibleTrack()
       val tracksCollection = Collection(List(trackRepresentation), None)
 
       val path = "/tracks"

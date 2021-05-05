@@ -87,7 +87,7 @@ class LikesHandlerSpec extends UnitSpecification {
     }
 
     trait SuccessfulResponse extends TrackRepresentationSpecContext with TracksForUserContext {
-      val trackRepresentation = createTrackRepresentation()
+      val trackRepresentation = createTrackRepresentationFromVisibleTrack()
       val tracksCollection = Collection(List(trackRepresentation), None)
       val expectedResponse = Collection.getRepresentation(tracksCollection, true)
     }
@@ -468,7 +468,7 @@ class LikesHandlerSpec extends UnitSpecification {
     }
 
     trait SuccessfulResponse extends TrackRepresentationSpecContext with TracksForUserContext {
-      val trackRepresentation = createTrackRepresentation()
+      val trackRepresentation = createTrackRepresentationFromVisibleTrack()
       val tracksCollection = Collection(List(trackRepresentation), None)
       val expectedResponse = Collection.getRepresentation(tracksCollection, true)
     }
