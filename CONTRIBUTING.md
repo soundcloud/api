@@ -10,7 +10,7 @@ We recommend reading about our BFFs before making changes to our codebase, espec
 * `make test` – run just the unit tests.
 * `make interactive` – start an SBT console.
 
-Set the `USE_CRUN` environment variable to `false` to avoid using crun when possible.
+Set the `USE_CRUN` environment variable to `false` to avoid using sc crun when possible.
 
 ## Running Public API Strangler locally
 
