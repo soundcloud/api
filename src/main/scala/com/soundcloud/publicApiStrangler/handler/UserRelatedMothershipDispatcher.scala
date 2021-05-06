@@ -2,7 +2,6 @@ package com.soundcloud.publicApiStrangler.handler
 
 import com.soundcloud.jvmkit.module.bff.session.UserAuthentication
 import com.soundcloud.jvmkit.module.http.server.HandlerRequest
-import com.soundcloud.jvmkit.module.telemetry.Telemetry
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.publicApiStrangler.client.followcounts.{FollowCounts, FollowCountsClient}
@@ -41,22 +40,11 @@ class UserRelatedMothershipDispatcher(
     mothershipDispatcher: DispatchToMothershipHandler,
     followCountsClient: FollowCountsClient,
     lieblingClient: LieblingClient,
-    repostsClient: RepostsClient,
-    telemetry: Telemetry
+    repostsClient: RepostsClient
 ) {
-
-  private lazy val trackIdFavoritersPaginationCounter =
-    telemetry.counter(
-      "track_id_favorites_pagination_type_total",
-      "Count of the types of pagination used on tracks/:id/favoriters endpoint",
-      "pagination_method"
-    )
-
-  private lazy val trackIdFavoritersRegex = "(/tracks/\\d+/favoriters)".r
 
   def dispatchToMothership(request: HandlerRequest): Future[Response] = {
     userAuthentication.withUserSession(request) { session =>
-      countPaginationMethodIfNeeded(request)
       mothershipDispatcher
         .dispatch(request)
         .flatMap(response => {
@@ -75,21 +63,6 @@ class UserRelatedMothershipDispatcher(
           }
         })
     }
-  }
-
-  private def countPaginationMethodIfNeeded(request: HandlerRequest): Unit = {
-    if (request.path.nonEmpty)
-      request.path match {
-        case trackIdFavoritersRegex(_) =>
-          if (request.params.contains("cursor")) {
-            trackIdFavoritersPaginationCounter.labels("cursor").inc()
-          } else if (request.params.contains("offset")) {
-            trackIdFavoritersPaginationCounter.labels("offset").inc()
-          } else {
-            trackIdFavoritersPaginationCounter.labels("none").inc()
-          }
-        case _ =>
-      }
   }
 
   private def enrichResponse(
