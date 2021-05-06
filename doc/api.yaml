@@ -1200,7 +1200,7 @@ components:
       deprecated: true
       type: array
       items:
-        $ref: '#/components/schemas/User'
+        $ref: './components/schemas/LegacyUser.yaml'
     Track:
       $ref: './components/schemas/Track.yaml'
     Tracks:

@@ -13,6 +13,7 @@ object UserFollowRepresentation {
       "uri" -> s"https://api.soundcloud.com/users/${user.urn.identifier}",
       "username" -> user.username,
       "permalink" -> user.permalink,
+      "created_at" -> user.created_at,
       "last_modified" -> user.updated_at,
       "first_name" -> user.first_name,
       "last_name" -> user.last_name,

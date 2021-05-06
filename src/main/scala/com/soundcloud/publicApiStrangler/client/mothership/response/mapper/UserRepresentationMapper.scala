@@ -66,6 +66,7 @@ object UserRepresentationMapper {
       followers_count = followCount.map(_.followers).orElse((json \ "followers_count").asOpt[Long]),
       verified = (json \ "verified").as[Boolean],
       description = (json \ "description").asOpt[String],
+      created_at = (json \ "created_at").asOpt[String],
       updated_at = (json \ "updated_at").asOpt[String],
       discogs_name = getNameInNetwork(json, "discogs"),
       first_name = (json \ "first_name").asOpt[String],

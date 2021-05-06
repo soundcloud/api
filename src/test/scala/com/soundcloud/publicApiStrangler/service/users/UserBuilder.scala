@@ -18,6 +18,7 @@ class UserBuilder {
   private var verified: Boolean = true
   private var description: Option[String] = Some("I am a nice person")
   private var updated_at: Option[String] = Some("2016/10/10 11:21:36 +0000")
+  private var created_at: Option[String] = Some("2014/10/10 11:21:36 +0000")
   private var discogs_name: Option[String] = Some("discogs")
   private var first_name: Option[String] = Some("G")
   private var last_name: Option[String] = Some("Raffe")
@@ -47,6 +48,7 @@ class UserBuilder {
   def setFollowingsCount(value: Option[Long]) = { followings_count = value; this }
   def setVerified(value: Boolean) = { verified = value; this }
   def setDescription(value: Option[String]) = { description = value; this }
+  def setCreatedAt(value: Option[String]) = { created_at = value; this }
   def setUpdatedAt(value: Option[String]) = { updated_at = value; this }
   def setDiscogsName(value: Option[String]) = { discogs_name = value; this }
   def setFirstName(value: Option[String]) = { first_name = value; this }
@@ -79,6 +81,7 @@ class UserBuilder {
       followings_count = this.followings_count,
       verified = this.verified,
       description = this.description,
+      created_at = this.created_at,
       updated_at = this.updated_at,
       discogs_name = this.discogs_name,
       first_name = this.first_name,

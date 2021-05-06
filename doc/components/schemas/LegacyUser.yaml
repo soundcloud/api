@@ -34,10 +34,6 @@ properties:
   kind:
     description: kind of resource
     type: string
-  created_at:
-    description: profile creation datetime
-    format: date-time
-    type: string
   last_modified:
     description: last modified datetime
     format: date-time
