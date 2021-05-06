@@ -60,27 +60,27 @@ docker-up-%:
 	sc crun -l base-dev -- sc wait http publicapistrangler:5000/-/health
 	sc crun -l base-dev -- sc wait http asset-uploads:5005/-/health
 
-end-to-end-test: remove-containers
+end-to-end-test: stop-containers
 	echo "This assumes you've run make package before"
 	CONFIG=e2e VERSION=$(PUBLIC_API_STRANGLER_VERSION) docker-compose -f docker-compose-e2e-tests.yml up -d publicapistrangler
 	sc crun -l base-dev -- sc wait http publicapistrangler:5000/-/health
 	sc crun -l sbt -e ACCESS_TOKEN=$(shell make -s generate-token) --config=e2e.secrets -- sbt endToEnd/test
 	make docker-down
 
-local-contract-test: remove-containers docker-up-development
+local-contract-test: stop-containers docker-up-development
 	cd doc && make test
 
 package-assets:
 	make --directory=asset-uploads package
 
-contract-test: package package-assets remove-containers docker-up-development
+contract-test: package package-assets stop-containers docker-up-development
 	sc crun -l nodejs-12-dev -e ACCESS_TOKEN=$(shell make -s generate-token) --enable-proxy --config=e2e.secrets -- make --directory=doc contract-test
 	make docker-down
 
 docker-down:
 	CONFIG= VERSION=$(PUBLIC_API_STRANGLER_VERSION) docker-compose down --remove-orphans
 
-remove-containers:
+stop-containers:
 	CONFIG= VERSION=$(PUBLIC_API_STRANGLER_VERSION) docker-compose rm -s -f
 
 unit-test:
@@ -158,4 +158,4 @@ deploy-prometheus:
 		--rule=https://ent.int.s-cloud.net/prometheus/rules/jvmkit.yml \
 		--rule=https://ent.int.s-cloud.net/prometheus/rules/canary_vs_release.yml \
 		--rule=https://ent.int.s-cloud.net/prometheus/rules/slo.yml \
-		--rule=https://ent.int.s-cloud.net/prometheus/rules/memcached.yml 
+		--rule=https://ent.int.s-cloud.net/prometheus/rules/memcached.yml
