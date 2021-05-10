@@ -2,15 +2,19 @@ package com.soundcloud.publicApiStrangler.handler.search
 
 import com.soundcloud.jvmkit.module.bff.session.UserAuthentication
 import com.soundcloud.jvmkit.module.http.server.HandlerRequest
+import com.soundcloud.jvmkit.module.outcome.Outcome
+import com.soundcloud.jvmkit.module.telemetry.Telemetry
 import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.publicApiStrangler.handler.representation.collection.CollectionResponse
 import com.soundcloud.publicApiStrangler.handler.representation.serializers.SearchUserRepresentation.searchUserWrites
 import com.soundcloud.publicApiStrangler.handler.search.SearchHandler._
 import com.soundcloud.publicApiStrangler.service.SearchService
 import com.soundcloud.publicApiStrangler.service.pagination.OffsetBasedPagination
+import com.soundcloud.publicApiStrangler.service.representation.collection.Collection
 import com.soundcloud.publicApiStrangler.service.trackrepresentation.TrackPagination
 import com.twitter.finagle.http.{ParamMap, Response}
 import com.twitter.util.Future
+import play.api.libs.json.Writes
 
 import java.net.URL
 
@@ -20,8 +24,24 @@ import java.net.URL
 class SearchHandler(
     userAuthentication: UserAuthentication,
     baseUrl: String,
-    searchService: SearchService
+    searchService: SearchService,
+    telemetry: Telemetry
 ) {
+  private val incompleteResponsesCounter = telemetry.counter(
+    "incomplete_paginated_results_total",
+    "Number of requests that get fewer results than requested, even when more are available"
+  )
+  private val missingResultsCounter = telemetry.histogram(
+    "missing_paginated_items_total",
+    "Number of items that were missing from paginated requests (due to geoblocking, for example)",
+    Seq.empty,
+    5d,
+    10d,
+    25d,
+    50d,
+    100d,
+    200d
+  )
 
   def searchUsers(req: HandlerRequest): Future[Response] =
     addWildcardIfNoSearchQuery(req, defaultParams, searchUsers)
@@ -37,8 +57,22 @@ class SearchHandler(
       val tracksCollection = searchService
         .searchTracks(session, req.params, pagination)
         .value
+        .onSuccess(recordIncompleteResponses(_, pagination.limit))
+
       CollectionResponse.handleCollectionResponse(tracksCollection, hasLinkedPartitioning)
     }
+  }
+
+  private def recordIncompleteResponses[T: Writes](
+      collectionResponse: Outcome[Collection[T]],
+      requestedLimit: Int
+  ): Unit = {
+    collectionResponse.foreach(coll => {
+      if (requestedLimit > coll.items.size && coll.nextHref.isDefined) {
+        incompleteResponsesCounter.inc()
+        missingResultsCounter.observe(requestedLimit - coll.items.size)
+      }
+    })
   }
 
   private def searchPlaylists(

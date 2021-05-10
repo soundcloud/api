@@ -38,13 +38,14 @@ class SearchHandlerSpec extends UnitSpecification {
     val repostsClientMock = mock[RepostsClient]
     val exceptionCollector = new ExceptionCollector(Telemetry.createIsolatedInstance)
     val searchService = mock[SearchService]
-
+    val telemetry = Telemetry.createIsolatedInstance
     val authentication = new FakeUserAuthentication(anonymousSession)
 
     val handler = new SearchHandler(
       authentication,
       "http://api.soundcloud.com",
-      searchService
+      searchService,
+      telemetry
     )
 
     override def routingDefinitions = Routing.forSearchHandler(handler)
@@ -136,11 +137,8 @@ class SearchHandlerSpec extends UnitSpecification {
         anonymousSession,
         ParamMap(("q", "foo"), ("offset", "10"), ("limit", "5"), ("linked_partitioning", "1")),
         paginationParams(path + queryString)
-      ) returns Future
-        .value(
-          tracksCollection
-        )
-        .outcomeF
+      ) returns Future.value(tracksCollection).outcomeF
+
       val response = get(path, Map("q" -> "foo", "offset" -> "10", "limit" -> "5", "linked_partitioning" -> "1"))
 
       response.statusCode ==== 200
@@ -158,6 +156,22 @@ class SearchHandlerSpec extends UnitSpecification {
       val response = get(path, Map("q" -> "foo", "offset" -> "10", "limit" -> "5", "linked_partitioning" -> "1"))
 
       response.statusCode ==== 400
+    }
+
+    "records missing items" in new Context {
+      val incompleteTracksCollection = Collection(List(trackRepresentation), Some("next_href"))
+      val queryString = "?q=foo&offset=10&limit=5&linked_partitioning=1"
+      val params = ParamMap(("q", "foo"), ("offset", "10"), ("limit", "5"), ("linked_partitioning", "1"))
+      searchService.searchTracks(
+        anonymousSession,
+        params,
+        paginationParams(path + queryString)
+      ) returns Future.value(incompleteTracksCollection).outcomeF
+
+      get(path, params)
+
+      telemetry.getSampleValue("incomplete_paginated_results_total", Seq.empty, Seq.empty) === Some(1)
+      telemetry.getSampleValue("missing_paginated_items_total_bucket", Seq("le"), Seq("5.0")) === Some(1.0)
     }
   }
 

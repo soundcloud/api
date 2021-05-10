@@ -75,7 +75,8 @@ class Handlers(
     new SearchHandler(
       userAuthentication,
       baseUrl,
-      searchService
+      searchService,
+      telemetry
     )
   }
 
