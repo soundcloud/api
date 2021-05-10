@@ -112,26 +112,6 @@ pipelines:
                 command: make
                 arguments:
                 - deploy-api
-    - deploy-prometheus:
-        jobs:
-          deploy-db:
-            job_type: deploy
-            environment_variables:
-              ZONE: db
-            tasks:
-            - exec:
-                command: make
-                arguments:
-                - deploy-prometheus
-          deploy-et:
-            job_type: deploy
-            environment_variables:
-              ZONE: et
-            tasks:
-            - exec:
-                command: make
-                arguments:
-                - deploy-prometheus
     - deploy-doc:
         jobs:
           deploy:
@@ -146,3 +126,24 @@ pipelines:
                 - promote
                 - deploy
                 working_directory: doc
+    - deploy-prometheus:
+        approval: manual
+        jobs:
+          deploy-db:
+            job_type: deploy
+            environment_variables:
+              ZONE: db
+            tasks:
+              - exec:
+                  command: make
+                  arguments:
+                    - deploy-prometheus
+          deploy-et:
+            job_type: deploy
+            environment_variables:
+              ZONE: et
+            tasks:
+              - exec:
+                  command: make
+                  arguments:
+                    - deploy-prometheus
