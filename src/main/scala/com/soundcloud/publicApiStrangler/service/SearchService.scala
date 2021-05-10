@@ -137,6 +137,7 @@ class SearchService(
     "client_id" -> "client_id",
     "place" -> "filter.place"
   )
+  val userParams: Seq[String] = UserParamMappings.keys.toSeq
 
   private def mapUserParams(params: Params): Params = params.collect {
     case (k, v) if UserParamMappings contains k => UserParamMappings(k) -> v

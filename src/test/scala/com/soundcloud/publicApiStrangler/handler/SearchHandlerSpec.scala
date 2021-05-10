@@ -56,30 +56,30 @@ class SearchHandlerSpec extends UnitSpecification {
       val user = new UserBuilder().setUrn(userUrn).build
       val userCollection = Collection[UserRepresentation](items = List(user), nextHref = None)
 
-      val queryParams = Map("q" -> "foo")
-      val pageParams = Map("offset" -> "0", "limit" -> "10")
-      val extraParams = pageParams ++ queryParams
+      lazy val queryParams = Map("q" -> "foo")
+      lazy val pageParams = Map("offset" -> "0", "limit" -> "10")
+      lazy val requestParams = pageParams ++ queryParams
+      searchService.userParams returns Seq("linked_partitioning", "q")
+
+      val request = Request("/users", requestParams.toSeq: _*)
+      request.host = "localhost"
+      val page = OffsetBasedPagination.build(request, searchService.userParams)
+
+      when(searchService.searchUsers(anonymousSession, request.params, page))
+        .thenReturn(Good(userCollection).outcomeF)
 
       val expectedResponse = Collection.getRepresentation(userCollection, false)(searchUserWrites)
     }
 
     "performs a search when q param is present" in new Context {
-      val request = Request("/users", extraParams.toSeq: _*)
-      request.host = "localhost"
-      val page = OffsetBasedPagination.build(request, Seq("linked_partitioning"))
-
-      when(searchService.searchUsers(anonymousSession, request.params, page))
-        .thenReturn(Good(userCollection).outcomeF)
-      val response = get("/users", extraParams, Map("Host" -> "localhost"))
+      val response = get("/users", requestParams, Map("Host" -> "localhost"))
       response.statusCode ==== 200
       response.contentString ==== expectedResponse
     }
 
     "adds wildcard q param to request when not present" in new Context {
       val wildcardParam = Map("q" -> "*")
-      val request = Request("/users", pageParams.toSeq: _*)
-      request.host = "localhost"
-      val page = OffsetBasedPagination.build(request, Seq("linked_partitioning"))
+      override lazy val requestParams = pageParams
 
       when(searchService.searchUsers(anonymousSession, request.params ++ wildcardParam, page))
         .thenReturn(Good(userCollection).outcomeF)
@@ -89,13 +89,7 @@ class SearchHandlerSpec extends UnitSpecification {
     }
 
     "response contains a caching header" in new Context {
-      val request = Request("/users", extraParams.toSeq: _*)
-      request.host = "localhost"
-      val page = OffsetBasedPagination.build(request, Seq("linked_partitioning"))
-
-      when(searchService.searchUsers(anonymousSession, request.params, page))
-        .thenReturn(Good(userCollection).outcomeF)
-      val response = get("/users", extraParams, Map("Host" -> "localhost"))
+      val response = get("/users", requestParams, Map("Host" -> "localhost"))
 
       response.statusCode ==== 200
 
@@ -104,22 +98,12 @@ class SearchHandlerSpec extends UnitSpecification {
     }
 
     "200 when no pagination params" in new Context {
-      val request = Request("/users", queryParams.toSeq: _*)
-      request.host = "localhost"
-      val page = OffsetBasedPagination.build(request, Seq("linked_partitioning"))
-
-      when(searchService.searchUsers(anonymousSession, request.params, page))
-        .thenReturn(Good(userCollection).outcomeF)
-
+      override lazy val requestParams = queryParams
       val response = get("/users", request.params, Map("Host" -> "localhost"))
       response.statusCode ==== 200
     }
 
     "returns 400 when search service returns error" in new Context {
-      val request = Request("/users", queryParams.toSeq: _*)
-      request.host = "localhost"
-      val page = OffsetBasedPagination.build(request, Seq("linked_partitioning"))
-
       when(searchService.searchUsers(anonymousSession, request.params, page))
         .thenReturn(NotValid("not valid").badF)
 

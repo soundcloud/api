@@ -65,7 +65,7 @@ class SearchHandler(
       extraParams: Option[ParamMap]
   ): Future[Response] = {
     val hasLinkedPartitioning = req.params.contains("linked_partitioning")
-    val pagination = OffsetBasedPagination.build(req, Seq("linked_partitioning"))
+    val pagination = OffsetBasedPagination.build(req, Seq("linked_partitioning") ++ searchService.userParams)
 
     val params = extraParams.map(_ ++ req.params).getOrElse(req.params)
     val usersCollection =
@@ -73,7 +73,6 @@ class SearchHandler(
         .searchUsers(session, params, pagination)
         .value
     CollectionResponse.handleCollectionResponse(usersCollection, hasLinkedPartitioning)(searchUserWrites)
-
   }
 
   private def addWildcardIfNoSearchQuery(
