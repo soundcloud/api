@@ -5,7 +5,7 @@ import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.publicApiStrangler.client.liebling.LieblingClient
 import com.soundcloud.publicApiStrangler.client.media.WaveformUrlsGenerator
 import com.soundcloud.publicApiStrangler.client.mothership.RichOkidokiClient
-import com.soundcloud.publicApiStrangler.client.mothership.response.representation.{Geoblockings, UserRepresentation}
+import com.soundcloud.publicApiStrangler.client.mothership.response.representation.Geoblockings
 import com.soundcloud.publicApiStrangler.client.pubmese.{Isrc, PubmeseClient}
 import com.soundcloud.publicApiStrangler.client.quota.UserQuotaClient
 import com.soundcloud.publicApiStrangler.client.stitch.{StitchClient, StitchCounts}
@@ -26,6 +26,12 @@ class TrackRepresentationsService(
     userQuotaClient: UserQuotaClient
 ) {
 
+  def track(
+      session: UserSession,
+      trackRequest: TrackRequest
+  ): Future[Option[TrackRepresentation]] =
+    tracks(session, List(trackRequest), AccessParams.explicitAccess).map(_.headOption)
+
   def tracks(
       session: UserSession,
       trackRequests: List[TrackRequest],
@@ -39,12 +45,6 @@ class TrackRepresentationsService(
     }
   }
 
-  def track(
-      session: UserSession,
-      trackRequest: TrackRequest
-  ): Future[Option[TrackRepresentation]] =
-    tracks(session, List(trackRequest), AccessParams.explicitAccess).map(_.headOption)
-
   private def enrichTracks(
       session: UserSession,
       visibleTracks: List[VisibleTrack]
@@ -52,12 +52,10 @@ class TrackRepresentationsService(
     val urns = visibleTracks.map(_.urn).toSet
     val userUrns = visibleTracks.map(_.userUrn).toSet
     val waveformUrls = visibleTracks.flatMap(_.uid).map(uid => uid -> waveformUrlsGenerator.fromUid(uid)).toMap
-    val userUrnsFromLabelIds =
-      visibleTracks.flatMap(_.labelId).map(labelId => Urn("soundcloud", "users", labelId.toString))
+
     Future
       .join(
         okidokiClient.fetchUserObjects(session, userUrns).map(users => users.map(user => user.urn -> user).toMap),
-        okidokiClient.fetchTracksAudioMetadata(session, urns),
         session.user
           .map(user =>
             lieblingClient.userLikedTracks(session, urns, user).handle { case NonFatal(_) => Map.empty[Urn, Boolean] }
@@ -68,13 +66,10 @@ class TrackRepresentationsService(
         stitchClient.countsForTracks(session, visibleTracks.map(track => (track.userUrn, track.urn)).toSet).handle {
           case NonFatal(_) => Map.empty[Urn, StitchCounts]
         },
-        okidokiClient.fetchUsersMap(session, userUrnsFromLabelIds.toSet).handle {
-          case NonFatal(_) => Map.empty[Urn, UserRepresentation]
-        },
         userQuotaClient.downloadsPerTrack(session, userUrns).handle { case NonFatal(_) => Map.empty[Urn, Option[Int]] }
       )
       .map {
-        case (users, audios, isLiked, isrcs, geoBlockings, counts, labels, downloadsPerTrack) =>
+        case (users, isLiked, isrcs, geoBlockings, counts, downloadsPerTrack) =>
           visibleTracks.map { visibleTrack =>
             TrackRepresentationBuilder.fromVisibleTrack(
               client = session.agent,
@@ -83,9 +78,7 @@ class TrackRepresentationsService(
               user = users(visibleTrack.userUrn),
               isrc = isrcs.get(visibleTrack.urn),
               counts = counts.getOrElse(visibleTrack.urn, StitchCounts(0, 0, 0, 0, 0)),
-              label = visibleTrack.labelId.flatMap(id => labels.get(Urn("soundcloud", "users", id.toString))),
               geoblockings = geoBlockings.getOrElse(visibleTrack.urn, List.empty),
-              trackAudioMetadata = audios(visibleTrack.urn),
               isLiked = isLiked.getOrElse(visibleTrack.urn, false),
               waveformUrl = waveformUrls(visibleTrack.uid.getOrElse("")),
               downloadsPerTrack = downloadsPerTrack.get(visibleTrack.userUrn).flatten

@@ -13,75 +13,10 @@ import play.api.libs.json.{JsNull, Json}
 
 class RichOkidokiClientSpec extends UnitSpecification {
   trait GenericContext extends Scope {
+    lazy val client = new RichOkidokiClient(jsonClient, exceptionCollector)
     val session = anonymousSession
-
     val jsonClient = mock[JsonClient]
     val exceptionCollector = mock[ExceptionCollector]
-    lazy val client = new RichOkidokiClient(jsonClient, exceptionCollector)
-  }
-
-  "track audio" >> {
-    trait TrackAudioMetadataContext extends GenericContext {
-      def resultF = client.fetchTrackAudioMetadata(session, urn)
-
-      def resultT = Await.result(resultF.liftToTry)
-
-      def result = Await.result(resultF)
-
-      lazy val path = Path() / "tracks" / urn / "audio"
-      val urn = Urn("soundcloud", "tracks", "123")
-
-      def mockTrackAudioMetadata: TrackAudioMetadata = TrackAudioMetadata("finished", Some("vqf"), Some(9001))
-
-      def mockResponseContents =
-        Json.obj(
-          "state" -> mockTrackAudioMetadata.state,
-          "original_content_size" -> mockTrackAudioMetadata.original_content_size,
-          "original_format" -> mockTrackAudioMetadata.original_format
-        )
-
-      def mockResponseStatus: Status = Status.Ok
-
-      def mockResponse = Future.value(jsonResponse(mockResponseStatus, mockResponseContents))
-
-      when(jsonClient.getWithSession(session, path, Params.empty, Headers.empty)).thenReturn(mockResponse)
-    }
-
-    "200 response" in new TrackAudioMetadataContext {
-      result ==== Some(TrackAudioMetadata("finished", Some("vqf"), Some(9001)))
-    }
-
-    "200 response with null values for size and format" in new TrackAudioMetadataContext {
-      override def mockResponse =
-        Future.value(
-          jsonResponse(
-            mockResponseStatus,
-            Json.obj("state" -> "storing", "original_content_size" -> JsNull, "original_format" -> JsNull)
-          )
-        )
-
-      result.get.state ==== "storing"
-      result.get.original_format ==== None
-      result.get.original_content_size ==== None
-    }
-
-    "404 response" in new TrackAudioMetadataContext {
-      override def mockResponseStatus = Status.InternalServerError
-
-      resultT.isThrow === true
-    }
-
-    "500 response" in new TrackAudioMetadataContext {
-      override def mockResponseStatus = Status.InternalServerError
-
-      resultT.isThrow === true
-    }
-
-    "exception response" in new TrackAudioMetadataContext {
-      override def mockResponse = Future.exception(new RuntimeException("kaboom"))
-
-      resultT.isThrow === true
-    }
   }
 
   "#fetchTrackGeoblockings" >> {
@@ -138,69 +73,6 @@ class RichOkidokiClientSpec extends UnitSpecification {
         .thenReturn(Future.value(jsonResponse(Status.InternalServerError, JsNull)))
 
       Await.result(client.fetchTrackGeoblockings(session, urns)) ==== Map.empty
-    }
-  }
-
-  "#fetchTracksAudioMetadata" >> {
-    trait GeoblockingsContext extends GenericContext {
-      val path = Path() / "tracks" / "audio" / ""
-
-      val urns = Set(
-        Urn("soundcloud", "tracks", "1"),
-        Urn("soundcloud", "tracks", "2"),
-        Urn("soundcloud", "tracks", "3"),
-        Urn("soundcloud", "tracks", "4")
-      )
-
-      val (firstBatch, secondBatch) = urns.splitAt(2)
-
-      val firstBatchJson = Json.parse(s"""
-           |{
-           |  "collection": [{
-           |    "track_urn": "${firstBatch.head}",
-           |    "state": "finished",
-           |    "original_content_size": 4,
-           |    "original_format": "mp3"
-           |  }, {
-           |    "track_urn": "${firstBatch.last}",
-           |    "state": "failed",
-           |    "original_content_size": null,
-           |    "original_format": null
-           |  }]
-           |}
-        """.stripMargin)
-
-      val secondBatchJson = Json.parse(s"""
-           |{
-           |  "collection": [{
-           |    "track_urn": "${secondBatch.head}",
-           |    "state": "finished",
-           |    "original_content_size": 5,
-           |    "original_format": "ogg"
-           |  }]
-           |}
-        """.stripMargin)
-    }
-
-    "200 response" in new GeoblockingsContext {
-      when(jsonClient.getWithSession(session, path, Map("urns" -> firstBatch.mkString(",")), Headers.empty))
-        .thenReturn(Future.value(jsonResponse(Status.Ok, firstBatchJson)))
-      when(jsonClient.getWithSession(session, path, Map("urns" -> secondBatch.mkString(",")), Headers.empty))
-        .thenReturn(Future.value(jsonResponse(Status.Ok, secondBatchJson)))
-
-      val batchSize = 2
-      Await.result(client.fetchTracksAudioMetadata(session, urns, batchSize)) ==== Map(
-        Urn("soundcloud", "tracks", "1") -> TrackAudioMetadata("finished", Some("mp3"), Some(4)),
-        Urn("soundcloud", "tracks", "2") -> TrackAudioMetadata("failed", None, None),
-        Urn("soundcloud", "tracks", "3") -> TrackAudioMetadata("finished", Some("ogg"), Some(5))
-      )
-    }
-
-    "500 response" in new GeoblockingsContext {
-      when(jsonClient.getWithSession(session, path, Params("urns" -> urns.mkString(",")), Headers.empty))
-        .thenReturn(Future.value(jsonResponse(Status.InternalServerError, JsNull)))
-
-      Await.result(client.fetchTracksAudioMetadata(session, urns)) ==== Map.empty
     }
   }
 

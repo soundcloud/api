@@ -4,7 +4,6 @@ import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.publicApiStrangler.authorization.AllowlistedClients
 import com.soundcloud.publicApiStrangler.authorization.policies.{Access, ContentPolicy, MonetizationModel}
 import com.soundcloud.publicApiStrangler.client.media.TrackWaveformUrl
-import com.soundcloud.publicApiStrangler.client.mothership.TrackAudioMetadata
 import com.soundcloud.publicApiStrangler.client.mothership.response.representation.{Geoblockings, UserRepresentation}
 import com.soundcloud.publicApiStrangler.client.pubmese.Isrc
 import com.soundcloud.publicApiStrangler.client.stitch.StitchCounts
@@ -27,37 +26,26 @@ object TrackRepresentationBuilder {
   ): TrackRepresentation = {
     val urn = Urn.parse(trackCoordinatorTrack.urn).get
     val secretToken = getSecretTokenForPrivateTrack(trackCoordinatorTrack.public, trackCoordinatorTrack.secret_token)
-    val metadata = TrackAudioMetadata(
-      trackCoordinatorTrack.state,
-      trackCoordinatorTrack.original_format,
-      trackCoordinatorTrack.original_content_size.map(_.toLong)
-    )
 
     TrackRepresentation(
       urn = urn,
       createdAt = DateTime.parse(trackCoordinatorTrack.created_at, TrackRepresentation.dateTimeFormat).toLocalDateTime,
       duration = trackDuration(None, trackCoordinatorTrack.duration),
-      lastModified =
-        DateTime.parse(trackCoordinatorTrack.last_modified, TrackRepresentation.dateTimeFormat).toLocalDateTime,
       public = trackCoordinatorTrack.public,
       userTags = trackCoordinatorTrack.tag_list,
       machineTags = None,
-      permalink = trackCoordinatorTrack.permalink,
       apiStreamable = trackCoordinatorTrack.api_streamable,
       embeddableBy = EmbeddingPermission.all
         .find(_.stringValue == trackCoordinatorTrack.embeddable_by)
         .getOrElse(EmbeddingPermission.None),
       purchaseUrl = trackCoordinatorTrack.purchase_url,
       purchaseTitle = trackCoordinatorTrack.purchase_title,
-      labelId = trackCoordinatorTrack.label_id.map(_.toLong),
       genre = trackCoordinatorTrack.genre,
       title = trackCoordinatorTrack.title,
       description = trackCoordinatorTrack.description,
       labelName = trackCoordinatorTrack.label_name,
       release = trackCoordinatorTrack.release,
-      trackType = trackCoordinatorTrack.track_type,
       keySignature = trackCoordinatorTrack.key_signature,
-      videoUrl = trackCoordinatorTrack.video_url,
       bpm = trackCoordinatorTrack.bpm.map(_.toDouble),
       releaseYear = trackCoordinatorTrack.release_year,
       license = trackCoordinatorTrack.license,
@@ -65,14 +53,11 @@ object TrackRepresentationBuilder {
       commentable = trackCoordinatorTrack.commentable,
       user = user,
       isrc = trackCoordinatorTrack.isrc.map(Isrc),
-      label = None,
       availableCountries = getAvailableCountryNodes(trackCoordinatorTrack.geo_blockings.getOrElse(List.empty)),
-      audioMetadata = metadata,
       playbackCount = Some(trackCoordinatorTrack.playback_count),
       downloadCount = Some(trackCoordinatorTrack.downloads_count),
       favoritingsCount = Some(trackCoordinatorTrack.favoritings_count),
       repostsCount = None,
-      secretToken = secretToken,
       releaseDay = trackCoordinatorTrack.release_day,
       releaseMonth = trackCoordinatorTrack.release_month,
       uri = urlFor(urn, trackCoordinatorTrack.public, secretToken),
@@ -87,7 +72,6 @@ object TrackRepresentationBuilder {
       waveformUrl = trackCoordinatorTrack.waveform_url,
       artworkUrl = trackCoordinatorTrack.artwork_url,
       downloadable = trackCoordinatorTrack.downloadable.getOrElse(false),
-      downloadsRemaining = None,
       policy = None,
       monetizationModel = None
     )
@@ -100,9 +84,7 @@ object TrackRepresentationBuilder {
       user: UserRepresentation,
       isrc: Option[Isrc],
       counts: StitchCounts,
-      label: Option[UserRepresentation],
       geoblockings: Geoblockings,
-      trackAudioMetadata: TrackAudioMetadata,
       isLiked: Boolean,
       waveformUrl: TrackWaveformUrl,
       downloadsPerTrack: Option[Int]
@@ -115,24 +97,19 @@ object TrackRepresentationBuilder {
       urn = visibleTrack.urn,
       createdAt = visibleTrack.createdAt,
       duration = trackDuration(Option(visibleTrack.authorization.policy), visibleTrack.duration),
-      lastModified = visibleTrack.lastModified,
       public = visibleTrack.public,
       userTags = mkTagList(visibleTrack.userTags),
       machineTags = mkTagList(visibleTrack.machineTags),
-      permalink = visibleTrack.permalink,
       apiStreamable = visibleTrack.apiStreamable,
       embeddableBy = visibleTrack.embeddableBy,
       purchaseUrl = visibleTrack.purchaseUrl,
       purchaseTitle = visibleTrack.purchaseTitle,
-      labelId = visibleTrack.labelId,
       genre = visibleTrack.genre,
       title = visibleTrack.title,
       description = visibleTrack.description,
       labelName = visibleTrack.labelName,
       release = visibleTrack.release,
-      trackType = visibleTrack.trackType,
       keySignature = visibleTrack.keySignature,
-      videoUrl = visibleTrack.videoUrl,
       bpm = visibleTrack.bpm,
       releaseYear = visibleTrack.releaseYear,
       license = visibleTrack.license,
@@ -140,14 +117,11 @@ object TrackRepresentationBuilder {
       commentable = visibleTrack.commentable,
       user = user,
       isrc = isrc,
-      label = label,
       availableCountries = getAvailableCountryNodes(geoblockings),
-      audioMetadata = trackAudioMetadata,
       playbackCount = getCount(userIsOwner, visibleTrack, "playback_count", counts),
       downloadCount = getCount(userIsOwner, visibleTrack, "download_count", counts),
       favoritingsCount = getCount(userIsOwner, visibleTrack, "favoritings_count", counts),
       repostsCount = getCount(userIsOwner, visibleTrack, "reposts_count", counts),
-      secretToken = secretToken,
       releaseDay = releaseDayFor(visibleTrack),
       releaseMonth = releaseMonthFor(visibleTrack),
       uri = urlFor(visibleTrack.urn, visibleTrack.public, secretToken),
@@ -161,7 +135,6 @@ object TrackRepresentationBuilder {
       waveformUrl = waveformUrl.pngUrl.s,
       artworkUrl = visibleTrack.artwork.filename.map(imageUrl),
       downloadable = getDownloadable(visibleTrack, downloadsPerTrack, counts),
-      downloadsRemaining = getDownloadsRemaining(counts, downloadsPerTrack, userIsOwner),
       policy = getPolicy(visibleTrack.authorization.policy, client),
       monetizationModel = getMonetizationModel(visibleTrack.authorization.monetizationModel, client)
     )
@@ -273,17 +246,6 @@ object TrackRepresentationBuilder {
       case (false, _) => false
       case (true, None) => trackDownloadable // User has no quota, default to track's 'downloadable' setting
       case (true, Some(quota)) => counts.download_count < quota
-    }
-  }
-
-  private def getDownloadsRemaining(
-      counts: StitchCounts,
-      downloadsPerTrack: Option[Int],
-      userIsOwner: Boolean
-  ): Option[Int] = {
-    downloadsPerTrack.map(_ - counts.download_count) match {
-      case res @ Some(_) if userIsOwner => res
-      case _ => None
     }
   }
 

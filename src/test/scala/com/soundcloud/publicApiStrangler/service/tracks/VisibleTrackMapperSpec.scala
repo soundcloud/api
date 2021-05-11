@@ -3,13 +3,7 @@ package com.soundcloud.publicApiStrangler.service.tracks
 import com.soundcloud.jvmkit.module.twirp.proto.WellKnownOps._
 import com.soundcloud.jvmkit.module.util.{Url, Urn}
 import com.soundcloud.publicApiStrangler.authorization.policies._
-import com.soundcloud.publicApiStrangler.client.tracks.{
-  Artwork,
-  EmbeddingPermission,
-  Transcoding,
-  WaveformType,
-  WaveformUrl
-}
+import com.soundcloud.publicApiStrangler.client.tracks._
 import org.joda.time.LocalDateTime
 import org.specs2.mutable.Specification
 import org.specs2.specification.Scope
@@ -17,7 +11,6 @@ import proto.soundcloud.tracks.api.{
   Metadata,
   ContentAuthorization => ProtoContentAuthorization,
   Track => ProtoTrack,
-  TrackType => ProtoTrackType,
   Transcoding => ProtoTranscoding,
   WaveformUrl => ProtoWaveformUrl
 }
@@ -40,13 +33,11 @@ class VisibleTrackMapperSpec extends Specification {
           title = "Some title",
           createdAt = Some(Instant.parse("2013-08-19T02:29:15.000Z").asProto),
           disabledAt = None,
-          lastModified = Some(Instant.parse("2013-08-19T03:29:15.000Z").asProto),
           downloadable = false,
           duration = 123,
           commentable = true,
           genre = None,
           public = false,
-          permalink = "lost-ii-by-dead-battery-dabin",
           permalinkUrl = Some(s"https://soundcloud.com/owner-perma/lost-ii-by-dead-battery-dabin"),
           userTags = List.empty,
           description = None,
@@ -70,11 +61,8 @@ class VisibleTrackMapperSpec extends Specification {
           purchaseTitle = None,
           supplyChainStatus = Some("manual_upload"),
           bpm = None,
-          trackType = ProtoTrackType.DEMO,
           release = None,
-          keySignature = None,
-          videoUrl = None,
-          labelId = None
+          keySignature = None
         )
       ),
       authorization = Some(
@@ -118,13 +106,11 @@ class VisibleTrackMapperSpec extends Specification {
       visibleTrack.title ==== "Some title"
       visibleTrack.createdAt ==== new LocalDateTime(Instant.parse("2013-08-19T02:29:15.000Z").toEpochMilli)
       visibleTrack.disabledAt ==== None
-      visibleTrack.lastModified ==== new LocalDateTime(Instant.parse("2013-08-19T03:29:15.000Z").toEpochMilli)
       visibleTrack.downloadable ==== false
       visibleTrack.duration ==== 123
       visibleTrack.commentable ==== true
       visibleTrack.genre ==== None
       visibleTrack.public ==== false
-      visibleTrack.permalink ==== "lost-ii-by-dead-battery-dabin"
       visibleTrack.permalinkUrl ==== Some(s"https://soundcloud.com/owner-perma/lost-ii-by-dead-battery-dabin")
       visibleTrack.userTags ==== List.empty
       visibleTrack.description ==== None
@@ -174,11 +160,8 @@ class VisibleTrackMapperSpec extends Specification {
         )
       )
       visibleTrack.bpm ==== None
-      visibleTrack.trackType ==== Some("demo")
       visibleTrack.release ==== None
       visibleTrack.keySignature ==== None
-      visibleTrack.videoUrl ==== None
-      visibleTrack.labelId ==== None
       visibleTrack.access ==== None
     }
 

@@ -4,10 +4,6 @@ properties:
   title:
     description: Track title.
     type: string
-  track_type:
-    deprecated: true
-    description: Track type.
-    type: string
   artwork_url:
     description: URL to a JPEG image.
     type: string
@@ -57,31 +53,11 @@ properties:
   kind:
     description: Type of object (track).
     type: string
-  label_id:
-    deprecated: true
-    description: Label user identifier.
-    type: integer
   label_name:
     description: Label user name.
     type: string
-  last_modified:
-    deprecated: true
-    description: Last modified timestamp.
-    type: string
   license:
     description: License
-    type: string
-  original_content_size:
-    deprecated: true
-    description: Content size.
-    type: integer
-  original_format:
-    deprecated: true
-    description: Format.
-    type: string
-  permalink:
-    deprecated: true
-    description: Permalink.
     type: string
   permalink_url:
     description: Permalink URL.
@@ -110,10 +86,6 @@ properties:
   sharing:
     description: Type of sharing (public/private).
     type: string
-  state:
-    deprecated: true
-    description: Track state.
-    type: string
   stream_url:
     description: URL to stream.
     type: string
@@ -132,17 +104,9 @@ properties:
   user_favorite:
     description: Is user's favourite.
     type: boolean
-  user_id:
-    deprecated: true
-    description: User identifier.
-    type: integer
   user_playback_count:
     description: Number of plays by a user.
     type: integer
-  video_url:
-    deprecated: true
-    description: Video URL.
-    type: string
   waveform_url:
     description: Waveform URL.
     type: string
@@ -162,31 +126,12 @@ properties:
       - preview
       - blocked
       - null
-  domain_lockings:
-    deprecated: true
-    description: Domain lockings.
-    type: string
   download_url:
     description: URL to download a track.
     type: string
-  downloads_remaining:
-    deprecated: true
-    description: Number of remaining downloads.
-    type: integer
-  label:
-    deprecated: true
-    $ref: "#/components/schemas/MetaUser"
   reposts_count:
     description: Number of reposts.
     type: integer
-  secret_token:
-    deprecated: true
-    description: Secret token.
-    type: string
   secret_uri:
     description: Secret URL.
-    type: string
-  user_uri:
-    deprecated: true
-    description: User URI.
     type: string

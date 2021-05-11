@@ -85,7 +85,7 @@ class TrackCoordinatorTrackFixtures {
       license = trackRepresentation.license,
       original_content_size = Some(6923),
       original_format = Some("mp3"),
-      permalink = trackRepresentation.permalink,
+      permalink = "",
       permalink_url = "https://soundcloud.com/imprisonedprecision/awesome-track-2014-10-27-17-25-29-66",
       playback_count = 0,
       public = trackRepresentation.public,

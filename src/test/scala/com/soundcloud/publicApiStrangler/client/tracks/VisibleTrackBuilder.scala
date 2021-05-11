@@ -19,7 +19,6 @@ class VisibleTrackBuilder {
   private var downloadable: Boolean = false
   private var duration: Int = 123
   private var genre: Option[String] = None
-  private var lastModified: LocalDateTime = LocalDateTime.parse("2013-08-19T03:29:15")
   private var permalink: String = "lost-ii-by-dead-battery-dabin"
   private var permalinkUrl: Option[String] = Some(s"https://soundcloud.com/owner-perma/$permalink")
   private var public: Boolean = false
@@ -49,11 +48,8 @@ class VisibleTrackBuilder {
   private var supplyChainStatus: Option[String] = None
   private var waveformUrls: List[WaveformUrl] = List.empty
   private var bpm: Option[Double] = None
-  private var trackType: Option[String] = None
   private var release: Option[String] = None
   private var keySignature: Option[String] = None
-  private var videoUrl: Option[String] = None
-  private var labelId: Option[Long] = None
   private var access: Option[Access] = None
 
   def setUrn(value: Urn) = {
@@ -90,10 +86,6 @@ class VisibleTrackBuilder {
 
   def setGenre(value: Option[String]) = {
     genre = value; this
-  }
-
-  def setLastModified(value: LocalDateTime) = {
-    lastModified = value; this
   }
 
   def setPermalink(value: String) = {
@@ -210,24 +202,12 @@ class VisibleTrackBuilder {
     bpm = value; this
   }
 
-  def setTrackType(value: Option[String]) = {
-    trackType = value; this
-  }
-
   def setRelease(value: Option[String]) = {
     release = value; this
   }
 
   def setKeySignature(value: Option[String]) = {
     keySignature = value; this
-  }
-
-  def setVideoUrl(value: Option[String]) = {
-    videoUrl = value; this
-  }
-
-  def setLabelId(value: Option[Long]) = {
-    labelId = value; this
   }
 
   def setAccess(value: Option[Access]) = {
@@ -242,13 +222,11 @@ class VisibleTrackBuilder {
       title,
       createdAt,
       disabledAt,
-      lastModified,
       downloadable,
       duration,
       commentable,
       genre,
       public,
-      permalink,
       permalinkUrl,
       userTags,
       description,
@@ -275,11 +253,8 @@ class VisibleTrackBuilder {
       supplyChainStatus,
       waveformUrls,
       bpm,
-      trackType,
       release,
       keySignature,
-      videoUrl,
-      labelId,
       access
     )
 }

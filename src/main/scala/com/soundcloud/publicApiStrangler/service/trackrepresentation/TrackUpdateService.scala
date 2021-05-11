@@ -149,7 +149,6 @@ class TrackUpdateService(
       downloadable = metadataUpdate.downloadable.getOrElse(false),
       labelName = metadataUpdate.label_name,
       license = metadataUpdate.license,
-      permalink = metadataUpdate.permalink,
       purchaseTitle = metadataUpdate.purchase_title,
       purchaseUrl = metadataUpdate.purchase_url,
       release = metadataUpdate.release,

@@ -31,17 +31,11 @@ class VisibleTrackMapper {
             .toEpochMilli
         )
       ),
-      lastModified = new LocalDateTime(
-        Instant
-          .ofEpochSecond(metadata.lastModified.get.seconds, metadata.lastModified.get.nanos)
-          .toEpochMilli
-      ),
       downloadable = metadata.downloadable,
       duration = metadata.duration.toInt,
       commentable = metadata.commentable,
       genre = metadata.genre,
       public = metadata.public,
-      permalink = metadata.permalink,
       permalinkUrl = metadata.permalinkUrl,
       userTags = metadata.userTags.toList,
       description = metadata.description,
@@ -103,11 +97,8 @@ class VisibleTrackMapper {
         .map(wfu => WaveformUrl(WaveformType.parse(wfu.waveformType), Url(wfu.json), Url(wfu.png)))
         .toList,
       bpm = metadata.bpm,
-      trackType = TrackType.fromProto(metadata.trackType).map(_.trackType),
       release = metadata.release,
       keySignature = metadata.keySignature,
-      videoUrl = metadata.videoUrl,
-      labelId = metadata.labelId,
       access = None
     )
   }

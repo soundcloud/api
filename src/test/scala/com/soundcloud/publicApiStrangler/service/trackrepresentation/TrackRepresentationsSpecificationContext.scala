@@ -4,7 +4,6 @@ import com.soundcloud.jvmkit.module.util.session.{UserSession, UserSessionBuilde
 import com.soundcloud.jvmkit.module.util.{Url, Urn}
 import com.soundcloud.publicApiStrangler.authorization.policies._
 import com.soundcloud.publicApiStrangler.client.media.TrackWaveformUrl
-import com.soundcloud.publicApiStrangler.client.mothership.TrackAudioMetadata
 import com.soundcloud.publicApiStrangler.client.mothership.response.representation.Geoblockings
 import com.soundcloud.publicApiStrangler.client.pubmese.Isrc
 import com.soundcloud.publicApiStrangler.client.stitch.StitchCounts
@@ -32,11 +31,6 @@ trait TrackRepresentationsSpecificationContext extends UnitSpecification {
     )
     val geoblockingsList = List("DE", "FR")
 
-    val trackAudioMetadataList = TrackAudioMetadata(
-      state = "failed",
-      original_content_size = Some(9001),
-      original_format = Some("vqf")
-    )
     val trackRequest = TrackRequest(trackUrn, None)
 
     def trackOwner = new UserBuilder().setUrn(trackOwnerUrn).build
@@ -47,15 +41,12 @@ trait TrackRepresentationsSpecificationContext extends UnitSpecification {
 
     def geoblockings: Map[Urn, Geoblockings] = Map(trackUrn -> geoblockingsList)
 
-    def trackAudioMetadata: Map[Urn, TrackAudioMetadata] = Map(trackUrn -> trackAudioMetadataList)
-
     def trackVisibilityTrack(
         disabledAt: Option[LocalDateTime] = None,
         isPublic: Boolean = true,
         secretToken: String = "secr3t-Token",
         isDownloadable: Boolean = false,
         user: Urn = trackOwnerUrn,
-        labelId: Option[Long] = Some(labelUrn.identifier.toLong),
         revealStats: Boolean = false,
         revealComments: Boolean = true
     ) =
@@ -69,8 +60,6 @@ trait TrackRepresentationsSpecificationContext extends UnitSpecification {
         downloadable = isDownloadable,
         duration = 0,
         genre = None,
-        lastModified = lastModified,
-        permalink = "",
         permalinkUrl = None,
         public = isPublic,
         secretToken = Some(secretToken),
@@ -95,11 +84,8 @@ trait TrackRepresentationsSpecificationContext extends UnitSpecification {
         purchaseUrl = Some("http://example.com/buy/7890"),
         purchaseTitle = Some("buy me pls"),
         bpm = Some(120.7),
-        trackType = Some("original"),
         release = Some("DR012"),
         keySignature = Some("Emaj"),
-        videoUrl = Some("http://example.com/video.mp4"),
-        labelId = labelId,
         supplyChainStatus = None,
         waveformUrls = List.empty,
         transcodings = List.empty,
@@ -127,9 +113,7 @@ trait TrackRepresentationsSpecificationContext extends UnitSpecification {
         user = trackOwner,
         isrc = Some(Isrc("US-S1Z-99-00001")),
         counts = StitchCounts(111, 222, 333, 444, 555),
-        label = None,
         geoblockings = geoblockingsList,
-        trackAudioMetadata = trackAudioMetadataList,
         isLiked = true,
         waveformUrl = waveformUrl(trackUrn.identifier),
         downloadsPerTrack = Some(0)

@@ -39,14 +39,13 @@ class CommentService(
     moshimoshiClient
       .createComment(session, params)
       .flatMap {
-        case Good(okidokiComment) => {
+        case Good(okidokiComment) =>
           fetchUsers(session, okidokiComment).map(usersMap =>
             usersMap.get(okidokiComment.user.self.urn) match {
               case Some(miniUser) => Comment.fromOkidokiComment(okidokiComment, miniUser, params.secretToken).good
               case None => NotFound().bad
             }
           )
-        }
         case Bad(badThing) => Future.value(badThing.bad)
       }
   }

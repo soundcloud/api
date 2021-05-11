@@ -5,7 +5,6 @@ import com.soundcloud.jvmkit.module.telemetry.Telemetry
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSessionBuilder
 import com.soundcloud.publicApiStrangler.Routing
-import com.soundcloud.publicApiStrangler.client.mothership.TrackAudioMetadata
 import com.soundcloud.publicApiStrangler.client.stitch.StitchCounts
 import com.soundcloud.publicApiStrangler.client.tracks.{TrackRequest, VisibleTrackBuilder}
 import com.soundcloud.publicApiStrangler.service.trackrepresentation.{
@@ -26,7 +25,6 @@ class SingleTrackHandlerSpec extends UnitSpecification with TrackRepresentationS
     .setSecretToken(Some("secr3t-Token"))
     .setDownloadable(true)
     .setUserUrn(Urn("soundcloud", "users", "3000"))
-    .setLabelId(None)
     .setDownloadable(false)
     .setCommentable(false)
     .build
@@ -37,10 +35,13 @@ class SingleTrackHandlerSpec extends UnitSpecification with TrackRepresentationS
     visibleTrack = visibleTrack,
     user = user,
     isrc = None,
-    counts = new StitchCounts(1, 2, 3, 4, 5),
-    label = None,
-    geoblockings = List.empty,
-    audioMetadata = new TrackAudioMetadata("lol", Some("donkey"), Some(123))
+    counts = StitchCounts(1, 2, 3, 4, 5),
+    geoblockings = List.empty
+  )
+  val path = "/tracks/987"
+  val nonNumericPaths = List(
+    "/tracks/__12",
+    "/tracks/permalinktrack"
   )
 
   trait Context extends HandlerSpecificationScope {
@@ -58,13 +59,6 @@ class SingleTrackHandlerSpec extends UnitSpecification with TrackRepresentationS
 
     override def routingDefinitions = Routing.forSingleTrackHandler(handler)
   }
-
-  val path = "/tracks/987"
-
-  val nonNumericPaths = List(
-    "/tracks/__12",
-    "/tracks/permalinktrack"
-  )
 
   nonNumericPaths.foreach { path =>
     s"returns 400 for non-numeric track identifier for path: $path" in new Context {
