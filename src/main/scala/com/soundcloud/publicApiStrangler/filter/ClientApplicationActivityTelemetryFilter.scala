@@ -82,6 +82,9 @@ object ClientApplicationActivityTelemetryFilter {
     "265183", // The Playlist Guru dev key
     "313993", // Soundmouse ICE
     "91144", // Tune My Music
-    "313799" // Linfkire
+    "313799", // Linfkire
+    // Potentially suspicious clients. Adding here to monitor API usage
+    "300216", // Josiahventure.com (Suspect of unusual/fraud activity)
+    "181821" // Purple Lum (Suspect of unusual/fraud activity)
   )
 }
