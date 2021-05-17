@@ -18,11 +18,11 @@ class ClientApplicationAuthFilterSpec extends Specification with Mockito {
     val service = mock[Service[Request, Response]]
     val telemetry = Telemetry.createIsolatedInstance
     val router = HandlerRouterBuilder()
-      .register(Method.Get, "/foo", (_) => Future.value(JsonResponseBuilder.ok()))
-      .register(Method.Post, Routing.tokenExchangePath, (_) => Future.value(JsonResponseBuilder.ok()))
+      .register(Method.Get, "/foo", _ => Future.value(JsonResponseBuilder.ok()))
+      .register(Method.Post, Routing.tokenExchangePath, _ => Future.value(JsonResponseBuilder.ok()))
       .build
     val sessionBuilder = new UserSessionBuilder()
-    val request = HandlerRequest(Request(Method.Get, s"/foo"))
+    val request = HandlerRequest(Request(s"/foo", ("client_id", "999")))
   }
 
   "with allowlisted client application id" >> {
@@ -33,6 +33,20 @@ class ClientApplicationAuthFilterSpec extends Specification with Mockito {
       val filter = new ClientApplicationAuthFilter(new FakeUserAuthentication(session), telemetry, router)
 
       Await.result(filter.apply(request, service)).status ==== Status.Ok
+    }
+
+    "logs client param" in new Context {
+      service.apply(request) returns Future.value(Response(Status.Ok))
+
+      val session = sessionBuilder.setAgent(new Urn("soundcloud", "application", "999")).build()
+      val filter = new ClientApplicationAuthFilter(new FakeUserAuthentication(session), telemetry, router)
+
+      Await.result(filter.apply(request, service)).status
+
+      telemetry.getSampleValue("application_auth_type_total", Seq("auth_type", "path"), Seq("client_id_param", "/foo")) === Some(
+        1
+      )
+      telemetry.getSampleValue("deprecated_auth_by_app_total", Seq("appid"), Seq("999")) === Some(1)
     }
   }
 
@@ -72,6 +86,26 @@ class ClientApplicationAuthFilterSpec extends Specification with Mockito {
 
         Await.result(filter.apply(request, service)).status ==== Status.Forbidden
       }
+    }
+  }
+
+  "with oauth header" >> {
+    "logs auth type but not deprecated id" in new Context {
+      private val r: Request = Request("/foo")
+      r.authorization = "OAuth 1234"
+      override val request = HandlerRequest(r)
+      service.apply(request) returns Future.value(Response(Status.Ok))
+
+      val session = sessionBuilder.setAgent(new Urn("soundcloud", "application", "999")).build()
+      val filter = new ClientApplicationAuthFilter(new FakeUserAuthentication(session), telemetry, router)
+
+      Await.result(filter.apply(request, service)).status
+
+      telemetry.getSampleValue("application_auth_type_total", Seq("auth_type", "path"), Seq("oauth_header", "/foo")) === Some(
+        1
+      )
+      telemetry.getSampleValue("deprecated_auth_by_app_total", Seq("appid"), Seq("999")) === None
+
     }
   }
 }
