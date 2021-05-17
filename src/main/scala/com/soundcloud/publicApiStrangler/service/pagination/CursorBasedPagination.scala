@@ -27,7 +27,7 @@ object CursorBasedPagination extends PaginationHelpers {
 
   def build(request: Request, extraParams: Seq[String] = Seq.empty) = {
     val cursor = request.params
-      .get(CursorBasedPagination.NormalizedCursorParam) filterNot (FalsyValues.contains)
+      .get(CursorBasedPagination.NormalizedCursorParam) filterNot FalsyValues.contains
 
     CursorBasedPagination(
       baseUrl = baseUrl(request),

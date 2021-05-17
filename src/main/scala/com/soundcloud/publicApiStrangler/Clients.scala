@@ -178,15 +178,15 @@ class Clients(
   val likesService = new LikesService(tracksService, lieblingClient, likeTracksTwirpClient)
   val playlistService = new PlaylistsService(playlistsTwirpClient, tracksService, okidokiClient, exceptionCollector)
   val userPlaylistsService = new UserPlaylistsService(playlistService, okidokiClient)
-  val userRepresentationsService =
+  val userRepresentationService =
     new UserRepresentationsService(followCountsClient, repostsClient, okidokiClient, lieblingClient)
   val searchService =
-    new SearchService(searchClient, tracksService, playlistService, userRepresentationsService)
+    new SearchService(searchClient, tracksService, playlistService, userRepresentationService)
 
   val timelineService = new TimelineService(timelineClient, tracksService, playlistService)
 
   val streamService = new StreamService(trackVisibilityService, tracksMediaTwirpClient)
-
+  val repostsService = new RepostsService(userRepresentationService, repostsClient)
   val playlistDeletionClient = new PlaylistDeletionClient(okidokiJsonClient)
   val commentsService =
     new CommentService(richOkidokiClient, moshimoshiClient, moshimoshiCommentsClient)
@@ -195,7 +195,4 @@ class Clients(
   private val authorizationHttpClient = HttpClient[String](authorizationConfig, telemetry)
   private val authorizationTelemetry = ClientTelemetry.from(authorizationConfig, telemetry)
   val authorizationClient = new AuthorizationClientProtobuf(authorizationHttpClient.httpService, authorizationTelemetry)
-
-  val userRepresentationService =
-    new UserRepresentationsService(followCountsClient, repostsClient, okidokiClient, lieblingClient)
 }

@@ -126,7 +126,9 @@ object Routing {
       route(Method.Post, "/reposts/tracks/:id", repostsHandler.createTracksRepost) :::
       route(Method.Delete, "/reposts/tracks/:id", repostsHandler.deleteTracksRepost) :::
       route(Method.Post, "/reposts/playlists/:id", repostsHandler.createPlaylistsRepost) :::
-      route(Method.Delete, "/reposts/playlists/:id", repostsHandler.deletePlaylistsRepost)
+      route(Method.Delete, "/reposts/playlists/:id", repostsHandler.deletePlaylistsRepost) :::
+      route(Method.Get, "/tracks/:id/reposters", repostsHandler.getTracksReposters) :::
+      route(Method.Get, "/playlists/:id/reposters", repostsHandler.getPlaylistsReposters)
   }
 
   def forTimelineHandler(timelineHandler: TimelineHandler): List[(Method, String, Handler)] = {

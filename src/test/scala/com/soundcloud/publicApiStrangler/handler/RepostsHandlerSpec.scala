@@ -4,26 +4,32 @@ import com.soundcloud.jvmkit.module.bff.testsupport.FakeUserAuthentication
 import com.soundcloud.jvmkit.module.util.session.UserSessionBuilder
 import com.soundcloud.jvmkit.module.util.{Geo, Urn}
 import com.soundcloud.publicApiStrangler.Routing
-import com.soundcloud.publicApiStrangler.client.reposts.RepostsClient
+import com.soundcloud.publicApiStrangler.client.mothership.response.representation.UserRepresentation
 import com.soundcloud.publicApiStrangler.client.reposts.RepostsClient._
+import com.soundcloud.publicApiStrangler.service.RepostsService
+import com.soundcloud.publicApiStrangler.service.pagination.CursorBasedPagination
+import com.soundcloud.publicApiStrangler.service.representation.collection.Collection
+import com.soundcloud.publicApiStrangler.service.users.UserBuilder
 import com.soundcloud.publicApiStrangler.test.{HandlerSpecificationScope, UnitSpecification}
-import com.twitter.finagle.http.Status
+import com.twitter.finagle.http.{ParamMap, Status}
 import com.twitter.util.Future
 
 class RepostsHandlerSpec extends UnitSpecification {
   trait Context extends HandlerSpecificationScope {
-    val user = Urn("soundcloud", "users", "999")
+    val userUrn = Urn("soundcloud", "users", "999")
+    val user = new UserBuilder().setUrn(userUrn).build
+    val userCollection = Collection[UserRepresentation](items = List(user), nextHref = None)
+
     val track = Urn("soundcloud", "tracks", "100")
     val playlist = Urn("soundcloud", "playlists", "200")
     val geo = new Geo("US")
     val baseUrl = "http://api.example.com"
     val requestHeaders = Map("Host" -> "api.example.com")
     val session =
-      new UserSessionBuilder().setUser(user).setAgent(Urn("soundcloud", "applications", "v2")).setGeo(geo).build()
+      new UserSessionBuilder().setUser(userUrn).setAgent(Urn("soundcloud", "applications", "v2")).setGeo(geo).build()
+    val repostsService = mock[RepostsService]
 
-    val repostsClient = mock[RepostsClient]
-
-    lazy val handler = new RepostsHandler(new FakeUserAuthentication(session), repostsClient)
+    lazy val handler = new RepostsHandler(new FakeUserAuthentication(session), repostsService)
 
     override def routingDefinitions = Routing.forRepostsHandler(handler)
   }
@@ -32,7 +38,7 @@ class RepostsHandlerSpec extends UnitSpecification {
     trait CreateTrackContext extends Context {
       def result: Result
 
-      repostsClient
+      repostsService
         .createRepost(session, track, baseUrl)
         .returns(Future.value(result))
 
@@ -76,7 +82,7 @@ class RepostsHandlerSpec extends UnitSpecification {
     trait DeleteTrackContext extends Context {
       def result: Result
 
-      repostsClient
+      repostsService
         .deleteRepost(session, track, baseUrl)
         .returns(Future.value(result))
 
@@ -103,11 +109,47 @@ class RepostsHandlerSpec extends UnitSpecification {
     }
   }
 
+  "GET /tracks/:id/reposters" >> {
+    trait GetTrackRepostersContext extends Context {
+      def result: Collection[UserRepresentation]
+
+      val expectedResponse = Collection.getRepresentation(result, true)
+      val pagination = CursorBasedPagination(
+        "https://api.example.com",
+        "/tracks/100/reposters",
+        ParamMap(),
+        None,
+        1
+      )
+
+      repostsService
+        .getReposters(session, track, pagination)
+        .returns(Future.value(result))
+
+      lazy val response =
+        get("/tracks/100/reposters?limit=1", Map(), requestHeaders)
+    }
+
+    "when getting succeeds" in new GetTrackRepostersContext {
+      override def result = userCollection
+
+      response.status ==== Status.Ok
+      response.contentString ==== expectedResponse
+    }
+
+    "when getting returns empty collection because the track/repost does not exist" in new GetTrackRepostersContext {
+      override def result = Collection[UserRepresentation](List.empty, None)
+
+      response.status ==== Status.Ok
+      response.contentString ==== expectedResponse
+    }
+  }
+
   "POST /reposts/playlists/:id" >> {
     trait CreatePlaylistContext extends Context {
       def result: Result
 
-      repostsClient
+      repostsService
         .createRepost(session, playlist, baseUrl)
         .returns(Future.value(result))
 
@@ -151,7 +193,7 @@ class RepostsHandlerSpec extends UnitSpecification {
     trait DeletePlaylistContext extends Context {
       def result: Result
 
-      repostsClient
+      repostsService
         .deleteRepost(session, playlist, baseUrl)
         .returns(Future.value(result))
 
@@ -178,12 +220,48 @@ class RepostsHandlerSpec extends UnitSpecification {
     }
   }
 
+  "GET /playlists/:id/reposters" >> {
+    trait GetPlaylistRepostersContext extends Context {
+      def result: Collection[UserRepresentation]
+
+      val expectedResponse = Collection.getRepresentation(result, true)
+      val pagination = CursorBasedPagination(
+        "https://api.example.com",
+        "/playlists/200/reposters",
+        ParamMap(),
+        None,
+        1
+      )
+
+      repostsService
+        .getReposters(session, playlist, pagination)
+        .returns(Future.value(result))
+
+      lazy val response =
+        get("/playlists/200/reposters?limit=1", Map(), requestHeaders)
+    }
+
+    "when getting succeeds" in new GetPlaylistRepostersContext {
+      override def result = userCollection
+
+      response.status ==== Status.Ok
+      response.contentString ==== expectedResponse
+    }
+
+    "when getting returns empty collection because the playlist/repost does not exist" in new GetPlaylistRepostersContext {
+      override def result = Collection[UserRepresentation](List.empty, None)
+
+      response.status ==== Status.Ok
+      response.contentString ==== expectedResponse
+    }
+  }
+
   // To be deprecated in favour of new route names
   "PUT /e1/me/track_reposts/:id" >> {
     trait CreateTrackContext extends Context {
       def result: Result
 
-      repostsClient
+      repostsService
         .createRepost(session, track, baseUrl)
         .returns(Future.value(result))
 
@@ -227,7 +305,7 @@ class RepostsHandlerSpec extends UnitSpecification {
     trait DeleteTrackContext extends Context {
       def result: Result
 
-      repostsClient
+      repostsService
         .deleteRepost(session, track, baseUrl)
         .returns(Future.value(result))
 
@@ -258,7 +336,7 @@ class RepostsHandlerSpec extends UnitSpecification {
     trait CreatePlaylistContext extends Context {
       def result: Result
 
-      repostsClient
+      repostsService
         .createRepost(session, playlist, baseUrl)
         .returns(Future.value(result))
 
@@ -302,7 +380,7 @@ class RepostsHandlerSpec extends UnitSpecification {
     trait DeletePlaylistContext extends Context {
       def result: Result
 
-      repostsClient
+      repostsService
         .deleteRepost(session, playlist, baseUrl)
         .returns(Future.value(result))
 

@@ -93,7 +93,7 @@ class Handlers(
 
   val userPlaylistsHandler = new UserPlaylistsHandler(userAuthentication, userPlaylistsService)
 
-  val repostsHandler = new RepostsHandler(userAuthentication, repostsClient)
+  val repostsHandler = new RepostsHandler(userAuthentication, repostsService)
 
   val likesHandler = new LikesHandler(userAuthentication, likesService)
 

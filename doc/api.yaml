@@ -638,6 +638,23 @@ paths:
           $ref: '#/components/responses/BadRequest'
         401:
           $ref: '#/components/responses/Unauthorized'
+  /playlists/{playlist_id}/reposters:
+    get:
+      summary: Returns a collection of playlist's reposters.
+      tags:
+        - playlists
+      security:
+        - ClientId: [ ]
+      parameters:
+        - $ref: '#/components/parameters/playlist_id'
+        - $ref: '#/components/parameters/limit'
+      responses:
+        200:
+          $ref: '#/components/responses/MetaUsers'
+        401:
+          $ref: '#/components/responses/Unauthorized'
+        404:
+          $ref: '#/components/responses/NotFound'
   /tracks/{track_id}:
     get:
       summary: Returns a track.
@@ -784,6 +801,23 @@ paths:
       responses:
         200:
           $ref: "#/components/responses/UsersList"
+        401:
+          $ref: '#/components/responses/Unauthorized'
+        404:
+          $ref: '#/components/responses/NotFound'
+  /tracks/{track_id}/reposters:
+    get:
+      summary: Returns a collection of track's reposters.
+      tags:
+        - tracks
+      security:
+        - ClientId: [ ]
+      parameters:
+        - $ref: '#/components/parameters/track_id'
+        - $ref: '#/components/parameters/limit'
+      responses:
+        200:
+          $ref: '#/components/responses/MetaUsers'
         401:
           $ref: '#/components/responses/Unauthorized'
         404:
@@ -1196,6 +1230,15 @@ components:
             $ref: '#/components/schemas/User'
         next_href:
           type: string
+    MetaUsers:
+      type: object
+      properties:
+        collection:
+          type: array
+          items:
+            $ref: '#/components/schemas/MetaUser'
+        next_href:
+          type: string
     UsersList:
       deprecated: true
       type: array
@@ -1330,6 +1373,11 @@ components:
       value:
         collection:
           $ref: "#/components/examples/User/value"
+        next_href: https://api.soundcloud.com/collection?client_id=client_id&page_size=10&cursor=1234567
+    MetaUsers:
+      value:
+        collection:
+          $ref: "#/components/examples/UserOf/value"
         next_href: https://api.soundcloud.com/collection?client_id=client_id&page_size=10&cursor=1234567
     WebProfiles:
       $ref: './components/examples/WebProfiles.yaml'

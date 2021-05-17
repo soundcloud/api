@@ -2,7 +2,6 @@ package com.soundcloud.publicApiStrangler.service
 
 import com.soundcloud.jvmkit.module.http.client.{Params, StringParam}
 import com.soundcloud.jvmkit.module.outcome._
-import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.publicApiStrangler.client.mothership.response.representation.UserRepresentation
 import com.soundcloud.publicApiStrangler.client.search.SearchClient
@@ -17,8 +16,9 @@ import com.soundcloud.publicApiStrangler.service.trackrepresentation.{
   TrackRepresentation,
   TrackRepresentationsService
 }
-import com.twitter.finagle.http.ParamMap
+import com.soundcloud.publicApiStrangler.service.users.UserOrderingUtils.sortByProvidedUrns
 import com.soundcloud.publicApiStrangler.service.users.UserRepresentationsService
+import com.twitter.finagle.http.ParamMap
 
 class SearchService(
     searchClient: SearchClient,
@@ -141,12 +141,5 @@ class SearchService(
 
   private def mapUserParams(params: Params): Params = params.collect {
     case (k, v) if UserParamMappings contains k => UserParamMappings(k) -> v
-  }
-
-  private def sortByProvidedUrns(users: Seq[UserRepresentation], urns: Seq[Urn]): Seq[UserRepresentation] = {
-    val orderedByUrn = Ordering.by(urns.zipWithIndex.toMap compose {
-      (_: UserRepresentation).urn
-    })
-    users.sorted(orderedByUrn)
   }
 }
