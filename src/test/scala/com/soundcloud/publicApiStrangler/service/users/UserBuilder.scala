@@ -1,7 +1,10 @@
 package com.soundcloud.publicApiStrangler.service.users
 
 import com.soundcloud.jvmkit.module.util.Urn
-import com.soundcloud.publicApiStrangler.client.mothership.response.representation.{Subscription, UserRepresentation}
+import com.soundcloud.publicApiStrangler.client.mothership.response.representation.{
+  CreatorSubscription,
+  UserRepresentation
+}
 
 class UserBuilder {
   private var urn: Urn = Urn("soundcloud", "users", "1")
@@ -27,7 +30,7 @@ class UserBuilder {
   private var website_title: Option[String] = Some("website title")
   private var website: Option[String] = Some("website")
   private var plan: Option[String] = Some("free")
-  private var subscriptions: Seq[Subscription] = Seq.empty
+  private var subscriptions: Seq[CreatorSubscription] = Seq.empty
   private var public_favorites_count: Option[Long] = Some(12L)
   private var public_playlists_count: Option[Int] = Some(55)
   private var comments_count: Option[Int] = Some(11)
@@ -58,7 +61,7 @@ class UserBuilder {
   def setWebsiteTitle(value: Option[String]) = { website_title = value; this }
   def setWebsite(value: Option[String]) = { website = value; this }
   def setPlan(value: Option[String]) = { plan = value; this }
-  def setSubscriptions(value: Seq[Subscription]) = { subscriptions = value; this }
+  def setSubscriptions(value: Seq[CreatorSubscription]) = { subscriptions = value; this }
   def setPublicFavouritesCount(value: Option[Long]) = { public_favorites_count = value; this }
   def setPublicPlaylistsCount(value: Option[Int]) = { public_playlists_count = value; this }
   def setCommentsCount(value: Option[Int]) = { comments_count = value; this }

@@ -1,6 +1,7 @@
 package com.soundcloud.publicApiStrangler.client.mothership.response.representation
 
 import com.soundcloud.jvmkit.module.util.Urn
+import com.soundcloud.publicApiStrangler.subscriptions.{SubmarineToLegacyMapper, SubmarineCreatorSubscription}
 import play.api.libs.json.{Json, Writes}
 
 case class Product(id: String, name: String)
@@ -9,10 +10,20 @@ object Product {
   implicit val writes: Writes[Product] = Json.writes[Product]
 }
 
-case class Subscription(product: Product)
+case class CreatorSubscription(product: Product, recurring: Option[Boolean] = None)
 
-object Subscription {
-  implicit val writes: Writes[Subscription] = Json.writes[Subscription]
+object CreatorSubscription {
+  implicit val writes: Writes[CreatorSubscription] = Json.writes[CreatorSubscription]
+
+  // maps to the old mothership representation
+  def from(
+      submarineSubscription: SubmarineCreatorSubscription,
+      shouldIncludeRecurring: Boolean = false
+  ): CreatorSubscription = {
+    val plan = SubmarineToLegacyMapper.from(submarineSubscription)
+    val maybeRecurring = if (shouldIncludeRecurring) Some(submarineSubscription.recurring) else None
+    CreatorSubscription(Product(plan.id, plan.name), maybeRecurring)
+  }
 }
 
 case class UserRepresentation(
@@ -39,7 +50,7 @@ case class UserRepresentation(
     website_title: Option[String],
     website: Option[String],
     plan: Option[String],
-    subscriptions: Seq[Subscription],
+    subscriptions: Seq[CreatorSubscription],
     public_favorites_count: Option[Long],
     public_playlists_count: Option[Int], // deprecated, kept for structure
     comments_count: Option[Int], // deprecated, kept for structure

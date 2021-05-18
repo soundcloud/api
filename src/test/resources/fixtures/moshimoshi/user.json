@@ -103,5 +103,9 @@
   ],
   "updated_at":"2014/05/16 02:43:00 +0000",
   "date_of_birth": "1979/10/16",
-  "verified": true
+  "verified": true,
+  "private_tracks_count": 5,
+  "private_playlists_count": 0,
+  "primary_email_confirmed": true,
+  "locale": "en_GB"
 }

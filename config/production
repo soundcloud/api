@@ -94,3 +94,5 @@ CDN_WAVE_HTTPS_ENDPOINT=https://wave.sndcdn.com
 
 MOSHIMOSHI_COMMENTS_SRV_RECORD=dnssrv!http.moshimoshi-comments.prod.mothership.srv.${ZONE}.s-cloud.net.
 MOSHIMOSHI_SRV_RECORD=dnssrv!http.moshimoshi.prod.mothership.srv.${ZONE}.s-cloud.net.
+
+SUBMARINE_SRV_RECORD="dnssrv!http.api.prod.submarine.srv.${ZONE}.s-cloud.net."

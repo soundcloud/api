@@ -90,4 +90,6 @@ HOCUSPOCUS_CLIENT_REQUEST_TIMEOUT_MILLIS=5000
 MOSHIMOSHI_COMMENTS_SRV_RECORD=dnssrv!http.moshimoshi-comments.prod.mothership.srv.db.s-cloud.net.
 MOSHIMOSHI_SRV_RECORD=dnssrv!http.moshimoshi.prod.mothership.srv.db.s-cloud.net.
 
+SUBMARINE_SRV_RECORD="dnssrv!http.api.staging.submarine.srv.db.s-cloud.net."
+
 IS_DEVELOPMENT_MODE=true

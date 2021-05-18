@@ -1,0 +1,28 @@
+{
+  "data": {
+    "soundcloud:users:123": {
+      "kind": "creator-subscription",
+      "state": "active",
+      "started_at": "2015-05-15T19:22:37Z",
+      "expires_at": "2015-05-16T19:22:37Z",
+      "bought_at": "2015-05-17T19:22:37Z",
+      "package": {
+        "urn": "soundcloud:payments:packages:42531",
+        "name": "Yearly Pro plan",
+        "vendor": "v2",
+        "product": "creator-subscription",
+        "plan": "pro",
+        "term": "yearly",
+        "price": {
+          "amount": 2900,
+          "currency": "EUR"
+        }
+      },
+      "recurring": false,
+      "refundable": false,
+      "product_permalink": "creator-subscription-pro-yearly",
+      "order_urn": "soundcloud:payments:order:456463"
+    },
+    "soundcloud:users:2": null
+  }
+}

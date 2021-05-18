@@ -47,6 +47,7 @@ object Fixtures {
     contentsOf("track-coordinator", "coordinator-track-in-public-api-format")
 
   lazy val consumerSubscription = contentsOf("subscriptions", "consumer-subscription")
+  lazy val submarineCreatorSubscription = contentsOf("subscriptions", "submarine/creator-subscription")
 
   lazy val timelineItemStream = contentsOf("timeline", "item_stream")
   lazy val timelineStream = contentsOf("timeline", "stream")

@@ -90,3 +90,5 @@ IS_DEVELOPENT_MODE=true
 
 MOSHIMOSHI_COMMENTS_SRV_RECORD=dnssrv!http.moshimoshi-comments.prod.mothership.srv.db.s-cloud.net.
 MOSHIMOSHI_SRV_RECORD=dnssrv!http.moshimoshi.prod.mothership.srv.db.s-cloud.net.
+
+SUBMARINE_SRV_RECORD="dnssrv!http.api.staging.submarine.srv.db.s-cloud.net."

@@ -36,6 +36,7 @@ import com.soundcloud.publicApiStrangler.service.media.{StreamService, TrackAcce
 import com.soundcloud.publicApiStrangler.service.trackrepresentation.{TrackRepresentationsService, TrackUpdateService}
 import com.soundcloud.publicApiStrangler.service.tracks.VisibleTrackMapper
 import com.soundcloud.publicApiStrangler.service.users.UserRepresentationsService
+import com.soundcloud.publicApiStrangler.subscriptions.SubmarineClient
 import com.twitter.finagle.Service
 import com.twitter.finagle.http.{Request, Response}
 import com.twitter.finagle.service.RetryPolicy.RetryableWriteException
@@ -178,15 +179,19 @@ class Clients(
   val likesService = new LikesService(tracksService, lieblingClient, likeTracksTwirpClient)
   val playlistService = new PlaylistsService(playlistsTwirpClient, tracksService, okidokiClient, exceptionCollector)
   val userPlaylistsService = new UserPlaylistsService(playlistService, okidokiClient)
-  val userRepresentationService =
-    new UserRepresentationsService(followCountsClient, repostsClient, okidokiClient, lieblingClient)
+
+  private val submarineClient = new SubmarineClient(jsonClient("submarine"))
+
+  val userRepresentationsService =
+    new UserRepresentationsService(followCountsClient, repostsClient, okidokiClient, lieblingClient, submarineClient)
+
   val searchService =
-    new SearchService(searchClient, tracksService, playlistService, userRepresentationService)
+    new SearchService(searchClient, tracksService, playlistService, userRepresentationsService)
 
   val timelineService = new TimelineService(timelineClient, tracksService, playlistService)
 
   val streamService = new StreamService(trackVisibilityService, tracksMediaTwirpClient)
-  val repostsService = new RepostsService(userRepresentationService, repostsClient)
+  val repostsService = new RepostsService(userRepresentationsService, repostsClient)
   val playlistDeletionClient = new PlaylistDeletionClient(okidokiJsonClient)
   val commentsService =
     new CommentService(richOkidokiClient, moshimoshiClient, moshimoshiCommentsClient)
