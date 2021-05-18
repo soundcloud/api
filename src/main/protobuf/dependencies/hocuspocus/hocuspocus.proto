@@ -4,14 +4,7 @@
 syntax = "proto3";
 
 package com.soundcloud.hocuspocus;
-
-// we can't use a fully qualified import path for go_package;
-// it produces weirdness with Go modules.
-// Upstream discussions:
-// - https://github.com/twitchtv/twirp/issues/169
-// - https://github.com/golang/protobuf/issues/748
-
-option go_package = "hocuspocus";
+option go_package = "github.com/soundcloud/hocuspocus";
 
 // Will be lowercased and used in the path name. Field names must match /[A-Z]+/
 enum Kind {

@@ -10,6 +10,8 @@ import "google/protobuf/wrappers.proto";
 service AccessGrantExchange {
   rpc AuthorizationCodeExchange(AuthorizationCodeGrant) returns (AuthorizationCodeExchangeResponse);
   rpc RefreshTokenExchange(RefreshTokenGrant) returns (RefreshTokenExchangeResponse);
+  rpc ClientCredentialExchange(ClientCredentialGrant) returns (ClientCredentialExchangeResponse);
+  rpc PasswordExchange(PasswordGrant) returns (PasswordExchangeResponse);
 }
 
 message AuthorizationCodeGrant {
@@ -53,6 +55,49 @@ message RefreshTokenExchangeErrorResponse {
   }
 }
 
+message ClientCredentialGrant {
+  ClientCredential client_credential = 1;
+  repeated string scope = 2;
+}
+
+message ClientCredentialExchangeResponse {
+  oneof result {
+    AccessTokenResponse access_token_response = 1;
+    ClientCredentialExchangeErrorResponse error_response = 2;
+  }
+}
+
+message ClientCredentialExchangeErrorResponse {
+  oneof error {
+    InvalidClient invalid_client = 1;
+    InvalidScope invalid_scope = 2;
+  }
+}
+
+message PasswordGrant {
+  ClientCredential client_credential = 1;
+  string identifier = 2;
+  string password = 3;
+  repeated string scope = 4;
+  string ip_address = 5;
+  google.protobuf.StringValue vk2_correlation_id = 6; // Not Required
+}
+
+message PasswordExchangeResponse {
+ oneof result {
+   AccessTokenResponse access_token_response = 1;
+   PasswordExchangeErrorResponse error_response = 2;
+ }
+}
+
+message PasswordExchangeErrorResponse {
+  oneof error {
+    InvalidClient invalid_client = 1;
+    InvalidGrant invalid_grant = 2;
+    InvalidScope invalid_scope = 3;
+  }
+}
+
 message ClientCredential {
   string client_id = 1;
   string client_secret = 2;
@@ -70,3 +115,5 @@ message InvalidClient{}
 message UnauthorizedClient{}
 
 message InvalidGrant{}
+
+message InvalidScope{}

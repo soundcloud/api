@@ -29,6 +29,18 @@ message LikeTrackResponse {
     string user_urn = 3;
 }
 
+service Reposts {
+    rpc RepostTrack (RepostTrackRequest) returns (RepostTrackResponse) {};
+    rpc DeleteTrackRepost (RepostTrackRequest) returns (RepostTrackResponse) {};
+}
+
+message RepostTrackRequest {
+    proto.soundcloud.common.session.UserSession user_session = 1;
+    string track_urn = 2;
+}
+
+message RepostTrackResponse {}
+
 service Media {
     // This method is for getting a media stream URL for a track.
     // Potential errors:
@@ -170,7 +182,7 @@ message GetVisibleTracksRequest {
     bool bypass_progressive_download_restriction = 2;
     proto.soundcloud.common.session.UserSession user_session = 3; // You must provide a UserSession
     google.protobuf.StringValue subscription_country_code = 4; // optional, will be fetched by this service is not present
-    google.protobuf.FieldMask track_field_mask = 5; // optional, if not specified `TrackFieldMasks.DefaultTrackFieldMask` is used
+    google.protobuf.FieldMask track_field_mask = 5; // required
 }
 
 message TrackRequest {
@@ -186,6 +198,7 @@ message GetVisibleTracksResponse {
 message GetGenerallyVisibleTracksRequest {
     repeated TrackRequest track_requests = 1;
     proto.soundcloud.common.session.UserSession user_session = 2; // You must provide a UserSession
+    google.protobuf.FieldMask track_field_mask = 3; // required
 }
 
 enum TrackType {
@@ -221,6 +234,8 @@ message Track {
     // additional fields that are not included in the response
     // unless they are specified in the track field mask
     Counts counts = 49; // optional
+
+    DownloadMetadata download_metadata = 50; // optional
 }
 
 message Metadata {
@@ -342,8 +357,13 @@ message TrackSegment {
 
 message Counts {
     google.protobuf.Int64Value plays = 1;
-    google.protobuf.Int64Value downloads = 2;
-    google.protobuf.Int64Value likes = 3;
-    google.protobuf.Int64Value reposts = 4;
-    google.protobuf.Int64Value comments = 5;
+    google.protobuf.Int64Value likes = 2;
+    google.protobuf.Int64Value reposts = 3;
+    google.protobuf.Int64Value comments = 4;
+}
+
+message DownloadMetadata {
+    bool allowed = 1;
+    google.protobuf.Int64Value count = 2;
+    google.protobuf.Int64Value remaining = 3;
 }

@@ -14,27 +14,30 @@ import com.twitter.util.Future
 class RepostsHandler(userAuthentication: UserAuthentication, repostsService: RepostsService) {
   def createTracksRepost = createRepost(_: HandlerRequest, "tracks")
 
-  def deleteTracksRepost = deleteRepost(_: HandlerRequest, "tracks")
+  def deleteTracksRepost(request: HandlerRequest): Future[Response] = {
+    userAuthentication.withLoggedInUser(request) { (session, _) =>
+      val target = Urn("soundcloud", "tracks", request.routeParams("id"))
+      repostsService.deleteTracksRepost(session, target).map(renderResult)
+    }
+  }
 
   def getTracksReposters: HandlerRequest => Future[Response] = getReposters(_: HandlerRequest, "tracks")
 
   def createPlaylistsRepost = createRepost(_: HandlerRequest, "playlists")
 
-  def deletePlaylistsRepost = deleteRepost(_: HandlerRequest, "playlists")
+  def deletePlaylistsRepost(request: HandlerRequest): Future[Response] = {
+    userAuthentication.withLoggedInUser(request) { (session, _) =>
+      val target = Urn("soundcloud", "playlists", request.routeParams("id"))
+      repostsService.deletePlaylistsRepost(session, target).map(renderResult)
+    }
+  }
 
   def getPlaylistsReposters: HandlerRequest => Future[Response] = getReposters(_: HandlerRequest, "playlists")
 
   private def createRepost(request: HandlerRequest, targetType: String): Future[Response] = {
     userAuthentication.withLoggedInUser(request) { (session, _) =>
       val target = Urn("soundcloud", targetType, request.routeParams("id"))
-      repostsService.createRepost(session, target, baseUrl(request)).map(renderResult)
-    }
-  }
-
-  private def deleteRepost(request: HandlerRequest, targetType: String): Future[Response] = {
-    userAuthentication.withLoggedInUser(request) { (session, _) =>
-      val target = Urn("soundcloud", targetType, request.routeParams("id"))
-      repostsService.deleteRepost(session, target, baseUrl(request)).map(renderResult)
+      repostsService.createRepost(session, target).map(renderResult)
     }
   }
 
@@ -50,12 +53,6 @@ class RepostsHandler(userAuthentication: UserAuthentication, repostsService: Rep
           JsonResponseBuilder.ok(Collection.getRepresentation(userCollection, true))
         })
     }
-  }
-
-  private def baseUrl(request: HandlerRequest): String = {
-    // default means that request is coming from a dev environment
-    val protocol = request.headerMap.getOrElse("X-Forwarded-Proto", "http")
-    s"$protocol://${request.host.get}"
   }
 
   private def renderResult(result: Result): Response = result match {

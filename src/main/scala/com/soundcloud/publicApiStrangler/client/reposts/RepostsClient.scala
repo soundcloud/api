@@ -1,10 +1,10 @@
 package com.soundcloud.publicApiStrangler.client.reposts
 
 import com.soundcloud.jvmkit.module.http.client.{JsonClient, Params}
-import com.soundcloud.jvmkit.module.util.{Path, Urn}
+import com.soundcloud.jvmkit.module.json.play.UrnFormat._
 import com.soundcloud.jvmkit.module.util.http.Headers
 import com.soundcloud.jvmkit.module.util.session.UserSession
-import com.soundcloud.jvmkit.module.json.play.UrnFormat._
+import com.soundcloud.jvmkit.module.util.{Path, Urn}
 import com.soundcloud.publicApiStrangler.client.reposts.RepostsClient._
 import com.soundcloud.publicApiStrangler.client.support.FetchClient
 import com.twitter.finagle.http.{Response, Status}
@@ -19,7 +19,7 @@ case class Reposts(urns: List[Urn], nextCursor: Option[String])
   * https://github.com/soundcloud/voltron/tree/master/reposts
   */
 class RepostsClient(jsonClient: JsonClient) extends FetchClient {
-  def createRepost(session: UserSession, target: Urn, baseUrl: String): Future[Result] =
+  def createRepost(session: UserSession, target: Urn): Future[Result] =
     jsonClient
       .postWithSession(
         session,
@@ -28,9 +28,9 @@ class RepostsClient(jsonClient: JsonClient) extends FetchClient {
         Headers.empty,
         None
       )
-      .map(toResult(_, baseUrl))
+      .map(toResult)
 
-  def deleteRepost(session: UserSession, target: Urn, baseUrl: String): Future[Result] =
+  def deleteRepost(session: UserSession, target: Urn): Future[Result] =
     jsonClient
       .deleteWithSession(
         session,
@@ -39,7 +39,7 @@ class RepostsClient(jsonClient: JsonClient) extends FetchClient {
         Headers.empty,
         None
       )
-      .map(toResult(_, baseUrl))
+      .map(toResult)
 
   def getRepostCountsByUrnWithFallback(session: UserSession, urns: Set[Urn]): Future[Map[Urn, Long]] =
     repostCountsForUrns(session, urns)
@@ -192,7 +192,7 @@ object RepostsClient {
 
   implicit val countFormat: Format[Count] = Json.format[Count]
 
-  def toResult(response: Response, baseUrl: => String): Result = response.status match {
+  def toResult(response: Response): Result = response.status match {
     case Status.Created => Created
     case Status.Accepted => Deleted
     case Status.Ok => AlreadyExists

@@ -23,7 +23,6 @@ class RepostsHandlerSpec extends UnitSpecification {
     val track = Urn("soundcloud", "tracks", "100")
     val playlist = Urn("soundcloud", "playlists", "200")
     val geo = new Geo("US")
-    val baseUrl = "http://api.example.com"
     val requestHeaders = Map("Host" -> "api.example.com")
     val session =
       new UserSessionBuilder().setUser(userUrn).setAgent(Urn("soundcloud", "applications", "v2")).setGeo(geo).build()
@@ -39,7 +38,7 @@ class RepostsHandlerSpec extends UnitSpecification {
       def result: Result
 
       repostsService
-        .createRepost(session, track, baseUrl)
+        .createRepost(session, track)
         .returns(Future.value(result))
 
       lazy val response = post("/reposts/tracks/100", Map(), requestHeaders)
@@ -83,7 +82,7 @@ class RepostsHandlerSpec extends UnitSpecification {
       def result: Result
 
       repostsService
-        .deleteRepost(session, track, baseUrl)
+        .deleteTracksRepost(session, track)
         .returns(Future.value(result))
 
       lazy val response = delete("/reposts/tracks/100", Map(), requestHeaders)
@@ -150,7 +149,7 @@ class RepostsHandlerSpec extends UnitSpecification {
       def result: Result
 
       repostsService
-        .createRepost(session, playlist, baseUrl)
+        .createRepost(session, playlist)
         .returns(Future.value(result))
 
       lazy val response = post("/reposts/playlists/200", Map(), requestHeaders)
@@ -194,7 +193,7 @@ class RepostsHandlerSpec extends UnitSpecification {
       def result: Result
 
       repostsService
-        .deleteRepost(session, playlist, baseUrl)
+        .deletePlaylistsRepost(session, playlist)
         .returns(Future.value(result))
 
       lazy val response = delete("/reposts/playlists/200", Map(), requestHeaders)
@@ -262,7 +261,7 @@ class RepostsHandlerSpec extends UnitSpecification {
       def result: Result
 
       repostsService
-        .createRepost(session, track, baseUrl)
+        .createRepost(session, track)
         .returns(Future.value(result))
 
       lazy val response = put("/e1/me/track_reposts/100", Map(), requestHeaders)
@@ -306,7 +305,7 @@ class RepostsHandlerSpec extends UnitSpecification {
       def result: Result
 
       repostsService
-        .deleteRepost(session, track, baseUrl)
+        .deleteTracksRepost(session, track)
         .returns(Future.value(result))
 
       lazy val response = delete("/e1/me/track_reposts/100", Map(), requestHeaders)
@@ -337,7 +336,7 @@ class RepostsHandlerSpec extends UnitSpecification {
       def result: Result
 
       repostsService
-        .createRepost(session, playlist, baseUrl)
+        .createRepost(session, playlist)
         .returns(Future.value(result))
 
       lazy val response = put("/e1/me/playlist_reposts/200", Map(), requestHeaders)
@@ -381,7 +380,7 @@ class RepostsHandlerSpec extends UnitSpecification {
       def result: Result
 
       repostsService
-        .deleteRepost(session, playlist, baseUrl)
+        .deletePlaylistsRepost(session, playlist)
         .returns(Future.value(result))
 
       lazy val response = delete("/e1/me/playlist_reposts/200", Map(), requestHeaders)

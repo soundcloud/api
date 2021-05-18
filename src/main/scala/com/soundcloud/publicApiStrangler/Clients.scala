@@ -43,7 +43,12 @@ import com.twitter.finagle.service.RetryPolicy.RetryableWriteException
 import com.twitter.util.{Throw, Try}
 import proto.soundcloud.authenticator.oauth.AuthorizationClientProtobuf
 import proto.soundcloud.playlists.api.PlaylistsClientProtobuf
-import proto.soundcloud.tracks.api.{LikesClientProtobuf, MediaClientProtobuf, TrackMetadataClientProtobuf}
+import proto.soundcloud.tracks.api.{
+  LikesClientProtobuf,
+  MediaClientProtobuf,
+  RepostsClientProtobuf,
+  TrackMetadataClientProtobuf
+}
 
 class Clients(
     config: AppConfig,
@@ -121,6 +126,13 @@ class Clients(
     new TrackMetadataClientProtobuf(_, _)
   )
 
+  val trackRepostsTwirpClient = TwirpClient(
+    ResourceName("tracks"),
+    config,
+    telemetry,
+    new RepostsClientProtobuf(_, _)
+  )
+
   val likeTracksTwirpClient = TwirpClient(
     ResourceName("tracks"),
     config,
@@ -191,7 +203,8 @@ class Clients(
   val timelineService = new TimelineService(timelineClient, tracksService, playlistService)
 
   val streamService = new StreamService(trackVisibilityService, tracksMediaTwirpClient)
-  val repostsService = new RepostsService(userRepresentationsService, repostsClient)
+  val repostsService =
+    new RepostsService(userRepresentationsService, repostsClient, trackRepostsTwirpClient, rolloutClient)
   val playlistDeletionClient = new PlaylistDeletionClient(okidokiJsonClient)
   val commentsService =
     new CommentService(richOkidokiClient, moshimoshiClient, moshimoshiCommentsClient)
