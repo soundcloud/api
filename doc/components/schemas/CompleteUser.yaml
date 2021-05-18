@@ -1,5 +1,5 @@
 type: object
-description: SoundCloud User object
+description: SoundCloud Complete User object
 properties:
   avatar_url:
     description: URL to a JPEG image.

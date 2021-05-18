@@ -6,7 +6,9 @@ import com.soundcloud.jvmkit.module.outcome.Outcome
 import com.soundcloud.jvmkit.module.telemetry.Telemetry
 import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.publicApiStrangler.handler.representation.collection.CollectionResponse
-import com.soundcloud.publicApiStrangler.handler.representation.serializers.SearchUserRepresentation.searchUserWrites
+import com.soundcloud.publicApiStrangler.handler.representation.serializers.CanonicalUserRepresentation.{
+  writes => searchUserWrites
+}
 import com.soundcloud.publicApiStrangler.handler.search.SearchHandler._
 import com.soundcloud.publicApiStrangler.service.SearchService
 import com.soundcloud.publicApiStrangler.service.pagination.OffsetBasedPagination

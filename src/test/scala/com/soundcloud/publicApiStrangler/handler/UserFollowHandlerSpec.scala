@@ -83,7 +83,7 @@ class UserFollowHandlerSpec extends UnitSpecification {
         |  "online": false,
         |  "likes_count": 5,
         |  "playlist_count": null,
-        |  "subscriptions": []
+        |  "subscriptions": [{"product":{"id":"pro-plus","name":"Pro Plus"}}]
         |}
       """.stripMargin)
 
@@ -119,7 +119,7 @@ class UserFollowHandlerSpec extends UnitSpecification {
         |  "online": false,
         |  "likes_count": 5,
         |  "playlist_count": null,
-        |  "subscriptions": []
+        |  "subscriptions": [{"product":{"id":"pro-plus","name":"Pro Plus"}}]
         |}
       """.stripMargin
     )

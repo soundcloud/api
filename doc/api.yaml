@@ -266,7 +266,7 @@ paths:
         - $ref: '#/components/parameters/user_id'
       responses:
         200:
-          $ref: '#/components/responses/CompleteUser'
+          $ref: '#/components/responses/User'
         401:
           $ref: '#/components/responses/Unauthorized'
         404:
@@ -288,27 +288,6 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         404:
           $ref: '#/components/responses/NotFound'
-    # post:
-    #   summary: Endpoint to follow another user.
-    #   tags:
-    #     - me
-    #   security:
-    #     - AuthHeader: []
-    #   parameters:
-    #     - $ref: '#/components/parameters/user_id'
-    #   responses:
-    #     201:
-    #       description: Success
-    #       content:
-    #         application/json:
-    #           examples:
-    #             200:
-    #               $ref: '#/components/examples/OK'
-    #             201:
-    #               $ref: '#/components/examples/User'
-    #     404:
-    #     500:
-    #       description: Internal Server Error
     delete:
       summary: Deletes a user who is followed by the authenticated user.
       tags:
@@ -357,7 +336,7 @@ paths:
         - $ref: '#/components/parameters/follower_id'
       responses:
         200:
-          $ref: '#/components/responses/CompleteUser'
+          $ref: '#/components/responses/User'
         401:
           $ref: '#/components/responses/Unauthorized'
   /me/playlists:

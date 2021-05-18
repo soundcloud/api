@@ -20,7 +20,9 @@ import com.soundcloud.publicApiStrangler.client.mothership.OkidokiClient
 import com.soundcloud.publicApiStrangler.client.mothership.response.mapper.UserRepresentationMapper
 import com.soundcloud.publicApiStrangler.client.mothership.response.representation.UserRepresentation
 import com.soundcloud.publicApiStrangler.client.reposts.RepostsClient
-import com.soundcloud.publicApiStrangler.handler.representation.serializers.UserFollowRepresentation.userFollowWrites
+import com.soundcloud.publicApiStrangler.handler.representation.serializers.CanonicalUserRepresentation.{
+  writes => userFollowWrites
+}
 import com.soundcloud.publicApiStrangler.service.representation.collection.Collection
 import com.soundcloud.publicApiStrangler.support.ErrorResponse
 import com.twitter.finagle.http.{Response, Status}
