@@ -188,6 +188,8 @@ object RepostsClient {
 
   case object Failed extends Result
 
+  case object Forbidden extends Result
+
   case class Count(urn: Urn, count: Long)
 
   implicit val countFormat: Format[Count] = Json.format[Count]

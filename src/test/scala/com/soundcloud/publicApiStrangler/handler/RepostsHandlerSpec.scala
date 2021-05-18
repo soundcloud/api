@@ -38,7 +38,7 @@ class RepostsHandlerSpec extends UnitSpecification {
       def result: Result
 
       repostsService
-        .createRepost(session, track)
+        .createTracksRepost(session, track)
         .returns(Future.value(result))
 
       lazy val response = post("/reposts/tracks/100", Map(), requestHeaders)
@@ -149,7 +149,7 @@ class RepostsHandlerSpec extends UnitSpecification {
       def result: Result
 
       repostsService
-        .createRepost(session, playlist)
+        .createPlaylistsRepost(session, playlist)
         .returns(Future.value(result))
 
       lazy val response = post("/reposts/playlists/200", Map(), requestHeaders)
@@ -261,7 +261,7 @@ class RepostsHandlerSpec extends UnitSpecification {
       def result: Result
 
       repostsService
-        .createRepost(session, track)
+        .createTracksRepost(session, track)
         .returns(Future.value(result))
 
       lazy val response = put("/e1/me/track_reposts/100", Map(), requestHeaders)
@@ -336,7 +336,7 @@ class RepostsHandlerSpec extends UnitSpecification {
       def result: Result
 
       repostsService
-        .createRepost(session, playlist)
+        .createPlaylistsRepost(session, playlist)
         .returns(Future.value(result))
 
       lazy val response = put("/e1/me/playlist_reposts/200", Map(), requestHeaders)

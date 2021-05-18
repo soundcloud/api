@@ -6,7 +6,14 @@ import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.publicApiStrangler.client.mothership.response.representation.UserRepresentation
 import com.soundcloud.publicApiStrangler.client.reposts.RepostsClient
-import com.soundcloud.publicApiStrangler.client.reposts.RepostsClient.{Deleted, Failed, NotFound, Result}
+import com.soundcloud.publicApiStrangler.client.reposts.RepostsClient.{
+  Created,
+  Deleted,
+  Failed,
+  Forbidden,
+  NotFound,
+  Result
+}
 import com.soundcloud.publicApiStrangler.service.pagination.CursorBasedPagination
 import com.soundcloud.publicApiStrangler.service.representation.collection.Collection
 import com.soundcloud.publicApiStrangler.service.users.UserOrderingUtils.sortByProvidedUrns
@@ -21,10 +28,23 @@ class RepostsService(
     trackRepostsService: TrackRepostsService,
     rollout: Rollout
 ) {
+  val trackRepostTwirpRollout = RolloutFeature("twirp-repost-tracks")
   val deleteTrackRepostTwirpRollout = RolloutFeature("delete-twirp-repost-tracks")
 
-  def createRepost(session: UserSession, target: Urn): Future[Result] = {
-    repostsClient.createRepost(session, target)
+  def createTracksRepost(session: UserSession, track: Urn): Future[Result] = {
+    rollout
+      .isActive(trackRepostTwirpRollout)
+      .flatMap(isActive => {
+        if (isActive) {
+          createTrackRepost(session, track)
+        } else {
+          repostsClient.createRepost(session, track)
+        }
+      })
+  }
+
+  def createPlaylistsRepost(session: UserSession, playlist: Urn): Future[Result] = {
+    repostsClient.createRepost(session, playlist)
   }
 
   def deleteTracksRepost(session: UserSession, track: Urn): Future[Result] = {
@@ -57,6 +77,21 @@ class RepostsService(
             val nextHref = reposts.nextCursor.map(cursor => pagination.nextPage(cursor)).map(_.normalizedHref)
             Collection(sortByProvidedUrns(users, reposts.urns).toList, nextHref)
           }
+      }
+  }
+
+  private def createTrackRepost(session: UserSession, trackUrn: Urn): Future[Result] = {
+    val request = RepostTrackRequest(Some(session.asProtoSession), trackUrn.toString)
+
+    // will rework the responses when jsonClient is removed
+    trackRepostsService
+      .repostTrack(request)
+      .map(_ => Created)
+      .handle {
+        case TwinagleException(ErrorCode.NotFound, _, _, _) => NotFound
+        case TwinagleException(ErrorCode.PermissionDenied, msg, _, _) => Forbidden
+        case TwinagleException(_, _, _, _) => Failed
+
       }
   }
 

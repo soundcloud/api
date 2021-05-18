@@ -12,7 +12,13 @@ import com.twitter.finagle.http.{Response, Status}
 import com.twitter.util.Future
 
 class RepostsHandler(userAuthentication: UserAuthentication, repostsService: RepostsService) {
-  def createTracksRepost = createRepost(_: HandlerRequest, "tracks")
+
+  def createTracksRepost(request: HandlerRequest) = {
+    userAuthentication.withLoggedInUser(request) { (session, _) =>
+      val target = Urn("soundcloud", "tracks", request.routeParams("id"))
+      repostsService.createTracksRepost(session, target).map(renderResult)
+    }
+  }
 
   def deleteTracksRepost(request: HandlerRequest): Future[Response] = {
     userAuthentication.withLoggedInUser(request) { (session, _) =>
@@ -23,7 +29,12 @@ class RepostsHandler(userAuthentication: UserAuthentication, repostsService: Rep
 
   def getTracksReposters: HandlerRequest => Future[Response] = getReposters(_: HandlerRequest, "tracks")
 
-  def createPlaylistsRepost = createRepost(_: HandlerRequest, "playlists")
+  def createPlaylistsRepost(request: HandlerRequest) = {
+    userAuthentication.withLoggedInUser(request) { (session, _) =>
+      val target = Urn("soundcloud", "playlists", request.routeParams("id"))
+      repostsService.createPlaylistsRepost(session, target).map(renderResult)
+    }
+  }
 
   def deletePlaylistsRepost(request: HandlerRequest): Future[Response] = {
     userAuthentication.withLoggedInUser(request) { (session, _) =>
@@ -33,13 +44,6 @@ class RepostsHandler(userAuthentication: UserAuthentication, repostsService: Rep
   }
 
   def getPlaylistsReposters: HandlerRequest => Future[Response] = getReposters(_: HandlerRequest, "playlists")
-
-  private def createRepost(request: HandlerRequest, targetType: String): Future[Response] = {
-    userAuthentication.withLoggedInUser(request) { (session, _) =>
-      val target = Urn("soundcloud", targetType, request.routeParams("id"))
-      repostsService.createRepost(session, target).map(renderResult)
-    }
-  }
 
   private def getReposters(request: HandlerRequest, targetType: String): Future[Response] = {
     userAuthentication.withUserSession(request) { session =>
@@ -60,6 +64,7 @@ class RepostsHandler(userAuthentication: UserAuthentication, repostsService: Rep
     case Deleted => ResponseBuilder.ok()
     case AlreadyExists => ResponseBuilder.ok()
     case NotFound => ErrorResponse.notFound()
+    case Forbidden => ErrorResponse.forbidden()
     case SpamBlocked => ErrorResponse(Status.TooManyRequests)
     case Failed => ErrorResponse(Status.InternalServerError)
   }
