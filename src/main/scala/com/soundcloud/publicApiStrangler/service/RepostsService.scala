@@ -1,6 +1,5 @@
 package com.soundcloud.publicApiStrangler.service
 
-import com.soundcloud.jvmkit.module.rollout.{Rollout, RolloutFeature}
 import com.soundcloud.jvmkit.module.twirp.proto.UserSessionOps.JvmkitSessionExt
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSession
@@ -25,38 +24,36 @@ import proto.soundcloud.tracks.api.{RepostTrackRequest, RepostsService => TrackR
 class RepostsService(
     userRepresentationService: UserRepresentationsService,
     repostsClient: RepostsClient,
-    trackRepostsService: TrackRepostsService,
-    rollout: Rollout
+    trackRepostsService: TrackRepostsService
 ) {
-  val trackRepostTwirpRollout = RolloutFeature("twirp-repost-tracks")
-  val deleteTrackRepostTwirpRollout = RolloutFeature("delete-twirp-repost-tracks")
 
-  def createTracksRepost(session: UserSession, track: Urn): Future[Result] = {
-    rollout
-      .isActive(trackRepostTwirpRollout)
-      .flatMap(isActive => {
-        if (isActive) {
-          createTrackRepost(session, track)
-        } else {
-          repostsClient.createRepost(session, track)
-        }
-      })
+  def createTracksRepost(session: UserSession, trackUrn: Urn): Future[Result] = {
+    val request = RepostTrackRequest(Some(session.asProtoSession), trackUrn.toString)
+
+    trackRepostsService
+      .repostTrack(request)
+      .map(_ => Created)
+      .handle {
+        case TwinagleException(ErrorCode.NotFound, _, _, _) => NotFound
+        case TwinagleException(ErrorCode.PermissionDenied, _, _, _) => Forbidden
+        case TwinagleException(_, _, _, _) => Failed
+      }
+  }
+
+  def deleteTracksRepost(session: UserSession, trackUrn: Urn): Future[Result] = {
+    val request = RepostTrackRequest(Some(session.asProtoSession), trackUrn.toString)
+
+    trackRepostsService
+      .deleteTrackRepost(request)
+      .map(_ => Deleted)
+      .handle {
+        case TwinagleException(ErrorCode.NotFound, _, _, _) => NotFound
+        case TwinagleException(_, _, _, _) => Failed
+      }
   }
 
   def createPlaylistsRepost(session: UserSession, playlist: Urn): Future[Result] = {
     repostsClient.createRepost(session, playlist)
-  }
-
-  def deleteTracksRepost(session: UserSession, track: Urn): Future[Result] = {
-    rollout
-      .isActive(deleteTrackRepostTwirpRollout)
-      .flatMap(isActive => {
-        if (isActive) {
-          deleteTrackRepost(session, track)
-        } else {
-          repostsClient.deleteRepost(session, track)
-        }
-      })
   }
 
   def deletePlaylistsRepost(session: UserSession, playlist: Urn): Future[Result] = {
@@ -77,33 +74,6 @@ class RepostsService(
             val nextHref = reposts.nextCursor.map(cursor => pagination.nextPage(cursor)).map(_.normalizedHref)
             Collection(sortByProvidedUrns(users, reposts.urns).toList, nextHref)
           }
-      }
-  }
-
-  private def createTrackRepost(session: UserSession, trackUrn: Urn): Future[Result] = {
-    val request = RepostTrackRequest(Some(session.asProtoSession), trackUrn.toString)
-
-    // will rework the responses when jsonClient is removed
-    trackRepostsService
-      .repostTrack(request)
-      .map(_ => Created)
-      .handle {
-        case TwinagleException(ErrorCode.NotFound, _, _, _) => NotFound
-        case TwinagleException(ErrorCode.PermissionDenied, msg, _, _) => Forbidden
-        case TwinagleException(_, _, _, _) => Failed
-
-      }
-  }
-
-  private def deleteTrackRepost(session: UserSession, trackUrn: Urn): Future[Result] = {
-    val request = RepostTrackRequest(Some(session.asProtoSession), trackUrn.toString)
-
-    trackRepostsService
-      .deleteTrackRepost(request)
-      .map(_ => Deleted)
-      .handle {
-        case TwinagleException(ErrorCode.NotFound, _, _, _) => NotFound
-        case TwinagleException(_, _, _, _) => Failed
       }
   }
 

@@ -1,6 +1,5 @@
 package com.soundcloud.publicApiStrangler.service
 
-import com.soundcloud.jvmkit.module.rollout.{Rollout, RolloutFeature}
 import com.soundcloud.jvmkit.module.twirp.proto.UserSessionOps.JvmkitSessionExt
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSessionBuilder
@@ -18,15 +17,12 @@ class RepostsServiceSpec extends UnitSpecification {
     val userRepresentationService = mock[UserRepresentationsService]
     val repostsClient = mock[RepostsClient]
     val trackRepostsService = mock[TrackRepostsService]
-    val rollout = mock[Rollout]
-    val repostsService = new RepostsService(userRepresentationService, repostsClient, trackRepostsService, rollout)
+    val repostsService = new RepostsService(userRepresentationService, repostsClient, trackRepostsService)
 
     val trackUrn = Urn("soundcloud", "tracks", "123")
     val session = new UserSessionBuilder().build()
     val request = RepostTrackRequest(Some(session.asProtoSession), trackUrn.toString)
     val response = RepostTrackResponse()
-
-    rollout.isActive(any[RolloutFeature]) returns Future.True
   }
 
   "create track repost" >> {

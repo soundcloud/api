@@ -204,7 +204,7 @@ class Clients(
 
   val streamService = new StreamService(trackVisibilityService, tracksMediaTwirpClient)
   val repostsService =
-    new RepostsService(userRepresentationsService, repostsClient, trackRepostsTwirpClient, rolloutClient)
+    new RepostsService(userRepresentationsService, repostsClient, trackRepostsTwirpClient)
   val playlistDeletionClient = new PlaylistDeletionClient(okidokiJsonClient)
   val commentsService =
     new CommentService(richOkidokiClient, moshimoshiClient, moshimoshiCommentsClient)

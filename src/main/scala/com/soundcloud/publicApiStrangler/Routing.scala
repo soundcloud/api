@@ -119,15 +119,15 @@ object Routing {
   }
 
   def forRepostsHandler(repostsHandler: RepostsHandler): List[(Method, String, Handler)] = {
-    route(Method.Put, "/e1/me/track_reposts/:id", repostsHandler.createTracksRepost) ::: // deprecate
-      route(Method.Delete, "/e1/me/track_reposts/:id", repostsHandler.deleteTracksRepost) ::: // deprecate
+    route(Method.Put, "/e1/me/track_reposts/:trackId", repostsHandler.createTracksRepost) ::: // deprecate
+      route(Method.Delete, "/e1/me/track_reposts/:trackId", repostsHandler.deleteTracksRepost) ::: // deprecate
       route(Method.Put, "/e1/me/playlist_reposts/:id", repostsHandler.createPlaylistsRepost) ::: // deprecate
       route(Method.Delete, "/e1/me/playlist_reposts/:id", repostsHandler.deletePlaylistsRepost) ::: // deprecate
-      route(Method.Post, "/reposts/tracks/:id", repostsHandler.createTracksRepost) :::
-      route(Method.Delete, "/reposts/tracks/:id", repostsHandler.deleteTracksRepost) :::
+      route(Method.Post, "/reposts/tracks/:trackId", repostsHandler.createTracksRepost) :::
+      route(Method.Delete, "/reposts/tracks/:trackId", repostsHandler.deleteTracksRepost) :::
       route(Method.Post, "/reposts/playlists/:id", repostsHandler.createPlaylistsRepost) :::
       route(Method.Delete, "/reposts/playlists/:id", repostsHandler.deletePlaylistsRepost) :::
-      route(Method.Get, "/tracks/:id/reposters", repostsHandler.getTracksReposters) :::
+      route(Method.Get, "/tracks/:trackId/reposters", repostsHandler.getTracksReposters) :::
       route(Method.Get, "/playlists/:id/reposters", repostsHandler.getPlaylistsReposters)
   }
 
