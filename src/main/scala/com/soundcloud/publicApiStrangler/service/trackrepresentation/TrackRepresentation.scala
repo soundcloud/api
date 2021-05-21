@@ -65,19 +65,6 @@ object TrackRepresentation {
 
   implicit val writes = new Writes[TrackRepresentation] {
 
-    implicit val userWrites = Writes[UserRepresentation] { user =>
-      Json.obj(
-        "id" -> user.urn.identifier.toLong,
-        "kind" -> "user",
-        "permalink" -> user.permalink,
-        "username" -> user.username,
-        "last_modified" -> user.updated_at,
-        "uri" -> s"https://api.soundcloud.com/users/${user.urn.identifier}",
-        "permalink_url" -> user.permalink_url,
-        "avatar_url" -> user.avatar_url.replaceAll("\\?[0-9]+$", "").replaceAll("^http:", "https:")
-      )
-    }
-
     override def writes(rep: TrackRepresentation): JsValue = {
       Json.obj(
         "kind" -> "track",

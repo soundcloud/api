@@ -11,9 +11,6 @@ import com.soundcloud.publicApiStrangler.client.liebling.LieblingClient
 import com.soundcloud.publicApiStrangler.client.mothership.response.representation.UserRepresentation
 import com.soundcloud.publicApiStrangler.client.reposts.RepostsClient
 import com.soundcloud.publicApiStrangler.handler.representation.collection.CollectionResponse.MaxCacheAge
-import com.soundcloud.publicApiStrangler.handler.representation.serializers.CanonicalUserRepresentation.{
-  writes => searchUserWrites
-}
 import com.soundcloud.publicApiStrangler.handler.search.SearchHandler
 import com.soundcloud.publicApiStrangler.service.SearchService
 import com.soundcloud.publicApiStrangler.service.pagination.OffsetBasedPagination
@@ -71,7 +68,7 @@ class SearchHandlerSpec extends UnitSpecification {
       when(searchService.searchUsers(anonymousSession, request.params, page))
         .thenReturn(Good(userCollection).outcomeF)
 
-      val expectedResponse = Collection.getRepresentation(userCollection, false)(searchUserWrites)
+      val expectedResponse = Collection.getRepresentation(userCollection, false)
     }
 
     "performs a search when q param is present" in new Context {

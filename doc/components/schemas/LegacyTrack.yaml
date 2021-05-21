@@ -100,7 +100,7 @@ properties:
     type: string
   user:
     description: User who uploaded a track
-    $ref: "#/components/schemas/MetaUser"
+    $ref: "#/components/schemas/User"
   user_favorite:
     description: Is user's favourite.
     type: boolean

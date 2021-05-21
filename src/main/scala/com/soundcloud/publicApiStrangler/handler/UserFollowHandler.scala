@@ -20,9 +20,6 @@ import com.soundcloud.publicApiStrangler.client.mothership.OkidokiClient
 import com.soundcloud.publicApiStrangler.client.mothership.response.mapper.UserRepresentationMapper
 import com.soundcloud.publicApiStrangler.client.mothership.response.representation.UserRepresentation
 import com.soundcloud.publicApiStrangler.client.reposts.RepostsClient
-import com.soundcloud.publicApiStrangler.handler.representation.serializers.CanonicalUserRepresentation.{
-  writes => userFollowWrites
-}
 import com.soundcloud.publicApiStrangler.service.representation.collection.Collection
 import com.soundcloud.publicApiStrangler.support.ErrorResponse
 import com.twitter.finagle.http.{Response, Status}
@@ -79,7 +76,7 @@ class UserFollowHandler(
     fetchUsers(session, Set(target)).map { users =>
       JsonResponseBuilder.created(
         users.headOption
-          .map(user => Json.stringify(Json.toJson(user)(userFollowWrites)))
+          .map(user => Json.stringify(Json.toJson(user)))
           .getOrElse(Json.stringify(JsNull))
       )
     }
@@ -123,7 +120,7 @@ class UserFollowHandler(
 
   private def mapUsersToUsers(users: List[UserRepresentation], nextHref: Option[String]): String = {
     val userCollection = Collection[UserRepresentation](users, nextHref)
-    Collection.getRepresentation(userCollection, true)(userFollowWrites)
+    Collection.getRepresentation(userCollection, true)
   }
 
   private def mapUsersToUrns(users: List[UserRepresentation], nextHref: Option[String]): String = {
@@ -191,7 +188,7 @@ class UserFollowHandler(
               JsonResponseBuilder(
                 status = Status.SeeOther,
                 headers = Map("Location" -> s"$baseUrl/users/$userId"),
-                body = Json.stringify(Json.toJson(users.head)(userFollowWrites))
+                body = Json.stringify(Json.toJson(users.head))
               ).build
             } else {
               ResponseBuilder.notFound()

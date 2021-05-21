@@ -119,24 +119,18 @@ User:
       examples:
         default:
           $ref: "#/components/examples/User"
-MetaUser:
+LegacyUser:
   description: Success
   content:
     application/json; charset=utf-8:
       schema:
-        $ref: '#/components/schemas/MetaUser'
-      examples:
-        default:
-          $ref: "#/components/examples/UserOf"
-CompleteUser:
+        $ref: '#/components/schemas/LegacyUser'
+LegacyLoggedInUser:
   description: Success
   content:
     application/json; charset=utf-8:
       schema:
-        $ref: '#/components/schemas/CompleteUser'
-      examples:
-        default:
-          $ref: "#/components/examples/CompleteUser"
+        $ref: '#/components/schemas/LegacyLoggedInUser'
 Users:
   description: Success
   content:
@@ -159,15 +153,6 @@ UsersList:
       examples:
         default:
           $ref: "#/components/examples/UsersList"
-MetaUsers:
-  description: Success
-  content:
-    application/json; charset=utf-8:
-      schema:
-        $ref: '#/components/schemas/MetaUsers'
-      examples:
-        default:
-          $ref: "#/components/examples/MetaUsers"
 Track:
   description: Success
   content:

@@ -1,5 +1,5 @@
 type: object
-description: SoundCloud Complete User object
+description: SoundCloud Legacy Logged In User object
 properties:
   avatar_url:
     description: URL to a JPEG image.
@@ -42,7 +42,7 @@ properties:
     type: string
   locale:
     description: locale.
-    type: string
+    type: [ string, null ]
   myspace_name:
     description: myspace name
     type: string

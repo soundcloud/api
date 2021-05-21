@@ -97,7 +97,7 @@ properties:
     description: Playlist URI.
     type: string
   user:
-    $ref: "#/components/schemas/MetaUser"
+    $ref: "#/components/schemas/User"
   user_id:
     description: User identifier.
     type: integer

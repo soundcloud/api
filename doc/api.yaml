@@ -114,7 +114,7 @@ paths:
         - AuthHeader: [ ]
       responses:
         200:
-          $ref: '#/components/responses/CompleteUser'
+          $ref: '#/components/responses/LegacyLoggedInUser'
         401:
           $ref: '#/components/responses/Unauthorized'
   /me/activities:
@@ -629,7 +629,7 @@ paths:
         - $ref: '#/components/parameters/limit'
       responses:
         200:
-          $ref: '#/components/responses/MetaUsers'
+          $ref: '#/components/responses/Users'
         401:
           $ref: '#/components/responses/Unauthorized'
         404:
@@ -796,7 +796,7 @@ paths:
         - $ref: '#/components/parameters/limit'
       responses:
         200:
-          $ref: '#/components/responses/MetaUsers'
+          $ref: '#/components/responses/Users'
         401:
           $ref: '#/components/responses/Unauthorized'
         404:
@@ -846,7 +846,7 @@ paths:
         - $ref: '#/components/parameters/user_id'
       responses:
         200:
-          $ref: '#/components/responses/CompleteUser'
+          $ref: '#/components/responses/LegacyLoggedInUser'
         401:
           $ref: '#/components/responses/Unauthorized'
         404:
@@ -937,7 +937,7 @@ paths:
         - $ref: '#/components/parameters/following_id'
       responses:
         200:
-          $ref: '#/components/responses/CompleteUser'
+          $ref: '#/components/responses/User'
         401:
           $ref: '#/components/responses/Unauthorized'
         404:
@@ -1196,10 +1196,10 @@ components:
               type: string
     User:
       $ref: './components/schemas/User.yaml'
-    MetaUser:
-      $ref: './components/schemas/MetaUser.yaml'
-    CompleteUser:
-      $ref: './components/schemas/CompleteUser.yaml'
+    LegacyUser:
+      $ref: './components/schemas/LegacyUser.yaml'
+    LegacyLoggedInUser:
+      $ref: './components/schemas/LegacyLoggedInUser.yaml'
     Users:
       type: object
       properties:
@@ -1207,15 +1207,6 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/User'
-        next_href:
-          type: string
-    MetaUsers:
-      type: object
-      properties:
-        collection:
-          type: array
-          items:
-            $ref: '#/components/schemas/MetaUser'
         next_href:
           type: string
     UsersList:
@@ -1340,8 +1331,6 @@ components:
         $ref: "#/components/examples/Track/value"
     User:
       $ref: './components/examples/User.yaml'
-    CompleteUser:
-      $ref: './components/examples/CompleteUser.yaml'
     UserOf:
       $ref: './components/examples/UserOf.yaml'
     UsersList:
@@ -1352,11 +1341,6 @@ components:
       value:
         collection:
           $ref: "#/components/examples/User/value"
-        next_href: https://api.soundcloud.com/collection?client_id=client_id&page_size=10&cursor=1234567
-    MetaUsers:
-      value:
-        collection:
-          $ref: "#/components/examples/UserOf/value"
         next_href: https://api.soundcloud.com/collection?client_id=client_id&page_size=10&cursor=1234567
     WebProfiles:
       $ref: './components/examples/WebProfiles.yaml'
