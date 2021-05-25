@@ -86,7 +86,7 @@ object App {
         List.concat(
           forUserFollowHandler(handlers.userFollowHandler),
           forMothershipDispatcher(handlers.mothershipDispatcher),
-          forTokenExchange(handlers.tokenExchangeRolloutHandler.handle _),
+          forTokenExchange(handlers.tokenExchangeRolloutHandler.handle),
           forSingleTrackHandler(handlers.singleTrackHandler),
           forPlaylistHandler(handlers.playlistsHandler),
           forSimilarTracksHandler(handlers.similarTracksHandler),
@@ -127,7 +127,8 @@ object App {
         new CookieHeaderRemovalFilter,
         new ExceptForTrackUploadsFilter(rateLimitingFacade.filter),
         new DeprecatedEndpointUsageFilter(clients.userAuthentication, telemetry, router),
-        new RequestTelemetryFilter(clients.userAuthentication, telemetry, router)
+        new RequestTelemetryFilter(clients.userAuthentication, telemetry, router),
+        new PlaylistsWithTracksTelemetryFilter(clients.userAuthentication, telemetry, router)
       )
 
     new AdminServer(

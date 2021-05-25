@@ -42,4 +42,7 @@ trait UnitSpecification extends Specification with BeforeAfterEach with Mockito 
 
   def jsonResponse(status: Status, json: JsValue, headers: HeaderMap = HeaderMap()) =
     JsonResponseBuilder().status(status).body(Json.stringify(json)).headers(headers.toMap).build
+
+  def jsonCollectionResponse(status: Status, jsonCollection: String, headers: HeaderMap = HeaderMap()) =
+    JsonResponseBuilder().status(status).body(jsonCollection).headers(headers.toMap).build
 }
