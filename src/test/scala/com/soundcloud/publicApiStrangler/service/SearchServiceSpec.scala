@@ -103,7 +103,7 @@ class SearchServiceSpec extends TrackRepresentationsSpecificationContext {
       when(searchClient.searchTracks(===(session), anyObject, anyObject)).thenReturn(response)
     }
 
-    "when all data is available" in new TrackContext {
+    "default to free tier tracks only (to support current behavior)" in new TrackContext {
       val result = Await.result(searchService.searchTracks(session, ParamMap(("q", query)), trackPagination).value)
 
       val tracksCollection = result.getOrElse(Collection(List.empty, None))
@@ -126,7 +126,7 @@ class SearchServiceSpec extends TrackRepresentationsSpecificationContext {
       tracksCollection.items ==== List(trackRepresentationMock)
       there was one(searchClient).searchTracks(
         ===(session),
-        ===(Params("q" -> query, "filter.content_tier" -> "ANY", "filter.content_country" -> "--")),
+        ===(Params("q" -> query)),
         anyObject
       )
     }

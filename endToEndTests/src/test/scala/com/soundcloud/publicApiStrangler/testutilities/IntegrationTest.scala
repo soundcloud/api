@@ -18,6 +18,7 @@ trait IntegrationTest extends Specification with SpinningUpAppSupport {
     lazy val freeTierTrackId = "405325995"
     lazy val freeTierNonStreamableTrackId = "1015448728"
     lazy val highTierTrackId = "653338388"
+    lazy val geoblockedInGermanyTrackId = "774186184"
     lazy val blockedTrackId = "974675008"
     lazy val rightsholderRestrictedTrackId = "945370459"
 
@@ -27,5 +28,7 @@ trait IntegrationTest extends Specification with SpinningUpAppSupport {
 
     def authenticatedUSHeaders =
       HeaderMap("Authorization" -> s"OAuth $token", "X-Real-IP" -> "65.206.21.12")
+    def authenticatedDEHeaders =
+      HeaderMap("Authorization" -> s"OAuth $token", "X-Real-IP" -> "2.16.7.255")
   }
 }

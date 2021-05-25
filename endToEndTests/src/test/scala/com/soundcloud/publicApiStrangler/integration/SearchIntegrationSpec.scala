@@ -14,10 +14,7 @@ class SearchIntegrationSpec extends IntegrationTest {
 
   "/tracks" >> {
     "should return only full tracks, if no access are present (free tier is default)" in new SearchContext {
-      val response = server.get(
-        searchPath(params = Map("q" -> "Crazy In Love")),
-        authenticatedUSHeaders
-      )
+      val response = server.get(searchPath(params = Map("q" -> "Crazy In Love")))
 
       response.status === 200
 
@@ -51,5 +48,23 @@ class SearchIntegrationSpec extends IntegrationTest {
       searchResult.map(item => (item \ "access").as[String]) must contain("blocked")
     }
 
+    "should return geoblocked tracks as well, full access" in new SearchContext {
+      val response = server.get(
+        searchPath(params = Map(
+          "q" -> "D.A.N.C.E Loopified",
+          "ids" -> geoblockedInGermanyTrackId,
+          "access" -> "playable,preview,blocked")),
+        authenticatedDEHeaders
+      )
+
+      response.status === 200
+
+      val searchResult = (response.json \ "collection").as[JsArray].value
+      searchResult.map(item => (item \ "access").as[String]) must contain("blocked")
+      searchResult.exists(item => {
+        val maybeCountryCodes = (item \ "available_country_codes").asOpt[List[String]]
+        maybeCountryCodes.exists(!_.contains("DE"))
+      }) must beTrue
+    }
   }
 }
