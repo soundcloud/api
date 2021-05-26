@@ -128,7 +128,7 @@ object App {
         new ExceptForTrackUploadsFilter(rateLimitingFacade.filter),
         new DeprecatedEndpointUsageFilter(clients.userAuthentication, telemetry, router),
         new RequestTelemetryFilter(clients.userAuthentication, telemetry, router),
-        new PlaylistsWithTracksTelemetryFilter(clients.userAuthentication, telemetry, router)
+        new PlaylistsWithTracksTelemetryFilter(telemetry, router)
       )
 
     new AdminServer(

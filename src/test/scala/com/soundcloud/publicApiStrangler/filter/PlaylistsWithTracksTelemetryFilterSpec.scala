@@ -1,7 +1,5 @@
 package com.soundcloud.publicApiStrangler.filter
 
-import com.soundcloud.jvmkit.module.bff.session.UserAuthentication
-import com.soundcloud.jvmkit.module.bff.testsupport.FakeUserAuthentication
 import com.soundcloud.jvmkit.module.http.server.{
   HandlerRequest,
   HandlerRouter,
@@ -9,8 +7,6 @@ import com.soundcloud.jvmkit.module.http.server.{
   JsonResponseBuilder
 }
 import com.soundcloud.jvmkit.module.telemetry.Telemetry
-import com.soundcloud.jvmkit.module.util.Urn
-import com.soundcloud.jvmkit.module.util.session.UserSessionBuilder
 import com.soundcloud.publicApiStrangler.service.playlists.PlaylistBuilder
 import com.soundcloud.publicApiStrangler.service.representation.collection.Collection
 import com.soundcloud.publicApiStrangler.service.trackrepresentation.TrackRepresentationsSpecificationContext
@@ -27,20 +23,13 @@ class PlaylistsWithTracksTelemetryFilterSpec extends TrackRepresentationsSpecifi
     val router = HandlerRouterBuilder()
       .register(Method.Get, "/users/:userId/playlists", _ => Future.value(JsonResponseBuilder.ok()))
       .register(Method.Post, "/foo", _ => Future.value(JsonResponseBuilder.ok()))
-      .register(Method.Post, "/users", _ => Future.value(JsonResponseBuilder.ok()))
+      .register(Method.Get, "/users", _ => Future.value(JsonResponseBuilder.ok()))
       .build
 
-    override val session = new UserSessionBuilder()
-      .setUser(Urn("soundcloud", "users", "111"))
-      .setAgent(Urn("soundcloud", "application", "999"))
-      .build()
-
-    val userAuthentication = new FakeUserAuthentication(session)
     val telemetry = Telemetry.createIsolatedInstance
 
     val filter =
       new PlaylistsWithTracksTelemetryFilter(
-        userAuthentication: UserAuthentication,
         telemetry: Telemetry,
         router: HandlerRouter
       )
@@ -48,22 +37,22 @@ class PlaylistsWithTracksTelemetryFilterSpec extends TrackRepresentationsSpecifi
     def getHistogramCount(path: String): Option[Double] = {
       telemetry.getSampleValue(
         "tracks_in_playlist_collection_count",
-        Seq("path", "appid"),
-        Seq(path, "999")
+        Seq("path"),
+        Seq(path)
       )
     }
 
     def getHistogramBucket(path: String, le: String): Option[Double] = {
       telemetry.getSampleValue(
         "tracks_in_playlist_collection_bucket",
-        Seq("path", "appid", "le"),
-        Seq(path, "999", le)
+        Seq("path", "le"),
+        Seq(path, le)
       )
     }
   }
 
   trait PlaylistWithTracksResponseContext extends Context {
-    val request = HandlerRequest(Request("/users/111/playlists", ("client_id", "999")))
+    val request = HandlerRequest(Request("/users/111/playlists"))
     val path = "/users/:userId/playlists"
 
     lazy val tracks = List(createTrackRepresentation, createTrackRepresentation, createTrackRepresentation)
@@ -81,7 +70,7 @@ class PlaylistsWithTracksTelemetryFilterSpec extends TrackRepresentationsSpecifi
     Await.result(filter.apply(request, service)) ==== expectedResponse
 
     getHistogramCount(path) === Some(1.0)
-    getHistogramBucket(path, "10.0") === Some(1.0)
+    getHistogramBucket(path, "100.0") === Some(1.0)
 
   }
 
@@ -95,7 +84,7 @@ class PlaylistsWithTracksTelemetryFilterSpec extends TrackRepresentationsSpecifi
   }
 
   trait TrackResponseContext extends Context {
-    val request = HandlerRequest(Request("/foo", ("client_id", "999")))
+    val request = HandlerRequest(Request("/foo"))
 
     lazy val track = createTrackRepresentation
     lazy val json = Json.toJson(track)
@@ -111,7 +100,7 @@ class PlaylistsWithTracksTelemetryFilterSpec extends TrackRepresentationsSpecifi
   }
 
   trait UserResponseContext extends Context {
-    val request = HandlerRequest(Request("/users", ("client_id", "999")))
+    val request = HandlerRequest(Request("/users"))
 
     lazy val user = new UserBuilder().build
     lazy val usersCollection = Collection(List(user, user), None)
