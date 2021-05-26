@@ -14,6 +14,7 @@ import com.soundcloud.jvmkit.module.util.session.UserSessionBuilder
 import com.soundcloud.publicApiStrangler.service.playlists.PlaylistBuilder
 import com.soundcloud.publicApiStrangler.service.representation.collection.Collection
 import com.soundcloud.publicApiStrangler.service.trackrepresentation.TrackRepresentationsSpecificationContext
+import com.soundcloud.publicApiStrangler.service.users.UserBuilder
 import com.twitter.finagle.Service
 import com.twitter.finagle.http._
 import com.twitter.util.{Await, Future}
@@ -26,6 +27,7 @@ class PlaylistsWithTracksTelemetryFilterSpec extends TrackRepresentationsSpecifi
     val router = HandlerRouterBuilder()
       .register(Method.Get, "/users/:userId/playlists", _ => Future.value(JsonResponseBuilder.ok()))
       .register(Method.Post, "/foo", _ => Future.value(JsonResponseBuilder.ok()))
+      .register(Method.Post, "/users", _ => Future.value(JsonResponseBuilder.ok()))
       .build
 
     override val session = new UserSessionBuilder()
@@ -102,10 +104,28 @@ class PlaylistsWithTracksTelemetryFilterSpec extends TrackRepresentationsSpecifi
     service.apply(any[HandlerRequest]) returns Future.value(expectedResponse)
   }
 
-  "should not record tracks count for a different response type" in new TrackResponseContext {
+  "should not record tracks count for a track response type" in new TrackResponseContext {
     Await.result(filter.apply(request, service)) ==== expectedResponse
 
     getHistogramCount("/foo") === None
+  }
+
+  trait UserResponseContext extends Context {
+    val request = HandlerRequest(Request("/users", ("client_id", "999")))
+
+    lazy val user = new UserBuilder().build
+    lazy val usersCollection = Collection(List(user, user), None)
+
+    lazy val json = Collection.getRepresentation(usersCollection, true)
+    lazy val expectedResponse = jsonCollectionResponse(Status.Ok, json)
+
+    service.apply(any[HandlerRequest]) returns Future.value(expectedResponse)
+  }
+
+  "should not record tracks count for a track response type" in new UserResponseContext {
+    Await.result(filter.apply(request, service)) ==== expectedResponse
+
+    getHistogramCount("/users") === None
   }
 
 }
