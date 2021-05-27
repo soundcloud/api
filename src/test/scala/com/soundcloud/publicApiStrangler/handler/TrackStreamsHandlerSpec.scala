@@ -1,7 +1,7 @@
 package com.soundcloud.publicApiStrangler.handler
 
 import com.soundcloud.jvmkit.module.bff.testsupport.FakeUserAuthentication
-import com.soundcloud.jvmkit.module.http.server.{Handler, ResponseBuilder}
+import com.soundcloud.jvmkit.module.http.server.ResponseBuilder
 import com.soundcloud.jvmkit.module.outcome._
 import com.soundcloud.jvmkit.module.telemetry.Telemetry
 import com.soundcloud.jvmkit.module.util.Urn
@@ -9,10 +9,6 @@ import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.publicApiStrangler.Routing
 import com.soundcloud.publicApiStrangler.authorization.policies.Reason
 import com.soundcloud.publicApiStrangler.client.media.TrackAccessRecorderClient
-import com.soundcloud.publicApiStrangler.mapper.trackstreams.{
-  TrackStreamJsonResponseMapper,
-  TrackStreamRedirectResponseMapper
-}
 import com.soundcloud.publicApiStrangler.service.UnavailableByPolicy
 import com.soundcloud.publicApiStrangler.service.media._
 import com.soundcloud.publicApiStrangler.test.{HandlerSpecificationScope, UnitSpecification}
@@ -22,19 +18,19 @@ import org.specs2.specification.core.Fragments
 import play.api.libs.json.Json
 
 class TrackStreamsHandlerSpec extends UnitSpecification {
+
   trait MediaServiceContext extends HandlerSpecificationScope {
     val user = Urn("soundcloud", "users", "1234")
     val session = loggedInSession(user)
 
     val streamService = mock[StreamService]
     val trackAccessClient = mock[TrackAccessRecorderClient]
+
     trackAccessClient.recordAccess(any[UserSession], any[Urn], anyString, anyBoolean, any[Option[String]]) returns Future
       .value(ResponseBuilder.ok())
 
     val handler = new TrackStreamsHandler(
       new FakeUserAuthentication(session),
-      mock[TrackStreamJsonResponseMapper],
-      mock[TrackStreamRedirectResponseMapper],
       streamService,
       new TrackAccessRecorderService(trackAccessClient, mock[Telemetry])
     )
@@ -48,7 +44,7 @@ class TrackStreamsHandlerSpec extends UnitSpecification {
     val hlsOpus = "http://opus-hls"
     val httpPreviewMp3 = "http://mp3-progressive-preview"
 
-    def call(method: Method, handler: Handler, path: String) = method match {
+    def call(method: Method, path: String) = method match {
       case Method.Head => head(path)
       case Method.Get => get(path)
     }
@@ -66,7 +62,7 @@ class TrackStreamsHandlerSpec extends UnitSpecification {
           streamService.fetchUrls(session, trackUrn, None, singleStream = true) returns
             Future.value(RedirectStreamResponse(httpMp3).good)
 
-          val response = call(method, handler.redirectStreamRequest, path)
+          val response = call(method, path)
 
           response.statusCode ==== 302
           if (method == Method.Get) {
@@ -82,7 +78,7 @@ class TrackStreamsHandlerSpec extends UnitSpecification {
       streamService.fetchUrls(session, trackUrn, None, singleStream = true) returns
         Future.value(RedirectStreamResponse(httpMp3).good)
 
-      val response = get("/tracks/5/stream")
+      get("/tracks/5/stream")
       there was one(trackAccessClient).recordAccess(
         ===(session),
         ===(trackUrn),
@@ -106,7 +102,7 @@ class TrackStreamsHandlerSpec extends UnitSpecification {
             MediaStreamUrls(httpMp3, hlsMp3, Some(hlsOpus), Some(httpPreviewMp3)).good
           )
 
-          val response = call(method, handler.handleStreamRequest, path)
+          val response = call(method, path)
 
           response.statusCode ==== 200
           if (method == Method.Get) {
@@ -125,7 +121,7 @@ class TrackStreamsHandlerSpec extends UnitSpecification {
         MediaStreamUrls(httpMp3, hlsMp3, Some(hlsOpus), Some(httpPreviewMp3)).good
       )
 
-      val response = get("/tracks/5/streams")
+      get("/tracks/5/streams")
       there was one(trackAccessClient).recordAccess(
         ===(session),
         ===(trackUrn),

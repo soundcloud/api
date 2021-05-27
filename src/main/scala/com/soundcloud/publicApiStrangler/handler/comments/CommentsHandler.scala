@@ -5,15 +5,16 @@ import com.soundcloud.jvmkit.module.http.server.{HandlerRequest, JsonResponseBui
 import com.soundcloud.jvmkit.module.outcome.{Bad, Good, _}
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.publicApiStrangler.client.comments.Comment
+import com.soundcloud.publicApiStrangler.client.mothership._
 import com.soundcloud.publicApiStrangler.service.comments.CommentService
 import com.soundcloud.publicApiStrangler.service.pagination.OffsetBasedPagination
 import com.soundcloud.publicApiStrangler.service.representation.collection.Collection
+import com.soundcloud.publicApiStrangler.support.ErrorResponse
+import com.soundcloud.publicApiStrangler.support.TrackUrnUtil.getTrackUrn
 import com.twitter.conversions.DurationOps._
 import com.twitter.finagle.http.{Response, Status}
-import com.twitter.util.{Duration, Future, Try}
+import com.twitter.util._
 import play.api.libs.json.{JsString, JsValue, Json}
-import com.soundcloud.publicApiStrangler.client.mothership._
-import com.soundcloud.publicApiStrangler.support.ErrorResponse
 
 class CommentsHandler(
     userAuthentication: UserAuthentication,
@@ -22,13 +23,16 @@ class CommentsHandler(
 
   def getCommentsForTrack(request: HandlerRequest): Future[Response] = {
     userAuthentication.withUserSession(request) { session =>
-      val track = Urn("soundcloud", "tracks", request.routeParams("trackId"))
-      commentService.fetchTracksComments(session, track, pagination(request)).map {
-        case Good(comments) =>
-          val body = Collection.getNonNullRepresentation(comments, request.params.contains("linked_partitioning"))
-          JsonResponseBuilder(Status.Ok, body, buildCacheHeaders(Some(10.minutes))).build
-        case Bad(NotFound(_)) => ErrorResponse.notFound()
-        case Bad(_) => ErrorResponse.badRequest()
+      Try(getTrackUrn(request)) match {
+        case Return(urn) =>
+          commentService.fetchTracksComments(session, urn, pagination(request)).map {
+            case Good(comments) =>
+              val body = Collection.getNonNullRepresentation(comments, request.params.contains("linked_partitioning"))
+              JsonResponseBuilder(Status.Ok, body, buildCacheHeaders(Some(10.minutes))).build
+            case Bad(NotFound(_)) => ErrorResponse.notFound()
+            case Bad(_) => ErrorResponse.badRequest()
+          }
+        case Throw(e) => Future.value(ErrorResponse.badRequest(e.getMessage))
       }
     }
   }
@@ -43,10 +47,13 @@ class CommentsHandler(
           if (body.isEmpty) {
             Future.value(ErrorResponse(Status.UnprocessableEntity, noCommentBodyErrorString))
           } else {
-            val commentParams = extractCommentParams(request, commentJson)
-            commentService.createComment(session, commentParams).map {
-              case Good(comment) => createResponse(comment)
-              case Bad(applicationError) => createErrorResponse(applicationError)
+            extractCommentParams(request, commentJson) match {
+              case Right(commentParams) =>
+                commentService.createComment(session, commentParams).map {
+                  case Good(comment) => createResponse(comment)
+                  case Bad(applicationError) => createErrorResponse(applicationError)
+                }
+              case Left(err) => Future.value(createErrorResponse(err))
             }
           }
       }
@@ -67,13 +74,18 @@ class CommentsHandler(
     }
   }
 
-  private def extractCommentParams(request: HandlerRequest, commentJson: JsValue): CreateCommentParams = {
-    val trackUrn = Urn("soundcloud", "tracks", request.routeParams("trackId"))
-    val timestamp = timestampInt(commentJson)
-    val secretToken = request.params.get("secret_token")
-    val body = (commentJson \ "body").as[String]
-    CreateCommentParams(trackUrn, body, timestamp, secretToken)
-  }
+  private def extractCommentParams(
+      request: HandlerRequest,
+      commentJson: JsValue
+  ): Outcome[CreateCommentParams] =
+    Try(getTrackUrn(request)) match {
+      case Return(urn) =>
+        val timestamp = timestampInt(commentJson)
+        val secretToken = request.params.get("secret_token")
+        val body = (commentJson \ "body").as[String]
+        CreateCommentParams(urn, body, timestamp, secretToken).good
+      case Throw(e) => NotValid(e.getMessage).bad
+    }
 
   private def timestampInt(commentJson: JsValue): Option[Int] = {
     (commentJson \ "timestamp").asOpt[String] match {

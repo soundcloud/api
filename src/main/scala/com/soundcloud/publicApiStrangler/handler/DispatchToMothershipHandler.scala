@@ -50,7 +50,7 @@ object ForwardedRequest {
   def apply(originalRequest: Request, maybeSession: Option[UserSession]) = {
     originalRequest.host = "api.soundcloud.com"
     addMandatoryHeaders(originalRequest)
-    maybeSession.map(session => addUserSessionHeaders(originalRequest, session))
+    maybeSession.foreach(session => addUserSessionHeaders(originalRequest, session))
     maybeSession.map(_ => originalRequest.headerMap.set(X_OAUTH_USE_INTERNAL_HEADERS, "true"))
     originalRequest
   }

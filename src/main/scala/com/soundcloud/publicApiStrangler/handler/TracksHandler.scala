@@ -162,7 +162,7 @@ class TracksHandler(
 
     val artwork =
       paramsParser.parseFilesFromRequest(request, "track[artwork_data]").map(_.map(TrackArtworkUpdateRequest))
-    val assetData = extractedParams.map(TrackAssetDataCreateRequest.fromForm).getOrElse(None)
+    val assetData = extractedParams.flatMap(TrackAssetDataCreateRequest.fromForm)
     val metadata =
       extractedParams.map(TrackMetadataCreateRequest.fromForm).getOrElse(NotValid("Invalid request").bad)
 

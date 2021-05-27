@@ -4,13 +4,7 @@ import com.soundcloud.jvmkit.module.bff.session.UserAuthentication
 import com.soundcloud.jvmkit.module.http.server.{HandlerRequest, ResponseBuilder}
 import com.soundcloud.jvmkit.module.outcome._
 import com.soundcloud.jvmkit.module.util.Urn
-import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.publicApiStrangler.authorization.Reasonator
-import com.soundcloud.publicApiStrangler.mapper.trackstreams.{
-  TrackStreamJsonResponseMapper,
-  TrackStreamRedirectResponseMapper,
-  TrackStreamResponseMapper
-}
 import com.soundcloud.publicApiStrangler.service.UnavailableByPolicy
 import com.soundcloud.publicApiStrangler.service.media._
 import com.soundcloud.publicApiStrangler.support.ErrorResponse
@@ -27,21 +21,18 @@ case class StreamParams(trackUrn: Urn, secretToken: Option[String])
   */
 class TrackStreamsHandler(
     userAuthentication: UserAuthentication,
-    trackStreamUrlToJsonResponseMapper: TrackStreamJsonResponseMapper,
-    trackStreamUrlToRedirectMapper: TrackStreamRedirectResponseMapper,
     streamService: StreamService,
     trackAccessRecorderService: TrackAccessRecorderService
 ) {
 
   def handleStreamRequest(request: HandlerRequest): Future[Response] =
-    handleStreamRequest(request, trackStreamUrlToJsonResponseMapper, singleStream = false)
+    handleStreamRequest(request, singleStream = false)
 
   def redirectStreamRequest(request: HandlerRequest): Future[Response] =
-    handleStreamRequest(request, trackStreamUrlToRedirectMapper, singleStream = true)
+    handleStreamRequest(request, singleStream = true)
 
   private def handleStreamRequest(
       request: HandlerRequest,
-      mapper: TrackStreamResponseMapper,
       singleStream: Boolean
   ): Future[Response] = {
     userAuthentication.withUserSession(request) { session =>
@@ -54,7 +45,7 @@ class TrackStreamsHandler(
                 request,
                 streamParams.trackUrn,
                 loggingEnabled = singleStream
-              )(Future.value(renderStreamResponse(request, session, streamResponse)))
+              )(Future.value(renderStreamResponse(request, streamResponse)))
             case Bad(CustomError(UnavailableByPolicy(_, reason), _)) =>
               Future.value(Reasonator.reasonToError(reason))
             case Bad(NotAuthorized(_)) => Future.value(ErrorResponse.forbidden())
@@ -67,7 +58,6 @@ class TrackStreamsHandler(
 
   private def renderStreamResponse(
       request: HandlerRequest,
-      session: UserSession,
       streamResponse: MediaStreamResponse
   ): Response = {
     val builder = streamResponse match {

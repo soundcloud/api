@@ -21,9 +21,9 @@ import com.soundcloud.publicApiStrangler.client.mothership.response.mapper.UserR
 import com.soundcloud.publicApiStrangler.client.mothership.response.representation.UserRepresentation
 import com.soundcloud.publicApiStrangler.client.reposts.RepostsClient
 import com.soundcloud.publicApiStrangler.service.representation.collection.Collection
-import com.soundcloud.publicApiStrangler.support.ErrorResponse
+import com.soundcloud.publicApiStrangler.support.{ErrorResponse, UserUrnUtil}
 import com.twitter.finagle.http.{Response, Status}
-import com.twitter.util.Future
+import com.twitter.util.{Future, Return, Throw, Try}
 import org.joda.time.format.DateTimeFormat
 import org.joda.time.{LocalDate, Years}
 import play.api.libs.json._
@@ -38,39 +38,43 @@ class UserFollowHandler(
 ) {
   val formatter = DateTimeFormat.forPattern("yyyy/M/d")
 
-  def follow(request: HandlerRequest): Future[Response] = {
+  def follow(request: HandlerRequest): Future[Response] =
     userAuthentication.withLoggedInUser(request) { (session, userUrn) =>
-      val user = Urn("soundcloud", "users", request.routeParams.get("other_id").get)
-      follows.follow(session, user).flatMap {
-        case _: FollowingCreated => renderFollow(session, user)
-        case AlreadyFollowing => renderStatus()
-        case UserNotFound => renderError(Status.NotFound)
-        case SpamBlocked => renderError(Status.TooManyRequests)
-        case MaxFollowingsReached => renderError(Status.UnprocessableEntity)
-        case BlockedByTarget => renderError(Status.Forbidden)
-        case UserAsTarget => renderError(Status.BadRequest)
-        case AgeRestrictedUser =>
-          findUserAge(session, userUrn).flatMap {
-            case Some(userAge) => denyAgeRestricted(userAge)
-            case _ => denyAgeUnknown
+      Try(UserUrnUtil.getUserUrn(request.routeParams("other_id"))) match {
+        case Return(user) =>
+          follows.follow(session, user).flatMap {
+            case _: FollowingCreated => renderFollow(session, user)
+            case AlreadyFollowing => renderStatus()
+            case UserNotFound => renderError(Status.NotFound)
+            case SpamBlocked => renderError(Status.TooManyRequests)
+            case MaxFollowingsReached => renderError(Status.UnprocessableEntity)
+            case BlockedByTarget => renderError(Status.Forbidden)
+            case UserAsTarget => renderError(Status.BadRequest)
+            case AgeRestrictedUser =>
+              findUserAge(session, userUrn).flatMap {
+                case Some(userAge) => denyAgeRestricted(userAge)
+                case _ => denyAgeUnknown
+              }
+            case AgeUnknownUser => denyAgeUnknown
+            case _: UnknownError | BulkFollowFailed(_) => renderError(Status.InternalServerError)
           }
-        case AgeUnknownUser => denyAgeUnknown
-        case _: UnknownError | BulkFollowFailed(_) => renderError(Status.InternalServerError)
+        case Throw(_) => renderError(Status.BadRequest)
       }
     }
-  }
 
-  def unfollow(request: HandlerRequest): Future[Response] = {
-    userAuthentication.withLoggedInUser(request) { (session, userUrn) =>
-      val user = Urn("soundcloud", "users", request.routeParams.get("other_id").get)
-      follows.unfollow(session, user).flatMap {
-        case UnfollowSuccessful => renderStatus()
-        case UnfollowUserNotFound => renderError(Status.NotFound)
-        case UnfollowUserAsTarget | NotFollowing => renderError(Status.UnprocessableEntity)
-        case _: UnfollowUnknownError => renderError(Status.InternalServerError)
+  def unfollow(request: HandlerRequest): Future[Response] =
+    userAuthentication.withLoggedInUser(request) { (session, _) =>
+      Try(UserUrnUtil.getUserUrn(request.routeParams("other_id"))) match {
+        case Return(user) =>
+          follows.unfollow(session, user).flatMap {
+            case UnfollowSuccessful => renderStatus()
+            case UnfollowUserNotFound => renderError(Status.NotFound)
+            case UnfollowUserAsTarget | NotFollowing => renderError(Status.UnprocessableEntity)
+            case _: UnfollowUnknownError => renderError(Status.InternalServerError)
+          }
+        case Throw(_) => renderError(Status.BadRequest)
       }
     }
-  }
 
   private def renderFollow(session: LoggedInUserSession, target: Urn): Future[Response] = {
     fetchUsers(session, Set(target)).map { users =>
@@ -173,28 +177,29 @@ class UserFollowHandler(
       filteringFunction: (UserSession, Urn, Seq[Urn]) => Future[Option[FilteredUserUrns]],
       requireLogin: Boolean
   ): Future[Response] =
-    authenticateIfNeeded(request, requireLogin) { (session: UserSession, loggedInUser: Urn) =>
-      val userId = request.routeParams.get("other_id").get
-      val user = Urn("soundcloud", "users", userId)
-
-      for {
-        filteredOption <- filteringFunction(session, loggedInUser, Seq(user))
-        urns = filteredOption.map(_.included).getOrElse(Set.empty)
-        users <- fetchUsers(session, urns)
-      } yield {
-        filteredOption
-          .map { _ =>
-            if (users.nonEmpty) {
-              JsonResponseBuilder(
-                status = Status.SeeOther,
-                headers = Map("Location" -> s"$baseUrl/users/$userId"),
-                body = Json.stringify(Json.toJson(users.head))
-              ).build
-            } else {
-              ResponseBuilder.notFound()
-            }
+    authenticateIfNeeded(request, requireLogin) { (session, loggedInUser) =>
+      Try(UserUrnUtil.getUserUrn(request.routeParams("other_id"))) match {
+        case Return(user) =>
+          for {
+            filteredOption <- filteringFunction(session, loggedInUser, Seq(user))
+            urns = filteredOption.map(_.included).getOrElse(Set.empty)
+            users <- fetchUsers(session, urns)
+          } yield {
+            filteredOption
+              .map { _ =>
+                if (users.nonEmpty) {
+                  JsonResponseBuilder(
+                    status = Status.SeeOther,
+                    headers = Map("Location" -> s"$baseUrl/users/${user.identifier}"),
+                    body = Json.stringify(Json.toJson(users.head))
+                  ).build
+                } else {
+                  ResponseBuilder.notFound()
+                }
+              }
+              .getOrElse(ErrorResponse(Status.ServiceUnavailable))
           }
-          .getOrElse(ErrorResponse(Status.ServiceUnavailable))
+        case Throw(_) => renderError(Status.BadRequest)
       }
     }
 
@@ -240,7 +245,7 @@ class UserFollowHandler(
 
   private def findUserAge(session: UserSession, userUrn: Urn): Future[Option[Int]] = {
     okidoki.fetch(session, Set(userUrn)).map {
-      case user :: xs => (user \ "date_of_birth").asOpt[String].map(currentAge)
+      case user :: _ => (user \ "date_of_birth").asOpt[String].map(currentAge)
       case _ => None
     }
   }

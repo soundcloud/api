@@ -182,6 +182,16 @@ class CommentsHandlerSpec extends UnitSpecification with Mockito {
   "POST /tracks/:track_id/comments" >> {
 
     trait PostContext extends CommentsHandlerContext {
+      val body =
+        """
+          |{
+          |  "comment": {
+          |    "body": "comment body", 
+          |    "timestamp": 5000
+          |  }
+          |}
+          |""".stripMargin
+
       def stubService(outcome: Outcome[Comment]) = {
         commentService
           .createComment(any, any)
@@ -192,13 +202,13 @@ class CommentsHandlerSpec extends UnitSpecification with Mockito {
     "failure cases" >> {
       "returns a 401 for an anonymous user" in new PostContext {
         override val session = anonymousSession
-        val body = ""
+        override val body = ""
         val response = post(s"/tracks/${validTrackId}/comments", Map.empty, headers, body)
         response.status ==== Status.Unauthorized
       }
 
       "no comment parameter returns a 422 and gives error message" in new PostContext {
-        val body = ""
+        override val body = ""
         val response = post(s"/tracks/${validTrackId}/comments", Map.empty, headers, body)
 
         response.status ==== Status.UnprocessableEntity
@@ -206,7 +216,7 @@ class CommentsHandlerSpec extends UnitSpecification with Mockito {
       }
 
       "no comment body parameter returns a 422 and gives error message" in new PostContext {
-        val body =
+        override val body =
           """
             |{
             |  "comment": {
@@ -230,35 +240,24 @@ class CommentsHandlerSpec extends UnitSpecification with Mockito {
         ).bad
         stubService(customError)
 
-        val body =
-          """
-            |{
-            |  "comment": {
-            |    "body": "comment body", 
-            |    "timestamp": 5000
-            |  }
-            |}
-            |""".stripMargin
-
         val response = post(s"/tracks/${validTrackId}/comments", Map.empty, headers, body)
 
         response.status ==== Status.TooManyRequests
         (Json.parse(response.contentString) \ "spam_warning_urn").get === JsString(spamUrn.toString)
+      }
+
+      "returns a 400 for an invalid track urn" in new PostContext {
+        val invalidTrackId = "1a2b3c"
+
+        val response = post(s"/tracks/$invalidTrackId/comments", Map.empty, headers, body)
+        response.status ==== Status.BadRequest
       }
     }
 
     "success cases" >> {
       "returns a 201 created on success" in new PostContext {
         stubService(comment.good)
-        val body =
-          """
-            |{
-            |  "comment": {
-            |    "body": "comment body", 
-            |    "timestamp": 5000
-            |  }
-            |}
-            |""".stripMargin
+
         val response = post(s"/tracks/${validTrackId}/comments", Map.empty, headers, body)
         response.status ==== Status.Created
         response.contentString ==== Json.stringify(Json.toJson(comment))
@@ -266,15 +265,7 @@ class CommentsHandlerSpec extends UnitSpecification with Mockito {
 
       "adds Location header" in new PostContext {
         stubService(comment.good)
-        val body =
-          """
-            |{
-            |  "comment": {
-            |    "body": "comment body", 
-            |    "timestamp": 5000
-            |  }
-            |}
-            |""".stripMargin
+
         val response = post(s"/tracks/${validTrackId}/comments", Map.empty, headers, body)
         response.headerMap.get("Location") ==== Some("https://api.soundcloud.com/comments/1")
       }
@@ -282,7 +273,7 @@ class CommentsHandlerSpec extends UnitSpecification with Mockito {
       "accepts Int as timestamp" in new PostContext {
         stubService(comment.good)
         val timestamp = 5000
-        val body =
+        override val body =
           s"""
             |{
             |  "comment": {
@@ -291,7 +282,8 @@ class CommentsHandlerSpec extends UnitSpecification with Mockito {
             |  }
             |}
             |""".stripMargin
-        val response = post(s"/tracks/${validTrackId}/comments", Map.empty, headers, body)
+
+        post(s"/tracks/${validTrackId}/comments", Map.empty, headers, body)
 
         verify(commentService)
           .createComment(session, CreateCommentParams(validTrackUrn, "comment body", Some(timestamp), None))
@@ -300,7 +292,7 @@ class CommentsHandlerSpec extends UnitSpecification with Mockito {
       "accepts Float as timestamp" in new PostContext {
         stubService(comment.good)
         val timestamp = 5000.123
-        val body =
+        override val body =
           s"""
              |{
              |  "comment": {
@@ -309,7 +301,8 @@ class CommentsHandlerSpec extends UnitSpecification with Mockito {
              |  }
              |}
              |""".stripMargin
-        val response = post(s"/tracks/${validTrackId}/comments", Map.empty, headers, body)
+
+        post(s"/tracks/${validTrackId}/comments", Map.empty, headers, body)
 
         verify(commentService)
           .createComment(session, CreateCommentParams(validTrackUrn, "comment body", Some(timestamp.toInt), None))
@@ -318,7 +311,7 @@ class CommentsHandlerSpec extends UnitSpecification with Mockito {
       "accepts String as timestamp" in new PostContext {
         stubService(comment.good)
         val timestamp = "5000.123"
-        val body =
+        override val body =
           s"""
              |{
              |  "comment": {
@@ -327,7 +320,8 @@ class CommentsHandlerSpec extends UnitSpecification with Mockito {
              |  }
              |}
              |""".stripMargin
-        val response = post(s"/tracks/${validTrackId}/comments", Map.empty, headers, body)
+
+        post(s"/tracks/${validTrackId}/comments", Map.empty, headers, body)
 
         verify(commentService)
           .createComment(

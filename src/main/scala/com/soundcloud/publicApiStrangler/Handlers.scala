@@ -6,10 +6,6 @@ import com.soundcloud.jvmkit.module.telemetry.exceptions.ExceptionCollector
 import com.soundcloud.publicApiStrangler.handler._
 import com.soundcloud.publicApiStrangler.handler.comments.CommentsHandler
 import com.soundcloud.publicApiStrangler.handler.search.SearchHandler
-import com.soundcloud.publicApiStrangler.mapper.trackstreams.{
-  TrackStreamJsonResponseMapper,
-  TrackStreamRedirectResponseMapper
-}
 import com.soundcloud.publicApiStrangler.service.media.DownloadService
 import com.soundcloud.publicApiStrangler.service.oauth.AuthorizationService
 import com.soundcloud.publicApiStrangler.support.oauth.{RailsLikeParamsParser, TokenExchangeRequestParser}
@@ -28,18 +24,11 @@ class Handlers(
     timelineService
   )
 
-  val trackStreamsHandler: TrackStreamsHandler = {
-    val trackStreamUrlToJsonResponseMapper = new TrackStreamJsonResponseMapper
-    val trackStreamUrlToRedirectMapper = new TrackStreamRedirectResponseMapper
-
-    new TrackStreamsHandler(
-      userAuthentication,
-      trackStreamUrlToJsonResponseMapper,
-      trackStreamUrlToRedirectMapper,
-      streamService,
-      trackAccessRecorderService
-    )
-  }
+  val trackStreamsHandler: TrackStreamsHandler = new TrackStreamsHandler(
+    userAuthentication,
+    streamService,
+    trackAccessRecorderService
+  )
 
   val trackDownloadHandler: TrackDownloadHandler = new TrackDownloadHandler(
     userAuthentication,
