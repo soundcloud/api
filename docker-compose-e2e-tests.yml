@@ -32,4 +32,6 @@ services:
     links:
       - publicapistrangler:publicapistrangler
     environment:
-      https_proxy: 'http://proxy.dev.s-cloud.net:3128'
+      https_proxy: 'http://proxy.localproxy.sc:42043'
+    extra_hosts:
+      - proxy.localproxy.sc:host-gateway

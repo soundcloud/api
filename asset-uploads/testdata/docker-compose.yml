@@ -8,7 +8,9 @@ services:
       - public_api_strangler
     command: ./api --config=api-test
     environment:
-      https_proxy: 'http://proxy.dev.s-cloud.net:3128'
+      https_proxy: 'http://proxy.localproxy.sc:42043'
+    extra_hosts:
+      - proxy.localproxy.sc:host-gateway
 
   media_service:
     image: ${SC_DOCKER_REPO}/go-1:latest
