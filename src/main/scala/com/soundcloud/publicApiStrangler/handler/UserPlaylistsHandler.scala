@@ -28,12 +28,6 @@ class UserPlaylistsHandler(
     }
   }
 
-  def getMePlaylist(req: HandlerRequest): Future[Response] = {
-    userAuthentication.withLoggedInUser(req) { (session, userUrn) =>
-      performGetPlaylist(req, session, userUrn.identifier)
-    }
-  }
-
   private def performGetPlaylist(req: HandlerRequest, session: UserSession, userId: String): Future[Response] = {
     val hasLinkedPartitioning = req.params.get("linked_partitioning")
     val pagination =

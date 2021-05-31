@@ -29,12 +29,7 @@ class DeprecatedEndpointUsageFilter(userAuthentication: UserAuthentication, tele
     "/me/followers/:other_id",
     "/me/followings/:other_id", // only get
     "/me/favorites",
-    "/me/favorites/ids",
-    "/me/favorites/:trackId",
     "/users/:userId/favorites",
-    "/me/tracks/:trackId",
-    "/me/playlists/:id",
-    "/me/activities/tracks/:tag",
     "/tracks/:id/favoriters"
   )
 

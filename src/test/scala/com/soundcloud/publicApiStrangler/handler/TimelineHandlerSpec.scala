@@ -55,8 +55,7 @@ class TimelineHandlerSpec extends UnitSpecification {
     "returns successful response with valid request" in new SuccessfulCase {
       val queryParams = "?limit=10"
       Seq(
-        "/me/activities/tracks",
-        "/me/activities/tracks/sometag"
+        "/me/activities/tracks"
       ).foreach { endpoint =>
         val path = s"$endpoint$queryParams"
 
@@ -79,8 +78,7 @@ class TimelineHandlerSpec extends UnitSpecification {
       val queryParams = "?limit=10"
 
       Seq(
-        "/me/activities/tracks",
-        "/me/activities/tracks/sometag"
+        "/me/activities/tracks"
       ).foreach { endpoint =>
         val path = s"$endpoint$queryParams"
 
@@ -102,8 +100,7 @@ class TimelineHandlerSpec extends UnitSpecification {
       val queryParams = "?limit=10"
 
       Seq(
-        "/me/activities/tracks",
-        "/me/activities/tracks/sometag"
+        "/me/activities/tracks"
       ).foreach { endpoint =>
         val path = s"$endpoint$queryParams"
 

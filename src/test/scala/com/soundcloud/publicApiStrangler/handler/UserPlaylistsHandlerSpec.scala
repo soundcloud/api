@@ -1,9 +1,10 @@
 package com.soundcloud.publicApiStrangler.handler
 
-import java.util.TimeZone
 import com.soundcloud.jvmkit.module.bff.testsupport.FakeUserAuthentication
+import com.soundcloud.jvmkit.module.outcome._
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.publicApiStrangler.Routing
+import com.soundcloud.publicApiStrangler.handler.support.requestParser.AccessParams
 import com.soundcloud.publicApiStrangler.service.UserPlaylistsService
 import com.soundcloud.publicApiStrangler.service.pagination.{CursorBasedPagination, OffsetBasedPagination}
 import com.soundcloud.publicApiStrangler.service.playlists.PlaylistBuilder
@@ -11,12 +12,12 @@ import com.soundcloud.publicApiStrangler.service.playlists.representation.Playli
 import com.soundcloud.publicApiStrangler.service.representation.collection.Collection
 import com.soundcloud.publicApiStrangler.test.{HandlerSpecificationScope, UnitSpecification}
 import com.twitter.finagle.http.{Request, Status}
-import com.soundcloud.jvmkit.module.outcome._
-import com.soundcloud.publicApiStrangler.handler.support.requestParser.AccessParams
 import com.twitter.util.Future
 import org.joda.time.DateTimeZone
 import org.mockito.Mockito.when
 import play.api.libs.json.Json
+
+import java.util.TimeZone
 
 class UserPlaylistsHandlerSpec extends UnitSpecification {
   TimeZone.setDefault(TimeZone.getTimeZone("UTC"))
@@ -188,31 +189,6 @@ class UserPlaylistsHandlerSpec extends UnitSpecification {
           val response = get(path)
 
           response.status ==== Status.NotFound
-        }
-      }
-
-      "GET /me/playlists/:id" >> {
-        "with a successful response from playlists service" >> {
-          "return playlist" in new PlaylistsForUserContext with SuccessfulResponse {
-            val path = s"/me/playlists/987$queryString"
-
-            stubService(Urn("soundcloud", "playlists", "987"), path, "1", playlist.good)
-            val response = get(path)
-
-            response.status ==== Status.Ok
-            response.contentString ==== Json.stringify(Json.toJson(expectedResponse))
-          }
-        }
-
-        "with a 404 from playlists service" >> {
-          "returns an error response with message" in new PlaylistsForUserContext {
-            val path = s"/me/playlists/404$queryString"
-
-            stubService(Urn("soundcloud", "playlists", "404"), path, "1", NotFound("playlist not found").bad)
-            val response = get(path)
-
-            response.status ==== Status.NotFound
-          }
         }
       }
     }

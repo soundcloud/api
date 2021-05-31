@@ -19,12 +19,6 @@ import play.api.libs.json.Json
 
 class LikesHandler(userAuthentication: UserAuthentication, likesService: LikesService) {
 
-  def getMeLikedTrackId(req: HandlerRequest): Future[Response] = {
-    userAuthentication.withLoggedInUser(req) { (session, userUrn) =>
-      performGetUserLikedTrackId(req, session, userUrn.identifier)
-    }
-  }
-
   def createMeLikedTrackId(req: HandlerRequest): Future[Response] = {
     userAuthentication.withLoggedInUser(req) { (session, _) =>
       Try(getTrackUrn(req)) match {
@@ -78,28 +72,6 @@ class LikesHandler(userAuthentication: UserAuthentication, likesService: LikesSe
           }
         case _ => Future.value(ErrorResponse.badRequest())
       }
-  }
-
-  private def performGetUserLikedTrackId(
-      request: HandlerRequest,
-      session: UserSession,
-      userId: String
-  ): Future[Response] = {
-    Try(getUserUrn(userId)) match {
-      case Return(userUrn) =>
-        Try(getTrackUrn(request)) match {
-          case Return(trackUrn) =>
-            likesService
-              .userTrackLikeForUrn(session, userUrn, trackUrn)
-              .map {
-                case None => ErrorResponse.notFound()
-                case Some(track) => JsonResponseBuilder.ok(Json.stringify(Json.toJson(track)))
-
-              }
-          case _ => Future.value(ErrorResponse.notFound())
-        }
-      case Throw(e) => Future.value(ErrorResponse.badRequest(e.getMessage))
-    }
   }
 
   def getUserTracksLikes(req: HandlerRequest): Future[Response] = {

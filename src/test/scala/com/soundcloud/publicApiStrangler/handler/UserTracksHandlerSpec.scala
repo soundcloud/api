@@ -16,7 +16,6 @@ import com.twitter.finagle.http.{Request, Status}
 import com.twitter.util.Future
 import org.joda.time.DateTimeZone
 import org.mockito.Mockito.when
-import play.api.libs.json.Json
 
 import java.util.TimeZone
 
@@ -103,50 +102,4 @@ class UserTracksHandlerSpec extends UnitSpecification with TrackRepresentationSp
 
   }
 
-  "Getting single track" >> {
-    trait TrackForUserContext extends Context {
-      def stubService(
-          trackUrn: Urn
-      ) = {
-        when(userTracksService.userTrack(trackUrn, session, "1", Some("s3cret")))
-          .thenReturn(Future.value(Some(mockTrackRepresentation)))
-
-        when(userTracksService.userTrack(trackUrn, session, "2", Some("s3cret")))
-          .thenReturn(Future.value(None))
-      }
-    }
-
-    trait SuccessfulResponse {
-      val expectedResponse = mockTrackRepresentation
-    }
-
-    "GET me/tracks/:trackId" >> {
-      "with a successful response from tracks service" >> {
-        "return track" in new TrackForUserContext with SuccessfulResponse {
-          val path = "/me/tracks/987"
-
-          stubService(Urn("soundcloud", "tracks", "987"))
-          val response = get(path, Map("secret_token" -> "s3cret"))
-
-          response.status ==== Status.Ok
-          response.statusCode ==== 200
-          response.contentString ==== Json.stringify(Json.toJson(expectedResponse))
-        }
-      }
-
-      "with a 404 from tracks service" >> {
-        "returns an error response with message" in new TrackForUserContext {
-          val path = "/me/tracks/404"
-
-          when(userTracksService.userTrack(Urn("soundcloud", "tracks", "404"), session, "1", Some("s3cret")))
-            .thenReturn(Future.value(None))
-
-          val response = get(path, Map("secret_token" -> "s3cret"))
-
-          response.status ==== Status(404)
-          response.statusCode ==== 404
-        }
-      }
-    }
-  }
 }

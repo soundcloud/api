@@ -208,21 +208,6 @@ paths:
           $ref: "#/components/responses/Tracks"
         401:
           $ref: '#/components/responses/Unauthorized'
-  /me/favorites/ids:
-    get:
-      summary: Returns user’s favorites ids. (use /me/likes/tracks instead to fetch the authenticated user's likes)
-      deprecated: true
-      tags:
-        - me
-      security:
-        - AuthHeader: [ ]
-      parameters:
-        - $ref: '#/components/parameters/limit'
-      responses:
-        200:
-          description: Success
-        404:
-          description: The user could not be found
   /me/followings:
     get:
       summary: Returns a list of users who are followed by the authenticated user.
@@ -356,28 +341,6 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         404:
           $ref: '#/components/responses/NotFound'
-    # post:
-    #   summary: Returns user’s favorites ids.
-    #   tags:
-    #     - me
-    #   security:
-    #     - AuthHeader: []
-    #   responses:
-    #     200:
-    #       description: Success
-  /me/playlists/{playlist_id}:
-    get:
-      summary: Returns playlist. (use /playlists/{playlist_id} instead, to fetch the playlist details)
-      deprecated: true
-      tags:
-        - me
-      security:
-        - AuthHeader: [ ]
-      parameters:
-        - $ref: '#/components/parameters/playlist_id'
-      responses:
-        200:
-          $ref: "#/components/responses/Playlist"
   /me/tracks:
     get:
       summary: Returns a list of user's tracks.
@@ -393,19 +356,6 @@ paths:
           $ref: "#/components/responses/Tracks"
         401:
           $ref: '#/components/responses/Unauthorized'
-  /me/tracks/{track_id}:
-    get:
-      summary: Returns a specified track. (use /tracks/{track_id} instead, to fetch the track details)
-      deprecated: true
-      tags:
-        - me
-      security:
-        - AuthHeader: [ ]
-      parameters:
-        - $ref: '#/components/parameters/track_id'
-      responses:
-        200:
-          $ref: "#/components/responses/Track"
   /tracks:
     get:
       summary: Performs a track search based on a query
@@ -530,16 +480,6 @@ paths:
           $ref: '#/components/responses/BadRequest'
         401:
           $ref: '#/components/responses/Unauthorized'
-  #   post:
-  #     summary: Returns  error ???.
-  #     tags:
-  #       - playlists
-  #     security:
-  #       - ClientId: []
-  #         AuthHeader: []
-  #     responses:
-  #       200:
-  #         description: Success
   /playlists/{playlist_id}:
     get:
       summary: Returns a playlist.
