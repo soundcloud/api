@@ -4,6 +4,14 @@ import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.publicApiStrangler.authorization.policies._
 import org.joda.time.LocalDateTime
 
+case class VisibleTrackCounts(
+    plays: Option[Long],
+    likes: Option[Long],
+    reposts: Option[Long],
+    comments: Option[Long],
+    downloads: Option[Long]
+)
+
 case class VisibleTrack(
     urn: Urn,
     userUrn: Urn,
@@ -44,5 +52,6 @@ case class VisibleTrack(
     bpm: Option[Double],
     release: Option[String],
     keySignature: Option[String],
-    access: Option[Access]
+    access: Option[Access],
+    counts: VisibleTrackCounts
 )

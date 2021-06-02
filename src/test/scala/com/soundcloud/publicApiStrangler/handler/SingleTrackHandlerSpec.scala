@@ -5,7 +5,6 @@ import com.soundcloud.jvmkit.module.telemetry.Telemetry
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSessionBuilder
 import com.soundcloud.publicApiStrangler.Routing
-import com.soundcloud.publicApiStrangler.client.stitch.StitchCounts
 import com.soundcloud.publicApiStrangler.client.tracks.{TrackRequest, VisibleTrackBuilder}
 import com.soundcloud.publicApiStrangler.service.trackrepresentation.{
   TrackRepresentationSpecContext,
@@ -35,7 +34,6 @@ class SingleTrackHandlerSpec extends UnitSpecification with TrackRepresentationS
     visibleTrack = visibleTrack,
     user = user,
     isrc = None,
-    counts = StitchCounts(1, 2, 3, 4, 5),
     geoblockings = List.empty
   )
   val path = "/tracks/987"

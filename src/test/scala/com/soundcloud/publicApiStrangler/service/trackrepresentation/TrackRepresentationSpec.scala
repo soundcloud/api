@@ -6,7 +6,6 @@ import com.soundcloud.publicApiStrangler.authorization.policies._
 import com.soundcloud.publicApiStrangler.client.media.TrackWaveformUrl
 import com.soundcloud.publicApiStrangler.client.mothership.response.representation.{Geoblockings, UserRepresentation}
 import com.soundcloud.publicApiStrangler.client.pubmese.Isrc
-import com.soundcloud.publicApiStrangler.client.stitch.StitchCounts
 import com.soundcloud.publicApiStrangler.client.trackcoordinator.TrackCoordinatorTrack
 import com.soundcloud.publicApiStrangler.client.tracks._
 import com.soundcloud.publicApiStrangler.service.users.UserBuilder
@@ -26,7 +25,6 @@ trait TrackRepresentationSpecContext {
       visibleTrack: VisibleTrack = defaultTrack,
       user: UserRepresentation = defaultUser,
       isrc: Option[Isrc] = defaultIsrc,
-      counts: StitchCounts = defaultCounts,
       geoblockings: Geoblockings = defaultGeoblockings,
       downloadsPerTrack: Option[Int] = None,
       waveformUrl: TrackWaveformUrl = TrackWaveformUrl("some_uid", Url("https://bar.sndcdn.com/stream/a1b2c3.png")),
@@ -38,7 +36,6 @@ trait TrackRepresentationSpecContext {
       visibleTrack = visibleTrack,
       user = user,
       isrc = isrc,
-      counts = counts,
       geoblockings = geoblockings,
       isLiked = isLiked,
       waveformUrl = waveformUrl,
@@ -98,12 +95,11 @@ trait TrackRepresentationSpecContext {
     ),
     transcodings = List.empty[Transcoding],
     waveformUrls = List.empty[WaveformUrl],
-    access = Some(Access.Playable)
+    access = Some(Access.Playable),
+    counts = VisibleTrackCounts(None, None, None, None, None)
   )
 
   def defaultIsrc = Some(Isrc("US-S1Z-99-00001"))
-
-  def defaultCounts = StitchCounts(111, 222, 333, 444, 555)
 
   def defaultGeoblockings: Geoblockings = List("DE", "FR")
 }
@@ -374,12 +370,11 @@ class TrackRepresentationSpec extends UnitSpecification {
   "counts" >> {
     trait Context extends Scope with TrackRepresentationSpecContext {
 
-      val revealStatsTrack = defaultTrack.copy(revealStats = true)
-      val counts = StitchCounts(111, 222, 333, 444, 555)
+      val counts = VisibleTrackCounts(Some(111), Some(222), Some(333), Some(444), Some(555))
+      val revealStatsTrack = defaultTrack.copy(revealStats = true, counts = counts)
       val trackRepresentation: TrackRepresentation =
         createTrackRepresentationFromVisibleTrack(
           visibleTrack = revealStatsTrack,
-          counts = counts,
           loggedInUser = userUrn
         )
     }
@@ -388,26 +383,28 @@ class TrackRepresentationSpec extends UnitSpecification {
       val json = Json.toJson(trackRepresentation)
 
       json \ "playback_count" ==== JsDefined(JsNumber(111))
-      json \ "download_count" ==== JsDefined(JsNumber(222))
-      json \ "favoritings_count" ==== JsDefined(JsNumber(333))
-      json \ "reposts_count" ==== JsDefined(JsNumber(555))
+      json \ "favoritings_count" ==== JsDefined(JsNumber(222))
+      json \ "reposts_count" ==== JsDefined(JsNumber(333))
+      json \ "download_count" ==== JsDefined(JsNumber(555))
     }
   }
 
   "comment counts" >> {
     trait Context extends Scope with TrackRepresentationSpecContext {
 
-      val showCommentsTrack = defaultTrack.copy(revealComments = true, revealStats = true)
-      val counts = StitchCounts(1, 2, 3, 444, 555)
+      val showCommentsTrack = defaultTrack.copy(
+        revealComments = true,
+        revealStats = true,
+        counts = VisibleTrackCounts(None, None, None, Some(444), None)
+      )
       val trackRepresentation: TrackRepresentation =
         createTrackRepresentationFromVisibleTrack(
           visibleTrack = showCommentsTrack,
-          counts = counts,
           loggedInUser = userUrn
         )
     }
 
-    "adds counts" in new Context {
+    "adds counts when user is logged in and has reveal stats/comments" in new Context {
       val json = Json.toJson(trackRepresentation)
 
       json \ "comment_count" ==== JsDefined(JsNumber(444))
@@ -597,74 +594,45 @@ class TrackRepresentationSpec extends UnitSpecification {
 
   "quota counts" >> {
     trait Context extends Scope with TrackRepresentationSpecContext {
-      val ninetyDownloads = StitchCounts(
-        download_count = 90,
-        playback_count = 0,
-        favoritings_count = 0,
-        comment_count = 0,
-        reposts_count = 0
-      )
-
-      val oneHundredDownloads = StitchCounts(
-        download_count = 100,
-        playback_count = 0,
-        favoritings_count = 0,
-        comment_count = 0,
-        reposts_count = 0
-      )
-
-      val oneThousandDownloads = StitchCounts(
-        download_count = 1000,
-        playback_count = 0,
-        favoritings_count = 0,
-        comment_count = 0,
-        reposts_count = 0
-      )
+      val ninetyDownloads = VisibleTrackCounts(None, None, None, None, Some(90))
+      val oneHundredDownloads = ninetyDownloads.copy(downloads = Some(100))
+      val oneThousandDownloads = ninetyDownloads.copy(downloads = Some(1000))
     }
 
     "downloadable" >> {
       "when the track is downloadable" >> {
         "adds downloadable as true when downloads are below the user's quota" in new Context {
-          val trackRepresentation: TrackRepresentation =
-            createTrackRepresentationFromVisibleTrack(
-              visibleTrack = defaultTrack.copy(downloadable = true),
-              downloadsPerTrack = Some(100),
-              counts = ninetyDownloads
-            )
+          val downloadableTrack: VisibleTrack = defaultTrack.copy(downloadable = true, counts = ninetyDownloads)
+          val trackRepresentation =
+            createTrackRepresentationFromVisibleTrack(visibleTrack = downloadableTrack, downloadsPerTrack = Some(100))
 
           val json = Json.toJson(trackRepresentation)
           json \ "downloadable" ==== JsDefined(JsBoolean(true))
         }
 
         "adds downloadable as false when downloads are exactly at the user's quota" in new Context {
-          val trackRepresentation: TrackRepresentation =
-            createTrackRepresentationFromVisibleTrack(
-              visibleTrack = defaultTrack.copy(downloadable = true),
-              downloadsPerTrack = Some(100),
-              counts = oneHundredDownloads
-            )
+          val downloadableTrack: VisibleTrack = defaultTrack.copy(downloadable = true, counts = oneHundredDownloads)
+          val trackRepresentation =
+            createTrackRepresentationFromVisibleTrack(visibleTrack = downloadableTrack, downloadsPerTrack = Some(100))
+
           val json = Json.toJson(trackRepresentation)
           json \ "downloadable" ==== JsDefined(JsBoolean(false))
         }
 
         "adds downloadable as false when downloads are above the user's quota" in new Context {
-          val trackRepresentation: TrackRepresentation =
-            createTrackRepresentationFromVisibleTrack(
-              visibleTrack = defaultTrack.copy(downloadable = true),
-              downloadsPerTrack = Some(100),
-              counts = oneThousandDownloads
-            )
+          val downloadableTrack: VisibleTrack = defaultTrack.copy(downloadable = true, counts = oneThousandDownloads)
+          val trackRepresentation =
+            createTrackRepresentationFromVisibleTrack(visibleTrack = downloadableTrack, downloadsPerTrack = Some(100))
+
           val json = Json.toJson(trackRepresentation)
           json \ "downloadable" ==== JsDefined(JsBoolean(false))
         }
 
         "adds downloadable as true when the user has no quota (ie. unlimited)" in new Context {
+          val downloadableTrack: VisibleTrack = defaultTrack.copy(downloadable = true, counts = oneThousandDownloads)
           val trackRepresentation =
-            createTrackRepresentationFromVisibleTrack(
-              visibleTrack = defaultTrack.copy(downloadable = true),
-              downloadsPerTrack = None,
-              counts = oneThousandDownloads
-            )
+            createTrackRepresentationFromVisibleTrack(visibleTrack = downloadableTrack, downloadsPerTrack = None)
+
           val json = Json.toJson(trackRepresentation)
           json \ "downloadable" ==== JsDefined(JsBoolean(true))
         }
@@ -672,42 +640,19 @@ class TrackRepresentationSpec extends UnitSpecification {
 
       "when the track is not downloadable" >> {
         "adds downloadable as false when downloads are below the user's quota" in new Context {
+          val downloadableTrack: VisibleTrack = defaultTrack.copy(downloadable = false, counts = ninetyDownloads)
           val trackRepresentation =
-            createTrackRepresentationFromVisibleTrack(
-              downloadsPerTrack = Some(100),
-              counts = ninetyDownloads
-            )
+            createTrackRepresentationFromVisibleTrack(visibleTrack = downloadableTrack, downloadsPerTrack = Some(100))
+
           val json = Json.toJson(trackRepresentation)
           json \ "downloadable" ==== JsDefined(JsBoolean(false))
         }
 
         "adds downloadable as false when the user has no quota (ie. unlimited)" in new Context {
+          val downloadableTrack: VisibleTrack = defaultTrack.copy(downloadable = false, counts = ninetyDownloads)
           val trackRepresentation =
-            createTrackRepresentationFromVisibleTrack(downloadsPerTrack = None, counts = ninetyDownloads)
-          val json = Json.toJson(trackRepresentation)
-          json \ "downloadable" ==== JsDefined(JsBoolean(false))
-        }
-      }
+            createTrackRepresentationFromVisibleTrack(downloadsPerTrack = None, visibleTrack = downloadableTrack)
 
-      "when the track has a 'downloadable' value that is null (None)" >> {
-        "adds downloadable as false when downloads are below the user's quota" in new Context {
-          val trackRepresentation =
-            createTrackRepresentationFromVisibleTrack(
-              visibleTrack = defaultTrack.copy(downloadable = false),
-              downloadsPerTrack = Some(100),
-              counts = ninetyDownloads
-            )
-          val json = Json.toJson(trackRepresentation)
-          json \ "downloadable" ==== JsDefined(JsBoolean(false))
-        }
-
-        "adds downloadable as false when the user has no quota (ie. unlimited)" in new Context {
-          val trackRepresentation =
-            createTrackRepresentationFromVisibleTrack(
-              visibleTrack = defaultTrack.copy(downloadable = false),
-              downloadsPerTrack = None,
-              counts = ninetyDownloads
-            )
           val json = Json.toJson(trackRepresentation)
           json \ "downloadable" ==== JsDefined(JsBoolean(false))
         }

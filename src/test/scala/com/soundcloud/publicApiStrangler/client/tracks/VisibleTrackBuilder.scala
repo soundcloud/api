@@ -51,6 +51,7 @@ class VisibleTrackBuilder {
   private var release: Option[String] = None
   private var keySignature: Option[String] = None
   private var access: Option[Access] = None
+  private var counts: VisibleTrackCounts = VisibleTrackCounts(None, None, None, None, None)
 
   def setUrn(value: Urn) = {
     urn = value; this
@@ -214,6 +215,10 @@ class VisibleTrackBuilder {
     access = value; this
   }
 
+  def setCounts(value: VisibleTrackCounts) = {
+    counts = value; this
+  }
+
   def build: VisibleTrack =
     VisibleTrack(
       urn,
@@ -255,6 +260,7 @@ class VisibleTrackBuilder {
       bpm,
       release,
       keySignature,
-      access
+      access,
+      counts
     )
 }

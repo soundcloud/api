@@ -6,8 +6,7 @@ import com.soundcloud.publicApiStrangler.authorization.policies._
 import com.soundcloud.publicApiStrangler.client.media.TrackWaveformUrl
 import com.soundcloud.publicApiStrangler.client.mothership.response.representation.Geoblockings
 import com.soundcloud.publicApiStrangler.client.pubmese.Isrc
-import com.soundcloud.publicApiStrangler.client.stitch.StitchCounts
-import com.soundcloud.publicApiStrangler.client.tracks.{Artwork, EmbeddingPermission, TrackRequest, VisibleTrack}
+import com.soundcloud.publicApiStrangler.client.tracks._
 import com.soundcloud.publicApiStrangler.service.users.UserBuilder
 import com.soundcloud.publicApiStrangler.test.UnitSpecification
 import org.joda.time.LocalDateTime
@@ -90,14 +89,12 @@ trait TrackRepresentationsSpecificationContext extends UnitSpecification {
         waveformUrls = List.empty,
         transcodings = List.empty,
         authorization = authorization,
-        access = Some(Access.Playable)
+        access = Some(Access.Playable),
+        counts = VisibleTrackCounts(Some(111), Some(222), Some(333), Some(444), Some(555))
       )
 
     def isrc(wrapped: String = "US-S1Z-99-00001"): Map[Urn, Isrc] =
       Map(trackUrn -> Isrc(wrapped))
-
-    def stitchCounts: Map[Urn, StitchCounts] =
-      Map(trackUrn -> StitchCounts(111, 222, 333, 444, 555))
 
     def userLikedTracks: Map[Urn, Boolean] =
       Map(trackUrn -> true)
@@ -112,7 +109,6 @@ trait TrackRepresentationsSpecificationContext extends UnitSpecification {
         visibleTrack = trackVisibilityTrack(),
         user = trackOwner,
         isrc = Some(Isrc("US-S1Z-99-00001")),
-        counts = StitchCounts(111, 222, 333, 444, 555),
         geoblockings = geoblockingsList,
         isLiked = true,
         waveformUrl = waveformUrl(trackUrn.identifier),

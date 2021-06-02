@@ -6,7 +6,6 @@ import com.soundcloud.publicApiStrangler.authorization.policies.{Access, Content
 import com.soundcloud.publicApiStrangler.client.media.TrackWaveformUrl
 import com.soundcloud.publicApiStrangler.client.mothership.response.representation.{Geoblockings, UserRepresentation}
 import com.soundcloud.publicApiStrangler.client.pubmese.Isrc
-import com.soundcloud.publicApiStrangler.client.stitch.StitchCounts
 import com.soundcloud.publicApiStrangler.client.trackcoordinator.TrackCoordinatorTrack
 import com.soundcloud.publicApiStrangler.client.tracks.{EmbeddingPermission, VisibleTrack}
 import org.joda.time.DateTime
@@ -83,13 +82,11 @@ object TrackRepresentationBuilder {
       visibleTrack: VisibleTrack,
       user: UserRepresentation,
       isrc: Option[Isrc],
-      counts: StitchCounts,
       geoblockings: Geoblockings,
       isLiked: Boolean,
       waveformUrl: TrackWaveformUrl,
       downloadsPerTrack: Option[Int]
   ): TrackRepresentation = {
-    val userIsOwner = sessionUser.contains(visibleTrack.userUrn)
     val isAnonymous = sessionUser.isEmpty
     val secretToken = getSecretTokenForPrivateTrack(visibleTrack.public, visibleTrack.secretToken)
 
@@ -118,10 +115,10 @@ object TrackRepresentationBuilder {
       user = user,
       isrc = isrc,
       availableCountries = getAvailableCountryNodes(geoblockings),
-      playbackCount = getCount(userIsOwner, visibleTrack, "playback_count", counts),
-      downloadCount = getCount(userIsOwner, visibleTrack, "download_count", counts),
-      favoritingsCount = getCount(userIsOwner, visibleTrack, "favoritings_count", counts),
-      repostsCount = getCount(userIsOwner, visibleTrack, "reposts_count", counts),
+      playbackCount = visibleTrack.counts.plays,
+      downloadCount = visibleTrack.counts.downloads,
+      favoritingsCount = visibleTrack.counts.likes,
+      repostsCount = visibleTrack.counts.reposts,
       releaseDay = releaseDayFor(visibleTrack),
       releaseMonth = releaseMonthFor(visibleTrack),
       uri = urlFor(visibleTrack.urn, visibleTrack.public, secretToken),
@@ -129,12 +126,12 @@ object TrackRepresentationBuilder {
       downloadUrl = urlFor(visibleTrack.urn, visibleTrack.public, "download", secretToken),
       permalinkUrl = secretPath(visibleTrack.permalinkUrl, visibleTrack.public, secretToken),
       secretUri = getSecretUri(visibleTrack),
-      commentCount = getCommentCount(visibleTrack, userIsOwner, counts),
+      commentCount = visibleTrack.counts.comments,
       userFavourite = if (!isAnonymous) Some(isLiked) else None,
       userPlaybackCount = if (!isAnonymous) Some(1) else None,
       waveformUrl = waveformUrl.pngUrl.s,
       artworkUrl = visibleTrack.artwork.filename.map(imageUrl),
-      downloadable = getDownloadable(visibleTrack, downloadsPerTrack, counts),
+      downloadable = getDownloadable(visibleTrack, downloadsPerTrack, visibleTrack.counts.downloads),
       policy = getPolicy(visibleTrack.authorization.policy, client),
       monetizationModel = getMonetizationModel(visibleTrack.authorization.monetizationModel, client)
     )
@@ -176,29 +173,6 @@ object TrackRepresentationBuilder {
     else
       tag
 
-  private def getCount(
-      userIsOwner: Boolean,
-      visibleTrack: VisibleTrack,
-      countType: String,
-      counts: StitchCounts
-  ): Option[Int] = {
-    if (userIsOwner || visibleTrack.revealStats)
-      countType match {
-        case "playback_count" => Some(counts.playback_count)
-        case "download_count" => Some(counts.download_count)
-        case "favoritings_count" => Some(counts.favoritings_count)
-        case "reposts_count" => Some(counts.reposts_count)
-        case _ => None
-      }
-    else None
-  }
-
-  private def getCommentCount(visibleTrack: VisibleTrack, userIsOwner: Boolean, counts: StitchCounts): Option[Int] = {
-    if ((userIsOwner || visibleTrack.revealStats) && visibleTrack.revealComments)
-      Some(counts.comment_count)
-    else None
-  }
-
   private def getAvailableCountryNodes(geoblockings: Geoblockings): Option[HashSet[String]] = {
     if (geoblockings.nonEmpty)
       Some(Country.officiallyAssignedAlpha2Codes.--(geoblockings))
@@ -239,14 +213,20 @@ object TrackRepresentationBuilder {
     })
   }
 
-  private def getDownloadable(visibleTrack: VisibleTrack, downloadsPerTrack: Option[Int], counts: StitchCounts) = {
+  private def getDownloadable(
+      visibleTrack: VisibleTrack,
+      downloadsPerTrack: Option[Int],
+      downloadCount: Option[Long]
+  ): Boolean = {
     val trackDownloadable = visibleTrack.downloadable
+    if (!trackDownloadable) return false
 
-    (trackDownloadable, downloadsPerTrack) match {
-      case (false, _) => false
-      case (true, None) => trackDownloadable // User has no quota, default to track's 'downloadable' setting
-      case (true, Some(quota)) => counts.download_count < quota
-    }
+    val isUnderQuota = for {
+      count <- downloadCount
+      quota <- downloadsPerTrack
+    } yield count < quota
+
+    isUnderQuota.getOrElse(trackDownloadable)
   }
 
   private def getPolicy(policy: ContentPolicy, client: Option[Urn]): Option[String] = {

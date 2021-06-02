@@ -31,7 +31,6 @@ GOBBLY_SRV_RECORD=dnssrv!http.api.prod.gobbly.srv.db.s-cloud.net.
 GATEKEEPER_SRV_RECORD=dnssrv!http.api.prod.gatekeeper.srv.db.s-cloud.net.
 PUBMESE_SRV_RECORD=dnssrv!http.api.prod.pubmese.srv.db.s-cloud.net.
 GEOIP_SRV_RECORD=dnssrv!http.geoip2http.prod.geoip.srv.db.s-cloud.net.
-STITCH_SRV_RECORD=dnssrv!http.web-total-counts.prod.stitch4counts.srv.db.s-cloud.net.
 REPOSTS_SRV_RECORD=dnssrv!http.api.prod.reposts.srv.db.s-cloud.net.
 REPOSTS_CLIENT_REQUEST_TIMEOUT_MILLIS=5000
 PLAYLISTS_SRV_RECORD=dnssrv!http.api.prod.playlists.srv.db.s-cloud.net.

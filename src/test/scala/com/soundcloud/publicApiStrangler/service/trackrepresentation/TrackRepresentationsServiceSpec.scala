@@ -7,9 +7,8 @@ import com.soundcloud.publicApiStrangler.client.media.WaveformUrlsGenerator
 import com.soundcloud.publicApiStrangler.client.mothership.RichOkidokiClient
 import com.soundcloud.publicApiStrangler.client.pubmese.PubmeseClient
 import com.soundcloud.publicApiStrangler.client.quota.UserQuotaClient
-import com.soundcloud.publicApiStrangler.client.stitch.{StitchClient, StitchCounts}
 import com.soundcloud.publicApiStrangler.client.trackmetadata.TrackmetadataClient
-import com.soundcloud.publicApiStrangler.client.tracks.{TrackRequest, VisibleTrack}
+import com.soundcloud.publicApiStrangler.client.tracks.{TrackRequest, VisibleTrack, VisibleTrackCounts}
 import com.soundcloud.publicApiStrangler.handler.support.requestParser.AccessParams
 import com.soundcloud.publicApiStrangler.service.TrackVisibilityService
 import com.twitter.util.{Await, Future}
@@ -23,7 +22,6 @@ class TrackRepresentationsServiceSpec extends TrackRepresentationsSpecificationC
     val trackVisibilityService = mock[TrackVisibilityService]
     val okidokiClient = mock[RichOkidokiClient]
     val pubmeseClient = mock[PubmeseClient]
-    val stitchClient = mock[StitchClient]
     val lieblingClient = mock[LieblingClient]
     val waveformUrlsGenerator = mock[WaveformUrlsGenerator]
     val userQuotaClient = mock[UserQuotaClient]
@@ -34,7 +32,6 @@ class TrackRepresentationsServiceSpec extends TrackRepresentationsSpecificationC
       trackVisibilityService,
       okidokiClient,
       pubmeseClient,
-      stitchClient,
       lieblingClient,
       waveformUrlsGenerator,
       userQuotaClient
@@ -51,7 +48,6 @@ class TrackRepresentationsServiceSpec extends TrackRepresentationsSpecificationC
       when(okidokiClient.fetchUserObjects(session, Set(labelUrn))).thenReturn(Future.value(List(label)))
       when(okidokiClient.fetchUserObjects(session, Set(trackOwnerUrn))).thenReturn(Future.value(List(trackOwner)))
       when(pubmeseClient.isrcsForTracks(session, Set(trackUrn))).thenReturn(Future.value(isrc()))
-      when(stitchClient.countsForTracks(session, Set((trackOwnerUrn, trackUrn)))).thenReturn(Future.value(stitchCounts))
       when(okidokiClient.fetchTrackGeoblockings(session, Set(trackUrn))).thenReturn(Future.value(geoblockings))
       when(lieblingClient.userLikedTracks(session, Set(trackUrn), session.getUser))
         .thenReturn(Future.value(userLikedTracks))
@@ -281,12 +277,10 @@ class TrackRepresentationsServiceSpec extends TrackRepresentationsSpecificationC
     "downloadable" >> {
       "is true when track is downloadable, and below user's quota" in new Context {
         val track = trackVisibilityTrack(isDownloadable = true)
+          .copy(counts = VisibleTrackCounts(None, None, None, None, Some(99)))
         setUpMocksForExistingTrack(track, session)
         userQuotaClient.downloadsPerTrack(session, Set(track.userUrn)) returns Future.value(
           Map(track.userUrn -> Some(100))
-        )
-        stitchClient.countsForTracks(session, Set((track.userUrn, trackUrn))) returns Future.value(
-          Map(trackUrn -> StitchCounts(0, 90, 0, 0, 0))
         )
         val trackRepLike = Await.result(tracksService.track(session, trackRequest))
         trackRepLike match {
@@ -301,9 +295,6 @@ class TrackRepresentationsServiceSpec extends TrackRepresentationsSpecificationC
         val track = trackVisibilityTrack(isDownloadable = true)
         setUpMocksForExistingTrack(track, session)
         userQuotaClient.downloadsPerTrack(session, Set(track.userUrn)) returns Future.value(Map(track.userUrn -> None))
-        stitchClient.countsForTracks(session, Set((track.userUrn, trackUrn))) returns Future.value(
-          Map(trackUrn -> StitchCounts(0, 90, 0, 0, 0))
-        )
         val trackRepLike = Await.result(tracksService.track(session, trackRequest))
         trackRepLike match {
           case Some(rep) =>
@@ -315,12 +306,10 @@ class TrackRepresentationsServiceSpec extends TrackRepresentationsSpecificationC
 
       "is false when track is downloadable, and above user's quota" in new Context {
         val track = trackVisibilityTrack(isDownloadable = true)
+          .copy(counts = VisibleTrackCounts(None, None, None, None, Some(101)))
         setUpMocksForExistingTrack(track, session)
         userQuotaClient.downloadsPerTrack(session, Set(track.userUrn)) returns Future.value(
           Map(track.userUrn -> Some(100))
-        )
-        stitchClient.countsForTracks(session, Set((track.userUrn, trackUrn))) returns Future.value(
-          Map(trackUrn -> StitchCounts(0, 100, 0, 0, 0))
         )
         val trackRepLike = Await.result(tracksService.track(session, trackRequest))
         trackRepLike match {
@@ -332,13 +321,11 @@ class TrackRepresentationsServiceSpec extends TrackRepresentationsSpecificationC
       }
 
       "is false when track is not downloadable, and below user's quota" in new Context {
-        val track = trackVisibilityTrack()
+        val track = trackVisibilityTrack(isDownloadable = false)
+          .copy(counts = VisibleTrackCounts(None, None, None, None, Some(99)))
         setUpMocksForExistingTrack(track, session)
         userQuotaClient.downloadsPerTrack(session, Set(track.userUrn)) returns Future.value(
           Map(track.userUrn -> Some(100))
-        )
-        stitchClient.countsForTracks(session, Set((track.userUrn, trackUrn))) returns Future.value(
-          Map(trackUrn -> StitchCounts(0, 90, 0, 0, 0))
         )
         val trackRepLike = Await.result(tracksService.track(session, trackRequest))
         trackRepLike match {
@@ -346,171 +333,6 @@ class TrackRepresentationsServiceSpec extends TrackRepresentationsSpecificationC
             val json = Json.toJson(rep)
             json \ "downloadable" ==== JsDefined(JsBoolean(false))
           case None =>
-        }
-      }
-    }
-
-    "counts" >> {
-      "requesting as uploader" >> {
-        "returns proper counts" in new Context {
-          override val session = new UserSessionBuilder().setUser(trackOwnerUrn).build
-
-          val track = trackVisibilityTrack()
-          setUpMocksForExistingTrack(track, session)
-
-          val trackRepLike = Await.result(tracksService.track(session, trackRequest))
-
-          trackRepLike match {
-            case Some(rep) =>
-              val json = Json.toJson(rep)
-              json \ "playback_count" ==== JsDefined(JsNumber(111))
-              json \ "download_count" ==== JsDefined(JsNumber(222))
-              json \ "favoritings_count" ==== JsDefined(JsNumber(333))
-              json \ "reposts_count" ==== JsDefined(JsNumber(555))
-            case None =>
-          }
-        }
-
-        "returns empty counts if Stitch is failing" in new Context {
-          override val session = new UserSessionBuilder().setUser(trackOwnerUrn).build
-
-          val track = trackVisibilityTrack()
-          setUpMocksForExistingTrack(track, session)
-          when(stitchClient.countsForTracks(session, Set((trackOwnerUrn, trackUrn))))
-            .thenReturn(Future.exception(new RuntimeException("bewm! hahahaaa")))
-
-          val trackRepLike = Await.result(tracksService.track(session, trackRequest))
-
-          trackRepLike match {
-            case Some(rep) =>
-              val json = Json.toJson(rep)
-              json \ "playback_count" ==== JsDefined(JsNumber(0))
-              json \ "download_count" ==== JsDefined(JsNumber(0))
-              json \ "favoritings_count" ==== JsDefined(JsNumber(0))
-              json \ "comment_count" ==== JsDefined(JsNumber(0))
-            case None =>
-          }
-        }
-
-        "includes comment_count if reveal_comments = true" in new Context {
-          override val session = new UserSessionBuilder().setUser(trackOwnerUrn).build
-
-          val track = trackVisibilityTrack()
-          setUpMocksForExistingTrack(track, session)
-
-          val trackRepLike = Await.result(tracksService.track(session, trackRequest))
-
-          trackRepLike match {
-            case Some(rep) =>
-              val json = Json.toJson(rep)
-              json \ "comment_count" ==== JsDefined(JsNumber(444))
-            case None =>
-          }
-        }
-
-        "does not include comment_count if reveal_comments = false" in new Context {
-          override val session = new UserSessionBuilder().setUser(trackOwnerUrn).build
-
-          val track = trackVisibilityTrack(revealComments = false)
-          setUpMocksForExistingTrack(track, session)
-
-          val trackRepLike = Await.result(tracksService.track(session, trackRequest))
-
-          trackRepLike match {
-            case Some(rep) =>
-              val json = Json.toJson(rep)
-              json.as[JsObject].value("comment_count") === JsNull
-            case None =>
-          }
-        }
-      }
-
-      "not requesting as uploader" >> {
-        "track stats are not public" >> {
-          "returns no counts" in new Context {
-            val track = trackVisibilityTrack()
-            setUpMocksForExistingTrack(track, session)
-
-            val trackRepLike = Await.result(tracksService.track(session, trackRequest))
-
-            trackRepLike match {
-              case Some(rep) =>
-                val json = Json.toJson(rep)
-                json.as[JsObject].value("playback_count") === JsNull
-                json.as[JsObject].value("download_count") === JsNull
-                json.as[JsObject].value("favoritings_count") === JsNull
-                json.as[JsObject].value("comment_count") === JsNull
-              case None =>
-            }
-          }
-        }
-
-        "track has public stats" >> {
-          "returns proper counts" in new Context {
-            val track = trackVisibilityTrack(revealStats = true)
-            setUpMocksForExistingTrack(track, session)
-
-            val trackRepLike = Await.result(tracksService.track(session, trackRequest))
-
-            trackRepLike match {
-              case Some(rep) =>
-                val json = Json.toJson(rep)
-                json \ "playback_count" ==== JsDefined(JsNumber(111))
-                json \ "download_count" ==== JsDefined(JsNumber(222))
-                json \ "favoritings_count" ==== JsDefined(JsNumber(333))
-                json \ "comment_count" ==== JsDefined(JsNumber(444))
-                json \ "reposts_count" ==== JsDefined(JsNumber(555))
-              case None =>
-            }
-          }
-
-          "includes comment_count if reveal_comments = true" in new Context {
-            val track = trackVisibilityTrack(revealStats = true)
-            setUpMocksForExistingTrack(track, session)
-
-            val trackRepLike = Await.result(tracksService.track(session, trackRequest))
-
-            trackRepLike match {
-              case Some(rep) =>
-                val json = Json.toJson(rep)
-                json \ "comment_count" ==== JsDefined(JsNumber(444))
-              case None =>
-            }
-          }
-
-          "does not include comment_count if reveal_comments = false" in new Context {
-            val track = trackVisibilityTrack(revealStats = true, revealComments = false)
-            setUpMocksForExistingTrack(track, session)
-
-            val trackRepLike = Await.result(tracksService.track(session, trackRequest))
-
-            trackRepLike match {
-              case Some(rep) =>
-                val json = Json.toJson(rep)
-                json.as[JsObject].value("comment_count") === JsNull
-              case None =>
-            }
-          }
-
-          "returns empty counts if Stitch is failing" in new Context {
-            val track = trackVisibilityTrack(revealStats = true)
-            setUpMocksForExistingTrack(track, session)
-            when(stitchClient.countsForTracks(session, Set((trackOwnerUrn, trackUrn))))
-              .thenReturn(Future.exception(new RuntimeException("bewm! hahahaaa")))
-
-            val trackRepLike = Await.result(tracksService.track(session, trackRequest))
-
-            trackRepLike match {
-              case Some(rep) =>
-                val json = Json.toJson(rep)
-                json \ "playback_count" ==== JsDefined(JsNumber(0))
-                json \ "download_count" ==== JsDefined(JsNumber(0))
-                json \ "favoritings_count" ==== JsDefined(JsNumber(0))
-                json \ "comment_count" ==== JsDefined(JsNumber(0))
-                json \ "reposts_count" ==== JsDefined(JsNumber(0))
-              case None =>
-            }
-          }
         }
       }
     }

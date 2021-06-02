@@ -99,7 +99,14 @@ class VisibleTrackMapper {
       bpm = metadata.bpm,
       release = metadata.release,
       keySignature = metadata.keySignature,
-      access = None
+      access = None,
+      counts = VisibleTrackCounts(
+        track.counts.flatMap(_.plays),
+        track.counts.flatMap(_.likes),
+        track.counts.flatMap(_.reposts),
+        track.counts.flatMap(_.comments),
+        track.downloadMetadata.flatMap(_.count)
+      )
     )
   }
 }

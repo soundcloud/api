@@ -8,7 +8,6 @@ import com.soundcloud.publicApiStrangler.client.mothership.RichOkidokiClient
 import com.soundcloud.publicApiStrangler.client.mothership.response.representation.Geoblockings
 import com.soundcloud.publicApiStrangler.client.pubmese.{Isrc, PubmeseClient}
 import com.soundcloud.publicApiStrangler.client.quota.UserQuotaClient
-import com.soundcloud.publicApiStrangler.client.stitch.{StitchClient, StitchCounts}
 import com.soundcloud.publicApiStrangler.client.tracks.{TrackRequest, VisibleTrack}
 import com.soundcloud.publicApiStrangler.handler.support.requestParser.AccessParams
 import com.soundcloud.publicApiStrangler.service.TrackVisibilityService
@@ -20,7 +19,6 @@ class TrackRepresentationsService(
     trackVisibilityService: TrackVisibilityService,
     okidokiClient: RichOkidokiClient,
     pubmeseClient: PubmeseClient,
-    stitchClient: StitchClient,
     lieblingClient: LieblingClient,
     waveformUrlsGenerator: WaveformUrlsGenerator,
     userQuotaClient: UserQuotaClient
@@ -63,13 +61,10 @@ class TrackRepresentationsService(
           .getOrElse(Future.value(Map.empty[Urn, Boolean])),
         pubmeseClient.isrcsForTracks(session, urns).handle { case NonFatal(_) => Map.empty[Urn, Isrc] },
         okidokiClient.fetchTrackGeoblockings(session, urns).handle { case NonFatal(_) => Map.empty[Urn, Geoblockings] },
-        stitchClient.countsForTracks(session, visibleTracks.map(track => (track.userUrn, track.urn)).toSet).handle {
-          case NonFatal(_) => Map.empty[Urn, StitchCounts]
-        },
         userQuotaClient.downloadsPerTrack(session, userUrns).handle { case NonFatal(_) => Map.empty[Urn, Option[Int]] }
       )
       .map {
-        case (users, isLiked, isrcs, geoBlockings, counts, downloadsPerTrack) =>
+        case (users, isLiked, isrcs, geoBlockings, downloadsPerTrack) =>
           visibleTracks.map { visibleTrack =>
             TrackRepresentationBuilder.fromVisibleTrack(
               client = session.agent,
@@ -77,7 +72,6 @@ class TrackRepresentationsService(
               visibleTrack = visibleTrack,
               user = users(visibleTrack.userUrn),
               isrc = isrcs.get(visibleTrack.urn),
-              counts = counts.getOrElse(visibleTrack.urn, StitchCounts(0, 0, 0, 0, 0)),
               geoblockings = geoBlockings.getOrElse(visibleTrack.urn, List.empty),
               isLiked = isLiked.getOrElse(visibleTrack.urn, false),
               waveformUrl = waveformUrls(visibleTrack.uid.getOrElse("")),

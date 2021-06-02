@@ -27,7 +27,6 @@ import com.soundcloud.publicApiStrangler.client.pubmese.PubmeseClient
 import com.soundcloud.publicApiStrangler.client.quota.UserQuotaClient
 import com.soundcloud.publicApiStrangler.client.reposts.RepostsClient
 import com.soundcloud.publicApiStrangler.client.search.SearchClient
-import com.soundcloud.publicApiStrangler.client.stitch.StitchClient
 import com.soundcloud.publicApiStrangler.client.trackcoordinator.TrackCoordinatorClient
 import com.soundcloud.publicApiStrangler.client.trackmetadata.TrackmetadataClient
 import com.soundcloud.publicApiStrangler.service._
@@ -95,8 +94,6 @@ class Clients(
   val trackCoordinatorClient = new TrackCoordinatorClient(jsonClient("track_coordinator"))
 
   val pubmeseClient = new PubmeseClient(jsonClient("pubmese"))
-
-  val stitchClient = new StitchClient(jsonClient("stitch"))
 
   lazy val moshimoshiCommentsClient = new MoshimoshiCommentsClient(jsonClient("moshimoshi_comments"))
   lazy val moshimoshiClient = new MoshimoshiClient(jsonClient("moshimoshi"), exceptionCollector)
@@ -173,7 +170,6 @@ class Clients(
     trackVisibilityService,
     richOkidokiClient,
     pubmeseClient,
-    stitchClient,
     lieblingClient,
     waveformUrlsGenerator,
     userQuotaClient
