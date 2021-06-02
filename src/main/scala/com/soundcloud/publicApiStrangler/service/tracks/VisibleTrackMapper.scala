@@ -31,7 +31,7 @@ class VisibleTrackMapper {
             .toEpochMilli
         )
       ),
-      downloadable = metadata.downloadable,
+      downloadable = metadata.downloadable && track.downloadMetadata.forall(_.allowed),
       duration = metadata.duration.toInt,
       commentable = metadata.commentable,
       genre = metadata.genre,

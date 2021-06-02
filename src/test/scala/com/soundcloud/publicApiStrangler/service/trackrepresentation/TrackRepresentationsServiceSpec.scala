@@ -1,14 +1,12 @@
 package com.soundcloud.publicApiStrangler.service.trackrepresentation
 
-import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.{UserSession, UserSessionBuilder}
 import com.soundcloud.publicApiStrangler.client.liebling.LieblingClient
 import com.soundcloud.publicApiStrangler.client.media.WaveformUrlsGenerator
 import com.soundcloud.publicApiStrangler.client.mothership.RichOkidokiClient
 import com.soundcloud.publicApiStrangler.client.pubmese.PubmeseClient
-import com.soundcloud.publicApiStrangler.client.quota.UserQuotaClient
 import com.soundcloud.publicApiStrangler.client.trackmetadata.TrackmetadataClient
-import com.soundcloud.publicApiStrangler.client.tracks.{TrackRequest, VisibleTrack, VisibleTrackCounts}
+import com.soundcloud.publicApiStrangler.client.tracks.{TrackRequest, VisibleTrack}
 import com.soundcloud.publicApiStrangler.handler.support.requestParser.AccessParams
 import com.soundcloud.publicApiStrangler.service.TrackVisibilityService
 import com.twitter.util.{Await, Future}
@@ -24,7 +22,6 @@ class TrackRepresentationsServiceSpec extends TrackRepresentationsSpecificationC
     val pubmeseClient = mock[PubmeseClient]
     val lieblingClient = mock[LieblingClient]
     val waveformUrlsGenerator = mock[WaveformUrlsGenerator]
-    val userQuotaClient = mock[UserQuotaClient]
     val trackmetadataClient = mock[TrackmetadataClient]
     val trackPagination = mock[TrackPagination]
 
@@ -33,8 +30,7 @@ class TrackRepresentationsServiceSpec extends TrackRepresentationsSpecificationC
       okidokiClient,
       pubmeseClient,
       lieblingClient,
-      waveformUrlsGenerator,
-      userQuotaClient
+      waveformUrlsGenerator
     )
 
     def setUpMocksForExistingTrack(
@@ -52,8 +48,6 @@ class TrackRepresentationsServiceSpec extends TrackRepresentationsSpecificationC
       when(lieblingClient.userLikedTracks(session, Set(trackUrn), session.getUser))
         .thenReturn(Future.value(userLikedTracks))
       when(waveformUrlsGenerator.fromUid(track.uid.get)).thenReturn(waveformUrl(track.uid.get))
-      when(userQuotaClient.downloadsPerTrack(session, Set(track.userUrn)))
-        .thenReturn(Future.value(Map.empty[Urn, Option[Int]]))
     }
 
     def setUpMocksForNonExistingTrack = {
@@ -270,69 +264,6 @@ class TrackRepresentationsServiceSpec extends TrackRepresentationsSpecificationC
               json \ "permalink_url" ==== JsDefined(JsNull)
             case None =>
           }
-        }
-      }
-    }
-
-    "downloadable" >> {
-      "is true when track is downloadable, and below user's quota" in new Context {
-        val track = trackVisibilityTrack(isDownloadable = true)
-          .copy(counts = VisibleTrackCounts(None, None, None, None, Some(99)))
-        setUpMocksForExistingTrack(track, session)
-        userQuotaClient.downloadsPerTrack(session, Set(track.userUrn)) returns Future.value(
-          Map(track.userUrn -> Some(100))
-        )
-        val trackRepLike = Await.result(tracksService.track(session, trackRequest))
-        trackRepLike match {
-          case Some(rep) =>
-            val json = Json.toJson(rep)
-            json \ "downloadable" ==== JsDefined(JsBoolean(true))
-          case None =>
-        }
-      }
-
-      "it true when track is downloadable, and use has no quota" in new Context {
-        val track = trackVisibilityTrack(isDownloadable = true)
-        setUpMocksForExistingTrack(track, session)
-        userQuotaClient.downloadsPerTrack(session, Set(track.userUrn)) returns Future.value(Map(track.userUrn -> None))
-        val trackRepLike = Await.result(tracksService.track(session, trackRequest))
-        trackRepLike match {
-          case Some(rep) =>
-            val json = Json.toJson(rep)
-            json \ "downloadable" ==== JsDefined(JsBoolean(true))
-          case None =>
-        }
-      }
-
-      "is false when track is downloadable, and above user's quota" in new Context {
-        val track = trackVisibilityTrack(isDownloadable = true)
-          .copy(counts = VisibleTrackCounts(None, None, None, None, Some(101)))
-        setUpMocksForExistingTrack(track, session)
-        userQuotaClient.downloadsPerTrack(session, Set(track.userUrn)) returns Future.value(
-          Map(track.userUrn -> Some(100))
-        )
-        val trackRepLike = Await.result(tracksService.track(session, trackRequest))
-        trackRepLike match {
-          case Some(rep) =>
-            val json = Json.toJson(rep)
-            json \ "downloadable" ==== JsDefined(JsBoolean(false))
-          case None =>
-        }
-      }
-
-      "is false when track is not downloadable, and below user's quota" in new Context {
-        val track = trackVisibilityTrack(isDownloadable = false)
-          .copy(counts = VisibleTrackCounts(None, None, None, None, Some(99)))
-        setUpMocksForExistingTrack(track, session)
-        userQuotaClient.downloadsPerTrack(session, Set(track.userUrn)) returns Future.value(
-          Map(track.userUrn -> Some(100))
-        )
-        val trackRepLike = Await.result(tracksService.track(session, trackRequest))
-        trackRepLike match {
-          case Some(rep) =>
-            val json = Json.toJson(rep)
-            json \ "downloadable" ==== JsDefined(JsBoolean(false))
-          case None =>
         }
       }
     }

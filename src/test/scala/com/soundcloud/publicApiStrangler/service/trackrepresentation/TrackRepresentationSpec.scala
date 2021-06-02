@@ -26,7 +26,6 @@ trait TrackRepresentationSpecContext {
       user: UserRepresentation = defaultUser,
       isrc: Option[Isrc] = defaultIsrc,
       geoblockings: Geoblockings = defaultGeoblockings,
-      downloadsPerTrack: Option[Int] = None,
       waveformUrl: TrackWaveformUrl = TrackWaveformUrl("some_uid", Url("https://bar.sndcdn.com/stream/a1b2c3.png")),
       isLiked: Boolean = false
   ) = {
@@ -38,8 +37,7 @@ trait TrackRepresentationSpecContext {
       isrc = isrc,
       geoblockings = geoblockings,
       isLiked = isLiked,
-      waveformUrl = waveformUrl,
-      downloadsPerTrack = downloadsPerTrack
+      waveformUrl = waveformUrl
     )
   }
 
@@ -589,74 +587,6 @@ class TrackRepresentationSpec extends UnitSpecification {
       val json = Json.toJson(trackRepresentation)
 
       json \ "stream_url" ==== JsDefined(JsNull)
-    }
-  }
-
-  "quota counts" >> {
-    trait Context extends Scope with TrackRepresentationSpecContext {
-      val ninetyDownloads = VisibleTrackCounts(None, None, None, None, Some(90))
-      val oneHundredDownloads = ninetyDownloads.copy(downloads = Some(100))
-      val oneThousandDownloads = ninetyDownloads.copy(downloads = Some(1000))
-    }
-
-    "downloadable" >> {
-      "when the track is downloadable" >> {
-        "adds downloadable as true when downloads are below the user's quota" in new Context {
-          val downloadableTrack: VisibleTrack = defaultTrack.copy(downloadable = true, counts = ninetyDownloads)
-          val trackRepresentation =
-            createTrackRepresentationFromVisibleTrack(visibleTrack = downloadableTrack, downloadsPerTrack = Some(100))
-
-          val json = Json.toJson(trackRepresentation)
-          json \ "downloadable" ==== JsDefined(JsBoolean(true))
-        }
-
-        "adds downloadable as false when downloads are exactly at the user's quota" in new Context {
-          val downloadableTrack: VisibleTrack = defaultTrack.copy(downloadable = true, counts = oneHundredDownloads)
-          val trackRepresentation =
-            createTrackRepresentationFromVisibleTrack(visibleTrack = downloadableTrack, downloadsPerTrack = Some(100))
-
-          val json = Json.toJson(trackRepresentation)
-          json \ "downloadable" ==== JsDefined(JsBoolean(false))
-        }
-
-        "adds downloadable as false when downloads are above the user's quota" in new Context {
-          val downloadableTrack: VisibleTrack = defaultTrack.copy(downloadable = true, counts = oneThousandDownloads)
-          val trackRepresentation =
-            createTrackRepresentationFromVisibleTrack(visibleTrack = downloadableTrack, downloadsPerTrack = Some(100))
-
-          val json = Json.toJson(trackRepresentation)
-          json \ "downloadable" ==== JsDefined(JsBoolean(false))
-        }
-
-        "adds downloadable as true when the user has no quota (ie. unlimited)" in new Context {
-          val downloadableTrack: VisibleTrack = defaultTrack.copy(downloadable = true, counts = oneThousandDownloads)
-          val trackRepresentation =
-            createTrackRepresentationFromVisibleTrack(visibleTrack = downloadableTrack, downloadsPerTrack = None)
-
-          val json = Json.toJson(trackRepresentation)
-          json \ "downloadable" ==== JsDefined(JsBoolean(true))
-        }
-      }
-
-      "when the track is not downloadable" >> {
-        "adds downloadable as false when downloads are below the user's quota" in new Context {
-          val downloadableTrack: VisibleTrack = defaultTrack.copy(downloadable = false, counts = ninetyDownloads)
-          val trackRepresentation =
-            createTrackRepresentationFromVisibleTrack(visibleTrack = downloadableTrack, downloadsPerTrack = Some(100))
-
-          val json = Json.toJson(trackRepresentation)
-          json \ "downloadable" ==== JsDefined(JsBoolean(false))
-        }
-
-        "adds downloadable as false when the user has no quota (ie. unlimited)" in new Context {
-          val downloadableTrack: VisibleTrack = defaultTrack.copy(downloadable = false, counts = ninetyDownloads)
-          val trackRepresentation =
-            createTrackRepresentationFromVisibleTrack(downloadsPerTrack = None, visibleTrack = downloadableTrack)
-
-          val json = Json.toJson(trackRepresentation)
-          json \ "downloadable" ==== JsDefined(JsBoolean(false))
-        }
-      }
     }
   }
 

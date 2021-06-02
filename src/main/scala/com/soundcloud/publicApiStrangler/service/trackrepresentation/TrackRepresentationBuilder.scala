@@ -84,8 +84,7 @@ object TrackRepresentationBuilder {
       isrc: Option[Isrc],
       geoblockings: Geoblockings,
       isLiked: Boolean,
-      waveformUrl: TrackWaveformUrl,
-      downloadsPerTrack: Option[Int]
+      waveformUrl: TrackWaveformUrl
   ): TrackRepresentation = {
     val isAnonymous = sessionUser.isEmpty
     val secretToken = getSecretTokenForPrivateTrack(visibleTrack.public, visibleTrack.secretToken)
@@ -131,7 +130,7 @@ object TrackRepresentationBuilder {
       userPlaybackCount = if (!isAnonymous) Some(1) else None,
       waveformUrl = waveformUrl.pngUrl.s,
       artworkUrl = visibleTrack.artwork.filename.map(imageUrl),
-      downloadable = getDownloadable(visibleTrack, downloadsPerTrack, visibleTrack.counts.downloads),
+      downloadable = visibleTrack.downloadable,
       policy = getPolicy(visibleTrack.authorization.policy, client),
       monetizationModel = getMonetizationModel(visibleTrack.authorization.monetizationModel, client)
     )
@@ -211,22 +210,6 @@ object TrackRepresentationBuilder {
         p
       }
     })
-  }
-
-  private def getDownloadable(
-      visibleTrack: VisibleTrack,
-      downloadsPerTrack: Option[Int],
-      downloadCount: Option[Long]
-  ): Boolean = {
-    val trackDownloadable = visibleTrack.downloadable
-    if (!trackDownloadable) return false
-
-    val isUnderQuota = for {
-      count <- downloadCount
-      quota <- downloadsPerTrack
-    } yield count < quota
-
-    isUnderQuota.getOrElse(trackDownloadable)
   }
 
   private def getPolicy(policy: ContentPolicy, client: Option[Urn]): Option[String] = {

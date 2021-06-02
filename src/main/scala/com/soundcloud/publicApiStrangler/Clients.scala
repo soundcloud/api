@@ -24,7 +24,6 @@ import com.soundcloud.publicApiStrangler.client.media.{
 import com.soundcloud.publicApiStrangler.client.mothership.{MoshimoshiClient, OkidokiClient, RichOkidokiClient}
 import com.soundcloud.publicApiStrangler.client.playlists.PlaylistDeletionClient
 import com.soundcloud.publicApiStrangler.client.pubmese.PubmeseClient
-import com.soundcloud.publicApiStrangler.client.quota.UserQuotaClient
 import com.soundcloud.publicApiStrangler.client.reposts.RepostsClient
 import com.soundcloud.publicApiStrangler.client.search.SearchClient
 import com.soundcloud.publicApiStrangler.client.trackcoordinator.TrackCoordinatorClient
@@ -158,8 +157,6 @@ class Clients(
 
   val richOkidokiClient = new RichOkidokiClient(okidokiJsonClient, exceptionCollector)
 
-  val userQuotaClient = new UserQuotaClient(okidokiJsonClient)
-
   val trackVisibilityService =
     new TrackVisibilityService(
       trackMetadataTwirpClient,
@@ -171,8 +168,7 @@ class Clients(
     richOkidokiClient,
     pubmeseClient,
     lieblingClient,
-    waveformUrlsGenerator,
-    userQuotaClient
+    waveformUrlsGenerator
   )
 
   private val hocuspocusConfig = HttpClientConfig.from(ResourceName("hocuspocus"), config)

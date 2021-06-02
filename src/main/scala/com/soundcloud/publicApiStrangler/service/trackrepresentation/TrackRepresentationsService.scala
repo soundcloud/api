@@ -7,7 +7,6 @@ import com.soundcloud.publicApiStrangler.client.media.WaveformUrlsGenerator
 import com.soundcloud.publicApiStrangler.client.mothership.RichOkidokiClient
 import com.soundcloud.publicApiStrangler.client.mothership.response.representation.Geoblockings
 import com.soundcloud.publicApiStrangler.client.pubmese.{Isrc, PubmeseClient}
-import com.soundcloud.publicApiStrangler.client.quota.UserQuotaClient
 import com.soundcloud.publicApiStrangler.client.tracks.{TrackRequest, VisibleTrack}
 import com.soundcloud.publicApiStrangler.handler.support.requestParser.AccessParams
 import com.soundcloud.publicApiStrangler.service.TrackVisibilityService
@@ -20,8 +19,7 @@ class TrackRepresentationsService(
     okidokiClient: RichOkidokiClient,
     pubmeseClient: PubmeseClient,
     lieblingClient: LieblingClient,
-    waveformUrlsGenerator: WaveformUrlsGenerator,
-    userQuotaClient: UserQuotaClient
+    waveformUrlsGenerator: WaveformUrlsGenerator
 ) {
 
   def track(
@@ -60,11 +58,10 @@ class TrackRepresentationsService(
           )
           .getOrElse(Future.value(Map.empty[Urn, Boolean])),
         pubmeseClient.isrcsForTracks(session, urns).handle { case NonFatal(_) => Map.empty[Urn, Isrc] },
-        okidokiClient.fetchTrackGeoblockings(session, urns).handle { case NonFatal(_) => Map.empty[Urn, Geoblockings] },
-        userQuotaClient.downloadsPerTrack(session, userUrns).handle { case NonFatal(_) => Map.empty[Urn, Option[Int]] }
+        okidokiClient.fetchTrackGeoblockings(session, urns).handle { case NonFatal(_) => Map.empty[Urn, Geoblockings] }
       )
       .map {
-        case (users, isLiked, isrcs, geoBlockings, downloadsPerTrack) =>
+        case (users, isLiked, isrcs, geoBlockings) =>
           visibleTracks.map { visibleTrack =>
             TrackRepresentationBuilder.fromVisibleTrack(
               client = session.agent,
@@ -74,8 +71,7 @@ class TrackRepresentationsService(
               isrc = isrcs.get(visibleTrack.urn),
               geoblockings = geoBlockings.getOrElse(visibleTrack.urn, List.empty),
               isLiked = isLiked.getOrElse(visibleTrack.urn, false),
-              waveformUrl = waveformUrls(visibleTrack.uid.getOrElse("")),
-              downloadsPerTrack = downloadsPerTrack.get(visibleTrack.userUrn).flatten
+              waveformUrl = waveformUrls(visibleTrack.uid.getOrElse(""))
             )
           }
       }

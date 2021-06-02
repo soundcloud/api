@@ -111,8 +111,7 @@ trait TrackRepresentationsSpecificationContext extends UnitSpecification {
         isrc = Some(Isrc("US-S1Z-99-00001")),
         geoblockings = geoblockingsList,
         isLiked = true,
-        waveformUrl = waveformUrl(trackUrn.identifier),
-        downloadsPerTrack = Some(0)
+        waveformUrl = waveformUrl(trackUrn.identifier)
       )
   }
 }

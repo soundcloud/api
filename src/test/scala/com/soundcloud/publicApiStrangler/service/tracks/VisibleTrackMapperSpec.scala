@@ -8,6 +8,7 @@ import org.joda.time.LocalDateTime
 import org.specs2.mutable.Specification
 import org.specs2.specification.Scope
 import proto.soundcloud.tracks.api.{
+  DownloadMetadata,
   Metadata,
   ContentAuthorization => ProtoContentAuthorization,
   Track => ProtoTrack,
@@ -165,5 +166,42 @@ class VisibleTrackMapperSpec extends Specification {
       visibleTrack.access ==== None
     }
 
+    "downloadable" >> {
+      "track is downloadable if metadata and user allowed" in new Context {
+        val metadata = Some(protoTrack.metadata.get.copy(downloadable = true))
+        val downloadMetadata = Some(DownloadMetadata(allowed = true))
+        val track = protoTrack.copy(metadata = metadata, downloadMetadata = downloadMetadata)
+        val visibleTrack = mapper(track)
+
+        visibleTrack.downloadable === true
+      }
+
+      "track is not downloadable if metadata restricted" in new Context {
+        val metadata = Some(protoTrack.metadata.get.copy(downloadable = false))
+        val downloadMetadata = Some(DownloadMetadata(allowed = true))
+        val track = protoTrack.copy(metadata = metadata, downloadMetadata = downloadMetadata)
+        val visibleTrack = mapper(track)
+
+        visibleTrack.downloadable === false
+      }
+
+      "track is not downloadable if overquota" in new Context {
+        val metadata = Some(protoTrack.metadata.get.copy(downloadable = true))
+        val downloadMetadata = Some(DownloadMetadata(allowed = false))
+        val track = protoTrack.copy(metadata = metadata, downloadMetadata = downloadMetadata)
+        val visibleTrack = mapper(track)
+
+        visibleTrack.downloadable === false
+      }
+
+      "track is downloadable if no quota information" in new Context {
+        val metadata = Some(protoTrack.metadata.get.copy(downloadable = true))
+        val downloadMetadata = None
+        val track = protoTrack.copy(metadata = metadata, downloadMetadata = downloadMetadata)
+        val visibleTrack = mapper(track)
+
+        visibleTrack.downloadable === true
+      }
+    }
   }
 }
