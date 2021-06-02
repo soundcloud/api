@@ -3,7 +3,7 @@
   "description": "Swagger UI for API Public",
   "contact_email": "integrations-team@soundcloud.com",
   "contact_channel": "integrations-alerts",
-  "ci_dashboard": "https://ci.dev.s-cloud.net/go/tab/pipeline/history/public-api-strangler",
+  "ci_dashboard": "https://ci.soundcloud.org/go/tab/pipeline/history/public-api-strangler",
   "owner": "integrations-team",
   "status": "production",
   "type": "external_service",

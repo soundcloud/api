@@ -2,7 +2,7 @@
 
 ## BFF architecture
 
-We recommend reading about our BFFs before making changes to our codebase, especially if your change involved business logic. You can learn more about BFFs (including architectural guidelines and best practices) in the [BFF Documentation](http://eng-doc.int.s-cloud.net/guidelines/bff).
+We recommend reading about our BFFs before making changes to our codebase, especially if your change involved business logic. You can learn more about BFFs (including architectural guidelines and best practices) in the [BFF Documentation](https://eng-doc.soundcloud.org/guidelines/bff).
 
 ## Useful `make` targets
 
