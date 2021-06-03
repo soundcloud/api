@@ -32,7 +32,7 @@ case class Playlist(
     lastModified: Option[Instant],
     license: Option[String],
     playlistType: String,
-    downloadable: Option[Boolean],
+    downloadable: Option[Boolean] = None,
     sharing: String,
     createdAt: Option[Instant],
     release: Option[String],
@@ -43,7 +43,7 @@ case class Playlist(
     embeddableBy: String,
     labelId: Option[String],
     user: UserRepresentation,
-    tracks: Option[List[TrackRepresentation]],
+    tracks: Option[List[TrackRepresentation]] = None,
     secretUri: Option[String],
     secretToken: Option[String]
 )
@@ -103,18 +103,16 @@ object Playlist {
 
   def fromVisiblePlaylist(
       playlist: VisiblePlaylist,
-      playlistTracks: List[TrackRepresentation],
       playlistOwner: UserRepresentation,
       maybeLabel: Option[UserRepresentation],
       requestingUserUrn: Option[Urn],
-      showTracks: Boolean
+      likesCount: Long
   ): Playlist = {
     val releaseDay =
       playlist.releaseDate.map(date => LocalDateTime.ofInstant(date, ZoneOffset.UTC).getDayOfMonth)
     val releaseMonth =
       playlist.releaseDate.map(date => LocalDateTime.ofInstant(date, ZoneOffset.UTC).getMonth.getValue)
     val releaseYear = playlist.releaseDate.map(date => LocalDateTime.ofInstant(date, ZoneOffset.UTC).getYear)
-    val tracks = if (showTracks) Some(playlistTracks) else None
 
     Playlist(
       title = playlist.title,
@@ -135,7 +133,6 @@ object Playlist {
       lastModified = playlist.updatedAt,
       license = playlist.license,
       playlistType = playlist.setType,
-      downloadable = if (playlistTracks.forall(track => track.downloadable)) Some(true) else None,
       sharing = playlist.sharing,
       createdAt = playlist.createdAt,
       release = None,
@@ -143,14 +140,13 @@ object Playlist {
       artworkUrl = playlist.artworkUrl,
       ean = playlist.ean,
       streamable = playlist.streamable,
-      likesCount = playlist.likesCount,
+      likesCount = likesCount,
       embeddableBy = playlist.embeddableBy,
       labelId = playlist.labelId,
       labelName = playlist.labelName,
       label = maybeLabel,
       purchaseUrl = playlist.purchaseUrl,
       user = playlistOwner,
-      tracks = tracks,
       secretToken = requestingUserUrn.flatMap(ownerUrn =>
         if (!playlist.public && playlist.userUrn == ownerUrn.toString) playlist.secretToken else None
       ),
@@ -159,6 +155,12 @@ object Playlist {
       )
     )
   }
+
+  def enrichPlaylistWithTracks(playlist: Playlist, playlistTracks: List[TrackRepresentation]): Playlist =
+    playlist.copy(
+      downloadable = if (playlistTracks.forall(track => track.downloadable)) Some(true) else None,
+      tracks = Some(playlistTracks)
+    )
 
   /*
    This method converts a list of the format [tag_a, tag_b] to a string like '"tag_a" "tag_b"'

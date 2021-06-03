@@ -181,7 +181,8 @@ class Clients(
     new TrackUpdateService(trackCoordinatorClient, okidokiClient, hocuspocusClient, tracksService)
   val similarTracksService = new SimilarTracksService(tracksService, systemPlaylistsClient)
   val likesService = new LikesService(tracksService, lieblingClient, likeTracksTwirpClient)
-  val playlistService = new PlaylistsService(playlistsTwirpClient, tracksService, okidokiClient, exceptionCollector)
+  val playlistService =
+    new PlaylistsService(playlistsTwirpClient, tracksService, okidokiClient, lieblingClient, exceptionCollector)
   val userPlaylistsService = new UserPlaylistsService(playlistService, okidokiClient)
 
   private val submarineClient = new SubmarineClient(jsonClient("submarine"))

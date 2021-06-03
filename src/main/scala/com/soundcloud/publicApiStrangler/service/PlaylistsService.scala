@@ -2,11 +2,12 @@ package com.soundcloud.publicApiStrangler.service
 
 import com.soundcloud.jvmkit.module.outcome._
 import com.soundcloud.jvmkit.module.telemetry.exceptions.ExceptionCollector
-import com.soundcloud.jvmkit.module.telemetry.exceptions.ExceptionHandler.FutureExtensions
 import com.soundcloud.jvmkit.module.twirp.proto.UserSessionOps._
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSession
+import com.soundcloud.publicApiStrangler.client.liebling.{LieblingClient, LikesCount}
 import com.soundcloud.publicApiStrangler.client.mothership.MoshimoshiClient
+import com.soundcloud.publicApiStrangler.client.mothership.response.representation.UserRepresentation
 import com.soundcloud.publicApiStrangler.handler.support.requestParser.AccessParams
 import com.soundcloud.publicApiStrangler.service.pagination.OffsetBasedPagination
 import com.soundcloud.publicApiStrangler.service.playlists.representation.{Playlist, VisiblePlaylist}
@@ -22,12 +23,11 @@ import proto.soundcloud.playlists.api.{
   PlaylistsService => PlaylistsTwirpService
 }
 
-import scala.util.control.NonFatal
-
 class PlaylistsService(
     playlistsTwirpService: PlaylistsTwirpService,
     tracksService: TrackRepresentationsService,
     moshimoshiClient: MoshimoshiClient,
+    lieblingClient: LieblingClient,
     exceptionCollector: ExceptionCollector,
     playlistProtoMapper: PlaylistProtoMapper = new PlaylistProtoMapper()
 ) {
@@ -83,7 +83,7 @@ class PlaylistsService(
     for {
       visiblePlaylistObjects <- getPlaylistsWithTracks(session, playlistRequests, pagination)
       visiblePlaylists = visiblePlaylistObjects.flatMap(response => playlistProtoMapper.apply(response, pagination))
-      playlists <- getFullPlaylists(visiblePlaylists, session, access, showTracks = true)
+      playlists <- resolvePlaylists(visiblePlaylists, session, access, showTracks = true)
     } yield playlists
   }
 
@@ -105,47 +105,69 @@ class PlaylistsService(
     for {
       visiblePlaylistObjects <- getPlaylistsWithoutTracks(session, playlistRequests)
       visiblePlaylists = visiblePlaylistObjects.flatMap(response => playlistProtoMapper.apply(response, None))
-      playlists <- getFullPlaylists(visiblePlaylists, session, AccessParams.defaultAccess, showTracks = false)
+      playlists <- resolvePlaylists(visiblePlaylists, session, AccessParams.defaultAccess, showTracks = false)
     } yield playlists
   }
 
-  private def getFullPlaylists(
+  private def resolvePlaylists(
       visiblePlaylists: List[VisiblePlaylist],
       session: UserSession,
       access: AccessParams,
       showTracks: Boolean
   ): Future[List[Playlist]] = {
     for {
-      maybePlaylists <- Future
+      playlists <- getFullPlaylists(session, visiblePlaylists)
+      playlistTracks <- Future
         .collect(
-          visiblePlaylists.map(playlist =>
-            getFullPlaylist(playlist, session, access, showTracks).handleAndReport(exceptionCollector) {
-              case NonFatal(_) => None
-            }
-          )
+          visiblePlaylists
+            .filter(_ => showTracks)
+            .map(playlist =>
+              tracksService
+                .tracks(session, playlist.trackRequests.requests, access)
+                .map(tracks => (Urn.parse(playlist.urn).get.identifier.toLong, tracks))
+            )
         )
-        .map(_.toList)
-      playlists = maybePlaylists.flatten
-    } yield playlists
+        .map(_.toMap)
+      enrichedPlaylists = if (showTracks)
+        playlists.map(playlist => Playlist.enrichPlaylistWithTracks(playlist, playlistTracks(playlist.id)))
+      else playlists
+    } yield enrichedPlaylists
   }
 
-  private def getFullPlaylist(
-      visiblePlaylist: VisiblePlaylist,
+  private def getFullPlaylists(
       session: UserSession,
-      access: AccessParams,
-      showTracks: Boolean
-  ): Future[Option[Playlist]] = {
+      visiblePlaylists: List[VisiblePlaylist]
+  ): Future[List[Playlist]] = {
+    val urns = visiblePlaylists.map(_.urn)
+
+    if (urns.isEmpty) Future.value(List.empty)
+    else {
+      val userUrns: Seq[Urn] = visiblePlaylists.map(playlist => Urn.parse(playlist.userUrn).get) ++
+        visiblePlaylists.flatMap(playlist => playlist.labelId.map(id => Urn("soundcloud", "users", id)))
+
+      for {
+        (users, likes) <- Future.join(
+          moshimoshiClient.fetchUserObjects(session, userUrns.toSet),
+          lieblingClient.likeCounts(session, urns.map(urn => Urn.parse(urn).get))
+        )
+      } yield mapPlaylists(urns, visiblePlaylists, users, likes, session)
+    }
+  }
+
+  private def mapPlaylists(
+      urns: List[String],
+      visiblePlaylists: List[VisiblePlaylist],
+      users: List[UserRepresentation],
+      likeCounts: List[LikesCount],
+      session: UserSession
+  ): List[Playlist] = {
     for {
-      tracks <- tracksService.tracks(session, visiblePlaylist.trackRequests.requests, access)
-      playlistOwner <- moshimoshiClient
-        .fetchUserObjects(session, Set(Urn.parse(visiblePlaylist.userUrn).get))
-        .map(_.head)
-      maybeLabelOwner <- visiblePlaylist.labelId
-        .map(id => moshimoshiClient.fetchUserObjects(session, Set(Urn("soundcloud", "users", id))).map(_.headOption))
-        .getOrElse(Future.None)
-    } yield Some(
-      Playlist.fromVisiblePlaylist(visiblePlaylist, tracks, playlistOwner, maybeLabelOwner, session.user, showTracks)
-    )
+      urn <- urns
+      playlist <- visiblePlaylists.find(_.urn == urn)
+      likesCount <- likeCounts.find(_.target_urn == Urn.parse(urn).get).map(_.likes_count)
+      owner <- users.find(_.urn.toString == playlist.userUrn)
+      maybeLabelOwner = playlist.labelId.flatMap(id => users.find(_.urn.identifier == id))
+    } yield Playlist.fromVisiblePlaylist(playlist, owner, maybeLabelOwner, session.user, likesCount)
   }
 
   private def getPlaylistsWithoutTracks(

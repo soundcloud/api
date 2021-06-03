@@ -6,6 +6,7 @@ import com.soundcloud.jvmkit.module.telemetry.exceptions.ExceptionCollector
 import com.soundcloud.jvmkit.module.twirp.proto.UserSessionOps._
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.{UserSession, UserSessionBuilder}
+import com.soundcloud.publicApiStrangler.client.liebling.{LieblingClient, LikesCount}
 import com.soundcloud.publicApiStrangler.client.mothership.MoshimoshiClient
 import com.soundcloud.publicApiStrangler.client.tracks.TrackRequest
 import com.soundcloud.publicApiStrangler.handler.support.requestParser.AccessParams
@@ -59,11 +60,18 @@ class PlaylistsServiceSpec extends UnitSpecification {
     val playlistsTwirpServiceMock = mock[PlaylistsTwirpService]
     val trackServiceMock = mock[TrackRepresentationsService]
     val moshimoshiClientMock = mock[MoshimoshiClient]
+    val lieblingClientMock = mock[LieblingClient]
     val telemetry = Telemetry.defaultInstance
     val exceptionCollector = new ExceptionCollector(telemetry)
 
     val playlistsService =
-      new PlaylistsService(playlistsTwirpServiceMock, trackServiceMock, moshimoshiClientMock, exceptionCollector)
+      new PlaylistsService(
+        playlistsTwirpServiceMock,
+        trackServiceMock,
+        moshimoshiClientMock,
+        lieblingClientMock,
+        exceptionCollector
+      )
     val playlistRequests = List(PlaylistRequest(requestedPlaylistUrn, candidateSecretToken))
     val access = AccessParams.defaultAccess
   }
@@ -93,6 +101,8 @@ class PlaylistsServiceSpec extends UnitSpecification {
         labelId = Some(labelUrn.identifier)
       )
 
+    val likesCount = LikesCount(requestedPlaylistUrn, 5L)
+
     val protoTrack = Seq(ProtoTrackRequest(urn = requestedPlaylistTrackUrn.toString))
     val protoTracks = Seq(
       ProtoTrackRequest(urn = requestedPlaylistTrackUrn.toString),
@@ -100,9 +110,10 @@ class PlaylistsServiceSpec extends UnitSpecification {
       ProtoTrackRequest(urn = requestedPlaylistTrackUrn2.toString)
     )
 
-    when(moshimoshiClientMock.fetchUserObjects(session, Set(playlistOwner.urn)))
-      .thenReturn(Future.value(List(playlistOwner)))
-    when(moshimoshiClientMock.fetchUserObjects(session, Set(labelUrn))).thenReturn(Future.value(List(defaultLabel)))
+    when(moshimoshiClientMock.fetchUserObjects(session, Set(playlistOwner.urn, labelUrn)))
+      .thenReturn(Future.value(List(playlistOwner, defaultLabel)))
+    when(lieblingClientMock.likeCounts(session, Seq(requestedPlaylistUrn)))
+      .thenReturn(Future.value(List(likesCount)))
 
     def setUpMocksForPlaylists(
         pagination: Option[PlaylistPagination],
@@ -126,6 +137,19 @@ class PlaylistsServiceSpec extends UnitSpecification {
         trackServiceMock.tracks(session, trackRequests, AccessParams.defaultAccess)
       ).thenReturn(Future.value(requestedPlaylistTracks))
     }
+  }
+
+  trait NoLabelIdContext extends SuccessContext {
+    override val protoPlaylist =
+      ProtoPlaylist(
+        urn = requestedPlaylistUrn.toString,
+        userUrn = playlistOwner.urn.toString,
+        labelId = None
+      )
+
+    when(moshimoshiClientMock.fetchUserObjects(session, Set(playlistOwner.urn)))
+      .thenReturn(Future.value(List(playlistOwner)))
+
   }
 
   trait NotFoundContext extends Context {
@@ -169,7 +193,29 @@ class PlaylistsServiceSpec extends UnitSpecification {
           playlist.id ==== requestedPlaylistUrn.identifier.toLong
           playlist.userId ==== playlistOwner.urn.identifier.toLong
           playlist.tracks.get.length ==== 1
-          playlist.tracks.get(0).urn ==== requestedPlaylistTrack.urn
+          playlist.tracks.get.head.urn ==== requestedPlaylistTrack.urn
+          playlist.likesCount ==== 5
+        case _ => failure(s"returned ${result.toString} instead of Good(_)")
+      }
+    }
+
+    "can fetch a playlist with labelId not present" in new NoLabelIdContext {
+      setUpMocksForPlaylists(
+        pagination = Some(PlaylistPagination(cursor = Some("4"), limit = 2)),
+        trackRequests = List(TrackRequest(urn = requestedPlaylistTrackUrn, secretToken = None)),
+        visiblePlaylistsRequest = getVisiblePlaylistWithPagination
+      )
+
+      val result =
+        Await.result(
+          playlistsService
+            .fetchPlaylist(session, requestedPlaylistUrn, candidateSecretToken, access, Some(offsetBasedPagination))
+        )
+
+      result match {
+        case Good(playlist) =>
+          playlist.id ==== requestedPlaylistUrn.identifier.toLong
+          playlist.labelId ==== None
         case _ => failure(s"returned ${result.toString} instead of Good(_)")
       }
     }
@@ -193,6 +239,7 @@ class PlaylistsServiceSpec extends UnitSpecification {
           playlist.userId ==== playlistOwner.urn.identifier.toLong
           playlist.tracks.get.length ==== 1
           playlist.tracks.get.head.urn ==== requestedPlaylistTrack.urn
+          playlist.likesCount ==== 5
         case _ => failure(s"returned ${result.toString} instead of Good(_)")
       }
     }
@@ -293,6 +340,7 @@ class PlaylistsServiceSpec extends UnitSpecification {
       result.head.userId ==== playlistOwner.urn.identifier.toLong
       result.head.tracks.get.length ==== 1
       result.head.tracks.get.head.urn ==== requestedPlaylistTrack.urn
+      result.head.likesCount ==== 5
     }
 
     "can fetch a list of playlists without pagination" in new SuccessContext {
@@ -313,6 +361,7 @@ class PlaylistsServiceSpec extends UnitSpecification {
       result.head.userId ==== playlistOwner.urn.identifier.toLong
       result.head.tracks.get.length ==== 1
       result.head.tracks.get.head.urn ==== requestedPlaylistTrack.urn
+      result.head.likesCount ==== 5
     }
 
     "returns empty list if no playlist returned from client" in new NotFoundContext {
@@ -349,6 +398,7 @@ class PlaylistsServiceSpec extends UnitSpecification {
 
       result.length ==== 1
       result.head.tracks must beEmpty
+      result.head.likesCount ==== 5
     }
 
     "returns an empty list if no playlists found" in new SuccessContext {
