@@ -2,20 +2,20 @@ version: '2.3'
 
 services:
   memcached:
-    image: ${SC_DOCKER_REPO}/sc-memcached:release
+    image: docker.localproxy.sc:42042/sc-memcached:release
     container_name: strangler_memcached
     ports:
       - "11211:11211"
 
   zookeeper:
-    image: ${SC_DOCKER_REPO}/sc-zookeeper
+    image: docker.localproxy.sc:42042/sc-zookeeper
     container_name: strangler_zk
     ports:
       - "2181:2181"
 
   # This container is only ever used by tests.
   publicapistrangler:
-    image: ${SC_DOCKER_REPO}/public-api-strangler:$VERSION
+    image: docker.localproxy.sc:42042/public-api-strangler:$VERSION
     command: bash -lex -c "./api --config=$CONFIG"
     ports:
       - "5000:5000"
@@ -25,7 +25,7 @@ services:
       - memcached:memcached
 
   asset-uploads:
-    image: ${SC_DOCKER_REPO}/public-api-strangler-asset-uploads:$VERSION
+    image: docker.localproxy.sc:42042/public-api-strangler-asset-uploads:$VERSION
     command: ./api --config=api-contract-test
     ports:
       - "5005:5005"

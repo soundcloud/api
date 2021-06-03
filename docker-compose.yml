@@ -2,7 +2,7 @@
 version: '2.3'
 services:
   strangler_memcached:
-    image: ${SC_DOCKER_REPO}/sc-memcached:release
+    image: docker.localproxy.sc:42042/sc-memcached:release
 
   strangler_zk:
-    image: ${SC_DOCKER_REPO}/sc-zookeeper
+    image: docker.localproxy.sc:42042/sc-zookeeper
