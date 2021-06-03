@@ -83,7 +83,7 @@ object App {
         List.concat(
           forUserFollowHandler(handlers.userFollowHandler),
           forMothershipDispatcher(handlers.mothershipDispatcher),
-          forTokenExchange(handlers.tokenExchangeRolloutHandler.handle),
+          forTokenExchange(handlers.tokenExchangeHandler.instrumentedMothershipDispatch),
           forSingleTrackHandler(handlers.singleTrackHandler),
           forPlaylistHandler(handlers.playlistsHandler),
           forSimilarTracksHandler(handlers.similarTracksHandler),

@@ -1,6 +1,5 @@
 package com.soundcloud.publicApiStrangler
 
-import com.soundcloud.jvmkit.module.rollout.RolloutFeature
 import com.soundcloud.jvmkit.module.telemetry.Telemetry
 import com.soundcloud.jvmkit.module.telemetry.exceptions.ExceptionCollector
 import com.soundcloud.publicApiStrangler.handler._
@@ -94,13 +93,6 @@ class Handlers(
       tokenExchangeRequestMapper.parse,
       new AuthorizationService(clients.authorizationClient, exceptionCollector)
     )
-  val instrumentTokenExchangeRequest = RolloutFeature("instrument_token_exchange_requests")
-
-  val tokenExchangeRolloutHandler = new RolloutHandler(
-    () => rolloutClient.isActive(instrumentTokenExchangeRequest),
-    mothershipDispatcher.dispatchUnauthenticated,
-    tokenExchangeHandler.instrumentedMothershipDispatch
-  )
 
   val commentsHandler = new CommentsHandler(userAuthentication, commentsService)
 }
