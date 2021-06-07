@@ -27,7 +27,7 @@ class AuthorizationService(service: proto.AuthorizationService, exceptionCollect
           proto.AccessGrant.GrantType.ClientCredentialsGrant(proto.ClientCredentialsGrant())
         case r: RefreshTokenGrant =>
           proto.AccessGrant.GrantType.RefreshTokenGrant(proto.RefreshTokenGrant(r.refreshToken))
-        case r: ResourceOwnerPasswordCredentialsGrant =>
+        case r: PasswordGrant =>
           proto.AccessGrant.GrantType
             .ResourceOwnerPasswordCredentialsGrant(proto.ResourceOwnerPasswordCredentialsGrant(r.password, r.username))
       }

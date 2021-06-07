@@ -8,10 +8,10 @@ package proto.soundcloud.authenticator.access_grant_exchange;
 import "google/protobuf/wrappers.proto";
 
 service AccessGrantExchange {
-  rpc AuthorizationCodeExchange(AuthorizationCodeGrant) returns (AuthorizationCodeExchangeResponse);
-  rpc RefreshTokenExchange(RefreshTokenGrant) returns (RefreshTokenExchangeResponse);
-  rpc ClientCredentialExchange(ClientCredentialGrant) returns (ClientCredentialExchangeResponse);
-  rpc PasswordExchange(PasswordGrant) returns (PasswordExchangeResponse);
+  rpc AuthorizationCodeExchange(AuthorizationCodeGrant) returns (AccessGrantExchangeResponse);
+  rpc RefreshTokenExchange(RefreshTokenGrant) returns (AccessGrantExchangeResponse);
+  rpc ClientCredentialExchange(ClientCredentialGrant) returns (AccessGrantExchangeResponse);
+  rpc PasswordExchange(PasswordGrant) returns (AccessGrantExchangeResponse);
 }
 
 message AuthorizationCodeGrant {
@@ -20,18 +20,23 @@ message AuthorizationCodeGrant {
   string redirect_uri = 3;
 }
 
-message AuthorizationCodeExchangeResponse {
+message AccessGrantExchangeResponse {
   oneof result {
-    AccessTokenResponse access_token_response = 1;
-    AuthorizationCodeExchangeErrorResponse error_response = 2;
+    AccessToken access_token = 1;
+    Error error = 2;
   }
-}
 
-message AuthorizationCodeExchangeErrorResponse {
-  oneof error {
-    InvalidClient invalid_client = 1;
-    UnauthorizedClient unauthorized_client = 2;
-    InvalidGrant invalid_grant = 3;
+  message AccessToken {
+    string access_token = 1;
+    google.protobuf.Int32Value expires_in_seconds = 2; // Not Required
+    google.protobuf.StringValue refresh_token = 3; // Not Required
+    repeated string scope = 4;
+  }
+
+  enum Error {
+    INVALID_CLIENT = 0;
+    INVALID_GRANT = 1;
+    INVALID_SCOPE = 2;
   }
 }
 
@@ -40,38 +45,9 @@ message RefreshTokenGrant {
   string refresh_token = 2;
 }
 
-message RefreshTokenExchangeResponse {
-  oneof result {
-    AccessTokenResponse access_token_response = 1;
-    RefreshTokenExchangeErrorResponse error_response = 2;
-  }
-}
-
-message RefreshTokenExchangeErrorResponse {
-  oneof error {
-    InvalidClient invalid_client = 1;
-    UnauthorizedClient unauthorized_client = 2;
-    InvalidGrant invalid_grant = 3;
-  }
-}
-
 message ClientCredentialGrant {
   ClientCredential client_credential = 1;
   repeated string scope = 2;
-}
-
-message ClientCredentialExchangeResponse {
-  oneof result {
-    AccessTokenResponse access_token_response = 1;
-    ClientCredentialExchangeErrorResponse error_response = 2;
-  }
-}
-
-message ClientCredentialExchangeErrorResponse {
-  oneof error {
-    InvalidClient invalid_client = 1;
-    InvalidScope invalid_scope = 2;
-  }
 }
 
 message PasswordGrant {
@@ -80,40 +56,10 @@ message PasswordGrant {
   string password = 3;
   repeated string scope = 4;
   string ip_address = 5;
-  google.protobuf.StringValue vk2_correlation_id = 6; // Not Required
-}
-
-message PasswordExchangeResponse {
- oneof result {
-   AccessTokenResponse access_token_response = 1;
-   PasswordExchangeErrorResponse error_response = 2;
- }
-}
-
-message PasswordExchangeErrorResponse {
-  oneof error {
-    InvalidClient invalid_client = 1;
-    InvalidGrant invalid_grant = 2;
-    InvalidScope invalid_scope = 3;
-  }
+  google.protobuf.StringValue user_agent = 6; // Not Required
 }
 
 message ClientCredential {
   string client_id = 1;
   string client_secret = 2;
 }
-
-message AccessTokenResponse {
-  string access_token = 1;
-  google.protobuf.Int32Value expires_in_seconds = 2; // Not Required
-  google.protobuf.StringValue refresh_token = 3; // Not Required
-  repeated string scope = 4; // Not Required
-}
-
-message InvalidClient{}
-
-message UnauthorizedClient{}
-
-message InvalidGrant{}
-
-message InvalidScope{}

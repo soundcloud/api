@@ -31,12 +31,12 @@ class TokenExchangeRequestParser(railsLikeParamsParser: RailsLikeParamsParser) {
         } yield AuthorizationCodeGrant(code, redirectUri)
         grantOpt.toRight(InvalidGrant(AuthorizationCodeGrant.Name))
 
-      case Some(ResourceOwnerPasswordCredentialsGrant.Name) =>
+      case Some(PasswordGrant.Name) =>
         val grantOpt = for {
           username <- getNonBlank(params, "username")
           password <- getNonBlank(params, "password")
-        } yield ResourceOwnerPasswordCredentialsGrant(username, password)
-        grantOpt.toRight(InvalidGrant(ResourceOwnerPasswordCredentialsGrant.Name))
+        } yield PasswordGrant(username, password, Set.empty)
+        grantOpt.toRight(InvalidGrant(PasswordGrant.Name))
 
       case Some(RefreshTokenGrant.Name) =>
         val grantOpt = for {
@@ -45,7 +45,7 @@ class TokenExchangeRequestParser(railsLikeParamsParser: RailsLikeParamsParser) {
         grantOpt.toRight(InvalidGrant(RefreshTokenGrant.Name))
 
       case Some(ClientCredentialsGrant.Name) =>
-        Right(ClientCredentialsGrant())
+        Right(ClientCredentialsGrant(Set.empty))
 
       case Some(other) => Left(UnsupportedGrantType(other))
 

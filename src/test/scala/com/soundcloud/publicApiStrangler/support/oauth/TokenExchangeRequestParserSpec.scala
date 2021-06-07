@@ -102,7 +102,7 @@ class TokenExchangeRequestParserSpec extends UnitSpecification {
         result ==== Right(
           TokenExchangeRequest(
             ClientCredential("s6BhdRkqt3", "gX1fBat3bV"),
-            ClientCredentialsGrant(),
+            ClientCredentialsGrant(Set.empty),
             RequestContext(remoteIp, userAgent)
           )
         )
@@ -121,7 +121,7 @@ class TokenExchangeRequestParserSpec extends UnitSpecification {
         result ==== Right(
           TokenExchangeRequest(
             ClientCredential("s6BhdRkqt3", "gX1fBat3bV"),
-            ResourceOwnerPasswordCredentialsGrant("johndoe", "A3ddj3w"),
+            PasswordGrant("johndoe", "A3ddj3w", Set.empty),
             RequestContext(remoteIp, userAgent)
           )
         )

@@ -17,7 +17,7 @@ class TokenExchangeHandlerSpec extends UnitSpecification {
       val dispatchToMothershipHandler: Handler = _ => Future.value(Response(Status.Ok))
 
       val credential: ClientCredential = ClientCredential(id = "s6BhdRkqt3", secret = "47HDu8s")
-      val grant: ClientCredentialsGrant = ClientCredentialsGrant()
+      val grant: ClientCredentialsGrant = ClientCredentialsGrant(Set.empty)
       val context: RequestContext = RequestContext("0.1.2.3", "Netscape Navigator 0.86 Beta 3")
 
       val tokenExchangeRequestParseResult: Either[TokenExchangeRequestError, TokenExchangeRequest] =
