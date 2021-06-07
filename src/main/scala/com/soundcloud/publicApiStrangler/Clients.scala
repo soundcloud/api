@@ -33,7 +33,7 @@ import com.soundcloud.publicApiStrangler.service.comments.CommentService
 import com.soundcloud.publicApiStrangler.service.media.{StreamService, TrackAccessRecorderService}
 import com.soundcloud.publicApiStrangler.service.trackrepresentation.{TrackRepresentationsService, TrackUpdateService}
 import com.soundcloud.publicApiStrangler.service.tracks.VisibleTrackMapper
-import com.soundcloud.publicApiStrangler.service.users.UserRepresentationsService
+import com.soundcloud.publicApiStrangler.service.users.{MeService, UserRepresentationsService}
 import com.soundcloud.publicApiStrangler.subscriptions.SubmarineClient
 import com.twitter.finagle.Service
 import com.twitter.finagle.http.{Request, Response}
@@ -188,7 +188,15 @@ class Clients(
   private val submarineClient = new SubmarineClient(jsonClient("submarine"))
 
   val userRepresentationsService =
-    new UserRepresentationsService(followCountsClient, repostsClient, okidokiClient, lieblingClient, submarineClient)
+    new UserRepresentationsService(
+      followCountsClient,
+      repostsClient,
+      okidokiClient,
+      lieblingClient,
+      submarineClient
+    )
+
+  val meService = new MeService(userRepresentationsService, okidokiClient, trackCoordinatorClient, exceptionCollector)
 
   val searchService =
     new SearchService(searchClient, tracksService, playlistService, userRepresentationsService)

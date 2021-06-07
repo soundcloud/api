@@ -29,6 +29,8 @@
       "search-dispatcher-remix",
       "system-playlists",
       "timeline",
-      "tracks"
+      "tracks",
+      "track-coordinator",
+      "submarine"
     ]
 }

@@ -1,7 +1,7 @@
 package com.soundcloud.publicApiStrangler.client.mothership.response.representation
 
 import com.soundcloud.jvmkit.module.util.Urn
-import com.soundcloud.publicApiStrangler.subscriptions.{SubmarineToLegacyMapper, SubmarineCreatorSubscription}
+import com.soundcloud.publicApiStrangler.subscriptions.{SubmarineCreatorSubscription, SubmarineToLegacyMapper}
 import play.api.libs.json.{Json, Writes}
 
 case class Product(id: String, name: String)
@@ -56,11 +56,7 @@ case class UserRepresentation(
     comments_count: Option[Int], // deprecated, kept for structure
     likes_count: Option[Long], // deprecated, kept for structure
     reposts_count: Option[Long], // deprecated, kept for structure
-    online: Boolean = false, // deprecated, kept for structure
-    private_tracks_count: Option[Long] = None,
-    private_playlists_count: Option[Long] = None,
-    primary_email_confirmed: Option[Boolean] = None,
-    locale: Option[String] = None
+    online: Boolean = false // deprecated, kept for structure
 )
 
 object UserRepresentation {
@@ -95,8 +91,7 @@ object UserRepresentation {
       "online" -> user.online,
       "likes_count" -> user.likes_count,
       "playlist_count" -> user.public_playlists_count,
-      "subscriptions" -> Json.toJson(user.subscriptions),
-      "locale" -> user.locale
+      "subscriptions" -> Json.toJson(user.subscriptions)
     )
   }
 }

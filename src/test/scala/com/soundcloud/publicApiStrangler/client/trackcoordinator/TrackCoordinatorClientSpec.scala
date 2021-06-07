@@ -13,6 +13,7 @@ import com.soundcloud.publicApiStrangler.handler.support.requestParser.{
   TrackMetadataCreateRequest,
   TrackMetadataUpdateRequest
 }
+import com.soundcloud.publicApiStrangler.service.users.UserUploadQuota
 import com.soundcloud.publicApiStrangler.test.UnitSpecification
 import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures
 import com.twitter.finagle.http.Status
@@ -51,6 +52,7 @@ class TrackCoordinatorClientSpec extends UnitSpecification {
       TrackAssetDataCreateRequest(original_filename = "filename", uid = "uid")
 
     val expectedResponse = Json.parse(Json.stringify(Fixtures.trackCoordinatorTrack)).as[TrackCoordinatorTrack]
+    val uploadQuota = UserUploadQuota(196, Some(21600))
   }
 
   trait CreateContext extends Context {
@@ -75,6 +77,11 @@ class TrackCoordinatorClientSpec extends UnitSpecification {
           "artwork_from_s3" -> Json.toJson(trackArtworkMetaResponse)
         )
     )
+  }
+
+  trait UploadQuotaContext extends Context {
+    val path = Path("/user/upload-quota")
+    val headers = Headers(TrackCoordinatorHeaders.USER -> userUrn.toString)
   }
 
   "#createTrack" >> {
@@ -377,4 +384,41 @@ class TrackCoordinatorClientSpec extends UnitSpecification {
     }
   }
 
+  "#uploadQuota" >> {
+    trait SuccessContext extends UploadQuotaContext {
+      when(jsonClient.getWithSession(session, path, Params.empty, headers))
+        .thenReturn(
+          Future(jsonResponse(Status.Ok, Fixtures.trackCoordinatorUploadQuota))
+        )
+    }
+
+    trait NotFoundContext extends UploadQuotaContext {
+      when(jsonClient.getWithSession(session, path, Params.empty, headers))
+        .thenReturn(
+          Future(jsonResponse(Status.NotFound, JsNull))
+        )
+    }
+    trait ErrorContext extends UploadQuotaContext {
+      when(jsonClient.getWithSession(session, path, Params.empty, headers))
+        .thenReturn(
+          Future(jsonResponse(Status.InternalServerError, Json.obj("400" -> "Invalid Request")))
+        )
+    }
+
+    "Successfully returns upload quota" in new SuccessContext {
+      val result = Await.result(client.uploadQuota(session, userUrn))
+
+      result mustEqual Good(uploadQuota)
+    }
+
+    "returns 404 when not found" in new NotFoundContext {
+      val result = Await.result(client.uploadQuota(session, userUrn))
+
+      result mustEqual NotFound().bad
+    }
+
+    "Handles unexpected error" in new ErrorContext {
+      Await.result(client.uploadQuota(session, userUrn)) must throwAn[UnhandledResponseException]
+    }
+  }
 }

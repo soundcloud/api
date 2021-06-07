@@ -14,6 +14,7 @@ import com.soundcloud.publicApiStrangler.handler.support.requestParser.{
   TrackMetadataRequest,
   TrackMetadataUpdateRequest
 }
+import com.soundcloud.publicApiStrangler.service.users.UserUploadQuota
 import com.twitter.util.Future
 import play.api.libs.json.{JsObject, Json}
 
@@ -49,6 +50,17 @@ class TrackCoordinatorClient(service: JsonClient) {
       .map(TrackCoordinatorUpdateMapper(_))
   }
 
+  def uploadQuota(session: UserSession, userUrn: Urn): Future[Outcome[UserUploadQuota]] = {
+    service
+      .getWithSession(
+        session,
+        Path("/user/upload-quota"),
+        Params.empty,
+        Headers(TrackCoordinatorHeaders.USER -> userUrn.toString)
+      )
+      .map(UserUploadQuotaMapper(_))
+  }
+
   private def buildCreateBody(
       trackAsset: TrackAssetDataCreateRequest,
       trackMetadata: TrackMetadataCreateRequest,
@@ -79,4 +91,8 @@ class TrackCoordinatorClient(service: JsonClient) {
     maybeArtworkMetadata.foreach(artworkMeta => body = body ++ Json.obj("artwork_from_s3" -> Json.toJson(artworkMeta)))
     Json.stringify(body)
   }
+}
+
+object TrackCoordinatorHeaders {
+  val USER = "Sc-User"
 }

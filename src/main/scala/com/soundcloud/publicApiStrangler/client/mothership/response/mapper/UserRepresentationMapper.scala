@@ -6,11 +6,30 @@ import com.soundcloud.publicApiStrangler.client.followcounts.FollowCounts
 import com.soundcloud.publicApiStrangler.client.liebling.UserTotalLikes
 import com.soundcloud.publicApiStrangler.client.mothership.response.representation.{
   CreatorSubscription,
+  Me,
   Product,
   UserRepresentation
 }
-import com.soundcloud.publicApiStrangler.subscriptions.{SubmarineToLegacyMapper, SubmarineCreatorSubscription}
+import com.soundcloud.publicApiStrangler.service.users.UserUploadQuota
+import com.soundcloud.publicApiStrangler.subscriptions.{SubmarineCreatorSubscription, SubmarineToLegacyMapper}
 import play.api.libs.json.{JsObject, JsValue}
+
+object MeMapper {
+  def apply(
+      moshiUserJson: JsValue,
+      userRepresentation: UserRepresentation,
+      maybeQuota: Option[UserUploadQuota] = None
+  ): Me = {
+    Me(
+      userRepresentation = userRepresentation,
+      private_tracks_count = (moshiUserJson \ "private_tracks_count").asOpt[Long],
+      private_playlists_count = (moshiUserJson \ "private_playlists_count").asOpt[Long],
+      primary_email_confirmed = (moshiUserJson \ "primary_email_confirmed").asOpt[Boolean],
+      locale = (moshiUserJson \ "locale").asOpt[String],
+      quota = maybeQuota
+    )
+  }
+}
 
 object UserRepresentationMapper {
 
@@ -46,21 +65,16 @@ object UserRepresentationMapper {
       maybeFollowCounts: Option[Map[Urn, FollowCounts]] = None,
       maybeRepostsCounts: Option[Map[Urn, Long]] = None,
       maybeTotalLikesCounts: Option[Map[Urn, UserTotalLikes]] = None,
-      currentUser: Option[Urn] = None,
+      loggedInUser: Option[Urn] = None,
       maybeSubscriptions: Option[Map[Urn, Option[SubmarineCreatorSubscription]]] = None
   ): UserRepresentation = {
     val urn = (json \ "self" \ "urn").as[Urn]
-    val isCurrentUser = currentUser.contains(urn)
+    val isLoggedInUser = loggedInUser.contains(urn)
     val followCount = maybeFollowCounts.flatMap(_.get(urn))
     val repostCount = maybeRepostsCounts.flatMap(_.get(urn))
     val publicFavoritesCount = maybeTotalLikesCounts.flatMap(_.get(urn))
     val creatorSubscription = maybeSubscriptions.flatMap(_.get(urn)).flatten
     val maybePlan = creatorSubscription.map(SubmarineToLegacyMapper.from(_).planName).orElse(None)
-
-    val privateTracksCount = if (isCurrentUser) (json \ "private_tracks_count").asOpt[Long] else None
-    val privatePlaylissCount = if (isCurrentUser) (json \ "private_playlists_count").asOpt[Long] else None
-    val isPrimaryEmailConfirmed = if (isCurrentUser) (json \ "primary_email_confirmed").asOpt[Boolean] else None
-    val locale = if (isCurrentUser) (json \ "locale").asOpt[String] else None
 
     new UserRepresentation(
       urn = urn,
@@ -87,18 +101,14 @@ object UserRepresentationMapper {
       website = getNameInNetwork(json, "personal", "url"),
       plan = maybePlan.orElse((json \ "plan").asOpt[String]),
       subscriptions = creatorSubscription
-        .map(_ => makeSubscriptions(creatorSubscription, isCurrentUser))
+        .map(_ => makeSubscriptions(creatorSubscription, isLoggedInUser))
         .getOrElse(getMoshiSubscriptions(json)),
       public_favorites_count =
         publicFavoritesCount.map(_.totalLikeCount).orElse((json \ "public_favorites_count").asOpt[Long]),
       public_playlists_count = (json \ "public_playlists_count").asOpt[Int],
       comments_count = (json \ "comments_count").asOpt[Int],
       likes_count = (json \ "public_favorites_count").asOpt[Long],
-      reposts_count = repostCount.orElse((json \ "reposts_count").asOpt[Long]),
-      private_tracks_count = privateTracksCount,
-      private_playlists_count = privatePlaylissCount,
-      primary_email_confirmed = isPrimaryEmailConfirmed,
-      locale = locale
+      reposts_count = repostCount.orElse((json \ "reposts_count").asOpt[Long])
     )
   }
 }

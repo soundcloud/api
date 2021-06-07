@@ -98,6 +98,7 @@ object App {
           forTrackDownloadHandler(handlers.trackDownloadHandler),
           forLikesHandler(handlers.likesHandler),
           forCommentsHandler(handlers.commentsHandler),
+          forMeHandler(handlers.meHandler),
           forDummyHandler()
         )
       )

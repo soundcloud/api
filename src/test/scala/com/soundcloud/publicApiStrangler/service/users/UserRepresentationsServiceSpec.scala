@@ -38,6 +38,7 @@ class UserRepresentationsServiceSpec extends UnitSpecification {
     val okidokiUser = Fixtures.okidokiUsersWithDeprecatedCounts
     val totalLikesCount = UserTotalLikes(user1, 2, 2)
     val submarineSubscription = new SubmarineCreatorSubscriptionsMapper()(Fixtures.submarineCreatorSubscription)
+    val uploadQuota = UserUploadQuota(1, Some(2))
 
     def stubClients() = {
       when(followCountsClient.counts(session, requestedUrns))
@@ -54,7 +55,13 @@ class UserRepresentationsServiceSpec extends UnitSpecification {
     }
 
     val userRepresentationService =
-      new UserRepresentationsService(followCountsClient, repostsClient, okidokiClient, lieblingClient, submarineClient)
+      new UserRepresentationsService(
+        followCountsClient,
+        repostsClient,
+        okidokiClient,
+        lieblingClient,
+        submarineClient
+      )
   }
 
   "#getUsers" >> {
@@ -120,29 +127,6 @@ class UserRepresentationsServiceSpec extends UnitSpecification {
       val result = Await.result(userRepresentationService.getUsers(session, requestedUrns.toSet))
 
       result.head.public_favorites_count ==== Some(0)
-    }
-
-    "returns extra fields on user if it matches the logged-in user" in new Context {
-      override val session = loggedInSession(user1)
-      stubClients()
-
-      val result = Await.result(userRepresentationService.getUsers(session, requestedUrns.toSet))
-
-      result.head.private_tracks_count ==== Some(28)
-      result.head.private_playlists_count ==== Some(2)
-      result.head.primary_email_confirmed ==== Some(true)
-      result.head.locale ==== Some("en_GB")
-    }
-
-    "does not return extra fields on user if it does not match the logged-in user" in new Context {
-      stubClients()
-
-      val result = Await.result(userRepresentationService.getUsers(session, requestedUrns.toSet))
-
-      result.head.private_tracks_count ==== None
-      result.head.private_playlists_count ==== None
-      result.head.primary_email_confirmed ==== None
-      result.head.locale ==== None
     }
   }
 }

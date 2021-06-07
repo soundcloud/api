@@ -43,6 +43,7 @@ object Fixtures {
   lazy val followsAgeUnknownError = contentsOf("follows", "follow_failed_age_unknown")
 
   lazy val trackCoordinatorTrack = contentsOf("track-coordinator", "track")
+  lazy val trackCoordinatorUploadQuota = contentsOf("track-coordinator", "upload-quota")
   lazy val trackCoordinatorTrackInPublicApiFormat =
     contentsOf("track-coordinator", "coordinator-track-in-public-api-format")
 
