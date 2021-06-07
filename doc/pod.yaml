@@ -2,6 +2,9 @@ containers:
 - name: {{ component }}
   image: {{ image }}
   command: {{ cmd }}
+  env:
+  - name: ZONE
+    value: "{{ zone }}"
   ports:
   - name: http
     containerPort: 80

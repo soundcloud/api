@@ -3,6 +3,8 @@ containers:
   image: "{{ image }}"
   command: {{ cmd }}
   env:
+  - name: ZONE
+    value: "{{ zone }}"
   - name: PORT
     value: "80"
   - name: TELE_PORT
