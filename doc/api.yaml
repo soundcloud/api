@@ -114,7 +114,7 @@ paths:
         - AuthHeader: [ ]
       responses:
         200:
-          $ref: '#/components/responses/LegacyLoggedInUser'
+          $ref: '#/components/responses/Me'
         401:
           $ref: '#/components/responses/Unauthorized'
   /me/activities:
@@ -1136,6 +1136,8 @@ components:
               type: string
     User:
       $ref: './components/schemas/User.yaml'
+    Me:
+      $ref: './components/schemas/Me.yaml'
     LegacyUser:
       $ref: './components/schemas/LegacyUser.yaml'
     LegacyLoggedInUser:

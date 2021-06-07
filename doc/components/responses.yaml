@@ -119,6 +119,12 @@ User:
       examples:
         default:
           $ref: "#/components/examples/User"
+Me:
+  description: Success
+  content:
+    application/json; charset=utf-8:
+      schema:
+        $ref: '#/components/schemas/Me'
 LegacyUser:
   description: Success
   content:
