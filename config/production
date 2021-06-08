@@ -55,6 +55,7 @@ LIEBLING_SRV_RECORD="dnssrv!http.web.prod.liebling.srv.${ZONE}.s-cloud.net."
 SYSTEM_PLAYLISTS_SRV_RECORD="dnssrv!http.api.prod.system-playlists.srv.${ZONE}.s-cloud.net."
 
 TRACK_COORDINATOR_SRV_RECORD="dnssrv!http.coordinator.prod.tracks.srv.db.s-cloud.net."
+TRACK_COORDINATOR_CLIENT_REQUEST_TIMEOUT_MILLIS=2000
 
 RATELIMIT_MAX_CONN="999999"
 
@@ -75,6 +76,8 @@ AUTHENTICATOR_CLIENT_FAILURE_ACCRUAL_MARK_DEAD_FOR_MILLIS="100"
 TRACKMETADATA_SRV_RECORD=dnssrv!http.api.prod.trackmetadata.srv.${ZONE}.s-cloud.net.
 
 TRACKS_SRV_RECORD=dnssrv!http.api.prod.tracks.srv.${ZONE}.s-cloud.net.
+TRACKS_CLIENT_REQUEST_TIMEOUT_MILLIS=2000
+TRACKS_CLIENT_MAX_RESPONSE_SIZE_MB=10
 
 MEDIA_SERVICE_SRV_RECORD=dnssrv!http.api.prod.media-service.srv.${ZONE}.s-cloud.net.
 
