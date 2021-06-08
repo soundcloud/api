@@ -86,12 +86,20 @@ class Handlers(
   val likesHandler = new LikesHandler(userAuthentication, likesService)
 
   val tokenExchangeRequestMapper = new TokenExchangeRequestParser(new RailsLikeParamsParser())
+  val authenticatorClientIdList = Set(
+    // soundcloud:applications:314313
+    "k4jhTn0YjXgL7snEdrgFhbhOy2hGtzLl",
+    "joXqgfEHKHJE7uZkByzPnU0C83ZDFOWC", // with redirect_uri
+    "b4swATLVu3JSqIKF6HyGHC0u9WKGVCF4" // revoked client_id
+  )
   val tokenExchangeHandler =
     new TokenExchangeHandler(
       mothershipDispatcher.dispatchUnauthenticated,
       telemetry,
       tokenExchangeRequestMapper.parse,
-      new AuthorizationService(clients.authorizationClient, exceptionCollector)
+      new AuthorizationService(clients.authorizationClient, exceptionCollector),
+      oauthGrantExchangeService,
+      authenticatorClientIdList
     )
 
   val commentsHandler = new CommentsHandler(userAuthentication, commentsService)

@@ -35,7 +35,7 @@ class TokenExchangeRequestParser(railsLikeParamsParser: RailsLikeParamsParser) {
         val grantOpt = for {
           username <- getNonBlank(params, "username")
           password <- getNonBlank(params, "password")
-        } yield PasswordGrant(username, password, Set.empty)
+        } yield PasswordGrant(username, password, getScope(params))
         grantOpt.toRight(InvalidGrant(PasswordGrant.Name))
 
       case Some(RefreshTokenGrant.Name) =>
@@ -45,13 +45,21 @@ class TokenExchangeRequestParser(railsLikeParamsParser: RailsLikeParamsParser) {
         grantOpt.toRight(InvalidGrant(RefreshTokenGrant.Name))
 
       case Some(ClientCredentialsGrant.Name) =>
-        Right(ClientCredentialsGrant(Set.empty))
+        Right(ClientCredentialsGrant(getScope(params)))
 
       case Some(other) => Left(UnsupportedGrantType(other))
 
       case None =>
         Left(InvalidRequest("missing_grant_type"))
     }
+
+  private def getScope(values: Map[String, String]): Set[String] = {
+    getNonBlank(values, "scope")
+      .getOrElse("")
+      .split(" ")
+      .filter(_.nonEmpty)
+      .toSet
+  }
 
   private def readContext(request: HandlerRequest): Either[TokenExchangeRequestError, RequestContext] =
     (request.remoteIp(), request.headerMap.get("User-Agent").getOrElse("")) match {

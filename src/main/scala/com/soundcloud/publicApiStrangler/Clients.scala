@@ -31,6 +31,7 @@ import com.soundcloud.publicApiStrangler.client.trackmetadata.TrackmetadataClien
 import com.soundcloud.publicApiStrangler.service._
 import com.soundcloud.publicApiStrangler.service.comments.CommentService
 import com.soundcloud.publicApiStrangler.service.media.{StreamService, TrackAccessRecorderService}
+import com.soundcloud.publicApiStrangler.service.oauth.TokenExchangeService
 import com.soundcloud.publicApiStrangler.service.trackrepresentation.{TrackRepresentationsService, TrackUpdateService}
 import com.soundcloud.publicApiStrangler.service.tracks.VisibleTrackMapper
 import com.soundcloud.publicApiStrangler.service.users.{MeService, UserRepresentationsService}
@@ -39,6 +40,7 @@ import com.twitter.finagle.Service
 import com.twitter.finagle.http.{Request, Response}
 import com.twitter.finagle.service.RetryPolicy.RetryableWriteException
 import com.twitter.util.{Throw, Try}
+import proto.soundcloud.authenticator.access_grant_exchange.AccessGrantExchangeClientProtobuf
 import proto.soundcloud.authenticator.oauth.AuthorizationClientProtobuf
 import proto.soundcloud.playlists.api.PlaylistsClientProtobuf
 import proto.soundcloud.tracks.api.{
@@ -214,4 +216,12 @@ class Clients(
   private val authorizationHttpClient = HttpClient[String](authorizationConfig, telemetry)
   private val authorizationTelemetry = ClientTelemetry.from(authorizationConfig, telemetry)
   val authorizationClient = new AuthorizationClientProtobuf(authorizationHttpClient.httpService, authorizationTelemetry)
+
+  private val oauthGrantExchangeClient = TwirpClient(
+    ResourceName("oauth_authorization"),
+    config,
+    telemetry,
+    new AccessGrantExchangeClientProtobuf(_, _)
+  )
+  val oauthGrantExchangeService = new TokenExchangeService(oauthGrantExchangeClient)
 }
