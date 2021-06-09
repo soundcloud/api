@@ -55,7 +55,7 @@ class TokenExchangeService(accessGrantExchangeService: proto.AccessGrantExchange
         value match {
           case AccessGrantExchangeError.INVALID_CLIENT => NotAuthorized("invalid_client").bad
           case AccessGrantExchangeError.INVALID_GRANT => NotValid("invalid_grant").bad
-          case AccessGrantExchangeError.INVALID_SCOPE => NotAuthorized("invalid_grant").bad
+          case AccessGrantExchangeError.INVALID_SCOPE => NotValid("invalid_scope").bad
           case proto.AccessGrantExchangeResponse.Error.Unrecognized(unrecognizedValue) =>
             throw new IllegalArgumentException(
               s"Unrecognised response from authenticator proto client: $unrecognizedValue"

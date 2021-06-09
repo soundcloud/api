@@ -202,7 +202,7 @@ class TokenExchangeServiceSpec extends UnitSpecification {
           )
         val ctx = ctxFactory(response)
 
-        ctx.result ==== NotAuthorized("invalid_grant").bad
+        ctx.result ==== NotValid("invalid_scope").bad
       }
     }
 
