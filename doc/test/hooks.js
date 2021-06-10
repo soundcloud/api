@@ -6,9 +6,7 @@ var responseStash = {};
 var skipDeprecatedTransactionIds = [
     "GET (200) /users/948745750/followings/25219981",
     "GET (200) /users/948745750/followers/743372812",
-    "GET (200) /tracks/463532259/favoriters/948745750",
     "GET (200) /me/followers/743372812",
-    "GET (200) /me/tracks/308946187",
     "GET (200) /me/followings/948745750"
 ];
 var skipTransactionIds = [
@@ -59,10 +57,6 @@ hooks.beforeEach((transaction, done) => {
 
     if (replacePlaylistIdTransactionIds.includes(transaction.id)) {
         replaceId(transaction, '10', responseStash.playlist_id);
-    }
-
-    if (transaction.id == "POST (200) /likes/playlists/1212781357") {
-        replaceId(transaction, '1212781357', '1168654222');
     }
 
     if (transaction.id == "PUT (200) /me/followings/743372812") {

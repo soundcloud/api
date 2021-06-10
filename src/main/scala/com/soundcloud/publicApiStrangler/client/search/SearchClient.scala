@@ -73,7 +73,8 @@ class SearchClient(jsonClient: JsonClient) {
         response.status match {
           case Status.Ok => Json.parse(response.contentString).as[SearchResponse].good
           case Status.BadRequest => NotValid("invalid request").bad
-          case _ => throw new RuntimeException(response.toString)
+          case Status.NotFound | Status.Unauthorized => NotFound().bad
+          case _ => HttpServiceError(HttpResponseFields(response.statusCode)).bad
         }
       }
       .outcomeF

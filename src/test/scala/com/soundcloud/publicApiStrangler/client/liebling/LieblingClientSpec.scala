@@ -2,11 +2,13 @@ package com.soundcloud.publicApiStrangler.client.liebling
 
 import com.soundcloud.jvmkit.module.http.client.{JsonClient, Params}
 import com.soundcloud.jvmkit.module.json.play.UrnFormat._
+import com.soundcloud.jvmkit.module.outcome.Good
 import com.soundcloud.jvmkit.module.telemetry.Telemetry
 import com.soundcloud.jvmkit.module.telemetry.exceptions.ExceptionCollector
 import com.soundcloud.jvmkit.module.util.http.Headers
 import com.soundcloud.jvmkit.module.util.session.UserSessionBuilder
 import com.soundcloud.jvmkit.module.util.{Path, Urn}
+import com.soundcloud.publicApiStrangler.service.{CreateLikeResponse, DeleteLikeResponse}
 import com.soundcloud.publicApiStrangler.test.Helpers._
 import com.soundcloud.publicApiStrangler.test.UnitSpecification
 import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures._
@@ -76,7 +78,7 @@ class LieblingClientSpec extends UnitSpecification {
       })
 
       val actual = Await.result(client.createPlaylistLike(session, playlistUrn))
-      actual ==== LikeCreated
+      actual ==== Good(CreateLikeResponse())
     }
   }
 
@@ -101,7 +103,7 @@ class LieblingClientSpec extends UnitSpecification {
       })
 
       val actual = Await.result(client.deletePlaylistLike(session, playlistUrn))
-      actual must beAnInstanceOf[DeleteLikeResponse]
+      actual ==== Good(DeleteLikeResponse())
     }
   }
 

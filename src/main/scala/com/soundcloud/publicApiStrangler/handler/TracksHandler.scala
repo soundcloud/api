@@ -199,7 +199,7 @@ class TracksHandler(
         handleCreateTrackResponseFromService(createdTrack)
       case (None, _) => invalidAssetDataResponse
       case (_, Bad(NotValid(errors))) => Future.value(ErrorResponse.badRequest(errors.head))
-      case _ => throw new UnhandledOutcomeException
+      case _ => Future.value(ErrorResponse(Status.InternalServerError))
     }
   }
 

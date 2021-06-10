@@ -1,24 +1,21 @@
 package com.soundcloud.publicApiStrangler.service
 
+import com.soundcloud.jvmkit.module.outcome.{ApplicationError, GoodOps, Outcome}
+import com.soundcloud.jvmkit.module.twirp.proto.UserSessionOps._
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.publicApiStrangler.client.liebling._
 import com.soundcloud.publicApiStrangler.client.tracks.TrackRequest
+import com.soundcloud.publicApiStrangler.handler.support.requestParser.AccessParams
 import com.soundcloud.publicApiStrangler.service.pagination.CursorBasedPagination
 import com.soundcloud.publicApiStrangler.service.representation.collection.Collection
 import com.soundcloud.publicApiStrangler.service.trackrepresentation.{TrackRepresentation, TrackRepresentationsService}
+import com.soundcloud.twinagle.TwinagleException
 import com.twitter.util.Future
 import proto.soundcloud.tracks.api.{LikeTrackRequest, LikesClientProtobuf}
-import com.soundcloud.twinagle.{ErrorCode, TwinagleException}
-import com.soundcloud.jvmkit.module.twirp.proto.UserSessionOps._
-import com.soundcloud.publicApiStrangler.handler.support.requestParser.AccessParams
 
-sealed trait CreateResponse
-case object OkCreateResponse extends CreateResponse
-case object OkCreatedCreateResponse extends CreateResponse
-case object NotAuthorizedCreateResponse extends CreateResponse
-case object NotFoundCreateResponse extends CreateResponse
-case object SpamBlockedCreateResponse extends CreateResponse
+case class CreateLikeResponse()
+case class DeleteLikeResponse()
 
 class LikesService(
     trackRepresentationsService: TrackRepresentationsService,
@@ -29,46 +26,35 @@ class LikesService(
   def createTrackLike(
       session: UserSession,
       urn: Urn
-  ): Future[CreateResponse] = {
+  ): Future[Outcome[CreateLikeResponse]] = {
     val request = LikeTrackRequest(userSession = Some(session.asProtoSession), trackUrn = urn.toString)
 
     likesTwirpClient
       .likeTrack(request)
-      .map(_ => OkCreateResponse)
+      .map(_ => CreateLikeResponse().good)
       .handle {
-        case TwinagleException(ErrorCode.NotFound, _, _, _) => NotFoundCreateResponse
-        case TwinagleException(ErrorCode.PermissionDenied, _, _, _) => NotAuthorizedCreateResponse
-        case TwinagleException(ErrorCode.ResourceExhausted, _, _, _) => SpamBlockedCreateResponse
-        case TwinagleException(_, msg, _, _) => throw new RuntimeException(s"unexpected response from tracks: ${msg}")
+        case e @ TwinagleException(_, _, _, _) => ApplicationError.fromTwinagleException(e).bad
       }
   }
 
-  def deleteTrackLike(session: UserSession, urn: Urn): Future[DeleteLikeResponse] = {
+  def deleteTrackLike(session: UserSession, urn: Urn): Future[Outcome[DeleteLikeResponse]] = {
     val request = LikeTrackRequest(userSession = Some(session.asProtoSession), trackUrn = urn.toString)
 
     likesTwirpClient
       .unlikeTrack(request)
-      .map(_ => LikeDeleted)
+      .map(_ => DeleteLikeResponse().good)
       .handle {
-        case TwinagleException(ErrorCode.NotFound, _, _, _) => LikeNotFound
-        case TwinagleException(_, msg, _, _) => throw new RuntimeException(s"unexpected response from tracks: ${msg}")
+        case e @ TwinagleException(_, _, _, _) => ApplicationError.fromTwinagleException(e).bad
       }
   }
 
   def createPlaylistLike(
       session: UserSession,
       urn: Urn
-  ) = {
-    lieblingClient.createPlaylistLike(session, urn).map {
-      case LikeCreated => OkCreatedCreateResponse
-      case LikeAlreadyExists => OkCreateResponse
-      case UserBlocked => NotAuthorizedCreateResponse
-      case UserHasSpamWarning => SpamBlockedCreateResponse
-      case _ => NotFoundCreateResponse
-    }
-  }
+  ): Future[Outcome[CreateLikeResponse]] =
+    lieblingClient.createPlaylistLike(session, urn)
 
-  def deletePlaylistLike(session: UserSession, urn: Urn): Future[DeleteLikeResponse] =
+  def deletePlaylistLike(session: UserSession, urn: Urn): Future[Outcome[DeleteLikeResponse]] =
     lieblingClient.deletePlaylistLike(session, urn)
 
   def userTrackLikeForUrn(

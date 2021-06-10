@@ -1,7 +1,6 @@
 package com.soundcloud.publicApiStrangler.client.trackcoordinator.mapper
 
 import com.soundcloud.jvmkit.module.outcome._
-import com.soundcloud.publicApiStrangler.client.support.UnhandledResponseException
 import com.soundcloud.publicApiStrangler.client.trackcoordinator.UserUploadQuotaMapper
 import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures.trackCoordinatorUploadQuota
 import com.twitter.finagle.http.{Response, Status}
@@ -18,10 +17,9 @@ class UserUploadQuotaMapperSpec extends Specification {
 
       val result = UserUploadQuotaMapper(response)
       result match {
-        case Good(quota) => {
+        case Good(quota) =>
           quota.seconds_used ==== 196
           quota.seconds_limit ==== Some(21600)
-        }
         case _ => ko
       }
     }
@@ -67,16 +65,20 @@ class UserUploadQuotaMapperSpec extends Specification {
         case _ => ko
       }
     }
-  }
 
-  "on unhandled response" >> {
-    "throws unhandled exception" in new Scope {
+    "returns internal error if unhandled exception" in new Scope {
       val errorResponse = """{"code":500,"message": "internal server error"}""".trim
 
       val response = Response.apply(Status.InternalServerError)
       response.setContentString(errorResponse)
 
-      UserUploadQuotaMapper(response) must throwA[UnhandledResponseException]
+      val result = UserUploadQuotaMapper(response)
+
+      result match {
+        case Bad(HttpServiceError(responseFields)) => responseFields.statusCode mustEqual 500
+        case _ => ko
+      }
     }
   }
+
 }

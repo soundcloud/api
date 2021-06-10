@@ -1,14 +1,25 @@
 package com.soundcloud.publicApiStrangler.client.liebling
 
 import com.soundcloud.jvmkit.module.http.client.{JsonClient, Params}
-import com.soundcloud.jvmkit.module.util.http.Headers
-import com.soundcloud.jvmkit.module.util.{Path, Urn}
-import com.soundcloud.jvmkit.module.util.logging.SoundCloudLoggerFactory
-import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.jvmkit.module.json.play.UrnFormat._
+import com.soundcloud.jvmkit.module.outcome.{
+  GoodOps,
+  HttpResponseFields,
+  HttpServiceError,
+  NotAllowed,
+  NotFound,
+  NotValid,
+  Outcome
+}
 import com.soundcloud.jvmkit.module.telemetry.exceptions.ExceptionCollector
 import com.soundcloud.jvmkit.module.telemetry.exceptions.ExceptionHandler._
+import com.soundcloud.jvmkit.module.util.http.Headers
+import com.soundcloud.jvmkit.module.util.logging.SoundCloudLoggerFactory
+import com.soundcloud.jvmkit.module.util.session.UserSession
+import com.soundcloud.jvmkit.module.util.{Path, Urn}
 import com.soundcloud.publicApiStrangler.client.support.{FetchClient, ResponseHandlers}
+import com.soundcloud.publicApiStrangler.service.{CreateLikeResponse, DeleteLikeResponse}
+import com.twitter.finagle.http.Status
 import com.twitter.util.Future
 import play.api.libs.json.{JsObject, Json, Reads, Writes}
 
@@ -23,20 +34,46 @@ class LieblingClient(jsonClient: JsonClient, exceptionCollector: ExceptionCollec
   /**
     * @see https://github.com/soundcloud/liebling/tree/master/doc#like-a-playlist
     */
-  def createPlaylistLike(session: UserSession, playlist: Urn): Future[CreateLikeResponse] =
-    createLike(
-      session,
-      Path() / "playlists" / playlist.toString / "likes"
-    )
+  def createPlaylistLike(session: UserSession, playlist: Urn): Future[Outcome[CreateLikeResponse]] =
+    jsonClient
+      .postWithSession(
+        session,
+        Path() / "playlists" / playlist.toString / "likes",
+        Params.empty,
+        Headers.empty,
+        jsonBody(session)
+      )
+      .map(response =>
+        response.status match {
+          case Status.Ok | Status.Created => CreateLikeResponse().good
+          case Status.Forbidden => NotAllowed().bad
+          case Status.NotFound => NotFound().bad
+          case Status.UnprocessableEntity => NotValid(response.contentString).bad
+          case Status.TooManyRequests => HttpServiceError(HttpResponseFields(response.statusCode)).bad
+          case Status(_) => NotFound().bad
+        }
+      )
 
   /**
     * @see https://github.com/soundcloud/liebling/tree/master/doc#unlike-a-playlist
     */
-  def deletePlaylistLike(session: UserSession, playlist: Urn): Future[DeleteLikeResponse] =
-    deleteLike(
-      session,
-      Path() / "playlists" / playlist.toString / "likes"
-    )
+  def deletePlaylistLike(session: UserSession, playlist: Urn): Future[Outcome[DeleteLikeResponse]] =
+    jsonClient
+      .deleteWithSession(
+        session,
+        Path() / "playlists" / playlist.toString / "likes",
+        Params.empty,
+        Headers.empty,
+        jsonBody(session)
+      )
+      .map(response =>
+        response.status match {
+          case Status.Ok => DeleteLikeResponse().good
+          case Status.NotFound | Status.Unauthorized => NotFound().bad
+          case Status.BadRequest => NotValid(response.contentString).bad
+          case _ => HttpServiceError(HttpResponseFields(response.statusCode)).bad
+        }
+      )
 
   def likeCounts(session: UserSession, targetUrns: Seq[Urn]): Future[List[LikesCount]] =
     inBatches(targetUrns.toList, 50) { urns =>
@@ -163,28 +200,6 @@ class LieblingClient(jsonClient: JsonClient, exceptionCollector: ExceptionCollec
     Map("page_size" -> pageSize.toString) ++
       cursor.map(c => Map("cursor" -> c)).getOrElse(Map.empty) ++
       urns.headOption.map(_ => Map("urns" -> urns.map(_.toString).mkString(","))).getOrElse(Map.empty)
-
-  private def createLike(session: UserSession, path: Path): Future[CreateLikeResponse] =
-    jsonClient
-      .postWithSession(
-        session,
-        path,
-        Params.empty,
-        Headers.empty,
-        jsonBody(session)
-      )
-      .map(CreateLikeResponseMapper(_))
-
-  private def deleteLike(session: UserSession, path: Path): Future[DeleteLikeResponse] =
-    jsonClient
-      .deleteWithSession(
-        session,
-        path,
-        Params.empty,
-        Headers.empty,
-        jsonBody(session)
-      )
-      .map(DeleteLikeResponseMapper(_))
 
   private def jsonBody(session: UserSession): Option[String] = {
     Some(Json.obj("user_urn" -> session.getUser.toString).toString)

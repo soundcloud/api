@@ -5,12 +5,11 @@ import com.soundcloud.jvmkit.module.outcome._
 import com.soundcloud.jvmkit.module.util.http.Headers
 import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.jvmkit.module.util.{Path, Urn}
-import com.soundcloud.publicApiStrangler.client.support.UnhandledResponseException
+import com.soundcloud.publicApiStrangler.service.pagination.OffsetBasedPagination
 import com.twitter.finagle.http.Status
 import com.twitter.util.Future
 import play.api.libs.json.Json
 import com.soundcloud.jvmkit.module.json.play.UrnFormat._
-import com.soundcloud.publicApiStrangler.service.pagination.OffsetBasedPagination
 
 case class MoshimoshiCommentsSelf(urn: Urn)
 object MoshimoshiCommentsSelf {
@@ -60,7 +59,7 @@ class MoshimoshiCommentsClient(service: JsonClient) {
           case Status.Ok => Json.parse(response.contentString).as[MoshimoshiCommentsPagedResponse].good
           case Status.NotFound => NotFound().bad
           case Status.BadRequest => NotValid(response.contentString).bad
-          case _ => throw UnhandledResponseException(response)
+          case _ => HttpServiceError(HttpResponseFields(response.statusCode)).bad
         }
       }
   }

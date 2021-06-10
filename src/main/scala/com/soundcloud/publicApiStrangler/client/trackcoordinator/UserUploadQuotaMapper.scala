@@ -1,7 +1,6 @@
 package com.soundcloud.publicApiStrangler.client.trackcoordinator
 
-import com.soundcloud.jvmkit.module.outcome.{GoodOps, NotFound, NotValid, Outcome}
-import com.soundcloud.publicApiStrangler.client.support.UnhandledResponseException
+import com.soundcloud.jvmkit.module.outcome.{GoodOps, HttpResponseFields, HttpServiceError, NotFound, NotValid, Outcome}
 import com.soundcloud.publicApiStrangler.client.trackcoordinator.mapper.TrackCoordinatorError
 import com.soundcloud.publicApiStrangler.service.users.UserUploadQuota
 import com.twitter.finagle.http.{Response, Status}
@@ -12,10 +11,9 @@ object UserUploadQuotaMapper {
     response.status match {
       case Status.Ok => (Json.parse(response.contentString) \ "upload_duration").as[UserUploadQuota].good
       case Status.NotFound | Status.Unauthorized => NotFound().bad
-      case Status.BadRequest => {
+      case Status.BadRequest =>
         NotValid(TrackCoordinatorError.extractTrackCoordinatorErrorMessage(response.contentString)).bad
-      }
-      case _ => throw UnhandledResponseException(response)
+      case _ => HttpServiceError(HttpResponseFields(response.statusCode)).bad
     }
   }
 }

@@ -4,7 +4,6 @@ import com.soundcloud.jvmkit.module.bff.session.UserAuthentication
 import com.soundcloud.jvmkit.module.http.server.{HandlerRequest, JsonResponseBuilder}
 import com.soundcloud.jvmkit.module.outcome._
 import com.soundcloud.jvmkit.module.util.session.UserSession
-import com.soundcloud.publicApiStrangler.client.liebling.{LikeDeleted, LikeNotFound}
 import com.soundcloud.publicApiStrangler.handler.representation.collection.CollectionResponse
 import com.soundcloud.publicApiStrangler.handler.support.requestParser.{AccessParams, AccessParamsExtractor}
 import com.soundcloud.publicApiStrangler.service._
@@ -13,6 +12,7 @@ import com.soundcloud.publicApiStrangler.support.ErrorResponse
 import com.soundcloud.publicApiStrangler.support.PlaylistUrnUtil.getPlaylistUrn
 import com.soundcloud.publicApiStrangler.support.TrackUrnUtil.getTrackUrn
 import com.soundcloud.publicApiStrangler.support.UserUrnUtil.getUserUrn
+import com.soundcloud.twinagle.{ErrorCode, TwinagleException}
 import com.twitter.finagle.http.{Response, Status}
 import com.twitter.util.{Future, Return, Throw, Try}
 import play.api.libs.json.Json
@@ -24,10 +24,12 @@ class LikesHandler(userAuthentication: UserAuthentication, likesService: LikesSe
       Try(getTrackUrn(req)) match {
         case Return(urn) =>
           likesService.createTrackLike(session, urn).map {
-            case OkCreateResponse | OkCreatedCreateResponse => JsonResponseBuilder.ok(requestBodyForStatus(Status.Ok))
-            case NotAuthorizedCreateResponse => ErrorResponse(Status.Unauthorized)
-            case NotFoundCreateResponse => ErrorResponse.notFound()
-            case SpamBlockedCreateResponse => ErrorResponse(Status.TooManyRequests)
+            case Good(_) => JsonResponseBuilder.ok(requestBodyForStatus(Status.Ok))
+            case Bad(NotAuthorized(_)) => ErrorResponse(Status.Unauthorized)
+            case Bad(NotFound(_)) => ErrorResponse.notFound()
+            case Bad(UnexpectedError(TwinagleException(ErrorCode.ResourceExhausted, _, _, _))) =>
+              ErrorResponse(Status.TooManyRequests)
+            case _ => ErrorResponse(Status.InternalServerError)
           }
         case _ => Future.value(ErrorResponse.badRequest())
       }
@@ -39,8 +41,10 @@ class LikesHandler(userAuthentication: UserAuthentication, likesService: LikesSe
       Try(getTrackUrn(req)) match {
         case Return(urn) =>
           likesService.deleteTrackLike(session, urn).map {
-            case LikeDeleted => JsonResponseBuilder.ok(requestBodyForStatus(Status.Ok))
-            case LikeNotFound => ErrorResponse.notFound()
+            case Good(_) => JsonResponseBuilder.ok(requestBodyForStatus(Status.Ok))
+            case Bad(NotFound(_)) => ErrorResponse.notFound()
+            case Bad(NotValid(_)) => ErrorResponse.badRequest()
+            case _ => ErrorResponse(Status.InternalServerError)
           }
         case _ => Future.value(ErrorResponse.badRequest())
       }
@@ -51,11 +55,12 @@ class LikesHandler(userAuthentication: UserAuthentication, likesService: LikesSe
       Try(getPlaylistUrn(req)) match {
         case Return(urn) =>
           likesService.createPlaylistLike(session, urn).map {
-            case OkCreatedCreateResponse => JsonResponseBuilder.created(requestBodyForStatus(Status.Created))
-            case OkCreateResponse => JsonResponseBuilder.ok(requestBodyForStatus(Status.Ok))
-            case NotAuthorizedCreateResponse => ErrorResponse(Status.Unauthorized)
-            case NotFoundCreateResponse => ErrorResponse.notFound()
-            case SpamBlockedCreateResponse => ErrorResponse(Status.TooManyRequests)
+            case Good(_) => JsonResponseBuilder.ok(requestBodyForStatus(Status.Ok))
+            case Bad(NotAuthorized(_)) => ErrorResponse(Status.Unauthorized)
+            case Bad(NotFound(_)) => ErrorResponse.notFound()
+            case Bad(HttpServiceError(HttpResponseFields(Status.TooManyRequests.code, _, _, _))) =>
+              ErrorResponse(Status.TooManyRequests)
+            case _ => ErrorResponse(Status.InternalServerError)
           }
         case _ => Future.value(ErrorResponse.badRequest())
       }
@@ -67,8 +72,10 @@ class LikesHandler(userAuthentication: UserAuthentication, likesService: LikesSe
       Try(getPlaylistUrn(req)) match {
         case Return(urn) =>
           likesService.deletePlaylistLike(session, urn).map {
-            case LikeDeleted => JsonResponseBuilder.ok(requestBodyForStatus(Status.Ok))
-            case LikeNotFound => ErrorResponse.notFound()
+            case Good(_) => JsonResponseBuilder.ok(requestBodyForStatus(Status.Ok))
+            case Bad(NotFound(_)) => ErrorResponse.notFound()
+            case Bad(NotValid(_)) => ErrorResponse.badRequest()
+            case _ => ErrorResponse(Status.InternalServerError)
           }
         case _ => Future.value(ErrorResponse.badRequest())
       }

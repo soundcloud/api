@@ -2,6 +2,8 @@ package com.soundcloud.publicApiStrangler.service.pagination
 
 import com.twitter.finagle.http.{ParamMap, Request}
 
+import scala.util.Try
+
 case class CursorBasedPagination(
     baseUrl: String,
     path: String,
@@ -42,7 +44,7 @@ object CursorBasedPagination extends PaginationHelpers {
     params
       .get(CursorBasedPagination.NormalizedPageSizeParam)
       .orElse(params.get(CursorBasedPagination.AlternativePageSizeParam))
-      .map(_.toInt)
+      .map(size => Try(size.toInt).getOrElse(DefaultPageSize))
       .getOrElse(DefaultPageSize)
   }
 }

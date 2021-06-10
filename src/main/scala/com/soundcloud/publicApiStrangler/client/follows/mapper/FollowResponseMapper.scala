@@ -20,11 +20,11 @@ object FollowResponseMapper {
           case Some("UserAsTarget") => UserAsTarget
           case Some("AgeRestrictedUser") => AgeRestrictedUser
           case Some("AgeUnknownUser") => AgeUnknownUser
-          case _ => unknownError(Status.UnprocessableEntity, data)
+          case _ => unknownError(Status.UnprocessableEntity, response.contentString)
         }
-      case status => unknownError(status, Json.parse(response.contentString))
+      case status => unknownError(status, response.contentString)
     }
 
-  private def unknownError(status: Status, data: JsValue) =
+  private def unknownError(status: Status, data: String) =
     UnknownError(s"Unknown error: $data", status.code)
 }

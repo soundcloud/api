@@ -2,10 +2,9 @@ package com.soundcloud.publicApiStrangler.handler.representation.collection
 
 import com.soundcloud.jvmkit.module.http.server.JsonResponseBuilder
 import com.soundcloud.jvmkit.module.outcome._
-import com.soundcloud.publicApiStrangler.handler.support.error.UnhandledOutcomeException
 import com.soundcloud.publicApiStrangler.service.representation.collection.Collection
 import com.soundcloud.publicApiStrangler.support.ErrorResponse
-import com.twitter.finagle.http.Response
+import com.twitter.finagle.http.{Response, Status}
 import com.twitter.util.Future
 import play.api.libs.json.Writes
 
@@ -25,8 +24,8 @@ object CollectionResponse {
           appendCacheHeaders(response)
 
         case Bad(NotValid(_)) => ErrorResponse.badRequest()
-        case Bad(NotFound(_)) => ErrorResponse.notFound()
-        case _ => throw new UnhandledOutcomeException
+        case Bad(NotFound(_)) | Bad(NotAuthorized(_)) => ErrorResponse.notFound()
+        case _ => ErrorResponse(Status.InternalServerError)
       }
   }
 

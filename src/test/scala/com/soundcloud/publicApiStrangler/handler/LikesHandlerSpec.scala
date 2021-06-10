@@ -2,10 +2,10 @@ package com.soundcloud.publicApiStrangler.handler
 
 import com.soundcloud.jvmkit.module.bff.session.UserAuthentication
 import com.soundcloud.jvmkit.module.bff.testsupport.FakeUserAuthentication
+import com.soundcloud.jvmkit.module.outcome.{GoodOps, HttpResponseFields, HttpServiceError, NotFound, UnexpectedError}
 import com.soundcloud.jvmkit.module.telemetry.Telemetry
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.publicApiStrangler.Routing
-import com.soundcloud.publicApiStrangler.client.liebling.{LikeDeleted, LikeNotFound}
 import com.soundcloud.publicApiStrangler.handler.support.requestParser.AccessParams
 import com.soundcloud.publicApiStrangler.service.pagination.CursorBasedPagination
 import com.soundcloud.publicApiStrangler.service.representation.collection.Collection
@@ -13,13 +13,10 @@ import com.soundcloud.publicApiStrangler.service.trackrepresentation.{
   TrackRepresentation,
   TrackRepresentationSpecContext
 }
-import com.soundcloud.publicApiStrangler.service.{
-  LikesService,
-  OkCreateResponse,
-  OkCreatedCreateResponse,
-  SpamBlockedCreateResponse
-}
+import com.soundcloud.publicApiStrangler.service.{CreateLikeResponse, DeleteLikeResponse, LikesService}
 import com.soundcloud.publicApiStrangler.test.{HandlerSpecificationScope, UnitSpecification}
+import com.soundcloud.twinagle.ErrorCode.ResourceExhausted
+import com.soundcloud.twinagle.TwinagleException
 import com.twitter.finagle.http.{Request, Status}
 import com.twitter.util.Future
 import org.joda.time.DateTimeZone
@@ -136,7 +133,7 @@ class LikesHandlerSpec extends UnitSpecification {
             override def before: Any = {
               super.before
               when(likesService.createTrackLike(session, trackUrn))
-                .thenReturn(Future.value(OkCreateResponse))
+                .thenReturn(Future.value(CreateLikeResponse().good))
             }
           }
 
@@ -167,7 +164,8 @@ class LikesHandlerSpec extends UnitSpecification {
           trait SpamPostTrackLikesContext extends LoggedInPostTrackLikeContext {
             override def before: Any = {
               super.before
-              when(likesService.createTrackLike(session, trackUrn)).thenReturn(Future.value(SpamBlockedCreateResponse))
+              when(likesService.createTrackLike(session, trackUrn))
+                .thenReturn(Future.value(UnexpectedError(TwinagleException(ResourceExhausted, "")).bad))
             }
           }
 
@@ -210,7 +208,7 @@ class LikesHandlerSpec extends UnitSpecification {
             override def before: Any = {
               super.before
               when(likesService.deleteTrackLike(session, trackUrn))
-                .thenReturn(Future.value(LikeNotFound))
+                .thenReturn(Future.value(NotFound().bad))
             }
           }
 
@@ -224,7 +222,7 @@ class LikesHandlerSpec extends UnitSpecification {
             override def before: Any = {
               super.before
               when(likesService.deleteTrackLike(session, trackUrn))
-                .thenReturn(Future.value(LikeDeleted))
+                .thenReturn(Future.value(DeleteLikeResponse().good))
             }
           }
 
@@ -276,38 +274,20 @@ class LikesHandlerSpec extends UnitSpecification {
       "logged in" >> {
         trait LoggedInPostPlaylistLikeContext extends PostPlaylistLikeContext with LoggedInContext
 
-        "when path contains a not liked URN" >> {
-          trait NonLikedUrnContext extends LoggedInPostPlaylistLikeContext {
+        "like a playlist" >> {
+          trait LikedContext extends LoggedInPostPlaylistLikeContext {
             override def before: Any = {
               super.before
               when(likesService.createPlaylistLike(session, playlistUrn))
-                .thenReturn(Future.value(OkCreatedCreateResponse))
+                .thenReturn(Future.value(CreateLikeResponse().good))
             }
           }
 
-          "returns 201" in new NonLikedUrnContext {
-            response.statusCode ==== 201
-          }
-
-          "renders correct body" in new NonLikedUrnContext {
-            Json.parse(response.contentString) ==== Json.obj("status" -> "201 - Created")
-          }
-        }
-
-        "when URN is already liked" >> {
-          trait AlreadyLikedUrnContext extends LoggedInPostPlaylistLikeContext {
-            override def before: Any = {
-              super.before
-              when(likesService.createPlaylistLike(session, playlistUrn))
-                .thenReturn(Future.value(OkCreateResponse))
-            }
-          }
-
-          "returns 200" in new AlreadyLikedUrnContext {
+          "returns 200" in new LikedContext {
             response.statusCode ==== 200
           }
 
-          "renders correct body" in new AlreadyLikedUrnContext {
+          "renders correct body" in new LikedContext {
             Json.parse(response.contentString) ==== Json.obj("status" -> "200 - OK")
           }
         }
@@ -331,7 +311,7 @@ class LikesHandlerSpec extends UnitSpecification {
             override def before: Any = {
               super.before
               when(likesService.createPlaylistLike(session, playlistUrn))
-                .thenReturn(Future.value(SpamBlockedCreateResponse))
+                .thenReturn(Future.value(HttpServiceError(HttpResponseFields(Status.TooManyRequests.code)).bad))
             }
           }
 
@@ -374,7 +354,7 @@ class LikesHandlerSpec extends UnitSpecification {
             override def before: Any = {
               super.before
               when(likesService.deletePlaylistLike(session, playlistUrn))
-                .thenReturn(Future.value(LikeNotFound))
+                .thenReturn(Future.value(NotFound().bad))
             }
           }
 
@@ -388,7 +368,7 @@ class LikesHandlerSpec extends UnitSpecification {
             override def before: Any = {
               super.before
               when(likesService.deletePlaylistLike(session, playlistUrn))
-                .thenReturn(Future.value(LikeDeleted))
+                .thenReturn(Future.value(DeleteLikeResponse().good))
             }
           }
 

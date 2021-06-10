@@ -1,18 +1,12 @@
 package com.soundcloud.publicApiStrangler.client.trackcoordinator
 
 import com.soundcloud.jvmkit.module.http.client.{JsonClient, Params}
+import com.soundcloud.jvmkit.module.outcome._
 import com.soundcloud.jvmkit.module.util.http.Headers
 import com.soundcloud.jvmkit.module.util.session.UserSessionBuilder
 import com.soundcloud.jvmkit.module.util.{Path, Urn}
-import com.soundcloud.jvmkit.module.outcome._
 import com.soundcloud.publicApiStrangler.client.support.UnhandledResponseException
-import com.soundcloud.publicApiStrangler.handler.support.requestParser.{
-  TrackArtworkUpdateResult,
-  TrackAssetDataCreateRequest,
-  TrackAssetDataUpdateRequest,
-  TrackMetadataCreateRequest,
-  TrackMetadataUpdateRequest
-}
+import com.soundcloud.publicApiStrangler.handler.support.requestParser._
 import com.soundcloud.publicApiStrangler.service.users.UserUploadQuota
 import com.soundcloud.publicApiStrangler.test.UnitSpecification
 import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures
@@ -99,11 +93,14 @@ class TrackCoordinatorClientSpec extends UnitSpecification {
             Future(jsonResponse(Status.NotFound, JsNull))
           )
       }
+
       trait ErrorContext extends CreateContext {
         when(jsonClient.postWithSession(session, path, Params.empty, Headers.empty, Some(requestBody)))
           .thenReturn(
             Future(jsonResponse(Status.InternalServerError, Json.obj("400" -> "Invalid Request")))
           )
+
+        val expectedErrorResponse = HttpServiceError(HttpResponseFields(500)).bad
       }
 
       "Successfully creates track metadata" in new SuccessContext {
@@ -142,7 +139,7 @@ class TrackCoordinatorClientSpec extends UnitSpecification {
             trackMetadataCreateRequest,
             Some(trackArtworkMetaResponse)
           )
-        ) must throwAn[UnhandledResponseException]
+        ) mustEqual expectedErrorResponse
       }
     }
 
@@ -188,6 +185,8 @@ class TrackCoordinatorClientSpec extends UnitSpecification {
         ).thenReturn(
           Future(jsonResponse(Status.InternalServerError, Json.obj("400" -> "Invalid Request")))
         )
+
+        val expectedErrorResponse = HttpServiceError(HttpResponseFields(500)).bad
       }
 
       "Successfully creates track audio data" in new SuccessContext {
@@ -226,7 +225,7 @@ class TrackCoordinatorClientSpec extends UnitSpecification {
             trackMetadataCreateRequest,
             Some(trackArtworkMetaResponse)
           )
-        ) must throwAn[UnhandledResponseException]
+        ) mustEqual expectedErrorResponse
       }
     }
   }
@@ -403,6 +402,7 @@ class TrackCoordinatorClientSpec extends UnitSpecification {
         .thenReturn(
           Future(jsonResponse(Status.InternalServerError, Json.obj("400" -> "Invalid Request")))
         )
+      val expectedErrorResponse = HttpServiceError(HttpResponseFields(500)).bad
     }
 
     "Successfully returns upload quota" in new SuccessContext {
@@ -418,7 +418,7 @@ class TrackCoordinatorClientSpec extends UnitSpecification {
     }
 
     "Handles unexpected error" in new ErrorContext {
-      Await.result(client.uploadQuota(session, userUrn)) must throwAn[UnhandledResponseException]
+      Await.result(client.uploadQuota(session, userUrn)) mustEqual expectedErrorResponse
     }
   }
 }

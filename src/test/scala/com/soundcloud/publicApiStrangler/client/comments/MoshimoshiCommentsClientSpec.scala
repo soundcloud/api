@@ -6,7 +6,6 @@ import com.soundcloud.jvmkit.module.outcome._
 import com.soundcloud.jvmkit.module.util.http.Headers
 import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.jvmkit.module.util.{Path, Urn}
-import com.soundcloud.publicApiStrangler.client.support.UnhandledResponseException
 import com.soundcloud.publicApiStrangler.service.pagination._
 import com.soundcloud.publicApiStrangler.test.UnitSpecification
 import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures
@@ -44,9 +43,9 @@ class MoshimoshiCommentsClientSpec extends UnitSpecification {
       Await.result(client.fetchTrackComments(session, track, pagination)) ==== NotValid("").bad
     }
 
-    "Throws unhandled response exception for other non 200 responses" in new Context {
+    "Returns internal error for a unhandled response exception" in new Context {
       stubService(ResponseBuilder.serviceUnavailable())
-      Await.result(client.fetchTrackComments(session, track, pagination)) must throwAn[UnhandledResponseException]
+      Await.result(client.fetchTrackComments(session, track, pagination)) ==== HttpServiceError(HttpResponseFields(503)).bad
     }
 
     trait SuccessContext extends Context {

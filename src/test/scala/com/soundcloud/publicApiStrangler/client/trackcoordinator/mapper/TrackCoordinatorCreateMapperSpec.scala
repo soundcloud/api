@@ -1,12 +1,11 @@
 package com.soundcloud.publicApiStrangler.client.trackcoordinator.mapper
 
 import com.soundcloud.jvmkit.module.outcome._
-import com.soundcloud.publicApiStrangler.client.support.UnhandledResponseException
 import com.soundcloud.publicApiStrangler.client.trackcoordinator.TrackCoordinatorTrack
 import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures.trackCoordinatorTrack
 import com.twitter.finagle.http.{Response, Status}
-import org.specs2.specification.Scope
 import org.specs2.mutable.Specification
+import org.specs2.specification.Scope
 import play.api.libs.json.Json
 
 class TrackCoordinatorCreateMapperSpec extends Specification {
@@ -65,16 +64,20 @@ class TrackCoordinatorCreateMapperSpec extends Specification {
         case _ => ko
       }
     }
-  }
 
-  "on unhandled response" >> {
-    "throws unhandled exception" in new Scope {
+    "returns internal error if unhandled exception" in new Scope {
       val errorResponse = """{"code":500,"message": "internal server error"}""".trim
 
       val response = Response.apply(Status.InternalServerError)
       response.setContentString(errorResponse)
 
-      TrackCoordinatorCreateMapper(response) must throwA[UnhandledResponseException]
+      val result = TrackCoordinatorCreateMapper(response)
+
+      result match {
+        case Bad(HttpServiceError(responseFields)) => responseFields.statusCode mustEqual 500
+        case _ => ko
+      }
     }
   }
+
 }

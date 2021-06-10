@@ -1,6 +1,7 @@
 package com.soundcloud.publicApiStrangler.service
 
 import com.google.protobuf.timestamp.Timestamp
+import com.soundcloud.jvmkit.module.outcome.{GoodOps, NotAllowed, NotFound, UnexpectedError}
 import com.soundcloud.jvmkit.module.twirp.proto.UserSessionOps._
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.publicApiStrangler.client.liebling._
@@ -64,25 +65,25 @@ class LikesServiceSpec extends TrackRepresentationsSpecificationContext {
         )
       )
       val result = Await.result(likesService.createTrackLike(session, trackUrn))
-      result ==== OkCreateResponse
+      result ==== CreateLikeResponse().good
     }
 
     "returns NotFoundCreateResponse when tracks responds with NotFound" in new CreateTrackLike {
       tracksTwinagleClient.likeTrack(request) returns Future.exception(
-        TwinagleException(ErrorCode.NotFound, "Track not found")
+        TwinagleException(ErrorCode.NotFound, "Resource not found")
       )
 
       val result = Await.result(likesService.createTrackLike(session, trackUrn))
-      result ==== NotFoundCreateResponse
+      result ==== NotFound().bad
     }
 
     "returns NotAuthorizedCreateResponse when tracks responds with PermissionDenied" in new CreateTrackLike {
       tracksTwinagleClient.likeTrack(request) returns Future.exception(
-        TwinagleException(ErrorCode.PermissionDenied, "User blocked")
+        TwinagleException(ErrorCode.PermissionDenied, "Operation not allowed")
       )
 
       val result = Await.result(likesService.createTrackLike(session, trackUrn))
-      result ==== NotAuthorizedCreateResponse
+      result ==== NotAllowed().bad
     }
 
     "returns SpamBlockedCreateResponse when tracks responds with ResourceExhausted" in new CreateTrackLike {
@@ -91,7 +92,7 @@ class LikesServiceSpec extends TrackRepresentationsSpecificationContext {
       )
 
       val result = Await.result(likesService.createTrackLike(session, trackUrn))
-      result ==== SpamBlockedCreateResponse
+      result ==== UnexpectedError(TwinagleException(ErrorCode.ResourceExhausted, "Spam alert")).bad
     }
   }
 
@@ -112,113 +113,16 @@ class LikesServiceSpec extends TrackRepresentationsSpecificationContext {
         )
       )
       val result = Await.result(likesService.deleteTrackLike(session, trackUrn))
-      result ==== LikeDeleted
+      result ==== DeleteLikeResponse().good
     }
 
     "returns LikeNotFound when like was not found" in new DeleteTrackLike {
       tracksTwinagleClient.unlikeTrack(request) returns Future.exception(
-        TwinagleException(ErrorCode.NotFound, "Track not found")
+        TwinagleException(ErrorCode.NotFound, "Resource not found")
       )
 
       val result = Await.result(likesService.deleteTrackLike(session, trackUrn))
-      result ==== LikeNotFound
-    }
-  }
-
-  "#createPlaylistLike" >> {
-    trait CreatePlaylistLike extends Context {
-      lazy val itemUrn = Urn("soundcloud", "playlists", "1")
-      val lieblingResult: CreateLikeResponse
-
-      lazy val result = Await.result(likesService.createPlaylistLike(session, itemUrn))
-
-      override def before: Any = {
-        when(lieblingClient.createPlaylistLike(session, itemUrn)).thenReturn(Future.value(lieblingResult))
-      }
-    }
-
-    "#when liebling successfully creates a like" >> {
-      trait LikeAddedContext extends CreatePlaylistLike {
-        override val lieblingResult = LikeCreated
-      }
-
-      "returns an OkCreatedCreateResponse" in new LikeAddedContext {
-        result ==== OkCreatedCreateResponse
-      }
-    }
-
-    "#when like already exists" >> {
-      trait LikeAddedContext extends CreatePlaylistLike {
-        override val lieblingResult = LikeAlreadyExists
-      }
-
-      "returns an OkCreateResponse" in new LikeAddedContext {
-        result ==== OkCreateResponse
-      }
-    }
-
-    "#when user is blocked" >> {
-      trait LikeAddedContext extends CreatePlaylistLike {
-        override val lieblingResult = UserBlocked
-      }
-
-      "returns an NotAuthorizedCreateResponse" in new LikeAddedContext {
-        result ==== NotAuthorizedCreateResponse
-      }
-    }
-
-    "#when request is rate limited" >> {
-      trait LikeAddedContext extends CreatePlaylistLike {
-        override val lieblingResult = UserHasSpamWarning
-      }
-
-      "returns an SpamBlockedCreateResponse" in new LikeAddedContext {
-        result ==== SpamBlockedCreateResponse
-      }
-    }
-
-    "#when something went wrong" >> {
-      trait LikeAddedContext extends CreatePlaylistLike {
-        override val lieblingResult = LikeableNotFound
-      }
-
-      "returns an NotAuthorizedCreateResponse" in new LikeAddedContext {
-        result ==== NotFoundCreateResponse
-      }
-    }
-  }
-
-  "#deletePlaylistLike" >> {
-    trait DeletePlaylistLike extends Context {
-      lazy val itemUrn = Urn("soundcloud", "playlists", "1")
-      lazy val result = Await.result(likesService.deletePlaylistLike(session, itemUrn))
-      val lieblingResult: DeleteLikeResponse
-
-      override def before: Any = {
-        super.before
-
-        when(lieblingClient.deletePlaylistLike(session, itemUrn)).thenReturn(Future.value(lieblingResult))
-      }
-    }
-
-    "#when liebling successfully deletes a like" >> {
-      trait LikeAddedContext extends DeletePlaylistLike {
-        override val lieblingResult = LikeDeleted
-      }
-
-      "returns an LikeDeleted" in new LikeAddedContext {
-        result ==== LikeDeleted
-      }
-    }
-
-    "#when like was not found" >> {
-      trait LikeNotFoundContext extends DeletePlaylistLike {
-        override val lieblingResult = LikeNotFound
-      }
-
-      "returns an LikeNotFound" in new LikeNotFoundContext {
-        result ==== LikeNotFound
-      }
+      result ==== NotFound().bad
     }
   }
 

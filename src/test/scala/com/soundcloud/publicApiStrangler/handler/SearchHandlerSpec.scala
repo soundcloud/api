@@ -111,6 +111,14 @@ class SearchHandlerSpec extends UnitSpecification {
       response.statusCode ==== 400
     }
 
+    "returns 505 when search service returns unknown error" in new Context {
+      when(searchService.searchUsers(anonymousSession, request.params, page))
+        .thenReturn(HttpServiceError(HttpResponseFields(500)).badF)
+
+      val response = get("/users", request.params, Map("Host" -> "localhost"))
+      response.statusCode ==== 500
+    }
+
   }
 
   "/tracks" >> {
