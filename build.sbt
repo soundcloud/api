@@ -1,5 +1,5 @@
-val jvmkitVersion = "15.0.0"
-val specs2Version = "4.9.2"
+val jvmkitVersion = "15.1.0"
+val specs2Version = "4.12.0"
 val httpComponentsVersion = "4.5.12"
 
 lazy val publicApiStrangler = project
