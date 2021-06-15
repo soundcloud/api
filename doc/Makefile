@@ -3,7 +3,7 @@ SYSTEM := $(shell sc manifest name)
 API_SYSTEM := $(shell sc manifest name --manifest=../manifest.json)
 COMPONENT := doc
 
-CRUN = sc crun nodejs-12
+CRUN = sc crun nodejs-lts
 
 .PHONY: run clean package publish promote publish-deploy deploy
 
@@ -41,7 +41,7 @@ package:
 	sc add-files assets
 	sc add-files components
 	sc gen-wrapper-script --target="./run-swagger-ui.sh" --wrapper=$(COMPONENT)
-	sc artifact-manager package --runtime=nodejs-12
+	sc artifact-manager package --runtime=nodejs-lts
 
 publish:
 	sc artifact-manager publish
