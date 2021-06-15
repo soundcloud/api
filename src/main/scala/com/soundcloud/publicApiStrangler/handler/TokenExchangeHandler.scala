@@ -3,6 +3,7 @@ package com.soundcloud.publicApiStrangler.handler
 import com.soundcloud.jvmkit.module.http.server.{Handler, HandlerRequest, ResponseBuilder}
 import com.soundcloud.jvmkit.module.outcome._
 import com.soundcloud.jvmkit.module.telemetry.Telemetry
+import com.soundcloud.jvmkit.module.util.logging.SoundCloudLoggerFactory
 import com.soundcloud.publicApiStrangler.service.oauth.{AuthorizationService, TokenExchangeService}
 import com.soundcloud.publicApiStrangler.support.ErrorResponse
 import com.soundcloud.publicApiStrangler.support.oauth._
@@ -19,11 +20,17 @@ class TokenExchangeHandler(
     authenticatorClientIdList: Set[String]
 ) extends Handler {
 
+  private val logger = SoundCloudLoggerFactory.getLogger(this.getClass)
+
   def apply(request: HandlerRequest): Future[Response] = {
     parseRequest(request) match {
-      case Right(request) if authenticatorClientIdList.contains(request.clientCredential.id) =>
-        dispatchToAuthenticator(request)
-      case parseResult => instrumentedMothershipDispatch(request, parseResult)
+      //authenticatorClientIdList.contains(parsedRequest.clientCredential.id) =>
+      case Right(parsedRequest) if parsedRequest.context.userAgent == "user-auth-test-agent" =>
+        logger.info(s"Original request body looks like: ${request.contentString}")
+        logger.info(s"Parsed request looks like: $parsedRequest")
+        dispatchToAuthenticator(parsedRequest)
+      case parseResult =>
+        instrumentedMothershipDispatch(request, parseResult)
     }
   }
 
