@@ -6,7 +6,6 @@ import com.soundcloud.publicApiStrangler.handler._
 import com.soundcloud.publicApiStrangler.handler.comments.CommentsHandler
 import com.soundcloud.publicApiStrangler.handler.search.SearchHandler
 import com.soundcloud.publicApiStrangler.service.media.DownloadService
-import com.soundcloud.publicApiStrangler.service.oauth.AuthorizationService
 import com.soundcloud.publicApiStrangler.support.oauth.{RailsLikeParamsParser, TokenExchangeRequestParser}
 
 class Handlers(
@@ -86,20 +85,11 @@ class Handlers(
   val likesHandler = new LikesHandler(userAuthentication, likesService)
 
   val tokenExchangeRequestMapper = new TokenExchangeRequestParser(new RailsLikeParamsParser())
-  val authenticatorClientIdList = Set(
-    // soundcloud:applications:314313
-    "k4jhTn0YjXgL7snEdrgFhbhOy2hGtzLl",
-    "joXqgfEHKHJE7uZkByzPnU0C83ZDFOWC", // with redirect_uri
-    "b4swATLVu3JSqIKF6HyGHC0u9WKGVCF4" // revoked client_id
-  )
   val tokenExchangeHandler =
     new TokenExchangeHandler(
-      mothershipDispatcher.dispatchUnauthenticated,
       telemetry,
       tokenExchangeRequestMapper.parse,
-      new AuthorizationService(clients.authorizationClient, exceptionCollector),
-      oauthGrantExchangeService,
-      authenticatorClientIdList
+      oauthGrantExchangeService
     )
 
   val commentsHandler = new CommentsHandler(userAuthentication, commentsService)
