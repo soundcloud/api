@@ -60,6 +60,7 @@ docker-up-%:
 	sc crun -l base-dev -- sc wait http publicapistrangler:5000/-/health
 	sc crun -l base-dev -- sc wait http asset-uploads:5005/-/health
 
+
 end-to-end-test: stop-containers
 	echo "This assumes you've run make package before"
 	CONFIG=e2e VERSION=$(PUBLIC_API_STRANGLER_VERSION) docker-compose -f docker-compose-e2e-tests.yml up -d publicapistrangler
@@ -159,3 +160,7 @@ deploy-prometheus:
 		--rule=https://ent.int.s-cloud.net/prometheus/rules/canary_vs_release.yml \
 		--rule=https://ent.int.s-cloud.net/prometheus/rules/slo.yml \
 		--rule=https://ent.int.s-cloud.net/prometheus/rules/memcached.yml
+
+publish-changelog:
+	git diff-index --exit-code origin/master RELEASE_NOTES.md && echo 'No release notes to publish...' && exit 0; \
+	./scripts/release

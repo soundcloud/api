@@ -4,13 +4,11 @@
 
 The scope of this PR. What is it supposed to do? What is it not supposed to do?
 
-## Implementation
-
-A short description of your implementation approach.
-
-## Comments for reviewers?
-
-Do you have comments that will help reviewing this PR?
+## Checklist
+If you are introducing API changes (adding/removing/renaming/deprecating fields or endpoints, introducing new user-facing logic):
+- [ ] update documentation
+- [ ] ensure contract tests cover your changes
+- [ ] create release notes ([check README](./../README.md#Release notes))
 
 ---
 

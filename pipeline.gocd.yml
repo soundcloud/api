@@ -126,6 +126,14 @@ pipelines:
                 - promote
                 - deploy
                 working_directory: doc
+    - publish-release:
+        jobs:
+          publish-release:
+            tasks:
+            - exec:
+                command: make
+                arguments:
+                - publish-changelog
     - deploy-prometheus:
         approval: manual
         jobs:

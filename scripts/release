@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+
+  hub api \
+    -X POST \
+    -H "Accept: application/vnd.github.v3+json" \
+    /repos/{owner}/api/releases \
+    -F tag_name=$(date "+%Y-%m-%d") \
+    -F name=$(date "+%Y-%m-%d") \
+    -F body=@RELEASE_NOTES.md
+

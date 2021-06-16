@@ -48,3 +48,16 @@ or for the production system.
 ```
 sc crun --interactive base-dev sh access-grant-exchange-acceptance-tests/test-suite.sh
 ```
+
+## Release notes
+
+Release Notes are posted to our public repo soundcloud/api to keep users up-to-date.
+
+In case you are introducing breaking changes or changes worth mentioning to the users please:
+* fill in the [RELEASE_NOTES.md](RELEASE_NOTES.md) to generate a release with a current changelog. 
+
+**IMPORTANT**: If your PR is a part of a bigger epic, please create a release for the latest PR only and include all the relevant info.
+
+Note: Markdown formatting is preserved. Check the previous [releases](https://github.com/soundcloud/api/releases). 
+
+For any questions reach out to #integrations-team.
