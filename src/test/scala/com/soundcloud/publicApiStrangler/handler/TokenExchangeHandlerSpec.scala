@@ -35,20 +35,32 @@ class TokenExchangeHandlerSpec extends UnitSpecification with DataTables {
 
     val handler =
       new TokenExchangeHandler(
+        dispatchToMothershipHandler,
         telemetry,
         _ => tokenExchangeRequestParseResult,
-        tokenExchangeService
+        authorizationService,
+        tokenExchangeService,
+        authenticatorClientIdList
       )
 
-    def getBadRequestCount(errorValue: String): Double = {
+    def getGrantTypeCount(grantTypeValue: String, responseStatusValue: String, isValidValue: String): Double = {
       telemetry
         .getSampleValue(
-          "oauth_grant_exchange_bad_request_total",
-          Array("reason"),
-          Array(errorValue)
+          "oauth_token_exchange_grant_type_total",
+          Array("grant_type", "response_status", "is_valid"),
+          Array(grantTypeValue, responseStatusValue, isValidValue)
         )
-        .getOrElse(0.0)
-        .toInt
+        .get
+    }
+
+    def getRequestErrorCount(errorValue: String, reasonValue: String, responseStatusValue: String): Double = {
+      telemetry
+        .getSampleValue(
+          "oauth_token_exchange_error_total",
+          Array("error", "reason", "response_status"),
+          Array(errorValue, reasonValue, responseStatusValue)
+        )
+        .get
     }
 
     def getGrantExchangeCount(grantType: AccessGrant, status: Status, reason: String = ""): Int = {
@@ -69,116 +81,130 @@ class TokenExchangeHandlerSpec extends UnitSpecification with DataTables {
 
   "when the request can be parsed" >> {
     "and the grant type is supported" >> {
-
-      "it sends the request to the TokenExchangeService" in new Context {
-        result
-        there was one(tokenExchangeService).exchange(TokenExchangeRequest(credential, grant, context))
-      }
-
-      "it counts the grant type and validation result" in new Context {
-        result
-        getGrantExchangeCount(grant, Status.Ok) ==== 1
-      }
-
-      "when the exchange was successful" >> {
-        "it returns an ok response the given response content" >> {
-          def expectedJson(
-              accessToken: String,
-              expiresIn: Option[Int] = None,
-              refreshToken: Option[String] = None,
-              scope: String = ""
-          ) = {
-            val base = Json.obj("access_token" -> accessToken, "scope" -> scope)
-            val expiresInJson = expiresIn.map(value => Json.obj("expires_in" -> value)).getOrElse(Json.obj())
-            val refreshTokenJson =
-              refreshToken.map(value => Json.obj("refresh_token" -> value)).getOrElse(Json.obj())
-            base ++ expiresInJson ++ refreshTokenJson
+      "and statically valid" >> {
+        "when the client id is not in the list of clients to be routed to authenticator" >> {
+          "proxies the request to the dispatch handler" in new Context {
+            result.status ==== Status.Ok
           }
 
-          // @formatter:off
+          "counts grant type and validation result" in new Context {
+            result
+            getGrantTypeCount("client_credentials", "200", "true") ==== 1.0
+          }
+        }
+
+        "when the client id is in the list of clients to be routed to authenticator" >> {
+          trait RoutedToAuthenticatorContext extends Context {
+            override def authenticatorClientIdList: Set[String] = Set(credential.id)
+            override lazy val context: RequestContext = RequestContext("0.1.2.3", "user-auth-test-agent")
+          }
+
+          "it sends the request to the TokenExchangeService" in new RoutedToAuthenticatorContext {
+            result
+            there was one(tokenExchangeService).exchange(TokenExchangeRequest(credential, grant, context))
+          }
+
+          "when the exchange was successful" >> {
+            "it returns an ok response the given response content" >> {
+              def expectedJson(
+                  accessToken: String,
+                  expiresIn: Option[Int] = None,
+                  refreshToken: Option[String] = None,
+                  scope: String = ""
+              ) = {
+                val base = Json.obj("access_token" -> accessToken, "scope" -> scope)
+                val expiresInJson = expiresIn.map(value => Json.obj("expires_in" -> value)).getOrElse(Json.obj())
+                val refreshTokenJson =
+                  refreshToken.map(value => Json.obj("refresh_token" -> value)).getOrElse(Json.obj())
+                base ++ expiresInJson ++ refreshTokenJson
+              }
+
+              // @formatter:off
               "serviceResult"                                                 | "expectedJson"                                                 |>
               AccessTokenResponse("aaa", None, None, Seq.empty)               ! expectedJson("aaa")                                 |
               AccessTokenResponse("aaa", Some(123), None, Seq.empty)          ! expectedJson("aaa", Some(123))                      |
               AccessTokenResponse("aaa", None, Some("refresh"), Seq.empty)    ! expectedJson("aaa", refreshToken = Some("refresh")) |
               AccessTokenResponse("aaa", None, None, Seq("scope1", "scope2")) ! expectedJson("aaa", scope = "scope1 scope2")        |>
               // @formatter:on
-          { (serviceResult, expectedJson) =>
-            new Context {
-              override def tokenExchangeResponse = serviceResult.goodF
+              { (serviceResult, expectedJson) =>
+                new RoutedToAuthenticatorContext {
+                  override def tokenExchangeResponse = serviceResult.goodF
 
-              result.status ==== Status.Ok
-              Json.parse(result.contentString) ==== expectedJson
+                  result.status ==== Status.Ok
+                  Json.parse(result.contentString) ==== expectedJson
+                }
+              }
+            }
+
+            "it counts the grant type and status" in new RoutedToAuthenticatorContext {
+              override def tokenExchangeResponse: OutcomeF[AccessTokenResponse] =
+                AccessTokenResponse("aaa", None, None, Seq.empty).goodF
+              result
+              getGrantExchangeCount(grant, Status.Ok) ==== 1
+              getGrantExchangeCount(grant, Status.BadRequest) ==== 0
             }
           }
-        }
 
-        "it counts the grant type and status" in new Context {
-          override def tokenExchangeResponse: OutcomeF[AccessTokenResponse] =
-            AccessTokenResponse("aaa", None, None, Seq.empty).goodF
-          result
-          getGrantExchangeCount(grant, Status.Ok) ==== 1
-          getGrantExchangeCount(grant, Status.BadRequest) ==== 0
-        }
-      }
-
-      "when the exchange fails" >> {
-        "it returns an error object with the appropriate message and error code" >> {
-          // @formatter:off
+          "when the exchange fails" >> {
+            "it returns an error object with the appropriate message and error code" >> {
+              // @formatter:off
               "serviceResult"           | "expectedMessage" | "expectedStatus"    |>
-              NotValid("invalid_grant") ! "invalid_grant"   ! Status.Unauthorized |
+              NotValid("invalid_grant") ! "invalid_grant"   ! Status.BadRequest   |
               NotAuthorized("gah!")     ! "gah!"            ! Status.Unauthorized |
               NotAllowed("noooo")       ! ""                ! Status.BadRequest   |>
               // @formatter:on
-          { (serviceResult, expectedMessage, expectedStatus) =>
-            new Context {
-              override def tokenExchangeResponse = serviceResult.badF
+              { (serviceResult, expectedMessage, expectedStatus) =>
+                new RoutedToAuthenticatorContext {
+                  override def tokenExchangeResponse = serviceResult.badF
 
-              result.status ==== expectedStatus
-              (Json.parse(result.contentString) \ "message").get ==== JsString(expectedMessage)
-              (Json.parse(result.contentString) \ "error_code").get ==== JsString(expectedMessage)
+                  result.status ==== expectedStatus
+                  (Json.parse(result.contentString) \ "message").get ==== JsString(expectedMessage)
+                  (Json.parse(result.contentString) \ "error_code").get ==== JsString(expectedMessage)
+                }
+              }
+            }
+
+            "it counts the grant type, status and failure reason" in new RoutedToAuthenticatorContext {
+              override def tokenExchangeResponse: OutcomeF[AccessTokenResponse] = NotValid("invalid_grant").badF
+              result
+              getGrantExchangeCount(grant, Status.BadRequest, "invalid_grant") ==== 1
+              getGrantExchangeCount(grant, Status.BadRequest, "other_failure") ==== 0
             }
           }
         }
+      }
 
-        "it counts the grant type, status and failure reason" in new Context {
-          override def tokenExchangeResponse: OutcomeF[AccessTokenResponse] = NotValid("invalid_grant").badF
+      "but statically invalid" >> {
+        trait InvalidGrantContext extends Context {
+          override val tokenExchangeRequestParseResult = Left(InvalidGrant("password"))
+        }
+
+        "fails the request without proxying to the dispatch handler" in new InvalidGrantContext {
+          result.status ==== Status.BadRequest
+          (Json.parse(result.contentString) \ "error_code") ==== JsDefined(JsString("invalid_grant"))
+        }
+
+        "counts error type" in new InvalidGrantContext {
           result
-          getGrantExchangeCount(grant, Status.Unauthorized, "invalid_grant") ==== 1
-          getGrantExchangeCount(grant, Status.BadRequest, "other_failure") ==== 0
+          getRequestErrorCount("invalid_grant", "password", "400") ==== 1.0
         }
       }
     }
-  }
 
-  "but statically invalid" >> {
-    trait InvalidGrantContext extends Context {
-      override val tokenExchangeRequestParseResult = Left(InvalidGrant("password"))
-    }
+    "but the grant type is not supported" >> {
+      trait UnsupportedGrantTypeContext extends Context {
+        override val tokenExchangeRequestParseResult = Left(UnsupportedGrantType("this_type_is_not_supported"))
+      }
 
-    "fails the request without proxying to the dispatch handler" in new InvalidGrantContext {
-      result.status ==== Status.BadRequest
-      (Json.parse(result.contentString) \ "error_code") ==== JsDefined(JsString("invalid_grant"))
-    }
+      "fails the request without proxying to the dispatch handler" in new UnsupportedGrantTypeContext {
+        result.status ==== Status.BadRequest
+        (Json.parse(result.contentString) \ "error_code") ==== JsDefined(JsString("unsupported_grant_type"))
+      }
 
-    "counts error type" in new InvalidGrantContext {
-      result
-      getBadRequestCount("invalid_grant") ==== 1
-    }
-  }
-
-  "but the grant type is not supported" >> {
-    trait UnsupportedGrantTypeContext extends Context {
-      override val tokenExchangeRequestParseResult = Left(UnsupportedGrantType("this_type_is_not_supported"))
-    }
-
-    "fails the request without proxying to the dispatch handler" in new UnsupportedGrantTypeContext {
-      result.status ==== Status.BadRequest
-      (Json.parse(result.contentString) \ "error_code") ==== JsDefined(JsString("unsupported_grant_type"))
-    }
-
-    "counts error type" in new UnsupportedGrantTypeContext {
-      result
-      getBadRequestCount("unsupported_grant_type") ==== 1
+      "counts error type" in new UnsupportedGrantTypeContext {
+        result
+        getRequestErrorCount("unsupported_grant_type", "this_type_is_not_supported", "400") ==== 1.0
+      }
     }
   }
 
@@ -194,7 +220,7 @@ class TokenExchangeHandlerSpec extends UnitSpecification with DataTables {
 
     "counts error type" in new UnparseableRequestContext {
       result
-      getBadRequestCount("unparseable_request_body") ==== 1
+      getRequestErrorCount("unparseable_request_body", "unknown", "400") ==== 1.0
     }
   }
 }

@@ -3,7 +3,8 @@ package com.soundcloud.publicApiStrangler.handler
 import com.soundcloud.jvmkit.module.http.server.{Handler, HandlerRequest, ResponseBuilder}
 import com.soundcloud.jvmkit.module.outcome._
 import com.soundcloud.jvmkit.module.telemetry.Telemetry
-import com.soundcloud.publicApiStrangler.service.oauth.TokenExchangeService
+import com.soundcloud.jvmkit.module.util.logging.SoundCloudLoggerFactory
+import com.soundcloud.publicApiStrangler.service.oauth.{AuthorizationService, TokenExchangeService}
 import com.soundcloud.publicApiStrangler.support.ErrorResponse
 import com.soundcloud.publicApiStrangler.support.oauth._
 import com.twitter.finagle.http.{Response, Status}
@@ -11,17 +12,25 @@ import com.twitter.util.Future
 import play.api.libs.json.{JsString, Json}
 
 class TokenExchangeHandler(
+    mothershipDispatch: Handler,
     telemetry: Telemetry,
     parseRequest: HandlerRequest => Either[TokenExchangeRequestError, TokenExchangeRequest],
-    tokenExchangeService: TokenExchangeService
+    authorizationService: AuthorizationService,
+    tokenExchangeService: TokenExchangeService,
+    authenticatorClientIdList: Set[String]
 ) extends Handler {
+
+  private val logger = SoundCloudLoggerFactory.getLogger(this.getClass)
 
   def apply(request: HandlerRequest): Future[Response] = {
     parseRequest(request) match {
-      case Right(parsedRequest) => dispatchToAuthenticator(parsedRequest)
-      case Left(error) =>
-        grantExchangeBadRequestCounter.labels(error.errorType).inc()
-        buildBadRequestResponse(error)
+      //authenticatorClientIdList.contains(parsedRequest.clientCredential.id) =>
+      case Right(parsedRequest) if parsedRequest.context.userAgent == "user-auth-test-agent" =>
+        logger.info(s"Original request body looks like: ${request.contentString}")
+        logger.info(s"Parsed request looks like: $parsedRequest")
+        dispatchToAuthenticator(parsedRequest)
+      case parseResult =>
+        instrumentedMothershipDispatch(request, parseResult)
     }
   }
 
@@ -32,8 +41,8 @@ class TokenExchangeHandler(
         ResponseBuilder.ok(Json.stringify(Json.toJson(accessToken)))
 
       case Bad(NotValid(reason :: _)) =>
-        incrementGrantExchangeCounter(request.accessGrant, Status.Unauthorized, reason)
-        buildErrorResponse(Status.Unauthorized, reason)
+        incrementGrantExchangeCounter(request.accessGrant, Status.BadRequest, reason)
+        buildErrorResponse(Status.BadRequest, reason)
       case Bad(NotAuthorized(reason)) =>
         incrementGrantExchangeCounter(request.accessGrant, Status.Unauthorized, reason)
         buildErrorResponse(Status.Unauthorized, reason)
@@ -48,15 +57,37 @@ class TokenExchangeHandler(
     Some(Map("error_code" -> JsString(reason)))
   )
 
-  private def buildBadRequestResponse(error: TokenExchangeRequestError): Future[Response] = {
-    val response = ErrorResponse(
-      Status.BadRequest,
-      errorCode(error),
-      Some(Map("error_code" -> JsString(errorCode(error)))) // backwards compatibility
-    )
+  private def instrumentedMothershipDispatch(
+      request: HandlerRequest,
+      parseResult: Either[TokenExchangeRequestError, TokenExchangeRequest]
+  ): Future[Response] =
+    parseResult match {
+      case Right(TokenExchangeRequest(credential, accessGrant, context)) =>
+        for {
+          (response, isValid) <- Future.join(
+            mothershipDispatch(request),
+            authorizationService.validateAccessGrant(credential, accessGrant, context)
+          )
+        } yield {
+          grantTypeCounter
+            .labels(accessGrant.grantType, response.statusCode.toString, isValid.toString)
+            .inc()
 
-    Future.value(response)
-  }
+          response
+        }
+      case Left(error) =>
+        val response = ErrorResponse(
+          Status.BadRequest,
+          errorCode(error),
+          Some(Map("error_code" -> JsString(errorCode(error)))) // backwards compatibility
+        )
+
+        requestErrorCounter
+          .labels(error.errorType, error.reason, response.status.code.toString)
+          .inc()
+
+        Future.value(response)
+    }
 
   private def errorCode(error: TokenExchangeRequestError) =
     error match {
@@ -65,17 +96,27 @@ class TokenExchangeHandler(
       case InvalidGrant(_) | MissingClientCredentials() => "invalid_grant"
     }
 
+  private val grantTypeCounter = telemetry.counter(
+    "oauth_token_exchange_grant_type_total",
+    "OAuth 2 Token exchange request grant type.",
+    "grant_type",
+    "response_status",
+    "is_valid"
+  )
+
+  private val requestErrorCounter = telemetry.counter(
+    "oauth_token_exchange_error_total",
+    "OAuth 2 Token exchange error.",
+    "error",
+    "reason",
+    "response_status"
+  )
+
   private val grantExchangeCounter = telemetry.counter(
     "oauth_grant_exchange_total",
     "Counter for oauth grant exchanges and results",
     "grant_type",
     "status",
-    "reason"
-  )
-
-  private val grantExchangeBadRequestCounter = telemetry.counter(
-    "oauth_grant_exchange_bad_request_total",
-    "Counter for bad requests for grant exchanges and reasons",
     "reason"
   )
 
