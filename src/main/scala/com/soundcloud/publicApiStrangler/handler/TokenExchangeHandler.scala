@@ -32,8 +32,8 @@ class TokenExchangeHandler(
         ResponseBuilder.ok(Json.stringify(Json.toJson(accessToken)))
 
       case Bad(NotValid(reason :: _)) =>
-        incrementGrantExchangeCounter(request.accessGrant, Status.BadRequest, reason)
-        buildErrorResponse(Status.BadRequest, reason)
+        incrementGrantExchangeCounter(request.accessGrant, Status.Unauthorized, reason)
+        buildErrorResponse(Status.Unauthorized, reason)
       case Bad(NotAuthorized(reason)) =>
         incrementGrantExchangeCounter(request.accessGrant, Status.Unauthorized, reason)
         buildErrorResponse(Status.Unauthorized, reason)

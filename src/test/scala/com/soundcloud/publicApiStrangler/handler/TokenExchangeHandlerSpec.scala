@@ -125,7 +125,7 @@ class TokenExchangeHandlerSpec extends UnitSpecification with DataTables {
         "it returns an error object with the appropriate message and error code" >> {
           // @formatter:off
               "serviceResult"           | "expectedMessage" | "expectedStatus"    |>
-              NotValid("invalid_grant") ! "invalid_grant"   ! Status.BadRequest   |
+              NotValid("invalid_grant") ! "invalid_grant"   ! Status.Unauthorized |
               NotAuthorized("gah!")     ! "gah!"            ! Status.Unauthorized |
               NotAllowed("noooo")       ! ""                ! Status.BadRequest   |>
               // @formatter:on
@@ -143,7 +143,7 @@ class TokenExchangeHandlerSpec extends UnitSpecification with DataTables {
         "it counts the grant type, status and failure reason" in new Context {
           override def tokenExchangeResponse: OutcomeF[AccessTokenResponse] = NotValid("invalid_grant").badF
           result
-          getGrantExchangeCount(grant, Status.BadRequest, "invalid_grant") ==== 1
+          getGrantExchangeCount(grant, Status.Unauthorized, "invalid_grant") ==== 1
           getGrantExchangeCount(grant, Status.BadRequest, "other_failure") ==== 0
         }
       }
