@@ -141,6 +141,14 @@ canary-api:
 deploy-api:
 	sc artifact-manager deploy run --zone="$(ZONE)" --component="$(API_COMPONENT)"
 
+check-autoscale:
+	sc k8s --zone $(ZONE) --system $(APP_NAME) kubectl describe hpa $(APP_NAME)-$(API_COMPONENT)-autoscale
+
+autoscale:
+	sc k8s scale --zone $(ZONE) --system $(APP_NAME) --component $(API_COMPONENT) \
+		--autoscale.replicas.max=150 --autoscale.replicas.min=25 \
+		--autoscale.metric.name=namespace_system_env_component_track_version_pod_container:cpu_usage:rate --autoscale.metric.target-value=0.5
+
 CPU_REQUEST_db = 2
 CPU_REQUEST_et = 300m
 CPU_REQUEST = $(if $(CPU_REQUEST_$(ZONE)),$(CPU_REQUEST_$(ZONE)),$(error CPU_REQUEST is not set for ZONE $(ZONE)))
