@@ -6,7 +6,8 @@ import com.soundcloud.jvmkit.module.telemetry.Telemetry
 import com.soundcloud.publicApiStrangler.service.oauth.{AccessTokenResponse, AuthorizationService, TokenExchangeService}
 import com.soundcloud.publicApiStrangler.support.oauth._
 import com.soundcloud.publicApiStrangler.test.UnitSpecification
-import com.twitter.finagle.http.{Response, Status}
+import com.twitter.finagle.http.{Request, RequestBuilder, Response, Status}
+import com.twitter.io.Buf
 import com.twitter.util.{Await, Future}
 import org.specs2.matcher.DataTables
 import play.api.libs.json.{JsDefined, JsString, Json}
@@ -74,7 +75,15 @@ class TokenExchangeHandlerSpec extends UnitSpecification with DataTables {
         .toInt
     }
 
-    val request: HandlerRequest = mock[HandlerRequest]
+    def userAgentHeader = "any-user-agent"
+    def request: HandlerRequest =
+      HandlerRequest(
+        RequestBuilder()
+          .url(Request.queryString("http://api/test", Map("a" -> "b")))
+          .setHeader("User-Agent", userAgentHeader)
+          .setHeader("X-Real-Ip", "any-ip")
+          .buildPost(Buf.Empty)
+      )
 
     lazy val result = Await.result(handler(request))
   }
@@ -82,7 +91,7 @@ class TokenExchangeHandlerSpec extends UnitSpecification with DataTables {
   "when the request can be parsed" >> {
     "and the grant type is supported" >> {
       "and statically valid" >> {
-        "when the client id is not in the list of clients to be routed to authenticator" >> {
+        "when the request header is not the test header" >> {
           "proxies the request to the dispatch handler" in new Context {
             result.status ==== Status.Ok
           }
@@ -93,9 +102,9 @@ class TokenExchangeHandlerSpec extends UnitSpecification with DataTables {
           }
         }
 
-        "when the client id is in the list of clients to be routed to authenticator" >> {
+        "when the request header is the test header" >> {
           trait RoutedToAuthenticatorContext extends Context {
-            override def authenticatorClientIdList: Set[String] = Set(credential.id)
+            override def userAgentHeader: String = "user-auth-test-agent"
             override lazy val context: RequestContext = RequestContext("0.1.2.3", "user-auth-test-agent")
           }
 

@@ -23,14 +23,24 @@ class TokenExchangeHandler(
   private val logger = SoundCloudLoggerFactory.getLogger(this.getClass)
 
   def apply(request: HandlerRequest): Future[Response] = {
+    if (request.userAgent.contains("user-auth-test-agent")) {
+      debugDispatch(request).onFailure { e: Throwable =>
+        logger.error(s"Test request failed with Throwable", e)
+      }
+    } else instrumentedMothershipDispatch(request, parseRequest(request))
+  }
+
+  def debugDispatch(request: HandlerRequest): Future[Response] = {
+    logger.info(s"Original request body looks like: ${request.contentString}")
+    logger.info(s"Original headers look like: ${request.headerMap.toString()}")
     parseRequest(request) match {
-      //authenticatorClientIdList.contains(parsedRequest.clientCredential.id) =>
-      case Right(parsedRequest) if parsedRequest.context.userAgent == "user-auth-test-agent" =>
-        logger.info(s"Original request body looks like: ${request.contentString}")
+      case Right(parsedRequest) =>
         logger.info(s"Parsed request looks like: $parsedRequest")
         dispatchToAuthenticator(parsedRequest)
-      case parseResult =>
-        instrumentedMothershipDispatch(request, parseResult)
+      case parsingResult =>
+        logger.error(s"Parsing error for test request: ${parsingResult.toString}")
+        // handling of parsing error in instrumentedMothershipDispatch
+        instrumentedMothershipDispatch(request, parsingResult)
     }
   }
 
