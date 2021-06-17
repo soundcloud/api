@@ -29,7 +29,7 @@ class TokenExchangeServiceSpec extends UnitSpecification {
 
     val protoClientCredential = proto.ClientCredential(clientCredential.id, clientCredential.secret)
 
-    def result: Outcome[AccessTokenResponse] = Await.result(subject.exchange(tokenExchangeRequest).value).outcome
+    def result: Outcome[AccessTokenResponse] = Await.result(subject.exchange(tokenExchangeRequest))
   }
 
   "when received request contains an auth code grant" >> {

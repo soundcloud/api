@@ -35,7 +35,7 @@ class TokenExchangeHandler(
   }
 
   private def dispatchToAuthenticator(request: TokenExchangeRequest): Future[Response] =
-    tokenExchangeService.exchange(request).value.map {
+    tokenExchangeService.exchange(request).map {
       case Good(accessToken) =>
         incrementGrantExchangeCounter(request.accessGrant, Status.Ok)
         ResponseBuilder.ok(Json.stringify(Json.toJson(accessToken)))

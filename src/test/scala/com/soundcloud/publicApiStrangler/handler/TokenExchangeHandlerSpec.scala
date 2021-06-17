@@ -1,7 +1,7 @@
 package com.soundcloud.publicApiStrangler.handler
 
 import com.soundcloud.jvmkit.module.http.server.{Handler, HandlerRequest}
-import com.soundcloud.jvmkit.module.outcome.{GoodOps, NotAllowed, NotAuthorized, NotValid, OutcomeF}
+import com.soundcloud.jvmkit.module.outcome.{GoodOps, NotAllowed, NotAuthorized, NotValid, Outcome}
 import com.soundcloud.jvmkit.module.telemetry.Telemetry
 import com.soundcloud.publicApiStrangler.service.oauth.{AccessTokenResponse, AuthorizationService, TokenExchangeService}
 import com.soundcloud.publicApiStrangler.support.oauth._
@@ -28,8 +28,8 @@ class TokenExchangeHandlerSpec extends UnitSpecification with DataTables {
     authorizationService.validateAccessGrant(===(credential), ===(grant), any()).returns(Future.value(true))
 
     val tokenExchangeService = mock[TokenExchangeService]
-    def tokenExchangeResponse: OutcomeF[AccessTokenResponse] = AccessTokenResponse("", None, None, Seq.empty).goodF
-    tokenExchangeService.exchange(any()) returns tokenExchangeResponse
+    def tokenExchangeResponse: Outcome[AccessTokenResponse] = AccessTokenResponse("", None, None, Seq.empty).good
+    tokenExchangeService.exchange(any()) returns Future.value(tokenExchangeResponse)
 
     def authenticatorClientIdList: Set[String] = Set.empty
 
@@ -128,7 +128,7 @@ class TokenExchangeHandlerSpec extends UnitSpecification with DataTables {
               // @formatter:on
               { (serviceResult, expectedJson) =>
                 new RoutedToAuthenticatorContext {
-                  override def tokenExchangeResponse = serviceResult.goodF
+                  override def tokenExchangeResponse = serviceResult.good
 
                   result.status ==== Status.Ok
                   Json.parse(result.contentString) ==== expectedJson
@@ -137,8 +137,8 @@ class TokenExchangeHandlerSpec extends UnitSpecification with DataTables {
             }
 
             "it counts the grant type and status" in new RoutedToAuthenticatorContext {
-              override def tokenExchangeResponse: OutcomeF[AccessTokenResponse] =
-                AccessTokenResponse("aaa", None, None, Seq.empty).goodF
+              override def tokenExchangeResponse: Outcome[AccessTokenResponse] =
+                AccessTokenResponse("aaa", None, None, Seq.empty).good
               result
               getGrantExchangeCount(grant, Status.Ok) ==== 1
               getGrantExchangeCount(grant, Status.BadRequest) ==== 0
@@ -155,7 +155,7 @@ class TokenExchangeHandlerSpec extends UnitSpecification with DataTables {
               // @formatter:on
               { (serviceResult, expectedMessage, expectedStatus) =>
                 new RoutedToAuthenticatorContext {
-                  override def tokenExchangeResponse = serviceResult.badF
+                  override def tokenExchangeResponse = serviceResult.bad
 
                   result.status ==== expectedStatus
                   (Json.parse(result.contentString) \ "message").get ==== JsString(expectedMessage)
@@ -165,7 +165,7 @@ class TokenExchangeHandlerSpec extends UnitSpecification with DataTables {
             }
 
             "it counts the grant type, status and failure reason" in new RoutedToAuthenticatorContext {
-              override def tokenExchangeResponse: OutcomeF[AccessTokenResponse] = NotValid("invalid_grant").badF
+              override def tokenExchangeResponse: Outcome[AccessTokenResponse] = NotValid("invalid_grant").bad
               result
               getGrantExchangeCount(grant, Status.BadRequest, "invalid_grant") ==== 1
               getGrantExchangeCount(grant, Status.BadRequest, "other_failure") ==== 0
