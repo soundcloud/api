@@ -38,3 +38,4 @@ metals.sbt
 .history
 .bsp/
 config/e2e.secrets
+config/ci-credentials

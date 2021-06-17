@@ -169,6 +169,7 @@ deploy-prometheus:
 		--rule=https://ent.int.s-cloud.net/prometheus/rules/slo.yml \
 		--rule=https://ent.int.s-cloud.net/prometheus/rules/memcached.yml
 
-publish-changelog:
+GO_REVISION_GIT ?= HEAD
+publish-changelog: 
 	git diff-index --exit-code $(GO_REVISION_GIT)~1 RELEASE_NOTES.md && echo 'No release notes to publish...' && exit 0; \
-	./scripts/release
+		./scripts/release

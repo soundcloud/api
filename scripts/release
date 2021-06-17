@@ -1,10 +1,13 @@
 #!/usr/bin/env bash
 
-  hub api \
-    -X POST \
-    -H "Accept: application/vnd.github.v3+json" \
-    /repos/{owner}/api/releases \
-    -F tag_name=$(date "+%Y-%m-%d") \
-    -F name=$(date "+%Y-%m-%d") \
-    -F body=@RELEASE_NOTES.md
+GITHUB_TOKEN=$(curl -fsS -T config/ci-credentials.enc https://shibboleth.int.s-cloud.net/decrypt)
+
+hub api \
+  -X POST \
+  -H "Accept: application/vnd.github.v3+json" \
+  -H "Authorization: token $GITHUB_TOKEN" \
+  /repos/{owner}/api/releases \
+  -F tag_name=$(date "+%Y-%m-%d") \
+  -F name=$(date "+%Y-%m-%d") \
+  -F body=@RELEASE_NOTES.md
 
