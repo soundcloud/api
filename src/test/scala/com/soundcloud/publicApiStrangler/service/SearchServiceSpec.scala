@@ -64,7 +64,7 @@ class SearchServiceSpec extends TrackRepresentationsSpecificationContext {
         SearchResponse(query, queryUrn, 0, 5, 1, 1000, Seq(Doc(userUrn)), None).goodF
       )
 
-      when(userRepresentationsService.getUsers(session, Set(userUrn))).thenReturn(Future.value(List(user)))
+      when(userRepresentationsService.getUsers(session, Seq(userUrn))).thenReturn(Future.value(List(user)))
 
       val result = Await.result(searchService.searchUsers(session, Map("q" -> query), offsetBasedPagination).value)
       val usersCollection = result.getOrElse(Collection(List.empty, None))
@@ -82,7 +82,7 @@ class SearchServiceSpec extends TrackRepresentationsSpecificationContext {
         SearchResponse(query, queryUrn, 0, 5, 1, 1000, Seq.empty, None).goodF
       )
 
-      when(userRepresentationsService.getUsers(session, Set.empty)).thenReturn(Future.value(List.empty))
+      when(userRepresentationsService.getUsers(session, Seq.empty)).thenReturn(Future.value(List.empty))
 
       val result = Await.result(searchService.searchUsers(session, Map("q" -> query), offsetBasedPagination).value)
 

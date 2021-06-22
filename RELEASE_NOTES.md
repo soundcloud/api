@@ -1,3 +1,3 @@
 <!--- Remove everything below and start over --->
 
-FIRST RELEASE TEST
+Adds linked partitioning to GET `/tracks/{track_id}/favoriters`

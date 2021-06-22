@@ -716,10 +716,10 @@ paths:
       parameters:
         - $ref: '#/components/parameters/track_id'
         - $ref: '#/components/parameters/limit'
-        - $ref: '#/components/parameters/offset'
+        - $ref: '#/components/parameters/linked_partitioning'
       responses:
         200:
-          $ref: "#/components/responses/UsersList"
+          $ref: "#/components/responses/Users"
         401:
           $ref: '#/components/responses/Unauthorized'
         404:
@@ -1136,8 +1136,6 @@ components:
       $ref: './components/schemas/User.yaml'
     Me:
       $ref: './components/schemas/Me.yaml'
-    LegacyUser:
-      $ref: './components/schemas/LegacyUser.yaml'
     LegacyLoggedInUser:
       $ref: './components/schemas/LegacyLoggedInUser.yaml'
     Users:
@@ -1149,11 +1147,6 @@ components:
             $ref: '#/components/schemas/User'
         next_href:
           type: string
-    UsersList:
-      deprecated: true
-      type: array
-      items:
-        $ref: './components/schemas/LegacyUser.yaml'
     Track:
       $ref: './components/schemas/Track.yaml'
     Tracks:
@@ -1273,10 +1266,6 @@ components:
       $ref: './components/examples/User.yaml'
     UserOf:
       $ref: './components/examples/UserOf.yaml'
-    UsersList:
-      description: Deprecated, use Users instead.
-      value:
-        $ref: "#/components/examples/User/value"
     Users:
       value:
         collection:

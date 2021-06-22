@@ -1,7 +1,7 @@
 package com.soundcloud.publicApiStrangler.service
 
 import com.google.protobuf.timestamp.Timestamp
-import com.soundcloud.jvmkit.module.outcome.{GoodOps, NotAllowed, NotFound, UnexpectedError}
+import com.soundcloud.jvmkit.module.outcome._
 import com.soundcloud.jvmkit.module.twirp.proto.UserSessionOps._
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.publicApiStrangler.client.liebling._
@@ -18,7 +18,14 @@ import com.twitter.finagle.http.ParamMap
 import com.twitter.util.{Await, Future}
 import org.mockito.Mockito._
 import org.specs2.mutable.BeforeAfter
-import proto.soundcloud.tracks.api.{LikeTrackRequest, LikeTrackResponse, LikesClientProtobuf}
+import proto.soundcloud.tracks.api.{
+  GetTrackLikersPagination,
+  GetTrackLikersRequest,
+  GetTrackLikersResponse,
+  LikeTrackRequest,
+  LikeTrackResponse,
+  LikesClientProtobuf
+}
 
 import java.time.Instant
 
@@ -122,6 +129,48 @@ class LikesServiceSpec extends TrackRepresentationsSpecificationContext {
       )
 
       val result = Await.result(likesService.deleteTrackLike(session, trackUrn))
+      result ==== NotFound().bad
+    }
+  }
+
+  "#trackLikers" >> {
+    trait TrackLikers extends Context {
+      val userUrn = Urn("soundcloud", "users", "1")
+      val requestPagination = GetTrackLikersPagination(pagination.cursor, pagination.pageSize)
+      val request = GetTrackLikersRequest(Some(session.asProtoSession), trackUrn.toString, Some(requestPagination))
+    }
+
+    "returns TrackLikersResponse when tracks successfully gets likers" in new TrackLikers {
+      tracksTwinagleClient.getTrackLikers(request) returns Future.value(
+        GetTrackLikersResponse(
+          Seq(userUrn.toString)
+        )
+      )
+      val result = Await.result(likesService.trackLikers(session, trackUrn, pagination))
+      result ==== TrackLikersResponse(Seq(userUrn), None).good
+    }
+
+    "sets the next cursor when there is pagination" in new TrackLikers {
+      tracksTwinagleClient.getTrackLikers(request) returns Future.value(
+        GetTrackLikersResponse(
+          Seq(userUrn.toString),
+          pagination.cursor
+        )
+      )
+      val result = Await.result(likesService.trackLikers(session, trackUrn, pagination))
+      val nextHref = pagination.nextPage(pagination.cursor.get).normalizedHref
+      result match {
+        case Good(response) => response.nextHRef ==== Some(nextHref)
+        case _ => ko
+      }
+    }
+
+    "returns NotFound when tracks service returns not found" in new TrackLikers {
+      tracksTwinagleClient.getTrackLikers(request) returns Future.exception(
+        TwinagleException(ErrorCode.NotFound, "Resource not found")
+      )
+
+      val result = Await.result(likesService.trackLikers(session, trackUrn, pagination))
       result ==== NotFound().bad
     }
   }

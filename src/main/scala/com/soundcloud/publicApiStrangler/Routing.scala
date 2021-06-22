@@ -91,8 +91,7 @@ object Routing {
   def forUserRelatedMothershipDispatcher(
       userRelatedMothershipDispatcher: UserRelatedMothershipDispatcher
   ): List[(Method, String, Handler)] = {
-    route(Method.Get, "/tracks/:id/favoriters", userRelatedMothershipDispatcher.dispatchToMothership) :::
-      route(Method.Get, "/users/:id", userRelatedMothershipDispatcher.dispatchToMothership) :::
+    route(Method.Get, "/users/:id", userRelatedMothershipDispatcher.dispatchToMothership) :::
       route(Method.Get, "/users/:id/comments", userRelatedMothershipDispatcher.dispatchToMothership)
   }
 
@@ -151,7 +150,8 @@ object Routing {
       route(Method.Post, "/likes/tracks/:trackId", likesHandler.createMeLikedTrackId) :::
       route(Method.Delete, "/likes/tracks/:trackId", likesHandler.deleteMeLikedTrackId) :::
       route(Method.Post, "/likes/playlists/:id", likesHandler.createMeLikedPlaylistId) :::
-      route(Method.Delete, "/likes/playlists/:id", likesHandler.deleteMeLikedPlaylistId)
+      route(Method.Delete, "/likes/playlists/:id", likesHandler.deleteMeLikedPlaylistId) :::
+      route(Method.Get, "/tracks/:trackId/favoriters", likesHandler.getTrackLikers)
     // todo - fetching a list of likes(users) of a playlist
   }
 

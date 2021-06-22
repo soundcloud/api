@@ -125,12 +125,6 @@ Me:
     application/json; charset=utf-8:
       schema:
         $ref: '#/components/schemas/Me'
-LegacyUser:
-  description: Success
-  content:
-    application/json; charset=utf-8:
-      schema:
-        $ref: '#/components/schemas/LegacyUser'
 LegacyLoggedInUser:
   description: Success
   content:
@@ -142,23 +136,10 @@ Users:
   content:
     application/json; charset=utf-8:
       schema:
-        oneOf:
-          - $ref: '#/components/schemas/Users'
-          - $ref: '#/components/schemas/UsersList'
+        $ref: '#/components/schemas/Users'
       examples:
         default:
           $ref: "#/components/examples/Users"
-        usersList:
-          $ref: "#/components/examples/UsersList"
-UsersList:
-  description: Success
-  content:
-    application/json; charset=utf-8:
-      schema:
-        $ref: '#/components/schemas/UsersList'
-      examples:
-        default:
-          $ref: "#/components/examples/UsersList"
 Track:
   description: Success
   content:

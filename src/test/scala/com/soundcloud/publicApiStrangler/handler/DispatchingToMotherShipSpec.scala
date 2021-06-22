@@ -18,8 +18,7 @@ class DispatchingToMotherShipSpec extends UnitSpecification {
     (Get, "/users/7110"),
     (Get, "/users/7110/comments"),
     (Get, "/users/me"),
-    (Get, "/users/suggested"),
-    (Get, "/tracks/7110/favoriters")
+    (Get, "/users/suggested")
   )
 
   trait MothershipContext extends HandlerSpecificationScope {

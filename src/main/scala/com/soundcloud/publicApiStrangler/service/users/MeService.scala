@@ -22,7 +22,7 @@ class MeService(
   def getMe(session: UserSession, meUserUrn: Urn): Future[Outcome[Me]] = {
     for {
       (userRepresentations, moshiUsers, maybeQuota) <- Future.join(
-        userRepresentationsService.getUsers(session, Set(meUserUrn)),
+        userRepresentationsService.getUsers(session, Seq(meUserUrn)),
         okidokiClient.fetch(session, Set(meUserUrn)),
         userQuota(session, Set(meUserUrn))
       )

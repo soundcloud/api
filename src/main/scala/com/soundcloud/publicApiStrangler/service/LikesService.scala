@@ -12,10 +12,16 @@ import com.soundcloud.publicApiStrangler.service.representation.collection.Colle
 import com.soundcloud.publicApiStrangler.service.trackrepresentation.{TrackRepresentation, TrackRepresentationsService}
 import com.soundcloud.twinagle.TwinagleException
 import com.twitter.util.Future
-import proto.soundcloud.tracks.api.{LikeTrackRequest, LikesClientProtobuf}
+import proto.soundcloud.tracks.api.{
+  GetTrackLikersPagination,
+  GetTrackLikersRequest,
+  LikeTrackRequest,
+  LikesClientProtobuf
+}
 
 case class CreateLikeResponse()
 case class DeleteLikeResponse()
+case class TrackLikersResponse(urns: Seq[Urn], nextHRef: Option[String])
 
 class LikesService(
     trackRepresentationsService: TrackRepresentationsService,
@@ -43,6 +49,25 @@ class LikesService(
     likesTwirpClient
       .unlikeTrack(request)
       .map(_ => DeleteLikeResponse().good)
+      .handle {
+        case e @ TwinagleException(_, _, _, _) => ApplicationError.fromTwinagleException(e).bad
+      }
+  }
+
+  def trackLikers(
+      session: UserSession,
+      urn: Urn,
+      pagination: CursorBasedPagination
+  ): Future[Outcome[TrackLikersResponse]] = {
+    val requestPagination = GetTrackLikersPagination(pagination.cursor, pagination.pageSize)
+    val request = GetTrackLikersRequest(Some(session.asProtoSession), urn.toString, Some(requestPagination))
+
+    likesTwirpClient
+      .getTrackLikers(request)
+      .map(response => {
+        val nextHref = response.cursor.map(pagination.nextPage(_).normalizedHref)
+        TrackLikersResponse(response.userUrns.map(Urn.parse(_).get), nextHref).good
+      })
       .handle {
         case e @ TwinagleException(_, _, _, _) => ApplicationError.fromTwinagleException(e).bad
       }

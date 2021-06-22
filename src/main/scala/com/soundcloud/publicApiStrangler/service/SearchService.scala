@@ -16,7 +16,6 @@ import com.soundcloud.publicApiStrangler.service.trackrepresentation.{
   TrackRepresentation,
   TrackRepresentationsService
 }
-import com.soundcloud.publicApiStrangler.service.users.UserOrderingUtils.sortByProvidedUrns
 import com.soundcloud.publicApiStrangler.service.users.UserRepresentationsService
 import com.twitter.finagle.http.ParamMap
 
@@ -36,9 +35,8 @@ class SearchService(
     for {
       searchPage <- searchClient.searchUsers(session, mapParams)
       userUrns = searchPage.docs.map(_.urn).toSet
-      users <- userRepresentationsService.getUsers(session, userUrns).outcomeF
-      sortedUsers = sortByProvidedUrns(users, searchPage.docs.map(_.urn))
-    } yield Collection[UserRepresentation](sortedUsers.toList, pagination.nextHref(searchPage.total_results.toInt))
+      users <- userRepresentationsService.getUsers(session, userUrns.toSeq).outcomeF
+    } yield Collection[UserRepresentation](users, pagination.nextHref(searchPage.total_results.toInt))
   }
 
   def searchTracks(

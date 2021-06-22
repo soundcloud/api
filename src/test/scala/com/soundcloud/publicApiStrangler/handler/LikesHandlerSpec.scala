@@ -2,10 +2,19 @@ package com.soundcloud.publicApiStrangler.handler
 
 import com.soundcloud.jvmkit.module.bff.session.UserAuthentication
 import com.soundcloud.jvmkit.module.bff.testsupport.FakeUserAuthentication
-import com.soundcloud.jvmkit.module.outcome.{GoodOps, HttpResponseFields, HttpServiceError, NotFound, UnexpectedError}
+import com.soundcloud.jvmkit.module.outcome.{
+  GoodOps,
+  HttpResponseFields,
+  HttpServiceError,
+  NotFound,
+  NotValid,
+  Outcome,
+  UnexpectedError
+}
 import com.soundcloud.jvmkit.module.telemetry.Telemetry
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.publicApiStrangler.Routing
+import com.soundcloud.publicApiStrangler.client.mothership.response.mapper.UserRepresentationMapper
 import com.soundcloud.publicApiStrangler.handler.support.requestParser.AccessParams
 import com.soundcloud.publicApiStrangler.service.pagination.CursorBasedPagination
 import com.soundcloud.publicApiStrangler.service.representation.collection.Collection
@@ -13,7 +22,14 @@ import com.soundcloud.publicApiStrangler.service.trackrepresentation.{
   TrackRepresentation,
   TrackRepresentationSpecContext
 }
-import com.soundcloud.publicApiStrangler.service.{CreateLikeResponse, DeleteLikeResponse, LikesService}
+import com.soundcloud.publicApiStrangler.service.users.UserRepresentationsService
+import com.soundcloud.publicApiStrangler.service.{
+  CreateLikeResponse,
+  DeleteLikeResponse,
+  LikesService,
+  TrackLikersResponse
+}
+import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures
 import com.soundcloud.publicApiStrangler.test.{HandlerSpecificationScope, UnitSpecification}
 import com.soundcloud.twinagle.ErrorCode.ResourceExhausted
 import com.soundcloud.twinagle.TwinagleException
@@ -22,7 +38,7 @@ import com.twitter.util.Future
 import org.joda.time.DateTimeZone
 import org.mockito.Mockito.when
 import org.specs2.mutable.BeforeAfter
-import play.api.libs.json.{JsString, Json}
+import play.api.libs.json.{JsArray, JsString, Json}
 
 import java.util.TimeZone
 
@@ -35,9 +51,10 @@ class LikesHandlerSpec extends UnitSpecification {
     val userAuthentication: UserAuthentication
 
     val likesService = mock[LikesService]
+    val userRepresentationService = mock[UserRepresentationsService]
     val telemetry = Telemetry.createIsolatedInstance
 
-    val handler = new LikesHandler(userAuthentication, likesService)
+    val handler = new LikesHandler(userAuthentication, likesService, userRepresentationService)
 
     override def routingDefinitions = Routing.forLikesHandler(handler)
   }
@@ -107,6 +124,95 @@ class LikesHandlerSpec extends UnitSpecification {
           val response = get(path)
           response.status ==== Status.Ok
           response.contentString ==== expectedResponse
+        }
+      }
+    }
+  }
+
+  "Getting likers of a track" >> {
+    trait TrackLikersContext extends Context {
+      lazy val userAuthentication = new FakeUserAuthentication(session)
+
+      val userUrn = Urn("soundcloud", "users", "123")
+      val okidokiUser =
+        Fixtures.okidokiUsersWithDeprecatedCounts.as[JsArray].value.last
+      val userRepresentation = UserRepresentationMapper(okidokiUser)
+      val users = List(userRepresentation)
+
+      val trackUrn = Urn("soundcloud", "tracks", "456")
+
+      def paginationParams(path: String): CursorBasedPagination = {
+        val mockRequest = Request(path)
+        mockRequest.host = "localhost"
+        CursorBasedPagination.build(mockRequest, Seq("linked_partitioning"))
+      }
+
+      when(userRepresentationService.getUsers(session, Seq(userUrn)))
+        .thenReturn(Future.value(users))
+    }
+
+    trait SuccessfulResponseContext extends TrackLikersContext {
+
+      def stubTrackLikers(
+          track: Urn,
+          path: String
+      ) = {
+        when(likesService.trackLikers(session, track, paginationParams(path)))
+          .thenReturn(Future.value(TrackLikersResponse(Seq(userUrn), None).good))
+      }
+
+      val usersCollection = Collection(List(userRepresentation), None)
+      val expectedResponse = Collection.getRepresentation(usersCollection, false)
+    }
+
+    "GET /tracks/:trackId/favoriters" >> {
+      "with a successful response from tracks and user representations services" >> {
+        "returns users" in new SuccessfulResponseContext {
+          val path = s"/tracks/456/favoriters"
+
+          stubTrackLikers(trackUrn, path)
+
+          val response = get(path)
+          response.status ==== Status.Ok
+          response.contentString ==== expectedResponse
+        }
+
+        "renders a collection and next href if there's linked_partitioning" in new SuccessfulResponseContext {
+          override val expectedResponse = Collection.getRepresentation(usersCollection, true)
+          val path = "/tracks/456/favoriters?linked_partitioning=1"
+
+          stubTrackLikers(trackUrn, path)
+
+          val response = get(path)
+          response.status ==== Status.Ok
+          response.contentString ==== expectedResponse
+        }
+      }
+
+      "when likes service fails" >> {
+        trait FailureContext extends TrackLikersContext {
+          val path = s"/tracks/456/favoriters"
+
+          def stubTrackLikers(
+              outcome: Outcome[TrackLikersResponse],
+              track: Urn,
+              path: String
+          ) = {
+            when(likesService.trackLikers(session, track, paginationParams(path)))
+              .thenReturn(Future.value(outcome))
+          }
+        }
+
+        "returns 404 for Not Found" in new FailureContext {
+          stubTrackLikers(NotFound().bad, trackUrn, path)
+          val response = get(path)
+          response.status ==== Status.NotFound
+        }
+
+        "returns 500 for unhandled errors" in new FailureContext {
+          stubTrackLikers(NotValid("").bad, trackUrn, path)
+          val response = get(path)
+          response.status ==== Status.InternalServerError
         }
       }
     }

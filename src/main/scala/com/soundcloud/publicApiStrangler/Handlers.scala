@@ -83,7 +83,7 @@ class Handlers(
 
   val repostsHandler = new RepostsHandler(userAuthentication, repostsService)
 
-  val likesHandler = new LikesHandler(userAuthentication, likesService)
+  val likesHandler = new LikesHandler(userAuthentication, likesService, userRepresentationsService)
 
   val tokenExchangeRequestMapper = new TokenExchangeRequestParser(new RailsLikeParamsParser())
   val authenticatorClientIdList = Set(

@@ -16,6 +16,24 @@ service Likes {
     rpc LikeTrack (LikeTrackRequest) returns (LikeTrackResponse) {};
 
     rpc UnlikeTrack (LikeTrackRequest) returns (LikeTrackResponse) {};
+
+    rpc GetTrackLikers (GetTrackLikersRequest) returns (GetTrackLikersResponse) {};
+}
+
+message GetTrackLikersRequest {
+    proto.soundcloud.common.session.UserSession user_session = 1; // You must provide a UserSession
+    string track_urn = 2;
+    GetTrackLikersPagination pagination = 3; // optional
+}
+
+message GetTrackLikersPagination {
+    google.protobuf.StringValue cursor = 1; // optional
+    int64 limit = 2;
+}
+
+message GetTrackLikersResponse {
+    repeated string user_urns = 1;
+    google.protobuf.StringValue cursor = 2; // optional
 }
 
 message LikeTrackRequest {
@@ -32,6 +50,7 @@ message LikeTrackResponse {
 service Reposts {
     rpc RepostTrack (RepostTrackRequest) returns (RepostTrackResponse) {};
     rpc DeleteTrackRepost (RepostTrackRequest) returns (RepostTrackResponse) {};
+    rpc GetTrackReposters (TrackRepostersRequest) returns (TrackRepostersResponse) {};
 }
 
 message RepostTrackRequest {
@@ -40,6 +59,38 @@ message RepostTrackRequest {
 }
 
 message RepostTrackResponse {}
+
+message TrackRepostersRequest {
+    proto.soundcloud.common.session.UserSession user_session = 1;
+    string track_urn = 2;
+    TrackRepostersPagination pagination = 3; // optional
+}
+
+message TrackRepostersResponse {
+    repeated string user_urns = 1;
+    google.protobuf.StringValue cursor = 2; // optional
+}
+
+message TrackRepostersPagination {
+    google.protobuf.StringValue cursor = 1; // optional
+    int64 limit = 2;
+}
+
+service Comments {
+    rpc GetCommentsOnWaveform (GetCommentsOnWaveformRequest) returns (GetCommentsOnWaveformResponse) {};
+}
+
+message GetCommentsOnWaveformRequest {
+    proto.soundcloud.common.session.UserSession user_session = 1;
+    string urn = 2;
+    google.protobuf.StringValue secret_token = 3; // optional
+    int32 limit = 4;
+    int32 offset = 5;
+}
+
+message GetCommentsOnWaveformResponse {
+    repeated string comments_urns = 1;
+}
 
 service Media {
     // This method is for getting a media stream URL for a track.
@@ -234,8 +285,9 @@ message Track {
     // additional fields that are not included in the response
     // unless they are specified in the track field mask
     Counts counts = 49; // optional
-
     DownloadMetadata download_metadata = 50; // optional
+    PublisherMetadata publisher_metadata = 51; // optional
+    Station station = 52; // optional
 }
 
 message Metadata {
@@ -366,4 +418,26 @@ message DownloadMetadata {
     bool allowed = 1;
     google.protobuf.Int64Value count = 2;
     google.protobuf.Int64Value remaining = 3;
+}
+
+message PublisherMetadata {
+    google.protobuf.StringValue album_title = 1; // optional
+    google.protobuf.StringValue artist = 2; // optional
+    google.protobuf.StringValue writer_composer = 3; // optional
+    google.protobuf.BoolValue contains_music = 4; // optional
+    google.protobuf.BoolValue explicit = 5; // optional
+    google.protobuf.StringValue isrc = 6; // optional
+    google.protobuf.StringValue iswc = 7; // optional
+    google.protobuf.StringValue p_line = 8; // optional
+    google.protobuf.StringValue p_line_for_display = 9; // optional
+    google.protobuf.StringValue c_line = 10; // optional
+    google.protobuf.StringValue c_line_for_display = 11; // optional
+    google.protobuf.StringValue publisher = 12; // optional
+    google.protobuf.StringValue release_title = 13; // optional
+    google.protobuf.StringValue upc_or_ean = 14; // optional
+}
+
+message Station {
+    google.protobuf.StringValue urn = 1; // optional
+    google.protobuf.StringValue permalink = 2; // optional
 }

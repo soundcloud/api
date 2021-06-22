@@ -68,7 +68,7 @@ class UserRepresentationsServiceSpec extends UnitSpecification {
     "Enriches users with follow counts, repost counts, public favorites count, creator subscriptions" in new Context {
       stubClients()
 
-      val result = Await.result(userRepresentationService.getUsers(session, requestedUrns.toSet))
+      val result = Await.result(userRepresentationService.getUsers(session, requestedUrns))
 
       result.head.followers_count ==== Some(999)
       result.head.followings_count ==== Some(999)
@@ -82,7 +82,7 @@ class UserRepresentationsServiceSpec extends UnitSpecification {
       when(okidokiClient.fetch(session, requestedUrns.toSet))
         .thenReturn(Future.value(List()))
 
-      val result = Await.result(userRepresentationService.getUsers(session, requestedUrns.toSet))
+      val result = Await.result(userRepresentationService.getUsers(session, requestedUrns))
 
       result.isEmpty ==== true
     }
@@ -94,7 +94,7 @@ class UserRepresentationsServiceSpec extends UnitSpecification {
         NoSubmarineCreatorSubscriptionsResponse
       )
 
-      val result = Await.result(userRepresentationService.getUsers(session, requestedUrns.toSet))
+      val result = Await.result(userRepresentationService.getUsers(session, requestedUrns))
 
       result.head.subscriptions ==== Seq.empty
     }
@@ -103,7 +103,7 @@ class UserRepresentationsServiceSpec extends UnitSpecification {
       stubClients()
       when(followCountsClient.counts(session, requestedUrns)).thenReturn(Future.value(List()))
 
-      val result = Await.result(userRepresentationService.getUsers(session, requestedUrns.toSet))
+      val result = Await.result(userRepresentationService.getUsers(session, requestedUrns))
 
       result.head.followers_count ==== Some(0)
       result.head.followings_count ==== Some(0)
@@ -114,7 +114,7 @@ class UserRepresentationsServiceSpec extends UnitSpecification {
       when(repostsClient.getRepostCountsByUrnWithFallback(session, requestedUrns.toSet))
         .thenReturn(Future.value(Map[Urn, Long]()))
 
-      val result = Await.result(userRepresentationService.getUsers(session, requestedUrns.toSet))
+      val result = Await.result(userRepresentationService.getUsers(session, requestedUrns))
 
       result.head.reposts_count ==== Some(0)
     }
@@ -124,7 +124,7 @@ class UserRepresentationsServiceSpec extends UnitSpecification {
       when(lieblingClient.userTotalLikeCount(session, requestedUrns))
         .thenReturn(Future.value(List()))
 
-      val result = Await.result(userRepresentationService.getUsers(session, requestedUrns.toSet))
+      val result = Await.result(userRepresentationService.getUsers(session, requestedUrns))
 
       result.head.public_favorites_count ==== Some(0)
     }
