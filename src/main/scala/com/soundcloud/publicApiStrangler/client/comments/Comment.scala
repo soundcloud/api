@@ -1,6 +1,7 @@
 package com.soundcloud.publicApiStrangler.client.comments
 
 import com.soundcloud.publicApiStrangler.client.mothership.response.representation.UserRepresentation
+import com.soundcloud.publicApiStrangler.support.HtmlSanitizer
 import play.api.libs.json.{Json, Writes}
 
 case class Comment(
@@ -29,7 +30,7 @@ object Comment {
     Json.obj(
       "kind" -> "comment",
       "id" -> comment.id,
-      "body" -> comment.body,
+      "body" -> HtmlSanitizer.sanitize(comment.body),
       "created_at" -> comment.createdAt,
       "timestamp" -> comment.timestamp,
       "track_id" -> comment.trackId,

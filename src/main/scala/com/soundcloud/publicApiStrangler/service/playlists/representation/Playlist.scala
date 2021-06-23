@@ -3,6 +3,7 @@ package com.soundcloud.publicApiStrangler.service.playlists.representation
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.publicApiStrangler.client.mothership.response.representation.UserRepresentation
 import com.soundcloud.publicApiStrangler.service.trackrepresentation.TrackRepresentation
+import com.soundcloud.publicApiStrangler.support.HtmlSanitizer
 import play.api.libs.json._
 
 import java.net.URLEncoder
@@ -58,15 +59,15 @@ object Playlist {
 
     var playlistJson = Json.obj(
       "duration" -> playlist.duration,
-      "genre" -> playlist.genre,
+      "genre" -> HtmlSanitizer.sanitize(playlist.genre),
       "release_day" -> playlist.releaseDay,
       "permalink" -> playlist.permalink,
       "permalink_url" -> playlist.permalinkUrl,
       "release_month" -> playlist.releaseMonth,
       "release_year" -> playlist.releaseYear,
-      "description" -> playlist.description,
+      "description" -> playlist.description.map(HtmlSanitizer.sanitize),
       "uri" -> playlist.uri,
-      "label_name" -> playlist.labelName,
+      "label_name" -> playlist.labelName.map(HtmlSanitizer.sanitize),
       "label_id" -> playlist.labelId.map(id => id.toInt),
       "label" -> playlist.label,
       "tag_list" -> playlist.tagList,
@@ -82,11 +83,11 @@ object Playlist {
       "likes_count" -> playlist.likesCount,
       "sharing" -> playlist.sharing,
       "created_at" -> playlist.createdAt.map(formatter.format(_)),
-      "release" -> playlist.release,
+      "release" -> playlist.release.map(HtmlSanitizer.sanitize),
       "tags" -> playlist.tagList,
       "kind" -> playlist.kind,
-      "title" -> playlist.title,
-      "purchase_title" -> playlist.purchaseTitle,
+      "title" -> HtmlSanitizer.sanitize(playlist.title),
+      "purchase_title" -> playlist.purchaseTitle.map(HtmlSanitizer.sanitize),
       "ean" -> playlist.ean,
       "streamable" -> playlist.streamable,
       "embeddable_by" -> playlist.embeddableBy,
