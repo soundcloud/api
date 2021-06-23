@@ -41,7 +41,6 @@ import com.twitter.finagle.http.{Request, Response}
 import com.twitter.finagle.service.RetryPolicy.RetryableWriteException
 import com.twitter.util.{Throw, Try}
 import proto.soundcloud.authenticator.access_grant_exchange.AccessGrantExchangeClientProtobuf
-import proto.soundcloud.authenticator.oauth.AuthorizationClientProtobuf
 import proto.soundcloud.playlists.api.PlaylistsClientProtobuf
 import proto.soundcloud.tracks.api.{
   LikesClientProtobuf,
@@ -211,11 +210,6 @@ class Clients(
   val playlistDeletionClient = new PlaylistDeletionClient(okidokiJsonClient)
   val commentsService =
     new CommentService(richOkidokiClient, moshimoshiClient, moshimoshiCommentsClient)
-
-  private val authorizationConfig = HttpClientConfig.from(ResourceName("oauth_authorization"), config)
-  private val authorizationHttpClient = HttpClient[String](authorizationConfig, telemetry)
-  private val authorizationTelemetry = ClientTelemetry.from(authorizationConfig, telemetry)
-  val authorizationClient = new AuthorizationClientProtobuf(authorizationHttpClient.httpService, authorizationTelemetry)
 
   private val oauthGrantExchangeClient = TwirpClient(
     ResourceName("oauth_authorization"),

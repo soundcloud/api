@@ -30,17 +30,6 @@ class DispatchToMothershipHandler(
         }
     }
   }
-
-  // Deprecated! Only used for token exchange until it is properly implemented in PAS itself.
-  def dispatchUnauthenticated(request: HandlerRequest): Future[Response] = {
-    mothershipClient(ForwardedRequest(request.request, None))
-      .map(res => JsonResponseBuilder(res.status, res.contentString, res.headerMap.toMap).build)
-      .handle {
-        case NonFatal(exception: Exception) =>
-          logger.debug("Bad response from mothership", exception)
-          ErrorResponse(Status.InternalServerError)
-      }
-  }
 }
 
 object ForwardedRequest {
