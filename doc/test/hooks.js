@@ -24,7 +24,7 @@ var skippedStatuses = ["400", "403", "404", "422", "429", "500"];
 
 function addCredentials(transaction) {
     const clientId = process.env.CLIENT_ID;
-    const accessToken = process.env.ACCESS_TOKEN;
+    const accessToken = process.env.OAUTH_TOKEN;
 
     var paramToAdd = "client_id=" + clientId;
     if (transaction.fullPath.indexOf('?') > -1) {

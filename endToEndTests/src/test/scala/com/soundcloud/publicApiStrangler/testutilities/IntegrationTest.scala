@@ -13,7 +13,7 @@ trait IntegrationTest extends Specification with SpinningUpAppSupport {
 
     def clientId = config.get("CLIENT_ID", DataSensitivity.SENSITIVE)
 
-    def token = config.get("ACCESS_TOKEN", DataSensitivity.SENSITIVE)
+    def token = config.get("OAUTH_TOKEN", DataSensitivity.SENSITIVE)
 
     lazy val freeTierTrackId = "405325995"
     lazy val freeTierNonStreamableTrackId = "1015448728"

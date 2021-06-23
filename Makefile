@@ -42,15 +42,6 @@ format: auto-apply-lint
 auto-apply-lint:
 	$(SBT) scalafmtAll
 
-fetch-token:
-	curl -X POST "https://api.soundcloud.com/oauth2/token" \
-		-d "grant_type=password" \
-		-d "username=$(USER)" -d "password=$(PASSWORD)" \
-		-d "client_id=$(CLIENT_ID)" -d "client_secret=$(CLIENT_SECRET)"
-
-generate-token:
-	sc crun base-dev --config=e2e.secrets --enable-proxy 'make -s fetch-token | jq .access_token'
-
 check-prometheus:
 	sc prometheus promtool -- check rules config/prometheus.yml
 
@@ -65,7 +56,7 @@ end-to-end-test: stop-containers
 	echo "This assumes you've run make package before"
 	CONFIG=e2e VERSION=$(PUBLIC_API_STRANGLER_VERSION) docker-compose -f docker-compose-e2e-tests.yml up -d publicapistrangler
 	sc crun -l base-dev -- sc wait http publicapistrangler:5000/-/health
-	sc crun -l sbt -e ACCESS_TOKEN=$(shell make -s generate-token) --config=e2e.secrets -- sbt endToEnd/test
+	sc crun -l sbt --config=e2e.secrets -- sbt endToEnd/test
 	make docker-down
 
 local-contract-test: stop-containers docker-up-development
@@ -75,7 +66,7 @@ package-assets:
 	make --directory=asset-uploads package
 
 contract-test: package package-assets stop-containers docker-up-development
-	sc crun -l nodejs-12-dev -e ACCESS_TOKEN=$(shell make -s generate-token) --enable-proxy --config=e2e.secrets -- make --directory=doc contract-test
+	sc crun -l nodejs-12-dev --enable-proxy --config=e2e.secrets -- make --directory=doc contract-test
 	make docker-down
 
 docker-down:
