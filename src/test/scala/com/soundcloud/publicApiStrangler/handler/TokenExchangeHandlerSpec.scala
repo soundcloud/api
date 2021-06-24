@@ -15,7 +15,7 @@ class TokenExchangeHandlerSpec extends UnitSpecification with DataTables {
   trait Context extends Scope {
     val telemetry: Telemetry = Telemetry.createIsolatedInstance
 
-    val credential: ClientCredential = ClientCredential(id = "s6BhdRkqt3", secret = "47HDu8s")
+    lazy val credential: ClientCredential = ClientCredential(id = "s6BhdRkqt3", secret = "47HDu8s")
     val grant: ClientCredentialsGrant = ClientCredentialsGrant(Set.empty)
     lazy val context: RequestContext = RequestContext("0.1.2.3", "Netscape Navigator 0.86 Beta 3")
 
@@ -113,6 +113,15 @@ class TokenExchangeHandlerSpec extends UnitSpecification with DataTables {
           "it returns a response with content type json" in new Context {
             result
             result.contentType ==== Some("application/json; charset=utf-8")
+          }
+
+          "when the request contains a repost client id" >> {
+            "it returns a response with content type plain/text" in new Context {
+              override lazy val credential = ClientCredential("RcTym36UFfGVYMkMND74sakJwAw498ME", "any")
+
+              result
+              result.contentType ==== Some("text/plain; charset=utf-8")
+            }
           }
         }
 

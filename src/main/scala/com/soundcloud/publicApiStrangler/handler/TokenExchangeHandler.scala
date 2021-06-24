@@ -1,6 +1,6 @@
 package com.soundcloud.publicApiStrangler.handler
 
-import com.soundcloud.jvmkit.module.http.server.{Handler, HandlerRequest, JsonResponseBuilder}
+import com.soundcloud.jvmkit.module.http.server.{Handler, HandlerRequest, JsonResponseBuilder, ResponseBuilder}
 import com.soundcloud.jvmkit.module.outcome._
 import com.soundcloud.jvmkit.module.telemetry.Telemetry
 import com.soundcloud.publicApiStrangler.service.oauth.TokenExchangeService
@@ -25,12 +25,20 @@ class TokenExchangeHandler(
     }
   }
 
+  // respost app urn soundcloud:applications:314153
+  private val repostClientIds =
+    Set("1jtbGRxaCld7OEmR7TVYeJy0qaFQqnSf", "RcTym36UFfGVYMkMND74sakJwAw498ME", "SZa63XTt7C8KdgCVBFGoPGJVQojLS4KN")
+
   private def dispatchToAuthenticator(request: TokenExchangeRequest): Future[Response] =
     tokenExchangeService.exchange(request).map {
       case Good(accessToken) =>
         incrementGrantExchangeCounter(request.accessGrant, Status.Ok)
-        JsonResponseBuilder.ok(Json.stringify(Json.toJson(accessToken)))
 
+        if (repostClientIds.contains(request.clientCredential.id)) {
+          ResponseBuilder.ok(Json.stringify(Json.toJson(accessToken)))
+        } else {
+          JsonResponseBuilder.ok(Json.stringify(Json.toJson(accessToken)))
+        }
       case Bad(NotValid(reason :: _)) =>
         incrementGrantExchangeCounter(request.accessGrant, Status.Unauthorized, reason)
         buildErrorResponse(Status.Unauthorized, reason)
