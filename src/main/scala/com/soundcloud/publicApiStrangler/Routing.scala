@@ -8,7 +8,7 @@ import com.twitter.finagle.http.Method
 import com.twitter.util.Future
 
 object Routing {
-  val tokenExchangePath = "/oauth2/token"
+  val grantExchangePath = "/oauth2/token"
 
   // Mothership routes accept the /v1 suffix
   // See https://github.com/soundcloud/soundcloud/blob/master/lib/rack/extract_api_version.rb
@@ -64,8 +64,8 @@ object Routing {
       route(Method.Get, "/users/:userId/web-profiles", mothershipDispatcher.dispatch)
   }
 
-  def forTokenExchange(handler: Handler): List[(Method, String, Handler)] = {
-    route(Method.Post, tokenExchangePath, handler)
+  def forOauthGrantExchange(handler: Handler): List[(Method, String, Handler)] = {
+    route(Method.Post, grantExchangePath, handler)
   }
 
   def forSingleTrackHandler(singleTrackHandler: SingleTrackHandler): List[(Method, String, Handler)] = {

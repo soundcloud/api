@@ -5,14 +5,14 @@ import com.soundcloud.publicApiStrangler.test.UnitSpecification
 import com.twitter.finagle.http.{Request, RequestBuilder}
 import com.twitter.io.Buf
 
-class TokenExchangeRequestParserSpec extends UnitSpecification {
+class GrantExchangeRequestParserSpec extends UnitSpecification {
   "parsing token exchange requests should" >> {
     trait Context extends Scope {
       val paramsParser = new RailsLikeParamsParser()
-      val parser = new TokenExchangeRequestParser(paramsParser)
+      val parser = new GrantExchangeRequestParser(paramsParser)
 
       val request: Request
-      lazy val result: Either[TokenExchangeRequestError, TokenExchangeRequest] = parser.parse(HandlerRequest(request))
+      lazy val result: Either[GrantExchangeRequestError, GrantExchangeRequest] = parser.parse(HandlerRequest(request))
     }
 
     "fail for requests that can't be parsed" in new Context {
@@ -82,7 +82,7 @@ class TokenExchangeRequestParserSpec extends UnitSpecification {
         )
 
         result ==== Right(
-          TokenExchangeRequest(
+          GrantExchangeRequest(
             ClientCredential("s6BhdRkqt3", "gX1fBat3bV"),
             AuthorizationCodeGrant("i1WsRn1uB1", "http://redirect/callback"),
             RequestContext(remoteIp, userAgent)
@@ -104,7 +104,7 @@ class TokenExchangeRequestParserSpec extends UnitSpecification {
         "when no scope parameter is included" >> {
           "it returns a ClientCredentialsGrant with empty scope" in new ClientCredentialsParamsContext {
             result ==== Right(
-              TokenExchangeRequest(
+              GrantExchangeRequest(
                 ClientCredential("s6BhdRkqt3", "gX1fBat3bV"),
                 ClientCredentialsGrant(Set.empty),
                 RequestContext(remoteIp, userAgent)
@@ -118,7 +118,7 @@ class TokenExchangeRequestParserSpec extends UnitSpecification {
             override def params: Map[String, String] = super.params ++ Map("scope" -> "some_range another_range")
 
             result ==== Right(
-              TokenExchangeRequest(
+              GrantExchangeRequest(
                 ClientCredential("s6BhdRkqt3", "gX1fBat3bV"),
                 ClientCredentialsGrant(Set("some_range", "another_range")),
                 RequestContext(remoteIp, userAgent)
@@ -131,7 +131,7 @@ class TokenExchangeRequestParserSpec extends UnitSpecification {
               override def params: Map[String, String] = super.params ++ Map("scope" -> " ab c d   f")
 
               result should beLike {
-                case Right(TokenExchangeRequest(_, ClientCredentialsGrant(scope), _)) =>
+                case Right(GrantExchangeRequest(_, ClientCredentialsGrant(scope), _)) =>
                   scope ==== Set("ab", "c", "d", "f")
               }
             }
@@ -154,7 +154,7 @@ class TokenExchangeRequestParserSpec extends UnitSpecification {
         "when no scope parameter is included" >> {
           "it returns a PasswordGrant with empty scopes" in new PasswordGrantParamsContext {
             result ==== Right(
-              TokenExchangeRequest(
+              GrantExchangeRequest(
                 ClientCredential("s6BhdRkqt3", "gX1fBat3bV"),
                 PasswordGrant("johndoe", "A3ddj3w", Set.empty),
                 RequestContext(remoteIp, userAgent)
@@ -168,7 +168,7 @@ class TokenExchangeRequestParserSpec extends UnitSpecification {
             override def params = super.params ++ Map("scope" -> "range_one range_two")
 
             result ==== Right(
-              TokenExchangeRequest(
+              GrantExchangeRequest(
                 ClientCredential("s6BhdRkqt3", "gX1fBat3bV"),
                 PasswordGrant("johndoe", "A3ddj3w", Set("range_one", "range_two")),
                 RequestContext(remoteIp, userAgent)
@@ -188,7 +188,7 @@ class TokenExchangeRequestParserSpec extends UnitSpecification {
         )
 
         result ==== Right(
-          TokenExchangeRequest(
+          GrantExchangeRequest(
             ClientCredential("s6BhdRkqt3", "gX1fBat3bVt"),
             RefreshTokenGrant("n4E9O119d"),
             RequestContext(remoteIp, userAgent)

@@ -31,7 +31,7 @@ import com.soundcloud.publicApiStrangler.client.trackmetadata.TrackmetadataClien
 import com.soundcloud.publicApiStrangler.service._
 import com.soundcloud.publicApiStrangler.service.comments.CommentService
 import com.soundcloud.publicApiStrangler.service.media.{StreamService, TrackAccessRecorderService}
-import com.soundcloud.publicApiStrangler.service.oauth.TokenExchangeService
+import com.soundcloud.publicApiStrangler.service.oauth.GrantExchangeService
 import com.soundcloud.publicApiStrangler.service.trackrepresentation.{TrackRepresentationsService, TrackUpdateService}
 import com.soundcloud.publicApiStrangler.service.tracks.VisibleTrackMapper
 import com.soundcloud.publicApiStrangler.service.users.{MeService, UserRepresentationsService}
@@ -217,5 +217,5 @@ class Clients(
     telemetry,
     new AccessGrantExchangeClientProtobuf(_, _)
   )
-  val oauthGrantExchangeService = new TokenExchangeService(oauthGrantExchangeClient)
+  val grantExchangeService = new GrantExchangeService(oauthGrantExchangeClient)
 }

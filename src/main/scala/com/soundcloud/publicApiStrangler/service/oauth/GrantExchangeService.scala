@@ -6,13 +6,13 @@ import com.twitter.util.Future
 import proto.soundcloud.authenticator.{access_grant_exchange => proto}
 import proto.AccessGrantExchangeResponse.{Error => AccessGrantExchangeError}
 
-class TokenExchangeService(accessGrantExchangeService: proto.AccessGrantExchangeService) {
-  def exchange(exchangeRequest: TokenExchangeRequest): Future[Outcome[AccessTokenResponse]] = {
+class GrantExchangeService(accessGrantExchangeService: proto.AccessGrantExchangeService) {
+  def exchange(exchangeRequest: GrantExchangeRequest): Future[Outcome[AccessTokenResponse]] = {
     dispatch(exchangeRequest)
       .map(transformResponse)
   }
 
-  private def dispatch(request: TokenExchangeRequest): Future[proto.AccessGrantExchangeResponse] = {
+  private def dispatch(request: GrantExchangeRequest): Future[proto.AccessGrantExchangeResponse] = {
     val clientCredentials =
       proto.ClientCredential(request.clientCredential.id, request.clientCredential.secret)
 

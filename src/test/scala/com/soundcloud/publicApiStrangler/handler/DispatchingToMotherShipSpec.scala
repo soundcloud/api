@@ -29,7 +29,7 @@ class DispatchingToMotherShipSpec extends UnitSpecification {
   }
 
   trait TokenExchangeContext extends HandlerSpecificationScope {
-    override def routingDefinitions() = Routing.forTokenExchange(_ => Future(ResponseBuilder.ok()))
+    override def routingDefinitions() = Routing.forOauthGrantExchange(_ => Future(ResponseBuilder.ok()))
   }
 
   trait UserRelatedMothershipContext extends HandlerSpecificationScope {

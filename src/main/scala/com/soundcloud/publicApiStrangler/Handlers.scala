@@ -6,7 +6,7 @@ import com.soundcloud.publicApiStrangler.handler._
 import com.soundcloud.publicApiStrangler.handler.comments.CommentsHandler
 import com.soundcloud.publicApiStrangler.handler.search.SearchHandler
 import com.soundcloud.publicApiStrangler.service.media.DownloadService
-import com.soundcloud.publicApiStrangler.support.oauth.{RailsLikeParamsParser, TokenExchangeRequestParser}
+import com.soundcloud.publicApiStrangler.support.oauth.{RailsLikeParamsParser, GrantExchangeRequestParser}
 
 class Handlers(
     telemetry: Telemetry,
@@ -84,12 +84,12 @@ class Handlers(
 
   val likesHandler = new LikesHandler(userAuthentication, likesService, userRepresentationsService)
 
-  val tokenExchangeRequestMapper = new TokenExchangeRequestParser(new RailsLikeParamsParser())
-  val tokenExchangeHandler =
-    new TokenExchangeHandler(
+  val grantExchangeRequestMapper = new GrantExchangeRequestParser(new RailsLikeParamsParser())
+  val oauthGrantExchangeHandler =
+    new OauthGrantExchangeHandler(
       telemetry,
-      tokenExchangeRequestMapper.parse,
-      oauthGrantExchangeService
+      grantExchangeRequestMapper.parse,
+      grantExchangeService
     )
 
   val commentsHandler = new CommentsHandler(userAuthentication, commentsService)

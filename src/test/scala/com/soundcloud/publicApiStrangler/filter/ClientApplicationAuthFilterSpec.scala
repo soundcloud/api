@@ -19,7 +19,7 @@ class ClientApplicationAuthFilterSpec extends Specification with Mockito {
     val telemetry = Telemetry.createIsolatedInstance
     val router = HandlerRouterBuilder()
       .register(Method.Get, "/foo", _ => Future.value(JsonResponseBuilder.ok()))
-      .register(Method.Post, Routing.tokenExchangePath, _ => Future.value(JsonResponseBuilder.ok()))
+      .register(Method.Post, Routing.grantExchangePath, _ => Future.value(JsonResponseBuilder.ok()))
       .build
     val sessionBuilder = new UserSessionBuilder()
     val request = HandlerRequest(Request(s"/foo", ("client_id", "999")))

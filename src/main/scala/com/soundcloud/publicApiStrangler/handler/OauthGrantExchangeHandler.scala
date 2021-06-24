@@ -3,17 +3,17 @@ package com.soundcloud.publicApiStrangler.handler
 import com.soundcloud.jvmkit.module.http.server.{Handler, HandlerRequest, JsonResponseBuilder, ResponseBuilder}
 import com.soundcloud.jvmkit.module.outcome._
 import com.soundcloud.jvmkit.module.telemetry.Telemetry
-import com.soundcloud.publicApiStrangler.service.oauth.TokenExchangeService
+import com.soundcloud.publicApiStrangler.service.oauth.GrantExchangeService
 import com.soundcloud.publicApiStrangler.support.ErrorResponse
 import com.soundcloud.publicApiStrangler.support.oauth._
 import com.twitter.finagle.http.{Response, Status}
 import com.twitter.util.Future
 import play.api.libs.json.{JsString, Json}
 
-class TokenExchangeHandler(
+class OauthGrantExchangeHandler(
     telemetry: Telemetry,
-    parseRequest: HandlerRequest => Either[TokenExchangeRequestError, TokenExchangeRequest],
-    tokenExchangeService: TokenExchangeService
+    parseRequest: HandlerRequest => Either[GrantExchangeRequestError, GrantExchangeRequest],
+    grantExchangeService: GrantExchangeService
 ) extends Handler {
 
   def apply(request: HandlerRequest): Future[Response] = {
@@ -29,8 +29,8 @@ class TokenExchangeHandler(
   private val repostClientIds =
     Set("1jtbGRxaCld7OEmR7TVYeJy0qaFQqnSf", "RcTym36UFfGVYMkMND74sakJwAw498ME", "SZa63XTt7C8KdgCVBFGoPGJVQojLS4KN")
 
-  private def dispatchToAuthenticator(request: TokenExchangeRequest): Future[Response] =
-    tokenExchangeService.exchange(request).map {
+  private def dispatchToAuthenticator(request: GrantExchangeRequest): Future[Response] =
+    grantExchangeService.exchange(request).map {
       case Good(accessToken) =>
         incrementGrantExchangeCounter(request.accessGrant, Status.Ok)
 
@@ -56,7 +56,7 @@ class TokenExchangeHandler(
     Some(Map("error_code" -> JsString(reason)))
   )
 
-  private def buildBadRequestResponse(error: TokenExchangeRequestError): Future[Response] = {
+  private def buildBadRequestResponse(error: GrantExchangeRequestError): Future[Response] = {
     val response = ErrorResponse(
       Status.BadRequest,
       errorCode(error),
@@ -66,7 +66,7 @@ class TokenExchangeHandler(
     Future.value(response)
   }
 
-  private def errorCode(error: TokenExchangeRequestError) =
+  private def errorCode(error: GrantExchangeRequestError) =
     error match {
       case InvalidRequest(_) | UnparseableRequest(_) => "invalid_request"
       case UnsupportedGrantType(_) => "unsupported_grant_type"
@@ -85,7 +85,7 @@ class TokenExchangeHandler(
     grantExchangeCounter.labels(accessGrant.grantType, status.code.toString, reason).inc()
   }
 
-  private def incrementGrantExchangeCounterBadRequest(error: TokenExchangeRequestError): Unit = {
+  private def incrementGrantExchangeCounterBadRequest(error: GrantExchangeRequestError): Unit = {
     grantExchangeCounter.labels("unknown", "400", error.errorType).inc()
   }
 }

@@ -3,7 +3,7 @@ package com.soundcloud.publicApiStrangler.support.oauth
 abstract sealed class AccessGrant(val grantType: String)
 
 object AccessGrant {
-  type Validation[A] = Either[TokenExchangeRequestError, A]
+  type Validation[A] = Either[GrantExchangeRequestError, A]
 }
 
 case class AuthorizationCodeGrant(code: String, redirectUri: String) extends AccessGrant(AuthorizationCodeGrant.Name)

@@ -44,7 +44,7 @@ class ClientApplicationAuthFilter(userAuthentication: UserAuthentication, teleme
 
     // Token exchange accepts client ids in the request body instead of in the params for historical reasons.
     // Authenticator does not parse the body, so we need to exclude the path here to avoid returning 401.
-    if (path == Routing.tokenExchangePath) {
+    if (path == Routing.grantExchangePath) {
       service(request)
     } else {
       userAuthentication.withUserSession(HandlerRequest(request)) { userSession =>

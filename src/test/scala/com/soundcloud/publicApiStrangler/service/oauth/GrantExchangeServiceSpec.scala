@@ -6,17 +6,17 @@ import com.soundcloud.publicApiStrangler.test.UnitSpecification
 import com.twitter.util.{Await, Future}
 import proto.soundcloud.authenticator.{access_grant_exchange => proto}
 
-class TokenExchangeServiceSpec extends UnitSpecification {
+class GrantExchangeServiceSpec extends UnitSpecification {
   trait Context extends Scope {
     val accessGrantExchangeService = mock[proto.AccessGrantExchangeService]
 
-    val subject = new TokenExchangeService(accessGrantExchangeService)
+    val subject = new GrantExchangeService(accessGrantExchangeService)
 
     def accessGrant: AccessGrant
 
     val clientCredential = ClientCredential("some-client-id", "some-client-secret")
 
-    def tokenExchangeRequest: TokenExchangeRequest = TokenExchangeRequest(
+    def grantExchangeRequest: GrantExchangeRequest = GrantExchangeRequest(
       clientCredential,
       accessGrant,
       RequestContext("remote-ip", "user-agent")
@@ -29,7 +29,7 @@ class TokenExchangeServiceSpec extends UnitSpecification {
 
     val protoClientCredential = proto.ClientCredential(clientCredential.id, clientCredential.secret)
 
-    def result: Outcome[AccessTokenResponse] = Await.result(subject.exchange(tokenExchangeRequest))
+    def result: Outcome[AccessTokenResponse] = Await.result(subject.exchange(grantExchangeRequest))
   }
 
   "when received request contains an auth code grant" >> {

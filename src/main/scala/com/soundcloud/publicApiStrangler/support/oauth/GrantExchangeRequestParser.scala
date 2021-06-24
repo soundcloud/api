@@ -2,19 +2,19 @@ package com.soundcloud.publicApiStrangler.support.oauth
 
 import com.soundcloud.jvmkit.module.http.server.HandlerRequest
 
-class TokenExchangeRequestParser(railsLikeParamsParser: RailsLikeParamsParser) {
-  def parse(request: HandlerRequest): Either[TokenExchangeRequestError, TokenExchangeRequest] =
+class GrantExchangeRequestParser(railsLikeParamsParser: RailsLikeParamsParser) {
+  def parse(request: HandlerRequest): Either[GrantExchangeRequestError, GrantExchangeRequest] =
     for {
       params <- railsLikeParamsParser.parse(request).toRight(UnparseableRequest(request.mediaType))
       accessGrant <- readAccessGrant(params)
       clientCredential <- readClientCredential(params)
       context <- readContext(request)
-    } yield TokenExchangeRequest(clientCredential, accessGrant, context)
+    } yield GrantExchangeRequest(clientCredential, accessGrant, context)
 
   private def getNonBlank(values: Map[String, String], key: String) =
     values.get(key).filter(!_.trim.isEmpty)
 
-  private def readClientCredential(params: Map[String, String]): Either[TokenExchangeRequestError, ClientCredential] = {
+  private def readClientCredential(params: Map[String, String]): Either[GrantExchangeRequestError, ClientCredential] = {
     val credOpt = for {
       clientId <- getNonBlank(params, "client_id")
       clientSecret <- getNonBlank(params, "client_secret")
@@ -22,7 +22,7 @@ class TokenExchangeRequestParser(railsLikeParamsParser: RailsLikeParamsParser) {
     credOpt.toRight(MissingClientCredentials())
   }
 
-  private def readAccessGrant(params: Map[String, String]): Either[TokenExchangeRequestError, AccessGrant] =
+  private def readAccessGrant(params: Map[String, String]): Either[GrantExchangeRequestError, AccessGrant] =
     getNonBlank(params, "grant_type") match {
       case Some(AuthorizationCodeGrant.Name) =>
         val grantOpt = for {
@@ -61,7 +61,7 @@ class TokenExchangeRequestParser(railsLikeParamsParser: RailsLikeParamsParser) {
       .toSet
   }
 
-  private def readContext(request: HandlerRequest): Either[TokenExchangeRequestError, RequestContext] =
+  private def readContext(request: HandlerRequest): Either[GrantExchangeRequestError, RequestContext] =
     (request.remoteIp(), request.headerMap.get("User-Agent").getOrElse("")) match {
       case (Some(remoteIp), userAgent) => Right(RequestContext(remoteIp, userAgent))
       case _ => Left(InvalidRequest("remote_ip_missing"))

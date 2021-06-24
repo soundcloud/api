@@ -3,7 +3,7 @@ package com.soundcloud.publicApiStrangler.handler
 import com.soundcloud.jvmkit.module.http.server.HandlerRequest
 import com.soundcloud.jvmkit.module.outcome.{GoodOps, NotAllowed, NotAuthorized, NotValid, Outcome}
 import com.soundcloud.jvmkit.module.telemetry.Telemetry
-import com.soundcloud.publicApiStrangler.service.oauth.{AccessTokenResponse, TokenExchangeService}
+import com.soundcloud.publicApiStrangler.service.oauth.{AccessTokenResponse, GrantExchangeService}
 import com.soundcloud.publicApiStrangler.support.oauth._
 import com.soundcloud.publicApiStrangler.test.UnitSpecification
 import com.twitter.finagle.http.Status
@@ -11,7 +11,7 @@ import com.twitter.util.{Await, Future}
 import org.specs2.matcher.DataTables
 import play.api.libs.json.{JsDefined, JsString, Json}
 
-class TokenExchangeHandlerSpec extends UnitSpecification with DataTables {
+class OAuthGrantExchangeHandlerSpec extends UnitSpecification with DataTables {
   trait Context extends Scope {
     val telemetry: Telemetry = Telemetry.createIsolatedInstance
 
@@ -19,20 +19,18 @@ class TokenExchangeHandlerSpec extends UnitSpecification with DataTables {
     val grant: ClientCredentialsGrant = ClientCredentialsGrant(Set.empty)
     lazy val context: RequestContext = RequestContext("0.1.2.3", "Netscape Navigator 0.86 Beta 3")
 
-    val tokenExchangeRequestParseResult: Either[TokenExchangeRequestError, TokenExchangeRequest] =
-      Right(TokenExchangeRequest(credential, grant, context))
+    val grantExchangeRequestParseResult: Either[GrantExchangeRequestError, GrantExchangeRequest] =
+      Right(GrantExchangeRequest(credential, grant, context))
 
-    val tokenExchangeService = mock[TokenExchangeService]
-    def tokenExchangeResponse: Outcome[AccessTokenResponse] = AccessTokenResponse("", None, None, Seq.empty).good
-    tokenExchangeService.exchange(any()) returns Future.value(tokenExchangeResponse)
-
-    def authenticatorClientIdList: Set[String] = Set.empty
+    val grantExchangeService = mock[GrantExchangeService]
+    def grantExchangeResponse: Outcome[AccessTokenResponse] = AccessTokenResponse("", None, None, Seq.empty).good
+    grantExchangeService.exchange(any()) returns Future.value(grantExchangeResponse)
 
     val handler =
-      new TokenExchangeHandler(
+      new OauthGrantExchangeHandler(
         telemetry,
-        _ => tokenExchangeRequestParseResult,
-        tokenExchangeService
+        _ => grantExchangeRequestParseResult,
+        grantExchangeService
       )
 
     def getGrantExchangeCount(grantType: AccessGrant, status: Status, reason: String = ""): Int = {
@@ -67,7 +65,7 @@ class TokenExchangeHandlerSpec extends UnitSpecification with DataTables {
       "and statically valid" >> {
         "it sends the request to the TokenExchangeService" in new Context {
           result
-          there was one(tokenExchangeService).exchange(TokenExchangeRequest(credential, grant, context))
+          there was one(grantExchangeService).exchange(GrantExchangeRequest(credential, grant, context))
         }
 
         "when the exchange was successful" >> {
@@ -94,7 +92,7 @@ class TokenExchangeHandlerSpec extends UnitSpecification with DataTables {
               // @formatter:on
             { (serviceResult, expectedJson) =>
               new Context {
-                override def tokenExchangeResponse = serviceResult.good
+                override def grantExchangeResponse = serviceResult.good
 
                 result.status ==== Status.Ok
                 Json.parse(result.contentString) ==== expectedJson
@@ -103,7 +101,7 @@ class TokenExchangeHandlerSpec extends UnitSpecification with DataTables {
           }
 
           "it counts the grant type and status" in new Context {
-            override def tokenExchangeResponse: Outcome[AccessTokenResponse] =
+            override def grantExchangeResponse: Outcome[AccessTokenResponse] =
               AccessTokenResponse("aaa", None, None, Seq.empty).good
             result
             getGrantExchangeCount(grant, Status.Ok) ==== 1
@@ -135,7 +133,7 @@ class TokenExchangeHandlerSpec extends UnitSpecification with DataTables {
               // @formatter:on
             { (serviceResult, expectedMessage, expectedStatus) =>
               new Context {
-                override def tokenExchangeResponse = serviceResult.bad
+                override def grantExchangeResponse = serviceResult.bad
 
                 result.status ==== expectedStatus
                 (Json.parse(result.contentString) \ "message").get ==== JsString(expectedMessage)
@@ -145,7 +143,7 @@ class TokenExchangeHandlerSpec extends UnitSpecification with DataTables {
           }
 
           "it counts the grant type, status and failure reason" in new Context {
-            override def tokenExchangeResponse: Outcome[AccessTokenResponse] = NotValid("invalid_grant").bad
+            override def grantExchangeResponse: Outcome[AccessTokenResponse] = NotValid("invalid_grant").bad
             result
             getGrantExchangeCount(grant, Status.Unauthorized, "invalid_grant") ==== 1
             getGrantExchangeCount(grant, Status.Unauthorized, "other_failure") ==== 0
@@ -155,7 +153,7 @@ class TokenExchangeHandlerSpec extends UnitSpecification with DataTables {
 
       "but statically invalid" >> {
         trait InvalidGrantContext extends Context {
-          override val tokenExchangeRequestParseResult = Left(InvalidGrant("password"))
+          override val grantExchangeRequestParseResult = Left(InvalidGrant("password"))
         }
 
         "fails the request without proxying to the dispatch handler" in new InvalidGrantContext {
@@ -172,7 +170,7 @@ class TokenExchangeHandlerSpec extends UnitSpecification with DataTables {
 
     "but the grant type is not supported" >> {
       trait UnsupportedGrantTypeContext extends Context {
-        override val tokenExchangeRequestParseResult = Left(UnsupportedGrantType("this_type_is_not_supported"))
+        override val grantExchangeRequestParseResult = Left(UnsupportedGrantType("this_type_is_not_supported"))
       }
 
       "fails the request without proxying to the dispatch handler" in new UnsupportedGrantTypeContext {
@@ -189,7 +187,7 @@ class TokenExchangeHandlerSpec extends UnitSpecification with DataTables {
 
   "when the request cannot be parsed" >> {
     trait UnparseableRequestContext extends Context {
-      override val tokenExchangeRequestParseResult = Left(UnparseableRequest(None))
+      override val grantExchangeRequestParseResult = Left(UnparseableRequest(None))
     }
 
     "fails the request without proxying to the dispatch handler" in new UnparseableRequestContext {
