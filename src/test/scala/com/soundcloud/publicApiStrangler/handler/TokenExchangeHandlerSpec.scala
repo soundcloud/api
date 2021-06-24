@@ -109,6 +109,11 @@ class TokenExchangeHandlerSpec extends UnitSpecification with DataTables {
             getGrantExchangeCount(grant, Status.Ok) ==== 1
             getGrantExchangeCount(grant, Status.BadRequest) ==== 0
           }
+
+          "it returns a response with content type json" in new Context {
+            result
+            result.contentType ==== Some("application/json; charset=utf-8")
+          }
         }
 
         "when the exchange fails" >> {

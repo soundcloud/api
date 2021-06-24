@@ -1,6 +1,6 @@
 package com.soundcloud.publicApiStrangler.handler
 
-import com.soundcloud.jvmkit.module.http.server.{Handler, HandlerRequest, ResponseBuilder}
+import com.soundcloud.jvmkit.module.http.server.{Handler, HandlerRequest, JsonResponseBuilder}
 import com.soundcloud.jvmkit.module.outcome._
 import com.soundcloud.jvmkit.module.telemetry.Telemetry
 import com.soundcloud.publicApiStrangler.service.oauth.TokenExchangeService
@@ -29,7 +29,7 @@ class TokenExchangeHandler(
     tokenExchangeService.exchange(request).map {
       case Good(accessToken) =>
         incrementGrantExchangeCounter(request.accessGrant, Status.Ok)
-        ResponseBuilder.ok(Json.stringify(Json.toJson(accessToken)))
+        JsonResponseBuilder.ok(Json.stringify(Json.toJson(accessToken)))
 
       case Bad(NotValid(reason :: _)) =>
         incrementGrantExchangeCounter(request.accessGrant, Status.Unauthorized, reason)
