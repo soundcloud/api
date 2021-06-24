@@ -1,9 +1,9 @@
 package com.soundcloud.publicApiStrangler.handler
 
 import com.soundcloud.jvmkit.module.bff.testsupport.FakeUserAuthentication
+import com.soundcloud.jvmkit.module.outcome._
 import com.soundcloud.jvmkit.module.util.session.UserSessionBuilder
 import com.soundcloud.jvmkit.module.util.{Geo, Urn}
-import com.soundcloud.jvmkit.module.outcome._
 import com.soundcloud.publicApiStrangler.Routing
 import com.soundcloud.publicApiStrangler.client.playlists.PlaylistDeletionClient
 import com.soundcloud.publicApiStrangler.handler.support.requestParser.AccessParams
@@ -79,21 +79,21 @@ class PlaylistsHandlerSpec extends UnitSpecification {
 
   "GET /playlists/:id" >> {
     "passes secret token to playlists service" in new Context {
-      when(playlistsService.fetchPlaylist(session, playlistUrn, Some("s3cret"), access, None))
+      when(playlistsService.fetchPlaylist(session, playlistUrn, Some("s3cret"), access, None, None))
         .thenReturn(Future.value(Good(playlist)))
       get("/playlists/1", Map("secret_token" -> "s3cret"))
-      verify(playlistsService).fetchPlaylist(session, playlistUrn, Some("s3cret"), access, None)
+      verify(playlistsService).fetchPlaylist(session, playlistUrn, Some("s3cret"), access, None, None)
     }
 
     "it returns 200 when a playlist is found" in new Context {
-      when(playlistsService.fetchPlaylist(session, playlistUrn, None, access, None))
+      when(playlistsService.fetchPlaylist(session, playlistUrn, None, access, None, None))
         .thenReturn(Future.value(Good(playlist)))
       val response = get("/playlists/1")
       response.status.code ==== 200
     }
 
     "it returns 404 for None" in new Context {
-      when(playlistsService.fetchPlaylist(session, playlistUrn, None, access, None))
+      when(playlistsService.fetchPlaylist(session, playlistUrn, None, access, None, None))
         .thenReturn(Future.value(NotFound("playlist not found").bad))
 
       val response = get("/playlists/1")

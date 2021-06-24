@@ -199,15 +199,6 @@ Playlists:
           $ref: "#/components/examples/Playlists"
         playlistsArray:
           $ref: "#/components/examples/PlaylistsArray"
-PlaylistsArray:
-  description: Success
-  content:
-    application/json; charset=utf-8:
-      schema:
-        $ref: '#/components/schemas/PlaylistsArray'
-      examples:
-        default:
-          $ref: "#/components/examples/PlaylistsArray"
 Activities:
   description: Success
   content:
@@ -231,7 +222,7 @@ Comment:
   content:
     application/json; charset=utf-8:
       schema:
-          - $ref: '#/components/schemas/Comment'
+        - $ref: '#/components/schemas/Comment'
       examples:
         default:
           $ref: "#/components/examples/Comment"

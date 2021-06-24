@@ -24,32 +24,28 @@ class UserPlaylistsHandler(
   def getUserPlaylist(req: HandlerRequest): Future[Response] = {
     userAuthentication.withUserSession(req) { session =>
       val userId = req.routeParams("userId")
-      performGetPlaylist(req, session, userId)
-    }
-  }
+      val hasLinkedPartitioning = req.params.get("linked_partitioning")
+      val pagination = hasLinkedPartitioning.map(_ => OffsetBasedPagination.build(req, Seq("linked_partitioning")))
+      val secretToken = req.params.get("secret_token")
+      val access = AccessParamsExtractor.unapply(req.params)
+      val showTracks = req.params.getBoolean("show_tracks")
 
-  private def performGetPlaylist(req: HandlerRequest, session: UserSession, userId: String): Future[Response] = {
-    val hasLinkedPartitioning = req.params.get("linked_partitioning")
-    val pagination =
-      hasLinkedPartitioning.map(_ => OffsetBasedPagination.build(req, Seq("linked_partitioning")))
-    val secretToken = req.params.get("secret_token")
-    val access = AccessParamsExtractor.unapply(req.params)
-
-    Try(getUserUrn(userId)) match {
-      case Return(userUrn) =>
-        Try(getPlaylistUrn(req)) match {
-          case Return(playlistUrn) =>
-            userPlaylistsService
-              .userPlaylist(session, playlistUrn, secretToken, pagination, userUrn.identifier, access)
-              .map {
-                case Good(playlist) =>
-                  JsonResponseBuilder.ok(Json.stringify(Json.toJson(playlist)))
-                case Bad(NotFound(_)) => ErrorResponse.notFound("404 - Not Found")
-                case _ => throw new UnhandledOutcomeException
-              }
-          case Throw(e) => Future.value(ErrorResponse.badRequest(e.getMessage))
-        }
-      case Throw(e) => Future.value(ErrorResponse.badRequest(e.getMessage))
+      Try(getUserUrn(userId)) match {
+        case Return(userUrn) =>
+          Try(getPlaylistUrn(req)) match {
+            case Return(playlistUrn) =>
+              userPlaylistsService
+                .userPlaylist(session, playlistUrn, secretToken, pagination, userUrn.identifier, access, showTracks)
+                .map {
+                  case Good(playlist) =>
+                    JsonResponseBuilder.ok(Json.stringify(Json.toJson(playlist)))
+                  case Bad(NotFound(_)) => ErrorResponse.notFound("404 - Not Found")
+                  case _ => throw new UnhandledOutcomeException
+                }
+            case Throw(e) => Future.value(ErrorResponse.badRequest(e.getMessage))
+          }
+        case Throw(e) => Future.value(ErrorResponse.badRequest(e.getMessage))
+      }
     }
   }
 
@@ -76,12 +72,13 @@ class UserPlaylistsHandler(
   ): Future[Response] = {
     val hasLinkedPartitioning = req.params.contains("linked_partitioning")
     val pagination = CursorBasedPagination.build(req, Seq("linked_partitioning"))
+    val showTracks = req.params.getBoolean("show_tracks")
 
     Try(getUserUrn(userId)) match {
       case Return(urn) =>
         val playlistsCollection =
           userPlaylistsService
-            .userPlaylists(session, urn, access, pagination)
+            .userPlaylists(session, urn, access, pagination, showTracks)
             .map(Good(_))
         CollectionResponse.handleCollectionResponse(playlistsCollection, hasLinkedPartitioning)
       case Throw(e) => Future.value(ErrorResponse.badRequest(e.getMessage))

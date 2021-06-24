@@ -21,7 +21,8 @@ class UserPlaylistsService(
       session: UserSession,
       userUrn: Urn,
       access: AccessParams,
-      pagination: CursorBasedPagination
+      pagination: CursorBasedPagination,
+      showTracks: Option[Boolean]
   ): Future[Collection[Playlist]] = {
     for {
       userPlaylistsResponse <- moshimoshiClient.userPlaylists(session, userUrn, pagination)
@@ -29,7 +30,8 @@ class UserPlaylistsService(
         session,
         userPlaylistsResponse.items.map(item => PlaylistRequest(item.urn, None)),
         access,
-        None
+        None,
+        showTracks
       )
     } yield {
       Collection(playlists, nextHref(userPlaylistsResponse.items, pagination))
@@ -42,9 +44,10 @@ class UserPlaylistsService(
       secretToken: Option[String],
       pagination: Option[OffsetBasedPagination],
       userId: String,
-      access: AccessParams
+      access: AccessParams,
+      showTracks: Option[Boolean]
   ): Future[Outcome[Playlist]] = {
-    playlistsService.fetchPlaylist(session, playlistUrn, secretToken, access, pagination).map {
+    playlistsService.fetchPlaylist(session, playlistUrn, secretToken, access, pagination, showTracks).map {
       case Good(playlist) if playlist.userId == userId.toLong => playlist.good
       case _ => NotFound("playlist not found").bad
     }

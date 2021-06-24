@@ -1,7 +1,7 @@
 package com.soundcloud.publicApiStrangler.service
 
-import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.outcome._
+import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.publicApiStrangler.client.chrono.{ChronoItem, ChronoMeta, ChronoMetaParams, ChronoResponse}
 import com.soundcloud.publicApiStrangler.client.mothership.MoshimoshiClient
 import com.soundcloud.publicApiStrangler.handler.support.requestParser.AccessParams
@@ -45,11 +45,11 @@ class UserPlaylistsServiceSpec extends UnitSpecification {
     "when all data is available" in new Context {
       when(moshimoshiClient.userPlaylists(session, playlist.user.urn, pagination))
         .thenReturn(Future.value(chronoResponse))
-      when(playlistService.fetchPlaylists(session, List(PlaylistRequest(playlistUrn, None)), access, None))
+      when(playlistService.fetchPlaylists(session, List(PlaylistRequest(playlistUrn, None)), access, None, Some(true)))
         .thenReturn(Future.value(List(playlist)))
 
       val playlistsCollection =
-        Await.result(userPlaylistsService.userPlaylists(session, playlist.user.urn, access, pagination))
+        Await.result(userPlaylistsService.userPlaylists(session, playlist.user.urn, access, pagination, Some(true)))
 
       playlistsCollection.items ==== List(playlist)
       playlistsCollection.nextHref ==== Some("https://api.soundcloud.com/users/1/playlists/?cursor=2&page_size=2")
@@ -58,11 +58,11 @@ class UserPlaylistsServiceSpec extends UnitSpecification {
     "when data is not available" in new Context {
       when(moshimoshiClient.userPlaylists(session, playlist.user.urn, pagination))
         .thenReturn(Future.value(ChronoResponse.emptyResponse))
-      when(playlistService.fetchPlaylists(session, List.empty, access, None))
+      when(playlistService.fetchPlaylists(session, List.empty, access, None, None))
         .thenReturn(Future.value(List.empty))
 
       val playlistsCollection =
-        Await.result(userPlaylistsService.userPlaylists(session, playlist.user.urn, access, pagination))
+        Await.result(userPlaylistsService.userPlaylists(session, playlist.user.urn, access, pagination, None))
 
       playlistsCollection.items ==== List.empty
       playlistsCollection.nextHref ==== None
@@ -71,13 +71,21 @@ class UserPlaylistsServiceSpec extends UnitSpecification {
 
   "#userPlaylist" >> {
     "when all data is available" in new Context {
-      when(playlistService.fetchPlaylist(session, playlistUrn, Some("secr3t-Token"), access, None))
+      when(playlistService.fetchPlaylist(session, playlistUrn, Some("secr3t-Token"), access, None, Some(true)))
         .thenReturn(Future.value(Good(playlist)))
 
       val result =
         Await.result(
           userPlaylistsService
-            .userPlaylist(session, playlistUrn, Some("secr3t-Token"), None, playlist.userId.toString, access)
+            .userPlaylist(
+              session,
+              playlistUrn,
+              Some("secr3t-Token"),
+              None,
+              playlist.userId.toString,
+              access,
+              Some(true)
+            )
         )
 
       result match {
@@ -89,13 +97,13 @@ class UserPlaylistsServiceSpec extends UnitSpecification {
     }
 
     "when data is not available" in new Context {
-      when(playlistService.fetchPlaylist(session, playlistUrn, Some("secr3t-Token"), access, None))
+      when(playlistService.fetchPlaylist(session, playlistUrn, Some("secr3t-Token"), access, None, None))
         .thenReturn(Future.value(NotFound("playlist not found").bad))
 
       val result =
         Await.result(
           userPlaylistsService
-            .userPlaylist(session, playlistUrn, Some("secr3t-Token"), None, session.getUser.identifier, access)
+            .userPlaylist(session, playlistUrn, Some("secr3t-Token"), None, session.getUser.identifier, access, None)
         )
 
       result ==== Bad(NotFound("playlist not found"))

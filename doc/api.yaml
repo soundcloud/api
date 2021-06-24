@@ -333,10 +333,12 @@ paths:
       security:
         - AuthHeader: [ ]
       parameters:
+        - $ref: '#/components/parameters/show_tracks'
+        - $ref: '#/components/parameters/linked_partitioning'
         - $ref: '#/components/parameters/limit'
       responses:
         200:
-          $ref: "#/components/responses/PlaylistsArray"
+          $ref: "#/components/responses/Playlists"
         401:
           $ref: '#/components/responses/Unauthorized'
         404:
@@ -427,6 +429,7 @@ paths:
       parameters:
         - $ref: "#/components/parameters/q"
         - $ref: '#/components/parameters/access'
+        - $ref: '#/components/parameters/show_tracks'
         - $ref: '#/components/parameters/limit'
         - $ref: '#/components/parameters/offset'
         - $ref: '#/components/parameters/linked_partitioning'
@@ -492,6 +495,7 @@ paths:
         - $ref: "#/components/parameters/playlist_id"
         - $ref: "#/components/parameters/secret_token"
         - $ref: "#/components/parameters/access"
+        - $ref: "#/components/parameters/show_tracks"
       responses:
         200:
           $ref: "#/components/responses/Playlist"
@@ -893,6 +897,7 @@ paths:
       parameters:
         - $ref: '#/components/parameters/user_id'
         - $ref: '#/components/parameters/access'
+        - $ref: "#/components/parameters/show_tracks"
         - $ref: '#/components/parameters/limit'
         - $ref: '#/components/parameters/linked_partitioning'
       responses:

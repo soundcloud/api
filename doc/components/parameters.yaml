@@ -187,6 +187,14 @@ access:
     like to see all possible tracks. See `Track#access` schema for more details.
   style: form
   explode: false
+show_tracks:
+  in: query
+  name: show_tracks
+  required: false
+  schema:
+    type: boolean
+  description: A boolean flag to request a playlist with or without tracks. Default is `true`.
+  example: true
 # path #
 comment_id:
   in: path

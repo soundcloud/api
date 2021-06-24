@@ -148,7 +148,8 @@ class SearchServiceSpec extends TrackRepresentationsSpecificationContext {
           session,
           List(PlaylistRequest(playlistUrn, None)),
           access,
-          Some(offsetBasedPagination)
+          Some(offsetBasedPagination),
+          None
         )
       ).thenReturn(Future.value(List(playlist)))
       when(
@@ -179,7 +180,7 @@ class SearchServiceSpec extends TrackRepresentationsSpecificationContext {
 
     "when data is not available" in new Context {
       when(
-        playlistsService.fetchPlaylists(session, List.empty, access, Some(offsetBasedPagination))
+        playlistsService.fetchPlaylists(session, List.empty, access, Some(offsetBasedPagination), None)
       ).thenReturn(Future.value(List.empty))
 
       when(

@@ -56,7 +56,7 @@ class UserPlaylistsHandlerSpec extends UnitSpecification {
           collection: Collection[Playlist],
           access: AccessParams = AccessParams.defaultAccess
       ) = {
-        when(userPlaylistsService.userPlaylists(session, user, access, paginationParams(path)))
+        when(userPlaylistsService.userPlaylists(session, user, access, paginationParams(path), None))
           .thenReturn(Future.value(collection))
       }
     }
@@ -155,7 +155,8 @@ class UserPlaylistsHandlerSpec extends UnitSpecification {
             Some("s3cret"),
             Some(paginationParams(path)),
             userId,
-            access
+            access,
+            None
           )
         ).thenReturn(Future.value(response))
       }

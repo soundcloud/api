@@ -72,11 +72,14 @@ class SearchService(
   ): OutcomeF[Collection[Playlist]] = {
     val mapParams = mapPlaylistParams(params)
     val access = AccessParamsExtractor.unapply(params)
+    val showTracks = params.getBoolean("show_tracks")
 
     for {
       searchPage <- searchClient.searchPlaylists(session, mapParams)
       playlistRequests = searchPage.docs.map(doc => PlaylistRequest(urn = doc.urn, None))
-      playlists <- playlistsService.fetchPlaylists(session, playlistRequests.toList, access, Some(pagination)).outcomeF
+      playlists <- playlistsService
+        .fetchPlaylists(session, playlistRequests.toList, access, Some(pagination), showTracks)
+        .outcomeF
     } yield {
       Collection(playlists, pagination.nextHref(searchPage.total_results.toInt))
     }

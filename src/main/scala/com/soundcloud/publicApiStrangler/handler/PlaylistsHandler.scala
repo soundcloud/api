@@ -39,12 +39,14 @@ class PlaylistsHandler(
     userAuthentication.withUserSession(request) { session =>
       val candidateSecretToken = request.params.get("secret_token")
       val hasLinkedPartitioning = request.params.get("linked_partitioning")
+      val showTracks = request.params.getBoolean("show_tracks")
       val pagination =
         hasLinkedPartitioning.map(_ => OffsetBasedPagination.build(request, Seq("linked_partitioning")))
       val access = AccessParamsExtractor.unapply(request.params)
+
       Try(getPlaylistUrn(request)) match {
         case Return(urn) =>
-          playlistsService.fetchPlaylist(session, urn, candidateSecretToken, access, pagination).map {
+          playlistsService.fetchPlaylist(session, urn, candidateSecretToken, access, pagination, showTracks).map {
             case Good(playlist) => JsonResponseBuilder.ok(body = Json.stringify(Json.toJson(playlist)))
             case Bad(NotFound(_)) => ErrorResponse.notFound()
             case _ => throw new UnhandledOutcomeException

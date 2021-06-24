@@ -185,7 +185,14 @@ class PlaylistsServiceSpec extends UnitSpecification {
       val result =
         Await.result(
           playlistsService
-            .fetchPlaylist(session, requestedPlaylistUrn, candidateSecretToken, access, Some(offsetBasedPagination))
+            .fetchPlaylist(
+              session,
+              requestedPlaylistUrn,
+              candidateSecretToken,
+              access,
+              Some(offsetBasedPagination),
+              Some(true)
+            )
         )
 
       result match {
@@ -194,6 +201,36 @@ class PlaylistsServiceSpec extends UnitSpecification {
           playlist.userId ==== playlistOwner.urn.identifier.toLong
           playlist.tracks.get.length ==== 1
           playlist.tracks.get.head.urn ==== requestedPlaylistTrack.urn
+          playlist.likesCount ==== 5
+        case _ => failure(s"returned ${result.toString} instead of Good(_)")
+      }
+    }
+
+    "can fetch a playlist w/o tracks given playlist, pagination and showTracks=false" in new SuccessContext {
+      setUpMocksForPlaylists(
+        pagination = Some(PlaylistPagination(cursor = Some("4"), limit = 2)),
+        trackRequests = List(TrackRequest(urn = requestedPlaylistTrackUrn, secretToken = None)),
+        visiblePlaylistsRequest = getVisiblePlaylistWithPagination
+      )
+
+      val result =
+        Await.result(
+          playlistsService
+            .fetchPlaylist(
+              session,
+              requestedPlaylistUrn,
+              candidateSecretToken,
+              access,
+              Some(offsetBasedPagination),
+              Some(false)
+            )
+        )
+
+      result match {
+        case Good(playlist) =>
+          playlist.id ==== requestedPlaylistUrn.identifier.toLong
+          playlist.userId ==== playlistOwner.urn.identifier.toLong
+          playlist.tracks ==== None
           playlist.likesCount ==== 5
         case _ => failure(s"returned ${result.toString} instead of Good(_)")
       }
@@ -209,7 +246,14 @@ class PlaylistsServiceSpec extends UnitSpecification {
       val result =
         Await.result(
           playlistsService
-            .fetchPlaylist(session, requestedPlaylistUrn, candidateSecretToken, access, Some(offsetBasedPagination))
+            .fetchPlaylist(
+              session,
+              requestedPlaylistUrn,
+              candidateSecretToken,
+              access,
+              Some(offsetBasedPagination),
+              Some(true)
+            )
         )
 
       result match {
@@ -230,7 +274,7 @@ class PlaylistsServiceSpec extends UnitSpecification {
       val result =
         Await.result(
           playlistsService
-            .fetchPlaylist(session, requestedPlaylistUrn, candidateSecretToken, access, None)
+            .fetchPlaylist(session, requestedPlaylistUrn, candidateSecretToken, access, None, Some(true))
         )
 
       result match {
@@ -248,7 +292,7 @@ class PlaylistsServiceSpec extends UnitSpecification {
       val result =
         Await.result(
           playlistsService
-            .fetchPlaylist(session, requestedPlaylistUrn, candidateSecretToken, access, None)
+            .fetchPlaylist(session, requestedPlaylistUrn, candidateSecretToken, access, None, Some(true))
         )
 
       result ==== Bad(NotFound("playlist not found"))
@@ -332,7 +376,7 @@ class PlaylistsServiceSpec extends UnitSpecification {
       val result =
         Await.result(
           playlistsService
-            .fetchPlaylists(session, playlistRequests, access, Some(offsetBasedPagination))
+            .fetchPlaylists(session, playlistRequests, access, Some(offsetBasedPagination), None)
         )
 
       result.length ==== 1
@@ -340,6 +384,26 @@ class PlaylistsServiceSpec extends UnitSpecification {
       result.head.userId ==== playlistOwner.urn.identifier.toLong
       result.head.tracks.get.length ==== 1
       result.head.tracks.get.head.urn ==== requestedPlaylistTrack.urn
+      result.head.likesCount ==== 5
+    }
+
+    "can fetch a list of playlists w/o tracks given playlist, pagination and showTracks=false" in new SuccessContext {
+      setUpMocksForPlaylists(
+        pagination = Some(PlaylistPagination(cursor = Some("4"), limit = 2)),
+        visiblePlaylistsRequest = getVisiblePlaylistWithPagination,
+        trackRequests = List(TrackRequest(urn = requestedPlaylistTrackUrn, secretToken = None))
+      )
+
+      val result =
+        Await.result(
+          playlistsService
+            .fetchPlaylists(session, playlistRequests, access, Some(offsetBasedPagination), Some(false))
+        )
+
+      result.length ==== 1
+      result.head.id ==== requestedPlaylistUrn.identifier.toLong
+      result.head.userId ==== playlistOwner.urn.identifier.toLong
+      result.head.tracks ==== None
       result.head.likesCount ==== 5
     }
 
@@ -353,7 +417,7 @@ class PlaylistsServiceSpec extends UnitSpecification {
       val result =
         Await.result(
           playlistsService
-            .fetchPlaylists(session, playlistRequests, access, None)
+            .fetchPlaylists(session, playlistRequests, access, None, None)
         )
 
       result.length ==== 1
@@ -368,7 +432,7 @@ class PlaylistsServiceSpec extends UnitSpecification {
       val result =
         Await.result(
           playlistsService
-            .fetchPlaylists(session, playlistRequests, access, None)
+            .fetchPlaylists(session, playlistRequests, access, None, None)
         )
 
       result ==== List.empty

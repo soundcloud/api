@@ -40,8 +40,11 @@ class PlaylistsService(
       pagination: Option[OffsetBasedPagination]
   ): Future[Outcome[Collection[TrackRepresentation]]] = {
     val playlistRequest = PlaylistRequest(urn = playlistUrn, secretToken = candidateSecretToken)
+    val playlistPagination =
+      pagination.map(p => PlaylistPagination(cursor = p.offset.map(_.toString), limit = p.limit))
+
     for {
-      visiblePlaylistObject <- getPlaylistsWithTracks(session, List(playlistRequest), pagination)
+      visiblePlaylistObject <- getPlaylistObjects(session, List(playlistRequest), playlistPagination)
       visiblePlaylist = visiblePlaylistObject.flatMap(response => playlistProtoMapper.apply(response, pagination))
       playlistTrackRequests = visiblePlaylist.map(_.trackRequests).headOption
       tracks <- playlistTrackRequests
@@ -63,10 +66,11 @@ class PlaylistsService(
       playlistUrn: Urn,
       candidateSecretToken: Option[String],
       access: AccessParams,
-      pagination: Option[OffsetBasedPagination]
+      pagination: Option[OffsetBasedPagination],
+      showTracks: Option[Boolean]
   ): Future[Outcome[Playlist]] = {
     val playlistRequest = PlaylistRequest(urn = playlistUrn, secretToken = candidateSecretToken)
-    fetchPlaylists(session, List(playlistRequest), access, pagination)
+    fetchPlaylists(session, List(playlistRequest), access, pagination, showTracks)
       .map(_.headOption)
       .map {
         case Some(playlist) => playlist.good
@@ -78,32 +82,29 @@ class PlaylistsService(
       session: UserSession,
       playlistRequests: List[PlaylistRequest],
       access: AccessParams,
-      pagination: Option[OffsetBasedPagination]
+      pagination: Option[OffsetBasedPagination],
+      showTracks: Option[Boolean]
   ): Future[List[Playlist]] = {
-    for {
-      visiblePlaylistObjects <- getPlaylistsWithTracks(session, playlistRequests, pagination)
-      visiblePlaylists = visiblePlaylistObjects.flatMap(response => playlistProtoMapper.apply(response, pagination))
-      playlists <- resolvePlaylists(visiblePlaylists, session, access, showTracks = true)
-    } yield playlists
-  }
-
-  private def getPlaylistsWithTracks(
-      session: UserSession,
-      playlistRequests: List[PlaylistRequest],
-      pagination: Option[OffsetBasedPagination]
-  ): Future[List[PlaylistResponse]] = {
     val playlistPagination =
       pagination.map(p => PlaylistPagination(cursor = p.offset.map(_.toString), limit = p.limit))
 
-    getPlaylistObjects(session, playlistRequests, playlistPagination)
+    for {
+      visiblePlaylistObjects <- getPlaylistObjects(session, playlistRequests, playlistPagination)
+      visiblePlaylists = visiblePlaylistObjects.flatMap(response => playlistProtoMapper.apply(response, pagination))
+      playlists <- resolvePlaylists(visiblePlaylists, session, access, showTracks.getOrElse(true))
+    } yield playlists
   }
 
   def fetchPlaylistsMetadataOnly(
       session: UserSession,
       playlistRequests: List[PlaylistRequest]
   ): Future[List[Playlist]] = {
+    // we set the limit to 0 (default) in pagination in order to retrieve no tracks and avoid
+    // unnecessary calls to track-metadata in Playlists VAS
+    val playlistPagination = PlaylistPagination()
+
     for {
-      visiblePlaylistObjects <- getPlaylistsWithoutTracks(session, playlistRequests)
+      visiblePlaylistObjects <- getPlaylistObjects(session, playlistRequests, Some(playlistPagination))
       visiblePlaylists = visiblePlaylistObjects.flatMap(response => playlistProtoMapper.apply(response, None))
       playlists <- resolvePlaylists(visiblePlaylists, session, AccessParams.defaultAccess, showTracks = false)
     } yield playlists
@@ -168,16 +169,6 @@ class PlaylistsService(
       owner <- users.find(_.urn.toString == playlist.userUrn)
       maybeLabelOwner = playlist.labelId.flatMap(id => users.find(_.urn.identifier == id))
     } yield Playlist.fromVisiblePlaylist(playlist, owner, maybeLabelOwner, session.user, likesCount)
-  }
-
-  private def getPlaylistsWithoutTracks(
-      session: UserSession,
-      playlistRequests: List[PlaylistRequest]
-  ): Future[List[PlaylistResponse]] = {
-    // we set the limit to 0 (default) in pagination in order to retrieve no tracks and avoid
-    // unnecessary calls to track-metadata in Playlists VAS
-    val playlistPagination = PlaylistPagination()
-    getPlaylistObjects(session, playlistRequests, Some(playlistPagination))
   }
 
   private def getPlaylistObjects(
