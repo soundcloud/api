@@ -126,6 +126,7 @@ canary-api:
 		--system=public-api-strangler \
 		--env=production \
 		--component="$(API_COMPONENT)" \
+		--slack '#deploys' \
 		--replicas=2
 
 .PHONY: deploy-api

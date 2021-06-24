@@ -57,6 +57,7 @@ publish-deploy:
 		--component=$(COMPONENT) \
 		--glimpse=http.$(COMPONENT).prod.$(SYSTEM) \
 		--env=production \
+		--slack '#deploys' \
 		--ingress=http://$(SYSTEM).lb.$(ZONE).s-cloud.net:http \
 		--ingress=http://$(SYSTEM).int.s-cloud.net:http \
 		--ingress=http://$(SYSTEM):http \
