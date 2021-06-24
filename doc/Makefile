@@ -1,4 +1,4 @@
-ZONE ?= db
+ZONES ?= db
 SYSTEM := $(shell sc manifest name)
 API_SYSTEM := $(shell sc manifest name --manifest=../manifest.json)
 COMPONENT := doc
@@ -52,13 +52,13 @@ promote:
 
 publish-deploy:
 	sc artifact-manager deploy publish \
-		--zone=$(ZONE) \
+		--zones=$(ZONES) \
 		--system=$(API_SYSTEM) \
 		--component=$(COMPONENT) \
 		--glimpse=http.$(COMPONENT).prod.$(SYSTEM) \
 		--env=production \
 		--slack '#deploys' \
-		--ingress=http://$(SYSTEM).lb.$(ZONE).s-cloud.net:http \
+		--ingress=http://$(SYSTEM):http \
 		--ingress=http://$(SYSTEM).int.s-cloud.net:http \
 		--ingress=http://$(SYSTEM):http \
 		--ingress=https://$(SYSTEM).soundcloud.org:http \
@@ -66,7 +66,7 @@ publish-deploy:
 		
 deploy:
 	sc artifact-manager deploy run \
-		--zone=$(ZONE) \
+		--zones=$(ZONES) \
 		--system=$(API_SYSTEM) \
 		--component=$(COMPONENT) \
 		--env=production

@@ -19,12 +19,12 @@ pipelines:
                 arguments:
                 - deploy
                 - scale
-                - ZONE=db
+                - ZONES=db
                 - SYSTEM=public-api-strangler
                 - CPU=0.2
                 - STORAGE=512
                 - REPLICAS=10
-          deploy-et:
+          deploy-replicas:
             job_type: deploy
             tasks:
             - exec:
@@ -32,7 +32,7 @@ pipelines:
                 arguments:
                 - deploy
                 - scale
-                - ZONE=et
+                - ZONES=replicas
                 - SYSTEM=public-api-strangler
                 - CPU=0.2
                 - STORAGE=512
