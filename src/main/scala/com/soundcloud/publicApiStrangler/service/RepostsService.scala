@@ -69,7 +69,7 @@ class RepostsService(
       .reposters(session, target, pagination.pageSize, pagination.cursor)
       .flatMap { reposts =>
         userRepresentationService
-          .getUsers(session, reposts.urns)
+          .users(session, reposts.urns)
           .map { users =>
             val nextHref = reposts.nextCursor.map(cursor => pagination.nextPage(cursor)).map(_.normalizedHref)
             Collection(sortByProvidedUrns(users, reposts.urns).toList, nextHref)

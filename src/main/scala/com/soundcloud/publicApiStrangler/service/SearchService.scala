@@ -35,7 +35,7 @@ class SearchService(
     for {
       searchPage <- searchClient.searchUsers(session, mapParams)
       userUrns = searchPage.docs.map(_.urn).toSet
-      users <- userRepresentationsService.getUsers(session, userUrns.toSeq).outcomeF
+      users <- userRepresentationsService.users(session, userUrns.toSeq).outcomeF
     } yield Collection[UserRepresentation](users, pagination.nextHref(searchPage.total_results.toInt))
   }
 

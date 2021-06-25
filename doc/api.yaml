@@ -790,7 +790,7 @@ paths:
         - $ref: '#/components/parameters/user_id'
       responses:
         200:
-          $ref: '#/components/responses/LegacyLoggedInUser'
+          $ref: '#/components/responses/User'
         401:
           $ref: '#/components/responses/Unauthorized'
         404:
@@ -1141,8 +1141,6 @@ components:
       $ref: './components/schemas/User.yaml'
     Me:
       $ref: './components/schemas/Me.yaml'
-    LegacyLoggedInUser:
-      $ref: './components/schemas/LegacyLoggedInUser.yaml'
     Users:
       type: object
       properties:
