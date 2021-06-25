@@ -110,7 +110,7 @@ class LikesHandler(
         case Return(urn) => {
           likesService.trackLikers(session, urn, pagination).flatMap {
             case Good(response) => {
-              userRepresentationsService.users(session, response.urns).map { users =>
+              userRepresentationsService.getUsers(session, response.urns).map { users =>
                 JsonResponseBuilder
                   .ok(Collection.getRepresentation(Collection(users, response.nextHRef), hasLinkedPartitioning))
               }

@@ -125,6 +125,12 @@ Me:
     application/json; charset=utf-8:
       schema:
         $ref: '#/components/schemas/Me'
+LegacyLoggedInUser:
+  description: Success
+  content:
+    application/json; charset=utf-8:
+      schema:
+        $ref: '#/components/schemas/LegacyLoggedInUser'
 Users:
   description: Success
   content:

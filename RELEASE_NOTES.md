@@ -1,3 +1,12 @@
 <!--- Remove everything below and start over --->
 
-Adds created_at, comments_count and likes_count to the User object 
+### Feature request
+
+- to allow clients request playlists with/without tracks, a new boolean flag `show_tracks` was added to the following endpoints:
+    * /playlists
+    * /me/playlists
+    * /playlists/{playlist_id}
+    * /users/{user_id}/playlists
+
+For more details on usage: https://developers.soundcloud.com/docs/api/explorer/open-api    
+    

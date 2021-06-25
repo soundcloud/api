@@ -95,6 +95,4 @@ class Handlers(
   val commentsHandler = new CommentsHandler(userAuthentication, commentsService)
 
   val meHandler = new MeHandler(userAuthentication, meService)
-
-  val usersHandler = new UsersHandler(userAuthentication, userRepresentationsService)
 }

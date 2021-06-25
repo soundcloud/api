@@ -19,14 +19,7 @@ class UserRepresentationsService(
     lieblingClient: LieblingClient,
     submarineClient: SubmarineClient
 ) {
-  def user(
-      session: UserSession,
-      urn: Urn
-  ): Future[Option[UserRepresentation]] = {
-    users(session, Seq(urn)).map(_.headOption)
-  }
-
-  def users(
+  def getUsers(
       session: UserSession,
       urns: Seq[Urn]
   ): Future[List[UserRepresentation]] = {

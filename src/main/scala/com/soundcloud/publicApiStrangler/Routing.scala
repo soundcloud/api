@@ -91,16 +91,12 @@ object Routing {
   def forUserRelatedMothershipDispatcher(
       userRelatedMothershipDispatcher: UserRelatedMothershipDispatcher
   ): List[(Method, String, Handler)] = {
-    route(Method.Get, "/users/:id/comments", userRelatedMothershipDispatcher.dispatchToMothership)
+    route(Method.Get, "/users/:id", userRelatedMothershipDispatcher.dispatchToMothership) :::
+      route(Method.Get, "/users/:id/comments", userRelatedMothershipDispatcher.dispatchToMothership)
   }
 
   def forMeHandler(meHandler: MeHandler): List[(Method, String, Handler)] = {
-    route(Method.Get, "/me", meHandler.me) :::
-      route(Method.Get, "/users/me", meHandler.me)
-  }
-
-  def forUsersHandler(usersHandler: UsersHandler): List[(Method, String, Handler)] = {
-    route(Method.Get, "/users/:id", usersHandler.user)
+    route(Method.Get, "/me", meHandler.me)
   }
 
   def forSearchHandler(searchHandler: SearchHandler): List[(Method, String, Handler)] = {

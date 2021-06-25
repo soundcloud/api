@@ -30,7 +30,7 @@ class MeServiceSpec extends UnitSpecification {
 
     def stubClients() = {
       okidokiClient.fetch(session, requestedUrns.toSet) returns Future.value(okidokiUser.as[List[JsObject]])
-      userRepresentationsSerice.users(session, Seq(meUrn)) returns Future.value(List(userRepresentation))
+      userRepresentationsSerice.getUsers(session, Seq(meUrn)) returns Future.value(List(userRepresentation))
       trackCoordinatorClient.uploadQuota(session, meUrn) returns Future.value(uploadQuota.good)
     }
 
@@ -104,7 +104,7 @@ class MeServiceSpec extends UnitSpecification {
     "returns NotFound if UserRepresentationsService fetch fails" in new Context {
       stubClients()
 
-      userRepresentationsSerice.users(session, Seq(meUrn)) returns Future.value(List.empty)
+      userRepresentationsSerice.getUsers(session, Seq(meUrn)) returns Future.value(List.empty)
 
       val result = Await.result(meService.getMe(session, meUrn))
 
