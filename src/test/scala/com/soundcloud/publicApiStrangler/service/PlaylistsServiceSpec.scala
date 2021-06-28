@@ -2,7 +2,6 @@ package com.soundcloud.publicApiStrangler.service
 
 import com.soundcloud.jvmkit.module.outcome._
 import com.soundcloud.jvmkit.module.telemetry.Telemetry
-import com.soundcloud.jvmkit.module.telemetry.exceptions.ExceptionCollector
 import com.soundcloud.jvmkit.module.twirp.proto.UserSessionOps._
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.{UserSession, UserSessionBuilder}
@@ -62,15 +61,13 @@ class PlaylistsServiceSpec extends UnitSpecification {
     val moshimoshiClientMock = mock[MoshimoshiClient]
     val lieblingClientMock = mock[LieblingClient]
     val telemetry = Telemetry.defaultInstance
-    val exceptionCollector = new ExceptionCollector(telemetry)
 
     val playlistsService =
       new PlaylistsService(
         playlistsTwirpServiceMock,
         trackServiceMock,
         moshimoshiClientMock,
-        lieblingClientMock,
-        exceptionCollector
+        lieblingClientMock
       )
     val playlistRequests = List(PlaylistRequest(requestedPlaylistUrn, candidateSecretToken))
     val access = AccessParams.defaultAccess

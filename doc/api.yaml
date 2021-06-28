@@ -208,6 +208,21 @@ paths:
           $ref: "#/components/responses/Tracks"
         401:
           $ref: '#/components/responses/Unauthorized'
+  /me/likes/playlists:
+    get:
+      summary: Returns a list of favorited or liked playlists of the authenticated user.
+      tags:
+        - me
+      security:
+        - AuthHeader: [ ]
+      parameters:
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/linked_partitioning'
+      responses:
+        200:
+          $ref: "#/components/responses/Playlists"
+        401:
+          $ref: '#/components/responses/Unauthorized'
   /me/followings:
     get:
       summary: Returns a list of users who are followed by the authenticated user.
@@ -957,6 +972,27 @@ paths:
       responses:
         200:
           $ref: "#/components/responses/Tracks"
+        400:
+          $ref: '#/components/responses/BadRequest'
+        401:
+          $ref: '#/components/responses/Unauthorized'
+        404:
+          $ref: '#/components/responses/NotFound'
+  /users/{user_id}/likes/playlists:
+    get:
+      summary: Returns a list of user's liked playlists.
+      tags:
+        - users
+      security:
+        - ClientId: [ ]
+          AuthHeader: [ ]
+      parameters:
+        - $ref: '#/components/parameters/user_id'
+        - $ref: '#/components/parameters/limit'
+        - $ref: "#/components/parameters/linked_partitioning"
+      responses:
+        200:
+          $ref: "#/components/responses/Playlists"
         400:
           $ref: '#/components/responses/BadRequest'
         401:

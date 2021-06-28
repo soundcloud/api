@@ -107,20 +107,49 @@ class LikesHandler(
       val pagination = CursorBasedPagination.build(request, Seq("linked_partitioning"))
 
       Try(getTrackUrn(request)) match {
-        case Return(urn) => {
+        case Return(urn) =>
           likesService.trackLikers(session, urn, pagination).flatMap {
-            case Good(response) => {
+            case Good(response) =>
               userRepresentationsService.getUsers(session, response.urns).map { users =>
                 JsonResponseBuilder
                   .ok(Collection.getRepresentation(Collection(users, response.nextHRef), hasLinkedPartitioning))
               }
-            }
             case Bad(NotFound(_)) => Future.value(ErrorResponse.notFound())
             case _ => Future.value(ErrorResponse(Status.InternalServerError))
           }
-        }
         case Throw(e) => Future.value(ErrorResponse.badRequest(e.getMessage))
       }
+    }
+  }
+
+  def getUserPlaylistsLikes(req: HandlerRequest): Future[Response] = {
+    userAuthentication.withUserSession(req) { session =>
+      val userId = req.routeParams("userId")
+      performGetPlaylistsLikes(req, session, userId)
+    }
+  }
+
+  def getMePlaylistsLikes(req: HandlerRequest): Future[Response] = {
+    userAuthentication.withLoggedInUser(req) { (session, userUrn) =>
+      performGetPlaylistsLikes(req, session, userUrn.identifier)
+    }
+  }
+
+  private def performGetPlaylistsLikes(
+      request: HandlerRequest,
+      session: UserSession,
+      userId: String
+  ): Future[Response] = {
+    val hasLinkedPartitioning = request.params.contains("linked_partitioning")
+    val pagination = CursorBasedPagination.build(request, Seq("linked_partitioning"))
+
+    Try(getUserUrn(userId)) match {
+      case Return(urn) =>
+        val playlistsCollection = likesService
+          .userPlaylistsLikes(session, urn, pagination)
+          .map(Good(_))
+        CollectionResponse.handleCollectionResponse(playlistsCollection, hasLinkedPartitioning)
+      case Throw(e) => Future.value(ErrorResponse.badRequest(e.getMessage))
     }
   }
 

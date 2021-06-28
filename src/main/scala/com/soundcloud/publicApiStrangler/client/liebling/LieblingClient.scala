@@ -163,8 +163,24 @@ class LieblingClient(jsonClient: JsonClient, exceptionCollector: ExceptionCollec
       userUrn: Urn,
       cursor: Option[String],
       pageSize: Int = 50
+  ): Future[LikesPage] =
+    userLikes("track_likes", session, userUrn, paramsFor(cursor, pageSize))
+
+  def userPlaylistLikes(
+      session: UserSession,
+      userUrn: Urn,
+      cursor: Option[String],
+      pageSize: Int = 50
+  ): Future[LikesPage] =
+    userLikes("playlist_likes", session, userUrn, paramsFor(cursor, pageSize))
+
+  private def userLikes(
+      path: String,
+      session: UserSession,
+      userUrn: Urn,
+      pageParams: Params
   ): Future[LikesPage] = {
-    fetch(jsonClient, session, Path() / "users" / userUrn / "track_likes", paramsFor(cursor, pageSize))
+    fetch(jsonClient, session, Path() / "users" / userUrn / path, pageParams)
       .map { response =>
         Json.parse(response.contentString).as[LikesPage]
       }
@@ -188,7 +204,7 @@ class LieblingClient(jsonClient: JsonClient, exceptionCollector: ExceptionCollec
     ).map(ResponseHandlers.SingleItem(_))
 
   private def batched[I, O](inputs: Seq[I], batchSize: Int)(
-      fetch: (Seq[I]) => Future[O]
+      fetch: Seq[I] => Future[O]
   )(combine: (O, O) => O): Future[O] =
     Future
       .collect {

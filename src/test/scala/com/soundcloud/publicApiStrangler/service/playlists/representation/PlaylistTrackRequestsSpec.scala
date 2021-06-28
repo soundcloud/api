@@ -58,7 +58,7 @@ class PlaylistTrackRequestsSpec extends UnitSpecification {
         )
 
       playlistTrackRequests.requests ==== expectedTrackRequests
-      playlistTrackRequests.pagination.isEmpty
+      playlistTrackRequests.pagination must beEmpty
     }
 
     "omits pagination when no next or current pagination given" in new Context {
@@ -70,7 +70,7 @@ class PlaylistTrackRequestsSpec extends UnitSpecification {
         )
 
       playlistTrackRequests.requests ==== expectedTrackRequests
-      playlistTrackRequests.pagination.isEmpty
+      playlistTrackRequests.pagination must beEmpty
     }
   }
 }

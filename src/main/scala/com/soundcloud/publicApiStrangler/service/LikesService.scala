@@ -8,6 +8,8 @@ import com.soundcloud.publicApiStrangler.client.liebling._
 import com.soundcloud.publicApiStrangler.client.tracks.TrackRequest
 import com.soundcloud.publicApiStrangler.handler.support.requestParser.AccessParams
 import com.soundcloud.publicApiStrangler.service.pagination.CursorBasedPagination
+import com.soundcloud.publicApiStrangler.service.playlists.PlaylistRequest
+import com.soundcloud.publicApiStrangler.service.playlists.representation.Playlist
 import com.soundcloud.publicApiStrangler.service.representation.collection.Collection
 import com.soundcloud.publicApiStrangler.service.trackrepresentation.{TrackRepresentation, TrackRepresentationsService}
 import com.soundcloud.twinagle.TwinagleException
@@ -25,6 +27,7 @@ case class TrackLikersResponse(urns: Seq[Urn], nextHRef: Option[String])
 
 class LikesService(
     trackRepresentationsService: TrackRepresentationsService,
+    playlistsService: PlaylistsService,
     lieblingClient: LieblingClient,
     likesTwirpClient: LikesClientProtobuf
 ) {
@@ -117,6 +120,25 @@ class LikesService(
         likesPage.meta.cursor.next_params.map(params => pagination.nextPage(params.cursor)).map(_.normalizedHref)
 
       Collection(enrichedTracks, nextHref)
+    }
+  }
+
+  def userPlaylistsLikes(
+      session: UserSession,
+      userUrn: Urn,
+      pagination: CursorBasedPagination
+  ): Future[Collection[Playlist]] = {
+    for {
+      likesPage <- lieblingClient.userPlaylistLikes(session, userUrn, pagination.cursor, pagination.pageSize)
+      playlists <- playlistsService.fetchPlaylistsMetadataOnly(
+        session,
+        likesPage.likes.map(like => PlaylistRequest(like.target_urn, None))
+      )
+    } yield {
+      val nextHref =
+        likesPage.meta.cursor.next_params.map(params => pagination.nextPage(params.cursor)).map(_.normalizedHref)
+
+      Collection(playlists, nextHref)
     }
   }
 }

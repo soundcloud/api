@@ -17,6 +17,8 @@ import com.soundcloud.publicApiStrangler.Routing
 import com.soundcloud.publicApiStrangler.client.mothership.response.mapper.UserRepresentationMapper
 import com.soundcloud.publicApiStrangler.handler.support.requestParser.AccessParams
 import com.soundcloud.publicApiStrangler.service.pagination.CursorBasedPagination
+import com.soundcloud.publicApiStrangler.service.playlists.PlaylistBuilder
+import com.soundcloud.publicApiStrangler.service.playlists.representation.Playlist
 import com.soundcloud.publicApiStrangler.service.representation.collection.Collection
 import com.soundcloud.publicApiStrangler.service.trackrepresentation.{
   TrackRepresentation,
@@ -67,12 +69,15 @@ class LikesHandlerSpec extends UnitSpecification {
     lazy val userAuthentication = new FakeUserAuthentication(session)
   }
 
-  "Getting likes on tracks" >> {
-    trait TracksForUserContext extends Context {
+  "Getting liked tracks" >> {
+    trait TracksForUserContext extends Context with TrackRepresentationSpecContext {
       lazy val userAuthentication = new FakeUserAuthentication(session)
 
       val queryString =
         "?page_size=1&cursor=2&linked_partitioning=1"
+      val trackRepresentation = createTrackRepresentationFromVisibleTrack()
+      val tracksCollection = Collection(List(trackRepresentation), None)
+      val expectedResponse = Collection.getRepresentation(tracksCollection, true)
 
       def paginationParams(path: String): CursorBasedPagination = {
         val mockRequest = Request(path)
@@ -92,15 +97,9 @@ class LikesHandlerSpec extends UnitSpecification {
       }
     }
 
-    trait SuccessfulResponse extends TrackRepresentationSpecContext with TracksForUserContext {
-      val trackRepresentation = createTrackRepresentationFromVisibleTrack()
-      val tracksCollection = Collection(List(trackRepresentation), None)
-      val expectedResponse = Collection.getRepresentation(tracksCollection, true)
-    }
-
     "GET /users/:userId/likes/tracks" >> {
       "with a successful response from tracks service" >> {
-        "returns tracks" in new TracksForUserContext with SuccessfulResponse {
+        "returns tracks" in new TracksForUserContext {
           val user = Urn("soundcloud", "users", "1")
           val path = s"/users/1/likes/tracks/$queryString"
 
@@ -115,11 +114,69 @@ class LikesHandlerSpec extends UnitSpecification {
 
     "GET /me/likes/tracks" >> {
       "with a successful response from tracks service" >> {
-        "returns tracks" in new TracksForUserContext with SuccessfulResponse {
+        "returns tracks" in new TracksForUserContext {
           val user = Urn("soundcloud", "users", "1")
           val path = s"/me/likes/tracks/$queryString"
 
           stubUserTracksLikes(user, path, tracksCollection, AccessParams.explicitAccess)
+
+          val response = get(path)
+          response.status ==== Status.Ok
+          response.contentString ==== expectedResponse
+        }
+      }
+    }
+  }
+
+  "Getting liked playlists" >> {
+    trait PlaylistsForUserContext extends Context {
+      lazy val userAuthentication = new FakeUserAuthentication(session)
+
+      val queryString =
+        "?page_size=1&cursor=2&linked_partitioning=1"
+      val playlist = new PlaylistBuilder().build
+      val playlistsCollection = Collection(List(playlist), None)
+      val expectedResponse = Collection.getRepresentation(playlistsCollection, true)
+
+      def paginationParams(path: String): CursorBasedPagination = {
+        val mockRequest = Request(path)
+        mockRequest.host = "localhost"
+        CursorBasedPagination.build(mockRequest, Seq("linked_partitioning"))
+
+      }
+
+      def stubUserPlaylistsLikes(
+          user: Urn,
+          path: String,
+          collection: Collection[Playlist]
+      ) = {
+        when(likesService.userPlaylistsLikes(session, user, paginationParams(path)))
+          .thenReturn(Future.value(collection))
+      }
+    }
+
+    "GET /users/:userId/likes/playlists" >> {
+      "with a successful response from tracks service" >> {
+        "returns tracks" in new PlaylistsForUserContext {
+          val user = Urn("soundcloud", "users", "1")
+          val path = s"/users/1/likes/playlists/$queryString"
+
+          stubUserPlaylistsLikes(user, path, playlistsCollection)
+
+          val response = get(path)
+          response.status ==== Status.Ok
+          response.contentString ==== expectedResponse
+        }
+      }
+    }
+
+    "GET /me/likes/playlists" >> {
+      "with a successful response from tracks service" >> {
+        "returns playlists" in new PlaylistsForUserContext {
+          val user = Urn("soundcloud", "users", "1")
+          val path = s"/me/likes/playlists/$queryString"
+
+          stubUserPlaylistsLikes(user, path, playlistsCollection)
 
           val response = get(path)
           response.status ==== Status.Ok

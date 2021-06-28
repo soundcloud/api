@@ -35,7 +35,6 @@ class LieblingClientSpec extends UnitSpecification {
 
     val trackUrn = Urn("soundcloud", "tracks", "48786981")
     val tracksUrns = List(trackUrn, Urn("soundcloud", "tracks", "101"))
-    val lieblingTrackLikes = contentsOf("liebling", "track_likes")
     val notFoundTrackUrn = Urn("soundcloud", "tracks", "0")
 
     val requestBodyString = s"""{"user_urn":"${userUrn.toString}"}"""
@@ -300,6 +299,30 @@ class LieblingClientSpec extends UnitSpecification {
       )
 
       val result = Await.result(client.userTracksLikes(session, userUrn, Some("1234567890123456"), 2))
+      result ==== client.emptyLikesPage
+    }
+  }
+
+  "#userPlaylistsLikes" >> {
+    "successful response" in new Context {
+      expectOkResponse(
+        Path() / "users" / userUrn / "playlist_likes",
+        lieblingPlaylistLikes,
+        Params("cursor" -> "1234567890123456", "page_size" -> "2")
+      )
+
+      val result = Await.result(client.userPlaylistLikes(session, userUrn, Some("1234567890123456"), 2))
+      result.likes must haveSize(2)
+      result.meta.cursor.next_params ==== Some(LikesPageNextParams("1358467797123456", 2))
+    }
+
+    "non successful response" in new Context {
+      expectInternalErrorResponse(
+        Path() / "users" / userUrn / "playlist_likes",
+        Map("cursor" -> "1234567890123456", "page_size" -> "2")
+      )
+
+      val result = Await.result(client.userPlaylistLikes(session, userUrn, Some("1234567890123456"), 2))
       result ==== client.emptyLikesPage
     }
   }

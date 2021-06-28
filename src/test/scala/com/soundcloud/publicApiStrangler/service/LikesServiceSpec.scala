@@ -7,6 +7,8 @@ import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.publicApiStrangler.client.liebling._
 import com.soundcloud.publicApiStrangler.handler.support.requestParser.AccessParams
 import com.soundcloud.publicApiStrangler.service.pagination.CursorBasedPagination
+import com.soundcloud.publicApiStrangler.service.playlists.representation.Playlist
+import com.soundcloud.publicApiStrangler.service.playlists.{PlaylistBuilder, PlaylistRequest}
 import com.soundcloud.publicApiStrangler.service.representation.collection.Collection
 import com.soundcloud.publicApiStrangler.service.trackrepresentation.{
   TrackRepresentation,
@@ -18,14 +20,7 @@ import com.twitter.finagle.http.ParamMap
 import com.twitter.util.{Await, Future}
 import org.mockito.Mockito._
 import org.specs2.mutable.BeforeAfter
-import proto.soundcloud.tracks.api.{
-  GetTrackLikersPagination,
-  GetTrackLikersRequest,
-  GetTrackLikersResponse,
-  LikeTrackRequest,
-  LikeTrackResponse,
-  LikesClientProtobuf
-}
+import proto.soundcloud.tracks.api._
 
 import java.time.Instant
 
@@ -34,6 +29,7 @@ class LikesServiceSpec extends TrackRepresentationsSpecificationContext {
   trait Context extends TrackRepresentationsContext with BeforeAfter {
 
     val trackRepresentationsService = mock[TrackRepresentationsService]
+    val playlistsService = mock[PlaylistsService]
     val lieblingClient = mock[LieblingClient]
     val pagination = CursorBasedPagination(
       "https://api.soundcloud.com",
@@ -46,6 +42,7 @@ class LikesServiceSpec extends TrackRepresentationsSpecificationContext {
 
     val likesService = new LikesService(
       trackRepresentationsService,
+      playlistsService,
       lieblingClient,
       tracksTwinagleClient
     )
@@ -195,7 +192,6 @@ class LikesServiceSpec extends TrackRepresentationsSpecificationContext {
 
   "#userTracksLikes" >> {
     "when all data is available" in new Context {
-      val track = trackVisibilityTrack()
       val likesPage = LikesPage(
         likes = List(Like(requestingUserUrn, trackUrn, createdAt.toDateTime(), None)),
         meta = LikesPageMeta(
@@ -214,8 +210,33 @@ class LikesServiceSpec extends TrackRepresentationsSpecificationContext {
       val tracksCollection = Await.result(likesService.userTracksLikes(session, trackOwnerUrn, access, pagination))
 
       tracksCollection match {
-        case rep =>
-          rep must beAnInstanceOf[Collection[TrackRepresentation]]
+        case rep => rep must beAnInstanceOf[Collection[TrackRepresentation]]
+      }
+    }
+  }
+
+  "#userPlaylistsLikes" >> {
+    "when all data is available" in new Context {
+      val playlist = new PlaylistBuilder().build
+      val playlistUrn = Urn("soundcloud", "playlists", "1001")
+      val likesPage = LikesPage(
+        likes = List(Like(requestingUserUrn, playlistUrn, createdAt.toDateTime(), None)),
+        meta = LikesPageMeta(
+          cursor = LikesPageCursor(
+            next_params = None,
+            next_href = None
+          )
+        )
+      )
+      when(playlistsService.fetchPlaylistsMetadataOnly(session, List(PlaylistRequest(playlistUrn, None))))
+        .thenReturn(Future.value(List(playlist)))
+      when(lieblingClient.userPlaylistLikes(session, trackOwnerUrn, pagination.cursor, pagination.pageSize))
+        .thenReturn(Future.value(likesPage))
+
+      val playlistsCollection = Await.result(likesService.userPlaylistsLikes(session, trackOwnerUrn, pagination))
+
+      playlistsCollection match {
+        case rep => rep must beAnInstanceOf[Collection[Playlist]]
       }
     }
   }

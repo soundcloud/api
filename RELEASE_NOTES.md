@@ -2,11 +2,8 @@
 
 ### Feature request
 
-- to allow clients request playlists with/without tracks, a new boolean flag `show_tracks` was added to the following endpoints:
-    * /playlists
-    * /me/playlists
-    * /playlists/{playlist_id}
-    * /users/{user_id}/playlists
+New endpoint for fetching user/s liked playlists:
+* /users/:userId/likes/playlists
+* /me/likes/playlists
 
-For more details on usage: https://developers.soundcloud.com/docs/api/explorer/open-api    
-    
+Find details on usage in our [API Explorer](https://developers.soundcloud.com/docs/api/explorer/open-api).

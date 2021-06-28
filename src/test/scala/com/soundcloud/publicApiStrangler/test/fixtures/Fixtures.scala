@@ -79,4 +79,6 @@ object Fixtures {
 
   lazy val lieblingLikeCreationSuccess = fileToString("liebling", "like_creation_success")
   lazy val lieblingLikeDeletionSuccess = fileToString("liebling", "like_deletion_success")
+  lazy val lieblingTrackLikes = contentsOf("liebling", "track_likes")
+  lazy val lieblingPlaylistLikes = contentsOf("liebling", "playlist_likes")
 }

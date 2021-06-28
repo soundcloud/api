@@ -1,7 +1,6 @@
 package com.soundcloud.publicApiStrangler.service
 
 import com.soundcloud.jvmkit.module.outcome._
-import com.soundcloud.jvmkit.module.telemetry.exceptions.ExceptionCollector
 import com.soundcloud.jvmkit.module.twirp.proto.UserSessionOps._
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSession
@@ -28,7 +27,6 @@ class PlaylistsService(
     tracksService: TrackRepresentationsService,
     moshimoshiClient: MoshimoshiClient,
     lieblingClient: LieblingClient,
-    exceptionCollector: ExceptionCollector,
     playlistProtoMapper: PlaylistProtoMapper = new PlaylistProtoMapper()
 ) {
 

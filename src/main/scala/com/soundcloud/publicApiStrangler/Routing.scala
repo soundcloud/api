@@ -146,7 +146,9 @@ object Routing {
     route(Method.Get, "/users/:userId/favorites", likesHandler.getUserTracksLikes) ::: // deprecate
       route(Method.Get, "/me/favorites", likesHandler.getMeTracksLikes) ::: // deprecate
       route(Method.Get, "/me/likes/tracks", likesHandler.getMeTracksLikes) :::
+      route(Method.Get, "/me/likes/playlists", likesHandler.getMePlaylistsLikes) :::
       route(Method.Get, "/users/:userId/likes/tracks", likesHandler.getUserTracksLikes) :::
+      route(Method.Get, "/users/:userId/likes/playlists", likesHandler.getUserPlaylistsLikes) :::
       route(Method.Post, "/likes/tracks/:trackId", likesHandler.createMeLikedTrackId) :::
       route(Method.Delete, "/likes/tracks/:trackId", likesHandler.deleteMeLikedTrackId) :::
       route(Method.Post, "/likes/playlists/:id", likesHandler.createMeLikedPlaylistId) :::
