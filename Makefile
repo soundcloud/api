@@ -35,7 +35,7 @@ precheckin:
 	make package
 	make end-to-end-test
 
-lint:
+lint: validate-manifest
 	$(SBT) scalafmtCheckAll
 
 format: auto-apply-lint
@@ -165,3 +165,7 @@ GO_REVISION_GIT ?= HEAD
 publish-changelog: 
 	git diff-index --exit-code $(GO_REVISION_GIT)~1 RELEASE_NOTES.md && echo 'No release notes to publish...' && exit 0; \
 		./scripts/release
+
+.PHONY: validate-manifest
+validate-manifest:
+	sc manifest validate
