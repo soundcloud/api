@@ -6,14 +6,10 @@
     "owner": "integrations-team",
     "status": "production",
     "type": "external_service",
-    "alert_service": "https://sndcld.pagerduty.com/services/PYW11IP",
     "telemetry_dashboard": "https://grafana.soundcloud.org/dashboard/db/jvmkit-generic?var-prometheus=public-api-strangler&var-system=public-api-strangler&var-job=public-api-strangler",
     "ci_dashboard": "https://ci.soundcloud.org/go/tab/pipeline/history/public-api-strangler",
     "runbook": "https://eng-doc.soundcloud.org/runbooks/core-services/public-api-strangler",
     "data_sensitivity": ["user_urn", "other_user_data", "pid"],
-    "slo": {
-      "metrics_server": "prometheus-core-services.int.s-cloud.net:9090"
-    },
     "dependencies": [
       "authenticator",
       "gatekeeper",
@@ -25,7 +21,6 @@
       "okidoki",
       "playlists",
       "public-api",
-      "playlists",
       "search-dispatcher-remix",
       "system-playlists",
       "timeline",
