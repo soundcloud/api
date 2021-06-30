@@ -158,7 +158,6 @@ deploy-prometheus:
 		--rule=https://ent.int.s-cloud.net/prometheus/rules/prometheus_base.yml \
 		--rule=https://ent.int.s-cloud.net/prometheus/rules/jvmkit.yml \
 		--rule=https://ent.int.s-cloud.net/prometheus/rules/canary_vs_release.yml \
-		--rule=https://ent.int.s-cloud.net/prometheus/rules/slo.yml \
 		--rule=https://ent.int.s-cloud.net/prometheus/rules/memcached.yml
 
 GO_REVISION_GIT ?= HEAD
