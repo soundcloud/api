@@ -34,13 +34,11 @@ class DispatchToMothershipHandler(
 
 object ForwardedRequest {
   private val mandatoryHeaders = Map("X-Forwarded-Proto" -> "https", "Host" -> "api.soundcloud.com")
-  private val X_OAUTH_USE_INTERNAL_HEADERS = "X-oauth-use-internal-headers"
 
   def apply(originalRequest: Request, maybeSession: Option[UserSession]) = {
     originalRequest.host = "api.soundcloud.com"
     addMandatoryHeaders(originalRequest)
     maybeSession.foreach(session => addUserSessionHeaders(originalRequest, session))
-    maybeSession.map(_ => originalRequest.headerMap.set(X_OAUTH_USE_INTERNAL_HEADERS, "true"))
     originalRequest
   }
 

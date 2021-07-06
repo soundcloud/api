@@ -26,8 +26,6 @@ class ForwardedRequestSpec extends UnitSpecification {
     val session = loggedInSession(Urn("soundcloud", "users", "1"))
     val client = Http.client.withStreaming(enabled = false).newService(s"localhost:${server.getPort}")
 
-    val X_OAUTH_USE_INTERNAL_HEADERS = "X-oauth-use-internal-headers"
-
     def stranglerService: Service[Request, Response] =
       new Service[Request, Response] {
         def apply(request: Request): Future[Response] = {
@@ -75,7 +73,6 @@ class ForwardedRequestSpec extends UnitSpecification {
     recordedRequest.getHeader("Sc-Geo-Country-Code") ==== session.getGeo.getCountryCode
     recordedRequest.getHeader("Sc-Oauth-Scopes") ==== session.getScopes.asScala.mkString(",")
 
-    recordedRequest.getHeader(X_OAUTH_USE_INTERNAL_HEADERS) ==== "true"
     (Json.parse(recordedRequest.getHeader("X-SC-Auth")) \ "user").as[String] ==== session.getUser.toString
     (Json.parse(recordedRequest.getHeader("X-SC-Auth")) \ "agent").as[String] ==== session.getAgent.toString
     (Json.parse(recordedRequest.getHeader("X-SC-Auth")) \ "geo" \ "city").as[String] ==== session.getGeo.getCity
@@ -112,7 +109,6 @@ class ForwardedRequestSpec extends UnitSpecification {
     recordedRequest.getHeader("Sc-Geo-Country-Code") ==== session.getGeo.getCountryCode
     recordedRequest.getHeader("Sc-Oauth-Scopes") ==== session.getScopes.asScala.mkString(",")
 
-    recordedRequest.getHeader(X_OAUTH_USE_INTERNAL_HEADERS) ==== "true"
     (Json.parse(recordedRequest.getHeader("X-SC-Auth")) \ "user").as[String] ==== session.getUser.toString
     (Json.parse(recordedRequest.getHeader("X-SC-Auth")) \ "agent").as[String] ==== session.getAgent.toString
     (Json.parse(recordedRequest.getHeader("X-SC-Auth")) \ "geo" \ "city").as[String] ==== session.getGeo.getCity
@@ -149,7 +145,6 @@ class ForwardedRequestSpec extends UnitSpecification {
     recordedRequest.getHeader("Sc-Geo-Country-Code") ==== session.getGeo.getCountryCode
     recordedRequest.getHeader("Sc-Oauth-Scopes") ==== session.getScopes.asScala.mkString(",")
 
-    recordedRequest.getHeader(X_OAUTH_USE_INTERNAL_HEADERS) ==== "true"
     (Json.parse(recordedRequest.getHeader("X-SC-Auth")) \ "user").as[String] ==== session.getUser.toString
     (Json.parse(recordedRequest.getHeader("X-SC-Auth")) \ "agent").as[String] ==== session.getAgent.toString
     (Json.parse(recordedRequest.getHeader("X-SC-Auth")) \ "geo" \ "city").as[String] ==== session.getGeo.getCity
@@ -188,7 +183,6 @@ class ForwardedRequestSpec extends UnitSpecification {
     recordedRequest.getHeader("Sc-Geo-Country-Code") ==== session.getGeo.getCountryCode
     recordedRequest.getHeader("Sc-Oauth-Scopes") ==== session.getScopes.asScala.mkString(",")
 
-    recordedRequest.getHeader(X_OAUTH_USE_INTERNAL_HEADERS) ==== "true"
     (Json.parse(recordedRequest.getHeader("X-SC-Auth")) \ "user").as[String] ==== session.getUser.toString
     (Json.parse(recordedRequest.getHeader("X-SC-Auth")) \ "agent").as[String] ==== session.getAgent.toString
     (Json.parse(recordedRequest.getHeader("X-SC-Auth")) \ "geo" \ "city").as[String] ==== session.getGeo.getCity
@@ -280,6 +274,5 @@ class ForwardedRequestSpec extends UnitSpecification {
     Option(recordedRequest.getHeader("Sc-Oauth-Scopes")) ==== None
 
     Option(recordedRequest.getHeader("X-SC-Auth")) ==== None
-    Option(recordedRequest.getHeader(X_OAUTH_USE_INTERNAL_HEADERS)) ==== None
   }
 }
