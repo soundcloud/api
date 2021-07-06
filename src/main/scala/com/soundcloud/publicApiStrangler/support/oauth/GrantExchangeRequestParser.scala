@@ -12,7 +12,7 @@ class GrantExchangeRequestParser(railsLikeParamsParser: RailsLikeParamsParser) {
     } yield GrantExchangeRequest(clientCredential, accessGrant, context)
 
   private def getNonBlank(values: Map[String, String], key: String) =
-    values.get(key).filter(!_.trim.isEmpty)
+    values.get(key).filter(_.trim.nonEmpty)
 
   private def readClientCredential(params: Map[String, String]): Either[GrantExchangeRequestError, ClientCredential] = {
     val credOpt = for {
@@ -30,13 +30,6 @@ class GrantExchangeRequestParser(railsLikeParamsParser: RailsLikeParamsParser) {
           redirectUri <- getNonBlank(params, "redirect_uri")
         } yield AuthorizationCodeGrant(code, redirectUri)
         grantOpt.toRight(InvalidGrant(AuthorizationCodeGrant.Name))
-
-      case Some(PasswordGrant.Name) =>
-        val grantOpt = for {
-          username <- getNonBlank(params, "username")
-          password <- getNonBlank(params, "password")
-        } yield PasswordGrant(username, password, getScope(params))
-        grantOpt.toRight(InvalidGrant(PasswordGrant.Name))
 
       case Some(RefreshTokenGrant.Name) =>
         val grantOpt = for {

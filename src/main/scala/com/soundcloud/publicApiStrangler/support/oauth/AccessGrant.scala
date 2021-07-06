@@ -23,9 +23,3 @@ case class RefreshTokenGrant(refreshToken: String) extends AccessGrant(RefreshTo
 object RefreshTokenGrant {
   val Name: String = "refresh_token"
 }
-
-case class PasswordGrant(username: String, password: String, scope: Set[String]) extends AccessGrant(PasswordGrant.Name)
-
-object PasswordGrant {
-  val Name: String = "password"
-}

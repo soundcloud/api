@@ -69,14 +69,12 @@ paths:
               oneOf:
                 - $ref: '#/components/schemas/AuthorizationCode'
                 - $ref: '#/components/schemas/RefreshToken'
-                - $ref: '#/components/schemas/Password'
+                - $ref: '#/components/schemas/ClientCredentials'
             examples:
               AuthorizationCode:
                 $ref: '#/components/examples/AuthorizationCode'
               ClientCredentials:
                 $ref: '#/components/examples/ClientCredentials'
-              Password:
-                $ref: '#/components/examples/Password'
               RefreshToken:
                 $ref: '#/components/examples/RefreshToken'
       responses:
@@ -1141,8 +1139,8 @@ components:
       $ref: './components/schemas/AuthorizationCode.yaml'
     RefreshToken:
       $ref: './components/schemas/RefreshToken.yaml'
-    Password:
-      $ref: './components/schemas/Password.yaml'
+    ClientCredentials:
+      $ref: './components/schemas/ClientCredentials.yaml'
     Connection:
       $ref: './components/schemas/Connection.yaml'
     Connections:
@@ -1249,8 +1247,6 @@ components:
       $ref: './components/examples/AuthorizationCode.yaml'
     ClientCredentials:
       $ref: './components/examples/ClientCredentials.yaml'
-    Password:
-      $ref: './components/examples/Password.yaml'
     RefreshToken:
       $ref: './components/examples/RefreshToken.yaml'
     Activities:

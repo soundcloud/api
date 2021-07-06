@@ -104,32 +104,6 @@ class GrantExchangeServiceSpec extends UnitSpecification {
     )
   }
 
-  "when received request contains a password grant" >> {
-    trait PasswordContext extends Context {
-      override def accessGrant: PasswordGrant =
-        PasswordGrant("id", "password", Set("scope"))
-
-      accessGrantExchangeService
-        .passwordExchange(any())
-        .returns(Future.value(response))
-    }
-
-    "it calls passwordExchange" in new PasswordContext {
-      result
-
-      there was one(accessGrantExchangeService).passwordExchange(
-        proto
-          .PasswordGrant(Some(protoClientCredential), "id", "password", Seq("scope"), "remote-ip", Some("user-agent"))
-      )
-    }
-
-    verifyResponseHandlingBehaviour(resp =>
-      new PasswordContext {
-        override def response = resp
-      }
-    )
-  }
-
   /**
     * This function emulates rspec shared_examples style behaviour.
     *

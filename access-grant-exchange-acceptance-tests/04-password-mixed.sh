@@ -26,5 +26,6 @@ response=$(
     --form "scope=${scope_requested}"
 )
 
-access_token=$(echo "$response" | jq '.access_token // empty' -r)
-assert_not_empty "$access_token" "Access token"
+error_code=$(echo "$response" | jq '.error' -r)
+assert_equal "$error_code" "$error_code_expected" "Error code"
+error_code_expected="unsupported_grant_type"

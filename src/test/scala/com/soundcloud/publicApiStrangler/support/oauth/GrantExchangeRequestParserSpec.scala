@@ -52,7 +52,7 @@ class GrantExchangeRequestParserSpec extends UnitSpecification {
 
     "fail when client credentials are missing" in new RequestWithParamsContext {
       override val params = Map(
-        "grant_type" -> "password",
+        "grant_type" -> "client_credentials",
         "username" -> "johndoe",
         "password" -> "password"
       )
@@ -135,45 +135,6 @@ class GrantExchangeRequestParserSpec extends UnitSpecification {
                   scope ==== Set("ab", "c", "d", "f")
               }
             }
-          }
-        }
-      }
-
-      // https://tools.ietf.org/html/draft-ietf-oauth-v2-10#section-4.1.2
-      "when the request is for a password grant" >> {
-        trait PasswordGrantParamsContext extends RequestWithParamsContext {
-          override def params = Map(
-            "grant_type" -> "password",
-            "client_id" -> "s6BhdRkqt3",
-            "client_secret" -> "gX1fBat3bV",
-            "username" -> "johndoe",
-            "password" -> "A3ddj3w"
-          )
-        }
-
-        "when no scope parameter is included" >> {
-          "it returns a PasswordGrant with empty scopes" in new PasswordGrantParamsContext {
-            result ==== Right(
-              GrantExchangeRequest(
-                ClientCredential("s6BhdRkqt3", "gX1fBat3bV"),
-                PasswordGrant("johndoe", "A3ddj3w", Set.empty),
-                RequestContext(remoteIp, userAgent)
-              )
-            )
-          }
-        }
-
-        "when a scope parameter is included" >> {
-          "it returns a PasswordGrant with a set of access ranges" in new PasswordGrantParamsContext {
-            override def params = super.params ++ Map("scope" -> "range_one range_two")
-
-            result ==== Right(
-              GrantExchangeRequest(
-                ClientCredential("s6BhdRkqt3", "gX1fBat3bV"),
-                PasswordGrant("johndoe", "A3ddj3w", Set("range_one", "range_two")),
-                RequestContext(remoteIp, userAgent)
-              )
-            )
           }
         }
       }

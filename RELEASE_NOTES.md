@@ -1,9 +1,7 @@
 <!--- Remove everything below and start over --->
 
-### Feature request
+### Security update
 
-New endpoint for fetching user/s liked playlists:
-* /users/:userId/likes/playlists
-* /me/likes/playlists
+Grant type `password` is deprecated.
 
-Find details on usage in our [API Explorer](https://developers.soundcloud.com/docs/api/explorer/open-api).
+Find more in our [blog post](https://developers.soundcloud.com/blog/security-updates-api).

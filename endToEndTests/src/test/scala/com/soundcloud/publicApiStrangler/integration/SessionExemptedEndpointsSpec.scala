@@ -13,17 +13,13 @@ class SessionExemptedEndpointsSpec extends IntegrationTest {
     }
 
     "return success for multipart request with oauth2 token" in new IntegrationContext {
-      val user = config.get("USER", DataSensitivity.SENSITIVE)
-      val password = config.get("PASSWORD", DataSensitivity.SENSITIVE)
       val secret = config.get("CLIENT_SECRET", DataSensitivity.SENSITIVE)
       val request = RequestBuilder()
         .url(s"http://${server.serverAddress}/oauth2/token")
         .addHeader("X-Real-IP", "65.206.21.12")
-        .addFormElement("grant_type" -> "password")
-        .addFormElement("username"-> user)
-        .addFormElement("password" -> password)
+        .addFormElement("grant_type" -> "client_credentials")
         .addFormElement("client_id" -> clientId)
-        .addFormElement("client_secret"-> secret)
+        .addFormElement("client_secret" -> secret)
         .buildFormPost(multipart = false)
 
       private val response: IntegrationTestHttpResponse = server.executeRequest(request)

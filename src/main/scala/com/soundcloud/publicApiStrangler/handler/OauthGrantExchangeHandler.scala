@@ -25,7 +25,7 @@ class OauthGrantExchangeHandler(
     }
   }
 
-  // respost app urn soundcloud:applications:314153
+  // repost app urn soundcloud:applications:314153
   private val repostClientIds =
     Set("1jtbGRxaCld7OEmR7TVYeJy0qaFQqnSf", "RcTym36UFfGVYMkMND74sakJwAw498ME", "SZa63XTt7C8KdgCVBFGoPGJVQojLS4KN")
 

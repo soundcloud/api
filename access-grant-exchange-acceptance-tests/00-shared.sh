@@ -63,6 +63,8 @@ test_refresh() {
         --data "refresh_token=${refresh_token}"
     )
 
+    echo "$response"
+
     scope_granted=$(echo "$response" | jq '.scope' -r)
     assert_equal "$scope_granted" "$scope_requested" "Scope granted"
   else

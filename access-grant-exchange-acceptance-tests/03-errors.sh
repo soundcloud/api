@@ -12,6 +12,8 @@ response=$(
   sc_curl_token
 )
 
+echo "$response"
+
 error_code=$(echo "$response" | jq '.error' -r)
 assert_equal "$error_code" "$error_code_expected" "Error code"
 
@@ -40,7 +42,16 @@ assert_equal "$error_code" "$error_code_expected" "Error code"
 error_code_expected="unsupported_grant_type"
 response=$(
   sc_curl_token_client_credentials \
-    --data "grant_type=a_type_that_is_not_supported"
+    --data "grant_type=password"
+)
+
+error_code=$(echo "$response" | jq '.error' -r)
+assert_equal "$error_code" "$error_code_expected" "Error code"
+
+error_code_expected="unsupported_grant_type"
+response=$(
+  sc_curl_token_client_credentials \
+    --data "grant_type=code_and_token"
 )
 
 error_code=$(echo "$response" | jq '.error' -r)

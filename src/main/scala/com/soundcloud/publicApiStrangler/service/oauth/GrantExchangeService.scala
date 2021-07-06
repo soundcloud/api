@@ -1,10 +1,12 @@
 package com.soundcloud.publicApiStrangler.service.oauth
 
+import _root_.proto.soundcloud.authenticator.access_grant_exchange.AccessGrantExchangeResponse.{
+  Error => AccessGrantExchangeError
+}
 import com.soundcloud.jvmkit.module.outcome._
 import com.soundcloud.publicApiStrangler.support.oauth._
 import com.twitter.util.Future
 import proto.soundcloud.authenticator.{access_grant_exchange => proto}
-import proto.AccessGrantExchangeResponse.{Error => AccessGrantExchangeError}
 
 class GrantExchangeService(accessGrantExchangeService: proto.AccessGrantExchangeService) {
   def exchange(exchangeRequest: GrantExchangeRequest): Future[Outcome[AccessTokenResponse]] = {
@@ -26,18 +28,6 @@ class GrantExchangeService(accessGrantExchangeService: proto.AccessGrantExchange
       case RefreshTokenGrant(refreshToken) =>
         accessGrantExchangeService
           .refreshTokenExchange(proto.RefreshTokenGrant(Some(clientCredentials), refreshToken))
-      case PasswordGrant(username, password, scope) =>
-        accessGrantExchangeService
-          .passwordExchange(
-            proto.PasswordGrant(
-              Some(clientCredentials),
-              username,
-              password,
-              scope.toSeq,
-              request.context.remoteIp,
-              Some(request.context.userAgent)
-            )
-          )
     }
   }
 
