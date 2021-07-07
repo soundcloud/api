@@ -1,5 +1,6 @@
 package com.soundcloud.publicApiStrangler.service
 
+import com.soundcloud.jvmkit.module.outcome.{ApplicationError, Bad, Good, GoodOps, Outcome}
 import com.soundcloud.jvmkit.module.twirp.proto.UserSessionOps.JvmkitSessionExt
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSession
@@ -15,11 +16,16 @@ import com.soundcloud.publicApiStrangler.client.reposts.RepostsClient.{
 }
 import com.soundcloud.publicApiStrangler.service.pagination.CursorBasedPagination
 import com.soundcloud.publicApiStrangler.service.representation.collection.Collection
-import com.soundcloud.publicApiStrangler.service.users.UserOrderingUtils.sortByProvidedUrns
 import com.soundcloud.publicApiStrangler.service.users.UserRepresentationsService
 import com.soundcloud.twinagle.{ErrorCode, TwinagleException}
 import com.twitter.util.Future
-import proto.soundcloud.tracks.api.{RepostTrackRequest, RepostsService => TrackRepostsService}
+import proto.soundcloud.tracks.api.{
+  RepostTrackRequest,
+  TrackRepostersPagination,
+  TrackRepostersRequest,
+  TrackRepostersResponse,
+  RepostsService => TrackRepostsService
+}
 
 class RepostsService(
     userRepresentationService: UserRepresentationsService,
@@ -60,7 +66,7 @@ class RepostsService(
     repostsClient.deleteRepost(session, playlist)
   }
 
-  def getReposters(
+  def getPlaylistReposters(
       session: UserSession,
       target: Urn,
       pagination: CursorBasedPagination
@@ -72,8 +78,46 @@ class RepostsService(
           .getUsers(session, reposts.urns)
           .map { users =>
             val nextHref = reposts.nextCursor.map(cursor => pagination.nextPage(cursor)).map(_.normalizedHref)
-            Collection(sortByProvidedUrns(users, reposts.urns).toList, nextHref)
+            Collection(users, nextHref)
           }
+      }
+  }
+
+  def getTrackReposters(
+      session: UserSession,
+      target: Urn,
+      pagination: CursorBasedPagination
+  ): Future[Outcome[Collection[UserRepresentation]]] = {
+    fetchTrackReposters(session, target, pagination).flatMap {
+      case Good(response) =>
+        userRepresentationService
+          .getUsers(session, response.userUrns.map(u => Urn.parse(u).get))
+          .map { users =>
+            val nextHref = response.cursor.map(cursor => pagination.nextPage(cursor)).map(_.normalizedHref)
+            Collection(users, nextHref).good
+          }
+      case Bad(err) => Future.value(err.bad)
+      case _ => Future.value(com.soundcloud.jvmkit.module.outcome.NotFound().bad)
+    }
+  }
+
+  private def fetchTrackReposters(
+      session: UserSession,
+      trackUrn: Urn,
+      pagination: CursorBasedPagination
+  ): Future[Outcome[TrackRepostersResponse]] = {
+    val trackRepostersPagination = TrackRepostersPagination(limit = pagination.pageSize, cursor = pagination.cursor)
+    val request = TrackRepostersRequest(
+      userSession = Some(session.asProtoSession),
+      trackUrn = trackUrn.toString,
+      pagination = Some(trackRepostersPagination)
+    )
+
+    trackRepostsService
+      .getTrackReposters(request)
+      .map(res => TrackRepostersResponse(userUrns = res.userUrns, cursor = res.cursor).good)
+      .handle {
+        case e @ TwinagleException(_, _, _, _) => ApplicationError.fromTwinagleException(e).bad
       }
   }
 

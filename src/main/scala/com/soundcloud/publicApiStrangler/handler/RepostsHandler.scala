@@ -2,6 +2,7 @@ package com.soundcloud.publicApiStrangler.handler
 
 import com.soundcloud.jvmkit.module.bff.session.UserAuthentication
 import com.soundcloud.jvmkit.module.http.server.{HandlerRequest, JsonResponseBuilder, ResponseBuilder}
+import com.soundcloud.jvmkit.module.outcome.{Bad, Good}
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.publicApiStrangler.client.reposts.RepostsClient._
@@ -22,7 +23,22 @@ class RepostsHandler(userAuthentication: UserAuthentication, repostsService: Rep
   def deleteTracksRepost(request: HandlerRequest): Future[Response] =
     execute(request, getTrackUrn, repostsService.deleteTracksRepost)
 
-  def getTracksReposters(request: HandlerRequest): Future[Response] = executeGet(request, getTrackUrn)
+  def getTracksReposters(request: HandlerRequest): Future[Response] =
+    userAuthentication.withUserSession(request) { session =>
+      val pagination = CursorBasedPagination.build(request)
+
+      Try(getTrackUrn(request)) match {
+        case Return(urn) =>
+          repostsService
+            .getTrackReposters(session, urn, pagination)
+            .map {
+              case Good(userCollection) => JsonResponseBuilder.ok(Collection.getRepresentation(userCollection, true))
+              case Bad(com.soundcloud.jvmkit.module.outcome.NotFound(_)) => ErrorResponse.notFound()
+              case Bad(_) => ErrorResponse(Status.InternalServerError)
+            }
+        case _ => Future.value(ErrorResponse.badRequest())
+      }
+    }
 
   def createPlaylistsRepost(request: HandlerRequest): Future[Response] =
     execute(request, getPlaylistUrn, repostsService.createPlaylistsRepost)
@@ -30,7 +46,20 @@ class RepostsHandler(userAuthentication: UserAuthentication, repostsService: Rep
   def deletePlaylistsRepost(request: HandlerRequest): Future[Response] =
     execute(request, getPlaylistUrn, repostsService.deletePlaylistsRepost)
 
-  def getPlaylistsReposters(request: HandlerRequest): Future[Response] = executeGet(request, getPlaylistUrn)
+  def getPlaylistsReposters(request: HandlerRequest): Future[Response] =
+    userAuthentication.withUserSession(request) { session =>
+      val pagination = CursorBasedPagination.build(request)
+
+      Try(getPlaylistUrn(request)) match {
+        case Return(urn) =>
+          repostsService
+            .getPlaylistReposters(session, urn, pagination)
+            .map(userCollection => {
+              JsonResponseBuilder.ok(Collection.getRepresentation(userCollection, true))
+            })
+        case _ => Future.value(ErrorResponse.badRequest())
+      }
+    }
 
   private def execute(
       request: HandlerRequest,
@@ -43,22 +72,6 @@ class RepostsHandler(userAuthentication: UserAuthentication, repostsService: Rep
         case _ => Future.value(ErrorResponse.badRequest())
       }
     }
-
-  private def executeGet(request: HandlerRequest, extractUrn: HandlerRequest => Urn): Future[Response] = {
-    userAuthentication.withUserSession(request) { session =>
-      val pagination = CursorBasedPagination.build(request)
-
-      Try(extractUrn(request)) match {
-        case Return(urn) =>
-          repostsService
-            .getReposters(session, urn, pagination)
-            .map(userCollection => {
-              JsonResponseBuilder.ok(Collection.getRepresentation(userCollection, true))
-            })
-        case _ => Future.value(ErrorResponse.badRequest())
-      }
-    }
-  }
 
   private def renderResult(result: Result): Response = result match {
     case Created => ResponseBuilder.created()

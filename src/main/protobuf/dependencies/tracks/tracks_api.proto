@@ -78,6 +78,7 @@ message TrackRepostersPagination {
 
 service Comments {
     rpc GetCommentsOnWaveform (GetCommentsOnWaveformRequest) returns (GetCommentsOnWaveformResponse) {};
+    rpc GetThreadedComments (GetThreadedCommentsRequest) returns (GetThreadedCommentsResponse) {};
 }
 
 message GetCommentsOnWaveformRequest {
@@ -89,6 +90,18 @@ message GetCommentsOnWaveformRequest {
 }
 
 message GetCommentsOnWaveformResponse {
+    repeated string comments_urns = 1;
+}
+
+message GetThreadedCommentsRequest {
+    proto.soundcloud.common.session.UserSession user_session = 1;
+    string urn = 2;
+    google.protobuf.StringValue secret_token = 3; // optional
+    int32 limit = 4;
+    int32 offset = 5;
+}
+
+message GetThreadedCommentsResponse {
     repeated string comments_urns = 1;
 }
 
@@ -287,7 +300,7 @@ message Track {
     Counts counts = 49; // optional
     DownloadMetadata download_metadata = 50; // optional
     PublisherMetadata publisher_metadata = 51; // optional
-    Station station = 52; // optional
+    google.protobuf.StringValue station_urn = 52; // optional
 }
 
 message Metadata {
@@ -435,9 +448,4 @@ message PublisherMetadata {
     google.protobuf.StringValue publisher = 12; // optional
     google.protobuf.StringValue release_title = 13; // optional
     google.protobuf.StringValue upc_or_ean = 14; // optional
-}
-
-message Station {
-    google.protobuf.StringValue urn = 1; // optional
-    google.protobuf.StringValue permalink = 2; // optional
 }

@@ -1,6 +1,7 @@
 package com.soundcloud.publicApiStrangler.handler
 
 import com.soundcloud.jvmkit.module.bff.testsupport.FakeUserAuthentication
+import com.soundcloud.jvmkit.module.outcome.{Bad, GoodOps, Outcome}
 import com.soundcloud.jvmkit.module.util.session.UserSessionBuilder
 import com.soundcloud.jvmkit.module.util.{Geo, Urn}
 import com.soundcloud.publicApiStrangler.Routing
@@ -110,9 +111,8 @@ class RepostsHandlerSpec extends UnitSpecification {
 
   "GET /tracks/:id/reposters" >> {
     trait GetTrackRepostersContext extends Context {
-      def result: Collection[UserRepresentation]
+      def result: Outcome[Collection[UserRepresentation]]
 
-      val expectedResponse = Collection.getRepresentation(result, true)
       val pagination = CursorBasedPagination(
         "https://api.example.com",
         "/tracks/100/reposters",
@@ -122,7 +122,7 @@ class RepostsHandlerSpec extends UnitSpecification {
       )
 
       repostsService
-        .getReposters(session, track, pagination)
+        .getTrackReposters(session, track, pagination)
         .returns(Future.value(result))
 
       lazy val response =
@@ -130,17 +130,17 @@ class RepostsHandlerSpec extends UnitSpecification {
     }
 
     "when getting succeeds" in new GetTrackRepostersContext {
-      override def result = userCollection
+      val expectedResponse = Collection.getRepresentation(result.right.get, true)
+      override def result = userCollection.good
 
       response.status ==== Status.Ok
       response.contentString ==== expectedResponse
     }
 
-    "when getting returns empty collection because the track/repost does not exist" in new GetTrackRepostersContext {
-      override def result = Collection[UserRepresentation](List.empty, None)
+    "when getting returns not found because the repost does not exist" in new GetTrackRepostersContext {
+      override def result = Bad(com.soundcloud.jvmkit.module.outcome.NotFound())
 
-      response.status ==== Status.Ok
-      response.contentString ==== expectedResponse
+      response.status ==== Status.NotFound
     }
   }
 
@@ -233,7 +233,7 @@ class RepostsHandlerSpec extends UnitSpecification {
       )
 
       repostsService
-        .getReposters(session, playlist, pagination)
+        .getPlaylistReposters(session, playlist, pagination)
         .returns(Future.value(result))
 
       lazy val response =
