@@ -134,10 +134,10 @@ deploy-api:
 	sc artifact-manager deploy run --zones=$(ZONES) --component="$(API_COMPONENT)"
 
 check-autoscale:
-	sc k8s --zone $(ZONE) --system $(APP_NAME) kubectl describe hpa $(APP_NAME)-$(API_COMPONENT)-autoscale
+	sc k8s --zones $(ZONES) --system $(APP_NAME) kubectl describe hpa $(APP_NAME)-$(API_COMPONENT)-autoscale
 
 autoscale:
-	sc k8s scale --zone $(ZONE) --system $(APP_NAME) --component $(API_COMPONENT) \
+	sc k8s scale --zones $(ZONES) --system $(APP_NAME) --component $(API_COMPONENT) \
 		--autoscale.replicas.max=150 --autoscale.replicas.min=25 \
 		--autoscale.metric.name=namespace_system_env_component_track_version_pod_container:cpu_usage:rate --autoscale.metric.target-value=0.5
 
@@ -150,7 +150,7 @@ MEMORY_REQUEST_replicas = 2Gi
 MEMORY_REQUEST = $(if $(MEMORY_REQUEST_$(ZONES)),$(MEMORY_REQUEST_$(ZONES)),$(error MEMORY_REQUEST is not set for ZONES $(ZONES)))
 
 deploy-prometheus:
-	sc prometheus deploy -z $(ZONES) -s public-api-strangler -e production \
+	sc prometheus deploy --zones $(ZONES) -s public-api-strangler -e production \
 		--cpu.request=$(CPU_REQUEST) \
 		--memory.request=$(MEMORY_REQUEST) \
 		--volume-size=150Gi \
