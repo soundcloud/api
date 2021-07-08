@@ -7,7 +7,6 @@ import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.publicApiStrangler.client.mothership.MoshimoshiClient
 import com.soundcloud.publicApiStrangler.client.mothership.response.representation.UserRepresentation
-import com.soundcloud.publicApiStrangler.client.pubmese.Isrc
 import com.soundcloud.publicApiStrangler.client.trackcoordinator.{TrackCoordinatorClient, TrackCoordinatorTrack}
 import com.soundcloud.publicApiStrangler.client.tracks.TrackRequest
 import com.soundcloud.publicApiStrangler.handler.support.error.UnhandledOutcomeException
@@ -138,7 +137,7 @@ class TrackUpdateService(
   ): TrackRepresentation = {
 
     trackRep.copy(
-      isrc = metadataUpdate.publisher_metadata.flatMap(publisherMetadata => publisherMetadata.isrc.map(Isrc)),
+      isrc = metadataUpdate.publisher_metadata.flatMap(publisherMetadata => publisherMetadata.isrc),
       availableCountries = metadataUpdate.geo_blockings.flatMap(getGeoBlockings),
       title = metadataUpdate.title,
       genre = metadataUpdate.genre,

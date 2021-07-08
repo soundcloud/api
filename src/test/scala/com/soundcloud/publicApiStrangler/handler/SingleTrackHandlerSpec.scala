@@ -33,7 +33,6 @@ class SingleTrackHandlerSpec extends UnitSpecification with TrackRepresentationS
   val trackRepresentation = createTrackRepresentationFromVisibleTrack(
     visibleTrack = visibleTrack,
     user = user,
-    isrc = None,
     geoblockings = List.empty
   )
   val path = "/tracks/987"

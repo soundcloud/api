@@ -53,5 +53,6 @@ case class VisibleTrack(
     release: Option[String],
     keySignature: Option[String],
     access: Option[Access],
-    counts: VisibleTrackCounts
+    counts: VisibleTrackCounts,
+    isrc: Option[String]
 )

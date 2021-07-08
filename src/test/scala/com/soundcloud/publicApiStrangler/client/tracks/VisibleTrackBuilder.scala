@@ -52,6 +52,7 @@ class VisibleTrackBuilder {
   private var keySignature: Option[String] = None
   private var access: Option[Access] = None
   private var counts: VisibleTrackCounts = VisibleTrackCounts(None, None, None, None, None)
+  private var isrc: Option[String] = None
 
   def setUrn(value: Urn) = {
     urn = value; this
@@ -219,6 +220,10 @@ class VisibleTrackBuilder {
     counts = value; this
   }
 
+  def setIsrc(value: Option[String]) = {
+    isrc = value; this
+  }
+
   def build: VisibleTrack =
     VisibleTrack(
       urn,
@@ -261,6 +266,7 @@ class VisibleTrackBuilder {
       release,
       keySignature,
       access,
-      counts
+      counts,
+      isrc
     )
 }

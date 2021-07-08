@@ -43,7 +43,7 @@ class TracksIntegrationSpec extends IntegrationTest {
 
       (response.json \ "stream_url").asOpt[String] must beNone
       (response.json \ "access").as[String] must equalTo("blocked")
-      (response.json \ "available_country_codes").as[List[String]] must not contain("DE")
+      (response.json \ "available_country_codes").as[List[String]] must not contain "DE"
     }
 
     "should return a track with api_streamable=false" in new TrackContext {

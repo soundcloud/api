@@ -51,7 +51,7 @@ class SearchIntegrationSpec extends IntegrationTest {
     "should return geoblocked tracks as well, full access" in new SearchContext {
       val response = server.get(
         searchPath(params = Map(
-          "q" -> "D.A.N.C.E Loopified",
+          "q" -> "Test - Geo blocked track",
           "ids" -> geoblockedInGermanyTrackId,
           "access" -> "playable,preview,blocked")),
         authenticatedDEHeaders

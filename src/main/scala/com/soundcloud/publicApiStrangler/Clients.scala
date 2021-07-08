@@ -23,7 +23,6 @@ import com.soundcloud.publicApiStrangler.client.media.{
 }
 import com.soundcloud.publicApiStrangler.client.mothership.{MoshimoshiClient, OkidokiClient, RichOkidokiClient}
 import com.soundcloud.publicApiStrangler.client.playlists.PlaylistDeletionClient
-import com.soundcloud.publicApiStrangler.client.pubmese.PubmeseClient
 import com.soundcloud.publicApiStrangler.client.reposts.RepostsClient
 import com.soundcloud.publicApiStrangler.client.search.SearchClient
 import com.soundcloud.publicApiStrangler.client.trackcoordinator.TrackCoordinatorClient
@@ -92,8 +91,6 @@ class Clients(
   val systemPlaylistsClient = new SystemPlaylistsClient(jsonClient("system_playlists"))
 
   val trackCoordinatorClient = new TrackCoordinatorClient(jsonClient("track_coordinator"))
-
-  val pubmeseClient = new PubmeseClient(jsonClient("pubmese"))
 
   lazy val moshimoshiCommentsClient = new MoshimoshiCommentsClient(jsonClient("moshimoshi_comments"))
   lazy val moshimoshiClient = new MoshimoshiClient(jsonClient("moshimoshi"), exceptionCollector)
@@ -167,7 +164,6 @@ class Clients(
   val tracksService = new TrackRepresentationsService(
     trackVisibilityService,
     richOkidokiClient,
-    pubmeseClient,
     lieblingClient,
     waveformUrlsGenerator
   )

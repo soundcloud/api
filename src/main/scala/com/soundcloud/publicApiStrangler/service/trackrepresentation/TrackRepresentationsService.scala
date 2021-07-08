@@ -6,7 +6,6 @@ import com.soundcloud.publicApiStrangler.client.liebling.LieblingClient
 import com.soundcloud.publicApiStrangler.client.media.WaveformUrlsGenerator
 import com.soundcloud.publicApiStrangler.client.mothership.RichOkidokiClient
 import com.soundcloud.publicApiStrangler.client.mothership.response.representation.Geoblockings
-import com.soundcloud.publicApiStrangler.client.pubmese.{Isrc, PubmeseClient}
 import com.soundcloud.publicApiStrangler.client.tracks.{TrackRequest, VisibleTrack}
 import com.soundcloud.publicApiStrangler.handler.support.requestParser.AccessParams
 import com.soundcloud.publicApiStrangler.service.TrackVisibilityService
@@ -17,7 +16,6 @@ import scala.util.control.NonFatal
 class TrackRepresentationsService(
     trackVisibilityService: TrackVisibilityService,
     okidokiClient: RichOkidokiClient,
-    pubmeseClient: PubmeseClient,
     lieblingClient: LieblingClient,
     waveformUrlsGenerator: WaveformUrlsGenerator
 ) {
@@ -57,18 +55,16 @@ class TrackRepresentationsService(
             lieblingClient.userLikedTracks(session, urns, user).handle { case NonFatal(_) => Map.empty[Urn, Boolean] }
           )
           .getOrElse(Future.value(Map.empty[Urn, Boolean])),
-        pubmeseClient.isrcsForTracks(session, urns).handle { case NonFatal(_) => Map.empty[Urn, Isrc] },
         okidokiClient.fetchTrackGeoblockings(session, urns).handle { case NonFatal(_) => Map.empty[Urn, Geoblockings] }
       )
       .map {
-        case (users, isLiked, isrcs, geoBlockings) =>
+        case (users, isLiked, geoBlockings) =>
           visibleTracks.map { visibleTrack =>
             TrackRepresentationBuilder.fromVisibleTrack(
               client = session.agent,
               sessionUser = session.user,
               visibleTrack = visibleTrack,
               user = users(visibleTrack.userUrn),
-              isrc = isrcs.get(visibleTrack.urn),
               geoblockings = geoBlockings.getOrElse(visibleTrack.urn, List.empty),
               isLiked = isLiked.getOrElse(visibleTrack.urn, false),
               waveformUrl = waveformUrls(visibleTrack.uid.getOrElse(""))

@@ -106,7 +106,8 @@ class VisibleTrackMapper {
         track.counts.flatMap(_.reposts),
         track.counts.flatMap(_.comments),
         track.downloadMetadata.flatMap(_.count)
-      )
+      ),
+      isrc = track.publisherMetadata.flatMap(_.isrc)
     )
   }
 }

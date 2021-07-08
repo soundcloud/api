@@ -77,10 +77,28 @@ message TrackRepostersPagination {
 }
 
 service Comments {
+    // TO BE REMOVED
     rpc GetCommentsOnWaveform (GetCommentsOnWaveformRequest) returns (GetCommentsOnWaveformResponse) {};
+    // TO BE REMOVED
     rpc GetThreadedComments (GetThreadedCommentsRequest) returns (GetThreadedCommentsResponse) {};
+
+    rpc GetTrackComments (GetTrackCommentsRequest) returns (GetTrackCommentsResponse) {};
+    rpc GetTrackCommentsOnWaveform (GetTrackCommentsRequest) returns (GetTrackCommentsResponse) {};
 }
 
+message GetTrackCommentsRequest {
+    proto.soundcloud.common.session.UserSession user_session = 1;
+    string urn = 2;
+    google.protobuf.StringValue secret_token = 3; // optional
+    int32 limit = 4;
+    int32 offset = 5;
+}
+
+message GetTrackCommentsResponse {
+    repeated string comments_urns = 1;
+}
+
+// TO BE REMOVED
 message GetCommentsOnWaveformRequest {
     proto.soundcloud.common.session.UserSession user_session = 1;
     string urn = 2;
@@ -89,10 +107,12 @@ message GetCommentsOnWaveformRequest {
     int32 offset = 5;
 }
 
+// TO BE REMOVED
 message GetCommentsOnWaveformResponse {
     repeated string comments_urns = 1;
 }
 
+// TO BE REMOVED
 message GetThreadedCommentsRequest {
     proto.soundcloud.common.session.UserSession user_session = 1;
     string urn = 2;
@@ -101,6 +121,7 @@ message GetThreadedCommentsRequest {
     int32 offset = 5;
 }
 
+// TO BE REMOVED
 message GetThreadedCommentsResponse {
     repeated string comments_urns = 1;
 }
@@ -160,6 +181,7 @@ message GetMediaStreamRequest {
     string transcoding_id = 4;
     string protocol = 5;
     bool bypass_progressive_download_restriction = 6;
+    google.protobuf.StringValue track_authorization = 7;
 }
 
 message GetOfflineSyncRequest {
@@ -287,6 +309,7 @@ message Track {
     ContentAuthorization authorization = 36;
     repeated Transcoding transcodings = 37;
     repeated WaveformUrl waveform_urls = 38;
+    string track_authorization = 39;
 
     // additional fields that are not included in the response
     // unless they are specified in the track field mask
@@ -301,6 +324,7 @@ message Track {
     DownloadMetadata download_metadata = 50; // optional
     PublisherMetadata publisher_metadata = 51; // optional
     google.protobuf.StringValue station_urn = 52; // optional
+    Visuals visuals = 53; // optional
 }
 
 message Metadata {
@@ -448,4 +472,22 @@ message PublisherMetadata {
     google.protobuf.StringValue publisher = 12; // optional
     google.protobuf.StringValue release_title = 13; // optional
     google.protobuf.StringValue upc_or_ean = 14; // optional
+}
+
+message Visuals {
+    string urn = 1;
+    bool enabled = 2;
+    repeated Visual visuals = 3;
+    Tracking tracking = 4; // optional
+}
+
+message Visual {
+    string urn = 1;
+    int32 entry_time = 2;
+    string visual_url = 3;
+    google.protobuf.StringValue link = 4; // optional
+}
+
+message Tracking {
+    repeated string impression = 1;
 }

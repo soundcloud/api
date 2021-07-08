@@ -3,7 +3,6 @@ package com.soundcloud.publicApiStrangler.service.trackrepresentation
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.publicApiStrangler.authorization.policies.Access
 import com.soundcloud.publicApiStrangler.client.mothership.response.representation.UserRepresentation
-import com.soundcloud.publicApiStrangler.client.pubmese.Isrc
 import com.soundcloud.publicApiStrangler.client.tracks.EmbeddingPermission
 import com.soundcloud.publicApiStrangler.support.HtmlSanitizer
 import org.joda.time.LocalDateTime
@@ -29,7 +28,7 @@ case class TrackRepresentation(
     labelName: Option[String],
     release: Option[String],
     keySignature: Option[String],
-    isrc: Option[Isrc],
+    isrc: Option[String],
     bpm: Option[Double],
     releaseYear: Option[Int],
     releaseDay: Option[Int],
@@ -85,7 +84,7 @@ object TrackRepresentation {
         "label_name" -> rep.labelName.map(HtmlSanitizer.sanitize),
         "release" -> rep.release.map(HtmlSanitizer.sanitize),
         "key_signature" -> rep.keySignature.map(HtmlSanitizer.sanitize),
-        "isrc" -> rep.isrc.map(_.toString),
+        "isrc" -> rep.isrc,
         "bpm" -> rep.bpm.map(roundBpm),
         "release_year" -> rep.releaseYear,
         "release_month" -> rep.releaseMonth,

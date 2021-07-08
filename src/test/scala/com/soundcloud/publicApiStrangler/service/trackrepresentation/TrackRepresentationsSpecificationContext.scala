@@ -5,7 +5,6 @@ import com.soundcloud.jvmkit.module.util.{Url, Urn}
 import com.soundcloud.publicApiStrangler.authorization.policies._
 import com.soundcloud.publicApiStrangler.client.media.TrackWaveformUrl
 import com.soundcloud.publicApiStrangler.client.mothership.response.representation.Geoblockings
-import com.soundcloud.publicApiStrangler.client.pubmese.Isrc
 import com.soundcloud.publicApiStrangler.client.tracks._
 import com.soundcloud.publicApiStrangler.service.users.UserBuilder
 import com.soundcloud.publicApiStrangler.test.UnitSpecification
@@ -47,7 +46,8 @@ trait TrackRepresentationsSpecificationContext extends UnitSpecification {
         isDownloadable: Boolean = false,
         user: Urn = trackOwnerUrn,
         revealStats: Boolean = false,
-        revealComments: Boolean = true
+        revealComments: Boolean = true,
+        isrc: Option[String] = Some("US-S1Z-99-00001")
     ) =
       VisibleTrack(
         urn = trackUrn,
@@ -90,11 +90,9 @@ trait TrackRepresentationsSpecificationContext extends UnitSpecification {
         transcodings = List.empty,
         authorization = authorization,
         access = Some(Access.Playable),
-        counts = VisibleTrackCounts(Some(111), Some(222), Some(333), Some(444), Some(555))
+        counts = VisibleTrackCounts(Some(111), Some(222), Some(333), Some(444), Some(555)),
+        isrc = isrc
       )
-
-    def isrc(wrapped: String = "US-S1Z-99-00001"): Map[Urn, Isrc] =
-      Map(trackUrn -> Isrc(wrapped))
 
     def userLikedTracks: Map[Urn, Boolean] =
       Map(trackUrn -> true)
@@ -108,7 +106,6 @@ trait TrackRepresentationsSpecificationContext extends UnitSpecification {
         sessionUser = session.user,
         visibleTrack = trackVisibilityTrack(),
         user = trackOwner,
-        isrc = Some(Isrc("US-S1Z-99-00001")),
         geoblockings = geoblockingsList,
         isLiked = true,
         waveformUrl = waveformUrl(trackUrn.identifier)

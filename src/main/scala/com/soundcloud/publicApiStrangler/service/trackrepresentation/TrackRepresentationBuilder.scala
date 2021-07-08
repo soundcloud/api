@@ -5,7 +5,6 @@ import com.soundcloud.publicApiStrangler.authorization.AllowlistedClients
 import com.soundcloud.publicApiStrangler.authorization.policies.{Access, ContentPolicy, MonetizationModel}
 import com.soundcloud.publicApiStrangler.client.media.TrackWaveformUrl
 import com.soundcloud.publicApiStrangler.client.mothership.response.representation.{Geoblockings, UserRepresentation}
-import com.soundcloud.publicApiStrangler.client.pubmese.Isrc
 import com.soundcloud.publicApiStrangler.client.trackcoordinator.TrackCoordinatorTrack
 import com.soundcloud.publicApiStrangler.client.tracks.{EmbeddingPermission, VisibleTrack}
 import org.joda.time.DateTime
@@ -51,7 +50,7 @@ object TrackRepresentationBuilder {
       access = None,
       commentable = trackCoordinatorTrack.commentable,
       user = user,
-      isrc = trackCoordinatorTrack.isrc.map(Isrc),
+      isrc = trackCoordinatorTrack.isrc,
       availableCountries = getAvailableCountryNodes(trackCoordinatorTrack.geo_blockings.getOrElse(List.empty)),
       playbackCount = Some(trackCoordinatorTrack.playback_count),
       downloadCount = Some(trackCoordinatorTrack.downloads_count),
@@ -81,7 +80,6 @@ object TrackRepresentationBuilder {
       sessionUser: Option[Urn],
       visibleTrack: VisibleTrack,
       user: UserRepresentation,
-      isrc: Option[Isrc],
       geoblockings: Geoblockings,
       isLiked: Boolean,
       waveformUrl: TrackWaveformUrl
@@ -112,7 +110,7 @@ object TrackRepresentationBuilder {
       access = visibleTrack.access,
       commentable = visibleTrack.commentable,
       user = user,
-      isrc = isrc,
+      isrc = visibleTrack.isrc,
       availableCountries = getAvailableCountryNodes(geoblockings),
       playbackCount = visibleTrack.counts.plays,
       downloadCount = visibleTrack.counts.downloads,

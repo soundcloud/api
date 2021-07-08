@@ -5,7 +5,6 @@ import com.soundcloud.publicApiStrangler.authorization.AllowlistedClients
 import com.soundcloud.publicApiStrangler.authorization.policies._
 import com.soundcloud.publicApiStrangler.client.media.TrackWaveformUrl
 import com.soundcloud.publicApiStrangler.client.mothership.response.representation.{Geoblockings, UserRepresentation}
-import com.soundcloud.publicApiStrangler.client.pubmese.Isrc
 import com.soundcloud.publicApiStrangler.client.trackcoordinator.TrackCoordinatorTrack
 import com.soundcloud.publicApiStrangler.client.tracks._
 import com.soundcloud.publicApiStrangler.service.users.UserBuilder
@@ -24,7 +23,6 @@ trait TrackRepresentationSpecContext {
       loggedInUser: Urn = Urn("soundcloud", "users", "555"),
       visibleTrack: VisibleTrack = defaultTrack,
       user: UserRepresentation = defaultUser,
-      isrc: Option[Isrc] = defaultIsrc,
       geoblockings: Geoblockings = defaultGeoblockings,
       waveformUrl: TrackWaveformUrl = TrackWaveformUrl("some_uid", Url("https://bar.sndcdn.com/stream/a1b2c3.png")),
       isLiked: Boolean = false
@@ -34,7 +32,6 @@ trait TrackRepresentationSpecContext {
       sessionUser = Some(loggedInUser),
       visibleTrack = visibleTrack,
       user = user,
-      isrc = isrc,
       geoblockings = geoblockings,
       isLiked = isLiked,
       waveformUrl = waveformUrl
@@ -94,10 +91,11 @@ trait TrackRepresentationSpecContext {
     transcodings = List.empty[Transcoding],
     waveformUrls = List.empty[WaveformUrl],
     access = Some(Access.Playable),
-    counts = VisibleTrackCounts(None, None, None, None, None)
+    counts = VisibleTrackCounts(None, None, None, None, None),
+    isrc = defaultIsrc
   )
 
-  def defaultIsrc = Some(Isrc("US-S1Z-99-00001"))
+  def defaultIsrc = Some("US-S1Z-99-00001")
 
   def defaultGeoblockings: Geoblockings = List("DE", "FR")
 }
