@@ -112,15 +112,6 @@ class OAuthGrantExchangeHandlerSpec extends UnitSpecification with DataTables {
             result
             result.contentType ==== Some("application/json; charset=utf-8")
           }
-
-          "when the request contains a repost client id" >> {
-            "it returns a response with content type plain/text" in new Context {
-              override lazy val credential = ClientCredential("RcTym36UFfGVYMkMND74sakJwAw498ME", "any")
-
-              result
-              result.contentType ==== Some("text/plain; charset=utf-8")
-            }
-          }
         }
 
         "when the exchange fails" >> {
