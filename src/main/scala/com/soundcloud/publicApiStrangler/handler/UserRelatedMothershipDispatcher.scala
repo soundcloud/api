@@ -2,6 +2,7 @@ package com.soundcloud.publicApiStrangler.handler
 
 import com.soundcloud.jvmkit.module.bff.session.UserAuthentication
 import com.soundcloud.jvmkit.module.http.server.HandlerRequest
+import com.soundcloud.jvmkit.module.telemetry.Telemetry
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.publicApiStrangler.client.followcounts.{FollowCounts, FollowCountsClient}
@@ -40,11 +41,22 @@ class UserRelatedMothershipDispatcher(
     mothershipDispatcher: DispatchToMothershipHandler,
     followCountsClient: FollowCountsClient,
     lieblingClient: LieblingClient,
-    repostsClient: RepostsClient
+    repostsClient: RepostsClient,
+    telemetry: Telemetry
 ) {
+
+  private lazy val usersIdCommentsPaginationCounter =
+    telemetry.counter(
+      "users_id_comments_pagination_total",
+      "Count of times pagination is used on users/:id/comments endpoint",
+      "pagination_used"
+    )
+
+  private lazy val usersIdCommentsRegex = "(/users/\\d+/comments)".r
 
   def dispatchToMothership(request: HandlerRequest): Future[Response] = {
     userAuthentication.withUserSession(request) { session =>
+      countPaginationIfNeeded(request)
       mothershipDispatcher
         .dispatch(request)
         .flatMap(response => {
@@ -63,6 +75,20 @@ class UserRelatedMothershipDispatcher(
           }
         })
     }
+  }
+
+  private def countPaginationIfNeeded(request: HandlerRequest) = {
+    if (request.path.nonEmpty)
+      request.path match {
+        case usersIdCommentsRegex(_) => {
+          if (request.params.contains("offset")) {
+            usersIdCommentsPaginationCounter.labels("true").inc()
+          } else {
+            usersIdCommentsPaginationCounter.labels("false").inc()
+          }
+        }
+        case _ =>
+      }
   }
 
   private def enrichResponse(

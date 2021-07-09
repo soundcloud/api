@@ -47,7 +47,8 @@ class Handlers(
     mothershipDispatcher,
     followCountsClient,
     lieblingClient,
-    repostsClient
+    repostsClient,
+    telemetry
   )
 
   val userTracksHandler = new UserTracksHandler(
