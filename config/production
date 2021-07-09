@@ -79,8 +79,6 @@ TRACKS_SRV_RECORD=dnssrv!http.api.prod.tracks.srv.${ZONE}.s-cloud.net.
 TRACKS_CLIENT_REQUEST_TIMEOUT_MILLIS=2000
 TRACKS_CLIENT_MAX_RESPONSE_SIZE_MB=10
 
-MEDIA_SERVICE_SRV_RECORD=dnssrv!http.api.prod.media-service.srv.${ZONE}.s-cloud.net.
-
 TRACK_ACCESS_RECORDER_SRV_RECORD=dnssrv!http.moshimoshi.prod.mothership.srv.${ZONE}.s-cloud.net.
 TRACK_ACCESS_RECORDER_CLIENT_REQUEST_TIMEOUT_MILLIS="3000"
 

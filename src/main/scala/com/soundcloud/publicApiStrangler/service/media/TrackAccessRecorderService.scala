@@ -1,7 +1,6 @@
 package com.soundcloud.publicApiStrangler.service.media
 
 import com.soundcloud.jvmkit.module.http.server.{HandlerRequest, ResponseBuilder}
-import com.soundcloud.jvmkit.module.telemetry.Telemetry
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.publicApiStrangler.client.media.TrackAccessRecorderClient
@@ -9,7 +8,7 @@ import com.soundcloud.publicApiStrangler.support.RangeHelper
 import com.twitter.finagle.http.{Method, Response, Status}
 import com.twitter.util.Future
 
-class TrackAccessRecorderService(trackAccessRecorderClient: TrackAccessRecorderClient, telemetry: Telemetry) {
+class TrackAccessRecorderService(trackAccessRecorderClient: TrackAccessRecorderClient) {
   def recordStreamAccess(session: UserSession, request: HandlerRequest, trackUrn: Urn, loggingEnabled: Boolean = true)(
       action: => Future[Response]
   ): Future[Response] =

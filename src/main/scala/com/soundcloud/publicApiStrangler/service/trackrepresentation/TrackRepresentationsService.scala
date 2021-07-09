@@ -3,12 +3,12 @@ package com.soundcloud.publicApiStrangler.service.trackrepresentation
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.publicApiStrangler.client.liebling.LieblingClient
-import com.soundcloud.publicApiStrangler.client.media.WaveformUrlsGenerator
 import com.soundcloud.publicApiStrangler.client.mothership.RichOkidokiClient
 import com.soundcloud.publicApiStrangler.client.mothership.response.representation.Geoblockings
 import com.soundcloud.publicApiStrangler.client.tracks.{TrackRequest, VisibleTrack}
 import com.soundcloud.publicApiStrangler.handler.support.requestParser.AccessParams
 import com.soundcloud.publicApiStrangler.service.TrackVisibilityService
+import com.soundcloud.publicApiStrangler.service.TrackVisibilityService.DefaultTrackFieldMask
 import com.twitter.util.Future
 
 import scala.util.control.NonFatal
@@ -16,8 +16,7 @@ import scala.util.control.NonFatal
 class TrackRepresentationsService(
     trackVisibilityService: TrackVisibilityService,
     okidokiClient: RichOkidokiClient,
-    lieblingClient: LieblingClient,
-    waveformUrlsGenerator: WaveformUrlsGenerator
+    lieblingClient: LieblingClient
 ) {
 
   def track(
@@ -32,7 +31,7 @@ class TrackRepresentationsService(
       access: AccessParams
   ): Future[List[TrackRepresentation]] = {
     for {
-      visibleTracks <- trackVisibilityService.visibleTracks(session, trackRequests, access)
+      visibleTracks <- trackVisibilityService.visibleTracks(session, trackRequests, DefaultTrackFieldMask, access)
       enrichedTracks <- enrichTracks(session, visibleTracks)
     } yield {
       enrichedTracks
@@ -45,7 +44,6 @@ class TrackRepresentationsService(
   ): Future[List[TrackRepresentation]] = {
     val urns = visibleTracks.map(_.urn).toSet
     val userUrns = visibleTracks.map(_.userUrn).toSet
-    val waveformUrls = visibleTracks.flatMap(_.uid).map(uid => uid -> waveformUrlsGenerator.fromUid(uid)).toMap
 
     Future
       .join(
@@ -66,8 +64,7 @@ class TrackRepresentationsService(
               visibleTrack = visibleTrack,
               user = users(visibleTrack.userUrn),
               geoblockings = geoBlockings.getOrElse(visibleTrack.urn, List.empty),
-              isLiked = isLiked.getOrElse(visibleTrack.urn, false),
-              waveformUrl = waveformUrls(visibleTrack.uid.getOrElse(""))
+              isLiked = isLiked.getOrElse(visibleTrack.urn, false)
             )
           }
       }

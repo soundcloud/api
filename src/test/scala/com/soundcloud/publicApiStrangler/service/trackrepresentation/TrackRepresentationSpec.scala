@@ -3,7 +3,6 @@ package com.soundcloud.publicApiStrangler.service.trackrepresentation
 import com.soundcloud.jvmkit.module.util.{Url, Urn}
 import com.soundcloud.publicApiStrangler.authorization.AllowlistedClients
 import com.soundcloud.publicApiStrangler.authorization.policies._
-import com.soundcloud.publicApiStrangler.client.media.TrackWaveformUrl
 import com.soundcloud.publicApiStrangler.client.mothership.response.representation.{Geoblockings, UserRepresentation}
 import com.soundcloud.publicApiStrangler.client.trackcoordinator.TrackCoordinatorTrack
 import com.soundcloud.publicApiStrangler.client.tracks._
@@ -24,7 +23,6 @@ trait TrackRepresentationSpecContext {
       visibleTrack: VisibleTrack = defaultTrack,
       user: UserRepresentation = defaultUser,
       geoblockings: Geoblockings = defaultGeoblockings,
-      waveformUrl: TrackWaveformUrl = TrackWaveformUrl("some_uid", Url("https://bar.sndcdn.com/stream/a1b2c3.png")),
       isLiked: Boolean = false
   ) = {
     TrackRepresentationBuilder.fromVisibleTrack(
@@ -33,8 +31,7 @@ trait TrackRepresentationSpecContext {
       visibleTrack = visibleTrack,
       user = user,
       geoblockings = geoblockings,
-      isLiked = isLiked,
-      waveformUrl = waveformUrl
+      isLiked = isLiked
     )
   }
 
@@ -89,7 +86,13 @@ trait TrackRepresentationSpecContext {
       MonetizationModel.AD_SUPPORTED
     ),
     transcodings = List.empty[Transcoding],
-    waveformUrls = List.empty[WaveformUrl],
+    waveformUrls = List(
+      WaveformUrl(
+        WaveformType.Full,
+        Url("https://bar.sndcdn.com/stream/a1b2c3.json"),
+        Url("https://bar.sndcdn.com/stream/a1b2c3.png")
+      )
+    ),
     access = Some(Access.Playable),
     counts = VisibleTrackCounts(None, None, None, None, None),
     isrc = defaultIsrc

@@ -3,7 +3,6 @@ package com.soundcloud.publicApiStrangler.service.trackrepresentation
 import com.soundcloud.jvmkit.module.util.session.{UserSession, UserSessionBuilder}
 import com.soundcloud.jvmkit.module.util.{Url, Urn}
 import com.soundcloud.publicApiStrangler.authorization.policies._
-import com.soundcloud.publicApiStrangler.client.media.TrackWaveformUrl
 import com.soundcloud.publicApiStrangler.client.mothership.response.representation.Geoblockings
 import com.soundcloud.publicApiStrangler.client.tracks._
 import com.soundcloud.publicApiStrangler.service.users.UserBuilder
@@ -86,7 +85,13 @@ trait TrackRepresentationsSpecificationContext extends UnitSpecification {
         release = Some("DR012"),
         keySignature = Some("Emaj"),
         supplyChainStatus = None,
-        waveformUrls = List.empty,
+        waveformUrls = List(
+          WaveformUrl(
+            WaveformType.Full,
+            Url("https://bar.sndcdn.com/stream/a1b2c3.json"),
+            Url("https://bar.sndcdn.com/stream/a1b2c3.png")
+          )
+        ),
         transcodings = List.empty,
         authorization = authorization,
         access = Some(Access.Playable),
@@ -97,9 +102,6 @@ trait TrackRepresentationsSpecificationContext extends UnitSpecification {
     def userLikedTracks: Map[Urn, Boolean] =
       Map(trackUrn -> true)
 
-    def waveformUrl(uid: String) =
-      TrackWaveformUrl(uid, Url("https://bar.sndcdn.com/stream/a1b2c3.png"))
-
     def createTrackRepresentation: TrackRepresentation =
       TrackRepresentationBuilder.fromVisibleTrack(
         client = session.agent,
@@ -107,8 +109,7 @@ trait TrackRepresentationsSpecificationContext extends UnitSpecification {
         visibleTrack = trackVisibilityTrack(),
         user = trackOwner,
         geoblockings = geoblockingsList,
-        isLiked = true,
-        waveformUrl = waveformUrl(trackUrn.identifier)
+        isLiked = true
       )
   }
 }

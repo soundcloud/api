@@ -8,6 +8,7 @@ import com.soundcloud.publicApiStrangler.authorization.policies.{ContentPolicy, 
 import com.soundcloud.publicApiStrangler.client.tracks._
 import com.soundcloud.publicApiStrangler.handler.support.requestParser.AccessParams
 import com.soundcloud.publicApiStrangler.service.TrackVisibilityService
+import com.soundcloud.publicApiStrangler.service.TrackVisibilityService.TrackWithTranscodingsFieldMask
 import com.soundcloud.twinagle.{ErrorCode, TwinagleException}
 import com.twitter.util.Future
 import proto.soundcloud.tracks.api.{GetMediaStreamRequest, GetMediaStreamResponse, MediaService}
@@ -28,7 +29,12 @@ class StreamService(
       singleStream: Boolean = false
   ): Future[Outcome[MediaStreamResponse]] = {
     trackVisibilityService
-      .tracks(session, List(TrackRequest(trackUrn, secretToken)), AccessParams.streamAccess)
+      .tracks(
+        session,
+        List(TrackRequest(trackUrn, secretToken)),
+        TrackWithTranscodingsFieldMask,
+        AccessParams.streamAccess
+      )
       .flatMap(_.headOption match {
         case Some(Good(visibleTrack)) =>
           visibleTrack.transcodings

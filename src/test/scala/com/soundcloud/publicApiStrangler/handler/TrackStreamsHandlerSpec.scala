@@ -3,7 +3,6 @@ package com.soundcloud.publicApiStrangler.handler
 import com.soundcloud.jvmkit.module.bff.testsupport.FakeUserAuthentication
 import com.soundcloud.jvmkit.module.http.server.ResponseBuilder
 import com.soundcloud.jvmkit.module.outcome._
-import com.soundcloud.jvmkit.module.telemetry.Telemetry
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.publicApiStrangler.Routing
@@ -32,7 +31,7 @@ class TrackStreamsHandlerSpec extends UnitSpecification {
     val handler = new TrackStreamsHandler(
       new FakeUserAuthentication(session),
       streamService,
-      new TrackAccessRecorderService(trackAccessClient, mock[Telemetry])
+      new TrackAccessRecorderService(trackAccessClient)
     )
 
     val trackUrn = Urn("soundcloud", "tracks", "5")

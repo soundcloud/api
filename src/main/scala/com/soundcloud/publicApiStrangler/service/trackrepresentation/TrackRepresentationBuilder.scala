@@ -3,7 +3,6 @@ package com.soundcloud.publicApiStrangler.service.trackrepresentation
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.publicApiStrangler.authorization.AllowlistedClients
 import com.soundcloud.publicApiStrangler.authorization.policies.{Access, ContentPolicy, MonetizationModel}
-import com.soundcloud.publicApiStrangler.client.media.TrackWaveformUrl
 import com.soundcloud.publicApiStrangler.client.mothership.response.representation.{Geoblockings, UserRepresentation}
 import com.soundcloud.publicApiStrangler.client.trackcoordinator.TrackCoordinatorTrack
 import com.soundcloud.publicApiStrangler.client.tracks.{EmbeddingPermission, VisibleTrack}
@@ -81,8 +80,7 @@ object TrackRepresentationBuilder {
       visibleTrack: VisibleTrack,
       user: UserRepresentation,
       geoblockings: Geoblockings,
-      isLiked: Boolean,
-      waveformUrl: TrackWaveformUrl
+      isLiked: Boolean
   ): TrackRepresentation = {
     val isAnonymous = sessionUser.isEmpty
     val secretToken = getSecretTokenForPrivateTrack(visibleTrack.public, visibleTrack.secretToken)
@@ -126,7 +124,7 @@ object TrackRepresentationBuilder {
       commentCount = visibleTrack.counts.comments,
       userFavourite = if (!isAnonymous) Some(isLiked) else None,
       userPlaybackCount = if (!isAnonymous) Some(1) else None,
-      waveformUrl = waveformUrl.pngUrl.s,
+      waveformUrl = visibleTrack.waveformUrls.map(_.png.s).headOption.getOrElse(""),
       artworkUrl = visibleTrack.artwork.filename.map(imageUrl),
       downloadable = visibleTrack.downloadable,
       policy = getPolicy(visibleTrack.authorization.policy, client),

@@ -71,8 +71,6 @@ TRACKMETADATA_SRV_RECORD=dnssrv!http.api.prod.trackmetadata.srv.db.s-cloud.net.
 
 TRACKS_SRV_RECORD=dnssrv!http.api.prod.tracks.srv.db.s-cloud.net.
 
-MEDIA_SERVICE_SRV_RECORD=dnssrv!http.api.prod.media-service.srv.db.s-cloud.net.
-
 TRACK_ACCESS_RECORDER_SRV_RECORD=dnssrv!http.moshimoshi.prod.mothership.srv.db.s-cloud.net.
 
 CDN_WAVE_HTTPS_ENDPOINT=https://wave.sndcdn.com

@@ -2,12 +2,12 @@ package com.soundcloud.publicApiStrangler.service.trackrepresentation
 
 import com.soundcloud.jvmkit.module.util.session.{UserSession, UserSessionBuilder}
 import com.soundcloud.publicApiStrangler.client.liebling.LieblingClient
-import com.soundcloud.publicApiStrangler.client.media.WaveformUrlsGenerator
 import com.soundcloud.publicApiStrangler.client.mothership.RichOkidokiClient
 import com.soundcloud.publicApiStrangler.client.trackmetadata.TrackmetadataClient
 import com.soundcloud.publicApiStrangler.client.tracks.{TrackRequest, VisibleTrack}
 import com.soundcloud.publicApiStrangler.handler.support.requestParser.AccessParams
 import com.soundcloud.publicApiStrangler.service.TrackVisibilityService
+import com.soundcloud.publicApiStrangler.service.TrackVisibilityService.DefaultTrackFieldMask
 import com.twitter.util.{Await, Future}
 import org.mockito.Mockito._
 import play.api.libs.json._
@@ -19,23 +19,23 @@ class TrackRepresentationsServiceSpec extends TrackRepresentationsSpecificationC
     val trackVisibilityService = mock[TrackVisibilityService]
     val okidokiClient = mock[RichOkidokiClient]
     val lieblingClient = mock[LieblingClient]
-    val waveformUrlsGenerator = mock[WaveformUrlsGenerator]
     val trackmetadataClient = mock[TrackmetadataClient]
     val trackPagination = mock[TrackPagination]
 
     val tracksService = new TrackRepresentationsService(
       trackVisibilityService,
       okidokiClient,
-      lieblingClient,
-      waveformUrlsGenerator
+      lieblingClient
     )
 
     def setUpMocksForExistingTrack(
         track: VisibleTrack,
         session: UserSession
     ) = {
-      when(trackVisibilityService.visibleTracks(session, List(trackRequest), AccessParams.explicitAccess))
-        .thenReturn(Future.value(List(track)))
+      when(
+        trackVisibilityService
+          .visibleTracks(session, List(trackRequest), DefaultTrackFieldMask, AccessParams.explicitAccess)
+      ).thenReturn(Future.value(List(track)))
       when(okidokiClient.fetchUserObjects(session, Set(requestingUserUrn)))
         .thenReturn(Future.value(List(requestingUser)))
       when(okidokiClient.fetchUserObjects(session, Set(labelUrn))).thenReturn(Future.value(List(label)))
@@ -43,12 +43,13 @@ class TrackRepresentationsServiceSpec extends TrackRepresentationsSpecificationC
       when(okidokiClient.fetchTrackGeoblockings(session, Set(trackUrn))).thenReturn(Future.value(geoblockings))
       when(lieblingClient.userLikedTracks(session, Set(trackUrn), session.getUser))
         .thenReturn(Future.value(userLikedTracks))
-      when(waveformUrlsGenerator.fromUid(track.uid.get)).thenReturn(waveformUrl(track.uid.get))
     }
 
     def setUpMocksForNonExistingTrack = {
-      when(trackVisibilityService.visibleTracks(session, List(trackRequest), AccessParams.explicitAccess))
-        .thenReturn(Future.value(List.empty))
+      when(
+        trackVisibilityService
+          .visibleTracks(session, List(trackRequest), DefaultTrackFieldMask, AccessParams.explicitAccess)
+      ).thenReturn(Future.value(List.empty))
       when(okidokiClient.fetchTrackGeoblockings(session, Set(trackUrn))).thenReturn(Future.value(geoblockings))
     }
   }
@@ -207,7 +208,7 @@ class TrackRepresentationsServiceSpec extends TrackRepresentationsSpecificationC
     }
 
     "waveform_url" >> {
-      "is present when urlgen returns a stream URL" in new Context {
+      "is present when visible track contains waveform urls" in new Context {
         val track = trackVisibilityTrack()
         setUpMocksForExistingTrack(track, session)
 
@@ -215,6 +216,19 @@ class TrackRepresentationsServiceSpec extends TrackRepresentationsSpecificationC
         trackRepLike match {
           case Some(rep) =>
             Json.toJson(rep).as[JsObject].keys.contains("waveform_url") ==== true
+          case None =>
+        }
+      }
+
+      "is empty when visible track has no waveform urls" in new Context {
+        val track = trackVisibilityTrack().copy(waveformUrls = List.empty)
+        setUpMocksForExistingTrack(track, session)
+
+        val trackRepLike = Await.result(tracksService.track(session, trackRequest))
+        trackRepLike match {
+          case Some(rep) =>
+            val json = Json.toJson(rep)
+            json \ "waveform_url" ==== JsDefined(JsString(""))
           case None =>
         }
       }

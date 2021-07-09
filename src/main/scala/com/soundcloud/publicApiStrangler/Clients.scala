@@ -10,17 +10,13 @@ import com.soundcloud.jvmkit.module.telemetry.exceptions.ExceptionCollector
 import com.soundcloud.jvmkit.module.twirp.TwirpClient
 import com.soundcloud.jvmkit.module.twirp.filters.ClientTelemetry
 import com.soundcloud.jvmkit.module.util.ResourceName
-import com.soundcloud.jvmkit.module.util.config.{AppConfig, ConfigConvention, DataSensitivity}
+import com.soundcloud.jvmkit.module.util.config.{AppConfig, DataSensitivity}
 import com.soundcloud.publicApiStrangler.client._
 import com.soundcloud.publicApiStrangler.client.comments.MoshimoshiCommentsClient
 import com.soundcloud.publicApiStrangler.client.followcounts.FollowCountsClient
 import com.soundcloud.publicApiStrangler.client.follows.FollowsClient
 import com.soundcloud.publicApiStrangler.client.liebling.LieblingClient
-import com.soundcloud.publicApiStrangler.client.media.{
-  MediaServiceClient,
-  TrackAccessRecorderClient,
-  WaveformUrlsGenerator
-}
+import com.soundcloud.publicApiStrangler.client.media.TrackAccessRecorderClient
 import com.soundcloud.publicApiStrangler.client.mothership.{MoshimoshiClient, OkidokiClient, RichOkidokiClient}
 import com.soundcloud.publicApiStrangler.client.playlists.PlaylistDeletionClient
 import com.soundcloud.publicApiStrangler.client.reposts.RepostsClient
@@ -101,10 +97,6 @@ class Clients(
 
   val trackmetadataClient = new TrackmetadataClient(jsonClient("trackmetadata"))
 
-  private val waveformUrlsGenerator = new WaveformUrlsGenerator(
-    config.get(ResourceName("CDN_WAVE"), ConfigConvention.HTTPS_ENDPOINT)
-  )
-
   val tracksMediaTwirpClient = TwirpClient(
     ResourceName("tracks"),
     config,
@@ -141,10 +133,8 @@ class Clients(
     new PlaylistsClientProtobuf(_, _)
   )
 
-  val mediaServiceClient = new MediaServiceClient(jsonClient("media_service"))
-
   val trackAccessRecorderService =
-    new TrackAccessRecorderService(new TrackAccessRecorderClient(jsonClient("track_access_recorder")), telemetry)
+    new TrackAccessRecorderService(new TrackAccessRecorderClient(jsonClient("track_access_recorder")))
 
   val userAuthentication = UserAuthentication(config, telemetry)
 
@@ -164,8 +154,7 @@ class Clients(
   val tracksService = new TrackRepresentationsService(
     trackVisibilityService,
     richOkidokiClient,
-    lieblingClient,
-    waveformUrlsGenerator
+    lieblingClient
   )
 
   private val hocuspocusConfig = HttpClientConfig.from(ResourceName("hocuspocus"), config)

@@ -1,5 +1,6 @@
 package com.soundcloud.publicApiStrangler.service
 
+import com.google.protobuf.field_mask.FieldMask
 import com.soundcloud.jvmkit.module.outcome.{CustomError, Outcome, _}
 import com.soundcloud.jvmkit.module.twirp.proto.UserSessionOps._
 import com.soundcloud.jvmkit.module.util.Urn
@@ -27,22 +28,25 @@ class TrackVisibilityService(
   def visibleTracks(
       session: UserSession,
       trackRequests: List[TrackRequest],
+      fieldMask: FieldMask,
       access: AccessParams
   ): Future[List[VisibleTrack]] = {
-    tracks(session, trackRequests, access).map(allTracks => allTracks.filter(_.isRight).map(_.right.get))
+    tracks(session, trackRequests, fieldMask, access).map(allTracks => allTracks.filter(_.isRight).map(_.right.get))
   }
 
   def tracks(
       session: UserSession,
       trackRequests: List[TrackRequest],
+      fieldMask: FieldMask,
       access: AccessParams
   ): Future[List[Outcome[VisibleTrack]]] = {
-    fetchVisibleTracks(session, trackRequests, access)
+    fetchVisibleTracks(session, trackRequests, fieldMask, access)
   }
 
   private def fetchVisibleTracks(
       session: UserSession,
       trackRequests: Seq[TrackRequest],
+      fieldMask: FieldMask,
       access: AccessParams
   ): Future[List[Outcome[VisibleTrack]]] = {
 
@@ -50,7 +54,7 @@ class TrackVisibilityService(
       trackRequests = trackRequests.toList.map(trackRequest =>
         TwirpTrackRequest(trackRequest.urn.toString, trackRequest.secretToken)
       ),
-      trackFieldMask = Some(TrackVisibilityService.TrackFieldMask),
+      trackFieldMask = Some(fieldMask),
       userSession = Some(session.asProtoSession)
     )
 
@@ -97,15 +101,23 @@ class TrackVisibilityService(
 }
 
 object TrackVisibilityService {
-  val TrackFieldMask = FieldMaskUtil.selectFieldNumbers[Track](
+
+  val DefaultTrackFieldMask: FieldMask = FieldMaskUtil.selectFieldNumbers[Track](
     Set(
       Track.METADATA_FIELD_NUMBER,
-      Track.TRANSCODINGS_FIELD_NUMBER,
-      Track.WAVEFORM_URLS_FIELD_NUMBER,
       Track.AUTHORIZATION_FIELD_NUMBER,
+      Track.WAVEFORM_URLS_FIELD_NUMBER,
       Track.COUNTS_FIELD_NUMBER,
       Track.DOWNLOAD_METADATA_FIELD_NUMBER,
       Track.PUBLISHER_METADATA_FIELD_NUMBER
+    )
+  )
+
+  val TrackWithTranscodingsFieldMask: FieldMask = FieldMaskUtil.selectFieldNumbers[Track](
+    Set(
+      Track.METADATA_FIELD_NUMBER,
+      Track.AUTHORIZATION_FIELD_NUMBER,
+      Track.TRANSCODINGS_FIELD_NUMBER
     )
   )
 }

@@ -1,7 +1,6 @@
 package com.soundcloud.publicApiStrangler.service.media
 
 import com.soundcloud.jvmkit.module.http.server.{HandlerRequest, ResponseBuilder}
-import com.soundcloud.jvmkit.module.telemetry.Telemetry
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSessionBuilder
 import com.soundcloud.publicApiStrangler.client.media.TrackAccessRecorderClient
@@ -12,8 +11,7 @@ import com.twitter.util.{Await, Future}
 class TrackAccessRecorderServiceSpec extends UnitSpecification {
   trait Context extends Scope {
     val trackAccessRecorderClient = mock[TrackAccessRecorderClient]
-    val fakeTelemetry = Telemetry.createIsolatedInstance
-    val service = new TrackAccessRecorderService(trackAccessRecorderClient, fakeTelemetry)
+    val service = new TrackAccessRecorderService(trackAccessRecorderClient)
     val session = new UserSessionBuilder().build
     val trackUrn = Urn("soundcloud", "tracks", "1234")
 
