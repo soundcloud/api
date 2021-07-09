@@ -2,6 +2,6 @@
 
 ### Security update
 
-Grant type `password` is deprecated.
+Response types `token` and `code_and_token` are deprecated for Authorization Code Flow.
 
 Find more in our [blog post](https://developers.soundcloud.com/blog/security-updates-api).
