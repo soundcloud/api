@@ -109,11 +109,12 @@ class LikesHandler(
       Try(getTrackUrn(request)) match {
         case Return(urn) =>
           likesService.trackLikers(session, urn, pagination).flatMap {
-            case Good(response) =>
-              userRepresentationsService.getUsers(session, response.urns).map { users =>
+            case Good(response) => {
+              userRepresentationsService.users(session, response.urns).map { users =>
                 JsonResponseBuilder
                   .ok(Collection.getRepresentation(Collection(users, response.nextHRef), hasLinkedPartitioning))
               }
+            }
             case Bad(NotFound(_)) => Future.value(ErrorResponse.notFound())
             case _ => Future.value(ErrorResponse(Status.InternalServerError))
           }

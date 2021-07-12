@@ -75,7 +75,7 @@ class RepostsService(
       .reposters(session, target, pagination.pageSize, pagination.cursor)
       .flatMap { reposts =>
         userRepresentationService
-          .getUsers(session, reposts.urns)
+          .users(session, reposts.urns)
           .map { users =>
             val nextHref = reposts.nextCursor.map(cursor => pagination.nextPage(cursor)).map(_.normalizedHref)
             Collection(users, nextHref)
@@ -91,7 +91,7 @@ class RepostsService(
     fetchTrackReposters(session, target, pagination).flatMap {
       case Good(response) =>
         userRepresentationService
-          .getUsers(session, response.userUrns.map(u => Urn.parse(u).get))
+          .users(session, response.userUrns.map(u => Urn.parse(u).get))
           .map { users =>
             val nextHref = response.cursor.map(cursor => pagination.nextPage(cursor)).map(_.normalizedHref)
             Collection(users, nextHref).good

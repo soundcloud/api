@@ -115,7 +115,7 @@ class RepostsServiceSpec extends UnitSpecification {
       trackRepostsService.getTrackReposters(twirpRequest) returns Future.value(
         TrackRepostersResponse(userUrns = Seq(userUrn.toString), cursor = Some("999"))
       )
-      userRepresentationService.getUsers(session, Seq(userUrn)) returns Future.value(List(user))
+      userRepresentationService.users(session, Seq(userUrn)) returns Future.value(List(user))
 
       val response = Await.result(repostsService.getTrackReposters(session, trackUrn, pagination))
       response ==== Collection(List(user), Some("http://api.example.com?cursor=999&page_size=10")).good

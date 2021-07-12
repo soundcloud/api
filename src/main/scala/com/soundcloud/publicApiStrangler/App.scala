@@ -99,6 +99,7 @@ object App {
           forLikesHandler(handlers.likesHandler),
           forCommentsHandler(handlers.commentsHandler),
           forMeHandler(handlers.meHandler),
+          forUsersHandler(handlers.usersHandler),
           forDummyHandler()
         )
       )

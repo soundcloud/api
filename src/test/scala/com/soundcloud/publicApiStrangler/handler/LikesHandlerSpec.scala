@@ -204,7 +204,7 @@ class LikesHandlerSpec extends UnitSpecification {
         CursorBasedPagination.build(mockRequest, Seq("linked_partitioning"))
       }
 
-      when(userRepresentationService.getUsers(session, Seq(userUrn)))
+      when(userRepresentationService.users(session, Seq(userUrn)))
         .thenReturn(Future.value(users))
     }
 

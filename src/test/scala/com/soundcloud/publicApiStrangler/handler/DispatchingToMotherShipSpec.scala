@@ -15,10 +15,7 @@ class DispatchingToMotherShipSpec extends UnitSpecification {
   )
 
   val expectedUserRelatedMothershipEndpoint = Set(
-    (Get, "/users/7110"),
-    (Get, "/users/7110/comments"),
-    (Get, "/users/me"),
-    (Get, "/users/suggested")
+    (Get, "/users/7110/comments")
   )
 
   trait MothershipContext extends HandlerSpecificationScope {
