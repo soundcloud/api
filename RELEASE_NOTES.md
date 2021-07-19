@@ -2,6 +2,6 @@
 
 ### Security update
 
-Enforcing the `Authorization` header for every request. In case it is not present API returns error `Unauthorized` 401.
+Disallow requesting non-expiring tokens.
 
 Find more in our [blog post](https://developers.soundcloud.com/blog/security-updates-api).

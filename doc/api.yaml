@@ -85,8 +85,6 @@ paths:
               examples:
                 ExpiringToken:
                   $ref: "#/components/examples/ExpiringToken"
-                NonExpiringToken:
-                  $ref: "#/components/examples/NonExpiringToken"
         400:
           description: 'Bad Request'
           content:
@@ -1258,8 +1256,6 @@ components:
       $ref: './components/examples/Activities.yaml'
     ExpiringToken:
       $ref: './components/examples/ExpiringToken.yaml'
-    NonExpiringToken:
-      $ref: './components/examples/NonExpiringToken.yaml'
     CreateUpdatePlaylistRequest:
       $ref: './components/examples/CreateUpdatePlaylistRequest.yaml'
     TrackDataRequest:

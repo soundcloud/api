@@ -1,3 +1,0 @@
-value:
-  access_token: some string
-  scope: 'non-expiring'

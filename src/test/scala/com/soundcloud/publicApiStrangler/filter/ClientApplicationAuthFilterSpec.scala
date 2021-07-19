@@ -34,7 +34,7 @@ class ClientApplicationAuthFilterSpec extends Specification with Mockito {
   "with allowlisted application id" >> {
     "forwards the request if Auth header is present, rollout is active" in new Context {
       private val r: Request = Request("/foo")
-      r.authorization = "OAuth 1234"
+      r.authorization_=("OAuth 1234")
       override lazy val request = HandlerRequest(r)
 
       service.apply(request) returns Future.value(Response(Status.Ok))
@@ -88,7 +88,7 @@ class ClientApplicationAuthFilterSpec extends Specification with Mockito {
   "with missing application id" >> {
     "forwards the request if Auth header is present, rollout inactive" in new Context {
       private val r: Request = Request("/foo")
-      r.authorization = "OAuth 1234"
+      r.authorization_=("OAuth 1234")
       override lazy val request = HandlerRequest(r)
       override lazy val session = new UserSessionBuilder().build()
       override lazy val oauthHeaderRollout = () => Future.value(false)
@@ -132,7 +132,7 @@ class ClientApplicationAuthFilterSpec extends Specification with Mockito {
   "with oauth header" >> {
     "forwards request, logs auth type but not deprecated id, rollout active" in new Context {
       private val r: Request = Request("/foo")
-      r.authorization = "OAuth 1234"
+      r.authorization_=("OAuth 1234")
 
       override lazy val request = HandlerRequest(r)
       service.apply(request) returns Future.value(Response(Status.Ok))
@@ -147,11 +147,11 @@ class ClientApplicationAuthFilterSpec extends Specification with Mockito {
   }
 
   "/connect" >> {
-    "valid response_type" in new Context {
+    "valid response_type/scope" in new Context {
       override lazy val request =
         HandlerRequest(Request("/connect?client_id=123&response_type=code&redirect_uri=ww.example.com&scope="))
 
-      service.apply(request) returns Future.value(Response(Status.Ok))
+      service.apply(any[Request]) returns Future.value(Response(Status.Ok))
 
       Await.result(filter.apply(request, service)).status ==== Status.Ok
     }
@@ -164,6 +164,18 @@ class ClientApplicationAuthFilterSpec extends Specification with Mockito {
 
       result.status ==== Status.Forbidden
       result.contentString = ClientApplicationAuthFilter.invalidResponseTypeError
+    }
+
+    "invalid scope" in new Context {
+      override lazy val request =
+        HandlerRequest(
+          Request("/connect?client_id=123&response_type=code&redirect_uri=ww.example.com&scope=non-expiring")
+        )
+
+      val result = Await.result(filter.apply(request, service))
+
+      result.status ==== Status.Forbidden
+      result.contentString = ClientApplicationAuthFilter.invalidScopeError
     }
   }
 }

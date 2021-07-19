@@ -126,7 +126,7 @@ scope:
   required: true
   schema:
     type: string
-  description: Scope
+  description: Scope. Leave blank by default
   example: default
 state:
   in: query

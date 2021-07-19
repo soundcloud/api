@@ -6,7 +6,8 @@ import com.soundcloud.jvmkit.module.telemetry.Telemetry
 import com.soundcloud.publicApiStrangler.Routing
 import com.soundcloud.publicApiStrangler.filter.ClientApplicationAuthFilter.{
   invalidAuthenticationError,
-  invalidResponseTypeError
+  invalidResponseTypeError,
+  invalidScopeError
 }
 import com.soundcloud.publicApiStrangler.support.ErrorResponse
 import com.twitter.finagle.http.{Request, Response, Status}
@@ -59,10 +60,13 @@ class ClientApplicationAuthFilter(
     if (path == Routing.grantExchangePath) {
       service(request)
 
-      // Check that call to /connect has only allowed response_type=code
+      // Check that call to /connect has only allowed response_type=code + non-expiring scope isn't present
     } else if (path == Routing.connectPath) {
-      if (isResponseTypeAllowed(request)) service(request)
-      else Future.value(ErrorResponse.forbidden(invalidResponseTypeError))
+      (isResponseTypeAllowed(request), isScopeNonExpiring(request)) match {
+        case (false, _) => Future.value(ErrorResponse.forbidden(invalidResponseTypeError))
+        case (_, true) => Future.value(ErrorResponse.forbidden(invalidScopeError))
+        case _ => service(request)
+      }
 
     } else {
       userAuthentication.withUserSession(HandlerRequest(request)) { userSession =>
@@ -105,6 +109,10 @@ class ClientApplicationAuthFilter(
     request.params.get("response_type").exists(value => value.equals("code"))
 
   private def isAuthHeaderPresent(authType: String): Boolean = authType.equals("oauth_header")
+
+  private def isScopeNonExpiring(request: Request): Boolean = {
+    request.params.get("scope").exists(value => value.equals("non-expiring"))
+  }
 }
 
 object ClientApplicationAuthFilter {
@@ -122,6 +130,7 @@ object ClientApplicationAuthFilter {
   )
 
   val invalidResponseTypeError = "Authorization is only allowed for response_type=code."
+  val invalidScopeError = "Requesting non-expiring tokens is not allowed. Set scope=''."
   val invalidAuthenticationError =
     "A request must contain the Authorization header. For details please refer to https://developers.soundcloud.com/blog/security-updates-api."
 }
