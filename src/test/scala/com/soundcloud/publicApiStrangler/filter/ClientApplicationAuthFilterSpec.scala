@@ -20,28 +20,48 @@ class ClientApplicationAuthFilterSpec extends Specification with Mockito {
     val router = HandlerRouterBuilder()
       .register(Method.Get, "/foo", _ => Future.value(JsonResponseBuilder.ok()))
       .register(Method.Post, Routing.grantExchangePath, _ => Future.value(JsonResponseBuilder.ok()))
+      .register(Method.Get, Routing.connectPath, _ => Future.value(JsonResponseBuilder.ok()))
       .build
-    val sessionBuilder = new UserSessionBuilder()
-    val request = HandlerRequest(Request(s"/foo", ("client_id", "999")))
+
+    def oauthHeaderRollout = () => Future.value(true)
+    lazy val session = new UserSessionBuilder().setAgent(new Urn("soundcloud", "application", "999")).build()
+    lazy val request = HandlerRequest(Request("/foo", ("client_id", "999")))
+
+    val filter =
+      new ClientApplicationAuthFilter(new FakeUserAuthentication(session), telemetry, router, oauthHeaderRollout)
   }
 
-  "with allowlisted client application id" >> {
-    "forwards the request" in new Context {
-      service.apply(request) returns Future.value(Response(Status.Ok))
+  "with allowlisted application id" >> {
+    "forwards the request if Auth header is present, rollout is active" in new Context {
+      private val r: Request = Request("/foo")
+      r.authorization = "OAuth 1234"
+      override lazy val request = HandlerRequest(r)
 
-      val session = sessionBuilder.setAgent(new Urn("soundcloud", "application", "999")).build()
-      val filter = new ClientApplicationAuthFilter(new FakeUserAuthentication(session), telemetry, router)
+      service.apply(request) returns Future.value(Response(Status.Ok))
 
       Await.result(filter.apply(request, service)).status ==== Status.Ok
+      telemetry.getSampleValue("application_auth_type_total", Seq("auth_type", "path"), Seq("oauth_header", "/foo")) === Some(
+        1
+      )
     }
 
-    "logs client param" in new Context {
+    "logs client param and forwards the request, rollout inactive" in new Context {
+      override lazy val oauthHeaderRollout = () => Future.value(false)
       service.apply(request) returns Future.value(Response(Status.Ok))
 
-      val session = sessionBuilder.setAgent(new Urn("soundcloud", "application", "999")).build()
-      val filter = new ClientApplicationAuthFilter(new FakeUserAuthentication(session), telemetry, router)
+      Await.result(filter.apply(request, service)).status ==== Status.Ok
+      telemetry.getSampleValue("application_auth_type_total", Seq("auth_type", "path"), Seq("client_id_param", "/foo")) === Some(
+        1
+      )
+      telemetry.getSampleValue("deprecated_auth_by_app_total", Seq("appid"), Seq("999")) === Some(1)
+    }
 
-      Await.result(filter.apply(request, service)).status
+    "logs client param and rejects the request as Auth header is not present, rollout active" in new Context {
+      service.apply(request) returns Future.value(Response(Status.Ok))
+
+      val result = Await.result(filter.apply(request, service))
+      result.status ==== Status.Unauthorized
+      result.contentString = ClientApplicationAuthFilter.invalidAuthenticationError
 
       telemetry.getSampleValue("application_auth_type_total", Seq("auth_type", "path"), Seq("client_id_param", "/foo")) === Some(
         1
@@ -51,38 +71,58 @@ class ClientApplicationAuthFilterSpec extends Specification with Mockito {
   }
 
   "with token exchange request" >> {
-    trait TokenExchangeContext extends Context {
-      override val request = HandlerRequest(Request(Method.Post, "/oauth2/token"))
-    }
-
-    "forwards the request" in new TokenExchangeContext {
+    "forwards the request" in new Context {
+      override lazy val request = HandlerRequest(Request(Method.Post, "/oauth2/token"))
       service.apply(request) returns Future.value(Response(Status.Ok))
 
       ClientApplicationAuthFilter.blockedApplicationIds.foreach { appId =>
-        val session = sessionBuilder.setAgent(new Urn("soundcloud", "application", appId)).build()
-        val filter = new ClientApplicationAuthFilter(new FakeUserAuthentication(session), telemetry, router)
+        val session = new UserSessionBuilder().setAgent(new Urn("soundcloud", "application", appId)).build()
+        val filter =
+          new ClientApplicationAuthFilter(new FakeUserAuthentication(session), telemetry, router, oauthHeaderRollout)
 
         Await.result(filter.apply(request, service)).status ==== Status.Ok
       }
     }
   }
 
-  "with missing client application id" >> {
-    "forwards the request" in new Context {
+  "with missing application id" >> {
+    "forwards the request if Auth header is present, rollout inactive" in new Context {
+      private val r: Request = Request("/foo")
+      r.authorization = "OAuth 1234"
+      override lazy val request = HandlerRequest(r)
+      override lazy val session = new UserSessionBuilder().build()
+      override lazy val oauthHeaderRollout = () => Future.value(false)
+
       service.apply(request) returns Future.value(Response(Status.Ok))
 
-      val session = sessionBuilder.build()
-      val filter = new ClientApplicationAuthFilter(new FakeUserAuthentication(session), telemetry, router)
-
       Await.result(filter.apply(request, service)).status ==== Status.Ok
+    }
+
+    "rejects the request if Auth header is not present, rollout active" in new Context {
+      override lazy val session = new UserSessionBuilder().build()
+
+      val result = Await.result(filter.apply(request, service))
+      result.status ==== Status.Unauthorized
+      result.contentString = ClientApplicationAuthFilter.invalidAuthenticationError
+
+    }
+
+    "forwards the request, rollout inactive" in new Context {
+      override lazy val session = new UserSessionBuilder().build()
+      override lazy val oauthHeaderRollout = () => Future.value(false)
+
+      service.apply(request) returns Future.value(Response(Status.Ok))
+      val result = Await.result(filter.apply(request, service)).status ==== Status.Ok
     }
   }
 
   "with denylisted client application id" >> {
     "returns forbidden" in new Context {
+
       ClientApplicationAuthFilter.blockedApplicationIds.foreach { appId =>
-        val session = sessionBuilder.setAgent(new Urn("soundcloud", "application", appId)).build()
-        val filter = new ClientApplicationAuthFilter(new FakeUserAuthentication(session), telemetry, router)
+        val session = new UserSessionBuilder().setAgent(new Urn("soundcloud", "application", appId)).build()
+        val filter =
+          new ClientApplicationAuthFilter(new FakeUserAuthentication(session), telemetry, router, oauthHeaderRollout)
 
         Await.result(filter.apply(request, service)).status ==== Status.Forbidden
       }
@@ -90,22 +130,40 @@ class ClientApplicationAuthFilterSpec extends Specification with Mockito {
   }
 
   "with oauth header" >> {
-    "logs auth type but not deprecated id" in new Context {
+    "forwards request, logs auth type but not deprecated id, rollout active" in new Context {
       private val r: Request = Request("/foo")
       r.authorization = "OAuth 1234"
-      override val request = HandlerRequest(r)
+
+      override lazy val request = HandlerRequest(r)
       service.apply(request) returns Future.value(Response(Status.Ok))
 
-      val session = sessionBuilder.setAgent(new Urn("soundcloud", "application", "999")).build()
-      val filter = new ClientApplicationAuthFilter(new FakeUserAuthentication(session), telemetry, router)
-
-      Await.result(filter.apply(request, service)).status
+      Await.result(filter.apply(request, service)).status ==== Status.Ok
 
       telemetry.getSampleValue("application_auth_type_total", Seq("auth_type", "path"), Seq("oauth_header", "/foo")) === Some(
         1
       )
       telemetry.getSampleValue("deprecated_auth_by_app_total", Seq("appid"), Seq("999")) === None
+    }
+  }
 
+  "/connect" >> {
+    "valid response_type" in new Context {
+      override lazy val request =
+        HandlerRequest(Request("/connect?client_id=123&response_type=code&redirect_uri=ww.example.com&scope="))
+
+      service.apply(request) returns Future.value(Response(Status.Ok))
+
+      Await.result(filter.apply(request, service)).status ==== Status.Ok
+    }
+
+    "invalid response_type" in new Context {
+      override lazy val request =
+        HandlerRequest(Request("/connect?client_id=123&response_type=token&redirect_uri=ww.example.com&scope="))
+
+      val result = Await.result(filter.apply(request, service))
+
+      result.status ==== Status.Forbidden
+      result.contentString = ClientApplicationAuthFilter.invalidResponseTypeError
     }
   }
 }

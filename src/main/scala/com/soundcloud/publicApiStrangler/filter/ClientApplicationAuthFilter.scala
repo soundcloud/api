@@ -4,16 +4,28 @@ import com.soundcloud.jvmkit.module.bff.session.UserAuthentication
 import com.soundcloud.jvmkit.module.http.server.{HandlerRequest, HandlerRouter}
 import com.soundcloud.jvmkit.module.telemetry.Telemetry
 import com.soundcloud.publicApiStrangler.Routing
+import com.soundcloud.publicApiStrangler.filter.ClientApplicationAuthFilter.{
+  invalidAuthenticationError,
+  invalidResponseTypeError
+}
 import com.soundcloud.publicApiStrangler.support.ErrorResponse
-import com.twitter.finagle.http.{Request, Response}
+import com.twitter.finagle.http.{Request, Response, Status}
 import com.twitter.finagle.{Service, SimpleFilter}
 import com.twitter.util.Future
 
 /**
-  * Block access to the API based on a denylist of client application ids
+  * Block access to the API based on:
+  * * a deny list of client application ids
+  * * lack of Authorization header
+  * * for /connect - invalid response_type
   */
-class ClientApplicationAuthFilter(userAuthentication: UserAuthentication, telemetry: Telemetry, router: HandlerRouter)
-    extends SimpleFilter[Request, Response] {
+class ClientApplicationAuthFilter(
+    userAuthentication: UserAuthentication,
+    telemetry: Telemetry,
+    router: HandlerRouter,
+    oauthHeaderRolloutFlag: () => Future[Boolean]
+) extends SimpleFilter[Request, Response] {
+
   private val oauthTokenParams = List("auth_token", "oauth_token")
   private val oauthClientParams = List("client_id", "consumer_key")
   private val allOauthParams = (oauthTokenParams ++ oauthClientParams).toSet
@@ -46,6 +58,12 @@ class ClientApplicationAuthFilter(userAuthentication: UserAuthentication, teleme
     // Authenticator does not parse the body, so we need to exclude the path here to avoid returning 401.
     if (path == Routing.grantExchangePath) {
       service(request)
+
+      // Check that call to /connect has only allowed response_type=code
+    } else if (path == Routing.connectPath) {
+      if (isResponseTypeAllowed(request)) service(request)
+      else Future.value(ErrorResponse.forbidden(invalidResponseTypeError))
+
     } else {
       userAuthentication.withUserSession(HandlerRequest(request)) { userSession =>
         val clientAppId = Option(userSession.getAgent).map(_.identifier).getOrElse("unknown")
@@ -58,7 +76,17 @@ class ClientApplicationAuthFilter(userAuthentication: UserAuthentication, teleme
         } else {
           appAuthTypeCounter.labels(authType, path).inc()
           if (oauthClientParams.exists(paramAsType(_) == authType)) deprecatedAuthByAppCounter.labels(clientAppId).inc()
-          service(request)
+
+          // allow only Authorization header, under the rollout flag
+          oauthHeaderRolloutFlag().flatMap {
+            case true =>
+              if (isAuthHeaderPresent(authType)) {
+                service(request)
+              } else {
+                Future.value(ErrorResponse(Status.Unauthorized, invalidAuthenticationError))
+              }
+            case _ => service(request)
+          }
         }
       }
     }
@@ -72,6 +100,11 @@ class ClientApplicationAuthFilter(userAuthentication: UserAuthentication, teleme
       .map(paramAsType)
       .orElse(request.headerMap.keys.find("Authorization".equalsIgnoreCase).map(_ => "oauth_header"))
       .getOrElse("unknown")
+
+  private def isResponseTypeAllowed(request: Request): Boolean =
+    request.params.get("response_type").exists(value => value.equals("code"))
+
+  private def isAuthHeaderPresent(authType: String): Boolean = authType.equals("oauth_header")
 }
 
 object ClientApplicationAuthFilter {
@@ -87,4 +120,8 @@ object ClientApplicationAuthFilter {
     "3537", // SoundCloud Desktop
     "60973" // SoundCloud Flash Widget
   )
+
+  val invalidResponseTypeError = "Authorization is only allowed for response_type=code."
+  val invalidAuthenticationError =
+    "A request must contain the Authorization header. For details please refer to https://developers.soundcloud.com/blog/security-updates-api."
 }

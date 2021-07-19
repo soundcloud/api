@@ -581,6 +581,7 @@ paths:
         - playlists
       security:
         - ClientId: [ ]
+        - AuthHeader: [ ]
       parameters:
         - $ref: '#/components/parameters/playlist_id'
         - $ref: '#/components/parameters/limit'
@@ -598,6 +599,7 @@ paths:
         - tracks
       security:
         - ClientId: [ ]
+        - AuthHeader: [ ]
       parameters:
         - $ref: '#/components/parameters/track_id'
         - $ref: "#/components/parameters/secret_token"
@@ -655,6 +657,7 @@ paths:
         - tracks
       security:
         - ClientId: [ ]
+        - AuthHeader: [ ]
       parameters:
         - $ref: '#/components/parameters/track_id'
         - $ref: "#/components/parameters/secret_token"
@@ -672,6 +675,7 @@ paths:
         - tracks
       security:
         - ClientId: [ ]
+        - AuthHeader: [ ]
       parameters:
         - $ref: '#/components/parameters/track_id'
         - $ref: '#/components/parameters/limit'
@@ -730,6 +734,7 @@ paths:
         - tracks
       security:
         - ClientId: [ ]
+        - AuthHeader: [ ]
       parameters:
         - $ref: '#/components/parameters/track_id'
         - $ref: '#/components/parameters/limit'
@@ -748,6 +753,7 @@ paths:
         - tracks
       security:
         - ClientId: [ ]
+        - AuthHeader: [ ]
       parameters:
         - $ref: '#/components/parameters/track_id'
         - $ref: '#/components/parameters/limit'
@@ -765,6 +771,7 @@ paths:
         - tracks
       security:
         - ClientId: [ ]
+        - AuthHeader: [ ]
       parameters:
         - $ref: '#/components/parameters/track_id'
         - $ref: '#/components/parameters/access'

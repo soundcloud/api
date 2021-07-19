@@ -9,6 +9,7 @@ import com.twitter.util.Future
 
 object Routing {
   val grantExchangePath = "/oauth2/token"
+  val connectPath = "/connect"
 
   // Mothership routes accept the /v1 suffix
   // See https://github.com/soundcloud/soundcloud/blob/master/lib/rack/extract_api_version.rb
@@ -53,7 +54,7 @@ object Routing {
   }
 
   def forMothershipDispatcher(mothershipDispatcher: DispatchToMothershipHandler): List[(Method, String, Handler)] = {
-    route(Method.Get, "/connect", mothershipDispatcher.dispatch) :::
+    route(Method.Get, connectPath, mothershipDispatcher.dispatch) :::
       route(Method.Get, "/me/connections", mothershipDispatcher.dispatch) :::
       route(Method.Get, "/me/connections/:id", mothershipDispatcher.dispatch) :::
       route(Method.Post, "/playlists", mothershipDispatcher.dispatch) :::

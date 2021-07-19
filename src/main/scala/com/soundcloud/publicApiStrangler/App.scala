@@ -114,7 +114,14 @@ object App {
         CorsFilter((_, _) => true), // allow all CORS origins (for now)
         new CorsTelemetryFilter(telemetry, router),
         new StaticFilesFilter,
-        new ExceptForTrackUploadsFilter(new ClientApplicationAuthFilter(clients.userAuthentication, telemetry, router)),
+        new ExceptForTrackUploadsFilter(
+          new ClientApplicationAuthFilter(
+            clients.userAuthentication,
+            telemetry,
+            router,
+            () => clients.rolloutClient.isActive(BasicRolloutFeature("enforce_oauth_header"))
+          )
+        ),
         new ExceptForTrackUploadsFilter(
           new ClientApplicationActivityTelemetryFilter(clients.userAuthentication, telemetry, router)
         ),
