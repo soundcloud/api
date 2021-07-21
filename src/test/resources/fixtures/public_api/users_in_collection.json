@@ -63,5 +63,5 @@
       "permalink" : "shai-lev"
     }
   ],
-  "next_href" : "https://api.soundcloud.com/tracks/173030512/favoriters?app_version=ae8ecf3&client_id=02gUJC0hH2ct1EGOcYXQIzRFU91c72Ea&cursor=1441890551000000&linked_partitioning=1&page_number=0&page_size=3"
+  "next_href" : "https://api.soundcloud.com/tracks/173030512/favoriters?app_version=ae8ecf3&cursor=1441890551000000&linked_partitioning=1&page_number=0&page_size=3"
 }

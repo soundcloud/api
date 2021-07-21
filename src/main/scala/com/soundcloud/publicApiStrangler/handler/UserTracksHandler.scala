@@ -40,7 +40,7 @@ class UserTracksHandler(
       access: AccessParams
   ): Future[Response] = {
     val hasLinkedPartitioning = req.params.contains("linked_partitioning")
-    val pagination = CursorBasedPagination.build(req, Seq("linked_partitioning"))
+    val pagination = CursorBasedPagination.build(req, Seq("linked_partitioning", "access"))
 
     Try(getUserUrn(userId)) match {
       case Return(urn) =>

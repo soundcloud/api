@@ -225,7 +225,8 @@ class UserFollowHandler(
   ): Option[String] = {
     next.map { pagination =>
       val params = requestParams ++ Map("cursor" -> pagination.cursor, "page_size" -> pagination.page_size) -- Seq(
-        "limit"
+        "limit",
+        "client_id"
       )
       baseUrl + path + "?" + params.map { case (k, v) => s"$k=$v" }.mkString("&")
     }

@@ -125,6 +125,25 @@ class TrackPaginationSpec extends UnitSpecification with TrackRepresentationSpec
         )
         pagination.nextHref(29) ==== None
       }
+
+      "when access parameter is present" >> {
+        val pagination =
+          new TrackPagination(
+            Some(2),
+            None,
+            true,
+            None,
+            None,
+            new URL(s"${base}limit=2&another=value&access=playable,preview")
+          )
+        pagination.nextHref(100) ==== Some(s"${base}limit=2&another=value&access=playable,preview&offset=2")
+      }
+
+      "remove client_id if present" >> {
+        val pagination =
+          new TrackPagination(Some(2), None, true, None, None, new URL(s"${base}limit=2&client_id=test&another=value"))
+        pagination.nextHref(100) ==== Some(s"${base}limit=2&another=value&offset=2")
+      }
     }
 
     "when linked_partitioning=false returns none" >> {

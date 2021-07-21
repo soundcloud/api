@@ -137,5 +137,11 @@ class PaginationSpec extends Specification {
       val pagination = OffsetBasedPagination.build(request)
       pagination.nextHref(20) ==== None
     }
+
+    "it returns a valid nextHref with no client_id present" in new Scope {
+      val request = mockRequest(Map("limit" -> "10", "client_id" -> "TEST_CLIENT_ID", "offset" -> "5"))
+      val pagination = OffsetBasedPagination.build(request)
+      pagination.nextHref(20) ==== Some(s"$baseUrl$path?limit=10&offset=15")
+    }
   }
 }

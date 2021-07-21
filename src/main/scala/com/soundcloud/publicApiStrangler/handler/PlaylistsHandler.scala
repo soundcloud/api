@@ -40,9 +40,11 @@ class PlaylistsHandler(
       val candidateSecretToken = request.params.get("secret_token")
       val hasLinkedPartitioning = request.params.get("linked_partitioning")
       val showTracks = request.params.getBoolean("show_tracks")
-      val pagination =
-        hasLinkedPartitioning.map(_ => OffsetBasedPagination.build(request, Seq("linked_partitioning")))
       val access = AccessParamsExtractor.unapply(request.params)
+      val pagination =
+        hasLinkedPartitioning.map(_ =>
+          OffsetBasedPagination.build(request, Seq("linked_partitioning", "access", "show_tracks", "secret_token"))
+        )
 
       Try(getPlaylistUrn(request)) match {
         case Return(urn) =>
@@ -60,9 +62,12 @@ class PlaylistsHandler(
     userAuthentication.withUserSession(request) { session =>
       val candidateSecretToken = request.params.get("secret_token")
       val hasLinkedPartitioning = request.params.get("linked_partitioning")
-      val pagination =
-        hasLinkedPartitioning.map(_ => OffsetBasedPagination.build(request, Seq("linked_partitioning")))
       val access = AccessParamsExtractor.unapply(request.params)
+      val pagination =
+        hasLinkedPartitioning.map(_ =>
+          OffsetBasedPagination.build(request, Seq("linked_partitioning", "access", "secret_token"))
+        )
+
       Try(getPlaylistUrn(request)) match {
         case Return(urn) =>
           playlistsService.fetchPlaylistTracks(session, urn, candidateSecretToken, access, pagination).map {

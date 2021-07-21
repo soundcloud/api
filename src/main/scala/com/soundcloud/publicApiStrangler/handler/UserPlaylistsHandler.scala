@@ -25,10 +25,13 @@ class UserPlaylistsHandler(
     userAuthentication.withUserSession(req) { session =>
       val userId = req.routeParams("userId")
       val hasLinkedPartitioning = req.params.get("linked_partitioning")
-      val pagination = hasLinkedPartitioning.map(_ => OffsetBasedPagination.build(req, Seq("linked_partitioning")))
       val secretToken = req.params.get("secret_token")
       val access = AccessParamsExtractor.unapply(req.params)
       val showTracks = req.params.getBoolean("show_tracks")
+
+      val pagination = hasLinkedPartitioning.map(_ =>
+        OffsetBasedPagination.build(req, Seq("linked_partitioning", "access", "show_tracks", "secret_token"))
+      )
 
       Try(getUserUrn(userId)) match {
         case Return(userUrn) =>
@@ -71,7 +74,7 @@ class UserPlaylistsHandler(
       access: AccessParams
   ): Future[Response] = {
     val hasLinkedPartitioning = req.params.contains("linked_partitioning")
-    val pagination = CursorBasedPagination.build(req, Seq("linked_partitioning"))
+    val pagination = CursorBasedPagination.build(req, Seq("linked_partitioning", "access", "show_tracks"))
     val showTracks = req.params.getBoolean("show_tracks")
 
     Try(getUserUrn(userId)) match {

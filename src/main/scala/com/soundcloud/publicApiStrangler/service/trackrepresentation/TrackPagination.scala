@@ -50,6 +50,7 @@ case class TrackPagination(
         val params = requestUrl.getQuery
           .split("&")
           .toList
+          .filter(s => !s.contains("client_id"))
           .map(_.split("=").toList)
           .flatMap {
             case List(key, value) => Some((key, value))

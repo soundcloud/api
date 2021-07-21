@@ -161,11 +161,29 @@ class UserFollowHandlerSpec extends UnitSpecification {
             .value(Map.empty[Urn, Long])
         }
 
+        val response = get("/me/followings", Map("limit" -> "10"))
+        response.status ==== Status.Ok
+        Json.parse(response.contentString) ==== Json.obj(
+          "collection" -> List(user123),
+          "next_href" -> "http://foo/me/followings?cursor=123-1234&page_size=2"
+        )
+      }
+
+      "cut client_id out of next_href if present" in new FollowingsContext {
+        override def before: Any = {
+          super.before
+          followCountsClientMock.counts(session, followings.map(_.target)) returns Future.value(
+            Seq(FollowCounts(followings.head.target, 1111, 2222))
+          )
+          repostsClientMock.getRepostCountsByUrnWithFallback(session, followings.map(_.target).toSet) returns Future
+            .value(Map.empty[Urn, Long])
+        }
+
         val response = get("/me/followings", Map("limit" -> "10", "client_id" -> "FOO"))
         response.status ==== Status.Ok
         Json.parse(response.contentString) ==== Json.obj(
           "collection" -> List(user123),
-          "next_href" -> "http://foo/me/followings?client_id=FOO&cursor=123-1234&page_size=2"
+          "next_href" -> "http://foo/me/followings?cursor=123-1234&page_size=2"
         )
       }
     }
@@ -327,7 +345,7 @@ class UserFollowHandlerSpec extends UnitSpecification {
         )
       }
 
-      val response = put("/me/followings/999", Map("client_id" -> "YOUR_CLIENT_ID"))
+      val response = put("/me/followings/999")
       response.status ==== Status.Created
       Json.parse(response.contentString) ==== anotherUser123
     }
@@ -338,7 +356,7 @@ class UserFollowHandlerSpec extends UnitSpecification {
         followsMock.follow(session, userUrn) returns Future.value(AgeRestrictedUser)
       }
 
-      val response = put("/me/followings/999", Map("client_id" -> "YOUR_CLIENT_ID"))
+      val response = put("/me/followings/999")
       response.status ==== Status.Forbidden
       val errors = (Json.parse(response.contentString) \ "errors").as[Seq[JsObject]].head
       (errors \ "error_message").asOpt[String] ==== Option("DENY_AGE_RESTRICTED")
@@ -353,7 +371,7 @@ class UserFollowHandlerSpec extends UnitSpecification {
         followsMock.follow(session, userUrn) returns Future.value(AgeUnknownUser)
       }
 
-      val response = put("/me/followings/999", Map("client_id" -> "YOUR_CLIENT_ID"))
+      val response = put("/me/followings/999")
       response.status ==== Status.Forbidden
       val errors = (Json.parse(response.contentString) \ "errors").as[Seq[JsObject]].head
       (errors \ "error_message").asOpt[String] ==== Option("DENY_AGE_UNKNOWN")
@@ -365,7 +383,7 @@ class UserFollowHandlerSpec extends UnitSpecification {
         followsMock.follow(session, userUrn) returns Future.value(UserNotFound)
       }
 
-      val response = put("/me/followings/999", Map("client_id" -> "YOUR_CLIENT_ID"))
+      val response = put("/me/followings/999")
       response.status ==== Status.NotFound
       (Json.parse(response.contentString) \ "status").get === JsString("404 - Not Found")
     }
@@ -378,7 +396,7 @@ class UserFollowHandlerSpec extends UnitSpecification {
         followsMock.unfollow(session, userUrn) returns Future.value(UnfollowSuccessful)
       }
 
-      val response = delete("/me/followings/999", Map("client_id" -> "YOUR_CLIENT_ID"))
+      val response = delete("/me/followings/999")
       response.status ==== Status.Ok
     }
 
@@ -388,7 +406,7 @@ class UserFollowHandlerSpec extends UnitSpecification {
         followsMock.unfollow(session, userUrn) returns Future.value(UserAsTarget)
       }
 
-      val response = delete("/me/followings/999", Map("client_id" -> "YOUR_CLIENT_ID"))
+      val response = delete("/me/followings/999")
       response.status ==== Status.UnprocessableEntity
     }
   }

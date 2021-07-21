@@ -42,12 +42,12 @@ class UserPlaylistsHandlerSpec extends UnitSpecification {
   "Getting multiple playlists" >> {
     trait PlaylistsForUserContext extends Context {
       val queryString =
-        "?page_size=1&cursor=2&linked_partitioning=1"
+        "?page_size=1&cursor=2&linked_partitioning=1&access=playable,preview"
 
       def paginationParams(path: String): CursorBasedPagination = {
         val mockRequest = Request(path)
         mockRequest.host = "localhost"
-        CursorBasedPagination.build(mockRequest, Seq("linked_partitioning"))
+        CursorBasedPagination.build(mockRequest, Seq("linked_partitioning", "access"))
       }
 
       def stubService(
@@ -106,6 +106,7 @@ class UserPlaylistsHandlerSpec extends UnitSpecification {
     "GET /me/playlists" >> {
       "with a successful response from playlists service" >> {
         "returns playlists" in new PlaylistsForUserContext with SuccessfulResponse {
+          override val queryString = "?page_size=1&cursor=2&linked_partitioning=1"
           val userUrn = Urn("soundcloud", "users", "1")
           val path = s"/me/playlists$queryString"
 
@@ -133,12 +134,12 @@ class UserPlaylistsHandlerSpec extends UnitSpecification {
   "Getting single playlist" >> {
     trait PlaylistsForUserContext extends Context {
       val queryString =
-        "?limit=1&offset=2&linked_partitioning=1&secret_token=s3cret"
+        "?limit=1&offset=2&linked_partitioning=1&secret_token=s3cret&access=playable,preview"
 
       def paginationParams(path: String): OffsetBasedPagination = {
         val mockRequest = Request(path)
         mockRequest.host = "localhost"
-        OffsetBasedPagination.build(mockRequest, Seq("linked_partitioning"))
+        OffsetBasedPagination.build(mockRequest, Seq("linked_partitioning", "secret_token", "access"))
       }
 
       def stubService(

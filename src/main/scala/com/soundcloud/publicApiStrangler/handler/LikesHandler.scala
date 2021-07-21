@@ -109,12 +109,11 @@ class LikesHandler(
       Try(getTrackUrn(request)) match {
         case Return(urn) =>
           likesService.trackLikers(session, urn, pagination).flatMap {
-            case Good(response) => {
+            case Good(response) =>
               userRepresentationsService.users(session, response.urns).map { users =>
                 JsonResponseBuilder
                   .ok(Collection.getRepresentation(Collection(users, response.nextHRef), hasLinkedPartitioning))
               }
-            }
             case Bad(NotFound(_)) => Future.value(ErrorResponse.notFound())
             case _ => Future.value(ErrorResponse(Status.InternalServerError))
           }
@@ -161,7 +160,7 @@ class LikesHandler(
       access: AccessParams
   ): Future[Response] = {
     val hasLinkedPartitioning = request.params.contains("linked_partitioning")
-    val pagination = CursorBasedPagination.build(request, Seq("linked_partitioning"))
+    val pagination = CursorBasedPagination.build(request, Seq("linked_partitioning", "access"))
 
     Try(getUserUrn(userId)) match {
       case Return(urn) =>

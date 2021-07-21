@@ -113,10 +113,10 @@ class PlaylistsHandlerSpec extends UnitSpecification {
     }
 
     "returns paginated track collection" in new Context {
-      val path = "/playlists/1/tracks?linked_partitioning=true&limit=1&secret_token=s-3creT"
+      val path = "/playlists/1/tracks?linked_partitioning=true&limit=1&secret_token=s-3creT&access=playable,preview"
       val mockRequest = Request(path)
       mockRequest.host = "localhost"
-      val pagination = OffsetBasedPagination.build(mockRequest, Seq("linked_partitioning"))
+      val pagination = OffsetBasedPagination.build(mockRequest, Seq("linked_partitioning", "secret_token", "access"))
       val paginatedTracksCollection =
         Collection(List(requestedTrack1, requestedTrack2), Some(pagination.normalizedHref))
 

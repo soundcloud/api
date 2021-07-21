@@ -123,7 +123,7 @@ class SearchService(
     "genres" -> "filter.genre",
     "tags" -> "filter.tag"
   )
-  val playlistParams: Seq[String] = PlaylistParamMappings.keys.toSeq
+  val playlistParams: Seq[String] = PlaylistParamMappings.keys.toSeq ++ Seq("show_tracks", "access")
 
   private def mapPlaylistParams(params: Params): Params = params.collect {
     case (k, v) if PlaylistParamMappings contains k => PlaylistParamMappings(k) -> v

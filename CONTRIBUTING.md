@@ -17,7 +17,7 @@ Set the `USE_CRUN` environment variable to `false` to avoid using sc crun when p
 ```
 shibboleth show config/production_api.sh.enc > config/production_api.sh
 make run
-curl "http://localhost:5000/tracks?client_id=$A_VALID_CLIENT_ID"
+curl "http://localhost:5000/tracks" -H "Authorization: OAuth ACCESS_TOKEN"
 ```
 
 This runs against production servers.

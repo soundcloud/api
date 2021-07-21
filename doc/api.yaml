@@ -1266,7 +1266,7 @@ components:
       value:
         collection:
           $ref: "#/components/examples/Comment/value"
-        next_href: https://api.soundcloud.com/collection?client_id=client_id&page_size=10&cursor=1234567
+        next_href: https://api.soundcloud.com/collection?page_size=10&cursor=1234567
     CommentsList:
       description: Deprecated, use Comments instead.
       value:
@@ -1282,7 +1282,7 @@ components:
       value:
         collection:
           $ref: "#/components/examples/Playlist/value"
-        next_href: https://api.soundcloud.com/collection?client_id=client_id&page_size=10&cursor=1234567
+        next_href: https://api.soundcloud.com/collection?page_size=10&cursor=1234567
     PlaylistsArray:
       description: Deprecated, use Playlists instead.
       value:
@@ -1295,7 +1295,7 @@ components:
       value:
         collection:
           $ref: "#/components/examples/Track/value"
-        next_href: https://api.soundcloud.com/collection?client_id=client_id&page_size=10&cursor=1234567
+        next_href: https://api.soundcloud.com/collection?page_size=10&cursor=1234567
     TracksList:
       description: Deprecated, use Tracks instead.
       value:
@@ -1308,7 +1308,7 @@ components:
       value:
         collection:
           $ref: "#/components/examples/User/value"
-        next_href: https://api.soundcloud.com/collection?client_id=client_id&page_size=10&cursor=1234567
+        next_href: https://api.soundcloud.com/collection?page_size=10&cursor=1234567
     WebProfiles:
       $ref: './components/examples/WebProfiles.yaml'
     Success:

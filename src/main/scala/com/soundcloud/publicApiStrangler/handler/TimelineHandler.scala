@@ -29,7 +29,7 @@ class TimelineHandler(
 
   def renderPublicStream(request: HandlerRequest): Future[Response] = {
     userAuthentication.withLoggedInUser(request) { (session: LoggedInUserSession, _) =>
-      val pagination = CursorBasedPagination.build(request, Seq("linked_partitioning"))
+      val pagination = CursorBasedPagination.build(request, Seq("linked_partitioning", "access"))
 
       val (cursor, reverseCursor) = Try(extractCursor(pagination)) match {
         case Failure(_) => return Future.value(ErrorResponse.badRequest("Cursor is not a valid UUID."))
@@ -56,7 +56,7 @@ class TimelineHandler(
 
   def renderTrackStream(request: HandlerRequest): Future[Response] = {
     userAuthentication.withLoggedInUser(request) { (session: LoggedInUserSession, _) =>
-      val pagination = CursorBasedPagination.build(request, Seq("linked_partitioning"))
+      val pagination = CursorBasedPagination.build(request, Seq("linked_partitioning", "access"))
 
       val (cursor, reverseCursor) = Try(extractCursor(pagination)) match {
         case Failure(_) => return Future.value(ErrorResponse.badRequest("Cursor is not a valid UUID."))
@@ -109,7 +109,7 @@ class TimelineHandler(
 
   def renderFollowingTracks(request: HandlerRequest): Future[Response] = {
     userAuthentication.withLoggedInUser(request) { (session: LoggedInUserSession, _) =>
-      val pagination = CursorBasedPagination.build(request, Seq("linked_partitioning"))
+      val pagination = CursorBasedPagination.build(request, Seq("linked_partitioning", "access"))
 
       val (cursor, reverseCursor) = Try(extractCursor(pagination)) match {
         case Failure(_) => return Future.value(ErrorResponse.badRequest("Cursor is not a valid UUID."))

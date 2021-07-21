@@ -22,16 +22,8 @@ var replacePlaylistIdTransactionIds = [
 ];
 var skippedStatuses = ["400", "403", "404", "422", "429", "500"];
 
-function addCredentials(transaction) {
-    const clientId = process.env.CLIENT_ID;
+function addOAuthHeader(transaction) {
     const accessToken = process.env.OAUTH_TOKEN;
-
-    var paramToAdd = "client_id=" + clientId;
-    if (transaction.fullPath.indexOf('?') > -1) {
-       transaction.fullPath += "&" + paramToAdd;
-    } else {
-      transaction.fullPath += "?" + paramToAdd;
-    }
 
     transaction.request.headers.Authorization = "OAuth " + accessToken;
     return transaction;
@@ -52,7 +44,7 @@ hooks.beforeEach((transaction, done) => {
     }
 
     if (transaction.expected.statusCode != "401") {
-        addCredentials(transaction);
+        addOAuthHeader(transaction);
     }
 
     if (replacePlaylistIdTransactionIds.includes(transaction.id)) {
