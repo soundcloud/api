@@ -813,25 +813,6 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         404:
           $ref: '#/components/responses/NotFound'
-  /users/{user_id}/comments:
-    get:
-      summary: Returns a list of user's comments.
-      tags:
-        - users
-      security:
-        - ClientId: [ ]
-          AuthHeader: [ ]
-      parameters:
-        - $ref: '#/components/parameters/user_id'
-        - $ref: '#/components/parameters/limit'
-        - $ref: '#/components/parameters/offset'
-      responses:
-        200:
-          $ref: "#/components/responses/CommentsList"
-        401:
-          $ref: '#/components/responses/Unauthorized'
-        404:
-          $ref: '#/components/responses/NotFound'
   /users/{user_id}/favorites:
     get:
       summary: Returns a list of user's favorited or liked tracks. (use /users/:userId/likes/tracks instead, to fetch a user's likes)
@@ -1236,11 +1217,6 @@ components:
             $ref: '#/components/schemas/Comment'
         next_href:
           type: [ string, null ]
-    CommentsList:
-      deprecated: true
-      type: array
-      items:
-        $ref: '#/components/schemas/Comment'
     Streams:
       $ref: './components/schemas/Streams.yaml'
   responses:
@@ -1267,10 +1243,6 @@ components:
         collection:
           $ref: "#/components/examples/Comment/value"
         next_href: https://api.soundcloud.com/collection?page_size=10&cursor=1234567
-    CommentsList:
-      description: Deprecated, use Comments instead.
-      value:
-        $ref: "#/components/examples/Comment/value"
     Connection:
       $ref: './components/examples/Connection.yaml'
     Connections:

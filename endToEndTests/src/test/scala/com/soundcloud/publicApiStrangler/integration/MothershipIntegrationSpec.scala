@@ -5,15 +5,15 @@ import play.api.libs.json.{JsArray, JsObject}
 
 class MothershipIntegrationSpec extends IntegrationTest {
 
-  "/users/146532/comments" >> {
+  "/users/19645907/web-profiles" >> {
     "should parse response" in new IntegrationContext {
-      val response = server.get("/users/146532/comments.json", authenticatedUSHeaders)
+      val response = server.get("/users/19645907/web-profiles.json", authenticatedUSHeaders)
 
       response.status === 200
 
       val jsonResponse = response.json.as[JsArray]
       val last = jsonResponse.last.as[JsObject]
-      (last \ "user" \ "id").as[Int] === 146532
+      (last \ "id").as[Int] === 9222660
     }
   }
 }

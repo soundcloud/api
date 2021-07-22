@@ -42,15 +42,6 @@ class Handlers(
   val singleTrackHandler =
     new SingleTrackHandler(userAuthentication, tracksService)
 
-  val userRelatedMothershipDispatcher = new UserRelatedMothershipDispatcher(
-    userAuthentication,
-    mothershipDispatcher,
-    followCountsClient,
-    lieblingClient,
-    repostsClient,
-    telemetry
-  )
-
   val userTracksHandler = new UserTracksHandler(
     userAuthentication,
     userTracksService

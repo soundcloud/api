@@ -13,11 +13,6 @@ class DispatchingToMotherShipSpec extends UnitSpecification {
     (Put, "/playlists/1"),
     (Get, "/resolve")
   )
-
-  val expectedUserRelatedMothershipEndpoint = Set(
-    (Get, "/users/7110/comments")
-  )
-
   trait MothershipContext extends HandlerSpecificationScope {
     val dispatcher = mock[DispatchToMothershipHandler]
     dispatcher.dispatch(any[HandlerRequest]) returns Future.value(ResponseBuilder.ok())
@@ -27,13 +22,6 @@ class DispatchingToMotherShipSpec extends UnitSpecification {
 
   trait TokenExchangeContext extends HandlerSpecificationScope {
     override def routingDefinitions() = Routing.forOauthGrantExchange(_ => Future(ResponseBuilder.ok()))
-  }
-
-  trait UserRelatedMothershipContext extends HandlerSpecificationScope {
-    val dispatcher = mock[UserRelatedMothershipDispatcher]
-    dispatcher.dispatchToMothership(any[HandlerRequest]) returns Future.value(ResponseBuilder.ok())
-
-    override def routingDefinitions() = Routing.forUserRelatedMothershipDispatcher(dispatcher)
   }
 
   expectedMotherShipEndpoints foreach {
@@ -53,16 +41,4 @@ class DispatchingToMotherShipSpec extends UnitSpecification {
 
   }
 
-  expectedUserRelatedMothershipEndpoint foreach {
-    case (method, endpoint) =>
-      s"User-related mothership dispatcher should handle $method at $endpoint" in new UserRelatedMothershipContext {
-        method match {
-          case Get => get(endpoint).status ==== Status.Ok
-          case Post => post(endpoint).status ==== Status.Ok
-          case Put => put(endpoint).status ==== Status.Ok
-          case Head => head(endpoint).status ==== Status.Ok
-          case m => throw new UnsupportedOperationException(s"Test for method $m not implemented")
-        }
-      }
-  }
 }

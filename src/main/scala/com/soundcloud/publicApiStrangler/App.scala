@@ -88,7 +88,6 @@ object App {
           forPlaylistHandler(handlers.playlistsHandler),
           forSimilarTracksHandler(handlers.similarTracksHandler),
           forTracksHandler(handlers.tracksHandler),
-          forUserRelatedMothershipDispatcher(handlers.userRelatedMothershipDispatcher),
           forSearchHandler(handlers.searchHandler),
           forUserTracksHandler(handlers.userTracksHandler),
           forUserPlaylistsHandler(handlers.userPlaylistsHandler),

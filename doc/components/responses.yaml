@@ -225,23 +225,10 @@ Comments:
   content:
     application/json; charset=utf-8:
       schema:
-        oneOf:
-          - $ref: '#/components/schemas/Comments'
-          - $ref: '#/components/schemas/CommentsList'
+        - $ref: '#/components/schemas/Comments'
       examples:
         default:
           $ref: "#/components/examples/Comments"
-        commentsList:
-          $ref: "#/components/examples/CommentsList"
-CommentsList:
-  description: Success
-  content:
-    application/json; charset=utf-8:
-      schema:
-        $ref: '#/components/schemas/CommentsList'
-      examples:
-        default:
-          $ref: "#/components/examples/CommentsList"
 Streams:
   description: Success
   content:

@@ -1,7 +1,3 @@
 <!--- Remove everything below and start over --->
 
-### Security update
-
-Disallow requesting non-expiring tokens.
-
-Find more in our [blog post](https://developers.soundcloud.com/blog/security-updates-api).
+Removed `GET /users/{user_id}/comments`. Requests to this endpoint will now return 404 NotFound.

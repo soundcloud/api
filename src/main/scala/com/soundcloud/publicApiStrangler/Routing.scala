@@ -89,12 +89,6 @@ object Routing {
       route(Method.Delete, "/tracks/:trackId", tracksHandler.handleDeleteTrack)
   }
 
-  def forUserRelatedMothershipDispatcher(
-      userRelatedMothershipDispatcher: UserRelatedMothershipDispatcher
-  ): List[(Method, String, Handler)] = {
-    route(Method.Get, "/users/:id/comments", userRelatedMothershipDispatcher.dispatchToMothership)
-  }
-
   def forMeHandler(meHandler: MeHandler): List[(Method, String, Handler)] = {
     route(Method.Get, "/me", meHandler.me) :::
       route(Method.Get, "/users/me", meHandler.me)
