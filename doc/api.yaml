@@ -161,6 +161,7 @@ paths:
   /me/connections:
     get:
       summary: Returns a list of the authenticated user's connected social accounts.
+      deprecated: true
       tags:
         - me
       security:
@@ -176,6 +177,7 @@ paths:
   /me/connections/{connection_id}:
     get:
       summary: Returns the authenticated user's connected social account.
+      deprecated: true
       tags:
         - me
       security:

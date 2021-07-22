@@ -1,3 +1,3 @@
 <!--- Remove everything below and start over --->
 
-Removed `GET /users/{user_id}/comments`. Requests to this endpoint will now return 404 NotFound.
+Deprecated `GET /me/connections` and `GET /me/connections/{connection_id}`. These endpoints will be removed from 20/08/21.
