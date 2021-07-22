@@ -1,4 +1,5 @@
 {
   "name": "public-api-strangler-asset-uploads",
-  "description": "Preprocessor for multipart requests (track uploads)"
+  "description": "Preprocessor for multipart requests (track uploads)",
+  "dependencies": []
 }

@@ -7,6 +7,5 @@
   "owner": "integrations-team",
   "status": "production",
   "type": "external_service",
-  "data_sensitivity": ["no_user_data"],
   "dependencies": []
 }
