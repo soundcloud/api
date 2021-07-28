@@ -1,0 +1,39 @@
+type: object
+properties:
+  grant_type:
+    type: string
+    description: One of `authorization_code`, `client_credentials`, `refresh_token`
+    example: authorization_code
+    enum:
+      - authorization_code
+      - refresh_token
+      - client_credentials
+  client_id:
+    type: string
+    description: Client ID
+    example: CLIENT_ID
+  client_secret:
+    type: string
+    description: Client secret
+    example: CLIENT_SECRET
+  code:
+    type: string
+    description: Authorization code. Required on `grant_type = authorization_code`.
+    example: 1-123456-12345678-FAbcfbe9ir2wdj0
+  redirect_uri:
+    type: string
+    description: Redirect URI. Required on `grant_type = (authorization_code|refresh_token)`.
+    example: https://mywebsite/auth/soundcloud
+  refresh_token:
+    type: string
+    description: Refresh token. Required on `grant_type = refresh_token`.
+    example: 1234c331329477150e7b6056ff212345
+# The scope parameter is usually empty for most of the clients. As different scopes are poorly supported, we shouldn't mention it here at all.
+#  scope:
+#    type: string
+#    description: Space separated scopes. Can be set on `grant_type = client_credentials` to define the scopes.
+#    example: ''
+required:
+  - grant_type
+  - client_id
+  - client_secret

@@ -48,11 +48,16 @@ paths:
         - $ref: '#/components/parameters/client_id'
         - $ref: '#/components/parameters/redirect_uri'
         - $ref: '#/components/parameters/response_type'
-        - $ref: '#/components/parameters/scope'
+# The scope parameter is usually empty for most of the clients. As different scopes are poorly supported, we shouldn't mention it here at all.
+#        - $ref: '#/components/parameters/scope'
         - $ref: '#/components/parameters/state'
       responses:
         302:
-          $ref: '#/components/responses/FoundHtml'
+          description: Redirect to connect portal
+          headers:
+            location:
+              description: Redirect to connect poral "https://secure.soundcloud.com/connect"
+              type: string
         401:
           $ref: '#/components/responses/Unauthorized'
   /oauth2/token:
@@ -63,20 +68,14 @@ paths:
       security:
         - ClientId: [ ]
       requestBody:
+        required: true
         content:
           application/x-www-form-urlencoded:
             schema:
-              oneOf:
-                - $ref: '#/components/schemas/AuthorizationCode'
-                - $ref: '#/components/schemas/RefreshToken'
-                - $ref: '#/components/schemas/ClientCredentials'
-            examples:
-              AuthorizationCode:
-                $ref: '#/components/examples/AuthorizationCode'
-              ClientCredentials:
-                $ref: '#/components/examples/ClientCredentials'
-              RefreshToken:
-                $ref: '#/components/examples/RefreshToken'
+              $ref: '#/components/schemas/OAuthToken'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/OAuthToken'
       responses:
         200:
           description: Success
@@ -100,7 +99,22 @@ paths:
                 BadRequest:
                   $ref: "#/components/examples/BadRequest"
         401:
-          $ref: '#/components/responses/Unauthorized'
+          description: 'Unauthorized'
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/Error'
+              examples:
+                ErrorInvalidGrant:
+                  value:
+                    code: 401
+                    message: invalid_grant
+                    link: https://developers.soundcloud.com/docs/api/guide#authentication
+                ErrorInvalidScope:
+                  $ref: '#/components/examples/ErrorInvalidScope'
+                ErrorInvalidClient:
+                  $ref: '#/components/examples/ErrorInvalidClient'
   /me:
     get:
       summary: Returns the authenticated user’s information.
@@ -1123,12 +1137,8 @@ components:
   securitySchemes:
     $ref: './components/securitySchemes.yaml'
   schemas:
-    AuthorizationCode:
-      $ref: './components/schemas/AuthorizationCode.yaml'
-    RefreshToken:
-      $ref: './components/schemas/RefreshToken.yaml'
-    ClientCredentials:
-      $ref: './components/schemas/ClientCredentials.yaml'
+    OAuthToken:
+      $ref: './components/schemas/OAuthToken.yaml'
     Connection:
       $ref: './components/schemas/Connection.yaml'
     Connections:
@@ -1224,12 +1234,6 @@ components:
   responses:
     $ref: './components/responses.yaml'
   examples:
-    AuthorizationCode:
-      $ref: './components/examples/AuthorizationCode.yaml'
-    ClientCredentials:
-      $ref: './components/examples/ClientCredentials.yaml'
-    RefreshToken:
-      $ref: './components/examples/RefreshToken.yaml'
     Activities:
       $ref: './components/examples/Activities.yaml'
     ExpiringToken:
@@ -1297,11 +1301,6 @@ components:
     Created:
       value:
         status: 201 - Created
-    ErrorInvalidGrant:
-      value:
-        code: 400
-        message: invalid_grant
-        link: https://developers.soundcloud.com/docs/api/guide#authentication
     ErrorUnsupportedGrant:
       value:
         code: 400
@@ -1312,11 +1311,26 @@ components:
         code: 400
         message: Detailed message of errors, when available
         link: https://developers.soundcloud.com/docs/api/explorer/open-api
+    ErrorInvalidGrant:
+      value:
+        code: 400
+        message: invalid_grant
+        link: https://developers.soundcloud.com/docs/api/guide#authentication
     Unauthorized:
       value:
         code: 401
         message: Detailed message of errors, when available
         link: https://developers.soundcloud.com/docs/api/explorer/open-api
+    ErrorInvalidScope:
+      value:
+        code: 401
+        message: invalid_scope
+        link: https://developers.soundcloud.com/docs/api/guide#authentication
+    ErrorInvalidClient:
+      value:
+        code: 401
+        message: invalid_client
+        link: https://developers.soundcloud.com/docs/api/guide#authentication
     Forbidden:
       value:
         code: 403
