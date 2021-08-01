@@ -9,22 +9,71 @@
   "telemetry_dashboard": "https://grafana.soundcloud.org/dashboard/db/jvmkit-generic?var-prometheus=public-api-strangler&var-system=public-api-strangler&var-job=public-api-strangler",
   "ci_dashboard": "https://ci.soundcloud.org/go/tab/pipeline/history/public-api-strangler",
   "runbook": "https://eng-doc.soundcloud.org/runbooks/core-services/public-api-strangler",
+  "_schema": "soundcloud/applicationmanifest/v1",
   "dependencies": [
-    "authenticator",
-    "gatekeeper",
-    "geoip2",
-    "hocuspocus",
-    "liebling",
-    "media-service",
-    "moshimoshi",
-    "okidoki",
-    "playlists",
-    "public-api",
-    "search-dispatcher-remix",
-    "system-playlists",
-    "timeline",
-    "tracks",
-    "track-coordinator",
-    "submarine"
+    {
+      "type": "http",
+      "system": "authenticator"
+    },
+    {
+      "type": "http",
+      "system": "gatekeeper"
+    },
+    {
+      "type": "http",
+      "system": "geoip2"
+    },
+    {
+      "type": "http",
+      "system": "hocuspocus"
+    },
+    {
+      "type": "http",
+      "system": "liebling"
+    },
+    {
+      "type": "http",
+      "system": "media-service"
+    },
+    {
+      "type": "http",
+      "system": "moshimoshi"
+    },
+    {
+      "type": "http",
+      "system": "okidoki"
+    },
+    {
+      "type": "http",
+      "system": "playlists"
+    },
+    {
+      "type": "http",
+      "system": "public-api"
+    },
+    {
+      "type": "http",
+      "system": "search-dispatcher-remix"
+    },
+    {
+      "type": "http",
+      "system": "system-playlists"
+    },
+    {
+      "type": "http",
+      "system": "timeline"
+    },
+    {
+      "type": "http",
+      "system": "tracks"
+    },
+    {
+      "type": "http",
+      "system": "track-coordinator"
+    },
+    {
+      "type": "http",
+      "system": "submarine"
+    }
   ]
 }
