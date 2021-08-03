@@ -30,7 +30,10 @@ Please don't post security issues or vulnerabilities here. Instead, submit them 
 
 ## Frequently asked questions
 ### Can I request an API key for a new app?
-While we hope to explore opening up access again, we're currently not issuing new keys to 3rd party apps. Please subscribe to our [@SoundCloudDev] on Twitter for updates
+While we hope to explore opening up access again, we're currently not issuing new keys to 3rd party apps. Please subscribe to our [@SoundCloudDev] on Twitter for updates.
+
+### How can I update my app's `redirect_uri`?
+Our Support Team will be happy to help you with your URI's redirects. Please fill out a ticket [here] under "I need help with something else" and they will get back to you as soon as they can.
 
 ### I am an official partner of SoundCloud. Can I use this issue tracker for a technical question?
 This repository only deals with the public-facing API. Any partnership-specific questions don’t belong here as this is a public forum; please contact your SoundCloud partnership contact.
@@ -59,3 +62,4 @@ For all SoundCloud developer-related announcements, please subscribe to [@SoundC
 [inactive]:  https://github.com/soundcloud/api/labels/inactive
 
 [bug-bounty program]: https://bugcrowd.com/soundcloud
+[here]:https://help.soundcloud.com/hc/en-us/requests/new?ticket_form_id=581048
