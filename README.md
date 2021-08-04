@@ -24,19 +24,36 @@ Please use the [issue tracker] in this repository for bug reports, feature reque
 
 In order to show your support for issues filed here, please add a thumbs-up emoji 👍🏽. 
 
-## Security Issues
+Please note - if there is an issue filed for something that is answered already in the FAQ, we will close the issue in the spirit of having the open issues only for unanswered questions of topics. 
 
+## Security Issues
 Please don't post security issues or vulnerabilities here. Instead, submit them to our public [bug-bounty program] to get triaged and receive bounty payouts.
 
 ## Frequently asked questions
 ### Can I request an API key for a new app?
-While we hope to explore opening up access again, we're currently not issuing new keys to 3rd party apps. Please subscribe to our [@SoundCloudDev] on Twitter for updates.
+We're actively exploring on how best to open up public access to our API again. While we're currently not issuing new API keys to 3rd party apps, we're helping improve the systems and tools in place to better serve the already active integrations. This is helping us to better understand what resources we need to put in place in order to support this product at scale. We understand this may be frustrating to new developers, but we hope to have your support and patience during this phase. Please subscribe to our [@SoundCloudDev] on Twitter or our [Backstage Blog] for API Announcements
 
 ### How can I update my app's `redirect_uri`?
 Our Support Team will be happy to help you with your URI's redirects. Please fill out a ticket [here] under "I need help with something else" and they will get back to you as soon as they can.
 
 ### I am an official partner of SoundCloud. Can I use this issue tracker for a technical question?
 This repository only deals with the public-facing API. Any partnership-specific questions don’t belong here as this is a public forum; please contact your SoundCloud partnership contact.
+
+## Code of Conduct
+Our request to the community - we're a rather small team. You'd be surprised how small we are. We want to help the community but we need to be brutally lean on what we can accomplish. Our mission is to enable a thriving community of innovative projects powered by the SoundCloud platform. In that spirit, we're requesting folks to follow the following guidelines when interacting with our team. 
+
+Examples of behavior that contributes to creating a positive environment include:
+- Using welcoming and inclusive language
+- Being respectful of differing viewpoints and experiences
+- Focusing on what is best for the community
+- Showing empathy towards other community members
+
+Examples of unacceptable behavior by participants include:
+- The use of sexualized language or imagery and unwelcome sexual attention or advances
+- Trolling, insulting/derogatory comments, and personal or political attacks
+- Public or private harassment
+- Publishing others' private information, such as a physical or electronic address, without explicit permission
+- Other conduct which could reasonably be considered inappropriate in a professional setting
 
 ## Stay in touch
 For all SoundCloud developer-related announcements, please subscribe to [@SoundCloudDev], our [Backstage blog], our [API announcements], or [releases] page.
