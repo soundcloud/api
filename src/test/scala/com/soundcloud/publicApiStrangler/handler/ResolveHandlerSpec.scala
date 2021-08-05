@@ -42,6 +42,11 @@ class ResolveHandlerSpec extends UnitSpecification {
         response.contentString ==== s"""{"status":"302 - Found", "location":"$permalink"}"""
       }
 
+      "returns expected Location header" in new ServiceSuccessContext {
+        val response = get(s"/resolve?url=$permalinkUrlParam")
+        response.headerMap("Location") ==== permalink
+      }
+
       "handles legacy url param key 'permalink_url'" in new ServiceSuccessContext {
         val response = get(s"/resolve?permalink_url=$permalinkUrlParam")
         response.statusCode ==== 302
