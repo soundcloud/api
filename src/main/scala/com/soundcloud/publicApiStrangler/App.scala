@@ -99,6 +99,7 @@ object App {
           forCommentsHandler(handlers.commentsHandler),
           forMeHandler(handlers.meHandler),
           forUsersHandler(handlers.usersHandler),
+          forResolveHandler(handlers.resolveHandler),
           forDummyHandler()
         )
       )

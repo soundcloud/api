@@ -8,6 +8,7 @@ import com.twitter.finagle.http.Status.{Redirection, Successful}
 import com.twitter.finagle.http.{Request, Response}
 import com.twitter.finagle.{Service, SimpleFilter}
 import com.twitter.util.Future
+import com.soundcloud.publicApiStrangler.Routing
 
 /**
   * Instrument usage of internal and experimental endpoints
@@ -35,7 +36,7 @@ class DeprecatedEndpointUsageFilter(userAuthentication: UserAuthentication, tele
     "/me/connections",
     "/me/connections/:id",
     "/playlists",
-    "/playlists/:id",
+    Routing.playlistIdPath,
     "/resolve",
     "/me/playlists",
     "/me/playlists/:trackId",

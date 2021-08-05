@@ -10,6 +10,9 @@ import com.twitter.util.Future
 object Routing {
   val grantExchangePath = "/oauth2/token"
   val connectPath = "/connect"
+  val userIdPath = "/users/:id"
+  val playlistIdPath = "/playlists/:id"
+  val trackIdPath = "/tracks/:trackId"
 
   // Mothership routes accept the /v1 suffix
   // See https://github.com/soundcloud/soundcloud/blob/master/lib/rack/extract_api_version.rb
@@ -58,8 +61,7 @@ object Routing {
       route(Method.Get, "/me/connections", mothershipDispatcher.dispatch) :::
       route(Method.Get, "/me/connections/:id", mothershipDispatcher.dispatch) :::
       route(Method.Post, "/playlists", mothershipDispatcher.dispatch) :::
-      route(Method.Put, "/playlists/:id", mothershipDispatcher.dispatch) :::
-      route(Method.Get, "/resolve", mothershipDispatcher.dispatch) :::
+      route(Method.Put, playlistIdPath, mothershipDispatcher.dispatch) :::
       route(Method.Post, "/me/playlists", mothershipDispatcher.dispatch) :::
       route(Method.Put, "/me/playlists/:trackId", mothershipDispatcher.dispatch) :::
       route(Method.Get, "/users/:userId/web-profiles", mothershipDispatcher.dispatch)
@@ -70,12 +72,12 @@ object Routing {
   }
 
   def forSingleTrackHandler(singleTrackHandler: SingleTrackHandler): List[(Method, String, Handler)] = {
-    route(Method.Get, "/tracks/:trackId", singleTrackHandler.renderTrack)
+    route(Method.Get, trackIdPath, singleTrackHandler.renderTrack)
   }
 
   def forPlaylistHandler(playlistsHandler: PlaylistsHandler): List[(Method, String, Handler)] = {
-    route(Method.Delete, "/playlists/:id", playlistsHandler.handleDelete) :::
-      route(Method.Get, "/playlists/:id", playlistsHandler.handleFetchPlaylist) :::
+    route(Method.Delete, playlistIdPath, playlistsHandler.handleDelete) :::
+      route(Method.Get, playlistIdPath, playlistsHandler.handleFetchPlaylist) :::
       route(Method.Get, "/playlists/:id/tracks", playlistsHandler.handleFetchPlaylistTracks)
   }
 
@@ -84,9 +86,9 @@ object Routing {
   }
 
   def forTracksHandler(tracksHandler: TracksHandler): List[(Method, String, Handler)] = {
-    route(Method.Put, "/tracks/:trackId", tracksHandler.handleUpdateTrack) :::
+    route(Method.Put, trackIdPath, tracksHandler.handleUpdateTrack) :::
       route(Method.Post, "/tracks", tracksHandler.handleCreateTrack) :::
-      route(Method.Delete, "/tracks/:trackId", tracksHandler.handleDeleteTrack)
+      route(Method.Delete, trackIdPath, tracksHandler.handleDeleteTrack)
   }
 
   def forMeHandler(meHandler: MeHandler): List[(Method, String, Handler)] = {
@@ -95,7 +97,7 @@ object Routing {
   }
 
   def forUsersHandler(usersHandler: UsersHandler): List[(Method, String, Handler)] = {
-    route(Method.Get, "/users/:id", usersHandler.user)
+    route(Method.Get, userIdPath, usersHandler.user)
   }
 
   def forSearchHandler(searchHandler: SearchHandler): List[(Method, String, Handler)] = {
@@ -159,6 +161,10 @@ object Routing {
   def forCommentsHandler(commentsHandler: CommentsHandler): List[(Method, String, Handler)] = {
     route(Method.Get, "/tracks/:trackId/comments", commentsHandler.getCommentsForTrack) :::
       route(Method.Post, "/tracks/:trackId/comments", commentsHandler.createCommentsForTrack)
+  }
+
+  def forResolveHandler(resolveHandler: ResolveHandler): List[(Method, String, Handler)] = {
+    route(Method.Get, "/resolve", resolveHandler.resolve)
   }
 
   def forDummyHandler(): List[(Method, String, Handler)] = {

@@ -1,16 +1,17 @@
 package com.soundcloud.publicApiStrangler.client.mothership
 
 import com.soundcloud.jvmkit.module.http.client.{JsonClient, Params}
-import com.soundcloud.jvmkit.module.outcome.{CustomError, NotValid, Outcome, _}
+import com.soundcloud.jvmkit.module.json.play.UrnFormat._
+import com.soundcloud.jvmkit.module.outcome.{CustomError, GoodOps, NotAllowed, NotValid, Outcome}
 import com.soundcloud.jvmkit.module.telemetry.exceptions.ExceptionCollector
-import com.soundcloud.jvmkit.module.telemetry.exceptions.ExceptionHandler._
+import com.soundcloud.jvmkit.module.telemetry.exceptions.ExceptionHandler.FutureExtensions
 import com.soundcloud.jvmkit.module.util.http.Headers
 import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.jvmkit.module.util.{Path, Urn}
 import com.soundcloud.publicApiStrangler.client.chrono.ChronoResponse
 import com.soundcloud.publicApiStrangler.client.comments.MoshimoshiCommentsComment
-import com.soundcloud.publicApiStrangler.client.mothership.response.mapper._
-import com.soundcloud.publicApiStrangler.client.mothership.response.representation._
+import com.soundcloud.publicApiStrangler.client.mothership.response.mapper.UserRepresentationMapper
+import com.soundcloud.publicApiStrangler.client.mothership.response.representation.UserRepresentation
 import com.soundcloud.publicApiStrangler.client.support.FetchClient
 import com.soundcloud.publicApiStrangler.handler.comments.CreateCommentParams
 import com.soundcloud.publicApiStrangler.service.pagination.CursorBasedPagination
@@ -24,6 +25,16 @@ class MoshimoshiClient(
     service: JsonClient,
     exceptionCollector: ExceptionCollector
 ) extends FetchClient {
+
+  def resolveToUrn(session: UserSession, permalink: String): Future[Option[Urn]] =
+    service
+      .getWithSession(session, Path() / "resolve_to_self", Params("permalink_url" -> permalink), Headers.empty())
+      .map { response =>
+        response.status match {
+          case Status.Ok => Some((Json.parse(response.contentString) \ "self" \ "urn").as[Urn])
+          case _ => None
+        }
+      }
 
   def fetchUserObjects(session: UserSession, urns: Set[Urn]): Future[List[UserRepresentation]] =
     fetchByUrns(service, session, Path() / "users" / "fetch", urns).map(_.map(UserRepresentationMapper(_)))

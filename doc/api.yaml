@@ -812,6 +812,8 @@ paths:
       responses:
         302:
           $ref: "#/components/responses/Found"
+        404:
+          $ref: '#/components/responses/NotFound'
   /users/{user_id}:
     get:
       summary: Returns a user.

@@ -17,8 +17,8 @@ lazy val publicApiStrangler = project
       "com.soundcloud" %% "jvmkit-json-play" % jvmkitVersion,
       "com.soundcloud" %% "jvmkit-outcome" % jvmkitVersion,
       "com.soundcloud" %% "jvmkit-twirp" % jvmkitVersion,
-      "com.netaporter" %% "scala-uri" % "0.4.16",
       "org.jsoup" % "jsoup" % "1.11.3",
+      "io.lemonlabs" %% "scala-uri" % "1.5.1",
       "com.squareup.okhttp3" % "mockwebserver" % "3.11.0" % "test",
       "org.apache.httpcomponents" % "httpclient" % httpComponentsVersion % "test",
       "org.apache.httpcomponents" % "httpmime" % httpComponentsVersion % "test",
@@ -27,6 +27,12 @@ lazy val publicApiStrangler = project
     ),
     Compile / mainClass := Some("com.soundcloud.publicApiStrangler.App")
   )
+
+// FIXME: upgrade scala-uri lib to fix these simulacrum conflicts, then remove the merge strategy
+assembly / assemblyMergeStrategy := {
+  case PathList("simulacrum", _*) => MergeStrategy.first
+  case x => (assembly / assemblyMergeStrategy).value(x)
+}
 
 lazy val endToEnd = project
   .in(file("endToEndTests"))

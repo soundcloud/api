@@ -10,8 +10,7 @@ import com.twitter.util.Future
 class DispatchingToMotherShipSpec extends UnitSpecification {
   val expectedMotherShipEndpoints = Set(
     (Post, "/playlists"),
-    (Put, "/playlists/1"),
-    (Get, "/resolve")
+    (Put, "/playlists/1")
   )
   trait MothershipContext extends HandlerSpecificationScope {
     val dispatcher = mock[DispatchToMothershipHandler]
