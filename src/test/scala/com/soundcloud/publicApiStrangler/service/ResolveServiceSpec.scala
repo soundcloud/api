@@ -1,7 +1,7 @@
 package com.soundcloud.publicApiStrangler.service
 
 import com.soundcloud.publicApiStrangler.test.UnitSpecification
-import com.soundcloud.publicApiStrangler.service.resolve.ResolveService
+import com.soundcloud.publicApiStrangler.service.resolve.{ResolveService, ResourceURLs}
 import com.soundcloud.publicApiStrangler.client.mothership.MoshimoshiClient
 import com.soundcloud.jvmkit.module.util.Urn
 import com.twitter.util.Future
@@ -23,17 +23,18 @@ class ResolveServiceSpec extends UnitSpecification {
 
     val sessionUser = Urn("soundcloud", "users", "1")
     val session = loggedInSession(sessionUser)
-    val permalink: String
+    def permalink: String
 
     def stubMoshimoshi(maybeUrn: Option[Urn]) = {
-      mockMoshimoshiClient resolveToUrn (session, permalink) returns Future.value(maybeUrn)
+      val normalised = ResourceURLs.parsePermalinkUrl(permalink).toOption.get.normalized
+      mockMoshimoshiClient resolveToUrn (session, normalised) returns Future.value(maybeUrn)
     }
   }
 
   "#resolveUrl" >> {
     "users" >> {
       trait UsersContext extends Context {
-        override val permalink: String = "https://soundcloud.com/user-885473394"
+        override def permalink: String = "https://soundcloud.com/user-885473394"
         val user = Urn("soundcloud", "users", "2")
       }
 
@@ -43,6 +44,19 @@ class ResolveServiceSpec extends UnitSpecification {
         }
 
         "returns user url" in new MoshimoshiSuccessContext {
+          val result = Await.result(resolveService.resolveUrl(session, permalink))
+          result ==== Some(s"$baseUrl/users/2")
+        }
+
+        "preserves whitelisted query params" in new MoshimoshiSuccessContext {
+          override def permalink =
+            "https://soundcloud.com/user-885473394?client_id=the-client-id&other=should-not-be-included"
+          val result = Await.result(resolveService.resolveUrl(session, permalink))
+          result ==== Some(s"$baseUrl/users/2?client_id=the-client-id")
+        }
+
+        "no query params returned when permalink does not include any of the whitelisted params" in new MoshimoshiSuccessContext {
+          override def permalink = "https://soundcloud.com/user-885473394?&other=should-not-be-included"
           val result = Await.result(resolveService.resolveUrl(session, permalink))
           result ==== Some(s"$baseUrl/users/2")
         }
@@ -62,7 +76,7 @@ class ResolveServiceSpec extends UnitSpecification {
 
     "tracks" >> {
       trait TracksContext extends Context with TrackRepresentationSpecContext {
-        override val permalink: String = "https://soundcloud.com/remover/impact-moderato/s-0aQFV0COfSw"
+        override def permalink: String = "https://soundcloud.com/remover/impact-moderato/s-0aQFV0COfSw"
       }
 
       "when moshimoshi resolves permalink to urn" >> {
@@ -84,6 +98,19 @@ class ResolveServiceSpec extends UnitSpecification {
           "returns track url" in new VisibleTrackContext {
             val result = Await.result(resolveService.resolveUrl(session, permalink))
             result ==== Some(s"$baseUrl/tracks/1324?secret_token=s-0aQFV0COfSw")
+          }
+
+          "preserves whitelisted query params" in new VisibleTrackContext {
+            override def permalink =
+              "https://soundcloud.com/tracks/1324?client_id=the-client-id&other=should-not-be-included"
+            val result = Await.result(resolveService.resolveUrl(session, permalink))
+            result ==== Some(s"$baseUrl/tracks/1324?client_id=the-client-id")
+          }
+
+          "no query params returned when permalink does not include any of the whitelisted params" in new VisibleTrackContext {
+            override def permalink = "https://soundcloud.com/tracks/1324?&other=should-not-be-included"
+            val result = Await.result(resolveService.resolveUrl(session, permalink))
+            result ==== Some(s"$baseUrl/tracks/1324")
           }
         }
 
@@ -115,7 +142,7 @@ class ResolveServiceSpec extends UnitSpecification {
 
     "playlists" >> {
       trait PlaylistsContext extends Context {
-        override val permalink: String = "https://soundcloud.com/remover/sets/tortoise/s-I5aouttNwKq"
+        override def permalink: String = "https://soundcloud.com/remover/sets/tortoise/s-I5aouttNwKq"
         val playlistUrn = Urn("soundcloud", "playlists", "1")
         val playlist = new PlaylistBuilder().build
       }
@@ -139,6 +166,19 @@ class ResolveServiceSpec extends UnitSpecification {
           "returns playlist url" in new VisiblePlaylistContext {
             val result = Await.result(resolveService.resolveUrl(session, permalink))
             result ==== Some(s"$baseUrl/playlists/1?secret_token=s-I5aouttNwKq")
+          }
+
+          "preserves whitelisted query params" in new VisiblePlaylistContext {
+            override def permalink =
+              "https://soundcloud.com/playlists/1?client_id=the-client-id&other=should-not-be-included"
+            val result = Await.result(resolveService.resolveUrl(session, permalink))
+            result ==== Some(s"$baseUrl/playlists/1?client_id=the-client-id")
+          }
+
+          "no query params returned when permalink does not include any of the whitelisted params" in new VisiblePlaylistContext {
+            override def permalink = "https://soundcloud.com/playlists/1?&other=should-not-be-included"
+            val result = Await.result(resolveService.resolveUrl(session, permalink))
+            result ==== Some(s"$baseUrl/playlists/1")
           }
         }
 

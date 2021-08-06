@@ -16,7 +16,7 @@ class ResourceURLsSpec extends UnitSpecification {
     val trackUrn = Urn("soundcloud", "tracks", "1")
   }
 
-  "#permalink" >> {
+  "#parsePermalinkUrl" >> {
     "with a user permalink" >> {
       trait UserContext extends Context {
         val userPermalink = "http://soundcloud.com/some-user"
@@ -101,6 +101,26 @@ class ResourceURLsSpec extends UnitSpecification {
       "it fails" in new UnknownContext {
         ResourceURLs.parsePermalinkUrl(unknownPermalink).toOption ==== None
       }
+    }
+  }
+
+  "queryParams" >> {
+    trait QueryParamsContext extends Scope {
+      val permalink = "http://soundcloud.com/some-user/a-track?client_id=the-client-id&other=should-not-be-included"
+    }
+
+    "only returns whitelisted params" in new QueryParamsContext {
+      ResourceURLs.queryParams(permalink) ==== "?client_id=the-client-id"
+    }
+
+    "returns empty string when there's no params to return" in new QueryParamsContext {
+      override val permalink = "http://soundcloud.com/some-user/a-track?other=should-not-be-included"
+      ResourceURLs.queryParams(permalink) ==== ""
+    }
+
+    "returns empty string when there's no params given" in new QueryParamsContext {
+      override val permalink = "http://soundcloud.com/some-user/a-track"
+      ResourceURLs.queryParams(permalink) ==== ""
     }
   }
 }

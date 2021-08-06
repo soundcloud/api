@@ -60,6 +60,13 @@ object ResourceURLs {
     }
   }
 
+  def queryParams(permalinkUrl: String): String = {
+    val parsedPermalinkUrl = Url.parse(permalinkUrl)
+    parsedPermalinkUrl.query.filter(param => acceptedParams.contains(param._1)).toString()
+  }
+
+  private def acceptedParams = Seq("client_id")
+
   private def withSecretTokenAsPathPart(url: Url, secretToken: Option[String]): String =
     secretToken match {
       case Some(secretTokenString) => url / secretTokenString
