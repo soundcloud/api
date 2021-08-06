@@ -36,6 +36,9 @@ We're actively exploring on how best to open up public access to our API again. 
 ### How can I update my app's `redirect_uri`?
 Our Support Team will be happy to help you with your URI's redirects. Please fill out a ticket [here] under "I need help with something else" and they will get back to you as soon as they can.
 
+### I have a questions about the SDKs. Can I post them here?
+Yes, you may. However, please note that we're not maintaining the Ruby, Python or JS SDK anymore and we're going to be announcing soon that we're going to poen it for maintainers from the community if there's interest. Our recommendation is to use the API directly and build your own client. We will also be exposing the underlying yaml file for the OpenAPI spec soon, so that folks can generate clients from this. 
+
 ### I am an official partner of SoundCloud. Can I use this issue tracker for a technical question?
 This repository only deals with the public-facing API. Any partnership-specific questions don’t belong here as this is a public forum; please contact your SoundCloud partnership contact.
 
