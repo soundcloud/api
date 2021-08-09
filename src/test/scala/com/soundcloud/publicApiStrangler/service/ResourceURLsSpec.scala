@@ -110,17 +110,21 @@ class ResourceURLsSpec extends UnitSpecification {
     }
 
     "only returns whitelisted params" in new QueryParamsContext {
-      ResourceURLs.queryParams(permalink) ==== "?client_id=the-client-id"
+      ResourceURLs.queryParams(permalink, None) ==== "?client_id=the-client-id"
+    }
+
+    "includes secret token in params if present" in new QueryParamsContext {
+      ResourceURLs.queryParams(permalink, Some("secret-token")) ==== "?client_id=the-client-id&secret_token=secret-token"
     }
 
     "returns empty string when there's no params to return" in new QueryParamsContext {
       override val permalink = "http://soundcloud.com/some-user/a-track?other=should-not-be-included"
-      ResourceURLs.queryParams(permalink) ==== ""
+      ResourceURLs.queryParams(permalink, None) ==== ""
     }
 
     "returns empty string when there's no params given" in new QueryParamsContext {
       override val permalink = "http://soundcloud.com/some-user/a-track"
-      ResourceURLs.queryParams(permalink) ==== ""
+      ResourceURLs.queryParams(permalink, None) ==== ""
     }
   }
 }

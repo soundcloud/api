@@ -107,6 +107,20 @@ class ResolveServiceSpec extends UnitSpecification {
             result ==== Some(s"$baseUrl/tracks/1324?client_id=the-client-id")
           }
 
+          "with secret token as path component, preserves secret token as well as whitelisted query params" in new VisibleTrackContext {
+            override def permalink =
+              "https://soundcloud.com/remover/impact-moderato/s-0aQFV0COfSw?client_id=the-client-id&other=should-not-be-included"
+            val result = Await.result(resolveService.resolveUrl(session, permalink))
+            result ==== Some(s"$baseUrl/tracks/1324?client_id=the-client-id&secret_token=s-0aQFV0COfSw")
+          }
+
+          "with secret token as query param, preserves secret token as well as whitelisted query params" in new VisibleTrackContext {
+            override def permalink =
+              "http://soundcloud.com/remover/impact-moderato?secret_token=thesecret&client_id=the-client-id&other=should-not-be-included"
+            val result = Await.result(resolveService.resolveUrl(session, permalink))
+            result ==== Some(s"$baseUrl/tracks/1324?client_id=the-client-id&secret_token=thesecret")
+          }
+
           "no query params returned when permalink does not include any of the whitelisted params" in new VisibleTrackContext {
             override def permalink = "https://soundcloud.com/tracks/1324?&other=should-not-be-included"
             val result = Await.result(resolveService.resolveUrl(session, permalink))
@@ -173,6 +187,20 @@ class ResolveServiceSpec extends UnitSpecification {
               "https://soundcloud.com/playlists/1?client_id=the-client-id&other=should-not-be-included"
             val result = Await.result(resolveService.resolveUrl(session, permalink))
             result ==== Some(s"$baseUrl/playlists/1?client_id=the-client-id")
+          }
+
+          "with secret token as path component, preserves secret token as well as whitelisted query params" in new VisiblePlaylistContext {
+            override def permalink =
+              "https://soundcloud.com/remover/sets/tortoise/s-I5aouttNwKq?client_id=the-client-id&other=should-not-be-included"
+            val result = Await.result(resolveService.resolveUrl(session, permalink))
+            result ==== Some(s"$baseUrl/playlists/1?client_id=the-client-id&secret_token=s-I5aouttNwKq")
+          }
+
+          "with secret token as query param, preserves secret token as well as whitelisted query params" in new VisiblePlaylistContext {
+            override def permalink =
+              "http://soundcloud.com/some-user/sets/a:playlist?secret_token=thesecret&client_id=the-client-id&other=should-not-be-included"
+            val result = Await.result(resolveService.resolveUrl(session, permalink))
+            result ==== Some(s"$baseUrl/playlists/1?client_id=the-client-id&secret_token=thesecret")
           }
 
           "no query params returned when permalink does not include any of the whitelisted params" in new VisiblePlaylistContext {
