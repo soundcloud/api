@@ -24,7 +24,7 @@ class ResolveService(
     Future.value(maybePermalink).flatMap {
       case Some(permalink) =>
         moshimoshiClient.resolveToUrn(session, permalink.normalized).flatMap {
-          case Some(urn) => {
+          case Some(urn) =>
             val preservedQueryParams = ResourceURLs.queryParams(url, permalink.secretToken)
             urn.collection match {
               case "users" => Future.value(Some(buildUserUrl(urn.identifier, preservedQueryParams)))
@@ -32,7 +32,6 @@ class ResolveService(
               case "playlists" => fetchAndBuildPlaylistUrl(session, permalink, urn, preservedQueryParams)
               case _ => Future.value(None)
             }
-          }
           case _ => Future.value(None)
         }
       case _ => Future.value(None)

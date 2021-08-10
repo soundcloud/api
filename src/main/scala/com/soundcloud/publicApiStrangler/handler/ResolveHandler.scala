@@ -3,10 +3,9 @@ package com.soundcloud.publicApiStrangler.handler
 import com.soundcloud.jvmkit.module.bff.session.UserAuthentication
 import com.soundcloud.jvmkit.module.http.server.{HandlerRequest, JsonResponseBuilder}
 import com.soundcloud.publicApiStrangler.service.resolve.ResolveService
-import com.twitter.finagle.http.Response
-import com.twitter.util.Future
 import com.soundcloud.publicApiStrangler.support.ErrorResponse
-import com.twitter.finagle.http.Status
+import com.twitter.finagle.http.{Response, Status}
+import com.twitter.util.Future
 
 class ResolveHandler(
     userAuthentication: UserAuthentication,
@@ -19,13 +18,12 @@ class ResolveHandler(
       maybeUrl match {
         case Some(url) =>
           resolveService.resolveUrl(session, url).map {
-            case Some(url) => {
+            case Some(url) =>
               JsonResponseBuilder(
                 status = Status.Found,
                 body = responseBody(url),
-                headers = Map("Location" -> url)
+                headers = Map("Location" -> url) ++ request.headerMap
               ).build
-            }
             case None => ErrorResponse.notFound("404 - Not Found")
           }
         case None => Future.value(JsonResponseBuilder.badRequest())
