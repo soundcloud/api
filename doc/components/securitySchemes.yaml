@@ -1,9 +1,3 @@
-ClientId:
-  in: query
-  type: apiKey
-  name: client_id
-  description: Your product key. This is not the same as the API key used for most requests. Deprecated, please use `AuthHeader` instead.
-  deprecated: true
 AuthHeader:
   in: header
   type: apiKey

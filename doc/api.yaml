@@ -42,8 +42,7 @@ paths:
       tags:
         - oauth
       security:
-        - ClientId: [ ]
-          AuthHeader: [ ]
+        - AuthHeader: [ ]
       parameters:
         - $ref: '#/components/parameters/client_id'
         - $ref: '#/components/parameters/redirect_uri'
@@ -65,8 +64,6 @@ paths:
       summary: This endpoint accepts POST requests and is used to provision access tokens once a user has authorized your application.
       tags:
         - oauth
-      security:
-        - ClientId: [ ]
       requestBody:
         required: true
         content:
@@ -391,8 +388,7 @@ paths:
       tags:
         - search
       security:
-        - ClientId: [ ]
-          AuthHeader: [ ]
+        - AuthHeader: [ ]
       parameters:
         - $ref: "#/components/parameters/q"
         - $ref: "#/components/parameters/ids"
@@ -436,8 +432,7 @@ paths:
                 - track[title]
                 - track[asset_data]
       security:
-        - ClientId: [ ]
-          AuthHeader: [ ]
+        - AuthHeader: [ ]
       responses:
         201:
           $ref: '#/components/responses/Track'
@@ -451,8 +446,7 @@ paths:
       tags:
         - search
       security:
-        - ClientId: [ ]
-          AuthHeader: [ ]
+        - AuthHeader: [ ]
       parameters:
         - $ref: "#/components/parameters/q"
         - $ref: '#/components/parameters/access'
@@ -495,8 +489,7 @@ paths:
       tags:
         - search
       security:
-        - ClientId: [ ]
-          AuthHeader: [ ]
+        - AuthHeader: [ ]
       parameters:
         - $ref: "#/components/parameters/q"
         - $ref: "#/components/parameters/ids"
@@ -516,8 +509,7 @@ paths:
       tags:
         - playlists
       security:
-        - ClientId: [ ]
-          AuthHeader: [ ]
+        - AuthHeader: [ ]
       parameters:
         - $ref: "#/components/parameters/playlist_id"
         - $ref: "#/components/parameters/secret_token"
@@ -559,8 +551,7 @@ paths:
       tags:
         - playlists
       security:
-        - ClientId: [ ]
-          AuthHeader: [ ]
+        - AuthHeader: [ ]
       parameters:
         - $ref: "#/components/parameters/fake_playlist_id"
       responses:
@@ -574,8 +565,7 @@ paths:
       tags:
         - playlists
       security:
-        - ClientId: [ ]
-          AuthHeader: [ ]
+        - AuthHeader: [ ]
       parameters:
         - $ref: "#/components/parameters/playlist_id"
         - $ref: "#/components/parameters/secret_token"
@@ -594,7 +584,6 @@ paths:
       tags:
         - playlists
       security:
-        - ClientId: [ ]
         - AuthHeader: [ ]
       parameters:
         - $ref: '#/components/parameters/playlist_id'
@@ -612,7 +601,6 @@ paths:
       tags:
         - tracks
       security:
-        - ClientId: [ ]
         - AuthHeader: [ ]
       parameters:
         - $ref: '#/components/parameters/track_id'
@@ -670,7 +658,6 @@ paths:
       tags:
         - tracks
       security:
-        - ClientId: [ ]
         - AuthHeader: [ ]
       parameters:
         - $ref: '#/components/parameters/track_id'
@@ -688,7 +675,6 @@ paths:
       tags:
         - tracks
       security:
-        - ClientId: [ ]
         - AuthHeader: [ ]
       parameters:
         - $ref: '#/components/parameters/track_id'
@@ -707,8 +693,7 @@ paths:
       tags:
         - tracks
       security:
-        - ClientId: [ ]
-          AuthHeader: [ ]
+        - AuthHeader: [ ]
       parameters:
         - $ref: '#/components/parameters/track_id'
       requestBody:
@@ -747,7 +732,6 @@ paths:
       tags:
         - tracks
       security:
-        - ClientId: [ ]
         - AuthHeader: [ ]
       parameters:
         - $ref: '#/components/parameters/track_id'
@@ -766,7 +750,6 @@ paths:
       tags:
         - tracks
       security:
-        - ClientId: [ ]
         - AuthHeader: [ ]
       parameters:
         - $ref: '#/components/parameters/track_id'
@@ -784,7 +767,6 @@ paths:
       tags:
         - tracks
       security:
-        - ClientId: [ ]
         - AuthHeader: [ ]
       parameters:
         - $ref: '#/components/parameters/track_id'
@@ -805,8 +787,7 @@ paths:
       tags:
         - miscellaneous
       security:
-        - ClientId: [ ]
-          AuthHeader: [ ]
+        - AuthHeader: [ ]
       parameters:
         - $ref: '#/components/parameters/url'
       responses:
@@ -820,8 +801,7 @@ paths:
       tags:
         - users
       security:
-        - ClientId: [ ]
-          AuthHeader: [ ]
+        - AuthHeader: [ ]
       parameters:
         - $ref: '#/components/parameters/user_id'
       responses:
@@ -838,8 +818,7 @@ paths:
       tags:
         - users
       security:
-        - ClientId: [ ]
-          AuthHeader: [ ]
+        - AuthHeader: [ ]
       parameters:
         - $ref: '#/components/parameters/user_id'
         - $ref: '#/components/parameters/limit'
@@ -856,8 +835,7 @@ paths:
       tags:
         - users
       security:
-        - ClientId: [ ]
-          AuthHeader: [ ]
+        - AuthHeader: [ ]
       parameters:
         - $ref: '#/components/parameters/user_id'
         - $ref: '#/components/parameters/limit'
@@ -873,8 +851,7 @@ paths:
       tags:
         - users
       security:
-        - ClientId: [ ]
-          AuthHeader: [ ]
+        - AuthHeader: [ ]
       parameters:
         - $ref: '#/components/parameters/user_id'
         - $ref: '#/components/parameters/limit'
@@ -891,8 +868,7 @@ paths:
       tags:
         - users
       security:
-        - ClientId: [ ]
-          AuthHeader: [ ]
+        - AuthHeader: [ ]
       parameters:
         - $ref: '#/components/parameters/user_id'
         - $ref: '#/components/parameters/following_id'
@@ -909,8 +885,7 @@ paths:
       tags:
         - users
       security:
-        - ClientId: [ ]
-          AuthHeader: [ ]
+        - AuthHeader: [ ]
       parameters:
         - $ref: '#/components/parameters/user_id'
         - $ref: '#/components/parameters/access'
@@ -928,8 +903,7 @@ paths:
       tags:
         - users
       security:
-        - ClientId: [ ]
-          AuthHeader: [ ]
+        - AuthHeader: [ ]
       parameters:
         - $ref: '#/components/parameters/user_id'
         - $ref: '#/components/parameters/access'
@@ -946,8 +920,7 @@ paths:
       tags:
         - users
       security:
-        - ClientId: [ ]
-          AuthHeader: [ ]
+        - AuthHeader: [ ]
       parameters:
         - $ref: '#/components/parameters/user_id'
         - $ref: '#/components/parameters/limit'
@@ -964,8 +937,7 @@ paths:
       tags:
         - users
       security:
-        - ClientId: [ ]
-          AuthHeader: [ ]
+        - AuthHeader: [ ]
       parameters:
         - $ref: '#/components/parameters/user_id'
         - $ref: '#/components/parameters/access'
@@ -986,8 +958,7 @@ paths:
       tags:
         - users
       security:
-        - ClientId: [ ]
-          AuthHeader: [ ]
+        - AuthHeader: [ ]
       parameters:
         - $ref: '#/components/parameters/user_id'
         - $ref: '#/components/parameters/limit'
