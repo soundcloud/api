@@ -22,7 +22,7 @@ class ResolveHandler(
               JsonResponseBuilder(
                 status = Status.Found,
                 body = responseBody(url),
-                headers = Map("Location" -> url) ++ request.headerMap
+                headers = Map("Location" -> url)
               ).build
             case None => ErrorResponse.notFound("404 - Not Found")
           }
