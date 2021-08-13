@@ -31,7 +31,7 @@ class ClientApplicationAuthFilterSpec extends Specification with Mockito {
       new ClientApplicationAuthFilter(new FakeUserAuthentication(session), telemetry, router, oauthHeaderRollout)
   }
 
-  "with allowlisted application id" >> {
+  "with present application id" >> {
     "forwards the request if Auth header is present, rollout is active" in new Context {
       private val r: Request = Request("/foo")
       r.authorization_=("OAuth 1234")
@@ -143,6 +143,18 @@ class ClientApplicationAuthFilterSpec extends Specification with Mockito {
         1
       )
       telemetry.getSampleValue("deprecated_auth_by_app_total", Seq("appid"), Seq("999")) === None
+    }
+
+    "forwards request for allowlisted apps, rollout active" in new Context {
+      service.apply(request) returns Future.value(Response(Status.Ok))
+
+      ClientApplicationAuthFilter.allowlistedApplicationIds.foreach { appId =>
+        val session = new UserSessionBuilder().setAgent(new Urn("soundcloud", "application", appId)).build()
+        val filter =
+          new ClientApplicationAuthFilter(new FakeUserAuthentication(session), telemetry, router, oauthHeaderRollout)
+
+        Await.result(filter.apply(request, service)).status ==== Status.Ok
+      }
     }
   }
 

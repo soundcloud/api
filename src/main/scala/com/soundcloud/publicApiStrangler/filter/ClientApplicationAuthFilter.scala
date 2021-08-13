@@ -81,15 +81,20 @@ class ClientApplicationAuthFilter(
           appAuthTypeCounter.labels(authType, path).inc()
           if (oauthClientParams.exists(paramAsType(_) == authType)) deprecatedAuthByAppCounter.labels(clientAppId).inc()
 
-          // allow only Authorization header, under the rollout flag
-          oauthHeaderRolloutFlag().flatMap {
-            case true =>
-              if (isAuthHeaderPresent(authType)) {
-                service(request)
-              } else {
-                Future.value(ErrorResponse(Status.Unauthorized, invalidAuthenticationError))
-              }
-            case _ => service(request)
+          // exclude allowlisted partners from Auth header enforcement
+          if (ClientApplicationAuthFilter.allowlistedApplicationIds.contains(clientAppId)) {
+            service(request)
+          } else {
+            // allow only Authorization header, under the rollout flag
+            oauthHeaderRolloutFlag().flatMap {
+              case true =>
+                if (isAuthHeaderPresent(authType)) {
+                  service(request)
+                } else {
+                  Future.value(ErrorResponse(Status.Unauthorized, invalidAuthenticationError))
+                }
+              case _ => service(request)
+            }
           }
         }
       }
@@ -127,6 +132,19 @@ object ClientApplicationAuthFilter {
     "3152", // SoundCloud Android
     "3537", // SoundCloud Desktop
     "60973" // SoundCloud Flash Widget
+  )
+
+  /** Application that are temporary excluded from auth changes due to upgrade complications on their side */
+  val allowlistedApplicationIds = Set(
+    "313807", // Serato DJ Pro
+    "313871", // Serato Lite
+    "192783", // Sonos
+    "192796", // Sonos Dev - SC GO
+    "192798", // Sonos Int
+    "192799", // Sonos Test
+    "192801", // Sonos Perf
+    "192802", // Sonos Stage
+    "201750" // Sonos CI
   )
 
   val invalidResponseTypeError = "Authorization is only allowed for response_type=code."
