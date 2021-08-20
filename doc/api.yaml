@@ -169,39 +169,6 @@ paths:
           $ref: "#/components/responses/Activities"
         401:
           $ref: '#/components/responses/Unauthorized'
-  /me/connections:
-    get:
-      summary: Returns a list of the authenticated user's connected social accounts.
-      deprecated: true
-      tags:
-        - me
-      security:
-        - AuthHeader: [ ]
-      parameters:
-        - $ref: '#/components/parameters/limit'
-        - $ref: '#/components/parameters/offset'
-      responses:
-        200:
-          $ref: '#/components/responses/Connections'
-        401:
-          $ref: '#/components/responses/Unauthorized'
-  /me/connections/{connection_id}:
-    get:
-      summary: Returns the authenticated user's connected social account.
-      deprecated: true
-      tags:
-        - me
-      security:
-        - AuthHeader: [ ]
-      parameters:
-        - $ref: '#/components/parameters/connection_id'
-      responses:
-        200:
-          $ref: '#/components/responses/Connection'
-        401:
-          $ref: '#/components/responses/Unauthorized'
-        404:
-          $ref: '#/components/responses/NotFound'
   /me/likes/tracks:
     get:
       summary: Returns a list of favorited or liked tracks of the authenticated user.
@@ -1112,12 +1079,6 @@ components:
   schemas:
     OAuthToken:
       $ref: './components/schemas/OAuthToken.yaml'
-    Connection:
-      $ref: './components/schemas/Connection.yaml'
-    Connections:
-      type: array
-      items:
-        $ref: '#/components/schemas/Connection'
     TrackMetadataRequest:
       $ref: './components/schemas/TrackMetadataRequest.yaml'
     CreateUpdatePlaylistRequest:
@@ -1222,11 +1183,6 @@ components:
         collection:
           $ref: "#/components/examples/Comment/value"
         next_href: https://api.soundcloud.com/collection?page_size=10&cursor=1234567
-    Connection:
-      $ref: './components/examples/Connection.yaml'
-    Connections:
-      value:
-        $ref: "#/components/examples/Connection/value"
     Playlist:
       $ref: './components/examples/Playlist.yaml'
     Playlists:

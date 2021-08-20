@@ -12,7 +12,6 @@ var skipDeprecatedTransactionIds = [
 var skipTransactionIds = [
     "POST (200) /oauth2/token",
     "POST (401) /oauth2/token",
-    "GET (200) /me/connections/123456",
     "PUT (200) /tracks/308946187",
     "POST (201) /tracks/308946187/comments"
 ];

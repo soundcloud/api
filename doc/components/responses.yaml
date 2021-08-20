@@ -92,24 +92,6 @@ TooManyRequests:
           $ref: '#/components/examples/TooManyRequests'
       schema:
         $ref: '#/components/schemas/TooManyRequests'
-Connection:
-  description: Success
-  content:
-    application/json; charset=utf-8:
-      schema:
-        $ref: '#/components/schemas/Connection'
-      examples:
-        default:
-          $ref: "#/components/examples/Connection"
-Connections:
-  description: Success
-  content:
-    application/json; charset=utf-8:
-      schema:
-        $ref: '#/components/schemas/Connections'
-      examples:
-        default:
-          $ref: "#/components/examples/Connections"
 User:
   description: Success
   content:

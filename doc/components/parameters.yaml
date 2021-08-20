@@ -202,14 +202,6 @@ comment_id:
     type: integer
   description: SoundCloud comment id
   example: 123456
-connection_id:
-  in: path
-  name: connection_id
-  required: true
-  schema:
-    type: integer
-  description: SoundCloud connection id
-  example: 123456
 follower_id:
   in: path
   name: follower_id

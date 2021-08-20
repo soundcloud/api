@@ -33,8 +33,6 @@ class DeprecatedEndpointUsageFilter(userAuthentication: UserAuthentication, tele
     "/users/:userId/favorites",
     "/users/me",
     "/connect",
-    "/me/connections",
-    "/me/connections/:id",
     "/playlists",
     Routing.playlistIdPath,
     "/resolve",

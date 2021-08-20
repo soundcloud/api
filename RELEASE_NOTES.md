@@ -1,3 +1,3 @@
 <!--- Remove everything below and start over --->
 
-Fixed an issue on the `GET /resolve` endpoint where the Location header was missing from the response.
+Removed the deprecated endpoints `GET /me/connections` and `GET /me/connections/{connection_id}`.
