@@ -167,4 +167,4 @@ publish-changelog:
 
 .PHONY: validate-manifest
 validate-manifest:
-	sc manifest validate
+	sc manifest validate -m manifest.json

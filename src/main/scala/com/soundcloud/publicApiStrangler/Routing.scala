@@ -57,8 +57,7 @@ object Routing {
   }
 
   def forMothershipDispatcher(mothershipDispatcher: DispatchToMothershipHandler): List[(Method, String, Handler)] = {
-    route(Method.Get, connectPath, mothershipDispatcher.dispatch) :::
-      route(Method.Get, "/me/connections", mothershipDispatcher.dispatch) :::
+    route(Method.Get, "/me/connections", mothershipDispatcher.dispatch) :::
       route(Method.Get, "/me/connections/:id", mothershipDispatcher.dispatch) :::
       route(Method.Post, "/playlists", mothershipDispatcher.dispatch) :::
       route(Method.Put, playlistIdPath, mothershipDispatcher.dispatch) :::
@@ -165,6 +164,10 @@ object Routing {
 
   def forResolveHandler(resolveHandler: ResolveHandler): List[(Method, String, Handler)] = {
     route(Method.Get, "/resolve", resolveHandler.resolve)
+  }
+
+  def forConnectHandler(connectHandler: ConnectHandler): List[(Method, String, Handler)] = {
+    route(Method.Get, connectPath, connectHandler.connect)
   }
 
   def forDummyHandler(): List[(Method, String, Handler)] = {

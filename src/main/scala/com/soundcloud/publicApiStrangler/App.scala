@@ -100,6 +100,7 @@ object App {
           forMeHandler(handlers.meHandler),
           forUsersHandler(handlers.usersHandler),
           forResolveHandler(handlers.resolveHandler),
+          forConnectHandler(handlers.connectHandler),
           forDummyHandler()
         )
       )

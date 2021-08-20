@@ -91,4 +91,7 @@ class Handlers(
   val usersHandler = new UsersHandler(userAuthentication, userRepresentationsService)
 
   val resolveHandler = new ResolveHandler(userAuthentication, resolveService)
+
+  val connectHandler = new ConnectHandler(userAuthentication, mothershipDispatcher)
+
 }
