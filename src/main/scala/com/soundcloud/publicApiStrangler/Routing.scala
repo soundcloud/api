@@ -60,8 +60,7 @@ object Routing {
     route(Method.Post, "/playlists", mothershipDispatcher.dispatch) :::
       route(Method.Put, playlistIdPath, mothershipDispatcher.dispatch) :::
       route(Method.Post, "/me/playlists", mothershipDispatcher.dispatch) :::
-      route(Method.Put, "/me/playlists/:trackId", mothershipDispatcher.dispatch) :::
-      route(Method.Get, "/users/:userId/web-profiles", mothershipDispatcher.dispatch)
+      route(Method.Put, "/me/playlists/:trackId", mothershipDispatcher.dispatch)
   }
 
   def forOauthGrantExchange(handler: Handler): List[(Method, String, Handler)] = {
@@ -95,6 +94,10 @@ object Routing {
 
   def forUsersHandler(usersHandler: UsersHandler): List[(Method, String, Handler)] = {
     route(Method.Get, userIdPath, usersHandler.user)
+  }
+
+  def forWebProfilesHandler(webProfilesHandler: WebProfilesHandler): List[(Method, String, Handler)] = {
+    route(Method.Get, "/users/:userId/web-profiles", webProfilesHandler.getWebProfiles)
   }
 
   def forSearchHandler(searchHandler: SearchHandler): List[(Method, String, Handler)] = {

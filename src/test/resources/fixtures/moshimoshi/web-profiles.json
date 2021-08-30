@@ -1,0 +1,38 @@
+[
+  {
+    "id": 9222658,
+    "url": "http://www.hanszimmer.com/",
+    "username": "",
+    "title": "HansZimmer.com",
+    "created_at": "2012/07/03 00:17:07 +0000",
+    "service": "personal",
+    "user": {
+      "urn": "soundcloud:users:19645907",
+      "url": "http://moshimoshi.mothership.lb.db.s-cloud.net/users/soundcloud:users:19645907"
+    }
+  },
+  {
+    "id": 9222659,
+    "url": "https://www.facebook.com/hanszimmer",
+    "username": "hanszimmer",
+    "title": null,
+    "created_at": "2012/07/03 00:17:07 +0000",
+    "service": "facebook",
+    "user": {
+      "urn": "soundcloud:users:19645907",
+      "url": "http://moshimoshi.mothership.lb.db.s-cloud.net/users/soundcloud:users:19645907"
+    }
+  },
+  {
+    "id": 9222660,
+    "url": "https://twitter.com/#!/realhanszimmer",
+    "username": "realhanszimmer",
+    "title": null,
+    "created_at": "2012/07/03 00:17:07 +0000",
+    "service": "twitter",
+    "user": {
+      "urn": "soundcloud:users:19645907",
+      "url": "http://moshimoshi.mothership.lb.db.s-cloud.net/users/soundcloud:users:19645907"
+    }
+  }
+]

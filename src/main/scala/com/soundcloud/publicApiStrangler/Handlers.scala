@@ -94,4 +94,5 @@ class Handlers(
 
   val connectHandler = new ConnectHandler(userAuthentication, mothershipDispatcher)
 
+  val webProfilesHandler = new WebProfilesHandler(userAuthentication, moshimoshiClient)
 }

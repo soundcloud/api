@@ -101,6 +101,7 @@ object App {
           forUsersHandler(handlers.usersHandler),
           forResolveHandler(handlers.resolveHandler),
           forConnectHandler(handlers.connectHandler),
+          forWebProfilesHandler(handlers.webProfilesHandler),
           forDummyHandler()
         )
       )

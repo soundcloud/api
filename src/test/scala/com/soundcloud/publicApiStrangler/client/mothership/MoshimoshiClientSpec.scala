@@ -19,6 +19,7 @@ import org.mockito.Mockito.when
 import play.api.libs.json._
 import com.soundcloud.jvmkit.module.outcome._
 import com.soundcloud.publicApiStrangler.client.comments.MoshimoshiCommentsComment
+import com.soundcloud.publicApiStrangler.client.mothership.response.representation.WebProfile
 
 class MoshimoshiClientSpec extends UnitSpecification {
   trait Context extends Scope {
@@ -160,4 +161,29 @@ class MoshimoshiClientSpec extends UnitSpecification {
       Await.result(client.userPlaylists(anonymousSession, userUrn, pagination)) ==== ChronoResponse.emptyResponse
     }
   }
+
+  "#userWebProfiles" >> {
+    trait WebProfilesContext extends Context {
+      val userUrn = Urn("soundcloud", "users", "1")
+
+      def path = Path("/users") / userUrn.identifier / "web_profiles"
+
+      def fetch = Await.result(client.userWebProfiles(session, userUrn))
+    }
+
+    "found response" in new WebProfilesContext {
+      expectOkResponse(path, webProfiles)
+
+      val expectedWebProfiles = webProfiles.as[List[WebProfile]]
+
+      fetch ==== expectedWebProfiles
+    }
+
+    "invalid response" in new WebProfilesContext {
+      expectInternalErrorResponse(path)
+
+      fetch must throwA[IllegalStateException]
+    }
+  }
+
 }

@@ -11,8 +11,9 @@ import com.soundcloud.jvmkit.module.util.{Path, Urn}
 import com.soundcloud.publicApiStrangler.client.chrono.ChronoResponse
 import com.soundcloud.publicApiStrangler.client.comments.MoshimoshiCommentsComment
 import com.soundcloud.publicApiStrangler.client.mothership.response.mapper.UserRepresentationMapper
-import com.soundcloud.publicApiStrangler.client.mothership.response.representation.UserRepresentation
+import com.soundcloud.publicApiStrangler.client.mothership.response.representation.{UserRepresentation, WebProfile}
 import com.soundcloud.publicApiStrangler.client.support.FetchClient
+import com.soundcloud.publicApiStrangler.client.support.ResponseHandlers.ListResponse
 import com.soundcloud.publicApiStrangler.handler.comments.CreateCommentParams
 import com.soundcloud.publicApiStrangler.service.pagination.CursorBasedPagination
 import com.twitter.finagle.http.Status
@@ -101,6 +102,20 @@ class MoshimoshiClient(
         case NonFatal(_) =>
           NotValid("Something went wrong").bad
       }
+  }
+
+  def userWebProfiles(
+      session: UserSession,
+      userUrn: Urn
+  ): Future[List[WebProfile]] = {
+    service
+      .getWithSession(
+        session,
+        Path("/users") / userUrn.identifier / "web_profiles",
+        Params.empty,
+        Headers.empty
+      )
+      .map(ListResponse(_).map(_.as[WebProfile]))
   }
 
   protected def parseRateLimitedError(errorJson: JsValue): Option[RateLimitedError] =
