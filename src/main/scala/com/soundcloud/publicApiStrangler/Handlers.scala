@@ -92,7 +92,7 @@ class Handlers(
 
   val resolveHandler = new ResolveHandler(userAuthentication, resolveService)
 
-  val connectHandler = new ConnectHandler(userAuthentication, mothershipDispatcher)
+  val connectHandler = new ConnectHandler()
 
   val webProfilesHandler = new WebProfilesHandler(userAuthentication, moshimoshiClient)
 }
