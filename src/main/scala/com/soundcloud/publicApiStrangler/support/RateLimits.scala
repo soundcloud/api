@@ -3,6 +3,8 @@ package com.soundcloud.publicApiStrangler.support
 import com.soundcloud.jvmkit.module.bff.ratelimiting.RateLimitClassifier
 import com.soundcloud.jvmkit.module.http.server.HandlerRequest
 import com.soundcloud.publicApiStrangler.handler.search.SearchHandler._
+import com.soundcloud.publicApiStrangler.support.oauth.ClientCredentialsGrant
+import com.twitter.finagle.http.Method
 
 object RateLimits {
   private val searchParams = defaultParams ++ trackParams ++ playlistParams
@@ -37,6 +39,21 @@ object RateLimits {
   private def dummyRequests: RateLimitClassifier.rateLimitClassifier = {
     case req: HandlerRequest if req.path.startsWith("/dummy") => true
   }
+
+  private val oauthGrantExchangePath = "/oauth2/token"
+  private val clientCredentialsExchangeBucket = "client-credentials-exchange"
+  private def clientCredentialsExchangeRequest: RateLimitClassifier.rateLimitClassifier = {
+    case req: HandlerRequest if matchesClientCredentialsExchangeRequest(req) => true
+  }
+
+  private def matchesClientCredentialsExchangeRequest(req: HandlerRequest): Boolean = {
+    (req.method == Method.Post) &&
+    req.path == oauthGrantExchangePath &&
+    req.params.get("grant_type").contains(ClientCredentialsGrant.Name)
+  }
+
+  val clientCredentialsExchangeRateLimiter =
+    new RateLimitClassifier(clientCredentialsExchangeBucket, clientCredentialsExchangeRequest)
 
   val dummyRateLimiter = new RateLimitClassifier(dummyBucket, dummyRequests)
 }
