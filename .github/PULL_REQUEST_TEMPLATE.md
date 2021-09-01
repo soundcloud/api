@@ -1,4 +1,4 @@
-[JIRA](https://jira.soundcloud.com/browse/TEMP-1111)
+[JIRA](https://soundcloud.atlassian.net/browse/TEMP-1111)
 
 ## Scope
 

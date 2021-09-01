@@ -197,7 +197,7 @@ object TrackRepresentationBuilder {
   ): Option[String] = {
     path.map(p => {
       if (agentUrn.contains(AbletonLiveApplication)) {
-        // TODO: remove this workaround once better solution for Ableton integration is found: https://jira.soundcloud.org/browse/INT-279
+        // TODO: remove this workaround once better solution for Ableton integration is found: https://soundcloud.atlassian.net/browse/INT-279
         p
       } else if (!isPublic && secretParam.isDefined) {
         val secret = URLEncoder.encode(secretParam.get, "UTF-8")
