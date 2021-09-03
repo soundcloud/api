@@ -4,7 +4,8 @@ case class AccessTokenResponse(
     accessToken: String,
     expiresIn: Option[Int],
     refreshToken: Option[String],
-    scope: Seq[String]
+    scope: Seq[String],
+    tokenType: String = "bearer"
 )
 
 object AccessTokenResponse {

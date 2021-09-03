@@ -1,3 +1,3 @@
 <!--- Remove everything below and start over --->
 
-Removed the deprecated endpoints `GET /me/connections` and `GET /me/connections/{connection_id}`.
+Added a new parameter `token_type=bearer` to the response of `/oauth2/token` endpoint.

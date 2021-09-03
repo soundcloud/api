@@ -76,7 +76,7 @@ class OAuthGrantExchangeHandlerSpec extends UnitSpecification with DataTables {
                 refreshToken: Option[String] = None,
                 scope: String = ""
             ) = {
-              val base = Json.obj("access_token" -> accessToken, "scope" -> scope)
+              val base = Json.obj("access_token" -> accessToken, "scope" -> scope, "token_type" -> "bearer")
               val expiresInJson = expiresIn.map(value => Json.obj("expires_in" -> value)).getOrElse(Json.obj())
               val refreshTokenJson =
                 refreshToken.map(value => Json.obj("refresh_token" -> value)).getOrElse(Json.obj())

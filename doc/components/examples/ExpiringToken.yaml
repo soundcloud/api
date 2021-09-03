@@ -3,3 +3,4 @@ value:
   expires_in: 3599
   scope: ''
   refresh_token: some string
+  token_type: bearer

@@ -128,7 +128,7 @@ class GrantExchangeServiceSpec extends UnitSpecification {
           )
         val ctx = ctxFactory(response)
 
-        ctx.result ==== AccessTokenResponse("token", Some(200), Some("refresh"), Seq("scope")).good
+        ctx.result ==== AccessTokenResponse("token", Some(200), Some("refresh"), Seq("scope"), "bearer").good
       }
     }
 
