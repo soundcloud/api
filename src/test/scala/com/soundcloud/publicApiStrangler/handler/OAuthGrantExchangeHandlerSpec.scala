@@ -1,7 +1,7 @@
 package com.soundcloud.publicApiStrangler.handler
 
 import com.soundcloud.jvmkit.module.http.server.HandlerRequest
-import com.soundcloud.jvmkit.module.outcome.{GoodOps, NotAllowed, NotAuthorized, NotValid, Outcome}
+import com.soundcloud.jvmkit.module.outcome.{GoodOps, NotAllowed, NotAuthorized, NotFound, NotValid, Outcome}
 import com.soundcloud.jvmkit.module.telemetry.Telemetry
 import com.soundcloud.publicApiStrangler.service.oauth.{AccessTokenResponse, GrantExchangeService}
 import com.soundcloud.publicApiStrangler.support.oauth._
@@ -117,10 +117,11 @@ class OAuthGrantExchangeHandlerSpec extends UnitSpecification with DataTables {
         "when the exchange fails" >> {
           "it returns an error object with the appropriate message and error code" >> {
             // @formatter:off
-              "serviceResult"           | "expectedMessage" | "expectedStatus"    |>
-              NotValid("invalid_grant") ! "invalid_grant"   ! Status.Unauthorized |
-              NotAuthorized("gah!")     ! "gah!"            ! Status.Unauthorized |
-              NotAllowed("noooo")       ! ""                ! Status.BadRequest   |>
+              "serviceResult"           | "expectedMessage" | "expectedStatus"       |>
+              NotValid("invalid_grant") ! "invalid_grant"   ! Status.Unauthorized    |
+              NotAuthorized("gah!")     ! "gah!"            ! Status.Unauthorized    |
+              NotAllowed("irks")        ! "irks"            ! Status.TooManyRequests |
+              NotFound("noooo")         ! ""                ! Status.BadRequest      |>
               // @formatter:on
             { (serviceResult, expectedMessage, expectedStatus) =>
               new Context {

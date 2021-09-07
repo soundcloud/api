@@ -36,6 +36,7 @@ message AccessGrantExchangeResponse {
     INVALID_CLIENT = 0;
     INVALID_GRANT = 1;
     INVALID_SCOPE = 2;
+    RATE_LIMIT_EXCEEDED = 3;
   }
 }
 

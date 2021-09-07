@@ -36,6 +36,9 @@ class OauthGrantExchangeHandler(
       case Bad(NotAuthorized(reason)) =>
         incrementGrantExchangeCounter(request.accessGrant, Status.Unauthorized, reason)
         buildErrorResponse(Status.Unauthorized, reason)
+      case Bad(NotAllowed(reason)) =>
+        incrementGrantExchangeCounter(request.accessGrant, Status.TooManyRequests, reason)
+        buildErrorResponse(Status.TooManyRequests, reason)
       case Bad(_) =>
         incrementGrantExchangeCounter(request.accessGrant, Status.BadRequest, "this_should_not_happen")
         buildErrorResponse(Status.BadRequest, "")
