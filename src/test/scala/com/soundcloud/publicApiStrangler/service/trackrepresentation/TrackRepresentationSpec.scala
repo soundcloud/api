@@ -48,7 +48,7 @@ trait TrackRepresentationSpecContext {
     description = Some("Follow @samstarling !"),
     createdAt = new LocalDateTime(2015, 2, 15, 16, 47, 27),
     disabledAt = None,
-    downloadable = false,
+    downloadable = true,
     duration = 60000,
     genre = Some("future bass"),
     permalinkUrl = Some("http://soundcloud.com/nirvana/plsty-remix"),
@@ -591,6 +591,19 @@ class TrackRepresentationSpec extends UnitSpecification {
     }
   }
 
+  "download url" >> {
+    trait Context extends Scope with TrackRepresentationSpecContext {
+      override def defaultTrack: VisibleTrack = super.defaultTrack.copy(downloadable = false)
+    }
+
+    "no download url present when track is non-downloadable" in new Context {
+      val trackRepresentation: TrackRepresentation = createTrackRepresentationFromVisibleTrack()
+      val json = Json.toJson(trackRepresentation)
+
+      json \ "download_url" ==== JsDefined(JsNull)
+    }
+  }
+
   "track representation from visible track all fields" >> {
     trait Context extends Scope with TrackRepresentationSpecContext
 
@@ -601,6 +614,7 @@ class TrackRepresentationSpec extends UnitSpecification {
       trackJson \ "created_at" ==== JsDefined(JsString("2015/02/15 16:47:27 +0000"))
       trackJson \ "duration" ==== JsDefined(JsNumber(60000))
       trackJson \ "commentable" ==== JsDefined(JsBoolean(false))
+      trackJson \ "downloadable" ==== JsDefined(JsBoolean(true))
       trackJson \ "tag_list" ==== JsDefined(
         JsString("system:foo system:bar \"awesomeness:very high\" dubstep folk \"tag with spaces\"")
       )

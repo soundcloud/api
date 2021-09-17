@@ -117,8 +117,8 @@ object TrackRepresentationBuilder {
       releaseDay = releaseDayFor(visibleTrack),
       releaseMonth = releaseMonthFor(visibleTrack),
       uri = urlFor(visibleTrack.urn, visibleTrack.public, secretToken),
-      streamUrl = getStreamUrl(visibleTrack),
-      downloadUrl = urlFor(visibleTrack.urn, visibleTrack.public, "download", secretToken),
+      streamUrl = getConditionalUrl(visibleTrack, visibleTrack.access.contains(Access.Blocked), "stream"),
+      downloadUrl = getConditionalUrl(visibleTrack, !visibleTrack.downloadable, "download"),
       permalinkUrl = secretPath(visibleTrack.permalinkUrl, visibleTrack.public, secretToken),
       secretUri = getSecretUri(visibleTrack),
       commentCount = visibleTrack.counts.comments,
@@ -231,12 +231,12 @@ object TrackRepresentationBuilder {
     }
   }
 
-  private def getStreamUrl(visibleTrack: VisibleTrack): Option[String] = {
+  private def getConditionalUrl(visibleTrack: VisibleTrack, condition: Boolean, subresource: String): Option[String] = {
     val secretToken = getSecretTokenForPrivateTrack(visibleTrack.public, visibleTrack.secretToken)
-    if (visibleTrack.access.contains(Access.Blocked))
+    if (condition)
       None
     else {
-      urlFor(visibleTrack.urn, visibleTrack.public, "stream", secretToken)
+      urlFor(visibleTrack.urn, visibleTrack.public, subresource, secretToken)
     }
   }
 

@@ -237,7 +237,11 @@ class TrackRepresentationsServiceSpec extends TrackRepresentationsSpecificationC
     "private urls" >> {
       "track token in params is correct" >> {
         "appends the track secret token to urls" in new Context {
-          val track = trackVisibilityTrack().copy(permalinkUrl = Some("http://soundcloud.com/foo/bar"), public = false)
+          val track = trackVisibilityTrack().copy(
+            permalinkUrl = Some("http://soundcloud.com/foo/bar"),
+            public = false,
+            downloadable = true
+          )
           override val trackRequest = TrackRequest(trackUrn, Some("secr3t-Token"))
 
           val trackOwnerSession = new UserSessionBuilder().setUser(trackOwner.urn).build()
