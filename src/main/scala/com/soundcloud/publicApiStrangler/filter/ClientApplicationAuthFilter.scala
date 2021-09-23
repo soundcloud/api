@@ -144,7 +144,9 @@ object ClientApplicationAuthFilter {
     "192799", // Sonos Test
     "192801", // Sonos Perf
     "192802", // Sonos Stage
-    "201750" // Sonos CI
+    "201750", // Sonos CI
+    "277251", // SoundCloud Developer Candidate Playground
+    "179373" // Android Pairing Interview
   )
 
   val invalidResponseTypeError = "Authorization is only allowed for response_type=code."
