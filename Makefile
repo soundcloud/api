@@ -1,3 +1,5 @@
+DEV_STACK := sbt-jdk-8
+
 APP_NAME := $(shell sc manifest name)
 PUBLIC_API_STRANGLER_VERSION := $(shell sc artifact-manager package-version)
 
@@ -14,8 +16,8 @@ ifeq ($(USE_CRUN),false)
 	SBT = sbt
 	SBT_INTERACTIVE = sbt
 else
-	SBT = sc crun sbt -- sbt
-	SBT_INTERACTIVE = sc crun -i sbt -- sbt
+	SBT = sc crun $(DEV_STACK) -- sbt
+	SBT_INTERACTIVE = sc crun -i $(DEV_STACK) -- sbt
 endif
 
 default: precheckin
@@ -24,7 +26,7 @@ dependencies:
 	docker-compose up --force-recreate -d
 
 run: dependencies
-	sc crun sbt -l --config=development --expose-port 5000:5000,5001:5001,5005:5005 -- sbt run
+	sc crun $(DEV_STACK) -l --config=development --expose-port 5000:5000,5001:5001,5005:5005 -- sbt run
 
 run-no-docker:
 	set -o allexport; source config/development; set +o allexport; sbt run
@@ -56,7 +58,7 @@ end-to-end-test: stop-containers
 	echo "This assumes you've run make package before"
 	CONFIG=e2e VERSION=$(PUBLIC_API_STRANGLER_VERSION) docker-compose -f docker-compose-e2e-tests.yml up -d publicapistrangler
 	sc crun -l base-dev -- sc wait http publicapistrangler:5000/-/health
-	sc crun -l sbt --config=e2e.secrets -- sbt endToEnd/test
+	sc crun -l $(DEV_STACK) --config=e2e.secrets -- sbt endToEnd/test
 	make docker-down
 
 local-contract-test: stop-containers docker-up-development
@@ -91,7 +93,7 @@ package: prepare-package-layout
 	sc artifact-manager package --runtime=$(RUNTIME_STACK)
 
 prepare-package-layout:
-	sc crun sbt -- sbt packageSC
+	sc crun $(DEV_STACK) -- sbt packageSC
 	sc gen-wrapper-script --target="bin/$(APP_NAME)" --wrapper=api
 	sc add-config config/development
 	sc add-config config/e2e
