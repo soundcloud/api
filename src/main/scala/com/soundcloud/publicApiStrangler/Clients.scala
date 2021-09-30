@@ -37,7 +37,7 @@ import com.twitter.finagle.http.{Request, Response}
 import com.twitter.finagle.service.RetryPolicy.RetryableWriteException
 import com.twitter.util.{Throw, Try}
 import proto.soundcloud.authenticator.access_grant_exchange.AccessGrantExchangeClientProtobuf
-import proto.soundcloud.playlists.api.PlaylistsClientProtobuf
+import proto.soundcloud.playlists.api.{PlaylistsClientProtobuf, WritesClientProtobuf}
 import proto.soundcloud.tracks.api.{
   LikesClientProtobuf,
   MediaClientProtobuf,
@@ -134,6 +134,13 @@ class Clients(
     new PlaylistsClientProtobuf(_, _)
   )
 
+  val playlistsWritesTwirpClient = TwirpClient(
+    ResourceName("playlists"),
+    config,
+    telemetry,
+    new WritesClientProtobuf(_, _)
+  )
+
   val trackAccessRecorderService =
     new TrackAccessRecorderService(new TrackAccessRecorderClient(jsonClient("track_access_recorder")))
 
@@ -168,7 +175,14 @@ class Clients(
     new TrackUpdateService(trackCoordinatorClient, okidokiClient, hocuspocusClient, tracksService)
   val similarTracksService = new SimilarTracksService(tracksService, systemPlaylistsClient)
   val playlistService =
-    new PlaylistsService(playlistsTwirpClient, tracksService, okidokiClient, lieblingClient)
+    new PlaylistsService(
+      playlistsTwirpClient,
+      tracksService,
+      okidokiClient,
+      lieblingClient,
+      playlistsWritesTwirpClient,
+      exceptionCollector
+    )
   val likesService = new LikesService(tracksService, playlistService, lieblingClient, likeTracksTwirpClient)
   val userPlaylistsService = new UserPlaylistsService(playlistService, okidokiClient)
 

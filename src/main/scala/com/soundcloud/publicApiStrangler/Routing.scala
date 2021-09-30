@@ -57,9 +57,7 @@ object Routing {
   }
 
   def forMothershipDispatcher(mothershipDispatcher: DispatchToMothershipHandler): List[(Method, String, Handler)] = {
-    route(Method.Post, "/playlists", mothershipDispatcher.dispatch) :::
-      route(Method.Put, playlistIdPath, mothershipDispatcher.dispatch) :::
-      route(Method.Post, "/me/playlists", mothershipDispatcher.dispatch) :::
+    route(Method.Put, playlistIdPath, mothershipDispatcher.dispatch) :::
       route(Method.Put, "/me/playlists/:trackId", mothershipDispatcher.dispatch)
   }
 
@@ -72,7 +70,9 @@ object Routing {
   }
 
   def forPlaylistHandler(playlistsHandler: PlaylistsHandler): List[(Method, String, Handler)] = {
-    route(Method.Delete, playlistIdPath, playlistsHandler.handleDelete) :::
+    route(Method.Post, "/playlists", playlistsHandler.handleCreate) :::
+      route(Method.Post, "/me/playlists", playlistsHandler.handleCreate) :::
+      route(Method.Delete, playlistIdPath, playlistsHandler.handleDelete) :::
       route(Method.Get, playlistIdPath, playlistsHandler.handleFetchPlaylist) :::
       route(Method.Get, "/playlists/:id/tracks", playlistsHandler.handleFetchPlaylistTracks)
   }

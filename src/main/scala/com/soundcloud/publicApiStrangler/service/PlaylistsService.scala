@@ -1,6 +1,7 @@
 package com.soundcloud.publicApiStrangler.service
 
 import com.soundcloud.jvmkit.module.outcome._
+import com.soundcloud.jvmkit.module.telemetry.exceptions.ExceptionCollector
 import com.soundcloud.jvmkit.module.twirp.proto.UserSessionOps._
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSession
@@ -9,17 +10,24 @@ import com.soundcloud.publicApiStrangler.client.mothership.MoshimoshiClient
 import com.soundcloud.publicApiStrangler.client.mothership.response.representation.UserRepresentation
 import com.soundcloud.publicApiStrangler.handler.support.requestParser.AccessParams
 import com.soundcloud.publicApiStrangler.service.pagination.OffsetBasedPagination
-import com.soundcloud.publicApiStrangler.service.playlists.representation.{Playlist, VisiblePlaylist}
+import com.soundcloud.publicApiStrangler.service.playlists.representation.{
+  Playlist,
+  PlaylistCreateOrUpdate,
+  VisiblePlaylist
+}
 import com.soundcloud.publicApiStrangler.service.playlists.{PlaylistProtoMapper, PlaylistRequest}
 import com.soundcloud.publicApiStrangler.service.representation.collection.Collection
 import com.soundcloud.publicApiStrangler.service.trackrepresentation.{TrackRepresentation, TrackRepresentationsService}
+import com.soundcloud.twinagle.{ErrorCode, TwinagleException}
 import com.twitter.util.Future
 import proto.soundcloud.playlists.api.{
+  CreatePlaylistRequest,
   GetVisiblePlaylistsRequest,
   PlaylistPagination,
   PlaylistResponse,
   PlaylistRequest => ProtoPlaylistRequest,
-  PlaylistsService => PlaylistsTwirpService
+  PlaylistsService => PlaylistsTwirpService,
+  WritesService => PlaylistsWritesTwirpService
 }
 
 class PlaylistsService(
@@ -27,6 +35,8 @@ class PlaylistsService(
     tracksService: TrackRepresentationsService,
     moshimoshiClient: MoshimoshiClient,
     lieblingClient: LieblingClient,
+    playlistsWritesTwirpService: PlaylistsWritesTwirpService,
+    exceptionCollector: ExceptionCollector,
     playlistProtoMapper: PlaylistProtoMapper = new PlaylistProtoMapper()
 ) {
 
@@ -67,6 +77,7 @@ class PlaylistsService(
       pagination: Option[OffsetBasedPagination],
       showTracks: Option[Boolean]
   ): Future[Outcome[Playlist]] = {
+
     val playlistRequest = PlaylistRequest(urn = playlistUrn, secretToken = candidateSecretToken)
     fetchPlaylists(session, List(playlistRequest), access, pagination, showTracks)
       .map(_.headOption)
@@ -106,6 +117,34 @@ class PlaylistsService(
       visiblePlaylists = visiblePlaylistObjects.flatMap(response => playlistProtoMapper.apply(response, None))
       playlists <- resolvePlaylists(visiblePlaylists, session, AccessParams.defaultAccess, showTracks = false)
     } yield playlists
+  }
+
+  def createPlaylist(session: UserSession, playlistCreate: PlaylistCreateOrUpdate): OutcomeF[Playlist] = {
+    val playlist = for {
+      createdUrn <- playlistsWritesTwirpService
+        .createPlaylist(
+          CreatePlaylistRequest(playlist = Some(playlistCreate.toProto), userSession = Some(session.asProtoSession))
+        )
+        .map(res => Urn.parse(res.urn).get.good)
+        .handle {
+          case TwinagleException(ErrorCode.InvalidArgument, msg, _, _) => Bad(NotValid(msg))
+          case TwinagleException(ErrorCode.PermissionDenied, msg, _, _) => Bad(NotAuthorized(msg))
+          case TwinagleException(_, msg, _, _) =>
+            throw new RuntimeException(s"unexpected response from playlists: ${msg}")
+        }
+        .outcomeF
+      playlist <- fetchPlaylist(session, createdUrn, None, AccessParams.explicitAccess, None, None).outcomeF
+    } yield playlist
+    playlist.leftMap {
+      case notFound: NotFound =>
+        exceptionCollector.addMessage(
+          "read-after-write-playlists",
+          "reading after creating a playlist failed",
+          collectRequestBody = true
+        )
+        notFound
+      case other => other
+    }
   }
 
   private def resolvePlaylists(

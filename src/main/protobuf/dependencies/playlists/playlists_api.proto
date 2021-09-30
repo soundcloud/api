@@ -10,6 +10,16 @@ import "google/protobuf/wrappers.proto";
 
 import "common_session.proto";
 
+service Playlists {
+    rpc GetVisiblePlaylists (GetVisiblePlaylistsRequest) returns (GetVisiblePlaylistsResponse) {}
+}
+
+message GetVisiblePlaylistsRequest {
+    repeated PlaylistRequest playlist_requests = 1;
+    proto.soundcloud.common.session.UserSession user_session = 2;
+    google.protobuf.StringValue subscription_country_code = 3; // optional
+}
+
 message PlaylistRequest {
     string urn = 1;
     google.protobuf.StringValue secret_token = 2; // optional
@@ -21,29 +31,14 @@ message PlaylistPagination {
     int64 limit = 2;
 }
 
-message GetVisiblePlaylistsRequest {
-    repeated PlaylistRequest playlist_requests = 1;
-    proto.soundcloud.common.session.UserSession user_session = 2;
-    google.protobuf.StringValue subscription_country_code = 3; // optional
+message GetVisiblePlaylistsResponse {
+    repeated PlaylistResponse playlist_response = 1;
 }
 
 message PlaylistResponse {
     Playlist playlist = 1;
     repeated TrackRequest track_requests = 2;
     PlaylistPagination pagination = 3; // optional
-}
-
-message GetVisiblePlaylistsResponse {
-    repeated PlaylistResponse playlist_response = 1;
-}
-
-service Playlists {
-    rpc GetVisiblePlaylists (GetVisiblePlaylistsRequest) returns (GetVisiblePlaylistsResponse) {}
-}
-
-message TrackRequest {
-    string urn = 1;
-    google.protobuf.StringValue secret_token = 2; // optional
 }
 
 message Playlist {
@@ -80,4 +75,62 @@ message Playlist {
     google.protobuf.StringValue ean = 33; // optional
     google.protobuf.BoolValue streamable = 34; // optional
     string uri = 35;
+}
+
+message TrackRequest {
+    string urn = 1;
+    google.protobuf.StringValue secret_token = 2; // optional
+}
+
+service Writes {
+    rpc CreatePlaylist (CreatePlaylistRequest) returns (CreatePlaylistResponse) {}
+    rpc UpdatePlaylist (UpdatePlaylistRequest) returns (UpdatePlaylistResponse) {}
+    rpc DeletePlaylist (DeletePlaylistRequest) returns (DeletePlaylistResponse) {}
+}
+
+message CreatePlaylistRequest {
+    PlaylistCreateOrUpdate playlist = 1;
+    proto.soundcloud.common.session.UserSession user_session = 3;
+}
+
+message CreatePlaylistResponse {
+    string urn = 1;
+}
+
+message UpdatePlaylistRequest {
+    PlaylistCreateOrUpdate playlist = 1;
+    string urn = 2;
+    proto.soundcloud.common.session.UserSession user_session = 3;
+}
+
+message UpdatePlaylistResponse {}
+
+message DeletePlaylistRequest {
+    string urn = 1;
+    proto.soundcloud.common.session.UserSession user_session = 2;
+}
+
+message DeletePlaylistResponse {}
+
+message PlaylistCreateOrUpdate {
+    google.protobuf.StringValue title = 1; // optional
+    google.protobuf.BoolValue public = 2; // optional
+    google.protobuf.StringValue license = 3; // optional
+    google.protobuf.StringValue permalink = 4; // optional
+    google.protobuf.StringValue description = 5; // optional
+    google.protobuf.StringValue genre = 6; // optional
+    google.protobuf.StringValue tag_list = 7; // optional
+    google.protobuf.StringValue label_name = 8; // optional
+    google.protobuf.StringValue release = 9; // optional
+    google.protobuf.StringValue release_date = 10; // optional
+    google.protobuf.StringValue purchase_url = 11; // optional
+    google.protobuf.StringValue purchase_title = 12; // optional
+    google.protobuf.StringValue ean = 13; // optional
+    google.protobuf.StringValue permalink_url = 15; // optional
+    google.protobuf.StringValue set_type = 16; // optional
+    Tracks tracks = 14; // optional
+}
+
+message Tracks {
+    repeated string urns = 1;
 }

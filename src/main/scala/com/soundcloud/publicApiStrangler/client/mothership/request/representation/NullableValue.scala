@@ -24,4 +24,10 @@ object NullableValue {
     case JsDefined(JsNull) => NullValue
     case JsDefined(x) => Value(x.as[A])
   }
+
+  def read[A](json: JsValue)(implicit r: Reads[A]): NullableValue[A] = json match {
+    case JsNull => NullValue
+    case JsUndefined() => MissingValue
+    case x => Value(x.as[A])
+  }
 }

@@ -68,7 +68,14 @@ class Handlers(
   }
 
   val playlistsHandler =
-    new PlaylistsHandler(userAuthentication, playlistDeletionClient, playlistService)
+    new PlaylistsHandler(
+      userAuthentication,
+      playlistDeletionClient,
+      playlistService,
+      mothershipDispatcher,
+      rolloutClient,
+      baseUrl
+    )
 
   val userPlaylistsHandler = new UserPlaylistsHandler(userAuthentication, userPlaylistsService)
 
