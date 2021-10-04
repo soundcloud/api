@@ -12,8 +12,8 @@ import com.soundcloud.publicApiStrangler.service.PlaylistsService
 import com.soundcloud.publicApiStrangler.service.pagination.OffsetBasedPagination
 import com.soundcloud.publicApiStrangler.service.playlists.representation.PlaylistCreateOrUpdate
 import com.soundcloud.publicApiStrangler.service.representation.collection.Collection
-import com.soundcloud.publicApiStrangler.support.ErrorResponse
 import com.soundcloud.publicApiStrangler.support.PlaylistUrnUtil.getPlaylistUrn
+import com.soundcloud.publicApiStrangler.support.{ErrorResponse, PlaylistUrnUtil}
 import com.twitter.finagle.http.{Request, Response, Status}
 import com.twitter.util.{Future, Return, Throw, Try}
 import play.api.libs.json.{JsObject, Json}
@@ -34,28 +34,11 @@ class PlaylistsHandler(
     }
   }
 
-  private def performCreate(request: HandlerRequest): Future[Response] = {
-    userAuthentication.withLoggedInUser(request) { (session, _) =>
-      val result = for {
-        parsedPlaylist <- tryParsePlaylistWriteRequestOutcome(request).outcomeF
-        createdPlaylist <- playlistsService.createPlaylist(session, parsedPlaylist)
-      } yield createdPlaylist
-      result.value.map {
-        case Good(playlist) =>
-          JsonResponseBuilder(
-            status = Status.Created,
-            headers = Map("location" -> playlistLocation(playlist.id.toString)),
-            body = Json.stringify(Json.toJson(playlist))
-          ).build
-        case Bad(NotValid(msg)) => ErrorResponse(Status.UnprocessableEntity, msg.mkString(","))
-        case Bad(NotAuthorized(_)) => ErrorResponse.forbidden()
-        case _ => ErrorResponse(Status.InternalServerError)
-      }
+  def handleUpdate(request: HandlerRequest): Future[Response] = {
+    rollout.isActive(BasicRolloutFeature("update_playlist_rewrite")).flatMap {
+      case true => performUpdate(request)
+      case false => dispatchToMothershipHandler.dispatch(request)
     }
-  }
-
-  private def playlistLocation(urnIdentifier: String): String = {
-    s"$baseUrl/playlists/$urnIdentifier"
   }
 
   def handleDelete(request: HandlerRequest): Future[Response] = {
@@ -119,11 +102,55 @@ class PlaylistsHandler(
     }
   }
 
+  private def performCreate(request: HandlerRequest): Future[Response] = {
+    userAuthentication.withLoggedInUser(request) { (session, _) =>
+      val result = for {
+        parsedPlaylist <- tryParsePlaylistWriteRequestOutcome(request).outcomeF
+        createdPlaylist <- playlistsService.createPlaylist(session, parsedPlaylist)
+      } yield createdPlaylist
+      result.value.map {
+        case Good(playlist) =>
+          JsonResponseBuilder(
+            status = Status.Created,
+            headers = Map("location" -> playlistLocation(playlist.id.toString)),
+            body = Json.stringify(Json.toJson(playlist))
+          ).build
+        case Bad(NotValid(msg)) => ErrorResponse(Status.UnprocessableEntity, msg.mkString(","))
+        case Bad(NotAuthorized(_)) => ErrorResponse.forbidden()
+        case _ => ErrorResponse(Status.InternalServerError)
+      }
+    }
+  }
+
+  private def performUpdate(request: HandlerRequest): Future[Response] = {
+    userAuthentication.withLoggedInUser(request) { (session, _) =>
+      val urn = PlaylistUrnUtil.getPlaylistUrn(request)
+      val result = for {
+        playlistUpdate <- tryParsePlaylistWriteRequestOutcome(request).outcomeF
+        updatedPlaylist <- playlistsService.updatePlaylist(session, urn, playlistUpdate)
+      } yield updatedPlaylist
+
+      result.value.map {
+        case Good(playlist) => JsonResponseBuilder.ok(Json.stringify(Json.toJson(playlist)))
+        case Bad(NotValid(msg)) => ErrorResponse(Status.UnprocessableEntity, msg.mkString(","))
+        case Bad(NotFound(_)) => ErrorResponse.notFound()
+        case Bad(NotAuthorized(_)) => ErrorResponse.forbidden()
+        case _ => ErrorResponse(Status.InternalServerError)
+      }
+    }
+  }
+
+  private def playlistLocation(urnIdentifier: String): String = {
+    s"$baseUrl/playlists/$urnIdentifier"
+  }
+
   private def tryParsePlaylistWriteRequestOutcome(request: Request): Outcome[PlaylistCreateOrUpdate] = {
     val tryJson = Try(Json.parse(request.getContentString()))
+
     tryJson
       .flatMap { json =>
         Try((json \ "playlist").asOpt[JsObject].fold(json.as[PlaylistCreateOrUpdate])(_.as[PlaylistCreateOrUpdate]))
+
       }
       .outcome
       .leftMap(_ => NotValid("Could not parse JSON request body."))

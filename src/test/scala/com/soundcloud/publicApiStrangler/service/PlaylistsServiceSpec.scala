@@ -33,6 +33,8 @@ import proto.soundcloud.playlists.api.{
   GetVisiblePlaylistsResponse,
   PlaylistPagination,
   PlaylistResponse,
+  UpdatePlaylistRequest,
+  UpdatePlaylistResponse,
   Playlist => ProtoPlaylist,
   PlaylistRequest => ProtoPlaylistRequest,
   PlaylistsService => PlaylistsTwirpService,
@@ -71,6 +73,15 @@ class PlaylistsServiceSpec extends UnitSpecification {
     val telemetry = Telemetry.defaultInstance
     val exceptionCollector = mock[ExceptionCollector]
 
+    val protoPlaylist =
+      ProtoPlaylist(
+        urn = requestedPlaylistUrn.toString,
+        userUrn = playlistOwner.urn.toString,
+        labelId = Some(labelUrn.identifier)
+      )
+
+    val protoTrack = Seq(ProtoTrackRequest(urn = requestedPlaylistTrackUrn.toString))
+
     val playlistsService =
       new PlaylistsService(
         playlistsTwirpServiceMock,
@@ -82,46 +93,6 @@ class PlaylistsServiceSpec extends UnitSpecification {
       )
     val playlistRequests = List(PlaylistRequest(requestedPlaylistUrn, candidateSecretToken))
     val access = AccessParams.defaultAccess
-  }
-
-  trait SuccessContext extends Context {
-    val requestWithPagination = ProtoPlaylistRequest(
-      urn = requestedPlaylistUrn.toString,
-      secretToken = candidateSecretToken,
-      pagination = Some(pagination)
-    )
-
-    val requestWithoutPagination = ProtoPlaylistRequest(
-      urn = requestedPlaylistUrn.toString,
-      secretToken = candidateSecretToken,
-      pagination = None
-    )
-
-    val getVisiblePlaylistWithPagination =
-      GetVisiblePlaylistsRequest(playlistRequests = Seq(requestWithPagination), userSession = Some(protoSession))
-    val getVisiblePlaylist =
-      GetVisiblePlaylistsRequest(playlistRequests = Seq(requestWithoutPagination), userSession = Some(protoSession))
-
-    val protoPlaylist =
-      ProtoPlaylist(
-        urn = requestedPlaylistUrn.toString,
-        userUrn = playlistOwner.urn.toString,
-        labelId = Some(labelUrn.identifier)
-      )
-
-    val likesCount = LikesCount(requestedPlaylistUrn, 5L)
-
-    val protoTrack = Seq(ProtoTrackRequest(urn = requestedPlaylistTrackUrn.toString))
-    val protoTracks = Seq(
-      ProtoTrackRequest(urn = requestedPlaylistTrackUrn.toString),
-      ProtoTrackRequest(urn = requestedPlaylistTrackUrn1.toString),
-      ProtoTrackRequest(urn = requestedPlaylistTrackUrn2.toString)
-    )
-
-    when(moshimoshiClientMock.fetchUserObjects(session, Set(playlistOwner.urn, labelUrn)))
-      .thenReturn(Future.value(List(playlistOwner, defaultLabel)))
-    when(lieblingClientMock.likeCounts(session, Seq(requestedPlaylistUrn)))
-      .thenReturn(Future.value(List(likesCount)))
 
     def setUpMocksForReadPlaylists(
         pagination: Option[PlaylistPagination] = None,
@@ -165,6 +136,54 @@ class PlaylistsServiceSpec extends UnitSpecification {
           )
       ).thenReturn(response)
     }
+
+    def setUpMocksForUpdatePlaylists(
+        playlistCreate: PlaylistCreateOrUpdate,
+        playlistUrn: Urn,
+        response: Future[UpdatePlaylistResponse]
+    ) = {
+      when(
+        playlistsWritesTwirpServiceMock.updatePlaylist(
+          UpdatePlaylistRequest(
+            playlist = Some(playlistCreate.toProto),
+            urn = playlistUrn.toString,
+            userSession = Some(session.asProtoSession)
+          )
+        )
+      ).thenReturn(response)
+    }
+  }
+
+  trait SuccessContext extends Context {
+    val requestWithPagination = ProtoPlaylistRequest(
+      urn = requestedPlaylistUrn.toString,
+      secretToken = candidateSecretToken,
+      pagination = Some(pagination)
+    )
+
+    val requestWithoutPagination = ProtoPlaylistRequest(
+      urn = requestedPlaylistUrn.toString,
+      secretToken = candidateSecretToken,
+      pagination = None
+    )
+
+    val getVisiblePlaylistWithPagination =
+      GetVisiblePlaylistsRequest(playlistRequests = Seq(requestWithPagination), userSession = Some(protoSession))
+    val getVisiblePlaylist =
+      GetVisiblePlaylistsRequest(playlistRequests = Seq(requestWithoutPagination), userSession = Some(protoSession))
+
+    val likesCount = LikesCount(requestedPlaylistUrn, 5L)
+
+    val protoTracks = Seq(
+      ProtoTrackRequest(urn = requestedPlaylistTrackUrn.toString),
+      ProtoTrackRequest(urn = requestedPlaylistTrackUrn1.toString),
+      ProtoTrackRequest(urn = requestedPlaylistTrackUrn2.toString)
+    )
+
+    when(moshimoshiClientMock.fetchUserObjects(session, Set(playlistOwner.urn, labelUrn)))
+      .thenReturn(Future.value(List(playlistOwner, defaultLabel)))
+    when(lieblingClientMock.likeCounts(session, Seq(requestedPlaylistUrn)))
+      .thenReturn(Future.value(List(likesCount)))
   }
 
   trait NoLabelIdContext extends SuccessContext {
@@ -512,40 +531,42 @@ class PlaylistsServiceSpec extends UnitSpecification {
     }
   }
 
+  trait CreateOrUpdatePlaylist extends SuccessContext {
+    val playlistUrn = Urn("soundcloud", "playlists", "1")
+    val createOrUpdatePlaylist = PlaylistCreateOrUpdate(
+      public = Value(true),
+      title = Value("title"),
+      tracks = Value(Seq(Map("id" -> "1")))
+    )
+
+    val playlistRequest =
+      ProtoPlaylistRequest(urn = Urn("soundcloud", "playlists", "1").toString, secretToken = None, pagination = None)
+
+    val visiblePlaylistRequests =
+      GetVisiblePlaylistsRequest(playlistRequests = Seq(playlistRequest), userSession = Some(protoSession))
+
+    def shouldFailGetVisiblePlaylist = false
+
+    setUpMocksForReadPlaylists(
+      trackRequests = List(TrackRequest(urn = requestedPlaylistTrackUrn, secretToken = None)),
+      visiblePlaylistsRequest = visiblePlaylistRequests,
+      playlistAccess = AccessParams.explicitAccess,
+      shouldFailGetVisiblePlaylist = shouldFailGetVisiblePlaylist
+    )
+  }
+
   "#createPlaylist" >> {
-    trait CreatePlaylist extends SuccessContext {
-      val playlistCreate = PlaylistCreateOrUpdate(
-        public = Value(true),
-        title = Value("title"),
-        tracks = Value(Seq(Map("id" -> "1")))
-      )
 
-      val playlistRequest =
-        ProtoPlaylistRequest(urn = Urn("soundcloud", "playlists", "1").toString, secretToken = None, pagination = None)
-
-      val visiblePlaylistRequests =
-        GetVisiblePlaylistsRequest(playlistRequests = Seq(playlistRequest), userSession = Some(protoSession))
-
-      def shouldFailGetVisiblePlaylist = false
-
-      setUpMocksForReadPlaylists(
-        trackRequests = List(TrackRequest(urn = requestedPlaylistTrackUrn, secretToken = None)),
-        visiblePlaylistsRequest = visiblePlaylistRequests,
-        playlistAccess = AccessParams.explicitAccess,
-        shouldFailGetVisiblePlaylist = shouldFailGetVisiblePlaylist
-      )
-    }
-
-    "creates the playlist" in new CreatePlaylist {
+    "creates the playlist" in new CreateOrUpdatePlaylist {
       val playlist = new PlaylistBuilder().setId(1).build
 
       setUpMocksForWritePlaylists(
-        playlistCreate = playlistCreate,
+        playlistCreate = createOrUpdatePlaylist,
         response =
           Future.value(CreatePlaylistResponse(urn = Urn("soundcloud", "playlists", playlist.id.toString).toString))
       )
 
-      val result = Await.result(playlistsService.createPlaylist(session, playlistCreate).value)
+      val result = Await.result(playlistsService.createPlaylist(session, createOrUpdatePlaylist).value)
 
       result match {
         case Good(playlist) =>
@@ -558,57 +579,60 @@ class PlaylistsServiceSpec extends UnitSpecification {
       }
     }
 
-    "returns Not Valid if Playlists returned Invalid Argument" in new CreatePlaylist {
+    "returns Not Valid if Playlists returned Invalid Argument" in new CreateOrUpdatePlaylist {
       val playlist = new PlaylistBuilder().setId(1).build
 
       setUpMocksForWritePlaylists(
-        playlistCreate = playlistCreate,
+        playlistCreate = createOrUpdatePlaylist,
         response = Future.exception(TwinagleException(ErrorCode.InvalidArgument, "invalid argument", null, null))
       )
 
-      val result = Await.result(playlistsService.createPlaylist(session, playlistCreate).value)
+      val result = Await.result(playlistsService.createPlaylist(session, createOrUpdatePlaylist).value)
 
       result ==== Bad(NotValid("invalid argument"))
     }
 
-    "returns Not Authorised if Playlists returned Permission Denied" in new CreatePlaylist {
+    "returns Not Authorised if Playlists returned Permission Denied" in new CreateOrUpdatePlaylist {
       setUpMocksForWritePlaylists(
-        playlistCreate = playlistCreate,
+        playlistCreate = createOrUpdatePlaylist,
         response = Future.exception(TwinagleException(ErrorCode.PermissionDenied, "permission denied", null, null))
       )
 
-      val result = Await.result(playlistsService.createPlaylist(session, playlistCreate).value)
+      val result = Await.result(playlistsService.createPlaylist(session, createOrUpdatePlaylist).value)
 
       result ==== Bad(NotAuthorized("permission denied"))
     }
 
-    "throws error if Playlists returns unexpected response" in new CreatePlaylist {
+    "throws error if Playlists returns unexpected response" in new CreateOrUpdatePlaylist {
       val playlist = new PlaylistBuilder().setId(1).build
 
       when(
         playlistsWritesTwirpServiceMock
           .createPlaylist(
-            CreatePlaylistRequest(playlist = Some(playlistCreate.toProto), userSession = Some(session.asProtoSession))
+            CreatePlaylistRequest(
+              playlist = Some(createOrUpdatePlaylist.toProto),
+              userSession = Some(session.asProtoSession)
+            )
           )
       ).thenReturn(Future.exception(TwinagleException(ErrorCode.Internal, "oops", null, null)))
 
-      Await.result(playlistsService.createPlaylist(session, playlistCreate).value) must throwA[
+      Await.result(playlistsService.createPlaylist(session, createOrUpdatePlaylist).value) must throwA[
         RuntimeException
       ]
     }
 
-    "logs exception if read after write fails" in new CreatePlaylist {
+    "logs exception if read after write fails" in new CreateOrUpdatePlaylist {
       override def shouldFailGetVisiblePlaylist = true
 
       val playlist = new PlaylistBuilder().setId(1).build
 
       setUpMocksForWritePlaylists(
-        playlistCreate = playlistCreate,
+        playlistCreate = createOrUpdatePlaylist,
         response =
           Future.value(CreatePlaylistResponse(urn = Urn("soundcloud", "playlists", playlist.id.toString).toString))
       )
 
-      val result = Await.result(playlistsService.createPlaylist(session, playlistCreate).value)
+      val result = Await.result(playlistsService.createPlaylist(session, createOrUpdatePlaylist).value)
 
       result match {
         case Good(_) =>
@@ -623,4 +647,72 @@ class PlaylistsServiceSpec extends UnitSpecification {
       )
     }
   }
+
+  "#updatePlaylist" >> {
+
+    "updates the playlist" in new CreateOrUpdatePlaylist {
+      setUpMocksForUpdatePlaylists(createOrUpdatePlaylist, playlistUrn, Future.value(UpdatePlaylistResponse()))
+
+      val result = Await.result(playlistsService.updatePlaylist(session, playlistUrn, createOrUpdatePlaylist).value)
+
+      result match {
+        case Good(playlist) =>
+          playlist.id ==== requestedPlaylistUrn.identifier.toLong
+          playlist.userId ==== playlistOwner.urn.identifier.toLong
+          playlist.tracks.get.length ==== 1
+          playlist.tracks.get.head.urn ==== requestedPlaylistTrack.urn
+          playlist.likesCount ==== 5
+        case _ => failure(s"returned ${result.toString} instead of Good(_)")
+      }
+    }
+
+    "returns Not Found if Playlists returned Not Found" in new CreateOrUpdatePlaylist {
+      setUpMocksForUpdatePlaylists(
+        createOrUpdatePlaylist,
+        playlistUrn,
+        response = Future.exception(TwinagleException(ErrorCode.NotFound, "not found", null, null))
+      )
+
+      val result = Await.result(playlistsService.updatePlaylist(session, playlistUrn, createOrUpdatePlaylist).value)
+
+      result ==== Bad(NotFound("playlist not found"))
+    }
+
+    "returns Not Valid if Playlists returned Invalid Argument" in new CreateOrUpdatePlaylist {
+      setUpMocksForUpdatePlaylists(
+        createOrUpdatePlaylist,
+        playlistUrn,
+        response = Future.exception(TwinagleException(ErrorCode.InvalidArgument, "invalid argument", null, null))
+      )
+
+      val result = Await.result(playlistsService.updatePlaylist(session, playlistUrn, createOrUpdatePlaylist).value)
+
+      result ==== Bad(NotValid("invalid argument"))
+    }
+
+    "returns Not Authorised if Playlists returned Permission Denied" in new CreateOrUpdatePlaylist {
+      setUpMocksForUpdatePlaylists(
+        createOrUpdatePlaylist,
+        playlistUrn,
+        response = Future.exception(TwinagleException(ErrorCode.PermissionDenied, "permission denied", null, null))
+      )
+
+      val result = Await.result(playlistsService.updatePlaylist(session, playlistUrn, createOrUpdatePlaylist).value)
+
+      result ==== Bad(NotAuthorized("permission denied"))
+    }
+
+    "throws error if Playlists returns unexpected response" in new CreateOrUpdatePlaylist {
+      setUpMocksForUpdatePlaylists(
+        createOrUpdatePlaylist,
+        playlistUrn,
+        response = Future.exception(TwinagleException(ErrorCode.Internal, "oops", null, null))
+      )
+
+      Await.result(playlistsService.updatePlaylist(session, playlistUrn, createOrUpdatePlaylist).value) must throwA[
+        RuntimeException
+      ]
+    }
+  }
+
 }

@@ -1,9 +1,9 @@
 package com.soundcloud.publicApiStrangler
 
 import com.soundcloud.jvmkit.module.http.server.{Handler, JsonResponseBuilder}
+import com.soundcloud.publicApiStrangler.handler._
 import com.soundcloud.publicApiStrangler.handler.comments.CommentsHandler
 import com.soundcloud.publicApiStrangler.handler.search.SearchHandler
-import com.soundcloud.publicApiStrangler.handler.{DispatchToMothershipHandler, _}
 import com.twitter.finagle.http.Method
 import com.twitter.util.Future
 
@@ -56,11 +56,6 @@ object Routing {
       route(Method.Delete, "/me/followings/:other_id", userFollowHandler.unfollow)
   }
 
-  def forMothershipDispatcher(mothershipDispatcher: DispatchToMothershipHandler): List[(Method, String, Handler)] = {
-    route(Method.Put, playlistIdPath, mothershipDispatcher.dispatch) :::
-      route(Method.Put, "/me/playlists/:trackId", mothershipDispatcher.dispatch)
-  }
-
   def forOauthGrantExchange(handler: Handler): List[(Method, String, Handler)] = {
     route(Method.Post, grantExchangePath, handler)
   }
@@ -72,6 +67,8 @@ object Routing {
   def forPlaylistHandler(playlistsHandler: PlaylistsHandler): List[(Method, String, Handler)] = {
     route(Method.Post, "/playlists", playlistsHandler.handleCreate) :::
       route(Method.Post, "/me/playlists", playlistsHandler.handleCreate) :::
+      route(Method.Put, playlistIdPath, playlistsHandler.handleUpdate) :::
+      route(Method.Put, "/me/playlists/:trackId", playlistsHandler.handleUpdate) :::
       route(Method.Delete, playlistIdPath, playlistsHandler.handleDelete) :::
       route(Method.Get, playlistIdPath, playlistsHandler.handleFetchPlaylist) :::
       route(Method.Get, "/playlists/:id/tracks", playlistsHandler.handleFetchPlaylistTracks)

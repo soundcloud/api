@@ -83,7 +83,6 @@ object App {
       .register(
         List.concat(
           forUserFollowHandler(handlers.userFollowHandler),
-          forMothershipDispatcher(handlers.mothershipDispatcher),
           forOauthGrantExchange(handlers.oauthGrantExchangeHandler),
           forSingleTrackHandler(handlers.singleTrackHandler),
           forPlaylistHandler(handlers.playlistsHandler),

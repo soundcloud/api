@@ -25,6 +25,7 @@ import proto.soundcloud.playlists.api.{
   GetVisiblePlaylistsRequest,
   PlaylistPagination,
   PlaylistResponse,
+  UpdatePlaylistRequest,
   PlaylistRequest => ProtoPlaylistRequest,
   PlaylistsService => PlaylistsTwirpService,
   WritesService => PlaylistsWritesTwirpService
@@ -145,6 +146,32 @@ class PlaylistsService(
         notFound
       case other => other
     }
+  }
+
+  def updatePlaylist(
+      session: UserSession,
+      playlistUrn: Urn,
+      playlistCreate: PlaylistCreateOrUpdate
+  ): OutcomeF[Playlist] = {
+    val updatePlaylistRequest = UpdatePlaylistRequest(
+      Some(playlistCreate.toProto),
+      playlistUrn.toString,
+      Some(session.asProtoSession)
+    )
+    for {
+      _ <- playlistsWritesTwirpService
+        .updatePlaylist(updatePlaylistRequest)
+        .map(Good(_))
+        .handle {
+          case TwinagleException(ErrorCode.NotFound, _, _, _) => Bad(NotFound("playlist not found"))
+          case TwinagleException(ErrorCode.InvalidArgument, msg, _, _) => Bad(NotValid(msg))
+          case TwinagleException(ErrorCode.PermissionDenied, msg, _, _) => Bad(NotAuthorized(msg))
+          case TwinagleException(code, msg, meta, _) =>
+            throw new RuntimeException(s"unexpected response from playlists: msg: ${msg}, code: ${code}, meta: ${meta}")
+        }
+        .outcomeF
+      playlist <- fetchPlaylist(session, playlistUrn, None, AccessParams.explicitAccess, None, None).outcomeF
+    } yield playlist
   }
 
   private def resolvePlaylists(
