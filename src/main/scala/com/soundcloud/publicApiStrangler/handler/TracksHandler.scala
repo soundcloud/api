@@ -3,8 +3,10 @@ package com.soundcloud.publicApiStrangler.handler
 import com.soundcloud.jvmkit.module.bff.session.UserAuthentication
 import com.soundcloud.jvmkit.module.http.server.{HandlerRequest, ResponseBuilder}
 import com.soundcloud.jvmkit.module.outcome._
+import com.soundcloud.jvmkit.module.telemetry.exceptions.ExceptionCollector
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSession
+import com.soundcloud.periskop.client.Severity
 import com.soundcloud.publicApiStrangler.client.trackcoordinator.TrackCoordinatorClient
 import com.soundcloud.publicApiStrangler.handler.representation.tracks.TrackRepresentationResponse.{
   handleCreateTrackResponseFromService,
@@ -29,6 +31,7 @@ class TracksHandler(
     userAuthentication: UserAuthentication,
     trackCoordinator: TrackCoordinatorClient,
     trackUpdateService: TrackUpdateService,
+    exceptionCollector: ExceptionCollector,
     paramsParser: RailsLikeParamsParser = new RailsLikeParamsParser
 ) {
 
@@ -190,16 +193,39 @@ class TracksHandler(
   ): Future[Response] = {
     (maybeAssetData, maybeMetadata) match {
       case (Some(assetData), Good(metadata)) =>
-        val createdTrack = trackUpdateService.createTrack(
-          assetData,
-          artwork,
-          metadata,
-          session
-        )
-        handleCreateTrackResponseFromService(createdTrack)
+        for {
+          allowedLimit <- Future.value(
+            TrackAssetDataCreateRequest.isFileNameLengthWithInLimit(assetData.original_filename)
+          )
+          response <- if (allowedLimit)
+            handleCreateTrackResponseFromService(
+              trackUpdateService.createTrack(
+                assetData,
+                artwork,
+                metadata,
+                session
+              )
+            )
+          else {
+            for {
+              _ <- Future.value(
+                exceptionCollector.addMessage(
+                  "track-asset-upload",
+                  "Original file name length exceeds 255 chars",
+                  severity = Severity.Error,
+                  collectRequestBody = true
+                )
+              )
+              response <- Future.value(
+                ErrorResponse.unprocessableEntity("Original file name length exceeds limit 255 chars")
+              )
+            } yield response
+          }
+        } yield response
       case (None, _) => invalidAssetDataResponse
       case (_, Bad(NotValid(errors))) => Future.value(ErrorResponse.badRequest(errors.head))
-      case _ => Future.value(ErrorResponse(Status.InternalServerError))
+      case _ =>
+        Future.value(ErrorResponse(Status.InternalServerError)) //TODO why do we throw InternalServerError?? - fix this with a proper 4XX error
     }
   }
 

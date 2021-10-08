@@ -2,6 +2,7 @@ package com.soundcloud.publicApiStrangler.handler
 
 import com.soundcloud.jvmkit.module.bff.testsupport.FakeUserAuthentication
 import com.soundcloud.jvmkit.module.outcome._
+import com.soundcloud.jvmkit.module.telemetry.exceptions.ExceptionCollector
 import com.soundcloud.jvmkit.module.util.session.UserSessionBuilder
 import com.soundcloud.jvmkit.module.util.{Geo, Urn}
 import com.soundcloud.publicApiStrangler.Routing
@@ -24,6 +25,7 @@ import org.mockito.Mockito._
 import play.api.libs.json._
 
 import java.nio.file.{Files, Paths}
+import scala.util.Random
 
 class TracksHandlerSpec extends UnitSpecification with TrackRepresentationSpecContext {
   trait Context extends HandlerSpecificationScope {
@@ -48,7 +50,8 @@ class TracksHandlerSpec extends UnitSpecification with TrackRepresentationSpecCo
       new TracksHandler(
         new FakeUserAuthentication(session),
         trackCoordinator,
-        trackUpdateService
+        trackUpdateService,
+        mock[ExceptionCollector]
       )
 
     override def routingDefinitions = Routing.forTracksHandler(handler)
@@ -323,6 +326,13 @@ class TracksHandlerSpec extends UnitSpecification with TrackRepresentationSpecCo
           ("track[original_filename]", "audio.mp3"),
           ("track[title]", "my track")
         )
+
+        val requestBodyInvalidFileName = Seq[(String, String)](
+          ("track[uid]", "12345"),
+          ("track[original_filename]", Random.nextString(256)), //anything which exceeds 255 is invalid
+          ("track[title]", "my track")
+        )
+
         val parsedRequestBody =
           Map[String, String]("uid" -> "12345", "original_filename" -> "audio.mp3", "title" -> "my track")
         val assetUpdate = TrackAssetDataCreateRequest("audio.mp3", "12345")
@@ -373,6 +383,11 @@ class TracksHandlerSpec extends UnitSpecification with TrackRepresentationSpecCo
 
         val response = postForm(path, body = requestBody)
         response.statusCode === 404
+      }
+
+      "returns a 422 un-processable entity when file name exceeds 255 chars" in new UrlEncodedContext {
+        val response = postForm(path, body = requestBodyInvalidFileName)
+        response.statusCode === 422
       }
 
       "returns a 400 for an invalid request" in new InvalidRequestContext {

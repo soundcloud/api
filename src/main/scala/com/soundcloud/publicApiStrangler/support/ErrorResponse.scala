@@ -8,6 +8,7 @@ object ErrorResponse {
   def notFound(error: String = "") = apply(Status.NotFound, error)
   def badRequest(error: String = "") = apply(Status.BadRequest, error)
   def forbidden(error: String = "") = apply(Status.Forbidden, error)
+  def unprocessableEntity(error: String = "") = apply(Status.UnprocessableEntity, error)
 
   def apply(
       status: Status,

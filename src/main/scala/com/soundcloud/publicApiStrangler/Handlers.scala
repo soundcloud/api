@@ -36,7 +36,8 @@ class Handlers(
   val tracksHandler = new TracksHandler(
     userAuthentication,
     trackCoordinatorClient,
-    trackUpdateService
+    trackUpdateService,
+    exceptionCollector
   )
 
   val singleTrackHandler =
