@@ -73,6 +73,22 @@ func TestControllerServiceS3Integration(t *testing.T) {
 			crlf + "My Track" +
 			crlf + "--------------------------6808b4f61ea0e5a2--" +
 			crlf)
+	fileNameTooLong := []byte(
+		"--------------------------6808b4f61ea0e5a2" +
+			crlf + "Content-Disposition: form-data; name=\"track[asset_data]\"; filename=\"ldkfjaskldjfaklsdjfklasjd;" +
+			"lkfjasd;lkfjas;ldkfjaskldjfaklsdjfklasjd;lkfjasd;lkfjas;ldkfjaskldjfaklsdjfklasjd;lkfjasd;lkfjas;ldkfjask" +
+			"ldjfaklsdjfklasjd;lkfjasd;lkfjas;ldkfjaskldjfaklsdjfklasjd;lkfjasd;lkfjas;ldkfjaskldjfaklsdjfklasjd;lkfjasd;" +
+			"lkfjas;ldkfjaskldjfaklsdjfklasjd;lkfjasd;lkfjas;ldkfjaskldjfaklsdjfklasjd;lkfjasd;lkfj.wav\"" + //string longer than 255. Not the best way but works
+			crlf + "Content-Type: application/octet-stream" +
+			crlf + "" +
+			crlf + "12345" +
+			crlf + "" +
+			crlf + "--------------------------6808b4f61ea0e5a2" +
+			crlf + "Content-Disposition: form-data; name=\"track[title]\"" +
+			crlf + "" +
+			crlf + "My Track" +
+			crlf + "--------------------------6808b4f61ea0e5a2--" +
+			crlf)
 
 	res := httptest.NewRecorder()
 	req := httptest.NewRequest("POST", "/tracks", bytes.NewReader(body))
@@ -101,7 +117,6 @@ func TestControllerServiceS3Integration(t *testing.T) {
 			crlf + "My Track" +
 			crlf + "--------------------------6808b4f61ea0e5a2--" +
 			crlf)
-
 	if want, got := int64(len(expected)), result.ContentLength; want != got {
 		t.Errorf("Expected content length to be %d, got %d", want, got)
 	}
@@ -109,5 +124,17 @@ func TestControllerServiceS3Integration(t *testing.T) {
 	bs, _ := ioutil.ReadAll(result.Body)
 	if want, got := expected, bs; !bytes.Equal(want, got) {
 		t.Errorf("Expected response body to be %s, got %s", want, got)
+	}
+
+	newRes := httptest.NewRecorder()
+	newReq := httptest.NewRequest("POST", "/tracks", bytes.NewReader(fileNameTooLong))
+	newReq.Host = "api.sc.local"
+	newReq.Header.Set("Content-Type", "multipart/form-data; boundary=------------------------6808b4f61ea0e5a2")
+
+	controller.tracks().ServeHTTP(newRes, newReq)
+
+	newResult := newRes.Result()
+	if want, got := http.StatusUnprocessableEntity, newResult.StatusCode; want != got {
+		t.Errorf("Expected response status to be %v, got %v", want, got)
 	}
 }

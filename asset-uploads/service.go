@@ -47,6 +47,12 @@ func (e clientError) Error() string {
 	return fmt.Sprintf("client error: %s", e.cause)
 }
 
+type fileNameValidationError struct {}
+
+func (e fileNameValidationError) Error() string {
+	return fmt.Sprintf("file name validation error")
+}
+
 func (s service) createTrack(r *createTrackRequest) (*createTrackResponse, error) {
 	req, err := s.rewriteMultipartRequest(r.request, r.boundary, s.rewriteTrackPart)
 	if err != nil {
@@ -194,6 +200,10 @@ func (s service) uploadTrackAssetData(p *multipart.Part, w *multipart.Writer) (*
 	}
 
 	filename := p.FileName()
+	if len(filename) > 255 {
+		return nil, fileNameValidationError{}
+	}
+
 	if _, err := o.Write([]byte(filename)); err != nil {
 		return nil, err
 	}

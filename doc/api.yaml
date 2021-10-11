@@ -405,6 +405,8 @@ paths:
           $ref: '#/components/responses/BadRequest'
         401:
           $ref: '#/components/responses/Unauthorized'
+        422:
+          $ref: '#/components/responses/UnprocessableEntity'
   /playlists:
     get:
       summary: Performs a playlist search based on a query
