@@ -36,7 +36,8 @@ class Handlers(
   val tracksHandler = new TracksHandler(
     userAuthentication,
     trackCoordinatorClient,
-    trackUpdateService
+    trackUpdateService,
+    exceptionCollector
   )
 
   val singleTrackHandler =
@@ -68,7 +69,14 @@ class Handlers(
   }
 
   val playlistsHandler =
-    new PlaylistsHandler(userAuthentication, playlistDeletionClient, playlistService)
+    new PlaylistsHandler(
+      userAuthentication,
+      playlistDeletionClient,
+      playlistService,
+      mothershipDispatcher,
+      rolloutClient,
+      baseUrl
+    )
 
   val userPlaylistsHandler = new UserPlaylistsHandler(userAuthentication, userPlaylistsService)
 

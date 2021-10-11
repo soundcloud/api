@@ -1,15 +1,19 @@
 package com.soundcloud.publicApiStrangler.handler
 
 import com.soundcloud.jvmkit.module.bff.testsupport.FakeUserAuthentication
+import com.soundcloud.jvmkit.module.http.server.{HandlerRequest, ResponseBuilder}
 import com.soundcloud.jvmkit.module.outcome._
-import com.soundcloud.jvmkit.module.util.session.UserSessionBuilder
+import com.soundcloud.jvmkit.module.rollout.{BasicRolloutFeature, Rollout}
+import com.soundcloud.jvmkit.module.util.session.{UserSession, UserSessionBuilder}
 import com.soundcloud.jvmkit.module.util.{Geo, Urn}
 import com.soundcloud.publicApiStrangler.Routing
+import com.soundcloud.publicApiStrangler.client.mothership.request.representation.Value
 import com.soundcloud.publicApiStrangler.client.playlists.PlaylistDeletionClient
 import com.soundcloud.publicApiStrangler.handler.support.requestParser.AccessParams
 import com.soundcloud.publicApiStrangler.service.PlaylistsService
 import com.soundcloud.publicApiStrangler.service.pagination.OffsetBasedPagination
 import com.soundcloud.publicApiStrangler.service.playlists.PlaylistBuilder
+import com.soundcloud.publicApiStrangler.service.playlists.representation.PlaylistCreateOrUpdate
 import com.soundcloud.publicApiStrangler.service.representation.collection.Collection
 import com.soundcloud.publicApiStrangler.service.trackrepresentation.TrackRepresentationSpecContext
 import com.soundcloud.publicApiStrangler.test.{HandlerSpecificationScope, UnitSpecification}
@@ -32,10 +36,25 @@ class PlaylistsHandlerSpec extends UnitSpecification {
     val playlistsService = mock[PlaylistsService]
     val playlistUrn = Urn("soundcloud", "playlists", "1")
 
+    val mothershipDispatcher = mock[DispatchToMothershipHandler]
+    mothershipDispatcher.dispatch(any[HandlerRequest]) returns Future.value(ResponseBuilder.ok())
+    val rollout = mock[Rollout]
+
+    def isCreateRolloutActive = true
+    def isUpdateRolloutActive = true
+
+    rollout.isActive(BasicRolloutFeature("create_playlist_rewrite")) returns Future.value(isCreateRolloutActive)
+    rollout.isActive(BasicRolloutFeature("update_playlist_rewrite")) returns Future.value(isUpdateRolloutActive)
+
+    val baseUrl = "http://localhost:5000"
+
     lazy val handler = new PlaylistsHandler(
       new FakeUserAuthentication(session),
       playlistDeletionClient,
-      playlistsService
+      playlistsService,
+      mothershipDispatcher,
+      rollout,
+      baseUrl
     )
 
     override def routingDefinitions = Routing.forPlaylistHandler(handler)
@@ -43,6 +62,160 @@ class PlaylistsHandlerSpec extends UnitSpecification {
     val requestedTrack1 = createTrackRepresentationFromVisibleTrack()
     val requestedTrack2 = createTrackRepresentationFromVisibleTrack()
     val access = AccessParams.defaultAccess
+  }
+
+  "POST /playlists" >> {
+    trait CreatePlaylistContext extends Context {
+      val isPublic = true
+      val title = "title"
+      val trackIds = Seq(Map("id" -> "1"))
+
+      val playlistCreateBody: String = ""
+      val playlistCreate = PlaylistCreateOrUpdate(
+        public = Value(isPublic),
+        title = Value(title),
+        tracks = Value(trackIds)
+      )
+
+      playlistsService.createPlaylist(===(session), ===(playlistCreate)) returns Good(playlist).outcomeF
+
+      lazy val response = post("/playlists", Map.empty, Map("Host" -> "api.soundcloud.com"), playlistCreateBody)
+    }
+
+    trait ValidPostBody {
+      self: CreatePlaylistContext =>
+      override val playlistCreateBody = Json.stringify(
+        Json.obj(
+          "sharing" -> (if (isPublic) "public" else "private"),
+          "title" -> title,
+          "tracks" -> trackIds
+        )
+      )
+    }
+
+    trait InvalidPostBody {
+      self: CreatePlaylistContext =>
+      // missing all properties
+      override val playlistCreateBody = ""
+    }
+
+    trait Anonymous {
+      self: CreatePlaylistContext =>
+      // missing all properties
+      override lazy val session: UserSession = anonymousSession
+    }
+
+    "returns 401 for anonymous user" in new CreatePlaylistContext with Anonymous {
+      response.status ==== Status.Unauthorized
+    }
+
+    "with invalid POST body" >> {
+      "returns 422" in new CreatePlaylistContext with InvalidPostBody {
+        response.status ==== Status.UnprocessableEntity
+      }
+    }
+
+    "with valid POST body" >> {
+      "returns 201 when create succeeds" in new CreatePlaylistContext with ValidPostBody {
+        response.status ==== Status.Created
+        response.contentString ==== Json.stringify(Json.toJson(playlist))
+      }
+
+      "on success adds the location header" in new CreatePlaylistContext with ValidPostBody {
+        response.headerMap("location") ==== s"$baseUrl/playlists/${playlist.id.toString}"
+      }
+
+      "when rollout is not active dispatches to mothership" in new CreatePlaylistContext with ValidPostBody {
+        override def isCreateRolloutActive = false
+
+        val _ = response
+        verify(mothershipDispatcher).dispatch(any())
+      }
+    }
+  }
+
+  "PUT /playlists" >> {
+    trait UpdatePlaylistContext extends Context {
+      val isPublic = true
+      val title = "title"
+      val trackIds = Seq(Map("id" -> "1"))
+
+      val playlistCreateBody: String = ""
+      val playlistCreate = PlaylistCreateOrUpdate(
+        public = Value(isPublic),
+        title = Value(title),
+        tracks = Value(trackIds)
+      )
+
+      playlistsService.updatePlaylist(===(session), ===(playlistUrn), ===(playlistCreate)) returns Good(playlist).outcomeF
+
+      lazy val response = put("/playlists/1", Map.empty, Map("Host" -> "api.soundcloud.com"), playlistCreateBody)
+    }
+
+    trait ValidPostBody {
+      self: UpdatePlaylistContext =>
+      override val playlistCreateBody = Json.stringify(
+        Json.obj(
+          "sharing" -> (if (isPublic) "public" else "private"),
+          "title" -> title,
+          "tracks" -> trackIds
+        )
+      )
+    }
+
+    trait InvalidPostBody {
+      self: UpdatePlaylistContext =>
+      // missing all properties
+      override val playlistCreateBody = ""
+    }
+
+    trait Anonymous {
+      self: UpdatePlaylistContext =>
+      // missing all properties
+      override lazy val session: UserSession = anonymousSession
+    }
+
+    "returns 401 for anonymous user" in new UpdatePlaylistContext with Anonymous {
+      response.status ==== Status.Unauthorized
+    }
+
+    "with invalid POST body" >> {
+      "returns 422" in new UpdatePlaylistContext with InvalidPostBody {
+        response.status ==== Status.UnprocessableEntity
+      }
+    }
+
+    "with valid POST body" >> {
+      "returns 201 when create succeeds" in new UpdatePlaylistContext with ValidPostBody {
+        response.status ==== Status.Ok
+        response.contentString ==== Json.stringify(Json.toJson(playlist))
+      }
+
+      "returns 404 when service responds with NotFound" in new UpdatePlaylistContext with ValidPostBody {
+        playlistsService.updatePlaylist(===(session), ===(playlistUrn), ===(playlistCreate)) returns NotFound().bad.outcomeF
+
+        response.status ==== Status.NotFound
+      }
+
+      "returns 403 when service responds with NotAuthorized" in new UpdatePlaylistContext with ValidPostBody {
+        playlistsService.updatePlaylist(===(session), ===(playlistUrn), ===(playlistCreate)) returns NotAuthorized().bad.outcomeF
+
+        response.status ==== Status.Forbidden
+      }
+
+      "returns 500 when service responds with unhandled response" in new UpdatePlaylistContext with ValidPostBody {
+        playlistsService.updatePlaylist(===(session), ===(playlistUrn), ===(playlistCreate)) returns CustomError("blah").bad.outcomeF
+
+        response.status ==== Status.InternalServerError
+      }
+
+      "when rollout is not active dispatches to mothership" in new UpdatePlaylistContext with ValidPostBody {
+        override def isUpdateRolloutActive = false
+
+        val _ = response
+        verify(mothershipDispatcher).dispatch(any())
+      }
+    }
   }
 
   "DELETE /playlists/:id" >> {
