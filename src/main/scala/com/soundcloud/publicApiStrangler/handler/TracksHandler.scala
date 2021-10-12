@@ -131,14 +131,30 @@ class TracksHandler(
   ): Future[Response] = {
     metadataParams match {
       case Good(metadata) =>
-        val updatedTrack = trackUpdateService.updateTrack(
-          artwork,
-          assetData,
-          metadata,
-          trackUrn,
-          session
-        )
-        handleUpdateTrackResponseFromService(updatedTrack)
+        for {
+          allowedLimit <- Future.value(
+            assetData match {
+              case Some(t) => TrackAssetDataUpdateRequest.isFileNameLengthWithInLimit(t.replacing_original_filename)
+              case _ => true
+            }
+          )
+          response <- if (allowedLimit) {
+            handleUpdateTrackResponseFromService(
+              trackUpdateService.updateTrack(
+                artwork,
+                assetData,
+                metadata,
+                trackUrn,
+                session
+              )
+            )
+          } else
+            generateUnprocessableEntity(
+              "track-asset-update",
+              "Original file name length exceeds 255 chars",
+              Severity.Error
+            )
+        } yield response
       case Bad(NotValid(errors)) => Future.value(ErrorResponse.badRequest(errors.head))
       case _ => throw new UnhandledOutcomeException
     }
@@ -206,21 +222,12 @@ class TracksHandler(
                 session
               )
             )
-          else {
-            for {
-              _ <- Future.value(
-                exceptionCollector.addMessage(
-                  "track-asset-upload",
-                  "Original file name length exceeds 255 chars",
-                  severity = Severity.Error,
-                  collectRequestBody = true
-                )
-              )
-              response <- Future.value(
-                ErrorResponse.unprocessableEntity("Original file name length exceeds limit 255 chars")
-              )
-            } yield response
-          }
+          else
+            generateUnprocessableEntity(
+              "track-asset-create",
+              "Original file name length exceeds 255 chars",
+              Severity.Error
+            )
         } yield response
       case (None, _) => invalidAssetDataResponse
       case (_, Bad(NotValid(errors))) => Future.value(ErrorResponse.badRequest(errors.head))
@@ -240,6 +247,24 @@ class TracksHandler(
         }
     }
   }
+  private def generateUnprocessableEntity(
+      aggregationKey: String,
+      message: String,
+      severity: Severity
+  ): Future[Response] =
+    for {
+      _ <- Future.value(
+        exceptionCollector.addMessage(
+          aggregationKey,
+          message,
+          severity,
+          collectRequestBody = true
+        )
+      )
+      response <- Future.value(
+        ErrorResponse.unprocessableEntity(message)
+      )
+    } yield response
 
   private def generateBadResponse: Future[Response] =
     Future.value(ErrorResponse.badRequest("400 - Invalid Request"))

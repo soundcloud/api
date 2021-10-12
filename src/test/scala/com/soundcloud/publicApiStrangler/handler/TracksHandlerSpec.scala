@@ -144,6 +144,19 @@ class TracksHandlerSpec extends UnitSpecification with TrackRepresentationSpecCo
         val response = put(path, body = invalidRequestBody)
         response.statusCode === 400
       }
+
+      val requestBodyInvalidFileName = Seq[(String, String)](
+        ("track[uid]", "12345"),
+        ("track[original_filename]", Random.nextString(256)), //anything which exceeds 255 is invalid
+        ("track[title]", "changed"),
+        ("track[description]", "changed")
+      )
+
+      "returns 422 unprocessable entity when track name exceeds 255 chars on update track by id" in new FailureContext {
+        val path = s"/tracks/${mockTrackRepresentation.urn.identifier}"
+        val response = putForm(path, body = requestBodyInvalidFileName)
+        response.statusCode === 422
+      }
     }
 
     "application/x-www-form-urlencoded request" >> {
@@ -385,7 +398,7 @@ class TracksHandlerSpec extends UnitSpecification with TrackRepresentationSpecCo
         response.statusCode === 404
       }
 
-      "returns a 422 un-processable entity when file name exceeds 255 chars" in new UrlEncodedContext {
+      "returns a 422 un-processable entity when file name exceeds 255 chars on create tracks" in new UrlEncodedContext {
         val response = postForm(path, body = requestBodyInvalidFileName)
         response.statusCode === 422
       }
