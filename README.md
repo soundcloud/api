@@ -1,4 +1,8 @@
-# Public API Strangler (PAS)
+# Deprecated
+
+Traffic and code has been moved to [API Public](https://github.com/soundcloud/api-public). Do not make new changes here. This repository will be graveyarded soon.
+
+## Public API Strangler (PAS)
 
 [![Swagger UI](https://img.shields.io/badge/API-Swagger%20UI-green)](https://public-api-doc.soundcloud.org/)
 
