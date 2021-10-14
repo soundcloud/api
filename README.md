@@ -1,6 +1,7 @@
 # Deprecated
 
-Traffic and code have been moved to [API Public](https://github.com/soundcloud/api-public). Do not make new changes here. This repository will be graveyarded soon.
+**Traffic and code have been moved to [API Public](https://github.com/soundcloud/api-public). Do not make new changes here. This repository will be graveyarded soon.
+**
 
 ## Public API Strangler (PAS)
 
