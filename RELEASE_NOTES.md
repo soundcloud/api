@@ -1,7 +1,6 @@
 <!--- Remove everything below and start over --->
 
-Added rate limiting response for client credential grant exchange against `POST /oauth2/token`. In case of
-rate limiting, the endpoint will return `429 - Too Many Requests`. 
+Added validation for `POST /tracks` REST endpoint to verify file_name length is within 255 chars.
+The new error response when the above condition is not satisfied is as below
+`HTTP 422 - UnprocessableEntity` 
 
-The client credential grant exchange serves server-side client applications, and currently the tokens are valid for
-24 hours. We expect reasonable usage for the client credential exchange per client application per 24 hours.  

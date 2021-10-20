@@ -63,10 +63,10 @@ func handleProxyError(w http.ResponseWriter, r *http.Request, err error) {
 	// Assume we did something wrong and default to 500.
 	status := http.StatusInternalServerError
 
-	// Unless we have a clientError, then respond with 400.
 	if _, ok := err.(clientError); ok {
 		status = http.StatusBadRequest
+	} else if _, ok := err.(fileNameValidationError); ok {
+		status = http.StatusUnprocessableEntity
 	}
-
 	http.Error(w, emptyResponse, status)
 }
