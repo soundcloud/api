@@ -46,11 +46,11 @@ clean:
 publish:
 	sc artifact-manager publish
 
-# We're deploying into the "public-api-strangler" system/namespace.
+# We're deploying into the "api-public" system/namespace.
 # The "api" component will be called "asset-uploads-api" in that namespace.
 COMPONENT ?= asset-uploads-api
 ENV       ?= $(error need to set ENV)
-SYSTEM    ?= public-api-strangler
+SYSTEM    ?= api-public
 ZONES     ?= $(error need to set ZONES)
 
 define DEPLOY_FLAGS
@@ -61,10 +61,10 @@ define DEPLOY_FLAGS
 endef
 
 # Glimpse naming conventions require mapping "production" to "prod".
-# The public-api-strangler deployment is the "public-api" product in glimpse.
+# The api-public deployment is the "public-api" product in glimpse.
 .PHONY: publish-deploy
 publish-deploy: GLIMPSE_ENV=$(ENV:production=prod)
-publish-deploy: GLIMPSE_PRODUCT=public-api
+publish-deploy: GLIMPSE_PRODUCT=api-public
 publish-deploy:
 	sc artifact-manager deploy $(DEPLOY_FLAGS) publish \
 		--command="./api --config=api-$(ENV)" \

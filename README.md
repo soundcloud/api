@@ -1,30 +1,24 @@
-# ⚠️⚠️DEPRECATED⚠️⚠️
+# API Public
 
-**Traffic and code have been moved to [API Public](https://github.com/soundcloud/api-public). Do not make new changes here. This repository will be graveyarded soon.**
-
-## Public API Strangler (PAS)
-
-[![Swagger UI](https://img.shields.io/badge/API-Swagger%20UI-green)](https://public-api-doc.soundcloud.org/)
+[![Swagger UI](https://img.shields.io/badge/API-Swagger%20UI-green)](https://api-public-doc.soundcloud.org/)
 
 
-**Service discovery name:** `http.strangler.prod.public-api.srv.db.s-cloud.net`
+**Service discovery name:** `http.api.prod.api-public.srv.db.s-cloud.net`
 
-An implementation of the [_strangler_ pattern](http://martinfowler.com/bliki/StranglerApplication.html) for Mothership's Public API.
-
-Several small features, like rate-limiting and other security checks, are implemented at this layer, rather than in the Mothership codebase.
+SoundCloud's Public API.
 
 ## Development
 
-See [CONTRIBUTING.md](https://github.com/soundcloud/public-api-strangler/blob/master/CONTRIBUTING.md#making-a-change) for development and contribution guidelines.
+See [CONTRIBUTING.md](https://github.com/soundcloud/api-public/blob/master/CONTRIBUTING.md#making-a-change) for development and contribution guidelines.
 
-[CD Pipeline](https://ci.soundcloud.org/go/pipeline/activity/public-api-strangler).
+[CD Pipeline](https://ci.soundcloud.org/go/pipeline/activity/api-public).
 
 ## Notes
 
 ### Multipart requests
 
 All `multipart/form-data` requests are forwarded by [ampelmann](https://github.com/soundcloud/ampelmann/blob/master/ampelmann.json#L94-L115)
-to the [`asset-uploads` component](https://github.com/soundcloud/public-api-strangler/blob/master/asset-uploads/README.md).
+to the [`asset-uploads` component](https://github.com/soundcloud/api-public/blob/master/asset-uploads/README.md).
 
 ### Rate limiting allowlist
 
@@ -39,7 +33,7 @@ The `./access-grant-exchange-acceptance-tests` directory contains scripts to
 support interactive acceptance testing of the supported OAuth access grant
 exchange flows. These intention of these tests is mainly to ensure that no
 regressions are introduced while extracting the access grant exchange from
-Mothership into Public API Strangler.
+Mothership into API Public.
 
 The test suite can be run for a local instance,
 

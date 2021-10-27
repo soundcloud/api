@@ -1,4 +1,4 @@
-APP_NAME="public-api-strangler"
+APP_NAME="api-public"
 
 JAVA_OPTS="-XX:+UseCompressedOops -XX:+UseConcMarkSweepGC -XX:NewRatio=1 -Xmx2G -Xms2G -XX:ParallelGCThreads=2 -Dcom.twitter.jvm.numProcs=10 -Djdk.nio.maxCachedBufferSize=262144"
 
@@ -58,7 +58,7 @@ TRACK_COORDINATOR_CLIENT_REQUEST_TIMEOUT_MILLIS=2000
 
 RATELIMIT_MAX_CONN="999999"
 
-PUBLIC_API_STRANGLER_MEMCACHED_SRV_RECORD="dnssrv!memcached.cache.prod.public-api-strangler.srv.${ZONE}.s-cloud.net."
+API_PUBLIC_MEMCACHED_SRV_RECORD="dnssrv!memcached.cache.prod.api-public.srv.${ZONE}.s-cloud.net."
 ZOOKEEPER_ADDRESS="dnssrv!zookeeper.coordinator.prod.rollout.srv.db.s-cloud.net."
 
 STITCH4FOLLOWS_SRV_RECORD="dnssrv!http.web-follows.prod.stitch4counts.srv.db.s-cloud.net."

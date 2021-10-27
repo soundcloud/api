@@ -1,7 +1,7 @@
 source api-production-secrets
 
 MEDIA_SERVICE_ADDRESS=dnssrv!http.coordinator.prod.media-service.srv.db.s-cloud.net
-PUBLIC_API_STRANGLER_ADDRESS=publicapistrangler:5000
+API_PUBLIC_ADDRESS=apipublic:5000
 
 MAX_REQUEST_BYTES=524288000
 

@@ -1,7 +1,7 @@
 DEV_STACK := sbt-jdk-8
 
 APP_NAME := $(shell sc manifest name)
-PUBLIC_API_STRANGLER_VERSION := $(shell sc artifact-manager package-version)
+API_PUBLIC_VERSION := $(shell sc artifact-manager package-version)
 
 API_COMPONENT := api
 API_CONFIG    := production
@@ -49,15 +49,15 @@ check-prometheus:
 
 docker-up-%:
 	echo "This assumes you've run make package & make package-assets before"
-	CONFIG=$* VERSION=$(PUBLIC_API_STRANGLER_VERSION) docker-compose -f docker-compose-e2e-tests.yml up -d
-	sc crun -l base-dev -- sc wait http publicapistrangler:5000/-/health
+	CONFIG=$* VERSION=$(API_PUBLIC_VERSION) docker-compose -f docker-compose-e2e-tests.yml up -d
+	sc crun -l base-dev -- sc wait http apipublic:5000/-/health
 	sc crun -l base-dev -- sc wait http asset-uploads:5005/-/health
 
 
 end-to-end-test: stop-containers
 	echo "This assumes you've run make package before"
-	CONFIG=e2e VERSION=$(PUBLIC_API_STRANGLER_VERSION) docker-compose -f docker-compose-e2e-tests.yml up -d publicapistrangler
-	sc crun -l base-dev -- sc wait http publicapistrangler:5000/-/health
+	CONFIG=e2e VERSION=$(API_PUBLIC_VERSION) docker-compose -f docker-compose-e2e-tests.yml up -d apipublic
+	sc crun -l base-dev -- sc wait http apipublic:5000/-/health
 	sc crun -l $(DEV_STACK) --config=e2e.secrets -- sbt endToEnd/test
 	make docker-down
 
@@ -72,10 +72,10 @@ contract-test: package package-assets stop-containers docker-up-development
 	make docker-down
 
 docker-down:
-	CONFIG= VERSION=$(PUBLIC_API_STRANGLER_VERSION) docker-compose down --remove-orphans
+	CONFIG= VERSION=$(API_PUBLIC_VERSION) docker-compose down --remove-orphans
 
 stop-containers:
-	CONFIG= VERSION=$(PUBLIC_API_STRANGLER_VERSION) docker-compose rm -s -f
+	CONFIG= VERSION=$(API_PUBLIC_VERSION) docker-compose rm -s -f
 
 unit-test:
 	$(SBT) test
@@ -110,10 +110,10 @@ publish-deploy:
 		--ingress http://$(APP_NAME).k2.lb.s-cloud.net:http \
 		--ingress http://$(APP_NAME):http \
 		--ingress http://$(APP_NAME).int.s-cloud.net:http \
-		--ingress http://public-api.int.s-cloud.net:http \
+		--ingress http://api-public.int.s-cloud.net:http \
 		--public-ingress http://api.soundcloud.com:http \
 		--slack '#deploys' \
-		--glimpse http.strangler.prod.public-api \
+		--glimpse http.api.prod.api-public \
 		--prometheus.port telemetry
 
 promote-to-stable:
@@ -125,7 +125,7 @@ promote-to-release:
 canary-api:
 	sc k8s canary \
 		--zones=$(ZONES) \
-		--system=public-api-strangler \
+		--system=api-public \
 		--env=production \
 		--component="$(API_COMPONENT)" \
 		--slack '#deploys' \
@@ -152,7 +152,7 @@ MEMORY_REQUEST_replicas = 2Gi
 MEMORY_REQUEST = $(if $(MEMORY_REQUEST_$(ZONES)),$(MEMORY_REQUEST_$(ZONES)),$(error MEMORY_REQUEST is not set for ZONES $(ZONES)))
 
 deploy-prometheus:
-	sc prometheus deploy --zones $(ZONES) -s public-api-strangler -e production \
+	sc prometheus deploy --zones $(ZONES) -s api-public -e production \
 		--cpu.request=$(CPU_REQUEST) \
 		--memory.request=$(MEMORY_REQUEST) \
 		--volume-size=150Gi \

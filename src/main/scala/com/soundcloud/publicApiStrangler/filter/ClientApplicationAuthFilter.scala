@@ -23,8 +23,7 @@ import com.twitter.util.Future
 class ClientApplicationAuthFilter(
     userAuthentication: UserAuthentication,
     telemetry: Telemetry,
-    router: HandlerRouter,
-    oauthHeaderRolloutFlag: () => Future[Boolean]
+    router: HandlerRouter
 ) extends SimpleFilter[Request, Response] {
 
   private val oauthTokenParams = List("auth_token", "oauth_token")
@@ -84,17 +83,10 @@ class ClientApplicationAuthFilter(
           // exclude allowlisted partners from Auth header enforcement
           if (ClientApplicationAuthFilter.allowlistedApplicationIds.contains(clientAppId)) {
             service(request)
+          } else if (isAuthHeaderPresent(authType)) {
+            service(request)
           } else {
-            // allow only Authorization header, under the rollout flag
-            oauthHeaderRolloutFlag().flatMap {
-              case true =>
-                if (isAuthHeaderPresent(authType)) {
-                  service(request)
-                } else {
-                  Future.value(ErrorResponse(Status.Unauthorized, invalidAuthenticationError))
-                }
-              case _ => service(request)
-            }
+            Future.value(ErrorResponse(Status.Unauthorized, invalidAuthenticationError))
           }
         }
       }
@@ -149,7 +141,7 @@ object ClientApplicationAuthFilter {
     "179373", // Android Pairing Interview
     "313960", // WeDJ
     "313943", // Rekordbox DJ
-    "122363" // rss-importer
+    "129952" // Traktor DJ
   )
 
   val invalidResponseTypeError = "Authorization is only allowed for response_type=code."

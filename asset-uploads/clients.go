@@ -9,7 +9,7 @@ import (
 
 const (
 	jsonContentType  = "application/json"
-	clientSystemName = "public-api-strangler-assets"
+	clientSystemName = "api-public-assets"
 )
 
 type mediaServiceClientAPI interface {

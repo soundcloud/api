@@ -9,7 +9,6 @@ import com.soundcloud.jvmkit.module.http.server.akira.ResponseDumpSessionRegistr
 import com.soundcloud.jvmkit.module.http.server.config.HttpServerConfig
 import com.soundcloud.jvmkit.module.memcached.RichMemcachedClient
 import com.soundcloud.jvmkit.module.memcached.config.MemcachedClientConfig
-import com.soundcloud.jvmkit.module.rollout.BasicRolloutFeature
 import com.soundcloud.jvmkit.module.telemetry.Telemetry
 import com.soundcloud.jvmkit.module.telemetry.exceptions.ExceptionCollector
 import com.soundcloud.jvmkit.module.util.config.AppConfig
@@ -34,9 +33,9 @@ object App {
     val handlers = new Handlers(telemetry, clients, exceptionCollector)
 
     val bffApplication =
-      BffApplication(Urn("soundcloud", "systems", "public-api-strangler"), config.getApplicationResourceName)
+      BffApplication(Urn("soundcloud", "systems", "api-public"), config.getApplicationResourceName)
 
-    val memcachedResourceName = ResourceName("PUBLIC_API_STRANGLER_MEMCACHED")
+    val memcachedResourceName = ResourceName("API_PUBLIC_MEMCACHED")
     val memcachedClient = RichMemcachedClient(
       MemcachedClientConfig.from(memcachedResourceName, config),
       telemetry
@@ -120,16 +119,13 @@ object App {
           new ClientApplicationAuthFilter(
             clients.userAuthentication,
             telemetry,
-            router,
-            () => clients.rolloutClient.isActive(BasicRolloutFeature("enforce_oauth_header"))
+            router
           )
         ),
         new ExceptForTrackUploadsFilter(
           new ClientApplicationActivityTelemetryFilter(clients.userAuthentication, telemetry, router)
         ),
-        new AcceptOnlyJsonRequestFilter(
-          () => clients.rolloutClient.isActive(BasicRolloutFeature("strip_format_xml_param"))
-        ),
+        new AcceptOnlyJsonRequestFilter,
         new HeadRequestFilter,
         new OffsetLimitRequestFilter(limitOffsetPaths, limitOffset),
         new CookieHeaderRemovalFilter,

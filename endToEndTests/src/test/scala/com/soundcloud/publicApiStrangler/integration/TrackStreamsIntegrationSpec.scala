@@ -11,7 +11,7 @@ class TrackStreamsIntegrationSpec extends IntegrationTest {
   "requesting track's streamable URLs" >> {
 
     "should return URLs for a streamable track" in new TrackStreamContext {
-      val response = server.get(path(freeTierTrackId))
+      val response = server.get(path(freeTierTrackId), authenticatedUSHeaders)
 
       response.status === 200
 

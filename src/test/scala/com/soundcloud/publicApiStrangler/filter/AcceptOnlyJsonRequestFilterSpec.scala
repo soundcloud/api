@@ -13,7 +13,7 @@ class AcceptOnlyJsonRequestFilterSpec extends UnitSpecification {
   }
 
   "doesn't strip the format query parameter if the value is not xml" in new Context {
-    val filter = new AcceptOnlyJsonRequestFilter(() => Future.True)
+    val filter = new AcceptOnlyJsonRequestFilter
     val request = Request("/test", "format" -> "json")
 
     val responseFromNextService = mock[Response]
@@ -25,8 +25,8 @@ class AcceptOnlyJsonRequestFilterSpec extends UnitSpecification {
     Await.result(filter(request, next)) mustEqual responseFromNextService
   }
 
-  "strips format query parameter when rollout is on" in new Context {
-    val filter = new AcceptOnlyJsonRequestFilter(() => Future.True)
+  "strips format query parameter if the value is xml" in new Context {
+    val filter = new AcceptOnlyJsonRequestFilter
     val request = Request("/test", "format" -> "xml")
 
     val responseFromNextService = mock[Response]
@@ -38,19 +38,9 @@ class AcceptOnlyJsonRequestFilterSpec extends UnitSpecification {
     Await.result(filter(request, next)) mustEqual responseFromNextService
   }
 
-  "doesn't modify incoming request when rollout is off" in new Context {
-    val filter = new AcceptOnlyJsonRequestFilter(() => Future.False)
-    val request = Request("/test", "format" -> "xml")
-
-    val responseFromNextService = mock[Response]
-    when(next.apply(request)).thenReturn(Future.value(responseFromNextService))
-
-    Await.result(filter(request, next)) mustEqual responseFromNextService
-  }
-
   "doesn't modify incoming request if request method is NOT GET" in new Context {
     val contentString = "somecontentHere--"
-    val filter = new AcceptOnlyJsonRequestFilter(() => Future.True)
+    val filter = new AcceptOnlyJsonRequestFilter
     val request = Request("/test", "format" -> "xml")
     request.setContentString(contentString)
     request.method_=(Method.Put)
@@ -82,7 +72,7 @@ class AcceptOnlyJsonRequestFilterSpec extends UnitSpecification {
         val request = Request()
         request.accept = header
 
-        val filter = new AcceptOnlyJsonRequestFilter(() => Future.False)
+        val filter = new AcceptOnlyJsonRequestFilter
 
         val responseFromNextService = mock[Response]
         when(next.apply(like[Request] {
@@ -96,7 +86,7 @@ class AcceptOnlyJsonRequestFilterSpec extends UnitSpecification {
 
     "using the json suffix" in new Context {
       val request = Request("/test.json")
-      val filter = new AcceptOnlyJsonRequestFilter(() => Future.False)
+      val filter = new AcceptOnlyJsonRequestFilter
 
       val responseFromNextService = mock[Response]
       when(next.apply(like[Request] {
@@ -109,7 +99,7 @@ class AcceptOnlyJsonRequestFilterSpec extends UnitSpecification {
 
     "without the header and extension" in new Context {
       val request = Request()
-      val filter = new AcceptOnlyJsonRequestFilter(() => Future.False)
+      val filter = new AcceptOnlyJsonRequestFilter
       val responseFromNextService = mock[Response]
 
       when(next.apply(like[Request] {
@@ -124,7 +114,7 @@ class AcceptOnlyJsonRequestFilterSpec extends UnitSpecification {
   "sets accept header to application/json for XML+* requests" in new Context {
     val request = Request()
     request.accept = "application/xml;q=0.8,*/*;q=0.5"
-    val filter = new AcceptOnlyJsonRequestFilter(() => Future.False)
+    val filter = new AcceptOnlyJsonRequestFilter
 
     val responseFromNextService = mock[Response]
     when(next.apply(like[Request] {
@@ -138,7 +128,7 @@ class AcceptOnlyJsonRequestFilterSpec extends UnitSpecification {
   "rejects non-json requests with a 406 response" >> {
     "using the suffix" in new Context {
       val request = Request("/test.xml")
-      val filter = new AcceptOnlyJsonRequestFilter(() => Future.False)
+      val filter = new AcceptOnlyJsonRequestFilter
 
       Await.result(filter(request, next)).statusCode mustEqual 406
       verifyNoMoreInteractions(next)
@@ -147,7 +137,7 @@ class AcceptOnlyJsonRequestFilterSpec extends UnitSpecification {
     "using the accept header" in new Context {
       val request = Request()
       request.accept = MediaType.Xml
-      val filter = new AcceptOnlyJsonRequestFilter(() => Future.False)
+      val filter = new AcceptOnlyJsonRequestFilter
 
       Await.result(filter(request, next)).statusCode mustEqual 406
       verifyNoMoreInteractions(next)

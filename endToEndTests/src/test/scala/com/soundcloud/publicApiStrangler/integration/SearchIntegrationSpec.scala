@@ -14,7 +14,7 @@ class SearchIntegrationSpec extends IntegrationTest {
 
   "/tracks" >> {
     "should return only full tracks, if no access are present (free tier is default)" in new SearchContext {
-      val response = server.get(searchPath(params = Map("q" -> "Crazy In Love")))
+      val response = server.get(searchPath(params = Map("q" -> "Crazy In Love")), authenticatedDEHeaders)
 
       response.status === 200
 
@@ -24,7 +24,8 @@ class SearchIntegrationSpec extends IntegrationTest {
 
     "should return full tracks and snippets, if access=playable,preview" in new SearchContext {
       val response = server.get(
-        searchPath(params = Map("q" -> "better", "limit" -> "30", "access" -> "playable,preview"))
+        searchPath(params = Map("q" -> "better", "limit" -> "30", "access" -> "playable,preview")),
+        authenticatedDEHeaders
       )
 
       response.status === 200
@@ -39,7 +40,8 @@ class SearchIntegrationSpec extends IntegrationTest {
 
     "should return blocked tracks as well, full access" in new SearchContext {
       val response = server.get(
-        searchPath(params = Map("q" -> "better", "limit" -> "30", "access" -> "playable,preview,blocked"))
+        searchPath(params = Map("q" -> "better", "limit" -> "30", "access" -> "playable,preview,blocked")),
+        authenticatedDEHeaders
       )
 
       response.status === 200
@@ -53,7 +55,9 @@ class SearchIntegrationSpec extends IntegrationTest {
         searchPath(params = Map(
           "q" -> "Test - Geo blocked track",
           "ids" -> geoblockedInGermanyTrackId,
-          "access" -> "playable,preview,blocked")),
+          "access" -> "playable,preview,blocked"
+        )
+        ),
         authenticatedDEHeaders
       )
 

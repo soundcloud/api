@@ -1,1 +1,1 @@
-{"name":"PUBLIC_API_STRANGLER_CONTENT_AUTHORIZATION","groups":[],"percentages":[1],"user_ids":[],"state":{"json_class":"Symbol","s":"off"},"actions":[{"json_class":"Symbol","s":"enable"}]}
+{"name":"API_PUBLIC_CONTENT_AUTHORIZATION","groups":[],"percentages":[1],"user_ids":[],"state":{"json_class":"Symbol","s":"off"},"actions":[{"json_class":"Symbol","s":"enable"}]}

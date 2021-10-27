@@ -4,24 +4,23 @@ import com.twitter.finagle.http._
 import com.twitter.finagle.{Service, SimpleFilter}
 import com.twitter.util.Future
 
-class AcceptOnlyJsonRequestFilter(stripXml: () => Future[Boolean]) extends SimpleFilter[Request, Response] {
+class AcceptOnlyJsonRequestFilter extends SimpleFilter[Request, Response] {
   override def apply(request: Request, next: Service[Request, Response]) = {
-    stripFormatParam(request).flatMap {
-      case req =>
-        if (isJsonRequest(req)) {
-          req.accept = "application/json"
-          next(req)
-        } else
-          Future.value(Response(Version.Http11, Status.NotAcceptable))
+    stripFormatParam(request).flatMap { req =>
+      if (isJsonRequest(req)) {
+        req.accept = "application/json"
+        next(req)
+      } else
+        Future.value(Response(Version.Http11, Status.NotAcceptable))
     }
   }
 
   private def isJsonRequest(request: Request) =
     (!request.path.contains('.') || request.path.split('.').toList.last == "json") &&
       (request.acceptMediaTypes.isEmpty ||
-        request.acceptMediaTypes.find(_ == "*/*").isDefined ||
-        request.acceptMediaTypes.find(_ == "*").isDefined ||
-        request.acceptMediaTypes.find(_.matches("(text|application)/(x-)?j(avascript|son)")).isDefined)
+        request.acceptMediaTypes.contains("*/*") ||
+        request.acceptMediaTypes.contains("*") ||
+        request.acceptMediaTypes.exists(_.matches("(text|application)/(x-)?j(avascript|son)")))
 
   private def isGet(request: Request) =
     request.method == Method.Get
@@ -30,20 +29,15 @@ class AcceptOnlyJsonRequestFilter(stripXml: () => Future[Boolean]) extends Simpl
     if (!isGet(request)) {
       Future.value(request)
     } else {
-      stripXml().map {
-        case true =>
-          val paramsWithoutFormat = request.params.toIterable.filterNot { case (k, v) => k == "format" && v == "xml" }
-          val req = Request(request.path, paramsWithoutFormat.toSeq: _*)
-          req.version_=(request.version)
-          req.method_=(request.method)
-          request.headerMap.foreach {
-            case (k, v) =>
-              req.headerMap.set(k, v)
-          }
-          req
-        case false =>
-          request
+      val paramsWithoutFormat = request.params.filterNot { case (k, v) => k == "format" && v == "xml" }
+      val req = Request(request.path, paramsWithoutFormat.toSeq: _*)
+      req.version_=(request.version)
+      req.method_=(request.method)
+      request.headerMap.foreach {
+        case (k, v) =>
+          req.headerMap.set(k, v)
       }
+      Future.value(req)
     }
   }
 }

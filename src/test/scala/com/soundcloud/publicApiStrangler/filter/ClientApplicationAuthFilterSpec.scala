@@ -23,16 +23,15 @@ class ClientApplicationAuthFilterSpec extends Specification with Mockito {
       .register(Method.Get, Routing.connectPath, _ => Future.value(JsonResponseBuilder.ok()))
       .build
 
-    def oauthHeaderRollout = () => Future.value(true)
     lazy val session = new UserSessionBuilder().setAgent(new Urn("soundcloud", "application", "999")).build()
     lazy val request = HandlerRequest(Request("/foo", ("client_id", "999")))
 
     val filter =
-      new ClientApplicationAuthFilter(new FakeUserAuthentication(session), telemetry, router, oauthHeaderRollout)
+      new ClientApplicationAuthFilter(new FakeUserAuthentication(session), telemetry, router)
   }
 
   "with present application id" >> {
-    "forwards the request if Auth header is present, rollout is active" in new Context {
+    "forwards the request if Auth header is present" in new Context {
       private val r: Request = Request("/foo")
       r.authorization_=("OAuth 1234")
       override lazy val request = HandlerRequest(r)
@@ -45,18 +44,7 @@ class ClientApplicationAuthFilterSpec extends Specification with Mockito {
       )
     }
 
-    "logs client param and forwards the request, rollout inactive" in new Context {
-      override lazy val oauthHeaderRollout = () => Future.value(false)
-      service.apply(request) returns Future.value(Response(Status.Ok))
-
-      Await.result(filter.apply(request, service)).status ==== Status.Ok
-      telemetry.getSampleValue("application_auth_type_total", Seq("auth_type", "path"), Seq("client_id_param", "/foo")) === Some(
-        1
-      )
-      telemetry.getSampleValue("deprecated_auth_by_app_total", Seq("appid"), Seq("999")) === Some(1)
-    }
-
-    "logs client param and rejects the request as Auth header is not present, rollout active" in new Context {
+    "logs client param and rejects the request as Auth header is not present" in new Context {
       service.apply(request) returns Future.value(Response(Status.Ok))
 
       val result = Await.result(filter.apply(request, service))
@@ -78,7 +66,7 @@ class ClientApplicationAuthFilterSpec extends Specification with Mockito {
       ClientApplicationAuthFilter.blockedApplicationIds.foreach { appId =>
         val session = new UserSessionBuilder().setAgent(new Urn("soundcloud", "application", appId)).build()
         val filter =
-          new ClientApplicationAuthFilter(new FakeUserAuthentication(session), telemetry, router, oauthHeaderRollout)
+          new ClientApplicationAuthFilter(new FakeUserAuthentication(session), telemetry, router)
 
         Await.result(filter.apply(request, service)).status ==== Status.Ok
       }
@@ -86,33 +74,24 @@ class ClientApplicationAuthFilterSpec extends Specification with Mockito {
   }
 
   "with missing application id" >> {
-    "forwards the request if Auth header is present, rollout inactive" in new Context {
+    "forwards the request if Auth header is present" in new Context {
       private val r: Request = Request("/foo")
       r.authorization_=("OAuth 1234")
       override lazy val request = HandlerRequest(r)
       override lazy val session = new UserSessionBuilder().build()
-      override lazy val oauthHeaderRollout = () => Future.value(false)
 
       service.apply(request) returns Future.value(Response(Status.Ok))
 
       Await.result(filter.apply(request, service)).status ==== Status.Ok
     }
 
-    "rejects the request if Auth header is not present, rollout active" in new Context {
+    "rejects the request if Auth header is not present" in new Context {
       override lazy val session = new UserSessionBuilder().build()
 
       val result = Await.result(filter.apply(request, service))
       result.status ==== Status.Unauthorized
       result.contentString = ClientApplicationAuthFilter.invalidAuthenticationError
 
-    }
-
-    "forwards the request, rollout inactive" in new Context {
-      override lazy val session = new UserSessionBuilder().build()
-      override lazy val oauthHeaderRollout = () => Future.value(false)
-
-      service.apply(request) returns Future.value(Response(Status.Ok))
-      val result = Await.result(filter.apply(request, service)).status ==== Status.Ok
     }
   }
 
@@ -122,7 +101,7 @@ class ClientApplicationAuthFilterSpec extends Specification with Mockito {
       ClientApplicationAuthFilter.blockedApplicationIds.foreach { appId =>
         val session = new UserSessionBuilder().setAgent(new Urn("soundcloud", "application", appId)).build()
         val filter =
-          new ClientApplicationAuthFilter(new FakeUserAuthentication(session), telemetry, router, oauthHeaderRollout)
+          new ClientApplicationAuthFilter(new FakeUserAuthentication(session), telemetry, router)
 
         Await.result(filter.apply(request, service)).status ==== Status.Forbidden
       }
@@ -130,7 +109,7 @@ class ClientApplicationAuthFilterSpec extends Specification with Mockito {
   }
 
   "with oauth header" >> {
-    "forwards request, logs auth type but not deprecated id, rollout active" in new Context {
+    "forwards request, logs auth type but not deprecated id" in new Context {
       private val r: Request = Request("/foo")
       r.authorization_=("OAuth 1234")
 
@@ -145,13 +124,13 @@ class ClientApplicationAuthFilterSpec extends Specification with Mockito {
       telemetry.getSampleValue("deprecated_auth_by_app_total", Seq("appid"), Seq("999")) === None
     }
 
-    "forwards request for allowlisted apps, rollout active" in new Context {
+    "forwards request for allowlisted apps" in new Context {
       service.apply(request) returns Future.value(Response(Status.Ok))
 
       ClientApplicationAuthFilter.allowlistedApplicationIds.foreach { appId =>
         val session = new UserSessionBuilder().setAgent(new Urn("soundcloud", "application", appId)).build()
         val filter =
-          new ClientApplicationAuthFilter(new FakeUserAuthentication(session), telemetry, router, oauthHeaderRollout)
+          new ClientApplicationAuthFilter(new FakeUserAuthentication(session), telemetry, router)
 
         Await.result(filter.apply(request, service)).status ==== Status.Ok
       }

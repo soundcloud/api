@@ -24,7 +24,7 @@ class Vk2Client(httpClient: JsonClient) {
               .obj(
                 "test" -> false,
                 // You might be wondering why the system_urn here is public-api
-                // rather than, e.g., public-api-strangler. Essentially, vk2 uses a
+                // rather than, e.g., api-public. Essentially, vk2 uses a
                 // hardcoded list of system URNs as a way of verifying that requests
                 // came from a "valid place" (e.g. that we don't get sign-up requests
                 // that claim to be from api-web, which does not support sign-up).

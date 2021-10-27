@@ -1,7 +1,7 @@
 ---
 format_version: 2
 pipelines:
-  public-api-strangler-memcached:
+  api-public-memcached:
     group: integrations-team
     label_template: "${COUNT}-${git[:7]}"
     materials:
@@ -20,7 +20,7 @@ pipelines:
                 - deploy
                 - scale
                 - ZONES=db
-                - SYSTEM=public-api-strangler
+                - SYSTEM=api-public
                 - CPU=0.2
                 - STORAGE=512
                 - REPLICAS=10
@@ -33,7 +33,7 @@ pipelines:
                 - deploy
                 - scale
                 - ZONES=replicas
-                - SYSTEM=public-api-strangler
+                - SYSTEM=api-public
                 - CPU=0.2
                 - STORAGE=512
                 - REPLICAS=10

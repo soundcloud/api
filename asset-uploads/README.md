@@ -1,6 +1,6 @@
 # asset-uploads
 
-This is a `public-api-strangler` component that preprocesses, rewrites and
+This is a `api-public` component that preprocesses, rewrites and
 forwards ALL `multipart/form-data` requests. Even if a route does not exist for
 the given endpoint, the request is forwarded as is to the `api`
 component.
@@ -25,7 +25,7 @@ curl -vi -XPOST \
 -F "track[sharing]=private" \
 -F "track[title]=My Track" \
 -H "Host: api.soundcloud.com" \
-http.asset-uploads-api.prod.public-api.srv.db.s-cloud.net/tracks
+http.asset-uploads-api.prod.api-public.srv.db.s-cloud.net/tracks
 ```
 
 To use chunked transfer mode (where we don't tell the server how big the file is going to be upfront), add `-H "Transfer-Encoding: chunked"`.

@@ -1,12 +1,12 @@
 ---
 format_version: 2
 pipelines:
-  public-api-strangler:
+  api-public:
     group: integrations-team
     label_template: "${COUNT}-${git[:7]}"
     materials:
       git:
-        git: git@github.com:soundcloud/public-api-strangler.git
+        git: git@github.com:soundcloud/api-public.git
         # There is a separate pipeline for the asset-uploads-api component.
         blacklist:
         - asset-uploads/**/*

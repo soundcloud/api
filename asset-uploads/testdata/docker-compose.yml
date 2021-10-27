@@ -2,10 +2,10 @@ version: '3'
 
 services:
   asset_uploads:
-    image: docker.localproxy.sc:42042/public-api-strangler-asset-uploads:$TAG
+    image: docker.localproxy.sc:42042/api-public-asset-uploads:$TAG
     depends_on:
       - media_service
-      - public_api_strangler
+      - api_public
     command: ./api --config=api-test
     environment:
       https_proxy: 'http://proxy.localproxy.sc:42043'
@@ -19,7 +19,7 @@ services:
     working_dir: /srv/test
     command: go run media_service.go -listenAddr=:80
 
-  public_api_strangler:
+  api_public:
     image: docker.localproxy.sc:42042/go-1:latest
     volumes:
       - ../testdata:/srv/test:ro

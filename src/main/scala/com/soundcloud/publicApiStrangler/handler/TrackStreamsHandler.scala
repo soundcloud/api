@@ -15,10 +15,6 @@ import play.api.libs.json.Json
 
 case class StreamParams(trackUrn: Urn, secretToken: Option[String])
 
-/**
-  * Overrides the public api endpoints used to retrieve track streams.
-  * Reason for overriding is to migrate to the media-service service, and to add support for SNIP content policy.
-  */
 class TrackStreamsHandler(
     userAuthentication: UserAuthentication,
     streamService: StreamService,

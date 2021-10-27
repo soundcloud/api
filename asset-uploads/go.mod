@@ -1,4 +1,4 @@
-module github.com/soundcoud/public-api-strangler/asset-uploads
+module github.com/soundcoud/api-public/asset-uploads
 
 go 1.12
 

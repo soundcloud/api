@@ -11,7 +11,7 @@ class TracksIntegrationSpec extends IntegrationTest {
   "requesting a track resource by default" >> {
 
     "should return a streamable track" in new TrackContext {
-      val response = server.get(path(freeTierTrackId))
+      val response = server.get(path(freeTierTrackId), authenticatedDEHeaders)
 
       response.status === 200
 
@@ -47,7 +47,7 @@ class TracksIntegrationSpec extends IntegrationTest {
     }
 
     "should return a track with api_streamable=false" in new TrackContext {
-      val response = server.get(path(freeTierNonStreamableTrackId))
+      val response = server.get(path(freeTierNonStreamableTrackId), authenticatedDEHeaders)
 
       response.status === 200
 
@@ -59,6 +59,8 @@ class TracksIntegrationSpec extends IntegrationTest {
 
     "should return a blocked track, not allowlisted app" in new TrackContext {
       val response = server.get(path(blockedTrackId), authenticatedUSHeaders)
+
+      response.status === 200
 
       (response.json \ "stream_url").asOpt[String] must beNone
       (response.json \ "access").as[String] must equalTo("blocked")

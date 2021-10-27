@@ -2,11 +2,11 @@ val jvmkitVersion = "16.3.0"
 val specs2Version = "4.12.0"
 val httpComponentsVersion = "4.5.12"
 
-lazy val publicApiStrangler = project
+lazy val apiPublic = project
   .in(file("."))
   .enablePlugins(SbtKitPlugin, TwirpSbtPlugin)
   .settings(
-    name := "public-api-strangler",
+    name := "api-public",
     scalaVersion := scalaVersion212,
     libraryDependencies ++= Seq(
       "com.soundcloud" %% "jvmkit-http-client" % jvmkitVersion,

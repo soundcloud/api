@@ -1,4 +1,4 @@
-# Developing Public API Strangler
+# Developing API Public
 
 ## BFF architecture
 
@@ -12,7 +12,7 @@ We recommend reading about our BFFs before making changes to our codebase, espec
 
 Set the `USE_CRUN` environment variable to `false` to avoid using sc crun when possible.
 
-## Running Public API Strangler locally
+## Running API Public locally
 
 ```
 shibboleth show config/production_api.sh.enc > config/production_api.sh

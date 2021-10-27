@@ -30,7 +30,7 @@ func main() {
 
 		mediaServiceAddr = flag.String("media-service-addr", os.Getenv("MEDIA_SERVICE_ADDRESS"), "media service address")
 
-		stranglerAddr = flag.String("strangler-addr", os.Getenv("PUBLIC_API_STRANGLER_ADDRESS"), "Public API strangler service address")
+		apiAddr = flag.String("api-addr", os.Getenv("API_PUBLIC_ADDRESS"), "API Public service address")
 
 		awsKey    = flag.String("aws-key", os.Getenv("AWS_ACCESS_KEY_ID"), "AWS access key ID")
 		awsSecret = flag.String("aws-secret", os.Getenv("AWS_SECRET_ACCESS_KEY"), "AWS secret access key")
@@ -78,28 +78,28 @@ func main() {
 
 	service := &service{
 		upload: &uploader{
-			mediaService: 	mediaService,
-			s3Uploader:   	s3manager.NewUploaderWithClient(s3),
-			s3Bucket:     	*s3Bucket,
+			mediaService:   mediaService,
+			s3Uploader:     s3manager.NewUploaderWithClient(s3),
+			s3Bucket:       *s3Bucket,
 			s3KeyGenerator: generateS3Key,
 		},
 	}
 
-	stranglerURL, err := url.Parse("http://" + *stranglerAddr)
+	apiPublicURL, err := url.Parse("http://" + *apiAddr)
 	if err != nil {
 		log.Fatal(err)
 	}
-	strangler := httputil.NewSingleHostReverseProxy(stranglerURL)
-	strangler.Transport = instrumenthttp.Tripperware(
-		"PUBLIC_API_STRANGLER",
+	apiPublic := httputil.NewSingleHostReverseProxy(apiPublicURL)
+	apiPublic.Transport = instrumenthttp.Tripperware(
+		"API_PUBLIC",
 		instrumenthttp.TripperwareOpts{},
 		dnssrv.DefaultTransport,
 	)
-	strangler.ErrorHandler = handleProxyError
+	apiPublic.ErrorHandler = handleProxyError
 
 	controller := &controller{
 		maxRequestBytes: *maxRequestBytes,
-		proxy:           strangler,
+		proxy:           apiPublic,
 		service:         service,
 	}
 
