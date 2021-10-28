@@ -91,8 +91,5 @@
       "type": "http",
       "system": "submarine"
     }
-  ],
-  "telemetry_dashboard": "https://grafana.soundcloud.org/dashboard/db/jvmkit-generic?var-prometheus=public-api-strangler&var-system=public-api-strangler&var-job=public-api-strangler",
-  "ci_dashboard": "https://ci.soundcloud.org/go/tab/pipeline/history/public-api-strangler",
-  "runbook": "https://eng-doc.soundcloud.org/runbooks/integrations/public-api-strangler/"
+  ]
 }
