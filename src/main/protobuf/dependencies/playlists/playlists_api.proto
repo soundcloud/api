@@ -86,6 +86,8 @@ service Writes {
     rpc CreatePlaylist (CreatePlaylistRequest) returns (CreatePlaylistResponse) {}
     rpc UpdatePlaylist (UpdatePlaylistRequest) returns (UpdatePlaylistResponse) {}
     rpc DeletePlaylist (DeletePlaylistRequest) returns (DeletePlaylistResponse) {}
+    rpc AddTrackToPlaylist (AddTrackToPlaylistRequest) returns (AddTrackToPlaylistResponse) {}
+    rpc DeleteTrackFromPlaylist (DeleteTrackFromPlaylistRequest) returns (DeleteTrackFromPlaylistResponse) {}
 }
 
 message CreatePlaylistRequest {
@@ -112,6 +114,22 @@ message DeletePlaylistRequest {
 
 message DeletePlaylistResponse {}
 
+message AddTrackToPlaylistRequest {
+    string playlist_urn = 1;
+    string track_urn = 2;
+    proto.soundcloud.common.session.UserSession user_session = 3;
+}
+
+message AddTrackToPlaylistResponse {}
+
+message DeleteTrackFromPlaylistRequest {
+    string playlist_urn = 1;
+    string track_urn = 2;
+    proto.soundcloud.common.session.UserSession user_session = 3;
+}
+
+message DeleteTrackFromPlaylistResponse {}
+
 message PlaylistCreateOrUpdate {
     google.protobuf.StringValue title = 1; // optional
     google.protobuf.BoolValue public = 2; // optional
@@ -133,4 +151,23 @@ message PlaylistCreateOrUpdate {
 
 message Tracks {
     repeated string urns = 1;
+}
+
+service Likes {
+    // Likes the given playlist for the given user
+    rpc LikePlaylist (LikePlaylistRequest) returns (LikePlaylistResponse) {};
+
+    // Unlikes the given playlist for the given user
+    rpc UnlikePlaylist (LikePlaylistRequest) returns (LikePlaylistResponse) {};
+}
+
+message LikePlaylistRequest {
+    proto.soundcloud.common.session.UserSession user_session = 1; // You must provide a UserSession
+    string urn = 2;
+}
+
+message LikePlaylistResponse {
+    google.protobuf.Timestamp created_at = 1;
+    string target_urn = 2;
+    string user_urn = 3;
 }

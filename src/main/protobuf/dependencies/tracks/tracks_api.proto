@@ -13,10 +13,13 @@ import "common_session.proto";
 import "google/protobuf/timestamp.proto";
 
 service Likes {
+    // Likes the given track of the given user
     rpc LikeTrack (LikeTrackRequest) returns (LikeTrackResponse) {};
 
+    // Unlikes the given track of the given user
     rpc UnlikeTrack (LikeTrackRequest) returns (LikeTrackResponse) {};
 
+    // Returns a list of users that liked the given track
     rpc GetTrackLikers (GetTrackLikersRequest) returns (GetTrackLikersResponse) {};
 }
 
@@ -48,8 +51,13 @@ message LikeTrackResponse {
 }
 
 service Reposts {
+    // Reposts the given track of the given user
     rpc RepostTrack (RepostTrackRequest) returns (RepostTrackResponse) {};
+
+    // Deletes a repost of the given track of the given user
     rpc DeleteTrackRepost (RepostTrackRequest) returns (RepostTrackResponse) {};
+
+    // Returns a list of users that reposted the given track
     rpc GetTrackReposters (TrackRepostersRequest) returns (TrackRepostersResponse) {};
 }
 
@@ -77,12 +85,10 @@ message TrackRepostersPagination {
 }
 
 service Comments {
-    // TO BE REMOVED
-    rpc GetCommentsOnWaveform (GetCommentsOnWaveformRequest) returns (GetCommentsOnWaveformResponse) {};
-    // TO BE REMOVED
-    rpc GetThreadedComments (GetThreadedCommentsRequest) returns (GetThreadedCommentsResponse) {};
-
+    // Returns a threaded list of comments of the given track
     rpc GetTrackComments (GetTrackCommentsRequest) returns (GetTrackCommentsResponse) {};
+
+    // Returns a list of comments (the head of a comment) of the given track
     rpc GetTrackCommentsOnWaveform (GetTrackCommentsRequest) returns (GetTrackCommentsResponse) {};
 }
 
@@ -95,34 +101,6 @@ message GetTrackCommentsRequest {
 }
 
 message GetTrackCommentsResponse {
-    repeated string comments_urns = 1;
-}
-
-// TO BE REMOVED
-message GetCommentsOnWaveformRequest {
-    proto.soundcloud.common.session.UserSession user_session = 1;
-    string urn = 2;
-    google.protobuf.StringValue secret_token = 3; // optional
-    int32 limit = 4;
-    int32 offset = 5;
-}
-
-// TO BE REMOVED
-message GetCommentsOnWaveformResponse {
-    repeated string comments_urns = 1;
-}
-
-// TO BE REMOVED
-message GetThreadedCommentsRequest {
-    proto.soundcloud.common.session.UserSession user_session = 1;
-    string urn = 2;
-    google.protobuf.StringValue secret_token = 3; // optional
-    int32 limit = 4;
-    int32 offset = 5;
-}
-
-// TO BE REMOVED
-message GetThreadedCommentsResponse {
     repeated string comments_urns = 1;
 }
 
@@ -325,6 +303,10 @@ message Track {
     PublisherMetadata publisher_metadata = 51; // optional
     google.protobuf.StringValue station_urn = 52; // optional
     Visuals visuals = 53; // optional
+    Caption caption = 54; // optional
+    AudioAnalysis audio_analysis = 55; // optional
+    google.protobuf.StringValue profile_urn = 56; // optional
+    QuickReactionCounts quick_reaction_counts = 57; // optional
 }
 
 message Metadata {
@@ -490,4 +472,79 @@ message Visual {
 
 message Tracking {
     repeated string impression = 1;
+}
+
+message Caption {
+    google.protobuf.StringValue content = 1; // optional
+}
+
+message AudioAnalysis {
+    string key = 1;
+    double bpm = 2;
+}
+
+service FeaturedPlaylists {
+    // Returns a list of playlists in which the given track is featured
+    rpc GetAllFeaturedPlaylists (GetFeaturedPlaylistsRequest) returns (GetFeaturedPlaylistsResponse) {};
+
+    // Returns a list of albums in which the given track is featured and which are owned by the track owner
+    rpc GetFeaturedAlbums (GetFeaturedPlaylistsRequest) returns (GetFeaturedPlaylistsResponse) {};
+
+    // Returns a list of playlists without albums in which the given track is featured
+    rpc GetFeaturedPlaylistsWithoutAlbums (GetFeaturedPlaylistsRequest) returns (GetFeaturedPlaylistsResponse) {};
+}
+
+message GetFeaturedPlaylistsRequest {
+    proto.soundcloud.common.session.UserSession user_session = 1;
+    string track_urn = 2;
+    int32 limit = 3;
+    int32 offset = 4;
+}
+
+message GetFeaturedPlaylistsResponse {
+    repeated string playlist_urns = 1;
+    google.protobuf.Int32Value offset = 2;
+}
+
+service QuickReactions {
+    rpc CreateOrUpdateReaction (CreateOrUpdateReactionRequest) returns (CreateOrUpdateReactionResponse) {};
+
+    rpc DeleteReaction (DeleteReactionRequest) returns (DeleteReactionResponse) {};
+}
+
+message QuickReaction {
+    string user_urn = 1;
+    string target_urn = 2;
+    string type = 3;
+    google.protobuf.Timestamp created_at = 4;
+}
+
+message CreateOrUpdateReactionRequest {
+    proto.soundcloud.common.session.UserSession user_session = 1;
+    string target_urn = 2;
+    google.protobuf.StringValue secret_token = 3;
+    string type = 4;
+}
+
+message CreateOrUpdateReactionResponse {
+    QuickReaction quick_reaction = 1;
+}
+
+message DeleteReactionRequest {
+    proto.soundcloud.common.session.UserSession user_session = 1;
+    string target_urn = 2;
+    google.protobuf.StringValue secret_token = 3;
+}
+
+message DeleteReactionResponse {
+    QuickReaction quick_reaction = 1;
+}
+
+message QuickReactionCounts {
+    message Count {
+        string type = 1;
+        int64 count = 2;
+    }
+
+    repeated Count counts = 1;
 }

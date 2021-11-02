@@ -1,4 +1,4 @@
-package com.soundcloud.publicApiStrangler.client.comments
+package com.soundcloud.publicApiStrangler.client.moshimoshicomments
 
 import com.soundcloud.jvmkit.module.http.client.{JsonClient, Params}
 import com.soundcloud.jvmkit.module.http.server.ResponseBuilder

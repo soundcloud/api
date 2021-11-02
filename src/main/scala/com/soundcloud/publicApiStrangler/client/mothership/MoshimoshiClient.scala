@@ -9,7 +9,7 @@ import com.soundcloud.jvmkit.module.util.http.Headers
 import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.jvmkit.module.util.{Path, Urn}
 import com.soundcloud.publicApiStrangler.client.chrono.ChronoResponse
-import com.soundcloud.publicApiStrangler.client.comments.MoshimoshiCommentsComment
+import com.soundcloud.publicApiStrangler.client.moshimoshicomments.MoshimoshiCommentsComment
 import com.soundcloud.publicApiStrangler.client.mothership.response.mapper.UserRepresentationMapper
 import com.soundcloud.publicApiStrangler.client.mothership.response.representation.{UserRepresentation, WebProfile}
 import com.soundcloud.publicApiStrangler.client.support.FetchClient

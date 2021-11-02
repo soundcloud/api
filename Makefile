@@ -50,14 +50,13 @@ check-prometheus:
 docker-up-%:
 	echo "This assumes you've run make package & make package-assets before"
 	CONFIG=$* VERSION=$(API_PUBLIC_VERSION) docker-compose -f docker-compose-e2e-tests.yml up -d
-	sc crun -l base-dev -- sc wait http apipublic:5000/-/health
-	sc crun -l base-dev -- sc wait http asset-uploads:5005/-/health
+	sc wait-for-compose
 
 
 end-to-end-test: stop-containers
 	echo "This assumes you've run make package before"
 	CONFIG=e2e VERSION=$(API_PUBLIC_VERSION) docker-compose -f docker-compose-e2e-tests.yml up -d apipublic
-	sc crun -l base-dev -- sc wait http apipublic:5000/-/health
+	sc wait-for-compose
 	sc crun -l $(DEV_STACK) --config=e2e.secrets -- sbt endToEnd/test
 	make docker-down
 

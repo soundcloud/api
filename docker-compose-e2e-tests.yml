@@ -17,6 +17,11 @@ services:
   apipublic:
     image: docker.localproxy.sc:42042/api-public:$VERSION
     command: bash -lex -c "./api --config=$CONFIG"
+    healthcheck:
+       test: [ "CMD", "curl", "-f", "http://localhost:5001/-/health" ]
+       interval: 5s
+       timeout: 10s
+       retries: 30
     ports:
       - "5000:5000"
       - "5001:5001"
@@ -27,6 +32,11 @@ services:
   asset-uploads:
     image: docker.localproxy.sc:42042/api-public-asset-uploads:$VERSION
     command: ./api --config=api-contract-test
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:5005/-/health" ]
+      interval: 5s
+      timeout: 10s
+      retries: 30
     ports:
       - "5005:5005"
     links:

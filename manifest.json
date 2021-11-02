@@ -33,6 +33,10 @@
     },
     {
       "type": "http",
+      "system": "comments"
+    },
+    {
+      "type": "http",
       "system": "gatekeeper"
     },
     {

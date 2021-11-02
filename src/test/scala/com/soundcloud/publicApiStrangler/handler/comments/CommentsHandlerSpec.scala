@@ -5,7 +5,7 @@ import com.soundcloud.jvmkit.module.outcome._
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.publicApiStrangler.Routing
-import com.soundcloud.publicApiStrangler.client.comments.Comment
+import com.soundcloud.publicApiStrangler.client.moshimoshicomments.Comment
 import com.soundcloud.publicApiStrangler.client.mothership.{RateLimitedError, TooManyRequests}
 import com.soundcloud.publicApiStrangler.service.comments.CommentService
 import com.soundcloud.publicApiStrangler.service.pagination.OffsetBasedPagination
@@ -46,16 +46,16 @@ class CommentsHandlerSpec extends UnitSpecification with Mockito {
   "GET /tracks/:trackId/comments" >> {
 
     trait GetContext extends CommentsHandlerContext {
-      def stubService(outcome: Outcome[Collection[Comment]]) = {
+      def stubService(outcome: OutcomeF[Collection[Comment]]) = {
         commentService
-          .fetchTracksComments(any, any, any)
-          .returns(Future.value(outcome))
+          .fetchTracksComments(any, any, any, any)
+          .returns(outcome)
       }
     }
 
     "when service returns Good" >> {
       "returns ok" in new GetContext {
-        stubService(Collection(List[Comment](), None).good)
+        stubService(Collection(List[Comment](), None).goodF)
 
         val response = get(s"/tracks/${validTrackId}/comments", params, headers)
         response.status ==== Status.Ok
@@ -64,7 +64,7 @@ class CommentsHandlerSpec extends UnitSpecification with Mockito {
       "when linked_partitioning param present, returns a collection of Comments and nextHref" in new GetContext {
         val nextHref = "https://de.link.com"
         val collection = Collection(List(comment), Some(nextHref))
-        stubService(collection.good)
+        stubService(collection.goodF)
 
         val response = get(s"/tracks/${validTrackId}/comments", params, headers)
         response.status ==== Status.Ok
@@ -75,7 +75,7 @@ class CommentsHandlerSpec extends UnitSpecification with Mockito {
 
       "when linked_partitioning param present, does not render nextHref if it's null" in new GetContext {
         val collection = Collection(List(comment), None)
-        stubService(collection.good)
+        stubService(collection.goodF)
 
         val response = get(s"/tracks/${validTrackId}/comments", params, headers)
         response.status ==== Status.Ok
@@ -86,7 +86,7 @@ class CommentsHandlerSpec extends UnitSpecification with Mockito {
 
       "when linked_partitioning param absent, returns a flat array of Comments" in new GetContext {
         val collection = Collection(List(comment), None)
-        stubService(collection.good)
+        stubService(collection.goodF)
 
         override val params = Map("client_id" -> validClientId)
         val response = get(s"/tracks/${validTrackId}/comments", params, headers)
@@ -95,9 +95,9 @@ class CommentsHandlerSpec extends UnitSpecification with Mockito {
       }
 
       "defaults limit to 200 if param not present" in new GetContext {
-        stubService(Collection(List[Comment](), None).good)
+        stubService(Collection(List[Comment](), None).goodF)
 
-        val response = get(s"/tracks/${validTrackId}/comments", params, headers)
+        get(s"/tracks/${validTrackId}/comments", params, headers)
 
         val expectedLimit = 200
         verify(commentService).fetchTracksComments(
@@ -109,12 +109,13 @@ class CommentsHandlerSpec extends UnitSpecification with Mockito {
             ParamMap("linked_partitioning" -> "1", "client_id" -> validClientId),
             None,
             expectedLimit
-          )
+          ),
+          None
         )
       }
 
       "includes the secret_token in the request and pagination" in new GetContext {
-        stubService(Collection(List[Comment](), None).good)
+        stubService(Collection(List[Comment](), None).goodF)
 
         override val params = Map(
           "client_id" -> validClientId,
@@ -125,25 +126,24 @@ class CommentsHandlerSpec extends UnitSpecification with Mockito {
         response.status ==== Status.Ok
 
         verify(commentService).fetchTracksComments(
-          any,
-          any,
-          ===(
-            OffsetBasedPagination(
-              "https://api.example.com",
-              s"/tracks/${validTrackId}/comments",
-              ParamMap(
-                "client_id" -> validClientId,
-                "secret_token" -> "abc"
-              ),
-              None,
-              200
-            )
-          )
+          session,
+          validTrackUrn,
+          OffsetBasedPagination(
+            "https://api.example.com",
+            s"/tracks/${validTrackId}/comments",
+            ParamMap(
+              "client_id" -> validClientId,
+              "secret_token" -> "abc"
+            ),
+            None,
+            200
+          ),
+          Some("abc")
         )
       }
 
       "attaches a 10 minute cache control header" in new GetContext {
-        stubService(Collection(List[Comment](), None).good)
+        stubService(Collection(List[Comment](), None).goodF)
 
         val response = get(s"/tracks/${validTrackId}/comments", params, headers)
 
@@ -154,7 +154,7 @@ class CommentsHandlerSpec extends UnitSpecification with Mockito {
 
     "when service returns Bad" >> {
       "when service returns NotFound, returns not found" in new GetContext {
-        stubService(NotFound().bad)
+        stubService(NotFound().badF)
 
         val response = get(s"/tracks/${validTrackId}/comments", params, headers)
         response.status ==== Status.NotFound
@@ -162,14 +162,14 @@ class CommentsHandlerSpec extends UnitSpecification with Mockito {
       }
 
       "any other Bad, returns bad request" in new GetContext {
-        stubService(CustomError("").bad)
+        stubService(CustomError("").badF)
 
         val response = get(s"/tracks/${validTrackId}/comments", params, headers)
         response.status ==== Status.BadRequest
       }
 
       "does not attach a cache control header" in new GetContext {
-        stubService(NotFound().bad)
+        stubService(NotFound().badF)
 
         val response = get(s"/tracks/${validTrackId}/comments", params, headers)
 

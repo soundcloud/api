@@ -55,6 +55,11 @@ message Badge {
   google.protobuf.Timestamp unread_update_at = 2; // optional
 }
 
+message Seed {
+  string urn = 1;
+  string permalink = 2;
+}
+
 message SystemPlaylist {
   string urn = 1;
   string title = 2;
@@ -72,4 +77,5 @@ message SystemPlaylist {
   google.protobuf.StringValue made_for_urn = 14;
   google.protobuf.StringValue seed_track = 15;
   bool should_filter_geo_blocked = 16;
+  Seed seed = 17; // optional: used by artists-stations, track-stations and personalized-tracks
 }

@@ -4,7 +4,7 @@ import com.soundcloud.jvmkit.module.bff.session.UserAuthentication
 import com.soundcloud.jvmkit.module.http.server.{HandlerRequest, JsonResponseBuilder}
 import com.soundcloud.jvmkit.module.outcome.{Bad, Good, _}
 import com.soundcloud.jvmkit.module.util.Urn
-import com.soundcloud.publicApiStrangler.client.comments.Comment
+import com.soundcloud.publicApiStrangler.client.moshimoshicomments.Comment
 import com.soundcloud.publicApiStrangler.client.mothership._
 import com.soundcloud.publicApiStrangler.service.comments.CommentService
 import com.soundcloud.publicApiStrangler.service.pagination.OffsetBasedPagination
@@ -25,17 +25,22 @@ class CommentsHandler(
     userAuthentication.withUserSession(request) { session =>
       Try(getTrackUrn(request)) match {
         case Return(urn) =>
-          commentService.fetchTracksComments(session, urn, pagination(request)).map {
-            case Good(comments) =>
-              val body = Collection.getNonNullRepresentation(comments, request.params.contains("linked_partitioning"))
-              JsonResponseBuilder(Status.Ok, body, buildCacheHeaders(Some(10.minutes))).build
-            case Bad(NotFound(_)) => ErrorResponse.notFound()
-            case Bad(_) => ErrorResponse.badRequest()
-          }
+          commentService
+            .fetchTracksComments(session, urn, pagination(request), secretToken(request))
+            .value
+            .map {
+              case Good(comments) =>
+                val body = Collection.getNonNullRepresentation(comments, request.params.contains("linked_partitioning"))
+                JsonResponseBuilder(Status.Ok, body, buildCacheHeaders(Some(10.minutes))).build
+              case Bad(NotFound(_)) => ErrorResponse.notFound()
+              case Bad(_) => ErrorResponse.badRequest()
+            }
         case Throw(e) => Future.value(ErrorResponse.badRequest(e.getMessage))
       }
     }
   }
+
+  private def secretToken(request: HandlerRequest) = request.params.get("secret_token")
 
   def createCommentsForTrack(request: HandlerRequest): Future[Response] = {
     userAuthentication.withLoggedInUser(request) { (session, _) =>

@@ -30,7 +30,7 @@ assemble: target/api
 	sc add-config config/api-contract-test
 	sc add-files --strip-components=1 target/api
 	sc gen-wrapper-script \
-		--target='api -addr=$$HOSTNAME:$$PORT -admin-addr=$$HOSTNAME:$$TELE_PORT -max-request-bytes=$$MAX_REQUEST_BYTES' \
+		--target='api -addr=0.0.0.0:$$PORT -admin-addr=0.0.0.0:$$TELE_PORT -max-request-bytes=$$MAX_REQUEST_BYTES' \
 		--wrapper=api
 
 .PHONY: package

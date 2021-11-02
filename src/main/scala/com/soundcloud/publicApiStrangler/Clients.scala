@@ -12,7 +12,7 @@ import com.soundcloud.jvmkit.module.twirp.filters.ClientTelemetry
 import com.soundcloud.jvmkit.module.util.ResourceName
 import com.soundcloud.jvmkit.module.util.config.{AppConfig, DataSensitivity}
 import com.soundcloud.publicApiStrangler.client._
-import com.soundcloud.publicApiStrangler.client.comments.MoshimoshiCommentsClient
+import com.soundcloud.publicApiStrangler.client.moshimoshicomments.MoshimoshiCommentsClient
 import com.soundcloud.publicApiStrangler.client.followcounts.FollowCountsClient
 import com.soundcloud.publicApiStrangler.client.follows.FollowsClient
 import com.soundcloud.publicApiStrangler.client.liebling.LieblingClient
@@ -24,7 +24,7 @@ import com.soundcloud.publicApiStrangler.client.search.SearchClient
 import com.soundcloud.publicApiStrangler.client.trackcoordinator.TrackCoordinatorClient
 import com.soundcloud.publicApiStrangler.client.trackmetadata.TrackmetadataClient
 import com.soundcloud.publicApiStrangler.service._
-import com.soundcloud.publicApiStrangler.service.comments.CommentService
+import com.soundcloud.publicApiStrangler.service.comments.{CommentService}
 import com.soundcloud.publicApiStrangler.service.media.{StreamService, TrackAccessRecorderService}
 import com.soundcloud.publicApiStrangler.service.oauth.GrantExchangeService
 import com.soundcloud.publicApiStrangler.service.resolve.ResolveService
@@ -39,11 +39,13 @@ import com.twitter.util.{Throw, Try}
 import proto.soundcloud.authenticator.access_grant_exchange.AccessGrantExchangeClientProtobuf
 import proto.soundcloud.playlists.api.{PlaylistsClientProtobuf, WritesClientProtobuf}
 import proto.soundcloud.tracks.api.{
+  CommentsClientProtobuf => TrackCommentsClientProtobuf,
   LikesClientProtobuf,
   MediaClientProtobuf,
   RepostsClientProtobuf,
   TrackMetadataClientProtobuf
 }
+import proto.soundcloud.comments.api.CommentsClientProtobuf
 
 class Clients(
     config: AppConfig,
@@ -208,8 +210,30 @@ class Clients(
   val repostsService =
     new RepostsService(userRepresentationsService, repostsClient, trackRepostsTwirpClient)
   val playlistDeletionClient = new PlaylistDeletionClient(okidokiJsonClient)
+
+  val trackCommentsTwirpClient = TwirpClient(
+    ResourceName("tracks"),
+    config,
+    telemetry,
+    new TrackCommentsClientProtobuf(_, _)
+  )
+
+  val commentsTwirpClient = TwirpClient(
+    ResourceName("comments"),
+    config,
+    telemetry,
+    new CommentsClientProtobuf(_, _)
+  )
+
   val commentsService =
-    new CommentService(richOkidokiClient, moshimoshiClient, moshimoshiCommentsClient)
+    new CommentService(
+      richOkidokiClient,
+      moshimoshiClient,
+      moshimoshiCommentsClient,
+      trackCommentsTwirpClient,
+      commentsTwirpClient,
+      rolloutClient
+    )
 
   private val oauthGrantExchangeClient = TwirpClient(
     ResourceName("oauth_authorization"),

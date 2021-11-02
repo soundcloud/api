@@ -88,4 +88,7 @@ IS_DEVELOPENT_MODE=true
 MOSHIMOSHI_COMMENTS_SRV_RECORD=dnssrv!_first16.http.moshimoshi-comments.prod.mothership.srv.db.s-cloud.net.
 MOSHIMOSHI_SRV_RECORD=dnssrv!_first16.http.moshimoshi.prod.mothership.srv.db.s-cloud.net.
 
+COMMENTS_SRV_RECORD=dnssrv!_first16.http.api.prod.comments.srv.db.s-cloud.net.
+COMMENTS_CLIENT_REQUEST_TIMEOUT_MILLIS=5000
+
 SUBMARINE_SRV_RECORD="dnssrv!_first16.http.api.staging.submarine.srv.db.s-cloud.net."

@@ -18,7 +18,7 @@ import com.twitter.util.{Await, Future}
 import org.mockito.Mockito.when
 import play.api.libs.json._
 import com.soundcloud.jvmkit.module.outcome._
-import com.soundcloud.publicApiStrangler.client.comments.MoshimoshiCommentsComment
+import com.soundcloud.publicApiStrangler.client.moshimoshicomments.MoshimoshiCommentsComment
 import com.soundcloud.publicApiStrangler.client.mothership.response.representation.WebProfile
 
 class MoshimoshiClientSpec extends UnitSpecification {

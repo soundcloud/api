@@ -1,0 +1,117 @@
+// DO NOT EDIT
+// This file has been automatically downloaded via 'sc idl fetch' from an upstream dependency.
+
+syntax = "proto3";
+
+package proto.soundcloud.comments.api;
+
+import "google/protobuf/wrappers.proto";
+import "google/protobuf/timestamp.proto";
+
+// Comments authorizes the request to create and fetch comments from track-comments service.
+// If the request is authorized, then it makes the request to track-comments service to create or fetch comments,
+// then ,it responds with the response based on the response from track-comments service.
+// if the request is not authorized ,then it responds with the error response.
+service Comments {
+  // GetUserComments authorizes GetUserCommentsRequest to GetUserComments on track-comments service.
+  // GetUserComments on track-comments service is responsible for fetching user comments for the given user urn.
+  rpc GetUserComments(GetUserCommentsRequest) returns (GetUserCommentsResponse) {}
+
+  // Replaces GetTrackCommentsThreadHeads
+  //GetTrackCommentsWithoutReplies returns only comments urns for the thread heads (i.e threaded comments without replies) for the given track urn.
+  rpc GetTrackCommentsWithoutReplies(GetTrackCommentsRequest) returns (GetTrackCommentsThreadsResponse) {}
+
+  // GetTrackComments authorizes the request to fetch comment threads of the given track from track-comments service.
+  rpc GetTrackCommentsThreads(GetTrackCommentsRequest) returns (GetTrackCommentsThreadsResponse) {}
+
+  // GetComments authorizes the request to fetch comments for the given comments urns from track-comments service.
+  rpc GetComments (GetCommentsRequest) returns (GetCommentsResponse) {}
+
+  // GetUserCommentsChrono authorizes the request to fetch comments for the given user urn in a chronological order from track-comments service.
+  rpc GetUserCommentsChrono(GetUserCommentsChronoRequest) returns (GetUserCommentsChronoResponse) {}
+
+}
+
+message GetCommentRequest {
+  string urn = 1;
+}
+
+
+message Comment {
+  string urn = 1;
+  string track_urn = 2;
+  string user_urn = 3;
+  string body = 4;
+  google.protobuf.Timestamp created_at = 5;
+  google.protobuf.Int32Value timestamp = 6;
+}
+
+message GetCommentResponse {
+  oneof Result{
+    Comment comment = 1;
+  }
+}
+
+message GetUserCommentsRequest {
+  string user_urn = 1;
+  int32 limit = 2;
+  google.protobuf.Int32Value cursor = 3;
+}
+
+message GetUserCommentsResponse {
+  repeated Comment comments = 1;
+}
+
+message GetTrackCommentsRequest {
+  string track_urn = 1;
+  int32 limit = 2;
+  int32 offset = 3;
+}
+
+message GetCommentsRequest {
+  repeated string urns = 1;
+}
+
+message GetCommentsResponse {
+  repeated Comment comments = 1;
+}
+
+message GetTrackCommentsThreadsResponse {
+  repeated string urns = 1;
+}
+
+enum ChronoDirection {
+    DESC = 0;
+    ASC = 1;
+}
+
+message ChronoParams {
+    ChronoDirection direction = 1;
+    google.protobuf.Int32Value limit = 2;
+    google.protobuf.StringValue cursor = 3;
+}
+
+message GetUserCommentsChronoRequest {
+    string user_urn = 1;
+    ChronoParams chrono_params = 2;
+}
+
+message GetUserCommentsChronoResponse {
+    message CommentChronoItem {
+        string cursor = 1;
+        string actor = 2;
+        string target = 3;
+        string timestamp = 4;
+        string type = 5;
+        string urn = 6;
+        string track = 7;
+    }
+
+    message ChronoMeta {
+        ChronoParams params = 1;
+        bool valid_for_caching = 2;
+    }
+
+    repeated CommentChronoItem items = 1;
+    ChronoMeta meta = 2;
+}
