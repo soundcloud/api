@@ -96,6 +96,5 @@ MOSHIMOSHI_COMMENTS_SRV_RECORD=dnssrv!http.moshimoshi-comments.prod.mothership.s
 MOSHIMOSHI_SRV_RECORD=dnssrv!http.moshimoshi.prod.mothership.srv.${ZONE}.s-cloud.net.
 
 COMMENTS_SRV_RECORD=dnssrv!http.api.prod.comments.srv.${ZONE}.s-cloud.net.
-COMMENTS_CLIENT_REQUEST_TIMEOUT_MILLIS=5000
 
 SUBMARINE_SRV_RECORD="dnssrv!http.api.prod.submarine.srv.${ZONE}.s-cloud.net."

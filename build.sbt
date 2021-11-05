@@ -17,6 +17,7 @@ lazy val apiPublic = project
       "com.soundcloud" %% "jvmkit-json-play" % jvmkitVersion,
       "com.soundcloud" %% "jvmkit-outcome" % jvmkitVersion,
       "com.soundcloud" %% "jvmkit-twirp" % jvmkitVersion,
+      "com.softwaremill.diffx" %% "diffx-core" % "0.4.5",
       "org.jsoup" % "jsoup" % "1.11.3",
       "io.lemonlabs" %% "scala-uri" % "1.5.1",
       "com.squareup.okhttp3" % "mockwebserver" % "3.11.0" % "test",

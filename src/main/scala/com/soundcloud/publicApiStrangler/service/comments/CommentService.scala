@@ -2,6 +2,8 @@ package com.soundcloud.publicApiStrangler.service.comments
 
 import com.soundcloud.jvmkit.module.outcome._
 import com.soundcloud.jvmkit.module.rollout.{BasicRolloutFeature, Rollout}
+import com.soundcloud.jvmkit.module.telemetry.Telemetry
+import com.soundcloud.jvmkit.module.telemetry.exceptions.ExceptionCollector
 import com.soundcloud.jvmkit.module.twirp.proto.UserSessionOps._
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSession
@@ -17,9 +19,11 @@ import com.soundcloud.publicApiStrangler.client.mothership.{MoshimoshiClient, Ri
 import com.soundcloud.publicApiStrangler.handler.comments.CreateCommentParams
 import com.soundcloud.publicApiStrangler.service.pagination.OffsetBasedPagination
 import com.soundcloud.publicApiStrangler.service.representation.collection.Collection
+import com.soundcloud.publicApiStrangler.utilities.ComparisonUtilities
 import com.soundcloud.twinagle.{ErrorCode, TwinagleException}
 import com.twitter.util.Future
-import org.joda.time.format.{DateTimeFormat, ISODateTimeFormat}
+import org.joda.time.DateTime
+import org.joda.time.format.DateTimeFormat
 import proto.soundcloud.comments.api.{CommentsClientProtobuf, GetCommentsRequest}
 import proto.soundcloud.tracks.api.{
   GetTrackCommentsRequest,
@@ -33,12 +37,16 @@ class CommentService(
     moshimoshiCommentsClient: MoshimoshiCommentsClient,
     trackCommentsTwirpClient: TracksCommentsClientProtobuf,
     commentsTwirpClient: CommentsClientProtobuf,
-    rolloutClient: Rollout
+    rolloutClient: Rollout,
+    telemetry: Telemetry,
+    exceptionCollector: ExceptionCollector
 ) {
 
   private val tracksVasTrackComments = BasicRolloutFeature(
     "tracks-vas-track-comments"
   )
+
+  private val comparisonUtilities = new ComparisonUtilities[Collection[Comment]](telemetry, exceptionCollector)
 
   def fetchTracksComments(
       session: UserSession,
@@ -46,16 +54,32 @@ class CommentService(
       pagination: OffsetBasedPagination,
       secretToken: Option[String] = None
   ): OutcomeF[Collection[Comment]] = {
+
+    val moshimoshiComments: OutcomeF[Collection[Comment]] =
+      fetchFromMoshimoshi(session, track, pagination)
     for {
       shouldFetchFromVas <- rolloutClient.isActive(tracksVasTrackComments).outcomeF
       comments <- shouldFetchFromVas match {
-        case false => fetchFromMoshimoshi(session, track, pagination)
-        case true => fetchFromComments(session, track, secretToken, pagination)
+        case false => moshimoshiComments
+        case true =>
+          val newComments: OutcomeF[Collection[Comment]] = fetchFromComments(session, track, secretToken, pagination)
+          comparisonUtilities
+            .compareAndReport(
+              "trackIdComments",
+              moshimoshiComments,
+              newComments,
+              session.user
+            )
+          newComments
       }
     } yield comments
   }
 
-  private def fetchFromMoshimoshi(session: UserSession, track: Urn, pagination: OffsetBasedPagination) = {
+  private def fetchFromMoshimoshi(
+      session: UserSession,
+      track: Urn,
+      pagination: OffsetBasedPagination
+  ): OutcomeF[Collection[Comment]] = {
     for {
       moshiComments <- moshimoshiCommentsClient.fetchTrackComments(session, track, pagination).outcomeF
       materializedComments <- buildCommentsFromMoshimoshiResponse(session, moshiComments, pagination)
@@ -188,8 +212,6 @@ class CommentService(
     if (comments.isEmpty) {
       return Collection(List[Comment](), None).goodF
     }
-    val outputFormat = DateTimeFormat.forPattern("yyyy/MM/dd HH:mm:ss").withZoneUTC()
-    val formatter = ISODateTimeFormat.dateTime.withZoneUTC()
 
     okidokiClient
       .fetchUsersMap(session, comments.map(_.user).toSet)
@@ -199,7 +221,7 @@ class CommentService(
             Comment(
               id = comment.urn.identifier.toLong,
               body = comment.body,
-              createdAt = outputFormat.print(formatter.parseDateTime(comment.createdAt.toString)),
+              createdAt = comment.createdAt.map(format).getOrElse(""),
               trackId = comment.track.identifier.toLong,
               userId = comment.user.identifier.toLong,
               user = urnToUserMap(comment.user),
@@ -214,5 +236,11 @@ class CommentService(
         Collection(commentsResponse.toList, nextHref).good
       }
       .outcomeF
+  }
+
+  private def format(dateTime: DateTime): String = {
+    DateTimeFormat
+      .forPattern("yyyy/MM/dd HH:mm:ss Z")
+      .print(dateTime)
   }
 }

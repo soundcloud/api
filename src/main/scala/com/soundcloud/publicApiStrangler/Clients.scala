@@ -12,11 +12,11 @@ import com.soundcloud.jvmkit.module.twirp.filters.ClientTelemetry
 import com.soundcloud.jvmkit.module.util.ResourceName
 import com.soundcloud.jvmkit.module.util.config.{AppConfig, DataSensitivity}
 import com.soundcloud.publicApiStrangler.client._
-import com.soundcloud.publicApiStrangler.client.moshimoshicomments.MoshimoshiCommentsClient
 import com.soundcloud.publicApiStrangler.client.followcounts.FollowCountsClient
 import com.soundcloud.publicApiStrangler.client.follows.FollowsClient
 import com.soundcloud.publicApiStrangler.client.liebling.LieblingClient
 import com.soundcloud.publicApiStrangler.client.media.TrackAccessRecorderClient
+import com.soundcloud.publicApiStrangler.client.moshimoshicomments.MoshimoshiCommentsClient
 import com.soundcloud.publicApiStrangler.client.mothership.{MoshimoshiClient, OkidokiClient, RichOkidokiClient}
 import com.soundcloud.publicApiStrangler.client.playlists.PlaylistDeletionClient
 import com.soundcloud.publicApiStrangler.client.reposts.RepostsClient
@@ -24,7 +24,7 @@ import com.soundcloud.publicApiStrangler.client.search.SearchClient
 import com.soundcloud.publicApiStrangler.client.trackcoordinator.TrackCoordinatorClient
 import com.soundcloud.publicApiStrangler.client.trackmetadata.TrackmetadataClient
 import com.soundcloud.publicApiStrangler.service._
-import com.soundcloud.publicApiStrangler.service.comments.{CommentService}
+import com.soundcloud.publicApiStrangler.service.comments.CommentService
 import com.soundcloud.publicApiStrangler.service.media.{StreamService, TrackAccessRecorderService}
 import com.soundcloud.publicApiStrangler.service.oauth.GrantExchangeService
 import com.soundcloud.publicApiStrangler.service.resolve.ResolveService
@@ -37,15 +37,15 @@ import com.twitter.finagle.http.{Request, Response}
 import com.twitter.finagle.service.RetryPolicy.RetryableWriteException
 import com.twitter.util.{Throw, Try}
 import proto.soundcloud.authenticator.access_grant_exchange.AccessGrantExchangeClientProtobuf
+import proto.soundcloud.comments.api.CommentsClientProtobuf
 import proto.soundcloud.playlists.api.{PlaylistsClientProtobuf, WritesClientProtobuf}
 import proto.soundcloud.tracks.api.{
-  CommentsClientProtobuf => TrackCommentsClientProtobuf,
   LikesClientProtobuf,
   MediaClientProtobuf,
   RepostsClientProtobuf,
-  TrackMetadataClientProtobuf
+  TrackMetadataClientProtobuf,
+  CommentsClientProtobuf => TrackCommentsClientProtobuf
 }
-import proto.soundcloud.comments.api.CommentsClientProtobuf
 
 class Clients(
     config: AppConfig,
@@ -232,7 +232,9 @@ class Clients(
       moshimoshiCommentsClient,
       trackCommentsTwirpClient,
       commentsTwirpClient,
-      rolloutClient
+      rolloutClient,
+      telemetry,
+      exceptionCollector
     )
 
   private val oauthGrantExchangeClient = TwirpClient(

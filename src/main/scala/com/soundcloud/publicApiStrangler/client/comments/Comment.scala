@@ -11,7 +11,7 @@ case class Comment(
     urn: Urn,
     track: Urn,
     user: Urn,
-    createdAt: DateTime,
+    createdAt: Option[DateTime],
     timestamp: Option[Long],
     body: String,
     secretToken: Option[String] = None
@@ -27,7 +27,7 @@ object Comment {
     urn = Urn.parse(protoComment.urn).get,
     track = Urn.parse(protoComment.trackUrn).get,
     user = Urn.parse(protoComment.userUrn).get,
-    createdAt = ProtoTimestampExt(protoComment.createdAt.get).asJodaDateTime,
+    createdAt = protoComment.createdAt.map(_.asJodaDateTime),
     timestamp = toLong(protoComment.timestamp),
     body = protoComment.body
   )
