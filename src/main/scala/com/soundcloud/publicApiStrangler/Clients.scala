@@ -232,9 +232,7 @@ class Clients(
       moshimoshiCommentsClient,
       trackCommentsTwirpClient,
       commentsTwirpClient,
-      rolloutClient,
-      telemetry,
-      exceptionCollector
+      rolloutClient
     )
 
   private val oauthGrantExchangeClient = TwirpClient(

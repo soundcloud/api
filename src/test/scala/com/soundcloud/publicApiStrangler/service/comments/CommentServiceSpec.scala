@@ -2,8 +2,6 @@ package com.soundcloud.publicApiStrangler.service.comments
 
 import com.soundcloud.jvmkit.module.outcome._
 import com.soundcloud.jvmkit.module.rollout.{BasicRolloutFeature, Rollout}
-import com.soundcloud.jvmkit.module.telemetry.Telemetry
-import com.soundcloud.jvmkit.module.telemetry.exceptions.ExceptionCollector
 import com.soundcloud.jvmkit.module.twirp.proto.WellKnownOps.JodaDateTimeExt
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.publicApiStrangler.client.comments.{Comment => CommentFromVAS}
@@ -127,24 +125,6 @@ class CommentServiceSpec extends UnitSpecification {
     )
     rollout.isActive(commentsvasTrackComments) returns Future.value(false)
 
-    val telemetry = Telemetry.createIsolatedInstance
-
-    def getInconsistentCounterValue(status: String) =
-      telemetry
-        .getSampleValue(
-          "inconsistent_response_total",
-          Seq("route", "status"),
-          Seq("trackIdComments", status)
-        )
-        .getOrElse(0.0)
-
-    def getConsistentCounterValue =
-      telemetry
-        .getSampleValue("consistent_response_total", Seq("route"), Seq("trackIdComments"))
-        .getOrElse(0.0)
-
-    val exceptionCollector: ExceptionCollector = mock[ExceptionCollector]
-
     val commentService =
       new CommentService(
         okidokiClient,
@@ -152,9 +132,7 @@ class CommentServiceSpec extends UnitSpecification {
         moshimoshiCommentsClient,
         tracksTwirpClient,
         commentsTwirpClient,
-        rollout,
-        telemetry,
-        exceptionCollector
+        rollout
       )
 
   }
@@ -287,14 +265,12 @@ class CommentServiceSpec extends UnitSpecification {
         )
 
       }
-      "calls both comments VAS and moshimoshi-comments" in new CommentsNewContext {
-        when(moshimoshiCommentsClient.fetchTrackComments(any, any, any)).thenReturn(Future.value(NotValid("").bad))
-
+      "only calls comments VAS" in new CommentsNewContext {
         val result = Await.result(commentService.fetchTracksComments(anonymousSession, trackUrn, pagination).value)
 
         there was one(tracksTwirpClient).getTrackComments(any)
         there was one(commentsTwirpClient).getComments(any)
-        there was one(moshimoshiCommentsClient).fetchTrackComments(any, any, any)
+        there was no(moshimoshiCommentsClient).fetchTrackComments(any, any, any)
       }
 
       "returns NotValid if the request to tracks vas returns Invalid argument" in new CommentsNewContext {
@@ -377,155 +353,72 @@ class CommentServiceSpec extends UnitSpecification {
         )
       }
 
-      "when comments and moshimoshi returns the same success response" >> {
+      "fetches the user representations for each comment" in new CommentsNewContext {
+        val secretToken = Some("secret-token")
 
-        "fetches the user representations for each comment" in new CommentsNewContext {
-          val secretToken = Some("secret-token")
+        val result =
+          Await.result(commentService.fetchTracksComments(anonymousSession, trackUrn, pagination, secretToken).value)
 
-          val result =
-            Await.result(commentService.fetchTracksComments(anonymousSession, trackUrn, pagination, secretToken).value)
+        result ==== Collection(commentsInResponse.toList, None).good
+      }
 
-          result ==== Collection(commentsInResponse.toList, None).good
-        }
+      "filters out comments where the user could not be fetched" in new CommentsNewContext {
+        val users = Set(UserBuilder.urnFor(20), UserBuilder.urnFor(21), UserBuilder.urnFor(22))
+        when(okidokiClient.fetchUsersMap(anonymousSession, users)).thenReturn(
+          Future.value(Map(UserBuilder.urnFor(21) -> UserBuilder.user(21)))
+        )
 
-        "filters out comments where the user could not be fetched" in new CommentsNewContext {
-          val users = Set(UserBuilder.urnFor(20), UserBuilder.urnFor(21), UserBuilder.urnFor(22))
-          when(okidokiClient.fetchUsersMap(anonymousSession, users)).thenReturn(
-            Future.value(Map(UserBuilder.urnFor(21) -> UserBuilder.user(21)))
-          )
-
-          val result =
-            Await.result(
-              commentService.fetchTracksComments(anonymousSession, trackUrn, pagination, Some("secret-token")).value
-            )
-
-          result ==== Collection(
-            Seq(commentFromVAS2).map(CommentFromVAS.fromProto).map(toResponseRepresentation).toList,
-            None
-          ).good
-        }
-
-        "builds the next href if the backing client returns a next_href" in new CommentsNewContext {
-          when(moshimoshiCommentsClient.fetchTrackComments(any, any, any))
-            .thenReturn(
-              Future.value(
-                MoshimoshiCommentsPagedResponse(
-                  moshimoshiCommentsResponse,
-                  Some("http://the-next-href-of-your-dreams.com")
-                ).good
-              )
-            )
-
-          override val pagination = OffsetBasedPagination(
-            "http://api.example.com",
-            s"/tracks/${trackId}/comments",
-            ParamMap("filter_replies" -> "0", "threaded" -> "0", "client_id" -> someClientId),
-            None,
-            3
-          )
-
-          when(
-            okidokiClient.fetchUsersMap(
-              anonymousSession,
-              Set(UserBuilder.urnFor(20), UserBuilder.urnFor(21), UserBuilder.urnFor(22))
-            )
-          ).thenReturn(
-            Future.value(
-              Map(
-                UserBuilder.urnFor(20) -> UserBuilder.user(20),
-                UserBuilder.urnFor(21) -> UserBuilder.user(21),
-                UserBuilder.urnFor(22) -> UserBuilder.user(22)
-              )
-            )
-          )
-
-          val result =
-            Await.result(
-              commentService.fetchTracksComments(anonymousSession, trackUrn, pagination, Some("secret-token")).value
-            )
-
-          result ==== Collection(commentsInResponse.toList, Some(pagination.nextPage.normalizedHref)).good
-        }
-
-        "increments the correct counter" in new CommentsNewContext {
+        val result =
           Await.result(
             commentService.fetchTracksComments(anonymousSession, trackUrn, pagination, Some("secret-token")).value
           )
 
-          getConsistentCounterValue === 1.0
-          getInconsistentCounterValue("ok") === 0.0
-          getInconsistentCounterValue("error") === 0.0
-        }
+        result ==== Collection(
+          Seq(commentFromVAS2).map(CommentFromVAS.fromProto).map(toResponseRepresentation).toList,
+          None
+        ).good
       }
 
-      "when the 2 paths return different responses increments correct counters" >> {
-
-        "when moshimoshi and comments returns different success response" in new CommentsNewContext {
-
-          when(commentsTwirpClient.getComments(any))
-            .thenReturn(Future.value(GetCommentsResponse(Seq(commentsFromVAS.head))))
-
-          val result =
-            Await.result(
-              commentService.fetchTracksComments(anonymousSession, trackUrn, pagination, Some("secret-token")).value
-            )
-
-          result ==== Collection(Seq(commentsInResponse.head).toList, None).good
-          there was one(exceptionCollector).addMessage(
-            ===("[inconsistent-responses]: Non-identical payloads for endpoint [trackIdComments]"),
-            any,
-            any,
-            any,
-            any
-          )
-          getConsistentCounterValue === 0.0
-          getInconsistentCounterValue("ok") === 1.0
-          getInconsistentCounterValue("error") === 0.0
-        }
-
-        "when moshimoshi fails but comments succeeds " in new CommentsNewContext {
-          when(moshimoshiCommentsClient.fetchTrackComments(any, any, any))
-            .thenReturn(Future.value(HttpServiceError(HttpResponseFields(500)).bad))
-
-          val result =
-            Await.result(
-              commentService.fetchTracksComments(anonymousSession, trackUrn, pagination, Some("secret-token")).value
-            )
-
-          result ==== Collection(commentsInResponse.toList, None).good
-          there was one(exceptionCollector).addMessage(
-            ===("[inconsistent-responses]: Only the legacy path failed for endpoint [trackIdComments]"),
-            any,
-            any,
-            any,
-            any
-          )
-          getConsistentCounterValue === 0.0
-          getInconsistentCounterValue("ok") === 0.0
-          getInconsistentCounterValue("error") === 1.0
-        }
-
-        "when moshimoshi succeeds but comments VAS fails " in new CommentsNewContext {
-          when(tracksTwirpClient.getTrackComments(any)).thenReturn(
-            Future.exception(
-              TwinagleException(ErrorCode.InvalidArgument, "")
+      "builds the next href if the backing client returns a next_href" in new CommentsNewContext {
+        when(moshimoshiCommentsClient.fetchTrackComments(any, any, any))
+          .thenReturn(
+            Future.value(
+              MoshimoshiCommentsPagedResponse(
+                moshimoshiCommentsResponse,
+                Some("http://the-next-href-of-your-dreams.com")
+              ).good
             )
           )
-          val result = Await.result(commentService.fetchTracksComments(anonymousSession, trackUrn, pagination).value)
 
-          result ==== NotValid("").bad
-          there was one(exceptionCollector).addMessage(
-            ===("[inconsistent-responses]: Only the new path failed for endpoint [trackIdComments]"),
-            any,
-            any,
-            any,
-            any
+        override val pagination = OffsetBasedPagination(
+          "http://api.example.com",
+          s"/tracks/${trackId}/comments",
+          ParamMap("filter_replies" -> "0", "threaded" -> "0", "client_id" -> someClientId),
+          None,
+          3
+        )
+
+        when(
+          okidokiClient.fetchUsersMap(
+            anonymousSession,
+            Set(UserBuilder.urnFor(20), UserBuilder.urnFor(21), UserBuilder.urnFor(22))
           )
-          getConsistentCounterValue === 0.0
-          getInconsistentCounterValue("ok") === 0.0
-          getInconsistentCounterValue("error") === 1.0
-        }
+        ).thenReturn(
+          Future.value(
+            Map(
+              UserBuilder.urnFor(20) -> UserBuilder.user(20),
+              UserBuilder.urnFor(21) -> UserBuilder.user(21),
+              UserBuilder.urnFor(22) -> UserBuilder.user(22)
+            )
+          )
+        )
 
+        val result =
+          Await.result(
+            commentService.fetchTracksComments(anonymousSession, trackUrn, pagination, Some("secret-token")).value
+          )
+
+        result ==== Collection(commentsInResponse.toList, Some(pagination.nextPage.normalizedHref)).good
       }
     }
   }

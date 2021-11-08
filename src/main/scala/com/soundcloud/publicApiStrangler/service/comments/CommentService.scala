@@ -2,8 +2,6 @@ package com.soundcloud.publicApiStrangler.service.comments
 
 import com.soundcloud.jvmkit.module.outcome._
 import com.soundcloud.jvmkit.module.rollout.{BasicRolloutFeature, Rollout}
-import com.soundcloud.jvmkit.module.telemetry.Telemetry
-import com.soundcloud.jvmkit.module.telemetry.exceptions.ExceptionCollector
 import com.soundcloud.jvmkit.module.twirp.proto.UserSessionOps._
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSession
@@ -19,7 +17,6 @@ import com.soundcloud.publicApiStrangler.client.mothership.{MoshimoshiClient, Ri
 import com.soundcloud.publicApiStrangler.handler.comments.CreateCommentParams
 import com.soundcloud.publicApiStrangler.service.pagination.OffsetBasedPagination
 import com.soundcloud.publicApiStrangler.service.representation.collection.Collection
-import com.soundcloud.publicApiStrangler.utilities.ComparisonUtilities
 import com.soundcloud.twinagle.{ErrorCode, TwinagleException}
 import com.twitter.util.Future
 import org.joda.time.DateTime
@@ -37,16 +34,12 @@ class CommentService(
     moshimoshiCommentsClient: MoshimoshiCommentsClient,
     trackCommentsTwirpClient: TracksCommentsClientProtobuf,
     commentsTwirpClient: CommentsClientProtobuf,
-    rolloutClient: Rollout,
-    telemetry: Telemetry,
-    exceptionCollector: ExceptionCollector
+    rolloutClient: Rollout
 ) {
 
   private val tracksVasTrackComments = BasicRolloutFeature(
     "tracks-vas-track-comments"
   )
-
-  private val comparisonUtilities = new ComparisonUtilities[Collection[Comment]](telemetry, exceptionCollector)
 
   def fetchTracksComments(
       session: UserSession,
@@ -54,23 +47,11 @@ class CommentService(
       pagination: OffsetBasedPagination,
       secretToken: Option[String] = None
   ): OutcomeF[Collection[Comment]] = {
-
-    val moshimoshiComments: OutcomeF[Collection[Comment]] =
-      fetchFromMoshimoshi(session, track, pagination)
     for {
       shouldFetchFromVas <- rolloutClient.isActive(tracksVasTrackComments).outcomeF
       comments <- shouldFetchFromVas match {
-        case false => moshimoshiComments
-        case true =>
-          val newComments: OutcomeF[Collection[Comment]] = fetchFromComments(session, track, secretToken, pagination)
-          comparisonUtilities
-            .compareAndReport(
-              "trackIdComments",
-              moshimoshiComments,
-              newComments,
-              session.user
-            )
-          newComments
+        case false => fetchFromMoshimoshi(session, track, pagination)
+        case true => fetchFromComments(session, track, secretToken, pagination)
       }
     } yield comments
   }
