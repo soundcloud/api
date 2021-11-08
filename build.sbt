@@ -8,6 +8,7 @@ lazy val apiPublic = project
   .settings(
     name := "api-public",
     scalaVersion := scalaVersion212,
+    scalacOptions += "-Wconf:cat=deprecation:is,any:e",
     libraryDependencies ++= Seq(
       "com.soundcloud" %% "jvmkit-http-client" % jvmkitVersion,
       "com.soundcloud" %% "jvmkit-admin-server" % jvmkitVersion,

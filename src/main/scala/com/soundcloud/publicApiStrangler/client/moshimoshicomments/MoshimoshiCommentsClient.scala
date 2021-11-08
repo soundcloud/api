@@ -41,7 +41,18 @@ object MoshimoshiCommentsPagedResponse {
   implicit val reads = Json.reads[MoshimoshiCommentsPagedResponse]
 }
 
+@deprecated(
+  "moshimoshi-comments will be removed. Please use the new comments services " +
+    "(wrapped in the com.soundcloud.publicApiStrangler.service.comments.CommentService) for fetching comments.",
+  "2021.11.01"
+)
 class MoshimoshiCommentsClient(service: JsonClient) {
+
+  @deprecated(
+    "moshimoshi-comments will be removed. Please use the new comments services " +
+      "(wrapped in the com.soundcloud.publicApiStrangler.service.comments.CommentService) for fetching comments.",
+    "2021.11.01"
+  )
   def fetchTrackComments(
       session: UserSession,
       track: Urn,
