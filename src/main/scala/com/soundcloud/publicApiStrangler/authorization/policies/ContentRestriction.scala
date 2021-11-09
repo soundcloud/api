@@ -28,6 +28,11 @@ object ContentRestriction {
   case object NO_OFFLINE_SYNC extends ContentRestriction("NO_OFFLINE_SYNC")
 
   /**
+    * Restricts the track from being downloaded for offline sync on third party app.
+    */
+  case object NO_THIRD_PARTY_OFFLINE_SYNC extends ContentRestriction("NO_THIRD_PARTY_OFFLINE_SYNC")
+
+  /**
     * The content owner has chosen to not make progressive download streaming available.
     */
   case object NO_PROGRESSIVE_DOWNLOAD extends ContentRestriction("NO_PROGRESSIVE_DOWNLOAD")
@@ -50,7 +55,14 @@ object ContentRestriction {
     values.find(_.name == n).getOrElse(throw new IllegalArgumentException(s"No value for name $n"))
   }
 
-  def values = List(ENCRYPTED_STREAM_ONLY, NO_OFFLINE_SYNC, NO_PROGRESSIVE_DOWNLOAD, NO_EXTERNAL_SHARE)
+  def values =
+    List(
+      ENCRYPTED_STREAM_ONLY,
+      NO_OFFLINE_SYNC,
+      NO_THIRD_PARTY_OFFLINE_SYNC,
+      NO_PROGRESSIVE_DOWNLOAD,
+      NO_EXTERNAL_SHARE
+    )
 
   /**
     * Returns string set of all possible string-representations of the enum
