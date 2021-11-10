@@ -8,8 +8,6 @@ API_CONFIG    := production
 
 RUNTIME_STACK := jdk-8
 
-DOCKER_IP ?= $(shell sc docker-ip)
-
 ZONES ?= $(error please specify the ZONES environment variable)
 
 ifeq ($(USE_CRUN),false)
@@ -162,7 +160,7 @@ deploy-prometheus:
 		--rule=https://ent.int.s-cloud.net/prometheus/rules/memcached.yml
 
 GO_REVISION_GIT ?= HEAD
-publish-changelog: 
+publish-changelog:
 	git diff-index --exit-code $(GO_REVISION_GIT)~1 RELEASE_NOTES.md && echo 'No release notes to publish...' && exit 0; \
 		./scripts/release
 
