@@ -20,17 +20,17 @@ done
 [ -z "$tag" ] && exit 1
 
 env TAG="$tag" \
-  docker-compose up -d
+  docker compose up -d
 
 teardown() {
   env TAG="$tag" \
-    docker-compose down -t 0
+    docker compose down -t 0
 }
 
 trap teardown EXIT
 
 env TAG="$tag" \
-  docker-compose logs --follow &
+  docker compose logs --follow &
 
 sc crun -l base-dev:latest -- \
   sc wait http asset_uploads/-/health

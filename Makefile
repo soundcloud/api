@@ -23,7 +23,7 @@ endif
 default: precheckin
 
 dependencies:
-	docker-compose up --force-recreate -d
+	docker compose up --force-recreate -d
 
 run: dependencies
 	sc crun $(DEV_STACK) -l --config=development --expose-port 5000:5000,5001:5001,5005:5005 -- sbt run
@@ -49,13 +49,13 @@ check-prometheus:
 
 docker-up-%:
 	echo "This assumes you've run make package & make package-assets before"
-	CONFIG=$* VERSION=$(API_PUBLIC_VERSION) docker-compose -f docker-compose-e2e-tests.yml up -d
+	CONFIG=$* VERSION=$(API_PUBLIC_VERSION) docker compose -f docker-compose-e2e-tests.yml up -d
 	sc wait-for-compose
 
 
 end-to-end-test: stop-containers
 	echo "This assumes you've run make package before"
-	CONFIG=e2e VERSION=$(API_PUBLIC_VERSION) docker-compose -f docker-compose-e2e-tests.yml up -d apipublic
+	CONFIG=e2e VERSION=$(API_PUBLIC_VERSION) docker compose -f docker-compose-e2e-tests.yml up -d apipublic
 	sc wait-for-compose
 	sc crun -l $(DEV_STACK) --config=e2e.secrets -- sbt endToEnd/test
 	make docker-down
@@ -71,10 +71,10 @@ contract-test: package package-assets stop-containers docker-up-development
 	make docker-down
 
 docker-down:
-	CONFIG= VERSION=$(API_PUBLIC_VERSION) docker-compose down --remove-orphans
+	CONFIG= VERSION=$(API_PUBLIC_VERSION) docker compose down --remove-orphans
 
 stop-containers:
-	CONFIG= VERSION=$(API_PUBLIC_VERSION) docker-compose rm -s -f
+	CONFIG= VERSION=$(API_PUBLIC_VERSION) docker compose rm -s -f
 
 unit-test:
 	$(SBT) test

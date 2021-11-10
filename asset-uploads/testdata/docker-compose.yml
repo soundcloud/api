@@ -1,5 +1,3 @@
-version: '3'
-
 services:
   asset_uploads:
     image: docker.localproxy.sc:42042/api-public-asset-uploads:$TAG

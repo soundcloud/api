@@ -1,5 +1,3 @@
-version: '2.3'
-
 services:
   memcached:
     image: docker.localproxy.sc:42042/sc-memcached:release
