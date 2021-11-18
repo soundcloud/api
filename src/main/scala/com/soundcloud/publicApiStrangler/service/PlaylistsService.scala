@@ -1,24 +1,32 @@
 package com.soundcloud.publicApiStrangler.service
 
+import com.soundcloud.hocuspocus.{HocuspocusService, Image}
 import com.soundcloud.jvmkit.module.outcome._
 import com.soundcloud.jvmkit.module.telemetry.exceptions.ExceptionCollector
+import com.soundcloud.jvmkit.module.telemetry.exceptions.ExceptionHandler.FutureExtensions
 import com.soundcloud.jvmkit.module.twirp.proto.UserSessionOps._
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.publicApiStrangler.client.liebling.{LieblingClient, LikesCount}
-import com.soundcloud.publicApiStrangler.client.mothership.MoshimoshiClient
 import com.soundcloud.publicApiStrangler.client.mothership.response.representation.UserRepresentation
+import com.soundcloud.publicApiStrangler.client.mothership.{MoshimoshiClient, PlaylistArtworkUpdate}
 import com.soundcloud.publicApiStrangler.handler.support.requestParser.AccessParams
+import com.soundcloud.publicApiStrangler.service.artwork.HocuspocusUtils
 import com.soundcloud.publicApiStrangler.service.pagination.OffsetBasedPagination
 import com.soundcloud.publicApiStrangler.service.playlists.representation.{
   Playlist,
   PlaylistCreateOrUpdate,
   VisiblePlaylist
 }
-import com.soundcloud.publicApiStrangler.service.playlists.{PlaylistProtoMapper, PlaylistRequest}
+import com.soundcloud.publicApiStrangler.service.playlists.{
+  PlaylistProtoMapper,
+  PlaylistRequest,
+  UpdatePlaylistArtworkRequest
+}
 import com.soundcloud.publicApiStrangler.service.representation.collection.Collection
 import com.soundcloud.publicApiStrangler.service.trackrepresentation.{TrackRepresentation, TrackRepresentationsService}
 import com.soundcloud.twinagle.{ErrorCode, TwinagleException}
+import com.twitter.io.Buf
 import com.twitter.util.Future
 import proto.soundcloud.playlists.api.{
   CreatePlaylistRequest,
@@ -38,6 +46,7 @@ class PlaylistsService(
     lieblingClient: LieblingClient,
     playlistsWritesTwirpService: PlaylistsWritesTwirpService,
     exceptionCollector: ExceptionCollector,
+    hocuspocusService: HocuspocusService,
     playlistProtoMapper: PlaylistProtoMapper = new PlaylistProtoMapper()
 ) {
 
@@ -120,7 +129,11 @@ class PlaylistsService(
     } yield playlists
   }
 
-  def createPlaylist(session: UserSession, playlistCreate: PlaylistCreateOrUpdate): OutcomeF[Playlist] = {
+  def createPlaylist(
+      session: UserSession,
+      playlistCreate: PlaylistCreateOrUpdate,
+      artworkUpdateRequest: Option[UpdatePlaylistArtworkRequest]
+  ): OutcomeF[Playlist] = {
     val playlist = for {
       createdUrn <- playlistsWritesTwirpService
         .createPlaylist(
@@ -134,6 +147,7 @@ class PlaylistsService(
             throw new RuntimeException(s"unexpected response from playlists: ${msg}")
         }
         .outcomeF
+      _ <- artworkUpdateRequest.map(updatePlaylistArtwork(session, createdUrn, _)).getOrElse(().goodF)
       playlist <- fetchPlaylist(session, createdUrn, None, AccessParams.explicitAccess, None, None).outcomeF
     } yield playlist
     playlist.leftMap {
@@ -148,10 +162,44 @@ class PlaylistsService(
     }
   }
 
+  private def updatePlaylistArtwork(
+      session: UserSession,
+      playlistUrn: Urn,
+      playlistArtworkRequest: UpdatePlaylistArtworkRequest
+  ): OutcomeF[Unit] = {
+    for {
+      createdImage <- uploadImageToHocuspocus(playlistArtworkRequest.imageData)
+      updateParams <- extractMoshiMoshiUpdateParams(createdImage).liftF
+      updateResponse <- moshimoshiClient.updatePlaylistArtwork(session, playlistUrn, updateParams)
+    } yield updateResponse
+  }
+
+  private def uploadImageToHocuspocus(imageData: Buf): OutcomeF[Image] = {
+    val handleErrors: PartialFunction[Throwable, Outcome[Image]] = {
+      case TwinagleException(ErrorCode.InvalidArgument, _, _, _) => NotValid("Invalid Image").bad
+    }
+
+    hocuspocusService
+      .storeImage(HocuspocusUtils.toRaw(imageData))
+      .map(_.good)
+      .handleAndReport(exceptionCollector, true)(handleErrors)
+      .outcomeF
+      .catchToUnexpectedError
+  }
+
+  private def extractMoshiMoshiUpdateParams(createdImage: Image): Outcome[PlaylistArtworkUpdate] = {
+    val s3UrlRegex = HocuspocusUtils.s3UrlRegex
+    createdImage.originUri match {
+      case s3UrlRegex(bucket, filename) => PlaylistArtworkUpdate(bucket, filename).good
+      case _ => NotValid("Invalid image location").bad
+    }
+  }
+
   def updatePlaylist(
       session: UserSession,
       playlistUrn: Urn,
-      playlistCreate: PlaylistCreateOrUpdate
+      playlistCreate: PlaylistCreateOrUpdate,
+      artworkUpdateRequest: Option[UpdatePlaylistArtworkRequest]
   ): OutcomeF[Playlist] = {
     val updatePlaylistRequest = UpdatePlaylistRequest(
       Some(playlistCreate.toProto),
@@ -170,6 +218,7 @@ class PlaylistsService(
             throw new RuntimeException(s"unexpected response from playlists: msg: ${msg}, code: ${code}, meta: ${meta}")
         }
         .outcomeF
+      _ <- artworkUpdateRequest.map(updatePlaylistArtwork(session, playlistUrn, _)).getOrElse(().goodF)
       playlist <- fetchPlaylist(session, playlistUrn, None, AccessParams.explicitAccess, None, None).outcomeF
     } yield playlist
   }

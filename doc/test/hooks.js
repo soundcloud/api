@@ -75,6 +75,17 @@ hooks.before("/tracks > Uploads a new track. > 201 > application/json; charset=u
     done();
 });
 
+hooks.before("/playlists > Creates a playlist. > 201 > application/json; charset=utf-8", async (transaction, done) => {
+    const form = new Multipart();
+    form.append('playlist[title]', 'Test title');
+    form.append('playlist[sharing]', 'private');
+
+    transaction.request.body = (await form.buffer()).toString('base64');
+    transaction.request.bodyEncoding = 'base64';
+    transaction.request.headers['Content-Type'] = form.getHeaders()['content-type'];
+    done();
+});
+
 hooks.before("/connect > The OAuth2 authorization endpoint. Your app redirects a user to this endpoint, allowing them to delegate access to their account. > 200", (transaction, done) => {
     var newPath = transaction.fullPath.replace("?client_id=some%20client&", "?");
     transaction.fullPath = newPath;

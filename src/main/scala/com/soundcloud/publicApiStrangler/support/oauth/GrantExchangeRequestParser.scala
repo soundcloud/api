@@ -6,8 +6,9 @@ class GrantExchangeRequestParser(railsLikeParamsParser: RailsLikeParamsParser) {
   def parse(request: HandlerRequest): Either[GrantExchangeRequestError, GrantExchangeRequest] =
     for {
       params <- railsLikeParamsParser.parse(request).toRight(UnparseableRequest(request.mediaType))
-      accessGrant <- readAccessGrant(params)
-      clientCredential <- readClientCredential(params)
+      paramsWithLastValue = params.map(tuple => (tuple._1, tuple._2.last))
+      accessGrant <- readAccessGrant(paramsWithLastValue)
+      clientCredential <- readClientCredential(paramsWithLastValue)
       context <- readContext(request)
     } yield GrantExchangeRequest(clientCredential, accessGrant, context)
 

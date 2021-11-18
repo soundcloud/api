@@ -13,13 +13,14 @@ import com.soundcloud.publicApiStrangler.test.Helpers._
 import com.soundcloud.publicApiStrangler.test.UnitSpecification
 import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures
 import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures._
-import com.twitter.finagle.http.{ParamMap, Status}
+import com.twitter.finagle.http.{ParamMap, Response, Status}
 import com.twitter.util.{Await, Future}
 import org.mockito.Mockito.when
 import play.api.libs.json._
 import com.soundcloud.jvmkit.module.outcome._
 import com.soundcloud.publicApiStrangler.client.moshimoshicomments.MoshimoshiCommentsComment
 import com.soundcloud.publicApiStrangler.client.mothership.response.representation.WebProfile
+import com.soundcloud.publicApiStrangler.client.support.UnhandledResponseException
 
 class MoshimoshiClientSpec extends UnitSpecification {
   trait Context extends Scope {
@@ -184,6 +185,48 @@ class MoshimoshiClientSpec extends UnitSpecification {
 
       fetch must throwA[IllegalStateException]
     }
+  }
+
+  "#updatePlaylistArtwork" >> {
+    trait UpdatePlaylistContext extends Context {
+      val playlistUrn = Urn("soundcloud", "playlists", "1")
+      val path = Path() / "playlists" / playlistUrn / "artwork"
+      val playlistArtworkParams = PlaylistArtworkUpdate(bucket = "bucket1", filename = "myimage")
+      val jsonBody = Json.obj("bucket" -> "bucket1", "filename" -> "myimage")
+      def mockService(response: Future[Response]) = {
+        when(
+          service
+            .putWithSession(session, path, Params.empty, Headers.empty(), Some(Json.stringify(jsonBody)))
+        ).thenReturn(response)
+      }
+      def result = {
+        mockService(Future.value(Response(status = Status.Created)))
+
+        Await.result(client.updatePlaylistArtwork(session, playlistUrn, playlistArtworkParams).value)
+      }
+    }
+    "happy path" >> {
+      trait HappyPathContext extends UpdatePlaylistContext
+      "it returns mapped response" in new HappyPathContext {
+        result must beEqualTo(Good(()))
+      }
+    }
+
+    "Response mapper cannot map response" >> {
+      trait UnMappedResponseContext extends UpdatePlaylistContext {
+        val unexpectedResponse = Response(status = Status.Accepted)
+        override def result = {
+          mockService(Future.value(unexpectedResponse))
+
+          Await.result(client.updatePlaylistArtwork(session, playlistUrn, playlistArtworkParams).value)
+        }
+      }
+
+      "it throws an unhandled response error " in new UnMappedResponseContext {
+        result must throwA[UnhandledResponseException]
+      }
+    }
+
   }
 
 }

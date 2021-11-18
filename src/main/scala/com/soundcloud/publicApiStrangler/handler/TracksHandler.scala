@@ -15,7 +15,7 @@ import com.soundcloud.publicApiStrangler.handler.representation.tracks.TrackRepr
 import com.soundcloud.publicApiStrangler.handler.support.error.UnhandledOutcomeException
 import com.soundcloud.publicApiStrangler.handler.support.requestParser._
 import com.soundcloud.publicApiStrangler.service.trackrepresentation.TrackUpdateService
-import com.soundcloud.publicApiStrangler.support.ErrorResponse
+import com.soundcloud.publicApiStrangler.support.{ErrorResponse, MultipartParamsUtils}
 import com.soundcloud.publicApiStrangler.support.TrackUrnUtil.getTrackUrn
 import com.soundcloud.publicApiStrangler.support.oauth.RailsLikeParamsParser
 import com.twitter.finagle.http._
@@ -34,6 +34,8 @@ class TracksHandler(
     exceptionCollector: ExceptionCollector,
     paramsParser: RailsLikeParamsParser = new RailsLikeParamsParser
 ) {
+
+  private val trackPattern = """track\[(\S+)\]""".r
 
   /**
     * Methods for track deletion
@@ -75,15 +77,7 @@ class TracksHandler(
       session: UserSession,
       urn: Urn
   ): Future[Response] = {
-
-    /**
-      * Ugly, but we have to manually change the request method from PUT to POST, otherwise MultiPart.Decode will return None
-      * We change it back to Put after the parse call to avoid any potential side effects
-      * https://twitter.github.io/finagle/docs/com/twitter/finagle/http/exp/MultipartDecoder.html
-      * https://softwareengineering.stackexchange.com/a/319429
-      */
-    request.method = Method.Post
-    val extractedParams = paramsParser.parse(request).map(extractTrackFieldsFromParams)
+    val extractedParams = paramsParser.parse(request).map(MultipartParamsUtils.extractFieldsFromParams(trackPattern, _))
 
     val artwork =
       paramsParser.parseFilesFromRequest(request, "track[artwork_data]").map(_.map(TrackArtworkUpdateRequest))
@@ -91,8 +85,6 @@ class TracksHandler(
 
     val params = extractedParams.getOrElse(Map.empty)
     val metadataParams = TrackMetadataUpdateRequest.fromForm(params)
-
-    request.method = Method.Put
 
     for {
       artworkRequest <- artwork
@@ -105,7 +97,8 @@ class TracksHandler(
       session: UserSession,
       urn: Urn
   ): Future[Response] = {
-    val extractedParams = extractTrackFieldsFromParams(request.params)
+    val wrappedParams = request.params.map(tuple => (tuple._1, Seq(tuple._2)))
+    val extractedParams = MultipartParamsUtils.extractFieldsFromParams(trackPattern, wrappedParams)
     val assetData = TrackAssetDataUpdateRequest.fromForm(extractedParams)
     val metadata = TrackMetadataUpdateRequest.fromForm(extractedParams)
 
@@ -177,7 +170,7 @@ class TracksHandler(
       request: HandlerRequest,
       session: UserSession
   ): Future[Response] = {
-    val extractedParams = paramsParser.parse(request).map(extractTrackFieldsFromParams)
+    val extractedParams = paramsParser.parse(request).map(MultipartParamsUtils.extractFieldsFromParams(trackPattern, _))
 
     val artwork =
       paramsParser.parseFilesFromRequest(request, "track[artwork_data]").map(_.map(TrackArtworkUpdateRequest))
@@ -195,7 +188,8 @@ class TracksHandler(
       request: HandlerRequest,
       session: UserSession
   ): Future[Response] = {
-    val extractedParams = extractTrackFieldsFromParams(request.params)
+    val wrappedParams = request.params.map(tuple => (tuple._1, Seq(tuple._2)))
+    val extractedParams = MultipartParamsUtils.extractFieldsFromParams(trackPattern, wrappedParams)
     val assetData = TrackAssetDataCreateRequest.fromForm(extractedParams)
     val metadata = TrackMetadataCreateRequest.fromForm(extractedParams)
     createTrack(metadata, assetData, None, session)
@@ -236,17 +230,6 @@ class TracksHandler(
     }
   }
 
-  private def extractTrackFieldsFromParams(multipartParams: Map[String, String]): Map[String, String] = {
-    val trackPattern = """track\[(\S+)\]""".r
-
-    multipartParams.foldLeft(Map[String, String]()) {
-      case (acc, (key, value)) =>
-        key match {
-          case trackPattern(field) => acc + (field -> value)
-          case _ => acc
-        }
-    }
-  }
   private def generateUnprocessableEntity(
       aggregationKey: String,
       message: String,

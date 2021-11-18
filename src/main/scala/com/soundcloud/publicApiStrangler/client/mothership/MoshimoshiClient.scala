@@ -2,7 +2,7 @@ package com.soundcloud.publicApiStrangler.client.mothership
 
 import com.soundcloud.jvmkit.module.http.client.{JsonClient, Params}
 import com.soundcloud.jvmkit.module.json.play.UrnFormat._
-import com.soundcloud.jvmkit.module.outcome.{CustomError, GoodOps, NotAllowed, NotValid, Outcome}
+import com.soundcloud.jvmkit.module.outcome.{CustomError, GoodOps, NotAllowed, NotValid, Outcome, OutcomeF}
 import com.soundcloud.jvmkit.module.telemetry.exceptions.ExceptionCollector
 import com.soundcloud.jvmkit.module.telemetry.exceptions.ExceptionHandler.FutureExtensions
 import com.soundcloud.jvmkit.module.util.http.Headers
@@ -10,7 +10,10 @@ import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.jvmkit.module.util.{Path, Urn}
 import com.soundcloud.publicApiStrangler.client.chrono.ChronoResponse
 import com.soundcloud.publicApiStrangler.client.moshimoshicomments.MoshimoshiCommentsComment
-import com.soundcloud.publicApiStrangler.client.mothership.response.mapper.UserRepresentationMapper
+import com.soundcloud.publicApiStrangler.client.mothership.response.mapper.{
+  UpdatePlaylistArtworkResponseMapper,
+  UserRepresentationMapper
+}
 import com.soundcloud.publicApiStrangler.client.mothership.response.representation.{UserRepresentation, WebProfile}
 import com.soundcloud.publicApiStrangler.client.support.FetchClient
 import com.soundcloud.publicApiStrangler.client.support.ResponseHandlers.ListResponse
@@ -18,13 +21,14 @@ import com.soundcloud.publicApiStrangler.handler.comments.CreateCommentParams
 import com.soundcloud.publicApiStrangler.service.pagination.CursorBasedPagination
 import com.twitter.finagle.http.Status
 import com.twitter.util.{Future, Try}
-import play.api.libs.json.{JsNull, JsValue, Json}
+import play.api.libs.json.{JsNull, JsValue, Json, Writes}
 
 import scala.util.control.NonFatal
 
 class MoshimoshiClient(
     service: JsonClient,
-    exceptionCollector: ExceptionCollector
+    exceptionCollector: ExceptionCollector,
+    updatePlaylistArtworkResponseMapper: UpdatePlaylistArtworkResponseMapper = new UpdatePlaylistArtworkResponseMapper
 ) extends FetchClient {
 
   def resolveToUrn(session: UserSession, permalink: String): Future[Option[Urn]] =
@@ -116,6 +120,23 @@ class MoshimoshiClient(
         Headers.empty
       )
       .map(ListResponse(_).map(_.as[WebProfile]))
+  }
+
+  def updatePlaylistArtwork(
+      session: UserSession,
+      playlistUrn: Urn,
+      requestParams: PlaylistArtworkUpdate
+  ): OutcomeF[Unit] = {
+    service
+      .putWithSession(
+        session,
+        Path() / "playlists" / playlistUrn / "artwork",
+        Params.empty,
+        Headers.empty(),
+        Some(Json.stringify(implicitly[Writes[PlaylistArtworkUpdate]].writes(requestParams)))
+      )
+      .map(updatePlaylistArtworkResponseMapper(_))
+      .outcomeF
   }
 
   protected def parseRateLimitedError(errorJson: JsValue): Option[RateLimitedError] =

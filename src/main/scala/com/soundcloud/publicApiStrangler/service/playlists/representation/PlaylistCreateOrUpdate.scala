@@ -126,4 +126,43 @@ object PlaylistCreateOrUpdate {
 
     if (allFieldsMissing) JsError("All properties were undefined") else JsSuccess(createOrUpdate)
   }
+
+  def fromForm(
+      playlistParams: Map[String, String],
+      trackIds: Option[Seq[Map[String, String]]]
+  ): PlaylistCreateOrUpdate = {
+    val playlistCreateOrUpdate = PlaylistCreateOrUpdate(
+      description = parseNullableStringInput(playlistParams, "description"),
+      ean = parseNullableStringInput(playlistParams, "ean"),
+      genre = parseNullableStringInput(playlistParams, "genre"),
+      label_name = parseNullableStringInput(playlistParams, "label_name"),
+      license = parseNullableStringInput(playlistParams, "license"),
+      permalink = parseNullableStringInput(playlistParams, "permalink"),
+      public = isPublic(playlistParams).getOrElse(MissingValue), //isPublic.getOrElse(MissingValue)
+      purchase_title = parseNullableStringInput(playlistParams, "purchase_title"),
+      purchase_url = parseNullableStringInput(playlistParams, "purchase_url"),
+      release = parseNullableStringInput(playlistParams, "release"),
+      release_date = parseNullableStringInput(playlistParams, "release_date"),
+      set_type = parseNullableStringInput(playlistParams, "set_type"),
+      tag_list = parseNullableStringInput(playlistParams, "tag_list"),
+      title = parseNullableStringInput(playlistParams, "title"),
+      tracks = trackIds.map(Value(_)).getOrElse(MissingValue)
+    )
+    val allFieldsMissing = playlistCreateOrUpdate.productIterator.forall {
+      case MissingValue => true
+      case _ => false
+    }
+
+    if (allFieldsMissing) throw new Exception("All properties were undefined") else playlistCreateOrUpdate
+  }
+
+  private def parseNullableStringInput(params: Map[String, String], fieldName: String): NullableValue[String] = {
+    params.get(fieldName).map(v => Value[String](v)).getOrElse(MissingValue)
+  }
+
+  private def isPublic(params: Map[String, String]) = params.get("sharing").map {
+    case "public" => Value(true)
+    case "private" => Value(false)
+    case invalid => throw new Exception(s"`sharing` can only be 'private' or 'public', given $invalid")
+  }
 }

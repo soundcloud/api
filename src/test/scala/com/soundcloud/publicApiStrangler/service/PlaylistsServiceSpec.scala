@@ -1,5 +1,6 @@
 package com.soundcloud.publicApiStrangler.service
 
+import com.soundcloud.hocuspocus.{HocuspocusService, Image, Kind}
 import com.soundcloud.jvmkit.module.outcome._
 import com.soundcloud.jvmkit.module.telemetry.Telemetry
 import com.soundcloud.jvmkit.module.twirp.proto.UserSessionOps._
@@ -7,11 +8,15 @@ import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.{UserSession, UserSessionBuilder}
 import com.soundcloud.jvmkit.module.telemetry.exceptions.ExceptionCollector
 import com.soundcloud.publicApiStrangler.client.liebling.{LieblingClient, LikesCount}
-import com.soundcloud.publicApiStrangler.client.mothership.MoshimoshiClient
+import com.soundcloud.publicApiStrangler.client.mothership.{MoshimoshiClient, PlaylistArtworkUpdate}
 import com.soundcloud.publicApiStrangler.client.tracks.TrackRequest
 import com.soundcloud.publicApiStrangler.handler.support.requestParser.AccessParams
 import com.soundcloud.publicApiStrangler.service.pagination.OffsetBasedPagination
-import com.soundcloud.publicApiStrangler.service.playlists.{PlaylistBuilder, PlaylistRequest}
+import com.soundcloud.publicApiStrangler.service.playlists.{
+  PlaylistBuilder,
+  PlaylistRequest,
+  UpdatePlaylistArtworkRequest
+}
 import com.soundcloud.publicApiStrangler.service.playlists.representation.PlaylistCreateOrUpdate
 import com.soundcloud.publicApiStrangler.service.representation.collection.Collection
 import com.soundcloud.publicApiStrangler.service.trackrepresentation.{
@@ -25,7 +30,9 @@ import com.twitter.util.{Await, Future}
 import org.mockito.Mockito.{verify, when}
 import proto.soundcloud.common.session.{UserSession => ProtoUserSession}
 import com.soundcloud.publicApiStrangler.client.mothership.request.representation.Value
+import com.soundcloud.publicApiStrangler.service.artwork.HocuspocusUtils
 import com.soundcloud.twinagle.{ErrorCode, TwinagleException}
+import com.twitter.io.{BufReader, Reader}
 import proto.soundcloud.playlists.api.{
   CreatePlaylistRequest,
   CreatePlaylistResponse,
@@ -81,6 +88,7 @@ class PlaylistsServiceSpec extends UnitSpecification {
       )
 
     val protoTrack = Seq(ProtoTrackRequest(urn = requestedPlaylistTrackUrn.toString))
+    val hocusPocusService = mock[HocuspocusService]
 
     val playlistsService =
       new PlaylistsService(
@@ -89,7 +97,8 @@ class PlaylistsServiceSpec extends UnitSpecification {
         moshimoshiClientMock,
         lieblingClientMock,
         playlistsWritesTwirpServiceMock,
-        exceptionCollector
+        exceptionCollector,
+        hocusPocusService
       )
     val playlistRequests = List(PlaylistRequest(requestedPlaylistUrn, candidateSecretToken))
     val access = AccessParams.defaultAccess
@@ -566,7 +575,7 @@ class PlaylistsServiceSpec extends UnitSpecification {
           Future.value(CreatePlaylistResponse(urn = Urn("soundcloud", "playlists", playlist.id.toString).toString))
       )
 
-      val result = Await.result(playlistsService.createPlaylist(session, createOrUpdatePlaylist).value)
+      val result = Await.result(playlistsService.createPlaylist(session, createOrUpdatePlaylist, None).value)
 
       result match {
         case Good(playlist) =>
@@ -579,6 +588,44 @@ class PlaylistsServiceSpec extends UnitSpecification {
       }
     }
 
+    trait ArtworkContext extends CreateOrUpdatePlaylist {
+      val testImage = "test-image.jpg"
+
+      val buf = Await.result(
+        BufReader.readAll(Reader.fromStream(this.getClass.getClassLoader.getResourceAsStream(testImage)))
+      )
+
+      val artworkUpdateRequest = UpdatePlaylistArtworkRequest(buf)
+      val expectedRaw = HocuspocusUtils.toRaw(buf)
+
+      val expectedArtworkUpdate = PlaylistArtworkUpdate("bucket", "filename")
+
+      hocusPocusService.storeImage(expectedRaw) returns Future.value(
+        Image(kind = Kind.ARTWORKS, originUri = "s3://bucket/filename")
+      )
+
+      moshimoshiClientMock.updatePlaylistArtwork(session, playlistUrn, expectedArtworkUpdate) returns ().goodF
+
+      val playlist = new PlaylistBuilder().setId(1).build
+
+      setUpMocksForWritePlaylists(
+        playlistCreate = createOrUpdatePlaylist,
+        response =
+          Future.value(CreatePlaylistResponse(urn = Urn("soundcloud", "playlists", playlist.id.toString).toString))
+      )
+
+      val _ =
+        Await.result(playlistsService.createPlaylist(session, createOrUpdatePlaylist, Some(artworkUpdateRequest)).value)
+    }
+
+    "uploads the artwork data to s3" in new ArtworkContext {
+      verify(hocusPocusService).storeImage(expectedRaw)
+    }
+
+    "updates playlist artwork metadata" in new ArtworkContext {
+      verify(moshimoshiClientMock).updatePlaylistArtwork(session, playlistUrn, expectedArtworkUpdate)
+    }
+
     "returns Not Valid if Playlists returned Invalid Argument" in new CreateOrUpdatePlaylist {
       val playlist = new PlaylistBuilder().setId(1).build
 
@@ -587,7 +634,7 @@ class PlaylistsServiceSpec extends UnitSpecification {
         response = Future.exception(TwinagleException(ErrorCode.InvalidArgument, "invalid argument", null, null))
       )
 
-      val result = Await.result(playlistsService.createPlaylist(session, createOrUpdatePlaylist).value)
+      val result = Await.result(playlistsService.createPlaylist(session, createOrUpdatePlaylist, None).value)
 
       result ==== Bad(NotValid("invalid argument"))
     }
@@ -598,7 +645,7 @@ class PlaylistsServiceSpec extends UnitSpecification {
         response = Future.exception(TwinagleException(ErrorCode.PermissionDenied, "permission denied", null, null))
       )
 
-      val result = Await.result(playlistsService.createPlaylist(session, createOrUpdatePlaylist).value)
+      val result = Await.result(playlistsService.createPlaylist(session, createOrUpdatePlaylist, None).value)
 
       result ==== Bad(NotAuthorized("permission denied"))
     }
@@ -616,7 +663,7 @@ class PlaylistsServiceSpec extends UnitSpecification {
           )
       ).thenReturn(Future.exception(TwinagleException(ErrorCode.Internal, "oops", null, null)))
 
-      Await.result(playlistsService.createPlaylist(session, createOrUpdatePlaylist).value) must throwA[
+      Await.result(playlistsService.createPlaylist(session, createOrUpdatePlaylist, None).value) must throwA[
         RuntimeException
       ]
     }
@@ -632,7 +679,7 @@ class PlaylistsServiceSpec extends UnitSpecification {
           Future.value(CreatePlaylistResponse(urn = Urn("soundcloud", "playlists", playlist.id.toString).toString))
       )
 
-      val result = Await.result(playlistsService.createPlaylist(session, createOrUpdatePlaylist).value)
+      val result = Await.result(playlistsService.createPlaylist(session, createOrUpdatePlaylist, None).value)
 
       result match {
         case Good(_) =>
@@ -653,7 +700,8 @@ class PlaylistsServiceSpec extends UnitSpecification {
     "updates the playlist" in new CreateOrUpdatePlaylist {
       setUpMocksForUpdatePlaylists(createOrUpdatePlaylist, playlistUrn, Future.value(UpdatePlaylistResponse()))
 
-      val result = Await.result(playlistsService.updatePlaylist(session, playlistUrn, createOrUpdatePlaylist).value)
+      val result =
+        Await.result(playlistsService.updatePlaylist(session, playlistUrn, createOrUpdatePlaylist, None).value)
 
       result match {
         case Good(playlist) =>
@@ -673,7 +721,8 @@ class PlaylistsServiceSpec extends UnitSpecification {
         response = Future.exception(TwinagleException(ErrorCode.NotFound, "not found", null, null))
       )
 
-      val result = Await.result(playlistsService.updatePlaylist(session, playlistUrn, createOrUpdatePlaylist).value)
+      val result =
+        Await.result(playlistsService.updatePlaylist(session, playlistUrn, createOrUpdatePlaylist, None).value)
 
       result ==== Bad(NotFound("playlist not found"))
     }
@@ -685,7 +734,8 @@ class PlaylistsServiceSpec extends UnitSpecification {
         response = Future.exception(TwinagleException(ErrorCode.InvalidArgument, "invalid argument", null, null))
       )
 
-      val result = Await.result(playlistsService.updatePlaylist(session, playlistUrn, createOrUpdatePlaylist).value)
+      val result =
+        Await.result(playlistsService.updatePlaylist(session, playlistUrn, createOrUpdatePlaylist, None).value)
 
       result ==== Bad(NotValid("invalid argument"))
     }
@@ -697,7 +747,8 @@ class PlaylistsServiceSpec extends UnitSpecification {
         response = Future.exception(TwinagleException(ErrorCode.PermissionDenied, "permission denied", null, null))
       )
 
-      val result = Await.result(playlistsService.updatePlaylist(session, playlistUrn, createOrUpdatePlaylist).value)
+      val result =
+        Await.result(playlistsService.updatePlaylist(session, playlistUrn, createOrUpdatePlaylist, None).value)
 
       result ==== Bad(NotAuthorized("permission denied"))
     }
@@ -709,7 +760,7 @@ class PlaylistsServiceSpec extends UnitSpecification {
         response = Future.exception(TwinagleException(ErrorCode.Internal, "oops", null, null))
       )
 
-      Await.result(playlistsService.updatePlaylist(session, playlistUrn, createOrUpdatePlaylist).value) must throwA[
+      Await.result(playlistsService.updatePlaylist(session, playlistUrn, createOrUpdatePlaylist, None).value) must throwA[
         RuntimeException
       ]
     }

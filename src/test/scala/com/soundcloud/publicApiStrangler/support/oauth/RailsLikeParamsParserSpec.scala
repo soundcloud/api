@@ -10,7 +10,8 @@ class RailsLikeParamsParserSpec extends UnitSpecification {
     trait Context extends Scope {
       val request: Request
 
-      lazy val params: Option[Map[String, String]] = new RailsLikeParamsParser().parse(HandlerRequest(request))
+      lazy val params: Option[Map[String, Seq[String]]] = new RailsLikeParamsParser()
+        .parse(HandlerRequest(request))
     }
 
     "when the request Content-Type is application/json" >> {
@@ -29,7 +30,7 @@ class RailsLikeParamsParserSpec extends UnitSpecification {
             |{}
             |""".stripMargin
 
-        params ==== Some(Map("a" -> "b"))
+        params ==== Some(Map("a" -> Seq("b")))
       }
 
       "include additional parameters from the request body" in new JsonContext {
@@ -42,7 +43,7 @@ class RailsLikeParamsParserSpec extends UnitSpecification {
             |}
             |""".stripMargin
 
-        params ==== Some(Map("a" -> "b", "a2" -> "1", "a3" -> "2", "a4" -> "true"))
+        params ==== Some(Map("a" -> Seq("b"), "a2" -> Seq("1"), "a3" -> Seq("2"), "a4" -> Seq("true")))
       }
 
       "exclude complex/nested parameters from the request body" in new JsonContext {
@@ -57,7 +58,7 @@ class RailsLikeParamsParserSpec extends UnitSpecification {
             |}
             |""".stripMargin
 
-        params ==== Some(Map("a" -> "b", "a2" -> "1"))
+        params ==== Some(Map("a" -> Seq("b"), "a2" -> Seq("1")))
       }
 
       "prefer the last value if a parameter is passed multiple times" in new JsonContext {
@@ -68,7 +69,7 @@ class RailsLikeParamsParserSpec extends UnitSpecification {
             |}
             |""".stripMargin
 
-        params must beSome.which(_.get("a") ==== Some("b2"))
+        params ==== Some(Map("a" -> Seq("b2")))
       }
 
       "handle invalid bodies" in new JsonContext {
@@ -91,13 +92,13 @@ class RailsLikeParamsParserSpec extends UnitSpecification {
       "return regular request parameters" in new FormUploadContext {
         override val fields = Seq(("c", "d"))
 
-        params ==== Some(Map("a" -> "b", "c" -> "d"))
+        params ==== Some(Map("a" -> Seq("b"), "c" -> Seq("d")))
       }
 
       "prefer the last value if a parameter is passed multiple times" in new FormUploadContext {
         override val fields = Seq(("a", "b2"))
 
-        params must beSome.which(_.get("a") ==== Some("b2"))
+        params ==== Some(Map("a" -> Seq("b")))
       }
     }
 
@@ -120,13 +121,13 @@ class RailsLikeParamsParserSpec extends UnitSpecification {
       "return additional parameters from the request body" in new MultipartContext {
         override val fields = Seq(("a2", "c"), ("a3", "d"))
 
-        params ==== Some(Map("a" -> "b", "a2" -> "c", "a3" -> "d"))
+        params ==== Some(Map("a" -> Seq("b"), "a2" -> Seq("c"), "a3" -> Seq("d")))
       }
 
-      "prefer the last value if a parameter is passed multiple times" in new MultipartContext {
+      "return all values if a parameter is passed multiple times" in new MultipartContext {
         override val fields = Seq(("a2", "c"), ("a2", "d"))
 
-        params ==== Some(Map("a" -> "b", "a2" -> "d"))
+        params ==== Some(Map("a" -> Seq("b"), "a2" -> Seq("c", "d")))
       }
 
       "handle invalid bodies" in new Context {
@@ -150,7 +151,12 @@ class RailsLikeParamsParserSpec extends UnitSpecification {
 
       "prefer the multi-part parameters to header params" in new MultipartBasicAuthContext {
         params ==== Some(
-          Map("a" -> "b", "client_id" -> "multi_id", "client_secret" -> "multi_secret", "grant_type" -> "auth_code")
+          Map(
+            "a" -> Seq("b"),
+            "client_id" -> Seq("multi_id"),
+            "client_secret" -> Seq("multi_secret"),
+            "grant_type" -> Seq("auth_code")
+          )
         )
       }
     }
@@ -161,7 +167,7 @@ class RailsLikeParamsParserSpec extends UnitSpecification {
           .url(Request.queryString("http://api/test", Map("a" -> "b")))
           .buildPost(Buf.Empty)
 
-        params ==== Some(Map("a" -> "b"))
+        params ==== Some(Map("a" -> Seq("b")))
       }
 
       "prefer the last value if a parameter is passed multiple times" in new Context {
@@ -169,7 +175,7 @@ class RailsLikeParamsParserSpec extends UnitSpecification {
           .url(Request.queryString("http://api/test", Map("a" -> "b", "a" -> "c")))
           .buildPost(Buf.Empty)
 
-        params must beSome.which(_.get("a") ==== Some("c"))
+        params ==== Some(Map("a" -> Seq("c")))
       }
     }
 
@@ -187,7 +193,7 @@ class RailsLikeParamsParserSpec extends UnitSpecification {
 
       "return parameters for client_credentials flow" in new BasicAuthContext {
         params ==== Some(
-          Map("client_id" -> "test_client", "client_secret" -> "test_secret")
+          Map("client_id" -> Seq("test_client"), "client_secret" -> Seq("test_secret"))
         )
       }
 
@@ -206,7 +212,7 @@ class RailsLikeParamsParserSpec extends UnitSpecification {
           ParamMap("client_id" -> "request_client", "client_secret" -> "request_secret")
 
         params ==== Some(
-          Map("client_id" -> "test_client", "client_secret" -> "test_secret")
+          Map("client_id" -> Seq("test_client"), "client_secret" -> Seq("test_secret"))
         )
       }
 

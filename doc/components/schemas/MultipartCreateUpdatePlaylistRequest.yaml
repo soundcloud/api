@@ -1,0 +1,19 @@
+type: object
+properties:
+  playlist[title]:
+    type: string
+  playlist[sharing]:
+    type: string
+    enum:
+      - public
+      - private
+    default: public
+  playlist[description]:
+    type: string
+  playlist[tracks][][id]:
+    type: string
+    description: To pass multiple tracks, pass multiple comma-separated values, e.g. -F "playlist[tracks][][id]=111,222"
+  playlist[artwork_data]:
+    type: string
+    format: binary
+

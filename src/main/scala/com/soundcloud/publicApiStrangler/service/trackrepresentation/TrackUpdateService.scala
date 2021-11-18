@@ -1,7 +1,6 @@
 package com.soundcloud.publicApiStrangler.service.trackrepresentation
 
-import com.google.protobuf.ByteString
-import com.soundcloud.hocuspocus.{HocuspocusService, Image, Kind, Raw}
+import com.soundcloud.hocuspocus.{HocuspocusService, Image}
 import com.soundcloud.jvmkit.module.outcome.{Outcome, _}
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSession
@@ -11,7 +10,7 @@ import com.soundcloud.publicApiStrangler.client.trackcoordinator.{TrackCoordinat
 import com.soundcloud.publicApiStrangler.client.tracks.TrackRequest
 import com.soundcloud.publicApiStrangler.handler.support.error.UnhandledOutcomeException
 import com.soundcloud.publicApiStrangler.handler.support.requestParser._
-import com.twitter.io.Buf
+import com.soundcloud.publicApiStrangler.service.artwork.HocuspocusUtils
 import com.twitter.util.Future
 
 import scala.collection.immutable.HashSet
@@ -74,9 +73,7 @@ class TrackUpdateService(
     maybeUpdateAlbumArt match {
       case Some(artworkMetadata) =>
         hocuspocusService
-          .storeImage(
-            Raw(Kind.ARTWORKS, ByteString.copyFrom(Buf.ByteArray.Owned.extract(artworkMetadata.imageData)))
-          )
+          .storeImage(HocuspocusUtils.toRaw(artworkMetadata.imageData))
           .map(image => createTrackArtworkUpdate(image))
 
       case _ => Future.None
@@ -116,7 +113,7 @@ class TrackUpdateService(
   }
 
   private def createTrackArtworkUpdate(createdImage: Image): Option[TrackArtworkUpdateResult] = {
-    val s3UrlRegex = "s3://([^/ ]+)/([^/ ]+)".r
+    val s3UrlRegex = HocuspocusUtils.s3UrlRegex
     createdImage.originUri match {
       case s3UrlRegex(bucket, filename) => Some(TrackArtworkUpdateResult(bucket, filename))
       case _ => None
