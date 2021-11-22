@@ -141,7 +141,8 @@ object ClientApplicationAuthFilter {
     "179373", // Android Pairing Interview
     "313960", // WeDJ
     "313943", // Rekordbox DJ
-    "129952" // Traktor DJ
+    "129952", // Traktor DJ
+    "313832" // Pioneer DJ DJM-REC
   )
 
   val invalidResponseTypeError = "Authorization is only allowed for response_type=code."
