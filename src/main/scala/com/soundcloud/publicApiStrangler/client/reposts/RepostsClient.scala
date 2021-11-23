@@ -165,11 +165,50 @@ class RepostsClient(jsonClient: JsonClient) extends FetchClient {
           Count(user, trackReposts.count + playlistReposts.count)
       }
 
+  def getBulkUserRepostCounts(session: UserSession, users: Seq[Urn], batchSize: Int = 100): Future[Seq[Count]] =
+    Future
+      .collect(
+        groupByLimit(users, batchSize).map(batch => userCountByBatch(batch.toSet, session))
+      )
+      .map(_.flatten)
+
+  private[reposts] def groupByLimit(users: Seq[Urn], batchSize: Int = 100): Seq[Seq[Urn]] =
+    users
+      .grouped(if (Math.abs(batchSize) > 100 || batchSize == 0) 100 else Math.abs(batchSize))
+      .toSeq
+
+  private def userCountByBatch(users: Set[Urn], session: UserSession): Future[Seq[Count]] =
+    Future
+      .join(
+        getBatchUserCountForKind(session, users, "track_reposts"),
+        getBatchUserCountForKind(session, users, "playlist_reposts")
+      )
+      .map(batchCount => (batchCount._1 ++ batchCount._2).groupBy(_.urn))
+      .map { m =>
+        m.collect {
+          case (urn, counts) => Count(urn, counts.map(_.count).sum)
+        }
+      }
+      .map(_.toSeq)
+
   private def getUserCountForKind(session: UserSession, user: Urn, kind: String): Future[Count] =
     jsonClient
       .getWithSession(session, Path() / "users" / user.toString / kind / "count", Params.empty, Headers.empty)
       .map {
         case response if response.status == Status.Ok => (Json.parse(response.contentString) \ "counts")(0).as[Count]
+      }
+
+  private def getBatchUserCountForKind(session: UserSession, batchUrns: Set[Urn], kind: String): Future[Seq[Count]] =
+    jsonClient
+      .getWithSession(
+        session,
+        Path() / "users" / kind / "count",
+        Params("urns" -> batchUrns.map(_.toString).mkString(",")),
+        Headers.empty
+      )
+      .map {
+        case response if response.status == Status.Ok => (Json.parse(response.contentString) \ "counts").as[Seq[Count]]
+        case _ => Seq.empty
       }
 }
 
