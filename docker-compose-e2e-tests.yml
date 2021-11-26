@@ -1,12 +1,12 @@
 services:
   memcached:
-    image: docker.localproxy.sc:42042/sc-memcached:release
+    image: docker.localproxy.sc:42042/sc-memcached:latest-${HOSTARCH}
     container_name: api_public_memcached
     ports:
       - "11211:11211"
 
   zookeeper:
-    image: docker.localproxy.sc:42042/sc-zookeeper
+    image: docker.localproxy.sc:42042/sc-zookeeper:latest-${HOSTARCH}
     container_name: api_public_zk
     ports:
       - "2181:2181"

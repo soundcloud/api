@@ -11,14 +11,14 @@ services:
       - proxy.localproxy.sc:host-gateway
 
   media_service:
-    image: docker.localproxy.sc:42042/go-1:latest
+    image: docker.localproxy.sc:42042/go-1:latest-${HOSTARCH}
     volumes:
       - ../testdata:/srv/test:ro
     working_dir: /srv/test
     command: go run media_service.go -listenAddr=:80
 
   api_public:
-    image: docker.localproxy.sc:42042/go-1:latest
+    image: docker.localproxy.sc:42042/go-1:latest-${HOSTARCH}
     volumes:
       - ../testdata:/srv/test:ro
     working_dir: /srv/test

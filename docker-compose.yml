@@ -1,6 +1,6 @@
 services:
   api_public_memcached:
-    image: docker.localproxy.sc:42042/sc-memcached:release
+    image: docker.localproxy.sc:42042/sc-memcached:latest-${HOSTARCH}
 
   api_public_zk:
-    image: docker.localproxy.sc:42042/sc-zookeeper
+    image: docker.localproxy.sc:42042/sc-zookeeper:latest-${HOSTARCH}
