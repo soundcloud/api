@@ -114,12 +114,11 @@ class RepostsClient(jsonClient: JsonClient) extends FetchClient {
   private def repostCountsForUrns(session: UserSession, urns: Set[Urn]): Future[Set[Count]] =
     Future
       .collect(
-        (urns.filter(_.collection == "users").map { userUrn =>
-          getUserTotalCount(session, userUrn).map(Seq(_))
-        } ++ Set(
+        Set(
+          getBulkUserRepostCounts(session, urns.filter(_.collection == "users")),
           filterAndGetBulkCounts(session, "tracks", urns),
           filterAndGetBulkCounts(session, "playlists", urns)
-        )).map(f => f.handle { case NonFatal(_) => Seq.empty }).toSeq
+        ).map(f => f.handle { case NonFatal(_) => Seq.empty }).toSeq
       )
       .map(_.flatten)
       .map(_.toSet)
@@ -154,21 +153,10 @@ class RepostsClient(jsonClient: JsonClient) extends FetchClient {
       .map(_.flatten)
   }
 
-  private def getUserTotalCount(session: UserSession, user: Urn): Future[Count] =
-    Future
-      .join(
-        getUserCountForKind(session, user, "track_reposts"),
-        getUserCountForKind(session, user, "playlist_reposts")
-      )
-      .map {
-        case (trackReposts, playlistReposts) =>
-          Count(user, trackReposts.count + playlistReposts.count)
-      }
-
-  def getBulkUserRepostCounts(session: UserSession, users: Seq[Urn], batchSize: Int = 100): Future[Seq[Count]] =
+  def getBulkUserRepostCounts(session: UserSession, users: Set[Urn], batchSize: Int = 100): Future[Seq[Count]] =
     Future
       .collect(
-        groupByLimit(users, batchSize).map(batch => userCountByBatch(batch.toSet, session))
+        groupByLimit(users.toSeq, batchSize).map(batch => userCountByBatch(batch.toSet, session))
       )
       .map(_.flatten)
 
@@ -190,13 +178,6 @@ class RepostsClient(jsonClient: JsonClient) extends FetchClient {
         }
       }
       .map(_.toSeq)
-
-  private def getUserCountForKind(session: UserSession, user: Urn, kind: String): Future[Count] =
-    jsonClient
-      .getWithSession(session, Path() / "users" / user.toString / kind / "count", Params.empty, Headers.empty)
-      .map {
-        case response if response.status == Status.Ok => (Json.parse(response.contentString) \ "counts")(0).as[Count]
-      }
 
   private def getBatchUserCountForKind(session: UserSession, batchUrns: Set[Urn], kind: String): Future[Seq[Count]] =
     jsonClient

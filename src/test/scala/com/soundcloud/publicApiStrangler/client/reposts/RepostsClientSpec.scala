@@ -20,7 +20,7 @@ class RepostsClientSpec extends UnitSpecification {
     val client = new RepostsClient(service)
 
     val userUrn = Urn("soundcloud", "users", "1039586181")
-    val userUrns = Seq(Urn("soundcloud", "users", "1039586181"))
+    val userUrns = Set(Urn("soundcloud", "users", "1039586181"))
     val notFoundUserUrn = Urn("soundcloud", "users", "0")
 
     val playlistUrn = Urn("soundcloud", "playlists", "48786981")
