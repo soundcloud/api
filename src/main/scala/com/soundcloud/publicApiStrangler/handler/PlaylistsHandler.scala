@@ -132,13 +132,13 @@ class PlaylistsHandler(
 
   private def playlistFromRequest(request: HandlerRequest) = {
     request.mediaType match {
-      case Some(MediaType.MultipartForm) => playlistFromMultipartRequest(request)
+      case Some(MediaType.MultipartForm) | Some(MediaType.WwwForm) => playlistFromFormRequest(request)
       case Some(MediaType.Json) => tryParsePlaylistWriteRequestOutcome(request)
       case _ => NotValid("").bad
     }
   }
 
-  private def playlistFromMultipartRequest(
+  private def playlistFromFormRequest(
       request: HandlerRequest
   ): Outcome[PlaylistCreateOrUpdate] = {
     val playlistPattern = """playlist\[(\S+)\]""".r
@@ -155,14 +155,18 @@ class PlaylistsHandler(
       request: HandlerRequest
   ): Option[Seq[Map[String, String]]] = {
     val tracksPattern = """playlist\[tracks\]\[\]\[(\S+)\]""".r
-    paramsParser.parse(request).flatMap { idKeyToTrackIds =>
-      Some(idKeyToTrackIds.foldLeft(Seq[Map[String, String]]()) {
+    val maybeTrackIds = paramsParser.parse(request).map { idKeyToTrackIds =>
+      idKeyToTrackIds.foldLeft(Seq[Map[String, String]]()) {
         case (acc, (multipartTrackIdKey, trackIds)) =>
           multipartTrackIdKey match {
             case tracksPattern(idField) => acc ++ trackIds.map(item => Map(idField -> item))
             case _ => acc
           }
-      })
+      }
+    }
+    maybeTrackIds match {
+      case Some(trackIds) if trackIds.nonEmpty => maybeTrackIds
+      case _ => None
     }
   }
 

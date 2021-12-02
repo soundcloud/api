@@ -445,12 +445,12 @@ paths:
                 $ref: "#/components/examples/CreateUpdatePlaylistRequest"
           multipart/form-data:
             schema:
-              $ref: '#/components/schemas/MultipartCreateUpdatePlaylistRequest'
+              $ref: '#/components/schemas/CreateUpdatePlaylistFormRequest'
               required:
                 - playlist[title]
             examples:
               default:
-                $ref: "#/components/examples/MultipartCreateUpdatePlaylistRequest"
+                $ref: "#/components/examples/CreateUpdatePlaylistFormRequest"
       responses:
         201:
           $ref: "#/components/responses/LegacyPlaylist"
@@ -1089,8 +1089,8 @@ components:
       $ref: './components/schemas/TrackMetadataRequest.yaml'
     CreateUpdatePlaylistRequest:
       $ref: './components/schemas/CreateUpdatePlaylistRequest.yaml'
-    MultipartCreateUpdatePlaylistRequest:
-      $ref: './components/schemas/MultipartCreateUpdatePlaylistRequest.yaml'
+    CreateUpdatePlaylistFormRequest:
+      $ref: './components/schemas/CreateUpdatePlaylistFormRequest.yaml'
     TrackDataRequest:
       $ref: './components/schemas/TrackDataRequest.yaml'
     Found:
@@ -1182,8 +1182,8 @@ components:
       $ref: './components/examples/ExpiringToken.yaml'
     CreateUpdatePlaylistRequest:
       $ref: './components/examples/CreateUpdatePlaylistRequest.yaml'
-    MultipartCreateUpdatePlaylistRequest:
-      $ref: './components/examples/MultipartCreateUpdatePlaylistRequest.yaml'
+    CreateUpdatePlaylistFormRequest:
+      $ref: './components/examples/CreateUpdatePlaylistFormRequest.yaml'
     TrackDataRequest:
       $ref: './components/examples/TrackDataRequest.yaml'
     Comment:
