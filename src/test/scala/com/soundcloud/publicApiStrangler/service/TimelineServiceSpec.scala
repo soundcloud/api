@@ -101,7 +101,7 @@ class TimelineServiceSpec extends TrackRepresentationsSpecificationContext {
   "#fetchTimelineTracksForUser" >> {
     trait SuccessCase extends Context {
       def setupMocksForTimelineResponse(session: UserSession) = {
-        when(timelineClient.stream(session, None, 10, reverseCursor = false, Some("uuid")))
+        when(timelineClient.stream(session, None, 10, reverseCursor = false))
           .thenReturn(Future.value(timelineStreamMock))
 
         when(trackService.tracks(session, List(TrackRequest(trackUrn, None)), access))
@@ -111,7 +111,7 @@ class TimelineServiceSpec extends TrackRepresentationsSpecificationContext {
 
     trait FailureCase extends Context {
       def setupMocksForTimelineResponse(session: UserSession) = {
-        when(timelineClient.stream(session, None, 10, reverseCursor = false, Some("uuid")))
+        when(timelineClient.stream(session, None, 10, reverseCursor = false))
           .thenReturn(Future.value(emptyTimelineStreamMock))
 
         when(trackService.tracks(session, List.empty, access))
@@ -128,7 +128,6 @@ class TimelineServiceSpec extends TrackRepresentationsSpecificationContext {
           None,
           reverseCursor = false,
           10,
-          Some("uuid"),
           pagination
         )
       )
@@ -151,7 +150,6 @@ class TimelineServiceSpec extends TrackRepresentationsSpecificationContext {
           None,
           reverseCursor = false,
           10,
-          Some("uuid"),
           pagination
         )
       )
@@ -164,7 +162,7 @@ class TimelineServiceSpec extends TrackRepresentationsSpecificationContext {
   "#fetchTimelineForUser" >> {
     trait SuccessCase extends Context {
       def setupMocksForTimelineResponse(session: UserSession) = {
-        when(timelineClient.stream(session, None, 10, reverseCursor = false, Some("uuid")))
+        when(timelineClient.stream(session, None, 10, reverseCursor = false))
           .thenReturn(Future.value(timelineStreamMock))
 
         when(trackService.tracks(session, List(TrackRequest(trackUrn, None)), access))
@@ -181,7 +179,7 @@ class TimelineServiceSpec extends TrackRepresentationsSpecificationContext {
 
     trait FailureCase extends Context {
       def setupMocksForTimelineResponse(session: UserSession) = {
-        when(timelineClient.stream(session, None, 10, reverseCursor = false, Some("uuid")))
+        when(timelineClient.stream(session, None, 10, reverseCursor = false))
           .thenReturn(Future.value(emptyTimelineStreamMock))
 
         when(trackService.tracks(session, List.empty, access))
@@ -202,7 +200,6 @@ class TimelineServiceSpec extends TrackRepresentationsSpecificationContext {
           None,
           reverseCursor = false,
           10,
-          Some("uuid"),
           pagination
         )
       )
@@ -228,7 +225,6 @@ class TimelineServiceSpec extends TrackRepresentationsSpecificationContext {
           None,
           reverseCursor = false,
           10,
-          Some("uuid"),
           pagination
         )
       )
@@ -244,7 +240,7 @@ class TimelineServiceSpec extends TrackRepresentationsSpecificationContext {
   "#fetchFollowingTracksForUser" >> {
     trait SuccessCase extends Context {
       def setupMocksForTimelineResponse(session: UserSession) = {
-        when(timelineClient.followingsTracks(session, None, 10, reverseCursor = false, Some("uuid")))
+        when(timelineClient.followingsTracks(session, None, 10, reverseCursor = false))
           .thenReturn(Future.value(timelineFollowingTracksMock))
 
         when(trackService.tracks(session, List(TrackRequest(trackUrn, None)), access))
@@ -254,7 +250,7 @@ class TimelineServiceSpec extends TrackRepresentationsSpecificationContext {
 
     trait FailureCase extends Context {
       def setupMocksForTimelineResponse(session: UserSession) = {
-        when(timelineClient.followingsTracks(session, None, 10, reverseCursor = false, Some("uuid")))
+        when(timelineClient.followingsTracks(session, None, 10, reverseCursor = false))
           .thenReturn(Future.value(emptyTimelineStreamMock))
 
         when(trackService.tracks(session, List.empty, access))
@@ -271,8 +267,7 @@ class TimelineServiceSpec extends TrackRepresentationsSpecificationContext {
           access,
           None,
           reverseCursor = false,
-          10,
-          Some("uuid")
+          10
         )
       )
 
@@ -289,8 +284,7 @@ class TimelineServiceSpec extends TrackRepresentationsSpecificationContext {
           access,
           None,
           reverseCursor = false,
-          10,
-          Some("uuid")
+          10
         )
       )
 

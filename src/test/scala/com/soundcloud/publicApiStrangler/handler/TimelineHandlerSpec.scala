@@ -64,7 +64,7 @@ class TimelineHandlerSpec extends UnitSpecification {
         val pagination = CursorBasedPagination.build(mockRequest, Seq("linked_partitioning"))
 
         val mockTimelineResponse = Timeline(mockTimelineItems, mockTimelineMeta, pagination)
-        when(timelineService.fetchTimelineTracksForUser(session, access, None, false, 10, Some("uuid"), pagination))
+        when(timelineService.fetchTimelineTracksForUser(session, access, None, false, 10, pagination))
           .thenReturn(Future.value(mockTimelineResponse))
 
         val result = get(path)
@@ -87,7 +87,7 @@ class TimelineHandlerSpec extends UnitSpecification {
         val pagination = CursorBasedPagination.build(mockRequest, Seq("linked_partitioning"))
 
         val mockTimelineResponse = Timeline(mockTimelineItems, mockTimelineMeta, pagination)
-        when(timelineService.fetchTimelineTracksForUser(session, access, None, false, 10, Some("uuid"), pagination))
+        when(timelineService.fetchTimelineTracksForUser(session, access, None, false, 10, pagination))
           .thenReturn(Future.value(mockTimelineResponse))
 
         val result = get(path)
@@ -108,7 +108,7 @@ class TimelineHandlerSpec extends UnitSpecification {
         mockRequest.host = "localhost"
         val pagination = CursorBasedPagination.build(mockRequest, Seq("linked_partitioning"))
 
-        when(timelineService.fetchTimelineTracksForUser(session, access, None, false, 10, Some("uuid"), pagination))
+        when(timelineService.fetchTimelineTracksForUser(session, access, None, false, 10, pagination))
           .thenReturn(Future.value(null))
 
         val result = get(path)
@@ -131,7 +131,7 @@ class TimelineHandlerSpec extends UnitSpecification {
       val queryParams = "?limit=10"
       val path = s"/me/followings/tracks$queryParams"
 
-      when(timelineService.fetchFollowingTracksForUser(session, access, None, false, 10, Some("uuid")))
+      when(timelineService.fetchFollowingTracksForUser(session, access, None, false, 10))
         .thenReturn(Future.value(mockTimelineResponse))
 
       val result = get(path)
@@ -143,7 +143,7 @@ class TimelineHandlerSpec extends UnitSpecification {
       val queryParams = "?limit=10"
       val path = s"/me/followings/tracks$queryParams"
 
-      when(timelineService.fetchFollowingTracksForUser(session, access, None, false, 10, Some("uuid")))
+      when(timelineService.fetchFollowingTracksForUser(session, access, None, false, 10))
         .thenReturn(Future.value(emptyTimelineResponse))
 
       val result = get(path)
@@ -155,7 +155,7 @@ class TimelineHandlerSpec extends UnitSpecification {
       val queryParams = "?limit=10"
       val path = s"/me/followings/tracks$queryParams"
 
-      when(timelineService.fetchFollowingTracksForUser(session, access, None, false, 10, Some("uuid")))
+      when(timelineService.fetchFollowingTracksForUser(session, access, None, false, 10))
         .thenReturn(Future.value(noTimelineResponse))
 
       val result = get(path)
@@ -193,7 +193,7 @@ class TimelineHandlerSpec extends UnitSpecification {
         val pagination = CursorBasedPagination.build(mockRequest, Seq("linked_partitioning"))
 
         val mockTimelineResponse = Timeline(mockTimelineItems, mockTimelineMeta, pagination)
-        when(timelineService.fetchTimelineForUser(session, access, None, false, 10, Some("uuid"), pagination))
+        when(timelineService.fetchTimelineForUser(session, access, None, false, 10, pagination))
           .thenReturn(Future.value(mockTimelineResponse))
 
         val result = get(path)
@@ -217,7 +217,7 @@ class TimelineHandlerSpec extends UnitSpecification {
           val pagination = CursorBasedPagination.build(mockRequest, Seq("linked_partitioning"))
 
           val mockTimelineResponse = Timeline(mockTimelineItems, mockTimelineMeta, pagination)
-          when(timelineService.fetchTimelineForUser(session, access, None, false, 10, Some("uuid"), pagination))
+          when(timelineService.fetchTimelineForUser(session, access, None, false, 10, pagination))
             .thenReturn(Future.value(mockTimelineResponse))
 
           val result = get(path)

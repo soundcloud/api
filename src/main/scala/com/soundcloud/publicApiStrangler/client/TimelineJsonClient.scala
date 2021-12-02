@@ -40,14 +40,13 @@ class TimelineJsonClient(service: JsonClient) extends FetchClient {
       session: UserSession,
       cursor: Option[String],
       pageSize: Int = 50,
-      reverseCursor: Boolean = false,
-      cursorEncoding: Option[String] = None
+      reverseCursor: Boolean = false
   ): Future[JsObject] =
     fetch(
       service,
       session,
       Path() / "stream",
-      paramsFor(cursor, pageSize, reverseCursor, cursorEncoding),
+      paramsFor(cursor, pageSize, reverseCursor, None),
       Headers.empty
     ).map(SingleItem(_))
 
@@ -156,8 +155,7 @@ class TimelineJsonClient(service: JsonClient) extends FetchClient {
       session: UserSession,
       cursor: Option[String],
       pageSize: Int = 50,
-      reverseCursor: Boolean = false,
-      cursorEncoding: Option[String] = None
+      reverseCursor: Boolean = false
   ): Future[JsObject] = {
     val noPaging = JsObject(Seq())
 
@@ -167,7 +165,7 @@ class TimelineJsonClient(service: JsonClient) extends FetchClient {
       trackEvents
     }
 
-    stream(session, cursor, pageSize, reverseCursor, cursorEncoding).map { stream =>
+    stream(session, cursor, pageSize, reverseCursor).map { stream =>
       Json.obj(
         "events" -> tracksOnly(stream),
         "meta" -> noPaging

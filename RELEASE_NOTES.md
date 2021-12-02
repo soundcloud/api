@@ -1,6 +1,5 @@
 <!--- Remove everything below and start over --->
 
-Added validation for `POST /tracks` REST endpoint to verify file_name length is within 255 chars.
-The new error response when the above condition is not satisfied is as below
-`HTTP 422 - UnprocessableEntity` 
-
+Changed `cursor` parameter format in `GET /me/activities/tracks`, `GET /me/activities`, `GET /me/activities/all/own`, 
+`GET /me/followings/tracks` REST endpoints, the new format is an integer value instead of UUID.
+This should not affect clients which use pagination links since they should be treated as opaque links.

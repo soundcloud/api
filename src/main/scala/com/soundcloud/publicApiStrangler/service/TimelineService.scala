@@ -24,11 +24,10 @@ class TimelineService(
       access: AccessParams,
       cursor: Option[String],
       reverseCursor: Boolean,
-      limit: Int,
-      cursorEncoding: Option[String]
+      limit: Int
   ): Future[List[TrackRepresentation]] = {
     for {
-      trackActivities <- timelineJsonClient.followingsTracks(session, cursor, limit, reverseCursor, cursorEncoding)
+      trackActivities <- timelineJsonClient.followingsTracks(session, cursor, limit, reverseCursor)
       timelineResponse = timelineResponseMapper(trackActivities)
       tracks <- getTrackRepresentations(session, timelineResponse.events, access)
     } yield tracks
@@ -40,11 +39,10 @@ class TimelineService(
       cursor: Option[String],
       reverseCursor: Boolean,
       limit: Int,
-      cursorEncoding: Option[String],
       pagination: CursorBasedPagination
   ): Future[Timeline] = {
     for {
-      timelineResponse <- fetchTimelineObjects(session, cursor, reverseCursor, limit, cursorEncoding)
+      timelineResponse <- fetchTimelineObjects(session, cursor, reverseCursor, limit)
       tracks <- getTrackRepresentations(session, timelineResponse.events, access)
       playlists <- getPlaylistRepresentations(session, timelineResponse.events)
     } yield {
@@ -59,11 +57,10 @@ class TimelineService(
       cursor: Option[String],
       reverseCursor: Boolean,
       limit: Int,
-      cursorEncoding: Option[String],
       pagination: CursorBasedPagination
   ): Future[Timeline] = {
     for {
-      timelineResponse <- fetchTimelineObjects(session, cursor, reverseCursor, limit, cursorEncoding)
+      timelineResponse <- fetchTimelineObjects(session, cursor, reverseCursor, limit)
       tracks <- getTrackRepresentations(session, timelineResponse.events, access)
     } yield {
       val trackTimelineItems = timelineResponse.events.flatMap(event => createTrackTimelineItem(tracks, event))
@@ -89,11 +86,10 @@ class TimelineService(
       session: LoggedInUserSession,
       cursor: Option[String],
       reverseCursor: Boolean,
-      limit: Int,
-      cursorEncoding: Option[String]
+      limit: Int
   ): Future[TimelineResponse] = {
     for {
-      activities <- timelineJsonClient.stream(session, cursor, limit, reverseCursor, cursorEncoding)
+      activities <- timelineJsonClient.stream(session, cursor, limit, reverseCursor)
       timelineResponse = timelineResponseMapper(activities)
     } yield timelineResponse
   }

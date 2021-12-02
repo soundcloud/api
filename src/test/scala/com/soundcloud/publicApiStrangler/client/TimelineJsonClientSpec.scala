@@ -46,9 +46,9 @@ class TimelineJsonClientSpec extends UnitSpecification {
       expectOkResponse(
         Path() / "item_stream",
         timelineItemStream,
-        Map("page_size" -> "10", "cursor" -> "deadbeef", "direction" -> "before", "cursor_encoding" -> "uuid")
+        Map("page_size" -> "10", "cursor" -> "deadbeef", "direction" -> "before")
       )
-      timelineItemStream ==== Await.result(client.itemStream(session, Some("deadbeef"), 10, true, Some("uuid")))
+      timelineItemStream ==== Await.result(client.itemStream(session, Some("deadbeef"), 10, true))
     }
   }
 
@@ -80,9 +80,9 @@ class TimelineJsonClientSpec extends UnitSpecification {
       expectOkResponse(
         Path() / "stream",
         timelineStream,
-        Map("page_size" -> "10", "cursor" -> "deadbeef", "direction" -> "before", "cursor_encoding" -> "uuid")
+        Map("page_size" -> "10", "cursor" -> "deadbeef", "direction" -> "before")
       )
-      timelineStream ==== Await.result(client.stream(session, Some("deadbeef"), 10, true, Some("uuid")))
+      timelineStream ==== Await.result(client.stream(session, Some("deadbeef"), 10, true))
     }
   }
 
@@ -376,10 +376,10 @@ class TimelineJsonClientSpec extends UnitSpecification {
       expectOkResponse(
         Path() / "stream",
         actualTimeline,
-        Map("page_size" -> "10", "cursor" -> "deadbeef", "direction" -> "before", "cursor_encoding" -> "uuid")
+        Map("page_size" -> "10", "cursor" -> "deadbeef", "direction" -> "before")
       )
 
-      expectedAnswer ==== Await.result(client.followingsTracks(session, Some("deadbeef"), 10, true, Some("uuid")))
+      expectedAnswer ==== Await.result(client.followingsTracks(session, Some("deadbeef"), 10, true))
     }
 
     "should return tracks only" in new TimelineWithMixedItemsScenario {

@@ -15,9 +15,6 @@ import com.twitter.finagle.http.Response
 import com.twitter.util.Future
 import play.api.libs.json.Json
 
-import java.util.UUID
-import scala.util.{Failure, Success, Try}
-
 /**
   * Note: the PAS API refers to 'activities' in the endpoint syntax, but internally we call the /stream endpoint from Timeline,
   * hence the naming of the handler methods
@@ -31,14 +28,11 @@ class TimelineHandler(
     userAuthentication.withLoggedInUser(request) { (session: LoggedInUserSession, _) =>
       val pagination = CursorBasedPagination.build(request, Seq("linked_partitioning", "access"))
 
-      val (cursor, reverseCursor) = Try(extractCursor(pagination)) match {
-        case Failure(_) => return Future.value(ErrorResponse.badRequest("Cursor is not a valid UUID."))
-        case Success(value) => value
-      }
+      val (cursor, reverseCursor) = extractCursor(pagination)
       val limit = pagination.pageSize
       val access = AccessParamsExtractor.unapply(request.params)
 
-      performGetAllStreamItems(session, access, cursor.map(_.toString), reverseCursor, limit, pagination)
+      performGetAllStreamItems(session, access, cursor, reverseCursor, limit, pagination)
         .map {
           case Good(timeline) => JsonResponseBuilder.ok(timeline.getRepresentation())
           case Bad(NotFound(_)) => ErrorResponse.notFound()
@@ -47,26 +41,21 @@ class TimelineHandler(
     }
   }
 
-  private def extractCursor(pagination: CursorBasedPagination): (Option[UUID], Boolean) = {
+  private def extractCursor(pagination: CursorBasedPagination): (Option[String], Boolean) =
     pagination.extraParams.get("uuid[to]") match {
-      case Some(uuid) => (Some(UUID.fromString(uuid)), true)
-      case _ => (pagination.cursor.map(UUID.fromString), false)
+      case Some(uuid) => (Some(uuid), true)
+      case _ => (pagination.cursor, false)
     }
-  }
 
   def renderTrackStream(request: HandlerRequest): Future[Response] = {
     userAuthentication.withLoggedInUser(request) { (session: LoggedInUserSession, _) =>
       val pagination = CursorBasedPagination.build(request, Seq("linked_partitioning", "access"))
 
-      val (cursor, reverseCursor) = Try(extractCursor(pagination)) match {
-        case Failure(_) => return Future.value(ErrorResponse.badRequest("Cursor is not a valid UUID."))
-        case Success(value) => value
-      }
-
+      val (cursor, reverseCursor) = extractCursor(pagination)
       val limit = pagination.pageSize
       val access = AccessParamsExtractor.unapply(request.params)
 
-      performGetTrackStreamItems(session, access, cursor.map(_.toString), reverseCursor, limit, pagination)
+      performGetTrackStreamItems(session, access, cursor, reverseCursor, limit, pagination)
         .map {
           case Good(timeline) => JsonResponseBuilder.ok(timeline.getRepresentation())
           case Bad(NotFound(_)) => ErrorResponse.notFound()
@@ -84,7 +73,7 @@ class TimelineHandler(
       pagination: CursorBasedPagination
   ): Future[Outcome[SimpleTimeline]] = {
     timelineService
-      .fetchTimelineForUser(session, access, cursor, reverseCursor, limit, Some("uuid"), pagination)
+      .fetchTimelineForUser(session, access, cursor, reverseCursor, limit, pagination)
       .map {
         case timeline: SimpleTimeline => Good(timeline)
         case _ => NotFound().bad
@@ -100,7 +89,7 @@ class TimelineHandler(
       pagination: CursorBasedPagination
   ): Future[Outcome[SimpleTimeline]] = {
     timelineService
-      .fetchTimelineTracksForUser(session, access, cursor, reverseCursor, limit, Some("uuid"), pagination)
+      .fetchTimelineTracksForUser(session, access, cursor, reverseCursor, limit, pagination)
       .map {
         case timeline: SimpleTimeline => Good(timeline)
         case _ => NotFound().bad
@@ -111,15 +100,11 @@ class TimelineHandler(
     userAuthentication.withLoggedInUser(request) { (session: LoggedInUserSession, _) =>
       val pagination = CursorBasedPagination.build(request, Seq("linked_partitioning", "access"))
 
-      val (cursor, reverseCursor) = Try(extractCursor(pagination)) match {
-        case Failure(_) => return Future.value(ErrorResponse.badRequest("Cursor is not a valid UUID."))
-        case Success(value) => value
-      }
-
+      val (cursor, reverseCursor) = extractCursor(pagination)
       val limit = pagination.pageSize
       val access = AccessParamsExtractor.unapply(request.params)
 
-      performGetFollowingTrackActivities(session, access, cursor.map(_.toString), reverseCursor, limit)
+      performGetFollowingTrackActivities(session, access, cursor, reverseCursor, limit)
         .map {
           case Good(tracks) => JsonResponseBuilder.ok(Json.stringify(Json.toJson(tracks)))
           case Bad(NotFound(_)) => ErrorResponse.notFound()
@@ -136,7 +121,7 @@ class TimelineHandler(
       limit: Int
   ): Future[Outcome[List[TrackRepresentation]]] = {
     timelineService
-      .fetchFollowingTracksForUser(session, access, cursor, reverseCursor, limit, cursorEncoding = Some("uuid"))
+      .fetchFollowingTracksForUser(session, access, cursor, reverseCursor, limit)
       .map {
         case tracks: List[TrackRepresentation] => Good(tracks)
         case _ => NotFound().bad
