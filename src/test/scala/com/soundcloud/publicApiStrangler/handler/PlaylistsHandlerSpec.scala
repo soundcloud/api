@@ -30,7 +30,6 @@ class PlaylistsHandlerSpec extends UnitSpecification {
 
     lazy val geo = new Geo("US")
     val playlist = new PlaylistBuilder().build
-
     lazy val session = new UserSessionBuilder()
       .setUser(Urn("soundcloud", "users", "2"))
       .setAgent(Urn("soundcloud", "applications", "v2"))
@@ -240,91 +239,6 @@ class PlaylistsHandlerSpec extends UnitSpecification {
           override def isCreateRolloutActive = false
 
           val _ = postForm(path, body = playlistCreateBody, maybeFile = Some(file), isMultipart = true)
-          verify(mothershipDispatcher).dispatch(any())
-        }
-      }
-    }
-
-    "application/x-www-form-urlencoded request" >> {
-      trait ValidPostBody {
-        self: CreatePlaylistContext =>
-        val playlistTitle = "my playlist"
-        val playlistDescription = "description"
-        val trackid1 = "3311"
-        val trackid2 = "723290971"
-        val trackid3 = "60521501"
-        val playlistCreateBody = Seq[(String, String)](
-          ("playlist[title]", playlistTitle),
-          ("playlist[description]", playlistDescription),
-          ("playlist[tracks][][id]", trackid1),
-          ("playlist[tracks][][id]", trackid2),
-          ("playlist[tracks][][id]", trackid3)
-        )
-
-        val expectedTrackIds = Seq(Map("id" -> trackid1), Map("id" -> trackid2), Map("id" -> trackid3))
-        val expectedPlaylistCreate = PlaylistCreateOrUpdate(
-          title = Value(playlistTitle),
-          description = Value(playlistDescription),
-          tracks = Value(expectedTrackIds)
-        )
-      }
-
-      trait InvalidPostBody {
-        self: CreatePlaylistContext =>
-        // missing all properties
-        val playlistCreateBody = Seq.empty
-      }
-
-      trait Anonymous {
-        self: CreatePlaylistContext =>
-        // missing all properties
-        override lazy val session: UserSession = anonymousSession
-        val playlistCreateBody = Seq.empty
-      }
-
-      "returns 401 for anonymous user" in new CreatePlaylistContext with Anonymous {
-        val response = postForm(path, body = playlistCreateBody)
-        response.status ==== Status.Unauthorized
-      }
-
-      "with invalid POST body" >> {
-        "returns 422" in new CreatePlaylistContext with InvalidPostBody {
-          stubService(playlistCreateOrUpdate = nullPlaylist, maybeArtworkRequest = None)
-          val response = postForm(path, body = playlistCreateBody)
-          response.status ==== Status.UnprocessableEntity
-        }
-      }
-
-      "with valid POST body" >> {
-        "returns 201 when create succeeds" in new CreatePlaylistContext with ValidPostBody {
-          stubService(playlistCreateOrUpdate = expectedPlaylistCreate, maybeArtworkRequest = None)
-          val response = postForm(path, body = playlistCreateBody)
-          response.status ==== Status.Created
-          response.contentString ==== Json.stringify(Json.toJson(playlist))
-        }
-
-        "extracts track ids" in new CreatePlaylistContext with ValidPostBody {
-          stubService(playlistCreateOrUpdate = expectedPlaylistCreate, maybeArtworkRequest = None)
-          val response = postForm(path, body = playlistCreateBody)
-          response.status ==== Status.Created
-
-          verify(playlistsService).createPlaylist(
-            session,
-            expectedPlaylistCreate,
-            None
-          )
-        }
-
-        "on success adds the location header" in new CreatePlaylistContext with ValidPostBody {
-          stubService(playlistCreateOrUpdate = expectedPlaylistCreate, maybeArtworkRequest = None)
-          val response = postForm(path, body = playlistCreateBody)
-          response.headerMap("location") ==== s"$baseUrl/playlists/${playlist.id.toString}"
-        }
-
-        "when rollout is not active dispatches to mothership" in new CreatePlaylistContext with ValidPostBody {
-          override def isCreateRolloutActive = false
-
-          val _ = postForm(path, body = playlistCreateBody)
           verify(mothershipDispatcher).dispatch(any())
         }
       }

@@ -95,16 +95,10 @@ class RailsLikeParamsParserSpec extends UnitSpecification {
         params ==== Some(Map("a" -> Seq("b"), "c" -> Seq("d")))
       }
 
-      "prefer body params if a parameter is passed multiple times" in new FormUploadContext {
+      "prefer the last value if a parameter is passed multiple times" in new FormUploadContext {
         override val fields = Seq(("a", "b2"))
 
-        params ==== Some(Map("a" -> Seq("b2")))
-      }
-
-      "handles empty values" in new FormUploadContext {
-        override val fields = Seq(("c", ""))
-
-        params ==== Some(Map("a" -> Seq("b"), "c" -> Seq("")))
+        params ==== Some(Map("a" -> Seq("b")))
       }
     }
 

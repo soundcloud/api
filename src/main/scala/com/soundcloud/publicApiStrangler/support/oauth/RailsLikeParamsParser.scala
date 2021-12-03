@@ -9,7 +9,6 @@ import com.twitter.util.{Base64StringEncoder, Future}
 import play.api.libs.json._
 
 import java.io.File
-import java.net.URLDecoder
 import scala.util.{Success, Try}
 
 class RailsLikeParamsParser {
@@ -32,7 +31,9 @@ class RailsLikeParamsParser {
     request.mediaType match {
       case Some(MediaType.Json) => parseJsonRequest(request)
       case Some(MediaType.MultipartForm) => parseMultipartBody(request)
-      case Some(MediaType.WwwForm) => Some(parseWwwFormBody(request))
+      case Some(MediaType.WwwForm) =>
+        // In this case, finagle will parse and return request.params accordingly.
+        Some(Map.empty)
       case _ =>
         // It would be possible to restrict to known Content-Types only here.
         // Since we're trying to be permissive, this isn't an error.
@@ -77,23 +78,6 @@ class RailsLikeParamsParser {
         }
       case _ => Future.value(None)
     }
-  }
-
-  private def parseWwwFormBody(request: Request): Map[String, Seq[String]] = {
-    URLDecoder
-      .decode(request.contentString, "UTF-8")
-      .split('&')
-      .map(_.split('='))
-      .map(arr => (arr.headOption.getOrElse(""), if (arr.length > 1) arr(1) else ""))
-      .foldLeft(Map[String, Seq[String]]()) {
-        case (acc, attribute) =>
-          attribute match {
-            case (k, vs) => {
-              val merged = acc.getOrElse(k, Seq.empty) ++ Seq(vs)
-              acc + (k -> merged)
-            }
-          }
-      }
   }
 
   private def parseMultipartBody(request: Request): Option[Map[String, Seq[String]]] = {
