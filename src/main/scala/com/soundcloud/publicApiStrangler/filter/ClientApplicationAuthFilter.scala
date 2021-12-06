@@ -142,7 +142,8 @@ object ClientApplicationAuthFilter {
     "313960", // WeDJ
     "313943", // Rekordbox DJ
     "129952", // Traktor DJ
-    "313832" // Pioneer DJ DJM-REC
+    "313832", // Pioneer DJ DJM-REC
+    "283387" // Auxy
   )
 
   val invalidResponseTypeError = "Authorization is only allowed for response_type=code."
