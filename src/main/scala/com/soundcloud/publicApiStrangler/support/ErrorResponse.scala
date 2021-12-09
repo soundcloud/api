@@ -14,13 +14,15 @@ object ErrorResponse {
       status: Status,
       message: String = "",
       extraAttributes: Option[Map[String, JsValue]] = None,
-      errorDetails: Option[Map[String, JsValue]] = None
+      errorDetails: Option[Map[String, JsValue]] = None,
+      additionalHeaders: Map[String, String] = Map.empty
   ): Response = {
     val deprecatedErrorDetails =
       errorDetails.orElse(if (message.isEmpty) None else Some(Map("error_message" -> JsString(message))))
 
     new JsonResponseBuilder()
       .status(status)
+      .headers(additionalHeaders)
       .body(
         Json.stringify(
           Json.obj(

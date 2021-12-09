@@ -49,4 +49,18 @@ class ErrorResponseTypeFilterSpec extends UnitSpecification {
     (response \ "code").as[Int] mustEqual 400
     filter.emptyBodyErrorResponseCounter.labels("/tracks/:id", "400").get === 1
   }
+
+  "adds headers in case of failed response" in new Context {
+    val request = Request("/tracks/123")
+    val responseFromNextService =
+      JsonResponseBuilder(status = Status.Unauthorized, headers = Map("something" -> "else")).build
+    when(next.apply(request)).thenReturn(Future.value(responseFromNextService))
+
+    val response = Await.result(filter(request, next))
+    val contentString = Json.parse(response.contentString)
+
+    (contentString \ "code").as[Int] mustEqual 401
+    filter.emptyBodyErrorResponseCounter.labels("/tracks/:id", "401").get === 1
+    response.headerMap.contains("something")
+  }
 }

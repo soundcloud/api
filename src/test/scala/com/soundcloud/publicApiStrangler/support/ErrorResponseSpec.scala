@@ -84,4 +84,10 @@ class ErrorResponseSpec extends Specification {
       "errors" -> Json.arr()
     )
   }
+
+  "adds headers from the initial response (to preserve CORS)" in new Scope {
+    val response = ErrorResponse(Status.Unauthorized, additionalHeaders = Map("else" -> "other"))
+    response.statusCode === 401
+    response.headerMap.contains("else")
+  }
 }

@@ -24,7 +24,7 @@ class ErrorResponseTypeFilter(telemetry: Telemetry, router: HandlerRouter) exten
       .map { response =>
         if (response.statusCode >= 400 && isEmpty(response.contentString)) {
           emptyBodyErrorResponseCounter.labels(path, response.statusCode.toString).inc()
-          ErrorResponse(response.status)
+          ErrorResponse(response.status, additionalHeaders = response.headerMap.toMap)
         } else response
       }
   }
