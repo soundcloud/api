@@ -87,7 +87,7 @@ class RailsLikeParamsParser {
         .map(_.attributes)
     ).map(extractMultipartParams) match {
       case Success(params) if params.nonEmpty => Some(params)
-      case _ => None
+      case _ => Some(Map.empty)
     }
   }
 

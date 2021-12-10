@@ -108,6 +108,7 @@ object PlaylistCreateOrUpdate {
       label_name = extractNullableString("label_name"),
       license = extractNullableString("license"),
       permalink = extractNullableString("permalink"),
+      permalink_url = extractNullableString("permalink_url"),
       public = isPublic.getOrElse(MissingValue),
       purchase_title = extractNullableString("purchase_title"),
       purchase_url = extractNullableString("purchase_url"),
@@ -138,7 +139,8 @@ object PlaylistCreateOrUpdate {
       label_name = parseNullableStringInput(playlistParams, "label_name"),
       license = parseNullableStringInput(playlistParams, "license"),
       permalink = parseNullableStringInput(playlistParams, "permalink"),
-      public = isPublic(playlistParams).getOrElse(MissingValue), //isPublic.getOrElse(MissingValue)
+      permalink_url = parseNullableStringInput(playlistParams, "permalink_url"),
+      public = isPublic(playlistParams).getOrElse(MissingValue),
       purchase_title = parseNullableStringInput(playlistParams, "purchase_title"),
       purchase_url = parseNullableStringInput(playlistParams, "purchase_url"),
       release = parseNullableStringInput(playlistParams, "release"),

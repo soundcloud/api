@@ -28,6 +28,24 @@ class SessionExemptedEndpointsSpec extends IntegrationTest {
       response.status ==== Status.Ok.code
     }
 
+    "return success for multipart request with oauth2 token and multiple values for the same key" in new IntegrationContext {
+      val secret = config.get("CLIENT_SECRET", DataSensitivity.SENSITIVE)
+      val request = RequestBuilder()
+        .url(s"http://${server.serverAddress}/oauth2/token")
+        .addHeader("X-Real-IP", "65.206.21.12")
+        .addFormElement("grant_type" -> "client_credentials")
+        .addFormElement("client_id" -> clientId)
+        .addFormElement("client_id" -> clientId)
+        .addFormElement("client_secret" -> secret)
+        .addFormElement("playlist[tracks][][id]" -> "1")
+        .addFormElement("playlist[tracks][][id]" -> "2")
+        .addFormElement("playlist[tracks][][id]" -> "3")
+        .buildFormPost(multipart = false)
+
+      private val response: IntegrationTestHttpResponse = server.executeRequest(request)
+      response.status ==== Status.Ok.code
+    }
+
     "return success for Basic auth request with oauth2 token" in new IntegrationContext {
       val secret = config.get("CLIENT_SECRET", DataSensitivity.SENSITIVE)
       val encodedAuth = Base64StringEncoder.encode(new String(clientId + ":" + secret).getBytes)

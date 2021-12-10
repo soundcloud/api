@@ -72,7 +72,7 @@ class RailsLikeParamsParserSpec extends UnitSpecification {
         params ==== Some(Map("a" -> Seq("b2")))
       }
 
-      "handle invalid bodies" in new JsonContext {
+      "invalid body fails parsing" in new JsonContext {
         override val json = "This ain't JSON."
 
         params ==== None
@@ -87,6 +87,12 @@ class RailsLikeParamsParserSpec extends UnitSpecification {
           .url(Request.queryString("http://api.test", Map("a" -> "b")))
           .addFormElement(fields: _*)
           .buildFormPost(false)
+      }
+
+      "return query parameters" in new FormUploadContext {
+        override val fields = Seq.empty
+
+        params ==== Some(Map("a" -> Seq("b")))
       }
 
       "return regular request parameters" in new FormUploadContext {
@@ -112,10 +118,9 @@ class RailsLikeParamsParserSpec extends UnitSpecification {
           .buildFormPost(multipart = true)
       }
 
-      "return None given empty body" in new MultipartContext {
+      "return query parameters when body is empty" in new MultipartContext {
         override val fields = Seq.empty
-
-        params ==== None
+        params ==== Some(Map("a" -> Seq("b")))
       }
 
       "return additional parameters from the request body" in new MultipartContext {
@@ -130,13 +135,13 @@ class RailsLikeParamsParserSpec extends UnitSpecification {
         params ==== Some(Map("a" -> Seq("b"), "a2" -> Seq("c", "d")))
       }
 
-      "handle invalid bodies" in new Context {
+      "invalid body does not fail parsing" in new Context {
         override val request = RequestBuilder()
           .url(Request.queryString("http://api/test", Map("a" -> "b")))
           .setHeader("Content-Type", "multipart/form-data")
           .buildPost(Buf.Utf8("Not multipart."))
 
-        params ==== None
+        params ==== Some(Map("a" -> Seq("b")))
       }
 
       trait MultipartBasicAuthContext extends Context {
@@ -197,13 +202,15 @@ class RailsLikeParamsParserSpec extends UnitSpecification {
         )
       }
 
-      "return None for invalid credentials format" in new BasicAuthContext {
+      "invalid credentials fails parsing" in new BasicAuthContext {
         override lazy val encodedString: String = "dGVzdF9jbGllbnQ6"
+        override lazy val requestParams = ParamMap("a" -> "b")
         params ==== None
       }
 
-      "return None for invalid base64-encoded string" in new BasicAuthContext {
+      "invalid base64-encoded string fails parsing" in new BasicAuthContext {
         override lazy val encodedString: String = "invalid_encode_string"
+        override lazy val requestParams = ParamMap("a" -> "b")
         params ==== None
       }
 

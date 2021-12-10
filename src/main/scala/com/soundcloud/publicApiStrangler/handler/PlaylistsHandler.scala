@@ -7,15 +7,16 @@ import com.soundcloud.jvmkit.module.outcome._
 import com.soundcloud.jvmkit.module.rollout.{BasicRolloutFeature, Rollout}
 import com.soundcloud.publicApiStrangler.client.playlists.PlaylistDeletionClient
 import com.soundcloud.publicApiStrangler.handler.support.error.UnhandledOutcomeException
-import com.soundcloud.publicApiStrangler.handler.support.requestParser.AccessParamsExtractor
+import com.soundcloud.publicApiStrangler.handler.support.requestParser.{
+  AccessParamsExtractor,
+  PlaylistFormParamsExtractor
+}
 import com.soundcloud.publicApiStrangler.service.PlaylistsService
 import com.soundcloud.publicApiStrangler.service.pagination.OffsetBasedPagination
-import com.soundcloud.publicApiStrangler.service.playlists.UpdatePlaylistArtworkRequest
 import com.soundcloud.publicApiStrangler.service.playlists.representation.PlaylistCreateOrUpdate
 import com.soundcloud.publicApiStrangler.service.representation.collection.Collection
 import com.soundcloud.publicApiStrangler.support.PlaylistUrnUtil.getPlaylistUrn
-import com.soundcloud.publicApiStrangler.support.oauth._
-import com.soundcloud.publicApiStrangler.support.{ErrorResponse, MultipartParamsUtils, PlaylistUrnUtil}
+import com.soundcloud.publicApiStrangler.support.{ErrorResponse, PlaylistUrnUtil}
 import com.twitter.finagle.http._
 import com.twitter.util.{Future, Return, Throw, Try}
 import play.api.libs.json.{JsObject, Json}
@@ -27,7 +28,7 @@ class PlaylistsHandler(
     dispatchToMothershipHandler: DispatchToMothershipHandler,
     rollout: Rollout,
     baseUrl: String,
-    paramsParser: RailsLikeParamsParser = new RailsLikeParamsParser
+    playlistFormParamsExtractor: PlaylistFormParamsExtractor = new PlaylistFormParamsExtractor
 ) {
 
   def handleCreate(request: HandlerRequest): Future[Response] = {
@@ -108,7 +109,7 @@ class PlaylistsHandler(
   private def performCreate(request: HandlerRequest): Future[Response] = {
     userAuthentication.withLoggedInUser(request) { (session, _) =>
       val result = for {
-        artworkRequest <- artworkDataFromRequest(request).outcomeF
+        artworkRequest <- playlistFormParamsExtractor.artworkDataFromRequest(request).outcomeF
         parsedPlaylist <- playlistFromRequest(request).outcomeF
         createdPlaylist <- playlistsService.createPlaylist(session, parsedPlaylist, artworkRequest)
       } yield createdPlaylist
@@ -126,43 +127,12 @@ class PlaylistsHandler(
     }
   }
 
-  private def artworkDataFromRequest(request: HandlerRequest): Future[Option[UpdatePlaylistArtworkRequest]] = {
-    paramsParser.parseFilesFromRequest(request, "playlist[artwork_data]").map(_.map(UpdatePlaylistArtworkRequest))
-  }
-
   private def playlistFromRequest(request: HandlerRequest) = {
     request.mediaType match {
-      case Some(MediaType.MultipartForm) => playlistFromMultipartRequest(request)
+      case Some(MediaType.MultipartForm) | Some(MediaType.WwwForm) =>
+        playlistFormParamsExtractor.playlistFromFormRequest(request)
       case Some(MediaType.Json) => tryParsePlaylistWriteRequestOutcome(request)
       case _ => NotValid("").bad
-    }
-  }
-
-  private def playlistFromMultipartRequest(
-      request: HandlerRequest
-  ): Outcome[PlaylistCreateOrUpdate] = {
-    val playlistPattern = """playlist\[(\S+)\]""".r
-    val extractedParams =
-      paramsParser.parse(request).map(MultipartParamsUtils.extractFieldsFromParams(playlistPattern, _))
-    val extractedTrackParams = extractPlaylistTrackFieldsFromParams(request)
-    val params = extractedParams.getOrElse(Map.empty)
-    Try(PlaylistCreateOrUpdate.fromForm(params, extractedTrackParams)).outcome.leftMap(_ =>
-      NotValid("Could not parse request body.")
-    )
-  }
-
-  private def extractPlaylistTrackFieldsFromParams(
-      request: HandlerRequest
-  ): Option[Seq[Map[String, String]]] = {
-    val tracksPattern = """playlist\[tracks\]\[\]\[(\S+)\]""".r
-    paramsParser.parse(request).flatMap { idKeyToTrackIds =>
-      Some(idKeyToTrackIds.foldLeft(Seq[Map[String, String]]()) {
-        case (acc, (multipartTrackIdKey, trackIds)) =>
-          multipartTrackIdKey match {
-            case tracksPattern(idField) => acc ++ trackIds.map(item => Map(idField -> item))
-            case _ => acc
-          }
-      })
     }
   }
 
@@ -170,7 +140,7 @@ class PlaylistsHandler(
     userAuthentication.withLoggedInUser(request) { (session, _) =>
       val urn = PlaylistUrnUtil.getPlaylistUrn(request)
       val result = for {
-        artworkRequest <- artworkDataFromRequest(request).outcomeF
+        artworkRequest <- playlistFormParamsExtractor.artworkDataFromRequest(request).outcomeF
         playlistUpdate <- playlistFromRequest(request).outcomeF
         updatedPlaylist <- playlistsService.updatePlaylist(session, urn, playlistUpdate, artworkRequest)
       } yield updatedPlaylist
