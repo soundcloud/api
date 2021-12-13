@@ -5,6 +5,8 @@ import com.soundcloud.jvmkit.module.bff.session.UserAuthentication
 import com.soundcloud.jvmkit.module.http.server.{HandlerRequest, JsonResponseBuilder}
 import com.soundcloud.jvmkit.module.outcome._
 import com.soundcloud.jvmkit.module.rollout.{BasicRolloutFeature, Rollout}
+import com.soundcloud.jvmkit.module.telemetry.exceptions.ExceptionCollector
+import com.soundcloud.periskop.client.Severity
 import com.soundcloud.publicApiStrangler.client.playlists.PlaylistDeletionClient
 import com.soundcloud.publicApiStrangler.handler.support.error.UnhandledOutcomeException
 import com.soundcloud.publicApiStrangler.handler.support.requestParser.{
@@ -28,6 +30,7 @@ class PlaylistsHandler(
     dispatchToMothershipHandler: DispatchToMothershipHandler,
     rollout: Rollout,
     baseUrl: String,
+    exceptionCollector: ExceptionCollector,
     playlistFormParamsExtractor: PlaylistFormParamsExtractor = new PlaylistFormParamsExtractor
 ) {
 
@@ -120,7 +123,15 @@ class PlaylistsHandler(
             headers = Map("location" -> playlistLocation(playlist.id.toString)),
             body = Json.stringify(Json.toJson(playlist))
           ).build
-        case Bad(NotValid(msg)) => ErrorResponse(Status.UnprocessableEntity, msg.mkString(","))
+        case Bad(NotValid(msg)) => {
+          exceptionCollector.addMessage(
+            "unprocessable-playlist-write",
+            "422 when creating a playlist",
+            Severity.Info,
+            true
+          )
+          ErrorResponse(Status.UnprocessableEntity, msg.mkString(","))
+        }
         case Bad(NotAuthorized(_)) => ErrorResponse.forbidden()
         case _ => ErrorResponse(Status.InternalServerError)
       }

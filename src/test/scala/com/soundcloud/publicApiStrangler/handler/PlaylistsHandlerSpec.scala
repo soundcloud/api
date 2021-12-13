@@ -4,6 +4,8 @@ import com.soundcloud.jvmkit.module.bff.testsupport.FakeUserAuthentication
 import com.soundcloud.jvmkit.module.http.server.{HandlerRequest, ResponseBuilder}
 import com.soundcloud.jvmkit.module.outcome._
 import com.soundcloud.jvmkit.module.rollout.{BasicRolloutFeature, Rollout}
+import com.soundcloud.jvmkit.module.telemetry.Telemetry
+import com.soundcloud.jvmkit.module.telemetry.exceptions.ExceptionCollector
 import com.soundcloud.jvmkit.module.util.session.{UserSession, UserSessionBuilder}
 import com.soundcloud.jvmkit.module.util.{Geo, Urn}
 import com.soundcloud.publicApiStrangler.Routing
@@ -59,7 +61,8 @@ class PlaylistsHandlerSpec extends UnitSpecification {
       playlistsService,
       mothershipDispatcher,
       rollout,
-      baseUrl
+      baseUrl,
+      new ExceptionCollector(Telemetry.createIsolatedInstance)
     )
 
     override def routingDefinitions = Routing.forPlaylistHandler(handler)

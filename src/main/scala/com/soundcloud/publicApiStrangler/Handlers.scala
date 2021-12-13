@@ -75,7 +75,8 @@ class Handlers(
       playlistService,
       mothershipDispatcher,
       rolloutClient,
-      baseUrl
+      baseUrl,
+      exceptionCollector
     )
 
   val userPlaylistsHandler = new UserPlaylistsHandler(userAuthentication, userPlaylistsService)
