@@ -125,7 +125,7 @@ class PlaylistsHandler(
           ).build
         case Bad(NotValid(msg)) => {
           exceptionCollector.addMessage(
-            "unprocessable-playlist-write",
+            "unprocessable-playlist-create",
             "422 when creating a playlist",
             Severity.Info,
             true
@@ -158,7 +158,15 @@ class PlaylistsHandler(
 
       result.value.map {
         case Good(playlist) => JsonResponseBuilder.ok(Json.stringify(Json.toJson(playlist)))
-        case Bad(NotValid(msg)) => ErrorResponse(Status.UnprocessableEntity, msg.mkString(","))
+        case Bad(NotValid(msg)) => {
+          exceptionCollector.addMessage(
+            "unprocessable-playlist-update",
+            "422 when updating a playlist",
+            Severity.Info,
+            true
+          )
+          ErrorResponse(Status.UnprocessableEntity, msg.mkString(","))
+        }
         case Bad(NotFound(_)) => ErrorResponse.notFound()
         case Bad(NotAuthorized(_)) => ErrorResponse.forbidden()
         case _ => ErrorResponse(Status.InternalServerError)
