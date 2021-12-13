@@ -126,7 +126,7 @@ class PlaylistsHandler(
         case Bad(NotValid(msg)) => {
           exceptionCollector.addMessage(
             "unprocessable-playlist-create",
-            "422 when creating a playlist",
+            request.contentString,
             Severity.Info,
             true
           )
@@ -161,7 +161,7 @@ class PlaylistsHandler(
         case Bad(NotValid(msg)) => {
           exceptionCollector.addMessage(
             "unprocessable-playlist-update",
-            "422 when updating a playlist",
+            request.contentString,
             Severity.Info,
             true
           )
