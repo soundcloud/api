@@ -34,6 +34,7 @@ import proto.soundcloud.playlists.api.{
   PlaylistPagination,
   PlaylistResponse,
   UpdatePlaylistRequest,
+  UpdatePlaylistResponse,
   PlaylistRequest => ProtoPlaylistRequest,
   PlaylistsService => PlaylistsTwirpService,
   WritesService => PlaylistsWritesTwirpService
@@ -135,18 +136,7 @@ class PlaylistsService(
       artworkUpdateRequest: Option[UpdatePlaylistArtworkRequest]
   ): OutcomeF[Playlist] = {
     val playlist = for {
-      createdUrn <- playlistsWritesTwirpService
-        .createPlaylist(
-          CreatePlaylistRequest(playlist = Some(playlistCreate.toProto), userSession = Some(session.asProtoSession))
-        )
-        .map(res => Urn.parse(res.urn).get.good)
-        .handle {
-          case TwinagleException(ErrorCode.InvalidArgument, msg, _, _) => Bad(NotValid(msg))
-          case TwinagleException(ErrorCode.PermissionDenied, msg, _, _) => Bad(NotAuthorized(msg))
-          case TwinagleException(_, msg, _, _) =>
-            throw new RuntimeException(s"unexpected response from playlists: ${msg}")
-        }
-        .outcomeF
+      createdUrn <- createPlaylistMetadata(playlistCreate, session)
       _ <- artworkUpdateRequest.map(updatePlaylistArtwork(session, createdUrn, _)).getOrElse(().goodF)
       playlist <- fetchPlaylist(session, createdUrn, None, AccessParams.explicitAccess, None, None).outcomeF
     } yield playlist
@@ -159,6 +149,31 @@ class PlaylistsService(
         )
         notFound
       case other => other
+    }
+  }
+
+  private def createPlaylistMetadata(
+      playlistCreateOrUpdate: PlaylistCreateOrUpdate,
+      session: UserSession
+  ): OutcomeF[Urn] = {
+    if (playlistCreateOrUpdate.allFieldsMissing) {
+      NotValid("All fields missing").badF
+    } else {
+      playlistsWritesTwirpService
+        .createPlaylist(
+          CreatePlaylistRequest(
+            playlist = Some(playlistCreateOrUpdate.toProto),
+            userSession = Some(session.asProtoSession)
+          )
+        )
+        .map(res => Urn.parse(res.urn).get.good)
+        .handle {
+          case TwinagleException(ErrorCode.InvalidArgument, msg, _, _) => Bad(NotValid(msg))
+          case TwinagleException(ErrorCode.PermissionDenied, msg, _, _) => Bad(NotAuthorized(msg))
+          case TwinagleException(_, msg, _, _) =>
+            throw new RuntimeException(s"unexpected response from playlists: ${msg}")
+        }
+        .outcomeF
     }
   }
 
@@ -201,13 +216,27 @@ class PlaylistsService(
       playlistCreate: PlaylistCreateOrUpdate,
       artworkUpdateRequest: Option[UpdatePlaylistArtworkRequest]
   ): OutcomeF[Playlist] = {
+    for {
+      _ <- updatePlaylistMetadata(playlistCreate, playlistUrn, session)
+      _ <- artworkUpdateRequest.map(updatePlaylistArtwork(session, playlistUrn, _)).getOrElse(().goodF)
+      playlist <- fetchPlaylist(session, playlistUrn, None, AccessParams.explicitAccess, None, None).outcomeF
+    } yield playlist
+  }
+
+  private def updatePlaylistMetadata(
+      playlistCreateOrUpdate: PlaylistCreateOrUpdate,
+      playlistUrn: Urn,
+      session: UserSession
+  ): OutcomeF[UpdatePlaylistResponse] = {
     val updatePlaylistRequest = UpdatePlaylistRequest(
-      Some(playlistCreate.toProto),
+      Some(playlistCreateOrUpdate.toProto),
       playlistUrn.toString,
       Some(session.asProtoSession)
     )
-    for {
-      _ <- playlistsWritesTwirpService
+    if (playlistCreateOrUpdate.allFieldsMissing) {
+      UpdatePlaylistResponse().goodF
+    } else {
+      playlistsWritesTwirpService
         .updatePlaylist(updatePlaylistRequest)
         .map(Good(_))
         .handle {
@@ -218,9 +247,7 @@ class PlaylistsService(
             throw new RuntimeException(s"unexpected response from playlists: msg: ${msg}, code: ${code}, meta: ${meta}")
         }
         .outcomeF
-      _ <- artworkUpdateRequest.map(updatePlaylistArtwork(session, playlistUrn, _)).getOrElse(().goodF)
-      playlist <- fetchPlaylist(session, playlistUrn, None, AccessParams.explicitAccess, None, None).outcomeF
-    } yield playlist
+    }
   }
 
   private def resolvePlaylists(

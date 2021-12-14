@@ -14,7 +14,7 @@ import com.soundcloud.publicApiStrangler.client.playlists.PlaylistDeletionClient
 import com.soundcloud.publicApiStrangler.handler.support.requestParser.AccessParams
 import com.soundcloud.publicApiStrangler.service.PlaylistsService
 import com.soundcloud.publicApiStrangler.service.pagination.OffsetBasedPagination
-import com.soundcloud.publicApiStrangler.service.playlists.representation.PlaylistCreateOrUpdate
+import com.soundcloud.publicApiStrangler.service.playlists.representation.{Playlist, PlaylistCreateOrUpdate}
 import com.soundcloud.publicApiStrangler.service.playlists.{PlaylistBuilder, UpdatePlaylistArtworkRequest}
 import com.soundcloud.publicApiStrangler.service.representation.collection.Collection
 import com.soundcloud.publicApiStrangler.service.trackrepresentation.TrackRepresentationSpecContext
@@ -94,11 +94,10 @@ class PlaylistsHandlerSpec extends UnitSpecification {
 
       def stubService(
           playlistCreateOrUpdate: PlaylistCreateOrUpdate = playlistCreate,
-          maybeArtworkRequest: Option[UpdatePlaylistArtworkRequest] = Some(UpdatePlaylistArtworkRequest(buf))
+          maybeArtworkRequest: Option[UpdatePlaylistArtworkRequest] = Some(UpdatePlaylistArtworkRequest(buf)),
+          outcome: Outcome[Playlist] = Good(playlist)
       ) = {
-        playlistsService.createPlaylist(session, playlistCreateOrUpdate, maybeArtworkRequest) returns Good(
-          playlist
-        ).outcomeF
+        playlistsService.createPlaylist(session, playlistCreateOrUpdate, maybeArtworkRequest) returns outcome.outcomeF
       }
     }
 
@@ -187,12 +186,6 @@ class PlaylistsHandlerSpec extends UnitSpecification {
         )
       }
 
-      trait InvalidPostBody {
-        self: CreatePlaylistContext =>
-        // missing all properties
-        val playlistCreateBody = Seq.empty
-      }
-
       trait Anonymous {
         self: CreatePlaylistContext =>
         // missing all properties
@@ -203,14 +196,6 @@ class PlaylistsHandlerSpec extends UnitSpecification {
       "returns 401 for anonymous user" in new CreatePlaylistContext with Anonymous {
         val response = postForm(path, body = playlistCreateBody, maybeFile = Some(file), isMultipart = true)
         response.status ==== Status.Unauthorized
-      }
-
-      "with invalid POST body" >> {
-        "returns 422" in new CreatePlaylistContext with InvalidPostBody {
-          stubService(playlistCreateOrUpdate = nullPlaylist, maybeArtworkRequest = None)
-          val response = postForm(path, body = playlistCreateBody, maybeFile = None, isMultipart = true)
-          response.status ==== Status.UnprocessableEntity
-        }
       }
 
       "with valid POST body" >> {
@@ -272,12 +257,6 @@ class PlaylistsHandlerSpec extends UnitSpecification {
         )
       }
 
-      trait InvalidPostBody {
-        self: CreatePlaylistContext =>
-        // missing all properties
-        val playlistCreateBody = Seq.empty
-      }
-
       trait Anonymous {
         self: CreatePlaylistContext =>
         // missing all properties
@@ -288,14 +267,6 @@ class PlaylistsHandlerSpec extends UnitSpecification {
       "returns 401 for anonymous user" in new CreatePlaylistContext with Anonymous {
         val response = postForm(path, body = playlistCreateBody)
         response.status ==== Status.Unauthorized
-      }
-
-      "with invalid POST body" >> {
-        "returns 422" in new CreatePlaylistContext with InvalidPostBody {
-          stubService(playlistCreateOrUpdate = nullPlaylist, maybeArtworkRequest = None)
-          val response = postForm(path, body = playlistCreateBody)
-          response.status ==== Status.UnprocessableEntity
-        }
       }
 
       "with valid POST body" >> {
@@ -333,7 +304,8 @@ class PlaylistsHandlerSpec extends UnitSpecification {
       }
     }
 
-    "returns a 422 for an unsupported request type" in new CreatePlaylistContext {
+    "maps NotValid outcome from service to 422" in new CreatePlaylistContext {
+      stubService(playlistCreateOrUpdate = nullPlaylist, maybeArtworkRequest = None, outcome = NotValid("").bad)
       val response = postForm(path, body = Seq.empty)
       response.status ==== Status.UnprocessableEntity
     }

@@ -57,7 +57,14 @@ case class PlaylistCreateOrUpdate(
     )
   }
 
-  def mapNullableStringToOption(nullableValue: NullableValue[String]): Option[String] = {
+  def allFieldsMissing: Boolean = {
+    productIterator.forall {
+      case MissingValue => true
+      case _ => false
+    }
+  }
+
+  private def mapNullableStringToOption(nullableValue: NullableValue[String]): Option[String] = {
     nullableValue match {
       case Value(value) => Some(value)
       case NullValue => Some("")
@@ -65,7 +72,7 @@ case class PlaylistCreateOrUpdate(
     }
   }
 
-  def mapNullableBooleanToOption(nullableValue: NullableValue[Boolean]): Option[Boolean] = {
+  private def mapNullableBooleanToOption(nullableValue: NullableValue[Boolean]): Option[Boolean] = {
     nullableValue match {
       case Value(value) => Some(value)
       case NullValue => Some(false)
@@ -101,38 +108,33 @@ object PlaylistCreateOrUpdate {
       case _ => MissingValue
     }
 
-    val createOrUpdate = PlaylistCreateOrUpdate(
-      description = extractNullableString("description"),
-      ean = extractNullableString("ean"),
-      genre = extractNullableString("genre"),
-      label_name = extractNullableString("label_name"),
-      license = extractNullableString("license"),
-      permalink = extractNullableString("permalink"),
-      permalink_url = extractNullableString("permalink_url"),
-      public = isPublic.getOrElse(MissingValue),
-      purchase_title = extractNullableString("purchase_title"),
-      purchase_url = extractNullableString("purchase_url"),
-      release = extractNullableString("release"),
-      release_date = extractNullableString("release_date"),
-      set_type = extractNullableString("set_type"),
-      tag_list = extractNullableString("tag_list"),
-      title = extractNullableString("title"),
-      tracks = trackIds
+    JsSuccess(
+      PlaylistCreateOrUpdate(
+        description = extractNullableString("description"),
+        ean = extractNullableString("ean"),
+        genre = extractNullableString("genre"),
+        label_name = extractNullableString("label_name"),
+        license = extractNullableString("license"),
+        permalink = extractNullableString("permalink"),
+        permalink_url = extractNullableString("permalink_url"),
+        public = isPublic.getOrElse(MissingValue),
+        purchase_title = extractNullableString("purchase_title"),
+        purchase_url = extractNullableString("purchase_url"),
+        release = extractNullableString("release"),
+        release_date = extractNullableString("release_date"),
+        set_type = extractNullableString("set_type"),
+        tag_list = extractNullableString("tag_list"),
+        title = extractNullableString("title"),
+        tracks = trackIds
+      )
     )
-
-    val allFieldsMissing = createOrUpdate.productIterator.forall {
-      case MissingValue => true
-      case _ => false
-    }
-
-    if (allFieldsMissing) JsError("All properties were undefined") else JsSuccess(createOrUpdate)
   }
 
   def fromForm(
       playlistParams: Map[String, String],
       trackIds: Option[Seq[Map[String, String]]]
   ): PlaylistCreateOrUpdate = {
-    val playlistCreateOrUpdate = PlaylistCreateOrUpdate(
+    PlaylistCreateOrUpdate(
       description = parseNullableStringInput(playlistParams, "description"),
       ean = parseNullableStringInput(playlistParams, "ean"),
       genre = parseNullableStringInput(playlistParams, "genre"),
@@ -150,12 +152,6 @@ object PlaylistCreateOrUpdate {
       title = parseNullableStringInput(playlistParams, "title"),
       tracks = trackIds.map(Value(_)).getOrElse(MissingValue)
     )
-    val allFieldsMissing = playlistCreateOrUpdate.productIterator.forall {
-      case MissingValue => true
-      case _ => false
-    }
-
-    if (allFieldsMissing) throw new Exception("All properties were undefined") else playlistCreateOrUpdate
   }
 
   private def parseNullableStringInput(params: Map[String, String], fieldName: String): NullableValue[String] = {

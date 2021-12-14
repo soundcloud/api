@@ -138,8 +138,14 @@ class PlaylistCreateOrUpdateSpec extends Specification {
       PlaylistCreateOrUpdate.fromForm(Map("sharing" -> "just mine"), None) must throwA[Exception]
     }
 
-    "throws exception for empty params" in new Scope {
-      PlaylistCreateOrUpdate.fromForm(Map.empty, None) must throwA[Exception]
+    "allFieldsMissing is false when valid params passed" in new Scope {
+      val playlist = PlaylistCreateOrUpdate.fromForm(Map("title" -> "title"), None)
+      playlist.allFieldsMissing ==== false
+    }
+
+    "allFieldsMissing is true when no valid params are passed" in new Scope {
+      val playlist = PlaylistCreateOrUpdate.fromForm(Map.empty, None)
+      playlist.allFieldsMissing ==== true
     }
   }
 }

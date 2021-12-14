@@ -3,21 +3,23 @@ package com.soundcloud.publicApiStrangler.service
 import com.soundcloud.hocuspocus.{HocuspocusService, Image, Kind}
 import com.soundcloud.jvmkit.module.outcome._
 import com.soundcloud.jvmkit.module.telemetry.Telemetry
+import com.soundcloud.jvmkit.module.telemetry.exceptions.ExceptionCollector
 import com.soundcloud.jvmkit.module.twirp.proto.UserSessionOps._
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.{UserSession, UserSessionBuilder}
-import com.soundcloud.jvmkit.module.telemetry.exceptions.ExceptionCollector
 import com.soundcloud.publicApiStrangler.client.liebling.{LieblingClient, LikesCount}
+import com.soundcloud.publicApiStrangler.client.mothership.request.representation.Value
 import com.soundcloud.publicApiStrangler.client.mothership.{MoshimoshiClient, PlaylistArtworkUpdate}
 import com.soundcloud.publicApiStrangler.client.tracks.TrackRequest
 import com.soundcloud.publicApiStrangler.handler.support.requestParser.AccessParams
+import com.soundcloud.publicApiStrangler.service.artwork.HocuspocusUtils
 import com.soundcloud.publicApiStrangler.service.pagination.OffsetBasedPagination
+import com.soundcloud.publicApiStrangler.service.playlists.representation.PlaylistCreateOrUpdate
 import com.soundcloud.publicApiStrangler.service.playlists.{
   PlaylistBuilder,
   PlaylistRequest,
   UpdatePlaylistArtworkRequest
 }
-import com.soundcloud.publicApiStrangler.service.playlists.representation.PlaylistCreateOrUpdate
 import com.soundcloud.publicApiStrangler.service.representation.collection.Collection
 import com.soundcloud.publicApiStrangler.service.trackrepresentation.{
   TrackRepresentation,
@@ -25,14 +27,12 @@ import com.soundcloud.publicApiStrangler.service.trackrepresentation.{
   TrackRepresentationsService
 }
 import com.soundcloud.publicApiStrangler.test.UnitSpecification
-import com.twitter.finagle.http.ParamMap
-import com.twitter.util.{Await, Future}
-import org.mockito.Mockito.{verify, when}
-import proto.soundcloud.common.session.{UserSession => ProtoUserSession}
-import com.soundcloud.publicApiStrangler.client.mothership.request.representation.Value
-import com.soundcloud.publicApiStrangler.service.artwork.HocuspocusUtils
 import com.soundcloud.twinagle.{ErrorCode, TwinagleException}
+import com.twitter.finagle.http.ParamMap
 import com.twitter.io.{BufReader, Reader}
+import com.twitter.util.{Await, Future}
+import org.mockito.Mockito.{verify, verifyNoInteractions, when}
+import proto.soundcloud.common.session.{UserSession => ProtoUserSession}
 import proto.soundcloud.playlists.api.{
   CreatePlaylistRequest,
   CreatePlaylistResponse,
@@ -556,6 +556,8 @@ class PlaylistsServiceSpec extends UnitSpecification {
 
     def shouldFailGetVisiblePlaylist = false
 
+    val nullPlaylist = PlaylistCreateOrUpdate()
+
     setUpMocksForReadPlaylists(
       trackRequests = List(TrackRequest(urn = requestedPlaylistTrackUrn, secretToken = None)),
       visiblePlaylistsRequest = visiblePlaylistRequests,
@@ -637,6 +639,17 @@ class PlaylistsServiceSpec extends UnitSpecification {
       val result = Await.result(playlistsService.createPlaylist(session, createOrUpdatePlaylist, None).value)
 
       result ==== Bad(NotValid("invalid argument"))
+    }
+
+    "returns NotValid if all fields missing from params" in new CreateOrUpdatePlaylist {
+      val result = Await.result(playlistsService.createPlaylist(session, nullPlaylist, None).value)
+
+      result ==== Bad(NotValid("All fields missing"))
+    }
+
+    "does not call the twirp service if all fields missing from params" in new CreateOrUpdatePlaylist {
+      val _ = Await.result(playlistsService.createPlaylist(session, nullPlaylist, None).value)
+      verifyNoInteractions(playlistsWritesTwirpServiceMock)
     }
 
     "returns Not Authorised if Playlists returned Permission Denied" in new CreateOrUpdatePlaylist {
@@ -763,6 +776,11 @@ class PlaylistsServiceSpec extends UnitSpecification {
       Await.result(playlistsService.updatePlaylist(session, playlistUrn, createOrUpdatePlaylist, None).value) must throwA[
         RuntimeException
       ]
+    }
+
+    "does not call the twirp service if all fields missing from params" in new CreateOrUpdatePlaylist {
+      val _ = Await.result(playlistsService.updatePlaylist(session, playlistUrn, nullPlaylist, None).value)
+      verifyNoInteractions(playlistsWritesTwirpServiceMock)
     }
   }
 
