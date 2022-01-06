@@ -31,7 +31,6 @@ class SearchHandlerSpec extends UnitSpecification {
 
     def followCountsSeq: Seq[FollowCounts] = Seq.empty
 
-    val fallbackMock = mock[DispatchToMothershipHandler]
     val followCountsClientMock = mock[FollowCountsClient]
     val lieblingClientMock = mock[LieblingClient]
     val repostsClientMock = mock[RepostsClient]

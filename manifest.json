@@ -69,10 +69,6 @@
     },
     {
       "type": "http",
-      "system": "public-api"
-    },
-    {
-      "type": "http",
       "system": "search-dispatcher-remix"
     },
     {

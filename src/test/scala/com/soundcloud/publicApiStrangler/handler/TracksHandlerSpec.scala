@@ -16,7 +16,6 @@ import com.soundcloud.publicApiStrangler.service.trackrepresentation.{
   TrackUpdateService
 }
 import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures
-import com.soundcloud.publicApiStrangler.test.fixtures.Fixtures._
 import com.soundcloud.publicApiStrangler.test.{HandlerSpecificationScope, UnitSpecification}
 import com.twitter.finagle.http.{FileElement, Status}
 import com.twitter.io.{Buf, BufReader, Reader}
@@ -34,7 +33,6 @@ class TracksHandlerSpec extends UnitSpecification with TrackRepresentationSpecCo
     val trackUrn = Urn("soundcloud", "tracks", "999")
     val userUrn = Urn("soundcloud", "users", "102661606")
     val loggedInUserUrn = Urn("soundcloud", "users", "2")
-    val user = users.head
     val mockTrackRepresentation = createTrackRepresentationFromVisibleTrack()
 
     val emptyTrackUpdate = TrackMetadataUpdateRequest.fromForm(Map.empty).getOrElse(null)

@@ -14,8 +14,6 @@ class Handlers(
     exceptionCollector: ExceptionCollector
 ) {
   import clients._
-  val mothershipDispatcher =
-    new DispatchToMothershipHandler(userAuthentication, publicApiClient)
 
   val timelineHandler: TimelineHandler = new TimelineHandler(
     userAuthentication,
@@ -73,8 +71,6 @@ class Handlers(
       userAuthentication,
       playlistDeletionClient,
       playlistService,
-      mothershipDispatcher,
-      rolloutClient,
       baseUrl,
       exceptionCollector
     )

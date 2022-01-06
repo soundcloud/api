@@ -453,7 +453,7 @@ paths:
                 $ref: "#/components/examples/CreateUpdatePlaylistFormRequest"
       responses:
         201:
-          $ref: "#/components/responses/LegacyPlaylist"
+          $ref: "#/components/responses/Playlist"
         401:
           $ref: '#/components/responses/Unauthorized'
         404:
@@ -516,7 +516,7 @@ paths:
                 $ref: "#/components/examples/CreateUpdatePlaylistRequest"
       responses:
         200:
-          $ref: "#/components/responses/LegacyPlaylist"
+          $ref: "#/components/responses/Playlist"
         401:
           $ref: '#/components/responses/Unauthorized'
         404:
@@ -1219,8 +1219,6 @@ components:
         $ref: "#/components/examples/Track/value"
     User:
       $ref: './components/examples/User.yaml'
-    UserOf:
-      $ref: './components/examples/UserOf.yaml'
     Users:
       value:
         collection:

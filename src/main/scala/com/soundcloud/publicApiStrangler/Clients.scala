@@ -32,10 +32,6 @@ import com.soundcloud.publicApiStrangler.service.trackrepresentation.{TrackRepre
 import com.soundcloud.publicApiStrangler.service.tracks.VisibleTrackMapper
 import com.soundcloud.publicApiStrangler.service.users.{MeService, UserRepresentationsService}
 import com.soundcloud.publicApiStrangler.subscriptions.SubmarineClient
-import com.twitter.finagle.Service
-import com.twitter.finagle.http.{Request, Response}
-import com.twitter.finagle.service.RetryPolicy.RetryableWriteException
-import com.twitter.util.{Throw, Try}
 import proto.soundcloud.authenticator.access_grant_exchange.AccessGrantExchangeClientProtobuf
 import proto.soundcloud.comments.api.CommentsClientProtobuf
 import proto.soundcloud.playlists.api.{PlaylistsClientProtobuf, WritesClientProtobuf}
@@ -66,20 +62,6 @@ class Clients(
 
   val searchJsonClient = jsonClient("search")
   val searchClient = new SearchClient(searchJsonClient)
-
-  val publicApiClient: Service[Request, Response] = {
-    val name = ResourceName("PUBLIC_API")
-
-    val writeExceptions: PartialFunction[(Request, Try[Response]), Boolean] = {
-      case (_, Throw(RetryableWriteException(_))) => true
-    }
-
-    HttpClient[String](
-      HttpClientConfig.from(name, config),
-      telemetry,
-      retryOn = Some(writeExceptions)
-    ).httpService
-  }
 
   val followsClient = new FollowsClient(jsonClient("follows"))
 

@@ -19,18 +19,6 @@ object Fixtures {
     contentsOf(prefix, name).toString()
   }
 
-  lazy val singleTrack = contentsOf("public_api", "single_track")
-  lazy val tracksArray = contentsOf("public_api", "tracks_array")
-  lazy val playlist = contentsOf("public_api", "playlist")
-  lazy val user = contentsOf("public_api", "user")
-  lazy val users = contentsOf("public_api", "users")
-  lazy val usersInCollection = contentsOf("public_api", "users_in_collection")
-  lazy val objectsWithUsers = contentsOf("public_api", "objects_with_users")
-  lazy val stream = contentsOf("public_api", "stream")
-  lazy val streamFiltered = contentsOf("public_api", "streamFiltered")
-  lazy val generic = contentsOf("public_api", "generic")
-  lazy val genericFiltered = contentsOf("public_api", "genericFiltered")
-
   lazy val timelineMapperStream = contentsOf("timelinemapper", "stream")
   lazy val timelineMapperActivities = contentsOf("timelinemapper", "activities")
   lazy val timelineFollowingsTracks = withContentsOf("timeline", "followingsTracks")
@@ -44,8 +32,6 @@ object Fixtures {
 
   lazy val trackCoordinatorTrack = contentsOf("track-coordinator", "track")
   lazy val trackCoordinatorUploadQuota = contentsOf("track-coordinator", "upload-quota")
-  lazy val trackCoordinatorTrackInPublicApiFormat =
-    contentsOf("track-coordinator", "coordinator-track-in-public-api-format")
 
   lazy val consumerSubscription = contentsOf("subscriptions", "consumer-subscription")
   lazy val submarineCreatorSubscription = contentsOf("subscriptions", "submarine/creator-subscription")
@@ -67,7 +53,6 @@ object Fixtures {
 
   lazy val moshiUser = contentsOf("moshimoshi", "user")
   lazy val moshiUsers = contentsOf("moshimoshi", "users")
-  lazy val commentsUsers = contentsOf("public_api", "comment_users")
   lazy val moshiUser2 = contentsOf("moshimoshi", "user2")
   lazy val moshimoshiPlaylistsChrono = contentsOf("moshimoshi", "playlists_chrono")
   lazy val moshiComments = contentsOf("moshimoshi", "comments")

@@ -36,5 +36,5 @@ value:
   type: ''
   uri: https://api.soundcloud.com/playlists/12345
   user:
-    $ref: "#/components/examples/UserOf/value"
+    $ref: "#/components/examples/User/value"
   user_id: 1234

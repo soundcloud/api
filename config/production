@@ -26,10 +26,6 @@ REPOSTS_CLIENT_REQUEST_TIMEOUT_MILLIS="5000"
 # Playlists and listings are being extracted out of Mothership, this configuration value is in anticipation of that.
 PLAYLIST_SRV_RECORD="dnssrv!http.moshimoshi.prod.mothership.srv.${ZONE}.s-cloud.net."
 
-PUBLIC_API_ADDRESS="dnssrv!http.public-api.prod.mothership.srv.${ZONE}.s-cloud.net."
-PUBLIC_API_CLIENT_REQUEST_TIMEOUT_MILLIS="30000"
-PUBLIC_API_CLIENT_FOLLOW_REDIRECTS=false
-
 OKIDOKI_SRV_RECORD="dnssrv!http.okidoki.prod.moshimoshi.srv.${ZONE}.s-cloud.net."
 OKIDOKI_CLIENT_REQUEST_TIMEOUT_MILLIS=2000
 

@@ -4,7 +4,6 @@ import cats.implicits._
 import com.soundcloud.jvmkit.module.bff.session.UserAuthentication
 import com.soundcloud.jvmkit.module.http.server.{HandlerRequest, JsonResponseBuilder}
 import com.soundcloud.jvmkit.module.outcome._
-import com.soundcloud.jvmkit.module.rollout.{BasicRolloutFeature, Rollout}
 import com.soundcloud.jvmkit.module.telemetry.exceptions.ExceptionCollector
 import com.soundcloud.periskop.client.Severity
 import com.soundcloud.publicApiStrangler.client.playlists.PlaylistDeletionClient
@@ -27,24 +26,64 @@ class PlaylistsHandler(
     userAuthentication: UserAuthentication,
     playlistDeletionClient: PlaylistDeletionClient,
     playlistsService: PlaylistsService,
-    dispatchToMothershipHandler: DispatchToMothershipHandler,
-    rollout: Rollout,
     baseUrl: String,
     exceptionCollector: ExceptionCollector,
     playlistFormParamsExtractor: PlaylistFormParamsExtractor = new PlaylistFormParamsExtractor
 ) {
 
   def handleCreate(request: HandlerRequest): Future[Response] = {
-    rollout.isActive(BasicRolloutFeature("create_playlist_rewrite")).flatMap {
-      case true => performCreate(request)
-      case false => dispatchToMothershipHandler.dispatch(request)
+    userAuthentication.withLoggedInUser(request) { (session, _) =>
+      val result = for {
+        artworkRequest <- playlistFormParamsExtractor.artworkDataFromRequest(request).outcomeF
+        parsedPlaylist <- playlistFromRequest(request).outcomeF
+        createdPlaylist <- playlistsService.createPlaylist(session, parsedPlaylist, artworkRequest)
+      } yield createdPlaylist
+      result.value.map {
+        case Good(playlist) =>
+          JsonResponseBuilder(
+            status = Status.Created,
+            headers = Map("location" -> playlistLocation(playlist.id.toString)),
+            body = Json.stringify(Json.toJson(playlist))
+          ).build
+        case Bad(NotValid(msg)) => {
+          exceptionCollector.addMessage(
+            "unprocessable-playlist-create",
+            request.contentString,
+            Severity.Info,
+            true
+          )
+          ErrorResponse(Status.UnprocessableEntity, msg.mkString(","))
+        }
+        case Bad(NotAuthorized(_)) => ErrorResponse.forbidden()
+        case _ => ErrorResponse(Status.InternalServerError)
+      }
     }
   }
 
   def handleUpdate(request: HandlerRequest): Future[Response] = {
-    rollout.isActive(BasicRolloutFeature("update_playlist_rewrite")).flatMap {
-      case true => performUpdate(request)
-      case false => dispatchToMothershipHandler.dispatch(request)
+    userAuthentication.withLoggedInUser(request) { (session, _) =>
+      val urn = PlaylistUrnUtil.getPlaylistUrn(request)
+      val result = for {
+        artworkRequest <- playlistFormParamsExtractor.artworkDataFromRequest(request).outcomeF
+        playlistUpdate <- playlistFromRequest(request).outcomeF
+        updatedPlaylist <- playlistsService.updatePlaylist(session, urn, playlistUpdate, artworkRequest)
+      } yield updatedPlaylist
+
+      result.value.map {
+        case Good(playlist) => JsonResponseBuilder.ok(Json.stringify(Json.toJson(playlist)))
+        case Bad(NotValid(msg)) => {
+          exceptionCollector.addMessage(
+            "unprocessable-playlist-update",
+            request.contentString,
+            Severity.Info,
+            true
+          )
+          ErrorResponse(Status.UnprocessableEntity, msg.mkString(","))
+        }
+        case Bad(NotFound(_)) => ErrorResponse.notFound()
+        case Bad(NotAuthorized(_)) => ErrorResponse.forbidden()
+        case _ => ErrorResponse(Status.InternalServerError)
+      }
     }
   }
 
@@ -109,68 +148,12 @@ class PlaylistsHandler(
     }
   }
 
-  private def performCreate(request: HandlerRequest): Future[Response] = {
-    userAuthentication.withLoggedInUser(request) { (session, _) =>
-      val result = for {
-        artworkRequest <- playlistFormParamsExtractor.artworkDataFromRequest(request).outcomeF
-        parsedPlaylist <- playlistFromRequest(request).outcomeF
-        createdPlaylist <- playlistsService.createPlaylist(session, parsedPlaylist, artworkRequest)
-      } yield createdPlaylist
-      result.value.map {
-        case Good(playlist) =>
-          JsonResponseBuilder(
-            status = Status.Created,
-            headers = Map("location" -> playlistLocation(playlist.id.toString)),
-            body = Json.stringify(Json.toJson(playlist))
-          ).build
-        case Bad(NotValid(msg)) => {
-          exceptionCollector.addMessage(
-            "unprocessable-playlist-create",
-            request.contentString,
-            Severity.Info,
-            true
-          )
-          ErrorResponse(Status.UnprocessableEntity, msg.mkString(","))
-        }
-        case Bad(NotAuthorized(_)) => ErrorResponse.forbidden()
-        case _ => ErrorResponse(Status.InternalServerError)
-      }
-    }
-  }
-
   private def playlistFromRequest(request: HandlerRequest) = {
     request.mediaType match {
       case Some(MediaType.MultipartForm) | Some(MediaType.WwwForm) =>
         playlistFormParamsExtractor.playlistFromFormRequest(request)
       case Some(MediaType.Json) => tryParsePlaylistWriteRequestOutcome(request)
       case _ => NotValid("").bad
-    }
-  }
-
-  private def performUpdate(request: HandlerRequest): Future[Response] = {
-    userAuthentication.withLoggedInUser(request) { (session, _) =>
-      val urn = PlaylistUrnUtil.getPlaylistUrn(request)
-      val result = for {
-        artworkRequest <- playlistFormParamsExtractor.artworkDataFromRequest(request).outcomeF
-        playlistUpdate <- playlistFromRequest(request).outcomeF
-        updatedPlaylist <- playlistsService.updatePlaylist(session, urn, playlistUpdate, artworkRequest)
-      } yield updatedPlaylist
-
-      result.value.map {
-        case Good(playlist) => JsonResponseBuilder.ok(Json.stringify(Json.toJson(playlist)))
-        case Bad(NotValid(msg)) => {
-          exceptionCollector.addMessage(
-            "unprocessable-playlist-update",
-            request.contentString,
-            Severity.Info,
-            true
-          )
-          ErrorResponse(Status.UnprocessableEntity, msg.mkString(","))
-        }
-        case Bad(NotFound(_)) => ErrorResponse.notFound()
-        case Bad(NotAuthorized(_)) => ErrorResponse.forbidden()
-        case _ => ErrorResponse(Status.InternalServerError)
-      }
     }
   }
 

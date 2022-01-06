@@ -36,7 +36,7 @@ value:
   title: Some title
   uri: https://api.soundcloud.com/tracks/1234
   user:
-    $ref: "#/components/examples/UserOf/value"
+    $ref: "#/components/examples/User/value"
   user_favorite: true
   user_playback_count: 1
   waveform_url: https://wave.sndcdn.com/someString.png

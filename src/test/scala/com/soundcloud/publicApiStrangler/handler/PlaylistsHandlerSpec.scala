@@ -1,9 +1,7 @@
 package com.soundcloud.publicApiStrangler.handler
 
 import com.soundcloud.jvmkit.module.bff.testsupport.FakeUserAuthentication
-import com.soundcloud.jvmkit.module.http.server.{HandlerRequest, ResponseBuilder}
 import com.soundcloud.jvmkit.module.outcome._
-import com.soundcloud.jvmkit.module.rollout.{BasicRolloutFeature, Rollout}
 import com.soundcloud.jvmkit.module.telemetry.Telemetry
 import com.soundcloud.jvmkit.module.telemetry.exceptions.ExceptionCollector
 import com.soundcloud.jvmkit.module.util.session.{UserSession, UserSessionBuilder}
@@ -43,24 +41,12 @@ class PlaylistsHandlerSpec extends UnitSpecification {
     val playlistsService = mock[PlaylistsService]
     val playlistUrn = Urn("soundcloud", "playlists", "1")
 
-    val mothershipDispatcher = mock[DispatchToMothershipHandler]
-    mothershipDispatcher.dispatch(any[HandlerRequest]) returns Future.value(ResponseBuilder.ok())
-    val rollout = mock[Rollout]
-
-    def isCreateRolloutActive = true
-    def isUpdateRolloutActive = true
-
-    rollout.isActive(BasicRolloutFeature("create_playlist_rewrite")) returns Future.value(isCreateRolloutActive)
-    rollout.isActive(BasicRolloutFeature("update_playlist_rewrite")) returns Future.value(isUpdateRolloutActive)
-
     val baseUrl = "http://localhost:5000"
 
     lazy val handler = new PlaylistsHandler(
       new FakeUserAuthentication(session),
       playlistDeletionClient,
       playlistsService,
-      mothershipDispatcher,
-      rollout,
       baseUrl,
       new ExceptionCollector(Telemetry.createIsolatedInstance)
     )
@@ -151,13 +137,6 @@ class PlaylistsHandlerSpec extends UnitSpecification {
           val response = post(path, Map.empty, Map("Host" -> "api.soundcloud.com"), playlistCreateBody)
           response.headerMap("location") ==== s"$baseUrl/playlists/${playlist.id.toString}"
         }
-
-        "when rollout is not active dispatches to mothership" in new CreatePlaylistContext with ValidPostBody {
-          override def isCreateRolloutActive = false
-
-          val _ = post(path, Map.empty, Map("Host" -> "api.soundcloud.com"), playlistCreateBody)
-          verify(mothershipDispatcher).dispatch(any())
-        }
       }
     }
 
@@ -223,13 +202,6 @@ class PlaylistsHandlerSpec extends UnitSpecification {
           val response = postForm(path, body = playlistCreateBody, maybeFile = Some(file), isMultipart = true)
           response.headerMap("location") ==== s"$baseUrl/playlists/${playlist.id.toString}"
         }
-
-        "when rollout is not active dispatches to mothership" in new CreatePlaylistContext with ValidPostBody {
-          override def isCreateRolloutActive = false
-
-          val _ = postForm(path, body = playlistCreateBody, maybeFile = Some(file), isMultipart = true)
-          verify(mothershipDispatcher).dispatch(any())
-        }
       }
     }
 
@@ -293,13 +265,6 @@ class PlaylistsHandlerSpec extends UnitSpecification {
           stubService(playlistCreateOrUpdate = expectedPlaylistCreate, maybeArtworkRequest = None)
           val response = postForm(path, body = playlistCreateBody)
           response.headerMap("location") ==== s"$baseUrl/playlists/${playlist.id.toString}"
-        }
-
-        "when rollout is not active dispatches to mothership" in new CreatePlaylistContext with ValidPostBody {
-          override def isCreateRolloutActive = false
-
-          val _ = postForm(path, body = playlistCreateBody)
-          verify(mothershipDispatcher).dispatch(any())
         }
       }
     }
@@ -388,13 +353,6 @@ class PlaylistsHandlerSpec extends UnitSpecification {
         ).bad.outcomeF
 
         response.status ==== Status.InternalServerError
-      }
-
-      "when rollout is not active dispatches to mothership" in new UpdatePlaylistContext with ValidPostBody {
-        override def isUpdateRolloutActive = false
-
-        val _ = response
-        verify(mothershipDispatcher).dispatch(any())
       }
     }
   }
