@@ -27,7 +27,7 @@ lazy val apiPublic = project
       "org.specs2" %% "specs2-core" % specs2Version % "test",
       "org.specs2" %% "specs2-mock" % specs2Version % "test"
     ),
-    Compile / mainClass := Some("com.soundcloud.publicApiStrangler.App")
+    Compile / mainClass := Some("com.soundcloud.apipublic.App")
   )
 
 // FIXME: upgrade scala-uri lib to fix these simulacrum conflicts, then remove the merge strategy

@@ -1,0 +1,174 @@
+package com.soundcloud.apipublic.service
+
+import com.soundcloud.jvmkit.module.util.Urn
+import com.soundcloud.jvmkit.module.util.session.LoggedInUserSession
+import com.soundcloud.apipublic.client.TimelineJsonClient
+import com.soundcloud.apipublic.client.tracks.TrackRequest
+import com.soundcloud.apipublic.handler.support.requestParser.AccessParams
+import com.soundcloud.apipublic.service.pagination.CursorBasedPagination
+import com.soundcloud.apipublic.service.playlists.PlaylistRequest
+import com.soundcloud.apipublic.service.playlists.representation.Playlist
+import com.soundcloud.apipublic.service.timeline._
+import com.soundcloud.apipublic.service.trackrepresentation.{TrackRepresentation, TrackRepresentationsService}
+import com.twitter.util.Future
+
+class TimelineService(
+    timelineJsonClient: TimelineJsonClient,
+    trackRepresentationsService: TrackRepresentationsService,
+    playlistsService: PlaylistsService,
+    timelineResponseMapper: TimelineResponseMapper = new TimelineResponseMapper()
+) {
+
+  def fetchFollowingTracksForUser(
+      session: LoggedInUserSession,
+      access: AccessParams,
+      cursor: Option[String],
+      reverseCursor: Boolean,
+      limit: Int
+  ): Future[List[TrackRepresentation]] = {
+    for {
+      trackActivities <- timelineJsonClient.followingsTracks(session, cursor, limit, reverseCursor)
+      timelineResponse = timelineResponseMapper(trackActivities)
+      tracks <- getTrackRepresentations(session, timelineResponse.events, access)
+    } yield tracks
+  }
+
+  def fetchTimelineForUser(
+      session: LoggedInUserSession,
+      access: AccessParams,
+      cursor: Option[String],
+      reverseCursor: Boolean,
+      limit: Int,
+      pagination: CursorBasedPagination
+  ): Future[Timeline] = {
+    for {
+      timelineResponse <- fetchTimelineObjects(session, cursor, reverseCursor, limit)
+      tracks <- getTrackRepresentations(session, timelineResponse.events, access)
+      playlists <- getPlaylistRepresentations(session, timelineResponse.events)
+    } yield {
+      val timelineItems = createTimelineItems(timelineResponse.events, tracks, playlists)
+      Timeline(timelineItems, timelineResponse.meta, pagination)
+    }
+  }
+
+  def fetchTimelineTracksForUser(
+      session: LoggedInUserSession,
+      access: AccessParams,
+      cursor: Option[String],
+      reverseCursor: Boolean,
+      limit: Int,
+      pagination: CursorBasedPagination
+  ): Future[Timeline] = {
+    for {
+      timelineResponse <- fetchTimelineObjects(session, cursor, reverseCursor, limit)
+      tracks <- getTrackRepresentations(session, timelineResponse.events, access)
+    } yield {
+      val trackTimelineItems = timelineResponse.events.flatMap(event => createTrackTimelineItem(tracks, event))
+      Timeline(trackTimelineItems, timelineResponse.meta, pagination)
+    }
+  }
+
+  private def createTimelineItems(
+      events: List[TimelineEvent],
+      tracks: List[TrackRepresentation],
+      playlists: List[Playlist]
+  ): List[TimelineItem] = {
+    events.flatMap(event => {
+      event.eventType match {
+        case TrackTimelineEventType | TrackRepostTimelineEventType =>
+          createTrackTimelineItem(tracks, event)
+        case PlaylistRepostTimelineEventType | PlaylistTimelineEventType => createPlaylistTimelineItem(playlists, event)
+      }
+    })
+  }
+
+  private def fetchTimelineObjects(
+      session: LoggedInUserSession,
+      cursor: Option[String],
+      reverseCursor: Boolean,
+      limit: Int
+  ): Future[TimelineResponse] = {
+    for {
+      activities <- timelineJsonClient.stream(session, cursor, limit, reverseCursor)
+      timelineResponse = timelineResponseMapper(activities)
+    } yield timelineResponse
+  }
+
+  private def getTrackRepresentations(
+      session: LoggedInUserSession,
+      events: List[TimelineEvent],
+      access: AccessParams
+  ): Future[List[TrackRepresentation]] = {
+    val trackUrns = trackUrnsFromEvents(events)
+    trackRepresentationsService
+      .tracks(session, trackUrns.map(TrackRequest(_, None)), access)
+  }
+
+  private def getPlaylistRepresentations(
+      session: LoggedInUserSession,
+      events: List[TimelineEvent]
+  ): Future[List[Playlist]] = {
+    val playlistUrns = playlistUrnsFromEvents(events)
+    playlistsService.fetchPlaylistsMetadataOnly(session, playlistUrns.map(PlaylistRequest(_, None)))
+
+  }
+
+  private def trackUrnsFromEvents(events: List[TimelineEvent]): List[Urn] =
+    events.collect {
+      case TimelineEvent(TrackTimelineEventType, _, urn, _, _) => urn
+      case TimelineEvent(TrackRepostTimelineEventType, _, urn, _, _) => urn
+    }.distinct
+
+  private def playlistUrnsFromEvents(events: List[TimelineEvent]): List[Urn] =
+    events.collect {
+      case TimelineEvent(PlaylistTimelineEventType, _, urn, _, _) => urn
+      case TimelineEvent(PlaylistRepostTimelineEventType, _, urn, _, _) => urn
+    }.distinct
+
+  private def createTrackTimelineItem(
+      tracks: List[TrackRepresentation],
+      event: TimelineEvent
+  ): Option[TrackTimelineItem] =
+    tracks
+      .find(_.urn.toString == event.urn.toString)
+      .map(trackRep =>
+        event.eventType match {
+          case TrackRepostTimelineEventType =>
+            new TrackTimelineItem(
+              createdAt = event.timestamp,
+              timelineItemType = "track:repost",
+              track = trackRep
+            )
+          case _ =>
+            new TrackTimelineItem(
+              createdAt = event.timestamp,
+              timelineItemType = "track",
+              track = trackRep
+            )
+        }
+      )
+
+  private def createPlaylistTimelineItem(
+      playlists: List[Playlist],
+      event: TimelineEvent
+  ): Option[PlaylistTimelineItem] =
+    playlists
+      .find(_.id == event.urn.identifier.toLong)
+      .map(playlist =>
+        event.eventType match {
+          case PlaylistRepostTimelineEventType =>
+            new PlaylistTimelineItem(
+              createdAt = event.timestamp,
+              timelineItemType = "playlist:repost",
+              playlist = playlist
+            )
+          case _ =>
+            new PlaylistTimelineItem(
+              createdAt = event.timestamp,
+              timelineItemType = "playlist",
+              playlist = playlist
+            )
+        }
+      )
+
+}
