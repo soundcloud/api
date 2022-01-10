@@ -35,11 +35,11 @@ created_at:
       from:
         type: string
         description: (yyyy-mm-dd hh:mm:ss) return tracks created at this date or later
-        example: 2020-12-24 00:00:00
+        example: "2020-12-24 00:00:00"
       to:
         type: string
         description: (yyyy-mm-dd hh:mm:ss) return tracks created at this date or earlier
-        example: 2020-12-26 00:00:00
+        example: "2020-12-26 00:00:00"
 duration:
   in: query
   name: duration
