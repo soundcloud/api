@@ -79,6 +79,7 @@ hooks.before("/playlists > Creates a playlist. > 201 > application/json; charset
     const form = new Multipart();
     form.append('playlist[title]', 'Test title');
     form.append('playlist[sharing]', 'private');
+    form.append('playlist[tracks][][id]', [219787221,783019264,870073492]);
 
     transaction.request.body = (await form.buffer()).toString('base64');
     transaction.request.bodyEncoding = 'base64';
