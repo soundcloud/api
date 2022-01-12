@@ -88,6 +88,7 @@ service Writes {
     rpc DeletePlaylist (DeletePlaylistRequest) returns (DeletePlaylistResponse) {}
     rpc AddTrackToPlaylist (AddTrackToPlaylistRequest) returns (AddTrackToPlaylistResponse) {}
     rpc DeleteTrackFromPlaylist (DeleteTrackFromPlaylistRequest) returns (DeleteTrackFromPlaylistResponse) {}
+    rpc UpdatePlaylistArtwork (UpdatePlaylistArtworkRequest) returns (UpdatePlaylistArtworkResponse) {}
 }
 
 message CreatePlaylistRequest {
@@ -129,6 +130,15 @@ message DeleteTrackFromPlaylistRequest {
 }
 
 message DeleteTrackFromPlaylistResponse {}
+
+message UpdatePlaylistArtworkRequest {
+    proto.soundcloud.common.session.UserSession user_session = 1;
+    string urn = 2;
+    string bucket = 3;
+    string filename = 4;
+}
+
+message UpdatePlaylistArtworkResponse {}
 
 message PlaylistCreateOrUpdate {
     google.protobuf.StringValue title = 1; // optional

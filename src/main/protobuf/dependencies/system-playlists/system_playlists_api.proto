@@ -16,8 +16,8 @@ service SystemPlaylists {
 
 message GetSelectionsRequest {
   proto.soundcloud.common.session.UserSession user_session = 1; // You must provide a UserSession
-  repeated string excluded_subcollections = 2;
-  StagingParams staging_params = 3; // optional, this is used to remove some selections from some devices, such as artists-to-follow and artists-shortcuts on web
+  repeated string excluded_subcollections = 2;  // optional, this is used to remove some selections from some devices, such as artists-to-follow and artists-shortcuts on web
+  StagingParams staging_params = 3;
   bool disable_fallbacks = 4; // Should be true if Sc-User-Agent contains 'Googlebot'
   string locale = 5; // The content of the SC-App-Locale header, or SC-Device-Locale if it's not present
 }

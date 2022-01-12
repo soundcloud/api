@@ -7,6 +7,7 @@ package proto.soundcloud.comments.api;
 
 import "google/protobuf/wrappers.proto";
 import "google/protobuf/timestamp.proto";
+import "common_session.proto";
 
 // Comments authorizes the request to create and fetch comments from track-comments service.
 // If the request is authorized, then it makes the request to track-comments service to create or fetch comments,
@@ -30,6 +31,8 @@ service Comments {
   // GetUserCommentsChrono authorizes the request to fetch comments for the given user urn in a chronological order from track-comments service.
   rpc GetUserCommentsChrono(GetUserCommentsChronoRequest) returns (GetUserCommentsChronoResponse) {}
 
+  // DeleteComment authorizes the request to delete the comment for the given urn
+  rpc DeleteComment(DeleteCommentRequest) returns (DeleteCommentResponse) {}
 }
 
 message GetCommentRequest {
@@ -114,4 +117,13 @@ message GetUserCommentsChronoResponse {
 
     repeated CommentChronoItem items = 1;
     ChronoMeta meta = 2;
+}
+
+message DeleteCommentRequest {
+  string urn = 1;
+  proto.soundcloud.common.session.UserSession user_session = 2;
+}
+
+message DeleteCommentResponse {
+  Comment comment = 1;
 }
