@@ -17,6 +17,8 @@ import com.soundcloud.apipublic.service.playlists.representation.{Playlist, Play
 import com.soundcloud.apipublic.service.playlists.{PlaylistProtoMapper, PlaylistRequest, UpdatePlaylistArtworkRequest}
 import com.soundcloud.apipublic.service.representation.collection.Collection
 import com.soundcloud.apipublic.service.trackrepresentation.{TrackRepresentation, TrackRepresentationsService}
+import com.soundcloud.jvmkit.module.rollout.{Rollout, RolloutFeature}
+import com.soundcloud.jvmkit.module.util.logging.SoundCloudLoggerFactory
 import com.soundcloud.twinagle.{ErrorCode, TwinagleException}
 import com.twitter.io.Buf
 import com.twitter.util.Future
@@ -29,6 +31,7 @@ import proto.soundcloud.playlists.api.{
   UpdatePlaylistResponse,
   PlaylistRequest => ProtoPlaylistRequest,
   PlaylistsService => PlaylistsTwirpService,
+  UpdatePlaylistArtworkRequest => UpdatePlaylistArtworkTwirpRequest,
   WritesService => PlaylistsWritesTwirpService
 }
 
@@ -40,8 +43,10 @@ class PlaylistsService(
     playlistsWritesTwirpService: PlaylistsWritesTwirpService,
     exceptionCollector: ExceptionCollector,
     hocuspocusService: HocuspocusService,
-    playlistProtoMapper: PlaylistProtoMapper = new PlaylistProtoMapper()
+    playlistProtoMapper: PlaylistProtoMapper = new PlaylistProtoMapper(),
+    rollout: Rollout
 ) {
+  private val logger = SoundCloudLoggerFactory.getLogger(this.getClass)
 
   def fetchPlaylistTracks(
       session: UserSession,
@@ -173,12 +178,45 @@ class PlaylistsService(
       session: UserSession,
       playlistUrn: Urn,
       playlistArtworkRequest: UpdatePlaylistArtworkRequest
+  ): OutcomeF[Unit] =
+    for {
+      //TODO clean this up when rollout of playlist artwork update is 100%
+      isActive <- rollout.isActive(RolloutFeature("twirp-playlist-update-artwork")).outcomeF
+      _ <- if (isActive) {
+        for {
+          _ <- updatePlaylistArtworkTwirp(session, playlistUrn, playlistArtworkRequest)
+          _ <- Future.value(logger.info("Updated playlist artwork via twirp end-point successfully")).outcomeF
+        } yield ()
+      } else updatePlaylistArtworkLegacy(session, playlistUrn, playlistArtworkRequest)
+    } yield ()
+
+  private def updatePlaylistArtworkLegacy(
+      session: UserSession,
+      playlistUrn: Urn,
+      playlistArtworkRequest: UpdatePlaylistArtworkRequest
   ): OutcomeF[Unit] = {
     for {
       createdImage <- uploadImageToHocuspocus(playlistArtworkRequest.imageData)
       updateParams <- extractMoshiMoshiUpdateParams(createdImage).liftF
       updateResponse <- moshimoshiClient.updatePlaylistArtwork(session, playlistUrn, updateParams)
     } yield updateResponse
+  }
+
+  private def updatePlaylistArtworkTwirp(
+      session: UserSession,
+      playlistUrn: Urn,
+      playlistArtworkRequest: UpdatePlaylistArtworkRequest
+  ): OutcomeF[Unit] = {
+    for {
+      createdImage <- uploadImageToHocuspocus(playlistArtworkRequest.imageData)
+      updateParams <- extractPlaylistArtworkUpdateParams(createdImage).liftF
+      _ <- playlistsWritesTwirpService
+        .updatePlaylistArtwork(
+          updateParams
+            .copy(Some(session.asProtoSession), playlistUrn.toString, updateParams.bucket, updateParams.filename)
+        )
+        .outcomeF
+    } yield ()
   }
 
   private def uploadImageToHocuspocus(imageData: Buf): OutcomeF[Image] = {
@@ -198,6 +236,14 @@ class PlaylistsService(
     val s3UrlRegex = HocuspocusUtils.s3UrlRegex
     createdImage.originUri match {
       case s3UrlRegex(bucket, filename) => PlaylistArtworkUpdate(bucket, filename).good
+      case _ => NotValid("Invalid image location").bad
+    }
+  }
+
+  private def extractPlaylistArtworkUpdateParams(createdImage: Image): Outcome[UpdatePlaylistArtworkTwirpRequest] = {
+    val s3UrlRegex = HocuspocusUtils.s3UrlRegex
+    createdImage.originUri match {
+      case s3UrlRegex(bucket, filename) => UpdatePlaylistArtworkTwirpRequest(bucket = bucket, filename = filename).good
       case _ => NotValid("Invalid image location").bad
     }
   }
