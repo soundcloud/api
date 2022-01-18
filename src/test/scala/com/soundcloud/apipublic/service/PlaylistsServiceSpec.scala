@@ -23,6 +23,7 @@ import com.soundcloud.apipublic.service.trackrepresentation.{
   TrackRepresentationsService
 }
 import com.soundcloud.apipublic.test.UnitSpecification
+import com.soundcloud.jvmkit.module.rollout.{Rollout, RolloutFeature}
 import com.soundcloud.twinagle.{ErrorCode, TwinagleException}
 import com.twitter.finagle.http.ParamMap
 import com.twitter.io.{BufReader, Reader}
@@ -85,7 +86,7 @@ class PlaylistsServiceSpec extends UnitSpecification {
 
     val protoTrack = Seq(ProtoTrackRequest(urn = requestedPlaylistTrackUrn.toString))
     val hocusPocusService = mock[HocuspocusService]
-
+    val rollout = mock[Rollout]
     val playlistsService =
       new PlaylistsService(
         playlistsTwirpServiceMock,
@@ -94,7 +95,8 @@ class PlaylistsServiceSpec extends UnitSpecification {
         lieblingClientMock,
         playlistsWritesTwirpServiceMock,
         exceptionCollector,
-        hocusPocusService
+        hocusPocusService,
+        rollout = rollout
       )
     val playlistRequests = List(PlaylistRequest(requestedPlaylistUrn, candidateSecretToken))
     val access = AccessParams.defaultAccess
@@ -592,7 +594,7 @@ class PlaylistsServiceSpec extends UnitSpecification {
       val buf = Await.result(
         BufReader.readAll(Reader.fromStream(this.getClass.getClassLoader.getResourceAsStream(testImage)))
       )
-
+      when(rollout.isActive(any[RolloutFeature])).thenReturn(Future.False)
       val artworkUpdateRequest = UpdatePlaylistArtworkRequest(buf)
       val expectedRaw = HocuspocusUtils.toRaw(buf)
 
@@ -616,12 +618,64 @@ class PlaylistsServiceSpec extends UnitSpecification {
         Await.result(playlistsService.createPlaylist(session, createOrUpdatePlaylist, Some(artworkUpdateRequest)).value)
     }
 
+    trait ArtworkContextTwirp extends CreateOrUpdatePlaylist {
+      val testImage = "test-image.jpg"
+
+      val buf = Await.result(
+        BufReader.readAll(Reader.fromStream(this.getClass.getClassLoader.getResourceAsStream(testImage)))
+      )
+      when(rollout.isActive(any[RolloutFeature])).thenReturn(Future.True)
+      val artworkUpdateRequest = UpdatePlaylistArtworkRequest(buf)
+      val expectedRaw = HocuspocusUtils.toRaw(buf)
+
+      val expectedArtworkUpdate = PlaylistArtworkUpdate("bucket", "filename")
+
+      hocusPocusService.storeImage(expectedRaw) returns Future.value(
+        Image(kind = Kind.ARTWORKS, originUri = "s3://bucket/filename")
+      )
+
+      val playlist = new PlaylistBuilder().setId(1).build
+
+      setUpMocksForWritePlaylists(
+        playlistCreate = createOrUpdatePlaylist,
+        response =
+          Future.value(CreatePlaylistResponse(urn = Urn("soundcloud", "playlists", playlist.id.toString).toString))
+      )
+
+      when(
+        playlistsWritesTwirpServiceMock.updatePlaylistArtwork(
+          proto.soundcloud.playlists.api.UpdatePlaylistArtworkRequest(
+            Some(session.asProtoSession),
+            urn = playlistUrn.toString,
+            expectedArtworkUpdate.bucket,
+            expectedArtworkUpdate.filename
+          )
+        )
+      ).thenReturn(
+        Future(proto.soundcloud.playlists.api.UpdatePlaylistArtworkResponse(_root_.scalapb.UnknownFieldSet.empty))
+      )
+
+      val _ =
+        Await.result(playlistsService.createPlaylist(session, createOrUpdatePlaylist, Some(artworkUpdateRequest)).value)
+    }
+
     "uploads the artwork data to s3" in new ArtworkContext {
       verify(hocusPocusService).storeImage(expectedRaw)
     }
 
     "updates playlist artwork metadata" in new ArtworkContext {
       verify(moshimoshiClientMock).updatePlaylistArtwork(session, playlistUrn, expectedArtworkUpdate)
+    }
+
+    "updates playlist artwork metadata via VAS service when rollout flag is enabled" in new ArtworkContextTwirp {
+      verify(playlistsWritesTwirpServiceMock).updatePlaylistArtwork(
+        proto.soundcloud.playlists.api.UpdatePlaylistArtworkRequest(
+          Some(session.asProtoSession),
+          urn = playlistUrn.toString,
+          expectedArtworkUpdate.bucket,
+          expectedArtworkUpdate.filename
+        )
+      )
     }
 
     "returns Not Valid if Playlists returned Invalid Argument" in new CreateOrUpdatePlaylist {

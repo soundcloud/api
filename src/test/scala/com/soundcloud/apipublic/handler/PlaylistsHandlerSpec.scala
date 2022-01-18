@@ -17,6 +17,7 @@ import com.soundcloud.apipublic.service.playlists.{PlaylistBuilder, UpdatePlayli
 import com.soundcloud.apipublic.service.representation.collection.Collection
 import com.soundcloud.apipublic.service.trackrepresentation.TrackRepresentationSpecContext
 import com.soundcloud.apipublic.test.{HandlerSpecificationScope, UnitSpecification}
+import com.soundcloud.jvmkit.module.rollout.Rollout
 import com.twitter.finagle.http.{FileElement, Request, Status}
 import com.twitter.io.{BufReader, Reader}
 import com.twitter.util.{Await, Future}
@@ -36,7 +37,7 @@ class PlaylistsHandlerSpec extends UnitSpecification {
       .setAgent(Urn("soundcloud", "applications", "v2"))
       .setGeo(geo)
       .build()
-
+    val rollout = mock[Rollout]
     val playlistDeletionClient = mock[PlaylistDeletionClient]
     val playlistsService = mock[PlaylistsService]
     val playlistUrn = Urn("soundcloud", "playlists", "1")
@@ -71,7 +72,6 @@ class PlaylistsHandlerSpec extends UnitSpecification {
       )
       val file =
         FileElement("playlist[artwork_data]", buf, Some("image/jpeg"), Some(testImage))
-
       val playlistCreate = PlaylistCreateOrUpdate(
         public = Value(isPublic),
         title = Value(title),
@@ -288,7 +288,6 @@ class PlaylistsHandlerSpec extends UnitSpecification {
         title = Value(title),
         tracks = Value(trackIds)
       )
-
       playlistsService.updatePlaylist(===(session), ===(playlistUrn), ===(playlistCreate), ===(None)) returns Good(
         playlist
       ).outcomeF

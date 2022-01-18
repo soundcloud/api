@@ -306,7 +306,6 @@ message Track {
     Caption caption = 54; // optional
     AudioAnalysis audio_analysis = 55; // optional
     google.protobuf.StringValue profile_urn = 56; // optional
-    QuickReactionCounts quick_reaction_counts = 57; // optional
 }
 
 message Metadata {
@@ -431,6 +430,7 @@ message Counts {
     google.protobuf.Int64Value likes = 2;
     google.protobuf.Int64Value reposts = 3;
     google.protobuf.Int64Value comments = 4;
+    QuickReactionCounts quick_reactions = 5;
 }
 
 message DownloadMetadata {
@@ -480,7 +480,8 @@ message Caption {
 
 message AudioAnalysis {
     string key = 1;
-    double bpm = 2;
+    double bpmDeprecated = 2; // deprecated
+    google.protobuf.DoubleValue bpm = 3; // optional
 }
 
 service FeaturedPlaylists {
@@ -515,7 +516,7 @@ service QuickReactions {
 message QuickReaction {
     string user_urn = 1;
     string target_urn = 2;
-    string type = 3;
+    string reaction_type = 3;
     google.protobuf.Timestamp created_at = 4;
 }
 
@@ -523,7 +524,7 @@ message CreateOrUpdateReactionRequest {
     proto.soundcloud.common.session.UserSession user_session = 1;
     string target_urn = 2;
     google.protobuf.StringValue secret_token = 3;
-    string type = 4;
+    string reaction_type = 4;
 }
 
 message CreateOrUpdateReactionResponse {
@@ -542,9 +543,10 @@ message DeleteReactionResponse {
 
 message QuickReactionCounts {
     message Count {
-        string type = 1;
+        string reaction_type = 1;
         int64 count = 2;
     }
 
     repeated Count counts = 1;
+    int64 total_count = 2;
 }
