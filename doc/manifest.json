@@ -2,7 +2,7 @@
   "_schema": "soundcloud/applicationmanifest/v1",
   "name": "api-public-doc",
   "description": "Swagger UI for API Public",
-  "owner": "integrations-team",
+  "owner": "devices-team",
   "type": "external_service",
   "status": "production",
   "links": [
@@ -12,19 +12,19 @@
       "icon": "dashboard"
     },
     {
-      "url": "https://eng-doc.soundcloud.org/runbooks/integrations/api-public/",
+      "url": "https://eng-doc.soundcloud.org/runbooks/devices/api-public/",
       "title": "Runbook",
       "icon": "alert"
     },
     {
-      "url": "mailto:integrations-team@soundcloud.com",
+      "url": "mailto:devices-team@soundcloud.com",
       "title": "Contact Email",
       "icon": "help"
     }
   ],
   "annotations": {
     "gocd.org/pipelines": "api-public",
-    "soundcloud.com/contact-channel": "integrations-alerts"
+    "soundcloud.com/contact-channel": "devices-alerts"
   },
   "dependencies": [
     {

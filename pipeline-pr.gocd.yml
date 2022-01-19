@@ -2,7 +2,7 @@
 format_version: 2
 pipelines:
   api-public-pr:
-    group: integrations-team
+    group: devices-team
     label_template: "${COUNT}-${git[:7]}"
     materials:
       git:
