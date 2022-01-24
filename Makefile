@@ -137,7 +137,7 @@ check-autoscale:
 
 autoscale:
 	sc k8s scale --zones $(ZONES) --system $(APP_NAME) --component $(API_COMPONENT) \
-		--autoscale.replicas.max=150 --autoscale.replicas.min=25 \
+		--autoscale.replicas.max=150 --autoscale.replicas.min=18 \
 		--autoscale.metric.name=namespace_system_env_component_track_version_pod_container:cpu_usage:rate --autoscale.metric.target-value=0.5
 
 CPU_REQUEST_db = 2
