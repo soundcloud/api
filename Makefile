@@ -133,7 +133,7 @@ deploy-api:
 	sc artifact-manager deploy run --zones=$(ZONES) --component="$(API_COMPONENT)"
 
 check-autoscale:
-	sc k8s --zones $(ZONES) --system $(APP_NAME) kubectl describe hpa $(APP_NAME)-$(API_COMPONENT)-autoscale
+	sc k8s --zone $(ZONES) --system $(APP_NAME) kubectl describe hpa $(APP_NAME)-$(API_COMPONENT)-autoscale
 
 autoscale:
 	sc k8s scale --zones $(ZONES) --system $(APP_NAME) --component $(API_COMPONENT) \

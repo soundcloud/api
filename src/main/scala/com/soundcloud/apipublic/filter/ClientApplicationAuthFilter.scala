@@ -1,8 +1,5 @@
 package com.soundcloud.apipublic.filter
 
-import com.soundcloud.jvmkit.module.bff.session.UserAuthentication
-import com.soundcloud.jvmkit.module.http.server.{HandlerRequest, HandlerRouter}
-import com.soundcloud.jvmkit.module.telemetry.Telemetry
 import com.soundcloud.apipublic.Routing
 import com.soundcloud.apipublic.filter.ClientApplicationAuthFilter.{
   invalidAuthenticationError,
@@ -10,6 +7,9 @@ import com.soundcloud.apipublic.filter.ClientApplicationAuthFilter.{
   invalidScopeError
 }
 import com.soundcloud.apipublic.support.ErrorResponse
+import com.soundcloud.jvmkit.module.bff.session.UserAuthentication
+import com.soundcloud.jvmkit.module.http.server.{HandlerRequest, HandlerRouter}
+import com.soundcloud.jvmkit.module.telemetry.Telemetry
 import com.twitter.finagle.http.{Request, Response, Status}
 import com.twitter.finagle.{Service, SimpleFilter}
 import com.twitter.util.Future
@@ -18,7 +18,7 @@ import com.twitter.util.Future
   * Block access to the API based on:
   * * a deny list of client application ids
   * * lack of Authorization header
-  * * for /connect - invalid response_type
+  * * for /connect - invalid response_type/non-expiring scope
   */
 class ClientApplicationAuthFilter(
     userAuthentication: UserAuthentication,
@@ -26,9 +26,7 @@ class ClientApplicationAuthFilter(
     router: HandlerRouter
 ) extends SimpleFilter[Request, Response] {
 
-  private val oauthTokenParams = List("auth_token", "oauth_token")
-  private val oauthClientParams = List("client_id", "consumer_key")
-  private val allOauthParams = (oauthTokenParams ++ oauthClientParams).toSet
+  private val authParams = Set("auth_token", "oauth_token", "client_id", "consumer_key")
 
   private val unauthorisedClientApplicationCounter = telemetry.counter(
     "unauthorised_client_application_access_total",
@@ -78,7 +76,7 @@ class ClientApplicationAuthFilter(
           Future.value(ErrorResponse.forbidden())
         } else {
           appAuthTypeCounter.labels(authType, path).inc()
-          if (oauthClientParams.exists(paramAsType(_) == authType)) deprecatedAuthByAppCounter.labels(clientAppId).inc()
+          if (authParams.exists(paramAsType(_) == authType)) deprecatedAuthByAppCounter.labels(clientAppId).inc()
 
           // exclude allowlisted partners from Auth header enforcement
           if (ClientApplicationAuthFilter.allowlistedApplicationIds.contains(clientAppId)) {
@@ -97,7 +95,7 @@ class ClientApplicationAuthFilter(
 
   private def getAuthType(request: Request): String =
     request.params.keys
-      .find(allOauthParams.contains)
+      .find(authParams.contains)
       .map(paramAsType)
       .orElse(request.headerMap.keys.find("Authorization".equalsIgnoreCase).map(_ => "oauth_header"))
       .getOrElse("unknown")
