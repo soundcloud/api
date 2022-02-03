@@ -8,6 +8,7 @@ import (
 	"net/url"
 	"os"
 	"time"
+	"strconv"
 
 	_ "net/http/pprof"
 
@@ -24,6 +25,10 @@ import (
 )
 
 func main() {
+    bytes, err := strconv.ParseInt(os.Getenv("MAX_REQUEST_BYTES"), 10, 64)
+    if err != nil {
+        log.Fatal(err)
+    }
 	var (
 		addr      = flag.String("addr", ":80", "Listen address")
 		adminAddr = flag.String("admin-addr", ":5000", "Listen address admin server")
@@ -37,7 +42,7 @@ func main() {
 		s3Bucket  = flag.String("s3-bucket", os.Getenv("AWS_S3_BUCKET"), "AWS S3 bucket")
 		s3Region  = flag.String("s3-region", os.Getenv("AWS_S3_REGION"), "AWS S3 region")
 
-		maxRequestBytes = flag.Int64("max-request-bytes", 500<<(10*2), "Max request size in bytes")
+		maxRequestBytes = flag.Int64("max-request-bytes", bytes, "Max request size in bytes")
 	)
 	flag.Parse()
 
