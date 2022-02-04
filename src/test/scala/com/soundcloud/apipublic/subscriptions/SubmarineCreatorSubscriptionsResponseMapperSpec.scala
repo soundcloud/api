@@ -1,54 +1,39 @@
 package com.soundcloud.apipublic.subscriptions
 
-import com.soundcloud.jvmkit.module.http.server.JsonResponseBuilder
+import com.soundcloud.apipublic.test.UnitSpecification
+import com.soundcloud.apipublic.test.fixtures.Fixtures.submarineCreatorSubscription
 import com.soundcloud.jvmkit.module.util.Urn
 import com.twitter.finagle.http.{Response, Status}
-import org.mockito.Mockito.when
-import org.specs2.mock.Mockito
-import org.specs2.mutable.Specification
-import org.specs2.specification.Scope
 import play.api.libs.json.Json
 
-class SubmarineCreatorSubscriptionsResponseMapperSpec extends Specification with Mockito {
-  trait Context extends Scope {
-    val creatorSubscriptionsMapper = smartMock[SubmarineCreatorSubscriptionsMapper]
-    val subject = new SubmarineCreatorSubscriptionsResponseMapper(creatorSubscriptionsMapper)
-
-    def status: Status
-
-    def body: String
-
-    def creatorSubscriptionResponse: Response = JsonResponseBuilder(status, body).build
-  }
-
-  "when response is OK status" >> {
-    trait OkContext extends Context {
-      val activeCreatorSubscription = Map.empty[Urn, Option[SubmarineCreatorSubscription]]
-      val someJsValue = Json.obj("some" -> "jsValue")
-
-      override def status = Status.Ok
-
-      override def body = """{"some":"jsValue"}"""
-
-      when(creatorSubscriptionsMapper.apply(someJsValue)).thenReturn(activeCreatorSubscription)
+class SubmarineCreatorSubscriptionsResponseMapperSpec extends UnitSpecification {
+  "when response is 200" >> {
+    trait SuccessContext extends Scope {
+      val successResponse = Json.stringify(submarineCreatorSubscription)
+      val response = Response(Status.Ok)
+      response.setContentString(successResponse)
     }
 
-    "returns an ActiveCreatorSubscriptionsResponse" in new OkContext {
-      subject.apply(creatorSubscriptionResponse) ==== ActiveSubmarineCreatorSubscriptionsResponse(
-        activeCreatorSubscription
-      )
+    "maps creator subscriptions" in new SuccessContext {
+      val expectedResult =
+        Map(
+          Urn("soundcloud", "users", "123") -> Some(
+            SubmarineCreatorSubscription(false, Package("Yearly Pro plan", "pro"))
+          ),
+          Urn("soundcloud", "users", "2") -> None
+        )
+      SubmarineCreatorSubscriptionsResponseMapper(response) ==== expectedResult
     }
   }
 
-  "when response is NOT FOUND status" >> {
-    trait NotFoundContext extends Context {
-      override def status = Status.NotFound
-
-      override def body = ""
+  "when response is not successful" >> {
+    trait FailureContext extends Scope {
+      val response = Response(Status.NotFound)
     }
 
-    "returns a NoCreatorSubscriptionsResponse" in new NotFoundContext {
-      subject.apply(creatorSubscriptionResponse) ==== NoSubmarineCreatorSubscriptionsResponse
+    "maps creator subscriptions" in new FailureContext {
+      SubmarineCreatorSubscriptionsResponseMapper(response) ==== Map.empty
     }
   }
+
 }

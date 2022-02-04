@@ -1,18 +1,32 @@
 package com.soundcloud.apipublic.subscriptions
 
-import com.soundcloud.apipublic.client.support.ResponseMapper
-import play.api.libs.json.Json
+import com.soundcloud.jvmkit.module.util.Urn
+import play.api.libs.json.{JsNull, JsValue, Json}
 import com.twitter.finagle.http.{Response, Status}
 
-class SubmarineCreatorSubscriptionsResponseMapper(
-    creatorSubscriptionsMapper: SubmarineCreatorSubscriptionsMapper = new SubmarineCreatorSubscriptionsMapper()
-) extends ResponseMapper[SubmarineCreatorSubscriptionsResponse] {
-  override def apply(response: Response): SubmarineCreatorSubscriptionsResponse = {
-
+object SubmarineCreatorSubscriptionsResponseMapper {
+  def apply(response: Response): Map[Urn, Option[SubmarineCreatorSubscription]] = {
     response.status match {
       case Status.Ok =>
-        ActiveSubmarineCreatorSubscriptionsResponse(creatorSubscriptionsMapper(Json.parse(response.contentString)))
-      case _ => NoSubmarineCreatorSubscriptionsResponse
+        (Json.parse(response.contentString) \ "data").as[Map[String, JsValue]].map {
+          case (urn, json) => {
+            val creatorSubscription = json match {
+              case JsNull => None
+              case json: JsValue =>
+                Some(
+                  SubmarineCreatorSubscription(
+                    (json \ "recurring").asOpt[Boolean].getOrElse(false),
+                    Package(
+                      (json \ "package" \ "name").as[String],
+                      (json \ "package" \ "plan").as[String]
+                    )
+                  )
+                )
+            }
+            (Urn.parse(urn).get, creatorSubscription)
+          }
+        }
+      case _ => Map.empty
     }
   }
 }

@@ -5,19 +5,19 @@ import com.soundcloud.jvmkit.module.http.server.JsonResponseBuilder
 import com.soundcloud.jvmkit.module.util.http.Headers
 import com.soundcloud.jvmkit.module.util.{Path, Urn}
 import com.soundcloud.apipublic.test.UnitSpecification
+import com.soundcloud.apipublic.test.fixtures.Fixtures
 import com.twitter.util.{Await, Future}
 import org.mockito.Mockito.when
+import play.api.libs.json.Json
 
 class SubmarineClientSpec extends UnitSpecification {
   trait Context extends Scope {
     val serviceMock = smartMock[JsonClient]
-    val creatorSubscriptionsResponseMapperMock = smartMock[SubmarineCreatorSubscriptionsResponseMapper]
     val subject = new SubmarineClient(
-      serviceMock,
-      creatorSubscriptionsResponseMapperMock
+      serviceMock
     )
     val session = anonymousSession
-    val response = JsonResponseBuilder.ok("")
+    val response = JsonResponseBuilder.ok(Json.stringify(Fixtures.submarineCreatorSubscription))
   }
 
   "fetchActiveCreatorSubscriptions" >> {
@@ -26,8 +26,6 @@ class SubmarineClientSpec extends UnitSpecification {
     }
 
     "calls the service and maps the response" in new ActiveCreatorSubscriptionsContext {
-      val subscriptions = ActiveSubmarineCreatorSubscriptionsResponse(Map.empty)
-
       when(
         serviceMock.getWithSession(
           session,
@@ -37,9 +35,15 @@ class SubmarineClientSpec extends UnitSpecification {
         )
       ).thenReturn(Future(response))
 
-      when(creatorSubscriptionsResponseMapperMock.apply(response)).thenReturn(subscriptions)
+      val expectedResult =
+        Map(
+          Urn("soundcloud", "users", "123") -> Some(
+            SubmarineCreatorSubscription(false, Package("Yearly Pro plan", "pro"))
+          ),
+          Urn("soundcloud", "users", "2") -> None
+        )
 
-      Await.result(subject.fetchActiveCreatorSubscriptions(session, urns)) ==== subscriptions
+      Await.result(subject.fetchActiveCreatorSubscriptions(session, urns)) ==== expectedResult
     }
   }
 }

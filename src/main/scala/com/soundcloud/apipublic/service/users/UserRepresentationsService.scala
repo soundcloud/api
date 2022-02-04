@@ -48,7 +48,7 @@ class UserRepresentationsService(
           Some(repostsCountsMap),
           Some(totalLikesCountMap),
           session.user,
-          Some(subscriptionsResponse.subscriptions)
+          Some(subscriptionsResponse)
         )
       )
     } yield sortByProvidedUrns(fullUsers, urns).toList

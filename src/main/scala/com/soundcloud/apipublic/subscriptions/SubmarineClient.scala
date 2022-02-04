@@ -7,15 +7,13 @@ import com.soundcloud.jvmkit.module.util.{Path, Urn}
 import com.twitter.util.Future
 
 class SubmarineClient(
-    client: JsonClient,
-    creatorSubscriptionsResponseMapper: SubmarineCreatorSubscriptionsResponseMapper =
-      new SubmarineCreatorSubscriptionsResponseMapper
+    client: JsonClient
 ) {
 
   def fetchActiveCreatorSubscriptions(
       session: UserSession,
       urns: Set[Urn]
-  ): Future[SubmarineCreatorSubscriptionsResponse] = {
+  ): Future[Map[Urn, Option[SubmarineCreatorSubscription]]] = {
 
     client
       .getWithSession(
@@ -24,6 +22,6 @@ class SubmarineClient(
         Params("urns" -> urns),
         Headers.empty()
       )
-      .map(creatorSubscriptionsResponseMapper(_))
+      .map(SubmarineCreatorSubscriptionsResponseMapper(_))
   }
 }

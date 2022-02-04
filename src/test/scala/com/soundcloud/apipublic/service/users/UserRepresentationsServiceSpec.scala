@@ -1,23 +1,20 @@
 package com.soundcloud.apipublic.service.users
 
-import com.soundcloud.jvmkit.module.util.Urn
-import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.apipublic.client.followcounts.{FollowCounts, FollowCountsClient}
 import com.soundcloud.apipublic.client.liebling.{LieblingClient, UserTotalLikes}
 import com.soundcloud.apipublic.client.mothership.OkidokiClient
 import com.soundcloud.apipublic.client.mothership.response.representation.{CreatorSubscription, Product}
 import com.soundcloud.apipublic.client.reposts.RepostsClient
-import com.soundcloud.apipublic.subscriptions.{
-  ActiveSubmarineCreatorSubscriptionsResponse,
-  NoSubmarineCreatorSubscriptionsResponse,
-  SubmarineClient,
-  SubmarineCreatorSubscriptionsMapper
-}
+import com.soundcloud.apipublic.subscriptions.{SubmarineClient, SubmarineCreatorSubscriptionsResponseMapper}
 import com.soundcloud.apipublic.test.UnitSpecification
 import com.soundcloud.apipublic.test.fixtures.Fixtures
+import com.soundcloud.apipublic.test.fixtures.Fixtures.submarineCreatorSubscription
+import com.soundcloud.jvmkit.module.util.Urn
+import com.soundcloud.jvmkit.module.util.session.UserSession
+import com.twitter.finagle.http.{Response, Status}
 import com.twitter.util.{Await, Future}
 import org.mockito.Mockito.when
-import play.api.libs.json.JsObject
+import play.api.libs.json.{JsObject, Json}
 
 class UserRepresentationsServiceSpec extends UnitSpecification {
 
@@ -37,7 +34,12 @@ class UserRepresentationsServiceSpec extends UnitSpecification {
     val requestedUrns = Seq(user1)
     val okidokiUser = Fixtures.okidokiUsersWithDeprecatedCounts
     val totalLikesCount = UserTotalLikes(user1, 2, 2)
-    val submarineSubscription = new SubmarineCreatorSubscriptionsMapper()(Fixtures.submarineCreatorSubscription)
+
+    val successResponse = Json.stringify(submarineCreatorSubscription)
+    val response = Response(Status.Ok)
+    response.setContentString(successResponse)
+    val submarineSubscription = SubmarineCreatorSubscriptionsResponseMapper(response)
+
     val uploadQuota = UserUploadQuota(1, Some(2))
 
     def stubClients() = {
@@ -50,7 +52,7 @@ class UserRepresentationsServiceSpec extends UnitSpecification {
       when(lieblingClient.userTotalLikeCount(session, requestedUrns))
         .thenReturn(Future.value(List(totalLikesCount)))
       submarineClient.fetchActiveCreatorSubscriptions(session, requestedUrns.toSet) returns Future.value(
-        ActiveSubmarineCreatorSubscriptionsResponse(submarineSubscription)
+        submarineSubscription
       )
     }
 
@@ -91,7 +93,7 @@ class UserRepresentationsServiceSpec extends UnitSpecification {
       stubClients()
 
       submarineClient.fetchActiveCreatorSubscriptions(session, requestedUrns.toSet) returns Future.value(
-        NoSubmarineCreatorSubscriptionsResponse
+        Map.empty
       )
 
       val result = Await.result(userRepresentationService.users(session, requestedUrns))
