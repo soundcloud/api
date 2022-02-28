@@ -74,34 +74,5 @@ class UserTracksServiceSpec extends TrackRepresentationsSpecificationContext {
         tracksCollection.nextHref ==== None
       }
     }
-
-    "#userTrack" >> {
-      "when all data is available" in new Context {
-        when(trackRepresentationsService.track(session, TrackRequest(track.urn, Some("secr3t-Token"))))
-          .thenReturn(Future.value(Some(track)))
-
-        val trackRepresentation =
-          Await.result(
-            userTracksService
-              .userTrack(track.urn, session, track.user.urn.identifier, Some("secr3t-Token"))
-          )
-
-        trackRepresentation match {
-          case Some(rep) => rep must beAnInstanceOf[TrackRepresentation]
-          case _ => false
-        }
-
-      }
-
-      "when data is not available" in new Context {
-        when(trackRepresentationsService.track(session, TrackRequest(track.urn, Some("secr3t-Token"))))
-          .thenReturn(Future.value(None))
-
-        val trackRepresentation =
-          Await.result(userTracksService.userTrack(track.urn, session, "123", Some("secr3t-Token")))
-
-        trackRepresentation.isEmpty
-      }
-    }
   }
 }

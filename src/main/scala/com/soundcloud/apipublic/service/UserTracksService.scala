@@ -34,20 +34,6 @@ class UserTracksService(
     }
   }
 
-  def userTrack(
-      trackUrn: Urn,
-      session: UserSession,
-      userId: String,
-      secretToken: Option[String]
-  ): Future[Option[TrackRepresentation]] = {
-    for {
-      track <- trackRepresentationsService.track(session, TrackRequest(trackUrn, secretToken))
-      userOwnedTrack = track.filter(_.user.urn.identifier == userId)
-    } yield {
-      userOwnedTrack
-    }
-  }
-
   private def userTracksNextHref(items: List[ChronoItem], pagination: CursorBasedPagination): Option[String] = {
     if (items.nonEmpty) {
       Some(
