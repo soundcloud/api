@@ -35,6 +35,7 @@ import com.soundcloud.apipublic.subscriptions.SubmarineClient
 import proto.soundcloud.authenticator.access_grant_exchange.AccessGrantExchangeClientProtobuf
 import proto.soundcloud.comments.api.CommentsClientProtobuf
 import proto.soundcloud.playlists.api.{PlaylistsClientProtobuf, WritesClientProtobuf}
+import proto.soundcloud.likes.{api => likes}
 import proto.soundcloud.tracks.api.{
   LikesClientProtobuf,
   MediaClientProtobuf,
@@ -111,6 +112,13 @@ class Clients(
     new LikesClientProtobuf(_, _)
   )
 
+  val likesTwirpClient = TwirpClient(
+    ResourceName("likes"),
+    config,
+    telemetry,
+    new likes.LikesClientProtobuf(_, _)
+  )
+
   val playlistsTwirpClient = TwirpClient(
     ResourceName("playlists"),
     config,
@@ -169,7 +177,8 @@ class Clients(
       hocuspocusClient,
       rollout = rolloutClient
     )
-  val likesService = new LikesService(tracksService, playlistService, lieblingClient, likeTracksTwirpClient)
+  val likesService =
+    new LikesService(tracksService, playlistService, lieblingClient, likesTwirpClient, likeTracksTwirpClient)
   val userPlaylistsService = new UserPlaylistsService(playlistService, okidokiClient)
 
   private val submarineClient = new SubmarineClient(jsonClient("submarine"))

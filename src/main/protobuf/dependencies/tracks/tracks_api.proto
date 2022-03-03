@@ -90,6 +90,9 @@ service Comments {
 
     // Returns a list of comments (the head of a comment) of the given track
     rpc GetTrackCommentsOnWaveform (GetTrackCommentsRequest) returns (GetTrackCommentsResponse) {};
+
+    //  Creates a track comment for the given track.
+    rpc CreateTrackComment (CreateTrackCommentRequest) returns (CreateTrackCommentResponse) {}
 }
 
 message GetTrackCommentsRequest {
@@ -102,6 +105,18 @@ message GetTrackCommentsRequest {
 
 message GetTrackCommentsResponse {
     repeated string comments_urns = 1;
+}
+
+message CreateTrackCommentRequest {
+    proto.soundcloud.common.session.UserSession user_session = 1;
+    string urn = 2;
+    google.protobuf.StringValue secret_token = 3; // optional
+    string body = 4;
+    google.protobuf.Int32Value timestamp = 5; // optional
+}
+
+message CreateTrackCommentResponse{
+     string urn = 1;
 }
 
 service Media {
@@ -505,6 +520,29 @@ message GetFeaturedPlaylistsRequest {
 message GetFeaturedPlaylistsResponse {
     repeated string playlist_urns = 1;
     google.protobuf.Int32Value offset = 2;
+}
+
+message RecommendationsMeta {
+   string query_urn = 1;
+   google.protobuf.Int32Value page_size = 2;
+   string source_version = 3;
+   string variant = 4;
+   google.protobuf.Int32Value seed_count = 5;
+}
+
+message GetSimilarTracksRequest {
+    proto.soundcloud.common.session.UserSession user_session = 1;
+    repeated string seed_urns = 2;
+    google.protobuf.Int32Value page_size = 3;
+}
+
+message GetSimilarTracksResponse {
+    repeated string track_urns = 1;
+    RecommendationsMeta meta = 2;
+}
+
+service Recommendations {
+    rpc GetSimilarTracks (GetSimilarTracksRequest) returns (GetSimilarTracksResponse) {};
 }
 
 service QuickReactions {

@@ -169,6 +169,9 @@ service Likes {
 
     // Unlikes the given playlist for the given user
     rpc UnlikePlaylist (LikePlaylistRequest) returns (LikePlaylistResponse) {};
+
+    // Gets the likers of a playlist
+    rpc GetPlaylistLikers (GetPlaylistLikersRequest) returns (GetPlaylistLikersResponse) {};
 }
 
 message LikePlaylistRequest {
@@ -180,4 +183,15 @@ message LikePlaylistResponse {
     google.protobuf.Timestamp created_at = 1;
     string target_urn = 2;
     string user_urn = 3;
+}
+
+message GetPlaylistLikersRequest {
+    proto.soundcloud.common.session.UserSession user_session = 1; // You must provide a UserSession
+    string urn = 2;
+    PlaylistPagination pagination = 4; // optional
+}
+
+message GetPlaylistLikersResponse {
+    repeated string user_urns = 1;
+    google.protobuf.StringValue cursor = 2; // optional
 }

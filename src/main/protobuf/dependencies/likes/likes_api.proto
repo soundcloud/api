@@ -1,0 +1,224 @@
+// DO NOT EDIT
+// This file has been automatically downloaded via 'sc idl fetch' from an upstream dependency.
+
+syntax = "proto3";
+
+package proto.soundcloud.likes.api;
+
+import "google/protobuf/wrappers.proto";
+import "google/protobuf/timestamp.proto";
+
+import "common_session.proto";
+
+enum ChronoDirection {
+    MISSING = 0;
+    ASC = 1;
+    DESC = 2;
+}
+
+enum Collection {
+    UNDEFINED = 0;
+    TRACKS = 1;
+    PLAYLISTS = 2;
+    SYSTEM_PLAYLISTS = 3;
+}
+
+enum SubcollectionsSelection {
+    DEFAULT = 0;
+    ALL_BUT_STATIONS = 1;
+    ALL = 2;
+    STATIONS_ONLY = 3;
+}
+
+message ChronoParams {
+    ChronoDirection direction = 1;
+    google.protobuf.Int32Value limit = 2;
+    google.protobuf.StringValue cursor = 3;
+    SubcollectionsSelection include = 4;
+}
+
+message ChronoWarnings {
+    repeated string warnings = 1;
+}
+
+message ChronoErrors {
+    repeated string errors = 1;
+}
+
+message ChronoMeta {
+    ChronoParams params = 1;
+    ChronoWarnings warnings = 2;
+    ChronoErrors errors = 3;
+    bool valid_for_caching = 4;
+}
+
+enum ResultType {
+    UNKNOWN = 0;
+    SUCCESS = 1;
+    EXISTING = 2;
+}
+
+message LikeRequest {
+    // Do not use index=1, it has been retired
+
+    string urn = 2;
+    proto.soundcloud.common.session.UserSession user_session = 3;
+}
+
+message LikeResponse {
+    string target_urn = 1;
+    string source_urn = 2;
+    google.protobuf.Timestamp created_at = 3;
+    ResultType result_type = 4;
+}
+
+message BatchLikeRequest {
+    // Do not use index=1, it has been retired
+
+    repeated string urns = 2;
+    proto.soundcloud.common.session.UserSession user_session = 3;
+}
+
+message BatchLikeResponse {
+    repeated string target_urns = 1;
+    string source_urn = 2;
+    google.protobuf.Timestamp created_at = 3;
+}
+
+message UnlikeRequest {
+    // Do not use index=1, it has been retired
+
+    string urn = 2;
+    proto.soundcloud.common.session.UserSession user_session = 3;
+}
+
+message BatchUnlikeRequest {
+    // Do not use index=1, it has been retired
+
+    repeated string urns = 2;
+    proto.soundcloud.common.session.UserSession user_session = 3;
+}
+
+message UnlikeResponse {
+    string target_urn = 1;
+    string source_urn = 2;
+    google.protobuf.Timestamp created_at = 3;
+}
+
+message BatchUnlikeResponse {
+    repeated string target_urns = 1;
+}
+
+message GetLikesChronoRequest {
+    // Do not use index=1, it has been retired
+
+    ChronoParams chrono_request = 2;
+    proto.soundcloud.common.session.UserSession user_session = 3;
+    Collection collection = 4; // If not present fetches system-playlists for backwards compatibility
+}
+
+message GetLikesByUserChronoRequest {
+    string user_urn = 1;
+    ChronoParams chrono_params = 2;
+    repeated Collection collections = 3; //Set of distinct collections to be fetched
+}
+
+message GetLikesByTargetChronoRequest {
+    string target_urn = 1;
+    ChronoParams chrono_request = 2;
+}
+
+message GetLikesByOwnerChronoRequest {
+    ChronoParams chrono_request = 1;
+    proto.soundcloud.common.session.UserSession user_session = 2;
+    Collection collection = 3;
+}
+
+message GetLikesChronoResponseItem {
+    string timestamp = 1;
+    string type = 2;
+    string user_urn = 3;
+    string target_urn = 4;
+    string cursor = 5;
+}
+
+message GetLikesChronoResponse {
+    repeated GetLikesChronoResponseItem items = 1;
+    ChronoMeta meta = 2;
+}
+
+message GetLikesByUserChronoResponse {
+    repeated GetLikesChronoResponseItem items = 1;
+    ChronoMeta meta = 2;
+}
+
+message GetLikesByTargetChronoResponse {
+    repeated GetLikesChronoResponseItem items = 1;
+    ChronoMeta meta = 2;
+}
+
+message GetLikesByOwnerChronoResponse {
+    repeated GetLikesChronoResponseItem items = 1;
+    ChronoMeta meta = 2;
+}
+
+message GetSystemPlaylistLikeCountRequest {
+    string system_playlist_urn = 1;
+}
+
+message GetSystemPlaylistLikeCountResponse {
+    string system_playlist_urn = 1;
+    int64 count = 2;
+}
+
+message BatchGetTargetLikeCountRequest {
+    repeated string target_urns = 1;
+}
+
+message BatchGetTargetLikeCountResponse {
+    repeated GetTargetLikeCountResponse counts = 1;
+}
+
+message GetTargetLikeCountResponse {
+    string target_urn = 1;
+    int64 count = 2;
+}
+
+message IsTargetLikedBatchRequest {
+    string source_urn = 1;
+    repeated string target_urns = 2;
+}
+
+message IsTargetLikedBatchResponse {
+    repeated string liked_target_urns = 1;
+}
+
+message GetUserLikeCountResponse {
+    string user_urn = 1;
+    int64 track_likes_count = 2;
+    int64 playlist_likes_count = 3;
+
+}
+
+message BatchGetUserLikeCountRequest {
+    repeated string user_urns = 1;
+}
+
+message BatchGetUserLikeCountResponse {
+    repeated GetUserLikeCountResponse users = 1;
+}
+
+service Likes {
+    rpc Like (LikeRequest) returns (LikeResponse) {}
+    rpc LikeBatch(BatchLikeRequest) returns (BatchLikeResponse) {}
+    rpc Unlike (UnlikeRequest) returns (UnlikeResponse) {}
+    rpc UnlikeBatch(BatchUnlikeRequest) returns (BatchUnlikeResponse) {}
+    rpc GetLikesChrono (GetLikesChronoRequest) returns (GetLikesChronoResponse) {}
+    rpc GetLikesByUserChrono (GetLikesByUserChronoRequest) returns (GetLikesByUserChronoResponse) {}
+    rpc GetLikesByTargetChrono (GetLikesByTargetChronoRequest) returns (GetLikesByTargetChronoResponse) {}
+    rpc GetLikesByOwnerChrono (GetLikesByOwnerChronoRequest) returns (GetLikesByOwnerChronoResponse) {}
+    rpc GetSystemPlaylistLikeCount (GetSystemPlaylistLikeCountRequest) returns (GetSystemPlaylistLikeCountResponse) {}
+    rpc GetTargetLikeCountBatch (BatchGetTargetLikeCountRequest) returns (BatchGetTargetLikeCountResponse) {}
+    rpc IsTargetLikedBatch (IsTargetLikedBatchRequest) returns (IsTargetLikedBatchResponse) {}
+    rpc GetUserLikeCountBatch (BatchGetUserLikeCountRequest) returns (BatchGetUserLikeCountResponse) {}
+}

@@ -9,16 +9,11 @@ import "google/protobuf/wrappers.proto";
 import "google/protobuf/timestamp.proto";
 import "common_session.proto";
 
-// Comments authorizes the request to create and fetch comments from track-comments service.
-// If the request is authorized, then it makes the request to track-comments service to create or fetch comments,
-// then ,it responds with the response based on the response from track-comments service.
-// if the request is not authorized ,then it responds with the error response.
+// Comments authorizes read or write requests for comments.
 service Comments {
-  // GetUserComments authorizes GetUserCommentsRequest to GetUserComments on track-comments service.
-  // GetUserComments on track-comments service is responsible for fetching user comments for the given user urn.
+  // GetUserComments authorizes the request for fetching user comments for the given user urn from track-comments service.
   rpc GetUserComments(GetUserCommentsRequest) returns (GetUserCommentsResponse) {}
 
-  // Replaces GetTrackCommentsThreadHeads
   //GetTrackCommentsWithoutReplies returns only comments urns for the thread heads (i.e threaded comments without replies) for the given track urn.
   rpc GetTrackCommentsWithoutReplies(GetTrackCommentsRequest) returns (GetTrackCommentsThreadsResponse) {}
 
@@ -31,8 +26,11 @@ service Comments {
   // GetUserCommentsChrono authorizes the request to fetch comments for the given user urn in a chronological order from track-comments service.
   rpc GetUserCommentsChrono(GetUserCommentsChronoRequest) returns (GetUserCommentsChronoResponse) {}
 
-  // DeleteComment authorizes the request to delete the comment for the given urn
-  rpc DeleteComment(DeleteCommentRequest) returns (DeleteCommentResponse) {}
+  // CreateTrackComment creates a comment for the given track urn.
+  rpc CreateTrackComment (CreateTrackCommentRequest) returns (CreateTrackCommentResponse) {}
+
+  // DeleteTrackComment authorizes the request to delete the track comment for the given urn
+  rpc DeleteTrackComment(DeleteTrackCommentRequest) returns (DeleteTrackCommentResponse) {}
 }
 
 message GetCommentRequest {
@@ -119,11 +117,31 @@ message GetUserCommentsChronoResponse {
     ChronoMeta meta = 2;
 }
 
+message CreateTrackCommentRequest {
+  proto.soundcloud.common.session.UserSession user_session = 1;
+  string track_urn = 2;
+  string body = 3;
+  google.protobuf.Int32Value timestamp = 4;
+}
+
+message CreateTrackCommentResponse {
+  string urn = 1;
+}
+
 message DeleteCommentRequest {
   string urn = 1;
   proto.soundcloud.common.session.UserSession user_session = 2;
 }
 
 message DeleteCommentResponse {
+  Comment comment = 1;
+}
+
+message DeleteTrackCommentRequest {
+  string urn = 1;
+  proto.soundcloud.common.session.UserSession user_session = 2;
+}
+
+message DeleteTrackCommentResponse {
   Comment comment = 1;
 }

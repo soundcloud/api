@@ -15,17 +15,11 @@ Set the `USE_CRUN` environment variable to `false` to avoid using sc crun when p
 ## Running API Public locally
 
 ```
-shibboleth show config/production_api.sh.enc > config/production_api.sh
 make run
 curl "http://localhost:5000/tracks" -H "Authorization: OAuth ACCESS_TOKEN"
 ```
 
 This runs against production servers.
-
-## Running
-
-Running `make run` from the command line should immediately get you up and running with a local instance running
-at [localhost:5000](http://localhost:5000).
 
 ## Debugging
 

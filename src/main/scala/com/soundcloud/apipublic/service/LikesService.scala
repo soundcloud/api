@@ -1,9 +1,5 @@
 package com.soundcloud.apipublic.service
 
-import com.soundcloud.jvmkit.module.outcome.{ApplicationError, GoodOps, Outcome}
-import com.soundcloud.jvmkit.module.twirp.proto.UserSessionOps._
-import com.soundcloud.jvmkit.module.util.Urn
-import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.apipublic.client.liebling._
 import com.soundcloud.apipublic.client.tracks.TrackRequest
 import com.soundcloud.apipublic.handler.support.requestParser.AccessParams
@@ -12,8 +8,13 @@ import com.soundcloud.apipublic.service.playlists.PlaylistRequest
 import com.soundcloud.apipublic.service.playlists.representation.Playlist
 import com.soundcloud.apipublic.service.representation.collection.Collection
 import com.soundcloud.apipublic.service.trackrepresentation.{TrackRepresentation, TrackRepresentationsService}
+import com.soundcloud.jvmkit.module.outcome.{ApplicationError, GoodOps, Outcome}
+import com.soundcloud.jvmkit.module.twirp.proto.UserSessionOps._
+import com.soundcloud.jvmkit.module.util.Urn
+import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.twinagle.TwinagleException
 import com.twitter.util.Future
+import proto.soundcloud.likes.{api => likes}
 import proto.soundcloud.tracks.api.{
   GetTrackLikersPagination,
   GetTrackLikersRequest,
@@ -29,7 +30,8 @@ class LikesService(
     trackRepresentationsService: TrackRepresentationsService,
     playlistsService: PlaylistsService,
     lieblingClient: LieblingClient,
-    likesTwirpClient: LikesClientProtobuf
+    likesClient: likes.LikesClientProtobuf,
+    tracksClient: LikesClientProtobuf
 ) {
 
   def createTrackLike(
@@ -38,7 +40,7 @@ class LikesService(
   ): Future[Outcome[CreateLikeResponse]] = {
     val request = LikeTrackRequest(userSession = Some(session.asProtoSession), trackUrn = urn.toString)
 
-    likesTwirpClient
+    tracksClient
       .likeTrack(request)
       .map(_ => CreateLikeResponse().good)
       .handle {
@@ -49,7 +51,7 @@ class LikesService(
   def deleteTrackLike(session: UserSession, urn: Urn): Future[Outcome[DeleteLikeResponse]] = {
     val request = LikeTrackRequest(userSession = Some(session.asProtoSession), trackUrn = urn.toString)
 
-    likesTwirpClient
+    tracksClient
       .unlikeTrack(request)
       .map(_ => DeleteLikeResponse().good)
       .handle {
@@ -65,7 +67,7 @@ class LikesService(
     val requestPagination = GetTrackLikersPagination(pagination.cursor, pagination.pageSize)
     val request = GetTrackLikersRequest(Some(session.asProtoSession), urn.toString, Some(requestPagination))
 
-    likesTwirpClient
+    tracksClient
       .getTrackLikers(request)
       .map(response => {
         val nextHref = response.cursor.map(pagination.nextPage(_).normalizedHref)
@@ -108,16 +110,28 @@ class LikesService(
       access: AccessParams,
       pagination: CursorBasedPagination
   ): Future[Collection[TrackRepresentation]] = {
+    val request = likes.GetLikesByUserChronoRequest(
+      userUrn = userUrn.toString,
+      chronoParams = Some(
+        likes.ChronoParams(
+          direction = likes.ChronoDirection.DESC,
+          limit = Some(pagination.pageSize),
+          cursor = pagination.cursor
+        )
+      ),
+      collections = Seq(likes.Collection.TRACKS)
+    )
     for {
-      likesPage <- lieblingClient.userTracksLikes(session, userUrn, pagination.cursor, pagination.pageSize)
+      likesPage <- likesClient.getLikesByUserChrono(request)
       enrichedTracks <- trackRepresentationsService.tracks(
         session,
-        likesPage.likes.map(like => TrackRequest(like.target_urn, None)),
+        likesPage.items.map(like => TrackRequest(Urn.parse(like.targetUrn).get, None)).toList,
         access
       )
     } yield {
       val nextHref =
-        likesPage.meta.cursor.next_params.map(params => pagination.nextPage(params.cursor)).map(_.normalizedHref)
+        if (likesPage.items.isEmpty) None
+        else Some(pagination.nextPage(likesPage.items.last.cursor).normalizedHref)
 
       Collection(enrichedTracks, nextHref)
     }
@@ -128,15 +142,27 @@ class LikesService(
       userUrn: Urn,
       pagination: CursorBasedPagination
   ): Future[Collection[Playlist]] = {
+    val request = likes.GetLikesByUserChronoRequest(
+      userUrn = userUrn.toString,
+      chronoParams = Some(
+        likes.ChronoParams(
+          direction = likes.ChronoDirection.DESC,
+          limit = Some(pagination.pageSize),
+          cursor = pagination.cursor
+        )
+      ),
+      collections = Seq(likes.Collection.PLAYLISTS)
+    )
     for {
-      likesPage <- lieblingClient.userPlaylistLikes(session, userUrn, pagination.cursor, pagination.pageSize)
+      likesPage <- likesClient.getLikesByUserChrono(request)
       playlists <- playlistsService.fetchPlaylistsMetadataOnly(
         session,
-        likesPage.likes.map(like => PlaylistRequest(like.target_urn, None))
+        likesPage.items.map(like => PlaylistRequest(Urn.parse(like.targetUrn).get, None)).toList
       )
     } yield {
       val nextHref =
-        likesPage.meta.cursor.next_params.map(params => pagination.nextPage(params.cursor)).map(_.normalizedHref)
+        if (likesPage.items.isEmpty) None
+        else Some(pagination.nextPage(likesPage.items.last.cursor).normalizedHref)
 
       Collection(playlists, nextHref)
     }

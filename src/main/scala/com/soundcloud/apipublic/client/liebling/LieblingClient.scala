@@ -12,7 +12,6 @@ import com.soundcloud.jvmkit.module.outcome.{
   Outcome
 }
 import com.soundcloud.jvmkit.module.telemetry.exceptions.ExceptionCollector
-import com.soundcloud.jvmkit.module.telemetry.exceptions.ExceptionHandler._
 import com.soundcloud.jvmkit.module.util.http.Headers
 import com.soundcloud.jvmkit.module.util.logging.SoundCloudLoggerFactory
 import com.soundcloud.jvmkit.module.util.session.UserSession
@@ -158,37 +157,6 @@ class LieblingClient(jsonClient: JsonClient, exceptionCollector: ExceptionCollec
       case NonFatal(_) => List.empty
     }
 
-  def userTracksLikes(
-      session: UserSession,
-      userUrn: Urn,
-      cursor: Option[String],
-      pageSize: Int = 50
-  ): Future[LikesPage] =
-    userLikes("track_likes", session, userUrn, paramsFor(cursor, pageSize))
-
-  def userPlaylistLikes(
-      session: UserSession,
-      userUrn: Urn,
-      cursor: Option[String],
-      pageSize: Int = 50
-  ): Future[LikesPage] =
-    userLikes("playlist_likes", session, userUrn, paramsFor(cursor, pageSize))
-
-  private def userLikes(
-      path: String,
-      session: UserSession,
-      userUrn: Urn,
-      pageParams: Params
-  ): Future[LikesPage] = {
-    fetch(jsonClient, session, Path() / "users" / userUrn / path, pageParams)
-      .map { response =>
-        Json.parse(response.contentString).as[LikesPage]
-      }
-      .handleAndReport(exceptionCollector) {
-        case NonFatal(_) => emptyLikesPage
-      }
-  }
-
   private def fetchLikes(
       session: UserSession,
       path: Path,
@@ -212,24 +180,9 @@ class LieblingClient(jsonClient: JsonClient, exceptionCollector: ExceptionCollec
       }
       .map(_.reduce(combine))
 
-  private def paramsFor(cursor: Option[String], pageSize: Int, urns: List[Urn] = List.empty): Params =
-    Map("page_size" -> pageSize.toString) ++
-      cursor.map(c => Map("cursor" -> c)).getOrElse(Map.empty) ++
-      urns.headOption.map(_ => Map("urns" -> urns.map(_.toString).mkString(","))).getOrElse(Map.empty)
-
   private def jsonBody(session: UserSession): Option[String] = {
     Some(Json.obj("user_urn" -> session.getUser.toString).toString)
   }
-
-  def emptyLikesPage: LikesPage = LikesPage(
-    likes = List.empty,
-    meta = LikesPageMeta(
-      cursor = LikesPageCursor(
-        next_params = None,
-        next_href = None
-      )
-    )
-  )
 }
 
 case class LikesCount(target_urn: Urn, likes_count: Long)

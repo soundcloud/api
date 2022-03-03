@@ -21,6 +21,7 @@ import com.twitter.util.{Await, Future}
 import org.mockito.Mockito._
 import org.specs2.mutable.BeforeAfter
 import proto.soundcloud.tracks.api._
+import proto.soundcloud.likes.{api => likes}
 
 import java.time.Instant
 
@@ -39,11 +40,13 @@ class LikesServiceSpec extends TrackRepresentationsSpecificationContext {
       1
     )
     val tracksTwinagleClient = mock[LikesClientProtobuf]
+    val likesTwinagleClient = mock[likes.LikesClientProtobuf]
 
     val likesService = new LikesService(
       trackRepresentationsService,
       playlistsService,
       lieblingClient,
+      likesTwinagleClient,
       tracksTwinagleClient
     )
 
@@ -190,54 +193,108 @@ class LikesServiceSpec extends TrackRepresentationsSpecificationContext {
     }
   }
 
+  trait LikesByUserContext extends Context {
+    def buildLikesRequest(collections: Seq[likes.Collection]) = likes.GetLikesByUserChronoRequest(
+      userUrn = trackOwnerUrn.toString,
+      chronoParams = Some(
+        likes.ChronoParams(
+          direction = likes.ChronoDirection.DESC,
+          limit = Some(pagination.pageSize),
+          cursor = pagination.cursor
+        )
+      ),
+      collections = collections
+    )
+
+    val access = AccessParams.defaultAccess
+    val playlist = new PlaylistBuilder().build
+    val playlistUrn = Urn("soundcloud", "playlists", "1001")
+
+    lazy val tracksCollection = Await.result(likesService.userTracksLikes(session, trackOwnerUrn, access, pagination))
+    lazy val playlistsCollection = Await.result(likesService.userPlaylistsLikes(session, trackOwnerUrn, pagination))
+  }
+
   "#userTracksLikes" >> {
-    "when all data is available" in new Context {
-      val likesPage = LikesPage(
-        likes = List(Like(requestingUserUrn, trackUrn, createdAt.toDateTime(), None)),
-        meta = LikesPageMeta(
-          cursor = LikesPageCursor(
-            next_params = None,
-            next_href = None
+    "when all data is available" in new LikesByUserContext {
+      val likesRequest = buildLikesRequest(Seq(likes.Collection.TRACKS))
+      val likesPage = likes.GetLikesByUserChronoResponse(
+        items = Seq(
+          likes.GetLikesChronoResponseItem(
+            createdAt.toString,
+            "user-track-likes",
+            requestingUserUrn.toString,
+            trackUrn.toString,
+            "some_cursor"
           )
         )
       )
-      val access = AccessParams.defaultAccess
+
       when(trackRepresentationsService.tracks(session, List(trackRequest), access))
         .thenReturn(Future.value(List(createTrackRepresentation)))
-      when(lieblingClient.userTracksLikes(session, trackOwnerUrn, pagination.cursor, pagination.pageSize))
+      when(likesTwinagleClient.getLikesByUserChrono(likesRequest))
         .thenReturn(Future.value(likesPage))
-
-      val tracksCollection = Await.result(likesService.userTracksLikes(session, trackOwnerUrn, access, pagination))
 
       tracksCollection match {
         case rep => rep must beAnInstanceOf[Collection[TrackRepresentation]]
       }
+      tracksCollection.nextHref === Some(pagination.nextPage("some_cursor").normalizedHref)
+    }
+
+    "when there is no next href" in new LikesByUserContext {
+      val likesRequest = buildLikesRequest(Seq(likes.Collection.TRACKS))
+      val likesPage = likes.GetLikesByUserChronoResponse()
+
+      when(trackRepresentationsService.tracks(session, List(), access))
+        .thenReturn(Future.value(List()))
+      when(likesTwinagleClient.getLikesByUserChrono(likesRequest))
+        .thenReturn(Future.value(likesPage))
+
+      tracksCollection match {
+        case rep => rep must beAnInstanceOf[Collection[TrackRepresentation]]
+      }
+      tracksCollection.nextHref === None
     }
   }
 
   "#userPlaylistsLikes" >> {
-    "when all data is available" in new Context {
-      val playlist = new PlaylistBuilder().build
-      val playlistUrn = Urn("soundcloud", "playlists", "1001")
-      val likesPage = LikesPage(
-        likes = List(Like(requestingUserUrn, playlistUrn, createdAt.toDateTime(), None)),
-        meta = LikesPageMeta(
-          cursor = LikesPageCursor(
-            next_params = None,
-            next_href = None
+    "when all data is available" in new LikesByUserContext {
+      val likesRequest = buildLikesRequest(Seq(likes.Collection.PLAYLISTS))
+      val likesPage = likes.GetLikesByUserChronoResponse(
+        items = Seq(
+          likes.GetLikesChronoResponseItem(
+            createdAt.toString,
+            "user-playlist-likes",
+            requestingUserUrn.toString,
+            playlistUrn.toString,
+            "some_cursor"
           )
         )
       )
+
       when(playlistsService.fetchPlaylistsMetadataOnly(session, List(PlaylistRequest(playlistUrn, None))))
         .thenReturn(Future.value(List(playlist)))
-      when(lieblingClient.userPlaylistLikes(session, trackOwnerUrn, pagination.cursor, pagination.pageSize))
+      when(likesTwinagleClient.getLikesByUserChrono(likesRequest))
         .thenReturn(Future.value(likesPage))
-
-      val playlistsCollection = Await.result(likesService.userPlaylistsLikes(session, trackOwnerUrn, pagination))
 
       playlistsCollection match {
         case rep => rep must beAnInstanceOf[Collection[Playlist]]
       }
+      playlistsCollection.nextHref === Some(pagination.nextPage("some_cursor").normalizedHref)
+    }
+
+    "when there is no next href" in new LikesByUserContext {
+      val likesRequest = buildLikesRequest(Seq(likes.Collection.PLAYLISTS))
+      val likesPage = likes.GetLikesByUserChronoResponse()
+
+      when(playlistsService.fetchPlaylistsMetadataOnly(session, List()))
+        .thenReturn(Future.value(List()))
+      when(likesTwinagleClient.getLikesByUserChrono(likesRequest))
+        .thenReturn(Future.value(likesPage))
+
+      playlistsCollection match {
+        case rep => rep must beAnInstanceOf[Collection[Playlist]]
+      }
+      playlistsCollection.nextHref === None
     }
   }
 }

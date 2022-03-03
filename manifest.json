@@ -53,6 +53,10 @@
     },
     {
       "type": "http",
+      "system": "likes"
+    },
+    {
+      "type": "http",
       "system": "media-service"
     },
     {
