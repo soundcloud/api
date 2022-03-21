@@ -1,9 +1,5 @@
 package com.soundcloud.apipublic.handler
 
-import com.soundcloud.jvmkit.module.bff.session.UserAuthentication
-import com.soundcloud.jvmkit.module.http.server.{HandlerRequest, JsonResponseBuilder}
-import com.soundcloud.jvmkit.module.outcome.{Bad, _}
-import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.apipublic.handler.representation.collection.CollectionResponse
 import com.soundcloud.apipublic.handler.support.requestParser.{AccessParams, AccessParamsExtractor}
 import com.soundcloud.apipublic.service._
@@ -14,6 +10,10 @@ import com.soundcloud.apipublic.support.ErrorResponse
 import com.soundcloud.apipublic.support.PlaylistUrnUtil.getPlaylistUrn
 import com.soundcloud.apipublic.support.TrackUrnUtil.getTrackUrn
 import com.soundcloud.apipublic.support.UserUrnUtil.getUserUrn
+import com.soundcloud.jvmkit.module.bff.session.UserAuthentication
+import com.soundcloud.jvmkit.module.http.server.{HandlerRequest, JsonResponseBuilder}
+import com.soundcloud.jvmkit.module.outcome.{Bad, _}
+import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.twinagle.{ErrorCode, TwinagleException}
 import com.twitter.finagle.http.{Response, Status}
 import com.twitter.util.{Future, Return, Throw, Try}
@@ -62,8 +62,9 @@ class LikesHandler(
         case Return(urn) =>
           likesService.createPlaylistLike(session, urn).map {
             case Good(_) => JsonResponseBuilder.ok(requestBodyForStatus(Status.Ok))
-            case Bad(NotAuthorized(_)) => ErrorResponse(Status.Unauthorized)
+            case Bad(NotAllowed(_)) => ErrorResponse(Status.Forbidden)
             case Bad(NotFound(_)) => ErrorResponse.notFound()
+            case Bad(NotValid(reason)) => ErrorResponse.badRequest(reason.mkString("; "))
             case Bad(HttpServiceError(HttpResponseFields(Status.TooManyRequests.code, _, _, _))) =>
               ErrorResponse(Status.TooManyRequests)
             case _ => ErrorResponse(Status.InternalServerError)

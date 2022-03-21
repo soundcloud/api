@@ -1,16 +1,5 @@
 package com.soundcloud.apipublic
 
-import com.soundcloud.hocuspocus.HocuspocusClientProtobuf
-import com.soundcloud.jvmkit.module.bff.session.UserAuthentication
-import com.soundcloud.jvmkit.module.http.client.config.HttpClientConfig
-import com.soundcloud.jvmkit.module.http.client.{HttpClient, JsonClient}
-import com.soundcloud.jvmkit.module.rollout.Rollout
-import com.soundcloud.jvmkit.module.telemetry.Telemetry
-import com.soundcloud.jvmkit.module.telemetry.exceptions.ExceptionCollector
-import com.soundcloud.jvmkit.module.twirp.TwirpClient
-import com.soundcloud.jvmkit.module.twirp.filters.ClientTelemetry
-import com.soundcloud.jvmkit.module.util.ResourceName
-import com.soundcloud.jvmkit.module.util.config.{AppConfig, DataSensitivity}
 import com.soundcloud.apipublic.client._
 import com.soundcloud.apipublic.client.followcounts.FollowCountsClient
 import com.soundcloud.apipublic.client.follows.FollowsClient
@@ -32,16 +21,31 @@ import com.soundcloud.apipublic.service.trackrepresentation.{TrackRepresentation
 import com.soundcloud.apipublic.service.tracks.VisibleTrackMapper
 import com.soundcloud.apipublic.service.users.{MeService, UserRepresentationsService}
 import com.soundcloud.apipublic.subscriptions.SubmarineClient
+import com.soundcloud.hocuspocus.HocuspocusClientProtobuf
+import com.soundcloud.jvmkit.module.bff.session.UserAuthentication
+import com.soundcloud.jvmkit.module.http.client.config.HttpClientConfig
+import com.soundcloud.jvmkit.module.http.client.{HttpClient, JsonClient}
+import com.soundcloud.jvmkit.module.rollout.Rollout
+import com.soundcloud.jvmkit.module.telemetry.Telemetry
+import com.soundcloud.jvmkit.module.telemetry.exceptions.ExceptionCollector
+import com.soundcloud.jvmkit.module.twirp.TwirpClient
+import com.soundcloud.jvmkit.module.twirp.filters.ClientTelemetry
+import com.soundcloud.jvmkit.module.util.ResourceName
+import com.soundcloud.jvmkit.module.util.config.{AppConfig, DataSensitivity}
 import proto.soundcloud.authenticator.access_grant_exchange.AccessGrantExchangeClientProtobuf
 import proto.soundcloud.comments.api.CommentsClientProtobuf
-import proto.soundcloud.playlists.api.{PlaylistsClientProtobuf, WritesClientProtobuf}
 import proto.soundcloud.likes.{api => likes}
+import proto.soundcloud.playlists.api.{
+  PlaylistsClientProtobuf,
+  WritesClientProtobuf,
+  LikesClientProtobuf => PlaylistLikesClientProtobuf
+}
 import proto.soundcloud.tracks.api.{
-  LikesClientProtobuf,
   MediaClientProtobuf,
   RepostsClientProtobuf,
   TrackMetadataClientProtobuf,
-  CommentsClientProtobuf => TrackCommentsClientProtobuf
+  CommentsClientProtobuf => TrackCommentsClientProtobuf,
+  LikesClientProtobuf => TrackLikesClientProtobuf
 }
 
 class Clients(
@@ -109,7 +113,7 @@ class Clients(
     ResourceName("tracks"),
     config,
     telemetry,
-    new LikesClientProtobuf(_, _)
+    new TrackLikesClientProtobuf(_, _)
   )
 
   val likesTwirpClient = TwirpClient(
@@ -117,6 +121,13 @@ class Clients(
     config,
     telemetry,
     new likes.LikesClientProtobuf(_, _)
+  )
+
+  val likesPlaylistsTwirpClient = TwirpClient(
+    ResourceName("playlists"),
+    config,
+    telemetry,
+    new PlaylistLikesClientProtobuf(_, _)
   )
 
   val playlistsTwirpClient = TwirpClient(
@@ -178,7 +189,15 @@ class Clients(
       rollout = rolloutClient
     )
   val likesService =
-    new LikesService(tracksService, playlistService, lieblingClient, likesTwirpClient, likeTracksTwirpClient)
+    new LikesService(
+      tracksService,
+      playlistService,
+      lieblingClient,
+      likesTwirpClient,
+      likeTracksTwirpClient,
+      likesPlaylistsTwirpClient,
+      rolloutClient
+    )
   val userPlaylistsService = new UserPlaylistsService(playlistService, okidokiClient)
 
   private val submarineClient = new SubmarineClient(jsonClient("submarine"))

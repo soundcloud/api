@@ -8,22 +8,36 @@ import com.soundcloud.apipublic.service.playlists.PlaylistRequest
 import com.soundcloud.apipublic.service.playlists.representation.Playlist
 import com.soundcloud.apipublic.service.representation.collection.Collection
 import com.soundcloud.apipublic.service.trackrepresentation.{TrackRepresentation, TrackRepresentationsService}
-import com.soundcloud.jvmkit.module.outcome.{ApplicationError, GoodOps, Outcome}
+import com.soundcloud.jvmkit.module.outcome.{
+  ApplicationError,
+  GoodOps,
+  HttpResponseFields,
+  HttpServiceError,
+  NotAllowed,
+  NotFound,
+  NotValid,
+  Outcome
+}
+import com.soundcloud.jvmkit.module.rollout.{Rollout, RolloutFeature}
 import com.soundcloud.jvmkit.module.twirp.proto.UserSessionOps._
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSession
-import com.soundcloud.twinagle.TwinagleException
+import com.soundcloud.twinagle.{ErrorCode, TwinagleException}
+import com.twitter.finagle.http.Status
 import com.twitter.util.Future
 import proto.soundcloud.likes.{api => likes}
+import proto.soundcloud.playlists.api.{LikePlaylistRequest, LikesClientProtobuf => PlaylistLikesClientProtobuf}
 import proto.soundcloud.tracks.api.{
   GetTrackLikersPagination,
   GetTrackLikersRequest,
   LikeTrackRequest,
-  LikesClientProtobuf
+  LikesClientProtobuf => TrackLikesClientProtobuf
 }
 
 case class CreateLikeResponse()
+
 case class DeleteLikeResponse()
+
 case class TrackLikersResponse(urns: Seq[Urn], nextHRef: Option[String])
 
 class LikesService(
@@ -31,7 +45,9 @@ class LikesService(
     playlistsService: PlaylistsService,
     lieblingClient: LieblingClient,
     likesClient: likes.LikesClientProtobuf,
-    tracksClient: LikesClientProtobuf
+    tracksClient: TrackLikesClientProtobuf,
+    playlistsClient: PlaylistLikesClientProtobuf,
+    rollout: Rollout
 ) {
 
   def createTrackLike(
@@ -82,7 +98,26 @@ class LikesService(
       session: UserSession,
       urn: Urn
   ): Future[Outcome[CreateLikeResponse]] =
-    lieblingClient.createPlaylistLike(session, urn)
+    rollout
+      .isActive(RolloutFeature("twirp-playlist-like"))
+      .flatMap(isActive =>
+        if (isActive) {
+          val request = LikePlaylistRequest(userSession = Some(session.asProtoSession), urn = urn.toString)
+
+          playlistsClient
+            .likePlaylist(request)
+            .map(_ => CreateLikeResponse().good)
+            .handle {
+              case TwinagleException(ErrorCode.NotFound, _, _, _) => NotFound().bad
+              case TwinagleException(ErrorCode.PermissionDenied, _, _, _) => NotAllowed().bad
+              case TwinagleException(ErrorCode.ResourceExhausted, _, _, _) =>
+                HttpServiceError(HttpResponseFields(Status.TooManyRequests.code)).bad
+              case TwinagleException(ErrorCode.InvalidArgument, _, _, _) => NotValid("Invalid request").bad
+              case TwinagleException(_, msg, _, _) =>
+                throw new RuntimeException(s"unexpected response from playlists: $msg")
+            }
+        } else lieblingClient.createPlaylistLike(session, urn)
+      )
 
   def deletePlaylistLike(session: UserSession, urn: Urn): Future[Outcome[DeleteLikeResponse]] =
     lieblingClient.deletePlaylistLike(session, urn)

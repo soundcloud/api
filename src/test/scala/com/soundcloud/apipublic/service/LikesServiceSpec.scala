@@ -1,9 +1,6 @@
 package com.soundcloud.apipublic.service
 
 import com.google.protobuf.timestamp.Timestamp
-import com.soundcloud.jvmkit.module.outcome._
-import com.soundcloud.jvmkit.module.twirp.proto.UserSessionOps._
-import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.apipublic.client.liebling._
 import com.soundcloud.apipublic.handler.support.requestParser.AccessParams
 import com.soundcloud.apipublic.service.pagination.CursorBasedPagination
@@ -15,13 +12,29 @@ import com.soundcloud.apipublic.service.trackrepresentation.{
   TrackRepresentationsService,
   TrackRepresentationsSpecificationContext
 }
+import com.soundcloud.jvmkit.module.outcome._
+import com.soundcloud.jvmkit.module.rollout.Rollout
+import com.soundcloud.jvmkit.module.twirp.proto.UserSessionOps._
+import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.twinagle.{ErrorCode, TwinagleException}
-import com.twitter.finagle.http.ParamMap
+import com.twitter.finagle.http.{ParamMap, Status}
 import com.twitter.util.{Await, Future}
 import org.mockito.Mockito._
 import org.specs2.mutable.BeforeAfter
-import proto.soundcloud.tracks.api._
 import proto.soundcloud.likes.{api => likes}
+import proto.soundcloud.playlists.api.{
+  LikePlaylistRequest,
+  LikePlaylistResponse,
+  LikesClientProtobuf => PlaylistLikesClientProtobuf
+}
+import proto.soundcloud.tracks.api.{
+  GetTrackLikersPagination,
+  GetTrackLikersRequest,
+  GetTrackLikersResponse,
+  LikeTrackRequest,
+  LikeTrackResponse,
+  LikesClientProtobuf => TrackLikesClientProtobuf
+}
 
 import java.time.Instant
 
@@ -39,15 +52,19 @@ class LikesServiceSpec extends TrackRepresentationsSpecificationContext {
       Some("2"),
       1
     )
-    val tracksTwinagleClient = mock[LikesClientProtobuf]
+    val tracksTwinagleClient = mock[TrackLikesClientProtobuf]
     val likesTwinagleClient = mock[likes.LikesClientProtobuf]
+    val playlistTwinagleClient = mock[PlaylistLikesClientProtobuf]
+    val rollout = mock[Rollout]
 
     val likesService = new LikesService(
       trackRepresentationsService,
       playlistsService,
       lieblingClient,
       likesTwinagleClient,
-      tracksTwinagleClient
+      tracksTwinagleClient,
+      playlistTwinagleClient,
+      rollout
     )
 
     override def before: Any = {}
@@ -190,6 +207,65 @@ class LikesServiceSpec extends TrackRepresentationsSpecificationContext {
         case rep =>
           rep must beAnInstanceOf[Option[TrackRepresentation]]
       }
+    }
+  }
+
+  "#createPlaylistLike" >> {
+    trait CreatePlaylistLike extends Context {
+      val userUrn = Urn("soundcloud", "users", "1")
+      val playlistUrn = Urn("soundcloud", "playlist", "1")
+      val created = Instant.now
+      val timestamp = Timestamp.of(created.getEpochSecond, created.getNano)
+      val request = LikePlaylistRequest(userSession = Some(session.asProtoSession), urn = playlistUrn.toString)
+    }
+
+    "returns an OkCreatedCreateResponse when Playlists successfully creates a like, rollout flag is on" in new CreatePlaylistLike {
+      playlistTwinagleClient.likePlaylist(request) returns Future.value(
+        LikePlaylistResponse(
+          Some(timestamp),
+          playlistUrn.toString,
+          userUrn.toString
+        )
+      )
+      rollout.isActive(any) returns Future.value(true)
+      Await.result(likesService.createPlaylistLike(session, playlistUrn)) ==== CreateLikeResponse().good
+    }
+
+    "returns an OkCreatedCreateResponse when Lieblings successfully creates a like, rollout flag is off" in new CreatePlaylistLike {
+      lieblingClient.createPlaylistLike(session, playlistUrn) returns Future.value(CreateLikeResponse().good)
+      rollout.isActive(any) returns Future.value(false)
+
+      Await.result(likesService.createPlaylistLike(session, playlistUrn)) ==== CreateLikeResponse().good
+    }
+
+    "returns NotFoundCreateResponse when playlists responds with NotFound" in new CreatePlaylistLike {
+      playlistTwinagleClient.likePlaylist(request) returns Future.exception(
+        TwinagleException(ErrorCode.NotFound, "Resource not found")
+      )
+      rollout.isActive(any) returns Future.value(true)
+
+      Await.result(likesService.createPlaylistLike(session, playlistUrn)) ==== NotFound().bad
+    }
+
+    "returns NotAuthorizedCreateResponse when playlists responds with PermissionDenied" in new CreatePlaylistLike {
+      playlistTwinagleClient.likePlaylist(request) returns Future.exception(
+        TwinagleException(ErrorCode.PermissionDenied, "Operation not allowed")
+      )
+      rollout.isActive(any) returns Future.value(true)
+
+      Await.result(likesService.createPlaylistLike(session, playlistUrn)) ==== NotAllowed().bad
+    }
+
+    "returns SpamBlockedCreateResponse when playlists responds with ResourceExhausted" in new CreatePlaylistLike {
+      playlistTwinagleClient.likePlaylist(request) returns Future.exception(
+        TwinagleException(ErrorCode.ResourceExhausted, "Spam alert")
+      )
+      rollout.isActive(any) returns Future.value(true)
+
+      Await.result(likesService.createPlaylistLike(session, playlistUrn)) ==== HttpServiceError(
+        HttpResponseFields(Status.TooManyRequests.code)
+      ).bad
+
     }
   }
 
