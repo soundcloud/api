@@ -1,29 +1,5 @@
 {
-  "_schema": "soundcloud/applicationmanifest/v1",
+  "_schema": "soundcloud/applicationmanifest/v2",
   "name": "api-public-asset-uploads",
-  "description": "Preprocessor for multipart requests (track uploads)",
-  "owner": "devices-team",
-  "type": "external_service",
-  "status": "production",
-  "links": [
-    {
-      "url": "https://grafana.soundcloud.org/dashboard/db/jvmkit-generic?var-prometheus=api-public&var-system=api-public&var-job=api-public",
-      "title": "Telemetry",
-      "icon": "dashboard"
-    },
-    {
-      "url": "https://eng-doc.soundcloud.org/runbooks/devices/api-public/",
-      "title": "Runbook",
-      "icon": "alert"
-    }
-  ],
-  "annotations": {
-    "gocd.org/pipelines": "api-public-asset-uploads"
-  },
-  "dependencies": [
-    {
-      "type": "http",
-      "system": "api-public"
-    }
-  ]
+  "owner": "devices-team"
 }

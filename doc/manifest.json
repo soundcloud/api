@@ -1,39 +1,5 @@
 {
-  "_schema": "soundcloud/applicationmanifest/v1",
+  "_schema": "soundcloud/applicationmanifest/v2",
   "name": "api-public-doc",
-  "description": "Swagger UI for API Public",
-  "owner": "devices-team",
-  "type": "external_service",
-  "status": "production",
-  "links": [
-    {
-      "url": "https://grafana.soundcloud.org/dashboard/db/jvmkit-generic?var-prometheus=api-public&var-system=api-public&var-job=api-public",
-      "title": "Telemetry",
-      "icon": "dashboard"
-    },
-    {
-      "url": "https://eng-doc.soundcloud.org/runbooks/devices/api-public/",
-      "title": "Runbook",
-      "icon": "alert"
-    },
-    {
-      "url": "mailto:devices-team@soundcloud.com",
-      "title": "Contact Email",
-      "icon": "help"
-    }
-  ],
-  "annotations": {
-    "gocd.org/pipelines": "api-public",
-    "soundcloud.com/contact-channel": "devices-alerts"
-  },
-  "dependencies": [
-    {
-      "type": "http",
-      "system": "api-public"
-    },
-    {
-      "type": "http",
-      "system": "api-public-asset-uploads"
-    }
-  ]
+  "owner": "devices-team"
 }

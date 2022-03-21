@@ -1,0 +1,102 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+spec:
+  type: external_service
+  lifecycle: production
+  owner: devices-team
+  dependsOn:
+  - Component:api-public
+metadata:
+  name: api-public-asset-uploads
+  description: Preprocessor for multipart requests (track uploads)
+  links:
+  - url: https://grafana.soundcloud.org/dashboard/db/jvmkit-generic?var-prometheus=api-public&var-system=api-public&var-job=api-public
+    title: Telemetry
+    link: dashboard
+  - url: https://eng-doc.soundcloud.org/runbooks/devices/api-public/
+    title: Runbook
+    link: alert
+  annotations:
+    gocd.org/pipelines: api-public-asset-uploads
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+spec:
+  type: external_service
+  lifecycle: production
+  owner: devices-team
+  dependsOn:
+  - Component:api-public
+  - Component:api-public-asset-uploads
+metadata:
+  name: api-public-doc
+  description: Swagger UI for API Public
+  links:
+  - url: https://grafana.soundcloud.org/dashboard/db/jvmkit-generic?var-prometheus=api-public&var-system=api-public&var-job=api-public
+    title: Telemetry
+    link: dashboard
+  - url: https://eng-doc.soundcloud.org/runbooks/devices/api-public/
+    title: Runbook
+    link: alert
+  - url: mailto:devices-team@soundcloud.com
+    title: Contact Email
+    link: help
+  annotations:
+    gocd.org/pipelines: api-public
+    soundcloud.com/contact-channel: devices-alerts
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+spec:
+  type: external_service
+  lifecycle: production
+  owner: devices-team
+  providesApis:
+  - api-public-api-openapi
+  dependsOn:
+  - Component:authenticator
+  - Component:comments
+  - Component:gatekeeper
+  - Component:geoip2
+  - Component:hocuspocus
+  - Component:liebling
+  - Component:likes
+  - Component:media-service
+  - Component:moshimoshi
+  - Component:okidoki
+  - Component:playlists
+  - Component:search-dispatcher-remix
+  - Component:system-playlists
+  - Component:timeline
+  - Component:tracks
+  - Component:track-coordinator
+  - Component:submarine
+metadata:
+  name: api-public
+  description: SoundCloud's Public API
+  links:
+  - url: https://grafana.soundcloud.org/dashboard/db/jvmkit-generic?var-prometheus=api-public&var-system=api-public&var-job=api-public
+    title: Telemetry
+    link: dashboard
+  - url: https://eng-doc.soundcloud.org/runbooks/devices/api-public/
+    title: Runbook
+    link: alert
+  - url: mailto:devices-team@soundcloud.com
+    title: Contact Email
+    link: help
+  annotations:
+    gocd.org/pipelines: api-public
+    soundcloud.com/contact-channel: devices-alerts
+---
+apiVersion: backstage.io/v1alpha1
+kind: API
+metadata:
+  name: api-public-api-openapi
+  title: api-public API
+  description: OpenApi docs for api-public
+spec:
+  type: openapi
+  lifecycle: production
+  owner: devices-team
+  definition:
+    $text: ./doc/api.yaml
