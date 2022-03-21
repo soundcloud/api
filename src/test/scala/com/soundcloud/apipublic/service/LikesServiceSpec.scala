@@ -269,6 +269,54 @@ class LikesServiceSpec extends TrackRepresentationsSpecificationContext {
     }
   }
 
+  "#deletePlaylistLike" >> {
+    trait DeletePlaylistLike extends Context {
+      val userUrn = Urn("soundcloud", "users", "1")
+      val playlistUrn = Urn("soundcloud", "playlist", "1")
+      val created = Instant.now
+      val timestamp = Timestamp.of(created.getEpochSecond, created.getNano)
+      val request = LikePlaylistRequest(userSession = Some(session.asProtoSession), urn = playlistUrn.toString)
+    }
+
+    "returns an OkDeletedResponse when Playlists successfully deletes a like, rollout flag is on" in new DeletePlaylistLike {
+      playlistTwinagleClient.unlikePlaylist(request) returns Future.value(
+        LikePlaylistResponse(
+          Some(timestamp),
+          playlistUrn.toString,
+          userUrn.toString
+        )
+      )
+      rollout.isActive(any) returns Future.value(true)
+      Await.result(likesService.deletePlaylistLike(session, playlistUrn)) ==== DeleteLikeResponse().good
+    }
+
+    "returns an OkDeletedResponse when Lieblings successfully creates a like, rollout flag is off" in new DeletePlaylistLike {
+      lieblingClient.deletePlaylistLike(session, playlistUrn) returns Future.value(DeleteLikeResponse().good)
+      rollout.isActive(any) returns Future.value(false)
+
+      Await.result(likesService.deletePlaylistLike(session, playlistUrn)) ==== DeleteLikeResponse().good
+    }
+
+    "returns NotFoundDeleteResponse when playlists responds with NotFound" in new DeletePlaylistLike {
+      playlistTwinagleClient.unlikePlaylist(request) returns Future.exception(
+        TwinagleException(ErrorCode.NotFound, "Resource not found")
+      )
+      rollout.isActive(any) returns Future.value(true)
+
+      Await.result(likesService.deletePlaylistLike(session, playlistUrn)) ==== NotFound().bad
+    }
+
+    "returns exception when playlists responds with unexpected error" in new DeletePlaylistLike {
+      playlistTwinagleClient.unlikePlaylist(request) returns Future.exception(
+        TwinagleException(ErrorCode.Internal, "Internal error")
+      )
+      rollout.isActive(any) returns Future.value(true)
+
+      Await.result(likesService.deletePlaylistLike(session, playlistUrn)) must throwA[RuntimeException]
+    }
+
+  }
+
   trait LikesByUserContext extends Context {
     def buildLikesRequest(collections: Seq[likes.Collection]) = likes.GetLikesByUserChronoRequest(
       userUrn = trackOwnerUrn.toString,

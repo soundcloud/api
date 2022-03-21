@@ -120,7 +120,23 @@ class LikesService(
       )
 
   def deletePlaylistLike(session: UserSession, urn: Urn): Future[Outcome[DeleteLikeResponse]] =
-    lieblingClient.deletePlaylistLike(session, urn)
+    rollout
+      .isActive(RolloutFeature("twirp-playlist-unlike"))
+      .flatMap(isActive =>
+        if (isActive) {
+          val request = LikePlaylistRequest(userSession = Some(session.asProtoSession), urn = urn.toString)
+
+          playlistsClient
+            .unlikePlaylist(request)
+            .map(_ => DeleteLikeResponse().good)
+            .handle {
+              case TwinagleException(ErrorCode.NotFound, _, _, _) => NotFound().bad
+              case TwinagleException(_, msg, _, _) =>
+                throw new RuntimeException(s"unexpected response from playlists: $msg")
+            }
+        } else
+          lieblingClient.deletePlaylistLike(session, urn)
+      )
 
   def userTrackLikeForUrn(
       session: UserSession,
