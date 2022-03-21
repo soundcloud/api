@@ -1,15 +1,13 @@
 services:
   memcached:
     image: docker.localproxy.sc:42042/sc-memcached:latest-${HOSTARCH}
-    container_name: api_public_memcached
     ports:
-      - "11211:11211"
+      - 11211:11211
 
   zookeeper:
     image: docker.localproxy.sc:42042/sc-zookeeper:latest-${HOSTARCH}
-    container_name: api_public_zk
     ports:
-      - "2181:2181"
+      - 2181:2181
 
   # This container is only ever used by tests.
   apipublic:
@@ -21,11 +19,11 @@ services:
        timeout: 10s
        retries: 30
     ports:
-      - "5000:5000"
-      - "5001:5001"
-    links:
-      - zookeeper:zookeeper
-      - memcached:memcached
+      - 5000:5000
+      - 5001:5001
+    depends_on:
+      - zookeeper
+      - memcached
 
   asset-uploads:
     image: docker.localproxy.sc:42042/api-public-asset-uploads:$VERSION
@@ -36,9 +34,9 @@ services:
       timeout: 10s
       retries: 30
     ports:
-      - "5005:5005"
-    links:
-      - apipublic:apipublic
+      - 5005:5005
+    depends_on:
+      - apipublic
     environment:
       https_proxy: 'http://proxy.localproxy.sc:42043'
     extra_hosts:
