@@ -185,6 +185,24 @@ access:
     like to see all possible tracks. See `Track#access` schema for more details.
   style: form
   explode: false
+access_explicit:
+  in: query
+  name: access
+  schema:
+    type: array
+    items:
+      type: string
+      enum:
+        - playable
+        - preview
+        - blocked
+    default: playable,preview,blocked
+  description: >
+    Filters content by level of access the user (logged in or anonymous) has to the track.
+    The result list will include only tracks with the specified access. Include all options if you'd
+    like to see all possible tracks. See `Track#access` schema for more details.
+  style: form
+  explode: false
 show_tracks:
   in: query
   name: show_tracks

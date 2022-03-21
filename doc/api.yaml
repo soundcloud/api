@@ -176,6 +176,7 @@ paths:
         - AuthHeader: [ ]
       parameters:
         - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/access_explicit'
         - $ref: '#/components/parameters/linked_partitioning'
       responses:
         200:

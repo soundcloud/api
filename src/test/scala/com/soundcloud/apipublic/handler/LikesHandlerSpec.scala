@@ -74,7 +74,7 @@ class LikesHandlerSpec extends UnitSpecification {
       def paginationParams(path: String): CursorBasedPagination = {
         val mockRequest = Request(path)
         mockRequest.host = "localhost"
-        CursorBasedPagination.build(mockRequest, Seq("linked_partitioning"))
+        CursorBasedPagination.build(mockRequest, Seq("linked_partitioning", "access"))
 
       }
 
@@ -111,6 +111,21 @@ class LikesHandlerSpec extends UnitSpecification {
           val path = s"/me/likes/tracks/$queryString"
 
           stubUserTracksLikes(user, path, tracksCollection, AccessParams.explicitAccess)
+
+          val response = get(path)
+          response.status ==== Status.Ok
+          response.contentString ==== expectedResponse
+        }
+      }
+
+      "with access query parameter" >> {
+        "propagates it to the service" in new TracksForUserContext {
+          val user = Urn("soundcloud", "users", "1")
+          override val queryString =
+            "?page_size=1&cursor=2&linked_partitioning=1&access=playable,preview"
+          val path = s"/me/likes/tracks/$queryString"
+
+          stubUserTracksLikes(user, path, tracksCollection, AccessParams.streamAccess)
 
           val response = get(path)
           response.status ==== Status.Ok

@@ -97,7 +97,8 @@ class LikesHandler(
 
   def getMeTracksLikes(req: HandlerRequest): Future[Response] = {
     userAuthentication.withLoggedInUser(req) { (session, userUrn) =>
-      performGetTracksLikes(req, session, userUrn.identifier, AccessParams.explicitAccess)
+      val access = AccessParamsExtractor.unapply(req.params, predefinedAccess = AccessParams.explicitAccess)
+      performGetTracksLikes(req, session, userUrn.identifier, access)
     }
   }
 
