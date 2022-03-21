@@ -25,7 +25,7 @@ import com.soundcloud.apipublic.support.{ErrorResponse, UserUrnUtil}
 import com.twitter.finagle.http.{Response, Status}
 import com.twitter.util.{Future, Return, Throw, Try}
 import org.joda.time.format.DateTimeFormat
-import org.joda.time.{LocalDate, Years}
+import org.joda.time.{DateTimeZone, LocalDate, Years}
 import play.api.libs.json._
 
 class UserFollowHandler(
@@ -253,7 +253,7 @@ class UserFollowHandler(
 
   private def currentAge(dateOfBirth: String): Int = {
     val dob = formatter.parseLocalDate(dateOfBirth)
-    Years.yearsBetween(dob, new LocalDate()).getYears
+    Years.yearsBetween(dob, new LocalDate(DateTimeZone.UTC)).getYears
   }
 
   private def denyAgeRestricted(age: Long): Future[Response] = {

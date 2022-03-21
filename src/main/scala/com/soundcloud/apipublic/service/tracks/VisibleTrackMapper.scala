@@ -3,7 +3,7 @@ package com.soundcloud.apipublic.service.tracks
 import com.soundcloud.jvmkit.module.util.{Url, Urn}
 import com.soundcloud.apipublic.authorization.policies._
 import com.soundcloud.apipublic.client.tracks._
-import org.joda.time.LocalDateTime
+import org.joda.time.{DateTimeZone, LocalDateTime}
 import proto.soundcloud.tracks.api.Transcoding.Quality
 import proto.soundcloud.tracks.api.{Track => ProtoTrack}
 
@@ -22,13 +22,15 @@ class VisibleTrackMapper {
       createdAt = new LocalDateTime(
         Instant
           .ofEpochSecond(metadata.createdAt.get.seconds, metadata.createdAt.get.nanos)
-          .toEpochMilli
+          .toEpochMilli,
+        DateTimeZone.UTC
       ),
       disabledAt = metadata.disabledAt.map(d =>
         new LocalDateTime(
           Instant
             .ofEpochSecond(d.seconds, d.nanos)
-            .toEpochMilli
+            .toEpochMilli,
+          DateTimeZone.UTC
         )
       ),
       downloadable = metadata.downloadable && track.downloadMetadata.forall(_.allowed),
@@ -46,7 +48,8 @@ class VisibleTrackMapper {
         new LocalDateTime(
           Instant
             .ofEpochSecond(d.seconds, d.nanos)
-            .toEpochMilli
+            .toEpochMilli,
+          DateTimeZone.UTC
         )
       ),
       machineTags = metadata.machineTags.toList,
@@ -64,7 +67,8 @@ class VisibleTrackMapper {
         new LocalDateTime(
           Instant
             .ofEpochSecond(d.seconds, d.nanos)
-            .toEpochMilli
+            .toEpochMilli,
+          DateTimeZone.UTC
         )
       ),
       purchaseUrl = metadata.purchaseUrl,
