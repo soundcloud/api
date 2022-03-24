@@ -18,7 +18,6 @@ import com.soundcloud.jvmkit.module.outcome.{
   NotValid,
   Outcome
 }
-import com.soundcloud.jvmkit.module.rollout.{Rollout, RolloutFeature}
 import com.soundcloud.jvmkit.module.twirp.proto.UserSessionOps._
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSession
@@ -46,8 +45,7 @@ class LikesService(
     lieblingClient: LieblingClient,
     likesClient: likes.LikesClientProtobuf,
     tracksClient: TrackLikesClientProtobuf,
-    playlistsClient: PlaylistLikesClientProtobuf,
-    rollout: Rollout
+    playlistsClient: PlaylistLikesClientProtobuf
 ) {
 
   def createTrackLike(
@@ -97,46 +95,35 @@ class LikesService(
   def createPlaylistLike(
       session: UserSession,
       urn: Urn
-  ): Future[Outcome[CreateLikeResponse]] =
-    rollout
-      .isActive(RolloutFeature("twirp-playlist-like"))
-      .flatMap(isActive =>
-        if (isActive) {
-          val request = LikePlaylistRequest(userSession = Some(session.asProtoSession), urn = urn.toString)
+  ): Future[Outcome[CreateLikeResponse]] = {
+    val request = LikePlaylistRequest(userSession = Some(session.asProtoSession), urn = urn.toString)
 
-          playlistsClient
-            .likePlaylist(request)
-            .map(_ => CreateLikeResponse().good)
-            .handle {
-              case TwinagleException(ErrorCode.NotFound, _, _, _) => NotFound().bad
-              case TwinagleException(ErrorCode.PermissionDenied, _, _, _) => NotAllowed().bad
-              case TwinagleException(ErrorCode.ResourceExhausted, _, _, _) =>
-                HttpServiceError(HttpResponseFields(Status.TooManyRequests.code)).bad
-              case TwinagleException(ErrorCode.InvalidArgument, _, _, _) => NotValid("Invalid request").bad
-              case TwinagleException(_, msg, _, _) =>
-                throw new RuntimeException(s"unexpected response from playlists: $msg")
-            }
-        } else lieblingClient.createPlaylistLike(session, urn)
-      )
+    playlistsClient
+      .likePlaylist(request)
+      .map(_ => CreateLikeResponse().good)
+      .handle {
+        case TwinagleException(ErrorCode.NotFound, _, _, _) => NotFound().bad
+        case TwinagleException(ErrorCode.PermissionDenied, _, _, _) => NotAllowed().bad
+        case TwinagleException(ErrorCode.ResourceExhausted, _, _, _) =>
+          HttpServiceError(HttpResponseFields(Status.TooManyRequests.code)).bad
+        case TwinagleException(ErrorCode.InvalidArgument, _, _, _) => NotValid("Invalid request").bad
+        case TwinagleException(_, msg, _, _) =>
+          throw new RuntimeException(s"unexpected response from playlists: $msg")
+      }
+  }
 
-  def deletePlaylistLike(session: UserSession, urn: Urn): Future[Outcome[DeleteLikeResponse]] =
-    rollout
-      .isActive(RolloutFeature("twirp-playlist-unlike"))
-      .flatMap(isActive =>
-        if (isActive) {
-          val request = LikePlaylistRequest(userSession = Some(session.asProtoSession), urn = urn.toString)
+  def deletePlaylistLike(session: UserSession, urn: Urn): Future[Outcome[DeleteLikeResponse]] = {
+    val request = LikePlaylistRequest(userSession = Some(session.asProtoSession), urn = urn.toString)
 
-          playlistsClient
-            .unlikePlaylist(request)
-            .map(_ => DeleteLikeResponse().good)
-            .handle {
-              case TwinagleException(ErrorCode.NotFound, _, _, _) => NotFound().bad
-              case TwinagleException(_, msg, _, _) =>
-                throw new RuntimeException(s"unexpected response from playlists: $msg")
-            }
-        } else
-          lieblingClient.deletePlaylistLike(session, urn)
-      )
+    playlistsClient
+      .unlikePlaylist(request)
+      .map(_ => DeleteLikeResponse().good)
+      .handle {
+        case TwinagleException(ErrorCode.NotFound, _, _, _) => NotFound().bad
+        case TwinagleException(_, msg, _, _) =>
+          throw new RuntimeException(s"unexpected response from playlists: $msg")
+      }
+  }
 
   def userTrackLikeForUrn(
       session: UserSession,

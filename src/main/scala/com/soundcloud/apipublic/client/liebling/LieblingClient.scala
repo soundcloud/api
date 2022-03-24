@@ -1,24 +1,12 @@
 package com.soundcloud.apipublic.client.liebling
 
+import com.soundcloud.apipublic.client.support.{FetchClient, ResponseHandlers}
 import com.soundcloud.jvmkit.module.http.client.{JsonClient, Params}
 import com.soundcloud.jvmkit.module.json.play.UrnFormat._
-import com.soundcloud.jvmkit.module.outcome.{
-  GoodOps,
-  HttpResponseFields,
-  HttpServiceError,
-  NotAllowed,
-  NotFound,
-  NotValid,
-  Outcome
-}
-import com.soundcloud.jvmkit.module.telemetry.exceptions.ExceptionCollector
 import com.soundcloud.jvmkit.module.util.http.Headers
 import com.soundcloud.jvmkit.module.util.logging.SoundCloudLoggerFactory
 import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.jvmkit.module.util.{Path, Urn}
-import com.soundcloud.apipublic.client.support.{FetchClient, ResponseHandlers}
-import com.soundcloud.apipublic.service.{CreateLikeResponse, DeleteLikeResponse}
-import com.twitter.finagle.http.Status
 import com.twitter.util.Future
 import play.api.libs.json.{JsObject, Json, Reads, Writes}
 
@@ -27,52 +15,8 @@ import scala.util.control.NonFatal
 /**
   * https://github.com/soundcloud/liebling/tree/master/doc
   */
-class LieblingClient(jsonClient: JsonClient, exceptionCollector: ExceptionCollector) extends FetchClient {
+class LieblingClient(jsonClient: JsonClient) extends FetchClient {
   val logger = SoundCloudLoggerFactory.getLogger(getClass)
-
-  /**
-    * @see https://github.com/soundcloud/liebling/tree/master/doc#like-a-playlist
-    */
-  def createPlaylistLike(session: UserSession, playlist: Urn): Future[Outcome[CreateLikeResponse]] =
-    jsonClient
-      .postWithSession(
-        session,
-        Path() / "playlists" / playlist.toString / "likes",
-        Params.empty,
-        Headers.empty,
-        jsonBody(session)
-      )
-      .map(response =>
-        response.status match {
-          case Status.Ok | Status.Created => CreateLikeResponse().good
-          case Status.Forbidden => NotAllowed().bad
-          case Status.NotFound => NotFound().bad
-          case Status.UnprocessableEntity => NotValid(response.contentString).bad
-          case Status.TooManyRequests => HttpServiceError(HttpResponseFields(response.statusCode)).bad
-          case Status(_) => NotFound().bad
-        }
-      )
-
-  /**
-    * @see https://github.com/soundcloud/liebling/tree/master/doc#unlike-a-playlist
-    */
-  def deletePlaylistLike(session: UserSession, playlist: Urn): Future[Outcome[DeleteLikeResponse]] =
-    jsonClient
-      .deleteWithSession(
-        session,
-        Path() / "playlists" / playlist.toString / "likes",
-        Params.empty,
-        Headers.empty,
-        jsonBody(session)
-      )
-      .map(response =>
-        response.status match {
-          case Status.Ok => DeleteLikeResponse().good
-          case Status.NotFound | Status.Unauthorized => NotFound().bad
-          case Status.BadRequest => NotValid(response.contentString).bad
-          case _ => HttpServiceError(HttpResponseFields(response.statusCode)).bad
-        }
-      )
 
   def likeCounts(session: UserSession, targetUrns: Seq[Urn]): Future[List[LikesCount]] =
     inBatches(targetUrns.toList, 50) { urns =>
@@ -180,9 +124,6 @@ class LieblingClient(jsonClient: JsonClient, exceptionCollector: ExceptionCollec
       }
       .map(_.reduce(combine))
 
-  private def jsonBody(session: UserSession): Option[String] = {
-    Some(Json.obj("user_urn" -> session.getUser.toString).toString)
-  }
 }
 
 case class LikesCount(target_urn: Urn, likes_count: Long)

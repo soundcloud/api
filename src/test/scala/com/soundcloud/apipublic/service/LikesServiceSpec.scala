@@ -13,7 +13,6 @@ import com.soundcloud.apipublic.service.trackrepresentation.{
   TrackRepresentationsSpecificationContext
 }
 import com.soundcloud.jvmkit.module.outcome._
-import com.soundcloud.jvmkit.module.rollout.Rollout
 import com.soundcloud.jvmkit.module.twirp.proto.UserSessionOps._
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.twinagle.{ErrorCode, TwinagleException}
@@ -55,7 +54,6 @@ class LikesServiceSpec extends TrackRepresentationsSpecificationContext {
     val tracksTwinagleClient = mock[TrackLikesClientProtobuf]
     val likesTwinagleClient = mock[likes.LikesClientProtobuf]
     val playlistTwinagleClient = mock[PlaylistLikesClientProtobuf]
-    val rollout = mock[Rollout]
 
     val likesService = new LikesService(
       trackRepresentationsService,
@@ -63,8 +61,7 @@ class LikesServiceSpec extends TrackRepresentationsSpecificationContext {
       lieblingClient,
       likesTwinagleClient,
       tracksTwinagleClient,
-      playlistTwinagleClient,
-      rollout
+      playlistTwinagleClient
     )
 
     override def before: Any = {}
@@ -219,7 +216,7 @@ class LikesServiceSpec extends TrackRepresentationsSpecificationContext {
       val request = LikePlaylistRequest(userSession = Some(session.asProtoSession), urn = playlistUrn.toString)
     }
 
-    "returns an OkCreatedCreateResponse when Playlists successfully creates a like, rollout flag is on" in new CreatePlaylistLike {
+    "returns an OkCreatedCreateResponse when Playlists successfully creates a like" in new CreatePlaylistLike {
       playlistTwinagleClient.likePlaylist(request) returns Future.value(
         LikePlaylistResponse(
           Some(timestamp),
@@ -227,13 +224,6 @@ class LikesServiceSpec extends TrackRepresentationsSpecificationContext {
           userUrn.toString
         )
       )
-      rollout.isActive(any) returns Future.value(true)
-      Await.result(likesService.createPlaylistLike(session, playlistUrn)) ==== CreateLikeResponse().good
-    }
-
-    "returns an OkCreatedCreateResponse when Lieblings successfully creates a like, rollout flag is off" in new CreatePlaylistLike {
-      lieblingClient.createPlaylistLike(session, playlistUrn) returns Future.value(CreateLikeResponse().good)
-      rollout.isActive(any) returns Future.value(false)
 
       Await.result(likesService.createPlaylistLike(session, playlistUrn)) ==== CreateLikeResponse().good
     }
@@ -242,7 +232,6 @@ class LikesServiceSpec extends TrackRepresentationsSpecificationContext {
       playlistTwinagleClient.likePlaylist(request) returns Future.exception(
         TwinagleException(ErrorCode.NotFound, "Resource not found")
       )
-      rollout.isActive(any) returns Future.value(true)
 
       Await.result(likesService.createPlaylistLike(session, playlistUrn)) ==== NotFound().bad
     }
@@ -251,7 +240,6 @@ class LikesServiceSpec extends TrackRepresentationsSpecificationContext {
       playlistTwinagleClient.likePlaylist(request) returns Future.exception(
         TwinagleException(ErrorCode.PermissionDenied, "Operation not allowed")
       )
-      rollout.isActive(any) returns Future.value(true)
 
       Await.result(likesService.createPlaylistLike(session, playlistUrn)) ==== NotAllowed().bad
     }
@@ -260,7 +248,6 @@ class LikesServiceSpec extends TrackRepresentationsSpecificationContext {
       playlistTwinagleClient.likePlaylist(request) returns Future.exception(
         TwinagleException(ErrorCode.ResourceExhausted, "Spam alert")
       )
-      rollout.isActive(any) returns Future.value(true)
 
       Await.result(likesService.createPlaylistLike(session, playlistUrn)) ==== HttpServiceError(
         HttpResponseFields(Status.TooManyRequests.code)
@@ -278,7 +265,7 @@ class LikesServiceSpec extends TrackRepresentationsSpecificationContext {
       val request = LikePlaylistRequest(userSession = Some(session.asProtoSession), urn = playlistUrn.toString)
     }
 
-    "returns an OkDeletedResponse when Playlists successfully deletes a like, rollout flag is on" in new DeletePlaylistLike {
+    "returns an OkDeletedResponse when Playlists successfully deletes a like" in new DeletePlaylistLike {
       playlistTwinagleClient.unlikePlaylist(request) returns Future.value(
         LikePlaylistResponse(
           Some(timestamp),
@@ -286,13 +273,6 @@ class LikesServiceSpec extends TrackRepresentationsSpecificationContext {
           userUrn.toString
         )
       )
-      rollout.isActive(any) returns Future.value(true)
-      Await.result(likesService.deletePlaylistLike(session, playlistUrn)) ==== DeleteLikeResponse().good
-    }
-
-    "returns an OkDeletedResponse when Lieblings successfully creates a like, rollout flag is off" in new DeletePlaylistLike {
-      lieblingClient.deletePlaylistLike(session, playlistUrn) returns Future.value(DeleteLikeResponse().good)
-      rollout.isActive(any) returns Future.value(false)
 
       Await.result(likesService.deletePlaylistLike(session, playlistUrn)) ==== DeleteLikeResponse().good
     }
@@ -301,7 +281,6 @@ class LikesServiceSpec extends TrackRepresentationsSpecificationContext {
       playlistTwinagleClient.unlikePlaylist(request) returns Future.exception(
         TwinagleException(ErrorCode.NotFound, "Resource not found")
       )
-      rollout.isActive(any) returns Future.value(true)
 
       Await.result(likesService.deletePlaylistLike(session, playlistUrn)) ==== NotFound().bad
     }
@@ -310,7 +289,6 @@ class LikesServiceSpec extends TrackRepresentationsSpecificationContext {
       playlistTwinagleClient.unlikePlaylist(request) returns Future.exception(
         TwinagleException(ErrorCode.Internal, "Internal error")
       )
-      rollout.isActive(any) returns Future.value(true)
 
       Await.result(likesService.deletePlaylistLike(session, playlistUrn)) must throwA[RuntimeException]
     }

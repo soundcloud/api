@@ -63,7 +63,7 @@ class Clients(
 
   val timelineClient = new TimelineJsonClient(jsonClient("timeline"))
 
-  val lieblingClient = new LieblingClient(jsonClient("liebling"), exceptionCollector)
+  val lieblingClient = new LieblingClient(jsonClient("liebling"))
 
   val searchJsonClient = jsonClient("search")
   val searchClient = new SearchClient(searchJsonClient)
@@ -195,8 +195,7 @@ class Clients(
       lieblingClient,
       likesTwirpClient,
       likeTracksTwirpClient,
-      likesPlaylistsTwirpClient,
-      rolloutClient
+      likesPlaylistsTwirpClient
     )
   val userPlaylistsService = new UserPlaylistsService(playlistService, okidokiClient)
 

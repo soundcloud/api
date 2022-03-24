@@ -1,30 +1,21 @@
 package com.soundcloud.apipublic.client.liebling
 
+import com.soundcloud.apipublic.test.Helpers._
+import com.soundcloud.apipublic.test.UnitSpecification
 import com.soundcloud.jvmkit.module.http.client.{JsonClient, Params}
 import com.soundcloud.jvmkit.module.json.play.UrnFormat._
-import com.soundcloud.jvmkit.module.outcome.Good
-import com.soundcloud.jvmkit.module.telemetry.Telemetry
-import com.soundcloud.jvmkit.module.telemetry.exceptions.ExceptionCollector
 import com.soundcloud.jvmkit.module.util.http.Headers
 import com.soundcloud.jvmkit.module.util.session.UserSessionBuilder
 import com.soundcloud.jvmkit.module.util.{Path, Urn}
-import com.soundcloud.apipublic.service.{CreateLikeResponse, DeleteLikeResponse}
-import com.soundcloud.apipublic.test.Helpers._
-import com.soundcloud.apipublic.test.UnitSpecification
-import com.soundcloud.apipublic.test.fixtures.Fixtures._
 import com.twitter.finagle.IndividualRequestTimeoutException
-import com.twitter.finagle.http.{Response, Status}
 import com.twitter.util.{Await, Duration, Future}
-import org.mockito.Mockito.when
 import play.api.libs.json.Json
 
 class LieblingClientSpec extends UnitSpecification {
   trait Context extends Scope {
     implicit val service = mock[JsonClient]
     implicit val session = new UserSessionBuilder().build()
-    val telemetry = Telemetry.defaultInstance
-    val exceptionCollector = new ExceptionCollector(telemetry)
-    val client = new LieblingClient(service, exceptionCollector)
+    val client = new LieblingClient(service)
 
     val userUrn = Urn("soundcloud", "users", "10419549")
     val notFoundUserUrn = Urn("soundcloud", "users", "0")
@@ -54,56 +45,6 @@ class LieblingClientSpec extends UnitSpecification {
         |    "soundcloud:tracks:48786981"
         |  ]
         |}""".stripMargin)
-  }
-
-  "#createPlaylistLike" >> {
-    trait LikeCreatedContext extends Context {
-      override implicit val session = loggedInSession(userUrn)
-    }
-
-    "creates a like response" in new LikeCreatedContext {
-      when(
-        service.postWithSession(
-          session,
-          Path() / "playlists" / playlistUrn.toString / "likes",
-          Params.empty,
-          Headers.empty,
-          Some(requestBodyString)
-        )
-      ).thenReturn(Future {
-        val response = Response(Status.Created)
-        response.setContentString(lieblingLikeCreationSuccess)
-        response
-      })
-
-      val actual = Await.result(client.createPlaylistLike(session, playlistUrn))
-      actual ==== Good(CreateLikeResponse())
-    }
-  }
-
-  "#deletePlaylistLike" >> {
-    trait LikeDeletedContext extends Context {
-      override implicit val session = loggedInSession(userUrn)
-    }
-
-    "creates a like response" in new LikeDeletedContext {
-      when(
-        service.deleteWithSession(
-          session,
-          Path() / "playlists" / playlistUrn.toString / "likes",
-          Params.empty,
-          Headers.empty,
-          Some(requestBodyString)
-        )
-      ).thenReturn(Future {
-        val response = Response(Status.Ok)
-        response.setContentString(lieblingLikeDeletionSuccess)
-        response
-      })
-
-      val actual = Await.result(client.deletePlaylistLike(session, playlistUrn))
-      actual ==== Good(DeleteLikeResponse())
-    }
   }
 
   "#likeCounts" >> {
