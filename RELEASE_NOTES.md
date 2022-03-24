@@ -1,4 +1,3 @@
 <!--- Remove everything below and start over --->
 
-Added a new `access` query parameter to the `/me/likes/track` endpoint. 
-Read more about track level access in API [here](https://developers.soundcloud.com/blog/high-tier-content-in-the-soundcloud-api) 
+Deprecate the `comments_count` field on the User object. From now on, the field always has a `0` value.

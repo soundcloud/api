@@ -88,7 +88,7 @@ object UserRepresentation {
       "discogs_name" -> user.discogs_name.map(HtmlSanitizer.sanitize),
       "website_title" -> user.website_title.map(HtmlSanitizer.sanitize),
       "website" -> user.website.map(HtmlSanitizer.sanitize),
-      "comments_count" -> user.comments_count,
+      "comments_count" -> 0, // Deprecated comments_count on the user model
       "online" -> user.online,
       "likes_count" -> user.likes_count,
       "playlist_count" -> user.public_playlists_count,

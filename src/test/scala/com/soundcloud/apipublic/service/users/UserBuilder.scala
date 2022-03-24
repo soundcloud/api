@@ -30,7 +30,7 @@ class UserBuilder {
   private var subscriptions: Seq[CreatorSubscription] = Seq.empty
   private var public_favorites_count: Option[Long] = Some(12L)
   private var public_playlists_count: Option[Int] = Some(55)
-  private var comments_count: Option[Int] = Some(11)
+  private var comments_count: Option[Int] = Some(0)
   private var likes_count: Option[Long] = Some(500L)
   private var reposts_count: Option[Long] = Some(12L)
   private var online: Boolean = false

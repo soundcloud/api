@@ -8,8 +8,9 @@ properties:
     description: city.
     type: string
   comments_count:
-    description: comments count.
+    description: comments count. From now on, the field always has a `0` value.
     type: integer
+    deprecated: true
   country:
     description: country.
     type: string
