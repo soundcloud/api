@@ -1,15 +1,8 @@
 package com.soundcloud.apipublic.service
 
-import com.soundcloud.hocuspocus.{HocuspocusService, Image}
-import com.soundcloud.jvmkit.module.outcome._
-import com.soundcloud.jvmkit.module.telemetry.exceptions.ExceptionCollector
-import com.soundcloud.jvmkit.module.telemetry.exceptions.ExceptionHandler.FutureExtensions
-import com.soundcloud.jvmkit.module.twirp.proto.UserSessionOps._
-import com.soundcloud.jvmkit.module.util.Urn
-import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.apipublic.client.liebling.{LieblingClient, LikesCount}
+import com.soundcloud.apipublic.client.mothership.MoshimoshiClient
 import com.soundcloud.apipublic.client.mothership.response.representation.UserRepresentation
-import com.soundcloud.apipublic.client.mothership.{MoshimoshiClient, PlaylistArtworkUpdate}
 import com.soundcloud.apipublic.handler.support.requestParser.AccessParams
 import com.soundcloud.apipublic.service.artwork.HocuspocusUtils
 import com.soundcloud.apipublic.service.pagination.OffsetBasedPagination
@@ -17,8 +10,13 @@ import com.soundcloud.apipublic.service.playlists.representation.{Playlist, Play
 import com.soundcloud.apipublic.service.playlists.{PlaylistProtoMapper, PlaylistRequest, UpdatePlaylistArtworkRequest}
 import com.soundcloud.apipublic.service.representation.collection.Collection
 import com.soundcloud.apipublic.service.trackrepresentation.{TrackRepresentation, TrackRepresentationsService}
-import com.soundcloud.jvmkit.module.rollout.{Rollout, RolloutFeature}
-import com.soundcloud.jvmkit.module.util.logging.SoundCloudLoggerFactory
+import com.soundcloud.hocuspocus.{HocuspocusService, Image}
+import com.soundcloud.jvmkit.module.outcome._
+import com.soundcloud.jvmkit.module.telemetry.exceptions.ExceptionCollector
+import com.soundcloud.jvmkit.module.telemetry.exceptions.ExceptionHandler.FutureExtensions
+import com.soundcloud.jvmkit.module.twirp.proto.UserSessionOps._
+import com.soundcloud.jvmkit.module.util.Urn
+import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.twinagle.{ErrorCode, TwinagleException}
 import com.twitter.io.Buf
 import com.twitter.util.Future
@@ -43,10 +41,8 @@ class PlaylistsService(
     playlistsWritesTwirpService: PlaylistsWritesTwirpService,
     exceptionCollector: ExceptionCollector,
     hocuspocusService: HocuspocusService,
-    playlistProtoMapper: PlaylistProtoMapper = new PlaylistProtoMapper(),
-    rollout: Rollout
+    playlistProtoMapper: PlaylistProtoMapper = new PlaylistProtoMapper()
 ) {
-  private val logger = SoundCloudLoggerFactory.getLogger(this.getClass)
 
   def fetchPlaylistTracks(
       session: UserSession,
@@ -180,29 +176,11 @@ class PlaylistsService(
       playlistArtworkRequest: UpdatePlaylistArtworkRequest
   ): OutcomeF[Unit] =
     for {
-      //TODO clean this up when rollout of playlist artwork update is 100%
-      isActive <- rollout.isActive(RolloutFeature("twirp-playlist-update-artwork")).outcomeF
-      _ <- if (isActive) {
-        for {
-          _ <- updatePlaylistArtworkTwirp(session, playlistUrn, playlistArtworkRequest)
-          _ <- Future.value(logger.info("Updated playlist artwork via twirp end-point successfully")).outcomeF
-        } yield ()
-      } else updatePlaylistArtworkLegacy(session, playlistUrn, playlistArtworkRequest)
+      _ <- updateArtwork(session, playlistUrn, playlistArtworkRequest)
+      _ <- Future.Unit.outcomeF
     } yield ()
 
-  private def updatePlaylistArtworkLegacy(
-      session: UserSession,
-      playlistUrn: Urn,
-      playlistArtworkRequest: UpdatePlaylistArtworkRequest
-  ): OutcomeF[Unit] = {
-    for {
-      createdImage <- uploadImageToHocuspocus(playlistArtworkRequest.imageData)
-      updateParams <- extractMoshiMoshiUpdateParams(createdImage).liftF
-      updateResponse <- moshimoshiClient.updatePlaylistArtwork(session, playlistUrn, updateParams)
-    } yield updateResponse
-  }
-
-  private def updatePlaylistArtworkTwirp(
+  private def updateArtwork(
       session: UserSession,
       playlistUrn: Urn,
       playlistArtworkRequest: UpdatePlaylistArtworkRequest
@@ -230,14 +208,6 @@ class PlaylistsService(
       .handleAndReport(exceptionCollector, true)(handleErrors)
       .outcomeF
       .catchToUnexpectedError
-  }
-
-  private def extractMoshiMoshiUpdateParams(createdImage: Image): Outcome[PlaylistArtworkUpdate] = {
-    val s3UrlRegex = HocuspocusUtils.s3UrlRegex
-    createdImage.originUri match {
-      case s3UrlRegex(bucket, filename) => PlaylistArtworkUpdate(bucket, filename).good
-      case _ => NotValid("Invalid image location").bad
-    }
   }
 
   private def extractPlaylistArtworkUpdateParams(createdImage: Image): Outcome[UpdatePlaylistArtworkTwirpRequest] = {

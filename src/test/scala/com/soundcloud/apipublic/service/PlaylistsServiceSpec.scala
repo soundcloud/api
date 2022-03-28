@@ -1,12 +1,5 @@
 package com.soundcloud.apipublic.service
 
-import com.soundcloud.hocuspocus.{HocuspocusService, Image, Kind}
-import com.soundcloud.jvmkit.module.outcome._
-import com.soundcloud.jvmkit.module.telemetry.Telemetry
-import com.soundcloud.jvmkit.module.telemetry.exceptions.ExceptionCollector
-import com.soundcloud.jvmkit.module.twirp.proto.UserSessionOps._
-import com.soundcloud.jvmkit.module.util.Urn
-import com.soundcloud.jvmkit.module.util.session.{UserSession, UserSessionBuilder}
 import com.soundcloud.apipublic.client.liebling.{LieblingClient, LikesCount}
 import com.soundcloud.apipublic.client.mothership.request.representation.Value
 import com.soundcloud.apipublic.client.mothership.{MoshimoshiClient, PlaylistArtworkUpdate}
@@ -23,7 +16,13 @@ import com.soundcloud.apipublic.service.trackrepresentation.{
   TrackRepresentationsService
 }
 import com.soundcloud.apipublic.test.UnitSpecification
-import com.soundcloud.jvmkit.module.rollout.{Rollout, RolloutFeature}
+import com.soundcloud.hocuspocus.{HocuspocusService, Image, Kind}
+import com.soundcloud.jvmkit.module.outcome._
+import com.soundcloud.jvmkit.module.telemetry.Telemetry
+import com.soundcloud.jvmkit.module.telemetry.exceptions.ExceptionCollector
+import com.soundcloud.jvmkit.module.twirp.proto.UserSessionOps._
+import com.soundcloud.jvmkit.module.util.Urn
+import com.soundcloud.jvmkit.module.util.session.{UserSession, UserSessionBuilder}
 import com.soundcloud.twinagle.{ErrorCode, TwinagleException}
 import com.twitter.finagle.http.ParamMap
 import com.twitter.io.{BufReader, Reader}
@@ -86,7 +85,6 @@ class PlaylistsServiceSpec extends UnitSpecification {
 
     val protoTrack = Seq(ProtoTrackRequest(urn = requestedPlaylistTrackUrn.toString))
     val hocusPocusService = mock[HocuspocusService]
-    val rollout = mock[Rollout]
     val playlistsService =
       new PlaylistsService(
         playlistsTwirpServiceMock,
@@ -95,8 +93,7 @@ class PlaylistsServiceSpec extends UnitSpecification {
         lieblingClientMock,
         playlistsWritesTwirpServiceMock,
         exceptionCollector,
-        hocusPocusService,
-        rollout = rollout
+        hocusPocusService
       )
     val playlistRequests = List(PlaylistRequest(requestedPlaylistUrn, candidateSecretToken))
     val access = AccessParams.defaultAccess
@@ -594,37 +591,6 @@ class PlaylistsServiceSpec extends UnitSpecification {
       val buf = Await.result(
         BufReader.readAll(Reader.fromStream(this.getClass.getClassLoader.getResourceAsStream(testImage)))
       )
-      when(rollout.isActive(any[RolloutFeature])).thenReturn(Future.False)
-      val artworkUpdateRequest = UpdatePlaylistArtworkRequest(buf)
-      val expectedRaw = HocuspocusUtils.toRaw(buf)
-
-      val expectedArtworkUpdate = PlaylistArtworkUpdate("bucket", "filename")
-
-      hocusPocusService.storeImage(expectedRaw) returns Future.value(
-        Image(kind = Kind.ARTWORKS, originUri = "s3://bucket/filename")
-      )
-
-      moshimoshiClientMock.updatePlaylistArtwork(session, playlistUrn, expectedArtworkUpdate) returns ().goodF
-
-      val playlist = new PlaylistBuilder().setId(1).build
-
-      setUpMocksForWritePlaylists(
-        playlistCreate = createOrUpdatePlaylist,
-        response =
-          Future.value(CreatePlaylistResponse(urn = Urn("soundcloud", "playlists", playlist.id.toString).toString))
-      )
-
-      val _ =
-        Await.result(playlistsService.createPlaylist(session, createOrUpdatePlaylist, Some(artworkUpdateRequest)).value)
-    }
-
-    trait ArtworkContextTwirp extends CreateOrUpdatePlaylist {
-      val testImage = "test-image.jpg"
-
-      val buf = Await.result(
-        BufReader.readAll(Reader.fromStream(this.getClass.getClassLoader.getResourceAsStream(testImage)))
-      )
-      when(rollout.isActive(any[RolloutFeature])).thenReturn(Future.True)
       val artworkUpdateRequest = UpdatePlaylistArtworkRequest(buf)
       val expectedRaw = HocuspocusUtils.toRaw(buf)
 
@@ -659,15 +625,7 @@ class PlaylistsServiceSpec extends UnitSpecification {
         Await.result(playlistsService.createPlaylist(session, createOrUpdatePlaylist, Some(artworkUpdateRequest)).value)
     }
 
-    "uploads the artwork data to s3" in new ArtworkContext {
-      verify(hocusPocusService).storeImage(expectedRaw)
-    }
-
-    "updates playlist artwork metadata" in new ArtworkContext {
-      verify(moshimoshiClientMock).updatePlaylistArtwork(session, playlistUrn, expectedArtworkUpdate)
-    }
-
-    "updates playlist artwork metadata via VAS service when rollout flag is enabled" in new ArtworkContextTwirp {
+    "updates playlist artwork metadata via VAS service when rollout flag is enabled" in new ArtworkContext {
       verify(playlistsWritesTwirpServiceMock).updatePlaylistArtwork(
         proto.soundcloud.playlists.api.UpdatePlaylistArtworkRequest(
           Some(session.asProtoSession),
@@ -679,8 +637,6 @@ class PlaylistsServiceSpec extends UnitSpecification {
     }
 
     "returns Not Valid if Playlists returned Invalid Argument" in new CreateOrUpdatePlaylist {
-      val playlist = new PlaylistBuilder().setId(1).build
-
       setUpMocksForWritePlaylists(
         playlistCreate = createOrUpdatePlaylist,
         response = Future.exception(TwinagleException(ErrorCode.InvalidArgument, "invalid argument", null, null))

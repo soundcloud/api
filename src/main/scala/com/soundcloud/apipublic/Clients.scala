@@ -185,8 +185,7 @@ class Clients(
       lieblingClient,
       playlistsWritesTwirpClient,
       exceptionCollector,
-      hocuspocusClient,
-      rollout = rolloutClient
+      hocuspocusClient
     )
   val likesService =
     new LikesService(
