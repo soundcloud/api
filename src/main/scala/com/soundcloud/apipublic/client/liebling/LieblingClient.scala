@@ -41,66 +41,6 @@ class LieblingClient(jsonClient: JsonClient) extends FetchClient {
       }
   }
 
-  def userLikeCounts(
-      session: UserSession,
-      targetUrns: Seq[Urn],
-      user: Urn,
-      batchSize: Int = 25
-  ): Future[UserLikesCount] = {
-    val fetch: (Seq[Urn]) => Future[UserLikesCount] = batch =>
-      fetchLikes(
-        session,
-        Path() / "likes_info",
-        Map("for_urns" -> batch, "includes" -> "likes_counts,liked_track_urns", "user_urn" -> user)
-      ).map(_.as[UserLikesCount])
-    val combine: (UserLikesCount, UserLikesCount) => UserLikesCount = {
-      case (ulc1, ulc2) =>
-        UserLikesCount(
-          ulc1.liked_track_urns ++ ulc2.liked_track_urns,
-          ulc1.likes_counts ++ ulc2.likes_counts
-        )
-    }
-    batched(targetUrns, batchSize)(fetch)(combine)
-  }
-
-  /**
-    * Returns a map of track urn to boolean indicating if the provided user has liked that track or not.
-    */
-  def userLikedTracks(
-      session: UserSession,
-      trackUrns: Set[Urn],
-      user: Urn,
-      batchSize: Int = 25
-  ): Future[Map[Urn, Boolean]] = {
-    // initialize all track urns as not liked
-    val defaultLikes = trackUrns.map((_ -> false)).toMap
-    userLikeCounts(session, trackUrns.toSeq, user, batchSize)
-      .map(userLikeCounts => {
-        userLikeCounts.liked_track_urns.map((_ -> true)).toMap
-      })
-      .map(defaultLikes ++ _)
-  }
-
-  /**
-    * Returns the tracks from given urn input list that are liked by given user
-    *
-    * @param session   User session.
-    * @param userUrn   User urn.
-    * @param trackUrns Input track urns.
-    * @return List of track urns from input list that are liked by given user as defined by user urn.
-    * @see https://github.com/soundcloud/liebling/tree/master/doc#user-content-get-likes-info
-    */
-  def userTracksLikesForUrns(session: UserSession, userUrn: Urn, trackUrns: List[Urn]): Future[List[Urn]] =
-    inBatches(trackUrns, 50) { urnBatch =>
-      fetchLikes(
-        session,
-        Path() / "likes_info",
-        Map("for_urns" -> urnBatch, "user_urn" -> userUrn, "includes" -> "liked_track_urns")
-      ).map(json => (json \ "liked_track_urns").as[List[Urn]])
-    }.handle {
-      case NonFatal(_) => List.empty
-    }
-
   private def fetchLikes(
       session: UserSession,
       path: Path,
@@ -114,16 +54,6 @@ class LieblingClient(jsonClient: JsonClient) extends FetchClient {
       params,
       headers
     ).map(ResponseHandlers.SingleItem(_))
-
-  private def batched[I, O](inputs: Seq[I], batchSize: Int)(
-      fetch: Seq[I] => Future[O]
-  )(combine: (O, O) => O): Future[O] =
-    Future
-      .collect {
-        inputs.grouped(batchSize).map(fetch).toSeq
-      }
-      .map(_.reduce(combine))
-
 }
 
 case class LikesCount(target_urn: Urn, likes_count: Long)
@@ -131,13 +61,6 @@ case class LikesCount(target_urn: Urn, likes_count: Long)
 object LikesCount {
   implicit val writes: Writes[LikesCount] = Json.writes[LikesCount]
   implicit val reads: Reads[LikesCount] = Json.reads[LikesCount]
-}
-
-case class UserLikesCount(liked_track_urns: Set[Urn], likes_counts: List[LikesCount])
-
-object UserLikesCount {
-  implicit val writes: Writes[UserLikesCount] = Json.writes[UserLikesCount]
-  implicit val reads: Reads[UserLikesCount] = Json.reads[UserLikesCount]
 }
 
 case class UserTotalLikes(user_urn: Urn, track_likes_count: Long, playlist_likes_count: Long) {

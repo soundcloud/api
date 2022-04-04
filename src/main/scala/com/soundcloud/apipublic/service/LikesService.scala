@@ -1,6 +1,5 @@
 package com.soundcloud.apipublic.service
 
-import com.soundcloud.apipublic.client.liebling._
 import com.soundcloud.apipublic.client.tracks.TrackRequest
 import com.soundcloud.apipublic.handler.support.requestParser.AccessParams
 import com.soundcloud.apipublic.service.pagination.CursorBasedPagination
@@ -42,7 +41,6 @@ case class TrackLikersResponse(urns: Seq[Urn], nextHRef: Option[String])
 class LikesService(
     trackRepresentationsService: TrackRepresentationsService,
     playlistsService: PlaylistsService,
-    lieblingClient: LieblingClient,
     likesClient: likes.LikesClientProtobuf,
     tracksClient: TrackLikesClientProtobuf,
     playlistsClient: PlaylistLikesClientProtobuf
@@ -123,23 +121,6 @@ class LikesService(
         case TwinagleException(_, msg, _, _) =>
           throw new RuntimeException(s"unexpected response from playlists: $msg")
       }
-  }
-
-  def userTrackLikeForUrn(
-      session: UserSession,
-      userUrn: Urn,
-      trackUrn: Urn
-  ): Future[Option[TrackRepresentation]] = {
-    for {
-      likedTrackUrns <- lieblingClient.userTracksLikesForUrns(session, userUrn, List(trackUrn))
-      enrichedTracks <- trackRepresentationsService.tracks(
-        session,
-        likedTrackUrns.map(track => TrackRequest(track, None)),
-        AccessParams.defaultAccess
-      )
-    } yield {
-      enrichedTracks.headOption
-    }
   }
 
   def userTracksLikes(

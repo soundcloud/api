@@ -3,7 +3,6 @@ package com.soundcloud.apipublic.client.liebling
 import com.soundcloud.apipublic.test.Helpers._
 import com.soundcloud.apipublic.test.UnitSpecification
 import com.soundcloud.jvmkit.module.http.client.{JsonClient, Params}
-import com.soundcloud.jvmkit.module.json.play.UrnFormat._
 import com.soundcloud.jvmkit.module.util.http.Headers
 import com.soundcloud.jvmkit.module.util.session.UserSessionBuilder
 import com.soundcloud.jvmkit.module.util.{Path, Urn}
@@ -77,53 +76,6 @@ class LieblingClientSpec extends UnitSpecification {
     }
   }
 
-  "#userLikeCounts" >> {
-    "successful response" in new Context() {
-      val targets = Seq(playlistUrn, trackUrn)
-
-      expectOkResponse(
-        Path() / "likes_info",
-        lieblingLikesCount,
-        Map("for_urns" -> targets, "includes" -> "likes_counts,liked_track_urns", "user_urn" -> userUrn)
-      )
-      val actual = Await.result(client.userLikeCounts(session, targets, userUrn))
-
-      actual.likes_counts must haveSize(2)
-      actual.likes_counts ==== (lieblingLikesCount \ "likes_counts").as[List[LikesCount]]
-      actual.liked_track_urns must haveSize(1)
-      actual.liked_track_urns ==== (lieblingLikesCount \ "liked_track_urns").as[Set[Urn]]
-    }
-
-    "performs requests in batches if necessary" in new Context() {
-      val targets = Seq(playlistUrn, trackUrn)
-      val firstResponse = Json.obj(
-        "likes_counts" -> Json.arr((lieblingLikesCount \ "likes_counts" \ 0).get),
-        "liked_track_urns" -> Json.arr()
-      )
-      val secondResponse = Json.obj(
-        "likes_counts" -> Json.arr((lieblingLikesCount \ "likes_counts" \ 1).get),
-        "liked_track_urns" -> (lieblingLikesCount \ "liked_track_urns").get
-      )
-
-      expectOkResponse(
-        Path() / "likes_info",
-        firstResponse,
-        Map("for_urns" -> Seq(playlistUrn), "includes" -> "likes_counts,liked_track_urns", "user_urn" -> userUrn)
-      )
-      expectOkResponse(
-        Path() / "likes_info",
-        secondResponse,
-        Map("for_urns" -> Seq(trackUrn), "includes" -> "likes_counts,liked_track_urns", "user_urn" -> userUrn)
-      )
-      val actual = Await.result(client.userLikeCounts(session, targets, userUrn, batchSize = 1))
-
-      actual.likes_counts must haveSize(2)
-      actual.likes_counts ==== (lieblingLikesCount \ "likes_counts").as[List[LikesCount]]
-      actual.liked_track_urns must haveSize(1)
-      actual.liked_track_urns ==== (lieblingLikesCount \ "liked_track_urns").as[Set[Urn]]
-    }
-  }
-
   "#userTotalLikeCounts" >> {
     trait UserTotalLikeCounts extends Context {
       val userUrn2 = Urn("soundcloud", "users", "1293871")
@@ -171,52 +123,6 @@ class LieblingClientSpec extends UnitSpecification {
         .exception(new RuntimeException("noooo"))
 
       result.size ==== 0
-    }
-  }
-
-  "#userLikedTracks" >> {
-    trait UserLikedTracksContext extends Context {
-      val track1 = Urn("soundcloud", "tracks", "48786981")
-      val track2 = Urn("soundcloud", "tracks", "2")
-      val trackUrns = Seq(track1, track2)
-    }
-
-    "returns if the user has liked the provided tracks" in new UserLikedTracksContext {
-      expectOkResponse(
-        Path() / "likes_info",
-        lieblingLikesCount,
-        Map("for_urns" -> trackUrns, "includes" -> "likes_counts,liked_track_urns", "user_urn" -> userUrn)
-      )
-
-      Await.result(client.userLikedTracks(session, trackUrns.toSet, userUrn)) ==== Map(track1 -> true, track2 -> false)
-    }
-  }
-
-  "#userTracksLikesForUrns" >> {
-    trait TracksLikedByUserContext extends Context {
-      val track1 = Urn("soundcloud", "tracks", "48786981")
-      val track2 = Urn("soundcloud", "tracks", "2")
-      val trackUrns = Seq(track1, track2)
-      lazy val result = Await.result(client.userTracksLikesForUrns(session, userUrn, trackUrns.toList))
-    }
-
-    "for a given set of urns, returns the urns of tracks that have been liked" in new TracksLikedByUserContext {
-      expectOkResponse(
-        Path() / "likes_info",
-        lieblingLikesCount,
-        Map("for_urns" -> trackUrns, "includes" -> "liked_track_urns", "user_urn" -> userUrn)
-      )
-
-      result ==== List(Urn("soundcloud", "tracks", "48786981"))
-    }
-
-    "unsuccessful response" in new TracksLikedByUserContext {
-      expectInternalErrorResponse(
-        Path() / "likes_info",
-        Map("for_urns" -> trackUrns, "includes" -> "liked_track_urns", "user_urn" -> userUrn)
-      )
-
-      result ==== List.empty
     }
   }
 }

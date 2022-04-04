@@ -1,7 +1,6 @@
 package com.soundcloud.apipublic.service
 
 import com.google.protobuf.timestamp.Timestamp
-import com.soundcloud.apipublic.client.liebling._
 import com.soundcloud.apipublic.handler.support.requestParser.AccessParams
 import com.soundcloud.apipublic.service.pagination.CursorBasedPagination
 import com.soundcloud.apipublic.service.playlists.representation.Playlist
@@ -43,7 +42,6 @@ class LikesServiceSpec extends TrackRepresentationsSpecificationContext {
 
     val trackRepresentationsService = mock[TrackRepresentationsService]
     val playlistsService = mock[PlaylistsService]
-    val lieblingClient = mock[LieblingClient]
     val pagination = CursorBasedPagination(
       "https://api.soundcloud.com",
       "/users/1/favorites/",
@@ -58,7 +56,6 @@ class LikesServiceSpec extends TrackRepresentationsSpecificationContext {
     val likesService = new LikesService(
       trackRepresentationsService,
       playlistsService,
-      lieblingClient,
       likesTwinagleClient,
       tracksTwinagleClient,
       playlistTwinagleClient
@@ -186,24 +183,6 @@ class LikesServiceSpec extends TrackRepresentationsSpecificationContext {
 
       val result = Await.result(likesService.trackLikers(session, trackUrn, pagination))
       result ==== NotFound().bad
-    }
-  }
-
-  "#userTrackLikeForUrn" >> {
-    "when all data is available" in new Context {
-      val track = trackVisibilityTrack()
-      when(trackRepresentationsService.tracks(session, List(trackRequest), AccessParams.defaultAccess))
-        .thenReturn(Future.value(List(createTrackRepresentation)))
-      when(lieblingClient.userTracksLikesForUrns(session, trackOwnerUrn, List(track.urn)))
-        .thenReturn(Future.value(List(trackUrn)))
-
-      val tracksCollection =
-        Await.result(likesService.userTrackLikeForUrn(session, trackOwnerUrn, track.urn))
-
-      tracksCollection match {
-        case rep =>
-          rep must beAnInstanceOf[Option[TrackRepresentation]]
-      }
     }
   }
 

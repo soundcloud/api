@@ -17,7 +17,11 @@ import com.soundcloud.apipublic.service.comments.CommentService
 import com.soundcloud.apipublic.service.media.{StreamService, TrackAccessRecorderService}
 import com.soundcloud.apipublic.service.oauth.GrantExchangeService
 import com.soundcloud.apipublic.service.resolve.ResolveService
-import com.soundcloud.apipublic.service.trackrepresentation.{TrackRepresentationsService, TrackUpdateService}
+import com.soundcloud.apipublic.service.trackrepresentation.{
+  LikedTracksService,
+  TrackRepresentationsService,
+  TrackUpdateService
+}
 import com.soundcloud.apipublic.service.tracks.VisibleTrackMapper
 import com.soundcloud.apipublic.service.users.{MeService, UserRepresentationsService}
 import com.soundcloud.apipublic.subscriptions.SubmarineClient
@@ -162,10 +166,12 @@ class Clients(
       new VisibleTrackMapper
     )
 
+  val likedTracksService = new LikedTracksService(likesTwirpClient, exceptionCollector)
+
   val tracksService = new TrackRepresentationsService(
     trackVisibilityService,
     richOkidokiClient,
-    lieblingClient
+    likedTracksService
   )
 
   private val hocuspocusConfig = HttpClientConfig.from(ResourceName("hocuspocus"), config)
@@ -191,7 +197,6 @@ class Clients(
     new LikesService(
       tracksService,
       playlistService,
-      lieblingClient,
       likesTwirpClient,
       likeTracksTwirpClient,
       likesPlaylistsTwirpClient

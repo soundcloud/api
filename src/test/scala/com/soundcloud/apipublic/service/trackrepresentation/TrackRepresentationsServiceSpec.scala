@@ -1,13 +1,12 @@
 package com.soundcloud.apipublic.service.trackrepresentation
 
-import com.soundcloud.jvmkit.module.util.session.{UserSession, UserSessionBuilder}
-import com.soundcloud.apipublic.client.liebling.LieblingClient
 import com.soundcloud.apipublic.client.mothership.RichOkidokiClient
 import com.soundcloud.apipublic.client.trackmetadata.TrackmetadataClient
 import com.soundcloud.apipublic.client.tracks.{TrackRequest, VisibleTrack}
 import com.soundcloud.apipublic.handler.support.requestParser.AccessParams
 import com.soundcloud.apipublic.service.TrackVisibilityService
 import com.soundcloud.apipublic.service.TrackVisibilityService.DefaultTrackFieldMask
+import com.soundcloud.jvmkit.module.util.session.{UserSession, UserSessionBuilder}
 import com.twitter.util.{Await, Future}
 import org.mockito.Mockito._
 import play.api.libs.json._
@@ -18,14 +17,14 @@ class TrackRepresentationsServiceSpec extends TrackRepresentationsSpecificationC
 
     val trackVisibilityService = mock[TrackVisibilityService]
     val okidokiClient = mock[RichOkidokiClient]
-    val lieblingClient = mock[LieblingClient]
+    val likedTracksService = mock[LikedTracksService]
     val trackmetadataClient = mock[TrackmetadataClient]
     val trackPagination = mock[TrackPagination]
 
     val tracksService = new TrackRepresentationsService(
       trackVisibilityService,
       okidokiClient,
-      lieblingClient
+      likedTracksService
     )
 
     def setUpMocksForExistingTrack(
@@ -41,8 +40,7 @@ class TrackRepresentationsServiceSpec extends TrackRepresentationsSpecificationC
       when(okidokiClient.fetchUserObjects(session, Set(labelUrn))).thenReturn(Future.value(List(label)))
       when(okidokiClient.fetchUserObjects(session, Set(trackOwnerUrn))).thenReturn(Future.value(List(trackOwner)))
       when(okidokiClient.fetchTrackGeoblockings(session, Set(trackUrn))).thenReturn(Future.value(geoblockings))
-      when(lieblingClient.userLikedTracks(session, Set(trackUrn), session.getUser))
-        .thenReturn(Future.value(userLikedTracks))
+      when(likedTracksService.getLikedTracks(session, Seq(trackUrn))).thenReturn(Future.value(Map(trackUrn -> true)))
     }
 
     def setUpMocksForNonExistingTrack = {
@@ -136,7 +134,7 @@ class TrackRepresentationsServiceSpec extends TrackRepresentationsSpecificationC
     }
 
     "user_favorite" >> {
-      "is true when the user has favourited the track, and is logged in" in new Context {
+      "is true when the user has liked the track, and is logged in" in new Context {
         val track = trackVisibilityTrack()
         override val session = new UserSessionBuilder().setUser(requestingUserUrn).build
         setUpMocksForExistingTrack(track, session)
@@ -149,12 +147,11 @@ class TrackRepresentationsServiceSpec extends TrackRepresentationsSpecificationC
         }
       }
 
-      "is false when the user has not favourited the track, and is logged in" in new Context {
+      "is false when the user has not liked the track, and is logged in" in new Context {
         val track = trackVisibilityTrack()
         override val session = new UserSessionBuilder().setUser(requestingUserUrn).build
         setUpMocksForExistingTrack(track, session)
-        when(lieblingClient.userLikedTracks(session, Set(trackUrn), session.getUser))
-          .thenReturn(Future.value(Map(trackUrn -> false)))
+        when(likedTracksService.getLikedTracks(session, Seq(trackUrn))).thenReturn(Future.value(Map(trackUrn -> false)))
 
         val trackRepLike = Await.result(tracksService.track(session, trackRequest))
         trackRepLike match {

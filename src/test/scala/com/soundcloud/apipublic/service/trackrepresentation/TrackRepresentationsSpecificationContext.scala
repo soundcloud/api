@@ -1,12 +1,12 @@
 package com.soundcloud.apipublic.service.trackrepresentation
 
-import com.soundcloud.jvmkit.module.util.session.{UserSession, UserSessionBuilder}
-import com.soundcloud.jvmkit.module.util.{Url, Urn}
 import com.soundcloud.apipublic.authorization.policies._
 import com.soundcloud.apipublic.client.mothership.response.representation.Geoblockings
 import com.soundcloud.apipublic.client.tracks._
 import com.soundcloud.apipublic.service.users.UserBuilder
 import com.soundcloud.apipublic.test.UnitSpecification
+import com.soundcloud.jvmkit.module.util.session.{UserSession, UserSessionBuilder}
+import com.soundcloud.jvmkit.module.util.{Url, Urn}
 import org.joda.time.LocalDateTime
 
 trait TrackRepresentationsSpecificationContext extends UnitSpecification {
@@ -98,9 +98,6 @@ trait TrackRepresentationsSpecificationContext extends UnitSpecification {
         counts = VisibleTrackCounts(Some(111), Some(222), Some(333), Some(444), Some(555)),
         isrc = isrc
       )
-
-    def userLikedTracks: Map[Urn, Boolean] =
-      Map(trackUrn -> true)
 
     def createTrackRepresentation: TrackRepresentation =
       TrackRepresentationBuilder.fromVisibleTrack(

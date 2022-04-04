@@ -1,14 +1,13 @@
 package com.soundcloud.apipublic.service.trackrepresentation
 
-import com.soundcloud.jvmkit.module.util.Urn
-import com.soundcloud.jvmkit.module.util.session.UserSession
-import com.soundcloud.apipublic.client.liebling.LieblingClient
 import com.soundcloud.apipublic.client.mothership.RichOkidokiClient
 import com.soundcloud.apipublic.client.mothership.response.representation.Geoblockings
 import com.soundcloud.apipublic.client.tracks.{TrackRequest, VisibleTrack}
 import com.soundcloud.apipublic.handler.support.requestParser.AccessParams
 import com.soundcloud.apipublic.service.TrackVisibilityService
 import com.soundcloud.apipublic.service.TrackVisibilityService.DefaultTrackFieldMask
+import com.soundcloud.jvmkit.module.util.Urn
+import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.twitter.util.Future
 
 import scala.util.control.NonFatal
@@ -16,7 +15,7 @@ import scala.util.control.NonFatal
 class TrackRepresentationsService(
     trackVisibilityService: TrackVisibilityService,
     okidokiClient: RichOkidokiClient,
-    lieblingClient: LieblingClient
+    likedTracksService: LikedTracksService
 ) {
 
   def track(
@@ -48,11 +47,7 @@ class TrackRepresentationsService(
     Future
       .join(
         okidokiClient.fetchUserObjects(session, userUrns).map(users => users.map(user => user.urn -> user).toMap),
-        session.user
-          .map(user =>
-            lieblingClient.userLikedTracks(session, urns, user).handle { case NonFatal(_) => Map.empty[Urn, Boolean] }
-          )
-          .getOrElse(Future.value(Map.empty[Urn, Boolean])),
+        likedTracksService.getLikedTracks(session, urns.toSeq),
         okidokiClient.fetchTrackGeoblockings(session, urns).handle { case NonFatal(_) => Map.empty[Urn, Geoblockings] }
       )
       .map {
