@@ -5,17 +5,26 @@ spec:
   lifecycle: production
   owner: devices-team
   dependsOn:
-  - Component:api-public
+    - Component:api-public
+  consumesApis:
+    - authenticator-authenticator_access_grant_exchange.proto
+    - comments-comments.proto
+    - gatekeeper-gatekeeper_api.proto
+    - hocuspocus-hocuspocus.proto
+    - likes-likes_api.proto
+    - playlists-playlists_api.proto
+    - system-playlists-system_playlists_api.proto
+    - tracks-tracks_api.proto
 metadata:
   name: api-public-asset-uploads
   description: Preprocessor for multipart requests (track uploads)
   links:
-  - url: https://grafana.soundcloud.org/dashboard/db/jvmkit-generic?var-prometheus=api-public&var-system=api-public&var-job=api-public
-    title: Telemetry
-    link: dashboard
-  - url: https://eng-doc.soundcloud.org/runbooks/devices/api-public/
-    title: Runbook
-    link: alert
+    - url: https://grafana.soundcloud.org/dashboard/db/jvmkit-generic?var-prometheus=api-public&var-system=api-public&var-job=api-public
+      title: Telemetry
+      link: dashboard
+    - url: https://eng-doc.soundcloud.org/runbooks/devices/api-public/
+      title: Runbook
+      link: alert
   annotations:
     gocd.org/pipelines: api-public-asset-uploads
 ---
@@ -26,21 +35,21 @@ spec:
   lifecycle: production
   owner: devices-team
   dependsOn:
-  - Component:api-public
-  - Component:api-public-asset-uploads
+    - Component:api-public
+    - Component:api-public-asset-uploads
 metadata:
   name: api-public-doc
   description: Swagger UI for API Public
   links:
-  - url: https://grafana.soundcloud.org/dashboard/db/jvmkit-generic?var-prometheus=api-public&var-system=api-public&var-job=api-public
-    title: Telemetry
-    link: dashboard
-  - url: https://eng-doc.soundcloud.org/runbooks/devices/api-public/
-    title: Runbook
-    link: alert
-  - url: mailto:devices-team@soundcloud.com
-    title: Contact Email
-    link: help
+    - url: https://grafana.soundcloud.org/dashboard/db/jvmkit-generic?var-prometheus=api-public&var-system=api-public&var-job=api-public
+      title: Telemetry
+      link: dashboard
+    - url: https://eng-doc.soundcloud.org/runbooks/devices/api-public/
+      title: Runbook
+      link: alert
+    - url: mailto:devices-team@soundcloud.com
+      title: Contact Email
+      link: help
   annotations:
     gocd.org/pipelines: api-public
     soundcloud.com/contact-channel: devices-alerts
@@ -52,38 +61,38 @@ spec:
   lifecycle: production
   owner: devices-team
   providesApis:
-  - api-public-api-openapi
+    - api-public-api-openapi
   dependsOn:
-  - Component:authenticator
-  - Component:comments
-  - Component:gatekeeper
-  - Component:geoip2
-  - Component:hocuspocus
-  - Component:liebling
-  - Component:likes
-  - Component:media-service
-  - Component:moshimoshi
-  - Component:okidoki
-  - Component:playlists
-  - Component:search-dispatcher-remix
-  - Component:system-playlists
-  - Component:timeline
-  - Component:tracks
-  - Component:track-coordinator
-  - Component:submarine
+    - Component:authenticator
+    - Component:comments
+    - Component:gatekeeper
+    - Component:geoip2
+    - Component:hocuspocus
+    - Component:liebling
+    - Component:likes
+    - Component:media-service
+    - Component:moshimoshi
+    - Component:okidoki
+    - Component:playlists
+    - Component:search-dispatcher-remix
+    - Component:system-playlists
+    - Component:timeline
+    - Component:tracks
+    - Component:track-coordinator
+    - Component:submarine
 metadata:
   name: api-public
   description: SoundCloud's Public API
   links:
-  - url: https://grafana.soundcloud.org/dashboard/db/jvmkit-generic?var-prometheus=api-public&var-system=api-public&var-job=api-public
-    title: Telemetry
-    link: dashboard
-  - url: https://eng-doc.soundcloud.org/runbooks/devices/api-public/
-    title: Runbook
-    link: alert
-  - url: mailto:devices-team@soundcloud.com
-    title: Contact Email
-    link: help
+    - url: https://grafana.soundcloud.org/dashboard/db/jvmkit-generic?var-prometheus=api-public&var-system=api-public&var-job=api-public
+      title: Telemetry
+      link: dashboard
+    - url: https://eng-doc.soundcloud.org/runbooks/devices/api-public/
+      title: Runbook
+      link: alert
+    - url: mailto:devices-team@soundcloud.com
+      title: Contact Email
+      link: help
   annotations:
     gocd.org/pipelines: api-public
     soundcloud.com/contact-channel: devices-alerts
