@@ -298,11 +298,18 @@ enum TrackType {
     DJ_MIX = 14;
 }
 
+enum TrackFlag {
+  UNKNOWN_FLAG = 0;
+  GO_PLUS = 1;
+  FPR = 2;
+}
+
 message Track {
     ContentAuthorization authorization = 36;
     repeated Transcoding transcodings = 37;
     repeated WaveformUrl waveform_urls = 38;
     string track_authorization = 39;
+    repeated TrackFlag flags = 40;
 
     // additional fields that are not included in the response
     // unless they are specified in the track field mask

@@ -1,17 +1,18 @@
 package com.soundcloud.apipublic.service.playlists
 
 import java.time.Instant
-
 import com.soundcloud.jvmkit.module.twirp.proto.WellKnownOps._
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.apipublic.client.tracks.TrackRequest
 import com.soundcloud.apipublic.service.pagination.OffsetBasedPagination
+import com.soundcloud.apipublic.service.playlists.representation.PlaylistCounts
 import com.twitter.finagle.http.ParamMap
 import org.specs2.matcher.Scope
 import org.specs2.mutable.Specification
 import proto.soundcloud.playlists.api.{
   PlaylistPagination,
   PlaylistResponse,
+  Counts => ProtoCounts,
   Playlist => ProtoPlaylist,
   TrackRequest => ProtoTrackRequest
 }
@@ -54,11 +55,9 @@ class PlaylistProtoMapperSpec extends Specification {
       secretToken = Some("s3creT"),
       updatedAt = Some(defaultProtoDate),
       userUrn = "soundcloud:users:1",
-      likesCount = 500,
       isAlbum = false,
       setType = "set",
       managedByFeeds = false,
-      repostsCount = 50,
       publishedAt = Some(defaultProtoDate),
       embeddableBy = "all",
       license = Some("gtp"),
@@ -69,7 +68,8 @@ class PlaylistProtoMapperSpec extends Specification {
       cursor = Some("cursor"),
       ean = Some("ean"),
       streamable = Some(true),
-      uri = "uri"
+      uri = "uri",
+      counts = Some(ProtoCounts(Some(2)))
     )
   }
 
@@ -111,11 +111,9 @@ class PlaylistProtoMapperSpec extends Specification {
       visiblePlaylist.secretToken ==== Some("s3creT")
       visiblePlaylist.updatedAt ==== Some(defaultInstant)
       visiblePlaylist.userUrn ==== "soundcloud:users:1"
-      visiblePlaylist.likesCount ==== 500
       visiblePlaylist.isAlbum ==== false
       visiblePlaylist.setType ==== "set"
       visiblePlaylist.managedByFeeds ==== false
-      visiblePlaylist.repostsCount ==== 50
       visiblePlaylist.publishedAt ==== Some(defaultInstant)
       visiblePlaylist.embeddableBy ==== "all"
       visiblePlaylist.license ==== Some("gtp")
@@ -127,6 +125,7 @@ class PlaylistProtoMapperSpec extends Specification {
       visiblePlaylist.ean ==== Some("ean")
       visiblePlaylist.streamable ==== Some(true)
       visiblePlaylist.uri ==== "uri"
+      visiblePlaylist.counts.get ==== PlaylistCounts(Some(2))
     }
 
     "returns None when no visible playlist supplied" in new Context {

@@ -18,19 +18,6 @@ import scala.util.control.NonFatal
 class LieblingClient(jsonClient: JsonClient) extends FetchClient {
   val logger = SoundCloudLoggerFactory.getLogger(getClass)
 
-  def likeCounts(session: UserSession, targetUrns: Seq[Urn]): Future[List[LikesCount]] =
-    inBatches(targetUrns.toList, 50) { urns =>
-      fetchLikes(
-        session,
-        Path() / "likes_info",
-        Map("for_urns" -> urns, "includes" -> "likes_counts")
-      ).map(json => (json \ "likes_counts").as[List[LikesCount]])
-    }.rescue {
-      case NonFatal(ex) =>
-        logger.error("error getting counts from Liebling", ex)
-        Future.value(List.empty)
-    }
-
   def userTotalLikeCount(session: UserSession, urns: Seq[Urn]): Future[List[UserTotalLikes]] = {
     fetchLikes(session, Path() / "users_counts", Map("for_urns" -> urns))
       .map(json => (json \ "users").as[List[UserTotalLikes]])
@@ -54,13 +41,6 @@ class LieblingClient(jsonClient: JsonClient) extends FetchClient {
       params,
       headers
     ).map(ResponseHandlers.SingleItem(_))
-}
-
-case class LikesCount(target_urn: Urn, likes_count: Long)
-
-object LikesCount {
-  implicit val writes: Writes[LikesCount] = Json.writes[LikesCount]
-  implicit val reads: Reads[LikesCount] = Json.reads[LikesCount]
 }
 
 case class UserTotalLikes(user_urn: Urn, track_likes_count: Long, playlist_likes_count: Long) {

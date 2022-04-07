@@ -33,11 +33,9 @@ class PlaylistSpec extends Specification with TrackRepresentationSpecContext {
         secretToken = Some("secret"),
         updatedAt = None,
         userUrn = userUrn.toString,
-        likesCount = 0,
         isAlbum = false,
         setType = "mix",
         managedByFeeds = false,
-        repostsCount = 0,
         publishedAt = None,
         embeddableBy = "",
         license = None,
@@ -49,7 +47,8 @@ class PlaylistSpec extends Specification with TrackRepresentationSpecContext {
         ean = Some("7641825109894"),
         streamable = Some(false),
         uri = "https://api.soundcloud.com/playlists/42703821?secret_token=secret",
-        trackRequests = PlaylistTrackRequests(requests = List.empty, pagination = None)
+        trackRequests = PlaylistTrackRequests(requests = List.empty, pagination = None),
+        counts = Some(PlaylistCounts(Some(2)))
       )
 
     val playlist =
@@ -57,8 +56,7 @@ class PlaylistSpec extends Specification with TrackRepresentationSpecContext {
         visiblePlaylist,
         defaultUser,
         Some(defaultLabel),
-        Some(Urn.parse(visiblePlaylist.userUrn).get),
-        1L
+        Some(Urn.parse(visiblePlaylist.userUrn).get)
       )
   }
 
@@ -68,8 +66,7 @@ class PlaylistSpec extends Specification with TrackRepresentationSpecContext {
         visiblePlaylist,
         defaultUser,
         Some(defaultLabel),
-        Some(Urn("soundcloud", "users", "1")),
-        1L
+        Some(Urn("soundcloud", "users", "1"))
       )
 
     playlist.title ==== "playlist mix"
@@ -96,7 +93,7 @@ class PlaylistSpec extends Specification with TrackRepresentationSpecContext {
     playlist.tracks ==== None
     playlist.secretUri ==== None
     playlist.secretToken ==== None
-    playlist.likesCount ==== 1L
+    playlist.likesCount ==== 2L
   }
 
   "downloadable is set to true if all tracks are downloadable" in new Context {
@@ -146,12 +143,25 @@ class PlaylistSpec extends Specification with TrackRepresentationSpecContext {
         visiblePlaylistNoSecret,
         defaultUser,
         Some(defaultLabel),
-        Some(Urn.parse(visiblePlaylist.userUrn).get),
-        1L
+        Some(Urn.parse(visiblePlaylist.userUrn).get)
       )
     val enrichedPlaylist = Playlist.enrichPlaylistWithTracks(playlist, List(trackRepresentation))
 
     val json = Json.toJson(enrichedPlaylist)
     (json \ "tracks_uri").as[String] ==== "https://api.soundcloud.com/playlists/42703821/tracks"
+  }
+
+  "returns 0 likes_count if not returned from VisiblePlaylist" in new Context {
+    val visiblePlaylistWithoutCounts = visiblePlaylist.copy(counts = None)
+
+    override val playlist =
+      Playlist.fromVisiblePlaylist(
+        visiblePlaylistWithoutCounts,
+        defaultUser,
+        Some(defaultLabel),
+        Some(Urn.parse(visiblePlaylist.userUrn).get)
+      )
+
+    playlist.likesCount ==== 0
   }
 }

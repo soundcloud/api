@@ -106,8 +106,7 @@ object Playlist {
       playlist: VisiblePlaylist,
       playlistOwner: UserRepresentation,
       maybeLabel: Option[UserRepresentation],
-      requestingUserUrn: Option[Urn],
-      likesCount: Long
+      requestingUserUrn: Option[Urn]
   ): Playlist = {
     val releaseDay =
       playlist.releaseDate.map(date => LocalDateTime.ofInstant(date, ZoneOffset.UTC).getDayOfMonth)
@@ -141,7 +140,7 @@ object Playlist {
       artworkUrl = playlist.artworkUrl,
       ean = playlist.ean,
       streamable = playlist.streamable,
-      likesCount = likesCount,
+      likesCount = playlist.counts.flatMap(_.likes).getOrElse(0),
       embeddableBy = playlist.embeddableBy,
       labelId = playlist.labelId,
       labelName = playlist.labelName,

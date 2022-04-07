@@ -2,7 +2,11 @@ package com.soundcloud.apipublic.service.playlists
 
 import com.soundcloud.jvmkit.module.twirp.proto.WellKnownOps._
 import com.soundcloud.apipublic.service.pagination.OffsetBasedPagination
-import com.soundcloud.apipublic.service.playlists.representation.{PlaylistTrackRequests, VisiblePlaylist}
+import com.soundcloud.apipublic.service.playlists.representation.{
+  PlaylistCounts,
+  PlaylistTrackRequests,
+  VisiblePlaylist
+}
 import proto.soundcloud.playlists.api.{
   Playlist,
   PlaylistPagination,
@@ -35,11 +39,9 @@ class PlaylistProtoMapper {
       secretToken = playlist.secretToken,
       updatedAt = playlist.updatedAt.map(_.asInstant),
       userUrn = playlist.userUrn,
-      likesCount = playlist.likesCount,
       isAlbum = playlist.isAlbum,
       setType = playlist.setType,
       managedByFeeds = playlist.managedByFeeds,
-      repostsCount = playlist.repostsCount,
       publishedAt = playlist.publishedAt.map(_.asInstant),
       embeddableBy = playlist.embeddableBy,
       license = playlist.license,
@@ -51,7 +53,8 @@ class PlaylistProtoMapper {
       ean = playlist.ean,
       streamable = playlist.streamable,
       uri = playlist.uri,
-      trackRequests = PlaylistTrackRequests.build(trackRequests.toList, currentPagination, nextPagination)
+      trackRequests = PlaylistTrackRequests.build(trackRequests.toList, currentPagination, nextPagination),
+      counts = playlist.counts.map(PlaylistCounts.fromProto(_))
     )
   }
 

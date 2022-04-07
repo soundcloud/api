@@ -1,6 +1,6 @@
 package com.soundcloud.apipublic.service
 
-import com.soundcloud.apipublic.client.liebling.{LieblingClient, LikesCount}
+import com.google.protobuf.field_mask.FieldMask
 import com.soundcloud.apipublic.client.mothership.MoshimoshiClient
 import com.soundcloud.apipublic.client.mothership.response.representation.UserRepresentation
 import com.soundcloud.apipublic.handler.support.requestParser.AccessParams
@@ -23,6 +23,7 @@ import com.twitter.util.Future
 import proto.soundcloud.playlists.api.{
   CreatePlaylistRequest,
   GetVisiblePlaylistsRequest,
+  Playlist => ProtoPlaylist,
   PlaylistPagination,
   PlaylistResponse,
   UpdatePlaylistRequest,
@@ -32,12 +33,12 @@ import proto.soundcloud.playlists.api.{
   UpdatePlaylistArtworkRequest => UpdatePlaylistArtworkTwirpRequest,
   WritesService => PlaylistsWritesTwirpService
 }
+import scalapb.FieldMaskUtil
 
 class PlaylistsService(
     playlistsTwirpService: PlaylistsTwirpService,
     tracksService: TrackRepresentationsService,
     moshimoshiClient: MoshimoshiClient,
-    lieblingClient: LieblingClient,
     playlistsWritesTwirpService: PlaylistsWritesTwirpService,
     exceptionCollector: ExceptionCollector,
     hocuspocusService: HocuspocusService,
@@ -102,7 +103,12 @@ class PlaylistsService(
       pagination.map(p => PlaylistPagination(cursor = p.offset.map(_.toString), limit = p.limit))
 
     for {
-      visiblePlaylistObjects <- getPlaylistObjects(session, playlistRequests, playlistPagination)
+      visiblePlaylistObjects <- getPlaylistObjects(
+        session,
+        playlistRequests,
+        playlistPagination,
+        Some(PlaylistsService.playlistWithCountsFieldMask)
+      )
       visiblePlaylists = visiblePlaylistObjects.flatMap(response => playlistProtoMapper.apply(response, pagination))
       playlists <- resolvePlaylists(visiblePlaylists, session, access, showTracks.getOrElse(true))
     } yield playlists
@@ -117,7 +123,12 @@ class PlaylistsService(
     val playlistPagination = PlaylistPagination()
 
     for {
-      visiblePlaylistObjects <- getPlaylistObjects(session, playlistRequests, Some(playlistPagination))
+      visiblePlaylistObjects <- getPlaylistObjects(
+        session,
+        playlistRequests,
+        Some(playlistPagination),
+        Some(PlaylistsService.playlistWithCountsFieldMask)
+      )
       visiblePlaylists = visiblePlaylistObjects.flatMap(response => playlistProtoMapper.apply(response, None))
       playlists <- resolvePlaylists(visiblePlaylists, session, AccessParams.defaultAccess, showTracks = false)
     } yield playlists
@@ -294,35 +305,31 @@ class PlaylistsService(
       val userUrns: Seq[Urn] = visiblePlaylists.map(playlist => Urn.parse(playlist.userUrn).get) ++
         visiblePlaylists.flatMap(playlist => playlist.labelId.map(id => Urn("soundcloud", "users", id)))
 
-      for {
-        (users, likes) <- Future.join(
-          moshimoshiClient.fetchUserObjects(session, userUrns.toSet),
-          lieblingClient.likeCounts(session, urns.map(urn => Urn.parse(urn).get))
-        )
-      } yield mapPlaylists(urns, visiblePlaylists, users, likes, session)
+      moshimoshiClient
+        .fetchUserObjects(session, userUrns.toSet)
+        .map(users => createPlaylistWithUserData(urns, visiblePlaylists, users, session))
     }
   }
 
-  private def mapPlaylists(
+  private def createPlaylistWithUserData(
       urns: List[String],
       visiblePlaylists: List[VisiblePlaylist],
       users: List[UserRepresentation],
-      likeCounts: List[LikesCount],
       session: UserSession
   ): List[Playlist] = {
     for {
       urn <- urns
       playlist <- visiblePlaylists.find(_.urn == urn)
-      likesCount <- likeCounts.find(_.target_urn == Urn.parse(urn).get).map(_.likes_count)
       owner <- users.find(_.urn.toString == playlist.userUrn)
       maybeLabelOwner = playlist.labelId.flatMap(id => users.find(_.urn.identifier == id))
-    } yield Playlist.fromVisiblePlaylist(playlist, owner, maybeLabelOwner, session.user, likesCount)
+    } yield Playlist.fromVisiblePlaylist(playlist, owner, maybeLabelOwner, session.user)
   }
 
   private def getPlaylistObjects(
       session: UserSession,
       playlistRequests: List[PlaylistRequest],
-      pagination: Option[PlaylistPagination]
+      pagination: Option[PlaylistPagination],
+      fieldMask: Option[FieldMask] = None
   ): Future[List[PlaylistResponse]] = {
     val protoPlaylistRequests = playlistRequests.map(request =>
       ProtoPlaylistRequest(
@@ -332,7 +339,7 @@ class PlaylistsService(
       )
     )
 
-    val getVisiblePlaylistsRequest = createGetVisiblePlaylistRequest(session, protoPlaylistRequests)
+    val getVisiblePlaylistsRequest = createGetVisiblePlaylistRequest(session, protoPlaylistRequests, fieldMask)
 
     playlistsTwirpService
       .getVisiblePlaylists(getVisiblePlaylistsRequest)
@@ -343,7 +350,8 @@ class PlaylistsService(
 
   private def createGetVisiblePlaylistRequest(
       session: UserSession,
-      playlistRequests: Seq[ProtoPlaylistRequest]
+      playlistRequests: Seq[ProtoPlaylistRequest],
+      fieldMask: Option[FieldMask]
   ): GetVisiblePlaylistsRequest = {
     val protoUserSession = session.asProtoSession
 
@@ -352,7 +360,15 @@ class PlaylistsService(
     GetVisiblePlaylistsRequest(
       playlistRequests = playlistRequests,
       userSession = Some(protoUserSession),
-      subscriptionCountryCode = Option(subscriptionCountryCode)
+      subscriptionCountryCode = Option(subscriptionCountryCode),
+      fieldMask = fieldMask
     )
   }
+}
+
+object PlaylistsService {
+
+  val playlistWithCountsFieldMask: FieldMask = FieldMaskUtil.selectFieldNumbers[ProtoPlaylist](
+    Set(ProtoPlaylist.COUNTS_FIELD_NUMBER)
+  )
 }

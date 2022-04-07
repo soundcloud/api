@@ -6,8 +6,7 @@ import com.soundcloud.jvmkit.module.http.client.{JsonClient, Params}
 import com.soundcloud.jvmkit.module.util.http.Headers
 import com.soundcloud.jvmkit.module.util.session.UserSessionBuilder
 import com.soundcloud.jvmkit.module.util.{Path, Urn}
-import com.twitter.finagle.IndividualRequestTimeoutException
-import com.twitter.util.{Await, Duration, Future}
+import com.twitter.util.{Await, Future}
 import play.api.libs.json.Json
 
 class LieblingClientSpec extends UnitSpecification {
@@ -28,52 +27,6 @@ class LieblingClientSpec extends UnitSpecification {
     val notFoundTrackUrn = Urn("soundcloud", "tracks", "0")
 
     val requestBodyString = s"""{"user_urn":"${userUrn.toString}"}"""
-
-    val lieblingLikesCount = Json.parse("""{
-        |  "likes_counts": [
-        |    {
-        |      "likes_count": 18,
-        |      "target_urn": "soundcloud:playlists:48786981"
-        |    },
-        |    {
-        |      "likes_count": 0,
-        |      "target_urn": "soundcloud:tracks:48786981"
-        |    }
-        |  ],
-        |  "liked_track_urns": [
-        |    "soundcloud:tracks:48786981"
-        |  ]
-        |}""".stripMargin)
-  }
-
-  "#likeCounts" >> {
-    "successful response" in new Context() {
-      val targets = Seq(playlistUrn, trackUrn)
-
-      expectOkResponse(
-        Path() / "likes_info",
-        lieblingLikesCount,
-        Map("for_urns" -> targets, "includes" -> "likes_counts")
-      )
-      val actual = Await.result(client.likeCounts(session, targets))
-
-      actual must haveSize(2)
-      actual ==== (lieblingLikesCount \ "likes_counts").as[List[LikesCount]]
-    }
-
-    "unsucessful response" in new Context {
-      val targets = Seq(playlistUrn, trackUrn)
-      service.getWithSession(
-        session,
-        Path() / "likes_info",
-        Params("for_urns" -> targets, "includes" -> "likes_counts"),
-        Headers.empty
-      ) returns Future.exception(new IndividualRequestTimeoutException(Duration.fromMilliseconds(1000L)))
-
-      val actual = Await.result(client.likeCounts(session, targets))
-
-      actual must haveSize(0)
-    }
   }
 
   "#userTotalLikeCounts" >> {

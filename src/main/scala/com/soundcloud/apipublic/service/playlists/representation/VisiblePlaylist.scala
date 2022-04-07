@@ -20,11 +20,9 @@ case class VisiblePlaylist(
     secretToken: Option[String],
     updatedAt: Option[Instant],
     userUrn: String,
-    likesCount: Long,
     isAlbum: Boolean,
     setType: String,
     managedByFeeds: Boolean,
-    repostsCount: Long,
     publishedAt: Option[Instant],
     embeddableBy: String,
     license: Option[String],
@@ -36,5 +34,6 @@ case class VisiblePlaylist(
     ean: Option[String],
     streamable: Option[Boolean],
     uri: String,
-    trackRequests: PlaylistTrackRequests
+    trackRequests: PlaylistTrackRequests,
+    counts: Option[PlaylistCounts]
 )

@@ -188,7 +188,6 @@ class Clients(
       playlistsTwirpClient,
       tracksService,
       okidokiClient,
-      lieblingClient,
       playlistsWritesTwirpClient,
       exceptionCollector,
       hocuspocusClient
