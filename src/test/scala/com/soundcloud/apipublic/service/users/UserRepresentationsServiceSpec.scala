@@ -1,7 +1,6 @@
 package com.soundcloud.apipublic.service.users
 
 import com.soundcloud.apipublic.client.followcounts.{FollowCounts, FollowCountsClient}
-import com.soundcloud.apipublic.client.liebling.{LieblingClient, UserTotalLikes}
 import com.soundcloud.apipublic.client.mothership.OkidokiClient
 import com.soundcloud.apipublic.client.mothership.response.representation.{CreatorSubscription, Product}
 import com.soundcloud.apipublic.client.reposts.RepostsClient
@@ -9,12 +8,19 @@ import com.soundcloud.apipublic.subscriptions.{SubmarineClient, SubmarineCreator
 import com.soundcloud.apipublic.test.UnitSpecification
 import com.soundcloud.apipublic.test.fixtures.Fixtures
 import com.soundcloud.apipublic.test.fixtures.Fixtures.submarineCreatorSubscription
+import com.soundcloud.jvmkit.module.telemetry.exceptions.ExceptionCollector
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.twitter.finagle.http.{Response, Status}
 import com.twitter.util.{Await, Future}
 import org.mockito.Mockito.when
 import play.api.libs.json.{JsObject, Json}
+import proto.soundcloud.likes.api.{
+  BatchGetUserLikeCountRequest,
+  BatchGetUserLikeCountResponse,
+  GetUserLikeCountResponse,
+  LikesClientProtobuf
+}
 
 class UserRepresentationsServiceSpec extends UnitSpecification {
 
@@ -22,8 +28,9 @@ class UserRepresentationsServiceSpec extends UnitSpecification {
     val followCountsClient = mock[FollowCountsClient]
     val repostsClient = mock[RepostsClient]
     val okidokiClient = mock[OkidokiClient]
-    val lieblingClient = mock[LieblingClient]
+    val likesClient = mock[LikesClientProtobuf]
     val submarineClient = mock[SubmarineClient]
+    val exceptionCollector = mock[ExceptionCollector]
 
     val user1 = Urn("soundcloud", "users", "123")
 
@@ -33,7 +40,7 @@ class UserRepresentationsServiceSpec extends UnitSpecification {
     val repostCounts = Map(user1 -> 456L)
     val requestedUrns = Seq(user1)
     val okidokiUser = Fixtures.okidokiUsersWithDeprecatedCounts
-    val totalLikesCount = UserTotalLikes(user1, 2, 2)
+    val likesResponse = BatchGetUserLikeCountResponse(Seq(GetUserLikeCountResponse(user1.toString, 2L, 2L)))
 
     val successResponse = Json.stringify(submarineCreatorSubscription)
     val response = Response(Status.Ok)
@@ -49,8 +56,8 @@ class UserRepresentationsServiceSpec extends UnitSpecification {
         .thenReturn(Future.value(repostCounts))
       when(okidokiClient.fetch(session, requestedUrns.toSet))
         .thenReturn(Future.value(okidokiUser.as[List[JsObject]]))
-      when(lieblingClient.userTotalLikeCount(session, requestedUrns))
-        .thenReturn(Future.value(List(totalLikesCount)))
+      when(likesClient.getUserLikeCountBatch(BatchGetUserLikeCountRequest(requestedUrns.map(_.toString))))
+        .thenReturn(Future.value(likesResponse))
       submarineClient.fetchActiveCreatorSubscriptions(session, requestedUrns.toSet) returns Future.value(
         submarineSubscription
       )
@@ -61,8 +68,9 @@ class UserRepresentationsServiceSpec extends UnitSpecification {
         followCountsClient,
         repostsClient,
         okidokiClient,
-        lieblingClient,
-        submarineClient
+        likesClient,
+        submarineClient,
+        exceptionCollector
       )
   }
 
@@ -121,10 +129,20 @@ class UserRepresentationsServiceSpec extends UnitSpecification {
       result.head.reposts_count ==== Some(0)
     }
 
-    "returns moshi favorites counts are zero if repost liebling client returns an empty list" in new Context {
+    "returns moshi favorites counts as zero if likes client returns an empty list" in new Context {
       stubClients()
-      when(lieblingClient.userTotalLikeCount(session, requestedUrns))
-        .thenReturn(Future.value(List()))
+      when(likesClient.getUserLikeCountBatch(BatchGetUserLikeCountRequest(requestedUrns.map(_.toString))))
+        .thenReturn(Future.value(BatchGetUserLikeCountResponse()))
+
+      val result = Await.result(userRepresentationService.users(session, requestedUrns))
+
+      result.head.public_favorites_count ==== Some(0)
+    }
+
+    "returns moshi favorites counts as zero if likes client throws an exception" in new Context {
+      stubClients()
+      likesClient.getUserLikeCountBatch(BatchGetUserLikeCountRequest(requestedUrns.map(_.toString))) returns
+        Future.exception(new RuntimeException("Something went wrong"))
 
       val result = Await.result(userRepresentationService.users(session, requestedUrns))
 

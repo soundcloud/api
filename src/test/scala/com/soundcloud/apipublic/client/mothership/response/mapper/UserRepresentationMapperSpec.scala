@@ -2,7 +2,6 @@ package com.soundcloud.apipublic.client.mothership.response.mapper
 
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.apipublic.client.followcounts.FollowCounts
-import com.soundcloud.apipublic.client.liebling.UserTotalLikes
 import com.soundcloud.apipublic.client.mothership.response.representation.{CreatorSubscription, Product}
 import com.soundcloud.apipublic.service.users.UserUploadQuota
 import com.soundcloud.apipublic.subscriptions.{Package, SubmarineCreatorSubscription}
@@ -20,7 +19,7 @@ class UserRepresentationMapperSpec extends UnitSpecification {
 
     val followCounts = Some(Map(userUrn -> FollowCounts(userUrn, 123, 456)))
     val repostCounts = Some(Map(userUrn -> 789L))
-    val totalLikesCount = Some(Map(userUrn -> UserTotalLikes(userUrn, 2, 4)))
+    val totalLikesCount = Some(Map(userUrn -> 6L))
     val uploadQuota = UserUploadQuota(1, Some(2))
 
     lazy val userJson = Fixtures.moshiUser

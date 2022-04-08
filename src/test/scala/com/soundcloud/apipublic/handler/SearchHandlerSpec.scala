@@ -7,7 +7,6 @@ import com.soundcloud.jvmkit.module.telemetry.exceptions.ExceptionCollector
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.apipublic.Routing
 import com.soundcloud.apipublic.client.followcounts.{FollowCounts, FollowCountsClient}
-import com.soundcloud.apipublic.client.liebling.LieblingClient
 import com.soundcloud.apipublic.client.mothership.response.representation.UserRepresentation
 import com.soundcloud.apipublic.client.reposts.RepostsClient
 import com.soundcloud.apipublic.handler.representation.collection.CollectionResponse.MaxCacheAge
@@ -32,7 +31,6 @@ class SearchHandlerSpec extends UnitSpecification {
     def followCountsSeq: Seq[FollowCounts] = Seq.empty
 
     val followCountsClientMock = mock[FollowCountsClient]
-    val lieblingClientMock = mock[LieblingClient]
     val repostsClientMock = mock[RepostsClient]
     val exceptionCollector = new ExceptionCollector(Telemetry.createIsolatedInstance)
     val searchService = mock[SearchService]

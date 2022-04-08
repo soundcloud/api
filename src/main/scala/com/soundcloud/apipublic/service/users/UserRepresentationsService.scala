@@ -3,21 +3,26 @@ package com.soundcloud.apipublic.service.users
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.apipublic.client.followcounts.FollowCountsClient
-import com.soundcloud.apipublic.client.liebling.{LieblingClient, UserTotalLikes}
 import com.soundcloud.apipublic.client.mothership.OkidokiClient
 import com.soundcloud.apipublic.client.mothership.response.mapper.UserRepresentationMapper
 import com.soundcloud.apipublic.client.mothership.response.representation.UserRepresentation
 import com.soundcloud.apipublic.client.reposts.RepostsClient
 import com.soundcloud.apipublic.service.users.UserOrderingUtils.sortByProvidedUrns
 import com.soundcloud.apipublic.subscriptions.SubmarineClient
+import com.soundcloud.jvmkit.module.telemetry.exceptions.ExceptionCollector
+import com.soundcloud.jvmkit.module.telemetry.exceptions.ExceptionHandler.FutureExtensions
 import com.twitter.util.Future
+import proto.soundcloud.likes.api.{BatchGetUserLikeCountRequest, LikesClientProtobuf}
+
+import scala.util.control.NonFatal
 
 class UserRepresentationsService(
     followCountsClient: FollowCountsClient,
     repostsClient: RepostsClient,
     okidokiClient: OkidokiClient,
-    lieblingClient: LieblingClient,
-    submarineClient: SubmarineClient
+    likesClient: LikesClientProtobuf,
+    submarineClient: SubmarineClient,
+    exceptionCollector: ExceptionCollector
 ) {
   def user(
       session: UserSession,
@@ -38,7 +43,7 @@ class UserRepresentationsService(
           .counts(session, urns)
           .map(_.map(followCounts => (followCounts.userUrn, followCounts)).toMap),
         repostsClient.getRepostCountsByUrnWithFallback(session, uniqueUrns),
-        getTotalLikesCount(session, uniqueUrns),
+        getTotalLikesCount(uniqueUrns),
         submarineClient.fetchActiveCreatorSubscriptions(session, uniqueUrns)
       )
       fullUsers = users.map(
@@ -54,8 +59,19 @@ class UserRepresentationsService(
     } yield sortByProvidedUrns(fullUsers, urns).toList
   }
 
-  private def getTotalLikesCount(session: UserSession, urns: Set[Urn]): Future[Map[Urn, UserTotalLikes]] =
-    lieblingClient
-      .userTotalLikeCount(session, urns.toSeq)
-      .map(_.map(count => (count.user_urn, count)).toMap)
+  private def getTotalLikesCount(urns: Set[Urn]): Future[Map[Urn, Long]] =
+    likesClient
+      .getUserLikeCountBatch(
+        BatchGetUserLikeCountRequest(urns.map(_.toString).toSeq)
+      )
+      .map(
+        _.users
+          .map(userCounts =>
+            (Urn.parse(userCounts.userUrn).get, userCounts.trackLikesCount + userCounts.playlistLikesCount)
+          )
+          .toMap
+      )
+      .handleAndReport(exceptionCollector) {
+        case NonFatal(_) => Map.empty
+      }
 }

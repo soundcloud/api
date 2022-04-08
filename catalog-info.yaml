@@ -68,7 +68,6 @@ spec:
     - Component:gatekeeper
     - Component:geoip2
     - Component:hocuspocus
-    - Component:liebling
     - Component:likes
     - Component:media-service
     - Component:moshimoshi

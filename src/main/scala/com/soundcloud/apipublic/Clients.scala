@@ -3,7 +3,6 @@ package com.soundcloud.apipublic
 import com.soundcloud.apipublic.client._
 import com.soundcloud.apipublic.client.followcounts.FollowCountsClient
 import com.soundcloud.apipublic.client.follows.FollowsClient
-import com.soundcloud.apipublic.client.liebling.LieblingClient
 import com.soundcloud.apipublic.client.media.TrackAccessRecorderClient
 import com.soundcloud.apipublic.client.moshimoshicomments.MoshimoshiCommentsClient
 import com.soundcloud.apipublic.client.mothership.{MoshimoshiClient, OkidokiClient, RichOkidokiClient}
@@ -66,8 +65,6 @@ class Clients(
   val okidokiClient = new OkidokiClient(okidokiJsonClient, exceptionCollector)
 
   val timelineClient = new TimelineJsonClient(jsonClient("timeline"))
-
-  val lieblingClient = new LieblingClient(jsonClient("liebling"))
 
   val searchJsonClient = jsonClient("search")
   val searchClient = new SearchClient(searchJsonClient)
@@ -209,8 +206,9 @@ class Clients(
       followCountsClient,
       repostsClient,
       okidokiClient,
-      lieblingClient,
-      submarineClient
+      likesTwirpClient,
+      submarineClient,
+      exceptionCollector
     )
 
   val meService = new MeService(userRepresentationsService, okidokiClient, trackCoordinatorClient, exceptionCollector)

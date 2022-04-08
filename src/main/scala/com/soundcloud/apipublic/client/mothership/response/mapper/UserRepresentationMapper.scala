@@ -1,9 +1,6 @@
 package com.soundcloud.apipublic.client.mothership.response.mapper
 
-import com.soundcloud.jvmkit.module.json.play.UrnFormat._
-import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.apipublic.client.followcounts.FollowCounts
-import com.soundcloud.apipublic.client.liebling.UserTotalLikes
 import com.soundcloud.apipublic.client.mothership.response.representation.{
   CreatorSubscription,
   Me,
@@ -12,6 +9,8 @@ import com.soundcloud.apipublic.client.mothership.response.representation.{
 }
 import com.soundcloud.apipublic.service.users.UserUploadQuota
 import com.soundcloud.apipublic.subscriptions.{SubmarineCreatorSubscription, SubmarineToLegacyMapper}
+import com.soundcloud.jvmkit.module.json.play.UrnFormat._
+import com.soundcloud.jvmkit.module.util.Urn
 import play.api.libs.json.{JsObject, JsValue}
 
 object MeMapper {
@@ -64,7 +63,7 @@ object UserRepresentationMapper {
       json: JsValue,
       maybeFollowCounts: Option[Map[Urn, FollowCounts]] = None,
       maybeRepostsCounts: Option[Map[Urn, Long]] = None,
-      maybeTotalLikesCounts: Option[Map[Urn, UserTotalLikes]] = None,
+      maybeTotalLikesCounts: Option[Map[Urn, Long]] = None,
       loggedInUser: Option[Urn] = None,
       maybeSubscriptions: Option[Map[Urn, Option[SubmarineCreatorSubscription]]] = None
   ): UserRepresentation = {
@@ -103,8 +102,7 @@ object UserRepresentationMapper {
       subscriptions = creatorSubscription
         .map(_ => makeSubscriptions(creatorSubscription, isLoggedInUser))
         .getOrElse(getMoshiSubscriptions(json)),
-      public_favorites_count =
-        publicFavoritesCount.map(_.totalLikeCount).orElse((json \ "public_favorites_count").asOpt[Long]),
+      public_favorites_count = publicFavoritesCount.orElse((json \ "public_favorites_count").asOpt[Long]),
       public_playlists_count = (json \ "public_playlists_count").asOpt[Int],
       comments_count = (json \ "comments_count").asOpt[Int],
       likes_count = (json \ "public_favorites_count").asOpt[Long],
