@@ -1,27 +1,26 @@
 package com.soundcloud.apipublic.service.comments
 
-import com.soundcloud.jvmkit.module.outcome._
-import com.soundcloud.jvmkit.module.rollout.{BasicRolloutFeature, Rollout}
-import com.soundcloud.jvmkit.module.twirp.proto.WellKnownOps.JodaDateTimeExt
-import com.soundcloud.jvmkit.module.util.Urn
-import com.soundcloud.apipublic.client.comments.{Comment => CommentFromVAS}
+import com.soundcloud.apipublic.client.comments.{CommentsClient, Comment => CommentFromVAS}
 import com.soundcloud.apipublic.client.moshimoshicomments._
 import com.soundcloud.apipublic.client.mothership.response.representation.UserRepresentation
 import com.soundcloud.apipublic.client.mothership.{MoshimoshiClient, RichOkidokiClient}
+import com.soundcloud.apipublic.client.tracks.{CreateTrackCommentUserHasSpamWarning, TracksClient}
 import com.soundcloud.apipublic.handler.comments.CreateCommentParams
 import com.soundcloud.apipublic.service.pagination.OffsetBasedPagination
 import com.soundcloud.apipublic.service.representation.collection.Collection
 import com.soundcloud.apipublic.service.users.UserBuilder
 import com.soundcloud.apipublic.test.UnitSpecification
 import com.soundcloud.apipublic.test.fixtures.Fixtures
-import com.soundcloud.twinagle.{ErrorCode, TwinagleException}
+import com.soundcloud.jvmkit.module.outcome._
+import com.soundcloud.jvmkit.module.rollout.{BasicRolloutFeature, Rollout}
+import com.soundcloud.jvmkit.module.twirp.proto.WellKnownOps.JodaDateTimeExt
+import com.soundcloud.jvmkit.module.util.Urn
 import com.twitter.finagle.http.ParamMap
 import com.twitter.util.{Await, Future}
-import org.joda.time.DateTime
+import org.joda.time.{DateTime, DateTimeZone, LocalDateTime}
 import org.joda.time.format.DateTimeFormat
 import org.mockito.Mockito.{verify, when}
-import proto.soundcloud.comments.api.{CommentsClientProtobuf, GetCommentsResponse, Comment => ProtoComment}
-import proto.soundcloud.tracks.api.{GetTrackCommentsResponse, CommentsClientProtobuf => TracksCommentsClientProtobuf}
+import proto.soundcloud.comments.api.{Comment => ProtoComment}
 
 import scala.util.Try
 
@@ -31,9 +30,8 @@ class CommentServiceSpec extends UnitSpecification {
     val okidokiClient = mock[RichOkidokiClient]
     val moshimoshiClient = mock[MoshimoshiClient]
     val moshimoshiCommentsClient = mock[MoshimoshiCommentsClient]
-    val commentsTwirpClient = mock[CommentsClientProtobuf]
-    val tracksTwirpClient = mock[TracksCommentsClientProtobuf]
-
+    val tracksClient = mock[TracksClient]
+    val commentsClient = mock[CommentsClient]
     val rollout = mock[Rollout]
 
     val trackId = 4876
@@ -130,8 +128,8 @@ class CommentServiceSpec extends UnitSpecification {
         okidokiClient,
         moshimoshiClient,
         moshimoshiCommentsClient,
-        tracksTwirpClient,
-        commentsTwirpClient,
+        tracksClient,
+        commentsClient,
         rollout
       )
 
@@ -144,8 +142,8 @@ class CommentServiceSpec extends UnitSpecification {
 
         val result = Await.result(commentService.fetchTracksComments(anonymousSession, trackUrn, pagination).value)
 
-        there was no(tracksTwirpClient).getTrackComments(any)
-        there was no(commentsTwirpClient).getComments(any)
+        there was no(tracksClient).getComments(any, any, any, any, any)
+        there was no(commentsClient).getComments(any)
         there was one(moshimoshiCommentsClient).fetchTrackComments(any, any, any)
       }
 
@@ -242,11 +240,11 @@ class CommentServiceSpec extends UnitSpecification {
           )
         )
 
-        when(tracksTwirpClient.getTrackComments(any))
-          .thenReturn(Future.value(GetTrackCommentsResponse(commentsFromVAS.map(_.urn))))
+        when(tracksClient.getComments(any, any, any, any, any))
+          .thenReturn(commentsFromVAS.map(comment => Urn.parse(comment.urn).get).goodF)
 
-        when(commentsTwirpClient.getComments(any))
-          .thenReturn(Future.value(GetCommentsResponse(commentsFromVAS)))
+        when(commentsClient.getComments(any))
+          .thenReturn(commentsFromVAS.map(CommentFromVAS.fromProto).goodF)
 
         when(
           okidokiClient.fetchUsersMap(
@@ -268,17 +266,13 @@ class CommentServiceSpec extends UnitSpecification {
       "only calls comments VAS" in new CommentsNewContext {
         val result = Await.result(commentService.fetchTracksComments(anonymousSession, trackUrn, pagination).value)
 
-        there was one(tracksTwirpClient).getTrackComments(any)
-        there was one(commentsTwirpClient).getComments(any)
+        there was one(tracksClient).getComments(any, any, any, any, any)
+        there was one(commentsClient).getComments(any)
         there was no(moshimoshiCommentsClient).fetchTrackComments(any, any, any)
       }
 
-      "returns NotValid if the request to tracks vas returns Invalid argument" in new CommentsNewContext {
-        when(tracksTwirpClient.getTrackComments(any)).thenReturn(
-          Future.exception(
-            TwinagleException(ErrorCode.InvalidArgument, "")
-          )
-        )
+      "returns NotValid if the request to tracksClient returns Invalid argument" in new CommentsNewContext {
+        when(tracksClient.getComments(any, any, any, any, any)).thenReturn(NotValid("").badF)
 
         val result = Await.result(commentService.fetchTracksComments(anonymousSession, trackUrn, pagination).value)
 
@@ -286,71 +280,44 @@ class CommentServiceSpec extends UnitSpecification {
 
       }
 
-      "returns empty comments list if tracks vas returns PermissionDenied" in new CommentsNewContext {
-        when(tracksTwirpClient.getTrackComments(any)).thenReturn(
-          Future.exception(
-            TwinagleException(ErrorCode.PermissionDenied, "")
-          )
-        )
+      "returns empty comments list if tracksClient returns empty list" in new CommentsNewContext {
+        when(tracksClient.getComments(any, any, any, any, any)).thenReturn(Seq.empty.goodF)
+        when(commentsClient.getComments(any)).thenReturn(Seq.empty.goodF)
 
         val result = Await.result(commentService.fetchTracksComments(anonymousSession, trackUrn, pagination).value)
 
         result ==== Collection(Seq[Comment]().toList, None).good
       }
 
-      "returns empty comments list if tracks vas returns NotFound" in new CommentsNewContext {
-        when(tracksTwirpClient.getTrackComments(any)).thenReturn(
-          Future.exception(
-            TwinagleException(ErrorCode.NotFound, "")
-          )
-        )
-
+      "throws exception if the tracksClient is throwing a RuntimeException" in new CommentsNewContext {
+        when(tracksClient.getComments(any, any, any, any, any))
+          .thenReturn(UnexpectedError(new RuntimeException("internal server error")).badF)
         val result = Await.result(commentService.fetchTracksComments(anonymousSession, trackUrn, pagination).value)
 
-        result ==== Collection(Seq[Comment]().toList, None).good
+        result must beLeft.like {
+          case UnexpectedError(throwable) =>
+            throwable.getMessage must be_===(
+              "internal server error"
+            )
+        }
       }
 
-      "returns NotValid if comments vas returns InvalidArgument" in new CommentsNewContext {
-        val expectedResponse = NotValid("").bad
+      "throws exception when the commentsClient throws a RuntimeException" in new CommentsNewContext {
+        when(tracksClient.getComments(any, any, any, any, any))
+          .thenReturn(commentsFromVAS.map(comment => Urn.parse(comment.urn).get).goodF)
 
-        when(tracksTwirpClient.getTrackComments(any))
-          .thenReturn(Future.value(GetTrackCommentsResponse(commentsFromVAS.map(_.urn))))
-
-        when(commentsTwirpClient.getComments(any)).thenReturn(
-          Future.exception(
-            TwinagleException(ErrorCode.InvalidArgument, "")
+        when(commentsClient.getComments(any))
+          .thenReturn(
+            UnexpectedError(new RuntimeException("unexpected response from comments: internal server error")).badF
           )
-        )
 
         val result = Await.result(commentService.fetchTracksComments(anonymousSession, trackUrn, pagination).value)
-
-        result ==== expectedResponse
-      }
-
-      "throws exception if the tracks vas is throwing a RuntimeException" in new CommentsNewContext {
-        when(tracksTwirpClient.getTrackComments(any))
-          .thenReturn(Future.exception(TwinagleException(ErrorCode.Internal, "internal server error")))
-
-        Await.result(commentService.fetchTracksComments(anonymousSession, trackUrn, pagination).value) must throwA(
-          new RuntimeException(
-            s"unexpected response from tracks: internal server error"
-          )
-        )
-
-      }
-
-      "throws exception if the comments vas is throwing a RuntimeException" in new CommentsNewContext {
-        when(tracksTwirpClient.getTrackComments(any))
-          .thenReturn(Future.value(GetTrackCommentsResponse(commentsFromVAS.map(_.urn))))
-
-        when(commentsTwirpClient.getComments(any))
-          .thenReturn(Future.exception(TwinagleException(ErrorCode.Internal, "internal server error")))
-
-        Await.result(commentService.fetchTracksComments(anonymousSession, trackUrn, pagination).value) must throwA(
-          new RuntimeException(
-            s"unexpected response from comments: internal server error"
-          )
-        )
+        result must beLeft.like {
+          case UnexpectedError(throwable) =>
+            throwable.getMessage must be_===(
+              "unexpected response from comments: internal server error"
+            )
+        }
       }
 
       "fetches the user representations for each comment" in new CommentsNewContext {
@@ -423,8 +390,17 @@ class CommentServiceSpec extends UnitSpecification {
     }
   }
 
-  "#createComment" >> {
-    "returns Comment on success" in new Context {
+  "#createComment via moshimoshi" >> {
+
+    trait MoshimoshiContext extends Context {
+      val tracksVasCreateComment = BasicRolloutFeature(
+        "tracks-vas-create-comment"
+      )
+
+      rollout.isActive(tracksVasCreateComment) returns Future.value(false)
+    }
+
+    "returns Comment on success via Moshimoshi" in new MoshimoshiContext {
       val createCommentParams = CreateCommentParams(trackUrn, "bar", Some(1000), None)
       val okidokiComment = moshimoshiResponse.as[MoshimoshiCommentsComment]
       val user = UserBuilder.user(1)
@@ -434,11 +410,11 @@ class CommentServiceSpec extends UnitSpecification {
       when(okidokiClient.fetchUsersMap(anonymousSession, Set(okidokiComment.user.self.urn)))
         .thenReturn(Future(Map(okidokiComment.user.self.urn -> user)))
 
-      val result = Await.result(commentService.createComment(anonymousSession, createCommentParams))
+      val result = Await.result(commentService.createComment(anonymousSession, createCommentParams).value)
       result ==== Comment.fromOkidokiComment(okidokiComment, user).good
     }
 
-    "adds secret token to comment if present" in new Context {
+    "adds secret token to comment if present" in new MoshimoshiContext {
       val secretToken = Some("secret-token")
       val createCommentParams = CreateCommentParams(trackUrn, "bar", Some(1000), secretToken)
       val okidokiComment = moshimoshiResponse.as[MoshimoshiCommentsComment]
@@ -449,23 +425,23 @@ class CommentServiceSpec extends UnitSpecification {
       when(okidokiClient.fetchUsersMap(anonymousSession, Set(okidokiComment.user.self.urn)))
         .thenReturn(Future(Map(okidokiComment.user.self.urn -> user)))
 
-      val result = Await.result(commentService.createComment(anonymousSession, createCommentParams))
+      val result = Await.result(commentService.createComment(anonymousSession, createCommentParams).value)
       result match {
         case Good(comment) => comment.uri ==== "https://api.soundcloud.com/comments/123?secret_token=secret-token"
         case Bad(_) => true ==== false
       }
     }
 
-    "forwards failures" in new Context {
+    "forwards failures" in new MoshimoshiContext {
       val createCommentParams = CreateCommentParams(trackUrn, "bar", Some(1000), None)
 
       when(moshimoshiClient.createComment(anonymousSession, createCommentParams)).thenReturn(Future(NotValid("").bad))
 
-      val result = Await.result(commentService.createComment(anonymousSession, createCommentParams))
+      val result = Await.result(commentService.createComment(anonymousSession, createCommentParams).value)
       result ==== NotValid("").bad
     }
 
-    "handles userservice failures" in new Context {
+    "handles userservice failures" in new MoshimoshiContext {
       val createCommentParams = CreateCommentParams(trackUrn, "bar", Some(1000), None)
       val okidokiComment = moshimoshiResponse.as[MoshimoshiCommentsComment]
 
@@ -474,8 +450,88 @@ class CommentServiceSpec extends UnitSpecification {
       when(okidokiClient.fetchUsersMap(anonymousSession, Set(okidokiComment.user.self.urn)))
         .thenReturn(Future(Map.empty[Urn, UserRepresentation]))
 
-      val result = Await.result(commentService.createComment(anonymousSession, createCommentParams))
+      val result = Await.result(commentService.createComment(anonymousSession, createCommentParams).value)
       result ==== NotFound().bad
     }
   }
+
+  "#createComment via new comment service" >> {
+
+    trait TrackCommentsCreateContext extends Context {
+      val tracksVasCreateComment = BasicRolloutFeature(
+        "tracks-vas-create-comment"
+      )
+
+      rollout.isActive(tracksVasCreateComment) returns Future.value(true)
+
+      val urn = Urn("soundcloud", "comments", "1")
+      val comment = CommentFromVAS.fromProto(commentFromVAS1)
+      val user = UserBuilder.user(comment.user.identifier.toLong)
+      val createdAt: DateTime = LocalDateTime.now().toDateTime(DateTimeZone.UTC)
+
+      lazy val createCommentResponse = urn.goodF
+      when(tracksClient.createComment(any, any))
+        .thenReturn(createCommentResponse)
+
+      when(okidokiClient.fetchUsersMap(anonymousSession, Set(anonymousSession.getUser)))
+        .thenReturn(Future(Map(anonymousSession.getUser -> user)))
+
+      val createCommentParams =
+        CreateCommentParams(comment.track, comment.body, comment.timestamp.map(s => s.toInt), comment.secretToken)
+      lazy val result =
+        Await.result(commentService.createComment(anonymousSession, createCommentParams, createdAt).value)
+    }
+
+    "returns Comment on success" in new TrackCommentsCreateContext {
+      result ==== Comment.fromVASComment(urn, createCommentParams, createdAt, user).good
+    }
+
+    "forwards failures" >> {
+      "failures while creating the comment" >> {
+        "returns NotFound when tracksClient returns NotFound" in new TrackCommentsCreateContext {
+          override lazy val createCommentResponse = NotFound("Track not found").badF
+
+          result ==== NotFound("Track not found").bad
+        }
+
+        "returns NotValid when tracksClient returns InvalidArgument" in new TrackCommentsCreateContext {
+          override lazy val createCommentResponse = NotValid("User is muted").badF
+          result ==== NotValid("User is muted").bad
+        }
+
+        "returns NoAllowed when tracksClient returns PermissionDenied" in new TrackCommentsCreateContext {
+          override lazy val createCommentResponse = NotAllowed("Track not commentable").badF
+          result ==== NotAllowed("Track not commentable").bad
+        }
+
+        "returns CustomError when tracksClient returns ResourceExhausted" in new TrackCommentsCreateContext {
+          lazy val spamWarningUrn = Urn.parse("soundcloud:spam-warnings:111").get
+          override lazy val createCommentResponse =
+            CustomError(CreateTrackCommentUserHasSpamWarning(spamWarningUrn)).badF
+          result ==== CustomError(CreateTrackCommentUserHasSpamWarning(spamWarningUrn)).bad
+        }
+
+        "returns UnexpectedError when tracksClient returns an exception" in new TrackCommentsCreateContext {
+          override lazy val createCommentResponse = UnexpectedError(new RuntimeException("Some Internal Error")).badF
+
+          result must beLeft.like {
+            case UnexpectedError(throwable) =>
+              throwable.getMessage must be_===(
+                "Some Internal Error"
+              )
+          }
+        }
+      }
+
+      "failures while fetching the user" >> {
+        "returns NotFound when okidoki returns an empty map" in new TrackCommentsCreateContext {
+          when(okidokiClient.fetchUsersMap(anonymousSession, Set(anonymousSession.getUser)))
+            .thenReturn(Future.value(Map.empty[Urn, UserRepresentation]))
+
+          result ==== NotFound().bad
+        }
+      }
+    }
+  }
+
 }

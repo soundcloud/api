@@ -1,16 +1,17 @@
 package com.soundcloud.apipublic.handler.comments
 
-import com.soundcloud.jvmkit.module.bff.session.UserAuthentication
-import com.soundcloud.jvmkit.module.http.server.{HandlerRequest, JsonResponseBuilder}
-import com.soundcloud.jvmkit.module.outcome.{Bad, Good, _}
-import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.apipublic.client.moshimoshicomments.Comment
 import com.soundcloud.apipublic.client.mothership._
+import com.soundcloud.apipublic.client.tracks.CreateTrackCommentUserHasSpamWarning
 import com.soundcloud.apipublic.service.comments.CommentService
 import com.soundcloud.apipublic.service.pagination.OffsetBasedPagination
 import com.soundcloud.apipublic.service.representation.collection.Collection
 import com.soundcloud.apipublic.support.ErrorResponse
 import com.soundcloud.apipublic.support.TrackUrnUtil.getTrackUrn
+import com.soundcloud.jvmkit.module.bff.session.UserAuthentication
+import com.soundcloud.jvmkit.module.http.server.{HandlerRequest, JsonResponseBuilder}
+import com.soundcloud.jvmkit.module.outcome.{Bad, Good, _}
+import com.soundcloud.jvmkit.module.util.Urn
 import com.twitter.conversions.DurationOps._
 import com.twitter.finagle.http.{Response, Status}
 import com.twitter.util._
@@ -54,7 +55,7 @@ class CommentsHandler(
           } else {
             extractCommentParams(request, commentJson) match {
               case Right(commentParams) =>
-                commentService.createComment(session, commentParams).map {
+                commentService.createComment(session, commentParams).value.map {
                   case Good(comment) => createResponse(comment)
                   case Bad(applicationError) => createErrorResponse(applicationError)
                 }
@@ -75,6 +76,8 @@ class CommentsHandler(
       case _: NotAllowed => ErrorResponse.badRequest()
       case CustomError(TooManyRequests, Some(CustomError(context: RateLimitedError, _))) =>
         ErrorResponse(Status.TooManyRequests, "Spam warning", Some(spamWarningError(context.spamWarningUrn)))
+      case CustomError(CreateTrackCommentUserHasSpamWarning(spamWarningUrn: Urn), _) =>
+        ErrorResponse(Status.TooManyRequests, "Spam warning", Some(spamWarningError(spamWarningUrn)))
       case _ => ErrorResponse.badRequest()
     }
   }

@@ -1,6 +1,7 @@
 package com.soundcloud.apipublic
 
 import com.soundcloud.apipublic.client._
+import com.soundcloud.apipublic.client.comments.CommentsTwirpClient
 import com.soundcloud.apipublic.client.followcounts.FollowCountsClient
 import com.soundcloud.apipublic.client.follows.FollowsClient
 import com.soundcloud.apipublic.client.media.TrackAccessRecorderClient
@@ -11,6 +12,7 @@ import com.soundcloud.apipublic.client.reposts.RepostsClient
 import com.soundcloud.apipublic.client.search.SearchClient
 import com.soundcloud.apipublic.client.trackcoordinator.TrackCoordinatorClient
 import com.soundcloud.apipublic.client.trackmetadata.TrackmetadataClient
+import com.soundcloud.apipublic.client.tracks.TracksTwirpClient
 import com.soundcloud.apipublic.service._
 import com.soundcloud.apipublic.service.comments.CommentService
 import com.soundcloud.apipublic.service.media.{StreamService, TrackAccessRecorderService}
@@ -242,8 +244,8 @@ class Clients(
       richOkidokiClient,
       moshimoshiClient,
       moshimoshiCommentsClient,
-      trackCommentsTwirpClient,
-      commentsTwirpClient,
+      new TracksTwirpClient(trackCommentsTwirpClient),
+      new CommentsTwirpClient(commentsTwirpClient),
       rolloutClient
     )
 

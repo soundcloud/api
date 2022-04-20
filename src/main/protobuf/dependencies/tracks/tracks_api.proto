@@ -115,8 +115,16 @@ message CreateTrackCommentRequest {
     google.protobuf.Int32Value timestamp = 5; // optional
 }
 
+enum CreateTrackCommentErrorReasons {
+    UNKNOWN_REASON = 0;
+    USER_IS_MUTED_BY_TRACK_OWNER = 1;
+    USER_IS_MUTED_BY_MENTIONED_USERS = 2;
+    USER_IS_NOT_CONFIRMED = 3;
+    TRACK_NOT_COMMENTABLE = 4;
+}
+
 message CreateTrackCommentResponse{
-     string urn = 1;
+    string urn = 1;
 }
 
 service Media {

@@ -72,6 +72,10 @@ class MoshimoshiClient(
       }
   }
 
+  @deprecated(
+    "Comments are currently being extracted out of moshimoshi/mothership. Please use the new comments services (wrapped in the CommentsService) for creating.",
+    "2022.04.19"
+  )
   def createComment(
       session: UserSession,
       createCommentParams: CreateCommentParams

@@ -1,9 +1,12 @@
 package com.soundcloud.apipublic.client.moshimoshicomments
 
 import com.soundcloud.apipublic.client.mothership.response.representation.UserRepresentation
+import com.soundcloud.apipublic.handler.comments.CreateCommentParams
 import com.soundcloud.apipublic.support.HtmlSanitizer
+import com.soundcloud.jvmkit.module.util.Urn
+import org.joda.time.DateTime
+import org.joda.time.format.DateTimeFormat
 import play.api.libs.json.{Json, Writes}
-
 case class Comment(
     id: Long,
     body: String,
@@ -55,4 +58,27 @@ object Comment {
       user = user,
       secretToken = secretToken
     )
+
+  def fromVASComment(
+      commentUrn: Urn,
+      params: CreateCommentParams,
+      createdAtVasValueOverride: DateTime,
+      user: UserRepresentation
+  ): Comment =
+    Comment(
+      id = commentUrn.identifier.toLong,
+      body = params.body,
+      createdAt = format(createdAtVasValueOverride),
+      trackId = params.trackUrn.identifier.toLong,
+      userId = user.urn.identifier.toLong,
+      user = user,
+      timestamp = params.timestamp,
+      secretToken = params.secretToken
+    )
+
+  private def format(dateTime: DateTime): String = {
+    DateTimeFormat
+      .forPattern("yyyy/MM/dd HH:mm:ss Z")
+      .print(dateTime)
+  }
 }

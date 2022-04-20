@@ -1,39 +1,31 @@
 package com.soundcloud.apipublic.service.comments
 
-import com.soundcloud.jvmkit.module.outcome._
-import com.soundcloud.jvmkit.module.rollout.{BasicRolloutFeature, Rollout}
-import com.soundcloud.jvmkit.module.twirp.proto.UserSessionOps._
-import com.soundcloud.jvmkit.module.util.Urn
-import com.soundcloud.jvmkit.module.util.session.UserSession
-import com.soundcloud.apipublic.client.comments.{Comment => CommentFromVAS}
+import com.soundcloud.apipublic.client.comments.{CommentsClient, Comment => CommentFromVAS}
 import com.soundcloud.apipublic.client.moshimoshicomments.{
   Comment,
   MoshimoshiCommentsClient,
   MoshimoshiCommentsComment,
   MoshimoshiCommentsPagedResponse
 }
-import com.soundcloud.apipublic.client.mothership.response.representation.UserRepresentation
 import com.soundcloud.apipublic.client.mothership.{MoshimoshiClient, RichOkidokiClient}
+import com.soundcloud.apipublic.client.tracks.TracksClient
 import com.soundcloud.apipublic.handler.comments.CreateCommentParams
 import com.soundcloud.apipublic.service.pagination.OffsetBasedPagination
 import com.soundcloud.apipublic.service.representation.collection.Collection
-import com.soundcloud.twinagle.{ErrorCode, TwinagleException}
+import com.soundcloud.jvmkit.module.outcome._
+import com.soundcloud.jvmkit.module.rollout.{BasicRolloutFeature, Rollout}
+import com.soundcloud.jvmkit.module.util.Urn
+import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.twitter.util.Future
-import org.joda.time.DateTime
+import org.joda.time.{DateTime, DateTimeZone}
 import org.joda.time.format.DateTimeFormat
-import proto.soundcloud.comments.api.{CommentsClientProtobuf, GetCommentsRequest}
-import proto.soundcloud.tracks.api.{
-  GetTrackCommentsRequest,
-  GetTrackCommentsResponse,
-  CommentsClientProtobuf => TracksCommentsClientProtobuf
-}
 
 class CommentService(
     okidokiClient: RichOkidokiClient,
     moshimoshiClient: MoshimoshiClient,
     moshimoshiCommentsClient: MoshimoshiCommentsClient,
-    trackCommentsTwirpClient: TracksCommentsClientProtobuf,
-    commentsTwirpClient: CommentsClientProtobuf,
+    tracksClient: TracksClient,
+    commentClient: CommentsClient,
     rolloutClient: Rollout
 ) {
 
@@ -75,86 +67,89 @@ class CommentService(
   ): OutcomeF[Collection[Comment]] = {
 
     for {
-      tracksResponse <- fetchUrnsFromTracks(
+      commentUrns <- tracksClient.getComments(
         session,
         trackUrn,
         secretToken,
         pagination.offset.getOrElse(0),
         pagination.limit
       )
-      comments <- fetchFromComments(tracksResponse.commentsUrns)
+      comments <- commentClient.getComments(commentUrns)
       materializedComments <- buildComments(session, comments, pagination)
     } yield materializedComments
   }
 
-  private def fetchUrnsFromTracks(
+  private val tracksVasCreateComment = BasicRolloutFeature(
+    "tracks-vas-create-comment"
+  )
+
+  /**
+    * Creates track comments
+    *
+    * @param session User session
+    * @param params Comment params
+    * @param createdAtVasValueOverride This parameter specifies a createdAt field value of a newly created
+    *                                  comment on VAS. This value is never passed to the downstream backends.
+    *                                  It's needed on a new comment creation since requesting a freshly created comment
+    *                                  from the comments VAS is unstable due to replication lag, so BFF will build the
+    *                                  comment from params.
+    * @return
+    */
+  def createComment(
       session: UserSession,
-      trackUrn: Urn,
-      secretToken: Option[String],
-      offset: Int,
-      limit: Int
-  ): OutcomeF[GetTrackCommentsResponse] = {
-
-    val request = GetTrackCommentsRequest(
-      userSession = Some(session.asProtoSession),
-      urn = trackUrn.toString,
-      secretToken = secretToken,
-      offset = offset,
-      limit = limit
-    )
-    trackCommentsTwirpClient
-      .getTrackComments(request)
-      .map(response => GetTrackCommentsResponse(response.commentsUrns).good)
-      .handle {
-        case TwinagleException(ErrorCode.NotFound, _, _, _) | TwinagleException(ErrorCode.PermissionDenied, _, _, _) =>
-          GetTrackCommentsResponse(Seq.empty).good
-        case TwinagleException(ErrorCode.InvalidArgument, reason, _, _) => NotValid(reason).bad
-        case TwinagleException(_, msg, _, _) => throw new RuntimeException(s"unexpected response from tracks: $msg")
+      params: CreateCommentParams,
+      createdAtVasValueOverride: DateTime = DateTime.now(DateTimeZone.UTC)
+  ): OutcomeF[Comment] = {
+    for {
+      shouldUseCommentsVas <- rolloutClient.isActive(tracksVasCreateComment).outcomeF
+      response <- shouldUseCommentsVas match {
+        case false => createMoshimoshiComment(session, params)
+        case true => createTrackComment(session, params, createdAtVasValueOverride)
       }
-      .outcomeF
+    } yield response
+
   }
 
-  private def fetchFromComments(
-      urns: Seq[String]
-  ): OutcomeF[Seq[CommentFromVAS]] = {
+  private def createTrackComment(
+      session: UserSession,
+      params: CreateCommentParams,
+      createdAtVasValueOverride: DateTime
+  ): OutcomeF[Comment] = {
 
-    if (urns.isEmpty) Seq.empty.goodF
-    else {
-      val request = GetCommentsRequest(
-        urns = urns
-      )
-      commentsTwirpClient
-        .getComments(request)
-        .map(response => response.comments.map(CommentFromVAS.fromProto).good)
-        .handle {
-          case TwinagleException(ErrorCode.InvalidArgument, reason, _, _) => NotValid(reason).bad
-          case TwinagleException(_, msg, _, _) =>
-            throw new RuntimeException(s"unexpected response from comments: $msg")
-        }
+    for {
+      user <- okidokiClient
+        .fetchUsersMap(session, Set(session.getUser))
+        .map(usersMap =>
+          usersMap.get(session.getUser) match {
+            case Some(miniUser) => miniUser.good
+            case None => NotFound().bad
+          }
+        )
         .outcomeF
-    }
+      commentUrn <- tracksClient
+        .createComment(session, params)
+    } yield Comment.fromVASComment(commentUrn, params, createdAtVasValueOverride, user)
   }
 
-  def createComment(session: UserSession, params: CreateCommentParams): Future[Outcome[Comment]] = {
+  private def createMoshimoshiComment(
+      session: UserSession,
+      params: CreateCommentParams
+  ): OutcomeF[Comment] = {
     moshimoshiClient
       .createComment(session, params)
       .flatMap {
         case Good(okidokiComment) =>
-          fetchUsers(session, okidokiComment).map(usersMap =>
-            usersMap.get(okidokiComment.user.self.urn) match {
-              case Some(miniUser) => Comment.fromOkidokiComment(okidokiComment, miniUser, params.secretToken).good
-              case None => NotFound().bad
-            }
-          )
+          okidokiClient
+            .fetchUsersMap(session, Set(okidokiComment.user.self.urn))
+            .map(usersMap =>
+              usersMap.get(okidokiComment.user.self.urn) match {
+                case Some(miniUser) => Comment.fromOkidokiComment(okidokiComment, miniUser, params.secretToken).good
+                case None => NotFound().bad
+              }
+            )
         case Bad(badThing) => Future.value(badThing.bad)
       }
-  }
-
-  private def fetchUsers(
-      session: UserSession,
-      moshimoshiComment: MoshimoshiCommentsComment
-  ): Future[Map[Urn, UserRepresentation]] = {
-    okidokiClient.fetchUsersMap(session, Set(moshimoshiComment.user.self.urn))
+      .outcomeF
   }
 
   private def buildCommentsFromMoshimoshiResponse(

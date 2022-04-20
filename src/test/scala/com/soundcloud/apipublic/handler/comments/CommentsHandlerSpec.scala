@@ -1,19 +1,19 @@
 package com.soundcloud.apipublic.handler.comments
 
-import com.soundcloud.jvmkit.module.bff.testsupport.FakeUserAuthentication
-import com.soundcloud.jvmkit.module.outcome._
-import com.soundcloud.jvmkit.module.util.Urn
-import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.apipublic.Routing
 import com.soundcloud.apipublic.client.moshimoshicomments.Comment
 import com.soundcloud.apipublic.client.mothership.{RateLimitedError, TooManyRequests}
-import com.soundcloud.apipublic.service.comments.CommentService
+import com.soundcloud.apipublic.client.tracks.CreateTrackCommentUserHasSpamWarning
+import com.soundcloud.apipublic.service.comments.{CommentService}
 import com.soundcloud.apipublic.service.pagination.OffsetBasedPagination
 import com.soundcloud.apipublic.service.representation.collection.Collection
 import com.soundcloud.apipublic.service.users.UserBuilder
 import com.soundcloud.apipublic.test.{HandlerSpecificationScope, UnitSpecification}
+import com.soundcloud.jvmkit.module.bff.testsupport.FakeUserAuthentication
+import com.soundcloud.jvmkit.module.outcome._
+import com.soundcloud.jvmkit.module.util.Urn
+import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.twitter.finagle.http.{ParamMap, Status}
-import com.twitter.util.Future
 import org.mockito.Mockito.verify
 import org.specs2.mock.Mockito
 import play.api.libs.json.{JsString, Json}
@@ -194,8 +194,8 @@ class CommentsHandlerSpec extends UnitSpecification with Mockito {
 
       def stubService(outcome: Outcome[Comment]) = {
         commentService
-          .createComment(any, any)
-          .returns(Future.value(outcome))
+          .createComment(any, any, any)
+          .returns(outcome.outcomeF)
       }
     }
 
@@ -231,13 +231,28 @@ class CommentsHandlerSpec extends UnitSpecification with Mockito {
         (Json.parse(response.contentString) \ "message").get === JsString("Body can't be blank.")
       }
 
-      "returns 429 and the spam warning urn when spamblocked" in new PostContext {
+      "returns 429 and the spam warning urn from mothership when spamblocked" in new PostContext {
         val spamUrn = Urn("soundcloud", "spam-warnings", "42")
         val rateLimitError = RateLimitedError(spamUrn)
         val customError = CustomError(
           TooManyRequests,
           Some(CustomError(rateLimitError))
         ).bad
+        stubService(customError)
+
+        val response = post(s"/tracks/${validTrackId}/comments", Map.empty, headers, body)
+
+        response.status ==== Status.TooManyRequests
+        (Json.parse(response.contentString) \ "spam_warning_urn").get === JsString(spamUrn.toString)
+      }
+
+      "returns 429 and the spam warning urn from the new comments service when spamblocked" in new PostContext {
+        val spamUrn = Urn("soundcloud", "spam-warnings", "42")
+
+        val customError = CustomError(
+          CreateTrackCommentUserHasSpamWarning(spamUrn)
+        ).bad
+
         stubService(customError)
 
         val response = post(s"/tracks/${validTrackId}/comments", Map.empty, headers, body)
