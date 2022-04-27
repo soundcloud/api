@@ -13,6 +13,11 @@ See [CONTRIBUTING.md](https://github.com/soundcloud/api-public/blob/master/CONTR
 
 [CD Pipeline](https://ci.soundcloud.org/go/pipeline/activity/api-public).
 
+## Testing
+
+To acquire a token use a test user provided in `/config/e2e.secrets.enc` file or reuse the existing token.<br/>
+Authentication process can be found here: [API Guide](https://developers.soundcloud.com/docs/api/guide#authentication)
+
 ## Notes
 
 ### Multipart requests
@@ -31,7 +36,7 @@ Zookeeper cluster and is managed by the
 
 The `./access-grant-exchange-acceptance-tests` directory contains scripts to
 support interactive acceptance testing of the supported OAuth access grant
-exchange flows. These intention of these tests is mainly to ensure that no
+exchange flows. This intention of these tests is mainly to ensure that no
 regressions are introduced while extracting the access grant exchange from
 Mothership into API Public.
 
