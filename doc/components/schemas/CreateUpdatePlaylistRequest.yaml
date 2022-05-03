@@ -26,3 +26,46 @@ properties:
             id:
               description: SoundCloud track id
               type: string
+      artwork_data:
+        title: Only for POST
+        type: string
+        format: binary
+      ean:
+        description: The European Article Number
+        type: string
+      genre:
+        description: Playlist's genre
+        type: string
+      label_name:
+        description: Label name
+        type: string
+      license:
+        description: License number
+        type: string
+      permalink:
+        description: Playlist's permalink
+        type: string
+      permalink_url:
+        description: Full permalink URL
+        type: string
+      purchase_title:
+        description: Purchase title
+        type: string
+      purchase_url:
+        description: Purchase URL
+        type: string
+      release:
+        description: Playlist's release
+        type: string
+      release_date:
+        description: Release date
+        type: string
+      set_type:
+        description: Playlist or album type
+        type: string
+        enum:
+          - album
+          - playlist
+      tag_list:
+        description: A comma-separated list of tags
+        type: string

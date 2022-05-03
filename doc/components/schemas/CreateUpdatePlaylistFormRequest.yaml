@@ -17,4 +17,30 @@ properties:
     title: Only for POST
     type: string
     format: binary
-
+  playlist[ean]:
+    type: string
+  playlist[genre]:
+    type: string
+  playlist[label_name]:
+    type: string
+  playlist[license]:
+    type: string
+  playlist[permalink]:
+    type: string
+  playlist[permalink_url]:
+    type: string
+  playlist[purchase_title]:
+    type: string
+  playlist[purchase_url]:
+    type: string
+  playlist[release]:
+    type: string
+  playlist[release_date]:
+    type: string
+  playlist[set_type]:
+    type: string
+    enum:
+      - album
+      - playlist
+  playlist[tag_list]:
+    type: string
