@@ -15,18 +15,26 @@ import proto.soundcloud.tracks.api.{
   GetTrackCommentsRequest,
   CommentsClientProtobuf => TracksCommentsClientProtoBuf
 }
+object Const {
+  final val REFERER = "https://api.soundcloud.com/"
+}
 
 case class CreateTrackCommentUserHasSpamWarning(spamWarning: Urn)
 
 class TracksTwirpClient(trackCommentsTwirpClient: TracksCommentsClientProtoBuf) extends TracksClient {
 
   override def createComment(session: UserSession, params: CreateCommentParams): OutcomeF[Urn] = {
+
+    val refererHeader = Option(session.getExtraHeader(UserSession.REFERER))
+    val referer = if (refererHeader.isDefined) refererHeader else Some(Const.REFERER)
+
     val request = CreateTrackCommentRequest(
       Some(session.asProtoSession),
       params.trackUrn.toString,
       params.secretToken,
       params.body,
-      params.timestamp
+      params.timestamp,
+      referer
     )
     trackCommentsTwirpClient
       .createTrackComment(request)

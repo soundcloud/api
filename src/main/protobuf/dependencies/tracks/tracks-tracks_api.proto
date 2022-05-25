@@ -113,6 +113,7 @@ message CreateTrackCommentRequest {
     google.protobuf.StringValue secret_token = 3; // optional
     string body = 4;
     google.protobuf.Int32Value timestamp = 5; // optional
+    google.protobuf.StringValue referer = 6; // optional
 }
 
 enum CreateTrackCommentErrorReasons {

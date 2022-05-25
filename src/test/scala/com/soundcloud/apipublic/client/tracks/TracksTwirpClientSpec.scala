@@ -4,6 +4,7 @@ import com.soundcloud.apipublic.handler.comments.CreateCommentParams
 import com.soundcloud.jvmkit.module.outcome._
 import com.soundcloud.jvmkit.module.twirp.proto.UserSessionOps._
 import com.soundcloud.jvmkit.module.util.Urn
+import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.jvmkit.module.util.session.UserSessionBuilder
 import com.soundcloud.twinagle.{ErrorCode, TwinagleException}
 import com.twitter.util.{Await, Future}
@@ -26,7 +27,8 @@ class TracksTwirpClientSpec extends Specification with Mockito {
     val tracksTwirpClient = new TracksTwirpClient(commentsClient)
     val userUrn = Urn("soundcloud", "users", "1")
     val trackUrn = Urn("soundcloud", "tracks", "1")
-    val session = new UserSessionBuilder().setUser(userUrn).build
+    val session =
+      new UserSessionBuilder().setUser(userUrn).build
   }
 
   "#createComment" >> {
@@ -37,7 +39,14 @@ class TracksTwirpClientSpec extends Specification with Mockito {
       val params = CreateCommentParams(trackUrn, "Nice Track", Some(1000), None)
 
       val createCommentRequest =
-        CreateTrackCommentRequest(Some(session.asProtoSession), trackUrn.toString, None, "Nice Track", Some(1000))
+        CreateTrackCommentRequest(
+          Some(session.asProtoSession),
+          trackUrn.toString,
+          None,
+          "Nice Track",
+          Some(1000),
+          Some(Const.REFERER)
+        )
 
     }
 
@@ -56,6 +65,33 @@ class TracksTwirpClientSpec extends Specification with Mockito {
       verify(commentsClient).createTrackComment(expectedRequest)
     }
 
+    "createComment successfully creates comment with referer header" in new CreateCommentContext {
+      val sessionWithReferer =
+        new UserSessionBuilder().setUser(userUrn).setExtraHeader(UserSession.REFERER, "https://soundcloud.com/").build
+
+      commentsClient.createTrackComment(any) returns Future.value(
+        CreateTrackCommentResponse(urn.toString)
+      )
+
+      val result =
+        Await.result(
+          tracksTwirpClient.createComment(sessionWithReferer, params).value
+        )
+      result ==== urn.good
+
+      val expectedRequest =
+        CreateTrackCommentRequest(
+          Some(session.asProtoSession),
+          trackUrn.toString,
+          None,
+          "Nice Track",
+          Some(1000),
+          Some("https://soundcloud.com/")
+        )
+
+      verify(commentsClient).createTrackComment(expectedRequest)
+    }
+
     "createComment fails" >> {
       "returns NotFound when commentsClient returns NotFound" in new CreateCommentContext {
         commentsClient.createTrackComment(any) returns Future.exception(
@@ -71,7 +107,8 @@ class TracksTwirpClientSpec extends Specification with Mockito {
           urn = trackUrn.toString,
           secretToken = None,
           body = "Nice Track",
-          timestamp = Some(1000)
+          timestamp = Some(1000),
+          Some(Const.REFERER)
         )
         verify(commentsClient).createTrackComment(expectedRequest)
       }
