@@ -14,7 +14,7 @@ properties:
     type: string
     description: To pass multiple tracks, pass multiple comma-separated values, e.g. -F "playlist[tracks][][id]=111,222"
   playlist[artwork_data]:
-    title: Only for POST
+    title: The playlist artwork in binary format. Supported formats are gif, jpeg and png
     type: string
     format: binary
   playlist[ean]:
