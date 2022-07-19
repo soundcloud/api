@@ -242,11 +242,8 @@ class Clients(
   val commentsService =
     new CommentService(
       richOkidokiClient,
-      moshimoshiClient,
-      moshimoshiCommentsClient,
       new TracksTwirpClient(trackCommentsTwirpClient),
-      new CommentsTwirpClient(commentsTwirpClient),
-      rolloutClient
+      new CommentsTwirpClient(commentsTwirpClient)
     )
 
   private val oauthGrantExchangeClient = TwirpClient(

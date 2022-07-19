@@ -1,37 +1,23 @@
 package com.soundcloud.apipublic.service.comments
 
 import com.soundcloud.apipublic.client.comments.{CommentsClient, Comment => CommentFromVAS}
-import com.soundcloud.apipublic.client.moshimoshicomments.{
-  Comment,
-  MoshimoshiCommentsClient,
-  MoshimoshiCommentsComment,
-  MoshimoshiCommentsPagedResponse
-}
-import com.soundcloud.apipublic.client.mothership.{MoshimoshiClient, RichOkidokiClient}
+import com.soundcloud.apipublic.client.moshimoshicomments.Comment
+import com.soundcloud.apipublic.client.mothership.RichOkidokiClient
 import com.soundcloud.apipublic.client.tracks.TracksClient
 import com.soundcloud.apipublic.handler.comments.CreateCommentParams
 import com.soundcloud.apipublic.service.pagination.OffsetBasedPagination
 import com.soundcloud.apipublic.service.representation.collection.Collection
 import com.soundcloud.jvmkit.module.outcome._
-import com.soundcloud.jvmkit.module.rollout.{BasicRolloutFeature, Rollout}
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSession
-import com.twitter.util.Future
-import org.joda.time.{DateTime, DateTimeZone}
 import org.joda.time.format.DateTimeFormat
+import org.joda.time.{DateTime, DateTimeZone}
 
 class CommentService(
     okidokiClient: RichOkidokiClient,
-    moshimoshiClient: MoshimoshiClient,
-    moshimoshiCommentsClient: MoshimoshiCommentsClient,
     tracksClient: TracksClient,
-    commentClient: CommentsClient,
-    rolloutClient: Rollout
+    commentClient: CommentsClient
 ) {
-
-  private val tracksVasTrackComments = BasicRolloutFeature(
-    "tracks-vas-track-comments"
-  )
 
   def fetchTracksComments(
       session: UserSession,
@@ -39,24 +25,7 @@ class CommentService(
       pagination: OffsetBasedPagination,
       secretToken: Option[String] = None
   ): OutcomeF[Collection[Comment]] = {
-    for {
-      shouldFetchFromVas <- rolloutClient.isActive(tracksVasTrackComments).outcomeF
-      comments <- shouldFetchFromVas match {
-        case false => fetchFromMoshimoshi(session, track, pagination)
-        case true => fetchFromComments(session, track, secretToken, pagination)
-      }
-    } yield comments
-  }
-
-  private def fetchFromMoshimoshi(
-      session: UserSession,
-      track: Urn,
-      pagination: OffsetBasedPagination
-  ): OutcomeF[Collection[Comment]] = {
-    for {
-      moshiComments <- moshimoshiCommentsClient.fetchTrackComments(session, track, pagination).outcomeF
-      materializedComments <- buildCommentsFromMoshimoshiResponse(session, moshiComments, pagination)
-    } yield materializedComments
+    fetchFromComments(session, track, secretToken, pagination)
   }
 
   private def fetchFromComments(
@@ -79,10 +48,6 @@ class CommentService(
     } yield materializedComments
   }
 
-  private val tracksVasCreateComment = BasicRolloutFeature(
-    "tracks-vas-create-comment"
-  )
-
   /**
     * Creates track comments
     *
@@ -100,14 +65,7 @@ class CommentService(
       params: CreateCommentParams,
       createdAtVasValueOverride: DateTime = DateTime.now(DateTimeZone.UTC)
   ): OutcomeF[Comment] = {
-    for {
-      shouldUseCommentsVas <- rolloutClient.isActive(tracksVasCreateComment).outcomeF
-      response <- shouldUseCommentsVas match {
-        case false => createMoshimoshiComment(session, params)
-        case true => createTrackComment(session, params, createdAtVasValueOverride)
-      }
-    } yield response
-
+    createTrackComment(session, params, createdAtVasValueOverride)
   }
 
   private def createTrackComment(
@@ -129,54 +87,6 @@ class CommentService(
       commentUrn <- tracksClient
         .createComment(session, params)
     } yield Comment.fromVASComment(commentUrn, params, createdAtVasValueOverride, user)
-  }
-
-  private def createMoshimoshiComment(
-      session: UserSession,
-      params: CreateCommentParams
-  ): OutcomeF[Comment] = {
-    moshimoshiClient
-      .createComment(session, params)
-      .flatMap {
-        case Good(okidokiComment) =>
-          okidokiClient
-            .fetchUsersMap(session, Set(okidokiComment.user.self.urn))
-            .map(usersMap =>
-              usersMap.get(okidokiComment.user.self.urn) match {
-                case Some(miniUser) => Comment.fromOkidokiComment(okidokiComment, miniUser, params.secretToken).good
-                case None => NotFound().bad
-              }
-            )
-        case Bad(badThing) => Future.value(badThing.bad)
-      }
-      .outcomeF
-  }
-
-  private def buildCommentsFromMoshimoshiResponse(
-      session: UserSession,
-      moshimoshiComments: MoshimoshiCommentsPagedResponse,
-      pagination: OffsetBasedPagination
-  ): OutcomeF[Collection[Comment]] = {
-    okidokiClient
-      .fetchUsersMap(session, moshimoshiComments.collection.map(_.user.self.urn).toSet)
-      .map { urnToUserMap =>
-        val comments = moshimoshiComments.collection
-          .collect({
-            case moshiComment: MoshimoshiCommentsComment if urnToUserMap.contains(moshiComment.user.self.urn) =>
-              Comment(
-                id = moshiComment.self.urn.identifier.toLong,
-                body = moshiComment.body,
-                createdAt = moshiComment.created_at,
-                timestamp = moshiComment.timestamp,
-                trackId = moshiComment.track.identifier.toLong,
-                userId = moshiComment.user.self.urn.identifier.toLong,
-                user = urnToUserMap(moshiComment.user.self.urn)
-              )
-          })
-        val nextHref = moshimoshiComments.next_href.map(_ => pagination.nextPage.normalizedHref)
-        Collection(comments.toList, nextHref).good
-      }
-      .outcomeF
   }
 
   private def buildComments(
